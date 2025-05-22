@@ -45,6 +45,9 @@
 
 #include <opm/common/utility/TimeService.hpp>
 
+#include <opm/input/eclipse/Parser/ErrorGuard.hpp>
+#include <opm/input/eclipse/Parser/InputErrorAction.hpp>
+#include <opm/input/eclipse/Parser/ParseContext.hpp>
 #include <opm/input/eclipse/Parser/Parser.hpp>
 
 #include <opm/input/eclipse/Deck/Deck.hpp>
@@ -209,11 +212,19 @@ namespace {
 
     struct SimulationCase
     {
-        explicit SimulationCase(const Opm::Deck& deck,
-                                const bool needFipRegStat = false)
+        explicit SimulationCase(const Opm::Deck& deck)
             : es   { deck }
             , grid { deck }
             , sched{ deck, es, std::make_shared<Opm::Python>() }
+        {}
+
+        explicit SimulationCase(const Opm::Deck&         deck,
+                                const bool               needFipRegStat,
+                                const Opm::ParseContext& ctx,
+                                Opm::ErrorGuard&         errors)
+            : es   { deck }
+            , grid { deck }
+            , sched{ deck, es, ctx, errors, std::make_shared<Opm::Python>() }
         {
             if (needFipRegStat) {
                 this->es.computeFipRegionStatistics();
@@ -253,9 +264,16 @@ BOOST_AUTO_TEST_SUITE(Aggregate_UDQ)
 BOOST_AUTO_TEST_CASE (Declared_UDQ_data)
 {
     const auto needFipRegStatistics = true;
+
+    auto ctx = Opm::ParseContext{};
+    ctx.update(Opm::ParseContext::UDQ_DEFINE_CANNOT_EVAL,
+               Opm::InputErrorAction::IGNORE);
+
+    auto errors = Opm::ErrorGuard{};
+
     const auto simCase = SimulationCase {
         first_sim("UDQ_TEST_WCONPROD_IUAD-2.DATA"),
-        needFipRegStatistics
+        needFipRegStatistics, ctx, errors
     };
 
     const auto& es = simCase.es;

@@ -30,7 +30,10 @@
 #include <opm/input/eclipse/Schedule/ScheduleState.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQConfig.hpp>
 
+#include <opm/input/eclipse/Parser/ParseContext.hpp>
+
 #include <fmt/format.h>
+#include <fmt/ranges.h>
 
 #include <memory>
 #include <optional>
@@ -55,6 +58,78 @@ namespace {
         return dynSelector;
     }
 
+    class EvaluationCheck
+    {
+    public:
+        explicit EvaluationCheck(std::vector<std::string>   defines,
+                                 const Opm::HandlerContext& ctx,
+                                 const Opm::UDQConfig&      udqs);
+
+        bool feasible() const { return this->message_.empty(); }
+
+        const std::string& message() const { return this->message_; }
+
+    private:
+        std::string message_{};
+    };
+
+    EvaluationCheck::EvaluationCheck(std::vector<std::string>   defines,
+                                     const Opm::HandlerContext& ctx,
+                                     const Opm::UDQConfig&      udqs)
+    {
+        for (const auto& define : defines) {
+            const auto reqObj = udqs.define(define).requiredObjects();
+
+            auto missingWells = std::vector<std::string>{};
+            for (const auto& reqWellPatt : reqObj.wells) {
+                if (! ctx.hasWell(reqWellPatt)) {
+                    missingWells.push_back(reqWellPatt);
+                }
+            }
+
+            auto missingGroups = std::vector<std::string>{};
+            for (const auto& reqGrpPatt : reqObj.groups) {
+                if (! ctx.hasGroup(reqGrpPatt)) {
+                    missingGroups.push_back(reqGrpPatt);
+                }
+            }
+
+            if (missingWells.empty() && missingGroups.empty()) {
+                // No missing wells and no missing groups.  This is fine.
+                continue;
+            }
+
+            // If we get here then there are missing objects (wells and/or
+            // groups).  Report those.
+            this->message_ += fmt::format("  Missing object{} in "
+                                          "defining expression for {}\n",
+                                          (missingGroups.size() + missingWells.size() != 1)
+                                          ? "s" : "", define);
+
+            if (! missingWells.empty()) {
+                this->message_ += "    -> No existing well matches ";
+
+                if (missingWells.size() == 1) {
+                    this->message_ += fmt::format("the name {}\n", missingWells.front());
+                }
+                else {
+                    this->message_ += fmt::format("any of the names {:n}\n", missingWells);
+                }
+            }
+
+            if (! missingGroups.empty()) {
+                this->message_ += "    -> No existing group matches ";
+
+                if (missingGroups.size() == 1) {
+                    this->message_ += fmt::format("the name {}\n", missingGroups.front());
+                }
+                else {
+                    this->message_ += fmt::format("any of the names {:n}\n", missingGroups);
+                }
+            }
+        }
+    }
+
 } // Anonymous namespace
 
 namespace Opm {
@@ -72,11 +147,34 @@ void handleUDQ(HandlerContext& handlerContext)
 
     const auto dynSelector = makeDynamicSelector(handlerContext);
 
+    auto newDefines = std::vector<std::string>{};
+
     for (const auto& record : handlerContext.keyword) {
-        new_udq.add_record(segment_matcher_factory, record,
-                           handlerContext.keyword.location(),
-                           handlerContext.currentStep,
-                           dynSelector);
+        const auto definition = new_udq
+            .add_record(segment_matcher_factory, record,
+                        handlerContext.keyword.location(),
+                        handlerContext.currentStep,
+                        dynSelector);
+
+        if (definition.has_value()) {
+            newDefines.push_back(*definition);
+        }
+    }
+
+    if (const auto eval = EvaluationCheck {
+            std::move(newDefines), handlerContext, new_udq
+        }; ! eval.feasible())
+    {
+        const auto msg_fmt = fmt::format(R"(Problem with {{keyword}}
+In {{file}} line {{line}}
+DEFINE cannot be evaluated:
+{})", eval.message());
+
+        handlerContext.parseContext
+            .handleError(ParseContext::UDQ_DEFINE_CANNOT_EVAL,
+                         msg_fmt,
+                         handlerContext.keyword.location(),
+                         handlerContext.errors);
     }
 
     handlerContext.state().udq.update(std::move(new_udq));

@@ -23,118 +23,146 @@
 
 #include <opm/msim/msim.hpp>
 
-#include <stdexcept>
-#include <iostream>
-#include <memory>
-
-#include <opm/input/eclipse/Python/Python.hpp>
-#include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
-#include <opm/input/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
-#include <opm/input/eclipse/Schedule/SummaryState.hpp>
-#include <opm/input/eclipse/Schedule/Schedule.hpp>
-#include <opm/input/eclipse/Schedule/Action/ActionAST.hpp>
-#include <opm/input/eclipse/Schedule/Action/ActionContext.hpp>
-#include <opm/input/eclipse/Schedule/Action/Actions.hpp>
-#include <opm/input/eclipse/Schedule/Action/ActionX.hpp>
-#include <opm/input/eclipse/Schedule/UDQ/UDQConfig.hpp>
-#include <opm/input/eclipse/Schedule/Well/Well.hpp>
-#include <opm/input/eclipse/Deck/Deck.hpp>
-#include <opm/input/eclipse/Parser/Parser.hpp>
-#include <opm/input/eclipse/Parser/ParseContext.hpp>
-#include <opm/input/eclipse/Parser/ErrorGuard.hpp>
-
 #include <opm/io/eclipse/ESmry.hpp>
 
 #include <opm/output/eclipse/EclipseIO.hpp>
 
+#include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/input/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
+
+#include <opm/input/eclipse/Python/Python.hpp>
+
+#include <opm/input/eclipse/Schedule/Action/ActionAST.hpp>
+#include <opm/input/eclipse/Schedule/Action/ActionContext.hpp>
+#include <opm/input/eclipse/Schedule/Action/ActionX.hpp>
+#include <opm/input/eclipse/Schedule/Action/Actions.hpp>
+#include <opm/input/eclipse/Schedule/Schedule.hpp>
+#include <opm/input/eclipse/Schedule/SummaryState.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQConfig.hpp>
+#include <opm/input/eclipse/Schedule/Well/Well.hpp>
+
+#include <opm/input/eclipse/Deck/Deck.hpp>
+
+#include <opm/input/eclipse/Parser/ErrorGuard.hpp>
+#include <opm/input/eclipse/Parser/InputErrorAction.hpp>
+#include <opm/input/eclipse/Parser/ParseContext.hpp>
+#include <opm/input/eclipse/Parser/Parser.hpp>
+
 #include <tests/WorkArea.hpp>
+
+#include <cstddef>
+#include <memory>
+#include <initializer_list>
+#include <stdexcept>
+#include <string>
+#include <vector>
 
 using namespace Opm;
 
 namespace {
 
-struct test_data {
-    Deck deck;
-    EclipseState state;
-    std::shared_ptr<Python> python;
-    Schedule schedule;
-    SummaryConfig summary_config;
+double prod_opr(const EclipseState&  es,
+                const Schedule& /* sched */,
+                const SummaryState&,
+                const data::Solution& /* sol */,
+                const std::size_t /* report_step */,
+                const double /* seconds_elapsed */)
+{
+    const double oil_rate = 1.0;
 
-    explicit test_data(const Deck& deck_arg) :
-        deck(deck_arg),
-        state( this->deck ),
-        python( msim::python ),
-        schedule( this->deck, this->state, this->python),
-        summary_config( this->deck, this->schedule, this->state.fieldProps(), this->state.aquifer() )
-    {
-        auto& ioconfig = this->state.getIOConfig();
-        ioconfig.setBaseName("MSIM");
+    return -es.getUnits().to_si(UnitSystem::measure::rate, oil_rate);
+}
+
+double prod_gpr(const EclipseState&  es,
+                const Schedule& /* sched */,
+                const SummaryState&,
+                const data::Solution& /* sol */,
+                const std::size_t /* report_step */,
+                const double /* seconds_elapsed */)
+{
+    const double gas_rate = 20.0;
+
+    return -es.getUnits().to_si(UnitSystem::measure::rate, gas_rate);
+}
+
+double prod_opr_low(const EclipseState&  es,
+                    const Schedule& /* sched */,
+                    const SummaryState&,
+                    const data::Solution& /* sol */,
+                    const std::size_t /* report_step */,
+                    const double /* seconds_elapsed */)
+{
+    const double oil_rate = 0.5;
+
+    return -es.getUnits().to_si(UnitSystem::measure::rate, oil_rate);
+}
+
+double prod_wpr_P1(const EclipseState&  es,
+                   const Schedule& /* sched */,
+                   const SummaryState&,
+                   const data::Solution& /* sol */,
+                   const std::size_t /* report_step */,
+                   const double /* seconds_elapsed */)
+{
+    const double water_rate = 0.0;
+    return -es.getUnits().to_si(UnitSystem::measure::rate, water_rate);
+}
+
+double prod_wpr_P2(const EclipseState&  es,
+                   const Schedule& /* sched */,
+                   const SummaryState&,
+                   const data::Solution& /* sol */,
+                   const std::size_t report_step,
+                   const double /* seconds_elapsed */)
+{
+    double water_rate = 0.0;
+    if (report_step > 5) {
+        water_rate = 2.0;  // => WWCT = WWPR / (WOPR + WWPR) = 2/3
     }
 
-    explicit test_data(const std::string& deck_string) :
-        test_data( Parser().parseString(deck_string) )
-    {}
-
-
-};
-
-
-double prod_opr(const EclipseState&  es, const Schedule& /* sched */, const SummaryState&, const data::Solution& /* sol */, size_t /* report_step */, double /* seconds_elapsed */) {
-    const auto& units = es.getUnits();
-    double oil_rate = 1.0;
-    return -units.to_si(UnitSystem::measure::rate, oil_rate);
+    return -es.getUnits().to_si(UnitSystem::measure::rate, water_rate);
 }
 
-double prod_gpr(const EclipseState&  es, const Schedule& /* sched */, const SummaryState&, const data::Solution& /* sol */, size_t /* report_step */, double /* seconds_elapsed */) {
-    const auto& units = es.getUnits();
-    double gas_rate = 20.0;
-    return -units.to_si(UnitSystem::measure::rate, gas_rate);
+double prod_wpr_P3(const EclipseState&  es,
+                   const Schedule& /* sched */,
+                   const SummaryState&,
+                   const data::Solution& /* sol */,
+                   const std::size_t /* report_step */,
+                   const double /* seconds_elapsed */)
+{
+    const double water_rate = 0.0;
+
+    return -es.getUnits().to_si(UnitSystem::measure::rate, water_rate);
 }
 
-double prod_opr_low(const EclipseState&  es, const Schedule& /* sched */, const SummaryState&, const data::Solution& /* sol */, size_t /* report_step */, double /* seconds_elapsed */) {
-    const auto& units = es.getUnits();
-    double oil_rate = 0.5;
-    return -units.to_si(UnitSystem::measure::rate, oil_rate);
-}
-
-double prod_wpr_P1(const EclipseState&  es, const Schedule& /* sched */, const SummaryState&, const data::Solution& /* sol */, size_t /* report_step */, double /* seconds_elapsed */) {
-    const auto& units = es.getUnits();
+double prod_wpr_P4(const EclipseState&  es,
+                   const Schedule& /* sched */,
+                   const SummaryState&,
+                   const data::Solution& /* sol */,
+                   const std::size_t report_step,
+                   const double /* seconds_elapsed */)
+{
     double water_rate = 0.0;
-    return -units.to_si(UnitSystem::measure::rate, water_rate);
-}
-
-double prod_wpr_P2(const EclipseState&  es, const Schedule& /* sched */, const SummaryState&, const data::Solution& /* sol */, size_t report_step, double /* seconds_elapsed */) {
-    const auto& units = es.getUnits();
-    double water_rate = 0.0;
-    if (report_step > 5)
-        water_rate = 2.0;  // => WWCT = WWPR / (WOPR + WWPR) = 2/3
-
-    return -units.to_si(UnitSystem::measure::rate, water_rate);
-}
-
-double prod_wpr_P3(const EclipseState&  es, const Schedule& /* sched */, const SummaryState&, const data::Solution& /* sol */, size_t /* report_step */, double /* seconds_elapsed */) {
-    const auto& units = es.getUnits();
-    double water_rate = 0.0;
-    return -units.to_si(UnitSystem::measure::rate, water_rate);
-}
-
-double prod_wpr_P4(const EclipseState&  es, const Schedule& /* sched */, const SummaryState&, const data::Solution& /* sol */, size_t report_step, double /* seconds_elapsed */) {
-    const auto& units = es.getUnits();
-    double water_rate = 0.0;
-    if (report_step > 10)
+    if (report_step > 10) {
         water_rate = 2.0;
+    }
 
-    return -units.to_si(UnitSystem::measure::rate, water_rate);
+    return -es.getUnits().to_si(UnitSystem::measure::rate, water_rate);
 }
 
+double inj_wir_INJ(const EclipseState&,
+                   const Schedule& sched,
+                   const SummaryState& st,
+                   const data::Solution& /* sol */,
+                   const std::size_t report_step,
+                   const double /* seconds_elapsed */)
+{
+    if (! st.has("FUINJ")) {
+        return -99.0;
+    }
 
-double inj_wir_INJ(const EclipseState& , const Schedule& sched, const SummaryState& st, const data::Solution& /* sol */, size_t report_step, double /* seconds_elapsed */) {
-    if (st.has("FUINJ")) {
-        const auto& well = sched.getWell("INJ", report_step);
-        const auto controls = well.injectionControls(st);
-        return controls.surface_rate;
-    } else
-        return -99;
+    return sched.getWell("INJ", report_step)
+        .injectionControls(st).surface_rate;
 }
 
 bool ecl_sum_has_general_var(const EclIO::ESmry& smry, const std::string& var)
@@ -157,25 +185,54 @@ int ecl_sum_get_last_report_step(const EclIO::ESmry& smry)
     return static_cast<int>(smry.get_at_rstep("TIME").size());
 }
 
-
 int ecl_sum_iget_report_end(const EclIO::ESmry& smry, const int reportStep)
 {
     return smry.timestepIdxAtReportstepStart(reportStep + 1) - 1;
 }
 
-}
+} // Anonymous namespace
 
+BOOST_AUTO_TEST_SUITE(Common_Features)
 
-/*
-  The deck tested here has a UDQ DEFINE statement which sorts the wells after
-  oil production rate, and then subsequently closes the well with lowest OPR
-  with a ACTIONX keyword.
-*/
+namespace {
+
+    ParseContext ignoreUDQCantEval()
+    {
+        auto ctx = ParseContext{};
+        ctx.update(ParseContext::UDQ_DEFINE_CANNOT_EVAL,
+                   InputErrorAction::IGNORE);
+
+        return ctx;
+    }
+
+    struct test_data
+    {
+        EclipseState state;
+        Schedule schedule;
+        SummaryConfig summary_config;
+
+        explicit test_data(const Deck& deck)
+            : state    { deck }
+            , schedule { deck, state, ignoreUDQCantEval(), ErrorGuard{}, msim::python }
+            , summary_config { deck, schedule, state.fieldProps(), state.aquifer() }
+        {
+            this->state.getIOConfig().setBaseName("MSIM");
+        }
+
+        explicit test_data(const std::string& deck_string)
+            : test_data { Parser{}.parseString(deck_string) }
+        {}
+    };
+
+} // Anonymous namespace
+
+// The deck tested here has a UDQ DEFINE statement which sorts wells by oil
+// production rate.  We close the smallest OPR well in an ACTIONX block.
 
 BOOST_AUTO_TEST_CASE(UDQ_SORTA_EXAMPLE) {
 #include "actionx2.include"
 
-    test_data td( actionx );
+    test_data td(actionx);
     msim sim(td.state, td.schedule);
     {
         WorkArea work_area("test_msim");
@@ -202,11 +259,10 @@ BOOST_AUTO_TEST_CASE(UDQ_SORTA_EXAMPLE) {
     }
 }
 
-
 BOOST_AUTO_TEST_CASE(WELL_CLOSE_EXAMPLE) {
 #include "actionx1.include"
 
-    test_data td( actionx1 );
+    test_data td(actionx1);
     msim sim(td.state, td.schedule);
     {
         WorkArea work_area("test_msim");
@@ -253,12 +309,10 @@ BOOST_AUTO_TEST_CASE(WELL_CLOSE_EXAMPLE) {
     }
 }
 
-
-
 BOOST_AUTO_TEST_CASE(UDQ_ASSIGN) {
 #include "actionx1.include"
 
-    test_data td( actionx1 );
+    test_data td(actionx1);
     msim sim(td.state, td.schedule);
     {
         WorkArea work_area("test_msim");
@@ -304,7 +358,7 @@ BOOST_AUTO_TEST_CASE(UDQ_ASSIGN) {
 BOOST_AUTO_TEST_CASE(UDQ_WUWCT) {
 #include "actionx1.include"
 
-    test_data td( actionx1 );
+    test_data td(actionx1);
     msim sim(td.state, td.schedule);
     {
         WorkArea work_area("test_msim");
@@ -366,7 +420,8 @@ BOOST_AUTO_TEST_CASE(UDQ_WUWCT) {
 
 BOOST_AUTO_TEST_CASE(UDQ_IN_ACTIONX) {
 #include "udq_in_actionx.include"
-    test_data td( actionx1 );
+
+    test_data td(actionx1);
     msim sim(td.state, td.schedule);
     {
         WorkArea work_area("test_msim");
@@ -424,7 +479,8 @@ BOOST_AUTO_TEST_CASE(UDQ_IN_ACTIONX) {
 
 BOOST_AUTO_TEST_CASE(UDA) {
 #include "uda.include"
-    test_data td( uda_deck );
+
+    test_data td(uda_deck);
     msim sim(td.state, td.schedule);
     auto eps_lim = sim.uda_val().epsilonLimit();
 
@@ -463,7 +519,8 @@ BOOST_AUTO_TEST_CASE(UDA) {
 
 BOOST_AUTO_TEST_CASE(COMPDAT) {
 #include "compdat.include"
-    test_data td( compdat_deck );
+
+    test_data td(compdat_deck);
     msim sim(td.state, td.schedule);
     EclipseIO io(td.state, td.state.getInputGrid(), td.schedule, td.summary_config);
 
@@ -479,20 +536,46 @@ BOOST_AUTO_TEST_CASE(COMPDAT) {
     }
 }
 
+BOOST_AUTO_TEST_SUITE_END()     // Common_Features
+
+// ===========================================================================
+
 #ifdef EMBEDDED_PYTHON
 
-BOOST_AUTO_TEST_CASE(MSIM_EXIT_TEST_PYACTION) {
-    Opm::Parser parser;
+BOOST_AUTO_TEST_SUITE(Embedded_Python)
 
-    Opm::Deck deck = parser.parseFile("msim/MSIM_PYACTION_EXIT.DATA");
-    Opm::EclipseState state(deck);
-    Opm::Schedule schedule(deck, state, msim::python);
-    Opm::SummaryConfig summary_config(deck, schedule, state.fieldProps(), state.aquifer());
+namespace {
+
+    struct test_data
+    {
+        EclipseState state;
+        Schedule schedule;
+        SummaryConfig summary_config;
+
+        explicit test_data(const Deck& deck)
+            : state          { deck }
+            , schedule       { deck, state, msim::python }
+            , summary_config { deck, schedule, state.fieldProps(), state.aquifer() }
+        {
+            this->state.getIOConfig().setBaseName("MSIM");
+        }
+
+        explicit test_data(const std::string& file_name)
+            : test_data { Parser{}.parseFile(file_name) }
+        {}
+    };
+
+} // Anonymous namespace
+
+BOOST_AUTO_TEST_CASE(MSIM_EXIT_TEST_PYACTION) {
+    test_data td("msim/MSIM_PYACTION_EXIT.DATA");
 
     {
         WorkArea work_area("test_msim");
-        Opm::msim msim(state, schedule);
-        Opm::EclipseIO io(state, state.getInputGrid(), schedule, summary_config);
+
+        msim msim(td.state, td.schedule);
+        EclipseIO io(td.state, td.state.getInputGrid(), td.schedule, td.summary_config);
+
         msim.well_rate("P1", data::Rates::opt::oil, prod_opr);
         msim.well_rate("P2", data::Rates::opt::oil, prod_opr);
         msim.well_rate("P3", data::Rates::opt::oil, prod_opr);
@@ -509,10 +592,11 @@ BOOST_AUTO_TEST_CASE(MSIM_EXIT_TEST_PYACTION) {
         BOOST_CHECK_EQUAL(exit_status.value(), 99);
     }
 }
+
 BOOST_AUTO_TEST_CASE(MSIM_PYACTION_INSERT_KEYWORD) {
-    const auto& deck = Parser().parseFile("msim/MSIM_PYACTION_INSERT_KEYWORD.DATA");
-    test_data td( deck );
+    test_data td("msim/MSIM_PYACTION_INSERT_KEYWORD.DATA");
     msim sim(td.state, td.schedule);
+
     {
         WorkArea work_area("test_msim");
         EclipseIO io(td.state, td.state.getInputGrid(), sim.schedule, td.summary_config);
@@ -531,13 +615,16 @@ BOOST_AUTO_TEST_CASE(MSIM_PYACTION_INSERT_KEYWORD) {
         }
     }
 }
+
 BOOST_AUTO_TEST_CASE(PYTHON_WELL_CLOSE_EXAMPLE) {
-    const auto& deck1 = Parser().parseFile("msim/MSIM_PYACTION.DATA");
-    const auto& deck2 = Parser().parseFile("msim/MSIM_PYACTION_NO_RUN_FUNCTION.DATA");
-    std::vector<Deck> decks = {deck1, deck2};
-    for (auto&& deck : decks) {
-        test_data td( deck );
+    for (const auto& deck : {
+            "msim/MSIM_PYACTION.DATA",
+            "msim/MSIM_PYACTION_NO_RUN_FUNCTION.DATA",
+        })
+    {
+        test_data td(deck);
         msim sim(td.state, td.schedule);
+
         {
             WorkArea work_area("test_msim");
             EclipseIO io(td.state, td.state.getInputGrid(), sim.schedule, td.summary_config);
@@ -586,13 +673,17 @@ BOOST_AUTO_TEST_CASE(PYTHON_WELL_CLOSE_EXAMPLE) {
 }
 
 BOOST_AUTO_TEST_CASE(PYTHON_CHANGING_SCHEDULE) {
-    // Both decks test the same modifications, deck1 without an actionx_callback function, deck2 with an actionx_callback function 
-    const auto& deck1 = Parser().parseFile("msim/MSIM_PYACTION_CHANGING_SCHEDULE.DATA");
-    const auto& deck2 = Parser().parseFile("msim/MSIM_PYACTION_CHANGING_SCHEDULE_ACTIONX_CALLBACK.DATA");
-    std::vector<Deck> decks = {deck1, deck2};
-    for (auto&& deck : decks) {
-        test_data td( deck );
+    // Both input decks test the same actions.  Deck1 without an
+    // actionx_callback function, deck2 with an actionx_callback function
+
+    for (const auto& deck : {
+            "msim/MSIM_PYACTION_CHANGING_SCHEDULE.DATA",
+            "msim/MSIM_PYACTION_CHANGING_SCHEDULE_ACTIONX_CALLBACK.DATA",
+        })
+    {
+        test_data td(deck);
         msim sim(td.state, td.schedule);
+
         {
             WorkArea work_area("test_msim");
             EclipseIO io(td.state, td.state.getInputGrid(), sim.schedule, td.summary_config);
@@ -651,9 +742,9 @@ BOOST_AUTO_TEST_CASE(PYTHON_CHANGING_SCHEDULE) {
 }
 
 BOOST_AUTO_TEST_CASE(MSIM_PYACTION_INSERT_INVALID_KEYWORD) {
-    const auto& deck = Parser().parseFile("msim/MSIM_PYACTION_INSERT_INVALID_KEYWORD.DATA");
-    test_data td( deck );
+    test_data td("msim/MSIM_PYACTION_INSERT_INVALID_KEYWORD.DATA");
     msim sim(td.state, td.schedule);
+
     {
         WorkArea work_area("test_msim");
         EclipseIO io(td.state, td.state.getInputGrid(), sim.schedule, td.summary_config);
@@ -663,12 +754,14 @@ BOOST_AUTO_TEST_CASE(MSIM_PYACTION_INSERT_INVALID_KEYWORD) {
 }
 
 BOOST_AUTO_TEST_CASE(PYTHON_OPEN_WELL_AT_INVALID_REPORT_STEP) {
-    const auto& deck1 = Parser().parseFile("msim/MSIM_PYACTION_OPEN_WELL_AT_PAST_REPORT_STEP.DATA");
-    const auto& deck2 = Parser().parseFile("msim/MSIM_PYACTION_OPEN_WELL_AT_TOO_LATE_REPORT_STEP.DATA");
-    std::vector<Deck> decks = {deck1, deck2};
-    for (auto&& deck : decks) {
-        test_data td( deck );
+    for (const auto& deck : {
+            "msim/MSIM_PYACTION_OPEN_WELL_AT_PAST_REPORT_STEP.DATA",
+            "msim/MSIM_PYACTION_OPEN_WELL_AT_TOO_LATE_REPORT_STEP.DATA",
+        })
+    {
+        test_data td(deck);
         msim sim(td.state, td.schedule);
+
         {
             WorkArea work_area("test_msim");
             EclipseIO io(td.state, td.state.getInputGrid(), sim.schedule, td.summary_config);
@@ -678,9 +771,9 @@ BOOST_AUTO_TEST_CASE(PYTHON_OPEN_WELL_AT_INVALID_REPORT_STEP) {
 }
 
 BOOST_AUTO_TEST_CASE(MSIM_PYACTION_RETRIEVE_INFO) {
-    const auto& deck = Parser().parseFile("msim/MSIM_PYACTION_RETRIEVE_INFO.DATA");
-    test_data td( deck );
+    test_data td("msim/MSIM_PYACTION_RETRIEVE_INFO.DATA");
     msim sim(td.state, td.schedule);
+
     {
         WorkArea work_area("test_msim");
         EclipseIO io(td.state, td.state.getInputGrid(), sim.schedule, td.summary_config);
@@ -689,5 +782,6 @@ BOOST_AUTO_TEST_CASE(MSIM_PYACTION_RETRIEVE_INFO) {
     }
 }
 
-#endif
+BOOST_AUTO_TEST_SUITE_END()     // Embedded_Python
 
+#endif  // EMBEDDED_PYTHON
