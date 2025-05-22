@@ -245,11 +245,12 @@ namespace Opm {
         /// \param[in] dynamic_selector Named entities in a dynamic context,
         /// such as the wells matching an ACTIONX condition.  Nullopt if no
         /// such dynamic entities apply to this UDQ record.
-        void add_record(SegmentMatcherFactory                 create_segment_matcher,
-                        const DeckRecord&                     record,
-                        const KeywordLocation&                location,
-                        std::size_t                           report_step,
-                        const std::optional<DynamicSelector>& dynamic_selector = std::nullopt);
+        std::optional<std::string>
+        add_record(SegmentMatcherFactory                 create_segment_matcher,
+                   const DeckRecord&                     record,
+                   const KeywordLocation&                location,
+                   std::size_t                           report_step,
+                   const std::optional<DynamicSelector>& dynamic_selector = std::nullopt);
 
         /// Incorporate a unit string for a UDQ
         ///
