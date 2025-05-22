@@ -1316,6 +1316,32 @@
     "Tables_evaluate": {
         "signature": "Tables.evaluate(table_name: str, table_index: int, column_name: str, x: float) -> float",
         "doc": "Evaluates the specified column in the table at a given index with input x.\n\n:param table_name: The name of the table.\n:type table_name: str\n:param table_index: The index of the table.\n:type table_index: int\n:param column_name: The name of the column to evaluate.\n:type column_name: str\n:param x: The input value to the evaluation.\n:type x: float\n:return: The evaluation result.\n:type return: float\n:raises KeyError: If the table or column is not found."
+    },
+    "UnitSystem": {
+        "type": "class",
+        "signature": "UnitSystem",
+        "doc": "Represents a unit system with a name describing the units used."
+    },
+    "UnitSystem_name": {
+        "signature": "UnitSystem.name -> str",
+        "doc": "Returns the name of the unit system.\n\n:return: The name of the unit system.\n:type return: str"
+    },
+    "Dimension": {
+        "type": "class",
+        "signature": "Dimension",
+        "doc": "Represents a physical dimension with SI scaling and optional offset."
+    },
+    "Dimension_scaling": {
+        "signature": "Dimension.scaling -> float",
+        "doc": "Returns the SI scaling factor of the dimension.\n\n:return: The SI scaling factor.\n:type return: float"
+    },
+    "Dimension_offset": {
+        "signature": "Dimension.offset -> float",
+        "doc": "Returns the SI offset of the dimension.\n\n:return: The SI offset.\n:type return: float"
+    },
+    "Dimension_repr": {
+        "signature": "Dimension.__repr__() -> str",
+        "doc": "Returns a string representation of the Dimension object.\n\n:return: A string representing the Dimension.\n:type return: str"
     }
 
 }
