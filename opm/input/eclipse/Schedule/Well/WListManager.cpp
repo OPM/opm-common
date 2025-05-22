@@ -20,10 +20,18 @@
 #include <opm/input/eclipse/Schedule/Well/WListManager.hpp>
 
 #include <opm/common/utility/shmatch.hpp>
-#include <opm/input/eclipse/Schedule/Well/WList.hpp>
+
 #include <opm/io/eclipse/rst/state.hpp>
 
+#include <opm/input/eclipse/Schedule/Well/WList.hpp>
+
 #include <algorithm>
+#include <cstddef>
+#include <iterator>
+#include <numeric>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace Opm {
 
@@ -174,25 +182,60 @@ namespace Opm {
         return this->wlists == data.wlists;
     }
 
-    std::vector<std::string> WListManager::wells(const std::string& wlist_pattern) const {
-        if (this->hasList(wlist_pattern)) {
-            const auto& wlist = this->getList(wlist_pattern);
-            return { wlist.wells() };
-        } else {
-            std::vector<std::string> well_set;
-            auto pattern = wlist_pattern.substr(1);
-            for (const auto& [name, wlist] : this->wlists) {
-                auto wlist_name = name.substr(1);
-                if (shmatch(pattern, wlist_name)) {
-                    const auto& well_names = wlist.wells();
-                    for ( auto it = well_names.begin(); it != well_names.end(); it++ ) {
-                       if (std::count(well_set.begin(), well_set.end(), *it) == 0)
-                           well_set.push_back(*it);
-                    }
-                }
-            }
-            return { well_set };
+    std::vector<std::string>
+    WListManager::wells(const std::string& wlist_pattern) const
+    {
+        if (const auto wlistPos = this->wlists.find(wlist_pattern);
+            wlistPos != this->wlists.end())
+        {
+            return wlistPos->second.wells();
         }
+
+        auto allWells = std::vector<std::string>{};
+
+        const auto pattern = wlist_pattern.substr(1);
+        for (const auto& [name, wlist] : this->wlists) {
+            if (! shmatch(pattern, name.substr(1))) {
+                continue;
+            }
+
+            const auto& well_names = wlist.wells();
+            allWells.insert(allWells.end(), well_names.begin(), well_names.end());
+        }
+
+        if (allWells.empty()) {
+            // No active wells in any of the well lists matching
+            // 'wlist_pattern' (or no well lists matching that pattern).
+            // Return empty list of well names.
+            return allWells;
+        }
+
+        // Prune duplicate well names.  Uses sorted indices into 'allWells'.
+        auto wellIx = std::vector<std::vector<std::string>::size_type>(allWells.size());
+        std::iota(wellIx.begin(), wellIx.end(), std::vector<std::string>::size_type{0});
+
+        std::sort(wellIx.begin(), wellIx.end(),
+                  [&allWells](const auto i1, const auto i2)
+                  { return allWells[i1] < allWells[i2]; });
+
+        wellIx.erase(std::unique(wellIx.begin(), wellIx.end(),
+                                 [&allWells](const auto i1, const auto i2)
+                                 { return allWells[i1] == allWells[i2]; }),
+                     wellIx.end());
+
+        if (wellIx.size() == allWells.size()) {
+            // AllWells holds unique well names only.
+            return allWells;
+        }
+
+        // Re-sort unique well names based on order of appearance.
+        std::sort(wellIx.begin(), wellIx.end());
+
+        auto uniqueWells = std::vector<std::string>(wellIx.size());
+        std::transform(wellIx.begin(), wellIx.end(), uniqueWells.begin(),
+                       [&allWells](const auto i) { return allWells[i]; });
+
+        return uniqueWells;
     }
 
 }
