@@ -106,8 +106,8 @@
         "doc": "Function returning a dictionary with the following entries:\n\n['FLAG', 'DIRECTION', 'ALPHA_FACTOR', 'BETA_FACTOR', 'OIL_WATER', 'GAS_OIL']\n\n:return: A dictionary containing the specified entries. \n:type return: dict"
     },
     "EclipseState_simulation": {
-        "signature": "opm.io.ecl_state.EclipseState.simulation() -> SimulationConfiguration",
-        "doc": "Returns the simulation configuration.\n\n:return: The simulation configuration. \n:type return: SimulationConfiguration"
+        "signature": "opm.io.ecl_state.EclipseState.simulation() -> SimulationConfig",
+        "doc": "Returns the simulation configuration.\n\n:return: The simulation configuration. \n:type return: SimulationConfig"
     },
     "ScheduleClass": {
         "type": "class",
@@ -1270,6 +1270,39 @@
     "Parser_getitem": {
         "signature": "opm.io.parser.Parser.__getitem__(keyword: str) -> ParserKeyword",
         "doc": "Returns the ParserKeyword with the given name.\n\n:param keyword: The name of the keyword.\n:type keyword: str\n:return: The ParserKeyword instance.\n:type return: ParserKeyword"
+    },
+    "SimulationConfig": {
+        "type": "class",
+        "signature": "SimulationConfig",
+        "doc": "The SimulationConfig class encapsulates configuration flags used in reservoir simulation models."
+    },
+    "SimulationConfig_hasThresholdPressure": {
+        "signature": "SimulationConfig.hasThresholdPressure() -> bool",
+        "doc": "Returns whether threshold pressure is enabled.\n\n:return: True if threshold pressure is enabled, otherwise False.\n:type return: bool"
+    },
+    "SimulationConfig_useCPR": {
+        "signature": "SimulationConfig.useCPR() -> bool",
+        "doc": "Indicates if the CPR (Constrained Pressure Residual) preconditioner is enabled.\n\n:return: True if CPR is enabled, otherwise False.\n:type return: bool"
+    },
+    "SimulationConfig_useNONNC": {
+        "signature": "SimulationConfig.useNONNC() -> bool",
+        "doc": "Indicates whether the NONNC option is enabled in the simulation.\n\n:return: True if NONNC is enabled, otherwise False.\n:type return: bool"
+    },
+    "SimulationConfig_hasDISGAS": {
+        "signature": "SimulationConfig.hasDISGAS() -> bool",
+        "doc": "Indicates whether the DISGAS (dissolved gas) option is present.\n\n:return: True if DISGAS is enabled, otherwise False.\n:type return: bool"
+    },
+    "SimulationConfig_hasDISGASW": {
+        "signature": "SimulationConfig.hasDISGASW() -> bool",
+        "doc": "Indicates whether the DISGASW (dissolved gas in water) option is present.\n\n:return: True if DISGASW is enabled, otherwise False.\n:type return: bool"
+    },
+    "SimulationConfig_hasVAPOIL": {
+        "signature": "SimulationConfig.hasVAPOIL() -> bool",
+        "doc": "Indicates whether vaporized oil is considered in the simulation.\n\n:return: True if VAPOIL is enabled, otherwise False.\n:type return: bool"
+    },
+    "SimulationConfig_hasVAPWAT": {
+        "signature": "SimulationConfig.hasVAPWAT() -> bool",
+        "doc": "Indicates whether vaporized water is considered in the simulation.\n\n:return: True if VAPWAT is enabled, otherwise False.\n:type return: bool"
     }
 
 }
