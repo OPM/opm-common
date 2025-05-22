@@ -314,6 +314,17 @@ UDQDefine UDQDefine::serializationTestObject()
     return result;
 }
 
+UDQ::RequisiteEvaluationObjects UDQDefine::requiredObjects() const
+{
+    auto objects = UDQ::RequisiteEvaluationObjects{};
+
+    if (this->ast != nullptr) {
+        this->ast->requiredObjects(objects);
+    }
+
+    return objects;
+}
+
 void UDQDefine::required_summary(std::unordered_set<std::string>& summary_keys) const
 {
     this->ast->required_summary(summary_keys);
