@@ -82,8 +82,8 @@
         "doc": "Returns the configuration for the Eclipse simulation.\n\n:return: The simulation configuration.\n:type: EclipseConfig"
     },
     "EclipseState_tables": {
-        "signature": "opm.io.ecl_state.EclipseState.tables() -> TableManager",
-        "doc": "Returns the table manager associated with the Eclipse simulation.\n\n:return: The table manager for the simulation.\n:type: TableManager"
+        "signature": "opm.io.ecl_state.EclipseState.tables() -> Tables",
+        "doc": "Returns the table manager associated with the Eclipse simulation.\n\n:return: The table manager for the simulation.\n:type: Tables"
     },
     "EclipseState_has_input_nnc": {
         "signature": "opm.io.ecl_state.EclipseState.has_input_nnc() -> bool",
@@ -1303,6 +1303,19 @@
     "SimulationConfig_hasVAPWAT": {
         "signature": "SimulationConfig.hasVAPWAT() -> bool",
         "doc": "Indicates whether vaporized water is considered in the simulation.\n\n:return: True if VAPWAT is enabled, otherwise False.\n:type return: bool"
+    },
+    "Tables": {
+        "type": "class",
+        "signature": "Tables",
+        "doc": "The Tables class (or table manager) manages multiple named tables for data lookup and evaluation."
+    },
+    "Tables_contains": {
+        "signature": "Tables.__contains__(table_name: str) -> bool",
+        "doc": "Checks if tables with the specified name exist.\n\n:param table_name: The name of the table to check.\n:type table_name: str\n:return: True if the table exists, False otherwise.\n:type return: bool"
+    },
+    "Tables_evaluate": {
+        "signature": "Tables.evaluate(table_name: str, table_index: int, column_name: str, x: float) -> float",
+        "doc": "Evaluates the specified column in the table at a given index with input x.\n\n:param table_name: The name of the table.\n:type table_name: str\n:param table_index: The index of the table.\n:type table_index: int\n:param column_name: The name of the column to evaluate.\n:type column_name: str\n:param x: The input value to the evaluation.\n:type x: float\n:return: The evaluation result.\n:type return: float\n:raises KeyError: If the table or column is not found."
     }
 
 }
