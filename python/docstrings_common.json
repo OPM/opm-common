@@ -1183,6 +1183,93 @@
     "action_ignore": {
         "signature": "opm.io.parser.action.ignore",
         "doc": "Silently ignore the parsing error."
+    },
+    "ParserKeyword": {
+        "type": "class",
+        "signature": "ParserKeyword",
+        "doc": "The ParserKeyword class represents a keyword definition used during parsing of deck input files."
+    },
+    "ParserKeyword_name": {
+        "signature": "ParserKeyword.name -> str",
+        "doc": "Returns the name of the parser keyword.\n\n:return: The name of the keyword.\n:type return: str"
+    },
+    "eclSectionType": {
+        "type": "class",
+        "signature": "opm.io.parser.eclSectionType",
+        "doc": "`Python enum <https://docs.python.org/3/library/enum.html>`_ which defines the major sections found in an Eclipse-style reservoir simulation input deck."
+    },
+    "eclSectionType_RUNSPEC": {
+        "signature": "opm.io.parser.eclSectionType.RUNSPEC",
+        "doc": "Specifies the RUNSPEC section, which defines simulation run control parameters."
+    },
+    "eclSectionType_GRID": {
+        "signature": "opm.io.parser.eclSectionType.GRID",
+        "doc": "Specifies the GRID section, which contains grid geometry and dimensions."
+    },
+    "eclSectionType_EDIT": {
+        "signature": "opm.io.parser.eclSectionType.EDIT",
+        "doc": "Specifies the EDIT section, which allows modifications to the grid or properties."
+    },
+    "eclSectionType_PROPS": {
+        "signature": "opm.io.parser.eclSectionType.PROPS",
+        "doc": "Specifies the PROPS section, which defines rock and fluid properties."
+    },
+    "eclSectionType_REGIONS": {
+        "signature": "opm.io.parser.eclSectionType.REGIONS",
+        "doc": "Specifies the REGIONS section, which defines different rock, fluid, or control regions in the grid."
+    },
+    "eclSectionType_SOLUTION": {
+        "signature": "opm.io.parser.eclSectionType.SOLUTION",
+        "doc": "Specifies the SOLUTION section."
+    },
+    "eclSectionType_SUMMARY": {
+        "signature": "opm.io.parser.eclSectionType.SUMMARY",
+        "doc": "Specifies the SUMMARY section, which configures output variables and summaries."
+    },
+    "eclSectionType_SCHEDULE": {
+        "signature": "opm.io.parser.eclSectionType.SCHEDULE",
+        "doc": "Specifies the SCHEDULE section."
+    },
+    "Parser": {
+        "type": "class",
+        "signature": "opm.io.parser.Parser",
+        "doc": "The Parser class is responsible for parsing Eclipse-style deck files and strings."
+    },
+    "Parser_init": {
+        "signature": "opm.io.parser.Parser.__init__(add_default: bool = True) -> Parser",
+        "doc": "Creates a Parser.\n\n:param add_default: Boolean indicating if the default keywords should be known to the Parser, default is True.\n:type add_default: bool\n:return: Parser\n:type return: Parser"
+    },
+    "Parser_parse_file": {
+        "signature": "opm.io.parser.Parser.parse(filename: str) -> Deck",
+        "doc": "Parses the contents of a file using the default parsing context.\n\n:param filename: Path to the file to parse.\n:type filename: str\n:return: A parsed Deck object.\n:type return: Deck"
+    },
+    "Parser_parse_file_context": {
+        "signature": "opm.io.parser.Parser.parse(filename: str, context: ParseContext) -> Deck",
+        "doc": "Parses the contents of a file using a custom ParseContext.\n\n:param filename: Path to the file.\n:param context: The context used to configure error handling during parsing.\n:type filename: str\n:type context: ParseContext\n:return: A parsed Deck object.\n:type return: Deck"
+    },
+    "Parser_parse_file_context_sections": {
+        "signature": "opm.io.parser.Parser.parse(filename: str, context: ParseContext, sections: list[eclSectionType]) -> Deck",
+        "doc": "Parses a file using a custom ParseContext and a list of sections to include.\n\n:param filename: Path to the file.\n:param context: The parsing context.\n:param sections: List of section types to be parsed.\n:type filename: str\n:type context: ParseContext\n:type sections: List[eclSectionType]\n:return: A parsed Deck object.\n:type return: Deck"
+    },
+    "Parser_parse_string": {
+        "signature": "opm.io.parser.Parser.parse_string(data: str) -> Deck",
+        "doc": "Parses a string representation of a deck.\n\n:param data: The input string to parse.\n:type data: str\n:return: A parsed Deck object.\n:type return: Deck"
+    },
+    "Parser_parse_string_context": {
+        "signature": "opm.io.parser.Parser.parse_string(data: str, context: ParseContext) -> Deck",
+        "doc": "Parses a string using a custom ParseContext.\n\n:param data: The input string.\n:param context: The parsing context.\n:type data: str\n:type context: ParseContext\n:return: A parsed Deck object.\n:type return: Deck"
+    },
+    "Parser_add_keyword": {
+        "signature": "opm.io.parser.Parser.add_keyword(keyword: ParserKeyword) -> None",
+        "doc": "Adds a new ParserKeyword to the parser.\n\n:param keyword: The keyword definition to add.\n:type keyword: ParserKeyword"
+    },
+    "Parser_add_keyword_json": {
+        "signature": "opm.io.parser.Parser.add_keyword(keyword: str) -> None",
+        "doc": "Adds a new ParserKeyword to the parser.\n\n:param keyword_json: The keyword definition to add as a JSON string.\n:type keyword_json: str"
+    },
+    "Parser_getitem": {
+        "signature": "opm.io.parser.Parser.__getitem__(keyword: str) -> ParserKeyword",
+        "doc": "Returns the ParserKeyword with the given name.\n\n:param keyword: The name of the keyword.\n:type keyword: str\n:return: The ParserKeyword instance.\n:type return: ParserKeyword"
     }
 
 }
