@@ -151,6 +151,25 @@ public:
     //! \brief Obtain well group names from a pattern.
     std::vector<std::string> groupNames(const std::string& pattern) const;
 
+    //! \brief Whether or not any existing well matches a name pattern.
+    //!
+    //! If the pattern is a well list or a well list template, then the
+    //! predicate will check if any well lists matching the pattern exists
+    //! and, if so, whether the corresponding well list is non-empty.
+    //!
+    //! \param[in] pattern Well name, well name template, well list, or well
+    //! list template.
+    //!
+    //! \return Whether or not any existing well matches \p pattern.
+    bool hasWell(const std::string& pattern) const;
+
+    //! \brief Whether or not any existing group matches a name pattern.
+    //!
+    //! \param[in] pattern Group name or group name root.
+    //!
+    //! \return Whether or not any existing group matches \p pattern.
+    bool hasGroup(const std::string& pattern) const;
+
     //! \brief Obtain well names from a pattern.
     //! \details Throws if no wells match the pattern and pattern is not a WLIST.
     std::vector<std::string>

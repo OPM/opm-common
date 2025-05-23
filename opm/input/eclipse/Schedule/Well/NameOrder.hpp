@@ -112,6 +112,16 @@ public:
     /// \return Whether or not \p gname exists in the current collection.
     bool has(const std::string& gname) const;
 
+    /// Group name existence predicate.
+    ///
+    /// Pattern matching version.
+    ///
+    /// \param[in] pattern Group name or group name root.
+    ///
+    /// \return Whether or not any group in the current collection matches
+    /// the \p pattern.
+    bool anyGroupMatches(const std::string& pattern) const;
+
     /// Retrieve sequence of group names ordered appropriately for restart
     /// file output.
     ///

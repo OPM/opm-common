@@ -54,6 +54,16 @@ namespace Opm {
         return (this->wlists.size());
     }
 
+    bool WListManager::hasWell(const std::string& pattern) const
+    {
+        return std::any_of(this->wlists.begin(), this->wlists.end(),
+                           [patt = pattern.substr(1)](const auto& wlist)
+                           {
+                               return shmatch(patt, wlist.first.substr(1))
+                                   && !wlist.second.empty();
+                           });
+    }
+
     bool WListManager::hasList(const std::string& name) const
     {
         return this->wlists.find(name) != this->wlists.end();
