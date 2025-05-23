@@ -62,8 +62,8 @@
         "doc": "The EclipseState class - this is a representation of all static properties in the model, ranging from porosity to relperm tables.\nThe content of the EclipseState is immutable and may not be changed at runtime."
     },
     "EclipseState_init": {
-        "signature": "opm.io.ecl_state.EclipseState.__init__(deck: Deck) -> EclipseState",
-        "doc": "Creates an EclipseState from the given Deck.\n\n:param deck: The deck.\n:type deck: Deck\n:return: The EclipseState.\n:type return: EclipseState"
+        "signature": "opm.io.ecl_state.EclipseState.__init__(deck: Deck) -> None",
+        "doc": "Creates an EclipseState from the given Deck.\n\n:param deck: The deck.\n:type deck: Deck"
     },
     "EclipseState_title": {
         "signature": "opm.io.ecl_state.EclipseState.title -> str",
@@ -401,11 +401,11 @@
         "doc": "Represents a keyword in the Deck."
     },
     "DeckKeyword_init_parser_keyword": {
-        "signature": "opm.io.deck.DeckKeyword.__init__(parser_keyword: ParserKeyword) -> DeckKeyword",
+        "signature": "opm.io.deck.DeckKeyword.__init__(parser_keyword: ParserKeyword) -> None",
         "doc": "Creates a DeckKeyword with a specified ParserKeyword.\n\n:param parser_keyword: The ParserKeyword to initialize the DeckKeyword with.\n:type parser_keyword: ParserKeyword"
     },
     "DeckKeyword_init_parser_keyword_record_list": {
-        "signature": "opm.io.deck.DeckKeyword.__init__(parser_keyword: ParserKeyword, record_list: list, active_system: UnitSystem, default_system: UnitSystem) -> DeckKeyword",
+        "signature": "opm.io.deck.DeckKeyword.__init__(parser_keyword: ParserKeyword, record_list: list, active_system: UnitSystem, default_system: UnitSystem) -> None",
         "doc": "Creates a DeckKeyword with a specified ParserKeyword, a list of records, and two UnitSystem objects for active and default systems.\n\n:param parser_keyword: The ParserKeyword to initialize the DeckKeyword with.\n:type parser_keyword: ParserKeyword\n:param record_list: A list of records containing the keyword data as also specified in the parser_keyword.\n:type record_list: list\n:param active_system: The active UnitSystem.\n:type active_system: UnitSystem\n:param default_system: The default UnitSystem.\n:type default_system: UnitSystem"
     },
     "DeckKeyword_repr": {
@@ -433,11 +433,11 @@
         "doc": "Returns the name of the DeckKeyword.\n\n:return: The name of the DeckKeyword.\n:type: str"
     },
     "DeckKeyword_init_parser_keyword_pydata_int": {
-        "signature": "opm.io.deck.DeckKeyword.__init__(parser_keyword: ParserKeyword, py_data: numpy.ndarray[int]) -> DeckKeyword",
+        "signature": "opm.io.deck.DeckKeyword.__init__(parser_keyword: ParserKeyword, py_data: numpy.ndarray[int]) -> None",
         "doc": "Creates a DeckKeyword with a specified ParserKeyword and integer data (as a `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_). For this, the keyword must be a data keyword!\n\n:param parser_keyword: The ParserKeyword to initialize the DeckKeyword with.\n:type parser_keyword: ParserKeyword\n:param py_data: The integer data array.\n:type py_data: numpy.ndarray[int]"
     },
     "DeckKeyword_init_parser_keyword_pydata_double": {
-        "signature": "opm.io.deck.DeckKeyword.__init__(parser_keyword: ParserKeyword, py_data: numpy.ndarray[double], active_system: UnitSystem, default_system: UnitSystem) -> DeckKeyword",
+        "signature": "opm.io.deck.DeckKeyword.__init__(parser_keyword: ParserKeyword, py_data: numpy.ndarray[double], active_system: UnitSystem, default_system: UnitSystem) -> None",
         "doc": "Creates a DeckKeyword with a specified ParserKeyword, double data (as a `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_, and two UnitSystem objects for active and default systems. For this, the keyword must be a data keyword!\n\n:param parser_keyword: The ParserKeyword to initialize the DeckKeyword with.\n:type parser_keyword: ParserKeyword\n:param py_data: The double data array.\n:type py_data: numpy.ndarray[double]\n:param active_system: The active UnitSystem to interpret the data.\n:type active_system: UnitSystem\n:param default_system: The default UnitSystem to interpret the data.\n:type default_system: UnitSystem"
     },
     "DeckKeyword_get_int_array": {
@@ -560,12 +560,12 @@
         "doc": "Represents a UDA (User-Defined Arguments) in the deck."
     },
     "UDAValue_init_double": {
-        "signature": "opm.io.deck.UDAValue.__init__(value: double, dimension: Dimension) -> UDAValue",
-        "doc": "Creates a UDA with a double value and a dimension.\n\n:param value: The double value to store.\n:type value: double\n:param dimension: The dimension associated with this UDA.\n:type dimension: Dimension\n:return: The UDAValue.\n:type: UDAValue"
+        "signature": "opm.io.deck.UDAValue.__init__(value: double, dimension: Dimension) -> None",
+        "doc": "Creates a UDA with a double value and a dimension.\n\n:param value: The double value to store.\n:type value: double\n:param dimension: The dimension associated with this UDA.\n:type dimension: Dimension"
     },
     "UDAValue_init_string": {
-        "signature": "opm.io.deck.UDAValue.__init__(value: str, dimension: Dimension) -> UDAValue",
-        "doc": "Creates a UDA with a string value and a dimension.\n\n:param value: The string value to store.\n:type value: str\n:param dimension: The dimension associated with this UDA.\n:type dimension: Dimension\n:return: The UDAValue.\n:type: UDAValue"
+        "signature": "opm.io.deck.UDAValue.__init__(value: str, dimension: Dimension) -> None",
+        "doc": "Creates a UDA with a string value and a dimension.\n\n:param value: The string value to store.\n:type value: str\n:param dimension: The dimension associated with this UDA.\n:type dimension: Dimension"
     },
     "UDAValue_dimension": {
         "signature": "opm.io.deck.UDAValue.dimension() -> Dimension",
@@ -606,8 +606,8 @@
         "doc": "Represents the configuration for the summary."
     },
     "SummaryConfig_init": {
-        "signature": "opm.io.summary.SummaryConfig.__init__(deck: Deck, state: EclipseState, schedule: Schedule) -> SummaryConfig",
-        "doc": "Creates a SummaryConfig with the provided deck, state, and schedule.\n\n:param deck: The deck containing simulation data.\n:type deck: Deck\n:param state: The EclipseState containing simulation state.\n:type state: EclipseState\n:param schedule: The schedule for the simulation.\n:type schedule: Schedule\n:return: A new instance of SummaryConfig.\n:type: SummaryConfig"
+        "signature": "opm.io.summary.SummaryConfig.__init__(deck: Deck, state: EclipseState, schedule: Schedule) -> None",
+        "doc": "Creates a SummaryConfig with the provided deck, state, and schedule.\n\n:param deck: The deck containing simulation data.\n:type deck: Deck\n:param state: The EclipseState containing simulation state.\n:type state: EclipseState\n:param schedule: The schedule for the simulation.\n:type schedule: Schedule"
     },
     "SummaryConfig_contains": {
         "signature": "opm.io.summary.SummaryConfig.__contains__(keyword: str) -> bool",
@@ -743,8 +743,8 @@
         "doc": "Represents a file in the ECL format."
     },
     "EclFile_init": {
-        "signature": "opm.io.ecl.EclFile.__init__(filename: str, preload: bool = False) -> EclFile",
-        "doc": "Creates an EclFile instance.\n\n:param filename: The path to the EclFile.\n:type filename: str\n:param preload: Whether to already load the contents of the file.\n:type preload: bool\n:return: The EclFile.\n:type: EclFile"
+        "signature": "opm.io.ecl.EclFile.__init__(filename: str, preload: bool = False) -> None",
+        "doc": "Creates an EclFile instance.\n\n:param filename: The path to the EclFile.\n:type filename: str\n:param preload: Whether to already load the contents of the file.\n:type preload: bool"
     },
     "EclFile_arrays": {
         "signature": "opm.io.ecl.EclFile.arrays -> list[tuple(str, eclArrType, int)]",
@@ -780,8 +780,8 @@
         "doc": "Represents an Eclipse Restart file. This class inherits from the class EclFile."
     },
     "ERst_init": {
-        "signature": "opm.io.ecl.ERst.__init__(filename: str) -> ERst",
-        "doc": "Initializes the ERst object by loading the Restart file (and the underlying EclFile) from the specified path.\n\n:param filename: The path to the Restart file.\n:type filename: str\n:return: The ERst object.\n:type: ERst"
+        "signature": "opm.io.ecl.ERst.__init__(filename: str) -> None",
+        "doc": "Initializes the ERst object by loading the Restart file (and the underlying EclFile) from the specified path.\n\n:param filename: The path to the Restart file.\n:type filename: str"
     },
     "ERst_has_report_step": {
         "signature": "opm.io.ecl.ERst.__has_report_step(report_step: int) -> bool",
@@ -829,8 +829,8 @@
         "doc": "Handles summary data from Eclipse simulations."
     },
     "ESmry_init": {
-        "signature": "opm.io.ecl.ESmry.__init__(filename: str, load_base_run: bool = False) -> ESmry",
-        "doc": "Initializes the ESmry object by loading the summary file.\n\n:param filename: Path to the .SMSPEC or .ESMRY file.\n:type filename: str\n:param load_base_run: Whether to load base run data. Default is False.\n:type load_base_run: bool\n:return: The ESmry object.\n:type return: ESmry"
+        "signature": "opm.io.ecl.ESmry.__init__(filename: str, load_base_run: bool = False) -> None",
+        "doc": "Initializes the ESmry object by loading the summary file.\n\n:param filename: Path to the .SMSPEC or .ESMRY file.\n:type filename: str\n:param load_base_run: Whether to load base run data. Default is False.\n:type load_base_run: bool"
     },
     "ESmry_contains": {
         "signature": "opm.io.ecl.ESmry.__contains__(key: str) -> bool",
@@ -878,8 +878,8 @@
         "doc": "Represents an Eclipse Grid file."
     },
     "EGrid_init": {
-        "signature": "opm.io.ecl.EGrid.__init__(filename: str, grid_name: str = 'global') -> EGrid",
-        "doc": "Initializes an EGrid object by loading the grid file.\n\n:param filename: Path to the grid file.\n:type filename: str\n:param grid_name: The name of the grid (default is 'global').\n:type grid_name: str\n:return: The EGrid object.\n:type return: EGrid"
+        "signature": "opm.io.ecl.EGrid.__init__(filename: str, grid_name: str = 'global') -> None",
+        "doc": "Initializes an EGrid object by loading the grid file.\n\n:param filename: Path to the grid file.\n:type filename: str\n:param grid_name: The name of the grid (default is 'global').\n:type grid_name: str"
     },
     "EGrid_active_cells": {
         "signature": "opm.io.ecl.EGrid.active_cells -> int",
@@ -939,8 +939,8 @@
         "doc": "Handles RFT data from Eclipse simulation outputs."
     },
     "ERft_init": {
-        "signature": "opm.io.ecl.ERft.__init__(filename: str) -> ERft",
-        "doc": "Initializes the ERft object from the specified file.\n\n:param filename: Path to the RFT file.\n:type filename: str\n:return: The ERft object.\n:type return: ERft"
+        "signature": "opm.io.ecl.ERft.__init__(filename: str) -> None",
+        "doc": "Initializes the ERft object from the specified file.\n\n:param filename: Path to the RFT file.\n:type filename: str"
     },
     "ERft_list_of_rfts": {
         "signature": "opm.io.ecl.ERft.list_of_rfts -> list[tuple[well_name: str, tuple[year: int, month: int, day: int]]]",
@@ -984,8 +984,8 @@
         "doc": "Class for writing Eclipse output files."
     },
     "EclOutput_init": {
-        "signature": "opm.io.ecl.EclOutput.__init__(filename: str, formatted: bool = False, append: bool = False) -> EclOutput",
-        "doc": "Initialize the EclOutput object.\n\n:param filename: The name of the output file.\n:type filename: str\n:param formatted: Whether to use formatted output.\n:type formatted: bool\n:param append: Whether to append to an existing file.\n:type append: bool\n:return: The initialized EclOutput object.\n:type return: EclOutput"
+        "signature": "opm.io.ecl.EclOutput.__init__(filename: str, formatted: bool = False, append: bool = False) -> None",
+        "doc": "Initialize the EclOutput object.\n\n:param filename: The name of the output file.\n:type filename: str\n:param formatted: Whether to use formatted output.\n:type formatted: bool\n:param append: Whether to append to an existing file.\n:type append: bool"
     },
     "EclOutput_write_message": {
         "signature": "opm.io.ecl.EclOutput.write_message(message: str) -> None",
@@ -1042,8 +1042,8 @@
         "doc": "Represents an Eclipse model loaded from a simulation file."
     },
     "EModel_init": {
-        "signature": "opm.util.EModel.__init__(filename: str) -> EModel",
-        "doc": "Initializes the EModel instance using the provided file.\n\n:param filename: Path to the file.\n:type filename: str\n:return: EModel object.\n:type return: EModel"
+        "signature": "opm.util.EModel.__init__(filename: str) -> None",
+        "doc": "Initializes the EModel instance using the provided file.\n\n:param filename: Path to the file.\n:type filename: str"
     },
     "EModel_contains": {
         "signature": "opm.util.EModel.__contains__(parameter: str) -> bool",
@@ -1152,12 +1152,12 @@
         "doc": "The ParseContext class manages how input parsing errors are handled for specific keywords."
     },
     "ParseContext_init": {
-        "signature": "opm.io.parser.ParseContext.__init__() -> ParseContext",
-        "doc": "Creates an empty ParseContext with default error handling behavior.\n\n:return: ParseContext\n:type return: ParseContext"
+        "signature": "opm.io.parser.ParseContext.__init__() -> None",
+        "doc": "Creates an empty ParseContext with default error handling behavior."
     },
     "ParseContext_init_with_actions": {
         "signature": "opm.io.parser.ParseContext.__init__(action_list: list[tuple[str, action]]) -> None",
-        "doc": "Initializes a ParseContext with a list of specific error handling actions for the given keyword.\n\n:param action_list: A list of (keyword, action) pairs specifying how to handle errors for a keyword, wildcards '*' are possible in the keyword.\n:type action_list: list[tuple[str, action]]\n:return: ParseContext\n:type return: ParseContext"
+        "doc": "Initializes a ParseContext with a list of specific error handling actions for the given keyword.\n\n:param action_list: A list of (keyword, action) pairs specifying how to handle errors for a keyword, wildcards '*' are possible in the keyword.\n:type action_list: list[tuple[str, action]]"
     },
     "ParseContext_ignore_keyword": {
         "signature": "opm.io.parser.ParseContext.ignore_keyword(keyword: str) -> None",
@@ -1236,8 +1236,8 @@
         "doc": "The Parser class is responsible for parsing Eclipse-style deck files and strings."
     },
     "Parser_init": {
-        "signature": "opm.io.parser.Parser.__init__(add_default: bool = True) -> Parser",
-        "doc": "Creates a Parser.\n\n:param add_default: Boolean indicating if the default keywords should be known to the Parser, default is True.\n:type add_default: bool\n:return: Parser\n:type return: Parser"
+        "signature": "opm.io.parser.Parser.__init__(add_default: bool = True) -> None",
+        "doc": "Creates a Parser.\n\n:param add_default: Boolean indicating if the default keywords should be known to the Parser, default is True.\n:type add_default: bool"
     },
     "Parser_parse_file": {
         "signature": "opm.io.parser.Parser.parse(filename: str) -> Deck",
