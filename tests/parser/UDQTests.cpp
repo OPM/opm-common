@@ -61,6 +61,8 @@
 #include <opm/input/eclipse/Parser/ParseContext.hpp>
 #include <opm/input/eclipse/Parser/Parser.hpp>
 
+#include <opm/input/eclipse/Parser/ParserKeywords/D.hpp>
+
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
@@ -75,12 +77,18 @@
 using namespace Opm;
 
 namespace {
-    Schedule make_schedule(const std::string& input)
+    Schedule make_schedule(const std::string&  input,
+                           const ParseContext& ctx)
     {
-        auto deck = Parser{}.parseString(input);
-        if (deck.hasKeyword("DIMENS")) {
-            EclipseState es(deck);
-            return { deck, es, std::make_shared<Python>() };
+        const auto deck = Parser{}.parseString(input, ctx);
+
+        if (deck.hasKeyword<ParserKeywords::DIMENS>()) {
+            const auto es = EclipseState { deck };
+            auto errors = ErrorGuard{};
+
+            return {
+                deck, es, ctx, errors, std::make_shared<Python>()
+            };
         }
         else {
             EclipseGrid grid(10,10,10);
@@ -88,11 +96,23 @@ namespace {
             const FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
             const Runspec runspec(deck);
 
+            auto errors = ErrorGuard{};
+
             return {
-                deck, grid, fp, NumericalAquifers{},
-                runspec, std::make_shared<Python>()
+                deck, grid, fp,
+                NumericalAquifers{},
+                runspec, ctx, errors,
+                std::make_shared<Python>()
             };
         }
+    }
+
+    Schedule make_schedule(const std::string& input)
+    {
+        auto ctx = ParseContext{};
+        ctx.update(ParseContext::UDQ_DEFINE_CANNOT_EVAL, InputErrorAction::IGNORE);
+
+        return make_schedule(input, ctx);
     }
 
     Opm::Segment makeSegment(const int segmentNumber)
