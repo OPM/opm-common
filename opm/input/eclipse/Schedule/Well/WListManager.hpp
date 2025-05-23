@@ -19,19 +19,21 @@
 #ifndef WLISTMANAGER_HPP
 #define WLISTMANAGER_HPP
 
+#include <opm/input/eclipse/Schedule/Well/WList.hpp>
+
 #include <cstddef>
 #include <map>
-#include <vector>
 #include <string>
-#include <opm/input/eclipse/Schedule/Well/WList.hpp>
+#include <vector>
+
+namespace Opm::RestartIO {
+    struct RstState;
+} // namespace Opm::RestartIO
 
 namespace Opm {
 
-namespace RestartIO {
-struct RstState;
-}
-
-class WListManager {
+class WListManager
+{
 public:
     WListManager() = default;
     explicit WListManager(const RestartIO::RstState& rst_state);
@@ -64,7 +66,42 @@ private:
     std::map<std::string, WList> wlists;
     std::map<std::string, std::vector<std::string>> well_wlist_names;
     std::map<std::string, std::size_t> no_wlists_well;
+
+    /// Reset contents of existing well list.
+    ///
+    /// Implements the 'NEW' operation with a non-empty list of wells for
+    /// the case of an existing well list.  On exit, the existing well list
+    /// object will hold only those wells that are include in the 'NEW'
+    /// operation.
+    ///
+    /// \param[in] wlistName Well list name.
+    ///
+    /// \param[in] newWells List of wells to include in the new well list
+    /// object.
+    void resetExistingWList(const std::string& wlistName,
+                            const std::vector<std::string>& newWells);
+
+    /// Clear contents of existing well list.
+    ///
+    /// Implements the 'NEW' operation for a empty list of wells in the case
+    /// of an existing well list.
+    ///
+    /// \param[in] wlistName Well list name.
+    void clearExistingWList(const std::string& wlistName);
+
+    /// Create a new well list.
+    ///
+    /// Implements the 'NEW' operation with a non-empty list of wells for
+    /// the case of a non-existent well list.
+    ///
+    /// \param[in] wlistName Well list name.
+    ///
+    /// \param[in] newWells List of wells to include in the new well list
+    /// object.
+    void createNewWList(const std::string& wlistName,
+                        const std::vector<std::string>& newWells);
 };
 
-}
-#endif
+} // namespace Opm
+
+#endif // WLISTMANAGER_HPP

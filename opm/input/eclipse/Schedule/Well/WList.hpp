@@ -20,25 +20,30 @@
 #define WLIST_HPP
 
 #include <cstddef>
+#include <string>
 #include <unordered_set>
 #include <vector>
-#include <string>
 
 namespace Opm {
 
-class WList {
+class WList
+{
 public:
     using storage = std::vector<std::string>;
 
     WList() = default;
     WList(const storage& wlist, const std::string& wlname);
+
     std::size_t size() const;
+
+    void clear();
+
     void add(const std::string& well);
     void del(const std::string& well);
     bool has(const std::string& well) const;
-    std::string getName() const;
+    const std::string& getName() const { return this->name; }
 
-    std::vector<std::string> wells() const;
+    const std::vector<std::string>& wells() const;
     bool operator==(const WList& data) const;
 
     template<class Serializer>
@@ -51,9 +56,8 @@ public:
 private:
     storage well_list;
     std::string name;
-
 };
 
-}
+} // namespace Opm
 
-#endif
+#endif // WLIST_HPP

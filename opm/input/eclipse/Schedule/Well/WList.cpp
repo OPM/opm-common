@@ -18,6 +18,7 @@
 */
 
 #include <opm/input/eclipse/Schedule/Well/WList.hpp>
+
 #include <algorithm>
 
 namespace Opm {
@@ -25,41 +26,46 @@ namespace Opm {
 WList::WList(const storage& wlist, const std::string& wlname)
     : well_list(wlist)
     , name(wlname)
+{}
+
+std::size_t WList::size() const
 {
-}
-
-
-std::size_t WList::size() const {
     return this->well_list.size();
 }
 
-
-std::string WList::getName() const {
-    return this->name;
+void WList::clear()
+{
+    this->well_list.clear();
 }
 
-bool WList::has(const std::string& well) const {
-    return (std::count(this->well_list.begin(), this->well_list.end(), well) > 0);
+bool WList::has(const std::string& well) const
+{
+    return std::find(this->well_list.begin(), this->well_list.end(), well)
+        != this->well_list.end();
 }
 
-void WList::add(const std::string& well) {
-    //add well if it is not already in the well list
-    if (std::count(this->well_list.begin(), this->well_list.end(), well) == 0)
+void WList::add(const std::string& well)
+{
+    // Add well if it is not already in the well list.
+    if (! this->has(well)) {
         this->well_list.push_back(well);
+    }
 }
 
-void WList::del(const std::string& well) {
+void WList::del(const std::string& well)
+{
     auto end_keep = std::remove(this->well_list.begin(), this->well_list.end(), well);
     this->well_list.erase(end_keep, this->well_list.end());
 }
 
-
-std::vector<std::string> WList::wells() const {
+const std::vector<std::string>& WList::wells() const
+{
     return this->well_list;
 }
 
-bool WList::operator==(const WList& data) const {
+bool WList::operator==(const WList& data) const
+{
     return this->well_list == data.well_list;
 }
 
-}
+} // namespace Opm
