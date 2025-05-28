@@ -248,6 +248,13 @@ namespace Opm
         	return data_[i];
         }
 
+        // Get pointer to start of databuffer
+        // This is useful for getting access to the buffer itself so we can copy to GPU easily
+        const T* dataPtr() const
+        {
+            return data_.data();
+        }
+
     private:
         std::vector<T> data_;
         // Like in the compressed row sparse matrix format,
