@@ -107,6 +107,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cassert>
 #include <cstddef>
 #include <functional>
 #include <initializer_list>
@@ -401,6 +402,48 @@ namespace {
         return this->satTable_.get().getColumn(1)[row];
     }
 
+    void makeScaledUSatTableCopy(const std::string&      tableName,
+                                 const Opm::SimpleTable& src,
+                                 Opm::SimpleTable&       dst)
+    {
+        const auto ncol = dst.numColumns();
+
+        assert (src.numColumns() == ncol);
+
+        auto rows = std::array {
+            // Current row values and row values being prepared for next
+            // addRow() call.  Role switches between the two, thus enabling
+            // the "next" row to become the current row in the subsequent
+            // iteration.  This means we compute each row's values exactly
+            // once.
+            std::vector<double>(ncol),
+            std::vector<double>(ncol)
+        };
+
+        auto curr = 0*rows.size();
+
+        for (auto col = 0*ncol; col < ncol; ++col) {
+            rows[curr][col] = dst.get(col, 0);
+        }
+
+        for (auto row = 1 + 0*src.numRows(); row < src.numRows(); ++row) {
+            const auto next = 1 - curr;   // => 1, 0, 1, 0, 1, ...
+
+            // Primary variable.  Linear.
+            rows[next][0] = rows[curr][0] + src.get(0, row) - src.get(0, row - 1);
+
+            // FVF, viscosity &c.  Scaled copy.
+            for (auto col = 1 + 0*ncol; col < ncol; ++col) {
+                const auto scale = rows[curr][col] / src.get(col, row - 1);
+                rows[next][col]  = scale * src.get(col, row);
+            }
+
+            dst.addRow(rows[next], tableName);
+
+            curr = next;
+        }
+    }
+
 } // Anonymous namespace
 
 namespace Opm
@@ -559,7 +602,18 @@ PvtgTable::operator==(const PvtgTable& data) const
     return static_cast<const PvtxTable&>(*this) == static_cast<const PvtxTable&>(data);
 }
 
-PvtgwTable::PvtgwTable(const DeckKeyword& keyword, size_t tableIdx)
+void PvtgTable::makeScaledUSatTableCopy(const std::size_t src,
+                                        const std::size_t dest)
+{
+    assert (dest < src);
+    assert (this->m_underSaturatedTables[dest].numRows() == 1);
+
+    ::makeScaledUSatTableCopy("PVTG",
+                              this->m_underSaturatedTables[src],
+                              this->m_underSaturatedTables[dest]);
+}
+
+PvtgwTable::PvtgwTable(const DeckKeyword& keyword, const std::size_t tableIdx)
     : PvtxTable("P")
 {
     m_underSaturatedSchema.addColumn(ColumnSchema("RW", Table::STRICTLY_DECREASING, Table::DEFAULT_NONE));
@@ -589,7 +643,11 @@ PvtgwTable::operator==(const PvtgwTable& data) const
     return static_cast<const PvtxTable&>(*this) == static_cast<const PvtxTable&>(data);
 }
 
-PvtgwoTable::PvtgwoTable(const DeckKeyword& keyword, size_t tableIdx)
+void PvtgwTable::makeScaledUSatTableCopy([[maybe_unused]] const std::size_t src,
+                                         [[maybe_unused]] const std::size_t dest)
+{}
+
+PvtgwoTable::PvtgwoTable(const DeckKeyword& keyword, const std::size_t tableIdx)
     : PvtxTable("P")
 {
 
@@ -622,7 +680,11 @@ PvtgwoTable::operator==(const PvtgwoTable& data) const
     return static_cast<const PvtxTable&>(*this) == static_cast<const PvtxTable&>(data);
 }
 
-PvtoTable::PvtoTable(const DeckKeyword& keyword, size_t tableIdx)
+void PvtgwoTable::makeScaledUSatTableCopy([[maybe_unused]] const std::size_t src,
+                                          [[maybe_unused]] const std::size_t dest)
+{}
+
+PvtoTable::PvtoTable(const DeckKeyword& keyword, const std::size_t tableIdx)
     : PvtxTable("RS")
 {
     m_underSaturatedSchema.addColumn(ColumnSchema("P", Table::STRICTLY_INCREASING, Table::DEFAULT_NONE));
@@ -679,7 +741,18 @@ PvtoTable::nonMonotonicSaturatedFVF() const
     return nonmonoFVF;
 }
 
-PvtsolTable::PvtsolTable(const DeckKeyword& keyword, size_t tableIdx)
+void PvtoTable::makeScaledUSatTableCopy(const std::size_t src,
+                                        const std::size_t dest)
+{
+    assert (dest < src);
+    assert (this->m_underSaturatedTables[dest].numRows() == 1);
+
+    ::makeScaledUSatTableCopy("PVTO",
+                              this->m_underSaturatedTables[src],
+                              this->m_underSaturatedTables[dest]);
+}
+
+PvtsolTable::PvtsolTable(const DeckKeyword& keyword, const std::size_t tableIdx)
     : PvtxTable("ZCO2")
 {
     m_underSaturatedSchema.addColumn(ColumnSchema("P", Table::STRICTLY_INCREASING, Table::DEFAULT_NONE));
@@ -721,10 +794,13 @@ PvtsolTable::operator==(const PvtsolTable& data) const
     return static_cast<const PvtxTable&>(*this) == static_cast<const PvtxTable&>(data);
 }
 
+void PvtsolTable::makeScaledUSatTableCopy([[maybe_unused]] const std::size_t src,
+                                          [[maybe_unused]] const std::size_t dest)
+{}
+
 RwgsaltTable::RwgsaltTable(const DeckKeyword& keyword, size_t tableIdx)
     : PvtxTable("P")
 {
-
     m_underSaturatedSchema.addColumn(ColumnSchema("C_SALT", Table::INCREASING, Table::DEFAULT_NONE));
     m_underSaturatedSchema.addColumn(ColumnSchema("RVW", Table::RANDOM, Table::DEFAULT_LINEAR));
 
@@ -749,6 +825,10 @@ RwgsaltTable::operator==(const RwgsaltTable& data) const
 {
     return static_cast<const PvtxTable&>(*this) == static_cast<const PvtxTable&>(data);
 }
+
+void RwgsaltTable::makeScaledUSatTableCopy([[maybe_unused]] const std::size_t src,
+                                           [[maybe_unused]] const std::size_t dest)
+{}
 
 SpecheatTable::SpecheatTable(const DeckItem& item, const int tableID)
 {
