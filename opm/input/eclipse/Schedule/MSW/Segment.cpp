@@ -221,7 +221,6 @@ namespace Opm {
         result.m_data_ready = true;
         result.m_x = 12.0;
         result.m_y = 13.0;
-        result.m_perf_length = 14.0;
         result.m_icd = SICD::serializationTestObject();
         return result;
     }
@@ -252,11 +251,6 @@ namespace Opm {
     double Segment::depth() const
     {
         return m_depth;
-    }
-
-    double Segment::perfLength() const
-    {
-        return *this->m_perf_length;
     }
 
     double Segment::internalDiameter() const
@@ -333,7 +327,6 @@ namespace Opm {
             && this->m_roughness         == rhs.m_roughness
             && this->m_cross_area        == rhs.m_cross_area
             && this->m_volume            == rhs.m_volume
-            && this->m_perf_length       == rhs.m_perf_length
             && this->m_icd               == rhs.m_icd
             && this->m_data_ready        == rhs.m_data_ready
             && (this->m_x                == rhs.m_x)
@@ -411,11 +404,6 @@ namespace Opm {
     {
         auto new_valve = valve;
         this->updateValve__(new_valve, segment_length);
-    }
-
-    void Segment::updatePerfLength(double perf_length)
-    {
-        this->m_perf_length = perf_length;
     }
 
     const Valve& Segment::valve() const
