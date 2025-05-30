@@ -15,7 +15,8 @@
 
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
- */
+*/
+
 #ifndef OPM_PARSER_PVTX_TABLE_HPP
 #define OPM_PARSER_PVTX_TABLE_HPP
 
@@ -24,118 +25,215 @@
 #include <opm/input/eclipse/EclipseState/Tables/TableColumn.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableSchema.hpp>
 
+#include <cstddef>
 #include <string>
 #include <utility>
 #include <vector>
 
-#include <stddef.h>
-
-/*
-  This class is a common base class for the PVTG and PVTO tables. The
-  PVTO and PVTG keywords have a quite complex structure. The structure
-  consists of alternating records of saturated data and corresponding
-  undersaturated tables, this structure is again repeated for the
-  different satnum regions.
-
-
-  PVTO
-
---  RSO    PRESSURE    B-OIL     VISCOSITY
---          (BAR)                  (CP)
-
- [ 20.59  {  50.00    1.10615     1.180 } ]        \
-          {  75.00    1.10164     1.247 }          |
-          { 100.00    1.09744     1.315 }          |
-          { 125.00    1.09351     1.384 }          |
-          { 150.00    1.08984     1.453 }/         |
-                                                   |
- [ 28.19  {  70.00    1.12522     1.066 } ]        |
-          {  95.00    1.12047     1.124 }          |
-          { 120.00    1.11604     1.182 }          |-- Pvtnum region 1
-          { 145.00    1.11191     1.241 }          |
-          { 170.00    1.10804     1.300 }/         |
-                                                   |
- [ 36.01  {  90.00    1.14458     0.964 } ]        |
-          { 115.00    1.13959     1.014 }          |
-          { 140.00    1.13494     1.064 }          |
-          { 165.00    1.13060     1.115 }          |
-          { 190.00    1.12653     1.166 }/         |
-/                                                  /
-  404.60    594.29    1.97527     0.21564          \
-            619.29    1.96301     0.21981          |
-            644.29    1.95143     0.22393          |-- Pvtnum region 2
-            669.29    1.94046     0.22801          |
-            694.29    1.93005     0.23204 /        |
-/                                                  /
-  404.60    594.29    1.97527     0.21564          \
-            619.29    1.96301     0.21981          |
-            644.29    1.95143     0.22393          |
-            669.29    1.94046     0.22801          |
-            694.29    1.93005     0.23204 /        |-- Pvtnum region 3
-  404.60    594.29    1.97527     0.21564          |
-            619.29    1.96301     0.21981          |
-            644.29    1.95143     0.22393          |
-            669.29    1.94046     0.22801          |
-            694.29    1.93005     0.23204 /        /
-/
-
-
-In pvtnum region1 the saturated records are marked with [ ... ], and
-the corresponding undersaturated tables are marked with { ... }. So
-for pvtnum region1 the table of saturated properties looks like:
-
-   RSO       PRESSURE    B-OIL       VISCOSITY
-   20.59     50.00       1.10615     1.180
-   28.19     70.00       1.12522     1.066
-   36.01     90.00       1.14458     0.964
-
-In the PvtxTable class this table is available as the method
-getSaturatedTable( ). For each RS value there is a table of
-undersaturated properties; since the saturated table for region1 has
-three rows there are three such tables, these tables are available as
-getUnderSaturatedTable( index ). In this particular example the first
-undersaturated table looks like:
-
-     PRESSURE    B-OIL       VISCOSITY
-      50.00      1.10615     1.180
-      75.00      1.10164     1.247
-     100.00      1.09744     1.315
-     125.00      1.09351     1.384
-     150.00      1.08984     1.453
-
-The first row actually corresponds to saturated values.
-*/
-
- namespace Opm {
+namespace Opm {
 
     class DeckKeyword;
 
-    class PvtxTable {
-    public:
-        static size_t numTables( const DeckKeyword& keyword);
-        static std::vector<std::pair<size_t , size_t> > recordRanges( const DeckKeyword& keyword);
+} // namespace Opm
 
+namespace Opm {
+
+    /// Base class for PVTG and PVTO tables.
+    ///
+    /// Maintains an internal representation of FVF/viscosity values versus
+    /// pressure (PVTO) or composition (Rv, PVTG) for each of a set of
+    /// composition (Rs, PVTO) or pressure (PVTG) nodes.
+    ///
+    /// PVTO
+    /// --  Rs     Pressure    Bo        Viscosity
+    /// --          (bar)                  (cP)
+    ///
+    ///  [ 20.59  {  50.00    1.10615     1.180 } ]        |
+    ///           {  75.00    1.10164     1.247 }          |
+    ///           { 100.00    1.09744     1.315 }          |
+    ///           { 125.00    1.09351     1.384 }          |
+    ///           { 150.00    1.08984     1.453 }/         |
+    ///                                                    |
+    ///  [ 28.19  {  70.00    1.12522     1.066 } ]        |
+    ///           {  95.00    1.12047     1.124 }          |
+    ///           { 120.00    1.11604     1.182 }          |-- PVT region 1
+    ///           { 145.00    1.11191     1.241 }          |
+    ///           { 170.00    1.10804     1.300 }/         |
+    ///                                                    |
+    ///  [ 36.01  {  90.00    1.14458     0.964 } ]        |
+    ///           { 115.00    1.13959     1.014 }          |
+    ///           { 140.00    1.13494     1.064 }          |
+    ///           { 165.00    1.13060     1.115 }          |
+    ///           { 190.00    1.12653     1.166 }/         |
+    /// /                                                  |
+    ///
+    ///
+    ///   404.60    594.29    1.97527     0.21564          |
+    ///             619.29    1.96301     0.21981          |
+    ///             644.29    1.95143     0.22393          |-- PVT region 2
+    ///             669.29    1.94046     0.22801          |
+    ///             694.29    1.93005     0.23204 /        |
+    /// /                                                  |
+    ///
+    ///
+    ///   404.60    594.29    1.97527     0.21564          |
+    ///             619.29    1.96301     0.21981          |
+    ///             644.29    1.95143     0.22393          |
+    ///             669.29    1.94046     0.22801          |
+    ///             694.29    1.93005     0.23204 /        |-- PVT region 3
+    ///   404.60    594.29    1.97527     0.21564          |
+    ///             619.29    1.96301     0.21981          |
+    ///             644.29    1.95143     0.22393          |
+    ///             669.29    1.94046     0.22801          |
+    ///             694.29    1.93005     0.23204 /        |
+    /// /                                                  |
+    ///
+    ///
+    /// Saturated states are marked with [ ... ], while the corresponding
+    /// under-saturated tables are marked with { ... }.  Thus, for PVT
+    /// region 1 the table of saturated properties is
+    ///
+    ///    Rs        Pressure    Bo          Viscosity
+    ///    20.59     50.00       1.10615     1.180
+    ///    28.19     70.00       1.12522     1.066
+    ///    36.01     90.00       1.14458     0.964
+    ///
+    /// This table is available through member function getSaturatedTable().
+    ///
+    /// For each composition (Rs) value there is a table of under-saturated
+    /// properties.  These tables may be retrieved through member function
+    /// getUnderSaturatedTable(index) in which 'index' identifies the
+    /// composition node.  In the example above the under-saturated table in
+    /// PVT region 1 for Rs=28.19 (i.e., index = 1) is
+    ///
+    ///     Pressure     Bo          Viscosity
+    ///        70.00     1.12522     1.066
+    ///        95.00     1.12047     1.124
+    ///       120.00     1.11604     1.182
+    ///       145.00     1.11191     1.241
+    ///       170.00     1.10804     1.300
+    ///
+    class PvtxTable
+    {
+    public:
+        /// Number of complete tables in input PVTx keyword.
+        ///
+        /// This is effectively the number of regions for which input PVT
+        /// data is provided and should typically match the run's number of
+        /// PVT regions.
+        ///
+        /// \param[in] keyword Input PVTx keyword--typically PVTO or PVTG.
+        ///
+        /// \return Number of complete tables in \p keyword.
+        static std::size_t numTables(const DeckKeyword& keyword);
+
+        /// Identify which input records pertain to which PVT regions
+        ///
+        /// \param[in] keyword Input PVTx keyword--typically PVTO or PVTG.
+        ///
+        /// \return Keyword index ranges.  One range for each PVT region.
+        /// Each range is defined by a pair of start/end indices into the
+        /// input \p keyword.
+        static std::vector<std::pair<std::size_t, std::size_t>>
+        recordRanges(const DeckKeyword& keyword);
+
+        /// Default constructor.
+        ///
+        /// Resulting object is mostly usable as a target for a
+        /// deserialisation operation.
         PvtxTable() = default;
+
+        /// Constructor.
+        ///
+        /// Forms an empty table object that must be populated in a
+        /// subsequent call to init().
+        ///
+        /// \param[in] columnName Name of primary ("outer") lookup key.
+        /// User controlled name for the composition/pressure/etc node.
         explicit PvtxTable(const std::string& columnName);
 
+        /// Virtual destructor.
+        ///
+        /// This type is intended to be a base class for others--i.e., those
+        /// that define the specifics of a particular PVTx table.
+        virtual ~PvtxTable() = default;
+
+        /// Create a serialisation test object.
         static PvtxTable serializationTestObject();
 
-        const SimpleTable& getUnderSaturatedTable(size_t tableNumber) const;
-        void init(const DeckKeyword& keyword, size_t tableIdx);
-        size_t size() const;
-        double evaluate(const std::string& column, double outerArg, double innerArg) const;
-        double getArgValue(size_t index) const;
+        /// Retrieve derived table of saturated states.
+        ///
+        /// Generated from first row of each sub-table, along with the
+        /// associated composition (PVTO) or pressure (PVTG) information.
         const SimpleTable& getSaturatedTable() const;
 
-        /*
-          Will iterate over the internal undersaturated tables; same
-          as getUnderSaturatedTable( ).
-        */
-        std::vector< SimpleTable >::const_iterator begin() const;
-        std::vector< SimpleTable >::const_iterator end()   const;
+        /// Retrieve sub-table for a single composition or pressure node.
+        ///
+        /// \param[in] tableNumber Node index in the range 0..size()-1.
+        const SimpleTable& getUnderSaturatedTable(std::size_t tableNumber) const;
 
+        /// Interpolate property value at single point
+        ///
+        /// \param[in] column Property name.  Must be one of the named
+        /// dependent properties defined by a derived class.
+        ///
+        /// \param[in] outerArg Value of primary lookup key/variate.
+        /// Typically an Rs (PVTO) or a Pg (PVTG) value.
+        ///
+        /// \param[in] innerArg Value of secondary independent variate.
+        /// Typically an oil pressure (PVTO) or Rv (PVTG) value.
+        ///
+        /// \return Value of dependent variate \p column at the indenpendent
+        /// variate point (\p outerArg, \p innerArg), e.g., Bo(Rs,Po) or
+        /// Vg(Pg,Rv).
+        double evaluate(const std::string& column, double outerArg, double innerArg) const;
+
+        /// Retrieve composition/pressure node value at input point.
+        ///
+        /// \param[in] index Node index in the range 0..size()-1.
+        ///
+        /// \return Input composition (Rs, PVTO) or pressure (Pg, PVTG) at
+        /// \p index.
+        double getArgValue(std::size_t index) const;
+
+        /// Number of sub-tables.
+        ///
+        /// Effectively the number of composition (PVTO) or pressure (PVTG)
+        /// nodes in the input table.
+        std::size_t size() const;
+
+        /// Start of sequence of sub-tables.
+        ///
+        /// One sub-table for each composition (PVTO) or pressure (PVTG)
+        /// node.
+        auto begin() const { return this->m_underSaturatedTables.begin(); }
+
+        /// Start of sequence of sub-tables.
+        ///
+        /// One sub-table for each composition (PVTO) or pressure (PVTG)
+        /// node.
+        auto cbegin() const { return this->m_underSaturatedTables.cbegin(); }
+
+        /// End of sequence of sub-tables.
+        auto end() const { return this->m_underSaturatedTables.end(); }
+
+        /// End of sequence of sub-tables.
+        auto cend() const { return this->m_underSaturatedTables.cend(); }
+
+        /// Equality predicate
+        ///
+        /// \param[in] data Object against which \code *this \endcode will be
+        /// tested for equality.
+        ///
+        /// \return Whether or not \code *this \endcode is the same as \p
+        /// data.
         bool operator==(const PvtxTable& data) const;
 
+        /// Convert between byte array and object representation.
+        ///
+        /// \tparam Serializer Byte array conversion protocol.
+        ///
+        /// \param[in,out] serializer Byte array conversion object.
         template <class Serializer>
         void serializeOp(Serializer& serializer)
         {
@@ -148,14 +246,75 @@ The first row actually corresponds to saturated values.
         }
 
     protected:
-        ColumnSchema m_outerColumnSchema;
-        TableColumn m_outerColumn;
+        /// Table description of primary lookup key.
+        ///
+        /// Typically the composition (Rs, PVTO) or the pressure (Pg, PVTG).
+        ColumnSchema m_outerColumnSchema{};
 
-        TableSchema m_underSaturatedSchema;
-        TableSchema m_saturatedSchema;
-        std::vector< SimpleTable > m_underSaturatedTables;
-        SimpleTable m_saturatedTable;
+        /// Primary lookup key values.
+        TableColumn m_outerColumn{};
+
+        /// Table description of under-saturated states.
+        TableSchema m_underSaturatedSchema{};
+
+        /// Table description of saturated states.
+        TableSchema m_saturatedSchema{};
+
+        /// Under-saturated sub-tables.
+        ///
+        /// One table for each value of the primary lookup key.
+        std::vector<SimpleTable> m_underSaturatedTables{};
+
+        /// Inferred table of saturated states.
+        SimpleTable m_saturatedTable{};
+
+        /// Populate internal data structures from PVTx input table data.
+        ///
+        /// Fills the under-saturated sub-tables and generates the inferred
+        /// "saturated" table for a single PVT region.  Clients--i.e.,
+        /// derived classes--must define the table "schema" members (i.e.,
+        /// m_underSaturatedSchema and m_saturatedSchema) prior to calling
+        /// init().
+        ///
+        /// \param[in] keyword Input PVTx table data.  Typically containing
+        /// PVTO or PVTG (or similar) tables.
+        ///
+        /// \param[in] tableIdx Zero-based region index for which to
+        /// internalise table data.
+        void init(const DeckKeyword& keyword, std::size_t tableIdx);
+
+    private:
+        /// Populate collection of under-saturated tables.
+        ///
+        /// Inserts values into \c m_underSaturatedTables.  This is the
+        /// first main stage of init().
+        ///
+        /// \param[in] keyword Input PVTx table data.  Typically containing
+        /// PVTO or PVTG tables.
+        ///
+        /// \param[in] tableIdx Zero-based region index for which to
+        /// internalise table data.
+        ///
+        /// \param[in] first Starting index in keyword range for PVT region
+        /// \p tableIdx.
+        ///
+        /// \param[in] last One-past-end index in keyword range for PVT
+        /// region \p tableIdx.
+        void populateUndersaturatedTables(const DeckKeyword& keyword,
+                                          const std::size_t  tableIdx,
+                                          const std::size_t  first,
+                                          const std::size_t  last);
+
+        /// Populate derived table of saturated states.
+        ///
+        /// Inserts values into \c m_saturatedTable.  This is the final
+        /// stage of init().
+        ///
+        /// \param[in] tableName Name of table/keyword we're internalising.
+        /// Typically \code "PVTO" \endcode or \code "PVTG" \endcode.
+        void populateSaturatedTable(const std::string& tableName);
     };
-}
 
-#endif
+} // namespace Opm
+
+#endif // OPM_PARSER_PVTX_TABLE_HPP
