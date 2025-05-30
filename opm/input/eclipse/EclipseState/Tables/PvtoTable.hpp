@@ -15,7 +15,8 @@
 
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
- */
+*/
+
 #ifndef OPM_PARSER_PVTO_TABLE_HPP
 #define OPM_PARSER_PVTO_TABLE_HPP
 
@@ -29,9 +30,15 @@ namespace Opm {
 
     class DeckKeyword;
 
-    class PvtoTable : public PvtxTable {
+} // namespace Opm
+
+namespace Opm {
+
+    class PvtoTable : public PvtxTable
+    {
     public:
-        struct FlippedFVF {
+        struct FlippedFVF
+        {
             std::size_t i;
             std::array<double, std::size_t{2}> Rs;
             std::array<double, std::size_t{2}> Bo;
@@ -45,7 +52,12 @@ namespace Opm {
         bool operator==(const PvtoTable& data) const;
 
         std::vector<FlippedFVF> nonMonotonicSaturatedFVF() const;
-    };
-}
 
-#endif
+    private:
+        void makeScaledUSatTableCopy(const std::size_t src,
+                                     const std::size_t dest) override;
+    };
+
+} // namespace Opm
+
+#endif // OPM_PARSER_PVTO_TABLE_HPP
