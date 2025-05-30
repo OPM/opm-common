@@ -93,7 +93,6 @@ namespace Opm {
 
         const Segment& operator[](size_t idx) const;
         void orderSegments();
-        void updatePerfLength(const WellConnections& connections);
 
         bool operator==( const WellSegments& ) const;
         bool operator!=( const WellSegments& ) const;

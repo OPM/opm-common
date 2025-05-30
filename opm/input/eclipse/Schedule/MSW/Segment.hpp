@@ -78,7 +78,6 @@ namespace Opm {
         int segmentNumber() const;
         int branchNumber() const;
         int outletSegment() const;
-        double perfLength() const;
         double totalLength() const;
         double node_X() const;
         double node_Y() const;
@@ -103,7 +102,6 @@ namespace Opm {
         const AutoICD& autoICD() const;
         const Valve& valve() const;
 
-        void updatePerfLength(double perf_length);
         void updateSpiralICD(const SICD& spiral_icd);
         void updateAutoICD(const AutoICD& aicd);
         void updateValve(const Valve& valve, const double segment_length);
@@ -146,7 +144,6 @@ namespace Opm {
             serializer(m_data_ready);
             serializer(m_x);
             serializer(m_y);
-            serializer(m_perf_length);
             serializer(m_icd);
         }
 
@@ -228,7 +225,6 @@ namespace Opm {
         // simulations, but needed for the SEG option in WRFTPLT.
         double m_y{};
 
-        std::optional<double> m_perf_length;
         std::variant<RegularSegment, SICD, AutoICD, Valve> m_icd;
 
         // There are three other properties for the segment pertaining to

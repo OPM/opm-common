@@ -346,7 +346,6 @@ namespace {
                     throw std::runtime_error("Not all the connections are attached with a segment. "
                                              "The information from COMPSEGS is not complete");
             }
-            new_segment_set.updatePerfLength( new_connection_set );
 
             return std::make_pair( WellConnections( std::move( new_connection_set ) ),
                                    WellSegments( std::move(new_segment_set)));
@@ -421,7 +420,6 @@ namespace {
         auto comp_pressure_drop = pressure_drop_from_int(rst_well.msw_pressure_drop_model);
 
         WellSegments segments( comp_pressure_drop, segments_list);
-        segments.updatePerfLength( connections );
 
         return std::make_pair( std::move(connections), std::move(segments));
     }
