@@ -1008,6 +1008,108 @@ END
     }
 }
 
+BOOST_AUTO_TEST_CASE(PvtoTable_Tests_PopulateUSat) {
+    // PVT tables from opm-tests/model5/include/pvt_live_oil_dgas.ecl .
+    const auto deck = Opm::Parser{}.parseString(R"(RUNSPEC
+OIL
+GAS
+TABDIMS
+1 1 /
+PROPS
+DENSITY
+   924.1      1026.0      1.03446 /
+PVTO
+-- Table number: 1
+     3.9140      10.000   1.102358     2.8625 /
+
+     7.0500      15.000   1.112540     2.6589
+                 25.000   1.111313     2.7221
+                 45.000   1.108952     2.8374 /
+/
+END
+)");
+
+    const auto tmgr = Opm::TableManager { deck };
+    const auto& pvto = tmgr.getPvtoTables();
+    BOOST_REQUIRE_EQUAL(pvto.size(), std::size_t{1});
+
+    {
+        const auto& t1 = pvto[0];
+
+        BOOST_REQUIRE_EQUAL(t1.size(), std::size_t{2});
+
+        const auto& satTbl = t1.getSaturatedTable();
+        {
+            BOOST_REQUIRE_EQUAL(satTbl.numRows(), std::size_t{2});
+            BOOST_REQUIRE_EQUAL(satTbl.numColumns(), std::size_t{4});
+
+            const auto& rs = satTbl.getColumn(0);
+            BOOST_CHECK_CLOSE(rs[0], 3.914, 1.0e-8);
+            BOOST_CHECK_CLOSE(rs[1], 7.05, 1.0e-8);
+
+            const auto& p = satTbl.getColumn(1);
+            BOOST_CHECK_CLOSE(p[0], 1.0e6, 1.0e-8);
+            BOOST_CHECK_CLOSE(p[1], 1.5e6, 1.0e-8);
+
+            const auto& B = satTbl.getColumn(2);
+            BOOST_CHECK_CLOSE(B[0], 1.102358, 1.0e-8);
+            BOOST_CHECK_CLOSE(B[1], 1.11254, 1.0e-8);
+
+            const auto& mu = satTbl.getColumn(3);
+            BOOST_CHECK_CLOSE(mu[0], 2.8625e-3, 1.0e-8);
+            BOOST_CHECK_CLOSE(mu[1], 2.6589e-3, 1.0e-8);
+        }
+
+        {
+            const auto& u1 = t1.getUnderSaturatedTable(0);
+            BOOST_REQUIRE_EQUAL(u1.numRows(), std::size_t{3});
+            BOOST_REQUIRE_EQUAL(u1.numColumns(), std::size_t{3});
+
+            const auto& p = u1.getColumn(0);
+            BOOST_REQUIRE_EQUAL(p.size(), std::size_t{3});
+            BOOST_CHECK_CLOSE(p[0], 1.0e6, 1.0e-8);
+            BOOST_CHECK_CLOSE(p[1], 2.0e6, 1.0e-8);
+            BOOST_CHECK_CLOSE(p[2], 4.0e6, 1.0e-8);
+
+            const auto& B = u1.getColumn(1);
+            BOOST_REQUIRE_EQUAL(B.size(), std::size_t{3});
+            BOOST_CHECK_CLOSE(B[0], 1.102358, 1.0e-8);
+            BOOST_CHECK_CLOSE(B[1], 1.101142, 3.0e-5);
+            BOOST_CHECK_CLOSE(B[2], 1.098803, 2.0e-5);
+
+            const auto& mu = u1.getColumn(2);
+            BOOST_REQUIRE_EQUAL(mu.size(), std::size_t{3});
+            BOOST_CHECK_CLOSE(mu[0], 2.8625e-3, 1.0e-8);
+            BOOST_CHECK_CLOSE(mu[1], 2.9305e-3, 1.4e-3);
+            BOOST_CHECK_CLOSE(mu[2], 3.0547e-3, 1.1e-3);
+        }
+
+        {
+            const auto& u2 = t1.getUnderSaturatedTable(1);
+            BOOST_REQUIRE_EQUAL(u2.numRows(), std::size_t{3});
+            BOOST_REQUIRE_EQUAL(u2.numColumns(), std::size_t{3});
+
+            const auto& p = u2.getColumn(0);
+            BOOST_REQUIRE_EQUAL(p.size(), std::size_t{3});
+            BOOST_CHECK_CLOSE(p[0], 1.5e6, 1.0e-8);
+            BOOST_CHECK_CLOSE(p[1], 2.5e6, 1.0e-8);
+            BOOST_CHECK_CLOSE(p[2], 4.5e6, 1.0e-8);
+
+            const auto& B = u2.getColumn(1);
+            BOOST_REQUIRE_EQUAL(B.size(), std::size_t{3});
+            BOOST_CHECK_CLOSE(B[0], 1.112540, 1.0e-8);
+            BOOST_CHECK_CLOSE(B[1], 1.111313, 1.0e-8);
+            BOOST_CHECK_CLOSE(B[2], 1.108952, 1.0e-8);
+
+            const auto& mu = u2.getColumn(2);
+            BOOST_REQUIRE_EQUAL(mu.size(), std::size_t{3});
+            BOOST_CHECK_CLOSE(mu[0], 2.6589e-3, 1.0e-8);
+            BOOST_CHECK_CLOSE(mu[1], 2.7221e-3, 1.0e-8);
+            BOOST_CHECK_CLOSE(mu[2], 2.8374e-3, 1.0e-8);
+        }
+    }
+}
+
 BOOST_AUTO_TEST_CASE(PvtgTable_Tests) {
     // PVT tables from opm-tests/norne/INCLUDE/PVT/PVT-WET-GAS.INC .
     const auto deck = Opm::Parser{}.parseString(R"(RUNSPEC
@@ -1044,8 +1146,9 @@ END
         // bar, and one for p=pLim=3.002 bar.
         BOOST_REQUIRE_EQUAL(t1.size(), std::size_t{4});
 
-        const auto& satTbl = t1.getSaturatedTable();
         {
+            const auto& satTbl = t1.getSaturatedTable();
+
             BOOST_REQUIRE_EQUAL(satTbl.numRows(), std::size_t{4});
             BOOST_REQUIRE_EQUAL(satTbl.numColumns(), std::size_t{4});
 
@@ -1077,40 +1180,52 @@ END
 
         {
             const auto& u1 = t1.getUnderSaturatedTable(0);
-            BOOST_REQUIRE_EQUAL(u1.numRows(), std::size_t{1});
+            BOOST_REQUIRE_EQUAL(u1.numRows(), std::size_t{3});
             BOOST_REQUIRE_EQUAL(u1.numColumns(), std::size_t{3});
 
             const auto& rv = u1.getColumn(0);
-            BOOST_REQUIRE_EQUAL(rv.size(), std::size_t{1});
-            BOOST_CHECK_CLOSE(rv[0], 4.406029e-06, 2.0e-7);
+            BOOST_REQUIRE_EQUAL(rv.size(), std::size_t{3});
+            BOOST_CHECK_CLOSE(rv[0],  4.406029e-06, 2.0e-7);
+            BOOST_CHECK_CLOSE(rv[1],  1.916029e-06, 5.0e-7);
+            BOOST_CHECK_CLOSE(rv[2], -5.639710e-07, 2.0e-6); // <-- Note: Negative
 
             const auto& B = u1.getColumn(1);
-            BOOST_REQUIRE_EQUAL(B.size(), std::size_t{1});
+            BOOST_REQUIRE_EQUAL(B.size(), std::size_t{3});
             BOOST_CHECK_CLOSE(B[0], 1.1, 1.0e-8);
+            BOOST_CHECK_CLOSE(B[1], 1.1, 1.0e-8);
+            BOOST_CHECK_CLOSE(B[2], 1.1, 1.0e-8);
 
             const auto& mu = u1.getColumn(2);
             constexpr auto cP = prefix::centi*unit::Poise;
-            BOOST_REQUIRE_EQUAL(mu.size(), std::size_t{1});
+            BOOST_REQUIRE_EQUAL(mu.size(), std::size_t{3});
             BOOST_CHECK_CLOSE(mu[0], 2.63557694e-3*cP, 2.0e-8);
+            BOOST_CHECK_CLOSE(mu[1], 2.63374795e-3*cP, 1.0e-7);
+            BOOST_CHECK_CLOSE(mu[2], 2.63374795e-3*cP, 1.0e-7);
         }
 
         {
             const auto& u2 = t1.getUnderSaturatedTable(1);
-            BOOST_REQUIRE_EQUAL(u2.numRows(), std::size_t{1});
+            BOOST_REQUIRE_EQUAL(u2.numRows(), std::size_t{3});
             BOOST_REQUIRE_EQUAL(u2.numColumns(), std::size_t{3});
 
             const auto& rv = u2.getColumn(0);
-            BOOST_REQUIRE_EQUAL(rv.size(), std::size_t{1});
-            BOOST_CHECK_CLOSE(rv[0], 4.406029e-06, 2.0e-7);
+            BOOST_REQUIRE_EQUAL(rv.size(), std::size_t{3});
+            BOOST_CHECK_CLOSE(rv[0],  4.406029e-06, 2.0e-7);
+            BOOST_CHECK_CLOSE(rv[1],  1.916029e-06, 5.0e-7);
+            BOOST_CHECK_CLOSE(rv[2], -5.639710e-07, 2.0e-6); // <-- Note: Negative
 
             const auto& B = u2.getColumn(1);
-            BOOST_REQUIRE_EQUAL(B.size(), std::size_t{1});
+            BOOST_REQUIRE_EQUAL(B.size(), std::size_t{3});
             BOOST_CHECK_CLOSE(B[0], 1.0, 1.0e-8);
+            BOOST_CHECK_CLOSE(B[1], 1.0, 1.0e-8);
+            BOOST_CHECK_CLOSE(B[2], 1.0, 1.0e-8);
 
             const auto& mu = u2.getColumn(2);
             constexpr auto cP = prefix::centi*unit::Poise;
-            BOOST_REQUIRE_EQUAL(mu.size(), std::size_t{1});
+            BOOST_REQUIRE_EQUAL(mu.size(), std::size_t{3});
             BOOST_CHECK_CLOSE(mu[0], 2.63557694e-3*cP, 2.0e-8);
+            BOOST_CHECK_CLOSE(mu[1], 2.63374795e-3*cP, 1.0e-7);
+            BOOST_CHECK_CLOSE(mu[2], 2.63374795e-3*cP, 1.0e-7);
         }
 
         {
@@ -1169,8 +1284,9 @@ END
         // bar, and one for p=pLim=3.002 bar.
         BOOST_REQUIRE_EQUAL(t2.size(), std::size_t{4});
 
-        const auto& satTbl = t2.getSaturatedTable();
         {
+            const auto& satTbl = t2.getSaturatedTable();
+
             BOOST_REQUIRE_EQUAL(satTbl.numRows(), std::size_t{4});
             BOOST_REQUIRE_EQUAL(satTbl.numColumns(), std::size_t{4});
 
@@ -1202,40 +1318,52 @@ END
 
         {
             const auto& u1 = t2.getUnderSaturatedTable(0);
-            BOOST_REQUIRE_EQUAL(u1.numRows(), std::size_t{1});
+            BOOST_REQUIRE_EQUAL(u1.numRows(), std::size_t{3});
             BOOST_REQUIRE_EQUAL(u1.numColumns(), std::size_t{3});
 
             const auto& rv = u1.getColumn(0);
-            BOOST_REQUIRE_EQUAL(rv.size(), std::size_t{1});
-            BOOST_CHECK_CLOSE(rv[0], 4.406029e-06, 2.0e-7);
+            BOOST_REQUIRE_EQUAL(rv.size(), std::size_t{3});
+            BOOST_CHECK_CLOSE(rv[0],  4.406029e-06, 2.0e-7);
+            BOOST_CHECK_CLOSE(rv[1],  1.916029e-06, 5.0e-7);
+            BOOST_CHECK_CLOSE(rv[2], -5.639710e-07, 2.0e-6); // <-- Note: Negative
 
             const auto& B = u1.getColumn(1);
-            BOOST_REQUIRE_EQUAL(B.size(), std::size_t{1});
+            BOOST_REQUIRE_EQUAL(B.size(), std::size_t{3});
             BOOST_CHECK_CLOSE(B[0], 1.1, 1.0e-8);
+            BOOST_CHECK_CLOSE(B[1], 1.1, 1.0e-8);
+            BOOST_CHECK_CLOSE(B[2], 1.1, 1.0e-8);
 
             const auto& mu = u1.getColumn(2);
             constexpr auto cP = prefix::centi*unit::Poise;
-            BOOST_REQUIRE_EQUAL(mu.size(), std::size_t{1});
+            BOOST_REQUIRE_EQUAL(mu.size(), std::size_t{3});
             BOOST_CHECK_CLOSE(mu[0], 2.63557694e-3*cP, 2.0e-8);
+            BOOST_CHECK_CLOSE(mu[1], 2.63374795e-3*cP, 1.0e-7);
+            BOOST_CHECK_CLOSE(mu[2], 2.63374795e-3*cP, 1.0e-7);
         }
 
         {
             const auto& u2 = t2.getUnderSaturatedTable(1);
-            BOOST_REQUIRE_EQUAL(u2.numRows(), std::size_t{1});
+            BOOST_REQUIRE_EQUAL(u2.numRows(), std::size_t{3});
             BOOST_REQUIRE_EQUAL(u2.numColumns(), std::size_t{3});
 
             const auto& rv = u2.getColumn(0);
-            BOOST_REQUIRE_EQUAL(rv.size(), std::size_t{1});
-            BOOST_CHECK_CLOSE(rv[0], 4.406029e-06, 2.0e-7);
+            BOOST_REQUIRE_EQUAL(rv.size(), std::size_t{3});
+            BOOST_CHECK_CLOSE(rv[0],  4.406029e-06, 2.0e-7);
+            BOOST_CHECK_CLOSE(rv[1],  1.916029e-06, 5.0e-7);
+            BOOST_CHECK_CLOSE(rv[2], -5.639710e-07, 2.0e-6); // <-- Note: Negative
 
             const auto& B = u2.getColumn(1);
-            BOOST_REQUIRE_EQUAL(B.size(), std::size_t{1});
+            BOOST_REQUIRE_EQUAL(B.size(), std::size_t{3});
             BOOST_CHECK_CLOSE(B[0], 1.0, 1.0e-8);
+            BOOST_CHECK_CLOSE(B[1], 1.0, 1.0e-8);
+            BOOST_CHECK_CLOSE(B[2], 1.0, 1.0e-8);
 
             const auto& mu = u2.getColumn(2);
             constexpr auto cP = prefix::centi*unit::Poise;
-            BOOST_REQUIRE_EQUAL(mu.size(), std::size_t{1});
+            BOOST_REQUIRE_EQUAL(mu.size(), std::size_t{3});
             BOOST_CHECK_CLOSE(mu[0], 2.63557694e-3*cP, 2.0e-8);
+            BOOST_CHECK_CLOSE(mu[1], 2.63374795e-3*cP, 1.0e-7);
+            BOOST_CHECK_CLOSE(mu[2], 2.63374795e-3*cP, 1.0e-7);
         }
 
         {
