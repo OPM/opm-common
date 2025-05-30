@@ -97,7 +97,7 @@ namespace {
 
     Opm::Segment makeSegment(const int segmentNumber)
     {
-        return { segmentNumber, 1, 1, 1.0, 0.0, 0.5, 0.01, 0.25, 1.23, true, 0.0, 0.0 };
+        return { segmentNumber, 1, 1, 0.0, 1.0, 0.5, 0.01, 0.25, 1.23, true, 0.0, 0.0 };
     }
 
     std::shared_ptr<Opm::WellSegments> makeSegments(const int numSegments)
