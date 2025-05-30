@@ -349,12 +349,14 @@ namespace Opm {
         SimulatorUpdate applyAction(std::size_t reportStep,
                                     const Action::ActionX& action,
                                     const Action::Result::MatchingEntities& matches,
-                                    const std::unordered_map<std::string, double>& wellpi);
+                                    const std::unordered_map<std::string, double>& wellpi,
+                                    const bool iterateSchedule);
 
         SimulatorUpdate applyAction(std::size_t reportStep,
                                     const Action::ActionX& action,
                                     const Action::Result::MatchingEntities& matches,
-                                    const std::unordered_map<std::string, float>& wellpi);
+                                    const std::unordered_map<std::string, float>& wellpi,
+                                    const bool iterateSchedule);
         /*
           The runPyAction() will run the Python script in a PYACTION keyword. In
           the case of Schedule updates the recommended way of doing that from

@@ -142,7 +142,7 @@ void msim::post_step(data::Solution& /* sol */,
         const auto result = action->eval(context);
         if (result.conditionSatisfied()) {
             this->schedule.applyAction(report_step, *action, result.matches(),
-                                       std::unordered_map<std::string,double>{});
+                                       std::unordered_map<std::string,double>{}, true);
         }
     }
 
