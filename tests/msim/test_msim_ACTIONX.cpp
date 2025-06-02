@@ -585,7 +585,7 @@ BOOST_AUTO_TEST_CASE(PYTHON_WELL_CLOSE_EXAMPLE) {
     }
 }
 
-BOOST_AUTO_TEST_CASE(PYTHON_CHANGING_SCHEUDULE) {
+BOOST_AUTO_TEST_CASE(PYTHON_CHANGING_SCHEDULE) {
     // Both decks test the same modifications, deck1 without an actionx_callback function, deck2 with an actionx_callback function 
     const auto& deck1 = Parser().parseFile("msim/MSIM_PYACTION_CHANGING_SCHEDULE.DATA");
     const auto& deck2 = Parser().parseFile("msim/MSIM_PYACTION_CHANGING_SCHEDULE_ACTIONX_CALLBACK.DATA");

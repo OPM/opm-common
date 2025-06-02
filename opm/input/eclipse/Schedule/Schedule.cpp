@@ -937,9 +937,17 @@ Defaulted grid coordinates is not allowed for COMPDAT as part of ACTIONX)"
         DeckKeyword action_keyword(parserKeyword);
         action_keyword.addRecord(std::move(deckRecord));
         action.addKeyword(action_keyword);
-        SimulatorUpdate delta = this->applyAction(report_step, action,
-                                                  /* matches = */ Action::Result{false}.matches(),
-                                                  std::unordered_map<std::string,double>{}/*target_wellpi*/);
+        using DI = SimulatorUpdate::DelayedIteration;
+        const SimulatorUpdate delta =
+            this->applyAction(report_step,
+                              action,
+                              /* matches = */ Action::Result{false}.matches(),
+                              /*target_wellpi*/std::unordered_map<std::string,double>{},
+                              this->simUpdateFromPython->delayed_iteration == DI::Off);
+        if (this->simUpdateFromPython->delayed_iteration != DI::Off) {
+            this->simUpdateFromPython->delayed_iteration = DI::On;
+        }
+
         this->simUpdateFromPython->append(delta);
     }
 
@@ -1752,6 +1760,8 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
                                          &target_wellpi,
                                          prefix,
                                          /* keepKeywords = */ true);
+            this->simUpdateFromPython->delayed_iteration =
+                SimulatorUpdate::DelayedIteration::Off;
         }
 
         this->simUpdateFromPython->append(sim_update);
@@ -1771,9 +1781,11 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
     Schedule::applyAction(const std::size_t reportStep,
                           const Action::ActionX& action,
                           const Action::Result::MatchingEntities& matches,
-                          const std::unordered_map<std::string, float>& target_wellpi)
+                          const std::unordered_map<std::string, float>& target_wellpi,
+                          const bool iterateSchedule)
     {
-        return this->applyAction(reportStep, action, matches, convertToDoubleMap(target_wellpi));
+        return this->applyAction(reportStep, action, matches,
+                                 convertToDoubleMap(target_wellpi), iterateSchedule);
     }
 
 
@@ -1781,11 +1793,12 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
     Schedule::applyAction(std::size_t reportStep,
                           const Action::ActionX& action,
                           const Action::Result::MatchingEntities& matches,
-                          const std::unordered_map<std::string, double>& target_wellpi)
+                          const std::unordered_map<std::string, double>& target_wellpi,
+                          const bool iterateSchedule)
     {
         const std::string prefix = "| ";
         ParseContext parseContext;
-        // Ignore invalid keyword combinaions in actions, since these decks are typically incomplete
+        // Ignore invalid keyword combinations in actions, since these decks are typically incomplete
         parseContext.update(ParseContext::PARSE_INVALID_KEYWORD_COMBINATION, InputErrorAction::IGNORE);
         if (this->m_treat_critical_as_non_critical) { // Continue with invalid names if parsing strictness is set to low
             parseContext.update(ParseContext::SCHEDULE_INVALID_NAME, InputErrorAction::WARN);
@@ -1839,7 +1852,7 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
             }
         }
 
-        if (reportStep < this->m_sched_deck.size() - 1) {
+        if (reportStep < this->m_sched_deck.size() - 1 && iterateSchedule) {
             const auto keepKeywords = true;
             const auto log_to_debug = true;
             this->iterateScheduleSection(reportStep + 1, this->m_sched_deck.size(),
@@ -1957,7 +1970,7 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
 
             return this->applyAction(reportStep, actions[action_name],
                                      Action::Result{true}.wells(well_names).matches(),
-                                     std::unordered_map<std::string,double>{});
+                                     std::unordered_map<std::string,double>{}, true);
         }
         else {
             OpmLog::error(fmt::format("Tried to apply unknown action: '{}'", action_name));
@@ -2063,6 +2076,29 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
 
         auto result = pyaction.run(ecl_state, *this, reportStep, summary_state, apply_action_callback, target_wellpi);
         action_state.add_run(pyaction, result);
+
+        if (this->simUpdateFromPython->delayed_iteration ==
+                SimulatorUpdate::DelayedIteration::On &&
+            reportStep < this->m_sched_deck.size() - 1)
+        {
+            const auto keepKeywords = true;
+            const auto log_to_debug = true;
+
+            const std::string prefix = "| ";
+            ParseContext parseContext;
+            // Ignore invalid keyword combinations in actions, since these decks are typically incomplete
+            parseContext.update(ParseContext::PARSE_INVALID_KEYWORD_COMBINATION, InputErrorAction::IGNORE);
+            if (this->m_treat_critical_as_non_critical) { // Continue with invalid names if parsing strictness is set to low
+                parseContext.update(ParseContext::SCHEDULE_INVALID_NAME, InputErrorAction::WARN);
+            }
+
+            ErrorGuard errors;
+            ScheduleGrid grid(this->completed_cells, this->completed_cells_lgr, this->completed_cells_lgr_map);
+
+            this->iterateScheduleSection(reportStep + 1, this->m_sched_deck.size(),
+                                         parseContext, errors, grid, &target_wellpi,
+                                         prefix, keepKeywords, log_to_debug);
+        }
 
         // The whole pyaction script was executed, now the simUpdateFromPython is returned.
         return *(this->simUpdateFromPython);

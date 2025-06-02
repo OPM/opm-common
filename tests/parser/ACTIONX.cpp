@@ -230,7 +230,7 @@ TSTEP
 
         const auto& action1 = sched[0].actions.get()["ACTION"];
         auto sim_update = sched.applyAction(0, action1, action_result.matches(),
-                                            std::unordered_map<std::string,double>{});
+                                            std::unordered_map<std::string,double>{}, true);
 
         const auto& affected_wells = sim_update.affected_wells;
         const std::vector<std::string> expected_wells{"W0", "W1", "W3"};
@@ -301,7 +301,7 @@ COMPDAT
     const auto& action1 = sched[0].actions.get()["ACTION"];
 
     BOOST_CHECK_NO_THROW(sched.applyAction(0, action1, Action::Result{false}.matches(),
-                                           std::unordered_map<std::string,double>{}));
+                                           std::unordered_map<std::string,double>{}, true));
 }
 
 BOOST_AUTO_TEST_CASE(EMPTY)
@@ -1234,7 +1234,7 @@ END
 
     const Action::Result action_result{true};
     sched.applyAction(0, action1, action_result.matches(),
-                      std::unordered_map<std::string,double>{});
+                      std::unordered_map<std::string,double>{}, true);
 
     {
         const auto& group = sched.getGroup("G1", 1);
@@ -1361,7 +1361,8 @@ END
     {
         const Action::Result action_result(true);
         const auto& sim_update = sched.applyAction(0, action1, action_result.matches(),
-                                                   std::unordered_map<std::string,double>{});
+                                                   std::unordered_map<std::string,double>{},
+                                                   true);
 
         BOOST_CHECK(sim_update.affected_wells.empty());
     }
@@ -1444,7 +1445,7 @@ END
 
     Action::Result action_result(true);
     sched.applyAction(0, action1, action_result.matches(),
-                      std::unordered_map<std::string,double>{});
+                      std::unordered_map<std::string,double>{}, true);
 
     const auto& well = sched.getWell("PROD1", 1);
     const auto& connections = well.getConnections();
@@ -1505,14 +1506,15 @@ END
 
     const Action::Result action_result(true);
     BOOST_CHECK_THROW(sched.applyAction(0, action1, action_result.matches(),
-                                        std::unordered_map<std::string,double>{}), std::exception);
+                                        std::unordered_map<std::string,double>{}, true),
+                      std::exception);
 
     {
         const auto& well = sched.getWell("PROD1", 0);
         const auto& sim_update = sched.applyAction(0, action1, action_result.matches(),
                                                    std::unordered_map<std::string,double> {
                                                        { "PROD1", well.convertDeckPI(500) },
-                                                   });
+                                                   }, true);
 
         BOOST_CHECK_EQUAL(sim_update.welpi_wells.count("PROD1"), 1);
         BOOST_CHECK_EQUAL(sim_update.welpi_wells.size(), 1);
@@ -1586,7 +1588,7 @@ END
     const auto& action1 = sched[0].actions.get()["A"];
     const Action::Result action_result(true);
     auto sim_update = sched.applyAction(0, action1, action_result.matches(),
-                                        std::unordered_map<std::string,double>{});
+                                        std::unordered_map<std::string,double>{}, true);
 
     BOOST_CHECK(sim_update.tran_update);
     BOOST_CHECK_EQUAL(sched[0].geo_keywords().size(), 3);
