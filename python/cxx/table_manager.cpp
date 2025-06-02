@@ -2,6 +2,7 @@
 
 #include "export.hpp"
 
+#include <python/cxx/OpmCommonPythonDoc.hpp>
 
 namespace {
 
@@ -17,8 +18,10 @@ namespace {
 
 void python::common::export_TableManager(py::module& module) {
 
-  py::class_< TableManager >( module, "Tables")
-    .def( "__contains__",   &TableManager::hasTables )
-    .def("evaluate", &eval);
+    using namespace Opm::Common::DocStrings;
+
+    py::class_< TableManager >( module, "Tables", Tables_docstring)
+        .def( "__contains__",   &TableManager::hasTables , Tables_contains_docstring)
+        .def("evaluate", &eval, Tables_evaluate_docstring, Tables_evaluate_docstring);
 
 }
