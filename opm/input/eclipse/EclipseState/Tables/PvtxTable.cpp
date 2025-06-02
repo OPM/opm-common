@@ -29,177 +29,236 @@
 
 #include <opm/common/utility/OpmInputError.hpp>
 
+#include <algorithm>
+#include <cstddef>
+#include <iterator>
+#include <numeric>
+#include <optional>
+#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
 
-#include <stddef.h>
-
 #include <fmt/format.h>
+
+namespace {
+
+    std::optional<std::vector<std::pair<std::size_t, std::size_t>>::size_type>
+    locateSourceTable(const std::size_t                                       tableIdx,
+                      const std::vector<std::pair<std::size_t, std::size_t>>& ranges)
+    {
+        // Source table is *last* non-empty sub-range in 0..tableIdx.
+
+        // Recall: The reverse "begin" iterator, and especially its .base(),
+        // is one past the end of the sub-range.  Thus, pass "tableIdx + 1"
+        // as the argument to make_reverse_iterator().
+        auto srcRange = std::find_if(std::make_reverse_iterator(ranges.cbegin() + tableIdx + 1),
+                                     ranges.crend(),
+                                     [](const auto& subRange)
+                                     { return subRange.first != subRange.second; });
+
+        if (srcRange == ranges.crend()) {
+            return {};
+        }
+
+        return std::distance(ranges.cbegin(), srcRange.base() - 1);
+    }
+
+} // namespace Anonymous
 
 namespace Opm {
 
-    PvtxTable::PvtxTable(const std::string& columnName) :
-        m_outerColumnSchema( columnName , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ),
-        m_outerColumn( m_outerColumnSchema )
+    std::size_t PvtxTable::numTables(const DeckKeyword& keyword)
     {
-
+        return std::accumulate(keyword.begin(), keyword.end(), std::size_t{1},
+                               [](const auto acc, const auto& record)
+                               { return acc + !record.getItem(0).hasValue(0); });
     }
+
+    std::vector<std::pair<std::size_t, std::size_t>>
+    PvtxTable::recordRanges(const DeckKeyword& keyword)
+    {
+        auto ranges = std::vector<std::pair<std::size_t, std::size_t>>{};
+
+        std::size_t startRecord = 0;
+        std::size_t recordIndex = startRecord;
+
+        while (recordIndex < keyword.size()) {
+            if (! keyword.getRecord(recordIndex).getItem(0).hasValue(0)) {
+                ranges.emplace_back(startRecord, recordIndex);
+                startRecord = recordIndex + 1;
+            }
+
+            ++recordIndex;
+        }
+
+        ranges.emplace_back(startRecord, recordIndex);
+
+        return ranges;
+    }
+
+    PvtxTable::PvtxTable(const std::string& columnName)
+        : m_outerColumnSchema { columnName, Table::STRICTLY_INCREASING, Table::DEFAULT_NONE }
+        , m_outerColumn       { m_outerColumnSchema }
+    {}
 
     PvtxTable PvtxTable::serializationTestObject()
     {
         PvtxTable result;
+
         result.m_outerColumnSchema = ColumnSchema::serializationTestObject();
         result.m_outerColumn = TableColumn::serializationTestObject();
+
         result.m_underSaturatedSchema = TableSchema::serializationTestObject();
         result.m_saturatedSchema = TableSchema::serializationTestObject();
+
         result.m_underSaturatedTables = {SimpleTable::serializationTestObject()};
         result.m_saturatedTable = SimpleTable::serializationTestObject();
 
         return result;
     }
 
-    /*
-      The Schema pointers m_saturatedSchema and m_underSaturatedSchema must
-      have been explicitly set before calling this method.
-    */
+    const SimpleTable& PvtxTable::getSaturatedTable() const
+    {
+        return this->m_saturatedTable;
+    }
 
-    void PvtxTable::init( const DeckKeyword& keyword, const size_t tableIdx0) {
-        const auto ranges = recordRanges( keyword );
-        auto tableIdx = tableIdx0;
+    const SimpleTable&
+    PvtxTable::getUnderSaturatedTable(const std::size_t tableNumber) const
+    {
+        if (tableNumber >= this->size()) {
+            throw std::invalid_argument {
+                fmt::format("Undersaturated table number {} exceeds "
+                            "maximum possible value of {}.",
+                            tableNumber, this->size() - 1)
+            };
+        }
 
-        if (tableIdx >= ranges.size())
-            throw std::invalid_argument("Asked for table: " + std::to_string( tableIdx ) + " in keyword + " + keyword.name() + " which only has " + std::to_string( ranges.size() ) + " tables");
+        return this->m_underSaturatedTables[tableNumber];
+    }
 
-        auto isempty = [&ranges](const size_t ix)
-        {
-            const auto& [begin, end] = ranges[ix];
-            return begin == end;
-        };
+    std::size_t PvtxTable::size() const
+    {
+        return m_outerColumn.size();
+    }
 
-        if ((tableIdx == size_t{0}) && isempty(tableIdx)) {
+    double PvtxTable::evaluate(const std::string& column,
+                               const double       outerArg,
+                               const double       innerArg) const
+    {
+        const TableIndex outerIndex = m_outerColumn.lookup(outerArg);
+
+        const auto& underSaturatedTable1 = getUnderSaturatedTable(outerIndex.getIndex1());
+        const double weight1 = outerIndex.getWeight1();
+
+        double value = weight1 * underSaturatedTable1.evaluate(column, innerArg);
+
+        if (weight1 < 1) {
+            const auto& underSaturatedTable2 = getUnderSaturatedTable(outerIndex.getIndex2());
+            const double weight2 = outerIndex.getWeight2();
+
+            value += weight2 * underSaturatedTable2.evaluate(column, innerArg);
+        }
+
+        return value;
+    }
+
+    double PvtxTable::getArgValue(const std::size_t index) const
+    {
+        if (! (index < m_outerColumn.size())) {
+            throw std::invalid_argument {
+                fmt::format("Invalid index {}", index)
+            };
+        }
+
+        return this->m_outerColumn[index];
+    }
+
+    bool PvtxTable::operator==(const PvtxTable& data) const
+    {
+        return (this->m_outerColumnSchema == data.m_outerColumnSchema)
+            && (this->m_outerColumn == data.m_outerColumn)
+            && (this->m_underSaturatedSchema == data.m_underSaturatedSchema)
+            && (this->m_saturatedSchema == data.m_saturatedSchema)
+            && (this->m_underSaturatedTables == data.m_underSaturatedTables)
+            && (this->m_saturatedTable == data.m_saturatedTable)
+            ;
+    }
+
+    // The "schema" members m_saturatedSchema and m_underSaturatedSchema
+    // must have been explicitly set before calling this method.
+
+    void PvtxTable::init(const DeckKeyword& keyword,
+                         const std::size_t  tableIdx0)
+    {
+        const auto ranges = recordRanges(keyword);
+
+        if (tableIdx0 >= ranges.size()) {
+            throw std::invalid_argument {
+                fmt::format("Asked for table {} in keyword {} "
+                            "which only has {} tables.",
+                            tableIdx0, keyword.name(), ranges.size())
+            };
+        }
+
+        const auto tableIdx = locateSourceTable(tableIdx0, ranges);
+
+        if (! tableIdx.has_value()) {
             throw OpmInputError {
                 "Cannot default region 1's table data",
                 keyword.location()
             };
         }
 
-        // Locate source table for this region.  Last non-empty table up to
-        // and including 'tableIdx0'.
-        while ((tableIdx > size_t{0}) && isempty(tableIdx)) {
-            --tableIdx;
+        // We identify as 'tableIdx0' even if the real source table is
+        // '*tableIdx' (<= tableIdx0).  Input failure diagnostics reported
+        // to the user should refer to the actual PVT region we're
+        // processing.
+        this->populateUndersaturatedTables(keyword, tableIdx0,
+                                           ranges[*tableIdx].first,
+                                           ranges[*tableIdx].second);
+
+
+        this->populateSaturatedTable(keyword.name());
+    }
+
+    void PvtxTable::populateUndersaturatedTables(const DeckKeyword& keyword,
+                                                 const std::size_t  tableIdx,
+                                                 const std::size_t  first,
+                                                 const std::size_t  last)
+    {
+        for (auto rowIdx = first; rowIdx < last; ++rowIdx) {
+            const auto& deckRecord = keyword.getRecord(rowIdx);
+
+            this->m_outerColumn
+                .addValue(deckRecord.getItem(0).getSIDouble(0), keyword.name());
+
+            this->m_underSaturatedTables
+                .emplace_back(this->m_underSaturatedSchema,
+                              keyword.name(), deckRecord.getItem(1), tableIdx);
         }
+    }
 
-        {
-            auto range = ranges[ tableIdx ];
-            for (size_t  rowIdx = range.first; rowIdx < range.second; rowIdx++) {
-                const auto& deckRecord = keyword.getRecord(rowIdx);
-                m_outerColumn.addValue( deckRecord.getItem( 0 ).getSIDouble( 0 ),  keyword.name());
+    void PvtxTable::populateSaturatedTable(const std::string& tableName)
+    {
+        this->m_saturatedTable = SimpleTable { this->m_saturatedSchema };
 
-                const auto& dataItem = deckRecord.getItem(1);
-                m_underSaturatedTables.emplace_back(this->m_underSaturatedSchema, keyword.name(),  dataItem, tableIdx );
+        auto row = std::vector<double>(this->m_saturatedSchema.size());
+
+        const auto numSaturatedTables = this->size();
+        const auto usatTableSrcRow = std::size_t { 0 };
+
+        for (auto tableIdx = 0*numSaturatedTables; tableIdx < numSaturatedTables; ++tableIdx) {
+            const auto& usatTable = this->getUnderSaturatedTable(tableIdx);
+
+            row[0] = this->m_outerColumn[tableIdx];
+
+            for (auto colIdx = 0*row.size() + 1; colIdx < row.size(); ++colIdx) {
+                row[colIdx] = usatTable.get(colIdx - 1, usatTableSrcRow);
             }
 
-
-            m_saturatedTable = SimpleTable(m_saturatedSchema);
-            for (size_t sat_index = 0; sat_index < size(); sat_index++) {
-                const auto& underSaturatedTable = getUnderSaturatedTable( sat_index );
-                std::vector<double> row(m_saturatedSchema.size());
-                row[0] = m_outerColumn[sat_index];
-                for (size_t col_index = 0; col_index < m_underSaturatedSchema.size(); col_index++)
-                    row[col_index + 1] = underSaturatedTable.get( col_index , 0 );
-
-                m_saturatedTable.addRow( row, keyword.name() );
-            }
+            this->m_saturatedTable.addRow(row, tableName);
         }
     }
 
-
-    double PvtxTable::evaluate(const std::string& column, double outerArg, double innerArg) const
-    {
-        TableIndex outerIndex = m_outerColumn.lookup( outerArg );
-        const auto& underSaturatedTable1 = getUnderSaturatedTable( outerIndex.getIndex1( ) );
-        double weight1 = outerIndex.getWeight1( );
-        double value = weight1 * underSaturatedTable1.evaluate( column , innerArg );
-
-        if (weight1 < 1) {
-            const auto& underSaturatedTable2 = getUnderSaturatedTable( outerIndex.getIndex2( ) );
-            double weight2 = outerIndex.getWeight2( );
-
-            value += weight2 * underSaturatedTable2.evaluate( column , innerArg );
-        }
-
-        return value;
-    }
-
-
-    const SimpleTable& PvtxTable::getSaturatedTable() const {
-        return this->m_saturatedTable;
-    }
-
-
-
-    const SimpleTable& PvtxTable::getUnderSaturatedTable(size_t tableNumber) const {
-        if (tableNumber >= size())
-            throw std::invalid_argument("Invalid table number: " + std::to_string( tableNumber) + " max: " + std::to_string( size() - 1 ));
-        return m_underSaturatedTables[ tableNumber ];
-    }
-
-
-    std::vector< SimpleTable >::const_iterator PvtxTable::begin() const {
-        return m_underSaturatedTables.begin();
-    }
-
-    std::vector< SimpleTable >::const_iterator PvtxTable::end() const {
-        return m_underSaturatedTables.end();
-    }
-
-
-
-    size_t PvtxTable::size() const
-    {
-        return m_outerColumn.size();
-    }
-
-
-    size_t PvtxTable::numTables( const DeckKeyword& keyword )
-    {
-        auto ranges = recordRanges(keyword);
-        return ranges.size();
-    }
-
-
-    std::vector<std::pair<size_t , size_t> > PvtxTable::recordRanges( const DeckKeyword& keyword ) {
-        std::vector<std::pair<size_t,size_t> > ranges;
-        size_t startRecord = 0;
-        size_t recordIndex = 0;
-        while (recordIndex < keyword.size()) {
-            const auto& item = keyword.getRecord(recordIndex).getItem(0);
-            if (!item.hasValue(0)) {
-                ranges.push_back( std::make_pair( startRecord , recordIndex ) );
-                startRecord = recordIndex + 1;
-            }
-            recordIndex++;
-        }
-        ranges.push_back( std::make_pair( startRecord , recordIndex ) );
-        return ranges;
-    }
-
-
-    double PvtxTable::getArgValue(size_t index) const {
-        if (index < m_outerColumn.size())
-            return m_outerColumn[index];
-        else
-            throw std::invalid_argument("Invalid index");
-    }
-
-
-    bool PvtxTable::operator==(const PvtxTable& data) const {
-        return this->m_outerColumnSchema == data.m_outerColumnSchema &&
-               this->m_outerColumn == data.m_outerColumn &&
-               this->m_underSaturatedSchema == data.m_underSaturatedSchema &&
-               this->m_saturatedSchema == data.m_saturatedSchema &&
-               this->m_underSaturatedTables == data.m_underSaturatedTables &&
-               this->m_saturatedTable == data.m_saturatedTable;
-    }
-}
+} // namespace Opm
