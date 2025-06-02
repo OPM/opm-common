@@ -22,7 +22,7 @@ This folder contains the Python bindings for the OPM-common module and code requ
 	```
 
   Then:
-    - Either: Build the moodule opm-common and install it with "make install" - this will copy the file `<opm-common-folder>/python/opm_embedded/__init__.pyi` to the location where opm_embedded is installed, making it visible to VSCode.
+    - Either: Build the module opm-common and install it with "make install" - this will copy the file `<opm-common-folder>/python/opm_embedded/__init__.pyi` to the location where opm_embedded is installed, making it visible to VSCode.
     - Or: Copy the file `<opm-common-folder>/python/opm_embedded/__init__.pyi` into the folder defined in variable `python.analysis.stubPath` of VS Code and rename it to `opm_embedded.pyi`.
 
 - So: **When updating any classes or documentation here, please also update the stub file located in `<opm-common-folder>/python/opm_embedded/__init__.pyi`!**
