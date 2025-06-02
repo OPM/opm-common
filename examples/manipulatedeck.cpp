@@ -438,12 +438,13 @@ void extendDimens(const GridSize& grid_size, ExtendParam& extend_param, Opm::Dec
         goc = 0.0;
         deckkeyword.addRecord(std::move(record));
         }
-        if(records.name() == std::string("RSVD")){
+        if((records.name() == std::string("RSVD")) || records.name() == std::string("RTEMPVD")){
             DeckKeyword& deckkeyword = const_cast<DeckKeyword&>(records);
             assert(records.size() >0);
             DeckRecord record = records.getRecord(0);
             deckkeyword.addRecord(std::move(record));
         }
+        
 
     }     
 }
@@ -465,7 +466,7 @@ Opm::Deck manipulate_deck(const char* deck_file, std::ostream& os)
     extend_param.no_gap= true;
     extend_param.vert_coord= true;
     extend_param.monotonic_zcorn= true;// change results on norne?
-    extend_param.min_dist = 3;
+    extend_param.min_dist = 10;
     extend_param.upper_poro= 0.1;
     extend_param.nz_lower = 3;
     extend_param.bottom_lower = 3600;
