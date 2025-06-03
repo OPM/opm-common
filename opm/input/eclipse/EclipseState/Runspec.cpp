@@ -783,6 +783,14 @@ Runspec::Runspec(const Deck& deck)
             OpmLog::note(msg);
         }
 
+        if (runspecSection.hasKeyword<ParserKeywords::FRAC>()) {
+            m_frac = true;
+
+            const std::string msg = "\nSimulation will solve with fractures in wells";
+
+            OpmLog::note(msg);
+        }
+
         if (runspecSection.hasKeyword<ParserKeywords::TEMP>()) {
             m_temp = true;
 
@@ -921,6 +929,11 @@ bool Runspec::mech() const noexcept
     return this->m_mech;
 }
 
+bool Runspec::frac() const noexcept
+{
+    return this->m_frac;
+}
+
 bool Runspec::temp() const noexcept
 {
     return this->m_temp;
@@ -979,6 +992,7 @@ bool Runspec::rst_cmp(const Runspec& full_spec, const Runspec& rst_spec)
         full_spec.m_h2storage == rst_spec.m_h2storage &&
         full_spec.m_micp == rst_spec.m_micp &&
         full_spec.m_mech == rst_spec.m_mech &&
+        full_spec.m_frac == rst_spec.m_frac &&
         full_spec.m_temp == rst_spec.m_temp &&
         Welldims::rst_cmp(full_spec.wellDimensions(), rst_spec.wellDimensions());
 }
@@ -1007,6 +1021,7 @@ bool Runspec::operator==(const Runspec& data) const
         && (this->m_h2storage == data.m_h2storage)
         && (this->m_micp == data.m_micp)
         && (this->m_mech == data.m_mech)
+        && (this->m_frac == data.m_frac)
         && (this->m_temp == data.m_temp)
         ;
 }
