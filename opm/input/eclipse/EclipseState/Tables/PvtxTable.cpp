@@ -142,27 +142,6 @@ namespace Opm {
         return m_outerColumn.size();
     }
 
-    double PvtxTable::evaluate(const std::string& column,
-                               const double       outerArg,
-                               const double       innerArg) const
-    {
-        const TableIndex outerIndex = m_outerColumn.lookup(outerArg);
-
-        const auto& underSaturatedTable1 = getUnderSaturatedTable(outerIndex.getIndex1());
-        const double weight1 = outerIndex.getWeight1();
-
-        double value = weight1 * underSaturatedTable1.evaluate(column, innerArg);
-
-        if (weight1 < 1) {
-            const auto& underSaturatedTable2 = getUnderSaturatedTable(outerIndex.getIndex2());
-            const double weight2 = outerIndex.getWeight2();
-
-            value += weight2 * underSaturatedTable2.evaluate(column, innerArg);
-        }
-
-        return value;
-    }
-
     double PvtxTable::getArgValue(const std::size_t index) const
     {
         if (! (index < m_outerColumn.size())) {

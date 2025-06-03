@@ -172,22 +172,6 @@ namespace Opm {
         /// \param[in] tableNumber Node index in the range 0..size()-1.
         const SimpleTable& getUnderSaturatedTable(std::size_t tableNumber) const;
 
-        /// Interpolate property value at single point
-        ///
-        /// \param[in] column Property name.  Must be one of the named
-        /// dependent properties defined by a derived class.
-        ///
-        /// \param[in] outerArg Value of primary lookup key/variate.
-        /// Typically an Rs (PVTO) or a Pg (PVTG) value.
-        ///
-        /// \param[in] innerArg Value of secondary independent variate.
-        /// Typically an oil pressure (PVTO) or Rv (PVTG) value.
-        ///
-        /// \return Value of dependent variate \p column at the indenpendent
-        /// variate point (\p outerArg, \p innerArg), e.g., Bo(Rs,Po) or
-        /// Vg(Pg,Rv).
-        double evaluate(const std::string& column, double outerArg, double innerArg) const;
-
         /// Retrieve composition/pressure node value at input point.
         ///
         /// \param[in] index Node index in the range 0..size()-1.
