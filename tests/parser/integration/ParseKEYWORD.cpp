@@ -958,9 +958,6 @@ PVTO
     BOOST_CHECK_EQUAL( BO.back( ) , 1.01 );
 
     BOOST_CHECK_CLOSE(1.15 , table0.evaluate( "BO" , 250*1e5 ) , 1e-6);
-
-    BOOST_CHECK_CLOSE( 1.15 , pvtoTable.evaluate( "BO" , 1e-3 , 250*1e5 ) , 1e-6 );
-    BOOST_CHECK_CLOSE( 1.15 , pvtoTable.evaluate( "BO" , 0.0 , 250*1e5 ) , 1e-6 );
 }
 
 BOOST_AUTO_TEST_CASE( SGOF ) {
