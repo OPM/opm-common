@@ -1,5 +1,5 @@
 /*
-  Copyright 2021-2025 Equinor ASA.
+  Copyright 2025 Equinor ASA.
   Copyright 2016, 2017, 2018 Statoil ASA.
 
   This file is part of the Open Porous Media Project (OPM).
@@ -24,11 +24,7 @@
 #include <ctime>
 #include <vector>
 
-namespace Opm {
-
-} // namespace Opm
-
-namespace Opm { namespace RestartIO {
+namespace Opm::RestartIO {
 
     class LgrHEADD
     {

@@ -1,5 +1,5 @@
 /*
-  Copyright (c) 2021 Equinor ASA
+  Copyright (c) 2025 Equinor ASA
   Copyright (c) 2018 Statoil ASA
 
   This file is part of the Open Porous Media project (OPM).

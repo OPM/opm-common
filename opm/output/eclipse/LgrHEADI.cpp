@@ -1,5 +1,5 @@
 /*
-  Copyright 2021 Equinor ASA.
+  Copyright 2025 Equinor ASA.
   Copyright 2016, 2017, 2018 Statoil ASA.
 
   This file is part of the Open Porous Media Project (OPM).
@@ -22,30 +22,8 @@
 
 #include <opm/output/eclipse/VectorItems/lgrheadi.hpp>
 
-// #include <opm/input/eclipse/EclipseState/Aquifer/Aquancon.hpp>
-// #include <opm/input/eclipse/EclipseState/Aquifer/AquiferConfig.hpp>
-// #include <opm/input/eclipse/EclipseState/Aquifer/AquiferFlux.hpp>
-// #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
-// #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
-// #include <opm/input/eclipse/EclipseState/Runspec.hpp>
-
-// #include <opm/input/eclipse/Schedule/Schedule.hpp>
-// #include <opm/input/eclipse/Schedule/ScheduleState.hpp>
-// #include <opm/input/eclipse/Schedule/UDQ/UDQEnums.hpp>
-
-// #include <opm/input/eclipse/Units/UnitSystem.hpp>
-
-// #include <opm/common/utility/TimeService.hpp>
-
-// #include <algorithm>
-// #include <array>
-// #include <chrono>
 #include <cmath>
 #include <ctime>
-// #include <initializer_list>
-// #include <numeric>
-// #include <ratio>
-// #include <utility>
 #include <vector>
 
 // Public LGRHEADI items are recorded in the common header file
