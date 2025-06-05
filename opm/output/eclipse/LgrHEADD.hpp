@@ -38,8 +38,6 @@ namespace Opm::RestartIO {
         LgrHEADD& operator=(const LgrHEADD& rhs) = default;
         LgrHEADD& operator=(LgrHEADD&& rhs) = default;
 
-        LgrHEADD& initialize();
-
 
         const std::vector<double>& data() const
         {
@@ -49,6 +47,6 @@ namespace Opm::RestartIO {
     private:
         std::vector<double> data_;
     };
-}} // Opm::RestartIO
+} // Opm::RestartIO
 
 #endif // OPM_LGRHEADD_HEADER_INCLUDED

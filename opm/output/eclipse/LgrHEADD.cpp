@@ -52,11 +52,6 @@ enum index : std::vector<int>::size_type {
 
 Opm::RestartIO::LgrHEADD::LgrHEADD()
     : data_(LGRHEADD_NUMBER_OF_ITEMS, -0.1E+21)
-{}
-
-Opm::RestartIO::LgrHEADD&
-Opm::RestartIO::LgrHEADD::initialize()
 {
     this->data_[ih_001] = 0.0;
-    return *this;
 }

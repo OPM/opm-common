@@ -36,8 +36,7 @@ std::vector<double>
 Opm::RestartIO::Helpers::
 createLgrHeadd()
 {    
-    const auto ih = LgrHEADD{}
-        .initialize         ()
+    const auto ih = LgrHEADD()
         ;
 
     return ih.data();
