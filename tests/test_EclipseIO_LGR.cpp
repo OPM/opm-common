@@ -112,7 +112,9 @@ const std::string deckStringLGR = std::string { R"(RUNSPEC
     PORO
             9*0.3 /
     PERMX
-        9*500 /
+        110 120 130
+        210 220 230
+        310 320 330  /
     PERMY
         9*200 /
     PERMZ
@@ -181,109 +183,6 @@ const std::string deckStringLGR = std::string { R"(RUNSPEC
     1.6180	5014.7	1.8270	0.4490 
         9014.7	1.7370	0.6310 /	
     /
-    SOLUTION
-    EQUIL
-        8400 4800 8450 0 8300 0 1 0 0 /
-    RSVD
-    8300 1.270
-    8450 1.270 /
-    SUMMARY
-    FOPR
-    WGOR
-        'PROD'
-    /
-    FGOR
-    BPR
-    1  1  1 /
-    10 10 3 /
-    /
-    BGSAT
-    1  1  1 /
-    1  1  2 /
-    1  1  3 /
-    10 1  1 /
-    10 1  2 /
-    10 1  3 /
-    10 10 1 /
-    10 10 2 /
-    10 10 3 /
-    /
-    WBHP
-        'INJ'
-        'PROD'
-    /
-    WGIR
-        'INJ'
-        'PROD'
-    /
-    WGIT
-        'INJ'
-        'PROD'
-    /
-    WGPR
-        'INJ'
-        'PROD'
-    /
-    WGPT
-        'INJ'
-        'PROD'
-    /
-    WOIR
-        'INJ'
-        'PROD'
-    /
-    WOIT
-        'INJ'
-        'PROD'
-    /
-    WOPR
-        'INJ'
-        'PROD'
-    /
-    WOPT
-        'INJ'
-        'PROD'
-    /
-    WWIR
-        'INJ'
-        'PROD'
-    /
-    WWIT
-        'INJ'
-        'PROD'
-    /
-    WWPR
-        'INJ'
-        'PROD'
-    /
-    WWPT
-        'INJ'
-        'PROD'
-    /
-    SCHEDULE
-    RPTSCHED
-        'PRES' 'SGAS' 'RS' 'WELLS' /
-    RPTRST
-        'BASIC=1' /
-    DRSDT
-        0 /
-    WELSPECL
-        'PROD'	'G1' 'LGR2'	3	3	8400	'OIL' /
-        'INJ'	'G1' 'LGR1'	1	1	8335	'GAS' /
-    /
-    COMPDATL
-        'PROD' 'LGR2'	3	3	1	1	'OPEN'	1*	1*	0.5 /
-        'INJ'  'LGR1'   1	1	1	1	'OPEN'	1*	1*	0.5 /
-    /
-    WCONPROD
-        'PROD' 'OPEN' 'ORAT' 20000 4* 1000 /
-    /
-    WCONINJE
-        'INJ'	'GAS'	'OPEN'	'RATE'	100000 1* 9014 /
-    /
-    TSTEP
-    31 28 31 30 31 30 31 31 30 31 30 31 
-    /
     )" };
     
 
@@ -294,15 +193,25 @@ T sum(const std::vector<T>& array)
 }
 
 template< typename T, typename U >
-void compareErtData(const std::vector< T > &src,
+void compareSequences(const std::vector< T > &src,
                     const std::vector< U > &dst,
                     double tolerance ) {
     BOOST_REQUIRE_EQUAL(src.size(), dst.size());
 
-    for (size_t i = 0; i < src.size(); ++i)
+    for (auto i = 0*src.size(); i < src.size(); ++i) {
         BOOST_CHECK_CLOSE(src[i], dst[i], tolerance);
+    }
 }
 
+template< typename T, typename U >
+void compareSequencesToScalar(const std::vector< T > &src,
+                     U  &dst,
+                    double tolerance ) {
+
+    for (auto i = 0*src.size(); i < src.size(); ++i) {
+        BOOST_CHECK_CLOSE(src[i], dst, tolerance);
+    }
+}
 
 void checkInitFile(const Deck& deck,[[maybe_unused]] const data::Solution& simProps)
 {
@@ -316,15 +225,15 @@ void checkInitFile(const Deck& deck,[[maybe_unused]] const data::Solution& simPr
         const auto& poro_lgr2   = initFile.getInitData<float>("PORO", lgr_names[1]);
         const auto& expect = deck["PORO"].back().getSIDoubleData();
 
-        compareErtData(expect, poro_global, 1e-4);
-        compareErtData(expect, poro_lgr1, 1e-4);
-        compareErtData(expect, poro_lgr2, 1e-4);
+        compareSequences(expect, poro_global, 1e-4);
+        compareSequences(expect, poro_lgr1, 1e-4);
+        compareSequences(expect, poro_lgr2, 1e-4);
 
     }
 
     if (initFile.hasKey("PERMX")) {
         const auto& expect = deck["PERMX"].back().getSIDoubleData();
-        auto        permx  = initFile.get<float>("PERMX");
+        auto        permx  = initFile.getInitData<float>("PERMX");
         auto        permx_lgr1  = initFile.getInitData<float>("PERMX", lgr_names[0]);
         auto        permx_lgr2  = initFile.getInitData<float>("PERMX", lgr_names[1]);
 
@@ -335,12 +244,11 @@ void checkInitFile(const Deck& deck,[[maybe_unused]] const data::Solution& simPr
         std::transform(permx_lgr2.begin(), permx_lgr2.end(), permx_lgr2.begin(),
                        [](const auto& kx) { return kx * 9.869233e-16; });
 
-
-        compareErtData(expect, permx, 1e-4);
-        compareErtData(expect, permx_lgr1, 1e-4);
-        compareErtData(expect, permx_lgr2, 1e-4);
-
+        compareSequences(expect, permx, 1e-4);
+        compareSequencesToScalar(permx_lgr1, expect[0], 1e-4);
+        compareSequencesToScalar(permx_lgr2, expect[8], 1e-4);
     }
+
     if (initFile.hasKey("LGRHEADQ")) {
         auto        lgrheadq_lgr1  = initFile.getInitData<bool>("LGRHEADQ", lgr_names[0]);
         auto        lgrheadq_lgr2  = initFile.getInitData<bool>("LGRHEADQ", lgr_names[1]);
