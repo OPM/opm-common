@@ -27,6 +27,7 @@
 #include <opm/input/eclipse/Units/Units.hpp>
 
 #include <algorithm>
+#include <cassert>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -130,6 +131,16 @@ double Opm::GuideRate::get(const std::string& name, const Phase& phase) const
         throw std::logic_error {message};
     }
     return iter->second;
+}
+
+const Opm::GuideRate::RateVector& Opm::GuideRate::getPotentials(const std::string& name) const
+{
+    if (const auto candidate = this->potentials.find(name); candidate == this->potentials.end()) {
+        auto message = fmt::format("Potentials for '{}' do not exist.", name);
+        throw std::logic_error {message};
+    } else {
+        return candidate->second;
+    }
 }
 
 double Opm::GuideRate::getSI(const std::string&          well,
