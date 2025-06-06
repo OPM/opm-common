@@ -825,7 +825,6 @@ if(ENABLE_ECL_INPUT)
     tests/BASE.UNRST
   )
   list (APPEND EXAMPLE_SOURCE_FILES
-    examples/manipulatedeck.cpp
     examples/opmi.cpp
     examples/opmpack.cpp
     examples/opmhash.cpp
@@ -844,7 +843,6 @@ list (APPEND PROGRAM_SOURCE_FILES
 )
 if(ENABLE_ECL_INPUT)
   list (APPEND PROGRAM_SOURCE_FILES
-    examples/manipulatedeck.cpp
     examples/opmi.cpp
     examples/opmpack.cpp
     examples/opmhash.cpp
