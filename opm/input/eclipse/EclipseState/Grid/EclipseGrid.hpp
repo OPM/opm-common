@@ -28,6 +28,7 @@
 
 #include <array>
 #include <memory>
+#include <ranges>
 #include <optional>
 #include <stdexcept>
 #include <string>
@@ -82,7 +83,7 @@ namespace Opm {
                     const int * actnum = nullptr);
 
         virtual ~EclipseGrid() = default;
-
+        
         /// EclipseGrid ignores ACTNUM in Deck, and therefore needs ACTNUM
         /// explicitly.  If a null pointer is passed, every cell is active.
         explicit EclipseGrid(const Deck& deck, const int * actnum = nullptr);
@@ -109,6 +110,9 @@ namespace Opm {
         size_t getActiveIndex(size_t i, size_t j, size_t k) const {
             return activeIndex(i, j, k);
         }
+        const std::vector<std::size_t>& get_print_order_lgr () const {
+          return m_print_order_lgr_cells;
+        }       
 
         size_t getActiveIndex(size_t globalIndex) const {
             return activeIndex(globalIndex);
@@ -124,7 +128,7 @@ namespace Opm {
             return this->all_lgr_labels;
         }
         
-        std::string get_lgr_tag() const {
+        const std::string& get_lgr_tag() const {
             return this->lgr_label;
         }
 
@@ -145,7 +149,8 @@ namespace Opm {
         void init_children_host_cells(bool logical = true);
         void init_children_host_cells_logical(void);
         void init_children_host_cells_geometrical(void);
-
+        std::array<int,3> getCellSubdivisionRatioLGR(const std::string&  lgr_tag, 
+                                                     std::array<int,3>   acum = {1,1,1}) const;
         using GridDims::getGlobalIndex;
         size_t getGlobalIndex(size_t active_index) const;
 
@@ -287,6 +292,7 @@ namespace Opm {
         static bool hasEqualDVDEPTHZ(const Deck&);
         static bool allEqual(const std::vector<double> &v);
         EclipseGridLGR& getLGRCell(std::size_t index);
+        const EclipseGridLGR& getLGRCell(std::size_t index) const;
         const EclipseGridLGR& getLGRCell(const std::string& lgr_tag) const;
         int getLGR_global_father(std::size_t global_index,  const std::string& lgr_tag) const;
 
@@ -399,9 +405,6 @@ namespace Opm {
                             std::array<double,8>& X,
                             std::array<double,8>& Y,
                             std::array<double,8>& Z) const;
-        std::array<int,3> getCellSubdivisionRatioLGR(const std::string&  lgr_tag, 
-                                                     std::array<int,3>   acum = {1,1,1}) const;
-    
     
     };
 
@@ -434,6 +437,11 @@ namespace Opm {
         get_child_LGR_cell(const std::string& lgr_tag) const;
         std::vector<int> save_hostnum(void) const;
         int get_hostnum(std::size_t global_index) const {return(m_hostnum[global_index]);};
+        
+        //parsing the father grid allows the global_father references to be given in terms of father_grid
+        std::vector<int> getLGRCell_global_father(const EclipseGrid& father_grid) const;      
+        std::vector<double> getLGRCell_all_depth (const EclipseGrid& father_grid) const;      
+
         void get_label_child_to_top_father(std::vector<std::reference_wrapper<const std::string>>& list) const;
         void get_global_index_child_to_top_father(std::vector<std::size_t> & list, 
                                                   std::size_t i, std::size_t j, std::size_t k) const;
