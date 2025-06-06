@@ -378,25 +378,28 @@ namespace {
 
     }
 
-    void writePoreVolume(const ::Opm::EclipseState&        es,
-                         const ::Opm::UnitSystem&          units,
-                         ::Opm::EclIO::OutputStream::Init& initFile)
+    std::vector<double> readGlobalPoreVolume(const ::Opm::EclipseState&              es,
+                                             const ::Opm::UnitSystem&                units)
     {
         auto porv = es.globalFieldProps().porv(true);
         units.from_si(::Opm::UnitSystem::measure::volume, porv);
+        return porv;
+    }
+
+
+    void writePoreVolume(const   std::vector<double>&      porv,
+                         ::Opm::EclIO::OutputStream::Init& initFile)
+    {
         initFile.write("PORV", singlePrecision(porv));
     }
 
-    void writePoreVolumeLGRCell(const ::Opm::EclipseState&              es,
-                                const ::Opm::UnitSystem&                units,
+    void writePoreVolumeLGRCell(const   std::vector<double>&            porv,
                                 const   std::vector<int>&               global_fathers,
                                 const               int                 volume_prop,
                                       ::Opm::EclIO::OutputStream::Init& initFile)
 
     {
-        auto porv = es.globalFieldProps().porv(true);
         auto local_porv = VectorUtil::filterArray(porv, global_fathers);
-        units.from_si(::Opm::UnitSystem::measure::volume, local_porv);
         VectorUtil::scalarVectorOperation(static_cast<double>(volume_prop), local_porv,  std::divides<double>{});
         initFile.write("PORV", singlePrecision(local_porv));
     }    
@@ -434,10 +437,6 @@ namespace {
         // container.
 
         const auto& fp = es.globalFieldProps();
-        fp.get_int("PVTNUM");
-        fp.get_int("SATNUM");
-        fp.get_int("EQLNUM");
-        fp.get_int("FIPNUM");
 
         for (const auto& keyword : fp.keys<int>()) {
             auto data = fp.get_int(keyword);
@@ -893,7 +892,9 @@ void Opm::InitIO::write(const ::Opm::EclipseState&              es,
     // set to zero for inactive cells.  This treatment implies that the
     // active/inactive cell mapping can be inferred by reading the PORV
     // vector from the result set.
-    writePoreVolume(es, units, initFile);
+    const auto porv = readGlobalPoreVolume(es, units);
+    writePoreVolume(porv, initFile);
+
     writeGridGeometry(grid, units, initFile);
     writeDoubleCellProperties(es, units, initFile);
     writeSimulatorProperties(grid, simProps, initFile);
@@ -925,7 +926,7 @@ void Opm::InitIO::write(const ::Opm::EclipseState&              es,
             const std::array<int,3> subdivisions = grid.getCellSubdivisionRatioLGR(lgr_label);
             std::vector<int> global_fathers = lgr_grid.getLGRCell_global_father(grid);
             writeInitFileHeaderLGRCell(es, lgr_grid, schedule, initFile, index+1);           
-            writePoreVolumeLGRCell(es, units, global_fathers, subdivisions[0]*subdivisions[1]*subdivisions[2], initFile);
+            writePoreVolumeLGRCell(porv, global_fathers, subdivisions[0]*subdivisions[1]*subdivisions[2], initFile);
             writeGridGeometryLGRCell(grid, lgr_grid, units, initFile, subdivisions[0], subdivisions[1], subdivisions[2]);
             writeDoubleCellProperties(es, units, initFile, global_fathers);
             writeSimulatorPropertiesLGRCell(grid, simProps, initFile, global_fathers);
