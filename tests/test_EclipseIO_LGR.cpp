@@ -16,8 +16,17 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include "config.h"
-#include "opm/io/eclipse/EInit.hpp"
+#include <boost/test/tools/old/interface.hpp>
+#include <opm/io/eclipse/EInit.hpp>
+
+#include <opm/output/eclipse/LgrHEADD.hpp>
+#include <opm/output/eclipse/LgrHEADI.hpp>
+#include <opm/output/eclipse/LgrHEADQ.hpp>
+
+// #include <opm/output/eclipse/VectorItems/lgrheadd.hpp>
+// #include <opm/output/eclipse/VectorItems/lgrheadi.hpp>
+// #include <opm/output/eclipse/VectorItems/lgrheadq.hpp>
+
 
 #define BOOST_TEST_MODULE EclipseIO_LGR
 #include <boost/test/unit_test.hpp>
@@ -55,18 +64,14 @@
 #include <opm/input/eclipse/Parser/Parser.hpp>
 
 #include <algorithm>
-#include <fstream>
-#include <ios>
+#include <config.h>
 #include <map>
 #include <memory>
 #include <numeric>
 #include <stdexcept>
 #include <string>
-#include <tuple>
-#include <utility>
 #include <vector>
 
-#include <time.h>
 
 #include <tests/WorkArea.hpp>
 
@@ -101,7 +106,7 @@ const std::string deckStringLGR = std::string { R"(RUNSPEC
     'LGR2'  3  3  3  3  1  1  3  3  1 /
     ENDFIN
     INIT
-    DX 
+    DX
         9*1000 /
     DY
         9*1000 /
@@ -155,7 +160,7 @@ const std::string deckStringLGR = std::string { R"(RUNSPEC
     0.5	0.72	0.001	0
     0.6	0.87	0.0001	0
     0.7	0.94	0.000	0
-    0.85	0.98	0.000	0 
+    0.85	0.98	0.000	0
     0.88	0.984	0.000	0 /
     DENSITY
                 53.66 64.49 0.0533 /
@@ -178,13 +183,13 @@ const std::string deckStringLGR = std::string { R"(RUNSPEC
     0.6360	2014.7	1.4350	0.6950 /
     0.7750	2514.7	1.5000	0.6410 /
     0.9300	3014.7	1.5650	0.5940 /
-    1.2700	4014.7	1.6950	0.5100 
+    1.2700	4014.7	1.6950	0.5100
         9014.7	1.5790	0.7400 /
-    1.6180	5014.7	1.8270	0.4490 
-        9014.7	1.7370	0.6310 /	
+    1.6180	5014.7	1.8270	0.4490
+        9014.7	1.7370	0.6310 /
     /
     )" };
-    
+
 
 template <typename T>
 T sum(const std::vector<T>& array)
@@ -205,9 +210,9 @@ void compareSequences(const std::vector< T > &src,
 
 template< typename T, typename U >
 void compareSequencesToScalar(const std::vector< T > &src,
-                     U  &dst,
-                    double tolerance ) {
-
+                                                  U  &dst,
+                                        double tolerance )
+{
     for (auto i = 0*src.size(); i < src.size(); ++i) {
         BOOST_CHECK_CLOSE(src[i], dst, tolerance);
     }
@@ -256,11 +261,6 @@ void checkInitFile(const Deck& deck,[[maybe_unused]] const data::Solution& simPr
         BOOST_CHECK_EQUAL_COLLECTIONS(lgrheadq_lgr1.begin(), lgrheadq_lgr1.end(), lgrheadq.begin(), lgrheadq.end());
         BOOST_CHECK_EQUAL_COLLECTIONS(lgrheadq_lgr2.begin(), lgrheadq_lgr2.end(), lgrheadq.begin(), lgrheadq.end());
     }
-
-
-
-
-
 }
 
 
@@ -314,3 +314,38 @@ BOOST_AUTO_TEST_CASE(EclipseIOLGR_INIT)
     write_and_check();
 }
 
+
+BOOST_AUTO_TEST_CASE(TestLgrHEADD)
+{
+    Opm::RestartIO ::LgrHEADD lgrheadd;
+    BOOST_REQUIRE_EQUAL(lgrheadd.data().size(),5);
+    auto& data = lgrheadd.data();
+    BOOST_REQUIRE_EQUAL(data[0], 0.0);
+    for (std::vector<double>::size_type i = 1; i < data.size(); ++i) {
+        BOOST_REQUIRE_EQUAL(data[i], -0.1E+21);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(TestLgrHEADI)
+{
+    Opm::RestartIO ::LgrHEADI lgrheadi;
+    lgrheadi.toggleLGRCell();
+    lgrheadi.numberoOfLGRCell(10);
+    auto& data = lgrheadi.data();
+    BOOST_REQUIRE_EQUAL(data.size(),45);
+    BOOST_REQUIRE_EQUAL(data[0],10);
+    BOOST_REQUIRE_EQUAL(data[1],100);
+    lgrheadi.toggleLGRCell(false);
+    BOOST_REQUIRE_EQUAL(data[1],0);
+}
+
+BOOST_AUTO_TEST_CASE(TestLgrHEADQ)
+{
+    Opm::RestartIO ::LgrHEADQ lgrheadq;
+    auto& data = lgrheadq.data();
+    BOOST_REQUIRE_EQUAL(data.size(),5);
+    bool expected = false;
+    for (const auto& val : data) {
+        BOOST_CHECK_EQUAL(val, expected);
+    }
+}

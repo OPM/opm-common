@@ -95,13 +95,13 @@ Opm::RestartIO::LgrHEADI::LgrHEADI()
 
 Opm::RestartIO::LgrHEADI&
 Opm::RestartIO::LgrHEADI::
-toggleLGRCell(const bool isLgrCell = true)
+toggleLGRCell(const bool isLgrCell)
 {
     if (isLgrCell)
     {
         this -> data_[IS_ACTIVE] = 100;
-    } 
-    else 
+    }
+    else
     {
         this -> data_[IS_ACTIVE] = 0;
     }

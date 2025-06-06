@@ -42,7 +42,7 @@ namespace Opm { namespace RestartIO {
         LgrHEADI& operator=(const LgrHEADI& rhs) = default;
         LgrHEADI& operator=(LgrHEADI&& rhs) = default;
 
-        LgrHEADI& toggleLGRCell(const bool flag);
+        LgrHEADI& toggleLGRCell(const bool isLgrCell = true);
         LgrHEADI& numberoOfLGRCell(const int nactive);
 
 
