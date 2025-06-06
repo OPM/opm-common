@@ -21,9 +21,9 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <cstdint>
-#include <opm/common/utility/numeric/VectorUtil.hpp>
+
 #include <opm/output/eclipse/WriteInit.hpp>
+#include <opm/common/utility/numeric/VectorUtil.hpp>
 
 #include <opm/io/eclipse/OutputStream.hpp>
 
@@ -389,9 +389,9 @@ namespace {
 
     void writePoreVolumeLGRCell(const ::Opm::EclipseState&              es,
                                 const ::Opm::UnitSystem&                units,
-                                      ::Opm::EclIO::OutputStream::Init& initFile,
                                 const   std::vector<int>&               global_fathers,
-                                const               int                 volume_prop)
+                                const               int                 volume_prop,
+                                      ::Opm::EclIO::OutputStream::Init& initFile)
 
     {
         auto porv = es.globalFieldProps().porv(true);
@@ -925,7 +925,7 @@ void Opm::InitIO::write(const ::Opm::EclipseState&              es,
             const std::array<int,3> subdivisions = grid.getCellSubdivisionRatioLGR(lgr_label);
             std::vector<int> global_fathers = lgr_grid.getLGRCell_global_father(grid);
             writeInitFileHeaderLGRCell(es, lgr_grid, schedule, initFile, index+1);           
-            writePoreVolumeLGRCell(es, units, initFile, global_fathers, subdivisions[0]*subdivisions[1]*subdivisions[2]);
+            writePoreVolumeLGRCell(es, units, global_fathers, subdivisions[0]*subdivisions[1]*subdivisions[2], initFile);
             writeGridGeometryLGRCell(grid, lgr_grid, units, initFile, subdivisions[0], subdivisions[1], subdivisions[2]);
             writeDoubleCellProperties(es, units, initFile, global_fathers);
             writeSimulatorPropertiesLGRCell(grid, simProps, initFile, global_fathers);

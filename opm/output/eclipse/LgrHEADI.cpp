@@ -109,7 +109,7 @@ toggleLGRCell(const bool isLgrCell = true)
 }
 
 Opm::RestartIO::LgrHEADI&
-Opm::RestartIO::LgrHEADI::setLGRCellNumber(const int nactive)
+Opm::RestartIO::LgrHEADI::numberoOfLGRCell(const int nactive)
 {
     this->data_[LGR_INDEX] = nactive;
 

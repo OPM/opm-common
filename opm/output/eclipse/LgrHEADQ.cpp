@@ -52,6 +52,6 @@ enum index : std::vector<int>::size_type {
 // =====================================================================
 
 Opm::RestartIO::LgrHEADQ::LgrHEADQ()
-    : data_(LGRHEADQ_NUMBER_OF_ITEMS, 0)
+    : data_(LGRHEADQ_NUMBER_OF_ITEMS, false)
 {}
 

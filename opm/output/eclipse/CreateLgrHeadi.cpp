@@ -35,13 +35,13 @@
 
 std::vector<int>
 Opm::RestartIO::Helpers::
-createLgrHeadi(const EclipseState& es,
+createLgrHeadi([[maybe_unused]] const EclipseState& es,
                const int           lgr_index)
 // In the future, EclipseState will manage unused lgr cells.
 {    
     const auto ih = LgrHEADI{}
         .toggleLGRCell         (true)
-        .setLGRCellNumber      (lgr_index)
+        .numberoOfLGRCell      (lgr_index)
         ;
 
     return ih.data();

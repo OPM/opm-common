@@ -42,10 +42,6 @@ namespace Opm { namespace RestartIO {
         LgrHEADQ& operator=(const LgrHEADQ& rhs) = default;
         LgrHEADQ& operator=(LgrHEADQ&& rhs) = default;
 
-        LgrHEADQ& toggleLGRCell(const bool flag);
-        LgrHEADQ& setLGRCellNumber(const int nactive);
-
-
         const std::vector<bool>& data() const
         {
             return this->data_;
