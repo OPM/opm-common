@@ -268,14 +268,10 @@ write(const std::string&                        kw,
     this->writeImpl(kw, data);
 }
 
-void
-Opm::EclIO::OutputStream::Init::
-write(const std::string&                        kw,
-      const std::vector<char >&                 data)
+void Opm::EclIO::OutputStream::Init::message(const std::string& msg)
 {
-    this->writeImpl(kw, data);
+    this->stream().message(msg);
 }
-
 
 void
 Opm::EclIO::OutputStream::Init::

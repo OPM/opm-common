@@ -876,7 +876,6 @@ namespace {
                                  const ::Opm::UnitSystem& units,
                                        ::Opm::EclIO::OutputStream::Init& initFile)
     {
-        using NullMessage = std::vector<char>;
         if (grid.is_lgr()) {
             std::vector<std::string> all_lgr_tag = grid.get_all_lgr_labels();
             for (std::size_t index : grid.get_print_order_lgr())
@@ -904,7 +903,7 @@ namespace {
                     writeSimulatorPropertiesLGRCell(grid, multipliers, initFile, global_fathers);
                 }
             }
-            initFile.write("LGRSGONE", NullMessage{});
+            initFile.message("LGRSGONE");
             }
     }
 
@@ -925,8 +924,7 @@ namespace {
             writeInitFileHeaderLGRCell(es, lgr_grid, schedule, initFile, index + 1, false);
             writeIntegerCellPropertiesLGRCell(es, global_fathers, initFile);
         }
-        using NullMessage = std::vector<char>;
-        initFile.write("LGRSGONE", NullMessage{});
+        initFile.message("LGRSGONE");
     }
 
     void writeLGRnnc(const ::Opm::EclipseState& es,
@@ -936,7 +934,6 @@ namespace {
     {
         if (!grid.is_lgr())
             return;
-        using NullMessage = std::vector<char>;
         std::vector<std::string> all_lgr_tag  = grid.get_all_lgr_labels();
         for (std::size_t index : grid.get_print_order_lgr())
         {
@@ -946,7 +943,7 @@ namespace {
             writeInitFileHeaderLGRCell(es, lgr_grid, schedule, initFile, index+1,false);
 
         }
-        initFile.write("LGRSGONE", NullMessage{});
+        initFile.message("LGRSGONE");
     }
 
 } // Anonymous namespace

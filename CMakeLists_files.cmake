@@ -654,6 +654,7 @@ if(ENABLE_ECL_OUTPUT)
           tests/test_Inplace.cpp
           tests/test_InteHEAD.cpp
           tests/test_LGOData.cpp
+          tests/test_LgrHeadX.cpp
           tests/test_LinearisedOutputTable.cpp
           tests/test_LogiHEAD.cpp
           tests/test_OutputStream.cpp
