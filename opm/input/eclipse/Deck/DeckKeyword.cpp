@@ -304,6 +304,9 @@ namespace Opm {
         return this->getDataRecord().getDataItem().getData< std::string >();
     }
 
+    std::vector<double>& DeckKeyword::getRawDoubleData() {
+        return this->getRecord(0).getItem(0).getData<double>();
+    }
 
     const std::vector<double>& DeckKeyword::getRawDoubleData() const {
         return this->getDataRecord().getDataItem().getData< double >();

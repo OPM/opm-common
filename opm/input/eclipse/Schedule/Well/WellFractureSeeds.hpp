@@ -82,11 +82,13 @@ public:
     /// a unit normal as far as class WellFractureSeeds goes, but subsequent
     /// uses may prefer unit normals.
     ///
+    /// \param[in] seedSize Fracturing plane's initial size.
+    ///
     /// \return Whether or not a seed was inserted/updated.  Typically
     /// 'true'.
     bool updateSeed(const std::size_t   seedCellGlobal,
                     const NormalVector& seedNormal,
-		    const SizeVector& seedSize);
+                    const SizeVector&   seedSize);
 
     /// Establish accelerator structure for LOG(n) normal vector lookup
     /// based on Cartesian cell indices.
@@ -119,8 +121,8 @@ public:
     ///
     /// \param[in] c Cartesian cell index.
     ///
-    /// \return Fracturing plane normal vector in cell \p c.  Not guaranteed
-    /// to be a unit normal vector.  Nullptr if no seed exists in cell \p c.
+    /// \return Fracturing plane size vector in cell \p c.  Nullptr if no
+    /// seed exists in cell \p c.
     const SizeVector* getSize(const SeedCell& c) const;
 
     /// Retrieve fracturing plane normal vector based on insertion
@@ -171,6 +173,7 @@ public:
         serializer(this->wellName_);
         serializer(this->seedCell_);
         serializer(this->seedNormal_);
+        serializer(this->seedSize_);
         serializer(this->lookup_);
     }
 
@@ -241,9 +244,13 @@ private:
     ///
     /// \param[in] seedNormal Fracturing plane's normal vector.
     ///
+    /// \param[in] seedSize Fracturing plane's initial size.
+    ///
     /// \return Whether or not a seed was inserted/updated.  Typically
     /// 'true'.
-  bool insertNewSeed(const std::size_t seedCellGlobal, const NormalVector& seedNormal, const SizeVector& seedSize);
+    bool insertNewSeed(const std::size_t   seedCellGlobal,
+                       const NormalVector& seedNormal,
+                       const SizeVector&   seedSize);
 
     /// Update normal vector direction of an existing seed cell.
     ///
@@ -252,8 +259,12 @@ private:
     ///
     /// \param[in] seedNormal Fracturing plane's normal vector.
     ///
+    /// \param[in] seedSize Fracturing plane's initial size.
+    ///
     /// \return Whether or not the normal vector for seed \p ix was updated.
-  bool updateExistingSeed(const NormalVectorIx ix, const NormalVector& seedNormal, const SizeVector& seedSize);
+    bool updateExistingSeed(const NormalVectorIx ix,
+                            const NormalVector&  seedNormal,
+                            const SizeVector&    seedSize);
 };
 
 } // namespace Opm
