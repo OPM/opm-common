@@ -200,22 +200,22 @@ namespace Opm {
         return this->stress_yz_grad;
     }
 
-    bool StressEquilRecord::operator==(const StressEquilRecord& data) const {
-        return datum_depth == data.datum_depth &&
-               datum_posx == data.datum_posx &&
-               datum_posy == data.datum_posy &&
-               stress_xx == data.stress_xx &&
-               stress_xx_grad == data.stress_xx_grad &&
-               stress_yy == data.stress_yy &&
-               stress_yy_grad == data.stress_yy_grad &&
-               stress_zz == data.stress_zz &&
-               stress_zz_grad == data.stress_zz_grad &&
-               stress_xy_grad == data.stress_xy &&
-               stress_xy_grad == data.stress_xy_grad &&
-               stress_xz == data.stress_xz &&
-               stress_xz_grad == data.stress_xz_grad &&
-               stress_yz == data.stress_yz &&
-               stress_yz_grad == data.stress_yz_grad;
+    bool StressEquilRecord::operator==(const StressEquilRecord& data) const
+    {
+        return (datum_depth == data.datum_depth)
+            && (datum_posx == data.datum_posx)
+            && (datum_posy == data.datum_posy)
+
+            // Diagonal terms
+            && (stress_xx == data.stress_xx) && (stress_xx_grad == data.stress_xx_grad)
+            && (stress_yy == data.stress_yy) && (stress_yy_grad == data.stress_yy_grad)
+            && (stress_zz == data.stress_zz) && (stress_zz_grad == data.stress_zz_grad)
+
+            // Cross terms
+            && (stress_xy == data.stress_xy) && (stress_xy_grad == data.stress_xy_grad)
+            && (stress_xz == data.stress_xz) && (stress_xz_grad == data.stress_xz_grad)
+            && (stress_yz == data.stress_yz) && (stress_yz_grad == data.stress_yz_grad)
+            ;
     }
 
     /* ----------------------------------------------------------------- */

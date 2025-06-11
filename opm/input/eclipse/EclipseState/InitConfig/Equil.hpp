@@ -109,8 +109,6 @@ namespace Opm {
                 serializer(stress_xz_grad);
                 serializer(stress_yz);
                 serializer(stress_yz_grad);
-
-
             }
 
         private:
@@ -130,8 +128,6 @@ namespace Opm {
             double stress_xz_grad = 0.0;
             double stress_yz = 0.0;
             double stress_yz_grad = 0.0;
-
-            
     };
 
     template<class RecordType>
