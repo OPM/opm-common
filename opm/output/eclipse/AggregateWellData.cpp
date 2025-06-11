@@ -38,6 +38,7 @@
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
 #include <opm/input/eclipse/Schedule/VFPProdTable.hpp>
 #include <opm/input/eclipse/Schedule/Well/WDFAC.hpp>
+#include <opm/input/eclipse/Schedule/Well/Connection.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellEconProductionLimits.hpp>
@@ -467,6 +468,38 @@ namespace {
         }
 
         template <class IWellArray>
+        void captureWellConnections(const bool                  isMsw,
+                                    const Opm::WellConnections& conns,
+                                    IWellArray&                 iWell)
+        {
+            using Ix = VI::IWell::index;
+
+            auto isRegularConn = [](const Opm::Connection& conn)
+            { return conn.kind() != Opm::Connection::CTFKind::DynamicFracturing; };
+
+            iWell[Ix::NConn] = std::count_if(conns.begin(), conns.end(), isRegularConn);
+
+            if (isMsw || (iWell[Ix::NConn] == 0)) {
+                // Set top and bottom connections to zero for multi
+                // segment wells or if there are no connections at all.
+                iWell[Ix::FirstK] = iWell[Ix::LastK] = 0;
+            }
+            else {
+                auto firstPos = std::find_if(conns.begin(), conns.end(), isRegularConn);
+
+                auto lastPos  = std::find_if(std::make_reverse_iterator(conns.end()),
+                                             std::make_reverse_iterator(conns.begin()),
+                                             isRegularConn);
+
+                assert (firstPos != conns.end());
+                assert (lastPos  != std::make_reverse_iterator(conns.begin()));
+
+                iWell[Ix::FirstK] = firstPos->getK() + 1;
+                iWell[Ix::LastK]  = lastPos ->getK() + 1;
+            }
+        }
+
+        template <class IWellArray>
         void staticContrib(const Opm::Well&                well,
                            const Opm::GasLiftOpt&          glo,
                            const Opm::WellTestConfig&      wtest_config,
@@ -482,26 +515,7 @@ namespace {
             iWell[Ix::JHead] = well.getHeadJ() + 1;
             iWell[Ix::Status] = wellStatus(well.getStatus());
 
-            // Connections
-            {
-                const auto& conn = well.getConnections();
-
-                iWell[Ix::NConn]  = static_cast<int>(conn.size());
-
-                if (well.isMultiSegment()) {
-                    // Set top and bottom connections to zero for multi
-                    // segment wells
-                    iWell[Ix::FirstK] = 0;
-                    iWell[Ix::LastK]  = 0;
-                }
-                else {
-                    iWell[Ix::FirstK] = (iWell[Ix::NConn] == 0)
-                        ? 0 : conn.get(0).getK() + 1;
-
-                    iWell[Ix::LastK] = (iWell[Ix::NConn] == 0)
-                        ? 0 : conn.get(conn.size() - 1).getK() + 1;
-                }
-            }
+            captureWellConnections(well.isMultiSegment(), well.getConnections(), iWell);
 
             iWell[Ix::Group] =
                 groupIndex(trim(well.groupName()), GroupMapNameInd);

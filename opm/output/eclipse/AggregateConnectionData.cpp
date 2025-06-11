@@ -70,6 +70,11 @@ namespace {
 
         std::size_t connID = 0;
         for (const auto* connPtr : well.getConnections().output(grid)) {
+            if (connPtr->kind() == Opm::Connection::CTFKind::DynamicFracturing) {
+                // Don't emit, or count, connections created by dynamic fracturing.
+                continue;
+            }
+
             const auto* dynConnRes = (wellRes == nullptr)
                 ? nullptr : wellRes->find_connection(connPtr->global_index());
 
