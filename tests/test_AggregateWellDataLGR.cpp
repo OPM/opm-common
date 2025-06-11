@@ -101,7 +101,6 @@ namespace {
         Sz nsgrpz;
         Sz nxgrpz;
         Sz nzgrpz;
-
     };
 
     Opm::Deck msw_sim(const std::string& fname)
