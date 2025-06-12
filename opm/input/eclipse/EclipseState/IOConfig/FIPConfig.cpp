@@ -84,6 +84,11 @@ void FIPConfig::parseRPT(const RPTConfig& rptConfig)
                         static_cast<int>(OutputField::TRACER_REGION)}, mnemonic.second);
         } else if (mnemonic.first == "FIPRESV") {
             m_flags.set(static_cast<int>(OutputField::RESV));
+        } else if (mnemonic.first == "CSVFIP") {
+            m_flags.set(static_cast<int>(OutputField::FIELD));
+            m_flags.set(static_cast<int>(OutputField::FIPNUM));
+            m_flags.set(static_cast<int>(OutputField::FIP));
+            m_flags.set(static_cast<int>(OutputField::RESV));
         } else if (mnemonic.first == "FIPVE") {
             m_flags.set(static_cast<int>(OutputField::VE));
         }
