@@ -392,6 +392,13 @@ namespace Opm {
         bool operator==(const Schedule& data) const;
         std::shared_ptr<const Python> python() const;
 
+        /// Retrieve initial report configuration object
+        ///
+        /// Populated by RPTSOL keyword in the SOLUTION section.
+        ///
+        /// \return Initial configuration object.  Nullopt if there is no
+        /// RPTSOL information in the SOLUTION section.
+        const std::optional<RPTConfig>& initialReportConfiguration() const;
 
         const ScheduleState& back() const;
         const ScheduleState& operator[](std::size_t index) const;
