@@ -86,13 +86,6 @@ namespace Opm {
                            const std::size_t seqIndex = 0,
                            int lgr_grid_number = 0,
                            const bool defaultSatTabId = true);
-        
-        void loadCOMPDATX(const DeckRecord&      record,
-                         const ScheduleGrid&    grid,
-                         const std::string&     wname,
-                         const WDFAC&           wdfac,
-                         const KeywordLocation& location,
-                         std::optional<std::string> lgr_label);
 
         void loadCOMPDAT(const DeckRecord&      record,
                          const ScheduleGrid&    grid,
@@ -219,6 +212,13 @@ namespace Opm {
         void orderTRACK();
         void orderMSW();
         void orderDEPTH();
+
+        void loadCOMPDATX(const DeckRecord&                 record,
+                          const ScheduleGrid&               grid,
+                          const std::string&                wname,
+                          const WDFAC&                      wdfac,
+                          const KeywordLocation&            location,
+                          const std::optional<std::string>& lgr_label);
     };
 
     std::optional<int>

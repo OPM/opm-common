@@ -23,9 +23,9 @@
 
 #include <opm/common/OpmLog/KeywordLocation.hpp>
 #include <opm/common/OpmLog/OpmLog.hpp>
+
 #include <opm/common/utility/ActiveGridCells.hpp>
 #include <opm/common/utility/numeric/linearInterpolation.hpp>
-#include <opm/input/eclipse/Parser/ParserKeywords/W.hpp>
 
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
@@ -39,6 +39,9 @@
 #include <opm/input/eclipse/Units/Units.hpp>
 
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
+
+#include <opm/input/eclipse/Parser/ParserKeywords/C.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/W.hpp>
 
 #include <external/resinsight/LibCore/cvfVector3.h>
 #include <external/resinsight/ReservoirDataModel/RigHexIntersectionTools.h>
@@ -356,12 +359,12 @@ namespace Opm {
                             seqIndex, lgr_grid_number, defaultSatTabId);
     }
 
-    void WellConnections::loadCOMPDATX(const DeckRecord&      record,
-                                       const ScheduleGrid&    grid,
-                                       const std::string&     wname,
-                                       const WDFAC&           wdfac,
-                                       const KeywordLocation& location,
-                                       std::optional<std::string> lgr_label = std::nullopt)
+    void WellConnections::loadCOMPDATX(const DeckRecord&                 record,
+                                       const ScheduleGrid&               grid,
+                                       const std::string&                wname,
+                                       const WDFAC&                      wdfac,
+                                       const KeywordLocation&            location,
+                                       const std::optional<std::string>& lgr_label)
     {
         const auto& itemI = record.getItem("I");
         const auto defaulted_I = itemI.defaultApplied(0) || (itemI.get<int>(0) == 0);
@@ -411,10 +414,12 @@ namespace Opm {
         for (int k = K1; k <= K2; ++k) {
             const auto& cell = grid.get_cell(I, J, k, lgr_label);
             if (!cell.is_active()) {
-                auto msg = fmt::format(R"(Problem with COMPDATX keyword
+                const auto* kw_ext = lgr_label.has_value() ? "L" : "";
+
+                auto msg = fmt::format(R"(Problem with COMPDAT{} keyword
 In {} line {}
 The cell ({},{},{}) in well {} is not active and the connection will be ignored)",
-                                       location.filename, location.lineno,
+                                       kw_ext, location.filename, location.lineno,
                                        I + 1, J + 1, k + 1, wname);
 
                 OpmLog::warning(msg);
@@ -550,16 +555,17 @@ The cell ({},{},{}) in well {} is not active and the connection will be ignored)
         }
     }
 
-
-    void WellConnections:: loadCOMPDAT(const DeckRecord&     record,
+    void WellConnections::loadCOMPDAT(const DeckRecord&      record,
                                       const ScheduleGrid&    grid,
                                       const std::string&     wname,
                                       const WDFAC&           wdfac,
                                       const KeywordLocation& location)
     {
-        loadCOMPDATX(record,grid,wname,wdfac,location);
-    }
+        // No LGR tag when processing the main grid COMPDAT keyword.
+        const auto lgr_tag = std::optional<std::string>{}; // == nullopt.
 
+        this->loadCOMPDATX(record, grid, wname, wdfac, location, lgr_tag);
+    }
 
     void WellConnections::loadCOMPDATL(const DeckRecord&      record,
                                        const ScheduleGrid&    grid,
@@ -567,8 +573,13 @@ The cell ({},{},{}) in well {} is not active and the connection will be ignored)
                                        const WDFAC&           wdfac,
                                        const KeywordLocation& location)
     {
-        const std::string& lgr_tag = record.getItem("LGR").get<std::string>(0);
-        loadCOMPDATX(record,grid,wname,wdfac,location, lgr_tag);
+        // We're processing a local grid's connection data (COMPDATL or
+        // COMPDATM keyword).  Convey this information to the keyword
+        // handler.
+        const auto lgr_tag = std::make_optional
+            (record.getItem<ParserKeywords::COMPDATX::LGR>().getTrimmedString(0));
+
+        this->loadCOMPDATX(record, grid, wname, wdfac, location, lgr_tag);
     }
 
     void WellConnections::loadCOMPTRAJ(const DeckRecord&      record,
