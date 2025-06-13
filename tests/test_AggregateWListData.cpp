@@ -18,64 +18,82 @@
 */
 
 #define BOOST_TEST_MODULE Aggregate_Group_Data
-#include <opm/output/eclipse/AggregateGroupData.hpp>
-#include <opm/output/eclipse/AggregateNetworkData.hpp>
+
 #include <opm/output/eclipse/AggregateWListData.hpp>
-#include <opm/output/eclipse/WriteRestartHelpers.hpp>
 
 #include <boost/test/unit_test.hpp>
 
-#include <opm/output/eclipse/AggregateWellData.hpp>
-#include <opm/input/eclipse/Schedule/Well/WList.hpp>
+#include <opm/common/utility/TimeService.hpp>
+
+#include <opm/io/eclipse/OutputStream.hpp>
 
 #include <opm/output/eclipse/VectorItems/intehead.hpp>
 #include <opm/output/eclipse/VectorItems/group.hpp>
 #include <opm/output/eclipse/VectorItems/well.hpp>
-#include <opm/input/eclipse/Python/Python.hpp>
 
 #include <opm/output/data/Wells.hpp>
 
-#include <opm/input/eclipse/Deck/Deck.hpp>
-#include <opm/input/eclipse/Parser/Parser.hpp>
+#include <opm/output/eclipse/AggregateGroupData.hpp>
+#include <opm/output/eclipse/AggregateNetworkData.hpp>
+#include <opm/output/eclipse/WriteRestartHelpers.hpp>
+#include <opm/output/eclipse/AggregateWellData.hpp>
+
+#include <opm/input/eclipse/Schedule/Well/WList.hpp>
+
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
+
+#include <opm/input/eclipse/Python/Python.hpp>
+
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
 
-#include <opm/io/eclipse/OutputStream.hpp>
-#include <opm/common/utility/TimeService.hpp>
+#include <opm/input/eclipse/Deck/Deck.hpp>
 
+#include <opm/input/eclipse/Parser/ErrorGuard.hpp>
+#include <opm/input/eclipse/Parser/InputErrorAction.hpp>
+#include <opm/input/eclipse/Parser/ParseContext.hpp>
+#include <opm/input/eclipse/Parser/Parser.hpp>
+
+#include <cstddef>
 #include <exception>
+#include <memory>
 #include <stdexcept>
+#include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
-#include <iostream>
-#include <cstddef>
+
+#include <fmt/format.h>
 
 namespace {
 
-
-    Opm::Deck first_sim(std::string fname) {
+    Opm::Deck first_sim(const std::string& fname)
+    {
         return Opm::Parser{}.parseFile(fname);
     }
 
-    std::string pad8(const std::string& s) {
-        return s + std::string( 8 - s.size(), ' ');
+    std::string pad8(std::string_view s)
+    {
+        const auto size = std::string_view::size_type{8};
+
+        return fmt::format("{:<8}", s.substr(0, size));
     }
-}
+
+} // Anonymous namespace
 
 struct SimulationCase
 {
-    explicit SimulationCase(const Opm::Deck& deck)
-        : es   ( deck )
-        , grid { deck }
-        , python( std::make_shared<Opm::Python>() )
-        , sched (deck, es, python )
+    explicit SimulationCase(const Opm::Deck&         deck,
+                            const Opm::ParseContext& ctx,
+                            Opm::ErrorGuard&         errors)
+        : es    { deck }
+        , grid  { deck }
+        , sched { deck, es, ctx, errors, std::make_shared<Opm::Python>() }
     {}
 
     // Order requirement: 'es' must be declared/initialised before 'sched'.
     Opm::EclipseState es;
     Opm::EclipseGrid  grid;
-    std::shared_ptr<Opm::Python> python;
     Opm::Schedule     sched;
 };
 
@@ -83,16 +101,24 @@ struct SimulationCase
 
 BOOST_AUTO_TEST_SUITE(Aggregate_WList)
 
-
 // test dimensions for IWLS and ZWLS plus the vectors for different cases
 BOOST_AUTO_TEST_CASE (Constructor)
 {
     namespace VI = ::Opm::RestartIO::Helpers::VectorItems;
-    const auto simCase = SimulationCase{first_sim("TEST_WLIST.DATA")};
 
-    Opm::EclipseState es = simCase.es;
-    Opm::Schedule     sched = simCase.sched;
-    Opm::EclipseGrid  grid = simCase.grid;
+    auto ctx = Opm::ParseContext{};
+    ctx.update(Opm::ParseContext::UDQ_DEFINE_CANNOT_EVAL,
+               Opm::InputErrorAction::IGNORE);
+
+    auto errors = Opm::ErrorGuard{};
+
+    const auto simCase = SimulationCase {
+        first_sim("TEST_WLIST.DATA"), ctx, errors
+    };
+
+    const auto& es    = simCase.es;
+    const auto& sched = simCase.sched;
+    const auto& grid  = simCase.grid;
 
     // Report Step 2  (3.07.20)
     {
@@ -294,7 +320,7 @@ BOOST_AUTO_TEST_CASE (Constructor)
         BOOST_CHECK_EQUAL(zWLs[start + 3].c_str(), blank8);
     }
 
-        // Report Step 6  (20.08.20)
+    // Report Step 6  (20.08.20)
     {
         const auto simStep = std::size_t {5};
         double secs_elapsed = 3.1536E07;
@@ -424,7 +450,7 @@ BOOST_AUTO_TEST_CASE (Constructor)
         BOOST_CHECK_EQUAL(zWLs[start + 3].c_str(), blank8);
     }
 
-        // Report Step 9  (10.09.20)
+    // Report Step 9  (10.09.20)
     {
         const auto simStep = std::size_t {8};
         double secs_elapsed = 3.1536E07;
