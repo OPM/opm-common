@@ -276,7 +276,37 @@ void handleGCONPROD(HandlerContext& handlerContext)
                 const bool availableForGroupControl { (respond_to_parent || controlMode == Group::ProductionCMode::FLD) && !is_field } ;
                 auto new_group = handlerContext.state().groups.get(group_name);
                 Group::GroupProductionProperties production(handlerContext.static_schedule().m_unit_system, group_name);
-                production.cmode = controlMode;
+                if (controlMode == Group::ProductionCMode::FLD) {
+                    // If this is the FIELD group, FLD is not a valid control.
+                    if (new_group.name() == "FIELD") {
+                        // Do something and stop.
+                    }
+
+                    // Set this group's control mode to be the one of
+                    // the closest parent group with a mode different
+                    // from FLD or NONE. If there is no parent with a
+                    // definite control mode, set my mode to NONE.
+                    production.cmode = Group::ProductionCMode::NONE; // May be overwritten below
+                    std::string parent_name = new_group.parent();
+                    while(true) {
+                        const auto& parent_group = handlerContext.state().groups.get(parent_name);
+                        const auto parent_mode = parent_group.productionProperties().cmode;
+                        if (parent_mode != Group::ProductionCMode::FLD && parent_mode != Group::ProductionCMode::NONE) {
+                            // Found a definite control mode.
+                            production.cmode = parent_mode;
+                            break;
+                        }
+                        if (parent_name == "FIELD" || parent_name.empty()) {
+                            // Reached the top of the tree.
+                            break;
+                        } else {
+                            // Go one level up in the tree.
+                            parent_name = parent_group.parent();
+                        }
+                    }
+                } else {
+                    production.cmode = controlMode;
+                }
                 production.oil_target = oil_target;
                 production.gas_target = gas_target;
                 production.water_target = water_target;
