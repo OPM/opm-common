@@ -17,10 +17,9 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
-
 #ifndef OPM_PARSER_ECLIPSE_GRID_HPP
 #define OPM_PARSER_ECLIPSE_GRID_HPP
+
 #include <opm/input/eclipse/EclipseState/Grid/GridDims.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/MapAxes.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/MinpvMode.hpp>
@@ -28,14 +27,12 @@
 
 #include <array>
 #include <memory>
-#include <ranges>
 #include <optional>
 #include <stdexcept>
 #include <string>
 #include <unordered_set>
 #include <vector>
 #include <map>
-
 
 namespace Opm {
 
