@@ -2642,6 +2642,10 @@ namespace {
         return this->m_static.m_python_handle;
     }
 
+    const std::optional<RPTConfig>& Schedule::initialReportConfiguration() const
+    {
+        return this->m_static.rpt_config;
+    }
 
     const GasLiftOpt& Schedule::glo(std::size_t report_step) const {
         return this->snapshots[report_step].glo();

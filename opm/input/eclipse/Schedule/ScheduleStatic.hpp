@@ -23,6 +23,7 @@
 
 #include <opm/input/eclipse/Schedule/MessageLimits.hpp>
 #include <opm/input/eclipse/Schedule/OilVaporizationProperties.hpp>
+#include <opm/input/eclipse/Schedule/RPTConfig.hpp>
 #include <opm/input/eclipse/Schedule/RSTConfig.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleRestartInfo.hpp>
 
@@ -98,6 +99,11 @@ struct ScheduleStatic
     /// simulation run (reservoir coupling facility).
     bool slave_mode{false};
 
+    /// SOLUTION section's PRT file report configuration (RPTSOL keyword).
+    ///
+    /// Nullopt if there is no RPTSOL keyword in the SOLUTION section.
+    std::optional<RPTConfig> rpt_config{};
+
     /// Default constructor.
     ///
     /// Creates an object that's mostly usable as a target in a
@@ -165,6 +171,7 @@ struct ScheduleStatic
         serializer(this->gaslift_opt_active);
         serializer(this->oilVap);
         serializer(this->slave_mode);
+        serializer(this->rpt_config);
     }
 
     /// Create a serialisation test object.
