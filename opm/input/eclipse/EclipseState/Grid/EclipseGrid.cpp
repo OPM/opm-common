@@ -16,41 +16,35 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <opm/io/eclipse/PaddedOutputString.hpp>
-#include <cstddef>
-#include <cstdlib>
-#include <optional>
-#include <stdexcept>
-#include <vector>
-#include <string>
-#define _USE_MATH_DEFINES
 
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
-#include <opm/input/eclipse/EclipseState/Grid/LgrCollection.hpp>
-
-#include <opm/input/eclipse/EclipseState/Grid/FieldProps.hpp>
 
 #include <opm/common/ErrorMacros.hpp>
 #include <opm/common/OpmLog/OpmLog.hpp>
-#include <opm/common/utility/numeric/calculateCellVol.hpp>
-#include <opm/common/utility/numeric/VectorOps.hpp>
+
+#include <opm/common/utility/OpmInputError.hpp>
 #include <opm/common/utility/String.hpp>
+#include <opm/common/utility/numeric/GeometryUtil.hpp>
+#include <opm/common/utility/numeric/VectorOps.hpp>
+#include <opm/common/utility/numeric/VectorUtil.hpp>
+#include <opm/common/utility/numeric/calculateCellVol.hpp>
 
 #include <opm/io/eclipse/EclFile.hpp>
 #include <opm/io/eclipse/EclOutput.hpp>
+#include <opm/io/eclipse/PaddedOutputString.hpp>
 
+#include <opm/input/eclipse/EclipseState/Grid/LgrCollection.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/FieldProps.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/NNC.hpp>
+
+#include <opm/input/eclipse/Units/UnitSystem.hpp>
 #include <opm/input/eclipse/Units/Units.hpp>
+
 #include <opm/input/eclipse/Deck/DeckSection.hpp>
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/Deck/DeckItem.hpp>
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
-#include <opm/input/eclipse/EclipseState/Grid/NNC.hpp>
-#include <opm/common/utility/OpmInputError.hpp>
-#include <opm/common/utility/numeric/VectorUtil.hpp>
-#include <opm/common/utility/numeric/GeometryUtil.hpp>
-
-#include <opm/input/eclipse/Units/UnitSystem.hpp>
 
 #include <opm/input/eclipse/Parser/ParserKeywords/A.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/C.hpp>
@@ -64,16 +58,21 @@
 #include <opm/input/eclipse/Parser/ParserKeywords/T.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/Z.hpp>
 
+#define _USE_MATH_DEFINES
+
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
-#include <cstring>
 #include <cstdint>
+#include <cstdlib>
+#include <cstring>
 #include <functional>
 #include <initializer_list>
 #include <numeric>
-#include <tuple>
+#include <optional>
 #include <stdexcept>
+#include <string>
+#include <tuple>
 #include <vector>
 
 #include <fmt/format.h>
