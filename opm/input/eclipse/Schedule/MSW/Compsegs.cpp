@@ -41,31 +41,6 @@
 namespace Opm {
 namespace Compsegs {
 
-struct Record {
-    int m_i;
-    int m_j;
-    int m_k;
-    // the branch number on the main stem is always 1.
-    // lateral branches should be numbered bigger than 1.
-    // a suboridnate branch must have a higher branch number than parent branch.
-    int m_branch_number;
-    double m_distance_start;
-    double m_distance_end;
-    Connection::Direction m_dir;
-
-    double center_depth;
-    // we do not handle thermal length for the moment
-    // double m_thermal_length;
-    int segment_number;
-    std::size_t m_seqIndex;
-
-    Record(int i_in, int j_in, int k_in, int branch_number_in, double distance_start_in, double distance_end_in,
-           Connection::Direction dir_in, double center_depth_in, int segment_number_in, std::size_t seqIndex_in);
-
-    void calculateCenterDepthWithSegments(const WellSegments& segment_set);
-
-
-};
 
     Record::Record(int i_in, int j_in, int k_in, int branch_number_in, double distance_start_in, double distance_end_in,
                        Connection::Direction dir_in, double center_depth_in, int segment_number_in, size_t seqIndex_in)
@@ -184,6 +159,9 @@ namespace {
             }
         }
     }
+
+}
+
 
     std::vector< Record > compsegsFromCOMPSEGSKeyword(const DeckKeyword& compsegsKeyword,
                                                       const WellSegments& segments,
@@ -306,18 +284,40 @@ namespace {
         processCOMPSEGS__(compsegs, segments);
         return compsegs;
     }
-}
 
+
+    std::vector<Record> compsegsFromIntersections(const std::vector<std::pair<double, double>>& intersection_depths,
+                                                  const std::vector<std::array<int, 3>>& intersections_ijk,
+                                                  const WellSegments& segments)
+    {
+        std::vector<Record> compsegs;
+
+        for (size_t is = 0; is < intersection_depths.size(); ++is) {
+            const auto startMD = intersection_depths[is].first;
+            const auto endMD = intersection_depths[is].second;
+            const auto ijk = intersections_ijk[is];
+
+            // Defaulted values:
+            auto direction = Connection::Direction::X;
+            const double center_depth = 0.0;
+            int segment_number = 0;
+            const int branch = 1;
+
+            std::size_t seqIndex = compsegs.size();
+            compsegs.emplace_back(
+                ijk[0], ijk[1], ijk[2], branch, startMD, endMD, direction, center_depth, segment_number, seqIndex);
+        }
+
+        processCOMPSEGS__(compsegs, segments);
+        return compsegs;
+    }
 
     std::pair<WellConnections, WellSegments>
-    processCOMPSEGS(const DeckKeyword& compsegs,
+    processCOMPSEGS(const std::vector< Record >& compsegs_vector,
                     const WellConnections& input_connections,
                     const WellSegments& input_segments,
-                    const ScheduleGrid& grid,
-                    const ParseContext& parseContext,
-                    ErrorGuard& errors)
+                    const ScheduleGrid& grid)
     {
-            const auto& compsegs_vector = Compsegs::compsegsFromCOMPSEGSKeyword( compsegs, input_segments, grid, parseContext, errors);
             WellSegments new_segment_set = input_segments;
             WellConnections new_connection_set = input_connections;
 
