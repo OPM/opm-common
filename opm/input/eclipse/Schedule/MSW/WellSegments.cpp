@@ -294,8 +294,10 @@ namespace Opm {
             }
 
             const double input_roughness = record.getItem("ROUGHNESS").getSIDouble(0);
-            const double roughness = diameter * std::min(Segment::MAX_REL_ROUGHNESS, input_roughness/diameter);
-            if (input_roughness > roughness) {
+            const double safe_roughness = Segment::MAX_REL_ROUGHNESS * diameter;
+            const bool too_high_roughness = input_roughness > safe_roughness;
+            const double roughness = too_high_roughness ? safe_roughness : input_roughness;
+            if (too_high_roughness) {
                 const auto& location = welsegsKeyword.location();
                 OpmLog::warning(fmt::format("Well {} WELSEGS segment {} to {}: Too high roughness {:.3e} is found at line {} in file {}, \n"
                                             "the value is limited to {:.3e} to avoid singularity in friction factor calculation.",

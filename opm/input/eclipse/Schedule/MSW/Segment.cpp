@@ -106,12 +106,12 @@ namespace Opm {
         , m_y                (0.0)
     {
         if (is_valid_value(m_roughness) && is_valid_value(m_internal_diameter)) {
-            const double safe_roughness = m_internal_diameter * std::min(MAX_REL_ROUGHNESS, m_roughness/m_internal_diameter);
+            const double safe_roughness = m_internal_diameter * MAX_REL_ROUGHNESS;
             if (m_roughness > safe_roughness) {
                 OpmLog::warning(fmt::format("Well {} segment {}: Too high roughness {:.3e} is limited to {:.3e} to avoid singularity in friction factor calculation.",
                                             wname, m_segment_number, m_roughness, safe_roughness));
+                m_roughness = safe_roughness;
             }
-            m_roughness = safe_roughness;
         }
 
         const auto segment_type = segmentTypeFromInt(rst_segment.segment_type);
