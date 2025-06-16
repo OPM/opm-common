@@ -92,6 +92,18 @@ namespace {
         return ovp;
     }
 
+    std::optional<Opm::RPTConfig>
+    rptConfigSolutionSection(const Opm::SOLUTIONSection& section)
+    {
+        const auto input = section.getKeywordList<Opm::ParserKeywords::RPTSOL>();
+
+        if (input.empty()) {
+            return {};
+        }
+
+        return { Opm::RPTConfig { *input.back() } };
+    }
+
 } // Anonymous namespace
 
 Opm::ScheduleStatic::ScheduleStatic(std::shared_ptr<const Python> python_handle,
@@ -115,6 +127,7 @@ Opm::ScheduleStatic::ScheduleStatic(std::shared_ptr<const Python> python_handle,
     , gaslift_opt_active { deck.hasKeyword<ParserKeywords::LIFTOPT>() }
     , oilVap          { vappars_solution_section(SOLUTIONSection { deck }, runspec) }
     , slave_mode      { slave_mode_ }
+    , rpt_config      { rptConfigSolutionSection(SOLUTIONSection { deck }) }
 {}
 
 Opm::ScheduleStatic Opm::ScheduleStatic::serializationTestObject()
@@ -133,6 +146,7 @@ Opm::ScheduleStatic Opm::ScheduleStatic::serializationTestObject()
     st.gaslift_opt_active = true;
     st.oilVap.emplace(OilVaporizationProperties::serializationTestObject());
     st.slave_mode = true;
+    st.rpt_config.emplace(RPTConfig::serializationTestObject());
 
     return st;
 }
@@ -151,5 +165,6 @@ bool Opm::ScheduleStatic::operator==(const ScheduleStatic& other) const
         && (this->gaslift_opt_active == other.gaslift_opt_active)
         && (this->oilVap == other.oilVap)
         && (this->slave_mode == other.slave_mode)
+        && (this->rpt_config == other.rpt_config)
         ;
 }
