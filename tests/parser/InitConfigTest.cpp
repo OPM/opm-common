@@ -160,6 +160,22 @@ SKIPREST
 )" };
     }
 
+    std::string deckStr3_seq0()
+    {
+        return { R"(RUNSPEC
+DIMENS
+ 10 10 10 /
+START             -- 0
+19 JUN 2007 /
+GRID
+SOLUTION
+RESTART
+BASE 0 / -- From report step 0 => not supported
+SCHEDULE
+SKIPREST
+)" };
+    }
+
     std::string deckStr4()
     {
         return { R"(RUNSPEC
@@ -285,6 +301,11 @@ BOOST_AUTO_TEST_CASE(InitConfigTest)
     {
         const Deck deck3 = createDeck(deckStr3());
         BOOST_CHECK_THROW(InitConfig{deck3}, OpmInputError);
+    }
+
+    {
+        const Deck deck3_seq0 = createDeck(deckStr3_seq0());
+        BOOST_CHECK_THROW(InitConfig{deck3_seq0}, OpmInputError);
     }
 
     {
