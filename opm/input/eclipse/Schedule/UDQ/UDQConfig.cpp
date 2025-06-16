@@ -281,11 +281,12 @@ namespace Opm {
             || (this->m_definitions.find(keyword) != this->m_definitions.end());
     }
 
-    void UDQConfig::add_record(SegmentMatcherFactory                 create_segment_matcher,
-                               const DeckRecord&                     record,
-                               const KeywordLocation&                location,
-                               const std::size_t                     report_step,
-                               const std::optional<DynamicSelector>& dynamic_selector)
+    std::optional<std::string>
+    UDQConfig::add_record(SegmentMatcherFactory                 create_segment_matcher,
+                          const DeckRecord&                     record,
+                          const KeywordLocation&                location,
+                          const std::size_t                     report_step,
+                          const std::optional<DynamicSelector>& dynamic_selector)
     {
         using KW = ParserKeywords::UDQ;
 
@@ -309,12 +310,16 @@ namespace Opm {
         }
         else if (action == UDQAction::DEFINE) {
             this->add_define(quantity, location, data, report_step);
+
+            return { quantity };
         }
         else {
             throw std::runtime_error {
                 "Unknown UDQ Operation " + std::to_string(static_cast<int>(action))
             };
         }
+
+        return {};
     }
 
     void UDQConfig::add_unit(const std::string& keyword, const std::string& quoted_unit)

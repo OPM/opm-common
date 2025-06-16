@@ -261,6 +261,10 @@ class KeywordLocation;
         const static std::string UDQ_PARSE_ERROR;
         const static std::string UDQ_TYPE_ERROR;
 
+        /// Cannot evaluate the defining expression of a UDQ at the point of
+        /// definition due to missing objects, e.g., wells or groups.
+        const static std::string UDQ_DEFINE_CANNOT_EVAL;
+
         /*
           If the third item in the THPRES keyword is defaulted the
           threshold pressure is inferred from the initial pressure -
