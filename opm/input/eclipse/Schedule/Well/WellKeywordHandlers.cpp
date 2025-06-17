@@ -1055,6 +1055,10 @@ void handleWSEED(HandlerContext& handlerContext)
             record.getItem<ParserKeywords::WSEED::NORMAL_Y>().getSIDouble(0),
             record.getItem<ParserKeywords::WSEED::NORMAL_Z>().getSIDouble(0),
         };
+	const auto cellSeedSize = WellFractureSeeds::SizeVector {
+            record.getItem<ParserKeywords::WSEED::SIZE_Z>().getSIDouble(0),
+            record.getItem<ParserKeywords::WSEED::SIZE_H>().getSIDouble(0),
+        };
 
         for (const auto& well_name : well_names) {
             const auto hasConn = handlerContext.state()
@@ -1068,7 +1072,7 @@ void handleWSEED(HandlerContext& handlerContext)
                 ? std::make_shared<WellFractureSeeds>(seeds(well_name))
                 : std::make_shared<WellFractureSeeds>(well_name);
 
-            if (seed->updateSeed(cellSeedIndex, cellSeedNormal)) {
+            if (seed->updateSeed(cellSeedIndex, cellSeedNormal, cellSeedSize)) {
                 updated_seed_wells.insert(well_name);
                 seeds.update(well_name, std::move(seed));
             }
