@@ -57,10 +57,52 @@
       "dimension": "Pressure"
     },
     {
-      "item": 8,
+      "item": 9,
       "name": "STRESSZZGRAD",
       "value_type": "DOUBLE",
       "dimension": "Pressure/Length"
+    },
+    {
+      "item": 10,
+      "name": "STRESSXY",
+      "value_type": "DOUBLE",
+      "dimension": "Pressure",
+      "value": 0.0
+    },
+    {
+      "item": 11,
+      "name": "STRESSXYGRAD",
+      "value_type": "DOUBLE",
+      "dimension": "Pressure/Length",
+      "value": 0.0
+    },
+    {
+      "item": 10,
+      "name": "STRESSXZ",
+      "value_type": "DOUBLE",
+      "dimension": "Pressure",
+      "value": 0.0
+    },
+    {
+      "item": 11,
+      "name": "STRESSXZGRAD",
+      "value_type": "DOUBLE",
+      "dimension": "Pressure/Length",
+      "value": 0.0
+    },
+    {
+      "item": 12,
+      "name": "STRESSYZ",
+      "value_type": "DOUBLE",
+      "dimension": "Pressure",
+      "value": 0.0
+    },
+    {
+      "item": 13,
+      "name": "STRESSYZGRAD",
+      "value_type": "DOUBLE",
+      "dimension": "Pressure/Length",
+      "value": 0.0
     }
   ]
 }

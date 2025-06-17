@@ -48,6 +48,7 @@ public:
 
     /// Type alias for the normal vector at a single seed point.
     using NormalVector = std::array<double, 3>;
+    using SizeVector = std::array<double, 2>;
 
     /// Default constructor.
     ///
@@ -84,7 +85,8 @@ public:
     /// \return Whether or not a seed was inserted/updated.  Typically
     /// 'true'.
     bool updateSeed(const std::size_t   seedCellGlobal,
-                    const NormalVector& seedNormal);
+                    const NormalVector& seedNormal,
+		    const SizeVector& seedSize);
 
     /// Establish accelerator structure for LOG(n) normal vector lookup
     /// based on Cartesian cell indices.
@@ -112,6 +114,14 @@ public:
     /// \return Fracturing plane normal vector in cell \p c.  Not guaranteed
     /// to be a unit normal vector.  Nullptr if no seed exists in cell \p c.
     const NormalVector* getNormal(const SeedCell& c) const;
+
+    /// Look up fracturing size vector based on Cartesian cell index.
+    ///
+    /// \param[in] c Cartesian cell index.
+    ///
+    /// \return Fracturing plane normal vector in cell \p c.  Not guaranteed
+    /// to be a unit normal vector.  Nullptr if no seed exists in cell \p c.
+    const SizeVector* getSize(const SeedCell& c) const;
 
     /// Retrieve fracturing plane normal vector based on insertion
     /// order/record index.
@@ -180,6 +190,9 @@ private:
     /// Fracturing plane normal vectors for all seed cells.
     std::vector<NormalVector> seedNormal_{};
 
+    /// Fracturing plane normal vectors for all seed cells.
+    std::vector<SizeVector> seedSize_{};
+
     /// Binary search lookup structure.
     ///
     /// Indices into seedCell_ and seedNormal_ ordered by seedCell_ values.
@@ -230,7 +243,7 @@ private:
     ///
     /// \return Whether or not a seed was inserted/updated.  Typically
     /// 'true'.
-    bool insertNewSeed(const std::size_t seedCellGlobal, const NormalVector& seedNormal);
+  bool insertNewSeed(const std::size_t seedCellGlobal, const NormalVector& seedNormal, const SizeVector& seedSize);
 
     /// Update normal vector direction of an existing seed cell.
     ///
@@ -240,7 +253,7 @@ private:
     /// \param[in] seedNormal Fracturing plane's normal vector.
     ///
     /// \return Whether or not the normal vector for seed \p ix was updated.
-    bool updateExistingSeed(const NormalVectorIx ix, const NormalVector& seedNormal);
+  bool updateExistingSeed(const NormalVectorIx ix, const NormalVector& seedNormal, const SizeVector& seedSize);
 };
 
 } // namespace Opm
