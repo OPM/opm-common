@@ -224,6 +224,14 @@ namespace Opm {
             .getItem<ParserKeywords::RESTART::REPORTNUMBER>()
             .get<int>(0);
 
+        if (step < 1) {
+            throw OpmInputError {
+                "OPM does not support restarting a "
+                "simulation before report number 1",
+                rst_kw.location()
+            };
+        }
+
         const auto input_path = std::filesystem::path {
             deck.getInputPath()
         };
