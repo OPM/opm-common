@@ -142,6 +142,7 @@ namespace {
         production.group_limit_action.allRates = Opm::Group::ExceedActionFromInt(rst_group.exceed_action);
         // For now, we do not know where the other actions are stored in IGRP, so we set them all
         // to the allRates value.
+        production.group_limit_action.oil = production.group_limit_action.allRates;
         production.group_limit_action.water = production.group_limit_action.allRates;
         production.group_limit_action.gas = production.group_limit_action.allRates;
         production.group_limit_action.liquid = production.group_limit_action.allRates;

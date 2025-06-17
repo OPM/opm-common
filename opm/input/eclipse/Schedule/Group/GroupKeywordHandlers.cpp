@@ -179,7 +179,6 @@ void handleGCONPROD(HandlerContext& handlerContext)
         }
 
         const Group::ProductionCMode controlMode = Group::ProductionCModeFromString(record.getItem("CONTROL_MODE").getTrimmedString(0));
-
         Group::GroupLimitAction groupLimitAction;
         groupLimitAction.allRates = Group::ExceedActionFromString(record.getItem("EXCEED_PROC").getTrimmedString(0));
         // \Note: we do not use the allRates anymore. Instead, we have explicit definition of actions for all the possible rate limits
@@ -317,8 +316,6 @@ void handleGCONPROD(HandlerContext& handlerContext)
 
                 if (!apply_default_resv_target)
                     production.production_controls |= static_cast<int>(Group::ProductionCMode::RESV);
-
-                // TODO: similar to RESV, we might need to add for other limits which will be treated with RATE exceeding procedure
 
                 if (new_group.updateProduction(production)) {
                     auto new_config = handlerContext.state().guide_rate();
