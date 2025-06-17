@@ -17,73 +17,64 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <iostream>
+#include <opm/input/eclipse/EclipseState/InitConfig/InitConfig.hpp>
+
+#include <opm/common/utility/OpmInputError.hpp>
+
+#include <opm/input/eclipse/EclipseState/InitConfig/Equil.hpp>
+#include <opm/input/eclipse/EclipseState/InitConfig/FoamConfig.hpp>
 
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/Deck/DeckItem.hpp>
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
 #include <opm/input/eclipse/Deck/DeckSection.hpp>
-#include <opm/input/eclipse/EclipseState/InitConfig/InitConfig.hpp>
-#include <opm/input/eclipse/EclipseState/InitConfig/Equil.hpp>
 
 #include <opm/input/eclipse/Parser/ParserKeywords/E.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/F.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/N.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/R.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/S.hpp>
 
+#include <filesystem>
+#include <iostream>
+#include <stdexcept>
+#include <string>
+
+namespace {
+
+    Opm::Equil equils(const Opm::Deck& deck)
+    {
+        if (! deck.hasKeyword<Opm::ParserKeywords::EQUIL>()) {
+            return {};
+        }
+
+        return Opm::Equil {
+            deck.get<Opm::ParserKeywords::EQUIL>().back()
+        };
+    }
+
+    Opm::DeckKeyword stressequils(const Opm::Deck& deck)
+    {
+        if (! deck.hasKeyword<Opm::ParserKeywords::STREQUIL>()) {
+            return {};
+        }
+
+        return deck.get<Opm::ParserKeywords::STREQUIL>().back();
+    }
+
+} // Anonymous namespace
+
 namespace Opm {
 
-    static inline Equil equils( const Deck& deck ) {
-        if( !deck.hasKeyword<ParserKeywords::EQUIL>( ) ) return {};
-        return Equil( deck.get<ParserKeywords::EQUIL>( ).back() );
-    }
-
-    static inline DeckKeyword stressequils( const Deck& deck ) {
-        if( !deck.hasKeyword<ParserKeywords::STREQUIL>( ) ) return {};
-        return deck.get<ParserKeywords::STREQUIL>( ).back();
-    }
-
-    InitConfig::InitConfig()
-        : m_filleps(false)
-    {
-    }
-
     InitConfig::InitConfig(const Deck& deck)
-        : equil(equils(deck))
-        , stress_equil(stressequils(deck))
-        , foamconfig(deck)
-        , m_filleps(PROPSSection{deck}.hasKeyword("FILLEPS"))
+        : equil        { equils(deck) }
+        , stress_equil { stressequils(deck) }
+        , foamconfig   { deck }
+        , m_filleps    { PROPSSection{deck}.hasKeyword(ParserKeywords::FILLEPS::keywordName) }
+        , m_gravity    { ! deck.hasKeyword<ParserKeywords::NOGRAV>() }
     {
-        if( !deck.hasKeyword( "RESTART" ) ) {
-            if( deck.hasKeyword( "SKIPREST" ) ) {
-                std::cout << "Deck has SKIPREST, but no RESTART. "
-                          << "Ignoring SKIPREST." << std::endl;
-            }
-
-            return;
-        }
-
-        m_gravity = !deck.hasKeyword("NOGRAV");
-
-        const auto& record = deck["RESTART"].back().getRecord(0);
-        const auto& save_item = record.getItem(2);
-
-        if( save_item.hasValue( 0 ) ) {
-            throw std::runtime_error(
-                    "OPM does not support RESTART from a SAVE file, "
-                    "only from RESTART files");
-        }
-
-        int step = record.getItem( 1 ).get< int >(0);
-        const std::string& root = record.getItem( 0 ).get< std::string >( 0 );
-        const std::string& input_path = deck.getInputPath();
-
-        // Need the restart path as input (absolute or relative .DATA file) for writing to SMSPEC
-        this->m_restartRootNameInput = root;
-        if (root[0] == '/' || input_path.empty())
-            this->setRestart(root, step);
-        else
-            this->setRestart( input_path + "/" + root, step );
+        this->parseRestartKeyword(deck);
     }
 
     InitConfig InitConfig::serializationTestObject()
@@ -102,83 +93,151 @@ namespace Opm {
         return result;
     }
 
-    void InitConfig::setRestart( const std::string& root, int step) {
-        m_restartRequested = true;
-        m_restartStep = step;
-        m_restartRootName = root;
+    void InitConfig::setRestart(const std::string& root, const int step)
+    {
+        this->m_restartRequested = true;
+        this->m_restartStep = step;
+        this->m_restartRootName = root;
     }
 
-    bool InitConfig::restartRequested() const {
+    bool InitConfig::restartRequested() const
+    {
         return m_restartRequested;
     }
 
-    int InitConfig::getRestartStep() const {
+    int InitConfig::getRestartStep() const
+    {
         return m_restartStep;
     }
 
-    const std::string& InitConfig::getRestartRootName() const {
+    const std::string& InitConfig::getRestartRootName() const
+    {
         return m_restartRootName;
     }
 
-    const std::string& InitConfig::getRestartRootNameInput() const {
+    const std::string& InitConfig::getRestartRootNameInput() const
+    {
         return m_restartRootNameInput;
     }
 
-    bool InitConfig::hasEquil() const {
+    bool InitConfig::hasEquil() const
+    {
         return !this->equil.empty();
     }
 
-    const Equil& InitConfig::getEquil() const {
-        if( !this->hasEquil() )
-            throw std::runtime_error( "Error: No 'EQUIL' present" );
+    const Equil& InitConfig::getEquil() const
+    {
+        if (!this->hasEquil()) {
+            throw std::runtime_error {
+                "Error: No 'EQUIL' present"
+            };
+        }
 
         return this->equil;
     }
 
-    bool InitConfig::hasStressEquil() const {
+    bool InitConfig::hasStressEquil() const
+    {
         return !this->stress_equil.empty();
     }
 
-    const StressEquil& InitConfig::getStressEquil() const {
-        if( !this->hasStressEquil() )
-            throw std::runtime_error( "Error: No 'STREQUIL' present" );
+    const StressEquil& InitConfig::getStressEquil() const
+    {
+        if (! this->hasStressEquil()) {
+            throw std::runtime_error {
+                "Error: No 'STREQUIL' present"
+            };
+        }
 
         return this->stress_equil;
     }
 
-    bool InitConfig::hasGravity() const {
-        return m_gravity;
-    }
-
-    bool InitConfig::hasFoamConfig() const {
+    bool InitConfig::hasFoamConfig() const
+    {
         // return !this->foamconfig.empty();
         return true;
     }
 
-    const FoamConfig& InitConfig::getFoamConfig() const {
-        if( !this->hasFoamConfig() )
-            throw std::runtime_error( "Error: No foam model configuration keywords present" );
+    const FoamConfig& InitConfig::getFoamConfig() const
+    {
+        if (! this->hasFoamConfig()) {
+            throw std::runtime_error {
+                "Error: No foam model configuration keywords present"
+            };
+        }
 
         return this->foamconfig;
     }
 
-    bool InitConfig::operator==(const InitConfig& data) const {
-        return equil == data.equil &&
-               stress_equil == data.stress_equil &&
-               foamconfig == data.foamconfig &&
-               m_filleps == data.m_filleps &&
-               m_gravity == data.m_gravity &&
-               m_restartRequested == data.m_restartRequested &&
-               m_restartStep == data.m_restartStep &&
-               m_restartRootName == data.m_restartRootName &&
-               m_restartRootNameInput == data.m_restartRootNameInput;
+    bool InitConfig::operator==(const InitConfig& data) const
+    {
+        return (this->equil == data.equil)
+            && (this->stress_equil == data.stress_equil)
+            && (this->foamconfig == data.foamconfig)
+            && (this->m_filleps == data.m_filleps)
+            && (this->m_gravity == data.m_gravity)
+            && (this->m_restartRequested == data.m_restartRequested)
+            && (this->m_restartStep == data.m_restartStep)
+            && (this->m_restartRootName == data.m_restartRootName)
+            && (this->m_restartRootNameInput == data.m_restartRootNameInput)
+            ;
     }
 
-    bool InitConfig::rst_cmp(const InitConfig& full_config, const InitConfig& rst_config) {
-        return full_config.foamconfig == rst_config.foamconfig &&
-               full_config.m_filleps == rst_config.m_filleps &&
-               full_config.m_gravity == rst_config.m_gravity;
+    bool InitConfig::rst_cmp(const InitConfig& full_config,
+                             const InitConfig& rst_config)
+    {
+        return (full_config.foamconfig == rst_config.foamconfig)
+            && (full_config.m_filleps == rst_config.m_filleps)
+            && (full_config.m_gravity == rst_config.m_gravity)
+            ;
     }
 
+    // -----------------------------------------------------------------------
+    // Private member functions of class InitConfig below separator
+    // -----------------------------------------------------------------------
 
-} //namespace Opm
+    void InitConfig::parseRestartKeyword(const Deck& deck)
+    {
+        if (! deck.hasKeyword<ParserKeywords::RESTART>()) {
+            if (deck.hasKeyword<ParserKeywords::SKIPREST>()) {
+                std::cout << "Deck has SKIPREST, but no RESTART. "
+                          << "Ignoring SKIPREST." << std::endl;
+            }
+
+            return;
+        }
+
+        const auto& rst_kw = deck.get<ParserKeywords::RESTART>().back();
+        const auto& record = rst_kw.getRecord(0);
+
+        if (const auto& save_item = record.getItem<ParserKeywords::RESTART::SAVEFILE>();
+            save_item.hasValue(0))
+        {
+            throw OpmInputError {
+                "OPM does not support RESTART from a SAVE file, "
+                "only from RESTART files",
+                rst_kw.location()
+            };
+        }
+
+        const auto step = record
+            .getItem<ParserKeywords::RESTART::REPORTNUMBER>()
+            .get<int>(0);
+
+        const auto input_path = std::filesystem::path {
+            deck.getInputPath()
+        };
+
+        const auto input_root = std::filesystem::path {
+            record.getItem<ParserKeywords::RESTART::ROOTNAME>().getTrimmedString(0)
+        };
+
+        const auto root = (input_root.is_absolute() || input_path.empty())
+            ? input_root : input_path / input_root;
+
+        this->m_restartRootNameInput = input_root.generic_string();
+
+        this->setRestart(root.generic_string(), step);
+    }
+
+} // namespace Opm

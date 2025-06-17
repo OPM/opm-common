@@ -182,8 +182,6 @@ namespace Opm {
     template<class RecordType>
     EquilContainer<RecordType>::EquilContainer(const DeckKeyword& keyword)
     {
-        using ParserKeywords::EQUIL;
-
         for (const auto& record : keyword) {
             this->m_records.emplace_back(record);
         }

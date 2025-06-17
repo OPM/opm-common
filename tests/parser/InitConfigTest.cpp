@@ -15,27 +15,36 @@
 
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
- */
+*/
 
 #define BOOST_TEST_MODULE InitConfigTests
 
 #include <boost/test/unit_test.hpp>
 
-#include <fstream>
+#include <opm/input/eclipse/EclipseState/InitConfig/InitConfig.hpp>
+
+#include <opm/common/utility/OpmInputError.hpp>
+
+#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
+
+#include <opm/input/eclipse/Units/Units.hpp>
+
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/Parser/Parser.hpp>
-#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
-#include <opm/input/eclipse/EclipseState/InitConfig/InitConfig.hpp>
-#include <opm/input/eclipse/Units/Units.hpp>
 
 #include <tests/WorkArea.hpp>
 
 #include <fstream>
+#include <stdexcept>
+#include <string>
 
 using namespace Opm;
 
+namespace {
 
-const std::string full_deck1 = R"(
+    std::string full_deck1()
+    {
+        return { R"(RUNSPEC
 START
 7 OCT 2020 /
 
@@ -66,9 +75,12 @@ RESTART
   NOBASE 6 /
 
 SCHEDULE
-)";
+)" };
+    }
 
-const std::string full_deck2 = R"(
+    std::string full_deck2()
+    {
+        return { R"(RUNSPEC
 START
 7 OCT 2020 /
 
@@ -99,230 +111,267 @@ RESTART
   BASE 6 /
 
 SCHEDULE
-)";
+)" };
+    }
 
+    std::string deckStr()
+    {
+        return { R"(RUNSPEC
+DIMENS
+ 10 10 10 /
+SOLUTION
+RESTART
+BASE 5
+/
+GRID
+START             -- 0 
+19 JUN 2007 / 
+SCHEDULE
+SKIPREST
+)" };
+    }
 
+    std::string deckStr2()
+    {
+        return { R"(RUNSPEC
+DIMENS
+ 10 10 10 /
+SOLUTION
+GRID
+START             -- 0
+19 JUN 2007 /
+SCHEDULE
+)" };
+    }
 
+    std::string deckStr3()
+    {
+        return { R"(RUNSPEC
+DIMENS
+ 10 10 10 /
+START             -- 0
+19 JUN 2007 /
+GRID
+SOLUTION
+RESTART
+BASE 5 SAVE UNFORMATTED /
+SCHEDULE
+SKIPREST
+)" };
+    }
 
-const std::string& deckStr =
-    "RUNSPEC\n"
-    "DIMENS\n"
-    " 10 10 10 /\n"
-    "SOLUTION\n"
-    "RESTART\n"
-    "BASE 5\n"
-    "/\n"
-    "GRID\n"
-    "START             -- 0 \n"
-    "19 JUN 2007 / \n"
-    "SCHEDULE\n"
-    "SKIPREST \n";
+    std::string deckStr4()
+    {
+        return { R"(RUNSPEC
+DIMENS
+ 10 10 10 /
+SOLUTION
+RESTART
+BASE 5 /
+GRID
+START             -- 0
+19 JUN 2007 /
+SCHEDULE
+)" };
+    }
 
+    std::string deckStr5()
+    {
+        return { R"(RUNSPEC
+DIMENS
+ 10 10 10 /
+SOLUTION
+RESTART
+'/abs/path/BASE' 5 /
+GRID
+START             -- 0
+19 JUN 2007 /
+SCHEDULE
+)" };
+    }
 
-const std::string& deckStr2 =
-    "RUNSPEC\n"
-    "DIMENS\n"
-    " 10 10 10 /\n"
-    "SOLUTION\n"
-    "GRID\n"
-    "START             -- 0 \n"
-    "19 JUN 2007 / \n"
-    "SCHEDULE\n";
+    std::string deckWithEquil()
+    {
+        return { R"(RUNSPEC
+DIMENS
+ 10 10 10 /
+EQLDIMS
+1  100  20  1  1  /
+SOLUTION
+RESTART
+BASE 5
+/
+EQUIL
+2469   382.4   1705.0  0.0    500    0.0     1     1      20 /
+GRID
+START             -- 0
+19 JUN 2007 /
+SCHEDULE
+SKIPREST
+)" };
+    }
 
+    std::string deckWithStrEquil()
+    {
+        return { R"(RUNSPEC
+DIMENS
+ 10 10 10 /
+EQLDIMS
+1  100  20  1  1  /
+SOLUTION
+RESTART
+BASE 5
+/
+STREQUIL
+1.0 2.0 3.0 4.0 5.0 6.0 7.0 8.0 9.0 /
+/
+GRID
+START             -- 0
+19 JUN 2007 /
+SCHEDULE
+SKIPREST
+)" };
+    }
 
-const std::string& deckStr3 =
-    "RUNSPEC\n"
-    "DIMENS\n"
-    " 10 10 10 /\n"
-    "SOLUTION\n"
-    "RESTART\n"
-    "BASE 5 SAVE UNFORMATTED /\n"
-    "GRID\n"
-    "START             -- 0 \n"
-    "19 JUN 2007 / \n"
-    "SCHEDULE\n"
-    "SKIPREST \n";
+    Deck createDeck(const std::string& input)
+    {
+        auto deck = Parser{}.parseString(input);
 
-const std::string& deckStr4 =
-    "RUNSPEC\n"
-    "DIMENS\n"
-    " 10 10 10 /\n"
-    "SOLUTION\n"
-    "RESTART\n"
-    "BASE 5 /\n"
-    "GRID\n"
-    "START             -- 0 \n"
-    "19 JUN 2007 / \n"
-    "SCHEDULE\n";
+        // The call to setDataFile is completely bogus, it is just to ensure
+        // that a meaningfull path for the input file has been specified -
+        // so that we can locate restart files.
+        deck.setDataFile("SPE1CASE1.DATA");
 
-const std::string& deckStr5 =
-  "RUNSPEC\n"
-  "DIMENS\n"
-  " 10 10 10 /\n"
-  "SOLUTION\n"
-  "RESTART\n"
-  "'/abs/path/BASE' 5 /\n"
-  "GRID\n"
-  "START             -- 0 \n"
-  "19 JUN 2007 / \n"
-  "SCHEDULE\n";
+        return deck;
+    }
 
-const std::string& deckWithEquil =
-    "RUNSPEC\n"
-    "DIMENS\n"
-    " 10 10 10 /\n"
-    "EQLDIMS\n"
-    "1  100  20  1  1  /\n"
-    "SOLUTION\n"
-    "RESTART\n"
-    "BASE 5\n"
-    "/\n"
-    "EQUIL\n"
-    "2469   382.4   1705.0  0.0    500    0.0     1     1      20 /\n"
-    "GRID\n"
-    "START             -- 0 \n"
-    "19 JUN 2007 / \n"
-    "SCHEDULE\n"
-    "SKIPREST \n";
+} // Anonymous namespace
 
-const std::string& deckWithStrEquil =
-    "RUNSPEC\n"
-    "DIMENS\n"
-    " 10 10 10 /\n"
-    "EQLDIMS\n"
-    "1  100  20  1  1  /\n"
-    "SOLUTION\n"
-    "RESTART\n"
-    "BASE 5\n"
-    "/\n"
-    "STREQUIL\n"
-    "1.0 2.0 3.0 4.0 5.0 6.0 7.0 8.0 9.0 /\n"
-    "/\n"
-    "GRID\n"
-    "START             -- 0 \n"
-    "19 JUN 2007 / \n"
-    "SCHEDULE\n"
-    "SKIPREST \n";
-
-static Deck createDeck(const std::string& input) {
-    Opm::Parser parser;
-    auto deck = parser.parseString(input);
-    // The call to setDataFile is completely bogus, it is just to ensure that a
-    // meaningfull path for the input file has been specified - so that we can
-    // locate restart files.
-    deck.setDataFile("SPE1CASE1.DATA");
-    return deck;
-}
-
-BOOST_AUTO_TEST_CASE(EclipseStateTest) {
-    Deck deck1 = createDeck(full_deck1);
+BOOST_AUTO_TEST_CASE(EclipseStateTest)
+{
+    const Deck deck1 = createDeck(full_deck1());
     // This throws because the restart file does not exist
     BOOST_CHECK_THROW(EclipseState{deck1}, std::exception);
 
-    Deck deck2 = createDeck(full_deck2);
-    // This throws because the restart file does not contain the requested report step
+    const Deck deck2 = createDeck(full_deck2());
+    // This throws because the restart file does not contain the requested
+    // report step
     BOOST_CHECK_THROW(EclipseState{deck2}, std::exception);
 }
 
-BOOST_AUTO_TEST_CASE(InitConfigTest) {
+BOOST_AUTO_TEST_CASE(InitConfigTest)
+{
+    {
+        const auto deck = createDeck(deckStr());
+        const InitConfig cfg(deck);
+        BOOST_CHECK_EQUAL(cfg.restartRequested(), true);
+        BOOST_CHECK_EQUAL(cfg.getRestartStep(), 5);
+        BOOST_CHECK_EQUAL(cfg.getRestartRootName(), "BASE");
+    }
 
-    Deck deck = createDeck(deckStr);
-    InitConfig cfg( deck );
-    BOOST_CHECK_EQUAL(cfg.restartRequested(), true);
-    BOOST_CHECK_EQUAL(cfg.getRestartStep(), 5);
-    BOOST_CHECK_EQUAL(cfg.getRestartRootName(), "BASE");
+    {
+        const Deck deck2 = createDeck(deckStr2());
+        InitConfig cfg2(deck2);
+        BOOST_CHECK_EQUAL(cfg2.restartRequested(), false);
+        BOOST_CHECK_EQUAL(cfg2.getRestartStep(), 0);
+        BOOST_CHECK_EQUAL(cfg2.getRestartRootName(), "");
 
-    Deck deck2 = createDeck(deckStr2);
-    InitConfig cfg2( deck2 );
-    BOOST_CHECK_EQUAL(cfg2.restartRequested(), false);
-    BOOST_CHECK_EQUAL(cfg2.getRestartStep(), 0);
-    BOOST_CHECK_EQUAL(cfg2.getRestartRootName(), "");
+        cfg2.setRestart("CASE", 100);
+        BOOST_CHECK_EQUAL(cfg2.restartRequested(), true);
+        BOOST_CHECK_EQUAL(cfg2.getRestartStep(), 100);
+        BOOST_CHECK_EQUAL(cfg2.getRestartRootName(), "CASE");
+    }
 
-    cfg2.setRestart( "CASE" , 100);
-    BOOST_CHECK_EQUAL(cfg2.restartRequested(), true);
-    BOOST_CHECK_EQUAL(cfg2.getRestartStep(), 100);
-    BOOST_CHECK_EQUAL(cfg2.getRestartRootName(), "CASE");
+    {
+        const Deck deck3 = createDeck(deckStr3());
+        BOOST_CHECK_THROW(InitConfig{deck3}, OpmInputError);
+    }
 
-    Deck deck3 = createDeck(deckStr3);
-    BOOST_CHECK_THROW( InitConfig{ deck3 }, std::runtime_error );
-
-    Deck deck4 = createDeck(deckStr4);
-    BOOST_CHECK_NO_THROW( InitConfig{ deck4 } );
+    {
+        const Deck deck4 = createDeck(deckStr4());
+        BOOST_CHECK_NO_THROW(InitConfig{deck4});
+    }
 }
 
-BOOST_AUTO_TEST_CASE( InitConfigWithoutEquil ) {
-    auto deck = createDeck( deckStr );
-    InitConfig config( deck );
+BOOST_AUTO_TEST_CASE(InitConfigWithoutEquil)
+{
+    const auto deck = createDeck(deckStr());
+    const InitConfig config(deck);
 
-    BOOST_CHECK( !config.hasEquil() );
-    BOOST_CHECK_THROW( config.getEquil(), std::runtime_error );
+    BOOST_CHECK(! config.hasEquil());
+    BOOST_CHECK_THROW(config.getEquil(), std::runtime_error);
 }
 
-BOOST_AUTO_TEST_CASE( InitConfigWithEquil )  {
-    auto deck = createDeck( deckWithEquil );
-    InitConfig config( deck );
+BOOST_AUTO_TEST_CASE(InitConfigWithEquil)
+{
+    const auto deck = createDeck(deckWithEquil());
+    const InitConfig config(deck);
 
-    BOOST_CHECK( config.hasEquil() );
-    BOOST_CHECK_NO_THROW( config.getEquil() );
+    BOOST_CHECK(config.hasEquil());
+    BOOST_CHECK_NO_THROW(config.getEquil());
 }
 
-BOOST_AUTO_TEST_CASE( InitConfigWithStrEquil )  {
-    auto deck = createDeck( deckWithStrEquil );
-    InitConfig config( deck );
+BOOST_AUTO_TEST_CASE(InitConfigWithStrEquil)
+{
+    const auto deck = createDeck(deckWithStrEquil());
+    const InitConfig config(deck);
 
-    BOOST_CHECK( config.hasStressEquil() );
-    BOOST_CHECK_NO_THROW( config.getStressEquil() );
+    BOOST_CHECK(config.hasStressEquil());
+    BOOST_CHECK_NO_THROW(config.getStressEquil());
 }
 
-BOOST_AUTO_TEST_CASE( EquilOperations ) {
-    auto deck = createDeck( deckWithEquil );
-    InitConfig config( deck );
+BOOST_AUTO_TEST_CASE(EquilOperations)
+{
+    const auto deck = createDeck(deckWithEquil());
+    const InitConfig config(deck);
 
     const auto& equil = config.getEquil();
 
-    BOOST_CHECK( !equil.empty() );
-    BOOST_CHECK_EQUAL( 1U, equil.size() );
+    BOOST_CHECK(! equil.empty());
+    BOOST_CHECK_EQUAL(1U, equil.size());
 
-    BOOST_CHECK_NO_THROW( equil.getRecord( 0 ) );
-    BOOST_CHECK_THROW( equil.getRecord( 1 ), std::out_of_range );
+    BOOST_CHECK_NO_THROW(equil.getRecord(0));
+    BOOST_CHECK_THROW(equil.getRecord(1), std::out_of_range);
 
-    const auto& record = equil.getRecord( 0 );
-    BOOST_CHECK_CLOSE( 2469, record.datumDepth(), 1e-12 );
-    BOOST_CHECK_CLOSE( 382.4 * unit::barsa, record.datumDepthPressure(), 1e-12 );
-    BOOST_CHECK_CLOSE( 1705.0, record.waterOilContactDepth(), 1e-12 );
-    BOOST_CHECK_CLOSE( 0.0, record.waterOilContactCapillaryPressure(), 1e-12 );
-    BOOST_CHECK_CLOSE( 500, record.gasOilContactDepth(), 1e-12 );
-    BOOST_CHECK_CLOSE( 0.0, record.gasOilContactCapillaryPressure(), 1e-12 );
-    BOOST_CHECK( !record.liveOilInitConstantRs() );
-    BOOST_CHECK( !record.wetGasInitConstantRv() );
-    BOOST_CHECK_EQUAL( 20, record.initializationTargetAccuracy() );
+    const auto& record = equil.getRecord(0);
+    BOOST_CHECK_CLOSE( 2469, record.datumDepth(), 1e-12);
+    BOOST_CHECK_CLOSE( 382.4 * unit::barsa, record.datumDepthPressure(), 1e-12);
+    BOOST_CHECK_CLOSE( 1705.0, record.waterOilContactDepth(), 1e-12);
+    BOOST_CHECK_CLOSE( 0.0, record.waterOilContactCapillaryPressure(), 1e-12);
+    BOOST_CHECK_CLOSE( 500, record.gasOilContactDepth(), 1e-12);
+    BOOST_CHECK_CLOSE( 0.0, record.gasOilContactCapillaryPressure(), 1e-12);
+    BOOST_CHECK(! record.liveOilInitConstantRs());
+    BOOST_CHECK(! record.wetGasInitConstantRv());
+    BOOST_CHECK_EQUAL(20, record.initializationTargetAccuracy());
 }
 
-BOOST_AUTO_TEST_CASE( StrEquilOperations ) {
-    auto deck = createDeck( deckWithStrEquil );
-    InitConfig config( deck );
+BOOST_AUTO_TEST_CASE(StrEquilOperations)
+{
+    const auto deck = createDeck(deckWithStrEquil());
+    const InitConfig config(deck);
 
     const auto& equil = config.getStressEquil();
 
-    BOOST_CHECK( !equil.empty() );
-    BOOST_CHECK_EQUAL( 1U, equil.size() );
+    BOOST_CHECK(! equil.empty());
+    BOOST_CHECK_EQUAL(1U, equil.size());
 
-    BOOST_CHECK_NO_THROW( equil.getRecord( 0 ) );
-    BOOST_CHECK_THROW( equil.getRecord( 1 ), std::out_of_range );
+    BOOST_CHECK_NO_THROW(equil.getRecord(0));
+    BOOST_CHECK_THROW(equil.getRecord(1), std::out_of_range);
 
-    const auto& record = equil.getRecord( 0 );
-    BOOST_CHECK_CLOSE(1.0, record.datumDepth(), 1.0 );
-    BOOST_CHECK_CLOSE(2.0, record.datumPosX(), 1e-12 );
-    BOOST_CHECK_CLOSE(3.0, record.datumPosY(), 1e-12 );
-    BOOST_CHECK_CLOSE(4.0 * unit::barsa, record.stressXX(), 1e-12 );
-    BOOST_CHECK_CLOSE(5.0 * unit::barsa, record.stressXX_grad(), 1e-12 );
-    BOOST_CHECK_CLOSE(6.0 * unit::barsa, record.stressYY(), 1e-12 );
-    BOOST_CHECK_CLOSE(7.0 * unit::barsa, record.stressYY_grad(), 1e-12 );
-    BOOST_CHECK_CLOSE(8.0 * unit::barsa, record.stressZZ(), 1e-12 );
-    BOOST_CHECK_CLOSE(9.0 * unit::barsa, record.stressZZ_grad(), 1e-12 );
+    const auto& record = equil.getRecord(0);
+    BOOST_CHECK_CLOSE(1.0, record.datumDepth(), 1.0);
+    BOOST_CHECK_CLOSE(2.0, record.datumPosX(), 1e-12);
+    BOOST_CHECK_CLOSE(3.0, record.datumPosY(), 1e-12);
+    BOOST_CHECK_CLOSE(4.0 * unit::barsa, record.stressXX(), 1e-12);
+    BOOST_CHECK_CLOSE(5.0 * unit::barsa, record.stressXX_grad(), 1e-12);
+    BOOST_CHECK_CLOSE(6.0 * unit::barsa, record.stressYY(), 1e-12);
+    BOOST_CHECK_CLOSE(7.0 * unit::barsa, record.stressYY_grad(), 1e-12);
+    BOOST_CHECK_CLOSE(8.0 * unit::barsa, record.stressZZ(), 1e-12);
+    BOOST_CHECK_CLOSE(9.0 * unit::barsa, record.stressZZ_grad(), 1e-12);
 }
 
-BOOST_AUTO_TEST_CASE(RestartCWD) {
+BOOST_AUTO_TEST_CASE(RestartCWD)
+{
     WorkArea output_area;
 
     output_area.makeSubDir("simulation");
@@ -330,41 +379,44 @@ BOOST_AUTO_TEST_CASE(RestartCWD) {
     {
         std::fstream fs;
         fs.open ("simulation/CASE.DATA", std::fstream::out);
-        fs << deckStr4;
+        fs << deckStr4();
         fs.close();
 
         fs.open("simulation/CASE5.DATA", std::fstream::out);
-        fs << deckStr5;
+        fs << deckStr5();
         fs.close();
 
         fs.open("CASE5.DATA", std::fstream::out);
-        fs << deckStr5;
+        fs << deckStr5();
         fs.close();
 
         fs.open("CWD_CASE.DATA", std::fstream::out);
-        fs << deckStr4;
+        fs << deckStr4();
         fs.close();
     }
-    Opm::Parser parser;
+
     {
-        Opm::Deck deck = parser.parseFile("simulation/CASE.DATA");
-        Opm::InitConfig init_config(deck);
+        const Deck deck = Parser{}.parseFile("simulation/CASE.DATA");
+        const InitConfig init_config(deck);
         BOOST_CHECK_EQUAL(init_config.getRestartRootName(), "simulation/BASE");
     }
+
     {
-      Opm::Deck deck = parser.parseFile("simulation/CASE5.DATA");
-      Opm::InitConfig init_config(deck);
-      BOOST_CHECK_EQUAL(init_config.getRestartRootName(), "/abs/path/BASE");
+        const Deck deck = Parser{}.parseFile("simulation/CASE5.DATA");
+        const InitConfig init_config(deck);
+        BOOST_CHECK_EQUAL(init_config.getRestartRootName(), "/abs/path/BASE");
     }
+
     {
-        Opm::Deck deck = parser.parseFile("CWD_CASE.DATA");
-        Opm::InitConfig init_config(deck);
+        const Deck deck = Parser{}.parseFile("CWD_CASE.DATA");
+        const InitConfig init_config(deck);
         BOOST_CHECK_EQUAL(init_config.getRestartRootName(), "BASE");
     }
+
     {
-      Opm::Deck deck = parser.parseFile("CASE5.DATA");
-      Opm::InitConfig init_config(deck);
-      BOOST_CHECK_EQUAL(init_config.getRestartRootName(), "/abs/path/BASE");
+        const Deck deck = Parser{}.parseFile("CASE5.DATA");
+        const InitConfig init_config(deck);
+        BOOST_CHECK_EQUAL(init_config.getRestartRootName(), "/abs/path/BASE");
     }
 }
 
