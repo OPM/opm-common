@@ -58,6 +58,14 @@ namespace Compsegs {
                     const ParseContext& parseContext,
                     ErrorGuard& errors);
 
+    std::pair<WellConnections, WellSegments>
+    processCOMPSEGS(const std::vector<std::pair<double, double>>& intersection_depths,
+                    const std::vector<std::array<int, 3>>& intersections_ijk,
+                    const WellSegments& segments,
+                    const WellConnections& input_connections,
+                    const WellSegments& input_segments,
+                    const ScheduleGrid& grid);
+
 
     std::pair<WellConnections, WellSegments>
     rstUpdate(const RestartIO::RstWell& rst_well,

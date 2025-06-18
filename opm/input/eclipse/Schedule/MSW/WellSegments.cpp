@@ -63,6 +63,14 @@ namespace Opm {
     }
 
 
+    WellSegments::WellSegments(const std::string &wname, double length_top,
+        const std::vector<std::pair<double, double>>& intersections,
+        double diameter, const UnitSystem& unit_system)
+    {
+        this->addWellSegmentsFromIntersections(wname, length_top, intersections, diameter, unit_system);
+    }
+
+
     WellSegments WellSegments::serializationTestObject()
     {
         WellSegments result;
@@ -182,6 +190,77 @@ namespace Opm {
         };
 
         this->addSegment(segment);
+    }
+
+
+    void WellSegments::addWellSegmentsFromIntersections(const std::string &wname, double length_top,
+                                                        const std::vector<std::pair<double, double>>& intersections,
+                                                        double diameter, const UnitSystem& unit_system)
+    {
+        // Meaningless value to indicate unspecified values.
+        const double invalid_value = Segment::invalidValue();
+
+        m_comp_pressure_drop = WellSegments::CompPressureDrop::HF_;  // Defaulted: PRESSURE_COMPONENTS in WELSEGS.
+
+        int segmentID = 1;
+        const int branchID = 1;  // Only main branch for now.
+        int outletSegmendID_top = 0;
+        const auto diameter_top = invalid_value;
+        const auto roughness_top = invalid_value;
+        const auto area_top = invalid_value;
+        const double volume_top = 1.0e-5;  // Defaulted: WELLBORE_VOLUME in WELSEGS.
+
+        this->addSegment(segmentID, branchID, outletSegmendID_top,
+                         length_top, length_top,
+                         diameter_top, roughness_top, area_top,
+                         volume_top, true, 0.0, 0.0);
+        segmentID += 1;
+
+        const double roughness = 0.0;  // Defaulted: ROUGHNESS in WELSEGS.
+        const double area = M_PI * diameter * diameter / 4.0;
+        const double volume = invalid_value;
+
+        // If necessary add an extra segment at the top:
+        if (intersections[0].first > length_top) {
+            const auto startMD = intersections[0].first;
+            const auto length = (startMD - length_top) / 2.0 + length_top;
+            const auto depth = length;
+            const auto outletSegmendID = segmentID - 1;
+            this->addSegment(
+                segmentID, branchID, outletSegmendID,
+                length, depth, diameter,
+                roughness, area, volume, true,
+                0.0, 0.0
+            );           
+            segmentID += 1;
+        }
+
+        // Add a segment for each cell:
+        for (const auto& [startMD, endMD] : intersections) {
+            const auto length = (endMD - startMD) / 2.0 + startMD;
+            const auto depth = length;
+            const auto outletSegmendID = segmentID - 1;
+            this->addSegment(
+                segmentID, branchID, outletSegmendID,
+                length, depth, diameter,
+                roughness, area, volume, true,
+                0.0, 0.0
+            );           
+            segmentID += 1;
+        }
+
+        // Fix inlets:
+        for (const auto& segment : this->m_segments) {
+            const int outlet_segment = segment.outletSegment();
+            if (outlet_segment <= 0) { // no outlet segment
+                continue;
+            }
+
+            const int outlet_segment_index = segment_number_to_index[outlet_segment];
+            m_segments[outlet_segment_index].addInletSegment(segment.segmentNumber());
+        }
+
+        this->process(wname, unit_system, WellSegments::LengthDepth::ABS, length_top, length_top);
     }
 
 
