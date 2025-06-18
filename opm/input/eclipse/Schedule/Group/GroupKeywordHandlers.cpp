@@ -181,18 +181,44 @@ void handleGCONPROD(HandlerContext& handlerContext)
         const Group::ProductionCMode controlMode = Group::ProductionCModeFromString(record.getItem("CONTROL_MODE").getTrimmedString(0));
         Group::GroupLimitAction groupLimitAction;
         groupLimitAction.allRates = Group::ExceedActionFromString(record.getItem("EXCEED_PROC").getTrimmedString(0));
+        // \Note: we do not use the allRates anymore. Instead, we have explicit definition of actions for all the possible rate limits
+        // \Note: the allRates is here for backward compatibility for the RESTART file output
+        const auto& allRates = groupLimitAction.allRates;
+
+        groupLimitAction.oil = allRates;
 
         groupLimitAction.water = record.getItem("WATER_EXCEED_PROCEDURE").defaultApplied(0)
-        ? groupLimitAction.allRates
+        ? allRates
         : Group::ExceedActionFromString(record.getItem("WATER_EXCEED_PROCEDURE").getTrimmedString(0));
         
         groupLimitAction.gas = record.getItem("GAS_EXCEED_PROCEDURE").defaultApplied(0)
-        ? groupLimitAction.allRates
+        ? allRates
         : Group::ExceedActionFromString(record.getItem("GAS_EXCEED_PROCEDURE").getTrimmedString(0));
 
         groupLimitAction.liquid = record.getItem("LIQUID_EXCEED_PROCEDURE").defaultApplied(0)
-        ? groupLimitAction.allRates
+        ? allRates
         : Group::ExceedActionFromString(record.getItem("LIQUID_EXCEED_PROCEDURE").getTrimmedString(0));
+
+        // we overwrite the actions based on the control mode,
+        // TODO: while how to handle `FLD` remains undecided
+        switch (controlMode) {
+            case Group::ProductionCMode::ORAT:
+                groupLimitAction.oil = Group::ExceedAction::RATE;
+                break;
+            case Group::ProductionCMode::WRAT:
+                groupLimitAction.water = Group::ExceedAction::RATE;
+                break;
+            case Group::ProductionCMode::GRAT:
+                groupLimitAction.gas = Group::ExceedAction::RATE;
+                break;
+            case Group::ProductionCMode::LRAT:
+                groupLimitAction.liquid = Group::ExceedAction::RATE;
+                break;
+            case Group::ProductionCMode::FLD:
+                //TODO: we do not know yet and we do nothing for now
+            default:
+                break; // do nothing
+        }
 
         const bool respond_to_parent = DeckItem::to_bool(record.getItem("RESPOND_TO_PARENT").getTrimmedString(0));
 
@@ -268,7 +294,7 @@ void handleGCONPROD(HandlerContext& handlerContext)
                 // GCONPROD
                 // 'G1' 'ORAT' 1000 100 200 300 RATE =>  constraints 100,200,300 should be honored
                 if (production.cmode == Group::ProductionCMode::ORAT ||
-                    (groupLimitAction.allRates != Group::ExceedAction::NONE &&
+                    (groupLimitAction.oil != Group::ExceedAction::NONE &&
                     !apply_default_oil_target)) {
                     production.production_controls |= static_cast<int>(Group::ProductionCMode::ORAT);
                 }
