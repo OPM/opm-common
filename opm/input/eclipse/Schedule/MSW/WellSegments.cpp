@@ -64,10 +64,13 @@ namespace Opm {
 
 
     WellSegments::WellSegments(const std::string &wname, double length_top,
-        const std::vector<std::pair<double, double>>& intersections,
+        const std::vector<std::pair<double, double>>& intersections_md,
+        const std::vector<std::pair<double, double>>& intersections_tvd,
         double diameter, const UnitSystem& unit_system)
     {
-        this->addWellSegmentsFromIntersections(wname, length_top, intersections, diameter, unit_system);
+        this->addWellSegmentsFromIntersections(
+            wname, length_top, intersections_md, intersections_tvd, diameter, unit_system
+        );
     }
 
 
@@ -194,7 +197,8 @@ namespace Opm {
 
 
     void WellSegments::addWellSegmentsFromIntersections(const std::string &wname, double length_top,
-                                                        const std::vector<std::pair<double, double>>& intersections,
+                                                        const std::vector<std::pair<double, double>>& intersections_md,
+                                                        const std::vector<std::pair<double, double>>& intersections_tvd,
                                                         double diameter, const UnitSystem& unit_system)
     {
         // Meaningless value to indicate unspecified values.
@@ -221,14 +225,15 @@ namespace Opm {
         const double volume = invalid_value;
 
         // If necessary add an extra segment at the top:
-        if (intersections[0].first > length_top) {
-            const auto startMD = intersections[0].first;
-            const auto length = (startMD - length_top) / 2.0 + length_top;
-            const auto depth = length;
+        if (intersections_md[0].first > length_top) {
+            const auto startMD = intersections_md[0].first;
+            const auto startTVD = intersections_tvd[0].first;
+            const auto length = 0.5 * (startMD + length_top);
+            const auto depth = 0.5 * (startTVD + length_top);
             const auto outletSegmendID = segmentID - 1;
             this->addSegment(
                 segmentID, branchID, outletSegmendID,
-                length, depth, diameter,
+                depth, length, diameter,
                 roughness, area, volume, true,
                 0.0, 0.0
             );           
@@ -236,13 +241,17 @@ namespace Opm {
         }
 
         // Add a segment for each cell:
-        for (const auto& [startMD, endMD] : intersections) {
-            const auto length = (endMD - startMD) / 2.0 + startMD;
-            const auto depth = length;
+         for (auto it_md = intersections_md.begin(), it_tvd = intersections_tvd.begin();
+              it_md != intersections_md.end() && it_tvd != intersections_tvd.end();
+              ++it_md, ++it_tvd) {
+            const auto& [startMD, endMD] = *it_md;
+            const auto& [startTVD, endTVD] = *it_tvd;
+            const auto length = 0.5 * (startMD + endMD);
+            const auto depth = 0.5 * (startTVD + endTVD);
             const auto outletSegmendID = segmentID - 1;
             this->addSegment(
                 segmentID, branchID, outletSegmendID,
-                length, depth, diameter,
+                depth, length, diameter,
                 roughness, area, volume, true,
                 0.0, 0.0
             );           

@@ -59,7 +59,7 @@ namespace Compsegs {
                     ErrorGuard& errors);
 
     std::pair<WellConnections, WellSegments>
-    processCOMPSEGS(const std::vector<std::pair<double, double>>& intersection_depths,
+    processCOMPSEGS(const std::vector<std::pair<double, double>>& intersections_md,
                     const std::vector<std::array<int, 3>>& intersections_ijk,
                     const WellSegments& segments,
                     const WellConnections& input_connections,

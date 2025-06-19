@@ -172,14 +172,16 @@ void handleCOMPTRAJ(HandlerContext& handlerContext)
             // cellsearchTree is calculated only once and is used to
             // calculated cell intersections of the perforations
             // specified in COMPTRAJ
-            std::vector<std::pair<double, double>> intersection_depths;
+            std::vector<std::pair<double, double>> intersections_md;
+            std::vector<std::pair<double, double>> intersections_tvd;
             std::vector<std::array<int, 3>> intersection_ijk;
             connections->loadCOMPTRAJ(record,
                                       handlerContext.grid,
                                       name,
                                       handlerContext.keyword.location(),
                                       cellSearchTree,
-                                      intersection_depths,
+                                      intersections_md,
+                                      intersections_tvd,
                                       intersection_ijk);
 
             // In the case that defaults are used in WELSPECS for
@@ -208,7 +210,7 @@ Well {} is not connected to grid - will remain SHUT)",
                 const auto& diameter = record.getItem("DIAMETER").getSIDouble(0);
                 
                 auto well = handlerContext.state().wells.get(name);
-                well.addWellSegmentsFromIntersections(perf_top, intersection_depths, diameter);
+                well.addWellSegmentsFromIntersections(perf_top, intersections_md, intersections_tvd, diameter);
                 handlerContext.state().wells.update(std::move(well));
                 handlerContext.record_well_structure_change();
             }
@@ -216,7 +218,7 @@ Well {} is not connected to grid - will remain SHUT)",
             if (add_msw) { // Generate COMPSEGS data:
                 auto well = handlerContext.state().wells.get(name);
                 auto [new_connections, new_segments] = Compsegs::processCOMPSEGS(
-                    intersection_depths, intersection_ijk, well.getSegments(), well.getConnections(), well.getSegments(), handlerContext.grid
+                    intersections_md, intersection_ijk, well.getSegments(), well.getConnections(), well.getSegments(), handlerContext.grid
                 );
                 
                 well.updateConnections(std::make_shared<WellConnections>(std::move(new_connections)), false);

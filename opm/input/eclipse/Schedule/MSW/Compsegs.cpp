@@ -361,7 +361,7 @@ namespace {
     }
 
     std::pair<WellConnections, WellSegments>
-    processCOMPSEGS(const std::vector<std::pair<double, double>>& intersection_depths,
+    processCOMPSEGS(const std::vector<std::pair<double, double>>& intersections_md,
                     const std::vector<std::array<int, 3>>& intersections_ijk,
                     const WellSegments& segments,
                     const WellConnections& input_connections,
@@ -370,9 +370,9 @@ namespace {
     {
         std::vector<Record> compsegs;
 
-        for (size_t is = 0; is < intersection_depths.size(); ++is) {
-            const auto startMD = intersection_depths[is].first;
-            const auto endMD = intersection_depths[is].second;
+        for (size_t is = 0; is < intersections_md.size(); ++is) {
+            const auto startMD = intersections_md[is].first;
+            const auto endMD = intersections_md[is].second;
             const auto ijk = intersections_ijk[is];
 
             // Defaulted values:

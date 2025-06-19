@@ -564,7 +564,8 @@ public:
     double evalFilterConc(const SummaryState& summary_sate) const;
     bool applyGlobalWPIMULT(double scale_factor);
     void addWellSegmentsFromIntersections(double length_top,
-                                          const std::vector<std::pair<double, double>>& intersections,
+                                          const std::vector<std::pair<double, double>>& intersections_md,
+                                          const std::vector<std::pair<double, double>>& intersections_tvd,
                                           double diameter);
 
     void filterConnections(const ActiveGridCells& grid);
