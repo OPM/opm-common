@@ -21,9 +21,13 @@
 #include <string>
 #include <unordered_map>
 
+#include <opm/common/OpmLog/OpmLog.hpp>
+
 #include <opm/input/eclipse/Parser/ParserKeywords/L.hpp>
 #include <opm/input/eclipse/Schedule/Group/GuideRateModel.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellEnums.hpp>
+
+#include <fmt/format.h>
 
 namespace Opm {
 
@@ -142,7 +146,7 @@ double GuideRateModel::pot(Target target, double oil_pot, double gas_pot, double
 }
 
 
-double GuideRateModel::eval(double oil_pot, double gas_pot, double wat_pot) const {
+double GuideRateModel::eval(const std::string& wgname, double oil_pot, double gas_pot, double wat_pot) const {
     if (this->default_model)
         throw std::invalid_argument("The default GuideRateModel can not be evaluated - must enter GUIDERAT information explicitly.");
 
@@ -185,14 +189,18 @@ double GuideRateModel::eval(double oil_pot, double gas_pot, double wat_pot) cons
     }
 
 
-    double denom = this->B + this->C*std::pow(R1, this->D) + this->E*std::pow(R2, this->F);
-    /*
-      The values pot, R1 and R2 are runtime simulation results, so here
-      basically anything could happen. Quite dangerous to have hard error
-      handling here?
-    */
+    const double denom = this->B + this->C*std::pow(R1, this->D) + this->E*std::pow(R2, this->F);
     if (denom <= 0) {
-        throw std::range_error("Invalid denominator: " + std::to_string(denom));
+        OpmLog::warning("GUIDERATE_ZERO_DEONM",
+            fmt::format("GuideRateModel::eval: Denominator {}  <= 0, which is not allowed. "
+                                " returning zero guide rate for well/group {}", denom, wgname) );
+
+        const auto debug_msg = fmt::format("GuideRateModel::eval: invalid denominator {} with :\n"
+               "val: {}, R1: {}, R2: {}, A: {}, B: {}, C: {}, D: {}, E: {}, F: {}",
+            denom, val, R1, R2, this->A, this->B, this->C, this->D, this->E, this->F);
+        OpmLog::debug(debug_msg);
+
+        return 0;
     }
 
     return std::pow(val, this->A) / denom;
