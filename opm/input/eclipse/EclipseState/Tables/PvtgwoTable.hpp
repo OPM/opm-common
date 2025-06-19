@@ -16,25 +16,38 @@
 
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
- */
+*/
+
 #ifndef OPM_PARSER_PVTGWO_TABLE_HPP
-#define	OPM_PARSER_PVTGWO_TABLE_HPP
+#define OPM_PARSER_PVTGWO_TABLE_HPP
 
 #include <opm/input/eclipse/EclipseState/Tables/PvtxTable.hpp>
+
+#include <cstddef>
 
 namespace Opm {
 
     class DeckKeyword;
 
-    class PvtgwoTable : public PvtxTable {
+} // namespaced Opm
+
+namespace Opm {
+
+    class PvtgwoTable : public PvtxTable
+    {
     public:
         PvtgwoTable() = default;
-        PvtgwoTable( const DeckKeyword& keyword, size_t tableIdx);
+        PvtgwoTable(const DeckKeyword& keyword, const std::size_t tableIdx);
 
         static PvtgwoTable serializationTestObject();
 
         bool operator==(const PvtgwoTable& data) const;
-    };
-}
 
-#endif
+    private:
+        void makeScaledUSatTableCopy(const std::size_t src,
+                                     const std::size_t dest) override;
+    };
+
+} // namespace Opm
+
+#endif // OPM_PARSER_PVTGWO_TABLE_HPP
