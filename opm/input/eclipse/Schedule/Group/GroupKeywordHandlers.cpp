@@ -179,46 +179,24 @@ void handleGCONPROD(HandlerContext& handlerContext)
         }
 
         const Group::ProductionCMode controlMode = Group::ProductionCModeFromString(record.getItem("CONTROL_MODE").getTrimmedString(0));
+
+        // Set the group limit actions. Item 7 (EXCEED_PROC) gives the general action, items 11-13 (WATER_EXCEED_PROCEDURE etc.)
+        // can override this for water, gas or liquid rate limits.
         Group::GroupLimitAction groupLimitAction;
         groupLimitAction.allRates = Group::ExceedActionFromString(record.getItem("EXCEED_PROC").getTrimmedString(0));
         // \Note: we do not use the allRates anymore. Instead, we have explicit definition of actions for all the possible rate limits
         // \Note: the allRates is here for backward compatibility for the RESTART file output
         const auto& allRates = groupLimitAction.allRates;
-
         groupLimitAction.oil = allRates;
-
         groupLimitAction.water = record.getItem("WATER_EXCEED_PROCEDURE").defaultApplied(0)
-        ? allRates
-        : Group::ExceedActionFromString(record.getItem("WATER_EXCEED_PROCEDURE").getTrimmedString(0));
-        
+            ? allRates
+            : Group::ExceedActionFromString(record.getItem("WATER_EXCEED_PROCEDURE").getTrimmedString(0));
         groupLimitAction.gas = record.getItem("GAS_EXCEED_PROCEDURE").defaultApplied(0)
-        ? allRates
-        : Group::ExceedActionFromString(record.getItem("GAS_EXCEED_PROCEDURE").getTrimmedString(0));
-
+            ? allRates
+            : Group::ExceedActionFromString(record.getItem("GAS_EXCEED_PROCEDURE").getTrimmedString(0));
         groupLimitAction.liquid = record.getItem("LIQUID_EXCEED_PROCEDURE").defaultApplied(0)
-        ? allRates
-        : Group::ExceedActionFromString(record.getItem("LIQUID_EXCEED_PROCEDURE").getTrimmedString(0));
-
-        // we overwrite the actions based on the control mode,
-        // TODO: while how to handle `FLD` remains undecided
-        switch (controlMode) {
-            case Group::ProductionCMode::ORAT:
-                groupLimitAction.oil = Group::ExceedAction::RATE;
-                break;
-            case Group::ProductionCMode::WRAT:
-                groupLimitAction.water = Group::ExceedAction::RATE;
-                break;
-            case Group::ProductionCMode::GRAT:
-                groupLimitAction.gas = Group::ExceedAction::RATE;
-                break;
-            case Group::ProductionCMode::LRAT:
-                groupLimitAction.liquid = Group::ExceedAction::RATE;
-                break;
-            case Group::ProductionCMode::FLD:
-                //TODO: we do not know yet and we do nothing for now
-            default:
-                break; // do nothing
-        }
+            ? allRates
+            : Group::ExceedActionFromString(record.getItem("LIQUID_EXCEED_PROCEDURE").getTrimmedString(0));
 
         const bool respond_to_parent = DeckItem::to_bool(record.getItem("RESPOND_TO_PARENT").getTrimmedString(0));
 
@@ -248,6 +226,7 @@ void handleGCONPROD(HandlerContext& handlerContext)
         for (const auto& group_name : group_names) {
             const bool is_field { group_name == "FIELD" } ;
 
+            // Find guide rates.
             auto guide_rate_def = Group::GuideRateProdTarget::NO_GUIDE_RATE;
             double guide_rate = 0;
             if (!is_field) {
@@ -271,65 +250,122 @@ void handleGCONPROD(HandlerContext& handlerContext)
                 }
             }
 
-            {
-                // FLD overrides item 8 (respond_to_parent i.e if FLD the group is available for higher up groups)
-                const bool availableForGroupControl { (respond_to_parent || controlMode == Group::ProductionCMode::FLD) && !is_field } ;
-                auto new_group = handlerContext.state().groups.get(group_name);
-                Group::GroupProductionProperties production(handlerContext.static_schedule().m_unit_system, group_name);
-                production.cmode = controlMode;
-                production.oil_target = oil_target;
-                production.gas_target = gas_target;
-                production.water_target = water_target;
-                production.liquid_target = liquid_target;
-                production.guide_rate = guide_rate;
-                production.guide_rate_def = guide_rate_def;
-                production.resv_target = resv_target;
-                production.available_group_control = availableForGroupControl;
-                production.group_limit_action = groupLimitAction;
+            // FLD overrides item 8 (respond_to_parent i.e if FLD the group is available for higher up groups)
+            const bool availableForGroupControl { (respond_to_parent || controlMode == Group::ProductionCMode::FLD) && !is_field } ;
 
-                production.production_controls = 0;
-                // GCONPROD
-                // 'G1' 'ORAT' 1000 100 200 300 NONE =>  constraints 100,200,300 should be ignored
-                //
-                // GCONPROD
-                // 'G1' 'ORAT' 1000 100 200 300 RATE =>  constraints 100,200,300 should be honored
-                if (production.cmode == Group::ProductionCMode::ORAT ||
-                    (groupLimitAction.oil != Group::ExceedAction::NONE &&
-                    !apply_default_oil_target)) {
-                    production.production_controls |= static_cast<int>(Group::ProductionCMode::ORAT);
-                }
-                if (production.cmode == Group::ProductionCMode::WRAT ||
-                    ((groupLimitAction.water != Group::ExceedAction::NONE) &&
-                    !apply_default_water_target)) {
-                    production.production_controls |= static_cast<int>(Group::ProductionCMode::WRAT);
-                }
-                if (production.cmode == Group::ProductionCMode::GRAT ||
-                    ((groupLimitAction.gas  != Group::ExceedAction::NONE) &&
-                    !apply_default_gas_target)) {
-                    production.production_controls |= static_cast<int>(Group::ProductionCMode::GRAT);
-                }
-                if (production.cmode == Group::ProductionCMode::LRAT ||
-                    ((groupLimitAction.liquid != Group::ExceedAction::NONE) &&
-                    !apply_default_liquid_target)) {
-                    production.production_controls |= static_cast<int>(Group::ProductionCMode::LRAT);
-                }
+            auto new_group = handlerContext.state().groups.get(group_name);
+            Group::GroupProductionProperties production(handlerContext.static_schedule().m_unit_system, group_name);
 
-                if (!apply_default_resv_target)
-                    production.production_controls |= static_cast<int>(Group::ProductionCMode::RESV);
+            production.cmode = controlMode;
 
-                if (new_group.updateProduction(production)) {
-                    auto new_config = handlerContext.state().guide_rate();
-                    new_config.update_production_group(new_group);
-                    handlerContext.state().guide_rate.update( std::move(new_config));
+            production.oil_target = oil_target;
+            production.gas_target = gas_target;
+            production.water_target = water_target;
+            production.liquid_target = liquid_target;
+            production.guide_rate = guide_rate;
+            production.guide_rate_def = guide_rate_def;
+            production.resv_target = resv_target;
+            production.available_group_control = availableForGroupControl;
+            production.group_limit_action = groupLimitAction;
 
-                    handlerContext.state().groups.update( std::move(new_group));
-                    handlerContext.state().events().addEvent(ScheduleEvents::GROUP_PRODUCTION_UPDATE);
-                    handlerContext.state().wellgroup_events().addEvent( group_name, ScheduleEvents::GROUP_PRODUCTION_UPDATE);
-
-                    auto udq_active = handlerContext.state().udq_active.get();
-                    if (production.updateUDQActive(handlerContext.state().udq.get(), udq_active))
-                        handlerContext.state().udq_active.update( std::move(udq_active));
+            // We must overwrite the actions based on the control mode.
+            // First we find the mode to use. It will usually be the group's mode...
+            Group::ProductionCMode modeForActionOverride = controlMode;
+            // ...however, if the mode is FLD we must find it at a higher level:
+            if (controlMode == Group::ProductionCMode::FLD) {
+                // FLD is invalid for the FIELD group
+                if (is_field) {
+                    const auto& parseContext = handlerContext.parseContext;
+                    auto& errors = handlerContext.errors;
+                    parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR,
+                                             "The FIELD group cannot have FLD control mode.",
+                                             keyword.location(),
+                                             errors);
                 }
+                // Set this group's mode for action override to be the
+                // one of the closest parent group with a mode
+                // different from FLD or NONE. If there is no parent
+                // with a definite control mode, set it to NONE.
+                modeForActionOverride = Group::ProductionCMode::NONE; // May be overwritten below
+                std::string parent_name = new_group.parent();
+                while (true) {
+                    const auto& parent_group = handlerContext.state().groups.get(parent_name);
+                    const auto parent_mode = parent_group.productionProperties().cmode;
+                    if (parent_mode != Group::ProductionCMode::FLD && parent_mode != Group::ProductionCMode::NONE) {
+                        // Found a definite control mode.
+                        modeForActionOverride = parent_mode;
+                        break;
+                    }
+                    if (parent_name == "FIELD" || parent_name.empty()) {
+                        // Reached the top of the tree.
+                        break;
+                    } else {
+                        // Go one level up in the tree.
+                        parent_name = parent_group.parent();
+                    }
+                }
+            }
+
+            // Override the action corresponding to the found mode.
+            switch (modeForActionOverride) {
+            case Group::ProductionCMode::ORAT:
+                production.group_limit_action.oil = Group::ExceedAction::RATE;
+                break;
+            case Group::ProductionCMode::WRAT:
+                production.group_limit_action.water = Group::ExceedAction::RATE;
+                break;
+            case Group::ProductionCMode::GRAT:
+                production.group_limit_action.gas = Group::ExceedAction::RATE;
+                break;
+            case Group::ProductionCMode::LRAT:
+                production.group_limit_action.liquid = Group::ExceedAction::RATE;
+                break;
+            default:
+                break; // do nothing
+            }
+
+            production.production_controls = 0;
+            // GCONPROD
+            // 'G1' 'ORAT' 1000 100 200 300 NONE =>  constraints 100,200,300 should be ignored
+            //
+            // GCONPROD
+            // 'G1' 'ORAT' 1000 100 200 300 RATE =>  constraints 100,200,300 should be honored
+            if (production.cmode == Group::ProductionCMode::ORAT ||
+                (groupLimitAction.oil != Group::ExceedAction::NONE &&
+                 !apply_default_oil_target)) {
+                production.production_controls |= static_cast<int>(Group::ProductionCMode::ORAT);
+            }
+            if (production.cmode == Group::ProductionCMode::WRAT ||
+                ((groupLimitAction.water != Group::ExceedAction::NONE) &&
+                 !apply_default_water_target)) {
+                production.production_controls |= static_cast<int>(Group::ProductionCMode::WRAT);
+            }
+            if (production.cmode == Group::ProductionCMode::GRAT ||
+                ((groupLimitAction.gas  != Group::ExceedAction::NONE) &&
+                 !apply_default_gas_target)) {
+                production.production_controls |= static_cast<int>(Group::ProductionCMode::GRAT);
+            }
+            if (production.cmode == Group::ProductionCMode::LRAT ||
+                ((groupLimitAction.liquid != Group::ExceedAction::NONE) &&
+                 !apply_default_liquid_target)) {
+                production.production_controls |= static_cast<int>(Group::ProductionCMode::LRAT);
+            }
+
+            if (!apply_default_resv_target)
+                production.production_controls |= static_cast<int>(Group::ProductionCMode::RESV);
+
+            if (new_group.updateProduction(production)) {
+                auto new_config = handlerContext.state().guide_rate();
+                new_config.update_production_group(new_group);
+                handlerContext.state().guide_rate.update( std::move(new_config));
+
+                handlerContext.state().groups.update( std::move(new_group));
+                handlerContext.state().events().addEvent(ScheduleEvents::GROUP_PRODUCTION_UPDATE);
+                handlerContext.state().wellgroup_events().addEvent( group_name, ScheduleEvents::GROUP_PRODUCTION_UPDATE);
+
+                auto udq_active = handlerContext.state().udq_active.get();
+                if (production.updateUDQActive(handlerContext.state().udq.get(), udq_active))
+                    handlerContext.state().udq_active.update( std::move(udq_active));
             }
         }
     }
