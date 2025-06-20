@@ -256,44 +256,7 @@ void handleGCONPROD(HandlerContext& handlerContext)
             auto new_group = handlerContext.state().groups.get(group_name);
             Group::GroupProductionProperties production(handlerContext.static_schedule().m_unit_system, group_name);
 
-            // Set the production mode. If not FLD, this is
-            // straightforward, but for FLD we will go up the group
-            // tree to find a definite control mode.
-            if (controlMode == Group::ProductionCMode::FLD) {
-                if (is_field) {
-                    // FLD is invalid for the FIELD group
-                    const auto& parseContext = handlerContext.parseContext;
-                    auto& errors = handlerContext.errors;
-                    parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR,
-                                             "The FIELD group cannot have FLD control mode.",
-                                             keyword.location(),
-                                             errors);
-                }
-                // Set this group's control mode to be the one of
-                // the closest parent group with a mode different
-                // from FLD or NONE. If there is no parent with a
-                // definite control mode, set my mode to NONE.
-                production.cmode = Group::ProductionCMode::NONE; // May be overwritten below
-                std::string parent_name = new_group.parent();
-                while(true) {
-                    const auto& parent_group = handlerContext.state().groups.get(parent_name);
-                    const auto parent_mode = parent_group.productionProperties().cmode;
-                    if (parent_mode != Group::ProductionCMode::FLD && parent_mode != Group::ProductionCMode::NONE) {
-                        // Found a definite control mode.
-                        production.cmode = parent_mode;
-                        break;
-                    }
-                    if (parent_name == "FIELD" || parent_name.empty()) {
-                        // Reached the top of the tree.
-                        break;
-                    } else {
-                        // Go one level up in the tree.
-                        parent_name = parent_group.parent();
-                    }
-                }
-            } else {
-                production.cmode = controlMode;
-            }
+            production.cmode = controlMode;
 
             production.oil_target = oil_target;
             production.gas_target = gas_target;
@@ -305,8 +268,46 @@ void handleGCONPROD(HandlerContext& handlerContext)
             production.available_group_control = availableForGroupControl;
             production.group_limit_action = groupLimitAction;
 
-            // we overwrite the actions based on the control mode,
-            switch (production.cmode) {
+            // We must overwrite the actions based on the control mode.
+            // First we find the mode to use. It will usually be the group's mode...
+            Group::ProductionCMode modeForActionOverride = controlMode;
+            // ...however, if the mode is FLD we must find it at a higher level:
+            if (controlMode == Group::ProductionCMode::FLD) {
+                // FLD is invalid for the FIELD group
+                if (is_field) {
+                    const auto& parseContext = handlerContext.parseContext;
+                    auto& errors = handlerContext.errors;
+                    parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR,
+                                             "The FIELD group cannot have FLD control mode.",
+                                             keyword.location(),
+                                             errors);
+                }
+                // Set this group's mode for action override to be the
+                // one of the closest parent group with a mode
+                // different from FLD or NONE. If there is no parent
+                // with a definite control mode, set it to NONE.
+                modeForActionOverride = Group::ProductionCMode::NONE; // May be overwritten below
+                std::string parent_name = new_group.parent();
+                while (true) {
+                    const auto& parent_group = handlerContext.state().groups.get(parent_name);
+                    const auto parent_mode = parent_group.productionProperties().cmode;
+                    if (parent_mode != Group::ProductionCMode::FLD && parent_mode != Group::ProductionCMode::NONE) {
+                        // Found a definite control mode.
+                        modeForActionOverride = parent_mode;
+                        break;
+                    }
+                    if (parent_name == "FIELD" || parent_name.empty()) {
+                        // Reached the top of the tree.
+                        break;
+                    } else {
+                        // Go one level up in the tree.
+                        parent_name = parent_group.parent();
+                    }
+                }
+            }
+
+            // Override the action corresponding to the found mode.
+            switch (modeForActionOverride) {
             case Group::ProductionCMode::ORAT:
                 production.group_limit_action.oil = Group::ExceedAction::RATE;
                 break;
