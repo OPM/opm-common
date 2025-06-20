@@ -92,7 +92,6 @@ if(HAVE_OPM_TESTS)
                 ${OPM_TESTS_ROOT}/spe3/SPE3CASE1.DATA
                 ${OPM_TESTS_ROOT}/spe3/SPE3CASE2.DATA
                 ${OPM_TESTS_ROOT}/spe9/SPE9_CP.DATA
-                ${OPM_TESTS_ROOT}/spe9/SPE9_CP_GROUP.DATA
                 ${OPM_TESTS_ROOT}/spe9/SPE9_CP_SHORT.DATA
                 ${OPM_TESTS_ROOT}/spe9/SPE9.DATA
                 ${OPM_TESTS_ROOT}/msw_2d_h/2D_H__.DATA
@@ -112,7 +111,7 @@ if(HAVE_OPM_TESTS)
                    EXE_NAME parse_write
                    TEST_ARGS ${deck})
   endforeach()
-  opm_add_test("SPE9_CP_GROUP2" NO_COMPILE EXE_NAME parse_write TEST_ARGS "${OPM_TESTS_ROOT}/spe9group/SPE9_CP_GROUP.DATA")
+  opm_add_test("SPE9_CP_GROUP" NO_COMPILE EXE_NAME parse_write TEST_ARGS "${OPM_TESTS_ROOT}/spe9group/SPE9_CP_GROUP.DATA")
   set_property(TEST NORNE_ATW2013
                PROPERTY ENVIRONMENT "OPM_ERRORS_IGNORE=PARSE_RANDOM_SLASH")
 
