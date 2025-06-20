@@ -55,6 +55,13 @@
       "value_type": "DOUBLE",
       "dimension": "Length",
       "default": 0.3
+    },
+    {
+      "item": 10,
+      "name": "WIDTH",
+      "value_type": "DOUBLE",
+      "dimension": "Length",
+      "default": 1e-4
     }
   ]
 }

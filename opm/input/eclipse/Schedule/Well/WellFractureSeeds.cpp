@@ -87,7 +87,7 @@ Opm::WellFractureSeeds Opm::WellFractureSeeds::serializationTestObject()
 
     s.seedCell_.push_back(1729);
     s.seedNormal_.push_back({ 1.1, -2.2, 3.3 });
-    s.seedSize_.push_back({ 1.1, 2.2 });
+    s.seedSize_.push_back({ 1.1, 2.2, 1.0e-4 });
     s.lookup_.push_back(0);
 
     return s;
