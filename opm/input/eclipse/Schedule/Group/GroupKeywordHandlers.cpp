@@ -199,27 +199,6 @@ void handleGCONPROD(HandlerContext& handlerContext)
         ? allRates
         : Group::ExceedActionFromString(record.getItem("LIQUID_EXCEED_PROCEDURE").getTrimmedString(0));
 
-        // we overwrite the actions based on the control mode,
-        // TODO: while how to handle `FLD` remains undecided
-        switch (controlMode) {
-            case Group::ProductionCMode::ORAT:
-                groupLimitAction.oil = Group::ExceedAction::RATE;
-                break;
-            case Group::ProductionCMode::WRAT:
-                groupLimitAction.water = Group::ExceedAction::RATE;
-                break;
-            case Group::ProductionCMode::GRAT:
-                groupLimitAction.gas = Group::ExceedAction::RATE;
-                break;
-            case Group::ProductionCMode::LRAT:
-                groupLimitAction.liquid = Group::ExceedAction::RATE;
-                break;
-            case Group::ProductionCMode::FLD:
-                //TODO: we do not know yet and we do nothing for now
-            default:
-                break; // do nothing
-        }
-
         const bool respond_to_parent = DeckItem::to_bool(record.getItem("RESPOND_TO_PARENT").getTrimmedString(0));
 
         const auto oil_target = record.getItem("OIL_TARGET").get<UDAValue>(0);
@@ -316,6 +295,24 @@ void handleGCONPROD(HandlerContext& handlerContext)
                 production.resv_target = resv_target;
                 production.available_group_control = availableForGroupControl;
                 production.group_limit_action = groupLimitAction;
+
+                // we overwrite the actions based on the control mode,
+                switch (production.cmode) {
+                case Group::ProductionCMode::ORAT:
+                    production.group_limit_action.oil = Group::ExceedAction::RATE;
+                    break;
+                case Group::ProductionCMode::WRAT:
+                    production.group_limit_action.water = Group::ExceedAction::RATE;
+                    break;
+                case Group::ProductionCMode::GRAT:
+                    production.group_limit_action.gas = Group::ExceedAction::RATE;
+                    break;
+                case Group::ProductionCMode::LRAT:
+                    production.group_limit_action.liquid = Group::ExceedAction::RATE;
+                    break;
+                default:
+                    break; // do nothing
+                }
 
                 production.production_controls = 0;
                 // GCONPROD
