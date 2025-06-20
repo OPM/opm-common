@@ -48,7 +48,10 @@ public:
 
     /// Type alias for the normal vector at a single seed point.
     using NormalVector = std::array<double, 3>;
-    using SizeVector = std::array<double, 2>;
+
+    /// Vertical extent, horizontal extent, and width of initial fracture at
+    /// a seed point.
+    using SizeVector = std::array<double, 3>;
 
     /// Default constructor.
     ///
@@ -139,6 +142,24 @@ public:
     const NormalVector& getNormal(const SeedIndex& i) const
     {
         return this->seedNormal_[i.i];
+    }
+
+    /// Retrieve initial fracture size vector based on insertion
+    /// order/record index.
+    ///
+    /// \param[in] c Cartesian cell index.
+    ///
+    /// Should normally be used in conjunction with member function
+    /// seedCells() only.
+    ///
+    /// \param[in] i Insertion order.  Should be in the range [0
+    /// .. numSeeds()).
+    ///
+    /// \return Initial fracture size (vertical and horizontal extents,
+    /// along with initial width) at the \p i-th unique cell index.
+    const SizeVector& getSize(const SeedIndex& i) const
+    {
+        return this->seedSize_[i.i];
     }
 
     /// Retrieve this collection's fracture seed cells
