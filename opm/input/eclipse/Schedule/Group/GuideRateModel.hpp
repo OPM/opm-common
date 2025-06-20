@@ -68,7 +68,7 @@ public:
 
     static GuideRateModel serializationTestObject();
 
-    double eval(const std::string& wgname, double oil_pot, double gas_pot, double wat_pot) const;
+    double eval(const std::string& wgId, double oil_pot, double gas_pot, double wat_pot) const;
     bool updateLINCOM(const UDAValue& alpha, const UDAValue& beta, const UDAValue& gamma) const;
     double update_delay() const;
     bool allow_increase() const;

@@ -277,7 +277,7 @@ void Opm::GuideRate::group_compute(const std::string& wgname,
         }
 
         if (is_formula) {
-            const auto guide_rate = this->eval_form(config.model(), wgname, oil_pot, gas_pot, wat_pot);
+            const auto guide_rate = this->eval_form(config.model(), "group " + wgname, oil_pot, gas_pot, wat_pot);
             this->assign_grvalue(wgname, config.model(), { sim_time, guide_rate, config.model().target() });
         }
     }
@@ -345,18 +345,18 @@ void Opm::GuideRate::well_compute(const std::string& wgname,
         }
 
         const auto& model = config.model();
-        const auto guide_rate = this->eval_form(model, wgname, oil_pot, gas_pot, wat_pot);
+        const auto guide_rate = this->eval_form(model, "well " + wgname, oil_pot, gas_pot, wat_pot);
         this->assign_grvalue(wgname, model, { sim_time, guide_rate, model.target() });
     }
 }
 
 double Opm::GuideRate::eval_form(const GuideRateModel& model,
-                                 const std::string&    wgname,
+                                 const std::string&    wgId,
                                  const double          oil_pot,
                                  const double          gas_pot,
                                  const double          wat_pot) const
 {
-    return model.eval(wgname, oil_pot, gas_pot, wat_pot);
+    return model.eval(wgId, oil_pot, gas_pot, wat_pot);
 }
 
 void Opm::GuideRate::assign_grvalue(const std::string&    wgname,
