@@ -329,10 +329,10 @@ GCONPROD
 BOOST_AUTO_TEST_CASE(TESTGuideRateModel) {
     Opm::GuideRateModel grc_default;
     BOOST_CHECK_THROW(Opm::GuideRateModel(0.0,GuideRateModel::Target::OIL, -5,0,0,0,0,0,true,1,true), std::invalid_argument);
-    BOOST_CHECK_THROW(grc_default.eval(1,0.50,0.50), std::invalid_argument);
+    BOOST_CHECK_THROW(grc_default.eval("WELLA", 1,0.50,0.50), std::invalid_argument);
 
     Opm::GuideRateModel grc_delay(10, GuideRateModel::Target::OIL, 1,1,0,0,0,0,true,1,true);
-    BOOST_CHECK_NO_THROW(grc_delay.eval(1.0, 0.5, 0.5));
+    BOOST_CHECK_NO_THROW(grc_delay.eval("WELLA", 1.0, 0.5, 0.5));
 }
 
 BOOST_AUTO_TEST_CASE(TESTGuideRateLINCOM) {
