@@ -29,15 +29,13 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
-#include <tuple>
 #include <unordered_map>
 #include <utility>
 #include <vector>
 
 namespace Opm {
 
-namespace OrderedMapDetail
-{
+namespace OrderedMapDetail {
 
 template<class T, class A>
 std::string
@@ -103,7 +101,7 @@ template<>
 struct TruncatedStringEquals<std::string::npos> : public std::equal_to<std::string>
 {};
 
-} // end namespace detail
+} // end namespace OrderedMapDetail
 
 /// \brief A map with iteration in the order of insertion.
 ///
@@ -318,6 +316,7 @@ public:
         serializer(m_vector);
     }
 };
+
 }
 
 #endif
