@@ -468,7 +468,7 @@ public:
             break;
 
         case Stream::Debug:
-            this->log_function_ = &OpmLog::debug;
+            this->log_function_ = &ScheduleLogger::debug;
             break;
         }
     }
@@ -490,6 +490,11 @@ public:
     void info(const std::string& msg)
     {
         OpmLog::info(this->format_message(msg));
+    }
+
+    static void debug(const std::string& msg)
+    {
+        OpmLog::debug(msg);
     }
 
     void complete_step(const std::string& msg)

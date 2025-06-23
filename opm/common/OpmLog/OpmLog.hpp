@@ -50,7 +50,7 @@ public:
     static void error(const std::string& message);
     static void problem(const std::string& message);
     static void bug(const std::string& message);
-    static void debug(const std::string& message);
+    static void debug(const std::string& message, const int level = 0);
     static void note(const std::string& message);
 
     static void info(const std::string& tag, const std::string& message);
@@ -67,6 +67,10 @@ public:
     static void removeAllBackends();
     static bool enabledMessageType( int64_t messageType );
     static void addMessageType( int64_t messageType , const std::string& prefix);
+
+
+    static int getDebugLevel() { return debug_level_; }
+    static void setDebugLevel(const int level) { debug_level_ = level; }
 
     /// Create a basic logging setup that will send all log messages to standard output.
     ///
@@ -113,6 +117,7 @@ private:
 #ifdef EMBEDDED_PYTHON
     friend class PyRunModule;
 #endif
+    static int debug_level_;
     static std::shared_ptr<Logger> getLogger();
     static std::shared_ptr<Logger> m_logger;
 };

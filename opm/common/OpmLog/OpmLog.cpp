@@ -39,6 +39,7 @@
 #endif
 
 namespace Opm {
+    int OpmLog::debug_level_ = 0;
 
     bool OpmLog::stdoutIsTerminal()
     {
@@ -114,9 +115,11 @@ namespace Opm {
     }
 
     
-    void OpmLog::debug(const std::string& message)
+    void OpmLog::debug(const std::string& message, const int level)
     {
-        addMessage(Log::MessageType::Debug, message);
+        if (debug_level_ >= level) {
+            addMessage(Log::MessageType::Debug, message);
+        }
     }
 
 
