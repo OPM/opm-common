@@ -17,12 +17,13 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <stdexcept>
-#include <vector>
-
 #include <opm/input/eclipse/EclipseState/Grid/FaceDir.hpp>
 #include <fmt/format.h>
 #include <fmt/ranges.h>
+
+#include <array>
+#include <stdexcept>
+#include <vector>
 
 namespace Opm {
 
@@ -100,8 +101,14 @@ namespace Opm {
 
         DirEnum FromIntersectionIndex(int idx)
         {
-            const std::vector<FaceDir::DirEnum> mapping =
-                {XMinus, XPlus, YMinus, YPlus, ZMinus, ZPlus};
+            static constexpr auto mapping = std::array{
+                XMinus,
+                XPlus,
+                YMinus,
+                YPlus,
+                ZMinus,
+                ZPlus,
+            };
 
             if (idx < 0 || idx > 5)
                 throw std::invalid_argument("Wrong face direction");
