@@ -163,14 +163,15 @@ public:
         if (this->count(key) == 0)
             return 0;
 
-        std::size_t index = this->m_map.at(key);
+        const std::size_t idx = this->m_map.at(key);
         this->m_map.erase(key);
-        this->m_vector.erase(this->m_vector.begin() + index);
+        this->m_vector.erase(this->m_vector.begin() + idx);
 
         for (const auto& index_pair : this->m_map) {
             auto target_index = index_pair.second;
-            if (target_index > index)
-                target_index--;
+            if (target_index > idx) {
+                --target_index;
+            }
 
             this->m_map[index_pair.first] = target_index;
         }
@@ -181,12 +182,12 @@ public:
     void insert(std::pair<std::string,T> key_value_pair) {
         if (this->count(key_value_pair.first) > 0) {
             auto iter = m_map.find( key_value_pair.first );
-            size_t index = iter->second;
-            m_vector[index] = key_value_pair;
+            const std::size_t idx = iter->second;
+            m_vector[idx] = key_value_pair;
         } else {
-            size_t index = m_vector.size();
-            this->m_map.emplace(key_value_pair.first, index);
-            this->m_vector.push_back( std::move( key_value_pair ) );
+            const std::size_t idx = m_vector.size();
+            this->m_map.emplace(key_value_pair.first, idx);
+            this->m_vector.push_back(std::move(key_value_pair));
         }
     }
 
@@ -206,8 +207,8 @@ public:
                                         + startsWithSame);
         }
         else {
-            size_t index = iter->second;
-            return iget(index);
+            const std::size_t idx = iter->second;
+            return iget(idx);
         }
     }
 
@@ -233,8 +234,8 @@ public:
                                         + startsWithSame);
         }
         else {
-            size_t index = iter->second;
-            return iget(index);
+            const std::size_t idx = iter->second;
+            return iget(idx);
         }
     }
 
