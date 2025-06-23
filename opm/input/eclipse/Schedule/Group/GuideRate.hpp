@@ -203,6 +203,7 @@ private:
                        const double       wat_pot);
 
     double eval_form(const GuideRateModel& model,
+                     const std::string&    wgId,
                      const double          oil_pot,
                      const double          gas_pot,
                      const double          wat_pot) const;
