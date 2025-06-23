@@ -213,7 +213,7 @@ public:
     }
 
 
-    T& iget(size_t index) {
+    T& iget(std::size_t index) {
         if (index >= m_vector.size())
             throw std::invalid_argument("Invalid index");
         return m_vector[index].second;
@@ -240,7 +240,7 @@ public:
     }
 
 
-    const T& iget(size_t index) const {
+    const T& iget(std::size_t index) const {
         if (index >= m_vector.size())
         {
             using namespace std::string_literals;
@@ -251,7 +251,7 @@ public:
         return m_vector[index].second;
     }
 
-    const T& at(size_t index) const {
+    const T& at(std::size_t index) const {
         return this->iget(index);
     }
 
@@ -259,7 +259,7 @@ public:
         return this->get(key);
     }
 
-    T& at(size_t index) {
+    T& at(std::size_t index) {
         return this->iget(index);
     }
 
@@ -267,7 +267,7 @@ public:
         return this->get(key);
     }
 
-    size_t size() const {
+    std::size_t size() const {
         return m_vector.size();
     }
 
@@ -305,7 +305,7 @@ public:
         return std::next(this->m_vector.begin(), map_iter->second);
     }
 
-    template<size_t n>
+    template<std::size_t n>
     bool operator==(const OrderedMap<T,n>& data) const {
         return this->getIndex() == data.getIndex() &&
                this->getStorage() == data.getStorage();
