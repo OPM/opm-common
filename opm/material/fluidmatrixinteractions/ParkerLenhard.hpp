@@ -346,7 +346,7 @@ public:
     template <class Container, class FluidState>
     static void capillaryPressures(Container& values, const Params& params, const FluidState& fs)
     {
-        typedef typename std::remove_reference<decltype(values[0])>::type Evaluation;
+        using Evaluation = std::remove_reference_t<decltype(values[0])>;
 
         values[Traits::wettingPhaseIdx] = 0.0; // reference phase
         values[Traits::nonWettingPhaseIdx] = pcnw<FluidState, Evaluation>(params, fs);
@@ -367,7 +367,7 @@ public:
     template <class Container, class FluidState>
     static void relativePermeabilities(Container& values, const Params& params, const FluidState& fs)
     {
-        typedef typename std::remove_reference<decltype(values[0])>::type Evaluation;
+        using Evaluation = std::remove_reference_t<decltype(values[0])>;
 
         values[Traits::wettingPhaseIdx] = krw<FluidState, Evaluation>(params, fs);
         values[Traits::nonWettingPhaseIdx] = krn<FluidState, Evaluation>(params, fs);
