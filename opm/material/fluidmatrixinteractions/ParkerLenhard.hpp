@@ -102,10 +102,12 @@ public:
      */
     ~PLScanningCurve()
     {
-        if (loopNum_ == 0)
+        if (loopNum_ == 0) {
             delete prev_;
-        if (loopNum_ >= 0)
+        }
+        if (loopNum_ >= 0) {
             delete next_;
+        }
     }
 
     /*!
@@ -531,13 +533,16 @@ private:
     static Evaluation computeCurrentSnr_(const Params& params, const Evaluation& Sw)
     {
         // regularize
-        if (Sw > 1 - params.Snr())
+        if (Sw > 1 - params.Snr()) {
             return 0.0;
-        if (Sw < params.SwrPc())
+        }
+        if (Sw < params.SwrPc()) {
             return params.Snr();
+        }
 
-        if (params.Snr() == 0.0)
+        if (params.Snr() == 0.0) {
             return 0.0;
+        }
 
         // use Land's law
         const Scalar R = 1.0 / params.Snr() - 1;
