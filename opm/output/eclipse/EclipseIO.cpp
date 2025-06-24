@@ -70,6 +70,18 @@
 
 namespace {
 
+/// Create directory if it does not already exist
+///
+/// Intended primarily for the run's output directory.
+///
+/// \param[in] odir Directory name.  This function will create the named
+/// directory if it does not already exist.  If, on the other hand, a
+/// filesystem element with the name \p odir already exists but is not a
+/// directory, then this function will throw an exception of type \code
+/// std::runtime_error \endcode.  Finally, if the function is unable to
+/// create the named directory, e.g., because of insufficient privileges,
+/// then the function will also throw an exception of type \code
+/// std::runtime_error \endcode.
 void ensure_directory_exists(const std::filesystem::path& odir)
 {
     namespace fs = std::filesystem;
@@ -99,9 +111,42 @@ void ensure_directory_exists(const std::filesystem::path& odir)
 
 } // Anonymous namespace
 
+/// Internal implementation class for EclipseIO public interface.
 class Opm::EclipseIO::Impl
 {
 public:
+    /// Constructor.
+    ///
+    /// Invoked only by containing class EclipseIO.
+    ///
+    /// \param[in] eclipseState Run's static parameters such as region
+    /// definitions.  The EclipseIO object retains a reference to this
+    /// object, whence the lifetime of \p eclipseState should exceed that of
+    /// the EclipseIO object.
+    ///
+    /// \param[in] grid Run's active cells.  The EclipseIO object takes
+    /// ownership of this grid object.
+    ///
+    /// \param[in] schedule Run's dynamic objects.  The EclipseIO object
+    /// retains a reference to this object, whence the lifetime of \p
+    /// schedule should exceed that of the EclipseIO object.
+    ///
+    /// \param[in] summary_config Run's collection of summary vectors
+    /// requested in the SUMMARY section of the model description.  Used to
+    /// initialise an internal \c SummaryConfig object that will
+    /// additionally contain all vectors needed to evaluate the defining
+    /// expressions of any user-defined quantities in the run.
+    ///
+    /// \param[in] basename Name of main input data file, stripped of
+    /// extensions and directory names.
+    ///
+    /// \param[in] writeEsmry Whether or not to additionally create a
+    /// "transposed" .ESMRY output file during the simulation run.  ESMRY
+    /// files typically load faster into post-processing tools such as
+    /// qsummary and ResInsight than traditional SMSPEC/UNSMRY files,
+    /// especially if the user only needs to view a small number of vectors.
+    /// On the other hand, ESMRY files typically require more memory while
+    /// writing.
     Impl(const EclipseState&  eclipseState,
          EclipseGrid          grid,
          const Schedule&      schedule,
@@ -109,44 +154,222 @@ public:
          const std::string&   baseName,
          const bool           writeEsmry);
 
+    /// Whether or not run requests file output.
     bool outputEnabled() const { return this->output_enabled_; }
 
+    /// Whether or not run requests RFT file output at this time.
+    ///
+    /// \param[in] report_step One-based report step index.
+    ///
+    /// \param[in] isSubstep Whether or not we're being called in the middle
+    /// of a report step.  We typically do not output RFT files for
+    /// sub-steps.
+    ///
+    /// \return RFT file output status.  First member is whether or not to
+    /// output RFT information at this time.  Second is whether or not an
+    /// RFT file already exists.
     std::pair<bool, bool>
     wantRFTOutput(const int report_step, const bool isSubstep) const;
 
+    /// Whether or not to output summary file information at this time.
+    ///
+    /// \param[in] report_step One-based report step index for which to
+    /// create output.  Report_step=0 represents time zero.
+    ///
+    /// \param[in] isSubstep Whether or not we're being called in the middle
+    /// of a report step.
+    ///
+    /// \param[in] secs_elapsed Elapsed physical (i.e., simulated) time in
+    /// seconds since start of simulation.
+    ///
+    /// \param[in] time_step Current time step index.  Passing something
+    /// different than nullopt will typically generate summary file output
+    /// for all times.
+    ///
+    /// \return Whether or not to output summary file information at this
+    /// time.
     bool wantSummaryOutput(const int          report_step,
                            const bool         isSubstep,
                            const double       secs_elapsed,
                            std::optional<int> time_step) const;
 
+    /// Whether or not to output restart file information at this time.
+    ///
+    /// \param[in] report_step One-based report step index for which to
+    /// create output.  Report_step=0 represents time zero.
+    ///
+    /// \param[in] isSubstep Whether or not we're being called in the middle
+    /// of a report step.
+    ///
+    /// \param[in] time_step Current time step index.  Passing something
+    /// different than nullopt will typically generate summary file output
+    /// for all times.
+    ///
+    /// \return Whether or not to output restart file information at this
+    /// time.
     bool wantRestartOutput(const int          report_step,
                            const bool         isSubstep,
                            std::optional<int> time_step) const;
 
+    /// Whether or not this is the run's final report step.
+    ///
+    /// Simplifies checking for whether or not to to create an RSM file.
+    ///
+    /// \param[in] report_step One-based report step index for which to
+    /// create output.  Report_step=0 represents time zero.
+    ///
+    /// \return Whether or not \p report_step is the run's final report
+    /// step.
     bool isFinalStep(const int report_step) const;
 
+    /// Name of run's output directory.
     const std::string& outputDir() const { return this->outputDir_; }
+
+    /// Run's summary vector calculation engine.
     const out::Summary& summary() const { return this->summary_; }
+
+    /// Run's complete summary configuration object, including those vectors
+    /// that are needed to evaluate the defining expressions of any
+    /// user-defined quantities.
     const SummaryConfig& summaryConfig() const { return this->summaryConfig_; }
 
+    /// Load per-cell solution data and wellstate from restart file.
+    ///
+    /// Name of restart file and report step from which to restart inferred
+    /// from internal IOConfig object.
+    ///
+    /// \param[in] solution_keys Descriptors of requisite and optional
+    /// per-cell dynamic values to load from restart file.
+    ///
+    /// \param[in] extra_keys Descriptors of additional dynamic values to
+    /// load from restart file.  Optional.
+    ///
+    /// \param[in,out] action_state Run's action system state.  On input, a
+    /// valid object.  On exit, populated from restart file information.
+    ///
+    /// \param[in,out] summary_state Run's container of summary vector
+    /// values.  On input, a valid object.  On exit, populated from restart
+    /// file information.  Mostly relevant to cumulative quantities such as
+    /// FOPT.
+    ///
+    /// \return Collection of per-cell, per-well, per-connection,
+    /// per-segment, per-group, and per-aquifer dynamic results at
+    /// simulation restart time.
     RestartValue loadRestart(const std::vector<RestartKey>& solution_keys,
                              const std::vector<RestartKey>& extra_keys,
                              Action::State&                 action_state,
                              SummaryState&                  summary_state) const;
 
+    /// Load per-cell solution data from restart file at specific time.
+    ///
+    /// Common use case is to load the initial volumes-in-place from time
+    /// zero.
+    ///
+    /// Name of restart file inferred from internal IOConfig object.
+    ///
+    /// The map keys should be a map of keyword names and their
+    /// corresponding dimension object.  In other words, loading the state
+    /// from a simple two phase simulation you would pass:
+    ///
+    ///    keys = {
+    ///        {"PRESSURE" , UnitSystem::measure::pressure },
+    ///        {"SWAT"     , UnitSystem::measure::identity },
+    ///    }
+    ///
+    /// For a three phase black oil simulation you would add pairs for SGAS,
+    /// RS and RV.  If you request keys which are not found in the restart
+    /// file an exception will be raised.  This also happens if the size of
+    /// a vector does not match the expected size.
+    ///
+    /// \param[in] solution_keys Descriptors of requisite and optional
+    /// per-cell dynamic values to load from restart file.
+    ///
+    /// \param[in] report_step One-based report step index for which load
+    /// restart file information.
+    ///
+    /// \return Collection of per-cell results at \p report_step.
     data::Solution loadRestartSolution(const std::vector<RestartKey>& solution_keys,
                                        const int                      report_step) const;
 
+    /// Output static properties to EGRID and INIT files.
+    ///
+    /// \param[in] simProps Initial per-cell properties such as
+    /// transmissibilities.  Will be output to the INIT file.
+    ///
+    /// \param[in] int_data Additional integer arrays defined by simulator.
+    /// May contain things like the MPI partition arrays.  Will be output to
+    /// the INIT file.
+    ///
+    /// \param[in] nnc Run's non-neighbouring connections.  Includes those
+    /// connections that are derived from corner-point grid processing and
+    /// those connections that are explicitly entered using keywords like
+    /// NNC, EDITNNC, or EDITNNCR.  The cell pairs will be output to the
+    /// EGRID file while the associate transmissibility will be output to
+    /// the INIT file.
     void writeInitial(data::Solution                          simProps,
                       std::map<std::string, std::vector<int>> int_data,
                       const std::vector<NNCdata>&             nnc) const;
 
+    /// Create summary file output.
+    ///
+    /// Calls Summary::add_timestep() and Summary::write().
+    ///
+    /// \param[in] st Summary values from most recent call to eval().
+    /// Source object from which to retrieve the values that go into the
+    /// output buffer.
+    ///
+    /// \param[in] report_step One-based report step index for which to
+    /// create output.  This is the number that gets incorporated into the
+    /// file extension of "separate" summary output files (i.e., .S000n).
+    /// Report_step=0 represents time zero.
+    ///
+    /// \param[in] time_step Zero-based time step ID.  Nullopt if the
+    /// sequence number should be the same as the report step.
+    ///
+    /// \param[in] secs_elapsed Elapsed physical (i.e., simulated) time in
+    /// seconds since start of simulation.
+    ///
+    /// \param[in] isSubstep Whether or not we're being called in the middle
+    /// of a report step.
     void writeSummaryFile(const SummaryState&      st,
                           const int                report_step,
                           const std::optional<int> time_step,
                           const double             secs_elapsed,
                           const bool               isSubstep);
 
+    /// Create restart file output.
+    ///
+    /// Calls RestartIO::save().
+    ///
+    /// \param[in] action_state Run's current action system state.  Expected
+    /// to hold current values for the number of times each action has run
+    /// and the time of each action's last run.
+    ///
+    /// \param[in] wtest_state Run's current WTEST information.  Expected to
+    /// hold information about those wells that have been closed due to
+    /// various runtime conditions.
+    ///
+    /// \param[in] st Summary values from most recent call to
+    /// Summary::eval().  Source object from which to retrieve the values
+    /// that go into the output buffer.
+    ///
+    /// \param[in] udq_state Run's current UDQ values.
+    ///
+    /// \param[in] report_step One-based report step index for which to
+    /// create output.  Report_step=0 represents time zero.
+    ///
+    /// \param[in] time_step Current time step index.  Nullopt if the
+    /// sequence number should be the same as the report step index.
+    ///
+    /// \param[in] secs_elapsed Elapsed physical (i.e., simulated) time in
+    /// seconds since start of simulation.
+    ///
+    /// \param[in] write_double Whether or not to output simulation results
+    /// as double precision floating-point numbers.
+    ///
+    /// \param[in] value Collection of per-cell, per-well, per-connection,
+    /// per-segment, per-group, and per-aquifer dynamic results pertaining
+    /// to this time point.
     void writeRestartFile(const Action::State& action_state,
                           const WellTestState& wtest_state,
                           const SummaryState&  st,
@@ -157,47 +380,154 @@ public:
                           const bool           write_double,
                           RestartValue&&       value);
 
+    /// Create RSM file.
+    ///
+    /// Loads the run's summary output files and writes the "transposed"
+    /// file output.  Should typically be called only at the end of the
+    /// simulation run, and only if specifically requested through the
+    /// RUNSUM keyword.
     void writeRunSummary() const;
 
+    /// Create RFT file output.
+    ///
+    /// \param[in] secs_elapsed Elapsed physical (i.e., simulated) time in
+    /// seconds since start of simulation.
+    ///
+    /// \param[in] report_step One-based report step index for which to
+    /// create output.  Report_step=0 represents time zero, although this is
+    /// typically not applicable to this function.
+    ///
+    /// \param[in] haveExistingRFT Whether or not the run's RFT file already
+    /// exists.
+    ///
+    /// \param[in] wellSol Per-well, per-connection, and per-segment dynamic
+    /// result values.
     void writeRftFile(const double       secs_elapsed,
                       const int          report_step,
                       const bool         haveExistingRFT,
                       const data::Wells& wellSol) const;
 
+    /// Record full processing of a complete time step.
     void countTimeStep() { ++this->miniStepId_; }
 
 private:
+    /// Run's static properties.
     std::reference_wrapper<const EclipseState> es_;
+
+    /// Run's dynamic objects.
     std::reference_wrapper<const Schedule> schedule_;
+
+    /// Run's active cells.
     EclipseGrid grid_;
 
+    /// Run's output directory.
     std::string outputDir_;
+
+    /// Run's base name.  Input DATA file without extensions or directories.
     std::string baseName_;
+
+    /// Run's complete summary configuration object.
     SummaryConfig summaryConfig_;
+
+    /// Run's summary vector calculation engine.
     out::Summary summary_;
+
+    /// Whether or not run requests any kind of file output.
+    ///
+    /// Typically 'true', although 'false' may be useful in performance
+    /// tests.
     bool output_enabled_{false};
+
+    /// Run's current time step ID.
     int miniStepId_{0};
 
+    /// Static aquifer descriptions for restart file output.
+    ///
+    /// Nullopt unless run includes aquifers.
     std::optional<RestartIO::Helpers::AggregateAquiferData> aquiferData_{std::nullopt};
 
+    /// Whether or not SUMTHIN is currently active.
     mutable bool sumthin_active_{false};
+
+    /// Whether or not sufficient time has passed since last summary file
+    /// output in the context of SUMTHIN.
+    ///
+    /// Applicable only if sumthin_active_ is true.
     mutable bool sumthin_triggered_{false};
 
+    /// Simulated time of last summary file output triggered by SUMTHIN.
+    ///
+    /// Applicable only if sumthin_active_ is true.
     double last_sumthin_output_{std::numeric_limits<double>::lowest()};
 
+    /// Output static properties to INIT file.
+    ///
+    /// \param[in] simProps Initial per-cell properties such as
+    /// transmissibilities.  Will be output to the INIT file.
+    ///
+    /// \param[in] int_data Additional integer arrays defined by simulator.
+    /// May contain things like the MPI partition arrays.  Will be output to
+    /// the INIT file.
+    ///
+    /// \param[in] nnc Run's non-neighbouring connections.  Includes those
+    /// connections that are derived from corner-point grid processing and
+    /// those connections that are explicitly entered using keywords like
+    /// NNC, EDITNNC, or EDITNNCR.  This function uses only the
+    /// transmissibility information.
     void writeInitFile(data::Solution                          simProps,
                        std::map<std::string, std::vector<int>> int_data,
                        const std::vector<NNCdata>&             nnc) const;
 
+    /// Output static geometry to EGRID file.
+    ///
+    /// \param[in] nnc Run's non-neighbouring connections.  Includes those
+    /// connections that are derived from corner-point grid processing and
+    /// those connections that are explicitly entered using keywords like
+    /// NNC, EDITNNC, or EDITNNCR.  This function uses only the cell pairs.
     void writeEGridFile(const std::vector<NNCdata>& nnc) const;
 
+    /// Record a summary file output event.
+    ///
+    /// Handles details of SUMTHIN triggers if applicable.
+    ///
+    /// \param[in] secs_elapsed Elapsed physical (i.e., simulated) time in
+    /// seconds since start of simulation.
     void recordSummaryOutput(const double secs_elapsed);
 
+    /// Compute report sequence number.
+    ///
+    /// Typically equal to the report step index.
+    ///
+    /// \param[in] report_step One-based report step index for which to
+    /// create output.  Report_step=0 represents time zero.
+    ///
+    /// \param[in] time_step Zero-based time step ID.  Nullopt if the
+    /// sequence number should be the same as the report step.
     int reportIndex(const int report_step, const std::optional<int> time_step) const;
 
+    /// Decide whether or not SUMTHIN triggers summary file output.
+    ///
+    /// \param[in] report_step One-based report step index for which to
+    /// create output.  Report_step=0 represents time zero.
+    ///
+    /// \param[in] secs_elapsed Elapsed physical (i.e., simulated) time in
+    /// seconds since start of simulation.
+    ///
+    /// \return Whether or not summary file output is triggered by SUMTHIN.
+    /// False if SUMTHIN is not currently active or if time since last
+    /// SUMTHIN output event does not exceed current SUMTHIN interval.  This
+    /// predicate value is also stored in the sumthin_triggered_ data
+    /// member.
     bool checkAndRecordIfSumthinTriggered(const int report_step,
                                           const double secs_elapsed) const;
 
+    /// Whether or not to output summary file information only at report
+    /// steps.
+    ///
+    /// \param[in] report_step One-based report step index for which to
+    /// create output.  Report_step=0 represents time zero.
+    ///
+    /// \return Run's RPTONLY setting at \p report_step.  Typically false.
     bool summaryAtRptOnly(const int report_step) const;
 };
 
