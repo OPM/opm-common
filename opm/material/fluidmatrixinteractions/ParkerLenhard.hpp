@@ -55,7 +55,7 @@ public:
      * Further scanning curves can be added with
      * setNext.
      */
-    explicit PLScanningCurve(Scalar Swr)
+    explicit PLScanningCurve(const Scalar Swr)
     {
         loopNum_ = 0;
         prev_ = new PLScanningCurve(nullptr, // prev
@@ -153,34 +153,36 @@ public:
      *        whether Swei is part of the curve's
      *        domain and the curve thus applies to Swi.
      */
-    bool isValidAt_Sw(Scalar SwReversal)
+    bool isValidAt_Sw(Scalar SwReversal) const
     {
-        if (isImbib())
+        if (isImbib()) {
             // for inbibition the given saturation
             // must be between the start of the
             // current imbibition and the the start
             // of the last drainage
             return this->Sw() < SwReversal && SwReversal < prev_->Sw();
-        else
+        }
+        else {
             // for drainage the given saturation
             // must be between the start of the
             // last imbibition and the start
             // of the current drainage
             return prev_->Sw() < SwReversal && SwReversal < this->Sw();
+        }
     }
 
     /*!
      * \brief Returns true iff the scanning curve is a
      *        imbibition curve.
      */
-    bool isImbib()
-    { return loopNum()%2 == 1; }
+    bool isImbib() const
+    { return loopNum() % 2 == 1; }
 
     /*!
      * \brief Returns true iff the scanning curve is a
      *        drainage curve.
      */
-    bool isDrain()
+    bool isDrain() const
     { return !isImbib(); }
 
     /*!
@@ -188,7 +190,7 @@ public:
      *
      * The MDC is 0, PISC is 1, PDSC is 2, ...
      */
-    int loopNum()
+    int loopNum() const
     { return loopNum_; }
 
     /*!
@@ -208,14 +210,14 @@ public:
      * \brief Apparent saturation of the last reversal point on
      *        the pressure MIC.
      */
-    Scalar SwMic()
+    Scalar SwMic() const
     { return SwMic_; }
 
     /*!
      * \brief Apparent saturation of the last reversal point on
      *        the pressure MDC.
      */
-    Scalar SwMdc()
+    Scalar SwMdc() const
     { return SwMdc_; }
 
 private:
@@ -537,7 +539,7 @@ private:
             return 0.0;
 
         // use Land's law
-        Scalar R = 1.0/params.Snr() - 1;
+        const Scalar R = 1.0 / params.Snr() - 1;
         const Evaluation& curSnr = (1 - Sw)/(1 + R*(1 - Sw));
 
         // the current effective residual non-wetting saturation must
@@ -553,9 +555,9 @@ private:
     static Evaluation trappedEffectiveSn_(const Params& params, const Evaluation& Sw)
     {
         const Evaluation& Swe = absoluteToEffectiveSw_(params, Sw);
-        Scalar SwePisc = absoluteToEffectiveSw_(params, params.pisc()->Sw());
+        const Scalar SwePisc = absoluteToEffectiveSw_(params, params.pisc()->Sw());
 
-        Scalar Snre = absoluteToEffectiveSw_(params, params.currentSnr());
+        const Scalar Snre = absoluteToEffectiveSw_(params, params.currentSnr());
         return Snre*(Swe - SwePisc) / (1 - Snre - SwePisc);
     }
 
@@ -583,7 +585,7 @@ private:
     template <class Evaluation>
     static Evaluation apparentToEffectiveSw_(const Params& params, const Evaluation& Swapp)
     {
-        Scalar SwePisc = absoluteToEffectiveSw_(params, params.pisc()->Sw());
+        const Scalar SwePisc = absoluteToEffectiveSw_(params, params.pisc()->Sw());
         if (params.pisc() == nullptr || Swapp <= SwePisc) {
             // we are on the main drainage curve, i.e.
             // no non-wetting fluid is trapped
@@ -591,7 +593,7 @@ private:
             return Swapp;
         }
 
-        Scalar Snre = absoluteToEffectiveSw_(params.currentSnr());
+        const Scalar Snre = absoluteToEffectiveSw_(params.currentSnr());
         return
             (Swapp*(1 - Snre - SwePisc) + Snre*SwePisc)
             /(1 - SwePisc);
