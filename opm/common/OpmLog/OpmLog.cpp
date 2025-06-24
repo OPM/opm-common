@@ -39,6 +39,7 @@
 #endif
 
 namespace Opm {
+    int OpmLog::debug_verbosity_level_ = defaultDebugVerbosityLevel;
 
     bool OpmLog::stdoutIsTerminal()
     {
@@ -113,10 +114,12 @@ namespace Opm {
         addMessage(Log::MessageType::Bug, message);
     }
 
-    
-    void OpmLog::debug(const std::string& message)
+
+    void OpmLog::debug(const std::string& message, const int verbosity_level)
     {
-        addMessage(Log::MessageType::Debug, message);
+        if (debug_verbosity_level_ >= verbosity_level) {
+            addMessage(Log::MessageType::Debug, message);
+        }
     }
 
 
