@@ -128,10 +128,13 @@ public:
     /// file extension of "separate" summary output files (i.e., .S000n).
     /// Report_step=0 represents time zero.
     ///
+    /// \param[in] ministep_id Zero based count of time steps performed.
+    ///
     /// \param[in] isSubstep Whether or not we're being called in the middle
     /// of a report step.
     void add_timestep(const SummaryState& st,
                       const int           report_step,
+                      const int           ministep_id,
                       const bool          isSubstep);
 
     /// Calculate summary vector values.

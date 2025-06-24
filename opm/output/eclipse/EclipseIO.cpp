@@ -164,6 +164,8 @@ public:
                       const bool         haveExistingRFT,
                       const data::Wells& wellSol) const;
 
+    void countTimeStep() { ++this->miniStepId_; }
+
 private:
     std::reference_wrapper<const EclipseState> es_;
     std::reference_wrapper<const Schedule> schedule_;
@@ -174,6 +176,7 @@ private:
     SummaryConfig summaryConfig_;
     out::Summary summary_;
     bool output_enabled_{false};
+    int miniStepId_{0};
 
     std::optional<RestartIO::Helpers::AggregateAquiferData> aquiferData_{std::nullopt};
 
@@ -338,6 +341,7 @@ void Opm::EclipseIO::Impl::writeSummaryFile(const SummaryState&      st,
                                             const bool               isSubstep)
 {
     this->summary_.add_timestep(st, this->reportIndex(report_step, time_step),
+                                this->miniStepId_,
                                 !time_step.has_value() || isSubstep);
 
     const auto is_final_summary =
@@ -545,6 +549,8 @@ void Opm::EclipseIO::writeTimeStep(const Action::State& action_state,
         // Write RSM file at end of simulation.
         this->impl->writeRunSummary();
     }
+
+    this->impl->countTimeStep();
 }
 
 Opm::RestartValue
