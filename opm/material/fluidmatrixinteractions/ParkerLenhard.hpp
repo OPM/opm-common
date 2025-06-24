@@ -27,12 +27,12 @@
 #ifndef OPM_PARKER_LENHARD_HPP
 #define OPM_PARKER_LENHARD_HPP
 
-#include "ParkerLenhardParams.hpp"
-
+#include <opm/material/fluidmatrixinteractions/ParkerLenhardParams.hpp>
 #include <opm/material/fluidmatrixinteractions/VanGenuchten.hpp>
 
-#include <algorithm>
 #include <cassert>
+#include <stdexcept>
+#include <type_traits>
 
 namespace Opm {
 
@@ -47,7 +47,7 @@ template <class ScalarT>
 class PLScanningCurve
 {
 public:
-    typedef ScalarT Scalar;
+    using Scalar = ScalarT;
 
     /*!
      * \brief Constructs main imbibition curve.
@@ -55,7 +55,7 @@ public:
      * Further scanning curves can be added with
      * setNext.
      */
-    explicit PLScanningCurve(Scalar Swr)
+    explicit PLScanningCurve(const Scalar Swr)
     {
         loopNum_ = 0;
         prev_ = new PLScanningCurve(nullptr, // prev
@@ -74,6 +74,7 @@ public:
     }
 
     PLScanningCurve& operator=(const PLScanningCurve&) = delete;
+    PLScanningCurve(const PLScanningCurve&) = delete;
 
 protected:
     PLScanningCurve(PLScanningCurve* prevSC,
@@ -101,10 +102,12 @@ public:
      */
     ~PLScanningCurve()
     {
-        if (loopNum_ == 0)
+        if (loopNum_ == 0) {
             delete prev_;
-        if (loopNum_ >= 0)
+        }
+        if (loopNum_ >= 0) {
             delete next_;
+        }
     }
 
     /*!
@@ -153,34 +156,36 @@ public:
      *        whether Swei is part of the curve's
      *        domain and the curve thus applies to Swi.
      */
-    bool isValidAt_Sw(Scalar SwReversal)
+    bool isValidAt_Sw(Scalar SwReversal) const
     {
-        if (isImbib())
+        if (isImbib()) {
             // for inbibition the given saturation
             // must be between the start of the
             // current imbibition and the the start
             // of the last drainage
             return this->Sw() < SwReversal && SwReversal < prev_->Sw();
-        else
+        }
+        else {
             // for drainage the given saturation
             // must be between the start of the
             // last imbibition and the start
             // of the current drainage
             return prev_->Sw() < SwReversal && SwReversal < this->Sw();
+        }
     }
 
     /*!
      * \brief Returns true iff the scanning curve is a
      *        imbibition curve.
      */
-    bool isImbib()
-    { return loopNum()%2 == 1; }
+    bool isImbib() const
+    { return loopNum() % 2 == 1; }
 
     /*!
      * \brief Returns true iff the scanning curve is a
      *        drainage curve.
      */
-    bool isDrain()
+    bool isDrain() const
     { return !isImbib(); }
 
     /*!
@@ -188,7 +193,7 @@ public:
      *
      * The MDC is 0, PISC is 1, PDSC is 2, ...
      */
-    int loopNum()
+    int loopNum() const
     { return loopNum_; }
 
     /*!
@@ -208,14 +213,14 @@ public:
      * \brief Apparent saturation of the last reversal point on
      *        the pressure MIC.
      */
-    Scalar SwMic()
+    Scalar SwMic() const
     { return SwMic_; }
 
     /*!
      * \brief Apparent saturation of the last reversal point on
      *        the pressure MDC.
      */
-    Scalar SwMdc()
+    Scalar SwMdc() const
     { return SwMdc_; }
 
 private:
@@ -241,39 +246,39 @@ template <class TraitsT, class ParamsT = ParkerLenhardParams<TraitsT> >
 class ParkerLenhard : public TraitsT
 {
 public:
-    typedef TraitsT Traits;
-    typedef ParamsT Params;
-    typedef typename Traits::Scalar Scalar;
+    using Traits = TraitsT;
+    using Params = ParamsT;
+    using Scalar = typename Traits::Scalar;
 
     //! The number of fluid phases
-    static const int numPhases = Traits::numPhases;
+    static constexpr int numPhases = Traits::numPhases;
     static_assert(numPhases == 2,
                   "The Parker-Lenhard capillary pressure law only "
                   "applies to the case of two fluid phases");
 
     //! Specify whether this material law implements the two-phase
     //! convenience API
-    static const bool implementsTwoPhaseApi = true;
+    static constexpr bool implementsTwoPhaseApi = true;
 
     //! Specify whether this material law implements the two-phase
     //! convenience API which only depends on the phase saturations
-    static const bool implementsTwoPhaseSatApi = true;
+    static constexpr bool implementsTwoPhaseSatApi = true;
 
     //! Specify whether the quantities defined by this material law
     //! are saturation dependent
-    static const bool isSaturationDependent = true;
+    static constexpr bool isSaturationDependent = true;
 
     //! Specify whether the quantities defined by this material law
     //! are dependent on the absolute pressure
-    static const bool isPressureDependent = false;
+    static constexpr bool isPressureDependent = false;
 
     //! Specify whether the quantities defined by this material law
     //! are temperature dependent
-    static const bool isTemperatureDependent = false;
+    static constexpr bool isTemperatureDependent = false;
 
     //! Specify whether the quantities defined by this material law
     //! are dependent on the phase composition
-    static const bool isCompositionDependent = false;
+    static constexpr bool isCompositionDependent = false;
 
     static_assert(Traits::numPhases == 2,
                   "The number of fluid phases must be two if you want to use "
@@ -304,9 +309,9 @@ public:
     template <class FluidState>
     static void update(Params& params, const FluidState& fs)
     {
-        Scalar Sw = scalarValue(fs.saturation(Traits::wettingPhaseIdx));
+        const Scalar sw = scalarValue(fs.saturation(Traits::wettingPhaseIdx));
 
-        if (Sw > 1 - 1e-5) {
+        if (sw > 1 - 1e-5) {
             // if the absolute saturation is almost 1,
             // it means that we're back to the beginning
             reset(params);
@@ -315,7 +320,7 @@ public:
 
         // find the loop number which corrosponds to the
         // given effective saturation
-        ScanningCurve* curve = findScanningCurve_(params, Sw);
+        ScanningCurve* curve = findScanningCurve_(params, sw);
 
         // calculate the apparent saturation on the MIC and MDC
         // which yield the same capillary pressure as the
@@ -324,7 +329,7 @@ public:
         Scalar Sw_mic = VanGenuchten::twoPhaseSatSw(params.micParams(), pc);
         Scalar Sw_mdc = VanGenuchten::twoPhaseSatSw(params.mdcParams(), pc);
 
-        curve->setNext(Sw, pc, Sw_mic, Sw_mdc);
+        curve->setNext(sw, pc, Sw_mic, Sw_mdc);
         if (!curve->next())
             return;
 
@@ -333,7 +338,7 @@ public:
         // if we're back on the MDC, we also have a new PISC!
         if (params.csc() == params.mdc()) {
             params.setPisc(params.mdc()->next());
-            params.setCurrentSnr(computeCurrentSnr_(params, Sw));
+            params.setCurrentSnr(computeCurrentSnr_(params, sw));
         }
     }
 
@@ -344,7 +349,7 @@ public:
     template <class Container, class FluidState>
     static void capillaryPressures(Container& values, const Params& params, const FluidState& fs)
     {
-        typedef typename std::remove_reference<decltype(values[0])>::type Evaluation;
+        using Evaluation = std::remove_reference_t<decltype(values[0])>;
 
         values[Traits::wettingPhaseIdx] = 0.0; // reference phase
         values[Traits::nonWettingPhaseIdx] = pcnw<FluidState, Evaluation>(params, fs);
@@ -365,7 +370,7 @@ public:
     template <class Container, class FluidState>
     static void relativePermeabilities(Container& values, const Params& params, const FluidState& fs)
     {
-        typedef typename std::remove_reference<decltype(values[0])>::type Evaluation;
+        using Evaluation = std::remove_reference_t<decltype(values[0])>;
 
         values[Traits::wettingPhaseIdx] = krw<FluidState, Evaluation>(params, fs);
         values[Traits::nonWettingPhaseIdx] = krn<FluidState, Evaluation>(params, fs);
@@ -378,10 +383,10 @@ public:
     template <class FluidState, class Evaluation = typename FluidState::Scalar>
     static Evaluation pcnw(const Params& params, const FluidState& fs)
     {
-        const Evaluation& Sw =
+        const Evaluation& sw =
             decay<Evaluation>(fs.saturation(Traits::wettingPhaseIdx));
 
-        return twoPhaseSatPcnw(params, Sw);
+        return twoPhaseSatPcnw(params, sw);
     }
 
     template <class Evaluation>
@@ -411,8 +416,8 @@ public:
             return VanGenuchten::twoPhaseSatPcnw(params.micParams(), SwMic);
         }
         else { // sc->isDrain()
-            const Evaluation& SwMdc =
-                pos*(sc->prev()->SwMdc() - sc->SwMdc()) + sc->SwMdc();
+            const Evaluation SwMdc =
+                pos * (sc->prev()->SwMdc() - sc->SwMdc()) + sc->SwMdc();
 
             return VanGenuchten::twoPhaseSatPcnw(params.mdcParams(), SwMdc);
         }
@@ -449,10 +454,10 @@ public:
     template <class FluidState, class Evaluation = typename FluidState::Scalar>
     static Evaluation krw(const Params& params, const FluidState& fs)
     {
-        const Evaluation& Sw =
+        const Evaluation& sw =
             decay<Evaluation>(fs.saturation(Traits::wettingPhaseIdx));
 
-        return twoPhaseSatKrw(params, Sw);
+        return twoPhaseSatKrw(params, sw);
     }
 
     template <class Evaluation>
@@ -471,10 +476,10 @@ public:
     template <class FluidState, class Evaluation = typename FluidState::Scalar>
     static Evaluation krn(const Params& params, const FluidState& fs)
     {
-        const Evaluation& Sw =
+        const Evaluation& sw =
             decay<Evaluation>(fs.saturation(Traits::wettingPhaseIdx));
 
-        return twoPhaseSatKrn(params, Sw);
+        return twoPhaseSatKrn(params, sw);
     }
 
     template <class Evaluation>
@@ -507,7 +512,7 @@ private:
      */
     template <class Evaluation>
     static Evaluation absoluteToEffectiveSw_(const Params& params, const Evaluation& Sw)
-    { return (Sw - params.SwrPc())/(1 - params.SwrPc()); }
+    { return (Sw - params.SwrPc()) / (1 - params.SwrPc()); }
 
     /*!
      * \brief Convert an effective wetting saturation to an absolute one.
@@ -520,7 +525,7 @@ private:
      */
     template <class Evaluation>
     static Evaluation effectiveToAbsoluteSw_(const Params& params, const Evaluation& Swe)
-    { return Swe*(1 - params.SwrPc()) + params.SwrPc(); }
+    { return Swe * (1 - params.SwrPc()) + params.SwrPc(); }
 
     // return the effctive residual non-wetting saturation, given an
     // effective wetting saturation
@@ -528,17 +533,20 @@ private:
     static Evaluation computeCurrentSnr_(const Params& params, const Evaluation& Sw)
     {
         // regularize
-        if (Sw > 1 - params.Snr())
+        if (Sw > 1 - params.Snr()) {
             return 0.0;
-        if (Sw < params.SwrPc())
+        }
+        if (Sw < params.SwrPc()) {
             return params.Snr();
+        }
 
-        if (params.Snr() == 0.0)
+        if (params.Snr() == 0.0) {
             return 0.0;
+        }
 
         // use Land's law
-        Scalar R = 1.0/params.Snr() - 1;
-        const Evaluation& curSnr = (1 - Sw)/(1 + R*(1 - Sw));
+        const Scalar R = 1.0 / params.Snr() - 1;
+        const Evaluation& curSnr = (1 - Sw) / (1 + R * (1 - Sw));
 
         // the current effective residual non-wetting saturation must
         // be smaller than the residual non-wetting saturation
@@ -553,10 +561,10 @@ private:
     static Evaluation trappedEffectiveSn_(const Params& params, const Evaluation& Sw)
     {
         const Evaluation& Swe = absoluteToEffectiveSw_(params, Sw);
-        Scalar SwePisc = absoluteToEffectiveSw_(params, params.pisc()->Sw());
+        const Scalar SwePisc = absoluteToEffectiveSw_(params, params.pisc()->Sw());
 
-        Scalar Snre = absoluteToEffectiveSw_(params, params.currentSnr());
-        return Snre*(Swe - SwePisc) / (1 - Snre - SwePisc);
+        const Scalar Snre = absoluteToEffectiveSw_(params, params.currentSnr());
+        return Snre * (Swe - SwePisc) / (1 - Snre - SwePisc);
     }
 
     // returns the apparent saturation of the wetting phase depending
@@ -583,7 +591,7 @@ private:
     template <class Evaluation>
     static Evaluation apparentToEffectiveSw_(const Params& params, const Evaluation& Swapp)
     {
-        Scalar SwePisc = absoluteToEffectiveSw_(params, params.pisc()->Sw());
+        const Scalar SwePisc = absoluteToEffectiveSw_(params, params.pisc()->Sw());
         if (params.pisc() == nullptr || Swapp <= SwePisc) {
             // we are on the main drainage curve, i.e.
             // no non-wetting fluid is trapped
@@ -591,10 +599,10 @@ private:
             return Swapp;
         }
 
-        Scalar Snre = absoluteToEffectiveSw_(params.currentSnr());
+        const Scalar Snre = absoluteToEffectiveSw_(params.currentSnr());
         return
-            (Swapp*(1 - Snre - SwePisc) + Snre*SwePisc)
-            /(1 - SwePisc);
+            (Swapp * (1 - Snre - SwePisc) + Snre * SwePisc)
+            / (1 - SwePisc);
     }
 
 
