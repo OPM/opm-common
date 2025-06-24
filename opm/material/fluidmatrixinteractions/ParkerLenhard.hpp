@@ -47,7 +47,7 @@ template <class ScalarT>
 class PLScanningCurve
 {
 public:
-    typedef ScalarT Scalar;
+    using Scalar = ScalarT;
 
     /*!
      * \brief Constructs main imbibition curve.
@@ -241,9 +241,9 @@ template <class TraitsT, class ParamsT = ParkerLenhardParams<TraitsT> >
 class ParkerLenhard : public TraitsT
 {
 public:
-    typedef TraitsT Traits;
-    typedef ParamsT Params;
-    typedef typename Traits::Scalar Scalar;
+    using Traits = TraitsT;
+    using Params = ParamsT;
+    using Scalar = typename Traits::Scalar;
 
     //! The number of fluid phases
     static const int numPhases = Traits::numPhases;

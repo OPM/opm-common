@@ -48,10 +48,10 @@ class ParkerLenhardParams : public EnsureFinalized
 public:
     using EnsureFinalized :: finalize;
 
-    typedef typename TraitsT::Scalar Scalar;
-    typedef Opm::RegularizedVanGenuchten<TraitsT> VanGenuchten;
-    typedef typename VanGenuchten::Params VanGenuchtenParams;
-    typedef PLScanningCurve<Scalar> ScanningCurve;
+    using Scalar = typename TraitsT::Scalar;
+    using VanGenuchten = RegularizedVanGenuchten<TraitsT>;
+    using VanGenuchtenParams = typename VanGenuchten::Params;
+    using ScanningCurve = PLScanningCurve<Scalar>;
 
     ParkerLenhardParams()
         : currentSnr_(0)
