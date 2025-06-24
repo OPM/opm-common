@@ -42,6 +42,8 @@ namespace Opm {
 class OpmLog {
 
 public:
+    constexpr static int DEFAULT_DEBUG_VERBOSITY_LEVEL = 1;
+
     static void addMessage(int64_t messageFlag , const std::string& message);
     static void addTaggedMessage(int64_t messageFlag, const std::string& tag, const std::string& message);
 
@@ -50,7 +52,7 @@ public:
     static void error(const std::string& message);
     static void problem(const std::string& message);
     static void bug(const std::string& message);
-    static void debug(const std::string& message, const int level = 0);
+    static void debug(const std::string& message, const int verbosity_level = DEFAULT_DEBUG_VERBOSITY_LEVEL);
     static void note(const std::string& message);
 
     static void info(const std::string& tag, const std::string& message);
@@ -69,8 +71,8 @@ public:
     static void addMessageType( int64_t messageType , const std::string& prefix);
 
 
-    static int getDebugLevel() { return debug_level_; }
-    static void setDebugLevel(const int level) { debug_level_ = level; }
+    static int getDebugVerbosityLevel() { return debug_verbosity_level_; }
+    static void setDebugVerbosityLevel(const int verbosity_level) { debug_verbosity_level_ = verbosity_level; }
 
     /// Create a basic logging setup that will send all log messages to standard output.
     ///
@@ -117,7 +119,7 @@ private:
 #ifdef EMBEDDED_PYTHON
     friend class PyRunModule;
 #endif
-    static int debug_level_;
+    static int debug_verbosity_level_;
     static std::shared_ptr<Logger> getLogger();
     static std::shared_ptr<Logger> m_logger;
 };
