@@ -74,6 +74,7 @@ public:
     }
 
     PLScanningCurve& operator=(const PLScanningCurve&) = delete;
+    PLScanningCurve(const PLScanningCurve&) = delete;
 
 protected:
     PLScanningCurve(PLScanningCurve* prevSC,
