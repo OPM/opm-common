@@ -307,9 +307,9 @@ public:
     template <class FluidState>
     static void update(Params& params, const FluidState& fs)
     {
-        Scalar Sw = scalarValue(fs.saturation(Traits::wettingPhaseIdx));
+        const Scalar sw = scalarValue(fs.saturation(Traits::wettingPhaseIdx));
 
-        if (Sw > 1 - 1e-5) {
+        if (sw > 1 - 1e-5) {
             // if the absolute saturation is almost 1,
             // it means that we're back to the beginning
             reset(params);
@@ -318,7 +318,7 @@ public:
 
         // find the loop number which corrosponds to the
         // given effective saturation
-        ScanningCurve* curve = findScanningCurve_(params, Sw);
+        ScanningCurve* curve = findScanningCurve_(params, sw);
 
         // calculate the apparent saturation on the MIC and MDC
         // which yield the same capillary pressure as the
@@ -327,7 +327,7 @@ public:
         Scalar Sw_mic = VanGenuchten::twoPhaseSatSw(params.micParams(), pc);
         Scalar Sw_mdc = VanGenuchten::twoPhaseSatSw(params.mdcParams(), pc);
 
-        curve->setNext(Sw, pc, Sw_mic, Sw_mdc);
+        curve->setNext(sw, pc, Sw_mic, Sw_mdc);
         if (!curve->next())
             return;
 
@@ -336,7 +336,7 @@ public:
         // if we're back on the MDC, we also have a new PISC!
         if (params.csc() == params.mdc()) {
             params.setPisc(params.mdc()->next());
-            params.setCurrentSnr(computeCurrentSnr_(params, Sw));
+            params.setCurrentSnr(computeCurrentSnr_(params, sw));
         }
     }
 
@@ -381,10 +381,10 @@ public:
     template <class FluidState, class Evaluation = typename FluidState::Scalar>
     static Evaluation pcnw(const Params& params, const FluidState& fs)
     {
-        const Evaluation& Sw =
+        const Evaluation& sw =
             decay<Evaluation>(fs.saturation(Traits::wettingPhaseIdx));
 
-        return twoPhaseSatPcnw(params, Sw);
+        return twoPhaseSatPcnw(params, sw);
     }
 
     template <class Evaluation>
@@ -452,10 +452,10 @@ public:
     template <class FluidState, class Evaluation = typename FluidState::Scalar>
     static Evaluation krw(const Params& params, const FluidState& fs)
     {
-        const Evaluation& Sw =
+        const Evaluation& sw =
             decay<Evaluation>(fs.saturation(Traits::wettingPhaseIdx));
 
-        return twoPhaseSatKrw(params, Sw);
+        return twoPhaseSatKrw(params, sw);
     }
 
     template <class Evaluation>
@@ -474,10 +474,10 @@ public:
     template <class FluidState, class Evaluation = typename FluidState::Scalar>
     static Evaluation krn(const Params& params, const FluidState& fs)
     {
-        const Evaluation& Sw =
+        const Evaluation& sw =
             decay<Evaluation>(fs.saturation(Traits::wettingPhaseIdx));
 
-        return twoPhaseSatKrn(params, Sw);
+        return twoPhaseSatKrn(params, sw);
     }
 
     template <class Evaluation>
