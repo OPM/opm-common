@@ -416,8 +416,8 @@ public:
             return VanGenuchten::twoPhaseSatPcnw(params.micParams(), SwMic);
         }
         else { // sc->isDrain()
-            const Evaluation& SwMdc =
-                pos*(sc->prev()->SwMdc() - sc->SwMdc()) + sc->SwMdc();
+            const Evaluation SwMdc =
+                pos * (sc->prev()->SwMdc() - sc->SwMdc()) + sc->SwMdc();
 
             return VanGenuchten::twoPhaseSatPcnw(params.mdcParams(), SwMdc);
         }
@@ -512,7 +512,7 @@ private:
      */
     template <class Evaluation>
     static Evaluation absoluteToEffectiveSw_(const Params& params, const Evaluation& Sw)
-    { return (Sw - params.SwrPc())/(1 - params.SwrPc()); }
+    { return (Sw - params.SwrPc()) / (1 - params.SwrPc()); }
 
     /*!
      * \brief Convert an effective wetting saturation to an absolute one.
@@ -525,7 +525,7 @@ private:
      */
     template <class Evaluation>
     static Evaluation effectiveToAbsoluteSw_(const Params& params, const Evaluation& Swe)
-    { return Swe*(1 - params.SwrPc()) + params.SwrPc(); }
+    { return Swe * (1 - params.SwrPc()) + params.SwrPc(); }
 
     // return the effctive residual non-wetting saturation, given an
     // effective wetting saturation
@@ -546,7 +546,7 @@ private:
 
         // use Land's law
         const Scalar R = 1.0 / params.Snr() - 1;
-        const Evaluation& curSnr = (1 - Sw)/(1 + R*(1 - Sw));
+        const Evaluation& curSnr = (1 - Sw) / (1 + R * (1 - Sw));
 
         // the current effective residual non-wetting saturation must
         // be smaller than the residual non-wetting saturation
@@ -564,7 +564,7 @@ private:
         const Scalar SwePisc = absoluteToEffectiveSw_(params, params.pisc()->Sw());
 
         const Scalar Snre = absoluteToEffectiveSw_(params, params.currentSnr());
-        return Snre*(Swe - SwePisc) / (1 - Snre - SwePisc);
+        return Snre * (Swe - SwePisc) / (1 - Snre - SwePisc);
     }
 
     // returns the apparent saturation of the wetting phase depending
@@ -601,8 +601,8 @@ private:
 
         const Scalar Snre = absoluteToEffectiveSw_(params.currentSnr());
         return
-            (Swapp*(1 - Snre - SwePisc) + Snre*SwePisc)
-            /(1 - SwePisc);
+            (Swapp * (1 - Snre - SwePisc) + Snre * SwePisc)
+            / (1 - SwePisc);
     }
 
 

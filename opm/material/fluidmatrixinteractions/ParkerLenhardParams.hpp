@@ -131,10 +131,7 @@ public:
     void setSwr(Scalar pcSwr, Scalar krSwr = -1)
     {
         SwrPc_ = pcSwr;
-        if (krSwr < 0)
-            SwrKr_ = pcSwr;
-        else
-            SwrKr_ = krSwr;
+        SwrKr_ = krSwr < 0 ? pcSwr : krSwr;
     }
 
     /*!
