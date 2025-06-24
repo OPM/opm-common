@@ -39,7 +39,7 @@
 #endif
 
 namespace Opm {
-    int OpmLog::debug_verbosity_level_ = DEFAULT_DEBUG_VERBOSITY_LEVEL;
+    int OpmLog::debug_verbosity_level_ = defaultDebugVerbosityLevel;
 
     bool OpmLog::stdoutIsTerminal()
     {

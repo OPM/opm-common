@@ -42,7 +42,7 @@ namespace Opm {
 class OpmLog {
 
 public:
-    constexpr static int DEFAULT_DEBUG_VERBOSITY_LEVEL = 1;
+    constexpr static int defaultDebugVerbosityLevel = 1;
 
     static void addMessage(int64_t messageFlag , const std::string& message);
     static void addTaggedMessage(int64_t messageFlag, const std::string& tag, const std::string& message);
@@ -52,7 +52,7 @@ public:
     static void error(const std::string& message);
     static void problem(const std::string& message);
     static void bug(const std::string& message);
-    static void debug(const std::string& message, const int verbosity_level = DEFAULT_DEBUG_VERBOSITY_LEVEL);
+    static void debug(const std::string& message, const int verbosity_level = defaultDebugVerbosityLevel);
     static void note(const std::string& message);
 
     static void info(const std::string& tag, const std::string& message);
