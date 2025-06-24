@@ -4818,7 +4818,11 @@ public:
               const InterRegFlowValues&              interreg_flows,
               SummaryState&                          st) const;
 
-    void internal_store(const SummaryState& st, const int report_step, bool isSubstep);
+    void internal_store(const SummaryState& st,
+                        const int           report_step,
+                        const int           ministep_id,
+                        const bool          isSubstep);
+
     void write(const bool is_final_summary);
 
 private:
@@ -4843,7 +4847,6 @@ private:
     Opm::EclIO::OutputStream::Formatted fmt_;
     Opm::EclIO::OutputStream::Unified   unif_;
 
-    mutable int miniStepID_{0};
     mutable double prevEvalTime_{std::numeric_limits<double>::lowest()};
 
     int prevCreate_{-1};
@@ -4877,7 +4880,10 @@ private:
                       Evaluator::Factory& evaluatorFactory,
                       SummaryConfig&      summary_config);
 
-    MiniStep& getNextMiniStep(const int report_step, bool isSubstep);
+    MiniStep& getNextMiniStep(const int  report_step,
+                              const int  ministep_id,
+                              const bool isSubstep);
+
     const MiniStep& lastUnwritten() const;
 
     void write(const MiniStep& ms);
@@ -4939,9 +4945,12 @@ SummaryImplementation(SummaryConfig&      sumcfg,
 }
 
 void Opm::out::Summary::SummaryImplementation::
-internal_store(const SummaryState& st, const int report_step, bool isSubstep)
+internal_store(const SummaryState& st,
+               const int           report_step,
+               const int           ministep_id,
+               const bool          isSubstep)
 {
-    auto& ms = this->getNextMiniStep(report_step, isSubstep);
+    auto& ms = this->getNextMiniStep(report_step, ministep_id, isSubstep);
 
     const auto nParam = this->valueKeys_.size();
 
@@ -5000,7 +5009,6 @@ eval(const int                              sim_step,
 
     if (secs_elapsed > this->prevEvalTime_) {
         this->prevEvalTime_ = secs_elapsed;
-        ++this->miniStepID_;
     }
 }
 
@@ -5357,7 +5365,10 @@ configureRequiredRestartParameters(const SummaryConfig& sumcfg,
 }
 
 Opm::out::Summary::SummaryImplementation::MiniStep&
-Opm::out::Summary::SummaryImplementation::getNextMiniStep(const int report_step, bool isSubstep)
+Opm::out::Summary::SummaryImplementation::
+getNextMiniStep(const int  report_step,
+                const int  ministep_id,
+                const bool isSubstep)
 {
     if (this->numUnwritten_ == this->unwritten_.size()) {
         this->unwritten_.emplace_back();
@@ -5368,7 +5379,7 @@ Opm::out::Summary::SummaryImplementation::getNextMiniStep(const int report_step,
 
     auto& ms = this->unwritten_[this->numUnwritten_++];
 
-    ms.id  = this->miniStepID_ - 1;  // MINISTEP IDs start at zero.
+    ms.id  = ministep_id;
     ms.seq = report_step;
     ms.isSubstep = isSubstep;
 
@@ -5421,7 +5432,11 @@ createSmryStreamIfNecessary(const int report_step)
     }
 }
 
-namespace Opm { namespace out {
+// ===========================================================================
+// Public Interface Below Separator
+// ===========================================================================
+
+namespace Opm::out {
 
 Summary::Summary(SummaryConfig&       sumcfg,
                  const EclipseState&  es,
@@ -5467,9 +5482,12 @@ void Summary::eval(SummaryState&                          st,
                        aquifer_values, interreg_flows, st);
 }
 
-void Summary::add_timestep(const SummaryState& st, const int report_step, bool isSubstep)
+void Summary::add_timestep(const SummaryState& st,
+                           const int           report_step,
+                           const int           ministep_id,
+                           const bool          isSubstep)
 {
-    this->pImpl_->internal_store(st, report_step, isSubstep);
+    this->pImpl_->internal_store(st, report_step, ministep_id, isSubstep);
 }
 
 void Summary::write(const bool is_final_summary) const
@@ -5479,4 +5497,4 @@ void Summary::write(const bool is_final_summary) const
 
 Summary::~Summary() {}
 
-}} // namespace Opm::out
+} // namespace Opm::out

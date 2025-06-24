@@ -199,7 +199,6 @@ data::Wells result_wells()
     wellrates["OPU01"] = well1;
 
     return wellrates;
-
 }
 
 data::GroupAndNetworkValues result_group_network()
@@ -251,6 +250,7 @@ struct setup
         , ta       { "test_summary_group_constraints" }
     {}
 };
+
 } // Anonymous namespace
 
 // =====================================================================
@@ -273,10 +273,10 @@ BOOST_AUTO_TEST_CASE(group_keywords)
 
     out::Summary writer(cfg.config, cfg.es, cfg.grid, cfg.schedule, cfg.name);
     writer.eval(st, 0, 0*day, cfg.wells, cfg.wbp, cfg.grp_nwrk, {}, {}, {}, {});
-    writer.add_timestep( st, 0, false);
+    writer.add_timestep(st, 0, 0, false);
 
     writer.eval(st, 1, 1*day, cfg.wells, cfg.wbp, cfg.grp_nwrk, {}, {}, {}, {});
-    writer.add_timestep( st, 1, false);
+    writer.add_timestep(st, 1, 1, false);
 
     writer.write();
 

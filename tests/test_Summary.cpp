@@ -630,13 +630,13 @@ BOOST_AUTO_TEST_CASE(well_keywords)
 
     out::Summary writer(cfg.config, cfg.es, cfg.grid, cfg.schedule, cfg.name);
     writer.eval(st, 0, 0*day, cfg.wells, cfg.wbp, cfg.grp_nwrk, {}, {}, {}, {});
-    writer.add_timestep( st, 0, false);
+    writer.add_timestep(st, 0, 0, false);
 
     writer.eval(st, 1, 1*day, cfg.wells, cfg.wbp, cfg.grp_nwrk, {}, {}, {}, {});
-    writer.add_timestep( st, 1, false);
+    writer.add_timestep(st, 1, 1, false);
 
     writer.eval(st, 2, 2*day, cfg.wells, cfg.wbp, cfg.grp_nwrk, {}, {}, {}, {});
-    writer.add_timestep( st, 2, false);
+    writer.add_timestep(st, 2, 1, false);
     writer.write();
 
 
@@ -1000,15 +1000,15 @@ BOOST_AUTO_TEST_CASE(well_keywords_dynamic_close) {
 
     out::Summary writer(cfg.config, cfg.es, cfg.grid, cfg.schedule, cfg.name);
     writer.eval(st, 0, 0*day, cfg.wells, cfg.wbp, cfg.grp_nwrk, {}, {}, {}, {});
-    writer.add_timestep( st, 0, false);
+    writer.add_timestep(st, 0, 0, false);
 
     cfg.wells.at("W_2").dynamicStatus = ::Opm::Well::Status::SHUT;
     writer.eval(st, 1, 1*day, cfg.wells, cfg.wbp, cfg.grp_nwrk, {}, {}, {}, {});
-    writer.add_timestep( st, 1, false);
+    writer.add_timestep(st, 1, 1, false);
 
     cfg.wells.at("W_2").dynamicStatus = ::Opm::Well::Status::OPEN;
     writer.eval(st, 2, 2*day, cfg.wells, cfg.wbp, cfg.grp_nwrk, {}, {}, {}, {});
-    writer.add_timestep( st, 2, false);
+    writer.add_timestep(st, 2, 2, false);
     writer.write();
 
     auto res = readsum( cfg.name );
@@ -1203,7 +1203,7 @@ BOOST_AUTO_TEST_CASE(udq_keywords)
                     {}, {}, {}, {});
 
         const auto isSubstep = false;
-        writer.add_timestep(st, 0, isSubstep);
+        writer.add_timestep(st, 0, 0, isSubstep);
     }
 
     writer.write();
@@ -1224,13 +1224,13 @@ BOOST_AUTO_TEST_CASE(group_keywords) {
     out::Summary writer(cfg.config, cfg.es, cfg.grid, cfg.schedule, cfg.name);
     SummaryState st(TimeService::now(), cfg.es.runspec().udqParams().undefinedValue());
     writer.eval( st, 0, 0 * day, cfg.wells, cfg.wbp, cfg.grp_nwrk, {}, {}, {}, {});
-    writer.add_timestep( st, 0, false);
+    writer.add_timestep(st, 0, 0, false);
 
     writer.eval( st, 1, 1 * day, cfg.wells, cfg.wbp, cfg.grp_nwrk, {}, {}, {}, {});
-    writer.add_timestep( st, 1, false);
+    writer.add_timestep(st, 1, 1, false);
 
     writer.eval( st, 2, 2 * day, cfg.wells, cfg.wbp, cfg.grp_nwrk, {}, {}, {}, {});
-    writer.add_timestep( st, 2, false);
+    writer.add_timestep(st, 2, 0, false);
 
     writer.write();
 
@@ -1381,11 +1381,11 @@ BOOST_AUTO_TEST_CASE(group_group) {
     out::Summary writer(cfg.config, cfg.es, cfg.grid, cfg.schedule, cfg.name);
     SummaryState st(TimeService::now(), cfg.es.runspec().udqParams().undefinedValue());
     writer.eval( st, 0, 0 * day, cfg.wells, cfg.wbp, cfg.grp_nwrk, {}, {}, {}, {});
-    writer.add_timestep( st, 0, false);
+    writer.add_timestep(st, 0, 0, false);
     writer.eval( st, 1, 1 * day, cfg.wells, cfg.wbp, cfg.grp_nwrk, {}, {}, {}, {});
-    writer.add_timestep( st, 1, false);
+    writer.add_timestep(st, 1, 1, false);
     writer.eval( st, 2, 2 * day, cfg.wells, cfg.wbp, cfg.grp_nwrk, {}, {}, {}, {});
-    writer.add_timestep( st, 2, false);
+    writer.add_timestep(st, 2, 2, false);
     writer.write();
 
     auto res = readsum( cfg.name );
@@ -1463,13 +1463,13 @@ BOOST_AUTO_TEST_CASE(GLIR_and_ALQ)
     auto st = SummaryState { TimeService::now(), es.runspec().udqParams().undefinedValue() };
     auto writer = out::Summary{ cfg, es, es.getInputGrid(), sched, name };
     writer.eval(st, 0, 0*day, wellData, {}, {}, {}, {}, {});
-    writer.add_timestep(st, 0, false);
+    writer.add_timestep(st, 0, 0, false);
 
     writer.eval(st, 1, 1*day, wellData, {}, {}, {}, {}, {});
-    writer.add_timestep(st, 1, false);
+    writer.add_timestep(st, 1, 1, false);
 
     writer.eval(st, 2, 2*day, wellData, {}, {}, {}, {}, {});
-    writer.add_timestep(st, 2, false);
+    writer.add_timestep(st, 2, 2, false);
     writer.write();
 
     auto res = readsum(name);
@@ -1493,11 +1493,11 @@ BOOST_AUTO_TEST_CASE(connection_kewords) {
     out::Summary writer(cfg.config, cfg.es, cfg.grid, cfg.schedule, cfg.name);
     SummaryState st(TimeService::now(), cfg.es.runspec().udqParams().undefinedValue());
     writer.eval( st, 0, 0 * day, cfg.wells, cfg.wbp, cfg.grp_nwrk, {}, {}, {}, {});
-    writer.add_timestep( st, 0, false);
+    writer.add_timestep(st, 0, 0, false);
     writer.eval( st, 1, 1 * day, cfg.wells, cfg.wbp, cfg.grp_nwrk, {}, {}, {}, {});
-    writer.add_timestep( st, 1, false);
+    writer.add_timestep(st, 0, 1, false);
     writer.eval( st, 2, 2 * day, cfg.wells, cfg.wbp, cfg.grp_nwrk, {}, {}, {}, {});
-    writer.add_timestep( st, 2, false);
+    writer.add_timestep(st, 2, 2, false);
     writer.write();
 
     auto res = readsum( cfg.name );
@@ -1659,13 +1659,13 @@ BOOST_AUTO_TEST_CASE(DATE) {
     out::Summary writer(cfg.config, cfg.es, cfg.grid, cfg.schedule, cfg.name);
     SummaryState st(TimeService::now(), cfg.es.runspec().udqParams().undefinedValue());
     writer.eval( st, 1, 1 * day, cfg.wells, cfg.wbp, cfg.grp_nwrk, {}, {}, {}, {});
-    writer.add_timestep( st, 1, false);
+    writer.add_timestep(st, 1, 1, false);
     writer.eval( st, 2, 2 * day, cfg.wells, cfg.wbp, cfg.grp_nwrk, {}, {}, {}, {});
-    writer.add_timestep( st, 2, false);
+    writer.add_timestep(st, 2, 2, false);
     writer.eval( st, 3, 18 * day, cfg.wells, cfg.wbp, cfg.grp_nwrk, {}, {}, {}, {});
-    writer.add_timestep( st, 3, false);
+    writer.add_timestep(st, 3, 3, false);
     writer.eval( st, 4, 22 * day, cfg.wells, cfg.wbp, cfg.grp_nwrk, {}, {}, {}, {});
-    writer.add_timestep( st, 4, false);
+    writer.add_timestep(st, 4, 4, false);
     writer.write();
 
     auto res = readsum( cfg.name );
@@ -1703,21 +1703,21 @@ BOOST_AUTO_TEST_CASE(field_keywords) {
     single_values.insert_or_assign("FPRP", 109.87*barsa());
     single_values.insert_or_assign("FHPV", 123.45e6*sm3());
     writer.eval( st, 0, 0 * day, cfg.wells, cfg.wbp, cfg.grp_nwrk, single_values, {}, {}, {});
-    writer.add_timestep( st, 0, false);
+    writer.add_timestep(st, 0, 0, false);
 
     single_values.insert_or_assign("FPR" , 121.21*barsa());
     single_values.insert_or_assign("FPRH", 121.21*barsa());
     single_values.insert_or_assign("FPRP", 111.11*barsa());
     single_values.insert_or_assign("FHPV", 123.21e6*sm3());
     writer.eval( st, 1, 1 * day, cfg.wells, cfg.wbp, cfg.grp_nwrk, single_values, {}, {}, {});
-    writer.add_timestep( st, 1, false);
+    writer.add_timestep(st, 1, 1, false);
 
     single_values.insert_or_assign("FPR" , 101.98*barsa());
     single_values.insert_or_assign("FPRH", 101.98*barsa());
     single_values.insert_or_assign("FPRP",  99.98*barsa());
     single_values.insert_or_assign("FHPV", 121.21e6*sm3());
     writer.eval( st, 2, 2 * day, cfg.wells, cfg.wbp, cfg.grp_nwrk, single_values, {}, {}, {});
-    writer.add_timestep( st, 2, false);
+    writer.add_timestep(st, 2, 2, false);
 
     writer.write();
 
@@ -1871,11 +1871,11 @@ BOOST_AUTO_TEST_CASE(report_steps_time) {
     out::Summary writer(cfg.config, fg.es, cfg.grid, cfg.schedule, cfg.name);
     SummaryState st(TimeService::now(), cfg.es.runspec().udqParams().undefinedValue());
     writer.eval( st, 1, 2 *  day, cfg.wells, cfg.wbp, cfg.grp_nwrk, {}, {}, {}, {});
-    writer.add_timestep( st, 1, false);
+    writer.add_timestep(st, 0, 0, false);
     writer.eval( st, 1, 5 *  day, cfg.wells, cfg.wbp, cfg.grp_nwrk, {}, {}, {}, {});
-    writer.add_timestep( st, 1, false);
+    writer.add_timestep(st, 1, 1, false);
     writer.eval( st, 2, 10 * day, cfg.wells, cfg.wbp, cfg.grp_nwrk, {}, {}, {}, {});
-    writer.add_timestep( st, 2, false);
+    writer.add_timestep(st, 2, 2, false);
     writer.write();
 
     auto res = readsum( cfg.name );
@@ -1898,11 +1898,11 @@ BOOST_AUTO_TEST_CASE(skip_unknown_var) {
     out::Summary writer(cfg.config, cfg.es, cfg.grid, cfg.schedule, cfg.name);
     SummaryState st(TimeService::now(), cfg.es.runspec().udqParams().undefinedValue());
     writer.eval( st, 1, 2 *  day, cfg.wells, cfg.wbp, cfg.grp_nwrk, {}, {}, {}, {});
-    writer.add_timestep( st, 1, false);
+    writer.add_timestep(st, 1, 0, true);
     writer.eval( st, 1, 5 *  day, cfg.wells, cfg.wbp, cfg.grp_nwrk, {}, {}, {}, {});
-    writer.add_timestep( st, 1, false);
+    writer.add_timestep(st, 1, 1, false);
     writer.eval( st, 2, 10 * day, cfg.wells, cfg.wbp, cfg.grp_nwrk, {}, {}, {}, {});
-    writer.add_timestep( st, 2, false);
+    writer.add_timestep(st, 2, 2, false);
     writer.write();
 
     auto res = readsum( cfg.name );
@@ -2013,11 +2013,11 @@ BOOST_AUTO_TEST_CASE(region_vars) {
         out::Summary writer(cfg.config, cfg.es, cfg.grid, cfg.schedule, cfg.name);
         SummaryState st(TimeService::now(), cfg.es.runspec().udqParams().undefinedValue());
         writer.eval( st, 1, 2 *  day, cfg.wells, cfg.wbp, cfg.grp_nwrk, {}, {}, {}, region_values);
-        writer.add_timestep( st, 1, false);
+        writer.add_timestep(st, 1, 0, true);
         writer.eval( st, 1, 5 *  day, cfg.wells, cfg.wbp, cfg.grp_nwrk, {}, {}, {}, region_values);
-        writer.add_timestep( st, 1, false);
+        writer.add_timestep(st, 1, 1, false);
         writer.eval( st, 2, 10 * day, cfg.wells, cfg.wbp, cfg.grp_nwrk, {}, {}, {}, region_values);
-        writer.add_timestep( st, 2, false);
+        writer.add_timestep(st, 2, 2, false);
         writer.write();
     }
 
@@ -2078,11 +2078,11 @@ BOOST_AUTO_TEST_CASE(region_production) {
         out::Summary writer(cfg.config, cfg.es, cfg.grid, cfg.schedule, cfg.name);
         SummaryState st(TimeService::now(), cfg.es.runspec().udqParams().undefinedValue());
         writer.eval( st, 0, 0 * day, cfg.wells, cfg.wbp, cfg.grp_nwrk, {}, {}, {}, {});
-        writer.add_timestep( st, 0, false);
+        writer.add_timestep(st, 0, 0, false);
         writer.eval( st, 1, 1 * day, cfg.wells, cfg.wbp, cfg.grp_nwrk, {}, {}, {}, {});
-        writer.add_timestep( st, 1, false);
+        writer.add_timestep(st, 1, 1, false);
         writer.eval( st, 2, 2 * day, cfg.wells, cfg.wbp, cfg.grp_nwrk, {}, {}, {}, {});
-        writer.add_timestep( st, 2, false);
+        writer.add_timestep(st, 2, 2, false);
         writer.write();
     }
 
@@ -2118,15 +2118,15 @@ BOOST_AUTO_TEST_CASE(region_production_udef_regset)
 
         writer.eval(st, 1, 2 * day, cfg.wells, cfg.wbp, cfg.grp_nwrk,
                     single_values, initial_inplace, inplace);
-        writer.add_timestep(st, 1, false);
+        writer.add_timestep(st, 1, 0, true);
 
         writer.eval(st, 1, 5 * day, cfg.wells, cfg.wbp, cfg.grp_nwrk,
                     single_values, initial_inplace, inplace);
-        writer.add_timestep(st, 1, false);
+        writer.add_timestep(st, 1, 1, false);
 
         writer.eval(st, 2, 10 * day, cfg.wells, cfg.wbp, cfg.grp_nwrk,
                     single_values, initial_inplace, inplace);
-        writer.add_timestep(st, 2, false);
+        writer.add_timestep(st, 2, 2, false);
 
         writer.write();
     }
@@ -2158,11 +2158,11 @@ BOOST_AUTO_TEST_CASE(region_injection) {
     out::Summary writer(cfg.config, cfg.es, cfg.grid, cfg.schedule, cfg.name);
     SummaryState st(TimeService::now(), cfg.es.runspec().udqParams().undefinedValue());
     writer.eval( st, 0, 0 * day, cfg.wells, cfg.wbp, cfg.grp_nwrk, {}, {}, {}, {});
-    writer.add_timestep( st, 0, false);
+    writer.add_timestep(st, 0, 0, false);
     writer.eval( st, 1, 1 * day, cfg.wells, cfg.wbp, cfg.grp_nwrk, {}, {}, {}, {});
-    writer.add_timestep( st, 1, false);
+    writer.add_timestep(st, 1, 1, false);
     writer.eval( st, 2, 2 * day, cfg.wells, cfg.wbp, cfg.grp_nwrk, {}, {}, {}, {});
-    writer.add_timestep( st, 2, false);
+    writer.add_timestep(st, 2, 2, false);
     writer.write();
 
     auto res = readsum( cfg.name );
@@ -2290,7 +2290,7 @@ BOOST_AUTO_TEST_CASE(inter_region_flows)
         for (auto i = 0; i < 3; ++i) {
             writer.eval(st, i, i * day, cfg.wells, cfg.wbp, cfg.grp_nwrk,
                         {}, {}, {}, {}, {}, {}, values);
-            writer.add_timestep(st, 0, false);
+            writer.add_timestep(st, 0, 0, false);
         }
 
         writer.write();
@@ -2420,15 +2420,15 @@ BOOST_AUTO_TEST_CASE(BLOCK_VARIABLES)
     out::Summary writer(cfg.config, cfg.es, cfg.grid, cfg.schedule, cfg.name);
     SummaryState st(TimeService::now(), cfg.es.runspec().udqParams().undefinedValue());
     writer.eval( st, 0, 0 * day, cfg.wells, cfg.wbp, cfg.grp_nwrk, {}, {}, {}, {}, block_values);
-    writer.add_timestep( st, 0, false);
+    writer.add_timestep(st, 0, 0, false);
     writer.eval( st, 1, 1 * day, cfg.wells, cfg.wbp, cfg.grp_nwrk, {}, {}, {}, {}, block_values);
-    writer.add_timestep( st, 1, false);
+    writer.add_timestep(st, 1, 1, false);
     writer.eval( st, 2, 2 * day, cfg.wells, cfg.wbp, cfg.grp_nwrk, {}, {}, {}, {}, block_values);
-    writer.add_timestep( st, 2, false);
+    writer.add_timestep(st, 2, 2, false);
     writer.eval( st, 3, 2 * day, cfg.wells, cfg.wbp, cfg.grp_nwrk, {}, {}, {}, {}, block_values);
-    writer.add_timestep( st, 3, false);
+    writer.add_timestep(st, 3, 3, false);
     writer.eval( st, 4, 2 * day, cfg.wells, cfg.wbp, cfg.grp_nwrk, {}, {}, {}, {}, block_values);
-    writer.add_timestep( st, 4, false);
+    writer.add_timestep(st, 4, 4, false);
     writer.write();
 
     auto res = readsum(cfg.name);
@@ -2490,13 +2490,13 @@ BOOST_AUTO_TEST_CASE(NODE_VARIABLES) {
     out::Summary writer(cfg.config, cfg.es, cfg.grid, cfg.schedule, cfg.name);
     SummaryState st(TimeService::now(), cfg.es.runspec().udqParams().undefinedValue());
     writer.eval( st, 0, 0 * day, cfg.wells, cfg.wbp, cfg.grp_nwrk, {}, {}, {}, {});
-    writer.add_timestep( st, 0, false);
+    writer.add_timestep(st, 0, 0, false);
 
     writer.eval( st, 1, 1 * day, cfg.wells, cfg.wbp, cfg.grp_nwrk, {}, {}, {}, {});
-    writer.add_timestep( st, 1, false);
+    writer.add_timestep(st, 1, 1, false);
 
     writer.eval( st, 2, 2 * day, cfg.wells, cfg.wbp, cfg.grp_nwrk, {}, {}, {}, {});
-    writer.add_timestep( st, 2, false);
+    writer.add_timestep(st, 2, 2, false);
 
     writer.write();
 
@@ -2545,11 +2545,11 @@ BOOST_AUTO_TEST_CASE(MISC) {
     out::Summary writer(cfg.config, cfg.es, cfg.grid, cfg.schedule, cfg.name);
     SummaryState st(TimeService::now(), cfg.es.runspec().udqParams().undefinedValue());
     writer.eval( st, 0, 0 * day, cfg.wells, cfg.wbp, cfg.grp_nwrk, {}, {}, {}, {});
-    writer.add_timestep( st, 0, false);
+    writer.add_timestep(st, 0, 0, false);
     writer.eval( st, 1, 1 * day, cfg.wells, cfg.wbp, cfg.grp_nwrk, {}, {}, {}, {});
-    writer.add_timestep( st, 1, false);
+    writer.add_timestep(st, 1, 1, false);
     writer.eval( st, 2, 2 * day, cfg.wells, cfg.wbp, cfg.grp_nwrk, {}, {}, {}, {});
-    writer.add_timestep( st, 2, false);
+    writer.add_timestep(st, 2, 2, false);
     writer.write();
 
     auto res = readsum( cfg.name );
@@ -2564,19 +2564,19 @@ BOOST_AUTO_TEST_CASE(EXTRA) {
         out::Summary writer(cfg.config, cfg.es, cfg.grid, cfg.schedule, cfg.name);
         SummaryState st(TimeService::now(), cfg.es.runspec().udqParams().undefinedValue());
         writer.eval( st, 0, 0 * day, cfg.wells, cfg.wbp, cfg.grp_nwrk, { {"TCPU" , 0 }}, {}, {}, {});
-        writer.add_timestep( st, 0, false);
+        writer.add_timestep(st, 0, 0, false);
         writer.eval( st, 1, 1 * day, cfg.wells, cfg.wbp, cfg.grp_nwrk, { {"TCPU" , 1 }}, {}, {}, {});
-        writer.add_timestep( st, 1, false);
+        writer.add_timestep(st, 1, 1, false);
         writer.eval( st, 2, 2 * day, cfg.wells, cfg.wbp, cfg.grp_nwrk, { {"TCPU" , 2}}, {}, {}, {});
-        writer.add_timestep( st, 2, false);
+        writer.add_timestep(st, 2, 2, false);
 
         /* Add a not-recognized key; that is OK */
         BOOST_CHECK_NO_THROW(  writer.eval( st, 3, 3 * day, cfg.wells, cfg.wbp, cfg.grp_nwrk, { {"MISSING" , 2 }}, {}, {}, {}));
-        BOOST_CHECK_NO_THROW(  writer.add_timestep( st, 3, false));
+        BOOST_CHECK_NO_THROW(  writer.add_timestep(st, 3, 3, false));
 
         /* Override a NOT MISC variable - ignored. */
         writer.eval( st, 4, 4 * day, cfg.wells, cfg.wbp, cfg.grp_nwrk, {}, {}, {}, {});
-        writer.add_timestep( st, 4, false);
+        writer.add_timestep(st, 4, 4, false);
         writer.write();
     }
 
@@ -2700,11 +2700,11 @@ BOOST_AUTO_TEST_CASE(efficiency_factor) {
         out::Summary writer(cfg.config, cfg.es, cfg.grid, cfg.schedule, cfg.name);
         SummaryState st(TimeService::now(), cfg.es.runspec().udqParams().undefinedValue());
         writer.eval( st, 0, 0 * day, cfg.wells, cfg.wbp, cfg.grp_nwrk, {}, {}, {}, {});
-        writer.add_timestep( st, 0, false);
+        writer.add_timestep(st, 0, 0, false);
         writer.eval( st, 1, 1 * day, cfg.wells, cfg.wbp, cfg.grp_nwrk, {}, {}, {}, {});
-        writer.add_timestep( st, 1, false);
+        writer.add_timestep(st, 1, 1, false);
         writer.eval( st, 2, 2 * day, cfg.wells, cfg.wbp, cfg.grp_nwrk, {}, {}, {}, {});
-        writer.add_timestep( st, 2, false);
+        writer.add_timestep(st, 2, 2, false);
         writer.write();
         auto res = readsum( cfg.name );
         const auto* resp = res.get();
@@ -3010,11 +3010,11 @@ namespace {
 
         SummaryState st(TimeService::now(), config.es.runspec().udqParams().undefinedValue());
         smry.eval(st, 0, 0*day, config.wells, config.wbp, config.grp_nwrk, {}, {}, {}, {});
-        smry.add_timestep(st, 0, false);
+        smry.add_timestep(st, 0, 0, false);
         smry.eval(st, 1, 1*day, config.wells, config.wbp, config.grp_nwrk, {}, {}, {}, {});
-        smry.add_timestep(st, 1, false);
+        smry.add_timestep(st, 1, 1, false);
         smry.eval(st, 2, 2*day, config.wells, config.wbp, config.grp_nwrk, {}, {}, {}, {});
-        smry.add_timestep(st, 2, false);
+        smry.add_timestep(st, 2, 2, false);
 
         return st;
     }
@@ -4080,11 +4080,11 @@ BOOST_AUTO_TEST_CASE(Write_Read)
 
     SummaryState st(TimeService::now(), config.es.runspec().udqParams().undefinedValue());
     writer.eval(st, 0, 0*day, config.wells, config.wbp, config.grp_nwrk, {}, {}, {}, {});
-    writer.add_timestep(st, 0, false);
+    writer.add_timestep(st, 0, 0, false);
     writer.eval(st, 1, 1*day, config.wells, config.wbp, config.grp_nwrk, {}, {}, {}, {});
-    writer.add_timestep(st, 1, false);
+    writer.add_timestep(st, 1, 0, false);
     writer.eval(st, 2, 2*day, config.wells, config.wbp, config.grp_nwrk, {}, {}, {}, {});
-    writer.add_timestep(st, 2, false);
+    writer.add_timestep(st, 2, 0, false);
     writer.write();
 
     auto res = readsum("SOFR_TEST");
