@@ -27,12 +27,12 @@
 #ifndef OPM_PARKER_LENHARD_HPP
 #define OPM_PARKER_LENHARD_HPP
 
-#include "ParkerLenhardParams.hpp"
-
+#include <opm/material/fluidmatrixinteractions/ParkerLenhardParams.hpp>
 #include <opm/material/fluidmatrixinteractions/VanGenuchten.hpp>
 
-#include <algorithm>
 #include <cassert>
+#include <stdexcept>
+#include <type_traits>
 
 namespace Opm {
 
