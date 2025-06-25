@@ -95,6 +95,11 @@ public:
     T* operator->()
     { return &data_; }
 
+    operator const T&() const
+    { return data_; }
+    operator T&()
+    { return data_; }
+
 private:
     T data_{};
 };
@@ -141,6 +146,11 @@ public:
     const T* operator->() const
     { throw std::logic_error("data member deactivated"); }
     T* operator->()
+    { throw std::logic_error("data member deactivated"); }
+
+    operator const T&() const
+    { throw std::logic_error("data member deactivated"); }
+    operator T&()
     { throw std::logic_error("data member deactivated"); }
 };
 
