@@ -55,7 +55,8 @@ void
 EclMaterialLawManager<Traits>::InitParams::
 run(const std::function<std::vector<int>(const FieldPropsManager&, const std::string&, bool)>&
     fieldPropIntOnLeafAssigner,
-    const std::function<unsigned(unsigned)>& lookupIdxOnLevelZeroAssigner) {
+    const std::function<unsigned(unsigned)>& lookupIdxOnLevelZeroAssigner)
+{
     readUnscaledEpsPointsVectors_();
     readEffectiveParameters_();
     initSatnumRegionArray_(fieldPropIntOnLeafAssigner);
@@ -66,8 +67,11 @@ run(const std::function<std::vector<int>(const FieldPropsManager&, const std::st
     std::vector<std::vector<int>*> imbnumArray;
     std::vector<std::vector<MaterialLawParams>*> mlpArray;
     initArrays_(satnumArray, imbnumArray, mlpArray);
-    auto num_arrays = mlpArray.size();
-    for (unsigned i=0; i<num_arrays; i++) {
+    const auto num_arrays = mlpArray.size();
+    for (unsigned i = 0; i < num_arrays; i++) {
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
         for (unsigned elemIdx = 0; elemIdx < this->numCompressedElems_; ++elemIdx) {
             unsigned satRegionIdx = satRegion_(*satnumArray[i], elemIdx);
             //unsigned satNumCell = this->parent_.satnumRegionArray_[elemIdx];
