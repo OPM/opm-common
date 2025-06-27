@@ -138,20 +138,6 @@ public:
         return *this;
     }
 
-    const T& operator*() const
-    { throw std::logic_error("data member deactivated"); }
-    T& operator*()
-    { throw std::logic_error("data member deactivated"); }
-
-    const T* operator->() const
-    { throw std::logic_error("data member deactivated"); }
-    T* operator->()
-    { throw std::logic_error("data member deactivated"); }
-
-    operator const T&() const
-    { throw std::logic_error("data member deactivated"); }
-    operator T&()
-    { throw std::logic_error("data member deactivated"); }
 };
 
 } // namespace Opm
