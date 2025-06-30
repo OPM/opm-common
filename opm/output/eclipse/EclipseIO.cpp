@@ -765,8 +765,11 @@ void Opm::EclipseIO::Impl::writeEGridFile(const std::vector<NNCdata>& nnc) const
         + (formatted ? std::string{"F"} : std::string{})
         + "EGRID";
 
-    const auto egridFile = (std::filesystem::path{ this->outputDir_ }
-        / (this->baseName_ + ext)).generic_string();
+    const auto rset = EclIO::OutputStream::ResultSet {
+        this->outputDir_, this->baseName_
+    };
+
+    const auto egridFile = EclIO::OutputStream::outputFileName(rset, ext);
 
     this->grid_.save(egridFile, formatted, nnc, this->es_.get().getDeckUnitSystem());
 }
