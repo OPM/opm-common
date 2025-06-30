@@ -260,8 +260,15 @@ void checkFluidState(const BaseFluidState& fs)
         std::ignore = fs.saturation(/*phaseIdx=*/0);
         std::ignore = fs.fugacity(/*phaseIdx=*/0, /*compIdx=*/0);
         std::ignore = fs.fugacityCoefficient(/*phaseIdx=*/0, /*compIdx=*/0);
-        std::ignore = fs.enthalpy(/*phaseIdx=*/0);
-        std::ignore = fs.internalEnergy(/*phaseIdx=*/0);
+        // Note that we will no longer require that a fluid system
+        // supports enthalpy and internalEnergy compile time.
+        // The commented-out checks below only confirmed that there
+        // was a function that could be compiled, not that it actually
+        // made sense (usually empty but throwing functions).
+        // It is better to make such things compile errors rather than
+        // runtime errors.
+        // std::ignore = fs.enthalpy(/*phaseIdx=*/0);
+        // std::ignore = fs.internalEnergy(/*phaseIdx=*/0);
         std::ignore = fs.viscosity(/*phaseIdx=*/0);
     };
 }

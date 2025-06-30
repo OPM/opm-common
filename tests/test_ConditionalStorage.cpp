@@ -103,21 +103,11 @@ int main()
         // the assignment operator for the "wrapper" object should always work
         baz = foo;
 
-        try {
-            *bar;
-
-            // this is supposed to throw an std::logic_error
-            std::abort();
-        }
-        catch (std::logic_error &) {}
-
-        try {
-            std::ignore = foo->size();
-
-            // this is supposed to throw an std::logic_error
-            std::abort();
-        }
-        catch (std::logic_error &) {}
+        // Tests for the following expressions have been removed.
+        // They used to result in exceptions, but now become compile
+        // errors instead.
+        //  *bar;
+        //  foo->size();
     }
 
     {
