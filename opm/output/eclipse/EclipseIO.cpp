@@ -708,11 +708,19 @@ void Opm::EclipseIO::Impl::writeRestartFile(const Action::State& action_state,
 
 void Opm::EclipseIO::Impl::writeRunSummary() const
 {
-    const auto outputFile = std::filesystem::path {
-        this->outputDir_
-    } / this->baseName_;
+    const auto formatted = this->es_.get().cfg().io().getFMTOUT();
 
-    EclIO::ESmry { outputFile.generic_string() }.write_rsm_file();
+    const auto ext = '.'
+        + (formatted ? std::string{"F"} : std::string{})
+        + "SMSPEC";
+
+    const auto rset = EclIO::OutputStream::ResultSet {
+        this->outputDir_, this->baseName_
+    };
+
+    const auto smspec = EclIO::OutputStream::outputFileName(rset, ext);
+
+    EclIO::ESmry { smspec }.write_rsm_file();
 }
 
 void Opm::EclipseIO::Impl::writeRftFile(const double       secs_elapsed,
@@ -765,8 +773,11 @@ void Opm::EclipseIO::Impl::writeEGridFile(const std::vector<NNCdata>& nnc) const
         + (formatted ? std::string{"F"} : std::string{})
         + "EGRID";
 
-    const auto egridFile = (std::filesystem::path{ this->outputDir_ }
-        / (this->baseName_ + ext)).generic_string();
+    const auto rset = EclIO::OutputStream::ResultSet {
+        this->outputDir_, this->baseName_
+    };
+
+    const auto egridFile = EclIO::OutputStream::outputFileName(rset, ext);
 
     this->grid_.save(egridFile, formatted, nnc, this->es_.get().getDeckUnitSystem());
 }
