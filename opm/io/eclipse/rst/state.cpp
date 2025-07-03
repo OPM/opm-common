@@ -355,6 +355,11 @@ RstState::RstState(std::shared_ptr<EclIO::RestartFileView> rstView,
 void RstState::load_oil_vaporization(const std::vector<int>& intehead,
                                      const std::vector<double>& doubhead)
 {
+    if (!(doubhead[VI::doubhead::dRsDt] < 1.0e+20)) {
+        // DRSDT is not defined in the restart file, so we don't need to update the oilvap object.
+        return;
+    }
+
     const std::size_t numPvtRegions = this->oilvap.numPvtRegions();
     const auto tconv = this->unit_system.to_si(::Opm::UnitSystem::measure::time, 1.0);
     std::vector<double> maximums(numPvtRegions, doubhead[VI::doubhead::dRsDt]/tconv);
