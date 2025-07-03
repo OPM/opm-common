@@ -48,6 +48,21 @@ enum class EclMultiplexerApproach {
     OnePhase
 };
 
+template <EclMultiplexerApproach ApproachArg>
+struct EclMultiplexerDispatch
+{
+    static constexpr auto approach = ApproachArg;
+};
+
+// Helper struct to tell if a parameter pack starts with EclMultiplexerDispatch.
+template <typename ...Args>
+struct FrontIsEclMultiplexerDispatch : public std::false_type {};
+template <EclMultiplexerApproach Value, typename ...Args>
+struct FrontIsEclMultiplexerDispatch<EclMultiplexerDispatch<Value>, Args...> : public std::true_type {};
+template <typename ...Args>
+constexpr bool FrontIsEclMultiplexerDispatchV = FrontIsEclMultiplexerDispatch<Args...>::value;
+
+
 /*!
  * \brief Multiplexer implementation for the parameters required by the
  *        multiplexed three-phase material law.
