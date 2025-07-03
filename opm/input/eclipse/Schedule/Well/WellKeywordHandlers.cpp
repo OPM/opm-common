@@ -745,9 +745,29 @@ void handleWELTARG(HandlerContext& handlerContext)
 
     for (const auto& record : handlerContext.keyword) {
         const auto wellNamePattern = record.getItem<Kw::WELL>().getTrimmedString(0);
-        const auto well_names = handlerContext.wellNames(wellNamePattern);
+
+        const auto is_wlist = handlerContext.state()
+            .wlist_manager().hasList(wellNamePattern);
+
+        const auto well_names = handlerContext.wellNames(wellNamePattern, is_wlist);
+
         if (well_names.empty()) {
-            handlerContext.invalidNamePattern( wellNamePattern);
+            if (is_wlist) {
+                // wellNamePattern names an empty well list.  This is okay,
+                // so issue a warning and continue.
+                const auto msg_format =
+                    fmt::format("Empty WLIST '{}' in '{{keyword}}', "
+                                "in {{file}} line {{line}}.", wellNamePattern);
+
+                const auto msg = OpmInputError::format
+                    (msg_format, handlerContext.keyword.location());
+
+                OpmLog::warning("WELTARG:EmptyWLIST", msg);
+                continue;
+            }
+            else {
+                handlerContext.invalidNamePattern(wellNamePattern);
+            }
         }
 
         const auto cmode = WellWELTARGCModeFromString(record.getItem<Kw::CMODE>().getTrimmedString(0));

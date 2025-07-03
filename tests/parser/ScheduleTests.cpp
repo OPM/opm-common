@@ -104,6 +104,11 @@ namespace {
         return UnitSystem::newMETRIC().to_si(UnitSystem::measure::liquid_productivity_index, 1.0);
     }
 
+    double sm3_per_day()
+    {
+        return UnitSystem::newMETRIC().to_si(UnitSystem::measure::liquid_surface_rate, 1.0);
+    }
+
     double cp_rm3_per_db()
     {
         return UnitSystem::newMETRIC().to_si(UnitSystem::measure::transmissibility, 1.0);
@@ -1449,7 +1454,132 @@ WELTARG
     BOOST_CHECK_THROW(make_schedule(input), std::exception);
 }
 
+BOOST_AUTO_TEST_CASE(Weltarg_Empty_WList)
+{
+    const auto deck = Parser{}.parseString(R"(RUNSPEC
+DIMENS
+ 6 5 7 /
 
+OIL
+WATER
+GAS
+
+METRIC
+
+START
+ 3 'JUL' 2025 /
+
+--
+WELLDIMS
+--max.well  max.con/well  max.grup  max.w/grup  WLISTDYN
+  10        10            30        30    6*      2      /
+
+--
+TABDIMS
+--ntsfun     ntpvt  max.nssfun  max.nppvt  max.ntfip  max.nrpvt
+  1          1      50          60         72         60 /
+
+GRID
+
+DXV
+ 6*123.4 /
+
+DYV
+ 5*123.4 /
+
+DZV
+ 7*12.34 /
+
+DEPTHZ
+ 42*2000.0 /
+
+EQUALS
+  PORO 0.3 /
+  PERMX 100.0 /
+  PERMY 100.0 /
+  PERMZ  10.0 /
+  NTG  0.82 /
+/
+
+PROPS
+
+SWOF
+  0 0 1 0
+  1 1 0 0 /
+
+SGOF
+  0 0 1 0
+  1 1 0 0 /
+
+PVTW
+  1 2 3 4 5 /
+
+PVDG
+   1 1     0.001
+ 250 0.001 0.001 /
+
+PVDO
+   1 1     0.25
+ 250 0.99  0.25 /
+
+SOLUTION
+
+SWAT
+  210*0.25 /
+
+SGAS
+  210*0.6 /
+
+PRESSURE
+  210*100 /
+
+SCHEDULE
+
+WELSPECS
+  'P-1'   'TEST'  1  1  1*  'OIL'  2*  'STOP' /
+/
+
+COMPDAT
+-- WELL    I   J  K1   K2            Sat.   CF   DIAM
+   'P-1'   1   1   1	4    'OPEN'  1*     1*   0.25 /
+/
+
+WCONPROD
+  'P-1' 'OPEN'  'ORAT'  123.4 /
+/
+
+WLIST
+ '*EMPTY' NEW /
+/
+
+WELTARG
+-- Resetting a target on an empty WLIST is a no-op.
+ '*EMPTY' GRAT 13500 /
+/
+
+DATES
+ 10 JUL 2025 /
+/
+END
+)");
+
+    const auto es = EclipseState { deck };
+
+    // This is the real test here.  We're supposed to be able to create a
+    // Schedule object even when there is a WELTARG applied to an '*EMPTY'
+    // WLIST.  The rest of the statements are just to ensure that there is
+    // an actual assertion in this unit test.
+    const auto schedule = Schedule { deck, es };
+
+    const auto udq_default = 0.0;
+    const auto st = SummaryState { TimeService::now(), udq_default };
+
+    const auto controls = schedule.back().wells("P-1")
+        .getProductionProperties()
+        .controls(st, udq_default);
+
+    BOOST_CHECK_CLOSE(controls.oil_rate, 123.4*sm3_per_day(), 1.0e-8);
+}
 
 BOOST_AUTO_TEST_CASE(createDeckWithWeltArgException) {
     std::string input = R"(
