@@ -723,35 +723,35 @@ void handleWELSPECL(HandlerContext& handlerContext)
     }
 }
 
-/*
-  The documentation for the WELTARG keyword says that the well
-  must have been fully specified and initialized using one of the
-  WCONxxxx keywords prior to modifying the well using the WELTARG
-  keyword.
-
-  The following implementation of handling the WELTARG keyword
-  does not check or enforce in any way that this is done (i.e. it
-  is not checked or verified that the well is initialized with any
-  WCONxxxx keyword).
-
-  Update: See the discussion following the definitions of the SI factors, due
-  to a bad design we currently need the well to be specified with
-  WCONPROD / WCONHIST before WELTARG is applied, if not the units for the
-  rates will be wrong.
-*/
+// The documentation for the WELTARG keyword says that the well must have
+// been fully specified and initialized using one of the WCONxxxx keywords
+// prior to modifying the well using the WELTARG keyword.
+//
+// The following implementation of handling the WELTARG keyword does not
+// check or enforce in any way that this is done (i.e., it is not checked or
+// verified that the well is initialized with any WCONxxxx keyword).
+//
+// Update: See the discussion following the definitions of the SI factors,
+// due to a bad design we currently need the well to be specified with
+// WCONPROD / WCONHIST before WELTARG is applied.  Otherwise the units for
+// the rates will be wrong.
 
 void handleWELTARG(HandlerContext& handlerContext)
 {
-    const double SiFactorP = handlerContext.static_schedule().m_unit_system.parse("Pressure").getSIScaling();
+    using Kw = ParserKeywords::WELTARG;
+
+    const auto SiFactorP = handlerContext.static_schedule()
+        .m_unit_system.parse("Pressure").getSIScaling();
+
     for (const auto& record : handlerContext.keyword) {
-        const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
+        const auto wellNamePattern = record.getItem<Kw::WELL>().getTrimmedString(0);
         const auto well_names = handlerContext.wellNames(wellNamePattern);
         if (well_names.empty()) {
             handlerContext.invalidNamePattern( wellNamePattern);
         }
 
-        const auto cmode = WellWELTARGCModeFromString(record.getItem("CMODE").getTrimmedString(0));
-        const auto new_arg = record.getItem("NEW_VALUE").get<UDAValue>(0);
+        const auto cmode = WellWELTARGCModeFromString(record.getItem<Kw::CMODE>().getTrimmedString(0));
+        const auto new_arg = record.getItem<Kw::NEW_VALUE>().get<UDAValue>(0);
 
         for (const auto& well_name : well_names) {
             auto well2 = handlerContext.state().wells.get(well_name);
