@@ -131,12 +131,18 @@ public:
      * \param params Parameters
      * \param state The fluid state
      */
-    template <class ContainerT, class FluidState>
+    template <class ContainerT, class FluidState, class ...Args>
     static void capillaryPressures(ContainerT& values,
                                    const Params& params,
                                    const FluidState& fluidState)
     {
         OPM_TIMEFUNCTION_LOCAL();
+        if constexpr (FrontIsEclMultiplexerDispatchV<Args...>) {
+            capillaryPressuresT<ContainerT, FluidState, Args...>(values, params, fluidState);
+            return;
+        }
+
+        // Run-time switched version.
         switch (params.approach()) {
         case EclMultiplexerApproach::Stone1:
             Stone1Material::capillaryPressures(values,
@@ -165,6 +171,35 @@ public:
         case EclMultiplexerApproach::OnePhase:
             values[0] = 0.0;
             break;
+        }
+    }
+
+    template <class ContainerT, class FluidState, class Head, class ...Args>
+    static void capillaryPressuresT(ContainerT& values,
+                                    const Params& params,
+                                    const FluidState& fluidState)
+    {
+        // Compile-time switched version.
+        if constexpr (Head::approach == EclMultiplexerApproach::Stone1) {
+            Stone1Material::capillaryPressures(values,
+                                               params.template getRealParams<EclMultiplexerApproach::Stone1>(),
+                                               fluidState);
+        } else if constexpr (Head::approach == EclMultiplexerApproach::Stone2) {
+            Stone2Material::capillaryPressures(values,
+                                               params.template getRealParams<EclMultiplexerApproach::Stone2>(),
+                                               fluidState);
+        } else if constexpr (Head::approach == EclMultiplexerApproach::Default) {
+            DefaultMaterial::capillaryPressures(values,
+                                                params.template getRealParams<EclMultiplexerApproach::Default>(),
+                                                fluidState);
+        } else if constexpr (Head::approach == EclMultiplexerApproach::TwoPhase) {
+            TwoPhaseMaterial::capillaryPressures(values,
+                                                 params.template getRealParams<EclMultiplexerApproach::TwoPhase>(),
+                                                 fluidState);
+        } else if constexpr (Head::approach == EclMultiplexerApproach::OnePhase) {
+            values[0] = 0.0;
+        } else {
+            static_assert(false, "Unhandled EclMultiplexerApproach");
         }
     }
 
