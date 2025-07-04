@@ -86,9 +86,8 @@ public:
         using Evaluation = EvaluationT;
 
     public:
-        explicit ParameterCache(Scalar maxOilSat = 1.0, unsigned regionIdx = 0)
-            : maxOilSat_(maxOilSat)
-            , regionIdx_(regionIdx)
+        explicit ParameterCache(unsigned regionIdx = 0)
+            : regionIdx_(regionIdx)
         {
         }
 
@@ -103,7 +102,6 @@ public:
         void assignPersistentData(const OtherCache& other)
         {
             regionIdx_ = other.regionIndex();
-            maxOilSat_ = other.maxOilSat();
         }
 
         /*!
@@ -126,14 +124,7 @@ public:
         void setRegionIndex(unsigned val)
         { regionIdx_ = val; }
 
-        const Evaluation& maxOilSat() const
-        { return maxOilSat_; }
-
-        void setMaxOilSat(const Evaluation& val)
-        { maxOilSat_ = val; }
-
     private:
-        Evaluation maxOilSat_;
         unsigned regionIdx_;
     };
 

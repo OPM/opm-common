@@ -644,10 +644,9 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(BlackOil, Evaluation, Types)
 
     // create a parameter cache
     using ParamCache = typename FluidSystem::template ParameterCache<Scalar>;
-    ParamCache paramCache(/*maxOilSat=*/0.5, /*regionIdx=*/1);
+    ParamCache paramCache(/*regionIdx=*/1);
     BOOST_CHECK_EQUAL(paramCache.regionIndex(), 1);
 
-    BOOST_CHECK_SMALL(Opm::abs(paramCache.maxOilSat() - 0.5), 1e-10);
     BOOST_CHECK_SMALL(Opm::abs(FluidSystem::reservoirTemperature() - (273.15 + 15.555)), 1e-10);
     BOOST_CHECK(FluidSystem::enableDissolvedGas());
     BOOST_CHECK(FluidSystem::enableVaporizedOil());
