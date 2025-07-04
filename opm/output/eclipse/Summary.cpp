@@ -4847,8 +4847,6 @@ private:
     Opm::EclIO::OutputStream::Formatted fmt_;
     Opm::EclIO::OutputStream::Unified   unif_;
 
-    mutable double prevEvalTime_{std::numeric_limits<double>::lowest()};
-
     int prevCreate_{-1};
     int prevReportStepID_{-1};
     std::vector<MiniStep>::size_type numUnwritten_{0};
@@ -5006,10 +5004,6 @@ eval(const int                              sim_step,
     }
 
     st.update_elapsed(duration);
-
-    if (secs_elapsed > this->prevEvalTime_) {
-        this->prevEvalTime_ = secs_elapsed;
-    }
 }
 
 void Opm::out::Summary::SummaryImplementation::write(const bool is_final_summary)
