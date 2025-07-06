@@ -72,10 +72,37 @@ namespace Opm {
     }                                                                                                                  \
     case EclMultiplexerApproach::OnePhase: {                                                                           \
         constexpr EclMultiplexerApproach approach = EclMultiplexerApproach::OnePhase;                                  \
-        using ActualLaw = Stone1Material;                                                                              \
         onePhaseCode;                                                                                                  \
         break;                                                                                                         \
     }                                                                                                                  \
+    }
+
+#define OPM_ECL_MULTIPLEXER_MATERIAL_CALL_COMPILETIME(codeToCall, onePhaseCode)                                        \
+    if constexpr (Head::approach == EclMultiplexerApproach::Stone1) {                                                  \
+        constexpr EclMultiplexerApproach approach = EclMultiplexerApproach::Stone1;                                    \
+        auto& realParams = params.template getRealParams<approach>();                                                  \
+        using ActualLaw = Stone1Material;                                                                              \
+        codeToCall;                                                                                                    \
+    } else if constexpr (Head::approach == EclMultiplexerApproach::Stone2) {                                           \
+        constexpr EclMultiplexerApproach approach = EclMultiplexerApproach::Stone2;                                    \
+        auto& realParams = params.template getRealParams<approach>();                                                  \
+        using ActualLaw = Stone2Material;                                                                              \
+        codeToCall;                                                                                                    \
+    } else if constexpr (Head::approach == EclMultiplexerApproach::Default) {                                          \
+        constexpr EclMultiplexerApproach approach = EclMultiplexerApproach::Default;                                   \
+        auto& realParams = params.template getRealParams<approach>();                                                  \
+        using ActualLaw = DefaultMaterial;                                                                             \
+        codeToCall;                                                                                                    \
+    } else if constexpr (Head::approach == EclMultiplexerApproach::TwoPhase) {                                         \
+        constexpr EclMultiplexerApproach approach = EclMultiplexerApproach::TwoPhase;                                  \
+        auto& realParams = params.template getRealParams<approach>();                                                  \
+        using ActualLaw = TwoPhaseMaterial;                                                                            \
+        codeToCall;                                                                                                    \
+    } else if constexpr (Head::approach == EclMultiplexerApproach::OnePhase) {                                         \
+        constexpr EclMultiplexerApproach approach = EclMultiplexerApproach::OnePhase;                                  \
+        onePhaseCode;                                                                                                  \
+    } else {                                                                                                           \
+        static_assert(false, "Unhandled EclMultiplexerApproach");                                                      \
     }
 
     // Pass this for the onePhaseCode argument if nothing is to be done.
@@ -191,28 +218,8 @@ public:
                                     const Params& params,
                                     const FluidState& fluidState)
     {
-        // Compile-time switched version.
-        if constexpr (Head::approach == EclMultiplexerApproach::Stone1) {
-            Stone1Material::capillaryPressures(values,
-                                               params.template getRealParams<EclMultiplexerApproach::Stone1>(),
-                                               fluidState);
-        } else if constexpr (Head::approach == EclMultiplexerApproach::Stone2) {
-            Stone2Material::capillaryPressures(values,
-                                               params.template getRealParams<EclMultiplexerApproach::Stone2>(),
-                                               fluidState);
-        } else if constexpr (Head::approach == EclMultiplexerApproach::Default) {
-            DefaultMaterial::capillaryPressures(values,
-                                                params.template getRealParams<EclMultiplexerApproach::Default>(),
-                                                fluidState);
-        } else if constexpr (Head::approach == EclMultiplexerApproach::TwoPhase) {
-            TwoPhaseMaterial::capillaryPressures(values,
-                                                 params.template getRealParams<EclMultiplexerApproach::TwoPhase>(),
-                                                 fluidState);
-        } else if constexpr (Head::approach == EclMultiplexerApproach::OnePhase) {
-            values[0] = 0.0;
-        } else {
-            static_assert(false, "Unhandled EclMultiplexerApproach");
-        }
+        OPM_ECL_MULTIPLEXER_MATERIAL_CALL_COMPILETIME(ActualLaw::capillaryPressures(values, realParams, fluidState),
+                                                      values[0] = 0.0);
     }
 
     /*
@@ -417,28 +424,8 @@ public:
                                         const Params& params,
                                         const FluidState& fluidState)
     {
-        // Compile-time switched version.
-        if constexpr (Head::approach == EclMultiplexerApproach::Stone1) {
-            Stone1Material::relativePermeabilities(values,
-                                                   params.template getRealParams<EclMultiplexerApproach::Stone1>(),
-                                                   fluidState);
-        } else if constexpr (Head::approach == EclMultiplexerApproach::Stone2) {
-            Stone2Material::relativePermeabilities(values,
-                                                   params.template getRealParams<EclMultiplexerApproach::Stone2>(),
-                                                   fluidState);
-        } else if constexpr (Head::approach == EclMultiplexerApproach::Default) {
-            DefaultMaterial::relativePermeabilities(values,
-                                                    params.template getRealParams<EclMultiplexerApproach::Default>(),
-                                                    fluidState);
-        } else if constexpr (Head::approach == EclMultiplexerApproach::TwoPhase) {
-            TwoPhaseMaterial::relativePermeabilities(values,
-                                                     params.template getRealParams<EclMultiplexerApproach::TwoPhase>(),
-                                                     fluidState);
-        } else if constexpr (Head::approach == EclMultiplexerApproach::OnePhase) {
-            values[0] = 0.0;
-        } else {
-            static_assert(false, "Unhandled EclMultiplexerApproach");
-        }
+        OPM_ECL_MULTIPLEXER_MATERIAL_CALL_COMPILETIME(ActualLaw::relativePermeabilities(values, realParams, fluidState),
+                                                      values[0] = 0.0);
     }
 
 
