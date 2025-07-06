@@ -398,15 +398,51 @@ public:
      * oil relative permeability models" section of the ECLipse
      * technical description.
      */
-    template <class ContainerT, class FluidState>
+    template <class ContainerT, class FluidState, class ...Args>
     static void relativePermeabilities(ContainerT& values,
                                        const Params& params,
                                        const FluidState& fluidState)
     {
         OPM_TIMEFUNCTION_LOCAL();
+        if constexpr (FrontIsEclMultiplexerDispatchV<Args...>) {
+            relativePermeabilitiesT<ContainerT, FluidState, Args...>(values, params, fluidState);
+            return;
+        }
         OPM_ECL_MULTIPLEXER_MATERIAL_CALL(ActualLaw::relativePermeabilities(values, realParams, fluidState),
                                           values[0] = 0.0);
     }
+
+    template <class ContainerT, class FluidState, class Head, class ...Args>
+    static void relativePermeabilitiesT(ContainerT& values,
+                                        const Params& params,
+                                        const FluidState& fluidState)
+    {
+        // Compile-time switched version.
+        if constexpr (Head::approach == EclMultiplexerApproach::Stone1) {
+            Stone1Material::relativePermeabilities(values,
+                                                   params.template getRealParams<EclMultiplexerApproach::Stone1>(),
+                                                   fluidState);
+        } else if constexpr (Head::approach == EclMultiplexerApproach::Stone2) {
+            Stone2Material::relativePermeabilities(values,
+                                                   params.template getRealParams<EclMultiplexerApproach::Stone2>(),
+                                                   fluidState);
+        } else if constexpr (Head::approach == EclMultiplexerApproach::Default) {
+            DefaultMaterial::relativePermeabilities(values,
+                                                    params.template getRealParams<EclMultiplexerApproach::Default>(),
+                                                    fluidState);
+        } else if constexpr (Head::approach == EclMultiplexerApproach::TwoPhase) {
+            TwoPhaseMaterial::relativePermeabilities(values,
+                                                     params.template getRealParams<EclMultiplexerApproach::TwoPhase>(),
+                                                     fluidState);
+        } else if constexpr (Head::approach == EclMultiplexerApproach::OnePhase) {
+            values[0] = 0.0;
+        } else {
+            static_assert(false, "Unhandled EclMultiplexerApproach");
+        }
+    }
+
+
+
 
     /*!
      * \brief The relative permeability of oil in oil/gas system.
