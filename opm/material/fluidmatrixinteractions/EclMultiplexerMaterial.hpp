@@ -44,28 +44,28 @@ namespace Opm {
     switch (params.approach()) {                                                                                       \
     case EclMultiplexerApproach::Stone1: {                                                                             \
         constexpr EclMultiplexerApproach approach = EclMultiplexerApproach::Stone1;                                    \
-        const auto& realParams = params.template getRealParams<approach>();                                            \
+        auto& realParams = params.template getRealParams<approach>();                                                  \
         using ActualLaw = Stone1Material;                                                                              \
         codeToCall;                                                                                                    \
         break;                                                                                                         \
     }                                                                                                                  \
     case EclMultiplexerApproach::Stone2: {                                                                             \
         constexpr EclMultiplexerApproach approach = EclMultiplexerApproach::Stone2;                                    \
-        const auto& realParams = params.template getRealParams<approach>();                                            \
+        auto& realParams = params.template getRealParams<approach>();                                                  \
         using ActualLaw = Stone2Material;                                                                              \
         codeToCall;                                                                                                    \
         break;                                                                                                         \
     }                                                                                                                  \
     case EclMultiplexerApproach::Default: {                                                                            \
         constexpr EclMultiplexerApproach approach = EclMultiplexerApproach::Default;                                   \
-        const auto& realParams = params.template getRealParams<approach>();                                            \
+        auto& realParams = params.template getRealParams<approach>();                                                  \
         using ActualLaw = DefaultMaterial;                                                                             \
         codeToCall;                                                                                                    \
         break;                                                                                                         \
     }                                                                                                                  \
     case EclMultiplexerApproach::TwoPhase: {                                                                           \
         constexpr EclMultiplexerApproach approach = EclMultiplexerApproach::TwoPhase;                                  \
-        const auto& realParams = params.template getRealParams<approach>();                                            \
+        auto& realParams = params.template getRealParams<approach>();                                                  \
         using ActualLaw = TwoPhaseMaterial;                                                                            \
         codeToCall;                                                                                                    \
         break;                                                                                                         \
@@ -77,6 +77,9 @@ namespace Opm {
         break;                                                                                                         \
     }                                                                                                                  \
     }
+
+    // Pass this for the onePhaseCode argument if nothing is to be done.
+    inline void doNothing() {};
 
 /*!
  * \ingroup FluidMatrixInteractions
@@ -225,31 +228,8 @@ public:
                                          const Params& params)
     {
         OPM_TIMEFUNCTION_LOCAL();
-        switch (params.approach()) {
-        case EclMultiplexerApproach::Stone1:
-            Stone1Material::oilWaterHysteresisParams(soMax, swMax, swMin,
-                                     params.template getRealParams<EclMultiplexerApproach::Stone1>());
-            break;
-
-        case EclMultiplexerApproach::Stone2:
-            Stone2Material::oilWaterHysteresisParams(soMax, swMax, swMin,
-                                     params.template getRealParams<EclMultiplexerApproach::Stone2>());
-            break;
-
-        case EclMultiplexerApproach::Default:
-            DefaultMaterial::oilWaterHysteresisParams(soMax, swMax, swMin,
-                                     params.template getRealParams<EclMultiplexerApproach::Default>());
-            break;
-
-        case EclMultiplexerApproach::TwoPhase:
-            TwoPhaseMaterial::oilWaterHysteresisParams(soMax, swMax, swMin,
-                                     params.template getRealParams<EclMultiplexerApproach::TwoPhase>());
-            break;
-
-        case EclMultiplexerApproach::OnePhase:
-            // Do nothing.
-            break;
-        }
+        OPM_ECL_MULTIPLEXER_MATERIAL_CALL(ActualLaw::oilWaterHysteresisParams(soMax, swMax, swMin, realParams),
+                                          doNothing());
     }
 
     /*
@@ -265,31 +245,8 @@ public:
                                             Params& params)
     {
         OPM_TIMEFUNCTION_LOCAL();
-        switch (params.approach()) {
-        case EclMultiplexerApproach::Stone1:
-            Stone1Material::setOilWaterHysteresisParams(soMax, swMax, swMin,
-                                     params.template getRealParams<EclMultiplexerApproach::Stone1>());
-            break;
-
-        case EclMultiplexerApproach::Stone2:
-            Stone2Material::setOilWaterHysteresisParams(soMax, swMax, swMin,
-                                     params.template getRealParams<EclMultiplexerApproach::Stone2>());
-            break;
-
-        case EclMultiplexerApproach::Default:
-            DefaultMaterial::setOilWaterHysteresisParams(soMax, swMax, swMin,
-                                     params.template getRealParams<EclMultiplexerApproach::Default>());
-            break;
-
-        case EclMultiplexerApproach::TwoPhase:
-            TwoPhaseMaterial::setOilWaterHysteresisParams(soMax, swMax, swMin,
-                                     params.template getRealParams<EclMultiplexerApproach::TwoPhase>());
-            break;
-
-        case EclMultiplexerApproach::OnePhase:
-            // Do nothing.
-            break;
-        }
+        OPM_ECL_MULTIPLEXER_MATERIAL_CALL(ActualLaw::setOilWaterHysteresisParams(soMax, swMax, swMin, realParams),
+                                          doNothing());
     }
 
     /*
@@ -305,103 +262,36 @@ public:
                                        const Params& params)
     {
         OPM_TIMEFUNCTION_LOCAL();
-        switch (params.approach()) {
-        case EclMultiplexerApproach::Stone1:
-            Stone1Material::gasOilHysteresisParams(sgmax, shmax, somin,
-                                     params.template getRealParams<EclMultiplexerApproach::Stone1>());
-            break;
-
-        case EclMultiplexerApproach::Stone2:
-            Stone2Material::gasOilHysteresisParams(sgmax, shmax, somin,
-                                     params.template getRealParams<EclMultiplexerApproach::Stone2>());
-            break;
-
-        case EclMultiplexerApproach::Default:
-            DefaultMaterial::gasOilHysteresisParams(sgmax, shmax, somin,
-                                     params.template getRealParams<EclMultiplexerApproach::Default>());
-            break;
-
-        case EclMultiplexerApproach::TwoPhase:
-            TwoPhaseMaterial::gasOilHysteresisParams(sgmax, shmax, somin,
-                                     params.template getRealParams<EclMultiplexerApproach::TwoPhase>());
-            break;
-
-        case EclMultiplexerApproach::OnePhase:
-            // Do nothing.
-            break;
-        }
+        OPM_ECL_MULTIPLEXER_MATERIAL_CALL(ActualLaw::gasOilHysteresisParams(sgmax, shmax, somin, realParams),
+                                          doNothing());
     }
 
     static Scalar trappedGasSaturation(const Params& params, bool maximumTrapping)
     {
         OPM_TIMEFUNCTION_LOCAL();
-        switch (params.approach()) {
-        case EclMultiplexerApproach::Stone1:
-            return Stone1Material::trappedGasSaturation(params.template getRealParams<EclMultiplexerApproach::Stone1>(), maximumTrapping);
-        case EclMultiplexerApproach::Stone2:
-            return Stone2Material::trappedGasSaturation(params.template getRealParams<EclMultiplexerApproach::Stone2>(), maximumTrapping);
-        case EclMultiplexerApproach::Default:
-            return DefaultMaterial::trappedGasSaturation(params.template getRealParams<EclMultiplexerApproach::Default>(), maximumTrapping);
-        case EclMultiplexerApproach::TwoPhase:
-            return TwoPhaseMaterial::trappedGasSaturation(params.template getRealParams<EclMultiplexerApproach::TwoPhase>(), maximumTrapping); 
-        case EclMultiplexerApproach::OnePhase:
-            return 0.0;
-        }
-        return 0.0;
+        OPM_ECL_MULTIPLEXER_MATERIAL_CALL(return ActualLaw::trappedGasSaturation(realParams, maximumTrapping),
+                                          return 0.0);
     }
 
     static Scalar strandedGasSaturation(const Params& params, Scalar Sg, Scalar Kg)
     {
         OPM_TIMEFUNCTION_LOCAL();
-        switch (params.approach()) {
-        case EclMultiplexerApproach::Stone1:
-            return Stone1Material::strandedGasSaturation(params.template getRealParams<EclMultiplexerApproach::Stone1>(), Sg, Kg);
-        case EclMultiplexerApproach::Stone2:
-            return Stone2Material::strandedGasSaturation(params.template getRealParams<EclMultiplexerApproach::Stone2>(), Sg, Kg);
-        case EclMultiplexerApproach::Default:
-            return DefaultMaterial::strandedGasSaturation(params.template getRealParams<EclMultiplexerApproach::Default>(), Sg, Kg);
-        case EclMultiplexerApproach::TwoPhase:
-            return TwoPhaseMaterial::strandedGasSaturation(params.template getRealParams<EclMultiplexerApproach::TwoPhase>(), Sg, Kg); 
-        case EclMultiplexerApproach::OnePhase:
-            return 0.0;
-        }
-        return 0.0;
+        OPM_ECL_MULTIPLEXER_MATERIAL_CALL(return ActualLaw::strandedGasSaturation(realParams, Sg, Kg),
+                                          return 0.0);
     }
 
     static Scalar trappedOilSaturation(const Params& params, bool maximumTrapping) 
     {
         OPM_TIMEFUNCTION_LOCAL();
-        switch (params.approach()) {
-        case EclMultiplexerApproach::Stone1:
-            return Stone1Material::trappedOilSaturation(params.template getRealParams<EclMultiplexerApproach::Stone1>(), maximumTrapping);
-        case EclMultiplexerApproach::Stone2:
-            return Stone2Material::trappedOilSaturation(params.template getRealParams<EclMultiplexerApproach::Stone2>(), maximumTrapping);
-        case EclMultiplexerApproach::Default:
-            return DefaultMaterial::trappedOilSaturation(params.template getRealParams<EclMultiplexerApproach::Default>(), maximumTrapping);
-        case EclMultiplexerApproach::TwoPhase:
-            return TwoPhaseMaterial::trappedOilSaturation(params.template getRealParams<EclMultiplexerApproach::TwoPhase>(), maximumTrapping); 
-        case EclMultiplexerApproach::OnePhase:
-            return 0.0;
-        }
-        return 0.0;
+        OPM_ECL_MULTIPLEXER_MATERIAL_CALL(return ActualLaw::trappedOilSaturation(realParams, maximumTrapping),
+                                          return 0.0);
     }
 
     static Scalar trappedWaterSaturation(const Params& params)
     {
         OPM_TIMEFUNCTION_LOCAL();
-        switch (params.approach()) {
-        case EclMultiplexerApproach::Stone1:
-            return Stone1Material::trappedWaterSaturation(params.template getRealParams<EclMultiplexerApproach::Stone1>());
-        case EclMultiplexerApproach::Stone2:
-            return Stone2Material::trappedWaterSaturation(params.template getRealParams<EclMultiplexerApproach::Stone2>());
-        case EclMultiplexerApproach::Default:
-            return DefaultMaterial::trappedWaterSaturation(params.template getRealParams<EclMultiplexerApproach::Default>());
-        case EclMultiplexerApproach::TwoPhase:
-            return TwoPhaseMaterial::trappedWaterSaturation(params.template getRealParams<EclMultiplexerApproach::TwoPhase>()); 
-        case EclMultiplexerApproach::OnePhase:
-            return 0.0;
-        }
-        return 0.0;
+        OPM_ECL_MULTIPLEXER_MATERIAL_CALL(return ActualLaw::trappedWaterSaturation(realParams),
+                                          return 0.0);
     }
     /*
      * Hysteresis parameters for gas-oil
@@ -416,31 +306,8 @@ public:
                                           Params& params)
     {
         OPM_TIMEFUNCTION_LOCAL();
-        switch (params.approach()) {
-        case EclMultiplexerApproach::Stone1:
-            Stone1Material::setGasOilHysteresisParams(sgmax, shmax, somin,
-                                     params.template getRealParams<EclMultiplexerApproach::Stone1>());
-            break;
-
-        case EclMultiplexerApproach::Stone2:
-            Stone2Material::setGasOilHysteresisParams(sgmax, shmax, somin,
-                                     params.template getRealParams<EclMultiplexerApproach::Stone2>());
-            break;
-
-        case EclMultiplexerApproach::Default:
-            DefaultMaterial::setGasOilHysteresisParams(sgmax, shmax, somin,
-                                     params.template getRealParams<EclMultiplexerApproach::Default>());
-            break;
-
-        case EclMultiplexerApproach::TwoPhase:
-            TwoPhaseMaterial::setGasOilHysteresisParams(sgmax, shmax, somin,
-                                     params.template getRealParams<EclMultiplexerApproach::TwoPhase>());
-            break;
-
-        case EclMultiplexerApproach::OnePhase:
-            // Do nothing.
-            break;
-        }
+        OPM_ECL_MULTIPLEXER_MATERIAL_CALL(ActualLaw::setGasOilHysteresisParams(sgmax, shmax, somin, realParams),
+                                          doNothing());
     }
 
     /*!
@@ -537,39 +404,8 @@ public:
                                        const FluidState& fluidState)
     {
         OPM_TIMEFUNCTION_LOCAL();
-        switch (params.approach()) {
-        case EclMultiplexerApproach::Stone1:
-            Stone1Material::relativePermeabilities(values,
-                                                   params.template getRealParams<EclMultiplexerApproach::Stone1>(),
-                                                   fluidState);
-            break;
-
-        case EclMultiplexerApproach::Stone2:
-            Stone2Material::relativePermeabilities(values,
-                                                   params.template getRealParams<EclMultiplexerApproach::Stone2>(),
-                                                   fluidState);
-            break;
-
-        case EclMultiplexerApproach::Default:
-            DefaultMaterial::relativePermeabilities(values,
-                                                    params.template getRealParams<EclMultiplexerApproach::Default>(),
-                                                    fluidState);
-            break;
-
-        case EclMultiplexerApproach::TwoPhase:
-            TwoPhaseMaterial::relativePermeabilities(values,
-                                                     params.template getRealParams<EclMultiplexerApproach::TwoPhase>(),
-                                                     fluidState);
-            break;
-
-        case EclMultiplexerApproach::OnePhase:
-            values[0] = 1.0;
-            break;
-
-        default:
-            throw std::logic_error("Not implemented: relativePermeabilities() option for unknown EclMultiplexerApproach (="
-                                   + std::to_string(static_cast<int>(params.approach())) + ")");
-        }
+        OPM_ECL_MULTIPLEXER_MATERIAL_CALL(ActualLaw::relativePermeabilities(values, realParams, fluidState),
+                                          values[0] = 0.0);
     }
 
     /*!
@@ -676,31 +512,8 @@ public:
     static bool updateHysteresis(Params& params, const FluidState& fluidState)
     {
         OPM_TIMEFUNCTION_LOCAL();
-        switch (params.approach()) {
-        case EclMultiplexerApproach::Stone1:
-            return Stone1Material::updateHysteresis(params.template getRealParams<EclMultiplexerApproach::Stone1>(),
-                                             fluidState);
-            break;
-
-        case EclMultiplexerApproach::Stone2:
-            return Stone2Material::updateHysteresis(params.template getRealParams<EclMultiplexerApproach::Stone2>(),
-                                             fluidState);
-            break;
-
-        case EclMultiplexerApproach::Default:
-            return DefaultMaterial::updateHysteresis(params.template getRealParams<EclMultiplexerApproach::Default>(),
-                                              fluidState);
-            break;
-
-        case EclMultiplexerApproach::TwoPhase:
-            return TwoPhaseMaterial::updateHysteresis(params.template getRealParams<EclMultiplexerApproach::TwoPhase>(),
-                                               fluidState);
-            break;
-        case EclMultiplexerApproach::OnePhase:
-            return false;
-            break;
-        }
-        return false;
+        OPM_ECL_MULTIPLEXER_MATERIAL_CALL(return ActualLaw::updateHysteresis(realParams, fluidState),
+                                          return false);
     }
 };
 
