@@ -40,6 +40,44 @@
 
 namespace Opm {
 
+#define OPM_ECL_MULTIPLEXER_MATERIAL_CALL(codeToCall, onePhaseCode)                                                    \
+    switch (params.approach()) {                                                                                       \
+    case EclMultiplexerApproach::Stone1: {                                                                             \
+        constexpr EclMultiplexerApproach approach = EclMultiplexerApproach::Stone1;                                    \
+        const auto& realParams = params.template getRealParams<approach>();                                            \
+        using ActualLaw = Stone1Material;                                                                              \
+        codeToCall;                                                                                                    \
+        break;                                                                                                         \
+    }                                                                                                                  \
+    case EclMultiplexerApproach::Stone2: {                                                                             \
+        constexpr EclMultiplexerApproach approach = EclMultiplexerApproach::Stone2;                                    \
+        const auto& realParams = params.template getRealParams<approach>();                                            \
+        using ActualLaw = Stone2Material;                                                                              \
+        codeToCall;                                                                                                    \
+        break;                                                                                                         \
+    }                                                                                                                  \
+    case EclMultiplexerApproach::Default: {                                                                            \
+        constexpr EclMultiplexerApproach approach = EclMultiplexerApproach::Default;                                   \
+        const auto& realParams = params.template getRealParams<approach>();                                            \
+        using ActualLaw = DefaultMaterial;                                                                             \
+        codeToCall;                                                                                                    \
+        break;                                                                                                         \
+    }                                                                                                                  \
+    case EclMultiplexerApproach::TwoPhase: {                                                                           \
+        constexpr EclMultiplexerApproach approach = EclMultiplexerApproach::TwoPhase;                                  \
+        const auto& realParams = params.template getRealParams<approach>();                                            \
+        using ActualLaw = TwoPhaseMaterial;                                                                            \
+        codeToCall;                                                                                                    \
+        break;                                                                                                         \
+    }                                                                                                                  \
+    case EclMultiplexerApproach::OnePhase: {                                                                           \
+        constexpr EclMultiplexerApproach approach = EclMultiplexerApproach::OnePhase;                                  \
+        using ActualLaw = Stone1Material;                                                                              \
+        onePhaseCode;                                                                                                  \
+        break;                                                                                                         \
+    }                                                                                                                  \
+    }
+
 /*!
  * \ingroup FluidMatrixInteractions
  *
@@ -141,37 +179,8 @@ public:
             capillaryPressuresT<ContainerT, FluidState, Args...>(values, params, fluidState);
             return;
         }
-
-        // Run-time switched version.
-        switch (params.approach()) {
-        case EclMultiplexerApproach::Stone1:
-            Stone1Material::capillaryPressures(values,
-                                               params.template getRealParams<EclMultiplexerApproach::Stone1>(),
-                                               fluidState);
-            break;
-
-        case EclMultiplexerApproach::Stone2:
-            Stone2Material::capillaryPressures(values,
-                                               params.template getRealParams<EclMultiplexerApproach::Stone2>(),
-                                               fluidState);
-            break;
-
-        case EclMultiplexerApproach::Default:
-            DefaultMaterial::capillaryPressures(values,
-                                                params.template getRealParams<EclMultiplexerApproach::Default>(),
-                                                fluidState);
-            break;
-
-        case EclMultiplexerApproach::TwoPhase:
-            TwoPhaseMaterial::capillaryPressures(values,
-                                                 params.template getRealParams<EclMultiplexerApproach::TwoPhase>(),
-                                                 fluidState);
-            break;
-
-        case EclMultiplexerApproach::OnePhase:
-            values[0] = 0.0;
-            break;
-        }
+        OPM_ECL_MULTIPLEXER_MATERIAL_CALL(ActualLaw::capillaryPressures(values, realParams, fluidState),
+                                          values[0] = 0.0);
     }
 
     template <class ContainerT, class FluidState, class Head, class ...Args>
