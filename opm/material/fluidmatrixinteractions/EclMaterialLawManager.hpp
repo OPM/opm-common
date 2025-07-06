@@ -328,6 +328,11 @@ public:
         }
     }
 
+    EclMultiplexerApproach threePhaseApproach() const
+    {
+        return threePhaseApproach_;
+    }
+
 private:
     const MaterialLawParams& materialLawParamsFunc_(unsigned elemIdx, FaceDir::DirEnum facedir) const;
 
