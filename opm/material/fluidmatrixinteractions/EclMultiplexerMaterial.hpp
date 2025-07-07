@@ -213,13 +213,18 @@ public:
                                           values[0] = 0.0);
     }
 
+
     template <class ContainerT, class FluidState, class Head, class ...Args>
     static void capillaryPressuresT(ContainerT& values,
                                     const Params& params,
                                     const FluidState& fluidState)
     {
-        OPM_ECL_MULTIPLEXER_MATERIAL_CALL_COMPILETIME(ActualLaw::capillaryPressures(values, realParams, fluidState),
-                                                      values[0] = 0.0);
+#define OPM_LOCAL_TEMPLATE_ARGS ContainerT, FluidState, Args...
+        OPM_ECL_MULTIPLEXER_MATERIAL_CALL_COMPILETIME(
+            ActualLaw::template capillaryPressures<OPM_LOCAL_TEMPLATE_ARGS>(values, realParams, fluidState),
+            values[0] = 0.0
+        );
+#undef OPM_LOCAL_TEMPLATE_ARGS
     }
 
     /*
@@ -424,8 +429,12 @@ public:
                                         const Params& params,
                                         const FluidState& fluidState)
     {
-        OPM_ECL_MULTIPLEXER_MATERIAL_CALL_COMPILETIME(ActualLaw::relativePermeabilities(values, realParams, fluidState),
-                                                      values[0] = 0.0);
+#define OPM_LOCAL_TEMPLATE_ARGS ContainerT, FluidState, Args...
+        OPM_ECL_MULTIPLEXER_MATERIAL_CALL_COMPILETIME(
+            ActualLaw::template relativePermeabilities<OPM_LOCAL_TEMPLATE_ARGS>(values, realParams, fluidState),
+            values[0] = 0.0
+        );
+#undef OPM_LOCAL_TEMPLATE_ARGS
     }
 
 
