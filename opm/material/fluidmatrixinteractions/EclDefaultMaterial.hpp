@@ -133,16 +133,16 @@ public:
      * \param params Parameters
      * \param state The fluid state
      */
-    template <class ContainerT, class FluidState>
+    template <class ContainerT, class FluidState, class ...Args>
     static void capillaryPressures(ContainerT& values,
                                    const Params& params,
                                    const FluidState& state)
     {
         OPM_TIMEFUNCTION_LOCAL();
         using Evaluation = typename std::remove_reference<decltype(values[0])>::type;
-        values[gasPhaseIdx] = pcgn<FluidState, Evaluation>(params, state);
+        values[gasPhaseIdx] = pcgn<FluidState, Evaluation, Args...>(params, state);
         values[oilPhaseIdx] = 0;
-        values[waterPhaseIdx] = - pcnw<FluidState, Evaluation>(params, state);
+        values[waterPhaseIdx] = - pcnw<FluidState, Evaluation, Args...>(params, state);
 
         Valgrind::CheckDefined(values[gasPhaseIdx]);
         Valgrind::CheckDefined(values[oilPhaseIdx]);
@@ -253,14 +253,14 @@ public:
      * p_{c,gn} = p_g - p_n
      * \f]
      */
-    template <class FluidState, class Evaluation = typename FluidState::Scalar>
+    template <class FluidState, class Evaluation, class ...Args>
     static Evaluation pcgn(const Params& params,
                            const FluidState& fs)
     {
         OPM_TIMEFUNCTION_LOCAL();
         // Maximum attainable oil saturation is 1-SWL.
         const auto Sw = 1.0 - params.Swl() - decay<Evaluation>(fs.saturation(gasPhaseIdx));
-        return GasOilMaterialLaw::twoPhaseSatPcnw(params.gasOilParams(), Sw);
+        return GasOilMaterialLaw::template twoPhaseSatPcnw<Evaluation, Args...>(params.gasOilParams(), Sw);
     }
 
     /*!
@@ -272,7 +272,7 @@ public:
      * p_{c,nw} = p_n - p_w
      * \f]
      */
-    template <class FluidState, class Evaluation = typename FluidState::Scalar>
+    template <class FluidState, class Evaluation, class ...Args>
     static Evaluation pcnw(const Params& params,
                            const FluidState& fs)
     {
@@ -337,7 +337,7 @@ public:
      * oil relative permeability models" section of the ECLipse
      * technical description.
      */
-    template <class ContainerT, class FluidState>
+    template <class ContainerT, class FluidState, class ...Args>
     static void relativePermeabilities(ContainerT& values,
                                        const Params& params,
                                        const FluidState& fluidState)
@@ -345,40 +345,40 @@ public:
         OPM_TIMEFUNCTION_LOCAL();
         using Evaluation = typename std::remove_reference<decltype(values[0])>::type;
 
-        values[waterPhaseIdx] = krw<FluidState, Evaluation>(params, fluidState);
-        values[oilPhaseIdx] = krn<FluidState, Evaluation>(params, fluidState);
-        values[gasPhaseIdx] = krg<FluidState, Evaluation>(params, fluidState);
+        values[waterPhaseIdx] = krw<FluidState, Evaluation, Args...>(params, fluidState);
+        values[oilPhaseIdx] = krn<FluidState, Evaluation, Args...>(params, fluidState);
+        values[gasPhaseIdx] = krg<FluidState, Evaluation, Args...>(params, fluidState);
     }
 
     /*!
      * \brief The relative permeability of the gas phase.
      */
-    template <class FluidState, class Evaluation = typename FluidState::Scalar>
+    template <class FluidState, class Evaluation, class ...Args>
     static Evaluation krg(const Params& params,
                           const FluidState& fluidState)
     {
         OPM_TIMEFUNCTION_LOCAL();
         // Maximum attainable oil saturation is 1-SWL.
         const Evaluation sw = 1.0 - params.Swl() - decay<Evaluation>(fluidState.saturation(gasPhaseIdx));
-        return GasOilMaterialLaw::twoPhaseSatKrn(params.gasOilParams(), sw);
+        return GasOilMaterialLaw::template twoPhaseSatKrn<Evaluation, Args...>(params.gasOilParams(), sw);
     }
 
     /*!
      * \brief The relative permeability of the wetting phase.
      */
-    template <class FluidState, class Evaluation = typename FluidState::Scalar>
+    template <class FluidState, class Evaluation, class ...Args>
     static Evaluation krw(const Params& params,
                           const FluidState& fluidState)
     {
         OPM_TIMEFUNCTION_LOCAL();
         const Evaluation sw = decay<Evaluation>(fluidState.saturation(waterPhaseIdx));
-        return OilWaterMaterialLaw::twoPhaseSatKrw(params.oilWaterParams(), sw);
+        return OilWaterMaterialLaw::template twoPhaseSatKrw<Evaluation, Args...>(params.oilWaterParams(), sw);
     }
 
     /*!
      * \brief The relative permeability of the non-wetting (i.e., oil) phase.
      */
-    template <class FluidState, class Evaluation = typename FluidState::Scalar>
+    template <class FluidState, class Evaluation, class ...Args>
     static Evaluation krn(const Params& params,
                           const FluidState& fluidState)
     {
@@ -392,8 +392,8 @@ public:
         const Evaluation sg = decay<Evaluation>(fluidState.saturation(gasPhaseIdx));
 
         const Evaluation Sw_ow = sg + sw;
-        const Evaluation kro_ow = relpermOilInOilWaterSystem<Evaluation>(params, fluidState);
-        const Evaluation kro_go = relpermOilInOilGasSystem<Evaluation>(params, fluidState);
+        const Evaluation kro_ow = relpermOilInOilWaterSystem<Evaluation, FluidState, Args...>(params, fluidState);
+        const Evaluation kro_go = relpermOilInOilGasSystem<Evaluation, FluidState, Args...>(params, fluidState);
 
         // avoid the division by zero: chose a regularized kro which is used if Sw - Swco
         // < epsilon/2 and interpolate between the oridinary and the regularized kro between
@@ -417,7 +417,7 @@ public:
     /*!
      * \brief The relative permeability of oil in oil/gas system.
      */
-    template <class Evaluation, class FluidState>
+    template <class Evaluation, class FluidState, class ...Args>
     static Evaluation relpermOilInOilGasSystem(const Params& params,
                                                const FluidState& fluidState)
     {
@@ -429,13 +429,13 @@ public:
         const Evaluation sg = decay<Evaluation>(fluidState.saturation(gasPhaseIdx));
         const Evaluation So_go = 1.0 - (sg + sw);
 
-        return GasOilMaterialLaw::twoPhaseSatKrw(params.gasOilParams(), So_go);
+        return GasOilMaterialLaw::template twoPhaseSatKrw<Evaluation, Args...>(params.gasOilParams(), So_go);
     }
 
     /*!
      * \brief The relative permeability of oil in oil/water system.
      */
-    template <class Evaluation, class FluidState>
+    template <class Evaluation, class FluidState, class ...Args>
     static Evaluation relpermOilInOilWaterSystem(const Params& params,
                                                  const FluidState& fluidState)
     {
@@ -447,7 +447,7 @@ public:
         const Evaluation sg = decay<Evaluation>(fluidState.saturation(gasPhaseIdx));
         const Evaluation Sw_ow = sg + sw;
 
-        return OilWaterMaterialLaw::twoPhaseSatKrn(params.oilWaterParams(), Sw_ow);
+        return OilWaterMaterialLaw::template twoPhaseSatKrn<Evaluation, Args...>(params.oilWaterParams(), Sw_ow);
     }
 
     /*!
