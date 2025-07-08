@@ -648,6 +648,7 @@ if(ENABLE_ECL_OUTPUT)
           tests/test_AggregateUDQData.cpp
           tests/test_AggregateWListData.cpp
           tests/test_AggregateWellData.cpp
+          tests/test_AggregateWellDataLGR.cpp
           tests/test_ArrayDimChecker.cpp
           tests/test_DoubHEAD.cpp
           tests/test_data_GuideRateValue.cpp
