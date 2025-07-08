@@ -20,15 +20,18 @@
 #ifndef OPM_AGGREGATE_WELL_DATA_HPP
 #define OPM_AGGREGATE_WELL_DATA_HPP
 
+#include "opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp"
 #include <opm/output/eclipse/WindowedArray.hpp>
 
 #include <opm/io/eclipse/PaddedOutputString.hpp>
 
 #include <cstddef>
+#include <string>
 #include <vector>
 
 namespace Opm {
     class Schedule;
+    class EclipseGrid;
     class SummaryState;
     class UnitSystem;
     class WellTestState;
@@ -49,19 +52,38 @@ namespace Opm { namespace RestartIO { namespace Helpers {
     public:
         explicit AggregateWellData(const std::vector<int>& inteHead);
 
-        void captureDeclaredWellData(const Schedule&   	       sched,
-                                     const TracerConfig&       tracer,
-                                     const std::size_t 		     sim_step,
-                                     const Opm::Action::State& action_state,
-                                     const Opm::WellTestState& wtest_state,
-                                     const Opm::SummaryState&  smry,
-                                     const std::vector<int>& 	 inteHead);
+        void captureDeclaredWellData(const Schedule&   	          sched,
+                                     const TracerConfig&          tracer,
+                                     const std::size_t 		      sim_step,
+                                     const Opm::Action::State&    action_state,
+                                     const Opm::WellTestState&    wtest_state,
+                                     const Opm::SummaryState&     smry,
+                                     const std::vector<int>&      inteHead);
 
-        void captureDynamicWellData(const Opm::Schedule&        sched,
-                                    const TracerConfig&       tracer,
-                                    const std::size_t           sim_step,
-                                    const Opm::data::Wells&     xw,
-                                    const Opm::SummaryState&    smry);
+        void captureDeclaredWellData(const Schedule&   	          sched,
+                                     const EclipseGrid&           grid,
+                                     const TracerConfig&          tracer,
+                                     const std::size_t 		      sim_step,
+                                     const Opm::Action::State&    action_state,
+                                     const Opm::WellTestState&    wtest_state,
+                                     const Opm::SummaryState&     smry,
+                                     const std::vector<int>&      inteHead);
+
+        void captureDeclaredWellDataLGR(const Schedule&   	      sched,
+                                        const EclipseGrid&        grid,
+                                        const TracerConfig&       tracer,
+                                        const std::size_t 		  sim_step,
+                                        const Opm::Action::State& action_state,
+                                        const Opm::WellTestState& wtest_state,
+                                        const Opm::SummaryState&  smry,
+                                        const std::vector<int>&   inteHead,
+                                        const std::string&        lgr_tag);
+
+        void captureDynamicWellData(const Opm::Schedule&          sched,
+                                    const TracerConfig&           tracer,
+                                    const std::size_t             sim_step,
+                                    const Opm::data::Wells&       xw,
+                                    const Opm::SummaryState&      smry);
 
         /// Retrieve Integer Well Data Array.
         const std::vector<int>& getIWell() const

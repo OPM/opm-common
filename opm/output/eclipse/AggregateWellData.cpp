@@ -113,6 +113,22 @@ namespace {
         }
     }
 
+    template <typename WellOp>
+    void wellLoop(const std::vector<std::string>& wells,
+                  const Opm::Schedule&            sched,
+                  const std::size_t               simStep,
+                  WellOp&&                        wellOp,
+                  const std::string&              lgrTag)
+    {
+        for (const auto& wname : wells) {
+            const auto& well = sched.getWell(wname, simStep);
+            if (well.get_lgr_well_tag().value_or("") != lgrTag) {
+                continue; // skip wells not in the specified LGR
+            }
+            wellOp(well, well.seqIndex());
+        }
+    }
+
     namespace IWell {
         std::size_t entriesPerWell(const std::vector<int>& inteHead)
         {
@@ -1528,6 +1544,145 @@ captureDeclaredWellData(const Schedule&             sched,
             IWell::staticContrib(well, step_glo, wtest_config, wtest_state,
                                  smry, msWellID, groupMapNameIndex, iw);
         });
+    }
+
+    // Static contributions to SWEL array.
+    wellLoop(wells, sched, sim_step, [&step_glo, &sim_step, &sched,
+                                      &tracers, &wtest_state, &smry, this]
+             (const Well& well, const std::size_t wellID) -> void
+    {
+        auto sw = this->sWell_[wellID];
+
+        SWell::staticContrib(well, step_glo, sim_step, sched,
+                             tracers, wtest_state, smry, sw);
+    });
+
+    // Static contributions to XWEL array.
+    wellLoop(wells, sched, sim_step, [&sched, &smry, this]
+        (const Well& well, const std::size_t wellID) -> void
+    {
+        auto xw = this->xWell_[wellID];
+
+        XWell::staticContrib(well, smry,sched.getUnits(), xw);
+    });
+
+    // Static contributions to ZWEL array.
+    wellLoop(wells, sched, sim_step, [&sim_step, &action_state, &sched, this]
+             (const Well& well, const std::size_t wellID) -> void
+    {
+        auto zw = this->zWell_[wellID];
+
+        ZWell::staticContrib(well, sched[sim_step].actions(), action_state, zw);
+    });
+}
+
+// ---------------------------------------------------------------------
+
+void
+Opm::RestartIO::Helpers::AggregateWellData::
+captureDeclaredWellData(const Schedule&             sched,
+                        const EclipseGrid&          grid,
+                        const TracerConfig&         tracers,
+                        const std::size_t           sim_step,
+                        const ::Opm::Action::State& action_state,
+                        const Opm::WellTestState&   wtest_state,
+                        const ::Opm::SummaryState&  smry,
+                        const std::vector<int>&     inteHead)
+{
+    const auto& wells = sched.wellNames(sim_step);
+    const auto& step_glo = sched.glo(sim_step);
+
+    // Static contributions to IWEL array.
+    {
+        const auto groupMapNameIndex =
+            IWell::currentGroupMapNameIndex(sched, sim_step, inteHead);
+
+        auto msWellID = std::size_t{0};
+
+        wellLoop(wells, sched, sim_step,
+                 [&groupMapNameIndex, &msWellID,
+                  &step_glo, &wtest_state, &smry,
+                  &sched, &sim_step, this]
+                 (const Well& well, const std::size_t wellID) -> void
+        {
+            const auto& wtest_config = sched[sim_step].wtest_config();
+
+            msWellID += well.isMultiSegment();  // 1-based index.
+            auto iw   = this->iWell_[wellID];
+
+            IWell::staticContrib(well, step_glo, wtest_config, wtest_state,
+                                 smry, msWellID, groupMapNameIndex, iw);
+        });
+    }
+
+    // Static contributions to SWEL array.
+    wellLoop(wells, sched, sim_step, [&step_glo, &sim_step, &sched,
+                                      &tracers, &wtest_state, &smry, this]
+             (const Well& well, const std::size_t wellID) -> void
+    {
+        auto sw = this->sWell_[wellID];
+
+        SWell::staticContrib(well, step_glo, sim_step, sched,
+                             tracers, wtest_state, smry, sw);
+    });
+
+    // Static contributions to XWEL array.
+    wellLoop(wells, sched, sim_step, [&sched, &smry, this]
+        (const Well& well, const std::size_t wellID) -> void
+    {
+        auto xw = this->xWell_[wellID];
+
+        XWell::staticContrib(well, smry,sched.getUnits(), xw);
+    });
+
+    // Static contributions to ZWEL array.
+    wellLoop(wells, sched, sim_step, [&sim_step, &action_state, &sched, this]
+             (const Well& well, const std::size_t wellID) -> void
+    {
+        auto zw = this->zWell_[wellID];
+
+        ZWell::staticContrib(well, sched[sim_step].actions(), action_state, zw);
+    });
+}
+
+// ---------------------------------------------------------------------
+
+void
+Opm::RestartIO::Helpers::AggregateWellData::
+captureDeclaredWellDataLGR(const Schedule&             sched,
+                           const EclipseGrid&          grid,
+                           const TracerConfig&         tracers,
+                           const std::size_t           sim_step,
+                           const ::Opm::Action::State& action_state,
+                           const Opm::WellTestState&   wtest_state,
+                           const ::Opm::SummaryState&  smry,
+                           const std::vector<int>&     inteHead,
+                           const std::string&          lgr_tag)
+{
+    const auto& wells = sched.wellNames(sim_step);
+    const auto& step_glo = sched.glo(sim_step);
+
+    // Static contributions to IWEL array.
+    {
+        const auto groupMapNameIndex =
+            IWell::currentGroupMapNameIndex(sched, sim_step, inteHead);
+
+        auto msWellID = std::size_t{0};
+
+        wellLoop(wells, sched,  sim_step,
+                 [&groupMapNameIndex, &msWellID,
+                  &step_glo, &wtest_state, &smry,
+                  &sched, &grid, &sim_step, this]
+                 (const Well& well, const std::size_t wellID) -> void
+        {
+            const auto& wtest_config = sched[sim_step].wtest_config();
+
+            msWellID += well.isMultiSegment();  // 1-based index.
+            auto iw   = this->iWell_[wellID];
+
+            IWell::staticContrib(well, step_glo, wtest_config, wtest_state,
+                                 smry, msWellID, groupMapNameIndex, iw);
+        }, lgr_tag);
     }
 
     // Static contributions to SWEL array.
