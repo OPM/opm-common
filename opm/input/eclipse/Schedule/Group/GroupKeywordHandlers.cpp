@@ -33,6 +33,8 @@
 #include <opm/input/eclipse/Schedule/Group/Group.hpp>
 #include <opm/input/eclipse/Schedule/Group/GroupEconProductionLimits.hpp>
 #include <opm/input/eclipse/Schedule/Group/GuideRateConfig.hpp>
+#include <opm/input/eclipse/Schedule/Network/ExtNetwork.hpp>
+#include <opm/input/eclipse/Schedule/Network/Node.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleState.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleStatic.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQActive.hpp>
@@ -485,6 +487,17 @@ void handleGEFAC(HandlerContext& handlerContext)
                 handlerContext.state().wellgroup_events().addEvent( group_name, ScheduleEvents::WELLGROUP_EFFICIENCY_UPDATE);
                 handlerContext.state().events().addEvent( ScheduleEvents::WELLGROUP_EFFICIENCY_UPDATE );
                 handlerContext.state().groups.update(std::move(new_group));
+                // Ensure network node efficiences are also updated
+                auto ext_network = handlerContext.state().network.get();
+                if (ext_network.active() && ext_network.has_node(group_name)) {
+                    const auto network_efficiency = new_group.getGroupEfficiencyFactor(/*network*/ true);
+                    auto node = ext_network.node(group_name);
+                    if (node.efficiency() != network_efficiency) {
+                        node.set_efficiency(network_efficiency);
+                        ext_network.update_node(node);
+                        handlerContext.state().network.update( std::move(ext_network) );
+                    }
+                }
             }
         }
     }
