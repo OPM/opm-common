@@ -29,6 +29,8 @@
 #include <opm/input/eclipse/Schedule/Well/WDFAC.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
+#include <opm/input/eclipse/Schedule/MSW/Compsegs.hpp>
+#include <opm/input/eclipse/Schedule/MSW/WellSegments.hpp>
 
 #include <opm/input/eclipse/Parser/ParserKeywords/C.hpp>
 
@@ -170,9 +172,17 @@ void handleCOMPTRAJ(HandlerContext& handlerContext)
             // cellsearchTree is calculated only once and is used to
             // calculated cell intersections of the perforations
             // specified in COMPTRAJ
-            connections->loadCOMPTRAJ(record, handlerContext.grid, name,
+            std::vector<std::pair<double, double>> intersections_md;
+            std::vector<std::pair<double, double>> intersections_tvd;
+            std::vector<std::array<int, 3>> intersection_ijk;
+            connections->loadCOMPTRAJ(record,
+                                      handlerContext.grid,
+                                      name,
                                       handlerContext.keyword.location(),
-                                      cellSearchTree);
+                                      cellSearchTree,
+                                      intersections_md,
+                                      intersections_tvd,
+                                      intersection_ijk);
 
             // In the case that defaults are used in WELSPECS for
             // headI/J the headI/J are calculated based on the well
@@ -191,6 +201,31 @@ Well {} is not connected to grid - will remain SHUT)",
                                              name, location.filename,
                                              location.lineno, name);
                 OpmLog::warning(msg);
+            }
+
+            const auto add_msw = DeckItem::to_bool(record.getItem("MSW").get<std::string>(0));
+
+            if (add_msw) { // Generate WELSEGS data:
+                const auto& perf_top = record.getItem("PERF_TOP").getSIDouble(0);
+                const auto& diameter = record.getItem("DIAMETER").getSIDouble(0);
+                
+                auto well = handlerContext.state().wells.get(name);
+                well.addWellSegmentsFromIntersections(perf_top, intersections_md, intersections_tvd, diameter);
+                handlerContext.state().wells.update(std::move(well));
+                handlerContext.record_well_structure_change();
+            }
+
+            if (add_msw) { // Generate COMPSEGS data:
+                auto well = handlerContext.state().wells.get(name);
+                auto [new_connections, new_segments] = Compsegs::processCOMPSEGS(
+                    intersections_md, intersection_ijk, well.getSegments(), well.getConnections(), well.getSegments(), handlerContext.grid
+                );
+                
+                well.updateConnections(std::make_shared<WellConnections>(std::move(new_connections)), false);
+                well.updateSegments(std::make_shared<WellSegments>(std::move(new_segments)));
+                
+                handlerContext.state().wells.update(std::move(well));
+                handlerContext.record_well_structure_change();
             }
 
             handlerContext.state().wellgroup_events()

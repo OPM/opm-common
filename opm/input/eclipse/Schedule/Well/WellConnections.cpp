@@ -586,7 +586,10 @@ The cell ({},{},{}) in well {} is not active and the connection will be ignored)
                                        const ScheduleGrid&    grid,
                                        const std::string&     wname,
                                        const KeywordLocation& location,
-                                       external::cvf::ref<external::cvf::BoundingBoxTree>& cellSearchTree)
+                                       external::cvf::ref<external::cvf::BoundingBoxTree>& cellSearchTree,
+                                       std::vector<std::pair<double, double>>& intersections_md,
+                                       std::vector<std::pair<double, double>>& intersections_tvd,
+                                       std::vector<std::array<int, 3>>& intersection_ijk)
     {
         const auto& perf_top = record.getItem("PERF_TOP");
         const auto& perf_bot = record.getItem("PERF_BOT");
@@ -665,6 +668,9 @@ The cell ({},{},{}) in well {} is not active and the connection will be ignored)
 
         for (size_t is = 0; is < intersections.size(); ++is) {
             const auto ijk = ecl_grid->getIJK(intersections[is].globCellIndex);
+            intersections_md.emplace_back(intersections[is].startMD, intersections[is].endMD);
+            intersections_tvd.emplace_back(intersections[is].startPoint[2], intersections[is].endPoint[2]);
+            intersection_ijk.push_back(ijk);
 
             // When using WELTRAJ & COMPTRAJ one may use default settings in
             // WELSPECS for headI/J and let the headI/J be calculated by the
