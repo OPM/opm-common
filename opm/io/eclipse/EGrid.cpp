@@ -114,10 +114,6 @@ namespace EclIO
                     length_factor = 0.3048;
                 else if (m_mapunits == "CM")
                     length_factor = 0.01;
-                else {
-                    std::string message = "Unit system " + m_mapunits + " not supported for MAPUNITS";
-                    OPM_THROW(std::invalid_argument, message);
-                }
             }
 
             if (array_name[n] == "MAPAXES") {
