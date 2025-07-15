@@ -786,9 +786,7 @@ Runspec::Runspec(const Deck& deck)
         if (runspecSection.hasKeyword<ParserKeywords::FRAC>()) {
             m_frac = true;
 
-            const std::string msg = "\nSimulation will solve with fractures in wells";
-
-            OpmLog::note(msg);
+            OpmLog::note("\nSimulation will solve with fractures in wells");
         }
 
         if (runspecSection.hasKeyword<ParserKeywords::TEMP>()) {
