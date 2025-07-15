@@ -22,6 +22,7 @@
 #include <array>
 #include <cstddef>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace Opm {
@@ -51,7 +52,166 @@ public:
 
     /// Vertical extent, horizontal extent, and width of initial fracture at
     /// a seed point.
-    using SizeVector = std::array<double, 3>;
+    class SeedSize
+    {
+    private:
+        /// Named quantity indices.
+        enum class Quant : std::size_t {
+            /// Vertical extent.
+            Vertical,
+
+            /// Horizontal extent.
+            Horizontal,
+
+            /// Initial fracture width.
+            Width,
+
+            /// Number of named quantities.
+            ///
+            /// Note to maintainers: Num *MUST* be last enumerator.
+            Num,
+        };
+
+        /// Quantity container type.
+        using SizeVector = std::array<double, static_cast<std::underlying_type_t<Quant>>(Quant::Num)>;
+
+        /// Quantity container.
+        SizeVector v_{};
+
+        /// Convert named quantity identifier to linear index for array lookup
+        ///
+        /// \param[in] i Quantity identifier
+        ///
+        /// \return Linear index in SizeVector corresponding to \p i.
+        static constexpr auto ix(const Quant i)
+        {
+            return static_cast<std::underlying_type_t<Quant>>(i);
+        }
+
+    public:
+        /// Default constructor.
+        SeedSize() =  default;
+
+        /// Constructor.
+        ///
+        /// Mostly for the benefit of unit tests.
+        ///
+        /// \param[in] ev Vertical extent.
+        ///
+        /// \param[in] eh Horizontal extent.
+        ///
+        /// \param[in] wd Initial fracture width.
+        explicit SeedSize(const double ev, const double eh, const double wd)
+            : v_{ {ev, eh, wd} }
+        {}
+
+        /// Copy constructor.
+        SeedSize(const SeedSize& rhs) = default;
+
+        /// Move constructor.
+        SeedSize(SeedSize&& rhs) = default;
+
+        /// Assignment operator.
+        SeedSize& operator=(const SeedSize& rhs) = default;
+
+        /// Move assignment operator.
+        SeedSize& operator=(SeedSize&& rhs) = default;
+
+        /// Equality predicate.
+        ///
+        /// \param[in] that Object against which \code *this \endcode will
+        /// be tested for equality.
+        ///
+        /// \return Whether or not \code *this \endcode is the same as \p
+        /// that.
+        bool operator==(const SeedSize& that) const
+        {
+            return this->v_ == that.v_;
+        }
+
+        /// Inequality predicate.
+        ///
+        /// \param[in] that Object against which \code *this \endcode will
+        /// be tested for inequality.
+        ///
+        /// \return Whether or not \code *this \endcode is different from \p
+        /// that.
+        bool operator!=(const SeedSize& that) const
+        {
+            return ! (*this == that);
+        }
+
+        /// Assign horizontal extent
+        ///
+        /// Supports chained initialisation.
+        ///
+        /// \param[in] eh New horizontal extent.
+        ///
+        /// \return \code *this \endcode.
+        SeedSize& horizontalExtent(const double eh)
+        {
+            this->v_[ix(Quant::Horizontal)] = eh;
+            return *this;
+        }
+
+        /// Assign vertical extent
+        ///
+        /// Supports chained initialisation.
+        ///
+        /// \param[in] ev New vertical extent.
+        ///
+        /// \return \code *this \endcode.
+        SeedSize& verticalExtent(const double ev)
+        {
+            this->v_[ix(Quant::Vertical)] = ev;
+            return *this;
+        }
+
+        /// Assign initial fracture width
+        ///
+        /// Supports chained initialisation.
+        ///
+        /// \param[in] wd New initial fracture width.
+        ///
+        /// \return \code *this \endcode.
+        SeedSize& width(const double wd)
+        {
+            this->v_[ix(Quant::Width)] = wd;
+            return *this;
+        }
+
+        /// Seed's horizontal extent.
+        auto horizontalExtent() const
+        {
+            return this->v_[ix(Quant::Horizontal)];
+        }
+
+        /// Seed's vertical extent.
+        auto verticalExtent() const
+        {
+            return this->v_[ix(Quant::Vertical)];
+        }
+
+        /// Seed's initial fracture width.
+        auto width() const
+        {
+            return this->v_[ix(Quant::Width)];
+        }
+
+        /// Create a serialisation test object.
+        static SeedSize serializationTestObject();
+
+        /// Convert between byte array and object representation.
+        ///
+        /// \tparam Serializer Byte array conversion protocol.
+        ///
+        /// \param[in,out] serializer Byte array conversion object.
+        template <class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(this->v_);
+        }
+    };
 
     /// Default constructor.
     ///
@@ -91,7 +251,7 @@ public:
     /// 'true'.
     bool updateSeed(const std::size_t   seedCellGlobal,
                     const NormalVector& seedNormal,
-                    const SizeVector&   seedSize);
+                    const SeedSize&     seedSize);
 
     /// Establish accelerator structure for LOG(n) normal vector lookup
     /// based on Cartesian cell indices.
@@ -126,7 +286,7 @@ public:
     ///
     /// \return Fracturing plane size vector in cell \p c.  Nullptr if no
     /// seed exists in cell \p c.
-    const SizeVector* getSize(const SeedCell& c) const;
+    const SeedSize* getSize(const SeedCell& c) const;
 
     /// Retrieve fracturing plane normal vector based on insertion
     /// order/record index.
@@ -157,7 +317,7 @@ public:
     ///
     /// \return Initial fracture size (vertical and horizontal extents,
     /// along with initial width) at the \p i-th unique cell index.
-    const SizeVector& getSize(const SeedIndex& i) const
+    const SeedSize& getSize(const SeedIndex& i) const
     {
         return this->seedSize_[i.i];
     }
@@ -215,7 +375,7 @@ private:
     std::vector<NormalVector> seedNormal_{};
 
     /// Fracturing plane normal vectors for all seed cells.
-    std::vector<SizeVector> seedSize_{};
+    std::vector<SeedSize> seedSize_{};
 
     /// Binary search lookup structure.
     ///
@@ -271,7 +431,7 @@ private:
     /// 'true'.
     bool insertNewSeed(const std::size_t   seedCellGlobal,
                        const NormalVector& seedNormal,
-                       const SizeVector&   seedSize);
+                       const SeedSize&     seedSize);
 
     /// Update normal vector direction of an existing seed cell.
     ///
@@ -285,7 +445,7 @@ private:
     /// \return Whether or not the normal vector for seed \p ix was updated.
     bool updateExistingSeed(const NormalVectorIx ix,
                             const NormalVector&  seedNormal,
-                            const SizeVector&    seedSize);
+                            const SeedSize&      seedSize);
 };
 
 } // namespace Opm
