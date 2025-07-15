@@ -1058,11 +1058,10 @@ void handleWSEED(HandlerContext& handlerContext)
             record.getItem<ParserKeywords::WSEED::NORMAL_Z>().getSIDouble(0),
         };
 
-        const auto cellSeedSize = WellFractureSeeds::SizeVector {
-            record.getItem<ParserKeywords::WSEED::SIZE_Z>().getSIDouble(0),
-            record.getItem<ParserKeywords::WSEED::SIZE_H>().getSIDouble(0),
-            record.getItem<ParserKeywords::WSEED::WIDTH>().getSIDouble(0),
-        };
+        const auto cellSeedSize = WellFractureSeeds::SeedSize {}
+            .verticalExtent  (record.getItem<ParserKeywords::WSEED::SIZE_Z>().getSIDouble(0))
+            .horizontalExtent(record.getItem<ParserKeywords::WSEED::SIZE_H>().getSIDouble(0))
+            .width           (record.getItem<ParserKeywords::WSEED::WIDTH> ().getSIDouble(0));
 
         for (const auto& well_name : well_names) {
             const auto hasConn = handlerContext.state()
