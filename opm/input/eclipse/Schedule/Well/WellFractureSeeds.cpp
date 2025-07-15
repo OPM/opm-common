@@ -26,9 +26,17 @@
 #include <numeric>
 #include <vector>
 
+Opm::WellFractureSeeds::SeedSize
+Opm::WellFractureSeeds::SeedSize::serializationTestObject()
+{
+    return SeedSize { 1.2, 3.45, 678.91011 };
+}
+
+// ---------------------------------------------------------------------------
+
 bool Opm::WellFractureSeeds::updateSeed(const std::size_t   seedCellGlobal,
                                         const NormalVector& seedNormal,
-                                        const SizeVector&   seedSize)
+                                        const SeedSize&     seedSize)
 {
     const auto ix = this->seedIndex(seedCellGlobal);
 
@@ -58,7 +66,7 @@ Opm::WellFractureSeeds::getNormal(const SeedCell& c) const
     }
 }
 
-const Opm::WellFractureSeeds::SizeVector*
+const Opm::WellFractureSeeds::SeedSize*
 Opm::WellFractureSeeds::getSize(const SeedCell& c) const
 {
     const auto ix = this->seedIndex(c.c);
@@ -87,7 +95,7 @@ Opm::WellFractureSeeds Opm::WellFractureSeeds::serializationTestObject()
 
     s.seedCell_.push_back(1729);
     s.seedNormal_.push_back({ 1.1, -2.2, 3.3 });
-    s.seedSize_.push_back({ 1.1, 2.2, 1.0e-4 });
+    s.seedSize_.push_back(SeedSize::serializationTestObject());
     s.lookup_.push_back(0);
 
     return s;
@@ -155,7 +163,7 @@ Opm::WellFractureSeeds::seedIndexLinearSearch(const std::size_t seedCellGlobal) 
 
 bool Opm::WellFractureSeeds::insertNewSeed(const std::size_t   seedCellGlobal,
                                            const NormalVector& seedNormal,
-                                           const SizeVector&   seedSize)
+                                           const SeedSize&     seedSize)
 {
     this->seedCell_.push_back(seedCellGlobal);
     this->seedNormal_.push_back(seedNormal);
@@ -167,7 +175,7 @@ bool Opm::WellFractureSeeds::insertNewSeed(const std::size_t   seedCellGlobal,
 
 bool Opm::WellFractureSeeds::updateExistingSeed(const NormalVectorIx ix,
                                                 const NormalVector&  seedNormal,
-                                                const SizeVector&    seedSize)
+                                                const SeedSize&      seedSize)
 {
     const auto isDifferent =
         (this->seedNormal_[ix] != seedNormal) ||
