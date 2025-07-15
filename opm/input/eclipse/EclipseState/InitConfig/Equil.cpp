@@ -178,25 +178,33 @@ namespace Opm {
         return this->stress_zz_grad;
     }
 
-    double StressEquilRecord::stressXY() const {
+    double StressEquilRecord::stressXY() const
+    {
         return this->stress_xy;
     }
 
-    double StressEquilRecord::stressXY_grad() const {
+    double StressEquilRecord::stressXY_grad() const
+    {
         return this->stress_xy_grad;
     }
 
-    double StressEquilRecord::stressXZ() const {
+    double StressEquilRecord::stressXZ() const
+    {
         return this->stress_xz;
     }
-    double StressEquilRecord::stressXZ_grad() const {
+
+    double StressEquilRecord::stressXZ_grad() const
+    {
         return this->stress_xz_grad;
     }
 
-    double StressEquilRecord::stressYZ() const {
+    double StressEquilRecord::stressYZ() const
+    {
         return this->stress_yz;
     }
-    double StressEquilRecord::stressYZ_grad() const {
+
+    double StressEquilRecord::stressYZ_grad() const
+    {
         return this->stress_yz_grad;
     }
 
