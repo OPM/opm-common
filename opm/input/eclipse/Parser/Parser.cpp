@@ -1410,6 +1410,17 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
                                       includeFile.value().generic_string());
                 parserState.loadFile(includeFile.value());
             }
+
+            if (firstRecord.size() > 1) {
+                std::string ignored;
+                for(std::size_t i= 1; i < firstRecord.size(); ++i) {
+                    ignored += readValueToken<std::string>(firstRecord.getItem(i)) + " ";
+                }
+                const std::string msg = fmt::format("The keyword " + rawKeyword->getKeywordName() +
+                                                    " has more than 1 argument. The following will be ignored:\n{}\n"
+                                                    "Maybe a trailing slash (/) is missing?", ignored);
+                OpmLog::warning(Log::fileMessage(rawKeyword->location(), msg));
+            }
             continue;
         }
 
