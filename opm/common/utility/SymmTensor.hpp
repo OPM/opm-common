@@ -20,7 +20,9 @@
 #ifndef OPM_UTIL_SYMM_TENSOR_HPP
 #define OPM_UTIL_SYMM_TENSOR_HPP
 
-#include <dune/common/fvector.hh>
+namespace Dune {
+template<class K, int Size> class FieldVector;
+}
 
 #include <opm/common/utility/VoigtArray.hpp>
 
@@ -49,7 +51,9 @@ public:
     void reset();
 
     T trace() const;
+#if HAVE_DUNE_COMMON
     T traction(const Dune::FieldVector<T,3>& normal) const;
+#endif
 };
 
 template<class T1, class T2>

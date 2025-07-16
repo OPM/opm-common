@@ -391,6 +391,7 @@ if(dune-common_FOUND)
   # Explicitly link tests needing dune-common.
   # To avoid pulling dune-common into the opm-common interface
   target_include_directories(dunecommon INTERFACE ${dune-common_INCLUDE_DIRS})
+  target_include_directories(opmcommon PRIVATE ${dune-common_INCLUDE_DIRS})
   string(REPLACE " " ";" dflags "${dune-common_CXX_FLAGS}")
   target_compile_options(dunecommon INTERFACE ${dflags})
   target_compile_definitions(dunecommon INTERFACE DUNE_COMMON_VERSION_MAJOR=${DUNE_COMMON_VERSION_MAJOR})

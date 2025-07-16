@@ -19,7 +19,9 @@
 #include <config.h>
 #include <opm/common/utility/VoigtArray.hpp>
 
+#if HAVE_DUNE_COMMON
 #include <dune/common/fvector.hh>
+#endif
 
 #include <algorithm>
 
@@ -71,10 +73,16 @@ operator()(const VoigtIndex idx, const std::size_t i)
     return (*this)[idx].at(i);
 }
 
+#if HAVE_DUNE_COMMON
 #define INSTANTIATE_TYPE(T)                                                    \
     template class VoigtArray<T>;                                              \
     template VoigtContainer<T>::VoigtContainer(const std::array<T,6>&);        \
     template VoigtContainer<T>::VoigtContainer(const Dune::FieldVector<T,6>&);
+#else
+#define INSTANTIATE_TYPE(T)                                                    \
+    template class VoigtArray<T>;                                              \
+    template VoigtContainer<T>::VoigtContainer(const std::array<T,6>&);
+#endif
 
 INSTANTIATE_TYPE(float)
 INSTANTIATE_TYPE(double)
