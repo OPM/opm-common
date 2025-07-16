@@ -21,6 +21,10 @@
 
 #include <opm/common/utility/SymmTensor.hpp>
 
+#if HAVE_DUNE_COMMON
+#include <dune/common/fvector.hh>
+#endif
+
 #define BOOST_TEST_MODULE SymmTensorTest
 #include <boost/mpl/list.hpp>
 #include <boost/test/unit_test.hpp>
@@ -76,10 +80,12 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(Basics, Scalar, Types)
         BOOST_CHECK_EQUAL(tensor4[i], 2.0);
     }
     BOOST_CHECK_EQUAL(tensor.trace(), Scalar{2} + Scalar{3} + Scalar{4});
+#if HAVE_DUNE_COMMON
     BOOST_CHECK_EQUAL(tensor.traction({1.0, 0.0, 0.0}), 2.0);
     BOOST_CHECK_EQUAL(tensor.traction({0.0, 1.0, 0.0}), 3.0);
     BOOST_CHECK_EQUAL(tensor.traction({0.0, 0.0, 1.0}), 4.0);
     BOOST_CHECK_EQUAL(tensor.traction({1.0, 1.0, 0.0}), 2.0 + 3.0 + 2 * 5.0);
     BOOST_CHECK_EQUAL(tensor.traction({1.0, 0.0, 1.0}), 2.0 + 4.0 + 2 * 6.0);
     BOOST_CHECK_EQUAL(tensor.traction({0.0, 1.0, 1.0}), 3.0 + 4.0 + 2 * 7.0);
+#endif
 }

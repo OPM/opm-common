@@ -19,6 +19,10 @@
 #include <config.h>
 #include <opm/common/utility/SymmTensor.hpp>
 
+#if HAVE_DUNE_COMMON
+#include <dune/common/fvector.hh>
+#endif
+
 #include <algorithm>
 
 namespace Opm {
@@ -63,6 +67,7 @@ trace() const
            (*this)[VoigtIndex::ZZ];
 }
 
+#if HAVE_DUNE_COMMON
 template<class T>
 T SymmTensor<T>::traction(const Dune::FieldVector<T,3>& normal) const
 {
@@ -77,6 +82,7 @@ T SymmTensor<T>::traction(const Dune::FieldVector<T,3>& normal) const
 
     return traction;
 }
+#endif
 
 template<class T>
 SymmTensor<T>&

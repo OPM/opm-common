@@ -10,6 +10,7 @@ set (opm-common_CONFIG_VAR
 	HAVE_ECL_INPUT
 	HAVE_CXA_DEMANGLE
 	HAVE_FNMATCH_H
+	HAVE_DUNE_COMMON
 	)
 
 # dependencies
