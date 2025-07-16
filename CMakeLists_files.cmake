@@ -38,7 +38,9 @@ list (APPEND MAIN_SOURCE_FILES
       opm/common/utility/OpmInputError.cpp
       opm/common/utility/shmatch.cpp
       opm/common/utility/String.cpp
+      opm/common/utility/SymmTensor.cpp
       opm/common/utility/TimeService.cpp
+      opm/common/utility/VoigtArray.cpp
       opm/common/utility/parameters/Parameter.cpp
       opm/common/utility/parameters/ParameterGroup.cpp
       opm/common/utility/parameters/ParameterRequirement.cpp
@@ -487,8 +489,10 @@ list (APPEND TEST_SOURCE_FILES
       tests/test_ScheduleGrid.cpp
       tests/test_SegmentMatcher.cpp
       tests/test_sparsevector.cpp
+      tests/test_SymmTensor.cpp
       tests/test_uniformtablelinear.cpp
       tests/test_Uns2CPG.cpp
+      tests/test_VoigtArray.cpp
       tests/material/test_2dtables.cpp
       tests/material/test_blackoilfluidstate.cpp
       tests/material/test_blackoilfluidsystem_nonstatic.cpp
@@ -902,9 +906,11 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/common/utility/shmatch.hpp
       opm/common/utility/Serializer.hpp
       opm/common/utility/String.hpp
+      opm/common/utility/SymmTensor.hpp
       opm/common/utility/TimeService.hpp
       opm/common/utility/VectorWithDefaultAllocator.hpp
       opm/common/utility/Visitor.hpp
+      opm/common/utility/VoigtArray.hpp
       opm/material/components/Lnapl.hpp
       opm/material/components/N2.hpp
       opm/material/components/H2.hpp
