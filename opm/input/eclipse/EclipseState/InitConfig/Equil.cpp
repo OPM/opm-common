@@ -111,6 +111,12 @@ namespace Opm {
         , stress_yy_grad(record.getItem<ParserKeywords::STREQUIL::STRESSYYGRAD>().getSIDouble(0))
         , stress_zz(record.getItem<ParserKeywords::STREQUIL::STRESSZZ>().getSIDouble(0))
         , stress_zz_grad(record.getItem<ParserKeywords::STREQUIL::STRESSZZGRAD>().getSIDouble(0))
+        , stress_xy(record.getItem<ParserKeywords::STREQUIL::STRESSXX>().getSIDouble(0))
+        , stress_xy_grad(record.getItem<ParserKeywords::STREQUIL::STRESSXXGRAD>().getSIDouble(0))
+        , stress_xz(record.getItem<ParserKeywords::STREQUIL::STRESSYY>().getSIDouble(0))
+        , stress_xz_grad(record.getItem<ParserKeywords::STREQUIL::STRESSYYGRAD>().getSIDouble(0))
+        , stress_yz(record.getItem<ParserKeywords::STREQUIL::STRESSZZ>().getSIDouble(0))
+        , stress_yz_grad(record.getItem<ParserKeywords::STREQUIL::STRESSZZGRAD>().getSIDouble(0))
     {}
 
     StressEquilRecord StressEquilRecord::serializationTestObject()
@@ -125,6 +131,13 @@ namespace Opm {
         result.stress_yy_grad = 7.0;
         result.stress_zz = 8.0;
         result.stress_zz_grad = 9.0;
+
+        result.stress_xy = 4.0;
+        result.stress_xy_grad = 5.0;
+        result.stress_xz = 6.0;
+        result.stress_xz_grad = 7.0;
+        result.stress_yz = 8.0;
+        result.stress_yz_grad = 9.0;
 
         return result;
     }
@@ -165,16 +178,52 @@ namespace Opm {
         return this->stress_zz_grad;
     }
 
-    bool StressEquilRecord::operator==(const StressEquilRecord& data) const {
-        return datum_depth == data.datum_depth &&
-               datum_posx == data.datum_posx &&
-               datum_posy == data.datum_posy &&
-               stress_xx == data.stress_xx &&
-               stress_xx_grad == data.stress_xx_grad &&
-               stress_yy == data.stress_yy &&
-               stress_yy_grad == data.stress_yy_grad &&
-               stress_zz == data.stress_zz &&
-               stress_zz_grad == data.stress_zz_grad;
+    double StressEquilRecord::stressXY() const
+    {
+        return this->stress_xy;
+    }
+
+    double StressEquilRecord::stressXY_grad() const
+    {
+        return this->stress_xy_grad;
+    }
+
+    double StressEquilRecord::stressXZ() const
+    {
+        return this->stress_xz;
+    }
+
+    double StressEquilRecord::stressXZ_grad() const
+    {
+        return this->stress_xz_grad;
+    }
+
+    double StressEquilRecord::stressYZ() const
+    {
+        return this->stress_yz;
+    }
+
+    double StressEquilRecord::stressYZ_grad() const
+    {
+        return this->stress_yz_grad;
+    }
+
+    bool StressEquilRecord::operator==(const StressEquilRecord& data) const
+    {
+        return (datum_depth == data.datum_depth)
+            && (datum_posx == data.datum_posx)
+            && (datum_posy == data.datum_posy)
+
+            // Diagonal terms
+            && (stress_xx == data.stress_xx) && (stress_xx_grad == data.stress_xx_grad)
+            && (stress_yy == data.stress_yy) && (stress_yy_grad == data.stress_yy_grad)
+            && (stress_zz == data.stress_zz) && (stress_zz_grad == data.stress_zz_grad)
+
+            // Cross terms
+            && (stress_xy == data.stress_xy) && (stress_xy_grad == data.stress_xy_grad)
+            && (stress_xz == data.stress_xz) && (stress_xz_grad == data.stress_xz_grad)
+            && (stress_yz == data.stress_yz) && (stress_yz_grad == data.stress_yz_grad)
+            ;
     }
 
     /* ----------------------------------------------------------------- */
