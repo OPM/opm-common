@@ -1277,7 +1277,7 @@ void cleanup_deck_keyword_list(ParserState& parserState, const std::set<Opm::Ecl
 }
 
 
-bool parseState( ParserState& parserState, const Parser& parser ) {
+bool parseState( ParserState& parserState, const Parser& parser, ErrorGuard& errors ) {
     auto ignore = parserState.get_ignore();
 
     bool has_edit = true;
@@ -1404,12 +1404,27 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
             std::string includeFileAsString = readValueToken<std::string>(firstRecord.getItem(0));
             const auto& includeFile = parserState.getIncludeFilePath( includeFileAsString );
 
+            if (firstRecord.size() > 1) {
+                std::string ignored;
+                for(std::size_t i= 1; i < firstRecord.size(); ++i) {
+                    ignored += readValueToken<std::string>(firstRecord.getItem(i)) + " ";
+                }
+                const std::string msg = fmt::format("Problem with keyword {}:\n"
+                                                    "It has more than one argument. The following text would be ignored:\n{}\n"
+                                                    "Maybe a trailing slash (/) is missing?",
+                                                    rawKeyword->getKeywordName(), ignored);
+                OpmLog::error(Log::fileMessage(rawKeyword->location(),
+                                               msg + "\nWe will continue parsing, but stop afterwards as this is a fatal error."));
+                errors.addError(ParseContext::PARSE_EXTRA_DATA, Log::fileMessage(rawKeyword->location(), "Error: " + msg));
+            }
+
             if (includeFile.has_value()) {
                 auto& deck_tree = parserState.deck.tree();
                 deck_tree.add_include(std::filesystem::absolute(parserState.current_path()).generic_string(),
                                       includeFile.value().generic_string());
                 parserState.loadFile(includeFile.value());
             }
+
             continue;
         }
 
@@ -1588,7 +1603,7 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
             data_file = std::filesystem::proximate(std::filesystem::canonical(dataFileName)).generic_string();
 
         ParserState parserState( this->codeKeywords(), parseContext, errors, data_file, ignore_sections);
-        parseState( parserState, *this );
+        parseState( parserState, *this, errors );
 
         auto ignore = parserState.get_ignore();
 
@@ -1622,7 +1637,7 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
     Deck Parser::parseString(const std::string &data, const ParseContext& parseContext, ErrorGuard& errors) const {
         ParserState parserState( this->codeKeywords(), parseContext, errors );
         parserState.loadString( data );
-        parseState( parserState, *this );
+        parseState( parserState, *this, errors );
         return std::move( parserState.deck );
     }
 
