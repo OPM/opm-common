@@ -715,11 +715,14 @@ void handleWELSPECL(HandlerContext& handlerContext)
                            handlerContext.errors);
     };
     handleWELSPECS(handlerContext);
+    std::size_t index = 0;
     for (const auto& record : handlerContext.keyword) {
         const auto wellName = getTrimmedName(record.getItem<Kw::WELL>());
         const auto lgrTag = getTrimmedName(record.getItem<Kw::LGR>());
+        handlerContext.state().wells.get(wellName).setInsertIndexLGR(index);
         handlerContext.state().wells.get(wellName).flag_lgr_well();
         handlerContext.state().wells.get(wellName).set_lgr_well_tag(lgrTag);
+        index++;
     }
 }
 

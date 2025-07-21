@@ -18,6 +18,7 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp"
 #include <opm/output/eclipse/AggregateWellData.hpp>
 
 #include <opm/output/eclipse/VectorItems/intehead.hpp>
@@ -68,6 +69,13 @@
 #include <string>
 
 #include <fmt/format.h>
+
+// DEBUGGING LIBRARIES
+#include <dune/istl/io.hh>
+#include <sstream>
+
+// REMOVE AFTER DEBUGGING
+
 
 namespace VI = Opm::RestartIO::Helpers::VectorItems;
 
@@ -120,12 +128,14 @@ namespace {
                   WellOp&&                        wellOp,
                   const std::string&              lgrTag)
     {
+        std::size_t wellCount = 0;
         for (const auto& wname : wells) {
             const auto& well = sched.getWell(wname, simStep);
             if (well.get_lgr_well_tag().value_or("") != lgrTag) {
                 continue; // skip wells not in the specified LGR
             }
-            wellOp(well, well.seqIndex());
+            wellOp(well, wellCount);
+            wellCount++;
         }
     }
 
@@ -360,6 +370,23 @@ namespace {
             iWell[Ix::WTestRemaining] = wtest_rst->num_test;
         }
 
+        template <typename IWellArray>
+        void assignLGRindexGlobalGrid(const Opm::Well&           well,
+                                      const Opm::EclipseGrid&    grid,
+                                      IWellArray&                iWell)
+        {
+             using Ix = VI::IWell::index;
+             iWell[Ix::LGRIndex] = grid.get_lgr_cell_index(well.get_lgr_well_tag().value()) + 1;
+        }
+
+        template <typename IWellArray>
+        void assignLGRindexLGRGrid(const Opm::Well&           well,
+                                   IWellArray&                iWell)
+        {
+             using Ix = VI::IWell::index;
+             iWell[Ix::LGRIndex] = well.seqIndexLGR() + 1;
+        }
+
         int wgrupConGuideratePhase(const Opm::Well::GuideRateTarget grTarget)
         {
             using GRTarget = Opm::Well::GuideRateTarget;
@@ -482,22 +509,15 @@ namespace {
             iWell[Ix::EconLimitQuantity] = econLimitQuantity(limits.quantityLimit());
         }
 
-        template <class IWellArray>
-        void staticContrib(const Opm::Well&                well,
-                           const Opm::GasLiftOpt&          glo,
-                           const Opm::WellTestConfig&      wtest_config,
-                           const Opm::WellTestState&       wtest_state,
-                           const Opm::SummaryState&        st,
-                           const std::size_t               msWellID,
-                           const std::map <const std::string, size_t>&  GroupMapNameInd,
-                           IWellArray&                     iWell)
+
+        template <typename IWellArray>
+        void staticContribWellHead(const Opm::Well&      well,
+                                       IWellArray&      iWell)
         {
             using Ix = VI::IWell::index;
 
             iWell[Ix::IHead] = well.getHeadI() + 1;
             iWell[Ix::JHead] = well.getHeadJ() + 1;
-            iWell[Ix::Status] = wellStatus(well.getStatus());
-
             // Connections
             {
                 const auto& conn = well.getConnections();
@@ -517,6 +537,80 @@ namespace {
                     iWell[Ix::LastK] = (iWell[Ix::NConn] == 0)
                         ? 0 : conn.get(conn.size() - 1).getK() + 1;
                 }
+            }
+        }
+
+        template <typename IWellArray>
+        void staticContribWellHeadLGR(const        Opm::Well&    well,
+                                                 IWellArray&    iWell,
+                                     const Opm::EclipseGrid&    grid)
+        {
+            using Ix = VI::IWell::index;
+
+            const std::size_t I = well.getHeadI();
+            const std::size_t J = well.getHeadJ();
+
+            // Connections for LGR well
+            {
+                std::size_t firstK, lastK;
+                const auto& conn = well.getConnections();
+
+                iWell[Ix::NConn]  = static_cast<int>(conn.size());
+
+                if (well.isMultiSegment()) {
+                    // Set top and bottom connections to zero for multi
+                    // segment wells
+                    firstK = 0;
+                    lastK  = 0;
+                }
+                else {
+                    firstK = (iWell[Ix::NConn] == 0)
+                        ? 0 : conn.get(0).getK();
+
+                    lastK=  (iWell[Ix::NConn] == 0)
+                        ? 0 : conn.get(conn.size() - 1).getK();
+                }
+                auto lowerIJK = grid.getLGR_fatherIJK(I,J, firstK, well.get_lgr_well_tag().value_or(""));
+                auto upperIJK = grid.getLGR_fatherIJK(I,J, lastK, well.get_lgr_well_tag().value_or(""));
+
+                iWell[Ix::IHead] = lowerIJK[0] + 1;
+                iWell[Ix::JHead] = lowerIJK[1] + 1;
+                iWell[Ix::FirstK] = lowerIJK[2] + 1;
+                iWell[Ix::LastK]  = upperIJK[2] + 1;
+            }
+        }
+
+        template <class IWellArray>
+        void staticContrib(const Opm::Well&                well,
+                           const Opm::GasLiftOpt&          glo,
+                           const Opm::WellTestConfig&      wtest_config,
+                           const Opm::WellTestState&       wtest_state,
+                           const Opm::SummaryState&        st,
+                           const std::size_t               msWellID,
+                           const std::map <const std::string, size_t>&  GroupMapNameInd,
+                           IWellArray&                     iWell,
+                           const std::optional<Opm::EclipseGrid>& grid = std::nullopt,
+                           bool global_grid = true)
+        {
+            using Ix = VI::IWell::index;
+            iWell[Ix::Status] = wellStatus(well.getStatus());
+            // Global Well - NON LGR
+            if (!well.is_lgr_well()){
+                staticContribWellHead(well, iWell);
+            }
+            // LGR Well
+            else {
+                // If well is in the global grid
+                if (global_grid) {
+                    staticContribWellHeadLGR(well, iWell, grid.value());
+                }
+                // If well is in the local grid
+                else {
+                    // LGR well in local grid
+                    // continue from here
+                    staticContribWellHead(well, iWell);
+                }
+
             }
 
             iWell[Ix::Group] =
@@ -552,6 +646,19 @@ namespace {
             assignTHPLookupOptions(well, iWell);
             assignEconomicLimits(well, iWell);
             assignWellTest(well.name(), wtest_config, wtest_state, iWell);
+            if (grid.has_value())
+            {
+                if (global_grid){
+                    assignLGRindexGlobalGrid(well, grid.value(), iWell);
+                }
+                else{
+                    assignLGRindexLGRGrid(well,  iWell);
+                }
+            }
+
+
+
+
         }
 
         template <class IWellArray>
@@ -1497,6 +1604,33 @@ namespace {
     } // ZWell
 } // Anonymous
 
+namespace LGWell {
+    std::size_t entriesPerWell(const std::vector<int>& inteHead)
+    {
+        return inteHead[VI::intehead::NIWELZ];
+    }
+
+    Opm::RestartIO::Helpers::WindowedArray<int>
+    allocate(const std::vector<int>& inteHead)
+    {
+        using WV = Opm::RestartIO::Helpers::WindowedArray<int>;
+
+        return WV {
+            WV::NumWindows{ numWells(inteHead) },
+            WV::WindowSize{ 1}
+        };
+    }
+
+    template <class LGWellArray>
+    void staticContrib(const Opm::Well&            well,
+                            LGWellArray&           lgWell)
+    {
+        using Ix = VI::LGWell::index;
+        lgWell[Ix::WellRef] = well.seqIndexLGR();
+    }
+
+} // LGWell
+
 // =====================================================================
 
 Opm::RestartIO::Helpers::AggregateWellData::
@@ -1505,6 +1639,7 @@ AggregateWellData(const std::vector<int>& inteHead)
     , sWell_ (SWell::allocate(inteHead))
     , xWell_ (XWell::allocate(inteHead))
     , zWell_ (ZWell::allocate(inteHead))
+    , lgWell_ (LGWell::allocate(inteHead))
     , nWGMax_(maxNumGroups(inteHead))
 {}
 
@@ -1602,7 +1737,7 @@ captureDeclaredWellData(const Schedule&             sched,
         wellLoop(wells, sched, sim_step,
                  [&groupMapNameIndex, &msWellID,
                   &step_glo, &wtest_state, &smry,
-                  &sched, &sim_step, this]
+                  &sched, &grid, &sim_step, this]
                  (const Well& well, const std::size_t wellID) -> void
         {
             const auto& wtest_config = sched[sim_step].wtest_config();
@@ -1611,7 +1746,14 @@ captureDeclaredWellData(const Schedule&             sched,
             auto iw   = this->iWell_[wellID];
 
             IWell::staticContrib(well, step_glo, wtest_config, wtest_state,
-                                 smry, msWellID, groupMapNameIndex, iw);
+                                 smry, msWellID, groupMapNameIndex, iw, grid);
+            std::stringstream ss;
+            ss << "globalwell_" << wellID << ".m";
+            std::string filename = ss.str();
+
+            std::cout << "Converting " << filename << std::endl;
+            // Write IWEL to Matlab file for debugging purposes.
+            Dune::writeVectorToMatlab(iw,filename);
         });
     }
 
@@ -1681,7 +1823,17 @@ captureDeclaredWellDataLGR(const Schedule&             sched,
             auto iw   = this->iWell_[wellID];
 
             IWell::staticContrib(well, step_glo, wtest_config, wtest_state,
-                                 smry, msWellID, groupMapNameIndex, iw);
+                                 smry, msWellID, groupMapNameIndex, iw, grid, false);
+            // Write IWEL to Matlab file for debugging purposes.
+            if (well.get_lgr_well_tag().value() == "LGR1")
+            {
+                Dune::writeVectorToMatlab(iw,"testLGR01.m");
+            }
+            else {
+                Dune::writeVectorToMatlab(iw,"testLGR02.m");
+            }
+
+
         }, lgr_tag);
     }
 
@@ -1694,7 +1846,7 @@ captureDeclaredWellDataLGR(const Schedule&             sched,
 
         SWell::staticContrib(well, step_glo, sim_step, sched,
                              tracers, wtest_state, smry, sw);
-    });
+    }, lgr_tag);
 
     // Static contributions to XWEL array.
     wellLoop(wells, sched, sim_step, [&sched, &smry, this]
@@ -1703,7 +1855,7 @@ captureDeclaredWellDataLGR(const Schedule&             sched,
         auto xw = this->xWell_[wellID];
 
         XWell::staticContrib(well, smry,sched.getUnits(), xw);
-    });
+    }, lgr_tag);
 
     // Static contributions to ZWEL array.
     wellLoop(wells, sched, sim_step, [&sim_step, &action_state, &sched, this]
@@ -1712,7 +1864,18 @@ captureDeclaredWellDataLGR(const Schedule&             sched,
         auto zw = this->zWell_[wellID];
 
         ZWell::staticContrib(well, sched[sim_step].actions(), action_state, zw);
-    });
+    }, lgr_tag);
+
+    // Static contributions to LGWELS array.
+    wellLoop(wells, sched, sim_step, [&sim_step, &action_state, &sched, this]
+        (const Well& well, const std::size_t wellID) -> void
+    {
+        auto lgwell = this->lgWell_[wellID];
+
+        LGWell::staticContrib(well, lgwell);
+    }, lgr_tag);
+
+
 }
 
 // ---------------------------------------------------------------------

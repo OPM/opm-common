@@ -109,6 +109,12 @@ namespace Opm { namespace RestartIO { namespace Helpers {
             return this->zWell_.data();
         }
 
+        /// Retrieve Character LGWell Data Array.
+        const std::vector<int>& getLGWell() const
+        {
+            return this->lgWell_.data();
+        }
+
 
 
     private:
@@ -123,6 +129,9 @@ namespace Opm { namespace RestartIO { namespace Helpers {
 
         /// Aggregate 'ZWEL' array (Character) for all wells.
         WindowedArray<EclIO::PaddedOutputString<8>> zWell_;
+
+        /// Aggregate 'LGWEL' array (Integer) for all wells.
+        WindowedArray<int> lgWell_;
 
         /// Maximum number of groups in model.
         int nWGMax_;

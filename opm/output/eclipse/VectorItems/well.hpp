@@ -98,8 +98,9 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
                                        // Example: PEG   = 2 * 3 * 5          =   30
                                        //          PEGDC = 2 * 3 * 5 * 7 * 11 = 2310
 
-            LGRIindex = 42,            // Index of LGR cell where well is completed.
-
+            LGRIndex = 42,            // Index of LGR cell where well is completed
+                                      // for Globl IWELLS. (0 => global''§ wells),
+                                      // for LGR IWELLS it refers to the LGWEL TAG.
             WTestConfigReasons = 41,   // Which checks to perform when deciding to
 
             WTestRemaining = 45,       // Remaining number of times well can be tested (WTEST(4)).
@@ -424,6 +425,13 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
             ActionX  = 2, // ActionX name
         };
     } // ZWell
+
+    namespace LGWell {
+        enum index : std::vector<int>::size_type {
+            WellRef = 0, // Well name
+        };
+    } // LGWell
+
 }}}} // Opm::RestartIO::Helpers::VectorItems
 
 #endif // OPM_OUTPUT_ECLIPSE_VECTOR_WELL_HPP
