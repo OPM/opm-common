@@ -69,7 +69,7 @@ public:
     VoigtContainer() = default;
 
     template<class Array>
-    VoigtContainer(const Array& array);
+    explicit VoigtContainer(const Array& array);
 
     VoigtContainer(std::initializer_list<T> value)
     {
