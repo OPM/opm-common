@@ -100,7 +100,7 @@ to do the necessary modifications.
 
 2. Add the name of the translation unit to the `PROGRAM_SOURCE_FILES` list
    in `CMakeLists_files.txt`.
-   
+
 ### Creating a New Module
 
 1. Copy the directory `cmake/` and all sub-directories from opm-core. This
@@ -213,15 +213,60 @@ a good idea if you are building the library on the same machine
 as you will be using the library. Default is ON.
 
 <tr>
-<td>	WHOLE_PROG_OPTIM
+<td>	OPM_INTERPROCEDURAL_OPTIMIZATION_TYPE
 <td>
-Perform an extra round of optimization when linking the program.
-(Usually the compiler only optimizes within the translation unit).
-If your compiler supports this, it usually leads to a faster runtime.
-Default is OFF.
+Controls the type of interprocedural optimization (IPO, also known as Link Time
+Optimization or LTO) applied when linking targets. If enabled and supported by
+your compiler, IPO can significantly improve runtime performance by optimizing
+across translation units.
+Possible values are:
+<ul>
+  <li><b>DEFAULT</b>: Use the standard CMake IPO interface
+      (INTERPROCEDURAL_OPTIMIZATION property).</li>
+  <li><b>ThinLTO</b>: Use Clang's ThinLTO, enabling parallelism and cache
+      configuration for faster and more scalable builds.</li>
+  <li><b>NONE</b>: Disable interprocedural optimization.</li>
+</ul>
+The default is <code>ThinLTO</code> if supported by your compiler,
+<code>DEFAULT</code> if IPO is supported but ThinLTO is not, and
+<code>NONE</code> otherwise.
+</td>
+</tr>
+
+<tr>
+<td>	OPM_INTERPROCEDURAL_OPTIMIZATION_CONFIGURATION_TYPES
+<td>
+A semicolon-separated list of build configurations for which interprocedural
+optimization is enabled (e.g., <code>Release;RelWithDebInfo</code>).
+If not set, the default is <code>Release;RelWithDebInfo</code>.
+</td>
+</tr>
+
+<tr>
+<td>	OPM_INTERPROCEDURAL_OPTIMIZATION_JOBS
+<td>
+This controls the degree of parallelism during the ThinLTO optimization and
+linking phase. Note that this parallelism is for each translation unit being
+optimized. If set to <code>0</code>, ThinLTO will attempt to parallelize every
+link step for all processes, which may be too aggressive if the build stage is
+already parallelized (e.g., with <code>make -j</code> or Ninja).
+The default is <code>1</code>.
+</td>
+</tr>
+
+<tr>
+<td>	OPM_INTERPROCEDURAL_OPTIMIZATION_CACHE_POLICY
+<td>
+Specifies the cache policy for ThinLTO (e.g., <code>prune_after=604800</code>
+to prune cache files older than one week). This is passed to the linker if
+supported, allowing you to control cache size and cleanup behavior.
+Default is empty (no explicit policy).
+</td>
+</tr>
+
 
 </table>
-   
+
 ## Modules Reference
 
 ### Project-specific Files
@@ -391,7 +436,7 @@ must always be done from the beginning in order to link correctly.
 <td>
 Write .la file which will make libtool find our library. This enables
 users of our library to use libtool even if we did not do so ourselves.
-	
+
 </table>
 
 ### Build System Modules
@@ -717,7 +762,7 @@ translation.
 <td>
 Textual concatenation of all components of the version number (see below)
 with a dot inbetween. This form of version number can be compared using
-CMake VERSION_{LESS|EQUAL|GREATER} operators. 
+CMake VERSION_{LESS|EQUAL|GREATER} operators.
 
 <tr>
 <td>	_VERSION_MAJOR
