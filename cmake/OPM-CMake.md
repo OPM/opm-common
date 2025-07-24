@@ -100,7 +100,7 @@ to do the necessary modifications.
 
 2. Add the name of the translation unit to the `PROGRAM_SOURCE_FILES` list
    in `CMakeLists_files.txt`.
-   
+
 ### Creating a New Module
 
 1. Copy the directory `cmake/` and all sub-directories from opm-core. This
@@ -213,15 +213,79 @@ a good idea if you are building the library on the same machine
 as you will be using the library. Default is ON.
 
 <tr>
-<td>	WHOLE_PROG_OPTIM
+<td>  OPM_INTERPROCEDURAL_OPTIMIZATION_TYPE
 <td>
-Perform an extra round of optimization when linking the program.
-(Usually the compiler only optimizes within the translation unit).
-If your compiler supports this, it usually leads to a faster runtime.
-Default is OFF.
+Controls the type of interprocedural optimization (IPO, also known as
+Link Time Optimization or LTO) applied when linking targets. If
+enabled and supported by your compiler, IPO can significantly improve
+runtime performance by optimizing across translation units.<br>
+Possible values are:
+<ul>
+   <li><b>CMake</b>: Use the standard CMake IPO interface
+   (<code>INTERPROCEDURAL_OPTIMIZATION</code> property). This is
+   supported by most modern compilers.</li>
+   <li><b>Clang</b>: Use Clang's ThinLTO, enabling parallelism and
+   cache configuration for faster and more scalable builds. This mode
+   is selected automatically for Clang 7.0+ if available.</li>
+   <li><b>GNU</b>: Use GNU (GCC) incremental LTO with parallelism and
+   cache configuration. This mode is selected for GCC 4.5+ if available.
+   </li>
+   <li><b>NONE</b>: Disable interprocedural optimization.</li>
+</ul>
+The default is <code>NONE</code>.<br>
+</td>
+</tr>
+
+<tr>
+<td>  OPM_INTERPROCEDURAL_OPTIMIZATION_CONFIGURATION_TYPES
+<td>
+A semicolon-separated list of build configurations for which
+interprocedural optimization is enabled (e.g.,
+<code>Release;RelWithDebInfo</code>). If not set, the default is
+<code>Release;RelWithDebInfo</code>.<br>
+This controls which CMake build types (such as Release or RelWithDebInfo)
+will have IPO/LTO enabled. You can override this to enable or disable
+IPO for custom configurations.
+</td>
+</tr>
+
+<tr>
+<td>  OPM_INTERPROCEDURAL_OPTIMIZATION_JOBS
+<td>
+Controls the degree of parallelism for IPO/LTO linking and optimization.
+The effect depends on the selected IPO type and compiler:
+<ul>
+   <li>For <b>Clang</b> ThinLTO, sets the number of parallel jobs for
+   the ThinLTO backend (passed to the linker as <code>--thinlto-jobs
+   </code> or equivalent).</li>
+   <li>For <b>GNU</b> (GCC), sets the number of parallel LTO jobs (passed
+   as <code>-flto=N</code>).</li>
+</ul>
+If set to <code>0</code>, the build system or linker may attempt to use
+all available cores, which can be too aggressive if the build is already
+parallelized (e.g., with <code>make -j</code> or Ninja).<br>
+The default is <code>1</code>.
+</td>
+</tr>
+
+<tr>
+<td>  OPM_INTERPROCEDURAL_OPTIMIZATION_CACHE_POLICY
+<td>
+Specifies the cache policy for IPO/LTO cache directories, if supported
+by the selected compiler and linker. For example, with Clang ThinLTO
+and the LLD linker, you can set <code>prune_after=604800</code> to prune
+cache files older than one week. This value is passed to the linker if
+supported, allowing you to control cache size and cleanup behavior.<br>
+The default is empty (no explicit policy).<br>
+Cache directories are automatically created under
+<code>${CMAKE_BINARY_DIR}/LTOCache/&lt;config&gt;</code> for each
+configuration.
+</td>
+</tr>
+
 
 </table>
-   
+
 ## Modules Reference
 
 ### Project-specific Files
@@ -391,7 +455,7 @@ must always be done from the beginning in order to link correctly.
 <td>
 Write .la file which will make libtool find our library. This enables
 users of our library to use libtool even if we did not do so ourselves.
-	
+
 </table>
 
 ### Build System Modules
@@ -717,7 +781,7 @@ translation.
 <td>
 Textual concatenation of all components of the version number (see below)
 with a dot inbetween. This form of version number can be compared using
-CMake VERSION_{LESS|EQUAL|GREATER} operators. 
+CMake VERSION_{LESS|EQUAL|GREATER} operators.
 
 <tr>
 <td>	_VERSION_MAJOR
