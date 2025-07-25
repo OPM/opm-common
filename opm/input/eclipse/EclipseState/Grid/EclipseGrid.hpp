@@ -127,6 +127,11 @@ namespace Opm {
             return  {this->all_lgr_labels.begin() + 1, this->all_lgr_labels.end()};
         }
 
+        const std::string& get_lgr_labels_by_number(std::size_t num) const
+        {
+          return  all_lgr_labels[num];
+        }
+
         const std::vector<std::string>& get_all_labels() const
         {
             return this->all_lgr_labels;

@@ -28,6 +28,8 @@
 
 #include <opm/output/eclipse/VectorItems/intehead.hpp>
 #include <opm/output/eclipse/VectorItems/well.hpp>
+#include <opm/output/eclipse/VectorItems/connection.hpp>
+
 #include <opm/output/eclipse/WriteRestartHelpers.hpp>
 
 #include <opm/output/data/Wells.hpp>
@@ -74,7 +76,8 @@ namespace {
                         const int swelPerWell = 122,  // E100
                         const int xwelPerWell = 130,  // E100
                         const int zwelPerWell =   3); // E100
-
+        void add_icon_data(const int, const int,
+                           const int, const int);
         std::vector<int> value;
 
         using Sz = std::vector<int>::size_type;
@@ -84,6 +87,10 @@ namespace {
         Sz nswelz;
         Sz nxwelz;
         Sz nzwelz;
+        Sz niconz;
+        Sz nsconz;
+        Sz nxconz;
+        Sz ncwmax;
     };
 
     MockIH::MockIH(const int numWells,
@@ -100,6 +107,16 @@ namespace {
         this->nswelz = this->value[Ix::NSWELZ] = swelPerWell;
         this->nxwelz = this->value[Ix::NXWELZ] = xwelPerWell;
         this->nzwelz = this->value[Ix::NZWELZ] = zwelPerWell;
+    }
+
+    void MockIH::add_icon_data(const int entICON,  const int entSCON,
+                               const int entXCON,  const int maxNumConn)
+    {
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::intehead;
+        this->niconz = this->value[Ix::NICONZ] = entICON;
+        this->nsconz = this->value[Ix::NSCONZ] = entSCON;
+        this->nxconz =  this->value[Ix::NXCONZ] = entXCON;
+        this->ncwmax = this->value[Ix::NCWMAX] = maxNumConn;
     }
 
     struct SimulationCase
@@ -1442,25 +1459,28 @@ BOOST_AUTO_TEST_CASE (Declared_Well_DataLGR)
         return num_filtered_wells;
     };
 
-    const auto ih = MockIH {
+    auto ih = MockIH {
         static_cast<int>(simCase.sched.getWells(rptStep).size())
     };
+    // the original case has 25 entICON, 41 entSCON and 58 entWCON
+    // however, OPM forces 26 and 42 when INTHEAD is created.
+    ih.add_icon_data(26, 42 ,58 , 2);
+
     BOOST_CHECK_EQUAL(ih.nwells, MockIH::Sz{2});
 
     int num_lgr1 = countWells("LGR1");
     int num_lgr2 = countWells("LGR2");
 
-    const auto ih_lgr1 = MockIH {
+    auto ih_lgr1 = MockIH {
         static_cast<int>(num_lgr1)
     };
+    ih_lgr1.add_icon_data(26, 42 ,58 , 1);
 
-    const auto ih_lgr2 = MockIH {
+    auto ih_lgr2 = MockIH {
         static_cast<int>(num_lgr2)
     };
+    ih_lgr2.add_icon_data(26, 42 ,58 , 1);
 
-    const auto ih_test = MockIH {
-        static_cast<int>(0)
-    };
 
     BOOST_CHECK_EQUAL(ih.nwells, ih_lgr1.nwells + ih_lgr2.nwells);
 
@@ -1468,9 +1488,6 @@ BOOST_AUTO_TEST_CASE (Declared_Well_DataLGR)
     auto awd = Opm::RestartIO::Helpers::AggregateWellData{ih.value};
     auto awd_lgr1 = Opm::RestartIO::Helpers::AggregateWellData{ih_lgr1.value};
     auto awd_lgr2 = Opm::RestartIO::Helpers::AggregateWellData{ih_lgr2.value};
-
-    // auto awd_lgr2 = Opm::RestartIO::Helpers::AggregateWellData{ih_lgr2.value};
-    // auto awd_test = Opm::RestartIO::Helpers::AggregateWellData{ih_test.value};
 
     awd.captureDeclaredWellData(simCase.sched,
                             simCase.grid,
@@ -1492,7 +1509,6 @@ BOOST_AUTO_TEST_CASE (Declared_Well_DataLGR)
                                         ih.value,
                                         "LGR1");
 
-
     awd_lgr2.captureDeclaredWellDataLGR(simCase.sched,
                                         simCase.grid,
                                         simCase.es.tracer(),
@@ -1502,7 +1518,6 @@ BOOST_AUTO_TEST_CASE (Declared_Well_DataLGR)
                                         smry,
                                         ih.value,
                                         "LGR2");
-
 
 
     // -------------------------- IWEL FOR GLOBAL WELLS --------------------------
@@ -1543,213 +1558,139 @@ BOOST_AUTO_TEST_CASE (Declared_Well_DataLGR)
     {
         using Ix = ::Opm::RestartIO::Helpers::VectorItems::IWell::index;
 
-        const auto start = 0*ih.niwelz;
-        const auto& iwell = awd.getIWell();
+        const auto start = 0*ih_lgr2.niwelz;
+        const auto& iwell = awd_lgr2.getIWell();
         BOOST_CHECK_EQUAL(iwell[start + Ix::IHead] , 3); // PROD -> I
-        BOOST_CHECK_EQUAL(iwell[start + Ix::JHead] , 1); // PROD -> J
+        BOOST_CHECK_EQUAL(iwell[start + Ix::JHead] , 3); // PROD -> J
         BOOST_CHECK_EQUAL(iwell[start + Ix::FirstK], 1); // PROD/Head -> K
         BOOST_CHECK_EQUAL(iwell[start + Ix::LastK], 1); // PROD/Head -> K
         BOOST_CHECK_EQUAL(iwell[start + Ix::NConn] , 1); // PROD #Compl
         BOOST_CHECK_EQUAL(iwell[start + Ix::WType] , 1); // PROD -> Producer
+        BOOST_CHECK_EQUAL(iwell[start + Ix::LGRIndex] , 1); // LGR WELL LGR
+    }
+    // LGR02 WELL
+    // LGWEL (PROD)
+    {
+        const auto& lgwel = awd_lgr2.getLGWell();
+        BOOST_CHECK_EQUAL(lgwel[0] , 1); //
+    }
+
+    // -------------------------- IWEL FOR LGR WELLS --------------------------
+    // LGR01 WELL
+    // IWEL (INJ)
+    {
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::IWell::index;
+
+        const auto start = 0*ih_lgr1.niwelz;
+        const auto& iwell = awd_lgr1.getIWell();
+        BOOST_CHECK_EQUAL(iwell[start + Ix::IHead] , 1); // PROD -> I
+        BOOST_CHECK_EQUAL(iwell[start + Ix::JHead] , 1); // PROD -> J
+        BOOST_CHECK_EQUAL(iwell[start + Ix::FirstK], 1); // PROD/Head -> K
+        BOOST_CHECK_EQUAL(iwell[start + Ix::LastK], 1); // PROD/Head -> K
+        BOOST_CHECK_EQUAL(iwell[start + Ix::NConn] , 1); // PROD #Compl
+        BOOST_CHECK_EQUAL(iwell[start + Ix::WType] , 3); // PROD -> Producer
         BOOST_CHECK_EQUAL(iwell[start + Ix::LGRIndex] , 2); // LOCATED LGR2
-
     }
-
-
-
-
-
-
-    // SWEL (OP_1)
+    // LGR01 WELL
+    // LGWEL (INJ)
     {
-        using Ix = ::Opm::RestartIO::Helpers::VectorItems::SWell::index;
-
-        const auto i0 = 0*ih.nswelz;
-
-        const auto& swell = awd.getSWell();
-        BOOST_CHECK_CLOSE(swell[i0 + Ix::OilRateTarget], 20.0e3f, 1.0e-7f);
-
-        // No WRAT limit
-        BOOST_CHECK_CLOSE(swell[i0 + Ix::WatRateTarget], 1.0e20f, 1.0e-7f);
-
-        // No GRAT limit
-        BOOST_CHECK_CLOSE(swell[i0 + Ix::GasRateTarget], 1.0e20f, 1.0e-7f);
-
-        // LRAT limit derived from ORAT + WRAT (= ORAT + 0.0)
-        BOOST_CHECK_CLOSE(swell[i0 + Ix::LiqRateTarget], 1.0e20f, 1.0e-7f);
-
-        // No direct limit, extract value from 'smry' (WVPR:OP_1)
-        BOOST_CHECK_CLOSE(swell[i0 + Ix::ResVRateTarget], 1.0e20f, 1.0e-7f);
-
-        // No THP limit
-        BOOST_CHECK_CLOSE(swell[i0 + Ix::THPTarget] ,    0.0f, 1.0e-7f);
-        BOOST_CHECK_CLOSE(swell[i0 + Ix::BHPTarget] , 1000.0f, 1.0e-7f);
-        BOOST_CHECK_CLOSE(swell[i0 + Ix::DatumDepth], 7050.00049f, 1.0e-7f);
-
-        // Wtest
-        BOOST_CHECK_CLOSE(swell[i0 + Ix::WTestInterval], 1, 1e-7);
-        BOOST_CHECK_CLOSE(swell[i0 + Ix::WTestStartupTime], 2, 1e-7);
+        const auto& lgwel = awd_lgr1.getLGWell();
+        BOOST_CHECK_EQUAL(lgwel[0] , 2);
     }
 
-    // SWEL (OP_2)
-    {
-        using Ix = ::Opm::RestartIO::Helpers::VectorItems::SWell::index;
-
-        const auto i1 = 1*ih.nswelz;
-
-        const auto& swell = awd.getSWell();
-        BOOST_CHECK_CLOSE(swell[i1 + Ix::THPTarget], 1.0e20f, 1.0e-7f);
-        BOOST_CHECK_CLOSE(swell[i1 + Ix::BHPTarget],  400.0f, 1.0e-7f);
-
-        BOOST_CHECK_CLOSE(swell[i1 + Ix::DatumDepth], 7150.0f, 1.0e-7f);
-    }
-
-    // XWEL (OP_1)
-    {
-        using Ix = ::Opm::RestartIO::Helpers::VectorItems::XWell::index;
-
-        const auto i0 = 0*ih.nxwelz;
-
-        const auto& xwell = awd.getXWell();
-
-        BOOST_CHECK_CLOSE(xwell[i0 + Ix::BHPTarget], 1000.0, 1.0e-10);
-    }
-
-    // XWEL (OP_2)
-    {
-        using Ix = ::Opm::RestartIO::Helpers::VectorItems::XWell::index;
-
-        const auto i1 = 1*ih.nxwelz;
-
-        const auto& xwell = awd.getXWell();
-
-        BOOST_CHECK_CLOSE(xwell[i1 + Ix::BHPTarget], 400.0, 1.0e-10);
-    }
-
-    // ZWEL (OP_1)
+    // -------------------------- ZWEL FOR GLOBAL WELLS --------------------------
+    // GLOBAL WELLS
+    // ZWEL (PROD)
     {
         using Ix = ::Opm::RestartIO::Helpers::VectorItems::ZWell::index;
-
         const auto i0 = 0*ih.nzwelz;
-
         const auto& zwell = awd.getZWell();
-
-        BOOST_CHECK_EQUAL(zwell[i0 + Ix::WellName].c_str(), "OP_1    ");
+        BOOST_CHECK_EQUAL(zwell[i0 + Ix::WellName].c_str(), "PROD    ");
     }
-
-    // ZWEL (OP_2)
+    // ZWEL (INJ)
     {
         using Ix = ::Opm::RestartIO::Helpers::VectorItems::ZWell::index;
-
         const auto i1 = 1*ih.nzwelz;
-
         const auto& zwell = awd.getZWell();
-
-        BOOST_CHECK_EQUAL(zwell[i1 + Ix::WellName].c_str(), "OP_2    ");
+        BOOST_CHECK_EQUAL(zwell[i1 + Ix::WellName].c_str(), "INJ     ");
     }
-
+    // -------------------------- ZWEL FOR LGR WELLS --------------------------
+    // LGR02 WELL
+    // ZWEL (PROD)
     {
-        WorkArea work;
-        {
-            Opm::EclIO::OutputStream::Restart rstFile {
-                Opm::EclIO::OutputStream::ResultSet {"./", "TEST"},
-                rptStep,
-                Opm::EclIO::OutputStream::Formatted {false},
-                Opm::EclIO::OutputStream::Unified   {true}
-            };
-
-            const double secs_elapsed = 100;
-            const double next_step_size = 10;
-
-            const auto IH = Opm::RestartIO::Helpers::
-                createInteHead(simCase.es, simCase.es.getInputGrid(), simCase.sched, secs_elapsed,
-                               rptStep, rptStep, rptStep);
-
-            const auto dh =
-                Opm::RestartIO::Helpers::createDoubHead(simCase.es, simCase.sched,
-                                                        rptStep, rptStep+1,
-                                                        secs_elapsed, next_step_size);
-
-            const auto& lh = Opm::RestartIO::Helpers::createLogiHead(simCase.es);
-
-            rstFile.write("INTEHEAD", IH);
-            rstFile.write("DOUBHEAD", dh);
-            rstFile.write("LOGIHEAD", lh);
-            {
-                auto group_aggregator = Opm::RestartIO::Helpers::AggregateGroupData(IH);
-                rstFile.write("IGRP", group_aggregator.getIGroup());
-                rstFile.write("SGRP", group_aggregator.getSGroup());
-                rstFile.write("XGRP", group_aggregator.getXGroup());
-                rstFile.write("ZGRP", group_aggregator.getZGroup());
-            }
-
-            rstFile.write("IWEL", awd.getIWell());
-            rstFile.write("SWEL", awd.getSWell());
-            rstFile.write("XWEL", awd.getXWell());
-            rstFile.write("ZWEL", awd.getZWell());
-            {
-                auto conn_aggregator = Opm::RestartIO::Helpers::AggregateConnectionData(IH);
-                auto xw = Opm::data::Wells {};
-                conn_aggregator.captureDeclaredConnData(simCase.sched, simCase.es.getInputGrid(),
-                                                        simCase.es.getUnits(), xw,
-                                                        sim_state(), rptStep);
-
-                rstFile.write("ICON", conn_aggregator.getIConn());
-                rstFile.write("SCON", conn_aggregator.getSConn());
-                rstFile.write("XCON", conn_aggregator.getXConn());
-            }
-        }
-
-        auto rst_file = std::make_shared<Opm::EclIO::ERst>("TEST.UNRST");
-        auto rst_view = std::make_shared<Opm::EclIO::RestartFileView>(std::move(rst_file), 1);
-        auto rst_state = Opm::RestartIO::RstState::load(std::move(rst_view), simCase.es.runspec(), Opm::Parser{});
-
-        {
-            Opm::WellTestConfig wtest_config{rst_state, rptStep};
-            Opm::WellTestState ws{simCase.sched.runspec().start_time(), rst_state};
-            BOOST_CHECK(wtest_config.has("OP_1", Opm::WellTestConfig::Reason::PHYSICAL));
-            BOOST_CHECK(wtest_config.has("OP_1", Opm::WellTestConfig::Reason::GROUP));
-            BOOST_CHECK(wtest_config.has("OP_1", Opm::WellTestConfig::Reason::THP_DESIGN));
-
-            BOOST_CHECK(ws.well_is_closed("OP_1"));
-        }
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::ZWell::index;
+        const auto i0 = 0*ih_lgr2.nzwelz;
+        const auto& zwell = awd_lgr2.getZWell();
+        BOOST_CHECK_EQUAL(zwell[i0 + Ix::WellName].c_str(), "PROD    ");
     }
-
-    // SWEL (OP_6)
-    // Report Step 8: 2014-10-18 --> 2014-10-28
-    const auto rptStep_8 = std::size_t{8};
-
-    const auto ih_8 = MockIH {
-        static_cast<int>(simCase.sched.getWells(rptStep_8).size())
-    };
-
-    BOOST_CHECK_EQUAL(ih_8.nwells, MockIH::Sz{6});
-
-    //smry = sim_state();
-    awd = Opm::RestartIO::Helpers::AggregateWellData{ih_8.value};
-    awd.captureDeclaredWellData(simCase.sched,
-                                simCase.es.tracer(),
-                                rptStep_8,
-                                action_state,
-                                wtest_state,
-                                smry,
-                                ih_8.value);
+    // LGR01 WELL
+    // ZWEL (INJ)
     {
-        using Ix = ::Opm::RestartIO::Helpers::VectorItems::SWell::index;
-
-        const auto i1 = 4*ih_8.nswelz;
-
-        const auto& swell = awd.getSWell();
-        BOOST_CHECK_CLOSE(swell[i1 + Ix::OilRateTarget], 20000.0f, 1.0e-7f);
-        BOOST_CHECK_CLOSE(swell[i1 + Ix::WatRateTarget], 1.0e+20f, 1.0e-7f);
-        BOOST_CHECK_CLOSE(swell[i1 + Ix::GasRateTarget], 1.0e+20f, 1.0e-7f);
-
-
-        const auto i2 = 5*ih_8.nswelz;
-        BOOST_CHECK_CLOSE(swell[i2 + Ix::OilRateTarget], 275.f, 1.0e-7f);
-        BOOST_CHECK_CLOSE(swell[i2 + Ix::WatRateTarget], 0.0f, 1.0e-7f);
-        BOOST_CHECK_CLOSE(swell[i2 + Ix::GasRateTarget], 34576.0f, 1.0e-7f);
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::ZWell::index;
+        const auto i1 = 0*ih_lgr1.nzwelz;
+        const auto& zwell = awd_lgr1.getZWell();
+        BOOST_CHECK_EQUAL(zwell[i1 + Ix::WellName].c_str(), "INJ     ");
     }
+
+
+    auto conn_aggregator = Opm::RestartIO::Helpers::AggregateConnectionData(ih.value);
+    auto xw = Opm::data::Wells {};
+    conn_aggregator.captureDeclaredConnData(simCase.sched, simCase.es.getInputGrid(),
+                                            simCase.es.getUnits(), xw,
+                                            sim_stateLGR(), rptStep);
+
+
+    auto conn_aggregator_lgr1 = Opm::RestartIO::Helpers::AggregateConnectionData(ih_lgr1.value);
+    conn_aggregator_lgr1.captureDeclaredConnDataLGR(simCase.sched, simCase.es.getInputGrid(),
+                                                    simCase.es.getUnits(), xw,
+                                                    sim_stateLGR(), rptStep, "LGR1");
+
+
+    auto conn_aggregator_lgr2 = Opm::RestartIO::Helpers::AggregateConnectionData(ih_lgr2.value);
+    conn_aggregator_lgr2.captureDeclaredConnDataLGR(simCase.sched, simCase.es.getInputGrid(),
+                                                    simCase.es.getUnits(), xw,
+                                                    sim_stateLGR(), rptStep, "LGR2");
+
+    // -------------------------- ICON FOR GLOBAL GRID --------------------------
+    // ICON (PROD)
+    {
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::IConn::index;
+        const auto i0 = ih.niconz * ih.ncwmax * 0;
+        const auto& icon = conn_aggregator.getIConn();
+        BOOST_CHECK_EQUAL(icon[i0 + Ix::CellI] , 3); // PROD    -> ICON
+        BOOST_CHECK_EQUAL(icon[i0 + Ix::CellJ] , 1); // PROD    -> ICON
+        BOOST_CHECK_EQUAL(icon[i0 + Ix::CellK] , 1); // PROD    -> ICON
+    }
+    // ICON (PROD)
+    {
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::IConn::index;
+        const auto i0 = ih.niconz * ih.ncwmax * 1;
+        const auto& icon = conn_aggregator.getIConn();
+        BOOST_CHECK_EQUAL(icon[i0 + Ix::CellI] , 1); // INJ    -> ICON
+        BOOST_CHECK_EQUAL(icon[i0 + Ix::CellJ] , 1); // INJ    -> ICON
+        BOOST_CHECK_EQUAL(icon[i0 + Ix::CellK] , 1); // INJ    -> ICON
+    }
+    // -------------------------- ICON FOR LGLS GRID --------------------------
+    // ICON (PROD)
+    {
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::IConn::index;
+        const auto i0 = ih_lgr2.niconz * ih_lgr2.ncwmax * 0;
+        const auto& icon = conn_aggregator_lgr2.getIConn();
+        BOOST_CHECK_EQUAL(icon[i0 + Ix::CellI] , 3); // PROD    -> ICON
+        BOOST_CHECK_EQUAL(icon[i0 + Ix::CellJ] , 3); // PROD    -> ICON
+        BOOST_CHECK_EQUAL(icon[i0 + Ix::CellK] , 1); // PROD    -> ICON
+    }
+    // ICON (INK)
+    {
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::IConn::index;
+        //const auto i0 = 1*.niconz;
+        const auto i0 = ih_lgr1.niconz * ih_lgr1.ncwmax * 0;
+        const auto& icon = conn_aggregator_lgr1.getIConn();
+        BOOST_CHECK_EQUAL(icon[i0 + Ix::CellI] , 1); // INJ    -> ICON
+        BOOST_CHECK_EQUAL(icon[i0 + Ix::CellJ] , 1); // INJ    -> ICON
+        BOOST_CHECK_EQUAL(icon[i0 + Ix::CellK] , 1); // INJ    -> ICON
+    }
+
 }
 
 // --------------------------------------------------------------------

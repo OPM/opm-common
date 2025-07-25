@@ -20,7 +20,7 @@
 #ifndef OPM_AGGREGATE_WELL_DATA_HPP
 #define OPM_AGGREGATE_WELL_DATA_HPP
 
-#include "opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp"
+#include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/output/eclipse/WindowedArray.hpp>
 
 #include <opm/io/eclipse/PaddedOutputString.hpp>

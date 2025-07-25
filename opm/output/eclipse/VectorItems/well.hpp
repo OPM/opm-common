@@ -428,7 +428,7 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
 
     namespace LGWell {
         enum index : std::vector<int>::size_type {
-            WellRef = 0, // Well name
+            WellRef = 0, // Well Ref
         };
     } // LGWell
 

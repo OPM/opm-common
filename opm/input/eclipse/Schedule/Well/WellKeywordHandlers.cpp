@@ -59,6 +59,7 @@
 #include <memory>
 #include <numeric>
 #include <string>
+#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
@@ -707,6 +708,7 @@ Well{0} entered with 'FIELD' parent group:
 void handleWELSPECL(HandlerContext& handlerContext)
 {
     using Kw = ParserKeywords::WELSPECL;
+
     auto getTrimmedName = [&handlerContext](const auto& item)
     {
         return trim_wgname(handlerContext.keyword,
@@ -716,10 +718,24 @@ void handleWELSPECL(HandlerContext& handlerContext)
     };
     handleWELSPECS(handlerContext);
     std::size_t index = 0;
+    std::unordered_map<std::string, int> lgr_well_seq_map;
+    auto existsInMap = [&lgr_well_seq_map](const std::string& lgr_tag) {
+        return lgr_well_seq_map.find(lgr_tag) != lgr_well_seq_map.end();
+    };
+
     for (const auto& record : handlerContext.keyword) {
         const auto wellName = getTrimmedName(record.getItem<Kw::WELL>());
         const auto lgrTag = getTrimmedName(record.getItem<Kw::LGR>());
-        handlerContext.state().wells.get(wellName).setInsertIndexLGR(index);
+        if (!existsInMap(lgrTag)){
+            lgr_well_seq_map[lgrTag] = 0;
+        }
+        else {
+            // If the LGR tag already exists, we need to increment the index
+            // for this well to ensure unique insert indices.
+            lgr_well_seq_map[lgrTag] = lgr_well_seq_map[lgrTag] + 1;
+        }
+        handlerContext.state().wells.get(wellName).setInsertIndexLGR(lgr_well_seq_map[lgrTag]);
+        handlerContext.state().wells.get(wellName).setInsertIndexAllLGR(index);
         handlerContext.state().wells.get(wellName).flag_lgr_well();
         handlerContext.state().wells.get(wellName).set_lgr_well_tag(lgrTag);
         index++;

@@ -551,6 +551,7 @@ Well Well::serializationTestObject()
     result.init_step = 1;
     result.insert_index = 2;
     result.insert_index_lgr = 30;
+    result.insert_index_all_lgr = 33;
     result.headI = 3;
     result.headJ = 4;
     result.ref_depth = 5;
@@ -609,6 +610,11 @@ void Well::flag_lgr_well(void)
 void Well::setInsertIndexLGR(const std::size_t index)
 {
     this->insert_index_lgr = index;
+}
+
+void Well::setInsertIndexAllLGR(const std::size_t index)
+{
+    this->insert_index_all_lgr = index;
 }
 
 void Well::set_lgr_well_tag(const std::string& lgr_tag_name)

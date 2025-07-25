@@ -73,7 +73,7 @@
 // DEBUGGING LIBRARIES
 #include <dune/istl/io.hh>
 #include <sstream>
-
+#include <iostream>
 // REMOVE AFTER DEBUGGING
 
 
@@ -128,14 +128,12 @@ namespace {
                   WellOp&&                        wellOp,
                   const std::string&              lgrTag)
     {
-        std::size_t wellCount = 0;
         for (const auto& wname : wells) {
             const auto& well = sched.getWell(wname, simStep);
             if (well.get_lgr_well_tag().value_or("") != lgrTag) {
                 continue; // skip wells not in the specified LGR
             }
-            wellOp(well, wellCount);
-            wellCount++;
+            wellOp(well, well.seqIndexLGR());
         }
     }
 
@@ -384,7 +382,7 @@ namespace {
                                    IWellArray&                iWell)
         {
              using Ix = VI::IWell::index;
-             iWell[Ix::LGRIndex] = well.seqIndexLGR() + 1;
+             iWell[Ix::LGRIndex] = well.seqIndexAllLGR() + 1;
         }
 
         int wgrupConGuideratePhase(const Opm::Well::GuideRateTarget grTarget)
@@ -589,7 +587,8 @@ namespace {
                            const std::size_t               msWellID,
                            const std::map <const std::string, size_t>&  GroupMapNameInd,
                            IWellArray&                     iWell,
-                           const std::optional<Opm::EclipseGrid>& grid = std::nullopt,
+                           std::optional<std::reference_wrapper<const Opm::EclipseGrid>>
+                                                           grid = std::nullopt,
                            bool global_grid = true)
         {
             using Ix = VI::IWell::index;
@@ -602,12 +601,11 @@ namespace {
             else {
                 // If well is in the global grid
                 if (global_grid) {
-                    staticContribWellHeadLGR(well, iWell, grid.value());
+                    staticContribWellHeadLGR(well, iWell, grid.value().get());
                 }
                 // If well is in the local grid
                 else {
                     // LGR well in local grid
-                    // continue from here
                     staticContribWellHead(well, iWell);
                 }
 
@@ -649,7 +647,7 @@ namespace {
             if (grid.has_value())
             {
                 if (global_grid){
-                    assignLGRindexGlobalGrid(well, grid.value(), iWell);
+                    assignLGRindexGlobalGrid(well, grid.value().get(), iWell);
                 }
                 else{
                     assignLGRindexLGRGrid(well,  iWell);
@@ -1626,7 +1624,7 @@ namespace LGWell {
                             LGWellArray&           lgWell)
     {
         using Ix = VI::LGWell::index;
-        lgWell[Ix::WellRef] = well.seqIndexLGR();
+        lgWell[Ix::WellRef] = well.seqIndexAllLGR() + 1;
     }
 
 } // LGWell
