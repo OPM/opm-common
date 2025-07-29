@@ -124,6 +124,7 @@ readGasOilParameters_(unsigned satRegionIdx)
             readGasOilSlgof_(effParams, Swco, tolcrit, slgofTables.template getTable<SlgofTable>(satRegionIdx));
         }
         else if (!tableManager.getSgofletTable().empty()) {
+            parent_.onlyPiecewiseLinear_ = false;
             const auto& letSgofTab = tableManager.getSgofletTable()[satRegionIdx];
             const std::vector<Scalar> dum; // dummy arg to comform with existing interface
 
@@ -385,6 +386,7 @@ readOilWaterParameters_(unsigned satRegionIdx)
             realParams.finalize();
         }
         else if (!tableManager.getSwofletTable().empty()) {
+            parent_.onlyPiecewiseLinear_ = false;
             const auto& letTab = tableManager.getSwofletTable()[satRegionIdx];
             const std::vector<Scalar> dum; // dummy arg to conform with existing interface
 
