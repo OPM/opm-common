@@ -43,35 +43,35 @@ namespace Opm {
 #define OPM_ECL_MULTIPLEXER_MATERIAL_CALL(codeToCall, onePhaseCode)                                                    \
     switch (params.approach()) {                                                                                       \
     case EclMultiplexerApproach::Stone1: {                                                                             \
-        constexpr EclMultiplexerApproach approach = EclMultiplexerApproach::Stone1;                                    \
+        [[maybe_unused]] constexpr EclMultiplexerApproach approach = EclMultiplexerApproach::Stone1;                   \
         auto& realParams = params.template getRealParams<approach>();                                                  \
         using ActualLaw = Stone1Material;                                                                              \
         codeToCall;                                                                                                    \
         break;                                                                                                         \
     }                                                                                                                  \
     case EclMultiplexerApproach::Stone2: {                                                                             \
-        constexpr EclMultiplexerApproach approach = EclMultiplexerApproach::Stone2;                                    \
+        [[maybe_unused]] constexpr EclMultiplexerApproach approach = EclMultiplexerApproach::Stone2;                   \
         auto& realParams = params.template getRealParams<approach>();                                                  \
         using ActualLaw = Stone2Material;                                                                              \
         codeToCall;                                                                                                    \
         break;                                                                                                         \
     }                                                                                                                  \
     case EclMultiplexerApproach::Default: {                                                                            \
-        constexpr EclMultiplexerApproach approach = EclMultiplexerApproach::Default;                                   \
+        [[maybe_unused]] constexpr EclMultiplexerApproach approach = EclMultiplexerApproach::Default;                  \
         auto& realParams = params.template getRealParams<approach>();                                                  \
         using ActualLaw = DefaultMaterial;                                                                             \
         codeToCall;                                                                                                    \
         break;                                                                                                         \
     }                                                                                                                  \
     case EclMultiplexerApproach::TwoPhase: {                                                                           \
-        constexpr EclMultiplexerApproach approach = EclMultiplexerApproach::TwoPhase;                                  \
+        [[maybe_unused]] constexpr EclMultiplexerApproach approach = EclMultiplexerApproach::TwoPhase;                  \
         auto& realParams = params.template getRealParams<approach>();                                                  \
         using ActualLaw = TwoPhaseMaterial;                                                                            \
         codeToCall;                                                                                                    \
         break;                                                                                                         \
     }                                                                                                                  \
     case EclMultiplexerApproach::OnePhase: {                                                                           \
-        constexpr EclMultiplexerApproach approach = EclMultiplexerApproach::OnePhase;                                  \
+        [[maybe_unused]] constexpr EclMultiplexerApproach approach = EclMultiplexerApproach::OnePhase;                 \
         onePhaseCode;                                                                                                  \
         break;                                                                                                         \
     }                                                                                                                  \
@@ -79,27 +79,27 @@ namespace Opm {
 
 #define OPM_ECL_MULTIPLEXER_MATERIAL_CALL_COMPILETIME(codeToCall, onePhaseCode)                                        \
     if constexpr (Head::approach == EclMultiplexerApproach::Stone1) {                                                  \
-        constexpr EclMultiplexerApproach approach = EclMultiplexerApproach::Stone1;                                    \
+        [[maybe_unused]] constexpr EclMultiplexerApproach approach = EclMultiplexerApproach::Stone1;                   \
         auto& realParams = params.template getRealParams<approach>();                                                  \
         using ActualLaw = Stone1Material;                                                                              \
         codeToCall;                                                                                                    \
     } else if constexpr (Head::approach == EclMultiplexerApproach::Stone2) {                                           \
-        constexpr EclMultiplexerApproach approach = EclMultiplexerApproach::Stone2;                                    \
+        [[maybe_unused]] constexpr EclMultiplexerApproach approach = EclMultiplexerApproach::Stone2;                   \
         auto& realParams = params.template getRealParams<approach>();                                                  \
         using ActualLaw = Stone2Material;                                                                              \
         codeToCall;                                                                                                    \
     } else if constexpr (Head::approach == EclMultiplexerApproach::Default) {                                          \
-        constexpr EclMultiplexerApproach approach = EclMultiplexerApproach::Default;                                   \
+        [[maybe_unused]] constexpr EclMultiplexerApproach approach = EclMultiplexerApproach::Default;                  \
         auto& realParams = params.template getRealParams<approach>();                                                  \
         using ActualLaw = DefaultMaterial;                                                                             \
         codeToCall;                                                                                                    \
     } else if constexpr (Head::approach == EclMultiplexerApproach::TwoPhase) {                                         \
-        constexpr EclMultiplexerApproach approach = EclMultiplexerApproach::TwoPhase;                                  \
+        [[maybe_unused]] constexpr EclMultiplexerApproach approach = EclMultiplexerApproach::TwoPhase;                 \
         auto& realParams = params.template getRealParams<approach>();                                                  \
         using ActualLaw = TwoPhaseMaterial;                                                                            \
         codeToCall;                                                                                                    \
     } else if constexpr (Head::approach == EclMultiplexerApproach::OnePhase) {                                         \
-        constexpr EclMultiplexerApproach approach = EclMultiplexerApproach::OnePhase;                                  \
+        [[maybe_unused]] constexpr EclMultiplexerApproach approach = EclMultiplexerApproach::OnePhase;                 \
         onePhaseCode;                                                                                                  \
     } else {                                                                                                           \
         static_assert(false, "Unhandled EclMultiplexerApproach");                                                      \
