@@ -1242,6 +1242,8 @@ captureDeclaredGroupData(const Opm::Schedule&                 sched,
     groupLoop(curGroups,
               [&sumState, &units, &sched_state, this](const Group& group , const std::size_t groupID) -> void
     {
+
+        auto test = sched_state.group_contains_lgr(group, "LGR2");
         auto sw = this->sGroup_[groupID];
         SGrp::staticContrib(group, sched_state.glo(), sched_state.gconsump(), sumState, units, sw);
     });

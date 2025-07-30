@@ -433,6 +433,15 @@ captureDeclaredConnData(const Schedule&     sched,
         auto xc = this->xConn_(wellID, connID);
         XConn::dynamicContrib(wellName, is_producer,
                               global_index, summary_state, xc);
+
+           // debugging code for GLOBAL ICON
+           std::stringstream ss;
+           ss << "globalwellicon_" << wellID << ".m";
+           std::string filename = ss.str();
+
+           std::cout << "Converting " << filename << std::endl;
+           // Write IWEL to Matlab file for debugging purposes.
+           Dune::writeVectorToMatlab(ic,filename);
     });
 }
 

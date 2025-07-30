@@ -29,6 +29,8 @@
 #include <opm/output/eclipse/VectorItems/intehead.hpp>
 #include <opm/output/eclipse/VectorItems/well.hpp>
 #include <opm/output/eclipse/VectorItems/connection.hpp>
+#include <opm/output/eclipse/VectorItems/group.hpp>
+
 
 #include <opm/output/eclipse/WriteRestartHelpers.hpp>
 
@@ -78,6 +80,8 @@ namespace {
                         const int zwelPerWell =   3); // E100
         void add_icon_data(const int, const int,
                            const int, const int);
+        void add_igr_data(const int, const int, const int,
+                           const int, const int, const int);
         std::vector<int> value;
 
         using Sz = std::vector<int>::size_type;
@@ -91,6 +95,13 @@ namespace {
         Sz nsconz;
         Sz nxconz;
         Sz ncwmax;
+        Sz nwgmax;
+        Sz ngmaxz;
+        Sz nigrpz;
+        Sz nsgrpz;
+        Sz nxgrpz;
+        Sz nzgrpz;
+
     };
 
     MockIH::MockIH(const int numWells,
@@ -119,6 +130,22 @@ namespace {
         this->ncwmax = this->value[Ix::NCWMAX] = maxNumConn;
     }
 
+
+    void MockIH::add_igr_data(const int entIGR,  const int entSGR,
+                              const int entXGR,  const int entZGR,
+                              const int wellnumMaxGroup, const int maxGroupField)
+    {
+    using Ix = ::Opm::RestartIO::Helpers::VectorItems::intehead;
+    this->nigrpz = this->value[Ix::NIGRPZ] = entIGR;
+    this->nsgrpz = this->value[Ix::NSGRPZ] = entSGR;
+    this->nxgrpz =  this->value[Ix::NXGRPZ] = entXGR;
+    this->nzgrpz =  this->value[Ix::NZGRPZ] = entZGR;
+    this->nwgmax = this->value[Ix::NWGMAX] = wellnumMaxGroup;
+    this->ngmaxz = this->value[Ix::NGMAXZ] = maxGroupField;
+
+
+    }
+
     struct SimulationCase
     {
         explicit SimulationCase(const Opm::Deck& deck)
@@ -141,6 +168,230 @@ namespace {
 BOOST_AUTO_TEST_SUITE(LGR_Aggregate_WD)
 
 namespace {
+
+Opm::Deck sim_default()
+{
+    // SPECASE DEFAULT FOR THE SAKE OF DEBUGGING - TO BE REMOVED
+const auto sim_default = std::string {
+    R"~(
+RUNSPEC
+TITLE
+   SPE1 - CASE 1
+DIMENS
+   10 10 3 /
+EQLDIMS
+/
+TABDIMS
+/
+OIL
+GAS
+WATER
+DISGAS
+FIELD
+START
+   1 'JAN' 2015 /
+WELLDIMS
+   2 3 1 2 /
+UNIFOUT
+GRID
+INIT
+NOECHO
+DX
+   	300*1000 /
+DY
+	300*1000 /
+DZ
+	100*20 100*30 100*50 /
+TOPS
+	100*8325 /
+PORO
+   	300*0.3 /
+PERMX
+	100*500 100*50 100*200 /
+PERMY
+	100*500 100*50 100*200 /
+PERMZ
+	100*500 100*50 100*200 /
+ECHO
+PROPS
+PVTW
+    	4017.55 1.038 3.22E-6 0.318 0.0 /
+ROCK
+	14.7 3E-6 /
+SWOF
+0.12	0    		 	1	0
+0.18	4.64876033057851E-008	1	0
+0.24	0.000000186		0.997	0
+0.3	4.18388429752066E-007	0.98	0
+0.36	7.43801652892562E-007	0.7	0
+0.42	1.16219008264463E-006	0.35	0
+0.48	1.67355371900826E-006	0.2	0
+0.54	2.27789256198347E-006	0.09	0
+0.6	2.97520661157025E-006	0.021	0
+0.66	3.7654958677686E-006	0.01	0
+0.72	4.64876033057851E-006	0.001	0
+0.78	0.000005625		0.0001	0
+0.84	6.69421487603306E-006	0	0
+0.91	8.05914256198347E-006	0	0
+1	0.00001			0	0 /
+SGOF
+0	0	1	0
+0.001	0	1	0
+0.02	0	0.997	0
+0.05	0.005	0.980	0
+0.12	0.025	0.700	0
+0.2	0.075	0.350	0
+0.25	0.125	0.200	0
+0.3	0.190	0.090	0
+0.4	0.410	0.021	0
+0.45	0.60	0.010	0
+0.5	0.72	0.001	0
+0.6	0.87	0.0001	0
+0.7	0.94	0.000	0
+0.85	0.98	0.000	0
+0.88	0.984	0.000	0 /
+DENSITY
+      	53.66 64.49 0.0533 /
+PVDG
+14.700	166.666	0.008000
+264.70	12.0930	0.009600
+514.70	6.27400	0.011200
+1014.7	3.19700	0.014000
+2014.7	1.61400	0.018900
+2514.7	1.29400	0.020800
+3014.7	1.08000	0.022800
+4014.7	0.81100	0.026800
+5014.7	0.64900	0.030900
+9014.7	0.38600	0.047000 /
+PVTO
+0.0010	14.7	1.0620	1.0400 /
+0.0905	264.7	1.1500	0.9750 /
+0.1800	514.7	1.2070	0.9100 /
+0.3710	1014.7	1.2950	0.8300 /
+0.6360	2014.7	1.4350	0.6950 /
+0.7750	2514.7	1.5000	0.6410 /
+0.9300	3014.7	1.5650	0.5940 /
+1.2700	4014.7	1.6950	0.5100
+	9014.7	1.5790	0.7400 /
+1.6180	5014.7	1.8270	0.4490
+	9014.7	1.7370	0.6310 /
+/
+SOLUTION
+EQUIL
+	8400 4800 8450 0 8300 0 1 0 0 /
+RSVD
+8300 1.270
+8450 1.270 /
+SUMMARY
+FOPR
+WGOR
+   'PROD'
+/
+FGOR
+BPR
+1  1  1 /
+10 10 3 /
+/
+BGSAT
+1  1  1 /
+1  1  2 /
+1  1  3 /
+10 1  1 /
+10 1  2 /
+10 1  3 /
+10 10 1 /
+10 10 2 /
+10 10 3 /
+/
+WBHP
+  'INJ'
+  'PROD'
+/
+WGIR
+  'INJ'
+  'PROD'
+/
+WGIT
+  'INJ'
+  'PROD'
+/
+WGPR
+  'INJ'
+  'PROD'
+/
+WGPT
+  'INJ'
+  'PROD'
+/
+WOIR
+  'INJ'
+  'PROD'
+/
+WOIT
+  'INJ'
+  'PROD'
+/
+WOPR
+  'INJ'
+  'PROD'
+/
+WOPT
+  'INJ'
+  'PROD'
+/
+WWIR
+  'INJ'
+  'PROD'
+/
+WWIT
+  'INJ'
+  'PROD'
+/
+WWPR
+  'INJ'
+  'PROD'
+/
+WWPT
+  'INJ'
+  'PROD'
+/
+SCHEDULE
+RPTSCHED
+	'PRES' 'SGAS' 'RS' 'WELLS' /
+RPTRST
+	'BASIC=1' /
+DRSDT
+ 0 /
+WELSPECS
+	'PROD'	'G1'	10	10	8400	'OIL' /
+	'INJ'	'G1'	1	1	8335	'GAS' /
+/
+COMPDAT
+	'PROD'	10	10	1	3	'OPEN'	1*	1*	0.5 /
+	'INJ'	1	1	2	3	'OPEN'	1*	1*	0.5 /
+/
+WCONPROD
+	'PROD' 'OPEN' 'ORAT' 20000 4* 1000 /
+/
+WCONINJE
+	'INJ'	'GAS'	'OPEN'	'RATE'	100000 1* 9014 /
+/
+TSTEP
+31 28 31 30 31 30 31 31 30 31 30 31
+31 28 31 30 31 30 31 31 30 31 30 31
+31 28 31 30 31 30 31 31 30 31 30 31
+31 28 31 30 31 30 31 31 30 31 30 31
+31 28 31 30 31 30 31 31 30 31 30 31
+31 28 31 30 31 30 31 31 30 31 30 31
+31 28 31 30 31 30 31 31 30 31 30 31
+31 28 31 30 31 30 31 31 30 31 30 31
+31 28 31 30 31 30 31 31 30 31 30 31
+31 28 31 30 31 30 31 31 30 31 30 31 /
+END
+)~" };
+    return Opm::Parser{}.parseString(sim_default);
+}
+
 
     Opm::Deck simLGR_2lgrwell()
     {
@@ -1192,7 +1443,6 @@ WGRUPCON
 TSTEP            -- 3
 10 /
 )~" };
-
         return Opm::Parser{}.parseString(input);
     }
 
@@ -1690,6 +1940,191 @@ BOOST_AUTO_TEST_CASE (Declared_Well_DataLGR)
         BOOST_CHECK_EQUAL(icon[i0 + Ix::CellJ] , 1); // INJ    -> ICON
         BOOST_CHECK_EQUAL(icon[i0 + Ix::CellK] , 1); // INJ    -> ICON
     }
+
+    // -------------------------- TESTING ROUTINES --------------------------
+    const double secs_elapsed = 10;
+    const auto ihw = Opm::RestartIO::Helpers::createInteHead(simCase.es, simCase.es.getInputGrid(), simCase.sched, secs_elapsed,
+                rptStep, rptStep, rptStep);
+
+    auto group_aggregator1 = Opm::RestartIO::Helpers::AggregateGroupData(ihw);
+    const auto& units1    = simCase.es.getUnits();
+    group_aggregator1.captureDeclaredGroupData(simCase.sched, units1, rptStep, smry,
+        ihw);
+    // -------------------------- GROUP DATA FOR GLOBAL GRID --------------------------
+    ih.add_igr_data(99,112, 181,
+                    5,2, 2);
+    auto group_aggregator = Opm::RestartIO::Helpers::AggregateGroupData(ih.value);
+    const auto& units    = simCase.es.getUnits();
+    group_aggregator.captureDeclaredGroupData(simCase.sched, units, rptStep, smry,
+        ih.value);
+    // -------------------------- IGR FOR GLOBAL GRID --------------------------
+    // IGR (PROD)
+    {
+        auto start = 0*ih.nigrpz;
+
+        const auto& iGrp = group_aggregator.getIGroup();
+        BOOST_CHECK_EQUAL(iGrp[start + 0] ,  1); // Group G1 - Child group number one
+        BOOST_CHECK_EQUAL(iGrp[start + 1] ,  2); // Group G1 - Child group number two
+        BOOST_CHECK_EQUAL(iGrp[start + 4] ,  0); // Group G1 - No of child groups
+        BOOST_CHECK_EQUAL(iGrp[start + ih.nwgmax + 26] ,  0); // Group G1 - Group type (well group = 0, node group = 1)
+        BOOST_CHECK_EQUAL(iGrp[start + ih.nwgmax + 27] ,  1); // Group G1 - Group level (FIELD level is 0)
+        BOOST_CHECK_EQUAL(iGrp[start + ih.nwgmax + 28] ,  2); // Group G1 - index of parent group (= 0 for FIELD)
+
+    }
+
+}
+
+
+BOOST_AUTO_TEST_CASE (Declared_Well_DataDEFAULT)
+{
+    const auto simCase = SimulationCase{sim_default()};
+
+    Opm::Action::State action_state;
+    Opm::WellTestState wtest_state;
+
+    // Report Step 1: 2008-10-10 --> 2011-01-20
+    const auto rptStep = std::size_t{1};
+
+    const double secs_elapsed = 100;
+
+    const auto ih = Opm::RestartIO::Helpers::
+        createInteHead(simCase.es, simCase.es.getInputGrid(), simCase.sched, secs_elapsed,
+                    rptStep, rptStep, rptStep);
+
+    const int nwells = 2;
+    const int niwelz = niwelz;
+    // auto ih = MockIH {
+    //     static_cast<int>(simCase.sched.getWells(rptStep).size())
+    // };
+    // the original case has 25 entICON, 41 entSCON and 58 entWCON
+    // however, OPM forces 26 and 42 when INTHEAD is created.
+    // ih.add_icon_data(26, 42 ,58 , 2);
+
+
+    const auto smry = sim_stateLGR();
+    auto awd = Opm::RestartIO::Helpers::AggregateWellData{ih};
+
+    awd.captureDeclaredWellData(simCase.sched,
+                            simCase.grid,
+                            simCase.es.tracer(),
+                            rptStep,
+                            action_state,
+                            wtest_state,
+                            smry,
+                            ih);
+
+
+    // -------------------------- IWEL FOR GLOBAL WELLS --------------------------
+    // GLOBAL WELLS
+    // IWEL (PROD)
+    {
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::IWell::index;
+
+        const auto start = 0*niwelz;
+        const auto& iwell = awd.getIWell();
+        BOOST_CHECK_EQUAL(iwell[start + Ix::IHead] , 3); // PROD -> I
+        BOOST_CHECK_EQUAL(iwell[start + Ix::JHead] , 1); // PROD -> J
+        BOOST_CHECK_EQUAL(iwell[start + Ix::FirstK], 1); // PROD/Head -> K
+        BOOST_CHECK_EQUAL(iwell[start + Ix::LastK], 1); // PROD/Head -> K
+        BOOST_CHECK_EQUAL(iwell[start + Ix::NConn] , 1); // PROD #Compl
+        BOOST_CHECK_EQUAL(iwell[start + Ix::WType] , 1); // PROD -> Producer
+        BOOST_CHECK_EQUAL(iwell[start + Ix::LGRIndex] , 2); // LOCATED LGR2
+
+    }
+    // GLOBAL WELLS
+    // IWEL (INJ)
+    {
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::IWell::index;
+
+        const auto start = 1*niwelz;
+        const auto& iwell = awd.getIWell();
+        BOOST_CHECK_EQUAL(iwell[start + Ix::IHead] , 1); // INJ -> I
+        BOOST_CHECK_EQUAL(iwell[start + Ix::JHead] , 1); // INJ -> J
+        BOOST_CHECK_EQUAL(iwell[start + Ix::FirstK], 1); // INJ/Head -> K
+        BOOST_CHECK_EQUAL(iwell[start + Ix::LastK], 1); // INJ/Head -> K
+        BOOST_CHECK_EQUAL(iwell[start + Ix::NConn] , 1); // INJ #Compl
+        BOOST_CHECK_EQUAL(iwell[start + Ix::WType] , 3); // INJ -> Injector
+        BOOST_CHECK_EQUAL(iwell[start + Ix::LGRIndex] , 1); // LOCATED LGR1
+    }
+
+
+    auto conn_aggregator = Opm::RestartIO::Helpers::AggregateConnectionData(ih);
+    auto xw = Opm::data::Wells {};
+    conn_aggregator.captureDeclaredConnData(simCase.sched, simCase.es.getInputGrid(),
+                                            simCase.es.getUnits(), xw,
+                                            sim_stateLGR(), rptStep);
+
+
+    WorkArea work;
+    {
+        Opm::EclIO::OutputStream::Restart rstFile {
+            Opm::EclIO::OutputStream::ResultSet {"./", "TEST"},
+            rptStep,
+            Opm::EclIO::OutputStream::Formatted {true},
+            Opm::EclIO::OutputStream::Unified   {true}
+        };
+
+        const double secs_elapsed = 100;
+        const double next_step_size = 10;
+
+        const auto IH = Opm::RestartIO::Helpers::
+            createInteHead(simCase.es, simCase.es.getInputGrid(), simCase.sched, secs_elapsed,
+                            rptStep, rptStep, rptStep);
+
+        const auto dh =
+            Opm::RestartIO::Helpers::createDoubHead(simCase.es, simCase.sched,
+                                                    rptStep, rptStep+1,
+                                                    secs_elapsed, next_step_size);
+
+        const auto& lh = Opm::RestartIO::Helpers::createLogiHead(simCase.es);
+
+        rstFile.write("INTEHEAD", IH);
+        rstFile.write("DOUBHEAD", dh);
+        rstFile.write("LOGIHEAD", lh);
+        {
+            auto group_aggregator = Opm::RestartIO::Helpers::AggregateGroupData(IH);
+            rstFile.write("IGRP", group_aggregator.getIGroup());
+            rstFile.write("SGRP", group_aggregator.getSGroup());
+            rstFile.write("XGRP", group_aggregator.getXGroup());
+            rstFile.write("ZGRP", group_aggregator.getZGroup());
+        }
+
+        rstFile.write("IWEL", awd.getIWell());
+        rstFile.write("SWEL", awd.getSWell());
+        rstFile.write("XWEL", awd.getXWell());
+        rstFile.write("ZWEL", awd.getZWell());
+        {
+            auto conn_aggregator = Opm::RestartIO::Helpers::AggregateConnectionData(IH);
+            auto xw = Opm::data::Wells {};
+            conn_aggregator.captureDeclaredConnData(simCase.sched, simCase.es.getInputGrid(),
+                                                    simCase.es.getUnits(), xw,
+                                                    sim_state(), rptStep);
+
+            rstFile.write("ICON", conn_aggregator.getIConn());
+            rstFile.write("SCON", conn_aggregator.getSConn());
+            rstFile.write("XCON", conn_aggregator.getXConn());
+        }
+    }
+
+    // // -------------------------- ICON FOR GLOBAL GRID --------------------------
+    // // ICON (PROD)
+    // {
+    //     using Ix = ::Opm::RestartIO::Helpers::VectorItems::IConn::index;
+    //     const auto i0 = ih.niconz * ih.ncwmax * 0;
+    //     const auto& icon = conn_aggregator.getIConn();
+    //     BOOST_CHECK_EQUAL(icon[i0 + Ix::CellI] , 3); // PROD    -> ICON
+    //     BOOST_CHECK_EQUAL(icon[i0 + Ix::CellJ] , 1); // PROD    -> ICON
+    //     BOOST_CHECK_EQUAL(icon[i0 + Ix::CellK] , 1); // PROD    -> ICON
+    // }
+    // // ICON (PROD)
+    // {
+    //     using Ix = ::Opm::RestartIO::Helpers::VectorItems::IConn::index;
+    //     const auto i0 = ih.niconz * ih.ncwmax * 1;
+    //     const auto& icon = conn_aggregator.getIConn();
+    //     BOOST_CHECK_EQUAL(icon[i0 + Ix::CellI] , 1); // INJ    -> ICON
+    //     BOOST_CHECK_EQUAL(icon[i0 + Ix::CellJ] , 1); // INJ    -> ICON
+    //     BOOST_CHECK_EQUAL(icon[i0 + Ix::CellK] , 1); // INJ    -> ICON
+    // }
 
 }
 

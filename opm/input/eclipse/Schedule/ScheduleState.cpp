@@ -196,6 +196,19 @@ bool ScheduleState::first_in_year() const {
     return this->m_first_in_year;
 }
 
+bool ScheduleState::group_contains_lgr(const Group& grp, const std::string& lgr_tag) const
+{
+    if (grp.wellgroup()){
+        for (const auto& well_name : grp.wells()) {
+            const auto& well = this->wells.get(well_name);
+            if (well.get_lgr_well_tag().value_or("") == lgr_tag) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 void ScheduleState::init_nupcol(Nupcol nupcol) {
     this->m_nupcol = std::move(nupcol);
 }

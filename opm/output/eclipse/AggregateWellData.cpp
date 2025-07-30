@@ -18,7 +18,6 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp"
 #include <opm/output/eclipse/AggregateWellData.hpp>
 
 #include <opm/output/eclipse/VectorItems/intehead.hpp>
@@ -26,6 +25,7 @@
 
 #include <opm/output/data/Wells.hpp>
 
+#include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/Schedule/Action/ActionAST.hpp>
 #include <opm/input/eclipse/Schedule/Action/ActionContext.hpp>
 #include <opm/input/eclipse/Schedule/Action/ActionResult.hpp>
@@ -644,7 +644,7 @@ namespace {
             assignTHPLookupOptions(well, iWell);
             assignEconomicLimits(well, iWell);
             assignWellTest(well.name(), wtest_config, wtest_state, iWell);
-            if (grid.has_value())
+            if (grid.has_value() && (well.is_lgr_well()))
             {
                 if (global_grid){
                     assignLGRindexGlobalGrid(well, grid.value().get(), iWell);
@@ -1745,6 +1745,8 @@ captureDeclaredWellData(const Schedule&             sched,
 
             IWell::staticContrib(well, step_glo, wtest_config, wtest_state,
                                  smry, msWellID, groupMapNameIndex, iw, grid);
+
+           // debugging code for GLOBAL IWEL
             std::stringstream ss;
             ss << "globalwell_" << wellID << ".m";
             std::string filename = ss.str();
