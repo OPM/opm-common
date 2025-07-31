@@ -209,6 +209,21 @@ bool ScheduleState::group_contains_lgr(const Group& grp, const std::string& lgr_
     return false;
 }
 
+std::size_t ScheduleState::num_lgr_well_in_group(const Group& grp, const std::string& lgr_tag) const
+{
+    std::size_t num_lgr_wells = 0;
+    if (grp.wellgroup()){
+        for (const auto& well_name : grp.wells()) {
+            const auto& well = this->wells.get(well_name);
+            if (well.get_lgr_well_tag().value_or("") == lgr_tag) {
+                num_lgr_wells += 1;
+            }
+        }
+    }
+    return num_lgr_wells;
+}
+
+
 void ScheduleState::init_nupcol(Nupcol nupcol) {
     this->m_nupcol = std::move(nupcol);
 }

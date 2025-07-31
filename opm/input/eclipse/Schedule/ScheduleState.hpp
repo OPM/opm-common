@@ -348,6 +348,7 @@ namespace Opm {
         bool first_in_month() const;
         bool first_in_year() const;
         bool group_contains_lgr(const Group& grp, const std::string& lgr_tag) const;
+        std::size_t num_lgr_well_in_group(const Group& grp, const std::string& lgr_tag) const;
 
         bool operator==(const ScheduleState& other) const;
         static ScheduleState serializationTestObject();
