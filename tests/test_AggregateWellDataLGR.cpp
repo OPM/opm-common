@@ -1995,9 +1995,36 @@ BOOST_AUTO_TEST_CASE (Declared_Well_DataLGR)
         BOOST_CHECK_EQUAL(iGrp[start + ih.nwgmax + 28] ,  0); // Group G1 - index of parent group (= 0 for FIELD)
     }
 
+    // -------------------------- IGR FOR LGR GRID LGR1--------------------------
+    // IGR (G1 LGR1)
+    {
+        auto start = 0*ih.nigrpz;
+        const auto& iGrp = group_aggregator_lgr1.getIGroup();
+        BOOST_CHECK_EQUAL(iGrp[start + 0] ,  1); // Group G1 - Child group number one
+        BOOST_CHECK_EQUAL(iGrp[start + 1] ,  0); // Group G1 - Child group number two
+        BOOST_CHECK_EQUAL(iGrp[start + 2] ,  1); // Group G1 - Num of elements in group
+
+        BOOST_CHECK_EQUAL(iGrp[start + ih.nwgmax + 26] ,  0); // Group G1 - Group type (well group = 0, node group = 1)
+        BOOST_CHECK_EQUAL(iGrp[start + ih.nwgmax + 27] ,  1); // Group G1 - Group level (FIELD level is 0)
+        // Group G1 - INDEX 1 - Group FIELD INDEX 2
+        BOOST_CHECK_EQUAL(iGrp[start + ih.nwgmax + 28] ,  2); // Group G1 - index of parent group (= 0 for FIELD)
+    }
+    // IGR (FIELD LGR1)
+    {
+        auto start = 1*ih.nigrpz;
+        const auto& iGrp = group_aggregator_lgr1.getIGroup();
+        BOOST_CHECK_EQUAL(iGrp[start + 0] ,  1); // Group FIELD - Child group number one
+        BOOST_CHECK_EQUAL(iGrp[start + 1] ,  0); // Group FIELD - Child group number two
+        BOOST_CHECK_EQUAL(iGrp[start + 2] ,  1); // Group FIELD - Num of elements in group
+
+        BOOST_CHECK_EQUAL(iGrp[start + ih.nwgmax + 26] ,  1); // Group G1 - Group type (well group = 0, node group = 1)
+        BOOST_CHECK_EQUAL(iGrp[start + ih.nwgmax + 27] ,  0); // Group G1 - Group level (FIELD level is 0)
+        // Group G1 - INDEX 1 - Group FIELD INDEX 2
+        BOOST_CHECK_EQUAL(iGrp[start + ih.nwgmax + 28] ,  0); // Group G1 - index of parent group (= 0 for FIELD)
+    }
 
     // -------------------------- IGR FOR LGR GRID LGR2--------------------------
-    // IGR (G1 GLOBAL)
+    // IGR (G1 LGR2)
     {
         auto start = 0*ih.nigrpz;
         const auto& iGrp = group_aggregator_lgr2.getIGroup();
@@ -2010,7 +2037,7 @@ BOOST_AUTO_TEST_CASE (Declared_Well_DataLGR)
         // Group G1 - INDEX 1 - Group FIELD INDEX 2
         BOOST_CHECK_EQUAL(iGrp[start + ih.nwgmax + 28] ,  2); // Group G1 - index of parent group (= 0 for FIELD)
     }
-    // IGR (FIELD GLOBAL)
+    // IGR (FIELD LGR2)
     {
         auto start = 1*ih.nigrpz;
         const auto& iGrp = group_aggregator_lgr2.getIGroup();

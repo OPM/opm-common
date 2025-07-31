@@ -1397,7 +1397,7 @@ captureDeclaredGroupDataLGR(const Opm::Schedule&                 sched,
     {
         auto sw = this->sGroup_[groupID];
         SGrp::staticContrib(group, sched_state.glo(), sched_state.gconsump(), sumState, units, sw);
-    });
+    },sched_state, lgr_tag);
 
     // Define Dynamic Contributions to XGrp Array.
     groupLoop(curGroups, [&sumState, this]
@@ -1408,7 +1408,7 @@ captureDeclaredGroupDataLGR(const Opm::Schedule&                 sched,
         XGrp::dynamicContrib(this->restart_group_keys, this->restart_field_keys,
         this->groupKeyToIndex, this->fieldKeyToIndex, group,
         sumState, xg);
-    });
+    },sched_state, lgr_tag);
 
     // Define Static Contributions to ZGrp Array.
     groupLoop(curGroups, [this, &inteHead]
@@ -1420,5 +1420,5 @@ captureDeclaredGroupDataLGR(const Opm::Schedule&                 sched,
         auto zg = this->zGroup_[ group_index ];
 
         ZGrp::staticContrib(group, zg);
-    });
+    },sched_state, lgr_tag);
 }
