@@ -81,21 +81,13 @@ public:
     using GasPvt = std::conditional_t<
         std::is_same_v<Storage<double>, std::vector<double>>,
         GasPvtMultiplexer<Scalar, true>,
-        std::conditional_t<
-            std::is_same_v<SmartPointer<double>, std::shared_ptr<double>>,
-            GasPvtMultiplexer<Scalar, true, Storage<double>, Storage<Scalar>, true>,
-            GasPvtMultiplexer<Scalar, true, Storage<double>, Storage<Scalar>, false>
-        >
+        GasPvtMultiplexer<Scalar, true, Storage<double>, Storage<Scalar>, SmartPointer>
     >;
     using OilPvt = OilPvtMultiplexer<Scalar>;
     using WaterPvt = std::conditional_t<
         std::is_same_v<Storage<double>, std::vector<double>>,
         WaterPvtMultiplexer<Scalar, true, true>,
-        std::conditional_t<
-            std::is_same_v<SmartPointer<double>, std::shared_ptr<double>>,
-            WaterPvtMultiplexer<Scalar, true, true, Storage<double>, Storage<Scalar>, true>,
-            WaterPvtMultiplexer<Scalar, true, true, Storage<double>, Storage<Scalar>, false>
-        >
+        WaterPvtMultiplexer<Scalar, true, true, Storage<double>, Storage<Scalar>, SmartPointer>
     >;
 
     #ifdef COMPILING_STATIC_FLUID_SYSTEM
@@ -2063,8 +2055,8 @@ make_view(FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, OldContainerType>& oldFluid
 {
     using Array3 = std::array<Scalar, 3>;
     using Array9 = std::array<Scalar, 9>;
-    using GasMultiplexerView = GasPvtMultiplexer<Scalar, true, ViewType<double>, ViewType<Scalar>, false>;
-    using WaterMultiplexerView = WaterPvtMultiplexer<Scalar, true, true, ViewType<double>, ViewType<Scalar>, false>;
+    using GasMultiplexerView = GasPvtMultiplexer<Scalar, true, ViewType<double>, ViewType<Scalar>, PtrType>;
+    using WaterMultiplexerView = WaterPvtMultiplexer<Scalar, true, true, ViewType<double>, ViewType<Scalar>, PtrType>;
 
     auto newGasPvt = PtrType<GasMultiplexerView>(make_view<ViewType<double>, ViewType<Scalar>>(*oldFluidSystem.gasPvt_));
     auto newOilPvt = PtrType<OilPvtMultiplexer<Scalar>>(OilPvtMultiplexer<Scalar>());

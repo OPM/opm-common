@@ -334,7 +334,9 @@ public:
     }
 
     OPM_HOST_DEVICE Scalar gasReferenceDensity(unsigned regionIdx) const
-    { return gasReferenceDensity_[regionIdx]; }
+    {
+        return gasReferenceDensity_[regionIdx];
+    }
 
     OPM_HOST_DEVICE Scalar oilReferenceDensity(unsigned regionIdx) const
     { return brineReferenceDensity_[regionIdx]; }
@@ -371,19 +373,6 @@ public:
 
     OPM_HOST_DEVICE const Params& getParams() const
     { return co2Tables; }
-
-    Co2GasPvt& operator=(const Co2GasPvt& other)
-    {
-        brineReferenceDensity_ = other.brineReferenceDensity_;
-        gasReferenceDensity_ = other.gasReferenceDensity_;
-        salinity_ = other.salinity_;
-        enableEzrokhiDensity_ = other.enableEzrokhiDensity_;
-        enableVaporization_ = other.enableVaporization_;
-        activityModel_ = other.activityModel_;
-        gastype_ = other.gastype_;
-        co2Tables = other.co2Tables;
-        return *this;
-    }
 
 private:
     template <class LhsEval>

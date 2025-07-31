@@ -32,14 +32,12 @@
 #include <opm/material/fluidsystems/blackoilpvt/ConstantCompressibilityWaterPvt.hpp>
 #include <opm/material/fluidsystems/blackoilpvt/ConstantCompressibilityBrinePvt.hpp>
 #include <opm/material/fluidsystems/blackoilpvt/WaterPvtThermal.hpp>
-
-#include <opm/common/utility/gpuDecorators.hpp>
-
 #include <functional>
+#include <opm/common/utility/gpuDecorators.hpp>
 
 #if OPM_IS_COMPILING_WITH_GPU_COMPILER
 #define OPM_WATER_PVT_MULTIPLEXER_CALL(codeToCall, ...)                                \
-    if constexpr (UseSmartPointer) {              \
+    if constexpr (std::is_same_v<PtrType<void>, std::unique_ptr<void>>) {              \
         auto& pvtImpl = getRealPvt<WaterPvtApproach::BrineCo2>();                      \
         codeToCall;                                                                    \
         __VA_ARGS__;                                                                   \
@@ -102,14 +100,14 @@ class Schedule;
  * \brief This class represents the Pressure-Volume-Temperature relations of the water
  *        phase in the black-oil model.
  */
-template <class Scalar, bool enableThermal = true, bool enableBrine = true, class ParamsContainer = std::vector<double>, class ContainerT = std::vector<Scalar>, bool UseSmartPointer = true>
+template <class Scalar, bool enableThermal = true, bool enableBrine = true, class ParamsContainer = std::vector<double>, class ContainerT = std::vector<Scalar>, template <class...> class PtrType = std::unique_ptr>
 class WaterPvtMultiplexer
 {
 public:
 using ParamsT = CO2Tables<double, ParamsContainer>;
     using UniqueVoidPtrWithDeleter =
         std::conditional_t<
-            UseSmartPointer,
+            std::is_same_v<PtrType<void>, std::unique_ptr<void>>,
             std::unique_ptr<void, std::function<void(void*)>>,
             BrineCo2Pvt<Scalar, ParamsT, ContainerT>
         >;
@@ -130,7 +128,7 @@ using ParamsT = CO2Tables<double, ParamsContainer>;
     : approach_(approach)
     , realWaterPvt_(nullptr)
     {
-        if constexpr (UseSmartPointer) {
+        if constexpr (std::is_same_v<PtrType<void>, std::unique_ptr<void>>) {
             realWaterPvt_ = UniqueVoidPtrWithDeleter(new ConcretePvt(realWaterPvt), [this](void* ptr){ deleter(ptr); } );
         }
         else {
@@ -138,18 +136,18 @@ using ParamsT = CO2Tables<double, ParamsContainer>;
         }
     }
 
-    template <bool T = UseSmartPointer, typename std::enable_if<!T, int>::type = 0>
+    template <class T = PtrType<void>, typename std::enable_if<!std::is_same_v<T, std::unique_ptr<void>>, int>::type = 0>
     WaterPvtMultiplexer(WaterPvtApproach approach, const BrineCo2Pvt<Scalar, ParamsT, ContainerT>& realWaterPvt)
         : approach_(approach)
         , realWaterPvt_(realWaterPvt)
     {
     }
 
-    WaterPvtMultiplexer(const WaterPvtMultiplexer<Scalar,enableThermal,enableBrine, ParamsContainer, ContainerT, UseSmartPointer>& data)
+    WaterPvtMultiplexer(const WaterPvtMultiplexer<Scalar,enableThermal,enableBrine, ParamsContainer, ContainerT, PtrType>& data)
     : approach_(data.approach_)
     , realWaterPvt_(initializeCopyConstructor(data))
     {
-        if constexpr (UseSmartPointer) {
+        if constexpr (std::is_same_v<PtrType<void>, std::unique_ptr<void>>) {
             *this = data;
         }
     }
@@ -342,7 +340,7 @@ using ParamsT = CO2Tables<double, ParamsContainer>;
     OPM_HOST_DEVICE typename std::enable_if<approachV == WaterPvtApproach::BrineCo2, BrineCo2Pvt<Scalar, ParamsT, ContainerT> >::type& getRealPvt()
     {
         assert(approach() == approachV);
-        if constexpr (UseSmartPointer) {
+        if constexpr (std::is_same_v<PtrType<void>, std::unique_ptr<void>>) {
             return *static_cast<BrineCo2Pvt<Scalar, ParamsT, ContainerT>* >(realWaterPvt_.get());
         } else {
             return realWaterPvt_;
@@ -372,8 +370,8 @@ using ParamsT = CO2Tables<double, ParamsContainer>;
 
     const void* realWaterPvt() const { return realWaterPvt_.get(); }
 
-    WaterPvtMultiplexer<Scalar,enableThermal,enableBrine, ParamsContainer, ContainerT, UseSmartPointer>&
-    operator=(const WaterPvtMultiplexer<Scalar,enableThermal,enableBrine, ParamsContainer, ContainerT, UseSmartPointer>& data){
+    WaterPvtMultiplexer<Scalar,enableThermal,enableBrine, ParamsContainer, ContainerT, PtrType>&
+    operator=(const WaterPvtMultiplexer<Scalar,enableThermal,enableBrine, ParamsContainer, ContainerT, PtrType>& data){
         approach_ = data.approach_;
 
         copyPointer(data.realWaterPvt_);
@@ -384,7 +382,7 @@ private:
     template <class ConcreteGasPvt> UniqueVoidPtrWithDeleter makeWaterPvt();
 
     template <class ConcretePvt> UniqueVoidPtrWithDeleter copyPvt(const UniqueVoidPtrWithDeleter& sourcePvt){
-        if constexpr (UseSmartPointer) {
+        if constexpr (std::is_same_v<PtrType<void>, std::unique_ptr<void>>) {
             return UniqueVoidPtrWithDeleter(
                 new ConcretePvt(*static_cast<const ConcretePvt*>(sourcePvt.get())),
                 [this](void* ptr) { deleter(ptr); }
@@ -452,11 +450,15 @@ private:
     }
 
     UniqueVoidPtrWithDeleter initializeCopyConstructor(
-        const WaterPvtMultiplexer<Scalar, enableThermal, enableBrine, ParamsContainer, ContainerT, UseSmartPointer>& data)
+        const WaterPvtMultiplexer<Scalar, enableThermal, enableBrine, ParamsContainer, ContainerT, PtrType>& data)
     {
-        if constexpr (UseSmartPointer) {
+        if constexpr (std::is_same_v<PtrType<void>, std::unique_ptr<void>>) {
             if (data.realWaterPvt_.get() == nullptr) {
-                return UniqueVoidPtrWithDeleter(nullptr, [](void*){});
+                if constexpr (std::is_same_v<PtrType<void>, std::unique_ptr<void>>) {
+                    return UniqueVoidPtrWithDeleter(nullptr, [](void*){});
+                } else {
+                    return PtrType<void>(nullptr);
+                }
             }
             switch (data.approach_) {
             case WaterPvtApproach::ConstantCompressibilityWater:
@@ -470,7 +472,11 @@ private:
             case WaterPvtApproach::BrineH2:
                 return copyPvt<BrineH2Pvt<Scalar>>(data.realWaterPvt_);
             default:
-                return UniqueVoidPtrWithDeleter(nullptr, [](void*){});
+                if constexpr (std::is_same_v<PtrType<void>, std::unique_ptr<void>>) {
+                    return UniqueVoidPtrWithDeleter(nullptr, [](void*){});
+                } else {
+                    return PtrType<void>(nullptr); // Assuming default constructor works
+                }
             }
         }
         else {
@@ -496,9 +502,9 @@ namespace gpuistl{
         return WaterPvtMultiplexer<Scalar, true, true, ParamsContainer, GPUContainer>(WaterPvtApproach::BrineCo2, gpuPvt);
     }
 
-    template <class ViewDouble, class ViewScalar, class GPUContainerDouble, class GPUContainerScalar, class Scalar>
-    WaterPvtMultiplexer<Scalar, true, true, ViewDouble, ViewScalar, /*UseSmartPointer*/false>
-    make_view(WaterPvtMultiplexer<Scalar, true, true, GPUContainerDouble, GPUContainerScalar, /*UseSmartPointer*/true>& waterMultiplexer)
+    template <template <class> class ViewPtr, class ViewDouble, class ViewScalar, class GPUContainerDouble, class GPUContainerScalar, class Scalar>
+    WaterPvtMultiplexer<Scalar, true, true, ViewDouble, ViewScalar, ViewPtr>
+    make_view(WaterPvtMultiplexer<Scalar, true, true, GPUContainerDouble, GPUContainerScalar, std::unique_ptr>& waterMultiplexer)
     {
         using ParamsView = CO2Tables<Scalar, ViewDouble>;
 
@@ -506,7 +512,7 @@ namespace gpuistl{
 
         auto gpuPvtView = make_view<ViewScalar, ParamsView>(waterMultiplexer.template getRealPvt<WaterPvtApproach::BrineCo2>());
 
-        return WaterPvtMultiplexer<Scalar, true, true, ViewDouble, ViewScalar, /*UseSmartPointer*/false>(WaterPvtApproach::BrineCo2, gpuPvtView);
+        return WaterPvtMultiplexer<Scalar, true, true, ViewDouble, ViewScalar, ViewPtr>(WaterPvtApproach::BrineCo2, gpuPvtView);
     }
 }
 
