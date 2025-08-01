@@ -135,11 +135,11 @@ void groupLoop(const std::vector<const Opm::Group*>& groups,
     for (const auto* group : groups) {
         //groupID must be furthered studied to be sure it is correct
         groupID += 1;
-        if (group->wellgroup() &&
-            !sched_state.group_contains_lgr(*group, lgr_tag)) {
+        if (group == nullptr) {
             continue;
         }
-        if (group == nullptr) {
+        if (group->wellgroup() &&
+            !sched_state.group_contains_lgr(*group, lgr_tag)) {
             continue;
         }
 
