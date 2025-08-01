@@ -174,6 +174,17 @@ public:
     { return saturatedInverseFormationVolumeFactor(regionIdx, temperature, pressure); }
 
     /*!
+     * \brief Returns the formation volume factor [-] and viscosity [Pa s] of the fluid phase.
+     */
+    template <class FluidState, class LhsEval = typename FluidState::Scalar>
+    std::pair<LhsEval, LhsEval>
+    inverseFormationVolumeFactorAndViscosity(const FluidState& /*fluidState*/, unsigned /*regionIdx*/)
+    {
+        throw std::logic_error("Needs fixing before merging!");
+        return {};
+    }
+
+    /*!
      * \brief Returns the formation volume factor [-] of gas saturated oil.
      *
      * Note that constant compressibility oil is a special case of dead oil and dead oil

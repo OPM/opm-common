@@ -159,6 +159,17 @@ public:
     { return inverseOilB_[regionIdx].eval(pressure, /*extrapolate=*/true); }
 
     /*!
+     * \brief Returns the formation volume factor [-] and viscosity [Pa s] of the fluid phase.
+     */
+    template <class FluidState, class LhsEval = typename FluidState::Scalar>
+    std::pair<LhsEval, LhsEval>
+    inverseFormationVolumeFactorAndViscosity(const FluidState& /*fluidState*/, unsigned /*regionIdx*/)
+    {
+        throw std::logic_error("Needs fixing before merging!");
+        return {};
+    }
+
+    /*!
      * \brief Returns the formation volume factor [-] of saturated oil.
      *
      * Note that by definition, dead oil is always gas saturated.
