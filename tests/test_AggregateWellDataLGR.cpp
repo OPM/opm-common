@@ -1295,9 +1295,9 @@ BOOST_AUTO_TEST_CASE (Declared_Well_Data3Wells1G2LGR)
     }
 
     // -------------------------- TESTING ROUTINES --------------------------
-    // const double secs_elapsed = 1;
-    // const auto ihw = Opm::RestartIO::Helpers::createInteHead(simCase.es, simCase.es.getInputGrid(), simCase.sched, secs_elapsed,
-    //             rptStep, rptStep, rptStep);
+    const double secs_elapsed = 1;
+    const auto ihw = Opm::RestartIO::Helpers::createInteHead(simCase.es, simCase.es.getInputGrid(), simCase.sched, secs_elapsed,
+                rptStep, rptStep, rptStep);
 
     // auto group_aggregator1 = Opm::RestartIO::Helpers::AggregateGroupData(ihw);
     // const auto& units1    = simCase.es.getUnits();
@@ -1313,7 +1313,7 @@ BOOST_AUTO_TEST_CASE (Declared_Well_Data3Wells1G2LGR)
     // -------------------------- GROUP DATA FOR LGR GRID LGR1--------------------------
 
     ih_lgr2.add_igr_data(100,112, 181,
-                         5,3, 3);
+                         5,2, 2);
     auto group_aggregator_lgr2 = Opm::RestartIO::Helpers::AggregateGroupData(ih_lgr2.value);
     group_aggregator_lgr2.captureDeclaredGroupDataLGR(simCase.sched, units, rptStep, smry,
         ih.value,"LGR2");
@@ -1325,7 +1325,8 @@ BOOST_AUTO_TEST_CASE (Declared_Well_Data3Wells1G2LGR)
         const auto& iGrp = group_aggregator.getIGroup();
         BOOST_CHECK_EQUAL(iGrp[start + 0] ,  1); // Group G1 - Child group number one
         BOOST_CHECK_EQUAL(iGrp[start + 1] ,  2); // Group G1 - Child group number two
-        BOOST_CHECK_EQUAL(iGrp[start + 2] ,  2); // Group G1 - Num of elements in group
+        BOOST_CHECK_EQUAL(iGrp[start + 1],   3); // Group G1 - Child group number two
+        BOOST_CHECK_EQUAL(iGrp[start + 2] ,  3); // Group G1 - Num of elements in group
 
         BOOST_CHECK_EQUAL(iGrp[start + ih.nwgmax + 26] ,  0); // Group G1 - Group type (well group = 0, node group = 1)
         BOOST_CHECK_EQUAL(iGrp[start + ih.nwgmax + 27] ,  1); // Group G1 - Group level (FIELD level is 0)

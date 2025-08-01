@@ -132,10 +132,13 @@ void groupLoop(const std::vector<const Opm::Group*>& groups,
 {
     auto groupID = std::size_t {0};
 
-    for (const auto* group : groups) {
+    for (std::size_t i = 0; i < groups.size(); ++i) {
+        const auto* group = groups[i];
+    // for (const auto* group : groups) {
         //groupID must be furthered studied to be sure it is correct
         groupID += 1;
         if (group == nullptr) {
+            groupID -= 1;
             continue;
         }
         if (group->wellgroup() &&
@@ -1414,6 +1417,7 @@ captureDeclaredGroupDataLGR(const Opm::Schedule&                 sched,
     groupLoop(curGroups, [this, &inteHead]
               (const Group& group, const std::size_t /* groupID */) -> void
     {
+        // bug here
         std::size_t group_index = group.insert_index() - 1;
         if (group.name() == "FIELD")
             group_index = ngmaxz(inteHead) - 1;
