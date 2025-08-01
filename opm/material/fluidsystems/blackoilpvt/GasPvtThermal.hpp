@@ -27,6 +27,7 @@
 #ifndef OPM_GAS_PVT_THERMAL_HPP
 #define OPM_GAS_PVT_THERMAL_HPP
 
+#include "opm/common/utility/VectorWithDefaultAllocator.hpp"
 #include <opm/material/common/Tabulated1DFunction.hpp>
 
 #include <cstddef>
@@ -38,7 +39,7 @@ class EclipseState;
 class Schedule;
 #endif
 
-template <class Scalar, bool enableThermal, class ParamsContainer, class ContainerT, template <class...> class PtrType>
+template <class Scalar, bool enableThermal, template<class> class Storage, template <class...> class PtrType>
 class GasPvtMultiplexer;
 
 /*!
@@ -51,7 +52,7 @@ template <class Scalar>
 class GasPvtThermal
 {
 public:
-    using IsothermalPvt = GasPvtMultiplexer<Scalar, /*enableThermal=*/false, std::vector<double>, std::vector<Scalar>, std::unique_ptr>;
+    using IsothermalPvt = GasPvtMultiplexer<Scalar, /*enableThermal=*/false, VectorWithDefaultAllocator, std::unique_ptr>;
     using TabulatedOneDFunction = Tabulated1DFunction<Scalar>;
 
     GasPvtThermal() = default;

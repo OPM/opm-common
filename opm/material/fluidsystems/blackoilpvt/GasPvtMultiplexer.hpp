@@ -27,6 +27,7 @@
 #ifndef OPM_GAS_PVT_MULTIPLEXER_HPP
 #define OPM_GAS_PVT_MULTIPLEXER_HPP
 
+#include "opm/common/utility/VectorWithDefaultAllocator.hpp"
 #include <opm/material/fluidsystems/blackoilpvt/Co2GasPvt.hpp>
 #include <opm/material/fluidsystems/blackoilpvt/DryGasPvt.hpp>
 #include <opm/material/fluidsystems/blackoilpvt/DryHumidGasPvt.hpp>
@@ -37,6 +38,7 @@
 
 #include <functional>
 #include <opm/common/utility/gpuDecorators.hpp>
+#include <opm/common/utility/gpuistl_if_available.hpp>
 
 #include <iostream>
 
@@ -47,9 +49,10 @@ class EclipseState;
 class Schedule;
 #endif
 
-#if OPM_IS_COMPILING_WITH_GPU_COMPILER
+#if OPM_IS_INSIDE_DEVICE_FUNCTION
 // Testing whether hardcoding the PvtType supported on GPU helps
 #define OPM_GAS_PVT_MULTIPLEXER_CALL(codeToCall, ...)                     \
+    do {                                                                  \
     if constexpr (std::is_same_v<PtrType<void>, std::unique_ptr<void>>) { \
         auto& pvtImpl = getRealPvt<GasPvtApproach::Co2Gas>();             \
         codeToCall;                                                       \
@@ -58,7 +61,8 @@ class Schedule;
         auto& pvtImpl = realGasPvt_;                                      \
         codeToCall;                                                       \
         __VA_ARGS__;                                                      \
-    }
+    }                                                                     \
+    } while (false);
 
 #else
 #define OPM_GAS_PVT_MULTIPLEXER_CALL(codeToCall, ...)                     \
@@ -125,11 +129,12 @@ enum class GasPvtApproach {
  * the API exposed by this class is pretty specific to the assumptions made by the black
  * oil model.
  */
-template <class Scalar, bool enableThermal = true, class ParamsContainer = std::vector<double>, class ContainerT = std::vector<Scalar>, template <class...> class PtrType = std::unique_ptr>
+template <class Scalar, bool enableThermal = true, template <class> class Storage = VectorWithDefaultAllocator, template <class...> class PtrType = std::unique_ptr>
 class GasPvtMultiplexer
 {
 public:
-
+using ParamsContainer = Storage<double>;
+using ContainerT = Storage<Scalar>;
 using ParamsT = CO2Tables<double, ParamsContainer>;
 using UniqueVoidPtrWithDeleter =
         std::conditional_t<
@@ -168,7 +173,7 @@ using UniqueVoidPtrWithDeleter =
     }
 
     //template <class T = PtrType<void>, typename std::enable_if<std::is_same_v<T, std::unique_ptr<void>>, int>::type = 0>
-    GasPvtMultiplexer(const GasPvtMultiplexer<Scalar, enableThermal, ParamsContainer, ContainerT, PtrType>& data)
+    GasPvtMultiplexer(const GasPvtMultiplexer<Scalar, enableThermal, Storage, PtrType>& data)
     : gasPvtApproach_(data.gasPvtApproach_)
     , realGasPvt_(initializeCopyConstructor(data))
     {
@@ -446,8 +451,8 @@ using UniqueVoidPtrWithDeleter =
 
     OPM_HOST_DEVICE const void* realGasPvt() const { return realGasPvt_.get(); }
 
-    GasPvtMultiplexer<Scalar,enableThermal, ParamsContainer, ContainerT, PtrType>&
-    operator=(const GasPvtMultiplexer<Scalar,enableThermal, ParamsContainer, ContainerT, PtrType>& data){
+    GasPvtMultiplexer<Scalar,enableThermal, Storage, PtrType>&
+    operator=(const GasPvtMultiplexer<Scalar,enableThermal, Storage, PtrType>& data){
         gasPvtApproach_ = data.gasPvtApproach_;
 
         copyPointer(data.realGasPvt_);
@@ -457,7 +462,7 @@ using UniqueVoidPtrWithDeleter =
 private:
 
     UniqueVoidPtrWithDeleter initializeCopyConstructor(
-        const GasPvtMultiplexer<Scalar, enableThermal, ParamsContainer, ContainerT, PtrType>& data)
+        const GasPvtMultiplexer<Scalar, enableThermal, Storage, PtrType>& data)
     {
         if constexpr (std::is_same_v<PtrType<void>, std::unique_ptr<void>>) {
             if (data.realGasPvt_.get() == nullptr) {
@@ -576,34 +581,35 @@ private:
     UniqueVoidPtrWithDeleter realGasPvt_;
 };
 
-namespace gpuistl{
-    template<class GPUContainerDouble, class GPUContainerScalar, class Scalar>
-    GasPvtMultiplexer<Scalar, true, GPUContainerDouble, GPUContainerScalar>
-    copy_to_gpu(GasPvtMultiplexer<Scalar, true, std::vector<double>, std::vector<Scalar>>& gasMultiplexer)
+#if HAVE_CUDA
+namespace gpuistl {
+    template<class Scalar>
+    auto
+    copy_to_gpu(const GasPvtMultiplexer<Scalar, true>& gasMultiplexer)
     {
-        using Params = CO2Tables<Scalar, GPUContainerDouble>;
+        using Params = CO2Tables<Scalar, GpuBuffer<double>>;
 
         assert(gasMultiplexer.gasPvtApproach() == GasPvtApproach::Co2Gas);
 
-        return GasPvtMultiplexer<Scalar, true, GPUContainerDouble, GPUContainerScalar>(
+        return GasPvtMultiplexer<Scalar, true, GpuBuffer>(
             GasPvtApproach::Co2Gas,
-            copy_to_gpu<GPUContainerScalar, Params>(gasMultiplexer.template getRealPvt<GasPvtApproach::Co2Gas>())
+            copy_to_gpu<GpuBuffer<Scalar>, Params>(gasMultiplexer.template getRealPvt<GasPvtApproach::Co2Gas>())
         );
     }
-
-    template <template <class> class ViewPtr, class ViewDouble, class ViewScalar, class GPUContainerDouble, class GPUContainerScalar, class Scalar>
-    GasPvtMultiplexer<Scalar, true, ViewDouble, ViewScalar, ViewPtr>
-    make_view(GasPvtMultiplexer<Scalar, true, GPUContainerDouble, GPUContainerScalar, std::unique_ptr>& gasMultiplexer)
+    
+    template<class Scalar>
+    auto
+    make_view(const GasPvtMultiplexer<Scalar, true, GpuBuffer>& gasMultiplexer)
     {
-        using ParamsView = CO2Tables<Scalar, ViewDouble>;
+        using ParamsView = CO2Tables<Scalar, GpuView<double>>;
 
         assert(gasMultiplexer.gasPvtApproach() == GasPvtApproach::Co2Gas);
 
-        auto gpuPvtView = make_view<ViewScalar, ParamsView>(gasMultiplexer.template getRealPvt<GasPvtApproach::Co2Gas>());
+        auto gpuPvtView = make_view<GpuView<Scalar>, ParamsView>(gasMultiplexer.template getRealPvt<GasPvtApproach::Co2Gas>());
 
-        return GasPvtMultiplexer<Scalar, true, ViewDouble, ViewScalar, ViewPtr>(GasPvtApproach::Co2Gas, gpuPvtView);
+        return GasPvtMultiplexer<Scalar, true, GpuView, ValueAsPointer>(GasPvtApproach::Co2Gas, gpuPvtView);
     }
-}
+} // namespace gpuistl
+#endif // HAVE_CUDA
 } // namespace Opm
-
-#endif
+#endif 

@@ -32,6 +32,7 @@
 
 #include <opm/material/fluidsystems/blackoilpvt/GasPvtMultiplexer.hpp>
 
+#include <memory>
 #include <fmt/format.h>
 
 namespace Opm {

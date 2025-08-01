@@ -32,6 +32,8 @@
 
 #include <opm/common/TimingMacros.hpp>
 #include <opm/common/utility/VectorWithDefaultAllocator.hpp>
+#include <opm/common/utility/gpuDecorators.hpp>
+#include <opm/common/utility/gpuistl_if_available.hpp>
 
 #include <opm/material/fluidsystems/BaseFluidSystem.hpp>
 #include <opm/material/Constants.hpp>
@@ -81,13 +83,13 @@ public:
     using GasPvt = std::conditional_t<
         std::is_same_v<Storage<double>, std::vector<double>>,
         GasPvtMultiplexer<Scalar, true>,
-        GasPvtMultiplexer<Scalar, true, Storage<double>, Storage<Scalar>, SmartPointer>
+        GasPvtMultiplexer<Scalar, true, Storage, SmartPointer>
     >;
     using OilPvt = OilPvtMultiplexer<Scalar>;
     using WaterPvt = std::conditional_t<
         std::is_same_v<Storage<double>, std::vector<double>>,
         WaterPvtMultiplexer<Scalar, true, true>,
-        WaterPvtMultiplexer<Scalar, true, true, Storage<double>, Storage<Scalar>, SmartPointer>
+        WaterPvtMultiplexer<Scalar, true, true, Storage, SmartPointer>
     >;
 
     #ifdef COMPILING_STATIC_FLUID_SYSTEM
@@ -228,15 +230,17 @@ public:
     {
     }
 
-    template <template <class> class NewContainerType, class ScalarT, class IndexTraitsT, template <class> class OldContainerType>
-    friend FLUIDSYSTEM_CLASSNAME<ScalarT, IndexTraitsT, NewContainerType, SmartPointer>
-    gpuistl::copy_to_gpu(const FLUIDSYSTEM_CLASSNAME<ScalarT, IndexTraitsT, OldContainerType, SmartPointer>& oldFluidSystem);
+    #if HAVE_CUDA
+    template <class ScalarT, class IndexTraitsT>
+    friend FLUIDSYSTEM_CLASSNAME<ScalarT, IndexTraitsT, gpuistl::GpuBuffer>
+    gpuistl::copy_to_gpu(const FLUIDSYSTEM_CLASSNAME<ScalarT, IndexTraitsT>& oldFluidSystem);
 
-    template <template <class> class ViewType, template <class> class PtrType, class ScalarT, class IndexTraitsT, template <class> class OldContainerType>
-    friend FLUIDSYSTEM_CLASSNAME<ScalarT, IndexTraitsT, ViewType, PtrType>
-    gpuistl::make_view(FLUIDSYSTEM_CLASSNAME<ScalarT, IndexTraitsT, OldContainerType>& oldFluidSystem);
+    template <class ScalarT, class IndexTraitsT>
+    friend FLUIDSYSTEM_CLASSNAME<ScalarT, IndexTraitsT, gpuistl::GpuView, gpuistl::ValueAsPointer>
+    gpuistl::make_view(FLUIDSYSTEM_CLASSNAME<ScalarT, IndexTraitsT, gpuistl::GpuBuffer>& oldFluidSystem);
 
-    #endif
+    #endif // HAVE_CUDA
+    #endif // COMPILING_STATIC_FLUID_SYSTEM
 
     #ifdef COMPILING_STATIC_FLUID_SYSTEM
     /**
@@ -2001,30 +2005,30 @@ DECLARE_INSTANCE(double)
 namespace gpuistl
 {
 
-template <template <class> class NewContainerType, class Scalar, class IndexTraits, template <class> class OldContainerType>
-FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, NewContainerType>
-copy_to_gpu(const FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, OldContainerType>& oldFluidSystem) {
+template <class Scalar, class IndexTraits>
+FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, GpuBuffer>
+copy_to_gpu(const FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits>& oldFluidSystem) {
 
-    using GpuBuffer3Array = NewContainerType<std::array<Scalar, 3>>;
-    using GpuBuffer9Array = NewContainerType<std::array<Scalar, 9>>;
+    using GpuBuffer3Array = GpuBuffer<std::array<Scalar, 3>>;
+    using GpuBuffer9Array = GpuBuffer<std::array<Scalar, 9>>;
 
-    auto newGasPvt = std::make_shared<GasPvtMultiplexer<Scalar, true, NewContainerType<double>, NewContainerType<Scalar>>>(
-        copy_to_gpu<NewContainerType<double>, NewContainerType<Scalar>>(*oldFluidSystem.gasPvt_.get())
+    auto newGasPvt = std::make_shared<GasPvtMultiplexer<Scalar, true, GpuBuffer>>(
+        copy_to_gpu(*oldFluidSystem.gasPvt_.get())
     );
 
     auto newOilPvt = std::make_shared<OilPvtMultiplexer<Scalar>>();
 
-    auto newWaterPvt = std::make_shared<WaterPvtMultiplexer<Scalar, true, true, NewContainerType<double>, NewContainerType<Scalar>>>(
-        copy_to_gpu<NewContainerType<double>, NewContainerType<Scalar>>(*oldFluidSystem.waterPvt_)
+    auto newWaterPvt = std::make_shared<WaterPvtMultiplexer<Scalar, true, true, GpuBuffer>>(
+        copy_to_gpu(*oldFluidSystem.waterPvt_)
     );
 
-    static_assert(std::is_same_v<decltype(newGasPvt), std::shared_ptr<GasPvtMultiplexer<Scalar, true, NewContainerType<double>, NewContainerType<Scalar>>>>);
+    static_assert(std::is_same_v<decltype(newGasPvt), std::shared_ptr<GasPvtMultiplexer<Scalar, true, GpuBuffer>>>);
 
     auto newReferenceDensity = GpuBuffer3Array(oldFluidSystem.referenceDensity_);
     auto newMolarMass = GpuBuffer3Array(oldFluidSystem.molarMass_);
     auto newDiffusionCoefficients = GpuBuffer9Array(oldFluidSystem.diffusionCoefficients_);
 
-    return FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, NewContainerType>(
+    return FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, GpuBuffer>(
         oldFluidSystem.surfacePressure,
         oldFluidSystem.surfaceTemperature,
         oldFluidSystem.numActivePhases_,
@@ -2049,24 +2053,24 @@ copy_to_gpu(const FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, OldContainerType>& 
     );
 }
 
-template <template <class> class ViewType, template <class> class PtrType, class Scalar, class IndexTraits, template <class> class OldContainerType>
-FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, ViewType, PtrType>
-make_view(FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, OldContainerType>& oldFluidSystem)
+template <class Scalar, class IndexTraits>
+FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, GpuView, ValueAsPointer>
+make_view(FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, GpuBuffer>& oldFluidSystem)
 {
     using Array3 = std::array<Scalar, 3>;
     using Array9 = std::array<Scalar, 9>;
-    using GasMultiplexerView = GasPvtMultiplexer<Scalar, true, ViewType<double>, ViewType<Scalar>, PtrType>;
-    using WaterMultiplexerView = WaterPvtMultiplexer<Scalar, true, true, ViewType<double>, ViewType<Scalar>, PtrType>;
+    using GasMultiplexerView = GasPvtMultiplexer<Scalar, true, GpuView, ValueAsPointer>;
+    using WaterMultiplexerView = WaterPvtMultiplexer<Scalar, true, true, GpuView,ValueAsPointer>;
 
-    auto newGasPvt = PtrType<GasMultiplexerView>(make_view<ViewType<double>, ViewType<Scalar>>(*oldFluidSystem.gasPvt_));
-    auto newOilPvt = PtrType<OilPvtMultiplexer<Scalar>>(OilPvtMultiplexer<Scalar>());
-    auto newWaterPvt = PtrType<WaterMultiplexerView>(make_view<ViewType<double>, ViewType<Scalar>>(*oldFluidSystem.waterPvt_));
+    auto newGasPvt = ValueAsPointer<GasMultiplexerView>(make_view(*oldFluidSystem.gasPvt_));
+    auto newOilPvt = ValueAsPointer<OilPvtMultiplexer<Scalar>>(OilPvtMultiplexer<Scalar>());
+    auto newWaterPvt = ValueAsPointer<WaterMultiplexerView>(make_view(*oldFluidSystem.waterPvt_));
 
     auto newReferenceDensity = make_view<Array3>(oldFluidSystem.referenceDensity_);
     auto newMolarMass = make_view<Array3>(oldFluidSystem.molarMass_);
     auto newDiffusionCoefficients = make_view<Array9>(oldFluidSystem.diffusionCoefficients_);
 
-    return FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, ViewType, PtrType>(
+    return FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, GpuView, ValueAsPointer>(
         oldFluidSystem.surfacePressure,
         oldFluidSystem.surfaceTemperature,
         oldFluidSystem.numActivePhases_,

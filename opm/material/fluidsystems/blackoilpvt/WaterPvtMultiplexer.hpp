@@ -34,9 +34,12 @@
 #include <opm/material/fluidsystems/blackoilpvt/WaterPvtThermal.hpp>
 #include <functional>
 #include <opm/common/utility/gpuDecorators.hpp>
+#include <opm/common/utility/gpuistl_if_available.hpp>
+#include <opm/common/utility/VectorWithDefaultAllocator.hpp>
 
-#if OPM_IS_COMPILING_WITH_GPU_COMPILER
+#if OPM_IS_INSIDE_DEVICE_FUNCTION
 #define OPM_WATER_PVT_MULTIPLEXER_CALL(codeToCall, ...)                                \
+    do {                                                                               \
     if constexpr (std::is_same_v<PtrType<void>, std::unique_ptr<void>>) {              \
         auto& pvtImpl = getRealPvt<WaterPvtApproach::BrineCo2>();                      \
         codeToCall;                                                                    \
@@ -45,7 +48,8 @@
         auto& pvtImpl = realWaterPvt_;                                                 \
         codeToCall;                                                                    \
         __VA_ARGS__;                                                                   \
-    }
+    }                                                                                  \
+    } while (false);
 #else
 #define OPM_WATER_PVT_MULTIPLEXER_CALL(codeToCall, ...)                                \
     switch (approach_) {                                                               \
@@ -100,11 +104,13 @@ class Schedule;
  * \brief This class represents the Pressure-Volume-Temperature relations of the water
  *        phase in the black-oil model.
  */
-template <class Scalar, bool enableThermal = true, bool enableBrine = true, class ParamsContainer = std::vector<double>, class ContainerT = std::vector<Scalar>, template <class...> class PtrType = std::unique_ptr>
+template <class Scalar, bool enableThermal = true, bool enableBrine = true, template<class> class Storage = VectorWithDefaultAllocator, template <class...> class PtrType = std::unique_ptr>
 class WaterPvtMultiplexer
 {
 public:
-using ParamsT = CO2Tables<double, ParamsContainer>;
+    using ParamsContainer = Storage<double>;
+    using ContainerT = Storage<Scalar>;
+    using ParamsT = CO2Tables<double, ParamsContainer>;
     using UniqueVoidPtrWithDeleter =
         std::conditional_t<
             std::is_same_v<PtrType<void>, std::unique_ptr<void>>,
@@ -143,7 +149,7 @@ using ParamsT = CO2Tables<double, ParamsContainer>;
     {
     }
 
-    WaterPvtMultiplexer(const WaterPvtMultiplexer<Scalar,enableThermal,enableBrine, ParamsContainer, ContainerT, PtrType>& data)
+    WaterPvtMultiplexer(const WaterPvtMultiplexer<Scalar,enableThermal,enableBrine, Storage, PtrType>& data)
     : approach_(data.approach_)
     , realWaterPvt_(initializeCopyConstructor(data))
     {
@@ -370,8 +376,8 @@ using ParamsT = CO2Tables<double, ParamsContainer>;
 
     const void* realWaterPvt() const { return realWaterPvt_.get(); }
 
-    WaterPvtMultiplexer<Scalar,enableThermal,enableBrine, ParamsContainer, ContainerT, PtrType>&
-    operator=(const WaterPvtMultiplexer<Scalar,enableThermal,enableBrine, ParamsContainer, ContainerT, PtrType>& data){
+    WaterPvtMultiplexer<Scalar,enableThermal,enableBrine, Storage, PtrType>&
+    operator=(const WaterPvtMultiplexer<Scalar,enableThermal,enableBrine, Storage, PtrType>& data){
         approach_ = data.approach_;
 
         copyPointer(data.realWaterPvt_);
@@ -450,7 +456,7 @@ private:
     }
 
     UniqueVoidPtrWithDeleter initializeCopyConstructor(
-        const WaterPvtMultiplexer<Scalar, enableThermal, enableBrine, ParamsContainer, ContainerT, PtrType>& data)
+        const WaterPvtMultiplexer<Scalar, enableThermal, enableBrine, Storage, PtrType>& data)
     {
         if constexpr (std::is_same_v<PtrType<void>, std::unique_ptr<void>>) {
             if (data.realWaterPvt_.get() == nullptr) {
@@ -488,34 +494,35 @@ private:
     UniqueVoidPtrWithDeleter realWaterPvt_;
 };
 
+#if HAVE_CUDA
 namespace gpuistl{
-    template<class ParamsContainer, class GPUContainer, class Scalar>
-    WaterPvtMultiplexer<Scalar, true, true, ParamsContainer, GPUContainer>
-    copy_to_gpu(WaterPvtMultiplexer<Scalar>& waterMultiplexer)
+    template<class Scalar>
+    WaterPvtMultiplexer<Scalar, true, true, GpuBuffer>
+    copy_to_gpu(const WaterPvtMultiplexer<Scalar>& waterMultiplexer)
     {
-        using ParamsT = CO2Tables<double, ParamsContainer>;
+        using ParamsT = CO2Tables<double, GpuBuffer<double>>;
 
         assert(waterMultiplexer.approach() == WaterPvtApproach::BrineCo2);
 
-        auto gpuPvt = copy_to_gpu<ParamsT, GPUContainer>(waterMultiplexer.template getRealPvt<WaterPvtApproach::BrineCo2>());
+        auto gpuPvt = copy_to_gpu<ParamsT, GpuBuffer<Scalar>>(waterMultiplexer.template getRealPvt<WaterPvtApproach::BrineCo2>());
 
-        return WaterPvtMultiplexer<Scalar, true, true, ParamsContainer, GPUContainer>(WaterPvtApproach::BrineCo2, gpuPvt);
+        return WaterPvtMultiplexer<Scalar, true, true, GpuBuffer>(WaterPvtApproach::BrineCo2, gpuPvt);
     }
 
-    template <template <class> class ViewPtr, class ViewDouble, class ViewScalar, class GPUContainerDouble, class GPUContainerScalar, class Scalar>
-    WaterPvtMultiplexer<Scalar, true, true, ViewDouble, ViewScalar, ViewPtr>
-    make_view(WaterPvtMultiplexer<Scalar, true, true, GPUContainerDouble, GPUContainerScalar, std::unique_ptr>& waterMultiplexer)
+    template <class Scalar>
+    auto
+    make_view(const WaterPvtMultiplexer<Scalar, true, true, GpuBuffer>& waterMultiplexer)
     {
-        using ParamsView = CO2Tables<Scalar, ViewDouble>;
+        using ParamsView = CO2Tables<Scalar, GpuView<double>>;
 
         assert(waterMultiplexer.approach() == WaterPvtApproach::BrineCo2);
 
-        auto gpuPvtView = make_view<ViewScalar, ParamsView>(waterMultiplexer.template getRealPvt<WaterPvtApproach::BrineCo2>());
+        auto gpuPvtView = make_view<GpuView<Scalar>, ParamsView>(waterMultiplexer.template getRealPvt<WaterPvtApproach::BrineCo2>());
 
-        return WaterPvtMultiplexer<Scalar, true, true, ViewDouble, ViewScalar, ViewPtr>(WaterPvtApproach::BrineCo2, gpuPvtView);
+        return WaterPvtMultiplexer<Scalar, true, true, GpuView, ValueAsPointer>(WaterPvtApproach::BrineCo2, gpuPvtView);
     }
 }
-
+#endif // HAVE_CUDA
 } // namespace Opm
 
 #endif

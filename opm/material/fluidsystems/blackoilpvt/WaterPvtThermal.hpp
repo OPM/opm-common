@@ -27,6 +27,7 @@
 #ifndef OPM_WATER_PVT_THERMAL_HPP
 #define OPM_WATER_PVT_THERMAL_HPP
 
+#include "opm/common/utility/VectorWithDefaultAllocator.hpp"
 #include <opm/material/common/Tabulated1DFunction.hpp>
 
 #include <cstddef>
@@ -38,7 +39,7 @@ class EclipseState;
 class Schedule;
 #endif
 
-template <class Scalar, bool enableThermal, bool enableBrine, class ParamsContainer, class ContainerT, template <class...> class PtrType>
+template <class Scalar, bool enableThermal, bool enableBrine, template<class> class Storage, template <class...> class PtrType>
 class WaterPvtMultiplexer;
 
 /*!
@@ -52,7 +53,7 @@ class WaterPvtThermal
 {
 public:
     using TabulatedOneDFunction = Tabulated1DFunction<Scalar>;
-    using IsothermalPvt = WaterPvtMultiplexer<Scalar, /*enableThermal=*/false, enableBrine, std::vector<double>, std::vector<Scalar>, std::unique_ptr>;
+    using IsothermalPvt = WaterPvtMultiplexer<Scalar, /*enableThermal=*/false, enableBrine, VectorWithDefaultAllocator, std::unique_ptr>;
 
     WaterPvtThermal() = default;
 
