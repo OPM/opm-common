@@ -880,6 +880,20 @@ public:
         }
     }
 
+    template <class FluidState, class LhsEval = typename FluidState::Scalar>
+    STATIC_OR_DEVICE std::pair<LhsEval, LhsEval>
+    inverseFormationVolumeFactorAndViscosity(const FluidState& fluidState,
+                                             unsigned phaseIdx,
+                                             unsigned regionIdx)
+    {
+        switch (phaseIdx) {
+        case oilPhaseIdx: return oilPvt_->inverseFormationVolumeFactorAndViscosity(fluidState, regionIdx);
+        case gasPhaseIdx: return gasPvt_->inverseFormationVolumeFactorAndViscosity(fluidState, regionIdx);
+        case waterPhaseIdx: return waterPvt_->inverseFormationVolumeFactorAndViscosity(fluidState, regionIdx);
+        default: throw std::logic_error("Unhandled phase index "+std::to_string(phaseIdx));
+        }
+    }
+
     /*!
      * \brief Returns the formation volume factor \f$B_\alpha\f$ of a "saturated" fluid
      *        phase

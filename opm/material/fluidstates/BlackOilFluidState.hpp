@@ -118,6 +118,7 @@ template <class ScalarT,
           unsigned numStoragePhases = FluidSystem::numPhases>
 class BlackOilFluidState
 {
+public:
     enum { waterPhaseIdx = FluidSystem::waterPhaseIdx };
     enum { gasPhaseIdx = FluidSystem::gasPhaseIdx };
     enum { oilPhaseIdx = FluidSystem::oilPhaseIdx };
@@ -126,7 +127,6 @@ class BlackOilFluidState
     enum { gasCompIdx = FluidSystem::gasCompIdx };
     enum { oilCompIdx = FluidSystem::oilCompIdx };
 
-public:
     using Scalar = ScalarT;
     enum { numPhases = FluidSystem::numPhases };
     enum { numComponents = FluidSystem::numComponents };
