@@ -28,6 +28,7 @@
 #define OPM_GAS_PVT_THERMAL_HPP
 
 #include "opm/common/utility/VectorWithDefaultAllocator.hpp"
+#include <memory>
 #include <opm/material/common/Tabulated1DFunction.hpp>
 
 #include <cstddef>
@@ -52,7 +53,7 @@ template <class Scalar>
 class GasPvtThermal
 {
 public:
-    using IsothermalPvt = GasPvtMultiplexer<Scalar, /*enableThermal=*/false>;
+    using IsothermalPvt = GasPvtMultiplexer<Scalar, /*enableThermal=*/false, VectorWithDefaultAllocator, std::unique_ptr>;
     using TabulatedOneDFunction = Tabulated1DFunction<Scalar>;
 
     GasPvtThermal() = default;
