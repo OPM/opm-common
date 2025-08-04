@@ -500,8 +500,6 @@ namespace gpuistl {
     WaterPvtMultiplexer<Scalar, true, true, GpuBuffer>
     copy_to_gpu(const WaterPvtMultiplexer<Scalar>& waterMultiplexer)
     {
-        using ParamsT = CO2Tables<double, GpuBuffer>;
-
         assert(waterMultiplexer.approach() == WaterPvtApproach::BrineCo2);
 
         auto gpuPvt = copy_to_gpu(waterMultiplexer.template getRealPvt<WaterPvtApproach::BrineCo2>());
@@ -513,8 +511,6 @@ namespace gpuistl {
     auto
     make_view(WaterPvtMultiplexer<Scalar, true, true, GpuBuffer>& waterMultiplexer)
     {
-        using ParamsView = CO2Tables<Scalar, GpuView>;
-
         assert(waterMultiplexer.approach() == WaterPvtApproach::BrineCo2);
 
         auto gpuPvtView = make_view(waterMultiplexer.template getRealPvt<WaterPvtApproach::BrineCo2>());
