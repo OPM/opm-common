@@ -17,6 +17,13 @@
 
 #include <opm/common/utility/gpuDecorators.hpp>
 
+/**
+ * \file gpuistl_if_available.hpp
+ *
+ * Convience header to include the gpuistl headers if HAVE_CUDA is defined. 
+ * This will also take care of the case when we are compiling with HIP.
+ * If HAVE_CUDA is not defined, this header will be empty.
+ */
 #if HAVE_CUDA
 #if USE_HIP
 #include <opm/simulators/linalg/gpuistl_hip/GpuVector.hpp>
