@@ -27,7 +27,7 @@
 #ifndef OPM_WATER_PVT_THERMAL_HPP
 #define OPM_WATER_PVT_THERMAL_HPP
 
-#include "opm/common/utility/VectorWithDefaultAllocator.hpp"
+#include <opm/common/utility/VectorWithDefaultAllocator.hpp>
 #include <opm/material/common/Tabulated1DFunction.hpp>
 
 #include <cstddef>

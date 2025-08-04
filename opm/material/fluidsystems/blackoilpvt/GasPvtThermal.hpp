@@ -52,7 +52,7 @@ template <class Scalar>
 class GasPvtThermal
 {
 public:
-    using IsothermalPvt = GasPvtMultiplexer<Scalar, /*enableThermal=*/false, VectorWithDefaultAllocator, std::unique_ptr>;
+    using IsothermalPvt = GasPvtMultiplexer<Scalar, /*enableThermal=*/false>;
     using TabulatedOneDFunction = Tabulated1DFunction<Scalar>;
 
     GasPvtThermal() = default;

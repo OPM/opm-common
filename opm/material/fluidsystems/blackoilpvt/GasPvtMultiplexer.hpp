@@ -27,7 +27,6 @@
 #ifndef OPM_GAS_PVT_MULTIPLEXER_HPP
 #define OPM_GAS_PVT_MULTIPLEXER_HPP
 
-#include "opm/common/utility/VectorWithDefaultAllocator.hpp"
 #include <opm/material/fluidsystems/blackoilpvt/Co2GasPvt.hpp>
 #include <opm/material/fluidsystems/blackoilpvt/DryGasPvt.hpp>
 #include <opm/material/fluidsystems/blackoilpvt/DryHumidGasPvt.hpp>
@@ -39,6 +38,7 @@
 #include <functional>
 #include <opm/common/utility/gpuDecorators.hpp>
 #include <opm/common/utility/gpuistl_if_available.hpp>
+#include <opm/common/utility/VectorWithDefaultAllocator.hpp>
 
 #include <iostream>
 

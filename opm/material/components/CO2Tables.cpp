@@ -20,7 +20,6 @@
   module for the precise wording of the license and the list of
   copyright holders.
 */
-#include "opm/common/utility/VectorWithDefaultAllocator.hpp"
 #include <config.h>
 #include <opm/material/components/CO2Tables.hpp>
 

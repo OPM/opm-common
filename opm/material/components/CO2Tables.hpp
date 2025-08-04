@@ -27,6 +27,7 @@
 #include <opm/material/common/MathToolbox.hpp>
 #include <opm/material/common/UniformTabulated2DFunction.hpp>
 #include <opm/common/utility/gpuDecorators.hpp>
+#include <opm/common/utility/VectorWithDefaultAllocator.hpp>
 #include <opm/common/utility/gpuistl_if_available.hpp>
 
 namespace Opm {
