@@ -110,12 +110,12 @@ class WaterPvtMultiplexer
 public:
     using ParamsContainer = Storage<double>;
     using ContainerT = Storage<Scalar>;
-    using ParamsT = CO2Tables<double, ParamsContainer>;
+    using ParamsT = CO2Tables<double, Storage>;
     using UniqueVoidPtrWithDeleter =
         std::conditional_t<
             std::is_same_v<PtrType<void>, std::unique_ptr<void>>,
             std::unique_ptr<void, std::function<void(void*)>>,
-            BrineCo2Pvt<Scalar, ParamsT, ContainerT>
+            BrineCo2Pvt<Scalar, Storage>
         >;
 
     WaterPvtMultiplexer()
@@ -143,7 +143,7 @@ public:
     }
 
     template <class T = PtrType<void>, typename std::enable_if<!std::is_same_v<T, std::unique_ptr<void>>, int>::type = 0>
-    WaterPvtMultiplexer(WaterPvtApproach approach, const BrineCo2Pvt<Scalar, ParamsT, ContainerT>& realWaterPvt)
+    WaterPvtMultiplexer(WaterPvtApproach approach, const BrineCo2Pvt<Scalar, Storage>& realWaterPvt)
         : approach_(approach)
         , realWaterPvt_(realWaterPvt)
     {
@@ -343,21 +343,21 @@ public:
     }
 
     template <WaterPvtApproach approachV>
-    OPM_HOST_DEVICE typename std::enable_if<approachV == WaterPvtApproach::BrineCo2, BrineCo2Pvt<Scalar, ParamsT, ContainerT> >::type& getRealPvt()
+    OPM_HOST_DEVICE typename std::enable_if<approachV == WaterPvtApproach::BrineCo2, BrineCo2Pvt<Scalar, Storage> >::type& getRealPvt()
     {
         assert(approach() == approachV);
         if constexpr (std::is_same_v<PtrType<void>, std::unique_ptr<void>>) {
-            return *static_cast<BrineCo2Pvt<Scalar, ParamsT, ContainerT>* >(realWaterPvt_.get());
+            return *static_cast<BrineCo2Pvt<Scalar, Storage>* >(realWaterPvt_.get());
         } else {
             return realWaterPvt_;
         }
     }
 
     template <WaterPvtApproach approachV>
-    OPM_HOST_DEVICE typename std::enable_if<approachV == WaterPvtApproach::BrineCo2, const BrineCo2Pvt<Scalar, ParamsT, ContainerT> >::type& getRealPvt() const
+    OPM_HOST_DEVICE typename std::enable_if<approachV == WaterPvtApproach::BrineCo2, const BrineCo2Pvt<Scalar, Storage> >::type& getRealPvt() const
     {
         assert(approach() == approachV);
-        return *static_cast<const BrineCo2Pvt<Scalar, ParamsT, ContainerT>* >(realWaterPvt_.get());
+        return *static_cast<const BrineCo2Pvt<Scalar, Storage>* >(realWaterPvt_.get());
     }
 
     template <WaterPvtApproach approachV>
@@ -416,7 +416,7 @@ private:
                 break;
             }
             case WaterPvtApproach::BrineCo2: {
-                realWaterPvt_ = copyPvt<BrineCo2Pvt<Scalar, ParamsT, ContainerT>>(pointer);
+                realWaterPvt_ = copyPvt<BrineCo2Pvt<Scalar, Storage>>(pointer);
                 break;
             }
             case WaterPvtApproach::BrineH2: {
@@ -443,7 +443,7 @@ private:
                 break;
             }
             case WaterPvtApproach::BrineCo2: {
-                delete static_cast<BrineCo2Pvt<Scalar, ParamsT, ContainerT>*>(ptr);
+                delete static_cast<BrineCo2Pvt<Scalar, Storage>*>(ptr);
                 break;
             }
             case WaterPvtApproach::BrineH2: {
@@ -474,7 +474,7 @@ private:
             case WaterPvtApproach::ThermalWater:
                 return copyPvt<WaterPvtThermal<Scalar, enableBrine>>(data.realWaterPvt_);
             case WaterPvtApproach::BrineCo2:
-                return copyPvt<BrineCo2Pvt<Scalar, ParamsT, ContainerT>>(data.realWaterPvt_);
+                return copyPvt<BrineCo2Pvt<Scalar, Storage>>(data.realWaterPvt_);
             case WaterPvtApproach::BrineH2:
                 return copyPvt<BrineH2Pvt<Scalar>>(data.realWaterPvt_);
             default:
@@ -495,16 +495,16 @@ private:
 };
 
 #if HAVE_CUDA
-namespace gpuistl{
+namespace gpuistl {
     template<class Scalar>
     WaterPvtMultiplexer<Scalar, true, true, GpuBuffer>
     copy_to_gpu(const WaterPvtMultiplexer<Scalar>& waterMultiplexer)
     {
-        using ParamsT = CO2Tables<double, GpuBuffer<double>>;
+        using ParamsT = CO2Tables<double, GpuBuffer>;
 
         assert(waterMultiplexer.approach() == WaterPvtApproach::BrineCo2);
 
-        auto gpuPvt = copy_to_gpu<ParamsT, GpuBuffer<Scalar>>(waterMultiplexer.template getRealPvt<WaterPvtApproach::BrineCo2>());
+        auto gpuPvt = copy_to_gpu(waterMultiplexer.template getRealPvt<WaterPvtApproach::BrineCo2>());
 
         return WaterPvtMultiplexer<Scalar, true, true, GpuBuffer>(WaterPvtApproach::BrineCo2, gpuPvt);
     }
@@ -513,15 +513,15 @@ namespace gpuistl{
     auto
     make_view(const WaterPvtMultiplexer<Scalar, true, true, GpuBuffer>& waterMultiplexer)
     {
-        using ParamsView = CO2Tables<Scalar, GpuView<double>>;
+        using ParamsView = CO2Tables<Scalar, GpuView>;
 
         assert(waterMultiplexer.approach() == WaterPvtApproach::BrineCo2);
 
-        auto gpuPvtView = make_view<GpuView<Scalar>, ParamsView>(waterMultiplexer.template getRealPvt<WaterPvtApproach::BrineCo2>());
+        auto gpuPvtView = make_view(waterMultiplexer.template getRealPvt<WaterPvtApproach::BrineCo2>());
 
         return WaterPvtMultiplexer<Scalar, true, true, GpuView, ValueAsPointer>(WaterPvtApproach::BrineCo2, gpuPvtView);
     }
-}
+} // namespace gpuistl
 #endif // HAVE_CUDA
 } // namespace Opm
 

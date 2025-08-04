@@ -50,6 +50,7 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <type_traits>
 #include <vector>
 
 namespace Opm {
@@ -81,14 +82,14 @@ public:
     // if it is a buffer version, as it will allocate memory dynamically, and not be
     // used in a kernel, otherwise we must use a templated pointertype that is GPU compatible
     using GasPvt = std::conditional_t<
-        std::is_same_v<Storage<double>, std::vector<double>>,
-        GasPvtMultiplexer<Scalar, true>,
+        std::is_same_v<SmartPointer<double>, std::shared_ptr<double>>,
+        GasPvtMultiplexer<Scalar, true, Storage, std::unique_ptr>,
         GasPvtMultiplexer<Scalar, true, Storage, SmartPointer>
     >;
     using OilPvt = OilPvtMultiplexer<Scalar>;
     using WaterPvt = std::conditional_t<
-        std::is_same_v<Storage<double>, std::vector<double>>,
-        WaterPvtMultiplexer<Scalar, true, true>,
+        std::is_same_v<SmartPointer<double>, std::shared_ptr<double>>,
+        WaterPvtMultiplexer<Scalar, true, true, Storage, std::unique_ptr>,
         WaterPvtMultiplexer<Scalar, true, true, Storage, SmartPointer>
     >;
 
@@ -2002,6 +2003,7 @@ DECLARE_INSTANCE(double)
 #endif
 
 #ifndef COMPILING_STATIC_FLUID_SYSTEM
+#if HAVE_CUDA
 namespace gpuistl
 {
 
@@ -2095,6 +2097,6 @@ make_view(FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, GpuBuffer>& oldFluidSystem)
     );
 }
 }
-#endif
-
+#endif // HAVE_CUDA
+#endif // COMPILING_STATIC_FLUID_SYSTEM
 } // namespace Opm

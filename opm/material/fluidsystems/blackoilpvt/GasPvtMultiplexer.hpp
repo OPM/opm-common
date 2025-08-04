@@ -135,12 +135,12 @@ class GasPvtMultiplexer
 public:
 using ParamsContainer = Storage<double>;
 using ContainerT = Storage<Scalar>;
-using ParamsT = CO2Tables<double, ParamsContainer>;
+using ParamsT = CO2Tables<double, Storage>;
 using UniqueVoidPtrWithDeleter =
         std::conditional_t<
             std::is_same_v<PtrType<void>, std::unique_ptr<void>>,
             std::unique_ptr<void, std::function<void(void*)>>,
-            Co2GasPvt<Scalar, ParamsT, ContainerT>
+            Co2GasPvt<Scalar, Storage>
         >;
 
     GasPvtMultiplexer()
@@ -167,7 +167,7 @@ using UniqueVoidPtrWithDeleter =
     }
 
     template <class T = PtrType<void>, typename std::enable_if<!std::is_same_v<T, std::unique_ptr<void>>, int>::type = 0>
-    GasPvtMultiplexer(GasPvtApproach approach, const Co2GasPvt<Scalar, ParamsT, ContainerT>& realGasPvt)
+    GasPvtMultiplexer(GasPvtApproach approach, const Co2GasPvt<Scalar, Storage>& realGasPvt)
     : gasPvtApproach_(approach), realGasPvt_(realGasPvt)
     {
     }
@@ -417,11 +417,11 @@ using UniqueVoidPtrWithDeleter =
     }
 
     template <GasPvtApproach approachV>
-    OPM_HOST_DEVICE typename std::enable_if<approachV == GasPvtApproach::Co2Gas, Co2GasPvt<Scalar, ParamsT, ContainerT> >::type& getRealPvt()
+    OPM_HOST_DEVICE typename std::enable_if<approachV == GasPvtApproach::Co2Gas, Co2GasPvt<Scalar, Storage> >::type& getRealPvt()
     {
         if constexpr (std::is_same_v<PtrType<void>, std::unique_ptr<void>>) {
             assert(gasPvtApproach() == approachV);
-            return *static_cast<Co2GasPvt<Scalar, ParamsT, ContainerT>* >(realGasPvt_.get());
+            return *static_cast<Co2GasPvt<Scalar, Storage>* >(realGasPvt_.get());
         } else {
             assert(gasPvtApproach() == approachV);
             return realGasPvt_;
@@ -429,10 +429,10 @@ using UniqueVoidPtrWithDeleter =
     }
 
     template <GasPvtApproach approachV>
-    OPM_HOST_DEVICE typename std::enable_if<approachV == GasPvtApproach::Co2Gas, const Co2GasPvt<Scalar, ParamsT, ContainerT> >::type& getRealPvt() const
+    OPM_HOST_DEVICE typename std::enable_if<approachV == GasPvtApproach::Co2Gas, const Co2GasPvt<Scalar, Storage> >::type& getRealPvt() const
     {
         assert(gasPvtApproach() == approachV);
-        return *static_cast<const Co2GasPvt<Scalar, ParamsT, ContainerT>* >(realGasPvt_.get());
+        return *static_cast<const Co2GasPvt<Scalar, Storage>* >(realGasPvt_.get());
     }
 
     template <GasPvtApproach approachV>
@@ -484,7 +484,7 @@ private:
             case GasPvtApproach::ThermalGas:
                 return copyPvt<GasPvtThermal<Scalar>>(data.realGasPvt_);
             case GasPvtApproach::Co2Gas:
-                return copyPvt<Co2GasPvt<Scalar, ParamsT, ContainerT>>(data.realGasPvt_);
+                return copyPvt<Co2GasPvt<Scalar, Storage>>(data.realGasPvt_);
             case GasPvtApproach::H2Gas:
                 return copyPvt<H2GasPvt<Scalar>>(data.realGasPvt_);
             default:
@@ -518,7 +518,7 @@ private:
                 realGasPvt_ = copyPvt<GasPvtThermal<Scalar>>(pointer);
                 break;
             case GasPvtApproach::Co2Gas:
-                realGasPvt_ = copyPvt<Co2GasPvt<Scalar, ParamsT, ContainerT>>(pointer);
+                realGasPvt_ = copyPvt<Co2GasPvt<Scalar, Storage>>(pointer);
                 break;
             case GasPvtApproach::H2Gas:
                 realGasPvt_ = copyPvt<H2GasPvt<Scalar>>(pointer);
@@ -565,7 +565,7 @@ private:
                 break;
             }
             case GasPvtApproach::Co2Gas: {
-                delete static_cast<Co2GasPvt<Scalar, ParamsT, ContainerT>*>(ptr);
+                delete static_cast<Co2GasPvt<Scalar, Storage>*>(ptr);
                 break;
             }
             case GasPvtApproach::H2Gas: {
@@ -587,13 +587,13 @@ namespace gpuistl {
     auto
     copy_to_gpu(const GasPvtMultiplexer<Scalar, true>& gasMultiplexer)
     {
-        using Params = CO2Tables<Scalar, GpuBuffer<double>>;
+        using Params = CO2Tables<Scalar, GpuBuffer>;
 
         assert(gasMultiplexer.gasPvtApproach() == GasPvtApproach::Co2Gas);
 
         return GasPvtMultiplexer<Scalar, true, GpuBuffer>(
             GasPvtApproach::Co2Gas,
-            copy_to_gpu<GpuBuffer<Scalar>, Params>(gasMultiplexer.template getRealPvt<GasPvtApproach::Co2Gas>())
+            copy_to_gpu(gasMultiplexer.template getRealPvt<GasPvtApproach::Co2Gas>())
         );
     }
     
@@ -601,11 +601,11 @@ namespace gpuistl {
     auto
     make_view(const GasPvtMultiplexer<Scalar, true, GpuBuffer>& gasMultiplexer)
     {
-        using ParamsView = CO2Tables<Scalar, GpuView<double>>;
+        using ParamsView = CO2Tables<Scalar, GpuView>;
 
         assert(gasMultiplexer.gasPvtApproach() == GasPvtApproach::Co2Gas);
 
-        auto gpuPvtView = make_view<GpuView<Scalar>, ParamsView>(gasMultiplexer.template getRealPvt<GasPvtApproach::Co2Gas>());
+        auto gpuPvtView = make_view(gasMultiplexer.template getRealPvt<GasPvtApproach::Co2Gas>());
 
         return GasPvtMultiplexer<Scalar, true, GpuView, ValueAsPointer>(GasPvtApproach::Co2Gas, gpuPvtView);
     }

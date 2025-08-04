@@ -26,6 +26,8 @@
 
 #include <opm/material/common/MathToolbox.hpp>
 #include <opm/material/common/UniformTabulated2DFunction.hpp>
+#include <opm/common/utility/gpuDecorators.hpp>
+#include <opm/common/utility/gpuistl_if_available.hpp>
 
 namespace Opm {
 
@@ -55,51 +57,53 @@ struct co2TabulatedEnthalpyTraits
     static const Scalar vals[200][500];
 };
 
-template<class Scalar = double, class ContainerT = std::vector<double>>
+template<class Scalar = double, template<class> class Storage = VectorWithDefaultAllocator>
 class CO2Tables
 {
 public:
-    UniformTabulated2DFunction<Scalar, ContainerT> tabulatedDensity;
-    UniformTabulated2DFunction<Scalar, ContainerT> tabulatedEnthalpy;
+    using ContainerT = Storage<Scalar>;
+    UniformTabulated2DFunction<Scalar, Storage> tabulatedDensity;
+    UniformTabulated2DFunction<Scalar, Storage> tabulatedEnthalpy;
     static constexpr double brineSalinity = 1.000000000000000e-01;
 
     CO2Tables();
 
-    CO2Tables(const Opm::UniformTabulated2DFunction<Scalar, ContainerT>& enthalpy,
-              const Opm::UniformTabulated2DFunction<Scalar, ContainerT>& density)
+    CO2Tables(const Opm::UniformTabulated2DFunction<Scalar, Storage>& enthalpy,
+              const Opm::UniformTabulated2DFunction<Scalar, Storage>& density)
         : tabulatedEnthalpy(enthalpy), tabulatedDensity(density)
     {
     }
 
-    const Opm::UniformTabulated2DFunction<Scalar, ContainerT>& getTabulatedEnthalpy() const {
+    const Opm::UniformTabulated2DFunction<Scalar, Storage>& getTabulatedEnthalpy() const {
         return tabulatedEnthalpy;
     }
 
-    const Opm::UniformTabulated2DFunction<Scalar, ContainerT>& getTabulatedDensity() const {
+    const Opm::UniformTabulated2DFunction<Scalar, Storage>& getTabulatedDensity() const {
         return tabulatedDensity;
     }
 };
 
 } // namespace Opm
 
+#if HAVE_CUDA
 namespace Opm::gpuistl {
-    template <class ViewType, class Scalar, class ContainerType>
-    CO2Tables<Scalar, ViewType>
-    make_view(CO2Tables<Scalar, ContainerType>& oldCO2Tables) {
-        Opm::UniformTabulated2DFunction<double, ViewType> newEnthalpy = make_view<ViewType>(oldCO2Tables.tabulatedEnthalpy);
-        Opm::UniformTabulated2DFunction<double, ViewType> newDensity = make_view<ViewType>(oldCO2Tables.tabulatedDensity);
+    template <class Scalar>
+    CO2Tables<Scalar, GpuView>
+    make_view(const CO2Tables<Scalar, GpuBuffer>& oldCO2Tables) {
+        auto newEnthalpy = make_view(oldCO2Tables.tabulatedEnthalpy);
+        auto newDensity = make_view(oldCO2Tables.tabulatedDensity);
 
-        return CO2Tables<Scalar, ViewType>(newEnthalpy, newDensity);
+        return CO2Tables<Scalar, GpuView>(newEnthalpy, newDensity);
     }
 
-    template <class NewContainerType, class Scalar, class OldContainerType>
-    CO2Tables<Scalar, NewContainerType>
-    copy_to_gpu(const CO2Tables<Scalar, OldContainerType>& oldCO2Tables) {
-        return CO2Tables<Scalar, NewContainerType>(
-            copy_to_gpu<NewContainerType>(oldCO2Tables.tabulatedEnthalpy),
-            copy_to_gpu<NewContainerType>(oldCO2Tables.tabulatedDensity)
+    template <class Scalar>
+    CO2Tables<Scalar, GpuBuffer>
+    copy_to_gpu(const CO2Tables<Scalar>& oldCO2Tables) {
+        return CO2Tables<Scalar, GpuBuffer>(
+            copy_to_gpu(oldCO2Tables.tabulatedEnthalpy),
+            copy_to_gpu(oldCO2Tables.tabulatedDensity)
         );
     }
-}
-
+} // namespace Opm::gpuistl
+#endif // HAVE_CUDA
 #endif // OPM_CO2TABLES_HPP

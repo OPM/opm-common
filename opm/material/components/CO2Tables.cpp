@@ -20,6 +20,7 @@
   module for the precise wording of the license and the list of
   copyright holders.
 */
+#include "opm/common/utility/VectorWithDefaultAllocator.hpp"
 #include <config.h>
 #include <opm/material/components/CO2Tables.hpp>
 
@@ -30,8 +31,8 @@
 namespace Opm
 {
 
-template <class Scalar, class ContainerT>
-CO2Tables<Scalar, ContainerT>::CO2Tables()
+template <class Scalar, template<class> class Storage>
+CO2Tables<Scalar, Storage>::CO2Tables()
     : tabulatedDensity {co2TabulatedDensityTraits::xMin,
                         co2TabulatedDensityTraits::xMax,
                         co2TabulatedDensityTraits::numX,
@@ -49,6 +50,6 @@ CO2Tables<Scalar, ContainerT>::CO2Tables()
 {
 }
 
-template CO2Tables<double, std::vector<double>>::CO2Tables();
+template CO2Tables<double, VectorWithDefaultAllocator>::CO2Tables();
 
 } // namespace Opm
