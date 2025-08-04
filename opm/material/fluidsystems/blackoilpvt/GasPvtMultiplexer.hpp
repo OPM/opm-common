@@ -49,7 +49,7 @@ class EclipseState;
 class Schedule;
 #endif
 
-#if OPM_IS_INSIDE_DEVICE_FUNCTION
+#if OPM_IS_COMPILING_WITH_GPU_COMPILER
 // Testing whether hardcoding the PvtType supported on GPU helps
 #define OPM_GAS_PVT_MULTIPLEXER_CALL(codeToCall, ...)                     \
     do {                                                                  \
@@ -58,7 +58,7 @@ class Schedule;
         codeToCall;                                                       \
         __VA_ARGS__;                                                      \
     } else {                                                              \
-        auto& pvtImpl = realGasPvt_;                                      \
+        auto& pvtImpl = *realGasPvt_;                                     \
         codeToCall;                                                       \
         __VA_ARGS__;                                                      \
     }                                                                     \
@@ -140,7 +140,7 @@ using UniqueVoidPtrWithDeleter =
         std::conditional_t<
             std::is_same_v<PtrType<void>, std::unique_ptr<void>>,
             std::unique_ptr<void, std::function<void(void*)>>,
-            Co2GasPvt<Scalar, Storage>
+            PtrType<Co2GasPvt<Scalar, Storage>>
         >;
 
     GasPvtMultiplexer()
@@ -599,7 +599,7 @@ namespace gpuistl {
     
     template<class Scalar>
     auto
-    make_view(const GasPvtMultiplexer<Scalar, true, GpuBuffer>& gasMultiplexer)
+    make_view(GasPvtMultiplexer<Scalar, true, GpuBuffer>& gasMultiplexer)
     {
         using ParamsView = CO2Tables<Scalar, GpuView>;
 

@@ -89,7 +89,7 @@ public:
 namespace Opm::gpuistl {
     template <class Scalar>
     CO2Tables<Scalar, GpuView>
-    make_view(const CO2Tables<Scalar, GpuBuffer>& oldCO2Tables) {
+    make_view(CO2Tables<Scalar, GpuBuffer>& oldCO2Tables) {
         auto newEnthalpy = make_view(oldCO2Tables.tabulatedEnthalpy);
         auto newDensity = make_view(oldCO2Tables.tabulatedDensity);
 

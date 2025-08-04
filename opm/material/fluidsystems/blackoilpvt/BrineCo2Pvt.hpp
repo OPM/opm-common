@@ -837,7 +837,7 @@ namespace Opm::gpuistl
 
     template <class ScalarT>
     BrineCo2Pvt<ScalarT, GpuView>
-    make_view(const BrineCo2Pvt<ScalarT, GpuBuffer>& brineCo2Pvt)
+    make_view(BrineCo2Pvt<ScalarT, GpuBuffer>& brineCo2Pvt)
     {
 
         using ContainedType = ScalarT;

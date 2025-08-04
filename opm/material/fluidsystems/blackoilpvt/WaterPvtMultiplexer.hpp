@@ -37,7 +37,7 @@
 #include <opm/common/utility/gpuistl_if_available.hpp>
 #include <opm/common/utility/VectorWithDefaultAllocator.hpp>
 
-#if OPM_IS_INSIDE_DEVICE_FUNCTION
+#if OPM_IS_COMPILING_WITH_GPU_COMPILER
 #define OPM_WATER_PVT_MULTIPLEXER_CALL(codeToCall, ...)                                \
     do {                                                                               \
     if constexpr (std::is_same_v<PtrType<void>, std::unique_ptr<void>>) {              \
@@ -511,7 +511,7 @@ namespace gpuistl {
 
     template <class Scalar>
     auto
-    make_view(const WaterPvtMultiplexer<Scalar, true, true, GpuBuffer>& waterMultiplexer)
+    make_view(WaterPvtMultiplexer<Scalar, true, true, GpuBuffer>& waterMultiplexer)
     {
         using ParamsView = CO2Tables<Scalar, GpuView>;
 

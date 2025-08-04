@@ -463,7 +463,7 @@ private:
     #if HAVE_CUDA
     template <class ScalarT>
     friend Co2GasPvt<ScalarT, gpuistl::GpuView>
-    gpuistl::make_view(const Co2GasPvt<ScalarT, gpuistl::GpuBuffer>&);
+    gpuistl::make_view(Co2GasPvt<ScalarT, gpuistl::GpuBuffer>&);
     #endif // HAVE_CUDA
 
     template <class LhsEval>
@@ -503,7 +503,7 @@ namespace Opm::gpuistl {
 
     template <class ScalarT>
     Co2GasPvt<ScalarT, GpuView>
-    make_view(const Co2GasPvt<ScalarT, GpuBuffer>& co2GasPvt)
+    make_view(Co2GasPvt<ScalarT, GpuBuffer>& co2GasPvt)
     {
         using ContainedType = ScalarT;
 
