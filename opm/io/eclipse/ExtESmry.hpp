@@ -23,6 +23,7 @@
 #include <filesystem>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 #include <map>
 #include <stdint.h>
@@ -78,6 +79,7 @@ private:
     std::vector<std::map<std::string, int>> m_keyword_index;
     std::vector<std::tuple<int,int>> m_tstep_range;
     std::vector<std::string> m_keyword;
+    std::unordered_set<std::string> m_keywordSet;
     std::vector<int> m_rstep;
     std::vector<int> m_tstep;
     std::vector<std::vector<int>> m_rstep_v;

@@ -226,6 +226,8 @@ ExtESmry::ExtESmry(const std::string &filename, bool loadBaseRunData) :
         if (m_rstep[m] == 1)
             m_seqIndex.push_back(m);
 
+    m_keywordSet.insert(m_keyword.begin(), m_keyword.end());
+
     std::chrono::duration<double> elapsed_seconds = std::chrono::system_clock::now() - start;
     m_io_opening += elapsed_seconds.count();
 }
@@ -614,7 +616,7 @@ std::vector<std::string> ExtESmry::keywordList(const std::string& pattern) const
 
 bool ExtESmry::hasKey(const std::string &key) const
 {
-    return std::find(m_keyword.begin(), m_keyword.end(), key) != m_keyword.end();
+    return m_keywordSet.find(key) != m_keywordSet.end();
 }
 
 std::tuple<double, double> ExtESmry::get_io_elapsed() const
