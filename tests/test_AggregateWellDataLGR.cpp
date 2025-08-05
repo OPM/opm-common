@@ -959,6 +959,8 @@ BOOST_AUTO_TEST_CASE (Declared_Well_Data2LGRWells)
                          5,2, 2);
     auto group_aggregator_lgr1 = Opm::RestartIO::Helpers::AggregateGroupData(ih_lgr1.value);
     auto group_aggregator_lgr2 = Opm::RestartIO::Helpers::AggregateGroupData(ih_lgr2.value);
+    group_aggregator_lgr1.captureDeclaredGroupDataLGR(simCase.sched, units, rptStep, smry,
+        ih.value,"LGR1");
     group_aggregator_lgr2.captureDeclaredGroupDataLGR(simCase.sched, units, rptStep, smry,
         ih.value,"LGR2");
 
