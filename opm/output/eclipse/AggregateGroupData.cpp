@@ -1415,12 +1415,13 @@ captureDeclaredGroupDataLGR(const Opm::Schedule&                 sched,
 
     // Define Static Contributions to ZGrp Array.
     groupLoop(curGroups, [this, &inteHead]
-              (const Group& group, const std::size_t /* groupID */) -> void
+              (const Group& group, const std::size_t  groupID ) -> void
     {
         // bug here
-        std::size_t group_index = group.insert_index() - 1;
-        if (group.name() == "FIELD")
-            group_index = ngmaxz(inteHead) - 1;
+        // std::size_t group_index = group.insert_index() - 1;
+        // if (group.name() == "FIELD")
+        //     group_index = ngmaxz(inteHead) - 1;
+        std::size_t group_index = groupID;
         auto zg = this->zGroup_[ group_index ];
 
         ZGrp::staticContrib(group, zg);
