@@ -278,21 +278,21 @@ public:
      *
      * (This is only determined at runtime.)
      */
-    GasPvtApproach gasPvtApproach() const
+    GasPvtApproach approach() const
     { return gasPvtApproach_; }
 
     // get the parameter object for the dry gas case
     template <GasPvtApproach approachV>
     typename std::enable_if<approachV == GasPvtApproach::DryGas, DryGasPvt<Scalar> >::type& getRealPvt()
     {
-        assert(gasPvtApproach() == approachV);
+        assert(approach() == approachV);
         return *static_cast<DryGasPvt<Scalar>* >(realGasPvt_.get());
     }
 
     template <GasPvtApproach approachV>
     typename std::enable_if<approachV == GasPvtApproach::DryGas, const DryGasPvt<Scalar> >::type& getRealPvt() const
     {
-        assert(gasPvtApproach() == approachV);
+        assert(approach() == approachV);
         return *static_cast<const DryGasPvt<Scalar>* >(realGasPvt_.get());
     }
 
@@ -300,14 +300,14 @@ public:
     template <GasPvtApproach approachV>
     typename std::enable_if<approachV == GasPvtApproach::DryHumidGas, DryHumidGasPvt<Scalar> >::type& getRealPvt()
     {
-        assert(gasPvtApproach() == approachV);
+        assert(approach() == approachV);
         return *static_cast<DryHumidGasPvt<Scalar>* >(realGasPvt_.get());
     }
 
     template <GasPvtApproach approachV>
     typename std::enable_if<approachV == GasPvtApproach::DryHumidGas, const DryHumidGasPvt<Scalar> >::type& getRealPvt() const
     {
-        assert(gasPvtApproach() == approachV);
+        assert(approach() == approachV);
         return *static_cast<const DryHumidGasPvt<Scalar>* >(realGasPvt_.get());
     }
 
@@ -315,14 +315,14 @@ public:
     template <GasPvtApproach approachV>
     typename std::enable_if<approachV == GasPvtApproach::WetHumidGas, WetHumidGasPvt<Scalar> >::type& getRealPvt()
     {
-        assert(gasPvtApproach() == approachV);
+        assert(approach() == approachV);
         return *static_cast<WetHumidGasPvt<Scalar>* >(realGasPvt_.get());
     }
 
     template <GasPvtApproach approachV>
     typename std::enable_if<approachV == GasPvtApproach::WetHumidGas, const WetHumidGasPvt<Scalar> >::type& getRealPvt() const
     {
-        assert(gasPvtApproach() == approachV);
+        assert(approach() == approachV);
         return *static_cast<const WetHumidGasPvt<Scalar>* >(realGasPvt_.get());
     }
 
@@ -330,14 +330,14 @@ public:
     template <GasPvtApproach approachV>
     typename std::enable_if<approachV == GasPvtApproach::WetGas, WetGasPvt<Scalar> >::type& getRealPvt()
     {
-        assert(gasPvtApproach() == approachV);
+        assert(approach() == approachV);
         return *static_cast<WetGasPvt<Scalar>* >(realGasPvt_.get());
     }
 
     template <GasPvtApproach approachV>
     typename std::enable_if<approachV == GasPvtApproach::WetGas, const WetGasPvt<Scalar> >::type& getRealPvt() const
     {
-        assert(gasPvtApproach() == approachV);
+        assert(approach() == approachV);
         return *static_cast<const WetGasPvt<Scalar>* >(realGasPvt_.get());
     }
 
@@ -345,41 +345,41 @@ public:
     template <GasPvtApproach approachV>
     typename std::enable_if<approachV == GasPvtApproach::ThermalGas, GasPvtThermal<Scalar> >::type& getRealPvt()
     {
-        assert(gasPvtApproach() == approachV);
+        assert(approach() == approachV);
         return *static_cast<GasPvtThermal<Scalar>* >(realGasPvt_.get());
     }
     template <GasPvtApproach approachV>
     typename std::enable_if<approachV == GasPvtApproach::ThermalGas, const GasPvtThermal<Scalar> >::type& getRealPvt() const
     {
-        assert(gasPvtApproach() == approachV);
+        assert(approach() == approachV);
         return *static_cast<const GasPvtThermal<Scalar>* >(realGasPvt_.get());
     }
 
     template <GasPvtApproach approachV>
     typename std::enable_if<approachV == GasPvtApproach::Co2Gas, Co2GasPvt<Scalar> >::type& getRealPvt()
     {
-        assert(gasPvtApproach() == approachV);
+        assert(approach() == approachV);
         return *static_cast<Co2GasPvt<Scalar>* >(realGasPvt_.get());
     }
 
     template <GasPvtApproach approachV>
     typename std::enable_if<approachV == GasPvtApproach::Co2Gas, const Co2GasPvt<Scalar> >::type& getRealPvt() const
     {
-        assert(gasPvtApproach() == approachV);
+        assert(approach() == approachV);
         return *static_cast<const Co2GasPvt<Scalar>* >(realGasPvt_.get());
     }
 
     template <GasPvtApproach approachV>
     typename std::enable_if<approachV == GasPvtApproach::H2Gas, H2GasPvt<Scalar> >::type& getRealPvt()
     {
-        assert(gasPvtApproach() == approachV);
+        assert(approach() == approachV);
         return *static_cast<H2GasPvt<Scalar>* >(realGasPvt_.get());
     }
 
     template <GasPvtApproach approachV>
     typename std::enable_if<approachV == GasPvtApproach::H2Gas, const H2GasPvt<Scalar> >::type& getRealPvt() const
     {
-        assert(gasPvtApproach() == approachV);
+        assert(approach() == approachV);
         return *static_cast<const H2GasPvt<Scalar>* >(realGasPvt_.get());
     }
 

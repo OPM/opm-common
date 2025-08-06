@@ -63,8 +63,7 @@ namespace Opm
 {
 template <class Scalar,
           class IndexTraits,
-          template <typename> typename Storage,
-          template <typename> typename SmartPointer>
+          template <typename> typename Storage>
 class FLUIDSYSTEM_CLASSNAME_NONSTATIC;
 }
 
