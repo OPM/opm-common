@@ -146,11 +146,11 @@ public:
         throw std::invalid_argument("The pcnw(fs) method is not yet implemented");
     }
 
-    template <class Evaluation>
+    template <class Evaluation, class ...Args>
     static Evaluation twoPhaseSatPcnw(const Params& params, const Evaluation& SwScaled)
     {
         const Evaluation SwUnscaled = scaledToUnscaledSatPc(params, SwScaled);
-        const Evaluation pcUnscaled = EffLaw::twoPhaseSatPcnw(params.effectiveLawParams(), SwUnscaled);
+        const Evaluation pcUnscaled = EffLaw::template twoPhaseSatPcnw<Evaluation, Args...>(params.effectiveLawParams(), SwUnscaled);
         return unscaledToScaledPcnw_(params, pcUnscaled);
     }
 
@@ -218,11 +218,11 @@ public:
         throw std::invalid_argument("The krw(fs) method is not yet implemented");
     }
 
-    template <class Evaluation>
+    template <class Evaluation, class ...Args>
     static Evaluation twoPhaseSatKrw(const Params& params, const Evaluation& SwScaled)
     {
         const Evaluation SwUnscaled = scaledToUnscaledSatKrw(params, SwScaled);
-        const Evaluation krwUnscaled = EffLaw::twoPhaseSatKrw(params.effectiveLawParams(), SwUnscaled);
+        const Evaluation krwUnscaled = EffLaw::template twoPhaseSatKrw<Evaluation, Args...>(params.effectiveLawParams(), SwUnscaled);
         return unscaledToScaledKrw_(SwScaled, params, krwUnscaled);
     }
 
@@ -243,11 +243,11 @@ public:
         throw std::invalid_argument("The krn(fs) method is not yet implemented");
     }
 
-    template <class Evaluation>
+    template <class Evaluation, class ...Args>
     static Evaluation twoPhaseSatKrn(const Params& params, const Evaluation& SwScaled)
     {
         const Evaluation SwUnscaled = scaledToUnscaledSatKrn(params, SwScaled);
-        const Evaluation krnUnscaled = EffLaw::twoPhaseSatKrn(params.effectiveLawParams(), SwUnscaled);
+        const Evaluation krnUnscaled = EffLaw::template twoPhaseSatKrn<Evaluation, Args...>(params.effectiveLawParams(), SwUnscaled);
         return unscaledToScaledKrn_(SwScaled, params, krnUnscaled);
     }
 

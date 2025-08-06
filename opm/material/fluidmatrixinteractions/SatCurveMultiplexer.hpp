@@ -176,9 +176,13 @@ public:
         return 0.0;
     }
 
-    template <class Evaluation>
+    template <class Evaluation, class ...Args>
     static Evaluation twoPhaseSatPcnw(const Params& params, const Evaluation& Sw)
     {
+        if constexpr (FrontIsSatCurveMultiplexerDispatchV<Args...>) {
+            return twoPhaseSatPcnwT<Evaluation, Args...>(params, Sw);
+        }
+
         switch (params.approach()) {
         case SatCurveMultiplexerApproach::LET:
             return LETTwoPhaseLaw::twoPhaseSatPcnw(params.template getRealParams<SatCurveMultiplexerApproach::LET>(),
@@ -192,6 +196,20 @@ public:
         }
 
         return 0.0;
+    }
+
+    template <class Evaluation, class Head, class ...Args>
+    static Evaluation twoPhaseSatPcnwT(const Params& params, const Evaluation& Sw)
+    {
+        if constexpr (Head::approach == SatCurveMultiplexerApproach::LET) {
+            return LETTwoPhaseLaw::twoPhaseSatPcnw(params.template getRealParams<SatCurveMultiplexerApproach::LET>(),
+                                                   Sw);
+        } else if constexpr (Head::approach == SatCurveMultiplexerApproach::PiecewiseLinear) {
+            return PLTwoPhaseLaw::twoPhaseSatPcnw(params.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinear>(),
+                                                  Sw);
+        } else {
+            static_assert(false, "Unknown SatCurveMultiplexerApproach");
+        }
     }
 
     template <class Evaluation>
@@ -291,9 +309,13 @@ public:
         return 0.0;
     }
 
-    template <class Evaluation>
+    template <class Evaluation, class ...Args>
     static Evaluation twoPhaseSatKrw(const Params& params, const Evaluation& Sw)
     {
+        if constexpr (FrontIsSatCurveMultiplexerDispatchV<Args...>) {
+            return twoPhaseSatKrwT<Evaluation, Args...>(params, Sw);
+        }
+
         switch (params.approach()) {
         case SatCurveMultiplexerApproach::LET:
             return LETTwoPhaseLaw::twoPhaseSatKrw(params.template getRealParams<SatCurveMultiplexerApproach::LET>(),
@@ -307,6 +329,20 @@ public:
         }
 
         return 0.0;
+    }
+
+    template <class Evaluation, class Head, class ...Args>
+    static Evaluation twoPhaseSatKrwT(const Params& params, const Evaluation& Sw)
+    {
+        if constexpr (Head::approach == SatCurveMultiplexerApproach::LET) {
+            return LETTwoPhaseLaw::twoPhaseSatKrw(params.template getRealParams<SatCurveMultiplexerApproach::LET>(),
+                                                  Sw);
+        } else if constexpr (Head::approach == SatCurveMultiplexerApproach::PiecewiseLinear) {
+            return PLTwoPhaseLaw::twoPhaseSatKrw(params.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinear>(),
+                                                 Sw);
+        } else {
+            static_assert(false, "Unknown SatCurveMultiplexerApproach");
+        }
     }
 
     template <class Evaluation>
@@ -349,9 +385,13 @@ public:
         return 0.0;
     }
 
-    template <class Evaluation>
+    template <class Evaluation, class ...Args>
     static Evaluation twoPhaseSatKrn(const Params& params, const Evaluation& Sw)
     {
+        if constexpr (FrontIsSatCurveMultiplexerDispatchV<Args...>) {
+            return twoPhaseSatKrnT<Evaluation, Args...>(params, Sw);
+        }
+
         switch (params.approach()) {
         case SatCurveMultiplexerApproach::LET:
             return LETTwoPhaseLaw::twoPhaseSatKrn(params.template getRealParams<SatCurveMultiplexerApproach::LET>(),
@@ -365,6 +405,20 @@ public:
         }
 
         return 0.0;
+    }
+
+    template <class Evaluation, class Head, class ...Args>
+    static Evaluation twoPhaseSatKrnT(const Params& params, const Evaluation& Sw)
+    {
+        if constexpr (Head::approach == SatCurveMultiplexerApproach::LET) {
+            return LETTwoPhaseLaw::twoPhaseSatKrn(params.template getRealParams<SatCurveMultiplexerApproach::LET>(),
+                                                  Sw);
+        } else if constexpr (Head::approach == SatCurveMultiplexerApproach::PiecewiseLinear) {
+            return PLTwoPhaseLaw::twoPhaseSatKrn(params.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinear>(),
+                                                 Sw);
+        } else {
+            static_assert(false, "Unknown SatCurveMultiplexerApproach");
+        }
     }
 
     template <class Evaluation>

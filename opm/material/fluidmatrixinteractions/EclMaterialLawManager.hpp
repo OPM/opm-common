@@ -433,6 +433,16 @@ public:
         }
     }
 
+    EclMultiplexerApproach threePhaseApproach() const
+    {
+        return this->threePhaseApproach_;
+    }
+
+    bool satCurveIsAllPiecewiseLinear() const
+    {
+        return this->onlyPiecewiseLinear_;
+    }
+
 private:
     const MaterialLawParams& materialLawParamsFunc_(unsigned elemIdx, FaceDir::DirEnum facedir) const;
 
@@ -464,6 +474,7 @@ private:
     EclMultiplexerApproach threePhaseApproach_ = EclMultiplexerApproach::Default;
     // this attribute only makes sense for twophase simulations!
     enum EclTwoPhaseApproach twoPhaseApproach_ = EclTwoPhaseApproach::GasOil;
+    bool onlyPiecewiseLinear_ = true;
 
     std::vector<MaterialLawParams> materialLawParams_;
     DirectionalMaterialLawParamsPtr dirMaterialLawParams_;

@@ -29,6 +29,7 @@
 
 #include "EclStone1MaterialParams.hpp"
 
+#include <opm/common/TimingMacros.hpp>
 #include <opm/material/common/Valgrind.hpp>
 #include <opm/material/common/MathToolbox.hpp>
 
