@@ -32,7 +32,25 @@
 #include <opm/material/fluidsystems/blackoilpvt/ConstantCompressibilityWaterPvt.hpp>
 #include <opm/material/fluidsystems/blackoilpvt/ConstantCompressibilityBrinePvt.hpp>
 #include <opm/material/fluidsystems/blackoilpvt/WaterPvtThermal.hpp>
+#include <functional>
+#include <opm/common/utility/gpuDecorators.hpp>
+#include <opm/common/utility/gpuistl_if_available.hpp>
+#include <opm/common/utility/VectorWithDefaultAllocator.hpp>
 
+#if OPM_IS_COMPILING_WITH_GPU_COMPILER
+#define OPM_WATER_PVT_MULTIPLEXER_CALL(codeToCall, ...)                                \
+    do {                                                                               \
+    if constexpr (std::is_same_v<PtrType<void>, std::unique_ptr<void>>) {              \
+        auto& pvtImpl = getRealPvt<WaterPvtApproach::BrineCo2>();                      \
+        codeToCall;                                                                    \
+        __VA_ARGS__;                                                                   \
+    } else {                                                                           \
+        auto& pvtImpl = realWaterPvt_;                                                 \
+        codeToCall;                                                                    \
+        __VA_ARGS__;                                                                   \
+    }                                                                                  \
+    } while (false);
+#else
 #define OPM_WATER_PVT_MULTIPLEXER_CALL(codeToCall, ...)                                \
     switch (approach_) {                                                               \
     case WaterPvtApproach::ConstantCompressibilityWater: {                             \
@@ -64,6 +82,7 @@
     case WaterPvtApproach::NoWater:                                                    \
         throw std::logic_error("Not implemented: Water PVT of this deck!");            \
     }
+#endif
 
 namespace Opm {
 
@@ -85,27 +104,61 @@ class Schedule;
  * \brief This class represents the Pressure-Volume-Temperature relations of the water
  *        phase in the black-oil model.
  */
-template <class Scalar, bool enableThermal = true, bool enableBrine = true>
+template <class Scalar, bool enableThermal = true, bool enableBrine = true, template<class> class Storage = VectorWithDefaultAllocator, template <class...> class PtrType = std::unique_ptr>
 class WaterPvtMultiplexer
 {
 public:
+    using ParamsContainer = Storage<double>;
+    using ContainerT = Storage<Scalar>;
+    using ParamsT = CO2Tables<double, Storage>;
+    using UniqueVoidPtrWithDeleter =
+        std::conditional_t<
+            std::is_same_v<PtrType<void>, std::unique_ptr<void>>,
+            std::unique_ptr<void, std::function<void(void*)>>,
+            BrineCo2Pvt<Scalar, Storage>
+        >;
+
     WaterPvtMultiplexer()
         : approach_(WaterPvtApproach::NoWater)
-        , realWaterPvt_(nullptr)
+        , realWaterPvt_(nullptr, [](void*){})
     {
     }
 
     WaterPvtMultiplexer(WaterPvtApproach approach, void* realWaterPvt)
         : approach_(approach)
-        , realWaterPvt_(realWaterPvt)
+        , realWaterPvt_(realWaterPvt, [this](void* ptr){ deleter(ptr); })
     { }
 
-    WaterPvtMultiplexer(const WaterPvtMultiplexer<Scalar,enableThermal,enableBrine>& data)
+    template<class ConcretePvt>
+    WaterPvtMultiplexer(WaterPvtApproach approach, const ConcretePvt& realWaterPvt)
+    : approach_(approach)
+    , realWaterPvt_(nullptr)
     {
-        *this = data;
+        if constexpr (std::is_same_v<PtrType<void>, std::unique_ptr<void>>) {
+            realWaterPvt_ = UniqueVoidPtrWithDeleter(new ConcretePvt(realWaterPvt), [this](void* ptr){ deleter(ptr); } );
+        }
+        else {
+            realWaterPvt_ = realWaterPvt;
+        }
     }
 
-    ~WaterPvtMultiplexer();
+    template <class T = PtrType<void>, typename std::enable_if<!std::is_same_v<T, std::unique_ptr<void>>, int>::type = 0>
+    WaterPvtMultiplexer(WaterPvtApproach approach, const BrineCo2Pvt<Scalar, Storage>& realWaterPvt)
+        : approach_(approach)
+        , realWaterPvt_(realWaterPvt)
+    {
+    }
+
+    WaterPvtMultiplexer(const WaterPvtMultiplexer<Scalar,enableThermal,enableBrine, Storage, PtrType>& data)
+    : approach_(data.approach_)
+    , realWaterPvt_(initializeCopyConstructor(data))
+    {
+        if constexpr (std::is_same_v<PtrType<void>, std::unique_ptr<void>>) {
+            *this = data;
+        }
+    }
+
+    ~WaterPvtMultiplexer() = default;
 
     bool mixingEnergy() const
     {
@@ -126,20 +179,21 @@ public:
     /*!
      * \brief Return the number of PVT regions which are considered by this PVT-object.
      */
-    unsigned numRegions() const;
+    OPM_HOST_DEVICE unsigned numRegions() const;
 
-    void setVapPars(const Scalar par1, const Scalar par2);
+    OPM_HOST_DEVICE void setVapPars(const Scalar par1, const Scalar par2);
 
     /*!
      * \brief Return the reference density which are considered by this PVT-object.
      */
-    Scalar waterReferenceDensity(unsigned regionIdx) const;
+    OPM_HOST_DEVICE Scalar waterReferenceDensity(unsigned regionIdx) const
+    { OPM_WATER_PVT_MULTIPLEXER_CALL(return pvtImpl.waterReferenceDensity(regionIdx)); }
 
     /*!
      * \brief Returns the specific enthalpy [J/kg] of gas given a set of parameters.
      */
     template <class Evaluation>
-    Evaluation internalEnergy(unsigned regionIdx,
+    OPM_HOST_DEVICE Evaluation internalEnergy(unsigned regionIdx,
                         const Evaluation& temperature,
                         const Evaluation& pressure,
                         const Evaluation& Rsw,
@@ -152,7 +206,7 @@ public:
      * \brief Returns the dynamic viscosity [Pa s] of the fluid phase given a set of parameters.
      */
     template <class Evaluation>
-    Evaluation viscosity(unsigned regionIdx,
+    OPM_HOST_DEVICE Evaluation viscosity(unsigned regionIdx,
                          const Evaluation& temperature,
                          const Evaluation& pressure,
                          const Evaluation& Rsw,
@@ -165,7 +219,7 @@ public:
      * \brief Returns the dynamic viscosity [Pa s] of the fluid phase given a set of parameters.
      */
     template <class Evaluation>
-    Evaluation saturatedViscosity(unsigned regionIdx,
+    OPM_HOST_DEVICE Evaluation saturatedViscosity(unsigned regionIdx,
                                   const Evaluation& temperature,
                                   const Evaluation& pressure,
                                   const Evaluation& saltconcentration) const
@@ -177,7 +231,7 @@ public:
      * \brief Returns the formation volume factor [-] of the fluid phase.
      */
     template <class Evaluation>
-    Evaluation inverseFormationVolumeFactor(unsigned regionIdx,
+    OPM_HOST_DEVICE Evaluation inverseFormationVolumeFactor(unsigned regionIdx,
                                             const Evaluation& temperature,
                                             const Evaluation& pressure,
                                             const Evaluation& Rsw,
@@ -190,7 +244,7 @@ public:
      * \brief Returns the formation volume factor [-] of the fluid phase.
      */
     template <class Evaluation>
-    Evaluation saturatedInverseFormationVolumeFactor(unsigned regionIdx,
+    OPM_HOST_DEVICE Evaluation saturatedInverseFormationVolumeFactor(unsigned regionIdx,
                                                      const Evaluation& temperature,
                                                      const Evaluation& pressure,
                                                      const Evaluation& saltconcentration) const
@@ -202,7 +256,7 @@ public:
      * \brief Returns the gas dissolution factor \f$R_s\f$ [m^3/m^3] of saturated water.
      */
     template <class Evaluation>
-    Evaluation saturatedGasDissolutionFactor(unsigned regionIdx,
+    OPM_HOST_DEVICE Evaluation saturatedGasDissolutionFactor(unsigned regionIdx,
                                              const Evaluation& temperature,
                                              const Evaluation& pressure,
                                              const Evaluation& saltconcentration) const
@@ -218,7 +272,7 @@ public:
      * the black-oil PVT interface will just throw an exception...
      */
     template <class Evaluation>
-    Evaluation saturationPressure(unsigned regionIdx,
+    OPM_HOST_DEVICE Evaluation saturationPressure(unsigned regionIdx,
                                   const Evaluation& temperature,
                                   const Evaluation& Rs,
                                   const Evaluation& saltconcentration) const
@@ -228,104 +282,243 @@ public:
      * \copydoc BaseFluidSystem::diffusionCoefficient
      */
     template <class Evaluation>
-    Evaluation diffusionCoefficient(const Evaluation& temperature,
+    OPM_HOST_DEVICE Evaluation diffusionCoefficient(const Evaluation& temperature,
                                     const Evaluation& pressure,
                                     unsigned compIdx) const
     {
       OPM_WATER_PVT_MULTIPLEXER_CALL(return pvtImpl.diffusionCoefficient(temperature, pressure, compIdx));
     }
 
-    void setApproach(WaterPvtApproach appr);
+    OPM_HOST_DEVICE void setApproach(WaterPvtApproach appr);
 
     /*!
      * \brief Returns the concrete approach for calculating the PVT relations.
      *
      * (This is only determined at runtime.)
      */
-    WaterPvtApproach approach() const
+    OPM_HOST_DEVICE WaterPvtApproach approach() const
     { return approach_; }
 
     // get the concrete parameter object for the water phase
     template <WaterPvtApproach approachV>
-    typename std::enable_if<approachV == WaterPvtApproach::ConstantCompressibilityWater, ConstantCompressibilityWaterPvt<Scalar> >::type& getRealPvt()
+    OPM_HOST_DEVICE typename std::enable_if<approachV == WaterPvtApproach::ConstantCompressibilityWater, ConstantCompressibilityWaterPvt<Scalar> >::type& getRealPvt()
     {
         assert(approach() == approachV);
-        return *static_cast<ConstantCompressibilityWaterPvt<Scalar>* >(realWaterPvt_);
+        return *static_cast<ConstantCompressibilityWaterPvt<Scalar>* >(realWaterPvt_.get());
     }
 
     template <WaterPvtApproach approachV>
-    typename std::enable_if<approachV == WaterPvtApproach::ConstantCompressibilityWater, const ConstantCompressibilityWaterPvt<Scalar> >::type& getRealPvt() const
+    OPM_HOST_DEVICE typename std::enable_if<approachV == WaterPvtApproach::ConstantCompressibilityWater, const ConstantCompressibilityWaterPvt<Scalar> >::type& getRealPvt() const
     {
         assert(approach() == approachV);
-        return *static_cast<ConstantCompressibilityWaterPvt<Scalar>* >(realWaterPvt_);
+        return *static_cast<ConstantCompressibilityWaterPvt<Scalar>* >(realWaterPvt_.get());
     }
 
     template <WaterPvtApproach approachV>
-    typename std::enable_if<approachV == WaterPvtApproach::ConstantCompressibilityBrine, ConstantCompressibilityBrinePvt<Scalar> >::type& getRealPvt()
+    OPM_HOST_DEVICE typename std::enable_if<approachV == WaterPvtApproach::ConstantCompressibilityBrine, ConstantCompressibilityBrinePvt<Scalar> >::type& getRealPvt()
     {
         assert(approach() == approachV);
-        return *static_cast<ConstantCompressibilityBrinePvt<Scalar>* >(realWaterPvt_);
+        return *static_cast<ConstantCompressibilityBrinePvt<Scalar>* >(realWaterPvt_.get());
     }
 
     template <WaterPvtApproach approachV>
-    typename std::enable_if<approachV == WaterPvtApproach::ConstantCompressibilityBrine, const ConstantCompressibilityBrinePvt<Scalar> >::type& getRealPvt() const
+    OPM_HOST_DEVICE typename std::enable_if<approachV == WaterPvtApproach::ConstantCompressibilityBrine, const ConstantCompressibilityBrinePvt<Scalar> >::type& getRealPvt() const
     {
         assert(approach() == approachV);
-        return *static_cast<ConstantCompressibilityBrinePvt<Scalar>* >(realWaterPvt_);
+        return *static_cast<ConstantCompressibilityBrinePvt<Scalar>* >(realWaterPvt_.get());
     }
 
     template <WaterPvtApproach approachV>
-    typename std::enable_if<approachV == WaterPvtApproach::ThermalWater, WaterPvtThermal<Scalar, enableBrine> >::type& getRealPvt()
+    OPM_HOST_DEVICE typename std::enable_if<approachV == WaterPvtApproach::ThermalWater, WaterPvtThermal<Scalar, enableBrine> >::type& getRealPvt()
     {
         assert(approach() == approachV);
-        return *static_cast<WaterPvtThermal<Scalar, enableBrine>* >(realWaterPvt_);
+        return *static_cast<WaterPvtThermal<Scalar, enableBrine>* >(realWaterPvt_.get());
     }
 
     template <WaterPvtApproach approachV>
-    typename std::enable_if<approachV == WaterPvtApproach::ThermalWater, const WaterPvtThermal<Scalar, enableBrine> >::type& getRealPvt() const
+    OPM_HOST_DEVICE typename std::enable_if<approachV == WaterPvtApproach::ThermalWater, const WaterPvtThermal<Scalar, enableBrine> >::type& getRealPvt() const
     {
         assert(approach() == approachV);
-        return *static_cast<WaterPvtThermal<Scalar, enableBrine>* >(realWaterPvt_);
+        return *static_cast<WaterPvtThermal<Scalar, enableBrine>* >(realWaterPvt_.get());
     }
 
     template <WaterPvtApproach approachV>
-    typename std::enable_if<approachV == WaterPvtApproach::BrineCo2, BrineCo2Pvt<Scalar> >::type& getRealPvt()
+    OPM_HOST_DEVICE typename std::enable_if<approachV == WaterPvtApproach::BrineCo2, BrineCo2Pvt<Scalar, Storage> >::type& getRealPvt()
     {
         assert(approach() == approachV);
-        return *static_cast<BrineCo2Pvt<Scalar>* >(realWaterPvt_);
+        if constexpr (std::is_same_v<PtrType<void>, std::unique_ptr<void>>) {
+            return *static_cast<BrineCo2Pvt<Scalar, Storage>* >(realWaterPvt_.get());
+        } else {
+            return realWaterPvt_;
+        }
     }
 
     template <WaterPvtApproach approachV>
-    typename std::enable_if<approachV == WaterPvtApproach::BrineCo2, const BrineCo2Pvt<Scalar> >::type& getRealPvt() const
+    OPM_HOST_DEVICE typename std::enable_if<approachV == WaterPvtApproach::BrineCo2, const BrineCo2Pvt<Scalar, Storage> >::type& getRealPvt() const
     {
         assert(approach() == approachV);
-        return *static_cast<const BrineCo2Pvt<Scalar>* >(realWaterPvt_);
+        return *static_cast<const BrineCo2Pvt<Scalar, Storage>* >(realWaterPvt_.get());
     }
 
     template <WaterPvtApproach approachV>
-    typename std::enable_if<approachV == WaterPvtApproach::BrineH2, BrineH2Pvt<Scalar> >::type& getRealPvt()
+    OPM_HOST_DEVICE typename std::enable_if<approachV == WaterPvtApproach::BrineH2, BrineH2Pvt<Scalar> >::type& getRealPvt()
     {
         assert(approach() == approachV);
-        return *static_cast<BrineH2Pvt<Scalar>* >(realWaterPvt_);
+        return *static_cast<BrineH2Pvt<Scalar>* >(realWaterPvt_.get());
     }
 
     template <WaterPvtApproach approachV>
-    typename std::enable_if<approachV == WaterPvtApproach::BrineH2, const BrineH2Pvt<Scalar> >::type& getRealPvt() const
+    OPM_HOST_DEVICE typename std::enable_if<approachV == WaterPvtApproach::BrineH2, const BrineH2Pvt<Scalar> >::type& getRealPvt() const
     {
         assert(approach() == approachV);
-        return *static_cast<const BrineH2Pvt<Scalar>* >(realWaterPvt_);
+        return *static_cast<const BrineH2Pvt<Scalar>* >(realWaterPvt_.get());
     }
 
-    const void* realWaterPvt() const { return realWaterPvt_; }
+    const void* realWaterPvt() const { return realWaterPvt_.get(); }
 
-    WaterPvtMultiplexer<Scalar,enableThermal,enableBrine>&
-    operator=(const WaterPvtMultiplexer<Scalar,enableThermal,enableBrine>& data);
+    WaterPvtMultiplexer<Scalar,enableThermal,enableBrine, Storage, PtrType>&
+    operator=(const WaterPvtMultiplexer<Scalar,enableThermal,enableBrine, Storage, PtrType>& data){
+        approach_ = data.approach_;
+
+        copyPointer(data.realWaterPvt_);
+        return *this;
+    }
 
 private:
+    template <class ConcreteGasPvt> UniqueVoidPtrWithDeleter makeWaterPvt();
+
+    template <class ConcretePvt> UniqueVoidPtrWithDeleter copyPvt(const UniqueVoidPtrWithDeleter& sourcePvt){
+        if constexpr (std::is_same_v<PtrType<void>, std::unique_ptr<void>>) {
+            return UniqueVoidPtrWithDeleter(
+                new ConcretePvt(*static_cast<const ConcretePvt*>(sourcePvt.get())),
+                [this](void* ptr) { deleter(ptr); }
+            );
+        }
+        else {
+            return UniqueVoidPtrWithDeleter(
+                new ConcretePvt(*static_cast<const ConcretePvt*>(sourcePvt.get()))
+            );
+        }
+    }
+
+    void copyPointer(const UniqueVoidPtrWithDeleter& pointer) {
+        switch (approach_) {
+            case WaterPvtApproach::ConstantCompressibilityWater: {
+                realWaterPvt_ = copyPvt<ConstantCompressibilityWaterPvt<Scalar>>(pointer);
+                break;
+            }
+            case WaterPvtApproach::ConstantCompressibilityBrine: {
+                realWaterPvt_ = copyPvt<ConstantCompressibilityBrinePvt<Scalar>>(pointer);
+                break;
+            }
+            case WaterPvtApproach::ThermalWater: {
+                realWaterPvt_ = copyPvt<WaterPvtThermal<Scalar, enableBrine>>(pointer);
+                break;
+            }
+            case WaterPvtApproach::BrineCo2: {
+                realWaterPvt_ = copyPvt<BrineCo2Pvt<Scalar, Storage>>(pointer);
+                break;
+            }
+            case WaterPvtApproach::BrineH2: {
+                realWaterPvt_ = copyPvt<BrineH2Pvt<Scalar>>(pointer);
+                break;
+            }
+            case WaterPvtApproach::NoWater:
+                break;
+            }
+    }
+
+    void deleter(void* ptr){
+        switch (approach_) {
+            case WaterPvtApproach::ConstantCompressibilityWater: {
+                delete static_cast<ConstantCompressibilityWaterPvt<Scalar>*>(ptr);
+                break;
+            }
+            case WaterPvtApproach::ConstantCompressibilityBrine: {
+                delete static_cast<ConstantCompressibilityBrinePvt<Scalar>*>(ptr);
+                break;
+            }
+            case WaterPvtApproach::ThermalWater: {
+                delete static_cast<WaterPvtThermal<Scalar, enableBrine>*>(ptr);
+                break;
+            }
+            case WaterPvtApproach::BrineCo2: {
+                delete static_cast<BrineCo2Pvt<Scalar, Storage>*>(ptr);
+                break;
+            }
+            case WaterPvtApproach::BrineH2: {
+                delete static_cast<BrineH2Pvt<Scalar>*>(ptr);
+                break;
+            }
+            case WaterPvtApproach::NoWater:
+                break;
+            }
+    }
+
+    UniqueVoidPtrWithDeleter initializeCopyConstructor(
+        const WaterPvtMultiplexer<Scalar, enableThermal, enableBrine, Storage, PtrType>& data)
+    {
+        if constexpr (std::is_same_v<PtrType<void>, std::unique_ptr<void>>) {
+            if (data.realWaterPvt_.get() == nullptr) {
+                if constexpr (std::is_same_v<PtrType<void>, std::unique_ptr<void>>) {
+                    return UniqueVoidPtrWithDeleter(nullptr, [](void*){});
+                } else {
+                    return PtrType<void>(nullptr);
+                }
+            }
+            switch (data.approach_) {
+            case WaterPvtApproach::ConstantCompressibilityWater:
+                return copyPvt<ConstantCompressibilityWaterPvt<Scalar>>(data.realWaterPvt_);
+            case WaterPvtApproach::ConstantCompressibilityBrine:
+                return copyPvt<ConstantCompressibilityBrinePvt<Scalar>>(data.realWaterPvt_);
+            case WaterPvtApproach::ThermalWater:
+                return copyPvt<WaterPvtThermal<Scalar, enableBrine>>(data.realWaterPvt_);
+            case WaterPvtApproach::BrineCo2:
+                return copyPvt<BrineCo2Pvt<Scalar, Storage>>(data.realWaterPvt_);
+            case WaterPvtApproach::BrineH2:
+                return copyPvt<BrineH2Pvt<Scalar>>(data.realWaterPvt_);
+            default:
+                if constexpr (std::is_same_v<PtrType<void>, std::unique_ptr<void>>) {
+                    return UniqueVoidPtrWithDeleter(nullptr, [](void*){});
+                } else {
+                    return PtrType<void>(nullptr); // Assuming default constructor works
+                }
+            }
+        }
+        else {
+            return data.realWaterPvt_;
+        }
+    }
+
     WaterPvtApproach approach_{WaterPvtApproach::NoWater};
-    void* realWaterPvt_{nullptr};
+    UniqueVoidPtrWithDeleter realWaterPvt_;
 };
 
+#if HAVE_CUDA
+namespace gpuistl {
+    template<class Scalar>
+    WaterPvtMultiplexer<Scalar, true, true, GpuBuffer>
+    copy_to_gpu(const WaterPvtMultiplexer<Scalar>& waterMultiplexer)
+    {
+        assert(waterMultiplexer.approach() == WaterPvtApproach::BrineCo2);
+
+        auto gpuPvt = copy_to_gpu(waterMultiplexer.template getRealPvt<WaterPvtApproach::BrineCo2>());
+
+        return WaterPvtMultiplexer<Scalar, true, true, GpuBuffer>(WaterPvtApproach::BrineCo2, gpuPvt);
+    }
+
+    template <class Scalar>
+    auto
+    make_view(WaterPvtMultiplexer<Scalar, true, true, GpuBuffer>& waterMultiplexer)
+    {
+        assert(waterMultiplexer.approach() == WaterPvtApproach::BrineCo2);
+
+        auto gpuPvtView = make_view(waterMultiplexer.template getRealPvt<WaterPvtApproach::BrineCo2>());
+
+        return WaterPvtMultiplexer<Scalar, true, true, GpuView, ValueAsPointer>(WaterPvtApproach::BrineCo2, gpuPvtView);
+    }
+} // namespace gpuistl
+#endif // HAVE_CUDA
 } // namespace Opm
 
 #endif
