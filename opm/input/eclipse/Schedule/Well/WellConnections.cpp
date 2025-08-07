@@ -582,12 +582,16 @@ The cell ({},{},{}) in well {} is not active and the connection will be ignored)
         this->loadCOMPDATX(record, grid, wname, wdfac, location, lgr_tag);
     }
 
-    void WellConnections::loadCOMPTRAJ(const DeckRecord&      record,
-                                       const ScheduleGrid&    grid,
-                                       const std::string&     wname,
-                                       const KeywordLocation& location,
-                                       external::cvf::ref<external::cvf::BoundingBoxTree>& cellSearchTree)
-    {
+    std::vector<external::WellPathCellIntersectionInfo>
+    WellConnections::loadCOMPTRAJ(const DeckRecord&      record,
+                                  const ScheduleGrid&    grid,
+                                  const std::string&     wname,
+                                  const KeywordLocation& location,
+                                  external::cvf::ref<external::cvf::BoundingBoxTree>& cellSearchTree,
+                                  external::cvf::ref<external::RigWellPath>& wellPathGeometry)
+                                      {
+        if (this->coord[0].size() == 0) return {};  // No path.
+
         const auto& perf_top = record.getItem("PERF_TOP");
         const auto& perf_bot = record.getItem("PERF_BOT");
 
@@ -633,7 +637,6 @@ The cell ({},{},{}) in well {} is not active and the connection will be ignored)
         points.push_back(p_top);
         measured_depths.push_back(m_top);
 
-        external::cvf::ref<external::RigWellPath> wellPathGeometry { new external::RigWellPath };
         points.reserve(this->coord[0].size());
         measured_depths.reserve(this->coord[0].size());
         for (size_t i = 0; i < coord[0].size(); ++i) {
@@ -797,6 +800,8 @@ CF and Kh items for well {} must both be specified or both defaulted/negative)",
                 prev->updateSegment(conSegNo, cell.depth, css_ind, *perf_range);
             }
         }
+
+        return intersections;
     }
 
     void WellConnections::loadWELTRAJ(const DeckRecord& record,
