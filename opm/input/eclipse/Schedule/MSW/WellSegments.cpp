@@ -63,6 +63,14 @@ namespace Opm {
     }
 
 
+    WellSegments::WellSegments(const std::string &wname,
+        std::vector<std::pair<double, double>>& lengths_and_depths,
+        double diameter, const UnitSystem& unit_system)
+    {
+        this->addWellSegmentsFromLengthsAndDepths(wname, lengths_and_depths, diameter, unit_system);
+    }
+
+
     WellSegments WellSegments::serializationTestObject()
     {
         WellSegments result;
@@ -185,6 +193,44 @@ namespace Opm {
     }
 
 
+    void WellSegments::addWellSegmentsFromLengthsAndDepths(const std::string &wname,
+                                                           std::vector<std::pair<double, double>>& lengths_and_depths,
+                                                           double diameter, const UnitSystem& unit_system)
+    {
+        // Only LengthDepth::ABS is supported:
+        assert (this->m_length_depth_type == WellSegments::LengthDepth::ABS);
+
+        const int branchID = 1;  // Only main branch for now.
+        
+        const double roughness = 0.0;  // Defaulted: ROUGHNESS in WELSEGS.
+        const double area = M_PI * diameter * diameter / 4.0;
+        const double volume = Segment::invalidValue();
+        
+        // Add segments:
+        int segmentID = 2;
+        for (auto [length, depth]: lengths_and_depths) {
+            this->addSegment(
+                segmentID, branchID, segmentID - 1, depth, length, diameter,
+                roughness, area, volume, true, 0.0, 0.0
+            );           
+            segmentID += 1;
+        }
+
+        // Fix inlets:
+        for (const auto& segment : this->m_segments) {
+            const int outlet_segment = segment.outletSegment();
+            if (outlet_segment <= 0) { // no outlet segment
+                continue;
+            }
+
+            const int outlet_segment_index = segment_number_to_index[outlet_segment];
+            m_segments[outlet_segment_index].addInletSegment(segment.segmentNumber());
+        }
+
+        this->process(wname, unit_system, WellSegments::LengthDepth::ABS, this->depthTopSegment(), this->lengthTopSegment());
+    }
+
+
     void WellSegments::loadWELSEGS(const DeckKeyword& welsegsKeyword, const UnitSystem& unit_system)
     {
         // For the first record, which provides the information for the top
@@ -203,6 +249,8 @@ namespace Opm {
 
         const auto nodeX_top = record1.getItem("TOP_X").getSIDouble(0);
         const auto nodeY_top = record1.getItem("TOP_Y").getSIDouble(0);
+
+        this->m_length_depth_type = length_depth_type;
 
         // The main branch is 1 instead of 0.  The segment number for top
         // segment is also 1.

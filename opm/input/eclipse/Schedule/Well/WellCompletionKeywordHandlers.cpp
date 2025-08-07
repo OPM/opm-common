@@ -23,14 +23,22 @@
 #include <opm/common/utility/OpmInputError.hpp>
 
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 
+#include <opm/input/eclipse/Schedule/ScheduleGrid.hpp>
 #include <opm/input/eclipse/Schedule/Action/WGNames.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleState.hpp>
 #include <opm/input/eclipse/Schedule/Well/WDFAC.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
+#include <opm/input/eclipse/Schedule/MSW/Compsegs.hpp>
+#include <opm/input/eclipse/Schedule/MSW/WellSegments.hpp>
 
 #include <opm/input/eclipse/Parser/ParserKeywords/C.hpp>
+
+#include <external/resinsight/ReservoirDataModel/RigWellLogExtractor.h>
+#include <external/resinsight/ReservoirDataModel/RigWellPath.h>
+
 
 #include "../HandlerContext.hpp"
 
@@ -166,13 +174,14 @@ void handleCOMPTRAJ(HandlerContext& handlerContext)
         for (const auto& name : wellnames) {
             auto well2 = handlerContext.state().wells.get(name);
             auto connections = std::make_shared<WellConnections>(well2.getConnections());
+            external::cvf::ref<external::RigWellPath> wellPathGeometry { new external::RigWellPath };
 
             // cellsearchTree is calculated only once and is used to
             // calculated cell intersections of the perforations
             // specified in COMPTRAJ
-            connections->loadCOMPTRAJ(record, handlerContext.grid, name,
-                                      handlerContext.keyword.location(),
-                                      cellSearchTree);
+            auto intersections = connections->loadCOMPTRAJ(
+                record, handlerContext.grid, name, handlerContext.keyword.location(), cellSearchTree, wellPathGeometry
+            );
 
             // In the case that defaults are used in WELSPECS for
             // headI/J the headI/J are calculated based on the well
@@ -192,6 +201,49 @@ Well {} is not connected to grid - will remain SHUT)",
                                              location.lineno, name);
                 OpmLog::warning(msg);
             }
+            
+            if (handlerContext.state().wells.get(name).isMultiSegment()) {
+                // Retrieve the well path coordinates:
+                std::vector<std::tuple<double, double, std::array<int, 3>>> intersections_md_and_ijk;
+                std::vector<std::pair<double, double>> cell_md_and_tvd;
+                intersections_md_and_ijk.reserve(intersections.size());
+                cell_md_and_tvd.reserve(intersections.size());
+                const auto& ecl_grid = handlerContext.grid.get_grid();
+                for (const auto& intersection: intersections) {
+                    const auto ijk = ecl_grid->getIJK(intersection.globCellIndex);
+                    intersections_md_and_ijk.emplace_back(intersection.startMD, intersection.endMD, ijk);
+                    double cell_md = 0.5 * (intersection.startMD + intersection.endMD);
+                    double cell_tvd =  wellPathGeometry->interpolatedPointAlongWellPath(cell_md)[2];
+                    cell_md_and_tvd.emplace_back(cell_md, cell_tvd);
+                }
+
+                auto well = handlerContext.state().wells.get(name);
+                // COMPTRAJ is in absolute units, INC in WELSEGS is not supported:
+                if (well.getSegments().getLengthDepthType() == WellSegments::LengthDepth::INC) {
+                    const auto msg = fmt::format("   WELSEGS/{} defines segments as incremental (INC): only ABS allowed", name);
+                    throw Opm::OpmInputError(msg, handlerContext.keyword.location());
+                }
+                // For now, no segments may be defined via WELSEGS, except for the top:
+                if (well.getSegments().size() > 1) {
+                    const auto msg = fmt::format("   {} already defines segments with the WELSEGS keyword", name);
+                    throw Opm::OpmInputError(msg, handlerContext.keyword.location());
+                }
+                // Generate WELSEGS data:
+                const auto& diameter = record.getItem("DIAMETER").getSIDouble(0);
+                well.addWellSegmentsFromLengthsAndDepths(cell_md_and_tvd, diameter);
+                handlerContext.state().wells.update(std::move(well));
+                handlerContext.record_well_structure_change();
+
+                // Generate COMPSEGS data:
+                well = handlerContext.state().wells.get(name);
+                auto [new_connections, new_segments] = Compsegs::processCOMPSEGS(
+                    intersections_md_and_ijk, well.getSegments(), well.getConnections(), well.getSegments(), handlerContext.grid
+                );
+                well.updateConnections(std::make_shared<WellConnections>(std::move(new_connections)), false);
+                well.updateSegments(std::make_shared<WellSegments>(std::move(new_segments)));
+                handlerContext.state().wells.update(std::move(well));
+                handlerContext.record_well_structure_change();
+            }
 
             handlerContext.state().wellgroup_events()
                 .addEvent(name, ScheduleEvents::COMPLETION_CHANGE);
@@ -209,6 +261,7 @@ Well {} is not connected to grid - will remain SHUT)",
         well.updateRefDepth();
 
         handlerContext.state().wells.update(std::move(well));
+        handlerContext.comptraj_handled(wname);
     }
 
     if (! wells.empty()) {
