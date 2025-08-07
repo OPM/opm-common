@@ -58,6 +58,24 @@ WelSegsSet::difference(const std::set<std::string>& compsegs,
     return difference;
 }
 
+std::vector<WelSegsSet::Entry> 
+WelSegsSet::intersection(const std::set<std::string>& wells1,
+                         const std::set<std::string>& wells2) const
+{
+    std::vector<Entry> intersection;
+    intersection.reserve(entries_.size());
+
+    for (const auto& entry : entries_) {
+        if (std::count(wells1.begin(), wells1.end(), std::get<0>(entry)) &&
+            std::count(wells2.begin(), wells2.end(), std::get<0>(entry))) {
+            intersection.push_back(entry);
+        }
+    }
+
+    return intersection;
+}
+
+
 bool WelSegsSet::PairComp::
 operator()(const Entry& pair, const std::string& str) const
 {
