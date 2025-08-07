@@ -82,6 +82,9 @@ void ExtSmryOutput::write(const std::vector<float>& ts_data, int report_step, bo
     auto current = std::chrono::system_clock::now();
     std::chrono::duration<double> elapsed_seconds = current - m_last_write;
 
+    if ((m_rstep.size() > 0) && (m_rstep.back() == report_step))
+        m_rstep.back() = 0;
+
     m_rstep.push_back(report_step);
 
     // flow is yet not supporting rptonly in summary

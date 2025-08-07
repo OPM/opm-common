@@ -176,17 +176,7 @@ ExtESmry::ExtESmry(const std::string &filename, bool loadBaseRunData) :
             m_tstep_v.push_back(std::get<5>(ext_esmry_head));
 
             m_nTstep_v.push_back(m_tstep_v.back().size());
-
-            int cidx = 0;
-
-            auto it = std::find_if(m_rstep_v[sim_ind].begin(), m_rstep_v[sim_ind].end(),
-                           [&cidx, &rstNum](const int & val)
-                           {
-                              if (val == 1)
-                                  ++cidx;
-
-                              return cidx == rstNum;
-                           });
+            auto it = std::find(m_rstep_v[sim_ind].begin(), m_rstep_v[sim_ind].end(), rstNum);
 
             size_t ind =  std::distance(m_rstep_v[sim_ind].begin(), it);
 
@@ -223,7 +213,7 @@ ExtESmry::ExtESmry(const std::string &filename, bool loadBaseRunData) :
     m_nTstep = m_rstep.size();
 
     for (size_t m = 0; m < m_rstep.size(); m++)
-        if (m_rstep[m] == 1)
+        if (m_rstep[m] > 0)
             m_seqIndex.push_back(m);
 
     std::chrono::duration<double> elapsed_seconds = std::chrono::system_clock::now() - start;
