@@ -310,14 +310,11 @@ namespace {
 
 
     WellConnections
-    processCOMPSEGS(const DeckKeyword& compsegs,
-                    const WellConnections& input_connections,
-                    const WellSegments& input_segments,
-                    const ScheduleGrid& grid,
-                    const ParseContext& parseContext,
-                    ErrorGuard& errors)
+    process_compsegs_records(const std::vector<Record>& compsegs_vector,
+                             const WellConnections& input_connections,
+                             const ScheduleGrid& grid,
+                             const std::string& keyword)
     {
-        const auto& compsegs_vector = Compsegs::compsegsFromCOMPSEGSKeyword( compsegs, input_segments, grid, parseContext, errors);
         WellConnections new_connection_set = input_connections;
 
         for (const auto& compseg : compsegs_vector) {
@@ -342,11 +339,51 @@ namespace {
                             return !connection.attachedToSegment();
                         }))
         {
-            throw std::runtime_error("Not all the connections are attached with a segment. "
-                                     "The information from COMPSEGS is not complete");
+            const std::string msg = fmt::format("Not all the connections are attached with a segment. "
+                                                "The information from {} is not complete", keyword);
+            throw std::runtime_error(msg);
         }
 
         return new_connection_set;
+    }
+
+    WellConnections
+    processCOMPSEGS(const DeckKeyword& compsegs,
+                    const WellConnections& input_connections,
+                    const WellSegments& input_segments,
+                    const ScheduleGrid& grid,
+                    const ParseContext& parseContext,
+                    ErrorGuard& errors)
+    {
+        const auto compsegs_vector = compsegsFromCOMPSEGSKeyword(compsegs, input_segments, grid, parseContext, errors);
+        return process_compsegs_records(compsegs_vector, input_connections, grid, "COMPSEGS");
+    }
+
+    WellConnections
+    getConnectionsAndSegmentsFromTrajectory(const std::vector<TrajectorySegment>& trajectory_segments,
+                                            const WellSegments& segments,
+                                            const WellConnections& input_connections,
+                                            const ScheduleGrid& grid)
+    {
+        std::vector<Record> compsegs;
+
+        for (const auto& trajectory_point : trajectory_segments) {
+            // Defaulted values:
+            const auto direction = Connection::Direction::X;
+            const double center_depth = 0.0;
+            int segment_number = 0;
+            const int branch = 1;
+
+            const std::size_t seqIndex = compsegs.size();
+            compsegs.emplace_back(
+                trajectory_point.ijk[0],trajectory_point.ijk[1], trajectory_point.ijk[2],
+                branch, trajectory_point.startMD, trajectory_point.endMD, direction, center_depth,
+                segment_number, seqIndex
+            );
+        }
+
+        processCOMPSEGS__(compsegs, segments);
+        return process_compsegs_records(compsegs, input_connections, grid, "COMPTRAJ");
     }
 
 namespace {

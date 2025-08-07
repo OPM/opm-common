@@ -185,6 +185,41 @@ namespace Opm {
     }
 
 
+    void WellSegments::addWellSegmentsFromLengthsAndDepths(const std::string &wname,
+                                                           const std::vector<std::pair<double, double>>& lengths_and_depths,
+                                                           double diameter, const UnitSystem& unit_system)
+    {
+        const int branchID = 1;  // Only main branch for now.
+
+        const double roughness = 0.0;  // Defaulted: ROUGHNESS in WELSEGS.
+        const double area = M_PI * diameter * diameter / 4.0;
+        const double volume = Segment::invalidValue();
+
+        // Add segments:
+        int segmentID = 2;
+        for (auto [length, depth]: lengths_and_depths) {
+            this->addSegment(
+                segmentID, branchID, segmentID - 1, depth, length, diameter,
+                roughness, area, volume, true, 0.0, 0.0
+            );
+            segmentID += 1;
+        }
+
+        // Fix inlets:
+        for (const auto& segment : this->m_segments) {
+            const int outlet_segment = segment.outletSegment();
+            if (outlet_segment <= 0) { // no outlet segment
+                continue;
+            }
+
+            const int outlet_segment_index = segment_number_to_index[outlet_segment];
+            m_segments[outlet_segment_index].addInletSegment(segment.segmentNumber());
+        }
+
+        this->process(wname, unit_system, WellSegments::LengthDepth::ABS, this->depthTopSegment(), this->lengthTopSegment());
+    }
+
+
     void WellSegments::loadWELSEGS(const DeckKeyword& welsegsKeyword, const UnitSystem& unit_system)
     {
         // For the first record, which provides the information for the top

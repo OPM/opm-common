@@ -1840,6 +1840,21 @@ bool Well::handleWELSEGS(const DeckKeyword& keyword)
     return true;
 }
 
+void Well::addWellSegmentsFromLengthsAndDepths(const std::vector<std::pair<double, double>>& lengths_and_depths, double diameter, const KeywordLocation& location)
+{
+    if (this->segments == nullptr || this->segments->empty()) {
+        throw OpmInputError{
+            fmt::format("The WELSEGS keyword must be specified for well {} "
+                        "before creating segments through the COMPTRAJ keyword.", this->name()),
+            location
+        };
+    }
+    auto new_segments = std::make_shared<WellSegments>(*this->segments);
+    new_segments->addWellSegmentsFromLengthsAndDepths(this->name(), lengths_and_depths, diameter, *unit_system);
+
+    this->updateSegments(std::move(new_segments));
+}
+
 bool Well::updatePVTTable(std::optional<int> pvt_table_)
 {
     if (pvt_table_.has_value() && (this->pvt_table != *pvt_table_)) {

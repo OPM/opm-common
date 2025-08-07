@@ -54,6 +54,7 @@
 #include "ResCoup/ReservoirCouplingKeywordHandlers.hpp"
 #include "RXXKeywordHandlers.hpp"
 #include "UDQ/UDQKeywordHandlers.hpp"
+#include "Well/GridIndependentWellKeywordHandlers.hpp"
 #include "Well/WellCompletionKeywordHandlers.hpp"
 #include "Well/WellKeywordHandlers.hpp"
 #include "Well/WellPropertiesKeywordHandlers.hpp"
@@ -395,6 +396,7 @@ KeywordHandlers::KeywordHandlers()
     }
 {
     for (const auto& handlerFactory : {getGasLiftOptHandlers,
+                                       getGridIndependentWellKeywordHandlers,
                                        getGroupHandlers,
                                        getGuideRateHandlers,
                                        getMixingRateControlHandlers,

@@ -22,6 +22,7 @@
 #define COMPSEGS_HPP_
 
 #include <unordered_map>
+#include <array>
 #include <vector>
 
 namespace Opm {
@@ -57,6 +58,18 @@ namespace Compsegs {
                     const ScheduleGrid& grid,
                     const ParseContext& parseContext,
                     ErrorGuard& errors);
+
+    struct TrajectorySegment {
+      double startMD;
+      double endMD;
+      std::array<int, 3> ijk;
+    };
+
+    WellConnections
+    getConnectionsAndSegmentsFromTrajectory(const std::vector<TrajectorySegment>& trajectory_segments,
+                                            const WellSegments& segments,
+                                            const WellConnections& input_connections,
+                                            const ScheduleGrid& grid);
 
 
     std::pair<WellConnections, WellSegments>

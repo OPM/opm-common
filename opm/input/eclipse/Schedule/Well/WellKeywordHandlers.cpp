@@ -835,30 +835,6 @@ void handleWELTARG(HandlerContext& handlerContext)
     }
 }
 
-void handleWELTRAJ(HandlerContext& handlerContext)
-{
-    for (const auto& record : handlerContext.keyword) {
-        const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-        const auto wellnames = handlerContext.wellNames(wellNamePattern, false);
-
-        for (const auto& name : wellnames) {
-            auto well2 = handlerContext.state().wells.get(name);
-            auto connections = std::make_shared<WellConnections>(WellConnections(well2.getConnections()));
-            connections->loadWELTRAJ(record, handlerContext.grid, name, handlerContext.keyword.location());
-            if (well2.updateConnections(connections, handlerContext.grid)) {
-                handlerContext.state().wells.update( well2 );
-                handlerContext.record_well_structure_change();
-            }
-            handlerContext.state().wellgroup_events().addEvent( name, ScheduleEvents::COMPLETION_CHANGE);
-            const auto& md = connections->getMD();
-            if (!std::is_sorted(std::begin(md), std::end(md))) {
-                auto msg = fmt::format("Well {} measured depth column is not strictly increasing", name);
-                throw OpmInputError(msg, handlerContext.keyword.location());
-            }
-        }
-    }
-    handlerContext.state().events().addEvent(ScheduleEvents::COMPLETION_CHANGE);
-}
 
 void handleWHISTCTL(HandlerContext& handlerContext)
 {
@@ -1417,7 +1393,6 @@ getWellHandlers()
         { "WELSPECS", &handleWELSPECS },
         { "WELSPECL", &handleWELSPECL },
         { "WELTARG" , &handleWELTARG  },
-        { "WELTRAJ" , &handleWELTRAJ  },
         { "WHISTCTL", &handleWHISTCTL },
         { "WINJGAS",  &handleWINJGAS  },
         { "WLIST"   , &handleWLIST    },
