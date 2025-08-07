@@ -198,6 +198,21 @@ public:
         }
     }
 
+    void expandSize(size_t numElem)
+    {
+        assert(numElem >= size_);
+        if (size_ <= N) {
+            if (numElem > N) {
+                data_.resize(numElem, 0);
+                data_.assign(smallBuf_.begin(), smallBuf_.begin() + size_);
+                dataPtr_ = data_.data();
+            }
+        } else {
+            data_.resize(numElem, 0);
+        }
+        size_ = numElem;
+    }
+
 private:
     void init_(size_t numElem)
     {
