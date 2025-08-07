@@ -394,11 +394,8 @@ public:
         if (thisSize == otherSize) {
             // while the values are divided, the derivatives follow the rule for division,
             // i.e., (u/v)' = (v'u - u'v)/v^2.
-            const ValueType& u = data_[valuepos_()];
+            ValueType& u = data_[valuepos_()];
             const ValueType& v = other.value();
-
-            // value
-            data_[valuepos_()] /= v;
 
             // derivatives
             for (int idx = dstart_(); idx < dend_(); ++idx) {
@@ -407,6 +404,9 @@ public:
 
                 data_[idx] = (v*uPrime - u*vPrime)/(v*v);
             }
+
+            // value
+            u /= v;
 
             return *this;
         }
