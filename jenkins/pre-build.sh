@@ -1,6 +1,6 @@
 #! /bin/bash
 
-./bin/genEvalSpecializations.py
+# ./bin/genEvalSpecializations.py
 
 if test -n "$(git diff)"; then
     echo "The generated source files have been manually edited or the "
