@@ -1837,6 +1837,19 @@ bool Well::handleWELSEGS(const DeckKeyword& keyword)
     return true;
 }
 
+void Well::addWellSegmentsFromLengthsAndDepths(std::vector<std::pair<double, double>>& lengths_and_depths, double diameter)
+{
+    if (this->segments != nullptr) {
+        auto new_segments = std::make_shared<WellSegments>(*this->segments);
+        new_segments->addWellSegmentsFromLengthsAndDepths(this->name(), lengths_and_depths, diameter, *unit_system);
+
+        this->updateSegments(std::move(new_segments));
+    }
+    else {
+        this->updateSegments(std::make_shared<WellSegments>(this->name(), lengths_and_depths, diameter, *unit_system));
+    }
+}
+
 bool Well::updatePVTTable(std::optional<int> pvt_table_)
 {
     if (pvt_table_.has_value() && (this->pvt_table != *pvt_table_)) {

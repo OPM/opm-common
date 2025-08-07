@@ -22,6 +22,8 @@
 
 #include <opm/input/eclipse/Schedule/Well/Connection.hpp>
 #include <external/resinsight/LibGeometry/cvfBoundingBoxTree.h>
+#include <external/resinsight/ReservoirDataModel/RigWellLogExtractor.h>
+#include <external/resinsight/ReservoirDataModel/RigWellPath.h>
 
 #include <array>
 #include <cstddef>
@@ -99,11 +101,13 @@ namespace Opm {
                           const WDFAC&           wdfac,
                           const KeywordLocation& location);
 
-        void loadCOMPTRAJ(const DeckRecord&      record,
-                          const ScheduleGrid&    grid,
-                          const std::string&     wname,
-                          const KeywordLocation& location,
-                          external::cvf::ref<external::cvf::BoundingBoxTree>& cellSearchTree);
+        std::vector<external::WellPathCellIntersectionInfo>
+        loadCOMPTRAJ(const DeckRecord&      record,
+                     const ScheduleGrid&    grid,
+                     const std::string&     wname,
+                     const KeywordLocation& location,
+                     external::cvf::ref<external::cvf::BoundingBoxTree>& cellSearchTree,
+                     external::cvf::ref<external::RigWellPath>& wellPathGeometry);
 
         void loadWELTRAJ(const DeckRecord&      record,
                          const ScheduleGrid&    grid,

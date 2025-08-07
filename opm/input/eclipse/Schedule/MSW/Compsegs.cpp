@@ -310,14 +310,11 @@ namespace {
 
 
     std::pair<WellConnections, WellSegments>
-    processCOMPSEGS(const DeckKeyword& compsegs,
+    processCOMPSEGSfromRecords(const std::vector<Record>& compsegs_vector,
                     const WellConnections& input_connections,
                     const WellSegments& input_segments,
-                    const ScheduleGrid& grid,
-                    const ParseContext& parseContext,
-                    ErrorGuard& errors)
+                    const ScheduleGrid& grid)
     {
-            const auto& compsegs_vector = Compsegs::compsegsFromCOMPSEGSKeyword( compsegs, input_segments, grid, parseContext, errors);
             WellSegments new_segment_set = input_segments;
             WellConnections new_connection_set = input_connections;
 
@@ -349,6 +346,43 @@ namespace {
 
             return std::make_pair( WellConnections( std::move( new_connection_set ) ),
                                    WellSegments( std::move(new_segment_set)));
+    }
+
+    std::pair<WellConnections, WellSegments>
+    processCOMPSEGS(const DeckKeyword& compsegs,
+                    const WellConnections& input_connections,
+                    const WellSegments& input_segments,
+                    const ScheduleGrid& grid,
+                    const ParseContext& parseContext,
+                    ErrorGuard& errors)
+    {
+        const auto& compsegs_vector = Compsegs::compsegsFromCOMPSEGSKeyword(compsegs, input_segments, grid, parseContext, errors);
+        return processCOMPSEGSfromRecords(compsegs_vector, input_connections, input_segments, grid);
+    }
+
+    std::pair<WellConnections, WellSegments>
+    processCOMPSEGS(std::vector<std::tuple<double, double, std::array<int, 3>>>& segments_md_and_ijk,
+                    const WellSegments& segments,
+                    const WellConnections& input_connections,
+                    const WellSegments& input_segments,
+                    const ScheduleGrid& grid)
+    {
+        std::vector<Record> compsegs;
+
+        for (auto [startMD, endMD, ijk] : segments_md_and_ijk) {
+            // Defaulted values:
+            auto direction = Connection::Direction::X;
+            const double center_depth = 0.0;
+            int segment_number = 0;
+            const int branch = 1;
+
+            std::size_t seqIndex = compsegs.size();
+            compsegs.emplace_back(
+                ijk[0], ijk[1], ijk[2], branch, startMD, endMD, direction, center_depth, segment_number, seqIndex);
+        }
+
+        processCOMPSEGS__(compsegs, segments);
+        return processCOMPSEGSfromRecords(compsegs, input_connections, input_segments, grid);
     }
 
 namespace {
