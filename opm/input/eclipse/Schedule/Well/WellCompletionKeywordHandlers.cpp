@@ -205,7 +205,8 @@ Well {} is not connected to grid - will remain SHUT)",
                 OpmLog::warning(msg);
             }
 
-            { // Generate WELSEGS data:
+            if (DeckItem::to_bool(record.getItem("MSW").get<std::string>(0))) {
+                // Generate WELSEGS data:
                 const auto& perf_top = record.getItem("PERF_TOP").getSIDouble(0);
                 const auto& diameter = record.getItem("DIAMETER").getSIDouble(0);
                 auto well = handlerContext.state().wells.get(name);
