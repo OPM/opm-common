@@ -143,6 +143,7 @@ void groupLoop(const std::vector<const Opm::Group*>& groups,
         }
         if (group->wellgroup() &&
             !sched_state.group_contains_lgr(*group, lgr_tag)) {
+            groupID -= 1;
             continue;
         }
 
