@@ -563,6 +563,10 @@ public:
     void setFilterConc(const UDAValue& conc);
     double evalFilterConc(const SummaryState& summary_sate) const;
     bool applyGlobalWPIMULT(double scale_factor);
+    void addWellSegmentsFromIntersections(double length_top,
+                                          const std::vector<double>& centers_md,
+                                          const std::vector<double>& centers_tvd,
+                                          double diameter);
 
     void filterConnections(const ActiveGridCells& grid);
     ProductionControls productionControls(const SummaryState& st) const;
