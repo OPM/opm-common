@@ -138,7 +138,7 @@ namespace Opm {
     {
         if (i >= getNX() || j >= getNY() || k >= getNZ())
             throw std::invalid_argument(fmt::format("Input IJK index ({}, {}, {}) not part of grid with dimensions {} x {} x {}.",
-                                                    i + 1, j + 1, k + 1, getNX(), getNY(),getNZ()));
+                                                   i + 1, j + 1, k + 1, getNX(), getNY(),getNZ()));
     }
 
     // keyword must be DIMENS or SPECGRID

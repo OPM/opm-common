@@ -390,7 +390,7 @@ namespace Opm {
         result.restart_output = WriteRestartFileEvents::serializationTestObject();
         result.completed_cells = CompletedCells::serializationTestObject();
         result.completed_cells_lgr =  std::vector<CompletedCells>(3, CompletedCells::serializationTestObject());
-        result.completed_cells_lgr_map = { {"GLOBAL", 0}, {"LGR2", 1}, {"LGR1", 2} };	
+        result.completed_cells_lgr_map = { {"GLOBAL", 0}, {"LGR2", 1}, {"LGR1", 2} };
         result.current_report_step = 0;
         result.m_lowActionParsingStrictness = false;
         result.simUpdateFromPython = std::make_shared<SimulatorUpdate>(SimulatorUpdate::serializationTestObject());
@@ -586,7 +586,7 @@ void check_compsegs_consistency(const Opm::WelSegsSet& welsegs,
                                 const std::vector<::Opm::Well>& wells)
 {
     const auto difference = welsegs.difference(compsegs, wells);
-    
+
     if (!difference.empty()) {
         std::string well_str = "well";
         if (difference.size() > 1) {
@@ -1741,7 +1741,7 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
                                     action_mode,
                                     &sim_update,
                                     &target_wellpi,
-                                    wpimult_global_factor);    
+                                    wpimult_global_factor);
             }
             else {
                 const std::string msg_fmt =
@@ -2291,14 +2291,14 @@ namespace {
 }
 
     void Schedule::init_completed_cells_lgr(const EclipseGrid& ecl_grid)
-    { 
+    {
         if (ecl_grid.is_lgr())
         {
             std::size_t num_label = ecl_grid.get_all_lgr_labels().size();
             completed_cells_lgr.reserve(num_label);
             for (const auto& lgr_tag : ecl_grid.get_all_lgr_labels())
             {
-                const auto& lgr_grid = ecl_grid.getLGRCell(lgr_tag);    
+                const auto& lgr_grid = ecl_grid.getLGRCell(lgr_tag);
                 completed_cells_lgr.emplace_back(lgr_grid.getNX(), lgr_grid.getNY(), lgr_grid.getNZ());
             }
         }
