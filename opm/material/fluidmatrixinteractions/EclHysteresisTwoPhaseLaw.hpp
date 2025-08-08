@@ -181,8 +181,8 @@ public:
         }
         else {
             Scalar pciwght = params.pcWght(); // Align pci and pcd at Swir
-            //const Evaluation& SwEff = params.Swcri()+(Sw-params.pcSwMdc())/(Swma-params.pcSwMdc())*(Swma-params.Swcri());
-            const Evaluation& SwEff = Sw; // This is Killough 1976, Gives significantly better fit compared to benchmark then the above "scaling"
+            const Evaluation& SwEff = params.Swcri()+(Sw-params.pcSwMdc())/(Swma-params.pcSwMdc())*(Swma-params.Swcri());
+            //const Evaluation& SwEff = Sw; // This is Killough 1976, Gives significantly better fit compared to benchmark then the above "scaling"
             const Evaluation& Pci = pciwght*EffectiveLaw::twoPhaseSatPcnw(params.imbibitionParams(), SwEff);
 
             const Evaluation& Pcd = EffectiveLaw::twoPhaseSatPcnw(params.drainageParams(), Sw);
