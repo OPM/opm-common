@@ -691,7 +691,7 @@ private:
     void appendDerivativesToConstant(size_t numDer) {
         assert(size() == 0); // we only append derivatives to a constant
         if (numDer > 0) {
-            data_.expandSize(1 + numDer);
+            data_.resize(1 + numDer);
         }
     }
 };
