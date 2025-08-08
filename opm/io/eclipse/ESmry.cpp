@@ -1088,9 +1088,11 @@ bool ESmry::make_esmry_file()
         std::vector<int> is_rstep;
         is_rstep.reserve(timeStepList.size());
 
+        int rstep_num = 0;
+
         for (size_t i = 0; i < timeStepList.size(); i++)
             if(std::find(seqIndex.begin(), seqIndex.end(), i) != seqIndex.end())
-                is_rstep.push_back(1);
+                is_rstep.push_back(++rstep_num);
             else
                 is_rstep.push_back(0);
 
