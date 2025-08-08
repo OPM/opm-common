@@ -5028,13 +5028,19 @@ void Opm::out::Summary::SummaryImplementation::write(const bool is_final_summary
 
     for (auto i = 0*this->numUnwritten_; i < this->numUnwritten_; ++i) {
         this->write(this->unwritten_[i]);
+    }
 
-        if (this->esmry_ != nullptr) {
+    // Eagerly output last set of parameters to permanent storage.
+    this->stream_->flushStream();
+
+    if (this->esmry_ != nullptr) {
+        for (auto i = 0*this->numUnwritten_; i < this->numUnwritten_; ++i) {
             this->esmry_->write(this->unwritten_[i].params,
                                 this->unwritten_[i].seq,
                                 is_final_summary);
         }
     }
+
     // Reset "unwritten" counter to reflect the fact that we've
     // output all stored ministeps.
     this->numUnwritten_ = zero;
