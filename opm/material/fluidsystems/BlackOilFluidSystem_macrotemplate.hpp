@@ -1878,7 +1878,7 @@ short FLUIDSYSTEM_CLASSNAME<Scalar,IndexTraits, Storage>::
 canonicalToActivePhaseIdx(unsigned phaseIdx)
 {
     assert(phaseIdx<numPhases);
-    assert(phaseIsActive(phaseIdx));
+    if (!phaseIsActive(phaseIdx)) return -1;  // old phase_used return -1
     return canonicalToActivePhaseIdx_[phaseIdx];
 }
 
