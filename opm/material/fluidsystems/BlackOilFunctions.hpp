@@ -27,10 +27,6 @@
 #ifndef OPM_MATERIAL_FLUIDSYSTEMS_BLACKOILFUNCTIONS_HEADER_INCLUDED
 #define OPM_MATERIAL_FLUIDSYSTEMS_BLACKOILFUNCTIONS_HEADER_INCLUDED
 
-#include "blackoilpvt/GasPvtMultiplexer.hpp"
-#include "blackoilpvt/OilPvtMultiplexer.hpp"
-#include "blackoilpvt/WaterPvtMultiplexer.hpp"
-
 #include <opm/common/TimingMacros.hpp>
 
 #include <opm/material/Constants.hpp>
@@ -126,7 +122,7 @@ getRsw_(typename std::enable_if<HasMember_Rsw<FluidState>::value, const FluidSta
     return decay<LhsEval>(fluidState.Rsw());
 }
 
-template <class FluidSystem, class FluidState, class LhsEval>
+template <class FluidState, class LhsEval>
 LhsEval
 getSaltConcentration_(typename std::enable_if<!HasMember_saltConcentration<FluidState>::value, const FluidState&>::type,
                       unsigned)
@@ -134,7 +130,7 @@ getSaltConcentration_(typename std::enable_if<!HasMember_saltConcentration<Fluid
     return 0.0;
 }
 
-template <class FluidSystem, class FluidState, class LhsEval>
+template <class FluidState, class LhsEval>
 auto
 getSaltConcentration_(
     typename std::enable_if<HasMember_saltConcentration<FluidState>::value, const FluidState&>::type fluidState,

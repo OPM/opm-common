@@ -257,10 +257,14 @@ public:
      */
     template <class FluidState, class LhsEval = typename FluidState::Scalar>
     std::pair<LhsEval, LhsEval>
-    inverseFormationVolumeFactorAndViscosity(const FluidState& /*fluidState*/, unsigned /*regionIdx*/)
+    inverseFormationVolumeFactorAndViscosity(const FluidState& fluidState, unsigned regionIdx)
     {
-        throw std::logic_error("Needs fixing before merging!");
-        return {};
+        const LhsEval& T = decay<LhsEval>(fluidState.temperature(FluidState::gasPhaseIdx));
+        const LhsEval& p = decay<LhsEval>(fluidState.pressure(FluidState::gasPhaseIdx));
+        const LhsEval& Rv = decay<LhsEval>(fluidState.Rv());
+        const LhsEval& Rvw = decay<LhsEval>(fluidState.Rvw());
+        return { this->inverseFormationVolumeFactor(regionIdx, T, p, Rv, Rvw),
+                 this->viscosity(regionIdx, T, p, Rv, Rvw) };
     }
 
     /*!

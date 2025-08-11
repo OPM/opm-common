@@ -107,7 +107,7 @@ auto getSaltSaturation_(typename std::enable_if<!HasMember_saltSaturation<FluidS
  * relatively slow.
  */
 template <class ScalarT,
-          class FluidSystem,
+          class FluidSystemT,
           bool enableTemperature = false,
           bool enableEnergy = false,
           bool enableDissolution = true,
@@ -115,10 +115,13 @@ template <class ScalarT,
           bool enableBrine = false,
           bool enableSaltPrecipitation = false,
           bool enableDissolutionInWater = false,
-          unsigned numStoragePhases = FluidSystem::numPhases>
+          unsigned numStoragePhases = FluidSystemT::numPhases>
 class BlackOilFluidState
 {
 public:
+    using FluidSystem = FluidSystemT;
+    using Scalar = ScalarT;
+
     enum { waterPhaseIdx = FluidSystem::waterPhaseIdx };
     enum { gasPhaseIdx = FluidSystem::gasPhaseIdx };
     enum { oilPhaseIdx = FluidSystem::oilPhaseIdx };
@@ -127,7 +130,6 @@ public:
     enum { gasCompIdx = FluidSystem::gasCompIdx };
     enum { oilCompIdx = FluidSystem::oilCompIdx };
 
-    using Scalar = ScalarT;
     enum { numPhases = FluidSystem::numPhases };
     enum { numComponents = FluidSystem::numComponents };
 
@@ -204,7 +206,7 @@ public:
             setRsw(BlackOil::getRsw_<FluidSystem, FluidState, Scalar>(fs, pvtRegionIdx));
         }
         if constexpr (enableBrine){
-            setSaltConcentration(BlackOil::getSaltConcentration_<FluidSystem, FluidState, Scalar>(fs, pvtRegionIdx));
+            setSaltConcentration(BlackOil::getSaltConcentration_<FluidState, Scalar>(fs, pvtRegionIdx));
         }
         if constexpr (enableSaltPrecipitation){
             setSaltSaturation(BlackOil::getSaltSaturation_<FluidSystem, FluidState, Scalar>(fs, pvtRegionIdx));
