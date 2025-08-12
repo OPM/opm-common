@@ -209,10 +209,29 @@ public:
      */
     template <class FluidState, class LhsEval = typename FluidState::Scalar>
     std::pair<LhsEval, LhsEval>
-    inverseFormationVolumeFactorAndViscosity(const FluidState& /*fluidState*/, unsigned /*regionIdx*/)
+    inverseFormationVolumeFactorAndViscosity(const FluidState& fluidState, unsigned regionIdx)
     {
-        throw std::logic_error("Needs fixing before merging!");
-        return {};
+        const LhsEval& p = decay<LhsEval>(fluidState.pressure(FluidState::gasPhaseIdx));
+        const LhsEval& Rvw = decay<LhsEval>(fluidState.Rvw());
+
+        const auto satSegIdx = this->saturatedWaterVaporizationFactorTable_[regionIdx].findSegmentIndex(p, /*extrapolate=*/ true);
+        const auto& RvwSat = this->saturatedWaterVaporizationFactorTable_[regionIdx].eval(p, SegmentIndex{satSegIdx});
+        const bool useSaturatedTables = (fluidState.saturation(FluidState::waterPhaseIdx) > 0.0) && (Rvw >= (1.0 - 1e-10) * RvwSat);
+
+        if (useSaturatedTables) {
+            const LhsEval b = this->inverseSaturatedGasB_[regionIdx].eval(p, SegmentIndex{satSegIdx});
+            const LhsEval invBMu = this->inverseSaturatedGasBMu_[regionIdx].eval(p, SegmentIndex{satSegIdx});
+            const LhsEval mu = b / invBMu;
+            return { b, mu };
+        } else {
+            unsigned ii, jj1, jj2;
+            LhsEval alpha, beta1, beta2;
+            this->inverseGasB_[regionIdx].findPoints(ii, jj1, jj2, alpha, beta1, beta2, p, Rvw, /*extrapolate =*/ true);
+            const LhsEval b = this->inverseGasB_[regionIdx].eval(ii, jj1, jj2, alpha, beta1, beta2);
+            const LhsEval invBMu = this->inverseGasBMu_[regionIdx].eval(ii, jj1, jj2, alpha, beta1, beta2);
+            const LhsEval mu = b / invBMu;
+            return { b, mu };
+        }
     }
 
     /*!
