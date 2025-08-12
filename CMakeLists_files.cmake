@@ -138,6 +138,8 @@ if(ENABLE_ECL_INPUT)
     opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/SingleNumericalAquifer.cpp
     opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquifers.cpp
     opm/input/eclipse/EclipseState/Compositional/CompositionalConfig.cpp
+    opm/input/eclipse/EclipseState/Grid/AutoRefinement.cpp
+    opm/input/eclipse/EclipseState/Grid/AutoRefManager.cpp
     opm/input/eclipse/EclipseState/Grid/Box.cpp
     opm/input/eclipse/EclipseState/Grid/BoxManager.cpp
     opm/input/eclipse/EclipseState/Grid/Carfin.cpp
@@ -159,6 +161,7 @@ if(ENABLE_ECL_INPUT)
     opm/input/eclipse/EclipseState/Grid/NNC.cpp
     opm/input/eclipse/EclipseState/Grid/Operate.cpp
     opm/input/eclipse/EclipseState/Grid/PinchMode.cpp
+    opm/input/eclipse/EclipseState/Grid/readKeywordAutoRef.cpp
     opm/input/eclipse/EclipseState/Grid/readKeywordCarfin.cpp
     opm/input/eclipse/EclipseState/Grid/RegionSetMatcher.cpp
     opm/input/eclipse/EclipseState/Grid/SatfuncPropertyInitializers.cpp
@@ -555,6 +558,7 @@ if(ENABLE_ECL_INPUT)
     tests/parser/ACTIONX.cpp
     tests/parser/ADDREGTests.cpp
     tests/parser/AquiferTests.cpp
+    tests/parser/AutorefTests.cpp
     tests/parser/BCConfigTests.cpp
     tests/parser/BoxTests.cpp
     tests/parser/CarfinTests.cpp
@@ -1239,6 +1243,8 @@ if(ENABLE_ECL_INPUT)
        opm/input/eclipse/EclipseState/Grid/RegionSetMatcher.hpp
        opm/input/eclipse/EclipseState/Grid/SatfuncPropertyInitializers.hpp
        opm/input/eclipse/EclipseState/Grid/Fault.hpp
+       opm/input/eclipse/EclipseState/Grid/AutoRefinement.hpp
+       opm/input/eclipse/EclipseState/Grid/AutoRefManager.hpp
        opm/input/eclipse/EclipseState/Grid/Box.hpp
        opm/input/eclipse/EclipseState/Grid/Carfin.hpp
        opm/input/eclipse/EclipseState/Grid/LgrCollection.hpp
