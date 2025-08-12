@@ -35,6 +35,7 @@ copyright holders.
 #include <opm/material/components/H2.hpp>
 #include <opm/material/common/UniformTabulated2DFunction.hpp>
 #include <opm/material/common/Valgrind.hpp>
+#include <opm/material/fluidsystems/BlackOilFunctions.hpp>
 
 #include <cstddef>
 #include <vector>
@@ -266,10 +267,20 @@ public:
      */
     template <class FluidState, class LhsEval = typename FluidState::Scalar>
     std::pair<LhsEval, LhsEval>
-    inverseFormationVolumeFactorAndViscosity(const FluidState& /*fluidState*/, unsigned /*regionIdx*/)
+    inverseFormationVolumeFactorAndViscosity(const FluidState& fluidState, unsigned regionIdx)
     {
-        throw std::logic_error("Needs fixing before merging!");
-        return {};
+        // Deal with the possibility that we are in a two-phase H2STORE with OIL and GAS as phases.
+        const bool waterIsActive = FluidState::FluidSystem::phaseIsActive(FluidState::waterPhaseIdx);
+        const int myPhaseIdx = waterIsActive ? FluidState::waterPhaseIdx : FluidState::oilPhaseIdx;
+
+        const LhsEval& T = decay<LhsEval>(fluidState.temperature(myPhaseIdx));
+        const LhsEval& p = decay<LhsEval>(fluidState.pressure(myPhaseIdx));
+        const LhsEval& Rsw = decay<LhsEval>(fluidState.Rsw());
+        const LhsEval& saltConcentration
+            = BlackOil::template getSaltConcentration_<FluidState, LhsEval>(fluidState, regionIdx);
+        // TODO: The viscosity does not yet depend on the composition
+        return { this->inverseFormationVolumeFactor(regionIdx, T, p, Rsw, saltConcentration) ,
+                this->saturatedViscosity(regionIdx, T, p, saltConcentration) };
     }
 
     /*!
