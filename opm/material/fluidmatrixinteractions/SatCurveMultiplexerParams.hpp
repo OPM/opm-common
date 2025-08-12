@@ -46,6 +46,21 @@ enum class SatCurveMultiplexerApproach {
     LET
 };
 
+template <SatCurveMultiplexerApproach ApproachArg>
+struct SatCurveMultiplexerDispatch
+{
+    static constexpr auto approach = ApproachArg;
+};
+
+// Helper struct to tell if a parameter pack starts with SatCurveMultiplexerDispatch.
+template <typename ...Args>
+struct FrontIsSatCurveMultiplexerDispatch : public std::false_type {};
+template <SatCurveMultiplexerApproach Value, typename ...Args>
+struct FrontIsSatCurveMultiplexerDispatch<SatCurveMultiplexerDispatch<Value>, Args...> : public std::true_type {};
+template <typename ...Args>
+constexpr bool FrontIsSatCurveMultiplexerDispatchV = FrontIsSatCurveMultiplexerDispatch<Args...>::value;
+
+
 /*!
  * \ingroup FluidMatrixInteractions
  *
