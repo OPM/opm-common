@@ -366,10 +366,10 @@ public:
         // Deal with the possibility that we are in a two-phase CO2STORE with OIL and GAS as phases.
         const bool waterIsActive = FluidState::FluidSystem::phaseIsActive(FluidState::waterPhaseIdx);
         const int myPhaseIdx = waterIsActive ? FluidState::waterPhaseIdx : FluidState::oilPhaseIdx;
+        const LhsEval& Rsw = waterIsActive ? decay<LhsEval>(fluidState.Rsw()) : decay<LhsEval>(fluidState.Rs());
 
         const LhsEval& T = decay<LhsEval>(fluidState.temperature(myPhaseIdx));
         const LhsEval& p = decay<LhsEval>(fluidState.pressure(myPhaseIdx));
-        const LhsEval& Rsw = decay<LhsEval>(fluidState.Rsw());
         const LhsEval& saltConcentration
             = BlackOil::template getSaltConcentration_<FluidState, LhsEval>(fluidState, regionIdx);
         // TODO: The viscosity does not yet depend on the composition
