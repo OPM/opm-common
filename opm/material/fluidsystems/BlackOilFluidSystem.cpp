@@ -51,30 +51,7 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
     std::size_t num_regions = eclState.runspec().tabdims().getNumPVTTables();
     initBegin(num_regions);
 
-    numActivePhases_ = 0;
-    std::fill_n(&phaseIsActive_[0], numPhases, false);
-
-    if (eclState.runspec().phases().active(Phase::OIL)) {
-        phaseIsActive_[oilPhaseIdx] = true;
-        ++numActivePhases_;
-    }
-
-    if (eclState.runspec().phases().active(Phase::GAS)) {
-        phaseIsActive_[gasPhaseIdx] = true;
-        ++numActivePhases_;
-    }
-
-    if (eclState.runspec().phases().active(Phase::WATER)) {
-        phaseIsActive_[waterPhaseIdx] = true;
-        ++numActivePhases_;
-    }
-
-    // this fluidsystem only supports one, two or three phases
-    if (numActivePhases_ < 1 || numActivePhases_ > 3) {
-        OPM_THROW(std::runtime_error,
-                  fmt::format("Fluidsystem supports 1-3 phases, but {} is active\n",
-                              numActivePhases_));
-    }
+    phaseUsageInfo_.initFromState(eclState);
 
     // set the surface conditions using the STCOND keyword
     surfaceTemperature = eclState.getTableManager().stCond().temperature;
@@ -222,13 +199,8 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
 #endif
 
 #define INSTANTIATE_TYPE(T) \
-    template<> unsigned char BlackOilFluidSystem<T, BlackOilDefaultFluidSystemIndices, VectorWithDefaultAllocator>::numActivePhases_ = 0; \
-    template<> std::array<bool, BlackOilFluidSystem<T, BlackOilDefaultFluidSystemIndices, VectorWithDefaultAllocator>::numPhases> \
-        BlackOilFluidSystem<T, BlackOilDefaultFluidSystemIndices, VectorWithDefaultAllocator>::phaseIsActive_ = {false, false, false}; \
-    template<> std::array<short, BlackOilFluidSystem<T, BlackOilDefaultFluidSystemIndices, VectorWithDefaultAllocator>::numPhases> \
-        BlackOilFluidSystem<T, BlackOilDefaultFluidSystemIndices, VectorWithDefaultAllocator>::activeToCanonicalPhaseIdx_ = {0, 1, 2}; \
-    template<> std::array<short, BlackOilFluidSystem<T, BlackOilDefaultFluidSystemIndices, VectorWithDefaultAllocator>::numPhases> \
-        BlackOilFluidSystem<T , BlackOilDefaultFluidSystemIndices, VectorWithDefaultAllocator>::canonicalToActivePhaseIdx_ = {0, 1, 2}; \
+    template<> PhaseUsageInfo<BlackOilDefaultFluidSystemIndices> \
+               BlackOilFluidSystem<T, BlackOilDefaultFluidSystemIndices, VectorWithDefaultAllocator>::phaseUsageInfo_ = {};   \
     template<> T BlackOilFluidSystem<T, BlackOilDefaultFluidSystemIndices, VectorWithDefaultAllocator>::surfaceTemperature = 0.0; \
     template<> T BlackOilFluidSystem<T, BlackOilDefaultFluidSystemIndices, VectorWithDefaultAllocator>::surfacePressure = 0.0; \
     template<> T BlackOilFluidSystem<T, BlackOilDefaultFluidSystemIndices, VectorWithDefaultAllocator>::reservoirTemperature_ = 0.0; \
