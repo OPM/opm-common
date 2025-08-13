@@ -280,10 +280,30 @@ public:
      */
     template <class FluidState, class LhsEval = typename FluidState::Scalar>
     std::pair<LhsEval, LhsEval>
-    inverseFormationVolumeFactorAndViscosity(const FluidState& /*fluidState*/, unsigned /*regionIdx*/)
+    inverseFormationVolumeFactorAndViscosity(const FluidState& fluidState, unsigned regionIdx)
     {
-        throw std::logic_error("Needs fixing before merging!");
-        return {};
+        auto [b, mu] = isothermalPvt_->inverseFormationVolumeFactorAndViscosity(fluidState, regionIdx);
+        const LhsEval& temperature = decay<LhsEval>(fluidState.temperature(FluidState::gasPhaseIdx));
+        if (enableThermalDensity()) {
+            // we use the same approach as for the for water here, but with the OPM-specific
+            // GASDENT keyword.
+            //
+            // TODO: Since gas is quite a bit more compressible than water, it might be
+            //       necessary to make GASDENT to a table keyword. If the current temperature
+            //       is relatively close to the reference temperature, the current approach
+            //       should be good enough, though.
+            Scalar TRef = gasdentRefTemp_[regionIdx];
+            Scalar cT1 = gasdentCT1_[regionIdx];
+            Scalar cT2 = gasdentCT2_[regionIdx];
+            const LhsEval& Y = temperature - TRef;
+            b /= (1.0 + (cT1 + cT2 * Y) * Y);
+        }
+        if (enableThermalViscosity()) {
+            // compute the viscosity deviation due to temperature
+            const auto& muGasvisct = gasvisctCurves_[regionIdx].eval(temperature, /*extrapolate=*/true);
+            mu *= (muGasvisct / viscRef_[regionIdx]);
+        }
+        return { b, mu };
     }
 
     /*!
