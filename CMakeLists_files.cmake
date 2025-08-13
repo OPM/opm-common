@@ -982,6 +982,7 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/material/fluidsystems/BaseFluidSystem.hpp
       opm/material/fluidsystems/BlackOilDefaultFluidSystemIndices.hpp
       opm/material/fluidsystems/ParameterCacheBase.hpp
+      opm/material/fluidsystems/PhaseUsageInfo.hpp
       opm/material/fluidsystems/H2ON2LiquidPhaseFluidSystem.hpp
       opm/material/fluidsystems/BrineCO2FluidSystem.hpp
       opm/material/fluidsystems/GasPhase.hpp
