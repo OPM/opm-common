@@ -37,7 +37,7 @@
 
 namespace Opm {
 
-template <
+template<
     class Traits,
     template<class> class Storage,
     template<typename> typename SharedPtr,
@@ -45,7 +45,7 @@ template <
 >
 EclMaterialLawManager<Traits, Storage, SharedPtr, UniquePtr>::EclMaterialLawManager() = default;
 
-template <
+template<
     class Traits,
     template<class> class Storage,
     template<typename> typename SharedPtr,
@@ -53,7 +53,7 @@ template <
 >
 EclMaterialLawManager<Traits, Storage, SharedPtr, UniquePtr>::~EclMaterialLawManager() = default;
 
-template <
+template<
     class Traits,
     template<class> class Storage,
     template<typename> typename SharedPtr,
@@ -149,7 +149,7 @@ initFromState(const EclipseState& eclState)
     }
 }
 
-template <
+template<
     class Traits,
     template<class> class Storage,
     template<typename> typename SharedPtr,
@@ -157,7 +157,7 @@ template <
 >
 void EclMaterialLawManager<Traits, Storage, SharedPtr, UniquePtr>::
 initParamsForElements(const EclipseState& eclState, size_t numCompressedElems,
-                      const std::function<std::vector<int>(const FieldPropsManager&, const std::string&, bool)>& fieldPropIntOnLeafAssigner,
+                      const std::function<Storage<int>(const FieldPropsManager&, const std::string&, bool)>& fieldPropIntOnLeafAssigner,
                       const std::function<unsigned(unsigned)>& lookupIdxOnLevelZeroAssigner)
 {
     InitParams initParams {*this, eclState, numCompressedElems};
@@ -166,7 +166,7 @@ initParamsForElements(const EclipseState& eclState, size_t numCompressedElems,
 
 // TODO: Better (proper?) handling of mixed wettability systems - see ecl kw OPTIONS switch 74
 // Note: Without OPTIONS[74] the negative part of the Pcow curve is not scaled
-template <
+template<
     class Traits,
     template<class> class Storage,
     template<typename> typename SharedPtr,
@@ -245,7 +245,7 @@ applySwatinit(unsigned elemIdx,
     return {Sw, newSwatInit};
 }
 
-template <
+template<
     class Traits,
     template<class> class Storage,
     template<typename> typename SharedPtr,
@@ -268,7 +268,7 @@ EclMaterialLawManager<Traits, Storage, SharedPtr, UniquePtr>::applyRestartSwatIn
               EclTwoPhaseSystemType::OilWater);
 }
 
-template <
+template<
     class Traits,
     template<class> class Storage,
     template<typename> typename SharedPtr,
@@ -363,7 +363,7 @@ connectionMaterialLawParams(unsigned satRegionIdx, unsigned elemIdx) const
     return mlp;
 }
 
-template <
+template<
     class Traits,
     template<class> class Storage,
     template<typename> typename SharedPtr,
@@ -373,7 +373,7 @@ int EclMaterialLawManager<Traits, Storage, SharedPtr, UniquePtr>::
 getKrnumSatIdx(unsigned elemIdx, FaceDir::DirEnum facedir) const
 {
     using Dir = FaceDir::DirEnum;
-    const std::vector<int>* array = nullptr;
+    const Storage<int>* array = nullptr;
     switch(facedir) {
     case Dir::XPlus:
       array = &krnumXArray_;
@@ -395,7 +395,7 @@ getKrnumSatIdx(unsigned elemIdx, FaceDir::DirEnum facedir) const
     }
 }
 
-template <
+template<
     class Traits,
     template<class> class Storage,
     template<typename> typename SharedPtr,
@@ -414,7 +414,7 @@ oilWaterHysteresisParams(Scalar& soMax,
     MaterialLaw::oilWaterHysteresisParams(soMax, swMax, swMin, params);
 }
 
-template <
+template<
     class Traits,
     template<class> class Storage,
     template<typename> typename SharedPtr,
@@ -433,7 +433,7 @@ setOilWaterHysteresisParams(const Scalar& soMax,
     MaterialLaw::setOilWaterHysteresisParams(soMax, swMax, swMin, params);
 }
 
-template <
+template<
     class Traits,
     template<class> class Storage,
     template<typename> typename SharedPtr,
@@ -452,7 +452,7 @@ gasOilHysteresisParams(Scalar& sgmax,
     MaterialLaw::gasOilHysteresisParams(sgmax, shmax, somin, params);
 }
 
-template <
+template<
     class Traits,
     template<class> class Storage,
     template<typename> typename SharedPtr,
@@ -471,7 +471,7 @@ setGasOilHysteresisParams(const Scalar& sgmax,
     MaterialLaw::setGasOilHysteresisParams(sgmax, shmax, somin, params);
 }
 
-template <
+template<
     class Traits,
     template<class> class Storage,
     template<typename> typename SharedPtr,
@@ -507,7 +507,7 @@ oilWaterScaledEpsPointsDrainage(unsigned elemIdx)
     }
 }
 
-template <
+template<
     class Traits,
     template<class> class Storage,
     template<typename> typename SharedPtr,
@@ -537,7 +537,7 @@ materialLawParamsFunc_(unsigned elemIdx, FaceDir::DirEnum facedir) const
     }
 }
 
-template <
+template<
     class Traits,
     template<class> class Storage,
     template<typename> typename SharedPtr,
@@ -552,7 +552,7 @@ readGlobalEpsOptions_(const EclipseState& eclState)
     enableEndPointScaling_ = eclState.getTableManager().hasTables("ENKRVD");
 }
 
-template <
+template<
     class Traits,
     template<class> class Storage,
     template<typename> typename SharedPtr,
@@ -565,7 +565,7 @@ readGlobalHysteresisOptions_(const EclipseState& state)
     hysteresisConfig_->initFromState(state.runspec());
 }
 
-template <
+template<
     class Traits,
     template<class> class Storage,
     template<typename> typename SharedPtr,

@@ -28,9 +28,9 @@ namespace Opm {
 /* constructors*/
 template<
     class Traits,
-    template<class> class Storage = VectorWithDefaultAllocator,
-    template<typename> typename SharedPtr = std::shared_ptr,
-    template<typename, typename...> typename UniquePtr = std::unique_ptr
+    template<class> class Storage,
+    template<typename> typename SharedPtr,
+    template<typename, typename...> typename UniquePtr
 >
 EclMaterialLawManager<Traits, Storage, SharedPtr, UniquePtr>::InitParams::HystParams::
 HystParams(EclMaterialLawManager<Traits, Storage, SharedPtr, UniquePtr>::InitParams& init_params) :
@@ -46,9 +46,9 @@ HystParams(EclMaterialLawManager<Traits, Storage, SharedPtr, UniquePtr>::InitPar
 
 template<
     class Traits,
-    template<class> class Storage = VectorWithDefaultAllocator,
-    template<typename> typename SharedPtr = std::shared_ptr,
-    template<typename, typename...> typename UniquePtr = std::unique_ptr
+    template<class> class Storage,
+    template<typename> typename SharedPtr,
+    template<typename, typename...> typename UniquePtr
 >
 void
 EclMaterialLawManager<Traits, Storage, SharedPtr, UniquePtr>::InitParams::HystParams::
@@ -64,11 +64,11 @@ finalize()
 
 template<
     class Traits,
-    template<class> class Storage = VectorWithDefaultAllocator,
-    template<typename> typename SharedPtr = std::shared_ptr,
-    template<typename, typename...> typename UniquePtr = std::unique_ptr
+    template<class> class Storage,
+    template<typename> typename SharedPtr,
+    template<typename, typename...> typename UniquePtr
 >
-std::shared_ptr<typename EclMaterialLawManager<Traits, Storage, SharedPtr, UniquePtr>::GasOilTwoPhaseHystParams>
+SharedPtr<typename EclMaterialLawManager<Traits, Storage, SharedPtr, UniquePtr>::GasOilTwoPhaseHystParams>
 EclMaterialLawManager<Traits, Storage, SharedPtr, UniquePtr>::InitParams::HystParams::
 getGasOilParams()
 {
@@ -77,11 +77,11 @@ getGasOilParams()
 
 template<
     class Traits,
-    template<class> class Storage = VectorWithDefaultAllocator,
-    template<typename> typename SharedPtr = std::shared_ptr,
-    template<typename, typename...> typename UniquePtr = std::unique_ptr
+    template<class> class Storage,
+    template<typename> typename SharedPtr,
+    template<typename, typename...> typename UniquePtr
 >
-std::shared_ptr<typename EclMaterialLawManager<Traits, Storage, SharedPtr, UniquePtr>::OilWaterTwoPhaseHystParams>
+SharedPtr<typename EclMaterialLawManager<Traits, Storage, SharedPtr, UniquePtr>::OilWaterTwoPhaseHystParams>
 EclMaterialLawManager<Traits, Storage, SharedPtr, UniquePtr>::InitParams::HystParams::
 getOilWaterParams()
 {
@@ -90,11 +90,11 @@ getOilWaterParams()
 
 template<
     class Traits,
-    template<class> class Storage = VectorWithDefaultAllocator,
-    template<typename> typename SharedPtr = std::shared_ptr,
-    template<typename, typename...> typename UniquePtr = std::unique_ptr
+    template<class> class Storage,
+    template<typename> typename SharedPtr,
+    template<typename, typename...> typename UniquePtr
 >
-std::shared_ptr<typename EclMaterialLawManager<Traits, Storage, SharedPtr, UniquePtr>::GasWaterTwoPhaseHystParams>
+SharedPtr<typename EclMaterialLawManager<Traits, Storage, SharedPtr, UniquePtr>::GasWaterTwoPhaseHystParams>
 EclMaterialLawManager<Traits, Storage, SharedPtr, UniquePtr>::InitParams::HystParams::
 getGasWaterParams()
 {
@@ -103,9 +103,9 @@ getGasWaterParams()
 
 template<
     class Traits,
-    template<class> class Storage = VectorWithDefaultAllocator,
-    template<typename> typename SharedPtr = std::shared_ptr,
-    template<typename, typename...> typename UniquePtr = std::unique_ptr
+    template<class> class Storage,
+    template<typename> typename SharedPtr,
+    template<typename, typename...> typename UniquePtr
 >
 void
 EclMaterialLawManager<Traits, Storage, SharedPtr, UniquePtr>::InitParams::HystParams::
@@ -125,9 +125,9 @@ setConfig(unsigned satRegionIdx)
 
 template<
     class Traits,
-    template<class> class Storage = VectorWithDefaultAllocator,
-    template<typename> typename SharedPtr = std::shared_ptr,
-    template<typename, typename...> typename UniquePtr = std::unique_ptr
+    template<class> class Storage,
+    template<typename> typename SharedPtr,
+    template<typename, typename...> typename UniquePtr
 >
 void
 EclMaterialLawManager<Traits, Storage, SharedPtr, UniquePtr>::InitParams::HystParams::
@@ -149,9 +149,9 @@ setDrainageParamsGasWater(unsigned elemIdx, unsigned satRegionIdx,
 
 template<
     class Traits,
-    template<class> class Storage = VectorWithDefaultAllocator,
-    template<typename> typename SharedPtr = std::shared_ptr,
-    template<typename, typename...> typename UniquePtr = std::unique_ptr
+    template<class> class Storage,
+    template<typename> typename SharedPtr,
+    template<typename, typename...> typename UniquePtr
 >
 void
 EclMaterialLawManager<Traits, Storage, SharedPtr, UniquePtr>::InitParams::HystParams::
@@ -173,9 +173,9 @@ setDrainageParamsOilGas(unsigned elemIdx, unsigned satRegionIdx,
 
 template<
     class Traits,
-    template<class> class Storage = VectorWithDefaultAllocator,
-    template<typename> typename SharedPtr = std::shared_ptr,
-    template<typename, typename...> typename UniquePtr = std::unique_ptr
+    template<class> class Storage,
+    template<typename> typename SharedPtr,
+    template<typename, typename...> typename UniquePtr
 >
 void
 EclMaterialLawManager<Traits, Storage, SharedPtr, UniquePtr>::InitParams::HystParams::
@@ -206,9 +206,9 @@ setDrainageParamsOilWater(unsigned elemIdx, unsigned satRegionIdx,
 
 template<
     class Traits,
-    template<class> class Storage = VectorWithDefaultAllocator,
-    template<typename> typename SharedPtr = std::shared_ptr,
-    template<typename, typename...> typename UniquePtr = std::unique_ptr
+    template<class> class Storage,
+    template<typename> typename SharedPtr,
+    template<typename, typename...> typename UniquePtr
 >
 void
 EclMaterialLawManager<Traits, Storage, SharedPtr, UniquePtr>::InitParams::HystParams::
@@ -233,9 +233,9 @@ setImbibitionParamsGasWater(unsigned elemIdx, unsigned imbRegionIdx,
 
 template<
     class Traits,
-    template<class> class Storage = VectorWithDefaultAllocator,
-    template<typename> typename SharedPtr = std::shared_ptr,
-    template<typename, typename...> typename UniquePtr = std::unique_ptr
+    template<class> class Storage,
+    template<typename> typename SharedPtr,
+    template<typename, typename...> typename UniquePtr
 >
 void
 EclMaterialLawManager<Traits, Storage, SharedPtr, UniquePtr>::InitParams::HystParams::
@@ -260,9 +260,9 @@ setImbibitionParamsOilGas(unsigned elemIdx, unsigned imbRegionIdx,
 
 template<
     class Traits,
-    template<class> class Storage = VectorWithDefaultAllocator,
-    template<typename> typename SharedPtr = std::shared_ptr,
-    template<typename, typename...> typename UniquePtr = std::unique_ptr
+    template<class> class Storage,
+    template<typename> typename SharedPtr,
+    template<typename, typename...> typename UniquePtr
 >
 void
 EclMaterialLawManager<Traits, Storage, SharedPtr, UniquePtr>::InitParams::HystParams::
@@ -289,9 +289,9 @@ setImbibitionParamsOilWater(unsigned elemIdx, unsigned imbRegionIdx,
 
 template<
     class Traits,
-    template<class> class Storage = VectorWithDefaultAllocator,
-    template<typename> typename SharedPtr = std::shared_ptr,
-    template<typename, typename...> typename UniquePtr = std::unique_ptr
+    template<class> class Storage,
+    template<typename> typename SharedPtr,
+    template<typename, typename...> typename UniquePtr
 >
 bool
 EclMaterialLawManager<Traits, Storage, SharedPtr, UniquePtr>::InitParams::HystParams::
@@ -302,9 +302,9 @@ hasGasOil_()
 
 template<
     class Traits,
-    template<class> class Storage = VectorWithDefaultAllocator,
-    template<typename> typename SharedPtr = std::shared_ptr,
-    template<typename, typename...> typename UniquePtr = std::unique_ptr
+    template<class> class Storage,
+    template<typename> typename SharedPtr,
+    template<typename, typename...> typename UniquePtr
 >
 bool
 EclMaterialLawManager<Traits, Storage, SharedPtr, UniquePtr>::InitParams::HystParams::
@@ -315,9 +315,9 @@ hasGasWater_()
 
 template<
     class Traits,
-    template<class> class Storage = VectorWithDefaultAllocator,
-    template<typename> typename SharedPtr = std::shared_ptr,
-    template<typename, typename...> typename UniquePtr = std::unique_ptr
+    template<class> class Storage,
+    template<typename> typename SharedPtr,
+    template<typename, typename...> typename UniquePtr
 >
 bool
 EclMaterialLawManager<Traits, Storage, SharedPtr, UniquePtr>::InitParams::HystParams::
@@ -328,9 +328,9 @@ hasOilWater_()
 
 template<
     class Traits,
-    template<class> class Storage = VectorWithDefaultAllocator,
-    template<typename> typename SharedPtr = std::shared_ptr,
-    template<typename, typename...> typename UniquePtr = std::unique_ptr
+    template<class> class Storage,
+    template<typename> typename SharedPtr,
+    template<typename, typename...> typename UniquePtr
 >
 std::tuple<
   EclEpsScalingPointsInfo<typename EclMaterialLawManager<Traits, Storage, SharedPtr, UniquePtr>::Scalar>,
@@ -359,9 +359,9 @@ readScaledEpsPoints_(const EclEpsGridProperties& epsGridProperties, unsigned ele
 
 template<
     class Traits,
-    template<class> class Storage = VectorWithDefaultAllocator,
-    template<typename> typename SharedPtr = std::shared_ptr,
-    template<typename, typename...> typename UniquePtr = std::unique_ptr
+    template<class> class Storage,
+    template<typename> typename SharedPtr,
+    template<typename, typename...> typename UniquePtr
 >
 std::tuple<
   EclEpsScalingPointsInfo<typename EclMaterialLawManager<Traits, Storage, SharedPtr, UniquePtr>::Scalar>,
@@ -377,9 +377,9 @@ readScaledEpsPointsDrainage_(unsigned elemIdx, EclTwoPhaseSystemType type,
 
 template<
     class Traits,
-    template<class> class Storage = VectorWithDefaultAllocator,
-    template<typename> typename SharedPtr = std::shared_ptr,
-    template<typename, typename...> typename UniquePtr = std::unique_ptr
+    template<class> class Storage,
+    template<typename> typename SharedPtr,
+    template<typename, typename...> typename UniquePtr
 >
 std::tuple<
   EclEpsScalingPointsInfo<typename EclMaterialLawManager<Traits, Storage, SharedPtr, UniquePtr>::Scalar>,

@@ -37,7 +37,7 @@
 namespace Opm {
 
 /* constructors*/
-template <
+template<
     class Traits,
     template<class> class Storage,
     template<typename> typename SharedPtr,
@@ -51,7 +51,7 @@ ReadEffectiveParams(EclMaterialLawManager<Traits, Storage, SharedPtr, UniquePtr>
 }
 
 /* public methods */
-template <
+template<
     class Traits,
     template<class> class Storage,
     template<typename> typename SharedPtr,
@@ -78,13 +78,13 @@ read() {
 /* private methods, alphabetically sorted*/
 
 // Relative permeability values not strictly greater than 'tolcrit' treated as zero.
-template <
+template<
     class Traits,
     template<class> class Storage,
     template<typename> typename SharedPtr,
     template<typename, typename...> typename UniquePtr
 >
-std::vector<double>
+Storage<double>
 EclMaterialLawManager<Traits, Storage, SharedPtr, UniquePtr>::InitParams::ReadEffectiveParams::
 normalizeKrValues_(const double tolcrit, const TableColumn& krValues) const
 {
@@ -98,7 +98,7 @@ normalizeKrValues_(const double tolcrit, const TableColumn& krValues) const
     return kr;
 }
 
-template <
+template<
     class Traits,
     template<class> class Storage,
     template<typename> typename SharedPtr,
@@ -135,7 +135,7 @@ readGasOilParameters_(GasOilEffectiveParamVector& dest, unsigned satRegionIdx)
             readGasOilSlgof_(effParams, Swco, tolcrit, slgofTables.template getTable<SlgofTable>(satRegionIdx));
         else if ( !tableManager.getSgofletTable().empty() ) {
             const auto& letSgofTab = tableManager.getSgofletTable()[satRegionIdx];
-            const std::vector<Scalar> dum; // dummy arg to comform with existing interface
+            const Storage<Scalar> dum; // dummy arg to comform with existing interface
 
             effParams.setApproach(SatCurveMultiplexerApproach::LET);
             auto& realParams = effParams.template getRealParams<SatCurveMultiplexerApproach::LET>();
@@ -143,7 +143,7 @@ readGasOilParameters_(GasOilEffectiveParamVector& dest, unsigned satRegionIdx)
             // S=(So-Sogcr)/(1-Sogcr-Sgcr-Swco),  krog = Krt*S^L/[S^L+E*(1.0-S)^T]
             const Scalar s_min_w = letSgofTab.s2_critical;
             const Scalar s_max_w = 1.0-letSgofTab.s1_critical-Swco;
-            const std::vector<Scalar>& letCoeffsOil = {s_min_w, s_max_w,
+            const Storage<Scalar>& letCoeffsOil = {s_min_w, s_max_w,
                                                         static_cast<Scalar>(letSgofTab.l2_relperm),
                                                         static_cast<Scalar>(letSgofTab.e2_relperm),
                                                         static_cast<Scalar>(letSgofTab.t2_relperm),
@@ -153,7 +153,7 @@ readGasOilParameters_(GasOilEffectiveParamVector& dest, unsigned satRegionIdx)
             // S=(1-So-Sgcr-Swco)/(1-Sogcr-Sgcr-Swco), krg = Krt*S^L/[S^L+E*(1.0-S)^T]
             const Scalar s_min_nw = letSgofTab.s1_critical+Swco;
             const Scalar s_max_nw = 1.0-letSgofTab.s2_critical;
-            const std::vector<Scalar>& letCoeffsGas = {s_min_nw, s_max_nw,
+            const Storage<Scalar>& letCoeffsGas = {s_min_nw, s_max_nw,
                                                         static_cast<Scalar>(letSgofTab.l1_relperm),
                                                         static_cast<Scalar>(letSgofTab.e1_relperm),
                                                         static_cast<Scalar>(letSgofTab.t1_relperm),
@@ -161,7 +161,7 @@ readGasOilParameters_(GasOilEffectiveParamVector& dest, unsigned satRegionIdx)
             realParams.setKrnSamples(letCoeffsGas, dum);
 
             // S=(So-Sorg)/(1-Sorg-Sgl-Swco), Pc = Pct + (pcir_pc-Pct)*(1-S)^L/[(1-S)^L+E*S^T]
-            const std::vector<Scalar>& letCoeffsPc = {static_cast<Scalar>(letSgofTab.s2_residual),
+            const Storage<Scalar>& letCoeffsPc = {static_cast<Scalar>(letSgofTab.s2_residual),
                                                         static_cast<Scalar>(letSgofTab.s1_residual+Swco),
                                                         static_cast<Scalar>(letSgofTab.l_pc),
                                                         static_cast<Scalar>(letSgofTab.e_pc),
@@ -200,7 +200,7 @@ readGasOilParameters_(GasOilEffectiveParamVector& dest, unsigned satRegionIdx)
     }
 }
 
-template <
+template<
     class Traits,
     template<class> class Storage,
     template<typename> typename SharedPtr,
@@ -217,8 +217,8 @@ readGasOilFamily2_(GasOilEffectiveTwoPhaseParams& effParams,
                         const std::string& columnName)
 {
     // convert the saturations of the SGFN keyword from gas to oil saturations
-    std::vector<double> SoSamples(sgfnTable.numRows());
-    std::vector<double> SoColumn = sofTable.getColumn("SO").vectorCopy();
+    Storage<double> SoSamples(sgfnTable.numRows());
+    Storage<double> SoColumn = sofTable.getColumn("SO").vectorCopy();
     for (size_t sampleIdx = 0; sampleIdx < sgfnTable.numRows(); ++ sampleIdx) {
         SoSamples[sampleIdx] = (1.0 - Swco) - sgfnTable.get("SG", sampleIdx);
     }
@@ -232,7 +232,7 @@ readGasOilFamily2_(GasOilEffectiveTwoPhaseParams& effParams,
     realParams.finalize();
 }
 
-template <
+template<
     class Traits,
     template<class> class Storage,
     template<typename> typename SharedPtr,
@@ -246,7 +246,7 @@ readGasOilSgof_(GasOilEffectiveTwoPhaseParams& effParams,
                         const SgofTable& sgofTable)
 {
     // convert the saturations of the SGOF keyword from gas to oil saturations
-    std::vector<double> SoSamples(sgofTable.numRows());
+    Storage<double> SoSamples(sgofTable.numRows());
     for (size_t sampleIdx = 0; sampleIdx < sgofTable.numRows(); ++ sampleIdx) {
         SoSamples[sampleIdx] = (1.0 - Swco) - sgofTable.get("SG", sampleIdx);
     }
@@ -260,7 +260,7 @@ readGasOilSgof_(GasOilEffectiveTwoPhaseParams& effParams,
     realParams.finalize();
 }
 
-template <
+template<
     class Traits,
     template<class> class Storage,
     template<typename> typename SharedPtr,
@@ -274,7 +274,7 @@ readGasOilSlgof_(GasOilEffectiveTwoPhaseParams& effParams,
                         const SlgofTable& slgofTable)
 {
     // convert the saturations of the SLGOF keyword from "liquid" to oil saturations
-    std::vector<double> SoSamples(slgofTable.numRows());
+    Storage<double> SoSamples(slgofTable.numRows());
     for (size_t sampleIdx = 0; sampleIdx < slgofTable.numRows(); ++ sampleIdx) {
         SoSamples[sampleIdx] = slgofTable.get("SL", sampleIdx) - Swco;
     }
@@ -288,7 +288,7 @@ readGasOilSlgof_(GasOilEffectiveTwoPhaseParams& effParams,
     realParams.finalize();
 }
 
-template <
+template<
     class Traits,
     template<class> class Storage,
     template<typename> typename SharedPtr,
@@ -324,7 +324,7 @@ readGasWaterParameters_(GasWaterEffectiveParamVector& dest, unsigned satRegionId
         auto& realParams = effParams.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinear>();
         if (!sgwfnTables.empty()){
             const SgwfnTable& sgwfnTable = tableManager.getSgwfnTables().template getTable<SgwfnTable>( satRegionIdx );
-            std::vector<double> SwSamples(sgwfnTable.numRows());
+            Storage<double> SwSamples(sgwfnTable.numRows());
             for (size_t sampleIdx = 0; sampleIdx < sgwfnTable.numRows(); ++ sampleIdx)
                 SwSamples[sampleIdx] = 1 - sgwfnTable.get("SG", sampleIdx);
             realParams.setKrwSamples(SwSamples, normalizeKrValues_(tolcrit, sgwfnTable.getColumn("KRGW")));
@@ -335,10 +335,10 @@ readGasWaterParameters_(GasWaterEffectiveParamVector& dest, unsigned satRegionId
             const SgfnTable& sgfnTable = tableManager.getSgfnTables().template getTable<SgfnTable>( satRegionIdx );
             const SwfnTable& swfnTable = tableManager.getSwfnTables().template getTable<SwfnTable>( satRegionIdx );
 
-            std::vector<double> SwColumn = swfnTable.getColumn("SW").vectorCopy();
+            Storage<double> SwColumn = swfnTable.getColumn("SW").vectorCopy();
 
             realParams.setKrwSamples(SwColumn, normalizeKrValues_(tolcrit, swfnTable.getColumn("KRW")));
-            std::vector<double> SwSamples(sgfnTable.numRows());
+            Storage<double> SwSamples(sgfnTable.numRows());
             for (size_t sampleIdx = 0; sampleIdx < sgfnTable.numRows(); ++ sampleIdx)
                 SwSamples[sampleIdx] = 1 - sgfnTable.get("SG", sampleIdx);
             realParams.setKrnSamples(SwSamples, normalizeKrValues_(tolcrit, sgfnTable.getColumn("KRG")));
@@ -358,10 +358,10 @@ readGasWaterParameters_(GasWaterEffectiveParamVector& dest, unsigned satRegionId
         effParams.setApproach(SatCurveMultiplexerApproach::PiecewiseLinear);
         auto& realParams = effParams.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinear>();
 
-        std::vector<double> SwColumn = wsfTable.getColumn("SW").vectorCopy();
+        Storage<double> SwColumn = wsfTable.getColumn("SW").vectorCopy();
 
         realParams.setKrwSamples(SwColumn, normalizeKrValues_(tolcrit, wsfTable.getColumn("KRW")));
-        std::vector<double> SwSamples(gsfTable.numRows());
+        Storage<double> SwSamples(gsfTable.numRows());
         for (size_t sampleIdx = 0; sampleIdx < gsfTable.numRows(); ++ sampleIdx)
             SwSamples[sampleIdx] = 1 - gsfTable.get("SG", sampleIdx);
         realParams.setKrnSamples(SwSamples, normalizeKrValues_(tolcrit, gsfTable.getColumn("KRG")));
@@ -376,7 +376,7 @@ readGasWaterParameters_(GasWaterEffectiveParamVector& dest, unsigned satRegionId
     }
 }
 
-template <
+template<
     class Traits,
     template<class> class Storage,
     template<typename> typename SharedPtr,
@@ -403,7 +403,7 @@ readOilWaterParameters_(OilWaterEffectiveParamVector& dest, unsigned satRegionId
     {
         if (tableManager.hasTables("SWOF")) {
             const auto& swofTable = tableManager.getSwofTables().template getTable<SwofTable>(satRegionIdx);
-            const std::vector<double> SwColumn = swofTable.getColumn("SW").vectorCopy();
+            const Storage<double> SwColumn = swofTable.getColumn("SW").vectorCopy();
 
             effParams.setApproach(SatCurveMultiplexerApproach::PiecewiseLinear);
             auto& realParams = effParams.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinear>();
@@ -415,7 +415,7 @@ readOilWaterParameters_(OilWaterEffectiveParamVector& dest, unsigned satRegionId
         }
         else if ( !tableManager.getSwofletTable().empty() ) {
             const auto& letTab = tableManager.getSwofletTable()[satRegionIdx];
-            const std::vector<Scalar> dum; // dummy arg to conform with existing interface
+            const Storage<Scalar> dum; // dummy arg to conform with existing interface
 
             effParams.setApproach(SatCurveMultiplexerApproach::LET);
             auto& realParams = effParams.template getRealParams<SatCurveMultiplexerApproach::LET>();
@@ -423,7 +423,7 @@ readOilWaterParameters_(OilWaterEffectiveParamVector& dest, unsigned satRegionId
             // S=(Sw-Swcr)/(1-Sowcr-Swcr),  krw = Krt*S^L/[S^L+E*(1.0-S)^T]
             const Scalar s_min_w = letTab.s1_critical;
             const Scalar s_max_w = 1.0-letTab.s2_critical;
-            const std::vector<Scalar>& letCoeffsWat = {s_min_w, s_max_w,
+            const Storage<Scalar>& letCoeffsWat = {s_min_w, s_max_w,
                                                         static_cast<Scalar>(letTab.l1_relperm),
                                                         static_cast<Scalar>(letTab.e1_relperm),
                                                         static_cast<Scalar>(letTab.t1_relperm),
@@ -433,7 +433,7 @@ readOilWaterParameters_(OilWaterEffectiveParamVector& dest, unsigned satRegionId
             // S=(So-Sowcr)/(1-Sowcr-Swcr), krow = Krt*S^L/[S^L+E*(1.0-S)^T]
             const Scalar s_min_nw = letTab.s2_critical;
             const Scalar s_max_nw = 1.0-letTab.s1_critical;
-            const std::vector<Scalar>& letCoeffsOil = {s_min_nw, s_max_nw,
+            const Storage<Scalar>& letCoeffsOil = {s_min_nw, s_max_nw,
                                                         static_cast<Scalar>(letTab.l2_relperm),
                                                         static_cast<Scalar>(letTab.e2_relperm),
                                                         static_cast<Scalar>(letTab.t2_relperm),
@@ -441,7 +441,7 @@ readOilWaterParameters_(OilWaterEffectiveParamVector& dest, unsigned satRegionId
             realParams.setKrnSamples(letCoeffsOil, dum);
 
             // S=(Sw-Swco)/(1-Swco-Sorw), Pc = Pct + (Pcir-Pct)*(1-S)^L/[(1-S)^L+E*S^T]
-            const std::vector<Scalar>& letCoeffsPc = {static_cast<Scalar>(letTab.s1_residual),
+            const Storage<Scalar>& letCoeffsPc = {static_cast<Scalar>(letTab.s1_residual),
                                                         static_cast<Scalar>(letTab.s2_residual),
                                                         static_cast<Scalar>(letTab.l_pc),
                                                         static_cast<Scalar>(letTab.e_pc),
@@ -458,7 +458,7 @@ readOilWaterParameters_(OilWaterEffectiveParamVector& dest, unsigned satRegionId
     case SatFuncControls::KeywordFamily::Family_II:
     {
         const auto& swfnTable = tableManager.getSwfnTables().template getTable<SwfnTable>(satRegionIdx);
-        const std::vector<double> SwColumn = swfnTable.getColumn("SW").vectorCopy();
+        const Storage<double> SwColumn = swfnTable.getColumn("SW").vectorCopy();
 
         effParams.setApproach(SatCurveMultiplexerApproach::PiecewiseLinear);
         auto& realParams = effParams.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinear>();
@@ -469,7 +469,7 @@ readOilWaterParameters_(OilWaterEffectiveParamVector& dest, unsigned satRegionId
         if (!this->parent_.hasGas) {
             const auto& sof2Table = tableManager.getSof2Tables().template getTable<Sof2Table>(satRegionIdx);
             // convert the saturations of the SOF2 keyword from oil to water saturations
-            std::vector<double> SwSamples(sof2Table.numRows());
+            Storage<double> SwSamples(sof2Table.numRows());
             for (size_t sampleIdx = 0; sampleIdx < sof2Table.numRows(); ++ sampleIdx)
                 SwSamples[sampleIdx] = 1 - sof2Table.get("SO", sampleIdx);
 
@@ -477,7 +477,7 @@ readOilWaterParameters_(OilWaterEffectiveParamVector& dest, unsigned satRegionId
         } else {
             const auto& sof3Table = tableManager.getSof3Tables().template getTable<Sof3Table>(satRegionIdx);
             // convert the saturations of the SOF3 keyword from oil to water saturations
-            std::vector<double> SwSamples(sof3Table.numRows());
+            Storage<double> SwSamples(sof3Table.numRows());
             for (size_t sampleIdx = 0; sampleIdx < sof3Table.numRows(); ++ sampleIdx)
                 SwSamples[sampleIdx] = 1 - sof3Table.get("SO", sampleIdx);
 
