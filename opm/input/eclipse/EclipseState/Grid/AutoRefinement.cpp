@@ -16,6 +16,8 @@
 #include <opm/input/eclipse/EclipseState/Grid/AutoRefinement.hpp>
 
 
+#include <stdexcept>
+
 namespace Opm {
 
 
@@ -25,12 +27,20 @@ AutoRefinement::AutoRefinement()
 AutoRefinement::AutoRefinement(int nx,
                                int ny,
                                int nz,
-                               double  option_trans_mult)
-    : nx_{nx},
-      ny_{ny},
-      nz_{nz},
-      option_trans_mult_{option_trans_mult}
-{}
+                               double option_trans_mult)
+{
+    bool invalid = invalidRefinementFactor(nx) || invalidRefinementFactor(ny) || invalidRefinementFactor(nz);
+    bool notYet = (option_trans_mult>0);
+    if (invalid) {
+        throw std::invalid_argument("Refinement factors must be odd and positive.");
+    }
+    else if (notYet) {
+        throw std::invalid_argument("Only OPTION_TRANS_MULT 0 is supported for now.");
+    }
+    nx_ = nx;
+    ny_ = ny;
+    nz_ = nz;
+}
 
 int AutoRefinement::NX() const
 {

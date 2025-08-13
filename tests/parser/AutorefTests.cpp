@@ -32,8 +32,7 @@ using namespace Opm;
 
 
 BOOST_AUTO_TEST_CASE(ReadAutoref) {
-
-
+    
     const std::string deck_string = R"(
 RUNSPEC
 
@@ -54,31 +53,7 @@ DZ
 TOPS
 100*1 /
 
-PORO
-1000*0.15 /
-
-PERMX
-1000*1 /
-
-COPY
-  PERMX PERMZ /
-  PERMX PERMY /
-/
-
-EDIT
-
-OIL
-GAS
-
-TITLE
-The title
-
-START
-16 JUN 1988 /
-
 PROPS
-
-REGIONS
 
 SOLUTION
 
@@ -100,4 +75,84 @@ SCHEDULE
     BOOST_CHECK_EQUAL( autoRef.NY(), 3);
     BOOST_CHECK_EQUAL( autoRef.NZ(), 1);
     BOOST_CHECK_EQUAL( autoRef.OPTION_TRANS_MULT(), 0.);
+}
+
+BOOST_AUTO_TEST_CASE(ThrowEvenRefinementFactor) {
+
+    const std::string deck_string = R"(
+RUNSPEC
+
+DIMENS
+1 1 1 /
+
+AUTOREF
+3 2 1 0. /
+
+GRID
+
+DX
+1*1 /
+DY
+1*1 /
+DZ
+1*1 /
+TOPS
+1*0 /
+
+PROPS
+
+SOLUTION
+
+SCHEDULE
+)";
+    
+    Opm::Parser parser;
+    Opm::Deck deck = parser.parseString(deck_string);
+    Opm::EclipseState state(deck);
+
+    const auto& autoref_keyword = deck["AUTOREF"][0];
+
+    Opm::AutoRefManager autoRefManager{};
+
+    BOOST_CHECK_THROW(Opm::readKeywordAutoRef(autoref_keyword.getRecord(0), autoRefManager), std::invalid_argument);
+}
+
+BOOST_AUTO_TEST_CASE(ThrowNonDefaultOptionTransMult) {
+
+    const std::string deck_string = R"(
+RUNSPEC
+
+DIMENS
+1 1 1 /
+
+AUTOREF
+3 5 7 1 /
+
+GRID
+
+DX
+1*1 /
+DY
+1*1 /
+DZ
+1*1 /
+TOPS
+1*0 /
+
+PROPS
+
+SOLUTION
+
+SCHEDULE
+)";
+    
+    Opm::Parser parser;
+    Opm::Deck deck = parser.parseString(deck_string);
+    Opm::EclipseState state(deck);
+
+    const auto& autoref_keyword = deck["AUTOREF"][0];
+
+    Opm::AutoRefManager autoRefManager{};
+
+    BOOST_CHECK_THROW(Opm::readKeywordAutoRef(autoref_keyword.getRecord(0), autoRefManager), std::invalid_argument);
 }

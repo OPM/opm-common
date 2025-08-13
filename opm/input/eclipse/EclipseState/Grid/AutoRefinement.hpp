@@ -22,6 +22,21 @@ class AutoRefinement {
 public:
     AutoRefinement();
 
+    /// @brief Constructs an AutoRefinement configuration.
+    ///
+    /// Initializes the refinement factors in each grid direction (NX, NY, NZ)
+    /// and an optional transmissibility multiplier for refinement.
+    ///
+    /// @param nx  Refinement factor in the X direction (must be odd and positive).
+    /// @param ny  Refinement factor in the Y direction (must be odd and positive).
+    /// @param nz  Refinement factor in the Z direction (must be odd and positive).
+    /// @param option_trans_mult  Optional transmissibility multiplier.
+    /// Currently only 0.0 is supported.
+    ///
+    /// @throws std::invalid_argument
+    /// If any refinement factor is not odd and positive.
+    /// @throws std::invalid_argument
+    /// If option_trans_mult is not zero (feature not yet supported).
     AutoRefinement(int nx,
                    int ny,
                    int nz,
@@ -37,6 +52,12 @@ private:
     int ny_;
     int nz_;
     double option_trans_mult_{0.};
+
+    bool invalidRefinementFactor(int n)
+    {
+        return (n<=0) || (n%2 == 0);
+    }
+
 
 };
 }
