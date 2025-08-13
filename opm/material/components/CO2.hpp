@@ -53,7 +53,7 @@ namespace Opm {
  * is not a top priority, the much simpler component \c Opm::SimpleCO2 can be
  * used instead
  */
-template <class Scalar, class ParamsT = Opm::CO2Tables<double, std::vector<double>>>
+template <class Scalar, class ParamsT = Opm::CO2Tables<double, VectorWithDefaultAllocator>>
 class CO2 : public Component<Scalar, CO2<Scalar>>
 {
 public:

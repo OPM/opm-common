@@ -877,6 +877,7 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/common/utility/DemangledType.hpp
       opm/common/utility/FileSystem.hpp
       opm/common/utility/gpuDecorators.hpp
+      opm/common/utility/gpuistl_if_available.hpp
       opm/common/utility/MemPacker.hpp
       opm/common/utility/ThreadSafeMapBuilder.hpp
       opm/common/utility/numeric/cmp.hpp
@@ -1005,6 +1006,7 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/material/fluidsystems/blackoilpvt/DryGasPvt.hpp
       opm/material/fluidsystems/blackoilpvt/ConstantCompressibilityWaterPvt.hpp
       opm/material/fluidsystems/blackoilpvt/LiveOilPvt.hpp
+      opm/material/fluidsystems/blackoilpvt/NullOilPvt.hpp
       opm/material/fluidsystems/blackoilpvt/OilPvtThermal.hpp
       opm/material/fluidsystems/blackoilpvt/ConstantCompressibilityBrinePvt.hpp
       opm/material/fluidsystems/blackoilpvt/GasPvtThermal.hpp

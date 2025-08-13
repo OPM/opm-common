@@ -138,6 +138,11 @@ public:
 
     void initEnd();
 
+    bool isActive() const
+    {
+        return approach_ != OilPvtApproach::NoOil;
+    }
+
     /*!
      * \brief Return the number of PVT regions which are considered by this PVT-object.
      */

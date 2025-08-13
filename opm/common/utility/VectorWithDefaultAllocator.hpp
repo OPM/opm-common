@@ -18,6 +18,9 @@
 
 #ifndef OPM_COMMON_VECTOR_WITH_DEFAULT_ALLOCATOR_HPP
 #define OPM_COMMON_VECTOR_WITH_DEFAULT_ALLOCATOR_HPP
+
+#include <vector>
+
 namespace Opm
 {
 // NVCC being weird about std::vector, so we need this workaround.
