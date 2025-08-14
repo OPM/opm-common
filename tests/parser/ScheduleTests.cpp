@@ -6676,9 +6676,9 @@ END
     }
 }
 
-BOOST_AUTO_TEST_CASE(Well_Fracture_Seeds_No_MECH)
+BOOST_AUTO_TEST_CASE(Well_Fracture_Seeds_With_Size)
 {
-    const auto inputString = std::string { R"(RUNSPEC
+    const auto deck = Parser{}.parseString(R"(RUNSPEC
 DIMENS
   10 10 10 /
 
@@ -6730,24 +6730,49 @@ DATES             -- 1, 2
 /
 
 WSEED
-  'OP_1'  9 9 1   1.0   -1.0      1.0  /
-  'OP_1'  9 9 2   0.0    0.0     17.29 /
-  'OP_3'  7 7 2   3.1   41.592  653.5  /
+  'OP_1'  9 9 1   1.0   -1.0      1.0  0.12 34.567 891.01112 /
+  'OP_1'  9 9 2   0.0    0.0     17.29 8.91 0.111 0.2222 /
+  'OP_3'  7 7 2   3.1   41.592  653.5  12.13 14.151617 1819.202122 /
 /
 
 DATES
   1 SEP 2007 /
 /
 END
-)" };
+)");
 
-    // No MECH keyword means that parsing, by default, should fail in WSEED.
-    BOOST_CHECK_THROW(Parser().parseString(inputString), OpmInputError);
+    const auto es    = EclipseState { deck };
+    const auto sched = Schedule { deck, es };
 
-    auto ctx = ParseContext{};
-    ctx.update(ParseContext::PARSE_INVALID_KEYWORD_COMBINATION,
-               InputErrorAction::IGNORE);
+    const auto& wseed = sched[2].wseed;
 
-    // Allow parsing the input if we ignore incompatible keywords.
-    BOOST_CHECK_NO_THROW(Parser().parseString(inputString, ctx));
+    {
+        const auto& op_1 = wseed("OP_1");
+
+        const auto& seedCells = op_1.seedCells();
+
+        const auto* s0 = op_1.getSize(WellFractureSeeds::SeedCell { seedCells[0] });
+
+        BOOST_CHECK_CLOSE(s0->verticalExtent(), 0.12, 1.0e-8);
+        BOOST_CHECK_CLOSE(s0->horizontalExtent(), 34.567, 1.0e-8);
+        BOOST_CHECK_CLOSE(s0->width(), 891.01112, 1.0e-8);
+
+        const auto* s1 = op_1.getSize(WellFractureSeeds::SeedCell { seedCells[1] });
+
+        BOOST_CHECK_CLOSE(s1->verticalExtent(), 8.91 , 1.0e-8);
+        BOOST_CHECK_CLOSE(s1->horizontalExtent(), 0.111, 1.0e-8);
+        BOOST_CHECK_CLOSE(s1->width(), 0.2222, 1.0e-8);
+    }
+
+    {
+        const auto& op_3 = wseed("OP_3");
+
+        const auto& seedCells = op_3.seedCells();
+
+        const auto* s = op_3.getSize(WellFractureSeeds::SeedCell { seedCells[0] });
+
+        BOOST_CHECK_CLOSE(s->verticalExtent(), 12.13, 1.0e-8);
+        BOOST_CHECK_CLOSE(s->horizontalExtent(), 14.151617, 1.0e-8);
+        BOOST_CHECK_CLOSE(s->width(), 1819.202122, 1.0e-8);
+    }
 }

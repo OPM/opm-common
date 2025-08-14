@@ -83,6 +83,13 @@ namespace Opm {
             double stressZZ() const;
             double stressZZ_grad() const;
 
+            double stressXY() const;
+            double stressXY_grad() const;
+            double stressXZ() const;
+            double stressXZ_grad() const;
+            double stressYZ() const;
+            double stressYZ_grad() const;
+
             template<class Serializer>
             void serializeOp(Serializer& serializer)
             {
@@ -95,6 +102,13 @@ namespace Opm {
                 serializer(stress_yy_grad);
                 serializer(stress_zz);
                 serializer(stress_zz_grad);
+
+                serializer(stress_xy);
+                serializer(stress_xy_grad);
+                serializer(stress_xz);
+                serializer(stress_xz_grad);
+                serializer(stress_yz);
+                serializer(stress_yz_grad);
             }
 
         private:
@@ -107,6 +121,13 @@ namespace Opm {
             double stress_yy_grad = 0.0;
             double stress_zz = 0.0;
             double stress_zz_grad = 0.0;
+
+            double stress_xy = 0.0;
+            double stress_xy_grad = 0.0;
+            double stress_xz = 0.0;
+            double stress_xz_grad = 0.0;
+            double stress_yz = 0.0;
+            double stress_yz_grad = 0.0;
     };
 
     template<class RecordType>
