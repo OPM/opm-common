@@ -197,9 +197,9 @@ public:
                           bool _enableVaporizedOil_,
                           bool _enableVaporizedWater_,
                           bool _enableDiffusion_,
-                          Storage<std::array<Scalar, 3>> _referenceDensity_,
-                          Storage<std::array<Scalar, 3>> _molarMass_,
-                          Storage<std::array<Scalar, 3 * 3>> _diffusionCoefficients_,
+                          Storage<std::array<Scalar, 3>>&& _referenceDensity_,
+                          Storage<std::array<Scalar, 3>>&& _molarMass_,
+                          Storage<std::array<Scalar, 3 * 3>>&& _diffusionCoefficients_,
                           std::array<short, 3> _activeToCanonicalPhaseIdx_,
                           std::array<short, 3> _canonicalToActivePhaseIdx_,
                           bool _isInitialized_,
@@ -218,9 +218,9 @@ public:
         , enableVaporizedOil_(_enableVaporizedOil_)
         , enableVaporizedWater_(_enableVaporizedWater_)
         , enableDiffusion_(_enableDiffusion_)
-        , referenceDensity_(_referenceDensity_)
-        , molarMass_(_molarMass_)
-        , diffusionCoefficients_(_diffusionCoefficients_)
+        , referenceDensity_(std::move(_referenceDensity_))
+        , molarMass_(std::move(_molarMass_))
+        , diffusionCoefficients_(std::move(_diffusionCoefficients_))
         , activeToCanonicalPhaseIdx_(_activeToCanonicalPhaseIdx_)
         , canonicalToActivePhaseIdx_(_canonicalToActivePhaseIdx_)
         , isInitialized_(_isInitialized_)
@@ -2041,9 +2041,9 @@ copy_to_gpu(const FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits>& oldFluidSystem) {
         oldFluidSystem.enableVaporizedOil_,
         oldFluidSystem.enableVaporizedWater_,
         oldFluidSystem.enableDiffusion_,
-        newReferenceDensity,
-        newMolarMass,
-        newDiffusionCoefficients,
+        std::move(newReferenceDensity),
+        std::move(newMolarMass),
+        std::move(newDiffusionCoefficients),
         oldFluidSystem.activeToCanonicalPhaseIdx_,
         oldFluidSystem.canonicalToActivePhaseIdx_,
         oldFluidSystem.isInitialized_,
@@ -2081,9 +2081,9 @@ make_view(FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, GpuBuffer>& oldFluidSystem)
         oldFluidSystem.enableVaporizedOil_,
         oldFluidSystem.enableVaporizedWater_,
         oldFluidSystem.enableDiffusion_,
-        newReferenceDensity,
-        newMolarMass,
-        newDiffusionCoefficients,
+        std::move(newReferenceDensity),
+        std::move(newMolarMass),
+        std::move(newDiffusionCoefficients),
         oldFluidSystem.activeToCanonicalPhaseIdx_,
         oldFluidSystem.canonicalToActivePhaseIdx_,
         oldFluidSystem.isInitialized_,
