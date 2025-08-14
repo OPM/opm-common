@@ -300,7 +300,7 @@ public:
     {
         assert(enableTemperature || enableEnergy);
 
-        (*enthalpy_)[canonicalToStoragePhaseIndex_(phaseIdx)] = value;
+        (*enthalpy_)[canonicalToStoragePhaseIndex_(phaseIdx, *fluidSystem_)] = value;
     }
 
     /*!
