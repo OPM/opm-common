@@ -25,10 +25,12 @@
 #include <opm/io/eclipse/PaddedOutputString.hpp>
 
 #include <cstddef>
+#include <string>
 #include <vector>
 
 namespace Opm {
     class Schedule;
+    class EclipseGrid;
     class SummaryState;
     class UnitSystem;
     class WellTestState;
@@ -49,19 +51,38 @@ namespace Opm { namespace RestartIO { namespace Helpers {
     public:
         explicit AggregateWellData(const std::vector<int>& inteHead);
 
-        void captureDeclaredWellData(const Schedule&   	       sched,
-                                     const TracerConfig&       tracer,
-                                     const std::size_t 		     sim_step,
-                                     const Opm::Action::State& action_state,
-                                     const Opm::WellTestState& wtest_state,
-                                     const Opm::SummaryState&  smry,
-                                     const std::vector<int>& 	 inteHead);
+        void captureDeclaredWellData(const Schedule&   	          sched,
+                                     const TracerConfig&          tracer,
+                                     const std::size_t 		      sim_step,
+                                     const Opm::Action::State&    action_state,
+                                     const Opm::WellTestState&    wtest_state,
+                                     const Opm::SummaryState&     smry,
+                                     const std::vector<int>&      inteHead);
 
-        void captureDynamicWellData(const Opm::Schedule&        sched,
-                                    const TracerConfig&       tracer,
-                                    const std::size_t           sim_step,
-                                    const Opm::data::Wells&     xw,
-                                    const Opm::SummaryState&    smry);
+        void captureDeclaredWellData(const Schedule&   	          sched,
+                                     const EclipseGrid&           grid,
+                                     const TracerConfig&          tracer,
+                                     const std::size_t 		      sim_step,
+                                     const Opm::Action::State&    action_state,
+                                     const Opm::WellTestState&    wtest_state,
+                                     const Opm::SummaryState&     smry,
+                                     const std::vector<int>&      inteHead);
+
+        void captureDeclaredWellDataLGR(const Schedule&   	      sched,
+                                        const EclipseGrid&        grid,
+                                        const TracerConfig&       tracer,
+                                        const std::size_t 		  sim_step,
+                                        const Opm::Action::State& action_state,
+                                        const Opm::WellTestState& wtest_state,
+                                        const Opm::SummaryState&  smry,
+                                        const std::vector<int>&   inteHead,
+                                        const std::string&        lgr_tag);
+
+        void captureDynamicWellData(const Opm::Schedule&          sched,
+                                    const TracerConfig&           tracer,
+                                    const std::size_t             sim_step,
+                                    const Opm::data::Wells&       xw,
+                                    const Opm::SummaryState&      smry);
 
         /// Retrieve Integer Well Data Array.
         const std::vector<int>& getIWell() const
@@ -81,10 +102,16 @@ namespace Opm { namespace RestartIO { namespace Helpers {
             return this->xWell_.data();
         }
 
-        /// Retrieve Character Well Data Array.
+        /// Retrieve Interger Well Data Array.
         const std::vector<EclIO::PaddedOutputString<8>>& getZWell() const
         {
             return this->zWell_.data();
+        }
+
+        /// Retrieve Character LGWell Data Array.
+        const std::vector<int>& getLGWell() const
+        {
+            return this->lgWell_.data();
         }
 
 
@@ -101,6 +128,9 @@ namespace Opm { namespace RestartIO { namespace Helpers {
 
         /// Aggregate 'ZWEL' array (Character) for all wells.
         WindowedArray<EclIO::PaddedOutputString<8>> zWell_;
+
+        /// Aggregate 'LGWEL' array (Integer) for all wells.
+        WindowedArray<int> lgWell_;
 
         /// Maximum number of groups in model.
         int nWGMax_;
