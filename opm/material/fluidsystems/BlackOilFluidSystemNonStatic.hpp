@@ -58,6 +58,12 @@
 // Member variables need no decorators for the nonstatic version
 #define STATIC_OR_NOTHING
 
+// Make sure member functions are const in non-static version of the fluid system
+#define NOTHING_OR_CONST const
+
+// Functions defined outside of the class need OPM_HOST_DEVICE, but never static
+#define NOTHING_OR_DEVICE OPM_HOST_DEVICE
+
 
 // We need to forward-declare the static version of the fluid system, since we will
 // add it as a friend to the nonstatic version.
@@ -73,8 +79,10 @@ class FLUIDSYSTEM_CLASSNAME_STATIC;
 #include <opm/material/fluidsystems/BlackOilFluidSystem_macrotemplate.hpp>
 
 // Undefine the macros we defined above
+#undef NOTHING_OR_DEVICE
 #undef STATIC_OR_DEVICE
 #undef STATIC_OR_NOTHING
+#undef NOTHING_OR_CONST
 #undef FLUIDSYSTEM_CLASSNAME_NONSTATIC
 #undef FLUIDSYSTEM_CLASSNAME_STATIC
 #undef FLUIDSYSTEM_CLASSNAME

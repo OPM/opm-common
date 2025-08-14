@@ -54,7 +54,7 @@ GasPvtMultiplexer<Scalar, enableThermal>::setVapPars(const Scalar par1, const Sc
 
 template <class Scalar, bool enableThermal>
 Scalar
-GasPvtMultiplexer<Scalar, enableThermal>::gasReferenceDensity(unsigned regionIdx)
+GasPvtMultiplexer<Scalar, enableThermal>::gasReferenceDensity(unsigned regionIdx) const
 {
     OPM_GAS_PVT_MULTIPLEXER_CALL(return pvtImpl.gasReferenceDensity(regionIdx));
 }

@@ -37,6 +37,7 @@
 #include <opm/material/IdealGas.hpp>
 #include <opm/material/common/MathToolbox.hpp>
 
+#include <cassert>
 #include <cmath>
 #include <string_view>
 

@@ -33,6 +33,8 @@
 
 #include <opm/material/common/MathToolbox.hpp>
 #include <opm/common/utility/gpuDecorators.hpp>
+#include <opm/common/utility/gpuistl_if_available.hpp>
+#include <opm/common/utility/VectorWithDefaultAllocator.hpp>
 
 #include <algorithm>
 #include <cassert>
@@ -40,15 +42,17 @@
 #include <vector>
 
 // forward declaration of the class so the function in the next namespace can be declared
-template <class Scalar, class ContainerT = std::vector<Scalar>>
+template <class Scalar, template<class> class Storage = Opm::VectorWithDefaultAllocator>
 class UniformTabulated2DFunction;
 
+#if HAVE_CUDA
 // declaration of make_view in correct namespace so friend function can be declared in the class
 namespace Opm::gpuistl
 {
-    template <class ViewType, class ScalarT, class ContainerType>
-    UniformTabulated2DFunction<ScalarT, ViewType> make_view(UniformTabulated2DFunction<ScalarT, ContainerType>& params);
-}
+    template <class ScalarT>
+    UniformTabulated2DFunction<ScalarT, GpuView> make_view(UniformTabulated2DFunction<ScalarT, GpuBuffer>& params);
+} // namespace Opm::gpuistl
+#endif // HAVE_CUDA
 
 namespace Opm {
 
@@ -59,9 +63,10 @@ namespace Opm {
  * This class can be used when the sampling points are calculated at
  * run time.
  */
-template <class Scalar, class ContainerT = std::vector<Scalar>>
+template <class Scalar, template<class> class Storage = Opm::VectorWithDefaultAllocator>
 class UniformTabulated2DFunction
 {
+    using ContainerT = Storage<Scalar>;
 public:
     OPM_HOST_DEVICE UniformTabulated2DFunction()
     { }
@@ -70,8 +75,8 @@ public:
     // Intended for construction of UniformTabulated2DFunction<double, GPUBuffer>
     UniformTabulated2DFunction(Scalar minX, Scalar maxX, unsigned m,
                                Scalar minY, Scalar maxY, unsigned n,
-                               const ContainerT& samples)
-        : samples_(samples), m_(m), n_(n), xMin_(minX), yMin_(minY), xMax_(maxX), yMax_(maxY){
+                               ContainerT&& samples)
+        : samples_(std::move(samples)), m_(m), n_(n), xMin_(minX), yMin_(minY), xMax_(maxX), yMax_(maxY){
     }
 
      /*!
@@ -310,8 +315,10 @@ public:
     }
 
 private:
-    template <class ViewType, class ScalarT, class Container>
-    friend UniformTabulated2DFunction<ScalarT, ViewType> gpuistl::make_view(UniformTabulated2DFunction<ScalarT, Container>&);
+    #if HAVE_CUDA
+    template <class ScalarT>
+    friend UniformTabulated2DFunction<ScalarT, gpuistl::GpuView> gpuistl::make_view(UniformTabulated2DFunction<ScalarT, gpuistl::GpuBuffer>&);
+    #endif
 
     // the vector which contains the values of the sample points
     // f(x_i, y_j). don't use this directly, use getSamplePoint(i,j)
@@ -335,21 +342,21 @@ private:
 
 } // namespace Opm
 
-namespace Opm::gpuistl{
-    template<class GPUContainer, class ScalarT>
-    UniformTabulated2DFunction<ScalarT, GPUContainer>
-    copy_to_gpu(const UniformTabulated2DFunction<ScalarT>& tab){
-        return UniformTabulated2DFunction<ScalarT, GPUContainer>(tab.xMin(), tab.xMax(), tab.numX(), tab.yMin(), tab.yMax(), tab.numY(), GPUContainer(tab.samples()));
+#if HAVE_CUDA
+namespace Opm::gpuistl {
+    template<class ScalarT>
+    UniformTabulated2DFunction<ScalarT, GpuBuffer>
+    copy_to_gpu(const UniformTabulated2DFunction<ScalarT>& tab) {
+        return UniformTabulated2DFunction<ScalarT, GpuBuffer>(tab.xMin(), tab.xMax(), tab.numX(), tab.yMin(), tab.yMax(), tab.numY(), GpuBuffer(tab.samples()));
     }
 
-    template <class ViewType, class ScalarT, class ContainerType>
-    UniformTabulated2DFunction<ScalarT, ViewType>
-    make_view(UniformTabulated2DFunction<ScalarT, ContainerType>& tab) {
-
-        ViewType newTab = make_view<typename ViewType::value_type>(tab.samples_);
-
-        return UniformTabulated2DFunction<ScalarT, ViewType>(tab.xMin(), tab.xMax(), tab.numX(), tab.yMin(), tab.yMax(), tab.numY(), newTab);
+    template <class ScalarT>
+    UniformTabulated2DFunction<ScalarT, GpuView>
+    make_view(UniformTabulated2DFunction<ScalarT, GpuBuffer>& tab) {
+        return UniformTabulated2DFunction<ScalarT, GpuView>(tab.xMin(), tab.xMax(), tab.numX(), tab.yMin(), tab.yMax(), tab.numY(), make_view(tab.samples_));
     }
-}
+} // namespace Opm::gpuistl
+
+#endif // HAVE_CUDA
 
 #endif

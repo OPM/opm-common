@@ -133,6 +133,10 @@ public:
         return gasPvtApproach_ == GasPvtApproach::ThermalGas;
     }
 
+    bool isActive() const {
+        return gasPvtApproach_ != GasPvtApproach::NoGas;
+    }
+
 #if HAVE_ECL_INPUT
     /*!
      * \brief Initialize the parameters for gas using an ECL deck.
@@ -156,7 +160,7 @@ public:
     /*!
      * \brief Return the reference density which are considered by this PVT-object.
      */
-    Scalar gasReferenceDensity(unsigned regionIdx);
+    Scalar gasReferenceDensity(unsigned regionIdx) const;
 
     /*!
      * \brief Returns the specific enthalpy [J/kg] of gas given a set of parameters.

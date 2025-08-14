@@ -27,10 +27,13 @@
 #ifndef OPM_CO2_GAS_PVT_HPP
 #define OPM_CO2_GAS_PVT_HPP
 
+#include <opm/common/utility/VectorWithDefaultAllocator.hpp>
+
 #include <opm/material/Constants.hpp>
 #include <opm/common/TimingMacros.hpp>
 #include <opm/common/ErrorMacros.hpp>
 #include <opm/common/utility/gpuDecorators.hpp>
+#include <opm/common/utility/gpuistl_if_available.hpp>
 
 #include <opm/material/components/CO2.hpp>
 #include <opm/material/components/BrineDynamic.hpp>
@@ -52,27 +55,29 @@ class Schedule;
 class Co2StoreConfig;
 
 // forward declaration of the class so the function in the next namespace can be declared
-template <class Scalar, class ParamsT, class ContainerT>
+template <class Scalar, template<class> class Storage>
 class Co2GasPvt;
 
+#if HAVE_CUDA
 // declaration of make_view in correct namespace so friend function can be declared in the class
 namespace gpuistl {
-    template <class ViewType, class OutputParams, class InputParams, class ContainerType, class Scalar>
-    Co2GasPvt<Scalar, OutputParams, ViewType>
-    make_view(Co2GasPvt<Scalar, InputParams, ContainerType>&);
-}
-
+    template <class Scalar>
+    Co2GasPvt<Scalar, GpuView>
+    make_view(Co2GasPvt<Scalar, GpuVector>&);
+} // namespace gpuistl
+#endif // HAVE_CUDA
 /*!
  * \brief This class represents the Pressure-Volume-Temperature relations of the gas phase
  *        for CO2.
  */
-template <class Scalar, class ParamsT = Opm::CO2Tables<double, std::vector<double>>, class ContainerT = std::vector<Scalar>>
+template <class Scalar, template<class> class Storage = VectorWithDefaultAllocator>
 class Co2GasPvt
 {
-    using CO2 = ::Opm::CO2<Scalar, ParamsT>;
+    using Params = Opm::CO2Tables<double, Storage>;
+    using CO2 = ::Opm::CO2<Scalar, Params>;
     using H2O = SimpleHuDuanH2O<Scalar>;
     using Brine = ::Opm::BrineDynamic<Scalar, H2O>;
-    using Params = ParamsT;
+    using ContainerT = Storage<Scalar>;
     static constexpr bool extrapolate = true;
 
 public:
@@ -86,6 +91,18 @@ public:
                        int thermalMixingModel = 1,
                        Scalar T_ref = 288.71, //(273.15 + 15.56)
                        Scalar P_ref = 101325);
+
+    Co2GasPvt(const Co2GasPvt& other)
+        : brineReferenceDensity_(other.brineReferenceDensity_)
+        , gasReferenceDensity_(other.gasReferenceDensity_)
+        , salinity_(other.salinity_)
+        , enableEzrokhiDensity_(other.enableEzrokhiDensity_)
+        , enableVaporization_(other.enableVaporization_)
+        , activityModel_(other.activityModel_)
+        , gastype_(other.gastype_)
+        , co2Tables(other.co2Tables)
+    {
+    }
 
     Co2GasPvt(const Params& params,
               const ContainerT& brineReferenceDensity,
@@ -115,6 +132,12 @@ public:
 
     OPM_HOST_DEVICE void setVapPars(const Scalar, const Scalar)
     {
+    }
+
+
+    OPM_HOST_DEVICE static constexpr bool isActive()
+    {
+        return true;
     }
 
     /*!
@@ -322,7 +345,9 @@ public:
     }
 
     OPM_HOST_DEVICE Scalar gasReferenceDensity(unsigned regionIdx) const
-    { return gasReferenceDensity_[regionIdx]; }
+    {
+        return gasReferenceDensity_[regionIdx];
+    }
 
     OPM_HOST_DEVICE Scalar oilReferenceDensity(unsigned regionIdx) const
     { return brineReferenceDensity_[regionIdx]; }
@@ -441,9 +466,11 @@ private:
         return xgW * M_Brine / (xgW * (M_Brine - M_CO2) + M_CO2);
     }
 
-    template <class ViewType, class OutputParams, class InputParams, class ContainerType, class ScalarT>
-    friend Co2GasPvt<ScalarT, OutputParams, ViewType>
-    gpuistl::make_view(Co2GasPvt<ScalarT, InputParams, ContainerType>&);
+    #if HAVE_CUDA
+    template <class ScalarT>
+    friend Co2GasPvt<ScalarT, gpuistl::GpuView>
+    gpuistl::make_view(Co2GasPvt<ScalarT, gpuistl::GpuBuffer>&);
+    #endif // HAVE_CUDA
 
     template <class LhsEval>
     OPM_HOST_DEVICE const LhsEval salinityFromConcentration(const LhsEval&T, const LhsEval& P,
@@ -463,34 +490,35 @@ private:
 
 } // namespace Opm
 
-namespace Opm::gpuistl{
-    template<class GPUContainer, class Params, class ScalarT>
-    Co2GasPvt<ScalarT, Params, GPUContainer>
+#if HAVE_CUDA
+namespace Opm::gpuistl {
+    template<class ScalarT>
+    Co2GasPvt<ScalarT, GpuBuffer>
     copy_to_gpu(const Co2GasPvt<ScalarT>& cpuCo2)
     {
-        return Co2GasPvt<ScalarT, Params, GPUContainer>(
-            copy_to_gpu<GPUContainer>(cpuCo2.getParams()),
-            GPUContainer(cpuCo2.getBrineReferenceDensity()),
-            GPUContainer(cpuCo2.getGasReferenceDensity()),
-            GPUContainer(cpuCo2.getSalinity()),
+        return Co2GasPvt<ScalarT, GpuBuffer>(
+            copy_to_gpu(cpuCo2.getParams()),
+            GpuBuffer<ScalarT>(cpuCo2.getBrineReferenceDensity()),
+            GpuBuffer<ScalarT>(cpuCo2.getGasReferenceDensity()),
+            GpuBuffer<ScalarT>(cpuCo2.getSalinity()),
             cpuCo2.getEnableEzrokhiDensity(),
             cpuCo2.getEnableVaporization(),
             cpuCo2.getActivityModel(),
             cpuCo2.getGasType());
     }
 
-    template <class ViewType, class OutputParams, class InputParams, class ContainerType, class ScalarT>
-    Co2GasPvt<ScalarT, OutputParams, ViewType>
-    make_view(Co2GasPvt<ScalarT, InputParams, ContainerType>& co2GasPvt)
+    template <class ScalarT>
+    Co2GasPvt<ScalarT, GpuView>
+    make_view(Co2GasPvt<ScalarT, GpuBuffer>& co2GasPvt)
     {
-        using ContainedType = typename ContainerType::value_type;
+        using ContainedType = ScalarT;
 
-        ViewType newBrineReferenceDensity = make_view<ContainedType>(co2GasPvt.brineReferenceDensity_);
-        ViewType newGasReferenceDensity = make_view<ContainedType>(co2GasPvt.gasReferenceDensity_);
-        ViewType newSalinity = make_view<ContainedType>(co2GasPvt.salinity_);
+        auto newBrineReferenceDensity = make_view<ContainedType>(co2GasPvt.brineReferenceDensity_);
+        auto newGasReferenceDensity = make_view<ContainedType>(co2GasPvt.gasReferenceDensity_);
+        auto newSalinity = make_view<ContainedType>(co2GasPvt.salinity_);
 
-        return Co2GasPvt<ScalarT, OutputParams, ViewType>(
-            make_view<ViewType>(co2GasPvt.co2Tables),
+        return Co2GasPvt<ScalarT, GpuView>(
+            make_view(co2GasPvt.co2Tables),
             newBrineReferenceDensity,
             newGasReferenceDensity,
             newSalinity,
@@ -499,7 +527,7 @@ namespace Opm::gpuistl{
             co2GasPvt.getActivityModel(),
             co2GasPvt.getGasType());
     }
-}
-
+} // namespace Opm::gpuistl
+#endif // HAVE_CUDA
 
 #endif

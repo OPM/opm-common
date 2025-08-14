@@ -161,6 +161,11 @@ public:
         OPM_WATER_PVT_MULTIPLEXER_CALL(return pvtImpl.viscosity(regionIdx, temperature, pressure, Rsw, saltconcentration));
     }
 
+    bool isActive() const
+    {
+        return approach_ != WaterPvtApproach::NoWater;
+    }
+
     /*!
      * \brief Returns the dynamic viscosity [Pa s] of the fluid phase given a set of parameters.
      */

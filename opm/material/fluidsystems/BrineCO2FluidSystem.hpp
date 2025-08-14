@@ -463,8 +463,8 @@ public:
     }
 
 private:
-    static const CO2Tables<double, std::vector<double>>& getTableInstance() {
-        static CO2Tables<double, std::vector<double>> instance;
+    static const CO2Tables<double>& getTableInstance() {
+        static CO2Tables<double> instance;
         return instance;
     }
 

@@ -30,8 +30,8 @@
 namespace Opm
 {
 
-template <class Scalar, class ContainerT>
-CO2Tables<Scalar, ContainerT>::CO2Tables()
+template <class Scalar, template<class> class Storage>
+CO2Tables<Scalar, Storage>::CO2Tables()
     : tabulatedDensity {co2TabulatedDensityTraits::xMin,
                         co2TabulatedDensityTraits::xMax,
                         co2TabulatedDensityTraits::numX,
@@ -49,6 +49,6 @@ CO2Tables<Scalar, ContainerT>::CO2Tables()
 {
 }
 
-template CO2Tables<double, std::vector<double>>::CO2Tables();
+template CO2Tables<double, VectorWithDefaultAllocator>::CO2Tables();
 
 } // namespace Opm
