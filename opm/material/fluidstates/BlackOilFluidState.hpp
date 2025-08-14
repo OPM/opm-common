@@ -122,16 +122,16 @@ public:
     using FluidSystem = FluidSystemT;
     using Scalar = ScalarT;
 
-    enum { waterPhaseIdx = FluidSystem::waterPhaseIdx };
-    enum { gasPhaseIdx = FluidSystem::gasPhaseIdx };
-    enum { oilPhaseIdx = FluidSystem::oilPhaseIdx };
+    static constexpr int waterPhaseIdx = FluidSystem::waterPhaseIdx;
+    static constexpr int gasPhaseIdx = FluidSystem::gasPhaseIdx;
+    static constexpr int oilPhaseIdx = FluidSystem::oilPhaseIdx;
 
-    enum { waterCompIdx = FluidSystem::waterCompIdx };
-    enum { gasCompIdx = FluidSystem::gasCompIdx };
-    enum { oilCompIdx = FluidSystem::oilCompIdx };
+    static constexpr int waterCompIdx = FluidSystem::waterCompIdx;
+    static constexpr int gasCompIdx = FluidSystem::gasCompIdx;
+    static constexpr int oilCompIdx = FluidSystem::oilCompIdx;
 
-    enum { numPhases = FluidSystem::numPhases };
-    enum { numComponents = FluidSystem::numComponents };
+    static constexpr int numPhases = FluidSystem::numPhases;
+    static constexpr int numComponents = FluidSystem::numComponents;
 
     /*!
      * \brief Make sure that all attributes are defined.
