@@ -231,30 +231,30 @@ bool ScheduleState::group_contains_lgr(const Group& grp, const std::string& lgr_
 
 std::size_t ScheduleState::num_lgr_well_in_group(const Group& grp, const std::string& lgr_tag) const
 {
-    std::size_t num_lgr_wells = 0;
-    if (grp.wellgroup()){
-        for (const auto& well_name : grp.wells()) {
-            const auto& well = this->wells.get(well_name);
-            if (well.get_lgr_well_tag().value_or("") == lgr_tag) {
-                num_lgr_wells += 1;
-            }
-        }
+    if (! grp.wellgroup()) {
+        return 0;
     }
-    return num_lgr_wells;
+
+    const auto& wells = grp.wells();
+
+    return std::count_if(wells.begin(), wells.end(), [&lgr_tag, this](const std::string& wname)
+    {
+        return this->wells(wname).get_lgr_well_tag().value_or("") == lgr_tag;
+    });
 }
 
 std::size_t ScheduleState::num_lgr_groups_in_group(const Group& grp, const std::string& lgr_tag) const
 {
-    std::size_t num_lgr_grp = 0;
-    if (!grp.wellgroup()){
-        for (const auto& child_group_name : grp.groups()) {
-            const auto& child_group = this->groups.get(child_group_name);
-            if (this->group_contains_lgr(child_group, lgr_tag)) {
-                num_lgr_grp += 1;
-            }
-        }
+    if (grp.wellgroup()) {
+        return 0;
     }
-    return num_lgr_grp;
+
+    const auto& children = grp.groups();
+
+    return std::count_if(children.begin(), children.end(), [&lgr_tag, this](const std::string& child)
+    {
+        return this->group_contains_lgr(this->groups(child), lgr_tag);
+    });
 }
 
 void ScheduleState::init_nupcol(Nupcol nupcol) {
