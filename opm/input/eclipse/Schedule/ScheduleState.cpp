@@ -219,7 +219,7 @@ bool ScheduleState::group_contains_lgr(const Group& grp, const std::string& lgr_
         for (const auto& child_group_name : grp.groups()) {
             const auto& child_group = this->groups.get(child_group_name);
             if (child_group.wellgroup()){
-                contain_lgr = contain_lgr or this->well_group_contains_lgr(grp, lgr_tag);
+                contain_lgr = contain_lgr or this->well_group_contains_lgr(child_group, lgr_tag);
             }
             else {
                 contain_lgr = contain_lgr or this->group_contains_lgr(child_group, lgr_tag);
