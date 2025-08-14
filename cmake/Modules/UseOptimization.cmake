@@ -21,6 +21,8 @@ if (CXX_COMPAT_GCC)
   # disabled due to widespread bugs in the linker plugin
   option (WHOLE_PROG_OPTIM "Whole program optimization (lto)" OFF)
   if (WHOLE_PROG_OPTIM)
+    message(DEPRECATION "Variable WHOLE_PROG_OPTIM is deprecated. Use OPM_INTERPROCEDURAL_OPTIMIZATION_TYPE instead.")
+
     check_cxx_accepts_flag ("-flto" HAVE_LINK_OPTS)
     check_cxx_accepts_flag ("-fuse-linker-plugin" HAVE_LINK_PLUGIN)
     if (HAVE_LINK_OPTS)
@@ -91,3 +93,12 @@ else ()
 	endforeach (profile)
   endforeach (lang)
 endif ()
+
+# Warn users that any usage of WHOLE_PROG_OPTIM is deprecated
+function(opm_deprecate_WHOLE_PROG_OPTIM _variable _access)
+  if(_access STREQUAL "READ_ACCESS")
+    message(DEPRECATION "Variable WHOLE_PROG_OPTIM is deprecated. Use OPM_INTERPROCEDURAL_OPTIMIZATION_TYPE instead.")
+  endif()
+endfunction()
+
+variable_watch(WHOLE_PROG_OPTIM opm_deprecate_WHOLE_PROG_OPTIM)
