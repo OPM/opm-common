@@ -30,6 +30,7 @@
 #include <opm/input/eclipse/Schedule/Network/ExtNetwork.hpp>
 #include <opm/input/eclipse/Schedule/Network/Node.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
+#include <opm/input/eclipse/Schedule/ScheduleState.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 
@@ -116,6 +117,33 @@ void groupLoop(const std::vector<const Opm::Group*>& groups,
         groupID += 1;
 
         if (group == nullptr) {
+            continue;
+        }
+
+        groupOp(*group, groupID - 1);
+    }
+}
+
+template <typename GroupOp>
+void groupLoop(const std::vector<const Opm::Group*>& groups,
+               const Opm::ScheduleState&             sched_state,
+               const std::string&                    lgr_tag,
+               GroupOp&&                             groupOp)
+{
+    auto groupID = std::size_t {0};
+
+    for (std::size_t i = 0; i < groups.size(); ++i) {
+        const auto* group = groups[i];
+    // for (const auto* group : groups) {
+        //groupID must be furthered studied to be sure it is correct
+        groupID += 1;
+        if (group == nullptr) {
+            groupID -= 1;
+            continue;
+        }
+        if (group->wellgroup() &&
+            !sched_state.well_group_contains_lgr(*group, lgr_tag)) {
+            groupID -= 1;
             continue;
         }
 
@@ -731,6 +759,88 @@ void storeGroupTree(const Opm::Schedule& sched,
 }
 
 template <class IGrpArray>
+void storeGroupTreeLGR(const Opm::Schedule& sched,
+                    const Opm::Group& group,
+                    const int nwgmax,
+                    const int ngmaxz,
+                    const std::size_t simStep,
+                    IGrpArray& iGrp,
+                    const std::string& lgr_tag)
+{
+
+    namespace Value = ::Opm::RestartIO::Helpers::VectorItems::IGroup::Value;
+    using IGroup = ::Opm::RestartIO::Helpers::VectorItems::IGroup::index;
+    const bool is_field = group.name() == "FIELD";
+
+    auto group_insert_index_lgr = [&sched, &group, simStep](const Opm::Group& child_group, const std::string& lgr_label) -> int {
+        //This function assumes thatt the group is not a well group.
+        // A well group cannot own a general group.
+        const auto& father_group =  sched.getGroup(child_group.parent(), simStep);
+        const std::size_t num_father_child = group.groups().size() ;
+        int count = 0;
+
+        for (std::size_t index = 0; index < num_father_child; ++index) {
+            const auto& group_name = father_group.groups()[index];
+            const auto& father_child_group = sched.getGroup(group_name, simStep);
+            if (sched[simStep].group_contains_lgr(father_child_group, lgr_label)) {
+                count += 1;
+                if (group_name == child_group.name()) {
+                    break;
+                }
+            }
+
+        }
+        return count;
+    };
+
+    // Store index of all child wells or child groups.
+    if (group.wellgroup()) {
+        int igrpCount = 0;
+        for (const auto& well_name : group.wells()) {
+            const auto& well = sched.getWell(well_name, simStep);
+            auto well_lgr_tag = well.get_lgr_well_tag().value_or("");
+
+            if ((!well.is_lgr_well()) || (well_lgr_tag != lgr_tag)){
+                continue; // Skip wells that are not tagged with the specified LGR tag
+            }
+            iGrp[igrpCount] = well.seqIndexLGR() + 1;
+            igrpCount += 1;
+
+        }
+        iGrp[nwgmax] = sched[simStep].num_lgr_well_in_group(group, lgr_tag);
+
+        iGrp[nwgmax + IGroup::GroupType] = Value::GroupType::WellGroup;
+    } else  {
+        int igrpCount = 0;
+        for (const auto& group_name : group.groups()) {
+            const auto& child_group = sched.getGroup(group_name, simStep);
+            if (sched[simStep].well_group_contains_lgr(child_group, lgr_tag)){ // Ensure the group is part of the LGR {
+                iGrp[igrpCount] = group_insert_index_lgr(child_group, lgr_tag);
+                igrpCount += 1;
+            }
+        }
+        iGrp[nwgmax+ IGroup::NoOfChildGroupsWells] = (group.wellgroup()) ? sched[simStep].num_lgr_well_in_group(group, lgr_tag):
+                                                                           sched[simStep].num_lgr_groups_in_group(group,lgr_tag);
+        iGrp[nwgmax + IGroup::GroupType] = Value::GroupType::TreeGroup;
+    }
+
+
+    // Store index of parent group
+    if (is_field)
+        iGrp[nwgmax + IGroup::ParentGroup] = 0;
+    else {
+        const auto& parent_group = sched.getGroup(group.parent(), simStep);
+        if (parent_group.name() == "FIELD")
+            iGrp[nwgmax + IGroup::ParentGroup] = ngmaxz;
+        else
+            iGrp[nwgmax + IGroup::ParentGroup] = parent_group.insert_index();
+    }
+
+    iGrp[nwgmax + IGroup::GroupLevel] = currentGroupLevel(sched, group, simStep);
+}
+
+
+template <class IGrpArray>
 void storeFlowingWells(const Opm::Group&        group,
                        const int                nwgmax,
                        const Opm::SummaryState& sumState,
@@ -750,12 +860,18 @@ void staticContrib(const Opm::Schedule&     sched,
                    const int                ngmaxz,
                    const std::size_t        simStep,
                    const Opm::SummaryState& sumState,
-                   IGrpArray&               iGrp)
+                   IGrpArray&               iGrp,
+                   const std::string&       lgr_tag = "")
 {
     using IGroup = ::Opm::RestartIO::Helpers::VectorItems::IGroup::index;
     const bool is_field = group.name() == "FIELD";
 
-    storeGroupTree(sched, group, nwgmax, ngmaxz, simStep, iGrp);
+    if (lgr_tag.empty()) {
+        storeGroupTree(sched, group, nwgmax, ngmaxz, simStep, iGrp);
+    } else {
+        storeGroupTreeLGR(sched, group, nwgmax, ngmaxz, simStep, iGrp, lgr_tag);
+    }
+
 
     // Node number and other node properties for groups, i.e., leaf nodes,
     // in extended network model.
@@ -1270,3 +1386,58 @@ captureDeclaredGroupData(const Opm::Schedule&                 sched,
     });
 }
 
+
+void
+Opm::RestartIO::Helpers::AggregateGroupData::
+captureDeclaredGroupDataLGR(const Opm::Schedule&                 sched,
+                            const Opm::UnitSystem&               units,
+                            const std::size_t                    simStep,
+                            const Opm::SummaryState&             sumState,
+                            const std::vector<int>&              inteHead,
+                            const std::string&                   lgr_tag)
+{
+    const auto& curGroups = sched.restart_groups(simStep);
+    const auto& sched_state = sched[simStep];
+
+    groupLoop(curGroups,sched_state, lgr_tag,
+              [&sched, simStep, sumState, &lgr_tag, this]
+              (const Group& group, const std::size_t groupID) -> void
+    {
+        auto ig = this->iGroup_[groupID];
+        IGrp::staticContrib(sched, group, this->nWGMax_, this->nGMaxz_,
+        simStep, sumState, ig, lgr_tag);
+    });
+
+    // Define Static Contributions to SGrp Array.
+    groupLoop(curGroups, sched_state, lgr_tag,
+              [&sumState, &units, &sched_state, this](const Group& group , const std::size_t groupID) -> void
+    {
+        auto sw = this->sGroup_[groupID];
+        SGrp::staticContrib(group, sched_state.glo(), sched_state.gconsump(), sumState, units, sw);
+    });
+
+    // Define Dynamic Contributions to XGrp Array.
+    groupLoop(curGroups, sched_state, lgr_tag,
+              [&sumState, this] (const Group& group, const std::size_t groupID) -> void
+    {
+        auto xg = this->xGroup_[groupID];
+
+        XGrp::dynamicContrib(this->restart_group_keys, this->restart_field_keys,
+        this->groupKeyToIndex, this->fieldKeyToIndex, group,
+        sumState, xg);
+    });
+
+    // Define Static Contributions to ZGrp Array.
+    groupLoop(curGroups,sched_state, lgr_tag, [this, &inteHead]
+              (const Group& group, const std::size_t  groupID ) -> void
+    {
+        // bug here
+        // std::size_t group_index = group.insert_index() - 1;
+        // if (group.name() == "FIELD")
+        //     group_index = ngmaxz(inteHead) - 1;
+        std::size_t group_index = groupID;
+        auto zg = this->zGroup_[ group_index ];
+
+        ZGrp::staticContrib(group, zg);
+    });
+}

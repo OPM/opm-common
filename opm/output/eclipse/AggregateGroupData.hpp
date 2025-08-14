@@ -48,6 +48,14 @@ public:
                          const Opm::SummaryState&             sumState,
                          const std::vector<int>&              inteHead);
 
+
+    void captureDeclaredGroupDataLGR(const Opm::Schedule&        sched,
+                                     const Opm::UnitSystem&      units,
+                                     const std::size_t           simStep,
+                                     const Opm::SummaryState&    sumState,
+                                     const std::vector<int>&     inteHead,
+                                     const std::string&          lgr_tag);
+
     const std::vector<int>& getIGroup() const
     {
         return this->iGroup_.data();
