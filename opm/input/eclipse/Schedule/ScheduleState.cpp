@@ -198,35 +198,31 @@ bool ScheduleState::first_in_year() const {
 
 bool ScheduleState::well_group_contains_lgr(const Group& grp, const std::string& lgr_tag) const
 {
-    if (grp.wellgroup()){
-        for (const auto& well_name : grp.wells()) {
-            const auto& well = this->wells.get(well_name);
-            if (well.get_lgr_well_tag().value_or("") == lgr_tag) {
-                return true;
-            }
-        }
-    }
+if (! grp.wellgroup()) {
     return false;
+}
+
+const auto& gwells = grp.wells();
+
+return std::any_of(gwells.begin(), gwells.end(), [&lgr_tag, this](const std::string& wname)
+{
+    return this->wells(wname).get_lgr_well_tag().value_or("") == lgr_tag;
+});
 }
 
 bool ScheduleState::group_contains_lgr(const Group& grp, const std::string& lgr_tag) const
 {
-    bool contain_lgr = false;
-    if (grp.wellgroup()){
-        contain_lgr = contain_lgr or this->well_group_contains_lgr(grp, lgr_tag);
+    if (grp.wellgroup()) {
+        return this->well_group_contains_lgr(grp, lgr_tag);
     }
-    else {
-        for (const auto& child_group_name : grp.groups()) {
-            const auto& child_group = this->groups.get(child_group_name);
-            if (child_group.wellgroup()){
-                contain_lgr = contain_lgr or this->well_group_contains_lgr(child_group, lgr_tag);
-            }
-            else {
-                contain_lgr = contain_lgr or this->group_contains_lgr(child_group, lgr_tag);
-            }
-        }
-    }
-    return contain_lgr;
+
+    const auto& children = grp.groups();
+
+    return std::any_of(children.begin(), children.end(), [&lgr_tag, this](const std::string& child_group_name)
+    {
+        const auto& child_group = this->groups.get(child_group_name);
+        return this->group_contains_lgr(child_group, lgr_tag);
+    });
 }
 
 std::size_t ScheduleState::num_lgr_well_in_group(const Group& grp, const std::string& lgr_tag) const
@@ -235,9 +231,9 @@ std::size_t ScheduleState::num_lgr_well_in_group(const Group& grp, const std::st
         return 0;
     }
 
-    const auto& wells = grp.wells();
+    const auto& lwells = grp.wells();
 
-    return std::count_if(wells.begin(), wells.end(), [&lgr_tag, this](const std::string& wname)
+    return std::count_if(lwells.begin(), lwells.end(), [&lgr_tag, this](const std::string& wname)
     {
         return this->wells(wname).get_lgr_well_tag().value_or("") == lgr_tag;
     });
