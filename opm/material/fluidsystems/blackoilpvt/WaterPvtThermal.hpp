@@ -331,7 +331,9 @@ public:
             Scalar muRef = pvtwViscosity_[regionIdx] / (1.0 + x + 0.5 * x * x);
             // compute the viscosity deviation due to temperature
             const auto& muWatvisct = watvisctCurves_[regionIdx].eval(temperature, true);
-            mu *= muWatvisct / muRef;
+            // Split operations to get same order of operations as in the viscosity() function.
+            mu *= muWatvisct;
+            mu /= muRef;
         }
         return { b, mu };
     }
