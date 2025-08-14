@@ -102,13 +102,13 @@ namespace Opm { namespace RestartIO { namespace Helpers {
             return this->xWell_.data();
         }
 
-        /// Retrieve Interger Well Data Array.
+        /// Retrieve Character Well Data Array.
         const std::vector<EclIO::PaddedOutputString<8>>& getZWell() const
         {
             return this->zWell_.data();
         }
 
-        /// Retrieve Character LGWell Data Array.
+        /// Retrieve Interger LGWell Data Array.
         const std::vector<int>& getLGWell() const
         {
             return this->lgWell_.data();
