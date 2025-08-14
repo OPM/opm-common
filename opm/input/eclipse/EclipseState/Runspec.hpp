@@ -336,6 +336,11 @@ public:
      */
     bool activeWag() const;
 
+    /*!
+     * \brief Do Pc scaling for scanning curves.
+     */
+    bool doPcScaling() const;
+
     bool operator==(const EclHysterConfig& data) const;
 
     template<class Serializer>
@@ -347,6 +352,7 @@ public:
         serializer(modParamTrappedValue);
         serializer(curvatureCapPrsValue);
         serializer(activeWagHyst);
+        serializer(enablePcScaling);
     }
 
 private:
@@ -363,6 +369,9 @@ private:
 
     // enable WAG hysteresis
     bool activeWagHyst  { false };
+
+    // flag to enable Pc scaling
+    bool enablePcScaling { false };
 };
 
 class SatFuncControls {

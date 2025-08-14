@@ -181,8 +181,11 @@ public:
         }
         else {
             Scalar pciwght = params.pcWght(); // Align pci and pcd at Swir
-            const Evaluation SwScan = (Sw-params.pcSwMdc())/(Swma-params.pcSwMdc());
-            const Evaluation SwScaled = params.Swcri() + (1 - params.Sncri() - params.Swcri()) * SwScan;
+            Evaluation SwScaled = Sw; // Use without scaling. This is Killough 1976
+            if (params.config().enablePcScalingHyst()) {
+                const Evaluation SwScan = (Sw-params.pcSwMdc())/(Swma-params.pcSwMdc());
+                SwScaled = params.Swcri() + (1 - params.Sncri() - params.Swcri()) * SwScan;
+            }
             const Evaluation dPc = pciwght*EffectiveLaw::twoPhaseSatPcnw(params.imbibitionParams(), SwScaled) - EffectiveLaw::twoPhaseSatPcnw(params.drainageParams(), SwScaled);
             const Evaluation Pcd = EffectiveLaw::twoPhaseSatPcnw(params.drainageParams(), Sw);
             if (dPc == 0.0)
