@@ -114,11 +114,17 @@ namespace Opm {
 
         size_t get_lgr_cell_index(const std::string& lgr_tag) const {
           const auto& labels = get_all_lgr_labels();
+
           if (labels.empty()) {
-              throw std::runtime_error("No LGR cells defined in EclipseGrid");
+              throw std::runtime_error("No LGR labels available.");
           }
+
           auto it = std::find(labels.begin(), labels.end(), lgr_tag);
-          return (it != labels.end()) ? static_cast<int>(std::distance(labels.begin(), it)) : -1;
+          if (it == labels.end()) {
+              throw std::runtime_error("LGR tag not found: " + lgr_tag);
+          }
+
+          return static_cast<size_t>(std::distance(labels.begin(), it));
         }
 
         size_t getActiveIndex(size_t globalIndex) const {
