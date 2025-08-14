@@ -196,6 +196,67 @@ bool ScheduleState::first_in_year() const {
     return this->m_first_in_year;
 }
 
+bool ScheduleState::well_group_contains_lgr(const Group& grp, const std::string& lgr_tag) const
+{
+    if (grp.wellgroup()){
+        for (const auto& well_name : grp.wells()) {
+            const auto& well = this->wells.get(well_name);
+            if (well.get_lgr_well_tag().value_or("") == lgr_tag) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+bool ScheduleState::group_contains_lgr(const Group& grp, const std::string& lgr_tag) const
+{
+    bool contain_lgr = false;
+    if (grp.wellgroup()){
+        contain_lgr = contain_lgr or this->well_group_contains_lgr(grp, lgr_tag);
+    }
+    else {
+        for (const auto& child_group_name : grp.groups()) {
+            const auto& child_group = this->groups.get(child_group_name);
+            if (child_group.wellgroup()){
+                contain_lgr = contain_lgr or this->well_group_contains_lgr(grp, lgr_tag);
+            }
+            else {
+                contain_lgr = contain_lgr or this->group_contains_lgr(child_group, lgr_tag);
+            }
+        }
+    }
+    return contain_lgr;
+}
+
+std::size_t ScheduleState::num_lgr_well_in_group(const Group& grp, const std::string& lgr_tag) const
+{
+    std::size_t num_lgr_wells = 0;
+    if (grp.wellgroup()){
+        for (const auto& well_name : grp.wells()) {
+            const auto& well = this->wells.get(well_name);
+            if (well.get_lgr_well_tag().value_or("") == lgr_tag) {
+                num_lgr_wells += 1;
+            }
+        }
+    }
+    return num_lgr_wells;
+}
+
+std::size_t ScheduleState::num_lgr_groups_in_group(const Group& grp, const std::string& lgr_tag) const
+{
+    std::size_t num_lgr_grp = 0;
+    if (!grp.wellgroup()){
+        for (const auto& child_group_name : grp.groups()) {
+            const auto& child_group = this->groups.get(child_group_name);
+            if (this->group_contains_lgr(child_group, lgr_tag)) {
+                num_lgr_grp += 1;
+            }
+        }
+    }
+    return num_lgr_grp;
+}
+
 void ScheduleState::init_nupcol(Nupcol nupcol) {
     this->m_nupcol = std::move(nupcol);
 }
