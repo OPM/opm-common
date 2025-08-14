@@ -128,6 +128,12 @@ public:
     bool enableWagHysteresis() const
     { return enableWagHyst_; }
 
+    /*!
+     * \brief Returns whether Pc scaling is enabled.
+     */
+    bool enablePcScalingHyst() const
+    { return enablePcScalingHyst_; }
+
 #if HAVE_ECL_INPUT
     /*!
      * \brief Reads all relevant material parameters form a cell of a parsed ECL deck.
@@ -149,6 +155,9 @@ private:
 
     // WAG hysteresis
     bool enableWagHyst_{false};
+
+    // Enable bug fix for capillary pressure scaling
+    bool enablePcScalingHyst_{false};
 };
 
 } // namespace Opm

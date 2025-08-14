@@ -446,6 +446,16 @@ EclHysterConfig::EclHysterConfig(const Opm::Deck& deck)
         // Killough model: Regularisation for trapped critical saturation calculations
         if (pcHystMod == 0 || krHystMod == 2 || krHystMod == 3)
             modParamTrappedValue = ehystrKeyword.getRecord(0).getItem("mod_param_trapped").get<double>(0);
+
+        if (pcHystMod >= 0) {
+            const int pc_scaling_value = ehystrKeyword.getRecord(0).getItem("enable_pc_scaling").get<int>(0);
+            if (pc_scaling_value != 0 && pc_scaling_value != 1) {
+                throw std::runtime_error(
+                    "Only 0 and 1 allowed for the 'capillary pressure scaling parameter' "
+                    "(the 14 item of the 'EHYSTR' keyword).");
+            }
+            enablePcScaling = pc_scaling_value;
+        }
     }
 
 EclHysterConfig EclHysterConfig::serializationTestObject()
@@ -457,6 +467,7 @@ EclHysterConfig EclHysterConfig::serializationTestObject()
     result.modParamTrappedValue = 3;
     result.curvatureCapPrsValue = 4;
     result.activeWagHyst = true;
+    result.enablePcScaling = false;
 
     return result;
 }
@@ -479,6 +490,9 @@ double EclHysterConfig::curvatureCapPrs() const
 bool EclHysterConfig::activeWag() const
 { return activeWagHyst; }
 
+bool EclHysterConfig::doPcScaling() const
+{ return enablePcScaling; }
+
 bool EclHysterConfig::operator==(const EclHysterConfig& data) const
 {
     return (this->active() == data.active())
@@ -487,6 +501,7 @@ bool EclHysterConfig::operator==(const EclHysterConfig& data) const
         && (this->modParamTrapped() == data.modParamTrapped())
         && (this->curvatureCapPrs() == data.curvatureCapPrs())
         && (this->activeWag() == data.activeWag())
+        && (this->doPcScaling() == data.doPcScaling())
         ;
 }
 

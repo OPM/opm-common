@@ -181,21 +181,20 @@ public:
         }
         else {
             Scalar pciwght = params.pcWght(); // Align pci and pcd at Swir
-            //const Evaluation& SwEff = params.Swcri()+(Sw-params.pcSwMdc())/(Swma-params.pcSwMdc())*(Swma-params.Swcri());
-            const Evaluation& SwEff = Sw; // This is Killough 1976, Gives significantly better fit compared to benchmark then the above "scaling"
-            const Evaluation& Pci = pciwght*EffectiveLaw::twoPhaseSatPcnw(params.imbibitionParams(), SwEff);
-
-            const Evaluation& Pcd = EffectiveLaw::twoPhaseSatPcnw(params.drainageParams(), Sw);
-
-            if (Pci == Pcd)
+            Evaluation SwScaled = Sw; // Use without scaling. This is Killough 1976
+            if (params.config().enablePcScalingHyst()) {
+                const Evaluation SwScan = (Sw-params.pcSwMdc())/(Swma-params.pcSwMdc());
+                SwScaled = params.Swcri() + (1 - params.Sncri() - params.Swcri()) * SwScan;
+            }
+            const Evaluation dPc = pciwght*EffectiveLaw::twoPhaseSatPcnw(params.imbibitionParams(), SwScaled) - EffectiveLaw::twoPhaseSatPcnw(params.drainageParams(), SwScaled);
+            const Evaluation Pcd = EffectiveLaw::twoPhaseSatPcnw(params.drainageParams(), Sw);
+            if (dPc == 0.0)
                 return Pcd;
 
-            const Evaluation& F = (1.0/(Sw-params.pcSwMdc()+params.curvatureCapPrs())-1.0/params.curvatureCapPrs())
+            const Evaluation F = (1.0/(Sw-params.pcSwMdc()+params.curvatureCapPrs())-1.0/params.curvatureCapPrs())
                                 / (1.0/(Swma-params.pcSwMdc()+params.curvatureCapPrs())-1.0/params.curvatureCapPrs());
 
-            const Evaluation& pc_Killough = Pcd+F*(Pci-Pcd);
-
-            return pc_Killough;
+            return Pcd+F*dPc;
         }
 
         return 0.0;
