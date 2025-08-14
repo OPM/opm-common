@@ -59,6 +59,7 @@
 #include <memory>
 #include <numeric>
 #include <string>
+#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
@@ -707,6 +708,7 @@ Well{0} entered with 'FIELD' parent group:
 void handleWELSPECL(HandlerContext& handlerContext)
 {
     using Kw = ParserKeywords::WELSPECL;
+
     auto getTrimmedName = [&handlerContext](const auto& item)
     {
         return trim_wgname(handlerContext.keyword,
@@ -715,11 +717,23 @@ void handleWELSPECL(HandlerContext& handlerContext)
                            handlerContext.errors);
     };
     handleWELSPECS(handlerContext);
+    std::size_t index = 0;
+    std::unordered_map<std::string, int> lgr_well_seq_map;
+
     for (const auto& record : handlerContext.keyword) {
         const auto wellName = getTrimmedName(record.getItem<Kw::WELL>());
         const auto lgrTag = getTrimmedName(record.getItem<Kw::LGR>());
-        handlerContext.state().wells.get(wellName).flag_lgr_well();
-        handlerContext.state().wells.get(wellName).set_lgr_well_tag(lgrTag);
+        const auto& [tagPos, inserted] = lgr_well_seq_map.try_emplace(lgrTag, 0);
+        if (! inserted) {
+            // lgrTag already exists in the map, increase sequence number.
+            ++tagPos->second;
+        }
+        auto& well = handlerContext.state().wells.get(wellName);
+        well.setInsertIndexLGR(tagPos->second);
+        well.setInsertIndexAllLGR(index);
+        well.flag_lgr_well();
+        well.set_lgr_well_tag(lgrTag);
+        index++;
     }
 }
 

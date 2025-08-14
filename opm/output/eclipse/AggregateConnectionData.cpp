@@ -36,10 +36,12 @@
 #include <cmath>
 #include <cstddef>
 #include <exception>
+#include <optional>
 #include <stdexcept>
 #include <utility>
 
 #include <fmt/format.h>
+
 
 namespace VI = Opm::RestartIO::Helpers::VectorItems;
 
@@ -62,14 +64,18 @@ namespace {
     void connectionLoop(const Opm::EclipseGrid& grid,
                         const Opm::Well&        well,
                         const Opm::data::Well*  wellRes,
-                        ConnOp&&                connOp)
+                        ConnOp&&                connOp,
+                        bool global_grid = true)
     {
         const auto& wellName = well.name();
-        const auto  wellID   = well.seqIndex();
+        const auto wellID = global_grid ? well.seqIndex() : well.seqIndexLGR();
         const auto  isProd   = well.isProducer();
+        const Opm::EclipseGrid* lgrid =    well.is_lgr_well()
+                                            ? &grid.getLGRCell(well.get_lgr_well_tag().value())
+                                            : &grid;
 
         std::size_t connID = 0;
-        for (const auto* connPtr : well.getConnections().output(grid)) {
+        for (const auto* connPtr : well.getConnections().output(*lgrid)) {
             const auto* dynConnRes = (wellRes == nullptr)
                 ? nullptr : wellRes->find_connection(connPtr->global_index());
 
@@ -97,6 +103,26 @@ namespace {
         }
     }
 
+    template <class ConnOp>
+    void wellConnectionLoop(const Opm::Schedule&    sched,
+                            const std::size_t       sim_step,
+                            const Opm::EclipseGrid& grid,
+                            const Opm::data::Wells& xw,
+                            const std::string&      lgr_tag,
+                            ConnOp&&                connOp)
+    {
+        for (const auto& wname : sched.wellNames(sim_step)) {
+            const auto  well_iter = xw.find(wname);
+            const auto* wellRes   = (well_iter == xw.end())
+                ? nullptr : &well_iter->second;
+            if (sched.getWell(wname, sim_step).get_lgr_well_tag().value_or("") != lgr_tag) {
+                continue; // skip wells not in the specified LGR
+            }
+           connectionLoop(grid, sched.getWell(wname, sim_step),
+                           wellRes, connOp, false);
+        }
+    }
+
     namespace IConn {
         std::size_t entriesPerConn(const std::vector<int>& inteHead)
         {
@@ -116,18 +142,46 @@ namespace {
         }
 
         template <class IConnArray>
-        void staticContrib(const Opm::Connection& conn,
-                           const std::size_t      connID,
-                           IConnArray&            iConn)
+        void staticContribWellHead(const Opm::Connection& conn,
+                                   IConnArray&            iConn)
         {
-            using ConnState = ::Opm::Connection::State;
             using Ix = ::Opm::RestartIO::Helpers::VectorItems::IConn::index;
-
-            iConn[Ix::SeqIndex] = connID + 1;
 
             iConn[Ix::CellI] = conn.getI() + 1;
             iConn[Ix::CellJ] = conn.getJ() + 1;
             iConn[Ix::CellK] = conn.getK() + 1;
+        }
+
+        template <class IConnArray>
+        void staticContribWellHeadLGR(const Opm::Connection& conn,
+                                      IConnArray&            iConn,
+                                      const Opm::EclipseGrid& grid)
+        {
+            using Ix = ::Opm::RestartIO::Helpers::VectorItems::IConn::index;
+            const std::string& lgr_tag = grid.get_lgr_labels_by_number(conn.get_lgr_level());
+            auto fatherIJK = grid.getLGR_fatherIJK(conn.getI(),conn.getJ(),
+                                                                       conn.getK(), lgr_tag);
+            iConn[Ix::CellI] = fatherIJK[0] + 1;
+            iConn[Ix::CellJ] = fatherIJK[1] + 1;
+            iConn[Ix::CellK] = fatherIJK[2] + 1;
+        }
+
+        template <class IConnArray>
+        void staticContrib(const Opm::Connection& conn,
+                           const std::size_t      connID,
+                           IConnArray&            iConn,
+                           std::optional<std::reference_wrapper<const Opm::EclipseGrid>>
+                                                  grid = std::nullopt,
+                           bool                   global_grid = true)
+        {
+            using ConnState = ::Opm::Connection::State;
+            using Ix = ::Opm::RestartIO::Helpers::VectorItems::IConn::index;
+            iConn[Ix::SeqIndex] = connID + 1;
+            if ((conn.get_lgr_level() == 0) || !global_grid) {
+                staticContribWellHead(conn,  iConn);
+            } else {
+                staticContribWellHeadLGR(conn,  iConn, grid.value().get());
+            }
 
             iConn[Ix::ConnStat] = (conn.state() == ConnState::OPEN)
                 ? 1 : 0;
@@ -348,7 +402,7 @@ captureDeclaredConnData(const Schedule&     sched,
                         const SummaryState& summary_state,
                         const std::size_t   sim_step)
 {
-    wellConnectionLoop(sched, sim_step, grid, xw, [&units, &summary_state, this]
+    wellConnectionLoop(sched, sim_step, grid, xw, [&units, &summary_state, &grid, this]
         (const std::string&      wellName,
          const std::size_t       wellID,
          const bool              is_producer,
@@ -360,7 +414,48 @@ captureDeclaredConnData(const Schedule&     sched,
         auto ic = this->iConn_(wellID, connID);
         auto sc = this->sConn_(wellID, connID);
 
-        IConn::staticContrib(conn, connID, ic);
+        IConn::staticContrib(conn, connID, ic, grid);
+        SConn::staticContrib(conn, units, sc);
+
+        if (dynConnRes != nullptr) {
+            // Simulator provides dynamic connection results such as flow
+            // rates and PI-adjusted transmissibility factors.
+
+            SConn::dynamicContrib(*dynConnRes, units, sc);
+        }
+
+        auto xc = this->xConn_(wellID, connID);
+        XConn::dynamicContrib(wellName, is_producer,
+                              global_index, summary_state, xc);
+
+    });
+}
+
+
+
+void
+Opm::RestartIO::Helpers::AggregateConnectionData::
+captureDeclaredConnDataLGR(const Schedule&     sched,
+                           const EclipseGrid&  grid,
+                           const UnitSystem&   units,
+                           const data::Wells&  xw,
+                           const SummaryState& summary_state,
+                           const std::size_t   sim_step,
+                           const std::string&  lgr_tag)
+{
+    wellConnectionLoop(sched, sim_step, grid, xw, lgr_tag, [&units, &summary_state, &grid, this]
+        (const std::string&      wellName,
+         const std::size_t       wellID,
+         const bool              is_producer,
+         const Connection&       conn,
+         const std::size_t       connID,
+         const std::size_t       global_index,
+         const data::Connection* dynConnRes) -> void
+    {
+        auto ic = this->iConn_(wellID, connID);
+        auto sc = this->sConn_(wellID, connID);
+
+        IConn::staticContrib(conn, connID, ic, grid, false);
         SConn::staticContrib(conn, units, sc);
 
         if (dynConnRes != nullptr) {

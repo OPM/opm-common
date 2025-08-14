@@ -192,6 +192,7 @@ namespace Opm {
         int getJ() const;
         int getK() const;
         std::size_t global_index() const;
+        int get_lgr_level() const {return lgr_grid;}
         State state() const;
         Direction dir() const;
         double depth() const;
