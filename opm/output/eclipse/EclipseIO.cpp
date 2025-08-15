@@ -460,6 +460,11 @@ private:
     /// Applicable only if sumthin_active_ is true.
     double last_sumthin_output_{std::numeric_limits<double>::lowest()};
 
+    /// Elapsed/simulated time at last summary file output event.
+    ///
+    /// Stored as \c float to mimic the summary file's TIME vector.
+    float last_summary_output_{std::numeric_limits<float>::lowest()};
+
     /// Output static properties to INIT file.
     ///
     /// \param[in] simProps Initial per-cell properties such as
@@ -529,6 +534,35 @@ private:
     ///
     /// \return Run's RPTONLY setting at \p report_step.  Typically false.
     bool summaryAtRptOnly(const int report_step) const;
+
+    /// Whether or not to enable summary file output at particular time.
+    ///
+    /// This is special case handling to ensure that the summary file's TIME
+    /// vector is strictly increasing at all summary file output times.
+    /// Since TIME is stored in single precision ("float"), the minimum time
+    /// between summary file output events must typically be at least
+    ///
+    ///     numeric_limits<float>::epsilon() * elapsed
+    ///
+    /// which grows with the total simulated time.  For common float
+    /// implementations, this means that the minimum interval between
+    /// summary file output events may increase by as much as a minute for
+    /// each decade of simulated time.
+    ///
+    /// This special case handling is nevertheless applicable only to
+    /// sub-steps.  We always create summary file output for report steps.
+    ///
+    /// \param[in] report_step One-based report step index for which to
+    /// create output.  Report_step=0 represents time zero--the start of the
+    /// simulation.
+    ///
+    /// \param[in] secs_elapsed Elapsed physical (i.e., simulated) time in
+    /// seconds since start of simulation.
+    ///
+    /// \return Whether or not \p secs_elapsed, when treated as a \c float,
+    /// is strictly between the previous summary file output time
+    /// (last_summary_output_) and the next report step time.
+    bool elapsedTimeAccepted(const int report_step, const double secs_elapsed) const;
 };
 
 Opm::EclipseIO::Impl::Impl(const EclipseState&  eclipseState,
@@ -587,6 +621,19 @@ bool Opm::EclipseIO::Impl::wantSummaryOutput(const int          report_step,
                                              const double       secs_elapsed,
                                              std::optional<int> time_step) const
 {
+    if (isSubstep && !this->elapsedTimeAccepted(report_step, secs_elapsed)) {
+        // Time step too short or too close to end of report step.  This
+        // would lead to the summary file's single precision (float) TIME
+        // vector not being strictly increasing which is known to cause
+        // problems for at least some post-processing tools.  Don't write
+        // summary file output for this time step.
+        //
+        // Note: This special provision applies only to sub-steps.  We
+        // *always* emit summary file information at the end of a report
+        // step.
+        return false;
+    }
+
     if (time_step.has_value()) {
         return true;
     }
@@ -787,6 +834,8 @@ void Opm::EclipseIO::Impl::recordSummaryOutput(const double secs_elapsed)
     if (this->sumthin_triggered_) {
         this->last_sumthin_output_ = secs_elapsed;
     }
+
+    this->last_summary_output_ = static_cast<float>(secs_elapsed);
 }
 
 int Opm::EclipseIO::Impl::reportIndex(const int                report_step,
@@ -811,6 +860,24 @@ bool Opm::EclipseIO::Impl::checkAndRecordIfSumthinTriggered(const int    report_
 bool Opm::EclipseIO::Impl::summaryAtRptOnly(const int report_step) const
 {
     return this->schedule_.get()[report_step - 1].rptonly();
+}
+
+bool Opm::EclipseIO::Impl::elapsedTimeAccepted(const int    report_step,
+                                               const double secs_elapsed) const
+{
+    const auto float_elapsed = static_cast<float>(secs_elapsed);
+
+    // Recall: 'report_step' is a one-based index, so using this directly as
+    // an argument to Schedule::seconds() means we get the start time of the
+    // *next* report step.
+    const auto float_nextrpt = static_cast<float>
+        (this->schedule_.get().seconds(report_step));
+
+    // We accept the elapsed time if, when treated as a float, it is
+    // *strictly* between the previous summary file output time and the end
+    // of the current report step (i.e., the start of the next report step).
+    return (float_elapsed > this->last_summary_output_)
+        && (float_elapsed < float_nextrpt);
 }
 
 // ===========================================================================
