@@ -442,7 +442,12 @@ public:
     {
         assert(i < numX());
         Scalar x = iToX(i);
-        if (samples_[i].empty() || std::get<1>(samples_[i].back()) < y) {
+        if (samples_[i].empty()) {
+            samples_[i].push_back(SamplePoint(x, y, value));
+            yPos_[i] = y;
+            return 0;
+        }
+        else if (std::get<1>(samples_[i].back()) < y) {
             samples_[i].push_back(SamplePoint(x, y, value));
             if (interpolationGuide_ == InterpolationPolicy::RightExtreme) {
                 yPos_[i] = y;
