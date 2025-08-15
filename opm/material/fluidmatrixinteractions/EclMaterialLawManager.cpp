@@ -471,6 +471,7 @@ setGasOilHysteresisParams(const Scalar& sgmax,
     MaterialLaw::setGasOilHysteresisParams(sgmax, shmax, somin, params);
 }
 
+#if !HAVE_CUDA
 template<
     class Traits,
     template<class> class Storage,
@@ -506,6 +507,7 @@ oilWaterScaledEpsPointsDrainage(unsigned elemIdx)
         throw std::logic_error("Enum value for material approach unknown!");
     }
 }
+#endif
 
 template<
     class Traits,

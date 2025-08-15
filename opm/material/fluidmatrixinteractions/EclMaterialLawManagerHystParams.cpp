@@ -25,6 +25,8 @@
 
 namespace Opm {
 
+#if !HAVE_CUDA
+
 /* constructors*/
 template<
     class Traits,
@@ -398,6 +400,8 @@ template class EclMaterialLawManager<ThreePhaseMaterialTraits<double,0,1,2>>::In
 template class EclMaterialLawManager<ThreePhaseMaterialTraits<float,0,1,2>>::InitParams::HystParams;
 template class EclMaterialLawManager<ThreePhaseMaterialTraits<double,2,0,1>>::InitParams::HystParams;
 template class EclMaterialLawManager<ThreePhaseMaterialTraits<float,2,0,1>>::InitParams::HystParams;
+
+#endif // !HAVE_CUDA
 
 
 } // namespace Opm

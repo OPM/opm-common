@@ -94,6 +94,8 @@ private:
     using OilWaterTraits = TwoPhaseMaterialTraits<Scalar, waterPhaseIdx, oilPhaseIdx>;
     using GasWaterTraits = TwoPhaseMaterialTraits<Scalar, waterPhaseIdx, gasPhaseIdx>;
 
+#if !HAVE_CUDA
+
     // the two-phase material law which is defined on effective (unscaled) saturations
     using GasOilEffectiveTwoPhaseLaw = SatCurveMultiplexer<GasOilTraits>;
     using OilWaterEffectiveTwoPhaseLaw = SatCurveMultiplexer<OilWaterTraits>;
@@ -119,9 +121,25 @@ private:
     using OilWaterTwoPhaseHystParams = typename OilWaterTwoPhaseLaw::Params;
     using GasWaterTwoPhaseHystParams = typename GasWaterTwoPhaseLaw::Params;
 
+#else // HAVE_CUDA
+
+    using GasOilEffectiveTwoPhaseLaw = PiecewiseLinearTwoPhaseMaterial<GasOilTraits, PiecewiseLinearTwoPhaseMaterialParams<GasOilTraits, Storage<Scalar>>>;
+    using OilWaterEffectiveTwoPhaseLaw = PiecewiseLinearTwoPhaseMaterial<OilWaterTraits, PiecewiseLinearTwoPhaseMaterialParams<OilWaterTraits, Storage<Scalar>>>;
+    using GasWaterEffectiveTwoPhaseLaw = PiecewiseLinearTwoPhaseMaterial<GasWaterTraits, PiecewiseLinearTwoPhaseMaterialParams<GasWaterTraits, Storage<Scalar>>>;
+
+    using GasOilEffectiveTwoPhaseParams = typename GasOilEffectiveTwoPhaseLaw::Params;
+    using OilWaterEffectiveTwoPhaseParams = typename OilWaterEffectiveTwoPhaseLaw::Params;
+    using GasWaterEffectiveTwoPhaseParams = typename GasWaterEffectiveTwoPhaseLaw::Params;
+
+#endif // !HAVE_CUDA
+
 public:
     // the three-phase material law used by the simulation
+    #if !HAVE_CUDA
     using MaterialLaw = EclMultiplexerMaterial<Traits, GasOilTwoPhaseLaw, OilWaterTwoPhaseLaw, GasWaterTwoPhaseLaw>;
+    #else // HAVE_CUDA
+    using MaterialLaw = EclTwoPhaseMaterial<TraitsT, GasOilEffectiveTwoPhaseLaw, OilWaterEffectiveTwoPhaseLaw, GasWaterEffectiveTwoPhaseLaw>;
+    #endif
     using MaterialLawParams = typename MaterialLaw::Params;
     using DirectionalMaterialLawParamsPtr = UniquePtr<DirectionalMaterialLawParams<MaterialLawParams>>;
 
@@ -134,6 +152,7 @@ private:
     using OilWaterEffectiveParamVector = Storage<SharedPtr<OilWaterEffectiveTwoPhaseParams>>;
     using GasWaterEffectiveParamVector = Storage<SharedPtr<GasWaterEffectiveTwoPhaseParams>>;
 
+    #if !HAVE_CUDA
     using GasOilScalingPointsVector = Storage<SharedPtr<EclEpsScalingPoints<Scalar>>>;
     using OilWaterScalingPointsVector = Storage<SharedPtr<EclEpsScalingPoints<Scalar>>>;
     using GasWaterScalingPointsVector = Storage<SharedPtr<EclEpsScalingPoints<Scalar>>>;
@@ -142,6 +161,7 @@ private:
     using OilWaterParamVector = Storage<SharedPtr<OilWaterTwoPhaseHystParams>>;
     using GasWaterParamVector = Storage<SharedPtr<GasWaterTwoPhaseHystParams>>;
     using MaterialLawParamsVector = Storage<SharedPtr<MaterialLawParams>>;
+    #endif // !HAVE_CUDA
 
     // helper classes
 
@@ -156,7 +176,10 @@ private:
         void run(const std::function<Storage<int>(const FieldPropsManager&, const std::string&, bool)>& fieldPropIntOnLeafAssigner,
                  const std::function<unsigned(unsigned)>& lookupIdxOnLevelZeroAssigner);
     private:
+        
+        #if !HAVE_CUDA
         class HystParams;
+        #endif // !HAVE_CUDA
         // \brief Function argument 'fieldPropIntOnLeadAssigner' needed to lookup
         //        field properties of cells on the leaf grid view for CpGrid with local grid refinement.
         void copySatnumArrays_(const std::function<Storage<int>(const FieldPropsManager&, const std::string&, bool)>&
@@ -177,11 +200,18 @@ private:
         //        field properties of cells on the leaf grid view for CpGrid with local grid refinement.
         void initSatnumRegionArray_(const std::function<Storage<int>(const FieldPropsManager&, const std::string&, bool)>&
                                     fieldPropIntOnLeafAssigner);
+        #if !HAVE_CUDA
         void initThreePhaseParams_(
                                    HystParams &hystParams,
                                    MaterialLawParams& materialParams,
                                    unsigned satRegionIdx,
                                    unsigned elemIdx);
+        #else // HAVE_CUDA
+        void initThreePhaseParams_(
+                                   MaterialLawParams& materialParams,
+                                   unsigned satRegionIdx,
+                                   unsigned elemIdx);
+        #endif
         void readEffectiveParameters_();
         void readUnscaledEpsPointsVectors_();
         template <class Container>
@@ -189,6 +219,7 @@ private:
         unsigned satRegion_(Storage<int>& array, unsigned elemIdx);
         unsigned satOrImbRegion_(Storage<int>& array, Storage<int>& default_vec, unsigned elemIdx);
 
+        #if !HAVE_CUDA
         // This class' implementation is defined in "EclMaterialLawManagerHystParams.cpp"
         class HystParams {
         public:
@@ -236,6 +267,7 @@ private:
             SharedPtr<OilWaterTwoPhaseHystParams> oilWaterParams_;
             SharedPtr<GasWaterTwoPhaseHystParams> gasWaterParams_;
         };
+        #endif // !HAVE_CUDA
 
         // This class' implementation is defined in "EclMaterialLawManagerReadEffectiveParams.cpp"
         class ReadEffectiveParams {
@@ -393,6 +425,7 @@ public:
         OPM_TIMEFUNCTION_LOCAL();
         if (!enableHysteresis())
             return false;
+        #if !HAVE_CUDA
         bool changed = MaterialLaw::updateHysteresis(materialLawParams(elemIdx), fluidState);
         if (hasDirectionalRelperms() || hasDirectionalImbnum()) {
             using Dir = FaceDir::DirEnum;
@@ -404,6 +437,7 @@ public:
             }
         }
         return changed;
+        #endif // !HAVE_CUDA
     }
 
     void oilWaterHysteresisParams(Scalar& soMax,
@@ -426,10 +460,12 @@ public:
                                    const Scalar& somin,
                                    unsigned elemIdx);
 
+    #if !HAVE_CUDA
     EclEpsScalingPoints<Scalar>& oilWaterScaledEpsPointsDrainage(unsigned elemIdx);
 
     const EclEpsScalingPointsInfo<Scalar>& oilWaterScaledEpsInfoDrainage(size_t elemIdx) const
     { return oilWaterScaledEpsInfoDrainage_[elemIdx]; }
+    #endif // !HAVE_CUDA
 
     template<class Serializer>
     void serializeOp(Serializer& serializer)
@@ -456,7 +492,7 @@ private:
     SharedPtr<EclHysteresisConfig> hysteresisConfig_;
     Storage<SharedPtr<WagHysteresisConfig::WagHysteresisConfigRecord>> wagHystersisConfig_;
 
-
+    #if !HAVE_CUDA
     SharedPtr<EclEpsConfig> oilWaterEclEpsConfig_;
     Storage<EclEpsScalingPointsInfo<Scalar>> unscaledEpsInfo_;
     OilWaterScalingInfoVector oilWaterScaledEpsInfoDrainage_;
@@ -470,7 +506,7 @@ private:
     GasOilEffectiveParamVector gasOilEffectiveParamVector_;
     OilWaterEffectiveParamVector oilWaterEffectiveParamVector_;
     GasWaterEffectiveParamVector gasWaterEffectiveParamVector_;
-
+    #endif // !HAVE_CUDA
     EclMultiplexerApproach threePhaseApproach_ = EclMultiplexerApproach::Default;
     // this attribute only makes sense for twophase simulations!
     enum EclTwoPhaseApproach twoPhaseApproach_ = EclTwoPhaseApproach::GasOil;

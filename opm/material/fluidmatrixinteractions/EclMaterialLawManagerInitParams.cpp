@@ -244,6 +244,8 @@ initSatnumRegionArray_(const std::function<Storage<int>(const FieldPropsManager&
     }
 }
 
+#if !HAVE_CUDA
+
 template<
     class Traits,
     template<class> class Storage,
@@ -313,6 +315,73 @@ initThreePhaseParams_(HystParams &hystParams,
         }
     } // end switch()
 }
+#else
+template<
+    class Traits,
+    template<class> class Storage,
+    template<typename> typename SharedPtr,
+    template<typename, typename...> typename UniquePtr
+>
+void
+EclMaterialLawManager<Traits, Storage, SharedPtr, UniquePtr>::InitParams::
+initThreePhaseParams_(MaterialLawParams& materialParams,
+                      unsigned satRegionIdx,
+                      unsigned elemIdx)
+{
+    const auto& epsInfo = this->parent_.oilWaterScaledEpsInfoDrainage_[elemIdx];
+
+    materialParams.setApproach(this->parent_.threePhaseApproach_);
+    switch (materialParams.approach()) {
+        case EclMultiplexerApproach::Stone1: {
+            auto& realParams = materialParams.template getRealParams<EclMultiplexerApproach::Stone1>();
+            realParams.setGasOilParams(gasOilParams);
+            realParams.setOilWaterParams(oilWaterParams);
+            realParams.setSwl(epsInfo.Swl);
+
+            if (!this->parent_.stoneEtas_.empty()) {
+                realParams.setEta(this->parent_.stoneEtas_[satRegionIdx]);
+            }
+            else
+                realParams.setEta(1.0);
+            realParams.finalize();
+            break;
+        }
+
+        case EclMultiplexerApproach::Stone2: {
+            auto& realParams = materialParams.template getRealParams<EclMultiplexerApproach::Stone2>();
+            realParams.setGasOilParams(gasOilParams);
+            realParams.setOilWaterParams(oilWaterParams);
+            realParams.setSwl(epsInfo.Swl);
+            realParams.finalize();
+            break;
+        }
+
+        case EclMultiplexerApproach::Default: {
+            auto& realParams = materialParams.template getRealParams<EclMultiplexerApproach::Default>();
+            realParams.setGasOilParams(gasOilParams);
+            realParams.setOilWaterParams(oilWaterParams);
+            realParams.setSwl(epsInfo.Swl);
+            realParams.finalize();
+            break;
+        }
+
+        case EclMultiplexerApproach::TwoPhase: {
+            auto& realParams = materialParams.template getRealParams<EclMultiplexerApproach::TwoPhase>();
+            realParams.setGasOilParams(gasOilParams);
+            realParams.setOilWaterParams(oilWaterParams);
+            realParams.setGasWaterParams(gasWaterParams);
+            realParams.setApproach(this->parent_.twoPhaseApproach_);
+            realParams.finalize();
+            break;
+        }
+
+        case EclMultiplexerApproach::OnePhase: {
+            // Nothing to do, no parameters.
+            break;
+        }
+    } // end switch()
+}
+#endif // !HAVE_CUDA
 
 template<
     class Traits,
