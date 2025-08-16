@@ -600,7 +600,7 @@ public:
 
         const LhsEval& p = decay<LhsEval>(fluidState.pressure(phaseIdx));
         const LhsEval& T = decay<LhsEval>(fluidState.temperature(phaseIdx));
-        const LhsEval& saltConcentration = BlackOil::template getSaltConcentration_<ThisType, FluidState, LhsEval>(fluidState, regionIdx);
+        const LhsEval& saltConcentration = BlackOil::template getSaltConcentration_<FluidState, LhsEval>(fluidState, regionIdx);
 
         switch (phaseIdx) {
         case oilPhaseIdx: {
@@ -862,7 +862,7 @@ public:
         }
         case waterPhaseIdx:
         {
-            const auto& saltConcentration = BlackOil::template getSaltConcentration_<ThisType, FluidState, LhsEval>(fluidState, regionIdx);
+            const auto& saltConcentration = BlackOil::template getSaltConcentration_<FluidState, LhsEval>(fluidState, regionIdx);
             if (enableDissolvedGasInWater()) {
                 const auto& Rsw = BlackOil::template getRsw_<ThisType, FluidState, LhsEval>(fluidState, regionIdx);
                 if (useSaturatedTables() && fluidState.saturation(gasPhaseIdx) > 0.0
@@ -876,6 +876,20 @@ public:
             const LhsEval Rsw(0.0);
             return waterPvt_.inverseFormationVolumeFactor(regionIdx, T, p, Rsw, saltConcentration);
         }
+        default: throw std::logic_error("Unhandled phase index "+std::to_string(phaseIdx));
+        }
+    }
+
+    template <class FluidState, class LhsEval = typename FluidState::Scalar>
+    STATIC_OR_DEVICE std::pair<LhsEval, LhsEval>
+    inverseFormationVolumeFactorAndViscosity(const FluidState& fluidState,
+                                             unsigned phaseIdx,
+                                             unsigned regionIdx)
+    {
+        switch (phaseIdx) {
+        case oilPhaseIdx: return oilPvt_.inverseFormationVolumeFactorAndViscosity(fluidState, regionIdx);
+        case gasPhaseIdx: return gasPvt_.inverseFormationVolumeFactorAndViscosity(fluidState, regionIdx);
+        case waterPhaseIdx: return waterPvt_.inverseFormationVolumeFactorAndViscosity(fluidState, regionIdx);
         default: throw std::logic_error("Unhandled phase index "+std::to_string(phaseIdx));
         }
     }
@@ -900,7 +914,7 @@ public:
 
         const auto& p = decay<LhsEval>(fluidState.pressure(phaseIdx));
         const auto& T = decay<LhsEval>(fluidState.temperature(phaseIdx));
-        const auto& saltConcentration = BlackOil::template getSaltConcentration_<ThisType, FluidState, LhsEval>(fluidState, regionIdx);
+        const auto& saltConcentration = BlackOil::template getSaltConcentration_<FluidState, LhsEval>(fluidState, regionIdx);
 
         switch (phaseIdx) {
         case oilPhaseIdx: return oilPvt_.saturatedInverseFormationVolumeFactor(regionIdx, T, p);
@@ -1106,7 +1120,7 @@ public:
 
         case waterPhaseIdx:
         {
-            const LhsEval& saltConcentration = BlackOil::template getSaltConcentration_<ThisType, FluidState, LhsEval>(fluidState, regionIdx);
+            const LhsEval& saltConcentration = BlackOil::template getSaltConcentration_<FluidState, LhsEval>(fluidState, regionIdx);
             if (enableDissolvedGasInWater()) {
                 const auto& Rsw = BlackOil::template getRsw_<ThisType, FluidState, LhsEval>(fluidState, regionIdx);
                 if (useSaturatedTables() && fluidState.saturation(gasPhaseIdx) > 0.0
@@ -1147,7 +1161,7 @@ public:
                 return waterPvt_.internalEnergy
                     (regionIdx, T, p,
                      BlackOil::template getRsw_<ThisType, FluidState, LhsEval>(fluidState, regionIdx),
-                     BlackOil::template getSaltConcentration_<ThisType, FluidState, LhsEval>(fluidState, regionIdx));
+                     BlackOil::template getSaltConcentration_<FluidState, LhsEval>(fluidState, regionIdx));
             }
             break;
 
@@ -1180,7 +1194,7 @@ public:
         assert(regionIdx <= numRegions());
         const LhsEval& p = decay<LhsEval>(fluidState.pressure(phaseIdx));
         const LhsEval& T = decay<LhsEval>(fluidState.temperature(phaseIdx));
-        const LhsEval& saltConcentration = BlackOil::template getSaltConcentration_<ThisType, FluidState, LhsEval>(fluidState, regionIdx);
+        const LhsEval& saltConcentration = BlackOil::template getSaltConcentration_<FluidState, LhsEval>(fluidState, regionIdx);
         // to avoid putting all thermal into the interface of the multiplexer
         switch (phaseIdx) {
         case oilPhaseIdx: {
@@ -1222,7 +1236,7 @@ public:
                 const auto waterEnergy =
                     waterPvt_.internalEnergy(regionIdx, T, p,
                                               BlackOil::template getRsw_<ThisType, FluidState, LhsEval>(fluidState, regionIdx),
-                                              BlackOil::template getSaltConcentration_<ThisType, FluidState, LhsEval>(fluidState, regionIdx));
+                                              BlackOil::template getSaltConcentration_<FluidState, LhsEval>(fluidState, regionIdx));
                 // gas containing vaporized oil and vaporized water
                 const LhsEval& Rv = BlackOil::template getRv_<ThisType, FluidState, LhsEval>(fluidState, regionIdx);
                 const LhsEval& Rvw = BlackOil::template getRvw_<ThisType, FluidState, LhsEval>(fluidState, regionIdx);
@@ -1255,7 +1269,7 @@ public:
                 const auto waterEnergy =
                     waterPvt_.internalEnergy(regionIdx, T, p,
                                               BlackOil::template getRsw_<ThisType, FluidState, LhsEval>(fluidState, regionIdx),
-                                              BlackOil::template getSaltConcentration_<ThisType, FluidState, LhsEval>(fluidState, regionIdx));
+                                              BlackOil::template getSaltConcentration_<FluidState, LhsEval>(fluidState, regionIdx));
                 const auto hVapW = waterPvt_.hVap(regionIdx);
                 return
                     gasEnergy*bg*referenceDensity(gasPhaseIdx, regionIdx)
@@ -1273,7 +1287,7 @@ public:
             const auto waterEnergy =
                 waterPvt_.internalEnergy(regionIdx, T, p,
                                           BlackOil::template getRsw_<ThisType, FluidState, LhsEval>(fluidState, regionIdx),
-                                          BlackOil::template getSaltConcentration_<ThisType, FluidState, LhsEval>(fluidState, regionIdx));
+                                          BlackOil::template getSaltConcentration_<FluidState, LhsEval>(fluidState, regionIdx));
             assert(waterPvt_.mixingEnergy());
             if (enableDissolvedGasInWater()) {
                 const auto& gasEnergy =
@@ -1363,7 +1377,7 @@ public:
         case oilPhaseIdx: return oilPvt_.saturatedGasDissolutionFactor(regionIdx, T, p, So, maxOilSaturation);
         case gasPhaseIdx: return gasPvt_.saturatedOilVaporizationFactor(regionIdx, T, p, So, maxOilSaturation);
         case waterPhaseIdx: return waterPvt_.saturatedGasDissolutionFactor(regionIdx, T, p,
-        BlackOil::template getSaltConcentration_<ThisType, FluidState, LhsEval>(fluidState, regionIdx));
+        BlackOil::template getSaltConcentration_<FluidState, LhsEval>(fluidState, regionIdx));
         default: throw std::logic_error("Unhandled phase index "+std::to_string(phaseIdx));
         }
     }
@@ -1392,7 +1406,7 @@ public:
         case oilPhaseIdx: return oilPvt_.saturatedGasDissolutionFactor(regionIdx, T, p);
         case gasPhaseIdx: return gasPvt_.saturatedOilVaporizationFactor(regionIdx, T, p);
         case waterPhaseIdx: return waterPvt_.saturatedGasDissolutionFactor(regionIdx, T, p,
-        BlackOil::template getSaltConcentration_<ThisType, FluidState, LhsEval>(fluidState, regionIdx));
+        BlackOil::template getSaltConcentration_<FluidState, LhsEval>(fluidState, regionIdx));
         default: throw std::logic_error("Unhandled phase index "+std::to_string(phaseIdx));
         }
     }
@@ -1443,7 +1457,7 @@ public:
         case gasPhaseIdx: return gasPvt_.saturationPressure(regionIdx, T, BlackOil::template getRv_<ThisType, FluidState, LhsEval>(fluidState, regionIdx));
         case waterPhaseIdx: return waterPvt_.saturationPressure(regionIdx, T,
         BlackOil::template getRsw_<ThisType, FluidState, LhsEval>(fluidState, regionIdx),
-        BlackOil::template getSaltConcentration_<ThisType, FluidState, LhsEval>(fluidState, regionIdx));
+        BlackOil::template getSaltConcentration_<FluidState, LhsEval>(fluidState, regionIdx));
         default: throw std::logic_error("Unhandled phase index "+std::to_string(phaseIdx));
         }
     }

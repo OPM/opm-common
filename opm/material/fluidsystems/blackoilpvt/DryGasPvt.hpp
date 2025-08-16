@@ -171,6 +171,20 @@ public:
     { return saturatedInverseFormationVolumeFactor(regionIdx, temperature, pressure); }
 
     /*!
+     * \brief Returns the formation volume factor [-] and viscosity [Pa s] of the fluid phase.
+     */
+    template <class FluidState, class LhsEval = typename FluidState::Scalar>
+    std::pair<LhsEval, LhsEval>
+    inverseFormationVolumeFactorAndViscosity(const FluidState& fluidState, unsigned regionIdx)
+    {
+        const LhsEval& p = decay<LhsEval>(fluidState.pressure(FluidState::gasPhaseIdx));
+        const auto segIdx = this->inverseGasB_[regionIdx].findSegmentIndex(p, /*extrapolate=*/ true);
+        const auto& invBg = this->inverseGasB_[regionIdx].eval(p, SegmentIndex{segIdx});
+        const auto& invMugBg = this->inverseGasBMu_[regionIdx].eval(p, SegmentIndex{segIdx});
+        return { invBg, invBg / invMugBg };
+   }
+
+    /*!
      * \brief Returns the formation volume factor [-] of oil saturated gas at given pressure.
      */
     template <class Evaluation>
