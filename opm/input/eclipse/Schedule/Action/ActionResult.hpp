@@ -384,7 +384,7 @@ private:
     class Impl;
 
     /// Pointer to implementation.
-    std::unique_ptr<Impl> pImpl_{};
+    std::unique_ptr<Impl> pImpl_; // No in-class initializer to workaround nvcc issue
 };
 
 } // Namespace Opm::Action
