@@ -1259,6 +1259,7 @@ if(ENABLE_ECL_INPUT)
        opm/input/eclipse/EclipseState/Grid/FaceDir.hpp
        opm/input/eclipse/EclipseState/Grid/MapAxes.hpp
        opm/input/eclipse/EclipseState/Grid/MinpvMode.hpp
+       opm/input/eclipse/EclipseState/Grid/readKeywordAutoRef.hpp
        opm/input/eclipse/EclipseState/EndpointScaling.hpp
        opm/input/eclipse/EclipseState/TracerConfig.hpp
        opm/input/eclipse/EclipseState/WagHysteresisConfig.hpp
