@@ -702,31 +702,81 @@ alq_type(const Opm::ScheduleState&            sched_state,
     return sched_state.vfpprod(vfp_table_number).getALQType();
 }
 
-inline double accum_groups(const rt phase,
-                           const Opm::Schedule& schedule,
-                           const std::size_t sim_step,
-                           const std::string& gr_name)
+template <rt phase>
+double satellite_prod(const Opm::ScheduleState& sched, const std::string& group)
 {
-    if (!schedule.hasGroup(gr_name, sim_step)) {
+    using Rate = Opm::GSatProd::GSatProdGroup::Rate;
+
+    const auto& gsatprod = sched.gsatprod();
+
+    if (! gsatprod.has(group)) {
         return 0.0;
     }
-    const auto& top_group = schedule.getGroup(gr_name, sim_step);
-    double sum = std::accumulate(top_group.groups().begin(),
-                                 top_group.groups().end(), 0.0,
-                                 [&schedule, phase, sim_step](const double acc, const auto& child)
-                                 { return acc + accum_groups(phase, schedule, sim_step, child); });
-    const auto& gsatprod = schedule[sim_step].gsatprod.get();
-    if (gsatprod.has(gr_name)) {
-        const auto& gs = gsatprod.get(gr_name);
-        using Rate = Opm::GSatProd::GSatProdGroup::Rate;
-        if (phase == rt::oil)
-            sum += gs.rate[Rate::Oil];
-        else if (phase == rt::gas)
-            sum += gs.rate[Rate::Gas];
-        else if (phase == rt::wat)
-            sum += gs.rate[Rate::Water];
+
+    const auto& gs = gsatprod.get(group);
+
+    if constexpr (phase == rt::oil) {
+        return gs.rate[Rate::Oil];
     }
-    return sum;
+    else if constexpr (phase == rt::gas) {
+        return gs.rate[Rate::Gas];
+    }
+    else if constexpr (phase == rt::wat) {
+        return gs.rate[Rate::Water];
+    }
+
+    return 0.0;
+}
+
+inline double cumulativeSatProdEffFactor(const Opm::ScheduleState& sched,
+                                         const std::string&        gr_name)
+{
+    auto isField = [](const std::string& group)
+    { return group.empty() || (group == "FIELD"); };
+
+    if (isField(gr_name)) { return 1.0; }
+
+    const auto* grp = &sched.groups(gr_name);
+
+    auto efac = grp->getGroupEfficiencyFactor();
+
+    while (true) {
+        const auto& parent = grp->flow_group();
+
+        if (!parent.has_value() || isField(*parent)) {
+            // No efficiency factor on FIELD.
+            break;
+        }
+
+        grp = &sched.groups(*parent);
+
+        efac *= grp->getGroupEfficiencyFactor();
+    }
+
+    return efac;
+}
+
+template <rt phase>
+double accum_groups(const Opm::ScheduleState& sched,
+                    const std::string&        gr_name,
+                    const double              efac)
+{
+    if (! sched.groups.has(gr_name)) {
+        return 0.0;
+    }
+
+    const auto& children = sched.groups(gr_name).groups();
+
+    return efac * std::accumulate(children.begin(), children.end(),
+                                  satellite_prod<phase>(sched, gr_name),
+                                  [&sched](const double acc, const auto& child)
+                                  {
+                                      const auto efacDowntree = sched.groups(child)
+                                          .getGroupEfficiencyFactor();
+
+                                      return acc + accum_groups<phase>(sched, child,
+                                                                       efacDowntree);
+                                  });
 }
 
 inline quantity artificial_lift_quantity( const fn_args& args ) {
@@ -823,8 +873,9 @@ inline quantity glir( const fn_args& args ) {
     return { alq_rate, measure::gas_surface_rate };
 }
 
-template< rt phase, bool injection = true >
-inline quantity rate( const fn_args& args ) {
+template <rt phase, bool injection = true, bool cumSatProd = false>
+inline quantity rate(const fn_args& args)
+{
     double sum = 0.0;
 
     for (const auto* sched_well : args.schedule_wells) {
@@ -849,15 +900,27 @@ inline quantity rate( const fn_args& args ) {
         sum *= -1.0;
     }
 
-    const auto& gsatprod = args.schedule[args.sim_step].gsatprod.get();
-    // If gsatprod is given for a group we need to add the satelite production
-    // This is only done for production groups i.e. !args.group_name.empty() and
-    // !injection
-    if (!injection && gsatprod.size() > 0 && !args.group_name.empty()) {
-        sum += accum_groups(phase, args.schedule, args.sim_step, args.group_name);
+    if (!injection && !args.group_name.empty() &&
+        !args.schedule[args.sim_step].gsatprod().empty())
+    {
+        // Include satelite production in group's total rate.  This is only
+        // done for production groups, i.e. !args.group_name.empty() and
+        // !injection.  Furthermore, we need to distinguish between the rate
+        // and cumulative cases.  When computing cumulatives, we need to
+        // consider all efficiency factors imposed higher up in the group
+        // tree.  Otherwise, we need only include down-tree efficiency
+        // factors.
+
+        const auto& sched = args.schedule[args.sim_step];
+
+        const auto efac = !cumSatProd
+            ? 1.0
+            : cumulativeSatProdEffFactor(sched, args.group_name);
+
+        sum += accum_groups<phase>(sched, args.group_name, efac);
     }
 
-    if (phase == rt::polymer || phase == rt::brine) {
+    if ((phase == rt::polymer) || (phase == rt::brine)) {
         return { sum, measure::mass_rate };
     }
 
@@ -2519,9 +2582,10 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "NPR", converged_node_pressure },
     { "GNETPR", converged_node_pressure },
 
-    { "GWPT", mul( rate< rt::wat, producer >, duration ) },
-    { "GOPT", mul( rate< rt::oil, producer >, duration ) },
-    { "GGPT", mul( rate< rt::gas, producer >, duration ) },
+    { "GWPT", mul(rate<rt::wat, producer, /* cumSatProd = */ true>, duration) },
+    { "GOPT", mul(rate<rt::oil, producer, /* cumSatProd = */ true>, duration) },
+    { "GGPT", mul(rate<rt::gas, producer, /* cumSatProd = */ true>, duration) },
+
     { "GEPT", mul( rate< rt::energy, producer >, duration ) },
     { "GTPTHEA", mul( rate< rt::energy, producer >, duration ) },
     { "GNPT", mul( rate< rt::solvent, producer >, duration ) },
@@ -2768,9 +2832,11 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "FOPRF", sub (rate < rt::oil, producer >, rate< rt::vaporized_oil, producer > ) },
 
     { "FLPR", sum( rate< rt::wat, producer >, rate< rt::oil, producer > ) },
-    { "FWPT", mul( rate< rt::wat, producer >, duration ) },
-    { "FOPT", mul( rate< rt::oil, producer >, duration ) },
-    { "FGPT", mul( rate< rt::gas, producer >, duration ) },
+
+    { "FWPT", mul(rate<rt::wat, producer, /* cumSatProd = */ true>, duration) },
+    { "FOPT", mul(rate<rt::oil, producer, /* cumSatProd = */ true>, duration) },
+    { "FGPT", mul(rate<rt::gas, producer, /* cumSatProd = */ true>, duration) },
+
     { "FEPT", mul( rate< rt::energy, producer >, duration ) },
     { "FTPTHEA", mul( rate< rt::energy, producer >, duration ) },
     { "FNPT", mul( rate< rt::solvent, producer >, duration ) },

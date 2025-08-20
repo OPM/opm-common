@@ -20,9 +20,10 @@
 #ifndef GSATPROD_H
 #define GSATPROD_H
 
+#include <array>
+#include <cstddef>
 #include <map>
 #include <string>
-#include <array>
 
 namespace Opm {
 
@@ -117,6 +118,16 @@ namespace Opm {
         /// \return Satellite production rates for group \p name.
         const GSatProdGroup& get(const std::string& name) const;
 
+        /// Whether or not any groups have associate satellite production
+        /// rates.
+        ///
+        /// This is mostly a convenience function for certain logical
+        /// statements.
+        ///
+        /// \return True if no groups have satellite production rates and
+        /// false otherwise.
+        bool empty() const { return this->size() == 0; }
+
         /// Number of groups for which satellite production rates have been
         /// defined.
         std::size_t size() const;
@@ -146,6 +157,6 @@ namespace Opm {
         std::map<std::string, GSatProdGroup> groups_;
     };
 
-}
+} // namespace Opm
 
-#endif
+#endif // GSATPROD_H
