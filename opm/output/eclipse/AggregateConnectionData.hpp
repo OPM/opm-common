@@ -49,6 +49,13 @@ namespace Opm { namespace RestartIO { namespace Helpers {
                                      const Opm::data::Wells&     xw,
                                      const Opm::SummaryState&    summary_state,
                                      const std::size_t           sim_step);
+        void captureDeclaredConnDataLGR(const Opm::Schedule&        sched,
+                                        const Opm::EclipseGrid&     grid,
+                                        const Opm::UnitSystem&      units,
+                                        const Opm::data::Wells&     xw,
+                                        const Opm::SummaryState&    summary_state,
+                                        const std::size_t           sim_step,
+                                        const std::string&          lgr_tag);
 
         const std::vector<int>& getIConn() const
         {

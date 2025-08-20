@@ -306,7 +306,7 @@ Well::Well(const RestartIO::RstWell& rst_well,
     use_efficiency_in_network(true),   // @TODO@ Find and read the actual value from restart
     solvent_fraction(def_solvent_fraction),
     has_produced(rst_well.void_total != 0),
-    has_injected(rst_well.void_inj_total != 0),    
+    has_injected(rst_well.void_inj_total != 0),
     prediction_mode(rst_well.hist_requested_control == 0),
     econ_limits(economicLimits(rst_well)),
     foam_properties(std::make_shared<WellFoamProperties>()),
@@ -550,6 +550,8 @@ Well Well::serializationTestObject()
     result.group_name = "test2";
     result.init_step = 1;
     result.insert_index = 2;
+    result.insert_index_lgr = 30;
+    result.insert_index_all_lgr = 33;
     result.headI = 3;
     result.headJ = 4;
     result.ref_depth = 5;
@@ -605,20 +607,27 @@ void Well::flag_lgr_well(void)
     ref_type = WellRefinementType::LGR;
 }
 
+void Well::setInsertIndexLGR(const std::size_t index)
+{
+    this->insert_index_lgr = index;
+}
+
+void Well::setInsertIndexAllLGR(const std::size_t index)
+{
+    this->insert_index_all_lgr = index;
+}
+
 void Well::set_lgr_well_tag(const std::string& lgr_tag_name)
 {
     lgr_tag = lgr_tag_name;
 }
 
 std::optional<std::string> Well::get_lgr_well_tag(void) const
-{   
+{
     if (this->ref_type == WellRefinementType::STANDARD)
         return std::nullopt;
     return lgr_tag;
 }
-
-
-
 
 bool Well::is_lgr_well(void) const
 {

@@ -347,6 +347,12 @@ namespace Opm {
         std::size_t year_num() const;
         bool first_in_month() const;
         bool first_in_year() const;
+        bool well_group_contains_lgr(const Group& grp, const std::string& lgr_tag) const;
+        bool group_contains_lgr(const Group& grp, const std::string& lgr_tag) const;
+
+        std::size_t num_lgr_well_in_group(const Group& grp, const std::string& lgr_tag) const;
+        std::size_t num_lgr_groups_in_group(const Group& grp, const std::string& lgr_tag) const;
+
 
         bool operator==(const ScheduleState& other) const;
         static ScheduleState serializationTestObject();
@@ -507,7 +513,7 @@ namespace Opm {
         // constant flux aquifers
         std::unordered_map<int, SingleAquiferFlux> aqufluxs;
         BCProp bcprop;
-        // injection streams for compostional STREAM injection using WINJGAS 
+        // injection streams for compostional STREAM injection using WINJGAS
         map_member<std::string, std::vector<double>> inj_streams;
 
         std::unordered_map<std::string, double> target_wellpi;

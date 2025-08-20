@@ -106,6 +106,12 @@ public:
 
     void flag_lgr_well();
     void set_lgr_well_tag(const std::string& lgr_tag_name);
+    void setInsertIndexLGR(const std::size_t index);
+    void setInsertIndexAllLGR(const std::size_t index);
+
+    std::size_t seqIndexLGR() const { return insert_index_lgr; }
+    std::size_t seqIndexAllLGR() const { return insert_index_all_lgr; }
+
     bool is_lgr_well() const;
     std::optional<std::string> get_lgr_well_tag() const;
     struct WellGuideRate {
@@ -544,7 +550,7 @@ public:
     bool updateWSEGVALV(const std::vector<std::pair<int, Valve> >& valve_pairs);
     bool updateWSEGAICD(const std::vector<std::pair<int, AutoICD> >& aicd_pairs, const KeywordLocation& location);
     bool updateWPAVE(const PAvg& pavg);
-  
+
 
     void updateWPaveRefDepth(double ref_depth);
     bool updateWVFPDP(std::shared_ptr<WVFPDP> wvfpdp);
@@ -599,6 +605,8 @@ public:
         serializer(group_name);
         serializer(init_step);
         serializer(insert_index);
+        serializer(insert_index_lgr);
+        serializer(insert_index_all_lgr);
         serializer(headI);
         serializer(headJ);
         serializer(ref_depth);
@@ -658,6 +666,10 @@ private:
 
     std::size_t init_step{};
     std::size_t insert_index{};
+    // counts wells in a single LGR
+    std::size_t insert_index_lgr{0};
+    // counts wells in all LGRs combined
+    std::size_t insert_index_all_lgr{0};
     int headI{};
     int headJ{};
     std::optional<double> ref_depth{};
