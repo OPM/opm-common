@@ -59,16 +59,17 @@ auto getInvB_(typename std::enable_if<HasMember_invB<FluidState>::value,
                                       const FluidState&>::type fluidState,
               unsigned phaseIdx,
               unsigned,
-              [[maybe_unused]] const FluidSystem& fluidSystem =  FluidSystem{})
+              [[maybe_unused]] const FluidSystem& fluidSystem = FluidSystem{})
     -> decltype(decay<LhsEval>(fluidState.invB(phaseIdx)))
 { return decay<LhsEval>(fluidState.invB(phaseIdx)); }
 
 template <class FluidSystem, class FluidState, class LhsEval>
-OPM_HOST_DEVICE LhsEval getInvB_(typename std::enable_if<!HasMember_invB<FluidState>::value,
-                                 const FluidState&>::type fluidState,
-                                 unsigned phaseIdx,
-                                 unsigned pvtRegionIdx,
-                                 const FluidSystem& fluidSystem = FluidSystem{})
+OPM_HOST_DEVICE 
+LhsEval getInvB_(typename std::enable_if<!HasMember_invB<FluidState>::value,
+                                          const FluidState&>::type fluidState,
+                 unsigned phaseIdx,
+                 unsigned pvtRegionIdx,
+                 const FluidSystem& fluidSystem = FluidSystem{})
 {
     const auto& rho = fluidState.density(phaseIdx);
     const auto& Xsolvent =
@@ -144,7 +145,7 @@ public:
      * 
      * \param fluidSystem The fluid system which is used to compute various quantities
      */
-    OPM_HOST_DEVICE BlackOilFluidState(const FluidSystem& fluidSystem) : fluidSystem_(&fluidSystem) {}
+    explicit OPM_HOST_DEVICE BlackOilFluidState(const FluidSystem& fluidSystem) : fluidSystem_(&fluidSystem) {}
 
     /**
      * \brief Construct a fluid state object.
