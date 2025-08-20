@@ -925,8 +925,7 @@ BOOST_AUTO_TEST_CASE (Declared_Well_Data2LGRWells)
     auto ih = MockIH {
         static_cast<int>(simCase.sched.getWells(rptStep).size())
     };
-    // the original case has 25 entICON, 41 entSCON and 58 entWCON
-    // however, OPM forces 26 and 42 when INTHEAD is created.
+
     ih.add_icon_data(26, 42 ,58 , 2);
 
     BOOST_CHECK_EQUAL(ih.nwells, MockIH::Sz{2});
@@ -1291,8 +1290,7 @@ BOOST_AUTO_TEST_CASE (Declared_Well_Data3Wells1G2LGR)
     auto ih = MockIH {
         static_cast<int>(simCase.sched.getWells(rptStep).size())
     };
-    // the original case has 25 entICON, 41 entSCON and 58 entWCON
-    // however, OPM forces 26 and 42 when INTHEAD is created.
+
     ih.add_icon_data(26, 42 ,58 , 3);
     BOOST_CHECK_EQUAL(ih.nwells, MockIH::Sz{3});
 
@@ -1638,8 +1636,7 @@ BOOST_AUTO_TEST_CASE (Declared_Well_Data3MixedGroupsWells)
     auto ih = MockIH {
         static_cast<int>(simCase.sched.getWells(rptStep).size())
     };
-    // the original case has 25 entICON, 41 entSCON and 58 entWCON
-    // however, OPM forces 26 and 42 when INTHEAD is created.
+
     ih.add_icon_data(26, 42 ,58 , 3);
     BOOST_CHECK_EQUAL(ih.nwells, MockIH::Sz{3});
 
