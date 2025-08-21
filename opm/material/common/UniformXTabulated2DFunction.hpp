@@ -443,12 +443,12 @@ public:
         assert(i < numX());
         Scalar x = iToX(i);
         if (samples_[i].empty()) {
-            samples_[i].push_back(SamplePoint(x, y, value));
+            samples_[i].emplace_back(x, y, value);
             yPos_[i] = y;
             return 0;
         }
         else if (std::get<1>(samples_[i].back()) < y) {
-            samples_[i].push_back(SamplePoint(x, y, value));
+            samples_[i].emplace_back(x, y, value);
             if (interpolationGuide_ == InterpolationPolicy::RightExtreme) {
                 yPos_[i] = y;
             }
@@ -456,7 +456,7 @@ public:
         }
         else if (std::get<1>(samples_[i].front()) > y) {
             // slow, but we still don't care...
-            samples_[i].insert(samples_[i].begin(), SamplePoint(x, y, value));
+            samples_[i].emplace(samples_[i].begin(), x, y, value);
             if (interpolationGuide_ == InterpolationPolicy::LeftExtreme) {
                 yPos_[i] = y;
             }
