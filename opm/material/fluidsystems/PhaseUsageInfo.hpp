@@ -160,12 +160,12 @@ private:
             ++numActivePhases_;
         }
 
-        // we only support one, two or three phases
-        if (numActivePhases_ < 1 || numActivePhases_ > 3) {
-            OPM_THROW(std::runtime_error,
-                      fmt::format("Fluidsystem and PhaseUsageInfo supports 1-3 phases, but {} is active\n",
-                                  numActivePhases_));
-        }
+        // // we only support one, two or three phases
+        // if (numActivePhases_ < 1 || numActivePhases_ > 3) {
+        //     OPM_THROW(std::runtime_error,
+        //               fmt::format("Fluidsystem and PhaseUsageInfo supports 1-3 phases, but {} is active\n",
+        //                           numActivePhases_));
+        // }
 
         has_solvent = phases.active(Phase::SOLVENT);
         has_polymer = phases.active(Phase::POLYMER);
