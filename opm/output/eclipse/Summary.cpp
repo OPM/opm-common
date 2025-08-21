@@ -731,6 +731,8 @@ double satellite_prod(const Opm::ScheduleState& sched, const std::string& group)
 inline double cumulativeSatProdEffFactor(const Opm::ScheduleState& sched,
                                          const std::string&        gr_name)
 {
+    if (!sched.groups.has(gr_name)) { return 1.0; }
+
     auto isField = [](const std::string& group)
     { return group.empty() || (group == "FIELD"); };
 
