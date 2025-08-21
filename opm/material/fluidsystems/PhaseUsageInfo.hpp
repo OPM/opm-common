@@ -29,6 +29,18 @@ public:
     //! Index of the gas component
     static constexpr int gasCompIdx = IndexTraits::gasCompIdx;
 
+    explicit PhaseUsageInfo(const Phases& phases) {
+        initFromPhases(phases);
+    }
+
+    PhaseUsageInfo() = default;
+
+    void setNumActivePhases(unsigned numActivePhases) {
+        assert(numActivePhases <= numPhases);
+        numActivePhases_ = numActivePhases;
+        // TODO: it is not complete
+    }
+
     [[nodiscard]] unsigned numActivePhases() const {
         return numActivePhases_;
     }
@@ -68,40 +80,8 @@ public:
 #if HAVE_ECL_INPUT
     void initFromState(const EclipseState& eclState)
     {
-        // TODO: check some existing code, whether it is necessary and sensible
- //       initBegin();
-        numActivePhases_ = 0;
-        std::fill_n(&phaseIsActive_[0], numPhases, false);
-
-        if (eclState.runspec().phases().active(Phase::OIL)) {
-            phaseIsActive_[oilPhaseIdx] = true;
-            ++numActivePhases_;
-        }
-        if (eclState.runspec().phases().active(Phase::GAS)) {
-            phaseIsActive_[gasPhaseIdx] = true;
-            ++numActivePhases_;
-        }
-        if (eclState.runspec().phases().active(Phase::WATER)) {
-            phaseIsActive_[waterPhaseIdx] = true;
-            ++numActivePhases_;
-        }
-
-        // we only support one, two or three phases
-        if (numActivePhases_ < 1 || numActivePhases_ > 3) {
-            OPM_THROW(std::runtime_error,
-                      fmt::format("Fluidsystem and PhaseUsageInfo supports 1-3 phases, but {} is active\n",
-                                  numActivePhases_));
-        }
-
         const auto& phases = eclState.runspec().phases();
-
-        has_solvent = phases.active(Phase::SOLVENT);
-        has_polymer = phases.active(Phase::POLYMER);
-        has_energy = phases.active(Phase::ENERGY);
-        has_polymermw = phases.active(Phase::POLYMW);
-        has_foam = phases.active(Phase::FOAM);
-        has_brine = phases.active(Phase::BRINE);
-        has_zFraction = phases.active(Phase::ZFRACTION);
+        initFromPhases(phases);
 
         has_micp = eclState.runspec().micp();
         has_co2_or_h2store = eclState.runspec().co2Storage() || eclState.runspec().h2Storage();
@@ -161,6 +141,41 @@ private:
     bool has_zFraction{};
     bool has_micp{};
     bool has_co2_or_h2store{};
+
+    void initFromPhases(const Phases& phases) {
+        //       initBegin();
+        numActivePhases_ = 0;
+        std::fill_n(&phaseIsActive_[0], numPhases, false);
+
+        if (phases.active(Phase::OIL)) {
+            phaseIsActive_[oilPhaseIdx] = true;
+            ++numActivePhases_;
+        }
+        if (phases.active(Phase::GAS)) {
+            phaseIsActive_[gasPhaseIdx] = true;
+            ++numActivePhases_;
+        }
+        if (phases.active(Phase::WATER)) {
+            phaseIsActive_[waterPhaseIdx] = true;
+            ++numActivePhases_;
+        }
+
+        // we only support one, two or three phases
+        if (numActivePhases_ < 1 || numActivePhases_ > 3) {
+            OPM_THROW(std::runtime_error,
+                      fmt::format("Fluidsystem and PhaseUsageInfo supports 1-3 phases, but {} is active\n",
+                                  numActivePhases_));
+        }
+
+        has_solvent = phases.active(Phase::SOLVENT);
+        has_polymer = phases.active(Phase::POLYMER);
+        has_energy = phases.active(Phase::ENERGY);
+        has_polymermw = phases.active(Phase::POLYMW);
+        has_foam = phases.active(Phase::FOAM);
+        has_brine = phases.active(Phase::BRINE);
+        has_zFraction = phases.active(Phase::ZFRACTION);
+    }
+
 };
 
 }
