@@ -30,6 +30,7 @@
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 
 #include <cstddef>
+#include <cstdint>
 #include <map>
 #include <optional>
 #include <string>
@@ -308,6 +309,19 @@ public:
     double getGroupEfficiencyFactor(bool network = false) const;
     bool useEfficiencyInNetwork() const;
 
+    /// Tag current group as being one with satellite production.
+    ///
+    /// A satellite producer generates flows, defined by the GSATPROD
+    /// keyword, into the model.
+    void recordSatelliteProduction();
+
+    /// Predicate for whether or not this group is tagged as a satellite
+    /// producer.
+    ///
+    /// Returns true if function recordSatelliteProduction() has been
+    /// previously called and false otherwise.
+    bool hasSatelliteProduction() const;
+
     std::size_t numWells() const;
     bool addGroup(const std::string& group_name);
     bool hasGroup(const std::string& group_name) const;
@@ -354,6 +368,7 @@ public:
         serializer(group_type);
         serializer(gefac);
         serializer(use_efficiency_in_network);
+        serializer(satellite_status);
         serializer(parent_group);
         serializer(m_wells);
         serializer(m_groups);
@@ -367,23 +382,25 @@ private:
     bool hasType(GroupType gtype) const;
     void addType(GroupType new_gtype);
 
-    std::string m_name;
-    std::size_t m_insert_index;
-    double udq_undefined;
-    UnitSystem unit_system;
-    GroupType group_type;
-    double gefac;
-    bool use_efficiency_in_network;
+    std::string m_name{};
+    std::size_t m_insert_index{};
+    double udq_undefined{};
+    UnitSystem unit_system{};
+    GroupType group_type{};
+    double gefac{};
+    bool use_efficiency_in_network{};
 
-    std::string parent_group;
-    IOrderSet<std::string> m_wells;
-    IOrderSet<std::string> m_groups;
+    std::uint_least8_t satellite_status{};
 
-    std::map<Phase, GroupInjectionProperties> injection_properties;
-    GroupProductionProperties production_properties;
-    std::optional<Phase> m_topup_phase;
-    std::optional<GPMaint> m_gpmaint;
-    std::optional<std::string> m_choke_group;
+    std::string parent_group{};
+    IOrderSet<std::string> m_wells{};
+    IOrderSet<std::string> m_groups{};
+
+    std::map<Phase, GroupInjectionProperties> injection_properties{};
+    GroupProductionProperties production_properties{};
+    std::optional<Phase> m_topup_phase{};
+    std::optional<GPMaint> m_gpmaint{};
+    std::optional<std::string> m_choke_group{};
 };
 
 Group::GroupType operator |(Group::GroupType lhs, Group::GroupType rhs);
