@@ -57,10 +57,22 @@ private:
 
 public:
     IOrderSet() = default;
-    IOrderSet(const index_type& index, const storage_type& data)
-        : m_index(index)
-        , m_data(data)
-   {}
+
+    /// Constructor.
+    ///
+    /// Populates container with an initial set of elements.
+    ///
+    /// \param[in] data Ordered view of element collection.
+    explicit IOrderSet(const std::vector<T>& data)
+        : m_index { data.begin(), data.end() }
+        , m_data  { data }
+    {
+        if (this->m_data.size() != this->m_index.size()) {
+            throw std::invalid_argument {
+                "Initial sequence has duplicate elements"
+            };
+        }
+    }
 
     std::size_t size() const {
         return this->m_index.size();
