@@ -41,6 +41,8 @@
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 
+#include <opm/input/eclipse/Units/Units.hpp>
+
 #include <opm/common/utility/TimeService.hpp>
 
 #include <opm/input/eclipse/Deck/Deck.hpp>
@@ -422,6 +424,47 @@ TSTEP
     using Rate = GSatProd::GSatProdGroup::Rate;
     BOOST_CHECK_EQUAL(group.rate[Rate::Oil], 1000*metric_to_si);
     BOOST_CHECK_EQUAL(group.rate[Rate::Water], 0.0);
+}
+
+BOOST_AUTO_TEST_CASE(GSatProd_NewGroup)
+{
+    const auto sched = create_schedule(R"(
+START             -- 0
+31 AUG 1993 /
+SCHEDULE
+GRUPTREE
+  G1 FIELD /
+/
+
+GCONPROD
+  'G1' 'ORAT' 10000 /
+/
+
+GSATPROD
+  'G2' 1000 500 10E3 /
+/
+
+TSTEP
+  1 /
+END
+)");
+
+    BOOST_CHECK_MESSAGE(sched[0].groups.has("G2"), R"(Group "G2" must exist)");
+
+    const auto& gsatprod = sched[0].gsatprod();
+
+    BOOST_CHECK_EQUAL(gsatprod.size(), 1U);
+    BOOST_CHECK_MESSAGE(!gsatprod.has("G1"), R"(Group "G1" must NOT have satellite production)");
+    BOOST_CHECK_MESSAGE(gsatprod.has("G2"), R"(Group "G2" must have satellite production)");
+
+    const auto& gsrate = gsatprod.get("G2").rate;
+    using Rate = GSatProd::GSatProdGroup::Rate;
+
+    constexpr auto sm3d = unit::cubic(unit::meter)/unit::day;
+
+    BOOST_CHECK_CLOSE(gsrate[Rate::Oil], 1000*sm3d, 1.0e-8);
+    BOOST_CHECK_CLOSE(gsrate[Rate::Water], 500*sm3d, 1.0e-8);
+    BOOST_CHECK_CLOSE(gsrate[Rate::Gas], 10.0e3*sm3d, 1.0e-8);
 }
 
 BOOST_AUTO_TEST_CASE(TESTGCONSALE) {
