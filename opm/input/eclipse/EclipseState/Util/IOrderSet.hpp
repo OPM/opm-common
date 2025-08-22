@@ -15,12 +15,13 @@
 
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
- */
+*/
 
 #ifndef OPM_IORDER_SET_HPP
 #define OPM_IORDER_SET_HPP
 
 #include <algorithm>
+#include <cstddef>
 #include <iterator>
 #include <stdexcept>
 #include <string>
@@ -29,33 +30,20 @@
 
 namespace Opm {
 
-
-/*
-  Small class which implements a container which behaves roughly like
-  std::set<T>, but the insert order is preserved - i.e. when iterating over the
-  elements in the container they will come out in the order they have been
-  inserted. If an element is added multiple times the order in the container
-  will not be updated.
-
-  The set has an erase() method which can be used to remove elements, otherwise
-  the elements in the container are immutable.
-
-  The elements are duplicated in the std::set<T> and std::vector<T>, and the
-  class should not be used for large objects.
-*/
-
+/// Set of elements which preserves order of element insertion.
+///
+/// Repeated insertion of a particular element leaves container unchanged.
+///
+/// \tparam T Element type.  Should typically be a fairly small type, such
+/// as a built-in arithmetic type or a std::string.
 template <typename T>
-class IOrderSet {
+class IOrderSet
+{
 public:
-    using storage_type = typename std::vector<T>;
-    using index_type = typename std::unordered_set<T>;
-    using const_iter_type = typename storage_type::const_iterator;
-
-private:
-    index_type m_index;
-    storage_type m_data;
-
-public:
+    /// Default constructor.
+    ///
+    /// Resulting object is usable as target for a deserialisation
+    /// operation, and population through insert()/erase().
     IOrderSet() = default;
 
     /// Constructor.
@@ -64,79 +52,138 @@ public:
     ///
     /// \param[in] data Ordered view of element collection.
     explicit IOrderSet(const std::vector<T>& data)
-        : m_index { data.begin(), data.end() }
-        , m_data  { data }
+        : index_ { data.begin(), data.end() }
+        , data_  { data }
     {
-        if (this->m_data.size() != this->m_index.size()) {
+        if (this->data_.size() != this->index_.size()) {
             throw std::invalid_argument {
                 "Initial sequence has duplicate elements"
             };
         }
     }
 
-    std::size_t size() const {
-        return this->m_index.size();
+    /// Number of elements in collection.
+    auto size() const
+    {
+        return this->index_.size();
     }
 
-    bool empty() const {
-        return (this->size() == 0);
+    /// Whether or not this collection is empty.
+    auto empty() const
+    {
+        return this->size() == 0;
     }
 
-    std::size_t count(const T& value) const {
-        return this->m_index.count(value);
+    /// Whether or not a particular element exists in the collection.
+    ///
+    /// \param[in] value Element.
+    ///
+    /// \return Whether or no \p value exists in the collection.
+    auto contains(const T& value) const
+    {
+        return this->index_.find(value) != this->index_.end();
     }
 
-    bool contains(const T& value) const {
-        return (this->count(value) != 0);
+    /// Insert element into collection.
+    ///
+    /// If element already exists, then collection is unchanged.  Otherwise,
+    /// the element will be appended to the ordered view of the collection's
+    /// elements.
+    ///
+    /// \param[in] value Element.
+    ///
+    /// \return Whether or not the \p value was inserted into the
+    /// collection.
+    bool insert(const T& value)
+    {
+        const auto& stat = this->index_.insert(value);
+
+        if (stat.second) {
+            this->data_.push_back(value);
+        }
+
+        return stat.second;
     }
 
-    bool insert(const T& value) {
-        if (this->contains(value))
-            return false;
-
-        this->m_index.insert(value);
-        this->m_data.push_back(value);
-        return true;
-    }
-
-    std::size_t erase(const T& value) {
-        if (!this->contains(value))
+    /// Remove element from collection
+    ///
+    /// If element does not exist in the collection, the collection is
+    /// unchanged.
+    ///
+    /// \param[in] value Element.
+    ///
+    /// \return Number of elements removed from collection (0 or 1).
+    std::size_t erase(const T& value)
+    {
+        if (!this->contains(value)) {
             return 0;
+        }
 
-        this->m_index.erase(value);
-        auto data_iter = std::find(this->m_data.begin(), this->m_data.end(), value);
-        this->m_data.erase(data_iter);
+        this->index_.erase(value);
+
+        auto data_iter = std::find(this->data_.begin(), this->data_.end(), value);
+        this->data_.erase(data_iter);
+
         return 1;
     }
 
-    const_iter_type begin() const {
-        return this->m_data.begin();
+    /// Iterator to first element in ordered collection view.
+    auto begin() const { return this->data_.begin(); }
+
+    /// End of ordered collection view.
+    auto end() const { return this->data_.end(); }
+
+    /// Access element by index in ordered collection view.
+    ///
+    /// Throws an exception of type std::out_of_range if the index is not
+    /// strictly less than size().
+    ///
+    /// \param[in] i Element index.  Should be strictly less than size().
+    ///
+    /// \return Element at position \p i in ordered collection view.
+    const T& operator[](const std::size_t i) const
+    {
+        return this->data_.at(i);
     }
 
-    const_iter_type end() const {
-        return this->m_data.end();
+    /// Ordered collection view.
+    const std::vector<T>& data() const
+    {
+        return this->data_;
     }
 
-    const T& operator[](std::size_t i) const {
-        return this->m_data.at(i);
+    /// Equality predicate.
+    ///
+    /// \param[in] data Object against which \code *this \endcode will be
+    /// tested for equality.
+    ///
+    /// \return Whether or not \code *this \endcode is the same as \p data.
+    bool operator==(const IOrderSet<T>& data) const
+    {
+        return (this->index_ == data.index_)
+            && (this->data_ == data.data_);
     }
 
-    const std::vector<T>& data() const {
-        return this->m_data;
-    };
-
-    bool operator==(const IOrderSet<T>& data) const {
-        return this->m_index == data.m_index &&
-               this->data() == data.data();
-    }
-
-    template<class Serializer>
+    /// Convert between byte array and object representation.
+    ///
+    /// \tparam Serializer Byte array conversion protocol.
+    ///
+    /// \param[in,out] serializer Byte array conversion object.
+    template <class Serializer>
     void serializeOp(Serializer& serializer)
     {
-        serializer(m_index);
-        serializer(m_data);
+        serializer(this->index_);
+        serializer(this->data_);
     }
-};
-}
 
-#endif
+private:
+    /// Unordered collection view.
+    std::unordered_set<T> index_{};
+
+    /// Ordered collection view.
+    std::vector<T> data_{};
+};
+
+} // namespace Opm
+
+#endif // OPM_IORDER_SET_HPP

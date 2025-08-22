@@ -15,16 +15,19 @@
 
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
- */
+*/
 
-#include <stdexcept>
-
-#define BOOST_TEST_MODULE ScheduleTests
+#define BOOST_TEST_MODULE Ordered_Set_And_Map_Tests
 #include <boost/test/unit_test.hpp>
 
 #include <opm/input/eclipse/EclipseState/Util/OrderedMap.hpp>
 #include <opm/input/eclipse/EclipseState/Util/IOrderSet.hpp>
 
+#include <cstddef>
+#include <stdexcept>
+#include <string>
+#include <utility>
+#include <vector>
 
 BOOST_AUTO_TEST_CASE( check_empty) {
     Opm::OrderedMap<std::string> map;
@@ -145,55 +148,48 @@ BOOST_AUTO_TEST_CASE( check_order ) {
 
     BOOST_CHECK_EQUAL(map.erase("NO_SUCH_KEY"), 0U);
     BOOST_CHECK_EQUAL(map.erase("BKEY2"), 1U);
-    /*
-    BOOST_CHECK_EQUAL( "NewValue1" , map.get("CKEY1"));
-    BOOST_CHECK_EQUAL( "NewValue1" , map.iget( 0 ));
-    BOOST_CHECK_EQUAL( map.count("CKEY"), 0);
-
-    BOOST_CHECK_EQUAL( "Value3" , map.at("AKEY3"));
-    BOOST_CHECK_EQUAL( "Value3" , map.at( 1 ));
-    */
 }
 
 BOOST_AUTO_TEST_CASE(test_IOrderSet) {
-    Opm::IOrderSet<std::string> iset;
-    BOOST_CHECK(iset.empty());
+    Opm::IOrderSet<std::string> iset{};
+
+    BOOST_CHECK_MESSAGE(iset.empty(), "Default constructed set must be empty");
     BOOST_CHECK_EQUAL(iset.size(), 0U);
-    BOOST_CHECK_EQUAL(iset.count("HEI"), 0U);
-    BOOST_CHECK_EQUAL(iset.contains("HEI"), false);
+    BOOST_CHECK_MESSAGE(!iset.contains("HEI"), R"(Set must NOT contain element "HEI")");
 
-    BOOST_CHECK(iset.insert("HEI"));
+    BOOST_CHECK_MESSAGE(iset.insert("HEI"), "Inserting new element must change set");
     BOOST_CHECK_EQUAL(iset.size(), 1U);
-    BOOST_CHECK_EQUAL(iset.count("HEI"), 1U);
-    BOOST_CHECK_EQUAL(iset.contains("HEI"), true);
+    BOOST_CHECK_MESSAGE(iset.contains("HEI"), R"(Set must contain element "HEI")");
 
-    BOOST_CHECK(!iset.insert("HEI"));
+    BOOST_CHECK_MESSAGE(!iset.insert("HEI"), R"(Inserting existing element must leave set unchanged)");
     BOOST_CHECK_EQUAL(iset.size(), 1U);
-    BOOST_CHECK_EQUAL(iset.count("HEI"), 1U);
-    BOOST_CHECK_EQUAL(iset.contains("HEI"), true);
+    BOOST_CHECK_MESSAGE(iset.contains("HEI"), R"(Set must contain element "HEI")");
 
     BOOST_CHECK_THROW(iset[10], std::out_of_range);
 
 
-    Opm::IOrderSet<int> iset2;
+    Opm::IOrderSet<int> iset2{};
 
-
-    for (int i=10; i >= 0; i--)
+    for (int i = 10; i >= 0; --i) {
         iset2.insert(i);
-
-    int expected = 10;
-    std::size_t index=0;
-    const auto &d = iset2.data();
-    for (const auto &v : iset2) {
-        BOOST_CHECK_EQUAL(v, expected);
-        BOOST_CHECK_EQUAL(iset2[index], expected);
-        BOOST_CHECK_EQUAL(d[index], expected);
-        expected--;
-        index++;
     }
 
+    {
+        int expected = 10;
+        std::size_t index = 0;
 
-    Opm::IOrderSet<std::string> iset3;
+        const auto& d = iset2.data();
+        for (const auto &v : iset2) {
+            BOOST_CHECK_EQUAL(v, expected);
+            BOOST_CHECK_EQUAL(iset2[index], expected);
+            BOOST_CHECK_EQUAL(d[index], expected);
+
+            --expected;
+            ++index;
+        }
+    }
+
+    Opm::IOrderSet<std::string> iset3{};
     iset3.insert("AAA");
     iset3.insert("BBB");
 
@@ -208,4 +204,3 @@ BOOST_AUTO_TEST_CASE(test_IOrderSet) {
     BOOST_CHECK_EQUAL(iset3.size() , 1U);
     BOOST_CHECK_EQUAL(iset3[0], "BBB");
 }
-
