@@ -35,24 +35,26 @@
 #include <string>
 
 namespace Opm {
+    class SummaryState;
+    class UDQConfig;
+    class UDQActive;
+} // namespace Opm
 
-namespace RestartIO {
-struct RstGroup;
-}
+namespace Opm::RestartIO {
+    struct RstGroup;
+} // namespace Opm::RestartIO
 
-class SummaryState;
-class UDQConfig;
-class UDQActive;
-
-class Group {
+namespace Opm {
+class Group
+{
 public:
-    // A group can have both injection controls and production controls set at
-    // the same time, i.e. this enum is used as a bitmask.
+    // A group can have both injection controls and production controls set
+    // at the same time, i.e. this enum is used as a bitmask.
     enum class GroupType : unsigned {
         NONE = 0,
         PRODUCTION = 1,
         INJECTION = 2,
-        MIXED = 3
+        MIXED = 3,
     };
 
     enum class ExceedAction {
@@ -63,8 +65,8 @@ public:
         PLUG = 4,
         RATE = 5
     };
-    static const std::string ExceedAction2String( ExceedAction enumValue );
-    static ExceedAction ExceedActionFromString( const std::string& stringValue );
+    static std::string ExceedAction2String(ExceedAction enumValue);
+    static ExceedAction ExceedActionFromString(const std::string& stringValue);
     static ExceedAction ExceedActionFromInt(const int value);
 
     enum class InjectionCMode  : int {
@@ -76,8 +78,8 @@ public:
         FLD  = 16,
         SALE = 32
     };
-    static const std::string InjectionCMode2String( InjectionCMode enumValue );
-    static InjectionCMode InjectionCModeFromString( const std::string& stringValue );
+    static std::string InjectionCMode2String(InjectionCMode enumValue);
+    static InjectionCMode InjectionCModeFromString(const std::string& stringValue);
     static InjectionCMode InjectionCModeFromInt(int ecl_int);
     static int            InjectionCMode2Int(InjectionCMode enumValue);
 
@@ -92,8 +94,8 @@ public:
         PRBL = 64,
         FLD  = 128
     };
-    static const std::string ProductionCMode2String( ProductionCMode enumValue );
-    static ProductionCMode ProductionCModeFromString( const std::string& stringValue );
+    static std::string ProductionCMode2String(ProductionCMode enumValue);
+    static ProductionCMode ProductionCModeFromString(const std::string& stringValue);
     static ProductionCMode ProductionCModeFromInt(int ecl_int);
     static int             ProductionCMode2Int(Group::ProductionCMode cmode);
 
@@ -111,7 +113,7 @@ public:
         FORM = 10,
         NO_GUIDE_RATE = 11
     };
-    static GuideRateProdTarget GuideRateProdTargetFromString( const std::string& stringValue );
+    static GuideRateProdTarget GuideRateProdTargetFromString(const std::string& stringValue);
     static GuideRateProdTarget GuideRateProdTargetFromInt(int ecl_id);
 
     enum class GuideRateInjTarget {
@@ -121,7 +123,7 @@ public:
         RESV = 4,
         NO_GUIDE_RATE = 5
     };
-    static GuideRateInjTarget GuideRateInjTargetFromString( const std::string& stringValue );
+    static GuideRateInjTarget GuideRateInjTargetFromString(const std::string& stringValue);
     static GuideRateInjTarget GuideRateInjTargetFromInt(int ecl_id);
     static int                GuideRateInjTargetToInt(GuideRateInjTarget target);
 
@@ -273,8 +275,15 @@ public:
     };
 
     Group();
-    Group(const std::string& group_name, std::size_t insert_index_arg, double udq_undefined_arg, const UnitSystem& unit_system);
-    Group(const RestartIO::RstGroup& rst_group, std::size_t insert_index_arg, double udq_undefined_arg, const UnitSystem& unit_system);
+    Group(const std::string& group_name,
+          std::size_t insert_index_arg,
+          double udq_undefined_arg,
+          const UnitSystem& unit_system);
+
+    Group(const RestartIO::RstGroup& rst_group,
+          std::size_t insert_index_arg,
+          double udq_undefined_arg,
+          const UnitSystem& unit_system);
 
     static Group serializationTestObject();
 
@@ -380,6 +389,6 @@ private:
 Group::GroupType operator |(Group::GroupType lhs, Group::GroupType rhs);
 Group::GroupType operator &(Group::GroupType lhs, Group::GroupType rhs);
 
-}
+} // namespace Opm
 
 #endif // OPM_GROUP_HPP
