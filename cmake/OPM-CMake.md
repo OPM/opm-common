@@ -213,54 +213,48 @@ a good idea if you are building the library on the same machine
 as you will be using the library. Default is ON.
 
 <tr>
-<td>	OPM_INTERPROCEDURAL_OPTIMIZATION_TYPE
+<td>  OPM_INTERPROCEDURAL_OPTIMIZATION_TYPE
 <td>
-Controls the type of interprocedural optimization (IPO, also known as Link Time
-Optimization or LTO) applied when linking targets. If enabled and supported by
-your compiler, IPO can significantly improve runtime performance by optimizing
-across translation units.
+Controls the type of interprocedural optimization (IPO, also known as Link Time Optimization or LTO) applied when linking targets. If enabled and supported by your compiler, IPO can significantly improve runtime performance by optimizing across translation units.<br>
 Possible values are:
 <ul>
-  <li><b>DEFAULT</b>: Use the standard CMake IPO interface
-      (INTERPROCEDURAL_OPTIMIZATION property).</li>
-  <li><b>ThinLTO</b>: Use Clang's ThinLTO, enabling parallelism and cache
-      configuration for faster and more scalable builds.</li>
-  <li><b>NONE</b>: Disable interprocedural optimization.</li>
+   <li><b>CMake</b>: Use the standard CMake IPO interface (<code>INTERPROCEDURAL_OPTIMIZATION</code> property). This is supported by most modern compilers.</li>
+   <li><b>Clang</b>: Use Clang's ThinLTO, enabling parallelism and cache configuration for faster and more scalable builds. This mode is selected automatically for Clang 7.0+ if available.</li>
+   <li><b>GNU</b>: Use GNU (GCC) incremental LTO with parallelism and cache configuration. This mode is selected for GCC 4.5+ if available.</li>
+   <li><b>NONE</b>: Disable interprocedural optimization.</li>
 </ul>
-The default is <code>ThinLTO</code> if supported by your compiler,
-<code>DEFAULT</code> if IPO is supported but ThinLTO is not, and
-<code>NONE</code> otherwise.
+The default is <code>Clang</code> if supported by your compiler, <code>GNU</code> for supported GCC, <code>CMake</code> if IPO is supported but neither Clang nor GNU is available, and <code>NONE</code> otherwise.<br>
+See the build output for the detected default and available types on your platform.
 </td>
 </tr>
 
 <tr>
-<td>	OPM_INTERPROCEDURAL_OPTIMIZATION_CONFIGURATION_TYPES
+<td>  OPM_INTERPROCEDURAL_OPTIMIZATION_CONFIGURATION_TYPES
 <td>
-A semicolon-separated list of build configurations for which interprocedural
-optimization is enabled (e.g., <code>Release;RelWithDebInfo</code>).
-If not set, the default is <code>Release;RelWithDebInfo</code>.
+A semicolon-separated list of build configurations for which interprocedural optimization is enabled (e.g., <code>Release;RelWithDebInfo</code>). If not set, the default is <code>Release;RelWithDebInfo</code>.<br>
+This controls which CMake build types (such as Release or RelWithDebInfo) will have IPO/LTO enabled. You can override this to enable or disable IPO for custom configurations.
 </td>
 </tr>
 
 <tr>
-<td>	OPM_INTERPROCEDURAL_OPTIMIZATION_JOBS
+<td>  OPM_INTERPROCEDURAL_OPTIMIZATION_JOBS
 <td>
-This controls the degree of parallelism during the ThinLTO optimization and
-linking phase. Note that this parallelism is for each translation unit being
-optimized. If set to <code>0</code>, ThinLTO will attempt to parallelize every
-link step for all processes, which may be too aggressive if the build stage is
-already parallelized (e.g., with <code>make -j</code> or Ninja).
+Controls the degree of parallelism for IPO/LTO linking and optimization. The effect depends on the selected IPO type and compiler:
+<ul>
+   <li>For <b>Clang</b> ThinLTO, sets the number of parallel jobs for the ThinLTO backend (passed to the linker as <code>--thinlto-jobs</code> or equivalent).</li>
+   <li>For <b>GNU</b> (GCC), sets the number of parallel LTO jobs (passed as <code>-flto=N</code>).</li>
+</ul>
+If set to <code>0</code>, the build system or linker may attempt to use all available cores, which can be too aggressive if the build is already parallelized (e.g., with <code>make -j</code> or Ninja).<br>
 The default is <code>1</code>.
 </td>
 </tr>
 
 <tr>
-<td>	OPM_INTERPROCEDURAL_OPTIMIZATION_CACHE_POLICY
+<td>  OPM_INTERPROCEDURAL_OPTIMIZATION_CACHE_POLICY
 <td>
-Specifies the cache policy for ThinLTO (e.g., <code>prune_after=604800</code>
-to prune cache files older than one week). This is passed to the linker if
-supported, allowing you to control cache size and cleanup behavior.
-Default is empty (no explicit policy).
+Specifies the cache policy for IPO/LTO cache directories, if supported by the selected compiler and linker. For example, with Clang ThinLTO and the LLD linker, you can set <code>prune_after=604800</code> to prune cache files older than one week. This value is passed to the linker if supported, allowing you to control cache size and cleanup behavior.<br>
+The default is empty (no explicit policy).<br>
+Cache directories are automatically created under <code>${CMAKE_BINARY_DIR}/LTOCache/&lt;config&gt;</code> for each configuration.
 </td>
 </tr>
 

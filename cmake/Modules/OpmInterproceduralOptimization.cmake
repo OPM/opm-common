@@ -7,23 +7,19 @@ include(TestCXXAcceptsFlag)
 # Configure interprocedural optimization (IPO) for a target.
 #
 # This function enables IPO (Link Time Optimization) on the specified target.
-# It supports both the standard CMake IPO interface and ThinLTO settings for Clang.
+# It supports the standard CMake IPO interface as well as extended interfaces for
+# GCC and Clang settings.
 #
 # The type of optimization applied is controlled via the cache variable:
 #   OPM_INTERPROCEDURAL_OPTIMIZATION_TYPE
 # which can be one of:
-#   - DEFAULT: use standard CMake IPO via INTERPROCEDURAL_OPTIMIZATION_<config>
-#   - ThinLTO: use Clang's ThinLTO with parallelism and cache configuration
+#   - CMake: use standard CMake IPO via INTERPROCEDURAL_OPTIMIZATION_<config>
+#   - Clang: use Clang's ThinLTO with parallelism and cache configuration
+#   - GNU:   use GNU's incremental LTO with parallelism and cache configuration
 #   - NONE:    disable IPO
 #
-# ThinLTO cache directories are automatically created under:
+# Clang cache directories are automatically created under:
 #   ${CMAKE_BINARY_DIR}/LTOCache/<config>
-# and registered for clean-up.
-#
-# Supported linkers for ThinLTO customization:
-#   - LLD:       --thinlto-jobs, --thinlto-cache-dir, --thinlto-cache-policy
-#   - GNUgold:   -plugin-opt,jobs=..., cache-dir=..., cache-policy=...
-#   - AppleClang: -mllvm,-threads=..., -cache_path_lto,...
 #
 # Usage:
 #
@@ -40,37 +36,51 @@ include(TestCXXAcceptsFlag)
 #                        is used.
 #
 # Cache Variables:
-#   OPM_INTERPROCEDURAL_OPTIMIZATION_TYPE                 (DEFAULT, ThinLTO, NONE)
+#   OPM_INTERPROCEDURAL_OPTIMIZATION_TYPE                 (CMake, GCC, Clang, NONE)
 #   OPM_INTERPROCEDURAL_OPTIMIZATION_JOBS                 (e.g. 1, 8)
 #   OPM_INTERPROCEDURAL_OPTIMIZATION_CACHE_POLICY         (e.g. "prune_after=604800")
 #   OPM_INTERPROCEDURAL_OPTIMIZATION_CONFIGURATION_TYPES  (e.g. "Release;RelWithDebInfo")
 #
 # ------------------------------------------------------------------------------
 
-
-check_ipo_supported (RESULT ipo_supported)
-
-# Only test ThinLTO if using Clang
-if(ipo_supported AND (CMAKE_CXX_COMPILER_ID MATCHES "Clang"))
-  check_cxx_accepts_flag ("-flto=thin" has_thin_lto_support)
-endif()
-
-# define default values for LTO
-if(ipo_supported AND has_thin_lto_support)
-  set(opm_ipo_type ThinLTO)
-elseif (ipo_supported)
-  set(opm_ipo_type DEFAULT)
-else()
-  set(opm_ipo_type NONE)
-endif()
-
-set(OPM_INTERPROCEDURAL_OPTIMIZATION_TYPE ${opm_ipo_type} CACHE STRING "Default OPM interprocedural optimization type. Possible values: DEFAULT, ThinLTO, NONE")
-set_property(CACHE OPM_INTERPROCEDURAL_OPTIMIZATION_TYPE PROPERTY STRINGS DEFAULT ThinLTO NONE)
+set(OPM_INTERPROCEDURAL_OPTIMIZATION_CONFIGURATION_TYPES "Release;RelWithDebInfo" CACHE STRING "Default configuration types to apply OPM interprocedural optimization.")
 set(OPM_INTERPROCEDURAL_OPTIMIZATION_JOBS 1 CACHE STRING "Default OPM interprocedural optimization jobs.")
 set(OPM_INTERPROCEDURAL_OPTIMIZATION_CACHE_POLICY "" CACHE STRING "Default OPM interprocedural optimization cache policy.")
-set(OPM_INTERPROCEDURAL_OPTIMIZATION_CONFIGURATION_TYPES "Release;RelWithDebInfo" CACHE STRING "Default configuration types to apply OPM interprocedural optimization.")
+mark_as_advanced(OPM_INTERPROCEDURAL_OPTIMIZATION_JOBS)
+mark_as_advanced(OPM_INTERPROCEDURAL_OPTIMIZATION_CACHE_POLICY)
 
-message(STATUS "OPM interprocedural optimization type: ${OPM_INTERPROCEDURAL_OPTIMIZATION_TYPE}")
+# define possible values for LTO (order matters: first one in the list is used as default type)
+set(opm_ipo_types)
+check_ipo_supported (RESULT ipo_supported)
+if(ipo_supported)
+  list(PREPEND opm_ipo_types CMake)
+endif()
+
+# Add custom for known compiler versions
+if(ipo_supported)
+  if((CMAKE_CXX_COMPILER_ID MATCHES "Clang") AND (NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 7.0.0))
+    list(PREPEND opm_ipo_types Clang)
+  elseif((CMAKE_CXX_COMPILER_ID MATCHES "GNU") AND (NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.5.4))
+    list(PREPEND opm_ipo_types GNU)
+  endif()
+endif()
+
+# Some linkers decide to discard "unused" functions prematurely, so only enable by default for known configurations.
+if(${CMAKE_CXX_COMPILER_LINKER_ID} MATCHES "AppleClang")
+  list(APPEND opm_ipo_types NONE)
+else()
+  list(INSERT opm_ipo_types 0 NONE)
+endif()
+
+set(OPM_INTERPROCEDURAL_OPTIMIZATION_TYPES ${opm_ipo_types} CACHE STRING "OPM interprocedural optimization types." FORCE)
+mark_as_advanced(OPM_INTERPROCEDURAL_OPTIMIZATION_TYPES)
+list(GET OPM_INTERPROCEDURAL_OPTIMIZATION_TYPES 0 opm_ipo_default_type)
+
+message(STATUS "OPM interprocedural optimization default type: ${opm_ipo_default_type}")
+
+list(JOIN OPM_INTERPROCEDURAL_OPTIMIZATION_TYPES ", " opm_ipo_types_str)
+set(OPM_INTERPROCEDURAL_OPTIMIZATION_TYPE ${opm_ipo_default_type} CACHE STRING "Default OPM interprocedural optimization type. Possible values: ${opm_ipo_types_str}")
+set_property(CACHE OPM_INTERPROCEDURAL_OPTIMIZATION_TYPE PROPERTY STRINGS ${OPM_INTERPROCEDURAL_OPTIMIZATION_TYPES})
 
 function(opm_interprocedural_optimization)
   cmake_parse_arguments(OPM_IPO "" "TARGET" "CONFIGURATION_TYPES" ${ARGN})
@@ -82,20 +92,45 @@ function(opm_interprocedural_optimization)
 
   foreach(config ${OPM_IPO_CONFIGURATION_TYPES})
     if((CMAKE_CONFIGURATION_TYPES MATCHES ${config}) OR (CMAKE_BUILD_TYPE MATCHES ${config}))
-      if(OPM_INTERPROCEDURAL_OPTIMIZATION_TYPE STREQUAL DEFAULT)
+
+      set(LTO_CACHE_PATH ${CMAKE_BINARY_DIR}/LTOCache/${config})
+
+      if(OPM_INTERPROCEDURAL_OPTIMIZATION_TYPE STREQUAL CMake)
         # Use default CMake IPO
-        set_target_properties(${OPM_IPO_TARGET} PROPERTIES INTERPROCEDURAL_OPTIMIZATION_${config} TRUE)
-      elseif(OPM_INTERPROCEDURAL_OPTIMIZATION_TYPE STREQUAL ThinLTO)
+        string(TOUPPER ${config} uconfig)
+        set_target_properties(${OPM_IPO_TARGET} PROPERTIES INTERPROCEDURAL_OPTIMIZATION_${uconfig} ON)
+      elseif(OPM_INTERPROCEDURAL_OPTIMIZATION_TYPE STREQUAL GNU)
+        if((NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.6.4) AND (NOT OPM_INTERPROCEDURAL_OPTIMIZATION_JOBS EQUAL 1))
+          # https://gcc.gnu.org/onlinedocs/gcc-4.6.4/gcc/Optimize-Options.html
+          target_compile_options(${OPM_IPO_TARGET} PRIVATE $<$<CONFIG:${config}>:-flto=${OPM_INTERPROCEDURAL_OPTIMIZATION_JOBS}>)
+          target_link_options(${OPM_IPO_TARGET} INTERFACE $<$<CONFIG:${config}>:-flto=${OPM_INTERPROCEDURAL_OPTIMIZATION_JOBS}>)
+        elseif(NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.5.4)
+          # https://gcc.gnu.org/onlinedocs/gcc-4.5.4/gcc/Optimize-Options.html
+          target_compile_options(${OPM_IPO_TARGET} PRIVATE $<$<CONFIG:${config}>:-flto>)
+          target_link_options(${OPM_IPO_TARGET} INTERFACE $<$<CONFIG:${config}>:-flto>)
+        endif()
+
+        if(NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 15.0.0)
+          # use incremental LTO https://gcc.gnu.org/onlinedocs/gcc-15.2.0/gcc/Optimize-Options.html
+          target_compile_options(${OPM_IPO_TARGET} PRIVATE $<$<CONFIG:${config}>:-flto-incremental=${LTO_CACHE_PATH}>)
+          target_link_options(${OPM_IPO_TARGET} INTERFACE $<$<CONFIG:${config}>:-flto-incremental=${LTO_CACHE_PATH}>)
+
+          # Configure cache directory
+          file(MAKE_DIRECTORY ${LTO_CACHE_PATH})
+          set_property(DIRECTORY APPEND PROPERTY ADDITIONAL_CLEAN_FILES ${LTO_CACHE_PATH})
+        endif()
+
+      elseif(OPM_INTERPROCEDURAL_OPTIMIZATION_TYPE STREQUAL Clang)
         # Use ThinLTO and reuse cache (see https://releases.llvm.org/20.1.0/tools/clang/docs/ThinLTO.html)
 
         target_compile_options(${OPM_IPO_TARGET} PRIVATE $<$<CONFIG:${config}>:-flto=thin>)
         target_link_options(${OPM_IPO_TARGET} INTERFACE $<$<CONFIG:${config}>:-flto=thin>)
 
         # Configure cache directory
-        set(LTO_CACHE_PATH ${CMAKE_BINARY_DIR}/LTOCache/${config})
         file(MAKE_DIRECTORY ${LTO_CACHE_PATH})
         set_property(DIRECTORY APPEND PROPERTY ADDITIONAL_CLEAN_FILES ${LTO_CACHE_PATH})
 
+        # Parallel and cache options are linker dependent
         if(${CMAKE_CXX_COMPILER_LINKER_ID} MATCHES "LLD")
           target_link_options(${OPM_IPO_TARGET} INTERFACE
             $<$<CONFIG:${config}>:LINKER:--thinlto-jobs=${OPM_INTERPROCEDURAL_OPTIMIZATION_JOBS}>
@@ -122,10 +157,9 @@ function(opm_interprocedural_optimization)
             $<$<CONFIG:${config}>:LINKER:-cache_path_lto,${LTO_CACHE_PATH}>
           )
         else()
-          message(WARNING "ThinLTO supported, but linker type '${CMAKE_CXX_COMPILER_LINKER_ID}' is unrecognized. Not adding parallelism or cache flags.")
+          message(DEBUG "IPO for Clang is supported, but linker type '${CMAKE_CXX_COMPILER_LINKER_ID}' is unrecognized. Skip adding parallelism or cache flags.")
         endif()
       endif()
     endif()
   endforeach()
-
 endfunction()
