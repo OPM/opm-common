@@ -1848,7 +1848,7 @@ captureDeclaredWellDataLGR(const Schedule&             sched,
     });
 
     // Static contributions to LGWELS array.
-    wellLoop(wells, sched, sim_step, lgr_tag, [&sim_step, &action_state, &sched, this]
+    wellLoop(wells, sched, sim_step, lgr_tag, [this]
         (const Well& well, const std::size_t wellID) -> void
     {
         auto lgwell = this->lgWell_[wellID];

@@ -1176,10 +1176,10 @@ BOOST_AUTO_TEST_CASE (Declared_Well_Data2LGRWells)
                          5,2, 2);
     auto group_aggregator_lgr1 = Opm::RestartIO::Helpers::AggregateGroupData(ih_lgr1.value);
     auto group_aggregator_lgr2 = Opm::RestartIO::Helpers::AggregateGroupData(ih_lgr2.value);
-    group_aggregator_lgr1.captureDeclaredGroupDataLGR(simCase.sched, units, rptStep, smry,
-        ih.value,"LGR1");
-    group_aggregator_lgr2.captureDeclaredGroupDataLGR(simCase.sched, units, rptStep, smry,
-        ih.value,"LGR2");
+    group_aggregator_lgr1.captureDeclaredGroupDataLGR(simCase.sched, units,
+                                                      rptStep, smry, "LGR1");
+    group_aggregator_lgr2.captureDeclaredGroupDataLGR(simCase.sched, units,
+                                                      rptStep, smry, "LGR2");
 
     // -------------------------- IGR FOR GLOBAL GRID --------------------------
     // IGR (G1 GLOBAL)
@@ -1525,8 +1525,8 @@ BOOST_AUTO_TEST_CASE (Declared_Well_Data3Wells1G2LGR)
     ih_lgr2.add_igr_data(100,112, 181,
                          5,3, 2);
     auto group_aggregator_lgr2 = Opm::RestartIO::Helpers::AggregateGroupData(ih_lgr2.value);
-    group_aggregator_lgr2.captureDeclaredGroupDataLGR(simCase.sched, units, rptStep, smry,
-        ih.value,"LGR2");
+    group_aggregator_lgr2.captureDeclaredGroupDataLGR(simCase.sched, units,
+                                                      rptStep, smry, "LGR2");
 
 
     // IGRP allocation is different for LGRs. GLOBAL use the nwgmax of the global grid,
@@ -1907,14 +1907,14 @@ BOOST_AUTO_TEST_CASE (Declared_Well_Data3MixedGroupsWells)
     ih_lgr1.add_igr_data(100,112, 181,
         5,3, 2);
     auto group_aggregator_lgr1 = Opm::RestartIO::Helpers::AggregateGroupData(ih_lgr1.value);
-    group_aggregator_lgr1.captureDeclaredGroupDataLGR(simCase.sched, units, rptStep, smry,
-    ih.value,"LGR1");
+    group_aggregator_lgr1.captureDeclaredGroupDataLGR(simCase.sched, units,
+                                                      rptStep, smry, "LGR1");
     // -------------------------- GROUP DATA FOR LGR GRID LGR2--------------------------
     ih_lgr2.add_igr_data(100,112, 181,
                          5,3, 2);
     auto group_aggregator_lgr2 = Opm::RestartIO::Helpers::AggregateGroupData(ih_lgr2.value);
-    group_aggregator_lgr2.captureDeclaredGroupDataLGR(simCase.sched, units, rptStep, smry,
-        ih.value,"LGR2");
+    group_aggregator_lgr2.captureDeclaredGroupDataLGR(simCase.sched, units,
+                                                      rptStep, smry, "LGR2");
     // IGRP allocation is different for LGRs. GLOBAL use the nwgmax of the global grid,
     // while LGRs use the nwgmax of the LGR grid.
     // however inside the IGRP the ngwgmax used to count is the same the same as for GLOBAL GRID even for LGRs.

@@ -2986,4 +2986,15 @@ std::ostream& operator<<(std::ostream& os, const Schedule& sched)
     return os;
 }
 
+template Schedule::Schedule(const Deck&,
+                            const EclipseState&,
+                            const ParseContext&,
+                            ErrorGuard&&,
+                            std::shared_ptr<const Python>,
+                            const bool lowActionParsingStrictness,
+                            const bool slave_mode,
+                            const bool keepKeywords,
+                            const std::optional<int>&,
+                            const RestartIO::RstState* rst);
+
 }

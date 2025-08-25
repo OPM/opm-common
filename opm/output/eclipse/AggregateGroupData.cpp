@@ -1393,7 +1393,6 @@ captureDeclaredGroupDataLGR(const Opm::Schedule&                 sched,
                             const Opm::UnitSystem&               units,
                             const std::size_t                    simStep,
                             const Opm::SummaryState&             sumState,
-                            const std::vector<int>&              inteHead,
                             const std::string&                   lgr_tag)
 {
     const auto& curGroups = sched.restart_groups(simStep);
@@ -1428,7 +1427,7 @@ captureDeclaredGroupDataLGR(const Opm::Schedule&                 sched,
     });
 
     // Define Static Contributions to ZGrp Array.
-    groupLoop(curGroups,sched_state, lgr_tag, [this, &inteHead]
+    groupLoop(curGroups,sched_state, lgr_tag, [this]
               (const Group& group, const std::size_t  groupID ) -> void
     {
         // bug here
