@@ -30,13 +30,79 @@
 #include <fmt/format.h>
 
 #include <cmath>
+#include <cstdint>
 #include <stdexcept>
 #include <utility>
+#include <type_traits>
 
 namespace {
     bool is_defined(const double x)
     {
         return  x < (Opm::RestartIO::RstGroup::UNDEFINED_VALUE / 2);
+    }
+
+    /// Various group satellite status flags
+    ///
+    /// Packed into an unsigned integer of at least 8 bits.
+    enum class GroupSatelliteStatus : std::uint_least8_t {
+        /// Group is not a satellite
+        None = UINT8_C(0),
+
+        /// Group has satellite production
+        Production = (UINT8_C(1) << UINT8_C(0)),
+    };
+
+    /// Convert group satellite status flag to an integer.
+    ///
+    /// Needed for bit manipulations.
+    ///
+    /// \param[in] status Satellite status flag.
+    ///
+    /// \return Integer representation of \p status.
+    auto groupSatelliteStatusAsInteger(const GroupSatelliteStatus status)
+    {
+        return static_cast<std::underlying_type_t<GroupSatelliteStatus>>(status);
+    }
+
+    /// Set single status flag in set of group satellite flags
+    ///
+    /// \param[in] current Current set of group satellite status flags.
+    ///
+    /// \param[in] status Single group satellite status flag.
+    ///
+    /// \return \p current with bit corresponding to \p status guaranteed to
+    /// be set.
+    std::uint_least8_t
+    setGroupSatelliteStatusFlag(const std::uint_least8_t   current,
+                                const GroupSatelliteStatus status)
+    {
+        return current | groupSatelliteStatusAsInteger(status);
+    }
+
+    /// Query whether or not a particular flag is set in a set of satellite
+    /// status flags.
+    ///
+    /// \param[in] current Current set of group satellite status flags.
+    ///
+    /// \param[in] status Single group satellite status flag.
+    ///
+    /// \return Whether or not bit corresponding to \p status is set in \p
+    /// current.
+    bool groupSatelliteStatusFlagIsSet(const std::uint_least8_t   current,
+                                       const GroupSatelliteStatus status)
+    {
+        return (current & groupSatelliteStatusAsInteger(status)) != 0;
+    }
+
+    /// Query whether or not any satellite status flags are set
+    ///
+    /// \param[in] current Current set of group satellite status flags.
+    ///
+    /// \return Whether or not any group satellite status flags are set in
+    /// \p current.
+    bool groupIsSatellite(const std::uint_least8_t current)
+    {
+        return current != groupSatelliteStatusAsInteger(GroupSatelliteStatus::None);
     }
 
     struct ProductionLimits
@@ -258,6 +324,7 @@ Group::Group(const std::string& name,
     , group_type               (GroupType::NONE)
     , gefac                    (1)
     , use_efficiency_in_network(true)
+    , satellite_status         { groupSatelliteStatusAsInteger(GroupSatelliteStatus::None) }
     , production_properties    (unit_system, name)
 {
     // All groups are initially created as children of the "FIELD" group.
@@ -302,6 +369,7 @@ Group Group::serializationTestObject()
     result.group_type = GroupType::PRODUCTION;
     result.gefac = 4.0;
     result.use_efficiency_in_network = true;
+    result.recordSatelliteProduction();
     result.parent_group = "test2";
     result.m_wells = IOrderSet { std::vector<std::string> {"test3", "test4"} };
     result.m_groups = IOrderSet { std::vector<std::string> {"test5", "test6"} };
@@ -714,11 +782,19 @@ bool Group::wellgroup() const
 
 bool Group::addWell(const std::string& well_name)
 {
+    if (groupIsSatellite(this->satellite_status)) {
+        throw std::runtime_error {
+            fmt::format("Cannot parent well {} to "
+                        "satellite group {}",
+                        well_name, this->name())
+        };
+    }
+
     if (! this->wellgroup()) {
         throw std::runtime_error {
-            fmt::format("Groups cannot mix group and well "
-                        "children. Trying to add well {} "
-                        "to group {}", well_name, this->name())
+            fmt::format("Well {} cannot be a "
+                        "child of node group {}",
+                        well_name, this->name())
         };
     }
 
@@ -743,10 +819,18 @@ void Group::delWell(const std::string& well_name)
 
 bool Group::addGroup(const std::string& group_name)
 {
-    if (!this->m_wells.empty()) {
+    if (groupIsSatellite(this->satellite_status)) {
         throw std::runtime_error {
-            "Groups can not mix group and well children. "
-            "Trying to add group: " + group_name + " to group: " + this->name()
+            fmt::format("Group {} cannot be a child of "
+                        "satellite group {}", group_name, this->name())
+        };
+    }
+
+    if (! this->m_wells.empty()) { // Note: Not the same as this->wellgroup()
+        throw std::runtime_error {
+            fmt::format("Group {} cannot be a "
+                        "child of well group {}",
+                        group_name, this->name())
         };
     }
 
@@ -799,6 +883,19 @@ double Group::getGroupEfficiencyFactor(const bool network) const
 bool Group::useEfficiencyInNetwork() const
 {
     return this->use_efficiency_in_network;
+}
+
+void Group::recordSatelliteProduction()
+{
+    this->satellite_status =
+        setGroupSatelliteStatusFlag(this->satellite_status,
+                                    GroupSatelliteStatus::Production);
+}
+
+bool Group::hasSatelliteProduction() const
+{
+    return groupSatelliteStatusFlagIsSet(this->satellite_status,
+                                         GroupSatelliteStatus::Production);
 }
 
 const std::string& Group::parent() const
@@ -1377,6 +1474,7 @@ bool Group::operator==(const Group& data) const
         && (this->group_type == data.group_type)
         && (this->getGroupEfficiencyFactor() == data.getGroupEfficiencyFactor())
         && (this->useEfficiencyInNetwork() == data.useEfficiencyInNetwork())
+        && (this->satellite_status == data.satellite_status)
         && (this->parent() == data.parent())
         && (this->m_wells == data.m_wells)
         && (this->m_groups == data.m_groups)

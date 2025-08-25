@@ -467,6 +467,37 @@ END
     BOOST_CHECK_CLOSE(gsrate[Rate::Gas], 10.0e3*sm3d, 1.0e-8);
 }
 
+BOOST_AUTO_TEST_CASE(GSatProd_Status)
+{
+    const auto sched = create_schedule(R"(
+START             -- 0
+22 AUG 2025 /
+SCHEDULE
+GRUPTREE
+  G1 FIELD /
+/
+
+TSTEP
+  1 /
+
+GSATPROD
+  'G1' 1000 500 10E3 /
+/
+
+TSTEP
+  1 /
+END
+)");
+
+    // T = 0
+    BOOST_CHECK_MESSAGE(! sched[0].groups("G1").hasSatelliteProduction(),
+                        R"(Group "G1" must NOT have satellite production at time 0)");
+
+    // T = 1
+    BOOST_CHECK_MESSAGE(sched[1].groups("G1").hasSatelliteProduction(),
+                        R"(Group "G1" must have satellite production at time 1)");
+}
+
 BOOST_AUTO_TEST_CASE(TESTGCONSALE) {
     const std::string input = R"(
 START             -- 0

@@ -385,7 +385,10 @@ void handleGSATPROD(HandlerContext& handlerContext)
     using Kw = ParserKeywords::GSATPROD;
 
     const auto& keyword = handlerContext.keyword;
+
     auto new_gsatprod = handlerContext.state().gsatprod.get();
+
+    auto update = false;
 
     for (const auto& record : keyword) {
         const auto groupNamePattern = record
@@ -435,10 +438,19 @@ void handleGSATPROD(HandlerContext& handlerContext)
                                 water_rate,
                                 resv_rate,
                                 glift_rate);
+
+            auto grp = handlerContext.state().groups(group_name);
+            grp.recordSatelliteProduction();
+
+            handlerContext.state().groups.update(std::move(grp));
+
+            update = true;
         }
     }
 
-    handlerContext.state().gsatprod.update(std::move(new_gsatprod));
+    if (update) {
+        handlerContext.state().gsatprod.update(std::move(new_gsatprod));
+    }
 }
 
 void handleGCONSALE(HandlerContext& handlerContext)
