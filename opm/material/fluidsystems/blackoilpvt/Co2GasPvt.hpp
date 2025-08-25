@@ -253,6 +253,21 @@ public:
     }
 
     /*!
+     * \brief Returns the formation volume factor [-] and viscosity [Pa s] of the fluid phase.
+     */
+    template <class FluidState, class LhsEval = typename FluidState::Scalar>
+    std::pair<LhsEval, LhsEval>
+    inverseFormationVolumeFactorAndViscosity(const FluidState& fluidState, unsigned regionIdx)
+    {
+        const LhsEval& T = decay<LhsEval>(fluidState.temperature(FluidState::gasPhaseIdx));
+        const LhsEval& p = decay<LhsEval>(fluidState.pressure(FluidState::gasPhaseIdx));
+        const LhsEval& Rv = decay<LhsEval>(fluidState.Rv());
+        const LhsEval& Rvw = decay<LhsEval>(fluidState.Rvw());
+        return { this->inverseFormationVolumeFactor(regionIdx, T, p, Rv, Rvw),
+                 this->viscosity(regionIdx, T, p, Rv, Rvw) };
+    }
+
+    /*!
      * \brief Returns the formation volume factor [-] of water saturated gas at given pressure.
      */
     template <class Evaluation>
