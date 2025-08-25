@@ -2080,22 +2080,95 @@ BOOST_AUTO_TEST_CASE (Declared_Well_Data3MixedGroupsWells)
 BOOST_AUTO_TEST_CASE (Declared_WellDyamicDataLGR)
 {
     const auto simCase = SimulationCase{msw_sim("LGR_BASESIM2WELLS.DATA")};
-
-    // Report Step 1: 2008-10-10 --> 2011-01-20
     const auto rptStep = std::size_t{1};
+    auto countWells = [&simCase](const std::string& lgr_tag) -> int {
+        int num_filtered_wells = 0;
+        for (const auto& well : simCase.sched.getWells(rptStep)) {
+            if (well.get_lgr_well_tag().value_or("") == lgr_tag) {
+                ++num_filtered_wells;
+            }
+        }
+        return num_filtered_wells;
+    };
+
 
     const auto ih = MockIH {
         static_cast<int>(simCase.sched.getWells(rptStep).size())
     };
 
+    const auto ih_lgr1 = MockIH {
+        static_cast<int>(countWells("LGR1"))
+    };
+
+    const auto ih_lgr2 = MockIH {
+        static_cast<int>(countWells("LGR2"))
+    };
+
     const auto xw   = well_ratesLGR();
     const auto smry = sim_stateLGR();
     auto awd = Opm::RestartIO::Helpers::AggregateWellData{ih.value};
+    auto awd_lgr1 = Opm::RestartIO::Helpers::AggregateWellData{ih_lgr1.value};
+    auto awd_lgr2 = Opm::RestartIO::Helpers::AggregateWellData{ih_lgr2.value};
+
+
     Opm::WellTestState wtest_state;
 
     awd.captureDynamicWellData(simCase.sched, simCase.es.tracer(), rptStep, xw, smry);
+    awd_lgr1.captureDynamicWellDataLGR(simCase.sched, simCase.es.tracer(), rptStep, xw, smry, "LGR1");
+    awd_lgr2.captureDynamicWellDataLGR(simCase.sched, simCase.es.tracer(), rptStep, xw, smry, "LGR2");
+
+    // IWEL (PROD)
+    {
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::IWell::index;
+        using Value = ::Opm::RestartIO::Helpers::VectorItems::IWell::Value::Status;
+
+        const auto i0 = 0*ih.niwelz;
+
+        const auto& iwell = awd.getIWell();
+
+        BOOST_CHECK_EQUAL(iwell[i0 + Ix::item9 ], iwell[i0 + Ix::ActWCtrl]);
+        BOOST_CHECK_EQUAL(iwell[i0 + Ix::Status], Value::Open);
+    }
+
+    // IWEL (INJ)
+    {
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::IWell::index;
+        using Value = ::Opm::RestartIO::Helpers::VectorItems::IWell::Value::Status;
+
+        const auto i1 = 1*ih.niwelz;
+
+        const auto& iwell = awd.getIWell();
+
+        BOOST_CHECK_EQUAL(iwell[i1 + Ix::item9 ], -1);
+        BOOST_CHECK_EQUAL(iwell[i1 + Ix::Status], Value::Shut); // No flowing conns.
+    }
+
+    // IWEL (PROD)
+    {
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::IWell::index;
+        using Value = ::Opm::RestartIO::Helpers::VectorItems::IWell::Value::Status;
+
+        const auto i0 = 0*ih_lgr2.niwelz;
+
+        const auto& iwell = awd_lgr2.getIWell();
+
+        BOOST_CHECK_EQUAL(iwell[i0 + Ix::item9 ], iwell[i0 + Ix::ActWCtrl]);
+        BOOST_CHECK_EQUAL(iwell[i0 + Ix::Status], Value::Open);
+    }
+
+    // IWEL (INJ)
+    {
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::IWell::index;
+        using Value = ::Opm::RestartIO::Helpers::VectorItems::IWell::Value::Status;
+
+        const auto i1 = 0*ih_lgr1.niwelz;
+
+        const auto& iwell = awd_lgr1.getIWell();
+
+        BOOST_CHECK_EQUAL(iwell[i1 + Ix::item9 ], -1);
+        BOOST_CHECK_EQUAL(iwell[i1 + Ix::Status], Value::Shut); // No flowing conns.
+    }
+
 }
-
-
 
 BOOST_AUTO_TEST_SUITE_END()     // Extra_Effects
