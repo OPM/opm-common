@@ -104,6 +104,11 @@ namespace {
 
     };
 
+    Opm::Deck msw_sim(const std::string& fname)
+    {
+        return Opm::Parser{}.parseFile(fname);
+    }
+
     MockIH::MockIH(const int numWells,
                    const int iwelPerWell,
                    const int swelPerWell,
@@ -830,6 +835,45 @@ END
 )~" };
 
         return Opm::Parser{}.parseString(input);
+    }
+
+    Opm::data::Wells well_ratesLGR()
+    {
+        using o = ::Opm::data::Rates::opt;
+
+        auto xw = ::Opm::data::Wells{};
+
+        {
+            xw["PROD"].rates
+                .set(o::wat, 1.0)
+                .set(o::oil, 2.0)
+                .set(o::gas, 3.0);
+
+            xw["PROD"].connections.emplace_back();
+            auto& c = xw["PROD"].connections.back();
+
+            c.rates.set(o::wat, 1.0)
+                   .set(o::oil, 2.0)
+                   .set(o::gas, 3.0);
+            auto& curr = xw["PROD"].current_control;
+            curr.isProducer = true;
+            curr.prod = ::Opm::Well::ProducerCMode::GRAT;
+        }
+
+        {
+            xw["INJ"].bhp = 234.0;
+
+            xw["INJ"].rates.set(o::gas, 5.0);
+            //xw["OP_2"].connections.emplace_back();
+
+            //auto& c = xw["OP_2"].connections.back();
+            //c.rates.set(o::gas, 4.0);
+            auto& curr = xw["INJ"].current_control;
+            curr.isProducer = false;
+            curr.inj = ::Opm::Well::InjectorCMode::RATE;
+        }
+
+        return xw;
     }
 
     Opm::SummaryState sim_stateLGR()
@@ -2032,6 +2076,25 @@ BOOST_AUTO_TEST_CASE (Declared_Well_Data3MixedGroupsWells)
 
 }
 
+
+BOOST_AUTO_TEST_CASE (Declared_WellDyamicDataLGR)
+{
+    const auto simCase = SimulationCase{msw_sim("LGR_BASESIM2WELLS.DATA")};
+
+    // Report Step 1: 2008-10-10 --> 2011-01-20
+    const auto rptStep = std::size_t{1};
+
+    const auto ih = MockIH {
+        static_cast<int>(simCase.sched.getWells(rptStep).size())
+    };
+
+    const auto xw   = well_ratesLGR();
+    const auto smry = sim_stateLGR();
+    auto awd = Opm::RestartIO::Helpers::AggregateWellData{ih.value};
+    Opm::WellTestState wtest_state;
+
+    awd.captureDynamicWellData(simCase.sched, simCase.es.tracer(), rptStep, xw, smry);
+}
 
 
 
