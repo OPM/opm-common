@@ -81,6 +81,7 @@ namespace Opm {
         enum class CTFKind {
             DeckValue,
             Defaulted,
+            DynamicFracturing,
         };
 
 

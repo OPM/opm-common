@@ -28,6 +28,7 @@
 #include <utility>
 
 using NormalVector = Opm::WellFractureSeeds::NormalVector;
+using SeedSize = Opm::WellFractureSeeds::SeedSize;
 
 BOOST_AUTO_TEST_SUITE(Insert_Unique)
 
@@ -38,7 +39,7 @@ BOOST_AUTO_TEST_CASE(Single_Seed)
     BOOST_CHECK_EQUAL(seeds.name(), "W1");
     BOOST_CHECK_MESSAGE(seeds.empty(), "Default constructed WellFractureSeeds object must be empty");
 
-    BOOST_CHECK_MESSAGE(seeds.updateSeed(1729, NormalVector { 1.0, 0.0, 0.0 }),
+    BOOST_CHECK_MESSAGE(seeds.updateSeed(1729, NormalVector { 1.0, 0.0, 0.0 }, SeedSize { 1.1, 2.2, 3.3, }),
                         "Inserting into empty collection must succeed");
 
     BOOST_CHECK_EQUAL(seeds.numSeeds(), std::size_t{1});
@@ -58,6 +59,23 @@ BOOST_AUTO_TEST_CASE(Single_Seed)
         BOOST_CHECK_CLOSE(n[0], 1.0, 1.0e-8);
         BOOST_CHECK_CLOSE(n[1], 0.0, 1.0e-8);
         BOOST_CHECK_CLOSE(n[2], 0.0, 1.0e-8);
+    }
+
+    {
+        const auto* s = seeds.getSize(Opm::WellFractureSeeds::SeedCell { 1729 });
+        BOOST_CHECK_MESSAGE(s != nullptr, "Size vector in existing seed cell must not be null");
+
+        BOOST_CHECK_CLOSE(s->verticalExtent(), 1.1, 1.0e-8);
+        BOOST_CHECK_CLOSE(s->horizontalExtent(), 2.2, 1.0e-8);
+        BOOST_CHECK_CLOSE(s->width(), 3.3, 1.0e-8);
+    }
+
+    {
+        const auto& s = seeds.getSize(Opm::WellFractureSeeds::SeedIndex { 0 });
+
+        BOOST_CHECK_CLOSE(s.verticalExtent(), 1.1, 1.0e-8);
+        BOOST_CHECK_CLOSE(s.horizontalExtent(), 2.2, 1.0e-8);
+        BOOST_CHECK_CLOSE(s.width(), 3.3, 1.0e-8);
     }
 
     {
@@ -89,6 +107,23 @@ BOOST_AUTO_TEST_CASE(Single_Seed)
     }
 
     {
+        const auto* s = seeds.getSize(Opm::WellFractureSeeds::SeedCell { 1729 });
+        BOOST_CHECK_MESSAGE(s != nullptr, "Size vector in existing seed cell must not be null");
+
+        BOOST_CHECK_CLOSE(s->verticalExtent(), 1.1, 1.0e-8);
+        BOOST_CHECK_CLOSE(s->horizontalExtent(), 2.2, 1.0e-8);
+        BOOST_CHECK_CLOSE(s->width(), 3.3, 1.0e-8);
+    }
+
+    {
+        const auto& s = seeds.getSize(Opm::WellFractureSeeds::SeedIndex { 0 });
+
+        BOOST_CHECK_CLOSE(s.verticalExtent(), 1.1, 1.0e-8);
+        BOOST_CHECK_CLOSE(s.horizontalExtent(), 2.2, 1.0e-8);
+        BOOST_CHECK_CLOSE(s.width(), 3.3, 1.0e-8);
+    }
+
+    {
         const auto& c = seeds.seedCells();
         const auto expect = std::vector { std::size_t{1729} };
 
@@ -99,7 +134,7 @@ BOOST_AUTO_TEST_CASE(Single_Seed)
 BOOST_AUTO_TEST_CASE(Copy_Constructor)
 {
     auto seeds = Opm::WellFractureSeeds { "W1" };
-    seeds.updateSeed(1729, NormalVector { 1.0, 0.0, 0.0 });
+    seeds.updateSeed(1729, NormalVector { 1.0, 0.0, 0.0 }, SeedSize { 1.1, 2.2, 3.3 });
 
     const auto s2 = seeds;
 
@@ -125,6 +160,23 @@ BOOST_AUTO_TEST_CASE(Copy_Constructor)
     }
 
     {
+        const auto* s = s2.getSize(Opm::WellFractureSeeds::SeedCell { 1729 });
+        BOOST_CHECK_MESSAGE(s != nullptr, "Size vector in existing seed cell must not be null");
+
+        BOOST_CHECK_CLOSE(s->verticalExtent(), 1.1, 1.0e-8);
+        BOOST_CHECK_CLOSE(s->horizontalExtent(), 2.2, 1.0e-8);
+        BOOST_CHECK_CLOSE(s->width(), 3.3, 1.0e-8);
+    }
+
+    {
+        const auto& s = s2.getSize(Opm::WellFractureSeeds::SeedIndex { 0 });
+
+        BOOST_CHECK_CLOSE(s.verticalExtent(), 1.1, 1.0e-8);
+        BOOST_CHECK_CLOSE(s.horizontalExtent(), 2.2, 1.0e-8);
+        BOOST_CHECK_CLOSE(s.width(), 3.3, 1.0e-8);
+    }
+
+    {
         const auto& c = s2.seedCells();
         const auto expect = std::vector { std::size_t{1729} };
 
@@ -135,7 +187,7 @@ BOOST_AUTO_TEST_CASE(Copy_Constructor)
 BOOST_AUTO_TEST_CASE(Move_Constructor)
 {
     auto seeds = Opm::WellFractureSeeds { "W1" };
-    seeds.updateSeed(1729, NormalVector { 1.0, 0.0, 0.0 });
+    seeds.updateSeed(1729, NormalVector { 1.0, 0.0, 0.0 }, SeedSize { 1.7, 2.9, 0.1 });
 
     const auto s2 = std::move(seeds);
 
@@ -159,6 +211,23 @@ BOOST_AUTO_TEST_CASE(Move_Constructor)
     }
 
     {
+        const auto* s = s2.getSize(Opm::WellFractureSeeds::SeedCell { 1729 });
+        BOOST_CHECK_MESSAGE(s != nullptr, "Size vector in existing seed cell must not be null");
+
+        BOOST_CHECK_CLOSE(s->verticalExtent(), 1.7, 1.0e-8);
+        BOOST_CHECK_CLOSE(s->horizontalExtent(), 2.9, 1.0e-8);
+        BOOST_CHECK_CLOSE(s->width(), 0.1, 1.0e-8);
+    }
+
+    {
+        const auto& s = s2.getSize(Opm::WellFractureSeeds::SeedIndex { 0 });
+
+        BOOST_CHECK_CLOSE(s.verticalExtent(), 1.7, 1.0e-8);
+        BOOST_CHECK_CLOSE(s.horizontalExtent(), 2.9, 1.0e-8);
+        BOOST_CHECK_CLOSE(s.width(), 0.1, 1.0e-8);
+    }
+
+    {
         const auto& c = s2.seedCells();
         const auto expect = std::vector { std::size_t{1729} };
 
@@ -169,10 +238,10 @@ BOOST_AUTO_TEST_CASE(Move_Constructor)
 BOOST_AUTO_TEST_CASE(Assignment_Operator)
 {
     auto seeds = Opm::WellFractureSeeds { "W1" };
-    seeds.updateSeed(1729, NormalVector { 1.0, 0.0, 0.0 });
+    seeds.updateSeed(1729, NormalVector { 1.0, 0.0, 0.0 }, SeedSize { 1.1, 2.2, 0.1 });
 
     auto s2 = Opm::WellFractureSeeds { "W2" };
-    s2.updateSeed(2718, NormalVector { 0.0, -1.0, 0.0 });
+    s2.updateSeed(2718, NormalVector { 0.0, -1.0, 0.0 }, SeedSize { 3.3, 4.4, 0.125 });
 
     s2 = seeds;
 
@@ -198,6 +267,23 @@ BOOST_AUTO_TEST_CASE(Assignment_Operator)
     }
 
     {
+        const auto* s = s2.getSize(Opm::WellFractureSeeds::SeedCell { 1729 });
+        BOOST_CHECK_MESSAGE(s != nullptr, "Size vector in existing seed cell must not be null");
+
+        BOOST_CHECK_CLOSE(s->verticalExtent(), 1.1, 1.0e-8);
+        BOOST_CHECK_CLOSE(s->horizontalExtent(), 2.2, 1.0e-8);
+        BOOST_CHECK_CLOSE(s->width(), 0.1, 1.0e-8);
+    }
+
+    {
+        const auto& s = s2.getSize(Opm::WellFractureSeeds::SeedIndex { 0 });
+
+        BOOST_CHECK_CLOSE(s.verticalExtent(), 1.1, 1.0e-8);
+        BOOST_CHECK_CLOSE(s.horizontalExtent(), 2.2, 1.0e-8);
+        BOOST_CHECK_CLOSE(s.width(), 0.1, 1.0e-8);
+    }
+
+    {
         const auto& c = s2.seedCells();
         const auto expect = std::vector { std::size_t{1729} };
 
@@ -208,10 +294,10 @@ BOOST_AUTO_TEST_CASE(Assignment_Operator)
 BOOST_AUTO_TEST_CASE(Move_Assignment_Operator)
 {
     auto seeds = Opm::WellFractureSeeds { "W1" };
-    seeds.updateSeed(1729, NormalVector { 1.0, 0.0, 0.0 });
+    seeds.updateSeed(1729, NormalVector { 1.0, 0.0, 0.0 }, SeedSize { 1.7, 2.9, 0.1 });
 
     auto s2 = Opm::WellFractureSeeds { "W2" };
-    s2.updateSeed(2718, NormalVector { 0.0, -1.0, 0.0 });
+    s2.updateSeed(2718, NormalVector { 0.0, -1.0, 0.0 }, SeedSize { 31.415, 9.2653, 58.979 });
 
     s2 = std::move(seeds);
 
@@ -235,6 +321,23 @@ BOOST_AUTO_TEST_CASE(Move_Assignment_Operator)
     }
 
     {
+        const auto* s = s2.getSize(Opm::WellFractureSeeds::SeedCell { 1729 });
+        BOOST_CHECK_MESSAGE(s != nullptr, "Size vector in existing seed cell must not be null");
+
+        BOOST_CHECK_CLOSE(s->verticalExtent(), 1.7, 1.0e-8);
+        BOOST_CHECK_CLOSE(s->horizontalExtent(), 2.9, 1.0e-8);
+        BOOST_CHECK_CLOSE(s->width(), 0.1, 1.0e-8);
+    }
+
+    {
+        const auto& s = s2.getSize(Opm::WellFractureSeeds::SeedIndex { 0 });
+
+        BOOST_CHECK_CLOSE(s.verticalExtent(), 1.7, 1.0e-8);
+        BOOST_CHECK_CLOSE(s.horizontalExtent(), 2.9, 1.0e-8);
+        BOOST_CHECK_CLOSE(s.width(), 0.1, 1.0e-8);
+    }
+
+    {
         const auto& c = s2.seedCells();
         const auto expect = std::vector { std::size_t{1729} };
 
@@ -245,7 +348,7 @@ BOOST_AUTO_TEST_CASE(Move_Assignment_Operator)
 BOOST_AUTO_TEST_CASE(Request_Missing_Seed)
 {
     auto seeds = Opm::WellFractureSeeds { "W1" };
-    seeds.updateSeed(1729, NormalVector { 1.0, 0.0, 0.0 });
+    seeds.updateSeed(1729, NormalVector { 1.0, 0.0, 0.0 }, SeedSize { 0.1, 2.3, 45.67 });
 
     BOOST_CHECK_EQUAL(seeds.numSeeds(), std::size_t{1});
 
@@ -254,20 +357,30 @@ BOOST_AUTO_TEST_CASE(Request_Missing_Seed)
         BOOST_CHECK_MESSAGE(n == nullptr, "Normal vector in non-existing seed cell must be null");
     }
 
+    {
+        const auto* s = seeds.getSize(Opm::WellFractureSeeds::SeedCell { 271828 });
+        BOOST_CHECK_MESSAGE(s == nullptr, "Size vector in non-existing seed cell must be null");
+    }
+
     seeds.finalizeSeeds();
 
     {
         const auto* n = seeds.getNormal(Opm::WellFractureSeeds::SeedCell { 314159 });
         BOOST_CHECK_MESSAGE(n == nullptr, "Normal vector in non-existing seed cell must be null");
     }
+
+    {
+        const auto* s = seeds.getSize(Opm::WellFractureSeeds::SeedCell { 314159 });
+        BOOST_CHECK_MESSAGE(s == nullptr, "Size vector in non-existing seed cell must be null");
+    }
 }
 
 BOOST_AUTO_TEST_CASE(Multiple_Seeds)
 {
     auto seeds = Opm::WellFractureSeeds { "W1" };
-    seeds.updateSeed(1729, NormalVector { 1.0, 0.0, 0.0 });
-    seeds.updateSeed(1122, NormalVector { 0.0, 1.0, 0.0 });
-    seeds.updateSeed(3344, NormalVector { 0.0, 0.0, 1.0 });
+    seeds.updateSeed(1729, NormalVector { 1.0, 0.0, 0.0 }, SeedSize { 12.34, 5.67,  89.1011  });
+    seeds.updateSeed(1122, NormalVector { 0.0, 1.0, 0.0 }, SeedSize { 1.234, 56.7,  8.91011  });
+    seeds.updateSeed(3344, NormalVector { 0.0, 0.0, 1.0 }, SeedSize { 123.4, 0.567, 0.891011 });
 
     BOOST_CHECK_EQUAL(seeds.numSeeds(), std::size_t{3});
 
@@ -299,6 +412,33 @@ BOOST_AUTO_TEST_CASE(Multiple_Seeds)
     }
 
     {
+        const auto* s = seeds.getSize(Opm::WellFractureSeeds::SeedCell { 1729 });
+        BOOST_CHECK_MESSAGE(s != nullptr, "Size vector in existing seed cell must not be null");
+
+        BOOST_CHECK_CLOSE(s->verticalExtent(), 12.34, 1.0e-8);
+        BOOST_CHECK_CLOSE(s->horizontalExtent(), 5.67, 1.0e-8);
+        BOOST_CHECK_CLOSE(s->width(), 89.1011, 1.0e-8);
+    }
+
+    {
+        const auto* s = seeds.getSize(Opm::WellFractureSeeds::SeedCell { 1122 });
+        BOOST_CHECK_MESSAGE(s != nullptr, "Size vector in existing seed cell must not be null");
+
+        BOOST_CHECK_CLOSE(s->verticalExtent(), 1.234, 1.0e-8);
+        BOOST_CHECK_CLOSE(s->horizontalExtent(), 56.7, 1.0e-8);
+        BOOST_CHECK_CLOSE(s->width(), 8.91011, 1.0e-8);
+    }
+
+    {
+        const auto* s = seeds.getSize(Opm::WellFractureSeeds::SeedCell { 3344 });
+        BOOST_CHECK_MESSAGE(s != nullptr, "Size vector in existing seed cell must not be null");
+
+        BOOST_CHECK_CLOSE(s->verticalExtent(), 123.4, 1.0e-8);
+        BOOST_CHECK_CLOSE(s->horizontalExtent(), 0.567, 1.0e-8);
+        BOOST_CHECK_CLOSE(s->width(), 0.891011, 1.0e-8);
+    }
+
+    {
         const auto& n = seeds.getNormal(Opm::WellFractureSeeds::SeedIndex { 0 });
 
         BOOST_CHECK_CLOSE(n[0], 1.0, 1.0e-8);
@@ -320,6 +460,30 @@ BOOST_AUTO_TEST_CASE(Multiple_Seeds)
         BOOST_CHECK_CLOSE(n[0], 0.0, 1.0e-8);
         BOOST_CHECK_CLOSE(n[1], 0.0, 1.0e-8);
         BOOST_CHECK_CLOSE(n[2], 1.0, 1.0e-8);
+    }
+
+    {
+        const auto& s = seeds.getSize(Opm::WellFractureSeeds::SeedIndex { 0 });
+
+        BOOST_CHECK_CLOSE(s.verticalExtent(), 12.34, 1.0e-8);
+        BOOST_CHECK_CLOSE(s.horizontalExtent(), 5.67, 1.0e-8);
+        BOOST_CHECK_CLOSE(s.width(), 89.1011, 1.0e-8);
+    }
+
+    {
+        const auto& s = seeds.getSize(Opm::WellFractureSeeds::SeedIndex { 1 });
+
+        BOOST_CHECK_CLOSE(s.verticalExtent(), 1.234, 1.0e-8);
+        BOOST_CHECK_CLOSE(s.horizontalExtent(), 56.7, 1.0e-8);
+        BOOST_CHECK_CLOSE(s.width(), 8.91011, 1.0e-8);
+    }
+
+    {
+        const auto& s = seeds.getSize(Opm::WellFractureSeeds::SeedIndex { 2 });
+
+        BOOST_CHECK_CLOSE(s.verticalExtent(), 123.4, 1.0e-8);
+        BOOST_CHECK_CLOSE(s.horizontalExtent(), 0.567, 1.0e-8);
+        BOOST_CHECK_CLOSE(s.width(), 0.891011, 1.0e-8);
     }
 
     {
@@ -365,6 +529,33 @@ BOOST_AUTO_TEST_CASE(Multiple_Seeds)
     }
 
     {
+        const auto* s = seeds.getSize(Opm::WellFractureSeeds::SeedCell { 1729 });
+        BOOST_CHECK_MESSAGE(s != nullptr, "Size vector in existing seed cell must not be null");
+
+        BOOST_CHECK_CLOSE(s->verticalExtent(), 12.34, 1.0e-8);
+        BOOST_CHECK_CLOSE(s->horizontalExtent(), 5.67, 1.0e-8);
+        BOOST_CHECK_CLOSE(s->width(), 89.1011, 1.0e-8);
+    }
+
+    {
+        const auto* s = seeds.getSize(Opm::WellFractureSeeds::SeedCell { 1122 });
+        BOOST_CHECK_MESSAGE(s != nullptr, "Size vector in existing seed cell must not be null");
+
+        BOOST_CHECK_CLOSE(s->verticalExtent(), 1.234, 1.0e-8);
+        BOOST_CHECK_CLOSE(s->horizontalExtent(), 56.7, 1.0e-8);
+        BOOST_CHECK_CLOSE(s->width(), 8.91011, 1.0e-8);
+    }
+
+    {
+        const auto* s = seeds.getSize(Opm::WellFractureSeeds::SeedCell { 3344 });
+        BOOST_CHECK_MESSAGE(s != nullptr, "Size vector in existing seed cell must not be null");
+
+        BOOST_CHECK_CLOSE(s->verticalExtent(), 123.4, 1.0e-8);
+        BOOST_CHECK_CLOSE(s->horizontalExtent(), 0.567, 1.0e-8);
+        BOOST_CHECK_CLOSE(s->width(), 0.891011, 1.0e-8);
+    }
+
+    {
         const auto& n = seeds.getNormal(Opm::WellFractureSeeds::SeedIndex { 0 });
 
         BOOST_CHECK_CLOSE(n[0], 1.0, 1.0e-8);
@@ -386,6 +577,30 @@ BOOST_AUTO_TEST_CASE(Multiple_Seeds)
         BOOST_CHECK_CLOSE(n[0], 0.0, 1.0e-8);
         BOOST_CHECK_CLOSE(n[1], 0.0, 1.0e-8);
         BOOST_CHECK_CLOSE(n[2], 1.0, 1.0e-8);
+    }
+
+    {
+        const auto& s = seeds.getSize(Opm::WellFractureSeeds::SeedIndex { 0 });
+
+        BOOST_CHECK_CLOSE(s.verticalExtent(), 12.34, 1.0e-8);
+        BOOST_CHECK_CLOSE(s.horizontalExtent(), 5.67, 1.0e-8);
+        BOOST_CHECK_CLOSE(s.width(), 89.1011, 1.0e-8);
+    }
+
+    {
+        const auto& s = seeds.getSize(Opm::WellFractureSeeds::SeedIndex { 1 });
+
+        BOOST_CHECK_CLOSE(s.verticalExtent(), 1.234, 1.0e-8);
+        BOOST_CHECK_CLOSE(s.horizontalExtent(), 56.7, 1.0e-8);
+        BOOST_CHECK_CLOSE(s.width(), 8.91011, 1.0e-8);
+    }
+
+    {
+        const auto& s = seeds.getSize(Opm::WellFractureSeeds::SeedIndex { 2 });
+
+        BOOST_CHECK_CLOSE(s.verticalExtent(), 123.4, 1.0e-8);
+        BOOST_CHECK_CLOSE(s.horizontalExtent(), 0.567, 1.0e-8);
+        BOOST_CHECK_CLOSE(s.width(), 0.891011, 1.0e-8);
     }
 
     {
@@ -409,9 +624,13 @@ BOOST_AUTO_TEST_SUITE(Insert_Duplicate)
 BOOST_AUTO_TEST_CASE(Different_Normal_Vectors)
 {
     auto seeds = Opm::WellFractureSeeds { "W1" };
-    seeds.updateSeed(1729, NormalVector { 1.0, 0.0, 0.0 });
+    seeds.updateSeed(1729, NormalVector { 1.0, 0.0, 0.0 }, SeedSize { 1.1, 2.2, 3.3 });
 
-    BOOST_CHECK_MESSAGE(seeds.updateSeed(1729, NormalVector { 0.0, -1.0, 0.0 }),
+    BOOST_CHECK_MESSAGE(seeds.updateSeed(1729, NormalVector { 0.0, -1.0, 0.0 }, SeedSize { 1.1, 2.2, 3.3 }),
+                        "Updating seed with different "
+                        "normal vector must succeed");
+
+    BOOST_CHECK_MESSAGE(seeds.updateSeed(1729, NormalVector { 0.0, -1.0, 0.0 }, SeedSize { 1.7, 2.9, 0.1 }),
                         "Updating seed with different "
                         "normal vector must succeed");
 
@@ -427,11 +646,28 @@ BOOST_AUTO_TEST_CASE(Different_Normal_Vectors)
     }
 
     {
+        const auto* s = seeds.getSize(Opm::WellFractureSeeds::SeedCell { 1729 });
+        BOOST_CHECK_MESSAGE(s != nullptr, "Size vector in existing seed cell must not be null");
+
+        BOOST_CHECK_CLOSE(s->verticalExtent(), 1.7, 1.0e-8);
+        BOOST_CHECK_CLOSE(s->horizontalExtent(), 2.9, 1.0e-8);
+        BOOST_CHECK_CLOSE(s->width(), 0.1, 1.0e-8);
+    }
+
+    {
         const auto& n = seeds.getNormal(Opm::WellFractureSeeds::SeedIndex { 0 });
 
         BOOST_CHECK_CLOSE(n[0],  0.0, 1.0e-8);
         BOOST_CHECK_CLOSE(n[1], -1.0, 1.0e-8);
         BOOST_CHECK_CLOSE(n[2],  0.0, 1.0e-8);
+    }
+
+    {
+        const auto& s = seeds.getSize(Opm::WellFractureSeeds::SeedIndex { 0 });
+
+        BOOST_CHECK_CLOSE(s.verticalExtent(), 1.7, 1.0e-8);
+        BOOST_CHECK_CLOSE(s.horizontalExtent(), 2.9, 1.0e-8);
+        BOOST_CHECK_CLOSE(s.width(), 0.1, 1.0e-8);
     }
 
     {
@@ -455,11 +691,28 @@ BOOST_AUTO_TEST_CASE(Different_Normal_Vectors)
     }
 
     {
+        const auto* s = seeds.getSize(Opm::WellFractureSeeds::SeedCell { 1729 });
+        BOOST_CHECK_MESSAGE(s != nullptr, "Size vector in existing seed cell must not be null");
+
+        BOOST_CHECK_CLOSE(s->verticalExtent(), 1.7, 1.0e-8);
+        BOOST_CHECK_CLOSE(s->horizontalExtent(), 2.9, 1.0e-8);
+        BOOST_CHECK_CLOSE(s->width(), 0.1, 1.0e-8);
+    }
+
+    {
         const auto& n = seeds.getNormal(Opm::WellFractureSeeds::SeedIndex { 0 });
 
         BOOST_CHECK_CLOSE(n[0],  0.0, 1.0e-8);
         BOOST_CHECK_CLOSE(n[1], -1.0, 1.0e-8);
         BOOST_CHECK_CLOSE(n[2],  0.0, 1.0e-8);
+    }
+
+    {
+        const auto& s = seeds.getSize(Opm::WellFractureSeeds::SeedIndex { 0 });
+
+        BOOST_CHECK_CLOSE(s.verticalExtent(), 1.7, 1.0e-8);
+        BOOST_CHECK_CLOSE(s.horizontalExtent(), 2.9, 1.0e-8);
+        BOOST_CHECK_CLOSE(s.width(), 0.1, 1.0e-8);
     }
 
     {
@@ -473,11 +726,12 @@ BOOST_AUTO_TEST_CASE(Different_Normal_Vectors)
 BOOST_AUTO_TEST_CASE(Same_Normal_Vector)
 {
     auto seeds = Opm::WellFractureSeeds { "W1" };
-    seeds.updateSeed(1729, NormalVector { 1.0, 0.0, 0.0 });
+    seeds.updateSeed(1729, NormalVector { 1.0, 0.0, 0.0 }, SeedSize { 1.1, 2.2, 3.3 });
 
-    BOOST_CHECK_MESSAGE(! seeds.updateSeed(1729, NormalVector { 1.0, 0.0, 0.0 }),
+    BOOST_CHECK_MESSAGE(! seeds.updateSeed(1729, NormalVector { 1.0, 0.0, 0.0 }, SeedSize { 1.1, 2.2, 3.3 }),
                         "Updating seed with same "
-                        "normal vector must NOT succeed");
+                        "normal and size vectors "
+                        "must NOT succeed");
 
     BOOST_CHECK_EQUAL(seeds.numSeeds(), std::size_t{1});
 
@@ -491,11 +745,28 @@ BOOST_AUTO_TEST_CASE(Same_Normal_Vector)
     }
 
     {
+        const auto* s = seeds.getSize(Opm::WellFractureSeeds::SeedCell { 1729 });
+        BOOST_CHECK_MESSAGE(s != nullptr, "Size vector in existing seed cell must not be null");
+
+        BOOST_CHECK_CLOSE(s->verticalExtent(), 1.1, 1.0e-8);
+        BOOST_CHECK_CLOSE(s->horizontalExtent(), 2.2, 1.0e-8);
+        BOOST_CHECK_CLOSE(s->width(), 3.3, 1.0e-8);
+    }
+
+    {
         const auto& n = seeds.getNormal(Opm::WellFractureSeeds::SeedIndex { 0 });
 
         BOOST_CHECK_CLOSE(n[0], 1.0, 1.0e-8);
         BOOST_CHECK_CLOSE(n[1], 0.0, 1.0e-8);
         BOOST_CHECK_CLOSE(n[2], 0.0, 1.0e-8);
+    }
+
+    {
+        const auto& s = seeds.getSize(Opm::WellFractureSeeds::SeedIndex { 0 });
+
+        BOOST_CHECK_CLOSE(s.verticalExtent(), 1.1, 1.0e-8);
+        BOOST_CHECK_CLOSE(s.horizontalExtent(), 2.2, 1.0e-8);
+        BOOST_CHECK_CLOSE(s.width(), 3.3, 1.0e-8);
     }
 
     {
@@ -519,11 +790,28 @@ BOOST_AUTO_TEST_CASE(Same_Normal_Vector)
     }
 
     {
+        const auto* s = seeds.getSize(Opm::WellFractureSeeds::SeedCell { 1729 });
+        BOOST_CHECK_MESSAGE(s != nullptr, "Size vector in existing seed cell must not be null");
+
+        BOOST_CHECK_CLOSE(s->verticalExtent(), 1.1, 1.0e-8);
+        BOOST_CHECK_CLOSE(s->horizontalExtent(), 2.2, 1.0e-8);
+        BOOST_CHECK_CLOSE(s->width(), 3.3, 1.0e-8);
+    }
+
+    {
         const auto& n = seeds.getNormal(Opm::WellFractureSeeds::SeedIndex { 0 });
 
         BOOST_CHECK_CLOSE(n[0], 1.0, 1.0e-8);
         BOOST_CHECK_CLOSE(n[1], 0.0, 1.0e-8);
         BOOST_CHECK_CLOSE(n[2], 0.0, 1.0e-8);
+    }
+
+    {
+        const auto& s = seeds.getSize(Opm::WellFractureSeeds::SeedIndex { 0 });
+
+        BOOST_CHECK_CLOSE(s.verticalExtent(), 1.1, 1.0e-8);
+        BOOST_CHECK_CLOSE(s.horizontalExtent(), 2.2, 1.0e-8);
+        BOOST_CHECK_CLOSE(s.width(), 3.3, 1.0e-8);
     }
 
     {
@@ -537,10 +825,10 @@ BOOST_AUTO_TEST_CASE(Same_Normal_Vector)
 BOOST_AUTO_TEST_CASE(Multiple_Seeds_Different_Normals)
 {
     auto seeds = Opm::WellFractureSeeds { "W1" };
-    seeds.updateSeed(1729, NormalVector { 1.0, 0.0, 0.0 });
-    seeds.updateSeed(1122, NormalVector { 0.0, 1.0, 0.0 });
-    seeds.updateSeed(3344, NormalVector { 0.0, 0.0, 1.0 });
-    seeds.updateSeed(1729, NormalVector { 0.0, 0.0, 1.1 });
+    seeds.updateSeed(1729, NormalVector { 1.0, 0.0, 0.0 }, SeedSize { 1.7, 2.9 , 0.1 });
+    seeds.updateSeed(1122, NormalVector { 0.0, 1.0, 0.0 }, SeedSize { 1.6, 1.8 , 0.34 });
+    seeds.updateSeed(3344, NormalVector { 0.0, 0.0, 1.0 }, SeedSize { 2.7, 1.82, 8.1828 });
+    seeds.updateSeed(1729, NormalVector { 0.0, 0.0, 1.1 }, SeedSize { 3.3, 4.4 , 5.5 });
 
     BOOST_CHECK_EQUAL(seeds.numSeeds(), std::size_t{3});
 
@@ -554,12 +842,30 @@ BOOST_AUTO_TEST_CASE(Multiple_Seeds_Different_Normals)
     }
 
     {
+        const auto* s = seeds.getSize(Opm::WellFractureSeeds::SeedCell { 1729 });
+        BOOST_CHECK_MESSAGE(s != nullptr, "Size vector in existing seed cell must not be null");
+
+        BOOST_CHECK_CLOSE(s->verticalExtent(), 3.3, 1.0e-8);
+        BOOST_CHECK_CLOSE(s->horizontalExtent(), 4.4, 1.0e-8);
+        BOOST_CHECK_CLOSE(s->width(), 5.5, 1.0e-8);
+    }
+
+    {
         const auto* n = seeds.getNormal(Opm::WellFractureSeeds::SeedCell { 1122 });
         BOOST_CHECK_MESSAGE(n != nullptr, "Normal vector in existing seed cell must not be null");
 
         BOOST_CHECK_CLOSE((*n)[0], 0.0, 1.0e-8);
         BOOST_CHECK_CLOSE((*n)[1], 1.0, 1.0e-8);
         BOOST_CHECK_CLOSE((*n)[2], 0.0, 1.0e-8);
+    }
+
+    {
+        const auto* s = seeds.getSize(Opm::WellFractureSeeds::SeedCell { 1122 });
+        BOOST_CHECK_MESSAGE(s != nullptr, "Size vector in existing seed cell must not be null");
+
+        BOOST_CHECK_CLOSE(s->verticalExtent(), 1.6 , 1.0e-8);
+        BOOST_CHECK_CLOSE(s->horizontalExtent(), 1.8 , 1.0e-8);
+        BOOST_CHECK_CLOSE(s->width(), 0.34, 1.0e-8);
     }
 
     {
@@ -572,11 +878,28 @@ BOOST_AUTO_TEST_CASE(Multiple_Seeds_Different_Normals)
     }
 
     {
+        const auto* s = seeds.getSize(Opm::WellFractureSeeds::SeedCell { 3344 });
+        BOOST_CHECK_MESSAGE(s != nullptr, "Size vector in existing seed cell must not be null");
+
+        BOOST_CHECK_CLOSE(s->verticalExtent(), 2.7   , 1.0e-8);
+        BOOST_CHECK_CLOSE(s->horizontalExtent(), 1.82  , 1.0e-8);
+        BOOST_CHECK_CLOSE(s->width(), 8.1828, 1.0e-8);
+    }
+
+    {
         const auto& n = seeds.getNormal(Opm::WellFractureSeeds::SeedIndex { 0 });
 
         BOOST_CHECK_CLOSE(n[0], 0.0, 1.0e-8);
         BOOST_CHECK_CLOSE(n[1], 0.0, 1.0e-8);
         BOOST_CHECK_CLOSE(n[2], 1.1, 1.0e-8);
+    }
+
+    {
+        const auto& s = seeds.getSize(Opm::WellFractureSeeds::SeedIndex { 0 });
+
+        BOOST_CHECK_CLOSE(s.verticalExtent(), 3.3, 1.0e-8);
+        BOOST_CHECK_CLOSE(s.horizontalExtent(), 4.4, 1.0e-8);
+        BOOST_CHECK_CLOSE(s.width(), 5.5, 1.0e-8);
     }
 
     {
@@ -588,11 +911,27 @@ BOOST_AUTO_TEST_CASE(Multiple_Seeds_Different_Normals)
     }
 
     {
+        const auto& s = seeds.getSize(Opm::WellFractureSeeds::SeedIndex { 1 });
+
+        BOOST_CHECK_CLOSE(s.verticalExtent(), 1.6 , 1.0e-8);
+        BOOST_CHECK_CLOSE(s.horizontalExtent(), 1.8 , 1.0e-8);
+        BOOST_CHECK_CLOSE(s.width(), 0.34, 1.0e-8);
+    }
+
+    {
         const auto& n = seeds.getNormal(Opm::WellFractureSeeds::SeedIndex { 2 });
 
         BOOST_CHECK_CLOSE(n[0], 0.0, 1.0e-8);
         BOOST_CHECK_CLOSE(n[1], 0.0, 1.0e-8);
         BOOST_CHECK_CLOSE(n[2], 1.0, 1.0e-8);
+    }
+
+    {
+        const auto& s = seeds.getSize(Opm::WellFractureSeeds::SeedIndex { 2 });
+
+        BOOST_CHECK_CLOSE(s.verticalExtent(), 2.7   , 1.0e-8);
+        BOOST_CHECK_CLOSE(s.horizontalExtent(), 1.82  , 1.0e-8);
+        BOOST_CHECK_CLOSE(s.width(), 8.1828, 1.0e-8);
     }
 
     {
@@ -620,12 +959,30 @@ BOOST_AUTO_TEST_CASE(Multiple_Seeds_Different_Normals)
     }
 
     {
+        const auto* s = seeds.getSize(Opm::WellFractureSeeds::SeedCell { 1729 });
+        BOOST_CHECK_MESSAGE(s != nullptr, "Size vector in existing seed cell must not be null");
+
+        BOOST_CHECK_CLOSE(s->verticalExtent(), 3.3, 1.0e-8);
+        BOOST_CHECK_CLOSE(s->horizontalExtent(), 4.4, 1.0e-8);
+        BOOST_CHECK_CLOSE(s->width(), 5.5, 1.0e-8);
+    }
+
+    {
         const auto* n = seeds.getNormal(Opm::WellFractureSeeds::SeedCell { 1122 });
         BOOST_CHECK_MESSAGE(n != nullptr, "Normal vector in existing seed cell must not be null");
 
         BOOST_CHECK_CLOSE((*n)[0], 0.0, 1.0e-8);
         BOOST_CHECK_CLOSE((*n)[1], 1.0, 1.0e-8);
         BOOST_CHECK_CLOSE((*n)[2], 0.0, 1.0e-8);
+    }
+
+    {
+        const auto* s = seeds.getSize(Opm::WellFractureSeeds::SeedCell { 1122 });
+        BOOST_CHECK_MESSAGE(s != nullptr, "Size vector in existing seed cell must not be null");
+
+        BOOST_CHECK_CLOSE(s->verticalExtent(), 1.6, 1.0e-8);
+        BOOST_CHECK_CLOSE(s->horizontalExtent(), 1.8, 1.0e-8);
+        BOOST_CHECK_CLOSE(s->width(), 0.34, 1.0e-8);
     }
 
     {
@@ -638,11 +995,28 @@ BOOST_AUTO_TEST_CASE(Multiple_Seeds_Different_Normals)
     }
 
     {
+        const auto* s = seeds.getSize(Opm::WellFractureSeeds::SeedCell { 3344 });
+        BOOST_CHECK_MESSAGE(s != nullptr, "Size vector in existing seed cell must not be null");
+
+        BOOST_CHECK_CLOSE(s->verticalExtent(), 2.7, 1.0e-8);
+        BOOST_CHECK_CLOSE(s->horizontalExtent(), 1.82, 1.0e-8);
+        BOOST_CHECK_CLOSE(s->width(), 8.1828, 1.0e-8);
+    }
+
+    {
         const auto& n = seeds.getNormal(Opm::WellFractureSeeds::SeedIndex { 0 });
 
         BOOST_CHECK_CLOSE(n[0], 0.0, 1.0e-8);
         BOOST_CHECK_CLOSE(n[1], 0.0, 1.0e-8);
         BOOST_CHECK_CLOSE(n[2], 1.1, 1.0e-8);
+    }
+
+    {
+        const auto& s = seeds.getSize(Opm::WellFractureSeeds::SeedIndex { 0 });
+
+        BOOST_CHECK_CLOSE(s.verticalExtent(), 3.3, 1.0e-8);
+        BOOST_CHECK_CLOSE(s.horizontalExtent(), 4.4, 1.0e-8);
+        BOOST_CHECK_CLOSE(s.width(), 5.5, 1.0e-8);
     }
 
     {
@@ -654,11 +1028,27 @@ BOOST_AUTO_TEST_CASE(Multiple_Seeds_Different_Normals)
     }
 
     {
+        const auto& s = seeds.getSize(Opm::WellFractureSeeds::SeedIndex { 1 });
+
+        BOOST_CHECK_CLOSE(s.verticalExtent(), 1.6, 1.0e-8);
+        BOOST_CHECK_CLOSE(s.horizontalExtent(), 1.8, 1.0e-8);
+        BOOST_CHECK_CLOSE(s.width(), 0.34, 1.0e-8);
+    }
+
+    {
         const auto& n = seeds.getNormal(Opm::WellFractureSeeds::SeedIndex { 2 });
 
         BOOST_CHECK_CLOSE(n[0], 0.0, 1.0e-8);
         BOOST_CHECK_CLOSE(n[1], 0.0, 1.0e-8);
         BOOST_CHECK_CLOSE(n[2], 1.0, 1.0e-8);
+    }
+
+    {
+        const auto& s = seeds.getSize(Opm::WellFractureSeeds::SeedIndex { 2 });
+
+        BOOST_CHECK_CLOSE(s.verticalExtent(), 2.7, 1.0e-8);
+        BOOST_CHECK_CLOSE(s.horizontalExtent(), 1.82, 1.0e-8);
+        BOOST_CHECK_CLOSE(s.width(), 8.1828, 1.0e-8);
     }
 
     {

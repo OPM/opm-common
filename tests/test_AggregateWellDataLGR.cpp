@@ -101,7 +101,6 @@ namespace {
         Sz nsgrpz;
         Sz nxgrpz;
         Sz nzgrpz;
-
     };
 
     MockIH::MockIH(const int numWells,

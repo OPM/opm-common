@@ -73,7 +73,9 @@ namespace Opm {
         double getSIDouble( size_t ) const;
         std::string getTrimmedString( size_t ) const;
 
-        template< typename T > const std::vector< T >& getData() const;
+        template <typename T> std::vector<T>& getData();
+        template <typename T> const std::vector<T>& getData() const;
+
         const std::vector< double >& getSIDoubleData() const;
         const std::vector<value::status>& getValueStatus() const;
         const std::vector<Dimension>& getActiveDimensions() const
