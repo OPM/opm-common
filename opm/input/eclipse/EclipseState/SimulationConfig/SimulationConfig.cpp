@@ -123,6 +123,11 @@ namespace Opm {
                 m_PRECSALT = true;
             }
         }
+
+        if (DeckSection::hasSCHEDULE(deck)) {
+            const SCHEDULESection schedule(deck);
+            m_anyTUNING = schedule.hasKeyword<ParserKeywords::TUNING>();
+        }
     }
 
     SimulationConfig SimulationConfig::serializationTestObject()
@@ -142,6 +147,7 @@ namespace Opm {
         result.m_isThermal = true;
         result.m_diffuse = true;
         result.m_PRECSALT = true;
+        result.m_anyTUNING = true;
 
         return result;
     }
@@ -221,6 +227,11 @@ namespace Opm {
         return m_PRECSALT;
     }
 
+    bool SimulationConfig::anyTUNING() const
+    {
+        return m_anyTUNING;
+    }
+
     bool SimulationConfig::operator==(const SimulationConfig& data) const
     {
         return (this->getThresholdPressure() == data.getThresholdPressure())
@@ -236,6 +247,7 @@ namespace Opm {
             && (this->isThermal() == data.isThermal())
             && (this->isDiffusive() == data.isDiffusive())
             && (this->hasPRECSALT() == data.hasPRECSALT())
+            && (this->anyTUNING() == data.anyTUNING())
             ;
     }
 
@@ -255,6 +267,7 @@ namespace Opm {
             && (full_config.isThermal() == rst_config.isThermal())
             && (full_config.isDiffusive() == rst_config.isDiffusive())
             && (full_config.hasPRECSALT() == rst_config.hasPRECSALT())
+            && (full_config.anyTUNING() == rst_config.anyTUNING())
             ;
     }
 
