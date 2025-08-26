@@ -1898,3 +1898,43 @@ captureDynamicWellData(const Opm::Schedule&       sched,
         XWell::dynamicContrib(well, tracers, sched.runspec().tracers(), smry, xwell);
     });
 }
+
+
+void
+Opm::RestartIO::Helpers::AggregateWellData::
+captureDynamicWellDataLGR(const Opm::Schedule&       sched,
+                          const TracerConfig&        tracers,
+                          const std::size_t          sim_step,
+                          const Opm::data::Wells&    xw,
+                          const ::Opm::SummaryState& smry,
+                          const std::string&         lgr_tag)
+{
+    const auto& wells = sched.wellNames(sim_step);
+
+    // Dynamic contributions to IWEL array.
+    wellLoop(wells, sched, sim_step, lgr_tag,  [this, &xw]
+        (const Well& well, const std::size_t wellID) -> void
+    {
+        auto iWell = this->iWell_[wellID];
+
+        auto i = xw.find(well.name());
+        if ((i == std::end(xw)) || (i->second.dynamicStatus == Opm::Well::Status::SHUT)) {
+            IWell::dynamicContribShut(iWell);
+        }
+        else if (i->second.dynamicStatus == Opm::Well::Status::STOP) {
+            IWell::dynamicContribStop(i->second, iWell);
+        }
+        else {
+            IWell::dynamicContribOpen(well, i->second, iWell);
+        }
+    });
+
+    // Dynamic contributions to XWEL array.
+    wellLoop(wells, sched, sim_step, lgr_tag, [this, &sched, &tracers, &smry]
+        (const Well& well, const std::size_t wellID) -> void
+    {
+        auto xwell = this->xWell_[wellID];
+
+        XWell::dynamicContrib(well, tracers, sched.runspec().tracers(), smry, xwell);
+    });
+}
