@@ -322,6 +322,19 @@ public:
     /// previously called and false otherwise.
     bool hasSatelliteProduction() const;
 
+    /// Tag current group as being one with satellite injection.
+    ///
+    /// A satellite injector generates flows, defined by the GSATINJE
+    /// keyword, out of the model.
+    void recordSatelliteInjection();
+
+    /// Predicate for whether or not this group is tagged as a satellite
+    /// injector.
+    ///
+    /// Returns true if function recordSatelliteInjection() has been
+    /// previously called and false otherwise.
+    bool hasSatelliteInjection() const;
+
     std::size_t numWells() const;
     bool addGroup(const std::string& group_name);
     bool hasGroup(const std::string& group_name) const;

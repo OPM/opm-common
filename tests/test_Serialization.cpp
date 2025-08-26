@@ -98,6 +98,7 @@
 #include <opm/input/eclipse/Schedule/Group/GSatProd.hpp>
 #include <opm/input/eclipse/Schedule/Group/Group.hpp>
 #include <opm/input/eclipse/Schedule/Group/GroupEconProductionLimits.hpp>
+#include <opm/input/eclipse/Schedule/Group/GroupSatelliteInjection.hpp>
 #include <opm/input/eclipse/Schedule/Group/GuideRateConfig.hpp>
 #include <opm/input/eclipse/Schedule/Group/GuideRateModel.hpp>
 #include <opm/input/eclipse/Schedule/MSW/AICD.hpp>
@@ -266,6 +267,8 @@ TEST_FOR_TYPE(GConSale)
 TEST_FOR_TYPE(GConSump)
 TEST_FOR_TYPE(GSatProd)
 TEST_FOR_TYPE(GroupEconProductionLimits)
+TEST_FOR_TYPE_NAMED(GroupSatelliteInjection::Rate, GroupSatelliteInjectionRate)
+TEST_FOR_TYPE(GroupSatelliteInjection)
 TEST_FOR_TYPE(GridDims)
 TEST_FOR_TYPE(Group)
 TEST_FOR_TYPE_NAMED(Group::GroupInjectionProperties, GroupInjectionProperties)
