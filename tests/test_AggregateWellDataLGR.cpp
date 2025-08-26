@@ -2077,7 +2077,7 @@ BOOST_AUTO_TEST_CASE (Declared_Well_Data3MixedGroupsWells)
 }
 
 
-BOOST_AUTO_TEST_CASE (Declared_WellDyamicDataLGR)
+BOOST_AUTO_TEST_CASE (Declared_WellDynamicDataLGR)
 {
     const auto simCase = SimulationCase{msw_sim("LGR_BASESIM2WELLS.DATA")};
     const auto rptStep = std::size_t{1};
