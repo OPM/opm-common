@@ -101,6 +101,9 @@ namespace Opm
             /// For now, the WELOPEN, WCONPROD and WCONINJE keywords are
             /// considered with this event.
             REQUEST_OPEN_WELL = (UINT64_C(1) << 21),
+            /// When we go from historical model to prediction (WCONHIST->WCONPROD)
+            /// the simulator need to know
+            HIST_TO_PRED = (UINT64_C(1) << 22),
         };
     } // namespace ScheduleEvents
 
