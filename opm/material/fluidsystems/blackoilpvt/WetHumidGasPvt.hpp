@@ -228,9 +228,9 @@ public:
         // factor tables, and also the saturated B and Mu tables, have
         // the same pressure sample points. Therefore we do not bother
         // to separately call findSegmentIndex() and eval() here.
-        const auto& RvSat = this->saturatedOilVaporizationFactorTable_[regionIdx].eval(p, /*extrapolate=*/ true);
+        const auto RvSat = this->saturatedOilVaporizationFactorTable_[regionIdx].eval(p, /*extrapolate=*/ true);
         // TODO: check that handling of salt concentration is correct, it seems to only affect the saturation curve.
-        const auto& RvwSat = enableRwgSalt_
+        const auto RvwSat = enableRwgSalt_
             ? this->saturatedWaterVaporizationSaltFactorTable_[regionIdx].eval(p, saltConc, /*extrapolate=*/ true)
             : this->saturatedWaterVaporizationFactorTable_[regionIdx].eval(p, /*extrapolate=*/true);
 

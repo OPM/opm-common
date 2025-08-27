@@ -364,7 +364,7 @@ public:
     inverseFormationVolumeFactorAndViscosity(const FluidState& fluidState, unsigned regionIdx)
     {
         // Deal with the possibility that we are in a two-phase CO2STORE with OIL and GAS as phases.
-        const bool waterIsActive = FluidState::FluidSystem::phaseIsActive(FluidState::waterPhaseIdx);
+        const bool waterIsActive = fluidState.phaseIsActive(FluidState::waterPhaseIdx);
         const int myPhaseIdx = waterIsActive ? FluidState::waterPhaseIdx : FluidState::oilPhaseIdx;
         const LhsEval& Rsw = waterIsActive ? decay<LhsEval>(fluidState.Rsw()) : decay<LhsEval>(fluidState.Rs());
 

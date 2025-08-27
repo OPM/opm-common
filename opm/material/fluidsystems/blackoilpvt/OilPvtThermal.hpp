@@ -281,12 +281,12 @@ public:
             Scalar TRef = oildentRefTemp_[regionIdx];
             Scalar cT1 = oildentCT1_[regionIdx];
             Scalar cT2 = oildentCT2_[regionIdx];
-            const LhsEval& Y = temperature - TRef;
+            const LhsEval Y = temperature - TRef;
             b /= (1.0 + (cT1 + cT2 * Y) * Y);
         }
         if (enableThermalViscosity()) {
             // compute the viscosity deviation due to temperature
-            const auto& muOilvisct = oilvisctCurves_[regionIdx].eval(temperature, /*extrapolate=*/true);
+            const auto muOilvisct = oilvisctCurves_[regionIdx].eval(temperature, /*extrapolate=*/true);
             mu *= (muOilvisct / viscRef_[regionIdx]);
         }
         return { b, mu };

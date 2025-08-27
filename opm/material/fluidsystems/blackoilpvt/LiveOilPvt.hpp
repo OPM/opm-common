@@ -225,7 +225,7 @@ public:
         const LhsEval& Rs = decay<LhsEval>(fluidState.Rs());
 
         const auto satSegIdx = this->saturatedGasDissolutionFactorTable_[regionIdx].findSegmentIndex(p, /*extrapolate=*/ true);
-        const auto& RsSat = this->saturatedGasDissolutionFactorTable_[regionIdx].eval(p, SegmentIndex{satSegIdx});
+        const auto RsSat = this->saturatedGasDissolutionFactorTable_[regionIdx].eval(p, SegmentIndex{satSegIdx});
         const bool useSaturatedTables = (fluidState.saturation(FluidState::gasPhaseIdx) > 0.0) && (Rs >= (1.0 - 1e-10) * RsSat);
 
         if (useSaturatedTables) {

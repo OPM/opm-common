@@ -316,10 +316,10 @@ public:
         if (enableThermalDensity()) {
             Scalar BwRef = pvtwRefB_[regionIdx];
             Scalar TRef = watdentRefTemp_[regionIdx];
-            const LhsEval& X = pvtwCompressibility_[regionIdx] * (pressure - pvtwRefPress_[regionIdx]);
+            const LhsEval X = pvtwCompressibility_[regionIdx] * (pressure - pvtwRefPress_[regionIdx]);
             Scalar cT1 = watdentCT1_[regionIdx];
             Scalar cT2 = watdentCT2_[regionIdx];
-            const LhsEval& Y = temperature - TRef;
+            const LhsEval Y = temperature - TRef;
             // this is inconsistent with the density calculation of water in the isothermal
             // case (it misses the quadratic pressure term), but it is the equation given in
             // the documentation.
@@ -330,7 +330,7 @@ public:
             Scalar x = -pvtwViscosibility_[regionIdx] * (viscrefPress_[regionIdx] - pvtwRefPress_[regionIdx]);
             Scalar muRef = pvtwViscosity_[regionIdx] / (1.0 + x + 0.5 * x * x);
             // compute the viscosity deviation due to temperature
-            const auto& muWatvisct = watvisctCurves_[regionIdx].eval(temperature, true);
+            const auto muWatvisct = watvisctCurves_[regionIdx].eval(temperature, true);
             // Split operations to get same order of operations as in the viscosity() function.
             mu *= muWatvisct;
             mu /= muRef;

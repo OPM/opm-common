@@ -215,7 +215,7 @@ public:
         const LhsEval& Rvw = decay<LhsEval>(fluidState.Rvw());
 
         const auto satSegIdx = this->saturatedWaterVaporizationFactorTable_[regionIdx].findSegmentIndex(p, /*extrapolate=*/ true);
-        const auto& RvwSat = this->saturatedWaterVaporizationFactorTable_[regionIdx].eval(p, SegmentIndex{satSegIdx});
+        const auto RvwSat = this->saturatedWaterVaporizationFactorTable_[regionIdx].eval(p, SegmentIndex{satSegIdx});
         const bool useSaturatedTables = (fluidState.saturation(FluidState::waterPhaseIdx) > 0.0) && (Rvw >= (1.0 - 1e-10) * RvwSat);
 
         if (useSaturatedTables) {

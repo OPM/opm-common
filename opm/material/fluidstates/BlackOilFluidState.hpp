@@ -646,6 +646,18 @@ public:
             *pressure(phaseIdx);
     }
 
+    /*!
+     * \brief Return if a phase is active (via the FluidSystem).
+     *
+     * Note: this could be a static function, but for future GPU
+     *       usage we must avoid static, so making it a regular
+     *       member function to simplify future refactoring.
+     */
+    bool phaseIsActive(int phaseIdx) const
+    {
+        return FluidSystem::phaseIsActive(phaseIdx);
+    }
+
 private:
     static unsigned storageToCanonicalPhaseIndex_(unsigned storagePhaseIdx)
     {

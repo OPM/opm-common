@@ -887,10 +887,14 @@ public:
                                              unsigned regionIdx)
     {
         switch (phaseIdx) {
-        case oilPhaseIdx: return oilPvt_.inverseFormationVolumeFactorAndViscosity(fluidState, regionIdx);
-        case gasPhaseIdx: return gasPvt_.inverseFormationVolumeFactorAndViscosity(fluidState, regionIdx);
-        case waterPhaseIdx: return waterPvt_.inverseFormationVolumeFactorAndViscosity(fluidState, regionIdx);
-        default: throw std::logic_error("Unhandled phase index "+std::to_string(phaseIdx));
+        case oilPhaseIdx:
+            return oilPvt_.inverseFormationVolumeFactorAndViscosity(fluidState, regionIdx);
+        case gasPhaseIdx:
+            return gasPvt_.inverseFormationVolumeFactorAndViscosity(fluidState, regionIdx);
+        case waterPhaseIdx:
+            return waterPvt_.inverseFormationVolumeFactorAndViscosity(fluidState, regionIdx);
+        default:
+            throw std::logic_error("Unhandled phase index "+std::to_string(phaseIdx));
         }
     }
 

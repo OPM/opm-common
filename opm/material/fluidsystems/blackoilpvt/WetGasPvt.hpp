@@ -227,7 +227,7 @@ public:
         const LhsEval& Rv = decay<LhsEval>(fluidState.Rv());
 
         const auto satSegIdx = this->saturatedOilVaporizationFactorTable_[regionIdx].findSegmentIndex(p, /*extrapolate=*/ true);
-        const auto& RvSat = this->saturatedOilVaporizationFactorTable_[regionIdx].eval(p, SegmentIndex{satSegIdx});
+        const auto RvSat = this->saturatedOilVaporizationFactorTable_[regionIdx].eval(p, SegmentIndex{satSegIdx});
         const bool useSaturatedTables = (fluidState.saturation(FluidState::oilPhaseIdx) > 0.0) && (Rv >= (1.0 - 1e-10) * RvSat);
 
         if (useSaturatedTables) {
