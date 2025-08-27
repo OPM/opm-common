@@ -729,8 +729,12 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(BlackOil, Evaluation, Types)
                 Evaluation bSat = FluidSystem::saturatedInverseFormationVolumeFactor(fluidState, phaseIdx, regionIdx);
                 checkSmall(Opm::abs(b - bSat), eps);
 
-                checkSmall(Opm::abs(FluidSystem::viscosity(fluidState, paramCache, phaseIdx) -
-                                    FluidSystem::viscosity(fluidState, phaseIdx, regionIdx)), 1e-10);
+                Evaluation mu = FluidSystem::viscosity(fluidState, phaseIdx, regionIdx);
+                checkSmall(Opm::abs(FluidSystem::viscosity(fluidState, paramCache, phaseIdx) - mu), 1e-10);
+
+                auto [b2, mu2] = FluidSystem::inverseFormationVolumeFactorAndViscosity(fluidState, phaseIdx, regionIdx);
+                checkSmall(Opm::abs(b - b2), 1e-10);
+                checkSmall(Opm::abs(mu - mu2), 1e-10);
 
                 Evaluation R = FluidSystem::saturatedDissolutionFactor(fluidState, phaseIdx, regionIdx);
                 Evaluation R2 = FluidSystem::saturatedDissolutionFactor(fluidState, phaseIdx, regionIdx);
