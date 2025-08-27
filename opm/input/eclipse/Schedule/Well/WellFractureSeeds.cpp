@@ -26,16 +26,25 @@
 #include <numeric>
 #include <vector>
 
+Opm::WellFractureSeeds::SeedSize
+Opm::WellFractureSeeds::SeedSize::serializationTestObject()
+{
+    return SeedSize { 1.2, 3.45, 678.91011 };
+}
+
+// ---------------------------------------------------------------------------
+
 bool Opm::WellFractureSeeds::updateSeed(const std::size_t   seedCellGlobal,
-                                        const NormalVector& seedNormal)
+                                        const NormalVector& seedNormal,
+                                        const SeedSize&     seedSize)
 {
     const auto ix = this->seedIndex(seedCellGlobal);
 
     if (ix == this->seedCell_.size()) {
-        return this->insertNewSeed(seedCellGlobal, seedNormal);
+        return this->insertNewSeed(seedCellGlobal, seedNormal, seedSize);
     }
     else {
-        return this->updateExistingSeed(ix, seedNormal);
+        return this->updateExistingSeed(ix, seedNormal, seedSize);
     }
 }
 
@@ -57,11 +66,25 @@ Opm::WellFractureSeeds::getNormal(const SeedCell& c) const
     }
 }
 
+const Opm::WellFractureSeeds::SeedSize*
+Opm::WellFractureSeeds::getSize(const SeedCell& c) const
+{
+    const auto ix = this->seedIndex(c.c);
+
+    if (ix == this->seedSize_.size()) {
+        return nullptr;
+    }
+    else {
+        return &this->seedSize_[ix];
+    }
+}
+
 bool Opm::WellFractureSeeds::operator==(const WellFractureSeeds& that) const
 {
     return (this->wellName_ == that.wellName_)
         && (this->seedCell_ == that.seedCell_)
         && (this->seedNormal_ == that.seedNormal_)
+        && (this->seedSize_ == that.seedSize_)
         && (this->lookup_ == that.lookup_)
         ;
 }
@@ -72,6 +95,7 @@ Opm::WellFractureSeeds Opm::WellFractureSeeds::serializationTestObject()
 
     s.seedCell_.push_back(1729);
     s.seedNormal_.push_back({ 1.1, -2.2, 3.3 });
+    s.seedSize_.push_back(SeedSize::serializationTestObject());
     s.lookup_.push_back(0);
 
     return s;
@@ -138,21 +162,28 @@ Opm::WellFractureSeeds::seedIndexLinearSearch(const std::size_t seedCellGlobal) 
 }
 
 bool Opm::WellFractureSeeds::insertNewSeed(const std::size_t   seedCellGlobal,
-                                           const NormalVector& seedNormal)
+                                           const NormalVector& seedNormal,
+                                           const SeedSize&     seedSize)
 {
     this->seedCell_.push_back(seedCellGlobal);
     this->seedNormal_.push_back(seedNormal);
+    this->seedSize_.push_back(seedSize);
     this->lookup_.clear();
 
     return true;
 }
 
 bool Opm::WellFractureSeeds::updateExistingSeed(const NormalVectorIx ix,
-                                                const NormalVector&  seedNormal)
+                                                const NormalVector&  seedNormal,
+                                                const SeedSize&      seedSize)
 {
-    const auto isDifferent = this->seedNormal_[ix] != seedNormal;
+    const auto isDifferent =
+        (this->seedNormal_[ix] != seedNormal) ||
+        (this->seedSize_  [ix] != seedSize)
+        ;
 
     this->seedNormal_[ix] = seedNormal;
+    this->seedSize_  [ix] = seedSize;
 
     return isDifferent;
 }

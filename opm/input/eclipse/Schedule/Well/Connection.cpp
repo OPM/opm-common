@@ -589,7 +589,6 @@ Connection::Order Connection::OrderFromString(std::string_view stringValue)
     };
 }
 
-
 std::string Connection::CTFKindToString(const CTFKind ctf_kind)
 {
     switch (ctf_kind) {
@@ -598,11 +597,14 @@ std::string Connection::CTFKindToString(const CTFKind ctf_kind)
 
     case CTFKind::Defaulted:
         return "Defaulted";
+
+    case CTFKind::DynamicFracturing:
+        return "DynamicFractures";
     }
 
     throw std::invalid_argument {
         "Unhandled CTF Kind Value: " +
-        std::to_string(static_cast<int>(ctf_kind))
+        std::to_string(static_cast<std::underlying_type_t<CTFKind>>(ctf_kind))
     };
 }
 

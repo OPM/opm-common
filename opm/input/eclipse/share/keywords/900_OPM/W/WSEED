@@ -3,7 +3,6 @@
   "sections": [
     "SCHEDULE"
   ],
-  "requires": ["MECH"],
   "items": [
     {
       "item": 1,
@@ -42,6 +41,27 @@
       "name": "NORMAL_Z",
       "value_type": "DOUBLE",
       "dimension": "Length"
+    },
+    {
+      "item": 8,
+      "name": "SIZE_Z",
+      "value_type": "DOUBLE",
+      "dimension": "Length",
+      "default": 0.3
+    },
+    {
+      "item": 9,
+      "name": "SIZE_H",
+      "value_type": "DOUBLE",
+      "dimension": "Length",
+      "default": 0.3
+    },
+    {
+      "item": 10,
+      "name": "WIDTH",
+      "value_type": "DOUBLE",
+      "dimension": "Length",
+      "default": 1e-4
     }
   ]
 }

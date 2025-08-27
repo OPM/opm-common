@@ -66,6 +66,9 @@ namespace Opm {
         bool isDataKeyword() const;
         bool isDoubleRecordKeyword() const;
 
+        std::vector<int>& getIntData();
+        std::vector<double>& getRawDoubleData();
+
         const std::vector<int>& getIntData() const;
         const std::vector<double>& getRawDoubleData() const;
         const std::vector<double>& getSIDoubleData() const;

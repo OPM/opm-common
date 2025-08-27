@@ -1015,14 +1015,16 @@ void handleWPAVEDEP(HandlerContext& handlerContext)
 /// Keyword structure:
 ///
 ///   WSEED
-///     WellName  I  J  K  nx  ny  nz /
-///     WellName  I  J  K  nx  ny  nz /
-///     WellName  I  J  K  nx  ny  nz /
+///     WellName  I  J  K  nx  ny  nz  ev  eh  wd /
+///     WellName  I  J  K  nx  ny  nz  ev  eh  wd /
+///     WellName  I  J  K  nx  ny  nz  ev  eh  wd /
 ///   /
 ///
 /// in which 'WellName' is a well, well list, well template or well list
-/// template.  I,J,K are regular well connection coordinates and nx,ny,nz
-/// are the components of the fracturing plane's normal vector.
+/// template.  I,J,K are regular well connection coordinates, nx,ny,nz are
+/// the components of the fracturing plane's normal vector, and ev,eh,wd are
+/// the vertical and horizontal extents along with the initial fracture
+/// width at the seed point.
 void handleWSEED(HandlerContext& handlerContext)
 {
     const auto* grid = handlerContext.grid.get_grid();
@@ -1056,6 +1058,11 @@ void handleWSEED(HandlerContext& handlerContext)
             record.getItem<ParserKeywords::WSEED::NORMAL_Z>().getSIDouble(0),
         };
 
+        const auto cellSeedSize = WellFractureSeeds::SeedSize {}
+            .verticalExtent  (record.getItem<ParserKeywords::WSEED::SIZE_Z>().getSIDouble(0))
+            .horizontalExtent(record.getItem<ParserKeywords::WSEED::SIZE_H>().getSIDouble(0))
+            .width           (record.getItem<ParserKeywords::WSEED::WIDTH> ().getSIDouble(0));
+
         for (const auto& well_name : well_names) {
             const auto hasConn = handlerContext.state()
                 .wells(well_name)
@@ -1068,7 +1075,7 @@ void handleWSEED(HandlerContext& handlerContext)
                 ? std::make_shared<WellFractureSeeds>(seeds(well_name))
                 : std::make_shared<WellFractureSeeds>(well_name);
 
-            if (seed->updateSeed(cellSeedIndex, cellSeedNormal)) {
+            if (seed->updateSeed(cellSeedIndex, cellSeedNormal, cellSeedSize)) {
                 updated_seed_wells.insert(well_name);
                 seeds.update(well_name, std::move(seed));
             }
