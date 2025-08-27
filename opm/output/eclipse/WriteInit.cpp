@@ -671,6 +671,7 @@ namespace {
             {"NTG"      , ::Opm::UnitSystem::measure::identity},
             // the rest in alphabetic order starting here
             {"BIOTCOEF" , ::Opm::UnitSystem::measure::identity},
+            {"CSTRESS"  , ::Opm::UnitSystem::measure::identity},
             {"DISPERC"  , ::Opm::UnitSystem::measure::length},
             {"POELCOEF" , ::Opm::UnitSystem::measure::identity},
             {"PRATIO"   , ::Opm::UnitSystem::measure::identity},
