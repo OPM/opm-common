@@ -28,6 +28,7 @@
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/GridDims.hpp>
+#include <opm/input/eclipse/EclipseState/Runspec.hpp>
 
 #include <opm/input/eclipse/Schedule/Group/Group.hpp>
 #include <opm/input/eclipse/Schedule/Network/ExtNetwork.hpp>
@@ -53,6 +54,7 @@
 #include <algorithm>
 #include <array>
 #include <cassert>
+#include <cstddef>
 #include <iterator>
 #include <map>
 #include <regex>
@@ -66,15 +68,154 @@
 #include <vector>
 
 #include <fmt/format.h>
+#include <fmt/ranges.h>
 
 namespace Opm {
 
 namespace {
 
-struct SummaryConfigContext {
-    std::unordered_map<std::string, std::set<int>> regions;
-};
+    /// Basic information about run's region sets
+    ///
+    /// Simplifies creating region-level and inter-region summary vectors.
+    class SummaryConfigContext
+    {
+    public:
+        /// Constructor
+        ///
+        /// \param[in] declaredMaxRegID Run's declared maximum number of
+        /// distinct regions in each region set.  Forms a "minimum maximum"
+        /// number of distinct regions.  Derived from REGDIMS(1) and possiby
+        /// other sources.
+        explicit SummaryConfigContext(const std::size_t declaredMaxRegID)
+            : declaredMaxRegID_ { static_cast<int>(declaredMaxRegID) }
+        {}
 
+        /// Internalise characteristics about a single region set
+        ///
+        /// \param[in] regset Region set name.  Could for instance be the
+        /// built-in region set "FIPNUM" or a user defined region set like
+        /// FIPABC.  If the \p regset has been entered before, this function
+        /// does nothing.
+        ///
+        /// \param[in] regIDs Region IDs for region set \p regset.  One
+        /// integer value for each active cell in the run.
+        void analyseRegionSet(const std::string&      regset,
+                              const std::vector<int>& regIDs)
+        {
+            if (regIDs.empty()) { return; }
+
+            const auto& status = this->regSetIx_
+                .try_emplace(regset, this->regSets_.size());
+
+            if (! status.second) {
+                // We've seen this region set before.  Nothing to do.
+                return;
+            }
+
+            this->regSets_
+                .emplace_back(this->declaredMaxRegID_)
+                .summariseContents(regIDs);
+        }
+
+        /// Retrieve maximum supported region ID in named region set.
+        ///
+        /// \param[in] regset Region set name.
+        ///
+        /// \return Maximum supported region ID in region set \p regset.
+        /// Will be at least as large as the declaredMaxRegID parameter to
+        /// the type's constructor.  Will be larger than this value if the
+        /// actual maximum region ID of the region set was determined to be
+        /// larger than that "minimum maximum" value.
+        int maxID(const std::string& regset) const
+        {
+            const auto regPos = this->regSetIx_.find(regset);
+            if (regPos == this->regSetIx_.end()) {
+                return this->declaredMaxRegID_;
+            }
+
+            return this->regSets_[regPos->second].maxID;
+        }
+
+        /// Distinct region IDs in named region set
+        ///
+        /// \param[in] regset Named region set.  If this name has not
+        /// previously been analysed in analyseRegionSet(), then function
+        /// activeRegions() will throw an exception of type \code
+        /// std::logic_error \endif.
+        ///
+        /// \return Distinct numeric region IDs in region set \p regset.
+        /// Sorted ascendingly.
+        const std::vector<int>& activeRegions(const std::string& regset) const
+        {
+            const auto regPos = this->regSetIx_.find(regset);
+            if (regPos == this->regSetIx_.end()) {
+                throw std::logic_error {
+                    fmt::format("Region set {} is unknown", regset)
+                };
+            }
+
+            return this->regSets_[regPos->second].activeIDs;
+        }
+
+    private:
+        /// Basic characteristics of a single region set.
+        struct RegSet
+        {
+            /// Constructor.
+            ///
+            /// \param [in] maxID_ Run's declared maximum region ID.
+            explicit RegSet(const int maxID_)
+                : maxID { maxID_ }
+            {}
+
+            /// Compute basic characteristics of region set.
+            ///
+            /// \param[in] regIDs Region IDs for region set \p regset.  One
+            /// integer value for each active cell in the run.
+            void summariseContents(const std::vector<int>& regIDs);
+
+            /// Maximum region ID in region set.  No less than the run's
+            /// declared maximum region ID.
+            int maxID{};
+
+            /// Distinct region IDs in region set.  Sorted ascendingly.
+            std::vector<int> activeIDs{};
+        };
+
+        /// Run's declared maximum region ID.
+        int declaredMaxRegID_{};
+
+        /// Index map.
+        ///
+        /// Translates region set names to indices into the currently known
+        /// region sets.
+        std::unordered_map<std::string, std::vector<RegSet>::size_type> regSetIx_{};
+
+        /// Currently known region sets.
+        std::vector<RegSet> regSets_{};
+    };
+
+    void SummaryConfigContext::RegSet::summariseContents(const std::vector<int>& regIDs)
+    {
+        const auto maxPos = std::max_element(regIDs.begin(), regIDs.end());
+
+        this->maxID = std::max(this->maxID, *maxPos);
+
+        auto active = std::vector<bool>(this->maxID + 1, false);
+
+        std::for_each(regIDs.begin(), regIDs.end(),
+                      [&active](const int regID)
+                      { active[regID] = true; });
+
+        this->activeIDs.clear();
+        for (auto activeID = 0*active.size(); activeID < active.size(); ++activeID) {
+            if (active[activeID]) {
+                this->activeIDs.push_back(activeID);
+            }
+        }
+    }
+
+    // -----------------------------------------------------------------------
 
     const std::vector<std::string> ALL_keywords = {
         "FAQR",  "FAQRG", "FAQT", "FAQTG", "FGIP", "FGIPG", "FGIPL",
@@ -950,7 +1091,7 @@ establishRegionContext(const DeckKeyword&       keyword,
             const auto msg_fmt =
                 fmt::format("Problem with summary keyword {{keyword}}\n"
                             "In {{file}} line {{line}}\n"
-                            "FIP region {} not defined in "
+                            "FIP region set {} not defined in "
                             "REGIONS section - {{keyword}} ignored", region_name);
 
             parseContext.handleError(ParseContext::SUMMARY_INVALID_FIPNUM,
@@ -959,19 +1100,14 @@ establishRegionContext(const DeckKeyword&       keyword,
         }
     }
 
-    if (context.regions.count(region_name) == 0) {
-        const auto& fipnum = field_props.get_int(region_name);
-        context.regions.emplace(std::piecewise_construct,
-                                std::forward_as_tuple(region_name),
-                                std::forward_as_tuple(fipnum.begin(), fipnum.end()));
-    }
+    context.analyseRegionSet(region_name, field_props.get_global_int(region_name));
 
     return { region_name };
 }
 
-inline void keywordR2R_unsupported(const DeckKeyword&  keyword,
-                                   const ParseContext& parseContext,
-                                   ErrorGuard&         errors)
+void keywordR2R_unsupported(const DeckKeyword&  keyword,
+                            const ParseContext& parseContext,
+                            ErrorGuard&         errors)
 {
     const auto msg_fmt = std::string {
         "Region to region summary keyword {keyword} is ignored\n"
@@ -982,12 +1118,12 @@ inline void keywordR2R_unsupported(const DeckKeyword&  keyword,
                              msg_fmt, keyword.location(), errors);
 }
 
-inline void keywordR2R(const DeckKeyword&           keyword,
-                       const FieldPropsManager&     field_props,
-                       const ParseContext&          parseContext,
-                       ErrorGuard&                  errors,
-                       SummaryConfigContext&        context,
-                       SummaryConfig::keyword_list& list)
+void keywordR2R(const DeckKeyword&           keyword,
+                const FieldPropsManager&     field_props,
+                const ParseContext&          parseContext,
+                ErrorGuard&                  errors,
+                SummaryConfigContext&        context,
+                SummaryConfig::keyword_list& list)
 {
     if (is_unsupported_region_to_region(keyword.name())) {
         keywordR2R_unsupported(keyword, parseContext, errors);
@@ -1016,21 +1152,53 @@ inline void keywordR2R(const DeckKeyword&           keyword,
     .fip_region(region_name.value())
     .isUserDefined(false);
 
+    const auto maxID = context.maxID(*region_name);
+
+    auto oobRecords = std::vector<std::string>{};
+
     // Expected format:
     //
     //   ROFT
     //     1 2 /
     //     1 4 /
     //   /
+    auto recordID = 0;
     for (const auto& record : keyword) {
+        ++recordID;
+
         // We *intentionally* record/use one-based region IDs here.
         const auto r1 = record.getItem("REGION1").get<int>(0);
         const auto r2 = record.getItem("REGION2").get<int>(0);
 
+        if ((r1 > maxID) || (r2 > maxID)) {
+            oobRecords.push_back
+                (fmt::format("   {} {} / (record {})", r1, r2, recordID));
+
+            continue;
+        }
+
         list.push_back(param.number(EclIO::combineSummaryNumbers(r1, r2)));
     }
-}
 
+    if (oobRecords.empty()) {
+        return;
+    }
+
+    const auto* pl = (oobRecords.size() == 1)
+        ? " is" : "s are";
+
+    // Region_id is out of range.  Ignore it.
+    const auto msg_fmt =
+        fmt::format("Problem with SUMMARY keyword {{keyword}}.\n"
+                    "In {{file}} line {{line}}.\n"
+                    "At least one region index exceeds maximum "
+                    "supported value {} in region set {}.\n"
+                    "The following record{} ignored\n{}",
+                    maxID, *region_name, pl, fmt::join(oobRecords, "\n"));
+
+    parseContext.handleError(ParseContext::SUMMARY_REGION_TOO_LARGE,
+                             msg_fmt, keyword.location(), errors);
+}
 
 void keywordR(SummaryConfig::keyword_list& list,
               SummaryConfigContext&        context,
@@ -1055,22 +1223,14 @@ void keywordR(SummaryConfig::keyword_list& list,
         return;
     }
 
+    const auto maxID = context.maxID(*region_name);
+
     auto regions = std::vector<int>{};
 
-    // Assume that the FIPNUM array contains the values {1,2,4}; i.e. the
-    // maximum value is 4 and the value 3 is missing.  Values which are too
-    // large, i.e., > 4 in this case - and values which are missing in the
-    // range are treated differently:
-    //
-    //    region_id >= 5: The requested region results are completely ignored.
-    //
-    //    region_id == 3: The summary file will contain a vector Rxxx:3 with the
-    //    value 0.
-    //
-    // These behaviors are closely tied to the implementation in
-    // opm-simulators which actually performs the region summation; and that
-    // is also the main reason to treat these quite similar error conditions
-    // differently.
+    // Region IDs exceeding the maximum possible ID (maximum of the declared
+    // maximum region ID from keyword REGDIMS and the actual maximum region
+    // ID in the region set) are ignored.  Missing region IDs get a summary
+    // vector value of zero.
 
     if (! deck_keyword.empty() &&
         (deck_keyword.getDataRecord().getDataItem().data_size() > 0))
@@ -1078,29 +1238,26 @@ void keywordR(SummaryConfig::keyword_list& list,
         const auto& item = deck_keyword.getDataRecord().getDataItem();
 
         for (const auto& region_id : item.getData<int>()) {
-            const auto& region_set = context.regions.at(region_name.value());
-            auto max_iter = region_set.rbegin();
-            if (region_id > *max_iter) {
-                std::string msg_fmt = fmt::format("Problem with summary keyword {{keyword}}\n"
-                                                  "In {{file}} line {{line}}\n"
-                                                  "FIP region {} not present in {} - ignored", region_id, region_name.value());
-                parseContext.handleError(ParseContext::SUMMARY_REGION_TOO_LARGE, msg_fmt, deck_keyword.location(), errors);
-                continue;
+            if (region_id <= maxID) {
+                // Region_id is in range.  Include it.
+                regions.push_back(region_id);
             }
+            else {
+                // Region_id is out of range.  Ignore it.
+                const auto msg_fmt =
+                    fmt::format("Problem with summary keyword {{keyword}}\n"
+                                "In {{file}} line {{line}}\n"
+                                "FIP region {} not present in "
+                                "region set {} - ignored.",
+                                region_id, *region_name);
 
-            if (region_set.count(region_id) == 0) {
-                std::string msg_fmt = fmt::format("Problem with summary keyword {{keyword}}\n"
-                                                  "In {{file}} line {{line}}\n"
-                                                  "FIP region {} not present in {} - will use 0", region_id, region_name.value());
-                parseContext.handleError(ParseContext::SUMMARY_EMPTY_REGION, msg_fmt, deck_keyword.location(), errors);
+                parseContext.handleError(ParseContext::SUMMARY_REGION_TOO_LARGE,
+                                         msg_fmt, deck_keyword.location(), errors);
             }
-
-            regions.push_back(region_id);
         }
     }
     else {
-        const auto cregions = context.regions.at(region_name.value());
-        regions.assign(cregions.begin(), cregions.end());
+        regions = context.activeRegions(*region_name);
     }
 
     // See comment on function roew() in Summary.cpp for this weirdness.
@@ -1131,7 +1288,6 @@ void keywordR(SummaryConfig::keyword_list& list,
                        return param.number(region);
                    });
 }
-
 
 inline void keywordMISC( SummaryConfig::keyword_list& list,
                          const std::string& keyword,
@@ -1801,16 +1957,20 @@ bool operator<(const SummaryConfigNode& lhs, const SummaryConfigNode& rhs)
 
 // =====================================================================
 
-SummaryConfig::SummaryConfig( const Deck& deck,
-                              const Schedule& schedule,
-                              const FieldPropsManager& field_props,
-                              const AquiferConfig& aquiferConfig,
-                              const ParseContext& parseContext,
-                              ErrorGuard& errors,
-                              const GridDims& dims) {
+SummaryConfig::SummaryConfig(const Deck&              deck,
+                             const Schedule&          schedule,
+                             const FieldPropsManager& field_props,
+                             const AquiferConfig&     aquiferConfig,
+                             const ParseContext&      parseContext,
+                             ErrorGuard&              errors,
+                             const GridDims&          dims)
+{
     try {
-        SUMMARYSection section( deck );
-        SummaryConfigContext context;
+        const auto section = SUMMARYSection { deck };
+
+        auto context = SummaryConfigContext {
+            declaredMaxRegionID(Runspec { deck })
+        };
 
         const auto node_names = need_node_names(section)
             ? collect_node_names(schedule)
@@ -1846,6 +2006,7 @@ SummaryConfig::SummaryConfig( const Deck& deck,
         }
 
         uniq(this->m_keywords);
+
         for (const auto& kw : this->m_keywords) {
             this->short_keywords.insert(kw.keyword());
             this->summary_keywords.insert(kw.uniqueNodeKey());
@@ -1855,7 +2016,8 @@ SummaryConfig::SummaryConfig( const Deck& deck,
         throw;
     }
     catch (const std::exception& std_error) {
-        OpmLog::error(fmt::format("An error occurred while configuring the summary properties\n"
+        OpmLog::error(fmt::format("An error occurred while configuring "
+                                  "the summary properties\n"
                                   "Internal error: {}", std_error.what()));
         throw;
     }
@@ -1969,7 +2131,10 @@ SummaryConfig::registerRequisiteUDQorActionSummaryKeys(const std::vector<std::st
 
         const auto parseCtx = ParseContext { InputErrorAction::IGNORE };
         auto errors = ErrorGuard {};
-        auto ctxt   = SummaryConfigContext {};
+
+        auto ctxt   = SummaryConfigContext {
+            declaredMaxRegionID(es.runspec())
+        };
 
         for (const auto& vector_name : extraKeys) {
             handleKW(candidateSummaryNodes, ctxt, node_names,
