@@ -111,12 +111,12 @@ namespace Opm {
         , stress_yy_grad(record.getItem<ParserKeywords::STREQUIL::STRESSYYGRAD>().getSIDouble(0))
         , stress_zz(record.getItem<ParserKeywords::STREQUIL::STRESSZZ>().getSIDouble(0))
         , stress_zz_grad(record.getItem<ParserKeywords::STREQUIL::STRESSZZGRAD>().getSIDouble(0))
-        , stress_xy(record.getItem<ParserKeywords::STREQUIL::STRESSXX>().getSIDouble(0))
-        , stress_xy_grad(record.getItem<ParserKeywords::STREQUIL::STRESSXXGRAD>().getSIDouble(0))
-        , stress_xz(record.getItem<ParserKeywords::STREQUIL::STRESSYY>().getSIDouble(0))
-        , stress_xz_grad(record.getItem<ParserKeywords::STREQUIL::STRESSYYGRAD>().getSIDouble(0))
-        , stress_yz(record.getItem<ParserKeywords::STREQUIL::STRESSZZ>().getSIDouble(0))
-        , stress_yz_grad(record.getItem<ParserKeywords::STREQUIL::STRESSZZGRAD>().getSIDouble(0))
+        , stress_xy(record.getItem<ParserKeywords::STREQUIL::STRESSXY>().getSIDouble(0))
+        , stress_xy_grad(record.getItem<ParserKeywords::STREQUIL::STRESSXYGRAD>().getSIDouble(0))
+        , stress_xz(record.getItem<ParserKeywords::STREQUIL::STRESSXZ>().getSIDouble(0))
+        , stress_xz_grad(record.getItem<ParserKeywords::STREQUIL::STRESSXZGRAD>().getSIDouble(0))
+        , stress_yz(record.getItem<ParserKeywords::STREQUIL::STRESSYZ>().getSIDouble(0))
+        , stress_yz_grad(record.getItem<ParserKeywords::STREQUIL::STRESSYZGRAD>().getSIDouble(0))
     {}
 
     StressEquilRecord StressEquilRecord::serializationTestObject()
