@@ -17,18 +17,8 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
 #ifndef WELL2_HPP
 #define WELL2_HPP
-
-#include <cstddef>
-#include <iosfwd>
-#include <map>
-#include <memory>
-#include <optional>
-#include <string>
-#include <utility>
-#include <vector>
 
 #include <opm/input/eclipse/Deck/UDAValue.hpp>
 #include <opm/input/eclipse/EclipseState/Phase.hpp>
@@ -41,6 +31,15 @@
 #include <opm/input/eclipse/Schedule/Well/WellProductionControls.hpp>
 #include <opm/input/eclipse/Schedule/Well/WINJMULT.hpp>
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
+
+#include <cstddef>
+#include <iosfwd>
+#include <map>
+#include <memory>
+#include <optional>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace Opm {
 

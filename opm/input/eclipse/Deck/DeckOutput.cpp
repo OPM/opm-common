@@ -17,12 +17,11 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <ostream>
-
 #include <opm/input/eclipse/Deck/DeckOutput.hpp>
 #include <opm/input/eclipse/Deck/UDAValue.hpp>
 #include <opm/input/eclipse/Utility/Typetools.hpp>
 
+#include <ostream>
 
 namespace Opm {
 

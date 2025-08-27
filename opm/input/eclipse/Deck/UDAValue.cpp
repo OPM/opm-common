@@ -176,7 +176,6 @@ void UDAValue::update(const std::string& value) {
 }
 
 
-
 template<>
 std::string UDAValue::get() const {
     if (!this->string_value.empty())
@@ -207,7 +206,6 @@ bool UDAValue::operator==(const UDAValue& other) const {
 
     return this->string_value == other.string_value;
 }
-
 
 bool UDAValue::operator!=(const UDAValue& other) const {
     return !(*this == other);
