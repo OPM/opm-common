@@ -34,6 +34,7 @@
 #endif
 
 #include <array>
+#include <cassert>
 
 namespace Opm
 {
@@ -41,18 +42,11 @@ namespace Opm
 template <class IndexTraits>
 class PhaseUsageInfo {
 public:
-    static constexpr int numPhases = 3;
+    static constexpr int numPhases = IndexTraits::numPhases;
 
     static constexpr int waterPhaseIdx = IndexTraits::waterPhaseIdx;
     static constexpr int oilPhaseIdx = IndexTraits::oilPhaseIdx;
     static constexpr int gasPhaseIdx = IndexTraits::gasPhaseIdx;
-
-    //! Index of the oil component
-    static constexpr int oilCompIdx = IndexTraits::oilCompIdx;
-    //! Index of the water component
-    static constexpr int waterCompIdx = IndexTraits::waterCompIdx;
-    //! Index of the gas component
-    static constexpr int gasCompIdx = IndexTraits::gasCompIdx;
 
     explicit PhaseUsageInfo(const Phases& phases) {
         initFromPhases(phases);
