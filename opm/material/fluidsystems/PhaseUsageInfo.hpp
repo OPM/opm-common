@@ -24,10 +24,6 @@
 #ifndef OPM_PHASEUSAGEINFO_HPP
 #define OPM_PHASEUSAGEINFO_HPP
 
-#if HAVE_CONFIG_H
-#include "config.h"
-#endif // HAVE_CONFIG_H
-
 #if HAVE_ECL_INPUT
 #include <opm/common/ErrorMacros.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
