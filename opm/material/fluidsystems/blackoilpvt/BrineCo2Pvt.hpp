@@ -44,6 +44,7 @@
 #include <opm/material/components/CO2Tables.hpp>
 #include <opm/material/binarycoefficients/H2O_CO2.hpp>
 #include <opm/material/binarycoefficients/Brine_CO2.hpp>
+#include <opm/material/fluidsystems/BlackOilFunctions.hpp>
 
 #include <opm/input/eclipse/EclipseState/Co2StoreConfig.hpp>
 
@@ -353,6 +354,27 @@ public:
         return (1.0 - convertRsToXoG_(Rs,regionIdx)) * density(regionIdx, temperature, pressure,
                                                                Rs, Evaluation(salinity_[regionIdx]))
                                                      / brineReferenceDensity_[regionIdx];
+    }
+
+    /*!
+     * \brief Returns the formation volume factor [-] and viscosity [Pa s] of the fluid phase.
+     */
+    template <class FluidState, class LhsEval = typename FluidState::Scalar>
+    std::pair<LhsEval, LhsEval>
+    inverseFormationVolumeFactorAndViscosity(const FluidState& fluidState, unsigned regionIdx)
+    {
+        // Deal with the possibility that we are in a two-phase CO2STORE with OIL and GAS as phases.
+        const bool waterIsActive = fluidState.phaseIsActive(FluidState::waterPhaseIdx);
+        const int myPhaseIdx = waterIsActive ? FluidState::waterPhaseIdx : FluidState::oilPhaseIdx;
+        const LhsEval& Rsw = waterIsActive ? decay<LhsEval>(fluidState.Rsw()) : decay<LhsEval>(fluidState.Rs());
+
+        const LhsEval& T = decay<LhsEval>(fluidState.temperature(myPhaseIdx));
+        const LhsEval& p = decay<LhsEval>(fluidState.pressure(myPhaseIdx));
+        const LhsEval& saltConcentration
+            = BlackOil::template getSaltConcentration_<FluidState, LhsEval>(fluidState, regionIdx);
+        // TODO: The viscosity does not yet depend on the composition
+        return { this->inverseFormationVolumeFactor(regionIdx, T, p, Rsw, saltConcentration) ,
+                this->saturatedViscosity(regionIdx, T, p, saltConcentration) };
     }
 
     /*!

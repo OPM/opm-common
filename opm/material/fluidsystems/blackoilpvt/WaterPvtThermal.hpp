@@ -304,6 +304,41 @@ public:
     }
 
     /*!
+     * \brief Returns the formation volume factor [-] and viscosity [Pa s] of the fluid phase.
+     */
+    template <class FluidState, class LhsEval = typename FluidState::Scalar>
+    std::pair<LhsEval, LhsEval>
+    inverseFormationVolumeFactorAndViscosity(const FluidState& fluidState, unsigned regionIdx)
+    {
+        auto [b, mu] = isothermalPvt_->inverseFormationVolumeFactorAndViscosity(fluidState, regionIdx);
+        const LhsEval& pressure = decay<LhsEval>(fluidState.pressure(FluidState::waterPhaseIdx));
+        const LhsEval& temperature = decay<LhsEval>(fluidState.temperature(FluidState::waterPhaseIdx));
+        if (enableThermalDensity()) {
+            Scalar BwRef = pvtwRefB_[regionIdx];
+            Scalar TRef = watdentRefTemp_[regionIdx];
+            const LhsEval X = pvtwCompressibility_[regionIdx] * (pressure - pvtwRefPress_[regionIdx]);
+            Scalar cT1 = watdentCT1_[regionIdx];
+            Scalar cT2 = watdentCT2_[regionIdx];
+            const LhsEval Y = temperature - TRef;
+            // this is inconsistent with the density calculation of water in the isothermal
+            // case (it misses the quadratic pressure term), but it is the equation given in
+            // the documentation.
+            // Note assignment to 'b', not multiplying the isothermal 'b' by a factor!
+            b = 1.0 / (((1 - X) * (1 + cT1 * Y + cT2 * Y * Y)) * BwRef);
+        }
+        if (enableThermalViscosity()) {
+            Scalar x = -pvtwViscosibility_[regionIdx] * (viscrefPress_[regionIdx] - pvtwRefPress_[regionIdx]);
+            Scalar muRef = pvtwViscosity_[regionIdx] / (1.0 + x + 0.5 * x * x);
+            // compute the viscosity deviation due to temperature
+            const auto muWatvisct = watvisctCurves_[regionIdx].eval(temperature, true);
+            // Split operations to get same order of operations as in the viscosity() function.
+            mu *= muWatvisct;
+            mu /= muRef;
+        }
+        return { b, mu };
+    }
+
+    /*!
      * \brief Returns the saturation pressure of the water phase [Pa]
      *        depending on its mass fraction of the gas component
      *

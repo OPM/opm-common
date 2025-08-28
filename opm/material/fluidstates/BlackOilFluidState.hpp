@@ -107,7 +107,7 @@ auto getSaltSaturation_(typename std::enable_if<!HasMember_saltSaturation<FluidS
  * relatively slow.
  */
 template <class ScalarT,
-          class FluidSystem,
+          class FluidSystemT,
           bool enableTemperature = false,
           bool enableEnergy = false,
           bool enableDissolution = true,
@@ -115,21 +115,23 @@ template <class ScalarT,
           bool enableBrine = false,
           bool enableSaltPrecipitation = false,
           bool enableDissolutionInWater = false,
-          unsigned numStoragePhases = FluidSystem::numPhases>
+          unsigned numStoragePhases = FluidSystemT::numPhases>
 class BlackOilFluidState
 {
-    enum { waterPhaseIdx = FluidSystem::waterPhaseIdx };
-    enum { gasPhaseIdx = FluidSystem::gasPhaseIdx };
-    enum { oilPhaseIdx = FluidSystem::oilPhaseIdx };
-
-    enum { waterCompIdx = FluidSystem::waterCompIdx };
-    enum { gasCompIdx = FluidSystem::gasCompIdx };
-    enum { oilCompIdx = FluidSystem::oilCompIdx };
-
 public:
+    using FluidSystem = FluidSystemT;
     using Scalar = ScalarT;
-    enum { numPhases = FluidSystem::numPhases };
-    enum { numComponents = FluidSystem::numComponents };
+
+    static constexpr int waterPhaseIdx = FluidSystem::waterPhaseIdx;
+    static constexpr int gasPhaseIdx = FluidSystem::gasPhaseIdx;
+    static constexpr int oilPhaseIdx = FluidSystem::oilPhaseIdx;
+
+    static constexpr int waterCompIdx = FluidSystem::waterCompIdx;
+    static constexpr int gasCompIdx = FluidSystem::gasCompIdx;
+    static constexpr int oilCompIdx = FluidSystem::oilCompIdx;
+
+    static constexpr int numPhases = FluidSystem::numPhases;
+    static constexpr int numComponents = FluidSystem::numComponents;
 
     /*!
      * \brief Make sure that all attributes are defined.
@@ -204,7 +206,7 @@ public:
             setRsw(BlackOil::getRsw_<FluidSystem, FluidState, Scalar>(fs, pvtRegionIdx));
         }
         if constexpr (enableBrine){
-            setSaltConcentration(BlackOil::getSaltConcentration_<FluidSystem, FluidState, Scalar>(fs, pvtRegionIdx));
+            setSaltConcentration(BlackOil::getSaltConcentration_<FluidState, Scalar>(fs, pvtRegionIdx));
         }
         if constexpr (enableSaltPrecipitation){
             setSaltSaturation(BlackOil::getSaltSaturation_<FluidSystem, FluidState, Scalar>(fs, pvtRegionIdx));
@@ -642,6 +644,18 @@ public:
             fugacityCoefficient(phaseIdx, compIdx)
             *moleFraction(phaseIdx, compIdx)
             *pressure(phaseIdx);
+    }
+
+    /*!
+     * \brief Return if a phase is active (via the FluidSystem).
+     *
+     * Note: this could be a static function, but for future GPU
+     *       usage we must avoid static, so making it a regular
+     *       member function to simplify future refactoring.
+     */
+    bool phaseIsActive(int phaseIdx) const
+    {
+        return FluidSystem::phaseIsActive(phaseIdx);
     }
 
 private:

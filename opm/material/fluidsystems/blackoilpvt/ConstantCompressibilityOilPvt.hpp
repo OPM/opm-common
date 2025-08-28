@@ -27,6 +27,8 @@
 #ifndef OPM_CONSTANT_COMPRESSIBILITY_OIL_PVT_HPP
 #define OPM_CONSTANT_COMPRESSIBILITY_OIL_PVT_HPP
 
+#include <opm/material/densead/Math.hpp>
+
 #include <cstddef>
 #include <stdexcept>
 #include <vector>
@@ -172,6 +174,26 @@ public:
                                             const Evaluation& pressure,
                                             const Evaluation& /*Rs*/) const
     { return saturatedInverseFormationVolumeFactor(regionIdx, temperature, pressure); }
+
+    /*!
+     * \brief Returns the formation volume factor [-] and viscosity [Pa s] of the fluid phase.
+     */
+    template <class FluidState, class LhsEval = typename FluidState::Scalar>
+    std::pair<LhsEval, LhsEval>
+    inverseFormationVolumeFactorAndViscosity(const FluidState& fluidState, unsigned regionIdx)
+    {
+        const LhsEval& p = decay<LhsEval>(fluidState.pressure(FluidState::oilPhaseIdx));
+        // Calculate bo(p).
+        Scalar pRef = oilReferencePressure_[regionIdx];
+        const LhsEval X = oilCompressibility_[regionIdx] * (p - pRef);
+        Scalar BoRef = oilReferenceFormationVolumeFactor_[regionIdx];
+        const LhsEval bo = (1.0 + X * (1.0 + X / 2.0)) / BoRef;
+        // Calculate mu(p) as (Bo * mu) * bo. Recall bo = 1/Bo.
+        const LhsEval Y = (oilCompressibility_[regionIdx] - oilViscosibility_[regionIdx]) * (p - pRef);
+        Scalar BoMuoRef = oilViscosity_[regionIdx]*oilReferenceFormationVolumeFactor_[regionIdx];
+        const LhsEval muo = BoMuoRef * bo / (1.0 + Y * (1.0 + Y / 2.0));
+        return { bo, muo };
+    }
 
     /*!
      * \brief Returns the formation volume factor [-] of gas saturated oil.

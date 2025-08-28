@@ -267,6 +267,32 @@ public:
     }
 
     /*!
+     * \brief Returns the formation volume factor [-] and viscosity [Pa s] of the fluid phase.
+     */
+    template <class FluidState, class LhsEval = typename FluidState::Scalar>
+    std::pair<LhsEval, LhsEval>
+    inverseFormationVolumeFactorAndViscosity(const FluidState& fluidState, unsigned regionIdx)
+    {
+        auto [b, mu] = isothermalPvt_->inverseFormationVolumeFactorAndViscosity(fluidState, regionIdx);
+        const LhsEval& temperature = decay<LhsEval>(fluidState.temperature(FluidState::oilPhaseIdx));
+        if (enableThermalDensity()) {
+            // we use the same approach as for the for water here, but with the OPM-specific
+            // OILDENT keyword.
+            Scalar TRef = oildentRefTemp_[regionIdx];
+            Scalar cT1 = oildentCT1_[regionIdx];
+            Scalar cT2 = oildentCT2_[regionIdx];
+            const LhsEval Y = temperature - TRef;
+            b /= (1.0 + (cT1 + cT2 * Y) * Y);
+        }
+        if (enableThermalViscosity()) {
+            // compute the viscosity deviation due to temperature
+            const auto muOilvisct = oilvisctCurves_[regionIdx].eval(temperature, /*extrapolate=*/true);
+            mu *= (muOilvisct / viscRef_[regionIdx]);
+        }
+        return { b, mu };
+    }
+
+    /*!
      * \brief Returns the formation volume factor [-] of gas-saturated oil phase.
      */
     template <class Evaluation>
