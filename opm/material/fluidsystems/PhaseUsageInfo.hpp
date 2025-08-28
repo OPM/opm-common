@@ -39,7 +39,7 @@
 namespace Opm
 {
 
-template <class IndexTraits>
+template <typename IndexTraits>
 class PhaseUsageInfo {
 public:
     static constexpr int numPhases = IndexTraits::numPhases;
@@ -48,13 +48,7 @@ public:
     static constexpr int oilPhaseIdx = IndexTraits::oilPhaseIdx;
     static constexpr int gasPhaseIdx = IndexTraits::gasPhaseIdx;
 
-    explicit PhaseUsageInfo(const Phases& phases) {
-        initFromPhases(phases);
-    }
-
-    PhaseUsageInfo() = default;
-
-    void setNumActivePhases(unsigned numActivePhases);
+    PhaseUsageInfo();
 
     [[nodiscard]] unsigned numActivePhases() const {
         return numActivePhases_;
@@ -64,10 +58,6 @@ public:
         assert(phaseIdx < numPhases);
         return phaseIsActive_[phaseIdx];
     }
-
-    void initBegin();
-
-    void initEnd();
 
     [[nodiscard]] short canonicalToActivePhaseIdx(unsigned phaseIdx) const {
         assert(phaseIdx<numPhases);
@@ -79,6 +69,8 @@ public:
         assert(activePhaseIdx< numActivePhases_);
         return activeToCanonicalPhaseIdx_[activePhaseIdx];
     }
+
+    void initFromPhases(const Phases& phases);
 
 #if HAVE_ECL_INPUT
     void initFromState(const EclipseState& eclState);
@@ -122,9 +114,9 @@ public:
 
 private:
     unsigned char numActivePhases_ = 0;
-    std::array<bool, numPhases> phaseIsActive_ {{false, false, false}};
-    std::array<short, numPhases> activeToCanonicalPhaseIdx_ {{0, 1, 2}};
-    std::array<short, numPhases> canonicalToActivePhaseIdx_ {{0, 1, 2}};
+    std::array<bool, numPhases> phaseIsActive_;
+    std::array<short, numPhases> activeToCanonicalPhaseIdx_;
+    std::array<short, numPhases> canonicalToActivePhaseIdx_;
 
     bool has_solvent{};
     bool has_polymer{};
@@ -137,7 +129,9 @@ private:
     bool has_micp{};
     bool has_co2_or_h2store{};
 
-    void initFromPhases(const Phases& phases);
+    //  updating the mapping between active and canonical phase indices
+    void updateIndexMapping_();
+
 };
 
 }

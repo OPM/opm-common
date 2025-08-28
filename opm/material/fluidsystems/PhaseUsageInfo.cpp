@@ -43,21 +43,17 @@
 
 namespace Opm {
 
-template <class IndexTraits>
-void PhaseUsageInfo<IndexTraits>::setNumActivePhases(unsigned numActivePhases) {
-    assert(numActivePhases <= numPhases);
-    numActivePhases_ = numActivePhases;
-    // TODO: should we do something else here?
+template <typename IndexTraits>
+PhaseUsageInfo<IndexTraits>::PhaseUsageInfo()
+  : numActivePhases_(0)
+{
+    std::fill_n(&phaseIsActive_[0], numPhases, false);
+    std::fill_n(&this->canonicalToActivePhaseIdx_[0], numPhases, -1);
+    std::fill_n(&this->activeToCanonicalPhaseIdx_[0], numPhases, -1);
 }
 
-template <class IndexTraits>
-void PhaseUsageInfo<IndexTraits>::initBegin() {
-    numActivePhases_ = numPhases;
-    std::fill_n(&phaseIsActive_[0], numPhases, true);
-}
-
-template <class IndexTraits>
-void PhaseUsageInfo<IndexTraits>::initEnd() {
+template <typename IndexTraits>
+void PhaseUsageInfo<IndexTraits>::updateIndexMapping_() {
     int activePhaseIdx = 0;
     for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
         if(phaseIsActive_[phaseIdx]){
@@ -69,7 +65,7 @@ void PhaseUsageInfo<IndexTraits>::initEnd() {
 }
 
 #if HAVE_ECL_INPUT
-template <class IndexTraits>
+template <typename IndexTraits>
 void PhaseUsageInfo<IndexTraits>::initFromState(const EclipseState& eclState)
 {
     const auto& phases = eclState.runspec().phases();
@@ -80,12 +76,8 @@ void PhaseUsageInfo<IndexTraits>::initFromState(const EclipseState& eclState)
 }
 #endif
 
-template <class IndexTraits>
+template <typename IndexTraits>
 void PhaseUsageInfo<IndexTraits>::initFromPhases(const Phases& phases) {
-    //       initBegin();
-    numActivePhases_ = 0;
-    std::fill_n(&phaseIsActive_[0], numPhases, false);
-
     if (phases.active(Phase::OIL)) {
         phaseIsActive_[oilPhaseIdx] = true;
         ++numActivePhases_;
@@ -114,6 +106,8 @@ void PhaseUsageInfo<IndexTraits>::initFromPhases(const Phases& phases) {
     has_foam = phases.active(Phase::FOAM);
     has_brine = phases.active(Phase::BRINE);
     has_zFraction = phases.active(Phase::ZFRACTION);
+
+    this->updateIndexMapping_();
 }
 
 // Explicit template instantiations for commonly used IndexTraits
