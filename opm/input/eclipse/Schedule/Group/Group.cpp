@@ -52,7 +52,7 @@ namespace {
         Production = (UINT8_C(1) << UINT8_C(0)),
 
         /// Group has satellite injection.
-        Injection = (UINT8_C(1) << UINT8_C(0)),
+        Injection = (UINT8_C(1) << UINT8_C(1)),
     };
 
     /// Convert group satellite status flag to an integer.

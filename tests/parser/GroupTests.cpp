@@ -495,9 +495,15 @@ END
     BOOST_CHECK_MESSAGE(! sched[0].groups("G1").hasSatelliteProduction(),
                         R"(Group "G1" must NOT have satellite production at time 0)");
 
+    BOOST_CHECK_MESSAGE(! sched[0].groups("G1").hasSatelliteInjection(),
+                        R"(Group "G1" must NOT have satellite injection at time 0)");
+
     // T = 1
     BOOST_CHECK_MESSAGE(sched[1].groups("G1").hasSatelliteProduction(),
                         R"(Group "G1" must have satellite production at time 1)");
+
+    BOOST_CHECK_MESSAGE(! sched[1].groups("G1").hasSatelliteInjection(),
+                        R"(Group "G1" must NOT have satellite injection at time 1)");
 }
 
 BOOST_AUTO_TEST_CASE(Satellite_Injection)
@@ -775,9 +781,15 @@ END
     BOOST_CHECK_MESSAGE(! sched[0].groups("G1").hasSatelliteInjection(),
                         R"(Group "G1" must NOT have satellite injection rates at time 0)");
 
+    BOOST_CHECK_MESSAGE(! sched[0].groups("G1").hasSatelliteProduction(),
+                        R"(Group "G1" must NOT have satellite production rates at time 0)");
+
     // T = 1
     BOOST_CHECK_MESSAGE(sched[1].groups("G1").hasSatelliteInjection(),
                         R"(Group "G1" must have satellite injection rates at time 1)");
+
+    BOOST_CHECK_MESSAGE(! sched[1].groups("G1").hasSatelliteProduction(),
+                        R"(Group "G1" must NOT have satellite production rates at time 1)");
 }
 
 BOOST_AUTO_TEST_CASE(TESTGCONSALE) {
