@@ -36,12 +36,18 @@ namespace Opm {
 class BlackOilDefaultFluidSystemIndices
 {
 public:
+    //! Total number of phases
+    static constexpr unsigned numPhases = 3;
+
     //! Index of the water phase
     static constexpr unsigned waterPhaseIdx = 0;
     //! Index of the oil phase
     static constexpr unsigned oilPhaseIdx = 1;
     //! Index of the gas phase
     static constexpr unsigned gasPhaseIdx = 2;
+
+    //! Total number of components
+    static constexpr unsigned numComponents = 3;
 
     //! Index of the oil component
     static constexpr int oilCompIdx = 0;

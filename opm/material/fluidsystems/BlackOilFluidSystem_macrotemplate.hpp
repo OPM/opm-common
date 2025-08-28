@@ -377,7 +377,7 @@ public:
      ****************************************/
 
     //! \copydoc BaseFluidSystem::numPhases
-    static constexpr unsigned numPhases = 3;
+    static constexpr unsigned numPhases = IndexTraits::numPhases;
 
     //! Index of the water phase
     static constexpr unsigned waterPhaseIdx = IndexTraits::waterPhaseIdx;
@@ -407,7 +407,7 @@ public:
      ****************************************/
 
     //! \copydoc BaseFluidSystem::numComponents
-    static constexpr unsigned numComponents = 3;
+    static constexpr unsigned numComponents = IndexTraits::numComponents;
 
     //! Index of the oil component
     static constexpr int oilCompIdx = IndexTraits::oilCompIdx;
