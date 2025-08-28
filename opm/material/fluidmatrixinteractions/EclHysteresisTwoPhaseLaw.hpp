@@ -144,25 +144,25 @@ public:
         throw std::invalid_argument("The pcnw(fs) method is not yet implemented");
     }
 
-    template <class Evaluation>
+    template <class Evaluation, class ...Args>
     static Evaluation twoPhaseSatPcnw(const Params& params, const Evaluation& Sw)
     {
         OPM_TIMEFUNCTION_LOCAL();
         // if no pc hysteresis is enabled, use the drainage curve
         if (!params.config().enableHysteresis() || params.config().pcHysteresisModel() < 0)
-            return EffectiveLaw::twoPhaseSatPcnw(params.drainageParams(), Sw);
+            return EffectiveLaw::template twoPhaseSatPcnw<Evaluation, Args...>(params.drainageParams(), Sw);
 
         // Initial imbibition process
         if (params.initialImb()) {
             if (Sw >= params.pcSwMic()) {
-                return EffectiveLaw::twoPhaseSatPcnw(params.imbibitionParams(), Sw);
+                return EffectiveLaw::template twoPhaseSatPcnw<Evaluation, Args...>(params.imbibitionParams(), Sw);
             }
             else { // Reversal
                 const Evaluation& F = (1.0/(params.pcSwMic()-Sw+params.curvatureCapPrs())-1.0/params.curvatureCapPrs())
                      / (1.0/(params.pcSwMic()-params.Swcrd()+params.curvatureCapPrs())-1.0/params.curvatureCapPrs());
 
-                const Evaluation& Pcd = EffectiveLaw::twoPhaseSatPcnw(params.drainageParams(), Sw);
-                const Evaluation& Pci = EffectiveLaw::twoPhaseSatPcnw(params.imbibitionParams(), Sw);
+                const Evaluation& Pcd = EffectiveLaw::template twoPhaseSatPcnw<Evaluation, Args...>(params.drainageParams(), Sw);
+                const Evaluation& Pci = EffectiveLaw::template twoPhaseSatPcnw<Evaluation, Args...>(params.imbibitionParams(), Sw);
                 const Evaluation& pc_Killough = Pci+F*(Pcd-Pci);
 
                 return pc_Killough;
@@ -171,12 +171,12 @@ public:
 
         // Initial drainage process
         if (Sw <= params.pcSwMdc())
-            return EffectiveLaw::twoPhaseSatPcnw(params.drainageParams(), Sw);
+            return EffectiveLaw::template twoPhaseSatPcnw<Evaluation, Args...>(params.drainageParams(), Sw);
 
         // Reversal
         Scalar Swma = 1.0-params.Sncrt();
         if (Sw >= Swma) {
-            const Evaluation& Pci = EffectiveLaw::twoPhaseSatPcnw(params.imbibitionParams(), Sw);
+            const Evaluation& Pci = EffectiveLaw::template twoPhaseSatPcnw<Evaluation, Args...>(params.imbibitionParams(), Sw);
             return Pci;
         }
         else {
@@ -186,8 +186,8 @@ public:
                 const Evaluation SwScan = (Sw-params.pcSwMdc())/(Swma-params.pcSwMdc());
                 SwScaled = params.Swcri() + (1 - params.Sncri() - params.Swcri()) * SwScan;
             }
-            const Evaluation dPc = pciwght*EffectiveLaw::twoPhaseSatPcnw(params.imbibitionParams(), SwScaled) - EffectiveLaw::twoPhaseSatPcnw(params.drainageParams(), SwScaled);
-            const Evaluation Pcd = EffectiveLaw::twoPhaseSatPcnw(params.drainageParams(), Sw);
+            const Evaluation dPc = pciwght*EffectiveLaw::template twoPhaseSatPcnw<Evaluation, Args...>(params.imbibitionParams(), SwScaled) - EffectiveLaw::twoPhaseSatPcnw(params.drainageParams(), SwScaled);
+            const Evaluation Pcd = EffectiveLaw::template twoPhaseSatPcnw<Evaluation, Args...>(params.drainageParams(), Sw);
             if (dPc == 0.0)
                 return Pcd;
 
@@ -263,30 +263,30 @@ public:
         throw std::invalid_argument("The krw(fs) method is not yet implemented");
     }
 
-    template <class Evaluation>
+    template <class Evaluation, class ...Args>
     static Evaluation twoPhaseSatKrw(const Params& params, const Evaluation& Sw)
     {
 
         OPM_TIMEFUNCTION_LOCAL();
         // if no relperm hysteresis is enabled, use the drainage curve
         if (!params.config().enableHysteresis() || params.config().krHysteresisModel() < 0)
-            return EffectiveLaw::twoPhaseSatKrw(params.drainageParams(), Sw);
+            return EffectiveLaw::template twoPhaseSatKrw<Evaluation, Args...>(params.drainageParams(), Sw);
 
         if (params.config().krHysteresisModel() == 0 || params.config().krHysteresisModel() == 2)
             // use drainage curve for wetting phase
-            return EffectiveLaw::twoPhaseSatKrw(params.drainageParams(), Sw);
+            return EffectiveLaw::template twoPhaseSatKrw<Evaluation, Args...>(params.drainageParams(), Sw);
 
         // use imbibition curve for wetting phase
         if (params.config().krHysteresisModel() == 1 || params.config().krHysteresisModel() == 3)
-            return EffectiveLaw::twoPhaseSatKrw(params.imbibitionParams(), Sw);
+            return EffectiveLaw::template twoPhaseSatKrw<Evaluation, Args...>(params.imbibitionParams(), Sw);
 
         if (Sw <= params.krnSwMdc()) {
-            return EffectiveLaw::twoPhaseSatKrw(params.drainageParams(), Sw);
+            return EffectiveLaw::template twoPhaseSatKrw<Evaluation, Args...>(params.drainageParams(), Sw);
         }
         // Killough hysteresis for the wetting phase
         assert(params.config().krHysteresisModel() == 4);
         Evaluation Snorm = params.Sncri()+(1.0-Sw-params.Sncrt())*(params.Snmaxd()-params.Sncri())/(params.Snhy()-params.Sncrt());
-        Evaluation Krwi_snorm = EffectiveLaw::twoPhaseSatKrw(params.imbibitionParams(), 1 - Snorm);
+        Evaluation Krwi_snorm = EffectiveLaw::template twoPhaseSatKrw<Evaluation, Args...>(params.imbibitionParams(), 1 - Snorm);
         return params.KrwdHy() +  params.krwWght() * (Krwi_snorm - params.Krwi_snmax());
     }
 
@@ -300,7 +300,7 @@ public:
         throw std::invalid_argument("The krn(fs) method is not yet implemented");
     }
 
-    template <class Evaluation>
+    template <class Evaluation, class ...Args>
     static Evaluation twoPhaseSatKrn(const Params& params, const Evaluation& Sw)
     {
         OPM_TIMEFUNCTION_LOCAL();
@@ -310,19 +310,19 @@ public:
 
             // Primary drainage
             if (Sw <= params.krnSwMdc() + params.tolWAG() && params.nState() == 1) {
-                return EffectiveLaw::twoPhaseSatKrn(params.drainageParams(), Sw);
+                return EffectiveLaw::template twoPhaseSatKrn<Evaluation, Args...>(params.drainageParams(), Sw);
             }
 
             // Imbibition or reversion to two-phase drainage retracing imb curve
             // (Shift along primary drainage curve.)
             if (params.nState() == 1) {
                 Evaluation Swf = params.computeSwf(Sw);
-                return EffectiveLaw::twoPhaseSatKrn(params.drainageParams(), Swf);
+                return EffectiveLaw::template twoPhaseSatKrn<Evaluation, Args...>(params.drainageParams(), Swf);
             }
 
             // Three-phase drainage along current secondary drainage curve
             if (Sw <= params.krnSwDrainRevert()+params.tolWAG() /*&& params.nState()>=1 */) {
-                Evaluation Krg = EffectiveLaw::twoPhaseSatKrn(params.drainageParams(), Sw);
+                Evaluation Krg = EffectiveLaw::template twoPhaseSatKrn<Evaluation, Args...>(params.drainageParams(), Sw);
                 Evaluation KrgDrain2 = (Krg-params.krnDrainStart())*params.reductionDrain() + params.krnImbStart();
                 return KrgDrain2;
             }
@@ -333,30 +333,30 @@ public:
                 return KrgImb2;
             }
             else {/* Sw < params.krnSwWAG() */  // Reversion along "next" drainage curve
-                Evaluation Krg = EffectiveLaw::twoPhaseSatKrn(params.drainageParams(), Sw);
+                Evaluation Krg = EffectiveLaw::template twoPhaseSatKrn<Evaluation, Args...>(params.drainageParams(), Sw);
                 Evaluation KrgDrainNxt = (Krg-params.krnDrainStartNxt())*params.reductionDrainNxt() + params.krnImbStartNxt();
                 return KrgDrainNxt;
             }
         }
         // if no relperm hysteresis is enabled, use the drainage curve
         if (!params.config().enableHysteresis() || params.config().krHysteresisModel() < 0)
-            return EffectiveLaw::twoPhaseSatKrn(params.drainageParams(), Sw);
+            return EffectiveLaw::template twoPhaseSatKrn<Evaluation, Args...>(params.drainageParams(), Sw);
 
         // if it is enabled, use either the drainage or the imbibition curve. if the
         // imbibition curve is used, the saturation must be shifted.
         if (Sw <= params.krnSwMdc()) {
-            return EffectiveLaw::twoPhaseSatKrn(params.drainageParams(), Sw);
+            return EffectiveLaw::template twoPhaseSatKrn<Evaluation, Args...>(params.drainageParams(), Sw);
         }
 
         if (params.config().krHysteresisModel() <= 1) { //Carlson
-            return EffectiveLaw::twoPhaseSatKrn(params.imbibitionParams(),
-                                                Sw + params.deltaSwImbKrn());
+            return EffectiveLaw::template twoPhaseSatKrn<Evaluation, Args...>(params.imbibitionParams(),
+                                                                              Sw + params.deltaSwImbKrn());
         }
 
         // Killough
         assert(params.config().krHysteresisModel() == 2 || params.config().krHysteresisModel() == 3 || params.config().krHysteresisModel() == 4);
         Evaluation Snorm = params.Sncri()+(1.0-Sw-params.Sncrt())*(params.Snmaxd()-params.Sncri())/(params.Snhy()-params.Sncrt());
-        return params.krnWght()*EffectiveLaw::twoPhaseSatKrn(params.imbibitionParams(),1.0-Snorm);
+        return params.krnWght()*EffectiveLaw::template twoPhaseSatKrn<Evaluation, Args...>(params.imbibitionParams(),1.0-Snorm);
     }
 };
 
