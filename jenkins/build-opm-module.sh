@@ -96,7 +96,7 @@ function build_module {
   CMAKE_PARAMS="$1"
   DO_TEST_FLAG="$2"
   MOD_SRC_DIR="$3"
-  cmake "$MOD_SRC_DIR" -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=$DO_TEST_FLAG -DCMAKE_TOOLCHAIN_FILE=${configurations[$configuration]} $CMAKE_PARAMS
+  cmake "$MOD_SRC_DIR" -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=$DO_TEST_FLAG -DCMAKE_TOOLCHAIN_FILE=${configurations[$configuration]} -DOPM_DOXYGEN_LOG_FILE=$PWD/doc/doxygen/Warnings.log $CMAKE_PARAMS
   test $? -eq 0 || exit 1
   if test $DO_TEST_FLAG -eq 1
   then
