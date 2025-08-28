@@ -568,7 +568,8 @@ template std::vector<int>& DeckItem::getData<int>();
 template std::vector<double>& DeckItem::getData<double>();
 
 template const std::vector<int>& DeckItem::getData<int>() const;
-template const std::vector<double>& DeckItem::getData<double>() const;
+// Explicit instantiation for double is not needed since a template
+// specialization is defined above.
 template const std::vector<UDAValue>& DeckItem::getData<UDAValue>() const;
 template const std::vector<std::string>& DeckItem::getData<std::string>() const;
 template const std::vector<RawString>& DeckItem::getData<RawString>() const;
