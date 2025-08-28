@@ -486,6 +486,7 @@ list (APPEND TEST_SOURCE_FILES
       tests/test_nonuniformtablelinear.cpp
       tests/test_OpmInputError_format.cpp
       tests/test_OpmLog.cpp
+      tests/test_PhaseUsageInfo.cpp
       tests/test_param.cpp
       tests/test_RootFinders.cpp
       tests/test_ScheduleGrid.cpp

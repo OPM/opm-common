@@ -265,7 +265,7 @@ public:
      *
      * After calling this method the reference densities, all dissolution and formation
      * volume factors, the oil bubble pressure, all viscosities and the water
-     * compressibility must be set. Before the fluid system can be used, initEnd() must
+     * compressibility must be set. Before the fluid system can be used, updateIndexMapping_() must
      * be called to finalize the initialization.
      */
     STATIC_OR_NOTHING void initBegin(std::size_t numPvtRegions);
@@ -1814,8 +1814,6 @@ initBegin(std::size_t numPvtRegions)
     surfacePressure = 1.01325e5; // [Pa]
     setReservoirTemperature(surfaceTemperature);
 
-    phaseUsageInfo_.initBegin();
-
     resizeArrays_(numPvtRegions);
 }
 
@@ -1856,8 +1854,6 @@ NOTHING_OR_DEVICE void FLUIDSYSTEM_CLASSNAME<Scalar,IndexTraits, Storage>::initE
         // finally, for oil phase, we take the molar mass from the spe9 paper
         molarMass_[regionIdx][oilCompIdx] = 175e-3; // kg/mol
     }
-
-    phaseUsageInfo_.initEnd();
 
     isInitialized_ = true;
 }
