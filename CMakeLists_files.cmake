@@ -271,6 +271,7 @@ if(ENABLE_ECL_INPUT)
     opm/input/eclipse/Schedule/Group/GConSale.cpp
     opm/input/eclipse/Schedule/Group/GConSump.cpp
     opm/input/eclipse/Schedule/Group/GroupEconProductionLimits.cpp
+    opm/input/eclipse/Schedule/Group/GroupSatelliteInjection.cpp
     opm/input/eclipse/Schedule/Group/GSatProd.cpp
     opm/input/eclipse/Schedule/Group/GTNode.cpp
     opm/input/eclipse/Schedule/MSW/AICD.cpp
@@ -529,6 +530,7 @@ if(ENABLE_ECL_INPUT)
     tests/test_CSRGraphFromCoordinates_Merge.cpp
     tests/test_DatumDepth.cpp
     tests/test_ERsm.cpp
+    tests/test_GroupSatelliteInjection.cpp
     tests/test_GuideRate.cpp
     tests/test_RestartFileView.cpp
     tests/test_EclIO.cpp
@@ -1440,16 +1442,17 @@ if(ENABLE_ECL_INPUT)
        opm/input/eclipse/Schedule/Source.hpp
        opm/input/eclipse/Schedule/Tuning.hpp
        opm/input/eclipse/Schedule/WriteRestartFileEvents.hpp
-       opm/input/eclipse/Schedule/Group/GPMaint.hpp
-       opm/input/eclipse/Schedule/Group/GTNode.hpp
-       opm/input/eclipse/Schedule/Group/Group.hpp
-       opm/input/eclipse/Schedule/Group/GuideRate.hpp
        opm/input/eclipse/Schedule/Group/GConSale.hpp
        opm/input/eclipse/Schedule/Group/GConSump.hpp
+       opm/input/eclipse/Schedule/Group/GPMaint.hpp
        opm/input/eclipse/Schedule/Group/GSatProd.hpp
+       opm/input/eclipse/Schedule/Group/Group.hpp
        opm/input/eclipse/Schedule/Group/GroupEconProductionLimits.hpp
+       opm/input/eclipse/Schedule/Group/GroupSatelliteInjection.hpp
+       opm/input/eclipse/Schedule/Group/GuideRate.hpp
        opm/input/eclipse/Schedule/Group/GuideRateConfig.hpp
        opm/input/eclipse/Schedule/Group/GuideRateModel.hpp
+       opm/input/eclipse/Schedule/Group/GTNode.hpp
        opm/input/eclipse/Schedule/MessageLimits.hpp
        opm/input/eclipse/Schedule/CompletedCells.hpp
        opm/input/eclipse/Schedule/Events.hpp

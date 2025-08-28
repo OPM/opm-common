@@ -25,16 +25,18 @@
 #include <opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquifers.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
+#include <opm/input/eclipse/EclipseState/Phase.hpp>
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
 
 #include <opm/input/eclipse/Python/Python.hpp>
 
 #include <opm/input/eclipse/Schedule/Group/GConSump.hpp>
-#include <opm/input/eclipse/Schedule/Group/GSatProd.hpp>
 #include <opm/input/eclipse/Schedule/Group/GConSale.hpp>
-#include <opm/input/eclipse/Schedule/Group/GroupEconProductionLimits.hpp>
 #include <opm/input/eclipse/Schedule/Group/Group.hpp>
+#include <opm/input/eclipse/Schedule/Group/GroupEconProductionLimits.hpp>
+#include <opm/input/eclipse/Schedule/Group/GroupSatelliteInjection.hpp>
+#include <opm/input/eclipse/Schedule/Group/GSatProd.hpp>
 #include <opm/input/eclipse/Schedule/Group/GuideRateModel.hpp>
 #include <opm/input/eclipse/Schedule/Group/GuideRate.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
@@ -496,6 +498,286 @@ END
     // T = 1
     BOOST_CHECK_MESSAGE(sched[1].groups("G1").hasSatelliteProduction(),
                         R"(Group "G1" must have satellite production at time 1)");
+}
+
+BOOST_AUTO_TEST_CASE(Satellite_Injection)
+{
+    const auto sched = create_schedule(R"(
+START             -- 0
+27 AUG 2025 /
+SCHEDULE
+
+GRUPTREE
+  'G1' 'FIELD' /
+/
+
+GSATINJE
+  'G1' GAS   1*      78910.11 1.21314 /
+  'G1' WATER 1234.56 789.1011 /
+/
+
+TSTEP
+  1
+/
+END
+)");
+
+    constexpr auto sm3d = unit::cubic(unit::meter)/unit::day;
+    constexpr auto rm3d = unit::cubic(unit::meter)/unit::day;
+    constexpr auto kJm = prefix::kilo*unit::joule/unit::meter;
+
+    BOOST_REQUIRE_MESSAGE(sched[0].satelliteInjection.has("G1"),
+                          R"(Satellite injection rates must be defined for "G1" at time zero)");
+
+    BOOST_CHECK_MESSAGE(! sched[0].satelliteInjection.has("No-Such-Group"),
+                        R"(Satellite injection rates must NOT be defined for "No-Such-Group" at time zero)");
+
+    const auto& i = sched[0].satelliteInjection("G1");
+
+    BOOST_CHECK_EQUAL(i.name(), "G1");
+
+    {
+        const auto wix = i.rateIndex(Phase::WATER);
+        BOOST_REQUIRE_MESSAGE(wix.has_value(),
+                              R"(Group "G1" must have satellite injection rates defined for the WATER phase)");
+
+        const auto& rate = i[*wix];
+
+        const auto& qs = rate.surface();
+        BOOST_REQUIRE_MESSAGE(qs.has_value(),
+                              R"(Group "G1" must have surface condition satellite injection rates defined for the WATER phase)");
+        BOOST_CHECK_CLOSE(*qs, 1234.56*sm3d, 1.0e-8);
+
+        const auto& qr = rate.reservoir();
+        BOOST_REQUIRE_MESSAGE(qr.has_value(),
+                              R"(Group "G1" must have reservoir condition satellite injection rates defined for the WATER phase)");
+        BOOST_CHECK_CLOSE(*qr, 789.1011*rm3d, 1.0e-8);
+
+        BOOST_CHECK_MESSAGE(! rate.calorific().has_value(),
+                            R"(Group "G1" must NOT have satellite injection mean calorific value defined for the WATER phase)");
+    }
+
+    {
+        const auto gix = i.rateIndex(Phase::GAS);
+        BOOST_REQUIRE_MESSAGE(gix.has_value(),
+                              R"(Group "G1" must have satellite injection rates defined for the GAS phase)");
+
+        const auto& rate = i[*gix];
+
+        BOOST_REQUIRE_MESSAGE(! rate.surface().has_value(),
+                              R"(Group "G1" must NOT have surface condition satellite injection rates defined for the GAS phase)");
+
+        const auto& qr = rate.reservoir();
+        BOOST_REQUIRE_MESSAGE(qr.has_value(),
+                              R"(Group "G1" must have reservoir condition satellite injection rates defined for the GAS phase)");
+        BOOST_CHECK_CLOSE(*qr, 78910.11*rm3d, 1.0e-8);
+
+        const auto& c = rate.calorific();
+        BOOST_REQUIRE_MESSAGE(c.has_value(),
+                              R"(Group "G1" must have satellite injection mean calorific value defined for the GAS phase)");
+        BOOST_CHECK_CLOSE(*c, 1.21314*kJm, 1.0e-8);
+    }
+
+    BOOST_CHECK_MESSAGE(! i.rateIndex(Phase::OIL).has_value(),
+                        R"(Group "G1" must NOT have satellite injection rates defined for the OIL phase)");
+}
+
+BOOST_AUTO_TEST_CASE(Satellite_Injection_Field_Units)
+{
+    const auto sched = create_schedule(R"(
+START             -- 0
+27 AUG 2025 /
+FIELD
+
+SCHEDULE
+
+GRUPTREE
+  'G1' 'FIELD' /
+/
+
+GSATINJE
+  'G1' GAS   12345.6 78910.11 1.21314 /
+  'G1' WATER 1234.56 789.1011 /
+/
+
+TSTEP
+  1
+/
+END
+)");
+
+    constexpr auto mscfd = 1000*unit::cubic(unit::feet)/unit::day;
+    constexpr auto stbd = unit::stb/unit::day;
+    constexpr auto rbd = unit::stb/unit::day;
+    constexpr auto btu_mscf = unit::btu/(1000*unit::cubic(unit::feet));
+
+    BOOST_REQUIRE_MESSAGE(sched[0].satelliteInjection.has("G1"),
+                          R"(Satellite injection rates must be defined for "G1" at time zero)");
+
+    BOOST_CHECK_MESSAGE(! sched[0].satelliteInjection.has("No-Such-Group"),
+                        R"(Satellite injection rates must NOT be defined for "No-Such-Group" at time zero)");
+
+    const auto& i = sched[0].satelliteInjection("G1");
+
+    BOOST_CHECK_EQUAL(i.name(), "G1");
+
+    {
+        const auto wix = i.rateIndex(Phase::WATER);
+        BOOST_REQUIRE_MESSAGE(wix.has_value(),
+                              R"(Group "G1" must have satellite injection rates defined for the WATER phase)");
+
+        const auto& rate = i[*wix];
+
+        const auto& qs = rate.surface();
+        BOOST_REQUIRE_MESSAGE(qs.has_value(),
+                              R"(Group "G1" must have surface condition satellite injection rates defined for the WATER phase)");
+        BOOST_CHECK_CLOSE(*qs, 1234.56*stbd, 1.0e-8);
+
+        const auto& qr = rate.reservoir();
+        BOOST_REQUIRE_MESSAGE(qr.has_value(),
+                              R"(Group "G1" must have reservoir condition satellite injection rates defined for the WATER phase)");
+        BOOST_CHECK_CLOSE(*qr, 789.1011*rbd, 1.0e-8);
+
+        BOOST_CHECK_MESSAGE(! rate.calorific().has_value(),
+                            R"(Group "G1" must NOT have satellite injection mean calorific value defined for the WATER phase)");
+    }
+
+    {
+        const auto gix = i.rateIndex(Phase::GAS);
+        BOOST_REQUIRE_MESSAGE(gix.has_value(),
+                              R"(Group "G1" must have satellite injection rates defined for the GAS phase)");
+
+        const auto& rate = i[*gix];
+
+        const auto qs = rate.surface();
+        BOOST_REQUIRE_MESSAGE(qs.has_value(),
+                              R"(Group "G1" must have surface condition satellite injection rates defined for the GAS phase)");
+        BOOST_CHECK_CLOSE(*qs, 12345.6*mscfd, 1.0e-8);
+
+        const auto& qr = rate.reservoir();
+        BOOST_REQUIRE_MESSAGE(qr.has_value(),
+                              R"(Group "G1" must have reservoir condition satellite injection rates defined for the GAS phase)");
+        BOOST_CHECK_CLOSE(*qr, 78910.11*rbd, 1.0e-8);
+
+        const auto& c = rate.calorific();
+        BOOST_REQUIRE_MESSAGE(c.has_value(),
+                              R"(Group "G1" must have satellite injection mean calorific value defined for the GAS phase)");
+        BOOST_CHECK_CLOSE(*c, 1.21314*btu_mscf, 1.0e-8);
+    }
+
+    BOOST_CHECK_MESSAGE(! i.rateIndex(Phase::OIL).has_value(),
+                        R"(Group "G1" must NOT have satellite injection rates defined for the OIL phase)");
+}
+
+BOOST_AUTO_TEST_CASE(Satellite_Injection_NewGroup)
+{
+    const auto sched = create_schedule(R"(
+START             -- 0
+27 AUG 2025 /
+SCHEDULE
+
+GSATINJE
+  'G1' GAS   1*      78910.11 1.21314 /
+  'G1' WATER 1234.56 789.1011 /
+/
+
+TSTEP
+  1
+/
+END
+)");
+
+    BOOST_CHECK_MESSAGE(sched[0].groups.has("G1"), R"(Group "G1" must exist)");
+
+    constexpr auto sm3d = unit::cubic(unit::meter)/unit::day;
+    constexpr auto rm3d = unit::cubic(unit::meter)/unit::day;
+    constexpr auto kJm = prefix::kilo*unit::joule/unit::meter;
+
+    BOOST_REQUIRE_MESSAGE(sched[0].satelliteInjection.has("G1"),
+                          R"(Satellite injection rates must be defined for "G1" at time zero)");
+
+    BOOST_CHECK_MESSAGE(! sched[0].satelliteInjection.has("No-Such-Group"),
+                        R"(Satellite injection rates must NOT be defined for "No-Such-Group" at time zero)");
+
+    const auto& i = sched[0].satelliteInjection("G1");
+
+    BOOST_CHECK_EQUAL(i.name(), "G1");
+
+    {
+        const auto wix = i.rateIndex(Phase::WATER);
+        BOOST_REQUIRE_MESSAGE(wix.has_value(),
+                              R"(Group "G1" must have satellite injection rates defined for the WATER phase)");
+
+        const auto& rate = i[*wix];
+
+        const auto& qs = rate.surface();
+        BOOST_REQUIRE_MESSAGE(qs.has_value(),
+                              R"(Group "G1" must have surface condition satellite injection rates defined for the WATER phase)");
+        BOOST_CHECK_CLOSE(*qs, 1234.56*sm3d, 1.0e-8);
+
+        const auto& qr = rate.reservoir();
+        BOOST_REQUIRE_MESSAGE(qr.has_value(),
+                              R"(Group "G1" must have reservoir condition satellite injection rates defined for the WATER phase)");
+        BOOST_CHECK_CLOSE(*qr, 789.1011*rm3d, 1.0e-8);
+
+        BOOST_CHECK_MESSAGE(! rate.calorific().has_value(),
+                            R"(Group "G1" must NOT have satellite injection mean calorific value defined for the WATER phase)");
+    }
+
+    {
+        const auto gix = i.rateIndex(Phase::GAS);
+        BOOST_REQUIRE_MESSAGE(gix.has_value(),
+                              R"(Group "G1" must have satellite injection rates defined for the GAS phase)");
+
+        const auto& rate = i[*gix];
+
+        BOOST_REQUIRE_MESSAGE(! rate.surface().has_value(),
+                              R"(Group "G1" must NOT have surface condition satellite injection rates defined for the GAS phase)");
+
+        const auto& qr = rate.reservoir();
+        BOOST_REQUIRE_MESSAGE(qr.has_value(),
+                              R"(Group "G1" must have reservoir condition satellite injection rates defined for the GAS phase)");
+        BOOST_CHECK_CLOSE(*qr, 78910.11*rm3d, 1.0e-8);
+
+        const auto& c = rate.calorific();
+        BOOST_REQUIRE_MESSAGE(c.has_value(),
+                              R"(Group "G1" must have satellite injection mean calorific value defined for the GAS phase)");
+        BOOST_CHECK_CLOSE(*c, 1.21314*kJm, 1.0e-8);
+    }
+
+    BOOST_CHECK_MESSAGE(! i.rateIndex(Phase::OIL).has_value(),
+                        R"(Group "G1" must NOT have satellite injection rates defined for the OIL phase)");
+}
+
+BOOST_AUTO_TEST_CASE(Satellite_Injection_Status)
+{
+    const auto sched = create_schedule(R"(
+START             -- 0
+22 AUG 2025 /
+SCHEDULE
+GRUPTREE
+  G1 FIELD /
+/
+
+TSTEP
+  1 /
+
+GSATINJE
+  'G1' WATER 123 1* 7.89 /
+/
+
+TSTEP
+  1 /
+END
+)");
+
+    // T = 0
+    BOOST_CHECK_MESSAGE(! sched[0].groups("G1").hasSatelliteInjection(),
+                        R"(Group "G1" must NOT have satellite injection rates at time 0)");
+
+    // T = 1
+    BOOST_CHECK_MESSAGE(sched[1].groups("G1").hasSatelliteInjection(),
+                        R"(Group "G1" must have satellite injection rates at time 1)");
 }
 
 BOOST_AUTO_TEST_CASE(TESTGCONSALE) {

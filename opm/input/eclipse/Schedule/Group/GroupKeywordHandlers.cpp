@@ -29,9 +29,10 @@
 #include <opm/input/eclipse/Schedule/GasLiftOpt.hpp>
 #include <opm/input/eclipse/Schedule/Group/GConSale.hpp>
 #include <opm/input/eclipse/Schedule/Group/GConSump.hpp>
-#include <opm/input/eclipse/Schedule/Group/GSatProd.hpp>
 #include <opm/input/eclipse/Schedule/Group/Group.hpp>
 #include <opm/input/eclipse/Schedule/Group/GroupEconProductionLimits.hpp>
+#include <opm/input/eclipse/Schedule/Group/GroupSatelliteInjection.hpp>
+#include <opm/input/eclipse/Schedule/Group/GSatProd.hpp>
 #include <opm/input/eclipse/Schedule/Group/GuideRateConfig.hpp>
 #include <opm/input/eclipse/Schedule/Network/ExtNetwork.hpp>
 #include <opm/input/eclipse/Schedule/Network/Node.hpp>
@@ -39,6 +40,8 @@
 #include <opm/input/eclipse/Schedule/ScheduleStatic.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQActive.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQConfig.hpp>
+
+#include <opm/input/eclipse/Units/UnitSystem.hpp>
 
 #include "../HandlerContext.hpp"
 
@@ -50,6 +53,86 @@
 #include <string>
 #include <utility>
 #include <vector>
+
+namespace {
+
+    Opm::GroupSatelliteInjection::Rate
+    parseGSatInje(const Opm::Phase       phase,
+                  const Opm::UnitSystem& usys,
+                  const Opm::DeckRecord& record)
+    {
+        using Kw = Opm::ParserKeywords::GSATINJE;
+
+        auto rate = Opm::GroupSatelliteInjection::Rate{};
+
+        if (const auto& rateItem = record.getItem<Kw::SURF_INJ_RATE>();
+            ! rateItem.defaultApplied(0))
+        {
+            const auto rateUnit = (phase == Opm::Phase::GAS)
+                ? Opm::UnitSystem::measure::gas_surface_rate
+                : Opm::UnitSystem::measure::liquid_surface_rate;
+
+            rate.surface(usys.to_si(rateUnit, rateItem.get<double>(0)));
+        }
+
+        if (const auto& resvItem = record.getItem<Kw::RES_INJ_RATE>();
+            ! resvItem.defaultApplied(0))
+        {
+            rate.reservoir(resvItem.getSIDouble(0));
+        }
+
+        if (const auto& calorificItem = record.getItem<Kw::MEAN_CALORIFIC>();
+            ! calorificItem.defaultApplied(0))
+        {
+            rate.calorific(calorificItem.getSIDouble(0));
+        }
+
+        return rate;
+    }
+
+    void rejectGroupIfField(const std::string&   group_name,
+                            Opm::HandlerContext& handlerContext)
+    {
+        if (group_name == "FIELD") {
+            const auto msg_fmt = std::string {
+                "Problem with {keyword}\n"
+                "In {file} line {line}\n"
+                "{keyword} cannot be applied to FIELD"
+            };
+
+            handlerContext.parseContext
+                .handleError(Opm::ParseContext::SCHEDULE_GROUP_ERROR,
+                             msg_fmt, handlerContext.keyword.location(),
+                             handlerContext.errors);
+        }
+    }
+
+    std::vector<std::string>
+    getGroupNamesAndCreateIfNeeded(const std::string&   groupNamePattern,
+                                   Opm::HandlerContext& handlerContext)
+    {
+        auto group_names = handlerContext.groupNames(groupNamePattern);
+
+        if (group_names.empty()) {
+            if (groupNamePattern.find('*') != std::string::npos) {
+                // Pattern is a root of the form 'S*'.  There must be at
+                // least one group matching that pattern for GSATINJE to
+                // apply.
+                handlerContext.invalidNamePattern(groupNamePattern);
+            }
+            else {
+                // Pattern is fully specified group name like 'SAT', but the
+                // group does not yet exist.  Create it, and parent the new
+                // group directly to FIELD.
+                handlerContext.addGroup(groupNamePattern);
+                group_names.push_back(groupNamePattern);
+            }
+        }
+
+        return group_names;
+    }
+
+} // Anonymous namespace
 
 namespace Opm {
 
@@ -380,79 +463,6 @@ void handleGCONPROD(HandlerContext& handlerContext)
     }
 }
 
-void handleGSATPROD(HandlerContext& handlerContext)
-{
-    using Kw = ParserKeywords::GSATPROD;
-
-    const auto& keyword = handlerContext.keyword;
-
-    auto new_gsatprod = handlerContext.state().gsatprod.get();
-
-    auto update = false;
-
-    for (const auto& record : keyword) {
-        const auto groupNamePattern = record
-            .getItem<Kw::SATELLITE_GROUP_NAME_OR_GROUP_NAME_ROOT>()
-            .getTrimmedString(0);
-
-        auto group_names = handlerContext.groupNames(groupNamePattern);
-        if (group_names.empty()) {
-            if (groupNamePattern.find('*') != std::string::npos) {
-                // Pattern is a root of the form 'S*'.  There must exist at
-                // least one group matching that pattern for GSATPROD to
-                // apply.
-                handlerContext.invalidNamePattern(groupNamePattern);
-            }
-            else {
-                // Pattern is fully specified group name like 'SAT', but
-                // the group does not yet exist.  Create it, and parent the
-                // new group directly to FIELD.
-                handlerContext.addGroup(groupNamePattern);
-                group_names.push_back(groupNamePattern);
-            }
-        }
-
-        const auto oil_rate = record.getItem<Kw::OIL_PRODUCTION_RATE>().getSIDouble(0);
-        const auto gas_rate = record.getItem<Kw::GAS_PRODUCTION_RATE>().getSIDouble(0);
-        const auto water_rate = record.getItem<Kw::WATER_PRODUCTION_RATE>().getSIDouble(0);
-        const auto resv_rate = record.getItem<Kw::RES_FLUID_VOL_PRODUCTION_RATE>().getSIDouble(0);
-        const auto glift_rate = record.getItem<Kw::LIFT_GAS_SUPPLY_RATE>().getSIDouble(0);
-
-        for (const auto& group_name : group_names) {
-            if (group_name == "FIELD") {
-                const auto msg_fmt = std::string {
-                    "Problem with {keyword}\n"
-                    "In {file} line {line}\n"
-                    "GSATPROD cannot be applied to FIELD"
-                };
-
-                handlerContext.parseContext
-                    .handleError(ParseContext::SCHEDULE_GROUP_ERROR,
-                                 msg_fmt, keyword.location(),
-                                 handlerContext.errors);
-            }
-
-            new_gsatprod.assign(group_name,
-                                oil_rate,
-                                gas_rate,
-                                water_rate,
-                                resv_rate,
-                                glift_rate);
-
-            auto grp = handlerContext.state().groups(group_name);
-            grp.recordSatelliteProduction();
-
-            handlerContext.state().groups.update(std::move(grp));
-
-            update = true;
-        }
-    }
-
-    if (update) {
-        handlerContext.state().gsatprod.update(std::move(new_gsatprod));
-    }
-}
-
 void handleGCONSALE(HandlerContext& handlerContext)
 {
     auto new_gconsale = handlerContext.state().gconsale.get();
@@ -598,6 +608,83 @@ void handleGRUPTREE(HandlerContext& handlerContext)
     }
 }
 
+void handleGSATINJE(HandlerContext& handlerContext)
+{
+    using Kw = ParserKeywords::GSATINJE;
+
+    for (const auto& record : handlerContext.keyword) {
+        const auto group_names =
+            getGroupNamesAndCreateIfNeeded(record.getItem<Kw::GROUP>()
+                                           .getTrimmedString(0), handlerContext);
+
+        const auto phase = get_phase(record.getItem<Kw::PHASE>().getTrimmedString(0));
+        const auto rate =
+            parseGSatInje(phase, handlerContext.static_schedule().m_unit_system, record);
+
+        for (const auto& group_name : group_names) {
+            rejectGroupIfField(group_name, handlerContext);
+
+            auto i = handlerContext.state().satelliteInjection.has(group_name)
+                ? handlerContext.state().satelliteInjection(group_name)
+                : GroupSatelliteInjection { group_name };
+
+            i.rate(phase) = rate;
+            handlerContext.state().satelliteInjection.update(std::move(i));
+
+            auto grp = handlerContext.state().groups(group_name);
+            grp.recordSatelliteInjection();
+
+            handlerContext.state().groups.update(std::move(grp));
+        }
+    }
+}
+
+void handleGSATPROD(HandlerContext& handlerContext)
+{
+    using Kw = ParserKeywords::GSATPROD;
+
+    const auto& keyword = handlerContext.keyword;
+
+    auto new_gsatprod = handlerContext.state().gsatprod.get();
+
+    auto update = false;
+
+    for (const auto& record : keyword) {
+        const auto group_names =
+            getGroupNamesAndCreateIfNeeded(record
+                                           .getItem<Kw::SATELLITE_GROUP_NAME_OR_GROUP_NAME_ROOT>()
+                                           .getTrimmedString(0), handlerContext);
+
+        const auto oil_rate = record.getItem<Kw::OIL_PRODUCTION_RATE>().getSIDouble(0);
+        const auto gas_rate = record.getItem<Kw::GAS_PRODUCTION_RATE>().getSIDouble(0);
+        const auto water_rate = record.getItem<Kw::WATER_PRODUCTION_RATE>().getSIDouble(0);
+        const auto resv_rate = record.getItem<Kw::RES_FLUID_VOL_PRODUCTION_RATE>().getSIDouble(0);
+        const auto glift_rate = record.getItem<Kw::LIFT_GAS_SUPPLY_RATE>().getSIDouble(0);
+
+        for (const auto& group_name : group_names) {
+            rejectGroupIfField(group_name, handlerContext);
+
+            new_gsatprod.assign(group_name,
+                                oil_rate,
+                                gas_rate,
+                                water_rate,
+                                resv_rate,
+                                glift_rate);
+
+            auto grp = handlerContext.state().groups(group_name);
+            grp.recordSatelliteProduction();
+
+            handlerContext.state().groups.update(std::move(grp));
+
+            update = true;
+        }
+    }
+
+    if (update) {
+        handlerContext.state().gsatprod.update(std::move(new_gsatprod));
+    }
+}
+
 }
 
 std::vector<std::pair<std::string,KeywordHandlers::handler_function>>
@@ -612,6 +699,7 @@ getGroupHandlers()
         { "GEFAC"   , &handleGEFAC    },
         { "GPMAINT" , &handleGPMAINT  },
         { "GRUPTREE", &handleGRUPTREE },
+        { "GSATINJE", &handleGSATINJE },
         { "GSATPROD", &handleGSATPROD },
     };
 }

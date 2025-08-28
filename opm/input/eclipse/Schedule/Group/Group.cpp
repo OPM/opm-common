@@ -45,11 +45,14 @@ namespace {
     ///
     /// Packed into an unsigned integer of at least 8 bits.
     enum class GroupSatelliteStatus : std::uint_least8_t {
-        /// Group is not a satellite
+        /// Group is not a satellite.
         None = UINT8_C(0),
 
-        /// Group has satellite production
+        /// Group has satellite production.
         Production = (UINT8_C(1) << UINT8_C(0)),
+
+        /// Group has satellite injection.
+        Injection = (UINT8_C(1) << UINT8_C(0)),
     };
 
     /// Convert group satellite status flag to an integer.
@@ -896,6 +899,19 @@ bool Group::hasSatelliteProduction() const
 {
     return groupSatelliteStatusFlagIsSet(this->satellite_status,
                                          GroupSatelliteStatus::Production);
+}
+
+void Group::recordSatelliteInjection()
+{
+    this->satellite_status =
+        setGroupSatelliteStatusFlag(this->satellite_status,
+                                    GroupSatelliteStatus::Injection);
+}
+
+bool Group::hasSatelliteInjection() const
+{
+    return groupSatelliteStatusFlagIsSet(this->satellite_status,
+                                         GroupSatelliteStatus::Injection);
 }
 
 const std::string& Group::parent() const

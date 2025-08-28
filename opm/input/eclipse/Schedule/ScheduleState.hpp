@@ -69,9 +69,10 @@ namespace Opm {
     class GasLiftOpt;
     class GConSale;
     class GConSump;
-    class GSatProd;
     class GroupEconProductionLimits;
     class GroupOrder;
+    class GroupSatelliteInjection;
+    class GSatProd;
     class GuideRateConfig;
     class NameOrder;
     namespace Network {
@@ -506,6 +507,9 @@ namespace Opm {
         map_member<std::string, Group> groups;
         map_member<std::string, Well> wells;
 
+        /// Group level satellite injection rates.
+        map_member<std::string, GroupSatelliteInjection> satelliteInjection;
+
         /// Well fracturing seed points and associate fracture plane normal
         /// vectors.
         map_member<std::string, WellFractureSeeds> wseed;
@@ -549,6 +553,7 @@ namespace Opm {
             serializer(vfpinj);
             serializer(groups);
             serializer(wells);
+            serializer(this->satelliteInjection);
             serializer(wseed);
             serializer(aqufluxs);
             serializer(bcprop);
