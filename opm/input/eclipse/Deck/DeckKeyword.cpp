@@ -38,6 +38,14 @@ namespace Opm {
     {
     }
 
+    DeckKeyword::DeckKeyword(const KeywordLocation& location, const ParserKeyword& parserKeyword) :
+        m_keywordName(parserKeyword.getName()),
+        m_location(location),
+        m_isDataKeyword(false),
+        m_slashTerminated(!parserKeyword.hasFixedSize())
+    {
+    }
+
     DeckKeyword::DeckKeyword(const KeywordLocation& location, const std::string& keywordName) :
         m_keywordName(keywordName),
         m_location(location),
@@ -163,8 +171,8 @@ namespace Opm {
         }
     }
 
-    DeckKeyword::DeckKeyword(const ParserKeyword& parserKeyword, const std::vector<int>& data) :
-        DeckKeyword(parserKeyword)
+    DeckKeyword::DeckKeyword(const ParserKeyword& parserKeyword, const std::vector<int>& data, const KeywordLocation& location) :
+        DeckKeyword(location, parserKeyword)
     {
         if (!parserKeyword.isDataKeyword())
             throw std::invalid_argument("Deckkeyword '" + name() + "' is not a data keyword.");
@@ -185,8 +193,8 @@ namespace Opm {
     }
 
 
-    DeckKeyword::DeckKeyword(const ParserKeyword& parserKeyword, const std::vector<double>& data, const UnitSystem& system_active, const UnitSystem& system_default) :
-        DeckKeyword(parserKeyword)
+    DeckKeyword::DeckKeyword(const ParserKeyword& parserKeyword, const std::vector<double>& data, const UnitSystem& system_active, const UnitSystem& system_default, const KeywordLocation& location) :
+        DeckKeyword(location, parserKeyword)
     {
         if (!parserKeyword.isDataKeyword())
             throw std::invalid_argument("Deckkeyword '" + name() + "' is not a data keyword.");

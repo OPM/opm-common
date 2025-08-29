@@ -356,9 +356,9 @@ std::pair<Options, std::string> load_options(int argc, char **argv)
         }
 
         if (opt.mode == Opm::FileDeck::OutputMode::COPY) {
-            const auto target = fs::path(target_arg).parent_path();
+            const auto target = fs::path(fs::absolute(target_arg)).parent_path();
             if (fs::exists(target)) {
-                const auto input = fs::path(opt.input_deck).parent_path();
+                const auto input = fs::path(fs::absolute(opt.input_deck)).parent_path();
                 if (fs::equivalent(target, input)) {
                     opt.mode = Opm::FileDeck::OutputMode::SHARE;
                 }

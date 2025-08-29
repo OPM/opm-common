@@ -42,6 +42,7 @@ public:
     std::string keyword;
     std::string filename = "<memory string>";
     std::size_t lineno = 0;
+    static constexpr std::size_t LINENO_BINARY = 99999999;
 
     KeywordLocation() = default;
     KeywordLocation(std::string kw, std::string fname, std::size_t lno) :
@@ -50,7 +51,7 @@ public:
         lineno(lno)
     {}
 
-
+    bool is_binary() const { return lineno == LINENO_BINARY; }
     std::string format(const std::string& msg_fmt) const;
 
     static KeywordLocation serializationTestObject()
