@@ -60,6 +60,7 @@ list (APPEND MAIN_SOURCE_FILES
       opm/material/densead/Evaluation.cpp
       opm/material/fluidmatrixinteractions/EclEpsScalingPoints.cpp
       opm/material/fluidsystems/BlackOilFluidSystem.cpp
+      opm/material/fluidsystems/PhaseUsageInfo.cpp
       opm/material/fluidsystems/blackoilpvt/BrineCo2Pvt.cpp
       opm/material/fluidsystems/blackoilpvt/BrineH2Pvt.cpp
       opm/material/fluidsystems/blackoilpvt/Co2GasPvt.cpp
@@ -485,6 +486,7 @@ list (APPEND TEST_SOURCE_FILES
       tests/test_nonuniformtablelinear.cpp
       tests/test_OpmInputError_format.cpp
       tests/test_OpmLog.cpp
+      tests/test_PhaseUsageInfo.cpp
       tests/test_param.cpp
       tests/test_RootFinders.cpp
       tests/test_ScheduleGrid.cpp
@@ -982,6 +984,7 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/material/fluidsystems/BaseFluidSystem.hpp
       opm/material/fluidsystems/BlackOilDefaultFluidSystemIndices.hpp
       opm/material/fluidsystems/ParameterCacheBase.hpp
+      opm/material/fluidsystems/PhaseUsageInfo.hpp
       opm/material/fluidsystems/H2ON2LiquidPhaseFluidSystem.hpp
       opm/material/fluidsystems/BrineCO2FluidSystem.hpp
       opm/material/fluidsystems/GasPhase.hpp
