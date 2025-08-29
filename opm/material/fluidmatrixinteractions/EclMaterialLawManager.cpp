@@ -61,12 +61,9 @@ initFromState(const EclipseState& eclState)
     readGlobalThreePhaseOptions_(runspec);
 
     // Read the end point scaling configuration (once per run).
-    gasOilConfig_ = std::make_shared<EclEpsConfig>();
-    oilWaterConfig_ = std::make_shared<EclEpsConfig>();
-    gasWaterConfig_ = std::make_shared<EclEpsConfig>();
-    gasOilConfig_->initFromState(eclState, EclTwoPhaseSystemType::GasOil);
-    oilWaterConfig_->initFromState(eclState, EclTwoPhaseSystemType::OilWater);
-    gasWaterConfig_->initFromState(eclState, EclTwoPhaseSystemType::GasWater);
+    gasOilConfig_.initFromState(eclState, EclTwoPhaseSystemType::GasOil);
+    oilWaterConfig_.initFromState(eclState, EclTwoPhaseSystemType::OilWater);
+    gasWaterConfig_.initFromState(eclState, EclTwoPhaseSystemType::GasWater);
 
 
     const auto& tables = eclState.getTableManager();
@@ -214,8 +211,8 @@ applySwatinit(unsigned elemIdx,
 
     auto& elemEclEpsScalingPoints = oilWaterScaledEpsPointsDrainage(elemIdx);
     elemEclEpsScalingPoints.init(elemScaledEpsInfo,
-                                    *oilWaterEclEpsConfig_,
-                                    EclTwoPhaseSystemType::OilWater);
+                                 oilWaterEclEpsConfig_,
+                                 EclTwoPhaseSystemType::OilWater);
 
     return {Sw, newSwatInit};
 }
@@ -234,7 +231,7 @@ EclMaterialLawManager<TraitsT>::applyRestartSwatInit(const unsigned elemIdx,
 
     this->oilWaterScaledEpsPointsDrainage(elemIdx)
         .init(elemScaledEpsInfo,
-              *this->oilWaterEclEpsConfig_,
+              this->oilWaterEclEpsConfig_,
               EclTwoPhaseSystemType::OilWater);
 }
 
@@ -471,8 +468,7 @@ template<class TraitsT>
 void EclMaterialLawManager<TraitsT>::
 readGlobalEpsOptions_(const EclipseState& eclState)
 {
-    oilWaterEclEpsConfig_ = std::make_shared<EclEpsConfig>();
-    oilWaterEclEpsConfig_->initFromState(eclState, EclTwoPhaseSystemType::OilWater);
+    oilWaterEclEpsConfig_.initFromState(eclState, EclTwoPhaseSystemType::OilWater);
 
     enableEndPointScaling_ = eclState.getTableManager().hasTables("ENKRVD");
 }
@@ -481,8 +477,7 @@ template<class TraitsT>
 void EclMaterialLawManager<TraitsT>::
 readGlobalHysteresisOptions_(const EclipseState& state)
 {
-    hysteresisConfig_ = std::make_shared<EclHysteresisConfig>();
-    hysteresisConfig_->initFromState(state.runspec());
+    hysteresisConfig_.initFromState(state.runspec());
 }
 
 template<class TraitsT>

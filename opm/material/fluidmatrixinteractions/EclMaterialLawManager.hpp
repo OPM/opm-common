@@ -34,8 +34,9 @@
 #include <opm/input/eclipse/EclipseState/Grid/FaceDir.hpp>
 #include <opm/input/eclipse/EclipseState/WagHysteresisConfig.hpp>
 
-#include <opm/material/fluidmatrixinteractions/SatCurveMultiplexer.hpp>
+#include <opm/material/fluidmatrixinteractions/EclEpsConfig.hpp>
 #include <opm/material/fluidmatrixinteractions/EclEpsTwoPhaseLaw.hpp>
+#include <opm/material/fluidmatrixinteractions/SatCurveMultiplexer.hpp>
 #include <opm/material/fluidmatrixinteractions/EclHysteresisTwoPhaseLaw.hpp>
 #include <opm/material/fluidmatrixinteractions/EclMultiplexerMaterial.hpp>
 #include <opm/material/fluidmatrixinteractions/MaterialTraits.hpp>
@@ -50,7 +51,6 @@
 namespace Opm {
 
 class EclipseState;
-class EclEpsConfig;
 class EclEpsGridProperties;
 template<class Scalar> class EclEpsScalingPoints;
 template<class Scalar> struct EclEpsScalingPointsInfo;
@@ -174,8 +174,12 @@ private:
                                    unsigned elemIdx);
         void readEffectiveParameters_();
         void readUnscaledEpsPointsVectors_();
+
         template <class Container>
-        void readUnscaledEpsPoints_(Container& dest, std::shared_ptr<EclEpsConfig> config, EclTwoPhaseSystemType system_type);
+        void readUnscaledEpsPoints_(Container& dest,
+                                    const EclEpsConfig& config,
+                                    EclTwoPhaseSystemType system_type);
+
         unsigned satRegion_(std::vector<int>& array, unsigned elemIdx);
         unsigned satOrImbRegion_(std::vector<int>& array, std::vector<int>& default_vec, unsigned elemIdx);
 
@@ -311,19 +315,19 @@ public:
     { return enablePpcwmax_; }
 
     const EclHysteresisConfig& hysteresisConfig() const
-    { return *hysteresisConfig_; }
+    { return hysteresisConfig_; }
 
     bool enableHysteresis() const
-    { return hysteresisConfig_->enableHysteresis(); }
+    { return hysteresisConfig_.enableHysteresis(); }
 
     bool enablePCHysteresis() const
-    { return hysteresisConfig_->enablePCHysteresis(); }
+    { return hysteresisConfig_.enablePCHysteresis(); }
 
     bool enableWettingHysteresis() const
-    { return hysteresisConfig_->enableWettingHysteresis(); }
+    { return hysteresisConfig_.enableWettingHysteresis(); }
 
     bool enableNonWettingHysteresis() const
-    { return hysteresisConfig_->enableNonWettingHysteresis(); }
+    { return hysteresisConfig_.enableNonWettingHysteresis(); }
 
     MaterialLawParams& materialLawParams(unsigned elemIdx)
     {
@@ -443,11 +447,10 @@ private:
     void readGlobalThreePhaseOptions_(const Runspec& runspec);
 
     bool enableEndPointScaling_;
-    std::shared_ptr<EclHysteresisConfig> hysteresisConfig_;
+    EclHysteresisConfig hysteresisConfig_;
     std::vector<std::shared_ptr<WagHysteresisConfig::WagHysteresisConfigRecord>> wagHystersisConfig_;
 
-
-    std::shared_ptr<EclEpsConfig> oilWaterEclEpsConfig_;
+    EclEpsConfig oilWaterEclEpsConfig_;
     std::vector<EclEpsScalingPointsInfo<Scalar>> unscaledEpsInfo_;
     OilWaterScalingInfoVector oilWaterScaledEpsInfoDrainage_;
 
@@ -486,9 +489,9 @@ private:
     bool hasOil;
     bool hasWater;
 
-    std::shared_ptr<EclEpsConfig> gasOilConfig_;
-    std::shared_ptr<EclEpsConfig> oilWaterConfig_;
-    std::shared_ptr<EclEpsConfig> gasWaterConfig_;
+    EclEpsConfig gasOilConfig_;
+    EclEpsConfig oilWaterConfig_;
+    EclEpsConfig gasWaterConfig_;
 };
 } // namespace Opm
 
