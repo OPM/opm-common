@@ -67,7 +67,7 @@ class TableColumn;
 
 namespace Opm::EclMaterialLaw {
 
-template<class Traits> class HystParams;
+template<class Traits> class InitParams;
 
 /*!
  * \ingroup fluidmatrixinteractions
@@ -103,62 +103,6 @@ private:
     using GasWaterScalingPointsVector = std::vector<std::shared_ptr<EclEpsScalingPoints<Scalar>>>;
     using OilWaterScalingInfoVector = std::vector<EclEpsScalingPointsInfo<Scalar>>;
     using MaterialLawParamsVector = std::vector<std::shared_ptr<MaterialLawParams>>;
-
-    // helper classes
-
-    // This class' implementation is defined in "EclMaterialLawManagerInitParams.cpp"
-    class InitParams {
-    public:
-        InitParams(Manager<TraitsT>& parent, const EclipseState& eclState, size_t numCompressedElems);
-        // \brief Function argument 'fieldPropIntOnLeadAssigner' needed to lookup
-        //        field properties of cells on the leaf grid view for CpGrid with local grid refinement.
-        //        Function argument 'lookupIdxOnLevelZeroAssigner' is added to lookup, for each
-        //        leaf gridview cell with index 'elemIdx', its 'lookupIdx' (index of the parent/equivalent cell on level zero).
-        void run(const std::function<std::vector<int>(const FieldPropsManager&, const std::string&, bool)>& fieldPropIntOnLeafAssigner,
-                 const std::function<unsigned(unsigned)>& lookupIdxOnLevelZeroAssigner);
-    private:
-        // \brief Function argument 'fieldPropIntOnLeadAssigner' needed to lookup
-        //        field properties of cells on the leaf grid view for CpGrid with local grid refinement.
-        void copySatnumArrays_(const std::function<std::vector<int>(const FieldPropsManager&, const std::string&, bool)>&
-                               fieldPropIntOnLeafAssigner);
-        // \brief Function argument 'fieldPropIntOnLeadAssigner' needed to lookup
-        //        field properties of cells on the leaf grid view for CpGrid with local grid refinement.
-        void copyIntArray_(std::vector<int>& dest, const std::string& keyword,
-                           const std::function<std::vector<int>(const FieldPropsManager&, const std::string&, bool)>&
-                           fieldPropIntOnLeafAssigner);
-        unsigned imbRegion_(std::vector<int>& array, unsigned elemIdx);
-        void initArrays_(
-                         std::vector<std::vector<int>*>& satnumArray,
-                         std::vector<std::vector<int>*>& imbnumArray,
-                         std::vector<std::vector<MaterialLawParams>*>& mlpArray);
-        void initMaterialLawParamVectors_();
-        void initOilWaterScaledEpsInfo_();
-        // \brief Function argument 'fieldProptOnLeadAssigner' needed to lookup
-        //        field properties of cells on the leaf grid view for CpGrid with local grid refinement.
-        void initSatnumRegionArray_(const std::function<std::vector<int>(const FieldPropsManager&, const std::string&, bool)>&
-                                    fieldPropIntOnLeafAssigner);
-        void initThreePhaseParams_(HystParams<Traits>& hystParams,
-                                   MaterialLawParams& materialParams,
-                                   unsigned satRegionIdx,
-                                   unsigned elemIdx);
-        void readEffectiveParameters_();
-        void readUnscaledEpsPointsVectors_();
-
-        template <class Container>
-        void readUnscaledEpsPoints_(Container& dest,
-                                    const EclEpsConfig& config,
-                                    EclTwoPhaseSystemType system_type);
-
-        unsigned satRegion_(std::vector<int>& array, unsigned elemIdx);
-        unsigned satOrImbRegion_(std::vector<int>& array, std::vector<int>& default_vec, unsigned elemIdx);
-
-        Manager<TraitsT>& parent_;
-        const EclipseState& eclState_;
-        size_t numCompressedElems_;
-
-        std::unique_ptr<EclEpsGridProperties> epsImbGridProperties_; // imbibition
-        std::unique_ptr<EclEpsGridProperties> epsGridProperties_;    // drainage
-    };  // end of "class InitParams"
 
 public:
     void initFromState(const EclipseState& eclState);
@@ -278,14 +222,10 @@ public:
     }
 
     const MaterialLawParams& materialLawParams(unsigned elemIdx, FaceDir::DirEnum facedir) const
-    {
-        return materialLawParamsFunc_(elemIdx, facedir);
-    }
+    { return materialLawParamsFunc_(elemIdx, facedir); }
 
     MaterialLawParams& materialLawParams(unsigned elemIdx, FaceDir::DirEnum facedir)
-    {
-        return const_cast<MaterialLawParams&>(materialLawParamsFunc_(elemIdx, facedir));
-    }
+    { return const_cast<MaterialLawParams&>(materialLawParamsFunc_(elemIdx, facedir)); }
 
     /*!
      * \brief Returns a material parameter object for a given element and saturation region.
@@ -307,7 +247,8 @@ public:
         return !krnumXArray_.empty() || !krnumYArray_.empty() || !krnumZArray_.empty();
     }
 
-    bool hasDirectionalImbnum() const {
+    bool hasDirectionalImbnum() const
+    {
         if (imbnumXArray_.size() > 0 || imbnumYArray_.size() > 0 || imbnumZArray_.size() > 0) {
             return true;
         }
@@ -426,6 +367,8 @@ private:
     EclEpsConfig gasOilConfig_;
     EclEpsConfig oilWaterConfig_;
     EclEpsConfig gasWaterConfig_;
+
+    friend class InitParams<Traits>;
 };
 
 } // namespace Opm::EclMaterialLaw

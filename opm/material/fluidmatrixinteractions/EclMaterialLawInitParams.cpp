@@ -20,24 +20,31 @@
 */
 
 #include <config.h>
+#include <opm/material/fluidmatrixinteractions/EclMaterialLawInitParams.hpp>
 
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 
-#include <opm/material/fluidmatrixinteractions/EclEpsGridProperties.hpp>
+#include <opm/material/fluidmatrixinteractions/DirectionalMaterialLawParams.hpp>
 #include <opm/material/fluidmatrixinteractions/EclMaterialLawHystParams.hpp>
 #include <opm/material/fluidmatrixinteractions/EclMaterialLawManager.hpp>
 #include <opm/material/fluidmatrixinteractions/EclMaterialLawReadEffectiveParams.hpp>
+#include <opm/material/fluidmatrixinteractions/EclMultiplexerMaterialParams.hpp>
+
+#include <cassert>
 
 namespace Opm::EclMaterialLaw {
 
 /* constructors*/
 
 template <class Traits>
-Manager<Traits>::InitParams::
-InitParams(Manager<Traits>& parent, const EclipseState& eclState, size_t numCompressedElems) :
-    parent_{parent},
-    eclState_{eclState},
-    numCompressedElems_{numCompressedElems}
+InitParams<Traits>::
+InitParams(Manager<Traits>& parent,
+           const EclipseState& eclState,
+           std::size_t numCompressedElems)
+    : parent_{parent}
+    , eclState_{eclState}
+    , numCompressedElems_{numCompressedElems}
+    , epsGridProperties_(this->eclState_, false)
 {
     // read end point scaling grid properties
     // TODO: these objects might require some memory, can this be simplified?
@@ -45,18 +52,15 @@ InitParams(Manager<Traits>& parent, const EclipseState& eclState, size_t numComp
         this->epsImbGridProperties_
             = std::make_unique<EclEpsGridProperties>(this->eclState_, /*useImbibition=*/true);
     }
-    this->epsGridProperties_
-        = std::make_unique<EclEpsGridProperties>(this->eclState_, /*useImbibition=*/false);
 }
 
 /* public methods */
 
 template <class Traits>
 void
-Manager<Traits>::InitParams::
-run(const std::function<std::vector<int>(const FieldPropsManager&, const std::string&, bool)>&
-    fieldPropIntOnLeafAssigner,
-    const std::function<unsigned(unsigned)>& lookupIdxOnLevelZeroAssigner)
+InitParams<Traits>::
+run(const IntLookupFunction& fieldPropIntOnLeafAssigner,
+    const LookupFunction& lookupIdxOnLevelZeroAssigner)
 {
     readUnscaledEpsPointsVectors_();
     readEffectiveParameters_();
@@ -78,7 +82,7 @@ run(const std::function<std::vector<int>(const FieldPropsManager&, const std::st
             //unsigned satNumCell = this->parent_.satnumRegionArray_[elemIdx];
             HystParams<Traits> hystParams{
                 this->parent_.oilWaterScaledEpsInfoDrainage_,
-                *epsGridProperties_,
+                epsGridProperties_,
                 *epsImbGridProperties_,
                 this->eclState_,
                 this->parent_
@@ -104,9 +108,8 @@ run(const std::function<std::vector<int>(const FieldPropsManager&, const std::st
 
 template <class Traits>
 void
-Manager<Traits>::InitParams::
-copySatnumArrays_(const std::function<std::vector<int>(const FieldPropsManager&,
-                                                       const std::string&, bool)>& fieldPropIntOnLeafAssigner)
+InitParams<Traits>::
+copySatnumArrays_(const IntLookupFunction& fieldPropIntOnLeafAssigner)
 {
     copyIntArray_(this->parent_.krnumXArray_, "KRNUMX", fieldPropIntOnLeafAssigner);
     copyIntArray_(this->parent_.krnumYArray_, "KRNUMY", fieldPropIntOnLeafAssigner);
@@ -124,11 +127,10 @@ copySatnumArrays_(const std::function<std::vector<int>(const FieldPropsManager&,
 
 template <class Traits>
 void
-Manager<Traits>::InitParams::
+InitParams<Traits>::
 copyIntArray_(std::vector<int>& dest,
               const std::string& keyword,
-              const std::function<std::vector<int>(const FieldPropsManager&,
-                                                   const std::string&, bool)>& fieldPropIntOnLeafAssigner)
+              const IntLookupFunction& fieldPropIntOnLeafAssigner)
 {
     if (this->eclState_.fieldProps().has_int(keyword)) {
         dest = fieldPropIntOnLeafAssigner(this->eclState_.fieldProps(), keyword, /*needsTranslation*/true);
@@ -137,7 +139,7 @@ copyIntArray_(std::vector<int>& dest,
 
 template <class Traits>
 unsigned
-Manager<Traits>::InitParams::
+InitParams<Traits>::
 imbRegion_(std::vector<int>& array, unsigned elemIdx)
 {
     std::vector<int>& default_vec = this->parent_.imbnumRegionArray_;
@@ -146,7 +148,7 @@ imbRegion_(std::vector<int>& array, unsigned elemIdx)
 
 template <class Traits>
 void
-Manager<Traits>::InitParams::
+InitParams<Traits>::
 initArrays_(std::vector<std::vector<int>*>& satnumArray,
             std::vector<std::vector<int>*>& imbnumArray,
             std::vector<std::vector<MaterialLawParams>*>& mlpArray)
@@ -173,7 +175,7 @@ initArrays_(std::vector<std::vector<int>*>& satnumArray,
 
 template <class Traits>
 void
-Manager<Traits>::InitParams::
+InitParams<Traits>::
 initMaterialLawParamVectors_()
 {
     this->parent_.materialLawParams_.resize(this->numCompressedElems_);
@@ -185,7 +187,7 @@ initMaterialLawParamVectors_()
 
 template <class Traits>
 void
-Manager<Traits>::InitParams::
+InitParams<Traits>::
 initOilWaterScaledEpsInfo_()
 {
     // This vector will be updated in the hystParams.setDrainageOilWater() in the run() method
@@ -194,9 +196,8 @@ initOilWaterScaledEpsInfo_()
 
 template <class Traits>
 void
-Manager<Traits>::InitParams::
-initSatnumRegionArray_(const std::function<std::vector<int>(const FieldPropsManager&,
-                                                            const std::string&, bool)>& fieldPropIntOnLeafAssigner)
+InitParams<Traits>::
+initSatnumRegionArray_(const IntLookupFunction& fieldPropIntOnLeafAssigner)
 {
     // copy the SATNUM grid property. in some cases this is not necessary, but it
     // should not require much memory anyway...
@@ -212,7 +213,7 @@ initSatnumRegionArray_(const std::function<std::vector<int>(const FieldPropsMana
 
 template <class Traits>
 void
-Manager<Traits>::InitParams::
+InitParams<Traits>::
 initThreePhaseParams_(HystParams<Traits>& hystParams,
                       MaterialLawParams& materialParams,
                       unsigned satRegionIdx,
@@ -277,7 +278,7 @@ initThreePhaseParams_(HystParams<Traits>& hystParams,
 
 template <class Traits>
 void
-Manager<Traits>::InitParams::
+InitParams<Traits>::
 readEffectiveParameters_()
 {
     ReadEffectiveParams<Traits> effectiveReader{
@@ -294,7 +295,7 @@ readEffectiveParameters_()
 
 template <class Traits>
 void
-Manager<Traits>::InitParams::
+InitParams<Traits>::
 readUnscaledEpsPointsVectors_()
 {
     if (this->parent_.hasGas() && this->parent_.hasOil()) {
@@ -323,12 +324,12 @@ readUnscaledEpsPointsVectors_()
 template <class Traits>
 template <class Container>
 void
-Manager<Traits>::InitParams::
+InitParams<Traits>::
 readUnscaledEpsPoints_(Container& dest,
                        const EclEpsConfig& config,
                        EclTwoPhaseSystemType system_type)
 {
-    const size_t numSatRegions = this->eclState_.runspec().tabdims().getNumSatTables();
+    const std::size_t numSatRegions = this->eclState_.runspec().tabdims().getNumSatTables();
     dest.resize(numSatRegions);
     for (unsigned satRegionIdx = 0; satRegionIdx < numSatRegions; ++satRegionIdx) {
         dest[satRegionIdx] = std::make_shared<EclEpsScalingPoints<Scalar> >();
@@ -338,7 +339,7 @@ readUnscaledEpsPoints_(Container& dest,
 
 template <class Traits>
 unsigned
-Manager<Traits>::InitParams::
+InitParams<Traits>::
 satRegion_(std::vector<int>& array, unsigned elemIdx)
 {
     std::vector<int>& default_vec = this->parent_.satnumRegionArray_;
@@ -347,25 +348,25 @@ satRegion_(std::vector<int>& array, unsigned elemIdx)
 
 template <class Traits>
 unsigned
-Manager<Traits>::InitParams::
+InitParams<Traits>::
 satOrImbRegion_(std::vector<int>& array,
                 std::vector<int>& default_vec,
                 unsigned elemIdx)
 {
     int value;
-    if (array.size() > 0) {
-        value = array[elemIdx];
-    }
-    else { // use default value
+    if (array.empty()) { // use default value
         value = default_vec[elemIdx];
+    }
+    else {
+        value = array[elemIdx];
     }
     return static_cast<unsigned>(value);
 }
 
 // Make some actual code, by realizing the previously defined templated class
-template class Manager<ThreePhaseMaterialTraits<double,0,1,2>>::InitParams;
-template class Manager<ThreePhaseMaterialTraits<float,0,1,2>>::InitParams;
-template class Manager<ThreePhaseMaterialTraits<double,2,0,1>>::InitParams;
-template class Manager<ThreePhaseMaterialTraits<float,2,0,1>>::InitParams;
+template class InitParams<ThreePhaseMaterialTraits<double,0,1,2>>;
+template class InitParams<ThreePhaseMaterialTraits<float,0,1,2>>;
+template class InitParams<ThreePhaseMaterialTraits<double,2,0,1>>;
+template class InitParams<ThreePhaseMaterialTraits<float,2,0,1>>;
 
 } // namespace Opm::EclMaterialLaw
