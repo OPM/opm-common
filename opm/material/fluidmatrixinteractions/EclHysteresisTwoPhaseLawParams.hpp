@@ -94,8 +94,8 @@ public:
     /*!
      * \brief Set the hysteresis configuration object.
      */
-    void setConfig(std::shared_ptr<EclHysteresisConfig> value)
-    { config_ = *value; }
+    void setConfig(const EclHysteresisConfig& value)
+    { config_ = value; }
 
     /*!
      * \brief Returns the hysteresis configuration object.
