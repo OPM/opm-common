@@ -488,6 +488,36 @@ private:
 };
 
 
+class Geochem {
+public:
+    Geochem() = default;
+    explicit Geochem(const Deck&);
+
+    const std::string& geochem_file_name() const;
+    double mbal_tol() const;
+    double ph_tol() const;
+    int splay_tree_resolution() const;
+    bool charge_balance() const;
+    bool enabled() const;
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer) {
+        serializer(this->m_file_name);
+    }
+    static Geochem serializationTestObject();
+
+    bool operator==(const Geochem& data) const;
+
+private:
+    std::string m_file_name;
+    double m_mbal_tol{};
+    double m_ph_tol{};
+    bool m_charge_balance{false};
+    bool m_activated{false};
+    int m_splay_tree{0};
+};
+
+
 class Runspec {
 public:
     Runspec() = default;
@@ -511,6 +541,7 @@ public:
     const SatFuncControls& saturationFunctionControls() const noexcept;
     const Nupcol& nupcol() const noexcept;
     const Tracers& tracers() const;
+    const Geochem& geochem() const;
     bool compositionalMode() const;
     size_t numComps() const;
     bool co2Storage() const noexcept;
@@ -555,6 +586,7 @@ public:
         serializer(m_frac);
         serializer(m_temp);
         serializer(m_biof);
+        serializer(m_geochem);
     }
 
 private:
@@ -573,6 +605,7 @@ private:
     SatFuncControls m_sfuncctrl{};
     Nupcol m_nupcol{};
     Tracers m_tracers{};
+    Geochem m_geochem{};
     size_t m_comps = 0;
     bool m_co2storage{false};
     bool m_co2sol{false};

@@ -127,6 +127,10 @@ if(ENABLE_ECL_INPUT)
     opm/input/eclipse/EclipseState/EclipseConfig.cpp
     opm/input/eclipse/EclipseState/EclipseState.cpp
     opm/input/eclipse/EclipseState/EndpointScaling.cpp
+    opm/input/eclipse/EclipseState/Geochemistry/SpeciesConfig.cpp
+    opm/input/eclipse/EclipseState/Geochemistry/MineralConfig.cpp
+    opm/input/eclipse/EclipseState/Geochemistry/IonExchangeConfig.cpp
+    opm/input/eclipse/EclipseState/Geochemistry/GenericSpeciesConfig.cpp
     opm/input/eclipse/EclipseState/Phase.cpp
     opm/input/eclipse/EclipseState/Runspec.cpp
     opm/input/eclipse/EclipseState/TracerConfig.cpp
@@ -602,6 +606,7 @@ if(ENABLE_ECL_INPUT)
     tests/parser/FIPConfigTests.cpp
     tests/parser/FoamTests.cpp
     tests/parser/FunctionalTests.cpp
+    tests/parser/GeochemistryTests.cpp
     tests/parser/GeomodifierTests.cpp
     tests/parser/GroupTests.cpp
     tests/parser/ImportTests.cpp
@@ -655,6 +660,7 @@ if(ENABLE_ECL_INPUT)
     tests/parser/UnitTests.cpp
     tests/parser/integration/NNCTests.cpp
     tests/parser/WellSolventTests.cpp
+    tests/parser/WellSpeciesTests.cpp
     tests/parser/WellTracerTests.cpp
     tests/parser/WellTests.cpp
     tests/parser/WellTestsLGR.cpp
@@ -1197,6 +1203,10 @@ if(ENABLE_ECL_INPUT)
        opm/input/eclipse/Parser/ParserEnums.hpp
        opm/input/eclipse/Parser/ParseContext.hpp
        opm/input/eclipse/Parser/ParserConst.hpp
+       opm/input/eclipse/EclipseState/Geochemistry/SpeciesConfig.hpp
+       opm/input/eclipse/EclipseState/Geochemistry/MineralConfig.hpp
+       opm/input/eclipse/EclipseState/Geochemistry/IonExchangeConfig.hpp
+       opm/input/eclipse/EclipseState/Geochemistry/GenericSpeciesConfig.hpp
        opm/input/eclipse/EclipseState/InitConfig/InitConfig.hpp
        opm/input/eclipse/EclipseState/InitConfig/Equil.hpp
        opm/input/eclipse/EclipseState/InitConfig/FoamConfig.hpp
@@ -1319,6 +1329,7 @@ if(ENABLE_ECL_INPUT)
        opm/input/eclipse/EclipseState/Tables/ImkrvdTable.hpp
        opm/input/eclipse/EclipseState/Tables/Sof3Table.hpp
        opm/input/eclipse/EclipseState/Tables/SgofTable.hpp
+       opm/input/eclipse/EclipseState/Tables/SpeciesVdTable.hpp
        opm/input/eclipse/EclipseState/Tables/TracerVdTable.hpp
        opm/input/eclipse/EclipseState/Tables/BiofilmTable.hpp
        opm/input/eclipse/EclipseState/Tables/DiffMICPTable.hpp
