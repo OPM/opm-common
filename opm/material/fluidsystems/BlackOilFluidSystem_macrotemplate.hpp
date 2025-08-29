@@ -1814,6 +1814,8 @@ initBegin(std::size_t numPvtRegions)
     surfacePressure = 1.01325e5; // [Pa]
     setReservoirTemperature(surfaceTemperature);
 
+    phaseUsageInfo_.initFromPhases(Phases{true, true, true});
+
     resizeArrays_(numPvtRegions);
 }
 
