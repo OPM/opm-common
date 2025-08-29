@@ -20,64 +20,78 @@
 #define BOOST_TEST_MODULE SummaryConfigTests
 
 #include <boost/test/unit_test.hpp>
-#include <fmt/format.h>
+
 #include <opm/common/utility/OpmInputError.hpp>
+
 #include <opm/io/eclipse/SummaryNode.hpp>
-#include <opm/input/eclipse/Python/Python.hpp>
-#include <opm/input/eclipse/Deck/Deck.hpp>
+
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
+
+#include <opm/input/eclipse/Python/Python.hpp>
+
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
+
+#include <opm/input/eclipse/Deck/Deck.hpp>
+
 #include <opm/input/eclipse/Parser/ErrorGuard.hpp>
 #include <opm/input/eclipse/Parser/InputErrorAction.hpp>
 #include <opm/input/eclipse/Parser/ParseContext.hpp>
 #include <opm/input/eclipse/Parser/Parser.hpp>
 
 #include <algorithm>
+#include <cstddef>
+#include <memory>
+#include <string>
+#include <vector>
+
+#include <fmt/format.h>
 
 using namespace Opm;
 
-static Deck createDeck_no_wells( const std::string& summary ) {
-    Opm::Parser parser;
-    std::string input =
-            "START             -- 0 \n"
-            "10 MAI 2007 / \n"
-            "RUNSPEC\n"
-            "\n"
-            "DIMENS\n"
-            " 10 10 10 /\n"
-            "REGDIMS\n"
-            "  3/\n"
-            "GRID\n"
-            "DXV \n 10*400 /\n"
-            "DYV \n 10*400 /\n"
-            "DZV \n 10*400 /\n"
-            "TOPS \n 100*2202 / \n"
-            "PERMX\n"
-            "  1000*0.25 /\n"
-            "COPY\n"
-            "  PERMX PERMY /\n"
-            "  PERMX PERMZ /\n"
-            "/\n"
-            "PORO \n"
-            "   1000*0.15 /\n"
-            "REGIONS\n"
-            "FIPNUM\n"
-            "200*1 300*2 500*3 /\n"
-            "SCHEDULE\n"
-            "SUMMARY\n"
-            + summary;
+namespace {
 
-    return parser.parseString(input);
-}
-
-
-static Deck createDeck( const std::string& summary ) {
-    Opm::Parser parser;
-    std::string input = R"(
+Deck createDeck_no_wells(const std::string& summary)
+{
+    const auto header = std::string { R"(RUNSPEC
 START             -- 0
 10 MAI 2007 /
-RUNSPEC
+
+DIMENS
+ 10 10 10 /
+REGDIMS
+  3/
+GRID
+DXV
+  10*400 /
+DYV
+  10*400 /
+DZV
+  10*400 /
+DEPTHZ
+  121*2202 /
+PERMX
+  1000*0.25 /
+COPY
+  PERMX PERMY /
+  PERMX PERMZ /
+/
+PORO
+  1000*0.15 /
+REGIONS
+FIPNUM
+200*1 300*2 500*3 /
+SUMMARY
+)" };
+
+    return Parser{}.parseString(header + summary);
+}
+
+Deck createDeck(const std::string& summary)
+{
+    const auto header = std::string { R"(RUNSPEC
+START             -- 0
+10 MAI 2007 /
 
 DIMENS
  10 10 10 /
@@ -155,49 +169,72 @@ W_1 2 2 1 1 4 /
 /
 
 SUMMARY
-)" + summary;
+)" };
 
-    return parser.parseString(input);
+    return Parser{}.parseString(header + summary);
 }
 
-static std::vector< std::string > sorted_names( const SummaryConfig& summary ) {
-    std::vector< std::string > ret;
-    for( const auto& x : summary ) {
-        auto wgname = x.namedEntity();
-        if(wgname.size())
-            ret.push_back( wgname );
+std::vector<std::string> sorted_names(const SummaryConfig& summary)
+{
+    std::vector<std::string> ret;
+
+    for (const auto& x : summary) {
+        const auto& wgname = x.namedEntity();
+
+        if (! wgname.empty()) {
+            ret.push_back(wgname);
+        }
     }
 
-    std::sort( ret.begin(), ret.end() );
+    std::sort(ret.begin(), ret.end());
+
     return ret;
 }
 
-static std::vector< std::string > sorted_keywords( const SummaryConfig& summary ) {
-    std::vector< std::string > ret;
+std::vector<std::string> sorted_keywords(const SummaryConfig& summary)
+{
+    std::vector<std::string> ret;
+
     std::transform(summary.begin(), summary.end(), std::back_inserter(ret),
                    [](const auto& x) { return x.keyword(); });
 
-    std::sort( ret.begin(), ret.end() );
+    std::sort(ret.begin(), ret.end());
+
     return ret;
 }
 
-static std::vector< std::string > sorted_key_names( const SummaryConfig& summary ) {
-    std::vector< std::string > ret;
+std::vector<std::string> sorted_key_names(const SummaryConfig& summary)
+{
+    std::vector<std::string> ret;
+
     std::transform(summary.begin(), summary.end(), std::back_inserter(ret),
                    [](const auto& x) { return x.uniqueNodeKey(); });
 
-    std::sort( ret.begin(), ret.end() );
+    std::sort(ret.begin(), ret.end());
+
     return ret;
 }
 
-static SummaryConfig createSummary(const std::string& input , const ParseContext& parseContext = ParseContext()) {
-    ErrorGuard errors;
-    auto deck = createDeck( input );
-    auto python = std::make_shared<Python>();
-    EclipseState state( deck );
-    Schedule schedule(deck, state, parseContext, errors, python);
-    return SummaryConfig(deck, schedule, state.fieldProps(), state.aquifer(), parseContext, errors);
+SummaryConfig createSummary(const std::string&  input,
+                            const ParseContext& parseContext = ParseContext{})
+{
+    const auto deck = createDeck(input);
+    const auto state = EclipseState { deck };
+
+    auto errors = ErrorGuard {};
+
+    const auto schedule = Schedule {
+        deck, state, parseContext, errors,
+        std::make_shared<Python>()
+    };
+
+    return {
+        deck, schedule, state.fieldProps(),
+        state.aquifer(), parseContext, errors
+    };
 }
+
+} // Anonymous namespace
 
 BOOST_AUTO_TEST_CASE(wells_all) {
     const auto input = "WWCT\n/\n";
@@ -358,71 +395,55 @@ BOOST_AUTO_TEST_CASE(regions) {
             names.begin(), names.end() );
 }
 
-BOOST_AUTO_TEST_CASE(region2region) {
-    const auto input = std::string { R"(ROFT
+BOOST_AUTO_TEST_CASE(region2region)
+{
+    const auto summary = createSummary(R"(ROFT
 1 2/
-3 4/
 /
 ROFT+
 1 2/
-3 4/
 /
 ROFT-
 1 2/
-3 4/
 /
 ROFR
 1 2/
-3 4/
 /
 ROFR+
 1 2/
-3 4/
 /
 ROFR-
 1 2/
-3 4/
 /
 ROFTL
 1 2/
-3 4/
 /
 ROFTG
 1 2/
-3 4/
-1 3/
 /
 RGFT
-5 6/
-7 8/
+1 2/
 /
 RGFT+
-5 6/
-7 8/
+1 2/
 /
 RGFT-
-5 6/
-7 8/
+1 2/
 /
 RGFR
-5 6/
-7 8/
+1 2/
 /
 RGFR+
-5 6/
-7 8/
+1 2/
 /
 RGFR-
-5 6/
-7 8/
+1 2/
 /
 RGFTL
 1 2 /
-1 3 /
 /
 RGFTG
 1 2 /
-1 3 /
 /
 RWFT
 2 3 /
@@ -442,13 +463,7 @@ RWFR+
 RWFR-
 2 3 /
 /
-RWIP
-/
-)" };
-
-    ParseContext parseContext;
-
-    const auto summary = createSummary(input, parseContext);
+)");
 
     {
         const auto expect_kw = std::vector<std::string> {
@@ -465,85 +480,123 @@ RWIP
 
     {
         const auto kw = summary.keywords("ROFT");
-        BOOST_CHECK_EQUAL(kw.size(), 2);
+        BOOST_REQUIRE_EQUAL(kw.size(), std::size_t{1});
 
-        BOOST_CHECK_MESSAGE(kw[1].namedEntity().empty(),
+        BOOST_CHECK_MESSAGE(kw[0].namedEntity().empty(),
                             "ROFT vector must NOT have an associated named entity");
 
         BOOST_CHECK_MESSAGE(kw[0].type() == SummaryConfigNode::Type::Total,
                             "ROFT must be a Cumulative Total");
 
-        BOOST_CHECK_MESSAGE(kw[1].category() == SummaryConfigNode::Category::Region,
+        BOOST_CHECK_MESSAGE(kw[0].category() == SummaryConfigNode::Category::Region,
                             "ROFT must be a Region vector");
 
-        const auto expect_number = std::vector<int> {
-            393'217, // 1 2
-            458'755, // 3 4
-        };
+        const auto expect_number = 393'217; // 1 2
 
-        const auto n1 = kw[0].number();
-        const auto n2 = kw[1].number();
-
-        BOOST_CHECK_MESSAGE(((n1 == expect_number[0]) && (n2 == expect_number[1])) ||
-                            ((n2 == expect_number[0]) && (n1 == expect_number[1])),
-                            R"(ROFT 'NUMS' must match expected set)");
+        BOOST_CHECK_EQUAL(kw.front().number(), expect_number);
     }
 
     {
         const auto kw = summary.keywords("RGFR-");
-        BOOST_CHECK_EQUAL(kw.size(), 2);
+        BOOST_REQUIRE_EQUAL(kw.size(), std::size_t{1});
 
-        BOOST_CHECK_MESSAGE(kw[1].namedEntity().empty(),
+        BOOST_CHECK_MESSAGE(kw[0].namedEntity().empty(),
                             "RGFR- vector must NOT have an associated named entity");
 
         BOOST_CHECK_MESSAGE(kw[0].type() == SummaryConfigNode::Type::Rate,
                             "RGFR- must be a Rate");
 
-        BOOST_CHECK_MESSAGE(kw[1].category() == SummaryConfigNode::Category::Region,
+        BOOST_CHECK_MESSAGE(kw[0].category() == SummaryConfigNode::Category::Region,
                             "RGFR- must be a Region vector");
 
-        const auto expect_number = std::vector<int> {
-            524'293, // 5 6
-            589'831, // 7 8
-        };
+        const auto expect_number = 393'217; // 1 2
 
-        const auto n1 = kw[0].number();
-        const auto n2 = kw[1].number();
-
-        BOOST_CHECK_MESSAGE(((n1 == expect_number[0]) && (n2 == expect_number[1])) ||
-                            ((n2 == expect_number[0]) && (n1 == expect_number[1])),
-                            R"(RGFR- 'NUMS' must match expected set)");
+        BOOST_CHECK_EQUAL(kw.front().number(), expect_number);
     }
 
     {
         const auto kw = summary.keywords("ROFTG");
-        BOOST_CHECK_EQUAL(kw.size(), 3);
+        BOOST_REQUIRE_EQUAL(kw.size(), std::size_t{1});
 
-        BOOST_CHECK_MESSAGE(kw[1].namedEntity().empty(),
+        BOOST_CHECK_MESSAGE(kw[0].namedEntity().empty(),
                             "ROFTG vector must NOT have an associated named entity");
 
         BOOST_CHECK_MESSAGE(kw[0].type() == SummaryConfigNode::Type::Total,
                             "ROFTG must be a Cumulative Total");
 
-        BOOST_CHECK_MESSAGE(kw[1].category() == SummaryConfigNode::Category::Region,
+        BOOST_CHECK_MESSAGE(kw[0].category() == SummaryConfigNode::Category::Region,
                             "ROFTG must be a Region vector");
 
-        const auto expect_number = std::vector<int> {
-            393'217, // 1 2
-            458'755, // 3 4
-            425'985, // 1 3
-        };
+        const auto expect_number = 393'217; // 1 2
 
-        const auto actual = std::vector<int> {
-            kw[0].number(),
-            kw[1].number(),
-            kw[2].number(),
-        };
-
-        BOOST_CHECK_MESSAGE(std::is_permutation(actual       .begin(), actual       .end(),
-                                                expect_number.begin(), expect_number.end()),
-                            R"(ROFTG 'NUMS' must match expected set)");
+        BOOST_CHECK_EQUAL(kw.front().number(), expect_number);
     }
+}
+
+BOOST_AUTO_TEST_CASE(Region_to_Region_Excluded_IxPairs)
+{
+    const auto summary = []()
+    {
+        const auto input = std::string { R"(ROFT
+1 2/
+3 4/ -- Region 4 out of bounds
+3 1/
+8 1/ -- Region 8 out of bounds
+2 3/
+/
+RGFT
+5 6/ -- Regions 5 and 6 both out of bounds
+7 8/ -- Regions 7 and 8 both out of bounds
+/
+)" };
+
+        auto parseContext = ParseContext{};
+        parseContext.update(ParseContext::SUMMARY_REGION_TOO_LARGE,
+                            InputErrorAction::IGNORE);
+
+        return createSummary(input, parseContext);
+    }();
+
+    BOOST_REQUIRE_MESSAGE(summary.hasKeyword("ROFT"),
+                          R"(SummaryConfig MUST have "ROFT" summary nodes)");
+
+    {
+        // NUM = r1 + (1<<15)*(r2 + 10)
+        const auto expect = std::array {
+            393217,             // 1 2
+            360451,             // 3 1
+            425986,             // 2 3
+        };
+
+        const auto roft_nodes = summary.keywords("ROFT");
+
+        auto roft = std::vector<int>(roft_nodes.size());
+        std::transform(roft_nodes.begin(), roft_nodes.end(), roft.begin(),
+                       [](const auto& node) { return node.number(); });
+
+        BOOST_REQUIRE_EQUAL(roft.size(), std::size_t{3}); // Active records only
+
+        BOOST_CHECK_MESSAGE(std::is_permutation(roft  .begin(), roft  .end(),
+                                                expect.begin(), expect.end()),
+                            R"(ROFT 'NUMS' must match expected set)");
+    }
+
+    BOOST_CHECK_MESSAGE(! summary.hasKeyword("RGFT"),
+                        R"(SummaryConfig must NOT have "RGFT" summary nodes)");
+}
+
+BOOST_AUTO_TEST_CASE(Region_to_Region_Excluded_IxPairs_Throw)
+{
+    const auto input = std::string { R"(ROFT
+42 3/
+/
+)" };
+
+    auto parseContext = ParseContext{};
+    parseContext.update(ParseContext::SUMMARY_REGION_TOO_LARGE,
+                        InputErrorAction::THROW_EXCEPTION);
+
+    BOOST_CHECK_THROW(createSummary(input, parseContext), OpmInputError);
 }
 
 BOOST_AUTO_TEST_CASE(region2region_unsupported) {
@@ -2258,18 +2311,12 @@ RPR__REG
 
     {
         parse_context.update(ParseContext::SUMMARY_REGION_TOO_LARGE, InputErrorAction::IGNORE);
-        const auto& summary_config = createSummary(input_too_large, parse_context);
+        const auto summary_config = createSummary(input_too_large, parse_context);
         BOOST_CHECK_EQUAL( summary_config.size(), 3);
     }
 
     {
-        parse_context.update(ParseContext::SUMMARY_EMPTY_REGION, InputErrorAction::THROW_EXCEPTION);
-        BOOST_CHECK_THROW(createSummary(input_empty, parse_context), std::exception);
-    }
-
-    {
-        parse_context.update(ParseContext::SUMMARY_EMPTY_REGION, InputErrorAction::IGNORE);
-        const auto& summary_config = createSummary(input_empty, parse_context);
+        const auto summary_config = createSummary(input_empty, parse_context);
         BOOST_CHECK_EQUAL( summary_config.size(), 1);
     }
 }
