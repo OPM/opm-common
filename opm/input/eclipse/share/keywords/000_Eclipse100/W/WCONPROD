@@ -5,8 +5,8 @@
   ],
   "items": [
     {
-       "item": 1,
-     "name": "WELL",
+      "item": 1,
+      "name": "WELL",
       "value_type": "STRING"
     },
     {

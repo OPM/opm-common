@@ -25,7 +25,12 @@
 #include <map>
 #include <string>
 
+#include <opm/input/eclipse/Deck/UDAValue.hpp>
+#include <opm/input/eclipse/Units/UnitSystem.hpp>
+
 namespace Opm {
+
+    class SummaryState;
 
     /// Group level satellite production
     class GSatProd
@@ -34,13 +39,13 @@ namespace Opm {
         /// Satellite production rates for a single group.
         struct GSatProdGroup
         {
-            /// Satellite production rate items
-            enum Rate { Oil, Gas, Water, Resv, GLift, };
-
-            /// Satellite production rates.
-            ///
-            /// One rate for each enumerated item.
-            std::array<double, 5> rate{};
+            UDAValue oil_rate;
+            UDAValue gas_rate;
+            UDAValue water_rate;
+            double resv_rate;
+            double glift_rate;
+            double udq_undefined;
+            UnitSystem  unit_system;
 
             /// Equality predicate
             ///
@@ -49,9 +54,14 @@ namespace Opm {
             ///
             /// \return Whether or not \code *this \endcode is the same as
             /// \p data.
-            bool operator==(const GSatProdGroup& data) const
-            {
-                return rate == data.rate;
+            bool operator==(const GSatProdGroup& data) const {
+                return oil_rate == data.oil_rate &&
+                       gas_rate == data.gas_rate &&
+                       water_rate == data.water_rate &&
+                       resv_rate == data.resv_rate &&
+                       glift_rate == data.glift_rate &&
+                       udq_undefined == data.udq_undefined &&
+                       unit_system == data.unit_system;
             }
 
             /// Convert between byte array and object representation.
@@ -62,8 +72,24 @@ namespace Opm {
             template<class Serializer>
             void serializeOp(Serializer& serializer)
             {
-                serializer(rate);
+                serializer(oil_rate);
+                serializer(gas_rate);
+                serializer(water_rate);
+                serializer(resv_rate);
+                serializer(glift_rate);
+                serializer(udq_undefined);
+                serializer(unit_system);
             }
+        };
+
+        struct GSatProdGroupProp {
+            /// Satellite production rate items
+            enum Rate { Oil, Gas, Water, Resv, GLift, };
+
+            /// Satellite production rates.
+            ///
+            /// One rate for each enumerated item.
+            std::array<double, 5> rate{};
         };
 
         /// Create a serialisation test object.
@@ -89,12 +115,19 @@ namespace Opm {
         ///
         /// \param[in] glift_rate Satellite production gas lift rate for
         /// group \p name.
+        ///
+        /// \param[in] udq_undefined Satellite udq undefined value for
+        /// group \p name.
+        ///
+        /// \param[in] unit_system Satellite unit system for group \p name.
         void assign(const std::string& name,
-                    const double       oil_rate,
-                    const double       gas_rate,
-                    const double       water_rate,
+                    const UDAValue&    oil_rate,
+                    const UDAValue&    gas_rate,
+                    const UDAValue&    water_rate,
                     const double       resv_rate,
-                    const double       glift_rate);
+                    const double       glift_rate,
+                    double             udq_undefined,
+                    const UnitSystem&  unit_system);
 
         /// Whether or not satellite production rates have been defined for
         /// a named group.
@@ -117,6 +150,16 @@ namespace Opm {
         ///
         /// \return Satellite production rates for group \p name.
         const GSatProdGroup& get(const std::string& name) const;
+
+        /// Retrieve scalar satellite production rates for named group.
+        ///
+        /// \param[in] name Group name.
+        ///
+        /// \param[in] st Summary state.
+        ///
+        /// \return Satellite production rates for group \p name.
+        const GSatProdGroupProp get(const std::string& name,
+                                    const SummaryState& st) const;
 
         /// Whether or not any groups have associate satellite production
         /// rates.
