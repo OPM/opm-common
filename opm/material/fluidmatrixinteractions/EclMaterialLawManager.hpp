@@ -35,6 +35,7 @@
 #include <opm/input/eclipse/EclipseState/WagHysteresisConfig.hpp>
 
 #include <opm/material/fluidmatrixinteractions/EclEpsConfig.hpp>
+#include <opm/material/fluidmatrixinteractions/EclMaterialLawTwoPhaseTypes.hpp>
 #include <opm/material/fluidmatrixinteractions/EclEpsTwoPhaseLaw.hpp>
 #include <opm/material/fluidmatrixinteractions/SatCurveMultiplexer.hpp>
 #include <opm/material/fluidmatrixinteractions/EclHysteresisTwoPhaseLaw.hpp>
@@ -45,7 +46,6 @@
 #include <cassert>
 #include <functional>
 #include <memory>
-#include <tuple>
 #include <vector>
 
 namespace Opm {
@@ -63,6 +63,12 @@ class SgofTable;
 class SlgofTable;
 class TableColumn;
 
+}
+
+namespace Opm::EclMaterialLaw {
+
+template<class Traits> class InitParams;
+
 /*!
  * \ingroup fluidmatrixinteractions
  *
@@ -70,208 +76,33 @@ class TableColumn;
  *        for a complete ECL deck.
  */
 template <class TraitsT>
-class EclMaterialLawManager
+class Manager
 {
-private:
     using Traits = TraitsT;
     using Scalar = typename Traits::Scalar;
-    enum { waterPhaseIdx = Traits::wettingPhaseIdx };
-    enum { oilPhaseIdx = Traits::nonWettingPhaseIdx };
-    enum { gasPhaseIdx = Traits::gasPhaseIdx };
-    enum { numPhases = Traits::numPhases };
-
-    using GasOilTraits = TwoPhaseMaterialTraits<Scalar, oilPhaseIdx, gasPhaseIdx>;
-    using OilWaterTraits = TwoPhaseMaterialTraits<Scalar, waterPhaseIdx, oilPhaseIdx>;
-    using GasWaterTraits = TwoPhaseMaterialTraits<Scalar, waterPhaseIdx, gasPhaseIdx>;
-
-    // the two-phase material law which is defined on effective (unscaled) saturations
-    using GasOilEffectiveTwoPhaseLaw = SatCurveMultiplexer<GasOilTraits>;
-    using OilWaterEffectiveTwoPhaseLaw = SatCurveMultiplexer<OilWaterTraits>;
-    using GasWaterEffectiveTwoPhaseLaw = SatCurveMultiplexer<GasWaterTraits>;
-
-    using GasOilEffectiveTwoPhaseParams = typename GasOilEffectiveTwoPhaseLaw::Params;
-    using OilWaterEffectiveTwoPhaseParams = typename OilWaterEffectiveTwoPhaseLaw::Params;
-    using GasWaterEffectiveTwoPhaseParams = typename GasWaterEffectiveTwoPhaseLaw::Params;
-
-    // the two-phase material law which is defined on absolute (scaled) saturations
-    using GasOilEpsTwoPhaseLaw = EclEpsTwoPhaseLaw<GasOilEffectiveTwoPhaseLaw>;
-    using OilWaterEpsTwoPhaseLaw = EclEpsTwoPhaseLaw<OilWaterEffectiveTwoPhaseLaw>;
-    using GasWaterEpsTwoPhaseLaw = EclEpsTwoPhaseLaw<GasWaterEffectiveTwoPhaseLaw>;
-    using GasOilEpsTwoPhaseParams = typename GasOilEpsTwoPhaseLaw::Params;
-    using OilWaterEpsTwoPhaseParams = typename OilWaterEpsTwoPhaseLaw::Params;
-    using GasWaterEpsTwoPhaseParams = typename GasWaterEpsTwoPhaseLaw::Params;
-
-    // the scaled two-phase material laws with hystersis
-    using GasOilTwoPhaseLaw = EclHysteresisTwoPhaseLaw<GasOilEpsTwoPhaseLaw>;
-    using OilWaterTwoPhaseLaw = EclHysteresisTwoPhaseLaw<OilWaterEpsTwoPhaseLaw>;
-    using GasWaterTwoPhaseLaw = EclHysteresisTwoPhaseLaw<GasWaterEpsTwoPhaseLaw>;
-    using GasOilTwoPhaseHystParams = typename GasOilTwoPhaseLaw::Params;
-    using OilWaterTwoPhaseHystParams = typename OilWaterTwoPhaseLaw::Params;
-    using GasWaterTwoPhaseHystParams = typename GasWaterTwoPhaseLaw::Params;
+    static constexpr int gasPhaseIdx = Traits::gasPhaseIdx;
+    static constexpr int oilPhaseIdx = Traits::nonWettingPhaseIdx;
+    static constexpr int waterPhaseIdx = Traits::wettingPhaseIdx;
+    static constexpr int numPhases = Traits::numPhases;
+    using GasOilEffectiveParamVector = typename EclMaterialLaw::TwoPhaseTypes<Traits>::GasOilEffectiveParamVector;
+    using GasWaterEffectiveParamVector = typename EclMaterialLaw::TwoPhaseTypes<Traits>::GasWaterEffectiveParamVector;
+    using OilWaterEffectiveParamVector = typename EclMaterialLaw::TwoPhaseTypes<Traits>::OilWaterEffectiveParamVector;
 
 public:
     // the three-phase material law used by the simulation
-    using MaterialLaw = EclMultiplexerMaterial<Traits, GasOilTwoPhaseLaw, OilWaterTwoPhaseLaw, GasWaterTwoPhaseLaw>;
+    using MaterialLaw = EclMultiplexerMaterial<Traits,
+                                               typename EclMaterialLaw::TwoPhaseTypes<Traits>::GasOilLaw,
+                                               typename EclMaterialLaw::TwoPhaseTypes<Traits>::OilWaterLaw,
+                                               typename EclMaterialLaw::TwoPhaseTypes<Traits>::GasWaterLaw>;
     using MaterialLawParams = typename MaterialLaw::Params;
     using DirectionalMaterialLawParamsPtr = std::unique_ptr<DirectionalMaterialLawParams<MaterialLawParams>>;
 
-    EclMaterialLawManager();
-    ~EclMaterialLawManager();
-
 private:
-    // internal typedefs
-    using GasOilEffectiveParamVector = std::vector<std::shared_ptr<GasOilEffectiveTwoPhaseParams>>;
-    using OilWaterEffectiveParamVector = std::vector<std::shared_ptr<OilWaterEffectiveTwoPhaseParams>>;
-    using GasWaterEffectiveParamVector = std::vector<std::shared_ptr<GasWaterEffectiveTwoPhaseParams>>;
-
     using GasOilScalingPointsVector = std::vector<std::shared_ptr<EclEpsScalingPoints<Scalar>>>;
     using OilWaterScalingPointsVector = std::vector<std::shared_ptr<EclEpsScalingPoints<Scalar>>>;
     using GasWaterScalingPointsVector = std::vector<std::shared_ptr<EclEpsScalingPoints<Scalar>>>;
     using OilWaterScalingInfoVector = std::vector<EclEpsScalingPointsInfo<Scalar>>;
-    using GasOilParamVector = std::vector<std::shared_ptr<GasOilTwoPhaseHystParams>>;
-    using OilWaterParamVector = std::vector<std::shared_ptr<OilWaterTwoPhaseHystParams>>;
-    using GasWaterParamVector = std::vector<std::shared_ptr<GasWaterTwoPhaseHystParams>>;
     using MaterialLawParamsVector = std::vector<std::shared_ptr<MaterialLawParams>>;
-
-    // helper classes
-
-    // This class' implementation is defined in "EclMaterialLawManagerInitParams.cpp"
-    class InitParams {
-    public:
-        InitParams(EclMaterialLawManager<TraitsT>& parent, const EclipseState& eclState, size_t numCompressedElems);
-        // \brief Function argument 'fieldPropIntOnLeadAssigner' needed to lookup
-        //        field properties of cells on the leaf grid view for CpGrid with local grid refinement.
-        //        Function argument 'lookupIdxOnLevelZeroAssigner' is added to lookup, for each
-        //        leaf gridview cell with index 'elemIdx', its 'lookupIdx' (index of the parent/equivalent cell on level zero).
-        void run(const std::function<std::vector<int>(const FieldPropsManager&, const std::string&, bool)>& fieldPropIntOnLeafAssigner,
-                 const std::function<unsigned(unsigned)>& lookupIdxOnLevelZeroAssigner);
-    private:
-        class HystParams;
-        // \brief Function argument 'fieldPropIntOnLeadAssigner' needed to lookup
-        //        field properties of cells on the leaf grid view for CpGrid with local grid refinement.
-        void copySatnumArrays_(const std::function<std::vector<int>(const FieldPropsManager&, const std::string&, bool)>&
-                               fieldPropIntOnLeafAssigner);
-        // \brief Function argument 'fieldPropIntOnLeadAssigner' needed to lookup
-        //        field properties of cells on the leaf grid view for CpGrid with local grid refinement.
-        void copyIntArray_(std::vector<int>& dest, const std::string& keyword,
-                           const std::function<std::vector<int>(const FieldPropsManager&, const std::string&, bool)>&
-                           fieldPropIntOnLeafAssigner);
-        unsigned imbRegion_(std::vector<int>& array, unsigned elemIdx);
-        void initArrays_(
-                         std::vector<std::vector<int>*>& satnumArray,
-                         std::vector<std::vector<int>*>& imbnumArray,
-                         std::vector<std::vector<MaterialLawParams>*>& mlpArray);
-        void initMaterialLawParamVectors_();
-        void initOilWaterScaledEpsInfo_();
-        // \brief Function argument 'fieldProptOnLeadAssigner' needed to lookup
-        //        field properties of cells on the leaf grid view for CpGrid with local grid refinement.
-        void initSatnumRegionArray_(const std::function<std::vector<int>(const FieldPropsManager&, const std::string&, bool)>&
-                                    fieldPropIntOnLeafAssigner);
-        void initThreePhaseParams_(
-                                   HystParams &hystParams,
-                                   MaterialLawParams& materialParams,
-                                   unsigned satRegionIdx,
-                                   unsigned elemIdx);
-        void readEffectiveParameters_();
-        void readUnscaledEpsPointsVectors_();
-
-        template <class Container>
-        void readUnscaledEpsPoints_(Container& dest,
-                                    const EclEpsConfig& config,
-                                    EclTwoPhaseSystemType system_type);
-
-        unsigned satRegion_(std::vector<int>& array, unsigned elemIdx);
-        unsigned satOrImbRegion_(std::vector<int>& array, std::vector<int>& default_vec, unsigned elemIdx);
-
-        // This class' implementation is defined in "EclMaterialLawManagerHystParams.cpp"
-        class HystParams {
-        public:
-            explicit HystParams(EclMaterialLawManager<TraitsT>::InitParams& init_params);
-            void finalize();
-            std::shared_ptr<GasOilTwoPhaseHystParams> getGasOilParams();
-            std::shared_ptr<OilWaterTwoPhaseHystParams> getOilWaterParams();
-            std::shared_ptr<GasWaterTwoPhaseHystParams> getGasWaterParams();
-            void setConfig(unsigned satRegionIdx);
-            // Function argument 'lookupIdxOnLevelZeroAssigner' is added to lookup, for each
-            // leaf gridview cell with index 'elemIdx', its 'lookupIdx' (index of the parent/equivalent cell on level zero).
-            void setDrainageParamsOilGas(unsigned elemIdx, unsigned satRegionIdx,
-                                         const std::function<unsigned(unsigned)>& lookupIdxOnLevelZeroAssigner);
-            void setDrainageParamsOilWater(unsigned elemIdx, unsigned satRegionIdx,
-                                           const std::function<unsigned(unsigned)>& lookupIdxOnLevelZeroAssigner);
-            void setDrainageParamsGasWater(unsigned elemIdx, unsigned satRegionIdx,
-                                           const std::function<unsigned(unsigned)>& lookupIdxOnLevelZeroAssigner);
-            void setImbibitionParamsOilGas(unsigned elemIdx, unsigned satRegionIdx,
-                                           const std::function<unsigned(unsigned)>& lookupIdxOnLevelZeroAssigner);
-            void setImbibitionParamsOilWater(unsigned elemIdx, unsigned satRegionIdx,
-                                             const std::function<unsigned(unsigned)>& lookupIdxOnLevelZeroAssigner);
-            void setImbibitionParamsGasWater(unsigned elemIdx, unsigned satRegionIdx,
-                                             const std::function<unsigned(unsigned)>& lookupIdxOnLevelZeroAssigner);
-        private:
-            bool hasGasWater_();
-            bool hasGasOil_();
-            bool hasOilWater_();
-
-            // Function argument 'lookupIdxOnLevelZeroAssigner' is added to lookup, for each
-            // leaf gridview cell with index 'elemIdx', its 'lookupIdx' (index of the parent/equivalent cell on level zero).
-            std::tuple<EclEpsScalingPointsInfo<Scalar>, EclEpsScalingPoints<Scalar>>
-            readScaledEpsPoints_(const EclEpsGridProperties& epsGridProperties, unsigned elemIdx, EclTwoPhaseSystemType type,
-                                 const std::function<unsigned(unsigned)>& lookupIdxOnLevelZeroAssigner);
-            std::tuple<EclEpsScalingPointsInfo<Scalar>, EclEpsScalingPoints<Scalar>>
-            readScaledEpsPointsDrainage_(unsigned elemIdx, EclTwoPhaseSystemType type,
-                                         const std::function<unsigned(unsigned)>& lookupIdxOnLevelZeroAssigner);
-            std::tuple<EclEpsScalingPointsInfo<Scalar>, EclEpsScalingPoints<Scalar>>
-            readScaledEpsPointsImbibition_(unsigned elemIdx, EclTwoPhaseSystemType type,
-                                           const std::function<unsigned(unsigned)>& lookupIdxOnLevelZeroAssigner);
-
-            EclMaterialLawManager<TraitsT>::InitParams& init_params_;
-            EclMaterialLawManager<TraitsT>& parent_;
-            const EclipseState& eclState_;
-            std::shared_ptr<GasOilTwoPhaseHystParams> gasOilParams_;
-            std::shared_ptr<OilWaterTwoPhaseHystParams> oilWaterParams_;
-            std::shared_ptr<GasWaterTwoPhaseHystParams> gasWaterParams_;
-        };
-
-        // This class' implementation is defined in "EclMaterialLawManagerReadEffectiveParams.cpp"
-        class ReadEffectiveParams {
-        public:
-            explicit ReadEffectiveParams(EclMaterialLawManager<TraitsT>::InitParams& init_params);
-            void read();
-        private:
-            std::vector<double> normalizeKrValues_(const double tolcrit, const TableColumn& krValues) const;
-            void readGasOilParameters_(GasOilEffectiveParamVector& dest, unsigned satRegionIdx);
-            template <class TableType>
-            void readGasOilFamily2_(
-                                    GasOilEffectiveTwoPhaseParams& effParams,
-                                    const Scalar Swco,
-                                    const double tolcrit,
-                                    const TableType& sofTable,
-                                    const SgfnTable& sgfnTable,
-                                    const std::string& columnName);
-            void readGasOilSgof_(GasOilEffectiveTwoPhaseParams& effParams,
-                                 const Scalar Swco,
-                                 const double tolcrit,
-                                 const SgofTable& sgofTable);
-
-            void readGasOilSlgof_(GasOilEffectiveTwoPhaseParams& effParams,
-                                  const Scalar Swco,
-                                  const double tolcrit,
-                                  const SlgofTable& slgofTable);
-            void readGasWaterParameters_(GasWaterEffectiveParamVector& dest, unsigned satRegionIdx);
-            void readOilWaterParameters_(OilWaterEffectiveParamVector& dest, unsigned satRegionIdx);
-
-            EclMaterialLawManager<TraitsT>::InitParams& init_params_;
-            EclMaterialLawManager<TraitsT>& parent_;
-            const EclipseState& eclState_;
-        }; // end of "class ReadEffectiveParams"
-
-        EclMaterialLawManager<TraitsT>& parent_;
-        const EclipseState& eclState_;
-        size_t numCompressedElems_;
-
-        std::unique_ptr<EclEpsGridProperties> epsImbGridProperties_; //imbibition
-        std::unique_ptr<EclEpsGridProperties> epsGridProperties_;    // drainage
-
-    };  // end of "class InitParams"
 
 public:
     void initFromState(const EclipseState& eclState);
@@ -329,6 +160,55 @@ public:
     bool enableNonWettingHysteresis() const
     { return hysteresisConfig_.enableNonWettingHysteresis(); }
 
+    bool hasGas() const
+    { return hasGas_; }
+
+    bool hasOil() const
+    { return hasOil_; }
+
+    bool hasWater() const
+    { return hasWater_; }
+
+    const EclEpsScalingPointsInfo<Scalar>& unscaledEpsInfo(unsigned satRegionIdx) const
+    { return unscaledEpsInfo_[satRegionIdx]; }
+
+    std::shared_ptr<WagHysteresisConfig::WagHysteresisConfigRecord>
+    wagHystersisConfig(unsigned satRegionIdx) const
+    { return wagHystersisConfig_[satRegionIdx]; }
+
+    const EclEpsConfig& gasOilConfig() const
+    { return gasOilConfig_; }
+
+    const EclEpsConfig& gasWaterConfig() const
+    { return gasWaterConfig_; }
+
+    const EclEpsConfig& oilWaterConfig() const
+    { return oilWaterConfig_; }
+
+    std::shared_ptr<EclEpsScalingPoints<Scalar>>
+    gasOilUnscaledPoints(unsigned satRegionIdx) const
+    { return gasOilUnscaledPointsVector_[satRegionIdx]; }
+
+    std::shared_ptr<typename TwoPhaseTypes<Traits>::GasOilEffectiveParams>
+    gasOilEffectiveParams(unsigned satRegionIdx) const
+    { return gasOilEffectiveParamVector_[satRegionIdx]; }
+
+    std::shared_ptr<EclEpsScalingPoints<Scalar>>
+    gasWaterUnscaledPoints(unsigned satRegionIdx) const
+    { return gasWaterUnscaledPointsVector_[satRegionIdx]; }
+
+    std::shared_ptr<typename TwoPhaseTypes<Traits>::GasWaterEffectiveParams>
+    gasWaterEffectiveParams(unsigned satRegionIdx) const
+    { return gasWaterEffectiveParamVector_[satRegionIdx]; }
+
+    std::shared_ptr<EclEpsScalingPoints<Scalar>>
+    oilWaterUnscaledPoints(unsigned satRegionIdx) const
+    { return oilWaterUnscaledPointsVector_[satRegionIdx]; }
+
+    std::shared_ptr<typename TwoPhaseTypes<Traits>::OilWaterEffectiveParams>
+    oilWaterEffectiveParams(unsigned satRegionIdx) const
+    { return oilWaterEffectiveParamVector_[satRegionIdx]; }
+
     MaterialLawParams& materialLawParams(unsigned elemIdx)
     {
         assert(elemIdx <  materialLawParams_.size());
@@ -342,14 +222,10 @@ public:
     }
 
     const MaterialLawParams& materialLawParams(unsigned elemIdx, FaceDir::DirEnum facedir) const
-    {
-        return materialLawParamsFunc_(elemIdx, facedir);
-    }
+    { return materialLawParamsFunc_(elemIdx, facedir); }
 
     MaterialLawParams& materialLawParams(unsigned elemIdx, FaceDir::DirEnum facedir)
-    {
-        return const_cast<MaterialLawParams&>(materialLawParamsFunc_(elemIdx, facedir));
-    }
+    { return const_cast<MaterialLawParams&>(materialLawParamsFunc_(elemIdx, facedir)); }
 
     /*!
      * \brief Returns a material parameter object for a given element and saturation region.
@@ -371,7 +247,8 @@ public:
         return !krnumXArray_.empty() || !krnumYArray_.empty() || !krnumZArray_.empty();
     }
 
-    bool hasDirectionalImbnum() const {
+    bool hasDirectionalImbnum() const
+    {
         if (imbnumXArray_.size() > 0 || imbnumYArray_.size() > 0 || imbnumZArray_.size() > 0) {
             return true;
         }
@@ -446,7 +323,7 @@ private:
 
     void readGlobalThreePhaseOptions_(const Runspec& runspec);
 
-    bool enableEndPointScaling_;
+    bool enableEndPointScaling_{false};
     EclHysteresisConfig hysteresisConfig_;
     std::vector<std::shared_ptr<WagHysteresisConfig::WagHysteresisConfigRecord>> wagHystersisConfig_;
 
@@ -464,7 +341,7 @@ private:
 
     EclMultiplexerApproach threePhaseApproach_ = EclMultiplexerApproach::Default;
     // this attribute only makes sense for twophase simulations!
-    enum EclTwoPhaseApproach twoPhaseApproach_ = EclTwoPhaseApproach::GasOil;
+    EclTwoPhaseApproach twoPhaseApproach_ = EclTwoPhaseApproach::GasOil;
 
     std::vector<MaterialLawParams> materialLawParams_;
     DirectionalMaterialLawParamsPtr dirMaterialLawParams_;
@@ -479,18 +356,21 @@ private:
     std::vector<int> imbnumRegionArray_;
     std::vector<Scalar> stoneEtas_;
 
-    bool enablePpcwmax_;
+    bool enablePpcwmax_{false};
     std::vector<Scalar> maxAllowPc_;
     std::vector<bool> modifySwl_;
 
-    bool hasGas;
-    bool hasOil;
-    bool hasWater;
+    bool hasGas_{true};
+    bool hasOil_{true};
+    bool hasWater_{true};
 
     EclEpsConfig gasOilConfig_;
     EclEpsConfig oilWaterConfig_;
     EclEpsConfig gasWaterConfig_;
+
+    friend class InitParams<Traits>;
 };
-} // namespace Opm
+
+} // namespace Opm::EclMaterialLaw
 
 #endif
