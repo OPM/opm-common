@@ -60,6 +60,7 @@ namespace Opm {
         bool useEnthalpy() const;
         bool isDiffusive() const;
         bool hasPRECSALT() const;
+        bool anyTUNING() const;
 
         bool operator==(const SimulationConfig& data) const;
         static bool rst_cmp(const SimulationConfig& full_config,
@@ -82,6 +83,7 @@ namespace Opm {
             serializer(m_useEnthalpy);
             serializer(m_diffuse);
             serializer(m_PRECSALT);
+            serializer(m_anyTUNING);
         }
 
     private:
@@ -101,6 +103,7 @@ namespace Opm {
         bool m_useEnthalpy{false};
         bool m_diffuse{false};
         bool m_PRECSALT{false};
+        bool m_anyTUNING{false};
     };
 
 } // namespace Opm
