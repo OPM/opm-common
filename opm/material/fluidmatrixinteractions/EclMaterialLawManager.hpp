@@ -92,9 +92,6 @@ public:
     using MaterialLawParams = typename MaterialLaw::Params;
     using DirectionalMaterialLawParamsPtr = std::unique_ptr<DirectionalMaterialLawParams<MaterialLawParams>>;
 
-    EclMaterialLawManager();
-    ~EclMaterialLawManager();
-
 private:
     using GasOilScalingPointsVector = std::vector<std::shared_ptr<EclEpsScalingPoints<Scalar>>>;
     using OilWaterScalingPointsVector = std::vector<std::shared_ptr<EclEpsScalingPoints<Scalar>>>;
