@@ -20,24 +20,43 @@
 */
 
 #include <config.h>
+#include <opm/material/fluidmatrixinteractions/EclMaterialLawInitParams.hpp>
 
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 
-#include <opm/material/fluidmatrixinteractions/EclEpsGridProperties.hpp>
+#include <opm/material/fluidmatrixinteractions/DirectionalMaterialLawParams.hpp>
 #include <opm/material/fluidmatrixinteractions/EclMaterialLawHystParams.hpp>
 #include <opm/material/fluidmatrixinteractions/EclMaterialLawManager.hpp>
 #include <opm/material/fluidmatrixinteractions/EclMaterialLawReadEffectiveParams.hpp>
+#include <opm/material/fluidmatrixinteractions/EclMultiplexerMaterialParams.hpp>
+
+#include <cassert>
+
+namespace {
+
+unsigned satOrImbRegion(const std::vector<int>& array,
+                        const std::vector<int>& default_vec,
+                        unsigned elemIdx)
+{
+    const int value = array.empty() ? default_vec[elemIdx] : array[elemIdx];
+    return static_cast<unsigned>(value);
+}
+
+} // anonymous namespace
 
 namespace Opm::EclMaterialLaw {
 
 /* constructors*/
 
 template <class Traits>
-Manager<Traits>::InitParams::
-InitParams(Manager<Traits>& parent, const EclipseState& eclState, size_t numCompressedElems) :
-    parent_{parent},
-    eclState_{eclState},
-    numCompressedElems_{numCompressedElems}
+InitParams<Traits>::
+InitParams(const Manager<Traits>& parent,
+           const EclipseState& eclState,
+           std::size_t numCompressedElems)
+    : parent_{parent}
+    , eclState_{eclState}
+    , numCompressedElems_{numCompressedElems}
+    , epsGridProperties_(this->eclState_, false)
 {
     // read end point scaling grid properties
     // TODO: these objects might require some memory, can this be simplified?
@@ -45,18 +64,15 @@ InitParams(Manager<Traits>& parent, const EclipseState& eclState, size_t numComp
         this->epsImbGridProperties_
             = std::make_unique<EclEpsGridProperties>(this->eclState_, /*useImbibition=*/true);
     }
-    this->epsGridProperties_
-        = std::make_unique<EclEpsGridProperties>(this->eclState_, /*useImbibition=*/false);
 }
 
 /* public methods */
 
 template <class Traits>
 void
-Manager<Traits>::InitParams::
-run(const std::function<std::vector<int>(const FieldPropsManager&, const std::string&, bool)>&
-    fieldPropIntOnLeafAssigner,
-    const std::function<unsigned(unsigned)>& lookupIdxOnLevelZeroAssigner)
+InitParams<Traits>::
+run(const IntLookupFunction& fieldPropIntOnLeafAssigner,
+    const LookupFunction& lookupIdxOnLevelZeroAssigner)
 {
     readUnscaledEpsPointsVectors_();
     readEffectiveParameters_();
@@ -64,8 +80,8 @@ run(const std::function<std::vector<int>(const FieldPropsManager&, const std::st
     copySatnumArrays_(fieldPropIntOnLeafAssigner);
     initOilWaterScaledEpsInfo_();
     initMaterialLawParamVectors_();
-    std::vector<std::vector<int>*> satnumArray;
-    std::vector<std::vector<int>*> imbnumArray;
+    std::vector<const std::vector<int>*> satnumArray;
+    std::vector<const std::vector<int>*> imbnumArray;
     std::vector<std::vector<MaterialLawParams>*> mlpArray;
     initArrays_(satnumArray, imbnumArray, mlpArray);
     const auto num_arrays = mlpArray.size();
@@ -77,8 +93,8 @@ run(const std::function<std::vector<int>(const FieldPropsManager&, const std::st
             unsigned satRegionIdx = satRegion_(*satnumArray[i], elemIdx);
             //unsigned satNumCell = this->parent_.satnumRegionArray_[elemIdx];
             HystParams<Traits> hystParams{
-                this->parent_.oilWaterScaledEpsInfoDrainage_,
-                *epsGridProperties_,
+                params_,
+                epsGridProperties_,
                 *epsImbGridProperties_,
                 this->eclState_,
                 this->parent_
@@ -104,31 +120,29 @@ run(const std::function<std::vector<int>(const FieldPropsManager&, const std::st
 
 template <class Traits>
 void
-Manager<Traits>::InitParams::
-copySatnumArrays_(const std::function<std::vector<int>(const FieldPropsManager&,
-                                                       const std::string&, bool)>& fieldPropIntOnLeafAssigner)
+InitParams<Traits>::
+copySatnumArrays_(const IntLookupFunction& fieldPropIntOnLeafAssigner)
 {
-    copyIntArray_(this->parent_.krnumXArray_, "KRNUMX", fieldPropIntOnLeafAssigner);
-    copyIntArray_(this->parent_.krnumYArray_, "KRNUMY", fieldPropIntOnLeafAssigner);
-    copyIntArray_(this->parent_.krnumZArray_, "KRNUMZ", fieldPropIntOnLeafAssigner);
-    copyIntArray_(this->parent_.imbnumXArray_, "IMBNUMX", fieldPropIntOnLeafAssigner);
-    copyIntArray_(this->parent_.imbnumYArray_, "IMBNUMY", fieldPropIntOnLeafAssigner);
-    copyIntArray_(this->parent_.imbnumZArray_, "IMBNUMZ", fieldPropIntOnLeafAssigner);
+    copyIntArray_(params_.krnumXArray, "KRNUMX", fieldPropIntOnLeafAssigner);
+    copyIntArray_(params_.krnumYArray, "KRNUMY", fieldPropIntOnLeafAssigner);
+    copyIntArray_(params_.krnumZArray, "KRNUMZ", fieldPropIntOnLeafAssigner);
+    copyIntArray_(params_.imbnumXArray, "IMBNUMX", fieldPropIntOnLeafAssigner);
+    copyIntArray_(params_.imbnumYArray, "IMBNUMY", fieldPropIntOnLeafAssigner);
+    copyIntArray_(params_.imbnumZArray, "IMBNUMZ", fieldPropIntOnLeafAssigner);
     // create the information for the imbibition region (IMBNUM). By default this is
     // the same as the saturation region (SATNUM)
-    this->parent_.imbnumRegionArray_ = this->parent_.satnumRegionArray_;
-    copyIntArray_(this->parent_.imbnumRegionArray_, "IMBNUM", fieldPropIntOnLeafAssigner);
-    assert(this->numCompressedElems_ == this->parent_.satnumRegionArray_.size());
-    assert(!this->parent_.enableHysteresis() || this->numCompressedElems_ == this->parent_.imbnumRegionArray_.size());
+    params_.imbnumRegionArray = params_.satnumRegionArray;
+    copyIntArray_(params_.imbnumRegionArray, "IMBNUM", fieldPropIntOnLeafAssigner);
+    assert(this->numCompressedElems_ == params_.satnumRegionArray.size());
+    assert(!this->parent_.enableHysteresis() || this->numCompressedElems_ == params_.imbnumRegionArray.size());
 }
 
 template <class Traits>
 void
-Manager<Traits>::InitParams::
+InitParams<Traits>::
 copyIntArray_(std::vector<int>& dest,
               const std::string& keyword,
-              const std::function<std::vector<int>(const FieldPropsManager&,
-                                                   const std::string&, bool)>& fieldPropIntOnLeafAssigner)
+              const IntLookupFunction& fieldPropIntOnLeafAssigner) const
 {
     if (this->eclState_.fieldProps().has_int(keyword)) {
         dest = fieldPropIntOnLeafAssigner(this->eclState_.fieldProps(), keyword, /*needsTranslation*/true);
@@ -137,93 +151,92 @@ copyIntArray_(std::vector<int>& dest,
 
 template <class Traits>
 unsigned
-Manager<Traits>::InitParams::
-imbRegion_(std::vector<int>& array, unsigned elemIdx)
+InitParams<Traits>::
+imbRegion_(const std::vector<int>& array, unsigned elemIdx) const
 {
-    std::vector<int>& default_vec = this->parent_.imbnumRegionArray_;
-    return satOrImbRegion_(array, default_vec, elemIdx);
+    const std::vector<int>& default_vec = params_.imbnumRegionArray;
+    return satOrImbRegion(array, default_vec, elemIdx);
 }
 
 template <class Traits>
 void
-Manager<Traits>::InitParams::
-initArrays_(std::vector<std::vector<int>*>& satnumArray,
-            std::vector<std::vector<int>*>& imbnumArray,
+InitParams<Traits>::
+initArrays_(std::vector<const std::vector<int>*>& satnumArray,
+            std::vector<const std::vector<int>*>& imbnumArray,
             std::vector<std::vector<MaterialLawParams>*>& mlpArray)
 {
-    satnumArray.push_back(&this->parent_.satnumRegionArray_);
-    imbnumArray.push_back(&this->parent_.imbnumRegionArray_);
-    mlpArray.push_back(&this->parent_.materialLawParams_);
-    if (this->parent_.dirMaterialLawParams_) {
-        if (this->parent_.hasDirectionalRelperms()) {
-            satnumArray.push_back(&this->parent_.krnumXArray_);
-            satnumArray.push_back(&this->parent_.krnumYArray_);
-            satnumArray.push_back(&this->parent_.krnumZArray_);
+    satnumArray.push_back(&params_.satnumRegionArray);
+    imbnumArray.push_back(&params_.imbnumRegionArray);
+    mlpArray.push_back(&params_.materialLawParams);
+    if (params_.dirMaterialLawParams) {
+        if (this->params_.hasDirectionalRelperms()) {
+            satnumArray.push_back(&params_.krnumXArray);
+            satnumArray.push_back(&params_.krnumYArray);
+            satnumArray.push_back(&params_.krnumZArray);
         }
-        if (this->parent_.hasDirectionalImbnum()) {
-            imbnumArray.push_back(&this->parent_.imbnumXArray_);
-            imbnumArray.push_back(&this->parent_.imbnumYArray_);
-            imbnumArray.push_back(&this->parent_.imbnumZArray_);
+        if (this->params_.hasDirectionalImbnum()) {
+            imbnumArray.push_back(&params_.imbnumXArray);
+            imbnumArray.push_back(&params_.imbnumYArray);
+            imbnumArray.push_back(&params_.imbnumZArray);
         }
-        mlpArray.push_back(&(this->parent_.dirMaterialLawParams_->materialLawParamsX_));
-        mlpArray.push_back(&(this->parent_.dirMaterialLawParams_->materialLawParamsY_));
-        mlpArray.push_back(&(this->parent_.dirMaterialLawParams_->materialLawParamsZ_));
+        mlpArray.push_back(&params_.dirMaterialLawParams->materialLawParamsX_);
+        mlpArray.push_back(&params_.dirMaterialLawParams->materialLawParamsY_);
+        mlpArray.push_back(&params_.dirMaterialLawParams->materialLawParamsZ_);
     }
 }
 
 template <class Traits>
 void
-Manager<Traits>::InitParams::
+InitParams<Traits>::
 initMaterialLawParamVectors_()
 {
-    this->parent_.materialLawParams_.resize(this->numCompressedElems_);
-    if (this->parent_.hasDirectionalImbnum() || this->parent_.hasDirectionalRelperms()) {
-        this->parent_.dirMaterialLawParams_
+    params_.materialLawParams.resize(this->numCompressedElems_);
+    if (this->params_.hasDirectionalImbnum() || this->params_.hasDirectionalRelperms()) {
+        params_.dirMaterialLawParams
             = std::make_unique<DirectionalMaterialLawParams<MaterialLawParams>>(this->numCompressedElems_);
     }
 }
 
 template <class Traits>
 void
-Manager<Traits>::InitParams::
+InitParams<Traits>::
 initOilWaterScaledEpsInfo_()
 {
     // This vector will be updated in the hystParams.setDrainageOilWater() in the run() method
-    this->parent_.oilWaterScaledEpsInfoDrainage_.resize(this->numCompressedElems_);
+    params_.oilWaterScaledEpsInfoDrainage.resize(this->numCompressedElems_);
 }
 
 template <class Traits>
 void
-Manager<Traits>::InitParams::
-initSatnumRegionArray_(const std::function<std::vector<int>(const FieldPropsManager&,
-                                                            const std::string&, bool)>& fieldPropIntOnLeafAssigner)
+InitParams<Traits>::
+initSatnumRegionArray_(const IntLookupFunction& fieldPropIntOnLeafAssigner)
 {
     // copy the SATNUM grid property. in some cases this is not necessary, but it
     // should not require much memory anyway...
-    auto &satnumArray = this->parent_.satnumRegionArray_;
-    satnumArray.resize(this->numCompressedElems_);
+    params_.satnumRegionArray.resize(this->numCompressedElems_);
     if (this->eclState_.fieldProps().has_int("SATNUM")) {
-        satnumArray = fieldPropIntOnLeafAssigner(this->eclState_.fieldProps(), "SATNUM", /*needsTranslation*/true);
+        params_.satnumRegionArray = fieldPropIntOnLeafAssigner(this->eclState_.fieldProps(),
+                                                               "SATNUM", /*needsTranslation*/true);
     }
     else {
-        std::fill(satnumArray.begin(), satnumArray.end(), 0);
+        std::fill(params_.satnumRegionArray.begin(), params_.satnumRegionArray.end(), 0);
     }
 }
 
 template <class Traits>
 void
-Manager<Traits>::InitParams::
+InitParams<Traits>::
 initThreePhaseParams_(HystParams<Traits>& hystParams,
                       MaterialLawParams& materialParams,
                       unsigned satRegionIdx,
                       unsigned elemIdx)
 {
-    const auto& epsInfo = this->parent_.oilWaterScaledEpsInfoDrainage_[elemIdx];
+    const auto& epsInfo = this->params_.oilWaterScaledEpsInfoDrainage[elemIdx];
 
     auto oilWaterParams = hystParams.getOilWaterParams();
     auto gasOilParams = hystParams.getGasOilParams();
     auto gasWaterParams = hystParams.getGasWaterParams();
-    materialParams.setApproach(this->parent_.threePhaseApproach_);
+    materialParams.setApproach(this->parent_.threePhaseApproach());
     switch (materialParams.approach()) {
         case EclMultiplexerApproach::Stone1: {
             auto& realParams = materialParams.template getRealParams<EclMultiplexerApproach::Stone1>();
@@ -231,8 +244,8 @@ initThreePhaseParams_(HystParams<Traits>& hystParams,
             realParams.setOilWaterParams(oilWaterParams);
             realParams.setSwl(epsInfo.Swl);
 
-            if (!this->parent_.stoneEtas_.empty()) {
-                realParams.setEta(this->parent_.stoneEtas_[satRegionIdx]);
+            if (!this->parent_.stoneEtas().empty()) {
+                realParams.setEta(this->parent_.stoneEtas()[satRegionIdx]);
             }
             else
                 realParams.setEta(1.0);
@@ -263,7 +276,7 @@ initThreePhaseParams_(HystParams<Traits>& hystParams,
             realParams.setGasOilParams(gasOilParams);
             realParams.setOilWaterParams(oilWaterParams);
             realParams.setGasWaterParams(gasWaterParams);
-            realParams.setApproach(this->parent_.twoPhaseApproach_);
+            realParams.setApproach(this->parent_.twoPhaseApproach());
             realParams.finalize();
             break;
         }
@@ -277,13 +290,11 @@ initThreePhaseParams_(HystParams<Traits>& hystParams,
 
 template <class Traits>
 void
-Manager<Traits>::InitParams::
+InitParams<Traits>::
 readEffectiveParameters_()
 {
     ReadEffectiveParams<Traits> effectiveReader{
-        this->parent_.gasOilEffectiveParamVector_,
-        this->parent_.gasWaterEffectiveParamVector_,
-        this->parent_.oilWaterEffectiveParamVector_,
+        params_,
         this->eclState_,
         this->parent_
     };
@@ -294,27 +305,27 @@ readEffectiveParameters_()
 
 template <class Traits>
 void
-Manager<Traits>::InitParams::
+InitParams<Traits>::
 readUnscaledEpsPointsVectors_()
 {
     if (this->parent_.hasGas() && this->parent_.hasOil()) {
         readUnscaledEpsPoints_(
-            this->parent_.gasOilUnscaledPointsVector_,
-            this->parent_.gasOilConfig_,
+            params_.gasOilUnscaledPointsVector,
+            this->parent_.gasOilConfig(),
             EclTwoPhaseSystemType::GasOil
         );
     }
     if (this->parent_.hasOil() && this->parent_.hasWater()) {
         readUnscaledEpsPoints_(
-            this->parent_.oilWaterUnscaledPointsVector_,
-            this->parent_.oilWaterConfig_,
+            params_.oilWaterUnscaledPointsVector,
+            this->parent_.oilWaterConfig(),
             EclTwoPhaseSystemType::OilWater
         );
     }
     if (!this->parent_.hasOil()) {
         readUnscaledEpsPoints_(
-            this->parent_.gasWaterUnscaledPointsVector_,
-            this->parent_.gasWaterConfig_,
+            params_.gasWaterUnscaledPointsVector,
+            this->parent_.gasWaterConfig(),
             EclTwoPhaseSystemType::GasWater
         );
     }
@@ -323,49 +334,32 @@ readUnscaledEpsPointsVectors_()
 template <class Traits>
 template <class Container>
 void
-Manager<Traits>::InitParams::
+InitParams<Traits>::
 readUnscaledEpsPoints_(Container& dest,
                        const EclEpsConfig& config,
                        EclTwoPhaseSystemType system_type)
 {
-    const size_t numSatRegions = this->eclState_.runspec().tabdims().getNumSatTables();
+    const std::size_t numSatRegions = this->eclState_.runspec().tabdims().getNumSatTables();
     dest.resize(numSatRegions);
     for (unsigned satRegionIdx = 0; satRegionIdx < numSatRegions; ++satRegionIdx) {
         dest[satRegionIdx] = std::make_shared<EclEpsScalingPoints<Scalar> >();
-        dest[satRegionIdx]->init(this->parent_.unscaledEpsInfo_[satRegionIdx], config, system_type);
+        dest[satRegionIdx]->init(this->parent_.unscaledEpsInfo(satRegionIdx), config, system_type);
     }
 }
 
 template <class Traits>
 unsigned
-Manager<Traits>::InitParams::
-satRegion_(std::vector<int>& array, unsigned elemIdx)
+InitParams<Traits>::
+satRegion_(const std::vector<int>& array, unsigned elemIdx) const
 {
-    std::vector<int>& default_vec = this->parent_.satnumRegionArray_;
-    return satOrImbRegion_(array, default_vec, elemIdx);
-}
-
-template <class Traits>
-unsigned
-Manager<Traits>::InitParams::
-satOrImbRegion_(std::vector<int>& array,
-                std::vector<int>& default_vec,
-                unsigned elemIdx)
-{
-    int value;
-    if (array.size() > 0) {
-        value = array[elemIdx];
-    }
-    else { // use default value
-        value = default_vec[elemIdx];
-    }
-    return static_cast<unsigned>(value);
+    const std::vector<int>& default_vec = params_.satnumRegionArray;
+    return satOrImbRegion(array, default_vec, elemIdx);
 }
 
 // Make some actual code, by realizing the previously defined templated class
-template class Manager<ThreePhaseMaterialTraits<double,0,1,2>>::InitParams;
-template class Manager<ThreePhaseMaterialTraits<float,0,1,2>>::InitParams;
-template class Manager<ThreePhaseMaterialTraits<double,2,0,1>>::InitParams;
-template class Manager<ThreePhaseMaterialTraits<float,2,0,1>>::InitParams;
+template class InitParams<ThreePhaseMaterialTraits<double,0,1,2>>;
+template class InitParams<ThreePhaseMaterialTraits<float,0,1,2>>;
+template class InitParams<ThreePhaseMaterialTraits<double,2,0,1>>;
+template class InitParams<ThreePhaseMaterialTraits<float,2,0,1>>;
 
 } // namespace Opm::EclMaterialLaw

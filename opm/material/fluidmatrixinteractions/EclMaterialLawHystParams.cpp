@@ -30,12 +30,12 @@ namespace Opm::EclMaterialLaw {
 /* constructors*/
 template <class Traits>
 HystParams<Traits>::
-HystParams(std::vector<EclEpsScalingPointsInfo<Scalar>>& oilWaterScaledEpsInfoDrainage,
+HystParams(typename Manager<Traits>::Params& params,
            const EclEpsGridProperties& epsGridProperties,
            const EclEpsGridProperties& epsImbGridProperties,
            const EclipseState& eclState,
            const Manager<Traits>& parent)
-    : oilWaterScaledEpsInfoDrainage_(oilWaterScaledEpsInfoDrainage)
+    : params_(params)
     , epsGridProperties_(epsGridProperties)
     , epsImbGridProperties_(epsImbGridProperties)
     , eclState_(eclState)
@@ -91,9 +91,9 @@ setDrainageParamsGasWater(unsigned elemIdx, unsigned satRegionIdx,
             = readScaledEpsPointsDrainage_(elemIdx, EclTwoPhaseSystemType::GasWater, lookupIdxOnLevelZeroAssigner);
         typename TwoPhaseTypes<Traits>::GasWaterEpsParams gasWaterDrainParams;
         gasWaterDrainParams.setConfig(this->parent_.gasWaterConfig());
-        gasWaterDrainParams.setUnscaledPoints(this->parent_.gasWaterUnscaledPoints(satRegionIdx));
+        gasWaterDrainParams.setUnscaledPoints(this->params_.gasWaterUnscaledPointsVector[satRegionIdx]);
         gasWaterDrainParams.setScaledPoints(gasWaterScaledPoints);
-        gasWaterDrainParams.setEffectiveLawParams(this->parent_.gasWaterEffectiveParams(satRegionIdx));
+        gasWaterDrainParams.setEffectiveLawParams(this->params_.gasWaterEffectiveParamVector[satRegionIdx]);
         gasWaterDrainParams.finalize();
         this->gasWaterParams_->setDrainageParams(gasWaterDrainParams,
                                                  gasWaterScaledInfo,
@@ -112,9 +112,9 @@ setDrainageParamsOilGas(unsigned elemIdx, unsigned satRegionIdx,
             = readScaledEpsPointsDrainage_(elemIdx, EclTwoPhaseSystemType::GasOil, lookupIdxOnLevelZeroAssigner);
         typename TwoPhaseTypes<Traits>::GasOilEpsParams gasOilDrainParams;
         gasOilDrainParams.setConfig(this->parent_.gasOilConfig());
-        gasOilDrainParams.setUnscaledPoints(this->parent_.gasOilUnscaledPoints(satRegionIdx));
+        gasOilDrainParams.setUnscaledPoints(this->params_.gasOilUnscaledPointsVector[satRegionIdx]);
         gasOilDrainParams.setScaledPoints(gasOilScaledPoints);
-        gasOilDrainParams.setEffectiveLawParams(this->parent_.gasOilEffectiveParams(satRegionIdx));
+        gasOilDrainParams.setEffectiveLawParams(this->params_.gasOilEffectiveParamVector[satRegionIdx]);
         gasOilDrainParams.finalize();
         this->gasOilParams_->setDrainageParams(gasOilDrainParams,
                                                gasOilScaledInfo,
@@ -138,13 +138,13 @@ setDrainageParamsOilWater(unsigned elemIdx, unsigned satRegionIdx,
     //  since we currently does not support facedir for the scaling points info
     //  When such support is added, we need to extend the below vector which has info for each cell
     //   to include three more vectors, one with info for each facedir of a cell
-    oilWaterScaledEpsInfoDrainage_[elemIdx] = oilWaterScaledInfo;
+    params_.oilWaterScaledEpsInfoDrainage[elemIdx] = oilWaterScaledInfo;
     if (hasOilWater_()) {
         typename TwoPhaseTypes<Traits>::OilWaterEpsParams oilWaterDrainParams;
         oilWaterDrainParams.setConfig(this->parent_.oilWaterConfig());
-        oilWaterDrainParams.setUnscaledPoints(this->parent_.oilWaterUnscaledPoints(satRegionIdx));
+        oilWaterDrainParams.setUnscaledPoints(this->params_.oilWaterUnscaledPointsVector[satRegionIdx]);
         oilWaterDrainParams.setScaledPoints(oilWaterScaledPoints);
-        oilWaterDrainParams.setEffectiveLawParams(this->parent_.oilWaterEffectiveParams(satRegionIdx));
+        oilWaterDrainParams.setEffectiveLawParams(this->params_.oilWaterEffectiveParamVector[satRegionIdx]);
         oilWaterDrainParams.finalize();
         oilWaterParams_->setDrainageParams(oilWaterDrainParams, oilWaterScaledInfo, EclTwoPhaseSystemType::OilWater);
     }
@@ -161,9 +161,9 @@ setImbibitionParamsGasWater(unsigned elemIdx, unsigned imbRegionIdx,
             = readScaledEpsPointsImbibition_(elemIdx, EclTwoPhaseSystemType::GasWater, lookupIdxOnLevelZeroAssigner);
         typename EclMaterialLaw::TwoPhaseTypes<Traits>::GasWaterEpsParams gasWaterImbParamsHyst;
         gasWaterImbParamsHyst.setConfig(this->parent_.gasWaterConfig());
-        gasWaterImbParamsHyst.setUnscaledPoints(this->parent_.gasWaterUnscaledPoints(imbRegionIdx));
+        gasWaterImbParamsHyst.setUnscaledPoints(this->params_.gasWaterUnscaledPointsVector[imbRegionIdx]);
         gasWaterImbParamsHyst.setScaledPoints(gasWaterScaledPoints);
-        gasWaterImbParamsHyst.setEffectiveLawParams(this->parent_.gasWaterEffectiveParams(imbRegionIdx));
+        gasWaterImbParamsHyst.setEffectiveLawParams(this->params_.gasWaterEffectiveParamVector[imbRegionIdx]);
         gasWaterImbParamsHyst.finalize();
         this->gasWaterParams_->setImbibitionParams(gasWaterImbParamsHyst,
                                                    gasWaterScaledInfo,
@@ -183,9 +183,9 @@ setImbibitionParamsOilGas(unsigned elemIdx, unsigned imbRegionIdx,
 
         typename TwoPhaseTypes<Traits>::GasOilEpsParams gasOilImbParamsHyst;
         gasOilImbParamsHyst.setConfig(this->parent_.gasOilConfig());
-        gasOilImbParamsHyst.setUnscaledPoints(this->parent_.gasOilUnscaledPoints(imbRegionIdx));
+        gasOilImbParamsHyst.setUnscaledPoints(this->params_.gasOilUnscaledPointsVector[imbRegionIdx]);
         gasOilImbParamsHyst.setScaledPoints(gasOilScaledPoints);
-        gasOilImbParamsHyst.setEffectiveLawParams(this->parent_.gasOilEffectiveParams(imbRegionIdx));
+        gasOilImbParamsHyst.setEffectiveLawParams(this->params_.gasOilEffectiveParamVector[imbRegionIdx]);
         gasOilImbParamsHyst.finalize();
         this->gasOilParams_->setImbibitionParams(gasOilImbParamsHyst,
                                                  gasOilScaledInfo,
@@ -204,9 +204,9 @@ setImbibitionParamsOilWater(unsigned elemIdx, unsigned imbRegionIdx,
             = readScaledEpsPointsImbibition_(elemIdx, EclTwoPhaseSystemType::OilWater, lookupIdxOnLevelZeroAssigner);
         typename TwoPhaseTypes<Traits>::OilWaterEpsParams oilWaterImbParamsHyst;
         oilWaterImbParamsHyst.setConfig(this->parent_.oilWaterConfig());
-        oilWaterImbParamsHyst.setUnscaledPoints(this->parent_.oilWaterUnscaledPoints(imbRegionIdx));
+        oilWaterImbParamsHyst.setUnscaledPoints(this->params_.oilWaterUnscaledPointsVector[imbRegionIdx]);
         oilWaterImbParamsHyst.setScaledPoints(oilWaterScaledPoints);
-        oilWaterImbParamsHyst.setEffectiveLawParams(this->parent_.oilWaterEffectiveParams(imbRegionIdx));
+        oilWaterImbParamsHyst.setEffectiveLawParams(this->params_.oilWaterEffectiveParamVector[imbRegionIdx]);
         oilWaterImbParamsHyst.finalize();
         this->oilWaterParams_->setImbibitionParams(oilWaterImbParamsHyst,
                                                    oilWaterScaledInfo,

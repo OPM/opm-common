@@ -354,9 +354,9 @@ if(ENABLE_ECL_INPUT)
     opm/material/fluidmatrixinteractions/EclEpsConfig.cpp
     opm/material/fluidmatrixinteractions/EclEpsGridProperties.cpp
     opm/material/fluidmatrixinteractions/EclHysteresisConfig.cpp
+    opm/material/fluidmatrixinteractions/EclMaterialLawInitParams.cpp
     opm/material/fluidmatrixinteractions/EclMaterialLawHystParams.cpp
     opm/material/fluidmatrixinteractions/EclMaterialLawManager.cpp
-    opm/material/fluidmatrixinteractions/EclMaterialLawManagerInitParams.cpp
     opm/material/fluidmatrixinteractions/EclMaterialLawReadEffectiveParams.cpp
     opm/material/thermal/EclThermalLawManager.cpp
   )
@@ -1061,6 +1061,7 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/material/fluidmatrixinteractions/SplineTwoPhaseMaterialParams.hpp
       opm/material/fluidmatrixinteractions/EclEpsTwoPhaseLaw.hpp
       opm/material/fluidmatrixinteractions/TwoPhaseLETCurves.hpp
+      opm/material/fluidmatrixinteractions/EclMaterialLawInitParams.hpp
       opm/material/fluidmatrixinteractions/EclMaterialLawHystParams.hpp
       opm/material/fluidmatrixinteractions/EclMaterialLawManager.hpp
       opm/material/fluidmatrixinteractions/EclMaterialLawReadEffectiveParams.hpp
