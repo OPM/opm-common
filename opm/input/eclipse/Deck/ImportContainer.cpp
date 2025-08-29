@@ -25,6 +25,7 @@
 
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/common/OpmLog/LogUtil.hpp>
+#include <opm/common/OpmLog/KeywordLocation.hpp>
 #include <opm/io/eclipse/EclFile.hpp>
 #include <opm/input/eclipse/Parser/Parser.hpp>
 
@@ -47,19 +48,20 @@ ImportContainer::ImportContainer(const Parser& parser, const UnitSystem& unit_sy
             continue;
         }
 
+        KeywordLocation location(name, fname, KeywordLocation::LINENO_BINARY);
         const auto& parser_item = parser_kw.getRecord(0).get(0);
         if (parser_item.dataType() == type_tag::fdouble) {
             if (data_type == EclIO::REAL) {
                 auto& float_data = ecl_file.get<float>(kw_index);
                 std::vector<double> double_data{ float_data.begin(), float_data.end() };
-                this->keywords.emplace_back(parser_kw, double_data, unit_system, unit_system);
+                this->keywords.emplace_back(parser_kw, double_data, unit_system, unit_system, location);
             } else if (data_type == EclIO::DOUB) {
                 auto& double_data = ecl_file.get<double>(kw_index);
-                this->keywords.emplace_back(parser_kw, double_data, unit_system, unit_system);
+                this->keywords.emplace_back(parser_kw, double_data, unit_system, unit_system, location);
             }
         } else if (parser_item.dataType() == type_tag::integer) {
             const auto& data = ecl_file.get<int>(kw_index);
-            this->keywords.emplace_back(parser_kw, data);
+            this->keywords.emplace_back(parser_kw, data, location);
         } else
             throw std::logic_error(fmt::format("File: {} keyword:{}\nIMPORT keyword only supports integer and floating point data keywords", fname, name));
 

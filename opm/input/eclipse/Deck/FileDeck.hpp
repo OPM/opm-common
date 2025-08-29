@@ -117,7 +117,7 @@ private:
     private:
         std::string fname;
         std::vector<DeckKeyword> keywords;
-
+        bool is_binary {false};
         friend FileDeck;
     };
 

@@ -94,6 +94,9 @@ void DeckTree::add_include(std::string parent_file, std::string include_file) {
 }
 
 bool DeckTree::has_include(const std::string& fname) const {
+    if (this->nodes.count(fname) == 0) {
+        return false;
+    }
     const auto& node = this->nodes.at(fname);
     return !node.include_files.empty();
 }
