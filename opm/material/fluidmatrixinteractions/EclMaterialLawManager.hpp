@@ -307,6 +307,15 @@ public:
     bool enableNonWettingHysteresis() const
     { return hysteresisConfig_.enableNonWettingHysteresis(); }
 
+    bool hasGas() const
+    { return hasGas_; }
+
+    bool hasOil() const
+    { return hasOil_; }
+
+    bool hasWater() const
+    { return hasWater_; }
+
     MaterialLawParams& materialLawParams(unsigned elemIdx)
     {
         assert(elemIdx <  materialLawParams_.size());
@@ -461,9 +470,9 @@ private:
     std::vector<Scalar> maxAllowPc_;
     std::vector<bool> modifySwl_;
 
-    bool hasGas;
-    bool hasOil;
-    bool hasWater;
+    bool hasGas_{true};
+    bool hasOil_{true};
+    bool hasWater_{true};
 
     EclEpsConfig gasOilConfig_;
     EclEpsConfig oilWaterConfig_;

@@ -282,21 +282,21 @@ void
 Manager<Traits>::InitParams::
 readUnscaledEpsPointsVectors_()
 {
-    if (this->parent_.hasGas && this->parent_.hasOil) {
+    if (this->parent_.hasGas() && this->parent_.hasOil()) {
         readUnscaledEpsPoints_(
             this->parent_.gasOilUnscaledPointsVector_,
             this->parent_.gasOilConfig_,
             EclTwoPhaseSystemType::GasOil
         );
     }
-    if (this->parent_.hasOil && this->parent_.hasWater) {
+    if (this->parent_.hasOil() && this->parent_.hasWater()) {
         readUnscaledEpsPoints_(
             this->parent_.oilWaterUnscaledPointsVector_,
             this->parent_.oilWaterConfig_,
             EclTwoPhaseSystemType::OilWater
         );
     }
-    if (!this->parent_.hasOil) {
+    if (!this->parent_.hasOil()) {
         readUnscaledEpsPoints_(
             this->parent_.gasWaterUnscaledPointsVector_,
             this->parent_.gasWaterConfig_,
