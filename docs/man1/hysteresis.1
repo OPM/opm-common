@@ -1,13 +1,15 @@
 .TH HYSTERESIS "1" "April 2025" "hysteresis" "User Commands"
 .SH NAME
-hysteresis \- Tool to extract relative permeability curves with hysteresis
+hysteresis \- Tool to extract relative permeability and capillary pressure
+curves with hysteresis if enabled
 .SH SYNOPSIS
 .B hysteresis
 \fI\,DATA_FILE\/\fR
-\fI\,SATURATION_FILE\/\fR \fI\,OUTPUT_RELPERM_FILE\/\fR
+\fI\,SATURATION_FILE\/\fR \fI\,OUTPUT_FILE\/\fR
 \fI\,TWOPHASE_SYSTEM\/\fR  [\fI\,CELL_INDEX\/\fR]
 .SH DESCRIPTION
-Extracts the relative permeambility curves with hysteresis for a cell
+Extracts the relative permeambility curves and capillary pressure curves
+with hysteresis if enabled for a cell
 in the model and writes them as tables to a CSV file.
 .PP
 DATAFILE, Data file name that contains keywords SGOF, EHYSTR etc.
@@ -18,10 +20,12 @@ gas or water saturation depends on the parameter TWOPHASE_SYSTEM. It
 will be the saturation of the first mentioned phase of the specified
 system.
 .PP
-OUTPUT_RELPERM_FILE, the name of the CSV file that we write the
-permeability curves to. There will be one line for each saturation
-value from SATURATION_FILE. Each line will contain the values [s, kr,
-kro, krnSwMdc(So at turning point), Sn(trapped s) ]. 
+OUTPUT_FILE, the name of the CSV file that we write the
+relative permeability and capillary pressures curves to.
+There will be one line for each saturation
+value from SATURATION_FILE. Each line will contain the values [sw, krw,
+kro, pcow, krnSwMdc(So at turning point), Sn(trapped s) ].
+(Or equivalent for GO or GW systems.)
 .PP
 TWOPHASE_SYSTEM, The two phase system to use for outputting the first
 two phases. Should be one of the following strings: WO (for
