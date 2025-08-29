@@ -205,43 +205,6 @@ private:
             std::shared_ptr<GasWaterHystParams> gasWaterParams_;
         };
 
-        // This class' implementation is defined in "EclMaterialLawManagerReadEffectiveParams.cpp"
-        class ReadEffectiveParams {
-            using GasOilEffectiveParams = typename EclMaterialLaw::TwoPhaseTypes<Traits>::GasOilEffectiveParams;
-            using GasWaterEffectiveParams = typename EclMaterialLaw::TwoPhaseTypes<Traits>::GasWaterEffectiveParams;
-            using OilWaterEffectiveParams = typename EclMaterialLaw::TwoPhaseTypes<Traits>::OilWaterEffectiveParams;
-
-        public:
-            explicit ReadEffectiveParams(Manager<TraitsT>::InitParams& init_params);
-            void read();
-        private:
-            std::vector<double> normalizeKrValues_(const double tolcrit, const TableColumn& krValues) const;
-            void readGasOilParameters_(GasOilEffectiveParamVector& dest, unsigned satRegionIdx);
-            template <class TableType>
-            void readGasOilFamily2_(
-                                    GasOilEffectiveParams& effParams,
-                                    const Scalar Swco,
-                                    const double tolcrit,
-                                    const TableType& sofTable,
-                                    const SgfnTable& sgfnTable,
-                                    const std::string& columnName);
-            void readGasOilSgof_(GasOilEffectiveParams& effParams,
-                                 const Scalar Swco,
-                                 const double tolcrit,
-                                 const SgofTable& sgofTable);
-
-            void readGasOilSlgof_(GasOilEffectiveParams& effParams,
-                                  const Scalar Swco,
-                                  const double tolcrit,
-                                  const SlgofTable& slgofTable);
-            void readGasWaterParameters_(GasWaterEffectiveParamVector& dest, unsigned satRegionIdx);
-            void readOilWaterParameters_(OilWaterEffectiveParamVector& dest, unsigned satRegionIdx);
-
-            Manager<TraitsT>::InitParams& init_params_;
-            Manager<TraitsT>& parent_;
-            const EclipseState& eclState_;
-        }; // end of "class ReadEffectiveParams"
-
         Manager<TraitsT>& parent_;
         const EclipseState& eclState_;
         size_t numCompressedElems_;
@@ -436,7 +399,7 @@ private:
 
     void readGlobalThreePhaseOptions_(const Runspec& runspec);
 
-    bool enableEndPointScaling_;
+    bool enableEndPointScaling_{false};
     EclHysteresisConfig hysteresisConfig_;
     std::vector<std::shared_ptr<WagHysteresisConfig::WagHysteresisConfigRecord>> wagHystersisConfig_;
 
@@ -469,7 +432,7 @@ private:
     std::vector<int> imbnumRegionArray_;
     std::vector<Scalar> stoneEtas_;
 
-    bool enablePpcwmax_;
+    bool enablePpcwmax_{false};
     std::vector<Scalar> maxAllowPc_;
     std::vector<bool> modifySwl_;
 
@@ -482,6 +445,6 @@ private:
     EclEpsConfig gasWaterConfig_;
 };
 
-} // namespace Opm
+} // namespace Opm::EclMaterialLaw
 
 #endif

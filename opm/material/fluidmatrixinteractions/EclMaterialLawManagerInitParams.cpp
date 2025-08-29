@@ -23,9 +23,9 @@
 
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 
-#include <opm/material/fluidmatrixinteractions/EclMaterialLawManager.hpp>
 #include <opm/material/fluidmatrixinteractions/EclEpsGridProperties.hpp>
-
+#include <opm/material/fluidmatrixinteractions/EclMaterialLawManager.hpp>
+#include <opm/material/fluidmatrixinteractions/EclMaterialLawReadEffectiveParams.hpp>
 
 namespace Opm::EclMaterialLaw {
 
@@ -272,7 +272,14 @@ void
 Manager<Traits>::InitParams::
 readEffectiveParameters_()
 {
-    ReadEffectiveParams effectiveReader {*this};
+    ReadEffectiveParams<Traits> effectiveReader{
+        this->parent_.gasOilEffectiveParamVector_,
+        this->parent_.gasWaterEffectiveParamVector_,
+        this->parent_.oilWaterEffectiveParamVector_,
+        this->eclState_,
+        this->parent_
+    };
+
     // populates effective parameter vectors in the parent class (EclMaterialManager)
     effectiveReader.read();
 }

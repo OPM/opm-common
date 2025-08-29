@@ -355,9 +355,9 @@ if(ENABLE_ECL_INPUT)
     opm/material/fluidmatrixinteractions/EclEpsGridProperties.cpp
     opm/material/fluidmatrixinteractions/EclHysteresisConfig.cpp
     opm/material/fluidmatrixinteractions/EclMaterialLawManager.cpp
-    opm/material/fluidmatrixinteractions/EclMaterialLawManagerReadEffectiveParams.cpp
     opm/material/fluidmatrixinteractions/EclMaterialLawManagerInitParams.cpp
     opm/material/fluidmatrixinteractions/EclMaterialLawManagerHystParams.cpp
+    opm/material/fluidmatrixinteractions/EclMaterialLawReadEffectiveParams.cpp
     opm/material/thermal/EclThermalLawManager.cpp
   )
 
