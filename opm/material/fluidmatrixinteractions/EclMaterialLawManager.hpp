@@ -454,8 +454,6 @@ private:
     std::vector<EclEpsScalingPointsInfo<Scalar>> unscaledEpsInfo_;
     OilWaterScalingInfoVector oilWaterScaledEpsInfoDrainage_;
 
-    std::shared_ptr<EclEpsConfig> gasWaterEclEpsConfig_;
-
     GasOilScalingPointsVector gasOilUnscaledPointsVector_;
     OilWaterScalingPointsVector oilWaterUnscaledPointsVector_;
     GasWaterScalingPointsVector gasWaterUnscaledPointsVector_;
