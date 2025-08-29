@@ -251,35 +251,52 @@ public:
     }
 
     static Scalar trappedGasSaturation(const Params& params, bool maximumTrapping){
+        #if !HAVE_CUDA
+        // For now we have not implemented hysteresis for CUDA, and SnTrapped is only implemented by EclHysteresisTwoPhaseLawParams
         if(params.approach() == EclTwoPhaseApproach::GasOil)
             return params.gasOilParams().SnTrapped(maximumTrapping);
         if(params.approach() == EclTwoPhaseApproach::GasWater)
             return params.gasWaterParams().SnTrapped(maximumTrapping);
         return 0.0; // oil-water case
+        #else
+        return 0.0; // oil-water case
+        #endif
     }
 
     static Scalar strandedGasSaturation(const Params& params, Scalar Sg, Scalar Kg){
+        #if !HAVE_CUDA
         if(params.approach() == EclTwoPhaseApproach::GasOil)
             return params.gasOilParams().SnStranded(Sg, Kg);
         if(params.approach() == EclTwoPhaseApproach::GasWater)
             return params.gasWaterParams().SnStranded(Sg, Kg);
         return 0.0; // oil-water case
+        #else
+        return 0.0; // oil-water case
+        #endif
     }
 
     static Scalar trappedOilSaturation(const Params& params, bool maximumTrapping){
+        #if !HAVE_CUDA
         if(params.approach() == EclTwoPhaseApproach::GasOil)
             return params.gasOilParams().SwTrapped();
         if(params.approach() == EclTwoPhaseApproach::OilWater)
             return params.oilWaterParams().SnTrapped(maximumTrapping);
         return 0.0; // gas-water case
+        #else
+        return 0.0; // gas-water case
+        #endif
     }
 
     static Scalar trappedWaterSaturation(const Params& params){
+        #if !HAVE_CUDA
         if(params.approach() == EclTwoPhaseApproach::GasWater)
             return params.gasWaterParams().SwTrapped();
         if(params.approach() == EclTwoPhaseApproach::OilWater)
             return params.oilWaterParams().SwTrapped();
         return 0.0; // gas-oil case
+        #else
+        return 0.0; // gas-oil case
+        #endif
     }
 
 

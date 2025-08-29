@@ -462,10 +462,16 @@ public:
 
     #if !HAVE_CUDA
     EclEpsScalingPoints<Scalar>& oilWaterScaledEpsPointsDrainage(unsigned elemIdx);
+    #endif // !HAVE_CUDA
 
     const EclEpsScalingPointsInfo<Scalar>& oilWaterScaledEpsInfoDrainage(size_t elemIdx) const
-    { return oilWaterScaledEpsInfoDrainage_[elemIdx]; }
-    #endif // !HAVE_CUDA
+    {
+        #if !HAVE_CUDA
+        return oilWaterScaledEpsInfoDrainage_[elemIdx];
+        #else
+        OPM_THROW(std::runtime_error, "CUDA support is not available");
+        #endif // !HAVE_CUDA
+    }
 
     template<class Serializer>
     void serializeOp(Serializer& serializer)

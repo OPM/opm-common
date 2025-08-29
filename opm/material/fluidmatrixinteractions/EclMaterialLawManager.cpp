@@ -471,7 +471,6 @@ setGasOilHysteresisParams(const Scalar& sgmax,
     MaterialLaw::setGasOilHysteresisParams(sgmax, shmax, somin, params);
 }
 
-#if !HAVE_CUDA
 template<
     class Traits,
     template<class> class Storage,
@@ -482,6 +481,7 @@ EclEpsScalingPoints<typename Traits::Scalar>&
 EclMaterialLawManager<Traits, Storage, SharedPtr, UniquePtr>::
 oilWaterScaledEpsPointsDrainage(unsigned elemIdx)
 {
+    #if !HAVE_CUDA
     auto& materialParams = materialLawParams_[elemIdx];
     switch (materialParams.approach()) {
     case EclMultiplexerApproach::Stone1: {
@@ -506,8 +506,10 @@ oilWaterScaledEpsPointsDrainage(unsigned elemIdx)
     default:
         throw std::logic_error("Enum value for material approach unknown!");
     }
+    #else
+        OPM_THROW(NotImplementedError, "CUDA support is not available");
+    #endif
 }
-#endif
 
 template<
     class Traits,
