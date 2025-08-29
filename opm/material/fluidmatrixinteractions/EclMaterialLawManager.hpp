@@ -316,6 +316,9 @@ public:
     bool hasWater() const
     { return hasWater_; }
 
+    const EclEpsScalingPointsInfo<Scalar>& unscaledEpsInfo(unsigned satRegionIdx) const
+    { return unscaledEpsInfo_[satRegionIdx]; }
+
     MaterialLawParams& materialLawParams(unsigned elemIdx)
     {
         assert(elemIdx <  materialLawParams_.size());
