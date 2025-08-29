@@ -35,7 +35,7 @@
 
 #include <algorithm>
 
-namespace Opm {
+namespace Opm::EclMaterialLaw {
 
 template<class TraitsT>
 void EclMaterialLawManager<TraitsT>::
@@ -520,4 +520,4 @@ template class EclMaterialLawManager<ThreePhaseMaterialTraits<float,0,1,2>>;
 template class EclMaterialLawManager<ThreePhaseMaterialTraits<double,2,0,1>>;
 template class EclMaterialLawManager<ThreePhaseMaterialTraits<float,2,0,1>>;
 
-} // namespace Opm
+} // namespace Opm::EclMaterialLaw

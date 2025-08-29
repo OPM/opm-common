@@ -34,7 +34,7 @@
 
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
 
-namespace Opm {
+namespace Opm::EclMaterialLaw {
 
 /* constructors*/
 template <class Traits>
@@ -458,5 +458,4 @@ template class EclMaterialLawManager<ThreePhaseMaterialTraits<float,0,1,2>>::Ini
 template class EclMaterialLawManager<ThreePhaseMaterialTraits<double,2,0,1>>::InitParams::ReadEffectiveParams;
 template class EclMaterialLawManager<ThreePhaseMaterialTraits<float,2,0,1>>::InitParams::ReadEffectiveParams;
 
-
-} // namespace Opm
+} // namespace Opm::EclMaterialLaw

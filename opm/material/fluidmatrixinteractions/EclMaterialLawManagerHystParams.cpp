@@ -23,7 +23,7 @@
 #include <opm/material/fluidmatrixinteractions/EclMaterialLawManager.hpp>
 #include <opm/material/fluidmatrixinteractions/EclEpsGridProperties.hpp>
 
-namespace Opm {
+namespace Opm::EclMaterialLaw {
 
 /* constructors*/
 template <class Traits>
@@ -312,5 +312,4 @@ template class EclMaterialLawManager<ThreePhaseMaterialTraits<float,0,1,2>>::Ini
 template class EclMaterialLawManager<ThreePhaseMaterialTraits<double,2,0,1>>::InitParams::HystParams;
 template class EclMaterialLawManager<ThreePhaseMaterialTraits<float,2,0,1>>::InitParams::HystParams;
 
-
-} // namespace Opm
+} // namespace Opm::EclMaterialLaw

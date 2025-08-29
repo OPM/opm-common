@@ -64,6 +64,10 @@ class SgofTable;
 class SlgofTable;
 class TableColumn;
 
+}
+
+namespace Opm::EclMaterialLaw {
+
 /*!
  * \ingroup fluidmatrixinteractions
  *
