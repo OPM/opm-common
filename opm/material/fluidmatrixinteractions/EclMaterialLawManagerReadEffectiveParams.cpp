@@ -88,7 +88,7 @@ void
 Manager<Traits>::InitParams::ReadEffectiveParams::
 readGasOilParameters_(GasOilEffectiveParamVector& dest, unsigned satRegionIdx)
 {
-    if (!this->parent_.hasGas || !this->parent_.hasOil)
+    if (!this->parent_.hasGas() || !this->parent_.hasOil())
         // we don't read anything if either the gas or the oil phase is not active
         return;
 
@@ -158,7 +158,7 @@ readGasOilParameters_(GasOilEffectiveParamVector& dest, unsigned satRegionIdx)
     case SatFuncControls::KeywordFamily::Family_II:
     {
         const SgfnTable& sgfnTable = tableManager.getSgfnTables().template getTable<SgfnTable>( satRegionIdx );
-        if (!this->parent_.hasWater) {
+        if (!this->parent_.hasWater()) {
             // oil and gas case
             const Sof2Table& sof2Table = tableManager.getSof2Tables().template getTable<Sof2Table>( satRegionIdx );
             readGasOilFamily2_(effParams, Swco, tolcrit, sof2Table, sgfnTable, /*columnName=*/"KRO");
@@ -258,7 +258,7 @@ void
 Manager<Traits>::InitParams::ReadEffectiveParams::
 readGasWaterParameters_(GasWaterEffectiveParamVector& dest, unsigned satRegionIdx)
 {
-    if (!this->parent_.hasGas || !this->parent_.hasWater || this->parent_.hasOil)
+    if (!this->parent_.hasGas() || !this->parent_.hasWater() || this->parent_.hasOil())
         // we don't read anything if either the gas or the water phase is not active or if oil is present
         return;
 
@@ -341,7 +341,7 @@ void
 Manager<Traits>::InitParams::ReadEffectiveParams::
 readOilWaterParameters_(OilWaterEffectiveParamVector& dest, unsigned satRegionIdx)
 {
-    if (!this->parent_.hasOil || !this->parent_.hasWater)
+    if (!this->parent_.hasOil() || !this->parent_.hasWater())
         // we don't read anything if either the water or the oil phase is not active
         return;
 
@@ -421,7 +421,7 @@ readOilWaterParameters_(OilWaterEffectiveParamVector& dest, unsigned satRegionId
         realParams.setKrwSamples(SwColumn, normalizeKrValues_(tolcrit, swfnTable.getColumn("KRW")));
         realParams.setPcnwSamples(SwColumn, swfnTable.getColumn("PCOW").vectorCopy());
 
-        if (!this->parent_.hasGas) {
+        if (!this->parent_.hasGas()) {
             const auto& sof2Table = tableManager.getSof2Tables().template getTable<Sof2Table>(satRegionIdx);
             // convert the saturations of the SOF2 keyword from oil to water saturations
             std::vector<double> SwSamples(sof2Table.numRows());

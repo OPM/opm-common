@@ -230,7 +230,7 @@ bool
 Manager<Traits>::InitParams::HystParams::
 hasGasOil_()
 {
-    return this->parent_.hasGas && this->parent_.hasOil;
+    return this->parent_.hasGas() && this->parent_.hasOil();
 }
 
 template <class Traits>
@@ -238,7 +238,7 @@ bool
 Manager<Traits>::InitParams::HystParams::
 hasGasWater_()
 {
-    return this->parent_.hasGas && this->parent_.hasWater && !this->parent_.hasOil;
+    return this->parent_.hasGas() && this->parent_.hasWater() && !this->parent_.hasOil();
 }
 
 template <class Traits>
@@ -246,7 +246,7 @@ bool
 Manager<Traits>::InitParams::HystParams::
 hasOilWater_()
 {
-    return this->parent_.hasOil && this->parent_.hasWater;
+    return this->parent_.hasOil() && this->parent_.hasWater();
 }
 
 template <class Traits>

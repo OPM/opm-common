@@ -46,9 +46,9 @@ initFromState(const EclipseState& eclState)
     const size_t numSatRegions = runspec.tabdims().getNumSatTables();
 
     const auto& ph = runspec.phases();
-    this->hasGas = ph.active(Phase::GAS);
-    this->hasOil = ph.active(Phase::OIL);
-    this->hasWater = ph.active(Phase::WATER);
+    this->hasGas_ = ph.active(Phase::GAS);
+    this->hasOil_ = ph.active(Phase::OIL);
+    this->hasWater_ = ph.active(Phase::WATER);
 
     readGlobalEpsOptions_(eclState);
     readGlobalHysteresisOptions_(eclState);
@@ -96,7 +96,7 @@ initFromState(const EclipseState& eclState)
 
     this->unscaledEpsInfo_.resize(numSatRegions);
 
-    if (this->hasGas + this->hasOil + this->hasWater == 1) {
+    if (this->hasGas_ + this->hasOil_ + this->hasWater_ == 1) {
         // Single-phase simulation.  Special case.  Nothing to do here.
         return;
     }
