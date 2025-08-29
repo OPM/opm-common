@@ -306,13 +306,15 @@ template <class Traits>
 template <class Container>
 void
 EclMaterialLawManager<Traits>::InitParams::
-readUnscaledEpsPoints_(Container& dest, std::shared_ptr<EclEpsConfig> config, EclTwoPhaseSystemType system_type)
+readUnscaledEpsPoints_(Container& dest,
+                       const EclEpsConfig& config,
+                       EclTwoPhaseSystemType system_type)
 {
     const size_t numSatRegions = this->eclState_.runspec().tabdims().getNumSatTables();
     dest.resize(numSatRegions);
     for (unsigned satRegionIdx = 0; satRegionIdx < numSatRegions; ++satRegionIdx) {
         dest[satRegionIdx] = std::make_shared<EclEpsScalingPoints<Scalar> >();
-        dest[satRegionIdx]->init(this->parent_.unscaledEpsInfo_[satRegionIdx], *config, system_type);
+        dest[satRegionIdx]->init(this->parent_.unscaledEpsInfo_[satRegionIdx], config, system_type);
     }
 }
 

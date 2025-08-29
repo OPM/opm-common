@@ -81,11 +81,11 @@ void
 EclMaterialLawManager<Traits>::InitParams::HystParams::
 setConfig(unsigned satRegionIdx)
 {
-    this->gasOilParams_->setConfig(*this->parent_.hysteresisConfig_);
-    this->oilWaterParams_->setConfig(*this->parent_.hysteresisConfig_);
-    this->gasWaterParams_->setConfig(*this->parent_.hysteresisConfig_);
+    this->gasOilParams_->setConfig(this->parent_.hysteresisConfig_);
+    this->oilWaterParams_->setConfig(this->parent_.hysteresisConfig_);
+    this->gasWaterParams_->setConfig(this->parent_.hysteresisConfig_);
 
-    if (this->parent_.hysteresisConfig_->enableWagHysteresis()) {
+    if (this->parent_.hysteresisConfig_.enableWagHysteresis()) {
         this->gasOilParams_->setWagConfig(this->parent_.wagHystersisConfig_[satRegionIdx]);
         this->oilWaterParams_->setWagConfig(this->parent_.wagHystersisConfig_[satRegionIdx]);
         this->gasWaterParams_->setWagConfig(this->parent_.wagHystersisConfig_[satRegionIdx]);
@@ -103,7 +103,7 @@ setDrainageParamsGasWater(unsigned elemIdx, unsigned satRegionIdx,
         auto [gasWaterScaledInfo, gasWaterScaledPoints]
             = readScaledEpsPointsDrainage_(elemIdx, EclTwoPhaseSystemType::GasWater, lookupIdxOnLevelZeroAssigner);
         GasWaterEpsTwoPhaseParams gasWaterDrainParams;
-        gasWaterDrainParams.setConfig(*this->parent_.gasWaterConfig_);
+        gasWaterDrainParams.setConfig(this->parent_.gasWaterConfig_);
         gasWaterDrainParams.setUnscaledPoints(this->parent_.gasWaterUnscaledPointsVector_[satRegionIdx]);
         gasWaterDrainParams.setScaledPoints(gasWaterScaledPoints);
         gasWaterDrainParams.setEffectiveLawParams(this->parent_.gasWaterEffectiveParamVector_[satRegionIdx]);
@@ -122,7 +122,7 @@ setDrainageParamsOilGas(unsigned elemIdx, unsigned satRegionIdx,
         auto [gasOilScaledInfo, gasOilScaledPoints]
             = readScaledEpsPointsDrainage_(elemIdx, EclTwoPhaseSystemType::GasOil, lookupIdxOnLevelZeroAssigner);
         GasOilEpsTwoPhaseParams gasOilDrainParams;
-        gasOilDrainParams.setConfig(*this->parent_.gasOilConfig_);
+        gasOilDrainParams.setConfig(this->parent_.gasOilConfig_);
         gasOilDrainParams.setUnscaledPoints(this->parent_.gasOilUnscaledPointsVector_[satRegionIdx]);
         gasOilDrainParams.setScaledPoints(gasOilScaledPoints);
         gasOilDrainParams.setEffectiveLawParams(this->parent_.gasOilEffectiveParamVector_[satRegionIdx]);
@@ -150,7 +150,7 @@ setDrainageParamsOilWater(unsigned elemIdx, unsigned satRegionIdx,
     this->parent_.oilWaterScaledEpsInfoDrainage_[elemIdx] = oilWaterScaledInfo;
     if (hasOilWater_()) {
         OilWaterEpsTwoPhaseParams oilWaterDrainParams;
-        oilWaterDrainParams.setConfig(*this->parent_.oilWaterConfig_);
+        oilWaterDrainParams.setConfig(this->parent_.oilWaterConfig_);
         oilWaterDrainParams.setUnscaledPoints(this->parent_.oilWaterUnscaledPointsVector_[satRegionIdx]);
         oilWaterDrainParams.setScaledPoints(oilWaterScaledPoints);
         oilWaterDrainParams.setEffectiveLawParams(this->parent_.oilWaterEffectiveParamVector_[satRegionIdx]);
@@ -169,7 +169,7 @@ setImbibitionParamsGasWater(unsigned elemIdx, unsigned imbRegionIdx,
         auto [gasWaterScaledInfo, gasWaterScaledPoints]
             = readScaledEpsPointsImbibition_(elemIdx, EclTwoPhaseSystemType::GasWater, lookupIdxOnLevelZeroAssigner);
         GasWaterEpsTwoPhaseParams gasWaterImbParamsHyst;
-        gasWaterImbParamsHyst.setConfig(*this->parent_.gasWaterConfig_);
+        gasWaterImbParamsHyst.setConfig(this->parent_.gasWaterConfig_);
         gasWaterImbParamsHyst.setUnscaledPoints(this->parent_.gasWaterUnscaledPointsVector_[imbRegionIdx]);
         gasWaterImbParamsHyst.setScaledPoints(gasWaterScaledPoints);
         gasWaterImbParamsHyst.setEffectiveLawParams(this->parent_.gasWaterEffectiveParamVector_[imbRegionIdx]);
@@ -192,7 +192,7 @@ setImbibitionParamsOilGas(unsigned elemIdx, unsigned imbRegionIdx,
             = readScaledEpsPointsImbibition_(elemIdx, EclTwoPhaseSystemType::GasOil, lookupIdxOnLevelZeroAssigner);
 
         GasOilEpsTwoPhaseParams gasOilImbParamsHyst;
-        gasOilImbParamsHyst.setConfig(*this->parent_.gasOilConfig_);
+        gasOilImbParamsHyst.setConfig(this->parent_.gasOilConfig_);
         gasOilImbParamsHyst.setUnscaledPoints(this->parent_.gasOilUnscaledPointsVector_[imbRegionIdx]);
         gasOilImbParamsHyst.setScaledPoints(gasOilScaledPoints);
         gasOilImbParamsHyst.setEffectiveLawParams(this->parent_.gasOilEffectiveParamVector_[imbRegionIdx]);
@@ -213,7 +213,7 @@ setImbibitionParamsOilWater(unsigned elemIdx, unsigned imbRegionIdx,
         auto [oilWaterScaledInfo, oilWaterScaledPoints]
             = readScaledEpsPointsImbibition_(elemIdx, EclTwoPhaseSystemType::OilWater, lookupIdxOnLevelZeroAssigner);
         OilWaterEpsTwoPhaseParams oilWaterImbParamsHyst;
-        oilWaterImbParamsHyst.setConfig(*this->parent_.oilWaterConfig_);
+        oilWaterImbParamsHyst.setConfig(this->parent_.oilWaterConfig_);
         oilWaterImbParamsHyst.setUnscaledPoints(this->parent_.oilWaterUnscaledPointsVector_[imbRegionIdx]);
         oilWaterImbParamsHyst.setScaledPoints(oilWaterScaledPoints);
         oilWaterImbParamsHyst.setEffectiveLawParams(this->parent_.oilWaterEffectiveParamVector_[imbRegionIdx]);
@@ -260,7 +260,10 @@ EclMaterialLawManager<Traits>::InitParams::HystParams::
 readScaledEpsPoints_(const EclEpsGridProperties& epsGridProperties, unsigned elemIdx, EclTwoPhaseSystemType type,
                      const std::function<unsigned(unsigned)>& fieldPropIdxOnLevelZero)
 {
-    const EclEpsConfig& config = (type == EclTwoPhaseSystemType::OilWater)?  *(this->parent_.oilWaterConfig_): *(this->parent_.gasOilConfig_);
+    const EclEpsConfig& config =
+        (type == EclTwoPhaseSystemType::OilWater) ?
+            this->parent_.oilWaterConfig_         :
+            this->parent_.gasOilConfig_;
     // For CpGrids with LGRs, field prop is inherited from parent/equivalent cell from level 0.
     // 'lookupIdx' is the index on level zero of the parent cell or the equivalent cell of the
     // leaf grid view cell with index 'elemIdx'.
