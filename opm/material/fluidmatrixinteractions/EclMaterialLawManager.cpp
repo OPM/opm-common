@@ -31,6 +31,7 @@
 #include <opm/input/eclipse/EclipseState/Grid/SatfuncPropertyInitializers.hpp>
 
 #include <opm/material/fluidmatrixinteractions/EclEpsGridProperties.hpp>
+#include <opm/material/fluidmatrixinteractions/EclMaterialLawInitParams.hpp>
 #include <opm/material/fluidstates/SimpleModularFluidState.hpp>
 
 #include <algorithm>
@@ -131,7 +132,7 @@ initParamsForElements(const EclipseState& eclState, size_t numCompressedElems,
                       const std::function<std::vector<int>(const FieldPropsManager&, const std::string&, bool)>& fieldPropIntOnLeafAssigner,
                       const std::function<unsigned(unsigned)>& lookupIdxOnLevelZeroAssigner)
 {
-    InitParams initParams {*this, eclState, numCompressedElems};
+    InitParams<Traits> initParams {*this, eclState, numCompressedElems};
     initParams.run(fieldPropIntOnLeafAssigner, lookupIdxOnLevelZeroAssigner);
 }
 
