@@ -1062,6 +1062,7 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/material/fluidmatrixinteractions/EclEpsTwoPhaseLaw.hpp
       opm/material/fluidmatrixinteractions/TwoPhaseLETCurves.hpp
       opm/material/fluidmatrixinteractions/EclMaterialLawManager.hpp
+      opm/material/fluidmatrixinteractions/EclMaterialLawTwoPhaseTypes.hpp
       opm/material/fluidmatrixinteractions/DirectionalMaterialLawParams.hpp
       opm/material/fluidmatrixinteractions/DirectionalMaterialLawParams.hpp
       opm/material/fluidmatrixinteractions/RegularizedVanGenuchten.hpp

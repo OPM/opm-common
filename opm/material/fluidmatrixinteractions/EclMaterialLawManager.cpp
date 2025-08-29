@@ -144,7 +144,8 @@ initParamsForElements(const EclipseState& eclState, size_t numCompressedElems,
 // TODO: Better (proper?) handling of mixed wettability systems - see ecl kw OPTIONS switch 74
 // Note: Without OPTIONS[74] the negative part of the Pcow curve is not scaled
 template<class TraitsT>
-std::pair<typename TraitsT::Scalar, bool> EclMaterialLawManager<TraitsT>::
+std::pair<typename TraitsT::Scalar, bool>
+EclMaterialLawManager<TraitsT>::
 applySwatinit(unsigned elemIdx,
               Scalar pcow,
               Scalar Sw)
@@ -160,7 +161,7 @@ applySwatinit(unsigned elemIdx,
 
     // specify a fluid state which only stores the saturations
     using FluidState = SimpleModularFluidState<Scalar,
-                                                numPhases,
+                                                TraitsT::numPhases,
                                                 /*numComponents=*/0,
                                                 /*FluidSystem=*/void, /* -> don't care */
                                                 /*storePressure=*/false,
@@ -172,9 +173,9 @@ applySwatinit(unsigned elemIdx,
                                                 /*storeViscosity=*/false,
                                                 /*storeEnthalpy=*/false>;
     FluidState fs;
-    fs.setSaturation(waterPhaseIdx, Sw);
-    fs.setSaturation(gasPhaseIdx, 0);
-    fs.setSaturation(oilPhaseIdx, 0);
+    fs.setSaturation(TraitsT::wettingPhaseIdx, Sw);
+    fs.setSaturation(TraitsT::gasPhaseIdx, 0);
+    fs.setSaturation(TraitsT::nonWettingPhaseIdx, 0);
     std::array<Scalar, numPhases> pc = { 0 };
     MaterialLaw::capillaryPressures(pc, materialLawParams(elemIdx), fs);
     Scalar pcowAtSw = pc[oilPhaseIdx] - pc[waterPhaseIdx];
@@ -440,7 +441,8 @@ oilWaterScaledEpsPointsDrainage(unsigned elemIdx)
 }
 
 template<class TraitsT>
-const typename EclMaterialLawManager<TraitsT>::MaterialLawParams& EclMaterialLawManager<TraitsT>::
+const typename EclMaterialLawManager<TraitsT>::MaterialLawParams&
+EclMaterialLawManager<TraitsT>::
 materialLawParamsFunc_(unsigned elemIdx, FaceDir::DirEnum facedir) const
 {
     using Dir = FaceDir::DirEnum;
