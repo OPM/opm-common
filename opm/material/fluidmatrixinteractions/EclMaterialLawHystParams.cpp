@@ -20,17 +20,26 @@
 */
 
 #include <config.h>
-#include <opm/material/fluidmatrixinteractions/EclMaterialLawManager.hpp>
+#include <opm/material/fluidmatrixinteractions/EclMaterialLawHystParams.hpp>
+
 #include <opm/material/fluidmatrixinteractions/EclEpsGridProperties.hpp>
+#include <opm/material/fluidmatrixinteractions/EclMaterialLawManager.hpp>
 
 namespace Opm::EclMaterialLaw {
 
 /* constructors*/
 template <class Traits>
-Manager<Traits>::InitParams::HystParams::
-HystParams(Manager<Traits>::InitParams& init_params) :
-    init_params_{init_params}, parent_{init_params_.parent_},
-    eclState_{init_params_.eclState_}
+HystParams<Traits>::
+HystParams(std::vector<EclEpsScalingPointsInfo<Scalar>>& oilWaterScaledEpsInfoDrainage,
+           const EclEpsGridProperties& epsGridProperties,
+           const EclEpsGridProperties& epsImbGridProperties,
+           const EclipseState& eclState,
+           const Manager<Traits>& parent)
+    : oilWaterScaledEpsInfoDrainage_(oilWaterScaledEpsInfoDrainage)
+    , epsGridProperties_(epsGridProperties)
+    , epsImbGridProperties_(epsImbGridProperties)
+    , eclState_(eclState)
+    , parent_(parent)
 {
     gasOilParams_ = std::make_shared<GasOilHystParams>();
     oilWaterParams_ = std::make_shared<OilWaterHystParams>();
@@ -41,101 +50,83 @@ HystParams(Manager<Traits>::InitParams& init_params) :
 
 template <class Traits>
 void
-Manager<Traits>::InitParams::HystParams::
+HystParams<Traits>::
 finalize()
 {
-    if (hasGasOil_())
+    if (hasGasOil_()) {
         this->gasOilParams_->finalize();
-    if (hasOilWater_())
+    }
+    if (hasOilWater_()) {
         this->oilWaterParams_->finalize();
-    if (hasGasWater_())
+    }
+    if (hasGasWater_()) {
         this->gasWaterParams_->finalize();
-}
-
-template <class Traits>
-std::shared_ptr<typename TwoPhaseTypes<Traits>::GasOilHystParams>
-Manager<Traits>::InitParams::HystParams::
-getGasOilParams()
-{
-    return gasOilParams_;
-}
-
-template <class Traits>
-std::shared_ptr<typename TwoPhaseTypes<Traits>::OilWaterHystParams>
-Manager<Traits>::InitParams::HystParams::
-getOilWaterParams()
-{
-    return oilWaterParams_;
-}
-
-template <class Traits>
-std::shared_ptr<typename TwoPhaseTypes<Traits>::GasWaterHystParams>
-Manager<Traits>::InitParams::HystParams::
-getGasWaterParams()
-{
-    return gasWaterParams_;
+    }
 }
 
 template <class Traits>
 void
-Manager<Traits>::InitParams::HystParams::
+HystParams<Traits>::
 setConfig(unsigned satRegionIdx)
 {
-    this->gasOilParams_->setConfig(this->parent_.hysteresisConfig_);
-    this->oilWaterParams_->setConfig(this->parent_.hysteresisConfig_);
-    this->gasWaterParams_->setConfig(this->parent_.hysteresisConfig_);
+    this->gasOilParams_->setConfig(this->parent_.hysteresisConfig());
+    this->oilWaterParams_->setConfig(this->parent_.hysteresisConfig());
+    this->gasWaterParams_->setConfig(this->parent_.hysteresisConfig());
 
-    if (this->parent_.hysteresisConfig_.enableWagHysteresis()) {
-        this->gasOilParams_->setWagConfig(this->parent_.wagHystersisConfig_[satRegionIdx]);
-        this->oilWaterParams_->setWagConfig(this->parent_.wagHystersisConfig_[satRegionIdx]);
-        this->gasWaterParams_->setWagConfig(this->parent_.wagHystersisConfig_[satRegionIdx]);
+    if (this->parent_.hysteresisConfig().enableWagHysteresis()) {
+        this->gasOilParams_->setWagConfig(this->parent_.wagHystersisConfig(satRegionIdx));
+        this->oilWaterParams_->setWagConfig(this->parent_.wagHystersisConfig(satRegionIdx));
+        this->gasWaterParams_->setWagConfig(this->parent_.wagHystersisConfig(satRegionIdx));
     }
-
-} // namespace Opm
+}
 
 template <class Traits>
 void
-Manager<Traits>::InitParams::HystParams::
+HystParams<Traits>::
 setDrainageParamsGasWater(unsigned elemIdx, unsigned satRegionIdx,
-                          const std::function<unsigned(unsigned)>& lookupIdxOnLevelZeroAssigner)
+                          const LookupFunction& lookupIdxOnLevelZeroAssigner)
 {
     if (hasGasWater_()) {
         auto [gasWaterScaledInfo, gasWaterScaledPoints]
             = readScaledEpsPointsDrainage_(elemIdx, EclTwoPhaseSystemType::GasWater, lookupIdxOnLevelZeroAssigner);
         typename TwoPhaseTypes<Traits>::GasWaterEpsParams gasWaterDrainParams;
-        gasWaterDrainParams.setConfig(this->parent_.gasWaterConfig_);
-        gasWaterDrainParams.setUnscaledPoints(this->parent_.gasWaterUnscaledPointsVector_[satRegionIdx]);
+        gasWaterDrainParams.setConfig(this->parent_.gasWaterConfig());
+        gasWaterDrainParams.setUnscaledPoints(this->parent_.gasWaterUnscaledPoints(satRegionIdx));
         gasWaterDrainParams.setScaledPoints(gasWaterScaledPoints);
-        gasWaterDrainParams.setEffectiveLawParams(this->parent_.gasWaterEffectiveParamVector_[satRegionIdx]);
+        gasWaterDrainParams.setEffectiveLawParams(this->parent_.gasWaterEffectiveParams(satRegionIdx));
         gasWaterDrainParams.finalize();
-        this->gasWaterParams_->setDrainageParams(gasWaterDrainParams, gasWaterScaledInfo, EclTwoPhaseSystemType::GasWater);
+        this->gasWaterParams_->setDrainageParams(gasWaterDrainParams,
+                                                 gasWaterScaledInfo,
+                                                 EclTwoPhaseSystemType::GasWater);
     }
 }
 
 template <class Traits>
 void
-Manager<Traits>::InitParams::HystParams::
+HystParams<Traits>::
 setDrainageParamsOilGas(unsigned elemIdx, unsigned satRegionIdx,
-                        const std::function<unsigned(unsigned)>& lookupIdxOnLevelZeroAssigner)
+                        const LookupFunction& lookupIdxOnLevelZeroAssigner)
 {
     if (hasGasOil_()) {
         auto [gasOilScaledInfo, gasOilScaledPoints]
             = readScaledEpsPointsDrainage_(elemIdx, EclTwoPhaseSystemType::GasOil, lookupIdxOnLevelZeroAssigner);
         typename TwoPhaseTypes<Traits>::GasOilEpsParams gasOilDrainParams;
-        gasOilDrainParams.setConfig(this->parent_.gasOilConfig_);
-        gasOilDrainParams.setUnscaledPoints(this->parent_.gasOilUnscaledPointsVector_[satRegionIdx]);
+        gasOilDrainParams.setConfig(this->parent_.gasOilConfig());
+        gasOilDrainParams.setUnscaledPoints(this->parent_.gasOilUnscaledPoints(satRegionIdx));
         gasOilDrainParams.setScaledPoints(gasOilScaledPoints);
-        gasOilDrainParams.setEffectiveLawParams(this->parent_.gasOilEffectiveParamVector_[satRegionIdx]);
+        gasOilDrainParams.setEffectiveLawParams(this->parent_.gasOilEffectiveParams(satRegionIdx));
         gasOilDrainParams.finalize();
-        this->gasOilParams_->setDrainageParams(gasOilDrainParams, gasOilScaledInfo, EclTwoPhaseSystemType::GasOil);
+        this->gasOilParams_->setDrainageParams(gasOilDrainParams,
+                                               gasOilScaledInfo,
+                                               EclTwoPhaseSystemType::GasOil);
     }
 }
 
 template <class Traits>
 void
-Manager<Traits>::InitParams::HystParams::
+HystParams<Traits>::
 setDrainageParamsOilWater(unsigned elemIdx, unsigned satRegionIdx,
-                          const std::function<unsigned(unsigned)>& lookupIdxOnLevelZeroAssigner)
+                          const LookupFunction& lookupIdxOnLevelZeroAssigner)
 {
     // We need to compute the oil-water scaled info even if we are running a two-phase case without
     // water (e.g. gas-oil). The reason is that the oil-water scaled info is used when computing
@@ -147,13 +138,13 @@ setDrainageParamsOilWater(unsigned elemIdx, unsigned satRegionIdx,
     //  since we currently does not support facedir for the scaling points info
     //  When such support is added, we need to extend the below vector which has info for each cell
     //   to include three more vectors, one with info for each facedir of a cell
-    this->parent_.oilWaterScaledEpsInfoDrainage_[elemIdx] = oilWaterScaledInfo;
+    oilWaterScaledEpsInfoDrainage_[elemIdx] = oilWaterScaledInfo;
     if (hasOilWater_()) {
         typename TwoPhaseTypes<Traits>::OilWaterEpsParams oilWaterDrainParams;
-        oilWaterDrainParams.setConfig(this->parent_.oilWaterConfig_);
-        oilWaterDrainParams.setUnscaledPoints(this->parent_.oilWaterUnscaledPointsVector_[satRegionIdx]);
+        oilWaterDrainParams.setConfig(this->parent_.oilWaterConfig());
+        oilWaterDrainParams.setUnscaledPoints(this->parent_.oilWaterUnscaledPoints(satRegionIdx));
         oilWaterDrainParams.setScaledPoints(oilWaterScaledPoints);
-        oilWaterDrainParams.setEffectiveLawParams(this->parent_.oilWaterEffectiveParamVector_[satRegionIdx]);
+        oilWaterDrainParams.setEffectiveLawParams(this->parent_.oilWaterEffectiveParams(satRegionIdx));
         oilWaterDrainParams.finalize();
         oilWaterParams_->setDrainageParams(oilWaterDrainParams, oilWaterScaledInfo, EclTwoPhaseSystemType::OilWater);
     }
@@ -161,18 +152,18 @@ setDrainageParamsOilWater(unsigned elemIdx, unsigned satRegionIdx,
 
 template <class Traits>
 void
-Manager<Traits>::InitParams::HystParams::
+HystParams<Traits>::
 setImbibitionParamsGasWater(unsigned elemIdx, unsigned imbRegionIdx,
-                            const std::function<unsigned(unsigned)>& lookupIdxOnLevelZeroAssigner)
+                            const LookupFunction& lookupIdxOnLevelZeroAssigner)
 {
     if (hasGasWater_()) {
         auto [gasWaterScaledInfo, gasWaterScaledPoints]
             = readScaledEpsPointsImbibition_(elemIdx, EclTwoPhaseSystemType::GasWater, lookupIdxOnLevelZeroAssigner);
         typename EclMaterialLaw::TwoPhaseTypes<Traits>::GasWaterEpsParams gasWaterImbParamsHyst;
-        gasWaterImbParamsHyst.setConfig(this->parent_.gasWaterConfig_);
-        gasWaterImbParamsHyst.setUnscaledPoints(this->parent_.gasWaterUnscaledPointsVector_[imbRegionIdx]);
+        gasWaterImbParamsHyst.setConfig(this->parent_.gasWaterConfig());
+        gasWaterImbParamsHyst.setUnscaledPoints(this->parent_.gasWaterUnscaledPoints(imbRegionIdx));
         gasWaterImbParamsHyst.setScaledPoints(gasWaterScaledPoints);
-        gasWaterImbParamsHyst.setEffectiveLawParams(this->parent_.gasWaterEffectiveParamVector_[imbRegionIdx]);
+        gasWaterImbParamsHyst.setEffectiveLawParams(this->parent_.gasWaterEffectiveParams(imbRegionIdx));
         gasWaterImbParamsHyst.finalize();
         this->gasWaterParams_->setImbibitionParams(gasWaterImbParamsHyst,
                                                    gasWaterScaledInfo,
@@ -182,19 +173,19 @@ setImbibitionParamsGasWater(unsigned elemIdx, unsigned imbRegionIdx,
 
 template <class Traits>
 void
-Manager<Traits>::InitParams::HystParams::
+HystParams<Traits>::
 setImbibitionParamsOilGas(unsigned elemIdx, unsigned imbRegionIdx,
-                          const std::function<unsigned(unsigned)>& lookupIdxOnLevelZeroAssigner)
+                          const LookupFunction& lookupIdxOnLevelZeroAssigner)
 {
     if (hasGasOil_()) {
         auto [gasOilScaledInfo, gasOilScaledPoints]
             = readScaledEpsPointsImbibition_(elemIdx, EclTwoPhaseSystemType::GasOil, lookupIdxOnLevelZeroAssigner);
 
         typename TwoPhaseTypes<Traits>::GasOilEpsParams gasOilImbParamsHyst;
-        gasOilImbParamsHyst.setConfig(this->parent_.gasOilConfig_);
-        gasOilImbParamsHyst.setUnscaledPoints(this->parent_.gasOilUnscaledPointsVector_[imbRegionIdx]);
+        gasOilImbParamsHyst.setConfig(this->parent_.gasOilConfig());
+        gasOilImbParamsHyst.setUnscaledPoints(this->parent_.gasOilUnscaledPoints(imbRegionIdx));
         gasOilImbParamsHyst.setScaledPoints(gasOilScaledPoints);
-        gasOilImbParamsHyst.setEffectiveLawParams(this->parent_.gasOilEffectiveParamVector_[imbRegionIdx]);
+        gasOilImbParamsHyst.setEffectiveLawParams(this->parent_.gasOilEffectiveParams(imbRegionIdx));
         gasOilImbParamsHyst.finalize();
         this->gasOilParams_->setImbibitionParams(gasOilImbParamsHyst,
                                                  gasOilScaledInfo,
@@ -204,18 +195,18 @@ setImbibitionParamsOilGas(unsigned elemIdx, unsigned imbRegionIdx,
 
 template <class Traits>
 void
-Manager<Traits>::InitParams::HystParams::
+HystParams<Traits>::
 setImbibitionParamsOilWater(unsigned elemIdx, unsigned imbRegionIdx,
-                            const std::function<unsigned(unsigned)>& lookupIdxOnLevelZeroAssigner)
+                            const LookupFunction& lookupIdxOnLevelZeroAssigner)
 {
     if (hasOilWater_()) {
         auto [oilWaterScaledInfo, oilWaterScaledPoints]
             = readScaledEpsPointsImbibition_(elemIdx, EclTwoPhaseSystemType::OilWater, lookupIdxOnLevelZeroAssigner);
         typename TwoPhaseTypes<Traits>::OilWaterEpsParams oilWaterImbParamsHyst;
-        oilWaterImbParamsHyst.setConfig(this->parent_.oilWaterConfig_);
-        oilWaterImbParamsHyst.setUnscaledPoints(this->parent_.oilWaterUnscaledPointsVector_[imbRegionIdx]);
+        oilWaterImbParamsHyst.setConfig(this->parent_.oilWaterConfig());
+        oilWaterImbParamsHyst.setUnscaledPoints(this->parent_.oilWaterUnscaledPoints(imbRegionIdx));
         oilWaterImbParamsHyst.setScaledPoints(oilWaterScaledPoints);
-        oilWaterImbParamsHyst.setEffectiveLawParams(this->parent_.oilWaterEffectiveParamVector_[imbRegionIdx]);
+        oilWaterImbParamsHyst.setEffectiveLawParams(this->parent_.oilWaterEffectiveParams(imbRegionIdx));
         oilWaterImbParamsHyst.finalize();
         this->oilWaterParams_->setImbibitionParams(oilWaterImbParamsHyst,
                                                    oilWaterScaledInfo,
@@ -227,7 +218,7 @@ setImbibitionParamsOilWater(unsigned elemIdx, unsigned imbRegionIdx,
 
 template <class Traits>
 bool
-Manager<Traits>::InitParams::HystParams::
+HystParams<Traits>::
 hasGasOil_()
 {
     return this->parent_.hasGas() && this->parent_.hasOil();
@@ -235,7 +226,7 @@ hasGasOil_()
 
 template <class Traits>
 bool
-Manager<Traits>::InitParams::HystParams::
+HystParams<Traits>::
 hasGasWater_()
 {
     return this->parent_.hasGas() && this->parent_.hasWater() && !this->parent_.hasOil();
@@ -243,7 +234,7 @@ hasGasWater_()
 
 template <class Traits>
 bool
-Manager<Traits>::InitParams::HystParams::
+HystParams<Traits>::
 hasOilWater_()
 {
     return this->parent_.hasOil() && this->parent_.hasWater();
@@ -252,23 +243,23 @@ hasOilWater_()
 template <class Traits>
 std::tuple<EclEpsScalingPointsInfo<typename Traits::Scalar>,
            EclEpsScalingPoints<typename Traits::Scalar>>
-Manager<Traits>::InitParams::HystParams::
+HystParams<Traits>::
 readScaledEpsPoints_(const EclEpsGridProperties& epsGridProperties,
                      unsigned elemIdx,
                      EclTwoPhaseSystemType type,
-                     const std::function<unsigned(unsigned)>& fieldPropIdxOnLevelZero)
+                     const LookupFunction& fieldPropIdxOnLevelZero)
 {
     const EclEpsConfig& config =
         (type == EclTwoPhaseSystemType::OilWater) ?
-            this->parent_.oilWaterConfig_         :
-            this->parent_.gasOilConfig_;
+            this->parent_.oilWaterConfig()        :
+            this->parent_.gasOilConfig();
     // For CpGrids with LGRs, field prop is inherited from parent/equivalent cell from level 0.
     // 'lookupIdx' is the index on level zero of the parent cell or the equivalent cell of the
     // leaf grid view cell with index 'elemIdx'.
     const auto lookupIdx = fieldPropIdxOnLevelZero(elemIdx);
     unsigned satRegionIdx = epsGridProperties.satRegion( lookupIdx /* coincides with elemIdx when no LGRs */ );
     // Copy-construct a new instance of EclEpsScalingPointsInfo
-    EclEpsScalingPointsInfo<Scalar> destInfo(this->parent_.unscaledEpsInfo_[satRegionIdx]);
+    EclEpsScalingPointsInfo<Scalar> destInfo(this->parent_.unscaledEpsInfo(satRegionIdx));
     // TODO: currently epsGridProperties does not implement a face direction, e.g. SWLX, SWLY,...
     //  when these keywords get implemented, we need to use include facedir in the lookup
     destInfo.extractScaled(this->eclState_, epsGridProperties, lookupIdx /* coincides with elemIdx when no LGRs */);
@@ -281,29 +272,27 @@ readScaledEpsPoints_(const EclEpsGridProperties& epsGridProperties,
 template <class Traits>
 std::tuple<EclEpsScalingPointsInfo<typename Traits::Scalar>,
            EclEpsScalingPoints<typename Traits::Scalar>>
-Manager<Traits>::InitParams::HystParams::
+HystParams<Traits>::
 readScaledEpsPointsDrainage_(unsigned elemIdx, EclTwoPhaseSystemType type,
-                             const std::function<unsigned(unsigned)>& fieldPropIdxOnLevelZero)
+                             const LookupFunction& fieldPropIdxOnLevelZero)
 {
-    const auto& epsGridProperties = this->init_params_.epsGridProperties_;
-    return readScaledEpsPoints_(*epsGridProperties, elemIdx, type, fieldPropIdxOnLevelZero);
+    return readScaledEpsPoints_(epsGridProperties_, elemIdx, type, fieldPropIdxOnLevelZero);
 }
 
 template <class Traits>
 std::tuple<EclEpsScalingPointsInfo<typename Traits::Scalar>,
            EclEpsScalingPoints<typename Traits::Scalar>>
-Manager<Traits>::InitParams::HystParams::
+HystParams<Traits>::
 readScaledEpsPointsImbibition_(unsigned elemIdx, EclTwoPhaseSystemType type,
-                               const std::function<unsigned(unsigned)>& fieldPropIdxOnLevelZero)
+                               const LookupFunction& fieldPropIdxOnLevelZero)
 {
-    const auto& epsGridProperties = this->init_params_.epsImbGridProperties_;
-    return readScaledEpsPoints_(*epsGridProperties, elemIdx, type, fieldPropIdxOnLevelZero);
+    return readScaledEpsPoints_(epsImbGridProperties_, elemIdx, type, fieldPropIdxOnLevelZero);
 }
 
 // Make some actual code, by realizing the previously defined templated class
-template class Manager<ThreePhaseMaterialTraits<double,0,1,2>>::InitParams::HystParams;
-template class Manager<ThreePhaseMaterialTraits<float,0,1,2>>::InitParams::HystParams;
-template class Manager<ThreePhaseMaterialTraits<double,2,0,1>>::InitParams::HystParams;
-template class Manager<ThreePhaseMaterialTraits<float,2,0,1>>::InitParams::HystParams;
+template class HystParams<ThreePhaseMaterialTraits<double,0,1,2>>;
+template class HystParams<ThreePhaseMaterialTraits<float,0,1,2>>;
+template class HystParams<ThreePhaseMaterialTraits<double,2,0,1>>;
+template class HystParams<ThreePhaseMaterialTraits<float,2,0,1>>;
 
 } // namespace Opm::EclMaterialLaw
