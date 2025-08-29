@@ -45,11 +45,8 @@ namespace Opm {
 
 template <typename IndexTraits>
 PhaseUsageInfo<IndexTraits>::PhaseUsageInfo()
-  : numActivePhases_(0)
 {
-    std::fill_n(&phaseIsActive_[0], numPhases, false);
-    std::fill_n(&this->canonicalToActivePhaseIdx_[0], numPhases, -1);
-    std::fill_n(&this->activeToCanonicalPhaseIdx_[0], numPhases, -1);
+    reset_();
 }
 
 template <typename IndexTraits>
@@ -62,6 +59,14 @@ void PhaseUsageInfo<IndexTraits>::updateIndexMapping_() {
             activePhaseIdx++;
         }
     }
+}
+
+template <typename IndexTraits>
+void PhaseUsageInfo<IndexTraits>::reset_() {
+    numActivePhases_ = 0;
+    std::fill_n(&phaseIsActive_[0], numPhases, false);
+    std::fill_n(&canonicalToActivePhaseIdx_[0], numPhases, -1);
+    std::fill_n(&activeToCanonicalPhaseIdx_[0], numPhases, -1);
 }
 
 #if HAVE_ECL_INPUT
@@ -78,6 +83,9 @@ void PhaseUsageInfo<IndexTraits>::initFromState(const EclipseState& eclState)
 
 template <typename IndexTraits>
 void PhaseUsageInfo<IndexTraits>::initFromPhases(const Phases& phases) {
+
+    this->reset_();
+
     if (phases.active(Phase::OIL)) {
         phaseIsActive_[oilPhaseIdx] = true;
         ++numActivePhases_;

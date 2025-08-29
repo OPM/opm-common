@@ -128,6 +128,8 @@ private:
     //  updating the mapping between active and canonical phase indices
     void updateIndexMapping_();
 
+    void reset_();
+
 };
 
 }
