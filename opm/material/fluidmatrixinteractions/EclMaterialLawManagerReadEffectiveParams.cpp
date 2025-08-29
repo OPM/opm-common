@@ -92,7 +92,7 @@ readGasOilParameters_(GasOilEffectiveParamVector& dest, unsigned satRegionIdx)
         // we don't read anything if either the gas or the oil phase is not active
         return;
 
-    dest[satRegionIdx] = std::make_shared<GasOilEffectiveTwoPhaseParams>();
+    dest[satRegionIdx] = std::make_shared<GasOilEffectiveParams>();
 
     auto& effParams = *dest[satRegionIdx];
 
@@ -184,12 +184,12 @@ template <class Traits>
 template <class TableType>
 void
 EclMaterialLawManager<Traits>::InitParams::ReadEffectiveParams::
-readGasOilFamily2_(GasOilEffectiveTwoPhaseParams& effParams,
-                        const Scalar Swco,
-                        const double tolcrit,
-                        const TableType& sofTable,
-                        const SgfnTable& sgfnTable,
-                        const std::string& columnName)
+readGasOilFamily2_(GasOilEffectiveParams& effParams,
+                   const Scalar Swco,
+                   const double tolcrit,
+                   const TableType& sofTable,
+                   const SgfnTable& sgfnTable,
+                   const std::string& columnName)
 {
     // convert the saturations of the SGFN keyword from gas to oil saturations
     std::vector<double> SoSamples(sgfnTable.numRows());
@@ -210,10 +210,10 @@ readGasOilFamily2_(GasOilEffectiveTwoPhaseParams& effParams,
 template <class Traits>
 void
 EclMaterialLawManager<Traits>::InitParams::ReadEffectiveParams::
-readGasOilSgof_(GasOilEffectiveTwoPhaseParams& effParams,
-                        const Scalar Swco,
-                        const double tolcrit,
-                        const SgofTable& sgofTable)
+readGasOilSgof_(GasOilEffectiveParams& effParams,
+                const Scalar Swco,
+                const double tolcrit,
+                const SgofTable& sgofTable)
 {
     // convert the saturations of the SGOF keyword from gas to oil saturations
     std::vector<double> SoSamples(sgofTable.numRows());
@@ -233,10 +233,10 @@ readGasOilSgof_(GasOilEffectiveTwoPhaseParams& effParams,
 template <class Traits>
 void
 EclMaterialLawManager<Traits>::InitParams::ReadEffectiveParams::
-readGasOilSlgof_(GasOilEffectiveTwoPhaseParams& effParams,
-                        const Scalar Swco,
-                        const double tolcrit,
-                        const SlgofTable& slgofTable)
+readGasOilSlgof_(GasOilEffectiveParams& effParams,
+                 const Scalar Swco,
+                 const double tolcrit,
+                 const SlgofTable& slgofTable)
 {
     // convert the saturations of the SLGOF keyword from "liquid" to oil saturations
     std::vector<double> SoSamples(slgofTable.numRows());
@@ -262,7 +262,7 @@ readGasWaterParameters_(GasWaterEffectiveParamVector& dest, unsigned satRegionId
         // we don't read anything if either the gas or the water phase is not active or if oil is present
         return;
 
-    dest[satRegionIdx] = std::make_shared<GasWaterEffectiveTwoPhaseParams>();
+    dest[satRegionIdx] = std::make_shared<GasWaterEffectiveParams>();
 
     auto& effParams = *dest[satRegionIdx];
 
@@ -345,7 +345,7 @@ readOilWaterParameters_(OilWaterEffectiveParamVector& dest, unsigned satRegionId
         // we don't read anything if either the water or the oil phase is not active
         return;
 
-    dest[satRegionIdx] = std::make_shared<OilWaterEffectiveTwoPhaseParams>();
+    dest[satRegionIdx] = std::make_shared<OilWaterEffectiveParams>();
 
     const auto tolcrit = this->eclState_.runspec().saturationFunctionControls()
         .minimumRelpermMobilityThreshold();
