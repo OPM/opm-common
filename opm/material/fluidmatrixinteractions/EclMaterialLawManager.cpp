@@ -38,12 +38,6 @@
 namespace Opm {
 
 template<class TraitsT>
-EclMaterialLawManager<TraitsT>::EclMaterialLawManager() = default;
-
-template<class TraitsT>
-EclMaterialLawManager<TraitsT>::~EclMaterialLawManager() = default;
-
-template<class TraitsT>
 void EclMaterialLawManager<TraitsT>::
 initFromState(const EclipseState& eclState)
 {
