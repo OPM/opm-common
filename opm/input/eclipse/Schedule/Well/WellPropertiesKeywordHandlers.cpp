@@ -526,6 +526,30 @@ void handleWTEMP(HandlerContext& handlerContext)
     }
 }
 
+void handleWSPECIES(HandlerContext& handlerContext)
+{
+    // NOTE: WSPECIES is equivalent to WTRACERS, and therefore well tracer facilities are used
+    for (const auto& record : handlerContext.keyword) {
+        const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
+        const auto well_names = handlerContext.wellNames(wellNamePattern, false);
+
+        if (well_names.empty()) {
+            handlerContext.invalidNamePattern(wellNamePattern);
+        }
+
+        const auto spConcentration = record.getItem<ParserKeywords::WSPECIES::CONCENTRATION>().get<UDAValue>(0);
+        const std::string& spName = record.getItem("SPECIES").getTrimmedString(0);
+
+        for (const auto& well_name : well_names) {
+            auto well = handlerContext.state().wells.get( well_name );
+            auto wellSpeciesProperties = std::make_shared<WellTracerProperties>(well.getSpeciesProperties());
+            wellSpeciesProperties->setConcentration(WellTracerProperties::Tracer { spName }, spConcentration);
+            if (well.updateSpecies(wellSpeciesProperties))
+                handlerContext.state().wells.update( std::move(well) );
+        }
+    }
+}
+
 // The WTMULT keyword can optionally use UDA values in three different ways:
 //
 //   1. The target can be UDA - instead of the standard strings "ORAT",
@@ -759,6 +783,7 @@ getWellPropertiesHandlers()
         { "WSALT"   , &handleWSALT    },
         { "WSKPTAB" , &handleWSKPTAB  },
         { "WSOLVENT", &handleWSOLVENT },
+        { "WSPECIES", &handleWSPECIES },
         { "WTEMP"   , &handleWTEMP    },
         { "WTMULT"  , &handleWTMULT   },
         { "WTRACER" , &handleWTRACER  },

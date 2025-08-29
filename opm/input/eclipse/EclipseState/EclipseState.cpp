@@ -143,6 +143,9 @@ namespace Opm {
         , aquifer_config(      m_tables, m_inputGrid, deck, field_props)
         , compositional_config(deck, m_runspec)
         , m_transMult(         GridDims(deck), deck, field_props)
+        , species_config(      deck)
+        , mineral_config(      deck)
+        , ionex_config(        deck)
         , tracer_config(       m_deckUnitSystem, deck)
         , wag_hyst_config(     deck)
         , co2_store_config(    deck)
@@ -354,6 +357,18 @@ namespace Opm {
 
     const CompositionalConfig& EclipseState::compositionalConfig() const {
         return this->compositional_config;
+    }
+
+    const SpeciesConfig& EclipseState::species() const {
+        return this->species_config;
+    }
+
+    const MineralConfig& EclipseState::mineral() const {
+        return this->mineral_config;
+    }
+
+    const IonExchangeConfig& EclipseState::ionExchange() const {
+        return this->ionex_config;
     }
 
     const TracerConfig& EclipseState::tracer() const {
@@ -603,6 +618,9 @@ bool rst_cmp_obj(const T& full_arg, const T& rst_arg, const std::string& object_
             rst_cmp_obj(full_state.m_transMult, rst_state.m_transMult, "TransMult") &&
             rst_cmp_obj(full_state.m_faults, rst_state.m_faults, "Faults") &&
             rst_cmp_obj(full_state.m_title, rst_state.m_title, "Title") &&
+            rst_cmp_obj(full_state.species_config, rst_state.species_config, "SpeciesConfig") &&
+            rst_cmp_obj(full_state.mineral_config, rst_state.mineral_config, "MineralConfig") &&
+            rst_cmp_obj(full_state.ionex_config, rst_state.ionex_config, "IonExchangeConfig") &&
             rst_cmp_obj(full_state.tracer_config, rst_state.tracer_config, "Tracer");
     }
 

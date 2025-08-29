@@ -77,6 +77,7 @@
 #include <opm/input/eclipse/EclipseState/Tables/Sof3Table.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/SorwmisTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/SpecheatTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/SpeciesVdTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/SpecrockTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/SsfnTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/SwfnTable.hpp>
@@ -2546,6 +2547,13 @@ const TableColumn&
 OverburdTable::getOverburdenPressureColumn() const
 {
     return SimpleTable::getColumn(1);
+}
+
+SpeciesVdTable::SpeciesVdTable(const Opm::DeckItem& item, double inv_volume, const int tableID)
+{
+    m_schema.addColumn(Opm::ColumnSchema("DEPTH", Table::STRICTLY_INCREASING, Table::DEFAULT_NONE));
+    m_schema.addColumn(Opm::ColumnSchema("SPECIES_CONCENTRATION", Table::RANDOM, Table::DEFAULT_NONE));
+    SimpleTable::init("SPECIESVD", item, tableID, inv_volume);
 }
 
 TracerVdTable::TracerVdTable(const Opm::DeckItem& item, double inv_volume, const int tableID)
