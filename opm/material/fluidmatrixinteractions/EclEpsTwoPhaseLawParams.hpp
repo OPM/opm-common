@@ -74,8 +74,8 @@ public:
     /*!
      * \brief Set the endpoint scaling configuration object.
      */
-    void setConfig(std::shared_ptr<EclEpsConfig> value)
-    { config_ = *value; }
+    void setConfig(const EclEpsConfig& value)
+    { config_ = value; }
 
     /*!
      * \brief Returns the endpoint scaling configuration object.
