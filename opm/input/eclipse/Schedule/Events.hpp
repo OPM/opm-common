@@ -101,6 +101,9 @@ namespace Opm
             /// For now, the WELOPEN, WCONPROD and WCONINJE keywords are
             /// considered with this event.
             REQUEST_OPEN_WELL = (UINT64_C(1) << 21),
+
+            /// Analogue to above but when SCHEDULE set it to SHUT
+            REQUEST_SHUT_WELL = (UINT64_C(1) << 22),
         };
     } // namespace ScheduleEvents
 
