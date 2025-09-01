@@ -278,7 +278,7 @@ public:
     {
         OPM_TIMEFUNCTION_LOCAL();
         const auto Sw = decay<Evaluation>(fs.saturation(waterPhaseIdx));
-        return OilWaterMaterialLaw::twoPhaseSatPcnw(params.oilWaterParams(), Sw);
+        return OilWaterMaterialLaw::template twoPhaseSatPcnw<Evaluation, Args...>(params.oilWaterParams(), Sw);
     }
 
     /*!
