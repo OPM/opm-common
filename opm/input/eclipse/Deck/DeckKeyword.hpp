@@ -41,10 +41,11 @@ namespace Opm {
 
         DeckKeyword();
         explicit DeckKeyword(const ParserKeyword& parserKeyword);
+        DeckKeyword(const KeywordLocation& location, const ParserKeyword& parserKeyword);
         DeckKeyword(const KeywordLocation& location, const std::string& keywordName);
         DeckKeyword(const ParserKeyword& parserKeyword, const std::vector<std::vector<DeckValue>>& record_list, const UnitSystem& system_active, const UnitSystem& system_default);
-        DeckKeyword(const ParserKeyword& parserKeyword, const std::vector<int>& data);
-        DeckKeyword(const ParserKeyword& parserKeyword, const std::vector<double>& data, const UnitSystem& system_active, const UnitSystem& system_default);
+        DeckKeyword(const ParserKeyword& parserKeyword, const std::vector<int>& data, const KeywordLocation& location = KeywordLocation {});
+        DeckKeyword(const ParserKeyword& parserKeyword, const std::vector<double>& data, const UnitSystem& system_active, const UnitSystem& system_default, const KeywordLocation& location = KeywordLocation {});
 
         static DeckKeyword serializationTestObject();
 

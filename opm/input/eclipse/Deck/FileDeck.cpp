@@ -63,6 +63,14 @@ INCLUDE
 )", fname);
     }
 
+    void IMPORT(std::ostream& stream, const std::string& fname)
+    {
+        stream << fmt::format(R"(
+IMPORT
+   '{}' /
+)", fname);
+    }
+
     void touch_file(const fs::path& file)
     {
         if (fs::exists(file)) {
@@ -170,7 +178,7 @@ bool FileDeck::Index::operator<(const Index& other) const
 }
 
 FileDeck::FileDeck(const Deck& deck)
-    : input_directory(deck.getInputPath())
+    : input_directory(fs::absolute(deck.getInputPath().empty() ? fs::current_path() : fs::path(deck.getInputPath())))
     , deck_tree(deck.tree())
 {
     if (deck.empty()) {
@@ -183,6 +191,9 @@ FileDeck::FileDeck(const Deck& deck)
 
         FileDeck::Block block(current_file);
         block.load(deck, deck_index);
+        if (block.is_binary) {
+            this->deck_tree.add_include(this->blocks.back().fname, block.fname);
+        }
         deck_index += block.size();
         this->blocks.push_back(std::move(block));
 
@@ -202,8 +213,9 @@ const DeckKeyword& FileDeck::operator[](const Index& index) const
 
 void FileDeck::Block::load(const Deck& deck, std::size_t deck_index)
 {
-    const auto current_file = deck[deck_index].location().filename;
-
+    const auto& loc = deck[deck_index].location();
+    const auto& current_file = loc.filename;
+    this->is_binary = loc.is_binary();
     while (true) {
         this->keywords.push_back(deck[deck_index]);
 
@@ -490,6 +502,7 @@ void FileDeck::dump(const std::string& output_dir,
 
         for (std::size_t block_index = 1; block_index < this->blocks.size(); ++block_index) {
             const auto& block = this->blocks[block_index];
+            // For now, originally binary files will be written as GRDECL
             const auto& include_file = this->dump_block(block, output_dir, {}, context);
 
             if (block.fname != this->deck_tree.root()) {
@@ -520,12 +533,8 @@ void FileDeck::dump_shared(std::ostream& stream,
         else {
             // Should ideally use fs::relative()
             std::string include_file = fs::proximate(block.fname, output_dir).generic_string();
-            if (include_file.find(block.fname) == std::string::npos) {
-                INCLUDE(stream, include_file);
-            }
-            else {
-                INCLUDE(stream, block.fname);
-            }
+            const auto& fname = include_file.find(block.fname) == std::string::npos ? include_file : block.fname;
+            block.is_binary ? IMPORT(stream, fname) : INCLUDE(stream, fname);
         }
     }
 }
