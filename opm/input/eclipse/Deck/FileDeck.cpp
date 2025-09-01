@@ -216,9 +216,6 @@ void FileDeck::Block::load(const Deck& deck, std::size_t deck_index)
     const auto& loc = deck[deck_index].location();
     const auto& current_file = loc.filename;
     this->is_binary = loc.is_binary();
-    if (is_binary) {
-        fname = current_file;
-    }
     while (true) {
         this->keywords.push_back(deck[deck_index]);
 
@@ -536,12 +533,8 @@ void FileDeck::dump_shared(std::ostream& stream,
         else {
             // Should ideally use fs::relative()
             std::string include_file = fs::proximate(block.fname, output_dir).generic_string();
-            if (include_file.find(block.fname) == std::string::npos) {
-                block.is_binary ? IMPORT(stream, include_file) : INCLUDE(stream, include_file);
-            }
-            else {
-                block.is_binary ? IMPORT(stream, block.fname) : INCLUDE(stream, block.fname);
-            }
+            const auto& fname = include_file.find(block.fname) == std::string::npos ? include_file : block.fname;
+            block.is_binary ? IMPORT(stream, fname) : INCLUDE(stream, fname);
         }
     }
 }
