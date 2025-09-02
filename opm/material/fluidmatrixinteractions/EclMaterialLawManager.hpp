@@ -124,6 +124,7 @@ public:
         std::vector<int> imbnumRegionArray{};
         std::vector<MaterialLawParams> materialLawParams{};
         DirectionalMaterialLawParamsPtr dirMaterialLawParams{};
+        bool onlyPiecewiseLinear = true;
 
         bool hasDirectionalRelperms() const
         {
@@ -328,14 +329,9 @@ public:
         }
     }
 
-    EclMultiplexerApproach threePhaseApproach() const
-    {
-        return this->threePhaseApproach_;
-    }
-
     bool satCurveIsAllPiecewiseLinear() const
     {
-        return this->onlyPiecewiseLinear_;
+        return this->params_.onlyPiecewiseLinear;
     }
 
 private:
@@ -359,7 +355,6 @@ private:
     EclMultiplexerApproach threePhaseApproach_ = EclMultiplexerApproach::Default;
     // this attribute only makes sense for twophase simulations!
     EclTwoPhaseApproach twoPhaseApproach_ = EclTwoPhaseApproach::GasOil;
-    bool onlyPiecewiseLinear_ = true;
 
     std::vector<Scalar> stoneEtas_;
 
