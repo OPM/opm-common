@@ -533,7 +533,6 @@ SCHEDULE
     Opm::Deck deck = parser.parseString(deck_string);
     Opm::EclipseState state(deck);
     Opm::EclipseGrid eclipse_grid = state.getInputGrid();
-    Opm::LgrCollection lgrs = state.getLgrs();
     // Intialize host_cell numbering.
     eclipse_grid.init_children_host_cells();
     std::vector<int> host_vec_sol = { 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3};
