@@ -31,6 +31,14 @@
 
 #include <stdexcept>
 
+
+// The static_assert does not compile with gcc 12 and earlier when placed in the multiplexer calls below.
+#if __GNUC__ < 13
+    #define STATIC_ASSERT_SATCURVE_MULTIPLEXER_UNLESS_GCC_LT_13 throw std::logic_error("Unhandled SatCurveMultiplexerApproach")
+#else
+    #define STATIC_ASSERT_SATCURVE_MULTIPLEXER_UNLESS_GCC_LT_13 static_assert(false, "Unhandled SatCurveMultiplexerApproach")
+#endif
+
 namespace Opm {
 /*!
  * \ingroup FluidMatrixInteractions
@@ -208,7 +216,7 @@ public:
             return PLTwoPhaseLaw::twoPhaseSatPcnw(params.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinear>(),
                                                   Sw);
         } else {
-            static_assert(false, "Unknown SatCurveMultiplexerApproach");
+            STATIC_ASSERT_SATCURVE_MULTIPLEXER_UNLESS_GCC_LT_13;
         }
     }
 
@@ -341,7 +349,7 @@ public:
             return PLTwoPhaseLaw::twoPhaseSatKrw(params.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinear>(),
                                                  Sw);
         } else {
-            static_assert(false, "Unknown SatCurveMultiplexerApproach");
+            STATIC_ASSERT_SATCURVE_MULTIPLEXER_UNLESS_GCC_LT_13;
         }
     }
 
@@ -417,7 +425,7 @@ public:
             return PLTwoPhaseLaw::twoPhaseSatKrn(params.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinear>(),
                                                  Sw);
         } else {
-            static_assert(false, "Unknown SatCurveMultiplexerApproach");
+            STATIC_ASSERT_SATCURVE_MULTIPLEXER_UNLESS_GCC_LT_13;
         }
     }
 

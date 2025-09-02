@@ -77,6 +77,13 @@ namespace Opm {
     }                                                                                                                  \
     }
 
+// The static_assert does not compile with gcc 12 and earlier when placed in the multiplexer below.
+#if __GNUC__ < 13
+    #define STATIC_ASSERT_ECL_MULTIPLEXER_UNLESS_GCC_LT_13 throw std::logic_error("Unhandled EclMultiplexerApproach")
+#else
+    #define STATIC_ASSERT_ECL_MULTIPLEXER_UNLESS_GCC_LT_13 static_assert(false, "Unhandled EclMultiplexerApproach")
+#endif
+
 #define OPM_ECL_MULTIPLEXER_MATERIAL_CALL_COMPILETIME(codeToCall, onePhaseCode)                                        \
     if constexpr (Head::approach == EclMultiplexerApproach::Stone1) {                                                  \
         [[maybe_unused]] constexpr EclMultiplexerApproach approach = EclMultiplexerApproach::Stone1;                   \
@@ -102,11 +109,11 @@ namespace Opm {
         [[maybe_unused]] constexpr EclMultiplexerApproach approach = EclMultiplexerApproach::OnePhase;                 \
         onePhaseCode;                                                                                                  \
     } else {                                                                                                           \
-        static_assert(false, "Unhandled EclMultiplexerApproach");                                                      \
+        STATIC_ASSERT_ECL_MULTIPLEXER_UNLESS_GCC_LT_13;                                                                \
     }
 
-    // Pass this for the onePhaseCode argument if nothing is to be done.
-    inline void doNothing() {};
+// Pass this for the onePhaseCode argument if nothing is to be done.
+inline void doNothing() { };
 
 /*!
  * \ingroup FluidMatrixInteractions
