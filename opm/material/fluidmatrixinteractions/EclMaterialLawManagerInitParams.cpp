@@ -23,9 +23,9 @@
 
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 
-#include <opm/material/fluidmatrixinteractions/EclMaterialLawManager.hpp>
 #include <opm/material/fluidmatrixinteractions/EclEpsGridProperties.hpp>
-
+#include <opm/material/fluidmatrixinteractions/EclMaterialLawManager.hpp>
+#include <opm/material/fluidmatrixinteractions/EclMaterialLawReadEffectiveParams.hpp>
 
 namespace Opm::EclMaterialLaw {
 
@@ -272,7 +272,14 @@ void
 Manager<Traits>::InitParams::
 readEffectiveParameters_()
 {
-    ReadEffectiveParams effectiveReader {*this};
+    ReadEffectiveParams<Traits> effectiveReader{
+        this->parent_.gasOilEffectiveParamVector_,
+        this->parent_.gasWaterEffectiveParamVector_,
+        this->parent_.oilWaterEffectiveParamVector_,
+        this->eclState_,
+        this->parent_
+    };
+
     // populates effective parameter vectors in the parent class (EclMaterialManager)
     effectiveReader.read();
 }
@@ -282,21 +289,21 @@ void
 Manager<Traits>::InitParams::
 readUnscaledEpsPointsVectors_()
 {
-    if (this->parent_.hasGas && this->parent_.hasOil) {
+    if (this->parent_.hasGas() && this->parent_.hasOil()) {
         readUnscaledEpsPoints_(
             this->parent_.gasOilUnscaledPointsVector_,
             this->parent_.gasOilConfig_,
             EclTwoPhaseSystemType::GasOil
         );
     }
-    if (this->parent_.hasOil && this->parent_.hasWater) {
+    if (this->parent_.hasOil() && this->parent_.hasWater()) {
         readUnscaledEpsPoints_(
             this->parent_.oilWaterUnscaledPointsVector_,
             this->parent_.oilWaterConfig_,
             EclTwoPhaseSystemType::OilWater
         );
     }
-    if (!this->parent_.hasOil) {
+    if (!this->parent_.hasOil()) {
         readUnscaledEpsPoints_(
             this->parent_.gasWaterUnscaledPointsVector_,
             this->parent_.gasWaterConfig_,
