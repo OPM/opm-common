@@ -70,9 +70,7 @@ class ReadEffectiveParams
         typename TwoPhaseTypes<Traits>::OilWaterEffectiveParamVector;
 
 public:
-    ReadEffectiveParams(GasOilEffectiveParamVector& gasOilVector,
-                        GasWaterEffectiveParamVector& gasWaterVector,
-                        OilWaterEffectiveParamVector& oilWaterVector,
+    ReadEffectiveParams(typename Manager<Traits>::Params& params,
                         const EclipseState& eclState,
                         const Manager<Traits>& parent);
 
@@ -107,9 +105,7 @@ private:
 
     void readOilWaterParameters_(unsigned satRegionIdx);
 
-    GasOilEffectiveParamVector& gasOilVector_;
-    GasWaterEffectiveParamVector& gasWaterVector_;
-    OilWaterEffectiveParamVector& oilWaterVector_;
+    typename Manager<Traits>::Params& params_;
     const EclipseState& eclState_;
     const Manager<Traits>& parent_;
 };

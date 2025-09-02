@@ -31,6 +31,7 @@
 #include <opm/input/eclipse/EclipseState/Grid/SatfuncPropertyInitializers.hpp>
 
 #include <opm/material/fluidmatrixinteractions/EclEpsGridProperties.hpp>
+#include <opm/material/fluidmatrixinteractions/EclMaterialLawInitParams.hpp>
 #include <opm/material/fluidstates/SimpleModularFluidState.hpp>
 
 #include <algorithm>
@@ -131,8 +132,9 @@ initParamsForElements(const EclipseState& eclState, size_t numCompressedElems,
                       const std::function<std::vector<int>(const FieldPropsManager&, const std::string&, bool)>& fieldPropIntOnLeafAssigner,
                       const std::function<unsigned(unsigned)>& lookupIdxOnLevelZeroAssigner)
 {
-    InitParams initParams {*this, eclState, numCompressedElems};
+    InitParams<Traits> initParams {*this, eclState, numCompressedElems};
     initParams.run(fieldPropIntOnLeafAssigner, lookupIdxOnLevelZeroAssigner);
+    params_ = std::move(initParams.params_);
 }
 
 // TODO: Better (proper?) handling of mixed wettability systems - see ecl kw OPTIONS switch 74
@@ -149,7 +151,7 @@ applySwatinit(unsigned elemIdx,
         return {Sw, /*newSwatInit*/ true};
     }
 
-    auto& elemScaledEpsInfo = oilWaterScaledEpsInfoDrainage_[elemIdx];
+    auto& elemScaledEpsInfo = params_.oilWaterScaledEpsInfoDrainage[elemIdx];
     if (Sw <= elemScaledEpsInfo.Swl)
         Sw = elemScaledEpsInfo.Swl;
 
@@ -221,7 +223,7 @@ applyRestartSwatInit(const unsigned elemIdx,
     // Maximum capillary pressure adjusted from SWATINIT data.
 
     auto& elemScaledEpsInfo =
-        this->oilWaterScaledEpsInfoDrainage_[elemIdx];
+        this->params_.oilWaterScaledEpsInfoDrainage[elemIdx];
 
     elemScaledEpsInfo.maxPcow = maxPcow;
 
@@ -236,7 +238,7 @@ const typename Manager<TraitsT>::MaterialLawParams&
 Manager<TraitsT>::
 connectionMaterialLawParams(unsigned satRegionIdx, unsigned elemIdx) const
 {
-    MaterialLawParams& mlp = const_cast<MaterialLawParams&>(materialLawParams_[elemIdx]);
+    MaterialLawParams& mlp = const_cast<MaterialLawParams&>(params_.materialLawParams[elemIdx]);
 
     if (enableHysteresis())
         OpmLog::warning("Warning: Using non-default satnum regions for connection is not tested in combination with hysteresis");
@@ -248,10 +250,10 @@ connectionMaterialLawParams(unsigned satRegionIdx, unsigned elemIdx) const
     case EclMultiplexerApproach::Stone1: {
         auto& realParams = mlp.template getRealParams<EclMultiplexerApproach::Stone1>();
 
-        realParams.oilWaterParams().drainageParams().setUnscaledPoints(oilWaterUnscaledPointsVector_[satRegionIdx]);
-        realParams.oilWaterParams().drainageParams().setEffectiveLawParams(oilWaterEffectiveParamVector_[satRegionIdx]);
-        realParams.gasOilParams().drainageParams().setUnscaledPoints(gasOilUnscaledPointsVector_[satRegionIdx]);
-        realParams.gasOilParams().drainageParams().setEffectiveLawParams(gasOilEffectiveParamVector_[satRegionIdx]);
+        realParams.oilWaterParams().drainageParams().setUnscaledPoints(params_.oilWaterUnscaledPointsVector[satRegionIdx]);
+        realParams.oilWaterParams().drainageParams().setEffectiveLawParams(params_.oilWaterEffectiveParamVector[satRegionIdx]);
+        realParams.gasOilParams().drainageParams().setUnscaledPoints(params_.gasOilUnscaledPointsVector[satRegionIdx]);
+        realParams.gasOilParams().drainageParams().setEffectiveLawParams(params_.gasOilEffectiveParamVector[satRegionIdx]);
 //            if (enableHysteresis()) {
 //                realParams.oilWaterParams().imbibitionParams().setUnscaledPoints(oilWaterUnscaledPointsVector_[impRegionIdx]);
 //                realParams.oilWaterParams().imbibitionParams().setEffectiveLawParams(oilWaterEffectiveParamVector_[impRegionIdx]);
@@ -263,10 +265,10 @@ connectionMaterialLawParams(unsigned satRegionIdx, unsigned elemIdx) const
 
     case EclMultiplexerApproach::Stone2: {
         auto& realParams = mlp.template getRealParams<EclMultiplexerApproach::Stone2>();
-        realParams.oilWaterParams().drainageParams().setUnscaledPoints(oilWaterUnscaledPointsVector_[satRegionIdx]);
-        realParams.oilWaterParams().drainageParams().setEffectiveLawParams(oilWaterEffectiveParamVector_[satRegionIdx]);
-        realParams.gasOilParams().drainageParams().setUnscaledPoints(gasOilUnscaledPointsVector_[satRegionIdx]);
-        realParams.gasOilParams().drainageParams().setEffectiveLawParams(gasOilEffectiveParamVector_[satRegionIdx]);
+        realParams.oilWaterParams().drainageParams().setUnscaledPoints(params_.oilWaterUnscaledPointsVector[satRegionIdx]);
+        realParams.oilWaterParams().drainageParams().setEffectiveLawParams(params_.oilWaterEffectiveParamVector[satRegionIdx]);
+        realParams.gasOilParams().drainageParams().setUnscaledPoints(params_.gasOilUnscaledPointsVector[satRegionIdx]);
+        realParams.gasOilParams().drainageParams().setEffectiveLawParams(params_.gasOilEffectiveParamVector[satRegionIdx]);
 //            if (enableHysteresis()) {
 //                realParams.oilWaterParams().imbibitionParams().setUnscaledPoints(oilWaterUnscaledPointsVector_[impRegionIdx]);
 //                realParams.oilWaterParams().imbibitionParams().setEffectiveLawParams(oilWaterEffectiveParamVector_[impRegionIdx]);
@@ -278,10 +280,10 @@ connectionMaterialLawParams(unsigned satRegionIdx, unsigned elemIdx) const
 
     case EclMultiplexerApproach::Default: {
         auto& realParams = mlp.template getRealParams<EclMultiplexerApproach::Default>();
-        realParams.oilWaterParams().drainageParams().setUnscaledPoints(oilWaterUnscaledPointsVector_[satRegionIdx]);
-        realParams.oilWaterParams().drainageParams().setEffectiveLawParams(oilWaterEffectiveParamVector_[satRegionIdx]);
-        realParams.gasOilParams().drainageParams().setUnscaledPoints(gasOilUnscaledPointsVector_[satRegionIdx]);
-        realParams.gasOilParams().drainageParams().setEffectiveLawParams(gasOilEffectiveParamVector_[satRegionIdx]);
+        realParams.oilWaterParams().drainageParams().setUnscaledPoints(params_.oilWaterUnscaledPointsVector[satRegionIdx]);
+        realParams.oilWaterParams().drainageParams().setEffectiveLawParams(params_.oilWaterEffectiveParamVector[satRegionIdx]);
+        realParams.gasOilParams().drainageParams().setUnscaledPoints(params_.gasOilUnscaledPointsVector[satRegionIdx]);
+        realParams.gasOilParams().drainageParams().setEffectiveLawParams(params_.gasOilEffectiveParamVector[satRegionIdx]);
 //            if (enableHysteresis()) {
 //                realParams.oilWaterParams().imbibitionParams().setUnscaledPoints(oilWaterUnscaledPointsVector_[impRegionIdx]);
 //                realParams.oilWaterParams().imbibitionParams().setEffectiveLawParams(oilWaterEffectiveParamVector_[impRegionIdx]);
@@ -294,16 +296,16 @@ connectionMaterialLawParams(unsigned satRegionIdx, unsigned elemIdx) const
     case EclMultiplexerApproach::TwoPhase: {
         auto& realParams = mlp.template getRealParams<EclMultiplexerApproach::TwoPhase>();
         if (realParams.approach() == EclTwoPhaseApproach::GasOil) {
-            realParams.gasOilParams().drainageParams().setUnscaledPoints(gasOilUnscaledPointsVector_[satRegionIdx]);
-            realParams.gasOilParams().drainageParams().setEffectiveLawParams(gasOilEffectiveParamVector_[satRegionIdx]);
+            realParams.gasOilParams().drainageParams().setUnscaledPoints(params_.gasOilUnscaledPointsVector[satRegionIdx]);
+            realParams.gasOilParams().drainageParams().setEffectiveLawParams(params_.gasOilEffectiveParamVector[satRegionIdx]);
         }
         else if (realParams.approach() == EclTwoPhaseApproach::GasWater) {
-            realParams.gasWaterParams().drainageParams().setUnscaledPoints(gasWaterUnscaledPointsVector_[satRegionIdx]);
-            realParams.gasWaterParams().drainageParams().setEffectiveLawParams(gasWaterEffectiveParamVector_[satRegionIdx]);
+            realParams.gasWaterParams().drainageParams().setUnscaledPoints(params_.gasWaterUnscaledPointsVector[satRegionIdx]);
+            realParams.gasWaterParams().drainageParams().setEffectiveLawParams(params_.gasWaterEffectiveParamVector[satRegionIdx]);
         }
         else if (realParams.approach() == EclTwoPhaseApproach::OilWater) {
-            realParams.oilWaterParams().drainageParams().setUnscaledPoints(oilWaterUnscaledPointsVector_[satRegionIdx]);
-            realParams.oilWaterParams().drainageParams().setEffectiveLawParams(oilWaterEffectiveParamVector_[satRegionIdx]);
+            realParams.oilWaterParams().drainageParams().setUnscaledPoints(params_.oilWaterUnscaledPointsVector[satRegionIdx]);
+            realParams.oilWaterParams().drainageParams().setEffectiveLawParams(params_.oilWaterEffectiveParamVector[satRegionIdx]);
         }
 //            if (enableHysteresis()) {
 //                realParams.oilWaterParams().imbibitionParams().setUnscaledPoints(oilWaterUnscaledPointsVector_[impRegionIdx]);
@@ -330,13 +332,13 @@ getKrnumSatIdx(unsigned elemIdx, FaceDir::DirEnum facedir) const
     const std::vector<int>* array = nullptr;
     switch(facedir) {
     case Dir::XPlus:
-      array = &krnumXArray_;
+      array = &params_.krnumXArray;
       break;
     case Dir::YPlus:
-      array = &krnumYArray_;
+      array = &params_.krnumYArray;
       break;
     case Dir::ZPlus:
-      array = &krnumZArray_;
+      array = &params_.krnumZArray;
       break;
     default:
       throw std::runtime_error("Unknown face direction");
@@ -345,7 +347,7 @@ getKrnumSatIdx(unsigned elemIdx, FaceDir::DirEnum facedir) const
       return (*array)[elemIdx];
     }
     else {
-      return satnumRegionArray_[elemIdx];
+      return params_.satnumRegionArray[elemIdx];
     }
 }
 
@@ -357,11 +359,11 @@ oilWaterHysteresisParams(Scalar& soMax,
                          Scalar& swMin,
                          unsigned elemIdx) const
 {
-    if (!enableHysteresis())
+    if (!enableHysteresis()) {
         throw std::runtime_error("Cannot get hysteresis parameters if hysteresis not enabled.");
+    }
 
-    const auto& params = materialLawParams(elemIdx);
-    MaterialLaw::oilWaterHysteresisParams(soMax, swMax, swMin, params);
+    MaterialLaw::oilWaterHysteresisParams(soMax, swMax, swMin, materialLawParams(elemIdx));
 }
 
 template<class TraitsT>
@@ -375,8 +377,7 @@ setOilWaterHysteresisParams(const Scalar& soMax,
     if (!enableHysteresis())
         throw std::runtime_error("Cannot set hysteresis parameters if hysteresis not enabled.");
 
-    auto& params = materialLawParams(elemIdx);
-    MaterialLaw::setOilWaterHysteresisParams(soMax, swMax, swMin, params);
+    MaterialLaw::setOilWaterHysteresisParams(soMax, swMax, swMin, materialLawParams(elemIdx));
 }
 
 template<class TraitsT>
@@ -387,11 +388,11 @@ gasOilHysteresisParams(Scalar& sgmax,
                        Scalar& somin,
                        unsigned elemIdx) const
 {
-    if (!enableHysteresis())
+    if (!enableHysteresis()) {
         throw std::runtime_error("Cannot get hysteresis parameters if hysteresis not enabled.");
+    }
 
-    const auto& params = materialLawParams(elemIdx);
-    MaterialLaw::gasOilHysteresisParams(sgmax, shmax, somin, params);
+    MaterialLaw::gasOilHysteresisParams(sgmax, shmax, somin, materialLawParams(elemIdx));
 }
 
 template<class TraitsT>
@@ -405,8 +406,7 @@ setGasOilHysteresisParams(const Scalar& sgmax,
     if (!enableHysteresis())
         throw std::runtime_error("Cannot set hysteresis parameters if hysteresis not enabled.");
 
-    auto& params = materialLawParams(elemIdx);
-    MaterialLaw::setGasOilHysteresisParams(sgmax, shmax, somin, params);
+    MaterialLaw::setGasOilHysteresisParams(sgmax, shmax, somin, materialLawParams(elemIdx));
 }
 
 template<class TraitsT>
@@ -414,7 +414,7 @@ EclEpsScalingPoints<typename TraitsT::Scalar>&
 Manager<TraitsT>::
 oilWaterScaledEpsPointsDrainage(unsigned elemIdx)
 {
-    auto& materialParams = materialLawParams_[elemIdx];
+    auto& materialParams = params_.materialLawParams[elemIdx];
     switch (materialParams.approach()) {
     case EclMultiplexerApproach::Stone1: {
         auto& realParams = materialParams.template getRealParams<EclMultiplexerApproach::Stone1>();
@@ -446,23 +446,23 @@ Manager<TraitsT>::
 materialLawParamsFunc_(unsigned elemIdx, FaceDir::DirEnum facedir) const
 {
     using Dir = FaceDir::DirEnum;
-    if (dirMaterialLawParams_) {
+    if (params_.dirMaterialLawParams) {
         switch(facedir) {
             case Dir::XMinus:
             case Dir::XPlus:
-                return dirMaterialLawParams_->materialLawParamsX_[elemIdx];
+                return params_.dirMaterialLawParams->materialLawParamsX_[elemIdx];
             case Dir::YMinus:
             case Dir::YPlus:
-                return dirMaterialLawParams_->materialLawParamsY_[elemIdx];
+                return params_.dirMaterialLawParams->materialLawParamsY_[elemIdx];
             case Dir::ZMinus:
             case Dir::ZPlus:
-                return dirMaterialLawParams_->materialLawParamsZ_[elemIdx];
+                return params_.dirMaterialLawParams->materialLawParamsZ_[elemIdx];
             default:
                 throw std::runtime_error("Unexpected face direction");
         }
     }
     else {
-        return materialLawParams_[elemIdx];
+        return params_.materialLawParams[elemIdx];
     }
 }
 

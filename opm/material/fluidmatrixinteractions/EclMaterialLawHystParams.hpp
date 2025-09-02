@@ -52,7 +52,7 @@ public:
     using GasWaterHystParams = typename TwoPhaseTypes<Traits>::GasWaterHystParams;
     using OilWaterHystParams = typename TwoPhaseTypes<Traits>::OilWaterHystParams;
 
-    HystParams(std::vector<EclEpsScalingPointsInfo<Scalar>>& oilWaterScaledEpsInfoDrainage,
+    HystParams(typename Manager<Traits>::Params& params,
                const EclEpsGridProperties& epsGridProperties,
                const EclEpsGridProperties& epsImbGridProperties,
                const EclipseState& eclState,
@@ -121,7 +121,7 @@ private:
     std::shared_ptr<OilWaterHystParams> oilWaterParams_;
     std::shared_ptr<GasWaterHystParams> gasWaterParams_;
 
-    std::vector<EclEpsScalingPointsInfo<Scalar>>& oilWaterScaledEpsInfoDrainage_;
+    typename Manager<Traits>::Params& params_;
     const EclEpsGridProperties& epsGridProperties_;
     const EclEpsGridProperties& epsImbGridProperties_;
     const EclipseState& eclState_;

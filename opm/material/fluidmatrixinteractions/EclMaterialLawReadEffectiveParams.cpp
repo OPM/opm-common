@@ -48,14 +48,10 @@ namespace Opm::EclMaterialLaw {
 /* constructors*/
 template <class Traits>
 ReadEffectiveParams<Traits>::
-ReadEffectiveParams(GasOilEffectiveParamVector& gasOilVector,
-                    GasWaterEffectiveParamVector& gasWaterVector,
-                    OilWaterEffectiveParamVector& oilWaterVector,
+ReadEffectiveParams(typename Manager<Traits>::Params& params,
                     const EclipseState& eclState,
                     const Manager<Traits>& parent)
-    : gasOilVector_(gasOilVector)
-    , gasWaterVector_(gasWaterVector)
-    , oilWaterVector_(oilWaterVector)
+    : params_(params)
     , eclState_(eclState)
     , parent_(parent)
 {
@@ -68,9 +64,9 @@ ReadEffectiveParams<Traits>::
 read()
 {
     const std::size_t numSatRegions = this->eclState_.runspec().tabdims().getNumSatTables();
-    gasOilVector_.resize(numSatRegions);
-    oilWaterVector_.resize(numSatRegions);
-    gasWaterVector_.resize(numSatRegions);
+    params_.gasOilEffectiveParamVector.resize(numSatRegions);
+    params_.oilWaterEffectiveParamVector.resize(numSatRegions);
+    params_.gasWaterEffectiveParamVector.resize(numSatRegions);
     for (unsigned satRegionIdx = 0; satRegionIdx < numSatRegions; ++satRegionIdx) {
         readGasOilParameters_(satRegionIdx);
         readOilWaterParameters_(satRegionIdx);
@@ -104,9 +100,9 @@ readGasOilParameters_(unsigned satRegionIdx)
         return;
     }
 
-    gasOilVector_[satRegionIdx] = std::make_shared<GasOilEffectiveParams>();
+    params_.gasOilEffectiveParamVector[satRegionIdx] = std::make_shared<GasOilEffectiveParams>();
 
-    auto& effParams = *gasOilVector_[satRegionIdx];
+    auto& effParams = *params_.gasOilEffectiveParamVector[satRegionIdx];
 
     // the situation for the gas phase is complicated that all saturations are
     // shifted by the connate water saturation.
@@ -277,9 +273,9 @@ readGasWaterParameters_(unsigned satRegionIdx)
         return;
     }
 
-    gasWaterVector_[satRegionIdx] = std::make_shared<GasWaterEffectiveParams>();
+    params_.gasWaterEffectiveParamVector[satRegionIdx] = std::make_shared<GasWaterEffectiveParams>();
 
-    auto& effParams = *gasWaterVector_[satRegionIdx];
+    auto& effParams = *params_.gasWaterEffectiveParamVector[satRegionIdx];
 
     const auto tolcrit = this->eclState_.runspec().saturationFunctionControls()
         .minimumRelpermMobilityThreshold();
@@ -365,13 +361,13 @@ readOilWaterParameters_(unsigned satRegionIdx)
         return;
     }
 
-    oilWaterVector_[satRegionIdx] = std::make_shared<OilWaterEffectiveParams>();
+    params_.oilWaterEffectiveParamVector[satRegionIdx] = std::make_shared<OilWaterEffectiveParams>();
 
     const auto tolcrit = this->eclState_.runspec().saturationFunctionControls()
         .minimumRelpermMobilityThreshold();
 
     const auto& tableManager = this->eclState_.getTableManager();
-    auto& effParams = *oilWaterVector_[satRegionIdx];
+    auto& effParams = *params_.oilWaterEffectiveParamVector[satRegionIdx];
 
     switch (this->eclState_.runspec().saturationFunctionControls().family()) {
     case SatFuncControls::KeywordFamily::Family_I:
