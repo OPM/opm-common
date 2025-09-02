@@ -35,16 +35,10 @@
 
 #include <algorithm>
 
-namespace Opm {
+namespace Opm::EclMaterialLaw {
 
 template<class TraitsT>
-EclMaterialLawManager<TraitsT>::EclMaterialLawManager() = default;
-
-template<class TraitsT>
-EclMaterialLawManager<TraitsT>::~EclMaterialLawManager() = default;
-
-template<class TraitsT>
-void EclMaterialLawManager<TraitsT>::
+void Manager<TraitsT>::
 initFromState(const EclipseState& eclState)
 {
     // get the number of saturation regions and the number of cells in the deck
@@ -132,7 +126,7 @@ initFromState(const EclipseState& eclState)
 }
 
 template<class TraitsT>
-void EclMaterialLawManager<TraitsT>::
+void Manager<TraitsT>::
 initParamsForElements(const EclipseState& eclState, size_t numCompressedElems,
                       const std::function<std::vector<int>(const FieldPropsManager&, const std::string&, bool)>& fieldPropIntOnLeafAssigner,
                       const std::function<unsigned(unsigned)>& lookupIdxOnLevelZeroAssigner)
@@ -145,7 +139,7 @@ initParamsForElements(const EclipseState& eclState, size_t numCompressedElems,
 // Note: Without OPTIONS[74] the negative part of the Pcow curve is not scaled
 template<class TraitsT>
 std::pair<typename TraitsT::Scalar, bool>
-EclMaterialLawManager<TraitsT>::
+Manager<TraitsT>::
 applySwatinit(unsigned elemIdx,
               Scalar pcow,
               Scalar Sw)
@@ -220,8 +214,9 @@ applySwatinit(unsigned elemIdx,
 
 template<class TraitsT>
 void
-EclMaterialLawManager<TraitsT>::applyRestartSwatInit(const unsigned elemIdx,
-                                                     const Scalar   maxPcow)
+Manager<TraitsT>::
+applyRestartSwatInit(const unsigned elemIdx,
+                     const Scalar   maxPcow)
 {
     // Maximum capillary pressure adjusted from SWATINIT data.
 
@@ -237,8 +232,8 @@ EclMaterialLawManager<TraitsT>::applyRestartSwatInit(const unsigned elemIdx,
 }
 
 template<class TraitsT>
-const typename EclMaterialLawManager<TraitsT>::MaterialLawParams&
-EclMaterialLawManager<TraitsT>::
+const typename Manager<TraitsT>::MaterialLawParams&
+Manager<TraitsT>::
 connectionMaterialLawParams(unsigned satRegionIdx, unsigned elemIdx) const
 {
     MaterialLawParams& mlp = const_cast<MaterialLawParams&>(materialLawParams_[elemIdx]);
@@ -327,7 +322,8 @@ connectionMaterialLawParams(unsigned satRegionIdx, unsigned elemIdx) const
 }
 
 template<class TraitsT>
-int EclMaterialLawManager<TraitsT>::
+int
+Manager<TraitsT>::
 getKrnumSatIdx(unsigned elemIdx, FaceDir::DirEnum facedir) const
 {
     using Dir = FaceDir::DirEnum;
@@ -354,7 +350,8 @@ getKrnumSatIdx(unsigned elemIdx, FaceDir::DirEnum facedir) const
 }
 
 template<class TraitsT>
-void EclMaterialLawManager<TraitsT>::
+void
+Manager<TraitsT>::
 oilWaterHysteresisParams(Scalar& soMax,
                          Scalar& swMax,
                          Scalar& swMin,
@@ -368,7 +365,8 @@ oilWaterHysteresisParams(Scalar& soMax,
 }
 
 template<class TraitsT>
-void EclMaterialLawManager<TraitsT>::
+void
+Manager<TraitsT>::
 setOilWaterHysteresisParams(const Scalar& soMax,
                             const Scalar& swMax,
                             const Scalar& swMin,
@@ -382,7 +380,8 @@ setOilWaterHysteresisParams(const Scalar& soMax,
 }
 
 template<class TraitsT>
-void EclMaterialLawManager<TraitsT>::
+void
+Manager<TraitsT>::
 gasOilHysteresisParams(Scalar& sgmax,
                        Scalar& shmax,
                        Scalar& somin,
@@ -396,7 +395,8 @@ gasOilHysteresisParams(Scalar& sgmax,
 }
 
 template<class TraitsT>
-void EclMaterialLawManager<TraitsT>::
+void
+Manager<TraitsT>::
 setGasOilHysteresisParams(const Scalar& sgmax,
                           const Scalar& shmax,
                           const Scalar& somin,
@@ -411,7 +411,7 @@ setGasOilHysteresisParams(const Scalar& sgmax,
 
 template<class TraitsT>
 EclEpsScalingPoints<typename TraitsT::Scalar>&
-EclMaterialLawManager<TraitsT>::
+Manager<TraitsT>::
 oilWaterScaledEpsPointsDrainage(unsigned elemIdx)
 {
     auto& materialParams = materialLawParams_[elemIdx];
@@ -441,8 +441,8 @@ oilWaterScaledEpsPointsDrainage(unsigned elemIdx)
 }
 
 template<class TraitsT>
-const typename EclMaterialLawManager<TraitsT>::MaterialLawParams&
-EclMaterialLawManager<TraitsT>::
+const typename Manager<TraitsT>::MaterialLawParams&
+Manager<TraitsT>::
 materialLawParamsFunc_(unsigned elemIdx, FaceDir::DirEnum facedir) const
 {
     using Dir = FaceDir::DirEnum;
@@ -467,7 +467,8 @@ materialLawParamsFunc_(unsigned elemIdx, FaceDir::DirEnum facedir) const
 }
 
 template<class TraitsT>
-void EclMaterialLawManager<TraitsT>::
+void
+Manager<TraitsT>::
 readGlobalEpsOptions_(const EclipseState& eclState)
 {
     oilWaterEclEpsConfig_.initFromState(eclState, EclTwoPhaseSystemType::OilWater);
@@ -476,14 +477,16 @@ readGlobalEpsOptions_(const EclipseState& eclState)
 }
 
 template<class TraitsT>
-void EclMaterialLawManager<TraitsT>::
+void
+Manager<TraitsT>::
 readGlobalHysteresisOptions_(const EclipseState& state)
 {
     hysteresisConfig_.initFromState(state.runspec());
 }
 
 template<class TraitsT>
-void EclMaterialLawManager<TraitsT>::
+void
+Manager<TraitsT>::
 readGlobalThreePhaseOptions_(const Runspec& runspec)
 {
     bool gasEnabled = runspec.phases().active(Phase::GAS);
@@ -520,10 +523,9 @@ readGlobalThreePhaseOptions_(const Runspec& runspec)
     }
 }
 
+template class Manager<ThreePhaseMaterialTraits<double,0,1,2>>;
+template class Manager<ThreePhaseMaterialTraits<float,0,1,2>>;
+template class Manager<ThreePhaseMaterialTraits<double,2,0,1>>;
+template class Manager<ThreePhaseMaterialTraits<float,2,0,1>>;
 
-template class EclMaterialLawManager<ThreePhaseMaterialTraits<double,0,1,2>>;
-template class EclMaterialLawManager<ThreePhaseMaterialTraits<float,0,1,2>>;
-template class EclMaterialLawManager<ThreePhaseMaterialTraits<double,2,0,1>>;
-template class EclMaterialLawManager<ThreePhaseMaterialTraits<float,2,0,1>>;
-
-} // namespace Opm
+} // namespace Opm::EclMaterialLaw

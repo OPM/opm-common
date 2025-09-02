@@ -64,6 +64,10 @@ class SgofTable;
 class SlgofTable;
 class TableColumn;
 
+}
+
+namespace Opm::EclMaterialLaw {
+
 /*!
  * \ingroup fluidmatrixinteractions
  *
@@ -71,7 +75,7 @@ class TableColumn;
  *        for a complete ECL deck.
  */
 template <class TraitsT>
-class EclMaterialLawManager
+class Manager
 {
     using Traits = TraitsT;
     using Scalar = typename Traits::Scalar;
@@ -92,9 +96,6 @@ public:
     using MaterialLawParams = typename MaterialLaw::Params;
     using DirectionalMaterialLawParamsPtr = std::unique_ptr<DirectionalMaterialLawParams<MaterialLawParams>>;
 
-    EclMaterialLawManager();
-    ~EclMaterialLawManager();
-
 private:
     using GasOilScalingPointsVector = std::vector<std::shared_ptr<EclEpsScalingPoints<Scalar>>>;
     using OilWaterScalingPointsVector = std::vector<std::shared_ptr<EclEpsScalingPoints<Scalar>>>;
@@ -107,7 +108,7 @@ private:
     // This class' implementation is defined in "EclMaterialLawManagerInitParams.cpp"
     class InitParams {
     public:
-        InitParams(EclMaterialLawManager<TraitsT>& parent, const EclipseState& eclState, size_t numCompressedElems);
+        InitParams(Manager<TraitsT>& parent, const EclipseState& eclState, size_t numCompressedElems);
         // \brief Function argument 'fieldPropIntOnLeadAssigner' needed to lookup
         //        field properties of cells on the leaf grid view for CpGrid with local grid refinement.
         //        Function argument 'lookupIdxOnLevelZeroAssigner' is added to lookup, for each
@@ -159,7 +160,7 @@ private:
             using GasWaterHystParams = typename EclMaterialLaw::TwoPhaseTypes<Traits>::GasWaterHystParams;
             using OilWaterHystParams = typename EclMaterialLaw::TwoPhaseTypes<Traits>::OilWaterHystParams;
 
-            explicit HystParams(EclMaterialLawManager<TraitsT>::InitParams& init_params);
+            explicit HystParams(Manager<TraitsT>::InitParams& init_params);
             void finalize();
             std::shared_ptr<GasOilHystParams> getGasOilParams();
             std::shared_ptr<OilWaterHystParams> getOilWaterParams();
@@ -196,8 +197,8 @@ private:
             readScaledEpsPointsImbibition_(unsigned elemIdx, EclTwoPhaseSystemType type,
                                            const std::function<unsigned(unsigned)>& lookupIdxOnLevelZeroAssigner);
 
-            EclMaterialLawManager<TraitsT>::InitParams& init_params_;
-            EclMaterialLawManager<TraitsT>& parent_;
+            Manager<TraitsT>::InitParams& init_params_;
+            Manager<TraitsT>& parent_;
             const EclipseState& eclState_;
             std::shared_ptr<GasOilHystParams> gasOilParams_;
             std::shared_ptr<OilWaterHystParams> oilWaterParams_;
@@ -211,7 +212,7 @@ private:
             using OilWaterEffectiveParams = typename EclMaterialLaw::TwoPhaseTypes<Traits>::OilWaterEffectiveParams;
 
         public:
-            explicit ReadEffectiveParams(EclMaterialLawManager<TraitsT>::InitParams& init_params);
+            explicit ReadEffectiveParams(Manager<TraitsT>::InitParams& init_params);
             void read();
         private:
             std::vector<double> normalizeKrValues_(const double tolcrit, const TableColumn& krValues) const;
@@ -236,12 +237,12 @@ private:
             void readGasWaterParameters_(GasWaterEffectiveParamVector& dest, unsigned satRegionIdx);
             void readOilWaterParameters_(OilWaterEffectiveParamVector& dest, unsigned satRegionIdx);
 
-            EclMaterialLawManager<TraitsT>::InitParams& init_params_;
-            EclMaterialLawManager<TraitsT>& parent_;
+            Manager<TraitsT>::InitParams& init_params_;
+            Manager<TraitsT>& parent_;
             const EclipseState& eclState_;
         }; // end of "class ReadEffectiveParams"
 
-        EclMaterialLawManager<TraitsT>& parent_;
+        Manager<TraitsT>& parent_;
         const EclipseState& eclState_;
         size_t numCompressedElems_;
 

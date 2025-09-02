@@ -78,7 +78,7 @@ struct Fixture {
                                                     /*storeDensity=*/false,
                                                     /*storeViscosity=*/false,
                                                     /*storeEnthalpy=*/false>;
-    using MaterialLawManager = Opm::EclMaterialLawManager<MaterialTraits>;
+    using MaterialLawManager = Opm::EclMaterialLaw::Manager<MaterialTraits>;
     using MaterialLaw = typename MaterialLawManager::MaterialLaw;
 };
 
