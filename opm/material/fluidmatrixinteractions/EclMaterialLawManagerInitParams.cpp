@@ -24,6 +24,7 @@
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 
 #include <opm/material/fluidmatrixinteractions/EclEpsGridProperties.hpp>
+#include <opm/material/fluidmatrixinteractions/EclMaterialLawHystParams.hpp>
 #include <opm/material/fluidmatrixinteractions/EclMaterialLawManager.hpp>
 #include <opm/material/fluidmatrixinteractions/EclMaterialLawReadEffectiveParams.hpp>
 
@@ -75,7 +76,14 @@ run(const std::function<std::vector<int>(const FieldPropsManager&, const std::st
         for (unsigned elemIdx = 0; elemIdx < this->numCompressedElems_; ++elemIdx) {
             unsigned satRegionIdx = satRegion_(*satnumArray[i], elemIdx);
             //unsigned satNumCell = this->parent_.satnumRegionArray_[elemIdx];
-            HystParams hystParams {*this};
+            HystParams<Traits> hystParams{
+                this->parent_.oilWaterScaledEpsInfoDrainage_,
+                *epsGridProperties_,
+                *epsImbGridProperties_,
+                this->eclState_,
+                this->parent_
+            };
+
             hystParams.setConfig(satRegionIdx);
             hystParams.setDrainageParamsOilGas(elemIdx, satRegionIdx, lookupIdxOnLevelZeroAssigner);
             hystParams.setDrainageParamsOilWater(elemIdx, satRegionIdx, lookupIdxOnLevelZeroAssigner);
@@ -205,7 +213,7 @@ initSatnumRegionArray_(const std::function<std::vector<int>(const FieldPropsMana
 template <class Traits>
 void
 Manager<Traits>::InitParams::
-initThreePhaseParams_(HystParams &hystParams,
+initThreePhaseParams_(HystParams<Traits>& hystParams,
                       MaterialLawParams& materialParams,
                       unsigned satRegionIdx,
                       unsigned elemIdx)
