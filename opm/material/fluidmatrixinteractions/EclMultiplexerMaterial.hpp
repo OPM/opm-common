@@ -290,6 +290,7 @@ public:
         OPM_TIMEFUNCTION_LOCAL();
         OPM_ECL_MULTIPLEXER_MATERIAL_CALL(return ActualLaw::trappedGasSaturation(realParams, maximumTrapping),
                                           return 0.0);
+        return 0.0;
     }
 
     static Scalar strandedGasSaturation(const Params& params, Scalar Sg, Scalar Kg)
@@ -297,6 +298,7 @@ public:
         OPM_TIMEFUNCTION_LOCAL();
         OPM_ECL_MULTIPLEXER_MATERIAL_CALL(return ActualLaw::strandedGasSaturation(realParams, Sg, Kg),
                                           return 0.0);
+        return 0.0;
     }
 
     static Scalar trappedOilSaturation(const Params& params, bool maximumTrapping) 
@@ -304,6 +306,7 @@ public:
         OPM_TIMEFUNCTION_LOCAL();
         OPM_ECL_MULTIPLEXER_MATERIAL_CALL(return ActualLaw::trappedOilSaturation(realParams, maximumTrapping),
                                           return 0.0);
+        return 0.0;
     }
 
     static Scalar trappedWaterSaturation(const Params& params)
@@ -311,6 +314,7 @@ public:
         OPM_TIMEFUNCTION_LOCAL();
         OPM_ECL_MULTIPLEXER_MATERIAL_CALL(return ActualLaw::trappedWaterSaturation(realParams),
                                           return 0.0);
+        return 0.0;
     }
     /*
      * Hysteresis parameters for gas-oil
@@ -553,6 +557,7 @@ public:
         OPM_TIMEFUNCTION_LOCAL();
         OPM_ECL_MULTIPLEXER_MATERIAL_CALL(return ActualLaw::updateHysteresis(realParams, fluidState),
                                           return false);
+        return false;
     }
 };
 
