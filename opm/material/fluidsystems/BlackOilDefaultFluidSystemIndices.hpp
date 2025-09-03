@@ -27,6 +27,8 @@
 #ifndef OPM_BLACK_OIL_DEFAULT_FLUID_SYSTEM_INDICES_HPP
 #define OPM_BLACK_OIL_DEFAULT_FLUID_SYSTEM_INDICES_HPP
 
+#include <cassert>
+
 namespace Opm {
 
 /*!
@@ -55,6 +57,31 @@ public:
     static constexpr int waterCompIdx = 1;
     //! Index of the gas component
     static constexpr int gasCompIdx = 2;
+
+    // TODO: the following two functions are for black oil only
+    // it remains to be formulated to be more generic
+    // it is likely moved out of the Indices class
+    //! Map component index to phase index
+    static constexpr int componentToPhaseIdx(int compIdx) {
+        assert(compIdx >= 0 && compIdx < static_cast<int>(numComponents));
+        switch (compIdx) {
+            case oilCompIdx:   return oilPhaseIdx;
+            case waterCompIdx: return waterPhaseIdx;
+            case gasCompIdx:   return gasPhaseIdx;
+            default:           return -1; // invalid index
+        }
+    }
+
+    //! Map phase index to component index
+    static constexpr int phaseToComponentIdx(int phaseIdx) {
+        assert(phaseIdx >= 0 && phaseIdx < static_cast<int>(numPhases));
+        switch (phaseIdx) {
+            case waterPhaseIdx: return waterCompIdx;
+            case oilPhaseIdx:   return oilCompIdx;
+            case gasPhaseIdx:   return gasCompIdx;
+            default:            return -1; // invalid index
+        }
+    }
 };
 
 } // namespace Opm

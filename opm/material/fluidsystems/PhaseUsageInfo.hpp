@@ -36,6 +36,7 @@
 
 namespace Opm
 {
+class Phases;
 
 template <typename IndexTraits>
 class PhaseUsageInfo {
