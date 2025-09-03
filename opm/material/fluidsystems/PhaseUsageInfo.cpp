@@ -79,7 +79,6 @@ void PhaseUsageInfo<IndexTraits>::initFromState(const EclipseState& eclState)
     has_micp = eclState.runspec().micp();
     has_co2_or_h2store = eclState.runspec().co2Storage() || eclState.runspec().h2Storage();
 }
-#endif
 
 template <typename IndexTraits>
 void PhaseUsageInfo<IndexTraits>::initFromPhases(const Phases& phases) {
@@ -117,6 +116,7 @@ void PhaseUsageInfo<IndexTraits>::initFromPhases(const Phases& phases) {
 
     this->updateIndexMapping_();
 }
+#endif
 
 // Explicit template instantiations for commonly used IndexTraits
 template class PhaseUsageInfo<BlackOilDefaultFluidSystemIndices>;

@@ -66,9 +66,9 @@ public:
         return activeToCanonicalPhaseIdx_[activePhaseIdx];
     }
 
+#if HAVE_ECL_INPUT
     void initFromPhases(const Phases& phases);
 
-#if HAVE_ECL_INPUT
     void initFromState(const EclipseState& eclState);
 #endif
 
