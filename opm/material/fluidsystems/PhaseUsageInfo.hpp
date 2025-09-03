@@ -31,6 +31,8 @@
 
 #include <array>
 #include <cassert>
+#include <stdexcept>
+#include <string>
 
 namespace Opm
 {
@@ -56,8 +58,10 @@ public:
     }
 
     [[nodiscard]] short canonicalToActivePhaseIdx(unsigned phaseIdx) const {
-        assert(phaseIdx<numPhases);
-        if (!phaseIsActive(phaseIdx)) return -1;  // old phase_used return -1
+        if (!phaseIsActive(phaseIdx)) {
+            throw std::logic_error("Canonical phase " +
+                                   std::to_string(phaseIdx) + " is not active.");
+        }
         return canonicalToActivePhaseIdx_[phaseIdx];
     }
 
