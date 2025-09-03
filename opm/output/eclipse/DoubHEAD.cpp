@@ -555,7 +555,6 @@ Opm::RestartIO::DoubHEAD::DoubHEAD()
     this->data_[Index::DdpLim] = 1.0e+6;
     this->data_[Index::DdsLim] = 1.0e+6;
 
-
     this->data_[Index::ThrUPT] = 1.0e+20;
     this->data_[Index::XxxDPR] = 1.0e+20;
     this->data_[Index::TrgFIP] = 0.025;

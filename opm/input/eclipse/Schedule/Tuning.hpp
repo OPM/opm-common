@@ -65,32 +65,49 @@ namespace Opm {
 
         // Record 2
         double TRGTTE;
+        bool TRGTTE_has_value = false;
         double TRGCNV;
         double TRGMBE;
         double TRGLCV;
+        bool TRGLCV_has_value = false;
         double XXXTTE;
+        bool XXXTTE_has_value = false;
         double XXXCNV;
         double XXXMBE;
         double XXXLCV;
+        bool XXXLCV_has_value = false;
         double XXXWFL;
+        bool XXXWFL_has_value = false;
         double TRGFIP;
+        bool TRGFIP_has_value = false;
         double TRGSFT = 0.0;
         bool TRGSFT_has_value = false;
         double THIONX;
+        bool THIONX_has_value = false;
         double TRWGHT;
+        bool TRWGHT_has_value = false;
 
         // Record 3
         int NEWTMX;
         int NEWTMN;
         int LITMAX;
+        bool LITMAX_has_value = false;
         int LITMIN;
+        bool LITMIN_has_value = false;
         int MXWSIT;
+        bool MXWSIT_has_value = false;
         int MXWPIT;
+        bool MXWPIT_has_value = false;
         double DDPLIM;
+        bool DDPLIM_has_value = false;
         double DDSLIM;
+        bool DDSLIM_has_value = false;
         double TRGDPR;
+        bool TRGDPR_has_value = false;
         double XXXDPR;
         bool XXXDPR_has_value = false;
+        int MNWRFP;
+        bool MNWRFP_has_value = false;
 
         /*
           In addition to the values set in the TUNING keyword this Tuning
@@ -126,32 +143,49 @@ namespace Opm {
             serializer(TMAXWC_has_value);
 
             serializer(TRGTTE);
+            serializer(TRGTTE_has_value);
             serializer(TRGCNV);
             serializer(TRGMBE);
             serializer(TRGLCV);
+            serializer(TRGLCV_has_value);
             serializer(XXXTTE);
+            serializer(XXXTTE_has_value);
             serializer(XXXCNV);
             serializer(XXXMBE);
             serializer(XXXLCV);
+            serializer(XXXLCV_has_value);
             serializer(XXXWFL);
+            serializer(XXXWFL_has_value);
             serializer(TRGFIP);
+            serializer(TRGFIP_has_value);
             serializer(TRGSFT);
             serializer(TRGSFT_has_value);
             serializer(THIONX);
+            serializer(THIONX_has_value);
             serializer(TRWGHT);
+            serializer(TRWGHT_has_value);
 
             serializer(NEWTMX);
             serializer(NEWTMN);
             serializer(LITMAX);
+            serializer(LITMAX_has_value);
             serializer(LITMIN);
+            serializer(LITMIN_has_value);
             serializer(MXWSIT);
+            serializer(MXWSIT_has_value);
             serializer(MXWPIT);
+            serializer(MXWPIT_has_value);
             serializer(DDPLIM);
+            serializer(DDPLIM_has_value);
             serializer(DDSLIM);
+            serializer(DDSLIM_has_value);
             serializer(TRGDPR);
+            serializer(TRGDPR_has_value);
             serializer(XXXDPR);
             serializer(XXXDPR_has_value);
-
+            serializer(MNWRFP);
+            serializer(MNWRFP_has_value);
+            
             serializer(WSEG_MAX_RESTART);
             serializer(WSEG_REDUCTION_FACTOR);
             serializer(WSEG_INCREASE_FACTOR);
