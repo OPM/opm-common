@@ -428,7 +428,7 @@ public:
             return;
         }
         OPM_ECL_MULTIPLEXER_MATERIAL_CALL(ActualLaw::relativePermeabilities(values, realParams, fluidState),
-                                          values[0] = 0.0);
+                                          values[0] = 1.0);
     }
 
     template <class ContainerT, class FluidState, class Head, class ...Args>
@@ -439,7 +439,7 @@ public:
 #define OPM_LOCAL_TEMPLATE_ARGS ContainerT, FluidState, Args...
         OPM_ECL_MULTIPLEXER_MATERIAL_CALL_COMPILETIME(
             ActualLaw::template relativePermeabilities<OPM_LOCAL_TEMPLATE_ARGS>(values, realParams, fluidState),
-            values[0] = 0.0
+            values[0] = 1.0
         );
 #undef OPM_LOCAL_TEMPLATE_ARGS
     }
