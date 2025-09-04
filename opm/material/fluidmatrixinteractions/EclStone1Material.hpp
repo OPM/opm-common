@@ -29,6 +29,7 @@
 
 #include "EclStone1MaterialParams.hpp"
 
+#include <opm/common/TimingMacros.hpp>
 #include <opm/material/common/Valgrind.hpp>
 #include <opm/material/common/MathToolbox.hpp>
 
@@ -131,15 +132,15 @@ public:
      * \param params Parameters
      * \param state The fluid state
      */
-    template <class ContainerT, class FluidState>
+    template <class ContainerT, class FluidState, class ...Args>
     static void capillaryPressures(ContainerT& values,
                                    const Params& params,
                                    const FluidState& state)
     {
         using Evaluation = typename std::remove_reference<decltype(values[0])>::type;
-        values[gasPhaseIdx] = pcgn<FluidState, Evaluation>(params, state);
+        values[gasPhaseIdx] = pcgn<FluidState, Evaluation, Args...>(params, state);
         values[oilPhaseIdx] = 0;
-        values[waterPhaseIdx] = - pcnw<FluidState, Evaluation>(params, state);
+        values[waterPhaseIdx] = - pcnw<FluidState, Evaluation, Args...>(params, state);
         Valgrind::CheckDefined(values[gasPhaseIdx]);
         Valgrind::CheckDefined(values[oilPhaseIdx]);
         Valgrind::CheckDefined(values[waterPhaseIdx]);
@@ -248,13 +249,13 @@ public:
      * p_{c,gn} = p_g - p_n
      * \f]
      */
-    template <class FluidState, class Evaluation = typename FluidState::Scalar>
+    template <class FluidState, class Evaluation, class ...Args>
     static Evaluation pcgn(const Params& params,
                            const FluidState& fs)
     {
         // Maximum attainable oil saturation is 1-SWL
         const auto Sw = 1.0 - params.Swl() - decay<Evaluation>(fs.saturation(gasPhaseIdx));
-        return GasOilMaterialLaw::twoPhaseSatPcnw(params.gasOilParams(), Sw);
+        return GasOilMaterialLaw::template twoPhaseSatPcnw<Evaluation, Args...>(params.gasOilParams(), Sw);
     }
 
     /*!
@@ -266,14 +267,14 @@ public:
      * p_{c,nw} = p_n - p_w
      * \f]
      */
-    template <class FluidState, class Evaluation = typename FluidState::Scalar>
+    template <class FluidState, class Evaluation, class ...Args>
     static Evaluation pcnw(const Params& params,
                            const FluidState& fs)
     {
         const auto Sw = decay<Evaluation>(fs.saturation(waterPhaseIdx));
         Valgrind::CheckDefined(Sw);
 
-        const auto result = OilWaterMaterialLaw::twoPhaseSatPcnw(params.oilWaterParams(), Sw);
+        const auto result = OilWaterMaterialLaw::template twoPhaseSatPcnw<Evaluation, Args...>(params.oilWaterParams(), Sw);
         Valgrind::CheckDefined(result);
 
         return result;
@@ -335,22 +336,22 @@ public:
      * oil relative permeability models" section of the ECLipse
      * technical description.
      */
-    template <class ContainerT, class FluidState>
+    template <class ContainerT, class FluidState, class ...Args>
     static void relativePermeabilities(ContainerT& values,
                                        const Params& params,
                                        const FluidState& fluidState)
     {
         using Evaluation = typename std::remove_reference<decltype(values[0])>::type;
 
-        values[waterPhaseIdx] = krw<FluidState, Evaluation>(params, fluidState);
-        values[oilPhaseIdx] = krn<FluidState, Evaluation>(params, fluidState);
-        values[gasPhaseIdx] = krg<FluidState, Evaluation>(params, fluidState);
+        values[waterPhaseIdx] = krw<FluidState, Evaluation, Args...>(params, fluidState);
+        values[oilPhaseIdx] = krn<FluidState, Evaluation, Args...>(params, fluidState);
+        values[gasPhaseIdx] = krg<FluidState, Evaluation, Args...>(params, fluidState);
     }
 
     /*!
      * \brief The relative permeability of the gas phase.
      */
-    template <class FluidState, class Evaluation = typename FluidState::Scalar>
+    template <class FluidState, class Evaluation, class ...Args>
     static Evaluation krg(const Params& params,
                           const FluidState& fluidState)
     {
@@ -362,7 +363,7 @@ public:
     /*!
      * \brief The relative permeability of the wetting phase.
      */
-    template <class FluidState, class Evaluation = typename FluidState::Scalar>
+    template <class FluidState, class Evaluation, class ...Args>
     static Evaluation krw(const Params& params,
                           const FluidState& fluidState)
     {
@@ -373,7 +374,7 @@ public:
     /*!
      * \brief The relative permeability of the non-wetting (i.e., oil) phase.
      */
-    template <class FluidState, class Evaluation = typename FluidState::Scalar>
+    template <class FluidState, class Evaluation, class ...Args>
     static Evaluation krn(const Params& params,
                           const FluidState& fluidState)
     {
@@ -388,8 +389,8 @@ public:
         const Evaluation sw = decay<Evaluation>(fluidState.saturation(waterPhaseIdx));
         const Evaluation sg = decay<Evaluation>(fluidState.saturation(gasPhaseIdx));
 
-        const Evaluation kro_ow = relpermOilInOilWaterSystem<Evaluation>(params, fluidState);
-        const Evaluation kro_go = relpermOilInOilGasSystem<Evaluation>(params, fluidState);
+        const Evaluation kro_ow = relpermOilInOilWaterSystem<Evaluation, FluidState, Args...>(params, fluidState);
+        const Evaluation kro_go = relpermOilInOilGasSystem<Evaluation, FluidState, Args...>(params, fluidState);
 
         Evaluation beta;
         if (sw <= Swco) {
@@ -414,7 +415,7 @@ public:
     /*!
      * \brief The relative permeability of oil in oil/gas system.
      */
-    template <class Evaluation, class FluidState>
+    template <class Evaluation, class FluidState, class ...Args>
     static Evaluation relpermOilInOilGasSystem(const Params& params,
                                                const FluidState& fluidState)
     {
@@ -425,7 +426,7 @@ public:
     /*!
      * \brief The relative permeability of oil in oil/water system.
      */
-    template <class Evaluation, class FluidState>
+    template <class Evaluation, class FluidState, class ...Args>
     static Evaluation relpermOilInOilWaterSystem(const Params& params,
                                                  const FluidState& fluidState)
     {

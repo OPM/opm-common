@@ -31,6 +31,14 @@
 
 #include <stdexcept>
 
+
+// The static_assert does not compile with gcc 12 and earlier when placed in the multiplexer calls below.
+#if defined(__GNUC__) && (__GNUC__ < 13)
+    #define STATIC_ASSERT_SATCURVE_MULTIPLEXER_UNLESS_GCC_LT_13 throw std::logic_error("Unhandled SatCurveMultiplexerApproach")
+#else
+    #define STATIC_ASSERT_SATCURVE_MULTIPLEXER_UNLESS_GCC_LT_13 static_assert(false, "Unhandled SatCurveMultiplexerApproach")
+#endif
+
 namespace Opm {
 /*!
  * \ingroup FluidMatrixInteractions
@@ -176,9 +184,13 @@ public:
         return 0.0;
     }
 
-    template <class Evaluation>
+    template <class Evaluation, class ...Args>
     static Evaluation twoPhaseSatPcnw(const Params& params, const Evaluation& Sw)
     {
+        if constexpr (FrontIsSatCurveMultiplexerDispatchV<Args...>) {
+            return twoPhaseSatPcnwT<Evaluation, Args...>(params, Sw);
+        }
+
         switch (params.approach()) {
         case SatCurveMultiplexerApproach::LET:
             return LETTwoPhaseLaw::twoPhaseSatPcnw(params.template getRealParams<SatCurveMultiplexerApproach::LET>(),
@@ -192,6 +204,20 @@ public:
         }
 
         return 0.0;
+    }
+
+    template <class Evaluation, class Head, class ...Args>
+    static Evaluation twoPhaseSatPcnwT(const Params& params, const Evaluation& Sw)
+    {
+        if constexpr (Head::approach == SatCurveMultiplexerApproach::LET) {
+            return LETTwoPhaseLaw::twoPhaseSatPcnw(params.template getRealParams<SatCurveMultiplexerApproach::LET>(),
+                                                   Sw);
+        } else if constexpr (Head::approach == SatCurveMultiplexerApproach::PiecewiseLinear) {
+            return PLTwoPhaseLaw::twoPhaseSatPcnw(params.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinear>(),
+                                                  Sw);
+        } else {
+            STATIC_ASSERT_SATCURVE_MULTIPLEXER_UNLESS_GCC_LT_13;
+        }
     }
 
     template <class Evaluation>
@@ -291,9 +317,13 @@ public:
         return 0.0;
     }
 
-    template <class Evaluation>
+    template <class Evaluation, class ...Args>
     static Evaluation twoPhaseSatKrw(const Params& params, const Evaluation& Sw)
     {
+        if constexpr (FrontIsSatCurveMultiplexerDispatchV<Args...>) {
+            return twoPhaseSatKrwT<Evaluation, Args...>(params, Sw);
+        }
+
         switch (params.approach()) {
         case SatCurveMultiplexerApproach::LET:
             return LETTwoPhaseLaw::twoPhaseSatKrw(params.template getRealParams<SatCurveMultiplexerApproach::LET>(),
@@ -307,6 +337,20 @@ public:
         }
 
         return 0.0;
+    }
+
+    template <class Evaluation, class Head, class ...Args>
+    static Evaluation twoPhaseSatKrwT(const Params& params, const Evaluation& Sw)
+    {
+        if constexpr (Head::approach == SatCurveMultiplexerApproach::LET) {
+            return LETTwoPhaseLaw::twoPhaseSatKrw(params.template getRealParams<SatCurveMultiplexerApproach::LET>(),
+                                                  Sw);
+        } else if constexpr (Head::approach == SatCurveMultiplexerApproach::PiecewiseLinear) {
+            return PLTwoPhaseLaw::twoPhaseSatKrw(params.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinear>(),
+                                                 Sw);
+        } else {
+            STATIC_ASSERT_SATCURVE_MULTIPLEXER_UNLESS_GCC_LT_13;
+        }
     }
 
     template <class Evaluation>
@@ -349,9 +393,13 @@ public:
         return 0.0;
     }
 
-    template <class Evaluation>
+    template <class Evaluation, class ...Args>
     static Evaluation twoPhaseSatKrn(const Params& params, const Evaluation& Sw)
     {
+        if constexpr (FrontIsSatCurveMultiplexerDispatchV<Args...>) {
+            return twoPhaseSatKrnT<Evaluation, Args...>(params, Sw);
+        }
+
         switch (params.approach()) {
         case SatCurveMultiplexerApproach::LET:
             return LETTwoPhaseLaw::twoPhaseSatKrn(params.template getRealParams<SatCurveMultiplexerApproach::LET>(),
@@ -365,6 +413,20 @@ public:
         }
 
         return 0.0;
+    }
+
+    template <class Evaluation, class Head, class ...Args>
+    static Evaluation twoPhaseSatKrnT(const Params& params, const Evaluation& Sw)
+    {
+        if constexpr (Head::approach == SatCurveMultiplexerApproach::LET) {
+            return LETTwoPhaseLaw::twoPhaseSatKrn(params.template getRealParams<SatCurveMultiplexerApproach::LET>(),
+                                                  Sw);
+        } else if constexpr (Head::approach == SatCurveMultiplexerApproach::PiecewiseLinear) {
+            return PLTwoPhaseLaw::twoPhaseSatKrn(params.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinear>(),
+                                                 Sw);
+        } else {
+            STATIC_ASSERT_SATCURVE_MULTIPLEXER_UNLESS_GCC_LT_13;
+        }
     }
 
     template <class Evaluation>

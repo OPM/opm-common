@@ -141,7 +141,7 @@ public:
      * \param state The fluid state
      */
 
-    template <class ContainerT, class FluidState>
+    template <class ContainerT, class FluidState, class ...Args>
     static void capillaryPressures(ContainerT& values,
                                    const Params& params,
                                    const FluidState& fluidState)
@@ -155,7 +155,7 @@ public:
                 decay<Evaluation>(fluidState.saturation(oilPhaseIdx));
 
             values[oilPhaseIdx] = 0.0;
-            values[gasPhaseIdx] = GasOilMaterialLaw::twoPhaseSatPcnw(params.gasOilParams(), So);
+            values[gasPhaseIdx] = GasOilMaterialLaw::template twoPhaseSatPcnw<Evaluation, Args...>(params.gasOilParams(), So);
             break;
         }
 
@@ -164,7 +164,7 @@ public:
                 decay<Evaluation>(fluidState.saturation(waterPhaseIdx));
 
             values[waterPhaseIdx] = 0.0;
-            values[oilPhaseIdx] = OilWaterMaterialLaw::twoPhaseSatPcnw(params.oilWaterParams(), Sw);
+            values[oilPhaseIdx] = OilWaterMaterialLaw::template twoPhaseSatPcnw<Evaluation, Args...>(params.oilWaterParams(), Sw);
             break;
         }
 
@@ -173,7 +173,7 @@ public:
                 decay<Evaluation>(fluidState.saturation(waterPhaseIdx));
 
             values[waterPhaseIdx] = 0.0;
-            values[gasPhaseIdx] = GasWaterMaterialLaw::twoPhaseSatPcnw(params.gasWaterParams(), Sw);
+            values[gasPhaseIdx] = GasWaterMaterialLaw::template twoPhaseSatPcnw<Evaluation, Args...>(params.gasWaterParams(), Sw);
             break;
         }
 
@@ -371,7 +371,7 @@ public:
      * oil relative permeability models" section of the ECLipse
      * technical description.
      */
-    template <class ContainerT, class FluidState>
+    template <class ContainerT, class FluidState, class ...Args>
     static void relativePermeabilities(ContainerT& values,
                                        const Params& params,
                                        const FluidState& fluidState)
@@ -384,8 +384,8 @@ public:
             const Evaluation& So =
                 decay<Evaluation>(fluidState.saturation(oilPhaseIdx));
 
-            values[oilPhaseIdx] = GasOilMaterialLaw::twoPhaseSatKrw(params.gasOilParams(), So);
-            values[gasPhaseIdx] = GasOilMaterialLaw::twoPhaseSatKrn(params.gasOilParams(), So);
+            values[oilPhaseIdx] = GasOilMaterialLaw::template twoPhaseSatKrw<Evaluation, Args...>(params.gasOilParams(), So);
+            values[gasPhaseIdx] = GasOilMaterialLaw::template twoPhaseSatKrn<Evaluation, Args...>(params.gasOilParams(), So);
             break;
         }
 
@@ -393,8 +393,8 @@ public:
             const Evaluation& sw =
                 decay<Evaluation>(fluidState.saturation(waterPhaseIdx));
 
-            values[waterPhaseIdx] = OilWaterMaterialLaw::twoPhaseSatKrw(params.oilWaterParams(), sw);
-            values[oilPhaseIdx] = OilWaterMaterialLaw::twoPhaseSatKrn(params.oilWaterParams(), sw);
+            values[waterPhaseIdx] = OilWaterMaterialLaw::template twoPhaseSatKrw<Evaluation, Args...>(params.oilWaterParams(), sw);
+            values[oilPhaseIdx] = OilWaterMaterialLaw::template twoPhaseSatKrn<Evaluation, Args...>(params.oilWaterParams(), sw);
             break;
         }
 
@@ -402,8 +402,8 @@ public:
             const Evaluation& sw =
                 decay<Evaluation>(fluidState.saturation(waterPhaseIdx));
 
-            values[waterPhaseIdx] = GasWaterMaterialLaw::twoPhaseSatKrw(params.gasWaterParams(), sw);
-            values[gasPhaseIdx] = GasWaterMaterialLaw::twoPhaseSatKrn(params.gasWaterParams(), sw);
+            values[waterPhaseIdx] = GasWaterMaterialLaw::template twoPhaseSatKrw<Evaluation, Args...>(params.gasWaterParams(), sw);
+            values[gasPhaseIdx] = GasWaterMaterialLaw::template twoPhaseSatKrn<Evaluation, Args...>(params.gasWaterParams(), sw);
 
             break;
         }

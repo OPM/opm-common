@@ -124,6 +124,7 @@ public:
         std::vector<int> imbnumRegionArray{};
         std::vector<MaterialLawParams> materialLawParams{};
         DirectionalMaterialLawParamsPtr dirMaterialLawParams{};
+        bool onlyPiecewiseLinear = true;
 
         bool hasDirectionalRelperms() const
         {
@@ -326,6 +327,11 @@ public:
         for (auto& mat : params_.materialLawParams) {
             serializer(mat);
         }
+    }
+
+    bool satCurveIsAllPiecewiseLinear() const
+    {
+        return this->params_.onlyPiecewiseLinear;
     }
 
 private:
