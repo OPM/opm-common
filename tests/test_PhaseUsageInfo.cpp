@@ -45,7 +45,8 @@ BOOST_AUTO_TEST_CASE(default_constructor)
     BOOST_CHECK(pu.numActivePhases() == 0);
     for (unsigned i = 0; i < PhaseUsage::numPhases; ++i) {
         BOOST_CHECK(!pu.phaseIsActive(i));
-        BOOST_CHECK_THROW(pu.canonicalToActivePhaseIdx(i), std::logic_error);
+        BOOST_CHECK_THROW([[maybe_unused]] auto ign = pu.canonicalToActivePhaseIdx(i),
+                          std::logic_error);
     }
     BOOST_CHECK(!pu.hasSolvent());
     BOOST_CHECK(!pu.hasPolymer());
@@ -94,7 +95,8 @@ BOOST_AUTO_TEST_CASE(constructor_with_phases)
 
     BOOST_CHECK(pu.canonicalToActivePhaseIdx(PhaseUsage::waterPhaseIdx) == 0);
     BOOST_CHECK(pu.canonicalToActivePhaseIdx(PhaseUsage::oilPhaseIdx) == 1);
-    BOOST_CHECK_THROW(pu.canonicalToActivePhaseIdx(PhaseUsage::gasPhaseIdx), std::logic_error);
+    BOOST_CHECK_THROW([[maybe_unused]] auto ign = pu.canonicalToActivePhaseIdx(PhaseUsage::gasPhaseIdx),
+                      std::logic_error);
 
     BOOST_CHECK(pu.activeToCanonicalPhaseIdx(0) == PhaseUsage::waterPhaseIdx);
     BOOST_CHECK(pu.activeToCanonicalPhaseIdx(1) == PhaseUsage::oilPhaseIdx);
@@ -158,7 +160,8 @@ END
 
     BOOST_CHECK(pu.hasCO2orH2Store());
 
-    BOOST_CHECK_THROW(pu.canonicalToActivePhaseIdx(PhaseUsage::waterPhaseIdx), std::logic_error);
+    BOOST_CHECK_THROW([[maybe_unused]] auto ign = pu.canonicalToActivePhaseIdx(PhaseUsage::waterPhaseIdx),
+                      std::logic_error);
     BOOST_CHECK(pu.canonicalToActivePhaseIdx(PhaseUsage::oilPhaseIdx) == 0);
     BOOST_CHECK(pu.canonicalToActivePhaseIdx(PhaseUsage::gasPhaseIdx) == 1);
 
