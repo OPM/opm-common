@@ -1997,35 +1997,20 @@ template <class Scalar, class IndexTraits, template<typename> typename Storage>
 NOTHING_OR_DEVICE short FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, Storage>::
 activePhaseToCompIdx(unsigned activePhaseIdx) NOTHING_OR_CONST
 {
-    if (phaseIsActive(waterPhaseIdx) && canonicalToActivePhaseIdx(waterPhaseIdx) == static_cast<short>(activePhaseIdx)) {
-        return canonicalToActiveCompIdx(waterCompIdx);
-    }
-    if (phaseIsActive(oilPhaseIdx) && canonicalToActivePhaseIdx(oilPhaseIdx) == static_cast<short>(activePhaseIdx)) {
-        return canonicalToActiveCompIdx(oilCompIdx);
-    }
-    if (phaseIsActive(gasPhaseIdx) && canonicalToActivePhaseIdx(gasPhaseIdx) == static_cast<short>(activePhaseIdx)) {
-        return canonicalToActiveCompIdx(gasCompIdx);
-    }
-
-    // for other phases return the index
-    return activePhaseIdx;
+    const short canonicalPhaseIdx = activeToCanonicalPhaseIdx(activePhaseIdx);
+    const short canonicalCompIdx = IndexTraits::phaseToComponentIdx(canonicalPhaseIdx);
+    const short activeCompIdx = canonicalToActiveCompIdx(canonicalCompIdx);
+    return activeCompIdx;
 }
 
 template <class Scalar, class IndexTraits, template<typename> typename Storage>
 NOTHING_OR_DEVICE short FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, Storage>::
 activeCompToPhaseIdx(unsigned activeCompIdx) NOTHING_OR_CONST
 {
-    // we might want to provide a mapping from component index to phase index
-    // or we can try to use the solventComponentIndex(which converts phase to component index)
-    if (phaseIsActive(waterPhaseIdx) && canonicalToActiveCompIdx(waterCompIdx) == static_cast<short>(activeCompIdx))
-        return canonicalToActivePhaseIdx(waterPhaseIdx);
-    if (phaseIsActive(oilPhaseIdx) && canonicalToActiveCompIdx(oilCompIdx) == static_cast<short>(activeCompIdx))
-        return canonicalToActivePhaseIdx(oilPhaseIdx);
-    if (phaseIsActive(gasPhaseIdx) && canonicalToActiveCompIdx(gasCompIdx) == static_cast<short>(activeCompIdx))
-        return canonicalToActivePhaseIdx(gasPhaseIdx);
-
-    // for other phases return the index
-    return activeCompIdx;
+    const short canonicalCompIdx = activeToCanonicalCompIdx(activeCompIdx);
+    const short canonicalPhaseIdx = IndexTraits::componentToPhaseIdx(canonicalCompIdx);
+    const short activePhaseIdx = canonicalToActivePhaseIdx(canonicalPhaseIdx);
+    return activePhaseIdx;
 }
 
 template <class Scalar, class IndexTraits, template<typename> typename Storage>
