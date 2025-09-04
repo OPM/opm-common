@@ -263,10 +263,22 @@ public:
     template <class Evaluation>
     OPM_HOST_DEVICE static Evaluation liquidDensity(const Evaluation& temperature, const Evaluation& pressure, const Evaluation& salinity, bool extrapolate = false)
     {
+        const Evaluation rhow = H2O::liquidDensity(temperature, pressure, extrapolate);
+        return liquidDensity(temperature, pressure, salinity, rhow);
+    }
+
+    /*!
+     * \copydoc Component::liquidDensity
+     *
+     * Equations given in:
+     * - Batzle & Wang (1992)
+     * - cited by: Adams & Bachu in Geofluids (2002) 2, 257-271
+     */
+    template <class Evaluation>
+    OPM_HOST_DEVICE static Evaluation liquidDensity(const Evaluation& temperature, const Evaluation& pressure, const Evaluation& salinity, const Evaluation& rhow)
+    {
         Evaluation tempC = temperature - 273.15;
         Evaluation pMPa = pressure/1.0E6;
-
-        const Evaluation rhow = H2O::liquidDensity(temperature, pressure, extrapolate);
         return
             rhow +
             1000*salinity*(
