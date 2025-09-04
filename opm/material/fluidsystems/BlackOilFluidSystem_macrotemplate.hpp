@@ -200,8 +200,8 @@ public:
                           Storage<std::array<Scalar, 3>>&& _molarMass_,
                           Storage<std::array<Scalar, 3 * 3>>&& _diffusionCoefficients_,
                           const PhaseUsageInfo<IndexTraits>& _phaseUsageInfo_,
-                          std::array<short, numComponents> _activeToCanonicalCompIdx_,
-                          std::array<short, numComponents> _canonicalToActiveCompIdx_,
+                          std::array<short, 3> _activeToCanonicalCompIdx_,
+                          std::array<short, 3> _canonicalToActiveCompIdx_,
                           bool _isInitialized_,
                           bool _useSaturatedTables_,
                           bool _enthalpy_eq_energy_)
