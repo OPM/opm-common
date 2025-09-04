@@ -62,6 +62,10 @@ macro (opm_compile_satellites opm satellite excl_all test_regexp)
     get_filename_component (_sat_NAME "${_sat_FILE}" NAME_WE)
     add_executable (${_sat_NAME} ${excl_all} ${_sat_FILE})
     add_dependencies (${satellite} ${_sat_NAME})
+    # Ensure individual test executables depend on data files so they can be built independently
+    if (${satellite}_DATAFILES)
+      add_dependencies (${_sat_NAME} ${${satellite}_DATAFILES})
+    endif (${satellite}_DATAFILES)
     set_target_properties (${_sat_NAME} PROPERTIES
                                         LINK_FLAGS "${${opm}_LINKER_FLAGS_STR}")
     if(HAVE_DYNAMIC_BOOST_TEST)
