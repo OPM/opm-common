@@ -1981,7 +1981,7 @@ template <class Scalar, class IndexTraits, template<typename> typename Storage>
 NOTHING_OR_DEVICE short FLUIDSYSTEM_CLASSNAME<Scalar,IndexTraits, Storage>::
 activeToCanonicalCompIdx(unsigned activeCompIdx) NOTHING_OR_CONST
 {
-    assert(activeCompIdx < numComponents);
+    assert(activeCompIdx < numActivePhases());
     return activeToCanonicalCompIdx_[activeCompIdx];
 }
 
@@ -1997,6 +1997,9 @@ template <class Scalar, class IndexTraits, template<typename> typename Storage>
 NOTHING_OR_DEVICE short FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, Storage>::
 activePhaseToCompIdx(unsigned activePhaseIdx) NOTHING_OR_CONST
 {
+    if (activePhaseIdx >= numActivePhases()) {
+        return activePhaseIdx; // e.g. for solvent
+    }
     const short canonicalPhaseIdx = activeToCanonicalPhaseIdx(activePhaseIdx);
     const short canonicalCompIdx = IndexTraits::phaseToComponentIdx(canonicalPhaseIdx);
     const short activeCompIdx = canonicalToActiveCompIdx(canonicalCompIdx);
@@ -2007,6 +2010,9 @@ template <class Scalar, class IndexTraits, template<typename> typename Storage>
 NOTHING_OR_DEVICE short FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, Storage>::
 activeCompToPhaseIdx(unsigned activeCompIdx) NOTHING_OR_CONST
 {
+    if (activeCompIdx >= numActivePhases()) {
+        return activeCompIdx; // e.g. for solvent
+    }
     const short canonicalCompIdx = activeToCanonicalCompIdx(activeCompIdx);
     const short canonicalPhaseIdx = IndexTraits::componentToPhaseIdx(canonicalCompIdx);
     const short activePhaseIdx = canonicalToActivePhaseIdx(canonicalPhaseIdx);
