@@ -261,9 +261,7 @@ void handleTUNING(HandlerContext& handlerContext)
         tuning.TRGLCV = nondefault_or_previous_double(record2, "TRGLCV", tuning.TRGLCV);
         tuning.XXXTTE = nondefault_or_previous_double(record2, "XXXTTE", tuning.XXXTTE);
         tuning.XXXCNV = nondefault_or_previous_double(record2, "XXXCNV", tuning.XXXCNV);
-
         tuning.XXXMBE = nondefault_or_previous_double(record2, "XXXMBE", tuning.XXXMBE);
-
         tuning.XXXLCV = nondefault_or_previous_double(record2, "XXXLCV", tuning.XXXLCV);
         tuning.XXXWFL = nondefault_or_previous_double(record2, "XXXWFL", tuning.XXXWFL);
         tuning.TRGFIP = nondefault_or_previous_double(record2, "TRGFIP", tuning.TRGFIP);
@@ -273,9 +271,26 @@ void handleTUNING(HandlerContext& handlerContext)
             tuning.TRGSFT_has_value = true;
             tuning.TRGSFT = nondefault_or_previous_double(record2, "TRGSFT", tuning.TRGSFT);
         }
+        else {
+            tuning.TRGSFT_has_value = false;
+        }
 
         tuning.THIONX = nondefault_or_previous_double(record2, "THIONX", tuning.THIONX);
         tuning.TRWGHT = nondefault_or_previous_int(record2, "TRWGHT", tuning.TRWGHT);
+
+        // Check for no supported records from the deck to write as a warning.
+        // We check if the deck values are different from the default ones, since the method
+        // record.getItem("").hasValue(0) does not differentiate between deck and default values.
+        // An alternative is to remove the default values for the not supported items in TUNING
+        // and use record.getItem("").hasValue(0).
+        tuning.TRGTTE_has_value = !record2.getItem("TRGTTE").defaultApplied(0);
+        tuning.TRGLCV_has_value = !record2.getItem("TRGLCV").defaultApplied(0);
+        tuning.XXXTTE_has_value = !record2.getItem("XXXTTE").defaultApplied(0);
+        tuning.XXXLCV_has_value = !record2.getItem("XXXLCV").defaultApplied(0);
+        tuning.XXXWFL_has_value = !record2.getItem("XXXWFL").defaultApplied(0);
+        tuning.TRGFIP_has_value = !record2.getItem("TRGFIP").defaultApplied(0);
+        tuning.THIONX_has_value = !record2.getItem("THIONX").defaultApplied(0);
+        tuning.TRWGHT_has_value = !record2.getItem("TRWGHT").defaultApplied(0);
     }
 
     if (numrecords > 2) {
@@ -296,6 +311,21 @@ void handleTUNING(HandlerContext& handlerContext)
             tuning.XXXDPR_has_value = true;
             tuning.XXXDPR = nondefault_or_previous_sidouble(record3, "XXXDPR", tuning.XXXDPR);
         }
+        else {
+            tuning.XXXDPR_has_value = false;
+        }
+
+        tuning.MNWRFP = nondefault_or_previous_int(record3, "MNWRFP", tuning.MNWRFP);
+
+        // Check for no supported records from the deck to write as a warning.
+        tuning.LITMAX_has_value = !record3.getItem("LITMAX").defaultApplied(0);
+        tuning.LITMIN_has_value = !record3.getItem("LITMIN").defaultApplied(0);
+        tuning.MXWSIT_has_value = !record3.getItem("MXWSIT").defaultApplied(0);
+        tuning.MXWPIT_has_value = !record3.getItem("MXWPIT").defaultApplied(0);
+        tuning.DDPLIM_has_value = !record3.getItem("DDPLIM").defaultApplied(0);
+        tuning.DDSLIM_has_value = !record3.getItem("DDSLIM").defaultApplied(0);
+        tuning.TRGDPR_has_value = !record3.getItem("TRGDPR").defaultApplied(0);
+        tuning.MNWRFP_has_value = !record3.getItem("MNWRFP").defaultApplied(0);
     }
 
     handlerContext.state().update_tuning( std::move( tuning ));

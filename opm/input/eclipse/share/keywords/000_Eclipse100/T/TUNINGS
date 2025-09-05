@@ -184,7 +184,13 @@
       {
         "name": "XXXDPR",
         "value_type": "DOUBLE",
-        "dimension": "Pressure"
+        "dimension": "Pressure",
+        "default": 1000000
+      },
+      {
+        "name": "MNWRFP",
+        "value_type": "INT",
+        "default": 4
       }
     ]
   ]

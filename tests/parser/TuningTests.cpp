@@ -62,7 +62,7 @@ TSTEP
 TUNING
 2 300 0.3 0.30 6 0.6 0.2 2.25 2E20 /
 0.2 0.002 2E-7 0.0002 11 0.02 2.0E-6 0.002 0.002 0.035 66 0.02 2/
-13 2 26 2 9 9 4.0E6 4.0E6 4.0E6 1/
+13 2 26 2 9 9 4.0E6 4.0E6 4.0E6 1 3/
 DATES
  1 JAN 1982 /  -- 6
  1 JAN 1982 13:55:44 /  --7
@@ -224,6 +224,9 @@ BOOST_AUTO_TEST_CASE(TuningTest)
       double XXXDPR_default = tuning.XXXDPR;
       BOOST_CHECK_EQUAL(false, XXXDPR_has_value);
       BOOST_CHECK_CLOSE(XXXDPR_default, 0.0, diff);
+
+      int MNWRFP_default = tuning.MNWRFP;
+      BOOST_CHECK_EQUAL(MNWRFP_default, 4);
   }
 
 
@@ -338,6 +341,9 @@ BOOST_AUTO_TEST_CASE(TuningTest)
 
       BOOST_CHECK_EQUAL(true, tuning.XXXDPR_has_value);
       BOOST_CHECK_CLOSE(tuning.XXXDPR, 1.0 * Metric::Pressure, diff);
+
+      int MNWRFP = tuning.MNWRFP;
+      BOOST_CHECK_EQUAL(MNWRFP, 3);
   }
 
   /*** TIMESTEP 7 ***/
