@@ -445,6 +445,7 @@ if(ENABLE_ECL_OUTPUT)
           opm/output/eclipse/CreateInteHead.cpp
           opm/output/eclipse/CreateLogiHead.cpp
           opm/output/eclipse/CreateLgrHeadi.cpp
+          opm/output/eclipse/CreateLgrHeadq.cpp
           opm/output/eclipse/CreateLgrHeadd.cpp
           opm/output/eclipse/DoubHEAD.cpp
           opm/output/eclipse/EclipseGridInspector.cpp
@@ -669,6 +670,7 @@ if(ENABLE_ECL_OUTPUT)
           tests/test_rst.cpp
           tests/test_rst_netbalan.cpp
           tests/test_Restart.cpp
+          tests/test_RestartLGR.cpp
           tests/test_RFT.cpp
           tests/test_Solution.cpp
           tests/test_Summary.cpp
