@@ -78,7 +78,12 @@ bool PyRunModule::executeInnerRunFunction(const std::function<void(const std::st
     auto cpp_callback = py_actionx_callback(actionx_callback);
     try {
         py::object result = this->run_function(this->opm_embedded.attr("current_ecl_state"), this->opm_embedded.attr("current_schedule"), this->opm_embedded.attr("current_report_step"), this->opm_embedded.attr("current_summary_state"), cpp_callback);
-        return result.cast<bool>();
+        if (!result.is_none()) {
+            return result.cast<bool>();
+        } else {
+            OpmLog::warning("The run function in the PYACTION script did not return a value. Assuming true to make sure changes are picked up.");
+            return true;
+        }
     } catch (const std::exception& e) {
         OpmLog::error(fmt::format("Exception thrown when calling run(ecl_state, schedule, report_step, summary_state, actionx_callback) function of {}: {}", this->module_name, e.what()));
         throw e;
