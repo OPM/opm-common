@@ -84,6 +84,13 @@ namespace Opm {
                      data::GroupAndNetworkValues grpn_nwrk_arg,
                      data::Aquifers aquifer_arg);
 
+        // Overloaded constructor to handle grid containing LGR
+        RestartValue(data::Solution sol,
+                     data::Wells wells_arg,
+                     data::GroupAndNetworkValues grpn_nwrk_arg,
+                     data::Aquifers aquifer_arg,
+                     int lgr_grid);
+
         RestartValue() = default;
 
         bool hasExtra(const std::string& key) const;
@@ -92,7 +99,7 @@ namespace Opm {
         void addExtra(const std::string& key, std::vector<double> data);
         void addExtra(const std::string& key, std::vector<float> data);
         const std::vector<double>& getExtra(const std::string& key) const;
-
+        void filter_wells_for_lgr(data::Wells& allwells, int lgr_grid);
         void convertFromSI(const UnitSystem& units);
         void convertToSI(const UnitSystem& units);
 

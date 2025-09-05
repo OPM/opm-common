@@ -26,6 +26,7 @@
 #include <utility>
 #include <vector>
 
+
 namespace Opm {
 
     namespace {
@@ -60,6 +61,43 @@ namespace Opm {
         , aquifer  { std::move(aquifer_arg) }
     {
     }
+    RestartValue::RestartValue(data::Solution sol,
+                               data::Wells wells_arg,
+                               data::GroupAndNetworkValues grp_nwrk_arg,
+                               data::Aquifers aquifer_arg,
+                               int lgr_grid)
+        : RestartValue(std::move(sol), std::move(wells_arg),
+              std::move(grp_nwrk_arg), std::move(aquifer_arg))
+    {
+        // Filter the wells using the lgr_grid parameter.
+        filter_wells_for_lgr(this->wells, lgr_grid);
+    }
+
+    void RestartValue::filter_wells_for_lgr(data::Wells& all_wells, int lgr_grid){
+        std::vector<std::reference_wrapper<const std::string>> wells_to_be_removed;
+
+        auto filterConnections = [](const std::vector<Opm::data::Connection>& connections, int lgr_grid_num) -> bool {
+            for (const auto& conn : connections) {
+                if (conn.lgr_grid == lgr_grid_num) {
+                    return true;
+                }
+            }
+            return false;
+        };
+
+        for (const auto& pair : all_wells) {
+            const std::string& well_name = pair.first;
+            auto& well_data = pair.second;
+            if (!filterConnections(well_data.connections, lgr_grid)) {
+                wells_to_be_removed.push_back(std::cref(well_name));
+            }
+        }
+
+        for (const auto& well_ref : wells_to_be_removed) {
+            all_wells.erase(well_ref.get());
+        }
+    }
+
 
     const std::vector<double>& RestartValue::getExtra(const std::string& key) const {
         const auto iter = std::find_if(this->extra.begin(),
