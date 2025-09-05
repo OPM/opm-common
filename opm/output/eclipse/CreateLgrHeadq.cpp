@@ -20,8 +20,8 @@
 
 #include <opm/output/eclipse/WriteRestartHelpers.hpp>
 
-#include <opm/output/eclipse/LgrHEADI.hpp>
-#include <opm/output/eclipse/VectorItems/lgrheadi.hpp>
+#include <opm/output/eclipse/LgrHEADQ.hpp>
+#include <opm/output/eclipse/VectorItems/lgrheadq.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 
 
@@ -33,16 +33,11 @@
 // Public Interface (createInteHead()) Below Separator
 // ---------------------------------------------------------------------
 
-std::vector<int>
+std::vector<bool>
 Opm::RestartIO::Helpers::
-createLgrHeadi([[maybe_unused]] const EclipseState& es,
-               const int           lgr_index)
+createLgrHeadq([[maybe_unused]] const EclipseState& es)
 // In the future, EclipseState will manage unused lgr cells.
 {
-    const auto ih = LgrHEADI{}
-        .toggleLGRCell         (true)
-        .numberoOfLGRCell      (lgr_index)
-        ;
-
+    const auto ih = LgrHEADQ{};
     return ih.data();
 }

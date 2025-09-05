@@ -59,10 +59,13 @@ namespace Opm::RestartIO::Helpers {
 
     std::vector<int>
     createLgrHeadi(const EclipseState& es,
-                   const int           lgr_index);               
+                   const int           lgr_index);
+
+    std::vector<bool>
+    createLgrHeadq(const EclipseState& es);
 
     std::vector<double>
-    createLgrHeadd();  
+    createLgrHeadd();
 
     std::vector<bool>
     createLogiHead(const EclipseState& es);

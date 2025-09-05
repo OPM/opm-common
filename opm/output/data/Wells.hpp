@@ -435,7 +435,7 @@ namespace Opm { namespace data {
         double compact_mult{1.0}; // Rock compaction transmissibility multiplier (ROCKTAB)
 
         ConnectionFiltrate filtrate{};
-
+        int lgr_grid{0}; // LGR grid index, 0 if not in LGR
         /// Connection level fracturing statistics.
         ConnectionFracturing fract{};
 
@@ -453,6 +453,7 @@ namespace Opm { namespace data {
                 && (d_factor == conn2.d_factor)
                 && (compact_mult == conn2.compact_mult)
                 && (filtrate == conn2.filtrate)
+                && (lgr_grid == conn2.lgr_grid)
                 && (this->fract == conn2.fract)
                 ;
         }
@@ -479,6 +480,7 @@ namespace Opm { namespace data {
             serializer(d_factor);
             serializer(compact_mult);
             serializer(filtrate);
+            serializer(lgr_grid);
             serializer(this->fract);
         }
 
@@ -489,6 +491,7 @@ namespace Opm { namespace data {
                 2.0, 3.0, 4.0, 5.0,
                 6.0, 7.0, 8.0, 9.0, 0.987,
                 ConnectionFiltrate::serializationTestObject(),
+                3, // lgr_grid
                 ConnectionFracturing::serializationTestObject()
             };
         }
