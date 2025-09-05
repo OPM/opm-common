@@ -17,7 +17,10 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <opm/input/eclipse/Deck/UDAValue.hpp>
+
 #include <opm/input/eclipse/Schedule/Group/GSatProd.hpp>
+#include "../eval_uda.hpp"
 
 #include <stdexcept>
 
@@ -26,7 +29,8 @@ namespace Opm {
 GSatProd GSatProd::serializationTestObject()
 {
     GSatProd result;
-    result.groups_ = { {"test1", {1.0,2.0,3.0,4.0,5.0} } };
+    result.groups_ = { {"test1", {UDAValue(1.0), UDAValue(2.0), UDAValue(3.0), 4.0,
+                                  5.0, 6.0, UnitSystem::serializationTestObject()} } };
 
     return result;
 }
@@ -48,22 +52,37 @@ const GSatProd::GSatProdGroup& GSatProd::get(const std::string& name) const
     return it->second;
 }
 
-void GSatProd::assign(const std::string& name,
-                      const double       oil_rate,
-                      const double       gas_rate,
-                      const double       water_rate,
-                      const double       resv_rate,
-                      const double       glift_rate)
+const GSatProd::GSatProdGroupProp GSatProd::get(const std::string& name, const SummaryState& st) const
 {
-    using Rate = GSatProdGroup::Rate;
+    using Rate = GSatProdGroupProp::Rate;
 
-    auto& rate = this->groups_[name].rate;
+    GSatProdGroupProp prop;
+    const GSatProd::GSatProdGroup& group = this->get(name);
+    prop.rate[Rate::Oil] = UDA::eval_group_uda(group.oil_rate, name, st, group.udq_undefined);
+    prop.rate[Rate::Gas] = UDA::eval_group_uda(group.gas_rate, name, st, group.udq_undefined);
+    prop.rate[Rate::Water] = UDA::eval_group_uda(group.water_rate, name, st, group.udq_undefined);
+    
+    return prop;
+}
 
-    rate[Rate::Oil] = oil_rate;
-    rate[Rate::Gas] = gas_rate;
-    rate[Rate::Water] = water_rate;
-    rate[Rate::Resv] = resv_rate;
-    rate[Rate::GLift] = glift_rate;
+void GSatProd::assign(const std::string& name,
+                      const UDAValue&    oil_rate,
+                      const UDAValue&    gas_rate,
+                      const UDAValue&    water_rate,
+                      const double       resv_rate,
+                      const double       glift_rate,
+                      double             udq_undefined,
+                      const UnitSystem&  unit_system)
+{
+    GSatProd::GSatProdGroup& group = groups_[name];
+
+    group.oil_rate = oil_rate;
+    group.gas_rate = gas_rate;
+    group.water_rate = water_rate;
+    group.resv_rate = resv_rate;
+    group.glift_rate = glift_rate;
+    group.udq_undefined = udq_undefined;
+    group.unit_system = unit_system;
 }
 
 std::size_t GSatProd::size() const

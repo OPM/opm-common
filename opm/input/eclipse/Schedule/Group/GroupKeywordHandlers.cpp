@@ -655,21 +655,25 @@ void handleGSATPROD(HandlerContext& handlerContext)
                                            .getItem<Kw::SATELLITE_GROUP_NAME_OR_GROUP_NAME_ROOT>()
                                            .getTrimmedString(0), handlerContext);
 
-        const auto oil_rate = record.getItem<Kw::OIL_PRODUCTION_RATE>().getSIDouble(0);
-        const auto gas_rate = record.getItem<Kw::GAS_PRODUCTION_RATE>().getSIDouble(0);
-        const auto water_rate = record.getItem<Kw::WATER_PRODUCTION_RATE>().getSIDouble(0);
+        const auto oil_rate = record.getItem<Kw::OIL_PRODUCTION_RATE>().get<UDAValue>(0);
+        const auto gas_rate = record.getItem<Kw::GAS_PRODUCTION_RATE>().get<UDAValue>(0);
+        const auto water_rate = record.getItem<Kw::WATER_PRODUCTION_RATE>().get<UDAValue>(0);
         const auto resv_rate = record.getItem<Kw::RES_FLUID_VOL_PRODUCTION_RATE>().getSIDouble(0);
         const auto glift_rate = record.getItem<Kw::LIFT_GAS_SUPPLY_RATE>().getSIDouble(0);
 
         for (const auto& group_name : group_names) {
             rejectGroupIfField(group_name, handlerContext);
 
+            auto udqconfig = handlerContext.state().udq.get().params().undefinedValue();
+
             new_gsatprod.assign(group_name,
                                 oil_rate,
                                 gas_rate,
                                 water_rate,
                                 resv_rate,
-                                glift_rate);
+                                glift_rate,
+                                udqconfig,
+                                handlerContext.static_schedule().m_unit_system);
 
             auto grp = handlerContext.state().groups(group_name);
             grp.recordSatelliteProduction();

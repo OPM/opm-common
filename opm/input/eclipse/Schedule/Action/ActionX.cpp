@@ -109,6 +109,7 @@ bool ActionX::valid_keyword(const std::string& keyword)
         "GEFAC",
         "GLIFTOPT",
         "GRUPTREE",
+        "GSATPROD",
 
         "MULTX", "MULTX-", "MULTY", "MULTY-", "MULTZ", "MULTZ-",
         "NEXT", "NEXTSTEP",
