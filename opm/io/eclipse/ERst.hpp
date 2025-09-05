@@ -41,6 +41,9 @@ public:
 
     bool hasReportStepNumber(int number) const;
     bool hasArray(const std::string& name, int number) const;
+    //overload to check if array exists for specific lgr
+    bool hasArray(const std::string& name, int number, const std::string& gridname);
+
     bool hasLGR(const std::string& gridname, int reportStepNumber) const;
 
     void loadReportStepNumber(int number);
