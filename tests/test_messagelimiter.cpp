@@ -21,15 +21,16 @@
 
 #define BOOST_TEST_MODULE MESSAGELIMITER_TESTS
 
-#include <opm/common/utility/platform_dependent/disable_warnings.h>
 #include <boost/test/unit_test.hpp>
-#include <opm/common/utility/platform_dependent/reenable_warnings.h>
 
 #include <opm/common/OpmLog/MessageLimiter.hpp>
+
 #include <opm/common/OpmLog/LogUtil.hpp>
 
-using namespace Opm;
+#include <initializer_list>
+#include <map>
 
+using namespace Opm;
 
 BOOST_AUTO_TEST_CASE(ConstructionAndLimits)
 {
@@ -45,7 +46,6 @@ BOOST_AUTO_TEST_CASE(ConstructionAndLimits)
 
 BOOST_AUTO_TEST_CASE(TagResponse)
 {
-    using namespace Opm;
     {
         // No limits.
         MessageLimiter m;
@@ -55,7 +55,8 @@ BOOST_AUTO_TEST_CASE(TagResponse)
         BOOST_CHECK(m.handleMessageLimits("tag2", Log::MessageType::Info) == MessageLimiter::Response::PrintMessage);
         BOOST_CHECK(m.handleMessageLimits("tag1", Log::MessageType::Info) == MessageLimiter::Response::PrintMessage);
         BOOST_CHECK(m.handleMessageLimits("tag2", Log::MessageType::Info) == MessageLimiter::Response::PrintMessage);
-        BOOST_CHECK(m.categoryMessageCounts().at(Log::MessageType::Info) == 6);
+
+        BOOST_CHECK_EQUAL(m.categoryMessageCount(Log::MessageType::Info), 6);
     }
 
     {
@@ -67,7 +68,8 @@ BOOST_AUTO_TEST_CASE(TagResponse)
         BOOST_CHECK(m.handleMessageLimits("tag2", Log::MessageType::Info) == MessageLimiter::Response::OverTagLimit);
         BOOST_CHECK(m.handleMessageLimits("tag1", Log::MessageType::Info) == MessageLimiter::Response::OverTagLimit);
         BOOST_CHECK(m.handleMessageLimits("tag2", Log::MessageType::Info) == MessageLimiter::Response::OverTagLimit);
-        BOOST_CHECK(m.categoryMessageCounts().at(Log::MessageType::Info) == 0);
+
+        BOOST_CHECK_EQUAL(m.categoryMessageCount(Log::MessageType::Info), 0);
     }
 
     {
@@ -79,21 +81,22 @@ BOOST_AUTO_TEST_CASE(TagResponse)
         BOOST_CHECK(m.handleMessageLimits("tag2", Log::MessageType::Info) == MessageLimiter::Response::JustOverTagLimit);
         BOOST_CHECK(m.handleMessageLimits("tag1", Log::MessageType::Info) == MessageLimiter::Response::OverTagLimit);
         BOOST_CHECK(m.handleMessageLimits("tag2", Log::MessageType::Info) == MessageLimiter::Response::OverTagLimit);
-        BOOST_CHECK(m.categoryMessageCounts().at(Log::MessageType::Info) == 2);
+
+        BOOST_CHECK_EQUAL(m.categoryMessageCount(Log::MessageType::Info), 2);
     }
 }
 
 
 BOOST_AUTO_TEST_CASE(CategoryResponse)
 {
-    using namespace Opm;
     {
         // No limits.
         MessageLimiter m;
         BOOST_CHECK(m.handleMessageLimits("", Log::MessageType::Info) == MessageLimiter::Response::PrintMessage);
         BOOST_CHECK(m.handleMessageLimits("", Log::MessageType::Info) == MessageLimiter::Response::PrintMessage);
         BOOST_CHECK(m.handleMessageLimits("", Log::MessageType::Info) == MessageLimiter::Response::PrintMessage);
-        BOOST_CHECK(m.categoryMessageCounts().at(Log::MessageType::Info) == 3);
+
+        BOOST_CHECK_EQUAL(m.categoryMessageCount(Log::MessageType::Info), 3);
     }
 
     {
@@ -103,7 +106,8 @@ BOOST_AUTO_TEST_CASE(CategoryResponse)
         BOOST_CHECK(m.handleMessageLimits("", Log::MessageType::Info) == MessageLimiter::Response::JustOverCategoryLimit);
         BOOST_CHECK(m.handleMessageLimits("", Log::MessageType::Info) == MessageLimiter::Response::OverCategoryLimit);
         BOOST_CHECK(m.handleMessageLimits("", Log::MessageType::Info) == MessageLimiter::Response::OverCategoryLimit);
-        BOOST_CHECK(m.categoryMessageCounts().at(Log::MessageType::Info) == 3);
+
+        BOOST_CHECK_EQUAL(m.categoryMessageCount(Log::MessageType::Info), 3);
     }
 
     {
@@ -113,14 +117,14 @@ BOOST_AUTO_TEST_CASE(CategoryResponse)
         BOOST_CHECK(m.handleMessageLimits("", Log::MessageType::Info) == MessageLimiter::Response::PrintMessage);
         BOOST_CHECK(m.handleMessageLimits("", Log::MessageType::Info) == MessageLimiter::Response::JustOverCategoryLimit);
         BOOST_CHECK(m.handleMessageLimits("", Log::MessageType::Info) == MessageLimiter::Response::OverCategoryLimit);
-        BOOST_CHECK(m.categoryMessageCounts().at(Log::MessageType::Info) == 3);
+
+        BOOST_CHECK_EQUAL(m.categoryMessageCount(Log::MessageType::Info), 3);
     }
 }
 
 
 BOOST_AUTO_TEST_CASE(MixedResponse)
 {
-    using namespace Opm;
     {
         // Tag Limit == 1. Category limit = 0.
         MessageLimiter m(1, {{ Log::MessageType::Info, 0 }});
@@ -130,7 +134,8 @@ BOOST_AUTO_TEST_CASE(MixedResponse)
         BOOST_CHECK(m.handleMessageLimits("tag2", Log::MessageType::Info) == MessageLimiter::Response::JustOverTagLimit);
         BOOST_CHECK(m.handleMessageLimits("tag1", Log::MessageType::Info) == MessageLimiter::Response::OverTagLimit);
         BOOST_CHECK(m.handleMessageLimits("tag2", Log::MessageType::Info) == MessageLimiter::Response::OverTagLimit);
-        BOOST_CHECK(m.categoryMessageCounts().at(Log::MessageType::Info) == 2);
+
+        BOOST_CHECK_EQUAL(m.categoryMessageCount(Log::MessageType::Info), 2);
     }
 
     {
@@ -142,7 +147,8 @@ BOOST_AUTO_TEST_CASE(MixedResponse)
         BOOST_CHECK(m.handleMessageLimits("tag2", Log::MessageType::Info) == MessageLimiter::Response::OverTagLimit);
         BOOST_CHECK(m.handleMessageLimits("tag1", Log::MessageType::Info) == MessageLimiter::Response::OverTagLimit);
         BOOST_CHECK(m.handleMessageLimits("tag2", Log::MessageType::Info) == MessageLimiter::Response::OverTagLimit);
-        BOOST_CHECK(m.categoryMessageCounts().at(Log::MessageType::Info) == 0);
+
+        BOOST_CHECK_EQUAL(m.categoryMessageCount(Log::MessageType::Info), 0);
     }
 
     {
@@ -154,7 +160,7 @@ BOOST_AUTO_TEST_CASE(MixedResponse)
         BOOST_CHECK(m.handleMessageLimits("tag2", Log::MessageType::Info) == MessageLimiter::Response::JustOverTagLimit);
         BOOST_CHECK(m.handleMessageLimits("tag1", Log::MessageType::Info) == MessageLimiter::Response::OverTagLimit);
         BOOST_CHECK(m.handleMessageLimits("tag2", Log::MessageType::Info) == MessageLimiter::Response::OverTagLimit);
-        BOOST_CHECK(m.categoryMessageCounts().at(Log::MessageType::Info) == 2);
-    }
 
+        BOOST_CHECK_EQUAL(m.categoryMessageCount(Log::MessageType::Info), 2);
+    }
 }
