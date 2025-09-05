@@ -1,5 +1,7 @@
 # - Compile main library target
 
+include(OpmInterproceduralOptimization)
+
 option (STRIP_DEBUGGING_SYMBOLS "use separate files for the executable code and the debugging symbols" OFF)
 
 macro (opm_compile opm)
@@ -43,8 +45,11 @@ macro (opm_compile opm)
           SOVERSION ${${opm}_VERSION}
           VERSION ${${opm}_VERSION}
           LINK_FLAGS "${${opm}_LINKER_FLAGS_STR}"
-          POSITION_INDEPENDENT_CODE TRUE 
+          POSITION_INDEPENDENT_CODE TRUE
           )
+
+        opm_interprocedural_optimization(TARGET ${${opm}_TARGET})
+
         if (${${opm}_LIBRARY_TYPE} STREQUAL "SHARED")
           # libs that will be linked with the main lib
           string(REGEX REPLACE "([;^])[^;]+\\.a[;$]" "\\1" _public_libs
@@ -70,7 +75,7 @@ macro (opm_compile opm)
 	# unset this variable to signal that no library is generated
 	set (${opm}_TARGET)
   endif (${opm}_SOURCES)
-  
+
   # pre-compile common headers; this is setup *after* the library to pick
   # up extra options set there
   if (PRECOMPILE_HEADERS)
@@ -99,5 +104,5 @@ macro (opm_compile opm)
   if (${opm}_TARGET)
     set(${opm}_LIBRARY $<TARGET_FILE:${${opm}_TARGET}>)
   endif (${opm}_TARGET)
-  
+
 endmacro (opm_compile opm)
