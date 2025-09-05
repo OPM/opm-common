@@ -481,8 +481,8 @@ private:
         }
 
         // calculate individual contribution to density
-        const LhsEval& rho_brine = Brine::liquidDensity(T, pl, salinity, extrapolate);
         const LhsEval& rho_pure = H2O::liquidDensity(T, pl, extrapolate);
+        const LhsEval& rho_brine = Brine::liquidDensity(T, pl, salinity, rho_pure);
         const LhsEval& rho_lH2 = liquidDensityWaterH2_(T, pl, xlH2);
         const LhsEval& contribH2 = rho_lH2 - rho_pure;
 
