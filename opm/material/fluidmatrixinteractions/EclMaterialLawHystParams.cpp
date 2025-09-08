@@ -32,7 +32,7 @@ template <class Traits>
 HystParams<Traits>::
 HystParams(typename Manager<Traits>::Params& params,
            const EclEpsGridProperties& epsGridProperties,
-           const EclEpsGridProperties& epsImbGridProperties,
+           const EclEpsGridProperties* epsImbGridProperties,
            const EclipseState& eclState,
            const Manager<Traits>& parent)
     : params_(params)
@@ -286,7 +286,7 @@ HystParams<Traits>::
 readScaledEpsPointsImbibition_(unsigned elemIdx, EclTwoPhaseSystemType type,
                                const LookupFunction& fieldPropIdxOnLevelZero)
 {
-    return readScaledEpsPoints_(epsImbGridProperties_, elemIdx, type, fieldPropIdxOnLevelZero);
+    return readScaledEpsPoints_(*epsImbGridProperties_, elemIdx, type, fieldPropIdxOnLevelZero);
 }
 
 // Make some actual code, by realizing the previously defined templated class
