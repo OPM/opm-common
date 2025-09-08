@@ -124,7 +124,16 @@ public:
     { return H2O::triplePressure(); /* [N/m^2] */ }
 
     /*!
-     * \copydoc H2O::vaporPressure
+     * \brief The vapor pressure in \f$\mathrm{[Pa]}\f$ of pure water
+     *        at a given temperature.
+     *
+     * See:
+     *
+     * IAPWS: "Revised Release on the IAPWS Industrial Formulation
+     * 1997 for the Thermodynamic Properties of Water and Steam",
+     * http://www.iapws.org/relguide/IF97-Rev.pdf
+     *
+     * \param T Absolute temperature of the system in \f$\mathrm{[K]}\f$
      */
     template <class Evaluation>
     static Evaluation vaporPressure(const Evaluation& T)
@@ -254,14 +263,19 @@ public:
     { return H2O::gasDensity(temperature, pressure); }
 
     /*!
-     * \copydoc Component::liquidDensity
+     * \brief The density \f$\mathrm{[kg/m^3]}\f$ of the liquid component at a given pressure in \f$\mathrm{[Pa]}\f$ and temperature in \f$\mathrm{[K]}\f$.
+     *
+     * \param temperature temperature of component in \f$\mathrm{[K]}\f$
+     * \param pressure pressure of component in \f$\mathrm{[Pa]}\f$
+     * \param extrapolate True to use extrapolation
      *
      * Equations given in:
      * - Batzle & Wang (1992)
      * - cited by: Adams & Bachu in Geofluids (2002) 2, 257-271
      */
     template <class Evaluation>
-    static Evaluation liquidDensity(const Evaluation& temperature, const Evaluation& pressure, bool extrapolate = false)
+    static Evaluation liquidDensity(const Evaluation& temperature,
+                                    const Evaluation& pressure, bool extrapolate = false)
     {
         Evaluation tempC = temperature - 273.15;
         Evaluation pMPa = pressure/1.0E6;

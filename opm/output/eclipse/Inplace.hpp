@@ -186,7 +186,7 @@ public:
     ///
     /// \param[in] region Region set name, e.g., "FIPNUM" or "FIPABC".
     ///
-    /// \param[in] Phase In-place quantity.
+    /// \param[in] phase In-place quantity.
     ///
     /// \return Per-region values of requested quantity in the region set
     ///   named by \p region.  The get_vector functions return a vector of

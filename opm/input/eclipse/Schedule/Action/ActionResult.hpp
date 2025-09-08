@@ -197,12 +197,10 @@ public:
         ~MatchingEntities();
 
         /// Assignment operator.
-        ///
-        /// \param[in] rhs Source object whose value will overwrite \code
-        /// *this.
-        ///
+        /// \param[in] that Source object whose value will overwrite \code
+        ///                *this.
         /// \return *this.
-        MatchingEntities& operator=(const MatchingEntities& rhs);
+        MatchingEntities& operator=(const MatchingEntities& that);
 
         /// Move-assignment operator.
         ///

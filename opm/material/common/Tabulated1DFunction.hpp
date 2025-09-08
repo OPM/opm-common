@@ -64,6 +64,7 @@ public:
      * \param nSamples The number of sampling points (must be >= 2)
      * \param x An array containing the \f$x\f$ values of the spline's sampling points
      * \param y An array containing the \f$y\f$ values of the spline's sampling points
+     * \param sortInputs True to sort inputs
      */
     template <class ScalarArrayX, class ScalarArrayY>
     Tabulated1DFunction(size_t nSamples,
@@ -79,6 +80,7 @@ public:
      *          (must have a size() method)
      * \param y An array containing the \f$y\f$ values of the spline's sampling points
      *          (must have a size() method)
+     * \param sortInputs True to sort inputs
      */
     template <class ScalarContainer>
     Tabulated1DFunction(const ScalarContainer& x,
@@ -91,6 +93,7 @@ public:
      *
      * \param points A container of \f$(x,y)\f$ tuples of the spline's sampling points (must
      *               have a size() method)
+     * \param sortInputs True to sort inputs
      */
     template <class PointContainer>
     explicit Tabulated1DFunction(const PointContainer& points,

@@ -77,7 +77,7 @@ public:
     ///
     /// Any existing PyAction object with the same name will be replaced.
     ///
-    /// \param[in] action Action object to include in the current
+    /// \param[in] pyaction Action object to include in the current
     /// collection.
     void add(const PyAction& pyaction);
 

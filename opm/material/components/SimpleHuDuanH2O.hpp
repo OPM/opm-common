@@ -239,11 +239,13 @@ public:
      *
      * \param temperature temperature of component in \f$\mathrm{[K]}\f$
      * \param pressure pressure of component in \f$\mathrm{[Pa]}\f$
+     * \param extrapolate True to use extrapolation
      */
     template <class Evaluation>
-    OPM_HOST_DEVICE static Evaluation liquidInternalEnergy(const Evaluation& temperature,
-                                           const Evaluation& pressure,
-                                           bool extrapolate)
+    OPM_HOST_DEVICE static Evaluation
+    liquidInternalEnergy(const Evaluation& temperature,
+                         const Evaluation& pressure,
+                         bool extrapolate)
     {
         return
             liquidEnthalpy(temperature, pressure) -

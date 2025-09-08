@@ -411,7 +411,7 @@ public:
 
     /// Assign coalesced/global contributions
     ///
-    /// \param[in] avg Buffer of coalesced global contributions.
+    /// \param[in] a Buffer of coalesced global contributions.
     void assignRunningAverages(const LocalRunningAverages& a)
     {
         auto j = 0*a.size();

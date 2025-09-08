@@ -161,6 +161,7 @@ public:
      *
      * \param params A object that stores the appropriate coefficients
      *                for the respective law.
+     * \param fs The fluid state
      *
      * \return Capillary pressure [Pa] calculated by specific
      *         constitutive relation (e.g. Brooks & Corey, van
@@ -268,6 +269,7 @@ public:
      * \param params    A container object that is populated with the appropriate coefficients for the respective law.
      *                  Therefore, in the (problem specific) spatialParameters  first, the material law is chosen, and then the params container
      *                  is constructed accordingly. Afterwards the values are set there, too.
+     * \param fs        The fluid state
      * \return          Relative permeability of the wetting phase calculated as implied by EffLaw e.g. Brooks & Corey, van Genuchten, linear... .
      *
      */

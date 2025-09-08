@@ -484,7 +484,7 @@ namespace Opm {
          * @brief Sets Local Grid Refinement for the EclipseGridLGR.
          *
          * @param lgr_tag The string that contains the name of a given LGR cell.
-         * @param coords The coordinates of a given LGR cell in  CPG COORDSformat.
+         * @param coord The coordinates of a given LGR cell in  CPG COORDSformat.
          * @param zcorn The z-coordinates values of a given LGR cell in CPG ZCORN format.
          */
         void set_lgr_refinement(const std::string& lgr_tag,

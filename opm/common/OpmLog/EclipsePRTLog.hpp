@@ -35,22 +35,20 @@ public:
 
     ~EclipsePRTLog() override;
 
-    /// \brief Construct a logger to the <MODLE>.PRT file
+    /// \brief Construct a logger to the <MODEL>.PRT file
     /// \param logFile The name of the logfile to use.
-    /// \param messageMask ????
+    /// \param messageMask Mask for logging of messages.
     /// \param append If true then we append messages to the file.
     ///               Otherwise a new file is created.
     /// \param print_summary If true print a summary to the PRT file.
     EclipsePRTLog(const std::string& logFile , int64_t messageMask,
                   bool append, bool print_summary);
 
-    /// \brief Construct a logger to the <MODLE>.PRT file
-    /// \param logFile The name of the logfile to use.
-    /// \param messageMask ????
-    /// \param append If true then we append messages to the file.
-    ///               Otherwise a new file is created.
+    /// \brief Construct a logger to the <MODEL>.PRT file
+    /// \param os The stream to write the log to.
+    /// \param messageMask Mask for logging of messages
     /// \param print_summary If true print a summary to the PRT file.
-    EclipsePRTLog(std::ostream& os , int64_t messageMask,
+    EclipsePRTLog(std::ostream& os, int64_t messageMask,
                   bool print_summary);
 
 protected:

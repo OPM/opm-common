@@ -110,7 +110,7 @@ namespace Opm {
 	    }
 
         template <typename StringArray>
-	ParameterGroup::ParameterGroup(int argc, StringArray argv, bool verify_syntax,
+        ParameterGroup::ParameterGroup(int argc, StringArray argv, bool verify_syntax,
                                        const bool enable_output)
             : path_(ID_path_root), parent_(0), output_is_enabled_(enable_output)
 	{

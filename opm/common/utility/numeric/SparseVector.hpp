@@ -67,11 +67,12 @@ namespace Opm
 	{
 	}
 
-	/// A constructor taking all the element data for the vector and their indices.
+        /// A constructor taking all the element data for the vector and their indices.
+        /// \param sz Number of elements for data vector.
 	/// \param data_beg The start of the element data.
 	/// \param data_end One-beyond-end of the element data.
-	/// \param rowsize_beg The start of the index data.
-	/// \param rowsize_end One beyond the end of the index data.
+        /// \param index_beg The start of the index data.
+        /// \param index_end One beyond the end of the index data.
 	template <typename DataIter, typename IntegerIter>
 	SparseVector(int sz,
 		     DataIter data_beg, DataIter data_end,

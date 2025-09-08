@@ -113,7 +113,7 @@ namespace Opm {
             /// \param enable_output Whether to enable output or not.
             template <typename StringArray>
 	    ParameterGroup(int argc, StringArray argv, const bool verify_syntax = true,
-                           const bool enabled_output=true);
+                           const bool enable_output = true);
 
 	    /// \brief This method checks if there is something with name
 	    ///        \p name in the parameter gropup.

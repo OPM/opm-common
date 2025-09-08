@@ -52,12 +52,18 @@ public:
     /*!
      * \brief Binary diffusion coefficent [m^2/s] of water in the CO2 phase.
      *
-     * According to "Diffusion of Water in Liquid and Supercritical Carbon Dioxide: An NMR Study",Bin Xu et al., 2002
+     * According to "Diffusion of Water in Liquid and Supercritical Carbon Dioxide:
+     * An NMR Study",Bin Xu et al., 2002
+     * \param params Parameters to use
      * \param temperature the temperature [K]
      * \param pressure the phase pressure [Pa]
+     * \param extrapolate True to use extrapolation
      */
     template <class Evaluation, class CO2Params>
-    OPM_HOST_DEVICE static Evaluation gasDiffCoeff(const CO2Params& params, const Evaluation& temperature, const Evaluation& pressure, bool extrapolate = false)
+    OPM_HOST_DEVICE static Evaluation gasDiffCoeff(const CO2Params& params,
+                                                   const Evaluation& temperature,
+                                                   const Evaluation& pressure,
+                                                   bool extrapolate = false)
     {
         //Diffusion coefficient of water in the CO2 phase
         Scalar k = 1.3806504e-23; // Boltzmann constant
@@ -90,23 +96,27 @@ public:
      *        applying the activity coefficient expression of "Duan and Sun 2003"
      *        and the correlations for pure water given in "Spycher, Pruess and Ennis-King 2003"
      *
+     * \param params Parameters to use
      * \param temperature the temperature [K]
      * \param pg the gas phase pressure [Pa]
      * \param salinity the salinity [kg NaCl / kg solution]
      * \param knownPhaseIdx indicates which phases are present
      * \param xlCO2 mole fraction of CO2 in brine [mol/mol]
      * \param ygH2O mole fraction of water in the gas phase [mol/mol]
+     * \param activityModel Activity model to use
+     * \param extrapolate True to use extrapolation
      */
     template <class Evaluation, class CO2Params>
-    OPM_HOST_DEVICE static void calculateMoleFractions(const CO2Params& params,
-                                       const Evaluation& temperature,
-                                       const Evaluation& pg,
-                                       const Evaluation& salinity,
-                                       const int knownPhaseIdx,
-                                       Evaluation& xlCO2,
-                                       Evaluation& ygH2O,
-                                       const int& activityModel,
-                                       bool extrapolate = false)
+    OPM_HOST_DEVICE static void
+    calculateMoleFractions(const CO2Params& params,
+                           const Evaluation& temperature,
+                           const Evaluation& pg,
+                           const Evaluation& salinity,
+                           const int knownPhaseIdx,
+                           Evaluation& xlCO2,
+                           Evaluation& ygH2O,
+                           const int& activityModel,
+                           bool extrapolate = false)
     {
         OPM_TIMEFUNCTION_LOCAL();
 
@@ -180,8 +190,13 @@ public:
      *
      * (given in Spycher, Pruess and Ennis-King (2003))
      *
-     * \param T the temperature [K]
+     * \param params Parameters to use
+     * \param temperature the temperature [K]
      * \param pg the gas phase pressure [Pa]
+     * \param yH2O mole fraction of water
+     * \param highTemp True to use high temperature
+     * \param extrapolate True to use extrapolation
+     * \param spycherPruess2005 True to Spycher-Pruess (2005) model
      */
     template <class Evaluation, class CO2Params>
     static Evaluation fugacityCoefficientCO2(const CO2Params& params,
@@ -237,8 +252,13 @@ public:
      *
      * (given in Spycher, Pruess and Ennis-King (2003))
      *
+     * \param params Parameters to use
      * \param temperature the temperature [K]
      * \param pg the gas phase pressure [Pa]
+     * \param yH2O mole fraction of water
+     * \param highTemp True to use high temperature
+     * \param extrapolate True to use extrapolation
+     * \param spycherPruess2005 True to Spycher-Pruess (2005) model
      */
     template <class Evaluation, class CO2Params>
     static Evaluation fugacityCoefficientH2O(const CO2Params& params,

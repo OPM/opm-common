@@ -45,6 +45,7 @@ namespace Opm {
 
         void addColumns();
         //! \brief Initialize deck item.
+        //! \param tableName Name of table to initialize
         //! \param deckItem item to initialize
         //! \param tableID Index for table to initialize
         //! \param scaling_factor If zero use SI value, else use value scaled by scaling factor

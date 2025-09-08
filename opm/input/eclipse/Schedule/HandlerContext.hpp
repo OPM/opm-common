@@ -53,8 +53,20 @@ namespace Opm {
 class HandlerContext
 {
 public:
-    /// \param welsegs_wells All wells with a WELSEGS entry for checks.
-    /// \param compegs_wells All wells with a COMPSEGS entry for checks.
+    /// \param schedule Schedule to initialize
+    /// \param block_ Block in schedule to use
+    /// \param keyword_ Keyword to use
+    /// \param grid_ Grid schedule to use
+    /// \param currentStep_ Current report step
+    /// \param matches_ Matching entities
+    /// \param action_mode_ True if we are parsing an ACTION
+    /// \param parseContext_ Context for the parser
+    /// \param errors_ Error handler to use
+    /// \param sim_update_ Simulator update structure to use
+    /// \param target_wellpi_ Well production indices to target
+    /// \param wpimult_global_factor_ Global well production index multipliers
+    /// \param welsegs_wells_ All wells with a WELSEGS entry for checks.
+    /// \param compsegs_wells_ All wells with a COMPSEGS entry for checks.
     HandlerContext(Schedule& schedule,
                    const ScheduleBlock& block_,
                    const DeckKeyword& keyword_,

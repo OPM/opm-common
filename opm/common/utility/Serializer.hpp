@@ -346,7 +346,7 @@ protected:
 
     //! \brief Handler for maps.
     //! \tparam Map map type
-    //! \param map The map to (de-)serialize
+    //! \param data The map to (de-)serialize
     template<class Map>
     void map(const Map& data)
     {
