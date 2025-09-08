@@ -56,6 +56,9 @@ struct RstGroup
     int voidage_group_index;
     int add_gas_lift_gas;
 
+    /// Kind of group (i.e., well, node, or satellite).
+    int group_type{};
+
     float oil_rate_limit;
     float water_rate_limit;
     float gas_rate_limit;

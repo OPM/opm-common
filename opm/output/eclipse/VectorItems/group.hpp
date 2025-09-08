@@ -76,8 +76,10 @@ namespace Opm::RestartIO::Helpers::VectorItems {
             };
 
             enum GroupType : int {
-                WellGroup = 0,
-                TreeGroup = 1,
+                WellGroup = 0,      // Group is a well group (children are wells)
+                NodeGroup = 1,      // Group is a node group (children are other groups)
+                SatelliteGroup = 2, // Group is a satellite (GSAT* keywords, no children)
+                SlaveGroup = 3,     // Group is a slave in a reservoir coupling run
             };
 
             enum GLiftGas : int {
@@ -111,6 +113,8 @@ namespace Opm::RestartIO::Helpers::VectorItems {
             WatRateLimit_2 = 53, // Copy of group's water production target/limit
             LiqRateLimit_2 = 54, // Copy of group's liquid production target/limit
             ResvRateLimit_2 = 55, // Copy of group's maximum reservoir volume production rate target/limit
+
+            MeanCaloricValue = 79, // Mean calorific value of produced gas (GSATPROD keyword)
 
             GLOMaxRate    = 91, // Group's maximum lift gas rate
         };
@@ -147,6 +151,8 @@ namespace Opm::RestartIO::Helpers::VectorItems {
             gasResRateLimit_2       =  66, // Copy of group's gas reservoir volume injection rate target/limit
             gasReinjectionLimit_2   =  67, // Copy of group's gas reinjection fraction target/limit
             gasVoidageLimit_2       =  68, // Copy of group's gas voidage injection fraction target/limit
+
+            gasMeanCalorificValue = 83, // Mean calorific value of injected gas (GSATINJE keyword)
         };
 
         namespace Value {

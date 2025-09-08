@@ -91,6 +91,7 @@
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
 #include <opm/input/eclipse/Deck/DeckSection.hpp>
+#include <opm/input/eclipse/Deck/UDAValue.hpp>
 
 #include <opm/input/eclipse/Parser/ParserKeywords/A.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/B.hpp>
@@ -2325,8 +2326,11 @@ namespace {
         std::map<int, std::string> rst_group_names;
         for (const auto& rst_group : rst_state.groups) {
             this->addGroup(rst_group, report_step);
+
             const auto& group = this->snapshots.back().groups.get( rst_group.name );
+
             rst_group_names[group.insert_index()] = rst_group.name;
+
             if (group.isProductionGroup()) {
                 // Was originally at report_step + 1
                 this->snapshots.back().events().addEvent(ScheduleEvents::GROUP_PRODUCTION_UPDATE );
@@ -2491,6 +2495,7 @@ namespace {
 
         for (const auto& rst_group : rst_state.groups) {
             auto& group = this->snapshots.back().groups.get( rst_group.name );
+
             if (group.isProductionGroup()) {
                 auto new_config = this->snapshots.back().guide_rate();
                 new_config.update_production_group(group);
@@ -2525,6 +2530,31 @@ namespace {
                         group.updateInjection(inj_prop);
                     }
                 }
+            }
+
+            if (group.hasSatelliteProduction()) {
+                auto satellite_prod = this->snapshots.back().gsatprod();
+
+                const auto dim_l = this->m_static.m_unit_system
+                    .getDimension(UnitSystem::measure::liquid_surface_rate);
+
+                const auto dim_g = this->m_static.m_unit_system
+                    .getDimension(UnitSystem::measure::gas_surface_rate);
+
+                const auto dim_r = this->m_static.m_unit_system
+                    .getDimension(UnitSystem::measure::rate);
+
+                const auto qo    = UDAValue { rst_group.oil_rate_limit  , dim_l };
+                const auto qw    = UDAValue { rst_group.water_rate_limit, dim_l };
+                const auto qg    = UDAValue { rst_group.gas_rate_limit  , dim_g };
+                const auto qr    = UDAValue { rst_group.resv_rate_limit , dim_r };
+                const auto glift = UDAValue { rst_group.glift_max_supply, dim_g };
+
+                satellite_prod.assign(rst_group.name,
+                                      qo, qg, qw, qr, glift,
+                                      udq_undefined);
+
+                this->snapshots.back().gsatprod.update(std::move(satellite_prod));
             }
         }
 
