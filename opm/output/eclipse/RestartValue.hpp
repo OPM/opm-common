@@ -99,7 +99,6 @@ namespace Opm {
         void addExtra(const std::string& key, std::vector<double> data);
         void addExtra(const std::string& key, std::vector<float> data);
         const std::vector<double>& getExtra(const std::string& key) const;
-        void filter_wells_for_lgr(data::Wells& allwells, int lgr_grid);
         void convertFromSI(const UnitSystem& units);
         void convertToSI(const UnitSystem& units);
 
@@ -116,6 +115,9 @@ namespace Opm {
         }
 
         static RestartValue serializationTestObject();
+
+      private:
+        void filter_wells_for_lgr(int lgr_grid);
     };
 
 }

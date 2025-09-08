@@ -61,6 +61,7 @@ namespace Opm {
         , aquifer  { std::move(aquifer_arg) }
     {
     }
+
     RestartValue::RestartValue(data::Solution sol,
                                data::Wells wells_arg,
                                data::GroupAndNetworkValues grp_nwrk_arg,
@@ -70,31 +71,27 @@ namespace Opm {
               std::move(grp_nwrk_arg), std::move(aquifer_arg))
     {
         // Filter the wells using the lgr_grid parameter.
-        filter_wells_for_lgr(this->wells, lgr_grid);
+        filter_wells_for_lgr(lgr_grid);
     }
 
-    void RestartValue::filter_wells_for_lgr(data::Wells& all_wells, int lgr_grid){
+    void RestartValue::filter_wells_for_lgr(int lgr_grid){
         std::vector<std::reference_wrapper<const std::string>> wells_to_be_removed;
 
-        auto filterConnections = [](const std::vector<Opm::data::Connection>& connections, int lgr_grid_num) -> bool {
-            for (const auto& conn : connections) {
-                if (conn.lgr_grid == lgr_grid_num) {
-                    return true;
-                }
-            }
-            return false;
+        auto isConnected = [lgr_grid](const std::vector<data::Connection>& connections)
+        {
+            return std::any_of(connections.begin(), connections.end(),
+                               [lgr_grid](const auto& conn)
+                               { return conn.lgr_grid == lgr_grid; });
         };
 
-        for (const auto& pair : all_wells) {
-            const std::string& well_name = pair.first;
-            auto& well_data = pair.second;
-            if (!filterConnections(well_data.connections, lgr_grid)) {
+        for (const auto& [well_name, well_data] : this->wells ) {
+            if (!isConnected(well_data.connections)) {
                 wells_to_be_removed.push_back(std::cref(well_name));
             }
         }
 
         for (const auto& well_ref : wells_to_be_removed) {
-            all_wells.erase(well_ref.get());
+            this->wells.erase(well_ref.get());
         }
     }
 
