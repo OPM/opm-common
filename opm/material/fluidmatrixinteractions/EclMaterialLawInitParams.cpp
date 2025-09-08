@@ -95,7 +95,7 @@ run(const IntLookupFunction& fieldPropIntOnLeafAssigner,
             HystParams<Traits> hystParams{
                 params_,
                 epsGridProperties_,
-                *epsImbGridProperties_,
+                epsImbGridProperties_.get(),
                 this->eclState_,
                 this->parent_
             };

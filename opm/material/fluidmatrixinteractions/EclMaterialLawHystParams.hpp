@@ -54,7 +54,7 @@ public:
 
     HystParams(typename Manager<Traits>::Params& params,
                const EclEpsGridProperties& epsGridProperties,
-               const EclEpsGridProperties& epsImbGridProperties,
+               const EclEpsGridProperties* epsImbGridProperties,
                const EclipseState& eclState,
                const Manager<Traits>& parent);
 
@@ -123,7 +123,7 @@ private:
 
     typename Manager<Traits>::Params& params_;
     const EclEpsGridProperties& epsGridProperties_;
-    const EclEpsGridProperties& epsImbGridProperties_;
+    const EclEpsGridProperties* epsImbGridProperties_;
     const EclipseState& eclState_;
     const Manager<Traits>& parent_;
 };
