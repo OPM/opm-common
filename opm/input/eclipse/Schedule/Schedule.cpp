@@ -1715,7 +1715,7 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
         this->snapshots.resize(reportStep + 1);
 
         auto& input_block = this->m_sched_deck[reportStep];
-        ScheduleLogger logger(ScheduleLogger::select_stream(false, false), // will log to OpmLog::info
+        ScheduleLogger logger(ScheduleLogger::select_stream(true, false), // will log to OpmLog::debug
                               prefix, this->m_sched_deck.location());
 
         for (const auto& keyword : keywords) {
@@ -1764,7 +1764,8 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
                                          grid,
                                          &target_wellpi,
                                          prefix,
-                                         /* keepKeywords = */ true);
+                                         /* keepKeywords = */ true,
+                                         /* log_to_debug = */ true);
             this->simUpdateFromPython->delayed_iteration =
                 SimulatorUpdate::DelayedIteration::Off;
         }

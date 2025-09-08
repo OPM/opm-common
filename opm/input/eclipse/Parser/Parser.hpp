@@ -168,8 +168,12 @@ namespace Opm {
 
         const std::vector<std::pair<std::string,std::string>> codeKeywords() const;
 
+        bool silent() const { return silentMode; }
+        void silent(bool newSilentMode) { silentMode = newSilentMode; }
+        static constexpr int SILENT_MODE_MIN_DEBUG_VERBOSITY_LEVEL {3}; // Debug level at which to emit silenced messeages to the debug log
     private:
         bool hasWildCardKeyword(const std::string& keyword) const;
+        bool silentMode {false}; // Silence information messages (warnings and errors are still emitted)
         const ParserKeyword* matchingKeyword(const std::string_view& keyword) const;
         void addDefaultKeywords();
 
