@@ -38,8 +38,9 @@
 #include <opm/input/eclipse/Schedule/Action/Actions.hpp>
 #include <opm/input/eclipse/Schedule/GasLiftOpt.hpp>
 #include <opm/input/eclipse/Schedule/Group/GConSump.hpp>
-#include <opm/input/eclipse/Schedule/Group/GSatProd.hpp>
 #include <opm/input/eclipse/Schedule/Group/Group.hpp>
+#include <opm/input/eclipse/Schedule/Group/GroupSatelliteInjection.hpp>
+#include <opm/input/eclipse/Schedule/Group/GSatProd.hpp>
 #include <opm/input/eclipse/Schedule/MSW/Segment.hpp>
 #include <opm/input/eclipse/Schedule/MSW/WellSegments.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
@@ -703,7 +704,9 @@ alq_type(const Opm::ScheduleState&            sched_state,
 }
 
 template <rt phase>
-double satellite_prod(const Opm::SummaryState& st, const Opm::ScheduleState& sched, const std::string& group)
+double satellite_prod(const Opm::SummaryState&  st,
+                      const Opm::ScheduleState& sched,
+                      const std::string&        group)
 {
     using Rate = Opm::GSatProd::GSatProdGroupProp::Rate;
 
@@ -712,7 +715,8 @@ double satellite_prod(const Opm::SummaryState& st, const Opm::ScheduleState& sch
     if (! gsatprod.has(group)) {
         return 0.0;
     }
-    const auto& gs = gsatprod.get(group, st);
+
+    const auto gs = gsatprod.get(group, st);
 
     if constexpr (phase == rt::oil) {
         return gs.rate[Rate::Oil];
@@ -727,8 +731,38 @@ double satellite_prod(const Opm::SummaryState& st, const Opm::ScheduleState& sch
     return 0.0;
 }
 
-inline double cumulativeSatProdEffFactor(const Opm::ScheduleState& sched,
-                                         const std::string&        gr_name)
+template <rt phase>
+double satellite_inj(const Opm::ScheduleState& sched, const std::string& group)
+{
+    if (! sched.satelliteInjection.has(group)) {
+        return 0.0;
+    }
+
+    auto irate = [&gsatinje = sched.satelliteInjection(group)](const Opm::Phase p)
+    {
+        const auto ix = gsatinje.rateIndex(p);
+        if (! ix.has_value()) { return 0.0; }
+
+        const auto& q = gsatinje[*ix].surface();
+
+        return q.has_value() ? *q : 0.0;
+    };
+
+    if constexpr (phase == rt::oil) {
+        return irate(Opm::Phase::OIL);
+    }
+    else if constexpr (phase == rt::gas) {
+        return irate(Opm::Phase::GAS);
+    }
+    else if constexpr (phase == rt::wat) {
+        return irate(Opm::Phase::WATER);
+    }
+
+    return 0.0;
+}
+
+inline double cumulativeSatelliteEffFactor(const Opm::ScheduleState& sched,
+                                           const std::string&        gr_name)
 {
     if (!sched.groups.has(gr_name)) { return 1.0; }
 
@@ -757,11 +791,11 @@ inline double cumulativeSatProdEffFactor(const Opm::ScheduleState& sched,
     return efac;
 }
 
-template <rt phase>
-double accum_groups(const Opm::SummaryState& st,
-                    const Opm::ScheduleState& sched,
+template <typename SatelliteRate>
+double accum_groups(const Opm::ScheduleState& sched,
                     const std::string&        gr_name,
-                    const double              efac)
+                    const double              efac,
+                    SatelliteRate&&           sat_rate)
 {
     if (! sched.groups.has(gr_name)) {
         return 0.0;
@@ -770,15 +804,56 @@ double accum_groups(const Opm::SummaryState& st,
     const auto& children = sched.groups(gr_name).groups();
 
     return efac * std::accumulate(children.begin(), children.end(),
-                                  satellite_prod<phase>(st, sched, gr_name),
-                                  [&st, &sched](const double acc, const auto& child)
+                                  sat_rate(gr_name),
+                                  [&sched, &sat_rate]
+                                  (const double acc, const auto& child)
                                   {
                                       const auto efacDowntree = sched.groups(child)
                                           .getGroupEfficiencyFactor();
 
-                                      return acc + accum_groups<phase>(st, sched, child,
-                                                                       efacDowntree);
+                                      return acc + accum_groups(sched, child,
+                                                                efacDowntree,
+                                                                sat_rate);
                                   });
+}
+
+template <rt phase, bool injection, bool cumulativeSatellite>
+double satellite_rate(const fn_args& args)
+{
+    const auto& sched = args.schedule[args.sim_step];
+
+    const auto satRate = [is_cumulative = cumulativeSatellite,
+                          &sched, &gname = args.group_name]
+        (const auto& group_sat_rate)
+    {
+        // Distinguish between the rate and cumulative cases when including
+        // rates from satellite groups.  In particular, when computing
+        // cumulatives, we need to include all efficiency factors imposed at
+        // higher levels in the group tree.  Otherwise, we need only include
+        // down-tree efficiency factors.
+
+        const auto efac = !is_cumulative
+            ? 1.0
+            : cumulativeSatelliteEffFactor(sched, gname);
+
+        return accum_groups(sched, gname, efac, group_sat_rate);
+    };
+
+    if (!injection && !sched.gsatprod().empty()) {
+        // Down-tree satellite production rates.
+
+        return satRate([&st = args.st, &sched](const std::string& gname)
+        { return satellite_prod<phase>(st, sched, gname); });
+    }
+    else if (injection && (sched.satelliteInjection.size() > 0)) {
+        // Down-tree satellite injection rates.
+
+        return satRate([&sched](const std::string& gname)
+        { return satellite_inj<phase>(sched, gname); });
+    }
+
+    // Neither satellite injection nor satellite production.  Rate is zero.
+    return 0.0;
 }
 
 inline quantity artificial_lift_quantity( const fn_args& args ) {
@@ -875,7 +950,7 @@ inline quantity glir( const fn_args& args ) {
     return { alq_rate, measure::gas_surface_rate };
 }
 
-template <rt phase, bool injection = true, bool cumSatProd = false>
+template <rt phase, bool injection = true, bool cumulativeSatellite = false>
 inline quantity rate(const fn_args& args)
 {
     double sum = 0.0;
@@ -902,24 +977,8 @@ inline quantity rate(const fn_args& args)
         sum *= -1.0;
     }
 
-    if (!injection && !args.group_name.empty() &&
-        !args.schedule[args.sim_step].gsatprod().empty())
-    {
-        // Include satelite production in group's total rate.  This is only
-        // done for production groups, i.e. !args.group_name.empty() and
-        // !injection.  Furthermore, we need to distinguish between the rate
-        // and cumulative cases.  When computing cumulatives, we need to
-        // consider all efficiency factors imposed higher up in the group
-        // tree.  Otherwise, we need only include down-tree efficiency
-        // factors.
-
-        const auto& sched = args.schedule[args.sim_step];
-
-        const auto efac = !cumSatProd
-            ? 1.0
-            : cumulativeSatProdEffFactor(sched, args.group_name);
-
-        sum += accum_groups<phase>(args.st, sched, args.group_name, efac);
+    if (! args.group_name.empty()) {
+        sum += satellite_rate<phase, injection, cumulativeSatellite>(args);
     }
 
     if ((phase == rt::polymer) || (phase == rt::brine)) {
@@ -2542,9 +2601,10 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "GGIGR", group_guiderate<injector, Opm::data::GuideRateValue::Item::Gas> },
     { "GWIGR", group_guiderate<injector, Opm::data::GuideRateValue::Item::Water> },
 
-    { "GWIT", mul( rate< rt::wat, injector >, duration ) },
-    { "GOIT", mul( rate< rt::oil, injector >, duration ) },
-    { "GGIT", mul( rate< rt::gas, injector >, duration ) },
+    { "GWIT", mul(rate<rt::wat, injector, /* cumulativeSatellite = */ true>, duration) },
+    { "GOIT", mul(rate<rt::oil, injector, /* cumulativeSatellite = */ true>, duration) },
+    { "GGIT", mul(rate<rt::gas, injector, /* cumulativeSatellite = */ true>, duration) },
+
     { "GEIT", mul( rate< rt::energy, injector >, duration ) },
     { "GTITHEA", mul( rate< rt::energy, injector >, duration ) },
     { "GNIT", mul( rate< rt::solvent, injector >, duration ) },
@@ -2584,9 +2644,9 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "NPR", converged_node_pressure },
     { "GNETPR", converged_node_pressure },
 
-    { "GWPT", mul(rate<rt::wat, producer, /* cumSatProd = */ true>, duration) },
-    { "GOPT", mul(rate<rt::oil, producer, /* cumSatProd = */ true>, duration) },
-    { "GGPT", mul(rate<rt::gas, producer, /* cumSatProd = */ true>, duration) },
+    { "GWPT", mul(rate<rt::wat, producer, /* cumulativeSatellite = */ true>, duration) },
+    { "GOPT", mul(rate<rt::oil, producer, /* cumulativeSatellite = */ true>, duration) },
+    { "GGPT", mul(rate<rt::gas, producer, /* cumulativeSatellite = */ true>, duration) },
 
     { "GEPT", mul( rate< rt::energy, producer >, duration ) },
     { "GTPTHEA", mul( rate< rt::energy, producer >, duration ) },
