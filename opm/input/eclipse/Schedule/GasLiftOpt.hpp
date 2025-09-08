@@ -371,7 +371,7 @@ public:
     /// Throws an exception of type std::out_of_range if no parameters have
     /// been defined for the named well.
     ///
-    /// \param[in] qname Well name.
+    /// \param[in] wname Well name.
     ///
     /// \return Gas lift and gas lift optimisation parameters for named
     /// well \p wname.

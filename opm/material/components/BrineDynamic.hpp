@@ -123,7 +123,16 @@ public:
     { return H2O::triplePressure(); /* [N/m^2] */ }
 
     /*!
-     * \copydoc H2O::vaporPressure
+     * \brief The vapor pressure in \f$\mathrm{[Pa]}\f$ of pure water
+     *        at a given temperature.
+     *
+     * See:
+     *
+     * IAPWS: "Revised Release on the IAPWS Industrial Formulation
+     * 1997 for the Thermodynamic Properties of Water and Steam",
+     * http://www.iapws.org/relguide/IF97-Rev.pdf
+     *
+     * \param T Absolute temperature of the system in \f$\mathrm{[K]}\f$
      */
     template <class Evaluation>
     OPM_HOST_DEVICE static Evaluation vaporPressure(const Evaluation& T)
@@ -138,7 +147,12 @@ public:
     { return H2O::gasEnthalpy(temperature, pressure); /* [J/kg] */ }
 
     /*!
-     * \copydoc Component::liquidEnthalpy
+     * \brief Specific enthalpy \f$\mathrm{[J/kg]}\f$ of the pure component in liquid.
+     *
+     * \param temperature temperature of component in \f$\mathrm{[K]}\f$
+     * \param pressure pressure of component in \f$\mathrm{[Pa]}\f$
+     * \param salinity Salinity of component
+     *
      *
      * Equations given in:
      * - Palliser & McKibbin 1997
@@ -254,14 +268,20 @@ public:
     { return H2O::gasDensity(temperature, pressure); }
 
     /*!
-     * \copydoc Component::liquidDensity
+     * \brief The density \f$\mathrm{[kg/m^3]}\f$ of the liquid component at a given pressure in \f$\mathrm{[Pa]}\f$ and temperature in \f$\mathrm{[K]}\f$.
+     *
+     * \param temperature temperature of component in \f$\mathrm{[K]}\f$
+     * \param pressure pressure of component in \f$\mathrm{[Pa]}\f$
+     * \param salinity Salinity of component
+     * \param extrapolate True to use extrapolation
      *
      * Equations given in:
      * - Batzle & Wang (1992)
      * - cited by: Adams & Bachu in Geofluids (2002) 2, 257-271
      */
     template <class Evaluation>
-    OPM_HOST_DEVICE static Evaluation liquidDensity(const Evaluation& temperature, const Evaluation& pressure, const Evaluation& salinity, bool extrapolate = false)
+    OPM_HOST_DEVICE static Evaluation liquidDensity(const Evaluation& temperature, const Evaluation& pressure,
+                                                    const Evaluation& salinity, bool extrapolate = false)
     {
         Evaluation tempC = temperature - 273.15;
         Evaluation pMPa = pressure/1.0E6;
@@ -330,7 +350,10 @@ public:
     { return H2O::gasViscosity(temperature, pressure); }
 
     /*!
-     * \copydoc H2O::liquidViscosity
+     * \brief The dynamic liquid viscosity \f$\mathrm{[Pa*s]}\f$ of the pure component.
+     *
+     * \param temperature temperature of component in \f$\mathrm{[K]}\f$
+     * \param salinity Salinity of component
      *
      * Equation given in:
      * - Batzle & Wang (1992)
@@ -338,7 +361,9 @@ public:
      *   "Equations of State for basin geofluids"
      */
     template <class Evaluation>
-    OPM_HOST_DEVICE static Evaluation liquidViscosity(const Evaluation& temperature, const Evaluation& /*pressure*/, const Evaluation& salinity)
+    OPM_HOST_DEVICE static Evaluation liquidViscosity(const Evaluation& temperature,
+                                                      const Evaluation& /*pressure*/,
+                                                      const Evaluation& salinity)
     {
         Evaluation T_C = temperature - 273.15;
         if(temperature <= 275.) // regularization
@@ -349,6 +374,7 @@ public:
 
         return mu_brine/1000.0; // convert to [Pa s] (todo: check if correct cP->Pa s is times 10...)
     }
+
 private:
     //Molar mass salt (assumes pure NaCl) [kg/mol]
     static constexpr Scalar mM_salt()

@@ -98,6 +98,7 @@ public:
     /*!
      * \brief Initialize the function for the water vaporization factor \f$R_v\f$
      *
+     * \param regionIdx Region index to use
      * \param samplePoints A container of (x,y) values.
      */
     void setSaturatedGasWaterVaporizationFactor(unsigned regionIdx,
@@ -107,6 +108,7 @@ public:
     /*!
      * \brief Initialize the function for the oil vaporization factor \f$R_v\f$
      *
+     * \param regionIdx Region index to use
      * \param samplePoints A container of (x,y) values.
      */
     void setSaturatedGasOilVaporizationFactor(unsigned regionIdx,
@@ -341,6 +343,7 @@ public:
      * \brief Returns the saturation pressure of the gas phase [Pa]
      *        depending on its mass fraction of the water component
      *
+     * \param regionIdx Region index to use
      * \param Rw The surface volume of water component dissolved in what will yield one
      *           cubic meter of gas at the surface [-]
      */

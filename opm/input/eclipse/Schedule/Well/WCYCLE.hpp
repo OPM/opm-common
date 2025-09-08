@@ -127,6 +127,7 @@ public:
     /// \param[in] dt Current time step for simulator
     /// \param[in] wmatch Well matcher handling WLIST resolution
     /// \param[in] open_times Times at which cycling wells were opened
+    /// \param[in] schedule_open Callback to check if well is opened by the schedule
     /// \return Vector of efficiency scaling factors for cycling wells
     WellEfficiencyVec efficiencyScale(const double current_time,
                                       const double dt,

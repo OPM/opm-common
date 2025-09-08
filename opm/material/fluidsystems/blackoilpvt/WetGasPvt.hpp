@@ -92,6 +92,7 @@ public:
     /*!
      * \brief Initialize the function for the oil vaporization factor \f$R_v\f$
      *
+     * \param regionIdx Region index to use
      * \param samplePoints A container of (x,y) values.
      */
     void setSaturatedGasOilVaporizationFactor(unsigned regionIdx,
@@ -321,6 +322,7 @@ public:
      * This method uses the standard blackoil assumptions: This means that the Rv value
      * does not depend on the saturation of oil. (cf. the Eclipse VAPPARS keyword.)
      *
+     * \param regionIdx Region index to use
      * \param Rv The surface volume of oil component dissolved in what will yield one
      *           cubic meter of gas at the surface [-]
      */

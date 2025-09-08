@@ -99,6 +99,7 @@ public:
     /*!
      * \brief Initialize the function for the formation volume factor of dry gas
      *
+     * \param regionIdx Region index to use
      * \param samplePoints A container of \f$(p_g, B_g)\f$ values
      */
     void setGasFormationVolumeFactor(unsigned regionIdx,

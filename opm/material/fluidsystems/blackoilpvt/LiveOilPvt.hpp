@@ -88,6 +88,7 @@ public:
     /*!
      * \brief Initialize the function for the gas dissolution factor \f$R_s\f$
      *
+     * \param regionIdx Region index to use
      * \param samplePoints A container of (x,y) values.
      */
     void setSaturatedOilGasDissolutionFactor(unsigned regionIdx,
@@ -298,6 +299,7 @@ public:
      * \brief Returns the saturation pressure of the oil phase [Pa]
      *        depending on its mass fraction of the gas component
      *
+     * \param regionIdx Region index to use
      * \param Rs The surface volume of gas component dissolved in what will yield one cubic meter of oil at the surface [-]
      */
     template <class Evaluation>

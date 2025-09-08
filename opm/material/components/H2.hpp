@@ -190,11 +190,12 @@ public:
     }
 
     /*!
-    * \brief The density \f$\mathrm{[kg/m^3]}\f$ of \f$H_2\f$ at a given pressure and temperature.
-    *
-    * \param temperature temperature of component in \f$\mathrm{[K]}\f$
-    * \param pressure pressure of component in \f$\mathrm{[Pa]}\f$
-    */
+     * \brief The density \f$\mathrm{[kg/m^3]}\f$ of \f$H_2\f$ at a given pressure and temperature.
+     *
+     * \param temperature temperature of component in \f$\mathrm{[K]}\f$
+     * \param pressure pressure of component in \f$\mathrm{[Pa]}\f$
+     * \param extrapolate True to use extrapolation
+     */
     template <class Evaluation>
     static Evaluation gasDensity(Evaluation temperature, Evaluation pressure, bool extrapolate = false)
     {
@@ -206,6 +207,7 @@ public:
      *   depending on pressure and temperature.
      * \param temperature The temperature of the gas
      * \param pressure The pressure of the gas
+     * \param extrapolate True to use extrapolation
      */
     template <class Evaluation>
     static Evaluation gasMolarDensity(Evaluation temperature, Evaluation pressure, bool extrapolate = false)
@@ -259,6 +261,7 @@ public:
     *
     * \param temperature temperature of component in \f$\mathrm{[K]}\f$
     * \param pressure pressure of component in \f$\mathrm{[Pa]}\f$
+    * \param extrapolate True to use extrapolation
     */
     template <class Evaluation>
     static const Evaluation gasEnthalpy(Evaluation temperature,
@@ -273,6 +276,7 @@ public:
      *
      * \param temperature temperature of component in \f$\mathrm{[K]}\f$
      * \param pressure pressure of component in \f$\mathrm{[Pa]}\f$
+     * \param extrapolate True to use extrapolation
      *
      * See: Muzney et al., J. Chem. Eng. Data 2013, 58, 4, 969–979 (and the corrections!)
      *
@@ -407,6 +411,7 @@ public:
     * 
     * \param pg gas phase pressure [Pa]
     * \param temperature temperature [K]
+    * \param extrapolate True to use extrapolation
     */
     template <class Evaluation> 
     static Evaluation reducedMolarDensity(const Evaluation& temperature, 

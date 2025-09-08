@@ -102,7 +102,7 @@ class MonotCubicInterpolator {
 
    /**
        @param datafilename data file
-       @param XColumn x values
+       @param xColumn x values
        @param fColumn f values
 
        Accepts a filename as input, and parses the chosen columns in
@@ -117,7 +117,7 @@ class MonotCubicInterpolator {
 
    /**
        @param datafilename data file
-       @param XColumn x values
+       @param xColumn x values
        @param fColumn f values
 
        Accepts a filename as input, and parses the chosen columns in
@@ -170,7 +170,7 @@ class MonotCubicInterpolator {
 
    /**
        @param datafilename data file
-       @param XColumn x values
+       @param xColumn x values
        @param fColumn f values
 
        Accepts a filename as input, and parses the chosen columns in

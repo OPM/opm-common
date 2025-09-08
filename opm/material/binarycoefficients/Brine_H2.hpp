@@ -50,8 +50,8 @@ public:
     * \param temperature temperature [K]
     * \param pg gas phase pressure [Pa]
     * \param salinity salinity [kg NaCl / kg solution]
-    * \param knownPhaseIdx indicates which phases are present
     * \param xlH2 mole fraction of H2 in brine [mol/mol]
+    * \param extrapolate True to use extrapolation
     */
     template <class Evaluation>
     static Evaluation calculateMoleFractions(const Evaluation& temperature,
@@ -155,6 +155,7 @@ public:
     * 
     * \param temperature temperature [K]
     * \param pg gas phase pressure [Pa] 
+    * \param extrapolate True to use extrapolation
     */
     template <class Evaluation> 
     static Evaluation fugacityCoefficientH2(const Evaluation& temperature, 

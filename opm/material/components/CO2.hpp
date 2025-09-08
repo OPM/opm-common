@@ -309,11 +309,14 @@ public:
      * This function uses the fact that heat capacity is the partial
      * derivative of enthalpy function with respect to temperature.
      *
+     * \param params Parameters to use
      * \param temperature Temperature of component \f$\mathrm{[K]}\f$
      * \param pressure Pressure of component \f$\mathrm{[Pa]}\f$
      */
     template <class Evaluation>
-    OPM_HOST_DEVICE static Evaluation gasHeatCapacity(const Params& params, const Evaluation& temperature, const Evaluation& pressure)
+    OPM_HOST_DEVICE static Evaluation gasHeatCapacity(const Params& params,
+                                                      const Evaluation& temperature,
+                                                      const Evaluation& pressure)
     {
         OPM_TIMEFUNCTION_LOCAL();
         constexpr Scalar eps = 1e-6;

@@ -71,6 +71,7 @@ namespace Opm { namespace RestartIO { namespace Helpers {
         ///
         /// \param[in] n Number of windows.
         /// \param[in] sz Number of data items per window.
+        /// \param[in] initial Initial value to use
         explicit WindowedArray(const NumWindows n,
                                const WindowSize sz,
                                const T          initial = T{})
@@ -189,6 +190,7 @@ namespace Opm { namespace RestartIO { namespace Helpers {
         /// \param[in] nRows Number of rows.
         /// \param[in] nCols Number of columns.
         /// \param[in] sz Number of data items per (row,column) window.
+        /// \param[in] initial Initial value to use
         explicit WindowedMatrix(const NumRows&    nRows,
                                 const NumCols&    nCols,
                                 const WindowSize& sz,

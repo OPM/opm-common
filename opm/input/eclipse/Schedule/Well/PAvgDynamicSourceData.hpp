@@ -88,10 +88,9 @@ public:
 
         /// Assign all items
         ///
-        /// Availble only if underlying range is non-const.
+        /// Available only if underlying range is non-const.
         ///
-        /// \param[in] i Item of dynamic source data.
-        /// \param[in] value Numerical value of specified item.
+        /// \param[src] Source data span
         /// \return \code *this \endcode to enable chaining.
         template <typename U, typename Ret = SourceDataSpan&>
         constexpr std::enable_if_t<! std::is_const_v<T>, Ret>

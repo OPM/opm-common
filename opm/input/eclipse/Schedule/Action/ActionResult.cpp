@@ -375,7 +375,7 @@ public:
     ///
     /// Primarily for use by class Result.
     ///
-    /// \param[in] wells Sequence of well names that will be included in
+    /// \param[in] wnames Sequence of well names that will be included in
     /// set of matching entities.
     void addWells(const std::vector<std::string>& wnames);
 
@@ -400,10 +400,10 @@ public:
 
     /// Equality predicate.
     ///
-    /// \param[in] data Object against which \code *this \endcode will
+    /// \param[in] that Object against which \code *this \endcode will
     /// be tested for equality.
     ///
-    /// \return Whether or not \code *this \endcode is the same as \p data.
+    /// \return Whether or not \code *this \endcode is the same as \p that.
     bool operator==(const Impl& that) const;
 
 private:
@@ -574,7 +574,7 @@ public:
     ///
     /// Creates a result set with a known condition value.
     ///
-    /// \param[in] result_arg Condition value.
+    /// \param[in] result Condition value.
     explicit Impl(const bool result) : result_ { result } {}
 
     /// Get read/write access to set of matching entities.

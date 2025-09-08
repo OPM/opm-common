@@ -106,7 +106,9 @@ namespace Opm {
 
         /*! \brief Construct a Schedule object from a deck.
          *  \param deck Deck to construct Schedule from
+         *  \param grid Eclipse grid description
          *  \param fp Field property manager
+         *  \param numAquifers Numerical aquifers to use
          *  \param runspec Run specification parameters to use
          *  \param parseContext Parsing context
          *  \param errors Error configuration
@@ -122,7 +124,7 @@ namespace Opm {
                  const EclipseGrid& grid,
                  const FieldPropsManager& fp,
                  const NumericalAquifers& numAquifers,
-                 const Runspec &runspec,
+                 const Runspec& runspec,
                  const ParseContext& parseContext,
                  ErrorGuard& errors,
                  std::shared_ptr<const Python> python,

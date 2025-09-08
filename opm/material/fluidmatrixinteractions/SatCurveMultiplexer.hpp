@@ -142,7 +142,7 @@ public:
      *               relative permeability of each fluid phase.
      * \param params The parameter object expressing the coefficients
      *               required by the material law.
-     * \param fs The fluid state for which the relative permeabilities
+     * \param fluidState The fluid state for which the relative permeabilities
      *           ought to be calculated
      */
     template <class Container, class FluidState>

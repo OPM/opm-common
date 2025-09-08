@@ -134,7 +134,8 @@ public:
      * \param nSamples The number of sampling points (must be > 2)
      * \param x An array containing the \f$x\f$ values of the spline's sampling points
      * \param y An array containing the \f$y\f$ values of the spline's sampling points
-     * \param periodic Indicates whether a natural or a periodic spline should be created
+     * \param splineType Type of spline
+     * \param sortInputs True to sort inputs
      */
     template <class ScalarArrayX, class ScalarArrayY>
     Spline(size_t nSamples,
@@ -149,7 +150,8 @@ public:
      *
      * \param nSamples The number of sampling points (must be > 2)
      * \param points An array of \f$(x,y)\f$ tuples of the spline's sampling points
-     * \param periodic Indicates whether a natural or a periodic spline should be created
+     * \param splineType Type of spline
+     * \param sortInputs True to sort inputs
      */
     template <class PointArray>
     Spline(size_t nSamples,
@@ -163,7 +165,8 @@ public:
      *
      * \param x An array containing the \f$x\f$ values of the spline's sampling points (must have a size() method)
      * \param y An array containing the \f$y\f$ values of the spline's sampling points (must have a size() method)
-     * \param periodic Indicates whether a natural or a periodic spline should be created
+     * \param splineType Type of spline
+     * \param sortInputs True to sort inputs
      */
     template <class ScalarContainer>
     Spline(const ScalarContainer& x,
@@ -176,7 +179,8 @@ public:
      * \brief Convenience constructor for a natural or a periodic spline
      *
      * \param points An array of \f$(x,y)\f$ tuples of the spline's sampling points (must have a size() method)
-     * \param periodic Indicates whether a natural or a periodic spline should be created
+     * \param splineType Type of spline
+     * \param sortInputs True to sort inputs
      */
     template <class PointContainer>
     explicit Spline(const PointContainer& points,

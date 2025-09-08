@@ -148,6 +148,7 @@ public:
      *
      * \param params The parameters of the capillary pressure curve
      *               (for Brooks-Corey: Entry pressure and shape factor)
+     * \param fs Fluid state
      */
     template <class FluidState, class Evaluation = typename FluidState::Scalar>
     static Evaluation pcnw(const Params& params, const FluidState& fs)
@@ -187,6 +188,7 @@ public:
      *
      * \param params The parameters of the capillary pressure curve
      *               (for Brooks-Corey: Entry pressure and shape factor)
+     * \param fs Fluid state
      */
     template <class FluidState, class Evaluation = typename FluidState::Scalar>
     static Evaluation Sw(const Params& params, const FluidState& fs)
@@ -223,6 +225,7 @@ public:
      *
      * \param params The parameters of the capillary pressure curve
      *               (for Brooks-Corey: Entry pressure and shape factor)
+     * \param fs Fluid state
      */
     template <class FluidState, class Evaluation = typename FluidState::Scalar>
     static Evaluation krw(const Params& params, const FluidState& fs)
@@ -254,6 +257,7 @@ public:
      *
      * \param params The parameters of the capillary pressure curve
      *               (for Brooks-Corey: Entry pressure and shape factor)
+     * \param fs Fluid state
      */
     template <class FluidState, class Evaluation = typename FluidState::Scalar>
     static Evaluation krn(const Params& params, const FluidState& fs)

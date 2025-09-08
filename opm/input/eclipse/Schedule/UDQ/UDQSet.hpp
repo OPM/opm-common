@@ -166,7 +166,7 @@ public:
 
     /// Equality predicate
     ///
-    /// \param[in] UDQ scalar to which this scalar will be compared for
+    /// \param[in] other UDQ scalar to which this scalar will be compared for
     ///    equality.
     bool operator==(const UDQScalar& other) const;
 
@@ -244,12 +244,13 @@ public:
     ///
     /// \param[in] name UDQ set name
     /// \param[in] var_type UDQ set's variable type.
+    /// \param[in] size Size of value
     UDQSet(const std::string& name, UDQVarType var_type, std::size_t size);
 
     /// Construct empty, named UDQ set of specific variable type
     ///
     /// \param[in] name UDQ set name
-    /// \param[in] var_type UDQ set's variable type.
+    /// \param[in] size Size of value
     UDQSet(const std::string& name, std::size_t size);
 
     /// Form a UDQ set pertaining to a single scalar value.
@@ -266,7 +267,7 @@ public:
     ///
     /// \param[in] name UDQ set name
     ///
-    /// \param[in] scalar_value Initial numeric value of this scalar set.
+    /// \param[in] value Initial numeric value of this scalar set.
     ///    Non-finite value leaves the UDQ set undefined.
     static UDQSet scalar(const std::string& name, double value);
 
@@ -300,7 +301,7 @@ public:
     ///
     /// \param[in] name UDQ set name
     ///
-    /// \param[in] wells Collection of named groups.
+    /// \param[in] groups Collection of named groups.
     static UDQSet groups(const std::string& name,
                          const std::vector<std::string>& groups);
 

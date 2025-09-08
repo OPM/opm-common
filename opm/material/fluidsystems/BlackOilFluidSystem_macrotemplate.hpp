@@ -358,6 +358,7 @@ public:
      * \param rhoOil The reference density of (gas saturated) oil phase.
      * \param rhoWater The reference density of the water phase.
      * \param rhoGas The reference density of the gas phase.
+     * \param regionIdx Region index to use.
      */
     STATIC_OR_DEVICE void setReferenceDensities(Scalar rhoOil,
                                       Scalar rhoWater,

@@ -96,7 +96,7 @@ public:
      *
      * \param values Container for the return values
      * \param params Parameters
-     * \param state The fluid state
+     * \param fluidState The fluid state
      */
     template <class ContainerT, class FluidState>
     static void capillaryPressures(ContainerT& values,

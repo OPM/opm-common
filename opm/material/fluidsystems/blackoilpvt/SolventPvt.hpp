@@ -83,6 +83,7 @@ public:
     /*!
      * \brief Initialize the function for the formation volume factor of solvent gas
      *
+     * \param regionIdx Region index to use
      * \param samplePoints A container of \f$(p_g, B_s)\f$ values
      */
     void setSolventFormationVolumeFactor(unsigned regionIdx,

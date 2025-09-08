@@ -404,7 +404,7 @@ public:
         /// \code this->status \endcode is not \code GetStatus::OK \endcode.
         /// Does nothing otherwise.
         ///
-        /// \param[in] Input keyword which prompted request.
+        /// \param[in] loc Location of input keyword which prompted request.
         ///
         /// \param[in] descr Textual description of context in which request
         ///   occurred.

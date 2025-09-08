@@ -190,7 +190,7 @@ namespace Opm {
 
         /// Equality predicate.
         ///
-        /// \param[in] data Object against which \code *this \endcode will
+        /// \param[in] that Object against which \code *this \endcode will
         /// be tested for equality.
         ///
         /// \return Whether or not \code *this \endcode is the same as \p

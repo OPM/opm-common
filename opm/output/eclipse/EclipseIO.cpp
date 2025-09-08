@@ -131,13 +131,13 @@ public:
     /// retains a reference to this object, whence the lifetime of \p
     /// schedule should exceed that of the EclipseIO object.
     ///
-    /// \param[in] summary_config Run's collection of summary vectors
+    /// \param[in] summryConfig Run's collection of summary vectors
     /// requested in the SUMMARY section of the model description.  Used to
     /// initialise an internal \c SummaryConfig object that will
     /// additionally contain all vectors needed to evaluate the defining
     /// expressions of any user-defined quantities in the run.
     ///
-    /// \param[in] basename Name of main input data file, stripped of
+    /// \param[in] baseName Name of main input data file, stripped of
     /// extensions and directory names.
     ///
     /// \param[in] writeEsmry Whether or not to additionally create a

@@ -180,10 +180,11 @@ public:
     get_int_field_data(const std::string& keyword) const;
 
     /// \brief Get double field data associated with a keyword
+    /// \param keyword Keyword to obtain field data for
     /// \param allow_unsupported If true we deactivate some checks on the
     ///        keyword and thus allow getting FieldData used by the TranCalculator.
     const Fieldprops::FieldData<double>&
-    get_double_field_data(const std::string& keyword, bool allow_unsupported=false) const;
+    get_double_field_data(const std::string& keyword, bool allow_unsupported = false) const;
     virtual const std::vector<int>& get_int(const std::string& keyword) const { return this->get<int>(keyword); }
     virtual std::vector<int> get_global_int(const std::string& keyword) const { return this->get_global<int>(keyword); }
 
@@ -242,6 +243,7 @@ public:
     /// Needed for calculation transmissibility of NNCs over pinched out cells.
     /// \param indices The cartesian indices of the cells that contribute to the pinch out
     ///                transmissibilities.
+    /// \param data Vector to apply tranz to
     void apply_tranz_global(const std::vector<std::size_t>& indices,
                             std::vector<double>& data) const;
 

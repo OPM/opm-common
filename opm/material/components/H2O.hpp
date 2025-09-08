@@ -137,7 +137,7 @@ public:
      * 1997 for the Thermodynamic Properties of Water and Steam",
      * http://www.iapws.org/relguide/IF97-Rev.pdf
      *
-     * \param T Absolute temperature of the system in \f$\mathrm{[K]}\f$
+     * \param temperature Absolute temperature of the system in \f$\mathrm{[K]}\f$
      */
     template <class Evaluation>
     static Evaluation vaporPressure(Evaluation temperature)
@@ -684,6 +684,7 @@ public:
      *
      * \param temperature Absolute temperature of the fluid in \f$\mathrm{[K]}\f$
      * \param pressure Phase pressure in \f$\mathrm{[Pa]}\f$
+     * \param extrapolate True to use extrapolation
      */
     template <class Evaluation>
     static Evaluation liquidDensity(const Evaluation& temperature,
@@ -812,6 +813,7 @@ public:
      *
      * \param temperature Absolute temperature of the fluid in \f$\mathrm{[K]}\f$
      * \param pressure Phase pressure in \f$\mathrm{[Pa]}\f$
+     * \param extrapolate True to use extrapolation
      */
     template <class Evaluation>
     static Evaluation liquidViscosity(const Evaluation& temperature,

@@ -374,7 +374,7 @@ public:
      * \brief The vapor pressure in \f$\mathrm{[Pa]}\f$ of the component at a given
      *        temperature.
      *
-     * \param T temperature of component
+     * \param temperature temperature of component
      */
     template <class Evaluation>
     static Evaluation vaporPressure(const Evaluation& temperature)
