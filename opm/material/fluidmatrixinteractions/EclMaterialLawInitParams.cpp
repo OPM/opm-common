@@ -89,7 +89,7 @@ run(const IntLookupFunction& fieldPropIntOnLeafAssigner,
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-        for (unsigned elemIdx = 0; elemIdx < this->numCompressedElems_; ++elemIdx) {
+        for (long elemIdx = 0; elemIdx < static_cast<long>(this->numCompressedElems_); ++elemIdx) {
             unsigned satRegionIdx = satRegion_(*satnumArray[i], elemIdx);
             //unsigned satNumCell = this->parent_.satnumRegionArray_[elemIdx];
             HystParams<Traits> hystParams{
