@@ -82,10 +82,17 @@
 #include <tests/WorkArea.hpp>
 
 
-
 using namespace Opm;
 
 namespace {
+
+template <typename T>
+void check_vec_close(const T& actual, const T& expected, double tol = 1e-5)
+{
+    BOOST_REQUIRE_EQUAL(actual.size(), expected.size());
+    for (std::size_t i = 0; i < actual.size(); ++i)
+        BOOST_CHECK_CLOSE(actual[i], expected[i], tol);
+}
 
 data::GroupAndNetworkValues mkGroups()
 {
@@ -340,11 +347,13 @@ struct Setup
 BOOST_AUTO_TEST_CASE(ECL_LGRFORMATTED)
 {
     namespace OS = ::Opm::EclIO::OutputStream;
+    using measure = UnitSystem::measure;
 
     WorkArea test_area("test_Restart");
     test_area.copyIn("LGR_BASESIM2WELLS.DATA");
 
     Setup base_setup("LGR_BASESIM2WELLS.DATA");
+    const auto& units = base_setup.es.getUnits();
     auto& io_config = base_setup.es.getIOConfig();
     {
         const auto& lgr_labels = base_setup.grid.get_all_lgr_labels();
@@ -458,7 +467,72 @@ BOOST_AUTO_TEST_CASE(ECL_LGRFORMATTED)
 
                 BOOST_CHECK_MESSAGE(rst.hasKey("SWAT"), "Restart file must have SWAT vector");
                 BOOST_CHECK_MESSAGE(rst.hasKey("EXTRA"), "Restart file must have EXTRA vector");
+
+                {
+                    auto convert_length = [&units](measure m, const double x) { return static_cast<double>(units.to_si(m, x)); };
+                    auto convert_vector = [&](measure m, const std::vector<double>& input) {
+                        std::vector<double> output;
+                        output.resize(input.size());
+                        std::transform(input.begin(), input.end(), output.begin(),
+                                       [&](double x) { return convert_length(m, x); });
+                        return output;
+                    };
+
+                    // checking dynamic data for LGR
+                    {
+                    //LGR1
+                        auto pressure_lgr1 = rst.getRestartData<double>("PRESSURE", 1, "LGR1");
+                        check_vec_close(convert_vector(UnitSystem::measure::pressure, pressure_lgr1), std::vector<double>(num_cells[1], 6.0));
+
+                        auto temperature_lgr1 = rst.getRestartData<double>("TEMP", 1, "LGR1");
+                        check_vec_close(convert_vector(UnitSystem::measure::temperature, temperature_lgr1), std::vector<double>(num_cells[1], 7.0));
+
+                        auto swat_lgr1 = rst.getRestartData<double>("SWAT", 1, "LGR1");
+                        check_vec_close(swat_lgr1, std::vector<double>(num_cells[1], 8.0));
+                        auto sgas_lgr1 = rst.getRestartData<double>("SGAS", 1, "LGR1");
+                        check_vec_close(sgas_lgr1, std::vector<double>(num_cells[1], 9.0));
+
+                        auto rs_lgr1 = rst.getRestartData<double>("RS", 1, "LGR1");
+                        fun::iota rs_expected(300.0, 300.0 + num_cells[1]);
+                        std::vector<double> rs_expected_vec(rs_expected.begin(), rs_expected.end());
+                        check_vec_close(rs_lgr1, rs_expected_vec);
+
+                        auto rv_lgr1 = rst.getRestartData<double>("RV", 1, "LGR1");
+                        fun::iota rv_expected(400.0, 400.0 + num_cells[1]);
+                        std::vector<double> rv_expected_vec(rv_expected.begin(), rv_expected.end());
+                        check_vec_close(rv_lgr1, rv_expected_vec);
+                    }
+                    {
+                        //LGR2
+                        auto pressure_lgr2 = rst.getRestartData<double>("PRESSURE", 1, "LGR2");
+                        check_vec_close(convert_vector(UnitSystem::measure::pressure, pressure_lgr2), std::vector<double>(num_cells[1], 6.0));
+
+                        auto temperature_lgr2 = rst.getRestartData<double>("TEMP", 1, "LGR2");
+                        check_vec_close(convert_vector(UnitSystem::measure::temperature, temperature_lgr2), std::vector<double>(num_cells[1], 7.0));
+
+                        auto swat_lgr2 = rst.getRestartData<double>("SWAT", 1, "LGR2");
+                        check_vec_close(swat_lgr2, std::vector<double>(num_cells[1], 8.0));
+                        auto sgas_lgr2 = rst.getRestartData<double>("SGAS", 1, "LGR2");
+                        check_vec_close(sgas_lgr2, std::vector<double>(num_cells[1], 9.0));
+
+                        auto rs_lgr2 = rst.getRestartData<double>("RS", 1, "LGR2");
+                        fun::iota rs_expected(300.0, 300.0 + num_cells[1]);
+                        std::vector<double> rs_expected_vec(rs_expected.begin(), rs_expected.end());
+                        check_vec_close(rs_lgr2, rs_expected_vec);
+
+                        auto rv_lgr2 = rst.getRestartData<double>("RV", 1, "LGR2");
+                        fun::iota rv_expected(400.0, 400.0 + num_cells[1]);
+                        std::vector<double> rv_expected_vec(rv_expected.begin(), rv_expected.end());
+                        check_vec_close(rv_lgr2, rv_expected_vec);
+                    }
+
+
             }
+
+
+
+
         }
     }
+}
 }

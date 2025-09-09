@@ -999,21 +999,21 @@ namespace {
     }
 
     void writeLGRRestart(int                                          report_step,
-                        int                                          sim_step,
-                        double                                       seconds_elapsed,
-                        const Schedule&                              schedule,
-                        const EclipseGrid&                           grid,
-                        const EclipseState&                          es,
-                        const Action::State&                         action_state,
-                        const WellTestState&                         wtest_state,
-                        const SummaryState&                          sumState,
-                        const UDQState&                              udqState,
-                        bool                                         ecl_compatible_rst,
-                        bool                                         write_double,
-                        EclIO::OutputStream::Restart&                rstFile,
-                        const std::vector<RestartValue>&             values,
-                        int                                          lgrIndex,
-                        int                                          index)
+                         int                                          sim_step,
+                         double                                       seconds_elapsed,
+                         const Schedule&                              schedule,
+                         const EclipseGrid&                           grid,
+                         const EclipseState&                          es,
+                         const Action::State&                         action_state,
+                         const WellTestState&                         wtest_state,
+                         const SummaryState&                          sumState,
+                         const UDQState&                              udqState,
+                         bool                                         ecl_compatible_rst,
+                         bool                                         write_double,
+                         EclIO::OutputStream::Restart&                rstFile,
+                         const std::vector<RestartValue>&             values,
+                         int                                          lgrIndex,
+                         int                                          index)
     {
         const auto& all_lgr_names = grid.get_all_lgr_labels();
         const auto& lgr_grid_name = all_lgr_names[lgrIndex];
@@ -1027,13 +1027,13 @@ namespace {
 
         // Global HEADERS for LGR GRIDS
         const auto inteHD =
-        writeHeader(report_step, sim_step, nextStepSize(values[lgrIndex]),
+        writeHeader(report_step, sim_step, nextStepSize(values[lgrIndex+1]),
         seconds_elapsed, schedule, lgr_grid, es, rstFile);
 
-        writeDynamicDataLGR(sim_step, grid, es, schedule, values[lgrIndex].wells,
+        writeDynamicDataLGR(sim_step, grid, es, schedule, values[lgrIndex+1].wells,
                             action_state, wtest_state, sumState, inteHD,rstFile, lgr_grid_name);
 
-        writeSolutionLGR(values[lgrIndex], es, schedule, udqState, report_step, sim_step,
+        writeSolutionLGR(values[lgrIndex+1], es, schedule, udqState, report_step, sim_step,
         ecl_compatible_rst, write_double, inteHD, rstFile, lgr_grid_name);
 
         rstFile.write("ENDLGR", std::vector<int>{index});
