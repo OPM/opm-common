@@ -38,6 +38,7 @@
 #include <vector>
 
 #include <opm/common/utility/gpuDecorators.hpp>
+#include <opm/common/utility/gpuistl_if_available.hpp>
 
 // forward declaration of the class so the function in the next namespace can be declared
 template <class TraitsT, class VectorT = std::vector<typename TraitsT::Scalar>>
@@ -261,8 +262,10 @@ private:
         }
     }
 
+#if HAVE_CUDA
     template <class ViewType, class Traits, class Container>
     friend PiecewiseLinearTwoPhaseMaterialParams<Traits, ViewType> Opm::gpuistl::make_view(PiecewiseLinearTwoPhaseMaterialParams<Traits, Container>& params);
+#endif
 
     ValueVector SwPcwnSamples_;
     ValueVector SwKrwSamples_;
