@@ -178,7 +178,7 @@ bool FileDeck::Index::operator<(const Index& other) const
 }
 
 FileDeck::FileDeck(const Deck& deck)
-    : input_directory(fs::absolute(deck.getInputPath().empty() ? fs::current_path() : fs::path(deck.getInputPath())))
+    : input_directory(fs::absolute(deck.getInputPath().empty() ? fs::current_path() : fs::path(deck.getInputPath())).generic_string())
     , deck_tree(deck.tree())
 {
     if (deck.empty()) {
