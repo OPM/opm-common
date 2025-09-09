@@ -15,10 +15,7 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <opm/common/utility/numeric/calculateCellVol.hpp>
-
-#include <opm/common/ErrorMacros.hpp>
-
+#include <config.h>
 #include <algorithm>
 #include <array>
 #include <cassert>

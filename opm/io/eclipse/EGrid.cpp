@@ -15,6 +15,7 @@
    along with OPM.  If not, see <http://www.gnu.org/licenses/>.
    */
 
+#include <config.h>
 #include <opm/io/eclipse/EGrid.hpp>
 #include <opm/io/eclipse/EInit.hpp>
 #include <opm/io/eclipse/EclUtil.hpp>
