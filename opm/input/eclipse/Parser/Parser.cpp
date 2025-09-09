@@ -984,6 +984,7 @@ std::unique_ptr<RawKeyword> tryParseKeyword( ParserState& parserState, const Par
     std::unique_ptr<RawKeyword> rawKeyword;
     std::string_view record_buffer(str::emptystr);
     std::optional<ParserKeyword> parserKeyword;
+    const bool silent = parser.silent();
     while( !parserState.done() ) {
         auto line = parserState.getline();
 
@@ -994,11 +995,19 @@ std::unique_ptr<RawKeyword> tryParseKeyword( ParserState& parserState, const Par
         if (parserState.parseContext.isActiveSkipKeyword(deck_name)) {
             skip = true;
             auto msg = fmt::format("{:5} Reading {:<8} in {} line {} \n      ... ignoring everything until 'ENDSKIP' ... ", "", "SKIP", parserState.current_path().string(), parserState.line());
-            OpmLog::info(msg);
+            if (!silent) {
+                OpmLog::info(msg);
+            } else {
+                OpmLog::debug(msg, Parser::SILENT_MODE_MIN_DEBUG_VERBOSITY_LEVEL);
+            }
         } else if (deck_name == "ENDSKIP") {
             skip = false;
             auto msg = fmt::format("{:5} Reading {:<8} in {} line {}", "", "ENDSKIP", parserState.current_path().string(), parserState.line());
-            OpmLog::info(msg);
+            if (!silent) {
+                OpmLog::info(msg);
+            } else {
+                OpmLog::debug(msg, Parser::SILENT_MODE_MIN_DEBUG_VERBOSITY_LEVEL);
+            }
             continue;
         }
         if (skip) continue;
@@ -1434,7 +1443,11 @@ bool parseState( ParserState& parserState, const Parser& parser, ErrorGuard& err
             {
                 const auto& location = rawKeyword->location();
                 auto msg = fmt::format("{:5} Reading {:<8} in {} line {}", parserState.deck.size(), rawKeyword->getKeywordName(), location.filename, location.lineno);
-                OpmLog::info(msg);
+                if (!parser.silent()) {
+                    OpmLog::info(msg);
+                } else {
+                    OpmLog::debug(msg, Parser::SILENT_MODE_MIN_DEBUG_VERBOSITY_LEVEL);
+                }
             }
             try {
                 if (rawKeyword->getKeywordName() ==  Opm::RawConsts::pyinput) {
