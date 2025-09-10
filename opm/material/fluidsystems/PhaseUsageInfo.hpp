@@ -42,6 +42,7 @@ template <typename IndexTraits>
 class PhaseUsageInfo {
 public:
     static constexpr int numPhases = IndexTraits::numPhases;
+    static constexpr int numComponents = IndexTraits::numComponents;
 
     static constexpr int waterPhaseIdx = IndexTraits::waterPhaseIdx;
     static constexpr int oilPhaseIdx = IndexTraits::oilPhaseIdx;
@@ -70,6 +71,14 @@ public:
         assert(activePhaseIdx< numActivePhases_);
         return activeToCanonicalPhaseIdx_[activePhaseIdx];
     }
+
+    [[nodiscard]] short activeToCanonicalCompIdx(unsigned activeCompIdx) const;
+
+    [[nodiscard]] short canonicalToActiveCompIdx(unsigned compIdx) const;
+
+    [[nodiscard]] short activePhaseToCompIdx(unsigned activePhaseIdx) const;
+
+    [[nodiscard]] short activeCompToPhaseIdx(unsigned activeCompIdx) const;
 
 #if HAVE_ECL_INPUT
     void initFromPhases(const Phases& phases);
@@ -114,10 +123,15 @@ public:
     }
 
 private:
+    // only account for the three main phases: oil, water, gas
     unsigned char numActivePhases_ = 0;
     std::array<bool, numPhases> phaseIsActive_;
     std::array<short, numPhases> activeToCanonicalPhaseIdx_;
     std::array<short, numPhases> canonicalToActivePhaseIdx_;
+
+    // numComponents only account for three main components: oil, water, gas
+    std::array<short, numComponents> activeToCanonicalCompIdx_;
+    std::array<short, numComponents> canonicalToActiveCompIdx_;
 
     bool has_solvent{};
     bool has_polymer{};

@@ -177,8 +177,6 @@ public:
         , molarMass_(StorageT<typename decltype(molarMass_)::value_type>(other.molarMass_))
         , diffusionCoefficients_(StorageT<typename decltype(diffusionCoefficients_)::value_type>(other.diffusionCoefficients_))
         , phaseUsageInfo_(other.phaseUsageInfo_)
-        , activeToCanonicalCompIdx_(other.activeToCanonicalCompIdx_)
-        , canonicalToActiveCompIdx_(other.canonicalToActiveCompIdx_)
         , isInitialized_(other.isInitialized_)
         , useSaturatedTables_(other.useSaturatedTables_)
         , enthalpy_eq_energy_(other.enthalpy_eq_energy_)
@@ -200,8 +198,6 @@ public:
                           Storage<std::array<Scalar, 3>>&& _molarMass_,
                           Storage<std::array<Scalar, 3 * 3>>&& _diffusionCoefficients_,
                           const PhaseUsageInfo<IndexTraits>& _phaseUsageInfo_,
-                          std::array<short, 3> _activeToCanonicalCompIdx_,
-                          std::array<short, 3> _canonicalToActiveCompIdx_,
                           bool _isInitialized_,
                           bool _useSaturatedTables_,
                           bool _enthalpy_eq_energy_)
@@ -220,8 +216,6 @@ public:
         , molarMass_(std::move(_molarMass_))
         , diffusionCoefficients_(std::move(_diffusionCoefficients_))
         , phaseUsageInfo_(_phaseUsageInfo_)
-        , activeToCanonicalCompIdx_(_activeToCanonicalCompIdx_)
-        , canonicalToActiveCompIdx_(_canonicalToActiveCompIdx_)
         , isInitialized_(_isInitialized_)
         , useSaturatedTables_(_useSaturatedTables_)
         , enthalpy_eq_energy_(_enthalpy_eq_energy_)
@@ -1776,9 +1770,6 @@ private:
 
     STATIC_OR_NOTHING PhaseUsageInfo<IndexTraits> phaseUsageInfo_;
 
-    STATIC_OR_NOTHING std::array<short, numComponents> activeToCanonicalCompIdx_;
-    STATIC_OR_NOTHING std::array<short, numComponents> canonicalToActiveCompIdx_;
-
     STATIC_OR_NOTHING bool isInitialized_;
     STATIC_OR_NOTHING bool useSaturatedTables_;
     STATIC_OR_NOTHING bool enthalpy_eq_energy_;
@@ -1801,8 +1792,6 @@ private:
         , molarMass_(StorageT<typename decltype(molarMass_)::value_type>(other.molarMass_))
         , diffusionCoefficients_(StorageT<typename decltype(diffusionCoefficients_)::value_type>(other.diffusionCoefficients_))
         , phaseUsageInfo_(other.phaseUsageInfo_)
-        , activeToCanonicalCompIdx_(other.activeToCanonicalCompIdx_)
-        , canonicalToActiveCompIdx_(other.canonicalToActiveCompIdx_)
         , isInitialized_(other.isInitialized_)
         , useSaturatedTables_(other.useSaturatedTables_)
         , enthalpy_eq_energy_(other.enthalpy_eq_energy_)
@@ -1876,16 +1865,6 @@ NOTHING_OR_DEVICE void FLUIDSYSTEM_CLASSNAME<Scalar,IndexTraits, Storage>::initE
 
         // finally, for oil phase, we take the molar mass from the spe9 paper
         molarMass_[regionIdx][oilCompIdx] = 175e-3; // kg/mol
-    }
-
-    int activeCompIdx = 0;
-    for (unsigned c = 0; c < numComponents; ++c) {
-        // TODO: use phaseIsActive for components checking is a temporary workaround
-        if (phaseIsActive(IndexTraits::componentToPhaseIdx(c))) {
-            activeToCanonicalCompIdx_[activeCompIdx] = c;
-            canonicalToActiveCompIdx_[c] = activeCompIdx;
-            ++activeCompIdx;
-        }
     }
 
     isInitialized_ = true;
@@ -1982,47 +1961,28 @@ template <class Scalar, class IndexTraits, template<typename> typename Storage>
 NOTHING_OR_DEVICE short FLUIDSYSTEM_CLASSNAME<Scalar,IndexTraits, Storage>::
 activeToCanonicalCompIdx(unsigned activeCompIdx) NOTHING_OR_CONST
 {
-    if (activeCompIdx >= numActivePhases()) {
-        return activeCompIdx; // e.g. for solvent
-    }
-
-    return activeToCanonicalCompIdx_[activeCompIdx];
+    return phaseUsageInfo_.activeToCanonicalCompIdx(activeCompIdx);
 }
 
 template <class Scalar, class IndexTraits, template<typename> typename Storage>
 NOTHING_OR_DEVICE short FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, Storage>::
 canonicalToActiveCompIdx(unsigned compIdx) NOTHING_OR_CONST
 {
-    if (compIdx >= numComponents) {
-        return compIdx; // e.g. for solvent
-    }
-    return canonicalToActiveCompIdx_[compIdx];
+    return phaseUsageInfo_.canonicalToActiveCompIdx(compIdx);
 }
 
 template <class Scalar, class IndexTraits, template<typename> typename Storage>
 NOTHING_OR_DEVICE short FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, Storage>::
 activePhaseToCompIdx(unsigned activePhaseIdx) NOTHING_OR_CONST
 {
-    if (activePhaseIdx >= numActivePhases()) {
-        return activePhaseIdx; // e.g. for solvent
-    }
-    const short canonicalPhaseIdx = activeToCanonicalPhaseIdx(activePhaseIdx);
-    const short canonicalCompIdx = IndexTraits::phaseToComponentIdx(canonicalPhaseIdx);
-    const short activeCompIdx = canonicalToActiveCompIdx(canonicalCompIdx);
-    return activeCompIdx;
+    return phaseUsageInfo_.activePhaseToCompIdx(activePhaseIdx);
 }
 
 template <class Scalar, class IndexTraits, template<typename> typename Storage>
 NOTHING_OR_DEVICE short FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, Storage>::
 activeCompToPhaseIdx(unsigned activeCompIdx) NOTHING_OR_CONST
 {
-    if (activeCompIdx >= numActivePhases()) {
-        return activeCompIdx; // e.g. for solvent
-    }
-    const short canonicalCompIdx = activeToCanonicalCompIdx(activeCompIdx);
-    const short canonicalPhaseIdx = IndexTraits::componentToPhaseIdx(canonicalCompIdx);
-    const short activePhaseIdx = canonicalToActivePhaseIdx(canonicalPhaseIdx);
-    return activePhaseIdx;
+    return phaseUsageInfo_.activeCompToPhaseIdx(activeCompIdx);
 }
 
 template <class Scalar, class IndexTraits, template<typename> typename Storage>
@@ -2038,8 +1998,6 @@ template <typename T> using BOFS = FLUIDSYSTEM_CLASSNAME<T, BlackOilDefaultFluid
 
 #define DECLARE_INSTANCE(T) \
 template<> PhaseUsageInfo<BlackOilDefaultFluidSystemIndices> BOFS<T>::phaseUsageInfo_;\
-template<> std::array<short, BOFS<T>::numComponents> BOFS<T>::activeToCanonicalCompIdx_; \
-template<> std::array<short, BOFS<T>::numComponents> BOFS<T>::canonicalToActiveCompIdx_; \
 template<> T BOFS<T>::surfaceTemperature;                                             \
 template<> T BOFS<T>::surfacePressure;                                                \
 template<> T BOFS<T>::reservoirTemperature_;                                          \
@@ -2113,8 +2071,6 @@ copy_to_gpu(const FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits>& oldFluidSystem) {
         std::move(newMolarMass),
         std::move(newDiffusionCoefficients),
         oldFluidSystem.phaseUsageInfo_,
-        oldFluidSystem.activeToCanonicalCompIdx_,
-        oldFluidSystem.canonicalToActiveCompIdx_,
         oldFluidSystem.isInitialized_,
         oldFluidSystem.useSaturatedTables_,
         oldFluidSystem.enthalpy_eq_energy_
@@ -2152,8 +2108,6 @@ make_view(FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, GpuBuffer>& oldFluidSystem)
         std::move(newMolarMass),
         std::move(newDiffusionCoefficients),
         oldFluidSystem.phaseUsageInfo_,
-        oldFluidSystem.activeToCanonicalCompIdx_,
-        oldFluidSystem.canonicalToActiveCompIdx_,
         oldFluidSystem.isInitialized_,
         oldFluidSystem.useSaturatedTables_,
         oldFluidSystem.enthalpy_eq_energy_

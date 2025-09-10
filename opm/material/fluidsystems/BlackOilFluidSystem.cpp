@@ -221,10 +221,6 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
         BlackOilFluidSystem<T, BlackOilDefaultFluidSystemIndices, VectorWithDefaultAllocator>::molarMass_ = {}; \
     template<> std::vector<std::array<T, 9>> \
         BlackOilFluidSystem<T, BlackOilDefaultFluidSystemIndices, VectorWithDefaultAllocator>::diffusionCoefficients_ = {};   \
-    template<> std::array<short, BlackOilFluidSystem<T, BlackOilDefaultFluidSystemIndices, VectorWithDefaultAllocator>::numComponents> \
-        BlackOilFluidSystem<T, BlackOilDefaultFluidSystemIndices, VectorWithDefaultAllocator>::activeToCanonicalCompIdx_ = {0, 1, 2}; \
-    template<> std::array<short, BlackOilFluidSystem<T, BlackOilDefaultFluidSystemIndices, VectorWithDefaultAllocator>::numComponents> \
-        BlackOilFluidSystem<T , BlackOilDefaultFluidSystemIndices, VectorWithDefaultAllocator>::canonicalToActiveCompIdx_ = {0, 1, 2}; \
     template<> bool BlackOilFluidSystem<T, BlackOilDefaultFluidSystemIndices, VectorWithDefaultAllocator>::isInitialized_ = false; \
     template<> bool BlackOilFluidSystem<T, BlackOilDefaultFluidSystemIndices, VectorWithDefaultAllocator>::useSaturatedTables_ = false; \
     template<> bool BlackOilFluidSystem<T, BlackOilDefaultFluidSystemIndices, VectorWithDefaultAllocator>::enthalpy_eq_energy_ = false; \
