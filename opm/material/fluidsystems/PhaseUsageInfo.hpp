@@ -48,6 +48,10 @@ public:
     static constexpr int oilPhaseIdx = IndexTraits::oilPhaseIdx;
     static constexpr int gasPhaseIdx = IndexTraits::gasPhaseIdx;
 
+    static constexpr int waterCompIdx = IndexTraits::waterCompIdx;
+    static constexpr int oilCompIdx = IndexTraits::oilCompIdx;
+    static constexpr int gasCompIdx = IndexTraits::gasCompIdx;
+
     PhaseUsageInfo();
 
     [[nodiscard]] unsigned numActivePhases() const {

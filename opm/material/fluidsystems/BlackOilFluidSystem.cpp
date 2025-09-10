@@ -220,7 +220,7 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
     template<> std::vector<std::array<T, 3>> \
         BlackOilFluidSystem<T, BlackOilDefaultFluidSystemIndices, VectorWithDefaultAllocator>::molarMass_ = {}; \
     template<> std::vector<std::array<T, 9>> \
-        BlackOilFluidSystem<T, BlackOilDefaultFluidSystemIndices, VectorWithDefaultAllocator>::diffusionCoefficients_ = {};   \
+        BlackOilFluidSystem<T, BlackOilDefaultFluidSystemIndices, VectorWithDefaultAllocator>::diffusionCoefficients_ = {}; \
     template<> bool BlackOilFluidSystem<T, BlackOilDefaultFluidSystemIndices, VectorWithDefaultAllocator>::isInitialized_ = false; \
     template<> bool BlackOilFluidSystem<T, BlackOilDefaultFluidSystemIndices, VectorWithDefaultAllocator>::useSaturatedTables_ = false; \
     template<> bool BlackOilFluidSystem<T, BlackOilDefaultFluidSystemIndices, VectorWithDefaultAllocator>::enthalpy_eq_energy_ = false; \
