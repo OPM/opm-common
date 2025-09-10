@@ -20,15 +20,14 @@
 #ifndef DECKITEM_HPP
 #define DECKITEM_HPP
 
-#include <string>
-#include <vector>
-#include <iosfwd>
-
 #include <opm/input/eclipse/Units/Dimension.hpp>
 #include <opm/input/eclipse/Utility/Typetools.hpp>
 #include <opm/input/eclipse/Deck/UDAValue.hpp>
 #include <opm/input/eclipse/Deck/value_status.hpp>
 
+#include <string>
+#include <vector>
+#include <iosfwd>
 
 namespace Opm {
     class DeckOutput;

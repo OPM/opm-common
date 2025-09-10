@@ -17,10 +17,6 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <fmt/format.h>
-#include <ostream>
-#include <string>
-
 #include <opm/common/OpmLog/KeywordLocation.hpp>
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/common/utility/OpmInputError.hpp>
@@ -35,6 +31,11 @@
 #include <opm/input/eclipse/Units/Dimension.hpp>
 
 #include "../eval_uda.hpp"
+
+#include <fmt/format.h>
+
+#include <ostream>
+#include <string>
 
 namespace Opm {
 

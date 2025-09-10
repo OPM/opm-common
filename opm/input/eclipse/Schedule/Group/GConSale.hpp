@@ -20,11 +20,11 @@
 #ifndef GCONSALE_H
 #define GCONSALE_H
 
-#include <map>
-#include <string>
-
 #include <opm/input/eclipse/Deck/UDAValue.hpp>
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
+
+#include <map>
+#include <string>
 
 namespace Opm {
 

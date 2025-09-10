@@ -20,10 +20,10 @@
 #ifndef DECK_VALUE_HPP
 #define DECK_VALUE_HPP
 
-#include <string>
-
 #include <opm/input/eclipse/Utility/Typetools.hpp>
 #include <opm/input/eclipse/Deck/UDAValue.hpp>
+
+#include <string>
 
 namespace Opm {
 

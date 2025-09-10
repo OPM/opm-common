@@ -472,10 +472,10 @@ void handleGCONSALE(HandlerContext& handlerContext)
         auto max_rate = record.getItem("MAX_SALES_RATE").get<UDAValue>(0);
         auto min_rate = record.getItem("MIN_SALES_RATE").get<UDAValue>(0);
         std::string procedure = record.getItem("MAX_PROC").getTrimmedString(0);
-        auto udqconfig = handlerContext.state().udq.get().params().undefinedValue();
+        auto udq_undefined = handlerContext.state().udq.get().params().undefinedValue();
 
         new_gconsale.add(groupName, sales_target, max_rate, min_rate, procedure,
-                         udqconfig, handlerContext.static_schedule().m_unit_system);
+                         udq_undefined, handlerContext.static_schedule().m_unit_system);
 
         auto new_group = handlerContext.state().groups.get( groupName );
         Group::GroupInjectionProperties injection{groupName};
@@ -499,10 +499,10 @@ void handleGCONSUMP(HandlerContext& handlerContext)
         if (!network_node.defaultApplied(0))
             network_node_name = network_node.getTrimmedString(0);
 
-        auto udqconfig = handlerContext.state().udq.get().params().undefinedValue();
+        auto udq_undefined = handlerContext.state().udq.get().params().undefinedValue();
 
         new_gconsump.add(groupName, consumption_rate, import_rate, network_node_name,
-                         udqconfig, handlerContext.static_schedule().m_unit_system);
+                         udq_undefined, handlerContext.static_schedule().m_unit_system);
     }
     handlerContext.state().gconsump.update( std::move(new_gconsump) );
 }
@@ -655,21 +655,24 @@ void handleGSATPROD(HandlerContext& handlerContext)
                                            .getItem<Kw::SATELLITE_GROUP_NAME_OR_GROUP_NAME_ROOT>()
                                            .getTrimmedString(0), handlerContext);
 
-        const auto oil_rate = record.getItem<Kw::OIL_PRODUCTION_RATE>().getSIDouble(0);
-        const auto gas_rate = record.getItem<Kw::GAS_PRODUCTION_RATE>().getSIDouble(0);
-        const auto water_rate = record.getItem<Kw::WATER_PRODUCTION_RATE>().getSIDouble(0);
-        const auto resv_rate = record.getItem<Kw::RES_FLUID_VOL_PRODUCTION_RATE>().getSIDouble(0);
-        const auto glift_rate = record.getItem<Kw::LIFT_GAS_SUPPLY_RATE>().getSIDouble(0);
+        const auto oil_rate = record.getItem<Kw::OIL_PRODUCTION_RATE>().get<UDAValue>(0);
+        const auto gas_rate = record.getItem<Kw::GAS_PRODUCTION_RATE>().get<UDAValue>(0);
+        const auto water_rate = record.getItem<Kw::WATER_PRODUCTION_RATE>().get<UDAValue>(0);
+        const auto resv_rate = record.getItem<Kw::RES_FLUID_VOL_PRODUCTION_RATE>().get<UDAValue>(0);
+        const auto glift_rate = record.getItem<Kw::LIFT_GAS_SUPPLY_RATE>().get<UDAValue>(0);
 
         for (const auto& group_name : group_names) {
             rejectGroupIfField(group_name, handlerContext);
+
+            auto udq_undefined = handlerContext.state().udq.get().params().undefinedValue();
 
             new_gsatprod.assign(group_name,
                                 oil_rate,
                                 gas_rate,
                                 water_rate,
                                 resv_rate,
-                                glift_rate);
+                                glift_rate,
+                                udq_undefined);
 
             auto grp = handlerContext.state().groups(group_name);
             grp.recordSatelliteProduction();

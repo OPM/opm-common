@@ -703,17 +703,16 @@ alq_type(const Opm::ScheduleState&            sched_state,
 }
 
 template <rt phase>
-double satellite_prod(const Opm::ScheduleState& sched, const std::string& group)
+double satellite_prod(const Opm::SummaryState& st, const Opm::ScheduleState& sched, const std::string& group)
 {
-    using Rate = Opm::GSatProd::GSatProdGroup::Rate;
+    using Rate = Opm::GSatProd::GSatProdGroupProp::Rate;
 
     const auto& gsatprod = sched.gsatprod();
 
     if (! gsatprod.has(group)) {
         return 0.0;
     }
-
-    const auto& gs = gsatprod.get(group);
+    const auto& gs = gsatprod.get(group, st);
 
     if constexpr (phase == rt::oil) {
         return gs.rate[Rate::Oil];
@@ -759,7 +758,8 @@ inline double cumulativeSatProdEffFactor(const Opm::ScheduleState& sched,
 }
 
 template <rt phase>
-double accum_groups(const Opm::ScheduleState& sched,
+double accum_groups(const Opm::SummaryState& st,
+                    const Opm::ScheduleState& sched,
                     const std::string&        gr_name,
                     const double              efac)
 {
@@ -770,13 +770,13 @@ double accum_groups(const Opm::ScheduleState& sched,
     const auto& children = sched.groups(gr_name).groups();
 
     return efac * std::accumulate(children.begin(), children.end(),
-                                  satellite_prod<phase>(sched, gr_name),
-                                  [&sched](const double acc, const auto& child)
+                                  satellite_prod<phase>(st, sched, gr_name),
+                                  [&st, &sched](const double acc, const auto& child)
                                   {
                                       const auto efacDowntree = sched.groups(child)
                                           .getGroupEfficiencyFactor();
 
-                                      return acc + accum_groups<phase>(sched, child,
+                                      return acc + accum_groups<phase>(st, sched, child,
                                                                        efacDowntree);
                                   });
 }
@@ -919,7 +919,7 @@ inline quantity rate(const fn_args& args)
             ? 1.0
             : cumulativeSatProdEffFactor(sched, args.group_name);
 
-        sum += accum_groups<phase>(sched, args.group_name, efac);
+        sum += accum_groups<phase>(args.st, sched, args.group_name, efac);
     }
 
     if ((phase == rt::polymer) || (phase == rt::brine)) {

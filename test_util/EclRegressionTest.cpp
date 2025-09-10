@@ -643,7 +643,7 @@ void ECLRegressionTest::results_init()
         }
 
         if (printKeywordOnly) {
-            printComparisonForKeywordLists(keywords1,keywords2, arrayType1, arrayType2);
+            printComparisonForKeywordLists(keywords1, keywords2, arrayType1, arrayType2);
         } else {
             std::cout << "\nComparing init files \n" << std::endl;
             std::string reference = "Init file";
@@ -658,7 +658,7 @@ void ECLRegressionTest::results_init()
                     */
                     auto kw1 = sorted(keywords1);
                     auto kw2 = sorted(keywords2);
-                    compareKeywords(kw1,kw2,reference);
+                    compareKeywords(kw1, kw2, reference);
                     std::cerr << "Keyword reordering detected in INIT file" << std::endl;
                     /*
                       The keyword reordering should eventually be marked as a an
