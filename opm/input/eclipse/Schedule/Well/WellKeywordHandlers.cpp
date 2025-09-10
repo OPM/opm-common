@@ -240,6 +240,7 @@ void handleWCONINJE(HandlerContext& handlerContext)
 
             if (well2.updatePrediction(true)) {
                 update_well = true;
+                handlerContext.state().wellgroup_events().addEvent( well2.name(), ScheduleEvents::HIST_TO_PRED);
             }
 
             if (well2.updateHasInjected()) {
@@ -419,6 +420,7 @@ void handleWCONPROD(HandlerContext& handlerContext)
             }
 
             if (well2.updatePrediction(true)) {
+                handlerContext.state().wellgroup_events().addEvent( well2.name(), ScheduleEvents::HIST_TO_PRED);
                 update_well = true;
             }
 
