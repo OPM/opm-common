@@ -142,9 +142,8 @@ short PhaseUsageInfo<IndexTraits>::activeToCanonicalCompIdx(unsigned activeCompI
 
 template <typename IndexTraits>
 short PhaseUsageInfo<IndexTraits>::canonicalToActiveCompIdx(unsigned compIdx) const {
-    if (compIdx >= numComponents) {
-        return compIdx; // e.g. for solvent
-    }
+    assert(compIdx < numComponents);
+
     return canonicalToActiveCompIdx_[compIdx];
 }
 
