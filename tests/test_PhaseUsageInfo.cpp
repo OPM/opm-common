@@ -114,13 +114,13 @@ BOOST_AUTO_TEST_CASE(constructor_with_phases)
     BOOST_CHECK(pu.canonicalToActiveCompIdx(PhaseUsage::waterCompIdx) == 1);
     BOOST_CHECK(pu.canonicalToActiveCompIdx(PhaseUsage::gasCompIdx) == -1);
 
-    BOOST_CHECK(pu.activePhaseToCompIdx(0) == pu.canonicalToActiveCompIdx(PhaseUsage::waterCompIdx) );
-    BOOST_CHECK(pu.activePhaseToCompIdx(1) == pu.canonicalToActiveCompIdx(PhaseUsage::oilCompIdx) );
-    BOOST_CHECK(pu.activePhaseToCompIdx(2) == 2);
+    BOOST_CHECK(pu.activePhaseToActiveCompIdx(0) == pu.canonicalToActiveCompIdx(PhaseUsage::waterCompIdx) );
+    BOOST_CHECK(pu.activePhaseToActiveCompIdx(1) == pu.canonicalToActiveCompIdx(PhaseUsage::oilCompIdx) );
+    BOOST_CHECK(pu.activePhaseToActiveCompIdx(2) == 2);
 
-    BOOST_CHECK(pu.activeCompToPhaseIdx(0) == pu.canonicalToActivePhaseIdx(PhaseUsage::oilPhaseIdx) );
-    BOOST_CHECK(pu.activeCompToPhaseIdx(1) == pu.canonicalToActivePhaseIdx(PhaseUsage::waterPhaseIdx) );
-    BOOST_CHECK(pu.activePhaseToCompIdx(2) == 2);
+    BOOST_CHECK(pu.activeCompToActivePhaseIdx(0) == pu.canonicalToActivePhaseIdx(PhaseUsage::oilPhaseIdx) );
+    BOOST_CHECK(pu.activeCompToActivePhaseIdx(1) == pu.canonicalToActivePhaseIdx(PhaseUsage::waterPhaseIdx) );
+    BOOST_CHECK(pu.activePhaseToActiveCompIdx(2) == 2);
 
     BOOST_TEST_MESSAGE("Constructor with phases test passed.");
 }
@@ -200,13 +200,13 @@ END
     BOOST_CHECK(pu.canonicalToActiveCompIdx(PhaseUsage::gasCompIdx) == 1);
     BOOST_CHECK(pu.canonicalToActiveCompIdx(PhaseUsage::waterCompIdx) == -1);
 
-    BOOST_CHECK(pu.activePhaseToCompIdx(0) == pu.canonicalToActiveCompIdx(PhaseUsage::oilCompIdx) );
-    BOOST_CHECK(pu.activePhaseToCompIdx(1) == pu.canonicalToActiveCompIdx(PhaseUsage::gasCompIdx) );
-    BOOST_CHECK(pu.activePhaseToCompIdx(2) == 2);
+    BOOST_CHECK(pu.activePhaseToActiveCompIdx(0) == pu.canonicalToActiveCompIdx(PhaseUsage::oilCompIdx) );
+    BOOST_CHECK(pu.activePhaseToActiveCompIdx(1) == pu.canonicalToActiveCompIdx(PhaseUsage::gasCompIdx) );
+    BOOST_CHECK(pu.activePhaseToActiveCompIdx(2) == 2);
 
-    BOOST_CHECK(pu.activeCompToPhaseIdx(0) == pu.canonicalToActivePhaseIdx(PhaseUsage::oilPhaseIdx) );
-    BOOST_CHECK(pu.activeCompToPhaseIdx(1) == pu.canonicalToActivePhaseIdx(PhaseUsage::gasPhaseIdx) );
-    BOOST_CHECK(pu.activePhaseToCompIdx(2) == 2);
+    BOOST_CHECK(pu.activeCompToActivePhaseIdx(0) == pu.canonicalToActivePhaseIdx(PhaseUsage::oilPhaseIdx) );
+    BOOST_CHECK(pu.activeCompToActivePhaseIdx(1) == pu.canonicalToActivePhaseIdx(PhaseUsage::gasPhaseIdx) );
+    BOOST_CHECK(pu.activePhaseToActiveCompIdx(2) == 2);
 }
 #endif
 }

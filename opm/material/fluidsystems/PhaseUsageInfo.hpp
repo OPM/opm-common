@@ -76,13 +76,37 @@ public:
         return activeToCanonicalPhaseIdx_[activePhaseIdx];
     }
 
-    [[nodiscard]] short activeToCanonicalCompIdx(unsigned activeCompIdx) const;
+    [[nodiscard]] short activeToCanonicalCompIdx(unsigned activeCompIdx) const {
+        if (activeCompIdx >= numActivePhases()) {
+            return activeCompIdx; // e.g. for solvent
+        }
+        return activeToCanonicalCompIdx_[activeCompIdx];
+    }
 
-    [[nodiscard]] short canonicalToActiveCompIdx(unsigned compIdx) const;
+    [[nodiscard]] short canonicalToActiveCompIdx(unsigned compIdx) const {
+        assert(compIdx < numComponents);
+        return canonicalToActiveCompIdx_[compIdx];
+    }
 
-    [[nodiscard]] short activePhaseToCompIdx(unsigned activePhaseIdx) const;
+    [[nodiscard]] short activePhaseToActiveCompIdx(unsigned activePhaseIdx) const {
+        if (activePhaseIdx >= numActivePhases()) {
+            return activePhaseIdx; // e.g. for solvent
+        }
+        const short canonicalPhaseIdx = activeToCanonicalPhaseIdx(activePhaseIdx);
+        const short canonicalCompIdx = IndexTraits::phaseToComponentIdx(canonicalPhaseIdx);
+        const short activeCompIdx = canonicalToActiveCompIdx(canonicalCompIdx);
+        return activeCompIdx;
+    }
 
-    [[nodiscard]] short activeCompToPhaseIdx(unsigned activeCompIdx) const;
+    [[nodiscard]] short activeCompToActivePhaseIdx(unsigned activeCompIdx) const {
+        if (activeCompIdx >= numActivePhases()) {
+            return activeCompIdx; // e.g. for solvent
+        }
+        const short canonicalCompIdx = activeToCanonicalCompIdx(activeCompIdx);
+        const short canonicalPhaseIdx = IndexTraits::componentToPhaseIdx(canonicalCompIdx);
+        const short activePhaseIdx = canonicalToActivePhaseIdx(canonicalPhaseIdx);
+        return activePhaseIdx;
+    }
 
 #if HAVE_ECL_INPUT
     void initFromPhases(const Phases& phases);

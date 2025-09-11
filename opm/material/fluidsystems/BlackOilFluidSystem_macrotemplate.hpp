@@ -1698,9 +1698,9 @@ public:
 
     STATIC_OR_DEVICE short canonicalToActiveCompIdx(unsigned compIdx) NOTHING_OR_CONST;
 
-    STATIC_OR_DEVICE short activePhaseToCompIdx(unsigned activePhaseIdx) NOTHING_OR_CONST;
+    STATIC_OR_DEVICE short activePhaseToActiveCompIdx(unsigned activePhaseIdx) NOTHING_OR_CONST;
 
-    STATIC_OR_DEVICE short activeCompToPhaseIdx(unsigned activeCompIdx) NOTHING_OR_CONST;
+    STATIC_OR_DEVICE short activeCompToActivePhaseIdx(unsigned activeCompIdx) NOTHING_OR_CONST;
 
     //! \copydoc BaseFluidSystem::diffusionCoefficient
     STATIC_OR_DEVICE Scalar diffusionCoefficient(unsigned compIdx, unsigned phaseIdx, unsigned regionIdx = 0) NOTHING_OR_CONST
@@ -1973,16 +1973,16 @@ canonicalToActiveCompIdx(unsigned compIdx) NOTHING_OR_CONST
 
 template <class Scalar, class IndexTraits, template<typename> typename Storage>
 NOTHING_OR_DEVICE short FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, Storage>::
-activePhaseToCompIdx(unsigned activePhaseIdx) NOTHING_OR_CONST
+activePhaseToActiveCompIdx(unsigned activePhaseIdx) NOTHING_OR_CONST
 {
-    return phaseUsageInfo_.activePhaseToCompIdx(activePhaseIdx);
+    return phaseUsageInfo_.activePhaseToActiveCompIdx(activePhaseIdx);
 }
 
 template <class Scalar, class IndexTraits, template<typename> typename Storage>
 NOTHING_OR_DEVICE short FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, Storage>::
-activeCompToPhaseIdx(unsigned activeCompIdx) NOTHING_OR_CONST
+activeCompToActivePhaseIdx(unsigned activeCompIdx) NOTHING_OR_CONST
 {
-    return phaseUsageInfo_.activeCompToPhaseIdx(activeCompIdx);
+    return phaseUsageInfo_.activeCompToActivePhaseIdx(activeCompIdx);
 }
 
 template <class Scalar, class IndexTraits, template<typename> typename Storage>

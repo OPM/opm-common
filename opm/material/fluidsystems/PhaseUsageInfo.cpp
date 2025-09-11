@@ -131,44 +131,6 @@ void PhaseUsageInfo<IndexTraits>::initFromPhases(const Phases& phases) {
 }
 #endif
 
-template <typename IndexTraits>
-short PhaseUsageInfo<IndexTraits>::activeToCanonicalCompIdx(unsigned activeCompIdx) const {
-    if (activeCompIdx >= numActivePhases()) {
-        return activeCompIdx; // e.g. for solvent
-    }
-
-    return activeToCanonicalCompIdx_[activeCompIdx];
-}
-
-template <typename IndexTraits>
-short PhaseUsageInfo<IndexTraits>::canonicalToActiveCompIdx(unsigned compIdx) const {
-    assert(compIdx < numComponents);
-
-    return canonicalToActiveCompIdx_[compIdx];
-}
-
-template <typename IndexTraits>
-short PhaseUsageInfo<IndexTraits>::activePhaseToCompIdx(unsigned activePhaseIdx) const {
-    if (activePhaseIdx >= numActivePhases()) {
-        return activePhaseIdx; // e.g. for solvent
-    }
-    const short canonicalPhaseIdx = activeToCanonicalPhaseIdx(activePhaseIdx);
-    const short canonicalCompIdx = IndexTraits::phaseToComponentIdx(canonicalPhaseIdx);
-    const short activeCompIdx = canonicalToActiveCompIdx(canonicalCompIdx);
-    return activeCompIdx;
-}
-
-template <typename IndexTraits>
-short PhaseUsageInfo<IndexTraits>::activeCompToPhaseIdx(unsigned activeCompIdx) const {
-    if (activeCompIdx >= numActivePhases()) {
-        return activeCompIdx; // e.g. for solvent
-    }
-    const short canonicalCompIdx = activeToCanonicalCompIdx(activeCompIdx);
-    const short canonicalPhaseIdx = IndexTraits::componentToPhaseIdx(canonicalCompIdx);
-    const short activePhaseIdx = canonicalToActivePhaseIdx(canonicalPhaseIdx);
-    return activePhaseIdx;
-}
-
 // Explicit template instantiations for commonly used IndexTraits
 template class PhaseUsageInfo<BlackOilDefaultFluidSystemIndices>;
 
