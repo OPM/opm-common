@@ -68,12 +68,14 @@ public:
                     const std::vector<Scalar>& pvtwCompressibility,
                     const std::vector<Scalar>& pvtwViscosity,
                     const std::vector<Scalar>& pvtwViscosibility,
+                    const std::vector<Scalar>& referenceSaltConcentration,
                     const std::vector<TabulatedOneDFunction>& watvisctCurves,
                     const std::vector<TabulatedOneDFunction>& internalEnergyCurves,
                     bool enableThermalDensity,
                     bool enableJouleThomson,
                     bool enableThermalViscosity,
-                    bool enableInternalEnergy)
+                    bool enableInternalEnergy,
+                    bool enableBrineViscosity)
         : isothermalPvt_(isothermalPvt)
         , viscrefPress_(viscrefPress)
         , watdentRefTemp_(watdentRefTemp)
@@ -86,12 +88,14 @@ public:
         , pvtwCompressibility_(pvtwCompressibility)
         , pvtwViscosity_(pvtwViscosity)
         , pvtwViscosibility_(pvtwViscosibility)
+        , referenceSaltConcentration_(referenceSaltConcentration)
         , watvisctCurves_(watvisctCurves)
         , internalEnergyCurves_(internalEnergyCurves)
         , enableThermalDensity_(enableThermalDensity)
         , enableJouleThomson_(enableJouleThomson)
         , enableThermalViscosity_(enableThermalViscosity)
         , enableInternalEnergy_(enableInternalEnergy)
+        , enableBrineViscosity_(enableBrineViscosity)
     { }
 
     WaterPvtThermal(const WaterPvtThermal& data)
@@ -227,14 +231,16 @@ public:
         if (!enableThermalViscosity()) {
             return isothermalMu;
         }
-
-        Scalar x = -pvtwViscosibility_[regionIdx] * (viscrefPress_[regionIdx] -
-                                                     pvtwRefPress_[regionIdx]);
-        Scalar muRef = pvtwViscosity_[regionIdx] / (1.0 + x + 0.5 * x * x);
-
-        // compute the viscosity deviation due to temperature
+        
         const auto& muWatvisct = watvisctCurves_[regionIdx].eval(temperature, true);
-        return isothermalMu * muWatvisct / muRef;
+        if (enableBrineViscosity()) {
+            auto muRef = isothermalPvt_->viscosity(regionIdx, temperature, Evaluation(viscrefPress_[regionIdx]), Rsw, Evaluation(referenceSaltConcentration_[regionIdx]));
+            return isothermalMu * muWatvisct / muRef;
+        } else {
+            Scalar x = -pvtwViscosibility_[regionIdx] * (viscrefPress_[regionIdx] - pvtwRefPress_[regionIdx]);
+            Scalar muRef = pvtwViscosity_[regionIdx] / (1.0 + x + 0.5 * x * x);
+            return isothermalMu * muWatvisct / muRef;
+        }
     }
 
         /*!
@@ -404,6 +410,9 @@ public:
     const std::vector<Scalar>& pvtwViscosibility() const
     { return pvtwViscosibility_; }
 
+    const std::vector<Scalar>& referenceSaltConcentration() const
+    { return referenceSaltConcentration_; }
+
     const std::vector<TabulatedOneDFunction>& watvisctCurves() const
     { return watvisctCurves_; }
 
@@ -412,6 +421,9 @@ public:
 
     bool enableInternalEnergy() const
     { return enableInternalEnergy_; }
+
+    bool enableBrineViscosity() const
+    { return enableBrineViscosity_; }
 
     const std::vector<Scalar>& watJTRefPres() const
     { return  watJTRefPres_; }
@@ -443,6 +455,7 @@ private:
     std::vector<Scalar> pvtwCompressibility_{};
     std::vector<Scalar> pvtwViscosity_{};
     std::vector<Scalar> pvtwViscosibility_{};
+    std::vector<Scalar> referenceSaltConcentration_{};
 
     std::vector<TabulatedOneDFunction> watvisctCurves_{};
 
@@ -454,6 +467,7 @@ private:
     bool enableJouleThomson_{false};
     bool enableThermalViscosity_{false};
     bool enableInternalEnergy_{false};
+    bool enableBrineViscosity_{false};
 };
 
 } // namespace Opm
