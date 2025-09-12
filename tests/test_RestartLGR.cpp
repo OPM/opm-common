@@ -15,8 +15,6 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include "config.h"
-#include <cstddef>
 
 #define BOOST_TEST_MODULE Restart_File_IO
 
@@ -76,11 +74,8 @@
 #include <memory>
 #include <numeric>
 #include <optional>
-#include <sstream>
-#include <stdexcept>
 #include <string>
-#include <string_view>
-#include <tuple>
+
 #include <vector>
 
 #include <tests/WorkArea.hpp>
@@ -879,6 +874,7 @@ BOOST_AUTO_TEST_CASE(ECL_LGRFORMATTEDCOMPLEX)
                         BOOST_CHECK_EQUAL(iwell[start + Ix::WType] , 1); // PROD2 -> Producer
                         BOOST_CHECK_EQUAL(iwell[start + Ix::LGRIndex], 2); // LOCATED LGR2
                     }
+
                     // -------------------------- ICON FOR GLOBAL GRID --------------------------
                     // ICON (PROD1) - C1
                     {
@@ -891,7 +887,30 @@ BOOST_AUTO_TEST_CASE(ECL_LGRFORMATTEDCOMPLEX)
                         BOOST_CHECK_EQUAL(icon[i0 + Ix::CellJ] , 1); // PROD    -> ICON
                         BOOST_CHECK_EQUAL(icon[i0 + Ix::CellK] , 1); // PROD    -> ICON
                     }
+
                     // ICON (PROD1) - C2
+                    {
+                        const auto niconz =  26;
+                        const auto ncwmax =  1;
+                        const auto i0 = niconz * ncwmax * 1;
+                        const auto& icon = rst.getRestartData<int>("ICON", 1);
+                        BOOST_CHECK(std::all_of(icon.begin() + i0,
+                                        icon.begin() + i0 + niconz,
+                                        [](int x) { return x == 0; }));
+                    }
+
+                    // ICON (PROD1) - C3
+                    {
+                        const auto niconz =  26;
+                        const auto ncwmax =  2;
+                        const auto i0 = niconz * ncwmax * 1;
+                        const auto& icon = rst.getRestartData<int>("ICON", 1);
+                        BOOST_CHECK(std::all_of(icon.begin() + i0,
+                                        icon.begin() + i0 + niconz,
+                                        [](int x) { return x == 0; }));
+                    }
+
+                    // ICON (PROD2)
                     {
                         using Ix = ::Opm::RestartIO::Helpers::VectorItems::IConn::index;
                         const auto niconz =  26;
@@ -902,7 +921,8 @@ BOOST_AUTO_TEST_CASE(ECL_LGRFORMATTEDCOMPLEX)
                         BOOST_CHECK_EQUAL(icon[i0 + Ix::CellJ] , 1); // PROD    -> ICON
                         BOOST_CHECK_EQUAL(icon[i0 + Ix::CellK] , 1); // PROD    -> ICON
                     }
-                    // ICON (PROD1) - C3
+
+                    // ICON (INJ)
                     {
                         using Ix = ::Opm::RestartIO::Helpers::VectorItems::IConn::index;
                         const auto niconz =  26;
@@ -914,14 +934,58 @@ BOOST_AUTO_TEST_CASE(ECL_LGRFORMATTEDCOMPLEX)
                         BOOST_CHECK_EQUAL(icon[i0 + Ix::CellK] , 1); // PROD    -> ICON
                     }
 
-    // -------------------------- ICON FOR LGRS GRID --------------------------
+
+                    // -------------------------- ICON FOR LGR GRID --------------------------
+                    // ICON LGR1 (PROD1) - C1
+                    {
+                        using Ix = ::Opm::RestartIO::Helpers::VectorItems::IConn::index;
+                        const auto niconz =  26;
+                        const auto ncwmax =  1;
+                        const auto i0 = niconz * ncwmax * 0;
+                        const auto& icon = rst.getRestartData<int>("ICON", 1, "LGR1");
+                        BOOST_CHECK_EQUAL(icon[i0 + Ix::CellI] , 2); // PROD    -> ICON
+                        BOOST_CHECK_EQUAL(icon[i0 + Ix::CellJ] , 1); // PROD    -> ICON
+                        BOOST_CHECK_EQUAL(icon[i0 + Ix::CellK] , 1); // PROD    -> ICON
+                    }
+
+                    // ICON LGR1 (PROD1) - C2
+                    {
+                        using Ix = ::Opm::RestartIO::Helpers::VectorItems::IConn::index;
+                        const auto niconz =  26;
+                        const auto ncwmax =  1;
+                        const auto i0 = niconz * ncwmax * 1;
+                        const auto& icon = rst.getRestartData<int>("ICON", 1, "LGR1");
+                        BOOST_CHECK_EQUAL(icon[i0 + Ix::CellI] , 2); // PROD    -> ICON
+                        BOOST_CHECK_EQUAL(icon[i0 + Ix::CellJ] , 2); // PROD    -> ICON
+                        BOOST_CHECK_EQUAL(icon[i0 + Ix::CellK] , 1); // PROD    -> ICON
+                    }
+
+                    // ICON LGR1 (PROD1) - C3
+                    {
+                        using Ix = ::Opm::RestartIO::Helpers::VectorItems::IConn::index;
+                        const auto niconz =  26;
+                        const auto ncwmax =  2;
+                        const auto i0 = niconz * ncwmax * 1;
+                        const auto& icon = rst.getRestartData<int>("ICON", 1, "LGR1");
+                        BOOST_CHECK_EQUAL(icon[i0 + Ix::CellI] , 2); // PROD    -> ICON
+                        BOOST_CHECK_EQUAL(icon[i0 + Ix::CellJ] , 3); // PROD    -> ICON
+                        BOOST_CHECK_EQUAL(icon[i0 + Ix::CellK] , 1); // PROD    -> ICON
+                    }
+
+                    // ICON LGR2 (PROD2) - C1
+                    {
+                        using Ix = ::Opm::RestartIO::Helpers::VectorItems::IConn::index;
+                        const auto niconz =  26;
+                        const auto ncwmax =  1;
+                        const auto i0 = niconz * ncwmax * 0;
+                        const auto& icon = rst.getRestartData<int>("ICON", 1, "LGR2");
+                        BOOST_CHECK_EQUAL(icon[i0 + Ix::CellI] , 1); // PROD    -> ICON
+                        BOOST_CHECK_EQUAL(icon[i0 + Ix::CellJ] , 1); // PROD    -> ICON
+                        BOOST_CHECK_EQUAL(icon[i0 + Ix::CellK] , 1); // PROD    -> ICON
+                    }
 
 
             }
-
-
-
-
         }
     }
 }
