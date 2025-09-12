@@ -12,6 +12,12 @@ with open("README.md", "r") as fh:
 with open("requirements.txt", "r") as fh:
     requires = [line.rstrip() for line in fh]
 
+# NOTE (2025-09-12): Removed legacy `setup_requires` and `test_suite` arguments.
+# - `setup_requires` triggered setuptools' deprecated fetch_build_eggs path
+#   and is incompatible with modern PEP 517 builds. Build-time deps belong in
+#   pyproject.toml (we already use scikit-build there).
+# - `test_suite` is not a recognized distribution option and caused
+#   "Unknown distribution option: 'test_suite'" warnings.
 setup(
     name='opm',
     version = '@opm-common_VERSION@' + '@opm-common_PYTHON_PACKAGE_VERSION@',
@@ -38,8 +44,6 @@ setup(
     package_data={'opm' : ['$<TARGET_FILE_NAME:opmcommon_python>']},
     include_package_data=True,
     license='Open Source',
-    test_suite='tests',
-    setup_requires=["pytest-runner", 'setuptools_scm'],
     install_requires=requires,
     python_requires='>=3.6',
     classifiers=[
