@@ -634,8 +634,8 @@ private:
             return rho_pure * pow(10.0, nacl_exponent * salinity + co2_exponent * XCO2);
         }
         else {
-            const LhsEval& rho_brine = Brine::liquidDensity(T, pl, salinity, extrapolate);
-            const LhsEval& rho_lCO2 = liquidDensityWaterCO2_(T, pl, xlCO2);
+            const LhsEval& rho_brine = Brine::liquidDensity(T, pl, salinity, rho_pure);
+            const LhsEval& rho_lCO2 = liquidDensityWaterCO2_(T, xlCO2, rho_pure);
             const LhsEval& contribCO2 = rho_lCO2 - rho_pure;
             return rho_brine + contribCO2;
         }
@@ -643,15 +643,14 @@ private:
 
     template <class LhsEval>
     OPM_HOST_DEVICE LhsEval liquidDensityWaterCO2_(const LhsEval& temperature,
-                                          const LhsEval& pl,
-                                          const LhsEval& xlCO2) const
+                                                   const LhsEval& xlCO2,
+                                                   const LhsEval& rho_pure) const
     {
         OPM_TIMEFUNCTION_LOCAL();
         Scalar M_CO2 = CO2::molarMass();
         Scalar M_H2O = H2O::molarMass();
 
         const LhsEval& tempC = temperature - 273.15;        /* tempC : temperature in °C */
-        const LhsEval& rho_pure = H2O::liquidDensity(temperature, pl, extrapolate);
         // calculate the mole fraction of CO2 in the liquid. note that xlH2O is available
         // as a function parameter, but in the case of a pure gas phase the value of M_T
         // for the virtual liquid phase can become very large
