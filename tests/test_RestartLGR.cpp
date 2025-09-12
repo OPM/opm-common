@@ -29,6 +29,10 @@
 #include <opm/output/eclipse/EclipseIO.hpp>
 #include <opm/output/eclipse/RestartIO.hpp>
 #include <opm/output/eclipse/RestartValue.hpp>
+#include <opm/output/eclipse/VectorItems/well.hpp>
+#include <opm/output/eclipse/VectorItems/connection.hpp>
+#include <opm/output/eclipse/VectorItems/group.hpp>
+
 
 #include <opm/io/eclipse/ERst.hpp>
 #include <opm/io/eclipse/EclIOdata.hpp>
@@ -147,6 +151,76 @@ data::Wells mkWellsLGR_Global()
 
         wellRates["PROD"] = w1;
         wellRates["INJ"] = w2;
+
+        return wellRates;
+    }
+}
+
+
+data::Wells mkWellsLGR_Global_Complex()
+{
+    // This function creates a Wells object with three wells, each having two connections matching the one in the LGR_BASESIM2WELLS.DATA
+    data::Rates r1, r1c1, r1c2, r1c3, r2, r3;
+    r1.set( data::Rates::opt::wat, 11 );
+    r1.set( data::Rates::opt::oil, 13 );
+    r1.set( data::Rates::opt::gas, 5 );
+    r1c1.set( data::Rates::opt::wat, 5 );
+    r1c1.set( data::Rates::opt::oil, 5 );
+    r1c1.set( data::Rates::opt::gas, 3 );
+    r1c2.set( data::Rates::opt::wat, 5 );
+    r1c2.set( data::Rates::opt::oil, 7 );
+    r1c2.set( data::Rates::opt::gas, 1 );
+    r1c3.set( data::Rates::opt::wat, 1 );
+    r1c3.set( data::Rates::opt::oil, 1 );
+    r1c3.set( data::Rates::opt::gas, 1 );
+
+    r2.set( data::Rates::opt::wat, 5 );
+    r2.set( data::Rates::opt::oil, 7.2 );
+    r2.set( data::Rates::opt::gas, 3 );
+
+    r3.set( data::Rates::opt::wat, 10 );
+    r3.set( data::Rates::opt::oil, 12 );
+    r3.set( data::Rates::opt::gas, 4 );
+
+    data::Well w1, w2, w3;
+    w1.rates = r1;
+    w1.thp = 1.0;
+    w1.bhp = 1.23;
+    w1.temperature = 3.45;
+    w1.control = 1;
+
+    /*
+     *  the completion keys (active indices) and well names correspond to the
+     *  input deck. All other entries in the well structures are arbitrary.
+     */
+    Opm::data::ConnectionFiltrate con_filtrate {0.1, 1, 3, 0.4, 1.e-9, 0.2, 0.05, 10.}; // values are not used in this test
+    w1.connections.push_back( { 1, r1c1, 30.45, 123.4, 543.21, 0.62, 0.15, 1.0e3, 1.234, 0.0, 1.23, con_filtrate, 1 } );
+    w1.connections.push_back( { 4, r1c2, 31.45, 123.4, 543.21, 0.62, 0.15, 1.0e3, 1.234, 0.0, 1.23, con_filtrate, 1 } );
+    w1.connections.push_back( { 7, r1c3, 32.45, 123.4, 543.21, 0.62, 0.15, 1.0e3, 1.234, 0.0, 1.23, con_filtrate, 1 } );
+
+
+    w2.rates = r2;
+    w2.thp = 1.0;
+    w2.bhp = 1.23;
+    w2.temperature = 3.45;
+    w2.control = 1;
+    w2.connections.push_back( { 6, r2, 30.45, 123.4, 543.21, 0.62, 0.15, 1.0e3, 1.234, 0.0, 1.23, con_filtrate, 2 } );
+
+
+
+    w3.rates = r3;
+    w3.thp = 2.0;
+    w3.bhp = 2.34;
+    w3.temperature = 4.56;
+    w3.control = 2;
+    w3.connections.push_back( { 1, r3, 36.22, 123.4, 256.1, 0.55, 0.0125, 314.15, 3.456, 0.0, 2.46, con_filtrate,0 } );
+
+    {
+        data::Wells wellRates;
+
+        wellRates["PROD1"] = w1;
+        wellRates["PROD2"] = w2;
+        wellRates["INJ"] = w3;
 
         return wellRates;
     }
@@ -469,6 +543,200 @@ BOOST_AUTO_TEST_CASE(ECL_LGRFORMATTED)
                 BOOST_CHECK_MESSAGE(rst.hasKey("EXTRA"), "Restart file must have EXTRA vector");
 
                 {
+                    auto convert_unit = [&units](measure m, const double x) { return static_cast<double>(units.to_si(m, x)); };
+                    auto convert_vector = [&](measure m, const std::vector<double>& input) {
+                        std::vector<double> output;
+                        output.resize(input.size());
+                        std::transform(input.begin(), input.end(), output.begin(),
+                                       [&](double x) { return convert_unit(m, x); });
+                        return output;
+                    };
+
+                    // checking dynamic data for LGR
+                    {
+                    //LGR1
+                        auto pressure_lgr1 = rst.getRestartData<double>("PRESSURE", 1, "LGR1");
+                        check_vec_close(convert_vector(UnitSystem::measure::pressure, pressure_lgr1), std::vector<double>(num_cells[1], 6.0));
+
+                        auto temperature_lgr1 = rst.getRestartData<double>("TEMP", 1, "LGR1");
+                        check_vec_close(convert_vector(UnitSystem::measure::temperature, temperature_lgr1), std::vector<double>(num_cells[1], 7.0));
+
+                        auto swat_lgr1 = rst.getRestartData<double>("SWAT", 1, "LGR1");
+                        check_vec_close(swat_lgr1, std::vector<double>(num_cells[1], 8.0));
+                        auto sgas_lgr1 = rst.getRestartData<double>("SGAS", 1, "LGR1");
+                        check_vec_close(sgas_lgr1, std::vector<double>(num_cells[1], 9.0));
+
+                        auto rs_lgr1 = rst.getRestartData<double>("RS", 1, "LGR1");
+                        fun::iota rs_expected(300.0, 300.0 + num_cells[1]);
+                        std::vector<double> rs_expected_vec(rs_expected.begin(), rs_expected.end());
+                        check_vec_close(rs_lgr1, rs_expected_vec);
+
+                        auto rv_lgr1 = rst.getRestartData<double>("RV", 1, "LGR1");
+                        fun::iota rv_expected(400.0, 400.0 + num_cells[1]);
+                        std::vector<double> rv_expected_vec(rv_expected.begin(), rv_expected.end());
+                        check_vec_close(rv_lgr1, rv_expected_vec);
+                    }
+                    {
+                        //LGR2
+                        auto pressure_lgr2 = rst.getRestartData<double>("PRESSURE", 1, "LGR2");
+                        check_vec_close(convert_vector(UnitSystem::measure::pressure, pressure_lgr2), std::vector<double>(num_cells[1], 6.0));
+
+                        auto temperature_lgr2 = rst.getRestartData<double>("TEMP", 1, "LGR2");
+                        check_vec_close(convert_vector(UnitSystem::measure::temperature, temperature_lgr2), std::vector<double>(num_cells[1], 7.0));
+
+                        auto swat_lgr2 = rst.getRestartData<double>("SWAT", 1, "LGR2");
+                        check_vec_close(swat_lgr2, std::vector<double>(num_cells[1], 8.0));
+                        auto sgas_lgr2 = rst.getRestartData<double>("SGAS", 1, "LGR2");
+                        check_vec_close(sgas_lgr2, std::vector<double>(num_cells[1], 9.0));
+
+                        auto rs_lgr2 = rst.getRestartData<double>("RS", 1, "LGR2");
+                        fun::iota rs_expected(300.0, 300.0 + num_cells[1]);
+                        std::vector<double> rs_expected_vec(rs_expected.begin(), rs_expected.end());
+                        check_vec_close(rs_lgr2, rs_expected_vec);
+
+                        auto rv_lgr2 = rst.getRestartData<double>("RV", 1, "LGR2");
+                        fun::iota rv_expected(400.0, 400.0 + num_cells[1]);
+                        std::vector<double> rv_expected_vec(rv_expected.begin(), rv_expected.end());
+                        check_vec_close(rv_lgr2, rv_expected_vec);
+                    }
+
+
+            }
+
+
+
+
+        }
+    }
+}
+}
+
+
+BOOST_AUTO_TEST_CASE(ECL_LGRFORMATTEDCOMPLEX)
+{
+    namespace OS = ::Opm::EclIO::OutputStream;
+    using measure = UnitSystem::measure;
+
+    WorkArea test_area("test_Restart");
+    test_area.copyIn("LGR_3WELLS.DATA");
+
+    Setup base_setup("LGR_3WELLS.DATA");
+    const auto& units = base_setup.es.getUnits();
+    auto& io_config = base_setup.es.getIOConfig();
+    {
+        const auto& lgr_labels = base_setup.grid.get_all_lgr_labels();
+        auto num_lgr_cells = lgr_labels.size();
+        std::vector<int> lgr_grid_ids(num_lgr_cells+1);
+        std::iota(lgr_grid_ids.begin(), lgr_grid_ids.end(), 1);
+        std::vector <std::size_t> num_cells(num_lgr_cells+1);
+        num_cells[0] = base_setup.grid.getNumActive();
+        std::transform(lgr_labels.begin(), lgr_labels.end(),
+                      num_cells.begin() + 1 ,
+                    [&base_setup](const std::string& lgr_tag) {
+                                return base_setup.grid.getLGRCell(lgr_tag).getNumActive();});
+
+        std::vector<data::Solution> cells(num_lgr_cells+1);
+        std::transform(num_cells.begin(), num_cells.end(), cells.begin(),
+                        [](int n) { return mkSolution(n); });
+        std::vector<data::Wells> wells;
+        data::Wells lwells = mkWellsLGR_Global_Complex();
+
+        auto groups = mkGroups();
+        auto sumState = sim_stateLGR(base_setup.schedule);
+        auto udqState = UDQState{1};
+        auto aquiferData = std::optional<Opm::RestartIO::Helpers::AggregateAquiferData>{std::nullopt};
+        Action::State action_state;
+        WellTestState wtest_state;
+        {
+
+            std::vector<RestartValue> restart_value;
+
+            for (std::size_t i = 0; i < num_lgr_cells + 1; ++i) {
+                restart_value.emplace_back(cells[i], lwells, groups, data::Aquifers{}, lgr_grid_ids[i]);
+            }
+
+
+            io_config.setEclCompatibleRST( false );
+            std::transform(restart_value.begin(), restart_value.end(),
+                            restart_value.begin(),
+                            [](RestartValue& rv) {
+                                rv.addExtra("EXTRA", UnitSystem::measure::pressure, std::vector<double>{10.0,1.0,2.0,3.0});
+                                return rv;
+                            });
+
+            const auto outputDir = test_area.currentWorkingDirectory();
+
+            {
+                const auto seqnum = 1;
+                auto rstFile = OS::Restart {
+                    OS::ResultSet{ outputDir, "LGR-OPM" }, seqnum,
+                    OS::Formatted{ false }, OS::Unified{ true }
+                };
+
+                RestartIO::save(rstFile, seqnum,
+                                100,
+                                restart_value,
+                                base_setup.es,
+                                base_setup.grid,
+                                base_setup.schedule,
+                                action_state,
+                                wtest_state,
+                                sumState,
+                                udqState,
+                                aquiferData,
+                                true);
+            }
+
+            {
+                const auto rstFile = ::Opm::EclIO::OutputStream::
+                    outputFileName({outputDir, "LGR-OPM"}, "UNRST");
+
+                EclIO::ERst rst{ rstFile };
+
+                {
+                    auto lgrnames_global = rst.getRestartData<std::string>("LGRNAMES", 1);
+                    auto expected_lgrnames_global = base_setup.grid.get_all_lgr_labels();
+                    for (const auto& lgrname : lgrnames_global) {
+                        BOOST_CHECK_EQUAL(rst.hasLGR(lgrname, 1), true);
+                    }
+                    BOOST_CHECK_EQUAL(lgrnames_global.size(), lgr_labels.size());
+                    BOOST_CHECK_EQUAL_COLLECTIONS(lgrnames_global.begin(), lgrnames_global.end(),
+                                                  expected_lgrnames_global.begin(), expected_lgrnames_global.end());
+
+                    for (const auto& lgrname : expected_lgrnames_global) {
+                        BOOST_CHECK_EQUAL(rst.hasArray("LGRHEADI", 1, lgrname), true);
+                        BOOST_CHECK_EQUAL(rst.hasArray("LGRHEADQ", 1, lgrname), true);
+                        BOOST_CHECK_EQUAL(rst.hasArray("LGRHEADD", 1, lgrname), true);
+
+                        BOOST_CHECK_EQUAL(rst.hasArray("INTEHEAD", 1, lgrname), true);
+                        BOOST_CHECK_EQUAL(rst.hasArray("LOGIHEAD", 1, lgrname), true);
+                        BOOST_CHECK_EQUAL(rst.hasArray("DOUBHEAD", 1, lgrname), true);
+
+                        BOOST_CHECK_EQUAL(rst.hasArray("IGRP", 1, lgrname), true);
+                        BOOST_CHECK_EQUAL(rst.hasArray("SGRP", 1, lgrname), true);
+                        BOOST_CHECK_EQUAL(rst.hasArray("XGRP", 1, lgrname), true);
+                        BOOST_CHECK_EQUAL(rst.hasArray("ZGRP", 1, lgrname), true);
+
+                        BOOST_CHECK_EQUAL(rst.hasArray("IWEL", 1, lgrname), true);
+                        BOOST_CHECK_EQUAL(rst.hasArray("SWEL", 1, lgrname), true);
+                        BOOST_CHECK_EQUAL(rst.hasArray("XWEL", 1, lgrname), true);
+                        BOOST_CHECK_EQUAL(rst.hasArray("ZWEL", 1, lgrname), true);
+                        BOOST_CHECK_EQUAL(rst.hasArray("LGWEL", 1, lgrname), true);
+                        BOOST_CHECK_EQUAL(rst.hasArray("ICON", 1, lgrname), true);
+                        BOOST_CHECK_EQUAL(rst.hasArray("SCON", 1, lgrname), true);
+
+                        BOOST_CHECK_EQUAL(rst.hasArray("PRESSURE", 1, lgrname), true);
+                        BOOST_CHECK_EQUAL(rst.hasArray("SWAT", 1, lgrname), true);
+                        BOOST_CHECK_EQUAL(rst.hasArray("SGAS", 1, lgrname), true);
+                        BOOST_CHECK_EQUAL(rst.hasArray("RS", 1, lgrname), true);
+                    }
+
+                }
+
+                BOOST_CHECK_MESSAGE(rst.hasKey("SWAT"), "Restart file must have SWAT vector");
+                BOOST_CHECK_MESSAGE(rst.hasKey("EXTRA"), "Restart file must have EXTRA vector");
+
+                {
                     auto convert_length = [&units](measure m, const double x) { return static_cast<double>(units.to_si(m, x)); };
                     auto convert_vector = [&](measure m, const std::vector<double>& input) {
                         std::vector<double> output;
@@ -525,6 +793,128 @@ BOOST_AUTO_TEST_CASE(ECL_LGRFORMATTED)
                         std::vector<double> rv_expected_vec(rv_expected.begin(), rv_expected.end());
                         check_vec_close(rv_lgr2, rv_expected_vec);
                     }
+
+
+                    // -------------------------- IWEL FOR GLOBAL WELLS --------------------------
+                    // GLOBAL WELLS
+                    // IWEL (PROD1)
+                    {
+                        using Ix = ::Opm::RestartIO::Helpers::VectorItems::IWell::index;
+                        const auto niwelz = 155;
+                        const auto start = 0*niwelz;
+                        const auto& iwell = rst.getRestartData<int>("IWEL", 1);
+                        //WELL 1 ->  PROD1 -> LGR1
+                        // LGR1 -> 1,1,1 from GLOBAL
+                        BOOST_CHECK_EQUAL(iwell[start + Ix::IHead] , 1); // PROD1 -> I
+                        BOOST_CHECK_EQUAL(iwell[start + Ix::JHead] , 1); // PROD1 -> J
+                        BOOST_CHECK_EQUAL(iwell[start + Ix::FirstK], 1); // PROD1/Head -> K
+                        BOOST_CHECK_EQUAL(iwell[start + Ix::LastK], 1); // PROD1/Head -> K
+                        BOOST_CHECK_EQUAL(iwell[start + Ix::NConn] , 3); // PROD1 #Compl
+                        BOOST_CHECK_EQUAL(iwell[start + Ix::WType] , 1); // PROD1 -> Producer
+                        BOOST_CHECK_EQUAL(iwell[start + Ix::LGRIndex] ,1); // LOCATED LGR1
+                    }
+                    // IWEL (PROD2)
+                    {
+                        using Ix = ::Opm::RestartIO::Helpers::VectorItems::IWell::index;
+                        const auto niwelz = 155;
+                        const auto start = 1*niwelz;
+                        const auto& iwell = rst.getRestartData<int>("IWEL", 1);
+                        //WELL 2 ->  PROD2 -> LGR2
+                        // LGR1 -> 3,1,1 from GLOBAL
+                        BOOST_CHECK_EQUAL(iwell[start + Ix::IHead] , 3); // PROD2 -> I
+                        BOOST_CHECK_EQUAL(iwell[start + Ix::JHead] , 1); // PROD2 -> J
+                        BOOST_CHECK_EQUAL(iwell[start + Ix::FirstK], 1); // PROD2/Head -> K
+                        BOOST_CHECK_EQUAL(iwell[start + Ix::LastK], 1); // PROD2/Head -> K
+                        BOOST_CHECK_EQUAL(iwell[start + Ix::NConn] , 1); // PROD2 #Compl
+                        BOOST_CHECK_EQUAL(iwell[start + Ix::WType] , 1); // PROD2 -> Producer
+                        BOOST_CHECK_EQUAL(iwell[start + Ix::LGRIndex] ,2); // LOCATED LGR2
+                    }
+                    // IWEL (INJ)
+                    {
+                        using Ix = ::Opm::RestartIO::Helpers::VectorItems::IWell::index;
+                        const auto niwelz = 155;
+                        const auto start = 2*niwelz;
+                        const auto& iwell = rst.getRestartData<int>("IWEL", 1);
+                        //WELL 3 ->  INJ ->NO LGR
+                        BOOST_CHECK_EQUAL(iwell[start + Ix::IHead] , 2); // PROD2 -> I
+                        BOOST_CHECK_EQUAL(iwell[start + Ix::JHead] , 1); // PROD2 -> J
+                        BOOST_CHECK_EQUAL(iwell[start + Ix::FirstK], 1); // PROD2/Head -> K
+                        BOOST_CHECK_EQUAL(iwell[start + Ix::LastK], 1); // PROD2/Head -> K
+                        BOOST_CHECK_EQUAL(iwell[start + Ix::NConn] , 1); // PROD2 #Compl
+                        BOOST_CHECK_EQUAL(iwell[start + Ix::WType] , 3); // PROD2 -> INJECTOR
+                        BOOST_CHECK_EQUAL(iwell[start + Ix::LGRIndex] ,0); // NOT IN LGR
+                    }
+
+                    // LGR WELLS
+                    // IWEL (PROD1)
+                    {
+                        using Ix = ::Opm::RestartIO::Helpers::VectorItems::IWell::index;
+                        const auto niwelz = 155;
+                        const auto start = 0*niwelz;
+                        const auto& iwell = rst.getRestartData<int>("IWEL", 1,"LGR1");
+                        //WELL 1 ->  PROD1 -> LGR1
+                        // HEAD IN LGR1 -> 2,1,1
+                        BOOST_CHECK_EQUAL(iwell[start + Ix::IHead] , 2); // PROD1 -> I
+                        BOOST_CHECK_EQUAL(iwell[start + Ix::JHead] , 1); // PROD1 -> J
+                        BOOST_CHECK_EQUAL(iwell[start + Ix::FirstK], 1); // PROD1/Head -> K
+                        BOOST_CHECK_EQUAL(iwell[start + Ix::LastK], 1); // PROD1/Head -> K
+                        BOOST_CHECK_EQUAL(iwell[start + Ix::NConn] , 3); // PROD1 #Compl
+                        BOOST_CHECK_EQUAL(iwell[start + Ix::WType] , 1); // PROD1 -> Producer
+                        BOOST_CHECK_EQUAL(iwell[start + Ix::LGRIndex] ,1); // LOCATED LGR1
+                    }
+                    // LGR WELLS
+                    // IWEL (PROD2)
+                    {
+                        using Ix = ::Opm::RestartIO::Helpers::VectorItems::IWell::index;
+                        const auto niwelz = 155;
+                        const auto start = 0*niwelz;
+                        const auto& iwell = rst.getRestartData<int>("IWEL", 1,"LGR2");
+                        //WELL 2 ->  PROD1 -> LGR2
+                        // HEAD IN LGR1 -> 1,1,1
+                        BOOST_CHECK_EQUAL(iwell[start + Ix::IHead] , 1); // PROD2 -> I
+                        BOOST_CHECK_EQUAL(iwell[start + Ix::JHead] , 1); // PROD2 -> J
+                        BOOST_CHECK_EQUAL(iwell[start + Ix::FirstK], 1); // PROD2/Head -> K
+                        BOOST_CHECK_EQUAL(iwell[start + Ix::LastK], 1); // PROD2/Head -> K
+                        BOOST_CHECK_EQUAL(iwell[start + Ix::NConn] , 1); // PRO2 #Compl
+                        BOOST_CHECK_EQUAL(iwell[start + Ix::WType] , 1); // PROD2 -> Producer
+                        BOOST_CHECK_EQUAL(iwell[start + Ix::LGRIndex], 2); // LOCATED LGR2
+                    }
+                    // -------------------------- ICON FOR GLOBAL GRID --------------------------
+                    // ICON (PROD1) - C1
+                    {
+                        using Ix = ::Opm::RestartIO::Helpers::VectorItems::IConn::index;
+                        const auto niconz =  26;
+                        const auto ncwmax =  3;
+                        const auto i0 = niconz * ncwmax * 0;
+                        const auto& icon = rst.getRestartData<int>("ICON", 1);
+                        BOOST_CHECK_EQUAL(icon[i0 + Ix::CellI] , 1); // PROD    -> ICON
+                        BOOST_CHECK_EQUAL(icon[i0 + Ix::CellJ] , 1); // PROD    -> ICON
+                        BOOST_CHECK_EQUAL(icon[i0 + Ix::CellK] , 1); // PROD    -> ICON
+                    }
+                    // ICON (PROD1) - C2
+                    {
+                        using Ix = ::Opm::RestartIO::Helpers::VectorItems::IConn::index;
+                        const auto niconz =  26;
+                        const auto ncwmax =  3;
+                        const auto i0 = niconz * ncwmax * 1;
+                        const auto& icon = rst.getRestartData<int>("ICON", 1);
+                        BOOST_CHECK_EQUAL(icon[i0 + Ix::CellI] , 3); // PROD    -> ICON
+                        BOOST_CHECK_EQUAL(icon[i0 + Ix::CellJ] , 1); // PROD    -> ICON
+                        BOOST_CHECK_EQUAL(icon[i0 + Ix::CellK] , 1); // PROD    -> ICON
+                    }
+                    // ICON (PROD1) - C3
+                    {
+                        using Ix = ::Opm::RestartIO::Helpers::VectorItems::IConn::index;
+                        const auto niconz =  26;
+                        const auto ncwmax =  3;
+                        const auto i0 = niconz * ncwmax * 2;
+                        const auto& icon = rst.getRestartData<int>("ICON", 1);
+                        BOOST_CHECK_EQUAL(icon[i0 + Ix::CellI] , 2); // PROD    -> ICON
+                        BOOST_CHECK_EQUAL(icon[i0 + Ix::CellJ] , 1); // PROD    -> ICON
+                        BOOST_CHECK_EQUAL(icon[i0 + Ix::CellK] , 1); // PROD    -> ICON
+                    }
+
+    // -------------------------- ICON FOR LGRS GRID --------------------------
 
 
             }

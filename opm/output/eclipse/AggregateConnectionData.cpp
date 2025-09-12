@@ -427,8 +427,20 @@ captureDeclaredConnData(const Schedule&     sched,
          const std::size_t       global_index,
          const data::Connection* dynConnRes) -> void
     {
+        static int last_connection_lgr_id = -1;
+        bool skip_flag_lgr = true;
         auto ic = this->iConn_(wellID, connID);
         auto sc = this->sConn_(wellID, connID);
+        // ENSURES THAT ONLY THE FIRST CONNECTION OF A LGR WELL IS WRITTEN
+        // DOES NOT AFFECT GLOBAL CONNECTIONS
+        const int conn_lgr_level = conn.get_lgr_level();
+        if ((conn_lgr_level != last_connection_lgr_id) or (conn_lgr_level == 0)) {
+            skip_flag_lgr = false;
+        }
+        last_connection_lgr_id = conn_lgr_level;
+        if (skip_flag_lgr) {
+            return;
+        }
 
         IConn::staticContrib(conn, connID, ic, grid);
         SConn::staticContrib(conn, units, sc);
