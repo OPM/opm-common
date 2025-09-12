@@ -5,3 +5,11 @@ requires= [
   "cmake>=3.15",
   "ninja"
 ]
+# NOTE (2025-09-12): Explicitly declare the PEP 517 backend used by
+# `python -m build`, aligning with setuptools + scikit-build classic.
+build-backend = "setuptools.build_meta"
+
+# TODO (modernization): Future migration to scikit-build-core and PEP 621.
+# - Define metadata in a [project] table and configure scikit-build under
+#   [tool.scikit-build] or [tool.scikit-build-core]. This would enable
+#   dropping setup.py.in entirely and simplify versioning.
