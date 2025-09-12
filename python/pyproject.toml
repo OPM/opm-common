@@ -1,12 +1,13 @@
 [build-system]
+# NOTE: Raise the setuptools floor to >=61 to align with modern
+# pyproject-based builds and leave room for partial PEP 621 adoption later.
 requires= [
-  "setuptools>=42",
+  "setuptools>=61",
   "scikit-build>=0.13",
   "cmake>=3.15",
   "ninja"
 ]
-# NOTE (2025-09-12): Explicitly declare the PEP 517 backend used by
-# `python -m build`, aligning with setuptools + scikit-build classic.
+# PEP 517 backend used by `python -m build` with classic scikit-build.
 build-backend = "setuptools.build_meta"
 
 # TODO (modernization): Future migration to scikit-build-core and PEP 621.

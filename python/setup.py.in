@@ -43,11 +43,13 @@ setup(
             ],
     package_data={'opm' : ['$<TARGET_FILE_NAME:opmcommon_python>']},
     include_package_data=True,
-    license='Open Source',
+    # SPDX license expression to replace deprecated license classifier usage.
+    license='GPL-3.0-or-later',
     install_requires=requires,
     python_requires='>=3.6',
+    # NOTE (2025-09-12): Remove deprecated license classifier in favor of
+    # SPDX license expression above. Keep non-license classifiers only.
     classifiers=[
         "Programming Language :: Python :: 3",
-        "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
     ],
 )
