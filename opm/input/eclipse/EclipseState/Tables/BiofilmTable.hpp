@@ -33,7 +33,7 @@ public:
     const TableColumn& getDensityBiofilm() const;
     const TableColumn& getMicrobialDeathRate() const;
     const TableColumn& getMaximumGrowthRate() const;
-    const TableColumn& getHalfVelocityOxygen() const;
+    const TableColumn& gethalfVelocityGrowth() const;
     const TableColumn& getYieldGrowthCoefficient() const;
     const TableColumn& getOxygenConsumptionFactor() const;
     const TableColumn& getMicrobialAttachmentRate() const;
