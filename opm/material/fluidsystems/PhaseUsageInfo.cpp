@@ -59,6 +59,16 @@ void PhaseUsageInfo<IndexTraits>::updateIndexMapping_() {
             activePhaseIdx++;
         }
     }
+
+    int activeCompIdx = 0;
+    for (unsigned c = 0; c < numComponents; ++c) {
+        // TODO: use phaseIsActive for components checking is a temporary workaround for now
+        if (phaseIsActive(IndexTraits::componentToPhaseIdx(c))) {
+            activeToCanonicalCompIdx_[activeCompIdx] = c;
+            canonicalToActiveCompIdx_[c] = activeCompIdx;
+            ++activeCompIdx;
+        }
+    }
 }
 
 template <typename IndexTraits>
@@ -67,6 +77,9 @@ void PhaseUsageInfo<IndexTraits>::reset_() {
     std::fill_n(&phaseIsActive_[0], numPhases, false);
     std::fill_n(&canonicalToActivePhaseIdx_[0], numPhases, -1);
     std::fill_n(&activeToCanonicalPhaseIdx_[0], numPhases, -1);
+
+    std::fill_n(&activeToCanonicalCompIdx_[0], numComponents, -1);
+    std::fill_n(&canonicalToActiveCompIdx_[0], numComponents, -1);
 }
 
 #if HAVE_ECL_INPUT

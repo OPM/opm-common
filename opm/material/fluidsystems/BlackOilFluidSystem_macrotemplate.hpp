@@ -176,6 +176,7 @@ public:
         , referenceDensity_(StorageT<typename decltype(referenceDensity_)::value_type>(other.referenceDensity_))
         , molarMass_(StorageT<typename decltype(molarMass_)::value_type>(other.molarMass_))
         , diffusionCoefficients_(StorageT<typename decltype(diffusionCoefficients_)::value_type>(other.diffusionCoefficients_))
+        , phaseUsageInfo_(other.phaseUsageInfo_)
         , isInitialized_(other.isInitialized_)
         , useSaturatedTables_(other.useSaturatedTables_)
         , enthalpy_eq_energy_(other.enthalpy_eq_energy_)
@@ -193,10 +194,10 @@ public:
                           bool _enableVaporizedOil_,
                           bool _enableVaporizedWater_,
                           bool _enableDiffusion_,
-                          const PhaseUsageInfo<IndexTraits>& _phaseUsageInfo_,
                           Storage<std::array<Scalar, 3>>&& _referenceDensity_,
                           Storage<std::array<Scalar, 3>>&& _molarMass_,
                           Storage<std::array<Scalar, 3 * 3>>&& _diffusionCoefficients_,
+                          const PhaseUsageInfo<IndexTraits>& _phaseUsageInfo_,
                           bool _isInitialized_,
                           bool _useSaturatedTables_,
                           bool _enthalpy_eq_energy_)
@@ -211,10 +212,10 @@ public:
         , enableVaporizedOil_(_enableVaporizedOil_)
         , enableVaporizedWater_(_enableVaporizedWater_)
         , enableDiffusion_(_enableDiffusion_)
-        , phaseUsageInfo_(_phaseUsageInfo_)
         , referenceDensity_(std::move(_referenceDensity_))
         , molarMass_(std::move(_molarMass_))
         , diffusionCoefficients_(std::move(_diffusionCoefficients_))
+        , phaseUsageInfo_(_phaseUsageInfo_)
         , isInitialized_(_isInitialized_)
         , useSaturatedTables_(_useSaturatedTables_)
         , enthalpy_eq_energy_(_enthalpy_eq_energy_)
@@ -1693,6 +1694,14 @@ public:
 
     STATIC_OR_DEVICE short canonicalToActivePhaseIdx(unsigned phaseIdx) NOTHING_OR_CONST;
 
+    STATIC_OR_DEVICE short activeToCanonicalCompIdx(unsigned activeCompIdx) NOTHING_OR_CONST;
+
+    STATIC_OR_DEVICE short canonicalToActiveCompIdx(unsigned compIdx) NOTHING_OR_CONST;
+
+    STATIC_OR_DEVICE short activePhaseToActiveCompIdx(unsigned activePhaseIdx) NOTHING_OR_CONST;
+
+    STATIC_OR_DEVICE short activeCompToActivePhaseIdx(unsigned activeCompIdx) NOTHING_OR_CONST;
+
     //! \copydoc BaseFluidSystem::diffusionCoefficient
     STATIC_OR_DEVICE Scalar diffusionCoefficient(unsigned compIdx, unsigned phaseIdx, unsigned regionIdx = 0) NOTHING_OR_CONST
     { return diffusionCoefficients_[regionIdx][numPhases*compIdx + phaseIdx]; }
@@ -1949,6 +1958,34 @@ canonicalToActivePhaseIdx(unsigned phaseIdx) NOTHING_OR_CONST
 }
 
 template <class Scalar, class IndexTraits, template<typename> typename Storage>
+NOTHING_OR_DEVICE short FLUIDSYSTEM_CLASSNAME<Scalar,IndexTraits, Storage>::
+activeToCanonicalCompIdx(unsigned activeCompIdx) NOTHING_OR_CONST
+{
+    return phaseUsageInfo_.activeToCanonicalCompIdx(activeCompIdx);
+}
+
+template <class Scalar, class IndexTraits, template<typename> typename Storage>
+NOTHING_OR_DEVICE short FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, Storage>::
+canonicalToActiveCompIdx(unsigned compIdx) NOTHING_OR_CONST
+{
+    return phaseUsageInfo_.canonicalToActiveCompIdx(compIdx);
+}
+
+template <class Scalar, class IndexTraits, template<typename> typename Storage>
+NOTHING_OR_DEVICE short FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, Storage>::
+activePhaseToActiveCompIdx(unsigned activePhaseIdx) NOTHING_OR_CONST
+{
+    return phaseUsageInfo_.activePhaseToActiveCompIdx(activePhaseIdx);
+}
+
+template <class Scalar, class IndexTraits, template<typename> typename Storage>
+NOTHING_OR_DEVICE short FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, Storage>::
+activeCompToActivePhaseIdx(unsigned activeCompIdx) NOTHING_OR_CONST
+{
+    return phaseUsageInfo_.activeCompToActivePhaseIdx(activeCompIdx);
+}
+
+template <class Scalar, class IndexTraits, template<typename> typename Storage>
 void FLUIDSYSTEM_CLASSNAME<Scalar,IndexTraits,Storage>::
 resizeArrays_(std::size_t numRegions)
 {
@@ -2030,10 +2067,10 @@ copy_to_gpu(const FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits>& oldFluidSystem) {
         oldFluidSystem.enableVaporizedOil_,
         oldFluidSystem.enableVaporizedWater_,
         oldFluidSystem.enableDiffusion_,
-        oldFluidSystem.phaseUsageInfo_,
         std::move(newReferenceDensity),
         std::move(newMolarMass),
         std::move(newDiffusionCoefficients),
+        oldFluidSystem.phaseUsageInfo_,
         oldFluidSystem.isInitialized_,
         oldFluidSystem.useSaturatedTables_,
         oldFluidSystem.enthalpy_eq_energy_
@@ -2067,10 +2104,10 @@ make_view(FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, GpuBuffer>& oldFluidSystem)
         oldFluidSystem.enableVaporizedOil_,
         oldFluidSystem.enableVaporizedWater_,
         oldFluidSystem.enableDiffusion_,
-        oldFluidSystem.phaseUsageInfo_,
         std::move(newReferenceDensity),
         std::move(newMolarMass),
         std::move(newDiffusionCoefficients),
+        oldFluidSystem.phaseUsageInfo_,
         oldFluidSystem.isInitialized_,
         oldFluidSystem.useSaturatedTables_,
         oldFluidSystem.enthalpy_eq_energy_

@@ -61,6 +61,7 @@ BOOST_AUTO_TEST_CASE(default_constructor)
     BOOST_TEST_MESSAGE("Default constructor test passed.");
 }
 
+#if HAVE_ECL_INPUT
 BOOST_AUTO_TEST_CASE(constructor_with_phases)
 {
     // water and oil active, gas inactive
@@ -101,11 +102,30 @@ BOOST_AUTO_TEST_CASE(constructor_with_phases)
     BOOST_CHECK(pu.activeToCanonicalPhaseIdx(0) == PhaseUsage::waterPhaseIdx);
     BOOST_CHECK(pu.activeToCanonicalPhaseIdx(1) == PhaseUsage::oilPhaseIdx);
 
+    BOOST_CHECK(pu.activeToCanonicalCompIdx(0) == PhaseUsage::oilCompIdx);
+    BOOST_CHECK(pu.activeToCanonicalCompIdx(1) == PhaseUsage::waterCompIdx);
+    // for components other than oil, water, gas, we use the original index
+    // it is used for other components like polymer, solvent, etc.
+    BOOST_CHECK(pu.activeToCanonicalCompIdx(2) == 2);
+    BOOST_CHECK(pu.activeToCanonicalCompIdx(3) == 3);
+    BOOST_CHECK(pu.activeToCanonicalCompIdx(5) == 5);
+
+    BOOST_CHECK(pu.canonicalToActiveCompIdx(PhaseUsage::oilCompIdx) == 0);
+    BOOST_CHECK(pu.canonicalToActiveCompIdx(PhaseUsage::waterCompIdx) == 1);
+    BOOST_CHECK(pu.canonicalToActiveCompIdx(PhaseUsage::gasCompIdx) == -1);
+
+    BOOST_CHECK(pu.activePhaseToActiveCompIdx(0) == pu.canonicalToActiveCompIdx(PhaseUsage::waterCompIdx) );
+    BOOST_CHECK(pu.activePhaseToActiveCompIdx(1) == pu.canonicalToActiveCompIdx(PhaseUsage::oilCompIdx) );
+    BOOST_CHECK(pu.activePhaseToActiveCompIdx(2) == 2);
+
+    BOOST_CHECK(pu.activeCompToActivePhaseIdx(0) == pu.canonicalToActivePhaseIdx(PhaseUsage::oilPhaseIdx) );
+    BOOST_CHECK(pu.activeCompToActivePhaseIdx(1) == pu.canonicalToActivePhaseIdx(PhaseUsage::waterPhaseIdx) );
+    BOOST_CHECK(pu.activePhaseToActiveCompIdx(2) == 2);
+
     BOOST_TEST_MESSAGE("Constructor with phases test passed.");
 }
 
 
-#if HAVE_ECL_INPUT
 BOOST_AUTO_TEST_CASE(constructor_with_datafile)
 {
     const std::string deck_input = R"(
@@ -167,6 +187,26 @@ END
 
     BOOST_CHECK(pu.activeToCanonicalPhaseIdx(0) == PhaseUsage::oilPhaseIdx);
     BOOST_CHECK(pu.activeToCanonicalPhaseIdx(1) == PhaseUsage::gasPhaseIdx);
+
+    BOOST_CHECK(pu.activeToCanonicalCompIdx(0) == PhaseUsage::oilCompIdx);
+    BOOST_CHECK(pu.activeToCanonicalCompIdx(1) == PhaseUsage::gasCompIdx);
+    // for components other than oil, water, gas, we use the original index
+    // it is used for other components like polymer, solvent, etc.
+    BOOST_CHECK(pu.activeToCanonicalCompIdx(2) == 2);
+    BOOST_CHECK(pu.activeToCanonicalCompIdx(3) == 3);
+    BOOST_CHECK(pu.activeToCanonicalCompIdx(5) == 5);
+
+    BOOST_CHECK(pu.canonicalToActiveCompIdx(PhaseUsage::oilCompIdx) == 0);
+    BOOST_CHECK(pu.canonicalToActiveCompIdx(PhaseUsage::gasCompIdx) == 1);
+    BOOST_CHECK(pu.canonicalToActiveCompIdx(PhaseUsage::waterCompIdx) == -1);
+
+    BOOST_CHECK(pu.activePhaseToActiveCompIdx(0) == pu.canonicalToActiveCompIdx(PhaseUsage::oilCompIdx) );
+    BOOST_CHECK(pu.activePhaseToActiveCompIdx(1) == pu.canonicalToActiveCompIdx(PhaseUsage::gasCompIdx) );
+    BOOST_CHECK(pu.activePhaseToActiveCompIdx(2) == 2);
+
+    BOOST_CHECK(pu.activeCompToActivePhaseIdx(0) == pu.canonicalToActivePhaseIdx(PhaseUsage::oilPhaseIdx) );
+    BOOST_CHECK(pu.activeCompToActivePhaseIdx(1) == pu.canonicalToActivePhaseIdx(PhaseUsage::gasPhaseIdx) );
+    BOOST_CHECK(pu.activePhaseToActiveCompIdx(2) == 2);
 }
 #endif
 }

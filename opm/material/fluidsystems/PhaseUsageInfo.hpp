@@ -36,15 +36,21 @@
 
 namespace Opm
 {
+class Phases;
 
 template <typename IndexTraits>
 class PhaseUsageInfo {
 public:
     static constexpr int numPhases = IndexTraits::numPhases;
+    static constexpr int numComponents = IndexTraits::numComponents;
 
     static constexpr int waterPhaseIdx = IndexTraits::waterPhaseIdx;
     static constexpr int oilPhaseIdx = IndexTraits::oilPhaseIdx;
     static constexpr int gasPhaseIdx = IndexTraits::gasPhaseIdx;
+
+    static constexpr int waterCompIdx = IndexTraits::waterCompIdx;
+    static constexpr int oilCompIdx = IndexTraits::oilCompIdx;
+    static constexpr int gasCompIdx = IndexTraits::gasCompIdx;
 
     PhaseUsageInfo();
 
@@ -68,6 +74,38 @@ public:
     [[nodiscard]] short activeToCanonicalPhaseIdx(unsigned activePhaseIdx) const {
         assert(activePhaseIdx< numActivePhases_);
         return activeToCanonicalPhaseIdx_[activePhaseIdx];
+    }
+
+    [[nodiscard]] short activeToCanonicalCompIdx(unsigned activeCompIdx) const {
+        if (activeCompIdx >= numActivePhases()) {
+            return activeCompIdx; // e.g. for solvent
+        }
+        return activeToCanonicalCompIdx_[activeCompIdx];
+    }
+
+    [[nodiscard]] short canonicalToActiveCompIdx(unsigned compIdx) const {
+        assert(compIdx < numComponents);
+        return canonicalToActiveCompIdx_[compIdx];
+    }
+
+    [[nodiscard]] short activePhaseToActiveCompIdx(unsigned activePhaseIdx) const {
+        if (activePhaseIdx >= numActivePhases()) {
+            return activePhaseIdx; // e.g. for solvent
+        }
+        const short canonicalPhaseIdx = activeToCanonicalPhaseIdx(activePhaseIdx);
+        const short canonicalCompIdx = IndexTraits::phaseToComponentIdx(canonicalPhaseIdx);
+        const short activeCompIdx = canonicalToActiveCompIdx(canonicalCompIdx);
+        return activeCompIdx;
+    }
+
+    [[nodiscard]] short activeCompToActivePhaseIdx(unsigned activeCompIdx) const {
+        if (activeCompIdx >= numActivePhases()) {
+            return activeCompIdx; // e.g. for solvent
+        }
+        const short canonicalCompIdx = activeToCanonicalCompIdx(activeCompIdx);
+        const short canonicalPhaseIdx = IndexTraits::componentToPhaseIdx(canonicalCompIdx);
+        const short activePhaseIdx = canonicalToActivePhaseIdx(canonicalPhaseIdx);
+        return activePhaseIdx;
     }
 
 #if HAVE_ECL_INPUT
@@ -113,10 +151,15 @@ public:
     }
 
 private:
+    // only account for the three main phases: oil, water, gas
     unsigned char numActivePhases_ = 0;
     std::array<bool, numPhases> phaseIsActive_;
     std::array<short, numPhases> activeToCanonicalPhaseIdx_;
     std::array<short, numPhases> canonicalToActivePhaseIdx_;
+
+    // numComponents only account for three main components: oil, water, gas
+    std::array<short, numComponents> activeToCanonicalCompIdx_;
+    std::array<short, numComponents> canonicalToActiveCompIdx_;
 
     bool has_solvent{};
     bool has_polymer{};
