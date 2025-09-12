@@ -728,13 +728,13 @@ private:
     // (an std::reference_wrapper).
     ConditionalStorage<!fluidSystemIsStatic, FluidSystem const*> fluidSystemPtr_;
 
-    const FluidSystem& fluidSystem() const
+    OPM_HOST_DEVICE const FluidSystem& fluidSystem() const
     {
         if constexpr (fluidSystemIsStatic) {
             static FluidSystem instance;
             return instance;
         } else {
-            return *fluidSystemPtr_;
+            return **fluidSystemPtr_;
         }
     }
 };
