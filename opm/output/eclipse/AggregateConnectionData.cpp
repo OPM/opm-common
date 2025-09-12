@@ -64,6 +64,7 @@ namespace {
     void connectionLoop(const Opm::EclipseGrid& grid,
                         const Opm::Well&        well,
                         const Opm::data::Well*  wellRes,
+                        int&                    last_connection_lgr_id,
                         ConnOp&&                connOp,
                         const bool              global_grid = true)
     {
@@ -85,7 +86,7 @@ namespace {
                 ? nullptr : wellRes->find_connection(connPtr->global_index());
 
             connOp(wellName, wellID, isProd, *connPtr, connID,
-                   connPtr->global_index(), dynConnRes);
+                   connPtr->global_index(), last_connection_lgr_id, dynConnRes);
 
             ++connID;
         }
@@ -96,15 +97,17 @@ namespace {
                             const std::size_t       sim_step,
                             const Opm::EclipseGrid& grid,
                             const Opm::data::Wells& xw,
+
                             ConnOp&&                connOp)
     {
+        int last_connection_lgr_id = -1;
         for (const auto& wname : sched.wellNames(sim_step)) {
             const auto  well_iter = xw.find(wname);
             const auto* wellRes   = (well_iter == xw.end())
                 ? nullptr : &well_iter->second;
 
             connectionLoop(grid, sched[sim_step].wells(wname),
-                           wellRes, connOp);
+                           wellRes, last_connection_lgr_id, connOp);
         }
     }
 
@@ -116,6 +119,7 @@ namespace {
                             const std::string&      lgr_tag,
                             ConnOp&&                connOp)
     {
+        int last_connection_lgr_id = -1;
         for (const auto& wname : sched.wellNames(sim_step)) {
             const auto& well = sched[sim_step].wells(wname);
 
@@ -128,7 +132,7 @@ namespace {
             const auto* wellRes   = (well_iter == xw.end())
                 ? nullptr : &well_iter->second;
 
-            connectionLoop(grid, well, wellRes, connOp, false);
+            connectionLoop(grid, well, wellRes, last_connection_lgr_id, connOp,  false);
         }
     }
 
@@ -425,9 +429,9 @@ captureDeclaredConnData(const Schedule&     sched,
          const Connection&       conn,
          const std::size_t       connID,
          const std::size_t       global_index,
+               int&              last_connection_lgr_id,
          const data::Connection* dynConnRes) -> void
     {
-        static int last_connection_lgr_id = -1;
         bool skip_flag_lgr = true;
         auto ic = this->iConn_(wellID, connID);
         auto sc = this->sConn_(wellID, connID);
@@ -475,6 +479,7 @@ captureDeclaredConnDataLGR(const Schedule&     sched,
          const Connection&       conn,
          const std::size_t       connID,
          const std::size_t       global_index,
+  [[maybe_unused]]    int&       last_connection_lgr_id,
          const data::Connection* dynConnRes) -> void
     {
         auto ic = this->iConn_(wellID, connID);
