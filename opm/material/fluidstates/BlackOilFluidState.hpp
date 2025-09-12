@@ -140,25 +140,28 @@ public:
     static constexpr int numPhases = FluidSystem::numPhases;
     static constexpr int numComponents = FluidSystem::numComponents;
 
-    /**
-     * \brief Construct a fluid state object.
-     * 
-     * \param fluidSystem The fluid system which is used to compute various quantities
-     */
-    explicit OPM_HOST_DEVICE BlackOilFluidState(const FluidSystem& fluidSystem) : fluidSystem_(&fluidSystem) {}
+    static constexpr bool fluidSystemIsStatic = std::is_empty_v<FluidSystem>;
 
     /**
      * \brief Construct a fluid state object.
+     *
+     * \param fluidSystem The fluid system which is used to compute various quantities
      */
-    OPM_HOST_DEVICE BlackOilFluidState() : fluidSystem_(nullptr) {
-        // Note that we are technically storing a const ref to a variable
-        // that goes out of scope. This is fine as we have the assert below:
-        static_assert(std::is_empty_v<FluidSystem>,
-                      "When using the default constructor, the FluidSystem must be an empty class. "
-                      "That is, it must not have any data members, "
-                      "virtual functions or inherit from any class having data members or virtual "
-                      "functions. Only static member variables are allowed. "
-                      "If you want to use a dynamic FluidSystem, you must pass it to the constructor.");
+    explicit OPM_HOST_DEVICE BlackOilFluidState(const FluidSystem& fluidSystem)
+    {
+        if constexpr (fluidSystemIsStatic) {
+            fluidSystemPtr_ = &fluidSystem;
+        }
+    }
+
+    /**
+     * \brief Construct a fluid state object.
+     *
+     * The fluid system used is assumed to be stateless.
+     */
+    OPM_HOST_DEVICE BlackOilFluidState()
+    {
+        static_assert(fluidSystemIsStatic);
     }
 
     /*!
@@ -240,7 +243,7 @@ public:
             setSaltSaturation(BlackOil::getSaltSaturation_<FluidSystem, FluidState, Scalar>(fs, pvtRegionIdx));
         }
         for (unsigned storagePhaseIdx = 0; storagePhaseIdx < numStoragePhases; ++storagePhaseIdx) {
-            unsigned phaseIdx = storageToCanonicalPhaseIndex_(storagePhaseIdx, *fluidSystem_);
+            unsigned phaseIdx = storageToCanonicalPhaseIndex_(storagePhaseIdx, fluidSystem());
             setSaturation(phaseIdx, fs.saturation(phaseIdx));
             setPressure(phaseIdx, fs.pressure(phaseIdx));
             setDensity(phaseIdx, fs.density(phaseIdx));
@@ -248,7 +251,7 @@ public:
             if constexpr (enableEnergy)
                 setEnthalpy(phaseIdx, fs.enthalpy(phaseIdx));
 
-            setInvB(phaseIdx, getInvB_<FluidSystem, FluidState, Scalar>(fs, phaseIdx, pvtRegionIdx, *fluidSystem_));
+            setInvB(phaseIdx, getInvB_<FluidSystem, FluidState, Scalar>(fs, phaseIdx, pvtRegionIdx, fluidSystem()));
         }
     }
 
@@ -265,13 +268,13 @@ public:
      * \brief Set the pressure of a fluid phase [-].
      */
     OPM_HOST_DEVICE void setPressure(unsigned phaseIdx, const Scalar& p)
-    { pressure_[canonicalToStoragePhaseIndex_(phaseIdx, *fluidSystem_)] = p; }
+    { pressure_[canonicalToStoragePhaseIndex_(phaseIdx, fluidSystem())] = p; }
 
     /*!
      * \brief Set the saturation of a fluid phase [-].
      */
     OPM_HOST_DEVICE void setSaturation(unsigned phaseIdx, const Scalar& S)
-    { saturation_[canonicalToStoragePhaseIndex_(phaseIdx, *fluidSystem_)] = S; }
+    { saturation_[canonicalToStoragePhaseIndex_(phaseIdx, fluidSystem())] = S; }
 
     /*!
      * \brief Set the total saturation used for sequential methods
@@ -304,20 +307,20 @@ public:
     {
         assert(enableTemperature || enableEnergy);
 
-        (*enthalpy_)[canonicalToStoragePhaseIndex_(phaseIdx, *fluidSystem_)] = value;
+        (*enthalpy_)[canonicalToStoragePhaseIndex_(phaseIdx, fluidSystem())] = value;
     }
 
     /*!
      * \ brief Set the inverse formation volume factor of a fluid phase
      */
     OPM_HOST_DEVICE void setInvB(unsigned phaseIdx, const Scalar& b)
-    { invB_[canonicalToStoragePhaseIndex_(phaseIdx, *fluidSystem_)] = b; }
+    { invB_[canonicalToStoragePhaseIndex_(phaseIdx, fluidSystem())] = b; }
 
     /*!
      * \ brief Set the density of a fluid phase
      */
     OPM_HOST_DEVICE void setDensity(unsigned phaseIdx, const Scalar& rho)
-    { density_[canonicalToStoragePhaseIndex_(phaseIdx, *fluidSystem_)] = rho; }
+    { density_[canonicalToStoragePhaseIndex_(phaseIdx, fluidSystem())] = rho; }
 
     /*!
      * \brief Set the gas dissolution factor [m^3/m^3] of the oil phase.
@@ -367,13 +370,13 @@ public:
      * \brief Return the pressure of a fluid phase [Pa]
      */
     OPM_HOST_DEVICE const Scalar& pressure(unsigned phaseIdx) const
-    { return pressure_[canonicalToStoragePhaseIndex_(phaseIdx, *fluidSystem_)]; }
+    { return pressure_[canonicalToStoragePhaseIndex_(phaseIdx, fluidSystem())]; }
 
     /*!
      * \brief Return the saturation of a fluid phase [-]
      */
     OPM_HOST_DEVICE const Scalar& saturation(unsigned phaseIdx) const
-    { return saturation_[canonicalToStoragePhaseIndex_(phaseIdx, *fluidSystem_)]; }
+    { return saturation_[canonicalToStoragePhaseIndex_(phaseIdx, fluidSystem())]; }
 
     /*!
      * \brief Return the total saturation needed for sequential
@@ -391,7 +394,7 @@ public:
         if constexpr (enableTemperature || enableEnergy) {
             return *temperature_;
         } else {
-            return fluidSystem_->reservoirTemperature(pvtRegionIdx_);
+            return fluidSystem().reservoirTemperature(pvtRegionIdx_);
         }
     }
 
@@ -402,7 +405,7 @@ public:
      * pressure and temperature at reservoir conditions compared to surface conditions.
      */
     OPM_HOST_DEVICE const Scalar& invB(unsigned phaseIdx) const
-    { return invB_[canonicalToStoragePhaseIndex_(phaseIdx, *fluidSystem_)]; }
+    { return invB_[canonicalToStoragePhaseIndex_(phaseIdx, fluidSystem())]; }
 
     /*!
      * \brief Return the gas dissolution factor of oil [m^3/m^3].
@@ -503,7 +506,7 @@ public:
      * \brief Return the density [kg/m^3] of a given fluid phase.
       */
     OPM_HOST_DEVICE Scalar density(unsigned phaseIdx) const
-    { return density_[canonicalToStoragePhaseIndex_(phaseIdx, *fluidSystem_)]; }
+    { return density_[canonicalToStoragePhaseIndex_(phaseIdx, fluidSystem())]; }
 
     /*!
      * \brief Return the specific enthalpy [J/kg] of a given fluid phase.
@@ -512,7 +515,7 @@ public:
      * exception!
      */
     OPM_HOST_DEVICE const Scalar& enthalpy(unsigned phaseIdx) const
-    { return (*enthalpy_)[canonicalToStoragePhaseIndex_(phaseIdx, *fluidSystem_)]; }
+    { return (*enthalpy_)[canonicalToStoragePhaseIndex_(phaseIdx, fluidSystem())]; }
 
     /*!
      * \brief Return the specific internal energy [J/kg] of a given fluid phase.
@@ -521,8 +524,8 @@ public:
      * exception!
      */
     OPM_HOST_DEVICE Scalar internalEnergy(unsigned phaseIdx) const
-    {   auto energy = (*enthalpy_)[canonicalToStoragePhaseIndex_(phaseIdx, *fluidSystem_)];
-        if(!fluidSystem_->enthalpyEqualEnergy()){
+    {   auto energy = (*enthalpy_)[canonicalToStoragePhaseIndex_(phaseIdx, fluidSystem())];
+        if(!fluidSystem().enthalpyEqualEnergy()){
             energy -= pressure(phaseIdx)/density(phaseIdx);
         }
         return energy;
@@ -540,11 +543,11 @@ public:
         const auto& rho = density(phaseIdx);
 
         if (phaseIdx == waterPhaseIdx)
-            return rho/fluidSystem_->molarMass(waterCompIdx, pvtRegionIdx_);
+            return rho/fluidSystem().molarMass(waterCompIdx, pvtRegionIdx_);
 
         return
-            rho*(moleFraction(phaseIdx, gasCompIdx)/fluidSystem_->molarMass(gasCompIdx, pvtRegionIdx_)
-                 + moleFraction(phaseIdx, oilCompIdx)/fluidSystem_->molarMass(oilCompIdx, pvtRegionIdx_));
+            rho*(moleFraction(phaseIdx, gasCompIdx)/fluidSystem().molarMass(gasCompIdx, pvtRegionIdx_)
+                 + moleFraction(phaseIdx, oilCompIdx)/fluidSystem().molarMass(oilCompIdx, pvtRegionIdx_));
 
     }
 
@@ -560,7 +563,7 @@ public:
      * \brief Return the dynamic viscosity of a fluid phase [Pa s].
      */
     OPM_HOST_DEVICE Scalar viscosity(unsigned phaseIdx) const
-    { return fluidSystem_->viscosity(*this, phaseIdx, pvtRegionIdx_); }
+    { return fluidSystem().viscosity(*this, phaseIdx, pvtRegionIdx_); }
 
     /*!
      * \brief Return the mass fraction of a component in a fluid phase [-].
@@ -577,10 +580,10 @@ public:
             if (compIdx == waterCompIdx)
                 return 0.0;
             else if (compIdx == oilCompIdx)
-                return 1.0 - fluidSystem_->convertRsToXoG(Rs(), pvtRegionIdx_);
+                return 1.0 - fluidSystem().convertRsToXoG(Rs(), pvtRegionIdx_);
             else {
                 assert(compIdx == gasCompIdx);
-                return fluidSystem_->convertRsToXoG(Rs(), pvtRegionIdx_);
+                return fluidSystem().convertRsToXoG(Rs(), pvtRegionIdx_);
             }
             break;
 
@@ -588,10 +591,10 @@ public:
             if (compIdx == waterCompIdx)
                 return 0.0;
             else if (compIdx == oilCompIdx)
-                return fluidSystem_->convertRvToXgO(Rv(), pvtRegionIdx_);
+                return fluidSystem().convertRvToXgO(Rv(), pvtRegionIdx_);
             else {
                 assert(compIdx == gasCompIdx);
-                return 1.0 - fluidSystem_->convertRvToXgO(Rv(), pvtRegionIdx_);
+                return 1.0 - fluidSystem().convertRvToXgO(Rv(), pvtRegionIdx_);
             }
             break;
         }
@@ -614,12 +617,12 @@ public:
             if (compIdx == waterCompIdx)
                 return 0.0;
             else if (compIdx == oilCompIdx)
-                return 1.0 - fluidSystem_->convertXoGToxoG(fluidSystem_->convertRsToXoG(Rs(), pvtRegionIdx_),
+                return 1.0 - fluidSystem().convertXoGToxoG(fluidSystem().convertRsToXoG(Rs(), pvtRegionIdx_),
                                                           pvtRegionIdx_);
             else {
                 assert(compIdx == gasCompIdx);
-                return fluidSystem_->convertXoGToxoG(fluidSystem_->convertRsToXoG(Rs(), pvtRegionIdx_),
-                                                    pvtRegionIdx_);
+                return fluidSystem().convertXoGToxoG(fluidSystem().convertRsToXoG(Rs(), pvtRegionIdx_),
+                                                     pvtRegionIdx_);
             }
             break;
 
@@ -627,11 +630,11 @@ public:
             if (compIdx == waterCompIdx)
                 return 0.0;
             else if (compIdx == oilCompIdx)
-                return fluidSystem_->convertXgOToxgO(fluidSystem_->convertRvToXgO(Rv(), pvtRegionIdx_),
+                return fluidSystem().convertXgOToxgO(fluidSystem().convertRvToXgO(Rv(), pvtRegionIdx_),
                                                     pvtRegionIdx_);
             else {
                 assert(compIdx == gasCompIdx);
-                return 1.0 - fluidSystem_->convertXgOToxgO(fluidSystem_->convertRvToXgO(Rv(), pvtRegionIdx_),
+                return 1.0 - fluidSystem().convertXgOToxgO(fluidSystem().convertRvToXgO(Rv(), pvtRegionIdx_),
                                                           pvtRegionIdx_);
             }
             break;
@@ -653,7 +656,7 @@ public:
     {
         Scalar result(0.0);
         for (unsigned compIdx = 0; compIdx < numComponents; ++ compIdx)
-            result += fluidSystem_->molarMass(compIdx, pvtRegionIdx_)*moleFraction(phaseIdx, compIdx);
+            result += fluidSystem().molarMass(compIdx, pvtRegionIdx_)*moleFraction(phaseIdx, compIdx);
         return result;
     }
 
@@ -661,7 +664,7 @@ public:
      * \brief Return the fugacity coefficient of a component in a fluid phase [-].
      */
     OPM_HOST_DEVICE Scalar fugacityCoefficient(unsigned phaseIdx, unsigned compIdx) const
-    { return fluidSystem_->fugacityCoefficient(*this, phaseIdx, compIdx, pvtRegionIdx_); }
+    { return fluidSystem().fugacityCoefficient(*this, phaseIdx, compIdx, pvtRegionIdx_); }
 
     /*!
      * \brief Return the fugacity of a component in a fluid phase [Pa].
@@ -683,7 +686,7 @@ public:
      */
     bool phaseIsActive(int phaseIdx) const
     {
-        return FluidSystem::phaseIsActive(phaseIdx);
+        return fluidSystem().phaseIsActive(phaseIdx);
     }
 
 private:
@@ -723,7 +726,17 @@ private:
     // be copyable while still supporting a default FluidSystem pointing to a static object.
     // Once we move to a fully dynamic FluidSystem, this can be changed to a reference
     // (an std::reference_wrapper).
-    FluidSystem const* fluidSystem_;
+    ConditionalStorage<!fluidSystemIsStatic, FluidSystem const*> fluidSystemPtr_;
+
+    const FluidSystem& fluidSystem() const
+    {
+        if constexpr (fluidSystemIsStatic) {
+            static FluidSystem instance;
+            return instance;
+        } else {
+            return *fluidSystemPtr_;
+        }
+    }
 };
 
 } // namespace Opm
