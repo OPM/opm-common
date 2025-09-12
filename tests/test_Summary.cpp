@@ -1909,7 +1909,7 @@ BOOST_AUTO_TEST_CASE(skip_unknown_var) {
     const auto* resp = res.get();
 
     /* verify that some non-supported keywords aren't written to the file */
-    BOOST_CHECK( !ecl_sum_has_field_var( resp, "FGST" ) );
+    BOOST_CHECK( !ecl_sum_has_field_var( resp, "FOPP2" ) );
 }
 
 BOOST_AUTO_TEST_CASE(region_vars) {
