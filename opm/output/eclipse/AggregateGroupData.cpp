@@ -19,6 +19,8 @@
 
 #include <opm/output/eclipse/AggregateGroupData.hpp>
 
+#include <opm/common/OpmLog/OpmLog.hpp>
+
 #include <opm/output/eclipse/WriteRestartHelpers.hpp>
 #include <opm/output/eclipse/VectorItems/group.hpp>
 #include <opm/output/eclipse/VectorItems/well.hpp>
@@ -27,6 +29,7 @@
 #include <opm/input/eclipse/Schedule/GasLiftOpt.hpp>
 #include <opm/input/eclipse/Schedule/Group/GConSump.hpp>
 #include <opm/input/eclipse/Schedule/Group/Group.hpp>
+#include <opm/input/eclipse/Schedule/Group/GSatProd.hpp>
 #include <opm/input/eclipse/Schedule/Network/ExtNetwork.hpp>
 #include <opm/input/eclipse/Schedule/Network/Node.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
@@ -35,14 +38,18 @@
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 
 #include <algorithm>
+#include <cassert>
 #include <cstddef>
 #include <cstring>
 #include <exception>
+#include <initializer_list>
 #include <map>
 #include <optional>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <tuple>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -717,8 +724,8 @@ void storeGroupTree(const Opm::Schedule& sched,
                     const std::size_t simStep,
                     IGrpArray& iGrp)
 {
-
     namespace Value = ::Opm::RestartIO::Helpers::VectorItems::IGroup::Value;
+
     using IGroup = ::Opm::RestartIO::Helpers::VectorItems::IGroup::index;
     const bool is_field = group.name() == "FIELD";
 
@@ -732,7 +739,8 @@ void storeGroupTree(const Opm::Schedule& sched,
         }
         iGrp[nwgmax] = group.wells().size();
         iGrp[nwgmax + IGroup::GroupType] = Value::GroupType::WellGroup;
-    } else  {
+    }
+    else {
         int igrpCount = 0;
         for (const auto& group_name : group.groups()) {
             const auto& child_group = sched.getGroup(group_name, simStep);
@@ -740,19 +748,24 @@ void storeGroupTree(const Opm::Schedule& sched,
             igrpCount += 1;
         }
         iGrp[nwgmax+ IGroup::NoOfChildGroupsWells] = (group.wellgroup()) ? group.wells().size() : group.groups().size();
-        iGrp[nwgmax + IGroup::GroupType] = Value::GroupType::TreeGroup;
+        iGrp[nwgmax + IGroup::GroupType] = Value::GroupType::NodeGroup;
     }
 
+    if (group.hasSatelliteProduction()) {
+        assert(group.wells().empty() && group.groups().empty());
+
+        iGrp[nwgmax + IGroup::GroupType] = Value::GroupType::SatelliteGroup;
+    }
 
     // Store index of parent group
-    if (is_field)
+    if (is_field) {
         iGrp[nwgmax + IGroup::ParentGroup] = 0;
+    }
     else {
         const auto& parent_group = sched.getGroup(group.parent(), simStep);
-        if (parent_group.name() == "FIELD")
-            iGrp[nwgmax + IGroup::ParentGroup] = ngmaxz;
-        else
-            iGrp[nwgmax + IGroup::ParentGroup] = parent_group.insert_index();
+
+        iGrp[nwgmax + IGroup::ParentGroup] = (parent_group.name() == "FIELD")
+            ? ngmaxz : parent_group.insert_index();
     }
 
     iGrp[nwgmax + IGroup::GroupLevel] = currentGroupLevel(sched, group, simStep);
@@ -760,15 +773,15 @@ void storeGroupTree(const Opm::Schedule& sched,
 
 template <class IGrpArray>
 void storeGroupTreeLGR(const Opm::Schedule& sched,
-                    const Opm::Group& group,
-                    const int nwgmax,
-                    const int ngmaxz,
-                    const std::size_t simStep,
-                    IGrpArray& iGrp,
-                    const std::string& lgr_tag)
+                       const Opm::Group& group,
+                       const int nwgmax,
+                       const int ngmaxz,
+                       const std::size_t simStep,
+                       IGrpArray& iGrp,
+                       const std::string& lgr_tag)
 {
-
     namespace Value = ::Opm::RestartIO::Helpers::VectorItems::IGroup::Value;
+
     using IGroup = ::Opm::RestartIO::Helpers::VectorItems::IGroup::index;
     const bool is_field = group.name() == "FIELD";
 
@@ -821,7 +834,7 @@ void storeGroupTreeLGR(const Opm::Schedule& sched,
         }
         iGrp[nwgmax+ IGroup::NoOfChildGroupsWells] = (group.wellgroup()) ? sched[simStep].num_lgr_well_in_group(group, lgr_tag):
                                                                            sched[simStep].num_lgr_groups_in_group(group,lgr_tag);
-        iGrp[nwgmax + IGroup::GroupType] = Value::GroupType::TreeGroup;
+        iGrp[nwgmax + IGroup::GroupType] = Value::GroupType::NodeGroup;
     }
 
 
@@ -838,7 +851,6 @@ void storeGroupTreeLGR(const Opm::Schedule& sched,
 
     iGrp[nwgmax + IGroup::GroupLevel] = currentGroupLevel(sched, group, simStep);
 }
-
 
 template <class IGrpArray>
 void storeFlowingWells(const Opm::Group&        group,
@@ -872,7 +884,6 @@ void staticContrib(const Opm::Schedule&     sched,
         storeGroupTreeLGR(sched, group, nwgmax, ngmaxz, simStep, iGrp, lgr_tag);
     }
 
-
     // Node number and other node properties for groups, i.e., leaf nodes,
     // in extended network model.
     storeNetworkNodeInformation(sched, group.name(), nwgmax, simStep, iGrp);
@@ -885,20 +896,22 @@ void staticContrib(const Opm::Schedule&     sched,
     // Treat all groups for injection controls.
     injectionGroup(sched, group, nwgmax, simStep, sumState, iGrp);
 
-    if (is_field)
-    {
+    if (is_field) {
         //the maximum number of groups in the model
         iGrp[nwgmax + IGroup::ProdHighLevCtrl] = 0;
         iGrp[nwgmax + IGroup::WInjHighLevCtrl] = 0;
         iGrp[nwgmax + IGroup::GInjHighLevCtrl] = 0;
         iGrp[nwgmax+88] = ngmaxz;
-        if (iGrp[nwgmax + IGroup::VoidageGroupIndex] < 1) iGrp[nwgmax + IGroup::VoidageGroupIndex] = ngmaxz;
+
+        if (iGrp[nwgmax + IGroup::VoidageGroupIndex] < 1) {
+            iGrp[nwgmax + IGroup::VoidageGroupIndex] = ngmaxz;
+        }
+
         iGrp[nwgmax+95] = ngmaxz;
         iGrp[nwgmax+96] = ngmaxz;
     }
-    else
-    {
-        //parameters connected to oil injection - not implemented in flow yet
+    else {
+        // parameters connected to oil injection - not implemented in flow yet
         iGrp[nwgmax+11] = 0;
         iGrp[nwgmax+12] = -1;
 
@@ -907,12 +920,17 @@ void staticContrib(const Opm::Schedule&     sched,
 
         //assign values to group number (according to group sequence)
         iGrp[nwgmax+88] = group.insert_index();
+
         // Avoid test errors by assigning self-injection value to production groups
-        if (iGrp[nwgmax + IGroup::VoidageGroupIndex] < 1) iGrp[nwgmax + IGroup::VoidageGroupIndex] = group.insert_index();
+        if (iGrp[nwgmax + IGroup::VoidageGroupIndex] < 1) {
+            iGrp[nwgmax + IGroup::VoidageGroupIndex] = group.insert_index();
+        }
+
         iGrp[nwgmax+95] = group.insert_index();
         iGrp[nwgmax+96] = group.insert_index();
     }
 }
+
 } // Igrp
 
 namespace SGrp {
@@ -1109,6 +1127,116 @@ void assignGroupProductionTargets(const Opm::Group&        group,
     }
 }
 
+template <typename SGrpArray>
+void clearSatelliteRatesCommon(SGrpArray&& sGrp)
+{
+    using P = Opm::RestartIO::Helpers::VectorItems::SGroup::prod_index;
+    using I = Opm::RestartIO::Helpers::VectorItems::SGroup::inj_index;
+
+    for (const auto& rateItem : {
+            static_cast<std::underlying_type_t<P>>(P::OilRateLimit),
+            static_cast<std::underlying_type_t<P>>(P::WatRateLimit),
+            static_cast<std::underlying_type_t<P>>(P::GasRateLimit),
+            static_cast<std::underlying_type_t<I>>(I::oilSurfRateLimit),
+            static_cast<std::underlying_type_t<I>>(I::oilResRateLimit),
+            static_cast<std::underlying_type_t<I>>(I::waterSurfRateLimit),
+            static_cast<std::underlying_type_t<I>>(I::waterResRateLimit),
+            static_cast<std::underlying_type_t<I>>(I::gasSurfRateLimit),
+            static_cast<std::underlying_type_t<I>>(I::gasResRateLimit),
+            static_cast<std::underlying_type_t<P>>(P::ResvRateLimit),
+            static_cast<std::underlying_type_t<P>>(P::GasRateLimit_2),
+            static_cast<std::underlying_type_t<P>>(P::OilRateLimit_2),
+            static_cast<std::underlying_type_t<P>>(P::WatRateLimit_2),
+            static_cast<std::underlying_type_t<P>>(P::ResvRateLimit_2),
+            static_cast<std::underlying_type_t<I>>(I::oilSurfRateLimit_2),
+            static_cast<std::underlying_type_t<I>>(I::oilResRateLimit_2),
+            static_cast<std::underlying_type_t<I>>(I::waterSurfRateLimit_2),
+            static_cast<std::underlying_type_t<I>>(I::waterResRateLimit_2),
+            static_cast<std::underlying_type_t<I>>(I::gasSurfRateLimit_2),
+            static_cast<std::underlying_type_t<I>>(I::gasResRateLimit_2),
+        })
+    {
+        sGrp[rateItem] = 0.0f;
+    }
+}
+
+template <typename SGrpArray>
+void clearSatelliteRatesProduction(SGrpArray&& sGrp)
+{
+    using P = Opm::RestartIO::Helpers::VectorItems::SGroup::prod_index;
+
+    for (const auto& rateItem : {
+            static_cast<std::underlying_type_t<P>>(P::MeanCaloricValue),
+            static_cast<std::vector<float>::size_type>(80),
+        })
+    {
+        sGrp[rateItem] = 0.0f;
+    }
+}
+
+template <typename SGProp, class SGrpArray>
+void assignSatelliteGroupProduction(const Opm::Group&        group,
+                                    const Opm::SummaryState& sumState,
+                                    const Opm::GSatProd&     gsatprod,
+                                    SGProp&&                 sgprop,
+                                    SGrpArray&               sGrp)
+{
+    if (! gsatprod.has(group.name())) { return; }
+
+    clearSatelliteRatesCommon(sGrp);
+    clearSatelliteRatesProduction(sGrp);
+
+    using Ix = ::Opm::RestartIO::Helpers::VectorItems::SGroup::prod_index;
+    using M  = ::Opm::UnitSystem::measure;
+    using QI = ::Opm::GSatProd::GSatProdGroupProp::Rate;
+
+    using namespace std::string_view_literals;
+
+    const auto& gsp = gsatprod.get(group.name());
+    const auto rates = gsatprod.get(group.name(), sumState).rate;
+
+    auto udaWarning = [&gname = group.name()](std::string_view   item,
+                                              const std::string& udq,
+                                              const float        value)
+    {
+        Opm::OpmLog::warning(fmt::format("Restart:GSATPROD:{}:IsUDA", item),
+                             fmt::format("{} UDA '{}' in GSATPROD for group "
+                                         "{} will be lost in restart and "
+                                         "treated as numeric value {}.",
+                                         item, udq, gname, value));
+    };
+
+    for (const auto& [itemIx, outIx, unit, descr] : {
+            std::tuple { QI::Oil  , Ix::OilRateLimit, M::liquid_surface_rate, "Oil rate"sv },
+            std::tuple { QI::Water, Ix::WatRateLimit, M::liquid_surface_rate, "Water rate"sv },
+            std::tuple { QI::Gas  , Ix::GasRateLimit, M::gas_surface_rate, "Gas rate"sv },
+            std::tuple { QI::GLift, Ix::GLOMaxSupply, M::gas_surface_rate, "Lift gas supply rate"sv },
+        })
+    {
+        if (const auto value = rates[itemIx]; value > 0.0) {
+            sGrp[outIx] = sgprop(unit, value);
+
+            if (const auto& item = gsp.rate[itemIx]; !item.is_numeric()) {
+                udaWarning(descr,
+                           item.template get<std::string>(),
+                           sGrp[outIx]);
+            }
+        }
+    }
+
+    if (const auto qr = rates[QI::Resv]; qr > 0.0) {
+        sGrp[Ix::ResvRateLimit]
+            = sGrp[Ix::ResvRateLimit_2]
+            = sgprop(M::rate, qr);
+
+        if (const auto& item = gsp.rate[QI::Resv]; !item.is_numeric()) {
+            udaWarning("Reservoir voidage rate",
+                       item.template get<std::string>(),
+                       sGrp[Ix::ResvRateLimit]);
+        }
+    }
+}
+
 // Compatibility shim for restart output of gas-lift rates and limits.  The
 // values are intentionally discontinuous in small interval close to zero.
 template <typename SGProp>
@@ -1148,12 +1276,11 @@ void assignGasLiftOptimisation(const Opm::GasLiftGroup& group,
 }
 
 template <class SGrpArray>
-void staticContrib(const Opm::Group&        group,
-                   const Opm::GasLiftOpt&   glo,
-                   const Opm::GConSump&     gconsump,
-                   const Opm::SummaryState& sumState,
-                   const Opm::UnitSystem&   units,
-                   SGrpArray&               sGrp)
+void staticContrib(const Opm::Group&         group,
+                   const Opm::ScheduleState& sched,
+                   const Opm::SummaryState&  sumState,
+                   const Opm::UnitSystem&    units,
+                   SGrpArray&                sGrp)
 {
     using Ix  = ::Opm::RestartIO::Helpers::VectorItems::SGroup::index;
     using Isp = ::Opm::RestartIO::Helpers::VectorItems::SGroup::prod_index;
@@ -1206,9 +1333,10 @@ void staticContrib(const Opm::Group&        group,
 
     sGrp[Ix::EfficiencyFactor] =
         sgprop(M::identity, group.getGroupEfficiencyFactor());
-    const auto& gname = group.name();
-    if (gconsump.has(gname)) {
-        const auto& gc = gconsump.get(gname, sumState);
+
+    if (const auto& gname = group.name(); sched.gconsump().has(gname)) {
+        const auto& gc = sched.gconsump().get(gname, sumState);
+
         sGrp[Ix::GasConsumptionRate] = sgprop(M::gas_surface_rate, gc.consumption_rate);
         sGrp[Ix::GasImportRate] = sgprop(M::gas_surface_rate, gc.import_rate);
     }
@@ -1221,7 +1349,13 @@ void staticContrib(const Opm::Group&        group,
         assignGroupInjectionTargets(group, sumState, sgprop, sGrp);
     }
 
-    if (glo.has_group(group.name())) {
+    if (group.hasSatelliteProduction()) {
+        assignSatelliteGroupProduction(group, sumState,
+                                       sched.gsatprod(),
+                                       sgprop, sGrp);
+    }
+
+    if (const auto& glo = sched.glo(); glo.has_group(group.name())) {
         assignGasLiftOptimisation(glo.group(group.name()), sgprop, sGrp);
     }
 
@@ -1232,6 +1366,7 @@ void staticContrib(const Opm::Group&        group,
         sGrp[24] = 0.0;
     }
 }
+
 } // SGrp
 
 namespace XGrp {
@@ -1298,13 +1433,13 @@ std::size_t entriesPerGroup(const std::vector<int>& inteHead)
 }
 
 Opm::RestartIO::Helpers::WindowedArray<
-Opm::EclIO::PaddedOutputString<8>
->
+    Opm::EclIO::PaddedOutputString<8>
+    >
 allocate(const std::vector<int>& inteHead)
 {
     using WV = Opm::RestartIO::Helpers::WindowedArray<
-               Opm::EclIO::PaddedOutputString<8>
-               >;
+        Opm::EclIO::PaddedOutputString<8>
+        >;
 
     return WV {
         WV::NumWindows{ ngmaxz(inteHead) },
@@ -1337,11 +1472,11 @@ AggregateGroupData(const std::vector<int>& inteHead)
 
 void
 Opm::RestartIO::Helpers::AggregateGroupData::
-captureDeclaredGroupData(const Opm::Schedule&                 sched,
-                         const Opm::UnitSystem&               units,
-                         const std::size_t                    simStep,
-                         const Opm::SummaryState&             sumState,
-                         const std::vector<int>&              inteHead)
+captureDeclaredGroupData(const Opm::Schedule&     sched,
+                         const Opm::UnitSystem&   units,
+                         const std::size_t        simStep,
+                         const Opm::SummaryState& sumState,
+                         const std::vector<int>&  inteHead)
 {
     const auto& curGroups = sched.restart_groups(simStep);
     const auto& sched_state = sched[simStep];
@@ -1350,16 +1485,19 @@ captureDeclaredGroupData(const Opm::Schedule&                 sched,
               (const Group& group, const std::size_t groupID) -> void
     {
         auto ig = this->iGroup_[groupID];
+
         IGrp::staticContrib(sched, group, this->nWGMax_, this->nGMaxz_,
-        simStep, sumState, ig);
+                            simStep, sumState, ig);
     });
 
     // Define Static Contributions to SGrp Array.
     groupLoop(curGroups,
-              [&sumState, &units, &sched_state, this](const Group& group , const std::size_t groupID) -> void
+              [&sumState, &units, &sched_state, this]
+              (const Group& group, const std::size_t groupID) -> void
     {
-        auto sw = this->sGroup_[groupID];
-        SGrp::staticContrib(group, sched_state.glo(), sched_state.gconsump(), sumState, units, sw);
+        auto sg = this->sGroup_[groupID];
+
+        SGrp::staticContrib(group, sched_state, sumState, units, sg);
     });
 
     // Define Dynamic Contributions to XGrp Array.
@@ -1369,8 +1507,8 @@ captureDeclaredGroupData(const Opm::Schedule&                 sched,
         auto xg = this->xGroup_[groupID];
 
         XGrp::dynamicContrib(this->restart_group_keys, this->restart_field_keys,
-        this->groupKeyToIndex, this->fieldKeyToIndex, group,
-        sumState, xg);
+                             this->groupKeyToIndex, this->fieldKeyToIndex, group,
+                             sumState, xg);
     });
 
     // Define Static Contributions to ZGrp Array.
@@ -1378,22 +1516,23 @@ captureDeclaredGroupData(const Opm::Schedule&                 sched,
               (const Group& group, const std::size_t /* groupID */) -> void
     {
         std::size_t group_index = group.insert_index() - 1;
-        if (group.name() == "FIELD")
+        if (group.name() == "FIELD") {
             group_index = ngmaxz(inteHead) - 1;
+        }
+
         auto zg = this->zGroup_[ group_index ];
 
         ZGrp::staticContrib(group, zg);
     });
 }
 
-
 void
 Opm::RestartIO::Helpers::AggregateGroupData::
-captureDeclaredGroupDataLGR(const Opm::Schedule&                 sched,
-                            const Opm::UnitSystem&               units,
-                            const std::size_t                    simStep,
-                            const Opm::SummaryState&             sumState,
-                            const std::string&                   lgr_tag)
+captureDeclaredGroupDataLGR(const Opm::Schedule&     sched,
+                            const Opm::UnitSystem&   units,
+                            const std::size_t        simStep,
+                            const Opm::SummaryState& sumState,
+                            const std::string&       lgr_tag)
 {
     const auto& curGroups = sched.restart_groups(simStep);
     const auto& sched_state = sched[simStep];
@@ -1403,32 +1542,36 @@ captureDeclaredGroupDataLGR(const Opm::Schedule&                 sched,
               (const Group& group, const std::size_t groupID) -> void
     {
         auto ig = this->iGroup_[groupID];
+
         IGrp::staticContrib(sched, group, this->nWGMax_, this->nGMaxz_,
-        simStep, sumState, ig, lgr_tag);
+                            simStep, sumState, ig, lgr_tag);
     });
 
     // Define Static Contributions to SGrp Array.
     groupLoop(curGroups, sched_state, lgr_tag,
-              [&sumState, &units, &sched_state, this](const Group& group , const std::size_t groupID) -> void
+              [&sumState, &units, &sched_state, this]
+              (const Group& group, const std::size_t groupID) -> void
     {
-        auto sw = this->sGroup_[groupID];
-        SGrp::staticContrib(group, sched_state.glo(), sched_state.gconsump(), sumState, units, sw);
+        auto sg = this->sGroup_[groupID];
+
+        SGrp::staticContrib(group, sched_state, sumState, units, sg);
     });
 
     // Define Dynamic Contributions to XGrp Array.
     groupLoop(curGroups, sched_state, lgr_tag,
-              [&sumState, this] (const Group& group, const std::size_t groupID) -> void
+              [&sumState, this]
+              (const Group& group, const std::size_t groupID) -> void
     {
         auto xg = this->xGroup_[groupID];
 
         XGrp::dynamicContrib(this->restart_group_keys, this->restart_field_keys,
-        this->groupKeyToIndex, this->fieldKeyToIndex, group,
-        sumState, xg);
+                             this->groupKeyToIndex, this->fieldKeyToIndex, group,
+                             sumState, xg);
     });
 
     // Define Static Contributions to ZGrp Array.
     groupLoop(curGroups,sched_state, lgr_tag, [this]
-              (const Group& group, const std::size_t  groupID ) -> void
+              (const Group& group, const std::size_t groupID) -> void
     {
         // bug here
         // std::size_t group_index = group.insert_index() - 1;

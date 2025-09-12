@@ -25,6 +25,8 @@
 
 #include <opm/io/eclipse/rst/group.hpp>
 
+#include <opm/output/eclipse/VectorItems/group.hpp>
+
 #include "../eval_uda.hpp"
 
 #include <fmt/format.h>
@@ -106,6 +108,12 @@ namespace {
     bool groupIsSatellite(const std::uint_least8_t current)
     {
         return current != groupSatelliteStatusAsInteger(GroupSatelliteStatus::None);
+    }
+
+    bool groupIsSatellite(const Opm::RestartIO::RstGroup& rst_group)
+    {
+        return rst_group.group_type == Opm::RestartIO::Helpers::VectorItems::
+            IGroup::Value::GroupType::SatelliteGroup;
     }
 
     struct ProductionLimits
@@ -344,7 +352,16 @@ Group::Group(const RestartIO::RstGroup& rst_group,
 {
     this->gefac = rst_group.efficiency_factor;
 
-    const auto prod_limits      = ProductionLimits    { rst_group };
+    const auto prod_limits = ProductionLimits { rst_group };
+
+    if (groupIsSatellite(rst_group)) {
+        if (has_active(prod_limits)) {
+            this->recordSatelliteProduction();
+        }
+
+        return;
+    }
+
     const auto gas_inj_limits   = GasInjectionLimits  { rst_group };
     const auto water_inj_limits = WaterInjectionLimits{ rst_group };
 

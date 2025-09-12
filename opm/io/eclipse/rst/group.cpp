@@ -52,6 +52,7 @@ Opm::RestartIO::RstGroup::RstGroup(const ::Opm::UnitSystem& unit_system,
     inj_gas_guide_rate_def(igrp[header.nwgmax + VI::IGroup::GConInjeGasGuideRateMode]),
     voidage_group_index(igrp[header.nwgmax + VI::IGroup::VoidageGroupIndex]),
     add_gas_lift_gas(igrp[header.nwgmax + VI::IGroup::AddGLiftGasAsProducedGas]),
+    group_type(igrp[header.nwgmax + VI::IGroup::GroupType]),
 
     // -------------------------------------------------------------------------
 
