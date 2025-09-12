@@ -2640,6 +2640,16 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "GGIMR", gas_import_rate },
     { "GGIMT", mul( mul( gas_import_rate, group_efficiency_factor ), duration ) },
 
+    { "GSGR", sum(  sub( rate< rt::gas, producer >, rate< rt::gas, injector > ),
+                    sub( gas_import_rate, gas_consumption_rate ) ) },
+    { "GGSR", sum(  sub( rate< rt::gas, producer >, rate< rt::gas, injector > ),
+                    sub( gas_import_rate, gas_consumption_rate ) ) },
+    { "GSGT", mul( mul( sum(  sub( rate< rt::gas, producer >, rate< rt::gas, injector > ),
+                    sub( gas_import_rate, gas_consumption_rate ) ), group_efficiency_factor ), duration ) },
+    { "GGST", mul( mul( sum(  sub( rate< rt::gas, producer >, rate< rt::gas, injector > ),
+                    sub( gas_import_rate, gas_consumption_rate ) ), group_efficiency_factor ), duration ) },
+
+
     { "GPR", node_pressure },
     { "NPR", converged_node_pressure },
     { "GNETPR", converged_node_pressure },
@@ -2980,6 +2990,16 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "FGCT", mul( gas_consumption_rate, duration ) },
     { "FGIMR", gas_import_rate },
     { "FGIMT", mul( gas_import_rate, duration ) },
+
+    { "FSGR", sum(  sub( rate< rt::gas, producer >, rate< rt::gas, injector > ),
+                    sub( gas_import_rate, gas_consumption_rate ) ) },
+    { "FGSR", sum(  sub( rate< rt::gas, producer >, rate< rt::gas, injector > ),
+                    sub( gas_import_rate, gas_consumption_rate ) ) },
+    { "FSGT", mul( sum(  sub( rate< rt::gas, producer >, rate< rt::gas, injector > ),
+                    sub( gas_import_rate, gas_consumption_rate ) ), duration ) },
+    { "FGST", mul( sum(  sub( rate< rt::gas, producer >, rate< rt::gas, injector > ),
+                    sub( gas_import_rate, gas_consumption_rate ) ), duration ) },
+
 
     // Field potential
     { "FWPP", potential_rate< rt::well_potential_water , true, false>},
