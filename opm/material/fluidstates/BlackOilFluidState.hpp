@@ -689,6 +689,23 @@ public:
         return fluidSystem().phaseIsActive(phaseIdx);
     }
 
+    /*!
+     * \brief Return the fluid system used by this fluid state.
+     * 
+     * If the fluid system is static (i.e., if the fluid system
+     * has no state), this method will always return a reference
+     * to the same static object.
+     */
+    OPM_HOST_DEVICE const FluidSystem& fluidSystem() const
+    {
+        if constexpr (fluidSystemIsStatic) {
+            static FluidSystem instance;
+            return instance;
+        } else {
+            return **fluidSystemPtr_;
+        }
+    }
+
 private:
     OPM_HOST_DEVICE static unsigned storageToCanonicalPhaseIndex_(unsigned storagePhaseIdx, const FluidSystem& fluidSystem)
     {
@@ -727,16 +744,6 @@ private:
     // Once we move to a fully dynamic FluidSystem, this can be changed to a reference
     // (an std::reference_wrapper).
     ConditionalStorage<!fluidSystemIsStatic, FluidSystem const*> fluidSystemPtr_;
-
-    OPM_HOST_DEVICE const FluidSystem& fluidSystem() const
-    {
-        if constexpr (fluidSystemIsStatic) {
-            static FluidSystem instance;
-            return instance;
-        } else {
-            return **fluidSystemPtr_;
-        }
-    }
 };
 
 } // namespace Opm
