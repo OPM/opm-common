@@ -708,6 +708,7 @@ if(ENABLE_ECL_OUTPUT)
           tests/EGRID_NO_ACTNUM.FEGRID
           tests/BASE_SIM.DATA
           tests/BASE_SIM_THPRES.DATA
+          tests/LGR_3WELLS.DATA
           tests/LGR_BASESIM2WELLS.DATA
           tests/RESTART_SIM.DATA
           tests/summary_deck.DATA
