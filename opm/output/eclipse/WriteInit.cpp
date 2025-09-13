@@ -297,12 +297,6 @@ namespace {
         return lh.data();
     }
 
-    std::vector<bool> lgrheadq([[maybe_unused]] const ::Opm::EclipseState& es)
-    {
-        const auto lh = ::Opm::RestartIO::LgrHEADQ{};
-        return lh.data();
-    }
-
     void writeInitFileHeader(const ::Opm::EclipseState&      es,
                              const ::Opm::EclipseGrid&       grid,
                              const ::Opm::Schedule&          sched,
@@ -342,12 +336,14 @@ namespace {
         // LGR header data
         {
             const auto ih = ::Opm::RestartIO::Helpers::
-            createLgrHeadi(es, index);
+                                                    createLgrHeadi(es, index);
             initFile.write("LGRHEADI", ih);
         }
 
         {
-            initFile.write("LGRHEADQ", lgrheadq(es));
+            const auto iq = ::Opm::RestartIO::Helpers::
+                                                    createLgrHeadq(es);
+            initFile.write("LGRHEADQ", iq);
         }
 
         {
