@@ -119,6 +119,13 @@ namespace Opm {
         return iter->second.closed;
     }
 
+    bool WellTestState::well_is_closed_due_to_convergence_issues(const std::string& well_name) const {
+        auto iter = this->wells.find(well_name);
+        if (iter == this->wells.end())
+            return false;
+
+        return iter->second.closed && iter->second.reason == WellTestConfig::Reason::CONVERGENCE;
+    }
 
     void WellTestState::filter_wells(const std::vector<std::string>& existing_wells) {
         std::unordered_set<std::string> well_set{ existing_wells.begin(), existing_wells.end() };
@@ -135,11 +142,18 @@ namespace Opm {
 
     std::vector<std::string>
     WellTestState::test_wells(const WellTestConfig& config,
-                               double sim_time) {
+                              double sim_time) {
         std::vector<std::string> output;
 
         for (auto& [wname, well] : this->wells) {
             if (!well.closed)
+                continue;
+
+            // we always try to open well shut due to convergence issues
+            if (well.reason == WellTestConfig::Reason::CONVERGENCE)
+                output.push_back(well.name);
+
+            if (config.empty())
                 continue;
 
             if (config.has(wname, well.reason)) {
