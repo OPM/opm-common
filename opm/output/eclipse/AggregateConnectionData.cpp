@@ -64,7 +64,6 @@ namespace {
     void connectionLoop(const Opm::EclipseGrid& grid,
                         const Opm::Well&        well,
                         const Opm::data::Well*  wellRes,
-                        int&                    last_connection_lgr_id,
                         ConnOp&&                connOp,
                         const bool              global_grid = true)
     {
@@ -76,18 +75,31 @@ namespace {
             : &grid;
 
         std::size_t connID = 0;
+        bool skip_connection = false;
+        int connection_counter = 0;
+        std::string last_connection_lgr_tag = "";
         for (const auto* connPtr : well.getConnections().output(*lgrid)) {
             if (connPtr->kind() == Opm::Connection::CTFKind::DynamicFracturing) {
                 // Don't emit, or count, connections created by dynamic fracturing.
                 continue;
+            }
+            std::string current_lgr_lgr_tag = well.get_lgr_well_tag().value_or("");
+
+            if (well.is_lgr_well()) {
+                if ((current_lgr_lgr_tag == last_connection_lgr_tag) and (connection_counter > 0)) {
+                    // After the first connection of a LGR well, subsequent connections of the same well are skipped.
+                    skip_connection = true;
+                }
             }
 
             const auto* dynConnRes = (wellRes == nullptr)
                 ? nullptr : wellRes->find_connection(connPtr->global_index());
 
             connOp(wellName, wellID, isProd, *connPtr, connID,
-                   connPtr->global_index(), last_connection_lgr_id, dynConnRes);
-
+                   connPtr->global_index(), skip_connection, dynConnRes);
+            skip_connection = false;
+            last_connection_lgr_tag = current_lgr_lgr_tag;
+            connection_counter++;
             ++connID;
         }
     }
@@ -100,14 +112,13 @@ namespace {
 
                             ConnOp&&                connOp)
     {
-        int last_connection_lgr_id = -1;
         for (const auto& wname : sched.wellNames(sim_step)) {
             const auto  well_iter = xw.find(wname);
             const auto* wellRes   = (well_iter == xw.end())
                 ? nullptr : &well_iter->second;
 
             connectionLoop(grid, sched[sim_step].wells(wname),
-                           wellRes, last_connection_lgr_id, connOp);
+                           wellRes,  connOp);
         }
     }
 
@@ -119,7 +130,6 @@ namespace {
                             const std::string&      lgr_tag,
                             ConnOp&&                connOp)
     {
-        int last_connection_lgr_id = -1;
         for (const auto& wname : sched.wellNames(sim_step)) {
             const auto& well = sched[sim_step].wells(wname);
 
@@ -132,7 +142,7 @@ namespace {
             const auto* wellRes   = (well_iter == xw.end())
                 ? nullptr : &well_iter->second;
 
-            connectionLoop(grid, well, wellRes, last_connection_lgr_id, connOp,  false);
+            connectionLoop(grid, well, wellRes, connOp,  false);
         }
     }
 
@@ -429,19 +439,12 @@ captureDeclaredConnData(const Schedule&     sched,
          const Connection&       conn,
          const std::size_t       connID,
          const std::size_t       global_index,
-               int&              last_connection_lgr_id,
+               bool              skip_flag_lgr,
          const data::Connection* dynConnRes) -> void
     {
-        bool skip_flag_lgr = true;
         auto ic = this->iConn_(wellID, connID);
         auto sc = this->sConn_(wellID, connID);
-        // ENSURES THAT ONLY THE FIRST CONNECTION OF A LGR WELL IS WRITTEN
-        // DOES NOT AFFECT GLOBAL CONNECTIONS
-        const int conn_lgr_level = conn.get_lgr_level();
-        if ((conn_lgr_level != last_connection_lgr_id) or (conn_lgr_level == 0)) {
-            skip_flag_lgr = false;
-        }
-        last_connection_lgr_id = conn_lgr_level;
+
         if (skip_flag_lgr) {
             return;
         }
@@ -479,7 +482,7 @@ captureDeclaredConnDataLGR(const Schedule&     sched,
          const Connection&       conn,
          const std::size_t       connID,
          const std::size_t       global_index,
-  [[maybe_unused]]    int&       last_connection_lgr_id,
+  [[maybe_unused]]    bool       skip_flag_lgr,
          const data::Connection* dynConnRes) -> void
     {
         auto ic = this->iConn_(wellID, connID);
