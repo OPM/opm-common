@@ -132,14 +132,14 @@ data::Wells mkWellsLGR_Global()
      *  input deck. All other entries in the well structures are arbitrary.
      */
     Opm::data::ConnectionFiltrate con_filtrate {0.1, 1, 3, 0.4, 1.e-9, 0.2, 0.05, 10.}; // values are not used in this test
-    w1.connections.push_back( { 2, rc1, 30.45, 123.4, 543.21, 0.62, 0.15, 1.0e3, 1.234, 0.0, 1.23, con_filtrate, 1 } );
+    w1.connections.push_back( { 2, rc1, 30.45, 123.4, 543.21, 0.62, 0.15, 1.0e3, 1.234, 0.0, 1.23, 1, con_filtrate } );
 
     w2.rates = r2;
     w2.thp = 2.0;
     w2.bhp = 2.34;
     w2.temperature = 4.56;
     w2.control = 2;
-    w2.connections.push_back( { 0, rc2, 36.22, 123.4, 256.1, 0.55, 0.0125, 314.15, 3.456, 0.0, 2.46, con_filtrate,2 } );
+    w2.connections.push_back( { 0, rc2, 36.22, 123.4, 256.1, 0.55, 0.0125, 314.15, 3.456, 0.0, 2.46, 2, con_filtrate } );
 
     {
         data::Wells wellRates;
@@ -189,9 +189,9 @@ data::Wells mkWellsLGR_Global_Complex()
      *  input deck. All other entries in the well structures are arbitrary.
      */
     Opm::data::ConnectionFiltrate con_filtrate {0.1, 1, 3, 0.4, 1.e-9, 0.2, 0.05, 10.}; // values are not used in this test
-    w1.connections.push_back( { 1, r1c1, 30.45, 123.4, 543.21, 0.62, 0.15, 1.0e3, 1.234, 0.0, 1.23, con_filtrate, 1 } );
-    w1.connections.push_back( { 4, r1c2, 31.45, 123.4, 543.21, 0.62, 0.15, 1.0e3, 1.234, 0.0, 1.23, con_filtrate, 1 } );
-    w1.connections.push_back( { 7, r1c3, 32.45, 123.4, 543.21, 0.62, 0.15, 1.0e3, 1.234, 0.0, 1.23, con_filtrate, 1 } );
+    w1.connections.push_back( { 1, r1c1, 30.45, 123.4, 543.21, 0.62, 0.15, 1.0e3, 1.234, 0.0, 1.23, 1, con_filtrate } );
+    w1.connections.push_back( { 4, r1c2, 31.45, 123.4, 543.21, 0.62, 0.15, 1.0e3, 1.234, 0.0, 1.23, 1, con_filtrate } );
+    w1.connections.push_back( { 7, r1c3, 32.45, 123.4, 543.21, 0.62, 0.15, 1.0e3, 1.234, 0.0, 1.23, 1, con_filtrate } );
 
 
     w2.rates = r2;
@@ -199,7 +199,7 @@ data::Wells mkWellsLGR_Global_Complex()
     w2.bhp = 1.23;
     w2.temperature = 3.45;
     w2.control = 1;
-    w2.connections.push_back( { 6, r2, 30.45, 123.4, 543.21, 0.62, 0.15, 1.0e3, 1.234, 0.0, 1.23, con_filtrate, 2 } );
+    w2.connections.push_back( { 6, r2, 30.45, 123.4, 543.21, 0.62, 0.15, 1.0e3, 1.234, 0.0, 1.23, 2, con_filtrate } );
 
 
 
@@ -208,7 +208,7 @@ data::Wells mkWellsLGR_Global_Complex()
     w3.bhp = 2.34;
     w3.temperature = 4.56;
     w3.control = 2;
-    w3.connections.push_back( { 1, r3, 36.22, 123.4, 256.1, 0.55, 0.0125, 314.15, 3.456, 0.0, 2.46, con_filtrate,0 } );
+    w3.connections.push_back( { 1, r3, 36.22, 123.4, 256.1, 0.55, 0.0125, 314.15, 3.456, 0.0, 2.46, 0, con_filtrate } );
 
     {
         data::Wells wellRates;

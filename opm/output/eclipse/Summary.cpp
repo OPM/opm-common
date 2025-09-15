@@ -988,98 +988,56 @@ inline quantity rate(const fn_args& args)
     return { sum, rate_unit< phase >() };
 }
 
-
-template <bool injection = true>
-inline quantity filtrate_connection_quantities( const fn_args& args ) {
-
-    static const auto conn_quant =
-            std::unordered_map<std::string, std::pair<measure, double Opm::data::ConnectionFiltrate::*> >{
-                    {"CINJFVR",  {measure::geometric_volume_rate, &Opm::data::ConnectionFiltrate::rate}},
-                    {"CINJFVT",  {measure::geometric_volume,      &Opm::data::ConnectionFiltrate::total}},
-                    {"CFCWIDTH", {measure::length,                &Opm::data::ConnectionFiltrate::thickness}},
-                    {"CFCSKIN",  {measure::identity,              &Opm::data::ConnectionFiltrate::skin_factor}},
-                    {"CFCPORO",  {measure::identity,              &Opm::data::ConnectionFiltrate::poro}},
-                    {"CFCPERM",  {measure::permeability,          &Opm::data::ConnectionFiltrate::perm}},
-                    {"CFCRAD",   {measure::length,                &Opm::data::ConnectionFiltrate::radius}},
-                    {"CFCAOF",   {measure::area,                  &Opm::data::ConnectionFiltrate::area_of_flow}}
-            };
-
-    auto quant_pos = conn_quant.find(args.keyword_name);
-
-    if (quant_pos == conn_quant.end()) {
-        throw std::logic_error{
-                fmt::format("Unsupported connection summary keyword {} "
-                            "for filtrate injection modeling", args.keyword_name)
-        };
-    }
-
-    const auto& [unit, quant_ptr] = quant_pos->second;
-
-    const quantity zero = { 0., unit };
-
+template <bool injection>
+const Opm::data::Connection* findConnectionResults(const fn_args& args)
+{
     if (args.schedule_wells.empty()) {
-        return zero;
+        // Typically in the first call which configures the summary nodes.
+        return nullptr;
     }
 
-    const auto& name = args.schedule_wells.front()->name();
-    auto xwPos = args.wells.find(name);
+    const auto xwPos = args.wells.find(args.schedule_wells.front()->name());
     if ((xwPos == args.wells.end()) ||
         (xwPos->second.dynamicStatus == Opm::Well::Status::SHUT) ||
         (xwPos->second.current_control.isProducer == injection))
     {
-        return zero;
+        return nullptr;
     }
 
-    // The args.num value is the literal value which will go to the
-    // NUMS array in the eclipse SMSPEC file; the values in this array
-    // are offset 1 - whereas we need to use this index here to look
-    // up a connection with offset 0.
-    const size_t global_index = args.num - 1;
-    const auto& well_data = xwPos->second;
-    const auto& connection =
-            std::find_if(well_data.connections.begin(),
-                         well_data.connections.end(),
-                         [global_index](const Opm::data::Connection& c)
-                         {
-                             return c.index == global_index;
-                         });
-
-    if (connection == well_data.connections.end()) {
-        return zero;
-    }
-
-    return {connection->filtrate.*quant_ptr, unit };
+    return xwPos->second.find_connection(args.num - 1);
 }
 
-template <bool injection = true>
-inline quantity filtrate_well_quantities( const fn_args& args ) {
+template <double Opm::data::ConnectionFracture::* q, measure unit, bool injection = true>
+inline quantity fracture_connection_quantities(const fn_args& args)
+{
+    const auto* connection = findConnectionResults<injection>(args);
 
-    static const auto well_quant =
-            std::unordered_map<std::string, std::pair<measure, double Opm::data::WellFiltrate::*> > {
-                    {"WINJFVR", {measure::geometric_volume_rate, &Opm::data::WellFiltrate::rate}},
-                    {"WINJFVT", {measure::geometric_volume,      &Opm::data::WellFiltrate::total}},
-                    {"WINJFC",  {measure::ppm,                   &Opm::data::WellFiltrate::concentration}}
-            };
+    return (connection == nullptr)
+        ? quantity { 0.0, unit }
+        : quantity { connection->fracture.*q, unit };
+}
 
-    auto quant_pos = well_quant.find(args.keyword_name);
+template <double Opm::data::ConnectionFiltrate::* q, measure unit, bool injection = true>
+inline quantity filtrate_connection_quantities(const fn_args& args)
+{
+    const auto* connection = findConnectionResults<injection>(args);
 
-    if (quant_pos == well_quant.end()) {
-        throw std::logic_error{
-                fmt::format("Unsupported well summary keyword {} "
-                            "for filtrate injection modeling", args.keyword_name)
-        };
-    }
+    return (connection == nullptr)
+        ? quantity { 0.0, unit }
+        : quantity { connection->filtrate.*q, unit };
+}
 
-
-    const auto& [unit, quant_ptr] = quant_pos->second;
-    const quantity zero {0., unit};
+template <double Opm::data::WellFiltrate::* q, measure unit, bool injection = true>
+inline quantity filtrate_well_quantities(const fn_args& args)
+{
+    const auto zero = quantity { 0.0, unit };
 
     if (args.schedule_wells.empty()) {
+        // Typically in the first call which configures the summary nodes.
         return zero;
     }
 
-    const auto& name = args.schedule_wells.front()->name();
-    auto xwPos = args.wells.find(name);
+    auto xwPos = args.wells.find(args.schedule_wells.front()->name());
     if ((xwPos == args.wells.end()) ||
         (xwPos->second.dynamicStatus == Opm::Well::Status::SHUT) ||
         (xwPos->second.current_control.isProducer == injection))
@@ -1087,8 +1045,7 @@ inline quantity filtrate_well_quantities( const fn_args& args ) {
         return zero;
     }
 
-    const auto& well_filtrate = xwPos->second.filtrate;
-    return {well_filtrate.*quant_ptr, unit};
+    return { xwPos->second.filtrate.*q, unit };
 }
 
 template< rt tracer, rt phase, bool injection = true >
@@ -2562,9 +2519,15 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "WSTAT", wstat },
     { "WBHP", bhp },
     { "WTHP", thp },
-    { "WINJFVR", filtrate_well_quantities<injector> },
-    { "WINJFVT", filtrate_well_quantities<injector> },
-    { "WINJFC", filtrate_well_quantities<injector> },
+
+    // Well level filter cake quantities (OPM extension)
+    { "WINJFVR", filtrate_well_quantities<&Opm::data::WellFiltrate::rate,
+      measure::geometric_volume_rate, injector> },
+    { "WINJFVT", filtrate_well_quantities<&Opm::data::WellFiltrate::total,
+      measure::geometric_volume, injector> },
+    { "WINJFC", filtrate_well_quantities<&Opm::data::WellFiltrate::concentration,
+      measure::ppm, injector> },
+
     { "WBP" , well_block_average_pressure<Opm::data::WellBlockAvgPress::Quantity::WBP>  },
     { "WBP4", well_block_average_pressure<Opm::data::WellBlockAvgPress::Quantity::WBP4> },
     { "WBP5", well_block_average_pressure<Opm::data::WellBlockAvgPress::Quantity::WBP5> },
@@ -2790,18 +2753,38 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "CVIR", crate_resv<injector> },
     { "CCIR", crate< rt::polymer, injector > },
     { "CSIR", crate< rt::brine, injector > },
-    { "CINJFVR", filtrate_connection_quantities<injector> },
-    { "CINJFVT", filtrate_connection_quantities<injector> },
-    { "CFCSKIN",  filtrate_connection_quantities<injector> },
-    { "CFCWIDTH",  filtrate_connection_quantities<injector> },
-    { "CFCPERM",  filtrate_connection_quantities<injector> },
-    { "CFCPORO",  filtrate_connection_quantities<injector> },
-    { "CFCRAD",  filtrate_connection_quantities<injector> },
-    { "CFCAOF",  filtrate_connection_quantities<injector> },
+
+    // Filter cake quantities (OPM extension)
+    { "CINJFVR", filtrate_connection_quantities<&Opm::data::ConnectionFiltrate::rate,
+      measure::geometric_volume_rate, injector> },
+    { "CINJFVT", filtrate_connection_quantities<&Opm::data::ConnectionFiltrate::total,
+      measure::geometric_volume, injector> },
+    { "CFCWIDTH", filtrate_connection_quantities<&Opm::data::ConnectionFiltrate::thickness,
+      measure::length, injector> },
+    { "CFCSKIN", filtrate_connection_quantities<&Opm::data::ConnectionFiltrate::skin_factor,
+      measure::identity, injector> },
+    { "CFCPORO", filtrate_connection_quantities<&Opm::data::ConnectionFiltrate::poro,
+      measure::identity, injector> },
+    { "CFCPERM", filtrate_connection_quantities<&Opm::data::ConnectionFiltrate::perm,
+      measure::permeability, injector> },
+    { "CFCRAD", filtrate_connection_quantities<&Opm::data::ConnectionFiltrate::radius,
+      measure::length, injector> },
+    { "CFCAOF", filtrate_connection_quantities<&Opm::data::ConnectionFiltrate::area_of_flow,
+      measure::area, injector> },
 
     // Hydraulic fracturing (OPM extension)
     //
-    // Fracture pressure
+    // Per fracture characteristics
+    { "CFRAREA", fracture_connection_quantities<&Opm::data::ConnectionFracture::area,
+      measure::area, injector> },
+    { "CFRFLUX", fracture_connection_quantities<&Opm::data::ConnectionFracture::flux,
+      measure::geometric_volume_rate, injector> },
+    { "CFRHEIGH", fracture_connection_quantities<&Opm::data::ConnectionFracture::height,
+      measure::length, injector> },
+    { "CFRLENGT", fracture_connection_quantities<&Opm::data::ConnectionFracture::length,
+      measure::length, injector> },
+
+    // Fracture pressure statistics
     { "CFRPMAX", connFracStatistics<&Opm::data::ConnectionFracturing::press,
       &Opm::data::ConnectionFracturing::Statistics::max, measure::pressure> },
     { "CFRPMIN", connFracStatistics<&Opm::data::ConnectionFracturing::press,
@@ -2811,7 +2794,7 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "CFRPSTD", connFracStatistics<&Opm::data::ConnectionFracturing::press,
       &Opm::data::ConnectionFracturing::Statistics::stdev, measure::pressure> },
 
-    // Fracture injection rate
+    // Fracture injection rate statistics
     { "CFRIRMAX", connFracStatistics<&Opm::data::ConnectionFracturing::rate,
       &Opm::data::ConnectionFracturing::Statistics::max, measure::rate> },
     { "CFRIRMIN", connFracStatistics<&Opm::data::ConnectionFracturing::rate,
@@ -2821,7 +2804,7 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "CFRIRSTD", connFracStatistics<&Opm::data::ConnectionFracturing::rate,
       &Opm::data::ConnectionFracturing::Statistics::stdev, measure::rate> },
 
-    // Fracture width
+    // Fracture width statistics
     { "CFRWDMAX", connFracStatistics<&Opm::data::ConnectionFracturing::width,
       &Opm::data::ConnectionFracturing::Statistics::max, measure::length> },
     { "CFRWDMIN", connFracStatistics<&Opm::data::ConnectionFracturing::width,
