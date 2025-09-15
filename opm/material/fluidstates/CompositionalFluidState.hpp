@@ -30,8 +30,10 @@
 #ifndef OPM_COMPOSITIONAL_FLUID_STATE_HPP
 #define OPM_COMPOSITIONAL_FLUID_STATE_HPP
 
+
 #include "ModularFluidState.hpp"
 
+#include <opm/common/utility/gpuDecorators.hpp>
 #include <opm/material/common/Valgrind.hpp>
 #include <algorithm>
 
@@ -60,6 +62,17 @@ class CompositionalFluidState<Scalar, FluidSystem, true>
                                FluidStateExplicitViscosityModule<Scalar, FluidSystem::numPhases, CompositionalFluidState<Scalar, FluidSystem, true> >,
                                FluidStateExplicitEnthalpyModule<Scalar, FluidSystem::numPhases, CompositionalFluidState<Scalar, FluidSystem, true> > >
 {
+public:
+    /*!
+     * \brief Return the fluid system used by this fluid state.
+     *
+     * \note This is needed for GPU compatibility for now.
+     */
+    OPM_HOST_DEVICE const FluidSystem& fluidSystem() const
+    {
+      static FluidSystem instance;
+      return instance;
+    }
 };
 
 // specialization for the enthalpy disabled case
@@ -77,6 +90,18 @@ class CompositionalFluidState<Scalar, FluidSystem, false>
                                FluidStateExplicitViscosityModule<Scalar, FluidSystem::numPhases, CompositionalFluidState<Scalar, FluidSystem, false> >,
                                FluidStateNullEnthalpyModule<Scalar, FluidSystem::numPhases, CompositionalFluidState<Scalar, FluidSystem, false> > >
 {
+public:
+    /*!
+     * \brief Return the fluid system used by this fluid state.
+     *
+     * \note This is needed for GPU compatibility for now.
+     */
+    OPM_HOST_DEVICE const FluidSystem& fluidSystem() const
+    {
+      static FluidSystem instance;
+      return instance;
+        
+    }
 };
 
 } // namespace Opm
