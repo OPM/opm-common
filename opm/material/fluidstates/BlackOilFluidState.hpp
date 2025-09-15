@@ -739,10 +739,8 @@ private:
 
     unsigned short pvtRegionIdx_{};
 
-    // Note that this is currently stored a pointer to allow the object to 
-    // be copyable while still supporting a default FluidSystem pointing to a static object.
-    // Once we move to a fully dynamic FluidSystem, this can be changed to a reference
-    // (an std::reference_wrapper).
+    // If we have a non-static fluid system, we need to store a pointer
+    // to it. Otherwise, we do not need to store anything.
     ConditionalStorage<!fluidSystemIsStatic, FluidSystem const*> fluidSystemPtr_;
 };
 
