@@ -34,7 +34,7 @@
 namespace Opm {
 
 class Schedule;
-enum class WellGuideRateTarget;
+enum class WellGuideRateTarget : std::uint8_t;
 
 } // namespace Opm
 

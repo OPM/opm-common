@@ -74,10 +74,10 @@ namespace Opm {
     class TracerConfig;
     class UDQConfig;
     class Well;
-    enum class WellGasInflowEquation;
+    enum class WellGasInflowEquation : std::uint8_t;
     class WellMatcher;
-    enum class WellProducerCMode;
-    enum class WellStatus;
+    enum class WellProducerCMode : std::uint16_t;
+    enum class WellStatus : std::uint8_t;
     class WelSegsSet;
     class WellTestConfig;
 } // namespace Opm

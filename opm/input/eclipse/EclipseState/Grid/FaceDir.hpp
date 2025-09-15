@@ -20,6 +20,7 @@
 #ifndef OPM_FACEDIR_HPP
 #define OPM_FACEDIR_HPP
 
+#include <cstdint>
 #include <string>
 
 namespace Opm {
@@ -27,7 +28,7 @@ namespace Opm {
 
     namespace FaceDir {
 
-        enum DirEnum {
+        enum DirEnum : std::uint8_t {
             Unknown = 0,
             XPlus   = 1,
             XMinus  = 2,
