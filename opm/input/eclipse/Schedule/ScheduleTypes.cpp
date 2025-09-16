@@ -24,6 +24,8 @@
 #include <stdexcept>
 #include <string>
 
+#include <fmt/format.h>
+
 namespace {
 namespace ecl {
 
@@ -56,6 +58,28 @@ Opm::Phase from_ecl_phase(const int ecl_phase)
     default:
         throw std::invalid_argument("Invalid integer well phase");
     }
+}
+
+Opm::Phase from_ecl_phase(const int ecl_wtype, const int ecl_phase)
+{
+    if (Opm::WellType::producer(ecl_wtype)) {
+        return from_ecl_phase(ecl_phase);
+    }
+
+    switch (ecl_wtype) {
+    case ecl::oil_injector:
+        return Opm::Phase::OIL;
+
+    case ecl::water_injector:
+        return Opm::Phase::WATER;
+
+    case ecl::gas_injector:
+        return Opm::Phase::GAS;
+    }
+
+    throw std::invalid_argument {
+        fmt::format("Invalid integer well type ID {}", ecl_wtype)
+    };
 }
 
 Opm::Phase from_injector_type(const Opm::InjectorType injector_type)
@@ -110,32 +134,10 @@ Phase WellType::injection_phase() const
 }
 
 WellType::WellType(const int ecl_wtype, const int ecl_phase)
-    : m_injection_phase { ecl::from_ecl_phase(ecl_phase) }
+    : m_producer        { WellType::producer(ecl_wtype) }
+    , m_injection_phase { ecl::from_ecl_phase(ecl_wtype, ecl_phase) }
     , m_welspecs_phase  { ecl::from_ecl_phase(ecl_phase) }
-{
-    this->m_producer = false;
-
-    switch (ecl_wtype) {
-    case ecl::producer:
-        this->m_producer = true;
-        break;
-
-    case ecl::oil_injector:
-        this->m_injection_phase = Phase::OIL;
-        break;
-
-    case ecl::water_injector:
-        this->m_injection_phase = Phase::WATER;
-        break;
-
-    case ecl::gas_injector:
-        this->m_injection_phase = Phase::GAS;
-        break;
-
-    default:
-        throw std::invalid_argument("Invalid integer well type ID");
-    }
-}
+{}
 
 WellType::WellType(const bool producer, const Phase phase)
     : m_producer        { producer }
