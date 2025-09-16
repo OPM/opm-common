@@ -25,12 +25,12 @@
 
 namespace Opm {
 
-enum class WellGuideRateTarget;
+enum class WellGuideRateTarget : std::uint8_t;
 
 class GuideRateModel {
 public:
 
-    enum class Target {
+    enum class Target : std::uint8_t {
         OIL = 0,
         LIQ = 1,
         GAS = 2,

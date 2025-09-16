@@ -20,12 +20,13 @@
 #ifndef WELL_ENUMS_HPP
 #define WELL_ENUMS_HPP
 
+#include <cstdint>
 #include <iosfwd>
 #include <string>
 
 namespace Opm {
 
-enum class WellStatus {
+enum class WellStatus : std::uint8_t {
     OPEN = 1,
     STOP = 2,
     SHUT = 3,
@@ -37,7 +38,7 @@ enum class WellStatus {
   of which controls are present, i.e. the 2^n structure must
   be intact.
 */
-enum class WellInjectorCMode : int{
+enum class WellInjectorCMode : std::uint16_t {
     RATE =  1 ,
     RESV =  2 ,
     BHP  =  4 ,
@@ -54,7 +55,7 @@ enum class WellInjectorCMode : int{
   WHISTCTL to cancel its effect.
 */
 
-enum class WellProducerCMode : int {
+enum class WellProducerCMode : std::uint16_t  {
     NONE =     0,
     ORAT =     1,
     WRAT =     2,
@@ -68,7 +69,7 @@ enum class WellProducerCMode : int {
     CMODE_UNDEFINED = 1024
 };
 
-enum class WellWELTARGCMode {
+enum class WellWELTARGCMode : std::uint8_t {
     ORAT =  1,
     WRAT =  2,
     GRAT =  3,
@@ -82,7 +83,7 @@ enum class WellWELTARGCMode {
     GUID = 11
 };
 
-enum class WellGuideRateTarget {
+enum class WellGuideRateTarget : std::uint8_t {
     OIL = 0,
     WAT = 1,
     GAS = 2,
@@ -95,7 +96,7 @@ enum class WellGuideRateTarget {
     UNDEFINED = 9
 };
 
-enum class WellGasInflowEquation {
+enum class WellGasInflowEquation : std::uint8_t {
     STD = 0,
     R_G = 1,
     P_P = 2,

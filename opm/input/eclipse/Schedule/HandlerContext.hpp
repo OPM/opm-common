@@ -45,7 +45,7 @@ class ScheduleGrid;
 class ScheduleState;
 struct ScheduleStatic;
 struct SimulatorUpdate;
-enum class WellStatus;
+enum class WellStatus : std::uint8_t;
 class WelSegsSet;
 }
 
