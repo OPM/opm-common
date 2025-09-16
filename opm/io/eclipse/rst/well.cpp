@@ -71,7 +71,6 @@ namespace {
         return static_cast<float>(unit_system.to_si(dimension, coeff_a));
     }
 
-    constexpr int def_ecl_phase = 1;
     constexpr int def_pvt_table = 0;
 } // Anonymous namespace
 
@@ -92,12 +91,11 @@ Opm::RestartIO::RstWell::RstWell(const UnitSystem&  unit_system,
     group(group_arg),
     ij(                                                              {iwel[VI::IWell::IHead] - 1, iwel[VI::IWell::JHead] - 1}),
     k1k2(                                                            std::make_pair(iwel[VI::IWell::FirstK] - 1, iwel[VI::IWell::LastK] - 1)),
-    wtype(                                                           iwel[VI::IWell::WType], def_ecl_phase),
+    wtype(                                                           iwel[VI::IWell::WType], iwel[VI::IWell::PreferredPhase]),
     well_status(                                                     iwel[VI::IWell::Status]),
     active_control(                                                  iwel[VI::IWell::ActWCtrl]),
     vfp_table(                                                       iwel[VI::IWell::VFPTab]),
     econ_workover_procedure(                                         iwel[VI::IWell::EconWorkoverProcedure]),
-    preferred_phase(                                                 iwel[VI::IWell::PreferredPhase]),
     allow_xflow(                                                     iwel[VI::IWell::XFlow] == 1),
     group_controllable_flag(                                         iwel[VI::IWell::WGrupConControllable]),
     econ_limit_end_run(                                              iwel[VI::IWell::EconLimitEndRun]),
