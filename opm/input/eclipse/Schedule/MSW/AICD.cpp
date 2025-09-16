@@ -49,6 +49,7 @@ AutoICD AutoICD::serializationTestObject()
     aicd.m_oil_viscosity_exponent = 6.0;
     aicd.m_water_viscosity_exponent = 7.0;
     aicd.m_gas_viscosity_exponent = 8.0;
+    aicd.m_density_exponent = 1.0;
 
     return aicd;
 }
@@ -64,6 +65,7 @@ AutoICD::AutoICD(const DeckRecord& record)
     , m_oil_viscosity_exponent  (record.getItem<AICD::OIL_VISC_FRACTION>().get<double>(0))
     , m_water_viscosity_exponent(record.getItem<AICD::WATER_VISC_FRACTION>().get<double>(0))
     , m_gas_viscosity_exponent  (record.getItem<AICD::GAS_VISC_FRACTION>().get<double>(0))
+    , m_density_exponent        (record.getItem<AICD::DENSITY_EXPONENT>().get<double>(0))
 {}
 
 AutoICD::AutoICD(const RestartIO::RstSegment& rstSegment)
@@ -76,6 +78,7 @@ AutoICD::AutoICD(const RestartIO::RstSegment& rstSegment)
     , m_oil_viscosity_exponent  (rstSegment.aicd_oil_visc_exponent)
     , m_water_viscosity_exponent(rstSegment.aicd_wat_visc_exponent)
     , m_gas_viscosity_exponent  (rstSegment.aicd_gas_visc_exponent)
+    , m_density_exponent        (rstSegment.aicd_density_exponent)
 {}
 
 // the function will return a map
@@ -99,6 +102,7 @@ bool AutoICD::operator==(const AutoICD& other) const
         && (this->m_oil_viscosity_exponent == other.m_oil_viscosity_exponent)
         && (this->m_water_viscosity_exponent == other.m_water_viscosity_exponent)
         && (this->m_gas_viscosity_exponent == other.m_gas_viscosity_exponent)
+        && (this->m_density_exponent == other.m_density_exponent)
         ;
 }
 
@@ -141,5 +145,10 @@ double AutoICD::gasViscExponent() const
 {
     return this->m_gas_viscosity_exponent;
 }
+
+double AutoICD::densityExponent() const {
+    return this->m_density_exponent;
+}
+
 
 } // namespace Opm
