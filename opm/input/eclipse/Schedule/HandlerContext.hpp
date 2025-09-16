@@ -24,6 +24,7 @@
 #include <opm/input/eclipse/Schedule/Action/ActionResult.hpp>
 
 #include <cstddef>
+#include <cstdint>
 #include <optional>
 #include <set>
 #include <string>
