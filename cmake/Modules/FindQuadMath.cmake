@@ -40,13 +40,6 @@ if(QuadMath_FOUND AND NOT TARGET QuadMath::QuadMath)
   add_library(QuadMath::QuadMath INTERFACE IMPORTED)
   target_link_libraries(QuadMath::QuadMath INTERFACE quadmath)
 
-  target_compile_definitions(QuadMath::QuadMath INTERFACE
-    _GLIBCXX_USE_FLOAT128
-  )
-  target_compile_options(QuadMath::QuadMath INTERFACE
-    $<$<CXX_COMPILER_ID:GNU>:-fext-numeric-literals>
-  )
-
   # Check for numeric_limits specialization
   cmake_push_check_state()
   set(CMAKE_REQUIRED_LIBRARIES quadmath)
@@ -54,7 +47,7 @@ if(QuadMath_FOUND AND NOT TARGET QuadMath::QuadMath)
   if(${CMAKE_CXX_COMPILER_ID} STREQUAL GNU)
     set(CMAKE_REQUIRED_FLAGS "-fext-numeric-literals")
   endif()
-  set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} -D_GLIBCXX_USE_FLOAT128")
+
   check_cxx_source_compiles("
   #include <limits>
   int main()
