@@ -130,6 +130,12 @@
       "name": "GAS_VISC_FRACTION",
       "value_type": "DOUBLE",
       "default": 1
+    },
+    {
+      "item": 22,
+      "name": "DENSITY_EXPONENT",
+      "value_type": "DOUBLE",
+      "default": 1
     }
   ]
 }

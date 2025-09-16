@@ -79,6 +79,8 @@ struct RstSegment
     double aicd_oil_visc_exponent{};
     double aicd_wat_visc_exponent{};
     double aicd_gas_visc_exponent{};
+    // not reading from file yet, default to 1.0
+    double aicd_density_exponent{1.0};
 
     std::vector<int> inflow_segments;
 };

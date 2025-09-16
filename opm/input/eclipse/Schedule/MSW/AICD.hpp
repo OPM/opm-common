@@ -70,6 +70,7 @@ namespace Opm {
             serializer(m_oil_viscosity_exponent);
             serializer(m_water_viscosity_exponent);
             serializer(m_gas_viscosity_exponent);
+            serializer(m_density_exponent);
         }
 
         double flowRateExponent() const;
@@ -80,6 +81,7 @@ namespace Opm {
         double oilViscExponent() const;
         double waterViscExponent() const;
         double gasViscExponent() const;
+        double densityExponent() const;
 
     private:
         double m_flow_rate_exponent {};
@@ -90,6 +92,7 @@ namespace Opm {
         double m_oil_viscosity_exponent {};
         double m_water_viscosity_exponent {};
         double m_gas_viscosity_exponent {};
+        double m_density_exponent {};
     };
 } // namespace Opm
 

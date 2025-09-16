@@ -122,7 +122,7 @@ PROD01 /
 /
 
 WSEGAICD
-'PROD01'  8   8   0.002   -0.7  1* 1* 0.6 1* 1* 2* 1.0 1.0 'SHUT' /
+'PROD01'  8   8   0.002   -0.7  1* 1* 0.6 1* 1* 2* 1.0 1.0 'SHUT' 0.8 0.9 1.1 1.2 1.3 1.4 0.8 /
 /
 )";
 
@@ -180,6 +180,15 @@ WSEGAICD
     BOOST_CHECK_EQUAL(aicd.widthTransitionRegion(), 0.05);
     BOOST_CHECK_EQUAL(aicd.maxViscosityRatio(), 5.0);
     BOOST_CHECK_EQUAL(aicd.methodFlowScaling(), -1);
+    BOOST_CHECK_EQUAL(aicd.flowRateExponent(), 1.0);
+    BOOST_CHECK_EQUAL(aicd.viscExponent(), 1.0);
+    BOOST_CHECK_EQUAL(aicd.oilDensityExponent(), 0.8);
+    BOOST_CHECK_EQUAL(aicd.waterDensityExponent(), 0.9);
+    BOOST_CHECK_EQUAL(aicd.gasDensityExponent(), 1.1);
+    BOOST_CHECK_EQUAL(aicd.oilViscExponent(), 1.2);
+    BOOST_CHECK_EQUAL(aicd.waterViscExponent(), 1.3);
+    BOOST_CHECK_EQUAL(aicd.gasViscExponent(), 1.4);
+    BOOST_CHECK_EQUAL(aicd.densityExponent(), 0.8);
 
     const int outlet_segment_number = segment.outletSegment();
     const double outlet_segment_length = segment_set.segmentLength(outlet_segment_number);
