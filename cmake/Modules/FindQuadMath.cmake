@@ -55,8 +55,22 @@ if(QuadMath_FOUND AND NOT TARGET QuadMath::QuadMath)
      static_assert(std::numeric_limits<__float128>::is_specialized);
      return 0;
   }" QuadMath_HAS_LIMITS)
-  cmake_pop_check_state()  # Reset CMAKE_REQUIRED_XXX variables
+
   if(QuadMath_HAS_LIMITS)
     target_compile_definitions(QuadMath::QuadMath INTERFACE LIMITS_HAS_QUAD=1)
   endif()
+  check_cxx_source_compiles("
+  #include <limits>
+  #include <iostream>
+  int main()
+  {
+     __float128 b=0;
+     std::cout<<b;
+     return 0;
+  }" QuadMath_HAS_IO_OPERATOR)
+  cmake_pop_check_state()  # Reset CMAKE_REQUIRED_XXX variables
+  if(QuadMath_HAS_IO_OPERATOR)
+    target_compile_definitions(QuadMath::QuadMath INTERFACE QUADMATH_HAS_IO_OPERATOR=1)
+  endif()
+
 endif()

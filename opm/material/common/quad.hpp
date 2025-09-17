@@ -246,6 +246,7 @@ struct is_convertible<quad, OtherType>
     : public is_arithmetic<OtherType>
 { };
 
+#if !QUADMATH_HAS_IO_OPERATOR
 inline std::ostream& operator<<(std::ostream& os, const quad& val)
 {
     if (os.precision() > std::numeric_limits<double>::digits10)
@@ -256,13 +257,14 @@ inline std::ostream& operator<<(std::ostream& os, const quad& val)
     return os << static_cast<double>(val);
 }
 
-inline std::istream& operator>>(std::istream& is, quad& val)
+inline typename std::istream& operator>>(std::istream& is, quad& val)
 {
     double tmp = 0.0;
     std::istream& ret = (is >> tmp);
     val = tmp;
     return ret;
 }
+#endif
 
 inline quad real(quad val)
 { return val; }
@@ -276,6 +278,7 @@ inline quad imag(quad)
 inline quad imag(const std::complex<quad>& val)
 { return val.imag(); }
 
+#if !LIMITS_HAS_QUAD
 inline quad abs(quad val)
 { return (val < 0) ? -val : val; }
 
@@ -284,6 +287,7 @@ inline quad floor(quad val)
 
 inline quad ceil(quad val)
 { return ceilq(val); }
+#endif
 
 inline quad max(quad a, quad b)
 { return (a > b) ? a : b; }
@@ -291,8 +295,10 @@ inline quad max(quad a, quad b)
 inline quad min(quad a, quad b)
 { return (a < b) ? a : b; }
 
+#if !LIMITS_HAS_QUAD
 inline quad sqrt(quad val)
 { return sqrtq(val); }
+#endif
 
 template <class ExpType>
 inline quad pow(quad base, ExpType exp)
@@ -302,6 +308,7 @@ template <class BaseType>
 inline quad pow(BaseType base, quad exp)
 { return powq(static_cast<quad>(base), exp); }
 
+#if !LIMITS_HAS_QUAD
 inline quad pow(quad base, quad exp)
 { return powq(base, exp); }
 
@@ -337,6 +344,7 @@ inline bool isnan(quad val)
 
 inline bool isinf(quad val)
 { return isinfq(val); }
+#endif
 
 } // namespace std
 
