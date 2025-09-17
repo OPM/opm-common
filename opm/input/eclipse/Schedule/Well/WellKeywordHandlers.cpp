@@ -539,11 +539,6 @@ void handleWELOPEN(HandlerContext& handlerContext)
           shut.
          */
         for (const auto& wname : well_names) {
-            {
-                auto well = handlerContext.state().wells.get(wname);
-                handlerContext.state().wells.update( std::move(well) );
-            }
-
             const auto connection_status = Connection::StateFromString( status_str );
             {
                 auto well = handlerContext.state().wells.get(wname);
