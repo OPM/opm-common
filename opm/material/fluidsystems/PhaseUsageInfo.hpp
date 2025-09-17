@@ -154,6 +154,21 @@ public:
         return has_co2_or_h2store;
     }
 
+    bool enableDissolvedGas() const noexcept {
+        return enable_dissolved_gas_;
+    }
+
+    bool enableVaporizedOil() const noexcept {
+        return enable_vaporized_oil_;
+    }
+
+    bool enableVaporizedWater() const noexcept {
+        return enable_vaporized_water_;
+    }
+
+    bool enableDissolvedGasInWater() const noexcept {
+        return enable_dissolved_gas_in_water_;
+    }
 private:
     // only account for the three main phases: oil, water, gas
     unsigned char numActivePhases_ = 0;
@@ -176,6 +191,11 @@ private:
     bool has_biofilm{};
     bool has_micp{};
     bool has_co2_or_h2store{};
+
+    bool enable_dissolved_gas_{};
+    bool enable_vaporized_oil_{};
+    bool enable_vaporized_water_{};
+    bool enable_dissolved_gas_in_water_{};
 
     //  updating the mapping between active and canonical phase indices
     void updateIndexMapping_();
