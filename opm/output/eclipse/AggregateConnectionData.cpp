@@ -95,8 +95,11 @@ namespace {
             const auto* dynConnRes = (wellRes == nullptr)
                 ? nullptr : wellRes->find_connection(connPtr->global_index());
 
-            connOp(wellName, wellID, isProd, *connPtr, connID,
-                   connPtr->global_index(), skip_connection, dynConnRes);
+            if ((!skip_connection) or (!global_grid)) {
+                connOp(wellName, wellID, isProd, *connPtr, connID,
+                       connPtr->global_index(), dynConnRes);
+            }
+
             skip_connection = false;
             last_connection_lgr_tag = current_lgr_lgr_tag;
             connection_counter++;
@@ -438,15 +441,10 @@ captureDeclaredConnData(const Schedule&     sched,
          const Connection&       conn,
          const std::size_t       connID,
          const std::size_t       global_index,
-               bool              skip_flag_lgr,
          const data::Connection* dynConnRes) -> void
     {
         auto ic = this->iConn_(wellID, connID);
         auto sc = this->sConn_(wellID, connID);
-
-        if (skip_flag_lgr) {
-            return;
-        }
 
         IConn::staticContrib(conn, connID, ic, grid);
         SConn::staticContrib(conn, units, sc);
@@ -481,7 +479,6 @@ captureDeclaredConnDataLGR(const Schedule&     sched,
          const Connection&       conn,
          const std::size_t       connID,
          const std::size_t       global_index,
-  [[maybe_unused]]    bool       skip_flag_lgr,
          const data::Connection* dynConnRes) -> void
     {
         auto ic = this->iConn_(wellID, connID);
