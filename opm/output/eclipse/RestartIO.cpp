@@ -231,8 +231,6 @@ namespace {
                        EclIO::OutputStream::Restart& rstFile,
                        const std::string&            lgr_tag)
     {
-        // write IGRP to restart file
-        // write IGRP to restart file
         const size_t simStep = static_cast<size_t> (sim_step);
         auto  groupData = Helpers::AggregateGroupData(ih);
 
@@ -586,7 +584,7 @@ namespace {
             std::any_of(std::begin(wells), std::end(wells),
             [&schedule, sim_step](const std::string& well)
             {
-                auto lwell = schedule.getWell(well, sim_step);
+                const auto& lwell = schedule.getWell(well, sim_step);
                 return lwell.isMultiSegment() && (lwell.is_lgr_well() );
             });
 
@@ -859,8 +857,6 @@ namespace {
             rstFile.write(key, data);
         };
 
-        rstFile.message("STARTSOL");
-
         writeRegularSolutionVectors(value, writeDorF, writeInt);
         writeFluidInPlace(value, es, write_double_arg, rstFile);
         writeTracerVectors(schedule.getUnits(), es.tracer(), value,
@@ -886,6 +882,8 @@ namespace {
                        const std::vector<int>&       inteHD,
                        EclIO::OutputStream::Restart& rstFile)
     {
+        rstFile.message("STARTSOL");
+
         writeSolutionCore(value, es, schedule, udq_state, report_step, sim_step,
                           ecl_compatible_rst, write_double_arg, inteHD, rstFile);
 
@@ -897,7 +895,7 @@ namespace {
         rstFile.message("ENDSOL");
     }
 
-    //  Writes the solution for Global grids
+    //  Writes the solution for LGR grids
     void writeSolutionLGR(const RestartValue&           value,
                           const EclipseState&           es,
                           const Schedule&               schedule,
@@ -910,6 +908,8 @@ namespace {
                           EclIO::OutputStream::Restart& rstFile,
                           const std::string&            lgr_tag)
     {
+        rstFile.message("STARTSOL");
+
         writeSolutionCore(value, es, schedule, udq_state, report_step, sim_step,
                           ecl_compatible_rst, write_double_arg, inteHD, rstFile,true);
 
@@ -975,7 +975,6 @@ namespace {
                                                 bool write_double, EclIO::OutputStream::Restart& rstFile, const std::vector<RestartValue>& values,
                                                 std::optional<Helpers::AggregateAquiferData>& aquiferData)
     {
-        // Write GLOBAL RESTART
         const auto inteHD =
         writeHeader(report_step, sim_step, nextStepSize(values[0]),
                     seconds_elapsed, schedule, grid, es, rstFile);

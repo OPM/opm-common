@@ -109,7 +109,6 @@ namespace {
                             const std::size_t       sim_step,
                             const Opm::EclipseGrid& grid,
                             const Opm::data::Wells& xw,
-
                             ConnOp&&                connOp)
     {
         for (const auto& wname : sched.wellNames(sim_step)) {
