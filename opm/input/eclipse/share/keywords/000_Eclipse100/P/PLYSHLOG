@@ -11,7 +11,7 @@
       {
         "name": "REF_POLYMER_CONCENTRATION",
         "value_type": "DOUBLE",
-        "dimension": "PolymerDensity"
+        "dimension": "PolymerConcentration"
       },
       {
         "name": "REF_SALINITY",

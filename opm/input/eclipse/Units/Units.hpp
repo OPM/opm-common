@@ -279,7 +279,7 @@ namespace Opm {
         constexpr const double GasDissolutionFactor = GasSurfaceVolume/LiquidSurfaceVolume;
         constexpr const double OilDissolutionFactor = LiquidSurfaceVolume/GasSurfaceVolume;
         constexpr const double Density              = kilogram/cubic(meter);
-        constexpr const double PolymerDensity       = kilogram/cubic(meter);
+        constexpr const double PolymerConcentration = kilogram/cubic(meter);
         constexpr const double FoamDensity          = kilogram/cubic(meter);
         constexpr const double FoamSurfactantConcentration = kilogram/cubic(meter);
         constexpr const double Salinity             = kilogram/cubic(meter);
@@ -316,7 +316,7 @@ namespace Opm {
         constexpr const double GasDissolutionFactor = GasSurfaceVolume/LiquidSurfaceVolume;
         constexpr const double OilDissolutionFactor = LiquidSurfaceVolume/GasSurfaceVolume;
         constexpr const double Density              = pound/cubic(feet);
-        constexpr const double PolymerDensity       = pound/stb;
+        constexpr const double PolymerConcentration = pound/stb;
         constexpr const double FoamDensity          = pound/GasSurfaceVolume;
         constexpr const double FoamSurfactantConcentration = pound/stb;
         constexpr const double Salinity             = pound/stb;
@@ -353,7 +353,7 @@ namespace Opm {
         constexpr const double GasDissolutionFactor = GasSurfaceVolume/LiquidSurfaceVolume;
         constexpr const double OilDissolutionFactor = LiquidSurfaceVolume/GasSurfaceVolume;
         constexpr const double Density              = gram/cubic(centi*meter);
-        constexpr const double PolymerDensity       = gram/cubic(centi*meter);
+        constexpr const double PolymerConcentration = gram/cubic(centi*meter);
         constexpr const double FoamDensity          = gram/cubic(centi*meter);
         constexpr const double FoamSurfactantConcentration = gram/cubic(centi*meter);
         constexpr const double Salinity             = gram/cubic(centi*meter);
@@ -390,7 +390,7 @@ namespace Opm {
         constexpr const double GasDissolutionFactor = GasSurfaceVolume/LiquidSurfaceVolume;
         constexpr const double OilDissolutionFactor = LiquidSurfaceVolume/GasSurfaceVolume;
         constexpr const double Density              = kilogram/cubic(meter);
-        constexpr const double PolymerDensity       = kilogram/cubic(meter);
+        constexpr const double PolymerConcentration = kilogram/cubic(meter);
         constexpr const double FoamDensity          = kilogram/cubic(meter);
         constexpr const double FoamSurfactantConcentration = kilogram/cubic(meter);
         constexpr const double Salinity             = kilogram/cubic(meter);

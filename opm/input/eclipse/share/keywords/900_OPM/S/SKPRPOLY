@@ -12,7 +12,7 @@
       {
         "name": "POLYMERCONCENTRATION",
         "value_type": "DOUBLE",
-        "dimension": "PolymerDensity"
+        "dimension": "PolymerConcentration"
       }
     ],
     [

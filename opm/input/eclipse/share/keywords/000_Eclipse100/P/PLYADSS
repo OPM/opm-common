@@ -11,7 +11,7 @@
     {
       "name": "POLYMER_C",
       "value_type": "DOUBLE",
-      "dimension": "PolymerDensity"
+      "dimension": "PolymerConcentration"
     },
     {
       "name": "POLYMER_ADS_C",
