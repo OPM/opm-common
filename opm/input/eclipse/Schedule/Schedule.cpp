@@ -981,9 +981,9 @@ Defaulted grid coordinates is not allowed for COMPDAT as part of ACTIONX)"
         bool update = false;
         if (well2.updateStatus(status)) {
             if (status == Well::Status::OPEN) {
-                auto new_rft = this->snapshots.back().rft_config().well_open(well_name);
+                auto new_rft = this->snapshots[reportStep].rft_config().well_open(well_name);
                 if (new_rft.has_value())
-                    this->snapshots.back().rft_config.update( std::move(*new_rft) );
+                    this->snapshots[reportStep].rft_config.update( std::move(*new_rft) );
             }
 
             /*
@@ -994,8 +994,8 @@ Defaulted grid coordinates is not allowed for COMPDAT as part of ACTIONX)"
               event.
             */
             if (old_status != status) {
-                this->snapshots.back().events().addEvent( ScheduleEvents::WELL_STATUS_CHANGE);
-                this->snapshots.back().wellgroup_events().addEvent( well2.name(), ScheduleEvents::WELL_STATUS_CHANGE);
+                this->snapshots[reportStep].events().addEvent( ScheduleEvents::WELL_STATUS_CHANGE);
+                this->snapshots[reportStep].wellgroup_events().addEvent( well2.name(), ScheduleEvents::WELL_STATUS_CHANGE);
             }
             this->snapshots[reportStep].wells.update( std::move(well2) );
             update = true;
