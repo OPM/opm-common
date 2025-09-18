@@ -1607,17 +1607,17 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
 
 
 
-    void Schedule::checkIfAllConnectionsIsShut(std::size_t timeStep) {
-        const auto& well_names = this->wellNames(timeStep);
+    void Schedule::checkIfAllConnectionsIsShut(std::size_t reportStep) {
+        const auto& well_names = this->wellNames(reportStep);
         for (const auto& wname : well_names) {
-            const auto& well = this->getWell(wname, timeStep);
+            const auto& well = this->getWell(wname, reportStep);
             const auto& connections = well.getConnections();
             if (connections.allConnectionsShut() && well.getStatus() != Well::Status::SHUT) {
-                auto days = unit::convert::to(seconds(timeStep), unit::day);
+                auto days = unit::convert::to(seconds(reportStep), unit::day);
                 auto msg = fmt::format("All completions in well {} is shut at {} days\n"
                                        "The well is therefore also shut", well.name(), days);
                 OpmLog::note(msg);
-                this->updateWellStatus( well.name(), timeStep, Well::Status::SHUT);
+                this->updateWellStatus(well.name(), reportStep, Well::Status::SHUT);
             }
         }
     }
