@@ -97,7 +97,6 @@ namespace {
         0.0,
         0.0,
         0.0,
-        0.0,
     };
 
     static const double to_metric[] = {
@@ -141,8 +140,7 @@ namespace {
         1 / ( Metric::Energy / Metric::Time ),
         1 / (Metric::Pressure / Opm::unit::square(Metric::GeomVolume / Metric::Time)),
         1 / (Metric::Pressure / Metric::Density / Opm::unit::square(Metric::GeomVolume / Metric::Time)),
-        1 / Metric::PolymerConcentration,
-        1 / Metric::Salinity,
+        1 / Metric::Concentration,
         1 / (1 / Metric::Time),
         1 / Metric::Moles,
         1 / Metric::PPM,
@@ -192,8 +190,7 @@ namespace {
         Metric::Energy / Metric::Time,
         Metric::Pressure / Opm::unit::square(Metric::GeomVolume / Metric::Time),
         Metric::Pressure / Metric::Density / Opm::unit::square(Metric::GeomVolume / Metric::Time),
-        Metric::PolymerConcentration,
-        Metric::Salinity,
+        Metric::Concentration,
         1 / Metric::Time,
         Metric::Moles,
         Metric::PPM,
@@ -243,8 +240,7 @@ namespace {
         "KJ/DAY", /* energy rate*/
         "BARS/(RM3/DAY)2", /* ICD strength parameter */
         "BARS/(KG/SM3)/(RM3/DAY)2", /* AICD strength parameter */
-        "KG / SM3", /*polymer density */
-        "KG / SM3", /*salinity */
+        "KG / SM3", /* concentration */
         "SM3/SM3/DAY",
         "KG-M",
         "PPM", /*Parts per million */
@@ -283,7 +279,6 @@ namespace {
         0.0,
         0.0,
         Field::TemperatureOffset,
-        0.0,
         0.0,
         0.0,
         0.0,
@@ -365,8 +360,7 @@ namespace {
         1 / (Field::Energy / Field::Time),
         1 / (Field::Pressure / Opm::unit::square(Field::GeomVolume / Field::Time)),
         1 / (Field::Pressure / Field::Density / Opm::unit::square(Field::GeomVolume / Field::Time)),
-        1 / Field::PolymerConcentration,
-        1 / Field::Salinity,
+        1 / Field::Concentration,
         1 / (Field::GasSurfaceVolume / Field::LiquidSurfaceVolume / Field::Time),
         1 / Field::Moles,
         1 / Field::PPM,
@@ -416,8 +410,7 @@ namespace {
          Field::Energy / Field::Time,
          Field::Pressure / Opm::unit::square(Field::GeomVolume / Field::Time),
          Field::Pressure / Field::Density / Opm::unit::square(Field::GeomVolume / Field::Time),
-         Field::PolymerConcentration,
-         Field::Salinity,
+         Field::Concentration,
          Field::GasSurfaceVolume / Field::LiquidSurfaceVolume / Field::Time,
          Field::Moles,
          Field::PPM,
@@ -467,8 +460,7 @@ namespace {
         "BTU/DAY", /* energy rate*/
         "PSI/(RFT3/DAY)2", /* ICD strength parameter */
         "PSI/(LB/FT3)/(RFT3/DAY)2", /* AICD strength parameter */
-        "LB/STB", /*polymer density */
-        "LB/STB", /*salinity */
+        "LB/STB", /* concentration */
         "MSCF/STB/DAY",
         "LB-M",
         "PPM",
@@ -507,7 +499,6 @@ namespace {
         0.0,
         0.0,
         Lab::TemperatureOffset,
-        0.0,
         0.0,
         0.0,
         0.0,
@@ -589,8 +580,7 @@ namespace {
         1 / ( Lab::Energy / Lab::Time ),
         1 / (Lab::Pressure / Opm::unit::square(Lab::GeomVolume / Lab::Time)),
         1 / (Lab::Pressure / Lab::Density / Opm::unit::square(Lab::GeomVolume / Lab::Time)),
-        1 / Lab::PolymerConcentration,
-        1 / Lab::Salinity,
+        1 / Lab::Concentration,
         1 / (Lab::GasDissolutionFactor / Lab::Time),
         1 / Lab::Moles,
         1 / Lab::PPM,
@@ -640,8 +630,7 @@ namespace {
         Lab::Energy / Lab::Time,
         Lab::Pressure / Opm::unit::square(Lab::GeomVolume / Lab::Time),
         Lab::Pressure / Lab::Density / Opm::unit::square(Lab::GeomVolume / Lab::Time),
-        Lab::PolymerConcentration,
-        Lab::Salinity,
+        Lab::Concentration,
         Lab::GasDissolutionFactor / Lab::Time,
         Lab::Moles,
         Lab::PPM,
@@ -691,8 +680,7 @@ namespace {
         "J/HR", /* energy */
         "ATM/(RCC/H)2", /* ICD strength parameter */
         "ATM/(G/SCC)/(RCC/H)2", /* AICD strength parameter */
-        "G/SCC", /*polymer density */
-        "G/SCC", /*salinity */
+        "G/SCC", /* concentration */
         "SCC/SCC/HR",
         "g-M",
         "PPM",
@@ -731,7 +719,6 @@ namespace {
         0.0,
         0.0,
         PVT_M::TemperatureOffset,
-        0.0,
         0.0,
         0.0,
         0.0,
@@ -813,8 +800,7 @@ namespace {
         1 / ( PVT_M::Energy/ PVT_M::Time ),
         1 / (PVT_M::Pressure / Opm::unit::square(PVT_M::GeomVolume / PVT_M::Time)),
         1 / (PVT_M::Pressure / PVT_M::Density  / Opm::unit::square(PVT_M::GeomVolume / PVT_M::Time)),
-        1 / PVT_M::PolymerConcentration,
-        1 / PVT_M::Salinity,
+        1 / PVT_M::Concentration,
         1 / (PVT_M::GasSurfaceVolume / PVT_M::LiquidSurfaceVolume /PVT_M::Time),
         1 / PVT_M::Moles,
         1 / PVT_M::PPM,
@@ -864,8 +850,7 @@ namespace {
         PVT_M::Energy / PVT_M::Time,
         PVT_M::Pressure / Opm::unit::square(PVT_M::GeomVolume / PVT_M::Time),
         PVT_M::Pressure / PVT_M::Density  / Opm::unit::square(PVT_M::GeomVolume / PVT_M::Time),
-        PVT_M::PolymerConcentration,
-        PVT_M::Salinity,
+        PVT_M::Concentration,
         PVT_M::GasSurfaceVolume / PVT_M::LiquidSurfaceVolume /PVT_M::Time,
         PVT_M::Moles,
         PVT_M::PPM,
@@ -915,8 +900,7 @@ namespace {
         "KJ/DAY" /* energy */,
         "ATM/(RM3/DAY)2", /* ICD strength parameter */
         "ATM/(KG/SM3)/(RM3/DAY)2", /* AICD strength parameter */
-        "KG/SM3", /*polymer density */
-        "KG/SM3", /*salinity */
+        "KG/SM3", /* concentration */
         "SM3/SM3/DAY",
         "KG-M",
         "PPM",
@@ -946,7 +930,6 @@ namespace {
     // INPUT Unit Conventions
 
     static const double from_input_offset[] = {
-        0.0,
         0.0,
         0.0,
         0.0,
@@ -1044,11 +1027,9 @@ namespace {
         1,
         1,
         1,
-        1,
     };
 
     static const double from_input[] = {
-        1,
         1,
         1,
         1,
@@ -1139,8 +1120,7 @@ namespace {
         "KJ/DAY", /* energy rate*/
         "BARS/(RM3/DAY)2", /* ICD strength parameter */
         "BARS/(KG/SM3)/(RM3/DAY)2", /* AICD strength parameter */
-        "KG/SM3", /*polymer density */
-        "KG/SM3", /*salinity */
+        "KG/SM3", /* concentration */
         "SM3/SM3/DAY",
         "g-M",
         "PPM",
@@ -1206,10 +1186,8 @@ namespace {
         this->addDimension("ReservoirVolume", 1.0);
         this->addDimension("GeometricVolume", 1.0 );
         this->addDimension("Density"   , 1.0);
-        this->addDimension("PolymerConcentration", 1.0);
+        this->addDimension("Concentration", 1.0);
         this->addDimension("FoamDensity", 1.0);
-        this->addDimension("FoamSurfactantConcentration", 1.0);
-        this->addDimension("Salinity", 1.0);
         this->addDimension("Viscosity" , 1.0);
         this->addDimension("Timestep"  , 1.0);
         this->addDimension("SurfaceTension"  , 1.0);
@@ -1247,10 +1225,8 @@ namespace {
         this->addDimension("ReservoirVolume", PVT_M::ReservoirVolume );
         this->addDimension("GeometricVolume", PVT_M::GeomVolume );
         this->addDimension("Density"   , PVT_M::Density );
-        this->addDimension("PolymerConcentration", PVT_M::PolymerConcentration);
+        this->addDimension("Concentration", PVT_M::Concentration);
         this->addDimension("FoamDensity", PVT_M::FoamDensity);
-        this->addDimension("FoamSurfactantConcentration", PVT_M::FoamSurfactantConcentration);
-        this->addDimension("Salinity", PVT_M::Salinity);
         this->addDimension("Viscosity" , PVT_M::Viscosity);
         this->addDimension("Timestep"  , PVT_M::Timestep);
         this->addDimension("SurfaceTension"  , PVT_M::SurfaceTension);
@@ -1290,10 +1266,8 @@ namespace {
         this->addDimension("ReservoirVolume", Lab::ReservoirVolume );
         this->addDimension("GeometricVolume", Lab::GeomVolume );
         this->addDimension("Density", Lab::Density );
-        this->addDimension("PolymerConcentration", Lab::PolymerConcentration);
+        this->addDimension("Concentration", Lab::Concentration);
         this->addDimension("FoamDensity", Lab::FoamDensity);
-        this->addDimension("FoamSurfactantConcentration", Lab::FoamSurfactantConcentration);
-        this->addDimension("Salinity", Lab::Salinity);
         this->addDimension("Viscosity", Lab::Viscosity);
         this->addDimension("Timestep", Lab::Timestep);
         this->addDimension("SurfaceTension"  , Lab::SurfaceTension);
@@ -1334,10 +1308,8 @@ namespace {
         this->addDimension("ReservoirVolume", Metric::ReservoirVolume );
         this->addDimension("GeometricVolume", Metric::GeomVolume );
         this->addDimension("Density"   , Metric::Density );
-        this->addDimension("PolymerConcentration", Metric::PolymerConcentration);
+        this->addDimension("Concentration", Metric::Concentration);
         this->addDimension("FoamDensity", Metric::FoamDensity);
-        this->addDimension("FoamSurfactantConcentration", Metric::FoamSurfactantConcentration);
-        this->addDimension("Salinity", Metric::Salinity);
         this->addDimension("Viscosity" , Metric::Viscosity);
         this->addDimension("Timestep"  , Metric::Timestep);
         this->addDimension("SurfaceTension"  , Metric::SurfaceTension);
@@ -1376,10 +1348,8 @@ namespace {
         this->addDimension("ReservoirVolume", Field::ReservoirVolume );
         this->addDimension("GeometricVolume", Field::GeomVolume );
         this->addDimension("Density", Field::Density );
-        this->addDimension("PolymerConcentration", Field::PolymerConcentration);
+        this->addDimension("Concentration", Field::Concentration);
         this->addDimension("FoamDensity", Field::FoamDensity);
-        this->addDimension("FoamSurfactantConcentration", Field::FoamSurfactantConcentration);
-        this->addDimension("Salinity", Field::Salinity);
         this->addDimension("Viscosity", Field::Viscosity);
         this->addDimension("Timestep", Field::Timestep);
         this->addDimension("SurfaceTension"  , Field::SurfaceTension);

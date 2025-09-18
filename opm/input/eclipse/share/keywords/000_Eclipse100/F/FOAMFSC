@@ -13,7 +13,7 @@
       "item": 1,
       "name": "REF_SURF_CONC",
       "value_type": "DOUBLE",
-      "dimension": "FoamSurfactantConcentration"
+      "dimension": "Concentration"
     },
     {
       "item": 2,
@@ -27,7 +27,7 @@
       "name": "MIN_SURF_CONC",
       "value_type": "DOUBLE",
       "default": 1e-20,
-      "dimension": "FoamSurfactantConcentration"
+      "dimension": "Concentration"
     },
     {
       "item": 4,

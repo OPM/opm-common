@@ -15,7 +15,7 @@
       "value_type": "DOUBLE",
       "size_type": "ALL",
       "dimension": [
-        "PolymerConcentration",
+        "Concentration",
         "1"
       ]
     }

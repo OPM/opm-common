@@ -82,7 +82,7 @@
       "name": "INI_SALT",
       "value_type": "DOUBLE",
       "default": 0,
-      "dimension": "Salinity",
+      "dimension": "Concentration",
       "comment": "Not supported"
     },
     {

@@ -125,8 +125,8 @@ BOOST_AUTO_TEST_CASE( Brine ) {
         UnitSystem units(UnitSystem::UnitType::UNIT_TYPE_METRIC );
         {
             const auto& col = underSaturatedTable.getColumn(0);
-            BOOST_CHECK_CLOSE(col[0] , units.to_si(UnitSystem::measure::salinity, 0.0), 1e-3);
-            BOOST_CHECK_CLOSE(col[2] , units.to_si(UnitSystem::measure::salinity, 140.0), 1e-3);
+            BOOST_CHECK_CLOSE(col[0] , units.to_si(UnitSystem::measure::concentration, 0.0), 1e-3);
+            BOOST_CHECK_CLOSE(col[2] , units.to_si(UnitSystem::measure::concentration, 140.0), 1e-3);
         }
         {
             const auto& col = underSaturatedTable.getColumn(1);

@@ -11,12 +11,12 @@
       {
         "name": "REF_POLYMER_CONCENTRATION",
         "value_type": "DOUBLE",
-        "dimension": "PolymerConcentration"
+        "dimension": "Concentration"
       },
       {
         "name": "REF_SALINITY",
         "value_type": "DOUBLE",
-        "dimension": "Salinity"
+        "dimension": "Concentration"
       },
       {
         "name": "REF_TEMPERATURE",
