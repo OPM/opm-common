@@ -965,7 +965,8 @@ Defaulted grid coordinates is not allowed for COMPDAT as part of ACTIONX)"
         if (status != Well::Status::SHUT) {
             this->potential_wellopen_patterns.insert(well_name);
         }
-        auto well2 = this->snapshots[reportStep].wells.get(well_name);
+        auto& snapshot = this->snapshots[reportStep];
+        auto well2 = snapshot.wells.get(well_name);
         if (well2.getConnections().empty() && status == Well::Status::OPEN) {
             if (location) {
                 auto msg = fmt::format("Problem with {}\n"
@@ -981,9 +982,9 @@ Defaulted grid coordinates is not allowed for COMPDAT as part of ACTIONX)"
         bool update = false;
         if (well2.updateStatus(status)) {
             if (status == Well::Status::OPEN) {
-                auto new_rft = this->snapshots.back().rft_config().well_open(well_name);
+                auto new_rft = snapshot.rft_config().well_open(well_name);
                 if (new_rft.has_value())
-                    this->snapshots.back().rft_config.update( std::move(*new_rft) );
+                    snapshot.rft_config.update( std::move(*new_rft) );
             }
 
             /*
@@ -994,10 +995,10 @@ Defaulted grid coordinates is not allowed for COMPDAT as part of ACTIONX)"
               event.
             */
             if (old_status != status) {
-                this->snapshots.back().events().addEvent( ScheduleEvents::WELL_STATUS_CHANGE);
-                this->snapshots.back().wellgroup_events().addEvent( well2.name(), ScheduleEvents::WELL_STATUS_CHANGE);
+                snapshot.events().addEvent( ScheduleEvents::WELL_STATUS_CHANGE);
+                snapshot.wellgroup_events().addEvent( well2.name(), ScheduleEvents::WELL_STATUS_CHANGE);
             }
-            this->snapshots[reportStep].wells.update( std::move(well2) );
+            snapshot.wells.update( std::move(well2) );
             update = true;
         }
         return update;
