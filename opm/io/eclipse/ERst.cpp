@@ -301,6 +301,27 @@ bool  ERst::hasArray(const std::string& name, int number) const
     return true;
 }
 
+bool ERst::hasArray(const std::string& name, int number, const std::string& gridname)
+{
+    if (!hasReportStepNumber(number))
+        return false;
+
+    auto range_it = arrIndexRange.find(number);
+    std::pair<int,int> indexRange = range_it->second;
+
+    int start_ind_lgr = get_start_index_lgrname(number, gridname);
+
+    auto it = std::find(array_name.begin() + start_ind_lgr,
+                        array_name.begin() + indexRange.second, name);
+
+    if (it != array_name.begin() + indexRange.second) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
 
 int ERst::getArrayIndex(const std::string& name, int number, int occurrenc)
 {

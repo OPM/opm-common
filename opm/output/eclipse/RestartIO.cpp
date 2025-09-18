@@ -185,6 +185,24 @@ namespace {
         return ih;
     }
 
+    void writeHeaderLGR(const EclipseState&           es,
+                        EclIO::OutputStream::Restart& rstFile,
+                        const int                     lgr_index)
+    {
+        // create LGRHEADI
+        // lgr_index tis incremented by 1 to match ECLIPSE convention
+        auto lgrheadi = Helpers::createLgrHeadi(es, lgr_index + 1);
+        rstFile.write("LGRHEADI", lgrheadi);
+
+        // create LGRHEADQ
+        auto lgrheadq = Helpers::createLgrHeadq(es);
+        rstFile.write("LGRHEADQ", lgrheadq);
+
+        // create LGRHEADQ
+        auto lgrheadd = Helpers::createLgrHeadd();
+        rstFile.write("LGRHEADD", lgrheadd);
+    }
+
     void writeGroup(int                           sim_step,
                     const UnitSystem&             units,
                     const Schedule&               schedule,
@@ -198,6 +216,25 @@ namespace {
         auto  groupData = Helpers::AggregateGroupData(ih);
 
         groupData.captureDeclaredGroupData(schedule, units, simStep, sumState, ih);
+
+        rstFile.write("IGRP", groupData.getIGroup());
+        rstFile.write("SGRP", groupData.getSGroup());
+        rstFile.write("XGRP", groupData.getXGroup());
+        rstFile.write("ZGRP", groupData.getZGroup());
+    }
+
+    void writeGroupLGR(int                           sim_step,
+                       const UnitSystem&             units,
+                       const Schedule&               schedule,
+                       const Opm::SummaryState&      sumState,
+                       const std::vector<int>&       ih,
+                       EclIO::OutputStream::Restart& rstFile,
+                       const std::string&            lgr_tag)
+    {
+        const size_t simStep = static_cast<size_t> (sim_step);
+        auto  groupData = Helpers::AggregateGroupData(ih);
+
+        groupData.captureDeclaredGroupDataLGR(schedule, units, simStep, sumState, lgr_tag);
 
         rstFile.write("IGRP", groupData.getIGroup());
         rstFile.write("SGRP", groupData.getSGroup());
@@ -270,7 +307,7 @@ namespace {
         // UDQs are active in run.  Write UDQ related data to restart file.
         auto udqData = Helpers::AggregateUDQData(udqDims);
         udqData.captureDeclaredUDQData(schedule, simStep, udq_state, ih);
-        
+
         rstFile.write("ZUDN", udqData.getZUDN());
         rstFile.write("ZUDL", udqData.getZUDL());
         rstFile.write("IUDQ", udqData.getIUDQ());
@@ -342,7 +379,7 @@ namespace {
                    EclIO::OutputStream::Restart& rstFile)
     {
         auto wellData = Helpers::AggregateWellData(ih);
-        wellData.captureDeclaredWellData(schedule, tracers, sim_step, action_state, wtest_state, sumState, ih);
+        wellData.captureDeclaredWellData(schedule, grid, tracers, sim_step, action_state, wtest_state, sumState, ih);
         wellData.captureDynamicWellData(schedule, tracers, sim_step, wells, sumState);
 
         rstFile.write("IWEL", wellData.getIWell());
@@ -364,6 +401,48 @@ namespace {
         rstFile.write("SCON", connectionData.getSConn());
         rstFile.write("XCON", connectionData.getXConn());
     }
+
+    void writeWellLGR(int                           sim_step,
+                      const EclipseGrid&            grid,
+                      const Schedule&               schedule,
+                      const TracerConfig&           tracers,
+                      const data::Wells&            wells,
+                      const Opm::Action::State&     action_state,
+                      const Opm::WellTestState&     wtest_state,
+                      const Opm::SummaryState&      sumState,
+                      const std::vector<int>&       ih,
+                      EclIO::OutputStream::Restart& rstFile,
+                      const std::string&            lgr_tag)
+    {
+        auto wellData = Helpers::AggregateWellData(ih);
+        wellData.captureDeclaredWellDataLGR(schedule, grid, tracers, sim_step, action_state, wtest_state, sumState, ih, lgr_tag);
+        wellData.captureDynamicWellDataLGR(schedule, tracers, sim_step, wells, sumState,lgr_tag);
+
+        rstFile.write("IWEL", wellData.getIWell());
+        rstFile.write("SWEL", wellData.getSWell());
+        rstFile.write("XWEL", wellData.getXWell());
+        rstFile.write("ZWEL", wellData.getZWell());
+
+
+        // write LGWEL
+        rstFile.write("LGWEL", wellData.getLGWell());
+
+        // wListData for LGR is currently not supported.
+        // the following code is left here for future reference.
+        // auto wListData = Helpers::AggregateWListData(ih);
+        // wListData.captureDeclaredWListData(schedule, sim_step, ih);
+
+        // rstFile.write("ZWLS", wListData.getZWls());
+        // rstFile.write("IWLS", wListData.getIWls());
+
+        auto connectionData = Helpers::AggregateConnectionData(ih);
+        connectionData.captureDeclaredConnDataLGR(schedule, grid, schedule.getUnits(),
+                                                     wells, sumState, sim_step, lgr_tag);
+
+        rstFile.write("ICON", connectionData.getIConn());
+        rstFile.write("SCON", connectionData.getSConn());
+        rstFile.write("XCON", connectionData.getXConn());
+        }
 
     void writeAnalyticAquiferData(const Helpers::AggregateAquiferData& aquiferData,
                                   EclIO::OutputStream::Restart&        rstFile)
@@ -474,6 +553,52 @@ namespace {
                                       aquiferData.value(),
                                       rstFile);
         }
+    }
+
+    void writeDynamicDataLGR(const int                                     sim_step,
+                             const EclipseGrid&                            grid,
+                             const EclipseState&                           es,
+                             const Schedule&                               schedule,
+                             const data::Wells&                            wellSol,
+                             const Opm::Action::State&                     action_state,
+                             const Opm::WellTestState&                     wtest_state,
+                             const Opm::SummaryState&                      sumState,
+                             const std::vector<int>&                       inteHD,
+                             EclIO::OutputStream::Restart&                 rstFile,
+                             const std::string&                            lgr_tag)
+    {
+        writeGroupLGR(sim_step, schedule.getUnits(), schedule, sumState, inteHD, rstFile, lgr_tag);
+
+        // Write network data if the network option is used and network defined
+        const auto& network = schedule[sim_step].network();
+        if (network.active())
+        {
+            writeNetwork(es, sim_step, schedule.getUnits(), schedule, sumState, inteHD, rstFile);
+        }
+
+        // Write well and MSW data only when applicable (i.e., when present)
+        if (const auto& wells = schedule.wellNames(sim_step);
+            ! wells.empty())
+        {
+            const auto haveMSW =
+            std::any_of(std::begin(wells), std::end(wells),
+            [&schedule, sim_step](const std::string& well)
+            {
+                const auto& lwell = schedule.getWell(well, sim_step);
+                return lwell.isMultiSegment() && (lwell.is_lgr_well() );
+            });
+
+            if (haveMSW) {
+                throw std::logic_error("MSW not supported for LGR");
+            }
+
+            writeWellLGR(sim_step, grid, schedule, es.tracer(), wellSol,
+                         action_state, wtest_state, sumState, inteHD, rstFile, lgr_tag);
+        }
+        // Write aquifer data if the aquifer option for LGR.
+        // At the moment LGR and Aquifers are not supported.
+        // To be done.
+
     }
 
     std::vector<std::string>
@@ -674,16 +799,38 @@ namespace {
         }
     }
 
-    void writeSolution(const RestartValue&           value,
-                       const EclipseState&           es,
-                       const Schedule&               schedule,
-                       const UDQState&               udq_state,
-                       int                           report_step,
-                       int                           sim_step,
-                       const bool                    ecl_compatible_rst,
-                       const bool                    write_double_arg,
-                       const std::vector<int>&       inteHD,
-                       EclIO::OutputStream::Restart& rstFile)
+    template <typename WriteDorF, typename WriteInt, typename WriteDouble>
+    void writeSolutionExtra(const RestartValue&           value,
+                            const Schedule&               schedule,
+                            const UDQState&               udq_state,
+                            int                           report_step,
+                            int                           sim_step,
+                            const bool                    ecl_compatible_rst,
+                            const std::vector<int>&       inteHD,
+                            EclIO::OutputStream::Restart& rstFile,
+                            WriteDorF                     writeDorF,
+                            WriteInt                      writeInt,
+                            WriteDouble                   writeDouble)
+    {        // Use writeDorF, writeInt, and writeDouble as provided.
+
+        writeUDQ(report_step, sim_step, schedule, udq_state, inteHD, rstFile);
+        writeExtraVectors(value, writeDouble);
+        if (! ecl_compatible_rst) {
+            writeExtendedSolutionVectors(value, writeDorF, writeInt);
+        }
+    }
+
+    void writeSolutionCore(const RestartValue&           value,
+                           const EclipseState&           es,
+                           const Schedule&               schedule,
+                           const UDQState&               udq_state,
+                           int                           report_step,
+                           int                           sim_step,
+                           const bool                    ecl_compatible_rst,
+                           const bool                    write_double_arg,
+                           const std::vector<int>&       inteHD,
+                           EclIO::OutputStream::Restart& rstFile,
+                           const bool                    is_lgr_grid = false)
     {
         auto writeDorF = [&rstFile, write_double = write_double_arg]
             (const std::string& key, const std::vector<double>& data)
@@ -701,7 +848,7 @@ namespace {
         auto writeInt = [&rstFile](const std::string& key,
                                    const std::vector<int>& data)
         {
-            rstFile.write(key,data);
+            rstFile.write(key, data);
         };
 
         auto writeDouble = [&rstFile]
@@ -710,22 +857,75 @@ namespace {
             rstFile.write(key, data);
         };
 
-        rstFile.message("STARTSOL");
-
         writeRegularSolutionVectors(value, writeDorF, writeInt);
         writeFluidInPlace(value, es, write_double_arg, rstFile);
         writeTracerVectors(schedule.getUnits(), es.tracer(), value,
                            write_double_arg, rstFile);
-        writeUDQ(report_step, sim_step, schedule, udq_state, inteHD, rstFile);
 
-        writeExtraVectors(value, writeDouble);
-
-        if (! ecl_compatible_rst) {
-            writeExtendedSolutionVectors(value, writeDorF, writeInt);
+        if (!is_lgr_grid) {
+            writeSolutionExtra(value, schedule, udq_state, report_step, sim_step,
+                ecl_compatible_rst, inteHD, rstFile,
+                writeDorF, writeInt, writeDouble);
         }
 
+    }
+
+    //  Writes the solution for Global grids
+    void writeSolution(const RestartValue&           value,
+                       const EclipseState&           es,
+                       const Schedule&               schedule,
+                       const UDQState&               udq_state,
+                       int                           report_step,
+                       int                           sim_step,
+                       const bool                    ecl_compatible_rst,
+                       const bool                    write_double_arg,
+                       const std::vector<int>&       inteHD,
+                       EclIO::OutputStream::Restart& rstFile)
+    {
+        rstFile.message("STARTSOL");
+
+        writeSolutionCore(value, es, schedule, udq_state, report_step, sim_step,
+                          ecl_compatible_rst, write_double_arg, inteHD, rstFile);
+
+        const auto &grid = es.getInputGrid();
+        if (grid.is_lgr())
+        {
+            rstFile.write("LGRNAMES",grid.get_all_lgr_labels());
+        }
         rstFile.message("ENDSOL");
     }
+
+    //  Writes the solution for LGR grids
+    void writeSolutionLGR(const RestartValue&           value,
+                          const EclipseState&           es,
+                          const Schedule&               schedule,
+                          const UDQState&               udq_state,
+                          int                           report_step,
+                          int                           sim_step,
+                          const bool                    ecl_compatible_rst,
+                          const bool                    write_double_arg,
+                          const std::vector<int>&       inteHD,
+                          EclIO::OutputStream::Restart& rstFile,
+                          const std::string&            lgr_tag)
+    {
+        rstFile.message("STARTSOL");
+
+        writeSolutionCore(value, es, schedule, udq_state, report_step, sim_step,
+                          ecl_compatible_rst, write_double_arg, inteHD, rstFile,true);
+
+        const auto &grid = es.getInputGrid();
+        if (grid.is_lgr())
+        {
+            const auto &lgrid_names = grid.getLGRCell(lgr_tag).get_all_lgr_labels();
+            if (!lgrid_names.empty())
+            {
+                rstFile.write("LGRNAMES", lgrid_names);
+            }
+        }
+        rstFile.message("ENDSOL");
+    }
+
+
 
     void writeExtraData(const RestartValue::ExtraVector& extra_data,
                         EclIO::OutputStream::Restart&    rstFile)
@@ -767,6 +967,76 @@ namespace {
         ::Opm::OpmLog::info(msg);
     }
 
+
+    const std::vector<int>  writeGlobalRestart( int report_step, int sim_step, double seconds_elapsed,
+                                                const Schedule& schedule, const EclipseGrid& grid, const EclipseState& es,
+                                                const Action::State& action_state,  const WellTestState& wtest_state,
+                                                const SummaryState& sumState, const UDQState& udqState, bool ecl_compatible_rst,
+                                                bool write_double, EclIO::OutputStream::Restart& rstFile, const std::vector<RestartValue>& values,
+                                                std::optional<Helpers::AggregateAquiferData>& aquiferData)
+    {
+        const auto inteHD =
+        writeHeader(report_step, sim_step, nextStepSize(values[0]),
+                    seconds_elapsed, schedule, grid, es, rstFile);
+
+        if (report_step > 0) {
+        writeDynamicData(sim_step, grid, es, schedule, values[0].wells,
+                        action_state, wtest_state, sumState, inteHD,
+                        values[0].aquifer, aquiferData, rstFile);
+        }
+
+        writeActionx(report_step, sim_step, schedule, action_state, sumState, rstFile);
+
+        writeSolution(values[0], es, schedule, udqState, report_step, sim_step,
+                    ecl_compatible_rst, write_double, inteHD, rstFile);
+
+        if (! ecl_compatible_rst) {
+            writeExtraData(values[0].extra, rstFile);
+        }
+
+        return inteHD;
+    }
+
+    void writeLGRRestart(int                                          report_step,
+                         int                                          sim_step,
+                         double                                       seconds_elapsed,
+                         const Schedule&                              schedule,
+                         const EclipseGrid&                           grid,
+                         const EclipseState&                          es,
+                         const Action::State&                         action_state,
+                         const WellTestState&                         wtest_state,
+                         const SummaryState&                          sumState,
+                         const UDQState&                              udqState,
+                         bool                                         ecl_compatible_rst,
+                         bool                                         write_double,
+                         EclIO::OutputStream::Restart&                rstFile,
+                         const std::vector<RestartValue>&             values,
+                         int                                          lgrIndex,
+                         int                                          index)
+    {
+        const auto& all_lgr_names = grid.get_all_lgr_labels();
+        const auto& lgr_grid_name = all_lgr_names[lgrIndex];
+
+        rstFile.write("LGR", std::vector<std::string>{ lgr_grid_name });
+
+        const auto& lgr_grid = grid.getLGRCell(lgr_grid_name);
+
+        // LGR HEADERS
+        writeHeaderLGR(es, rstFile, lgrIndex);
+
+        // Global HEADERS for LGR GRIDS
+        const auto inteHD =
+        writeHeader(report_step, sim_step, nextStepSize(values[lgrIndex+1]),
+        seconds_elapsed, schedule, lgr_grid, es, rstFile);
+
+        writeDynamicDataLGR(sim_step, grid, es, schedule, values[lgrIndex+1].wells,
+                            action_state, wtest_state, sumState, inteHD,rstFile, lgr_grid_name);
+
+        writeSolutionLGR(values[lgrIndex+1], es, schedule, udqState, report_step, sim_step,
+        ecl_compatible_rst, write_double, inteHD, rstFile, lgr_grid_name);
+
+        rstFile.write("ENDLGR", std::vector<int>{index});
+    }
 } // Anonymous namespace
 
 void save(EclIO::OutputStream::Restart&                 rstFile,
@@ -817,7 +1087,72 @@ void save(EclIO::OutputStream::Restart&                 rstFile,
         writeExtraData(value.extra, rstFile);
     }
 
+}
+
+
+void save(EclIO::OutputStream::Restart&                 rstFile,
+          int                                           report_step,
+          double                                        seconds_elapsed,
+          std::vector<RestartValue>                     values,
+          const EclipseState&                           es,
+          const EclipseGrid&                            grid,
+          const Schedule&                               schedule,
+          const Action::State&                          action_state,
+          const WellTestState&                          wtest_state,
+          const SummaryState&                           sumState,
+          const UDQState&                               udqState,
+          std::optional<Helpers::AggregateAquiferData>& aquiferData,
+          bool                                          write_double)
+{
+    //checking Grid
+    {
+        //checking Global Grid
+        ::Opm::RestartIO::checkSaveArguments(es, values[0], grid);
+
+        //checking LGR Grids
+        int i = 1;
+        for (const std::string& lgr_grid_name:grid.get_all_lgr_labels()) {
+            ::Opm::RestartIO::checkSaveArguments(es, values[i], grid.getLGRCell(lgr_grid_name));
+            ++i;
+        }
+    }
+
+    const auto& ioCfg = es.getIOConfig();
+    const auto ecl_compatible_rst = ioCfg.getEclCompatibleRST();
+
+    const auto  sim_step = std::max(report_step - 1, 0);
+    const auto& units    = es.getUnits();
+
+    if (ecl_compatible_rst) {
+    write_double = false;
+    }
+
+    // Convert solution fields and extra values from SI to user units.
+    std::for_each(values.begin(), values.end(),
+                    [&units](RestartValue& value ) { return value.convertFromSI(units); });
+
+
+    const std::vector<int>& inteHD = writeGlobalRestart(report_step, sim_step, seconds_elapsed, schedule, grid, es,
+                                                        action_state, wtest_state, sumState, udqState,
+                                                        ecl_compatible_rst, write_double, rstFile, values, aquiferData);
+
+
+    // retrieving LGR printin order
+    auto lgr_order = grid.get_print_order_lgr();
+
+    // Write LGR restart
+    int index = 1;
+    for (std::size_t i : lgr_order) {
+        writeLGRRestart(report_step, sim_step, seconds_elapsed,
+                        schedule, grid, es,
+                        action_state, wtest_state, sumState,
+                        udqState, ecl_compatible_rst, write_double,
+                        rstFile, values,  i, index++);
+    }
+
+    // log information about writing everything
     logRestartOutput(report_step, schedule.size() - 1, inteHD);
+
 }
 
 }} // Opm::RestartIO

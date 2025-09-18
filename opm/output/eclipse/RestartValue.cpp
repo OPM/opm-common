@@ -26,6 +26,7 @@
 #include <utility>
 #include <vector>
 
+
 namespace Opm {
 
     namespace {
@@ -60,6 +61,40 @@ namespace Opm {
         , aquifer  { std::move(aquifer_arg) }
     {
     }
+
+    RestartValue::RestartValue(data::Solution sol,
+                               data::Wells wells_arg,
+                               data::GroupAndNetworkValues grp_nwrk_arg,
+                               data::Aquifers aquifer_arg,
+                               int lgr_grid)
+        : RestartValue(std::move(sol), std::move(wells_arg),
+              std::move(grp_nwrk_arg), std::move(aquifer_arg))
+    {
+        // Filter the wells using the lgr_grid parameter.
+        filter_wells_for_lgr(lgr_grid);
+    }
+
+    void RestartValue::filter_wells_for_lgr(int lgr_grid){
+        std::vector<std::reference_wrapper<const std::string>> wells_to_be_removed;
+
+        auto isConnected = [lgr_grid](const std::vector<data::Connection>& connections)
+        {
+            return std::any_of(connections.begin(), connections.end(),
+                               [lgr_grid](const auto& conn)
+                               { return conn.lgr_grid == lgr_grid; });
+        };
+
+        for (const auto& [well_name, well_data] : this->wells ) {
+            if (!isConnected(well_data.connections)) {
+                wells_to_be_removed.push_back(std::cref(well_name));
+            }
+        }
+
+        for (const auto& well_ref : wells_to_be_removed) {
+            this->wells.erase(well_ref.get());
+        }
+    }
+
 
     const std::vector<double>& RestartValue::getExtra(const std::string& key) const {
         const auto iter = std::find_if(this->extra.begin(),
