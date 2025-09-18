@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE( TestBiofPara ) {
     BOOST_CHECK_EQUAL( biofilmTable.getDensityBiofilm().front()                , 1.  );
     BOOST_CHECK_EQUAL( biofilmTable.getMicrobialDeathRate().front()            , 2.  * siFactor1 );
     BOOST_CHECK_EQUAL( biofilmTable.getMaximumGrowthRate().front()             , 3.  * siFactor1 );
-    BOOST_CHECK_EQUAL( biofilmTable.getHalfVelocityOxygen().front()            , 4.  );
+    BOOST_CHECK_EQUAL( biofilmTable.getHalfVelocityGrowth().front()            , 4.  );
     BOOST_CHECK_EQUAL( biofilmTable.getYieldGrowthCoefficient().front()        , 5.  );
     BOOST_CHECK_EQUAL( biofilmTable.getOxygenConsumptionFactor().front()       , 6.  );
     BOOST_CHECK_EQUAL( biofilmTable.getMicrobialAttachmentRate().front()       , 7.  * siFactor1 );

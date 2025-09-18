@@ -89,6 +89,7 @@ void PhaseUsageInfo<IndexTraits>::initFromState(const EclipseState& eclState)
     const auto& phases = eclState.runspec().phases();
     initFromPhases(phases);
 
+    has_biofilm = eclState.runspec().biof();
     has_micp = eclState.runspec().micp();
     has_co2_or_h2store = eclState.runspec().co2Storage() || eclState.runspec().h2Storage();
 }

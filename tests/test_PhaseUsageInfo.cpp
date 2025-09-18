@@ -55,6 +55,7 @@ BOOST_AUTO_TEST_CASE(default_constructor)
     BOOST_CHECK(!pu.hasFoam());
     BOOST_CHECK(!pu.hasBrine());
     BOOST_CHECK(!pu.hasZFraction());
+    BOOST_CHECK(!pu.hasBiofilm());
     BOOST_CHECK(!pu.hasMICP());
     BOOST_CHECK(!pu.hasCO2orH2Store());
 
@@ -91,6 +92,7 @@ BOOST_AUTO_TEST_CASE(constructor_with_phases)
     BOOST_CHECK(!pu.hasFoam());
     BOOST_CHECK(pu.hasBrine());
     BOOST_CHECK(!pu.hasZFraction());
+    BOOST_CHECK(!pu.hasBiofilm());
     BOOST_CHECK(!pu.hasMICP());
     BOOST_CHECK(!pu.hasCO2orH2Store());
 
@@ -176,6 +178,7 @@ END
     BOOST_CHECK(!pu.hasFoam());
     BOOST_CHECK(!pu.hasBrine());
     BOOST_CHECK(!pu.hasZFraction());
+    BOOST_CHECK(!pu.hasBiofilm());
     BOOST_CHECK(!pu.hasMICP());
 
     BOOST_CHECK(pu.hasCO2orH2Store());
