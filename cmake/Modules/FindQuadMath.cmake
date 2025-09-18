@@ -77,7 +77,7 @@ if(QuadMath_FOUND AND NOT TARGET QuadMath::QuadMath)
   int main()
   {
      __float128 b=10;
-     __float128 c=atan(b);
+     __float128 c=std::atan(b);
   }" QuadMath_HAS_MATH_OPS)
   cmake_pop_check_state()  # Reset CMAKE_REQUIRED_XXX variables
   if(QuadMath_HAS_MATH_OPS)
