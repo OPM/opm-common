@@ -38,19 +38,86 @@
 #include <vector>
 #include <numeric>
 #include <algorithm>
+#include <ostream>
+#include <type_traits>
 #include <opm/common/ErrorMacros.hpp>
 #include <opm/grid/utility/IteratorRange.hpp>
 
-#include <ostream>
+#if HAVE_CUDA
+#if USE_HIP
+#include <opm/simulators/linalg/gpuistl_hip/GpuBuffer.hpp>
+#include <opm/simulators/linalg/gpuistl_hip/GpuView.hpp>
+#else
+#include <opm/simulators/linalg/gpuistl/GpuBuffer.hpp>
+#include <opm/simulators/linalg/gpuistl/GpuView.hpp>
+#endif
+#endif
 
 namespace Opm
 {
+
+
+    template<class>
+inline constexpr bool always_false_v = false;
+
+// Poison iterator is a helper class that will allow for compilation but will fail at run-time
+// Its intetion is to be used so that we can have a SparseTable of GPU data, which requires the
+// GPUBuffer intermediate storage type, which does not support iterators.
+template<class T>
+struct PoisonIterator {
+    // iterator traits so it type-checks where an iterator is required
+    using iterator_category = std::input_iterator_tag;
+    using value_type        = T;
+    using difference_type   = std::ptrdiff_t;
+    using pointer           = T*;
+    using reference         = T&;
+
+    PoisonIterator() = default;
+
+    // Dereference
+    reference operator*() const {
+        static_assert(always_false_v<T>, "PoisonIterator: operator*() is not allowed.");
+        // Unreachable, but keeps the signature well-formed:
+        return *ptr_;
+    }
+
+    pointer operator->() const {
+        static_assert(always_false_v<T>, "PoisonIterator: operator->() is not allowed.");
+        return ptr_;
+    }
+
+    // Pre-increment
+    PoisonIterator& operator++() {
+        static_assert(always_false_v<T>, "PoisonIterator: operator++() is not allowed.");
+        return *this;
+    }
+
+    // Post-increment
+    PoisonIterator operator++(int) {
+        static_assert(always_false_v<T>, "PoisonIterator: operator++(int) is not allowed.");
+        return *this;
+    }
+
+    // Equality/inequality
+    friend bool operator==(const PoisonIterator&, const PoisonIterator&) {
+        static_assert(always_false_v<T>, "PoisonIterator: operator== is not allowed.");
+        return true;
+    }
+
+    friend bool operator!=(const PoisonIterator&, const PoisonIterator&) {
+        static_assert(always_false_v<T>, "PoisonIterator: operator!= is not allowed.");
+        return false;
+    }
+
+private:
+    T* ptr_ = nullptr; // placeholder to keep types consistent
+};
 
     /// A SparseTable stores a table with rows of varying size
     /// as efficiently as possible.
     /// It is supposed to behave similarly to a vector of vectors.
     /// Its behaviour is similar to compressed row sparse matrices.
-    template <typename T>
+    template <typename T, template <typename, typename...> class Storage = std::vector>
     class SparseTable
     {
     public:
@@ -71,6 +138,15 @@ namespace Opm
             : data_(data_beg, data_end)
         {
 	    setRowStartsFromSizes(rowsize_beg, rowsize_end);
+        }
+
+        SparseTable (Storage<T> data, Storage<int> row_starts)
+            : data_(data)
+            , row_start_(row_starts)
+        {
+            // removed for now because we cannot access the zero'th element if Storage is a GpuBuffer
+            // OPM_ERROR_IF(row_start_.size() == 0 || row_start_[0] != 0,
+            //              "Invalid row_start array");
         }
 
 
@@ -95,7 +171,7 @@ namespace Opm
         template <typename IntegerIter>
         void allocate(IntegerIter rowsize_beg, IntegerIter rowsize_end)
         {
-            typedef typename std::vector<T>::size_type sz_t;
+            typedef typename Storage<T>::size_type sz_t;
 
             sz_t ndata = std::accumulate(rowsize_beg, rowsize_end, sz_t(0));
             data_.resize(ndata);
@@ -112,13 +188,13 @@ namespace Opm
         }
 
         /// True if the table contains no rows.
-        bool empty() const
+        OPM_HOST_DEVICE bool empty() const
         {
             return row_start_.size()==1;
         }
 
         /// Returns the number of rows in the table.
-        int size() const
+        OPM_HOST_DEVICE int size() const
         {
             return row_start_.size() - 1;
         }
@@ -138,13 +214,13 @@ namespace Opm
         }
 
         /// Returns the number of data elements.
-        int dataSize() const
+        OPM_HOST_DEVICE int dataSize() const
         {
             return data_.size();
         }
 
         /// Returns the size of a table row.
-        int rowSize(int row) const
+        OPM_HOST_DEVICE int rowSize(int row) const
         {
 #ifndef NDEBUG
             OPM_ERROR_IF(row < 0 || row >= size(),
@@ -161,11 +237,63 @@ namespace Opm
         }
 
         /// Defining the row type, returned by operator[].
-        using row_type = iterator_range<typename std::vector<T>::const_iterator>;
-        using mutable_row_type = mutable_iterator_range<typename std::vector<T>::iterator>;
+
+        // Helper templates to select iterator range types only if (const_)iterator exists.
+        // Default: PoisonIterator (for non-traversable types)
+        template<class U, class = void>
+        struct row_type_helper {
+            using type = iterator_range<PoisonIterator<T>>;
+        };
+
+        // If Storage has const_iterator, use it (e.g. std::vector)
+        template<class U>
+        struct row_type_helper<U, std::void_t<typename U::const_iterator>> {
+            using type = iterator_range<typename U::const_iterator>;
+        };
+
+        // Default: PoisonIterator (for non-traversable types)
+        template<class U, class = void>
+        struct mutable_row_type_helper {
+            using type = mutable_iterator_range<PoisonIterator<T>>;
+        };
+
+        // If Storage has iterator, use it (e.g. std::vector)
+        template<class U>
+        struct mutable_row_type_helper<U, std::void_t<typename U::iterator>> {
+            using type = mutable_iterator_range<typename U::iterator>;
+        };
+
+#if HAVE_CUDA
+        // Specialization for GpuView: use its iterator
+        template<typename TT>
+        struct row_type_helper<gpuistl::GpuView<TT>> {
+            using type = iterator_range<typename gpuistl::GpuView<TT>::iterator>;
+        };
+
+        // Specialization for GpuBuffer: always PoisonIterator
+        template<typename TT>
+        struct row_type_helper<gpuistl::GpuBuffer<TT>> {
+            using type = iterator_range<PoisonIterator<TT>>;
+        };
+
+        // Specialization for GpuView: use its iterator
+        template<typename TT>
+        struct mutable_row_type_helper<gpuistl::GpuView<TT>> {
+            using type = mutable_iterator_range<typename gpuistl::GpuView<TT>::iterator>;
+        };
+
+        // Specialization for GpuBuffer: always PoisonIterator
+        template<typename TT>
+        struct mutable_row_type_helper<gpuistl::GpuBuffer<TT>> {
+            using type = mutable_iterator_range<PoisonIterator<TT>>;
+        };
+#endif // HAVE_CUDA
+
+        using row_type = typename row_type_helper<Storage<T>>::type;
+        using mutable_row_type = typename mutable_row_type_helper<Storage<T>>::type;
 
         /// Returns a row of the table.
-        row_type operator[](int row) const
+        OPM_HOST_DEVICE row_type operator[](int row) const
         {
             assert(row >= 0 && row < size());
             return row_type{data_.begin()+ row_start_[row],
@@ -173,7 +301,7 @@ namespace Opm
         }
 
         /// Returns a mutable row of the table.
-        mutable_row_type operator[](int row)
+        OPM_HOST_DEVICE mutable_row_type operator[](int row)
         {
             assert(row >= 0 && row < size());
             return mutable_row_type{data_.begin() + row_start_[row],
@@ -185,26 +313,26 @@ namespace Opm
         class Iterator
         {
         public:
-            Iterator(const SparseTable& table, const int begin_row_index)
+            OPM_HOST_DEVICE Iterator(const SparseTable& table, const int begin_row_index)
                 : table_(table)
                 , row_index_(begin_row_index)
             {
             }
-            Iterator& operator++()
+            OPM_HOST_DEVICE Iterator& operator++()
             {
                 ++row_index_;
                 return *this;
             }
-            row_type operator*() const
+            OPM_HOST_DEVICE row_type operator*() const
             {
                 return table_[row_index_];
             }
-            bool operator==(const Iterator& other)
+            OPM_HOST_DEVICE bool operator==(const Iterator& other)
             {
                 assert(&table_ == &other.table_);
                 return row_index_ == other.row_index_;
             }
-            bool operator!=(const Iterator& other)
+            OPM_HOST_DEVICE bool operator!=(const Iterator& other)
             {
                 return !(*this == other);
             }
@@ -214,17 +342,17 @@ namespace Opm
         };
 
         /// Iterator access.
-        Iterator begin() const
+        OPM_HOST_DEVICE Iterator begin() const
         {
             return Iterator(*this, 0);
         }
-        Iterator end() const
+        OPM_HOST_DEVICE Iterator end() const
         {
             return Iterator(*this, size());
         }
 
         /// Equality.
-        bool operator==(const SparseTable& other) const
+        OPM_HOST_DEVICE bool operator==(const SparseTable& other) const
         {
             return data_ == other.data_ && row_start_ == other.row_start_;
         }
@@ -255,11 +383,20 @@ namespace Opm
             return data_.data();
         }
 
+        const Storage<T>& dataStorage() const
+        {
+            return data_;
+        }
+
+        const Storage<int>& rowStarts() const
+        {
+            return row_start_;
+        }
     private:
-        std::vector<T> data_;
+        Storage<T> data_;
         // Like in the compressed row sparse matrix format,
         // row_start_.size() is equal to the number of rows + 1.
-        std::vector<int> row_start_;
+        Storage<int> row_start_;
 
 	template <class IntegerIter>
 	void setRowStartsFromSizes(IntegerIter rowsize_beg, IntegerIter rowsize_end)
@@ -288,5 +425,49 @@ namespace Opm
 
 } // namespace Opm
 
+#if HAVE_CUDA
+namespace Opm::gpuistl {
+
+template <class T>
+auto copy_to_gpu(const SparseTable<T>& cpu_table)
+{
+    return SparseTable<T, GpuBuffer>(
+        GpuBuffer<T>(cpu_table.dataStorage()),
+        GpuBuffer<int>(cpu_table.rowStarts())
+    );
+}
+
+// Since we cannot have MatrixBlock in GPU code, we need to convert to MiniMatrix
+// For now I think this is an okay place to convert types
+template<class MatrixBlockType, class MiniMatrixType, class ResidualNBInfoType, template <typename, typename...> class TemplatedStruct>
+auto copy_to_gpu(const SparseTable<TemplatedStruct<ResidualNBInfoType, MatrixBlockType>>& cpu_matrix)
+{
+    // Convert the DUNE FieldVectors to MiniMatrix types
+    using StructWithMinimatrix = TemplatedStruct<ResidualNBInfoType, MiniMatrixType>;
+    std::vector<StructWithMinimatrix> minimatrices(cpu_matrix.dataSize());
+    size_t idx = 0;
+    for (auto e : cpu_matrix.dataStorage()) {
+        minimatrices[idx++] = StructWithMinimatrix(e);
+    }
+
+    return SparseTable<StructWithMinimatrix, GpuBuffer>(
+        GpuBuffer<StructWithMinimatrix>(minimatrices),
+        GpuBuffer<int>(cpu_matrix.rowStarts())
+    );
+}
+
+template <class T>
+auto make_view(SparseTable<T, GpuBuffer>& buffer_table)
+{
+    return SparseTable<T, GpuView>(
+        GpuView<T>(const_cast<T*>(buffer_table.dataStorage().data()),
+                   buffer_table.dataStorage().size()),
+        GpuView<int>(const_cast<int*>(buffer_table.rowStarts().data()),
+                     buffer_table.rowStarts().size())
+    );
+}
+
+} // namespace Opm::gpuistl
+#endif // HAVE_CUDA
 
 #endif // OPM_SPARSETABLE_HEADER

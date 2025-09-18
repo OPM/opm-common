@@ -23,22 +23,24 @@
 #include <iterator>
 #include <type_traits>
 
+#include <opm/common/utility/gpuDecorators.hpp>
+
 namespace Opm {
 
 template <class DataType>
 struct iterator_range_pod {
-    iterator_range_pod(const DataType* begin, const DataType* end) : begin_(begin), end_(end) {}
+    OPM_HOST_DEVICE iterator_range_pod(const DataType* begin, const DataType* end) : begin_(begin), end_(end) {}
     iterator_range_pod() = default;
 
-    size_t size() const { return std::distance(begin_,end_); }
-    bool empty() const { return begin_ == end_; }
-    bool operator==(const iterator_range_pod<DataType>& rhs) const
+    OPM_HOST_DEVICE size_t size() const { return std::distance(begin_,end_); }
+    OPM_HOST_DEVICE bool empty() const { return begin_ == end_; }
+    OPM_HOST_DEVICE bool operator==(const iterator_range_pod<DataType>& rhs) const
     { return (begin_ == rhs.begin_) && (end_ == rhs.end_); }
 
-    const DataType& operator[](int idx) const { return begin_[idx]; }
+    OPM_HOST_DEVICE const DataType& operator[](int idx) const { return begin_[idx]; }
 
-    const DataType* begin() const { return begin_; }
-    const DataType* end() const { return end_; }
+    OPM_HOST_DEVICE const DataType* begin() const { return begin_; }
+    OPM_HOST_DEVICE const DataType* end() const { return end_; }
 
 protected:
     const DataType* begin_;
@@ -48,19 +50,19 @@ protected:
 
 template <class Iter>
 struct iterator_range {
-    iterator_range(Iter begin, Iter end) : begin_(begin), end_(end) {}
+    OPM_HOST_DEVICE iterator_range(Iter begin, Iter end) : begin_(begin), end_(end) {}
     iterator_range() = default;
 
-    size_t size() const { return std::distance(begin_,end_); }
-    bool empty() const { return begin_ == end_; }
-    bool operator==(const iterator_range<Iter>& rhs) const
+    OPM_HOST_DEVICE size_t size() const { return std::distance(begin_,end_); }
+    OPM_HOST_DEVICE bool empty() const { return begin_ == end_; }
+    OPM_HOST_DEVICE bool operator==(const iterator_range<Iter>& rhs) const
     { return (begin_ == rhs.begin_) && (end_ == rhs.end_); }
 
-    const typename Iter::value_type& operator[](int idx) const
+    OPM_HOST_DEVICE const typename Iter::value_type& operator[](int idx) const
     { return *(begin_+ idx); }
 
-    Iter begin() const { return begin_; }
-    Iter end() const { return end_; }
+    OPM_HOST_DEVICE Iter begin() const { return begin_; }
+    OPM_HOST_DEVICE Iter end() const { return end_; }
 
 protected:
     Iter begin_, end_;
@@ -68,19 +70,19 @@ protected:
 
 template<typename Iter>
 struct mutable_iterator_range {
-    mutable_iterator_range(Iter begin, Iter end) : begin_(begin), end_(end) {}
+    OPM_HOST_DEVICE mutable_iterator_range(Iter begin, Iter end) : begin_(begin), end_(end) {}
     mutable_iterator_range() = default;
 
-    size_t size() const { return std::distance(begin_,end_); }
-    bool empty() const { return begin_ == end_; }
-    bool operator==(const Iter& rhs) const
+    OPM_HOST_DEVICE size_t size() const { return std::distance(begin_,end_); }
+    OPM_HOST_DEVICE bool empty() const { return begin_ == end_; }
+    OPM_HOST_DEVICE bool operator==(const Iter& rhs) const
     { return (begin_ == rhs.begin_) && (end_ == rhs.end_); }
 
-    typename Iter::value_type& operator[](int idx)
+    OPM_HOST_DEVICE typename Iter::value_type& operator[](int idx)
     { return begin_[idx]; }
 
-    Iter begin() const { return begin_; }
-    Iter end() const { return end_; }
+    OPM_HOST_DEVICE Iter begin() const { return begin_; }
+    OPM_HOST_DEVICE Iter end() const { return end_; }
 
 protected:
     Iter begin_, end_;
