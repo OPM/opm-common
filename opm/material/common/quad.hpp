@@ -266,6 +266,7 @@ inline typename std::istream& operator>>(std::istream& is, quad& val)
 }
 #endif
 
+#if !QUADMATH_HAS_MATH_OPERATORS
 inline quad real(quad val)
 { return val; }
 
@@ -278,7 +279,6 @@ inline quad imag(quad)
 inline quad imag(const std::complex<quad>& val)
 { return val.imag(); }
 
-#if !LIMITS_HAS_QUAD
 inline quad abs(quad val)
 { return (val < 0) ? -val : val; }
 
@@ -287,7 +287,7 @@ inline quad floor(quad val)
 
 inline quad ceil(quad val)
 { return ceilq(val); }
-#endif
+
 
 inline quad max(quad a, quad b)
 { return (a > b) ? a : b; }
@@ -295,10 +295,10 @@ inline quad max(quad a, quad b)
 inline quad min(quad a, quad b)
 { return (a < b) ? a : b; }
 
-#if !LIMITS_HAS_QUAD
+
 inline quad sqrt(quad val)
 { return sqrtq(val); }
-#endif
+#endif // !QUADMATH_HAS_MATH_OPERATORS
 
 template <class ExpType>
 inline quad pow(quad base, ExpType exp)
@@ -308,7 +308,7 @@ template <class BaseType>
 inline quad pow(BaseType base, quad exp)
 { return powq(static_cast<quad>(base), exp); }
 
-#if !LIMITS_HAS_QUAD
+#if !QUADMATH_HAS_MATH_OPERATORS
 inline quad pow(quad base, quad exp)
 { return powq(base, exp); }
 
@@ -344,7 +344,7 @@ inline bool isnan(quad val)
 
 inline bool isinf(quad val)
 { return isinfq(val); }
-#endif
+#endif // QUADMATH_HAS_MATH_OPERATORS
 
 } // namespace std
 

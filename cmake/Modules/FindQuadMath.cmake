@@ -68,9 +68,20 @@ if(QuadMath_FOUND AND NOT TARGET QuadMath::QuadMath)
      std::cout<<b;
      return 0;
   }" QuadMath_HAS_IO_OPERATOR)
-  cmake_pop_check_state()  # Reset CMAKE_REQUIRED_XXX variables
+
   if(QuadMath_HAS_IO_OPERATOR)
     target_compile_definitions(QuadMath::QuadMath INTERFACE QUADMATH_HAS_IO_OPERATOR=1)
   endif()
-
+  check_cxx_source_compiles("
+  #include <cmath>
+  int main()
+  {
+     __float128 b=10;
+     __float128 c=atan(b);
+  }" QuadMath_HAS_MATH_OPS)
+  cmake_pop_check_state()  # Reset CMAKE_REQUIRED_XXX variables
+  if(QuadMath_HAS_MATH_OPS)
+    target_compile_definitions(QuadMath::QuadMath INTERFACE QUADMATH_HAS_MATH_OPERATORS=1)
+  endif()
+  cmake_pop_check_state()  # Reset CMAKE_REQUIRED_XXX variables
 endif()
