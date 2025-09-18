@@ -651,50 +651,50 @@ BOOST_AUTO_TEST_CASE(WellTestWPOLYMER) {
         const auto& well1 = sched.getWell("INJE01", 0);
         BOOST_CHECK( well1.isInjector());
         const WellPolymerProperties& props_well10 = well1.getPolymerProperties();
-        BOOST_CHECK_CLOSE(1.5*Metric::PolymerDensity, props_well10.m_polymerConcentration, 0.0001);
+        BOOST_CHECK_CLOSE(1.5*Metric::PolymerConcentration, props_well10.m_polymerConcentration, 0.0001);
     }
     {
         const auto& well1 = sched.getWell("INJE01", 1);
         const WellPolymerProperties& props_well11 = well1.getPolymerProperties();
-        BOOST_CHECK_CLOSE(1.0*Metric::PolymerDensity, props_well11.m_polymerConcentration, 0.0001);
+        BOOST_CHECK_CLOSE(1.0*Metric::PolymerConcentration, props_well11.m_polymerConcentration, 0.0001);
     }
     {
         const auto& well1 = sched.getWell("INJE01", 2);
         const WellPolymerProperties& props_well12 = well1.getPolymerProperties();
-        BOOST_CHECK_CLOSE(0.1*Metric::PolymerDensity, props_well12.m_polymerConcentration, 0.0001);
+        BOOST_CHECK_CLOSE(0.1*Metric::PolymerConcentration, props_well12.m_polymerConcentration, 0.0001);
     }
 
     {
         const auto& well2 = sched.getWell("INJE02", 0);
         BOOST_CHECK( well2.isInjector());
         const WellPolymerProperties& props_well20 = well2.getPolymerProperties();
-        BOOST_CHECK_CLOSE(2.0*Metric::PolymerDensity, props_well20.m_polymerConcentration, 0.0001);
+        BOOST_CHECK_CLOSE(2.0*Metric::PolymerConcentration, props_well20.m_polymerConcentration, 0.0001);
     }
     {
         const auto& well2 = sched.getWell("INJE02", 1);
         const WellPolymerProperties& props_well21 = well2.getPolymerProperties();
-        BOOST_CHECK_CLOSE(1.5*Metric::PolymerDensity, props_well21.m_polymerConcentration, 0.0001);
+        BOOST_CHECK_CLOSE(1.5*Metric::PolymerConcentration, props_well21.m_polymerConcentration, 0.0001);
     }
     {
         const auto& well2 = sched.getWell("INJE02", 2);
         const WellPolymerProperties& props_well22 = well2.getPolymerProperties();
-        BOOST_CHECK_CLOSE(0.2*Metric::PolymerDensity, props_well22.m_polymerConcentration, 0.0001);
+        BOOST_CHECK_CLOSE(0.2*Metric::PolymerConcentration, props_well22.m_polymerConcentration, 0.0001);
     }
     {
         const auto& well3 = sched.getWell("INJE03", 0);
         BOOST_CHECK( well3.isInjector());
         const WellPolymerProperties& props_well30 = well3.getPolymerProperties();
-        BOOST_CHECK_CLOSE(2.5*Metric::PolymerDensity, props_well30.m_polymerConcentration, 0.0001);
+        BOOST_CHECK_CLOSE(2.5*Metric::PolymerConcentration, props_well30.m_polymerConcentration, 0.0001);
     }
     {
         const auto& well3 = sched.getWell("INJE03", 1);
         const WellPolymerProperties& props_well31 = well3.getPolymerProperties();
-        BOOST_CHECK_CLOSE(2.0*Metric::PolymerDensity, props_well31.m_polymerConcentration, 0.0001);
+        BOOST_CHECK_CLOSE(2.0*Metric::PolymerConcentration, props_well31.m_polymerConcentration, 0.0001);
     }
     {
         const auto& well3 = sched.getWell("INJE03", 2);
         const WellPolymerProperties& props_well32 = well3.getPolymerProperties();
-        BOOST_CHECK_CLOSE(0.3*Metric::PolymerDensity, props_well32.m_polymerConcentration, 0.0001);
+        BOOST_CHECK_CLOSE(0.3*Metric::PolymerConcentration, props_well32.m_polymerConcentration, 0.0001);
     }
 }
 

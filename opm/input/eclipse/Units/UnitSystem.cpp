@@ -141,7 +141,7 @@ namespace {
         1 / ( Metric::Energy / Metric::Time ),
         1 / (Metric::Pressure / Opm::unit::square(Metric::GeomVolume / Metric::Time)),
         1 / (Metric::Pressure / Metric::Density / Opm::unit::square(Metric::GeomVolume / Metric::Time)),
-        1 / Metric::PolymerDensity,
+        1 / Metric::PolymerConcentration,
         1 / Metric::Salinity,
         1 / (1 / Metric::Time),
         1 / Metric::Moles,
@@ -192,7 +192,7 @@ namespace {
         Metric::Energy / Metric::Time,
         Metric::Pressure / Opm::unit::square(Metric::GeomVolume / Metric::Time),
         Metric::Pressure / Metric::Density / Opm::unit::square(Metric::GeomVolume / Metric::Time),
-        Metric::PolymerDensity,
+        Metric::PolymerConcentration,
         Metric::Salinity,
         1 / Metric::Time,
         Metric::Moles,
@@ -365,7 +365,7 @@ namespace {
         1 / (Field::Energy / Field::Time),
         1 / (Field::Pressure / Opm::unit::square(Field::GeomVolume / Field::Time)),
         1 / (Field::Pressure / Field::Density / Opm::unit::square(Field::GeomVolume / Field::Time)),
-        1 / Field::PolymerDensity,
+        1 / Field::PolymerConcentration,
         1 / Field::Salinity,
         1 / (Field::GasSurfaceVolume / Field::LiquidSurfaceVolume / Field::Time),
         1 / Field::Moles,
@@ -416,7 +416,7 @@ namespace {
          Field::Energy / Field::Time,
          Field::Pressure / Opm::unit::square(Field::GeomVolume / Field::Time),
          Field::Pressure / Field::Density / Opm::unit::square(Field::GeomVolume / Field::Time),
-         Field::PolymerDensity,
+         Field::PolymerConcentration,
          Field::Salinity,
          Field::GasSurfaceVolume / Field::LiquidSurfaceVolume / Field::Time,
          Field::Moles,
@@ -589,7 +589,7 @@ namespace {
         1 / ( Lab::Energy / Lab::Time ),
         1 / (Lab::Pressure / Opm::unit::square(Lab::GeomVolume / Lab::Time)),
         1 / (Lab::Pressure / Lab::Density / Opm::unit::square(Lab::GeomVolume / Lab::Time)),
-        1 / Lab::PolymerDensity,
+        1 / Lab::PolymerConcentration,
         1 / Lab::Salinity,
         1 / (Lab::GasDissolutionFactor / Lab::Time),
         1 / Lab::Moles,
@@ -640,7 +640,7 @@ namespace {
         Lab::Energy / Lab::Time,
         Lab::Pressure / Opm::unit::square(Lab::GeomVolume / Lab::Time),
         Lab::Pressure / Lab::Density / Opm::unit::square(Lab::GeomVolume / Lab::Time),
-        Lab::PolymerDensity,
+        Lab::PolymerConcentration,
         Lab::Salinity,
         Lab::GasDissolutionFactor / Lab::Time,
         Lab::Moles,
@@ -813,7 +813,7 @@ namespace {
         1 / ( PVT_M::Energy/ PVT_M::Time ),
         1 / (PVT_M::Pressure / Opm::unit::square(PVT_M::GeomVolume / PVT_M::Time)),
         1 / (PVT_M::Pressure / PVT_M::Density  / Opm::unit::square(PVT_M::GeomVolume / PVT_M::Time)),
-        1 / PVT_M::PolymerDensity,
+        1 / PVT_M::PolymerConcentration,
         1 / PVT_M::Salinity,
         1 / (PVT_M::GasSurfaceVolume / PVT_M::LiquidSurfaceVolume /PVT_M::Time),
         1 / PVT_M::Moles,
@@ -864,7 +864,7 @@ namespace {
         PVT_M::Energy / PVT_M::Time,
         PVT_M::Pressure / Opm::unit::square(PVT_M::GeomVolume / PVT_M::Time),
         PVT_M::Pressure / PVT_M::Density  / Opm::unit::square(PVT_M::GeomVolume / PVT_M::Time),
-        PVT_M::PolymerDensity,
+        PVT_M::PolymerConcentration,
         PVT_M::Salinity,
         PVT_M::GasSurfaceVolume / PVT_M::LiquidSurfaceVolume /PVT_M::Time,
         PVT_M::Moles,
@@ -1206,7 +1206,7 @@ namespace {
         this->addDimension("ReservoirVolume", 1.0);
         this->addDimension("GeometricVolume", 1.0 );
         this->addDimension("Density"   , 1.0);
-        this->addDimension("PolymerDensity", 1.0);
+        this->addDimension("PolymerConcentration", 1.0);
         this->addDimension("FoamDensity", 1.0);
         this->addDimension("FoamSurfactantConcentration", 1.0);
         this->addDimension("Salinity", 1.0);
@@ -1247,7 +1247,7 @@ namespace {
         this->addDimension("ReservoirVolume", PVT_M::ReservoirVolume );
         this->addDimension("GeometricVolume", PVT_M::GeomVolume );
         this->addDimension("Density"   , PVT_M::Density );
-        this->addDimension("PolymerDensity", PVT_M::PolymerDensity);
+        this->addDimension("PolymerConcentration", PVT_M::PolymerConcentration);
         this->addDimension("FoamDensity", PVT_M::FoamDensity);
         this->addDimension("FoamSurfactantConcentration", PVT_M::FoamSurfactantConcentration);
         this->addDimension("Salinity", PVT_M::Salinity);
@@ -1290,7 +1290,7 @@ namespace {
         this->addDimension("ReservoirVolume", Lab::ReservoirVolume );
         this->addDimension("GeometricVolume", Lab::GeomVolume );
         this->addDimension("Density", Lab::Density );
-        this->addDimension("PolymerDensity", Lab::PolymerDensity);
+        this->addDimension("PolymerConcentration", Lab::PolymerConcentration);
         this->addDimension("FoamDensity", Lab::FoamDensity);
         this->addDimension("FoamSurfactantConcentration", Lab::FoamSurfactantConcentration);
         this->addDimension("Salinity", Lab::Salinity);
@@ -1334,7 +1334,7 @@ namespace {
         this->addDimension("ReservoirVolume", Metric::ReservoirVolume );
         this->addDimension("GeometricVolume", Metric::GeomVolume );
         this->addDimension("Density"   , Metric::Density );
-        this->addDimension("PolymerDensity", Metric::PolymerDensity);
+        this->addDimension("PolymerConcentration", Metric::PolymerConcentration);
         this->addDimension("FoamDensity", Metric::FoamDensity);
         this->addDimension("FoamSurfactantConcentration", Metric::FoamSurfactantConcentration);
         this->addDimension("Salinity", Metric::Salinity);
@@ -1376,7 +1376,7 @@ namespace {
         this->addDimension("ReservoirVolume", Field::ReservoirVolume );
         this->addDimension("GeometricVolume", Field::GeomVolume );
         this->addDimension("Density", Field::Density );
-        this->addDimension("PolymerDensity", Field::PolymerDensity);
+        this->addDimension("PolymerConcentration", Field::PolymerConcentration);
         this->addDimension("FoamDensity", Field::FoamDensity);
         this->addDimension("FoamSurfactantConcentration", Field::FoamSurfactantConcentration);
         this->addDimension("Salinity", Field::Salinity);
