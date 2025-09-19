@@ -3,8 +3,10 @@
   "sections": [
     "SOLUTION"
   ],
+  "requires": ["WATER"],
+  "description": "Initial microbial concentration",
   "data": {
     "value_type": "DOUBLE",
-    "dimension": "Density"
+    "dimension": "Concentration"
   }
 }
