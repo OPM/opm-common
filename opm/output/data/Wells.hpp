@@ -1469,6 +1469,7 @@ namespace Opm { namespace data {
             buffer.write(this->d_factor);
             buffer.write(this->compact_mult);
             this->filtrate.write(buffer);
+            buffer.write(this->lgr_grid);
             this->fract.write(buffer);
     }
 
@@ -1649,6 +1650,7 @@ namespace Opm { namespace data {
             buffer.read(this->d_factor);
             buffer.read(this->compact_mult);
             this->filtrate.read(buffer);
+            buffer.read(this->lgr_grid);
             this->fract.read(buffer);
    }
 
