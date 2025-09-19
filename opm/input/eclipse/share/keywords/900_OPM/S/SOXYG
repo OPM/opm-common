@@ -3,8 +3,10 @@
   "sections": [
     "SOLUTION"
   ],
+  "requires": ["MICP", "WATER"],
+  "description": "Initial oxygen concentration",
   "data": {
     "value_type": "DOUBLE",
-    "dimension": "Density"
+    "dimension": "Concentration"
   }
 }
