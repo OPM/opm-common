@@ -554,7 +554,7 @@ namespace Opm {
         void addGroup(const RestartIO::RstGroup& rst_group, std::size_t timeStep);
         void addWell(const std::string& wellName, const DeckRecord& record,
                     std::size_t timeStep, ConnectionOrder connection_order);
-        void checkIfAllConnectionsIsShut(std::size_t currentStep);
+        void checkIfAllConnectionsIsShut(std::size_t reportStep);
         void end_report(std::size_t report_step);
         /// \param welsegs_wells All wells with a WELSEGS entry for checks.
         /// \param compegs_wells All wells with a COMPSEGS entry for checks.
