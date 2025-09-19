@@ -269,7 +269,7 @@ static const std::unordered_map<std::string, keyword_info<int>> int_keywords = {
 namespace SOLUTION {
 
 static const std::unordered_map<std::string, keyword_info<double>> double_keywords = {{"PRESSURE", keyword_info<double>{}.unit_string("Pressure")},
-                                                                                      {"SPOLY",    keyword_info<double>{}.unit_string("Density")},
+                                                                                      {"SPOLY",    keyword_info<double>{}.unit_string("Concentration")},
                                                                                       {"SPOLYMW",  keyword_info<double>{}},
                                                                                       {"SSOL",     keyword_info<double>{}},
                                                                                       {"SWAT",     keyword_info<double>{}},
@@ -280,7 +280,7 @@ static const std::unordered_map<std::string, keyword_info<double>> double_keywor
                                                                                       {"SBIOF",    keyword_info<double>{}},
                                                                                       {"SCALC",    keyword_info<double>{}},
                                                                                       {"SALTP",    keyword_info<double>{}},
-                                                                                      {"SALT",     keyword_info<double>{}.unit_string("Salinity")},
+                                                                                      {"SALT",     keyword_info<double>{}.unit_string("Concentration")},
                                                                                       {"TEMPI",    keyword_info<double>{}.unit_string("Temperature")},
                                                                                       {"RS",       keyword_info<double>{}.unit_string("GasDissolutionFactor")},
                                                                                       {"RSW",      keyword_info<double>{}.unit_string("GasDissolutionFactor")},

@@ -51,7 +51,7 @@
       "name": "SALINITY",
       "value_type": "DOUBLE",
       "default": 0,
-      "dimension": "Salinity",
+      "dimension": "Concentration",
       "comment": "Not supported"
     },
     {

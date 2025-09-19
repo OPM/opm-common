@@ -6,6 +6,6 @@
   ],
   "data": {
     "value_type": "DOUBLE",
-    "dimension": "Density"
+    "dimension": "Concentration"
   }
 }

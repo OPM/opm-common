@@ -12,7 +12,7 @@
     {
       "name": "CONCENTRATION",
       "value_type": "UDA",
-      "dimension": "Salinity"
+      "dimension": "Concentration"
     }
   ]
 }

@@ -65,7 +65,7 @@
     {
       "name": "SC_0",
       "value_type": "DOUBLE",
-      "dimension": "Salinity",
+      "dimension": "Concentration",
       "default": 0
     }
   ]

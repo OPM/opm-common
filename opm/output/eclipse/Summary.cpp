@@ -479,7 +479,7 @@ measure div_unit( measure numer, measure denom ) {
 
     if( numer == measure::mass_rate &&
         denom == measure::liquid_surface_rate )
-        return measure::polymer_density;
+        return measure::concentration;
 
     if( numer == measure::energy &&
         denom == measure::time )

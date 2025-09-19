@@ -9,7 +9,7 @@
       "name": "SALT_CONCENTRATION",
       "value_type": "DOUBLE",
       "size_type": "ALL",
-      "dimension": "Salinity"
+      "dimension": "Concentration"
     }
   ]
 }
