@@ -346,6 +346,9 @@ namespace ML
     }
 
     template class NNModel<float>;
+    template class NNModel<Opm::DenseAd::Evaluation<float, 3>>;
+    template class NNModel<Opm::DenseAd::Evaluation<float, 2>>;
+    template class NNModel<Opm::DenseAd::Evaluation<float, 1>>;
 
     template class NNModel<double>;
     template class NNModel<Opm::DenseAd::Evaluation<double, 6>>;
