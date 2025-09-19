@@ -260,6 +260,55 @@ namespace Opm { namespace data {
         void read(MessageBufferType& buffer);
     };
 
+    struct ConnectionFracture
+    {
+        double area{};
+        double flux{};
+        double height{};
+        double length{};
+
+        template <class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(area);
+            serializer(flux);
+            serializer(height);
+            serializer(length);
+        }
+
+        bool operator==(const ConnectionFracture& fraccon) const
+        {
+            return (this->area == fraccon.area)
+                && (this->flux == fraccon.flux)
+                && (this->height == fraccon.height)
+                && (this->length == fraccon.length)
+                ;
+        }
+
+        static ConnectionFracture serializationTestObject()
+        {
+            return {0.8, 100.0, 1.3, 1.4};
+        }
+
+        template <class MessageBufferType>
+        void write(MessageBufferType& buffer) const
+        {
+            buffer.write(this->area);
+            buffer.write(this->flux);
+            buffer.write(this->height);
+            buffer.write(this->length);
+        }
+
+        template <class MessageBufferType>
+        void read(MessageBufferType& buffer)
+        {
+            buffer.read(this->area);
+            buffer.read(this->flux);
+            buffer.read(this->height);
+            buffer.read(this->length);
+        }
+    };
+
     /// Connection Level Fracturing Statistics
     struct ConnectionFracturing
     {
@@ -434,8 +483,12 @@ namespace Opm { namespace data {
         double d_factor{};
         double compact_mult{1.0}; // Rock compaction transmissibility multiplier (ROCKTAB)
 
-        ConnectionFiltrate filtrate{};
         int lgr_grid{0}; // LGR grid index, 0 if not in LGR
+
+        ConnectionFiltrate filtrate{};
+
+        ConnectionFracture fracture{};
+
         /// Connection level fracturing statistics.
         ConnectionFracturing fract{};
 
@@ -452,8 +505,9 @@ namespace Opm { namespace data {
                 && (trans_factor == conn2.trans_factor)
                 && (d_factor == conn2.d_factor)
                 && (compact_mult == conn2.compact_mult)
-                && (filtrate == conn2.filtrate)
                 && (lgr_grid == conn2.lgr_grid)
+                && (filtrate == conn2.filtrate)
+                && (fracture == conn2.fracture)
                 && (this->fract == conn2.fract)
                 ;
         }
@@ -479,8 +533,9 @@ namespace Opm { namespace data {
             serializer(trans_factor);
             serializer(d_factor);
             serializer(compact_mult);
-            serializer(filtrate);
             serializer(lgr_grid);
+            serializer(filtrate);
+            serializer(fracture);
             serializer(this->fract);
         }
 
@@ -490,8 +545,9 @@ namespace Opm { namespace data {
                 1, Rates::serializationTestObject(),
                 2.0, 3.0, 4.0, 5.0,
                 6.0, 7.0, 8.0, 9.0, 0.987,
-                ConnectionFiltrate::serializationTestObject(),
                 3, // lgr_grid
+                ConnectionFiltrate::serializationTestObject(),
+                ConnectionFracture::serializationTestObject(),
                 ConnectionFracturing::serializationTestObject()
             };
         }
@@ -1468,8 +1524,9 @@ namespace Opm { namespace data {
             buffer.write(this->trans_factor);
             buffer.write(this->d_factor);
             buffer.write(this->compact_mult);
-            this->filtrate.write(buffer);
             buffer.write(this->lgr_grid);
+            this->filtrate.write(buffer);
+            this->fracture.write(buffer);
             this->fract.write(buffer);
     }
 
@@ -1649,8 +1706,9 @@ namespace Opm { namespace data {
             buffer.read(this->trans_factor);
             buffer.read(this->d_factor);
             buffer.read(this->compact_mult);
-            this->filtrate.read(buffer);
             buffer.read(this->lgr_grid);
+            this->filtrate.read(buffer);
+            this->fracture.read(buffer);
             this->fract.read(buffer);
    }
 
