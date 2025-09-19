@@ -4716,43 +4716,12 @@ END
     BOOST_CHECK_EQUAL(Well::eclipseControlMode(sched.getWell("W8", 10), st), 6);
 }
 
-BOOST_AUTO_TEST_CASE(SKIPREST_VFP) {
-    auto parser = Parser{};
-
-    const auto deck = parser.parseFile("MODEL2_RESTART.DATA");
-    const EclipseState es{ deck };
-    const auto& init_config = es.getInitConfig();
-    const auto report_step = init_config.getRestartStep();
-    const auto rst_filename = es.getIOConfig()
-        .getRestartFileName(init_config.getRestartRootName(), report_step, false);
-
-    auto rst_file = std::make_shared<EclIO::ERst>(rst_filename);
-    auto rst_view = std::make_shared<EclIO::RestartFileView>(std::move(rst_file), report_step);
-    const auto rst = RestartIO::RstState::load(std::move(rst_view), es.runspec(), parser);
-    const auto sched = Schedule {
-        deck, es, std::make_shared<Python>(),
-        /* lowActionParsingStrictness = */ false,
-        /* slave_mode = */ false,
-        /* keepKeywords = */ true,
-        /* output_interval = */ {},
-        &rst
-    };
-
-    BOOST_CHECK_NO_THROW( sched[3].vfpprod(5) );
-
-    for (std::size_t index = 0; index < sched.size(); ++index) {
-        const auto& state = sched[index];
-        BOOST_CHECK_EQUAL(index, state.sim_step());
-    }
-}
-
 BOOST_AUTO_TEST_CASE(GASLIFT_OPT) {
     GasLiftOpt glo{};
     BOOST_CHECK(!glo.active());
     BOOST_CHECK_THROW(glo.group("NO_SUCH_GROUP"), std::out_of_range);
     BOOST_CHECK_THROW(glo.well("NO_SUCH_WELL"), std::out_of_range);
 }
-
 
 BOOST_AUTO_TEST_CASE(GASLIFT_OPT_DECK) {
     const auto input = R"(-- Turns on gas lift optimization

@@ -74,7 +74,6 @@ struct RstWell
     int active_control;
     int vfp_table;
     int econ_workover_procedure;
-    int preferred_phase;
     bool allow_xflow;
     int group_controllable_flag;
     int econ_limit_end_run;
