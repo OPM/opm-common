@@ -236,11 +236,24 @@ namespace {
                      const ::Opm::Runspec&  rspec,
                      const ::Opm::Schedule& sched,
                      const std::size_t      report_step,
-                     const std::size_t      lookup_step)
+                     const std::size_t      lookup_step,
+                     const std::string&     lgr_tag)
     {
+
         const auto& wd = rspec.wellDimensions();
 
-        const auto numWells = static_cast<int>(sched.numWells(lookup_step));
+        const auto schedule_state = sched[lookup_step];
+        int numWells;
+        if (lgr_tag == "GLOBAL" or  lgr_tag.empty()) {
+            numWells = static_cast<int>(sched.numWells(lookup_step));
+        }
+        else {
+            const auto wnames = sched.wellNames(lookup_step);
+            numWells = std::count_if(wnames.begin(), wnames.end(),
+            [&lgr_tag, &sched = sched[lookup_step]](const auto& wname)
+            { return sched.wells(wname).get_lgr_well_tag().value_or("") == lgr_tag; });
+
+        }
 
         const auto maxPerf =
             std::max(wd.maxConnPerWell(),
@@ -566,7 +579,7 @@ createInteHead(const EclipseState& es,
                const int           lookup_step)
 {
     const auto nwgmax = (report_step == 0)
-        ? 0 : maxGroupSize(sched, lookup_step);
+        ? 0 : maxGroupSize(sched, lookup_step, grid.get_lgr_tag());
 
     const auto ngmax  = (report_step == 0)
         ? 0 : numGroupsInField(sched, lookup_step);
@@ -584,7 +597,7 @@ createInteHead(const EclipseState& es,
         .numActive          (static_cast<int>(grid.getNumActive()))
         .unitConventions    (es.getDeckUnitSystem())
         .wellTableDimensions(getWellTableDims(nwgmax, ngmax, rspec, sched,
-                                              report_step, lookup_step))
+                                              report_step, lookup_step, grid.get_lgr_tag()))
         .calendarDate       (getSimulationTimePoint(sched.posixStartTime(), simTime))
         .activePhases       (getActivePhases(rspec))
         .drsdt              (sched, lookup_step)
