@@ -214,17 +214,20 @@ namespace Opm { namespace data {
 
     struct ConnectionFiltrate
     {
-        double rate;
-        double total;
-        double skin_factor;
-        double thickness;
-        double perm;
-        double poro;
-        double radius;
-        double area_of_flow;
+        double rate{};
+        double total{};
+        double skin_factor{};
+        double thickness{};
+        double perm{};
+        double poro{};
+        double radius{};
+        double area_of_flow{};
+        double flow_factor{};
+        double fracture_rate{};
 
-        template<class Serializer>
-        void serializeOp(Serializer& serializer) {
+        template <class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
             serializer(rate);
             serializer(total);
             serializer(skin_factor);
@@ -233,24 +236,29 @@ namespace Opm { namespace data {
             serializer(poro);
             serializer(radius);
             serializer(area_of_flow);
+            serializer(flow_factor);
+            serializer(fracture_rate);
         }
 
         bool operator==(const ConnectionFiltrate& filtrate) const
         {
-            return this->rate == filtrate.rate &&
-                   this->total == filtrate.total &&
-                   this->skin_factor == filtrate.skin_factor &&
-                   this->thickness == filtrate.thickness &&
-                   this->perm == filtrate.perm &&
-                   this->poro == filtrate.poro &&
-                   this->radius == filtrate.radius &&
-                   this->area_of_flow == filtrate.area_of_flow;
+            return (this->rate == filtrate.rate)
+                && (this->total == filtrate.total)
+                && (this->skin_factor == filtrate.skin_factor)
+                && (this->thickness == filtrate.thickness)
+                && (this->perm == filtrate.perm)
+                && (this->poro == filtrate.poro)
+                && (this->radius == filtrate.radius)
+                && (this->area_of_flow == filtrate.area_of_flow)
+                && (this->flow_factor == filtrate.flow_factor)
+                && (this->fracture_rate == filtrate.fracture_rate)
+                ;
         }
 
         static ConnectionFiltrate serializationTestObject()
         {
-            return {0.8, 100., -1., 2., 1.e-9,
-                    0.3, 0.05, 0.8};
+            return {0.8, 100.0, -1.0, 2.0, 1.0e-9,
+                    0.3, 0.05, 0.8, 0.1, 0.7};
         }
 
         template <class MessageBufferType>
@@ -266,6 +274,11 @@ namespace Opm { namespace data {
         double flux{};
         double height{};
         double length{};
+        double WI{};
+        double volume{};
+        double filter_volume{};
+        double avg_width{};
+        double avg_filter_width{};
 
         template <class Serializer>
         void serializeOp(Serializer& serializer)
@@ -274,6 +287,11 @@ namespace Opm { namespace data {
             serializer(flux);
             serializer(height);
             serializer(length);
+            serializer(WI);
+            serializer(volume);
+            serializer(filter_volume);
+            serializer(avg_width);
+            serializer(avg_filter_width);
         }
 
         bool operator==(const ConnectionFracture& fraccon) const
@@ -282,12 +300,17 @@ namespace Opm { namespace data {
                 && (this->flux == fraccon.flux)
                 && (this->height == fraccon.height)
                 && (this->length == fraccon.length)
+                && (this->WI == fraccon.WI)
+                && (this->volume == fraccon.volume)
+                && (this->filter_volume == fraccon.filter_volume)
+                && (this->avg_width == fraccon.avg_width)
+                && (this->avg_filter_width == fraccon.avg_filter_width)
                 ;
         }
 
         static ConnectionFracture serializationTestObject()
         {
-            return {0.8, 100.0, 1.3, 1.4};
+            return {0.8, 100.0, 1.3, 1.4, 10.0, 4.0, 0.4, 0.5, 0.05};
         }
 
         template <class MessageBufferType>
@@ -297,6 +320,11 @@ namespace Opm { namespace data {
             buffer.write(this->flux);
             buffer.write(this->height);
             buffer.write(this->length);
+            buffer.write(this->WI);
+            buffer.write(this->volume);
+            buffer.write(this->filter_volume);
+            buffer.write(this->avg_width);
+            buffer.write(this->avg_filter_width);
         }
 
         template <class MessageBufferType>
@@ -306,6 +334,11 @@ namespace Opm { namespace data {
             buffer.read(this->flux);
             buffer.read(this->height);
             buffer.read(this->length);
+            buffer.read(this->WI);
+            buffer.read(this->volume);
+            buffer.read(this->filter_volume);
+            buffer.read(this->avg_width);
+            buffer.read(this->avg_filter_width);
         }
     };
 
@@ -1509,6 +1542,8 @@ namespace Opm { namespace data {
         buffer.write(this->poro);
         buffer.write(this->radius);
         buffer.write(this->area_of_flow);
+        buffer.write(this->flow_factor);
+        buffer.write(this->fracture_rate);
     }
 
     template <class MessageBufferType>
@@ -1691,6 +1726,8 @@ namespace Opm { namespace data {
         buffer.read(this->poro);
         buffer.read(this->radius);
         buffer.read(this->area_of_flow);
+        buffer.read(this->flow_factor);
+        buffer.read(this->fracture_rate);
     }
 
    template <class MessageBufferType>
