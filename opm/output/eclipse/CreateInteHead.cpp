@@ -112,6 +112,35 @@ namespace {
         return ngmax - 1;
     }
 
+    int numGroupsInField(const Opm::Schedule& sched,
+                         const std::size_t    lookup_step,
+                         const std::string&   lgr_tag)
+    {
+        if (lgr_tag == "GLOBAL" or  lgr_tag.empty()){
+            return numGroupsInField(sched, lookup_step);
+        }
+
+        const auto& sched_state = sched[lookup_step];
+        const auto& grps = sched_state.groups();
+
+        int ngmax = 0;
+        for (const auto& grp : grps) {
+            if (! sched_state.group_contains_lgr(grp, lgr_tag)) {
+                continue;
+            }
+            ngmax += 1;
+        }
+
+        if (ngmax < 1) {
+            throw std::invalid_argument {
+                "LGR Group run must include at least FIELD group"
+            };
+        }
+
+        // Number of non-FIELD groups.
+        return ngmax - 1;
+    }
+
     int GroupControl(const Opm::Schedule& sched,
                      const std::size_t    report_step,
                      const std::size_t    lookup_step)
@@ -582,7 +611,7 @@ createInteHead(const EclipseState& es,
         ? 0 : maxGroupSize(sched, lookup_step, grid.get_lgr_tag());
 
     const auto ngmax  = (report_step == 0)
-        ? 0 : numGroupsInField(sched, lookup_step);
+        ? 0 : numGroupsInField(sched, lookup_step, grid.get_lgr_tag());
 
     const auto& acts  = sched[lookup_step].actions.get();
     const auto& rspec = es.runspec();

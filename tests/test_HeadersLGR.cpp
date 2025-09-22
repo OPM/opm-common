@@ -475,6 +475,11 @@ BOOST_AUTO_TEST_CASE(LGRHEADERS)
                         BOOST_CHECK_EQUAL(intehead_lgr1[Ix::NWGMAX], 3);       // Number of wells
                         BOOST_CHECK_EQUAL(intehead_lgr2[Ix::NWGMAX], 3);       // Number of wells
 
+
+                        BOOST_CHECK_EQUAL(intehead_global[Ix::NGRP], 1);       // Number of wells
+                        BOOST_CHECK_EQUAL(intehead_lgr1[Ix::NGRP], 1);       // Number of wells
+                        BOOST_CHECK_EQUAL(intehead_lgr2[Ix::NGRP], 1);       // Number of wells
+
                         // BOOST_CHECK_EQUAL(intehead_global[Ix::NWELLS], 3);       // Number of wells
                         // BOOST_CHECK_EQUAL(intehead_global[Ix::NCWMAX], 3);       // Max completions per well
                         // BOOST_CHECK_EQUAL(intehead_global[Ix::NGRP], 1);         // Actual number of groups
