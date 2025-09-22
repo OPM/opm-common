@@ -282,14 +282,21 @@ public:
     }
 
     /*!
-     * \copydoc Component::liquidDensity
+     * \brief The density \f$\mathrm{[kg/m^3]}\f$ of the liquid component at a
+     *        given pressure in \f$\mathrm{[Pa]}\f$ and temperature in \f$\mathrm{[K]}\f$.
+     *
+     * \param temperature temperature of component in \f$\mathrm{[K]}\f$
+     * \param pressure pressure of component in \f$\mathrm{[Pa]}\f$
+     * \param rhow Density of liquid
      *
      * Equations given in:
      * - Batzle & Wang (1992)
      * - cited by: Adams & Bachu in Geofluids (2002) 2, 257-271
      */
     template <class Evaluation>
-    static Evaluation liquidDensity(const Evaluation& temperature, const Evaluation& pressure, const Evaluation& rhow)
+    static Evaluation liquidDensity(const Evaluation& temperature,
+                                    const Evaluation& pressure,
+                                    const Evaluation& rhow)
     {
         Evaluation tempC = temperature - 273.15;
         Evaluation pMPa = pressure/1.0E6;
