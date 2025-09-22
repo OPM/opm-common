@@ -11,17 +11,17 @@
     {
       "name": "MICROBIAL_CONCENTRATION",
       "value_type": "DOUBLE",
-      "dimension": "Density"
+      "dimension": "Concentration"
     },
     {
       "name": "OXYGEN_CONCENTRATION",
       "value_type": "DOUBLE",
-      "dimension": "Density"
+      "dimension": "Concentration"
     },
     {
       "name": "UREA_CONCENTRATION",
       "value_type": "DOUBLE",
-      "dimension": "Density"
+      "dimension": "Concentration"
     }
   ]
 }

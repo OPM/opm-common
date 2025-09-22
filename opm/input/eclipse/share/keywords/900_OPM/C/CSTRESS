@@ -3,7 +3,7 @@
   "sections": [
     "GRID"
   ],
-  "description": "The CSTRESS item is used to set the critcal stress  in mechanics models.",
+  "description": "The CSTRESS item is used to set the critcal stress in mechanics models.",
   "data": {
     "value_type": "DOUBLE",
     "dimension": "1"
