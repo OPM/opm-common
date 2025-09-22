@@ -59,7 +59,7 @@
       "item": 9,
       "name": "FOLLOW_ON_WELL",
       "value_type": "STRING",
-      "default": "'",
+      "default": "'"
    },
     {
       "item": 10,
