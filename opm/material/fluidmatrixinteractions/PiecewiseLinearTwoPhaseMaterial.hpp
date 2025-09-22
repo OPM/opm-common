@@ -99,7 +99,7 @@ public:
     template <class Container, class FluidState>
     OPM_HOST_DEVICE static void capillaryPressures(Container& values, const Params& params, const FluidState& fs)
     {
-        OPM_TIMEFUNCTION_LOCAL();
+        OPM_TIMEFUNCTION_LOCAL(Subsystem::SatProps);
         using Evaluation = typename std::remove_reference<decltype(values[0])>::type;
 
         values[Traits::wettingPhaseIdx] = 0.0; // reference phase
@@ -120,7 +120,7 @@ public:
     template <class Container, class FluidState>
     OPM_HOST_DEVICE static void relativePermeabilities(Container& values, const Params& params, const FluidState& fs)
     {
-        OPM_TIMEFUNCTION_LOCAL();
+        OPM_TIMEFUNCTION_LOCAL(Subsystem::SatProps);
         using Evaluation = typename std::remove_reference<decltype(values[0])>::type;
 
         values[Traits::wettingPhaseIdx] = krw<FluidState, Evaluation>(params, fs);
@@ -133,7 +133,7 @@ public:
     template <class FluidState, class Evaluation = typename FluidState::Scalar>
     OPM_HOST_DEVICE static Evaluation pcnw(const Params& params, const FluidState& fs)
     {
-        OPM_TIMEFUNCTION_LOCAL();
+        OPM_TIMEFUNCTION_LOCAL(Subsystem::SatProps);
         const auto& Sw =
             decay<Evaluation>(fs.saturation(Traits::wettingPhaseIdx));
 
@@ -146,7 +146,7 @@ public:
     template <class Evaluation>
     OPM_HOST_DEVICE static Evaluation twoPhaseSatPcnw(const Params& params, const Evaluation& Sw)
     {
-        OPM_TIMEFUNCTION_LOCAL();
+        OPM_TIMEFUNCTION_LOCAL(Subsystem::SatProps);
         return eval_(params.SwPcwnSamples(), params.pcwnSamples(), Sw);
     }
 
@@ -184,7 +184,7 @@ public:
     template <class FluidState, class Evaluation = typename FluidState::Scalar>
     OPM_HOST_DEVICE static Evaluation krw(const Params& params, const FluidState& fs)
     {
-        OPM_TIMEFUNCTION_LOCAL();
+        OPM_TIMEFUNCTION_LOCAL(Subsystem::SatProps);
         const auto& sw =
             decay<Evaluation>(fs.saturation(Traits::wettingPhaseIdx));
 
@@ -194,14 +194,14 @@ public:
     template <class Evaluation>
     OPM_HOST_DEVICE static Evaluation twoPhaseSatKrw(const Params& params, const Evaluation& Sw)
     {
-        OPM_TIMEFUNCTION_LOCAL();
+        OPM_TIMEFUNCTION_LOCAL(Subsystem::SatProps);
         return eval_(params.SwKrwSamples(), params.krwSamples(), Sw);
     }
 
     template <class Evaluation>
     OPM_HOST_DEVICE static Evaluation twoPhaseSatKrwInv(const Params& params, const Evaluation& krw)
     {
-        OPM_TIMEFUNCTION_LOCAL();
+        OPM_TIMEFUNCTION_LOCAL(Subsystem::SatProps);
         return eval_(params.krwSamples(), params.SwKrwSamples(), krw);
     }
 
@@ -212,7 +212,7 @@ public:
     template <class FluidState, class Evaluation = typename FluidState::Scalar>
     OPM_HOST_DEVICE static Evaluation krn(const Params& params, const FluidState& fs)
     {
-        OPM_TIMEFUNCTION_LOCAL();
+        OPM_TIMEFUNCTION_LOCAL(Subsystem::SatProps);
         const auto& sw =
             decay<Evaluation>(fs.saturation(Traits::wettingPhaseIdx));
 
@@ -222,7 +222,7 @@ public:
     template <class Evaluation>
     OPM_HOST_DEVICE static Evaluation twoPhaseSatKrn(const Params& params, const Evaluation& Sw)
     {
-        OPM_TIMEFUNCTION_LOCAL();
+        OPM_TIMEFUNCTION_LOCAL(Subsystem::SatProps);
         return eval_(params.SwKrnSamples(), params.krnSamples(), Sw);
     }
 
@@ -259,7 +259,7 @@ private:
                             const ValueVector& yValues,
                             const Evaluation& x)
     {
-        OPM_TIMEFUNCTION_LOCAL();
+        OPM_TIMEFUNCTION_LOCAL(Subsystem::SatProps);
         if (xValues.front() < xValues.back())
             return evalAscending_(xValues, yValues, x);
         return evalDescending_(xValues, yValues, x);
@@ -270,7 +270,7 @@ private:
                                      const ValueVector& yValues,
                                      const Evaluation& x)
     {
-        OPM_TIMEFUNCTION_LOCAL();
+        OPM_TIMEFUNCTION_LOCAL(Subsystem::SatProps);
         if (x <= xValues.front())
             return yValues.front();
         if (x >= xValues.back())
@@ -286,7 +286,7 @@ private:
                                       const ValueVector& yValues,
                                       const Evaluation& x)
     {
-        OPM_TIMEFUNCTION_LOCAL();
+        OPM_TIMEFUNCTION_LOCAL(Subsystem::SatProps);
         if (x >= xValues.front())
             return yValues.front();
         if (x <= xValues.back())
@@ -302,7 +302,7 @@ private:
                                  const ValueVector& yValues,
                                  const Evaluation& x)
     {
-        OPM_TIMEFUNCTION_LOCAL();
+        OPM_TIMEFUNCTION_LOCAL(Subsystem::SatProps);
         if (x <= xValues.front())
             return 0.0;
         if (x >= xValues.back())
@@ -321,7 +321,7 @@ private:
     template<class ScalarT>
     OPM_HOST_DEVICE static size_t findSegmentIndex_(const ValueVector& xValues, const ScalarT& x)
     {
-        OPM_TIMEFUNCTION_LOCAL();
+        OPM_TIMEFUNCTION_LOCAL(Subsystem::SatProps);
         assert(xValues.size() > 1); // we need at least two sampling points!
         size_t n = xValues.size() - 1;
         if (xValues.back() <= x)
@@ -344,7 +344,7 @@ private:
 
     OPM_HOST_DEVICE static size_t findSegmentIndexDescending_(const ValueVector& xValues, Scalar x)
     {
-        OPM_TIMEFUNCTION_LOCAL();
+        OPM_TIMEFUNCTION_LOCAL(Subsystem::SatProps);
         assert(xValues.size() > 1); // we need at least two sampling points!
         size_t n = xValues.size() - 1;
         if (x <= xValues.back())

@@ -251,7 +251,7 @@ public:
                                    const Evaluation& pressure,
                                    bool extrapolate = false)
     {
-        OPM_TIMEFUNCTION_LOCAL();
+        OPM_TIMEFUNCTION_LOCAL(Subsystem::PvtProps);
         constexpr Scalar a0 = 0.235156;
         constexpr Scalar a1 = -0.491266;
         constexpr Scalar a2 = 5.211155e-2;
@@ -318,7 +318,7 @@ public:
                                                       const Evaluation& temperature,
                                                       const Evaluation& pressure)
     {
-        OPM_TIMEFUNCTION_LOCAL();
+        OPM_TIMEFUNCTION_LOCAL(Subsystem::PvtProps);
         constexpr Scalar eps = 1e-6;
         // NB!! should be changed to using the derivative from the table (if piecwise linear double derivate is zero).
         // use central differences here because one-sided methods do

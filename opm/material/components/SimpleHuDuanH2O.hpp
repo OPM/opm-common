@@ -143,7 +143,7 @@ public:
     OPM_HOST_DEVICE static Evaluation vaporPressure(const Evaluation& T)
     {
 
-        OPM_TIMEFUNCTION_LOCAL();
+        OPM_TIMEFUNCTION_LOCAL(Subsystem::PvtProps);
         if (T > criticalTemperature())
             return criticalPressure();
         if (T < tripleTemperature())
@@ -403,7 +403,7 @@ private:
         // Hu, Duan, Zhu and Chou: PVTx properties of the CO2-H2O and CO2-H2O-NaCl
         // systems below 647 K: Assessment of experimental data and
         // thermodynamics models, Chemical Geology, 2007.
-        OPM_TIMEBLOCK_LOCAL(liquidDensity_);
+        OPM_TIMEBLOCK_LOCAL(liquidDensity_, Subsystem::PvtProps);
         if (T > 647 || pressure > 100e6) {
 #if !OPM_IS_INSIDE_DEVICE_FUNCTION
             const std::string msg =

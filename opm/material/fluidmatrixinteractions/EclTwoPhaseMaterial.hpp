@@ -146,7 +146,7 @@ public:
                                    const Params& params,
                                    const FluidState& fluidState)
     {
-        OPM_TIMEFUNCTION_LOCAL();
+        OPM_TIMEFUNCTION_LOCAL(Subsystem::SatProps);
         using Evaluation = typename std::remove_reference<decltype(values[0])>::type;
 
         switch (params.approach()) {
@@ -376,7 +376,7 @@ public:
                                        const Params& params,
                                        const FluidState& fluidState)
     {
-        OPM_TIMEFUNCTION_LOCAL();
+        OPM_TIMEFUNCTION_LOCAL(Subsystem::SatProps);
         using Evaluation = typename std::remove_reference<decltype(values[0])>::type;
 
         switch (params.approach()) {
@@ -451,7 +451,7 @@ public:
     template <class FluidState>
     static bool updateHysteresis(Params& params, const FluidState& fluidState)
     {
-        OPM_TIMEFUNCTION_LOCAL();
+        OPM_TIMEFUNCTION_LOCAL(Subsystem::SatProps);
         switch (params.approach()) {
         case EclTwoPhaseApproach::GasOil: {
             Scalar So = scalarValue(fluidState.saturation(oilPhaseIdx));

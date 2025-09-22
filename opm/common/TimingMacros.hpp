@@ -19,14 +19,41 @@
 #ifndef OPM_TIMINGMACROS_HPP
 #define OPM_TIMINGMACROS_HPP
 
+#include <cstdint>
+
 // This file defines macros
 // OPM_TIMEBLOCK - time block of main part of codes which do not effect performance
 // OPM_TIMEFUNCTION - time block of main part of codes which do not effect performance with name from function
 // OPM_TIMEBLOCK_LOCAL - detailed timing which may effect performance
 // OPM_TIMEFUNCTION_LOCAL - detailed timing which may effect performance with name from function
 
+namespace Opm::Subsystem
+{
+// If more granularity is needed, add more members to the enum below,
+// but keep in mind to possibly increase the number of bits used in
+// the representation, as well as updating AnySystem to be just 1-bits
+// for the new representation.
+enum Bitfield : std::uint8_t
+{
+    None = 0,
+    PvtProps = 1 << 0,
+    SatProps = 1 << 1,
+    Assembly = 1 << 2,
+    LinearSolver = 1 << 3,
+    Output = 1 << 4,
+    Wells = 1 << 5,
+    Other = 1 << 6,   // Consider expanding with more options instead.
+    AnySystem = 0xff  // Matches any system.
+};
+} // namespace Opm::SubSystem
+
 #ifndef DETAILED_PROFILING
-#define DETAILED_PROFILING 0 // set to 1 to enable invasive profiling
+#define DETAILED_PROFILING 0 // Turn detailed profiling off.
+// #define DETAILED_PROFILING 1 // Turn detailed profiling on.
+// The value of DETAILED_PROFILING_SUBSYSTEMS controls which subsystems are
+// active for detailed profiling. Some examples below.
+// #define DETAILED_PROFILING_SUBSYSTEMS (Opm::Subsystem::PvtProps | Opm::Subsystem::SatProps)
+// #define DETAILED_PROFILING_SUBSYSTEMS (Opm::Subsystem::Assembly)
 #endif
 
 #if USE_TRACY
@@ -35,8 +62,8 @@
 #define OPM_TIMEBLOCK(blockname) ZoneNamedN(blockname, #blockname, true)
 #define OPM_TIMEFUNCTION() ZoneNamedN(myname, __func__, true)
 #if DETAILED_PROFILING
-#define OPM_TIMEBLOCK_LOCAL(blockname) ZoneNamedN(blockname, #blockname, true)
-#define OPM_TIMEFUNCTION_LOCAL() ZoneNamedN(myname, __func__, true)
+#define OPM_TIMEBLOCK_LOCAL(blockname, subsys) ZoneNamedN(blockname, #blockname, DETAILED_PROFILING_SUBSYSTEMS & subsys)
+#define OPM_TIMEFUNCTION_LOCAL(subsys) ZoneNamedN(myname, __func__, DETAILED_PROFILING_SUBSYSTEMS & subsys)
 #endif
 #endif
 
@@ -47,7 +74,7 @@
 
 // detailed timing which may effect performance
 #ifndef OPM_TIMEBLOCK_LOCAL
-#define OPM_TIMEBLOCK_LOCAL(x)\
+#define OPM_TIMEBLOCK_LOCAL(x, subsys)\
     do { /* nothing */ } while (false)
 #endif
 
@@ -57,7 +84,7 @@
 #endif
 
 #ifndef OPM_TIMEFUNCTION_LOCAL
-#define OPM_TIMEFUNCTION_LOCAL()\
+#define OPM_TIMEFUNCTION_LOCAL(subsys)\
     do { /* nothing */ } while (false)
 #endif
 

@@ -147,7 +147,7 @@ public:
     template <class Evaluation, class ...Args>
     static Evaluation twoPhaseSatPcnw(const Params& params, const Evaluation& Sw)
     {
-        OPM_TIMEFUNCTION_LOCAL();
+        OPM_TIMEFUNCTION_LOCAL(Subsystem::SatProps);
         // if no pc hysteresis is enabled, use the drainage curve
         if (!params.config().enableHysteresis() || params.config().pcHysteresisModel() < 0)
             return EffectiveLaw::template twoPhaseSatPcnw<Evaluation, Args...>(params.drainageParams(), Sw);
@@ -267,7 +267,7 @@ public:
     static Evaluation twoPhaseSatKrw(const Params& params, const Evaluation& Sw)
     {
 
-        OPM_TIMEFUNCTION_LOCAL();
+        OPM_TIMEFUNCTION_LOCAL(Subsystem::SatProps);
         // if no relperm hysteresis is enabled, use the drainage curve
         if (!params.config().enableHysteresis() || params.config().krHysteresisModel() < 0)
             return EffectiveLaw::template twoPhaseSatKrw<Evaluation, Args...>(params.drainageParams(), Sw);
@@ -303,7 +303,7 @@ public:
     template <class Evaluation, class ...Args>
     static Evaluation twoPhaseSatKrn(const Params& params, const Evaluation& Sw)
     {
-        OPM_TIMEFUNCTION_LOCAL();
+        OPM_TIMEFUNCTION_LOCAL(Subsystem::SatProps);
         // If WAG hysteresis is enabled, the convential hysteresis model is ignored.
         // (Two-phase model, non-wetting: only gas in oil.)
         if (params.gasOilHysteresisWAG()) {

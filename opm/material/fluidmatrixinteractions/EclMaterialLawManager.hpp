@@ -275,7 +275,7 @@ public:
     template <class FluidState>
     bool updateHysteresis(const FluidState& fluidState, unsigned elemIdx)
     {
-        OPM_TIMEFUNCTION_LOCAL();
+        OPM_TIMEFUNCTION_LOCAL(Subsystem::SatProps);
         if (!enableHysteresis())
             return false;
         bool changed = MaterialLaw::updateHysteresis(materialLawParams(elemIdx), fluidState);
