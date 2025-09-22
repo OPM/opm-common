@@ -458,7 +458,7 @@ public:
     template <class FluidState>
     static Scalar clampSaturation(const FluidState& fluidState, const int phaseIndex)
     {
-        OPM_TIMEFUNCTION_LOCAL();
+        OPM_TIMEFUNCTION_LOCAL(Subsystem::SatProps);
         const auto sat = scalarValue(fluidState.saturation(phaseIndex));
         return std::clamp(sat, Scalar{0.0}, Scalar{1.0});
     }

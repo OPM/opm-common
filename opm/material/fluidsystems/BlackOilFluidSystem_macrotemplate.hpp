@@ -788,7 +788,7 @@ public:
                                                 unsigned phaseIdx,
                                                 unsigned regionIdx) NOTHING_OR_CONST
     {
-        OPM_TIMEBLOCK_LOCAL(inverseFormationVolumeFactor);
+        OPM_TIMEBLOCK_LOCAL(inverseFormationVolumeFactor, Subsystem::PvtProps);
         assert(phaseIdx <= numPhases);
         assert(regionIdx <= numRegions());
 
@@ -906,7 +906,7 @@ public:
                                                          unsigned phaseIdx,
                                                          unsigned regionIdx) NOTHING_OR_CONST
     {
-        OPM_TIMEBLOCK_LOCAL(saturatedInverseFormationVolumeFactor);
+        OPM_TIMEBLOCK_LOCAL(saturatedInverseFormationVolumeFactor, Subsystem::PvtProps);
         assert(phaseIdx <= numPhases);
         assert(regionIdx <= numRegions());
 
@@ -1050,7 +1050,7 @@ public:
                              unsigned phaseIdx,
                              unsigned regionIdx) NOTHING_OR_CONST
     {
-        OPM_TIMEBLOCK_LOCAL(viscosity);
+        OPM_TIMEBLOCK_LOCAL(viscosity, Subsystem::PvtProps);
         assert(phaseIdx <= numPhases);
         assert(regionIdx <= numRegions());
 
@@ -1363,7 +1363,7 @@ public:
                                               unsigned regionIdx,
                                               const LhsEval& maxOilSaturation) NOTHING_OR_CONST
     {
-        OPM_TIMEBLOCK_LOCAL(saturatedDissolutionFactor);
+        OPM_TIMEBLOCK_LOCAL(saturatedDissolutionFactor, Subsystem::PvtProps);
         assert(phaseIdx <= numPhases);
         assert(regionIdx <= numRegions());
 
@@ -1393,7 +1393,7 @@ public:
                                               unsigned phaseIdx,
                                               unsigned regionIdx) NOTHING_OR_CONST
     {
-        OPM_TIMEBLOCK_LOCAL(saturatedDissolutionFactor);
+        OPM_TIMEBLOCK_LOCAL(saturatedDissolutionFactor, Subsystem::PvtProps);
         assert(phaseIdx <= numPhases);
         assert(regionIdx <= numRegions());
 

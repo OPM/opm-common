@@ -211,7 +211,7 @@ public:
                                    const Params& params,
                                    const FluidState& fluidState)
     {
-        OPM_TIMEFUNCTION_LOCAL();
+        OPM_TIMEFUNCTION_LOCAL(Subsystem::SatProps);
         if constexpr (FrontIsEclMultiplexerDispatchV<Args...>) {
             capillaryPressuresT<ContainerT, FluidState, Args...>(values, params, fluidState);
             return;
@@ -246,7 +246,7 @@ public:
                                          Scalar& swMin,
                                          const Params& params)
     {
-        OPM_TIMEFUNCTION_LOCAL();
+        OPM_TIMEFUNCTION_LOCAL(Subsystem::SatProps);
         OPM_ECL_MULTIPLEXER_MATERIAL_CALL(ActualLaw::oilWaterHysteresisParams(soMax, swMax, swMin, realParams),
                                           doNothing());
     }
@@ -263,7 +263,7 @@ public:
                                             const Scalar& swMin,
                                             Params& params)
     {
-        OPM_TIMEFUNCTION_LOCAL();
+        OPM_TIMEFUNCTION_LOCAL(Subsystem::SatProps);
         OPM_ECL_MULTIPLEXER_MATERIAL_CALL(ActualLaw::setOilWaterHysteresisParams(soMax, swMax, swMin, realParams),
                                           doNothing());
     }
@@ -280,14 +280,14 @@ public:
                                        Scalar& somin,
                                        const Params& params)
     {
-        OPM_TIMEFUNCTION_LOCAL();
+        OPM_TIMEFUNCTION_LOCAL(Subsystem::SatProps);
         OPM_ECL_MULTIPLEXER_MATERIAL_CALL(ActualLaw::gasOilHysteresisParams(sgmax, shmax, somin, realParams),
                                           doNothing());
     }
 
     static Scalar trappedGasSaturation(const Params& params, bool maximumTrapping)
     {
-        OPM_TIMEFUNCTION_LOCAL();
+        OPM_TIMEFUNCTION_LOCAL(Subsystem::SatProps);
         OPM_ECL_MULTIPLEXER_MATERIAL_CALL(return ActualLaw::trappedGasSaturation(realParams, maximumTrapping),
                                           return 0.0);
         return 0.0;
@@ -295,7 +295,7 @@ public:
 
     static Scalar strandedGasSaturation(const Params& params, Scalar Sg, Scalar Kg)
     {
-        OPM_TIMEFUNCTION_LOCAL();
+        OPM_TIMEFUNCTION_LOCAL(Subsystem::SatProps);
         OPM_ECL_MULTIPLEXER_MATERIAL_CALL(return ActualLaw::strandedGasSaturation(realParams, Sg, Kg),
                                           return 0.0);
         return 0.0;
@@ -303,7 +303,7 @@ public:
 
     static Scalar trappedOilSaturation(const Params& params, bool maximumTrapping) 
     {
-        OPM_TIMEFUNCTION_LOCAL();
+        OPM_TIMEFUNCTION_LOCAL(Subsystem::SatProps);
         OPM_ECL_MULTIPLEXER_MATERIAL_CALL(return ActualLaw::trappedOilSaturation(realParams, maximumTrapping),
                                           return 0.0);
         return 0.0;
@@ -311,7 +311,7 @@ public:
 
     static Scalar trappedWaterSaturation(const Params& params)
     {
-        OPM_TIMEFUNCTION_LOCAL();
+        OPM_TIMEFUNCTION_LOCAL(Subsystem::SatProps);
         OPM_ECL_MULTIPLEXER_MATERIAL_CALL(return ActualLaw::trappedWaterSaturation(realParams),
                                           return 0.0);
         return 0.0;
@@ -328,7 +328,7 @@ public:
                                           const Scalar& somin,
                                           Params& params)
     {
-        OPM_TIMEFUNCTION_LOCAL();
+        OPM_TIMEFUNCTION_LOCAL(Subsystem::SatProps);
         OPM_ECL_MULTIPLEXER_MATERIAL_CALL(ActualLaw::setGasOilHysteresisParams(sgmax, shmax, somin, realParams),
                                           doNothing());
     }
@@ -426,7 +426,7 @@ public:
                                        const Params& params,
                                        const FluidState& fluidState)
     {
-        OPM_TIMEFUNCTION_LOCAL();
+        OPM_TIMEFUNCTION_LOCAL(Subsystem::SatProps);
         if constexpr (FrontIsEclMultiplexerDispatchV<Args...>) {
             relativePermeabilitiesT<ContainerT, FluidState, Args...>(values, params, fluidState);
             return;
@@ -458,7 +458,7 @@ public:
     static Evaluation relpermOilInOilGasSystem(const Params& params,
                                                const FluidState& fluidState)
     {
-        OPM_TIMEFUNCTION_LOCAL();
+        OPM_TIMEFUNCTION_LOCAL(Subsystem::SatProps);
         switch (params.approach()) {
         case EclMultiplexerApproach::Stone1:
             return Stone1Material::template relpermOilInOilGasSystem<Evaluation>
@@ -489,7 +489,7 @@ public:
     static Evaluation relpermOilInOilWaterSystem(const Params& params,
                                                  const FluidState& fluidState)
     {
-        OPM_TIMEFUNCTION_LOCAL();
+        OPM_TIMEFUNCTION_LOCAL(Subsystem::SatProps);
         switch (params.approach()) {
         case EclMultiplexerApproach::Stone1:
             return Stone1Material::template relpermOilInOilWaterSystem<Evaluation>
@@ -554,7 +554,7 @@ public:
     template <class FluidState>
     static bool updateHysteresis(Params& params, const FluidState& fluidState)
     {
-        OPM_TIMEFUNCTION_LOCAL();
+        OPM_TIMEFUNCTION_LOCAL(Subsystem::SatProps);
         OPM_ECL_MULTIPLEXER_MATERIAL_CALL(return ActualLaw::updateHysteresis(realParams, fluidState),
                                           return false);
         return false;

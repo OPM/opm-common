@@ -181,7 +181,7 @@ public:
                         const Evaluation& rv,
                         const Evaluation& rvw) const
     {
-        OPM_TIMEBLOCK_LOCAL(internalEnergy);
+        OPM_TIMEBLOCK_LOCAL(internalEnergy, Subsystem::PvtProps);
         if (gastype_ == Co2StoreConfig::GasMixingType::NONE) {
             // use the gasInternalEnergy of CO2
             return CO2::gasInternalEnergy(co2Tables, temperature, pressure, extrapolate);
@@ -219,7 +219,7 @@ public:
                                   const Evaluation& temperature,
                                   const Evaluation& pressure) const
     {
-        OPM_TIMEBLOCK_LOCAL(saturatedViscosity);
+        OPM_TIMEBLOCK_LOCAL(saturatedViscosity, Subsystem::PvtProps);
         // Neglects impact of vaporized water on the visosity
         return CO2::gasViscosity(co2Tables, temperature, pressure, extrapolate);
     }
@@ -234,7 +234,7 @@ public:
                                             const Evaluation& rv,
                                             const Evaluation& rvw) const
     {
-        OPM_TIMEFUNCTION_LOCAL();
+        OPM_TIMEFUNCTION_LOCAL(Subsystem::PvtProps);
         if (!enableVaporization_) {
             return CO2::gasDensity(co2Tables, temperature, pressure, extrapolate) /
                    gasReferenceDensity_[regionIdx];
@@ -275,7 +275,7 @@ public:
                                                      const Evaluation& temperature,
                                                      const Evaluation& pressure) const
     {
-        OPM_TIMEFUNCTION_LOCAL();
+        OPM_TIMEFUNCTION_LOCAL(Subsystem::PvtProps);
         const Evaluation rvw = rvwSat_(regionIdx, temperature, pressure,
                                        Evaluation(salinity_[regionIdx]));
         return inverseFormationVolumeFactor(regionIdx, temperature,
@@ -313,7 +313,7 @@ public:
                                               const Evaluation& pressure,
                                               const Evaluation& saltConcentration) const
     {
-        OPM_TIMEFUNCTION_LOCAL();
+        OPM_TIMEFUNCTION_LOCAL(Subsystem::PvtProps);
         const Evaluation salinity = salinityFromConcentration(temperature, pressure,
                                                               saltConcentration);
         return rvwSat_(regionIdx, temperature, pressure, salinity);
@@ -403,7 +403,7 @@ private:
                     const LhsEval& pressure,
                     const LhsEval& salinity) const
     {
-        OPM_TIMEFUNCTION_LOCAL();
+        OPM_TIMEFUNCTION_LOCAL(Subsystem::PvtProps);
         if (!enableVaporization_) {
             return 0.0;
         }
@@ -435,7 +435,7 @@ private:
     template <class LhsEval>
     OPM_HOST_DEVICE LhsEval convertXgWToRvw(const LhsEval& XgW, unsigned regionIdx) const
     {
-        OPM_TIMEFUNCTION_LOCAL();
+        OPM_TIMEFUNCTION_LOCAL(Subsystem::PvtProps);
         Scalar rho_wRef = brineReferenceDensity_[regionIdx];
         Scalar rho_gRef = gasReferenceDensity_[regionIdx];
 
@@ -449,7 +449,7 @@ private:
     template <class LhsEval>
     OPM_HOST_DEVICE LhsEval convertRvwToXgW_(const LhsEval& Rvw, unsigned regionIdx) const
     {
-        OPM_TIMEFUNCTION_LOCAL();
+        OPM_TIMEFUNCTION_LOCAL(Subsystem::PvtProps);
         Scalar rho_wRef = brineReferenceDensity_[regionIdx];
         Scalar rho_gRef = gasReferenceDensity_[regionIdx];
 
@@ -462,7 +462,7 @@ private:
     template <class LhsEval>
     OPM_HOST_DEVICE LhsEval convertxgWToXgW(const LhsEval& xgW, const LhsEval& salinity) const
     {
-        OPM_TIMEFUNCTION_LOCAL();
+        OPM_TIMEFUNCTION_LOCAL(Subsystem::PvtProps);
         Scalar M_CO2 = CO2::molarMass();
         LhsEval M_Brine = Brine::molarMass(salinity);
 

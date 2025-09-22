@@ -118,7 +118,7 @@ public:
                            const int& activityModel,
                            bool extrapolate = false)
     {
-        OPM_TIMEFUNCTION_LOCAL();
+        OPM_TIMEFUNCTION_LOCAL(Subsystem::PvtProps);
 
         // Iterate or not?
         bool iterate = false;
@@ -207,7 +207,7 @@ public:
                                              bool extrapolate = false,
                                              bool spycherPruess2005 = false)
     {
-        OPM_TIMEFUNCTION_LOCAL();
+        OPM_TIMEFUNCTION_LOCAL(Subsystem::PvtProps);
         Valgrind::CheckDefined(temperature);
         Valgrind::CheckDefined(pg);
 
@@ -269,7 +269,7 @@ public:
                                              bool extrapolate = false,
                                              bool spycherPruess2005 = false)
     {
-        OPM_TIMEFUNCTION_LOCAL();
+        OPM_TIMEFUNCTION_LOCAL(Subsystem::PvtProps);
         Valgrind::CheckDefined(temperature);
         Valgrind::CheckDefined(pg);
 
@@ -526,7 +526,7 @@ private:
      */
     template <class Evaluation>
     OPM_HOST_DEVICE static Evaluation salinityToMolFrac_(const Evaluation& salinity) {
-        OPM_TIMEFUNCTION_LOCAL();
+        OPM_TIMEFUNCTION_LOCAL(Subsystem::PvtProps);
         const Scalar Mw = H2O::molarMass(); /* molecular weight of water [kg/mol] */
         const Scalar Ms = 58.44e-3; /* molecular weight of NaCl  [kg/mol] */
 
@@ -580,7 +580,7 @@ private:
                                                                      const int& activityModel,
                                                                      bool extrapolate = false)
     {
-        OPM_TIMEFUNCTION_LOCAL();
+        OPM_TIMEFUNCTION_LOCAL(Subsystem::PvtProps);
 	    // Start point for fixed-point iterations as recommended below in section 2.2
         Evaluation yH2O = H2O::vaporPressure(temperature) / pg;  // ideal mixing
         Evaluation xCO2 = 0.009;  // same as ~0.5 mol/kg
@@ -743,7 +743,7 @@ private:
                                 bool extrapolate = false,
                                 bool spycherPruess2005 = false)
     {
-        OPM_TIMEFUNCTION_LOCAL();
+        OPM_TIMEFUNCTION_LOCAL(Subsystem::PvtProps);
 	    // Intermediate calculations
         const Evaluation& deltaP = pg / 1e5 - Pref_(temperature, highTemp); // pressure range [bar] from pref to pg[bar]
         Evaluation v_av_H2O = V_avg_H2O_(temperature, highTemp); // average partial molar volume of H2O [cm^3/mol]
@@ -785,7 +785,7 @@ private:
                                 bool extrapolate = false,
                                 bool spycherPruess2005 = false)
     {
-        OPM_TIMEFUNCTION_LOCAL();
+        OPM_TIMEFUNCTION_LOCAL(Subsystem::PvtProps);
 	    // Intermediate calculations
         const Evaluation& deltaP = pg / 1e5 - Pref_(temperature, highTemp); // pressure range [bar] from pref to pg[bar]
         Evaluation v_av_CO2 = V_avg_CO2_(temperature, highTemp); // average partial molar volume of CO2 [cm^3/mol]
@@ -819,7 +819,7 @@ private:
                                                const Evaluation& xCO2,
                                                const int& activityModel)
     {
-        OPM_TIMEFUNCTION_LOCAL();   
+        OPM_TIMEFUNCTION_LOCAL(Subsystem::PvtProps);
 	    // Lambda and xi parameter for either Rumpf et al (1994) (activityModel = 1) or Duan-Sun as modified by Spycher
         // & Pruess (2009) (activityModel = 2) or Duan & Sun (2003) as given in Spycher & Pruess (2005) (activityModel =
         // 3)
@@ -939,7 +939,7 @@ private:
                                               const bool& highTemp,
                                               bool spycherPruess2005 = false)
     {
-        OPM_TIMEFUNCTION_LOCAL();
+        OPM_TIMEFUNCTION_LOCAL(Subsystem::PvtProps);
         Evaluation temperatureCelcius = temperature - 273.15;
         std::array<Scalar, 4> c;
         if (highTemp) {

@@ -211,7 +211,7 @@ public:
                               const Evaluation& Rs,
                               const Evaluation& saltConcentration) const
     {
-        OPM_TIMEFUNCTION_LOCAL();
+        OPM_TIMEFUNCTION_LOCAL(Subsystem::PvtProps);
         const Evaluation salinity = salinityFromConcentration(regionIdx, temperature, pressure, saltConcentration);
         const Evaluation xlCO2 = convertRsToXoG_(Rs,regionIdx);
         return (liquidEnthalpyBrineCO2_(temperature,
@@ -229,7 +229,7 @@ public:
                         const Evaluation& pressure,
                         const Evaluation& Rs) const
     {
-        OPM_TIMEFUNCTION_LOCAL();
+        OPM_TIMEFUNCTION_LOCAL(Subsystem::PvtProps);
         const Evaluation xlCO2 = convertRsToXoG_(Rs,regionIdx);
         return (liquidEnthalpyBrineCO2_(temperature,
                                        pressure,
@@ -260,7 +260,7 @@ public:
                                  const Evaluation& pressure,
                                  const Evaluation& saltConcentration) const
     {
-        OPM_TIMEFUNCTION_LOCAL();
+        OPM_TIMEFUNCTION_LOCAL(Subsystem::PvtProps);
         const Evaluation salinity = salinityFromConcentration(regionIdx, temperature, pressure, saltConcentration);
         if (enableEzrokhiViscosity_) {
             const Evaluation& mu_pure = H2O::liquidViscosity(temperature, pressure, extrapolate);
@@ -282,7 +282,7 @@ public:
                          const Evaluation& /*Rsw*/,
                          const Evaluation& saltConcentration) const
     {
-        OPM_TIMEFUNCTION_LOCAL();
+        OPM_TIMEFUNCTION_LOCAL(Subsystem::PvtProps);
         //TODO: The viscosity does not yet depend on the composition
         return saturatedViscosity(regionIdx, temperature, pressure, saltConcentration);
     }
@@ -295,7 +295,7 @@ public:
                                   const Evaluation& temperature,
                                   const Evaluation& pressure) const
     {
-        OPM_TIMEFUNCTION_LOCAL();
+        OPM_TIMEFUNCTION_LOCAL(Subsystem::PvtProps);
         if (enableEzrokhiViscosity_) {
             const Evaluation& mu_pure = H2O::liquidViscosity(temperature, pressure, extrapolate);
             const Evaluation& nacl_exponent = ezrokhiExponent_(temperature, ezrokhiViscNaClCoeff_);
@@ -317,7 +317,7 @@ public:
                                                      const Evaluation& pressure,
                                                      const Evaluation& saltconcentration) const
     {
-        OPM_TIMEFUNCTION_LOCAL();
+        OPM_TIMEFUNCTION_LOCAL(Subsystem::PvtProps);
         const Evaluation salinity = salinityFromConcentration(regionIdx, temperature,
                                                               pressure, saltconcentration);
         Evaluation rs_sat = rsSat(regionIdx, temperature, pressure, salinity);
@@ -335,7 +335,7 @@ public:
                                             const Evaluation& Rs,
                                             const Evaluation& saltConcentration) const
     {
-        OPM_TIMEFUNCTION_LOCAL();
+        OPM_TIMEFUNCTION_LOCAL(Subsystem::PvtProps);
         const Evaluation salinity = salinityFromConcentration(regionIdx, temperature,
                                                               pressure, saltConcentration);
         return (1.0 - convertRsToXoG_(Rs,regionIdx)) * density(regionIdx, temperature,
@@ -385,7 +385,7 @@ public:
                                                      const Evaluation& temperature,
                                                      const Evaluation& pressure) const
     {
-        OPM_TIMEFUNCTION_LOCAL();
+        OPM_TIMEFUNCTION_LOCAL(Subsystem::PvtProps);
         Evaluation rs_sat = rsSat(regionIdx, temperature, pressure, Evaluation(salinity_[regionIdx]));
         return (1.0 - convertRsToXoG_(rs_sat,regionIdx)) * density(regionIdx, temperature, pressure,
                                                                     rs_sat, Evaluation(salinity_[regionIdx]))
@@ -508,7 +508,7 @@ public:
                                     const Evaluation& pressure,
                                     unsigned /*compIdx*/) const
     {
-        OPM_TIMEFUNCTION_LOCAL();
+        OPM_TIMEFUNCTION_LOCAL(Subsystem::PvtProps);
         // Diffusion coefficient of CO2 in pure water according to
         // (McLachlan and Danckwerts, 1972)
         const Evaluation log_D_H20 = -4.1764 + 712.52 / temperature
@@ -541,7 +541,7 @@ public:
                        const Evaluation& Rs,
                        const Evaluation& salinity) const
     {
-        OPM_TIMEFUNCTION_LOCAL();
+        OPM_TIMEFUNCTION_LOCAL(Subsystem::PvtProps);
         Evaluation xlCO2 = convertXoGToxoG_(convertRsToXoG_(Rs,regionIdx), salinity);
         Evaluation result = liquidDensity_(temperature,
                                         pressure,
@@ -558,7 +558,7 @@ public:
                      const Evaluation& pressure,
                      const Evaluation& salinity) const
     {
-        OPM_TIMEFUNCTION_LOCAL();
+        OPM_TIMEFUNCTION_LOCAL(Subsystem::PvtProps);
         if (!enableDissolution_) {
             return 0.0;
         }
@@ -598,7 +598,7 @@ private:
                            const LhsEval& xlCO2,
                            const LhsEval& salinity) const
     {
-        OPM_TIMEFUNCTION_LOCAL();
+        OPM_TIMEFUNCTION_LOCAL(Subsystem::PvtProps);
         Valgrind::CheckDefined(T);
         Valgrind::CheckDefined(pl);
         Valgrind::CheckDefined(xlCO2);
@@ -646,7 +646,7 @@ private:
                                                    const LhsEval& xlCO2,
                                                    const LhsEval& rho_pure) const
     {
-        OPM_TIMEFUNCTION_LOCAL();
+        OPM_TIMEFUNCTION_LOCAL(Subsystem::PvtProps);
         Scalar M_CO2 = CO2::molarMass();
         Scalar M_H2O = H2O::molarMass();
 
@@ -671,7 +671,7 @@ private:
     template <class LhsEval>
     OPM_HOST_DEVICE LhsEval convertRsToXoG_(const LhsEval& Rs, unsigned regionIdx) const
     {
-        OPM_TIMEFUNCTION_LOCAL();
+        OPM_TIMEFUNCTION_LOCAL(Subsystem::PvtProps);
         Scalar rho_oRef = brineReferenceDensity_[regionIdx];
         Scalar rho_gRef = co2ReferenceDensity_[regionIdx];
 
@@ -685,7 +685,7 @@ private:
     template <class LhsEval>
     OPM_HOST_DEVICE LhsEval convertXoGToxoG_(const LhsEval& XoG, const LhsEval& salinity) const
     {
-        OPM_TIMEFUNCTION_LOCAL();
+        OPM_TIMEFUNCTION_LOCAL(Subsystem::PvtProps);
         Scalar M_CO2 = CO2::molarMass();
         LhsEval M_Brine = Brine::molarMass(salinity);
         return XoG*M_Brine / (M_CO2*(1 - XoG) + XoG*M_Brine);
@@ -697,7 +697,7 @@ private:
     template <class LhsEval>
     OPM_HOST_DEVICE LhsEval convertxoGToXoG(const LhsEval& xoG, const LhsEval& salinity) const
     {
-        OPM_TIMEBLOCK_LOCAL(convertxoGToXoG);
+        OPM_TIMEBLOCK_LOCAL(convertxoGToXoG, Subsystem::PvtProps);
         Scalar M_CO2 = CO2::molarMass();
         LhsEval M_Brine = Brine::molarMass(salinity);
 
