@@ -60,7 +60,6 @@
       "name": "FOLLOW_ON_WELL",
       "value_type": "STRING",
       "default": "'",
-      "comment": "Not supported"
    },
     {
       "item": 10,
