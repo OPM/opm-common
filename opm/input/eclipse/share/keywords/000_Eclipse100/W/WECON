@@ -59,8 +59,7 @@
       "item": 9,
       "name": "FOLLOW_ON_WELL",
       "value_type": "STRING",
-      "default": "'",
-      "comment": "Not supported"
+      "default": "'"
    },
     {
       "item": 10,
