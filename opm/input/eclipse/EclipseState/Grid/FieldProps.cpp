@@ -33,7 +33,6 @@
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/RtempvdTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
-#include <opm/input/eclipse/EclipseState/Util/OrderedMap.hpp>
 
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 
@@ -992,7 +991,7 @@ void FieldProps::reset_actnum(const std::vector<int>& new_actnum)
     Fieldprops::compress(this->cell_volume, active_map);
     Fieldprops::compress(this->cell_depth, active_map);
 
-    this->m_actnum = std::move(new_actnum);
+    this->m_actnum = new_actnum;
     this->active_size = new_active_size;
 }
 
