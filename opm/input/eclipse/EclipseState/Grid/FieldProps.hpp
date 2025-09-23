@@ -27,7 +27,6 @@
 #include <opm/input/eclipse/EclipseState/Grid/SatfuncPropertyInitializers.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/TranCalculator.hpp>
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
-#include <opm/input/eclipse/EclipseState/Util/OrderedMap.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
 
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
@@ -685,16 +684,6 @@ public:
 
     std::size_t active_size;
     std::size_t global_size;
-
-    std::size_t num_int() const
-    {
-        return this->int_data.size();
-    }
-
-    std::size_t num_double() const
-    {
-        return this->double_data.size();
-    }
 
     void handle_schedule_keywords(const std::vector<DeckKeyword>& keywords);
     bool tran_active(const std::string& keyword) const;
