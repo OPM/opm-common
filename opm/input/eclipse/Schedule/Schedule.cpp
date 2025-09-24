@@ -994,9 +994,14 @@ Defaulted grid coordinates is not allowed for COMPDAT as part of ACTIONX)"
               for an actual status change before we emit a WELL_STATUS_CHANGE
               event.
             */
+            auto& wellgroup_events = snapshot.wellgroup_events();
             if (old_status != status) {
                 snapshot.events().addEvent( ScheduleEvents::WELL_STATUS_CHANGE);
-                snapshot.wellgroup_events().addEvent( well2.name(), ScheduleEvents::WELL_STATUS_CHANGE);
+                wellgroup_events.addEvent( well2.name(), ScheduleEvents::WELL_STATUS_CHANGE);
+            }
+            const bool has_open_request = wellgroup_events.hasEvent( well2.name(), ScheduleEvents::REQUEST_OPEN_WELL);
+            if (status == Well::Status::SHUT && has_open_request) {
+                wellgroup_events.clearEvent( well2.name(), ScheduleEvents::REQUEST_OPEN_WELL);
             }
             snapshot.wells.update( std::move(well2) );
             update = true;
