@@ -1627,7 +1627,8 @@ void FieldProps::handle_OPERATE(const DeckKeyword& keyword, Box box)
 
 void FieldProps::handle_operation(const Section      section,
                                   const DeckKeyword& keyword,
-                                  Box                box)
+                                  Box                box,
+                                  const bool         onlyACTNUM)
 {
     // Keyword handler for ADD, EQUALS, MAXVALUE, MINVALUE, and MULTIPLY.
     //
@@ -1662,6 +1663,10 @@ void FieldProps::handle_operation(const Section      section,
     for (const auto& record : keyword) {
         const auto target_kw = Fieldprops::keywords::
             get_keyword_from_alias(record.getItem(0).getTrimmedString(0));
+
+        if (onlyACTNUM && target_kw != "ACTNUM") {
+            continue;
+        }
 
         box.update(record);
 
@@ -1837,12 +1842,13 @@ void FieldProps::handle_COPY(const DeckKeyword& keyword,
 
 void FieldProps::handle_keyword(const Section      section,
                                 const DeckKeyword& keyword,
-                                Box&               box)
+                                Box&               box,
+                                const bool         onlyACTNUM)
 {
     const auto& name = keyword.name();
 
     if (Fieldprops::keywords::oper_keywords.count(name) == 1) {
-        this->handle_operation(section, keyword, box);
+        this->handle_operation(section, keyword, box, onlyACTNUM);
     }
 
     else if (name == ParserKeywords::OPERATE::keywordName) {
@@ -2078,7 +2084,7 @@ void FieldProps::scanGRIDSectionOnlyACTNUM(const GRIDSection& grid_section)
             this->handle_int_keyword(Fieldprops::keywords::GRID::int_keywords.at(name), keyword, box);
         }
         else if ((name == "EQUALS") || (Fieldprops::keywords::box_keywords.count(name) == 1)) {
-            this->handle_keyword(Section::GRID, keyword, box);
+            this->handle_keyword(Section::GRID, keyword, box, true);
         }
     }
 
