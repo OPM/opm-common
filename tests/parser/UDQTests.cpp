@@ -906,7 +906,7 @@ BOOST_AUTO_TEST_CASE(CMP_FUNCTIONS) {
         BOOST_CHECK_EQUAL( result[2].get(), 0);
         BOOST_CHECK_EQUAL( result[4].get(), 1);
 
-        result = UDQBinaryFunction::EQ(0.20, arg1, arg2);
+        result = UDQBinaryFunction::EQ(0.15, arg1, arg2);
         BOOST_CHECK_EQUAL( result[0].get(), 1);
         BOOST_CHECK_EQUAL( result[2].get(), 0);
         BOOST_CHECK_EQUAL( result[4].get(), 1);
@@ -961,8 +961,6 @@ BOOST_AUTO_TEST_CASE(CMP_FUNCTIONS) {
         BOOST_CHECK_EQUAL( result[0].get(), 0);
         BOOST_CHECK_EQUAL( result[2].get(), 1);
         BOOST_CHECK_EQUAL( result[4].get(), 1);
-
-
     }
 }
 
