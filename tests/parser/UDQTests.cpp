@@ -906,7 +906,7 @@ BOOST_AUTO_TEST_CASE(CMP_FUNCTIONS) {
         BOOST_CHECK_EQUAL( result[2].get(), 0);
         BOOST_CHECK_EQUAL( result[4].get(), 1);
 
-        result = UDQBinaryFunction::EQ(0.20, arg1, arg2);
+        result = UDQBinaryFunction::EQ(0.15, arg1, arg2);
         BOOST_CHECK_EQUAL( result[0].get(), 1);
         BOOST_CHECK_EQUAL( result[2].get(), 0);
         BOOST_CHECK_EQUAL( result[4].get(), 1);
@@ -961,8 +961,6 @@ BOOST_AUTO_TEST_CASE(CMP_FUNCTIONS) {
         BOOST_CHECK_EQUAL( result[0].get(), 0);
         BOOST_CHECK_EQUAL( result[2].get(), 1);
         BOOST_CHECK_EQUAL( result[4].get(), 1);
-
-
     }
 }
 
@@ -973,6 +971,258 @@ BOOST_AUTO_TEST_CASE(CMP_FUNCTIONS2) {
 
     auto eq = UDQBinaryFunction::EQ(0, arg1, arg2);
     BOOST_CHECK_EQUAL(eq[0].get(), 1);
+}
+
+BOOST_AUTO_TEST_CASE(Compare_Less_Equal)
+{
+    using namespace std::string_literals;
+
+    auto wu_a = UDQSet::wells("WU_A", std::vector { "W1"s, "W2"s, "W3"s });
+    wu_a.assign("W1"s,  9.9);
+    wu_a.assign("W3"s, 10.3);
+
+    auto wu_b = UDQSet::wells("WU_B", std::vector { "W1"s, "W2"s, "W3"s });
+    wu_b.assign("W1"s,  9.9005);
+    wu_b.assign("W2"s, 10.0);
+    wu_b.assign("W3"s, 10.1);
+
+    const auto scalar = UDQSet::scalar("FUNNY"s, std::make_optional(10.0));
+
+    const auto ftbl = UDQFunctionTable { UDQParams {
+            Parser{}.parseString(R"(UDQPARAM
+  3* 0.01 / -- Relative tolerance 0.01
+)")
+        }
+    };
+
+    const auto cmp_a_le_b = dynamic_cast<const UDQBinaryFunction&>
+        (ftbl.get("<="s)).eval(wu_a, wu_b);
+
+    BOOST_REQUIRE_MESSAGE(cmp_a_le_b["W1"s].defined(),
+                          R"(There must be a defined "a <= b" result for well "W1")");
+    BOOST_CHECK_MESSAGE(! cmp_a_le_b["W2"s].defined(),
+                        R"(There must NOT be a defined "a <= b" result for well "W2")");
+    BOOST_REQUIRE_MESSAGE(cmp_a_le_b["W3"s].defined(),
+                          R"(There must be a defined "a <= b" result for well "W3")");
+
+    BOOST_CHECK_CLOSE(cmp_a_le_b["W1"s].get(), 1.0, 1.0e-8);
+    BOOST_CHECK_CLOSE(cmp_a_le_b["W3"s].get(), 0.0, 1.0e-8);
+
+    const auto cmp_a_le_scalar = dynamic_cast<const UDQBinaryFunction&>
+        (ftbl.get("<="s)).eval(wu_a, scalar);
+
+    BOOST_REQUIRE_MESSAGE(cmp_a_le_scalar["W1"s].defined(),
+                          R"(There must be a defined "a <= scalar" result for well "W1")");
+    BOOST_CHECK_MESSAGE(! cmp_a_le_scalar["W2"s].defined(),
+                        R"(There must NOT be a defined "a <= scalar" result for well "W2")");
+    BOOST_REQUIRE_MESSAGE(cmp_a_le_scalar["W3"s].defined(),
+                          R"(There must be a defined "a <= scalar" result for well "W3")");
+
+    BOOST_CHECK_CLOSE(cmp_a_le_scalar["W1"s].get(), 1.0, 1.0e-8);
+    BOOST_CHECK_CLOSE(cmp_a_le_scalar["W3"s].get(), 0.0, 1.0e-8);
+
+    const auto cmp_scalar_le_b = dynamic_cast<const UDQBinaryFunction&>
+        (ftbl.get("<="s)).eval(scalar, wu_b);
+
+    BOOST_REQUIRE_MESSAGE(cmp_scalar_le_b["W1"s].defined(),
+                          R"(There must be a defined "scalar <= b" result for well "W1")");
+    BOOST_REQUIRE_MESSAGE(cmp_scalar_le_b["W2"s].defined(),
+                          R"(There must be a defined "scalar <= b" result for well "W2")");
+    BOOST_REQUIRE_MESSAGE(cmp_scalar_le_b["W3"s].defined(),
+                          R"(There must be a defined "scalar <= b" result for well "W3")");
+
+    BOOST_CHECK_CLOSE(cmp_scalar_le_b["W1"s].get(), 1.0, 1.0e-8);
+    BOOST_CHECK_CLOSE(cmp_scalar_le_b["W2"s].get(), 1.0, 1.0e-8);
+    BOOST_CHECK_CLOSE(cmp_scalar_le_b["W3"s].get(), 1.0, 1.0e-8);
+}
+
+BOOST_AUTO_TEST_CASE(Compare_Equal)
+{
+    using namespace std::string_literals;
+
+    auto wu_a = UDQSet::wells("WU_A", std::vector { "W1"s, "W2"s, "W3"s });
+    wu_a.assign("W1"s,  9.9);
+    wu_a.assign("W3"s, 10.3);
+
+    auto wu_b = UDQSet::wells("WU_B", std::vector { "W1"s, "W2"s, "W3"s });
+    wu_b.assign("W1"s,  9.9005);
+    wu_b.assign("W2"s, 10.0);
+    wu_b.assign("W3"s, 10.1);
+
+    const auto scalar = UDQSet::scalar("FUNNY"s, std::make_optional(10.0));
+
+    const auto ftbl = UDQFunctionTable { UDQParams {
+            Parser{}.parseString(R"(UDQPARAM
+  3* 0.01 / -- Relative tolerance 0.01
+)")
+        }
+    };
+
+    const auto cmp_a_eq_b = dynamic_cast<const UDQBinaryFunction&>
+        (ftbl.get("=="s)).eval(wu_a, wu_b);
+
+    BOOST_REQUIRE_MESSAGE(cmp_a_eq_b["W1"s].defined(),
+                          R"(There must be a defined "a == b" result for well "W1")");
+    BOOST_CHECK_MESSAGE(! cmp_a_eq_b["W2"s].defined(),
+                        R"(There must NOT be a defined "a == b" result for well "W2")");
+    BOOST_REQUIRE_MESSAGE(cmp_a_eq_b["W3"s].defined(),
+                          R"(There must be a defined "a == b" result for well "W3")");
+
+    BOOST_CHECK_CLOSE(cmp_a_eq_b["W1"s].get(), 1.0, 1.0e-8);
+    BOOST_CHECK_CLOSE(cmp_a_eq_b["W3"s].get(), 0.0, 1.0e-8);
+
+    const auto cmp_a_eq_scalar = dynamic_cast<const UDQBinaryFunction&>
+        (ftbl.get("=="s)).eval(wu_a, scalar);
+
+    BOOST_REQUIRE_MESSAGE(cmp_a_eq_scalar["W1"s].defined(),
+                          R"(There must be a defined "a == scalar" result for well "W1")");
+    BOOST_CHECK_MESSAGE(! cmp_a_eq_scalar["W2"s].defined(),
+                        R"(There must NOT be a defined "a == scalar" result for well "W2")");
+    BOOST_REQUIRE_MESSAGE(cmp_a_eq_scalar["W3"s].defined(),
+                          R"(There must be a defined "a == scalar" result for well "W3")");
+
+    BOOST_CHECK_CLOSE(cmp_a_eq_scalar["W1"s].get(), 1.0, 1.0e-8);
+    BOOST_CHECK_CLOSE(cmp_a_eq_scalar["W3"s].get(), 0.0, 1.0e-8);
+
+    const auto cmp_scalar_eq_b = dynamic_cast<const UDQBinaryFunction&>
+        (ftbl.get("=="s)).eval(scalar, wu_b);
+
+    BOOST_REQUIRE_MESSAGE(cmp_scalar_eq_b["W1"s].defined(),
+                          R"(There must be a defined "scalar == b" result for well "W1")");
+    BOOST_REQUIRE_MESSAGE(cmp_scalar_eq_b["W2"s].defined(),
+                          R"(There must be a defined "scalar == b" result for well "W2")");
+    BOOST_REQUIRE_MESSAGE(cmp_scalar_eq_b["W3"s].defined(),
+                          R"(There must be a defined "scalar == b" result for well "W3")");
+
+    BOOST_CHECK_CLOSE(cmp_scalar_eq_b["W1"s].get(), 1.0, 1.0e-8);
+    BOOST_CHECK_CLOSE(cmp_scalar_eq_b["W2"s].get(), 1.0, 1.0e-8);
+    BOOST_CHECK_CLOSE(cmp_scalar_eq_b["W3"s].get(), 1.0, 1.0e-8);
+}
+
+BOOST_AUTO_TEST_CASE(Compare_Not_Equal)
+{
+    using namespace std::string_literals;
+
+    auto wu_a = UDQSet::wells("WU_A", std::vector { "W1"s, "W2"s, "W3"s });
+    wu_a.assign("W1"s,  9.9);
+    wu_a.assign("W3"s, 10.3);
+
+    auto wu_b = UDQSet::wells("WU_B", std::vector { "W1"s, "W2"s, "W3"s });
+    wu_b.assign("W1"s,  9.9005);
+    wu_b.assign("W2"s, 10.0);
+    wu_b.assign("W3"s, 10.1);
+
+    const auto scalar = UDQSet::scalar("FUNNY"s, std::make_optional(10.0));
+
+    const auto ftbl = UDQFunctionTable { UDQParams {
+            Parser{}.parseString(R"(UDQPARAM
+  3* 0.01 / -- Relative tolerance 0.01
+)")
+        }
+    };
+
+    const auto cmp_a_ne_b = dynamic_cast<const UDQBinaryFunction&>
+        (ftbl.get("!="s)).eval(wu_a, wu_b);
+
+    BOOST_REQUIRE_MESSAGE(cmp_a_ne_b["W1"s].defined(),
+                          R"(There must be a defined "a != b" result for well "W1")");
+    BOOST_CHECK_MESSAGE(! cmp_a_ne_b["W2"s].defined(),
+                        R"(There must NOT be a defined "a != b" result for well "W2")");
+    BOOST_REQUIRE_MESSAGE(cmp_a_ne_b["W3"s].defined(),
+                          R"(There must be a defined "a != b" result for well "W3")");
+
+    BOOST_CHECK_CLOSE(cmp_a_ne_b["W1"s].get(), 0.0, 1.0e-8);
+    BOOST_CHECK_CLOSE(cmp_a_ne_b["W3"s].get(), 1.0, 1.0e-8);
+
+    const auto cmp_a_ne_scalar = dynamic_cast<const UDQBinaryFunction&>
+        (ftbl.get("!="s)).eval(wu_a, scalar);
+
+    BOOST_REQUIRE_MESSAGE(cmp_a_ne_scalar["W1"s].defined(),
+                          R"(There must be a defined "a != scalar" result for well "W1")");
+    BOOST_CHECK_MESSAGE(! cmp_a_ne_scalar["W2"s].defined(),
+                        R"(There must NOT be a defined "a != scalar" result for well "W2")");
+    BOOST_REQUIRE_MESSAGE(cmp_a_ne_scalar["W3"s].defined(),
+                          R"(There must be a defined "a != scalar" result for well "W3")");
+
+    BOOST_CHECK_CLOSE(cmp_a_ne_scalar["W1"s].get(), 0.0, 1.0e-8);
+    BOOST_CHECK_CLOSE(cmp_a_ne_scalar["W3"s].get(), 1.0, 1.0e-8);
+
+    const auto cmp_scalar_ne_b = dynamic_cast<const UDQBinaryFunction&>
+        (ftbl.get("!="s)).eval(scalar, wu_b);
+
+    BOOST_REQUIRE_MESSAGE(cmp_scalar_ne_b["W1"s].defined(),
+                          R"(There must be a defined "scalar != b" result for well "W1")");
+    BOOST_REQUIRE_MESSAGE(cmp_scalar_ne_b["W2"s].defined(),
+                          R"(There must be a defined "scalar != b" result for well "W2")");
+    BOOST_REQUIRE_MESSAGE(cmp_scalar_ne_b["W3"s].defined(),
+                          R"(There must be a defined "scalar != b" result for well "W3")");
+
+    BOOST_CHECK_CLOSE(cmp_scalar_ne_b["W1"s].get(), 0.0, 1.0e-8);
+    BOOST_CHECK_CLOSE(cmp_scalar_ne_b["W2"s].get(), 0.0, 1.0e-8);
+    BOOST_CHECK_CLOSE(cmp_scalar_ne_b["W3"s].get(), 0.0, 1.0e-8);
+}
+
+BOOST_AUTO_TEST_CASE(Compare_Greater_Equal)
+{
+    using namespace std::string_literals;
+
+    auto wu_a = UDQSet::wells("WU_A", std::vector { "W1"s, "W2"s, "W3"s });
+    wu_a.assign("W1"s,  9.8);
+    wu_a.assign("W3"s, 10.3);
+
+    auto wu_b = UDQSet::wells("WU_B", std::vector { "W1"s, "W2"s, "W3"s });
+    wu_b.assign("W1"s,  9.9005);
+    wu_b.assign("W2"s, 10.0);
+    wu_b.assign("W3"s, 10.1);
+
+    const auto scalar = UDQSet::scalar("FUNNY"s, std::make_optional(10.0));
+
+    const auto ftbl = UDQFunctionTable { UDQParams {
+            Parser{}.parseString(R"(UDQPARAM
+  3* 0.01 / -- Relative tolerance 0.01
+)")
+        }
+    };
+
+    const auto cmp_a_ge_b = dynamic_cast<const UDQBinaryFunction&>
+        (ftbl.get(">="s)).eval(wu_a, wu_b);
+
+    BOOST_REQUIRE_MESSAGE(cmp_a_ge_b["W1"s].defined(),
+                          R"(There must be a defined "a >= b" result for well "W1")");
+    BOOST_CHECK_MESSAGE(! cmp_a_ge_b["W2"s].defined(),
+                        R"(There must NOT be a defined "a >= b" result for well "W2")");
+    BOOST_REQUIRE_MESSAGE(cmp_a_ge_b["W3"s].defined(),
+                          R"(There must be a defined "a >= b" result for well "W3")");
+
+    BOOST_CHECK_CLOSE(cmp_a_ge_b["W1"s].get(), 0.0, 1.0e-8);
+    BOOST_CHECK_CLOSE(cmp_a_ge_b["W3"s].get(), 1.0, 1.0e-8);
+
+    const auto cmp_a_ge_scalar = dynamic_cast<const UDQBinaryFunction&>
+        (ftbl.get(">="s)).eval(wu_a, scalar);
+
+    BOOST_REQUIRE_MESSAGE(cmp_a_ge_scalar["W1"s].defined(),
+                          R"(There must be a defined "a >= scalar" result for well "W1")");
+    BOOST_CHECK_MESSAGE(! cmp_a_ge_scalar["W2"s].defined(),
+                        R"(There must NOT be a defined "a >= scalar" result for well "W2")");
+    BOOST_REQUIRE_MESSAGE(cmp_a_ge_scalar["W3"s].defined(),
+                          R"(There must be a defined "a >= scalar" result for well "W3")");
+
+    BOOST_CHECK_CLOSE(cmp_a_ge_scalar["W1"s].get(), 0.0, 1.0e-8);
+    BOOST_CHECK_CLOSE(cmp_a_ge_scalar["W3"s].get(), 1.0, 1.0e-8);
+
+    const auto cmp_scalar_ge_b = dynamic_cast<const UDQBinaryFunction&>
+        (ftbl.get(">="s)).eval(scalar, wu_b);
+
+    BOOST_REQUIRE_MESSAGE(cmp_scalar_ge_b["W1"s].defined(),
+                          R"(There must be a defined "scalar >= b" result for well "W1")");
+    BOOST_REQUIRE_MESSAGE(cmp_scalar_ge_b["W2"s].defined(),
+                          R"(There must be a defined "scalar >= b" result for well "W2")");
+    BOOST_REQUIRE_MESSAGE(cmp_scalar_ge_b["W3"s].defined(),
+                          R"(There must be a defined "scalar >= b" result for well "W3")");
+
+    BOOST_CHECK_CLOSE(cmp_scalar_ge_b["W1"s].get(), 1.0, 1.0e-8);
+    BOOST_CHECK_CLOSE(cmp_scalar_ge_b["W2"s].get(), 1.0, 1.0e-8);
+    BOOST_CHECK_CLOSE(cmp_scalar_ge_b["W3"s].get(), 1.0, 1.0e-8);
 }
 
 BOOST_AUTO_TEST_CASE(ELEMENTAL_UNARY_FUNCTIONS) {
