@@ -40,6 +40,11 @@ if(QuadMath_FOUND AND NOT TARGET QuadMath::QuadMath)
   add_library(QuadMath::QuadMath INTERFACE IMPORTED)
   target_link_libraries(QuadMath::QuadMath INTERFACE quadmath)
 
+  # Somehow needed for DUNE 2.9/g++-12
+  target_compile_options(QuadMath::QuadMath INTERFACE
+    $<$<CXX_COMPILER_ID:GNU>:-fext-numeric-literals>
+  )
+
   # Check for numeric_limits specialization
   cmake_push_check_state()
   set(CMAKE_REQUIRED_LIBRARIES quadmath)

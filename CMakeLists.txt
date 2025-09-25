@@ -180,12 +180,13 @@ macro (sources_hook)
     if(qm_defs)
       list(APPEND qm_defs HAVE_QUAD=1)
     else()
-      set( qm_defs HAVE_QUAD=1)
+      set(qm_defs HAVE_QUAD=1)
     endif()
-    message(qm:defs=${qm_defs})
+    get_target_property(qm_options QuadMath::QuadMath INTERFACE_COMPILE_OPTIONS)
     set_source_files_properties(opm/material/components/CO2.cpp
                                 opm/material/densead/Evaluation.cpp
-                                PROPERTIES COMPILE_DEFINITIONS "${qm_defs}")
+                                PROPERTIES COMPILE_DEFINITIONS "${qm_defs}"
+                                COMPILE_OPTIONS "${qm_options}")
   endif()
 endmacro (sources_hook)
 
