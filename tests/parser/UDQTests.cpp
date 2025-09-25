@@ -68,6 +68,7 @@
 #include <cstddef>
 #include <limits>
 #include <memory>
+#include <optional>
 #include <set>
 #include <stdexcept>
 #include <string>
@@ -1221,6 +1222,84 @@ BOOST_AUTO_TEST_CASE(UDQ_POW_TEST) {
     auto res_pow2 = def_pow2.eval(context);
     BOOST_CHECK_EQUAL( res_pow1["P1"].get() , 1 + 2 * std::pow(3,4));
     BOOST_CHECK_EQUAL( res_pow2["P1"].get() , std::pow(1 + 2, 1 + 3*4 - 7));
+}
+
+BOOST_AUTO_TEST_CASE(POW_Set_Raised_to_Scalar)
+{
+    using namespace std::string_literals;
+
+    auto wset = UDQSet::wells("WUZZY"s, std::vector { "W1"s, "W2"s, "W3"s });
+
+    wset.assign("W1"s, 0.5);
+    wset.assign("W3"s, 2.7);
+
+    const auto scalar = UDQSet::scalar("FUNNY"s, std::make_optional(1.2));
+
+    const auto pow = dynamic_cast<const UDQBinaryFunction&>
+        (UDQFunctionTable{}.get("^"s)).eval(wset, scalar);
+
+    BOOST_REQUIRE_MESSAGE(pow["W1"s].defined(), R"(There must be a defined result for well "W1")");
+    BOOST_CHECK_MESSAGE(! pow["W2"s].defined(), R"(There must NOT be a defined result for well "W2")");
+    BOOST_REQUIRE_MESSAGE(pow["W3"s].defined(), R"(There must be a defined result for well "W3")");
+
+    BOOST_CHECK_CLOSE(pow["W1"s].get(), std::pow(0.5, 1.2), 1.0e-8);
+    BOOST_CHECK_CLOSE(pow["W3"s].get(), std::pow(2.7, 1.2), 1.0e-8);
+}
+
+BOOST_AUTO_TEST_CASE(POW_Scalar_Raised_to_Set)
+{
+    using namespace std::string_literals;
+
+    auto wset = UDQSet::wells("WUZZY"s, std::vector { "W1"s, "W2"s, "W3"s });
+
+    wset.assign("W1"s, 0.5);
+    wset.assign("W3"s, 2.7);
+
+    const auto scalar = UDQSet::scalar("FUNNY"s, std::make_optional(1.2));
+
+    const auto pow = dynamic_cast<const UDQBinaryFunction&>
+        (UDQFunctionTable{}.get("^"s)).eval(scalar, wset);
+
+    BOOST_REQUIRE_MESSAGE(pow["W1"s].defined(), R"(There must be a defined result for well "W1")");
+    BOOST_CHECK_MESSAGE(! pow["W2"s].defined(), R"(There must NOT be a defined result for well "W2")");
+    BOOST_REQUIRE_MESSAGE(pow["W3"s].defined(), R"(There must be a defined result for well "W3")");
+
+    BOOST_CHECK_CLOSE(pow["W1"s].get(), std::pow(1.2, 0.5), 1.0e-8);
+    BOOST_CHECK_CLOSE(pow["W3"s].get(), std::pow(1.2, 2.7), 1.0e-8);
+}
+
+BOOST_AUTO_TEST_CASE(POW_Set_Raised_to_Incompatible_Set_Type)
+{
+    using namespace std::string_literals;
+
+    auto wset = UDQSet::wells("WUZZY"s, std::vector { "W1"s, "W2"s, "W3"s });
+    wset.assign("W1"s, 0.5);
+    wset.assign("W3"s, 2.7);
+
+    auto gset = UDQSet::groups("GUPPY", std::vector { "G1"s, "G2"s, "G3"s });
+    gset.assign("G1"s, 0.5);
+    gset.assign("G2"s, 2.7);
+
+    BOOST_CHECK_THROW(dynamic_cast<const UDQBinaryFunction&>
+                      (UDQFunctionTable{}.get("^"s)).eval(gset, wset),
+                      std::logic_error);
+}
+
+BOOST_AUTO_TEST_CASE(POW_Set_Raised_to_Incompatible_Set_Size)
+{
+    using namespace std::string_literals;
+
+    auto wset_1 = UDQSet::wells("WUZZY"s, std::vector { "W1"s, "W2"s, "W3"s });
+    wset_1.assign("W1"s, 0.5);
+    wset_1.assign("W3"s, 2.7);
+
+    auto wset_2 = UDQSet::groups("WUHU", std::vector { "W1"s, "W2"s });
+    wset_2.assign("W1"s, 0.5);
+    wset_2.assign("W2"s, 2.7);
+
+    BOOST_CHECK_THROW(dynamic_cast<const UDQBinaryFunction&>
+                      (UDQFunctionTable{}.get("^"s)).eval(wset_1, wset_2),
+                      std::logic_error);
 }
 
 BOOST_AUTO_TEST_CASE(UDQ_CMP_TEST) {
