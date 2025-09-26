@@ -169,6 +169,11 @@ public:
     bool enableDissolvedGasInWater() const noexcept {
         return enable_dissolved_gas_in_water_;
     }
+
+    int contiSolventEqIdx() const noexcept {
+        return contiSolventEqIdx_;
+    }
+
 private:
     // only account for the three main phases: oil, water, gas
     unsigned char numActivePhases_ = 0;
@@ -197,8 +202,14 @@ private:
     bool enable_vaporized_water_{};
     bool enable_dissolved_gas_in_water_{};
 
+
+    int contiSolventEqIdx_ = -1000;
+
     //  updating the mapping between active and canonical phase indices
     void updateIndexMapping_();
+
+    //  update equation indices
+    void updateIndices_();
 
     void reset_();
 

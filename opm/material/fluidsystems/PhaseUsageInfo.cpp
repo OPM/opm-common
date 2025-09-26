@@ -146,8 +146,14 @@ void PhaseUsageInfo<IndexTraits>::initFromPhases(const Phases& phases) {
     has_zFraction = phases.active(Phase::ZFRACTION);
 
     this->updateIndexMapping_();
+    this->updateIndices_();
 }
 #endif
+
+template <typename IndexTraits>
+void PhaseUsageInfo<IndexTraits>::updateIndices_() {
+    contiSolventEqIdx_ = has_solvent ? numActivePhases_ : -1000;
+}
 
 // Explicit template instantiations for commonly used IndexTraits
 template class PhaseUsageInfo<BlackOilDefaultFluidSystemIndices>;
