@@ -32,7 +32,7 @@ std::ostream& operator<<(std::ostream& os, const MinpvMode& mm)
     else if (mm == MinpvMode::Inactive)
         os << "Inactive";
     else
-        assert(0);
+        throw std::runtime_error("Unsupported MinpvMode type in operator<<()");
 
     return os;
 }
