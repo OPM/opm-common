@@ -460,15 +460,19 @@ public:
     template <class FluidState>
     static bool updateHysteresis(Params& params, const FluidState& fluidState)
     {
-        const Scalar Swco = params.Swl();
-        const Scalar sw = clampSaturation(fluidState, waterPhaseIdx);
-        const Scalar So = clampSaturation(fluidState, oilPhaseIdx);
-        const Scalar sg = clampSaturation(fluidState, gasPhaseIdx);
-        bool owChanged = params.oilWaterParams().update(/*pcSw=*/sw, /*krwSw=*/sw, /*krnSw=*/1 - So);
-        bool gochanged = params.gasOilParams().update(/*pcSw=*/  So,
-                                                          /*krwSw=*/ So,
-                                                          /*krnSw=*/ 1.0 - Swco - sg);
-        return owChanged || gochanged;
+        if constexpr (Traits::enableHysteresis) {
+            const Scalar Swco = params.Swl();
+            const Scalar sw = clampSaturation(fluidState, waterPhaseIdx);
+            const Scalar So = clampSaturation(fluidState, oilPhaseIdx);
+            const Scalar sg = clampSaturation(fluidState, gasPhaseIdx);
+            bool owChanged = params.oilWaterParams().update(/*pcSw=*/sw, /*krwSw=*/sw, /*krnSw=*/1 - So);
+            bool gochanged = params.gasOilParams().update(/*pcSw=*/So,
+                                                          /*krwSw=*/So,
+                                                          /*krnSw=*/1.0 - Swco - sg);
+            return owChanged || gochanged;
+        } else {
+            return false;
+        }
     }
 
     template <class FluidState>

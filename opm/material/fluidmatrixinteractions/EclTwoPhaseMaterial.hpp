@@ -451,26 +451,25 @@ public:
     template <class FluidState>
     static bool updateHysteresis(Params& params, const FluidState& fluidState)
     {
-        OPM_TIMEFUNCTION_LOCAL(Subsystem::SatProps);
-        switch (params.approach()) {
-        case EclTwoPhaseApproach::GasOil: {
-            Scalar So = scalarValue(fluidState.saturation(oilPhaseIdx));
-            return params.gasOilParams().update(/*pcSw=*/So, /*krwSw=*/So, /*krnSw=*/So);
+        if constexpr (Traits::enableHysteresis) {
+            OPM_TIMEFUNCTION_LOCAL(Subsystem::SatProps);
+            switch (params.approach()) {
+            case EclTwoPhaseApproach::GasOil: {
+                Scalar So = scalarValue(fluidState.saturation(oilPhaseIdx));
+                return params.gasOilParams().update(/*pcSw=*/So, /*krwSw=*/So, /*krnSw=*/So);
+            }
+            case EclTwoPhaseApproach::OilWater: {
+                Scalar sw = scalarValue(fluidState.saturation(waterPhaseIdx));
+                return params.oilWaterParams().update(/*pcSw=*/sw, /*krwSw=*/sw, /*krnSw=*/sw);
+            }
+            case EclTwoPhaseApproach::GasWater: {
+                Scalar sw = scalarValue(fluidState.saturation(waterPhaseIdx));
+                return params.gasWaterParams().update(/*pcSw=*/sw, /*krwSw=*/sw, /*krnSw=*/sw);
+            }
+            }
+        } else {
+            return false;
         }
-
-        case EclTwoPhaseApproach::OilWater: {
-            Scalar sw = scalarValue(fluidState.saturation(waterPhaseIdx));
-            return params.oilWaterParams().update(/*pcSw=*/sw, /*krwSw=*/sw, /*krnSw=*/sw);
-        }
-
-        case EclTwoPhaseApproach::GasWater: {
-            Scalar sw = scalarValue(fluidState.saturation(waterPhaseIdx));
-            return params.gasWaterParams().update(/*pcSw=*/sw, /*krwSw=*/sw, /*krnSw=*/sw);
-        }
-        }
-
-        // Should not get here...
-        return false;
     }
 };
 
