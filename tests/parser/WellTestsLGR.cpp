@@ -48,7 +48,7 @@
 #include <opm/common/utility/TimeService.hpp>
 
 #include <opm/input/eclipse/Parser/ParserKeywords/F.hpp>
-#define TOLERANCE_PERCENT 0.01  
+#define TOLERANCE_PERCENT 0.01
 using namespace Opm;
 
 std::unordered_map<std::string, std::size_t> create_label_mapper(const EclipseGrid& ecl_grid)
@@ -80,7 +80,7 @@ CARFIN
 ENDFIN
 
 INIT
-DX 
+DX
    	9*1000 /
 DY
 	9*1000 /
@@ -121,7 +121,7 @@ COMPDATL
     auto test2 = grid.get_all_lgr_labels();
 
     const auto sched = Schedule { deck, es };
-    
+
     BOOST_CHECK_EQUAL(sched.getWell("PROD", 0).is_lgr_well(), true);
     BOOST_CHECK_EQUAL(sched.getWell("INJ", 0).is_lgr_well(), true);
     BOOST_CHECK_EQUAL(sched.getWell("PROD", 0).get_lgr_well_tag().value(), "LGR2");
@@ -146,7 +146,7 @@ CARFIN
 ENDFIN
 
 INIT
-DX 
+DX
    	9*1000 /
 DY
 	9*1000 /
@@ -187,8 +187,8 @@ COMPDATL
     auto test2 = grid.get_all_lgr_labels();
 
     const auto sched = Schedule { deck, es };
-    
-    auto mapper = create_label_mapper(grid);    
+
+    auto mapper = create_label_mapper(grid);
 
     auto cell1 = sched.completed_cells_lgr[mapper["LGR2"]].get(1, 0, 0);
     auto cell2 = sched.completed_cells_lgr[mapper["LGR1"]].get(1, 0, 1);
@@ -199,7 +199,7 @@ COMPDATL
     auto dim_cell2 = cell2.dimensions;
 
     BOOST_CHECK_EQUAL(cell1.depth,8337.5);
-    BOOST_CHECK_EQUAL(cell2.depth,8362.5);    
+    BOOST_CHECK_EQUAL(cell2.depth,8362.5);
     BOOST_CHECK_EQUAL(dim_original[0]/2,dim_cell1[0]);
     BOOST_CHECK_EQUAL(dim_original[1]/1,dim_cell1[1]);
     BOOST_CHECK_EQUAL(dim_original[2]/2,dim_cell1[2]);
@@ -223,7 +223,7 @@ CARFIN
 ENDFIN
 
 INIT
-DX 
+DX
    	9*1000 /
 DY
 	9*1000 /
@@ -264,8 +264,8 @@ COMPDATL
     auto test2 = grid.get_all_lgr_labels();
 
     const auto sched = Schedule { deck, es };
-    
-    auto mapper = create_label_mapper(grid);    
+
+    auto mapper = create_label_mapper(grid);
 
     auto cell1 = sched.completed_cells_lgr[mapper["LGR2"]].get(2, 0, 0);
     auto cell2 = sched.completed_cells_lgr[mapper["LGR1"]].get(2, 0, 2);
@@ -275,7 +275,7 @@ COMPDATL
     auto dim_cell2 = cell2.dimensions;
 
     BOOST_CHECK_CLOSE(cell1.depth, 8333.333333, TOLERANCE_PERCENT);
-    BOOST_CHECK_CLOSE(cell2.depth,8366.666666, TOLERANCE_PERCENT);    
+    BOOST_CHECK_CLOSE(cell2.depth,8366.666666, TOLERANCE_PERCENT);
 
     BOOST_CHECK_EQUAL(dim_original[0]/3,dim_cell1[0]);
     BOOST_CHECK_EQUAL(dim_original[1]/1,dim_cell1[1]);

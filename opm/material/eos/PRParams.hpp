@@ -31,7 +31,7 @@
 namespace Opm {
 
 template <class Scalar, class FluidSystem>
-class PRParams 
+class PRParams
 {
     static constexpr Scalar R = Constants<Scalar>::R;
 
@@ -41,17 +41,17 @@ public:
         Scalar Tr = temperature / FluidSystem::criticalTemperature(compIdx);
         Scalar omega = FluidSystem::acentricFactor(compIdx);
         Scalar f_omega;
-        if (!modified || omega <= 0.49) 
+        if (!modified || omega <= 0.49)
             f_omega = 0.37464 + omega * (1.54226 + omega * (-0.26992));
         else
             f_omega = 0.379642 + omega * (1.48503 + omega * (-0.164423 + omega * 0.016666));
         Valgrind::CheckDefined(f_omega);
-        
+
         Scalar tmp = 1 + f_omega*(1 - sqrt(Tr));
         return 0.457235529 * tmp * tmp;
     }
 
-    static Scalar calcOmegaB() 
+    static Scalar calcOmegaB()
     {
         return Scalar(0.077796074);
     }

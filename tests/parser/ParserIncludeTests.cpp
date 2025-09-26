@@ -161,5 +161,3 @@ EQUIL
     Opm::Parser parser;
     BOOST_CHECK_THROW(parser.parseString(keywords_string), Opm::OpmInputError);
 }
-
-

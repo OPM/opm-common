@@ -62,10 +62,10 @@ namespace Opm {
     const std::string& ColumnSchema::name() const {
         return m_name;
     }
- 
+
     std::string ColumnSchema::orderSchema() const {
         switch (m_order) {
-        case Table::RANDOM:            
+        case Table::RANDOM:
             return "random";
             break;
         case Table::INCREASING:
@@ -84,7 +84,7 @@ namespace Opm {
              throw std::invalid_argument("Internal error - should not be here\n");
         }
     }
- 
+
     bool ColumnSchema::validOrder( double value1 , double value2) const {
         switch (m_order) {
         case Table::RANDOM:

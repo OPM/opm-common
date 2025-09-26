@@ -59,7 +59,7 @@ namespace Opm
         bool drsdtActive(const size_t pvtRegionIdx) const;
         bool drvdtActive(const size_t pvtRegionIdx) const;
         bool drsdtConvective(const size_t pvtRegionIdx) const;
-        
+
         bool drsdtActive() const;
         bool drvdtActive() const;
         bool drsdtConvective() const;

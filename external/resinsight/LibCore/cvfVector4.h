@@ -84,7 +84,7 @@ public:
     inline S                dot(const Vector4& other) const;
     inline S                operator*(const Vector4& rhs) const;    // Dot product
 
-    template<typename T> 
+    template<typename T>
     void                    set(const T& other);
     inline void             set(S x, S y, S z, S w);
     inline void             setZero();

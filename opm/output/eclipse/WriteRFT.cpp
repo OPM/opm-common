@@ -301,7 +301,7 @@ namespace {
         std::vector<float> sgas_;
 
         void addConnection(const ::Opm::UnitSystem&       usys,
-                           const double cell_depth, 
+                           const double cell_depth,
                            const ::Opm::data::Connection& xcon);
     };
 
@@ -347,7 +347,7 @@ namespace {
     }
 
     void RFTRecord::addConnection(const ::Opm::UnitSystem&       usys,
-                                  const double cell_depth, 
+                                  const double cell_depth,
                                   const ::Opm::data::Connection& xcon)
     {
         using M = ::Opm::UnitSystem::measure;
@@ -687,7 +687,7 @@ namespace {
         // Infer neighbour connection in direction of well head.
         this->assignNextNeighbourID(connPos, well.getConnections());
 
-        this->conn_depth_.push_back(cvrt(M::length, connPos->depth()));        
+        this->conn_depth_.push_back(cvrt(M::length, connPos->depth()));
         this->conn_pressure_.push_back(cvrt(M::pressure, xcon.pressure));
         this->trans_.push_back(cvrt(M::transmissibility, xcon.trans_factor));
         this->kh_.push_back(cvrt(M::effective_Kh, connPos->Kh()));

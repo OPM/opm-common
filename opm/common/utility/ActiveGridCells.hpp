@@ -63,7 +63,7 @@ public:
     /// \param cartesianIndex The cartesian index of the cell
     /// \return The local index or -1 if the cell is inactive
     int localCell(std::size_t cartesianIndex) const;
-    
+
     /// \brief Get the local index of a cell
     /// \param i The index in the i direction
     /// \param j The index in the j direction

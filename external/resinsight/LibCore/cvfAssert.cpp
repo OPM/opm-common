@@ -96,7 +96,7 @@ private:
 
 //--------------------------------------------------------------------------------------------------
 /// Show report of a failed assert in console and abort execution
-/// 
+///
 /// On Windows, a console will be created if one doesn't exist (GUI applications)
 //--------------------------------------------------------------------------------------------------
 Assert::FailAction AssertHandlerConsole::handleAssert(const char* fileName, int lineNumber, const char* expr, const char* msg)
@@ -122,7 +122,7 @@ Assert::FailAction AssertHandlerConsole::handleAssert(const char* fileName, int 
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 void AssertHandlerConsole::reportToConsole(const char* fileName, int lineNumber, const char* expr, const char* msg)
 {
@@ -154,7 +154,7 @@ void AssertHandlerConsole::reportToConsole(const char* fileName, int lineNumber,
 
 //--------------------------------------------------------------------------------------------------
 /// Ask for user action using console input
-/// 
+///
 /// \return  One of the USERACTION_ constants
 //--------------------------------------------------------------------------------------------------
 #if 0
@@ -208,10 +208,10 @@ int AssertHandlerConsole::askForUserActionUsingConsole()
 
 //--------------------------------------------------------------------------------------------------
 /// Creates a console and redirects I/O from/to it (Windows only)
-/// 
+///
 /// \param redirectInput  If true, input will also be redirected.
-/// 
-/// Function is useful for Windows GUI applications. Allocates a console if it doesn't exist and 
+///
+/// Function is useful for Windows GUI applications. Allocates a console if it doesn't exist and
 /// then redirects output to the console. Also redirects input if \a redirectInput is true
 //--------------------------------------------------------------------------------------------------
 #ifdef WIN32
@@ -288,7 +288,7 @@ private:
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 #ifdef WIN32
 Assert::FailAction AssertHandlerWinDialog::handleAssert(const char* fileName, int lineNumber, const char* expr, const char* msg)
@@ -311,8 +311,8 @@ Assert::FailAction AssertHandlerWinDialog::handleAssert(const char* fileName, in
         // raise abort signal
         raise(SIGABRT);
 
-        // We usually won't get here, but it's possible that SIGABRT was ignored.  
-        // So exit the program anyway. 
+        // We usually won't get here, but it's possible that SIGABRT was ignored.
+        // So exit the program anyway.
         _exit(3);
     }
 
@@ -325,13 +325,13 @@ Assert::FailAction AssertHandlerWinDialog::handleAssert(const char* fileName, in
 
 //--------------------------------------------------------------------------------------------------
 /// Shows message in interactive dialog and lets user choose how to proceed
-/// 
+///
 /// \return Returns one of the USERACTION_ constants depending on which button the user chooses.
-/// 
+///
 /// Compared to the handleUsingCrtDbgReport() function, this function will also work in release builds
-/// As opposed to the handleUsingCrtDbgReport(), this function will not call abort, but will return 
+/// As opposed to the handleUsingCrtDbgReport(), this function will not call abort, but will return
 /// USERACTION_ABORT instead.
-/// 
+///
 /// \todo  Must add code to handle case where new assert is triggered while handling an assert
 //--------------------------------------------------------------------------------------------------
 #ifdef WIN32
@@ -382,8 +382,8 @@ int AssertHandlerWinDialog::handleUsingDialog(const char* fileName, int lineNumb
 
 
 //--------------------------------------------------------------------------------------------------
-/// Wrapper function for the CRT _CrtDbgReport() function 
-/// 
+/// Wrapper function for the CRT _CrtDbgReport() function
+///
 /// This function never returns if the user chooses 'Abort'
 /// Note that the underlying function is only available in debug builds
 //--------------------------------------------------------------------------------------------------
@@ -420,8 +420,8 @@ int AssertHandlerWinDialog::handleUsingCrtDbgReport(const char* fileName, int li
 /// \class cvf::Assert
 /// \ingroup Core
 ///
-/// Helper class to customize assert 
-/// 
+/// Helper class to customize assert
+///
 //==================================================================================================
 
 #ifdef WIN32
@@ -431,7 +431,7 @@ std::unique_ptr<AssertHandler> Assert::sm_handler = std::make_unique<AssertHandl
 #endif
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 void Assert::setReportMode(ReportMode reportMode)
 {
@@ -456,11 +456,11 @@ void Assert::setReportMode(ReportMode reportMode)
 
 //--------------------------------------------------------------------------------------------------
 /// Show report of a failed assert
-/// 
+///
 /// If assertions are configured to be interactive, a message box will be shown on Windows and
-/// the user may opt to ignore or trigger debugging. 
+/// the user may opt to ignore or trigger debugging.
 /// On Linux, or if interactive asserts are disabled, the application will terminate.
-/// 
+///
 /// \todo  Add handling of cases where we get another assert while processing the first one AND
 ///        asserts from multiple threads.
 //--------------------------------------------------------------------------------------------------

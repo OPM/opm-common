@@ -48,7 +48,7 @@ class AssertHandler;
 
 //==================================================================================================
 //
-// Helper class to customize assert behavior 
+// Helper class to customize assert behavior
 //
 //==================================================================================================
 class Assert
@@ -92,7 +92,7 @@ private:
 #   define CVF_ASSERT(expr)           (void)( (!!(expr)) || (cvf::Assert::CONTINUE == cvf::Assert::reportFailedAssert(__FILE__, __LINE__, #expr, NULL))  || (CVF_DEBUGTRAP(), 0) )
 #   define CVF_ASSERT_MSG(expr, msg)  (void)( (!!(expr)) || (cvf::Assert::CONTINUE == cvf::Assert::reportFailedAssert(__FILE__, __LINE__, #expr, (msg))) || (CVF_DEBUGTRAP(), 0) )
 #   define CVF_FAIL_MSG(msg)          (void)( (cvf::Assert::CONTINUE == cvf::Assert::reportFailedAssert(__FILE__, __LINE__, NULL, (msg))) || (CVF_DEBUGTRAP(), 0) )
-#else 
+#else
 #   define CVF_ASSERT(expr)           ((void)0)
 #   define CVF_ASSERT_MSG(expr, msg)  ((void)0)
 #   define CVF_FAIL_MSG(msg)          ((void)0)
@@ -101,7 +101,7 @@ private:
 #if CVF_ENABLE_TIGHT_ASSERTS == 1 && CVF_ENABLE_ASSERTS == 1
 #   define CVF_TIGHT_ASSERT(expr)           CVF_ASSERT(expr)
 #   define CVF_TIGHT_ASSERT_MSG(expr, msg)  CVF_ASSERT_MSG(expr, msg)
-#else 
+#else
 #   define CVF_TIGHT_ASSERT(expr)           ((void)0)
 #   define CVF_TIGHT_ASSERT_MSG(expr, msg)  ((void)0)
 #endif

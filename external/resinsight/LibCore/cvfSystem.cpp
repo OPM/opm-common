@@ -42,11 +42,11 @@ namespace cvf {
 /// \ingroup Core
 ///
 /// Static wrapper class for system functions
-/// 
+///
 //==================================================================================================
 
 //--------------------------------------------------------------------------------------------------
-/// Check if we're running 64bit 
+/// Check if we're running 64bit
 //--------------------------------------------------------------------------------------------------
 bool System::is64Bit()
 {
@@ -56,7 +56,7 @@ bool System::is64Bit()
 
 //--------------------------------------------------------------------------------------------------
 /// Check if we are running on a big endian system.
-/// 
+///
 /// \return  Returns true if we're on big endian, false for little endian.
 //--------------------------------------------------------------------------------------------------
 bool System::isBigEndian()
@@ -69,7 +69,7 @@ bool System::isBigEndian()
 
 
 //--------------------------------------------------------------------------------------------------
-///  
+///
 //--------------------------------------------------------------------------------------------------
 bool System::memcpy(void* dst, size_t dstSizeInBytes, const void* src, size_t numBytesToCopy)
 {
@@ -96,7 +96,7 @@ bool System::memcpy(void* dst, size_t dstSizeInBytes, const void* src, size_t nu
 
     if (numBytesToCopy > dstSizeInBytes)
     {
-        // The source memory is too large to copy to the destination.  
+        // The source memory is too large to copy to the destination.
         // To be consistent with memcpy_s, return false to indicate failure
         return false;
     }
@@ -110,7 +110,7 @@ bool System::memcpy(void* dst, size_t dstSizeInBytes, const void* src, size_t nu
 
 
 //--------------------------------------------------------------------------------------------------
-///  
+///
 //--------------------------------------------------------------------------------------------------
 bool System::strcpy(char* strDestination, size_t maxNumElementsInDestination, const char* strSource)
 {
@@ -140,8 +140,8 @@ bool System::strcpy(char* strDestination, size_t maxNumElementsInDestination, co
 
 
 //--------------------------------------------------------------------------------------------------
-/// Append a string 
-/// 
+/// Append a string
+///
 /// \param  strDestination               Null-terminated destination string buffer
 /// \param  maxNumElementsInDestination  Total size of the destination string buffer in characters
 /// \param  strSource                    Null-terminated source string buffer
@@ -187,14 +187,14 @@ bool System::strcat(char* strDestination, size_t maxNumElementsInDestination, co
 
 //--------------------------------------------------------------------------------------------------
 /// Wrapper for sprintf
-/// 
+///
 /// \param buffer                  The buffer to write into
 /// \param maxNumElementsInBuffer  Size of the buffer in number of characters
 /// \param format                  Format string
-/// 
+///
 /// \return Number of character written into buffer, excluding the terminating NULL character.
 ///         If the function fails the return is -1
-/// 
+///
 /// Not that at most maxNumElementsInBuffer - 1 characters are ever written into the buffer since
 /// a termination character is always written to the last position in the buffer.
 //--------------------------------------------------------------------------------------------------
@@ -215,7 +215,7 @@ int System::sprintf(char* buffer, size_t maxNumElementsInBuffer, const char* for
 #else
 
     int numWritten = vsnprintf(buffer, maxNumElementsInBuffer, format, argList);
-    
+
     // Linux will fill the buffer without adding a NULL
     // Catch this and report as error
     if (numWritten == static_cast<int>(maxNumElementsInBuffer))
@@ -236,14 +236,14 @@ int System::sprintf(char* buffer, size_t maxNumElementsInBuffer, const char* for
 
 //--------------------------------------------------------------------------------------------------
 /// Wrapper for sprintf
-/// 
+///
 /// \param buffer                  The buffer to write into
 /// \param maxNumElementsInBuffer  Size of the buffer in number of wide characters (not bytes)
 /// \param format                  Format string
-/// 
+///
 /// \return Number of wide character written into buffer, excluding the terminating NULL character.
 ///         If the function fails the return is -1
-/// 
+///
 /// Not that at most maxNumElementsInBuffer - 1 characters are ever written into the buffer since
 /// a termination character is always written to the last position in the buffer.
 //--------------------------------------------------------------------------------------------------
@@ -272,7 +272,7 @@ int System::swprintf(wchar_t* buffer, size_t maxNumElementsInBuffer, const wchar
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 size_t System::strlen(const char* str)
 {
@@ -288,7 +288,7 @@ size_t System::strlen(const char* str)
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 int System::strcmp(const char* str1, const char* str2)
 {

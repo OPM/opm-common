@@ -4,7 +4,7 @@
 #include <cstdlib>
 #include <iostream>
 
-namespace external 
+namespace external
 {
 #define CAF_ASSERT( expr )                                                                                   \
     do                                                                                                       \

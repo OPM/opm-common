@@ -79,4 +79,3 @@ namespace Opm {
     };
 }
 #endif  /* RAWKEYWORD_HPP */
-

@@ -75,5 +75,3 @@ void python::common::export_Deck(py::module &module) {
         .def("add", &addKeyword, py::arg("keyword"), Deck_add_docstring);
 
 }
-
-

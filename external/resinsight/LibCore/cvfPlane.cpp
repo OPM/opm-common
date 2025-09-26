@@ -40,7 +40,7 @@ namespace cvf {
 ///
 /// The class describes a plane by the equation: \f$Ax + By + Cz + D = 0\f$
 /// The plane's normal is defined by the coefficients \f$[A, B, C]\f$
-/// 
+///
 //==================================================================================================
 
 //--------------------------------------------------------------------------------------------------
@@ -50,7 +50,7 @@ namespace cvf {
 //--------------------------------------------------------------------------------------------------
 Plane::Plane()
 {
-    // Invalidate plane coefficients 
+    // Invalidate plane coefficients
     // Note: Coefficients set to zero will still comply with the line equation but
     //       the normal is of zero length which is considered an invalid state in this class.
     m_A = m_B = m_C = m_D = 0.0;
@@ -64,7 +64,7 @@ Plane::Plane()
 /// Setting at least the A, B and C coefficients to zero will effectually set the plane to invalid.
 //--------------------------------------------------------------------------------------------------
 Plane::Plane(double A, double B, double C, double D)
-{ 
+{
     m_A = A;
     m_B = B;
     m_C = C;
@@ -75,9 +75,9 @@ Plane::Plane(double A, double B, double C, double D)
 //--------------------------------------------------------------------------------------------------
 /// Copy constructor
 //--------------------------------------------------------------------------------------------------
-Plane::Plane(const Plane& other) 
+Plane::Plane(const Plane& other)
 :   Object()
-{ 
+{
     *this = other;
 }
 
@@ -95,11 +95,11 @@ Plane::~Plane()
 /// Assignment operator
 //--------------------------------------------------------------------------------------------------
 const Plane& Plane::operator=(const Plane& rhs)
-{ 
-    m_A = rhs.m_A; 
-    m_B = rhs.m_B; 
-    m_C = rhs.m_C; 
-    m_D = rhs.m_D; 
+{
+    m_A = rhs.m_A;
+    m_B = rhs.m_B;
+    m_C = rhs.m_C;
+    m_D = rhs.m_D;
 
     return *this;
 }
@@ -157,13 +157,13 @@ bool Plane::isValid() const
 /// The plane coefficients \f$[A, B, C]\f$ defines the normal to the plane
 //--------------------------------------------------------------------------------------------------
 void Plane::set(double A, double B, double C, double D)
-{ 
+{
     CVF_ASSERT(!(A == 0.0 && B == 0.0 && C == 0.0));
 
-    m_A = A; 
-    m_B = B; 
-    m_C = C; 
-    m_D = D; 
+    m_A = A;
+    m_B = B;
+    m_C = C;
+    m_D = D;
 }
 
 
@@ -309,7 +309,7 @@ double Plane::distanceToOrigin() const
 ///
 /// \param     vector   Vector to be projected
 /// \param     projectedVector   Projected vector to be returned by pointer
-/// 
+///
 /// \return true if successfully projected.
 ///         false if the given \a vector is parallel with the plane's normal
 //--------------------------------------------------------------------------------------------------
@@ -327,7 +327,7 @@ bool Plane::projectVector(const Vec3d& vector, Vec3d* projectedVector) const
     k *= 1.0/length;
     length = vector*k;
     *projectedVector = k;
-    *projectedVector *= length; 
+    *projectedVector *= length;
 
     return true;
 }
@@ -339,7 +339,7 @@ bool Plane::projectVector(const Vec3d& vector, Vec3d* projectedVector) const
 Vec3d Plane::projectPoint(const Vec3d& point) const
 {
     Vec3d pip = pointInPlane();
-    
+
     // Create vector from point in plane to node
     Vec3d vector = point - pip;
 
@@ -365,8 +365,8 @@ Vec3d Plane::projectPoint(const Vec3d& point) const
 /// \param  other       The other plane to find intersection line with
 /// \param  point       Point on line
 /// \param  direction   Normalized direction of line
-/// 
-/// \return true if success. false if direction is zero -> no point of intersection exists 
+///
+/// \return true if success. false if direction is zero -> no point of intersection exists
 //--------------------------------------------------------------------------------------------------
 bool Plane::intersect(const Plane& other, Vec3d* point, Vec3d* direction) const
 {
@@ -384,10 +384,10 @@ bool Plane::intersect(const Plane& other, Vec3d* point, Vec3d* direction) const
     // Todo: VTFIsGreater(...) and VTFeqZero(..) replacement
     if ((dir2.z() > dir2.y()) && (dir2.z() > dir2.x()) && (dir2.z() != 0.0))
     {
-        // then get a point on the XY plane 
+        // then get a point on the XY plane
         invdet = 1.0 / vector.z();
 
-        // solve < pl1.x() * xpt.x() + pl1.y() * xpt.y() = - pl1.w > < pl2.x() * xpt.x() + pl2.y() * xpt.y() = - pl2.w > 
+        // solve < pl1.x() * xpt.x() + pl1.y() * xpt.y() = - pl1.w > < pl2.x() * xpt.x() + pl2.y() * xpt.y() = - pl2.w >
         point->x() = m_B*other.m_D - other.m_B*m_D;
         point->y() = other.m_A*m_D - m_A*other.m_D;
         point->z() = 0.0;
@@ -395,7 +395,7 @@ bool Plane::intersect(const Plane& other, Vec3d* point, Vec3d* direction) const
     // Todo: VTFIsGreater(...) and VTFeqZero(..) replacement
     else if ((dir2.y() > dir2.x()) && (dir2.y() != 0.0))
     {
-        // then get a point on the XZ plane 
+        // then get a point on the XZ plane
         invdet = 1.0f / vector.y();
 
         // solve < pl1.x() * xpt.x() + pl1.z() * xpt.z() = -pl1.w > < pl2.x() * xpt.x() + pl2.z() * xpt.z() = -pl2.w >
@@ -406,15 +406,15 @@ bool Plane::intersect(const Plane& other, Vec3d* point, Vec3d* direction) const
     // Todo: VTFeqZero(..) replacement
     else if (dir2.x() != 0.0)
     {
-        // then get a point on the YZ plane 
+        // then get a point on the YZ plane
         invdet = 1.0 / vector.x();
 
-        // solve < pl1.y() * xpt.y() + pl1.z() * xpt.z() = - pl1.w > < pl2.y() * xpt.y() + pl2.z() * xpt.z() = - pl2.w > 
+        // solve < pl1.y() * xpt.y() + pl1.z() * xpt.z() = - pl1.w > < pl2.y() * xpt.y() + pl2.z() * xpt.z() = - pl2.w >
         point->x() = 0.0;
         point->y() = m_C*other.m_D - other.m_C*m_D;
         point->z() = other.m_B*m_D - m_B*other.m_D;
     }
-    else 
+    else
     {
         // direction is zero, then no point of intersection exists
         return false;
@@ -467,7 +467,7 @@ bool Plane::intersect(const Vec3d& a, const Vec3d& b, Vec3d* intersection) const
 //--------------------------------------------------------------------------------------------------
 /// Clip a triangle against this plane
 ///
-/// Clip the triangle given by parameters a, b and c against this plane. The vertices of the 
+/// Clip the triangle given by parameters a, b and c against this plane. The vertices of the
 /// resulting clipped polygon (triangle or quad) will be returned in \a clippedPolygon. Since the
 /// clipped polygon may be a quad, the \a clippedPolygon array must have room for at least 4 elements.
 ///
@@ -475,11 +475,11 @@ bool Plane::intersect(const Vec3d& a, const Vec3d& b, Vec3d* intersection) const
 //--------------------------------------------------------------------------------------------------
 size_t Plane::clipTriangle(const Vec3d& a, const Vec3d& b, const Vec3d& c, Vec3d clippedPolygon[4]) const
 {
-    // Except for the trivial cases where all vertices are in front 
+    // Except for the trivial cases where all vertices are in front
     // or behind plane, these are the permutations
     //
-    // Single vertex on positive side of plane 
-    // => return a triangle                                
+    // Single vertex on positive side of plane
+    // => return a triangle
     //
     //  +\   /\c               /\c   /+          /\c        .
     //    \ /  \              /  \  /       +   /  \   +    .
@@ -488,14 +488,14 @@ size_t Plane::clipTriangle(const Vec3d& a, const Vec3d& b, const Vec3d& c, Vec3d
     //  a/___\____\b      a/_____/__\b      a/________\b    .
     //       +\                 /+
     //
-    // Two vertices vertex on positive side of plane 
+    // Two vertices vertex on positive side of plane
     // => return a quad
     //
-    //       /\c           \+  /\c               /\c  +/    .   
-    //      /  \            \ /  \              /  \  /     .  
+    //       /\c           \+  /\c               /\c  +/    .
+    //      /  \            \ /  \              /  \  /     .
     //  ___/____\___         \    \            /    \/      .
     //  + /      \ +        / \    \          /     /\      .
-    //  a/________\b      a/___\____\b      a/_____/__\b    .        
+    //  a/________\b      a/___\____\b      a/_____/__\b    .
     //                          \+               +/
 
     bool onPosSide[3];
@@ -503,7 +503,7 @@ size_t Plane::clipTriangle(const Vec3d& a, const Vec3d& b, const Vec3d& c, Vec3d
     onPosSide[1] = distanceSquared(b) >= 0 ? true : false;
     onPosSide[2] = distanceSquared(c) >= 0 ? true : false;
     const int numPositiveVertices = (onPosSide[0] ? 1 : 0) + (onPosSide[1] ? 1 : 0) + (onPosSide[2] ? 1 : 0);
-    
+
     // The entire triangle is on the negative side
     // Clip everything
     if (numPositiveVertices == 0)
@@ -513,7 +513,7 @@ size_t Plane::clipTriangle(const Vec3d& a, const Vec3d& b, const Vec3d& c, Vec3d
 
     // All triangle vertices are on the positive side
     // Return the same triangle
-    if (numPositiveVertices == 3) 
+    if (numPositiveVertices == 3)
     {
         clippedPolygon[0] = a;
         clippedPolygon[1] = b;
@@ -587,7 +587,7 @@ size_t Plane::clipTriangle(const Vec3d& a, const Vec3d& b, const Vec3d& c, Vec3d
 /// \return Plane::FRONT if the point is located on the side the plane normal is pointing\n
 ///         Plane::BACK if the point is located on the opposite side the plane normal is pointing\n
 ///         Plane::ON if the point is located in the plane
-///         
+///
 //--------------------------------------------------------------------------------------------------
 Plane::Side Plane::side(const Vec3d& point) const
 {
@@ -610,9 +610,9 @@ Plane::Side Plane::side(const Vec3d& point) const
 
 //--------------------------------------------------------------------------------------------------
 /// Classify where the points are located relative to the plane
-/// 
+///
 /// \param  points  Points to test for location relative the plane
-///  
+///
 /// \return Plane::FRONT if points are either Plane::FRONT or Plane::ON\n
 ///         Plane::BACK if points are either Plane::BACK or Plane::ON\n
 ///         Plane::ON if all points are Plane::ON\n
@@ -639,7 +639,7 @@ Plane::Side Plane::side(const Vec3dArray& points) const
             backCount++;
         }
     }
-    
+
     if (frontCount > 0 && backCount == 0)
     {
         return FRONT;

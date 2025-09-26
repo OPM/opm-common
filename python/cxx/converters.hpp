@@ -27,9 +27,9 @@ py::array numpy_string_array(const std::vector<std::string>& input);
 
 template <class T>
 std::vector<T> vector(py::array_t<T>& input) {
-    T * input_ptr    = (T *) input.request().ptr; 
+    T * input_ptr    = (T *) input.request().ptr;
     std::vector<T> output(input.size());
-  
+
     for (int i = 0; i < input.size(); i++)
         output[i] = input_ptr[i];
 

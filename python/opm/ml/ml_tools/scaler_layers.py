@@ -40,7 +40,7 @@ class ScalerLayer(keras.layers.Layer):
         data_min: Optional[float | ArrayLike] = None,
         data_max: Optional[float | ArrayLike] = None,
         feature_range: Sequence[float] | np.ndarray | tf.Tensor = (0, 1),
-        **kwargs, 
+        **kwargs,
     ) -> None:
         super().__init__(**kwargs)
         if feature_range[0] >= feature_range[1]:
@@ -131,7 +131,7 @@ class ScalerLayer(keras.layers.Layer):
         self._is_adapted = True
 
 
-class MinMaxScalerLayer(ScalerLayer, PreprocessingLayer): 
+class MinMaxScalerLayer(ScalerLayer, PreprocessingLayer):
     """Scales the input according to MinMaxScaling.
 
     See
@@ -150,7 +150,7 @@ class MinMaxScalerLayer(ScalerLayer, PreprocessingLayer):
         super().__init__(data_min, data_max, feature_range, **kwargs)
         self._name: str = "MinMaxScalerLayer"
 
-    def call(self, inputs: tf.Tensor) -> tf.Tensor: 
+    def call(self, inputs: tf.Tensor) -> tf.Tensor:
         if not self.is_adapted:
             print(np.greater_equal(self.data_min, self.data_max))
             raise RuntimeError(
@@ -181,12 +181,12 @@ class MinMaxUnScalerLayer(ScalerLayer, tf.keras.layers.Layer):
         data_min: Optional[float | ArrayLike] = None,
         data_max: Optional[float | ArrayLike] = None,
         feature_range: Sequence[float] | np.ndarray | tf.Tensor = (0, 1),
-        **kwargs, 
+        **kwargs,
     ) -> None:
         super().__init__(data_min, data_max, feature_range, **kwargs)
         self._name: str = "MinMaxUnScalerLayer"
 
-    def call(self, inputs: tf.Tensor) -> tf.Tensor: 
+    def call(self, inputs: tf.Tensor) -> tf.Tensor:
         if not self._is_adapted:
             raise RuntimeError(
                 """The layer has not been adapted correctly. Call ``adapt`` before using

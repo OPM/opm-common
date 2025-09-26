@@ -54,4 +54,3 @@ bool Opm::shmatch(const std::string& pattern, const std::string& symbol)
     return std::regex_search(symbol, regexp);
 #endif
 }
-

@@ -133,4 +133,3 @@ bool BCConfig::operator==(const BCConfig& other) const {
 
 
 } //namespace Opm
-

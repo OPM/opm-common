@@ -44,7 +44,7 @@
 
 #include <vector>
 
-namespace external 
+namespace external
 {
 namespace caf
 {

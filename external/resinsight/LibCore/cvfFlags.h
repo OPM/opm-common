@@ -42,21 +42,21 @@ namespace cvf {
 
 
 //=================================================================================================
-// 
+//
 // Flags class
-// 
+//
 //=================================================================================================
 template<typename FlagEnum>
 class Flags
 {
 public:
-    inline Flags(); 
+    inline Flags();
     inline Flags(const Flags& other);
     explicit inline Flags(FlagEnum flag);
 
     inline Flags&  operator=(const Flags& rhs);
     inline Flags&  operator=(FlagEnum flag);
-    
+
     inline Flags&  operator|=(const Flags& rhs);
     inline Flags   operator|(const Flags& rhs) const;
     inline Flags&  operator&=(const Flags& rhs);

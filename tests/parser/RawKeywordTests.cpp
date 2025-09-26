@@ -98,5 +98,3 @@ BOOST_AUTO_TEST_CASE(IsFinished) {
         BOOST_CHECK(kw5.isFinished());
     }
 }
-
-

@@ -34,7 +34,7 @@
 //
 //##################################################################################################
 
-namespace external 
+namespace external
 {
 namespace cvf {
 
@@ -44,12 +44,12 @@ namespace cvf {
 /// \class cvf::Array
 /// \ingroup Core
 ///
-/// Templated version of a simple array designed for high performance and no overhead over C arrays 
+/// Templated version of a simple array designed for high performance and no overhead over C arrays
 /// in release (non-check builds).
 ///
-/// Will only work on simple types and classes that do not rely on a constructor or 
+/// Will only work on simple types and classes that do not rely on a constructor or
 /// destructor (as they are not called).
-/// 
+///
 //==================================================================================================
 
 
@@ -149,7 +149,7 @@ void Array<T>::ground()
 {
     m_size = 0;
     m_data = NULL;
-    m_capacity = 0;   
+    m_capacity = 0;
     m_sharedData = false;
 }
 
@@ -221,7 +221,7 @@ void Array<T>::resize(size_t size)
             // Copy old data
             T* pTmp = m_data;
             m_data = new T[size];
-            
+
             size_t numToCopy = CVF_MIN(size, m_size);
             cvf::System::memcpy(m_data, size*sizeof(T), pTmp, numToCopy*sizeof(T));
 
@@ -249,7 +249,7 @@ void Array<T>::resize(size_t size)
 template <typename T>
 void Array<T>::clear()
 {
-    if (!m_sharedData) 
+    if (!m_sharedData)
     {
         delete[] m_data;
     }
@@ -296,7 +296,7 @@ inline void Array<T>::setAll(const T& val)
 
 //--------------------------------------------------------------------------------------------------
 /// Assign consecutive values to the elements in the array
-/// 
+///
 /// Example: setConsecutive(2) on an array with size=3 gives: {2,3,4}
 //--------------------------------------------------------------------------------------------------
 template <typename T>
@@ -323,7 +323,7 @@ const T& cvf::Array<T>::get(size_t index) const
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 template <typename T>
 T cvf::Array<T>::val(size_t index) const
@@ -379,7 +379,7 @@ inline T* Array<T>::ptr(size_t index)
 
 
 //--------------------------------------------------------------------------------------------------
-/// Data shared with another class. Will not delete on destruction. 
+/// Data shared with another class. Will not delete on destruction.
 ///
 /// Any method that reallocates data (resize, assign & setPtr) is not allowed and will assert
 /// The only way to break the shared 'connection' is via clear()
@@ -398,8 +398,8 @@ void Array<T>::setSharedPtr(T* data, size_t size)
 
 
 //--------------------------------------------------------------------------------------------------
-/// Set the data in the array to use the passed array. 
-/// 
+/// Set the data in the array to use the passed array.
+///
 /// This class takes ownership of the passed data.
 //--------------------------------------------------------------------------------------------------
 template <typename T>
@@ -410,7 +410,7 @@ void Array<T>::setPtr(T* data, size_t size)
     // Not allowed
     // The only way to break the shared 'connection' is via clear()
     CVF_ASSERT(!m_sharedData);
-    
+
     clear();
 
     m_data = data;
@@ -430,7 +430,7 @@ void Array<T>::assign(const T* data, size_t size)
 
     clear();
     resize(size);
-    
+
     // copy
     cvf::System::memcpy(m_data, m_size*sizeof(T), data, size*sizeof(T));
 }
@@ -458,7 +458,7 @@ void Array<T>::assign(const std::vector<T>& data)
 
 //--------------------------------------------------------------------------------------------------
 /// Copy data into the array
-/// 
+///
 /// \warning Must have enough room for the new data, meaning the array must be resize()'ed before use
 //--------------------------------------------------------------------------------------------------
 template <typename T>
@@ -475,7 +475,7 @@ void Array<T>::copyData(const T* pSource, size_t numElementsToCopy, size_t destI
 
 //--------------------------------------------------------------------------------------------------
 /// Copy data into the array
-/// 
+///
 /// \warning Must have enough room for the new data, meaning the array must be resize()'ed before use
 //--------------------------------------------------------------------------------------------------
 template <typename T>
@@ -485,12 +485,12 @@ void Array<T>::copyData(const Array<T>& source, size_t numElementsToCopy, size_t
     CVF_ASSERT(destIndex < m_size);
     CVF_ASSERT(numElementsToCopy + destIndex <= m_size);
 
-    cvf::System::memcpy(m_data + destIndex, (m_size - destIndex)*sizeof(T), source.ptr() + sourceIndex, numElementsToCopy*sizeof(T));    
+    cvf::System::memcpy(m_data + destIndex, (m_size - destIndex)*sizeof(T), source.ptr() + sourceIndex, numElementsToCopy*sizeof(T));
 }
 
 
 //--------------------------------------------------------------------------------------------------
-/// Copy data into this array with conversion. 
+/// Copy data into this array with conversion.
 /// Data in source array will be converted using static_cast
 //--------------------------------------------------------------------------------------------------
 template <typename T>
@@ -513,7 +513,7 @@ void Array<T>::copyConvertedData(const Array<U>& source, size_t numElementsToCop
 
 //--------------------------------------------------------------------------------------------------
 /// Returns an array containing the specified elements
-/// 
+///
 /// Example:
 /// <PRE>
 ///   this           = {2.0, 5.5, 100.0}
@@ -527,11 +527,11 @@ ref<Array<T> > Array<T>::extractElements(const Array<U>& elementIndices) const
 {
     ref<Array<T> > arr = new Array<T>;
     size_t numItems = elementIndices.size();
-    
+
     if (numItems > 0)
     {
         arr->resize(numItems);
-        
+
         size_t i;
         for (i = 0; i < numItems; i++)
         {
@@ -564,7 +564,7 @@ void Array<T>::toStdVector(std::vector<T>* vec) const
 
 
 //--------------------------------------------------------------------------------------------------
-/// Get the current capacity of the array (the size of the buffer). This will return a number >= size(), 
+/// Get the current capacity of the array (the size of the buffer). This will return a number >= size(),
 /// depending on if reserve() has been used or not.
 /// If capacity() > size(), then add() is allowed on the array.
 ///
@@ -665,7 +665,7 @@ void Array<T>::squeeze()
 
 
 //--------------------------------------------------------------------------------------------------
-/// Set the size (number of items) in the array to zero, but keep the buffer. Items in the buffer 
+/// Set the size (number of items) in the array to zero, but keep the buffer. Items in the buffer
 /// are not modified.
 ///
 /// \sa
@@ -684,9 +684,9 @@ void Array<T>::setSizeZero()
 
 
 //--------------------------------------------------------------------------------------------------
-/// Add an item to the array. 
+/// Add an item to the array.
 ///
-/// Note that this will not grow the array, so the array needs to be pre-allocated with reserve() 
+/// Note that this will not grow the array, so the array needs to be pre-allocated with reserve()
 /// before calling this method. The method will assert if not enough space.
 ///
 /// \sa
@@ -700,7 +700,7 @@ inline void Array<T>::add(const T& val)
 {
     CVF_TIGHT_ASSERT(!m_sharedData);
     CVF_TIGHT_ASSERT(m_size < m_capacity);
-    
+
     m_data[m_size] = val;
     m_size++;
 }
@@ -722,8 +722,8 @@ T Array<T>::min(size_t* index) const
         if (m_data[i] < minVal)
         {
             minVal = m_data[i];
-            
-            if (index) 
+
+            if (index)
             {
                 *index = i;
             }
@@ -750,8 +750,8 @@ T Array<T>::max(size_t* index) const
         if (m_data[i] > maxVal)
         {
             maxVal = m_data[i];
-            
-            if (index) 
+
+            if (index)
             {
                 *index = i;
             }
@@ -764,10 +764,10 @@ T Array<T>::max(size_t* index) const
 
 //--------------------------------------------------------------------------------------------------
 /// Exchanges the contents of the two arrays.
-/// 
+///
 /// \param other  Modifiable reference to the array that should have its contents swapped.
-/// 
-/// \warning Note that signature differs from normal practice. This is done to be 
+///
+/// \warning Note that signature differs from normal practice. This is done to be
 ///          consistent with the signature of std::swap()
 //--------------------------------------------------------------------------------------------------
 template <typename T>
@@ -775,10 +775,10 @@ void Array<T>::swap(Array& other)
 {
     using std::swap;
 
-    swap(m_size, other.m_size);    
-    swap(m_capacity, other.m_capacity);    
-    swap(m_data, other.m_data);    
-    swap(m_sharedData, other.m_sharedData);    
+    swap(m_size, other.m_size);
+    swap(m_capacity, other.m_capacity);
+    swap(m_data, other.m_data);
+    swap(m_sharedData, other.m_sharedData);
 }
 
 }  // namespace cvf

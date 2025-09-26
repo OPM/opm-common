@@ -44,7 +44,7 @@ namespace UDA {
         output_value = st.get(string_var);
 
     // We do not handle negative rates.
-    // If negative rates occur a very small positive value is used to avoid 0.0 
+    // If negative rates occur a very small positive value is used to avoid 0.0
     // since 0.0 means default which is no rate limit (a large positive value)
     output_value = std::max(value.epsilonLimit(), output_value);
     return value.get_dim().convertRawToSi(output_value);

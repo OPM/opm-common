@@ -121,7 +121,7 @@ BOOST_AUTO_TEST_CASE( Brine ) {
     const auto& underSaturatedTable = RwgsaltTable1.getUnderSaturatedTable(0);
     BOOST_CHECK_EQUAL(underSaturatedTable.numColumns( ) , 2);
     BOOST_CHECK_EQUAL(underSaturatedTable.numRows( ) , 3);
-    { 
+    {
         UnitSystem units(UnitSystem::UnitType::UNIT_TYPE_METRIC );
         {
             const auto& col = underSaturatedTable.getColumn(0);
@@ -132,13 +132,13 @@ BOOST_AUTO_TEST_CASE( Brine ) {
             const auto& col = underSaturatedTable.getColumn(1);
             BOOST_CHECK_EQUAL(col[0] ,  0.00013);
             BOOST_CHECK_EQUAL(col[2] ,  0.00011);
-        } 
+        }
     }
 
     const auto& saturatedTable = RwgsaltTable1.getSaturatedTable();
     BOOST_CHECK_EQUAL(saturatedTable.numColumns( ) , 3);
     BOOST_CHECK_EQUAL(saturatedTable.numRows( ) , 2);
-    { 
+    {
         UnitSystem units(UnitSystem::UnitType::UNIT_TYPE_METRIC );
         {
             const auto& col = saturatedTable.getColumn(0);
@@ -149,7 +149,7 @@ BOOST_AUTO_TEST_CASE( Brine ) {
             const auto& col = saturatedTable.getColumn(2);
             BOOST_CHECK_EQUAL(col[0] ,  0.00013);
             BOOST_CHECK_EQUAL(col[1] ,  0.00016);
-        } 
+        }
     }
 
     const auto& BdensityTables = tables.getBrineDensityTables( );
@@ -197,11 +197,11 @@ BOOST_AUTO_TEST_CASE( Saltsol ) {
     const auto& saltsolTable1 = saltsolTables.getTable<Opm::SaltsolTable>(0);
 
     BOOST_CHECK_EQUAL(saltsolTable1.getSaltsolColumn().size(), 1U);
-    BOOST_CHECK_CLOSE(saltsolTable1.getSaltsolColumn() [0], 8.0, 1e-5); 
-   
+    BOOST_CHECK_CLOSE(saltsolTable1.getSaltsolColumn() [0], 8.0, 1e-5);
+
     const auto& saltsolTable2 = saltsolTables.getTable<Opm::SaltsolTable>(1);
 
     BOOST_CHECK_EQUAL(saltsolTable2.getSaltsolColumn().size(), 1U);
-    BOOST_CHECK_CLOSE(saltsolTable2.getSaltsolColumn() [0], 9.0, 1e-5); 
-    BOOST_CHECK_CLOSE(saltsolTable2.getSaltdenColumn() [0], 2100.0, 1e-5); 
+    BOOST_CHECK_CLOSE(saltsolTable2.getSaltsolColumn() [0], 9.0, 1e-5);
+    BOOST_CHECK_CLOSE(saltsolTable2.getSaltdenColumn() [0], 2100.0, 1e-5);
 }

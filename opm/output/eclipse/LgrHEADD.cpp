@@ -40,7 +40,7 @@ enum index : std::vector<int>::size_type {
     ih_004      =       VI::lgrheadd::FOURTH,              //       0       0
     ih_005      =       VI::lgrheadd::FIFTH,              //       0       0
 
-    
+
  // ---------------------------------------------------------------------
  // ---------------------------------------------------------------------
   LGRHEADD_NUMBER_OF_ITEMS        // MUST be last element of enum.

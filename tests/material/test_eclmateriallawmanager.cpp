@@ -742,7 +742,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(Fam1Fam2Hysteresis, Scalar, Types)
 
                 for (unsigned phasePairIdx = 0; phasePairIdx < 3; ++phasePairIdx) {
                     BOOST_CHECK_CLOSE(sowmax_in[phasePairIdx], sowmax_out[phasePairIdx], 1e-5);
-                    BOOST_CHECK_CLOSE(sgomax_in[phasePairIdx], sgomax_out[phasePairIdx], 1e-5);     
+                    BOOST_CHECK_CLOSE(sgomax_in[phasePairIdx], sgomax_out[phasePairIdx], 1e-5);
                 }
             }
         }

@@ -69,4 +69,3 @@ std::ostream& operator<<( std::ostream&, const ParserRecord& );
 
 
 #endif  /* PARSERRECORD_HPP */
-

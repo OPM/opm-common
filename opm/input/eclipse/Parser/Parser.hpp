@@ -192,4 +192,3 @@ namespace Opm {
 
 } // namespace Opm
 #endif  /* PARSER_H */
-

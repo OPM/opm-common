@@ -58,11 +58,11 @@ function (strip_debug_symbols targets)
 	  # libraries must retain the symbols in order to link to them, but
 	  # everything can be stripped in an executable
 	  get_target_property (_kind ${target} TYPE)
-	  
+
 	  # don't strip static libraries
 	  if ("${_kind}" STREQUAL "STATIC_LIBRARY")
 		return ()
-	  endif ("${_kind}" STREQUAL "STATIC_LIBRARY")	  
+	  endif ("${_kind}" STREQUAL "STATIC_LIBRARY")
 
 	  # don't strip public symbols in shared objects
 	  if ("${_kind}" STREQUAL "EXECUTABLE")
@@ -70,7 +70,7 @@ function (strip_debug_symbols targets)
 	  else ("${_kind}" STREQUAL "EXECUTABLE")
 		set (_strip_args "--strip-debug")
 	  endif ("${_kind}" STREQUAL "EXECUTABLE")
-	  
+
 	  # add_custom_command doesn't support generator expressions in the
 	  # working_directory argument (sic; that's what you get when you do
 	  # ad hoc programming all the time), so we need to extract the
@@ -129,4 +129,3 @@ function (strip_debug_symbols targets)
 	endif (ARGV1)
   endif ()
 endfunction (strip_debug_symbols targets)
-

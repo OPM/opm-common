@@ -74,7 +74,7 @@ namespace Opm {
         };
 
         static GConSale serializationTestObject();
-        
+
         bool has(const std::string& name) const;
         const GCONSALEGroup& get(const std::string& name) const;
         const GCONSALEGroupProp get(const std::string& name, const SummaryState& st) const;

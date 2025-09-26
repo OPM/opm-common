@@ -185,7 +185,7 @@ namespace Opm {
             serializer(XXXDPR_has_value);
             serializer(MNWRFP);
             serializer(MNWRFP_has_value);
-            
+
             serializer(WSEG_MAX_RESTART);
             serializer(WSEG_REDUCTION_FACTOR);
             serializer(WSEG_INCREASE_FACTOR);

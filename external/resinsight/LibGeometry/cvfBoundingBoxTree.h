@@ -47,7 +47,7 @@ class BoundingBoxTreeImpl;
 
 //==================================================================================================
 //
-// An axis-aligned bounding-box search tree class 
+// An axis-aligned bounding-box search tree class
 //
 //==================================================================================================
 class BoundingBoxTree : public cvf::Object
@@ -55,10 +55,10 @@ class BoundingBoxTree : public cvf::Object
 public:
     BoundingBoxTree();
     ~BoundingBoxTree() override;
-    
+
     void buildTreeFromBoundingBoxes(const std::vector<cvf::BoundingBox>& boundingBoxes,
                                     const std::vector<size_t>* optionalBoundingBoxIds);
-    
+
     void findIntersections(const cvf::BoundingBox& inputBB, std::vector<size_t>* bbIdsOrIndexesIntersected) const;
 
 private:

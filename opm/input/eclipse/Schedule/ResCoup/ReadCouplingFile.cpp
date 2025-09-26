@@ -59,4 +59,3 @@ void handleUSECUPL(HandlerContext& handlerContext)
 }
 
 } // namespace Opm
-

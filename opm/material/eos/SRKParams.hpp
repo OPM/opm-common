@@ -41,7 +41,7 @@ public:
         Scalar omega = FluidSystem::acentricFactor(compIdx);
         Scalar f_omega = 0.48 + omega * (1.574 + omega * (-0.176));
         Valgrind::CheckDefined(f_omega);
-        
+
         Scalar tmp = 1 + f_omega*(1 - sqrt(Tr));
         return 0.4274802 * tmp * tmp;
     }

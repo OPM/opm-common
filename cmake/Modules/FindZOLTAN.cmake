@@ -68,4 +68,3 @@ if (ZOLTAN_FOUND)
     "  Include directory: ${ZOLTAN_INCLUDE_DIRS}\n"
     "  Library directory: ${ZOLTAN_LIBRARIES}\n\n")
 endif()
-

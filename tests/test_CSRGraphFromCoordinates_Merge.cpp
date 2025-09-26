@@ -208,7 +208,7 @@ BOOST_AUTO_TEST_CASE(Linear_7x1x1_Two_Intersecting_Merges)
 
     // Group vertices 1,2,3 together - they will be merged into a single vertex
     graph.addVertexGroup({1, 2, 3});
-    
+
     // Group vertices 3,4 together - they will be merged into a single vertex
     // Note: Since vertex 3 appears in both groups, these groups will be merged
     graph.addVertexGroup({3, 4});
@@ -560,7 +560,7 @@ BOOST_AUTO_TEST_CASE(Linear_7x1x1_Two_Intersecting_Merges)
 
     // Group vertices 1,2,3 together - they will be merged into a single vertex
     graph.addVertexGroup({1, 2, 3});
-    
+
     // Group vertices 3,4 together - they will be merged into a single vertex
     // Note: Since vertex 3 appears in both groups, these groups will be merged
     graph.addVertexGroup({3, 4});
@@ -876,7 +876,7 @@ BOOST_AUTO_TEST_CASE(Linear_7x1x1_Two_Intersecting_Merges)
 
     // Group vertices 1,2,3 together - they will be merged into a single vertex
     graph.addVertexGroup({1, 2, 3});
-    
+
     // Group vertices 3,4 together - they will be merged into a single vertex
     // Note: Since vertex 3 appears in both groups, these groups will be merged
     graph.addVertexGroup({3, 4});
@@ -1228,7 +1228,7 @@ BOOST_AUTO_TEST_CASE(Linear_7x1x1_Two_Intersecting_Merges)
 
     // Group vertices 1,2,3 together - they will be merged into a single vertex
     graph.addVertexGroup({1, 2, 3});
-    
+
     // Group vertices 3,4 together - they will be merged into a single vertex
     // Note: Since vertex 3 appears in both groups, these groups will be merged
     graph.addVertexGroup({3, 4});

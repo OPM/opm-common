@@ -308,7 +308,7 @@ BOOST_AUTO_TEST_CASE(SimulationConfig_VAPOIL_DISGAS_VAPWAT) {
     BOOST_CHECK_EQUAL( true , simulationConfig_vd.hasDISGAS());
     BOOST_CHECK_EQUAL( true , simulationConfig_vd.hasVAPOIL());
     BOOST_CHECK_EQUAL( true , simulationConfig_vd.hasVAPWAT());
-    
+
 }
 
 BOOST_AUTO_TEST_CASE(SimulationConfig_TEMP_THERMAL)

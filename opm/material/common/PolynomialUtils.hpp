@@ -337,15 +337,15 @@ unsigned cubicRoots(SolContainer* sol,
     // reduces to a quadratic polynomial
     if (std::abs(scalarValue(a)) < 1e-30)
         return invertQuadraticPolynomial(sol, b, c, d);
-    
+
     // We need to reduce the cubic equation to its "depressed cubic" form (however strange that sounds)
     // Depressed cubic form: t^3 + p*t + q, where x = t - b/3*a is the transform we use when we have
     // roots for t. p and q are defined below.
     // Formula for p and q:
     Scalar p = (3.0 * a * c - b * b) / (3.0 * a * a);
     Scalar q = (2.0 * b * b * b - 9.0 * a * b * c + 27.0 * d * a * a) / (27.0 * a * a * a);
-    
-    // Check if we have three or one real root by looking at the discriminant, and solve accordingly with 
+
+    // Check if we have three or one real root by looking at the discriminant, and solve accordingly with
     // correct formula
     Scalar discr = 4.0 * p * p * p + 27.0 * q * q;
     if (discr < 0.0) {
@@ -362,12 +362,12 @@ unsigned cubicRoots(SolContainer* sol,
         std::sort(sol, sol + 3);
 
         // Return confirmation of three roots
-      
+
         return 3;
     }
     else if (discr > 0.0) {
 
-        // Find one real root of a depressed cubic using hyperbolic method. Different solutions depending on 
+        // Find one real root of a depressed cubic using hyperbolic method. Different solutions depending on
         // sign of p
         Scalar t = 0;
         if (p < 0) {
@@ -399,7 +399,7 @@ unsigned cubicRoots(SolContainer* sol,
         if (p == 0) {
             sol[0] = sol[1] = sol[2] = 0.0 - b / (3.0 * a);
         }
-        // If p != 0, the we have a simple root and a double root 
+        // If p != 0, the we have a simple root and a double root
         else {
             sol[0] = (3.0 * q / p) - b / (3.0 * a);
             sol[1] = sol[2] = (-3.0 * q) / (2.0 * p) - b / (3.0 * a);

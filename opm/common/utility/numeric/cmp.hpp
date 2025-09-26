@@ -45,7 +45,7 @@ namespace Opm {
     /// actual comparison is based on the scalar_equal<T>()
     /// function. All functions exist as two overloads, one which
     /// takes explicit input values for the absolute and relative
-    /// epsilon, and one which uses default values.  
+    /// epsilon, and one which uses default values.
     ///
     /// The comparison functions are implemented as templates, with
     /// the following caveats:

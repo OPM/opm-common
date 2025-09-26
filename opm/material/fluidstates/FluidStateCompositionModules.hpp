@@ -222,7 +222,7 @@ public:
     * \brief Wilson formula to calculate K
     *
     */
-    Scalar wilsonK_(unsigned compIdx) const 
+    Scalar wilsonK_(unsigned compIdx) const
     {
         const auto& acf = FluidSystem::acentricFactor(compIdx);
         const auto& T_crit = FluidSystem::criticalTemperature(compIdx);
