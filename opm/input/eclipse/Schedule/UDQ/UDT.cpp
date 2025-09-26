@@ -22,7 +22,7 @@
 #include <opm/common/utility/numeric/linearInterpolation.hpp>
 
 #include <algorithm>
-#include <cassert>
+#include <stdexcept>
 
 namespace Opm {
 
@@ -64,7 +64,7 @@ double UDT::operator()(const double x) const
         return linearInterpolation(xvals_, yvals_, x);
     }
 
-    assert(0); // Should be unreachable
+    throw std::runtime_error("Unsupported interpolation type in UDT::operator()");
 }
 
 } // namespace Opm
