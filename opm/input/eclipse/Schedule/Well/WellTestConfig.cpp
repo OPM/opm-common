@@ -186,4 +186,3 @@ WellTestConfig::WellTestConfig(const RestartIO::RstState& rst_state, int report_
 }
 
 }
-

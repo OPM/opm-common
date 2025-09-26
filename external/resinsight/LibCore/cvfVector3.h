@@ -75,7 +75,7 @@ public:
     inline bool             equals(const Vector3& other) const;
     inline bool             operator==(const Vector3& rhs) const;
     inline bool             operator!=(const Vector3& rhs) const;
-    
+
     inline void             add(const Vector3& other);
     inline void             subtract(const Vector3& other);
     inline const Vector3    operator+(const Vector3& rhs) const;
@@ -96,7 +96,7 @@ public:
     inline void             cross(const Vector3& v1, const Vector3& v2);
     inline const Vector3    operator^(const Vector3& rhs) const;    // Cross product
 
-    template<typename T> 
+    template<typename T>
     void                    set(const T& other);
     inline void             set(S x, S y, S z);
     inline void             setZero();
@@ -125,7 +125,7 @@ public:
     inline S        pointDistance(const Vector3& otherPoint) const;
     inline S        pointDistanceSquared(const Vector3& otherPoint) const;
 
-    void            transformPoint(const Matrix4<S>& m);    
+    void            transformPoint(const Matrix4<S>& m);
     const Vector3   getTransformedPoint(const Matrix4<S>& m) const;
 
     void            transformVector(const Matrix4<S>& m);
@@ -144,7 +144,7 @@ public:
     static const Vector3 UNDEFINED; ///< Undefined vector
 
 private:
-    template<typename T> 
+    template<typename T>
     friend const Vector3<T> operator*(T scalar, const Vector3<T>& rhs);
 
 private:
@@ -166,4 +166,3 @@ template<> Vec3st const Vec3st::UNDEFINED;
 }
 } //namespace external
 #include "cvfVector3.inl"
-

@@ -209,5 +209,3 @@ PERMX
         BOOST_CHECK(vs == value::status::empty_default);
     }
 }
-
-

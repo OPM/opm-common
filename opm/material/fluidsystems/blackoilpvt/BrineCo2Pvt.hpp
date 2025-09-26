@@ -304,7 +304,7 @@ public:
         else {
             return Brine::liquidViscosity(temperature, pressure, Evaluation(salinity_[regionIdx]));
         }
-        
+
     }
 
 
@@ -591,7 +591,7 @@ private:
         const LhsEval& tempC = temperature - 273.15;
         return ezrokhiCoeff[0] + tempC * (ezrokhiCoeff[1] + ezrokhiCoeff[2] * tempC);
     }
-    
+
     template <class LhsEval>
     OPM_HOST_DEVICE LhsEval liquidDensity_(const LhsEval& T,
                            const LhsEval& pl,
@@ -720,10 +720,10 @@ private:
     template <class LhsEval>
     OPM_HOST_DEVICE LhsEval liquidEnthalpyBrineCO2_(const LhsEval& T,
                                     const LhsEval& p,
-                                    const LhsEval& salinity, 
+                                    const LhsEval& salinity,
                                     const LhsEval& X_CO2_w) const
     {
-        if (liquidMixType_ == Co2StoreConfig::LiquidMixingType::NONE 
+        if (liquidMixType_ == Co2StoreConfig::LiquidMixingType::NONE
             && saltMixType_ == Co2StoreConfig::SaltMixingType::NONE)
         {
             return H2O::liquidEnthalpy(T, p);
@@ -798,7 +798,7 @@ private:
         else {
             delta_hCO2 = 0.0;
         }
-            
+
         /* enthalpy contribution of CO2 (kJ/kg) */
         hg = CO2::gasEnthalpy(co2Tables_, T, p, extrapolate)/1E3 + delta_hCO2;
 

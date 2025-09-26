@@ -44,7 +44,7 @@ namespace cvf {
 
 //==================================================================================================
 //
-// 
+//
 //
 //==================================================================================================
 template <typename T>
@@ -100,4 +100,3 @@ typedef Rect<uint>      Rectui; ///< A rect with unsigned integer components
 }
 } //namespace external
 #include "cvfRect.inl"
-

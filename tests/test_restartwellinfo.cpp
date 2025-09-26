@@ -66,11 +66,11 @@ void verifyWellState(const std::string& rst_filename, const Opm::Schedule& sched
 {
 
   /*
-      reference variables ref_wellList, ref_wellHead and ref_wellConn are 
-      based on WELSPECS and COMPDAT in data deck -> testblackoilstate3.DATA.  
+      reference variables ref_wellList, ref_wellHead and ref_wellConn are
+      based on WELSPECS and COMPDAT in data deck -> testblackoilstate3.DATA.
 
   */
-  
+
     int step = std::stoi( rst_filename.substr(rst_filename.size()-1)) -1;
     Opm::EclIO::EclFile rstFile(rst_filename);
 

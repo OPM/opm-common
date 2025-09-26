@@ -22,11 +22,11 @@
 */
 /*!
 * \file
-* 
+*
 * \ingroup Components
 *
 * \copydoc Opm::SimpleH2
-* 
+*
 */
 #ifndef OPM_SIMPLE_H2_HPP
 #define OPM_SIMPLE_H2_HPP

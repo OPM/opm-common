@@ -47,7 +47,7 @@ namespace external {
 
 
 // Used to keep track of all instances of classes derived from Object.
-// Can be used to detect memory leaks in combination with the static member 
+// Can be used to detect memory leaks in combination with the static member
 // functions: Object::activeObjectInstances() and Object::dumpActiveObjectInstances()
 //  0 - disable tracking of active object instances
 //  1 - track active instances in debug builds

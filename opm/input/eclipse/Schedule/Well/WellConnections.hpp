@@ -97,7 +97,7 @@ namespace Opm {
                           const ScheduleGrid&    grid,
                           const std::string&     wname,
                           const WDFAC&           wdfac,
-                          const KeywordLocation& location);                         
+                          const KeywordLocation& location);
 
         void loadCOMPTRAJ(const DeckRecord&      record,
                           const ScheduleGrid&    grid,

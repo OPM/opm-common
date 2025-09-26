@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(TestCriticalErrorBeginEnd)
 BOOST_AUTO_TEST_CASE(TestCriticalErrorBeginEndPassCriticalError)
 {
     // make sure we simply rethrow CriticalError without decorating it
-    try { 
+    try {
         try {
             throw Opm::CriticalError("test");
             BOOST_FAIL("Should have thrown");

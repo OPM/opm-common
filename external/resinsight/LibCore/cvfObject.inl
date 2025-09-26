@@ -65,7 +65,7 @@ inline Object::~Object()
 
 //--------------------------------------------------------------------------------------------------
 /// Increments reference count.
-/// 
+///
 /// \return  The new reference count.
 //--------------------------------------------------------------------------------------------------
 inline int Object::addRef() const
@@ -77,9 +77,9 @@ inline int Object::addRef() const
 
 //--------------------------------------------------------------------------------------------------
 /// Decrements the reference count. Returns the new reference count.
-/// 
+///
 /// \return  The new reference count.
-/// 
+///
 /// If the new reference count is zero, the object (this) is deleted.\n
 //--------------------------------------------------------------------------------------------------
 inline int Object::release() const
@@ -114,17 +114,17 @@ inline int Object::refCount() const
 /// \class cvf::ref
 /// \ingroup Core
 ///
-/// Smart pointer class used for handling reference counted objects (that derive from Object). 
+/// Smart pointer class used for handling reference counted objects (that derive from Object).
 ///
-/// The ref<T> class encapsulates reference counting by calling Object::addRef() and Object::release() 
-/// on the internally stored object pointer. 
+/// The ref<T> class encapsulates reference counting by calling Object::addRef() and Object::release()
+/// on the internally stored object pointer.
 ///
 /// \internal Inspired by boost's intrusive_ptr class.
 //==================================================================================================
 
 //--------------------------------------------------------------------------------------------------
-/// Constructor from naked pointer 
-/// 
+/// Constructor from naked pointer
+///
 /// Will call addRef() on the passed object.
 //--------------------------------------------------------------------------------------------------
 template<typename T>
@@ -143,7 +143,7 @@ ref<T>::ref(T* object)
 
 //--------------------------------------------------------------------------------------------------
 /// Copy constructor
-///  
+///
 /// Copies the internal pointer from the passed ref object and calls addRef() on the object.
 //--------------------------------------------------------------------------------------------------
 template<typename T>
@@ -162,8 +162,8 @@ ref<T>::ref(const ref& other)
 
 
 //--------------------------------------------------------------------------------------------------
-/// Construct from related. 
-/// 
+/// Construct from related.
+///
 /// Copies the internal pointer from the passed ref object and calls addRef() on the object.
 //--------------------------------------------------------------------------------------------------
 template<typename T>
@@ -185,8 +185,8 @@ ref<T>::ref(const ref<T2>& other)
 
 
 //--------------------------------------------------------------------------------------------------
-/// Destructor. 
-/// 
+/// Destructor.
+///
 /// Will call release() on the internal pointer.
 //--------------------------------------------------------------------------------------------------
 template<typename T>
@@ -201,7 +201,7 @@ ref<T>::~ref()
 
 
 //--------------------------------------------------------------------------------------------------
-/// Assignment from raw pointer. 
+/// Assignment from raw pointer.
 //--------------------------------------------------------------------------------------------------
 template<typename T>
 ref<T>& ref<T>::operator=(T* rhs)
@@ -214,9 +214,9 @@ ref<T>& ref<T>::operator=(T* rhs)
 
 //--------------------------------------------------------------------------------------------------
 /// Assignment operator
-/// 
+///
 /// Copies the internal pointer from \a rhs and calls addRef().
-/// If we're already storing an internal pointer, this pointer will be release()'ed. 
+/// If we're already storing an internal pointer, this pointer will be release()'ed.
 //--------------------------------------------------------------------------------------------------
 template<typename T>
 ref<T>& ref<T>::operator=(ref rhs)
@@ -229,9 +229,9 @@ ref<T>& ref<T>::operator=(ref rhs)
 
 //--------------------------------------------------------------------------------------------------
 /// Assignment from related.
-/// 
+///
 /// Copies the internal pointer from \a rhs and calls addRef().
-/// If we're already storing an internal pointer, this pointer will be release()'ed. 
+/// If we're already storing an internal pointer, this pointer will be release()'ed.
 //--------------------------------------------------------------------------------------------------
 template<typename T>
 template<typename T2>
@@ -244,10 +244,10 @@ ref<T>& ref<T>::operator=(const ref<T2>& rhs)
 
 
 //--------------------------------------------------------------------------------------------------
-/// Returns the naked pointer this object is associated with. 
-/// 
+/// Returns the naked pointer this object is associated with.
+///
 /// Added to be able to write the same code for smart pointers as for normal naked pointers.
-/// 
+///
 /// \code
 /// ref<MyObject> myObject = new MyObject;
 /// myObject->doSomething();                // Easier than myObject.p()->doSomething()
@@ -256,25 +256,25 @@ ref<T>& ref<T>::operator=(const ref<T2>& rhs)
 template<typename T>
 inline T* ref<T>::operator->()
 {
-    CVF_TIGHT_ASSERT(m_object); 
+    CVF_TIGHT_ASSERT(m_object);
     return m_object;
 }
 
 
 //--------------------------------------------------------------------------------------------------
-/// Returns naked const pointer this object is associated with. 
+/// Returns naked const pointer this object is associated with.
 //--------------------------------------------------------------------------------------------------
 template<typename T>
 inline const T* ref<T>::operator->() const
 {
-    CVF_TIGHT_ASSERT(m_object); 
+    CVF_TIGHT_ASSERT(m_object);
     return m_object;
 }
 
 
 //--------------------------------------------------------------------------------------------------
-/// Dereference operator returning a modifiable reference to the associated object. 
-/// 
+/// Dereference operator returning a modifiable reference to the associated object.
+///
 /// Added to be able to write the same code for smart pointers as for normal naked pointers.
 /// \code
 /// ref<MyObject> myObject = new MyObject;
@@ -284,18 +284,18 @@ inline const T* ref<T>::operator->() const
 template<typename T>
 inline T& ref<T>::operator*()
 {
-    CVF_TIGHT_ASSERT(m_object); 
+    CVF_TIGHT_ASSERT(m_object);
     return *m_object;
 }
 
 
 //--------------------------------------------------------------------------------------------------
-/// Dereference operator returning a const reference to the associated object. 
+/// Dereference operator returning a const reference to the associated object.
 //--------------------------------------------------------------------------------------------------
 template<typename T>
 inline const T& ref<T>::operator*() const
 {
-    CVF_TIGHT_ASSERT(m_object); 
+    CVF_TIGHT_ASSERT(m_object);
     return *m_object;
 }
 
@@ -331,7 +331,7 @@ inline bool ref<T>::isNull() const
 
 
 //--------------------------------------------------------------------------------------------------
-/// Returns true if the internal pointer is different from NULL 
+/// Returns true if the internal pointer is different from NULL
 //--------------------------------------------------------------------------------------------------
 template<typename T>
 inline bool ref<T>::notNull() const
@@ -342,9 +342,9 @@ inline bool ref<T>::notNull() const
 
 //--------------------------------------------------------------------------------------------------
 /// Does less than comparison of two ref objects.
-/// 
+///
 /// \return Returns true if this object's internal pointer is less than the internal pointer of \a rhs.
-/// 
+///
 /// The comparison is done by comparing the internal pointer values ( this.p() < rhs.p() )
 /// This operator is used in several STL collections (e.g. std::set) as well as in many STL algorithms
 /// (e.g. std::sort() ).
@@ -359,20 +359,20 @@ bool ref<T>::operator<(const ref& rhs) const
 
 //--------------------------------------------------------------------------------------------------
 /// Exchanges the contents of the two smart pointers.
-/// 
+///
 /// \param other  Modifiable reference to the ref object that should have its contents swapped.
-/// 
-/// Swap the associated pointer in this and the passed ref object. Will not modify the reference 
+///
+/// Swap the associated pointer in this and the passed ref object. Will not modify the reference
 /// count of any of the associated objects.
-/// 
-/// \warning Note that signature differs from normal practice. This is done to be 
+///
+/// \warning Note that signature differs from normal practice. This is done to be
 ///          consistent with the signature of std::swap()
 //--------------------------------------------------------------------------------------------------
 template<typename T>
 void ref<T>::swap(ref& other)
 {
     T* tmp = other.m_object;
-    other.m_object = m_object; 
+    other.m_object = m_object;
     m_object = tmp;
 }
 
@@ -441,7 +441,7 @@ cref<T>::cref(const cref<T2>& other)
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 template<typename T>
 cref<T>::~cref()
@@ -455,7 +455,7 @@ cref<T>::~cref()
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 template<typename T>
 cref<T>& cref<T>::operator=(const T* rhs)
@@ -467,7 +467,7 @@ cref<T>& cref<T>::operator=(const T* rhs)
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 template<typename T>
 cref<T>& cref<T>::operator=(cref rhs)
@@ -479,7 +479,7 @@ cref<T>& cref<T>::operator=(cref rhs)
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 template<typename T>
 template<typename T2>
@@ -492,29 +492,29 @@ cref<T>& cref<T>::operator=(const cref<T2>& rhs)
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 template<typename T>
 inline const T* cref<T>::operator->() const
 {
-    CVF_TIGHT_ASSERT(m_object); 
+    CVF_TIGHT_ASSERT(m_object);
     return m_object;
 }
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 template<typename T>
 inline const T& cref<T>::operator*() const
 {
-    CVF_TIGHT_ASSERT(m_object); 
+    CVF_TIGHT_ASSERT(m_object);
     return *m_object;
 }
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 template<typename T>
 inline const T* cref<T>::p() const
@@ -524,7 +524,7 @@ inline const T* cref<T>::p() const
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 template<typename T>
 inline bool cref<T>::isNull() const
@@ -534,7 +534,7 @@ inline bool cref<T>::isNull() const
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 template<typename T>
 inline bool cref<T>::notNull() const
@@ -544,7 +544,7 @@ inline bool cref<T>::notNull() const
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 template<typename T>
 bool cref<T>::operator<(const cref& rhs) const
@@ -555,13 +555,13 @@ bool cref<T>::operator<(const cref& rhs) const
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 template<typename T>
 void cref<T>::swap(cref& other)
 {
     const T* tmp = other.m_object;
-    other.m_object = m_object; 
+    other.m_object = m_object;
     m_object = tmp;
 }
 

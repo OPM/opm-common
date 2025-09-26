@@ -47,15 +47,15 @@ namespace cvf {
 /// \ingroup Core
 ///
 /// Implements an iteration range for use with our functors.
-/// The class is designed to be compatible with TBB's blocked_range class with regards to 
+/// The class is designed to be compatible with TBB's blocked_range class with regards to
 /// the functor's requirements
-/// 
+///
 //==================================================================================================
 template <typename T>
 class FunctorRange
 {
 public:
-    FunctorRange(T beginIndex, T endIndex) 
+    FunctorRange(T beginIndex, T endIndex)
         : m_beginIndex(beginIndex), m_endIndex(endIndex) {}
 
     inline T begin() const { return m_beginIndex; }  ///< The first index included in the range

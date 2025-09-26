@@ -787,7 +787,7 @@ GRID
 
 INIT
 
-DX 
+DX
   100*1 /
 DY
         100*10 /
@@ -875,7 +875,7 @@ BOOST_AUTO_TEST_CASE(MULTPVInit)
 {
     checkMULTPV(createMULTPVDECK(false));
     checkMULTPV(createMULTPVDECK(true));
-    
+
 }
 
 namespace {
@@ -919,7 +919,7 @@ GRID
 
 INIT
 
-DX 
+DX
   100*1 /
 DY
         100*10 /

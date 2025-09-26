@@ -74,7 +74,7 @@ function (OpmInitProjVars)
   set (${project}_NAME "${project}" PARENT_SCOPE)
   set (${project}_DESCRIPTION "${description}" PARENT_SCOPE)
   set (${project}_VERSION_MAJOR "${major}" PARENT_SCOPE)
-  set (${project}_VERSION_MINOR "${minor}" PARENT_SCOPE)  
+  set (${project}_VERSION_MINOR "${minor}" PARENT_SCOPE)
   set (${project}_LABEL "${label}" PARENT_SCOPE)
 endfunction ()
 
@@ -85,7 +85,7 @@ macro (OpmInitDirVars)
 
   # but for backward compatibility we can override it
   if (COMMAND dir_hook)
-	dir_hook ()	
+	dir_hook ()
   endif (COMMAND dir_hook)
 endmacro ()
 

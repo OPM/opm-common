@@ -607,7 +607,7 @@ namespace {
             const auto& record = deck["WCONHIST"].back().getRecord(0);
             auto table_nr = record.getItem("VFP_TABLE").get< int >(0);
             Opm::Well::WellProductionProperties hist(unit_system, "W");
-            hist.handleWCONHIST(alq_type, table_nr, 
+            hist.handleWCONHIST(alq_type, table_nr,
                                 Opm::ParserKeywords::FBHPDEF::TARGET_BHP::defaultValue * unit::barsa,
                                 unit_system, record);
 

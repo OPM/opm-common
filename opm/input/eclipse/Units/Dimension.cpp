@@ -92,5 +92,3 @@ namespace Opm {
         return !(*this == rhs );
     }
 }
-
-

@@ -29,7 +29,7 @@
 
 /*
   This class is a simple demonstration of how the logging framework
-  can be used to create a simple very special case logging facility. 
+  can be used to create a simple very special case logging facility.
 */
 
 namespace Opm {
@@ -56,4 +56,3 @@ typedef std::shared_ptr<const TimerLog> TimerLogConstPtr;
 } // namespace Opm
 
 #endif
-

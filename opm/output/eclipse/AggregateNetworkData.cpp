@@ -730,4 +730,3 @@ captureDeclaredNetworkData(const Opm::EclipseState&             es,
     });
 
 }
-

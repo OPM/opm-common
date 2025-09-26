@@ -94,4 +94,3 @@ namespace Opm {
 
 
 #endif	/* RAWCONSTS_HPP */
-

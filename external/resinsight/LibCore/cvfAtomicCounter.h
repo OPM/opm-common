@@ -73,7 +73,7 @@ public:
     int operator -- (int);  // postfix
 
 private:
-    
+
     CVF_DISABLE_COPY_AND_ASSIGN(AtomicCounter);
 
 #ifdef WIN32

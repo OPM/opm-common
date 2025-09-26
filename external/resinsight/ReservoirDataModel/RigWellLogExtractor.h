@@ -91,7 +91,7 @@ protected:
     void appendIntersectionToArrays( double                      measuredDepth,
                                      const HexIntersectionInfo&  intersection /*,
                                      gsl::not_null<QStringList*> errorMessages */);
-    
+
     virtual cvf::Vec3d
         calculateLengthInCell( size_t cellIndex, const cvf::Vec3d& startPoint, const cvf::Vec3d& endPoint ) const = 0;
 

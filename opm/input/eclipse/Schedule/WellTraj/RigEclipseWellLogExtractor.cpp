@@ -41,8 +41,8 @@
 
 namespace external {
 
- RigEclipseWellLogExtractor::RigEclipseWellLogExtractor( const RigWellPath* wellpath, 
-                                                         const Opm::EclipseGrid& grid, 
+ RigEclipseWellLogExtractor::RigEclipseWellLogExtractor( const RigWellPath* wellpath,
+                                                         const Opm::EclipseGrid& grid,
                                                          cvf::ref<cvf::BoundingBoxTree>& cellSearchTree )
     : RigWellLogExtractor( wellpath, "" )
       ,m_grid(grid)
@@ -160,7 +160,7 @@ void RigEclipseWellLogExtractor::findCellLocalXYZ( const std::array<cvf::Vec3d, 
                                                                        hexCorners[1],
                                                                        hexCorners[5],
                                                                        hexCorners[4] );
-    
+
     cvf::Vec3d faceCenterPosJ = cvf::GeometryTools::computeFaceCenter( hexCorners[3],
                                                                        hexCorners[7],
                                                                        hexCorners[6],
@@ -188,12 +188,12 @@ void RigEclipseWellLogExtractor::hexCornersOpmToResinsight( cvf::Vec3d hexCorner
 {
     const auto[i,j,k] = m_grid.getIJK(cellIndex);
     std::array<std::size_t, 8> opm2resinsight = {0, 1, 3, 2, 4, 5, 7, 6};
-   
+
     for (std::size_t l = 0; l < 8; l++) {
          std::array<double, 3> cornerPointArray;
          cornerPointArray = m_grid.getCornerPos(i,j,k,l);
          hexCorners[opm2resinsight[l]]= cvf::Vec3d(cornerPointArray[0], cornerPointArray[1], cornerPointArray[2]);
-    } 
+    }
 }
 
 // Modified version of ApplicationLibCode\ReservoirDataModel\RigMainGrid.cpp
@@ -262,7 +262,7 @@ void RigEclipseWellLogExtractor::findIntersectingCells( const cvf::BoundingBox& 
     m_cellSearchTree->findIntersections( inputBB, cellIndices );
 }
 
-// Modified version of ApplicationLibCode\ReservoirDataModel\RigEclipseWellLogExtractor.cpp 
+// Modified version of ApplicationLibCode\ReservoirDataModel\RigEclipseWellLogExtractor.cpp
 std::vector<size_t> RigEclipseWellLogExtractor::findCloseCellIndices( const cvf::BoundingBox& bb )
 {
     std::vector<size_t> closeCells;

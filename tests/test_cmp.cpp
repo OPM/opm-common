@@ -120,4 +120,3 @@ BOOST_AUTO_TEST_CASE(TestFloatcmp) {
     v2.push_back( 27 );
     BOOST_CHECK( cmp::vector_equal(v1 , v2 ));
 }
-

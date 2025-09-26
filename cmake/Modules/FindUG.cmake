@@ -14,7 +14,7 @@ function(opmFindUg)
       # check whether UG is in /usr
     elseif(EXISTS "/usr/include/ug")
       set(UG_ROOT "/usr")
-      
+
       # oops
     else()
       message(STATUS "Could not find UG. It seems to be not installed.")
@@ -61,7 +61,7 @@ function(opmFindUg)
 
   # Adjust compiler/linker arguments
   set(UG_LIBRARY_DIR "${libdir}")
-  
+
   foreach (UG_RAW_LIB "-lugS2" "-lugS3" "-ldevS")
     string(REGEX REPLACE "-l(.*)" "\\1" UG_LIB "${UG_RAW_LIB}")
     set(UG_LIB_FILE  "${UG_LIBRARY_DIR}/lib${UG_LIB}.a")
@@ -89,7 +89,7 @@ endfunction()
 
 if (NOT HAVE_UG)
   opmFindUg()
-  
+
   set(HAVE_UG "${HAVE_UG}" CACHE BOOL "UG library is available")
   set(UG_INCLUDE_DIRS "${UG_INCLUDE_DIRS}" CACHE STRING "Directory containing the headers of the UG library")
   set(UG_LIBRARIES "${UG_LIBRARIES}" CACHE STRING "The libraries which need to be linked to be able to use the UG library")

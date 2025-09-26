@@ -1051,7 +1051,7 @@ inline quantity filtrate_well_quantities(const fn_args& args)
 template< rt tracer, rt phase, bool injection = true >
 inline quantity ratetracer( const fn_args& args ) {
     double sum = 0.0;
-    
+
     // All well-related tracer keywords, e.g. WTPCxx, WTPRxx, FTPTxx, have a 4-letter prefix length
     constexpr auto prefix_len = 4;
     std::string tracer_name = args.keyword_name.substr(prefix_len);
@@ -1412,13 +1412,13 @@ inline quantity srate(const fn_args& args)
 template< rt tracer, rt phase>
 inline quantity sratetracer(const fn_args& args)
 {
-    return segment_quantity(args, rate_unit<phase>(), 
+    return segment_quantity(args, rate_unit<phase>(),
         [&args](const Opm::data::Segment& segment)
     {
         // Tracer-related keywords, STFRx and STFCx, have a 4-letter prefix length
         constexpr auto prefix_len = 4;
         std::string tracer_name = args.keyword_name.substr(prefix_len);
-        
+
         return - segment.rates.get(tracer, 0.0, tracer_name)
             * efac(args.eff_factors, args.schedule_wells.front()->name());
     });

@@ -108,10 +108,10 @@ namespace Opm
         auto default_count = 0;
 
         std::string name = "LGR";
-        default_count += update_default_name(deckRecord.getItem<ParserKeywords::CARFIN::NAME>(), name);      
+        default_count += update_default_name(deckRecord.getItem<ParserKeywords::CARFIN::NAME>(), name);
 
         std::string parent_name = "GLOBAL";
-        default_count += update_default_name(deckRecord.getItem<ParserKeywords::CARFIN::PARENT>(), parent_name);      
+        default_count += update_default_name(deckRecord.getItem<ParserKeywords::CARFIN::PARENT>(), parent_name);
 
         int i1 = 0;
         int i2 = this->m_globalGridDims_.getNX() - 1;
@@ -161,7 +161,7 @@ namespace Opm
 
         this->name_grid = name;
         this->parent_name_grid = parent_name;
-        this->m_dims[0] = nx;  
+        this->m_dims[0] = nx;
         this->m_dims[1] = ny;
         this->m_dims[2] = nz;
 
@@ -183,12 +183,12 @@ namespace Opm
 
     std::size_t Carfin::num_parent_cells() const
     {
-        return (upper(0) - lower(0) + 1) * 
+        return (upper(0) - lower(0) + 1) *
                (upper(1) - lower(1) + 1) *
                (upper(2) - lower(2) + 1);
     }
 
-    
+
 
     bool Carfin::isGlobal() const
     {
@@ -212,7 +212,7 @@ namespace Opm
         return this->m_global_index_list;
     }
 
-    void Carfin::initIndexList() 
+    void Carfin::initIndexList()
     {
         this->m_active_index_list.clear();
         this->m_global_index_list.clear();
@@ -230,7 +230,7 @@ namespace Opm
             const auto global_index = this->m_globalGridDims_
                 .getGlobalIndex(this->m_offset[0] + (lgrIJK[0] / binSize[0]),
                         this->m_offset[1] + (lgrIJK[1] / binSize[1]),
-                        this->m_offset[2] + (lgrIJK[2] / binSize[2]));        
+                        this->m_offset[2] + (lgrIJK[2] / binSize[2]));
 
             if (this->m_globalIsActive_(global_index)) {
                 const auto active_index = this->m_globalActiveIdx_(global_index);

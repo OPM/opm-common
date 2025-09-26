@@ -40,4 +40,3 @@ void python::common::export_EclipseConfig(py::module& module)
     py::class_< IOConfig >( module, "IOConfig", IOConfig_docstring );
 
 }
-

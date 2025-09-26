@@ -388,7 +388,7 @@ namespace Opm {
         const auto skin_factor = record.getItem("SKIN").getSIDouble(0);
         const auto d_factor = record.getItem("D_FACTOR").getSIDouble(0);
         const int lgr_grid_number = grid.get_lgr_grid_number(lgr_label);
-        
+
         int satTableId = -1;
         bool defaultSatTable = true;
         if (satTableIdItem.hasValue(0) && (satTableIdItem.get<int>(0) > 0)) {
@@ -534,7 +534,7 @@ The cell ({},{},{}) in well {} is not active and the connection will be ignored)
                 const std::size_t noConn = this->m_connections.size();
                 this->addConnection(I, J, k, cell.global_index, state,
                                     cell.depth, ctf_props, satTableId,
-                                    direction, ctf_kind, noConn, 
+                                    direction, ctf_kind, noConn,
                                     lgr_grid_number, defaultSatTable);
             }
             else {

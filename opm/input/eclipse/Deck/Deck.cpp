@@ -62,7 +62,7 @@ const DeckView& Deck::global_view() const {
 
     Opm::DeckView Deck::operator[](const std::string& keyword) const {
         return this->global_view()[keyword];
-    } 
+    }
 
     const DeckKeyword& Deck::operator[](std::size_t index) const {
         return this->keywordList.at(index);

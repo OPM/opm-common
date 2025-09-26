@@ -120,4 +120,3 @@ namespace Opm {
 }
 
 #endif  /* DECKKEYWORD_HPP */
-

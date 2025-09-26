@@ -158,7 +158,7 @@ public:
         if (config().krHysteresisModel() == 4) {
             //Swco_ = info.Swl;
             if (twoPhaseSystem == EclTwoPhaseSystemType::GasOil) {
-                Swmaxd_ = 1.0 - info.Sgl - info.Swl; 
+                Swmaxd_ = 1.0 - info.Sgl - info.Swl;
                 KrwdMax_ = EffLawT::twoPhaseSatKrw(drainageParams(), Swmaxd_);
             }
             else if (twoPhaseSystem == EclTwoPhaseSystemType::GasWater) {
@@ -402,14 +402,14 @@ public:
     {
         if( config().krHysteresisModel() == 0 || config().krHysteresisModel() == 2)
             return Swcrd_;
-        
+
         if( config().krHysteresisModel() == 1 || config().krHysteresisModel() == 3)
             return Swcri_;
-        
+
         // For Killough the trapped saturation is already computed
         if( config().krHysteresisModel() == 4 )
             return Swcrt_;
-        
+
         return 0.0;
         //else // For Carlson we use the shift to compute it from the critial saturation
         //    return Swcri_ + deltaSwImbKrw_;
@@ -445,7 +445,7 @@ public:
     }
 
     Scalar krwdMax() const
-    { 
+    {
         return KrwdMax_; }
 
     Scalar KrwdHy() const
@@ -705,7 +705,7 @@ private:
             //Scalar krwMdcDrainage = EffLawT::twoPhaseSatKrw(drainageParams(), krwSwMdc_);
             //Scalar SwKrwMdcImbibition = EffLawT::twoPhaseSatKrwInv(imbibitionParams(), krwMdcDrainage);
             //deltaSwImbKrw_ = SwKrwMdcImbibition - krwSwMdc_;
-        //}   
+        //}
 
         if (config().krHysteresisModel() == 0 || config().krHysteresisModel() == 1) {
             Scalar krnMdcDrainage = EffLawT::twoPhaseSatKrn(drainageParams(), krnSwMdc_);

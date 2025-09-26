@@ -262,7 +262,7 @@ namespace Opm {
 		T val = this->translate<T>(*it, r);
 		it->second->setUsed();
 		if (output_is_enabled_) {
-            	    OpmLog::debug(name + " found at " + path() + ID_delimiter_path 
+            	    OpmLog::debug(name + " found at " + path() + ID_delimiter_path
                          + ", value is '" + to_string(val) + "'.");
 		}
 		return val;

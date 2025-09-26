@@ -108,11 +108,11 @@ initFromState(const EclipseState& eclState, const Schedule&)
     if (T_ref != Scalar(288.71) || P_ref != Scalar(1.01325e5)) {
         OPM_THROW(std::runtime_error, "CO2STORE can only be used with default values for STCOND!");
     }
-   
+
     // Check for Ezrokhi tables DENAQA and VISCAQA
     setEzrokhiDenCoeff(eclState.getCo2StoreConfig().getDenaqaTables());
     setEzrokhiViscCoeff(eclState.getCo2StoreConfig().getViscaqaTables());
-    
+
     std::size_t regions = eclState.runspec().tabdims().getNumPVTTables();
     setNumRegions(regions);
     for (std::size_t regionIdx = 0; regionIdx < regions; ++regionIdx) {
@@ -143,7 +143,7 @@ initFromState(const EclipseState& eclState, const Schedule&)
     }
     if (enableEzrokhiViscosity_) {
        OpmLog::info(fmt::format("Ezrokhi viscosity coefficients : \n\tNaCl = {:.3E} {:.3E} {:.3E}",
-                    ezrokhiViscNaClCoeff_[0], ezrokhiViscNaClCoeff_[1], ezrokhiViscNaClCoeff_[2])); 
+                    ezrokhiViscNaClCoeff_[0], ezrokhiViscNaClCoeff_[1], ezrokhiViscNaClCoeff_[2]));
     }
 }
 #endif

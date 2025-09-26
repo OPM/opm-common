@@ -46,11 +46,11 @@ namespace cvf {
 ///
 /// An axis-aligned bounding-box search tree
 ///
-/// This class can be used to quickly do an approximate search for geometry using a bounding box. 
-/// The geometry entities to search for must be enclosed in bounding boxes which are inserted 
-/// together with an ID. 
+/// This class can be used to quickly do an approximate search for geometry using a bounding box.
+/// The geometry entities to search for must be enclosed in bounding boxes which are inserted
+/// together with an ID.
 ///
-/// When intersecting, the ID's or the indexes of the intersected boundingboxes are returned, 
+/// When intersecting, the ID's or the indexes of the intersected boundingboxes are returned,
 /// depending on whether explicit id's where supplied.
 //==================================================================================================
 
@@ -65,7 +65,7 @@ namespace cvf {
 
     //==================================================================================================
     //
-    // 
+    //
     //
     //==================================================================================================
     class AABBTreeNode
@@ -132,13 +132,13 @@ namespace cvf {
     //
     /// An axis oriented bounding box tree. This is an abstract base class for AABB trees used for searching and intersection testing.
     /// All classes deriving from this must implement the CreateLeaves() method. This method creates all the leaf nodes in the AABB
-    /// tree and is called as a part of the BuildTree() process. 
+    /// tree and is called as a part of the BuildTree() process.
     ///
-    /// This base class handles the building of the tree with all the internal nodes. It also handles basic intersection and searching, 
-    /// but the IntersectLeafLeaf() and IntersectBoxLeaf() methods should be implemented in any tree classes used for intersection 
-    /// testing. 
+    /// This base class handles the building of the tree with all the internal nodes. It also handles basic intersection and searching,
+    /// but the IntersectLeafLeaf() and IntersectBoxLeaf() methods should be implemented in any tree classes used for intersection
+    /// testing.
     ///
-    /// The Find() method only searches for matches in bounding boxes, and must be reimplemented in the decendant classes for 
+    /// The Find() method only searches for matches in bounding boxes, and must be reimplemented in the decendant classes for
     /// accurate testing of leaf nodes when the leaf node properties are known.
     //=================================================================================================================================
     class AABBTree : public cvf::Object
@@ -246,7 +246,7 @@ static int largestComponent(const cvf::Vec3d v)
 }
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 AABBTreeNode::AABBTreeNode()
 {
@@ -254,7 +254,7 @@ AABBTreeNode::AABBTreeNode()
 }
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 const cvf::BoundingBox& AABBTreeNode::boundingBox() const
 {
@@ -263,7 +263,7 @@ const cvf::BoundingBox& AABBTreeNode::boundingBox() const
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 NodeType AABBTreeNode::type() const
 {
@@ -271,7 +271,7 @@ NodeType AABBTreeNode::type() const
 }
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 void AABBTreeNode::setBoundingBox(const cvf::BoundingBox bb)
 {
@@ -289,7 +289,7 @@ const cvf::Vec3d& AABBTreeNode::boundingBoxCenter() const
 }
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 AABBTreeNodeInternal::AABBTreeNodeInternal(AABBTreeNode* left, AABBTreeNode* right)
 {
@@ -303,7 +303,7 @@ AABBTreeNodeInternal::AABBTreeNodeInternal(AABBTreeNode* left, AABBTreeNode* rig
 }
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 AABBTreeNodeInternal::AABBTreeNodeInternal()
 {
@@ -314,7 +314,7 @@ AABBTreeNodeInternal::AABBTreeNodeInternal()
 }
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 const AABBTreeNode* AABBTreeNodeInternal::left() const
 {
@@ -322,7 +322,7 @@ const AABBTreeNode* AABBTreeNodeInternal::left() const
 }
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 AABBTreeNode* AABBTreeNodeInternal::left()
 {
@@ -330,7 +330,7 @@ AABBTreeNode* AABBTreeNodeInternal::left()
 }
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 const AABBTreeNode* AABBTreeNodeInternal::right() const
 {
@@ -338,14 +338,14 @@ const AABBTreeNode* AABBTreeNodeInternal::right() const
 }
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 AABBTreeNode* AABBTreeNodeInternal::right()
 {
     return m_pRight;
 }
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 void AABBTreeNodeInternal::setLeft(AABBTreeNode* left)
 {
@@ -354,7 +354,7 @@ void AABBTreeNodeInternal::setLeft(AABBTreeNode* left)
 }
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 void AABBTreeNodeInternal::setRight(AABBTreeNode* right)
 {
@@ -364,7 +364,7 @@ void AABBTreeNodeInternal::setRight(AABBTreeNode* right)
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 AABBTreeNodeLeaf::AABBTreeNodeLeaf()
 {
@@ -374,7 +374,7 @@ AABBTreeNodeLeaf::AABBTreeNodeLeaf()
 }
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 size_t AABBTreeNodeLeaf::index() const
 {
@@ -391,7 +391,7 @@ void AABBTreeNodeLeaf::setIndex(size_t index)
 }
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 AABBTree::AABBTree()
 {
@@ -403,7 +403,7 @@ AABBTree::AABBTree()
 }
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 AABBTree::~AABBTree()
 {
@@ -411,7 +411,7 @@ AABBTree::~AABBTree()
 }
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 void AABBTree::free()
 {
@@ -419,7 +419,7 @@ void AABBTree::free()
 }
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 bool AABBTree::buildTree()
 {
@@ -436,13 +436,13 @@ bool AABBTree::buildTree()
     if (m_iNumLeaves == 1)
     {
         m_pRoot = m_ppLeaves[0];
-        
+
         return true;
     }
 
     m_pRoot = createNode();
     m_pRoot->setBoundingBox(box);
-        
+
     bool bRes = buildTree(static_cast<AABBTreeNodeInternal*>(m_pRoot), 0, m_iNumLeaves - 1, 0, 4);
 
 #pragma omp parallel
@@ -464,7 +464,7 @@ bool AABBTree::buildTree()
 }
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 bool AABBTree::buildTree(AABBTreeNodeInternal* pNode, size_t iFromIdx, size_t iToIdx, int currentLevel, int maxLevel)
 {
@@ -499,7 +499,7 @@ bool AABBTree::buildTree(AABBTreeNodeInternal* pNode, size_t iFromIdx, size_t iT
             AABBTreeNodeLeaf* pTemp = m_ppLeaves[i];
             m_ppLeaves[i] = m_ppLeaves[iMid];
             m_ppLeaves[iMid] = pTemp;
-            
+
             iMid--;
         }
     }
@@ -561,7 +561,7 @@ bool AABBTree::buildTree(AABBTreeNodeInternal* pNode, size_t iFromIdx, size_t iT
 }
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 void AABBTree::freeThis()
 {
@@ -582,7 +582,7 @@ void AABBTree::freeThis()
 }
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 cvf::BoundingBox AABBTree::leafBoundingBox(size_t iStartIdx, size_t iEndIdx) const
 {
@@ -601,7 +601,7 @@ cvf::BoundingBox AABBTree::leafBoundingBox(size_t iStartIdx, size_t iEndIdx) con
 }
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 size_t AABBTree::treeSize(const AABBTreeNode* pNode) const
 {
@@ -618,7 +618,7 @@ size_t AABBTree::treeSize(const AABBTreeNode* pNode) const
 }
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 size_t AABBTree::treeSize() const
 {
@@ -628,7 +628,7 @@ size_t AABBTree::treeSize() const
 }
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 size_t AABBTree::treeNodeSize(const AABBTreeNode* pNode) const
 {
@@ -644,7 +644,7 @@ size_t AABBTree::treeNodeSize(const AABBTreeNode* pNode) const
 }
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 size_t AABBTree::treeHeight(const AABBTreeNode* pNode, size_t iLevel, size_t* piMin, size_t* piMax) const
 {
@@ -667,7 +667,7 @@ size_t AABBTree::treeHeight(const AABBTreeNode* pNode, size_t iLevel, size_t* pi
 }
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 cvf::String AABBTree::treeInfo() const
 {
@@ -698,21 +698,21 @@ cvf::String AABBTree::treeInfo() const
 }
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 bool AABBTree::boundingBox(cvf::BoundingBox* pBox) const
 {
     CVF_ASSERT(pBox);
 
     if (!m_pRoot) return false;
-    
+
     *pBox = m_pRoot->boundingBox();
 
     return true;
 }
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 size_t AABBTree::leavesCount() const
 {
@@ -720,7 +720,7 @@ size_t AABBTree::leavesCount() const
 }
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 bool AABBTree::intersect(const AABBTreeNode* pA, const AABBTreeNode* pB) const
 {
@@ -767,7 +767,7 @@ void AABBTree::deleteInternalNodesBottomUp(AABBTreeNode* node)
 }
 
 //--------------------------------------------------------------------------------------------------
-/// Creates leafs for the supplied valid bounding boxes, keeping the original index 
+/// Creates leafs for the supplied valid bounding boxes, keeping the original index
 //--------------------------------------------------------------------------------------------------
 cvf::BoundingBox BoundingBoxTreeImpl::createLeaves()
 {
@@ -815,12 +815,12 @@ void BoundingBoxTreeImpl::findIntersections(const cvf::BoundingBox& bb, std::vec
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 void BoundingBoxTreeImpl::findIntersections(const cvf::BoundingBox& bb, const AABBTreeNode* node, std::vector<size_t>& cvIndices) const
 {
     CVF_TIGHT_ASSERT(bb.isValid());
-    
+
     if (node && bb.intersects(node->boundingBox()))
     {
         if (node->type() == AB_LEAF)
@@ -842,7 +842,7 @@ void BoundingBoxTreeImpl::findIntersections(const cvf::BoundingBox& bb, const AA
 }
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 BoundingBoxTree::BoundingBoxTree()
 {
@@ -850,7 +850,7 @@ BoundingBoxTree::BoundingBoxTree()
 }
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 BoundingBoxTree::~BoundingBoxTree()
 {
@@ -883,7 +883,7 @@ void BoundingBoxTree::buildTreeFromBoundingBoxes(const std::vector<cvf::Bounding
             }
         }
     }
-    m_implTree->buildTree(); 
+    m_implTree->buildTree();
 }
 
 //--------------------------------------------------------------------------------------------------

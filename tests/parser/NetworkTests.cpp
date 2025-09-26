@@ -206,7 +206,7 @@ GRUPTREE
 BRANPROP
 --  Downtree  Uptree   #VFP    ALQ
     B1         PLAT-A    5      1*      /
-    C1         PLAT-A    9999      1*      /  
+    C1         PLAT-A    9999      1*      /
 /
 
 NODEPROP
@@ -324,7 +324,7 @@ BRANPROP
 
         BOOST_CHECK( network.has_node("C1") );
         BOOST_CHECK( !network.uptree_branch("C1") );
-        
+
         BOOST_CHECK(network.active());
     }
 }

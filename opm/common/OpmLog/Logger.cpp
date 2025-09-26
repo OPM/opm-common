@@ -93,7 +93,7 @@ namespace Opm {
         return m_enabledTypes;
     }
 
-    //static: 
+    //static:
     bool Logger::enabledMessageType( int64_t enabledTypes , int64_t messageType) {
         if (Log::isPower2( messageType)) {
             if ((messageType & enabledTypes) == 0)

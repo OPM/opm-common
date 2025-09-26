@@ -733,7 +733,7 @@ BOOST_AUTO_TEST_CASE(PYTHON_CHANGING_SCHEDULE) {
                 BOOST_CHECK(w1_at_reportstep4.getStatus() ==  Well::Status::SHUT ); // Opened P1 again at step 5
                 BOOST_CHECK(w1_at_reportstep5.getStatus() ==  Well::Status::OPEN ); // Opened P1 again at step 5
                 BOOST_CHECK(w1_at_reportstep6.getStatus() ==  Well::Status::OPEN ); // Opened P1 again at step 5
-                BOOST_CHECK(w2_at_reportstep6.getStatus() ==  Well::Status::SHUT ); 
+                BOOST_CHECK(w2_at_reportstep6.getStatus() ==  Well::Status::SHUT );
                 BOOST_CHECK(w3_at_reportstep6.getStatus() ==  Well::Status::SHUT );
                 BOOST_CHECK(w4_at_reportstep6.getStatus() ==  Well::Status::SHUT );
             }

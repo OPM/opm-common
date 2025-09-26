@@ -52,12 +52,12 @@ createLogiHead(const EclipseState& es)
         !(pvt.isLiveOil ||
           tabMgr.hasTables("PVDO") ||
           tabMgr.getPvcdoTable().empty());
-	
+
     const auto lh = LogiHEAD{}
         .variousParam(false, false, wsd.maxSegmentedWells(), hystPar.active())
         .pvtModel(pvt)
         .network(rspec.networkDimensions().maxNONodes())
         ;
-	
+
     return lh.data();
 }

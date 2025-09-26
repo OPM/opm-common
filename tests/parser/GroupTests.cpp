@@ -237,7 +237,7 @@ GRUPTREE
 GCONPROD
   'G1' 'ORAT' 10000 3* 'RATE' 3* 'RATE' 'NONE' 'RATE'/
   'G2' 'RESV' 10000 3* 'CON' /
-  'G3' 'ORAT' 10000 3*  1* / 
+  'G3' 'ORAT' 10000 3*  1* /
 /
 
 TSTEP
@@ -246,7 +246,7 @@ TSTEP
 GCONPROD
   'G1' 'NONE' 4* 'NONE'/
   'G2' 'NONE' 4* 'NONE'/
-  'G3' 'NONE' 4* 'NONE'/ 
+  'G3' 'NONE' 4* 'NONE'/
 /
 
 TSTEP
@@ -255,7 +255,7 @@ TSTEP
 GCONPROD
   'G1' 'NONE' 10000 3* 'RATE'/
   'G2' 'NONE' 10000 3* 'WELL'/
-  'G3' 'NONE' 10000 3* 'NONE'/ 
+  'G3' 'NONE' 10000 3* 'NONE'/
 /
 
 )";
@@ -1235,4 +1235,3 @@ GCONPROD
 
     BOOST_CHECK(sched[0].has_gpmaint());
 }
-

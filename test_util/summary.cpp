@@ -223,7 +223,7 @@ int main(int argc, char **argv) {
 
         smryData.push_back(vect);
     }
-    
+
     if (headers)
         printHeader(smryList, width);
 
@@ -236,9 +236,9 @@ int main(int argc, char **argv) {
         }
         std::cout << std::endl;
     }
- 
+
     if (headers)
         std::cout << std::endl;
-    
+
     return 0;
 }

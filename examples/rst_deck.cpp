@@ -425,4 +425,3 @@ int main(int argc, char** argv)
         file_deck.dump( options.target_path.value(), options.target_fname.value(), options.mode);
     }
 }
-

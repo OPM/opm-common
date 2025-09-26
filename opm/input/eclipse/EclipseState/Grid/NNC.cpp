@@ -341,4 +341,3 @@ bool is_neighbor(const EclipseGrid& grid, std::size_t g1, std::size_t g2) {
             return {};
     }
 } // namespace Opm
-

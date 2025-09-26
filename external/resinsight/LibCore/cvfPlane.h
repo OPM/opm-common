@@ -46,9 +46,9 @@ namespace external {
 namespace cvf {
 
 //=================================================================================================
-// 
+//
 // Plane class
-// 
+//
 //=================================================================================================
 class Plane : public Object
 {
@@ -66,7 +66,7 @@ public:
     bool            operator!=(const Plane& other) const;
 
     inline double   A() const   { return m_A; }     ///< Get plane coefficient A
-    inline double   B() const   { return m_B; }     ///< Get plane coefficient B     
+    inline double   B() const   { return m_B; }     ///< Get plane coefficient B
     inline double   C() const   { return m_C; }     ///< Get plane coefficient C
     inline double   D() const   { return m_D; }     ///< Get plane coefficient D
 
@@ -92,7 +92,7 @@ public:
     bool            intersect(const Plane& other, Vec3d* point, Vec3d* direction = NULL) const;
     bool            intersect(const Vec3d& a, const Vec3d& b, Vec3d* intersection) const;
     size_t          clipTriangle(const Vec3d& ta, const Vec3d& tb, const Vec3d& tc, Vec3d clippedPolygon[4]) const;
-    
+
     Side            side(const Vec3d& point) const;
     Side            side(const Vec3dArray& points) const;
 

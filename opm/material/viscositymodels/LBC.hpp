@@ -2,7 +2,7 @@
 // vi: set et ts=4 sw=4 sts=4:
 /*
   Copyright 2022 NORCE.
-  
+
   This file is part of the Open Porous Media project (OPM).
 
   OPM is free software: you can redistribute it and/or modify

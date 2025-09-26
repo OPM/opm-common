@@ -186,4 +186,3 @@ namespace Opm {
     };
 }
 #endif  /* DECKITEM_HPP */
-

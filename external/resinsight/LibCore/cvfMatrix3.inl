@@ -44,14 +44,14 @@ namespace cvf {
 /// \class cvf::Matrix3
 /// \ingroup Core
 ///
-/// Matrices are stored internally as a one dimensional array for performance reasons. 
-/// 
+/// Matrices are stored internally as a one dimensional array for performance reasons.
+///
 /// The internal indices into the 1D array are as follows:
-/// 
+///
 /// <PRE>
-///   | m00  m01  m02 |     | 0  3   6 | 
-///   | m10  m11  m12 |     | 1  4   7 | 
-///   | m20  m21  m22 |     | 2  5  18 | 
+///   | m00  m01  m02 |     | 0  3   6 |
+///   | m10  m11  m12 |     | 1  4   7 |
+///   | m20  m21  m22 |     | 2  5  18 |
 /// </PRE>
 ///
 /// See description of Matrix4 for more details on storage
@@ -62,7 +62,7 @@ template<typename S> Matrix3<S> const Matrix3<S>::IDENTITY;
 template<typename S> Matrix3<S> const Matrix3<S>::ZERO(0, 0, 0, 0, 0, 0, 0, 0, 0);
 
 //----------------------------------------------------------------------------------------------------
-/// Default constructor. Initializes matrix to identity 
+/// Default constructor. Initializes matrix to identity
 //----------------------------------------------------------------------------------------------------
 template <typename S>
 Matrix3<S>::Matrix3()
@@ -83,7 +83,7 @@ inline Matrix3<S>::Matrix3(const Matrix3& other)
 
 //----------------------------------------------------------------------------------------------------
 /// Constructor with explicit initialization of all matrix elements.
-/// 
+///
 /// The value of the parameter \a mrc will be placed in row r and column c of the matrix, eg m12
 /// goes into row 1, column 2.
 //----------------------------------------------------------------------------------------------------
@@ -103,7 +103,7 @@ Matrix3<S>::Matrix3(S m00, S m01, S m02, S m10, S m11, S m12, S m20, S m21, S m2
 
 
 //----------------------------------------------------------------------------------------------------
-/// 
+///
 //----------------------------------------------------------------------------------------------------
 template<typename S>
 template<typename T>
@@ -184,13 +184,13 @@ void Matrix3<S>::multiply(const Matrix3& mat)
 
 
 //----------------------------------------------------------------------------------------------------
-/// 
+///
 //----------------------------------------------------------------------------------------------------
 template <typename S>
 const Matrix3<S> Matrix3<S>::operator*(const Matrix3& rhs) const
 {
     Matrix3 m;
-    
+
     int r;
     for (r = 0; r < 3; r++)
     {
@@ -220,7 +220,7 @@ template <typename S>
 void Matrix3<S>::setIdentity()
 {
     m_v[0] = 1;
-    m_v[1] = 0;    
+    m_v[1] = 0;
     m_v[2] = 0;
 
     m_v[3] = 0;
@@ -262,7 +262,7 @@ template <typename S>
 void Matrix3<S>::setZero()
 {
     m_v[0]  = 0;
-    m_v[1]  = 0;    
+    m_v[1]  = 0;
     m_v[2]  = 0;
     m_v[3]  = 0;
     m_v[4]  = 0;
@@ -347,7 +347,7 @@ inline S Matrix3<S>::operator()(int row, int col) const
 
 
 //----------------------------------------------------------------------------------------------------
-/// 
+///
 //----------------------------------------------------------------------------------------------------
 template <typename S>
 bool Matrix3<S>::invert()
@@ -389,7 +389,7 @@ bool Matrix3<S>::invert()
 
 
 //----------------------------------------------------------------------------------------------------
-/// 
+///
 //----------------------------------------------------------------------------------------------------
 template <typename S>
 const Matrix3<S> Matrix3<S>::getInverted(bool* pInvertible) const
@@ -410,15 +410,15 @@ const Matrix3<S> Matrix3<S>::getInverted(bool* pInvertible) const
 
 
 //----------------------------------------------------------------------------------------------------
-/// 
+///
 //----------------------------------------------------------------------------------------------------
 template <typename S>
 S Matrix3<S>::determinant() const
 {
-    S det = m_v[e00]*m_v[e11]*m_v[e22] + 
-            m_v[e01]*m_v[e12]*m_v[e20] + 
-            m_v[e02]*m_v[e10]*m_v[e21] - 
-            m_v[e00]*m_v[e12]*m_v[e21] - 
+    S det = m_v[e00]*m_v[e11]*m_v[e22] +
+            m_v[e01]*m_v[e12]*m_v[e20] +
+            m_v[e02]*m_v[e10]*m_v[e21] -
+            m_v[e00]*m_v[e12]*m_v[e21] -
             m_v[e01]*m_v[e10]*m_v[e22] -
             m_v[e02]*m_v[e11]*m_v[e20];
 
@@ -427,7 +427,7 @@ S Matrix3<S>::determinant() const
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 template <typename S>
 void Matrix3<S>::transpose()
@@ -447,7 +447,7 @@ void Matrix3<S>::transpose()
 
 
 //----------------------------------------------------------------------------------------------------
-/// 
+///
 //----------------------------------------------------------------------------------------------------
 template <typename S>
 const S* Matrix3<S>::ptr() const
@@ -457,7 +457,7 @@ const S* Matrix3<S>::ptr() const
 
 
 //----------------------------------------------------------------------------------------------------
-/// 
+///
 //----------------------------------------------------------------------------------------------------
 template <typename S>
 Matrix3<S> Matrix3<S>::fromRotation(Vector3<S> axis, S angle)
@@ -477,11 +477,11 @@ Matrix3<S> Matrix3<S>::fromRotation(Vector3<S> axis, S angle)
     m.m_v[e02] =  axis.y() * rsin + axis.x()*axis.z()*(1 - rcos);
     m.m_v[e12] = -axis.x() * rsin + axis.y()*axis.z()*(1 - rcos);
     m.m_v[e22] =             rcos + axis.z()*axis.z()*(1 - rcos);
-    
+
     return m;
 }
 
 
-} 
+}
 
 } //namespace external

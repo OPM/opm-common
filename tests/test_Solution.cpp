@@ -113,4 +113,3 @@ BOOST_AUTO_TEST_CASE(UNITS) {
     c.convertToSI( metric );
     BOOST_CHECK_EQUAL( si0 , c.data<double>("NAME")[0] );
 }
-

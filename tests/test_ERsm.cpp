@@ -42,7 +42,7 @@ Opm::EclIO::ERsm create(const std::string& rsm_data)
 
 // Dont touch the string literals - it is all part of the format; down to the number of whitespace ... :-(
 
-const std::string block1_days = R"(1                                                                                                                                  
+const std::string block1_days = R"(1
  -------------------------------------------------------------------------------------------------------------------------------
  SUMMARY OF RUN nor01-temp01-rsm-all OPM FLOW VERSION 1910 ANYTHING CAN GO HERE: USER, MACHINE ETC.                                
  -------------------------------------------------------------------------------------------------------------------------------
@@ -57,7 +57,7 @@ const std::string block1_days = R"(1
  8.000000     0.021903     4381.301            0            0     4381.301            0     4381.301            0            0     
 )";
 
-const std::string block1_hours = R"(1                                                                                                                                  
+const std::string block1_hours = R"(1
  -------------------------------------------------------------------------------------------------------------------------------
  SUMMARY OF RUN nor01-temp01-rsm-all OPM FLOW VERSION 1910 ANYTHING CAN GO HERE: USER, MACHINE ETC.                                
  -------------------------------------------------------------------------------------------------------------------------------
@@ -72,7 +72,7 @@ const std::string block1_hours = R"(1
  8.000000     0.021903     4381.301            0            0     4381.301            0     4381.301            0            0     
 )";
 
-const std::string block1_date = R"(1                                                                                                                                  
+const std::string block1_date = R"(1
  -------------------------------------------------------------------------------------------------------------------------------
  SUMMARY OF RUN nor01-temp01-rsm-date OPM FLOW VERSION 1910 ANYTHING CAN GO HERE: USER, MACHINE ETC.                               
  -------------------------------------------------------------------------------------------------------------------------------
@@ -88,7 +88,7 @@ const std::string block1_date = R"(1
   5-MAR-1999  249.3513            0     80016.70            0            0            0            0            0            0     
 )";
 
-const std::string block2_date = R"(1                                                                                                                                  
+const std::string block2_date = R"(1
  -------------------------------------------------------------------------------------------------------------------------------
  SUMMARY OF RUN nor01-temp01-rsm-date OPM FLOW VERSION 1910 ANYTHING CAN GO HERE: USER, MACHINE ETC.                               
  -------------------------------------------------------------------------------------------------------------------------------
@@ -103,7 +103,7 @@ const std::string block2_date = R"(1
   4-MAR-1999  243.9480            0     71582.33            0            0            0            0            0            0     
 )";
 
-const std::string missing_time = R"(1                                                                                                                                  
+const std::string missing_time = R"(1
  -------------------------------------------------------------------------------------------------------------------------------
  SUMMARY OF RUN nor01-temp01-rsm-date OPM FLOW VERSION 1910 ANYTHING CAN GO HERE: USER, MACHINE ETC.                               
  -------------------------------------------------------------------------------------------------------------------------------
@@ -116,7 +116,7 @@ const std::string missing_time = R"(1
   1-MAR-1999  227.7381            0     46279.20            0            0            0            0            0            0     
 )";
 
-const std::string no_wgnames = R"(1                                                                                                                                  
+const std::string no_wgnames = R"(1
  -------------------------------------------------------------------------------------------------------------------------------   
  SUMMARY OF RUN SPE1CASE1 OPM FLOW VERSION 1910 ANYTHING CAN GO HERE: USER, MACHINE ETC.                                           
  -------------------------------------------------------------------------------------------------------------------------------   
@@ -134,7 +134,7 @@ const std::string no_wgnames = R"(1
        45           15            2         2015            0            0            0            0            0            0     
 )";
 
-const std::string multiple_blocks = R"(1                                                                                                                                  
+const std::string multiple_blocks = R"(1
  -------------------------------------------------------------------------------------------------------------------------------   
  SUMMARY OF RUN SPE1CASE1 OPM FLOW VERSION 1910 ANYTHING CAN GO HERE: USER, MACHINE ETC.                                           
  -------------------------------------------------------------------------------------------------------------------------------   

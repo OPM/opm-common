@@ -43,7 +43,7 @@
 #include <string>
 #include <type_traits>
 
-namespace external 
+namespace external
 {
 namespace caf
 {

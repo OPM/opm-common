@@ -57,4 +57,3 @@ int main(int /* argc */, char** argv) {
     Opm::EclipseIO io(state, state.getInputGrid(), schedule, summary_config);
     msim.run(io, false);
 }
-

@@ -66,7 +66,7 @@ function (opm_grid_type)
   #define USED_${a_SYMBOL}_GRIDTYPE 1
 #endif
 ")
-  
+
 endfunction (opm_grid_type)
 
 # write the grid type for opm-grid

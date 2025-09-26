@@ -394,7 +394,7 @@ EclHysterConfig::EclHysterConfig(const Opm::Deck& deck)
         }
 
         if (!deck.hasKeyword("EHYSTR")) {
-            std::string msg = "Hysteresis is enabled via the HYST parameter for SATOPTS, but the EHYSTR " 
+            std::string msg = "Hysteresis is enabled via the HYST parameter for SATOPTS, but the EHYSTR "
                               "keyword is not present in the deck. \n"
                               "Default values are used for the EHYSTR keyword.";
 

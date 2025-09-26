@@ -35,4 +35,3 @@ namespace Opm {
 }
 
 #endif
-

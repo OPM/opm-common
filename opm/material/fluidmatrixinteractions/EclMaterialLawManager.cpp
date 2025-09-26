@@ -77,7 +77,7 @@ initFromState(const EclipseState& eclState)
                                return table.eta;
                            });
         }
-        
+
         const auto& ppcwmaxTables = tables.getPpcwmax();
         this->enablePpcwmax_ = !ppcwmaxTables.empty();
 

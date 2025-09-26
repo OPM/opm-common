@@ -66,7 +66,7 @@ public:
     inline bool             equals(const Vector2& other) const;
     inline bool             operator==(const Vector2& rhs) const;
     inline bool             operator!=(const Vector2& rhs) const;
-    
+
     inline void             add(const Vector2& other);
     inline void             subtract(const Vector2& other);
     inline const Vector2    operator+(const Vector2& rhs) const;
@@ -84,7 +84,7 @@ public:
     inline S                dot(const Vector2& other) const;
     inline S                operator*(const Vector2& rhs) const;    // Dot product
 
-    template<typename T> 
+    template<typename T>
     void                    set(const T& other);
     inline void             set(S x, S y);
     inline void             setZero();
@@ -118,7 +118,7 @@ public:
     static const Vector2 UNDEFINED; ///< Undefined vector
 
 private:
-    template<typename T> 
+    template<typename T>
     friend const Vector2<T> operator*(T scalar, const Vector2<T>& rhs);
 
 private:

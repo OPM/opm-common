@@ -22,4 +22,3 @@ if ("${makefile}" IS_NEWER_THAN "${marker_file}")
 	${CMAKE_COMMAND} -E touch "${marker_file}"
 	)
 endif ("${makefile}" IS_NEWER_THAN "${marker_file}")
-	

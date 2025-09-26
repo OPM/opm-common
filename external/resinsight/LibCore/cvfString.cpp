@@ -45,17 +45,17 @@ namespace cvf {
 /// \class cvf::String
 /// \ingroup Core
 ///
-/// A general unicode based string class. 
-/// 
-/// The string class supports conversion to and from 
+/// A general unicode based string class.
+///
+/// The string class supports conversion to and from
 ///  - std::string
 ///  - std::wstring
 ///  - const char*
 ///  - const wchar_t*
-/// 
+///
 /// A separate class cvf::CharArray is used to be able to support the toAscii() method (conversion
 /// to a const char* string).
-/// 
+///
 //==================================================================================================
 
 const size_t String::npos = static_cast<size_t>(-1);
@@ -294,7 +294,7 @@ size_t String::size() const
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 void String::resize(size_t size)
 {
@@ -318,7 +318,7 @@ String String::toLower() const
         for (i = 0; i < strLen; ++i)
         {
             retStr[i] = towlower(m_string[i]);
-        } 
+        }
     }
 
     return retStr;
@@ -341,7 +341,7 @@ String String::toUpper() const
         for (i = 0; i < strLen; ++i)
         {
             retStr[i] = towupper(m_string[i]);
-        } 
+        }
     }
 
     return retStr;
@@ -380,7 +380,7 @@ String String::trimmedLeft() const
     // Same whitespace characters as isspace()
     const std::wstring whitespaces(L" \t\n\v\f\r");
 
-    size_t pos = m_string.find_first_not_of(whitespaces); 
+    size_t pos = m_string.find_first_not_of(whitespaces);
     if (pos != std::wstring::npos)
     {
         std::wstring retStr = m_string.substr(pos);
@@ -419,7 +419,7 @@ String String::trimmed() const
 
 //--------------------------------------------------------------------------------------------------
 /// Returns simplified string.
-/// 
+///
 /// Strips leading and trailing whitespace. Replaces sequences of internal whitespace with one space
 //--------------------------------------------------------------------------------------------------
 String String::simplified() const
@@ -433,10 +433,10 @@ String String::simplified() const
     for (i = 0; i < length; i++)
     {
         bool charIsWhitespace = iswspace(str[i]) ? true : false;
-        if (charIsWhitespace && i > 0 && iswspace(str[i - 1])) 
+        if (charIsWhitespace && i > 0 && iswspace(str[i - 1]))
         {
         }
-        else 
+        else
         {
             if (charIsWhitespace)
             {
@@ -455,9 +455,9 @@ String String::simplified() const
 
 
 //--------------------------------------------------------------------------------------------------
-/// Get the string as an ASCII 8 bit char text. 
-/// 
-/// A CharArray is used as a transport vehicle. This class has a ptr() method which allows for 
+/// Get the string as an ASCII 8 bit char text.
+///
+/// A CharArray is used as a transport vehicle. This class has a ptr() method which allows for
 /// conversion to const char*.\n
 /// To get a const char pointer, do the following:
 /// \code
@@ -496,10 +496,10 @@ CharArray String::toAscii() const
 //--------------------------------------------------------------------------------------------------
 std::string String::toStdString() const
 {
-    CharArray array = toAscii();    
+    CharArray array = toAscii();
     std::string str = array.ptr();
 
-    return str; 
+    return str;
 }
 
 
@@ -513,7 +513,7 @@ std::wstring String::toStdWString() const
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 CharArray String::toUtf8() const
 {
@@ -612,7 +612,7 @@ cvf::String String::fromAscii(const char* str, size_t strSize)
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 String String::fromUtf8(const char* utfStr)
 {
@@ -698,7 +698,7 @@ String String::fromUtf8(const char* utfStr)
         }
 
         // 0xxxxxxx (utfStr[i] < MASKBYTE)
-        else 
+        else
         {
             CVF_TIGHT_ASSERT(utfStr[i] >= 0);
             unicodeChar = static_cast<unsigned int>(utfStr[i]);
@@ -728,13 +728,13 @@ const wchar_t* String::c_str() const
 /// \param     n            The number to convert
 /// \param     format       'g': default, 'e' : scientific notation (1.234e4). 'f' : Fixed notation (1234.0)
 /// \param     precision    The precision for floating-point values. Only used for 'f' and 'e'
-/// 
+///
 /// \return A string with the given number
 //--------------------------------------------------------------------------------------------------
 String String::number(float n, char format, int precision)
 {
     std::wstringstream sstr;
-    
+
     switch(format)
     {
         case 'g' : sstr << n; break;
@@ -749,9 +749,9 @@ String String::number(float n, char format, int precision)
 
 //--------------------------------------------------------------------------------------------------
 /// Convert the contents of the string to a double value (if possible)
-/// 
+///
 /// \param ok  If not NULL, this will be set to true if conversion is ok, or to false if not
-/// 
+///
 /// \return  Returns the double value found at the start of the string. 0.0 if an error occurred.
 //--------------------------------------------------------------------------------------------------
 double String::toDouble(bool* ok) const
@@ -780,10 +780,10 @@ double String::toDouble(bool* ok) const
 
 //--------------------------------------------------------------------------------------------------
 /// Convert the contents of the string to a double value (if possible)
-/// 
+///
 /// \param defaultValue  The value returned if the conversion failed.
-/// 
-/// \return  Returns the double value found at the start of the string or defaultValue if the 
+///
+/// \return  Returns the double value found at the start of the string or defaultValue if the
 ///          conversion was not possible.
 //--------------------------------------------------------------------------------------------------
 double String::toDouble(double defaultValue) const
@@ -803,9 +803,9 @@ double String::toDouble(double defaultValue) const
 
 //--------------------------------------------------------------------------------------------------
 /// Convert the contents of the string to a float value (if possible)
-/// 
+///
 /// \param ok  If not NULL, this will be set to true if conversion is ok, or to false if not
-/// 
+///
 /// \return  Returns the float value found at the start of the string. 0.0f if an error occurred.
 //--------------------------------------------------------------------------------------------------
 float String::toFloat(bool* ok) const
@@ -834,10 +834,10 @@ float String::toFloat(bool* ok) const
 
 //--------------------------------------------------------------------------------------------------
 /// Convert the contents of the string to a float value (if possible)
-/// 
+///
 /// \param defaultValue  The value returned if the conversion failed.
-/// 
-/// \return  Returns the float value found at the start of the string or defaultValue if the 
+///
+/// \return  Returns the float value found at the start of the string or defaultValue if the
 ///          conversion was not possible.
 //--------------------------------------------------------------------------------------------------
 float String::toFloat(float defaultValue) const
@@ -857,9 +857,9 @@ float String::toFloat(float defaultValue) const
 
 //--------------------------------------------------------------------------------------------------
 /// Convert the contents of the string to a integer value (if possible)
-/// 
+///
 /// \param ok  If not NULL, this will be set to true if conversion is ok, or to false if not
-/// 
+///
 /// \return  Returns the integer value found at the start of the string. 0 if an error occurred.
 //--------------------------------------------------------------------------------------------------
 int String::toInt(bool* ok) const
@@ -888,10 +888,10 @@ int String::toInt(bool* ok) const
 
 //--------------------------------------------------------------------------------------------------
 /// Convert the contents of the string to a integer value (if possible)
-/// 
+///
 /// \param defaultValue  The value returned if the conversion failed.
-/// 
-/// \return  Returns the integer value found at the start of the string or defaultValue if the 
+///
+/// \return  Returns the integer value found at the start of the string or defaultValue if the
 ///          conversion was not possible.
 //--------------------------------------------------------------------------------------------------
 int String::toInt(int defaultValue) const
@@ -910,10 +910,10 @@ int String::toInt(int defaultValue) const
 
 
 //--------------------------------------------------------------------------------------------------
-/// Convert the contents of the string to an unsigned integer value 
-/// 
+/// Convert the contents of the string to an unsigned integer value
+///
 /// \param ok  If not NULL, this will be set to true if conversion is ok, or to false if not
-/// 
+///
 /// \return  Returns the unsigned integer value found at the start of the string. 0 if an error occurred.
 //--------------------------------------------------------------------------------------------------
 uint String::toUInt(bool* ok) const
@@ -948,10 +948,10 @@ uint String::toUInt(bool* ok) const
 
 //--------------------------------------------------------------------------------------------------
 /// Convert the contents of the string to an unsigned integer value
-/// 
+///
 /// \param defaultValue  The value returned if the conversion failed.
-/// 
-/// \return  Returns the value found at the start of the string or defaultValue if the 
+///
+/// \return  Returns the value found at the start of the string or defaultValue if the
 ///          conversion was not possible.
 //--------------------------------------------------------------------------------------------------
 uint String::toUInt(uint defaultValue) const
@@ -970,7 +970,7 @@ uint String::toUInt(uint defaultValue) const
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 int64_t String::toInt64(bool* ok) const
 {
@@ -997,7 +997,7 @@ int64_t String::toInt64(bool* ok) const
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 int64_t String::toInt64(int64_t defaultValue) const
 {
@@ -1020,7 +1020,7 @@ int64_t String::toInt64(int64_t defaultValue) const
 /// \param     n            The number to convert
 /// \param     format       'g': default, 'e' : scientific notation (1.234e4). 'f' : Fixed notation (1234.0)
 /// \param     precision    The precision for floating-point values. Only used for 'f' and 'e'
-/// 
+///
 /// \return A string with the given number
 //--------------------------------------------------------------------------------------------------
 String String::number(double n, char format, int precision)
@@ -1043,8 +1043,8 @@ String String::number(double n, char format, int precision)
 ///  To allow String s1 = "Test" + s2;
 //--------------------------------------------------------------------------------------------------
 String operator+(const char* str1, const String& str2)
-{ 
-    return String(str1) + str2; 
+{
+    return String(str1) + str2;
 }
 
 
@@ -1057,7 +1057,7 @@ std::vector<String> String::split(const String& delimiters) const
 {
     std::vector<String> tokens;
     if (size() == 0) return tokens;
-    
+
     std::wstring stdString = m_string;
     std::wstring stdDelimiters = delimiters.toStdWString();
 
@@ -1095,7 +1095,7 @@ size_t String::find(const String& str, size_t start) const
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 bool String::startsWith(const String& str) const
 {
@@ -1104,7 +1104,7 @@ bool String::startsWith(const String& str) const
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 String String::subString(size_t pos, size_t length) const
 {
@@ -1130,10 +1130,10 @@ void String::replace(const String& before, const String& after)
     while (next != std::wstring::npos)
     {
         // Inside the loop, so we found a match. Do the replacement.
-        m_string.replace(next, before.m_string.length(), after.m_string);   
-        
+        m_string.replace(next, before.m_string.length(), after.m_string);
+
         // Move to just after the replace
-        // This is the point were we start the next search from. 
+        // This is the point were we start the next search from.
         next += after.m_string.length();
 
         // Search for the next match starting after the last match that was found.
@@ -1181,7 +1181,7 @@ static ArgInfo findSmallestArgs(const String &s)
     argInfo.totalArgLength = 0;
 
     const wchar_t* c = strBegin;
-    while (c != strEnd) 
+    while (c != strEnd)
     {
         while (c != strEnd && *c != '%')
         {
@@ -1211,7 +1211,7 @@ static ArgInfo findSmallestArgs(const String &s)
 
         int secondArgDigit = digitValue(*c);
 
-        if (c != strEnd && secondArgDigit != -1) 
+        if (c != strEnd && secondArgDigit != -1)
         {
             argNumber = (10*argNumber) + secondArgDigit;
             ++c;
@@ -1222,7 +1222,7 @@ static ArgInfo findSmallestArgs(const String &s)
             continue;
         }
 
-        if (argNumber < argInfo.smallestArgIndex) 
+        if (argNumber < argInfo.smallestArgIndex)
         {
             argInfo.smallestArgIndex = argNumber;
             argInfo.smallestArgCount = 0;
@@ -1255,7 +1255,7 @@ static String replaceArgs(const String &s, const ArgInfo& info, int fieldWidth, 
     const wchar_t*  c = strBegin;
     int repl_cnt = 0;
 
-    while (c != strEnd) 
+    while (c != strEnd)
     {
         const wchar_t *textStart = c;
 
@@ -1268,21 +1268,21 @@ static String replaceArgs(const String &s, const ArgInfo& info, int fieldWidth, 
 
         int argIdx = digitValue(*c);
 
-        if (argIdx != -1) 
+        if (argIdx != -1)
         {
-            if (c + 1 != strEnd && digitValue(*(c + 1)) != -1) 
+            if (c + 1 != strEnd && digitValue(*(c + 1)) != -1)
             {
                 argIdx = (10*argIdx) + digitValue(*(c + 1));
                 ++c;
             }
         }
 
-        if (argIdx != info.smallestArgIndex) 
+        if (argIdx != info.smallestArgIndex)
         {
             memcpy(rc, textStart, (c - textStart)*sizeof(wchar_t));
             rc += c - textStart;
         }
-        else 
+        else
         {
             ++c;
 
@@ -1291,8 +1291,8 @@ static String replaceArgs(const String &s, const ArgInfo& info, int fieldWidth, 
 
             size_t pad_chars = CVF_MAX(absFieldWidth, arg.size()) - arg.size();
 
-            if (fieldWidth > 0) 
-            { 
+            if (fieldWidth > 0)
+            {
                 // left padded
                 unsigned int i;
                 for (i = 0; i < pad_chars; ++i)
@@ -1304,7 +1304,7 @@ static String replaceArgs(const String &s, const ArgInfo& info, int fieldWidth, 
             memcpy(rc, arg.c_str(), arg.size()*sizeof(wchar_t));
             rc += arg.size();
 
-            if (fieldWidth < 0) 
+            if (fieldWidth < 0)
             {
                 // right padded
                 unsigned int i;
@@ -1314,7 +1314,7 @@ static String replaceArgs(const String &s, const ArgInfo& info, int fieldWidth, 
                 }
             }
 
-            if (++repl_cnt == info.smallestArgCount) 
+            if (++repl_cnt == info.smallestArgCount)
             {
                 memcpy(rc, c, (strEnd - c)*sizeof(wchar_t));
                 rc += strEnd - c;
@@ -1331,21 +1331,21 @@ static String replaceArgs(const String &s, const ArgInfo& info, int fieldWidth, 
 
 
 //--------------------------------------------------------------------------------------------------
-/// Returns a copy of this string with the lowest numbered place marker (e.g. %1, %2,..%99) replaced 
+/// Returns a copy of this string with the lowest numbered place marker (e.g. %1, %2,..%99) replaced
 /// by string a.
-/// 
+///
 /// \param a            The string to insert at the lowest %x
 /// \param fieldWidth   The minimal number of characters the argument will occupy. Positive for right
 ///                     aligned text, negative for left aligned text.
 /// \param fillChar     The character that will be inserted if the passed string is shorter than
-///                     the specified fieldWidth. If the length of a is shorter than fieldWidth, 
+///                     the specified fieldWidth. If the length of a is shorter than fieldWidth,
 ///                     the string will be padded with this character.
 ///
-/// This method searches the current string for the lowest %x value, and then replaces all of the 
+/// This method searches the current string for the lowest %x value, and then replaces all of the
 /// lowest occurrence with the passed data.
 /// Example of use:
 /// \code
-/// String test = String("Reading file %1 (%2 of %3)").arg(filename).arg(fileIndex + 1).arg(fileCount); 
+/// String test = String("Reading file %1 (%2 of %3)").arg(filename).arg(fileIndex + 1).arg(fileCount);
 /// \endcode
 //--------------------------------------------------------------------------------------------------
 String String::arg(const String& a, int fieldWidth, const wchar_t& fillChar) const
@@ -1363,21 +1363,21 @@ String String::arg(const String& a, int fieldWidth, const wchar_t& fillChar) con
 
 
 //--------------------------------------------------------------------------------------------------
-/// Returns a copy of this string with the lowest numbered place marker (e.g. %1, %2,..%99) replaced 
+/// Returns a copy of this string with the lowest numbered place marker (e.g. %1, %2,..%99) replaced
 /// by the integer a.
-/// 
+///
 /// \param a            The character to insert at the lowest %x
 /// \param fieldWidth   The minimal number of characters the argument will occupy. Positive for right
 ///                     aligned text, negative for left aligned text.
-/// \param fillChar     The character that will be inserted if the string representation of a is shorter 
-///                     than the specified fieldWidth. If the length of a is shorter than fieldWidth, 
+/// \param fillChar     The character that will be inserted if the string representation of a is shorter
+///                     than the specified fieldWidth. If the length of a is shorter than fieldWidth,
 ///                     the string will be padded with this character.
 ///
-/// This method searches the current string for the lowest %x value, and then replaces all of the 
+/// This method searches the current string for the lowest %x value, and then replaces all of the
 /// lowest occurrence with the passed data.
 /// Example of use:
 /// \code
-/// String test = String("Reading file %1 (%2 of %3)").arg(filename).arg(fileIndex + 1).arg(fileCount); 
+/// String test = String("Reading file %1 (%2 of %3)").arg(filename).arg(fileIndex + 1).arg(fileCount);
 /// \endcode
 //--------------------------------------------------------------------------------------------------
 String String::arg(char a, int fieldWidth, const wchar_t& fillChar) const
@@ -1387,21 +1387,21 @@ String String::arg(char a, int fieldWidth, const wchar_t& fillChar) const
 
 
 //--------------------------------------------------------------------------------------------------
-/// Returns a copy of this string with the lowest numbered place marker (e.g. %1, %2,..%99) replaced 
+/// Returns a copy of this string with the lowest numbered place marker (e.g. %1, %2,..%99) replaced
 /// by the integer a.
-/// 
+///
 /// \param a            The unsigned int value to insert at the lowest %x
 /// \param fieldWidth   The minimal number of characters the argument will occupy. Positive for right
 ///                     aligned text, negative for left aligned text.
-/// \param fillChar     The character that will be inserted if the string representation of a is shorter 
-///                     than the specified fieldWidth. If the length of a is shorter than fieldWidth, 
+/// \param fillChar     The character that will be inserted if the string representation of a is shorter
+///                     than the specified fieldWidth. If the length of a is shorter than fieldWidth,
 ///                     the string will be padded with this character.
 ///
-/// This method searches the current string for the lowest %x value, and then replaces all of the 
+/// This method searches the current string for the lowest %x value, and then replaces all of the
 /// lowest occurrence with the passed data.
 /// Example of use:
 /// \code
-/// String test = String("Reading file %1 (%2 of %3)").arg(filename).arg(fileIndex + 1).arg(fileCount); 
+/// String test = String("Reading file %1 (%2 of %3)").arg(filename).arg(fileIndex + 1).arg(fileCount);
 /// \endcode
 //--------------------------------------------------------------------------------------------------
 String String::arg(uint a, int fieldWidth, const wchar_t& fillChar) const
@@ -1411,21 +1411,21 @@ String String::arg(uint a, int fieldWidth, const wchar_t& fillChar) const
 
 
 //--------------------------------------------------------------------------------------------------
-/// Returns a copy of this string with the lowest numbered place marker (e.g. %1, %2,..%99) replaced 
+/// Returns a copy of this string with the lowest numbered place marker (e.g. %1, %2,..%99) replaced
 /// by the integer a.
-/// 
+///
 /// \param a            The int value to insert at the lowest %x
 /// \param fieldWidth   The minimal number of characters the argument will occupy. Positive for right
 ///                     aligned text, negative for left aligned text.
-/// \param fillChar     The character that will be inserted if the string representation of a is shorter 
-///                     than the specified fieldWidth. If the length of a is shorter than fieldWidth, 
+/// \param fillChar     The character that will be inserted if the string representation of a is shorter
+///                     than the specified fieldWidth. If the length of a is shorter than fieldWidth,
 ///                     the string will be padded with this character.
 ///
-/// This method searches the current string for the lowest %x value, and then replaces all of the 
+/// This method searches the current string for the lowest %x value, and then replaces all of the
 /// lowest occurrence with the passed data.
 /// Example of use:
 /// \code
-/// String test = String("Reading file %1 (%2 of %3)").arg(filename).arg(fileIndex + 1).arg(fileCount); 
+/// String test = String("Reading file %1 (%2 of %3)").arg(filename).arg(fileIndex + 1).arg(fileCount);
 /// \endcode
 //--------------------------------------------------------------------------------------------------
 String String::arg(int a, int fieldWidth, const wchar_t& fillChar) const
@@ -1435,27 +1435,27 @@ String String::arg(int a, int fieldWidth, const wchar_t& fillChar) const
 
 
 //--------------------------------------------------------------------------------------------------
-/// Returns a copy of this string with the lowest numbered place marker (e.g. %1, %2,..%99) replaced 
+/// Returns a copy of this string with the lowest numbered place marker (e.g. %1, %2,..%99) replaced
 /// by the 64 bit integer a.
-/// 
+///
 /// \param a            The int64 value to insert at the lowest %x
 /// \param fieldWidth   The minimal number of characters the argument will occupy. Positive for right
 ///                     aligned text, negative for left aligned text.
-/// \param fillChar     The character that will be inserted if the string representation of a is shorter 
-///                     than the specified fieldWidth. If the length of a is shorter than fieldWidth, 
+/// \param fillChar     The character that will be inserted if the string representation of a is shorter
+///                     than the specified fieldWidth. If the length of a is shorter than fieldWidth,
 ///                     the string will be padded with this character.
 ///
-/// This method searches the current string for the lowest %x value, and then replaces all of the 
+/// This method searches the current string for the lowest %x value, and then replaces all of the
 /// lowest occurrence with the passed data.
 /// Example of use:
 /// \code
-/// String test = String("Reading file %1 (%2 of %3)").arg(filename).arg(fileIndex + 1).arg(fileCount); 
+/// String test = String("Reading file %1 (%2 of %3)").arg(filename).arg(fileIndex + 1).arg(fileCount);
 /// \endcode
 //--------------------------------------------------------------------------------------------------
 String String::arg(int64_t a, int fieldWidth, const wchar_t& fillChar) const
 {
     ArgInfo info = findSmallestArgs(*this);
-    
+
     if (info.smallestArgCount == 0)
     {
         // Show warning??
@@ -1467,23 +1467,23 @@ String String::arg(int64_t a, int fieldWidth, const wchar_t& fillChar) const
 
 
 //--------------------------------------------------------------------------------------------------
-/// Returns a copy of this string with the lowest numbered place marker (e.g. %1, %2,..%99) replaced 
+/// Returns a copy of this string with the lowest numbered place marker (e.g. %1, %2,..%99) replaced
 /// by the float a.
-/// 
+///
 /// \param a            The float value to insert at the lowest %x
 /// \param fieldWidth   The minimal number of characters the argument will occupy. Positive for right
 ///                     aligned text, negative for left aligned text.
 /// \param format       'g': default, 'e' : scientific notation (1.234e4). 'f' : Fixed notation (1234.0)
 /// \param precision    The precision for floating-point values. Only used for 'f' and 'e'
-/// \param fillChar     The character that will be inserted if the string representation of a is shorter 
-///                     than the specified fieldWidth. If the length of a is shorter than fieldWidth, 
+/// \param fillChar     The character that will be inserted if the string representation of a is shorter
+///                     than the specified fieldWidth. If the length of a is shorter than fieldWidth,
 ///                     the string will be padded with this character.
 ///
-/// This method searches the current string for the lowest %x value, and then replaces all of the 
+/// This method searches the current string for the lowest %x value, and then replaces all of the
 /// lowest occurrence with the passed data.
 /// Example of use:
 /// \code
-/// String test = String("Reading file %1 (%2 of %3)").arg(filename).arg(fileIndex + 1).arg(fileCount); 
+/// String test = String("Reading file %1 (%2 of %3)").arg(filename).arg(fileIndex + 1).arg(fileCount);
 /// \endcode
 //--------------------------------------------------------------------------------------------------
 String String::arg(float a, int fieldWidth, char format, int precision, const wchar_t& fillChar) const
@@ -1501,23 +1501,23 @@ String String::arg(float a, int fieldWidth, char format, int precision, const wc
 
 
 //--------------------------------------------------------------------------------------------------
-/// Returns a copy of this string with the lowest numbered place marker (e.g. %1, %2,..%99) replaced 
+/// Returns a copy of this string with the lowest numbered place marker (e.g. %1, %2,..%99) replaced
 /// by the double a.
-/// 
+///
 /// \param a            The double value to insert at the lowest %x
 /// \param fieldWidth   The minimal number of characters the argument will occupy. Positive for right
 ///                     aligned text, negative for left aligned text.
 /// \param format       'g': default, 'e' : scientific notation (1.234e4). 'f' : Fixed notation (1234.0)
 /// \param precision    The precision for floating-point values. Only used for 'f' and 'e'
-/// \param fillChar     The character that will be inserted if the string representation of a is shorter 
-///                     than the specified fieldWidth. If the length of a is shorter than fieldWidth, 
+/// \param fillChar     The character that will be inserted if the string representation of a is shorter
+///                     than the specified fieldWidth. If the length of a is shorter than fieldWidth,
 ///                     the string will be padded with this character.
 ///
-/// This method searches the current string for the lowest %x value, and then replaces all of the 
+/// This method searches the current string for the lowest %x value, and then replaces all of the
 /// lowest occurrence with the passed data.
 /// Example of use:
 /// \code
-/// String test = String("Reading file %1 (%2 of %3)").arg(filename).arg(fileIndex + 1).arg(fileCount); 
+/// String test = String("Reading file %1 (%2 of %3)").arg(filename).arg(fileIndex + 1).arg(fileCount);
 /// \endcode
 //--------------------------------------------------------------------------------------------------
 String String::arg(double a, int fieldWidth, char format, int precision, const wchar_t& fillChar) const
@@ -1536,10 +1536,10 @@ String String::arg(double a, int fieldWidth, char format, int precision, const w
 
 //--------------------------------------------------------------------------------------------------
 /// Exchanges the contents of the two strings.
-/// 
+///
 /// \param other  Modifiable reference to the string that should have its contents swapped.
-/// 
-/// \warning Note that signature differs from normal practice. This is done to be 
+///
+/// \warning Note that signature differs from normal practice. This is done to be
 ///          consistent with the signature of std::swap()
 //--------------------------------------------------------------------------------------------------
 void String::swap(String& other)

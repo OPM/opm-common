@@ -38,7 +38,7 @@ template <class Scalar, class FluidSystem, unsigned phaseIdx>
 class CubicEOSParams
 {
     enum { numComponents = FluidSystem::numComponents };
-    
+
     static constexpr Scalar R = Constants<Scalar>::R;
 
     using EOSType = CompositionalConfig::EOSType;
@@ -80,12 +80,12 @@ public:
         updateACache_();
 
     }
-    
+
     template <class FluidState>
     void updateMix(const FluidState& fs)
     {
         using FlashEval = typename FluidState::Scalar;
-        
+
         FlashEval newA = 0;
         FlashEval newB = 0;
         for (unsigned compIIdx = 0; compIIdx < numComponents; ++compIIdx) {
@@ -98,7 +98,7 @@ public:
                 FlashEval xj = max(0.0, min(1.0, moleFracJ));
                 Valgrind::CheckDefined(xj);
 
-                // Calculate A 
+                // Calculate A
                 newA +=  xi * xj * aCache_[compIIdx][compJIdx];
                 assert(std::isfinite(scalarValue(newA)));
             }
@@ -128,13 +128,13 @@ public:
     }
 
     void setAi(Scalar value, unsigned compIdx)
-    { 
-        Ai_[compIdx] = value; 
+    {
+        Ai_[compIdx] = value;
     }
 
     void setBi(Scalar value, unsigned compIdx)
-    { 
-        Bi_[compIdx] = value; 
+    {
+        Bi_[compIdx] = value;
     }
 
     Scalar Ai(unsigned compIdx) const
@@ -148,13 +148,13 @@ public:
     }
 
     void setA(Scalar value)
-    { 
-        A_ = value; 
+    {
+        A_ = value;
     }
 
     void setB(Scalar value)
-    { 
-        B_ = value; 
+    {
+        B_ = value;
     }
 
     Scalar A() const
@@ -171,17 +171,17 @@ public:
     {
         switch (EosType_) {
             case EOSType::PRCORR:
-            case EOSType::PR: 
+            case EOSType::PR:
                 return PR::calcm1();
-            case EOSType::RK: 
+            case EOSType::RK:
                 return RK::calcm1();
-            case EOSType::SRK: 
+            case EOSType::SRK:
                 return SRK::calcm1();
-            default: 
+            default:
                 throw std::runtime_error("EOS type not implemented!");
         }
-    }   
-    
+    }
+
     Scalar m2() const
     {
         switch (EosType_) {
@@ -192,7 +192,7 @@ public:
                 return RK::calcm2();
             case EOSType::SRK:
                 return SRK::calcm2();
-            default: 
+            default:
                 throw std::runtime_error("EOS type not implemented!");
         }
     }
@@ -230,7 +230,7 @@ private:
                 return RK::calcOmegaA(temperature, compIdx);
             case EOSType::SRK:
                 return SRK::calcOmegaA(temperature, compIdx);
-            default: 
+            default:
                 throw std::runtime_error("EOS type not implemented!");
         }
     }
@@ -245,7 +245,7 @@ private:
                 return RK::calcOmegaB();
             case EOSType::SRK:
                 return SRK::calcOmegaB();
-            default: 
+            default:
                 throw std::runtime_error("EOS type not implemented!");
         }
     }

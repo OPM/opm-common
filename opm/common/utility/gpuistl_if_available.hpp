@@ -20,7 +20,7 @@
 /**
  * \file gpuistl_if_available.hpp
  *
- * Convience header to include the gpuistl headers if HAVE_CUDA is defined. 
+ * Convience header to include the gpuistl headers if HAVE_CUDA is defined.
  * This will also take care of the case when we are compiling with HIP.
  * If HAVE_CUDA is not defined, this header will be empty.
  */

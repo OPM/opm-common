@@ -84,4 +84,3 @@ BOOST_AUTO_TEST_CASE( CreateTest ) {
             BOOST_CHECK_EQUAL( col[i] , exportCol[i]);
     }
 }
-

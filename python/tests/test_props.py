@@ -1,6 +1,6 @@
 import unittest
 import opm.io
-import numpy as np 
+import numpy as np
 
 from opm.io.parser import Parser
 from opm.io.ecl_state import EclipseState
@@ -78,7 +78,7 @@ class TestProps(unittest.TestCase):
         mask = [0] * (grid.nx*grid.ny*grid.nz)
         for ind in [0,10,11,12,15]:
             mask[ind]=1
-            
+
         self.assertEqual(len(mask), grid.nx*grid.ny*grid.nz)
         self.assertEqual(sum(mask), 5)
 
@@ -88,9 +88,9 @@ class TestProps(unittest.TestCase):
 
 
     def test_depth(self):
-        
+
         refDepth = np.array([7330.0, 7360.0, 7400.0, 7450.0], dtype="float64")
-        
+
         grid  = self.spe3.grid()
         for i in range(grid.nx):
             for j in range(grid.ny):
@@ -100,7 +100,7 @@ class TestProps(unittest.TestCase):
                     g_idx = grid.globalIndex(i,j,k)
                     self.assertClose(exp, grid.getCellDepth(g_idx))
                     self.assertClose(exp, grid.getCellDepth(i, j, k))
-        
+
 
         depth1 = grid.getCellDepth()
         self.assertTrue(isinstance(depth1, np.ndarray))
@@ -117,8 +117,8 @@ class TestProps(unittest.TestCase):
         depth2 = grid.getCellDepth(mask)
         self.assertEqual(len(depth2), grid.nx*grid.ny*grid.nz)
         self.assertClose(sum(refDepth)*12*0.0254, sum(depth2))
-        
 
-               
+
+
 if __name__ == "__main__":
     unittest.main()

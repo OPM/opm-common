@@ -64,7 +64,7 @@ initFromState(const EclipseState& eclState, const Schedule&)
                         "and PVDG/PVTG input is ignored.");
     }
     // Enable vaporization of water if needed
-    setEnableVaporizationWater(eclState.getSimulationConfig().hasVAPOIL() || 
+    setEnableVaporizationWater(eclState.getSimulationConfig().hasVAPOIL() ||
                                eclState.getSimulationConfig().hasVAPWAT());
 
     // We only supported single pvt region for the H2-brine module

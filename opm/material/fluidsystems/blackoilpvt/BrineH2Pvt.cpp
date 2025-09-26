@@ -79,7 +79,7 @@ initFromState(const EclipseState& eclState, const Schedule&)
     }
     OpmLog::info("H2STORE/HSOL is enabled.");
     // enable h2 dissolution into brine for h2sol case with DISGASW
-    // or h2store case with DISGASW or DISGAS    
+    // or h2store case with DISGASW or DISGAS
     bool h2sol_dis = h2sol && eclState.getSimulationConfig().hasDISGASW();
     bool h2storage_dis = eclState.runspec().h2Storage() && (eclState.getSimulationConfig().hasDISGASW() || eclState.getSimulationConfig().hasDISGAS());
     setEnableDissolvedGas(h2sol_dis || h2storage_dis);

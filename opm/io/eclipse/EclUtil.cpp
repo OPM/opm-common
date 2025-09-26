@@ -709,4 +709,3 @@ std::vector<double> Opm::EclIO::readFormattedDoubArray(const std::string& file_s
 
     return readFormattedArray<double>(file_str, size, fromPos, f);
 }
-

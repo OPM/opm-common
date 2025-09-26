@@ -69,4 +69,3 @@ private:
 
 }
 #endif  /* DECKRECORD_HPP */
-

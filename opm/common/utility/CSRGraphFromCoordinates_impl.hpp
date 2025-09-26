@@ -205,7 +205,7 @@ Connections::applyVertexMerges(const std::unordered_map<VertexID, VertexID>& ver
     this->max_i_ = this->max_j_ = new_id - 1;
 
     // Remap all vertices to compact IDs
-    auto remap = [&vertex_map](auto v) { 
+    auto remap = [&vertex_map](auto v) {
         // Using at() is appropriate here since we know all values from i_ and j_ are in vertex_map
         return vertex_map.at(v);
     };

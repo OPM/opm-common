@@ -301,7 +301,7 @@ public:
         return 0.0;
     }
 
-    static Scalar trappedOilSaturation(const Params& params, bool maximumTrapping) 
+    static Scalar trappedOilSaturation(const Params& params, bool maximumTrapping)
     {
         OPM_TIMEFUNCTION_LOCAL(Subsystem::SatProps);
         OPM_ECL_MULTIPLEXER_MATERIAL_CALL(return ActualLaw::trappedOilSaturation(realParams, maximumTrapping),

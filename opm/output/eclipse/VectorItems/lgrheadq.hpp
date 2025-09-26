@@ -29,7 +29,7 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
     enum lgrheadq : std::vector<int>::size_type {
         // LGRHEADQ indexes a Boolean vector of five flags,
         // with each flag initially set to false.
-        FIRST  = 0,  
+        FIRST  = 0,
         SECOND = 1,
         THIRD  = 2,
         FOURTH = 3,

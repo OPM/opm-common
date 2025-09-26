@@ -53,7 +53,7 @@
 #include <android/log.h>
 #endif
 
-namespace external 
+namespace external
 {
 
 namespace cvf {
@@ -99,14 +99,14 @@ void Trace::show(const char* format, ...)
     vsnprintf(temp, maxFormatLength, format, argList);
 #endif
 
-    va_end(argList);    
+    va_end(argList);
 
     showTraceOutput(temp, true);
 }
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 void Trace::showFileLineNumber(const String& file, int line, const String& message)
 {
@@ -144,7 +144,7 @@ void Trace::showTraceOutput(const String& text, bool addNewLine)
     __android_log_print(ANDROID_LOG_DEBUG, "CVF_TAG", "%s", text.toAscii().ptr());
 #else
     fprintf(stderr, "%s", text.toAscii().ptr());
-    if (addNewLine) 
+    if (addNewLine)
     {
         fprintf(stderr, "\n");
     }

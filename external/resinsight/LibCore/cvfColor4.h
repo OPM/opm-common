@@ -92,7 +92,7 @@ private:
 // Unsigned byte RGBA colors
 //
 //==================================================================================================
-class Color4ub 
+class Color4ub
 {
 public:
     Color4ub();

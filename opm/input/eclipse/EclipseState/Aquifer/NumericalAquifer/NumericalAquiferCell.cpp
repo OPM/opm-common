@@ -106,7 +106,3 @@ namespace Opm {
         return 2. * this->permeability * this->area / this->length;;
     }
 }
-
-
-
-

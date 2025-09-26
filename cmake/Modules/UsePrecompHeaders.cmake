@@ -44,7 +44,7 @@ is_compiler_gcc_compatible ()
 function (compiler_cmdline language type cmd_name args_name)
   # get the compiler for this particular language
   set (${cmd_name} "${CMAKE_${language}_COMPILER}" PARENT_SCOPE)
-  
+
   # in case someone has overridden the compiler (e.g. ccache)
   set (_args "${CMAKE_${language}_COMPILER_ARG1}")
 
@@ -78,7 +78,7 @@ endfunction (compiler_cmdline language type cmd_name args_name)
 
 function (precompile_header
 	language type hdr_kw header tgt_kw target flgs_kw flags_name)
-  
+
   # check "syntax"
   if (NOT hdr_kw STREQUAL "HEADER")
 	message (FATAL "Third token to precompile_header shoulde be \"HEADER\"")
@@ -103,7 +103,7 @@ function (precompile_header
   if (NOT header)
 	return ()
   endif (NOT header)
-  
+
   # only support precompiled headers if the compiler is gcc >= 3.4 or clang
   if (CXX_COMPAT_GCC)
 	if (CMAKE_COMPILER_IS_GNUCXX)
@@ -166,6 +166,6 @@ function (precompile_header
 	  set (${flags_name} "-Winvalid-pch -include ${_pch_dir}/${header}" PARENT_SCOPE)
 	endif ()
   endif ()
-  
+
 endfunction (precompile_header
   language type header tgt_kw target flgs_kw flags_name)

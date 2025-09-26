@@ -593,7 +593,7 @@ namespace {
                 for (const std::string& wellname : group.wells()) {
                     names.insert(wellname);
                 }
-            }            
+            }
         }
 
         node_names.assign(names.begin(), names.end());
@@ -1378,7 +1378,7 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
             [&kw](const char* known)
         {
             return kw == known;
-        }) 
+        })
         || is_in_set({ "STFR", "STFC" }, kw.substr(0, 4));
     }
 

@@ -49,6 +49,3 @@ BOOST_AUTO_TEST_CASE(CreateDimension) {
     const auto& record = keyword.getRecord(1);
     BOOST_CHECK_NO_THROW( record.getItem<ParserKeywords::COMPSEGS::DISTANCE_START>().getSIDouble(0) );
 }
-
-
-

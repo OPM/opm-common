@@ -65,8 +65,8 @@ namespace Opm {
 
     void CarfinManager::readKeywordCarfin(const std::string& name,
                                           int i1, int i2,
-                                          int j1, int j2, 
-                                          int k1, int k2, 
+                                          int j1, int j2,
+                                          int k1, int k2,
                                           int nx, int ny, int nz)
     {
         this->m_keywordCarfin = this->makeLgr(name, i1, i2, j1, j2, k1, k2, nx, ny, nz);

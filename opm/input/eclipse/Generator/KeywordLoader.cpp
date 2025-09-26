@@ -88,5 +88,3 @@ namespace Opm {
         return this->keywords.end( );
     }
 }
-
-

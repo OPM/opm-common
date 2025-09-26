@@ -116,4 +116,3 @@ namespace Opm {
         return str;
     }
 } // end of Opm namespace
-

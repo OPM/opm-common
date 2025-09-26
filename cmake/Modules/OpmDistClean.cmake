@@ -85,5 +85,5 @@ macro (opm_dist_clean opm)
 	COMMENT Removing CMake-generated files
 	VERBATIM
 	)
-  
+
 endmacro (opm_dist_clean opm)

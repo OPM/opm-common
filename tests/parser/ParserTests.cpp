@@ -1790,7 +1790,7 @@ BOOST_AUTO_TEST_CASE(GetAlternatingKeywordFromParser) {
 BOOST_AUTO_TEST_CASE(ConstructFromJson_withDoubleRecords) {
     const std::string json_string = R"(
     {"name" : "CECONT", "sections" : ["PROPS"] , "records_set" : [[
-      {"name" : "WELL", "value_type" : "STRING"}, 
+      {"name" : "WELL", "value_type" : "STRING"},
       {"name" : "I", "value_type" : "INT"},
       {"name" : "J", "value_type" : "INT"},
       {"name" : "K", "value_type" : "INT"}], [

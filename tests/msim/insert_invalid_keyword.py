@@ -17,4 +17,3 @@ if (report_step == 2):
 	    1000*0.01 /
 	"""
 	schedule.insert_keywords(invalid_kw)
-	

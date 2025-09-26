@@ -39,14 +39,14 @@ namespace external {
 namespace cvf {
 
 
-    
+
 //==================================================================================================
 ///
 /// \class cvf::Quat
 /// \ingroup Core
 ///
-/// Templated quaternion 
-/// 
+/// Templated quaternion
+///
 //==================================================================================================
 
 //--------------------------------------------------------------------------------------------------
@@ -54,9 +54,9 @@ namespace cvf {
 //--------------------------------------------------------------------------------------------------
 template<typename S>
 Quat<S>::Quat()
-:   m_x(0), 
-    m_y(0), 
-    m_z(0), 
+:   m_x(0),
+    m_y(0),
+    m_z(0),
     m_w(0)
 {
 }
@@ -67,9 +67,9 @@ Quat<S>::Quat()
 //--------------------------------------------------------------------------------------------------
 template<typename S>
 Quat<S>::Quat(S x, S y, S z, S w)
-:   m_x(x), 
-    m_y(y), 
-    m_z(z), 
+:   m_x(x),
+    m_y(y),
+    m_z(z),
     m_w(w)
 {
 }
@@ -80,9 +80,9 @@ Quat<S>::Quat(S x, S y, S z, S w)
 //--------------------------------------------------------------------------------------------------
 template<typename S>
 Quat<S>::Quat(const Quat& other)
-:   m_x(other.m_x), 
-    m_y(other.m_y), 
-    m_z(other.m_z), 
+:   m_x(other.m_x),
+    m_y(other.m_y),
+    m_z(other.m_z),
     m_w(other.m_w)
 {
 }
@@ -118,7 +118,7 @@ Quat<S>& Quat<S>::operator=(const Quat& rhs)
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 template<typename S>
 bool Quat<S>::operator==(const Quat& rhs) const
@@ -133,7 +133,7 @@ bool Quat<S>::operator==(const Quat& rhs) const
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 template<typename S>
 bool Quat<S>::operator!=(const Quat& rhs) const
@@ -148,7 +148,7 @@ bool Quat<S>::operator!=(const Quat& rhs) const
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 template<typename S>
 void Quat<S>::set(S x, S y, S z, S w)
@@ -166,7 +166,7 @@ void Quat<S>::set(S x, S y, S z, S w)
 template<typename S>
 bool Quat<S>::normalize()
 {
-    // Quaternions always obey:  a^2 + b^2 + c^2 + d^2 = 1.0. 
+    // Quaternions always obey:  a^2 + b^2 + c^2 + d^2 = 1.0.
     // If they don't add up to 1.0, dividing by their magnitude will re-normalize them.
 
     S len = Math::sqrt(m_x*m_x + m_y*m_y + m_z*m_z + m_w*m_w);
@@ -246,7 +246,7 @@ Matrix3<S> Quat<S>::toMatrix3() const
     S Nq = m_x*m_x + m_y*m_y + m_z*m_z + m_w*m_w;
     S s = (Nq > 0) ? (2/Nq) : 0;
 
-    S xs = m_x*s;         
+    S xs = m_x*s;
     S ys = m_y*s;
     S zs = m_z*s;
 
@@ -263,14 +263,14 @@ Matrix3<S> Quat<S>::toMatrix3() const
 
     // Default constructor initializes to identity
     Matrix3<S> m;
-    m.setRowCol( 0, 0,  1 - (yy + zz)); 
-    m.setRowCol( 0, 1,       xy - wz ); 
-    m.setRowCol( 0, 2,       xz + wy ); 
+    m.setRowCol( 0, 0,  1 - (yy + zz));
+    m.setRowCol( 0, 1,       xy - wz );
+    m.setRowCol( 0, 2,       xz + wy );
 
-    m.setRowCol( 1, 0,       xy + wz ); 
-    m.setRowCol( 1, 1,  1 - (xx + zz)); 
-    m.setRowCol( 1, 2,       yz - wx ); 
- 
+    m.setRowCol( 1, 0,       xy + wz );
+    m.setRowCol( 1, 1,  1 - (xx + zz));
+    m.setRowCol( 1, 2,       yz - wx );
+
     m.setRowCol( 2, 0,       xz - wy );
     m.setRowCol( 2, 1,       yz + wx );
     m.setRowCol( 2, 2,  1 - (xx + yy));
@@ -294,7 +294,7 @@ Matrix4<S> Quat<S>::toMatrix4() const
 /// Creates a quaternion from specified rotation axis and angle (in radians)
 //--------------------------------------------------------------------------------------------------
 template<typename S>
-Quat<S> Quat<S>::fromAxisAngle(Vector3<S> rotationAxis, S angle) 
+Quat<S> Quat<S>::fromAxisAngle(Vector3<S> rotationAxis, S angle)
 {
     // From matrix an quaternion FAQ
 
@@ -376,7 +376,7 @@ Quat<S> Quat<S>::fromRotationMatrix(const Matrix4<S>& rotMat)
                 q.m_w = (m02 - m20)/s;
             }
         }
-        else 
+        else
         {
             S s = Math::sqrt(1 + m22 - m00 - m11)*2;
             if (s > 0)

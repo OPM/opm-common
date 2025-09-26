@@ -373,7 +373,7 @@ void EGrid::getCellCorners(const std::array<int, 3>& ijk,
     std::vector<int> pind;
 
     int res_shift = res.at(ijk[2])*(nijk[0]+1)*(nijk[1]+1)*6;
-    
+
    // calculate indices for grid pillars in COORD arrray
     pind.push_back(res_shift + ijk[1]*(nijk[0]+1)*6 + ijk[0]*6);
     pind.push_back(pind[0] + 6);

@@ -26,7 +26,7 @@ namespace Opm {
 
 class DeckKeyword;
 
-class RwgsaltTable : public PvtxTable { 
+class RwgsaltTable : public PvtxTable {
 public:
     RwgsaltTable() = default;
     RwgsaltTable( const DeckKeyword& keyword, size_t tableIdx);

@@ -8,4 +8,3 @@ is_compiler_gcc_compatible ()
 if (CXX_COMPAT_GCC)
 	add_options (ALL_LANGUAGES ALL_BUILDS "-pipe")
 endif ()
-

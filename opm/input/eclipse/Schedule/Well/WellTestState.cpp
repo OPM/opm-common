@@ -259,5 +259,3 @@ namespace Opm {
         return ws;
     }
 }
-
-

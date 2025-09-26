@@ -99,7 +99,7 @@ private:
     static const int e20 = 2;   static const int e21 = 5;   static const int e22 = 8;
 
 private:
-    S   m_v[9];        
+    S   m_v[9];
 };
 
 typedef Matrix3<float>  Mat3f;

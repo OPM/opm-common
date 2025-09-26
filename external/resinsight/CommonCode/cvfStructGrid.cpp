@@ -39,7 +39,7 @@
 // }
 // } // namespace caf
 
-namespace external 
+namespace external
 {
 namespace cvf
 {

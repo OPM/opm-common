@@ -88,11 +88,11 @@ namespace {
             double f = 0.;
             double delay = 0.;
             double damping_fact = 0.;
-            
+
             const auto& guideCFG = sched[lookup_step].guide_rate();
             if (guideCFG.has_model()) {
                 const auto& guideRateModel = guideCFG.model();
-                
+
                 a = guideRateModel.getA();
                 b = guideRateModel.getB();
                 c = guideRateModel.getC();

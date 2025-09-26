@@ -90,7 +90,7 @@ struct Record {
         const double segment_depth = segment.depth();
         const double segment_distance = segment.totalLength();
 
-        // Using top segment depth may lead to depths outside of the 
+        // Using top segment depth may lead to depths outside of the
         // perforated grid cell, so simply stick to grid cell center in this case
         if (segment_number == 1) {
             center_depth = -1.0;
@@ -174,7 +174,7 @@ namespace {
                 }
 
                 compseg.segment_number = segment_number;
-            
+
             }
 
             // when depth is default or zero, we obtain the depth of the connection based on the information

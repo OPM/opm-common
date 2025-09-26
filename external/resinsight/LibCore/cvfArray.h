@@ -42,7 +42,7 @@
 
 #include <vector>
 
-namespace external 
+namespace external
 {
 namespace cvf {
 
@@ -86,20 +86,20 @@ public:
     inline T*       ptr(size_t index);
 
     void            setSharedPtr(T* data, size_t size);
-    void            setPtr(T* data, size_t size);   
+    void            setPtr(T* data, size_t size);
 
     void            copyData(const T* source, size_t numElementsToCopy, size_t destIndex);
     void            copyData(const Array<T>& source, size_t numElementsToCopy, size_t destIndex, size_t sourceIndex);
 
-    template<typename U> 
+    template<typename U>
     void            copyConvertedData(const Array<U>& source, size_t numElementsToCopy, size_t destIndex, size_t sourceIndex);
 
-    template<typename U> 
+    template<typename U>
     ref<Array<T> >  extractElements(const Array<U>& elementIndices) const;
 
     void            toStdVector(std::vector<T>* vec) const;
 
-    size_t          capacity() const;        
+    size_t          capacity() const;
     void            reserve(size_t capacity);
     void            squeeze();
     void            setSizeZero();
@@ -127,7 +127,7 @@ private:
     size_t  m_size;                 ///< Number of elements/items in array
     size_t  m_capacity;             ///< Size of the allocated buffer
     T*      m_data;                 ///< Array holding the actual data
-    bool    m_sharedData;           ///< True if the data member is shared with another object and cannot be changed                
+    bool    m_sharedData;           ///< True if the data member is shared with another object and cannot be changed
 };
 
 

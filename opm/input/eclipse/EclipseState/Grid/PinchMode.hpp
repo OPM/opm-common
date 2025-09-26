@@ -24,7 +24,7 @@
 #include <string>
 
 namespace Opm {
-    
+
 enum class PinchMode {
     ALL = 1,
     TOPBOT = 2,

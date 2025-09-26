@@ -22,7 +22,7 @@
 //##################################################################################################
 #include "cafSignal.h"
 
-namespace external 
+namespace external
 {
 using namespace caf;
 

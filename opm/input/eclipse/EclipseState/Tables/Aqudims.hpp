@@ -77,7 +77,7 @@ namespace Opm {
         {
             return m_nanaqu;
         }
-        
+
         size_t getNumRowsAquancon() const
         {
             return m_ncamax;

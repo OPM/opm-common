@@ -104,10 +104,10 @@ void ExtSmryOutput::write(const std::vector<float>& ts_data, int report_step, bo
         auto sec_since_epoch = std::chrono::duration_cast<std::chrono::seconds>(tp.time_since_epoch()).count();
 
         std::filesystem::path esmry_file(m_outputFileName);
-        std::filesystem::path rootName = esmry_file.parent_path() / esmry_file.stem();           
+        std::filesystem::path rootName = esmry_file.parent_path() / esmry_file.stem();
 
         std::string tmp_file_name = rootName.string() + "_TMP_" + std::to_string(sec_since_epoch) + ".ESMRY";
-        
+
         {
             Opm::EclIO::EclOutput outFile(tmp_file_name, m_fmt, std::ios::out);
 
@@ -134,7 +134,7 @@ void ExtSmryOutput::write(const std::vector<float>& ts_data, int report_step, bo
             m_last_write = std::chrono::system_clock::now();
         } else {
             Opm::OpmLog::warning("Not able to rename temporary ESMRY file " + tmp_file_name);
-            std::filesystem::path tmp_file(tmp_file_name);        
+            std::filesystem::path tmp_file(tmp_file_name);
             std::filesystem::remove(tmp_file);
         }
     }

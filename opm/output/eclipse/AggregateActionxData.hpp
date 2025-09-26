@@ -39,7 +39,7 @@ namespace Opm { namespace Action {
 }} // Opm::Action
 
 namespace Opm { namespace RestartIO { namespace Helpers {
-    
+
 class AggregateActionxData
 {
 public:
@@ -52,7 +52,7 @@ public:
     {
         return this->iACT_.data();
     }
-   
+
     const std::vector<float>& getSACT() const
     {
         return this->sACT_.data();
@@ -67,12 +67,12 @@ public:
     {
         return this->zLACT_.data();
     }
- 
+
     const std::vector<EclIO::PaddedOutputString<8>>& getZACN() const
     {
         return this->zACN_.data();
     }
-   
+
     const std::vector<int>& getIACN() const
     {
         return this->iACN_.data();
@@ -101,7 +101,7 @@ private:
 
     /// Aggregate 'ZACT' array (Character) for all ACTIONX data. (4 * 8 chars pr ACIONX keyword - name of Action)
     WindowedArray<EclIO::PaddedOutputString<8>> zACT_;
-   
+
     /// Aggregate 'ZLACT' array (Character) for all Actionx data.  (max 16 * 8 characters pr line (default 80 chars pr line)
     WindowedArray<EclIO::PaddedOutputString<8>> zLACT_;
 

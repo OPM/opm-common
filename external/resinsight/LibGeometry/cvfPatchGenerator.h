@@ -70,12 +70,12 @@ private:
     Vec3d   m_axisU;        // First axis of patch. Default is global X-axis
     Vec3d   m_axisV;        // Second axis of patch. Default is global Y-axis
     double  m_extentU;      // Extent along U axis
-    double  m_extentV;      // Extent along V axis 
+    double  m_extentV;      // Extent along V axis
     uint    m_cellCountU;   // Number of cells/quads in each direction. Default 1
     uint    m_cellCountV;   // :
 
     bool    m_useQuads;     // If true, quads will be generated, otherwise triangles. Default is quads
-    bool    m_windingCCW;   // Winding of the generated quads. Controls which side of the patch will be front facing. 
+    bool    m_windingCCW;   // Winding of the generated quads. Controls which side of the patch will be front facing.
 };
 
 

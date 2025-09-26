@@ -39,17 +39,17 @@ namespace external {
 namespace cvf {
 
 
-    
+
 //==================================================================================================
 ///
 /// \class cvf::Collection
 /// \ingroup Core
-/// 
-/// A collection class for reference counted objects (that derive from Object). 
-///    
-/// The class add a reference to all objects when added to the array, and releases them when removed 
+///
+/// A collection class for reference counted objects (that derive from Object).
+///
+/// The class add a reference to all objects when added to the array, and releases them when removed
 /// from the array.
-/// 
+///
 /// The class exposes the same public interface as a std::vector, so see the STL documentation
 /// for documentation on most of the methods.
 ///
@@ -85,7 +85,7 @@ Collection<T>::Collection(const std::vector< ref<T> >& vector)
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 template<typename T>
 Collection<T>& Collection<T>::operator=(Collection rhs)
@@ -108,117 +108,117 @@ Collection<T>& Collection<T>::operator=(const std::vector< ref<T> >& vector)
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 template<typename T>
-const ref<T>& Collection<T>::operator[](size_t index) const    
-{ 
-    return m_vector[index]; 
+const ref<T>& Collection<T>::operator[](size_t index) const
+{
+    return m_vector[index];
 }
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 template<typename T>
-ref<T>& Collection<T>::operator[](size_t index)                
-{ 
-    return m_vector[index]; 
+ref<T>& Collection<T>::operator[](size_t index)
+{
+    return m_vector[index];
 }
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 template<typename T>
-void Collection<T>::push_back(T* data)      	
-{ 
-    m_vector.push_back(data); 
+void Collection<T>::push_back(T* data)
+{
+    m_vector.push_back(data);
 }
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 template<typename T>
-const T* Collection<T>::at(size_t index) const	
-{ 
-    return m_vector[index].p(); 
+const T* Collection<T>::at(size_t index) const
+{
+    return m_vector[index].p();
 }
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 template<typename T>
-T* Collection<T>::at(size_t index)				
-{ 
-    return m_vector[index].p(); 
+T* Collection<T>::at(size_t index)
+{
+    return m_vector[index].p();
 }
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 template<typename T>
-void Collection<T>::resize(size_t size)     	
-{ 
-    m_vector.resize(size); 
+void Collection<T>::resize(size_t size)
+{
+    m_vector.resize(size);
 }
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 template<typename T>
-size_t Collection<T>::size() const             	
-{ 
-    return m_vector.size(); 
+size_t Collection<T>::size() const
+{
+    return m_vector.size();
 }
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 template<typename T>
-void Collection<T>::reserve(size_t capacity)	
-{ 
-    m_vector.reserve(capacity); 
+void Collection<T>::reserve(size_t capacity)
+{
+    m_vector.reserve(capacity);
 }
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 template<typename T>
-size_t Collection<T>::capacity() const      	
-{ 
-    return m_vector.capacity(); 
+size_t Collection<T>::capacity() const
+{
+    return m_vector.capacity();
 }
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 template<typename T>
-void Collection<T>::clear()                 	
-{ 
-    m_vector.clear(); 
+void Collection<T>::clear()
+{
+    m_vector.clear();
 }
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 template<typename T>
-bool Collection<T>::empty() const           	
-{ 
-    return m_vector.empty(); 
+bool Collection<T>::empty() const
+{
+    return m_vector.empty();
 }
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 template<typename T>
 bool Collection<T>::contains(const T* data) const
@@ -258,7 +258,7 @@ size_t Collection<T>::indexOf(const T* data) const
 /// Erase the specified element
 //--------------------------------------------------------------------------------------------------
 template<typename T>
-void Collection<T>::erase(const T* data) 
+void Collection<T>::erase(const T* data)
 {
     typename std::vector<ref<T> >::iterator it = std::find(m_vector.begin(), m_vector.end(), data);
     if (it != m_vector.end())
@@ -272,22 +272,22 @@ void Collection<T>::erase(const T* data)
 /// Erase the element at the specified index
 //--------------------------------------------------------------------------------------------------
 template<typename T>
-void Collection<T>::eraseAt(size_t index) 
-{ 
+void Collection<T>::eraseAt(size_t index)
+{
     CVF_ASSERT(index < m_vector.size());
 
     // Cast may have to be to std::vector<T>::difference_type
-    m_vector.erase(m_vector.begin() + static_cast<ptrdiff_t>(index)); 
+    m_vector.erase(m_vector.begin() + static_cast<ptrdiff_t>(index));
 }
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 template<typename T>
-void Collection<T>::swap(Collection& other)		
-{ 
-    m_vector.swap(other.m_vector); 
+void Collection<T>::swap(Collection& other)
+{
+    m_vector.swap(other.m_vector);
 }
 
 

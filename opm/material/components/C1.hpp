@@ -80,7 +80,7 @@ public:
      * \brief Critical volume of \f$C_1\f$ [m3/kmol].
      */
     static Scalar criticalVolume() {return 9.863e-2; }
-    
+
     /*!
      * \brief Acentric factor of \f$C_1\f$.
      */

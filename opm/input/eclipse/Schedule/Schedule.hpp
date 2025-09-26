@@ -503,7 +503,7 @@ namespace Opm {
 
         // The current_report_step is set to the current report step when a PYACTION call is executed.
         // This is needed since the Schedule object does not know the current report step of the simulator and
-        // we only allow PYACTIONS for the current and future report steps. 
+        // we only allow PYACTIONS for the current and future report steps.
         std::size_t current_report_step = 0;
         // The simUpdateFromPython points to a SimulatorUpdate collecting all updates from one PYACTION call.
         // The SimulatorUpdate is reset before a new PYACTION call is executed.

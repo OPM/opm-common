@@ -57,4 +57,3 @@ void handleRCMASTS(HandlerContext& handlerContext)
 }
 
 } // namespace Opm
-

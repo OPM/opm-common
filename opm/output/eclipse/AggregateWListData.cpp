@@ -235,5 +235,3 @@ captureDeclaredWListData(const Schedule&   sched,
 
     }
 }
-
-

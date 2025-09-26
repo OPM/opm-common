@@ -80,7 +80,7 @@ class FLUIDSYSTEM_CLASSNAME : public BaseFluidSystem<Scalar, FLUIDSYSTEM_CLASSNA
 
 public:
 
-    // The logic here is the following: We test if we are instantiating on the CPU 
+    // The logic here is the following: We test if we are instantiating on the CPU
     // std::is_same_v<Storage<Scalar>, VectorWithDefaultAllocator<Scalar>  == true
     // and if so, we use the multiplexer classes, if not, we use the concrete types.
     using GasPvt = std::conditional_t<std::is_same_v<Storage<Scalar>, VectorWithDefaultAllocator<Scalar>>,
@@ -157,7 +157,7 @@ public:
     #ifndef COMPILING_STATIC_FLUID_SYSTEM
     /**
      * \brief Default copy constructor.
-     * 
+     *
      * This can be used to copy from one storage type (say std::vector) to another (say GPUBuffer).
      */
     template<template<typename> typename StorageT>
@@ -237,17 +237,17 @@ public:
     #ifdef COMPILING_STATIC_FLUID_SYSTEM
     /**
      * \brief Get the non-static instance of the fluid system.
-     * 
+     *
      * This function is for now primarily used when accessing the fluid system from the GPU.
-     * 
-     * \note This function works as a singleton. 
+     *
+     * \note This function works as a singleton.
      */
     template<template<typename> typename StorageT = VectorWithDefaultAllocator>
     static FLUIDSYSTEM_CLASSNAME_NONSTATIC<Scalar, IndexTraits, StorageT>& getNonStaticInstance()
     {
         static FLUIDSYSTEM_CLASSNAME_NONSTATIC<Scalar, IndexTraits, StorageT> instance{FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, Storage>()};
         return instance;
-        
+
     }
     #endif
 
@@ -2037,14 +2037,14 @@ copy_to_gpu(const FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits>& oldFluidSystem) {
     OPM_ERROR_IF(oldFluidSystem.gasPvt_.approach() != GasPvtApproach::Co2Gas,
         fmt::format("Incompatible gas PVT approach. Given {}, expected {} (GasPvtApproach::Co2Gas).",
                      int(oldFluidSystem.gasPvt_.approach()), int(GasPvtApproach::Co2Gas)));
-                     
+
     OPM_ERROR_IF(oldFluidSystem.waterPvt_.approach() != WaterPvtApproach::BrineCo2,
         fmt::format("Incompatible water PVT approach. Given {}, expected {} (WaterPvtApproach::BrineCo2).",
                     int(oldFluidSystem.waterPvt_.approach()), int(WaterPvtApproach::BrineCo2)));
 
     OPM_ERROR_IF(oldFluidSystem.oilPvt_.isActive(),
         "We currently do not support an active oil phase for the FluidSystem on GPU.");
-    
+
     auto newGasPvt = copy_to_gpu(oldFluidSystem.gasPvt_.template getRealPvt<GasPvtApproach::Co2Gas>());
 
     auto newOilPvt = NullOilPvt<Scalar>();

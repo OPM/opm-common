@@ -60,7 +60,7 @@ Evaluation moleFractionToMolality(Evaluation& xlCO2, Evaluation& s, const int& a
 {
     Evaluation mCO2;
 
-    // Activity model 3 have been implemented without 2 times salt molality 
+    // Activity model 3 have been implemented without 2 times salt molality
     if (activityModel == 3){
         mCO2 = xlCO2 * (s + 55.508) / (1 - xlCO2);
     }
@@ -173,7 +173,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(Brine_CO2, Scalar, Types)
             }
         }
     }
-    
+
 }
 
 BOOST_AUTO_TEST_CASE_TEMPLATE(BrineDensityWithCO2, Scalar, Types)

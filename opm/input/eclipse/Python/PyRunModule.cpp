@@ -140,7 +140,7 @@ bool PyRunModule::run(EclipseState& ecl_state,
 
         if (py::hasattr(this->module, "run")) {
             OpmLog::info(R"(PYACTION can be used without a run(ecl_state, schedule, report_step, summary_state, actionx_callback) function, its arguments are available as attributes of the module opm_embedded, try the following in your python script:
-                    
+
 import opm_embedded
 
 help(opm_embedded.current_ecl_state)
@@ -153,7 +153,7 @@ help(opm_embedded.current_summary_state)
         }
     } else { // Module has been loaded already
         if (!this->run_function.is_none()) {
-            return this->executeInnerRunFunction(actionx_callback);            
+            return this->executeInnerRunFunction(actionx_callback);
         } else {
             try {
                 this->module.reload();

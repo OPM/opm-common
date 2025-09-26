@@ -365,5 +365,3 @@ namespace Opm {
     }
 
 }
-
-

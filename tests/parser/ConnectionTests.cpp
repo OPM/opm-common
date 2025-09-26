@@ -724,9 +724,9 @@ BOOST_AUTO_TEST_CASE(loadCOMPTRAJTESTSPE1) {
     /* Comparison values (CFs and intersected cells) are from ResInsight through importing a deviation file with contents
           WELLNAME: 'INJ1'
           # X   Y    TVDMSL   MDMSL
-          500   500  -100.0   0.0 
+          500   500  -100.0   0.0
           500   500   8325.0  8325.0
-          2500  2500  8425.0  8450.0 
+          2500  2500  8425.0  8450.0
        and adjusting the completion data in agreement with the COMPTRAJ data in the input file
      */
     const std::array<double, 4> connection_factor{311.783, 7.79428, 38.9674, 62.3465};
@@ -734,7 +734,7 @@ BOOST_AUTO_TEST_CASE(loadCOMPTRAJTESTSPE1) {
     BOOST_CHECK_EQUAL(connections.size(), 4);
     for (size_t i = 0 ; i < connections.size();  ++i ) {
          BOOST_CHECK_CLOSE(connections[i].CF(), units.to_si(Opm::UnitSystem::measure::transmissibility, connection_factor[i]), 2e-2);
-         BOOST_CHECK_EQUAL(connections[i].global_index(), global_index[i]);  
+         BOOST_CHECK_EQUAL(connections[i].global_index(), global_index[i]);
     }
 }
 
@@ -753,7 +753,7 @@ BOOST_AUTO_TEST_CASE(loadCOMPTRAJTESTSPE1_2) {
     /* Comparison values (CFs and intersected cells) are from ResInsight through importing a deviation file with contents
           WELLNAME: 'INJ1'
           # X   Y    TVDMSL   MDMSL
-          2500   3500  -100.0   0.0 
+          2500   3500  -100.0   0.0
           2500   3500   8325.0  8325.0
           2750   3750   8375.0  8375.0
           3500   4500   8400.0  8400.0
@@ -766,6 +766,6 @@ BOOST_AUTO_TEST_CASE(loadCOMPTRAJTESTSPE1_2) {
     BOOST_CHECK_EQUAL(connections.size(), 5);
     for (size_t i = 0 ; i < connections.size();  ++i ) {
          BOOST_CHECK_CLOSE(connections[i].CF(), units.to_si(Opm::UnitSystem::measure::transmissibility, connection_factor[i]), 2e-2);
-         BOOST_CHECK_EQUAL(connections[i].global_index(), global_index[i]);  
+         BOOST_CHECK_EQUAL(connections[i].global_index(), global_index[i]);
     }
 }
