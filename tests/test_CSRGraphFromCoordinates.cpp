@@ -1305,7 +1305,7 @@ BOOST_AUTO_TEST_CASE(Linear_4x1x1_Symmetric_Multiple_Repeated_Add_3x1x1)
         auto expect = std::vector { 0, 1, 2, 3, 4, 5, }; // Compressed original
         for (auto n = 0; n < nrep; ++n) {
             expect.insert(expect.end(), expectAdd.begin(), expectAdd.end());
-        }            
+        }
 
         BOOST_CHECK_EQUAL_COLLECTIONS(nzMap .begin(), nzMap .end(),
                                       expect.begin(), expect.end());
@@ -1376,7 +1376,7 @@ BOOST_AUTO_TEST_CASE(Linear_4x1x1_Symmetric_Multiple_Repeated_Add_3x1x1_Expand)
 
         for (auto n = 0; n < nrep; ++n) {
             expect.insert(expect.end(), expectAdd.begin(), expectAdd.end());
-        }            
+        }
 
         BOOST_CHECK_EQUAL_COLLECTIONS(nzMap .begin(), nzMap .end(),
                                       expect.begin(), expect.end());
@@ -2854,7 +2854,7 @@ BOOST_AUTO_TEST_CASE(Linear_4x1x1_Symmetric_Multiple_Repeated_Add_3x1x1)
         auto expect = std::vector { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, }; // Compressed original
         for (auto n = 0; n < nrep; ++n) {
             expect.insert(expect.end(), expectAdd.begin(), expectAdd.end());
-        }            
+        }
 
         BOOST_CHECK_EQUAL_COLLECTIONS(nzMap .begin(), nzMap .end(),
                                       expect.begin(), expect.end());
@@ -2930,7 +2930,7 @@ BOOST_AUTO_TEST_CASE(Linear_4x1x1_Symmetric_Multiple_Repeated_Add_3x1x1_Expand)
 
         for (auto n = 0; n < nrep; ++n) {
             expect.insert(expect.end(), expectAdd.begin(), expectAdd.end());
-        }            
+        }
 
         BOOST_CHECK_EQUAL_COLLECTIONS(nzMap .begin(), nzMap .end(),
                                       expect.begin(), expect.end());

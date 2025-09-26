@@ -159,7 +159,7 @@ global_kw_info(const std::string& name, const bool allow_unsupported)
     {
         return kwPos->second;
     }
-    
+
     if (auto kwPos = SOLUTION::composition_keywords.find(name);
         kwPos != SOLUTION::composition_keywords.end())
     {

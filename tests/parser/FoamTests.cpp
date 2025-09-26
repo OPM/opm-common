@@ -197,4 +197,3 @@ BOOST_AUTO_TEST_CASE(FoamConfigTest) {
 BOOST_AUTO_TEST_CASE(FoamConfigFailureTest) {
     BOOST_CHECK_THROW( createFailingDeck(), std::exception );
 }
-

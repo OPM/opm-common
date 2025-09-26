@@ -43,12 +43,12 @@ namespace cvf {
 /// \class cvf::Rect
 /// \ingroup Core
 ///
-/// 
+///
 //==================================================================================================
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 template <typename T>
 Rect<T>::Rect()
@@ -61,7 +61,7 @@ Rect<T>::Rect()
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 template <typename T>
 Rect<T>::Rect(T minX, T minY, T width, T height)
@@ -73,7 +73,7 @@ Rect<T>::Rect(T minX, T minY, T width, T height)
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 template <typename T>
 Rect<T>::Rect(const Vector2<T>& min, T width, T height)
@@ -85,7 +85,7 @@ Rect<T>::Rect(const Vector2<T>& min, T width, T height)
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 template <typename T>
 Rect<T>::Rect(const Rect& rect)
@@ -111,7 +111,7 @@ Rect<T>& Rect<T>::operator=(const Rect& rhs)
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 template <typename T>
 Vector2<T> Rect<T>::min() const
@@ -121,7 +121,7 @@ Vector2<T> Rect<T>::min() const
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 template <typename T>
 Vector2<T> Rect<T>::max() const
@@ -135,7 +135,7 @@ Vector2<T> Rect<T>::max() const
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 template <typename T>
 T Rect<T>::width() const
@@ -145,7 +145,7 @@ T Rect<T>::width() const
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 template <typename T>
 T Rect<T>::height() const
@@ -155,7 +155,7 @@ T Rect<T>::height() const
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 template <typename T>
 Vector2<T> Rect<T>::center() const
@@ -169,7 +169,7 @@ Vector2<T> Rect<T>::center() const
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 template <typename T>
 void Rect<T>::setMin(const Vector2<T>& min)
@@ -179,7 +179,7 @@ void Rect<T>::setMin(const Vector2<T>& min)
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 template <typename T>
 void Rect<T>::setWidth(T width)
@@ -189,7 +189,7 @@ void Rect<T>::setWidth(T width)
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 template <typename T>
 void Rect<T>::setHeight(T height)
@@ -199,7 +199,7 @@ void Rect<T>::setHeight(T height)
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 template <typename T>
 bool Rect<T>::isValid() const
@@ -210,7 +210,7 @@ bool Rect<T>::isValid() const
 
 //--------------------------------------------------------------------------------------------------
 /// Normalizes the rectangle
-/// 
+///
 /// Ensures that the rectangle has a non-negative width and height. If width or height is negative,
 /// the corresponding min component will be moved.
 //--------------------------------------------------------------------------------------------------
@@ -232,7 +232,7 @@ void Rect<T>::normalize()
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 template <typename T>
 void Rect<T>::include(const Vector2<T>& coord)
@@ -272,7 +272,7 @@ void Rect<T>::include(const Vector2<T>& coord)
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 template <typename T>
 void Rect<T>::include(const Rect& rect)
@@ -290,12 +290,12 @@ void Rect<T>::include(const Rect& rect)
         right += m_width;
     }
 
-    if (rect.width() < 0.0) 
+    if (rect.width() < 0.0)
     {
         left = CVF_MIN(left, rect.min().x() + rect.width());
         right = CVF_MAX(right, rect.min().x());
-    } 
-    else 
+    }
+    else
     {
         left = CVF_MIN(left, rect.min().x());
         right = CVF_MAX(right, rect.min().x() + rect.width());
@@ -312,12 +312,12 @@ void Rect<T>::include(const Rect& rect)
         top += m_height;
     }
 
-    if (rect.height() < 0.0) 
+    if (rect.height() < 0.0)
     {
         bottom = CVF_MIN(bottom, rect.min().y() + rect.height());
         top = CVF_MAX(top, rect.min().y());
-    } 
-    else 
+    }
+    else
     {
         bottom = CVF_MIN(bottom, rect.min().y());
         top = CVF_MAX(top, rect.min().y() + rect.height());
@@ -331,7 +331,7 @@ void Rect<T>::include(const Rect& rect)
 
 //--------------------------------------------------------------------------------------------------
 /// Check if the rectangle contains the specified coordinate
-/// 
+///
 /// Returns true if the point is inside or on the edge of the rectangle; otherwise returns false.
 //--------------------------------------------------------------------------------------------------
 template <typename T>
@@ -348,7 +348,7 @@ bool Rect<T>::contains(const Vector2<T>& coord) const
         right += m_width;
     }
 
-    if (left == right) 
+    if (left == right)
     {
         // null rect
         return false;
@@ -370,7 +370,7 @@ bool Rect<T>::contains(const Vector2<T>& coord) const
         top += m_height;
     }
 
-    if (bot == top) 
+    if (bot == top)
     {
         // null rect
         return false;
@@ -386,7 +386,7 @@ bool Rect<T>::contains(const Vector2<T>& coord) const
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 template <typename T>
 bool Rect<T>::intersects(const Rect& rect) const
@@ -402,7 +402,7 @@ bool Rect<T>::intersects(const Rect& rect) const
         right1 += m_width;
     }
 
-    if (left1 == right1) 
+    if (left1 == right1)
     {
         // null rect
         return false;
@@ -419,7 +419,7 @@ bool Rect<T>::intersects(const Rect& rect) const
         right2 += rect.width();
     }
 
-    if (left2 == right2) 
+    if (left2 == right2)
     {
         // null rect
         return false;
@@ -441,7 +441,7 @@ bool Rect<T>::intersects(const Rect& rect) const
         top1 += m_height;
     }
 
-    if (bot1 == top1) 
+    if (bot1 == top1)
     {
         // null rect
         return false;
@@ -458,7 +458,7 @@ bool Rect<T>::intersects(const Rect& rect) const
         top2 += rect.height();
     }
 
-    if (bot2 == top2) 
+    if (bot2 == top2)
     {
         // null rect
         return false;
@@ -474,7 +474,7 @@ bool Rect<T>::intersects(const Rect& rect) const
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 template <typename T>
 void Rect<T>::translate(const Vector2<T>& offset)
@@ -484,7 +484,7 @@ void Rect<T>::translate(const Vector2<T>& offset)
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 template <typename T>
 Rect<T> Rect<T>::fromMinMax(const Vector2<T>& min, const Vector2<T>& max)
@@ -499,7 +499,7 @@ Rect<T> Rect<T>::fromMinMax(const Vector2<T>& min, const Vector2<T>& max)
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 template <typename T>
 bool Rect<T>::segmentIntersect(const Vec2d& p1, const Vec2d& p2, Vec2d* intersect1, Vec2d* intersect2)
@@ -549,7 +549,7 @@ bool Rect<T>::segmentIntersect(const Vec2d& p1, const Vec2d& p2, Vec2d* intersec
 }
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 template <typename T>
 bool Rect<T>::clipTest(double p, double q, double *u1, double *u2)
@@ -587,7 +587,7 @@ bool Rect<T>::clipTest(double p, double q, double *u1, double *u2)
     }
     else
     {
-        // p = 0, so line is parallel to this clipping edge 
+        // p = 0, so line is parallel to this clipping edge
         if(q < 0.0)
         {
             // Line is outside clipping edge

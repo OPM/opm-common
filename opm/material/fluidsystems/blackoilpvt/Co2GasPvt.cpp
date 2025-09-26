@@ -95,7 +95,7 @@ initFromState(const EclipseState& eclState, const Schedule&)
         // Currently we only support constant salinity converted to mass fraction
         salinity_[regionIdx] = eclState.getCo2StoreConfig().salinity();
         // For consistency we compute the reference density the same way as in BrineCo2Pvt.cpp
-        if (enableEzrokhiDensity_) { 
+        if (enableEzrokhiDensity_) {
             const Scalar& rho_pure = H2O::liquidDensity(T_ref, P_ref, extrapolate);
             const Scalar& nacl_exponent = ezrokhiExponent_(T_ref, ezrokhiDenNaClCoeff_);
             brineReferenceDensity_[regionIdx] = rho_pure * pow(10.0, nacl_exponent * salinity_[regionIdx]);

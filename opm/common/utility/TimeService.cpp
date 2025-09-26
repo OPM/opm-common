@@ -333,4 +333,3 @@ Opm::time_point Opm::asTimePoint(const TimeStampUTC& ts)
 {
     return Opm::TimeService::from_time_t( Opm::asTimeT(ts) );
 }
-

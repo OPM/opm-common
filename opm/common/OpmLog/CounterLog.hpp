@@ -50,4 +50,3 @@ namespace Opm {
 } // namespace Opm
 
 #endif
-

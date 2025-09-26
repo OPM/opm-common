@@ -42,7 +42,7 @@
 
 // #include "../cafPdmCore/cafAppEnum.h"
 
-namespace external 
+namespace external
 {
 namespace cvf
 {

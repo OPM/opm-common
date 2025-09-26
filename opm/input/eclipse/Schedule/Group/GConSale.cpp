@@ -69,7 +69,7 @@ GConSale::MaxProcedure GConSale::stringToProcedure(const std::string& str_proc) 
     else if (str_proc == "RATE") return MaxProcedure::RATE;
     else if (str_proc == "MAXR") return MaxProcedure::MAXR;
     else if (str_proc == "END" ) return MaxProcedure::END;
-    else 
+    else
         throw std::invalid_argument(str_proc + "invalid argument to GConSake::stringToProcedure");
 
     return MaxProcedure::NONE;

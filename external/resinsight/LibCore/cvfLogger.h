@@ -59,7 +59,7 @@ class Logger : public Object
 public:
     enum Level
     {
-        LL_ERROR = 1,  
+        LL_ERROR = 1,
         LL_WARNING,
         LL_INFO,
         LL_DEBUG

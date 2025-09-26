@@ -69,7 +69,7 @@
 #ifdef __GNUC__
 // 40302 means version 4.3.2.
 # define CVF_GCC_VER  (__GNUC__*10000 + __GNUC_MINOR__*100 + __GNUC_PATCHLEVEL__)
-#endif  
+#endif
 
 // Helper macro to disable (ignore) compiler warnings on GCC
 // The needed pragma is only available in GCC for versions 4.2.x and above
@@ -77,13 +77,13 @@
 #define CVF_DO_PRAGMA(x) _Pragma(#x)
 #define CVF_GCC_DIAGNOSTIC_IGNORE(OPTION_STRING) CVF_DO_PRAGMA(GCC diagnostic ignored OPTION_STRING)
 #else
-#define CVF_GCC_DIAGNOSTIC_IGNORE(OPTION_STRING) 
+#define CVF_GCC_DIAGNOSTIC_IGNORE(OPTION_STRING)
 #endif
 
 
 #if defined(CVF_LINUX) || defined(CVF_IOS) || defined(CVF_OSX) || defined(CVF_ANDROID)
 // Used by int64_t on *nix below
-#include <stdint.h>     
+#include <stdint.h>
 #endif
 
 // Brings in size_t and definition of NULL
@@ -99,7 +99,7 @@ namespace external {
 #ifdef WIN32
 #define CVF_UNUSED(EXPR) (void)(EXPR);
 #else
-#define CVF_UNUSED(EXPR) (void)sizeof(EXPR); 
+#define CVF_UNUSED(EXPR) (void)sizeof(EXPR);
 #endif
 
 
@@ -119,10 +119,10 @@ typedef unsigned int     uint;
 
 // 64bit integer support via the int64 type
 #ifdef WIN32
-typedef __int64 int64;  
+typedef __int64 int64;
 #elif defined(CVF_LINUX) || defined(CVF_IOS) || defined(CVF_OSX) || defined(CVF_ANDROID)
-typedef int64_t int64;  
-#endif 
+typedef int64_t int64;
+#endif
 
 }
 } //namespace external
@@ -130,4 +130,3 @@ typedef int64_t int64;
 #include "cvfConfigCore.h"
 #include "cvfVersion.h"
 #include "cvfAssert.h"
-

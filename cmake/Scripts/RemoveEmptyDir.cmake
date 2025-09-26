@@ -5,7 +5,7 @@
 if (DIR)
   # check if empty
   file (GLOB_RECURSE files "${DIR}/*")
-  
+
   # remove only if
   if (NOT files)
 	execute_process (COMMAND

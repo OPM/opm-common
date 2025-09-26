@@ -111,7 +111,7 @@ namespace Opm {
         }
     }
 
-    void OilVaporizationProperties::updateDRSDTCON(OilVaporizationProperties& ovp, const std::vector<double>& maximums, const std::vector<std::string>& options, 
+    void OilVaporizationProperties::updateDRSDTCON(OilVaporizationProperties& ovp, const std::vector<double>& maximums, const std::vector<std::string>& options,
                                                    const std::vector<double>& psi, const std::vector<double>& omega){
         ovp.m_type = OilVaporization::DRSDTCON;
         ovp.m_maxDRSDT = maximums;

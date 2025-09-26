@@ -148,5 +148,3 @@ BOOST_AUTO_TEST_CASE(match_test) {
     BOOST_CHECK( !shmatch("NAME.?", "NAME.") );
     BOOST_CHECK( !shmatch("NAME.*", "NAME") );
 }
-
-

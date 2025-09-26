@@ -95,13 +95,13 @@
 #else // On GPU
 // On the GPU, we cannot throw exceptions, so we use assert(false) instead.
 // This will allow us to keep the same code for both CPU and GPU when using
-// the macros. The assert(false) will only cause the CUDA kernel to terminate, 
+// the macros. The assert(false) will only cause the CUDA kernel to terminate,
 // but it will not throw an exception. However, later calls to cudaGetLastError
 // or similar functions that check for errors will report the error, and if
 // they are wrapped in the OPM_GPU_SAFE_CALL macro, that will throw an exception.
 //
 // Notice however, that once we assert(false) in a CUDA kernel, the CUDA context
-// is broken for the rest of the process, see   
+// is broken for the rest of the process, see
 // https://forums.developer.nvidia.com/t/how-to-clear-cuda-errors/296393/5
 
 /**

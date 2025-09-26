@@ -504,25 +504,25 @@ DIMENS
 
 GRID
 
-DX 
+DX
  4*1 /
 DY
  4*1 /
-DZ 
+DZ
  4*1 /
-TOPS 
+TOPS
  4*0.0 /
 
 PORO
  4*0.3 /
- 
+
 PROPS
 
 THCO2MIX
   NONE IDEAL IDEAL  /
 
 )";
-    
+
     Parser parser;
     const auto& deck = parser.parseString(deck_string);
     EclipseState state(deck);
@@ -544,13 +544,13 @@ BOOST_AUTO_TEST_CASE(EzrokhiTablesTest) {
 
         GRID
 
-        DX 
+        DX
         4*1 /
         DY
         4*1 /
-        DZ 
+        DZ
         4*1 /
-        TOPS 
+        TOPS
         4*0.0 /
 
         PORO
@@ -585,7 +585,7 @@ BOOST_AUTO_TEST_CASE(EzrokhiTablesTest) {
     BOOST_CHECK_CLOSE(1.0, denaqa[0].getC0("H2O"), epsilon);
     BOOST_CHECK_CLOSE(2.0, denaqa[0].getC1("H2O"), epsilon);
     BOOST_CHECK_CLOSE(3.0, denaqa[0].getC2("H2O"), epsilon);
-    
+
     BOOST_CHECK_CLOSE(4.0, denaqa[0].getC0("CO2"), epsilon);
     BOOST_CHECK_CLOSE(5.0, denaqa[0].getC1("CO2"), epsilon);
     BOOST_CHECK_CLOSE(6.0, denaqa[0].getC2("CO2"), epsilon);
@@ -598,11 +598,11 @@ BOOST_AUTO_TEST_CASE(EzrokhiTablesTest) {
     BOOST_CHECK_CLOSE(11.0, viscaqa[0].getC0("H2O"), epsilon);
     BOOST_CHECK_CLOSE(12.0, viscaqa[0].getC1("H2O"), epsilon);
     BOOST_CHECK_CLOSE(13.0, viscaqa[0].getC2("H2O"), epsilon);
-    
+
     BOOST_CHECK_CLOSE(14.0, viscaqa[0].getC0("CO2"), epsilon);
     BOOST_CHECK_CLOSE(15.0, viscaqa[0].getC1("CO2"), epsilon);
     BOOST_CHECK_CLOSE(16.0, viscaqa[0].getC2("CO2"), epsilon);
-    
+
     BOOST_CHECK_CLOSE(17.0, viscaqa[0].getC0("NACL"), epsilon);
     BOOST_CHECK_CLOSE(18.0, viscaqa[0].getC1("NACL"), epsilon);
     BOOST_CHECK_CLOSE(19.0, viscaqa[0].getC2("NACL"), epsilon);
@@ -617,13 +617,13 @@ BOOST_AUTO_TEST_CASE(SALTMFTest) {
 
         GRID
 
-        DX 
+        DX
         4*1 /
         DY
         4*1 /
-        DZ 
+        DZ
         4*1 /
-        TOPS 
+        TOPS
         4*0.0 /
 
         PORO
@@ -642,13 +642,13 @@ BOOST_AUTO_TEST_CASE(SALTMFTest) {
 
         GRID
 
-        DX 
+        DX
         4*1 /
         DY
         4*1 /
-        DZ 
+        DZ
         4*1 /
-        TOPS 
+        TOPS
         4*0.0 /
 
         PORO

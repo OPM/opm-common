@@ -56,7 +56,7 @@ public:
     CharArray();
     CharArray(size_t size, char c);
     explicit CharArray(const char* str);
-    
+
     char&       operator[](size_t i);
     const char& operator[](size_t i) const;
 

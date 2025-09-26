@@ -65,5 +65,3 @@ def tmp(path=None, teardown=True):
         except OSError as oserr:
             logging.debug('tmp:rmtree failed %s (%s)' % (fname, oserr))
             shutil.rmtree(fname, ignore_errors=True)
-
-

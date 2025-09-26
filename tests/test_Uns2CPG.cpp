@@ -37,11 +37,11 @@ bool are_equal(const std::vector<double>& a, const std::vector<double>& b, doubl
                      });
 }
 
-BOOST_AUTO_TEST_CASE(TestGrid2CPG1) { 
+BOOST_AUTO_TEST_CASE(TestGrid2CPG1) {
 std::size_t nx, ny, nz;
 nx = 2;
 ny=  1;
-nz = 2;   
+nz = 2;
 std::vector<std::array<double, 3>> coord = {
 {1.00000000,1.00000000,-0.05000000},
 {1.00000000,0.00000000,-0.05000000},
@@ -90,7 +90,7 @@ std::vector<double> pZCORN = {
 0.50000000,0.45000000
 };
 
-auto [COORDS, ZCORN] = 
+auto [COORDS, ZCORN] =
                         Opm::GridUtil::convertUnsToCPG(coord,element, nx, ny,nz);
 BOOST_CHECK(are_equal(pCOORDS, COORDS));
 BOOST_CHECK(are_equal(pZCORN, ZCORN));

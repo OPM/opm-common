@@ -52,10 +52,10 @@ namespace cvf {
 ///  - cvf::Vec3f (Vector3<float>)
 ///  - cvf::Vec3d (Vector3<double>)
 ///  - cvf::Vec3i (Vector3<int>)
-/// 
+///
 //==================================================================================================
 
-template<typename S> Vector3<S> const Vector3<S>::X_AXIS(1,0,0);    
+template<typename S> Vector3<S> const Vector3<S>::X_AXIS(1,0,0);
 template<typename S> Vector3<S> const Vector3<S>::Y_AXIS(0,1,0);
 template<typename S> Vector3<S> const Vector3<S>::Z_AXIS(0,0,1);
 template<typename S> Vector3<S> const Vector3<S>::ZERO(0,0,0);
@@ -76,7 +76,7 @@ Vector3<S>::Vector3()
 /// Set the vector to <x,y,z>
 //--------------------------------------------------------------------------------------------------
 template<typename S>
-Vector3<S>::Vector3(S x, S y, S z) 
+Vector3<S>::Vector3(S x, S y, S z)
 {
     m_v[0] = x;
     m_v[1] = y;
@@ -88,9 +88,9 @@ Vector3<S>::Vector3(S x, S y, S z)
 /// Set the vector to the same as other
 //--------------------------------------------------------------------------------------------------
 template<typename S>
-Vector3<S>::Vector3(const Vector3& other) 
-{ 
-    *this = other; 
+Vector3<S>::Vector3(const Vector3& other)
+{
+    *this = other;
 }
 
 
@@ -109,7 +109,7 @@ Vector3<S>::Vector3(const T& other)
 
 //--------------------------------------------------------------------------------------------------
 /// Explicit constructor from 2D vector.
-/// 
+///
 /// Will initialize x and y components from the 2D vector, z will be set to 0.
 //--------------------------------------------------------------------------------------------------
 template<typename S>
@@ -122,7 +122,7 @@ Vector3<S>::Vector3(const Vector2<S>& other)
 
 
 //--------------------------------------------------------------------------------------------------
-/// Constructor 
+/// Constructor
 //--------------------------------------------------------------------------------------------------
 template<typename S>
 Vector3<S>::Vector3(const Vector2<S>& other, S z)
@@ -274,11 +274,11 @@ const Vector3<S> Vector3<S>::operator-() const
 //--------------------------------------------------------------------------------------------------
 template<typename S>
 inline Vector3<S>& Vector3<S>::operator+=(const Vector3& v)
-{ 
-    m_v[0] += v.x(); 
-    m_v[1] += v.y(); 
-    m_v[2] += v.z(); 
-    return *this; 
+{
+    m_v[0] += v.x();
+    m_v[1] += v.y();
+    m_v[2] += v.z();
+    return *this;
 }
 
 
@@ -287,11 +287,11 @@ inline Vector3<S>& Vector3<S>::operator+=(const Vector3& v)
 //--------------------------------------------------------------------------------------------------
 template<typename S>
 inline Vector3<S>& Vector3<S>::operator-=(const Vector3& v)
-{ 
-    m_v[0] -= v.x(); 
-    m_v[1] -= v.y(); 
-    m_v[2] -= v.z(); 
-    return *this; 
+{
+    m_v[0] -= v.x();
+    m_v[1] -= v.y();
+    m_v[2] -= v.z();
+    return *this;
 }
 
 
@@ -300,11 +300,11 @@ inline Vector3<S>& Vector3<S>::operator-=(const Vector3& v)
 //--------------------------------------------------------------------------------------------------
 template<typename S>
 inline Vector3<S>& Vector3<S>::operator*=(S scalar)
-{ 
-    m_v[0] *= scalar; 
-    m_v[1] *= scalar; 
-    m_v[2] *= scalar; 
-    return *this; 
+{
+    m_v[0] *= scalar;
+    m_v[1] *= scalar;
+    m_v[2] *= scalar;
+    return *this;
 }
 
 
@@ -313,11 +313,11 @@ inline Vector3<S>& Vector3<S>::operator*=(S scalar)
 //--------------------------------------------------------------------------------------------------
 template<typename S>
 inline Vector3<S>& Vector3<S>::operator/=(S scalar)
-{ 
-    m_v[0] /= scalar; 
-    m_v[1] /= scalar; 
-    m_v[2] /= scalar; 
-    return *this; 
+{
+    m_v[0] /= scalar;
+    m_v[1] /= scalar;
+    m_v[2] /= scalar;
+    return *this;
 }
 
 
@@ -359,7 +359,7 @@ S Vector3<S>::dot(const Vector3& other) const
 
 //--------------------------------------------------------------------------------------------------
 /// Compute the dot product of this and rhs and return the result (scalar)
-/// 
+///
 /// Formula:
 /// \code
 /// S = tx*rx + ty*ry + tz*rz
@@ -385,7 +385,7 @@ void cvf::Vector3<S>::cross(const Vector3& v1, const Vector3& v2)
 
 //--------------------------------------------------------------------------------------------------
 /// Compute the cross product of this and rhs and return the result (vector)
-/// 
+///
 /// Formula:
 /// \code
 /// vec = <ty*rz - tz*ry, tz*rx - tx*rz, tx*ry - ty*rx>
@@ -394,7 +394,7 @@ void cvf::Vector3<S>::cross(const Vector3& v1, const Vector3& v2)
 template<typename S>
 inline const Vector3<S> Vector3<S>::operator^(const Vector3& rhs) const
 {
-    return Vector3(m_v[1]*rhs.m_v[2] - m_v[2]*rhs.m_v[1], m_v[2]*rhs.m_v[0] - m_v[0]*rhs.m_v[2], m_v[0]*rhs.m_v[1] - m_v[1]*rhs.m_v[0]); 
+    return Vector3(m_v[1]*rhs.m_v[2] - m_v[2]*rhs.m_v[1], m_v[2]*rhs.m_v[0] - m_v[0]*rhs.m_v[2], m_v[0]*rhs.m_v[1] - m_v[1]*rhs.m_v[0]);
 }
 
 
@@ -413,7 +413,7 @@ void Vector3<S>::set(const T& other)
 
 //--------------------------------------------------------------------------------------------------
 /// Get the length of the vector
-/// 
+///
 /// Formula:
 /// \code
 /// len = sqrt(x*x + y*y + z*z)
@@ -428,7 +428,7 @@ inline S Vector3<S>::length() const
 
 //--------------------------------------------------------------------------------------------------
 /// Get the squared length (L2) of the vector
-/// 
+///
 /// Formula:
 /// \code
 /// len = x*x + y*y + z*z
@@ -442,11 +442,11 @@ inline S Vector3<S>::lengthSquared() const
 
 
 //--------------------------------------------------------------------------------------------------
-/// Set the length of the vector to \a newLength. 
-/// 
-/// \return  The method returns true if scaling was a success. Returns false if the vector was of 
+/// Set the length of the vector to \a newLength.
+///
+/// \return  The method returns true if scaling was a success. Returns false if the vector was of
 ///          zero length and \a newLength was different from 0.
-/// 
+///
 /// This is the same as calling normalize() and then scaling with \a newLength.
 /// If the current vector length is 0 or \a newLength is 0, the vector is set to all zeros.
 //--------------------------------------------------------------------------------------------------
@@ -502,7 +502,7 @@ inline S Vector3<S>::pointDistanceSquared(const Vector3& otherPoint) const
 
 //--------------------------------------------------------------------------------------------------
 /// Normalize the vector (make sure the length is 1.0).
-/// 
+///
 /// \return  Returns true if normalization was possible. Returns false if length is zero or a NaN vector.
 //--------------------------------------------------------------------------------------------------
 template<typename S>
@@ -577,7 +577,7 @@ inline bool Vector3<S>::isZero() const
 
 //--------------------------------------------------------------------------------------------------
 /// Check if vector is undefined
-/// 
+///
 /// \return Returns true if any one of the components is undefined
 //--------------------------------------------------------------------------------------------------
 template<typename S>
@@ -610,7 +610,7 @@ inline void Vector3<S>::set(S x, S y, S z)
 
 //--------------------------------------------------------------------------------------------------
 /// Transforms this vector as a point.
-/// 
+///
 /// Transforms this vector as a point by multiplying it with the passed matrix.
 /// This will both rotate and translate this.
 /// Assumes the matrix m doesn't contain any perspective projection
@@ -646,8 +646,8 @@ const Vector3<S> Vector3<S>::getTransformedPoint(const Matrix4<S>& m) const
 
 //--------------------------------------------------------------------------------------------------
 /// Transforms this vector as a vector.
-/// 
-/// Transforms this vector as a vector by multiplying it with the passed matrix. 
+///
+/// Transforms this vector as a vector by multiplying it with the passed matrix.
 /// This will only rotate the vector, but not consider the translation part of the matrix.
 /// Assumes the matrix m doesn't contain any perspective projection.
 //--------------------------------------------------------------------------------------------------
@@ -682,8 +682,8 @@ const Vector3<S> Vector3<S>::getTransformedVector(const Matrix4<S>& m) const
 
 //--------------------------------------------------------------------------------------------------
 /// Transforms this vector.
-/// 
-/// Transforms this vector by multiplying it with the passed matrix. 
+///
+/// Transforms this vector by multiplying it with the passed matrix.
 //--------------------------------------------------------------------------------------------------
 template<typename S>
 void Vector3<S>::transformVector(const Matrix3<S>& m)
@@ -716,12 +716,12 @@ const Vector3<S> Vector3<S>::getTransformedVector(const Matrix3<S>& m) const
 
 //----------------------------------------------------------------------------------------------------
 /// Create an orthonormal basis from this vector
-/// 
+///
 /// \param mapToAxis  Specifies which axis this vector should be mapped onto (0=u, 1=v, 2=w)
 /// \param uAxis      Output u vector
 /// \param vAxis      Output v vector
 /// \param wAxis      Output w vector
-/// 
+///
 /// Will create an orthonormal basis from this vector. The returned u, v and w axes will all be unit
 /// length and will be perpendicular to each other.
 /// The vector does not have to be normalized before calling this function.

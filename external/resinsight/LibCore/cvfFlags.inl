@@ -51,9 +51,9 @@ namespace cvf {
 /// Default constructor
 //--------------------------------------------------------------------------------------------------
 template<typename FlagEnum>
-inline Flags<FlagEnum>::Flags() 
-:   m_bitfield(0) 
-{ 
+inline Flags<FlagEnum>::Flags()
+:   m_bitfield(0)
+{
 }
 
 
@@ -61,9 +61,9 @@ inline Flags<FlagEnum>::Flags()
 /// Copy constructor
 //--------------------------------------------------------------------------------------------------
 template<typename FlagEnum>
-inline Flags<FlagEnum>::Flags(const Flags& other) 
-:   m_bitfield(other.m_bitfield) 
-{ 
+inline Flags<FlagEnum>::Flags(const Flags& other)
+:   m_bitfield(other.m_bitfield)
+{
 }
 
 
@@ -71,9 +71,9 @@ inline Flags<FlagEnum>::Flags(const Flags& other)
 /// Constructor with initialization
 //--------------------------------------------------------------------------------------------------
 template<typename FlagEnum>
-inline Flags<FlagEnum>::Flags(FlagEnum flag) 
-:   m_bitfield(flag) 
-{ 
+inline Flags<FlagEnum>::Flags(FlagEnum flag)
+:   m_bitfield(flag)
+{
 }
 
 
@@ -185,12 +185,12 @@ inline bool Flags<FlagEnum>::operator!=(int rhs) const
 
 
 //--------------------------------------------------------------------------------------------------
-/// Return true only if ALL bits in flag are set 
+/// Return true only if ALL bits in flag are set
 //--------------------------------------------------------------------------------------------------
 template<typename FlagEnum>
 inline bool Flags<FlagEnum>::testFlag(FlagEnum flag) const
-{ 
-    return ((m_bitfield & flag) == flag); 
+{
+    return ((m_bitfield & flag) == flag);
 }
 
 

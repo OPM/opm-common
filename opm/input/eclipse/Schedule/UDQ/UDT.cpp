@@ -65,6 +65,8 @@ double UDT::operator()(const double x) const
     }
 
     assert(0); // Should be unreachable
+
+    return 0.0;
 }
 
 } // namespace Opm

@@ -47,7 +47,7 @@ namespace cvf {
 
 //==================================================================================================
 //
-// A general unicode based string class 
+// A general unicode based string class
 //
 //==================================================================================================
 class String
@@ -61,7 +61,7 @@ public:
     String(const wchar_t* str);
 
     explicit String(char c);
-    
+
     explicit String(int number);
     explicit String(int64_t number);
     explicit String(uint number);

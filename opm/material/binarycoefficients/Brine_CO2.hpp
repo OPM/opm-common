@@ -129,8 +129,8 @@ public:
         // If both phases are present the mole fractions in each phase can be calculate with the mutual solubility
         // function
         if (knownPhaseIdx < 0) {
-            Evaluation molalityNaCl = massFracToMolality_(salinity); // mass fraction to molality of NaCl 
-            
+            Evaluation molalityNaCl = massFracToMolality_(salinity); // mass fraction to molality of NaCl
+
             // Duan-Sun model as given in Spycher & Pruess (2005) have a different fugacity coefficient formula and
             // activity coefficient definition (not a true activity coefficient but a ratio).
             // Technically only valid below T = 100 C, but we use low-temp. parameters and formulas even above 100 C as
@@ -200,10 +200,10 @@ public:
      */
     template <class Evaluation, class CO2Params>
     static Evaluation fugacityCoefficientCO2(const CO2Params& params,
-                                             const Evaluation& temperature, 
+                                             const Evaluation& temperature,
                                              const Evaluation& pg,
-                                             const Evaluation& yH2O, 
-                                             const bool highTemp, 
+                                             const Evaluation& yH2O,
+                                             const bool highTemp,
                                              bool extrapolate = false,
                                              bool spycherPruess2005 = false)
     {
@@ -262,10 +262,10 @@ public:
      */
     template <class Evaluation, class CO2Params>
     static Evaluation fugacityCoefficientH2O(const CO2Params& params,
-                                             const Evaluation& temperature, 
+                                             const Evaluation& temperature,
                                              const Evaluation& pg,
-                                             const Evaluation& yH2O, 
-                                             const bool highTemp, 
+                                             const Evaluation& yH2O,
+                                             const bool highTemp,
                                              bool extrapolate = false,
                                              bool spycherPruess2005 = false)
     {
@@ -357,7 +357,7 @@ private:
             return 7.89e7;
         }
     }
-    
+
     /*!
     * \brief
     */
@@ -473,7 +473,7 @@ private:
         if (highTemp && temperature > 373.15) {
             const Evaluation& temperatureCelcius = temperature - 273.15;
             static const Scalar c[5] = { -1.9906e-1, 2.0471e-3, 1.0152e-4, -1.4234e-6, 1.4168e-8 };
-            return c[0] + temperatureCelcius * (c[1] + temperatureCelcius * (c[2] + 
+            return c[0] + temperatureCelcius * (c[1] + temperatureCelcius * (c[2] +
                 temperatureCelcius * (c[3] + temperatureCelcius * c[4])));
         }
         else {
@@ -485,8 +485,8 @@ private:
     * \brief
     */
     template <class Evaluation>
-    OPM_HOST_DEVICE static Evaluation activityCoefficientCO2_(const Evaluation& temperature, 
-                                              const Evaluation& xCO2, 
+    OPM_HOST_DEVICE static Evaluation activityCoefficientCO2_(const Evaluation& temperature,
+                                              const Evaluation& xCO2,
                                               const bool& highTemp)
     {
         if (highTemp) {
@@ -504,8 +504,8 @@ private:
     * \brief
     */
     template <class Evaluation>
-    OPM_HOST_DEVICE static Evaluation activityCoefficientH2O_(const Evaluation& temperature, 
-                                              const Evaluation& xCO2, 
+    OPM_HOST_DEVICE static Evaluation activityCoefficientH2O_(const Evaluation& temperature,
+                                              const Evaluation& xCO2,
                                               const bool& highTemp)
     {
         if (highTemp) {
@@ -574,7 +574,7 @@ private:
     */
     template <class Evaluation, class CO2Parameters>
     OPM_HOST_DEVICE static std::pair<Evaluation, Evaluation> fixPointIterSolubility_(const CO2Parameters& params,
-                                                                     const Evaluation& temperature, 
+                                                                     const Evaluation& temperature,
                                                                      const Evaluation& pg,
                                                                      const Evaluation& m_NaCl,
                                                                      const int& activityModel,
@@ -590,7 +590,7 @@ private:
         if (m_NaCl > 0.0 && activityModel == 2) {
             gammaNaCl = activityCoefficientSalt_(temperature, pg, m_NaCl, Evaluation(0.0), activityModel);
         }
-        
+
         // Options
         int max_iter = 100;
         Scalar tol = 1e-8;
@@ -608,9 +608,9 @@ private:
             }
 
             // F(x_i) is the mutual solubilities
-            auto [xCO2_new, yH2O_new] = mutualSolubility_(params, temperature, pg, xCO2, yH2O, m_NaCl, gammaNaCl, highTemp, 
+            auto [xCO2_new, yH2O_new] = mutualSolubility_(params, temperature, pg, xCO2, yH2O, m_NaCl, gammaNaCl, highTemp,
                                                           iterate, extrapolate);
-            
+
             // Check for convergence
             if (abs(xCO2_new - xCO2) < tol && abs(yH2O_new - yH2O) < tol) {
                 xCO2 = xCO2_new;
@@ -633,7 +633,7 @@ private:
     */
     template <class Evaluation, class CO2Parameters>
     OPM_HOST_DEVICE static std::pair<Evaluation, Evaluation> nonIterSolubility_(const CO2Parameters& params,
-                                                                const Evaluation& temperature, 
+                                                                const Evaluation& temperature,
                                                                 const Evaluation& pg,
                                                                 const Evaluation& m_NaCl,
                                                                 const int& activityModel,
@@ -649,7 +649,7 @@ private:
         // Note that we don't use xCO2 and yH2O input in low-temperature case, so we set them to 0.0
         const bool highTemp = false;
         const bool iterate = false;
-        auto [xCO2, yH2O] = mutualSolubility_(params, temperature, pg, Evaluation(0.0), Evaluation(0.0), m_NaCl, gammaNaCl, 
+        auto [xCO2, yH2O] = mutualSolubility_(params, temperature, pg, Evaluation(0.0), Evaluation(0.0), m_NaCl, gammaNaCl,
                                               highTemp, iterate, extrapolate);
 
         return {xCO2, yH2O};
@@ -717,13 +717,13 @@ private:
             mCO2 /= gammaNaCl;
             xCO2 = mCO2 / (m_NaCl + 55.508 + mCO2);
 
-            // new yH2O with salt 
+            // new yH2O with salt
             const Evaluation& xNaCl = molalityToMoleFrac_(m_NaCl);
             yH2O = A * (1 - xCO2 - xNaCl);
         }
 
         return {xCO2, yH2O};
-    }                                       
+    }
 
     /*!
      * \brief Returns the paramater A for the calculation of
@@ -735,8 +735,8 @@ private:
      */
     template <class Evaluation, class CO2Params>
     OPM_HOST_DEVICE static Evaluation computeA_(const CO2Params& params,
-                                const Evaluation& temperature, 
-                                const Evaluation& pg, 
+                                const Evaluation& temperature,
+                                const Evaluation& pg,
                                 const Evaluation& yH2O,
                                 const Evaluation& xCO2,
                                 const bool& highTemp,
@@ -777,8 +777,8 @@ private:
      */
     template <class Evaluation, class CO2Parameters>
     static Evaluation computeB_(const CO2Parameters& params,
-                                const Evaluation& temperature, 
-                                const Evaluation& pg, 
+                                const Evaluation& temperature,
+                                const Evaluation& pg,
                                 const Evaluation& yH2O,
                                 const Evaluation& xCO2,
                                 const bool& highTemp,
@@ -814,7 +814,7 @@ private:
     */
     template <class Evaluation>
     OPM_HOST_DEVICE static Evaluation activityCoefficientSalt_(const Evaluation& temperature,
-                                               const Evaluation& pg, 
+                                               const Evaluation& pg,
                                                const Evaluation& m_NaCl,
                                                const Evaluation& xCO2,
                                                const int& activityModel)
@@ -848,7 +848,7 @@ private:
 
         // Eq. (18)
         const Evaluation& lnGamma = 2 * lambda * m_NaCl + xi * m_NaCl * m_NaCl;
-        
+
         // Eq. (18), return activity coeff. on mole-fraction scale
         return convTerm * exp(lnGamma);
     }
@@ -934,8 +934,8 @@ private:
      * \param temperature the temperature [K]
      */
     template <class Evaluation>
-    static Evaluation equilibriumConstantCO2_(const Evaluation& temperature, 
-                                              const Evaluation& pg, 
+    static Evaluation equilibriumConstantCO2_(const Evaluation& temperature,
+                                              const Evaluation& pg,
                                               const bool& highTemp,
                                               bool spycherPruess2005 = false)
     {
@@ -960,7 +960,7 @@ private:
                 c = { 1.189, 1.304e-2, -5.446e-5, 0.0 };
             }
         }
-        Evaluation logk0_CO2 = c[0] + temperatureCelcius * (c[1] + temperatureCelcius * 
+        Evaluation logk0_CO2 = c[0] + temperatureCelcius * (c[1] + temperatureCelcius *
                               (c[2] + temperatureCelcius * c[3]));
         Evaluation k0_CO2 = pow(10.0, logk0_CO2);
         return k0_CO2;
@@ -983,7 +983,7 @@ private:
         else {
             c = { -2.209, 3.097e-2, -1.098e-4, 2.048e-7, 0.0 };
         }
-        Evaluation logk0_H2O = c[0] + temperatureCelcius * (c[1] + temperatureCelcius * (c[2] + 
+        Evaluation logk0_H2O = c[0] + temperatureCelcius * (c[1] + temperatureCelcius * (c[2] +
             temperatureCelcius * (c[3] + temperatureCelcius * c[4])));
         return pow(10.0, logk0_H2O);
     }

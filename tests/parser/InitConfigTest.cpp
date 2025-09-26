@@ -124,8 +124,8 @@ RESTART
 BASE 5
 /
 GRID
-START             -- 0 
-19 JUN 2007 / 
+START             -- 0
+19 JUN 2007 /
 SCHEDULE
 SKIPREST
 )" };

@@ -28,7 +28,7 @@ Ppcwmax::Ppcwmax(const Deck& deck) {
     using PPCWMAX = ParserKeywords::PPCWMAX;
     if (!deck.hasKeyword<PPCWMAX>())
         return;
-    
+
     const auto& keyword = deck.get<PPCWMAX>().back();
     for (const auto& record : keyword) {
         // Get first column value, which is max. allowable capillary pressure
@@ -43,7 +43,7 @@ Ppcwmax::Ppcwmax(const Deck& deck) {
             option = false;
         else
             throw std::runtime_error("Second column input in PPCWMAX must be YES or NO!");
-        
+
         // Store input data
         this->data.emplace_back(max_cap_pres, option);
     }

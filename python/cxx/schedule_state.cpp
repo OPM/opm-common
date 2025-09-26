@@ -12,10 +12,10 @@ namespace {
 
 /**
  * @brief Function to export the ScheduleState class and some methods to Python.
- * 
+ *
  * In the below class we use std::shared_ptr as the holder type, see https://pybind11.readthedocs.io/en/stable/advanced/smart_ptrs.html
  * this makes it possible to share the ScheduleState (which is created only once per simulation) with e.g. the opm.simulators.BlackOilSimulator Python object.
- * 
+ *
  * @param module Reference to the python module.
  */
 void python::common::export_ScheduleState(py::module& module) {

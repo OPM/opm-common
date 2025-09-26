@@ -115,7 +115,7 @@ enum index : std::vector<int>::size_type {
   ih_055       =       55       ,              //       0       0
   ih_056       =       56       ,              //       0       0
   ih_057       =       57       ,              //       0       0
-  NGRNPHASE    =       VI::intehead::NGRNPH,   //       Parameter to determine the nominated phase for the guiderate 
+  NGRNPHASE    =       VI::intehead::NGRNPH,   //       Parameter to determine the nominated phase for the guiderate
   EACHNC       =       VI::intehead::EACHNCITS, //  Index indicating if lift gas distribution optimized each of the NUPCOL first iterations or not
   ih_060       =       60       ,              //       0       0
   ih_061       =       61       ,              //       0       0
@@ -303,7 +303,7 @@ enum index : std::vector<int>::size_type {
   ih_242       =      242       ,              //       0
   ih_243       =      243       ,              //       0
   ih_244       =      244       ,              //       0
-  MXACTC       =      VI::intehead::MAX_ACT_COND, //       Max no of conditions pr action 
+  MXACTC       =      VI::intehead::MAX_ACT_COND, //       Max no of conditions pr action
   ih_246       =      246       ,              //       0
   ih_247       =      247       ,              //       0
   ih_248       =      248       ,              //       0
@@ -526,7 +526,7 @@ Opm::RestartIO::InteHEAD::wellTableDimensions(const WellTableDim& wtdim)
                                    wtdim.maxGroupInField);
 
     this->data_[NGMAXZ] = wtdim.maxGroupInField + 1;
-    
+
     this->data_[NWMAXZ] = wtdim.maxWellsInField;
 
     this->data_[MXWLSTPW]  = wtdim.mxwlstprwel;
@@ -778,7 +778,7 @@ actionParam(const ActionParam& act_par)
     this -> data_[NO_ACT]     = act_par.no_actions;
     this -> data_[MAX_LINES]  = act_par.max_no_sched_lines_per_action;
     this -> data_[MXACTC]     = act_par.max_no_conditions_per_action;
-    this -> data_[MAXSPRLINE] = ((act_par.max_no_characters_per_line % 8) == 0) ? act_par.max_no_characters_per_line / 8 : 
+    this -> data_[MAXSPRLINE] = ((act_par.max_no_characters_per_line % 8) == 0) ? act_par.max_no_characters_per_line / 8 :
                                 (act_par.max_no_characters_per_line / 8) + 1;
 
     return *this;

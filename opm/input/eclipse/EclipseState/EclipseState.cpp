@@ -502,7 +502,7 @@ namespace Opm {
                 }
                 catch (const std::exception& std_error)
                 {
-                    OpmLog::error(fmt::format("\nMULTFLT: Cannot set fault transmissibility multiplier\n" 
+                    OpmLog::error(fmt::format("\nMULTFLT: Cannot set fault transmissibility multiplier\n"
                        "MULTFLT(FLTNAME) equals {} and MULT(FLT-TRS) equals {}\n"
                        "Error creating reservoir properties: {}" , faultPattern, multFlt, std_error.what()));
                     error = true;

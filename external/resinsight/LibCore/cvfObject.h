@@ -68,7 +68,7 @@ public:
     inline int release() const;
     inline int refCount() const;
 
-    // Helpers for debugging, see the CVF_TRACK_ACTIVE_OBJECT_INSTANCES define 
+    // Helpers for debugging, see the CVF_TRACK_ACTIVE_OBJECT_INSTANCES define
     static std::set<Object*>* activeObjectInstances();
     static void               dumpActiveObjectInstances();
 
@@ -115,7 +115,7 @@ public:
     inline bool     isNull() const;
     inline bool     notNull() const;
 
-    bool            operator<(const ref& rhs) const; 
+    bool            operator<(const ref& rhs) const;
 
     void            swap(ref& other);
 
@@ -135,7 +135,7 @@ template<typename T1, typename T2> inline bool operator!=(const T1* a, const ref
 
 /// Swap contents of \a a and \a b. Matches signature of std::swap().
 /// \todo Need to investigate which STL algorithms actually utilize the swap() function.
-template<typename T> inline void swap(ref<T>& a, ref<T>& b)   { a.swap(b); }              
+template<typename T> inline void swap(ref<T>& a, ref<T>& b)   { a.swap(b); }
 
 /// @}
 
@@ -163,7 +163,7 @@ public:
     inline bool     isNull() const;
     inline bool     notNull() const;
 
-    bool            operator<(const cref& rhs) const; 
+    bool            operator<(const cref& rhs) const;
 
     void            swap(cref& other);
 

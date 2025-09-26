@@ -428,4 +428,3 @@ OPM_HOST_DEVICE bool isnan(const Evaluation& value)
 } // namespace Opm
 
 #endif
-

@@ -44,15 +44,15 @@ namespace cvf {
 /// \class cvf::Matrix4
 /// \ingroup Core
 ///
-/// Matrices are stored internally as a one dimensional array for performance reasons. 
-/// 
+/// Matrices are stored internally as a one dimensional array for performance reasons.
+///
 /// The internal indices into the 1D array are as follows:
-/// 
+///
 /// <PRE>
-///   | m00  m01  m02  m03 |     | 0  4   8  12 | 
-///   | m10  m11  m12  m13 |     | 1  5   9  13 | 
-///   | m20  m21  m22  m23 |     | 2  6  10  14 | 
-///   | m30  m31  m32  m33 |     | 3  7  11  15 | 
+///   | m00  m01  m02  m03 |     | 0  4   8  12 |
+///   | m10  m11  m12  m13 |     | 1  5   9  13 |
+///   | m20  m21  m22  m23 |     | 2  6  10  14 |
+///   | m30  m31  m32  m33 |     | 3  7  11  15 |
 /// </PRE>
 ///
 /// This is consistent with the way matrices are represented in %OpenGL.
@@ -74,11 +74,11 @@ namespace cvf {
 ///   | 1 |   | 0  0  0  1 |   | 1 |
 /// </PRE>
 ///
-/// Beware when porting code that uses C style double array indexing. In this case, the first 
+/// Beware when porting code that uses C style double array indexing. In this case, the first
 /// index given will corrspond to the columnd, eg M[3][0] = Tx, M[3][1] = Ty, M[3][2] = Tz
 ///
 /// To ease accessing the internal 1D array in implementations, the private eij constants can be used.
-/// These are consistent with the normal row column ordering, so that e02 accesses the element 
+/// These are consistent with the normal row column ordering, so that e02 accesses the element
 /// in the first row and the third column.
 ///
 //==================================================================================================
@@ -87,7 +87,7 @@ template<typename S> Matrix4<S> const Matrix4<S>::IDENTITY;
 template<typename S> Matrix4<S> const Matrix4<S>::ZERO(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 
 //----------------------------------------------------------------------------------------------------
-/// Default constructor. Initializes matrix to identity 
+/// Default constructor. Initializes matrix to identity
 //----------------------------------------------------------------------------------------------------
 template <typename S>
 Matrix4<S>::Matrix4()
@@ -108,7 +108,7 @@ inline Matrix4<S>::Matrix4(const Matrix4& other)
 
 //----------------------------------------------------------------------------------------------------
 /// Constructor with explicit initialization of all matrix elements.
-/// 
+///
 /// The value of the parameter \a mrc will be placed in row r and column c of the matrix, eg m23
 /// goes into row 2, column 3.
 //----------------------------------------------------------------------------------------------------
@@ -135,7 +135,7 @@ Matrix4<S>::Matrix4(S m00, S m01, S m02, S m03, S m10, S m11, S m12, S m13, S m2
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 template<typename S>
 Matrix4<S>::Matrix4(const Matrix3<S>& other)
@@ -145,7 +145,7 @@ Matrix4<S>::Matrix4(const Matrix3<S>& other)
 
 
 //----------------------------------------------------------------------------------------------------
-/// 
+///
 //----------------------------------------------------------------------------------------------------
 template<typename S>
 template<typename T>
@@ -234,7 +234,7 @@ void Matrix4<S>::multiply(const Matrix4& mat)
 
 
 //----------------------------------------------------------------------------------------------------
-/// 
+///
 //----------------------------------------------------------------------------------------------------
 template <typename S>
 const Matrix4<S> Matrix4<S>::operator*(const Matrix4& rhs) const
@@ -244,28 +244,28 @@ const Matrix4<S> Matrix4<S>::operator*(const Matrix4& rhs) const
     m.m_v[e01] = m_v[e00] * rhs.m_v[e01] + m_v[e01] * rhs.m_v[e11] + m_v[e02] * rhs.m_v[e21] + m_v[e03] * rhs.m_v[e31];
     m.m_v[e02] = m_v[e00] * rhs.m_v[e02] + m_v[e01] * rhs.m_v[e12] + m_v[e02] * rhs.m_v[e22] + m_v[e03] * rhs.m_v[e32];
     m.m_v[e03] = m_v[e00] * rhs.m_v[e03] + m_v[e01] * rhs.m_v[e13] + m_v[e02] * rhs.m_v[e23] + m_v[e03] * rhs.m_v[e33];
-         
+
     m.m_v[e10] = m_v[e10] * rhs.m_v[e00] + m_v[e11] * rhs.m_v[e10] + m_v[e12] * rhs.m_v[e20] + m_v[e13] * rhs.m_v[e30];
     m.m_v[e11] = m_v[e10] * rhs.m_v[e01] + m_v[e11] * rhs.m_v[e11] + m_v[e12] * rhs.m_v[e21] + m_v[e13] * rhs.m_v[e31];
     m.m_v[e12] = m_v[e10] * rhs.m_v[e02] + m_v[e11] * rhs.m_v[e12] + m_v[e12] * rhs.m_v[e22] + m_v[e13] * rhs.m_v[e32];
     m.m_v[e13] = m_v[e10] * rhs.m_v[e03] + m_v[e11] * rhs.m_v[e13] + m_v[e12] * rhs.m_v[e23] + m_v[e13] * rhs.m_v[e33];
-         
+
     m.m_v[e20] = m_v[e20] * rhs.m_v[e00] + m_v[e21] * rhs.m_v[e10] + m_v[e22] * rhs.m_v[e20] + m_v[e23] * rhs.m_v[e30];
     m.m_v[e21] = m_v[e20] * rhs.m_v[e01] + m_v[e21] * rhs.m_v[e11] + m_v[e22] * rhs.m_v[e21] + m_v[e23] * rhs.m_v[e31];
     m.m_v[e22] = m_v[e20] * rhs.m_v[e02] + m_v[e21] * rhs.m_v[e12] + m_v[e22] * rhs.m_v[e22] + m_v[e23] * rhs.m_v[e32];
     m.m_v[e23] = m_v[e20] * rhs.m_v[e03] + m_v[e21] * rhs.m_v[e13] + m_v[e22] * rhs.m_v[e23] + m_v[e23] * rhs.m_v[e33];
-         
+
     m.m_v[e30] = m_v[e30] * rhs.m_v[e00] + m_v[e31] * rhs.m_v[e10] + m_v[e32] * rhs.m_v[e20] + m_v[e33] * rhs.m_v[e30];
     m.m_v[e31] = m_v[e30] * rhs.m_v[e01] + m_v[e31] * rhs.m_v[e11] + m_v[e32] * rhs.m_v[e21] + m_v[e33] * rhs.m_v[e31];
     m.m_v[e32] = m_v[e30] * rhs.m_v[e02] + m_v[e31] * rhs.m_v[e12] + m_v[e32] * rhs.m_v[e22] + m_v[e33] * rhs.m_v[e32];
     m.m_v[e33] = m_v[e30] * rhs.m_v[e03] + m_v[e31] * rhs.m_v[e13] + m_v[e32] * rhs.m_v[e23] + m_v[e33] * rhs.m_v[e33];
-          
+
     return m;
 }
 
 
 //----------------------------------------------------------------------------------------------------
-/// 
+///
 //----------------------------------------------------------------------------------------------------
 template <typename S>
 const Vector4<S> Matrix4<S>::operator*(const Vector4<S>& rhs) const
@@ -284,7 +284,7 @@ template <typename S>
 void Matrix4<S>::setIdentity()
 {
     m_v[0]  = 1;
-    m_v[1]  = 0;    
+    m_v[1]  = 0;
     m_v[2]  = 0;
     m_v[3]  = 0;
 
@@ -342,7 +342,7 @@ template <typename S>
 void Matrix4<S>::setZero()
 {
     m_v[0]  = 0;
-    m_v[1]  = 0;    
+    m_v[1]  = 0;
     m_v[2]  = 0;
     m_v[3]  = 0;
     m_v[4]  = 0;
@@ -442,7 +442,7 @@ inline S Matrix4<S>::operator()(int row, int col) const
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 template <typename S>
 void Matrix4<S>::setRow(int row, const Vector4<S>& vector)
@@ -457,7 +457,7 @@ void Matrix4<S>::setRow(int row, const Vector4<S>& vector)
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 template <typename S>
 Vector4<S> Matrix4<S>::row(int row) const
@@ -469,7 +469,7 @@ Vector4<S> Matrix4<S>::row(int row) const
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 template <typename S>
 void Matrix4<S>::setCol(int column, const Vector4<S>& vector)
@@ -484,7 +484,7 @@ void Matrix4<S>::setCol(int column, const Vector4<S>& vector)
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 template <typename S>
 Vector4<S> Matrix4<S>::col(int column) const
@@ -496,7 +496,7 @@ Vector4<S> Matrix4<S>::col(int column) const
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 template<typename S>
 template<typename T>
@@ -534,11 +534,11 @@ void Matrix4<S>::setTranslation(const Vector3<S>& trans)
 
 //----------------------------------------------------------------------------------------------------
 /// Adds translation by pre-multiplying the matrix with a matrix containing the specified translation
-/// 
-/// Adds translation to this (transformation) matrix by pre-multiplying the current matrix M with 
-/// a matrix T containing only the specified translation. 
+///
+/// Adds translation to this (transformation) matrix by pre-multiplying the current matrix M with
+/// a matrix T containing only the specified translation.
 /// Calling this function has the effect of doing the multiplication M' = T x M
-/// 
+///
 /// \param trans  Specifies the X, Y and Z components of the translation.
 //----------------------------------------------------------------------------------------------------
 template <typename S>
@@ -564,10 +564,10 @@ void Matrix4<S>::translatePreMultiply(const Vector3<S>& trans)
 //----------------------------------------------------------------------------------------------------
 /// Adds translation by post-multiplying the matrix with a matrix containing the specified translation
 ///
-/// Adds translation to this (transformation) matrix by post-multiplying the current matrix M with 
-/// a matrix T containing only the specified translation. 
+/// Adds translation to this (transformation) matrix by post-multiplying the current matrix M with
+/// a matrix T containing only the specified translation.
 /// Calling this function has the effect of doing the multiplication M' = M x T
-/// 
+///
 /// \param trans  Specifies the X, Y and Z coordinates of the translation.
 //----------------------------------------------------------------------------------------------------
 template <typename S>
@@ -581,7 +581,7 @@ void Matrix4<S>::translatePostMultiply(const Vector3<S>& trans)
 
 
 //----------------------------------------------------------------------------------------------------
-/// 
+///
 //----------------------------------------------------------------------------------------------------
 template <typename S>
 bool Matrix4<S>::invert()
@@ -604,13 +604,13 @@ bool Matrix4<S>::invert()
     const double m23 = static_cast<double>(m_v[e23]);
     const double m33 = static_cast<double>(m_v[e33]);
 
-    const double s0 = m00 * m11 - m01 * m10;   
-    const double s1 = m00 * m12 - m02 * m10;   
-    const double s2 = m00 * m13 - m03 * m10;   
-    const double s3 = m01 * m12 - m02 * m11;   
-    const double s4 = m01 * m13 - m03 * m11;   
-    const double s5 = m02 * m13 - m03 * m12;   
-    
+    const double s0 = m00 * m11 - m01 * m10;
+    const double s1 = m00 * m12 - m02 * m10;
+    const double s2 = m00 * m13 - m03 * m10;
+    const double s3 = m01 * m12 - m02 * m11;
+    const double s4 = m01 * m13 - m03 * m11;
+    const double s5 = m02 * m13 - m03 * m12;
+
     const double c5 = m22 * m33 - m23 * m32;
     const double c4 = m21 * m33 - m23 * m31;
     const double c3 = m21 * m32 - m22 * m31;
@@ -651,7 +651,7 @@ bool Matrix4<S>::invert()
 
 
 //----------------------------------------------------------------------------------------------------
-/// 
+///
 //----------------------------------------------------------------------------------------------------
 template <typename S>
 const Matrix4<S> Matrix4<S>::getInverted(bool* pInvertible) const
@@ -672,7 +672,7 @@ const Matrix4<S> Matrix4<S>::getInverted(bool* pInvertible) const
 
 
 //----------------------------------------------------------------------------------------------------
-/// 
+///
 //----------------------------------------------------------------------------------------------------
 template <typename S>
 S Matrix4<S>::determinant() const
@@ -698,7 +698,7 @@ S Matrix4<S>::determinant() const
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 template <typename S>
 void Matrix4<S>::transpose()
@@ -718,7 +718,7 @@ void Matrix4<S>::transpose()
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 template <typename S>
 const Matrix4<S> Matrix4<S>::getTransposed() const
@@ -730,7 +730,7 @@ const Matrix4<S> Matrix4<S>::getTransposed() const
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 template<typename S>
 void Matrix4<S>::setFromMatrix3(const Matrix3<S>& mat3)
@@ -755,7 +755,7 @@ void Matrix4<S>::setFromMatrix3(const Matrix3<S>& mat3)
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 template<typename S>
 Matrix3<S> Matrix4<S>::toMatrix3() const
@@ -767,7 +767,7 @@ Matrix3<S> Matrix4<S>::toMatrix3() const
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 template<typename S>
 void Matrix4<S>::toMatrix3(Matrix3<S>* mat3) const
@@ -786,7 +786,7 @@ void Matrix4<S>::toMatrix3(Matrix3<S>* mat3) const
 
 
 //----------------------------------------------------------------------------------------------------
-/// 
+///
 //----------------------------------------------------------------------------------------------------
 template <typename S>
 const S* Matrix4<S>::ptr() const
@@ -822,7 +822,7 @@ Matrix4<S> Matrix4<S>::fromScaling(const Vector3<S>& scale)
 
 
 //----------------------------------------------------------------------------------------------------
-/// 
+///
 //----------------------------------------------------------------------------------------------------
 template <typename S>
 Matrix4<S> Matrix4<S>::fromRotation(Vector3<S> axis, S angle)
@@ -842,17 +842,17 @@ Matrix4<S> Matrix4<S>::fromRotation(Vector3<S> axis, S angle)
     m.m_v[e02] =  axis.y() * rsin + axis.x()*axis.z()*(1 - rcos);
     m.m_v[e12] = -axis.x() * rsin + axis.y()*axis.z()*(1 - rcos);
     m.m_v[e22] =             rcos + axis.z()*axis.z()*(1 - rcos);
-    
+
     return m;
 }
 
 
 //----------------------------------------------------------------------------------------------------
 /// Create a rotation matrix that will align the global X, Y and Z axes with the specified axes.
-/// 
-/// Note that at least one axis must be specified and all specified axes must be normalized. 
+///
+/// Note that at least one axis must be specified and all specified axes must be normalized.
 /// If two or three axes are specified, they must be orthogonal to each other.
-/// 
+///
 /// \param xAxis  Orientation of x axis
 /// \param yAxis  Orientation of y axis
 /// \param zAxis  Orientation of z axis
@@ -917,7 +917,7 @@ Matrix4<S> Matrix4<S>::fromCoordSystemAxes(const Vector3<S>* xAxis, const Vector
 
 //--------------------------------------------------------------------------------------------------
 /// Post multiplication: matrix * column vector
-/// 
+///
 /// v' = M*v
 //--------------------------------------------------------------------------------------------------
 template<typename S>
@@ -933,6 +933,6 @@ cvf::Vector4<S> operator*(const cvf::Matrix4<S>& m, const cvf::Vector4<S>& v)
     return vec;
 }
 
-} 
+}
 
 } //namespace external

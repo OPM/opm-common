@@ -1014,7 +1014,7 @@ BOOST_AUTO_TEST_CASE(MinPVV) {
     BOOST_CHECK(grid.getMinpvVector()[4]==1010.0);
     BOOST_CHECK(grid.getMinpvVector()[0]==1000.0);
 
-    
+
     auto deck1 = createMinpvvEqualsCPDeck();
     Opm::EclipseState es1( deck1);
     const auto& grid1 = es1.getInputGrid();
@@ -3469,7 +3469,7 @@ DY
 1000*0.25 /
 DZ
 1000*1.0 /
-PORO 
+PORO
 10*0.15 /"
 )";
 

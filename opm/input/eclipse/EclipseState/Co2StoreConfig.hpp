@@ -37,7 +37,7 @@ class Deck;
         NONE,        // Pure water
         MICHAELIDES, // MICHAELIDES 1971 (default)
     };
-    
+
     enum class LiquidMixingType {
         NONE,     // Pure water
         IDEAL,    // Ideal mixing
@@ -55,7 +55,7 @@ class Deck;
 
     const std::vector<EzrokhiTable>& getDenaqaTables() const;
     const std::vector<EzrokhiTable>& getViscaqaTables() const;
-    
+
     double salinity() const;
     int actco2s() const;
 
@@ -82,7 +82,7 @@ class Deck;
     SaltMixingType string2enumSalt(const std::string& input) const;
     LiquidMixingType string2enumLiquid(const std::string& input) const;
     GasMixingType string2enumGas(const std::string& input) const;
-    
+
     std::map<std::string, int> cnames;
     std::vector<EzrokhiTable> denaqa_tables;
     std::vector<EzrokhiTable> viscaqa_tables;

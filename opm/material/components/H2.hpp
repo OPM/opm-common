@@ -80,9 +80,9 @@ struct H2TabulatedEnthalpyTraits {
  * thermodynamic EOS, which is better suited for many gases such as H2. See also Span R, Lemmon EW, Jacobsen RT, Wagner
  * W, Yokozeki A. A Reference Equation of State for the Thermodynamic Properties of Nitrogen for Temperatures from
  * 63.151 to 1000 K and Pressures to 2200 MPa for explicit equations derived from the fundamental EOS formula.
- * 
+ *
  * OBS: All equation and table references here are taken from Leachman et al. (2009) unless otherwise stated!
- * 
+ *
  * \tparam Scalar The type used for scalar values
  */
 template <class Scalar>
@@ -185,7 +185,7 @@ public:
             s += N[i] * pow(sigma, k[i]);
         }
         Evaluation lnPsigmaPc = T_recp * s;
-        
+
         return exp(lnPsigmaPc) * criticalPressure();
     }
 
@@ -238,7 +238,7 @@ public:
         Scalar R = IdealGas::R;
         Evaluation rho_red = density / (molarMass() * criticalDensity() * 1e6);
         Evaluation T_red = H2::criticalTemperature() / temperature;
-        return rho_red * criticalDensity() * R * temperature 
+        return rho_red * criticalDensity() * R * temperature
             * (1 + rho_red * derivResHelmholtzWrtRedRho(T_red, rho_red));
     }
 
@@ -282,7 +282,7 @@ public:
      *
      */
     template <class Evaluation>
-    static Evaluation gasViscosity(const Evaluation& temperature, 
+    static Evaluation gasViscosity(const Evaluation& temperature,
                                    const Evaluation& pressure,
                                    bool extrapolate = false)
     {
@@ -298,11 +298,11 @@ public:
         Evaluation rho = gasDensity(temperature, pressure, extrapolate);
         Evaluation rho_r = rho / 90.909090909; // see corrections
 
-        // 
+        //
         // Eta_0 terms (zero-density viscocity)
         //
-        // Parameters in Table 2 for Eq. (4) 
-        static constexpr Scalar a[5] = 
+        // Parameters in Table 2 for Eq. (4)
+        static constexpr Scalar a[5] =
             {2.0963e-1, -4.55274e-1, 1.43602e-1, -3.35325e-2, 2.76981e-3};
 
         // Eq. (4)
@@ -314,14 +314,14 @@ public:
         // Eq. (3)
         Evaluation eta_0 = 0.021357 * sqrt(M * temperature) / (sigma * sigma * exp(ln_S_star));
 
-        // 
+        //
         // Eta_1 terms (excess contribution)
-        // 
-        // 
+        //
+        //
         // Parameters in Table 3 for Eq. (7)
-        static constexpr Scalar b[7] = 
+        static constexpr Scalar b[7] =
             {-0.187, 2.4871, 3.7151, -11.0972, 9.0965, -3.8292, 0.5166};
-        
+
         // Eq. (7) with corrections
         Evaluation B_star = 0.0;
         for (int i = 0; i < 7; ++i) {
@@ -336,13 +336,13 @@ public:
 
         //
         // delta eta_h terms (higher-order effects)
-        // 
+        //
         // Parameters in Table 4 for Eq. (9)
         static constexpr Scalar c[6] =
             {6.43449673, 4.56334068e-2, 2.32797868e-1, 9.58326120e-1, 1.27941189e-1, 3.63576595e-1};
 
         // delta eta_h terms in Eq. (9)
-        Evaluation delta_eta_h = c[0] * rho_r * rho_r * exp(c[1] * T_r + c[2] / T_r + 
+        Evaluation delta_eta_h = c[0] * rho_r * rho_r * exp(c[1] * T_r + c[2] / T_r +
         (c[3] * rho_r * rho_r) / (c[4] + T_r) + c[5] * pow(rho_r, 6));
 
         // return all terms in Eq. (9) converted from muPa*s to Pa*s
@@ -352,7 +352,7 @@ public:
     /*!
     * \brief Specific isobaric heat capacity \f$\mathrm{[J/(kg*K)]}\f$ of pure hydrogen gas. This is equivalent to the
     * partial derivative of the specific enthalpy to the temperature.
-    * 
+    *
     * \param temperature temperature of component in \f$\mathrm{[K]}\f$
     * \param pressure pressure of component in \f$\mathrm{[Pa]}\f$
     *
@@ -364,17 +364,17 @@ public:
         // Reduced variables
         Evaluation rho_red = reducedMolarDensity(temperature, pressure);
         Evaluation T_red = criticalTemperature() / temperature;
-        
+
         // Need Eq. (62) in Span et al. (2000)
         Evaluation cv = gasIsochoricHeatCapacity(temperature, pressure);  // [J/(kg*K)]
 
-        // Some intermediate calculations 
-        Evaluation numerator = pow(1 + rho_red * derivResHelmholtzWrtRedRho(T_red, rho_red) 
+        // Some intermediate calculations
+        Evaluation numerator = pow(1 + rho_red * derivResHelmholtzWrtRedRho(T_red, rho_red)
             - rho_red * T_red * secDerivResHelmholtzWrtRecipRedTempAndRedRho(T_red, rho_red), 2);
 
         Evaluation denominator = 1 + 2 * rho_red * derivResHelmholtzWrtRedRho(T_red, rho_red)
             + pow(rho_red, 2) * secDerivResHelmholtzWrtRedRho(T_red, rho_red);
-        
+
         // Eq. (63) in Span et al. (2000).
         Scalar R = IdealGas::R;
         Evaluation cp = cv + R * (numerator / denominator) / molarMass();  // divide by M to get [J/(kg*K)]
@@ -385,7 +385,7 @@ public:
 
     /*!
     * \brief Specific isochoric heat capacity \f$\mathrm{[J/(kg*K)]}\f$ of pure hydrogen gas.
-    * 
+    *
     * \param temperature temperature of component in \f$\mathrm{[K]}\f$
     * \param pressure pressure of component in \f$\mathrm{[Pa]}\f$
     *
@@ -400,34 +400,34 @@ public:
 
         // Eq. (62) in Span et al. (2000)
         Scalar R = IdealGas::R;
-        Evaluation cv = R * (-pow(T_red, 2) * (secDerivIdealHelmholtzWrtRecipRedTemp(T_red) 
+        Evaluation cv = R * (-pow(T_red, 2) * (secDerivIdealHelmholtzWrtRecipRedTemp(T_red)
             + secDerivResHelmholtzWrtRecipRedTemp(T_red, rho_red)));  // [J/(mol*K)]
-        
+
         return cv / molarMass();
     }
     /*!
     * \brief Calculate reduced density (rho/rho_crit) from pressure and temperature. The conversion is done using the
     * simplest root-finding algorithm, i.e. the bisection method.
-    * 
+    *
     * \param pg gas phase pressure [Pa]
     * \param temperature temperature [K]
     * \param extrapolate True to use extrapolation
     */
-    template <class Evaluation> 
-    static Evaluation reducedMolarDensity(const Evaluation& temperature, 
-                                          const Evaluation& pg, 
+    template <class Evaluation>
+    static Evaluation reducedMolarDensity(const Evaluation& temperature,
+                                          const Evaluation& pg,
                                           bool extrapolate = false)
     {
         return gasDensity(temperature, pg, extrapolate) / (molarMass() * criticalDensity() * 1e6);
     }
-    
+
     /*!
     * \brief The ideal-gas part of Helmholtz energy.
-    * 
+    *
     * \param T_red reduced temperature [-]
     * \param rho_red reduced density [-]
     */
-    template <class Evaluation> 
+    template <class Evaluation>
     static Evaluation idealGasPartHelmholtz(const Evaluation& T_red, const Evaluation& rho_red)
     {
         // Eq. (31), which can be compared with Eq. (53) in Span et al. (2000)
@@ -447,10 +447,10 @@ public:
 
     /*!
     * \brief Derivative of the ideal-gas part of Helmholtz energy wrt to reciprocal reduced temperature.
-    * 
+    *
     * \param T_red reduced temperature [-]
     */
-    template <class Evaluation> 
+    template <class Evaluation>
     static Evaluation derivIdealHelmholtzWrtRecipRedTemp(const Evaluation& T_red)
     {
         // Derivative of Eq. (31) wrt. reciprocal reduced temperature, which can be compared with Eq. (79) in Span et
@@ -471,11 +471,11 @@ public:
 
     /*!
     * \brief Second derivative of the ideal-gas part of Helmholtz energy wrt to reciprocal reduced temperature.
-    * 
+    *
     * \param T_red reduced temperature [-]
     * \param rho_red reduced density [-]
     */
-    template <class Evaluation> 
+    template <class Evaluation>
     static Evaluation secDerivIdealHelmholtzWrtRecipRedTemp(const Evaluation& T_red)
     {
         // Second derivative of Eq. (31) wrt. reciprocal reduced temperature, which can be compared with Eq. (80) in
@@ -493,11 +493,11 @@ public:
 
     /*!
     * \brief The residual part of Helmholtz energy.
-    * 
+    *
     * \param T_red reduced temperature [-]
     * \param rho_red reduced density [-]
     */
-    template <class Evaluation> 
+    template <class Evaluation>
     static Evaluation residualPartHelmholtz(const Evaluation& T_red, const Evaluation& rho_red)
     {
         // Eq. (32), which can be compared with Eq. (55) in Span et al. (2000)
@@ -516,7 +516,7 @@ public:
         // Third, and last, sum term
         Evaluation s3 = 0.0;
         for (int i = 9; i < 14; ++i) {
-            s3 += N_[i] * pow(T_red, t_[i]) * pow(rho_red, d_[i]) * 
+            s3 += N_[i] * pow(T_red, t_[i]) * pow(rho_red, d_[i]) *
                 exp(phi_[i-9] * pow(rho_red - D_[i-9], 2) + beta_[i-9] * pow(T_red - gamma_[i-9], 2));
         }
 
@@ -527,15 +527,15 @@ public:
 
     /*!
     * \brief Derivative of the residual part of Helmholtz energy wrt. reduced density.
-    * 
+    *
     * \param T_red reduced temperature [-]
     * \param rho_red reduced density [-]
     */
-    template <class Evaluation> 
+    template <class Evaluation>
     static Evaluation derivResHelmholtzWrtRedRho(const Evaluation& T_red, const Evaluation& rho_red)
     {
         // Derivative of Eq. (32) wrt to reduced density, which can be compared with Eq. (81) in Span et al. (2000)
-        // First sum term 
+        // First sum term
         Evaluation s1 = 0.0;
         for (int i = 0; i < 7; ++i) {
             s1 += d_[i] * N_[i] * pow(rho_red, d_[i]-1) * pow(T_red, t_[i]);
@@ -551,7 +551,7 @@ public:
         // Third, and last, sum term
         Evaluation s3 = 0.0;
         for (int i = 9; i < 14; ++i) {
-            s3 += N_[i] * pow(T_red, t_[i]) * pow(rho_red, d_[i]-1) * 
+            s3 += N_[i] * pow(T_red, t_[i]) * pow(rho_red, d_[i]-1) *
                 exp(phi_[i-9] * pow(rho_red - D_[i-9], 2) + beta_[i-9] * pow(T_red - gamma_[i-9], 2)) *
                     (d_[i] + 2 * phi_[i-9] * rho_red * (rho_red - D_[i-9]));
         }
@@ -563,16 +563,16 @@ public:
 
     /*!
     * \brief Second derivative of the residual part of Helmholtz energy wrt. reduced density.
-    * 
+    *
     * \param T_red reduced temperature [-]
     * \param rho_red reduced density [-]
     */
-    template <class Evaluation> 
+    template <class Evaluation>
     static Evaluation secDerivResHelmholtzWrtRedRho(const Evaluation& T_red, const Evaluation& rho_red)
     {
         // Second derivative of Eq. (32) wrt to reduced density, which can be compared with Eq. (82) in Span et al.
         // (2000)
-        // First sum term 
+        // First sum term
         Evaluation s1 = 0.0;
         for (int i = 0; i < 7; ++i) {
             s1 += d_[i] * (d_[i] - 1) * N_[i] * pow(rho_red, d_[i]-2) * pow(T_red, t_[i]);
@@ -582,16 +582,16 @@ public:
         Evaluation s2 = 0.0;
         for (int i = 7; i < 9; ++i) {
             s2 += N_[i] * pow(T_red, t_[i]) * pow(rho_red, d_[i]-2) * exp(-pow(rho_red, p_[i-7])) *
-                ((d_[i] - p_[i-7] * pow(rho_red, p_[i-7])) * (d_[i] - p_[i-7] * pow(rho_red, p_[i-7]) - 1.0) 
+                ((d_[i] - p_[i-7] * pow(rho_red, p_[i-7])) * (d_[i] - p_[i-7] * pow(rho_red, p_[i-7]) - 1.0)
                     - pow(p_[i-7], 2) * pow(rho_red, p_[i-7]));
         }
 
         // Third, and last, sum term
         Evaluation s3 = 0.0;
         for (int i = 9; i < 14; ++i) {
-            s3 += N_[i] * pow(T_red, t_[i]) * pow(rho_red, d_[i]-2) * 
+            s3 += N_[i] * pow(T_red, t_[i]) * pow(rho_red, d_[i]-2) *
                 exp(phi_[i-9] * pow(rho_red - D_[i-9], 2) + beta_[i-9] * pow(T_red - gamma_[i-9], 2)) *
-                    (pow(d_[i] + 2 * phi_[i-9] * rho_red * (rho_red - D_[i-9]), 2) 
+                    (pow(d_[i] + 2 * phi_[i-9] * rho_red * (rho_red - D_[i-9]), 2)
                         - d_[i] + 2 * phi_[i-9] * pow(rho_red, 2));
         }
 
@@ -599,24 +599,24 @@ public:
         Evaluation s = s1 + s2 + s3;
         return s;
     }
-    
+
     /*!
     * \brief Derivative of the residual part of Helmholtz energy wrt. reciprocal reduced temperature.
-    * 
+    *
     * \param T_red reduced temperature [-]
     * \param rho_red reduced density [-]
     */
-    template <class Evaluation> 
+    template <class Evaluation>
     static Evaluation derivResHelmholtzWrtRecipRedTemp(const Evaluation& T_red, const Evaluation& rho_red)
     {
         // Derivative of Eq. (32) wrt to reciprocal reduced temperature, which can be compared with Eq. (84) in Span et
         // al. (2000).
-        // First sum term 
+        // First sum term
         Evaluation s1 = 0.0;
         for (int i = 0; i < 7; ++i) {
             s1 += t_[i] * N_[i] * pow(rho_red, d_[i]) * pow(T_red, t_[i]-1);
         }
-        
+
         // Second sum term
         Evaluation s2 = 0.0;
         for (int i = 7; i < 9; ++i) {
@@ -626,7 +626,7 @@ public:
         // Third, and last, sum term
         Evaluation s3 = 0.0;
         for (int i = 9; i < 14; ++i) {
-            s3 += N_[i] * pow(T_red, t_[i]-1) * pow(rho_red, d_[i]) * 
+            s3 += N_[i] * pow(T_red, t_[i]-1) * pow(rho_red, d_[i]) *
                 exp(phi_[i-9] * pow(rho_red - D_[i-9], 2) + beta_[i-9] * pow(T_red - gamma_[i-9], 2)) *
                     (t_[i] + 2 * beta_[i-9] * T_red * (T_red - gamma_[i-9]));
         }
@@ -638,21 +638,21 @@ public:
 
     /*!
     * \brief Second derivative of the residual part of Helmholtz energy wrt. reciprocal reduced temperature.
-    * 
+    *
     * \param T_red reduced temperature [-]
     * \param rho_red reduced density [-]
     */
-    template <class Evaluation> 
+    template <class Evaluation>
     static Evaluation secDerivResHelmholtzWrtRecipRedTemp(const Evaluation& T_red, const Evaluation& rho_red)
     {
         // Second derivative of Eq. (32) wrt to reciprocal reduced temperature, which can be compared with Eq. (85) in
         // Span et al. (2000).
-        // First sum term 
+        // First sum term
         Evaluation s1 = 0.0;
         for (int i = 0; i < 7; ++i) {
             s1 += t_[i] * (t_[i] - 1) * N_[i] * pow(rho_red, d_[i]) * pow(T_red, t_[i]-2);
         }
-        
+
         // Second sum term
         Evaluation s2 = 0.0;
         for (int i = 7; i < 9; ++i) {
@@ -662,9 +662,9 @@ public:
         // Third, and last, sum term
         Evaluation s3 = 0.0;
         for (int i = 9; i < 14; ++i) {
-            s3 += N_[i] * pow(T_red, t_[i]-2) * pow(rho_red, d_[i]) * 
+            s3 += N_[i] * pow(T_red, t_[i]-2) * pow(rho_red, d_[i]) *
                 exp(phi_[i-9] * pow(rho_red - D_[i-9], 2) + beta_[i-9] * pow(T_red - gamma_[i-9], 2)) *
-                    (pow(t_[i] + 2 * beta_[i-9] * T_red * (T_red - gamma_[i-9]), 2) 
+                    (pow(t_[i] + 2 * beta_[i-9] * T_red * (T_red - gamma_[i-9]), 2)
                         - t_[i] + 2 * beta_[i-9] * pow(T_red, 2));
         }
 
@@ -676,16 +676,16 @@ public:
     /*!
     * \brief Second derivative of the residual part of Helmholtz energy first wrt. reciprocal reduced temperature, and
     * second wrt. reduced density (i.e. d^2 H / drho_red dT_red).
-    * 
+    *
     * \param T_red reduced temperature [-]
     * \param rho_red reduced density [-]
     */
-    template <class Evaluation> 
+    template <class Evaluation>
     static Evaluation secDerivResHelmholtzWrtRecipRedTempAndRedRho(const Evaluation& T_red, const Evaluation& rho_red)
     {
         // Second derivative of Eq. (32) wrt to reciprocal reduced temperature and reduced density, which can be
         // compared with Eq. (86) in Span et al. (2000).
-        // First sum term 
+        // First sum term
         Evaluation s1 = 0.0;
         for (int i = 0; i < 7; ++i) {
             s1 += t_[i] * d_[i] * N_[i] * pow(rho_red, d_[i]-1) * pow(T_red, t_[i]-1);
@@ -701,9 +701,9 @@ public:
         // Third, and last, sum term
         Evaluation s3 = 0.0;
         for (int i = 9; i < 14; ++i) {
-            s3 += N_[i] * pow(T_red, t_[i]-1) * pow(rho_red, d_[i]-1) * 
+            s3 += N_[i] * pow(T_red, t_[i]-1) * pow(rho_red, d_[i]-1) *
                 exp(phi_[i-9] * pow(rho_red - D_[i-9], 2) + beta_[i-9] * pow(T_red - gamma_[i-9], 2)) *
-                    (t_[i] + 2 * beta_[i-9] * T_red * (T_red - gamma_[i-9])) 
+                    (t_[i] + 2 * beta_[i-9] * T_red * (T_red - gamma_[i-9]))
                         * (d_[i] + 2 * phi_[i-9] * rho_red * (rho_red - D_[i-9]));
         }
 
@@ -719,9 +719,9 @@ private:
     static constexpr Scalar b_[5] = {-16.0205159149, -22.6580178006, -60.0090511389, -74.9434303817, -206.9392065168};
 
     // Parameter values needed in the residual contribution to the reduced Helmholtz free energy given in Table 5.
-    static constexpr Scalar N_[14] = {-6.93643, 0.01, 2.1101, 4.52059, 0.732564, -1.34086, 0.130985, -0.777414, 
+    static constexpr Scalar N_[14] = {-6.93643, 0.01, 2.1101, 4.52059, 0.732564, -1.34086, 0.130985, -0.777414,
             0.351944, -0.0211716, 0.0226312, 0.032187, -0.0231752, 0.0557346};
-    static constexpr Scalar t_[14] = {0.6844, 1.0, 0.989, 0.489, 0.803, 1.1444, 1.409, 1.754, 1.311, 4.187, 5.646, 
+    static constexpr Scalar t_[14] = {0.6844, 1.0, 0.989, 0.489, 0.803, 1.1444, 1.409, 1.754, 1.311, 4.187, 5.646,
         0.791, 7.249, 2.986};
     static constexpr Scalar d_[14] = {1, 4, 1, 1, 2, 2, 3, 1, 3, 2, 1, 3, 1, 1};
     static constexpr Scalar p_[2] = {1, 1};
@@ -733,12 +733,12 @@ private:
 #if 0
     /*!
     * \brief Objective function in root-finding done in convertPgToReducedRho.
-    * 
+    *
     * \param rho_red reduced density [-]
     * \param pg gas phase pressure [Pa]
     * \param temperature temperature [K]
     */
-    template <class Evaluation> 
+    template <class Evaluation>
     static Evaluation rootFindingObj_(const Evaluation& rho_red, const Evaluation& temperature, const Evaluation& pg)
     {
         // Temporary calculations

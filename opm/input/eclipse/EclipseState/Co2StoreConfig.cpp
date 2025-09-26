@@ -45,7 +45,7 @@ namespace {
             const auto msg = "CNAMES must be defined together with " + keyword_name;
             throw Opm::OpmInputError(msg, deck[keyword_name].begin()->location());
         }
-        
+
         ezrokhitable.resize(num_eos_res);
         const auto& keyword = deck[keyword_name].back();
         for (std::size_t tableIdx = 0; tableIdx < num_eos_res; ++tableIdx) {
@@ -84,7 +84,7 @@ namespace Opm {
             this->brine_type = string2enumSalt(MIX::MIXING_MODEL_SALT::defaultValue);
             this->liquid_type = string2enumLiquid(MIX::MIXING_MODEL_LIQUID::defaultValue);
             this->gas_type = string2enumGas(MIX::MIXING_MODEL_GAS::defaultValue);
-        }     
+        }
         else {
             this->brine_type = string2enumSalt(deck["THCO2MIX"].back().getRecord(0).getItem<MIX::MIXING_MODEL_SALT>().get<std::string>( 0 ));
             this->liquid_type = string2enumLiquid(deck["THCO2MIX"].back().getRecord(0).getItem<MIX::MIXING_MODEL_LIQUID>().get<std::string>( 0 ));
@@ -163,7 +163,7 @@ namespace Opm {
     }
 
     bool Co2StoreConfig::operator==(const Co2StoreConfig& other) const {
-        return this->brine_type == other.brine_type 
+        return this->brine_type == other.brine_type
                 && this->liquid_type == other.liquid_type
                 && this->gas_type == other.gas_type
                 && this->denaqa_tables == other.denaqa_tables
@@ -177,7 +177,7 @@ namespace Opm {
         NONE,        // Pure water
         MICHAELIDES, // MICHAELIDES 1971 (default)
     };
-    
+
     enum class LiquidMixingType {
         NONE,     // Pure water
         IDEAL,    // Ideal mixing
