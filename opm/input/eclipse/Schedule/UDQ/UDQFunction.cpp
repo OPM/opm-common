@@ -395,6 +395,12 @@ UDQSet sortOrder(const UDQSet& arg, Compare&& cmp)
     return result;
 }
 
+    bool is_scalar(const UDQSet& s)
+    {
+        return (s.var_type() == UDQVarType::SCALAR)
+            || (s.var_type() == UDQVarType::FIELD_VAR);
+    }
+
 } // Anonymous namespace
 
 UDQSet UDQUnaryElementalFunction::SORTA(const UDQSet& arg)
@@ -409,7 +415,8 @@ UDQSet UDQUnaryElementalFunction::SORTD(const UDQSet& arg)
     return sortOrder(arg, std::greater<>{});
 }
 
-UDQBinaryFunction::UDQBinaryFunction(const std::string& name, std::function<UDQSet(const UDQSet& lhs, const UDQSet& rhs)> f)
+UDQBinaryFunction::UDQBinaryFunction(const std::string& name,
+                                     std::function<UDQSet(const UDQSet& lhs, const UDQSet& rhs)> f)
     : UDQFunction(name)
     , func(std::move(f))
 {}
@@ -596,13 +603,19 @@ UDQSet UDQBinaryFunction::DIV(const UDQSet& lhs, const UDQSet& rhs)
 
 UDQSet UDQBinaryFunction::POW(const UDQSet& lhs, const UDQSet& rhs)
 {
-    UDQSet result = lhs;
-    for (std::size_t index = 0; index < result.size(); ++index) {
-        auto& lhs_elm = lhs[index];
-        auto& rhs_elm = rhs[index];
+    auto result = lhs + rhs;
 
-        if (lhs_elm && rhs_elm) {
-            result.assign(index, std::pow(lhs_elm.get(), rhs_elm.get()));
+    const auto scalar_lhs = is_scalar(lhs);
+    const auto scalar_rhs = is_scalar(rhs);
+
+    const auto numElem = result.size();
+
+    for (auto index = 0*numElem; index < numElem; ++index) {
+        const auto base     = scalar_lhs ? 0 : index;
+        const auto exponent = scalar_rhs ? 0 : index;
+
+        if (lhs[base].defined() && rhs[exponent].defined()) {
+            result.assign(index, std::pow(lhs[base].get(), rhs[exponent].get()));
         }
     }
 
