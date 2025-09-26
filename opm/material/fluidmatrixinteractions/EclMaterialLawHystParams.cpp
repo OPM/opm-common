@@ -290,9 +290,9 @@ readScaledEpsPointsImbibition_(unsigned elemIdx, EclTwoPhaseSystemType type,
 }
 
 // Make some actual code, by realizing the previously defined templated class
-template class HystParams<ThreePhaseMaterialTraits<double,0,1,2>>;
-template class HystParams<ThreePhaseMaterialTraits<float,0,1,2>>;
-template class HystParams<ThreePhaseMaterialTraits<double,2,0,1>>;
-template class HystParams<ThreePhaseMaterialTraits<float,2,0,1>>;
+template class HystParams<ThreePhaseMaterialTraits<double,0,1,2,true,true>>;
+template class HystParams<ThreePhaseMaterialTraits<float,0,1,2,true,true>>;
+template class HystParams<ThreePhaseMaterialTraits<double,2,0,1,true,true>>;
+template class HystParams<ThreePhaseMaterialTraits<float,2,0,1,true,true>>;
 
 } // namespace Opm::EclMaterialLaw

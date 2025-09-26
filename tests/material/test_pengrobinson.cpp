@@ -173,7 +173,7 @@ Scalar bringOilToSurface(FluidState& surfaceFluidState, Scalar alpha, const Flui
     };
 
     typedef Opm::NcpFlash<Scalar, FluidSystem> Flash;
-    typedef Opm::ThreePhaseMaterialTraits<Scalar, waterPhaseIdx, oilPhaseIdx, gasPhaseIdx> MaterialTraits;
+    typedef Opm::ThreePhaseMaterialTraits<Scalar, waterPhaseIdx, oilPhaseIdx, gasPhaseIdx, false, false> MaterialTraits;
     typedef Opm::LinearMaterial<MaterialTraits> MaterialLaw;
     typedef typename MaterialLaw::Params MaterialLawParams;
     typedef Dune::FieldVector<Scalar, numComponents> ComponentVector;
@@ -312,7 +312,7 @@ inline void testAll()
     typedef Dune::FieldVector<Scalar, numComponents> ComponentVector;
     typedef Opm::CompositionalFluidState<Scalar, FluidSystem> FluidState;
 
-    typedef Opm::ThreePhaseMaterialTraits<Scalar, waterPhaseIdx, oilPhaseIdx, gasPhaseIdx> MaterialTraits;
+    typedef Opm::ThreePhaseMaterialTraits<Scalar, waterPhaseIdx, oilPhaseIdx, gasPhaseIdx, false, false> MaterialTraits;
     typedef Opm::LinearMaterial<MaterialTraits> MaterialLaw;
     typedef typename MaterialLaw::Params MaterialLawParams;
 

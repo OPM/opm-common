@@ -523,9 +523,9 @@ readGlobalThreePhaseOptions_(const Runspec& runspec)
     }
 }
 
-template class Manager<ThreePhaseMaterialTraits<double,0,1,2>>;
-template class Manager<ThreePhaseMaterialTraits<float,0,1,2>>;
-template class Manager<ThreePhaseMaterialTraits<double,2,0,1>>;
-template class Manager<ThreePhaseMaterialTraits<float,2,0,1>>;
+template class Manager<ThreePhaseMaterialTraits<double,0,1,2,true,true>>;
+template class Manager<ThreePhaseMaterialTraits<float,0,1,2,true,true>>;
+template class Manager<ThreePhaseMaterialTraits<double,2,0,1,true,true>>;
+template class Manager<ThreePhaseMaterialTraits<float,2,0,1,true,true>>;
 
 } // namespace Opm::EclMaterialLaw

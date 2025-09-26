@@ -82,7 +82,8 @@ public:
  *
  * \brief A generic traits class for three-phase material laws.
  */
-template <class ScalarT, int wettingPhaseIdxV, int nonWettingasPhaseIdxV, int gasPhaseIdxV>
+template <class ScalarT, int wettingPhaseIdxV, int nonWettingasPhaseIdxV, int gasPhaseIdxV,
+          bool enableHysteresisV, bool enableEndpointScalingV>
 class ThreePhaseMaterialTraits
 {
 public:
@@ -100,6 +101,12 @@ public:
 
     //! The index of the gas phase (i.e., the least wetting phase)
     static constexpr int gasPhaseIdx = gasPhaseIdxV;
+
+    //! Is hysteresis enabled
+    static constexpr bool enableHysteresis = enableHysteresisV;
+
+    //! Is endpoint scaling enabled
+    static constexpr bool enableEndpointScaling = enableEndpointScalingV;
 
     // some safety checks...
     static_assert(0 <= wettingPhaseIdx && wettingPhaseIdx < numPhases,
