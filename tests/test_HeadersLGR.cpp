@@ -347,10 +347,6 @@ struct Setup
         : Setup { Parser{}.parseFile(path) }
     {}
 
-    explicit Setup(const std::string& path)
-    : Setup{path.c_str()}
-    {}
-
     explicit Setup(const Deck& deck)
         : es             { deck }
         , grid           { es.getInputGrid() }
@@ -363,7 +359,8 @@ struct Setup
 
 void generate_opm_rst(Setup& base_setup,
                       const data::Wells& lwells,
-                      const SummaryState& simState)
+                      const SummaryState& simState,
+                      WorkArea& test_area)
 {
     namespace OS = ::Opm::EclIO::OutputStream;
     auto& io_config = base_setup.es.getIOConfig();
@@ -407,7 +404,7 @@ void generate_opm_rst(Setup& base_setup,
                        return rv;
                    });
 
-    const auto outputDir = WorkArea("test_Restart").currentWorkingDirectory();
+    const auto outputDir = test_area.currentWorkingDirectory();
     const auto seqnum = 1;
 
     auto rstFile = OS::Restart{
@@ -471,173 +468,79 @@ BOOST_AUTO_TEST_CASE(LGRHEADERS)
 
     auto wells = mkWellsLGR_Global_Complex();
     WorkArea test_area("test_Restart");
+    test_area.copyIn("LGR_3WELLS.DATA");
+
     Setup base_setup("LGR_3WELLS.DATA");
     auto simState = sim_stateLGR(base_setup.schedule);
 
-    generate_opm_rst(base_setup, wells, simState);
-
-    // generate_opm_rst(test_area, wells, "LGR_3WELLS.DATA", [](const Schedule& sched) {
-    //                                                                                 return sim_stateLGR(sched);});
-
+    generate_opm_rst(base_setup, wells, simState, test_area);
     const auto outputDir = test_area.currentWorkingDirectory();
 
+    {
+        const auto rstFile = ::Opm::EclIO::OutputStream::
+            outputFileName({outputDir, "LGR-OPM"}, "UNRST");
 
-    // namespace OS = ::Opm::EclIO::OutputStream;
-    // using measure = UnitSystem::measure;
+        EclIO::ERst rst{ rstFile };
 
-    // test_area.copyIn("LGR_3WELLS.DATA");
-
-    // Setup base_setup("LGR_3WELLS.DATA");
-    // const auto& units = base_setup.es.getUnits();
-    // auto& io_config = base_setup.es.getIOConfig();
-    // {
-    //     const auto& lgr_labels = base_setup.grid.get_all_lgr_labels();
-    //     auto num_lgr_cells = lgr_labels.size();
-    //     std::vector<int> lgr_grid_ids(num_lgr_cells+1);
-    //     std::iota(lgr_grid_ids.begin(), lgr_grid_ids.end(), 1);
-    //     std::vector <std::size_t> num_cells(num_lgr_cells+1);
-    //     num_cells[0] = base_setup.grid.getNumActive();
-    //     std::transform(lgr_labels.begin(), lgr_labels.end(),
-    //                   num_cells.begin() + 1 ,
-    //                 [&base_setup](const std::string& lgr_tag) {
-    //                             return base_setup.grid.getLGRCell(lgr_tag).getNumActive();});
-
-    //     std::vector<data::Solution> cells(num_lgr_cells+1);
-    //     std::transform(num_cells.begin(), num_cells.end(), cells.begin(),
-    //                     [](int n) { return mkSolution(n); });
-    //     data::Wells lwells = mkWellsLGR_Global_Complex();
-
-    //     auto groups = mkGroups();
-    //     auto sumState = sim_stateLGR(base_setup.schedule);
-    //     auto udqState = UDQState{1};
-    //     auto aquiferData = std::optional<Opm::RestartIO::Helpers::AggregateAquiferData>{std::nullopt};
-    //     Action::State action_state;
-    //     WellTestState wtest_state;
-    //     {
-
-    //         std::vector<RestartValue> restart_value;
-
-    //         for (std::size_t i = 0; i < num_lgr_cells + 1; ++i) {
-    //             restart_value.emplace_back(cells[i], lwells, groups, data::Aquifers{}, lgr_grid_ids[i]);
-    //         }
-
-
-    //         io_config.setEclCompatibleRST( false );
-    //         std::transform(restart_value.begin(), restart_value.end(),
-    //                         restart_value.begin(),
-    //                         [](RestartValue& rv) {
-    //                             rv.addExtra("EXTRA", UnitSystem::measure::pressure, std::vector<double>{10.0,1.0,2.0,3.0});
-    //                             return rv;
-    //                         });
-
-    //         const auto outputDir = test_area.currentWorkingDirectory();
-
-    //         {
-    //             const auto seqnum = 1;
-    //             auto rstFile = OS::Restart {
-    //                 OS::ResultSet{ outputDir, "LGR-OPM" }, seqnum,
-    //                 OS::Formatted{ false }, OS::Unified{ true }
-    //             };
-
-    //             RestartIO::save(rstFile, seqnum,
-    //                             100,
-    //                             restart_value,
-    //                             base_setup.es,
-    //                             base_setup.grid,
-    //                             base_setup.schedule,
-    //                             action_state,
-    //                             wtest_state,
-    //                             sumState,
-    //                             udqState,
-    //                             aquiferData,
-    //                             true);
-    //         }
-
+        {
+            auto expected_lgrnames_global = base_setup.grid.get_all_lgr_labels();
+            check_content_existence(expected_lgrnames_global,rst);
+            //INTEHEAD GLOBAL GRID
             {
-                const auto rstFile = ::Opm::EclIO::OutputStream::
-                    outputFileName({outputDir, "LGR-OPM"}, "UNRST");
+                using Ix = ::Opm::RestartIO::Helpers::VectorItems::intehead;
 
-                EclIO::ERst rst{ rstFile };
+                BOOST_CHECK_EQUAL(rst.hasArray("INTEHEAD", 1), true);
+                BOOST_CHECK_EQUAL(rst.hasArray("INTEHEAD", 1, "LGR1"), true);
+                BOOST_CHECK_EQUAL(rst.hasArray("INTEHEAD", 1,  "LGR2"), true);
 
-                {
-                    auto expected_lgrnames_global = base_setup.grid.get_all_lgr_labels();
-                    check_content_existence(expected_lgrnames_global,rst);
-                    //INTEHEAD GLOBAL GRID
-                    {
-                        using Ix = ::Opm::RestartIO::Helpers::VectorItems::intehead;
+                const auto& intehead_global = rst.getRestartData<int>("INTEHEAD", 1);
+                const auto& intehead_lgr1  = rst.getRestartData<int>("INTEHEAD", 1, "LGR1");
+                const auto& intehead_lgr2 = rst.getRestartData<int>("INTEHEAD", 1, "LGR2");
+                BOOST_CHECK_EQUAL(intehead_global[Ix::NX], 3);
+                BOOST_CHECK_EQUAL(intehead_global[Ix::NY], 1);
+                BOOST_CHECK_EQUAL(intehead_global[Ix::NZ], 1);
+                BOOST_CHECK_EQUAL(intehead_lgr1[Ix::NX], 3);
+                BOOST_CHECK_EQUAL(intehead_lgr1[Ix::NY], 3);
+                BOOST_CHECK_EQUAL(intehead_lgr1[Ix::NZ], 1);
+                BOOST_CHECK_EQUAL(intehead_lgr2[Ix::NX], 3);
+                BOOST_CHECK_EQUAL(intehead_lgr2[Ix::NY], 3);
+                BOOST_CHECK_EQUAL(intehead_lgr2[Ix::NZ], 1);
 
-                        BOOST_CHECK_EQUAL(rst.hasArray("INTEHEAD", 1), true);
-                        BOOST_CHECK_EQUAL(rst.hasArray("INTEHEAD", 1, "LGR1"), true);
-                        BOOST_CHECK_EQUAL(rst.hasArray("INTEHEAD", 1,  "LGR2"), true);
-
-                        const auto& intehead_global = rst.getRestartData<int>("INTEHEAD", 1);
-                        const auto& intehead_lgr1  = rst.getRestartData<int>("INTEHEAD", 1, "LGR1");
-                        const auto& intehead_lgr2 = rst.getRestartData<int>("INTEHEAD", 1, "LGR2");
-                        BOOST_CHECK_EQUAL(intehead_global[Ix::NX], 3);
-                        BOOST_CHECK_EQUAL(intehead_global[Ix::NY], 1);
-                        BOOST_CHECK_EQUAL(intehead_global[Ix::NZ], 1);
-                        BOOST_CHECK_EQUAL(intehead_lgr1[Ix::NX], 3);
-                        BOOST_CHECK_EQUAL(intehead_lgr1[Ix::NY], 3);
-                        BOOST_CHECK_EQUAL(intehead_lgr1[Ix::NZ], 1);
-                        BOOST_CHECK_EQUAL(intehead_lgr2[Ix::NX], 3);
-                        BOOST_CHECK_EQUAL(intehead_lgr2[Ix::NY], 3);
-                        BOOST_CHECK_EQUAL(intehead_lgr2[Ix::NZ], 1);
-
-                        BOOST_CHECK_EQUAL(intehead_global[Ix::NWELLS], 3);       // Number of wells
-                        BOOST_CHECK_EQUAL(intehead_lgr1[Ix::NWELLS], 1);
-                        BOOST_CHECK_EQUAL(intehead_lgr2[Ix::NWELLS], 1);
+                BOOST_CHECK_EQUAL(intehead_global[Ix::NWELLS], 3);       // Number of wells
+                BOOST_CHECK_EQUAL(intehead_lgr1[Ix::NWELLS], 1);
+                BOOST_CHECK_EQUAL(intehead_lgr2[Ix::NWELLS], 1);
 
 
-                        // I believe that for LGR grids it inherits from the global grid
-                        BOOST_CHECK_EQUAL(intehead_global[Ix::NCWMAX], 3);       // Maximum number of completions per well
-                        BOOST_CHECK_EQUAL(intehead_lgr1[Ix::NCWMAX], 3);
-                        BOOST_CHECK_EQUAL(intehead_lgr2[Ix::NCWMAX], 3);
+                // I believe that for LGR grids it inherits from the global grid
+                BOOST_CHECK_EQUAL(intehead_global[Ix::NCWMAX], 3);       // Maximum number of completions per well
+                BOOST_CHECK_EQUAL(intehead_lgr1[Ix::NCWMAX], 3);
+                BOOST_CHECK_EQUAL(intehead_lgr2[Ix::NCWMAX], 3);
 
-                        BOOST_CHECK_EQUAL(intehead_global[Ix::NGRP], 1);         // Actual number of groups
-                        BOOST_CHECK_EQUAL(intehead_lgr1[Ix::NGRP], 1);
-                        BOOST_CHECK_EQUAL(intehead_lgr2[Ix::NGRP], 1);
+                BOOST_CHECK_EQUAL(intehead_global[Ix::NGRP], 1);         // Actual number of groups
+                BOOST_CHECK_EQUAL(intehead_lgr1[Ix::NGRP], 1);
+                BOOST_CHECK_EQUAL(intehead_lgr2[Ix::NGRP], 1);
 
-                        // I believe that for LGR grids it inherits from the global grid
-                        BOOST_CHECK_EQUAL(intehead_global[Ix::NWGMAX], 3);       // Maximum number of wells in any well group
-                        BOOST_CHECK_EQUAL(intehead_lgr1[Ix::NWGMAX], 3);
-                        BOOST_CHECK_EQUAL(intehead_lgr2[Ix::NWGMAX], 3);
+                // I believe that for LGR grids it inherits from the global grid
+                BOOST_CHECK_EQUAL(intehead_global[Ix::NWGMAX], 3);       // Maximum number of wells in any well group
+                BOOST_CHECK_EQUAL(intehead_lgr1[Ix::NWGMAX], 3);
+                BOOST_CHECK_EQUAL(intehead_lgr2[Ix::NWGMAX], 3);
 
-                        BOOST_CHECK_EQUAL(intehead_global[Ix::NGMAXZ], 4);     // Maximum number of groups in field
-                        BOOST_CHECK_EQUAL(intehead_lgr1[Ix::NGMAXZ], 2);
-                        BOOST_CHECK_EQUAL(intehead_lgr2[Ix::NGMAXZ], 2);
+                BOOST_CHECK_EQUAL(intehead_global[Ix::NGMAXZ], 4);     // Maximum number of groups in field
+                BOOST_CHECK_EQUAL(intehead_lgr1[Ix::NGMAXZ], 2);
+                BOOST_CHECK_EQUAL(intehead_lgr2[Ix::NGMAXZ], 2);
 
-                        BOOST_CHECK_EQUAL(intehead_global[Ix::NWMAXZ],3);     // Maximum number of groups in field
-                        BOOST_CHECK_EQUAL(intehead_lgr1[Ix::NWMAXZ], 2);
-                        BOOST_CHECK_EQUAL(intehead_lgr2[Ix::NWMAXZ], 2);
-
-
-                        BOOST_CHECK_EQUAL(intehead_global[Ix::NIWELZ], 155);       // Data elements per well in IWEL (default 97)
-                        BOOST_CHECK_EQUAL(intehead_lgr1[Ix::NIWELZ], 155);
-                        BOOST_CHECK_EQUAL(intehead_lgr2[Ix::NIWELZ], 155);
+                BOOST_CHECK_EQUAL(intehead_global[Ix::NWMAXZ],3);     // Maximum number of groups in field
+                BOOST_CHECK_EQUAL(intehead_lgr1[Ix::NWMAXZ], 2);
+                BOOST_CHECK_EQUAL(intehead_lgr2[Ix::NWMAXZ], 2);
 
 
-                        // BOOST_CHECK_EQUAL(intehead_global[Ix::NSWELZ], 0);        // Data elements per well in SWEL (unknown default)
-                        // BOOST_CHECK_EQUAL(intehead_global[Ix::NXWELZ], 0);        // Data elements per well in XWEL (unknown default)
-                        // BOOST_CHECK_EQUAL(intehead_global[Ix::NZWELZ], 0);        // Words per well in ZWEL (unknown default)
-
-                        // BOOST_CHECK_EQUAL(intehead_global[Ix::MXWLSTPRWELL], 30); // Max well lists per well
-
-                        // BOOST_CHECK_EQUAL(intehead_global[Ix::NICONZ], 19);       // Data elements per completion in ICON (default 19)
-                        // BOOST_CHECK_EQUAL(intehead_global[Ix::NSCONZ], 0);        // Data elements per completion in SCON (unknown default)
-                        // BOOST_CHECK_EQUAL(intehead_global[Ix::NXCONZ], 0);        // Data elements per completion in XCON (unknown default)
-
-                        // BOOST_CHECK_EQUAL(intehead_global[Ix::NIGRPZ], 0);        // Data elements per group in IGRP (unknown default)
-                        // BOOST_CHECK_EQUAL(intehead_global[Ix::NSGRPZ], 0);        // Data elements per group in SGRP (unknown default)
-                        // BOOST_CHECK_EQUAL(intehead_global[Ix::NXGRPZ], 0);        // Data elements per group in XGRP (unknown default)
-                        // BOOST_CHECK_EQUAL(intehead_global[Ix::NZGRPZ], 0);        // Data elements per group in ZGRP (unknown default)
-
-
-                        // intehead_global[Ix::NINTL] = 2;
-                        // intehead_global[Ix::NINTR] = 2;
-                    }
-
-
-                }
+                BOOST_CHECK_EQUAL(intehead_global[Ix::NIWELZ], 155);       // Data elements per well in IWEL (default 97)
+                BOOST_CHECK_EQUAL(intehead_lgr1[Ix::NIWELZ], 155);
+                BOOST_CHECK_EQUAL(intehead_lgr2[Ix::NIWELZ], 155);
             }
+
+
+        }
     }
+}
 
