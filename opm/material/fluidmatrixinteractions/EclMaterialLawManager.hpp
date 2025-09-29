@@ -347,7 +347,6 @@ private:
     EclHysteresisConfig hysteresisConfig_;
     std::vector<std::shared_ptr<WagHysteresisConfig::WagHysteresisConfigRecord>> wagHystersisConfig_;
 
-    EclEpsConfig oilWaterEclEpsConfig_;
     std::vector<EclEpsScalingPointsInfo<Scalar>> unscaledEpsInfo_;
 
     Params params_;

@@ -192,12 +192,14 @@ public:
                                          Scalar& swMin,
                                          const Params& params)
     {
-        soMax = 1.0 - params.oilWaterParams().krnSwMdc();
-        swMax = params.oilWaterParams().krwSwMdc();
-        swMin = params.oilWaterParams().pcSwMdc();
-        Valgrind::CheckDefined(soMax);
-        Valgrind::CheckDefined(swMax);
-        Valgrind::CheckDefined(swMin);
+        if constexpr (Traits::enableHysteresis) {
+            soMax = 1.0 - params.oilWaterParams().krnSwMdc();
+            swMax = params.oilWaterParams().krwSwMdc();
+            swMin = params.oilWaterParams().pcSwMdc();
+            Valgrind::CheckDefined(soMax);
+            Valgrind::CheckDefined(swMax);
+            Valgrind::CheckDefined(swMin);
+        }
     }
 
     /*
@@ -212,7 +214,9 @@ public:
                                             const Scalar& swMin,
                                             Params& params)
     {
-        params.oilWaterParams().update(swMin, swMax, 1.0 - soMax);
+        if constexpr (Traits::enableHysteresis) {
+            params.oilWaterParams().update(swMin, swMax, 1.0 - soMax);
+        }
     }
 
 
@@ -228,12 +232,14 @@ public:
                                        Scalar& somin,
                                        const Params& params)
     {
-        sgmax = 1.0 - params.gasOilParams().krnSwMdc();
-        shmax = params.gasOilParams().krwSwMdc();
-        somin = params.gasOilParams().pcSwMdc();
-        Valgrind::CheckDefined(sgmax);
-        Valgrind::CheckDefined(shmax);
-        Valgrind::CheckDefined(somin);
+        if constexpr (Traits::enableHysteresis) {
+            sgmax = 1.0 - params.gasOilParams().krnSwMdc();
+            shmax = params.gasOilParams().krwSwMdc();
+            somin = params.gasOilParams().pcSwMdc();
+            Valgrind::CheckDefined(sgmax);
+            Valgrind::CheckDefined(shmax);
+            Valgrind::CheckDefined(somin);
+        }
     }
 
     /*
@@ -247,7 +253,9 @@ public:
                                           const Scalar& somin,
                                           Params& params)
     {
-        params.gasOilParams().update(somin , shmax, 1.0 - sgmax);
+        if constexpr (Traits::enableHysteresis) {
+            params.gasOilParams().update(somin , shmax, 1.0 - sgmax);
+        }
     }
 
     static Scalar trappedGasSaturation(const Params& params, bool maximumTrapping){

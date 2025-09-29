@@ -69,14 +69,16 @@ void
 HystParams<Traits>::
 setConfig(unsigned satRegionIdx)
 {
-    this->gasOilParams_->setConfig(this->parent_.hysteresisConfig());
-    this->oilWaterParams_->setConfig(this->parent_.hysteresisConfig());
-    this->gasWaterParams_->setConfig(this->parent_.hysteresisConfig());
+    if constexpr (Traits::enableHysteresis) {
+        this->gasOilParams_->setConfig(this->parent_.hysteresisConfig());
+        this->oilWaterParams_->setConfig(this->parent_.hysteresisConfig());
+        this->gasWaterParams_->setConfig(this->parent_.hysteresisConfig());
 
-    if (this->parent_.hysteresisConfig().enableWagHysteresis()) {
-        this->gasOilParams_->setWagConfig(this->parent_.wagHystersisConfig(satRegionIdx));
-        this->oilWaterParams_->setWagConfig(this->parent_.wagHystersisConfig(satRegionIdx));
-        this->gasWaterParams_->setWagConfig(this->parent_.wagHystersisConfig(satRegionIdx));
+        if (this->parent_.hysteresisConfig().enableWagHysteresis()) {
+            this->gasOilParams_->setWagConfig(this->parent_.wagHystersisConfig(satRegionIdx));
+            this->oilWaterParams_->setWagConfig(this->parent_.wagHystersisConfig(satRegionIdx));
+            this->gasWaterParams_->setWagConfig(this->parent_.wagHystersisConfig(satRegionIdx));
+        }
     }
 }
 
@@ -95,9 +97,13 @@ setDrainageParamsGasWater(unsigned elemIdx, unsigned satRegionIdx,
         gasWaterDrainParams.setScaledPoints(gasWaterScaledPoints);
         gasWaterDrainParams.setEffectiveLawParams(this->params_.gasWaterEffectiveParamVector[satRegionIdx]);
         gasWaterDrainParams.finalize();
-        this->gasWaterParams_->setDrainageParams(gasWaterDrainParams,
-                                                 gasWaterScaledInfo,
-                                                 EclTwoPhaseSystemType::GasWater);
+        if constexpr (Traits::enableHysteresis) {
+            this->gasWaterParams_->setDrainageParams(gasWaterDrainParams,
+                                                     gasWaterScaledInfo,
+                                                     EclTwoPhaseSystemType::GasWater);
+        } else {
+            *(this->gasWaterParams_) = gasWaterDrainParams;
+        }
     }
 }
 
@@ -116,9 +122,13 @@ setDrainageParamsOilGas(unsigned elemIdx, unsigned satRegionIdx,
         gasOilDrainParams.setScaledPoints(gasOilScaledPoints);
         gasOilDrainParams.setEffectiveLawParams(this->params_.gasOilEffectiveParamVector[satRegionIdx]);
         gasOilDrainParams.finalize();
-        this->gasOilParams_->setDrainageParams(gasOilDrainParams,
-                                               gasOilScaledInfo,
-                                               EclTwoPhaseSystemType::GasOil);
+        if constexpr (Traits::enableHysteresis) {
+            this->gasOilParams_->setDrainageParams(gasOilDrainParams,
+                                                   gasOilScaledInfo,
+                                                   EclTwoPhaseSystemType::GasOil);
+        } else {
+            *(this->gasOilParams_) = gasOilDrainParams;
+        }
     }
 }
 
@@ -146,7 +156,13 @@ setDrainageParamsOilWater(unsigned elemIdx, unsigned satRegionIdx,
         oilWaterDrainParams.setScaledPoints(oilWaterScaledPoints);
         oilWaterDrainParams.setEffectiveLawParams(this->params_.oilWaterEffectiveParamVector[satRegionIdx]);
         oilWaterDrainParams.finalize();
-        oilWaterParams_->setDrainageParams(oilWaterDrainParams, oilWaterScaledInfo, EclTwoPhaseSystemType::OilWater);
+        if constexpr (Traits::enableHysteresis) {
+            oilWaterParams_->setDrainageParams(oilWaterDrainParams,
+                                               oilWaterScaledInfo,
+                                               EclTwoPhaseSystemType::OilWater);
+        } else {
+            *(this->oilWaterParams_) = oilWaterDrainParams;
+        }
     }
 }
 
@@ -156,18 +172,20 @@ HystParams<Traits>::
 setImbibitionParamsGasWater(unsigned elemIdx, unsigned imbRegionIdx,
                             const LookupFunction& lookupIdxOnLevelZeroAssigner)
 {
-    if (hasGasWater_()) {
-        auto [gasWaterScaledInfo, gasWaterScaledPoints]
-            = readScaledEpsPointsImbibition_(elemIdx, EclTwoPhaseSystemType::GasWater, lookupIdxOnLevelZeroAssigner);
-        typename EclMaterialLaw::TwoPhaseTypes<Traits>::GasWaterEpsParams gasWaterImbParamsHyst;
-        gasWaterImbParamsHyst.setConfig(this->parent_.gasWaterConfig());
-        gasWaterImbParamsHyst.setUnscaledPoints(this->params_.gasWaterUnscaledPointsVector[imbRegionIdx]);
-        gasWaterImbParamsHyst.setScaledPoints(gasWaterScaledPoints);
-        gasWaterImbParamsHyst.setEffectiveLawParams(this->params_.gasWaterEffectiveParamVector[imbRegionIdx]);
-        gasWaterImbParamsHyst.finalize();
-        this->gasWaterParams_->setImbibitionParams(gasWaterImbParamsHyst,
-                                                   gasWaterScaledInfo,
-                                                   EclTwoPhaseSystemType::GasWater);
+    if constexpr (Traits::enableHysteresis) {
+        if (hasGasWater_()) {
+            auto [gasWaterScaledInfo, gasWaterScaledPoints]
+                = readScaledEpsPointsImbibition_(elemIdx, EclTwoPhaseSystemType::GasWater, lookupIdxOnLevelZeroAssigner);
+            typename EclMaterialLaw::TwoPhaseTypes<Traits>::GasWaterEpsParams gasWaterImbParamsHyst;
+            gasWaterImbParamsHyst.setConfig(this->parent_.gasWaterConfig());
+            gasWaterImbParamsHyst.setUnscaledPoints(this->params_.gasWaterUnscaledPointsVector[imbRegionIdx]);
+            gasWaterImbParamsHyst.setScaledPoints(gasWaterScaledPoints);
+            gasWaterImbParamsHyst.setEffectiveLawParams(this->params_.gasWaterEffectiveParamVector[imbRegionIdx]);
+            gasWaterImbParamsHyst.finalize();
+            this->gasWaterParams_->setImbibitionParams(gasWaterImbParamsHyst,
+                                                       gasWaterScaledInfo,
+                                                       EclTwoPhaseSystemType::GasWater);
+        }
     }
 }
 
@@ -177,19 +195,20 @@ HystParams<Traits>::
 setImbibitionParamsOilGas(unsigned elemIdx, unsigned imbRegionIdx,
                           const LookupFunction& lookupIdxOnLevelZeroAssigner)
 {
-    if (hasGasOil_()) {
-        auto [gasOilScaledInfo, gasOilScaledPoints]
-            = readScaledEpsPointsImbibition_(elemIdx, EclTwoPhaseSystemType::GasOil, lookupIdxOnLevelZeroAssigner);
-
-        typename TwoPhaseTypes<Traits>::GasOilEpsParams gasOilImbParamsHyst;
-        gasOilImbParamsHyst.setConfig(this->parent_.gasOilConfig());
-        gasOilImbParamsHyst.setUnscaledPoints(this->params_.gasOilUnscaledPointsVector[imbRegionIdx]);
-        gasOilImbParamsHyst.setScaledPoints(gasOilScaledPoints);
-        gasOilImbParamsHyst.setEffectiveLawParams(this->params_.gasOilEffectiveParamVector[imbRegionIdx]);
-        gasOilImbParamsHyst.finalize();
-        this->gasOilParams_->setImbibitionParams(gasOilImbParamsHyst,
-                                                 gasOilScaledInfo,
-                                                 EclTwoPhaseSystemType::GasOil);
+    if constexpr (Traits::enableHysteresis) {
+        if (hasGasOil_()) {
+            auto [gasOilScaledInfo, gasOilScaledPoints]
+                = readScaledEpsPointsImbibition_(elemIdx, EclTwoPhaseSystemType::GasOil, lookupIdxOnLevelZeroAssigner);
+            typename TwoPhaseTypes<Traits>::GasOilEpsParams gasOilImbParamsHyst;
+            gasOilImbParamsHyst.setConfig(this->parent_.gasOilConfig());
+            gasOilImbParamsHyst.setUnscaledPoints(this->params_.gasOilUnscaledPointsVector[imbRegionIdx]);
+            gasOilImbParamsHyst.setScaledPoints(gasOilScaledPoints);
+            gasOilImbParamsHyst.setEffectiveLawParams(this->params_.gasOilEffectiveParamVector[imbRegionIdx]);
+            gasOilImbParamsHyst.finalize();
+            this->gasOilParams_->setImbibitionParams(gasOilImbParamsHyst,
+                                                     gasOilScaledInfo,
+                                                     EclTwoPhaseSystemType::GasOil);
+        }
     }
 }
 
@@ -199,18 +218,20 @@ HystParams<Traits>::
 setImbibitionParamsOilWater(unsigned elemIdx, unsigned imbRegionIdx,
                             const LookupFunction& lookupIdxOnLevelZeroAssigner)
 {
-    if (hasOilWater_()) {
-        auto [oilWaterScaledInfo, oilWaterScaledPoints]
-            = readScaledEpsPointsImbibition_(elemIdx, EclTwoPhaseSystemType::OilWater, lookupIdxOnLevelZeroAssigner);
-        typename TwoPhaseTypes<Traits>::OilWaterEpsParams oilWaterImbParamsHyst;
-        oilWaterImbParamsHyst.setConfig(this->parent_.oilWaterConfig());
-        oilWaterImbParamsHyst.setUnscaledPoints(this->params_.oilWaterUnscaledPointsVector[imbRegionIdx]);
-        oilWaterImbParamsHyst.setScaledPoints(oilWaterScaledPoints);
-        oilWaterImbParamsHyst.setEffectiveLawParams(this->params_.oilWaterEffectiveParamVector[imbRegionIdx]);
-        oilWaterImbParamsHyst.finalize();
-        this->oilWaterParams_->setImbibitionParams(oilWaterImbParamsHyst,
-                                                   oilWaterScaledInfo,
-                                                   EclTwoPhaseSystemType::OilWater);
+    if constexpr (Traits::enableHysteresis) {
+        if (hasOilWater_()) {
+            auto [oilWaterScaledInfo, oilWaterScaledPoints]
+                = readScaledEpsPointsImbibition_(elemIdx, EclTwoPhaseSystemType::OilWater, lookupIdxOnLevelZeroAssigner);
+            typename TwoPhaseTypes<Traits>::OilWaterEpsParams oilWaterImbParamsHyst;
+            oilWaterImbParamsHyst.setConfig(this->parent_.oilWaterConfig());
+            oilWaterImbParamsHyst.setUnscaledPoints(this->params_.oilWaterUnscaledPointsVector[imbRegionIdx]);
+            oilWaterImbParamsHyst.setScaledPoints(oilWaterScaledPoints);
+            oilWaterImbParamsHyst.setEffectiveLawParams(this->params_.oilWaterEffectiveParamVector[imbRegionIdx]);
+            oilWaterImbParamsHyst.finalize();
+            this->oilWaterParams_->setImbibitionParams(oilWaterImbParamsHyst,
+                                                       oilWaterScaledInfo,
+                                                       EclTwoPhaseSystemType::OilWater);
+        }
     }
 }
 
@@ -294,5 +315,6 @@ template class HystParams<ThreePhaseMaterialTraits<double,0,1,2,true,true>>;
 template class HystParams<ThreePhaseMaterialTraits<float,0,1,2,true,true>>;
 template class HystParams<ThreePhaseMaterialTraits<double,2,0,1,true,true>>;
 template class HystParams<ThreePhaseMaterialTraits<float,2,0,1,true,true>>;
+template class HystParams<ThreePhaseMaterialTraits<double,0,1,2,false,true>>;
 
 } // namespace Opm::EclMaterialLaw
