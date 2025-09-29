@@ -1087,6 +1087,8 @@ void save(EclIO::OutputStream::Restart&                 rstFile,
         writeExtraData(value.extra, rstFile);
     }
 
+    // log information about writing everything
+    logRestartOutput(report_step, schedule.size() - 1, inteHD);
 }
 
 
