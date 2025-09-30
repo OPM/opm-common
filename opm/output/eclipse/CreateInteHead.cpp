@@ -125,16 +125,15 @@ namespace {
 
         int ngmax = 0;
         for (const auto& grp : grps) {
-            if (! sched_state.group_contains_lgr(grp, lgr_tag)) {
+            if (! sched_state.group_contains_lgr(grp.get(), lgr_tag)) {
                 continue;
             }
             ngmax += 1;
         }
 
+        // If an LGR contains no well the following condtions is met.
         if (ngmax < 1) {
-            throw std::invalid_argument {
-                "LGR Group run must include at least FIELD group"
-            };
+            return ngmax;
         }
 
         // Number of non-FIELD groups.
