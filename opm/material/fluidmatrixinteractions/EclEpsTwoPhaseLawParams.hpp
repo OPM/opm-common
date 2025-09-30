@@ -140,6 +140,15 @@ public:
     const EffLawParams& effectiveLawParams() const
     { return *effectiveLawParams_; }
 
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        // Do nothing, this class has no dynamic state!
+        // It is still somewhat useful to have this function,
+        // as then we do not need to embed that knowledge in
+        // other classes that may contain this one.
+    }
+
 private:
     EffLawParams* effectiveLawParams_{};
     EclEpsConfig config_;
