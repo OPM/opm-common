@@ -1360,26 +1360,6 @@ void FieldProps::handle_double_keyword(const Section section,
     this->handle_double_keyword(section, kw_info, keyword, keyword.name(), box);
 }
 
-double FieldProps::get_alpha(const std::string& func_name,
-                             const std::string& target_array,
-                             const double       raw_alpha)
-{
-    return ((func_name == "ADDX") ||
-            (func_name == "MAXLIM") ||
-            (func_name == "MINLIM"))
-        ? this->getSIValue(target_array, raw_alpha)
-        : raw_alpha;
-}
-
-double FieldProps::get_beta(const std::string& func_name,
-                            const std::string& target_array,
-                            const double       raw_beta)
-{
-    return (func_name == "MULTA")
-        ? this->getSIValue(target_array, raw_beta)
-        : raw_beta;
-}
-
 template <typename T>
 void FieldProps::operate(const DeckRecord&                   record,
                          Fieldprops::FieldData<T>&           target_data,
@@ -1395,11 +1375,21 @@ void FieldProps::operate(const DeckRecord&                   record,
         };
     }
 
+    auto parseDim = [this](const auto& fldData)
+    {
+        return fldData.kw_info.unit.has_value()
+            ? this->unit_system.parse(*fldData.kw_info.unit)
+            : Dimension { 1.0 };
+    };
+
+    const auto srcDim = parseDim(src_data);
+    const auto dstDim = parseDim(target_data);
+
     const auto func_name    = record.getItem("OPERATION").getTrimmedString(0);
     const auto check_target = (func_name == "MULTIPLY") || (func_name == "POLY");
 
-    const auto alpha = this->get_alpha(func_name, target_array, record.getItem("PARAM1").get<double>(0));
-    const auto beta  = this->get_beta(func_name, target_array, record.getItem("PARAM2").get<double>(0));
+    const auto alpha = record.getItem("PARAM1").get<double>(0);
+    const auto beta  = record.getItem("PARAM2").get<double>(0);
     const auto func  = Operate::get(func_name, alpha, beta);
 
     auto& to_data = global? *target_data.global_data : target_data.data;
@@ -1413,7 +1403,11 @@ void FieldProps::operate(const DeckRecord&                   record,
 
         if (value::has_value(from_status[ix])) {
             if (!check_target || value::has_value(to_status[ix])) {
-                to_data[ix] = func(to_data[ix], from_data[ix]);
+                // Convert the data to input units and apply the operation.
+                const auto val = func(dstDim.convertSiToRaw(to_data[ix]),
+                                      srcDim.convertSiToRaw(from_data[ix]));
+                // Convert back the data to internal SI units.
+                to_data[ix] = dstDim.convertRawToSi(val);
                 to_status[ix] = from_status[ix];
             }
             else {
@@ -1606,7 +1600,7 @@ void FieldProps::handle_OPERATE(const DeckKeyword& keyword, Box box)
 
         auto& field_data = this->init_get<double>(target_kw);
 
-        const auto src_kw = record.getItem("ARRAY").getTrimmedString(0);
+        const auto src_kw = record.getItem("ARRAY_PARAMETER").getTrimmedString(0);
         const auto& src_data = this->init_get<double>(src_kw);
 
         FieldProps::operate(record, field_data, src_data, box.index_list());

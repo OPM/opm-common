@@ -15,11 +15,11 @@
   You should have received a copy of the GNU General Public License along with
   OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
+#include "Operate.hpp"
+
 #include <cmath>
 #include <map>
 #include <string>
-
-#include "Operate.hpp"
 
 namespace Opm {
 namespace Operate {
@@ -127,7 +127,7 @@ function get(const std::string& func, double alpha, double beta) {
 
     return [alpha, beta, inner_func](double R, double X)
            {
-               return inner_func(R,X,alpha,beta);
+               return inner_func(R, X, alpha, beta);
            };
 }
 

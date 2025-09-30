@@ -41,7 +41,7 @@
       "value_type": "STRING"
     },
     {
-      "name": "ARRAY",
+      "name": "ARRAY_PARAMETER",
       "value_type": "STRING"
     },
     {

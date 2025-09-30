@@ -19,7 +19,7 @@
 #define OPERATE_HPP
 
 #include <functional>
-
+#include <string>
 
 namespace Opm {
 namespace Operate {

@@ -767,9 +767,6 @@ private:
                              const std::vector<double>& deck_data,
                              const Box& box);
 
-    double get_beta(const std::string& func_name, const std::string& target_array, double raw_beta);
-    double get_alpha(const std::string& func_name, const std::string& target_array, double raw_alpha);
-
     void handle_keyword(Section section, const DeckKeyword& keyword, Box& box);
     void handle_double_keyword(Section section,
                                const Fieldprops::keywords::keyword_info<double>& kw_info,
