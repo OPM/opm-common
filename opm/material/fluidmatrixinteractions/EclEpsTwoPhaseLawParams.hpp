@@ -113,6 +113,21 @@ public:
     ScalingPoints& scaledPoints()
     { return scaledPoints_; }
 
+    Scalar SnTrapped([[maybe_unused]] bool maximumTrapping) const
+    {
+        return 0.0;
+    }
+
+    Scalar SnStranded([[maybe_unused]] Scalar sg, [[maybe_unused]] Scalar krg) const
+    {
+        return 0.0;
+    }
+
+    Scalar SwTrapped() const
+    {
+        return 0.0;
+    }
+
     /*!
      * \brief Sets the parameter object for the effective/nested material law.
      */
