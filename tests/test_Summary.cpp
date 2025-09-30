@@ -309,14 +309,29 @@ data::Wells result_wells(const bool w3_injector = true)
     }
     segment.segNumber = 1;
 
-    /*
-      The global index assigned to the completion must be manually
-      syncronized with the global index in the COMPDAT keyword in the
-      input deck.
-    */
-    data::ConnectionFiltrate zero_filtrate {}; // only injecting connections are counted for filtration related
-    data::ConnectionFiltrate con_filtrate = {0.1*sm3_pr_day(), 1*sm3(), 3, 0.01*unit::meter, 1.e-3*unit::darcy, 0.2, 0.05*unit::meter, 10.*unit::square(unit::meter)};
-    data::ConnectionFiltrate w3_con_filtrate = w3_injector ? con_filtrate : zero_filtrate;
+    // The global index assigned to the completion must be manually
+    // syncronized with the global index in the COMPDAT keyword in the input
+    // deck.
+
+    // Recall: Only injecting connections go into filtration related summary
+    // quantities.
+    const auto zero_filtrate = data::ConnectionFiltrate {};
+
+    const auto con_filtrate = data::ConnectionFiltrate {
+        /* rate = */ 0.1*sm3_pr_day(),
+        /* total = */ 1*sm3(),
+        /* skin_factor = */ 3,
+        /* thickness = */ 0.01*unit::meter,
+        /* perm = */ 1.e-3*unit::darcy,
+        /* poro = */ 0.2,
+        /* radius = */ 0.05*unit::meter,
+        /* area_of_flow = */ 10.0*unit::square(unit::meter),
+        /* flow_factor = */ 0.75,
+        /* fracture_rate = */ 0.025*sm3_pr_day()
+    };
+
+    const auto& w3_con_filtrate = w3_injector ? con_filtrate : zero_filtrate;
+
     data::Connection well1_comp1 { 0  , crates1, 1.9 *unit::barsa, -123.4 *rm3_pr_day(), 314.15, 0.35 , 0.25,   2.718e2, 111.222*cp_rm3_per_db(), 0.0, 1.0, 0, zero_filtrate};
     data::Connection well2_comp1 { 1  , crates2, 1.10*unit::barsa, - 23.4 *rm3_pr_day(), 212.1 , 0.78 , 0.0 ,  12.34   , 222.333*cp_rm3_per_db(), 0.0, 1.0, 0, zero_filtrate};
     data::Connection well2_comp2 { 101, crates3, 1.11*unit::barsa, -234.5 *rm3_pr_day(), 150.6 , 0.001, 0.89, 100.0    , 333.444*cp_rm3_per_db(), 0.0, 1.0, 0, con_filtrate /* output should be zero since it is a producer */};

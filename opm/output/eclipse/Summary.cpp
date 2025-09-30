@@ -2771,6 +2771,10 @@ static const auto funs = std::unordered_map<std::string, ofun> {
       measure::length, injector> },
     { "CFCAOF", filtrate_connection_quantities<&Opm::data::ConnectionFiltrate::area_of_flow,
       measure::area, injector> },
+    { "CFCFFRAC", filtrate_connection_quantities<&Opm::data::ConnectionFiltrate::flow_factor,
+      measure::identity, injector> },
+    { "CFCFRATE", filtrate_connection_quantities<&Opm::data::ConnectionFiltrate::fracture_rate,
+      measure::geometric_volume_rate, injector> },
 
     // Hydraulic fracturing (OPM extension)
     //
@@ -2782,6 +2786,16 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "CFRHEIGH", fracture_connection_quantities<&Opm::data::ConnectionFracture::height,
       measure::length, injector> },
     { "CFRLENGT", fracture_connection_quantities<&Opm::data::ConnectionFracture::length,
+      measure::length, injector> },
+    { "CFRWI", fracture_connection_quantities<&Opm::data::ConnectionFracture::WI,
+      measure::transmissibility, injector> },
+    { "CFRVOLUM", fracture_connection_quantities<&Opm::data::ConnectionFracture::volume,
+      measure::geometric_volume, injector> },
+    { "CFRFVOLU", fracture_connection_quantities<&Opm::data::ConnectionFracture::filter_volume,
+      measure::geometric_volume, injector> },
+    { "CFRAVGW", fracture_connection_quantities<&Opm::data::ConnectionFracture::avg_width,
+      measure::length, injector> },
+    { "CFRAVGFW", fracture_connection_quantities<&Opm::data::ConnectionFracture::avg_filter_width,
       measure::length, injector> },
 
     // Fracture pressure statistics
