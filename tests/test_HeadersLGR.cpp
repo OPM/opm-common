@@ -463,7 +463,7 @@ void check_content_existence(const std::vector<std::string>& lgr_grid_list, EclI
 } // Anonymous namespace
 
 
-BOOST_AUTO_TEST_CASE(LGRHEADERS)
+BOOST_AUTO_TEST_CASE(LGRHEADERS_3WELLS)
 {
 
     auto wells = mkWellsLGR_Global_Complex();
@@ -544,3 +544,31 @@ BOOST_AUTO_TEST_CASE(LGRHEADERS)
     }
 }
 
+BOOST_AUTO_TEST_CASE(LGRHEADERS_SAMEGROUP)
+{
+
+    auto wells = mkWellsLGR_Global_Complex();
+    WorkArea test_area("test_Restart");
+    test_area.copyIn("LGR_SAMEGROUP.DATA");
+
+    Setup base_setup("LGR_SAMEGROUP.DATA");
+    auto simState = sim_stateLGR(base_setup.schedule);
+
+    generate_opm_rst(base_setup, wells, simState, test_area);
+    const auto outputDir = test_area.currentWorkingDirectory();
+}
+
+
+BOOST_AUTO_TEST_CASE(LGRHEADERS_DIFFGROUP)
+{
+
+    auto wells = mkWellsLGR_Global_Complex();
+    WorkArea test_area("test_Restart");
+    test_area.copyIn("LGR_DIFFGROUP.DATA");
+
+    Setup base_setup("LGR_DIFFGROUP.DATA");
+    auto simState = sim_stateLGR(base_setup.schedule);
+
+    generate_opm_rst(base_setup, wells, simState, test_area);
+    const auto outputDir = test_area.currentWorkingDirectory();
+}
