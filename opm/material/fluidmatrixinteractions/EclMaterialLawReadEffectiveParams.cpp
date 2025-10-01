@@ -478,5 +478,6 @@ template class ReadEffectiveParams<ThreePhaseMaterialTraits<float,0,1,2,true,tru
 template class ReadEffectiveParams<ThreePhaseMaterialTraits<double,2,0,1,true,true>>;
 template class ReadEffectiveParams<ThreePhaseMaterialTraits<float,2,0,1,true,true>>;
 template class ReadEffectiveParams<ThreePhaseMaterialTraits<double,0,1,2,false,true>>;
+template class ReadEffectiveParams<ThreePhaseMaterialTraits<float,0,1,2,false,true>>;
 
 } // namespace Opm::EclMaterialLaw
