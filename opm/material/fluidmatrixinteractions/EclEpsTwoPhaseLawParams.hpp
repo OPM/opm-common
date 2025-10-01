@@ -141,7 +141,7 @@ public:
     { return *effectiveLawParams_; }
 
     template<class Serializer>
-    void serializeOp(Serializer& serializer)
+    void serializeOp(Serializer&)
     {
         // Do nothing, this class has no dynamic state!
         // It is still somewhat useful to have this function,
