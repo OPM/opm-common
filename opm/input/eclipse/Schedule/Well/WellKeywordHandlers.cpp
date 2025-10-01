@@ -918,24 +918,31 @@ void handleWLIST(HandlerContext& handlerContext)
 
         if (action == "NEW") {
             new_wlm.newList(name, wells);
-        }
-
-        if (!new_wlm.hasList(name))
-            throw std::invalid_argument("Invalid well list: " + name);
-
-        if (action == "MOV") {
-            for (const auto& well : wells) {
+        } else if (action == "ADD") {
+            if (!new_wlm.hasList(name)) {
+                new_wlm.newList(name, wells);
+            } else {
+                new_wlm.addWListWells(wells, name);
+            }
+        } else if (action == "MOV") {
+            for (const auto& well: wells) {
                 new_wlm.delWell(well);
             }
-        }
-
-        if (action == "DEL") {
-            for (const auto& well : wells) {
-                new_wlm.delWListWell(well, name);
+            if (!new_wlm.hasList(name)) {
+                new_wlm.newList(name, wells);
+            } else {
+                new_wlm.addWListWells(wells, name);
             }
-        } else if (action != "NEW"){
-            for (const auto& well : wells) {
-                new_wlm.addWListWell(well, name);
+        } else if (action == "DEL") {
+            if (new_wlm.hasList(name)) {
+                for (const auto& well: wells) {
+                    new_wlm.delWListWell(well, name);
+                }
+            } else {
+                std::string msg_fmt = fmt::format("Problem with {{keyword}} in {{file}} line {{line}}\n"
+                                                  "The well list '{}' has not been defined and the operation DEL can not be applied.", name);
+                const auto& parseContext = handlerContext.parseContext;
+                parseContext.handleError(ParseContext::SCHEDULE_INVALID_NAME, msg_fmt, handlerContext.keyword.location(),handlerContext.errors);
             }
         }
         handlerContext.state().wlist_manager.update( std::move(new_wlm) );

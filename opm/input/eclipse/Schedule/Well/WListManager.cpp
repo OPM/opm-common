@@ -137,6 +137,13 @@ namespace Opm {
         }
     }
 
+    void WListManager::addWListWells(const std::vector<std::string>& wnames, const std::string& wlname)
+    {
+        for (const auto& wellname : wnames) {
+            this->addWListWell(wellname, wlname);
+        }
+    }
+
     void WListManager::delWell(const std::string& wname)
     {
         for (auto& pair: this->wlists) {
