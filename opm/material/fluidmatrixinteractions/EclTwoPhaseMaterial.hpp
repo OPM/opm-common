@@ -475,6 +475,7 @@ public:
                 return params.gasWaterParams().update(/*pcSw=*/sw, /*krwSw=*/sw, /*krnSw=*/sw);
             }
             }
+            return false;
         } else {
             return false;
         }
