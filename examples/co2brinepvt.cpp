@@ -65,8 +65,8 @@ double densityBrine(const BrinePvt& brinePvt, const double p, const double T, co
     return bo * (brinePvt.oilReferenceDensity(0) + Rs * brinePvt.gasReferenceDensity(0));
 }
 
-std::pair<double, double> moleFractionMutualSolubility(const double p, 
-                                                       const double T, 
+std::pair<double, double> moleFractionMutualSolubility(const double p,
+                                                       const double T,
                                                        const double s,
                                                        const int activityModel)
 {
@@ -84,30 +84,30 @@ std::pair<double, double> moleFractionMutualSolubility(const double p,
     return {xCO2, yH2O};
 }
 
-double moleFractionCO2inBrine(const double p, 
-                              const double T, 
+double moleFractionCO2inBrine(const double p,
+                              const double T,
                               const double s,
                               const int activityModel)
 {
     // Calculate mutual solubilities
     auto [xCO2, yH2O] = moleFractionMutualSolubility(p, T, s, activityModel);
-   
+
     return xCO2;
 }
 
-double moleFractionBrineInCO2(const double p, 
-                              const double T, 
+double moleFractionBrineInCO2(const double p,
+                              const double T,
                               const double s,
                               const int activityModel)
 {
     // Calculate mutual solubilities
     auto [xCO2, yH2O] = moleFractionMutualSolubility(p, T, s, activityModel);
-   
+
     return yH2O;
 }
 
-double molalityCO2inBrine(const double p, 
-                          const double T, 
+double molalityCO2inBrine(const double p,
+                          const double T,
                           const double m_sal,
                           const int activityModel)
 {
@@ -183,7 +183,7 @@ int main(int argc, char **argv)
     if (argc > 10)
         thermalmixliquid = atoi(argv[10]);
     if (argc > 11)
-        thermalmixsalt = atoi(argv[11]);    
+        thermalmixsalt = atoi(argv[11]);
 
     const double MmNaCl = 58.44e-3; // molar mass of NaCl [kg/mol]
     // convert to mass fraction
@@ -313,7 +313,7 @@ int main(int argc, char **argv)
         else {
             throw std::runtime_error("phase " + phase + " not recognized. Use either CO2 or brine");
         }
-    }  
+    }
     else {
         throw std::runtime_error("prop " + prop + " not recognized. "
         + "Use either density, visosity, invB, B, internalEnergy, enthalpy or diffusionCoefficient");

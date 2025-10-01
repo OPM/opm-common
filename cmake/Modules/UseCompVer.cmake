@@ -2,7 +2,7 @@
 
 # probe the GCC version, returns empty string if GCC is not compiler
 function (get_gcc_version language ver_name)
-  if(CMAKE_${language}_COMPILER_ID STREQUAL GNU)  
+  if(CMAKE_${language}_COMPILER_ID STREQUAL GNU)
     execute_process (
       COMMAND ${CMAKE_${language}_COMPILER} ${CMAKE_${language}_COMPILER_ARG1} -dumpversion
       OUTPUT_VARIABLE _version

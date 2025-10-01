@@ -178,7 +178,7 @@ namespace {
                 else
                     throw std::domain_error("Either SWOF or SWOFLET tables must be provided");
 
-            case SatfuncFamily::II: 
+            case SatfuncFamily::II:
                 if( !swfnTables.empty() )
                     return map( famII, Opm::fun::iota( num_tables ) );
                 else
@@ -231,7 +231,7 @@ namespace {
                     throw std::domain_error("Either SWOF or SWOFLET tables must be provided");
 
             case SatfuncFamily::II:
-                if( !swfnTables.empty() ) 
+                if( !swfnTables.empty() )
                     return map( famII, Opm::fun::iota( num_tables ) );
                 else
                     return map( famII_sgwfn, Opm::fun::iota( num_tables ) );

@@ -111,7 +111,7 @@ public:
         Valgrind::CheckDefined(fs.pressure(phaseIdx));
 
         using Evaluation = typename FluidState::Scalar;
-        
+
         // extract variables
         const Evaluation& T = fs.temperature(phaseIdx);
         const Evaluation& p = fs.pressure(phaseIdx);
@@ -135,7 +135,7 @@ public:
         Valgrind::SetUndefined(Vm);
         Evaluation Z[3] = {0.0, 0.0, 0.0};
         int numSol = cubicRoots(Z, a1, a2, a3, a4);
-        
+
         // pick correct root
         const Evaluation RT_p = R * T / p;
         if (numSol == 3) {

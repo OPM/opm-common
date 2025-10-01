@@ -37,7 +37,7 @@ namespace Opm {
     {
     }
 
-    
+
     size_t TableIndex::getIndex1( ) const {
         return m_index1;
     }

@@ -99,11 +99,11 @@ void scalarVectorOperation(const T& scalar, std::vector<T>& vecA, Operation op) 
 }
 
 
-std::tuple<std::array<double,4>, std::array<double,4>, std::array<double,4>> 
-appendNode(const std::array<double,3>&, const std::array<double,3>&, 
-           const std::array<double,3>&, const double&, const double&, 
+std::tuple<std::array<double,4>, std::array<double,4>, std::array<double,4>>
+appendNode(const std::array<double,3>&, const std::array<double,3>&,
+           const std::array<double,3>&, const double&, const double&,
            const double&);
-           
+
 template <typename T>
 std::vector<T> filterArray(const std::vector<T>& X, const std::vector<int>& ind){
     std::vector<T> filtered_vectorX(ind.size(),0);

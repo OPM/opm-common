@@ -44,4 +44,3 @@ BOOST_AUTO_TEST_CASE( CreateTest ) {
     BOOST_CHECK_THROW( schema.getColumn( "NO/NOT/THIS/COLUMN" ) , std::invalid_argument );
     BOOST_CHECK_THROW( schema.getColumn( 5 ) , std::invalid_argument );
 }
-

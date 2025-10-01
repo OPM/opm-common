@@ -96,14 +96,14 @@ namespace Opm
         int NY() const;
         int NZ() const;
         std::size_t num_parent_cells() const;
-         
+
         template<class Serializer>
         void serializeOp(Serializer& serializer)
         {
-            serializer(m_dims);    
-            serializer(m_offset);     
-            serializer(m_end_offset);     
-            serializer(name_grid);           
+            serializer(m_dims);
+            serializer(m_offset);
+            serializer(m_end_offset);
+            serializer(name_grid);
         }
 
     private:

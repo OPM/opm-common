@@ -55,91 +55,91 @@
 
 //Test Killogh hysteresis Gas Oil System
 static const char* hysterDeckStringKilloughGasOil = R"(
-    
+
     RUNSPEC
 
     DIMENS
        1 1 1 /
-    
+
     TABDIMS
      2 /
-    
+
     OIL
     GAS
-    
+
     GRID
-    
+
     DX
        1*1000 /
     DY
        1*1000 /
     DZ
        1*50 /
-    
+
     TOPS
        1*0 /
 
     PORO
       1*0.15 /
-    
+
     EHYSTR
       0.1 2 0.1 1* BOTH /
-    
+
     SATOPTS
       HYSTER /
-    
+
     PROPS
-    
+
     SGOF
     0      0    1.0   0
     1      1.0  0.0   0 /
     0.12   0    1.0   0
     1      1.0  0.0   0 /
-    
+
     REGIONS
-    
+
     SATNUM
     1*1 /
     IMBNUM
     1*2 / )";
 
 static const char* hysterDeckStringKillough3pBaker = R"(
-    
+
     RUNSPEC
 
     DIMENS
        1 1 1 /
-    
+
     TABDIMS
      2 /
-    
+
     OIL
     GAS
     WATER
-    
+
     GRID
-    
+
     DX
        1*1000 /
     DY
        1*1000 /
     DZ
        1*50 /
-    
+
     TOPS
        1*0 /
 
     PORO
       1*0.15 /
-    
+
     EHYSTR
       0.1 2 0.1 1* BOTH /
-    
+
     SATOPTS
       HYSTER /
-    
+
     PROPS
-    
+
     SWOF
     0.12   0    1.0   0
     1      1.0  0.0   0 /
@@ -151,100 +151,100 @@ static const char* hysterDeckStringKillough3pBaker = R"(
     0.88      1.0  0.0   0 /
     0.12   0    1.0   0
     0.88      1.0  0.0   0 /
-    
+
     REGIONS
-    
+
     SATNUM
     1*1 /
     IMBNUM
     1*2 / )";
 
 static const char* hysterDeckStringKilloughGasOilWetting = R"(
-    
+
     RUNSPEC
 
     DIMENS
        1 1 1 /
-    
+
     TABDIMS
      2 /
-    
+
     OIL
     GAS
-    
+
     GRID
-    
+
     DX
        1*1000 /
     DY
        1*1000 /
     DZ
        1*50 /
-    
+
     TOPS
        1*0 /
 
     PORO
       1*0.15 /
-    
+
     EHYSTR
       0.1 4 0.1 1* BOTH /
-    
+
     SATOPTS
       HYSTER /
-    
+
     PROPS
-    
+
     SGOF
     0      0    1.0   0
     1.0    1.0  0.0   0 /
     0.2    0    1.0   0
     1.0    1.0  0.0   0 /
-    
+
     REGIONS
-    
+
     SATNUM
     1*1 /
     IMBNUM
     1*2 / )";
 
 static const char* hysterDeckStringKillough3pBakerWetting = R"(
-    
+
     RUNSPEC
 
     DIMENS
        1 1 1 /
-    
+
     TABDIMS
      2 /
-    
+
     OIL
     GAS
     WATER
-    
+
     GRID
-    
+
     DX
        1*1000 /
     DY
        1*1000 /
     DZ
        1*50 /
-    
+
     TOPS
        1*0 /
 
     PORO
       1*0.15 /
-    
+
     EHYSTR
       0.1 4 0.1 1* BOTH /
-    
+
     SATOPTS
       HYSTER /
-    
+
     PROPS
-    
+
     SWOF
     0.12   0    1.0   0
     1      1.0  0.0   0 /
@@ -256,51 +256,51 @@ static const char* hysterDeckStringKillough3pBakerWetting = R"(
     0.88   1.0  0.0   0 /
     0.2     0    1.0   0
     0.88   1.0  0.0   0 /
-    
+
     REGIONS
-    
+
     SATNUM
     1*1 /
     IMBNUM
     1*2 / )";
 
 static const char* hysterDeckStringKillough3pStone1Wetting = R"(
-    
+
     RUNSPEC
 
     DIMENS
        1 1 1 /
-    
+
     TABDIMS
      2 /
-    
+
     OIL
     GAS
     WATER
-    
+
     GRID
-    
+
     DX
        1*1000 /
     DY
        1*1000 /
     DZ
        1*50 /
-    
+
     TOPS
        1*0 /
 
     PORO
       1*0.15 /
-    
+
     EHYSTR
       0.1 4 0.1 1* BOTH /
-    
+
     SATOPTS
       HYSTER /
-    
+
     PROPS
-    
+
     STONE1
 
     SWOF
@@ -314,51 +314,51 @@ static const char* hysterDeckStringKillough3pStone1Wetting = R"(
     0.88   1.0  0.0   0 /
     0.2     0    1.0   0
     0.88   1.0  0.0   0 /
-    
+
     REGIONS
-    
+
     SATNUM
     1*1 /
     IMBNUM
     1*2 / )";
 
 static const char* hysterDeckStringKillough3pStone2Wetting = R"(
-    
+
     RUNSPEC
 
     DIMENS
        1 1 1 /
-    
+
     TABDIMS
      2 /
-    
+
     OIL
     GAS
     WATER
-    
+
     GRID
-    
+
     DX
        1*1000 /
     DY
        1*1000 /
     DZ
        1*50 /
-    
+
     TOPS
        1*0 /
 
     PORO
       1*0.15 /
-    
+
     EHYSTR
       0.1 4 0.1 1* BOTH /
-    
+
     SATOPTS
       HYSTER /
-    
+
     PROPS
-    
+
     STONE2
 
     SWOF
@@ -372,9 +372,9 @@ static const char* hysterDeckStringKillough3pStone2Wetting = R"(
     0.88   1.0  0.0   0 /
     0.2     0    1.0   0
     0.88   1.0  0.0   0 /
-    
+
     REGIONS
-    
+
     SATNUM
     1*1 /
     IMBNUM
@@ -382,49 +382,49 @@ static const char* hysterDeckStringKillough3pStone2Wetting = R"(
 
 //Test Carlson hysteresis Gas Oil System
 static constexpr const char* hysterDeckStringCarlsonGasOil = R"(
-    
+
     RUNSPEC
 
     DIMENS
        1 1 1 /
-    
+
     TABDIMS
      2 /
-    
+
     OIL
     GAS
-    
+
     GRID
-    
+
     DX
        1*1000 /
     DY
        1*1000 /
     DZ
        1*50 /
-    
+
     TOPS
        1*0 /
 
     PORO
       1*0.15 /
-    
+
     EHYSTR
       0.1 0 0.1 1* BOTH /
-    
+
     SATOPTS
       HYSTER /
-    
+
     PROPS
-    
+
     SGOF
     0      0    1.0   0
     1      1.0  0.0   0 /
     0.12   0    1.0   0
     1      1.0  0.0   0 /
-    
+
     REGIONS
-    
+
     SATNUM
     1*1 /
     IMBNUM
@@ -432,49 +432,49 @@ static constexpr const char* hysterDeckStringCarlsonGasOil = R"(
 
 //Test Killogh hysteresis Gas Water System
 static constexpr const char* hysterDeckStringKilloughOilWater = R"(
-    
+
     RUNSPEC
 
     DIMENS
        1 1 1 /
-    
+
     TABDIMS
      2 /
-    
+
     OIL
     WATER
-    
+
     GRID
-    
+
     DX
        1*1000 /
     DY
        1*1000 /
     DZ
        1*50 /
-    
+
     TOPS
        1*0 /
 
     PORO
       1*0.15 /
-    
+
     EHYSTR
       0.1 2 0.1 1* BOTH /
-    
+
     SATOPTS
       HYSTER /
-    
+
     PROPS
-    
+
     SWOF
     0      0    1.0   0
     1      1.0  0.0   0 /
     0.12   0    1.0   0
     1      1.0  0.0   0 /
-    
+
     REGIONS
-    
+
     SATNUM
     1*1 /
 
@@ -482,49 +482,49 @@ static constexpr const char* hysterDeckStringKilloughOilWater = R"(
     1*2 / )";
 
 static constexpr const char* hysterDeckStringKilloughOilWaterScanning = R"(
-    
+
     RUNSPEC
 
     DIMENS
        1 1 1 /
-    
+
     TABDIMS
      2 /
-    
+
     OIL
     WATER
-    
+
     GRID
-    
+
     DX
        1*1000 /
     DY
        1*1000 /
     DZ
        1*50 /
-    
+
     TOPS
        1*0 /
 
     PORO
       1*0.15 /
-    
+
     EHYSTR
       0.1 2 0.1 1* BOTH /
-    
+
     SATOPTS
       HYSTER /
-    
+
     PROPS
-    
+
     SWOF
     0      0    1.0   0
     1      1.0  0.0   0 /
     0      0    1.0   0
     0.88   1.0  0.0   0 /
-    
+
     REGIONS
-    
+
     SATNUM
     1*1 /
 
@@ -532,49 +532,49 @@ static constexpr const char* hysterDeckStringKilloughOilWaterScanning = R"(
     1*2 / )";
 
 static constexpr const char* hysterDeckStringKilloughWettingOilWater = R"(
-    
+
     RUNSPEC
 
     DIMENS
        1 1 1 /
-    
+
     TABDIMS
      2 /
-    
+
     OIL
     WATER
-    
+
     GRID
-    
+
     DX
        1*1000 /
     DY
        1*1000 /
     DZ
        1*50 /
-    
+
     TOPS
        1*0 /
 
     PORO
       1*0.15 /
-    
+
     EHYSTR
       0.1 4 0.1 1* BOTH /
-    
+
     SATOPTS
       HYSTER /
-    
+
     PROPS
-    
+
     SWOF
     0.12      0    1.0   0
     1      1.0  0.0   0 /
     0.12     0    1.0   0
     0.8    1.0  0.0   0 /
-    
+
     REGIONS
-    
+
     SATNUM
     1*1 /
 
@@ -583,48 +583,48 @@ static constexpr const char* hysterDeckStringKilloughWettingOilWater = R"(
 
 
 static constexpr const char* hysterDeckStringKilloughWetting3phaseBaker = R"(
-    
+
     RUNSPEC
 
     DIMENS
        1 1 1 /
-    
+
     TABDIMS
      2 /
-    
+
     OIL
     WATER
     GAS
-    
+
     GRID
-    
+
     DX
        1*1000 /
     DY
        1*1000 /
     DZ
        1*50 /
-    
+
     TOPS
        1*0 /
 
     PORO
       1*0.15 /
-    
+
     EHYSTR
       0.1 4 0.1 1* BOTH /
-    
+
     SATOPTS
       HYSTER /
-    
+
     PROPS
-    
+
     SWOF
     0      0    1.0   0
     1      1.0  0.0   0 /
     0.12     0    1.0   0
     1.0    1.0  0.0   0 /
-    
+
     SGOF
     0      0    1.0   0
     1      1.0  0.0   0 /
@@ -634,7 +634,7 @@ static constexpr const char* hysterDeckStringKilloughWetting3phaseBaker = R"(
 
 
     REGIONS
-    
+
     SATNUM
     1*1 /
 
@@ -642,48 +642,48 @@ static constexpr const char* hysterDeckStringKilloughWetting3phaseBaker = R"(
     1*2 / )";
 
 static constexpr const char* hysterDeckStringKillough3phaseBaker = R"(
-    
+
     RUNSPEC
 
     DIMENS
        1 1 1 /
-    
+
     TABDIMS
      2 /
-    
+
     OIL
     WATER
     GAS
-    
+
     GRID
-    
+
     DX
        1*1000 /
     DY
        1*1000 /
     DZ
        1*50 /
-    
+
     TOPS
        1*0 /
 
     PORO
       1*0.15 /
-    
+
     EHYSTR
       0.1 2 0.1 1* BOTH /
-    
+
     SATOPTS
       HYSTER /
-    
+
     PROPS
-    
+
    SWOF
     0      0    1.0   0
     1      1.0  0.0   0 /
     0      0    1.0   0
     0.88   1.0  0.0   0 /
-    
+
     SGOF
     0      0    1.0   0
     1      1.0  0.0   0 /
@@ -691,7 +691,7 @@ static constexpr const char* hysterDeckStringKillough3phaseBaker = R"(
     1.0    1.0  0.0   0 /
 
     REGIONS
-    
+
     SATNUM
     1*1 /
 
@@ -752,7 +752,7 @@ template<class Scalar>
 Scalar linearScaledRelperm(Scalar s, Scalar smin, Scalar smax, Scalar kmax) {
     if (s < smin)
         return 0;
-    
+
     if (s > smax)
         return kmax;
 
@@ -865,7 +865,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisKilloughGasOilScanning, Scalar, Types)
                                         somin_out,
                                         param);
 
-    Scalar maxKrg = sgmax_out; 
+    Scalar maxKrg = sgmax_out;
     Scalar maxSg = sgmax_out;
     BOOST_CHECK_CLOSE(0.5, maxKrg, tol);
     BOOST_CHECK_CLOSE(0.5, maxSg, tol);
@@ -939,7 +939,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisKillough3pBakerConnateWaterScanning, Sca
                                         somin_out,
                                         param);
 
-    Scalar maxKrg = sgmax_out/0.88; 
+    Scalar maxKrg = sgmax_out/0.88;
     Scalar maxSg = sgmax_out;
     BOOST_CHECK_CLOSE(0.5, maxSg, tol);
     Scalar Sncri = 0.12;
@@ -1015,7 +1015,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisKilloughGasOilScanningWetting, Scalar, T
                                         shmax_out,
                                         somin_out,
                                         param);
-    Scalar maxKrg = sgmax_out; 
+    Scalar maxKrg = sgmax_out;
     Scalar maxSg = sgmax_out;
     BOOST_CHECK_CLOSE(1.0, maxKrg, tol);
     BOOST_CHECK_CLOSE(1.0, maxSg, tol);
@@ -1061,12 +1061,12 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisKilloughGasOilScanningWetting, Scalar, T
                                           somin_out2,
                                           0);
 
-                                            
+
         // the maximum number shouldn't change during imbibition
         BOOST_CHECK_CLOSE(sgmax_out, sgmax_out2, tol);
         BOOST_CHECK_CLOSE(shmax_out, shmax_out2, tol);
         hysteresis_restart.setGasOilHysteresisParams(sgmax_out2, shmax_out2, somin_out2, 0);
-        
+
         Scalar Sg = 0.5;
         Scalar So = 1.0 - Sg;
         typename Fixture<Scalar>::FluidState fs;
@@ -1078,7 +1078,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisKilloughGasOilScanningWetting, Scalar, T
         MaterialLaw::relativePermeabilities(kr_restart,
                                             param_restart,
                                             fs);
-                                      
+
         MaterialLaw::relativePermeabilities(kr,
                                             param,
                                             fs);
@@ -1151,7 +1151,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisKillough3pBakerConnateWaterScanningWetti
                                         somin_out,
                                         param);
 
-    Scalar maxKrg = sgmax_out; 
+    Scalar maxKrg = sgmax_out;
     Scalar maxSg = sgmax_out;
     BOOST_CHECK_CLOSE(1.0 - Sw, maxKrg, tol);
     BOOST_CHECK_CLOSE(1.0 - Sw, maxSg, tol);
@@ -1176,7 +1176,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisKillough3pBakerConnateWaterScanningWetti
         MaterialLaw::relativePermeabilities(kr,
                                             param,
                                             fs);
-                    
+
         trappedSg = MaterialLaw::trappedGasSaturation(param, /*maximumTrapping*/true);
         trappedSo = MaterialLaw::trappedOilSaturation(param, /*maximumTrapping*/true);
         Scalar Khyst = linearScaledRelperm(Sg, trappedSg, Scalar(0.88), Scalar(1.0));
@@ -1185,7 +1185,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisKillough3pBakerConnateWaterScanningWetti
         BOOST_CHECK_CLOSE(0, kr[Fixture<Scalar>::waterPhaseIdx], tol);
         if (KhystO < tol) {
             BOOST_CHECK_SMALL(kr[Fixture<Scalar>::oilPhaseIdx], tol);
-        } else {    
+        } else {
             BOOST_CHECK_CLOSE(KhystO, kr[Fixture<Scalar>::oilPhaseIdx], tol);
         }
         BOOST_CHECK_CLOSE(Khyst, kr[Fixture<Scalar>::gasPhaseIdx], tol);
@@ -1204,12 +1204,12 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisKillough3pBakerConnateWaterScanningWetti
                                           somin_out2,
                                           0);
 
-                                            
+
         // the maximum number shouldn't change during imbibition
         BOOST_CHECK_CLOSE(sgmax_out, sgmax_out2, tol);
         BOOST_CHECK_CLOSE(shmax_out, shmax_out2, tol);
         hysteresis_restart.setGasOilHysteresisParams(sgmax_out2, shmax_out2, somin_out2, 0);
-        
+
         Scalar Sg = 0.5;
         Scalar So = 1.0 - Sg;
         typename Fixture<Scalar>::FluidState fs;
@@ -1221,7 +1221,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisKillough3pBakerConnateWaterScanningWetti
         MaterialLaw::relativePermeabilities(kr_restart,
                                             param_restart,
                                             fs);
-                                      
+
         MaterialLaw::relativePermeabilities(kr,
                                             param,
                                             fs);
@@ -1274,7 +1274,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisKillough3pStone1ConnateWaterScanningWett
         BOOST_CHECK_CLOSE(0, kr[Fixture<Scalar>::waterPhaseIdx], tol);
         if (So < tol) {
            BOOST_CHECK_SMALL(kr[Fixture<Scalar>::oilPhaseIdx], tol);
-        } else {    
+        } else {
         BOOST_CHECK_CLOSE(KhystO, kr[Fixture<Scalar>::oilPhaseIdx], tol);
         }
         BOOST_CHECK_CLOSE(Khyst, kr[Fixture<Scalar>::gasPhaseIdx], tol);
@@ -1288,7 +1288,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisKillough3pStone1ConnateWaterScanningWett
                                         somin_out,
                                         param);
 
-    Scalar maxKrg = sgmax_out; 
+    Scalar maxKrg = sgmax_out;
     Scalar maxSg = sgmax_out;
     BOOST_CHECK_CLOSE(1.0 - Sw, maxKrg, tol);
     BOOST_CHECK_CLOSE(1.0 - Sw, maxSg, tol);
@@ -1314,7 +1314,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisKillough3pStone1ConnateWaterScanningWett
         BOOST_CHECK_CLOSE(0, kr[Fixture<Scalar>::waterPhaseIdx], tol);
         if (KhystO < tol) {
             BOOST_CHECK_SMALL(kr[Fixture<Scalar>::oilPhaseIdx], tol);
-        } else {    
+        } else {
             BOOST_CHECK_CLOSE(KhystO, kr[Fixture<Scalar>::oilPhaseIdx], tol);
         }
         BOOST_CHECK_CLOSE(Khyst, kr[Fixture<Scalar>::gasPhaseIdx], tol);
@@ -1333,12 +1333,12 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisKillough3pStone1ConnateWaterScanningWett
                                           somin_out2,
                                           0);
 
-                                            
+
         // the maximum number shouldn't change during imbibition
         BOOST_CHECK_CLOSE(sgmax_out, sgmax_out2, tol);
         BOOST_CHECK_CLOSE(shmax_out, shmax_out2, tol);
         hysteresis_restart.setGasOilHysteresisParams(sgmax_out2, shmax_out2, somin_out2, 0);
-        
+
         Scalar Sg = 0.5;
         Scalar So = 1.0 - Sg;
         typename Fixture<Scalar>::FluidState fs;
@@ -1350,7 +1350,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisKillough3pStone1ConnateWaterScanningWett
         MaterialLaw::relativePermeabilities(kr_restart,
                                             param_restart,
                                             fs);
-                                      
+
         MaterialLaw::relativePermeabilities(kr,
                                             param,
                                             fs);
@@ -1402,7 +1402,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisKillough3pStone2ConnateWaterScanningWett
         BOOST_CHECK_CLOSE(0, kr[Fixture<Scalar>::waterPhaseIdx], tol);
         if (So < tol) {
            BOOST_CHECK_SMALL(kr[Fixture<Scalar>::oilPhaseIdx], tol);
-        } else {    
+        } else {
         BOOST_CHECK_CLOSE(KhystO, kr[Fixture<Scalar>::oilPhaseIdx], tol);
         }
         BOOST_CHECK_CLOSE(Khyst, kr[Fixture<Scalar>::gasPhaseIdx], tol);
@@ -1416,7 +1416,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisKillough3pStone2ConnateWaterScanningWett
                                         somin_out,
                                         param);
 
-    Scalar maxKrg = sgmax_out; 
+    Scalar maxKrg = sgmax_out;
     Scalar maxSg = sgmax_out;
     BOOST_CHECK_CLOSE(1.0 - Sw, maxKrg, tol);
     BOOST_CHECK_CLOSE(1.0 - Sw, maxSg, tol);
@@ -1443,7 +1443,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisKillough3pStone2ConnateWaterScanningWett
         BOOST_CHECK_CLOSE(0, kr[Fixture<Scalar>::waterPhaseIdx], tol);
         if (So < tol) {
            BOOST_CHECK_SMALL(kr[Fixture<Scalar>::oilPhaseIdx], tol);
-        } else {    
+        } else {
         BOOST_CHECK_CLOSE(KhystO, kr[Fixture<Scalar>::oilPhaseIdx], tol);
         }
         BOOST_CHECK_CLOSE(Khyst, kr[Fixture<Scalar>::gasPhaseIdx], tol);
@@ -1462,12 +1462,12 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisKillough3pStone2ConnateWaterScanningWett
                                           somin_out2,
                                           0);
 
-                                            
+
         // the maximum number shouldn't change during imbibition
         BOOST_CHECK_CLOSE(sgmax_out, sgmax_out2, tol);
         BOOST_CHECK_CLOSE(shmax_out, shmax_out2, tol);
         hysteresis_restart.setGasOilHysteresisParams(sgmax_out2, shmax_out2, somin_out2, 0);
-        
+
         Scalar Sg = 0.5;
         Scalar So = 1.0 - Sg;
         typename Fixture<Scalar>::FluidState fs;
@@ -1479,7 +1479,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisKillough3pStone2ConnateWaterScanningWett
         MaterialLaw::relativePermeabilities(kr_restart,
                                             param_restart,
                                             fs);
-                                      
+
         MaterialLaw::relativePermeabilities(kr,
                                             param,
                                             fs);
@@ -1506,7 +1506,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisCarlsonGasOilScanning, Scalar, Types)
     MaterialLawManager hysteresis;
     hysteresis.initFromState(eclState);
     hysteresis.initParamsForElements(eclState, n, doOldLookup, doNothing);
-    auto& param = hysteresis.materialLawParams(0);    
+    auto& param = hysteresis.materialLawParams(0);
     Scalar Sw = 0.0;
     Scalar tol = 1e-3;
     std::array<Scalar,numPhases> kr = {0.0, 0.0, 0.0};
@@ -1538,11 +1538,11 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisCarlsonGasOilScanning, Scalar, Types)
                                         somin_out,
                                         param);
 
-    Scalar maxKrg = sgmax_out; 
+    Scalar maxKrg = sgmax_out;
     Scalar maxSg = sgmax_out;
     BOOST_CHECK_CLOSE(0.5, maxKrg, tol);
     BOOST_CHECK_CLOSE(0.5, maxSg, tol);
-    Scalar Si = 0.5 / ( 1.0/ (1.0 - 0.12)) + 0.12; //inverting the imb curve to find sg at krg(sg)=0.5 
+    Scalar Si = 0.5 / ( 1.0/ (1.0 - 0.12)) + 0.12; //inverting the imb curve to find sg at krg(sg)=0.5
     Scalar delta = 0.5 - Si;
     BOOST_CHECK_CLOSE(0.12+delta, trappedSg, tol);
 
@@ -1552,8 +1552,8 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisCarlsonGasOilScanning, Scalar, Types)
     const auto& drainageParams = realParams.gasOilParams().drainageParams();
     const auto& imbibitionParams = realParams.gasOilParams().imbibitionParams();
     Scalar deltaSwImbKrn = realParams.gasOilParams().deltaSwImbKrn();
-    BOOST_CHECK_CLOSE(MaterialLawGasOil::twoPhaseSatKrn(drainageParams, 0.5), 
-                      MaterialLawGasOil::twoPhaseSatKrn(imbibitionParams, 0.5 + deltaSwImbKrn), 
+    BOOST_CHECK_CLOSE(MaterialLawGasOil::twoPhaseSatKrn(drainageParams, 0.5),
+                      MaterialLawGasOil::twoPhaseSatKrn(imbibitionParams, 0.5 + deltaSwImbKrn),
                       tol);
 
     for (int i = 50; i >= 0; -- i) {
@@ -1576,7 +1576,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisCarlsonGasOilScanning, Scalar, Types)
         BOOST_CHECK_CLOSE(strandedSg, Sg - kr[Fixture<Scalar>::gasPhaseIdx], tol);
 
         MaterialLaw::updateHysteresis(param, fs);
-        Scalar Khyst = (Sg < trappedSg)? 0.0 : (Sg - trappedSg) * ( maxKrg/ (maxSg - trappedSg)); 
+        Scalar Khyst = (Sg < trappedSg)? 0.0 : (Sg - trappedSg) * ( maxKrg/ (maxSg - trappedSg));
 
         BOOST_CHECK_CLOSE(Sw, kr[Fixture<Scalar>::waterPhaseIdx], tol);
         BOOST_CHECK_CLOSE(So, kr[Fixture<Scalar>::oilPhaseIdx], tol);
@@ -1597,12 +1597,12 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisCarlsonGasOilScanning, Scalar, Types)
                                           somin_out2,
                                           0);
 
-                                            
+
         // the maximum number shouldn't change during imbibition
         BOOST_CHECK_CLOSE(sgmax_out, sgmax_out2, tol);
         BOOST_CHECK_CLOSE(shmax_out, shmax_out2, tol);
         hysteresis_restart.setGasOilHysteresisParams(sgmax_out2, shmax_out2, somin_out2, 0);
-        
+
         Scalar Sg = 0.5;
         Scalar So = 1.0 - Sg;
         typename Fixture<Scalar>::FluidState fs;
@@ -1614,7 +1614,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisCarlsonGasOilScanning, Scalar, Types)
         MaterialLaw::relativePermeabilities(kr_restart,
                                             param_restart,
                                             fs);
-                                      
+
         MaterialLaw::relativePermeabilities(kr,
                                             param,
                                             fs);
@@ -1673,8 +1673,8 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisKilloughOilWater, Scalar, Types)
                                             param,
                                             fs);
         MaterialLaw::updateHysteresis(param, fs);
-        
-        Scalar Khyst = (Sw < 0.12)? 1.0 : So * (1 / (1 - 0.12)); 
+
+        Scalar Khyst = (Sw < 0.12)? 1.0 : So * (1 / (1 - 0.12));
 
         BOOST_CHECK_CLOSE(Sw, kr[Fixture<Scalar>::waterPhaseIdx], tol);
         BOOST_CHECK_CLOSE(Khyst, kr[Fixture<Scalar>::oilPhaseIdx], tol);
@@ -1702,7 +1702,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisKilloughOilWaterScanning, Scalar, Types)
     auto& param = hysteresis.materialLawParams(0);
     Scalar Sg = 0.0;
     Scalar tol = 1e-3;
-    
+
     std::array<Scalar,numPhases> kr = {0.0, 0.0, 0.0};
     for (int i = 0; i <= 50; ++ i) {
         Scalar Sw = Scalar(i) / 100;
@@ -1717,7 +1717,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisKilloughOilWaterScanning, Scalar, Types)
                                             fs);
         MaterialLaw::updateHysteresis(param, fs);
 
-        Scalar Khyst = (So < 0.12)? 0.0 : (So - 0.12) * ( 1.0/ (1.0 - 0.12)); 
+        Scalar Khyst = (So < 0.12)? 0.0 : (So - 0.12) * ( 1.0/ (1.0 - 0.12));
 
         BOOST_CHECK_CLOSE(Sw, kr[Fixture<Scalar>::waterPhaseIdx], tol);
         BOOST_CHECK_CLOSE(Khyst, kr[Fixture<Scalar>::oilPhaseIdx], tol);
@@ -1733,7 +1733,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisKilloughOilWaterScanning, Scalar, Types)
                                           swmin_out,
                                           param);
 
-    Scalar maxKro = somax_out; 
+    Scalar maxKro = somax_out;
     Scalar maxSo = somax_out;
     BOOST_CHECK_CLOSE(1.0, maxKro, tol);
     BOOST_CHECK_CLOSE(1.0, maxSo, tol);
@@ -1752,8 +1752,8 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisKilloughOilWaterScanning, Scalar, Types)
                                             param,
                                             fs);
         MaterialLaw::updateHysteresis(param, fs);
-        
-        Scalar Khyst = (So < trappedSo)? 0.0 : (So - trappedSo) * ( maxKro/ (maxSo - trappedSo)); 
+
+        Scalar Khyst = (So < trappedSo)? 0.0 : (So - trappedSo) * ( maxKro/ (maxSo - trappedSo));
 
         BOOST_CHECK_CLOSE(Sw, kr[Fixture<Scalar>::waterPhaseIdx], tol);
         BOOST_CHECK_CLOSE(Khyst, kr[Fixture<Scalar>::oilPhaseIdx], tol);
@@ -1775,7 +1775,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisKilloughOilWaterScanning, Scalar, Types)
         // the maximum oil saturation shouldn't change during imbibition
         BOOST_CHECK_CLOSE(somax_out, somax_out2, tol);
         hysteresis_restart.setOilWaterHysteresisParams(somax_out2, swmax_out2, swmin_out2, 0);
-        
+
         Scalar So = 0.5;
         Scalar Sw = 1.0 - So;
         typename Fixture<Scalar>::FluidState fs;
@@ -1787,7 +1787,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisKilloughOilWaterScanning, Scalar, Types)
         MaterialLaw::relativePermeabilities(kr_restart,
                                             param_restart,
                                             fs);
-                                      
+
         MaterialLaw::relativePermeabilities(kr,
                                             param,
                                             fs);
@@ -1865,7 +1865,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisKilloughWettingOilWater, Scalar, Types)
                                         swmin_out,
                                         param);
 
-    Scalar maxKro = somax_out; 
+    Scalar maxKro = somax_out;
     Scalar maxSo = somax_out;
     BOOST_CHECK_CLOSE(1.0-Swl, maxKro, tol);
     BOOST_CHECK_CLOSE(1.0-Swl, maxSo, tol);
@@ -1884,7 +1884,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisKilloughWettingOilWater, Scalar, Types)
     BOOST_CHECK_CLOSE(Swcri, trappedSw, tol);
 
     for (int i = 50; i >= 0; -- i) {
-        Scalar Sw = Scalar(i) / 100 + Swl; 
+        Scalar Sw = Scalar(i) / 100 + Swl;
         Scalar So = 1 - Sw;
         typename Fixture<Scalar>::FluidState fs;
         fs.setSaturation(Fixture<Scalar>::waterPhaseIdx, Sw);
@@ -1900,7 +1900,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisKilloughWettingOilWater, Scalar, Types)
                                             swmax_out,
                                             swmin_out,
                                             param);
-        Scalar Khyst = linearScaledRelperm(So, trappedSo, somax_out, Scalar(1.0));       
+        Scalar Khyst = linearScaledRelperm(So, trappedSo, somax_out, Scalar(1.0));
         Scalar Kw = linearScaledRelperm(Sw, trappedSw, Scalar(0.8), Scalar(1.0));
         BOOST_CHECK_CLOSE(Kw, kr[Fixture<Scalar>::waterPhaseIdx], tol);
         BOOST_CHECK_CLOSE(Khyst, kr[Fixture<Scalar>::oilPhaseIdx], tol);
@@ -1934,7 +1934,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisKilloughWettingOilWater, Scalar, Types)
         MaterialLaw::relativePermeabilities(kr_restart,
                                             param_restart,
                                             fs);
-                                      
+
         MaterialLaw::relativePermeabilities(kr,
                                             param,
                                             fs);
@@ -1964,7 +1964,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisKillough3pBakerScanning, Scalar, Types)
     auto& param = hysteresis.materialLawParams(0);
     Scalar Sg = 0.0;
     Scalar tol = 1e-3;
-    
+
     std::array<Scalar,numPhases> kr = {0.0, 0.0, 0.0};
     for (int i = 0; i <= 50; ++ i) {
         Scalar Sw = Scalar(i) / 100;
@@ -1994,7 +1994,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisKillough3pBakerScanning, Scalar, Types)
                                           swmin_out,
                                           param);
 
-    Scalar maxKro = somax_out; 
+    Scalar maxKro = somax_out;
     Scalar maxSo = somax_out;
     BOOST_CHECK_CLOSE(1.0, maxKro, tol);
     BOOST_CHECK_CLOSE(1.0, maxSo, tol);
@@ -2013,7 +2013,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisKillough3pBakerScanning, Scalar, Types)
                                             param,
                                             fs);
         MaterialLaw::updateHysteresis(param, fs);
-        
+
         Scalar Khyst = linearScaledRelperm(So, trappedSo, maxSo, maxKro);
         BOOST_CHECK_CLOSE(Sw, kr[Fixture<Scalar>::waterPhaseIdx], tol);
         BOOST_CHECK_CLOSE(Khyst, kr[Fixture<Scalar>::oilPhaseIdx], tol);
@@ -2035,7 +2035,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisKillough3pBakerScanning, Scalar, Types)
         // the maximum oil saturation shouldn't change during imbibition
         BOOST_CHECK_CLOSE(somax_out, somax_out2, tol);
         hysteresis_restart.setOilWaterHysteresisParams(somax_out2, swmax_out2, swmin_out2, 0);
-        
+
         Scalar So = 0.5;
         Scalar Sw = 1.0 - So;
         typename Fixture<Scalar>::FluidState fs;
@@ -2047,7 +2047,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisKillough3pBakerScanning, Scalar, Types)
         MaterialLaw::relativePermeabilities(kr_restart,
                                             param_restart,
                                             fs);
-                                      
+
         MaterialLaw::relativePermeabilities(kr,
                                             param,
                                             fs);
@@ -2084,7 +2084,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisKilloughWetting3phaseBaker, Scalar, Type
     //1      1.0  0.0   0 /
     //0.12     0    1.0   0
     //1.0    1.0  0.0   0 /
-    
+
     //SGOF
     //0      0    1.0   0
     //1      1.0  0.0   0 /
@@ -2109,7 +2109,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisKilloughWetting3phaseBaker, Scalar, Type
 
         if (Khyst < tol) {
            BOOST_CHECK_SMALL(kr[Fixture<Scalar>::waterPhaseIdx], tol);
-        } else {    
+        } else {
             BOOST_CHECK_CLOSE(Khyst, kr[Fixture<Scalar>::waterPhaseIdx], tol);
         }
         BOOST_CHECK_CLOSE(KhystO, kr[Fixture<Scalar>::oilPhaseIdx], tol);
@@ -2125,7 +2125,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisKilloughWetting3phaseBaker, Scalar, Type
                                         swmin_out,
                                         param);
 
-    Scalar maxKro = somax_out; 
+    Scalar maxKro = somax_out;
     Scalar maxSo = somax_out;
     BOOST_CHECK_CLOSE(1.0, maxKro, tol);
     BOOST_CHECK_CLOSE(1.0, maxSo, tol);
@@ -2152,11 +2152,11 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisKilloughWetting3phaseBaker, Scalar, Type
         MaterialLaw::relativePermeabilities(kr,
                                             param,
                                             fs);
-        Scalar Khyst = linearScaledRelperm(Sw, Scalar(0.12), Scalar(1.0), Scalar(1.0));     
+        Scalar Khyst = linearScaledRelperm(Sw, Scalar(0.12), Scalar(1.0), Scalar(1.0));
         Scalar KhystOil = linearScaledRelperm(So, Scalar(0.0), Scalar(1.0 - 0.12), Scalar(1.0));
         if (Khyst < tol) {
            BOOST_CHECK_SMALL(kr[Fixture<Scalar>::waterPhaseIdx], tol);
-        } else {    
+        } else {
             BOOST_CHECK_CLOSE(Khyst, kr[Fixture<Scalar>::waterPhaseIdx], tol);
         }
         BOOST_CHECK_CLOSE(KhystOil, kr[Fixture<Scalar>::oilPhaseIdx], tol);
@@ -2190,7 +2190,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisKilloughWetting3phaseBaker, Scalar, Type
         MaterialLaw::relativePermeabilities(kr_restart,
                                             param_restart,
                                             fs);
-                                      
+
         MaterialLaw::relativePermeabilities(kr,
                                             param,
                                             fs);

@@ -45,7 +45,7 @@ class TestEclFile(unittest.TestCase):
         self.assertEqual( file2uf.arrays[16] , ("TABDIMS", eclArrType.INTE,100) )
         self.assertEqual( file2uf.arrays[17] , ("TAB", eclArrType.DOUB, 885) )
 
-        
+
     def test_get_function(self):
 
         file1 = EclFile(test_path("data/SPE9.INIT"), preload=True)
@@ -187,4 +187,3 @@ class TestEclFile(unittest.TestCase):
 if __name__ == "__main__":
 
     unittest.main()
-

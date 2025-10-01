@@ -77,4 +77,3 @@ class KeywordLocation;
 }
 
 #endif  /* RECORD_HPP */
-

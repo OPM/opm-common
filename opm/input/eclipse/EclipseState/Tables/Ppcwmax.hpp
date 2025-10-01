@@ -71,7 +71,7 @@ public:
     }
 
 private:
-    std::vector<PpcwmaxRecord> data;  
+    std::vector<PpcwmaxRecord> data;
 
 };
 }

@@ -65,4 +65,3 @@ int main(int argc, char** argv) {
     for (int iarg = 1; iarg < argc; iarg++)
         loadDeck( argv[iarg] );
 }
-

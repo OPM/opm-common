@@ -1,6 +1,6 @@
 
 #   Copyright (c) 2016 Robert W. Rose
-#   Copyright (c) 2018 Paul Maevskikh 
+#   Copyright (c) 2018 Paul Maevskikh
 #   Copyright (c) 2024 NORCE
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -101,7 +101,7 @@ def export_model(model, filename):
             elif activation == 'hard_sigmoid':
                 f.write(struct.pack('I', ACTIVATION_HARD_SIGMOID))
             else:
-                assert False, f"Unsupported activation type:{activation}" 
+                assert False, f"Unsupported activation type:{activation}"
 
         model_layers = [l for l in model.layers]
 
@@ -156,4 +156,4 @@ def export_model(model, filename):
                 write_activation(activation)
 
             else:
-                assert False, f"Unsupported layer type:{layer_type}" 
+                assert False, f"Unsupported layer type:{layer_type}"

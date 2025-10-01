@@ -192,7 +192,7 @@ public:
     /*!
      * \brief Specific enthalpy of liquid water \f$\mathrm{[J/kg]}\f$.
      *        Made by fitting a 2nd-degree polynomial to Coolprop data
-     *        for temperature range [0.1, 99] Celcius with reference 
+     *        for temperature range [0.1, 99] Celcius with reference
      *        temperature = 288.71 K (= 15.56 C) and pressure = 1.01325 bar.
      *
      * \param temperature temperature of component in \f$\mathrm{[K]}\f$

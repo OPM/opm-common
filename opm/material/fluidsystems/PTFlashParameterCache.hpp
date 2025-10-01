@@ -82,7 +82,7 @@ public:
         Valgrind::SetUndefined(Vm_[oilPhaseIdx]);
         VmUpToDate_[gasPhaseIdx] = false;
         Valgrind::SetUndefined(Vm_[gasPhaseIdx]);
-    
+
         oilPhaseParams_.setEOSType(eos_type);
         gasPhaseParams_.setEOSType(eos_type);
     }
@@ -134,7 +134,7 @@ public:
                                    "oil and gas phases");
         };
     }
-    
+
     Scalar B(unsigned phaseIdx) const
     {
         switch (phaseIdx)
@@ -146,7 +146,7 @@ public:
                                    "oil and gas phases");
         };
     }
-    
+
     Scalar Bi(unsigned phaseIdx, unsigned compIdx) const
     {
         switch (phaseIdx)
@@ -281,9 +281,9 @@ public:
      * \param phaseIdx The fluid phase of interest
      */
     Scalar molarVolume(unsigned phaseIdx) const
-    { 
-        assert(VmUpToDate_[phaseIdx]); 
-        return Vm_[phaseIdx]; 
+    {
+        assert(VmUpToDate_[phaseIdx]);
+        return Vm_[phaseIdx];
     }
 
 

@@ -161,4 +161,3 @@ BOOST_AUTO_TEST_CASE(UnInitializedVectorThrows) {
     Opm::Deck deck = createDeckUnInitializedVector();
     BOOST_CHECK_THROW( new Opm::EclipseState( deck) , std::invalid_argument );
 }
-

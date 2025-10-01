@@ -197,7 +197,7 @@ std::string TracerConfig::get_unit_string(const UnitSystem& unit_system, const s
         std::string tracer_name = tracer_kw.substr(4);
         std::string tracer_name2 = tracer_kw.substr(5);
         for (const auto& tracer : tracers) {
-            if (tracer.name == tracer_name || 
+            if (tracer.name == tracer_name ||
                 (tracer.name == tracer_name2 && (tracer_kw[4] == 'F' || tracer_kw[4] == 'S'))) {
                 std::string unit_string(tracer.unit_string);
                 if (tracer.unit_string != "") {

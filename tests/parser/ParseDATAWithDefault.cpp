@@ -103,6 +103,3 @@ BOOST_AUTO_TEST_CASE( parse_DATAWithDefult_OK ) {
     BOOST_CHECK( !item2.defaultApplied(0) );
     BOOST_CHECK( item2.defaultApplied(1) );
 }
-
-
-

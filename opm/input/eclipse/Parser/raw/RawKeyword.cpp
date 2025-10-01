@@ -97,7 +97,7 @@ namespace {
             if (m_isTempFinished)
                 this->m_isFinished = true;
             else
-                this->m_isTempFinished = true; 
+                this->m_isTempFinished = true;
         }
 
         if (m_sizeType == Raw::TABLE_COLLECTION) {
@@ -190,4 +190,3 @@ namespace {
     }
 
 }
-

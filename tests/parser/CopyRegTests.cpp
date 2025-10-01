@@ -164,5 +164,3 @@ BOOST_AUTO_TEST_CASE(TypeMismatchThrows) {
     Opm::Deck deck = createDeckInvalidTypeMismatch();
     BOOST_CHECK_THROW( new Opm::EclipseState( deck) , std::invalid_argument );
 }
-
-

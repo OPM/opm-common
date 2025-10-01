@@ -74,7 +74,7 @@ macro (opm_doc opm doxy_dir)
 	  add_dependencies (install-${format} doc)
 	endforeach (format)
   endif (DOXYGEN_FOUND)
-  
+
   # stylesheets must be specified with relative path in Doxyfile, or the
   # full path (to the source directory!) will be put in the output HTML.
   # thus, we'll need to copy the stylesheet to this path relative to where
@@ -87,5 +87,5 @@ macro (opm_doc opm doxy_dir)
   else ((NOT PROJECT_SOURCE_DIR STREQUAL PROJECT_BINARY_DIR) AND (EXISTS ${PROJECT_SOURCE_DIR}/${doxy_dir}/style.css))
 	set (${opm}_STYLESHEET_COPIED "")
   endif ((NOT PROJECT_SOURCE_DIR STREQUAL PROJECT_BINARY_DIR) AND (EXISTS ${PROJECT_SOURCE_DIR}/${doxy_dir}/style.css))
-  
+
 endmacro (opm_doc opm)

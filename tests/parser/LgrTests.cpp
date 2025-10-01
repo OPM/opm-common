@@ -36,7 +36,7 @@ BOOST_AUTO_TEST_CASE(CreateLgrCollection) {
     BOOST_CHECK_THROW( lgrs.getLgr("NO") , std::invalid_argument );
 }
 
-BOOST_AUTO_TEST_CASE(ReadLgrCollection) { 
+BOOST_AUTO_TEST_CASE(ReadLgrCollection) {
     const std::string deck_string = R"(
 RUNSPEC
 
@@ -101,7 +101,7 @@ SCHEDULE
     Opm::LgrCollection lgrs = state.getLgrs();
 
     BOOST_CHECK_MESSAGE(state.hasInputLGR(), "EclipseState should have LGRs");
-    BOOST_CHECK_EQUAL( 
+    BOOST_CHECK_EQUAL(
       lgrs.size() , 2U );
     BOOST_CHECK(lgrs.hasLgr("LGR1"));
     BOOST_CHECK(lgrs.hasLgr("LGR2"));
@@ -116,7 +116,7 @@ SCHEDULE
 }
 
 
-BOOST_AUTO_TEST_CASE(TestLgrNeighbor) { 
+BOOST_AUTO_TEST_CASE(TestLgrNeighbor) {
     const std::string deck_string = R"(
 RUNSPEC
 
@@ -136,7 +136,7 @@ CARFIN
 ENDFIN
 
 
-DX 
+DX
   9*1000 /
 DY
 	9*1000 /
@@ -185,7 +185,7 @@ SCHEDULE
     BOOST_CHECK_EQUAL( eclipse_grid.getTotalActiveLGR() , 25U );
     BOOST_CHECK_EQUAL( eclipse_grid.getLGRCell(0).getTotalActiveLGR() , 9U );
     BOOST_CHECK_EQUAL( eclipse_grid.getLGRCell(1).getTotalActiveLGR() , 9U );
-    
+
     BOOST_CHECK_EQUAL(eclipse_grid.getActiveIndexLGR("GLOBAL",0,0,0), 0U);
     BOOST_CHECK_EQUAL(eclipse_grid.getActiveIndexLGR("GLOBAL",2,2,0), 24U);
 
@@ -196,7 +196,7 @@ SCHEDULE
     BOOST_CHECK_EQUAL(eclipse_grid.getActiveIndexLGR("LGR2",2,2,0), 9U);
   }
 
-BOOST_AUTO_TEST_CASE(TestLgrColumnCells) { 
+BOOST_AUTO_TEST_CASE(TestLgrColumnCells) {
     const std::string deck_string = R"(
 RUNSPEC
 
@@ -216,7 +216,7 @@ CARFIN
 ENDFIN
 
 
-DX 
+DX
   9*1000 /
 DY
 	9*1000 /
@@ -265,7 +265,7 @@ SCHEDULE
     BOOST_CHECK_EQUAL( eclipse_grid.getTotalActiveLGR() , 21U );
     BOOST_CHECK_EQUAL( eclipse_grid.getLGRCell(0).getTotalActiveLGR() , 8U );
     BOOST_CHECK_EQUAL( eclipse_grid.getLGRCell(1).getTotalActiveLGR() , 8U );
-    
+
     BOOST_CHECK_EQUAL(eclipse_grid.getActiveIndexLGR("LGR1",0,0,0), 0U);
     BOOST_CHECK_EQUAL(eclipse_grid.getActiveIndexLGR("LGR1",1,3,0), 7U);
 
@@ -282,7 +282,7 @@ SCHEDULE
 
 
 
-BOOST_AUTO_TEST_CASE(TestLgrNested) { 
+BOOST_AUTO_TEST_CASE(TestLgrNested) {
     const std::string deck_string = R"(
 RUNSPEC
 
@@ -302,7 +302,7 @@ LGR2  2  2  2  2  1  1  3  3   1 1*  LGR1/
 ENDFIN
 
 
-DX 
+DX
   9*1000 /
 DY
 	9*1000 /
@@ -351,7 +351,7 @@ SCHEDULE
     BOOST_CHECK_EQUAL( eclipse_grid.getTotalActiveLGR() , 25U );
     BOOST_CHECK_EQUAL( eclipse_grid.getLGRCell(0).getTotalActiveLGR() , 17U );
     BOOST_CHECK_EQUAL( eclipse_grid.getLGRCell(0).getLGRCell(0).getTotalActiveLGR() , 9U );
-    
+
     BOOST_CHECK_EQUAL(eclipse_grid.getActiveIndexLGR("GLOBAL",0,0,0), 0U);
     BOOST_CHECK_EQUAL(eclipse_grid.getActiveIndexLGR("GLOBAL",2,2,0), 24U);
 
@@ -365,7 +365,7 @@ SCHEDULE
     BOOST_CHECK_THROW(eclipse_grid.getActiveIndexLGR("LGR1",1,1,0), std::invalid_argument);
     BOOST_CHECK_THROW(eclipse_grid.getActiveIndexLGR("LGR3",1,1,0), std::invalid_argument);
 }
-BOOST_AUTO_TEST_CASE(TestGLOBALinactivecells) { 
+BOOST_AUTO_TEST_CASE(TestGLOBALinactivecells) {
     const std::string deck_string = R"(
 RUNSPEC
 
@@ -375,9 +375,9 @@ DIMENS
 GRID
 
 ACTNUM
-1 0 1 
-1 1 1 
-1 1 1 
+1 0 1
+1 1 1
+1 1 1
 /
 
 CARFIN
@@ -386,7 +386,7 @@ CARFIN
 ENDFIN
 
 
-DX 
+DX
   9*1000 /
 DY
 	9*1000 /
@@ -433,25 +433,25 @@ SCHEDULE
     Opm::EclipseGrid eclipse_grid = state.getInputGrid();
 
     BOOST_CHECK_EQUAL( eclipse_grid.getTotalActiveLGR() , 16U );
-    BOOST_CHECK_EQUAL( eclipse_grid.getLGRCell(0).getTotalActiveLGR() , 9U );    
+    BOOST_CHECK_EQUAL( eclipse_grid.getLGRCell(0).getTotalActiveLGR() , 9U );
     BOOST_CHECK_EQUAL(eclipse_grid.getActiveIndexLGR("GLOBAL",0,0,0), 0U);
     BOOST_CHECK_EQUAL(eclipse_grid.getActiveIndexLGR("GLOBAL",2,2,0), 15U);
-   
-   
+
+
     BOOST_CHECK_EQUAL(eclipse_grid.getActiveIndexLGR("GLOBAL",0U), 0U);
     BOOST_CHECK_EQUAL(eclipse_grid.getActiveIndexLGR("GLOBAL",8U), 15U);
 
-    
+
     BOOST_CHECK_EQUAL(eclipse_grid.getActiveIndexLGR("LGR1",0,0,0), 3U);
     BOOST_CHECK_EQUAL(eclipse_grid.getActiveIndexLGR("LGR1",2,2,0), 11U);
-   
-   
+
+
     BOOST_CHECK_EQUAL(eclipse_grid.getActiveIndexLGR("LGR1",0), 3U);
     BOOST_CHECK_EQUAL(eclipse_grid.getActiveIndexLGR("LGR1",8), 11U);
 
 }
 
-BOOST_AUTO_TEST_CASE(TestLGRinactivecells) { 
+BOOST_AUTO_TEST_CASE(TestLGRinactivecells) {
     const std::string deck_string = R"(
 RUNSPEC
 
@@ -464,13 +464,13 @@ CARFIN
 -- NAME I1-I2 J1-J2 K1-K2 NX NY NZ
 'LGR1'  2  2  2  2  1  1  3  3   1/
 ACTNUM
-1 0 1 
-1 1 1 
-1 1 1 
+1 0 1
+1 1 1
+1 1 1
 /
 ENDFIN
 
-DX 
+DX
   9*1000 /
 DY
 	9*1000 /

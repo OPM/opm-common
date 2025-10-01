@@ -103,4 +103,3 @@ BOOST_AUTO_TEST_CASE(construction_and_queries)
     BOOST_CHECK_THROW(sv2.nonzeroElement(sv2.nonzeroSize()), std::exception);
 #endif
 }
-

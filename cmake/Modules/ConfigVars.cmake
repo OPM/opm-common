@@ -34,12 +34,12 @@ function (configure_vars obj syntax filename verb)
   if (NOT (("${syntax}" STREQUAL "CXX") OR ("${syntax}" STREQUAL "CMAKE")))
 	message (FATAL_ERROR "Invalid target syntax \"${syntax}\"")
   endif (NOT (("${syntax}" STREQUAL "CXX") OR ("${syntax}" STREQUAL "CMAKE")))
-  
+
   # truncate the file if the verb was "WRITE"
   if (verb STREQUAL "WRITE")
 	file (WRITE "${filename}" "")
   endif (verb STREQUAL "WRITE")
-  
+
   # whenever we use this, we also signal to the header files that we
   # have "config.h". add this before any other files (known till now)
   # to avoid confusion from other configuration files.
@@ -49,13 +49,13 @@ function (configure_vars obj syntax filename verb)
 	add_definitions (-DHAVE_CONFIG_H=1)
 	include_directories (BEFORE "${_config_path}")
   endif ("${_config_file}" MATCHES "config\\.h(\\..+)?")
-  
+
   # only write the current value of each variable once
   set (_args ${ARGN})
   if (_args)
 	list (REMOVE_DUPLICATES _args)
   endif (_args)
-  
+
   # process each variable
   set (_prev_verbatim TRUE)
   foreach (_var IN LISTS _args)
@@ -63,7 +63,7 @@ function (configure_vars obj syntax filename verb)
 	# massage the name to remove source code formatting
 	string (REGEX REPLACE "^[\\n\\t\\ ]+" "" _var "${_var}")
 	string (REGEX REPLACE "[\\n\\t\\ ]+$" "" _var "${_var}")
-	
+
 	# if the name of a variable has the syntax of a comments, write it
 	# verbatim to the file; this can be used to create headings
 	if ("X Y Z ${_var}" MATCHES "^X Y Z /[/*]")
@@ -72,7 +72,7 @@ function (configure_vars obj syntax filename verb)
 	  endif (NOT _prev_verbatim)
 	  file (APPEND "${filename}" "${_var}\n")
 	  set (_prev_verbatim TRUE)
-	  
+
 	else ()
 
 	  # write a CMake statements that warns if the value has changed
@@ -92,7 +92,7 @@ function (configure_vars obj syntax filename verb)
 		file (APPEND "${filename}" "\tmessage (WARNING \"Incompatible value \\\"${_db}${_var}}\\\" of variable \\\"${_var}\\\"\")\n")
 		file (APPEND "${filename}" "endif ()\n")
 	  endif ()
-	  
+
 	  # check for empty variable; variables that are explicitly set to false
 	  # is not included in this clause
 	  if ((NOT DEFINED ${_var}) OR ("${${_var}}" STREQUAL "") OR NOT _var)
@@ -116,7 +116,7 @@ function (configure_vars obj syntax filename verb)
 		    file (APPEND "${filename}" "#define ${_var} ${${_var}}\n")
 		  endif()
 		endif ("${syntax}" STREQUAL "CMAKE")
-		
+
 	  endif ((NOT DEFINED ${_var}) OR ("${${_var}}" STREQUAL "") OR NOT _var)
 	  set (_prev_verbatim FALSE)
 	endif ()

@@ -122,4 +122,3 @@ BOOST_AUTO_TEST_CASE(PYACTION_Log) {
 }
 
 #endif
-

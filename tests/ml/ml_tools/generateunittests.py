@@ -1,5 +1,5 @@
 #   Copyright (c) 2016 Robert W. Rose
-#   Copyright (c) 2018 Paul Maevskikh   
+#   Copyright (c) 2018 Paul Maevskikh
 #   Copyright (c) 2024 NORCE
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy

@@ -100,4 +100,3 @@ private:
 } // namespace Opm
 
 #endif // OPM_ECLIPSEGRIDINSPECTOR_HEADER
-

@@ -188,7 +188,7 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
             this->m_diffCoeffGasTable = DiffCoeffGasTable( deck["DIFFCGAS"].back() );
         else if ( deck.hasKeyword( "DIFFAGAS" ) )
             this->m_diffCoeffGasTable = DiffCoeffGasTable( deck["DIFFAGAS"].back() );
-        
+
         if (deck.hasKeyword( "DIFFAWAT" ) || deck.hasKeyword( "DIFFAGAS" ))
             this->m_diff_mole_fraction = false;
 
@@ -241,7 +241,7 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
 
         if (deck.hasKeyword<ParserKeywords::WATDENT>())
             this->watDenT = DenT( deck.get<ParserKeywords::WATDENT>().back());
-        
+
         if (deck.hasKeyword<ParserKeywords::GASJT>())
             this->gasJT = JouleThomson( deck.get<ParserKeywords::GASJT>().back());
 
@@ -636,7 +636,7 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
         } else if (hasRTEMPVD) {
             initSimpleTableContainer<RtempvdTable>(deck, "RTEMPVD", "RTEMPVD", m_eqldims.getNumEquilRegions());
         }
-    }   
+    }
 
 
     void TableManager::initPlyshlogTables(const Deck& deck) {
@@ -966,7 +966,7 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
     const TableContainer& TableManager::getPcfactTables() const {
         return getTables("PCFACT");
     }
-    
+
     const TableContainer& TableManager::getPermfactTables() const {
         return getTables("PERMFACT");
     }
