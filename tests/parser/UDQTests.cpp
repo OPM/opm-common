@@ -42,6 +42,7 @@
 #include <opm/input/eclipse/Schedule/UDQ/UDQAssign.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQConfig.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQContext.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQDefine.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQEnums.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQFunction.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQFunctionTable.hpp>
@@ -562,6 +563,98 @@ BOOST_AUTO_TEST_CASE(UDQ_DEFINETEST) {
         BOOST_CHECK_EQUAL( res["P2"].get(), 3 );
         BOOST_CHECK_EQUAL( res["I1"].get(), 2 );
         BOOST_CHECK_EQUAL( res["I2"].get(), 1 );
+    }
+}
+
+BOOST_AUTO_TEST_CASE(Define_Update_Status)
+{
+    using namespace std::string_literals;
+
+    auto def = UDQDefine {
+        UDQParams{}, "WUHOO"s, 0, KeywordLocation{},
+        std::vector {"WBHP"s, "*"s, "0.07"s, }
+    };
+
+    BOOST_CHECK_MESSAGE(def.status().first == UDQUpdate::ON,
+                        R"(Default update setting must be "ON")");
+
+    BOOST_CHECK_MESSAGE(! def.clear_update_next_for_new_report_step(),
+                        R"(Clear "NEXT" must not change object)");
+
+    def.update_status(UDQUpdate::NEXT, 0);
+
+    BOOST_CHECK_MESSAGE(def.status().first == UDQUpdate::NEXT,
+                        R"(Update setting must be "NEXT" after status update)");
+
+    BOOST_CHECK_MESSAGE(def.clear_update_next_for_new_report_step(),
+                        R"(Clear "NEXT" must change object when status is "NEXT)");
+
+    BOOST_CHECK_MESSAGE(def.status().first == UDQUpdate::OFF,
+                        R"(Update setting must be "OFF" after clear "NEXT")");
+
+    BOOST_CHECK_MESSAGE(! def.clear_update_next_for_new_report_step(),
+                        R"(Clear "NEXT" must not change object)");
+}
+
+BOOST_AUTO_TEST_CASE(Update_Next_Must_Reset_at_End_of_Report_Step)
+{
+    const auto deck = Parser{}.parseString(R"(RUNSPEC
+DIMENS
+10 10 3 /
+TABDIMS
+/
+START
+1 OCT 2025 /
+GRID
+DXV
+10*100.0 /
+DYV
+10*100.0 /
+DZV
+3*5.0 /
+DEPTHZ
+121*2000.0 /
+EQUALS
+ PERMX 100.0 /
+ PERMY 100.0 /
+ PERMZ  10.0 /
+ PORO    0.25 /
+/
+PROPS
+DENSITY
+ 800 1000 1 /
+SCHEDULE
+UDQ
+DEFINE WUHOO WBHP * 0.07 /
+UPDATE WUHOO NEXT /
+/
+DATES
+ 2 OCT 2025 /
+/
+)");
+
+    const auto es = EclipseState { deck };
+    const auto sched = Schedule { deck, es };
+
+    {
+        const auto update = sched[0].udq().define("WUHOO").status().first;
+
+        BOOST_CHECK_MESSAGE(update == UDQUpdate::NEXT,
+                            R"(Update setting must be "NEXT")");
+    }
+
+    {
+        const auto update = sched[1].udq().define("WUHOO").status().first;
+
+        BOOST_CHECK_MESSAGE(update == UDQUpdate::OFF,
+                            R"(Update setting must be "OFF")");
+    }
+
+    {
+        const auto update = sched.back().udq().define("WUHOO").status().first;
+
+        BOOST_CHECK_MESSAGE(update == UDQUpdate::OFF,
+                            R"(Update setting must be "OFF")");
     }
 }
 

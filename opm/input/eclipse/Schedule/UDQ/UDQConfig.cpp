@@ -432,6 +432,18 @@ namespace Opm {
         return update;
     }
 
+    bool UDQConfig::clear_update_next_for_new_report_step()
+    {
+        auto update = false;
+
+        for (auto& def : this->m_definitions) {
+            const auto chng = def.second.clear_update_next_for_new_report_step();
+            update = update || chng;
+        }
+
+        return update;
+    }
+
     void UDQConfig::eval_assign(const WellMatcher&    wm,
                                 const GroupOrder&     go,
                                 SegmentMatcherFactory create_segment_matcher,

@@ -152,9 +152,12 @@ ScheduleState::ScheduleState(const ScheduleState& src, const time_point& start_t
     {
         auto new_udq = this->udq();
 
-        if (new_udq.clear_pending_assignments()) {
-            // New report step.  All ASSIGNments from previous report steps
-            // have been performed.
+        const auto pending_chng = new_udq.clear_pending_assignments();
+        const auto next_chng = new_udq.clear_update_next_for_new_report_step();
+
+        if (pending_chng || next_chng) {
+            // New report step.  All ASSIGNments and all NEXT updates from
+            // previous report steps have been performed.
             this->udq.update(std::move(new_udq));
         }
     }
