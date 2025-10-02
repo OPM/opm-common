@@ -65,4 +65,3 @@ namespace Opm {
 }
 
 #endif
-

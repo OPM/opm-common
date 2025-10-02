@@ -454,7 +454,7 @@ public:
                                                           /*krnSw=*/ 1.0 - Swco - sg);
         return owChanged || gochanged;
     }
-    
+
     template <class FluidState>
     static Scalar clampSaturation(const FluidState& fluidState, const int phaseIndex)
     {

@@ -2717,8 +2717,8 @@ DEFINE FU_VAR36 FU_P1BL + FU_P2BL + FU_VAR32 + FU_VAR33 + FU_VAR34 + FU_VAR35  /
 
 -----XX xxxx xxxx
 ASSIGN FU_VAR37 2300 /
-ASSIGN FU_VAR38 0 /   --  xxxxxx  xx xxxx  xxxx  XX  xxxx 
-ASSIGN FU_VAR39 2300  /  -- xxxx * Y  xxxx xx Z xxxx XX  xxxx 
+ASSIGN FU_VAR38 0 /   --  xxxxxx  xx xxxx  xxxx  XX  xxxx
+ASSIGN FU_VAR39 2300  /  -- xxxx * Y  xxxx xx Z xxxx XX  xxxx
 -- xxxx  xxxx xxxx xxxx
 ASSIGN FU_VAR40 0  /
 DEFINE FU_VAR40 FU_VAR37 + FU_VAR38 + FU_VAR39 /

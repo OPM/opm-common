@@ -63,7 +63,7 @@ const GSatProd::GSatProdGroupProp GSatProd::get(const std::string& name, const S
     prop.rate[Rate::Water] = UDA::eval_group_uda(group.rate[Rate::Water], name, st, group.udq_undefined);
     prop.rate[Rate::Resv] = UDA::eval_group_uda(group.rate[Rate::Resv], name, st, group.udq_undefined);
     prop.rate[Rate::GLift] = UDA::eval_group_uda(group.rate[Rate::GLift], name, st, group.udq_undefined);
-    
+
     return prop;
 }
 

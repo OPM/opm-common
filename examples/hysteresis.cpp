@@ -24,7 +24,7 @@
 /*!
  * \file
  *
- * \brief A small application to extract relative permeability and 
+ * \brief A small application to extract relative permeability and
  * capillary pressures curves from a history of saturations
  * If hysteresis is enabled the tool can be used to extract
  * the scanning curves.

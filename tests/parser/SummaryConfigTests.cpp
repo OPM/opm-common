@@ -1312,7 +1312,7 @@ BOOST_AUTO_TEST_CASE(Summary_Segment)
         BOOST_CHECK_EQUAL(sogr->namedEntity(), "PROD01");
     }
 
-    // SGFR in all segments of PROD01 
+    // SGFR in all segments of PROD01
     BOOST_CHECK(deck.hasKeyword("SGFR"));
     BOOST_CHECK(summary.hasKeyword("SGFR"));
     BOOST_CHECK(summary.hasSummaryKey("SGFR:PROD01:1"));
@@ -1363,7 +1363,7 @@ BOOST_AUTO_TEST_CASE(Summary_Segment)
         BOOST_CHECK_EQUAL(sgfr->namedEntity(), "PROD01");
     }
 
-    // SGFRF in segment 2 of PROD01 
+    // SGFRF in segment 2 of PROD01
     BOOST_CHECK(deck.hasKeyword("SGFRF"));
     BOOST_CHECK(summary.hasKeyword("SGFRF"));
     BOOST_CHECK(!summary.hasSummaryKey("SGFRF:PROD01:1"));
@@ -1414,7 +1414,7 @@ BOOST_AUTO_TEST_CASE(Summary_Segment)
         BOOST_CHECK_EQUAL(sgfrf->namedEntity(), "PROD01");
     }
 
-    // SGFRF in segment 3 of PROD01 
+    // SGFRF in segment 3 of PROD01
     BOOST_CHECK(deck.hasKeyword("SGFRS"));
     BOOST_CHECK(summary.hasKeyword("SGFRS"));
     BOOST_CHECK(!summary.hasSummaryKey("SGFRS:PROD01:1"));

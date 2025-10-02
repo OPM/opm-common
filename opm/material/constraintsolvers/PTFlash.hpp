@@ -451,7 +451,7 @@ protected:
 
     template <class FlashFluidState, class ComponentVector>
     static void checkStability_(const FlashFluidState& fluid_state, bool& isTrivial, ComponentVector& K, ComponentVector& xy_loc,
-                                typename FlashFluidState::Scalar& S_loc, const ComponentVector& z, bool isGas, const EOSType& eos_type, 
+                                typename FlashFluidState::Scalar& S_loc, const ComponentVector& z, bool isGas, const EOSType& eos_type,
                                 int verbosity)
     {
         using FlashEval = typename FlashFluidState::Scalar;

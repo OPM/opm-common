@@ -21,10 +21,10 @@ static std::vector<double> pillar_to_flat_array(const std::vector<std::array<std
 
 
 std::tuple<std::vector<double>,std::vector<double>> convertUnsToCPG(
-                     const std::vector<std::array<double, 3>>& coord_uns, 
-                     const std::vector<std::array<std::size_t, 8>>& element, 
-                     std::size_t nx, std::size_t ny, std::size_t nz) 
-{                        
+                     const std::vector<std::array<double, 3>>& coord_uns,
+                     const std::vector<std::array<std::size_t, 8>>& element,
+                     std::size_t nx, std::size_t ny, std::size_t nz)
+{
     // nx, ny, nz are the number of cells in the x, y and z directions
     // converts unstructured mesh grid described by the coord_uns and element arrays
     // element contains a referece to the nodes described by coords_uns
@@ -32,7 +32,7 @@ std::tuple<std::vector<double>,std::vector<double>> convertUnsToCPG(
     const std::size_t num_pillars = (nx+1)*(ny+1);
     GridDims cpg_grid = GridDims(nx, ny, nz);
     GridDims pillar_grid = GridDims(nx+1, ny+1, 0);
-    
+
 
 
     auto ij_pillars = [ &pillar_grid](std::size_t i, std::size_t j) {
@@ -40,7 +40,7 @@ std::tuple<std::vector<double>,std::vector<double>> convertUnsToCPG(
     };
 
     auto compute_zcornind = [&nx, &ny]
-            (std::size_t  i, std::size_t j, std::size_t  k) 
+            (std::size_t  i, std::size_t j, std::size_t  k)
     {
         std::array<std::size_t, 8> zind;
         const std::size_t num = k * nx * ny * 8 + j * nx * 4 + i * 2;
@@ -54,7 +54,7 @@ std::tuple<std::vector<double>,std::vector<double>> convertUnsToCPG(
         zind[6] = zind[2] + offset_layer;
         zind[7] = zind[3] + offset_layer;
         return zind;
-    };    
+    };
 
 
     std::vector<std::array<std::array<double, 3>,2>> pillars(num_pillars);
@@ -81,7 +81,7 @@ std::tuple<std::vector<double>,std::vector<double>> convertUnsToCPG(
     std::vector<double> zcorn_cpg(element_size*8);
     for (std::size_t index = 0; index < element_size; index++) {
        auto [ii,jj,kk] = cpg_grid.getIJK((index));
-       std::array<std::size_t,8> z_ref = compute_zcornind(ii,jj,kk);       
+       std::array<std::size_t,8> z_ref = compute_zcornind(ii,jj,kk);
        const std::array<std::size_t,8>& element_nodes = element[index];
        for (std::size_t index_el = 0; index_el < 8; index_el++) {
            std::size_t local_z = z_ref[index_el];

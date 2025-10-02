@@ -76,7 +76,7 @@ for (const auto& sample : test_methods) {
     // Initialize JSON file with reference values
     std::filesystem::path jsonFile("material/ref_values_threecomponents_ptflash.json");
     Json::JsonObject parser(jsonFile);
-    
+
     // Initial: the primary variables are, pressure, molar fractions of the first and second component
     Evaluation p_init = Evaluation::createVariable(10e5, 0); // 10 bar
     ComponentVector comp;
@@ -136,7 +136,7 @@ for (const auto& sample : test_methods) {
                     std::cout << " \tderiv " << i << " = " << y[comp_idx].derivative(i) << std::endl;
                 }
             }
-            std::cout << " L: " << std::endl; 
+            std::cout << " L: " << std::endl;
             std::cout << " \tvalue = " << L.value() << std::endl;
             for (int i = 0; i < L.size(); ++i) {
                     std::cout << " \tderiv " << i << " = " << L.derivative(i) << std::endl;

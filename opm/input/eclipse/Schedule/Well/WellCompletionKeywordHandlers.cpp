@@ -43,13 +43,13 @@ namespace Opm {
 namespace {
 
 using LoadConnectionMethod = void (WellConnections::*)(
-    const DeckRecord&, 
+    const DeckRecord&,
     const ScheduleGrid&,
-    const std::string&, 
-    const WDFAC&, 
-    const KeywordLocation& 
+    const std::string&,
+    const WDFAC&,
+    const KeywordLocation&
 );
-    
+
 void handleCOMPDATX(HandlerContext& handlerContext, LoadConnectionMethod loadMethod)
 {
     std::unordered_set<std::string> wells;
@@ -62,7 +62,7 @@ void handleCOMPDATX(HandlerContext& handlerContext, LoadConnectionMethod loadMet
             auto well2 = handlerContext.state().wells.get(name);
 
             auto connections = std::make_shared<WellConnections>(well2.getConnections());
-            const auto origWellConnSetIsEmpty = connections->empty();            
+            const auto origWellConnSetIsEmpty = connections->empty();
             std::invoke(loadMethod, connections, record, handlerContext.grid,
                              name, well2.getWDFAC(), handlerContext.keyword.location());
 

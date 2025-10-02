@@ -189,4 +189,3 @@ BOOST_AUTO_TEST_CASE(parse_fileWithPathsKeyword_IncludeExtendsPath) {
     BOOST_CHECK( deck.hasKeyword("TITLE"));
     BOOST_CHECK( deck.hasKeyword("BOX"));
 }
-

@@ -140,7 +140,7 @@ double calculateCellVol(const std::array<double,8>& X,
 }
 
 
-/* 
+/*
     Cell volume calculation for a cell from a cylindrical grid, given by the
     inner and outer radius of the cell, and its spans in the angle and Z.
 */

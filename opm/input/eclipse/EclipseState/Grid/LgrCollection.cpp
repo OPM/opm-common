@@ -41,7 +41,7 @@ namespace Opm {
         for (const auto& lgrsKeyword : lgrKeywords) {
             OpmLog::info(OpmInputError::format("\nLoading lgrs from {keyword} in {file} line {line}", lgrsKeyword->location()));
 
-            for (const auto& lgrRecord : *lgrsKeyword) {                
+            for (const auto& lgrRecord : *lgrsKeyword) {
                 addLgr(grid, lgrRecord);
             }
         }
@@ -82,7 +82,7 @@ namespace Opm {
             {
                 return grid.activeIndex(global_index);
             });
-       lgr.update(lgrRecord);    
+       lgr.update(lgrRecord);
        m_lgrs.insert(std::make_pair(lgr.NAME(), lgr));
     }
 

@@ -14,7 +14,7 @@ function (set_aliases)
   foreach (alias IN LISTS aliases)
 	# convert entry "X Y" into a list "X;Y", then pick apart
 	string (REGEX REPLACE "\ +" ";" tuple "${alias}")
-	list (GET tuple 0 var)	
+	list (GET tuple 0 var)
 	list (GET tuple 1 name)
 
 	# write this alias to cache

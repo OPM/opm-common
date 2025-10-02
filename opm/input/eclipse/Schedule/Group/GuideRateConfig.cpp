@@ -128,5 +128,3 @@ bool GuideRateConfig::operator==(const GuideRateConfig& data) const {
 }
 
 }
-
-

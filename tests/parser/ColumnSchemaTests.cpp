@@ -80,5 +80,3 @@ BOOST_AUTO_TEST_CASE( CanLookup ) {
     BOOST_CHECK( schema1.lookupValid( ) );
     BOOST_CHECK( !schema2.lookupValid( ) );
 }
-
-

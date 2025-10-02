@@ -98,7 +98,7 @@ public:
     * \brief Returns the activity coefficient of H2 in brine which is needed in calculation of H2 solubility in Li et
     * al (2018). Note that we only include NaCl effects. Could be extended with other salts, e.g. from Duan & Sun,
     * Chem. Geol., 2003.
-    * 
+    *
     * \param temperature temperature [K]
     * \param salinity salinity [mol NaCl / kg solution]
     */
@@ -115,7 +115,7 @@ public:
 
     /*!
     * \brief Returns Henry's constant of H2 in brine which is needed in calculation of H2 solubility in Li et al (2018).
-    * 
+    *
     * \param temperature temperature [K]
     */
     template <class Evaluation>
@@ -125,7 +125,7 @@ public:
         static const Scalar a[5] = {2.68721e-5, -0.05121, 33.55196, -3411.0432, -31258.74683};
 
         // Eq. (13)
-        Evaluation lnKh = a[0]*temperature*temperature + a[1]*temperature + a[2] + a[3]/temperature 
+        Evaluation lnKh = a[0]*temperature*temperature + a[1]*temperature + a[2] + a[3]/temperature
             + a[4]/(temperature*temperature);
         return lnKh;
     }
@@ -133,7 +133,7 @@ public:
     /*!
     * \brief Returns mole fraction of H2 in gasous phase which is needed in calculation of H2 solubility in Li et al
     * (2018).
-    * 
+    *
     * \param temperature temperature [K]
     * \param pg gas phase pressure [Pa]
     */
@@ -152,14 +152,14 @@ public:
     * \brief Calculate fugacity coefficient for H2 which is needed in calculation of H2 solubility in Li et al (2018).
     * The equation used is based on Helmoltz free energy EOS. The formulas here are taken from Span et al., J. Phys.
     * Chem. Ref. Data 29, 2000 and Leachman et al., J. Phys. Chem. Ref. Data 38, 2009, and Li et al. (2018).
-    * 
+    *
     * \param temperature temperature [K]
-    * \param pg gas phase pressure [Pa] 
+    * \param pg gas phase pressure [Pa]
     * \param extrapolate True to use extrapolation
     */
-    template <class Evaluation> 
-    static Evaluation fugacityCoefficientH2(const Evaluation& temperature, 
-                                            const Evaluation& pg, 
+    template <class Evaluation>
+    static Evaluation fugacityCoefficientH2(const Evaluation& temperature,
+                                            const Evaluation& pg,
                                             bool extrapolate = false)
     {
         // Convert pressure to reduced density and temperature to reduced temperature
@@ -202,7 +202,7 @@ private:
     template <class Evaluation>
     static Evaluation salinityToMolality_(const Evaluation& salinity) {
         // Molar mass NaCl
-        const Scalar M_NaCl = 58.44e-3; 
+        const Scalar M_NaCl = 58.44e-3;
 
         // Convert
         const Evaluation X_NaCl = salinity / ((1 - salinity) * M_NaCl);

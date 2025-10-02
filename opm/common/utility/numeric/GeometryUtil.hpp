@@ -4,10 +4,10 @@
 #include <vector>
 #include <opm/common/utility/numeric/VectorUtil.hpp>
 #include <numeric>
-#include <cmath> 
+#include <cmath>
 namespace GeometryUtil {
 
-constexpr double epslon = 1e-6;         
+constexpr double epslon = 1e-6;
 // A simple utility function to calculate area of a rectangle
 double calculateRectangleArea(double width, double height);
 
@@ -21,26 +21,26 @@ T  calcTetraVol(const std::array<T,4>& x, const std::array<T,4>& y, const std::a
             - x[2]*y[3]*z[0] - x[3]*y[0]*z[2] + x[3]*y[2]*z[0]
             + x[1]*y[2]*z[3] - x[1]*y[3]*z[2] - x[2]*y[1]*z[3]
             + x[2]*y[3]*z[1] + x[3]*y[1]*z[2] - x[3]*y[2]*z[1];
-            return std::abs(det)/6; 
+            return std::abs(det)/6;
 }
 
 template <typename T = double>
-T calcHexaVol(const std::array<T,8>& x, const std::array<T,8>& y, const std::array<T,8>& z, 
+T calcHexaVol(const std::array<T,8>& x, const std::array<T,8>& y, const std::array<T,8>& z,
               const T& cx,  const T& cy, const T& cz )
 {
     constexpr std::array<std::array<int, 3>, 12> faceConfigurations
     {
-        std::array<int, 3>{0, 1, 5}, 
+        std::array<int, 3>{0, 1, 5},
                           {1, 5, 4},     // Face 0
                           {0, 4, 6},
                           {4, 6, 2},     // Face 1
-                          {2, 3, 7}, 
+                          {2, 3, 7},
                           {3, 7, 6},     // Face 2
-                          {1, 3, 7}, 
+                          {1, 3, 7},
                           {3, 7, 5},     // Face 3
-                          {0, 1, 3}, 
+                          {0, 1, 3},
                           {1, 3, 2},     // Face 4
-                          {4, 5, 7}, 
+                          {4, 5, 7},
                           {5, 7, 6}     // Face 5
     };
     auto getNodes = [](const std::array<T, 8>& X, const std::array<T, 8>& Y, const std::array<T, 8>& Z,
@@ -57,7 +57,7 @@ T calcHexaVol(const std::array<T,8>& x, const std::array<T,8>& y, const std::arr
     };
     // note: some CPG grids may have collapsed faces that are not planar, therefore
     // the hexadron is subdivided in terahedrons.
-    // calculating the volume of the pyramid with F0 as base and pc as center                         
+    // calculating the volume of the pyramid with F0 as base and pc as center
     T totalVolume = 0.0;
     for (size_t i = 0; i < faceConfigurations.size(); i += 2) {
         auto [fX0, fY0, fZ0] = getNodes(x, y, z, faceConfigurations[i]);
@@ -70,7 +70,7 @@ T calcHexaVol(const std::array<T,8>& x, const std::array<T,8>& y, const std::arr
 }
 
 template <typename T = double>
-std::vector<int> isInsideElement(const std::vector<T>& tpX, const std::vector<T>& tpY, const std::vector<T>& tpZ,  
+std::vector<int> isInsideElement(const std::vector<T>& tpX, const std::vector<T>& tpY, const std::vector<T>& tpZ,
                                                 const std::vector<std::array<T, 8>>& X, const std::vector<std::array<T, 8>>& Y,
                                                 const std::vector<std::array<T, 8>>& Z)
 {
@@ -87,21 +87,21 @@ std::vector<int> isInsideElement(const std::vector<T>& tpX, const std::vector<T>
         maxY = *std::max_element(Y[outerIndex].begin(), Y[outerIndex].end());
         maxZ = *std::max_element(Z[outerIndex].begin(), Z[outerIndex].end());
         pcX = std::accumulate(X[outerIndex].begin(), X[outerIndex].end(), 0.0)/8;
-        pcY = std::accumulate(Y[outerIndex].begin(), Y[outerIndex].end(), 0.0)/8;            
+        pcY = std::accumulate(Y[outerIndex].begin(), Y[outerIndex].end(), 0.0)/8;
         pcZ = std::accumulate(Z[outerIndex].begin(), Z[outerIndex].end(), 0.0)/8;
-        element_volume = calcHexaVol(X[outerIndex],Y[outerIndex],Z[outerIndex], pcX, pcY,pcZ);                         
+        element_volume = calcHexaVol(X[outerIndex],Y[outerIndex],Z[outerIndex], pcX, pcY,pcZ);
         for (size_t innerIndex  = 0; innerIndex < tpX.size(); innerIndex++){
             // check if center of refined volume is outside the boundary box of a coarse volume.
             // Only computes volumed base test is this condition is met.
             flag  = (minX < tpX[innerIndex]) && (maxX > tpX[innerIndex]) &&
                     (minY < tpY[innerIndex]) && (maxY > tpY[innerIndex]) &&
-                    (minZ < tpZ[innerIndex]) && (maxZ > tpZ[innerIndex]);                            
+                    (minZ < tpZ[innerIndex]) && (maxZ > tpZ[innerIndex]);
             if (flag && (in_elements[innerIndex] == 0)) {
-                test_element_volume = calcHexaVol(X[outerIndex],Y[outerIndex],Z[outerIndex], 
-                                                tpX[innerIndex], tpY[innerIndex],tpZ[innerIndex]);                         
+                test_element_volume = calcHexaVol(X[outerIndex],Y[outerIndex],Z[outerIndex],
+                                                tpX[innerIndex], tpY[innerIndex],tpZ[innerIndex]);
                 if (std::abs(test_element_volume - element_volume) < epslon){
                         in_elements[innerIndex] = static_cast<int>(outerIndex);
-                }                             
+                }
             }
         }
     }

@@ -30,7 +30,7 @@ namespace Opm {
     public:
         PvtgwTable() = default;
         PvtgwTable( const DeckKeyword& keyword, size_t tableIdx);
-        
+
         static PvtgwTable serializationTestObject();
 
         bool operator==(const PvtgwTable& data) const;

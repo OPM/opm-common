@@ -41,7 +41,7 @@ namespace Opm {
  * @brief Executes Python code within a specified context.
  *
  * This function executes the provided Python code within the given context.
- * 
+ *
  * @param python_code The Python code to execute, provided as a string.
  * @param context The Python module providing the context for execution.
  *
@@ -62,7 +62,7 @@ bool PythonInterp::exec(const std::string& python_code, py::module& context) {
  *
  * This function imports the module "opm_embedded" (initialized at opm-common/python/opm_embeded/__init__.py)
  * as the context module, adds the parser and deck to the context and executes the given Python code.
- * 
+ *
  * @param python_code The Python code to execute, provided as a string.
  * @param parser The parser.
  * @param deck   The current deck.
@@ -94,7 +94,7 @@ bool PythonInterp::exec(const std::string& python_code, const Parser& parser, De
  *
  * This function imports the module "opm_embedded" (initialized at opm-common/python/opm_embeded/__init__.py)
  * as the context module and executes the given Python code.
- * 
+ *
  * @param python_code The Python code to execute, provided as a string.
  *
  * @return bool The return value set at the "result" attribute in the context module.

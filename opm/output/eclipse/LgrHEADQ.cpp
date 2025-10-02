@@ -41,7 +41,7 @@ enum index : std::vector<int>::size_type {
     ih_004      =       VI::lgrheadq::FOURTH,              //       0       0
     ih_005      =       VI::lgrheadq::FIFTH,              //       0       0
 
-    
+
  // ---------------------------------------------------------------------
  // ---------------------------------------------------------------------
   LGRHEADQ_NUMBER_OF_ITEMS        // MUST be last element of enum.
@@ -54,4 +54,3 @@ enum index : std::vector<int>::size_type {
 Opm::RestartIO::LgrHEADQ::LgrHEADQ()
     : data_(LGRHEADQ_NUMBER_OF_ITEMS, false)
 {}
-

@@ -352,7 +352,7 @@ namespace {
         const auto max_lines_pr_action = acts.max_input_lines();
         const auto max_cond_per_action = rspec.actdims().max_conditions();
         const auto max_characters_per_line = rspec.actdims().max_characters();
-        
+
         return {
             static_cast<int>(no_act),
             max_lines_pr_action,
@@ -431,10 +431,10 @@ namespace {
         const auto& guideCFG = sched[lookup_step].guide_rate();
         if (guideCFG.has_model()) {
             const auto& guideRateModel = guideCFG.model();
-            
+
             const auto& targPhase = guideRateModel.target();
             const auto& allow_incr = guideRateModel.allow_increase();
-            
+
             const auto it_nph = nph_enumToECL.find(targPhase);
             if (it_nph != nph_enumToECL.end()) {
                 nom_phase = it_nph->second;

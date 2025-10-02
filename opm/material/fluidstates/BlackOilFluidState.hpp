@@ -54,7 +54,7 @@ OPM_HOST_DEVICE unsigned getPvtRegionIndex_(typename std::enable_if<!HasMember_p
 OPM_GENERATE_HAS_MEMBER(invB, /*phaseIdx=*/0) // Creates 'HasMember_invB<T>'.
 
 template <class FluidSystem, class FluidState, class LhsEval>
-OPM_HOST_DEVICE 
+OPM_HOST_DEVICE
 auto getInvB_(typename std::enable_if<HasMember_invB<FluidState>::value,
                                       const FluidState&>::type fluidState,
               unsigned phaseIdx,
@@ -64,7 +64,7 @@ auto getInvB_(typename std::enable_if<HasMember_invB<FluidState>::value,
 { return decay<LhsEval>(fluidState.invB(phaseIdx)); }
 
 template <class FluidSystem, class FluidState, class LhsEval>
-OPM_HOST_DEVICE 
+OPM_HOST_DEVICE
 LhsEval getInvB_(typename std::enable_if<!HasMember_invB<FluidState>::value,
                                           const FluidState&>::type fluidState,
                  unsigned phaseIdx,
@@ -691,7 +691,7 @@ public:
 
     /*!
      * \brief Return the fluid system used by this fluid state.
-     * 
+     *
      * If the fluid system is static (i.e., if the fluid system
      * has no state), this method will always return a reference
      * to the same static object.

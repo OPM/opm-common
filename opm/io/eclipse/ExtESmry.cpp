@@ -618,4 +618,3 @@ std::tuple<double, double> ExtESmry::get_io_elapsed() const
 
 
 }} // namespace Opm::ecl
-
