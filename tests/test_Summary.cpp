@@ -169,7 +169,7 @@ data::Wells result_wells(const bool w3_injector = true)
     // completions are 100*wellidx . type
 
     // conversion factor Pascal (simulator output) <-> barsa
-    const double ps = 100000;
+    const double ps = barsa();
 
     data::Rates rates1;
     rates1.set( rt::wat, -10.0 / day );
@@ -633,12 +633,41 @@ BOOST_AUTO_TEST_CASE(well_keywords)
     {
         using Quantity = data::WellBlockAvgPress::Quantity;
 
-        auto& wbp = cfg.wbp.values["W_1"];
+        {
+            auto& wbp = cfg.wbp.values["W_1"];
 
-        wbp[Quantity::WBP]  = 123.456*unit::barsa;
-        wbp[Quantity::WBP4] = 123.567*unit::barsa;
-        wbp[Quantity::WBP5] = 123.678*unit::barsa;
-        wbp[Quantity::WBP9] = 123.789*unit::barsa;
+            wbp[Quantity::WBP]  = 123.456*unit::barsa;
+            wbp[Quantity::WBP4] = 123.567*unit::barsa;
+            wbp[Quantity::WBP5] = 123.678*unit::barsa;
+            wbp[Quantity::WBP9] = 123.789*unit::barsa;
+        }
+
+        {
+            auto& wbp = cfg.wbp.values["W_2"];
+
+            wbp[Quantity::WBP]  = 12.31*unit::barsa;
+            wbp[Quantity::WBP4] = 12.34*unit::barsa;
+            wbp[Quantity::WBP5] = 12.35*unit::barsa;
+            wbp[Quantity::WBP9] = 12.39*unit::barsa;
+        }
+
+        {
+            auto& wbp = cfg.wbp.values["W_3"];
+
+            wbp[Quantity::WBP]  = 1.21*unit::barsa;
+            wbp[Quantity::WBP4] = 1.24*unit::barsa;
+            wbp[Quantity::WBP5] = 1.25*unit::barsa;
+            wbp[Quantity::WBP9] = 1.29*unit::barsa;
+        }
+
+        {
+            auto& wbp = cfg.wbp.values["W_6"];
+
+            wbp[Quantity::WBP]  = 1.1*unit::barsa;
+            wbp[Quantity::WBP4] = 1.4*unit::barsa;
+            wbp[Quantity::WBP5] = 1.5*unit::barsa;
+            wbp[Quantity::WBP9] = 1.9*unit::barsa;
+        }
     }
 
     SummaryState st(TimeService::now(), cfg.es.runspec().udqParams().undefinedValue());
@@ -713,7 +742,11 @@ BOOST_AUTO_TEST_CASE(well_keywords)
     BOOST_CHECK_CLOSE(10.1 / (123.678 - 0.1), ecl_sum_get_well_var( resp, 1, "W_1", "WPI5" ), 1.0e-5 );
     BOOST_CHECK_CLOSE(10.1 / (123.789 - 0.1), ecl_sum_get_well_var( resp, 1, "W_1", "WPI9" ), 1.0e-5 );
 
-    BOOST_CHECK_CLOSE(0.0, ecl_sum_get_well_var( resp, 1, "W_2", "WPI1" ), 1.0e-5 );
+    BOOST_CHECK_CLOSE(20.1 / (12.31 - 1.1), ecl_sum_get_well_var(resp, 1, "W_2", "WPI1"), 1.0e-5);
+
+    BOOST_CHECK_CLOSE(-30.0 / (1.24 - 2.1), ecl_sum_get_well_var(resp, 1, "W_3", "WPI4"), 1.0e-5);
+
+    BOOST_CHECK_CLOSE(-60.2 / (1.9  - 2.1), ecl_sum_get_well_var(resp, 1, "W_6", "WPI9"), 1.0e-5);
 
     BOOST_CHECK_CLOSE( 20.9 , ecl_sum_get_well_var( resp, 1, "W_2", "WPIW" ), 1.0e-5 );
     BOOST_CHECK_CLOSE( 20.11, ecl_sum_get_well_var( resp, 1, "W_2", "WPIO" ), 1.0e-5 );
@@ -980,7 +1013,25 @@ BOOST_AUTO_TEST_CASE(well_keywords)
     BOOST_CHECK_CLOSE( 123.678, ecl_sum_get_well_var( resp, 1, "W_1", "WBP5" ), 1e-5 );
     BOOST_CHECK_CLOSE( 123.789, ecl_sum_get_well_var( resp, 1, "W_1", "WBP9" ), 1e-5 );
 
-    BOOST_CHECK_CLOSE( 0.0, ecl_sum_get_well_var( resp, 1, "W_2", "WBP"  ), 1e-5 );
+    BOOST_CHECK_CLOSE(12.31, ecl_sum_get_well_var(resp, 1, "W_2", "WBP" ), 1.0e-5);
+    BOOST_CHECK_CLOSE(12.34, ecl_sum_get_well_var(resp, 1, "W_2", "WBP4"), 1.0e-5);
+    BOOST_CHECK_CLOSE(12.35, ecl_sum_get_well_var(resp, 1, "W_2", "WBP5"), 1.0e-5);
+    BOOST_CHECK_CLOSE(12.39, ecl_sum_get_well_var(resp, 1, "W_2", "WBP9"), 1.0e-5);
+
+    BOOST_CHECK_CLOSE(1.21, ecl_sum_get_well_var(resp, 1, "W_3", "WBP" ), 1.0e-5);
+    BOOST_CHECK_CLOSE(1.24, ecl_sum_get_well_var(resp, 1, "W_3", "WBP4"), 1.0e-5);
+    BOOST_CHECK_CLOSE(1.25, ecl_sum_get_well_var(resp, 1, "W_3", "WBP5"), 1.0e-5);
+    BOOST_CHECK_CLOSE(1.29, ecl_sum_get_well_var(resp, 1, "W_3", "WBP9"), 1.0e-5);
+
+    BOOST_CHECK_CLOSE(0.0, ecl_sum_get_well_var(resp, 1, "W_5", "WBP" ), 1.0e-5);
+    BOOST_CHECK_CLOSE(0.0, ecl_sum_get_well_var(resp, 1, "W_5", "WBP4"), 1.0e-5);
+    BOOST_CHECK_CLOSE(0.0, ecl_sum_get_well_var(resp, 1, "W_5", "WBP5"), 1.0e-5);
+    BOOST_CHECK_CLOSE(0.0, ecl_sum_get_well_var(resp, 1, "W_5", "WBP9"), 1.0e-5);
+
+    BOOST_CHECK_CLOSE(1.1, ecl_sum_get_well_var(resp, 1, "W_6", "WBP" ), 1.0e-5);
+    BOOST_CHECK_CLOSE(1.4, ecl_sum_get_well_var(resp, 1, "W_6", "WBP4"), 1.0e-5);
+    BOOST_CHECK_CLOSE(1.5, ecl_sum_get_well_var(resp, 1, "W_6", "WBP5"), 1.0e-5);
+    BOOST_CHECK_CLOSE(1.9, ecl_sum_get_well_var(resp, 1, "W_6", "WBP9"), 1.0e-5);
 
     /* THP */
     BOOST_CHECK_CLOSE( 0.2, ecl_sum_get_well_var( resp, 1, "W_1", "WTHP" ), 1e-5 );
