@@ -263,10 +263,10 @@ connectionMaterialLawParams(unsigned satRegionIdx, unsigned elemIdx) const
         getDrainageParams<Traits>(realParams.gasOilParams()).setUnscaledPoints(params_.gasOilUnscaledPointsVector[satRegionIdx]);
         getDrainageParams<Traits>(realParams.gasOilParams()).setEffectiveLawParams(params_.gasOilEffectiveParamVector[satRegionIdx]);
 //            if (enableHysteresis()) {
-//                getImbParams(realParams.oilWaterParams().imbibitionParams().setUnscaledPoints(oilWaterUnscaledPointsVector_[impRegionIdx]);
-//                getImbParams(realParams.oilWaterParams().imbibitionParams().setEffectiveLawParams(oilWaterEffectiveParamVector_[impRegionIdx]);
-//                getImbParams(realParams.gasOilParams().imbibitionParams().setUnscaledPoints(gasOilUnscaledPointsVector_[impRegionIdx]);
-//                getImbParams(realParams.gasOilParams().imbibitionParams().setEffectiveLawParams(gasOilEffectiveParamVector_[impRegionIdx]);
+//                getImbParams(realParams.oilWaterParams()).setUnscaledPoints(oilWaterUnscaledPointsVector_[impRegionIdx]);
+//                getImbParams(realParams.oilWaterParams()).setEffectiveLawParams(oilWaterEffectiveParamVector_[impRegionIdx]);
+//                getImbParams(realParams.gasOilParams()).setUnscaledPoints(gasOilUnscaledPointsVector_[impRegionIdx]);
+//                getImbParams(realParams.gasOilParams()).setEffectiveLawParams(gasOilEffectiveParamVector_[impRegionIdx]);
 //            }
     }
         break;
@@ -278,10 +278,10 @@ connectionMaterialLawParams(unsigned satRegionIdx, unsigned elemIdx) const
         getDrainageParams<Traits>(realParams.gasOilParams()).setUnscaledPoints(params_.gasOilUnscaledPointsVector[satRegionIdx]);
         getDrainageParams<Traits>(realParams.gasOilParams()).setEffectiveLawParams(params_.gasOilEffectiveParamVector[satRegionIdx]);
 //            if (enableHysteresis()) {
-//                getImbParams(realParams.oilWaterParams().imbibitionParams().setUnscaledPoints(oilWaterUnscaledPointsVector_[impRegionIdx]);
-//                getImbParams(realParams.oilWaterParams().imbibitionParams().setEffectiveLawParams(oilWaterEffectiveParamVector_[impRegionIdx]);
-//                getImbParams(realParams.gasOilParams().imbibitionParams().setUnscaledPoints(gasOilUnscaledPointsVector_[impRegionIdx]);
-//                getImbParams(realParams.gasOilParams().imbibitionParams().setEffectiveLawParams(gasOilEffectiveParamVector_[impRegionIdx]);
+//                getImbParams(realParams.oilWaterParams()).setUnscaledPoints(oilWaterUnscaledPointsVector_[impRegionIdx]);
+//                getImbParams(realParams.oilWaterParams()).setEffectiveLawParams(oilWaterEffectiveParamVector_[impRegionIdx]);
+//                getImbParams(realParams.gasOilParams()).setUnscaledPoints(gasOilUnscaledPointsVector_[impRegionIdx]);
+//                getImbParams(realParams.gasOilParams()).setEffectiveLawParams(gasOilEffectiveParamVector_[impRegionIdx]);
 //            }
     }
         break;
@@ -293,10 +293,10 @@ connectionMaterialLawParams(unsigned satRegionIdx, unsigned elemIdx) const
         getDrainageParams<Traits>(realParams.gasOilParams()).setUnscaledPoints(params_.gasOilUnscaledPointsVector[satRegionIdx]);
         getDrainageParams<Traits>(realParams.gasOilParams()).setEffectiveLawParams(params_.gasOilEffectiveParamVector[satRegionIdx]);
 //            if (enableHysteresis()) {
-//                getImbParams(realParams.oilWaterParams().imbibitionParams().setUnscaledPoints(oilWaterUnscaledPointsVector_[impRegionIdx]);
-//                getImbParams(realParams.oilWaterParams().imbibitionParams().setEffectiveLawParams(oilWaterEffectiveParamVector_[impRegionIdx]);
-//                getImbParams(realParams.gasOilParams().imbibitionParams().setUnscaledPoints(gasOilUnscaledPointsVector_[impRegionIdx]);
-//                getImbParams(realParams.gasOilParams().imbibitionParams().setEffectiveLawParams(gasOilEffectiveParamVector_[impRegionIdx]);
+//                getImbParams(realParams.oilWaterParams()).setUnscaledPoints(oilWaterUnscaledPointsVector_[impRegionIdx]);
+//                getImbParams(realParams.oilWaterParams()).setEffectiveLawParams(oilWaterEffectiveParamVector_[impRegionIdx]);
+//                getImbParams(realParams.gasOilParams()).setUnscaledPoints(gasOilUnscaledPointsVector_[impRegionIdx]);
+//                getImbParams(realParams.gasOilParams()).setEffectiveLawParams(gasOilEffectiveParamVector_[impRegionIdx]);
 //            }
     }
         break;
@@ -316,10 +316,10 @@ connectionMaterialLawParams(unsigned satRegionIdx, unsigned elemIdx) const
             getDrainageParams<Traits>(realParams.oilWaterParams()).setEffectiveLawParams(params_.oilWaterEffectiveParamVector[satRegionIdx]);
         }
 //            if (enableHysteresis()) {
-//                getImbParams(realParams.oilWaterParams().imbibitionParams().setUnscaledPoints(oilWaterUnscaledPointsVector_[impRegionIdx]);
-//                getImbParams(realParams.oilWaterParams().imbibitionParams().setEffectiveLawParams(oilWaterEffectiveParamVector_[impRegionIdx]);
-//                getImbParams(realParams.gasOilParams().imbibitionParams().setUnscaledPoints(gasOilUnscaledPointsVector_[impRegionIdx]);
-//                getImbParams(realParams.gasOilParams().imbibitionParams().setEffectiveLawParams(gasOilEffectiveParamVector_[impRegionIdx]);
+//                getImbParams(realParams.oilWaterParams()).setUnscaledPoints(oilWaterUnscaledPointsVector_[impRegionIdx]);
+//                getImbParams(realParams.oilWaterParams()).setEffectiveLawParams(oilWaterEffectiveParamVector_[impRegionIdx]);
+//                getImbParams(realParams.gasOilParams()).setUnscaledPoints(gasOilUnscaledPointsVector_[impRegionIdx]);
+//                getImbParams(realParams.gasOilParams()).setEffectiveLawParams(gasOilEffectiveParamVector_[impRegionIdx]);
 //            }
     }
         break;

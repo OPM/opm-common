@@ -35,9 +35,10 @@
 
 #include <opm/material/common/EnsureFinalized.hpp>
 
-#include <type_traits>
 #include <cassert>
 #include <memory>
+#include <stdexcept>
+#include <type_traits>
 
 namespace Opm {
 

@@ -33,6 +33,7 @@
 #include <opm/material/fluidmatrixinteractions/SatCurveMultiplexer.hpp>
 
 #include <memory>
+#include <type_traits>
 #include <vector>
 
 namespace Opm::EclMaterialLaw {
@@ -65,40 +66,24 @@ public:
     using OilWaterEffectiveParams = typename OilWaterEffectiveLaw::Params;
     using GasWaterEffectiveParams = typename GasWaterEffectiveLaw::Params;
 
-    template <bool EPS, class BaseLaw>
-    struct EPSHelper
-    {
-        using Law = EclEpsTwoPhaseLaw<BaseLaw>;
-    };
-    template <class BaseLaw>
-    struct EPSHelper<false, BaseLaw>
-    {
-        using Law = BaseLaw;
-    };
+    template <bool enableEPS, typename BaseLaw>
+    using SelectEPSLaw = std::conditional_t<enableEPS, EclEpsTwoPhaseLaw<BaseLaw>, BaseLaw>;
 
     // the two-phase material law which is defined on absolute (scaled) saturations
-    using GasOilEpsLaw = typename EPSHelper<Traits::enableEndpointScaling, GasOilEffectiveLaw>::Law;
-    using OilWaterEpsLaw = typename EPSHelper<Traits::enableEndpointScaling, OilWaterEffectiveLaw>::Law;
-    using GasWaterEpsLaw = typename EPSHelper<Traits::enableEndpointScaling, GasWaterEffectiveLaw>::Law;
+    using GasOilEpsLaw = SelectEPSLaw<Traits::enableEndpointScaling, GasOilEffectiveLaw>;
+    using OilWaterEpsLaw = SelectEPSLaw<Traits::enableEndpointScaling, OilWaterEffectiveLaw>;
+    using GasWaterEpsLaw = SelectEPSLaw<Traits::enableEndpointScaling, GasWaterEffectiveLaw>;
     using GasOilEpsParams = typename GasOilEpsLaw::Params;
     using OilWaterEpsParams = typename OilWaterEpsLaw::Params;
     using GasWaterEpsParams = typename GasWaterEpsLaw::Params;
 
-    template <bool Hyst, class BaseLaw>
-    struct HystHelper
-    {
-        using Law = EclHysteresisTwoPhaseLaw<BaseLaw>;
-    };
-    template <class BaseLaw>
-    struct HystHelper<false, BaseLaw>
-    {
-        using Law = BaseLaw;
-    };
+    template <bool enableHyst, typename BaseLaw>
+    using SelectHystLaw = std::conditional_t<enableHyst, EclHysteresisTwoPhaseLaw<BaseLaw>, BaseLaw>;
 
     // the (possibly scaled) two-phase material laws with hysteresis (or not)
-    using GasOilLaw = typename HystHelper<Traits::enableHysteresis, GasOilEpsLaw>::Law;
-    using OilWaterLaw = typename HystHelper<Traits::enableHysteresis, OilWaterEpsLaw>::Law;
-    using GasWaterLaw = typename HystHelper<Traits::enableHysteresis, GasWaterEpsLaw>::Law;
+    using GasOilLaw = SelectHystLaw<Traits::enableHysteresis, GasOilEpsLaw>;
+    using OilWaterLaw = SelectHystLaw<Traits::enableHysteresis, OilWaterEpsLaw>;
+    using GasWaterLaw = SelectHystLaw<Traits::enableHysteresis, GasWaterEpsLaw>;
 
     using GasOilHystParams = typename GasOilLaw::Params;
     using OilWaterHystParams = typename OilWaterLaw::Params;
