@@ -473,9 +473,11 @@ readOilWaterParameters_(unsigned satRegionIdx)
 }
 
 // Make some actual code, by realizing the previously defined templated class
-template class ReadEffectiveParams<ThreePhaseMaterialTraits<double,0,1,2>>;
-template class ReadEffectiveParams<ThreePhaseMaterialTraits<float,0,1,2>>;
-template class ReadEffectiveParams<ThreePhaseMaterialTraits<double,2,0,1>>;
-template class ReadEffectiveParams<ThreePhaseMaterialTraits<float,2,0,1>>;
+template class ReadEffectiveParams<ThreePhaseMaterialTraits<double,0,1,2,true,true>>;
+template class ReadEffectiveParams<ThreePhaseMaterialTraits<float,0,1,2,true,true>>;
+template class ReadEffectiveParams<ThreePhaseMaterialTraits<double,2,0,1,true,true>>;
+template class ReadEffectiveParams<ThreePhaseMaterialTraits<float,2,0,1,true,true>>;
+template class ReadEffectiveParams<ThreePhaseMaterialTraits<double,0,1,2,false,true>>;
+template class ReadEffectiveParams<ThreePhaseMaterialTraits<float,0,1,2,false,true>>;
 
 } // namespace Opm::EclMaterialLaw

@@ -33,6 +33,7 @@
 #include <opm/material/fluidmatrixinteractions/SatCurveMultiplexer.hpp>
 
 #include <memory>
+#include <type_traits>
 #include <vector>
 
 namespace Opm::EclMaterialLaw {
@@ -65,18 +66,25 @@ public:
     using OilWaterEffectiveParams = typename OilWaterEffectiveLaw::Params;
     using GasWaterEffectiveParams = typename GasWaterEffectiveLaw::Params;
 
+    template <bool enableEPS, typename BaseLaw>
+    using SelectEPSLaw = std::conditional_t<enableEPS, EclEpsTwoPhaseLaw<BaseLaw>, BaseLaw>;
+
     // the two-phase material law which is defined on absolute (scaled) saturations
-    using GasOilEpsLaw = EclEpsTwoPhaseLaw<GasOilEffectiveLaw>;
-    using OilWaterEpsLaw = EclEpsTwoPhaseLaw<OilWaterEffectiveLaw>;
-    using GasWaterEpsLaw = EclEpsTwoPhaseLaw<GasWaterEffectiveLaw>;
+    using GasOilEpsLaw = SelectEPSLaw<Traits::enableEndpointScaling, GasOilEffectiveLaw>;
+    using OilWaterEpsLaw = SelectEPSLaw<Traits::enableEndpointScaling, OilWaterEffectiveLaw>;
+    using GasWaterEpsLaw = SelectEPSLaw<Traits::enableEndpointScaling, GasWaterEffectiveLaw>;
     using GasOilEpsParams = typename GasOilEpsLaw::Params;
     using OilWaterEpsParams = typename OilWaterEpsLaw::Params;
     using GasWaterEpsParams = typename GasWaterEpsLaw::Params;
 
-    // the scaled two-phase material laws with hysteresis
-    using GasOilLaw = EclHysteresisTwoPhaseLaw<GasOilEpsLaw>;
-    using OilWaterLaw = EclHysteresisTwoPhaseLaw<OilWaterEpsLaw>;
-    using GasWaterLaw = EclHysteresisTwoPhaseLaw<GasWaterEpsLaw>;
+    template <bool enableHyst, typename BaseLaw>
+    using SelectHystLaw = std::conditional_t<enableHyst, EclHysteresisTwoPhaseLaw<BaseLaw>, BaseLaw>;
+
+    // the (possibly scaled) two-phase material laws with hysteresis (or not)
+    using GasOilLaw = SelectHystLaw<Traits::enableHysteresis, GasOilEpsLaw>;
+    using OilWaterLaw = SelectHystLaw<Traits::enableHysteresis, OilWaterEpsLaw>;
+    using GasWaterLaw = SelectHystLaw<Traits::enableHysteresis, GasWaterEpsLaw>;
+
     using GasOilHystParams = typename GasOilLaw::Params;
     using OilWaterHystParams = typename OilWaterLaw::Params;
     using GasWaterHystParams = typename GasWaterLaw::Params;

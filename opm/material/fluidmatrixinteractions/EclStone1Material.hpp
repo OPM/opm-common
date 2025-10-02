@@ -158,12 +158,14 @@ public:
                                          Scalar& swMin,
                                          const Params& params)
     {
-        soMax = 1.0 - params.oilWaterParams().krnSwMdc();
-        swMax = params.oilWaterParams().krwSwMdc();
-        swMin = params.oilWaterParams().pcSwMdc();
-        Valgrind::CheckDefined(soMax);
-        Valgrind::CheckDefined(swMax);
-        Valgrind::CheckDefined(swMin);
+        if constexpr (Traits::enableHysteresis) {
+            soMax = 1.0 - params.oilWaterParams().krnSwMdc();
+            swMax = params.oilWaterParams().krwSwMdc();
+            swMin = params.oilWaterParams().pcSwMdc();
+            Valgrind::CheckDefined(soMax);
+            Valgrind::CheckDefined(swMax);
+            Valgrind::CheckDefined(swMin);
+        }
     }
 
     /*
@@ -178,7 +180,9 @@ public:
                                             const Scalar& swMin,
                                             Params& params)
     {
-        params.oilWaterParams().update(swMin, swMax, 1.0 - soMax);
+        if constexpr (Traits::enableHysteresis) {
+            params.oilWaterParams().update(swMin, swMax, 1.0 - soMax);
+        }
     }
 
     /*
@@ -193,14 +197,15 @@ public:
                                        Scalar& soMin,
                                        const Params& params)
     {
-        const auto Swco = params.Swl();
-        sgMax = 1.0 - params.gasOilParams().krnSwMdc() - Swco;
-        shMax = params.gasOilParams().krwSwMdc();
-        soMin = params.gasOilParams().pcSwMdc();
-
-        Valgrind::CheckDefined(sgMax);
-        Valgrind::CheckDefined(shMax);
-        Valgrind::CheckDefined(soMin);
+        if constexpr (Traits::enableHysteresis) {
+            const auto Swco = params.Swl();
+            sgMax = 1.0 - params.gasOilParams().krnSwMdc() - Swco;
+            shMax = params.gasOilParams().krwSwMdc();
+            soMin = params.gasOilParams().pcSwMdc();
+            Valgrind::CheckDefined(sgMax);
+            Valgrind::CheckDefined(shMax);
+            Valgrind::CheckDefined(soMin);
+        }
     }
 
     /*
@@ -215,8 +220,10 @@ public:
                                           const Scalar& soMin,
                                           Params& params)
     {
-        const auto Swco = params.Swl();
-        params.gasOilParams().update(soMin, shMax, 1.0 - sgMax - Swco);
+        if constexpr (Traits::enableHysteresis) {
+            const auto Swco = params.Swl();
+            params.gasOilParams().update(soMin, shMax, 1.0 - sgMax - Swco);
+        }
     }
 
     static Scalar trappedGasSaturation(const Params& params, bool maximumTrapping)
@@ -444,15 +451,19 @@ public:
     template <class FluidState>
     static bool updateHysteresis(Params& params, const FluidState& fluidState)
     {
-        const Scalar Swco = params.Swl();
-        const Scalar sw = clampSaturation(fluidState, waterPhaseIdx);
-        const Scalar So = clampSaturation(fluidState, oilPhaseIdx);
-        const Scalar sg = clampSaturation(fluidState, gasPhaseIdx);
-        bool owChanged = params.oilWaterParams().update(/*pcSw=*/sw, /*krwSw=*/sw, /*krnSw=*/1 - So);
-        bool gochanged = params.gasOilParams().update(/*pcSw=*/  So,
-                                                          /*krwSw=*/ So,
-                                                          /*krnSw=*/ 1.0 - Swco - sg);
-        return owChanged || gochanged;
+        if constexpr (Traits::enableHysteresis) {
+            const Scalar Swco = params.Swl();
+            const Scalar sw = clampSaturation(fluidState, waterPhaseIdx);
+            const Scalar So = clampSaturation(fluidState, oilPhaseIdx);
+            const Scalar sg = clampSaturation(fluidState, gasPhaseIdx);
+            bool owChanged = params.oilWaterParams().update(/*pcSw=*/sw, /*krwSw=*/sw, /*krnSw=*/1 - So);
+            bool gochanged = params.gasOilParams().update(/*pcSw=*/So,
+                                                          /*krwSw=*/So,
+                                                          /*krnSw=*/1.0 - Swco - sg);
+            return owChanged || gochanged;
+        } else {
+            return false;
+        }
     }
 
     template <class FluidState>

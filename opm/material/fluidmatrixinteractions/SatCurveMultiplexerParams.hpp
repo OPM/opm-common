@@ -35,9 +35,10 @@
 
 #include <opm/material/common/EnsureFinalized.hpp>
 
-#include <type_traits>
 #include <cassert>
 #include <memory>
+#include <stdexcept>
+#include <type_traits>
 
 namespace Opm {
 
@@ -183,6 +184,22 @@ public:
             break;
         }
     }
+
+    Scalar SnTrapped([[maybe_unused]] bool maximumTrapping) const
+    {
+        throw std::logic_error("SatCurveMultiplexerParams::SnTrapped() not implemented");
+    }
+
+    Scalar SnStranded([[maybe_unused]] Scalar sg, [[maybe_unused]] Scalar krg) const
+    {
+        throw std::logic_error("SatCurveMultiplexerParams::SnStranded() not implemented");
+    }
+
+    Scalar SwTrapped() const
+    {
+        throw std::logic_error("SatCurveMultiplexerParams::SwTrapped() not implemented");
+    }
+
 
 private:
     template <class ParamT>

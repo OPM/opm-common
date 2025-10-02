@@ -277,7 +277,9 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(ApiConformance, Scalar, Types)
     using ThreePhaseTraits = Opm::ThreePhaseMaterialTraits<Scalar,
                                                            ThreePFluidSystem::waterPhaseIdx,
                                                            ThreePFluidSystem::oilPhaseIdx,
-                                                           ThreePFluidSystem::gasPhaseIdx>;
+                                                           ThreePFluidSystem::gasPhaseIdx,
+                                                           true,  // enable hysteresis
+                                                           true>; // enable endpoint scaling
 
     using Evaluation = Opm::DenseAd::Evaluation<Scalar, 3>;
     using TwoPhaseFluidState = Opm::ImmiscibleFluidState<Evaluation, TwoPFluidSystem>;

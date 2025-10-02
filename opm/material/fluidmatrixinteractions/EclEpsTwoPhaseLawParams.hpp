@@ -113,6 +113,21 @@ public:
     ScalingPoints& scaledPoints()
     { return scaledPoints_; }
 
+    Scalar SnTrapped([[maybe_unused]] bool maximumTrapping) const
+    {
+        return 0.0;
+    }
+
+    Scalar SnStranded([[maybe_unused]] Scalar sg, [[maybe_unused]] Scalar krg) const
+    {
+        return 0.0;
+    }
+
+    Scalar SwTrapped() const
+    {
+        return 0.0;
+    }
+
     /*!
      * \brief Sets the parameter object for the effective/nested material law.
      */
@@ -124,6 +139,15 @@ public:
      */
     const EffLawParams& effectiveLawParams() const
     { return *effectiveLawParams_; }
+
+    template<class Serializer>
+    void serializeOp(Serializer&)
+    {
+        // Do nothing, this class has no dynamic state!
+        // It is still somewhat useful to have this function,
+        // as then we do not need to embed that knowledge in
+        // other classes that may contain this one.
+    }
 
 private:
     EffLawParams* effectiveLawParams_{};

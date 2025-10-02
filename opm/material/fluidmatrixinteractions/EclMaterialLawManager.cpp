@@ -55,12 +55,6 @@ initFromState(const EclipseState& eclState)
     readGlobalHysteresisOptions_(eclState);
     readGlobalThreePhaseOptions_(runspec);
 
-    // Read the end point scaling configuration (once per run).
-    gasOilConfig_.initFromState(eclState, EclTwoPhaseSystemType::GasOil);
-    oilWaterConfig_.initFromState(eclState, EclTwoPhaseSystemType::OilWater);
-    gasWaterConfig_.initFromState(eclState, EclTwoPhaseSystemType::GasWater);
-
-
     const auto& tables = eclState.getTableManager();
 
     {
@@ -208,7 +202,7 @@ applySwatinit(unsigned elemIdx,
 
     auto& elemEclEpsScalingPoints = oilWaterScaledEpsPointsDrainage(elemIdx);
     elemEclEpsScalingPoints.init(elemScaledEpsInfo,
-                                 oilWaterEclEpsConfig_,
+                                 oilWaterConfig_,
                                  EclTwoPhaseSystemType::OilWater);
 
     return {Sw, newSwatInit};
@@ -229,9 +223,23 @@ applyRestartSwatInit(const unsigned elemIdx,
 
     this->oilWaterScaledEpsPointsDrainage(elemIdx)
         .init(elemScaledEpsInfo,
-              this->oilWaterEclEpsConfig_,
+              this->oilWaterConfig_,
               EclTwoPhaseSystemType::OilWater);
 }
+
+namespace
+{
+// Helper to get the eps level parameters.
+template <class TraitsT, class MaybeHystParams>
+auto& getDrainageParams(MaybeHystParams& p)
+{
+    if constexpr(TraitsT::enableHysteresis) {
+        return p.drainageParams();
+    } else {
+        return p;
+    }
+}
+} // anon namespace
 
 template<class TraitsT>
 const typename Manager<TraitsT>::MaterialLawParams&
@@ -250,45 +258,45 @@ connectionMaterialLawParams(unsigned satRegionIdx, unsigned elemIdx) const
     case EclMultiplexerApproach::Stone1: {
         auto& realParams = mlp.template getRealParams<EclMultiplexerApproach::Stone1>();
 
-        realParams.oilWaterParams().drainageParams().setUnscaledPoints(params_.oilWaterUnscaledPointsVector[satRegionIdx]);
-        realParams.oilWaterParams().drainageParams().setEffectiveLawParams(params_.oilWaterEffectiveParamVector[satRegionIdx]);
-        realParams.gasOilParams().drainageParams().setUnscaledPoints(params_.gasOilUnscaledPointsVector[satRegionIdx]);
-        realParams.gasOilParams().drainageParams().setEffectiveLawParams(params_.gasOilEffectiveParamVector[satRegionIdx]);
+        getDrainageParams<Traits>(realParams.oilWaterParams()).setUnscaledPoints(params_.oilWaterUnscaledPointsVector[satRegionIdx]);
+        getDrainageParams<Traits>(realParams.oilWaterParams()).setEffectiveLawParams(params_.oilWaterEffectiveParamVector[satRegionIdx]);
+        getDrainageParams<Traits>(realParams.gasOilParams()).setUnscaledPoints(params_.gasOilUnscaledPointsVector[satRegionIdx]);
+        getDrainageParams<Traits>(realParams.gasOilParams()).setEffectiveLawParams(params_.gasOilEffectiveParamVector[satRegionIdx]);
 //            if (enableHysteresis()) {
-//                realParams.oilWaterParams().imbibitionParams().setUnscaledPoints(oilWaterUnscaledPointsVector_[impRegionIdx]);
-//                realParams.oilWaterParams().imbibitionParams().setEffectiveLawParams(oilWaterEffectiveParamVector_[impRegionIdx]);
-//                realParams.gasOilParams().imbibitionParams().setUnscaledPoints(gasOilUnscaledPointsVector_[impRegionIdx]);
-//                realParams.gasOilParams().imbibitionParams().setEffectiveLawParams(gasOilEffectiveParamVector_[impRegionIdx]);
+//                getImbParams(realParams.oilWaterParams()).setUnscaledPoints(oilWaterUnscaledPointsVector_[impRegionIdx]);
+//                getImbParams(realParams.oilWaterParams()).setEffectiveLawParams(oilWaterEffectiveParamVector_[impRegionIdx]);
+//                getImbParams(realParams.gasOilParams()).setUnscaledPoints(gasOilUnscaledPointsVector_[impRegionIdx]);
+//                getImbParams(realParams.gasOilParams()).setEffectiveLawParams(gasOilEffectiveParamVector_[impRegionIdx]);
 //            }
     }
         break;
 
     case EclMultiplexerApproach::Stone2: {
         auto& realParams = mlp.template getRealParams<EclMultiplexerApproach::Stone2>();
-        realParams.oilWaterParams().drainageParams().setUnscaledPoints(params_.oilWaterUnscaledPointsVector[satRegionIdx]);
-        realParams.oilWaterParams().drainageParams().setEffectiveLawParams(params_.oilWaterEffectiveParamVector[satRegionIdx]);
-        realParams.gasOilParams().drainageParams().setUnscaledPoints(params_.gasOilUnscaledPointsVector[satRegionIdx]);
-        realParams.gasOilParams().drainageParams().setEffectiveLawParams(params_.gasOilEffectiveParamVector[satRegionIdx]);
+        getDrainageParams<Traits>(realParams.oilWaterParams()).setUnscaledPoints(params_.oilWaterUnscaledPointsVector[satRegionIdx]);
+        getDrainageParams<Traits>(realParams.oilWaterParams()).setEffectiveLawParams(params_.oilWaterEffectiveParamVector[satRegionIdx]);
+        getDrainageParams<Traits>(realParams.gasOilParams()).setUnscaledPoints(params_.gasOilUnscaledPointsVector[satRegionIdx]);
+        getDrainageParams<Traits>(realParams.gasOilParams()).setEffectiveLawParams(params_.gasOilEffectiveParamVector[satRegionIdx]);
 //            if (enableHysteresis()) {
-//                realParams.oilWaterParams().imbibitionParams().setUnscaledPoints(oilWaterUnscaledPointsVector_[impRegionIdx]);
-//                realParams.oilWaterParams().imbibitionParams().setEffectiveLawParams(oilWaterEffectiveParamVector_[impRegionIdx]);
-//                realParams.gasOilParams().imbibitionParams().setUnscaledPoints(gasOilUnscaledPointsVector_[impRegionIdx]);
-//                realParams.gasOilParams().imbibitionParams().setEffectiveLawParams(gasOilEffectiveParamVector_[impRegionIdx]);
+//                getImbParams(realParams.oilWaterParams()).setUnscaledPoints(oilWaterUnscaledPointsVector_[impRegionIdx]);
+//                getImbParams(realParams.oilWaterParams()).setEffectiveLawParams(oilWaterEffectiveParamVector_[impRegionIdx]);
+//                getImbParams(realParams.gasOilParams()).setUnscaledPoints(gasOilUnscaledPointsVector_[impRegionIdx]);
+//                getImbParams(realParams.gasOilParams()).setEffectiveLawParams(gasOilEffectiveParamVector_[impRegionIdx]);
 //            }
     }
         break;
 
     case EclMultiplexerApproach::Default: {
         auto& realParams = mlp.template getRealParams<EclMultiplexerApproach::Default>();
-        realParams.oilWaterParams().drainageParams().setUnscaledPoints(params_.oilWaterUnscaledPointsVector[satRegionIdx]);
-        realParams.oilWaterParams().drainageParams().setEffectiveLawParams(params_.oilWaterEffectiveParamVector[satRegionIdx]);
-        realParams.gasOilParams().drainageParams().setUnscaledPoints(params_.gasOilUnscaledPointsVector[satRegionIdx]);
-        realParams.gasOilParams().drainageParams().setEffectiveLawParams(params_.gasOilEffectiveParamVector[satRegionIdx]);
+        getDrainageParams<Traits>(realParams.oilWaterParams()).setUnscaledPoints(params_.oilWaterUnscaledPointsVector[satRegionIdx]);
+        getDrainageParams<Traits>(realParams.oilWaterParams()).setEffectiveLawParams(params_.oilWaterEffectiveParamVector[satRegionIdx]);
+        getDrainageParams<Traits>(realParams.gasOilParams()).setUnscaledPoints(params_.gasOilUnscaledPointsVector[satRegionIdx]);
+        getDrainageParams<Traits>(realParams.gasOilParams()).setEffectiveLawParams(params_.gasOilEffectiveParamVector[satRegionIdx]);
 //            if (enableHysteresis()) {
-//                realParams.oilWaterParams().imbibitionParams().setUnscaledPoints(oilWaterUnscaledPointsVector_[impRegionIdx]);
-//                realParams.oilWaterParams().imbibitionParams().setEffectiveLawParams(oilWaterEffectiveParamVector_[impRegionIdx]);
-//                realParams.gasOilParams().imbibitionParams().setUnscaledPoints(gasOilUnscaledPointsVector_[impRegionIdx]);
-//                realParams.gasOilParams().imbibitionParams().setEffectiveLawParams(gasOilEffectiveParamVector_[impRegionIdx]);
+//                getImbParams(realParams.oilWaterParams()).setUnscaledPoints(oilWaterUnscaledPointsVector_[impRegionIdx]);
+//                getImbParams(realParams.oilWaterParams()).setEffectiveLawParams(oilWaterEffectiveParamVector_[impRegionIdx]);
+//                getImbParams(realParams.gasOilParams()).setUnscaledPoints(gasOilUnscaledPointsVector_[impRegionIdx]);
+//                getImbParams(realParams.gasOilParams()).setEffectiveLawParams(gasOilEffectiveParamVector_[impRegionIdx]);
 //            }
     }
         break;
@@ -296,22 +304,22 @@ connectionMaterialLawParams(unsigned satRegionIdx, unsigned elemIdx) const
     case EclMultiplexerApproach::TwoPhase: {
         auto& realParams = mlp.template getRealParams<EclMultiplexerApproach::TwoPhase>();
         if (realParams.approach() == EclTwoPhaseApproach::GasOil) {
-            realParams.gasOilParams().drainageParams().setUnscaledPoints(params_.gasOilUnscaledPointsVector[satRegionIdx]);
-            realParams.gasOilParams().drainageParams().setEffectiveLawParams(params_.gasOilEffectiveParamVector[satRegionIdx]);
+            getDrainageParams<Traits>(realParams.gasOilParams()).setUnscaledPoints(params_.gasOilUnscaledPointsVector[satRegionIdx]);
+            getDrainageParams<Traits>(realParams.gasOilParams()).setEffectiveLawParams(params_.gasOilEffectiveParamVector[satRegionIdx]);
         }
         else if (realParams.approach() == EclTwoPhaseApproach::GasWater) {
-            realParams.gasWaterParams().drainageParams().setUnscaledPoints(params_.gasWaterUnscaledPointsVector[satRegionIdx]);
-            realParams.gasWaterParams().drainageParams().setEffectiveLawParams(params_.gasWaterEffectiveParamVector[satRegionIdx]);
+            getDrainageParams<Traits>(realParams.gasWaterParams()).setUnscaledPoints(params_.gasWaterUnscaledPointsVector[satRegionIdx]);
+            getDrainageParams<Traits>(realParams.gasWaterParams()).setEffectiveLawParams(params_.gasWaterEffectiveParamVector[satRegionIdx]);
         }
         else if (realParams.approach() == EclTwoPhaseApproach::OilWater) {
-            realParams.oilWaterParams().drainageParams().setUnscaledPoints(params_.oilWaterUnscaledPointsVector[satRegionIdx]);
-            realParams.oilWaterParams().drainageParams().setEffectiveLawParams(params_.oilWaterEffectiveParamVector[satRegionIdx]);
+            getDrainageParams<Traits>(realParams.oilWaterParams()).setUnscaledPoints(params_.oilWaterUnscaledPointsVector[satRegionIdx]);
+            getDrainageParams<Traits>(realParams.oilWaterParams()).setEffectiveLawParams(params_.oilWaterEffectiveParamVector[satRegionIdx]);
         }
 //            if (enableHysteresis()) {
-//                realParams.oilWaterParams().imbibitionParams().setUnscaledPoints(oilWaterUnscaledPointsVector_[impRegionIdx]);
-//                realParams.oilWaterParams().imbibitionParams().setEffectiveLawParams(oilWaterEffectiveParamVector_[impRegionIdx]);
-//                realParams.gasOilParams().imbibitionParams().setUnscaledPoints(gasOilUnscaledPointsVector_[impRegionIdx]);
-//                realParams.gasOilParams().imbibitionParams().setEffectiveLawParams(gasOilEffectiveParamVector_[impRegionIdx]);
+//                getImbParams(realParams.oilWaterParams()).setUnscaledPoints(oilWaterUnscaledPointsVector_[impRegionIdx]);
+//                getImbParams(realParams.oilWaterParams()).setEffectiveLawParams(oilWaterEffectiveParamVector_[impRegionIdx]);
+//                getImbParams(realParams.gasOilParams()).setUnscaledPoints(gasOilUnscaledPointsVector_[impRegionIdx]);
+//                getImbParams(realParams.gasOilParams()).setEffectiveLawParams(gasOilEffectiveParamVector_[impRegionIdx]);
 //            }
     }
         break;
@@ -319,7 +327,6 @@ connectionMaterialLawParams(unsigned satRegionIdx, unsigned elemIdx) const
     default:
         throw std::logic_error("Enum value for material approach unknown!");
     }
-
     return mlp;
 }
 
@@ -409,6 +416,20 @@ setGasOilHysteresisParams(const Scalar& sgmax,
     MaterialLaw::setGasOilHysteresisParams(sgmax, shmax, somin, materialLawParams(elemIdx));
 }
 
+namespace
+{
+template<class TraitsT, class MaterialLawParamsT>
+EclEpsScalingPoints<typename TraitsT::Scalar>&
+owsepdHelper(MaterialLawParamsT& mlp)
+{
+    if constexpr(TraitsT::enableHysteresis) {
+        return mlp.oilWaterParams().drainageParams().scaledPoints();
+    } else {
+        return mlp.oilWaterParams().scaledPoints();
+    }
+}
+} // anon namespace
+
 template<class TraitsT>
 EclEpsScalingPoints<typename TraitsT::Scalar>&
 Manager<TraitsT>::
@@ -418,22 +439,22 @@ oilWaterScaledEpsPointsDrainage(unsigned elemIdx)
     switch (materialParams.approach()) {
     case EclMultiplexerApproach::Stone1: {
         auto& realParams = materialParams.template getRealParams<EclMultiplexerApproach::Stone1>();
-        return realParams.oilWaterParams().drainageParams().scaledPoints();
+        return owsepdHelper<Traits>(realParams);
     }
 
     case EclMultiplexerApproach::Stone2: {
         auto& realParams = materialParams.template getRealParams<EclMultiplexerApproach::Stone2>();
-        return realParams.oilWaterParams().drainageParams().scaledPoints();
+        return owsepdHelper<Traits>(realParams);
     }
 
     case EclMultiplexerApproach::Default: {
         auto& realParams = materialParams.template getRealParams<EclMultiplexerApproach::Default>();
-        return realParams.oilWaterParams().drainageParams().scaledPoints();
+        return owsepdHelper<Traits>(realParams);
     }
 
     case EclMultiplexerApproach::TwoPhase: {
         auto& realParams = materialParams.template getRealParams<EclMultiplexerApproach::TwoPhase>();
-        return realParams.oilWaterParams().drainageParams().scaledPoints();
+        return owsepdHelper<Traits>(realParams);
     }
     default:
         throw std::logic_error("Enum value for material approach unknown!");
@@ -471,9 +492,12 @@ void
 Manager<TraitsT>::
 readGlobalEpsOptions_(const EclipseState& eclState)
 {
-    oilWaterEclEpsConfig_.initFromState(eclState, EclTwoPhaseSystemType::OilWater);
-
     enableEndPointScaling_ = eclState.getTableManager().hasTables("ENKRVD");
+
+    // Read the end point scaling configuration (once per run).
+    gasOilConfig_.initFromState(eclState, EclTwoPhaseSystemType::GasOil);
+    oilWaterConfig_.initFromState(eclState, EclTwoPhaseSystemType::OilWater);
+    gasWaterConfig_.initFromState(eclState, EclTwoPhaseSystemType::GasWater);
 }
 
 template<class TraitsT>
@@ -523,9 +547,11 @@ readGlobalThreePhaseOptions_(const Runspec& runspec)
     }
 }
 
-template class Manager<ThreePhaseMaterialTraits<double,0,1,2>>;
-template class Manager<ThreePhaseMaterialTraits<float,0,1,2>>;
-template class Manager<ThreePhaseMaterialTraits<double,2,0,1>>;
-template class Manager<ThreePhaseMaterialTraits<float,2,0,1>>;
+template class Manager<ThreePhaseMaterialTraits<double,0,1,2,true,true>>;
+template class Manager<ThreePhaseMaterialTraits<float,0,1,2,true,true>>;
+template class Manager<ThreePhaseMaterialTraits<double,2,0,1,true,true>>;
+template class Manager<ThreePhaseMaterialTraits<float,2,0,1,true,true>>;
+template class Manager<ThreePhaseMaterialTraits<double,0,1,2,false,true>>;
+template class Manager<ThreePhaseMaterialTraits<float,0,1,2,false,true>>;
 
 } // namespace Opm::EclMaterialLaw

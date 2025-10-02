@@ -704,10 +704,14 @@ struct Fixture {
     enum { waterPhaseIdx = 0 };
     enum { oilPhaseIdx = 1 };
     enum { gasPhaseIdx = 2 };
+    static constexpr bool enableHysteresis = true;
+    static constexpr bool enableEndpointScaling = true;
     using MaterialTraits = Opm::ThreePhaseMaterialTraits<Scalar,
                                                          waterPhaseIdx,
                                                          oilPhaseIdx,
-                                                         gasPhaseIdx>;
+                                                         gasPhaseIdx,
+                                                         enableHysteresis,
+                                                         enableEndpointScaling>;
 
     using FluidState = Opm::SimpleModularFluidState<Scalar,
                                                     /*numPhases=*/3,

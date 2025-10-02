@@ -357,9 +357,11 @@ satRegion_(const std::vector<int>& array, unsigned elemIdx) const
 }
 
 // Make some actual code, by realizing the previously defined templated class
-template class InitParams<ThreePhaseMaterialTraits<double,0,1,2>>;
-template class InitParams<ThreePhaseMaterialTraits<float,0,1,2>>;
-template class InitParams<ThreePhaseMaterialTraits<double,2,0,1>>;
-template class InitParams<ThreePhaseMaterialTraits<float,2,0,1>>;
+template class InitParams<ThreePhaseMaterialTraits<double,0,1,2,true,true>>;
+template class InitParams<ThreePhaseMaterialTraits<float,0,1,2,true,true>>;
+template class InitParams<ThreePhaseMaterialTraits<double,2,0,1,true,true>>;
+template class InitParams<ThreePhaseMaterialTraits<float,2,0,1,true,true>>;
+template class InitParams<ThreePhaseMaterialTraits<double,0,1,2,false,true>>;
+template class InitParams<ThreePhaseMaterialTraits<float,0,1,2,false,true>>;
 
 } // namespace Opm::EclMaterialLaw
