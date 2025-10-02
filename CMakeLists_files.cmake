@@ -593,6 +593,7 @@ if(ENABLE_ECL_INPUT)
     tests/parser/MultisegmentWellTests.cpp
     tests/parser/MULTREGTScannerTests.cpp
     tests/parser/NetworkTests.cpp
+    tests/parser/OperateTests.cpp
     tests/parser/OrderedMapTests.cpp
     tests/parser/ParseContextTests.cpp
     tests/parser/ParseContext_EXIT1.cpp
