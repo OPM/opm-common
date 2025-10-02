@@ -184,7 +184,7 @@ BOOST_AUTO_TEST_CASE(WlistInvalid) {
   std::string wlist_invalid_list2 = WELSPECS() +
     "WLIST\n"
     " \'*LIST1\' \'NEW\' W1 /\n"
-    " \'*LIST2\' \'ADD\' W2 /\n"
+    " \'*LIST2\' \'DEL\' W2 /\n"
     "/\n"
     "DATES\n"
     "10 JLY 2007 /\n"
@@ -283,4 +283,62 @@ BOOST_AUTO_TEST_CASE(WlistPattern) {
   BOOST_CHECK( vector_equal(wlm.wells("*LIST2"), {"W1", "W3"}));
   BOOST_CHECK( vector_equal(wlm.wells("*LIST*"), {"W1", "W2", "W3"}));
   BOOST_CHECK( vector_equal(wlm.wells("**OLL*"), {"C1", "C2"}));
+}
+
+BOOST_AUTO_TEST_CASE(WListNewMoveDel) {
+    std::string wlist = WELSPECS() +
+                        "WLIST\n"
+                        " \'*LIST1\' \'ADD\' W1 W2 /\n"
+                        " \'*LIST1\' \'ADD\' W3 W4 /\n"
+                        " \'*LIST2\' \'MOV\' W1 W3 /\n"
+                        " \'*LIST4\' \'ADD\' \'*LIST1\' /\n"
+                        " \'*LIST5\' \'ADD\' \'W*\' /\n"
+                        " \'*LIST6\' \'MOV\' \'I*\' /\n"
+                        "/\n"
+                        "DATES\n"
+                        "10 JLY 2007 /\n"
+                        "10 AUG 2007 /\n"
+                        "/\n"
+                        "WLIST\n"
+                        " \'*LIST3\' \'NEW\' /\n"
+                        " \'*LIST3\' \'MOV\' W1 W3 /\n"
+                        "/\n";
+
+    auto sched = createSchedule(wlist);
+    {
+        const auto& wlm = sched[1].wlist_manager.get();
+        const auto& wl1 = wlm.getList("*LIST1");
+        const auto& wl2 = wlm.getList("*LIST2");
+        const auto& wl4 = wlm.getList("*LIST4");
+        const auto& wl5 = wlm.getList("*LIST5");
+        const auto& wl6 = wlm.getList("*LIST6");
+
+        BOOST_CHECK_EQUAL(wl1.wells().size(), 2U );
+        BOOST_CHECK_EQUAL(wl2.wells().size(), 2U );
+        BOOST_CHECK_EQUAL(wl4.wells().size(), 2U );
+        BOOST_CHECK_EQUAL(wl5.wells().size(), 4U );
+        BOOST_CHECK_EQUAL(wl6.wells().size(), 0U );
+    }
+    {
+        const auto& wlm = sched[2].wlist_manager.get();
+        const auto& wl1 = wlm.getList("*LIST1");
+        const auto& wl2 = wlm.getList("*LIST2");
+        const auto& wl3 = wlm.getList("*LIST3");
+
+        BOOST_CHECK_EQUAL(wl1.wells().size(), 2U );
+        BOOST_CHECK_EQUAL(wl2.wells().size(), 0U );
+        BOOST_CHECK_EQUAL(wl3.wells().size(), 2U );
+
+        BOOST_CHECK( wl1.has("W2"));
+        BOOST_CHECK( wl1.has("W4"));
+
+        BOOST_CHECK( !wl2.has("W1"));
+        BOOST_CHECK( !wl2.has("W3"));
+
+        BOOST_CHECK( wl3.has("W1"));
+        BOOST_CHECK( wl3.has("W3"));
+
+        const auto& wells1 = wlm.wells("*LIST1");
+        BOOST_CHECK( wells1 == wl1.wells() );
+    }
 }

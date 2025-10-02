@@ -62,6 +62,7 @@ public:
     std::size_t getNoWListsWell(const std::string& wname) const;
     bool hasWList(const std::string& wname) const;
     void addWListWell(const std::string& wname, const std::string& wlname);
+    void addOrCreateWellList(const std::string& wlname, const std::vector<std::string>& wnames);
     void delWell(const std::string& wname);
     void delWListWell(const std::string& wname, const std::string& wlname);
 

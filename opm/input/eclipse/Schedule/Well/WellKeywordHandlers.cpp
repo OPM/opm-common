@@ -887,24 +887,38 @@ void handleWHISTCTL(HandlerContext& handlerContext)
 
 void handleWLIST(HandlerContext& handlerContext)
 {
-    const std::string legal_actions = "NEW:ADD:DEL:MOV";
+    enum class WellListAction { New, Add, Del, Mov, Invalid };
+
+    auto parseAction = [](const std::string& action) {
+        if (action == "NEW") return WellListAction::New;
+        if (action == "ADD") return WellListAction::Add;
+        if (action == "DEL") return WellListAction::Del;
+        if (action == "MOV") return WellListAction::Mov;
+        return WellListAction::Invalid;
+    };
+
     for (const auto& record : handlerContext.keyword) {
-        const std::string& name = record.getItem("NAME").getTrimmedString(0);
-        const std::string& action = record.getItem("ACTION").getTrimmedString(0);
+        const std::string name = record.getItem("NAME").getTrimmedString(0);
+        const std::string action_str = record.getItem("ACTION").getTrimmedString(0);
         const std::vector<std::string>& well_args = record.getItem("WELLS").getData<std::string>();
         std::vector<std::string> wells;
         auto new_wlm = handlerContext.state().wlist_manager.get();
 
-        if (legal_actions.find(action) == std::string::npos)
-            throw std::invalid_argument("The action:" + action + " is not recognized.");
+        WellListAction action = parseAction(action_str);
+        if (action == WellListAction::Invalid) {
+                const auto& parseContext = handlerContext.parseContext;
+                parseContext.handleError(ParseContext::SCHEDULE_INVALID_NAME,
+                fmt::format("The action: {} is not recognized.", action_str),
+                handlerContext.keyword.location(), handlerContext.errors);
+        }
 
         for (const auto& well_arg : well_args) {
             // does not use overload for context to avoid throw
             const auto names = handlerContext.wellNames(well_arg, true);
             if (names.empty() && well_arg.find("*") == std::string::npos) {
-                std::string msg_fmt = "Problem with {keyword}\n"
-                                      "In {file} line {line}\n"
-                                      "The well '" + well_arg + "' has not been defined with WELSPECS and will not be added to the list.";
+                const std::string msg_fmt = "Problem with {keyword}\n"
+                                            "In {file} line {line}\n"
+                                            "The well '" + well_arg + "' has not been defined with WELSPECS and will not be added to the list.";
                 const auto& parseContext = handlerContext.parseContext;
                 parseContext.handleError(ParseContext::SCHEDULE_INVALID_NAME, msg_fmt, handlerContext.keyword.location(),handlerContext.errors);
                 continue;
@@ -916,27 +930,41 @@ void handleWLIST(HandlerContext& handlerContext)
         if (name[0] != '*')
             throw std::invalid_argument("The list name in WLIST must start with a '*'");
 
-        if (action == "NEW") {
+        switch (action) {
+        case WellListAction::New: {
             new_wlm.newList(name, wells);
+            break;
         }
-
-        if (!new_wlm.hasList(name))
-            throw std::invalid_argument("Invalid well list: " + name);
-
-        if (action == "MOV") {
+        case WellListAction::Add: {
+            new_wlm.addOrCreateWellList(name, wells);
+            break;
+        }
+        case WellListAction::Mov: {
             for (const auto& well : wells) {
                 new_wlm.delWell(well);
             }
+            new_wlm.addOrCreateWellList(name, wells);
+            break;
         }
-
-        if (action == "DEL") {
-            for (const auto& well : wells) {
-                new_wlm.delWListWell(well, name);
+        case WellListAction::Del: {
+            if (new_wlm.hasList(name)) {
+                for (const auto& well : wells) {
+                    new_wlm.delWListWell(well, name);
+                }
+            } else {
+                const std::string msg_fmt = fmt::format("Problem with {{keyword}} in {{file}} line {{line}}\n"
+                                                        "The well list '{}' has not been defined and the operation DEL can not be applied.",
+                                                         name);
+                const auto& parseContext = handlerContext.parseContext;
+                parseContext.handleError(ParseContext::SCHEDULE_INVALID_NAME,
+                                         msg_fmt,
+                                         handlerContext.keyword.location(),
+                                         handlerContext.errors);
             }
-        } else if (action != "NEW"){
-            for (const auto& well : wells) {
-                new_wlm.addWListWell(well, name);
-            }
+            break;
+        }
+        default:
+            break;
         }
         handlerContext.state().wlist_manager.update( std::move(new_wlm) );
     }
