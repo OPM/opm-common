@@ -716,6 +716,8 @@ if(ENABLE_ECL_OUTPUT)
           tests/BASE_SIM_THPRES.DATA
           tests/LGR_3WELLS.DATA
           tests/LGR_BASESIM2WELLS.DATA
+          tests/LGR_DIFFGROUP.DATA
+          tests/LGR_GROUP_EX01.DATA
           tests/RESTART_SIM.DATA
           tests/summary_deck.DATA
           tests/group_group.DATA
