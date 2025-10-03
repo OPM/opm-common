@@ -36,7 +36,6 @@
 #include <opm/input/eclipse/EclipseState/Phase.hpp>
 
 #include <algorithm>
-#include <cassert>
 #include <stdexcept>
 
 #include <fmt/format.h>
@@ -92,6 +91,24 @@ void PhaseUsageInfo<IndexTraits>::initFromState(const EclipseState& eclState)
     has_biofilm = eclState.runspec().biof();
     has_micp = eclState.runspec().micp();
     has_co2_or_h2store = eclState.runspec().co2Storage() || eclState.runspec().h2Storage();
+    enable_dissolved_gas_ = eclState.getSimulationConfig().hasDISGAS();
+    enable_vaporized_oil_ = eclState.getSimulationConfig().hasVAPOIL();
+    enable_vaporized_water_ = eclState.getSimulationConfig().hasVAPWAT();
+    const bool disgasw = eclState.getSimulationConfig().hasDISGASW();
+    if (disgasw) {
+        if (has_co2_or_h2store) {
+            enable_dissolved_gas_in_water_ = true;
+        } else if (eclState.runspec().co2Sol() || eclState.runspec().h2Sol()) {
+            // For CO2SOL and H2SOL the dissolved gas in water is added in the solvent model
+            // The HC gas is not allowed to dissolve into water.
+            // For most HC gases this is a reasonable assumption.
+            OpmLog::info("CO2SOL/H2SOL is activated together with DISGASW.\n"
+                         "Only CO2/H2 is allowed to dissolve into water");
+        } else {
+            OPM_THROW(std::runtime_error,
+                      "DISGASW is only supported in combination with CO2STORE, H2STORE, CO2SOL, or H2SOL.");
+        }
+    }
 }
 
 template <typename IndexTraits>
@@ -129,8 +146,14 @@ void PhaseUsageInfo<IndexTraits>::initFromPhases(const Phases& phases) {
     has_zFraction = phases.active(Phase::ZFRACTION);
 
     this->updateIndexMapping_();
+    this->updateIndices_();
 }
 #endif
+
+template <typename IndexTraits>
+void PhaseUsageInfo<IndexTraits>::updateIndices_() {
+    contiSolventEqIdx_ = has_solvent ? numActivePhases_ : -1000;
+}
 
 // Explicit template instantiations for commonly used IndexTraits
 template class PhaseUsageInfo<BlackOilDefaultFluidSystemIndices>;
