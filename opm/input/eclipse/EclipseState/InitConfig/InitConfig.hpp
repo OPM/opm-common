@@ -28,6 +28,7 @@
 namespace Opm {
 
     class Deck;
+    class Phases;
 
 } // namespace Opm
 
@@ -48,7 +49,7 @@ namespace Opm {
         /// Internalises the run's initialisation-related information.
         ///
         /// \param[in] deck Run's model description.
-        explicit InitConfig(const Deck& deck);
+        InitConfig(const Deck& deck, const Phases& phases);
 
         /// Create a serialisation test object.
         static InitConfig serializationTestObject();
