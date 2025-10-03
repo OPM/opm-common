@@ -112,6 +112,21 @@ namespace {
         return ngmax - 1;
     }
 
+    int numGroupsInField(const Opm::Schedule& sched,
+                         const std::size_t    lookup_step,
+                         [[maybe_unused]] const std::string&   lgr_tag)
+    {
+        return numGroupsInField(sched, lookup_step);
+        // Following code should be enabled when AggregateGroupData.cpp is fixed
+        // if (lgr_tag == "GLOBAL" or  lgr_tag.empty()){
+        //     return numGroupsInField(sched, lookup_step);
+        // }
+        // else {
+        //     // This is the default value and correspond to a single well group for LGR grids.
+        //     return 1;
+        // }
+    }
+
     int GroupControl(const Opm::Schedule& sched,
                      const std::size_t    report_step,
                      const std::size_t    lookup_step)
@@ -238,9 +253,11 @@ namespace {
                      const std::size_t      report_step,
                      const std::size_t      lookup_step)
     {
+
         const auto& wd = rspec.wellDimensions();
 
-        const auto numWells = static_cast<int>(sched.numWells(lookup_step));
+        const auto schedule_state = sched[lookup_step];
+        int numWells = static_cast<int>(sched.numWells(lookup_step));
 
         const auto maxPerf =
             std::max(wd.maxConnPerWell(),
@@ -265,6 +282,77 @@ namespace {
         };
     }
 
+
+    Opm::RestartIO::InteHEAD::WellTableDim
+    getWellTableDims(const int              nwgmax,
+                     const int              ngmax,
+                     const ::Opm::Runspec&  rspec,
+                     const ::Opm::Schedule& sched,
+                     const std::size_t      report_step,
+                     const std::size_t      lookup_step,
+                     const std::string&     lgr_tag)
+    {
+        if ((lgr_tag == "GLOBAL") or (lgr_tag.empty()))
+        {
+            return getWellTableDims(nwgmax,ngmax,rspec,sched,report_step,lookup_step);
+        }
+
+        const auto& wd = rspec.wellDimensions();
+
+        const auto schedule_state = sched[lookup_step];
+        const auto wnames = sched.wellNames(lookup_step);
+        int numWells = std::count_if(wnames.begin(), wnames.end(),
+        [&lgr_tag, &sched = sched[lookup_step]](const auto& wname)
+        { return sched.wells(wname).get_lgr_well_tag().value_or("") == lgr_tag; });
+
+        const auto maxPerf =
+            std::max(wd.maxConnPerWell(),
+                     maxConnPerWell(sched, report_step, lookup_step));
+
+        int maxWellInGroup_acum = 0;
+        for (const auto& grp: sched.restart_groups(lookup_step))
+        {
+            if (grp == nullptr) continue;
+            if (grp->wellgroup() and schedule_state.group_contains_lgr(*grp, lgr_tag))
+            {
+                int num_well_local = schedule_state.num_lgr_well_in_group(*grp, lgr_tag);
+                maxWellInGroup_acum = (maxWellInGroup_acum < num_well_local) ? num_well_local : maxWellInGroup_acum;
+            }
+        }
+
+        const auto maxWellInGroup =
+             std::max(wd.maxWellsPerGroup(), nwgmax); // axWellsPerGroup computed in terms of the Global Grid
+
+        int maxGroupsInField_acum = 0;
+        for (const auto& grp: sched.restart_groups(lookup_step))
+        {
+            if (grp == nullptr) continue;
+            if ((grp->parent() == "FIELD") and (schedule_state.group_contains_lgr(*grp, lgr_tag))){
+                maxGroupsInField_acum += 1;
+            }
+        }
+
+        const auto maxGroupInField =
+            std::max(maxGroupsInField_acum, ngmax);
+
+        // This seems to be some sort of default value for LGR grid and should be enabled when AggregateGroupData.cpp is fixed.
+        //const auto maxGroupInField = 1;
+
+        const auto& wells = sched.getWells(lookup_step);
+
+        const auto nWMaxz = wd.maxWellsInField();
+
+        return {
+            (report_step > 0) ? numWells : 0,
+            maxPerf,
+            maxWellInGroup,
+            maxGroupInField,
+            (report_step > 0) ? std::max(nWMaxz, numWells) : nWMaxz,
+            wd.maxWellListsPrWell(),
+            wd.maxDynamicWellLists()
+        };
+    }
+
     std::array<int, 4>
     getNGRPZ(const int             grpsz,
              const int             ngrp,
@@ -273,6 +361,9 @@ namespace {
     {
         const auto& wd = rspec.wellDimensions();
 
+        // for LGR, grpsz, and ngrp are LGR property
+        // and maxWellsPerGroup, maxGroupsInField are always global properties.
+        // therefore, this does not need to be changed
         const auto nwgmax = std::max(grpsz, wd.maxWellsPerGroup());
         const auto ngmax  = std::max(ngrp , wd.maxGroupsInField());
 
@@ -288,6 +379,7 @@ namespace {
             nzgrpz,
         }};
     }
+
 
     Opm::RestartIO::InteHEAD::Phases
     getActivePhases(const ::Opm::Runspec& rspec)
@@ -566,10 +658,10 @@ createInteHead(const EclipseState& es,
                const int           lookup_step)
 {
     const auto nwgmax = (report_step == 0)
-        ? 0 : maxGroupSize(sched, lookup_step);
+        ? 0 : maxGroupSize(sched, lookup_step, grid.get_lgr_tag());
 
     const auto ngmax  = (report_step == 0)
-        ? 0 : numGroupsInField(sched, lookup_step);
+        ? 0 : numGroupsInField(sched, lookup_step, grid.get_lgr_tag());
 
     const auto& acts  = sched[lookup_step].actions.get();
     const auto& rspec = es.runspec();
@@ -584,7 +676,7 @@ createInteHead(const EclipseState& es,
         .numActive          (static_cast<int>(grid.getNumActive()))
         .unitConventions    (es.getDeckUnitSystem())
         .wellTableDimensions(getWellTableDims(nwgmax, ngmax, rspec, sched,
-                                              report_step, lookup_step))
+                                              report_step, lookup_step, grid.get_lgr_tag()))
         .calendarDate       (getSimulationTimePoint(sched.posixStartTime(), simTime))
         .activePhases       (getActivePhases(rspec))
         .drsdt              (sched, lookup_step)

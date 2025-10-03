@@ -424,3 +424,31 @@ Opm::maxGroupSize(const Opm::Schedule& sched,
 
     return nwgmax;
 }
+
+int
+Opm::maxGroupSize(const Opm::Schedule& sched,
+                  const std::size_t    step,
+                  const std::string&   lgr_tag)
+{
+    if ((lgr_tag == "GLOBAL") or (lgr_tag.empty())){
+        return maxGroupSize(sched, step);
+    }
+
+
+    int nwgmax = 0;
+
+    const auto& sched_state = sched[step];
+
+    for (const auto& gnm : sched.groupNames(step)) {
+        const auto& grp = sched.getGroup(gnm, step);
+        if (! sched_state.group_contains_lgr(grp, lgr_tag)) {
+            continue;
+        }
+        const auto  gsz = grp.wellgroup()
+            ? sched_state.num_lgr_well_in_group(grp, lgr_tag) : sched_state.num_lgr_groups_in_group(grp, lgr_tag) ;
+
+        nwgmax = std::max(nwgmax, static_cast<int>(gsz));
+    }
+
+    return nwgmax;
+}

@@ -662,6 +662,7 @@ if(ENABLE_ECL_OUTPUT)
           tests/test_data_InterRegFlowMap.cpp
           tests/test_EclipseIO.cpp
           tests/test_EclipseIO_LGR.cpp
+          tests/test_HeadersLGR.cpp
           tests/test_Inplace.cpp
           tests/test_InteHEAD.cpp
           tests/test_LGOData.cpp
@@ -715,6 +716,8 @@ if(ENABLE_ECL_OUTPUT)
           tests/BASE_SIM_THPRES.DATA
           tests/LGR_3WELLS.DATA
           tests/LGR_BASESIM2WELLS.DATA
+          tests/LGR_DIFFGROUP.DATA
+          tests/LGR_GROUP_EX01.DATA
           tests/RESTART_SIM.DATA
           tests/summary_deck.DATA
           tests/group_group.DATA
