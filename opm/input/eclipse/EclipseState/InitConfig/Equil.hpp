@@ -7,6 +7,7 @@
 namespace Opm {
     class DeckKeyword;
     class DeckRecord;
+    class Phases;
 
     class EquilRecord {
         public:
@@ -18,7 +19,7 @@ namespace Opm {
                         bool wet_gas_init,
                         int target_accuracy,
                         bool humid_gas_init);
-            explicit EquilRecord(const DeckRecord& record);
+            EquilRecord(const DeckRecord& record, const Phases& phases, int region);
 
             static EquilRecord serializationTestObject();
             double datumDepth() const;
@@ -67,7 +68,7 @@ namespace Opm {
     class StressEquilRecord {
         public:
             StressEquilRecord() = default;
-            explicit StressEquilRecord(const DeckRecord& record);
+            StressEquilRecord(const DeckRecord& record, const Phases& phases, int region);
 
             static StressEquilRecord serializationTestObject();
 
@@ -136,7 +137,7 @@ namespace Opm {
             using const_iterator = typename std::vector<RecordType>::const_iterator;
 
             EquilContainer() = default;
-            explicit EquilContainer( const DeckKeyword& );
+            EquilContainer( const DeckKeyword&, const Phases& );
 
             static EquilContainer serializationTestObject();
 
