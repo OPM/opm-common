@@ -27,12 +27,13 @@
 namespace Opm {
 
     class Deck;
+    class Phases;
 
     class EclipseConfig
     {
     public:
         EclipseConfig() = default;
-        explicit EclipseConfig(const Deck& deck);
+        EclipseConfig(const Deck& deck, const Phases& phases);
         EclipseConfig(const InitConfig& initConfig,
                       const FIPConfig& fip_conf,
                       const IOConfig& io_conf);

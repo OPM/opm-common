@@ -275,7 +275,7 @@ struct Setup
             tablemanager(deck),
             grid(10, 3, 4),
             fp(deck, Opm::Phases{true, true, true}, grid, tablemanager),
-            initConfig(deck),
+            initConfig(deck, Opm::Phases{true, true, true}),
             threshPres(initConfig.restartRequested(), deck, fp)
     {
         if (ft) {
@@ -291,7 +291,7 @@ struct Setup
             tablemanager(deck),
             grid(10, 3, 4),
             fp(deck, Opm::Phases{true, true, true}, grid, tablemanager),
-            initConfig(deck),
+            initConfig(deck, Opm::Phases{true, true, true}),
             threshPres(initConfig.restartRequested(), deck, fp)
     {
     }

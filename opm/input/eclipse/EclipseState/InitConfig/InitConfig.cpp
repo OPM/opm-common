@@ -43,14 +43,14 @@
 
 namespace {
 
-    Opm::Equil equils(const Opm::Deck& deck)
+    Opm::Equil equils(const Opm::Deck& deck, const Opm::Phases& phases)
     {
         if (! deck.hasKeyword<Opm::ParserKeywords::EQUIL>()) {
             return {};
         }
 
         return Opm::Equil {
-            deck.get<Opm::ParserKeywords::EQUIL>().back()
+            deck.get<Opm::ParserKeywords::EQUIL>().back(), phases
         };
     }
 
@@ -67,9 +67,9 @@ namespace {
 
 namespace Opm {
 
-    InitConfig::InitConfig(const Deck& deck)
-        : equil        { equils(deck) }
-        , stress_equil { stressequils(deck) }
+    InitConfig::InitConfig(const Deck& deck, const Phases& phases)
+        : equil        { equils(deck, phases) }
+        , stress_equil { stressequils(deck), phases }
         , foamconfig   { deck }
         , m_filleps    { PROPSSection{deck}.hasKeyword(ParserKeywords::FILLEPS::keywordName) }
         , m_gravity    { ! deck.hasKeyword<ParserKeywords::NOGRAV>() }
