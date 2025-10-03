@@ -353,6 +353,22 @@ namespace Opm {
         /// applied and to prepare for the next report step.
         bool clear_pending_assignments();
 
+        /// Clear "UPDATE NEXT" flags for all pertinent UDQ definitions
+        ///
+        /// This is required by the way we form ScheduleState objects.  The
+        /// function resets UPDATE NEXT to UPDATE OFF, and should typically
+        /// be called at the end of a report step.  If we do not do this,
+        /// then all UDQs with an UPDATE NEXT status will behave as if there
+        /// is an implicit UPDATE NEXT statement at the beginning of each
+        /// subsequent report step and that, in turn, will generate unwanted
+        /// value updates for the quantity.
+        ///
+        /// \return Whether or not any UPDATE NEXT flags were reset to
+        /// UPDATE OFF.  Allows client code to take action, if needed, based
+        /// on the knowledge that all such value updates have been applied
+        /// and to prepare for the next report step.
+        bool clear_update_next_for_new_report_step();
+
         /// Apply all pending assignments.
         ///
         /// Assigns new UDQ values to both the summary and UDQ state objects.
