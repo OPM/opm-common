@@ -114,30 +114,17 @@ namespace {
 
     int numGroupsInField(const Opm::Schedule& sched,
                          const std::size_t    lookup_step,
-                         const std::string&   lgr_tag)
+                         [[maybe_unused]] const std::string&   lgr_tag)
     {
-        if (lgr_tag == "GLOBAL" or  lgr_tag.empty()){
-            return numGroupsInField(sched, lookup_step);
-        }
-
-        const auto& sched_state = sched[lookup_step];
-        const auto& grps = sched_state.groups();
-
-        int ngmax = 0;
-        for (const auto& grp : grps) {
-            if (! sched_state.group_contains_lgr(grp.get(), lgr_tag)) {
-                continue;
-            }
-            ngmax += 1;
-        }
-
-        // If an LGR contains no well the following condtions is met.
-        if (ngmax < 1) {
-            return ngmax;
-        }
-
-        // Number of non-FIELD groups.
-        return ngmax - 1;
+        return numGroupsInField(sched, lookup_step);
+        // Following code should be enabled when AggregateGroupData.cpp is fixed
+        // if (lgr_tag == "GLOBAL" or  lgr_tag.empty()){
+        //     return numGroupsInField(sched, lookup_step);
+        // }
+        // else {
+        //     // This is the default value and correspond to a single well group for LGR grids.
+        //     return 1;
+        // }
     }
 
     int GroupControl(const Opm::Schedule& sched,
@@ -322,16 +309,16 @@ namespace {
             std::max(wd.maxConnPerWell(),
                      maxConnPerWell(sched, report_step, lookup_step));
 
-        // int maxWellInGroup_acum = 0;
-        // for (const auto& grp: sched.restart_groups(lookup_step))
-        // {
-        //     if (grp == nullptr) continue;
-        //     if (grp->wellgroup() and schedule_state.group_contains_lgr(*grp, lgr_tag))
-        //     {
-        //         int num_well_local = schedule_state.num_lgr_well_in_group(*grp, lgr_tag);
-        //         maxWellInGroup_acum = (maxWellInGroup_acum < num_well_local) ? num_well_local : maxWellInGroup_acum;
-        //     }
-        // }
+        int maxWellInGroup_acum = 0;
+        for (const auto& grp: sched.restart_groups(lookup_step))
+        {
+            if (grp == nullptr) continue;
+            if (grp->wellgroup() and schedule_state.group_contains_lgr(*grp, lgr_tag))
+            {
+                int num_well_local = schedule_state.num_lgr_well_in_group(*grp, lgr_tag);
+                maxWellInGroup_acum = (maxWellInGroup_acum < num_well_local) ? num_well_local : maxWellInGroup_acum;
+            }
+        }
 
         const auto maxWellInGroup =
              std::max(wd.maxWellsPerGroup(), nwgmax); // axWellsPerGroup computed in terms of the Global Grid
@@ -348,10 +335,12 @@ namespace {
         const auto maxGroupInField =
             std::max(maxGroupsInField_acum, ngmax);
 
+        // This seems to be some sort of default value for LGR grid and should be enabled when AggregateGroupData.cpp is fixed.
+        //const auto maxGroupInField = 1;
+
         const auto& wells = sched.getWells(lookup_step);
 
-        const int nWMaxz = std::count_if(wells.begin(),wells.end(), [](const auto& well)
-                                     {return well.is_lgr_well();});
+        const auto nWMaxz = wd.maxWellsInField();
 
         return {
             (report_step > 0) ? numWells : 0,

@@ -47,7 +47,7 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
 
         NWELLS = 16, //  Number of wells (per Grid)
         NCWMAX = 17, //  Maximum number of completions per well
-        NGRP = 18, //  Actual number of groups (per Grid)
+        NGRP = 18, //  Actual number of groups for Global grid
         NWGMAX = 19, //  Maximum number of wells in any well group
         NGMAXZ = 20, //  Maximum number of groups in field (per Grid)
 
