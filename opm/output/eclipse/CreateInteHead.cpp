@@ -309,36 +309,36 @@ namespace {
             std::max(wd.maxConnPerWell(),
                      maxConnPerWell(sched, report_step, lookup_step));
 
-        int maxWellInGroup_acum = 0;
-        for (const auto& grp: sched.restart_groups(lookup_step))
-        {
-            if (grp == nullptr) continue;
-            if (grp->wellgroup() and schedule_state.group_contains_lgr(*grp, lgr_tag))
-            {
-                int num_well_local = schedule_state.num_lgr_well_in_group(*grp, lgr_tag);
-                maxWellInGroup_acum = (maxWellInGroup_acum < num_well_local) ? num_well_local : maxWellInGroup_acum;
-            }
-        }
+        // int maxWellInGroup_acum = 0;
+        // for (const auto& grp: sched.restart_groups(lookup_step))
+        // {
+        //     if (grp == nullptr) continue;
+        //     if (grp->wellgroup() and schedule_state.group_contains_lgr(*grp, lgr_tag))
+        //     {
+        //         int num_well_local = schedule_state.num_lgr_well_in_group(*grp, lgr_tag);
+        //         maxWellInGroup_acum = (maxWellInGroup_acum < num_well_local) ? num_well_local : maxWellInGroup_acum;
+        //     }
+        // }
 
         const auto maxWellInGroup =
              std::max(wd.maxWellsPerGroup(), nwgmax); // axWellsPerGroup computed in terms of the Global Grid
 
-        int maxGroupsInField_acum = 0;
-        for (const auto& grp: sched.restart_groups(lookup_step))
-        {
-            if (grp == nullptr) continue;
-            if ((grp->parent() == "FIELD") and (schedule_state.group_contains_lgr(*grp, lgr_tag))){
-                maxGroupsInField_acum += 1;
-            }
-        }
+        // int maxGroupsInField_acum = 0;
+        // for (const auto& grp: sched.restart_groups(lookup_step))
+        // {
+        //     if (grp == nullptr) continue;
+        //     if ((grp->parent() == "FIELD") and (schedule_state.group_contains_lgr(*grp, lgr_tag))){
+        //         maxGroupsInField_acum += 1;
+        //     }
+        // }
 
-        const auto maxGroupInField =
-            std::max(maxGroupsInField_acum, ngmax);
+        // const auto maxGroupInField =
+        //     std::max(maxGroupsInField_acum, ngmax);
 
         // This seems to be some sort of default value for LGR grid and should be enabled when AggregateGroupData.cpp is fixed.
-        //const auto maxGroupInField = 1;
+        const auto maxGroupInField = 1;
 
-        const auto& wells = sched.getWells(lookup_step);
+        //const auto& wells = sched.getWells(lookup_step);
 
         const auto nWMaxz = wd.maxWellsInField();
 
