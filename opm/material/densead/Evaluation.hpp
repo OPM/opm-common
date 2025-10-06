@@ -43,6 +43,10 @@
 
 #include <opm/common/utility/gpuDecorators.hpp>
 
+#if HAVE_DUNE_COMMON
+#include <dune/common/typetraits.hh>
+#endif
+
 namespace Opm {
 namespace DenseAd {
 
@@ -627,5 +631,15 @@ OPM_HOST_DEVICE std::ostream& operator<<(std::ostream& os, const Evaluation<Valu
 } // namespace Opm
 
 #include "EvaluationSpecializations.hpp"
+
+#if HAVE_DUNE_COMMON
+namespace Dune {
+  //! Specialization of IsNumber for Opm::DenseAd::Evaluation
+  template <class ValueT, int numDerivs, unsigned staticSize>
+  struct IsNumber<Opm::DenseAd::Evaluation<ValueT,numDerivs,staticSize>>
+    : public std::integral_constant<bool, std::is_arithmetic<ValueT>::value> {
+  };
+} // namespace Dune
+#endif
 
 #endif // OPM_DENSEAD_EVALUATION_HPP
