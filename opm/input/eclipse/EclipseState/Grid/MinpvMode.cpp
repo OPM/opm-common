@@ -20,8 +20,8 @@
 #include <config.h>
 #include <opm/input/eclipse/EclipseState/Grid/MinpvMode.hpp>
 
-#include <cassert>
 #include <ostream>
+#include <stdexcept>
 
 namespace Opm {
 
@@ -32,7 +32,7 @@ std::ostream& operator<<(std::ostream& os, const MinpvMode& mm)
     else if (mm == MinpvMode::Inactive)
         os << "Inactive";
     else
-        assert(0);
+        throw std::runtime_error("Unsupported MinpvMode type in operator<<()");
 
     return os;
 }
