@@ -383,11 +383,13 @@ private:
             return data_.data();
         }
 
+        // Access the data being stored directly (for instance used for copying to GPU)
         const Storage<T>& dataStorage() const
         {
             return data_;
         }
 
+        // Access indices of where all rows start
         const Storage<int>& rowStarts() const
         {
             return row_start_;
