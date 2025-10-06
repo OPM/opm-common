@@ -40,9 +40,7 @@ if(QuadMath_FOUND AND NOT TARGET QuadMath::QuadMath)
   add_library(QuadMath::QuadMath INTERFACE IMPORTED)
   target_link_libraries(QuadMath::QuadMath INTERFACE quadmath)
 
-  target_compile_definitions(QuadMath::QuadMath INTERFACE
-    _GLIBCXX_USE_FLOAT128
-  )
+  # Somehow needed for DUNE 2.9/g++-12
   target_compile_options(QuadMath::QuadMath INTERFACE
     $<$<CXX_COMPILER_ID:GNU>:-fext-numeric-literals>
   )
@@ -54,7 +52,7 @@ if(QuadMath_FOUND AND NOT TARGET QuadMath::QuadMath)
   if(${CMAKE_CXX_COMPILER_ID} STREQUAL GNU)
     set(CMAKE_REQUIRED_FLAGS "-fext-numeric-literals")
   endif()
-  set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} -D_GLIBCXX_USE_FLOAT128")
+
   check_cxx_source_compiles("
   #include <limits>
   int main()
@@ -62,8 +60,33 @@ if(QuadMath_FOUND AND NOT TARGET QuadMath::QuadMath)
      static_assert(std::numeric_limits<__float128>::is_specialized);
      return 0;
   }" QuadMath_HAS_LIMITS)
-  cmake_pop_check_state()  # Reset CMAKE_REQUIRED_XXX variables
+
   if(QuadMath_HAS_LIMITS)
     target_compile_definitions(QuadMath::QuadMath INTERFACE LIMITS_HAS_QUAD=1)
   endif()
+  check_cxx_source_compiles("
+  #include <limits>
+  #include <iostream>
+  int main()
+  {
+     __float128 b=0;
+     std::cout<<b;
+     return 0;
+  }" QuadMath_HAS_IO_OPERATOR)
+
+  if(QuadMath_HAS_IO_OPERATOR)
+    target_compile_definitions(QuadMath::QuadMath INTERFACE QUADMATH_HAS_IO_OPERATOR=1)
+  endif()
+  check_cxx_source_compiles("
+  #include <cmath>
+  int main()
+  {
+     __float128 b=10;
+     __float128 c=std::atan(b);
+  }" QuadMath_HAS_MATH_OPS)
+  cmake_pop_check_state()  # Reset CMAKE_REQUIRED_XXX variables
+  if(QuadMath_HAS_MATH_OPS)
+    target_compile_definitions(QuadMath::QuadMath INTERFACE QUADMATH_HAS_MATH_OPERATORS=1)
+  endif()
+  cmake_pop_check_state()  # Reset CMAKE_REQUIRED_XXX variables
 endif()
