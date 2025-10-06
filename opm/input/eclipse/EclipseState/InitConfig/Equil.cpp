@@ -1,12 +1,20 @@
 #include <opm/input/eclipse/EclipseState/InitConfig/Equil.hpp>
 
+#include <opm/common/OpmLog/KeywordLocation.hpp>
+#include <opm/common/utility/OpmInputError.hpp>
+
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
+#include <opm/input/eclipse/EclipseState/Runspec.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/E.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/S.hpp>
 
+#include <stdexcept>
+#include <string>
 #include <vector>
 
 #include <stddef.h>
+
+#include <fmt/core.h>
 
 namespace Opm {
     EquilRecord::EquilRecord(const double datum_depth_arg, const double datum_depth_pc_arg,
@@ -26,9 +34,17 @@ namespace Opm {
         , wet_gas_init_proc(wet_gas_init)
         , init_target_accuracy(target_accuracy)
         , humid_gas_init_proc(humid_gas_init)
-    {}
+    {
+        // \Note: this is only used in the serializationTestObject(), we throw anyway
+        if (gas_oil_contact_depth > water_oil_contact_depth) {
+            const std::string msg = fmt::format("Equilibration data specification error:\n"
+                                                "Depth of gas-oil contact ({}) is below depth of water-oil contact ({})",
+                                                gas_oil_contact_depth, water_oil_contact_depth);
+            throw std::logic_error(msg);
+        }
+    }
 
-    EquilRecord::EquilRecord(const DeckRecord& record)
+    EquilRecord::EquilRecord(const DeckRecord& record, const Phases& phases, int region, const KeywordLocation& location)
         : datum_depth(record.getItem<ParserKeywords::EQUIL::DATUM_DEPTH>().getSIDouble(0))
         , datum_depth_ps(record.getItem<ParserKeywords::EQUIL::DATUM_PRESSURE>().getSIDouble(0))
         , water_oil_contact_depth(record.getItem<ParserKeywords::EQUIL::OWC>().getSIDouble(0))
@@ -39,11 +55,21 @@ namespace Opm {
         , wet_gas_init_proc(record.getItem<ParserKeywords::EQUIL::BLACK_OIL_INIT_WG>().get<int>(0) <= 0)
         , init_target_accuracy(record.getItem<ParserKeywords::EQUIL::OIP_INIT>().get<int>(0))
         , humid_gas_init_proc(record.getItem<ParserKeywords::EQUIL::BLACK_OIL_INIT_HG>().get<int>(0) <= 0)
-    {}
+    {
+        const bool three_phases = phases.active(Phase::WATER) && phases.active(Phase::OIL) && phases.active(Phase::GAS);
+        if (three_phases && (gas_oil_contact_depth > water_oil_contact_depth)) {
+            const auto goc_depth_input = record.getItem<ParserKeywords::EQUIL::GOC>().get<double>(0);
+            const auto woc_depth_input = record.getItem<ParserKeywords::EQUIL::OWC>().get<double>(0);
+            const std::string msg = fmt::format("Equilibration input error for region {}:\n"
+                                                "Depth of gas-oil contact ({}) is below depth of water-oil contact ({}).",
+                                                region, goc_depth_input, woc_depth_input);
+            throw OpmInputError(msg, location);
+        }
+    }
 
     EquilRecord EquilRecord::serializationTestObject()
     {
-        return EquilRecord{1.0, 2.0, 3.0, 4.0, 5.0, 6.0, true, false, 1, false};
+        return EquilRecord{1.0, 2.0, 5.0, 4.0, 3.0, 6.0, true, false, 1, false};
     }
 
     double EquilRecord::datumDepth() const {
@@ -101,7 +127,8 @@ namespace Opm {
                humid_gas_init_proc == data.humid_gas_init_proc;
     }
 
-    StressEquilRecord::StressEquilRecord(const DeckRecord& record)
+    StressEquilRecord::StressEquilRecord(const DeckRecord& record, const Phases& /* phases */,
+                                         int /* region */, const KeywordLocation& /* location */)
         : datum_depth(record.getItem<ParserKeywords::STREQUIL::DATUM_DEPTH>().getSIDouble(0))
         , datum_posx(record.getItem<ParserKeywords::STREQUIL::DATUM_POSX>().getSIDouble(0))
         , datum_posy(record.getItem<ParserKeywords::STREQUIL::DATUM_POSY>().getSIDouble(0))
@@ -229,10 +256,11 @@ namespace Opm {
     /* ----------------------------------------------------------------- */
 
     template<class RecordType>
-    EquilContainer<RecordType>::EquilContainer(const DeckKeyword& keyword)
+    EquilContainer<RecordType>::EquilContainer(const DeckKeyword& keyword, const Phases& phases)
     {
+        int region = 0;
         for (const auto& record : keyword) {
-            this->m_records.emplace_back(record);
+            this->m_records.emplace_back(record, phases, ++region, keyword.location());
         }
     }
 
