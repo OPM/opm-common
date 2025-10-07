@@ -35,10 +35,6 @@ namespace Opm {
     int maxGroupSize(const Schedule&   sched,
                      const std::size_t step);
 
-    int maxGroupSize(const Schedule&   sched,
-                     const std::size_t step,
-                     const std::string& lgr_tag);
-
     void checkConsistentArrayDimensions(const EclipseState& es,
                                         const Schedule&     sched,
                                         const ParseContext& ctxt,
