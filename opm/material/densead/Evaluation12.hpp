@@ -237,7 +237,7 @@ public:
     }
 
 
-    // add value and derivatives from other to this values and derivatives
+    // add value and derivatives from other to this value and derivatives
     OPM_HOST_DEVICE Evaluation& operator+=(const Evaluation& other)
     {
         assert(size() == other.size());
