@@ -45,11 +45,11 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
                     //     1: oil, 2: water, 3: O/W, 4: gas,
                     //     5: G/O, 6: G/W, 7: O/G/W
 
-        NWELLS = 16, //  Number of wells
+        NWELLS = 16, //  Number of wells (per Grid)
         NCWMAX = 17, //  Maximum number of completions per well
-        NGRP = 18, //  Actual number of groups
+        NGRP = 18, //  Actual number of groups for Global grid
         NWGMAX = 19, //  Maximum number of wells in any well group
-        NGMAXZ = 20, //  Maximum number of groups in field
+        NGMAXZ = 20, //  Maximum number of groups in field (per Grid)
 
         NIWELZ = 24, //  Number of data elements per well in IWEL array
                      //  (default 97 for ECLIPSE, 94 for ECLIPSE 300).
@@ -131,7 +131,7 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
         MAXNOSTRPRLINE = 158, //  Maximum number of 8-chars strings pr input line of Action data (rounded up from input)
 
         MAX_ACT_ANLYTIC_AQUCONN = 162, // Maximum number of *active* connections across all analytic aquifers
-        NWMAXZ = 163, //  Maximum number of wells in the model
+        NWMAXZ = 163, //  Maximum number of wells in the model (per Grid)
 
         NSEGWL = 174, //  Number of multisegment wells defined with WELSEG
         NSWLMX = 175, //  Maximum number of segmented wells (item 1 ofWSEGDIMS)

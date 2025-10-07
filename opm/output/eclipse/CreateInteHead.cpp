@@ -112,6 +112,21 @@ namespace {
         return ngmax - 1;
     }
 
+    int numGroupsInField(const Opm::Schedule& sched,
+                         const std::size_t    lookup_step,
+                         [[maybe_unused]] const std::string&   lgr_tag)
+    {
+        return numGroupsInField(sched, lookup_step);
+        // Following code should be enabled when AggregateGroupData.cpp is fixed
+        // if (lgr_tag == "GLOBAL" or  lgr_tag.empty()){
+        //     return numGroupsInField(sched, lookup_step);
+        // }
+        // else {
+        //     // This is the default value and correspond to a single well group for LGR grids.
+        //     return 1;
+        // }
+    }
+
     int GroupControl(const Opm::Schedule& sched,
                      const std::size_t    report_step,
                      const std::size_t    lookup_step)
@@ -265,6 +280,52 @@ namespace {
         };
     }
 
+
+    Opm::RestartIO::InteHEAD::WellTableDim
+    getWellTableDims(const int              nwgmax,
+                     const int              ngmax,
+                     const ::Opm::Runspec&  rspec,
+                     const ::Opm::Schedule& sched,
+                     const std::size_t      report_step,
+                     const std::size_t      lookup_step,
+                     const std::string&     lgr_tag)
+    {
+        if ((lgr_tag == "GLOBAL") or (lgr_tag.empty()))
+        {
+            return getWellTableDims(nwgmax,ngmax,rspec,sched,report_step,lookup_step);
+        }
+
+        const auto& wd = rspec.wellDimensions();
+
+        const auto schedule_state = sched[lookup_step];
+        const auto wnames = sched.wellNames(lookup_step);
+        int numWells = std::count_if(wnames.begin(), wnames.end(),
+        [&lgr_tag, &sched = sched[lookup_step]](const auto& wname)
+        { return sched.wells(wname).get_lgr_well_tag().value_or("") == lgr_tag; });
+
+        const auto maxPerf =
+            std::max(wd.maxConnPerWell(),
+                     maxConnPerWell(sched, report_step, lookup_step));
+
+        const auto maxWellInGroup =
+             std::max(wd.maxWellsPerGroup(), nwgmax); // WellsPerGroup computed in terms of the Global Grid
+
+        // This seems to be some sort of default value for LGR grid and should be enabled when AggregateGroupData.cpp is fixed.
+        const auto maxGroupInField = 1;
+
+        const auto nWMaxz = wd.maxWellsInField();
+
+        return {
+            (report_step > 0) ? numWells : 0,
+            maxPerf,
+            maxWellInGroup,
+            maxGroupInField,
+            (report_step > 0) ? std::max(nWMaxz, numWells) : nWMaxz,
+            wd.maxWellListsPrWell(),
+            wd.maxDynamicWellLists()
+        };
+    }
+
     std::array<int, 4>
     getNGRPZ(const int             grpsz,
              const int             ngrp,
@@ -288,6 +349,7 @@ namespace {
             nzgrpz,
         }};
     }
+
 
     Opm::RestartIO::InteHEAD::Phases
     getActivePhases(const ::Opm::Runspec& rspec)
@@ -565,11 +627,11 @@ createInteHead(const EclipseState& es,
                const int           report_step,
                const int           lookup_step)
 {
+
     const auto nwgmax = (report_step == 0)
         ? 0 : maxGroupSize(sched, lookup_step);
-
     const auto ngmax  = (report_step == 0)
-        ? 0 : numGroupsInField(sched, lookup_step);
+        ? 0 : numGroupsInField(sched, lookup_step, grid.get_lgr_tag());
 
     const auto& acts  = sched[lookup_step].actions.get();
     const auto& rspec = es.runspec();
@@ -584,7 +646,7 @@ createInteHead(const EclipseState& es,
         .numActive          (static_cast<int>(grid.getNumActive()))
         .unitConventions    (es.getDeckUnitSystem())
         .wellTableDimensions(getWellTableDims(nwgmax, ngmax, rspec, sched,
-                                              report_step, lookup_step))
+                                              report_step, lookup_step, grid.get_lgr_tag()))
         .calendarDate       (getSimulationTimePoint(sched.posixStartTime(), simTime))
         .activePhases       (getActivePhases(rspec))
         .drsdt              (sched, lookup_step)

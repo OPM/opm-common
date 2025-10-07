@@ -223,23 +223,24 @@ namespace {
         rstFile.write("ZGRP", groupData.getZGroup());
     }
 
-    void writeGroupLGR(int                           sim_step,
-                       const UnitSystem&             units,
-                       const Schedule&               schedule,
-                       const Opm::SummaryState&      sumState,
-                       const std::vector<int>&       ih,
-                       EclIO::OutputStream::Restart& rstFile,
-                       const std::string&            lgr_tag)
+    void writeGroupLGR([[maybe_unused]] int                           sim_step,
+                       [[maybe_unused]] const UnitSystem&             units,
+                       [[maybe_unused]] const Schedule&               schedule,
+                       [[maybe_unused]] const Opm::SummaryState&      sumState,
+                       [[maybe_unused]] const std::vector<int>&       ih,
+                       [[maybe_unused]] EclIO::OutputStream::Restart& rstFile,
+                       [[maybe_unused]] const std::string&            lgr_tag)
     {
-        const size_t simStep = static_cast<size_t> (sim_step);
-        auto  groupData = Helpers::AggregateGroupData(ih);
+        // temporary disabled until captureDeclaredGroupDataLGR and the respective tests are fixed
+        // const size_t simStep = static_cast<size_t> (sim_step);
+        // auto  groupData = Helpers::AggregateGroupData(ih);
 
-        groupData.captureDeclaredGroupDataLGR(schedule, units, simStep, sumState, lgr_tag);
+        // groupData.captureDeclaredGroupDataLGR(schedule, units, simStep, sumState, lgr_tag);
 
-        rstFile.write("IGRP", groupData.getIGroup());
-        rstFile.write("SGRP", groupData.getSGroup());
-        rstFile.write("XGRP", groupData.getXGroup());
-        rstFile.write("ZGRP", groupData.getZGroup());
+        // rstFile.write("IGRP", groupData.getIGroup());
+        // rstFile.write("SGRP", groupData.getSGroup());
+        // rstFile.write("XGRP", groupData.getXGroup());
+        // rstFile.write("ZGRP", groupData.getZGroup());
     }
 
     void writeNetwork(const Opm::EclipseState&      es,

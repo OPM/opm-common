@@ -21,6 +21,8 @@
 #define OPM_ARRAYDIM_CHECKER_HPP
 
 #include <cstddef>
+#include <string>
+
 
 namespace Opm {
     class ErrorGuard;
