@@ -23,9 +23,9 @@
 
 namespace Opm {
 
-WList::WList(const storage& wlist, const std::string& wlname)
-    : well_list(wlist)
-    , name(wlname)
+WList::WList(const std::vector<std::string>& wlist, const std::string& wlname)
+    : well_list { wlist }
+    , name      { wlname }
 {}
 
 std::size_t WList::size() const
