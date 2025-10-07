@@ -236,61 +236,39 @@ private:
             row_start_.resize(1);
         }
 
-        /// Defining the row type, returned by operator[].
-
         // Helper templates to select iterator range types only if (const_)iterator exists.
         // Default: PoisonIterator (for non-traversable types)
         template<class U, class = void>
         struct row_type_helper {
-            using type = iterator_range<PoisonIterator<T>>;
+            using const_type = iterator_range<PoisonIterator<T>>;
+            using mutable_type = mutable_iterator_range<PoisonIterator<T>>;
         };
 
         // If Storage has const_iterator, use it (e.g. std::vector)
         template<class U>
         struct row_type_helper<U, std::void_t<typename U::const_iterator>> {
-            using type = iterator_range<typename U::const_iterator>;
-        };
-
-        // Default: PoisonIterator (for non-traversable types)
-        template<class U, class = void>
-        struct mutable_row_type_helper {
-            using type = mutable_iterator_range<PoisonIterator<T>>;
-        };
-
-        // If Storage has iterator, use it (e.g. std::vector)
-        template<class U>
-        struct mutable_row_type_helper<U, std::void_t<typename U::iterator>> {
-            using type = mutable_iterator_range<typename U::iterator>;
+            using const_type = iterator_range<typename U::const_iterator>;
+            using mutable_type = mutable_iterator_range<typename U::iterator>;
         };
 
 #if HAVE_CUDA
         // Specialization for GpuView: use its iterator
         template<typename TT>
         struct row_type_helper<gpuistl::GpuView<TT>> {
-            using type = iterator_range<typename gpuistl::GpuView<TT>::iterator>;
+            using const_type = iterator_range<typename gpuistl::GpuView<TT>::iterator>;
+            using mutable_type = mutable_iterator_range<typename gpuistl::GpuView<TT>::iterator>;
         };
 
         // Specialization for GpuBuffer: always PoisonIterator
         template<typename TT>
         struct row_type_helper<gpuistl::GpuBuffer<TT>> {
-            using type = iterator_range<PoisonIterator<TT>>;
-        };
-
-        // Specialization for GpuView: use its iterator
-        template<typename TT>
-        struct mutable_row_type_helper<gpuistl::GpuView<TT>> {
-            using type = mutable_iterator_range<typename gpuistl::GpuView<TT>::iterator>;
-        };
-
-        // Specialization for GpuBuffer: always PoisonIterator
-        template<typename TT>
-        struct mutable_row_type_helper<gpuistl::GpuBuffer<TT>> {
-            using type = mutable_iterator_range<PoisonIterator<TT>>;
+            using const_type = iterator_range<PoisonIterator<TT>>;
+            using mutable_type = mutable_iterator_range<PoisonIterator<TT>>;
         };
 #endif // HAVE_CUDA
 
-        using row_type = typename row_type_helper<Storage<T>>::type;
-        using mutable_row_type = typename mutable_row_type_helper<Storage<T>>::type;
+        using row_type = typename row_type_helper<Storage<T>>::const_type;
+        using mutable_row_type = typename row_type_helper<Storage<T>>::mutable_type;
 
         /// Returns a row of the table.
         OPM_HOST_DEVICE row_type operator[](int row) const
