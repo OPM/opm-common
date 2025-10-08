@@ -1965,30 +1965,43 @@ quantity well_block_average_prod_index(const fn_args& args)
     // Note: This WPIn evaluation function is supported only at the well
     // level.  There is intentionally no loop over args.schedule_wells.
 
-    const auto unit = rate_unit<rt::productivity_index_oil>();
-    const quantity zero = { 0.0, unit };
+    const auto zero = quantity { 0.0, rate_unit<rt::productivity_index_oil>() };
 
     if (args.schedule_wells.empty()) {
         return zero;
     }
 
-    const auto& name = args.schedule_wells.front()->name();
+    const auto* well = args.schedule_wells.front();
 
-    auto xwPos = args.wells.find(name);
+    auto xwPos = args.wells.find(well->name());
     if ((xwPos == args.wells.end()) ||
         (xwPos->second.dynamicStatus == Opm::Well::Status::SHUT))
     {
         return zero;
     }
 
-    auto p = args.wbp.values.find(args.schedule_wells.front()->name());
+    auto p = args.wbp.values.find(well->name());
     if (p == args.wbp.values.end()) {
         return zero;
     }
 
-    // Rt::oil is intentional.
-    const auto eff_fac = efac(args.eff_factors, name);
-    const auto q  = xwPos->second.rates.get(rt::oil, 0.0) * eff_fac;
+    const auto& [rate_quant, unit] = [preferred_phase = well->getPreferredPhase()]()
+    {
+        switch (preferred_phase) {
+        case Opm::Phase::GAS:
+            return std::pair { rt::gas, rate_unit<rt::productivity_index_gas>() };
+
+        case Opm::Phase::WATER:
+            return std::pair { rt::wat, rate_unit<rt::productivity_index_water>() };
+
+        default:
+            return std::pair { rt::oil, rate_unit<rt::productivity_index_oil>() };
+        }
+    }();
+
+    const auto q = xwPos->second.rates.get(rate_quant, 0.0)
+        * efac(args.eff_factors, well->name());
+
     const auto dp = p->second[wbp_quantity] - xwPos->second.bhp;
 
     return { - q / dp, unit };
