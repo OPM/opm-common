@@ -6,7 +6,7 @@
 # C++ compilers should be smart enough to do this themselfs, but
 # contemporary compilers don't seem to exhibit enough brains.
 #
-# Usage: In the opm-material top-level source directory, run
+# Usage: In the opm-common top-level source directory, run
 # `./bin/genEvalSpecializations.py [MAX_DERIVATIVES]`. The script then
 # generates specializations for Evaluations with up to MAX_DERIVATIVES
 # derivatives. The default for MAX_DERIVATIVES is 12. To run this
@@ -88,6 +88,12 @@ specializationTemplate = \
 #include <stdexcept>
 
 #include <opm/common/utility/gpuDecorators.hpp>
+{% if numDerivs == 0 %}\
+
+#if HAVE_DUNE_COMMON
+#include <dune/common/typetraits.hh>
+#endif
+{% endif %}\
 
 namespace Opm {
 namespace DenseAd {
@@ -923,6 +929,16 @@ OPM_HOST_DEVICE DenseAd::Evaluation<Scalar, -1, staticSize> variable(int numDeri
 
 {% if numDerivs == 0 %}\
 #include "EvaluationSpecializations.hpp"
+
+#if HAVE_DUNE_COMMON
+namespace Dune {
+  //! Specialization of IsNumber for Opm::DenseAd::Evaluation
+  template <class ValueT, int numDerivs, unsigned staticSize>
+  struct IsNumber<Opm::DenseAd::Evaluation<ValueT,numDerivs,staticSize>>
+    : public std::integral_constant<bool, std::is_arithmetic<ValueT>::value> {
+  };
+} // namespace Dune
+#endif
 
 #endif // OPM_DENSEAD_EVALUATION_HPP
 {% elif numDerivs < 0 %}\
