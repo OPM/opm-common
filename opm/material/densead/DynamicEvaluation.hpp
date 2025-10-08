@@ -677,8 +677,22 @@ public:
     }
 
     // set derivative at position varIdx
-    OPM_HOST_DEVICE void setDerivative(int varIdx, const ValueType& derVal)
+    OPM_HOST_DEVICE void setDerivative(int varIdx, const ValueType& derVal, const int nVars = -1)
     {
+        // if size() == 0, we need nVars to be positive to extend the number of derivatives
+        // if size() > 0, nVars must be either negative (i.e. ignore) or match size()
+        assert( (size() == 0 && nVars > 0) ||
+                ((size() > 0 && (nVars < 0 || nVars == size()))) );
+
+        if (size() == 0) {
+            if (nVars < 0) {
+                throw std::logic_error("Cannot set derivative for a DynamicEvaluation initialized from a scalar "
+                                       "without specifying a positive number of derivatives");
+            }
+
+            this->appendDerivativesToConstant(nVars);
+        }
+
         assert(0 <= varIdx && varIdx < size());
 
         data_[dstart_() + varIdx] = derVal;
