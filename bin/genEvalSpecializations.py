@@ -1033,7 +1033,16 @@ public:
     // return varIdx'th derivative
     OPM_HOST_DEVICE const ValueType& derivative(int varIdx) const
     {
+{% if numDerivs < 0 %}\
+        assert(size() == 0 || (0 <= varIdx && varIdx < size()) );
+
+        if (size() == 0) {
+            static const ValueType zero {0.0};
+            return zero;
+        }
+{% else %}\
         assert(0 <= varIdx && varIdx < size());
+{% endif %}\
 
         return data_[dstart_() + varIdx];
     }
