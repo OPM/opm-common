@@ -38,6 +38,7 @@ setup(
                 'opm.io.sim',
                 'opm.io.summary',
                 'opm.io.ecl',
+                'opm.ml.ml_tools',
                 'opm.tools',
                 'opm.util'
             ],
