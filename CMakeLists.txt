@@ -406,7 +406,15 @@ if(dune-common_FOUND)
       get_filename_component(tgt ${src} NAME_WE)
       target_link_libraries(${tgt} dunecommon)
     endforeach()
-    target_link_libraries(test_SymmTensor dunecommon)
+
+    foreach(tst test_SymmTensor test_densead test_EvaluationFormat
+        test_binarycoefficients test_components test_blackoilfluidstate
+        test_blackoilfluidsystem_nonstatic test_fluidmatrixinteractions
+        test_fluidsystems test_tabulation test_h2brinepvt test_co2brinepvt
+        test_eclblackoilfluidsystem test_eclblackoilfluidsystemnonstatic
+        test_eclblackoilpvt)
+      target_link_libraries(${tst} dunecommon)
+    endforeach()
   endif()
   if(BUILD_EXAMPLES)
     target_link_libraries(co2brinepvt dunecommon)
