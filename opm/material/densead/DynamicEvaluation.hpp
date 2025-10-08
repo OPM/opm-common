@@ -666,7 +666,12 @@ public:
     // return varIdx'th derivative
     OPM_HOST_DEVICE const ValueType& derivative(int varIdx) const
     {
-        assert(0 <= varIdx && varIdx < size());
+        assert(size() == 0 || (0 <= varIdx && varIdx < size()) );
+
+        if (size() == 0) {
+            static const ValueType zero {0.0};
+            return zero;
+        }
 
         return data_[dstart_() + varIdx];
     }
