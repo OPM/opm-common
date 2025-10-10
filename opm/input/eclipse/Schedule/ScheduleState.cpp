@@ -25,8 +25,9 @@
 #include <opm/input/eclipse/Schedule/GasLiftOpt.hpp>
 #include <opm/input/eclipse/Schedule/Group/GConSale.hpp>
 #include <opm/input/eclipse/Schedule/Group/GConSump.hpp>
-#include <opm/input/eclipse/Schedule/Group/GSatProd.hpp>
 #include <opm/input/eclipse/Schedule/Group/GroupEconProductionLimits.hpp>
+#include <opm/input/eclipse/Schedule/Group/GroupSatelliteInjection.hpp>
+#include <opm/input/eclipse/Schedule/Group/GSatProd.hpp>
 #include <opm/input/eclipse/Schedule/Group/GuideRateConfig.hpp>
 #include <opm/input/eclipse/Schedule/Network/Balance.hpp>
 #include <opm/input/eclipse/Schedule/Network/ExtNetwork.hpp>
@@ -370,7 +371,9 @@ bool ScheduleState::operator==(const ScheduleState& other) const {
         && this->udq.get() == other.udq.get()
         && this->bhp_defaults.get() == other.bhp_defaults.get()
         && this->source.get() == other.source.get()
+        && this->wcycle() == other.wcycle()
         && this->wells == other.wells
+        && this->satelliteInjection == other.satelliteInjection
         && this->inj_streams == other.inj_streams
         && this->groups == other.groups
         && this->vfpprod == other.vfpprod
@@ -425,6 +428,7 @@ ScheduleState ScheduleState::serializationTestObject() {
     ts.rft_config.update( RFTConfig::serializationTestObject() );
     ts.rst_config.update( RSTConfig::serializationTestObject() );
     ts.source.update( Source::serializationTestObject() );
+    ts.wcycle.update(WCYCLE::serializationTestObject());
 
     return ts;
 }
