@@ -116,6 +116,7 @@
 #include <opm/input/eclipse/Schedule/RPTConfig.hpp>
 #include <opm/input/eclipse/Schedule/RSTConfig.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
+#include <opm/input/eclipse/Schedule/ScheduleState.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleTypes.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
 #include <opm/input/eclipse/Schedule/Tuning.hpp>
@@ -307,6 +308,7 @@ TEST_FOR_TYPE(Rock2dTable)
 TEST_FOR_TYPE(Runspec)
 TEST_FOR_TYPE(Schedule)
 TEST_FOR_TYPE(ScheduleDeck)
+TEST_FOR_TYPE_NAMED(ScheduleState::BHPDefaults, BHPDefaults)
 TEST_FOR_TYPE(Segment)
 TEST_FOR_TYPE(SimpleTable)
 TEST_FOR_TYPE(SimulationConfig)
