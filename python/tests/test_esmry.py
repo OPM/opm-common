@@ -4,7 +4,10 @@ import numpy as np
 import datetime
 
 from opm.io.ecl import ESmry
-from .utils import test_path
+try:
+    from tests.utils import test_path
+except ImportError:
+    from utils import test_path
 
 
 class TestEclFile(unittest.TestCase):

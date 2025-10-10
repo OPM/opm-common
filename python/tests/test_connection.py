@@ -24,7 +24,7 @@ class TestWells(unittest.TestCase):
         cls.state = EclipseState(deck)
         print("State OK")
         cls.sch = Schedule(deck, cls.state)
-        cls.timesteps = cls.sch.timesteps
+        cls.reportsteps = cls.sch.reportsteps
 
     def test_connection_pos(self):
         wells = self.sch.get_wells(0)
@@ -38,8 +38,8 @@ class TestWells(unittest.TestCase):
         self.assertEqual(p11, (0,0,1))
 
     def test_connection_state(self):
-        for timestep,_ in enumerate(self.timesteps):
-            for well in self.sch.get_wells(timestep):
+        for reportstep,_ in enumerate(self.reportsteps):
+            for well in self.sch.get_wells(reportstep):
                 for connection in well.connections():
                     self.assertEqual("OPEN", connection.state)
 
@@ -49,14 +49,14 @@ class TestWells(unittest.TestCase):
         self.assertEqual(len(list(filter(closed, connections))), 0)
 
     def test_direction(self):
-       for timestep,_ in enumerate(self.timesteps):
-           for well in self.sch.get_wells(timestep):
+       for reportstep,_ in enumerate(self.reportsteps):
+           for well in self.sch.get_wells(reportstep):
                 for connection in well.connections():
                     self.assertEqual(connection.direction, 'Z')
 
     def test_attached_to_segment(self):
-        for timestep,_ in enumerate(self.timesteps):
-            for well in self.sch.get_wells(timestep):
+        for reportstep,_ in enumerate(self.reportsteps):
+            for well in self.sch.get_wells(reportstep):
                 for connection in well.connections():
                     self.assertFalse(connection.attached_to_segment)
 
