@@ -929,6 +929,13 @@ public:
     /// parse().
     void apply(WListManager& wlm);
 
+    /// Whether or not any well lists have changed as a result of the
+    /// current set of operations.
+    bool wellListsChanged() const
+    {
+        return this->well_lists_changed_;
+    }
+
 private:
     // Note to maintainers: If you change the 'Action' enumeration, then you
     // must also update the apply() member function accordingly.
@@ -963,6 +970,10 @@ private:
 
     /// Set of wells involved in current operation.
     std::vector<std::string> wells_{};
+
+    /// Whether or not any well lists changed as a result of the current set
+    /// of operations.
+    bool well_lists_changed_{};
 
     /// Internalise well list name.
     ///
@@ -1029,6 +1040,10 @@ private:
     /// wells named in wells_ will no longer be included in the well list
     /// named in well_list_.
     void del(WListManager& wlm);
+
+    /// Record that at least one well list changed as a result of the
+    /// current operation.
+    void recordWellListChange();
 
     /// Report a parsing error through the run's parse context/error guard
     ///
@@ -1126,11 +1141,15 @@ void WListOperation::parseWListWells(const DeckRecord& record)
 void WListOperation::newList(WListManager& wlm)
 {
     wlm.newList(this->wlist_name_, this->wells_);
+
+    this->recordWellListChange();
 }
 
 void WListOperation::add(WListManager& wlm)
 {
     wlm.addOrCreateWellList(this->wlist_name_, this->wells_);
+
+    this->recordWellListChange();
 }
 
 void WListOperation::move(WListManager& wlm)
@@ -1153,8 +1172,15 @@ void WListOperation::del(WListManager& wlm)
     }
 
     for (const auto& well : this->wells_) {
-        wlm.delWListWell(well, this->wlist_name_);
+        if (wlm.delWListWell(well, this->wlist_name_)) {
+            this->recordWellListChange();
+        }
     }
+}
+
+void WListOperation::recordWellListChange()
+{
+    this->well_lists_changed_ = true;
 }
 
 void WListOperation::errorInvalidName(std::string_view message) const
@@ -1190,6 +1216,21 @@ void handleWLIST(HandlerContext& handlerContext)
 
         handlerContext.state().wlist_manager.update(std::move(wlm));
     }
+
+    if (! wlistOperation.wellListsChanged()) {
+        return;
+    }
+
+    auto tracker = handlerContext.state().wlist_tracker();
+
+    if (handlerContext.action_mode) {
+        tracker.recordActionChangedLists();
+    }
+    else {
+        tracker.recordStaticChangedLists();
+    }
+
+    handlerContext.state().wlist_tracker.update(std::move(tracker));
 }
 
 // ---------------------------------------------------------------------------

@@ -163,14 +163,19 @@ public:
     /// Implements the DEL operation.
     ///
     /// \param[in] wname Well name.
-    void delWell(const std::string& wname);
+    ///
+    /// \return Whether or not any well list changed as a result of removing
+    /// well \p wname.
+    bool delWell(const std::string& wname);
 
     /// Remove named well from specific, named well list.
     ///
     /// \param[in] wname Named well.
     ///
     /// \param[in] wlname Well list name, including leading asterisk.
-    void delWListWell(const std::string& wname, const std::string& wlname);
+    ///
+    /// \return Whether or not \p wlname changed.
+    bool delWListWell(const std::string& wname, const std::string& wlname);
 
     /// Equality predicate.
     ///

@@ -148,8 +148,10 @@ namespace Opm {
         }
     }
 
-    void WListManager::delWell(const std::string& wname)
+    bool WListManager::delWell(const std::string& wname)
     {
+        auto well_lists_changed = false;
+
         for (auto& pair: this->wlists) {
             auto& wlist = pair.second;
             wlist.del(wname);
@@ -163,12 +165,17 @@ namespace Opm {
                     if (no_wl == 0) {
                         wlist_vec.clear();
                     }
+
+                    well_lists_changed = true;
                 }
             }
         }
+
+        return well_lists_changed;
     }
 
-    void WListManager::delWListWell(const std::string& wname, const std::string& wlname)
+    bool WListManager::delWListWell(const std::string& wname,
+                                    const std::string& wlname)
     {
         //delete well from well list
         this->getList(wlname).del(wname);
@@ -183,8 +190,12 @@ namespace Opm {
                 if (no_wl == 0) {
                     wlist_vec.clear();
                 }
+
+                return true;
             }
         }
+
+        return false;
     }
 
     bool WListManager::operator==(const WListManager& data) const
