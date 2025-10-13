@@ -71,8 +71,8 @@ THPRES
 2 2  /
 /
 
-START             -- 0 
-1 NOV 1979 / 
+START             -- 0
+1 NOV 1979 /
 
 SCHEDULE
 SKIPREST
@@ -96,7 +96,7 @@ WCONINJE
 /
 
 DATES             -- 1
- 20  JAN 2011 / 
+ 20  JAN 2011 /
 /
 WELSPECS
       'OP_3'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
@@ -109,7 +109,7 @@ WCONPROD
 /
 
 DATES             -- 2
- 15  JUN 2013 / 
+ 15  JUN 2013 /
 /
 COMPDAT
       'OP_2'  9  9   3  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
@@ -117,7 +117,7 @@ COMPDAT
 /
 
 DATES             -- 3
- 22  APR 2014 / 
+ 22  APR 2014 /
 /
 WELSPECS
       'OP_4'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
@@ -131,7 +131,7 @@ WCONPROD
 /
 
 DATES             -- 4
- 30  AUG 2014 / 
+ 30  AUG 2014 /
 /
 WELSPECS
       'OP_5'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
@@ -144,14 +144,14 @@ WCONPROD
 /
 
 DATES             -- 5
- 15  SEP 2014 / 
+ 15  SEP 2014 /
 /
 WCONPROD
       'OP_3' 'SHUT' 'ORAT' 20000  4* 1000 /
 /
 
 DATES             -- 6
- 9  OCT 2014 / 
+ 9  OCT 2014 /
 /
 WELSPECS
       'OP_6'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /

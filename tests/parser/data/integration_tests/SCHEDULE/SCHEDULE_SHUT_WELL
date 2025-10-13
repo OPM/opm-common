@@ -4,7 +4,7 @@ START
 RUNSPEC
 
 DIMENS
- 20 40 1 / 
+ 20 40 1 /
 
 GRID
 
@@ -22,10 +22,10 @@ PORO
 
 SCHEDULE
 
-WELSPECS 
-     'W1'        'GROUP1'   30   37  1*       'OIL'  7* /    
-     'W2'        'GROUP1'   30   37  1*       'OIL'  7* /    
-     'W3'        'GROUP1'   30   37  1*       'OIL'  7* /    
+WELSPECS
+     'W1'        'GROUP1'   30   37  1*       'OIL'  7* /
+     'W2'        'GROUP1'   30   37  1*       'OIL'  7* /
+     'W3'        'GROUP1'   30   37  1*       'OIL'  7* /
 /
 
 COMPDAT
@@ -33,7 +33,7 @@ COMPDAT
     'W2'   10   32    1    1      'OPEN'  1*    118.457      0.216  12025.229  2*         'Z'     24.860 /
     'W3'   10   32    1    1      'OPEN'  1*    118.457      0.216  12025.229  2*         'Z'     24.860 /
 /
- 
+
 TSTEP  -- Step 1
  10 /
 
@@ -53,7 +53,7 @@ WCONHIST
    'W1'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
 /
 
-WCONPROD 
+WCONPROD
    'W1' 'OPEN' 'RESV' 999  3* 123 100 /
 /
 
@@ -72,13 +72,13 @@ WELOPEN
 /
 
 
-WCONPROD 
+WCONPROD
    'W2' 'SHUT' /
 /
 
 --!-----------------------------------------------------------------
 
-WCONPROD 
+WCONPROD
    'W3' 'OPEN' 'RESV' 999  3* 123 100 /
 /
 

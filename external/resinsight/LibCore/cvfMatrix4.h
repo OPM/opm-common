@@ -128,7 +128,7 @@ private:
     static const int e30 = 3;   static const int e31 = 7;   static const int e32 = 11;  static const int e33 = 15;
 
 private:
-    S   m_v[16];        
+    S   m_v[16];
 };
 
 

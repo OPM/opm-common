@@ -40,12 +40,12 @@ namespace cvf {
 /// \ingroup Core
 ///
 /// 8 bit zero terminated char array.
-/// 
+///
 /// Behind the scenes, the array always has a 0 termination sentinel.
 //==================================================================================================
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 CharArray::CharArray()
 {
@@ -54,7 +54,7 @@ CharArray::CharArray()
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 CharArray::CharArray(size_t size, char c)
 {
@@ -69,7 +69,7 @@ CharArray::CharArray(size_t size, char c)
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 CharArray::CharArray(const char* str)
 {
@@ -85,9 +85,9 @@ CharArray::CharArray(const char* str)
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
-char& CharArray::operator[](size_t i) 
+char& CharArray::operator[](size_t i)
 {
     CVF_TIGHT_ASSERT(i < m_data.size() - 1);
 
@@ -96,7 +96,7 @@ char& CharArray::operator[](size_t i)
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 const char& CharArray::operator[](size_t i) const
 {
@@ -107,7 +107,7 @@ const char& CharArray::operator[](size_t i) const
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 void CharArray::resize(size_t size)
 {
@@ -130,16 +130,16 @@ void CharArray::push_back(char c)
 
 //--------------------------------------------------------------------------------------------------
 /// Get the size of the character array.
-/// 
+///
 /// Note that this is not necessarily the length of the contained string. In order to get the string
 /// length, you must call System::strlen().
 //--------------------------------------------------------------------------------------------------
 size_t CharArray::size() const
-{ 
+{
     CVF_TIGHT_ASSERT(m_data.size() > 0);
 
     return m_data.size() - 1;
-}   
+}
 
 
 
@@ -147,11 +147,11 @@ size_t CharArray::size() const
 /// Get a const char* pointer to the string
 //--------------------------------------------------------------------------------------------------
 const char* CharArray::ptr() const
-{ 
+{
     CVF_ASSERT(m_data.size() > 0);
     CVF_ASSERT(m_data[m_data.size() - 1] == '\0');
-    
-    return &m_data[0]; 
+
+    return &m_data[0];
 }
 
 
@@ -159,11 +159,11 @@ const char* CharArray::ptr() const
 /// Get a const char* pointer to the string
 //--------------------------------------------------------------------------------------------------
 char* CharArray::ptr()
-{ 
+{
     CVF_ASSERT(m_data.size() > 0);
     CVF_ASSERT(m_data[m_data.size() - 1] == '\0');
 
-    return &m_data[0]; 
+    return &m_data[0];
 }
 
 

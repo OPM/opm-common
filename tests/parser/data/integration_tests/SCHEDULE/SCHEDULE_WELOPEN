@@ -4,8 +4,8 @@ START
 
 SCHEDULE
 
-WELSPECS 
-     'W_1'        'GROUP1'   30   37  1*       'OIL'  7* /    
+WELSPECS
+     'W_1'        'GROUP1'   30   37  1*       'OIL'  7* /
 /
 
 COMPDAT

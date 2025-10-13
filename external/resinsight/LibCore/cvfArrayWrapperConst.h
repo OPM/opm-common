@@ -42,22 +42,22 @@ namespace external {
 namespace cvf {
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 /// \class cvf::ArrayWrapperConst
 /// \ingroup Core
 ///
-/// A wrapper class for const access to make it possible to use different array types with 
-/// different element types in the same algorithms. 
+/// A wrapper class for const access to make it possible to use different array types with
+/// different element types in the same algorithms.
 ///
 /// The implementation has a specialization for bare pointer arrays.
-/// The reason for the bare pointer specialization is the [] access implementation 
+/// The reason for the bare pointer specialization is the [] access implementation
 /// which is different. (*array)[] vs array[]
 ///
-/// The convenience functions wrapArrayConst() are available to simplify wrapping of your data making it 
-/// possible to do: 
-///    myFunction (wrapArrayConst(myNodeArray), wrapArrayConst(myIndexArray), ...); 
+/// The convenience functions wrapArrayConst() are available to simplify wrapping of your data making it
+/// possible to do:
+///    myFunction (wrapArrayConst(myNodeArray), wrapArrayConst(myIndexArray), ...);
 /// when calling a template function using ArrayWrapperConst's as input.
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 
 template < typename ArrayType, typename ElmType >
@@ -66,7 +66,7 @@ class ArrayWrapperConst
 public:
     ArrayWrapperConst(const ArrayType* array, size_t size) : m_array(array), m_size(size) { }
 
-    inline size_t size() const { return m_size; } 
+    inline size_t size() const { return m_size; }
     inline const ElmType& operator[] (const size_t index) const { return (*m_array)[index]; }
 
 private:
@@ -83,7 +83,7 @@ class ArrayWrapperConst <const ElmType*, ElmType>
 public:
     ArrayWrapperConst(const ElmType* array, size_t size) : m_array(array), m_size(size) { }
 
-    inline size_t size() const { return m_size; } 
+    inline size_t size() const { return m_size; }
 
     inline const ElmType&  operator[](const size_t index) const { return m_array[index]; }
 

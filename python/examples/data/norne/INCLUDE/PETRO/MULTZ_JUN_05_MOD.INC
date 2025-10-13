@@ -20,7 +20,7 @@ EQUALS
   'MULTZ'   0.5   17  17  42  54  10  10  /  C north west
   'MULTZ'   0.5    6  12  38  39  10  10  /  C north west
   'MULTZ'   0.5    8  12  40  40  10  10  /  C north west
-  'MULTZ'   0.5   10  12  41  43  10  10  /  C north west   
+  'MULTZ'   0.5   10  12  41  43  10  10  /  C north west
   'MULTZ'   0.5   18  33  38  54  10  10  /  C1, D4 & D3
   'MULTZ'   0.5    6  13  44  52  10  10  /  B-4AH
   'MULTZ'   0.01  13  13  48  59  10  10  /  D-segm mid (B-4BH)
@@ -29,7 +29,7 @@ EQUALS
   'MULTZ'   0.05  17  19  55  99  10  10  /  E1
   'MULTZ'   0.05  14  14  60  62  10  10  /  E1
   'MULTZ'   0.05  15  15  60  65  10  10  /  E1
-  'MULTZ'   0.05  16  16  60  69  10  10  /  E1 
+  'MULTZ'   0.05  16  16  60  69  10  10  /  E1
   'MULTZ'   0.005  6   9  52  60  10  10  /  F-3H/E-2H
   'MULTZ'   0.005  9   9  53  57  10  10  /  F-3H/E-2H
   'MULTZ'   0.005 10  10  54  58  10  10  /  F-3H/E-2H
@@ -51,7 +51,7 @@ EQUALS
   'MULTZ'   0.0008   13  18  46  47  15  15 /
   'MULTZ'   0.0008   14  15  48  48  15  15 /
   'MULTZ'   0.0008   15  15  49  50  15  15 /
-  
+
   'MULTZ'   0.01      12 12 46 56 15 15 / D-segm
   'MULTZ'   0.01      13 13 48 59 15 15 / D-segm
   'MULTZ'   0.01      14 14 49 62 15 15 / D-segm
@@ -66,16 +66,16 @@ EQUALS
 
 -- D-1H water
 EQUALS
-  'MULTZ'    1.0  22  24  21  22  11  11 /  
-  'MULTZ'    0.1  21  25  17  19  15  15 /    
-  'MULTZ'    1.0  22  24  17  19  17  17 / 
-  'MULTZ'    1.0  22  24  15  17  18  18 /   
-/  
+  'MULTZ'    1.0  22  24  21  22  11  11 /
+  'MULTZ'    0.1  21  25  17  19  15  15 /
+  'MULTZ'    1.0  22  24  17  19  17  17 /
+  'MULTZ'    1.0  22  24  15  17  18  18 /
+/
 
 -- B-1 & B-3 water
 EQUALS
-  'MULTZ'    0.1 12  13  34  35  15  15 /  
-/ 
+  'MULTZ'    0.1 12  13  34  35  15  15 /
+/
 
 -- RFT D_-H
 EQUALS

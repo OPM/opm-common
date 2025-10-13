@@ -40,10 +40,10 @@ namespace cvf {
 
 //--------------------------------------------------------------------------------------------------
 /// Check if a value is within the specified range, inclusive.
-/// 
+///
 /// \return  Returns true if \a val >= \a min and \a val <= \a max.
 //--------------------------------------------------------------------------------------------------
-template<typename T> 
+template<typename T>
 bool Math::valueInRange(T val, T minVal, T maxVal)
 {
     CVF_ASSERT(minVal <= maxVal);
@@ -60,11 +60,11 @@ bool Math::valueInRange(T val, T minVal, T maxVal)
 
 
 //--------------------------------------------------------------------------------------------------
-/// Clamp a value within an inclusive range. 
-/// 
+/// Clamp a value within an inclusive range.
+///
 /// \return The clamped value
 //--------------------------------------------------------------------------------------------------
-template<typename T> 
+template<typename T>
 T Math::clamp(T val, T minVal, T maxVal)
 {
     CVF_ASSERT(minVal <= maxVal);
@@ -87,20 +87,20 @@ T Math::clamp(T val, T minVal, T maxVal)
 //--------------------------------------------------------------------------------------------------
 /// Returns the absolute value of val
 //--------------------------------------------------------------------------------------------------
-template<typename T> 
+template<typename T>
 T Math::abs(const T& val)
-{ 
-    return val >= 0 ? val : -val; 
+{
+    return val >= 0 ? val : -val;
 }
 
 
 //--------------------------------------------------------------------------------------------------
 /// Returns the sign of val
 //--------------------------------------------------------------------------------------------------
-template<typename T> 
+template<typename T>
 int Math::sign(const T& val)
-{ 
-    return val < 0 ? -1 : 1; 
+{
+    return val < 0 ? -1 : 1;
 }
 
 

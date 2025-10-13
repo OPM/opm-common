@@ -4,7 +4,7 @@
 
 sudo docker build -t manylinux2014_opm:built . -f python/Dockerfile
 
-* This will create a docker image with a version looking like '2020.10' with package 
+* This will create a docker image with a version looking like '2020.10' with package
   wheels ready for upload in /tmp/opm-common/build/wheelhouse
 * For subsequent python package versions, add a version_tag build argument including a dot '.':
 

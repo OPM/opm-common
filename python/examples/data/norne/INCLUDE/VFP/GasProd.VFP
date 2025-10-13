@@ -5,17 +5,17 @@
 
 -- Copyright (C) 2015 Statoil
 
--- Denne loeftekurven baserer seg paa data 
+-- Denne loeftekurven baserer seg paa data
 -- fra broenn D-2T2H, som har en broenn-bane
--- noe midt mellom det meste. Denne kurven 
--- brukes for gassbroenner. 
+-- noe midt mellom det meste. Denne kurven
+-- brukes for gassbroenner.
 VFPPROD
 --4 2200 'GAS' 'WGR' 'OGR' /
 4 2580 'GAS' 'WGR' 'OGR' /
 15 150 1500 15000 150000 1.5e+006 /
 30 40 60 100 200 250 /
 0 0.0003 0.003 0.03 0.3 3 30 /
-7.1e-007 1e-006 1e-005 0.0001 0.001 0.002 
+7.1e-007 1e-006 1e-005 0.0001 0.001 0.002
 0.009  /
 0 /
 1 1 1 1 34.8749 34.8749 34.875 34.879 35.1864 56.3325 /

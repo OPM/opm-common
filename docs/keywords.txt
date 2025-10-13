@@ -1,5 +1,5 @@
 Keywords is the most important aspect of the ECLIPSE datafile
-parser. 
+parser.
 
 1. The structure of a keyword
 -----------------------------
@@ -78,9 +78,9 @@ terminated. Here comes some typical examples of keywords:
     ... /
   /
 
-                ---\  
+                ---\
   EQLDIMS          |
-    ....   /       |  
+    ....   /       |
                    |
   EQUIL            |
     .... /         |
@@ -97,7 +97,7 @@ terminated. Here comes some typical examples of keywords:
   PVGO
    /
    /
-  
+
 
 In the list above here the GRID keyword has zero records, i.e. no data
 at all. The WCONHIST keyword has three records of data, the EQLDIMS
@@ -123,7 +123,7 @@ we currently have five different categories:
      the most common configuration and for keywords of this type it is
      not necessary to specify a size attribute at all:
 
-       {"name" : "WCONHIST" , .... }  
+       {"name" : "WCONHIST" , .... }
 
 
   3. Keywords where the number of records is inferred from the content
@@ -157,7 +157,7 @@ we currently have five different categories:
      next valid keyword is found:
 
         {"name" : "VFPPROD" , "size" : "UNKNOWN", ....
-     
+
 
 
   5. Tables PVTG and PVTO: The two tables PVTG and PVTO are special
@@ -221,7 +221,7 @@ PVTG
 250   0.05  0.05   20
       0.15  0.10   40  /
 ...
-     
+
 In the manual this is described as two tables with three columns, one
 with three rows and one with two rows. The leading values of 200 and
 250 are the pressure values where the two tables apply. The visual
@@ -266,7 +266,7 @@ configuration this could have been configured as:
                "value_type" : "DOUBLE" ,
                "size_type"  : "ALL" ,
                "default"    : 0 ,
-               "dimension"  : "1"}]                                                                                                                                                                                                                                                                                                                  
+               "dimension"  : "1"}]
 
 However, since keywords containing large data arrays, like e.g. COORD
 and PERMX are quite common a shortcut has been created for such
@@ -312,22 +312,22 @@ Classes:
 
 The library contains classes along two dimensions:
 
-   +----------------+     +----------------+     +----------------+ 
-   | Parser         |     | RawDeck        |     | Deck           | 
-   +----------------+     +----------------+     +----------------+ 
-  		       		      	      		    
-   +----------------+     +----------------+     +----------------+ 
-   | ParserKeyword  |     | Rawkeyword     |     | DeckKeyword    | 
-   +----------------+     +----------------+     +----------------+ 
-  		       		      	      		    
-   +----------------+     +----------------+     +----------------+ 
-   | ParserRecord   |     | RawRecord      |     | DeckRecord     | 
-   +----------------+     +----------------+     +----------------+ 
-        		             		            		    
-   +----------------+     		         +----------------+ 
-   | ParserItem     |     		         | DeckItem       | 
-   +----------------+     		         +----------------+ 
-  
+   +----------------+     +----------------+     +----------------+
+   | Parser         |     | RawDeck        |     | Deck           |
+   +----------------+     +----------------+     +----------------+
+
+   +----------------+     +----------------+     +----------------+
+   | ParserKeyword  |     | Rawkeyword     |     | DeckKeyword    |
+   +----------------+     +----------------+     +----------------+
+
+   +----------------+     +----------------+     +----------------+
+   | ParserRecord   |     | RawRecord      |     | DeckRecord     |
+   +----------------+     +----------------+     +----------------+
+
+   +----------------+     		         +----------------+
+   | ParserItem     |     		         | DeckItem       |
+   +----------------+     		         +----------------+
+
 
 
 

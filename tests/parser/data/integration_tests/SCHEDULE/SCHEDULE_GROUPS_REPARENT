@@ -25,7 +25,7 @@ GRUPTREE
 /
 
 TSTEP        -- Time 1
- 10 / 
+ 10 /
 
 GRUPTREE
  'GROUP_BIRGER' 'GROUP_NEW' /  -- Move BIRGER to NEW, i.e. NEW should now have NILS AND BIRGER, and BJARNE is childless

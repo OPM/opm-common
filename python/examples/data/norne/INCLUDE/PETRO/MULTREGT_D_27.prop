@@ -6,9 +6,9 @@
 -- Copyright (C) 2015 Statoil
 
 -- # the programm Xmultregt expects the upper part of the symmetric matrix
--- # off diagonal elements modify transmissibilities between different segments, 
+-- # off diagonal elements modify transmissibilities between different segments,
 -- # diagonal elements correspond to the same segment and will also modify the transmissibilities within the region
--- # this holds also for the small matrices, i.e. they shouild be symmetrical and diagonal elemnts 
+-- # this holds also for the small matrices, i.e. they shouild be symmetrical and diagonal elemnts
 -- # correspond to the same segment
 -- #    Garn            |  Ile          |   Tofte        |   Tilje_4/3      |   Tilje_1/2                |                 Formation
 -- #    C   D   E   G   | C   D   E   G |  C   D   E   G |  C   D   E   G   |  C     D     E     G       |         Segment
@@ -38,7 +38,7 @@
 -- FLUX                                                                              1     1     1      #| 18      D
 -- FLUX                                                                                    1     1      #| 19      E
 -- FLUX                                                                                          1      #| 20      G
--- # 
+-- #
 --
 -- Now comes the real data
 --

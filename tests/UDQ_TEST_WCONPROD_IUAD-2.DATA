@@ -338,7 +338,7 @@ COMPDAT
 
 
 UDQ
--- test 
+-- test
 --oil & liquid capacities at GEFAC = 0.8995
 DEFINE WUOPRL (WOPR PROD1 - 150) * 0.90 /
 DEFINE WULPRL (WLPR PROD1 - 200) * 0.90 /
@@ -440,13 +440,13 @@ UNITS  FU_CS38 SM3/DAY /
 -- Well production rate targets/limits:
 -- testing UDQs as production constrains
 WCONPROD
--- name      status  ctrl   qo     qw  qg  ql	 qr bhp  thp  vfp  alq 
+-- name      status  ctrl   qo     qw  qg  ql	 qr bhp  thp  vfp  alq
   'PROD1'     'OPEN'  'GRUP' WUOPRU  1*  1*  WULPRU 1* 60.0   / single wells
 /
 
 
 WCONPROD
--- name      status  ctrl   qo     qw  qg  ql	 qr bhp  thp  vfp  alq 
+-- name      status  ctrl   qo     qw  qg  ql	 qr bhp  thp  vfp  alq
   'PROD2'     'OPEN'  'GRUP' WUOPRU  1*  1*  WULPRU 1* 60.0   / single wells
  /
 

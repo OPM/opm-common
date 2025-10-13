@@ -86,8 +86,8 @@ private:
     Vec3d		m_direction;		    ///< Vector specifying ray direction
     double      m_minDistance;          ///< Minimum distance for a hit
     double      m_maxDistance;          ///< Maximum distance for a hit
-    double      m_minDistanceSquared;   
-    double      m_maxDistanceSquared;   
+    double      m_minDistanceSquared;
+    double      m_maxDistanceSquared;
     bool        m_distanceLimitedRay;
 };
 

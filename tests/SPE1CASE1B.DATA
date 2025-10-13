@@ -5,7 +5,7 @@
 
 -- Copyright (C) 2015 Statoil
 
--- This simulation is based on the data given in 
+-- This simulation is based on the data given in
 -- 'Comparison of Solutions to a Three-Dimensional
 -- Black-Oil Reservoir Simulation Problem' by Aziz S. Odeh,
 -- Journal of Petroleum Technology, January 1981
@@ -72,11 +72,11 @@ INIT
 -- -------------------------------------------------------------------------
 NOECHO
 
-DX 
--- There are in total 300 cells with length 1000ft in x-direction	
+DX
+-- There are in total 300 cells with length 1000ft in x-direction
    	300*1000 /
 DY
--- There are in total 300 cells with length 1000ft in y-direction	
+-- There are in total 300 cells with length 1000ft in y-direction
 	300*1000 /
 DZ
 -- The layers are 20, 30 and 50 ft thick, in each layer there are 100 cells
@@ -105,16 +105,16 @@ PERMZ
 ECHO
 
 -- PROPS section keyword "hidden" in include file
--- not able to parse individual sections 
- 
+-- not able to parse individual sections
+
 INCLUDE
  'props_spe1case1b.inc' /
- 
+
 
 REGIONS
 
 FIPNUM
-  300*1 / 
+  300*1 /
 
 SOLUTION
 -- -------------------------------------------------------------------------
@@ -122,7 +122,7 @@ SOLUTION
 EQUIL
 -- Item 1: datum depth (ft)
 -- Item 2: pressure at datum depth (psia)
--- 	   - Odeh's table 1 says that initial reservoir pressure is 
+-- 	   - Odeh's table 1 says that initial reservoir pressure is
 -- 	     4800 psi at 8400ft, which explains choice of item 1 and 2
 -- Item 3: depth of water-oil contact (ft)
 -- 	   - chosen to be directly under the reservoir
@@ -141,14 +141,14 @@ EQUIL
 
 RSVD
 -- Dissolved GOR is initially constant with depth through the reservoir.
--- The reason is that the initial reservoir pressure given is higher 
----than the bubble point presssure of 4014.7psia, meaning that there is no 
+-- The reason is that the initial reservoir pressure given is higher
+---than the bubble point presssure of 4014.7psia, meaning that there is no
 -- free gas initially present.
 8300 1.270
 8450 1.270 /
 
 SUMMARY
--- -------------------------------------------------------------------------	 
+-- -------------------------------------------------------------------------
 
 DATE
 
@@ -255,7 +255,7 @@ RPTRST
 -- If no resolution (i.e. case 1), the two following lines must be added:
 DRSDT
  0 /
--- if DRSDT is set to 0, GOR cannot rise and free gas does not 
+-- if DRSDT is set to 0, GOR cannot rise and free gas does not
 -- dissolve in undersaturated oil -> constant bubble point pressure
 
 WELSPECS
@@ -277,8 +277,8 @@ COMPDAT
 	'RFTI'  9  	9  	3	3	'OPEN'	1*	1*	0.5 /
 	'INJ'	1	1	1	1	'OPEN'	1*	1*	0.5 /
 /
--- Coordinates in item 2-5 are retreived from Odeh's figure 1 and 2 
--- Item 9 is the well bore internal diameter, 
+-- Coordinates in item 2-5 are retreived from Odeh's figure 1 and 2
+-- Item 9 is the well bore internal diameter,
 -- the radius is given to be 0.25ft in Odeh's paper
 
 
@@ -328,9 +328,9 @@ WELOPEN
 /
 
 TSTEP
-   28 31 30 31 30 31 31 30 31 30 31 
-31 28 31 30 31 30 31 31 30 31 30 31 
-31 28 31 30 31 30 31 31 30 31 30 31 
+   28 31 30 31 30 31 31 30 31 30 31
+31 28 31 30 31 30 31 31 30 31 30 31
+31 28 31 30 31 30 31 31 30 31 30 31
 31 /
 
 DATES
@@ -339,10 +339,10 @@ DATES
 
 TSTEP
       31 30 31 30 31 31 30 31 30 31
-31 28 31 30 31 30 31 31 30 31 30 31 
-31 28 31 30 31 30 31 31 30 31 30 31 
-31 28 31 30 31 30 31 31 30 31 30 31 
-31 28 31 30 31 30 31 31 30 31 30 31 
+31 28 31 30 31 30 31 31 30 31 30 31
+31 28 31 30 31 30 31 31 30 31 30 31
+31 28 31 30 31 30 31 31 30 31 30 31
+31 28 31 30 31 30 31 31 30 31 30 31
 31 28 31 30 31 30 31 31 30 31 30 31 /
 
 --Advance the simulator once a year for TEN years:

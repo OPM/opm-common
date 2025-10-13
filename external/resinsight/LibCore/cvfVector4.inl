@@ -50,7 +50,7 @@ namespace cvf {
 ///  - cvf::Vec4f (Vector4<float>)
 ///  - cvf::Vec4d (Vector4<double>)
 ///  - cvf::Vec4i (Vector4<int>)
-/// 
+///
 //==================================================================================================
 
 template<typename S> Vector4<S> const Vector4<S>::ZERO(0,0,0,0);
@@ -59,7 +59,7 @@ template<typename S> Vector4<S> const Vector4<S>::ZERO(0,0,0,0);
 /// Set the vector to <x,y,z>
 //--------------------------------------------------------------------------------------------------
 template<typename S>
-Vector4<S>::Vector4(S x, S y, S z, S w) 
+Vector4<S>::Vector4(S x, S y, S z, S w)
 {
     m_v[0] = x;
     m_v[1] = y;
@@ -72,9 +72,9 @@ Vector4<S>::Vector4(S x, S y, S z, S w)
 /// Set the vector to the same as other
 //--------------------------------------------------------------------------------------------------
 template<typename S>
-Vector4<S>::Vector4(const Vector4& other) 
-{ 
-    *this = other; 
+Vector4<S>::Vector4(const Vector4& other)
+{
+    *this = other;
 }
 
 
@@ -108,7 +108,7 @@ Vector4<S>& Vector4<S>::operator=(const Vector4& other)
 
 
 //--------------------------------------------------------------------------------------------------
-/// 
+///
 //--------------------------------------------------------------------------------------------------
 template<typename S>
 Vector4<S>::Vector4(const Vector3<S>& other, S w)
@@ -237,13 +237,13 @@ const Vector4<S> Vector4<S>::operator-() const
 //--------------------------------------------------------------------------------------------------
 template<typename S>
 inline Vector4<S>& Vector4<S>::operator+=(const Vector4& v)
-{ 
-    m_v[0] += v.x(); 
-    m_v[1] += v.y(); 
-    m_v[2] += v.z(); 
-    m_v[3] += v.w(); 
+{
+    m_v[0] += v.x();
+    m_v[1] += v.y();
+    m_v[2] += v.z();
+    m_v[3] += v.w();
 
-    return *this; 
+    return *this;
 }
 
 
@@ -252,13 +252,13 @@ inline Vector4<S>& Vector4<S>::operator+=(const Vector4& v)
 //--------------------------------------------------------------------------------------------------
 template<typename S>
 inline Vector4<S>& Vector4<S>::operator-=(const Vector4& v)
-{ 
-    m_v[0] -= v.x(); 
-    m_v[1] -= v.y(); 
-    m_v[2] -= v.z(); 
-    m_v[3] -= v.w(); 
+{
+    m_v[0] -= v.x();
+    m_v[1] -= v.y();
+    m_v[2] -= v.z();
+    m_v[3] -= v.w();
 
-    return *this; 
+    return *this;
 }
 
 
@@ -267,13 +267,13 @@ inline Vector4<S>& Vector4<S>::operator-=(const Vector4& v)
 //--------------------------------------------------------------------------------------------------
 template<typename S>
 inline Vector4<S>& Vector4<S>::operator*=(S scalar)
-{ 
-    m_v[0] *= scalar; 
-    m_v[1] *= scalar; 
-    m_v[2] *= scalar; 
-    m_v[3] *= scalar; 
+{
+    m_v[0] *= scalar;
+    m_v[1] *= scalar;
+    m_v[2] *= scalar;
+    m_v[3] *= scalar;
 
-    return *this; 
+    return *this;
 }
 
 
@@ -282,13 +282,13 @@ inline Vector4<S>& Vector4<S>::operator*=(S scalar)
 //--------------------------------------------------------------------------------------------------
 template<typename S>
 inline Vector4<S>& Vector4<S>::operator/=(S scalar)
-{ 
-    m_v[0] /= scalar; 
-    m_v[1] /= scalar; 
-    m_v[2] /= scalar; 
-    m_v[3] /= scalar; 
+{
+    m_v[0] /= scalar;
+    m_v[1] /= scalar;
+    m_v[2] /= scalar;
+    m_v[3] /= scalar;
 
-    return *this; 
+    return *this;
 }
 
 
@@ -330,7 +330,7 @@ S Vector4<S>::dot(const Vector4& other) const
 
 //--------------------------------------------------------------------------------------------------
 /// Compute the dot product of this and rhs and return the result (scalar)
-/// 
+///
 /// Formula:
 /// \code
 /// S = tx*rx + ty*ry + tz*rz + tw*rw
@@ -359,7 +359,7 @@ void Vector4<S>::set(const T& other)
 
 //--------------------------------------------------------------------------------------------------
 /// Get the length of the vector
-/// 
+///
 /// Formula:
 /// \code
 /// len = sqrt(x*x + y*y + z*z)
@@ -374,7 +374,7 @@ inline S Vector4<S>::length() const
 
 //--------------------------------------------------------------------------------------------------
 /// Get the squared length (L2) of the vector
-/// 
+///
 /// Formula:
 /// \code
 /// len = x*x + y*y + z*z
@@ -388,9 +388,9 @@ inline S Vector4<S>::lengthSquared() const
 
 
 //--------------------------------------------------------------------------------------------------
-/// Set the length of the vector to \a newLength. 
-/// 
-/// \sa Vector3::setLength() 
+/// Set the length of the vector to \a newLength.
+///
+/// \sa Vector3::setLength()
 //--------------------------------------------------------------------------------------------------
 template<typename S>
 bool Vector4<S>::setLength(S newLength)

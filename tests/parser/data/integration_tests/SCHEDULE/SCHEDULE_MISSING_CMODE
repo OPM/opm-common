@@ -1,4 +1,4 @@
-START         
+START
   10 MAI 2007   /
 
 RUNSPEC
@@ -19,12 +19,12 @@ COPY
 
 SCHEDULE
 
-WELSPECS 
-     'D-4H'        'OP'   30   37  3.33       'OIL'  7* /   
+WELSPECS
+     'D-4H'        'OP'   30   37  3.33       'OIL'  7* /
 /
 
 
-WCONPROD 
+WCONPROD
      'D-4H'      'SHUT' 15* /
 /
 

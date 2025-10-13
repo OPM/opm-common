@@ -14,7 +14,7 @@ expression based on the current results of the ongoing simulation is an
 important part of the concept, and they are often referenced in pair as
 \udq{}/\kw{ACTIONX}, this is slightly misleading as the two are fully
 independent and share very little both as concepts in \flow{} and in the C++
-implementation. The \kw{ACTIONX} keyword is described in chapter \ref{actionx}. 
+implementation. The \kw{ACTIONX} keyword is described in chapter \ref{actionx}.
 
 The \udq{} keyword is also documented in section 12.3.233 in the \flow{}
 reference manual.
@@ -130,7 +130,7 @@ for each well, \kw{WUOPR1} which is the oil production rate for a subset of
 wells and \kw{WUOPR2} which is the oil production rate for well OP1 \emph{broadcasted to all wells}.
 \begin{deck}
 UDQ
-  DEFINE WUBHP  WBHP     / 
+  DEFINE WUBHP  WBHP     /
   DEFINE WUOPR1 WOPR 'OP*' /
   DEFINE WUOPR2 WOPR OP1 /
 /
@@ -328,7 +328,7 @@ the shape of the result value is correct.
 \item[RRNDU] Random numbers from distribution $U(-1,1)$ seeded by the clock.
 \end{description}
 
-Assuming the argument vector \kw{WU1} looks like 
+Assuming the argument vector \kw{WU1} looks like
 \begin{code}
   WU1 = {"OP1": -2, "OP2": [], "WI": 1, "GI": []},
 \end{code}
@@ -431,7 +431,7 @@ not try this at home:
 UDQ
   -- Create a 0 / 1 mask with 0 for injectors and 1 for producers.
   DEFINE WUPROD WOPR > 0 /
-  
+
   -- Create a vector of random numbers [0,1] for all producers
   DEFINE WURAND 0.5 * (RANDU(WUPROD) + 1) * WUPROD /
 
@@ -440,7 +440,7 @@ UDQ
   DEFINE WUOPR FOPR * WURAND / SUM(WURAND) /
 /
 
--- Need to have a well list or similar to select all producers for 
+-- Need to have a well list or similar to select all producers for
 -- the WCONPROD keyword.
 WLIST
   'P' 'ADD' ..... /
@@ -487,7 +487,7 @@ UDQ
 \item As part of the summary evaluation the \inlinecode{SummaryState} will
   contain the water injection rate converted to field units.
 \item The \udq{} variable \kw{WUI} is evaluated as the water injection rate from
-  \inlinecode{SummaryState} subtracted numerical value 100, \emph{it is solely the users 
+  \inlinecode{SummaryState} subtracted numerical value 100, \emph{it is solely the users
   responsability that the numerical value 100 represents water injection rate in
   field units.}
 \end{enumerate}

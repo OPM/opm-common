@@ -1,4 +1,4 @@
--- This reservoir simulation deck is a simplified version of SPE1CASE2.DATA 
+-- This reservoir simulation deck is a simplified version of SPE1CASE2.DATA
 -- found in opm-data: https://github.com/OPM/opm-data/blob/master/spe1/SPE1CASE2.DATA
 
 
@@ -9,7 +9,7 @@
 
 -- Copyright (C) 2015 Statoil
 
--- This simulation is based on the data given in 
+-- This simulation is based on the data given in
 -- 'Comparison of Solutions to a Three-Dimensional
 -- Black-Oil Reservoir Simulation Problem' by Aziz S. Odeh,
 -- Journal of Petroleum Technology, January 1981
@@ -55,11 +55,11 @@ GRID
 -- -------------------------------------------------------------------------
 
 
-DX 
--- There are in total 300 cells with length 1000ft in x-direction	
+DX
+-- There are in total 300 cells with length 1000ft in x-direction
    	300*1000 /
 DY
--- There are in total 300 cells with length 1000ft in y-direction	
+-- There are in total 300 cells with length 1000ft in y-direction
 	300*1000 /
 DZ
 -- The layers are 20, 30 and 50 ft thick, in each layer there are 100 cells
@@ -100,11 +100,11 @@ WELSPECS
 -- 	     - stated to be 9110ft in Killough
 -- Column 6: preferred phase for well
 -- 	     - should be water for injector and oil for producers
--- Column 7: drainage radius for calc. of productivity or 
+-- Column 7: drainage radius for calc. of productivity or
 --           injectivity indices (ft)
 --	     - stated to be 60ft in Killough
 
--- #: 1	       2   3  4 5	 6	7  
+-- #: 1	       2   3  4 5	 6	7
     'INJE1'   'G' 1  1	9110    'WATER' 60   /
     'PRODU2'  'G'  2 2	9110	'OIL'   60   /
  /
@@ -118,21 +118,21 @@ COMPDAT
 -- Column 9: well bore diameter
 -- 	     - Killough says radius is 0.5ft
 
--- #: 1		     2  3	 4    5	  6	7	8	9 
+-- #: 1		     2  3	 4    5	  6	7	8	9
      'INJE1'        1  1 	 1    1	'OPEN'	1*	1*	1 /
      'PRODU2'        2  2	 2    2	'OPEN'	1*	1*	1 /
 /
 
 WCONINJE
 -- Killough says the water injector is set to a max rate of
--- 5000 STBW per D with a max BHP of 4000psia at a reference 
+-- 5000 STBW per D with a max BHP of 4000psia at a reference
 -- depth of 9110ft subsea:
 --   #:  1	    2       3      4     5       7
 	'INJE1' 'WATER' 'OPEN' 'RATE' 5000 1* 4000 /
 /
 
 WCONPROD
--- Killough says the max oil rate for all producers is set to 
+-- Killough says the max oil rate for all producers is set to
 -- 1500 STBO per D at time zero and that the min flowing BHP
 -- is set to 1000psia (with a ref. depth of 9110ft
 -- for this pressure in all wells):

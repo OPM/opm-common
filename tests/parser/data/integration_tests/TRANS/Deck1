@@ -23,7 +23,7 @@ FAULTS
    'F1'  3  3   1  5  1  1  'X' /
    'F2'  4  4   1  5  1  1  'X' /
 /
-  
+
 MULTFLT
    'F1' 0.10  /
    'F2' 0.10  /
@@ -36,7 +36,7 @@ SCHEDULE
 
 
 
-DATES 
+DATES
   10  'JUN'  2007 /
 /
 
@@ -44,7 +44,7 @@ DATES
 DATES
    10  JLY 2007 /
    10  AUG 2007 /
-/      
+/
 
 
 MULTFLT
@@ -54,11 +54,11 @@ MULTFLT
 
 TSTEP
   10   2*10  /
- 
+
 
 DATES
    10  JLY 2008 /
    10  AUG 2008 /
-/      
+/
 
 

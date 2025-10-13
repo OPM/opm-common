@@ -7,7 +7,7 @@
 #include <cmath>
 #include <vector>
 
-namespace external 
+namespace external
 {
 namespace cvf
 {
