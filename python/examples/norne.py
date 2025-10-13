@@ -54,7 +54,7 @@ def main():
     print('state:     %s' % es)
     print('schedule:  %s' % sc)
     print('the grid:  %s' % es.grid())
-    print('at timestep 100 (%s)' % sc.timesteps[100])
+    print('at reportstep 100 (%s)' % sc.reportsteps[100])
     print('prod well: %s' % wp)
     print('inj  well: %s' % wi)
     print('pos:       %s' % list(wp.pos()))
