@@ -30,7 +30,6 @@
 
 #include <algorithm>
 #include <array>
-#include <cassert>
 #include <cstddef>
 #include <ctime>
 #include <functional>
@@ -1036,6 +1035,39 @@ namespace {
         msw_connection.print_footer(os, {});
     }
 
+    void emitGroupHierarchy(const context&    ctx,
+                            const std::size_t reportStep,
+                            std::ostream&     os)
+    {
+        report_group_hierarchy_data(os, ctx, reportStep);
+        report_group_levels_data(os, ctx, reportStep);
+    }
+
+    void emitWellspec(const std::vector<std::string>& changedWells,
+                      const context&                  ctx,
+                      const Opm::ScheduleState&       sched,
+                      std::ostream&                   os)
+    {
+        auto changed_wells = std::vector<Opm::Well>{};
+        changed_wells.reserve(changedWells.size());
+
+        std::transform(changedWells.begin(), changedWells.end(),
+                       std::back_inserter(changed_wells),
+                       [&sched](const std::string& wname)
+                       { return sched.wells(wname); });
+
+        report_well_specification_data(os, changed_wells, ctx);
+        report_well_connection_data(os, changed_wells, ctx);
+
+        for (const auto& well : changed_wells) {
+            if (! well.isMultiSegment()) {
+                continue;
+            }
+
+            report_mswell_segment_data(os, well, ctx);
+            report_mswell_connection_data(os, well, ctx);
+        }
+    }
 }
 
 // ===========================================================================
@@ -1046,29 +1078,11 @@ void Opm::PrtFile::Reports::wellSpecification(const std::vector<std::string>& ch
                                               BlockDepthCallback              blockDepth,
                                               std::ostream&                   os)
 {
-    assert (! changedWells.empty());
-
     const context ctx { schedule, std::move(blockDepth) };
 
-    std::vector<Well> changed_wells;
-    changed_wells.reserve(changedWells.size());
-    std::transform(changedWells.begin(), changedWells.end(),
-                   std::back_inserter(changed_wells),
-                   [&reportStep, &schedule](const std::string& wname)
-                   { return schedule.getWell(wname, reportStep); });
-
-    report_well_specification_data(os, changed_wells, ctx);
-    report_well_connection_data(os, changed_wells, ctx);
-
-    for (const auto& well : changed_wells) {
-        if (! well.isMultiSegment()) {
-            continue;
-        }
-
-        report_mswell_segment_data(os, well, ctx);
-        report_mswell_connection_data(os, well, ctx);
+    if (! changedWells.empty()) {
+        emitWellspec(changedWells, ctx, schedule[reportStep], os);
     }
 
-    report_group_hierarchy_data(os, ctx, reportStep);
-    report_group_levels_data(os, ctx, reportStep);
+    emitGroupHierarchy(ctx, reportStep, os);
 }
