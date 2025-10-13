@@ -1022,6 +1022,8 @@ for numDerivs in range(1, maxDerivs + 1):
 template = jinja2.Template(includeSpecializationsTemplate)
 fileContents = template.render(specializationFileNames=specializationFileNames, scriptName=os.path.basename(sys.argv[0]))
 
-f = open("opm/material/densead/EvaluationSpecializations.hpp", "w")
-f.write(fileContents)
-f.close()
+# adding a newline at the end of the file if not present
+with open("opm/material/densead/EvaluationSpecializations.hpp", "w") as f:
+    if not fileContents.endswith('\n'):
+        fileContents += '\n'
+    f.write(fileContents)
