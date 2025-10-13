@@ -327,10 +327,3 @@ The library contains classes along two dimensions:
    +----------------+     		         +----------------+
    | ParserItem     |     		         | DeckItem       |
    +----------------+     		         +----------------+
-
-
-
-
-
-
-

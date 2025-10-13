@@ -3,4 +3,3 @@
      {"name" : "BPR",  "items" :
       [{"name":"ItemX" , "size_type":"SINGLE" , "value_type" : "FLOAT"}]} ,
      {"name" : "WWCT" , "size" : 0}]}
-
