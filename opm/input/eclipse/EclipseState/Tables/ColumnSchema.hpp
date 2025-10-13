@@ -40,8 +40,6 @@ namespace Opm {
         std::string orderSchema() const;
         bool validOrder( double value1 , double value2) const;
         bool lookupValid( ) const;
-        bool acceptsDefault( ) const;
-        bool isIncreasing( ) const;
         bool isDecreasing( ) const;
         Table::DefaultAction getDefaultMode( ) const;
         double getDefaultValue( ) const;
