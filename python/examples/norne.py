@@ -8,7 +8,6 @@ import opm.io
 from opm.io import Parser, ParseContext
 from opm.io.ecl_state import EclipseState
 from opm.io.schedule import Schedule
-from opm.io.summary import SummaryConfig
 
 
 def opmdatadir():

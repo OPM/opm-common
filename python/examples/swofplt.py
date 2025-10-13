@@ -4,13 +4,11 @@ import sys
 from os.path import isdir, join
 from datetime import datetime as dt
 
-import numpy as np
 import matplotlib.pyplot as plt
 
 import opm.io
 from opm.io.parser import Parser, ParseContext
 from opm.io.ecl_state import EclipseState
-from opm.io.schedule import Schedule
 
 
 def plotswof(ecl):
