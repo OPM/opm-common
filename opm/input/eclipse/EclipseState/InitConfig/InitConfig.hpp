@@ -49,6 +49,7 @@ namespace Opm {
         /// Internalises the run's initialisation-related information.
         ///
         /// \param[in] deck Run's model description.
+        /// \param[in] phases Run's active phase description.
         InitConfig(const Deck& deck, const Phases& phases);
 
         /// Create a serialisation test object.
