@@ -1145,6 +1145,7 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/material/thermal/SomertonThermalConductionLaw.hpp
       opm/material/thermal/EclSpecrockLaw.hpp
       opm/material/thermal/NullSolidEnergyLaw.hpp
+      opm/material/thermal/EnergyModuleType.hpp
       opm/ml/ml_model.hpp
 )
 
