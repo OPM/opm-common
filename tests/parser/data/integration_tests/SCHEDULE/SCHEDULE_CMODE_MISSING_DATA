@@ -1,4 +1,4 @@
-START         
+START
   10 MAI 2007   /
 
 RUNSPEC
@@ -19,11 +19,11 @@ COPY
 
 SCHEDULE
 
-WELSPECS 
-     'W1'        'OP'   30   37  3.33       'OIL'  7* /   
-     'W2'        'OP'   30   37  3.33       'OIL'  7* /   
-     'W3'        'OP'   30   37  3.33       'OIL'  7* /   
-     'W4'        'OP'   30   37  3.33       'OIL'  7* /   
+WELSPECS
+     'W1'        'OP'   30   37  3.33       'OIL'  7* /
+     'W2'        'OP'   30   37  3.33       'OIL'  7* /
+     'W3'        'OP'   30   37  3.33       'OIL'  7* /
+     'W4'        'OP'   30   37  3.33       'OIL'  7* /
 /
 
 
@@ -38,6 +38,6 @@ WCONHIST
 /
 
 
-WCONINJE 
+WCONINJE
      'W_1'     'WATER'  1*      'BHP'  20000.000  200000.000 * 678 4* /
 /

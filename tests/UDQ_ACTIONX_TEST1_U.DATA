@@ -5,7 +5,7 @@
 
 -- Copyright (C) 2018 Equinor
 
--- This deck uses User defined quantities (UDQ) together with the ACTIONX 
+-- This deck uses User defined quantities (UDQ) together with the ACTIONX
 -- keyword to shut well with highest water cut when number of wells on stream
 -- exceeds a defined number.
 
@@ -115,13 +115,13 @@ UDADIMS
 -- In this section simulation grid and static reservoir parameters are given
 -- *************************************************************************
 
-GRID 
+GRID
 
 -- ****************************************************
 -------------------------------------------------------
 
 --
---Disable echoing of the input file  
+--Disable echoing of the input file
 NOECHO
 
 --
@@ -156,37 +156,37 @@ INCLUDE
 
 PORO
  15*0.25
- 15*0.20 
- 15*0.23 
- 15*0.18 
-/ 
+ 15*0.20
+ 15*0.23
+ 15*0.18
+/
 
 PERMX
- 15*500 
- 15*100 
- 15*1000 
- 15*250 
-/ 
+ 15*500
+ 15*100
+ 15*1000
+ 15*250
+/
 
 -- ---------------------------------------------------
--- Copy PERMX to PERMY  & PERMZ 
+-- Copy PERMX to PERMY  & PERMZ
 COPY
  PERMX   PERMY   /
  PERMX   PERMZ   /
 /
 --
 -- ---------------------------------------------------
--- Set Kv/Kh 
+-- Set Kv/Kh
 MULTIPLY
  PERMZ   0.1     /
 /
 
 
-MULTZ 
+MULTZ
  15*1.0
  15*0.0
  30*1.0
-/ 
+/
 
 -- ***************************************************
 -- In this section simulation grid parameters are edited
@@ -199,7 +199,7 @@ EDIT
 
 
 -- ***************************************************
--- In this section fluid-rock properties and 
+-- In this section fluid-rock properties and
 -- relative permabilities are given
 -- ***************************************************
 
@@ -253,21 +253,21 @@ SOLUTION
 --   DATUM  DATUM   OWC     OWC    GOC    GOC    RSVD   RVVD   SOLN
 --   Depth  Pres.   Depth   Pcow   Depth  Pcog   Table  Table  Method
 EQUIL
-     2030   382.4   2030  0.0    500    0.0     1     1      0 / 
-     2050   382.4   2050  0.0    500    0.0     1     1      0 / 
-    
+     2030   382.4   2030  0.0    500    0.0     1     1      0 /
+     2050   382.4   2050  0.0    500    0.0     1     1      0 /
+
 
 
 --
 -- ---------------------------------------------------
--- Dissolved gas-oil ratio versus depth, 
+-- Dissolved gas-oil ratio versus depth,
 
 RSVD
  1500 180.0
  4000 180.0  /
  1500 180.0
  4000 180.0  /
- 
+
 
 -- ---------------------------------------------------
 --Controls on output to the RESTART file
@@ -277,7 +277,7 @@ RSVD
 
 RPTRST
  'BASIC=2'  'PBPD' /
- 
+
 
 --
 -- **************************************************************************************
@@ -307,17 +307,17 @@ FMWIN
 
 FMWPR
 
-GMWPR 
+GMWPR
  'UPPER' 'LOWER' /
 
-GMWIN 
+GMWIN
  'UPPER' 'LOWER' /
 
 
-WUPR1 
+WUPR1
  'OP*' /
 
-WUPR3 
+WUPR3
  'OP*' /
 
 FMCTP
@@ -339,7 +339,7 @@ GRUPTREE
  'LOWER'     'TEST'  /
 /
 
- 
+
 -- ***************************************************
 
 WELSPECS
@@ -347,7 +347,7 @@ WELSPECS
  'OPU02'         'UPPER'    1   4   2002      'OIL' 0.00      'STD'     'SHUT'	   'YES'    0	   'SEG' /
  'OPL01'         'LOWER'    1   2   2025      'OIL' 0.00      'STD'     'SHUT'	  'YES'    0	  'SEG' /
  'OPL02'         'LOWER'    1   4   2025      'OIL' 0.00      'STD'     'SHUT'	  'YES'    0	  'SEG' /
-/ 
+/
 
 
 WELSPECS
@@ -369,7 +369,7 @@ COMPDAT
 
 -- Well production rate targets/limits:
 WCONPROD
--- name      status  ctrl   qo     qw  qg  ql    qr bhp  thp  vfp  alq 
+-- name      status  ctrl   qo     qw  qg  ql    qr bhp  thp  vfp  alq
   'OPU*'     'SHUT'  'GRUP' 1500.  1*  1*  2500. 1* 60.0   / single wells
   'OPL*'     'SHUT'  'GRUP' 1500.  1*  1*  2500. 1* 60.0   / single wells
 /
@@ -382,8 +382,8 @@ WCONINJE
 
 
 UDQ
--- WUPR3 sorts production wells from poorest (highest wct) to best. ACTIONX will shut #1 in this list 
-DEFINE WUPR1 1/(0.01 + WWCT 'OP*') /   
+-- WUPR3 sorts production wells from poorest (highest wct) to best. ACTIONX will shut #1 in this list
+DEFINE WUPR1 1/(0.01 + WWCT 'OP*') /
 DEFINE WUPR3 SORTA(WUPR1) /
 -- units ignored
 /
@@ -426,19 +426,19 @@ ACTIONX
 ACT02 11 /
 FMWPR > 25 AND /
 WGPR 'OPL02' > GGPR 'LOWER' AND /
-MNTH > NOV / 
+MNTH > NOV /
 /
 WELOPEN
 '?' 'SHUT' 0 0 0 2* /
 /
 WELOPEN
- 'OPL01' 'OPEN' 5* / 
+ 'OPL01' 'OPEN' 5* /
 /
 ENDACTIO
 
 
 DATES
- 1 'SEP' 2018 / 
+ 1 'SEP' 2018 /
 /
 
 ACTIONX
@@ -463,64 +463,64 @@ WELOPEN
 '?' SHUT 0 0 0 2* /
 /
 WELOPEN
- 'OPU02' 'OPEN' 5* / 
+ 'OPU02' 'OPEN' 5* /
 /
 WELOPEN
- 'OPL02' 'OPEN' 5* / 
+ 'OPL02' 'OPEN' 5* /
 /
 ENDACTIO
 
 WELOPEN
- 'OPL01' 'OPEN' 5* / 
+ 'OPL01' 'OPEN' 5* /
 /
 
 DATES
- 1 'OCT' 2018 / 
+ 1 'OCT' 2018 /
 /
 
 
 WELOPEN
- 'WIL01' 'OPEN' 5* / 
+ 'WIL01' 'OPEN' 5* /
 /
 
 DATES
- 1 'NOV' 2018 / 
+ 1 'NOV' 2018 /
 /
-END 
+END
 
 WELOPEN
- 'OPL02' 'OPEN' 5* / 
+ 'OPL02' 'OPEN' 5* /
 /
 
 
 
 DATES
- 1 'DEC' 2018 / 
-/
-
-
-WELOPEN
- 'OPU01' 'OPEN' 5* / 
-/
-
-DATES
- 1 'MAY' 2019 / 
+ 1 'DEC' 2018 /
 /
 
 
 WELOPEN
- 'OPU02' 'OPEN' 5* / 
+ 'OPU01' 'OPEN' 5* /
 /
 
 DATES
- 1 'JUN' 2019 / 
+ 1 'MAY' 2019 /
 /
 
 
 WELOPEN
- 'WIU01' 'OPEN' 5* / 
+ 'OPU02' 'OPEN' 5* /
 /
 
 DATES
- 1 'JAN' 2021 / 
+ 1 'JUN' 2019 /
+/
+
+
+WELOPEN
+ 'WIU01' 'OPEN' 5* /
+/
+
+DATES
+ 1 'JAN' 2021 /
 /

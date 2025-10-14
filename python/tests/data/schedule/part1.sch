@@ -4,8 +4,8 @@ WELSPECS
      'D-1H'   'MANI-D1'   22   22  1*       'OIL'  2*      'STOP'  4* /
 /
 
-COMPDAT 
--- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro 
+COMPDAT
+-- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro
      'C-4H'   11   35    1    1      'OPEN'  1*     45.314      0.216   4253.571  2*         'Z'     16.503 /
      'C-4H'   11   35    2    2      'OPEN'  1*     43.674      0.216   4103.809  2*         'Z'     16.588 /
      'B-2H'   17   31    9    9      'OPEN'  1*     17.246      0.216   1285.863  2*         'X'      5.865 /
@@ -26,7 +26,7 @@ COMPDAT
      'D-1H'   23   22   13   13      'OPEN'  1*     12.603      0.216   1152.420  2*         'Z'     14.489 /
 /
 
-GRUPTREE 
+GRUPTREE
    'INJE'     'FIELD'  /
    'PROD'     'FIELD'  /
    'MANI-B2'     'PROD'  /
@@ -44,17 +44,17 @@ GRUPTREE
    'D2-DUMMY'     'MANI-D2'  /
 /
 
-WCONHIST 
+WCONHIST
      'C-4H'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
      'B-2H'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
      'D-1H'      'OPEN'      'RESV'   4347.700      0.000 482594.703  5* /
 /
 
-WPAVE 
+WPAVE
   1*      0.000      'WELL'       'ALL' /
 
 
-GRUPNET 
+GRUPNET
     'FIELD'     20.000  5* /
      'PROD'     20.000  5* /
   'MANI-B2'  1*    8  1*        'NO'  2* /
@@ -69,11 +69,11 @@ GRUPNET
   'MANI-E2'  1*    9  4* /
 /
 
-VAPPARS 
+VAPPARS
       0.500      0.000 /
 
 
-NETBALAN 
+NETBALAN
       0.000      0.200  6* /
 
 
@@ -87,15 +87,15 @@ WTEST
 'C-4H'  100  'C' 10 /
 /
 
-WCONHIST 
+WCONHIST
      'D-1H'      'OPEN'      'RESV'   5601.953      0.000 634722.739  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-4H'       'GAS'  1*      'RATE' 392180.973  1* 600 /
 /
 
-GECON 
+GECON
     'FIELD'   1000.000  5*        'NO'  1* /
 /
 
@@ -104,12 +104,12 @@ DATES
  1 'DEC' 1997 /
 /
 
-WCONHIST 
+WCONHIST
      'B-2H'      'OPEN'      'RESV'   2079.506      0.000 230825.037  5* /
      'D-1H'      'OPEN'      'RESV'   5433.419      0.000 651415.006  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-4H'       'GAS'  1*      'RATE' 480352.924  1*  600 /
 /
 
@@ -148,12 +148,12 @@ DATES
 --      : D-2H Connection 14 15  9 Perf. Len  24.00 ( 26.4%)
 --      : D-2H Connection 14 14  9 Perf. Len  69.30 ( 77.1%)
 --      : D-2H Connection 14 13  9 Perf. Len  19.50 ( 20.6%)
-WELSPECS 
+WELSPECS
      'D-2H'  'D2-DUMMY'   14   28  1*       'OIL'  2*      'STOP'  4* /
 /
 
-COMPDAT 
--- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro 
+COMPDAT
+-- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro
      'D-2H'   14   26    9    9      'OPEN'  1*     21.450      0.216   1590.754  2*         'Y'      5.741 /
      'D-2H'   14   25    9    9      'OPEN'  1*     39.557      0.216   2921.561  2*         'Y'      5.648 /
      'D-2H'   14   23    9    9      'OPEN'  1*     10.183      0.216    748.871  2*         'Y'      5.554 /
@@ -165,15 +165,14 @@ COMPDAT
      'D-2H'   14   13    9    9      'OPEN'  1*     24.664      0.216   1809.697  2*         'Y'      5.504 /
 /
 
-WCONHIST 
+WCONHIST
      'B-2H'      'OPEN'      'RESV'   5359.973      0.000 594956.842  5* /
      'D-1H'      'OPEN'      'RESV'   5481.020      0.000 693727.779  5* /
      'D-2H'      'OPEN'      'RESV'    161.927      0.000  17973.921  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-4H'       'GAS'  1*      'RATE' 1129535.350  1* 600  /
 /
 
 -- 56.000000 days from start of simulation ( 6 'NOV' 1997 )
-

@@ -39,7 +39,7 @@ deck = parser.parse_file(input_file)
 for kw in deck:
     print(kw.name)
 \end{code}
- 
+
 When used this way the Python interpreter is the main program running, and the
 \flow{} classes like \inlinecode{Opm::Parser} are loaded to extend the Python
 interpreter. This can also be flipped around, the Python interpreter can be
@@ -93,7 +93,7 @@ When the Python module is loaded it does so in an environment where the path to
 the \path{.DATA} file has been appended to the Python load path by manipulating
 the internal \inlinecode{sys.path} variable.
 
- 
+
 \subsection{The different arguments}
 The \inlinecode{run()} function will be called with exactly five arguments which
 your implementation can use. These arguments point to datastructures in the
@@ -137,7 +137,7 @@ arguments are:
         sum_wopr += summary_state.well_var(well, 'WOPR')
 
     # Directly fetch the FOPR from the summary_state
-    fopr = summary_state['FOPR'] 
+    fopr = summary_state['FOPR']
   \end{code}
   The \inlinecode{summary\_state} variable can also be updated with the
   \inlinecode{update()}, \inlinecode{update\_well\_var()} and
@@ -158,7 +158,7 @@ track of the timesteps and the $\mathrm{FOPR}$ as function of time - this is one
 possible implementation:
 \begin{code}
 def diff(pair1, pair2):
-    return (pair1[0] - pair2[0], pair1[1] - pair2[1])   
+    return (pair1[0] - pair2[0], pair1[1] - pair2[1])
 
 def fopr_diff2(summary_state):
     fopr = summary_state.get('FOPR')
@@ -252,7 +252,7 @@ detail as code comments of \inlinecode{Schedule::applyPyAction()} in the
 
 
 \section{Implementing \udq{} like behavior}
-The \udq{} keyword has three different purposes - all based on defining 
+The \udq{} keyword has three different purposes - all based on defining
 complex quantities from the current state of the simulation:
 
 \begin{enumerate}
@@ -312,7 +312,7 @@ def run(ecl_state, schedule, report_step, summary_state, actionx_callback):
                 bad_time = elapsed - state['bad_wells'][well]
                 if bad_time > time_limit:
                     shut_wells.append(well)
-                    state['closed_wells'].add( well )         
+                    state['closed_wells'].add( well )
         else:
             state['bad_wells'][well] = None
 
@@ -378,7 +378,7 @@ def run(ecl_state, schedule, report_step, summary_state, actionx_callback):
     for wname in schedule.well_names():
         if summary_state.well_var(wname, 'WOPR') > 0:
             num_prod_wells += 1
- 
+
     fopr = summary_state['FOPR']
     new_rate = fopr / num_prod_wells
     for wname in schedule.well_names():

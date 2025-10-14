@@ -8,7 +8,7 @@
     {
         "name": "MIXING_MODEL_SALT",
         "value_type": "STRING",
-        "default": "MICHAELIDES" 
+        "default": "MICHAELIDES"
     },
     {
       "name": "MIXING_MODEL_LIQUID",

@@ -19,7 +19,7 @@ COPY
 
 SCHEDULE
 
-WELSPECS 
+WELSPECS
     'W_1'        'GROUP_BJARNE'   30   37  1*       'OIL'  7* /
     'W_2'        'GROUP_ODD'   31   18  1*       'GAS'  7* /
     'W_3'        'GROUP_BJARNE'   20   51  1*       'WATER'  7* /

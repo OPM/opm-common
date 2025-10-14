@@ -20,7 +20,7 @@ COPY
 
 SCHEDULE
 
-NETBALAN 
+NETBALAN
       0.000      0.200  6* /
 
 
@@ -32,17 +32,15 @@ DATES      -- Bananskrell
 DATES
    10  JLY 2007 /
    10  AUG 2007 /
-/      
+/
 
 
 
 TSTEP
   10   2*10  /
- 
+
 
 DATES
    10  JLY 2008 /
    10  AUG 2008 /
-/      
-
-
+/

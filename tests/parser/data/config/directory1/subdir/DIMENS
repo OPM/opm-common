@@ -2,8 +2,8 @@
   "name" : "DIMENS",
   "sections":["RUNSPEC"],
   "size" : 1,
-  "items" : 
-      [{"name": "NX" , "size_type" : "SINGLE" , "value_type" : "INT"}, 
-       {"name": "NY" , "size_type" : "SINGLE" , "value_type" : "INT"}, 
+  "items" :
+      [{"name": "NX" , "size_type" : "SINGLE" , "value_type" : "INT"},
+       {"name": "NY" , "size_type" : "SINGLE" , "value_type" : "INT"},
        {"name": "NZ" , "size_type" : "SINGLE" , "value_type" : "INT"}]
 }

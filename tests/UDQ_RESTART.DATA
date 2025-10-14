@@ -334,7 +334,7 @@ COMPDAT
 
 
 UDQ
--- test 
+-- test
 --oil & liquid capacities at GEFAC = 0.8995
 DEFINE WUOPRL (WOPR PROD1 - 150) * 0.90 /
 DEFINE WULPRL (WLPR PROD1 - 200) * 0.90 /
@@ -360,13 +360,13 @@ WCONPROD
 /
 
 
-DATES     
+DATES
    1  'FEB'  2000 /
 /
 
 
-DATES     
-   1  'MAR' 2000 /  
+DATES
+   1  'MAR' 2000 /
 /
 
 DATES

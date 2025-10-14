@@ -74,4 +74,3 @@ compareECL \fB\-t\fR INIT \fB\-k\fR PORO <path to first casefile>
 compareECL \fB\-i\fR <path to first casefile> <path to second casefile> 0.01 1e\-6
 .PP
 Exceptions are thrown (and hence program exits) when deviations are larger than the specified tolerances, or when the number of cells does not match \fB\-\-\fR either in the grid file or for a specific keyword. Information about the keyword, keyword occurrence (zero based) and cell coordinate is printed when an exception is thrown. For more information about how the cases are compared, see the documentation of the EclFilesComparator class.
-

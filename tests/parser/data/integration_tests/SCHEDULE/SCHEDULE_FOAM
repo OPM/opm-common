@@ -1,6 +1,6 @@
 -- Based on the SCHEDULE_POLYMER test
 
-START         
+START
   10 MAI 2007   /
 RUNSPEC
 
@@ -24,16 +24,16 @@ SCHEDULE
 
 
 WELSPECS
-     'INJE01' 'I'    1  1 1* 'GAS'     /   
-     'INJE02' 'I'    5  1 1* 'GAS'     /   
-     'INJE03' 'I'    10 1 1* 'GAS'     /   
+     'INJE01' 'I'    1  1 1* 'GAS'     /
+     'INJE02' 'I'    5  1 1* 'GAS'     /
+     'INJE03' 'I'    10 1 1* 'GAS'     /
      'PROD01' 'P'    20  1  1* 'OIL'   7*  /
 /
 
 COMPDAT
-    'INJE01' 1  1  2  2   'OPEN'  1* 200. 0.5   /   
-    'INJE02' 5  1  2  2   'OPEN'  1* 200. 0.5   /   
-    'INJE03' 10  1  2  2   'OPEN'  1* 200. 0.5   /   
+    'INJE01' 1  1  2  2   'OPEN'  1* 200. 0.5   /
+    'INJE02' 5  1  2  2   'OPEN'  1* 200. 0.5   /
+    'INJE03' 10  1  2  2   'OPEN'  1* 200. 0.5   /
     'PROD01' 20  1  1  1    'OPEN'  1* 200. 0.5  /
 /
 

@@ -21,7 +21,7 @@ COPY
 SCHEDULE
 
 
-GRUPTREE 
+GRUPTREE
    'INJE'          'FIELD'  /
    'PROD'          'FIELD'  /
    'MANI-PROD'     'PROD'  /

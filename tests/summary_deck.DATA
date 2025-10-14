@@ -57,7 +57,7 @@ TOPS
 -- Cell 2,1,10 is inactive
 ACTNUM
   901*1 0 98*1 /
-  
+
 PORO
 1000*0.2 /
 
@@ -211,7 +211,7 @@ BPR
   1  1  7 /
   1  1  8 /
   1  1  9 /
-  1  1  10 /    
+  1  1  10 /
   2  1  10 /  -- This cell is not ACTIVE
 /
 
