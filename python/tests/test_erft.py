@@ -5,7 +5,10 @@ import datetime
 
 from opm.io.ecl import ERft, eclArrType
 
-from .utils import test_path
+try:
+    from tests.utils import test_path
+except ImportError:
+    from utils import test_path
 
 class TestEclFile(unittest.TestCase):
 

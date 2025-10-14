@@ -36,10 +36,10 @@ class TestSchedule(unittest.TestCase):
         self.assertEqual(dt.datetime(2015, 1, 1),   self.sch.start)
         self.assertEqual(dt.datetime(2029, 12, 28), self.sch.end)
 
-    def testTimesteps(self):
-        timesteps = self.sch.timesteps
-        self.assertEqual(176, len(timesteps))
-        self.assertEqual(dt.datetime(2016, 1, 1), timesteps[7])
+    def testReportsteps(self):
+        reportsteps = self.sch.reportsteps
+        self.assertEqual(176, len(reportsteps))
+        self.assertEqual(dt.datetime(2016, 1, 1), reportsteps[7])
 
     def testGroups(self):
 

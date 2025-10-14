@@ -12,11 +12,11 @@ def main():
     print('schedule:  %s' % sc)
     print('prod well: %s' % wp)
     print('inj  well: %s' % wi)
-    for i in range(len(sc.timesteps)):
+    for i in range(len(sc.reportsteps)):
         if not sc.get_wells(i)[0].isproducer() or sc.get_wells(i)[0].isinjector():
-            print('wp is not producer in step %s' % sc.timesteps[i])
+            print('wp is not producer in step %s' % sc.reportsteps[i])
         if not sc.get_wells(i)[1].isinjector() or sc.get_wells(i)[1].isproducer():
-            print('wi is not injector in step %s' % sc.timesteps[i])
+            print('wi is not injector in step %s' % sc.reportsteps[i])
 
 if __name__ == '__main__':
     main()
