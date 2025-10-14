@@ -2,12 +2,11 @@ RUNSPEC
 
 --      MAX     MAX     MAX     MAX     MAX     LSTACK  PRESS   MAX
 --      LGR     CELLS   MCOARS  MAMALG  MXLALG          OPT     NCHCOR
-LGR 
+LGR
         1*      1*      1*      1       1       1       1*      1* /
 
-LGR 
+LGR
         1*      1*      1*      /
 
-LGR 
+LGR
         /
- 

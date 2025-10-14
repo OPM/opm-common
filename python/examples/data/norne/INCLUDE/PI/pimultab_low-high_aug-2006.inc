@@ -7,7 +7,7 @@
 
 PIMULTAB
 -- The following is the reviewed model in Aug-2006, low-high case
--- a=0.25, b=0.1; 
+-- a=0.25, b=0.1;
 -- PIMULT=(1-a)/exp(fw/b)+a
 0.000 1.0000
 0.025 0.8341

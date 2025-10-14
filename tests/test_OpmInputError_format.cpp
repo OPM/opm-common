@@ -92,7 +92,7 @@ Runtime Error)" } ;
 }
 
 BOOST_AUTO_TEST_CASE(exception_multi_2) {
-    const std::string expected { R"(Problem with keywords 
+    const std::string expected { R"(Problem with keywords
   MXUNSUPP in FILENAME.DAT, line 42
   MZUNSUPP in FILENAME.DAT, line 45
 Runtime Error)" } ;

@@ -5,5 +5,3 @@
 {"name" : "LGRNAME", "value_type" : "STRING"},
 {"name" : "WELLHEAD_I", "value_type" : "INT"},
 {"name" : "WELLHEAD_J", "value_type" : "INT"}]}
-
-

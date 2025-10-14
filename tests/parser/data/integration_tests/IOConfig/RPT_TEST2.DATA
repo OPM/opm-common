@@ -28,19 +28,19 @@ RPTSOL
 RPTRST
   ALLPROPS RVSAT RSSAT PBPD  NORST=1  /
 --ALLPROPS --> fluid densities, viscosities , reciprocal formation volume factors and phase relative permeabilities
---NORST=1  --> output for visualization only 
+--NORST=1  --> output for visualization only
 
 SCHEDULE
 
 
-RPTSCHED 
+RPTSCHED
   'RESTART=1' 'FIP=3' 'WELSPECS' 'WELLS=0' 'NEWTON=1' 'SUMMARY=1' 'CPU=1' /
 
 
 RPTRST
   BASIC=5 FREQ=6 ALLPROPS  CONV=10  RVSAT RSSAT PBPD  NORST=1   /
 --ALLPROPS --> fluid densities, viscosities , reciprocal formation volume factors and phase relative permeabilities
---NORST=1  --> output for visualization only 
+--NORST=1  --> output for visualization only
 
 WELSPECS
      'F-14A'    'G'   12   85  99.00       'OIL'  7* /
@@ -85,7 +85,7 @@ DATES
 DATES
  22 'SEP' 2000 /
 /
- 
+
 DATES
  23 'SEP' 2000 /
 /
@@ -154,7 +154,7 @@ DATES
 DATES
  13 'APR' 2001 /
 /
-WTEST 
+WTEST
     'F-14A'      7.000         'P'  2* /
 /
 DATES
@@ -814,4 +814,3 @@ TSTEP
  1 /
 
 END
-

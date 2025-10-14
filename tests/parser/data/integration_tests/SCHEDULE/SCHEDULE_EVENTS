@@ -21,8 +21,8 @@ PORO
 
 SCHEDULE
 
-WELSPECS 
-     'W_1'        'GROUP1'   30   37  1*       'OIL'  7* /    
+WELSPECS
+     'W_1'        'GROUP1'   30   37  1*       'OIL'  7* /
 /
 
 COMPDAT
@@ -46,8 +46,8 @@ WELOPEN
 TSTEP    --2
   10 /
 
-WELSPECS 
-     'W_2'        'GROUP1'   20   37  1*       'OIL'  7* /    
+WELSPECS
+     'W_2'        'GROUP1'   20   37  1*       'OIL'  7* /
 /
 
 WELOPEN
@@ -58,8 +58,8 @@ WELOPEN
 TSTEP   --3
   10 /
 
-WELSPECS 
-     'W_2'        'GROUP2'   20   37  1*       'OIL'  7* /    
+WELSPECS
+     'W_2'        'GROUP2'   20   37  1*       'OIL'  7* /
 /
 
 WELOPEN

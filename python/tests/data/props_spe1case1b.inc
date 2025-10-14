@@ -5,7 +5,7 @@
 
 -- Copyright (C) 2015 Statoil
 
--- This simulation is based on the data given in 
+-- This simulation is based on the data given in
 -- 'Comparison of Solutions to a Three-Dimensional
 -- Black-Oil Reservoir Simulation Problem' by Aziz S. Odeh,
 -- Journal of Petroleum Technology, January 1981
@@ -43,9 +43,9 @@ SWOF
 --	       the coeffisient is set to 10e-5, S_{orw}=0 and S_{wi}=0.12
 -- Column 3: oil relative permeability when only oil and water are present
 --	     - we will use the same values as in column 3 in SGOF.
--- 	       This is not really correct, but since only the first 
+-- 	       This is not really correct, but since only the first
 --	       two values are of importance, this does not really matter
--- Column 4: water-oil capillary pressure (psi) 
+-- Column 4: water-oil capillary pressure (psi)
 
 0.12	0    		 	1	0
 0.18	4.64876033057851E-008	1	0
@@ -85,7 +85,7 @@ SGOF
 0.5	0.72	0.001	0
 0.6	0.87	0.0001	0
 0.7	0.94	0.000	0
-0.85	0.98	0.000	0 
+0.85	0.98	0.000	0
 0.88	0.984	0.000	0 /
 --1.00	1.0	0.000	0 /
 -- Warning from Eclipse: first sat. value in SWOF + last sat. value in SGOF
@@ -95,7 +95,7 @@ SGOF
 -- gas sat. and krw. between gas sat. 0.85 and 1.00 (the last two values given)
 
 DENSITY
--- Density (lb per ft³) at surface cond. of 
+-- Density (lb per ft³) at surface cond. of
 -- oil, water and gas, respectively (in that order)
 
 -- Using values from Norne:
@@ -107,9 +107,9 @@ DENSITY
 PVDG
 -- Column 1: gas phase pressure (psia)
 -- Column 2: gas formation volume factor (rb per Mscf)
--- 	     - in Odeh's paper the units are said to be given in rb per bbl, 
--- 	       but this is assumed to be a mistake: FVF-values in Odeh's paper 
---	       are given in rb per scf, not rb per bbl. This will be in 
+-- 	     - in Odeh's paper the units are said to be given in rb per bbl,
+-- 	       but this is assumed to be a mistake: FVF-values in Odeh's paper
+--	       are given in rb per scf, not rb per bbl. This will be in
 --	       agreement with conventions
 -- Column 3: gas viscosity (cP)
 
@@ -139,10 +139,10 @@ PVTO
 0.6360	2014.7	1.4350	0.6950 /
 0.7750	2514.7	1.5000	0.6410 /
 0.9300	3014.7	1.5650	0.5940 /
-1.2700	4014.7	1.6950	0.5100 
+1.2700	4014.7	1.6950	0.5100
 	9014.7	1.5790	0.7400 /
-1.6180	5014.7	1.8270	0.4490 
-	9014.7	1.7370	0.6310 /	
+1.6180	5014.7	1.8270	0.4490
+	9014.7	1.7370	0.6310 /
 -- It is required to enter data for undersaturated oil for the highest GOR
 -- (i.e. the last row) in the PVTO table.
 -- In order to fulfill this requirement, values for oil FVF and viscosity
@@ -151,6 +151,6 @@ PVTO
 -- and the FVF when keeping the pressure constant at 9014.7psia.
 -- From Odeh we know that (at 9014.7psia) the FVF is 2.357 at GOR=2.984
 -- for saturated oil and that the FVF is 1.579 at GOR=1.27 for undersaturated oil,
--- so it is possible to use the assumption described above. 
+-- so it is possible to use the assumption described above.
 -- An equivalent approximation for the viscosity has been used.
 /

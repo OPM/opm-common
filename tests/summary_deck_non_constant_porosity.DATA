@@ -43,7 +43,7 @@ TOPS
 
 ACTNUM
   1000*1/
-  
+
 PORO
 500*0.1 500*0.2/
 
@@ -53,7 +53,7 @@ FIPNUM
    400*1
    200*2
    400*3 /
-   
+
 
 SUMMARY
 DATE
@@ -130,7 +130,7 @@ BPR
   1  1  7 /
   1  1  8 /
   1  1  9 /
-  1  1  10 /    
+  1  1  10 /
   2  1  10 /  -- This cell is not ACTIVE
 /
 

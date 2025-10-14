@@ -121,14 +121,14 @@
 --      : GRUPNET >> VFP table 8 for south going flowline
 --      : GRUPNET >> VFP table 9 fro northgoing flowline
 --      : GRUPNET >> VFP table 9 for northgoing flowline
-WELSPECS 
+WELSPECS
      'C-4H'    'MANI-C'   11   35  1*       'OIL'  7* /
      'B-2H'  'B1-DUMMY'   15   31  1*       'OIL'  2*      'STOP'  4* /
      'D-1H'   'MANI-D1'   22   22  1*       'OIL'  2*      'STOP'  4* /
 /
 
-COMPDAT 
--- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro 
+COMPDAT
+-- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro
      'C-4H'   11   35    1    1      'OPEN'  1*     45.314      0.216   4253.571  2*         'Z'     16.503 /
      'C-4H'   11   35    2    2      'OPEN'  1*     43.674      0.216   4103.809  2*         'Z'     16.588 /
      'B-2H'   17   31    9    9      'OPEN'  1*     17.246      0.216   1285.863  2*         'X'      5.865 /
@@ -149,7 +149,7 @@ COMPDAT
      'D-1H'   23   22   13   13      'OPEN'  1*     12.603      0.216   1152.420  2*         'Z'     14.489 /
 /
 
-GRUPTREE 
+GRUPTREE
    'INJE'     'FIELD'  /
    'PROD'     'FIELD'  /
    'MANI-B2'     'PROD'  /
@@ -167,17 +167,17 @@ GRUPTREE
    'D2-DUMMY'     'MANI-D2'  /
 /
 
-WCONHIST 
+WCONHIST
      'C-4H'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
      'B-2H'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
      'D-1H'      'OPEN'      'RESV'   4347.700      0.000 482594.703  5* /
 /
 
-WPAVE 
+WPAVE
   1*      0.000      'WELL'       'ALL' /
 
 
-GRUPNET 
+GRUPNET
     'FIELD'     20.000  5* /
      'PROD'     20.000  5* /
   'MANI-B2'  1*    8  1*        'NO'  2* /
@@ -192,11 +192,11 @@ GRUPNET
   'MANI-E2'  1*    9  4* /
 /
 
-VAPPARS 
+VAPPARS
       0.500      0.000 /
 
 
-NETBALAN 
+NETBALAN
       0.000      0.200  6* /
 
 
@@ -205,15 +205,15 @@ DATES
  14 'NOV' 1997 00:00:00.001 /
 /
 
-WCONHIST 
+WCONHIST
      'D-1H'      'OPEN'      'RESV'   5601.953      0.000 634722.739  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-4H'       'GAS'  1*      'RATE' 392180.973  1* 600 /
 /
 
-GECON 
+GECON
     'FIELD'   1000.000  5*        'NO'  1* /
 /
 
@@ -222,12 +222,12 @@ DATES
  1 'DEC' 1997 /
 /
 
-WCONHIST 
+WCONHIST
      'B-2H'      'OPEN'      'RESV'   2079.506      0.000 230825.037  5* /
      'D-1H'      'OPEN'      'RESV'   5433.419      0.000 651415.006  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-4H'       'GAS'  1*      'RATE' 480352.924  1*  600 /
 /
 
@@ -266,12 +266,12 @@ DATES
 --      : D-2H Connection 14 15  9 Perf. Len  24.00 ( 26.4%)
 --      : D-2H Connection 14 14  9 Perf. Len  69.30 ( 77.1%)
 --      : D-2H Connection 14 13  9 Perf. Len  19.50 ( 20.6%)
-WELSPECS 
+WELSPECS
      'D-2H'  'D2-DUMMY'   14   28  1*       'OIL'  2*      'STOP'  4* /
 /
 
-COMPDAT 
--- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro 
+COMPDAT
+-- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro
      'D-2H'   14   26    9    9      'OPEN'  1*     21.450      0.216   1590.754  2*         'Y'      5.741 /
      'D-2H'   14   25    9    9      'OPEN'  1*     39.557      0.216   2921.561  2*         'Y'      5.648 /
      'D-2H'   14   23    9    9      'OPEN'  1*     10.183      0.216    748.871  2*         'Y'      5.554 /
@@ -283,13 +283,13 @@ COMPDAT
      'D-2H'   14   13    9    9      'OPEN'  1*     24.664      0.216   1809.697  2*         'Y'      5.504 /
 /
 
-WCONHIST 
+WCONHIST
      'B-2H'      'OPEN'      'RESV'   5359.973      0.000 594956.842  5* /
      'D-1H'      'OPEN'      'RESV'   5481.020      0.000 693727.779  5* /
      'D-2H'      'OPEN'      'RESV'    161.927      0.000  17973.921  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-4H'       'GAS'  1*      'RATE' 1129535.350  1* 600  /
 /
 
@@ -298,18 +298,18 @@ DATES
  1 'JAN' 1998 /
 /
 
-WCONHIST 
+WCONHIST
      'B-2H'      'OPEN'      'RESV'   5194.690      0.000 576611.282  5* /
      'D-1H'      'OPEN'      'RESV'   5169.755      0.000 703808.288  5* /
      'D-2H'      'OPEN'      'RESV'   5923.123      0.000 681178.935  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-4H'       'GAS'  1*      'RATE' 1749032.706  1* 600  /
 /
 
-RPTSCHED 
- 0 0 0 0 0 0 2 2 2 0 1 1 0 1 1 0 0 / 
+RPTSCHED
+ 0 0 0 0 0 0 2 2 2 0 1 1 0 1 1 0 0 /
 
 
 -- 87.000000 days from start of simulation ( 6 'NOV' 1997 )
@@ -317,20 +317,20 @@ DATES
  1 'FEB' 1998 /
 /
 
-WCONHIST 
+WCONHIST
      'B-2H'      'OPEN'      'RESV'    376.354      0.000  41775.297  5* /
      'D-1H'      'OPEN'      'RESV'    370.621      0.000  53044.248  5* /
      'D-2H'      'OPEN'      'RESV'    465.389      0.000  59855.401  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-4H'       'GAS'  1*      'RATE' 137940.769  1* 600  /
 /
 
-RPTSCHED 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 / 
+RPTSCHED
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 /
 
 
 -- 115.000000 days from start of simulation ( 6 'NOV' 1997 )
@@ -338,13 +338,13 @@ DATES
  1 'MAR' 1998 /
 /
 
-WCONHIST 
+WCONHIST
      'B-2H'      'OPEN'      'RESV'   3572.118      0.000 396505.322  5* /
      'D-1H'      'OPEN'      'RESV'   3487.875      0.000 563920.395  5* /
      'D-2H'      'OPEN'      'RESV'   3719.518      0.000 643627.261  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-4H'       'GAS'  1*      'RATE' 1418039.732  1* 600 /
 /
 
@@ -381,12 +381,12 @@ DATES
 --      : B-4H Connection  9 31 22 Perf. Len  27.56 (100.0%)
 --      : WCONPROD >> for RFT pressure points
 --      : WRFTPLT >> RFT recorded only once
-WELSPECS 
+WELSPECS
      'B-4H'  'B1-DUMMY'   10   32  1*       'OIL'  2*      'STOP'  4* /
 /
 
-COMPDAT 
--- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro 
+COMPDAT
+-- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro
      'B-4H'   10   32    1    1      'OPEN'  1*    118.457      0.216  12025.229  2*         'Z'     24.860 /
      'B-4H'   10   32    2    2      'OPEN'  1*     88.058      0.216   8892.405  2*         'Z'     24.161 /
      'B-4H'   10   32    3    3      'OPEN'  1*      6.493      0.216    651.729  2*         'Z'     23.389 /
@@ -409,22 +409,22 @@ COMPDAT
      'B-4H'    9   31   22   22      'OPEN'  1*    440.439      0.216  42866.883  2*         'Z'     19.863 /
 /
 
-WCONHIST 
+WCONHIST
      'B-2H'      'OPEN'      'RESV'   5093.700      0.000 565401.375  5* /
      'B-4H'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
      'D-1H'      'OPEN'      'RESV'   4638.900      0.000 772098.500  5* /
      'D-2H'      'OPEN'      'RESV'   5699.300      0.000 1048260.312  5* /
 /
 
-WCONPROD 
+WCONPROD
      'B-4H'      'SHUT' 15* /
 /
 
-WCONINJE 
+WCONINJE
      'C-4H'       'GAS'  1*      'RATE' 2370770.750  1* 600 /
 /
 
-WRFTPLT 
+WRFTPLT
      'B-4H'       'YES'       'YES'  1* /
 /
 
@@ -437,17 +437,17 @@ DATES
 --      : >> --for RFT pressure points
 --  WARN: B-4H Squeeze interval 2611.346020 2837.000000 Top changed to 2619.233018
 --  WARN: B-4H Squeeze interval 2834.362584 2837.000000 below grid
-WELOPEN 
+WELOPEN
      'B-4H'      'SHUT'    0    0    0  2* /
 /
 
-WCONHIST 
+WCONHIST
      'B-2H'      'OPEN'      'RESV'   6174.300      0.000 685348.969  5* /
      'D-1H'      'OPEN'      'RESV'   5427.250      0.000 906735.000  5* /
      'D-2H'      'OPEN'      'RESV'   5702.450      0.000 1057381.313  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-4H'       'GAS'  1*      'RATE' 2503454.000  1* 600 /
 /
 
@@ -456,18 +456,18 @@ DATES
  1 'APR' 1998 /
 /
 
-WCONHIST 
+WCONHIST
      'B-2H'      'OPEN'      'RESV'   5697.445      0.000 632415.385  5* /
      'D-1H'      'OPEN'      'RESV'   4933.305      0.000 848627.159  5* /
      'D-2H'      'OPEN'      'RESV'   5633.914      0.000 1112753.528  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-4H'       'GAS'  1*      'RATE' 2351508.324  1* 600 /
 /
 
-RPTSCHED 
- 0 0 0 0 0 0 2 2 2 0 1 1 0 1 1 0 0 / 
+RPTSCHED
+ 0 0 0 0 0 0 2 2 2 0 1 1 0 1 1 0 0 /
 
 
 -- 168.000000 days from start of simulation ( 6 'NOV' 1997 )
@@ -483,28 +483,28 @@ DATES
 --      : B-4H Connection  9 32 13 Perf. Len   8.40 ( 66.9%)
 --      : B-4H Connection  9 32 14 Perf. Len  12.64 (100.8%)
 --      : B-4H Connection  9 32 15 Perf. Len  12.96 (100.5%)
-COMPDAT 
--- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro 
+COMPDAT
+-- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro
      'B-4H'    9   32   13   13      'OPEN'  1*    181.797      0.216  17148.637  2*         'Z'     16.915 /
      'B-4H'    9   32   14   14      'OPEN'  1*    200.684      0.216  18964.795  2*         'Z'     17.072 /
      'B-4H'    9   32   15   15      'OPEN'  1*     60.756      0.216   5750.007  2*         'Z'     17.201 /
 /
 
-WCONHIST 
+WCONHIST
      'B-2H'      'OPEN'      'RESV'   5559.200      0.000 617071.770  5* /
      'B-4H'      'OPEN'      'RESV'   1994.063      0.000 221340.114  5* /
      'D-1H'      'OPEN'      'RESV'   4935.888      0.000 880581.422  5* /
      'D-2H'      'OPEN'      'RESV'   5681.213      0.000 1206619.906  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-4H'       'GAS'  1*      'RATE' 2680355.703  1* 600 /
 /
 
-RPTSCHED 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 / 
+RPTSCHED
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 /
 
 
 -- 176.000000 days from start of simulation ( 6 'NOV' 1997 )
@@ -512,14 +512,14 @@ DATES
  1 'MAY' 1998 /
 /
 
-WCONHIST 
+WCONHIST
      'B-2H'      'OPEN'      'RESV'   5211.576      0.000 578485.816  5* /
      'B-4H'      'OPEN'      'RESV'   5047.212      0.000 560240.344  5* /
      'D-1H'      'OPEN'      'RESV'   4680.112      0.000 867679.637  5* /
      'D-2H'      'OPEN'      'RESV'   5290.284      0.000 1211440.385  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-4H'       'GAS'  1*      'RATE' 2982926.875  1* 600 /
 /
 
@@ -562,12 +562,12 @@ DATES
 --      : D-4H Connection 21 41 22 Perf. Len  22.11 ( 82.9%)
 --      : WCONPROD >> for RFT pressure points
 --      : WRFTPLT >> RFT recorded only once
-WELSPECS 
+WELSPECS
      'D-4H'  'D2-DUMMY'   19   38  1*       'OIL'  2*      'STOP'  4* /
 /
 
-COMPDAT 
--- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro 
+COMPDAT
+-- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro
      'D-4H'   19   38    1    1      'OPEN'  1*     60.526      0.216   5653.468  2*         'Z'     16.099 /
      'D-4H'   19   38    2    2      'OPEN'  1*     49.828      0.216   4693.611  2*         'Z'     16.796 /
      'D-4H'   19   39    2    2      'OPEN'  1*     21.543      0.216   2035.817  2*         'Z'     17.072 /
@@ -596,7 +596,7 @@ COMPDAT
      'D-4H'   21   41   22   22      'OPEN'  1*    290.075      0.216  26112.416  2*         'Z'     13.428 /
 /
 
-WCONHIST 
+WCONHIST
      'B-2H'      'OPEN'      'RESV'   5389.400      0.000 598227.688  5* /
      'B-4H'      'OPEN'      'RESV'   5231.200      0.000 580659.687  5* /
      'D-1H'      'OPEN'      'RESV'   4782.000      0.000 912405.625  5* /
@@ -604,15 +604,15 @@ WCONHIST
      'D-4H'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
 /
 
-WCONPROD 
+WCONPROD
      'D-4H'      'SHUT' 15* /
 /
 
-WCONINJE 
+WCONINJE
      'C-4H'       'GAS'  1*      'RATE' 3179814.500  1* 600 /
 /
 
-WRFTPLT 
+WRFTPLT
      'D-4H'       'YES'       'YES'  1* /
 /
 
@@ -625,18 +625,18 @@ DATES
 --      : >> --for RFT pressure points
 --  WARN: D-4H Squeeze interval 2754.172800 3038.000000 Top changed to 2764.886044
 --  WARN: D-4H Squeeze interval 3036.734009 3038.000000 below grid
-WELOPEN 
+WELOPEN
      'D-4H'      'SHUT'    0    0    0  2* /
 /
 
-WCONHIST 
+WCONHIST
      'B-2H'      'OPEN'      'RESV'   5127.720      0.000 569177.869  5* /
      'B-4H'      'OPEN'      'RESV'   4969.300      0.000 551593.825  5* /
      'D-1H'      'OPEN'      'RESV'   4473.520      0.000 859087.887  5* /
      'D-2H'      'OPEN'      'RESV'   4944.620      0.000 1210434.200  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-4H'       'GAS'  1*      'RATE' 2904366.150  1* 600 /
 /
 
@@ -645,14 +645,14 @@ DATES
  1 'JUN' 1998 /
 /
 
-WCONHIST 
+WCONHIST
      'B-2H'      'OPEN'      'RESV'   4955.662      0.000 624988.334  5* /
      'B-4H'      'OPEN'      'RESV'   4771.846      0.000 529675.178  5* /
      'D-1H'      'OPEN'      'RESV'   4465.231      0.000 901975.524  5* /
      'D-2H'      'OPEN'      'RESV'   5120.546      0.000 1260391.423  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-4H'       'GAS'  1*      'RATE' 3063275.692  1* 600 /
 /
 
@@ -682,8 +682,8 @@ DATES
 --      : D-4H Connection 20 39 12 Perf. Len   4.06 (125.3%)
 --      : D-4H Connection 20 39 13 Perf. Len  15.46 (126.0%)
 --      : D-4H Connection 20 39 14 Perf. Len  10.56 ( 86.2%)
-COMPDAT 
--- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro 
+COMPDAT
+-- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro
      'D-4H'   19   39    9    9      'OPEN'  1*      8.764      0.216    824.763  2*         'Z'     16.719 /
      'D-4H'   19   39   10   10      'OPEN'  1*     56.214      0.216   5329.133  2*         'Z'     17.348 /
      'D-4H'   20   39   10   10      'OPEN'  1*     40.444      0.216   3722.835  2*         'Z'     14.970 /
@@ -693,7 +693,7 @@ COMPDAT
      'D-4H'   20   39   14   14      'OPEN'  1*     39.948      0.216   3599.744  2*         'Z'     13.494 /
 /
 
-WCONHIST 
+WCONHIST
      'B-2H'      'OPEN'      'RESV'   5199.311      0.000 653673.111  5* /
      'B-4H'      'OPEN'      'RESV'   4821.122      0.000 564045.615  5* /
      'D-1H'      'OPEN'      'RESV'   3930.378      0.000 793937.740  5* /
@@ -701,7 +701,7 @@ WCONHIST
      'D-4H'      'OPEN'      'RESV'   2208.522      0.000 245820.207  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-4H'       'GAS'  1*      'RATE' 3234733.333  1* 600 /
 /
 
@@ -740,12 +740,12 @@ DATES
 --      : C-1H Connection 27 44 22 Perf. Len  10.54 ( 39.4%)
 --      : WCONINJE >> for RFP pressure points
 --      : WRFTPLT >> RFT recorded only once
-WELSPECS 
+WELSPECS
      'C-1H'    'MANI-C'   26   44  1*       'OIL'  7* /
 /
 
-COMPDAT 
--- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro 
+COMPDAT
+-- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro
      'C-1H'   26   44    1    1      'OPEN'  1*    150.029      0.216  14140.780  2*         'Z'     16.847 /
      'C-1H'   26   44    2    2      'OPEN'  1*     51.872      0.216   4885.513  2*         'Z'     16.784 /
      'C-1H'   26   44    3    3      'OPEN'  1*      9.251      0.216    850.354  2*         'Z'     14.864 /
@@ -769,7 +769,7 @@ COMPDAT
      'C-1H'   27   44   22   22      'OPEN'  1*     44.948      0.216   4045.308  2*         'Z'     13.413 /
 /
 
-WCONHIST 
+WCONHIST
      'C-1H'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
      'B-2H'      'OPEN'      'RESV'   4871.900      0.000 599244.688  5* /
      'B-4H'      'OPEN'      'RESV'   5034.000      0.000 604074.125  5* /
@@ -778,12 +778,12 @@ WCONHIST
      'D-4H'      'OPEN'      'RESV'   5423.500      0.000 602013.000  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'      'SHUT'      'RATE'      0.001  1* 600 /
      'C-4H'       'GAS'  1*      'RATE' 3733812.000  5* /
 /
 
-WRFTPLT 
+WRFTPLT
      'C-1H'       'YES'       'YES'  1* /
 /
 
@@ -797,11 +797,11 @@ DATES
 --  WARN: C-1H Squeeze interval 2915.000000 3146.000000 Top changed to 2919.615799
 --  WARN: C-1H Squeeze interval 2953.587605 3146.000000 Top changed to 2961.578484
 --  WARN: C-1H Squeeze interval 3060.783145 3146.000000 Top changed to 3063.546586
-WELOPEN 
+WELOPEN
      'C-1H'      'SHUT'    0    0    0  2* /
 /
 
-WCONHIST 
+WCONHIST
      'B-2H'      'OPEN'      'RESV'   4099.328      0.000 610801.929  5* /
      'B-4H'      'OPEN'      'RESV'   4139.571      0.000 529866.330  5* /
      'D-1H'      'OPEN'      'RESV'   3201.686      0.000 861252.911  5* /
@@ -809,7 +809,7 @@ WCONHIST
      'D-4H'      'OPEN'      'RESV'   4468.929      0.000 513925.732  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-4H'       'GAS'  1*      'RATE' 2968319.000  1* 600 /
 /
 
@@ -818,7 +818,7 @@ DATES
  1 'JUL' 1998 /
 /
 
-WCONHIST 
+WCONHIST
      'B-2H'      'OPEN'      'RESV'   4147.973      0.000 580178.163  5* /
      'B-4H'      'OPEN'      'RESV'   3813.460      0.000 435373.341  5* /
      'D-1H'      'OPEN'      'RESV'   3293.673      0.000 832414.244  5* /
@@ -826,12 +826,12 @@ WCONHIST
      'D-4H'      'OPEN'      'RESV'   4371.020      0.000 533783.550  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-4H'       'GAS'  1*      'RATE' 2988119.733  1* 600 /
 /
 
-RPTSCHED 
- 0 0 0 0 0 0 2 2 2 0 1 1 0 1 1 0 0 / 
+RPTSCHED
+ 0 0 0 0 0 0 2 2 2 0 1 1 0 1 1 0 0 /
 
 
 -- 252.000000 days from start of simulation ( 6 'NOV' 1997 )
@@ -859,15 +859,15 @@ DATES
 --      : C-1H Connection 26 44 18 Perf. Len   2.81 ( 90.6%)
 --      : C-1H Connection 26 44 19 Perf. Len   9.30 (101.3%)
 --      : C-1H Connection 26 44 20 Perf. Len  14.00 ( 80.2%)
-COMPDAT 
--- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro 
+COMPDAT
+-- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro
      'C-1H'   26   44   16   16      'OPEN'  1*     45.862      0.216   4174.805  2*         'Z'     14.174 /
      'C-1H'   26   44   18   18      'OPEN'  1*     21.971      0.216   2008.825  2*         'Z'     14.483 /
      'C-1H'   26   44   19   19      'OPEN'  1*    198.117      0.216  18096.467  2*         'Z'     14.414 /
      'C-1H'   26   44   20   20      'OPEN'  1*    361.866      0.216  32983.109  2*         'Z'     14.264 /
 /
 
-WCONHIST 
+WCONHIST
      'B-2H'      'OPEN'      'RESV'   4722.037      0.000 751902.174  5* /
      'B-4H'      'OPEN'      'RESV'   4637.594      0.000 556095.523  5* /
      'D-1H'      'OPEN'      'RESV'   3475.575      0.000 995027.219  5* /
@@ -875,19 +875,19 @@ WCONHIST
      'D-4H'      'OPEN'      'RESV'   5324.644      0.000 719991.270  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   4916.931  1* 600 /
      'C-4H'       'GAS'  1*      'RATE' 3929878.563  1* 600 /
 /
 
-WTRACER 
+WTRACER
      'C-1H'       'SEA'      1.000  1* /
 /
 
-RPTSCHED 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 / 
+RPTSCHED
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 /
 
 
 -- 268.000000 days from start of simulation ( 6 'NOV' 1997 )
@@ -895,7 +895,7 @@ DATES
  1 'AUG' 1998 /
 /
 
-WCONHIST 
+WCONHIST
      'B-2H'      'OPEN'      'RESV'   4349.355      0.000 765123.036  5* /
      'B-4H'      'OPEN'      'RESV'   4319.490      0.000 551281.588  5* /
      'D-1H'      'OPEN'      'RESV'   3194.721      0.000 1011028.881  5* /
@@ -903,7 +903,7 @@ WCONHIST
      'D-4H'      'OPEN'      'RESV'   4836.603      0.000 698047.145  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   6957.500  1* 600 /
      'C-4H'       'GAS'  1*      'RATE' 3768740.203  1* 600 /
 /
@@ -943,12 +943,12 @@ DATES
 --      : E-3H Connection 12 72 22 Perf. Len  25.05 (106.2%)
 --      : WCONPROD >> for RFT pressure points
 --      : WRFTPLT >> RFT recorded only once
-WELSPECS 
+WELSPECS
      'E-3H'   'MANI-E1'   12   72  1*       'OIL'  2*      'STOP'  4* /
 /
 
-COMPDAT 
--- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro 
+COMPDAT
+-- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro
      'E-3H'   12   72    1    1      'OPEN'  1*     30.745      0.216   2985.926  2*         'Z'     19.644 /
      'E-3H'   12   72    2    2      'OPEN'  1*     72.198      0.216   7021.124  2*         'Z'     19.779 /
      'E-3H'   12   72    3    3      'OPEN'  1*      2.271      0.216    220.738  2*         'Z'     19.749 /
@@ -971,7 +971,7 @@ COMPDAT
      'E-3H'   12   72   22   22      'OPEN'  1*    213.459      0.216  20888.617  2*         'Z'     20.436 /
 /
 
-WCONHIST 
+WCONHIST
      'B-2H'      'OPEN'      'RESV'   4365.900      0.000 767577.688  5* /
      'B-4H'      'OPEN'      'RESV'   4391.900      0.000 539039.688  5* /
      'D-1H'      'OPEN'      'RESV'   3330.300      0.000 1093687.250  5* /
@@ -980,16 +980,16 @@ WCONHIST
      'E-3H'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
 /
 
-WCONPROD 
+WCONPROD
      'E-3H'      'SHUT' 15* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   6422.000  1* 600 /
      'C-4H'       'GAS'  1*      'RATE' 3404638.000  1* 600 /
 /
 
-WRFTPLT 
+WRFTPLT
      'E-3H'       'YES'       'YES'  1* /
 /
 
@@ -1002,11 +1002,11 @@ DATES
 --      : >> --for RFT pressure points
 --  WARN: E-3H Squeeze interval 2739.231349 2911.500000 Top changed to 2746.161382
 --  WARN: E-3H Squeeze interval 2906.409982 2911.500000 below grid
-WELOPEN 
+WELOPEN
      'E-3H'      'SHUT'    0    0    0  2* /
 /
 
-WCONHIST 
+WCONHIST
      'B-2H'      'OPEN'      'RESV'   4432.800      0.000 774446.625  5* /
      'B-4H'      'OPEN'      'RESV'   4430.900      0.000 540425.125  5* /
      'D-1H'      'OPEN'      'RESV'   3318.100      0.000 1082835.000  5* /
@@ -1014,7 +1014,7 @@ WCONHIST
      'D-4H'      'OPEN'      'RESV'   5271.800      0.000 724080.188  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   7096.500  1* 600 /
      'C-4H'       'GAS'  1*      'RATE' 3768639.000  1* 600 /
 /
@@ -1024,7 +1024,7 @@ DATES
  1 'SEP' 1998 /
 /
 
-WCONHIST 
+WCONHIST
      'B-2H'      'OPEN'      'RESV'   4625.818      0.000 846252.603  5* /
      'B-4H'      'OPEN'      'RESV'   4645.035      0.000 666010.254  5* /
      'D-1H'      'OPEN'      'RESV'   3739.600      0.000 1231525.176  5* /
@@ -1032,7 +1032,7 @@ WCONHIST
      'D-4H'      'OPEN'      'RESV'   5231.841      0.000 802162.327  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   5573.582  1* 600 /
      'C-4H'       'GAS'  1*      'RATE' 4072016.529  1* 600 /
 /
@@ -1071,8 +1071,8 @@ DATES
 --      : E-3H Connection 12 72 10 Perf. Len   8.95 ( 68.2%)
 --      : E-3H Connection 12 72 11 Perf. Len   2.28 ( 46.0%)
 --      : E-3H Connection 12 72 13 Perf. Len   3.00 ( 27.2%)
-COMPDAT 
--- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro 
+COMPDAT
+-- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro
      'E-3H'   12   72    5    5      'OPEN'  1*      3.904      0.216    380.345  2*         'Z'     19.975 /
      'E-3H'   12   72    7    7      'OPEN'  1*      2.152      0.216    209.682  2*         'Z'     19.977 /
      'E-3H'   12   72    8    8      'OPEN'  1*      5.210      0.216    507.021  2*         'Z'     19.864 /
@@ -1082,7 +1082,7 @@ COMPDAT
      'E-3H'   12   72   13   13      'OPEN'  1*     37.574      0.216   3659.592  2*         'Z'     19.939 /
 /
 
-WCONHIST 
+WCONHIST
      'B-2H'      'OPEN'      'RESV'   4251.060      0.000 847408.137  5* /
      'B-4H'      'OPEN'      'RESV'   4525.780      0.000 709767.950  5* /
      'D-1H'      'OPEN'      'RESV'   3627.760      0.000 1194599.850  5* /
@@ -1091,7 +1091,7 @@ WCONHIST
      'E-3H'      'OPEN'      'RESV'   2448.630      0.000 276690.507  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   7681.280  1* 600 /
      'C-4H'       'GAS'  1*      'RATE' 3952048.150  1* 600 /
 /
@@ -1101,7 +1101,7 @@ DATES
  28 'SEP' 1998 /
 /
 
-WCONHIST 
+WCONHIST
      'B-2H'      'OPEN'      'RESV'   3243.733      0.000 669178.854  5* /
      'B-4H'      'OPEN'      'RESV'   4025.467      0.000 612173.833  5* /
      'D-1H'      'OPEN'      'RESV'   3457.700      0.000 1098482.688  5* /
@@ -1110,12 +1110,12 @@ WCONHIST
      'E-3H'      'OPEN'      'RESV'   4845.367      0.000 551892.604  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 645345.104  1* 600 /
      'C-4H'       'GAS'  1*      'RATE' 1649276.284  1* 600 /
 /
 
-GECON 
+GECON
     'FIELD'   1000.000  5*        'NO'  1* /
 /
 
@@ -1124,7 +1124,7 @@ DATES
  1 'OCT' 1998 /
 /
 
-WCONHIST 
+WCONHIST
      'B-2H'      'OPEN'      'RESV'   2997.275      0.000 642497.089  5* /
      'B-4H'      'OPEN'      'RESV'   3197.358      0.000 506745.750  5* /
      'D-1H'      'OPEN'      'RESV'   2191.858      0.000 717291.818  5* /
@@ -1133,13 +1133,13 @@ WCONHIST
      'E-3H'      'OPEN'      'RESV'   3554.558      0.000 428231.341  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 959477.510  1* 600 /
      'C-4H'       'GAS'  1*      'RATE' 2434335.250  1* 600 /
 /
 
-RPTSCHED 
- 0 0 0 0 0 0 2 2 2 0 1 1 0 1 1 0 0 / 
+RPTSCHED
+ 0 0 0 0 0 0 2 2 2 0 1 1 0 1 1 0 0 /
 
 
 -- 341.000000 days from start of simulation ( 6 'NOV' 1997 )
@@ -1150,11 +1150,11 @@ DATES
 --      : C-4H Squeeze Garn 2002 Top:  2582.00 Bot:  2605.00
 --      : >> --straddle Garn perforations
 --  WARN: C-4H Layer Garn 2002 Adjusted 2582.00 2605.00 to 2587.69 2610.69
-WELOPEN 
+WELOPEN
      'C-4H'      'SHUT'    0    0    0  2* /
 /
 
-WCONHIST 
+WCONHIST
      'B-2H'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
      'B-4H'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
      'D-1H'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
@@ -1163,15 +1163,15 @@ WCONHIST
      'E-3H'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE'      0.000  1* 600 /
      'C-4H'       'GAS'  1*      'RATE'      0.000  1* 600 /
 /
 
-RPTSCHED 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 / 
+RPTSCHED
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 /
 
 
 -- 345.000000 days from start of simulation ( 6 'NOV' 1997 )
@@ -1186,13 +1186,13 @@ DATES
 --  WARN: C-4H Layer Tilje 3 2002 Adjusted 2749.50 2770.00 to 2754.84 2775.34
 --      : C-4H Connection 11 35 19 Perf. Len   8.50 ( 49.7%)
 --      : C-4H Connection 12 35 20 Perf. Len  20.50 ( 87.9%)
-COMPDAT 
--- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro 
+COMPDAT
+-- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro
      'C-4H'   11   35   19   19      'OPEN'  1*     15.596      0.216   1473.801  2*         'Z'     17.070 /
      'C-4H'   12   35   20   20      'OPEN'  1*    106.389      0.216  10079.642  2*         'Z'     17.295 /
 /
 
-WCONHIST 
+WCONHIST
      'B-2H'      'OPEN'      'RESV'   3527.087      0.000 645240.725  5* /
      'B-4H'      'OPEN'      'RESV'   3488.727      0.000 565074.850  5* /
      'D-1H'      'OPEN'      'RESV'   2117.873      0.000 594478.224  5* /
@@ -1201,7 +1201,7 @@ WCONHIST
      'E-3H'      'OPEN'      'RESV'   3764.120      0.000 387419.405  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 543718.785  1* 600 /
      'C-4H'       'GAS'  1*      'RATE' 1991812.448  1* 600 /
 /
@@ -1211,7 +1211,7 @@ DATES
  1 'NOV' 1998 /
 /
 
-WCONHIST 
+WCONHIST
      'B-2H'      'OPEN'      'RESV'   4491.490      0.000 877927.629  5* /
      'B-4H'      'OPEN'      'RESV'   4185.250      0.000 689605.025  5* /
      'D-1H'      'OPEN'      'RESV'   2949.873      0.000 923285.170  5* /
@@ -1220,7 +1220,7 @@ WCONHIST
      'E-3H'      'OPEN'      'RESV'   4639.443    118.260 553991.390  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 1018088.046  1* 600 /
      'C-4H'       'GAS'  1*      'RATE' 3677762.050  1* 600 /
 /
@@ -1230,7 +1230,7 @@ DATES
  1 'DEC' 1998 /
 /
 
-WCONHIST 
+WCONHIST
      'B-2H'      'OPEN'      'RESV'   3964.638      0.000 786130.199  5* /
      'B-4H'      'OPEN'      'RESV'   4015.171      0.000 648718.847  5* /
      'D-1H'      'OPEN'      'RESV'   2552.187      0.000 830792.963  5* /
@@ -1239,7 +1239,7 @@ WCONHIST
      'E-3H'      'OPEN'      'RESV'   2606.308    192.117 323734.784  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 1770183.448  1* 600 /
      'C-4H'       'GAS'  1*      'RATE' 2331130.508  1* 600 /
 /
@@ -1275,12 +1275,12 @@ DATES
 --      : C-4H Connection 11 35 18 Perf. Len   1.50 ( 37.1%)
 --      : C-4H Connection 11 35 19 Perf. Len  11.84 ( 69.2%)
 --      : C-4H Connection 12 35 20 Perf. Len  20.50 ( 87.9%)
-WELOPEN 
+WELOPEN
      'C-4H'      'SHUT'    0    0    0  2* /
 /
 
-COMPDAT 
--- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro 
+COMPDAT
+-- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro
      'C-4H'   11   35   16   16      'OPEN'  1*     32.828      0.216   3098.538  2*         'Z'     16.968 /
      'C-4H'   11   35   17   17      'OPEN'  1*      3.567      0.216    336.865  2*         'Z'     17.004 /
      'C-4H'   11   35   18   18      'OPEN'  1*     63.434      0.216   5990.994  2*         'Z'     17.020 /
@@ -1288,7 +1288,7 @@ COMPDAT
      'C-4H'   12   35   20   20      'OPEN'  1*    106.389      0.216  10079.642  2*         'Z'     17.295 /
 /
 
-WCONHIST 
+WCONHIST
      'B-2H'      'OPEN'      'RESV'   4098.157      0.000 866839.420  5* /
      'B-4H'      'OPEN'      'RESV'   4522.786      0.000 780509.393  5* /
      'D-1H'      'OPEN'      'RESV'   2472.571      0.000 859366.875  5* /
@@ -1297,7 +1297,7 @@ WCONHIST
      'E-3H'      'OPEN'      'RESV'   3024.043    234.629 397652.116  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 4017466.429  1* 600 /
      'C-4H'       'GAS'  1*      'RATE'      0.000  1* 600 /
 /
@@ -1307,7 +1307,7 @@ DATES
  1 'JAN' 1999 /
 /
 
-WCONHIST 
+WCONHIST
      'B-2H'      'OPEN'      'RESV'   3508.567      3.500 758060.396  5* /
      'B-4H'      'OPEN'      'RESV'   4132.800      4.133 726884.542  5* /
      'D-1H'      'OPEN'      'RESV'   2716.867      2.733 963635.667  5* /
@@ -1316,13 +1316,13 @@ WCONHIST
      'E-3H'      'OPEN'      'RESV'   2971.233    230.533 396036.469  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 830100.762  1* 600 /
      'C-4H'       'GAS'  1*      'RATE' 2901544.479  1* 600 /
 /
 
-RPTSCHED 
- 0 0 0 0 0 0 2 2 2 0 1 1 0 1 1 0 0 / 
+RPTSCHED
+ 0 0 0 0 0 0 2 2 2 0 1 1 0 1 1 0 0 /
 
 
 -- 424.000000 days from start of simulation ( 6 'NOV' 1997 )
@@ -1330,7 +1330,7 @@ DATES
  4 'JAN' 1999 /
 /
 
-WCONHIST 
+WCONHIST
      'B-2H'      'OPEN'      'RESV'   3858.867      3.873 964257.721  5* /
      'B-4H'      'OPEN'      'RESV'   4478.420      4.487 912091.354  5* /
      'D-1H'      'OPEN'      'RESV'   2721.380      2.727 1113224.588  5* /
@@ -1339,18 +1339,18 @@ WCONHIST
      'E-3H'      'OPEN'      'RESV'   2992.767    232.200 464336.487  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   7389.180  1* 600 /
      'C-4H'       'GAS'  1*      'RATE' 4232328.967  1* 600 /
 /
 
-RPTSCHED 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 / 
+RPTSCHED
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 /
 
 
-GECON 
+GECON
     'FIELD'   1000.000  5*        'NO'  1* /
 /
 
@@ -1359,7 +1359,7 @@ DATES
  19 'JAN' 1999 /
 /
 
-WCONHIST 
+WCONHIST
      'B-2H'      'OPEN'      'RESV'   4000.700      4.000 1000842.750  5* /
      'B-4H'      'OPEN'      'RESV'   4214.300      4.250 873846.750  5* /
      'D-1H'      'OPEN'      'RESV'   3052.750      3.100 1230078.188  5* /
@@ -1368,12 +1368,12 @@ WCONHIST
      'E-3H'      'OPEN'      'RESV'   2839.950    401.400 426692.656  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 713342.156  1* 600 /
      'C-4H'       'GAS'  1*      'RATE' 2345625.148  1* 600 /
 /
 
-GECON 
+GECON
     'FIELD'   1000.000  5*        'NO'  1* /
 /
 
@@ -1390,18 +1390,18 @@ DATES
 --      : C-2H Connection 24 14 19 Perf. Len  29.00 ( 29.4%)
 --      : C-2H Connection 24 14 20 Perf. Len   7.99 (  7.5%)
 --      : C-2H Connection 24 13 20 Perf. Len  22.01 ( 20.3%)
-WELSPECS 
+WELSPECS
      'C-2H'    'MANI-C'   23   15  1*       'OIL'  7* /
 /
 
-COMPDAT 
--- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro 
+COMPDAT
+-- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro
      'C-2H'   24   14   19   19      'OPEN'  1*     21.685      0.216   2062.169  2*         'Y'     17.624 /
      'C-2H'   24   14   20   20      'OPEN'  1*     13.821      0.216   1324.988  2*         'Y'     18.371 /
      'C-2H'   24   13   20   20      'OPEN'  1*     37.344      0.216   3605.704  2*         'Y'     19.058 /
 /
 
-WCONHIST 
+WCONHIST
      'B-2H'      'OPEN'      'RESV'   4074.727      4.082 886646.165  5* /
      'B-4H'      'OPEN'      'RESV'   4167.009      4.164 766384.307  5* /
      'D-1H'      'OPEN'      'RESV'   2930.664      2.936 1005560.517  5* /
@@ -1410,13 +1410,13 @@ WCONHIST
      'E-3H'      'OPEN'      'RESV'   2560.064    561.973 318231.388  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 734190.426  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   3301.100  1* 600 /
      'C-4H'       'GAS'  1*      'RATE' 3221026.009  1* 600 /
 /
 
-WTRACER 
+WTRACER
      'C-2H'       'SEA'      1.000  1* /
 /
 
@@ -1425,7 +1425,7 @@ DATES
  1 'FEB' 1999 /
 /
 
-WCONHIST 
+WCONHIST
      'B-2H'      'OPEN'      'RESV'   4093.256      4.091 764845.220  5* /
      'B-4H'      'OPEN'      'RESV'   4067.144      4.061 743778.247  5* /
      'D-1H'      'OPEN'      'RESV'   2627.235      2.635 773145.961  5* /
@@ -1434,7 +1434,7 @@ WCONHIST
      'E-3H'      'OPEN'      'RESV'   2614.048    540.939 278028.886  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 2410918.701  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   6975.617  1* 600 /
      'C-4H'       'GAS'  1*      'RATE' 2683441.250  1* 600 /
@@ -1445,7 +1445,7 @@ DATES
  24 'FEB' 1999 /
 /
 
-WCONHIST 
+WCONHIST
      'B-2H'      'OPEN'      'RESV'   4206.040      4.200 898909.000  5* /
      'B-4H'      'OPEN'      'RESV'   4168.440      4.180 819662.225  5* /
      'D-1H'      'OPEN'      'RESV'   2540.660      2.560 856332.175  5* /
@@ -1454,17 +1454,17 @@ WCONHIST
      'E-3H'      'OPEN'      'RESV'   2749.560    563.160 334300.875  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 4218303.000  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   6197.360  1* 600 /
      'C-4H'     'WATER'  1*      'RATE'   9255.840  1* 600 /
 /
 
-WTRACER 
+WTRACER
      'C-4H'       'SEA'      1.000  1* /
 /
 
-GECON 
+GECON
     'FIELD'   1000.000  5*        'NO'  1* /
 /
 
@@ -1473,7 +1473,7 @@ DATES
  1 'MAR' 1999 /
 /
 
-WCONHIST 
+WCONHIST
      'B-2H'      'OPEN'      'RESV'   4044.175      4.050 933702.766  5* /
      'B-4H'      'OPEN'      'RESV'   4375.875      4.375 910354.797  5* /
      'D-1H'      'OPEN'      'RESV'   2616.350      2.625 938827.516  5* /
@@ -1482,7 +1482,7 @@ WCONHIST
      'E-3H'      'OPEN'      'RESV'   2754.875    564.275 353661.250  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 4201928.500  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   5403.300  1* 600 /
      'C-4H'     'WATER'  1*      'RATE'   8434.375  1* 600 /
@@ -1493,7 +1493,7 @@ DATES
  5 'MAR' 1999 /
 /
 
-WCONHIST 
+WCONHIST
      'B-2H'      'OPEN'      'RESV'   4014.411      4.011 996512.542  5* /
      'B-4H'      'OPEN'      'RESV'   3751.600      3.756 786219.464  5* /
      'D-1H'      'OPEN'      'RESV'   2533.589      2.533 911585.290  5* /
@@ -1502,13 +1502,13 @@ WCONHIST
      'E-3H'      'OPEN'      'RESV'   2869.767    587.783 369519.859  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 1545428.007  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   6061.889  1* 600 /
      'C-4H'       'GAS'  1*      'RATE' 3333218.481  1* 600 /
 /
 
-GECON 
+GECON
     'FIELD'   1000.000  5*        'NO'  1* /
 /
 
@@ -1517,7 +1517,7 @@ DATES
  23 'MAR' 1999 /
 /
 
-WCONHIST 
+WCONHIST
      'B-2H'      'OPEN'      'RESV'   4321.267      4.300 1363575.458  5* /
      'B-4H'      'OPEN'      'RESV'   3526.667      3.533 930726.875  5* /
      'D-1H'      'OPEN'      'RESV'   2774.600      2.767 1259303.000  5* /
@@ -1526,13 +1526,13 @@ WCONHIST
      'E-3H'      'OPEN'      'RESV'   3698.367    757.500 603272.354  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   6314.100  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   6577.900  1* 600 /
      'C-4H'       'GAS'  1*      'RATE' 4794070.667  1* 600 /
 /
 
-GECON 
+GECON
     'FIELD'   1000.000  5*        'NO'  1* /
 /
 
@@ -1556,12 +1556,12 @@ DATES
 --      : B-1H Connection 18 49 15 Perf. Len  30.98 ( 35.3%)
 --      : B-1H Connection 18 49 14 Perf. Len  58.10 ( 65.3%)
 --      : B-1H Connection 18 50 14 Perf. Len  64.58 ( 73.7%)
-WELSPECS 
+WELSPECS
      'B-1H'   'MANI-B2'   14   34  1*       'OIL'  2*      'STOP'  4* /
 /
 
-COMPDAT 
--- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro 
+COMPDAT
+-- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro
      'B-1H'   17   44   15   15      'OPEN'  1*     34.720      0.216   3095.832  2*         'Y'     12.828 /
      'B-1H'   17   45   15   15      'OPEN'  1*     19.976      0.216   1779.033  2*         'Y'     12.754 /
      'B-1H'   17   47   15   15      'OPEN'  1*     51.570      0.216   4598.853  2*         'Y'     12.835 /
@@ -1572,7 +1572,7 @@ COMPDAT
      'B-1H'   18   50   14   14      'OPEN'  1*    425.169      0.216  38596.840  2*         'Y'     13.986 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
      'B-2H'      'OPEN'      'RESV'   4833.350      4.800 1527587.000  5* /
      'B-4H'      'OPEN'      'RESV'   3809.300      3.850 1008905.500  5* /
@@ -1582,7 +1582,7 @@ WCONHIST
      'E-3H'      'OPEN'      'RESV'   3766.150    771.400 616873.125  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   6974.800  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   6423.700  1* 600 /
      'C-4H'       'GAS'  1*      'RATE' 5002349.000  1* 600 /
@@ -1620,12 +1620,12 @@ DATES
 --      : B-1H Connection 18 49 15 Perf. Len  30.98 ( 35.3%)
 --      : B-1H Connection 18 49 14 Perf. Len  58.10 ( 65.3%)
 --      : B-1H Connection 18 50 14 Perf. Len  64.58 ( 73.7%)
-WELOPEN 
+WELOPEN
      'B-1H'      'SHUT'    0    0    0  2* /
 /
 
-COMPDAT 
--- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro 
+COMPDAT
+-- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro
      'B-1H'   15   38    9    9      'OPEN'  1*     25.620      0.216   2086.842  2*         'Y'      8.486 /
      'B-1H'   16   38   10   10      'OPEN'  1*     65.351      0.216   5227.131  2*         'Y'      7.844 /
      'B-1H'   16   39   10   10      'OPEN'  1*    206.584      0.216  15780.745  2*         'Y'      6.469 /
@@ -1642,7 +1642,7 @@ COMPDAT
      'B-1H'   18   50   14   14      'OPEN'  1*    425.169      0.216  38596.840  2*         'Y'     13.986 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
      'B-2H'      'OPEN'      'RESV'   4630.525      4.625 1449902.531  5* /
      'B-4H'      'OPEN'      'RESV'   3739.050      3.750 981292.094  5* /
@@ -1651,7 +1651,7 @@ WCONHIST
      'E-3H'      'OPEN'      'RESV'   3623.350    742.100 587979.172  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   6975.025  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   7185.350  1* 600 /
      'C-4H'       'GAS'  1*      'RATE' 4971927.375  1* 600 /
@@ -1662,7 +1662,7 @@ DATES
  1 'APR' 1999 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   4334.313      0.000 832512.553  5* /
      'B-2H'      'OPEN'      'RESV'   3956.347      3.353 1127240.823  5* /
      'B-4H'      'OPEN'      'RESV'    982.040      0.777 366267.852  5* /
@@ -1671,14 +1671,14 @@ WCONHIST
      'E-3H'      'OPEN'      'RESV'   3405.533    734.843 515051.560  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   6940.317  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   7278.190  1* 600 /
      'C-4H'       'GAS'  1*      'RATE' 4929679.767  1* 600 /
 /
 
-RPTSCHED 
- 0 0 0 0 0 0 2 2 2 0 1 1 0 1 1 0 0 / 
+RPTSCHED
+ 0 0 0 0 0 0 2 2 2 0 1 1 0 1 1 0 0 /
 
 
 -- 541.000000 days from start of simulation ( 6 'NOV' 1997 )
@@ -1686,7 +1686,7 @@ DATES
  1 'MAY' 1999 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   6468.633      0.000 1182172.167  5* /
      'B-2H'      'OPEN'      'RESV'   3682.300      0.000 808585.896  5* /
      'B-4H'      'OPEN'      'RESV'    290.900      0.000 237951.271  5* /
@@ -1696,16 +1696,16 @@ WCONHIST
      'E-3H'      'OPEN'      'RESV'   2321.767    693.533 302976.104  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   7019.833  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   7824.733  1* 600 /
      'C-4H'       'GAS'  1*      'RATE' 5051295.333  1* 600 /
 /
 
-RPTSCHED 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 / 
+RPTSCHED
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 /
 
 
 -- 544.000000 days from start of simulation ( 6 'NOV' 1997 )
@@ -1743,12 +1743,12 @@ DATES
 --      : C-3H Connection  9 13 22 Perf. Len  32.42 (101.9%)
 --      : WCONINJE >> for RFT pressure points
 --      : WRFTPLT >> RFT recorded only once
-WELSPECS 
+WELSPECS
      'C-3H'    'MANI-C'    9   13  1*       'OIL'  7* /
 /
 
-COMPDAT 
--- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro 
+COMPDAT
+-- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro
      'C-3H'    9   13    1    1      'OPEN'  1*     50.989      0.216   4704.962  2*         'Z'     15.152 /
      'C-3H'    9   13    2    2      'OPEN'  1*     22.165      0.216   2050.343  2*         'Z'     15.338 /
      'C-3H'    9   13    3    3      'OPEN'  1*      0.232      0.216     21.306  2*         'Z'     14.728 /
@@ -1772,7 +1772,7 @@ COMPDAT
      'C-3H'    9   13   22   22      'OPEN'  1*    114.368      0.216  10931.055  2*         'Z'     18.086 /
 /
 
-WCONHIST 
+WCONHIST
      'C-3H'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
      'B-1H'      'OPEN'      'RESV'   6461.400      0.000 1128108.875  5* /
      'B-2H'      'OPEN'      'RESV'   3950.000      0.000 827572.188  5* /
@@ -1783,14 +1783,14 @@ WCONHIST
      'E-3H'      'OPEN'      'RESV'   2423.700    724.000 302253.406  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   7001.300  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   7803.100  1* 600 /
      'C-3H'     'WATER'      'SHUT'      'RATE'      0.001  1* 600 /
      'C-4H'       'GAS'  1*      'RATE' 4893810.000  1* 600 /
 /
 
-WRFTPLT 
+WRFTPLT
      'C-3H'       'YES'       'YES'  1* /
 /
 
@@ -1804,11 +1804,11 @@ DATES
 --  WARN: C-3H Squeeze interval 3348.000000 3634.000000 Top changed to 3349.081678
 --  WARN: C-3H Squeeze interval 3378.268659 3634.000000 Top changed to 3388.915228
 --  WARN: C-3H Squeeze interval 3633.636588 3634.000000 below grid
-WELOPEN 
+WELOPEN
      'C-3H'      'SHUT'    0    0    0  2* /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   5656.975      0.000 911792.249  5* /
      'B-2H'      'OPEN'      'RESV'   3811.692      0.000 812485.984  5* /
      'B-4H'      'OPEN'      'RESV'     29.375      0.000  24538.108  5* /
@@ -1818,7 +1818,7 @@ WCONHIST
      'E-3H'      'OPEN'      'RESV'   2443.658    729.933 310856.255  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   6552.417  1* 600  /
      'C-2H'     'WATER'  1*      'RATE'   6797.467  1* 600 /
      'C-4H'       'GAS'  1*      'RATE' 4534522.667  1* 600 /
@@ -1855,8 +1855,8 @@ DATES
 --      : C-3H Connection  9 13 19 Perf. Len  23.00 ( 91.1%)
 --      : C-3H Connection  9 13 20 Perf. Len   1.00 (  4.1%)
 --  WARN: C-3H Connection  9 13 20 SUPPRESSED, perf percentage too small
-COMPDAT 
--- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro 
+COMPDAT
+-- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro
      'C-3H'    9   13   14   14      'OPEN'  1*     12.385      0.216   1161.340  2*         'Z'     16.416 /
      'C-3H'    9   13   15   15      'OPEN'  1*     10.954      0.216   1026.401  2*         'Z'     16.376 /
      'C-3H'    9   13   16   16      'OPEN'  1*    144.214      0.216  13588.730  2*         'Z'     16.823 /
@@ -1865,7 +1865,7 @@ COMPDAT
      'C-3H'    9   13   19   19      'OPEN'  1*     11.117      0.216   1052.709  2*         'Z'     17.250 /
 /
 
-WCONHIST 
+WCONHIST
      'C-3H'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
      'B-1H'      'OPEN'      'RESV'   5729.567      0.000 880870.813  5* /
      'B-2H'      'OPEN'      'RESV'   3852.033      0.000 802295.229  5* /
@@ -1876,7 +1876,7 @@ WCONHIST
      'E-3H'      'OPEN'      'RESV'   2351.900    702.533 291579.760  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   5987.500  1* 600  /
      'C-2H'     'WATER'  1*      'RATE'   6349.633  1* 600 /
      'C-4H'       'GAS'  1*      'RATE' 4493671.000  1* 600 /
@@ -1913,12 +1913,12 @@ DATES
 --      : GECON >> C-3H switches from water to gas injection
 --      : WCONINJE >> for RFT pressure points
 --      : WRFTPLT >> RFT recorded only once
-WELSPECS 
+WELSPECS
      'F-1H'    'MANI-F'   12   85  1*       'OIL'  7* /
 /
 
-COMPDAT 
--- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro 
+COMPDAT
+-- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro
      'F-1H'   12   85    2    2      'OPEN'  1*      6.285      0.216    610.663  2*         'Z'     19.689 /
      'F-1H'   12   85    3    3      'OPEN'  1*      0.639      0.216     62.076  2*         'Z'     19.743 /
      'F-1H'   12   85    6    6      'OPEN'  1*      0.405      0.216     39.522  2*         'Z'     20.137 /
@@ -1938,7 +1938,7 @@ COMPDAT
      'F-1H'   12   85   22   22      'OPEN'  1*    204.396      0.216  20136.275  2*         'Z'     21.169 /
 /
 
-WCONHIST 
+WCONHIST
      'F-1H'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
      'B-1H'      'OPEN'      'RESV'   5900.500      0.000 895569.625  5* /
      'B-2H'      'OPEN'      'RESV'   4059.300      0.000 834734.000  5* /
@@ -1948,7 +1948,7 @@ WCONHIST
      'E-3H'      'OPEN'      'RESV'   2526.000    754.500 309191.188  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   5835.500  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   5161.500  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'   5517.200  1* 600 /
@@ -1956,15 +1956,15 @@ WCONINJE
      'F-1H'     'WATER'      'SHUT'      'RATE'      0.001  1* 600 /
 /
 
-WRFTPLT 
+WRFTPLT
      'F-1H'       'YES'       'YES'  1* /
 /
 
-WTRACER 
+WTRACER
      'C-3H'       'SEA'      1.000  1* /
 /
 
-GECON 
+GECON
     'FIELD'   1000.000  5*        'NO'  1* /
 /
 
@@ -1977,11 +1977,11 @@ DATES
 --      : >> --for RFT pressure points
 --  WARN: F-1H Squeeze interval 2880.051033 3016.989990 Top changed to 2884.841513
 --  WARN: F-1H Squeeze interval 3014.733640 3016.989990 below grid
-WELOPEN 
+WELOPEN
      'F-1H'      'SHUT'    0    0    0  2* /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   5900.555      0.000 866862.636  5* /
      'B-2H'      'OPEN'      'RESV'   4206.164      0.000 850327.557  5* /
      'B-4H'      'OPEN'      'RESV'     10.600      0.000   8731.418  5* /
@@ -1991,7 +1991,7 @@ WCONHIST
      'E-3H'      'OPEN'      'RESV'   2304.909    688.482 277158.161  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   7127.400  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   6587.364  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'   7286.845  1* 600 /
@@ -2003,7 +2003,7 @@ DATES
  1 'JUN' 1999 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   6016.452      0.290 799017.452  5* /
      'B-2H'      'OPEN'      'RESV'   4343.881      0.195 724814.417  5* /
      'B-4H'      'OPEN'      'RESV'      3.476      0.000   2901.748  5* /
@@ -2013,7 +2013,7 @@ WCONHIST
      'E-3H'      'OPEN'      'RESV'   1908.238    635.110 236400.106  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   7922.981  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   7019.386  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'   7465.243  1* 600 /
@@ -2057,12 +2057,12 @@ DATES
 --  WARN: B-3H Connection  9 50 14 SUPPRESSED, perf percentage too small
 --      : B-3H Connection  9 51 14 Perf. Len  75.59 ( 89.0%)
 --      : B-3H Connection  9 52 14 Perf. Len  54.41 ( 64.4%)
-WELSPECS 
+WELSPECS
      'B-3H'   'MANI-B2'    9   37  1*       'OIL'  2*      'STOP'  4* /
 /
 
-COMPDAT 
--- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro 
+COMPDAT
+-- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro
      'B-3H'    8   41   11   11      'OPEN'  1*     65.711      0.216   5364.312  2*         'Y'      8.569 /
      'B-3H'    8   42   11   11      'OPEN'  1*     50.937      0.216   4118.021  2*         'Y'      8.214 /
      'B-3H'    9   43   11   11      'OPEN'  1*      1.671      0.216    143.592  2*         'Y'     10.796 /
@@ -2077,7 +2077,7 @@ COMPDAT
      'B-3H'    9   52   14   14      'OPEN'  1*    101.075      0.216   9540.154  2*         'Y'     16.968 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   6031.722      6.056 889792.319  5* /
      'B-3H'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
      'B-2H'      'OPEN'      'RESV'   4064.322      4.044 608386.153  5* /
@@ -2088,7 +2088,7 @@ WCONHIST
      'E-3H'      'OPEN'      'RESV'   1635.844    527.967 200601.387  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   7812.178  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   7464.689  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'   7813.567  1* 600 /
@@ -2100,7 +2100,7 @@ DATES
  1 'JUL' 1999 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   5126.543      5.136 762131.141  5* /
      'B-3H'      'OPEN'      'RESV'   2208.364      2.214 406293.306  5* /
      'B-2H'      'OPEN'      'RESV'   3284.321      3.286 495742.590  5* /
@@ -2110,15 +2110,15 @@ WCONHIST
      'E-3H'      'OPEN'      'RESV'   1363.721    440.129 169396.044  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   3275.350  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   6324.936  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'   7443.693  1* 600 /
      'C-4H'       'GAS'  1*      'RATE' 3993498.616  1* 600 /
 /
 
-RPTSCHED 
- 0 0 0 0 0 0 2 2 2 0 1 1 0 1 1 0 0 / 
+RPTSCHED
+ 0 0 0 0 0 0 2 2 2 0 1 1 0 1 1 0 0 /
 
 
 -- 616.000000 days from start of simulation ( 6 'NOV' 1997 )
@@ -2150,12 +2150,12 @@ DATES
 --      : C-2H Connection 24 14 19 Perf. Len  30.55 ( 30.8%)
 --      : C-2H Connection 24 14 20 Perf. Len   7.99 (  7.5%)
 --      : C-2H Connection 24 13 20 Perf. Len  22.01 ( 20.3%)
-WELOPEN 
+WELOPEN
      'C-2H'      'SHUT'    0    0    0  2* /
 /
 
-COMPDAT 
--- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro 
+COMPDAT
+-- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro
      'C-2H'   24   14   14   14      'OPEN'  1*     22.116      0.216   1988.961  2*         'Y'     13.365 /
      'C-2H'   24   14   15   15      'OPEN'  1*     25.523      0.216   2296.808  2*         'Y'     13.419 /
      'C-2H'   24   14   16   16      'OPEN'  1*     91.014      0.216   8165.169  2*         'Y'     13.209 /
@@ -2166,7 +2166,7 @@ COMPDAT
      'C-2H'   24   13   20   20      'OPEN'  1*     37.344      0.216   3605.704  2*         'Y'     19.058 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   4960.400      3.324 738025.636  5* /
      'B-3H'      'OPEN'      'RESV'   4869.347      3.029 1019269.796  5* /
      'B-2H'      'OPEN'      'RESV'   3172.965      2.082 476168.132  5* /
@@ -2176,17 +2176,17 @@ WCONHIST
      'E-3H'      'OPEN'      'RESV'   1028.676    331.994 129747.388  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   8227.759  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   6342.171  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'   8159.594  1* 600 /
      'C-4H'       'GAS'  1*      'RATE' 4972193.706  1* 600 /
 /
 
-RPTSCHED 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 / 
+RPTSCHED
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 /
 
 
 -- 633.000000 days from start of simulation ( 6 'NOV' 1997 )
@@ -2194,7 +2194,7 @@ DATES
  1 'AUG' 1999 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   4796.475      0.000 689150.938  5* /
      'B-3H'      'OPEN'      'RESV'   5309.525      0.000 1310257.156  5* /
      'B-2H'      'OPEN'      'RESV'   3229.000      0.000 463941.422  5* /
@@ -2204,7 +2204,7 @@ WCONHIST
      'E-3H'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   7308.550  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   6554.350  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'   7274.625  1* 600 /
@@ -2223,12 +2223,12 @@ DATES
 --      : E-3H Connection 12 72  8 Perf. Len   4.49 (104.3%)
 --      : E-3H Connection 12 72  9 Perf. Len   0.70 ( 98.1%)
 --      : E-3H Connection 12 72 10 Perf. Len   7.74 ( 58.8%)
-WELOPEN 
+WELOPEN
      'E-3H'      'SHUT'    0    0    0  2* /
 /
 
-COMPDAT 
--- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro 
+COMPDAT
+-- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro
      'E-3H'   12   72    5    5      'OPEN'  1*      3.904      0.216    380.345  2*         'Z'     19.975 /
      'E-3H'   12   72    7    7      'OPEN'  1*      2.152      0.216    209.682  2*         'Z'     19.977 /
      'E-3H'   12   72    8    8      'OPEN'  1*      5.210      0.216    507.021  2*         'Z'     19.864 /
@@ -2236,7 +2236,7 @@ COMPDAT
      'E-3H'   12   72   10   10      'OPEN'  1*     91.639      0.216   8935.316  2*         'Z'     20.054 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   4763.180      0.000 708665.425  5* /
      'B-3H'      'OPEN'      'RESV'   4853.276      0.000 1305322.410  5* /
      'B-2H'      'OPEN'      'RESV'   3115.276      0.000 467525.283  5* /
@@ -2246,7 +2246,7 @@ WCONHIST
      'E-3H'      'OPEN'      'RESV'   2531.568    451.844 305675.208  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   8576.476  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   7635.468  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'   8452.728  1* 600 /
@@ -2289,8 +2289,8 @@ DATES
 --      : F-1H Connection 12 85 13 Perf. Len   7.40 ( 70.0%)
 --      : F-1H Connection 12 85 14 Perf. Len  10.59 (100.2%)
 --      : F-1H Connection 12 85 15 Perf. Len  10.59 (100.0%)
-COMPDAT 
--- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro 
+COMPDAT
+-- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro
      'F-1H'   12   85    5    5      'OPEN'  1*      0.486      0.216     47.450  2*         'Z'     20.133 /
      'F-1H'   12   85    7    7      'OPEN'  1*      1.270      0.216    124.072  2*         'Z'     20.274 /
      'F-1H'   12   85    8    8      'OPEN'  1*      1.260      0.216    123.120  2*         'Z'     20.314 /
@@ -2302,7 +2302,7 @@ COMPDAT
      'F-1H'   12   85   15   15      'OPEN'  1*      6.055      0.216    594.483  2*         'Z'     20.787 /
 /
 
-WCONHIST 
+WCONHIST
      'F-1H'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
      'B-1H'      'OPEN'      'RESV'   5091.600      0.000 812775.969  5* /
      'B-3H'      'OPEN'      'RESV'   4790.900      0.000 1841221.938  5* /
@@ -2313,7 +2313,7 @@ WCONHIST
      'E-3H'      'OPEN'      'RESV'   3413.450    699.150 443703.703  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   8211.850  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   7163.100  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'   7945.600  1* 600 /
@@ -2325,7 +2325,7 @@ DATES
  1 'SEP' 1999 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   4932.800      0.000 776090.312  5* /
      'B-3H'      'OPEN'      'RESV'   4616.950      0.000 1748689.000  5* /
      'B-2H'      'OPEN'      'RESV'   3044.350      0.000 513178.563  5* /
@@ -2335,7 +2335,7 @@ WCONHIST
      'E-3H'      'OPEN'      'RESV'   2541.800    520.600 325509.141  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   6979.550  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   3646.750  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'   6800.850  1* 600 /
@@ -2343,7 +2343,7 @@ WCONINJE
      'F-1H'     'WATER'  1*      'RATE'   3580.650  1* 600 /
 /
 
-WTRACER 
+WTRACER
      'F-1H'       'SEA'      1.000  1* /
 /
 
@@ -2377,12 +2377,12 @@ DATES
 --      : E-1H Connection 17 57  9 Perf. Len  23.35 ( 25.9%)
 --      : E-1H Connection 18 57  9 Perf. Len  28.04 ( 31.8%)
 --      : E-1H Connection 18 56  9 Perf. Len  92.46 (104.1%)
-WELSPECS 
+WELSPECS
      'E-1H'   'MANI-E1'   18   68  1*       'OIL'  2*      'STOP'  4* /
 /
 
-COMPDAT 
--- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro 
+COMPDAT
+-- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro
      'E-1H'   17   66    5    5      'OPEN'  1*      7.079      0.216    591.822  2*         'Y'      9.519 /
      'E-1H'   17   65    5    5      'OPEN'  1*     22.320      0.216   1879.950  2*         'Y'      9.845 /
      'E-1H'   17   64    5    5      'OPEN'  1*      6.920      0.216    579.273  2*         'Y'      9.579 /
@@ -2395,7 +2395,7 @@ COMPDAT
      'E-1H'   18   56    9    9      'OPEN'  1*    108.224      0.216   8726.233  2*         'Y'      8.120 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   5042.572      0.000 792887.997  5* /
      'B-3H'      'OPEN'      'RESV'   3207.906      0.000 1198985.321  5* /
      'B-2H'      'OPEN'      'RESV'   3259.539      0.000 549488.186  5* /
@@ -2406,7 +2406,7 @@ WCONHIST
      'E-3H'      'OPEN'      'RESV'   2888.422    621.372 378901.677  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   7300.644  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'      0.000  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'   7975.967  1* 600 /
@@ -2419,7 +2419,7 @@ DATES
  21 'SEP' 1999 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   5691.700      0.000 1018050.375  5* /
      'B-3H'      'OPEN'      'RESV'    376.600      0.000 162135.906  5* /
      'B-2H'      'OPEN'      'RESV'   3810.200      0.000 730180.875  5* /
@@ -2430,14 +2430,14 @@ WCONHIST
      'E-3H'      'OPEN'      'RESV'   3137.000    688.600 472926.687  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   6898.000  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'   6897.000  1* 600 /
      'C-4H'       'GAS'  1*      'RATE' 5258671.000  1* 600 /
      'F-1H'     'WATER'  1*      'RATE'   8565.300  1* 600 /
 /
 
-WTRACER 
+WTRACER
      'C-1H'       'HTO'   1000.000  1* /
      'C-3H'       '4FB'   1000.000  1* /
      'F-1H'       'S36'     98.000  1* /
@@ -2448,7 +2448,7 @@ DATES
  22 'SEP' 1999 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   4334.978      0.000 694939.898  5* /
      'B-3H'      'OPEN'      'RESV'    917.956      0.000 361612.960  5* /
      'B-2H'      'OPEN'      'RESV'   2583.289      0.000 453425.307  5* /
@@ -2458,7 +2458,7 @@ WCONHIST
      'E-3H'      'OPEN'      'RESV'   2629.000    577.100 357853.138  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   5498.667  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   1520.489  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'   3992.056  1* 600 /
@@ -2466,7 +2466,7 @@ WCONINJE
      'F-1H'     'WATER'  1*      'RATE'   8521.767  1* 600 /
 /
 
-WTRACER 
+WTRACER
      'C-1H'       'HTO'      0.000  1* /
      'C-3H'       '4FB'      0.000  1* /
      'F-1H'       'S36'      0.000  1* /
@@ -2477,7 +2477,7 @@ DATES
  1 'OCT' 1999 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   5383.750      0.000 878357.188  5* /
      'B-3H'      'OPEN'      'RESV'   2576.450      0.000 1051269.281  5* /
      'B-2H'      'OPEN'      'RESV'   3438.650      0.000 601012.750  5* /
@@ -2487,7 +2487,7 @@ WCONHIST
      'E-3H'      'OPEN'      'RESV'   3698.150    924.650 537025.688  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   5935.550  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   2624.800  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'   5975.400  1* 600 /
@@ -2495,8 +2495,8 @@ WCONINJE
      'F-1H'     'WATER'  1*      'RATE'   7005.150  1* 600 /
 /
 
-RPTSCHED 
- 0 0 0 0 0 0 2 2 2 0 1 1 0 1 1 0 0 / 
+RPTSCHED
+ 0 0 0 0 0 0 2 2 2 0 1 1 0 1 1 0 0 /
 
 
 -- 696.000000 days from start of simulation ( 6 'NOV' 1997 )
@@ -2530,12 +2530,12 @@ DATES
 --      : F-2H Connection 17 83 22 Perf. Len  27.62 (103.9%)
 --      : WCONINJE >> for RFT pressure points
 --      : WRFTPLT >> RFT recorded only once
-WELSPECS 
+WELSPECS
      'F-2H'    'MANI-F'   18   83  1*       'OIL'  7* /
 /
 
-COMPDAT 
--- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro 
+COMPDAT
+-- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro
      'F-2H'   18   83    1    1      'OPEN'  1*     25.730      0.216   2469.123  2*         'Z'     18.462 /
      'F-2H'   18   83    2    2      'OPEN'  1*      0.582      0.216     54.591  2*         'Z'     16.376 /
      'F-2H'   18   83    3    3      'OPEN'  1*      1.043      0.216     99.417  2*         'Z'     17.837 /
@@ -2557,7 +2557,7 @@ COMPDAT
      'F-2H'   17   83   22   22      'OPEN'  1*     40.107      0.216   3782.455  2*         'Z'     16.896 /
 /
 
-WCONHIST 
+WCONHIST
      'F-2H'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
      'B-1H'      'OPEN'      'RESV'   5259.100      0.000 824582.375  5* /
      'B-3H'      'OPEN'      'RESV'   2241.700      0.000 916374.813  5* /
@@ -2568,7 +2568,7 @@ WCONHIST
      'E-3H'      'OPEN'      'RESV'   3471.800    979.200 513245.000  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   8308.000  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   7123.700  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'   7422.700  1* 600 /
@@ -2577,14 +2577,14 @@ WCONINJE
      'F-2H'     'WATER'      'SHUT'      'RATE'      0.001  1* 600 /
 /
 
-WRFTPLT 
+WRFTPLT
      'F-2H'       'YES'       'YES'  1* /
 /
 
-RPTSCHED 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 / 
+RPTSCHED
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 /
 
 
 -- 697.000000 days from start of simulation ( 6 'NOV' 1997 )
@@ -2595,11 +2595,11 @@ DATES
 --      : F-2H Squeeze  Top:  2782.93 Bot:  2960.15
 --      : >> --for RFT pressure points
 --  WARN: F-2H Squeeze interval 2817.942675 2960.149902 Top changed to 2824.482183
-WELOPEN 
+WELOPEN
      'F-2H'      'SHUT'    0    0    0  2* /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   5053.933      0.000 808302.243  5* /
      'B-3H'      'OPEN'      'RESV'   1713.811      0.000 715491.628  5* /
      'B-2H'      'OPEN'      'RESV'   3457.200      0.000 590477.014  5* /
@@ -2610,7 +2610,7 @@ WCONHIST
      'E-3H'      'OPEN'      'RESV'   3101.833    874.867 457018.302  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   8944.333  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   7173.300  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'   6610.200  1* 600 /
@@ -2651,8 +2651,8 @@ DATES
 --      : F-2H Connection 18 83 13 Perf. Len  11.11 ( 99.7%)
 --      : F-2H Connection 18 83 14 Perf. Len  12.44 (110.1%)
 --      : F-2H Connection 18 83 15 Perf. Len  12.08 (107.5%)
-COMPDAT 
--- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro 
+COMPDAT
+-- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro
      'F-2H'   18   83    5    5      'OPEN'  1*      1.126      0.216    107.318  2*         'Z'     17.830 /
      'F-2H'   18   83    7    7      'OPEN'  1*      1.739      0.216    166.572  2*         'Z'     18.290 /
      'F-2H'   18   83    8    8      'OPEN'  1*      1.786      0.216    170.909  2*         'Z'     18.188 /
@@ -2664,7 +2664,7 @@ COMPDAT
      'F-2H'   18   83   15   15      'OPEN'  1*      2.644      0.216    250.980  2*         'Z'     17.468 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   5018.700      0.000 812994.313  5* /
      'B-3H'      'OPEN'      'RESV'   1413.800      0.000 596978.521  5* /
      'B-2H'      'OPEN'      'RESV'   3283.100      0.000 569794.146  5* /
@@ -2675,7 +2675,7 @@ WCONHIST
      'E-3H'      'OPEN'      'RESV'   3403.800    960.000 472646.698  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   8331.033  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   6617.500  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'   6811.900  1* 600 /
@@ -2684,7 +2684,7 @@ WCONINJE
      'F-2H'     'WATER'  1*      'RATE'    254.533  1* 600 /
 /
 
-WTRACER 
+WTRACER
      'F-2H'       'SEA'      1.000  1* /
 /
 
@@ -2693,7 +2693,7 @@ DATES
  16 'OCT' 1999 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   3920.913      0.000 542344.490  5* /
      'B-3H'      'OPEN'      'RESV'   2634.450      0.000 930589.176  5* /
      'B-2H'      'OPEN'      'RESV'   2784.625      0.000 413845.798  5* /
@@ -2703,7 +2703,7 @@ WCONHIST
      'E-3H'      'OPEN'      'RESV'   2377.988    670.719 282177.434  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   7742.956  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   6847.431  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 1040260.398  1* 600 /
@@ -2712,7 +2712,7 @@ WCONINJE
      'F-2H'     'WATER'  1*      'RATE'   2511.819  1* 600 /
 /
 
-GECON 
+GECON
     'FIELD'   1000.000  5*        'NO'  1* /
 /
 
@@ -2721,7 +2721,7 @@ DATES
  1 'NOV' 1999 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
      'B-3H'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
      'B-2H'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
@@ -2731,7 +2731,7 @@ WCONHIST
      'E-3H'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'      0.000  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'      0.000  1* 600 /
      'C-3H'       'GAS'  1*      'RATE'      0.000  1* 600 /
@@ -2745,7 +2745,7 @@ DATES
  9 'NOV' 1999 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   2985.900      0.000 463561.094  5* /
      'B-3H'      'OPEN'      'RESV'   1247.000      0.000 478295.000  5* /
      'D-1H'      'OPEN'      'RESV'   1560.800      0.000 250872.297  5* /
@@ -2754,7 +2754,7 @@ WCONHIST
      'E-1H'      'OPEN'      'RESV'    439.800      0.000 104432.297  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-2H'     'WATER'  1*      'RATE'    503.000  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 960645.125  1* 600 /
      'C-4H'     'WATER'  1*      'RATE'   4050.900  1* 600 /
@@ -2762,7 +2762,7 @@ WCONINJE
      'F-2H'     'WATER'  1*      'RATE'   2636.400  1* 600 /
 /
 
-GECON 
+GECON
     'FIELD'   1000.000  5*        'NO'  1* /
 /
 
@@ -2771,7 +2771,7 @@ DATES
  10 'NOV' 1999 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   5301.467      0.000 714173.625  5* /
      'B-3H'      'OPEN'      'RESV'   1867.833      0.000 684155.076  5* /
      'B-2H'      'OPEN'      'RESV'   3045.733      0.000 389977.833  5* /
@@ -2782,7 +2782,7 @@ WCONHIST
      'E-3H'      'OPEN'      'RESV'   2384.300    881.900 227842.240  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 2203967.708  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   5902.933  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 1626331.375  1* 600 /
@@ -2791,7 +2791,7 @@ WCONINJE
      'F-2H'     'WATER'  1*      'RATE'   2758.167  1* 600 /
 /
 
-GECON 
+GECON
     'FIELD'   1000.000  5*        'NO'  1* /
 /
 
@@ -2824,12 +2824,12 @@ DATES
 --      : E-2H Connection 10 56  9 Perf. Len  28.08 ( 33.7%)
 --      : E-2H Connection 10 55  9 Perf. Len  81.05 ( 97.9%)
 --      : E-2H Connection 10 54  9 Perf. Len  14.61 ( 17.1%)
-WELSPECS 
+WELSPECS
      'E-2H'   'MANI-E2'   13   67  1*       'OIL'  2*      'STOP'  4* /
 /
 
-COMPDAT 
--- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro 
+COMPDAT
+-- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro
      'E-2H'   12   64    8    8      'OPEN'  1*      3.579      0.216    288.070  2*         'Y'      8.059 /
      'E-2H'   12   63    8    8      'OPEN'  1*     30.255      0.216   2436.132  2*         'Y'      8.072 /
      'E-2H'   12   62    8    8      'OPEN'  1*     19.754      0.216   1591.188  2*         'Y'      8.085 /
@@ -2841,7 +2841,7 @@ COMPDAT
      'E-2H'   10   54    9    9      'OPEN'  1*     30.378      0.216   2387.271  2*         'Y'      7.278 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   3987.511      0.000 607312.339  5* /
      'B-3H'      'OPEN'      'RESV'   1942.033      0.000 739114.664  5* /
      'B-2H'      'OPEN'      'RESV'   3362.072      0.000 479657.563  5* /
@@ -2853,7 +2853,7 @@ WCONHIST
      'E-2H'      'OPEN'      'RESV'   2427.061      0.000 383079.849  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 2140148.955  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   4997.317  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 2145643.875  1* 600 /
@@ -2867,7 +2867,7 @@ DATES
  1 'DEC' 1999 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   4391.848      0.000 793403.429  5* /
      'B-3H'      'OPEN'      'RESV'   2302.842      0.000 952746.782  5* /
      'B-2H'      'OPEN'      'RESV'   3375.606      0.000 570082.504  5* /
@@ -2880,7 +2880,7 @@ WCONHIST
      'E-2H'      'OPEN'      'RESV'   4901.335      0.000 1026513.255  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 3221508.153  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   8307.464  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 2878989.105  1* 600 /
@@ -2894,7 +2894,7 @@ DATES
  1 'JAN' 2000 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   3496.668      0.000 676135.493  5* /
      'B-3H'      'OPEN'      'RESV'   1994.623      0.000 876584.754  5* /
      'B-2H'      'OPEN'      'RESV'   3240.765      0.000 603156.201  5* /
@@ -2907,7 +2907,7 @@ WCONHIST
      'E-2H'      'OPEN'      'RESV'   5075.852      0.000 1188943.694  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 2737946.788  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   9333.823  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 2982802.990  1* 600 /
@@ -2916,8 +2916,8 @@ WCONINJE
      'F-2H'     'WATER'  1*      'RATE'   3856.361  1* 600 /
 /
 
-RPTSCHED 
- 0 0 0 0 0 0 2 2 2 0 1 1 0 1 1 0 0 / 
+RPTSCHED
+ 0 0 0 0 0 0 2 2 2 0 1 1 0 1 1 0 0 /
 
 
 -- 817.000000 days from start of simulation ( 6 'NOV' 1997 )
@@ -2925,7 +2925,7 @@ DATES
  1 'FEB' 2000 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   4215.862      0.000 779567.102  5* /
      'B-3H'      'OPEN'      'RESV'   3020.948      0.000 1305934.730  5* /
      'B-2H'      'OPEN'      'RESV'   3087.614      0.000 535312.209  5* /
@@ -2938,7 +2938,7 @@ WCONHIST
      'E-2H'      'OPEN'      'RESV'   5993.179      0.000 1336635.381  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 1581380.625  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   8309.303  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 4292487.478  1* 600 /
@@ -2947,10 +2947,10 @@ WCONINJE
      'F-2H'     'WATER'  1*      'RATE'   4671.862  1* 600 /
 /
 
-RPTSCHED 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 / 
+RPTSCHED
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 /
 
 
 -- 846.000000 days from start of simulation ( 6 'NOV' 1997 )
@@ -2958,7 +2958,7 @@ DATES
  1 'MAR' 2000 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   4799.900      0.000 916505.125  5* /
      'B-3H'      'OPEN'      'RESV'   3082.400      0.000 1367550.125  5* /
      'B-2H'      'OPEN'      'RESV'   3684.500      0.000 662147.375  5* /
@@ -2971,7 +2971,7 @@ WCONHIST
      'E-2H'      'OPEN'      'RESV'   6210.300      0.000 1632235.875  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 1712194.500  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'      0.000  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 5129735.500  1* 600 /
@@ -3003,12 +3003,12 @@ DATES
 --      : E-4H Connection 38 96 15 Perf. Len  15.00 ( 31.1%)
 --      : WCONPROD >> for RFT pressure points
 --      : WRFTPLT >> RFT recorded only once
-WELSPECS 
+WELSPECS
      'E-4H'   'MANI-E2'   36   96  1*       'OIL'  2*      'STOP'  4* /
 /
 
-COMPDAT 
--- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro 
+COMPDAT
+-- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro
      'E-4H'   36   96    2    2      'OPEN'  1*     27.041      0.216   2469.119  2*         'X'     14.390 /
      'E-4H'   36   96    3    3      'OPEN'  1*      0.076      0.216      6.649  2*         'X'     11.741 /
      'E-4H'   37   96    3    3      'OPEN'  1*      0.070      0.216      6.084  2*         'X'     11.363 /
@@ -3021,7 +3021,7 @@ COMPDAT
      'E-4H'   38   96   15   15      'OPEN'  1*      3.612      0.216    332.133  2*         'X'     14.901 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   4724.700      0.000 907458.812  5* /
      'B-3H'      'OPEN'      'RESV'   3100.900      0.000 1383855.500  5* /
      'B-2H'      'OPEN'      'RESV'   3628.700      0.000 655962.125  5* /
@@ -3033,17 +3033,17 @@ WCONHIST
      'E-4H'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
 /
 
-WCONPROD 
+WCONPROD
      'E-4H'      'SHUT' 15* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 1710670.500  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 5212674.500  1* 600 /
      'F-2H'     'WATER'  1*      'RATE'    470.100  1* 600 /
 /
 
-WRFTPLT 
+WRFTPLT
      'E-4H'       'YES'       'YES'  1* /
 /
 
@@ -3056,11 +3056,11 @@ DATES
 --      : >> --for RFT pressure points
 --  WARN: E-4H Squeeze interval 4425.191770 4501.000000 Top changed to 4435.303153
 --  WARN: E-4H Squeeze interval 4450.032375 4501.000000 Top changed to 4452.096323
-WELOPEN 
+WELOPEN
      'E-4H'      'SHUT'    0    0    0  2* /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   4109.659     43.790 939920.327  5* /
      'B-3H'      'OPEN'      'RESV'   3281.769      0.000 953288.474  5* /
      'B-2H'      'OPEN'      'RESV'   2895.976      0.000 467931.699  5* /
@@ -3072,7 +3072,7 @@ WCONHIST
      'E-2H'      'OPEN'      'RESV'   4876.852      0.000 1161092.482  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 1530587.071  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'  10394.759  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 4519536.082  1* 600 /
@@ -3086,7 +3086,7 @@ DATES
  1 'APR' 2000 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   2344.700     17.293 644069.425  5* /
      'B-3H'      'OPEN'      'RESV'   2248.817      0.000 528018.581  5* /
      'B-2H'      'OPEN'      'RESV'   2398.150      0.000 292312.555  5* /
@@ -3098,7 +3098,7 @@ WCONHIST
      'E-2H'      'OPEN'      'RESV'   3000.217      0.000 692522.348  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 1159818.773  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   4425.557  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 2267097.432  1* 600 /
@@ -3107,8 +3107,8 @@ WCONINJE
      'F-2H'     'WATER'  1*      'RATE'   2508.587  1* 600 /
 /
 
-RPTSCHED 
- 0 0 0 0 0 0 2 2 2 0 1 1 0 1 1 0 0 / 
+RPTSCHED
+ 0 0 0 0 0 0 2 2 2 0 1 1 0 1 1 0 0 /
 
 
 -- 907.000000 days from start of simulation ( 6 'NOV' 1997 )
@@ -3116,7 +3116,7 @@ DATES
  1 'MAY' 2000 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   3869.192      0.000 1297567.383  5* /
      'B-3H'      'OPEN'      'RESV'   3722.264      0.000 964280.215  5* /
      'B-2H'      'OPEN'      'RESV'   4753.756      0.000 582140.314  5* /
@@ -3128,7 +3128,7 @@ WCONHIST
      'E-2H'      'OPEN'      'RESV'   5132.044      0.000 1407636.954  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 2145800.735  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   3708.016  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 4424429.170  1* 600 /
@@ -3137,10 +3137,10 @@ WCONINJE
      'F-2H'     'WATER'  1*      'RATE'   6042.524  1* 600 /
 /
 
-RPTSCHED 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 / 
+RPTSCHED
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 /
 
 
 -- 932.000000 days from start of simulation ( 6 'NOV' 1997 )
@@ -3179,12 +3179,12 @@ DATES
 --      : E-4AH Connection 38 89  2 Perf. Len  53.06 ( 49.0%)
 --      : E-4AH Connection 38 88  2 Perf. Len 106.62 ( 98.0%)
 --      : E-4AH Connection 38 87  2 Perf. Len  38.31 ( 35.2%)
-WELSPECS 
+WELSPECS
     'E-4AH'   'MANI-E2'   38   98  1*       'OIL'  2*      'STOP'  4* /
 /
 
-COMPDAT 
--- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro 
+COMPDAT
+-- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro
     'E-4AH'   38   98    2    2      'OPEN'  1*     48.136      0.216   3456.518  2*         'Y'      5.061 /
     'E-4AH'   38   96    2    2      'OPEN'  1*     27.090      0.216   1873.571  2*         'Y'      4.392 /
     'E-4AH'   37   95    2    2      'OPEN'  1*      5.588      0.216    365.103  2*         'Y'      3.579 /
@@ -3199,7 +3199,7 @@ COMPDAT
     'E-4AH'   38   87    2    2      'OPEN'  1*     34.257      0.216   2195.543  2*         'Y'      3.347 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   4196.067      0.000 1401807.479  5* /
      'B-3H'      'OPEN'      'RESV'   3068.700      0.000 789047.729  5* /
      'B-2H'      'OPEN'      'RESV'   4894.533      0.000 595919.214  5* /
@@ -3210,7 +3210,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 2802328.000  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   3734.600  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 3514136.833  1* 600 /
@@ -3224,7 +3224,7 @@ DATES
  1 'JUN' 2000 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   3319.588      0.000 1196874.313  5* /
      'B-3H'      'OPEN'      'RESV'   3154.062      0.000 877212.535  5* /
      'B-2H'      'OPEN'      'RESV'   3885.950      0.000 507061.426  5* /
@@ -3235,7 +3235,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'RESV'   3507.300      0.000 358975.377  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 2742347.766  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   4235.962  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 3135476.859  1* 600 /
@@ -3249,11 +3249,11 @@ DATES
  9 'JUN' 2000 /
 /
 
-WELOPEN 
+WELOPEN
      'E-3H'      'SHUT'  5* /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   3328.629      0.000 1236979.360  5* /
      'B-3H'      'OPEN'      'RESV'   3349.938      0.000 959251.000  5* /
      'B-2H'      'OPEN'      'RESV'   3659.286      0.000 492781.309  5* /
@@ -3265,7 +3265,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'RESV'   5150.133      0.000 528616.981  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 2783176.228  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   3595.938  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 3335178.315  1* 600 /
@@ -3285,16 +3285,16 @@ DATES
 --      : B-4H Plug  Top:  2666.00
 --      : >> --plug Tofte water
 --      : B-4H Connection 10 32 10 Perf. Len   8.40 ( 48.4%)
-WELOPEN 
+WELOPEN
      'B-4H'      'SHUT'    0    0    0  2* /
 /
 
-COMPDAT 
--- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro 
+COMPDAT
+-- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro
      'B-4H'   10   32   10   10      'OPEN'  1*    165.734      0.216  16217.024  2*         'Z'     20.427 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   2000.000      0.000 756725.875  5* /
      'B-3H'      'OPEN'      'RESV'   4202.400      0.000 1228432.750  5* /
      'B-2H'      'OPEN'      'RESV'   3879.200      0.000 534889.000  5* /
@@ -3306,7 +3306,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'RESV'   5338.300      0.000 559420.375  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 534133.313  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   2810.900  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 542491.375  1* 600 /
@@ -3320,7 +3320,7 @@ DATES
  1 'JUL' 2000 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   3601.848      0.000 1248073.353  5* /
      'B-3H'      'OPEN'      'RESV'   3869.197      0.000 1128281.815  5* /
      'B-2H'      'OPEN'      'RESV'   4303.461      0.000 646937.652  5* /
@@ -3332,7 +3332,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'RESV'   3621.748      0.000 405790.225  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 2150956.899  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   8609.132  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 4426746.403  1* 600 /
@@ -3341,8 +3341,8 @@ WCONINJE
      'F-2H'     'WATER'  1*      'RATE'   3704.458  1* 600 /
 /
 
-RPTSCHED 
- 0 0 0 0 0 0 2 2 2 0 1 1 0 1 1 0 0 / 
+RPTSCHED
+ 0 0 0 0 0 0 2 2 2 0 1 1 0 1 1 0 0 /
 
 
 -- 999.000000 days from start of simulation ( 6 'NOV' 1997 )
@@ -3350,7 +3350,7 @@ DATES
  1 'AUG' 2000 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   3896.800      0.000 1276784.500  5* /
      'B-3H'      'OPEN'      'RESV'   4115.600      0.000 1179417.000  5* /
      'B-2H'      'OPEN'      'RESV'   4863.500      0.000 743321.125  5* /
@@ -3362,7 +3362,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'RESV'   3068.300      0.000 351710.500  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 1516594.250  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'  10847.200  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 5239526.000  1* 600 /
@@ -3371,10 +3371,10 @@ WCONINJE
      'F-2H'     'WATER'  1*      'RATE'   3949.900  1* 600 /
 /
 
-RPTSCHED 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 / 
+RPTSCHED
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 /
 
 
 -- 1000.000000 days from start of simulation ( 6 'NOV' 1997 )
@@ -3414,12 +3414,12 @@ DATES
 --      : D-3H Connection 18 52 22 Perf. Len   6.18 ( 22.8%)
 --      : WCONPROD >> for RFT pressure points
 --      : WRFTPLT >> RFT recorded only once
-WELSPECS 
+WELSPECS
      'D-3H'   'MANI-D1'   19   54  1*       'OIL'  2*      'STOP'  4* /
 /
 
-COMPDAT 
--- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro 
+COMPDAT
+-- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro
      'D-3H'   19   54    1    1      'OPEN'  1*     34.780      0.216   3067.401  2*         'X'     12.178 /
      'D-3H'   19   54    2    2      'OPEN'  1*     48.856      0.216   4297.798  2*         'X'     12.031 /
      'D-3H'   19   54    3    3      'OPEN'  1*     19.066      0.216   1673.723  2*         'X'     11.914 /
@@ -3446,7 +3446,7 @@ COMPDAT
      'D-3H'   18   52   22   22      'OPEN'  1*     49.121      0.216   4812.923  2*         'Z'     20.572 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   3653.600      0.000 1230309.875  5* /
      'B-3H'      'OPEN'      'RESV'   1584.100      0.000 466570.406  5* /
      'B-2H'      'OPEN'      'RESV'   4101.000      0.000 644194.813  5* /
@@ -3458,11 +3458,11 @@ WCONHIST
     'E-4AH'      'OPEN'      'RESV'   3030.500      0.000 357021.688  5* /
 /
 
-WCONPROD 
+WCONPROD
      'D-3H'      'SHUT' 15* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 1096764.875  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'  10825.600  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 3517711.000  1* 600 /
@@ -3471,7 +3471,7 @@ WCONINJE
      'F-2H'     'WATER'  1*      'RATE'   3939.600  1* 600 /
 /
 
-WRFTPLT 
+WRFTPLT
      'D-3H'       'YES'       'YES'  1* /
 /
 
@@ -3484,11 +3484,11 @@ DATES
 --      : >> --for RFT pressure points
 --  WARN: D-3H Squeeze interval 3940.017738 4198.000000 Top changed to 3957.662205
 --  WARN: D-3H Squeeze interval 4197.999982 4198.000000 below grid
-WELOPEN 
+WELOPEN
      'D-3H'      'SHUT'    0    0    0  2* /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   3969.012      0.000 1256988.728  5* /
      'B-3H'      'OPEN'      'RESV'   3848.641      0.000 1060828.078  5* /
      'B-2H'      'OPEN'      'RESV'   4440.106      0.000 656936.603  5* /
@@ -3499,7 +3499,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'RESV'   2960.547      0.000 328589.315  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 1530052.099  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   9764.394  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 4887768.191  1* 600 /
@@ -3529,12 +3529,12 @@ DATES
 --      : D-3AH Connection 13 44 14 Perf. Len  41.20 ( 49.5%)
 --      : D-3AH Connection 12 44 14 Perf. Len  54.09 ( 66.0%)
 --      : D-3AH Connection 12 43 14 Perf. Len  62.16 ( 74.5%)
-WELSPECS 
+WELSPECS
     'D-3AH'   'MANI-D1'   19   54  1*       'OIL'  2*      'STOP'  4* /
 /
 
-COMPDAT 
--- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro 
+COMPDAT
+-- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro
     'D-3AH'   17   50   14   14      'OPEN'  1*     21.157      0.216   1872.053  2*         'Y'     12.369 /
     'D-3AH'   16   50   14   14      'OPEN'  1*    465.838      0.216  41191.184  2*         'Y'     12.328 /
     'D-3AH'   16   49   14   14      'OPEN'  1*     48.703      0.216   4298.079  2*         'Y'     12.214 /
@@ -3549,7 +3549,7 @@ COMPDAT
     'D-3AH'   12   43   14   14      'OPEN'  1*    251.929      0.216  21988.264  2*         'Y'     11.595 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   2719.967      0.000 792101.578  5* /
      'B-3H'      'OPEN'      'RESV'   3839.100      0.000 971751.229  5* /
      'B-2H'      'OPEN'      'RESV'   4429.333      0.000 595767.078  5* /
@@ -3561,7 +3561,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'RESV'   1516.150      0.000 155760.116  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 785977.557  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   9449.850  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 3265412.292  1* 600 /
@@ -3575,7 +3575,7 @@ DATES
  26 'AUG' 2000 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   2112.200      0.000 654554.688  5* /
      'B-3H'      'OPEN'      'RESV'   3402.400      0.000 922202.313  5* /
      'B-2H'      'OPEN'      'RESV'   4642.300      0.000 671079.688  5* /
@@ -3586,7 +3586,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'RESV'   3452.400      0.000 374305.000  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 686006.625  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'  10998.800  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 3051748.500  1* 600 /
@@ -3595,7 +3595,7 @@ WCONINJE
      'F-2H'     'WATER'  1*      'RATE'   3994.300  1* 600 /
 /
 
-WTRACER 
+WTRACER
      'C-2H'       'S36'     78.000  1* /
      'C-4H'       '2FB'   1000.000  1* /
      'F-2H'       'DFB'   1000.000  1* /
@@ -3606,7 +3606,7 @@ DATES
  27 'AUG' 2000 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   3248.760      0.000 966614.287  5* /
      'B-3H'      'OPEN'      'RESV'   3738.840      0.000 970926.037  5* /
      'B-2H'      'OPEN'      'RESV'   4078.940      0.000 564704.075  5* /
@@ -3618,7 +3618,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'RESV'   2916.580      0.000 302785.900  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 1295424.063  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   9800.620  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 4319262.650  1* 600 /
@@ -3627,7 +3627,7 @@ WCONINJE
      'F-2H'     'WATER'  1*      'RATE'   6649.520  1* 600 /
 /
 
-WTRACER 
+WTRACER
      'C-2H'       'S36'      0.000  1* /
      'C-4H'       '2FB'      0.000  1* /
      'F-2H'       'DFB'      0.000  1* /
@@ -3638,7 +3638,7 @@ DATES
  1 'SEP' 2000 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   3640.950      0.000 1150705.438  5* /
      'B-3H'      'OPEN'      'RESV'   3824.962      0.000 1057624.859  5* /
      'B-2H'      'OPEN'      'RESV'   4178.412      0.000 616288.234  5* /
@@ -3650,7 +3650,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'RESV'   2910.075      0.000 321754.086  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 1377052.719  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'  10411.363  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 4659273.125  1* 600 /
@@ -3695,12 +3695,12 @@ DATES
 --      : F-3H Connection  7 56 22 Perf. Len  27.94 ( 96.3%)
 --      : WCONINJE >> for RFT pressure points
 --      : WRFTPLT >> RFT recorded only once
-WELSPECS 
+WELSPECS
      'F-3H'    'MANI-F'    6   57  1*       'OIL'  7* /
 /
 
-COMPDAT 
--- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro 
+COMPDAT
+-- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro
      'F-3H'    6   57    1    1      'OPEN'  1*      2.002      0.216    192.770  2*         'Z'     18.774 /
      'F-3H'    7   57    1    1      'OPEN'  1*      6.339      0.216    600.681  2*         'Z'     17.305 /
      'F-3H'    7   57    2    2      'OPEN'  1*     15.462      0.216   1475.990  2*         'Z'     17.971 /
@@ -3726,7 +3726,7 @@ COMPDAT
      'F-3H'    7   56   22   22      'OPEN'  1*    300.194      0.216  29777.980  2*         'Z'     21.955 /
 /
 
-WCONHIST 
+WCONHIST
      'F-3H'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
      'B-1H'      'OPEN'      'RESV'   2678.300      0.000 823141.875  5* /
      'B-3H'      'OPEN'      'RESV'   3703.200      0.000 995457.687  5* /
@@ -3738,7 +3738,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'RESV'   2553.800      0.000 274586.688  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 1416529.875  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'  10560.200  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 3854904.000  1* 600 /
@@ -3748,7 +3748,7 @@ WCONINJE
      'F-3H'     'WATER'      'SHUT'      'RATE'      0.001  1* 600 /
 /
 
-WRFTPLT 
+WRFTPLT
      'F-3H'       'YES'       'YES'  1* /
 /
 
@@ -3761,11 +3761,11 @@ DATES
 --      : >> --for RFT pressure points
 --  WARN: F-3H Squeeze interval 3348.020020 3608.020020 Top changed to 3348.718240
 --  WARN: F-3H Squeeze interval 3389.175677 3608.020020 Top changed to 3395.730366
-WELOPEN 
+WELOPEN
      'F-3H'      'SHUT'    0    0    0  2* /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   2821.655      0.000 914841.759  5* /
      'B-3H'      'OPEN'      'RESV'   3266.873      0.000 925280.685  5* /
      'B-2H'      'OPEN'      'RESV'   3983.336      0.000 599078.457  5* /
@@ -3776,7 +3776,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'RESV'   2838.264      0.000 320451.155  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 1474826.943  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'  10388.982  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 4465016.273  1* 600 /
@@ -3799,12 +3799,12 @@ DATES
 --      : F-3H Connection  7 56 20 Perf. Len  20.00 (101.5%)
 --      : F-3H Connection  7 56 21 Perf. Len   1.00 (  2.3%)
 --  WARN: F-3H Connection  7 56 21 SUPPRESSED, perf percentage too small
-COMPDAT 
--- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro 
+COMPDAT
+-- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro
      'F-3H'    7   56   20   20      'OPEN'  1*     80.517      0.216   7920.504  2*         'Z'     21.006 /
 /
 
-WCONHIST 
+WCONHIST
      'F-3H'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
      'B-1H'      'OPEN'      'RESV'    872.700      0.000 294040.813  5* /
      'B-3H'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
@@ -3816,7 +3816,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'RESV'   3345.800      0.000 394386.188  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 1040727.313  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   9958.200  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 1934893.750  1* 600 /
@@ -3842,12 +3842,12 @@ DATES
 --      : F-3H Connection  7 56 20 Perf. Len  20.00 (101.5%)
 --      : F-3H Connection  7 56 21 Perf. Len   1.00 (  2.3%)
 --  WARN: F-3H Connection  7 56 21 SUPPRESSED, perf percentage too small
-WELOPEN 
+WELOPEN
      'F-3H'      'SHUT'    0    0    0  2* /
 /
 
-COMPDAT 
--- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro 
+COMPDAT
+-- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro
      'F-3H'    7   57   13   13      'OPEN'  1*     75.707      0.216   7300.654  2*         'Z'     18.934 /
      'F-3H'    7   57   14   14      'OPEN'  1*     23.785      0.216   2299.001  2*         'Z'     19.163 /
      'F-3H'    7   57   15   15      'OPEN'  1*      8.837      0.216    855.976  2*         'Z'     19.378 /
@@ -3855,7 +3855,7 @@ COMPDAT
      'F-3H'    7   56   20   20      'OPEN'  1*     80.517      0.216   7920.504  2*         'Z'     21.006 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   3044.844      0.000 955534.083  5* /
      'B-3H'      'OPEN'      'RESV'   2912.133      0.000 781849.878  5* /
      'B-2H'      'OPEN'      'RESV'   4265.056      0.000 637199.083  5* /
@@ -3866,7 +3866,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'RESV'   3042.811      0.000 342683.090  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 1691579.125  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'  10983.700  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 3571745.806  1* 600 /
@@ -3876,7 +3876,7 @@ WCONINJE
      'F-3H'     'WATER'  1*      'RATE'   3359.022  1* 600 /
 /
 
-WTRACER 
+WTRACER
      'F-3H'       'SEA'      1.000  1* /
 /
 
@@ -3885,7 +3885,7 @@ DATES
  1 'OCT' 2000 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   3359.671      0.000 1100164.097  5* /
      'B-3H'      'OPEN'      'RESV'   3407.090      0.000 974620.490  5* /
      'B-2H'      'OPEN'      'RESV'   4365.561      0.000 667246.290  5* /
@@ -3896,7 +3896,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'RESV'   3103.148      0.000 355504.132  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 2346355.433  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   9737.384  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 4080953.442  1* 600 /
@@ -3906,8 +3906,8 @@ WCONINJE
      'F-3H'     'WATER'  1*      'RATE'   5011.468  1* 600 /
 /
 
-RPTSCHED 
- 0 0 0 0 0 0 2 2 2 0 1 1 0 1 1 0 0 / 
+RPTSCHED
+ 0 0 0 0 0 0 2 2 2 0 1 1 0 1 1 0 0 /
 
 
 -- 1091.000000 days from start of simulation ( 6 'NOV' 1997 )
@@ -3915,7 +3915,7 @@ DATES
  1 'NOV' 2000 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   3367.890      0.000 1168285.241  5* /
      'B-3H'      'OPEN'      'RESV'   3113.767      0.000 941468.645  5* /
      'B-2H'      'OPEN'      'RESV'   3887.940      0.000 632814.158  5* /
@@ -3926,7 +3926,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'RESV'   3447.170      0.000 421906.379  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 2163371.285  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   7440.457  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 4448847.175  1* 600 /
@@ -3936,10 +3936,10 @@ WCONINJE
      'F-3H'     'WATER'  1*      'RATE'   6241.463  1* 600 /
 /
 
-RPTSCHED 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 / 
+RPTSCHED
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 /
 
 
 -- 1121.000000 days from start of simulation ( 6 'NOV' 1997 )
@@ -3966,12 +3966,12 @@ DATES
 --      : E-3AH Connection 10 70  1 Perf. Len  89.96 (105.6%)
 --      : E-3AH Connection 10 71  1 Perf. Len   6.22 (  7.2%)
 --      : E-3AH Connection 11 71  1 Perf. Len  22.87 ( 27.1%)
-WELSPECS 
+WELSPECS
     'E-3AH'   'MANI-E1'    7   64  1*       'OIL'  2*      'STOP'  4* /
 /
 
-COMPDAT 
--- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro 
+COMPDAT
+-- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro
     'E-3AH'    7   65    2    2      'OPEN'  1*     14.740      0.216   1070.479  2*         'Y'      5.287 /
     'E-3AH'    7   66    2    2      'OPEN'  1*     33.983      0.216   2467.537  2*         'Y'      5.284 /
     'E-3AH'    8   66    2    2      'OPEN'  1*     26.299      0.216   1919.028  2*         'Y'      5.386 /
@@ -3981,7 +3981,7 @@ COMPDAT
     'E-3AH'   11   71    1    1      'OPEN'  1*     63.822      0.216   5300.814  2*         'Y'      9.247 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   3271.232      0.000 1172255.494  5* /
      'B-3H'      'OPEN'      'RESV'   2922.019      0.000 914639.835  5* /
      'B-2H'      'OPEN'      'RESV'   3587.397      0.000 601120.140  5* /
@@ -3993,7 +3993,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'RESV'   2937.194      0.000 374580.352  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 2355701.004  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   9260.852  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 4349459.782  1* 600 /
@@ -4008,7 +4008,7 @@ DATES
  1 'JAN' 2001 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   1151.503      0.000 410465.300  5* /
      'B-3H'      'OPEN'      'RESV'   4577.855      0.000 1210480.151  5* /
      'B-2H'      'OPEN'      'RESV'   3513.268      0.000 734562.160  5* /
@@ -4022,7 +4022,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'RESV'    863.816      0.000  72958.867  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 3121111.210  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   8699.281  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 2857948.647  1* 600 /
@@ -4032,8 +4032,8 @@ WCONINJE
      'F-3H'     'WATER'  1*      'RATE'   7069.271  1* 600 /
 /
 
-RPTSCHED 
- 0 0 0 0 0 0 2 2 2 0 1 1 0 1 1 0 0 / 
+RPTSCHED
+ 0 0 0 0 0 0 2 2 2 0 1 1 0 1 1 0 0 /
 
 
 -- 1183.000000 days from start of simulation ( 6 'NOV' 1997 )
@@ -4041,7 +4041,7 @@ DATES
  1 'FEB' 2001 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
      'B-3H'      'OPEN'      'RESV'   6639.964      0.000 1798026.629  5* /
      'B-2H'      'OPEN'      'RESV'   4508.986      0.000 1463985.929  5* /
@@ -4055,7 +4055,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'RESV'   1485.125      0.000 141254.548  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 1975302.054  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   8379.568  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 2195615.162  1* 600 /
@@ -4065,10 +4065,10 @@ WCONINJE
      'F-3H'     'WATER'  1*      'RATE'   7507.896  1* 600 /
 /
 
-RPTSCHED 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 / 
+RPTSCHED
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 /
 
 
 -- 1211.000000 days from start of simulation ( 6 'NOV' 1997 )
@@ -4076,7 +4076,7 @@ DATES
  1 'MAR' 2001 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'      9.226      0.000   5632.878  5* /
      'B-3H'      'OPEN'      'RESV'   6636.671      0.000 1728932.274  5* /
      'B-2H'      'OPEN'      'RESV'   4642.439      0.000 1448686.192  5* /
@@ -4089,7 +4089,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'RESV'    723.865      0.000  76672.806  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 1006735.306  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   8788.852  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 1430236.910  1* 600 /
@@ -4104,7 +4104,7 @@ DATES
  1 'APR' 2001 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
      'B-3H'      'OPEN'      'RESV'   7033.550      0.000 1642860.404  5* /
      'B-2H'      'OPEN'      'RESV'   4878.410      0.000 1367320.119  5* /
@@ -4117,7 +4117,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 1169868.634  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   8979.270  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 1086744.836  1* 600 /
@@ -4127,8 +4127,8 @@ WCONINJE
      'F-3H'     'WATER'  1*      'RATE'   7005.187  1* 600 /
 /
 
-RPTSCHED 
- 0 0 0 0 0 0 2 2 2 0 1 1 0 1 1 0 0 / 
+RPTSCHED
+ 0 0 0 0 0 0 2 2 2 0 1 1 0 1 1 0 0 /
 
 
 -- 1272.000000 days from start of simulation ( 6 'NOV' 1997 )
@@ -4136,7 +4136,7 @@ DATES
  1 'MAY' 2001 /
 /
 
-WCONHIST 
+WCONHIST
      'B-3H'      'OPEN'      'RESV'   6496.463      0.000 1529666.302  5* /
      'B-2H'      'OPEN'      'RESV'   4573.207      0.000 1293441.523  5* /
      'D-1H'      'OPEN'      'RESV'   1836.717   1836.717 434130.697  5* /
@@ -4148,7 +4148,7 @@ WCONHIST
      'E-2H'      'OPEN'      'RESV'   7714.700      0.000 1100436.444  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 1572526.026  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   9401.403  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 1536748.398  1* 600 /
@@ -4158,10 +4158,10 @@ WCONINJE
      'F-3H'     'WATER'  1*      'RATE'   7387.740  1* 600 /
 /
 
-RPTSCHED 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 / 
+RPTSCHED
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 /
 
 
 -- 1302.000000 days from start of simulation ( 6 'NOV' 1997 )
@@ -4169,11 +4169,11 @@ DATES
  31 'MAY' 2001 /
 /
 
-WELOPEN 
+WELOPEN
      'B-4H'      'SHUT'  5* /
 /
 
-WCONHIST 
+WCONHIST
      'B-3H'      'OPEN'      'RESV'   6707.800      0.000 1671972.000  5* /
      'B-2H'      'OPEN'      'RESV'   4806.800      0.000 1437754.750  5* /
      'D-1H'      'OPEN'      'RESV'   1921.400   1921.400 478911.812  5* /
@@ -4184,7 +4184,7 @@ WCONHIST
      'E-2H'      'OPEN'      'RESV'   7928.700      0.000 1197067.375  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 3272052.000  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   7020.300  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 3161095.000  1* 600 /
@@ -4199,7 +4199,7 @@ DATES
  1 'JUN' 2001 /
 /
 
-WCONHIST 
+WCONHIST
      'B-3H'      'OPEN'      'RESV'   6893.700      0.000 1654230.500  5* /
      'B-2H'      'OPEN'      'RESV'   4957.260      0.000 1427460.500  5* /
      'D-1H'      'OPEN'      'RESV'   1918.860   1918.860 460479.825  5* /
@@ -4210,7 +4210,7 @@ WCONHIST
      'E-2H'      'OPEN'      'RESV'   8197.620      0.000 1191492.200  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 2121885.000  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   8527.080  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 2272923.525  1* 600 /
@@ -4262,12 +4262,12 @@ DATES
 --      : B-4AH Connection 12 52 22 Perf. Len  38.11 ( 45.3%)
 --      : WCONPROD >> for RFT pressure points
 --      : WRFTPLT >> RFT recorded only once
-WELSPECS 
+WELSPECS
     'B-4AH'  'B1-DUMMY'    9   46  1*       'OIL'  2*      'STOP'  4* /
 /
 
-COMPDAT 
--- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro 
+COMPDAT
+-- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro
     'B-4AH'    9   46    1    1      'OPEN'  1*     43.174      0.216   3847.677  2*         'Y'     12.796 /
     'B-4AH'    9   46    2    2      'OPEN'  1*     16.178      0.216   1348.356  2*         'Y'      9.390 /
     'B-4AH'   10   46    2    2      'OPEN'  1*      6.486      0.216    527.232  2*         'Y'      8.413 /
@@ -4299,7 +4299,7 @@ COMPDAT
     'B-4AH'   12   52   22   22      'OPEN'  1*    377.405      0.216  34531.738  2*         'Y'     14.535 /
 /
 
-WCONHIST 
+WCONHIST
      'B-3H'      'OPEN'      'RESV'   4522.400      0.000 874989.625  5* /
      'B-2H'      'OPEN'      'RESV'   2960.000      0.000 687236.625  5* /
     'B-4AH'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
@@ -4311,11 +4311,11 @@ WCONHIST
      'E-2H'      'OPEN'      'RESV'   6431.500      0.000 753717.875  5* /
 /
 
-WCONPROD 
+WCONPROD
     'B-4AH'      'SHUT' 15* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 156046.203  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   8842.200  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 151124.594  1* 600 /
@@ -4325,7 +4325,7 @@ WCONINJE
      'F-3H'     'WATER'  1*      'RATE'   8094.400  1* 600 /
 /
 
-WRFTPLT 
+WRFTPLT
     'B-4AH'       'YES'       'YES'  1* /
 /
 
@@ -4338,11 +4338,11 @@ DATES
 --      : >> --for RFT pressure points
 --  WARN: B-4AH Squeeze interval 3197.000000 3886.000000 Top changed to 3204.610943
 --  WARN: B-4AH Squeeze interval 3343.582181 3886.000000 Top changed to 3387.266213
-WELOPEN 
+WELOPEN
     'B-4AH'      'SHUT'    0    0    0  2* /
 /
 
-WCONHIST 
+WCONHIST
      'B-3H'      'OPEN'      'RESV'   6262.627      0.000 1226366.290  5* /
      'B-2H'      'OPEN'      'RESV'   4691.282      0.000 1167318.528  5* /
      'D-1H'      'OPEN'      'RESV'   1774.573   2143.355 421611.381  5* /
@@ -4353,7 +4353,7 @@ WCONHIST
      'E-2H'      'OPEN'      'RESV'   7411.273      0.000 862120.903  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 721401.761  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   7037.291  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 1480433.222  1* 600 /
@@ -4368,7 +4368,7 @@ DATES
  18 'JUN' 2001 /
 /
 
-WCONHIST 
+WCONHIST
      'B-3H'      'OPEN'      'RESV'   4814.700      0.000 952338.812  5* /
      'B-2H'      'OPEN'      'RESV'   3482.700      0.000 989348.125  5* /
      'D-1H'      'OPEN'      'RESV'   1343.100   2191.400 466319.906  5* /
@@ -4379,7 +4379,7 @@ WCONHIST
      'E-2H'      'OPEN'      'RESV'   5499.200      0.000 595935.000  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE'      0.000  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   6873.400  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'  10358.400  1* 600 /
@@ -4389,7 +4389,7 @@ WCONINJE
      'F-3H'     'WATER'  1*      'RATE'   5615.200  1* 600 /
 /
 
-GECON 
+GECON
     'FIELD'   1000.000  5*        'NO'  1* /
 /
 
@@ -4398,7 +4398,7 @@ DATES
  19 'JUN' 2001 /
 /
 
-WCONHIST 
+WCONHIST
      'B-3H'      'OPEN'      'RESV'   6012.458      0.000 1020702.953  5* /
      'B-2H'      'OPEN'      'RESV'   4617.700      0.000 1129859.328  5* /
      'D-1H'      'OPEN'      'RESV'   1614.267   2633.800 481867.896  5* /
@@ -4410,7 +4410,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'RESV'     19.858      0.000   1936.533  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   7165.142  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   3083.742  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'   7442.308  1* 600 /
@@ -4420,7 +4420,7 @@ WCONINJE
      'F-3H'     'WATER'  1*      'RATE'   5605.108  1* 600 /
 /
 
-GECON 
+GECON
     'FIELD'   1000.000  5*        'NO'  1* /
 /
 
@@ -4429,7 +4429,7 @@ DATES
  1 'JUL' 2001 /
 /
 
-WCONHIST 
+WCONHIST
      'B-3H'      'OPEN'      'RESV'   4379.000      0.000 670744.625  5* /
      'B-2H'      'OPEN'      'RESV'   2361.800      0.000 519554.188  5* /
      'D-1H'      'OPEN'      'RESV'    749.800   1078.900 201589.203  5* /
@@ -4441,7 +4441,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   9651.200  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   3486.200  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'  10120.000  1* 600 /
@@ -4451,8 +4451,8 @@ WCONINJE
      'F-3H'     'WATER'  1*      'RATE'   7726.100  1* 600 /
 /
 
-RPTSCHED 
- 0 0 0 0 0 0 2 2 2 0 1 1 0 1 1 0 0 / 
+RPTSCHED
+ 0 0 0 0 0 0 2 2 2 0 1 1 0 1 1 0 0 /
 
 
 -- 1334.000000 days from start of simulation ( 6 'NOV' 1997 )
@@ -4485,12 +4485,12 @@ DATES
 --      : F-4H Connection 36 68 22 Perf. Len  16.09 (114.6%)
 --      : WCONINJE >> for RFT pressure points
 --      : WRFTPLT >> RFT recorded only once
-WELSPECS 
+WELSPECS
      'F-4H'    'MANI-F'   36   68  1*       'OIL'  7* /
 /
 
-COMPDAT 
--- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro 
+COMPDAT
+-- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro
      'F-4H'   36   68    1    1      'OPEN'  1*     32.805      0.216   3039.230  2*         'Z'     15.456 /
      'F-4H'   36   68    2    2      'OPEN'  1*     44.641      0.216   4162.395  2*         'Z'     15.958 /
      'F-4H'   36   68    3    3      'OPEN'  1*      6.151      0.216    567.604  2*         'Z'     15.154 /
@@ -4511,7 +4511,7 @@ COMPDAT
      'F-4H'   36   68   22   22      'OPEN'  1*     84.581      0.216   7891.694  2*         'Z'     16.011 /
 /
 
-WCONHIST 
+WCONHIST
      'F-4H'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
      'B-3H'      'OPEN'      'RESV'   4299.800      0.000 671111.688  5* /
      'B-2H'      'OPEN'      'RESV'   2326.500      0.000 521505.594  5* /
@@ -4523,7 +4523,7 @@ WCONHIST
      'E-2H'      'OPEN'      'RESV'   4309.600      0.000 389994.188  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   9596.900  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   3498.400  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'  10061.400  1* 600 /
@@ -4534,14 +4534,14 @@ WCONINJE
      'F-4H'     'WATER'      'SHUT'      'RATE'      0.001  1* 600 /
 /
 
-WRFTPLT 
+WRFTPLT
      'F-4H'       'YES'       'YES'  1* /
 /
 
-RPTSCHED 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 / 
+RPTSCHED
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 /
 
 
 -- 1335.000000 days from start of simulation ( 6 'NOV' 1997 )
@@ -4553,11 +4553,11 @@ DATES
 --      : >> --for RFT pressure points
 --  WARN: F-4H Squeeze interval 4162.102936 4266.000000 Top changed to 4169.375869
 --  WARN: F-4H Squeeze interval 4262.452978 4266.000000 below grid
-WELOPEN 
+WELOPEN
      'F-4H'      'SHUT'    0    0    0  2* /
 /
 
-WCONHIST 
+WCONHIST
      'B-3H'      'OPEN'      'RESV'   5831.575      0.000 925181.438  5* /
      'B-2H'      'OPEN'      'RESV'   4158.667      0.000 951927.271  5* /
      'D-1H'      'OPEN'      'RESV'    941.083   1354.258 261820.826  5* /
@@ -4568,7 +4568,7 @@ WCONHIST
      'E-2H'      'OPEN'      'RESV'   6390.783      0.000 587915.648  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   9492.225  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   3495.792  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'   9906.683  1* 600 /
@@ -4583,7 +4583,7 @@ DATES
  15 'JUL' 2001 /
 /
 
-WCONHIST 
+WCONHIST
      'B-3H'      'OPEN'      'RESV'   6396.400      0.000 1069669.375  5* /
      'B-2H'      'OPEN'      'RESV'   5074.000      0.000 1218610.000  5* /
      'D-1H'      'OPEN'      'RESV'   1036.300   1491.300 304210.500  5* /
@@ -4594,7 +4594,7 @@ WCONHIST
      'E-2H'      'OPEN'      'RESV'   7131.600      0.000 691465.187  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   9407.400  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   3665.900  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'   9818.000  1* 600 /
@@ -4604,8 +4604,8 @@ WCONINJE
      'F-3H'     'WATER'  1*      'RATE'   7513.300  1* 600 /
 /
 
-RPTRST 
- 2 / 
+RPTRST
+ 2 /
 
 
 -- 1348.000000 days from start of simulation ( 6 'NOV' 1997 )
@@ -4613,7 +4613,7 @@ DATES
  16 'JUL' 2001 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'    303.650      0.000 172776.634  5* /
      'B-3H'      'OPEN'      'RESV'   5761.586      0.000 895544.054  5* /
      'B-2H'      'OPEN'      'RESV'   4002.929      0.000 899352.138  5* /
@@ -4625,7 +4625,7 @@ WCONHIST
      'E-2H'      'OPEN'      'RESV'   6523.979      0.000 587100.853  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   8670.693  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   3655.736  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'   9067.543  1* 600 /
@@ -4635,8 +4635,8 @@ WCONINJE
      'F-3H'     'WATER'  1*      'RATE'   7039.200  1* 600 /
 /
 
-RPTRST 
- 0 / 
+RPTRST
+ 0 /
 
 
 -- 1362.000000 days from start of simulation ( 6 'NOV' 1997 )
@@ -4662,12 +4662,12 @@ DATES
 --      : B-4BH Connection 15 56  9 Perf. Len  46.60 ( 53.1%)
 --      : B-4BH Connection 15 57  9 Perf. Len  72.22 ( 81.9%)
 --      : B-4BH Connection 15 58  9 Perf. Len  18.78 ( 21.7%)
-WELSPECS 
+WELSPECS
     'B-4BH'  'B1-DUMMY'    9   46  1*       'OIL'  2*      'STOP'  4* /
 /
 
-COMPDAT 
--- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro 
+COMPDAT
+-- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro
     'B-4BH'   12   52    9    9      'OPEN'  1*     31.039      0.216   2432.255  2*         'Y'      7.190 /
     'B-4BH'   13   52    9    9      'OPEN'  1*     90.528      0.216   7115.854  2*         'Y'      7.284 /
     'B-4BH'   13   53    9    9      'OPEN'  1*    182.685      0.216  14326.053  2*         'Y'      7.213 /
@@ -4680,7 +4680,7 @@ COMPDAT
     'B-4BH'   15   58    9    9      'OPEN'  1*     28.179      0.216   2211.981  2*         'Y'      7.243 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   2749.100      0.000 1619707.437  5* /
      'B-3H'      'OPEN'      'RESV'   5000.200      0.000 692322.250  5* /
      'B-2H'      'OPEN'      'RESV'   2968.600      0.000 590302.250  5* /
@@ -4693,7 +4693,7 @@ WCONHIST
      'E-2H'      'OPEN'      'RESV'   6773.600      0.000 543758.406  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   9595.300  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   3866.050  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'   9992.450  1* 600 /
@@ -4708,7 +4708,7 @@ DATES
  1 'AUG' 2001 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   2086.156      0.000 1148734.694  5* /
      'B-3H'      'OPEN'      'RESV'   4895.833      0.000 634162.267  5* /
      'B-2H'      'OPEN'      'RESV'   2447.400      0.000 455138.339  5* /
@@ -4721,7 +4721,7 @@ WCONHIST
      'E-2H'      'OPEN'      'RESV'   6196.445      0.000 464718.437  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   8055.367  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   3995.078  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'  10252.867  1* 600 /
@@ -4749,14 +4749,14 @@ DATES
 --      : F-4H Connection 36 68  1 Perf. Len  10.56 ( 87.0%)
 --      : F-4H Connection 36 68  2 Perf. Len   9.41 ( 58.1%)
 --      : F-4H Connection 36 68  3 Perf. Len   9.87 (116.9%)
-COMPDAT 
--- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro 
+COMPDAT
+-- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro
      'F-4H'   36   68    1    1      'OPEN'  1*     60.291      0.216   5576.047  2*         'Z'     15.325 /
      'F-4H'   36   68    2    2      'OPEN'  1*     22.803      0.216   2128.744  2*         'Z'     16.054 /
      'F-4H'   36   68    3    3      'OPEN'  1*      6.931      0.216    639.261  2*         'Z'     15.123 /
 /
 
-WCONHIST 
+WCONHIST
      'F-4H'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
      'B-1H'      'OPEN'      'RESV'    788.500      0.000 429000.125  5* /
      'B-3H'      'OPEN'      'RESV'   4851.600      0.000 632663.167  5* /
@@ -4770,7 +4770,7 @@ WCONHIST
      'E-2H'      'OPEN'      'RESV'   6012.617      0.000 454440.146  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   8986.233  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   3586.050  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'   9359.517  1* 600 /
@@ -4785,7 +4785,7 @@ DATES
  16 'AUG' 2001 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
      'B-3H'      'OPEN'      'RESV'   2881.631     58.800 500281.242  5* /
      'B-2H'      'OPEN'      'RESV'    716.625      0.000 108231.825  5* /
@@ -4797,7 +4797,7 @@ WCONHIST
      'E-2H'      'OPEN'      'RESV'   6327.825      0.000 539558.982  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'  10254.356  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   5315.031  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 2112211.531  1* 600 /
@@ -4807,7 +4807,7 @@ WCONINJE
      'F-3H'     'WATER'  1*      'RATE'   6873.375  1* 600 /
 /
 
-GECON 
+GECON
     'FIELD'   1000.000  5*        'NO'  1* /
 /
 
@@ -4816,7 +4816,7 @@ DATES
  1 'SEP' 2001 /
 /
 
-WCONHIST 
+WCONHIST
      'B-3H'      'OPEN'      'RESV'   5158.844    105.278 904621.042  5* /
      'B-2H'      'OPEN'      'RESV'    812.822      0.000 124386.711  5* /
     'B-4BH'      'OPEN'      'RESV'   5225.444      0.000 560346.701  5* /
@@ -4827,7 +4827,7 @@ WCONHIST
      'E-2H'      'OPEN'      'RESV'   7349.322      0.000 635395.285  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'  12405.311  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   4908.622  1* 600 /
      'C-3H'       'GAS'  1*      'RATE'  31915.643  1* 600 /
@@ -4842,7 +4842,7 @@ DATES
  10 'SEP' 2001 /
 /
 
-WCONHIST 
+WCONHIST
      'B-3H'      'OPEN'      'RESV'   2935.676     79.505 510336.887  5* /
      'B-2H'      'OPEN'      'RESV'    506.095      0.000  75868.205  5* /
     'B-4BH'      'OPEN'      'RESV'   2718.810     78.352 295694.362  5* /
@@ -4853,7 +4853,7 @@ WCONHIST
      'E-2H'      'OPEN'      'RESV'   3460.905      0.000 300753.534  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   7120.048  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   7277.524  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'   7468.219  1* 600 /
@@ -4864,11 +4864,11 @@ WCONINJE
      'F-4H'     'WATER'  1*      'RATE'   1677.271  1* 600 /
 /
 
-WTRACER 
+WTRACER
      'F-4H'       'SEA'      1.000  1* /
 /
 
-GECON 
+GECON
     'FIELD'   1000.000  5*        'NO'  1* /
 /
 
@@ -4877,7 +4877,7 @@ DATES
  1 'OCT' 2001 /
 /
 
-WCONHIST 
+WCONHIST
      'B-3H'      'OPEN'      'RESV'   5166.916    216.319 1454487.875  5* /
      'B-2H'      'OPEN'      'RESV'   2508.471      0.000 479292.904  5* /
     'B-4BH'      'OPEN'      'RESV'   4418.677    586.603 657803.680  5* /
@@ -4888,7 +4888,7 @@ WCONHIST
      'E-2H'      'OPEN'      'RESV'   7235.745      0.000 770420.730  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   8065.974  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   8074.903  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'   7160.019  1* 600 /
@@ -4899,8 +4899,8 @@ WCONINJE
      'F-4H'     'WATER'  1*      'RATE'   2611.735  1* 600 /
 /
 
-RPTSCHED 
- 0 0 0 0 0 0 2 2 2 0 1 1 0 1 1 0 0 / 
+RPTSCHED
+ 0 0 0 0 0 0 2 2 2 0 1 1 0 1 1 0 0 /
 
 
 -- 1456.000000 days from start of simulation ( 6 'NOV' 1997 )
@@ -4908,7 +4908,7 @@ DATES
  1 'NOV' 2001 /
 /
 
-WCONHIST 
+WCONHIST
      'B-3H'      'OPEN'      'RESV'   4041.590    245.053 1553630.790  5* /
      'B-2H'      'OPEN'      'RESV'   4395.193      0.000 867709.254  5* /
     'B-4BH'      'OPEN'      'RESV'   3721.157    605.767 579098.769  5* /
@@ -4919,7 +4919,7 @@ WCONHIST
      'E-2H'      'OPEN'      'RESV'   7245.747      0.000 778546.298  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   8471.133  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   7566.113  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'   6346.333  1* 600 /
@@ -4930,10 +4930,10 @@ WCONINJE
      'F-4H'     'WATER'  1*      'RATE'   5553.767  1* 600 /
 /
 
-RPTSCHED 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 / 
+RPTSCHED
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 /
 
 
 -- 1486.000000 days from start of simulation ( 6 'NOV' 1997 )
@@ -4941,7 +4941,7 @@ DATES
  1 'DEC' 2001 /
 /
 
-WCONHIST 
+WCONHIST
      'B-3H'      'OPEN'      'RESV'   4038.843    343.146 2235931.353  5* /
      'B-2H'      'OPEN'      'RESV'   4484.246      0.000 857267.951  5* /
     'B-4BH'      'OPEN'      'RESV'   3676.993    691.307 578138.835  5* /
@@ -4952,7 +4952,7 @@ WCONHIST
      'E-2H'      'OPEN'      'RESV'   7245.414      0.000 789615.312  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   8102.871  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   7245.536  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'   5960.993  1* 600 /
@@ -4968,7 +4968,7 @@ DATES
  29 'DEC' 2001 /
 /
 
-WCONHIST 
+WCONHIST
      'B-3H'      'OPEN'      'RESV'   4477.133    285.800 2538492.917  5* /
      'B-2H'      'OPEN'      'RESV'   4503.467      0.000 644976.625  5* /
     'B-4BH'      'OPEN'      'RESV'   3494.300    985.567 496602.500  5* /
@@ -4978,7 +4978,7 @@ WCONHIST
      'E-2H'      'OPEN'      'RESV'   7222.900      0.000 716207.229  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'  10270.333  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   9156.833  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 1067075.250  1* 600 /
@@ -4989,7 +4989,7 @@ WCONINJE
      'F-4H'     'WATER'  1*      'RATE'      0.000  1* 600 /
 /
 
-GECON 
+GECON
     'FIELD'   1000.000  5*        'NO'  1* /
 /
 
@@ -4998,7 +4998,7 @@ DATES
  1 'JAN' 2002 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   3813.616      0.000 407007.113  5* /
      'B-3H'      'OPEN'      'RESV'    624.116     49.519 369102.399  5* /
      'B-2H'      'OPEN'      'RESV'   3987.684      0.000 557718.724  5* /
@@ -5012,7 +5012,7 @@ WCONHIST
      'E-2H'      'OPEN'      'RESV'   6492.565     14.445 632172.102  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   8580.526  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   7653.506  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 2176936.305  1* 600 /
@@ -5023,8 +5023,8 @@ WCONINJE
      'F-4H'     'WATER'  1*      'RATE'    514.394  1* 600 /
 /
 
-RPTSCHED 
- 0 0 0 0 0 0 2 2 2 0 1 1 0 1 1 0 0 / 
+RPTSCHED
+ 0 0 0 0 0 0 2 2 2 0 1 1 0 1 1 0 0 /
 
 
 -- 1548.000000 days from start of simulation ( 6 'NOV' 1997 )
@@ -5032,7 +5032,7 @@ DATES
  1 'FEB' 2002 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   4264.436      0.000 514041.666  5* /
      'B-3H'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
      'B-2H'      'OPEN'      'RESV'   5051.009      0.000 780531.392  5* /
@@ -5046,7 +5046,7 @@ WCONHIST
      'E-2H'      'OPEN'      'RESV'   7468.900     98.145 799331.966  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'  10287.127  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   9182.255  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 2195476.222  1* 600 /
@@ -5057,10 +5057,10 @@ WCONINJE
      'F-4H'     'WATER'  1*      'RATE'   4583.655  1* 600 /
 /
 
-RPTSCHED 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 / 
+RPTSCHED
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 /
 
 
 -- 1559.000000 days from start of simulation ( 6 'NOV' 1997 )
@@ -5068,7 +5068,7 @@ DATES
  12 'FEB' 2002 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   3456.800      0.000 471329.094  5* /
      'B-2H'      'OPEN'      'RESV'   3668.000      0.000 650171.375  5* /
     'B-4BH'      'OPEN'      'RESV'   1924.000    409.400 453829.906  5* /
@@ -5080,7 +5080,7 @@ WCONHIST
      'E-2H'      'OPEN'      'RESV'   5547.300     57.600 680729.313  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   7378.700  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   6571.700  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 2081026.875  1* 600 /
@@ -5091,7 +5091,7 @@ WCONINJE
      'F-4H'     'WATER'  1*      'RATE'    688.600  1* 600 /
 /
 
-WTRACER 
+WTRACER
      'F-3H'       'TFB'   1000.000  1* /
 /
 
@@ -5100,7 +5100,7 @@ DATES
  13 'FEB' 2002 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   2212.694      0.000 292380.869  5* /
      'B-3H'      'OPEN'      'RESV'   1753.231    111.306 1032597.020  5* /
      'B-2H'      'OPEN'      'RESV'   4328.225      0.000 712097.527  5* /
@@ -5113,7 +5113,7 @@ WCONHIST
      'E-2H'      'OPEN'      'RESV'   6060.219    101.781 687481.145  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'  10133.269  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   8940.075  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 2168295.223  1* 600 /
@@ -5124,7 +5124,7 @@ WCONINJE
      'F-4H'     'WATER'  1*      'RATE'   1127.719  1* 600 /
 /
 
-WTRACER 
+WTRACER
      'F-3H'       'TFB'      0.000  1* /
 /
 
@@ -5133,7 +5133,7 @@ DATES
  1 'MAR' 2002 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   4677.900      0.000 974510.220  5* /
      'B-3H'      'OPEN'      'RESV'   1775.103    155.455 679724.222  5* /
      'B-2H'      'OPEN'      'RESV'   3773.364      0.000 548051.571  5* /
@@ -5146,7 +5146,7 @@ WCONHIST
      'E-2H'      'OPEN'      'RESV'   6302.300    325.148 641179.731  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'  10052.890  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   8970.068  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 1655834.151  1* 600 /
@@ -5162,7 +5162,7 @@ DATES
  1 'APR' 2002 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   4998.050      0.000 1016818.654  5* /
      'B-3H'      'OPEN'      'RESV'   2302.313    222.067 737295.315  5* /
      'B-2H'      'OPEN'      'RESV'   5235.607      0.000 657799.631  5* /
@@ -5175,7 +5175,7 @@ WCONHIST
      'E-2H'      'OPEN'      'RESV'   6297.697    659.890 646873.234  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'  11152.220  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'  10001.737  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 2142392.512  1* 600 /
@@ -5186,8 +5186,8 @@ WCONINJE
      'F-4H'     'WATER'  1*      'RATE'    457.937  1* 600 /
 /
 
-RPTSCHED 
- 0 0 0 0 0 0 2 2 2 0 1 1 0 1 1 0 0 / 
+RPTSCHED
+ 0 0 0 0 0 0 2 2 2 0 1 1 0 1 1 0 0 /
 
 
 -- 1637.000000 days from start of simulation ( 6 'NOV' 1997 )
@@ -5195,11 +5195,11 @@ DATES
  1 'MAY' 2002 /
 /
 
-WELOPEN 
+WELOPEN
      'D-1H'      'SHUT'    0    0    0  2* /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   5772.455      0.000 1245479.533  5* /
      'B-3H'      'OPEN'      'RESV'    517.329    221.081  84755.075  5* /
      'B-2H'      'OPEN'      'RESV'   5139.165      0.000 653824.693  5* /
@@ -5212,7 +5212,7 @@ WCONHIST
      'E-2H'      'OPEN'      'RESV'   5363.152    757.723 586152.145  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'  11224.671  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'  10034.145  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 1902102.264  1* 600 /
@@ -5223,10 +5223,10 @@ WCONINJE
      'F-4H'     'WATER'  1*      'RATE'    470.142  1* 600 /
 /
 
-RPTSCHED 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 / 
+RPTSCHED
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 /
 
 
 -- 1668.000000 days from start of simulation ( 6 'NOV' 1997 )
@@ -5234,7 +5234,7 @@ DATES
  1 'JUN' 2002 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   4750.550      0.000 899633.059  5* /
      'B-3H'      'OPEN'      'RESV'   1815.977    843.363 252141.541  5* /
      'B-2H'      'OPEN'      'RESV'   2739.967      0.000 331747.687  5* /
@@ -5247,7 +5247,7 @@ WCONHIST
      'E-2H'      'OPEN'      'RESV'   4110.857    728.113 430383.120  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   9139.077  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   8239.277  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 2075962.092  1* 600 /
@@ -5263,7 +5263,7 @@ DATES
  1 'JUL' 2002 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   4609.186      0.000 701949.321  5* /
      'B-3H'      'OPEN'      'RESV'   1745.900    724.729 274697.930  5* /
      'B-2H'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
@@ -5275,7 +5275,7 @@ WCONHIST
      'E-2H'      'OPEN'      'RESV'   5156.529   1049.029 623375.402  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'  10828.400  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   9714.472  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 1471863.839  1* 600 /
@@ -5286,8 +5286,8 @@ WCONINJE
      'F-4H'     'WATER'  1*      'RATE'    387.300  1* 600 /
 /
 
-RPTSCHED 
- 0 0 0 0 0 0 2 2 2 0 1 1 0 1 1 0 0 / 
+RPTSCHED
+ 0 0 0 0 0 0 2 2 2 0 1 1 0 1 1 0 0 /
 
 
 -- 1705.000000 days from start of simulation ( 6 'NOV' 1997 )
@@ -5315,12 +5315,12 @@ DATES
 --      : B-3H Connection  9 52 14 Perf. Len  54.41 ( 64.4%)
 --  WARN: B-3H Connection  9 52 14 SUPPRESSED, no flow possible (CF = 0)
 --      : GECON >> C-4H switches from water to gas injection
-WELOPEN 
+WELOPEN
      'B-3H'      'SHUT'    0    0    0  2* /
 /
 
-COMPDAT 
--- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro 
+COMPDAT
+-- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro
      'B-3H'    8   41   11   11      'OPEN'  1*     65.711      0.216   5364.312  2*         'Y'      8.569 /
      'B-3H'    8   42   11   11      'OPEN'  1*     50.937      0.216   4118.021  2*         'Y'      8.214 /
      'B-3H'    9   43   11   11      'OPEN'  1*      1.671      0.216    143.592  2*         'Y'     10.796 /
@@ -5333,7 +5333,7 @@ COMPDAT
      'B-3H'    9   50   13   13      'OPEN'  1*    146.461      0.216  13820.293  2*         'Y'     16.944 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   4856.433      0.000 702140.542  5* /
      'B-3H'      'OPEN'      'RESV'   1250.800    575.533 187933.198  5* /
     'B-4BH'      'OPEN'      'RESV'   2345.667   2460.800 325597.833  5* /
@@ -5344,7 +5344,7 @@ WCONHIST
      'E-2H'      'OPEN'      'RESV'   5208.767   1173.700 602517.042  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   7499.067  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   6757.900  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 3848521.000  1* 600 /
@@ -5355,13 +5355,13 @@ WCONINJE
      'F-4H'     'WATER'  1*      'RATE'    541.933  1* 600 /
 /
 
-RPTSCHED 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 / 
+RPTSCHED
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 /
 
 
-GECON 
+GECON
     'FIELD'   1000.000  5*        'NO'  1* /
 /
 
@@ -5370,7 +5370,7 @@ DATES
  11 'JUL' 2002 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   4791.075      0.000 705373.266  5* /
      'B-3H'      'OPEN'      'RESV'   1092.200    505.675 167210.301  5* /
     'B-4BH'      'OPEN'      'RESV'   2311.375   2439.975 326670.383  5* /
@@ -5381,7 +5381,7 @@ WCONHIST
      'E-2H'      'OPEN'      'RESV'   5120.400   1161.000 603056.547  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'  11063.800  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   9922.575  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 2640222.312  1* 600 /
@@ -5392,7 +5392,7 @@ WCONINJE
      'F-4H'     'WATER'  1*      'RATE'    551.500  1* 600 /
 /
 
-GECON 
+GECON
     'FIELD'   1000.000  5*        'NO'  1* /
 /
 
@@ -5401,7 +5401,7 @@ DATES
  15 'JUL' 2002 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   4727.194      0.000 688480.033  5* /
      'B-3H'      'OPEN'      'RESV'   1530.641    712.565 232195.316  5* /
      'B-2H'      'OPEN'      'RESV'   4248.665      0.000 543214.207  5* /
@@ -5413,7 +5413,7 @@ WCONHIST
      'E-2H'      'OPEN'      'RESV'   3593.482    849.653 418972.865  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   5718.500  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   5174.706  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 3124091.515  1* 600 /
@@ -5424,7 +5424,7 @@ WCONINJE
      'F-4H'     'WATER'  1*      'RATE'    214.676  1* 600 /
 /
 
-GECON 
+GECON
     'FIELD'   1000.000  5*        'NO'  1* /
 /
 
@@ -5433,7 +5433,7 @@ DATES
  1 'AUG' 2002 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   4169.823      0.000 641386.483  5* /
      'B-3H'      'OPEN'      'RESV'   1421.285    624.808 221494.977  5* /
      'B-2H'      'OPEN'      'RESV'   2058.508      0.000 287675.909  5* /
@@ -5446,7 +5446,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'RESV'   1620.846      0.000 195311.046  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   4944.592  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   4528.731  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 2248776.483  1* 600 /
@@ -5462,7 +5462,7 @@ DATES
  14 'AUG' 2002 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   5178.639    197.433 837771.661  5* /
      'B-3H'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
      'B-2H'      'OPEN'      'RESV'   4201.450      0.000 537107.679  5* /
@@ -5476,7 +5476,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'RESV'   3500.100      0.000 402255.007  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 1704809.924  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   9695.428  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 1711804.512  1* 600 /
@@ -5487,7 +5487,7 @@ WCONINJE
      'F-4H'     'WATER'  1*      'RATE'    490.444  1* 600 /
 /
 
-GECON 
+GECON
     'FIELD'   1000.000  5*        'NO'  1* /
 /
 
@@ -5496,7 +5496,7 @@ DATES
  1 'SEP' 2002 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   4115.700    453.100 781703.813  5* /
      'B-2H'      'OPEN'      'RESV'   5054.700      0.000 621218.375  5* /
     'B-4BH'      'OPEN'      'RESV'   1120.700   1665.600 212850.203  5* /
@@ -5509,7 +5509,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'RESV'   3004.600      0.000 335687.688  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 1293452.875  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'  10133.800  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 2187915.000  1* 600 /
@@ -5525,7 +5525,7 @@ DATES
  2 'SEP' 2002 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   4357.546    492.392 754475.803  5* /
      'B-3H'      'OPEN'      'RESV'    118.562     40.646  16559.962  5* /
      'B-2H'      'OPEN'      'RESV'   4949.054      0.000 583708.168  5* /
@@ -5538,7 +5538,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'RESV'   2132.554      0.000 233285.607  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   9714.985  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   8724.500  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 2544224.856  1* 600 /
@@ -5549,7 +5549,7 @@ WCONINJE
      'F-4H'     'WATER'  1*      'RATE'    874.131  1* 600 /
 /
 
-GECON 
+GECON
     'FIELD'   1000.000  5*        'NO'  1* /
 /
 
@@ -5561,21 +5561,21 @@ DATES
 --      : F-3H Squeeze Tofte 2.1 2002 Top:  3450.00 Bot:  3479.63
 --      : >> --straddle Tofte perforations
 --      : F-3H Squeeze Tofte 1.2.2 2002 Top:  3479.63 Bot:  3490.00
---      : >> --straddle Tofte perforations	
+--      : >> --straddle Tofte perforations
 --  WARN: F-3H Layer Tofte 1.2.2 2002 Adjusted 3479.63 3490.00 to 3482.95 3493.32
 --      : F-3H Connection  7 56 20 Perf. Len  20.00 (101.5%)
 --      : F-3H Connection  7 56 21 Perf. Len   1.00 (  2.3%)
 --  WARN: F-3H Connection  7 56 21 SUPPRESSED, perf percentage too small
-WELOPEN 
+WELOPEN
      'F-3H'      'SHUT'    0    0    0  2* /
 /
 
-COMPDAT 
--- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro 
+COMPDAT
+-- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro
      'F-3H'    7   56   20   20      'OPEN'  1*     80.517      0.216   7920.504  2*         'Z'     21.006 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   4720.188    534.125 670542.678  5* /
      'B-3H'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
      'B-2H'      'OPEN'      'RESV'   4996.894      0.000 552924.311  5* /
@@ -5588,7 +5588,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'  10969.875  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'  10089.037  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 2129208.211  1* 600 /
@@ -5604,7 +5604,7 @@ DATES
  1 'OCT' 2002 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   4425.933    595.783 770046.542  5* /
      'B-2H'      'OPEN'      'RESV'   5154.100      0.000 619863.354  5* /
     'B-4BH'      'OPEN'      'RESV'    775.483    955.050 138782.268  5* /
@@ -5616,7 +5616,7 @@ WCONHIST
      'E-2H'      'OPEN'      'RESV'   2818.417    618.167 303458.068  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'  10819.167  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   9776.950  1* 600 /
      'C-3H'       'GAS'  1*      'RATE'      0.000  1* 600 /
@@ -5627,8 +5627,8 @@ WCONINJE
      'F-4H'     'WATER'  1*      'RATE'   2497.217  1* 600 /
 /
 
-RPTSCHED 
- 0 0 0 0 0 0 2 2 2 0 1 1 0 1 1 0 0 / 
+RPTSCHED
+ 0 0 0 0 0 0 2 2 2 0 1 1 0 1 1 0 0 /
 
 
 -- 1796.000000 days from start of simulation ( 6 'NOV' 1997 )
@@ -5636,7 +5636,7 @@ DATES
  7 'OCT' 2002 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   4626.828    771.371 898759.134  5* /
      'B-3H'      'OPEN'      'RESV'    242.643    106.414  36620.600  5* /
      'B-2H'      'OPEN'      'RESV'   5443.343      0.000 724691.304  5* /
@@ -5650,7 +5650,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'RESV'   2236.457      0.000 275283.710  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   8101.143  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   7168.886  1* 600 /
      'C-4H'     'WATER'  1*      'RATE'   8640.800  1* 600 /
@@ -5660,13 +5660,13 @@ WCONINJE
      'F-4H'     'WATER'  1*      'RATE'   1659.657  1* 600 /
 /
 
-RPTSCHED 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 / 
+RPTSCHED
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 /
 
 
-GECON 
+GECON
     'FIELD'   1000.000  5*        'NO'  1* /
 /
 
@@ -5675,7 +5675,7 @@ DATES
  14 'OCT' 2002 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   3727.522    747.794 677003.415  5* /
      'B-3H'      'OPEN'      'RESV'    287.250     69.122  48832.460  5* /
      'B-2H'      'OPEN'      'RESV'   4867.267      0.000 699776.547  5* /
@@ -5688,7 +5688,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'RESV'   1711.856      0.000 223677.516  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   7885.089  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   7756.328  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'   5892.939  1* 600 /
@@ -5699,7 +5699,7 @@ WCONINJE
      'F-4H'     'WATER'  1*      'RATE'   1728.433  1* 600 /
 /
 
-GECON 
+GECON
     'FIELD'   1000.000  5*        'NO'  1* /
 /
 
@@ -5708,7 +5708,7 @@ DATES
  1 'NOV' 2002 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   3466.620    542.353 703606.021  5* /
      'B-3H'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
      'B-2H'      'OPEN'      'RESV'   3733.700      0.000 545085.063  5* /
@@ -5721,7 +5721,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'    364.727  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   4675.507  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'   4325.587  1* 600 /
@@ -5737,11 +5737,11 @@ DATES
  16 'NOV' 2002 /
 /
 
-WELOPEN 
+WELOPEN
      'D-4H'      'SHUT'  5* /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   3728.387    585.453 787295.625  5* /
      'B-2H'      'OPEN'      'RESV'   4952.953      0.000 697687.592  5* /
     'B-4BH'      'OPEN'      'RESV'   1209.853   1296.473 263216.526  5* /
@@ -5752,7 +5752,7 @@ WCONHIST
      'E-2H'      'OPEN'      'RESV'   3653.047    709.587 489602.387  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   7870.007  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   7111.780  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'   5725.487  1* 600 /
@@ -5768,7 +5768,7 @@ DATES
  1 'DEC' 2002 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   3736.657    812.526 821582.766  5* /
      'B-2H'      'OPEN'      'RESV'   4198.661      0.000 698558.439  5* /
     'B-4BH'      'OPEN'      'RESV'    358.330    441.930  74291.387  5* /
@@ -5780,7 +5780,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'RESV'   1547.635      0.000 190287.441  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   5148.048  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   4877.756  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'   3620.630  1* 600 /
@@ -5795,7 +5795,7 @@ DATES
  24 'DEC' 2002 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   3789.075    957.675 976797.969  5* /
      'B-2H'      'OPEN'      'RESV'   4832.213      0.000 1142726.609  5* /
     'B-4BH'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
@@ -5807,7 +5807,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'RESV'   2176.675      0.000 311890.414  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'  12904.800  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   9021.650  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 1136918.625  1* 600 /
@@ -5817,7 +5817,7 @@ WCONINJE
      'F-4H'     'WATER'  1*      'RATE'   2949.912  1* 600 /
 /
 
-GECON 
+GECON
     'FIELD'   1000.000  5*        'NO'  1* /
 /
 
@@ -5826,7 +5826,7 @@ DATES
  1 'JAN' 2003 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   3748.100    929.400 735757.687  5* /
      'B-2H'      'OPEN'      'RESV'   5368.300      0.000 1159193.000  5* /
     'D-3AH'      'OPEN'      'RESV'   2650.100   1096.300 468194.594  5* /
@@ -5837,7 +5837,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'RESV'   1445.000      0.000 189108.000  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'  12082.400  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'  10934.500  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 2755485.250  1* 600 /
@@ -5847,8 +5847,8 @@ WCONINJE
      'F-4H'     'WATER'  1*      'RATE'   2373.600  1* 600 /
 /
 
-RPTSCHED 
- 0 0 0 0 0 0 2 2 2 0 1 1 0 1 1 0 0 / 
+RPTSCHED
+ 0 0 0 0 0 0 2 2 2 0 1 1 0 1 1 0 0 /
 
 
 -- 1883.000000 days from start of simulation ( 6 'NOV' 1997 )
@@ -5856,7 +5856,7 @@ DATES
  2 'JAN' 2003 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   3676.880    802.580 723364.256  5* /
      'B-2H'      'OPEN'      'RESV'   5351.830      0.000 1157897.787  5* /
     'D-3AH'      'OPEN'      'RESV'   2726.010    992.130 482664.622  5* /
@@ -5867,7 +5867,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'RESV'   1434.640      0.000 188147.848  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 1326147.987  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'  12545.460  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 1956115.713  1* 600 /
@@ -5877,13 +5877,13 @@ WCONINJE
      'F-4H'     'WATER'  1*      'RATE'   2283.730  1* 600 /
 /
 
-RPTSCHED 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 / 
+RPTSCHED
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 /
 
 
-GECON 
+GECON
     'FIELD'   1000.000  5*        'NO'  1* /
 /
 
@@ -5892,7 +5892,7 @@ DATES
  12 'JAN' 2003 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   3595.625    660.738 703897.813  5* /
      'B-2H'      'OPEN'      'RESV'   5370.013      0.000 1156339.094  5* /
     'D-3AH'      'OPEN'      'RESV'   2729.125    836.175 480798.934  5* /
@@ -5903,7 +5903,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'RESV'   1387.775      0.000 181098.014  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'  10621.538  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'  12462.750  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 2934102.094  1* 600 /
@@ -5913,7 +5913,7 @@ WCONINJE
      'F-4H'     'WATER'  1*      'RATE'   2463.600  1* 600 /
 /
 
-GECON 
+GECON
     'FIELD'   1000.000  5*        'NO'  1* /
 /
 
@@ -5922,7 +5922,7 @@ DATES
  20 'JAN' 2003 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   3319.483    843.200 723526.044  5* /
      'B-3H'      'OPEN'      'RESV'     78.742     25.875  15126.525  5* /
      'B-2H'      'OPEN'      'RESV'   4819.758      0.000 1151784.313  5* /
@@ -5934,7 +5934,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'RESV'    502.500      0.000  73699.367  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 1342655.010  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'  12715.417  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 3280170.021  1* 600 /
@@ -5944,7 +5944,7 @@ WCONINJE
      'F-4H'     'WATER'  1*      'RATE'   2538.533  1* 600 /
 /
 
-GECON 
+GECON
     'FIELD'   1000.000  5*        'NO'  1* /
 /
 
@@ -5953,7 +5953,7 @@ DATES
  1 'FEB' 2003 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   2815.869    964.954 563403.933  5* /
      'B-3H'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
      'B-2H'      'OPEN'      'RESV'   5469.754      0.000 1201537.894  5* /
@@ -5965,7 +5965,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 1161398.998  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'  10799.669  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 2987142.788  1* 600 /
@@ -5980,7 +5980,7 @@ DATES
  14 'FEB' 2003 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   3176.233   1127.180 704110.033  5* /
      'B-3H'      'OPEN'      'RESV'     66.467     22.933  12740.534  5* /
      'B-2H'      'OPEN'      'RESV'   4716.953      0.000 1149445.692  5* /
@@ -5992,7 +5992,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'RESV'    714.627      0.000 104573.889  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'  11446.173  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'  10863.580  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 1691833.017  1* 600 /
@@ -6002,7 +6002,7 @@ WCONINJE
      'F-4H'     'WATER'  1*      'RATE'   2381.260  1* 600 /
 /
 
-GECON 
+GECON
     'FIELD'   1000.000  5*        'NO'  1* /
 /
 
@@ -6011,7 +6011,7 @@ DATES
  1 'MAR' 2003 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   3498.200   1219.600 604770.400  5* /
      'B-3H'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
      'B-2H'      'OPEN'      'RESV'   3490.200      0.000 667949.600  5* /
@@ -6023,7 +6023,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'  11135.600  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'  10301.600  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 1430485.600  1* 600 /
@@ -6040,11 +6040,11 @@ DATES
 
 --      : B-3H Plug  Top:  3110.50
 --      : >> --plug perforations in Dsegment
-WELOPEN 
+WELOPEN
      'B-3H'      'SHUT'    0    0    0  2* /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   3143.000   1092.000 579427.000  5* /
      'B-2H'      'OPEN'      'RESV'   4232.000      0.000 858168.000  5* /
     'D-3AH'      'OPEN'      'RESV'   2641.000   1060.000 373298.000  5* /
@@ -6053,7 +6053,7 @@ WCONHIST
      'E-2H'      'OPEN'      'RESV'   4108.000   1290.000 504875.000  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'  11982.000  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'  10670.000  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 1737825.000  1* 600 /
@@ -6077,13 +6077,13 @@ DATES
 --  WARN: B-3H Layer Tofte 2.1 2002 Adjusted 2998.00 3028.80 to 3085.66 3116.46
 --      : B-3H Connection  8 40 12 Perf. Len   3.00 (  3.7%)
 --      : B-3H Connection  8 40 13 Perf. Len  19.38 ( 24.5%)
-COMPDAT 
--- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro 
+COMPDAT
+-- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro
      'B-3H'    8   40   12   12      'OPEN'  1*      1.879      0.216    148.474  2*         'Y'      7.444 /
      'B-3H'    8   40   13   13      'OPEN'  1*    302.749      0.216  26777.176  2*         'Y'     12.343 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   3267.640   1290.600 609909.200  5* /
      'B-3H'      'OPEN'      'RESV'   4282.360      0.000 798715.760  5* /
      'B-2H'      'OPEN'      'RESV'   4534.800      0.000 810775.560  5* /
@@ -6095,7 +6095,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'RESV'    329.800      0.000  40084.440  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'  11558.360  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'  10314.840  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 2581447.640  1* 600 /
@@ -6110,7 +6110,7 @@ DATES
  1 'APR' 2003 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   3340.033   1403.467 512950.600  5* /
      'B-3H'      'OPEN'      'RESV'   4408.267      0.000 744964.133  5* /
      'B-2H'      'OPEN'      'RESV'   5166.200      0.000 634786.700  5* /
@@ -6123,7 +6123,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'RESV'    871.033      0.000  89091.000  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'  10294.267  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'  10846.567  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 1591625.833  1* 600 /
@@ -6133,8 +6133,8 @@ WCONINJE
      'F-4H'     'WATER'  1*      'RATE'   2344.067  1* 600 /
 /
 
-RPTSCHED 
- 0 0 0 0 0 0 2 2 2 0 1 1 0 1 1 0 0 / 
+RPTSCHED
+ 0 0 0 0 0 0 2 2 2 0 1 1 0 1 1 0 0 /
 
 
 -- 2002.000000 days from start of simulation ( 6 'NOV' 1997 )
@@ -6142,7 +6142,7 @@ DATES
  1 'MAY' 2003 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   1992.387   1292.581 349612.613  5* /
      'B-3H'      'OPEN'      'RESV'   3997.710    249.806 709287.484  5* /
      'B-2H'      'OPEN'      'RESV'   5297.871      0.000 623210.581  5* /
@@ -6155,7 +6155,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'RESV'    280.419      0.000  29456.032  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   8565.839  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   8288.226  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 1578755.742  1* 600 /
@@ -6166,10 +6166,10 @@ WCONINJE
      'F-4H'     'WATER'  1*      'RATE'   1529.677  1* 600 /
 /
 
-RPTSCHED 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 / 
+RPTSCHED
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 /
 
 
 -- 2033.000000 days from start of simulation ( 6 'NOV' 1997 )
@@ -6177,7 +6177,7 @@ DATES
  1 'JUN' 2003 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
      'B-3H'      'OPEN'      'RESV'   4167.500   2001.500 498913.000  5* /
      'B-2H'      'OPEN'      'RESV'   6252.000      0.000 650826.000  5* /
@@ -6190,7 +6190,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'  11901.500  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'  10935.000  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 1456442.000  1* 600 /
@@ -6221,12 +6221,12 @@ DATES
 --      : D-4AH Connection 18 77  2 Perf. Len  49.53 ( 55.1%)
 --      : D-4AH Connection 18 79  1 Perf. Len  53.53 ( 61.6%)
 --      : D-4AH Connection 18 80  1 Perf. Len  68.59 ( 79.8%)
-WELSPECS 
+WELSPECS
     'D-4AH'  'D2-DUMMY'   16   66  1*       'OIL'  2*      'STOP'  4* /
 /
 
-COMPDAT 
--- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro 
+COMPDAT
+-- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro
     'D-4AH'   17   75    2    2      'OPEN'  1*      9.931      0.216    734.755  2*         'Y'      5.687 /
     'D-4AH'   17   76    2    2      'OPEN'  1*     27.106      0.216   2004.161  2*         'Y'      5.673 /
     'D-4AH'   18   76    2    2      'OPEN'  1*     11.598      0.216    856.594  2*         'Y'      5.648 /
@@ -6235,7 +6235,7 @@ COMPDAT
     'D-4AH'   18   80    1    1      'OPEN'  1*    131.888      0.216  11040.175  2*         'Y'      9.576 /
 /
 
-WCONHIST 
+WCONHIST
      'B-3H'      'OPEN'      'RESV'   3503.393   1450.036 485884.821  5* /
      'B-2H'      'OPEN'      'RESV'   5924.679      0.000 627271.321  5* /
     'D-3AH'      'OPEN'      'RESV'   2363.571    997.821 288653.821  5* /
@@ -6247,7 +6247,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'RESV'    456.821      0.000  44144.286  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'  10706.036  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'  10361.036  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 1789821.179  1* 600 /
@@ -6262,7 +6262,7 @@ DATES
  1 'JUL' 2003 /
 /
 
-WCONHIST 
+WCONHIST
      'B-3H'      'OPEN'      'RESV'   1497.111    417.667 336408.333  5* /
      'B-2H'      'OPEN'      'RESV'   5598.000      0.000 520606.778  5* /
     'D-3AH'      'OPEN'      'RESV'   2262.444   1047.000 242084.444  5* /
@@ -6274,7 +6274,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'RESV'    907.889      0.000  83438.000  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   3713.000  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'  15661.889  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 680164.778  1* 600 /
@@ -6284,8 +6284,8 @@ WCONINJE
      'F-4H'     'WATER'  1*      'RATE'   2619.667  1* 600 /
 /
 
-RPTSCHED 
- 0 0 0 0 0 0 2 2 2 0 1 1 0 1 1 0 0 / 
+RPTSCHED
+ 0 0 0 0 0 0 2 2 2 0 1 1 0 1 1 0 0 /
 
 
 -- 2072.000000 days from start of simulation ( 6 'NOV' 1997 )
@@ -6293,7 +6293,7 @@ DATES
  10 'JUL' 2003 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'     10.545     13.545   2135.909  5* /
      'B-3H'      'OPEN'      'RESV'   1466.909    461.273 326767.727  5* /
      'B-2H'      'OPEN'      'RESV'   6589.591      0.000 640259.955  5* /
@@ -6306,7 +6306,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'RESV'    960.136      0.000 101225.409  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 1389590.364  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'  11001.045  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'  10376.227  1* 600 /
@@ -6316,13 +6316,13 @@ WCONINJE
      'F-4H'     'WATER'  1*      'RATE'   3139.955  1* 600 /
 /
 
-RPTSCHED 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 / 
+RPTSCHED
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 /
 
 
-GECON 
+GECON
     'FIELD'   1000.000  5*        'NO'  1* /
 /
 
@@ -6331,7 +6331,7 @@ DATES
  1 'AUG' 2003 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
      'B-3H'      'OPEN'      'RESV'   1697.444    523.111 357808.111  5* /
      'B-2H'      'OPEN'      'RESV'   6721.667      0.000 627391.222  5* /
@@ -6344,7 +6344,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'RESV'   1606.222      0.000 161208.222  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 2060609.556  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'  10745.889  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'  10165.333  1* 600 /
@@ -6359,7 +6359,7 @@ DATES
  10 'AUG' 2003 /
 /
 
-WCONHIST 
+WCONHIST
      'B-3H'      'OPEN'      'RESV'   1779.000    545.000 390277.000  5* /
      'B-2H'      'OPEN'      'RESV'   6740.500      0.000 655643.000  5* /
     'D-3AH'      'OPEN'      'RESV'   2357.000   1806.500 261266.000  5* /
@@ -6371,7 +6371,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'RESV'   1610.500      0.000 168447.000  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 1098633.000  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'  16307.500  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'   5052.000  1* 600 /
@@ -6381,8 +6381,8 @@ WCONINJE
      'F-4H'     'WATER'  1*      'RATE'   3021.000  1* 600 /
 /
 
-RPTRST 
- 2 / 
+RPTRST
+ 2 /
 
 
 -- 2105.000000 days from start of simulation ( 6 'NOV' 1997 )
@@ -6390,7 +6390,7 @@ DATES
  12 'AUG' 2003 /
 /
 
-WCONHIST 
+WCONHIST
      'B-3H'      'OPEN'      'RESV'   1404.500    353.650 239040.650  5* /
      'B-2H'      'OPEN'      'RESV'   5371.600      0.000 508046.100  5* /
     'D-3AH'      'OPEN'      'RESV'   2203.150   1661.950 231389.600  5* /
@@ -6402,7 +6402,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'RESV'   1714.650      0.000 200424.450  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'  11743.900  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'  10711.350  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 2070783.750  1* 600 /
@@ -6412,11 +6412,11 @@ WCONINJE
      'F-4H'     'WATER'  1*      'RATE'   3002.950  1* 600 /
 /
 
-RPTRST 
- 0 / 
+RPTRST
+ 0 /
 
 
-GECON 
+GECON
     'FIELD'   1000.000  5*        'NO'  1* /
 /
 
@@ -6425,11 +6425,11 @@ DATES
  1 'SEP' 2003 /
 /
 
-WELOPEN 
+WELOPEN
     'B-4BH'      'SHUT'  5* /
 /
 
-WCONHIST 
+WCONHIST
      'B-3H'      'OPEN'      'RESV'   1278.300    295.700 259806.703  5* /
      'B-2H'      'OPEN'      'RESV'   6010.300      0.000 642925.188  5* /
     'D-3AH'      'OPEN'      'RESV'   2114.500   1956.800 237501.406  5* /
@@ -6441,7 +6441,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   9925.400  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   8643.400  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 1622912.250  1* 600 /
@@ -6456,7 +6456,7 @@ DATES
  2 'SEP' 2003 /
 /
 
-WCONHIST 
+WCONHIST
      'B-3H'      'OPEN'      'RESV'   1250.813    275.300 270783.951  5* /
      'B-2H'      'OPEN'      'RESV'   6491.988      0.000 740241.086  5* /
     'D-3AH'      'OPEN'      'RESV'   2096.625   1845.488 250948.398  5* /
@@ -6468,7 +6468,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'RESV'    142.425      0.000  20406.413  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 987983.711  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'  12930.200  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 1639903.656  1* 600 /
@@ -6478,7 +6478,7 @@ WCONINJE
      'F-4H'     'WATER'  1*      'RATE'   2908.112  1* 600 /
 /
 
-GECON 
+GECON
     'FIELD'   1000.000  5*        'NO'  1* /
 /
 
@@ -6491,11 +6491,11 @@ DATES
 --      : >> --plug Ile 1.3 due to water
 --  WARN: B-1H Squeeze interval 3317.734605 4301.100070 Top changed to 3317.810210
 --  WARN: B-1H Squeeze interval 4065.999853 4301.100070 Top changed to 4066.076648
-WELOPEN 
+WELOPEN
      'B-1H'      'SHUT'    0    0    0  2* /
 /
 
-WCONHIST 
+WCONHIST
      'B-3H'      'OPEN'      'RESV'   1125.500    257.850 244711.852  5* /
      'B-2H'      'OPEN'      'RESV'   6483.700      0.000 741964.938  5* /
     'D-3AH'      'OPEN'      'RESV'   2099.950   1925.100 252325.055  5* /
@@ -6507,7 +6507,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 1119372.250  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'  12811.200  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 2636494.875  1* 600 /
@@ -6527,12 +6527,12 @@ DATES
 --      : B-1H Connection 15 37  6 Perf. Len   1.07 (  1.1%)
 --  WARN: B-1H Connection 15 37  6 SUPPRESSED, perf percentage too small
 --      : B-1H Connection 15 37  7 Perf. Len  31.73 ( 36.1%)
-COMPDAT 
--- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro 
+COMPDAT
+-- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro
      'B-1H'   15   37    7    7      'OPEN'  1*     32.414      0.216   2564.617  2*         'Y'      7.489 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
      'B-3H'      'OPEN'      'RESV'   1150.800    274.300 248273.094  5* /
      'B-2H'      'OPEN'      'RESV'   5929.500      0.000 673277.500  5* /
@@ -6544,7 +6544,7 @@ WCONHIST
      'E-2H'      'OPEN'      'RESV'   2905.700   1698.200 313435.688  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 1151451.750  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'  12756.800  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 2678413.000  1* 600 /
@@ -6566,17 +6566,17 @@ DATES
 --      : B-1H Connection 15 37  6 Perf. Len   1.07 (  1.1%)
 --  WARN: B-1H Connection 15 37  6 SUPPRESSED, perf percentage too small
 --      : B-1H Connection 15 37  7 Perf. Len  31.73 ( 36.1%)
-WELOPEN 
+WELOPEN
      'B-1H'      'SHUT'    0    0    0  2* /
 /
 
-COMPDAT 
--- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro 
+COMPDAT
+-- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro
      'B-1H'   15   36    5    5      'OPEN'  1*     51.932      0.216   4231.565  2*         'Y'      8.499 /
      'B-1H'   15   37    7    7      'OPEN'  1*     32.414      0.216   2564.617  2*         'Y'      7.489 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
      'B-3H'      'OPEN'      'RESV'   1198.000    290.433 264858.104  5* /
      'B-2H'      'OPEN'      'RESV'   6041.733      0.000 703291.500  5* /
@@ -6588,7 +6588,7 @@ WCONHIST
      'E-2H'      'OPEN'      'RESV'   3179.833   1886.967 350889.865  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 1191180.667  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'  12859.767  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 2229838.667  1* 600 /
@@ -6610,17 +6610,17 @@ DATES
 --      : B-1H Connection 15 37  6 Perf. Len   1.07 (  1.1%)
 --  WARN: B-1H Connection 15 37  6 SUPPRESSED, perf percentage too small
 --      : B-1H Connection 15 37  7 Perf. Len  31.73 ( 36.1%)
-WELOPEN 
+WELOPEN
      'B-1H'      'SHUT'    0    0    0  2* /
 /
 
-COMPDAT 
--- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro 
+COMPDAT
+-- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro
      'B-1H'   15   36    5    5      'OPEN'  1*     51.932      0.216   4231.565  2*         'Y'      8.499 /
      'B-1H'   15   37    7    7      'OPEN'  1*     32.414      0.216   2564.617  2*         'Y'      7.489 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   1049.507      0.000 231765.741  5* /
      'B-3H'      'OPEN'      'RESV'    875.567    167.747 202096.695  5* /
      'B-2H'      'OPEN'      'RESV'   6301.233      0.000 766403.071  5* /
@@ -6633,7 +6633,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'RESV'    665.467      0.000  92983.668  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 1488170.696  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'  11062.467  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 2036849.183  1* 600 /
@@ -6649,7 +6649,7 @@ DATES
  1 'OCT' 2003 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   1237.682      0.000 395602.251  5* /
      'B-3H'      'OPEN'      'RESV'   1085.595    239.423 263641.059  5* /
      'B-2H'      'OPEN'      'RESV'   6762.845      0.000 802390.307  5* /
@@ -6662,7 +6662,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'RESV'   2424.868      4.468 308436.480  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'  12324.864  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'  11344.041  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 3087495.659  1* 600 /
@@ -6673,11 +6673,11 @@ WCONINJE
      'F-4H'     'WATER'  1*      'RATE'   3249.791  1* 600 /
 /
 
-RPTSCHED 
- 0 0 0 0 0 0 2 2 2 0 1 1 0 1 1 0 0 / 
+RPTSCHED
+ 0 0 0 0 0 0 2 2 2 0 1 1 0 1 1 0 0 /
 
 
-GECON 
+GECON
     'FIELD'   1000.000  5*        'NO'  1* /
 /
 
@@ -6719,12 +6719,12 @@ DATES
 --      : D-1CH Connection 22 23  7 Perf. Len  77.25 ( 87.3%)
 --      : D-1CH Connection 21 23  7 Perf. Len   6.59 (  7.3%)
 --      : D-1CH Connection 21 22  7 Perf. Len  77.91 ( 88.3%)
-WELSPECS 
+WELSPECS
     'D-1CH'   'MANI-D1'   25   37  1*       'OIL'  2*      'STOP'  4* /
 /
 
-COMPDAT 
--- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro 
+COMPDAT
+-- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro
     'D-1CH'   24   31    5    5      'OPEN'  1*     19.917      0.216   1441.266  2*         'Y'      5.215 /
     'D-1CH'   24   30    5    5      'OPEN'  1*     14.238      0.216   1021.922  2*         'Y'      5.052 /
     'D-1CH'   23   30    7    7      'OPEN'  1*     16.976      0.216   1219.509  2*         'Y'      5.069 /
@@ -6742,7 +6742,7 @@ COMPDAT
     'D-1CH'   21   22    7    7      'OPEN'  1*     41.777      0.216   3146.139  2*         'Y'      6.105 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   1359.367      0.000 598497.726  5* /
      'B-3H'      'OPEN'      'RESV'   1180.356    267.356 290941.955  5* /
      'B-2H'      'OPEN'      'RESV'   6793.167      0.000 765072.486  5* /
@@ -6756,7 +6756,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'RESV'   2305.611      5.978 278589.378  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'  11930.478  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'  10899.211  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 3097415.056  1* 600 /
@@ -6766,10 +6766,10 @@ WCONINJE
      'F-4H'     'WATER'  1*      'RATE'   3307.356  1* 600 /
 /
 
-RPTSCHED 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 / 
+RPTSCHED
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 /
 
 
 -- 2186.000000 days from start of simulation ( 6 'NOV' 1997 )
@@ -6777,7 +6777,7 @@ DATES
  1 'NOV' 2003 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   1408.071      0.000 605635.219  5* /
      'B-3H'      'OPEN'      'RESV'    749.771    194.724 181377.216  5* /
      'B-2H'      'OPEN'      'RESV'   6608.029      0.000 726591.577  5* /
@@ -6791,7 +6791,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'RESV'   1087.912      3.424 131085.201  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'  11002.618  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   9962.377  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 2614016.051  1* 600 /
@@ -6806,11 +6806,11 @@ DATES
  18 'NOV' 2003 /
 /
 
-WELOPEN 
+WELOPEN
      'C-4H'      'SHUT'  5* /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   1442.592      0.000 636829.274  5* /
      'B-3H'      'OPEN'      'RESV'    777.723    179.985 191938.809  5* /
      'B-2H'      'OPEN'      'RESV'   6734.977      0.000 760755.688  5* /
@@ -6824,7 +6824,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'  11874.277  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'  10775.100  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 3673105.654  1* 600 /
@@ -6839,7 +6839,7 @@ DATES
  1 'DEC' 2003 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   1410.257      0.000 622569.723  5* /
      'B-3H'      'OPEN'      'RESV'    908.843    208.643 192854.373  5* /
      'B-2H'      'OPEN'      'RESV'   6463.100      0.000 730454.598  5* /
@@ -6853,7 +6853,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'RESV'    236.457      0.729  28321.442  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'  12123.171  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'  11004.200  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 3414281.893  1* 600 /
@@ -6889,12 +6889,12 @@ DATES
 --      : C-4AH Connection 29 52 15 Perf. Len   9.02 ( 89.7%)
 --      : WCONINJE >> for RFT pressure points
 --      : WRFTPLT >> RFT recorded only once
-WELSPECS 
+WELSPECS
     'C-4AH'    'MANI-C'   29   51  1*       'OIL'  7* /
 /
 
-COMPDAT 
--- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro 
+COMPDAT
+-- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro
     'C-4AH'   29   51    1    1      'OPEN'  1*     23.332      0.216   2235.565  2*         'Z'     18.317 /
     'C-4AH'   29   51    2    2      'OPEN'  1*      6.052      0.216    575.515  2*         'Z'     17.628 /
     'C-4AH'   29   51    3    3      'OPEN'  1*     13.822      0.216   1229.859  2*         'Z'     12.701 /
@@ -6912,7 +6912,7 @@ COMPDAT
     'C-4AH'   29   52   15   15      'OPEN'  1*      1.969      0.216    189.710  2*         'Z'     18.864 /
 /
 
-WCONHIST 
+WCONHIST
     'C-4AH'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
      'B-1H'      'OPEN'      'RESV'   1496.800      0.000 691770.375  5* /
      'B-3H'      'OPEN'      'RESV'    899.500    215.800 199535.000  5* /
@@ -6927,7 +6927,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'RESV'   1233.000      3.400 156515.406  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'  11985.500  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'  10871.300  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 2661792.500  1* 600 /
@@ -6937,7 +6937,7 @@ WCONINJE
      'F-4H'     'WATER'  1*      'RATE'   2976.300  1* 600 /
 /
 
-WRFTPLT 
+WRFTPLT
     'C-4AH'       'YES'       'YES'  1* /
 /
 
@@ -6950,11 +6950,11 @@ DATES
 --      : >> --for RFT pressure points
 --  WARN: C-4AH Squeeze interval 3364.000000 3495.000000 Top changed to 3381.327970
 --  WARN: C-4AH Squeeze interval 3414.358884 3495.000000 Top changed to 3423.286488
-WELOPEN 
+WELOPEN
     'C-4AH'      'SHUT'    0    0    0  2* /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   1435.956      0.000 632356.549  5* /
      'B-3H'      'OPEN'      'RESV'    751.900    158.367 158891.479  5* /
      'B-2H'      'OPEN'      'RESV'   5788.111      0.000 654375.684  5* /
@@ -6968,7 +6968,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'RESV'    144.211     34.811  29651.611  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'  11743.989  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'  10597.033  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 3084211.986  1* 600 /
@@ -6983,7 +6983,7 @@ DATES
  18 'DEC' 2003 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   1431.350      0.000 669732.804  5* /
      'B-3H'      'OPEN'      'RESV'    981.907    216.186 220836.980  5* /
      'B-2H'      'OPEN'      'RESV'   6590.957      0.000 789527.451  5* /
@@ -6997,7 +6997,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 284868.951  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'  11870.579  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 502809.804  1* 600 /
@@ -7007,7 +7007,7 @@ WCONINJE
      'F-4H'     'WATER'  1*      'RATE'   1908.643  1* 600 /
 /
 
-GECON 
+GECON
     'FIELD'   1000.000  5*        'NO'  1* /
 /
 
@@ -7016,7 +7016,7 @@ DATES
  1 'JAN' 2004 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   1340.311     43.356 674918.003  5* /
      'B-3H'      'OPEN'      'RESV'   1021.456    207.900 244121.878  5* /
      'B-2H'      'OPEN'      'RESV'   6173.828     93.106 797008.740  5* /
@@ -7030,7 +7030,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'RESV'      4.206      0.811   1010.517  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 1117235.410  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   9278.033  1* 600 /
      'C-3H'       'GAS'  1*      'RATE'      0.000  1* 600 /
@@ -7040,8 +7040,8 @@ WCONINJE
      'F-4H'     'WATER'  1*      'RATE'   1804.017  1* 600 /
 /
 
-RPTSCHED 
- 0 0 0 0 0 0 2 2 2 0 1 1 0 1 1 0 0 / 
+RPTSCHED
+ 0 0 0 0 0 0 2 2 2 0 1 1 0 1 1 0 0 /
 
 
 -- 2265.000000 days from start of simulation ( 6 'NOV' 1997 )
@@ -7049,7 +7049,7 @@ DATES
  19 'JAN' 2004 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   1094.600    332.800 560905.313  5* /
      'B-3H'      'OPEN'      'RESV'    969.400    174.900 212885.594  5* /
      'B-2H'      'OPEN'      'RESV'   5021.700    217.300 612679.625  5* /
@@ -7063,7 +7063,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 218515.000  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   1419.900  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'    541.200  1* 600 /
@@ -7073,13 +7073,13 @@ WCONINJE
      'F-4H'     'WATER'  1*      'RATE'   1990.200  1* 600 /
 /
 
-RPTSCHED 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 / 
+RPTSCHED
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 /
 
 
-GECON 
+GECON
     'FIELD'   1000.000  5*        'NO'  1* /
 /
 
@@ -7106,8 +7106,8 @@ DATES
 --      : C-4AH Connection 29 52  9 Perf. Len   3.64 (111.8%)
 --      : C-4AH Connection 29 52 10 Perf. Len   8.05 ( 89.8%)
 --      : GECON >> C-4AH switches from water to gas injection
-COMPDAT 
--- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro 
+COMPDAT
+-- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro
     'C-4AH'   29   52    5    5      'OPEN'  1*      7.123      0.216    676.723  2*         'Z'     17.544 /
     'C-4AH'   29   52    6    6      'OPEN'  1*      1.703      0.216    162.180  2*         'Z'     17.743 /
     'C-4AH'   29   52    7    7      'OPEN'  1*      8.904      0.216    851.095  2*         'Z'     18.096 /
@@ -7116,7 +7116,7 @@ COMPDAT
     'C-4AH'   29   52   10   10      'OPEN'  1*     20.273      0.216   1954.730  2*         'Z'     18.919 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   1188.917    400.483 668307.979  5* /
      'B-3H'      'OPEN'      'RESV'   1219.617    244.217 294144.560  5* /
      'B-2H'      'OPEN'      'RESV'   5874.917    281.775 786119.510  5* /
@@ -7129,7 +7129,7 @@ WCONHIST
      'E-2H'      'OPEN'      'RESV'   2653.533    848.608 408347.052  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 2003787.792  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   5827.083  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'   2321.425  1* 600 /
@@ -7140,11 +7140,11 @@ WCONINJE
      'F-4H'     'WATER'  1*      'RATE'   1840.450  1* 600 /
 /
 
-WTRACER 
+WTRACER
     'C-4AH'       'SEA'      1.000  1* /
 /
 
-GECON 
+GECON
     'FIELD'   1000.000  5*        'NO'  1* /
 /
 
@@ -7153,7 +7153,7 @@ DATES
  1 'FEB' 2004 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   1138.986    418.176 617262.263  5* /
      'B-3H'      'OPEN'      'RESV'   1444.021    327.552 290615.863  5* /
      'B-2H'      'OPEN'      'RESV'   5616.876    511.731 864377.836  5* /
@@ -7166,7 +7166,7 @@ WCONHIST
      'E-2H'      'OPEN'      'RESV'   2354.555    882.962 354212.439  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 2197874.259  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   7776.334  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'   8913.755  1* 600 /
@@ -7182,7 +7182,7 @@ DATES
  1 'MAR' 2004 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'   1053.216    421.216 507597.243  5* /
      'B-3H'      'OPEN'      'RESV'   1119.061    294.200 162122.963  5* /
      'B-2H'      'OPEN'      'RESV'   5310.100    746.555 832930.379  5* /
@@ -7196,7 +7196,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'RESV'     45.658     24.652   6270.626  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 2127892.173  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   9665.523  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'   9045.152  1* 600 /
@@ -7212,7 +7212,7 @@ DATES
  1 'APR' 2004 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'    867.883    411.687 435386.272  5* /
      'B-3H'      'OPEN'      'RESV'   1730.600    381.117 282607.182  5* /
      'B-2H'      'OPEN'      'RESV'   3069.487    611.350 429334.251  5* /
@@ -7225,7 +7225,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'RESV'    434.710    332.463  72243.496  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 2330681.121  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   9612.317  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'   8789.753  1* 600 /
@@ -7236,8 +7236,8 @@ WCONINJE
      'F-4H'     'WATER'  1*      'RATE'   1849.790  1* 600 /
 /
 
-RPTSCHED 
- 0 0 0 0 0 0 2 2 2 0 1 1 0 1 1 0 0 / 
+RPTSCHED
+ 0 0 0 0 0 0 2 2 2 0 1 1 0 1 1 0 0 /
 
 
 -- 2368.000000 days from start of simulation ( 6 'NOV' 1997 )
@@ -7245,7 +7245,7 @@ DATES
  1 'MAY' 2004 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'    580.835    371.439 309477.265  5* /
      'B-3H'      'OPEN'      'RESV'   1882.374    433.852 320703.260  5* /
      'B-2H'      'OPEN'      'RESV'   3727.142    855.032 461091.895  5* /
@@ -7258,7 +7258,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'RESV'    156.148    170.419  10801.481  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 2226928.843  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   9836.877  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'   9244.529  1* 600 /
@@ -7269,10 +7269,10 @@ WCONINJE
      'F-4H'     'WATER'  1*      'RATE'   1837.474  1* 600 /
 /
 
-RPTSCHED 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 / 
+RPTSCHED
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 /
 
 
 -- 2399.000000 days from start of simulation ( 6 'NOV' 1997 )
@@ -7280,7 +7280,7 @@ DATES
  1 'JUN' 2004 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'    509.760    384.433 613348.690  5* /
      'B-3H'      'OPEN'      'RESV'   1940.033    428.553 309920.046  5* /
      'B-2H'      'OPEN'      'RESV'   2681.617    964.097 400990.893  5* /
@@ -7293,7 +7293,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'RESV'    321.470    371.737  26626.037  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 2987511.758  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'  10844.303  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'   4330.060  1* 600 /
@@ -7309,7 +7309,7 @@ DATES
  1 'JUL' 2004 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'    422.500    350.450 504273.047  5* /
      'B-3H'      'OPEN'      'RESV'   1948.750    472.550 308828.563  5* /
      'B-2H'      'OPEN'      'RESV'   2516.300   1070.800 394592.844  5* /
@@ -7322,7 +7322,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'RESV'    544.700    888.250  61799.500  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 2911072.375  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   9845.950  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'   8764.450  1* 600 /
@@ -7333,8 +7333,8 @@ WCONINJE
      'F-4H'     'WATER'  1*      'RATE'   1919.200  1* 600 /
 /
 
-RPTSCHED 
- 0 0 0 0 0 0 2 2 2 0 1 1 0 1 1 0 0 / 
+RPTSCHED
+ 0 0 0 0 0 0 2 2 2 0 1 1 0 1 1 0 0 /
 
 
 -- 2431.000000 days from start of simulation ( 6 'NOV' 1997 )
@@ -7367,12 +7367,12 @@ DATES
 --      : B-4DH Connection 19 24  6 Perf. Len  18.13 ( 21.3%)
 --      : B-4DH Connection 19 24  5 Perf. Len  23.38 ( 26.7%)
 --      : B-4DH Connection 20 24  5 Perf. Len  15.98 ( 21.8%)
-WELSPECS 
+WELSPECS
     'B-4DH'  'B1-DUMMY'   10   29  1*       'OIL'  2*      'STOP'  4* /
 /
 
-COMPDAT 
--- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro 
+COMPDAT
+-- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro
     'B-4DH'   16   25    8    8      'OPEN'  1*     15.881      0.216   1261.727  2*         'X'      7.622 /
     'B-4DH'   16   25    9    9      'OPEN'  1*     87.421      0.216   6660.474  2*         'X'      6.400 /
     'B-4DH'   17   25    9    9      'OPEN'  1*    107.811      0.216   8028.364  2*         'X'      5.836 /
@@ -7386,7 +7386,7 @@ COMPDAT
     'B-4DH'   20   24    5    5      'OPEN'  1*     11.634      0.216    900.185  2*         'X'      6.820 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'    215.995    164.968 276569.805  5* /
      'B-3H'      'OPEN'      'RESV'   1903.218    456.977 287467.330  5* /
      'B-2H'      'OPEN'      'RESV'   1845.750    715.650 274334.677  5* /
@@ -7401,7 +7401,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'RESV'    166.059    286.818  18705.518  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 2490669.347  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'  10257.032  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'   7697.327  1* 600 /
@@ -7412,10 +7412,10 @@ WCONINJE
      'F-4H'     'WATER'  1*      'RATE'   2011.923  1* 600 /
 /
 
-RPTSCHED 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 / 
+RPTSCHED
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 /
 
 
 -- 2453.000000 days from start of simulation ( 6 'NOV' 1997 )
@@ -7423,7 +7423,7 @@ DATES
  25 'JUL' 2004 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'    560.486    424.843 836169.598  5* /
      'B-3H'      'OPEN'      'RESV'   1798.729    451.100 289216.078  5* /
      'B-2H'      'OPEN'      'RESV'   1788.471    720.843 284747.752  5* /
@@ -7438,7 +7438,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'RESV'    495.943    860.057  60049.670  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 1080894.259  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'  11255.957  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 1794042.839  1* 600 /
@@ -7449,7 +7449,7 @@ WCONINJE
      'F-4H'     'WATER'  1*      'RATE'   1412.857  1* 600 /
 /
 
-GECON 
+GECON
     'FIELD'   1000.000  5*        'NO'  1* /
 /
 
@@ -7458,7 +7458,7 @@ DATES
  1 'AUG' 2004 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'    419.671    330.607 641055.210  5* /
      'B-3H'      'OPEN'      'RESV'   1619.000    417.307 259138.290  5* /
      'B-2H'      'OPEN'      'RESV'   1834.700    757.950 291540.770  5* /
@@ -7473,7 +7473,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'RESV'    274.271    482.864  31206.807  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 1519714.866  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'  11915.714  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 709887.052  1* 600 /
@@ -7489,7 +7489,7 @@ DATES
  15 'AUG' 2004 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
      'B-3H'      'OPEN'      'RESV'   1688.200    411.100 252355.594  5* /
      'B-2H'      'OPEN'      'RESV'   2288.200    894.800 338907.094  5* /
@@ -7504,7 +7504,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'RESV'    828.600   1403.500  92654.602  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 2765929.500  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'  12552.100  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 419076.000  1* 600 /
@@ -7515,8 +7515,8 @@ WCONINJE
      'F-4H'     'WATER'  1*      'RATE'   1897.000  1* 600 /
 /
 
-RPTRST 
- 2 / 
+RPTRST
+ 2 /
 
 
 -- 2475.000000 days from start of simulation ( 6 'NOV' 1997 )
@@ -7524,7 +7524,7 @@ DATES
  16 'AUG' 2004 /
 /
 
-WCONHIST 
+WCONHIST
      'B-3H'      'OPEN'      'RESV'    806.362    215.256 116149.438  5* /
      'B-2H'      'OPEN'      'RESV'    812.837    346.669 116166.139  5* /
     'B-4DH'      'OPEN'      'RESV'    279.987      0.000  92621.169  5* /
@@ -7537,7 +7537,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'RESV'     30.794     54.756   3313.937  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 1210930.656  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   4587.975  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 206118.946  1* 600 /
@@ -7548,8 +7548,8 @@ WCONINJE
      'F-4H'     'WATER'  1*      'RATE'    709.719  1* 600 /
 /
 
-RPTRST 
- 0 / 
+RPTRST
+ 0 /
 
 
 -- 2491.000000 days from start of simulation ( 6 'NOV' 1997 )
@@ -7557,7 +7557,7 @@ DATES
  1 'SEP' 2004 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'     23.400     16.895  30691.715  5* /
      'B-3H'      'OPEN'      'RESV'   1267.116    331.021 167780.211  5* /
      'B-2H'      'OPEN'      'RESV'    896.258    448.747 115003.773  5* /
@@ -7572,7 +7572,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'RESV'    150.921    227.611  15143.242  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 1279385.329  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   5998.795  1* 600 /
      'C-3H'       'GAS'  1*      'RATE'   7547.495  1* 600 /
@@ -7588,7 +7588,7 @@ DATES
  20 'SEP' 2004 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
      'B-3H'      'OPEN'      'RESV'   3416.173    860.636 469231.969  5* /
      'B-2H'      'OPEN'      'RESV'   2276.709    764.273 327852.094  5* /
@@ -7603,7 +7603,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'RESV'    469.791    709.400  48909.610  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'  11057.064  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   9970.209  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 1936354.193  1* 600 /
@@ -7614,7 +7614,7 @@ WCONINJE
      'F-4H'     'WATER'  1*      'RATE'   1761.055  1* 600 /
 /
 
-GECON 
+GECON
     'FIELD'   1000.000  5*        'NO'  1* /
 /
 
@@ -7623,7 +7623,7 @@ DATES
  1 'OCT' 2004 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'    197.681     99.658 124535.120  5* /
      'B-3H'      'OPEN'      'RESV'   3275.119   1039.742 431317.377  5* /
      'B-2H'      'OPEN'      'RESV'   2173.171    768.787 309232.714  5* /
@@ -7638,7 +7638,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'RESV'    311.584    644.139  31898.545  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   9252.023  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   8338.861  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 1589347.482  1* 600 /
@@ -7649,8 +7649,8 @@ WCONINJE
      'F-4H'     'WATER'  1*      'RATE'   1534.458  1* 600 /
 /
 
-RPTSCHED 
- 0 0 0 0 0 0 2 2 2 0 1 1 0 1 1 0 0 / 
+RPTSCHED
+ 0 0 0 0 0 0 2 2 2 0 1 1 0 1 1 0 0 /
 
 
 -- 2552.000000 days from start of simulation ( 6 'NOV' 1997 )
@@ -7658,7 +7658,7 @@ DATES
  1 'NOV' 2004 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'    298.993    159.140 189181.867  5* /
      'B-3H'      'OPEN'      'RESV'   2882.183   1124.557 333573.130  5* /
      'B-2H'      'OPEN'      'RESV'   1667.133    735.533 204679.267  5* /
@@ -7673,7 +7673,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'RESV'    141.800    303.163  13892.537  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   9976.780  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   8911.793  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 1291243.185  1* 600 /
@@ -7684,10 +7684,10 @@ WCONINJE
      'F-4H'     'WATER'  1*      'RATE'   1395.413  1* 600 /
 /
 
-RPTSCHED 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 / 
+RPTSCHED
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 /
 
 
 -- 2582.000000 days from start of simulation ( 6 'NOV' 1997 )
@@ -7695,7 +7695,7 @@ DATES
  1 'DEC' 2004 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'    193.455    102.506 127598.012  5* /
      'B-3H'      'OPEN'      'RESV'   2917.826   1144.745 342012.763  5* /
      'B-2H'      'OPEN'      'RESV'    561.371    436.265  58419.939  5* /
@@ -7710,7 +7710,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'RESV'    151.242    327.532  14605.529  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'  10121.652  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   9064.145  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 1627788.907  1* 600 /
@@ -7726,7 +7726,7 @@ DATES
  1 'JAN' 2005 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'    295.391    240.564 121996.628  5* /
      'B-3H'      'OPEN'      'RESV'   2149.555   1547.027 317469.784  5* /
      'B-2H'      'OPEN'      'RESV'    811.782    526.927 141410.571  5* /
@@ -7741,7 +7741,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'RESV'     49.164    109.573   5262.127  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'  11130.364  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   9943.573  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 811387.962  1* 600 /
@@ -7752,8 +7752,8 @@ WCONINJE
      'F-4H'     'WATER'  1*      'RATE'   1733.445  1* 600 /
 /
 
-RPTSCHED 
- 0 0 0 0 0 0 2 2 2 0 1 1 0 1 1 0 0 / 
+RPTSCHED
+ 0 0 0 0 0 0 2 2 2 0 1 1 0 1 1 0 0 /
 
 
 -- 2624.000000 days from start of simulation ( 6 'NOV' 1997 )
@@ -7765,11 +7765,11 @@ DATES
 --  WARN: E-3AH Squeeze interval 3850.000000 4849.259653 Top changed to 3860.311348
 --  WARN: E-3AH Squeeze interval 4432.286705 4849.259653 Top changed to 4573.023045
 --  WARN: E-3AH Squeeze interval 4661.143582 4849.259653 Top changed to 4726.013595
-WELOPEN 
+WELOPEN
     'E-3AH'      'SHUT'    0    0    0  2* /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'    342.779    338.400 138778.615  5* /
      'B-3H'      'OPEN'      'RESV'   1828.086   1601.950 264931.327  5* /
      'B-2H'      'OPEN'      'RESV'    826.629    669.629 140657.252  5* /
@@ -7784,7 +7784,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'RESV'    352.736    831.379  33197.507  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'  10985.528  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   9776.029  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 540756.451  1* 600 /
@@ -7795,10 +7795,10 @@ WCONINJE
      'F-4H'     'WATER'  1*      'RATE'   1580.493  1* 600 /
 /
 
-RPTSCHED 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 / 
+RPTSCHED
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 /
 
 
 -- 2638.000000 days from start of simulation ( 6 'NOV' 1997 )
@@ -7806,7 +7806,7 @@ DATES
  26 'JAN' 2005 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'    455.983    453.783 197652.682  5* /
      'B-3H'      'OPEN'      'RESV'   1577.733   1392.917 245949.484  5* /
      'B-2H'      'OPEN'      'RESV'    981.683    795.250 178229.102  5* /
@@ -7820,7 +7820,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'  11604.750  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'  10350.350  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'   3669.933  1* 600 /
@@ -7831,7 +7831,7 @@ WCONINJE
      'F-4H'     'WATER'  1*      'RATE'   1627.617  1* 600 /
 /
 
-GECON 
+GECON
     'FIELD'   1000.000  5*        'NO'  1* /
 /
 
@@ -7840,7 +7840,7 @@ DATES
  1 'FEB' 2005 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'    501.636    516.457 214585.097  5* /
      'B-3H'      'OPEN'      'RESV'   1923.761   1756.139 294317.640  5* /
      'B-2H'      'OPEN'      'RESV'    863.686    726.518 155552.465  5* /
@@ -7853,7 +7853,7 @@ WCONHIST
      'E-2H'      'OPEN'      'RESV'   1665.268   2784.825 182761.139  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'  11240.532  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   9860.139  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'   3835.354  1* 600 /
@@ -7869,7 +7869,7 @@ DATES
  1 'MAR' 2005 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'    213.427    229.436  95281.072  5* /
      'B-3H'      'OPEN'      'RESV'   1961.832   1809.695 312297.988  5* /
      'B-2H'      'OPEN'      'RESV'    821.214    696.923 153787.455  5* /
@@ -7883,7 +7883,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'RESV'    542.018   1351.936  55681.541  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'  10259.286  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   9123.164  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'   3265.482  1* 600 /
@@ -7929,12 +7929,12 @@ DATES
 --      : E-3BH Connection 13 69 21 Perf. Len   6.30 (  7.2%)
 --      : E-3BH Connection 13 69 22 Perf. Len  35.28 (139.1%)
 --      : WRFTPLT >> RFT recorded only once
-WELSPECS 
+WELSPECS
     'E-3BH'   'MANI-E1'   15   74  1*       'OIL'  2*      'STOP'  4* /
 /
 
-COMPDAT 
--- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro 
+COMPDAT
+-- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro
     'E-3BH'   15   74    1    1      'OPEN'  1*     72.602      0.216   6469.182  2*         'Y'     12.786 /
     'E-3BH'   15   74    2    2      'OPEN'  1*      9.222      0.216    798.702  2*         'Y'     11.183 /
     'E-3BH'   15   73    2    2      'OPEN'  1*     58.179      0.216   5009.146  2*         'Y'     10.884 /
@@ -7963,7 +7963,7 @@ COMPDAT
     'E-3BH'   13   69   22   22      'OPEN'  1*    384.977      0.216  37246.680  2*         'Z'     19.259 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'    436.100    500.300 197008.000  5* /
      'B-3H'      'OPEN'      'RESV'   1925.000   1956.600 311008.906  5* /
      'B-2H'      'OPEN'      'RESV'    871.400    816.300 165797.203  5* /
@@ -7978,11 +7978,11 @@ WCONHIST
     'E-4AH'      'OPEN'      'RESV'    479.500   1318.200  49951.000  5* /
 /
 
-WCONPROD 
+WCONPROD
     'E-3BH'      'SHUT' 15* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'  11519.500  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'  10222.500  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'   3970.600  1* 600 /
@@ -7993,7 +7993,7 @@ WCONINJE
      'F-4H'     'WATER'  1*      'RATE'   1773.000  1* 600 /
 /
 
-WRFTPLT 
+WRFTPLT
     'E-3BH'       'YES'       'YES'  1* /
 /
 
@@ -8005,11 +8005,11 @@ DATES
 --      : E-3BH Squeeze  Top:  2916.21 Bot:  3331.59
 --  WARN: E-3BH Squeeze interval 3015.589104 3331.590088 Top changed to 3037.589473
 --  WARN: E-3BH Squeeze interval 3331.563120 3331.590088 below grid
-WELOPEN 
+WELOPEN
     'E-3BH'      'SHUT'    0    0    0  2* /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'    157.050    165.900  72027.113  5* /
      'B-3H'      'OPEN'      'RESV'   2040.063   1976.362 334710.375  5* /
      'B-2H'      'OPEN'      'RESV'    875.438    781.037 169138.939  5* /
@@ -8023,7 +8023,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'RESV'    450.912   1178.862  47702.450  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'  11406.000  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'  10120.838  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'   3967.100  1* 600 /
@@ -8039,7 +8039,7 @@ DATES
  1 'APR' 2005 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'    136.517    118.404  54870.366  5* /
      'B-3H'      'OPEN'      'RESV'   2014.617   2481.387 297130.730  5* /
      'B-2H'      'OPEN'      'RESV'   1246.704   1029.878 177228.627  5* /
@@ -8053,7 +8053,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'RESV'    145.974    294.404  14117.065  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'  10238.304  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   9055.352  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'   3463.965  1* 600 /
@@ -8064,8 +8064,8 @@ WCONINJE
      'F-4H'     'WATER'  1*      'RATE'   1557.130  1* 600 /
 /
 
-RPTSCHED 
- 0 0 0 0 0 0 2 2 2 0 1 1 0 1 1 0 0 / 
+RPTSCHED
+ 0 0 0 0 0 0 2 2 2 0 1 1 0 1 1 0 0 /
 
 
 -- 2726.000000 days from start of simulation ( 6 'NOV' 1997 )
@@ -8090,12 +8090,12 @@ DATES
 --      : E-3CH Connection 11 63  5 Perf. Len   6.09 (  7.0%)
 --      : E-3CH Connection 10 62  5 Perf. Len   3.15 (  3.8%)
 --      : E-3CH Connection 10 61  5 Perf. Len  18.73 ( 21.9%)
-WELSPECS 
+WELSPECS
     'E-3CH'   'MANI-E1'   15   74  1*       'OIL'  2*      'STOP'  4* /
 /
 
-COMPDAT 
--- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro 
+COMPDAT
+-- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro
     'E-3CH'   13   70    5    5      'OPEN'  1*      4.798      0.216    387.734  2*         'Y'      8.197 /
     'E-3CH'   13   69    5    5      'OPEN'  1*     31.679      0.216   2558.741  2*         'Y'      8.181 /
     'E-3CH'   13   68    5    5      'OPEN'  1*      7.111      0.216    571.629  2*         'Y'      8.014 /
@@ -8106,7 +8106,7 @@ COMPDAT
     'E-3CH'   10   61    5    5      'OPEN'  1*      4.384      0.216    350.687  2*         'Y'      7.848 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
      'B-3H'      'OPEN'      'RESV'   2129.100   2977.229 317268.589  5* /
      'B-2H'      'OPEN'      'RESV'   1367.000   1213.471 199348.915  5* /
@@ -8121,7 +8121,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'  10579.229  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   9363.372  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'   3460.800  1* 600 /
@@ -8132,10 +8132,10 @@ WCONINJE
      'F-4H'     'WATER'  1*      'RATE'   1567.529  1* 600 /
 /
 
-RPTSCHED 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 / 
+RPTSCHED
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 /
 
 
 -- 2733.000000 days from start of simulation ( 6 'NOV' 1997 )
@@ -8143,7 +8143,7 @@ DATES
  1 'MAY' 2005 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'     52.565     55.523  21218.065  5* /
      'B-3H'      'OPEN'      'RESV'   2091.713   3226.087 296830.602  5* /
      'B-2H'      'OPEN'      'RESV'   1391.065   1270.890 197343.926  5* /
@@ -8158,7 +8158,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'RESV'     41.045    113.123   6633.910  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'  10434.552  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   9196.152  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'   3681.797  1* 600 /
@@ -8174,7 +8174,7 @@ DATES
  1 'JUN' 2005 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
      'B-3H'      'OPEN'      'RESV'   2077.200   3044.800 277095.688  5* /
      'B-2H'      'OPEN'      'RESV'    939.300    815.700 125296.703  5* /
@@ -8189,7 +8189,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'  10284.200  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   9012.300  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'   3862.500  1* 600 /
@@ -8205,11 +8205,11 @@ DATES
  2 'JUN' 2005 /
 /
 
-WELOPEN 
+WELOPEN
     'D-3AH'      'SHUT'    0    0    0  2* /
 /
 
-WCONHIST 
+WCONHIST
      'B-3H'      'OPEN'      'RESV'   1981.442   3286.596 285359.550  5* /
      'B-2H'      'OPEN'      'RESV'   1413.317   1314.362 204793.576  5* /
     'B-4DH'      'OPEN'      'RESV'    927.296    732.092 618406.507  5* /
@@ -8222,7 +8222,7 @@ WCONHIST
      'E-2H'      'OPEN'      'RESV'    424.304   2355.438  46021.829  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   9837.854  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   8664.992  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'   3573.208  1* 600 /
@@ -8238,7 +8238,7 @@ DATES
  26 'JUN' 2005 /
 /
 
-WCONHIST 
+WCONHIST
      'B-3H'      'OPEN'      'RESV'   1456.160   2618.660 219996.419  5* /
      'B-2H'      'OPEN'      'RESV'   1349.940   1305.700 203524.919  5* /
     'B-4DH'      'OPEN'      'RESV'    846.280    695.540 586237.081  5* /
@@ -8250,7 +8250,7 @@ WCONHIST
      'E-2H'      'OPEN'      'RESV'    375.380   2166.060  42281.300  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'    901.000  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   1044.960  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'    234.560  1* 600 /
@@ -8261,7 +8261,7 @@ WCONINJE
      'F-4H'     'WATER'  1*      'RATE'   1317.500  1* 600 /
 /
 
-GECON 
+GECON
     'FIELD'   1000.000  5*        'NO'  1* /
 /
 
@@ -8270,7 +8270,7 @@ DATES
  1 'JUL' 2005 /
 /
 
-WCONHIST 
+WCONHIST
      'B-3H'      'OPEN'      'RESV'   1955.844   3460.222 304389.663  5* /
      'B-2H'      'OPEN'      'RESV'   1517.078   1404.522 234161.387  5* /
     'B-4DH'      'OPEN'      'RESV'    922.767    908.233 530835.035  5* /
@@ -8283,7 +8283,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'RESV'    300.956    722.944  29907.090  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   7905.211  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   7854.178  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'   3042.056  1* 600 /
@@ -8294,8 +8294,8 @@ WCONINJE
      'F-4H'     'WATER'  1*      'RATE'   1687.111  1* 600 /
 /
 
-RPTSCHED 
- 0 0 0 0 0 0 2 2 2 0 1 1 0 1 1 0 0 / 
+RPTSCHED
+ 0 0 0 0 0 0 2 2 2 0 1 1 0 1 1 0 0 /
 
 
 -- 2803.000000 days from start of simulation ( 6 'NOV' 1997 )
@@ -8304,11 +8304,11 @@ DATES
 /
 
 --      : E-2H Plug  Top:  3220.00
-WELOPEN 
+WELOPEN
      'E-2H'      'SHUT'    0    0    0  2* /
 /
 
-WCONHIST 
+WCONHIST
      'B-3H'      'OPEN'      'RESV'   1967.567   3265.950 297077.583  5* /
      'B-2H'      'OPEN'      'RESV'   1554.783   1350.017 233161.018  5* /
     'B-4DH'      'OPEN'      'RESV'    955.667    881.600 533914.292  5* /
@@ -8321,7 +8321,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'RESV'      1.883     48.250   3993.850  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   3295.700  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   2940.833  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'   1143.817  1* 600 /
@@ -8332,10 +8332,10 @@ WCONINJE
      'F-4H'     'WATER'  1*      'RATE'   1834.733  1* 600 /
 /
 
-RPTSCHED 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 / 
+RPTSCHED
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 /
 
 
 -- 2809.000000 days from start of simulation ( 6 'NOV' 1997 )
@@ -8345,16 +8345,16 @@ DATES
 
 --      : E-4AH Plug  Top:  5000.00
 --      : E-4AH Connection 38 98  2 Perf. Len  59.95 ( 54.6%)
-WELOPEN 
+WELOPEN
     'E-4AH'      'SHUT'    0    0    0  2* /
 /
 
-COMPDAT 
--- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro 
+COMPDAT
+-- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro
     'E-4AH'   38   98    2    2      'OPEN'  1*     48.136      0.216   3456.518  2*         'Y'      5.061 /
 /
 
-WCONHIST 
+WCONHIST
      'B-3H'      'OPEN'      'RESV'   1653.769   2884.823 253419.840  5* /
      'B-2H'      'OPEN'      'RESV'   1365.746   1506.346 207426.338  5* /
     'B-4DH'      'OPEN'      'RESV'    890.692    865.846 504607.514  5* /
@@ -8366,7 +8366,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'RESV'      4.523    120.323   9914.915  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   9178.546  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   8191.408  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'   3199.100  1* 600 /
@@ -8382,11 +8382,11 @@ DATES
  29 'JUL' 2005 /
 /
 
-WELOPEN 
+WELOPEN
     'E-4AH'      'STOP'  5* /
 /
 
-WCONHIST 
+WCONHIST
      'B-3H'      'OPEN'      'RESV'   1629.933   3084.333 263326.703  5* /
      'B-2H'      'OPEN'      'RESV'   1122.500   1800.233 180118.932  5* /
     'B-4DH'      'OPEN'      'RESV'    884.233    929.800 528658.635  5* /
@@ -8398,7 +8398,7 @@ WCONHIST
     'E-4AH'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   9453.500  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   8406.867  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'   3400.600  1* 600 /
@@ -8414,7 +8414,7 @@ DATES
  1 'AUG' 2005 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'     16.700     34.400   2523.450  5* /
      'B-3H'      'OPEN'      'RESV'   1833.150   3002.700 288923.844  5* /
      'B-2H'      'OPEN'      'RESV'   1258.200   1746.600 196966.906  5* /
@@ -8425,7 +8425,7 @@ WCONHIST
     'E-3CH'      'OPEN'      'RESV'   3066.650   2325.550 351842.500  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   7394.800  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   6546.350  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'   2389.150  1* 600 /
@@ -8450,12 +8450,12 @@ DATES
 --      : E-2AH Connection 12 59  5 Perf. Len  82.66 ( 97.2%)
 --      : E-2AH Connection 12 58  5 Perf. Len  83.49 ( 98.1%)
 --      : E-2AH Connection 12 57  5 Perf. Len  21.75 ( 25.8%)
-WELSPECS 
+WELSPECS
     'E-2AH'   'MANI-E2'   13   67  1*       'OIL'  2*      'STOP'  4* /
 /
 
-COMPDAT 
--- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro 
+COMPDAT
+-- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro
     'E-2AH'   12   63    5    5      'OPEN'  1*      2.814      0.146    248.610  2*         'Y'      8.306 /
     'E-2AH'   12   62    5    5      'OPEN'  1*     16.504      0.146   1441.225  2*         'Y'      7.859 /
     'E-2AH'   12   61    5    5      'OPEN'  1*     17.389      0.146   1516.852  2*         'Y'      7.819 /
@@ -8465,7 +8465,7 @@ COMPDAT
     'E-2AH'   12   57    5    5      'OPEN'  1*      5.345      0.146    470.937  2*         'Y'      8.192 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'    299.500    608.200  46051.898  5* /
      'B-3H'      'OPEN'      'RESV'   1761.900   2883.000 280442.594  5* /
      'B-2H'      'OPEN'      'RESV'   1209.000   1676.500 191120.797  5* /
@@ -8477,7 +8477,7 @@ WCONHIST
     'E-2AH'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'      0.000  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'     94.100  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'      0.000  1* 600 /
@@ -8510,12 +8510,12 @@ DATES
 --      : D-3BH Connection 13 40  8 Perf. Len   1.91 (  2.6%)
 --      : D-3BH Connection 12 40  8 Perf. Len  80.37 ( 95.9%)
 --      : D-3BH Connection 12 39  8 Perf. Len  14.77 ( 17.5%)
-WELSPECS 
+WELSPECS
     'D-3BH'   'MANI-D1'   19   54  1*       'OIL'  2*      'STOP'  4* /
 /
 
-COMPDAT 
--- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro 
+COMPDAT
+-- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro
     'D-3BH'   15   48    7    7      'OPEN'  1*      2.300      0.216    178.019  2*         'Y'      6.825 /
     'D-3BH'   15   47    7    7      'OPEN'  1*     28.866      0.216   2240.595  2*         'Y'      6.911 /
     'D-3BH'   15   47    8    8      'OPEN'  1*     13.994      0.216   1091.152  2*         'Y'      7.042 /
@@ -8531,7 +8531,7 @@ COMPDAT
     'D-3BH'   12   39    8    8      'OPEN'  1*     12.763      0.216    988.058  2*         'Y'      6.835 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'    198.029    447.054  31115.739  5* /
      'B-3H'      'OPEN'      'RESV'   1572.268   2734.082 250770.672  5* /
      'B-2H'      'OPEN'      'RESV'   1127.957   1826.050 141978.604  5* /
@@ -8545,7 +8545,7 @@ WCONHIST
     'E-2AH'      'OPEN'      'RESV'    998.146      0.000 131966.236  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   7914.768  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   7081.532  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'   2654.032  1* 600 /
@@ -8561,7 +8561,7 @@ DATES
  1 'SEP' 2005 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'     50.885     79.554  16708.962  5* /
      'B-3H'      'OPEN'      'RESV'   1588.300   3287.069 274630.090  5* /
      'B-2H'      'OPEN'      'RESV'   1017.200   1687.038 132232.624  5* /
@@ -8574,7 +8574,7 @@ WCONHIST
     'E-2AH'      'OPEN'      'RESV'   2665.138      0.000 366891.952  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   8262.938  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   7354.761  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'   2823.292  1* 600 /
@@ -8590,11 +8590,11 @@ DATES
  14 'SEP' 2005 /
 /
 
-WELOPEN 
+WELOPEN
     'E-2AH'      'SHUT'  5* /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'     42.218     38.182  19331.271  5* /
      'B-3H'      'OPEN'      'RESV'   1981.565   3905.335 305733.460  5* /
      'B-2H'      'OPEN'      'RESV'   1292.612   1942.812 159929.230  5* /
@@ -8607,7 +8607,7 @@ WCONHIST
     'E-2AH'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   8183.724  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   7271.212  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'   2900.359  1* 600 /
@@ -8623,11 +8623,11 @@ DATES
  1 'OCT' 2005 /
 /
 
-WELOPEN 
+WELOPEN
      'B-1H'      'SHUT'  5* /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'RESV'     87.371     76.697  38510.791  5* /
      'B-3H'      'OPEN'      'RESV'   1843.645   3756.745 281619.263  5* /
      'B-2H'      'OPEN'      'RESV'   1255.858   2108.061 158862.646  5* /
@@ -8640,7 +8640,7 @@ WCONHIST
     'E-2AH'      'OPEN'      'RESV'     60.729    605.610   7828.177  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   9054.868  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   8011.484  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'   3171.816  1* 600 /
@@ -8650,8 +8650,8 @@ WCONINJE
      'F-3H'     'WATER'  1*      'RATE'   4077.429  1* 600 /
 /
 
-RPTSCHED 
- 0 0 0 0 0 0 2 2 2 0 1 1 0 1 1 0 0 / 
+RPTSCHED
+ 0 0 0 0 0 0 2 2 2 0 1 1 0 1 1 0 0 /
 
 
 -- 2917.000000 days from start of simulation ( 6 'NOV' 1997 )
@@ -8659,7 +8659,7 @@ DATES
  1 'NOV' 2005 /
 /
 
-WCONHIST 
+WCONHIST
      'B-1H'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
      'B-3H'      'OPEN'      'RESV'   1873.827   3329.197 253625.648  5* /
      'B-2H'      'OPEN'      'RESV'   1289.473   1896.687 143640.382  5* /
@@ -8672,7 +8672,7 @@ WCONHIST
     'E-2AH'      'OPEN'      'RESV'      1.250     12.617    149.730  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   5727.310  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   6068.777  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'   2156.743  1* 600 /
@@ -8682,13 +8682,13 @@ WCONINJE
      'F-3H'     'WATER'  1*      'RATE'   2518.350  1* 600 /
 /
 
-RPTSCHED 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 / 
+RPTSCHED
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 /
 
 
-GCONINJE 
+GCONINJE
     'FIELD'     'WATER'      'RATE'  42000.000  9* /
 /
 
@@ -8705,12 +8705,12 @@ DATES
 --      : B-1AH Connection  9 24  2 Perf. Len  14.46 ( 16.3%)
 --      : B-1AH Connection  9 25  2 Perf. Len   4.41 (  5.3%)
 --      : B-1AH Connection  9 25  3 Perf. Len  24.93 ( 30.1%)
-WELSPECS 
+WELSPECS
     'B-1AH'   'MANI-B2'   10   24  1*       'OIL'  2*      'STOP'  4* /
 /
 
-COMPDAT 
--- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro 
+COMPDAT
+-- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro
     'B-1AH'   10   24    1    1      'OPEN'  1*     73.447      0.216   6088.146  2*         'Y'      9.166 /
     'B-1AH'   10   24    2    2      'OPEN'  1*     18.326      0.216   1563.065  2*         'Y'     10.423 /
     'B-1AH'    9   24    2    2      'OPEN'  1*     34.389      0.216   2922.668  2*         'Y'     10.256 /
@@ -8718,7 +8718,7 @@ COMPDAT
     'B-1AH'    9   25    3    3      'OPEN'  1*      6.676      0.216    540.569  2*         'Y'      8.269 /
 /
 
-WCONHIST 
+WCONHIST
      'B-3H'      'OPEN'      'RESV'   2437.800   3803.200 385361.313  5* /
     'B-1AH'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
      'B-2H'      'OPEN'      'RESV'   1634.200   2133.000 264142.188  5* /
@@ -8731,11 +8731,11 @@ WCONHIST
     'E-2AH'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
 /
 
-WCONPROD 
+WCONPROD
     'B-1AH'      'SHUT' 15* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   8771.200  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   7795.200  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'   2797.900  1* 600 /
@@ -8745,7 +8745,7 @@ WCONINJE
      'F-3H'     'WATER'  1*      'RATE'   3581.200  1* 600 /
 /
 
-WRFTPLT 
+WRFTPLT
     'B-1AH'       'YES'       'YES'  1* /
 /
 
@@ -8756,11 +8756,11 @@ DATES
 
 --      : B-1AH Squeeze  Top:  3140.00 Bot:  3212.00
 --  WARN: B-1AH Squeeze interval 3206.308477 3212.000000 Top changed to 3225.714176
-WELOPEN 
+WELOPEN
     'B-1AH'      'SHUT'    0    0    0  2* /
 /
 
-WCONHIST 
+WCONHIST
      'B-3H'      'OPEN'      'RESV'   1999.843   3684.011 328822.612  5* /
      'B-2H'      'OPEN'      'RESV'   1448.075   2239.521 243599.570  5* /
     'B-4DH'      'OPEN'      'RESV'    205.364    240.729  38369.550  5* /
@@ -8771,7 +8771,7 @@ WCONHIST
     'E-3CH'      'OPEN'      'RESV'   1407.418   3323.368 171647.892  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   8680.296  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   7705.604  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'   2734.993  1* 600 /
@@ -8804,12 +8804,12 @@ DATES
 --      : B-1BH Connection  8 29 13 Perf. Len  85.45 (102.2%)
 --      : B-1BH Connection  8 30 13 Perf. Len  53.43 ( 64.4%)
 --      : B-1BH Connection  8 31 13 Perf. Len  83.96 ( 99.8%)
-WELSPECS 
+WELSPECS
     'B-1BH'   'MANI-B2'   10   24  1*       'OIL'  2*      'STOP'  4* /
 /
 
-COMPDAT 
--- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro 
+COMPDAT
+-- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro
     'B-1BH'    8   26   13   13      'OPEN'  1*    498.936      0.216  42212.508  2*         'Y'     10.047 /
     'B-1BH'    8   27   13   13      'OPEN'  1*   1421.913      0.216 120431.148  2*         'Y'     10.096 /
     'B-1BH'    8   28   13   13      'OPEN'  1*   1463.870      0.216 125311.945  2*         'Y'     10.599 /
@@ -8818,7 +8818,7 @@ COMPDAT
     'B-1BH'    8   31   13   13      'OPEN'  1*   1537.515      0.216 134230.813  2*         'Y'     11.610 /
 /
 
-WCONHIST 
+WCONHIST
      'B-3H'      'OPEN'      'RESV'   1635.600   3997.250 287626.406  5* /
     'B-1BH'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
      'B-2H'      'OPEN'      'RESV'   1233.950   2523.900 221884.055  5* /
@@ -8830,7 +8830,7 @@ WCONHIST
     'E-3CH'      'OPEN'      'RESV'   1201.800   3246.900 168646.703  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   8270.750  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   7351.850  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'   2646.600  1* 600 /
@@ -8845,7 +8845,7 @@ DATES
  1 'JAN' 2006 /
 /
 
-WCONHIST 
+WCONHIST
      'B-3H'      'OPEN'      'RESV'    874.271   2025.753 142088.620  5* /
     'B-1BH'      'OPEN'      'RESV'   1500.347      0.000 136041.876  5* /
      'B-2H'      'OPEN'      'RESV'   1186.324   2201.094 193222.918  5* /
@@ -8856,7 +8856,7 @@ WCONHIST
     'E-3CH'      'OPEN'      'RESV'   1184.971   3514.194 130660.212  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   7535.053  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   6692.400  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'   2347.094  1* 600 /
@@ -8866,12 +8866,12 @@ WCONINJE
      'F-3H'     'WATER'  1*      'RATE'   3780.724  1* 600 /
 /
 
-WTEST 
+WTEST
     'D-3BH'     30.000       'PEG' 1000  1* /
 /
 
-RPTSCHED 
- 0 0 0 0 0 0 2 2 2 0 1 1 0 1 1 0 0 / 
+RPTSCHED
+ 0 0 0 0 0 0 2 2 2 0 1 1 0 1 1 0 0 /
 
 
 -- 2995.000000 days from start of simulation ( 6 'NOV' 1997 )
@@ -8879,11 +8879,11 @@ DATES
  18 'JAN' 2006 /
 /
 
-WELOPEN 
+WELOPEN
     'D-4AH'      'STOP'  5* /
 /
 
-WCONHIST 
+WCONHIST
      'B-3H'      'OPEN'      'RESV'   1228.893   2764.243 206444.844  5* /
     'B-1BH'      'OPEN'      'RESV'   4245.386      0.000 417466.533  5* /
      'B-2H'      'OPEN'      'RESV'    920.814   1725.271 156971.486  5* /
@@ -8895,7 +8895,7 @@ WCONHIST
     'E-3CH'      'OPEN'      'RESV'    576.200   1721.636  64309.478  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   7975.200  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   7099.136  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'   2606.129  1* 600 /
@@ -8905,10 +8905,10 @@ WCONINJE
      'F-3H'     'WATER'  1*      'RATE'   3441.271  1* 600 /
 /
 
-RPTSCHED 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 / 
+RPTSCHED
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 /
 
 
 -- 3009.000000 days from start of simulation ( 6 'NOV' 1997 )
@@ -8916,7 +8916,7 @@ DATES
  1 'FEB' 2006 /
 /
 
-WCONHIST 
+WCONHIST
      'B-3H'      'OPEN'      'RESV'   1333.809   3293.391 233826.641  5* /
     'B-1BH'      'OPEN'      'RESV'   5463.417      0.000 598881.751  5* /
      'B-2H'      'OPEN'      'RESV'   1365.578   2802.178 244739.690  5* /
@@ -8928,7 +8928,7 @@ WCONHIST
     'E-3CH'      'OPEN'      'RESV'    813.339   2612.648 111665.760  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   7160.957  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   6631.948  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'   2623.552  1* 600 /
@@ -8943,11 +8943,11 @@ DATES
  24 'FEB' 2006 /
 /
 
-WELOPEN 
+WELOPEN
     'D-3BH'      'OPEN'  5* /
 /
 
-WCONHIST 
+WCONHIST
      'B-3H'      'OPEN'      'RESV'   1077.580   2842.320 187242.959  5* /
     'B-1BH'      'OPEN'      'RESV'   5154.520      0.000 552450.025  5* /
      'B-2H'      'OPEN'      'RESV'   1283.360   2691.320 227808.897  5* /
@@ -8959,7 +8959,7 @@ WCONHIST
     'E-3CH'      'OPEN'      'RESV'    519.920   1702.400  69950.821  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'      0.000  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   6754.460  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'   2569.620  1* 600 /
@@ -8974,7 +8974,7 @@ DATES
  1 'MAR' 2006 /
 /
 
-WCONHIST 
+WCONHIST
      'B-3H'      'OPEN'      'RESV'   1518.448   3586.842 256283.198  5* /
     'B-1BH'      'OPEN'      'RESV'   5996.161      0.000 610125.852  5* /
      'B-2H'      'OPEN'      'RESV'   1448.384   2719.506 249719.468  5* /
@@ -8986,7 +8986,7 @@ WCONHIST
     'E-3CH'      'OPEN'      'RESV'    821.929   2916.658 102172.103  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   4648.416  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   7295.768  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'   1308.536  1* 600 /
@@ -9001,7 +9001,7 @@ DATES
  1 'APR' 2006 /
 /
 
-WCONHIST 
+WCONHIST
      'B-3H'      'OPEN'      'RESV'   1492.954   4023.629 258694.414  5* /
     'B-1BH'      'OPEN'      'RESV'   6121.433      0.000 656747.652  5* /
      'B-2H'      'OPEN'      'RESV'   1301.850   2780.017 230537.063  5* /
@@ -9013,7 +9013,7 @@ WCONHIST
     'E-3CH'      'OPEN'      'RESV'    502.846   1913.937  67099.846  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'   7527.967  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'   6155.354  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'      0.013  1* 600 /
@@ -9024,8 +9024,8 @@ WCONINJE
      'F-4H'     'WATER'  1*      'RATE'      8.854  1* 600 /
 /
 
-RPTSCHED 
- 0 0 0 0 0 0 2 2 2 0 1 1 0 1 1 0 0 / 
+RPTSCHED
+ 0 0 0 0 0 0 2 2 2 0 1 1 0 1 1 0 0 /
 
 
 -- 3092.000000 days from start of simulation ( 6 'NOV' 1997 )
@@ -9033,14 +9033,14 @@ DATES
  25 'APR' 2006 /
 /
 
-WELOPEN 
+WELOPEN
      'C-1H'      'STOP'  5* /
      'C-2H'      'STOP'  5* /
      'C-3H'      'STOP'  5* /
     'C-4AH'      'STOP'  5* /
 /
 
-WCONHIST 
+WCONHIST
      'B-3H'      'OPEN'      'RESV'   1494.183   4319.933 253296.974  5* /
     'B-1BH'      'OPEN'      'RESV'   5951.283      0.000 608231.474  5* /
      'B-2H'      'OPEN'      'RESV'   1266.600   2914.017 219491.917  5* /
@@ -9052,7 +9052,7 @@ WCONHIST
     'E-3CH'      'OPEN'      'RESV'    445.967   1777.967  56946.700  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'      0.000  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'      0.000  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'      0.000  1* 600 /
@@ -9063,10 +9063,10 @@ WCONINJE
      'F-4H'     'WATER'  1*      'RATE'   1703.550  1* 600 /
 /
 
-RPTSCHED 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 / 
+RPTSCHED
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 /
 
 
 -- 3098.000000 days from start of simulation ( 6 'NOV' 1997 )
@@ -9074,7 +9074,7 @@ DATES
  1 'MAY' 2006 /
 /
 
-WCONHIST 
+WCONHIST
      'B-3H'      'OPEN'      'RESV'   1083.016   3943.416 182666.036  5* /
     'B-1BH'      'OPEN'      'RESV'   5531.206    532.552 586376.029  5* /
      'B-2H'      'OPEN'      'RESV'   1409.019   3180.948 247377.145  5* /
@@ -9087,7 +9087,7 @@ WCONHIST
     'E-3CH'      'OPEN'      'RESV'    344.816   1376.577  42404.168  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'    739.042  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'    545.706  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'      0.029  1* 600 /
@@ -9103,7 +9103,7 @@ DATES
  1 'JUN' 2006 /
 /
 
-WCONHIST 
+WCONHIST
      'B-3H'      'OPEN'      'RESV'    192.423    927.127  24898.606  5* /
     'B-1BH'      'OPEN'      'RESV'   4062.063   2304.670 456823.096  5* /
      'B-2H'      'OPEN'      'RESV'   1249.910   2496.343 227918.084  5* /
@@ -9117,7 +9117,7 @@ WCONHIST
     'E-2AH'      'OPEN'      'RESV'      2.827     28.570    339.097  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'     'WATER'  1*      'RATE'      0.000  1* 600 /
      'C-2H'     'WATER'  1*      'RATE'      0.000  1* 600 /
      'C-3H'     'WATER'  1*      'RATE'      0.000  1* 600 /
@@ -9133,7 +9133,7 @@ DATES
  1 'JUL' 2006 /
 /
 
-WCONHIST 
+WCONHIST
      'B-3H'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
     'B-1BH'      'OPEN'      'RESV'   3769.616   2219.658 412151.578  5* /
      'B-2H'      'OPEN'      'RESV'   1381.584   3060.416 235780.436  5* /
@@ -9147,15 +9147,15 @@ WCONHIST
     'E-2AH'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
 /
 
-WCONINJE 
+WCONINJE
      'F-1H'     'WATER'  1*      'RATE'   7966.771  1* 600 /
      'F-2H'     'WATER'  1*      'RATE'   1776.826  1* 600 /
      'F-3H'     'WATER'  1*      'RATE'   5629.781  1* 600 /
      'F-4H'     'WATER'  1*      'RATE'   1822.577  1* 600 /
 /
 
-RPTSCHED 
- 0 0 0 0 0 0 2 2 2 0 1 1 0 1 1 0 0 / 
+RPTSCHED
+ 0 0 0 0 0 0 2 2 2 0 1 1 0 1 1 0 0 /
 
 
 -- 3190.000000 days from start of simulation ( 6 'NOV' 1997 )
@@ -9163,7 +9163,7 @@ DATES
  1 'AUG' 2006 /
 /
 
-WCONHIST 
+WCONHIST
     'B-1BH'      'OPEN'      'RESV'   4115.007   2376.100 478591.538  5* /
      'B-2H'      'OPEN'      'RESV'   1285.929   2747.857 248495.743  5* /
     'B-4DH'      'OPEN'      'RESV'    226.021    441.536  34613.508  5* /
@@ -9175,17 +9175,17 @@ WCONHIST
     'E-3CH'      'OPEN'      'RESV'    861.007   3978.071 115002.056  5* /
 /
 
-WCONINJE 
+WCONINJE
      'F-1H'     'WATER'  1*      'RATE'   8875.114  1* 600 /
      'F-2H'     'WATER'  1*      'RATE'   2579.957  1* 600 /
      'F-3H'     'WATER'  1*      'RATE'   6637.750  1* 600 /
      'F-4H'     'WATER'  1*      'RATE'   2170.164  1* 600 /
 /
 
-RPTSCHED 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 / 
+RPTSCHED
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 /
 
 
 -- 3204.000000 days from start of simulation ( 6 'NOV' 1997 )
@@ -9193,7 +9193,7 @@ DATES
  15 'AUG' 2006 /
 /
 
-WCONHIST 
+WCONHIST
     'B-1BH'      'OPEN'      'RESV'   4385.100   2682.600 539491.313  5* /
      'B-2H'      'OPEN'      'RESV'   1040.700   2483.100 224255.797  5* /
     'B-4DH'      'OPEN'      'RESV'    216.200    471.900  36918.199  5* /
@@ -9204,15 +9204,15 @@ WCONHIST
     'E-3CH'      'OPEN'      'RESV'    875.700   4280.400 123941.000  5* /
 /
 
-WCONINJE 
+WCONINJE
      'F-1H'     'WATER'  1*      'RATE'   8947.300  1* 600 /
      'F-2H'     'WATER'  1*      'RATE'   3616.200  1* 600 /
      'F-3H'     'WATER'  1*      'RATE'   6840.100  1* 600 /
      'F-4H'     'WATER'  1*      'RATE'   2263.700  1* 600 /
 /
 
-RPTRST 
- 2 / 
+RPTRST
+ 2 /
 
 
 -- 3205.000000 days from start of simulation ( 6 'NOV' 1997 )
@@ -9220,7 +9220,7 @@ DATES
  16 'AUG' 2006 /
 /
 
-WCONHIST 
+WCONHIST
     'B-1BH'      'OPEN'      'RESV'   3855.406   2951.913 485091.074  5* /
      'B-2H'      'OPEN'      'RESV'   1212.756   2747.675 223587.844  5* /
     'B-4DH'      'OPEN'      'RESV'    186.838    387.894  27476.594  5* /
@@ -9231,7 +9231,7 @@ WCONHIST
     'E-3CH'      'OPEN'      'RESV'    865.481   4121.125 113293.363  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 145094.414  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 191404.942  1* 600 /
     'C-4AH'       'GAS'  1*      'RATE'  15687.775  1* 600 /
@@ -9241,8 +9241,8 @@ WCONINJE
      'F-4H'     'WATER'  1*      'RATE'   2129.994  1* 600 /
 /
 
-RPTRST 
- 0 / 
+RPTRST
+ 0 /
 
 
 -- 3221.000000 days from start of simulation ( 6 'NOV' 1997 )
@@ -9250,7 +9250,7 @@ DATES
  1 'SEP' 2006 /
 /
 
-WCONHIST 
+WCONHIST
     'B-1BH'      'OPEN'      'RESV'   3466.408   3496.646 408392.978  5* /
      'B-2H'      'OPEN'      'RESV'   1339.062   2759.292 153565.416  5* /
     'B-4DH'      'OPEN'      'RESV'    209.131    394.477  18989.438  5* /
@@ -9261,7 +9261,7 @@ WCONHIST
     'E-3CH'      'OPEN'      'RESV'    901.800   4091.192  95227.446  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 890105.726  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 855613.995  1* 600 /
     'C-4AH'       'GAS'  1*      'RATE'  94195.261  1* 600 /
@@ -9291,12 +9291,12 @@ DATES
 --      : K-3H Connection 11 17  5 Perf. Len  90.63 (100.1%)
 --      : K-3H Connection 11 16  5 Perf. Len   5.69 (  6.5%)
 --      : WRFTPLT >> Pressure data in connection with drilling
-WELSPECS 
+WELSPECS
      'K-3H'   'MANI-K2'   11   28  1*       'OIL'  2*      'STOP'  4* /
 /
 
-COMPDAT 
--- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro 
+COMPDAT
+-- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro
      'K-3H'   11   24    5    5      'OPEN'  1*     64.799      0.216   4558.657  2*         'Y'      4.681 /
      'K-3H'   11   23    5    5      'OPEN'  1*     10.405      0.216    732.714  2*         'Y'      4.699 /
      'K-3H'   10   23    5    5      'OPEN'  1*    157.439      0.216  11212.515  2*         'Y'      4.904 /
@@ -9310,7 +9310,7 @@ COMPDAT
      'K-3H'   11   16    5    5      'OPEN'  1*      7.253      0.216    534.921  2*         'Y'      5.615 /
 /
 
-WCONHIST 
+WCONHIST
      'B-3H'      'OPEN'      'RESV'      0.012      0.053      1.294  5* /
     'B-1BH'      'OPEN'      'RESV'   3292.053   3370.418 430592.737  5* /
      'B-2H'      'OPEN'      'RESV'   1045.994   2238.394 149126.571  5* /
@@ -9323,11 +9323,11 @@ WCONHIST
     'E-3CH'      'OPEN'      'RESV'    804.994   3710.247  94168.083  5* /
 /
 
-WCONPROD 
+WCONPROD
      'K-3H'      'SHUT' 15* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 699302.620  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 791935.301  1* 600 /
     'C-4AH'       'GAS'  1*      'RATE'  74907.918  1* 600 /
@@ -9337,7 +9337,7 @@ WCONINJE
      'F-4H'     'WATER'  1*      'RATE'   2157.935  1* 600 /
 /
 
-WRFTPLT 
+WRFTPLT
      'K-3H'       'YES'       'YES'  1* /
 /
 
@@ -9346,7 +9346,7 @@ DATES
  1 'OCT' 2006 /
 /
 
-WCONHIST 
+WCONHIST
      'B-3H'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
     'B-1BH'      'OPEN'      'RESV'   3402.478   2287.433 467306.715  5* /
      'B-2H'      'OPEN'      'RESV'   1138.967   1539.522 186820.613  5* /
@@ -9358,7 +9358,7 @@ WCONHIST
     'E-3CH'      'OPEN'      'RESV'    856.778   3881.711 105548.688  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 784659.812  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 938574.924  1* 600 /
     'C-4AH'       'GAS'  1*      'RATE'  84609.299  1* 600 /
@@ -9368,8 +9368,8 @@ WCONINJE
      'F-4H'     'WATER'  1*      'RATE'   2251.333  1* 600 /
 /
 
-RPTSCHED 
- 0 0 0 0 0 0 2 2 2 0 1 1 0 1 1 0 0 / 
+RPTSCHED
+ 0 0 0 0 0 0 2 2 2 0 1 1 0 1 1 0 0 /
 
 
 -- 3260.000000 days from start of simulation ( 6 'NOV' 1997 )
@@ -9377,11 +9377,11 @@ DATES
  10 'OCT' 2006 /
 /
 
-WELOPEN 
+WELOPEN
      'F-4H'      'STOP'  5* /
 /
 
-WCONHIST 
+WCONHIST
     'B-1BH'      'OPEN'      'RESV'   3502.000   2441.080 474211.300  5* /
      'B-2H'      'OPEN'      'RESV'    875.200   1265.760 139009.578  5* /
     'B-4DH'      'OPEN'      'RESV'    274.660    366.320  34540.980  5* /
@@ -9392,7 +9392,7 @@ WCONHIST
     'E-3CH'      'OPEN'      'RESV'    866.080   4070.140 105143.298  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 808842.037  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 969108.375  1* 600 /
     'C-4AH'       'GAS'  1*      'RATE'  88244.219  1* 600 /
@@ -9402,10 +9402,10 @@ WCONINJE
      'F-4H'     'WATER'  1*      'RATE'      0.000  1* 600 /
 /
 
-RPTSCHED 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
- 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 / 
+RPTSCHED
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 /
 
 
 -- 3265.000000 days from start of simulation ( 6 'NOV' 1997 )
@@ -9413,7 +9413,7 @@ DATES
  15 'OCT' 2006 /
 /
 
-WCONHIST 
+WCONHIST
     'B-1BH'      'OPEN'      'RESV'   3415.276   2898.641 472619.346  5* /
      'B-2H'      'OPEN'      'RESV'    884.188   1806.471 147205.483  5* /
     'B-4DH'      'OPEN'      'RESV'    188.688    351.300  25267.330  5* /
@@ -9426,7 +9426,7 @@ WCONHIST
     'E-2AH'      'OPEN'      'RESV'     94.582    956.424  11351.112  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 923574.471  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 385162.667  1* 600 /
     'C-4AH'       'GAS'  1*      'RATE'  99504.547  1* 600 /
@@ -9435,11 +9435,11 @@ WCONINJE
      'F-3H'     'WATER'  1*      'RATE'   7378.047  1* 600 /
 /
 
-WTEST 
+WTEST
      'K-3H'     30.000       'PEG' 1000  1* /
 /
 
-WPITAB 
+WPITAB
      'K-3H'    1 /
 /
 
@@ -9448,7 +9448,7 @@ DATES
  1 'NOV' 2006 /
 /
 
-WCONHIST 
+WCONHIST
     'B-1BH'      'OPEN'      'RESV'   1641.988   2985.512 224395.461  5* /
      'B-2H'      'OPEN'      'RESV'   1034.287   1688.500 177861.361  5* /
     'B-4DH'      'OPEN'      'RESV'     43.400     78.925   5882.075  5* /
@@ -9461,7 +9461,7 @@ WCONHIST
     'E-2AH'      'OPEN'      'RESV'     75.362   1325.900   8424.588  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 592364.371  1* 600 /
      'C-3H'       'GAS'  1*      'RATE'      0.000  1* 600 /
     'C-4AH'       'GAS'  1*      'RATE'  55925.724  1* 600 /
@@ -9475,11 +9475,11 @@ DATES
  9 'NOV' 2006 /
 /
 
-WELOPEN 
+WELOPEN
     'E-3CH'      'STOP'  5* /
 /
 
-WCONHIST 
+WCONHIST
     'B-1BH'      'OPEN'      'RESV'   1767.900   3793.100 241203.000  5* /
      'B-2H'      'OPEN'      'RESV'    944.850   2041.600 161710.750  5* /
     'B-4DH'      'OPEN'      'RESV'     37.700     92.650   5092.200  5* /
@@ -9492,7 +9492,7 @@ WCONHIST
     'E-2AH'      'OPEN'      'RESV'     86.150   1772.600   9593.200  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 431559.750  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 134390.750  1* 600 /
     'C-4AH'       'GAS'  1*      'RATE'  11018.100  1* 600 /
@@ -9507,7 +9507,7 @@ DATES
 /
 
 --  WARN: F-3H WCONINJE may be inconsistent, existing event took precedence over generated
-WCONHIST 
+WCONHIST
     'B-1BH'      'OPEN'      'RESV'   1755.250   3849.450 239171.784  5* /
      'B-2H'      'OPEN'      'RESV'    941.317   2105.767 160463.333  5* /
     'B-4DH'      'OPEN'      'RESV'     58.167    147.200   7859.067  5* /
@@ -9519,7 +9519,7 @@ WCONHIST
     'E-2AH'      'OPEN'      'RESV'     84.817   1785.167   9412.167  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE' 649396.174  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 1004323.339  1* 600 /
     'C-4AH'       'GAS'  1*      'RATE'  73359.334  1* 600 /
@@ -9533,11 +9533,11 @@ DATES
  17 'NOV' 2006 /
 /
 
-WELOPEN 
+WELOPEN
     'E-3CH'      'OPEN'  5* /
 /
 
-WCONHIST 
+WCONHIST
      'B-3H'      'OPEN'      'RESV'      8.579     75.536   1283.957  5* /
     'B-1BH'      'OPEN'      'RESV'   1484.500   3216.086 254435.886  5* /
      'B-2H'      'OPEN'      'RESV'    738.829   1614.036 194830.634  5* /
@@ -9551,7 +9551,7 @@ WCONHIST
     'E-2AH'      'OPEN'      'RESV'     63.571   1322.007   8732.021  5* /
 /
 
-WCONINJE 
+WCONINJE
      'C-1H'       'GAS'  1*      'RATE'  56404.185  1* 600 /
      'C-3H'       'GAS'  1*      'RATE' 143344.554  1* 600 /
     'C-4AH'       'GAS'  1*      'RATE'   8632.400  1* 600 /
@@ -9565,4 +9565,3 @@ DATES
 /
 
 END
-
