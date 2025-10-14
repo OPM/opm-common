@@ -95,7 +95,8 @@ Opm::OpmInputError::formatMultiple(const std::string&                  reason,
                         [](const std::string& s, const KeywordLocation& loc)
                         { return s + locationStringLine(loc); });
 
-    return fmt::format(R"(Problem with keywords {}
+    // \n is added at the beginning of the messages through locationStringLine()
+    return fmt::format(R"(Problem with keywords{}
 {})",
                        messages, reason);
 }
