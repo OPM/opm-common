@@ -19,19 +19,25 @@
 
 #ifndef WELLTRACERPROPERTIES_HPP_HEADER_INCLUDED
 #define WELLTRACERPROPERTIES_HPP_HEADER_INCLUDED
+
+#include <opm/input/eclipse/Deck/UDAValue.hpp>
+#include <opm/input/eclipse/Units/UnitSystem.hpp>
+
 #include <vector>
 #include <string>
 #include <map>
 
 namespace Opm {
 
+    class SummaryState;
+
     class WellTracerProperties {
 
     public:
         static WellTracerProperties serializationTestObject();
 
-        void setConcentration(const std::string& name, const double& concentration);
-        double getConcentration(const std::string& name) const;
+        void setConcentration(const std::string& name, const UDAValue& concentration, double udq_undefined);
+        double getConcentration(const std::string& wname, const std::string& name, const SummaryState& st) const;
 
         bool operator==(const WellTracerProperties& other) const;
         bool operator!=(const WellTracerProperties& other) const;
@@ -40,10 +46,12 @@ namespace Opm {
         void serializeOp(Serializer& serializer)
         {
             serializer(m_tracerConcentrations);
+            serializer(m_udq_undefined);
         }
 
     private:
-        std::map<std::string,double> m_tracerConcentrations;
+        std::map<std::string, UDAValue> m_tracerConcentrations;
+        double m_udq_undefined;
     };
 
 }

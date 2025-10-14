@@ -32,6 +32,7 @@
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
 
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
+#include <opm/input/eclipse/Schedule/SummaryState.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellTracerProperties.hpp>
 
@@ -183,6 +184,7 @@ BOOST_AUTO_TEST_CASE(TestDynamicWTRACER)
         deck, grid, fp, NumericalAquifers{},
         runspec, std::make_shared<Python>()
     };
+    SummaryState st(TimeService::now(), 0.0);
 
     BOOST_CHECK(deck.hasKeyword("WTRACER"));
 
@@ -192,12 +194,12 @@ BOOST_AUTO_TEST_CASE(TestDynamicWTRACER)
     const auto& record = keyword.getRecord(0);
     const std::string& well_name = record.getItem("WELL").getTrimmedString(0);
     BOOST_CHECK_EQUAL(well_name, "W_1");
-    BOOST_CHECK_EQUAL(schedule.getWell("W_1", 0).getTracerProperties().getConcentration("I1"),0); //default 0
-    BOOST_CHECK_EQUAL(schedule.getWell("W_1", 0).getTracerProperties().getConcentration("I2"),0); //default 0
-    BOOST_CHECK_EQUAL(schedule.getWell("W_1", 1).getTracerProperties().getConcentration("I1"),1);
-    BOOST_CHECK_EQUAL(schedule.getWell("W_1", 2).getTracerProperties().getConcentration("I1"),1);
-    BOOST_CHECK_EQUAL(schedule.getWell("W_1", 4).getTracerProperties().getConcentration("I1"),0);
-    BOOST_CHECK_EQUAL(schedule.getWell("W_1", 4).getTracerProperties().getConcentration("I2"),1);
+    BOOST_CHECK_EQUAL(schedule.getWell("W_1", 0).getTracerProperties().getConcentration("W_1", "I1", st), 0); //default 0
+    BOOST_CHECK_EQUAL(schedule.getWell("W_1", 0).getTracerProperties().getConcentration("W_1", "I2", st), 0); //default 0
+    BOOST_CHECK_EQUAL(schedule.getWell("W_1", 1).getTracerProperties().getConcentration("W_1", "I1", st), 1);
+    BOOST_CHECK_EQUAL(schedule.getWell("W_1", 2).getTracerProperties().getConcentration("W_1", "I1", st), 1);
+    BOOST_CHECK_EQUAL(schedule.getWell("W_1", 4).getTracerProperties().getConcentration("W_1", "I1", st), 0);
+    BOOST_CHECK_EQUAL(schedule.getWell("W_1", 4).getTracerProperties().getConcentration("W_1", "I2", st), 1);
 }
 
 
