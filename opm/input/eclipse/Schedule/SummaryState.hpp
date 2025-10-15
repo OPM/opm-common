@@ -124,6 +124,7 @@ public:
     double get_conn_var(const std::string& conn, const std::string& var, std::size_t global_index, double) const;
     double get_segment_var(const std::string& well, const std::string& var, std::size_t segment, double) const;
     double get_region_var(const std::string& regSet, const std::string& var, std::size_t region, double) const;
+    double get_udq_undefined() const { return udq_undefined; }
 
     bool is_undefined_value(const double val) const { return val == udq_undefined; }
 

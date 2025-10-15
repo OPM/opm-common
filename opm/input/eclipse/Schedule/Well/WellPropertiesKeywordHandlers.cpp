@@ -635,13 +635,13 @@ void handleWTRACER(HandlerContext& handlerContext)
             handlerContext.invalidNamePattern(wellNamePattern);
         }
 
-        const double tracerConcentration = record.getItem("CONCENTRATION").get<UDAValue>(0).getSI();
-        const std::string& tracerName = record.getItem("TRACER").getTrimmedString(0);
+        const auto trConcentration = record.getItem<ParserKeywords::WTRACER::CONCENTRATION>().get<UDAValue>(0);
+        const std::string& trName = record.getItem("TRACER").getTrimmedString(0);
 
         for (const auto& well_name : well_names) {
             auto well = handlerContext.state().wells.get( well_name );
             auto wellTracerProperties = std::make_shared<WellTracerProperties>(well.getTracerProperties());
-            wellTracerProperties->setConcentration(tracerName, tracerConcentration);
+            wellTracerProperties->setConcentration(WellTracerProperties::Tracer { trName }, trConcentration);
             if (well.updateTracer(wellTracerProperties))
                 handlerContext.state().wells.update( std::move(well) );
         }

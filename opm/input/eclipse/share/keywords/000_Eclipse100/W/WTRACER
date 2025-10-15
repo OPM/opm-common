@@ -5,22 +5,27 @@
   ],
   "items": [
     {
+      "item": 1,
       "name": "WELL",
       "value_type": "STRING"
     },
     {
+      "item": 2,
       "name": "TRACER",
       "value_type": "STRING"
     },
     {
+      "item": 3,
       "name": "CONCENTRATION",
       "value_type": "UDA"
     },
     {
+      "item": 4,
       "name": "CUM_TRACER_FACTOR",
       "value_type": "UDA"
     },
     {
+      "item": 5,
       "name": "PRODUCTION_GROUP",
       "value_type": "STRING",
       "comment": "Defaulted means: use the concentration from the CONCENTRATION item"
