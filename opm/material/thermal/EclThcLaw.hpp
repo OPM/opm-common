@@ -59,7 +59,7 @@ public:
         // The thermal conductivity approach based on the THC* keywords.
 
         // let's assume that the porosity of the rock at standard condition is meant
-        Scalar poro = params.porosity();
+        Scalar poro = params.porosity(); // NB! Effective porosity, here meaning poro*ntg
 
         // IMO this approach is very questionable because the total thermal conductivity
         // should at least depend on the current solution's phase saturation. Since ECL
