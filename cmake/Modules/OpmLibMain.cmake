@@ -66,10 +66,6 @@ find_threads (${project})
 # PETSc is optional
 option (USE_PETSC "Use PETSc iterative solvers" OFF)
 
-# static code analysis
-include(UseStaticAnalysis)
-setup_static_analysis_tools()
-
 # callback hook to setup additional dependencies
 if (COMMAND prereqs_hook)
 	prereqs_hook ()
