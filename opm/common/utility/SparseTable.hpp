@@ -132,13 +132,16 @@ private:
 	    setRowStartsFromSizes(rowsize_beg, rowsize_end);
         }
 
-        SparseTable (Storage<T> data, Storage<int> row_starts)
+        SparseTable (Storage<T>&& data, Storage<int>&& row_starts)
             : data_(data)
             , row_start_(row_starts)
         {
-            // removed for now because we cannot access the zero'th element if Storage is a GpuBuffer
-            // OPM_ERROR_IF(row_start_.size() == 0 || row_start_[0] != 0,
-            //              "Invalid row_start array");
+            // removed for non-default template instantiations
+            // because we cannot access the zero'th element if Storage is a GpuBuffer
+            if constexpr (std::is_same_v<Storage<T>, std::vector<T>>) {
+                OPM_ERROR_IF(row_start_.size() == 0 || row_start_[0] != 0,
+                             "Invalid row_start array");
+            }
         }
 
 
