@@ -627,7 +627,6 @@ void handleWTMULT(HandlerContext& handlerContext)
 
 void handleWTRACER(HandlerContext& handlerContext)
 {
-    auto udq_undefined = handlerContext.state().udq.get().params().undefinedValue();
     for (const auto& record : handlerContext.keyword) {
         const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
         const auto well_names = handlerContext.wellNames(wellNamePattern, false);
@@ -636,13 +635,13 @@ void handleWTRACER(HandlerContext& handlerContext)
             handlerContext.invalidNamePattern(wellNamePattern);
         }
 
-        const auto tracerConcentration = record.getItem<ParserKeywords::WTRACER::CONCENTRATION>().get<UDAValue>(0);
-        const std::string& tracerName = record.getItem("TRACER").getTrimmedString(0);
+        const auto trConcentration = record.getItem<ParserKeywords::WTRACER::CONCENTRATION>().get<UDAValue>(0);
+        const std::string& trName = record.getItem("TRACER").getTrimmedString(0);
 
         for (const auto& well_name : well_names) {
             auto well = handlerContext.state().wells.get( well_name );
             auto wellTracerProperties = std::make_shared<WellTracerProperties>(well.getTracerProperties());
-            wellTracerProperties->setConcentration(tracerName, tracerConcentration, udq_undefined);
+            wellTracerProperties->setConcentration(WellTracerProperties::Tracer { trName }, trConcentration);
             if (well.updateTracer(wellTracerProperties))
                 handlerContext.state().wells.update( std::move(well) );
         }
