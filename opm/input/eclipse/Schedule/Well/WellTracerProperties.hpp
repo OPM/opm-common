@@ -31,27 +31,28 @@ namespace Opm {
 
     class SummaryState;
 
-    class WellTracerProperties {
-
+    class WellTracerProperties
+    {
     public:
-        static WellTracerProperties serializationTestObject();
+        struct Well { const std::string& name; };
+        struct Tracer { const std::string& name; };
 
-        void setConcentration(const std::string& name, const UDAValue& concentration, double udq_undefined);
-        double getConcentration(const std::string& wname, const std::string& name, const SummaryState& st) const;
+        void setConcentration(const Tracer& tracer, const UDAValue& conc);
+        double getConcentration(const Well& well, const Tracer& tracer, const SummaryState& st) const;
 
         bool operator==(const WellTracerProperties& other) const;
         bool operator!=(const WellTracerProperties& other) const;
+
+        static WellTracerProperties serializationTestObject();
 
         template<class Serializer>
         void serializeOp(Serializer& serializer)
         {
             serializer(m_tracerConcentrations);
-            serializer(m_udq_undefined);
         }
 
     private:
         std::map<std::string, UDAValue> m_tracerConcentrations;
-        double m_udq_undefined;
     };
 
 }

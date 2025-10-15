@@ -19,6 +19,7 @@
 #include <opm/input/eclipse/Schedule/Well/WellTracerProperties.hpp>
 
 #include <opm/input/eclipse/Deck/UDAValue.hpp>
+#include <opm/input/eclipse/Schedule/SummaryState.hpp>
 #include "../eval_uda.hpp"
 
 #include <string>
@@ -31,26 +32,24 @@ namespace Opm {
     {
         WellTracerProperties result;
         result.m_tracerConcentrations = {{"test", UDAValue(1.0)}, {"test2", UDAValue(2.0)}};
-        result.m_udq_undefined = 3.0;
 
         return result;
     }
 
     bool WellTracerProperties::operator==(const WellTracerProperties& other) const {
-        return this->m_tracerConcentrations == other.m_tracerConcentrations &&
-               this->m_udq_undefined == other.m_udq_undefined;
+        return this->m_tracerConcentrations == other.m_tracerConcentrations;
     }
 
-    void WellTracerProperties::setConcentration(const std::string& name, const UDAValue& concentration, double udq_undefined) {
-        m_tracerConcentrations[name] = concentration;
-        m_udq_undefined = udq_undefined;
+    void WellTracerProperties::setConcentration(const Tracer& tracer, const UDAValue& conc) {
+        m_tracerConcentrations[tracer.name] = conc;
     }
 
-    double WellTracerProperties::getConcentration(const std::string& wname, const std::string& name, const SummaryState& st) const {
-        auto it = m_tracerConcentrations.find(name);
-        if (it == m_tracerConcentrations.end())
+    double WellTracerProperties::getConcentration(const Well& well, const Tracer& tracer, const SummaryState& st) const {
+        auto it = m_tracerConcentrations.find(tracer.name);
+        if (it == m_tracerConcentrations.end()) {
             return 0.0;
-        return UDA::eval_well_uda(it->second, wname, st, m_udq_undefined);
+        }
+        return UDA::eval_well_uda(it->second, well.name, st, st.get_udq_undefined());
     }
 
     bool WellTracerProperties::operator!=(const WellTracerProperties& other) const {
