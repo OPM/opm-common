@@ -24,6 +24,7 @@
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/common/utility/gpuDecorators.hpp>
 
+#include <cstdlib>
 #include <string>
 #include <exception>
 #include <stdexcept>
@@ -108,24 +109,24 @@
  * @brief assert(false) is only used on the GPU, as throwing exceptions is not supported.
  */
 #define OPM_THROW(Exception, message) \
-    assert(false)
+    abort()
 
 /**
  * @brief assert(false) is only used on the GPU, as throwing exceptions is not supported.
  */
 #define OPM_THROW_PROBLEM(Exception, message) \
-   assert(false)
+   abort()
 
 /**
  * @brief assert(false) is only used on the GPU, as throwing exceptions is not supported.
  */
 #define OPM_THROW_NOLOG(Exception, message) \
-   assert(false)
+   abort()
 
 /**
  * @brief assert(condition) is only used on the GPU, as throwing exceptions is not supported.
  */
 #define OPM_ERROR_IF(condition, message)                                    \
-    do {if(condition){assert(false);}} while(false)
+    do {if(condition){abort();}} while(false)
 #endif // GPU
 #endif // OPM_ERRORMACROS_HPP
