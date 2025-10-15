@@ -43,15 +43,7 @@
 #include <opm/common/ErrorMacros.hpp>
 #include <opm/grid/utility/IteratorRange.hpp>
 
-#if HAVE_CUDA
-#if USE_HIP
-#include <opm/simulators/linalg/gpuistl_hip/GpuBuffer.hpp>
-#include <opm/simulators/linalg/gpuistl_hip/GpuView.hpp>
-#else
-#include <opm/simulators/linalg/gpuistl/GpuBuffer.hpp>
-#include <opm/simulators/linalg/gpuistl/GpuView.hpp>
-#endif
-#endif
+#include <opm/common/utility/gpuistl_if_available.hpp>
 
 namespace Opm
 {
