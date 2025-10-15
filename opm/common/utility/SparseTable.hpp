@@ -417,25 +417,6 @@ auto copy_to_gpu(const SparseTable<T>& cpu_table)
     );
 }
 
-// Since we cannot have MatrixBlock in GPU code, we need to convert to MiniMatrix
-// For now I think this is an okay place to convert types
-template<class MatrixBlockType, class MiniMatrixType, class ResidualNBInfoType, template <typename, typename...> class TemplatedStruct>
-auto copy_to_gpu(const SparseTable<TemplatedStruct<ResidualNBInfoType, MatrixBlockType>>& cpu_matrix)
-{
-    // Convert the DUNE FieldVectors to MiniMatrix types
-    using StructWithMinimatrix = TemplatedStruct<ResidualNBInfoType, MiniMatrixType>;
-    std::vector<StructWithMinimatrix> minimatrices(cpu_matrix.dataSize());
-    size_t idx = 0;
-    for (auto e : cpu_matrix.dataStorage()) {
-        minimatrices[idx++] = StructWithMinimatrix(e);
-    }
-
-    return SparseTable<StructWithMinimatrix, GpuBuffer>(
-        GpuBuffer<StructWithMinimatrix>(minimatrices),
-        GpuBuffer<int>(cpu_matrix.rowStarts())
-    );
-}
-
 template <class T>
 auto make_view(SparseTable<T, GpuBuffer>& buffer_table)
 {
