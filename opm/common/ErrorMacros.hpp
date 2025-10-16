@@ -24,11 +24,14 @@
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/common/utility/gpuDecorators.hpp>
 
-#include <cstdlib>
 #include <string>
 #include <exception>
 #include <stdexcept>
 #include <cassert>
+
+#if OPM_IS_COMPILING_WITH_GPU_COMPILER
+#include <stdlib.h> // for abort()
+#endif
 
 // macros for reporting to stderr
 #ifdef OPM_VERBOSE // Verbose mode
