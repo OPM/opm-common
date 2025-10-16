@@ -469,9 +469,11 @@ Well::Well(const RestartIO::RstWell& rst_well,
         if (!rst_well.tracer_concentration_injection.empty()) {
             auto tracer = std::make_shared<WellTracerProperties>(this->getTracerProperties());
             for (std::size_t tracer_index = 0; tracer_index < tracer_config.size(); tracer_index++) {
-                const auto& tname = tracer_config[tracer_index].name;
-                const auto concentration = rst_well.tracer_concentration_injection[tracer_index];
-                tracer->setConcentration(tname, concentration);
+                const auto& trName = tracer_config[tracer_index].name;
+                const auto trConcentration = rst_well.tracer_concentration_injection[tracer_index];
+                // currently there is no support to UDA tracer concentrations from restart files
+                tracer->setConcentration(WellTracerProperties::Tracer { trName },
+                                         UDAValue { trConcentration });
             }
             this->updateTracer(tracer);
         }
