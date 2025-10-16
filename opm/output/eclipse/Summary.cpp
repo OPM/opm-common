@@ -648,6 +648,9 @@ measure rate_unit< rt::well_potential_oil >() { return measure::liquid_surface_r
 template<> constexpr
 measure rate_unit< rt::well_potential_gas >() { return measure::gas_surface_rate; }
 
+template<> constexpr
+measure rate_unit< rt::energy >() { return measure::energy_rate; }
+
 template <> constexpr
 measure rate_unit<Opm::data::GuideRateValue::Item::Gas>() { return measure::gas_surface_rate; }
 
