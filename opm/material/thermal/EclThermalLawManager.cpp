@@ -242,6 +242,7 @@ initThc_(const EclipseState& eclState, size_t numElems,
         thcwaterData = fieldPropsDoubleOnLeafAssigner(fp, "THCWATER");
 
     const std::vector<double>& poroData = fieldPropsDoubleOnLeafAssigner(fp, "PORO");
+    const std::vector<double>& ntgData = fieldPropsDoubleOnLeafAssigner(fp, "NTG");
 
     thermalConductionLawParams_.resize(numElems);
     for (unsigned elemIdx = 0; elemIdx < numElems; ++elemIdx) {
@@ -249,7 +250,7 @@ initThc_(const EclipseState& eclState, size_t numElems,
         elemParams.setThermalConductionApproach(EclThermalConductionApproach::Thc);
         auto& thcElemParams = elemParams.template getRealParams<EclThermalConductionApproach::Thc>();
 
-        thcElemParams.setPorosity(poroData[elemIdx]);
+        thcElemParams.setPorosity(poroData[elemIdx]*ntgData[elemIdx]);
         double thcrock = thcrockData.empty()    ? 0.0 : thcrockData[elemIdx];
         double thcoil = thcoilData.empty()      ? 0.0 : thcoilData[elemIdx];
         double thcgas = thcgasData.empty()      ? 0.0 : thcgasData[elemIdx];

@@ -53,7 +53,7 @@ public:
     { porosity_ = value; }
 
     /*!
-     * \brief Return the porosity
+     * \brief Return the effective porosity (here meaning porosity*ntg)
      */
     Scalar porosity() const
     { EnsureFinalized::check(); return porosity_; }
