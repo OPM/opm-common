@@ -425,7 +425,7 @@ namespace {
 
     bool is_total(const std::string& keyword) {
         static const keyword_set totalkw {
-            "OPT", "GPT", "WPT", "LPT", "NPT", "CPT",
+            "OPT", "GPT", "WPT", "GLIT", "LPT", "NPT", "CPT",
             "VPT", "TPT", "OVPT", "GVPT", "WVPT",
             "WPTH", "OPTH", "GPTH", "LPTH",
             "GPTS", "OPTS", "GPTF", "OPTF", "GMPT", "AMPT",
