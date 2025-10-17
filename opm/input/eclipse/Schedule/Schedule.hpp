@@ -581,6 +581,7 @@ namespace Opm {
                                            bool allowEmpty = false);
         static std::string formatDate(std::time_t t);
         void applyGlobalWPIMULT( const std::unordered_map<std::string, double>& wpimult_global_factor);
+        void updateICDScalingFactors();
 
         bool must_write_rst_file(std::size_t report_step) const;
 

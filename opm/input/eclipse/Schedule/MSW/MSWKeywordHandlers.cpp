@@ -109,18 +109,11 @@ void handleWSEGAICD(HandlerContext& handlerContext)
 {
     std::map<std::string, std::vector<std::pair<int, AutoICD> > > auto_icds = AutoICD::fromWSEGAICD(handlerContext.keyword);
 
-    for (auto& [well_name_pattern, aicd_pairs] : auto_icds) {
+    for (const auto& [well_name_pattern, aicd_pairs] : auto_icds) {
         const auto well_names = handlerContext.wellNames(well_name_pattern, true);
 
         for (const auto& well_name : well_names) {
             auto well = handlerContext.state().wells( well_name );
-
-            const auto& connections = well.getConnections();
-            const auto& segments = well.getSegments();
-            for (auto& [segment_nr, aicd] : aicd_pairs) {
-                const auto& outlet_segment_length = segments.segmentLength( segments.getFromSegmentNumber(segment_nr).outletSegment() );
-                aicd.updateScalingFactor(outlet_segment_length, connections.segment_perf_length(segment_nr));
-            }
 
             if (well.updateWSEGAICD(aicd_pairs, handlerContext.keyword.location()) )
                 handlerContext.state().wells.update( std::move(well) );
@@ -145,21 +138,14 @@ void handleWSEGSICD(HandlerContext& handlerContext)
 {
     std::map<std::string, std::vector<std::pair<int, SICD> > > spiral_icds = SICD::fromWSEGSICD(handlerContext.keyword);
 
-    for (auto& map_elem : spiral_icds) {
+    for (const auto& map_elem : spiral_icds) {
         const std::string& well_name_pattern = map_elem.first;
         const auto well_names = handlerContext.wellNames(well_name_pattern, false);
 
-        std::vector<std::pair<int, SICD> >& sicd_pairs = map_elem.second;
+        const std::vector<std::pair<int, SICD> >& sicd_pairs = map_elem.second;
 
         for (const auto& well_name : well_names) {
             auto well = handlerContext.state().wells( well_name );
-
-            const auto& connections = well.getConnections();
-            const auto& segments = well.getSegments();
-            for (auto& [segment_nr, sicd] : sicd_pairs) {
-                const auto& outlet_segment_length = segments.segmentLength( segments.getFromSegmentNumber(segment_nr).outletSegment() );
-                sicd.updateScalingFactor(outlet_segment_length, connections.segment_perf_length(segment_nr));
-            }
 
             if (well.updateWSEGSICD(sicd_pairs) )
                 handlerContext.state().wells.update( std::move(well) );

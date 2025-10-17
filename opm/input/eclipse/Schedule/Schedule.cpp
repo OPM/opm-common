@@ -763,6 +763,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                 keyword_index++;
             }
 
+            this->updateICDScalingFactors();
             check_compsegs_consistency(welsegs_wells, compsegs_wells, this->getWells(report_step));
             this->applyGlobalWPIMULT(wpimult_global_factor);
             this->end_report(report_step);
@@ -782,6 +783,20 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
             auto well = this->snapshots.back().wells(well_name);
             if (well.applyGlobalWPIMULT(factor)) {
                 this->snapshots.back().wells.update(std::move(well));
+            }
+        }
+    }
+
+    void Schedule::updateICDScalingFactors() {
+        // updating the scaling factors for all SICD and AICD segments
+        auto& sched_state = this->snapshots.back();
+        for (const auto& well : sched_state.wells()) {
+            if (!well.get().isMultiSegment()) {
+                continue;;
+            }
+            auto new_well{well.get()};
+            if (new_well.updateICDFlowScalingFactors()) {
+                sched_state.wells.update( std::move(new_well) );
             }
         }
     }

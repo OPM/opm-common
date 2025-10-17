@@ -112,6 +112,8 @@ namespace Opm {
 
         void checkSegmentDepthConsistency(const std::string& well_name, const UnitSystem& unit_system) const;
 
+        bool updateICDScalingFactors(const WellConnections& connections);
+
         template<class Serializer>
         void serializeOp(Serializer& serializer)
         {
