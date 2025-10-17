@@ -87,7 +87,7 @@ namespace {
     bool is_total(const std::string& key)
     {
         static const std::vector<std::string> totals = {
-            "OPT"  , "GPT"  , "WPT" , "GIT", "WIT", "OPTF" , "OPTS" , "OIT"  , "OVPT" , "OVIT" , "MWT" ,
+            "OPT"  , "GPT"  , "WPT" , "GIT", "WIT", "GLIT", "OPTF" , "OPTS" , "OIT"  , "OVPT" , "OVIT" , "MWT" ,
             "WVPT" , "WVIT" , "GMT"  , "GPTF" , "SGT"  , "GST" , "FGT" , "GCT" , "GIMT" ,
             "WGPT" , "WGIT" , "EGT"  , "EXGT" , "GVPT" , "GVIT" , "LPT" , "VPT" , "VIT" , "NPT" , "NIT",
             "TPT", "TIT", "CPT", "CIT", "SPT", "SIT", "EPT", "EIT", "TPTHEA", "TITHEA",
