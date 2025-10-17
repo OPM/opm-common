@@ -20,10 +20,21 @@
 namespace Opm {
 
     // Utility function motivated by for instance computing GPU pointers from the cpu without entering a kernel
-    void* ComputePtrBasedOnOffsetInOtherBuffer(void* bufBStart, void* bufAStart, void* ptrInA)
+    // Given a Buffer A with a starting pointer and a pointer into the buffer, compute the pointer with the same offset from the start of a buffer B
+    template <class PtrType>
+    PtrType* ComputePtrBasedOnOffsetInOtherBuffer(PtrType* bufBStart, size_t bufBLength, PtrType* bufAStart, size_t bufALength, PtrType* ptrInA)
     {
-        auto offset = static_cast<char*>(ptrInA) - static_cast<char*>(bufAStart);
-        auto res = static_cast<char*>(bufBStart) + offset;
+        if (bufAStart == nullptr || bufBStart == nullptr || ptrInA == nullptr) {
+            throw std::invalid_argument("ComputePtrBasedOnOffsetInOtherBuffer: One or more input pointers are null.");
+        }
+
+        auto offset = ptrInA - bufAStart;
+
+        if (offset < 0 || static_cast<size_t>(offset) >= bufALength) {
+            throw std::out_of_range("ComputePtrBasedOnOffsetInOtherBuffer: Pointer into A is out of range.");
+        }
+
+        auto res = bufBStart + offset;
         return res;
     }
 
