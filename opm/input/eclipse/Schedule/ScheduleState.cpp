@@ -72,6 +72,28 @@ namespace {
 
 namespace Opm {
 
+void
+ScheduleState::WellListChangeTracker::prepareNextReportStep()
+{
+    this->listsChanged_[this->index(Ix::Static)] =
+        this->listsChanged_[this->index(Ix::Action)];
+
+    this->listsChanged_[this->index(Ix::Action)] = false;
+}
+
+ScheduleState::WellListChangeTracker
+ScheduleState::WellListChangeTracker::serializationTestObject()
+{
+    auto tracker = WellListChangeTracker{};
+
+    tracker.recordStaticChangedLists();
+    tracker.recordActionChangedLists();
+
+    return tracker;
+}
+
+// ---------------------------------------------------------------------------
+
 void ScheduleState::updateSAVE(bool save) {
     this->m_save_step = save;
 }
@@ -160,6 +182,16 @@ ScheduleState::ScheduleState(const ScheduleState& src, const time_point& start_t
             // New report step.  All ASSIGNments and all NEXT updates from
             // previous report steps have been performed.
             this->udq.update(std::move(new_udq));
+        }
+    }
+
+    {
+        auto tracker = this->wlist_tracker();
+
+        tracker.prepareNextReportStep();
+
+        if (tracker.changedLists() != src.wlist_tracker().changedLists()) {
+            this->wlist_tracker.update(std::move(tracker));
         }
     }
 }
@@ -372,6 +404,7 @@ bool ScheduleState::operator==(const ScheduleState& other) const {
         && this->bhp_defaults.get() == other.bhp_defaults.get()
         && this->source.get() == other.source.get()
         && this->wcycle() == other.wcycle()
+        && this->wlist_tracker() == other.wlist_tracker()
         && this->wells == other.wells
         && this->satelliteInjection == other.satelliteInjection
         && this->inj_streams == other.inj_streams
@@ -429,6 +462,7 @@ ScheduleState ScheduleState::serializationTestObject() {
     ts.rst_config.update( RSTConfig::serializationTestObject() );
     ts.source.update( Source::serializationTestObject() );
     ts.wcycle.update(WCYCLE::serializationTestObject());
+    ts.wlist_tracker.update(WellListChangeTracker::serializationTestObject());
 
     return ts;
 }

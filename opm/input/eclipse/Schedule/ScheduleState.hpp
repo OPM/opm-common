@@ -42,12 +42,17 @@
 
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 
+#include <array>
 #include <cstddef>
+#include <iterator>
 #include <memory>
 #include <optional>
+#include <stdexcept>
+#include <string>
 #include <type_traits>
 #include <unordered_map>
 #include <utility>
+#include <vector>
 
 namespace {
 
@@ -326,6 +331,101 @@ namespace Opm {
             }
         };
 
+        /// Flag for structural changes to the run's well list
+        class WellListChangeTracker
+        {
+        private:
+            /// Named flag indices
+            enum class Ix : std::size_t {
+                /// Flag for static (regular) well list changes.
+                Static,
+
+                /// Flag for dynamic, i.e., ACTIONX based, well list changes.
+                Action,
+
+                /// Number of flags.  Must be last enumerator.
+                Num,
+            };
+
+            /// Translate flag to numeric index
+            ///
+            /// \param[in] Flag index
+            ///
+            /// \return numeric index corresponding to flag index \p i.
+            static constexpr auto index(const Ix i)
+            {
+                return static_cast<std::underlying_type_t<Ix>>(i);
+            }
+
+        public:
+            /// Record that one or more well lists have changed structurally
+            /// in response to a WLIST keyword entered in the regular input
+            /// stream.
+            void recordStaticChangedLists()
+            {
+                this->listsChanged_[ index(Ix::Static) ] = true;
+            }
+
+            /// Record that one or more well lists have changed structurally
+            /// in response to a WLIST keyword entered in an ACTIONX block.
+            void recordActionChangedLists()
+            {
+                this->listsChanged_[ index(Ix::Action) ] = true;
+            }
+
+            /// Report whether or not any well lists have changed since the
+            /// previous report step.
+            bool changedLists() const
+            {
+                return this->listsChanged_[ index(Ix::Static) ];
+            }
+
+            /// Prepare internal structure to record changes at the next
+            /// report step.
+            ///
+            /// Should typically be called at the end of one report step or
+            /// at the very beginning of the next report step, usually as
+            /// part of preparing the next ScheduleState object.
+            void prepareNextReportStep();
+
+            /// Create a serialisation test object.
+            static WellListChangeTracker serializationTestObject();
+
+            /// Equality predicate.
+            ///
+            /// \param[in] that Object against which \code *this \endcode
+            /// will be tested for equality.
+            ///
+            /// \return Whether or not \code *this \endcode is the same as
+            /// \p that.
+            bool operator==(const WellListChangeTracker& that) const
+            {
+                return this->listsChanged_ == that.listsChanged_;
+            }
+
+            /// Convert between byte array and object representation.
+            ///
+            /// \tparam Serializer Byte array conversion protocol.
+            ///
+            /// \param[in,out] serializer Byte array conversion object.
+            template <class Serializer>
+            void serializeOp(Serializer& serializer)
+            {
+                serializer(this->listsChanged_);
+            }
+
+        private:
+            /// Collection of change flags for run's well lists.
+            using ListChangeStatus = std::array
+                <bool, static_cast<std::underlying_type_t<Ix>>(Ix::Num)>;
+
+            /// Change flags for run's well lists.
+            ///
+            /// This could arguably be packed into a single unsigned char
+            /// (or std::byte).
+            ListChangeStatus listsChanged_{{false, false}};
+        };
+
         ScheduleState() = default;
         explicit ScheduleState(const time_point& start_time);
         ScheduleState(const time_point& start_time, const time_point& end_time);
@@ -439,6 +539,8 @@ namespace Opm {
         ptr_member<Source> source;
         ptr_member<WCYCLE> wcycle;
 
+        ptr_member<WellListChangeTracker> wlist_tracker;
+
         template <typename T>
         ptr_member<T>& get() {
             return const_cast<ptr_member<T>&>(std::as_const(*this).template get<T>());
@@ -495,6 +597,8 @@ namespace Opm {
                                   return this->source;
             else if constexpr ( std::is_same_v<T, WCYCLE> )
                                   return this->wcycle;
+            else if constexpr ( std::is_same_v<T, WellListChangeTracker> )
+                                  return this->wlist_tracker;
             else {
                 #if !OPM_IS_COMPILING_WITH_GPU_COMPILER // NVCC evaluates this branch for some reason
                 static_assert(always_false1::value, "Template type <T> not supported in get()");
@@ -549,6 +653,7 @@ namespace Opm {
             serializer(bhp_defaults);
             serializer(source);
             serializer(wcycle);
+            serializer(this->wlist_tracker);
             serializer(vfpprod);
             serializer(vfpinj);
             serializer(groups);

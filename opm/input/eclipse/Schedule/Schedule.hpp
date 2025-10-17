@@ -290,9 +290,45 @@ namespace Opm {
         /// \param[in] timeStep Zero-based report step index.
         std::vector<const Group*> restart_groups(std::size_t timeStep) const;
 
+        /// List of wells with structural changes since previous report step.
+        ///
+        /// Structural changes in this context include
+        ///
+        ///   -# number/location of reservoir connections
+        ///   -# number/topology of well segments/branches
+        ///   -# parent groups.
+        ///
+        /// \param[in] reportStep Zero-based report step index.
+        ///
+        /// \param[in] initialStep Zero-based report step index of the run's
+        /// first report step.  Typically zero for a base run, and the run's
+        /// restart step in a restarted simulation run.
+        ///
+        /// \return List of wells at time \p reportStep with structural
+        /// changes since the previous report step.
         std::vector<std::string>
         changed_wells(std::size_t reportStep,
                       std::size_t initialStep = 0) const;
+
+        /// Well lists change predicate
+        ///
+        /// Queries whether or not any structural well list changes have
+        /// happened at a particular report step.  Structural changes in
+        /// this context include
+        ///
+        ///   -# creation of a new well list
+        ///   -# wells being added to/removed from one or more well lists
+        ///
+        /// \param[in] reportStep Zero-based report step index.
+        ///
+        /// \param[in] initialStep Zero-based report step index of the run's
+        /// first report step.  Typically zero for a base run, and the run's
+        /// restart step in a restarted simulation run.
+        ///
+        /// \return Whether or not any of the run's well lists had
+        /// structural changes since the previous report step.
+        bool changedWellLists(std::size_t reportStep,
+                              std::size_t initialStep = 0) const;
 
         const Well& getWell(std::size_t well_index, std::size_t timeStep) const;
         const Well& getWell(const std::string& wellName, std::size_t timeStep) const;
