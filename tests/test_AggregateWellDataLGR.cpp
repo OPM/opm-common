@@ -67,7 +67,7 @@
 #include <utility>
 #include <vector>
 
-#include "tests/WorkArea.hpp"
+#include <tests/WorkArea.hpp>
 
 namespace {
 
@@ -907,6 +907,275 @@ END
         state.update_well_var("PROD", "WWPGR",    3.8);
         state.update_well_var("PROD", "WGPGR",    2.7);
         state.update_well_var("PROD", "WVPGR",    6.1);
+
+        state.update_well_var("INJ", "WOPR" ,    0.0);
+        state.update_well_var("INJ", "WWPR" ,    0.0);
+        state.update_well_var("INJ", "WGPR" ,    0.0);
+        state.update_well_var("INJ", "WVPR" ,    0.0);
+        state.update_well_var("INJ", "WOPT" ,    0.0);
+        state.update_well_var("INJ", "WWPT" ,    0.0);
+        state.update_well_var("INJ", "WGPT" ,    0.0);
+        state.update_well_var("INJ", "WVPT" ,    0.0);
+        state.update_well_var("INJ", "WWIR" ,  100.0);
+        state.update_well_var("INJ", "WGIR" ,  200.0);
+        state.update_well_var("INJ", "WWIT" , 1000.0);
+        state.update_well_var("INJ", "WGIT" , 2000.0);
+        state.update_well_var("INJ", "WVIT" , 1234.5);
+        state.update_well_var("INJ", "WWCT" ,    0.0);
+        state.update_well_var("INJ", "WGOR" ,    0.0);
+        state.update_well_var("INJ", "WBHP" ,  400.6);
+        state.update_well_var("INJ", "WTHP" ,  234.5);
+        state.update_well_var("INJ", "WOPTH",    0.0);
+        state.update_well_var("INJ", "WWPTH",    0.0);
+        state.update_well_var("INJ", "WGPTH",    0.0);
+        state.update_well_var("INJ", "WWITH", 1515.0);
+        state.update_well_var("INJ", "WGITH", 3030.0);
+        state.update_well_var("INJ", "WGVIR", 1234.0);
+        state.update_well_var("INJ", "WWVIR", 4321.0);
+        state.update_well_var("INJ", "WOIGR",    4.9);
+        state.update_well_var("INJ", "WWIGR",    3.8);
+        state.update_well_var("INJ", "WGIGR",    2.7);
+        state.update_well_var("INJ", "WVIGR",    6.1);
+
+        return state;
+    }
+
+
+    Opm::SummaryState sim_stateLGR_example04()
+    {
+        auto state = Opm::SummaryState{Opm::TimeService::now(), 0.0};
+
+        state.update_group_var("G1", "GOPR" ,    1.0);
+        state.update_group_var("G1", "GWPR" ,    2.0);
+        state.update_group_var("G1", "GGPR" ,    3.0);
+        state.update_group_var("G1", "GVPR" ,    4.0);
+        state.update_group_var("G1", "GOPT" ,   10.0);
+        state.update_group_var("G1", "GWPT" ,   20.0);
+        state.update_group_var("G1", "GGPT" ,   30.0);
+        state.update_group_var("G1", "GVPT" ,   40.0);
+        state.update_group_var("G1", "GWIR" ,    0.0);
+        state.update_group_var("G1", "GGIR" ,    0.0);
+        state.update_group_var("G1", "GWIT" ,    0.0);
+        state.update_group_var("G1", "GGIT" ,    0.0);
+        state.update_group_var("G1", "GVIT" ,    0.0);
+        state.update_group_var("G1", "GWCT" ,    0.625);
+        state.update_group_var("G1", "GGOR" ,  234.5);
+        state.update_group_var("G1", "GBHP" ,  314.15);
+        state.update_group_var("G1", "GTHP" ,  123.45);
+        state.update_group_var("G1", "GOPTH",  345.6);
+        state.update_group_var("G1", "GWPTH",  456.7);
+        state.update_group_var("G1", "GGPTH",  567.8);
+        state.update_group_var("G1", "GWITH",    0.0);
+        state.update_group_var("G1", "GGITH",    0.0);
+        state.update_group_var("G1", "GGVIR",    0.0);
+        state.update_group_var("G1", "GWVIR",    0.0);
+        state.update_group_var("G1", "GOPGR",    4.9);
+        state.update_group_var("G1", "GWPGR",    3.8);
+        state.update_group_var("G1", "GGPGR",    2.7);
+        state.update_group_var("G1", "GVPGR",    6.1);
+
+        state.update_group_var("G5", "GOPR" ,    1.0);
+        state.update_group_var("G5", "GWPR" ,    2.0);
+        state.update_group_var("G5", "GGPR" ,    3.0);
+        state.update_group_var("G5", "GVPR" ,    4.0);
+        state.update_group_var("G5", "GOPT" ,   10.0);
+        state.update_group_var("G5", "GWPT" ,   20.0);
+        state.update_group_var("G5", "GGPT" ,   30.0);
+        state.update_group_var("G5", "GVPT" ,   40.0);
+        state.update_group_var("G5", "GWIR" ,    0.0);
+        state.update_group_var("G5", "GGIR" ,    0.0);
+        state.update_group_var("G5", "GWIT" ,    0.0);
+        state.update_group_var("G5", "GGIT" ,    0.0);
+        state.update_group_var("G5", "GVIT" ,    0.0);
+        state.update_group_var("G5", "GWCT" ,    0.625);
+        state.update_group_var("G5", "GGOR" ,  234.5);
+        state.update_group_var("G5", "GBHP" ,  314.15);
+        state.update_group_var("G5", "GTHP" ,  123.45);
+        state.update_group_var("G5", "GOPTH",  345.6);
+        state.update_group_var("G5", "GWPTH",  456.7);
+        state.update_group_var("G5", "GGPTH",  567.8);
+        state.update_group_var("G5", "GWITH",    0.0);
+        state.update_group_var("G5", "GGITH",    0.0);
+        state.update_group_var("G5", "GGVIR",    0.0);
+        state.update_group_var("G5", "GWVIR",    0.0);
+        state.update_group_var("G5", "GOPGR",    4.9);
+        state.update_group_var("G5", "GWPGR",    3.8);
+        state.update_group_var("G5", "GGPGR",    2.7);
+        state.update_group_var("G5", "GVPGR",    6.1);
+
+        state.update_group_var("G3", "GOPR" ,    1.0);
+        state.update_group_var("G3", "GWPR" ,    2.0);
+        state.update_group_var("G3", "GGPR" ,    3.0);
+        state.update_group_var("G3", "GVPR" ,    4.0);
+        state.update_group_var("G3", "GOPT" ,   10.0);
+        state.update_group_var("G3", "GWPT" ,   20.0);
+        state.update_group_var("G3", "GGPT" ,   30.0);
+        state.update_group_var("G3", "GVPT" ,   40.0);
+        state.update_group_var("G3", "GWIR" ,    0.0);
+        state.update_group_var("G3", "GGIR" ,    0.0);
+        state.update_group_var("G3", "GWIT" ,    0.0);
+        state.update_group_var("G3", "GGIT" ,    0.0);
+        state.update_group_var("G3", "GVIT" ,    0.0);
+        state.update_group_var("G3", "GWCT" ,    0.625);
+        state.update_group_var("G3", "GGOR" ,  234.5);
+        state.update_group_var("G3", "GBHP" ,  314.15);
+        state.update_group_var("G3", "GTHP" ,  123.45);
+        state.update_group_var("G3", "GOPTH",  345.6);
+        state.update_group_var("G3", "GWPTH",  456.7);
+        state.update_group_var("G3", "GGPTH",  567.8);
+        state.update_group_var("G3", "GWITH",    0.0);
+        state.update_group_var("G3", "GGITH",    0.0);
+        state.update_group_var("G3", "GGVIR",    0.0);
+        state.update_group_var("G3", "GWVIR",    0.0);
+        state.update_group_var("G3", "GOPGR",    4.9);
+        state.update_group_var("G3", "GWPGR",    3.8);
+        state.update_group_var("G3", "GGPGR",    2.7);
+        state.update_group_var("G3", "GVPGR",    6.1);
+
+        state.update_group_var("G4", "GOPR" ,    1.0);
+        state.update_group_var("G4", "GWPR" ,    2.0);
+        state.update_group_var("G4", "GGPR" ,    3.0);
+        state.update_group_var("G4", "GVPR" ,    4.0);
+        state.update_group_var("G4", "GOPT" ,   10.0);
+        state.update_group_var("G4", "GWPT" ,   20.0);
+        state.update_group_var("G4", "GGPT" ,   30.0);
+        state.update_group_var("G4", "GVPT" ,   40.0);
+        state.update_group_var("G4", "GWIR" ,    0.0);
+        state.update_group_var("G4", "GGIR" ,    0.0);
+        state.update_group_var("G4", "GWIT" ,    0.0);
+        state.update_group_var("G4", "GGIT" ,    0.0);
+        state.update_group_var("G4", "GVIT" ,    0.0);
+        state.update_group_var("G4", "GWCT" ,    0.625);
+        state.update_group_var("G4", "GGOR" ,  234.5);
+        state.update_group_var("G4", "GBHP" ,  314.15);
+        state.update_group_var("G4", "GTHP" ,  123.45);
+        state.update_group_var("G4", "GOPTH",  345.6);
+        state.update_group_var("G4", "GWPTH",  456.7);
+        state.update_group_var("G4", "GGPTH",  567.8);
+        state.update_group_var("G4", "GWITH",    0.0);
+        state.update_group_var("G4", "GGITH",    0.0);
+        state.update_group_var("G4", "GGVIR",    0.0);
+        state.update_group_var("G4", "GWVIR",    0.0);
+        state.update_group_var("G4", "GOPGR",    4.9);
+        state.update_group_var("G4", "GWPGR",    3.8);
+        state.update_group_var("G4", "GGPGR",    2.7);
+        state.update_group_var("G4", "GVPGR",    6.1);
+
+        state.update_well_var("PROD1", "WOPR" ,    1.0);
+        state.update_well_var("PROD1", "WWPR" ,    2.0);
+        state.update_well_var("PROD1", "WGPR" ,    3.0);
+        state.update_well_var("PROD1", "WVPR" ,    4.0);
+        state.update_well_var("PROD1", "WOPT" ,   10.0);
+        state.update_well_var("PROD1", "WWPT" ,   20.0);
+        state.update_well_var("PROD1", "WGPT" ,   30.0);
+        state.update_well_var("PROD1", "WVPT" ,   40.0);
+        state.update_well_var("PROD1", "WWIR" ,    0.0);
+        state.update_well_var("PROD1", "WGIR" ,    0.0);
+        state.update_well_var("PROD1", "WWIT" ,    0.0);
+        state.update_well_var("PROD1", "WGIT" ,    0.0);
+        state.update_well_var("PROD1", "WVIT" ,    0.0);
+        state.update_well_var("PROD1", "WWCT" ,    0.625);
+        state.update_well_var("PROD1", "WGOR" ,  234.5);
+        state.update_well_var("PROD1", "WBHP" ,  314.15);
+        state.update_well_var("PROD1", "WTHP" ,  123.45);
+        state.update_well_var("PROD1", "WOPTH",  345.6);
+        state.update_well_var("PROD1", "WWPTH",  456.7);
+        state.update_well_var("PROD1", "WGPTH",  567.8);
+        state.update_well_var("PROD1", "WWITH",    0.0);
+        state.update_well_var("PROD1", "WGITH",    0.0);
+        state.update_well_var("PROD1", "WGVIR",    0.0);
+        state.update_well_var("PROD1", "WWVIR",    0.0);
+        state.update_well_var("PROD1", "WOPGR",    4.9);
+        state.update_well_var("PROD1", "WWPGR",    3.8);
+        state.update_well_var("PROD1", "WGPGR",    2.7);
+        state.update_well_var("PROD1", "WVPGR",    6.1);
+
+        state.update_well_var("PROD2", "WOPR" ,    1.0);
+        state.update_well_var("PROD2", "WWPR" ,    2.0);
+        state.update_well_var("PROD2", "WGPR" ,    3.0);
+        state.update_well_var("PROD2", "WVPR" ,    4.0);
+        state.update_well_var("PROD2", "WOPT" ,   10.0);
+        state.update_well_var("PROD2", "WWPT" ,   20.0);
+        state.update_well_var("PROD2", "WGPT" ,   30.0);
+        state.update_well_var("PROD2", "WVPT" ,   40.0);
+        state.update_well_var("PROD2", "WWIR" ,    0.0);
+        state.update_well_var("PROD2", "WGIR" ,    0.0);
+        state.update_well_var("PROD2", "WWIT" ,    0.0);
+        state.update_well_var("PROD2", "WGIT" ,    0.0);
+        state.update_well_var("PROD2", "WVIT" ,    0.0);
+        state.update_well_var("PROD2", "WWCT" ,    0.625);
+        state.update_well_var("PROD2", "WGOR" ,  234.5);
+        state.update_well_var("PROD2", "WBHP" ,  314.15);
+        state.update_well_var("PROD2", "WTHP" ,  123.45);
+        state.update_well_var("PROD2", "WOPTH",  345.6);
+        state.update_well_var("PROD2", "WWPTH",  456.7);
+        state.update_well_var("PROD2", "WGPTH",  567.8);
+        state.update_well_var("PROD2", "WWITH",    0.0);
+        state.update_well_var("PROD2", "WGITH",    0.0);
+        state.update_well_var("PROD2", "WGVIR",    0.0);
+        state.update_well_var("PROD2", "WWVIR",    0.0);
+        state.update_well_var("PROD2", "WOPGR",    4.9);
+        state.update_well_var("PROD2", "WWPGR",    3.8);
+        state.update_well_var("PROD2", "WGPGR",    2.7);
+        state.update_well_var("PROD2", "WVPGR",    6.1);
+
+        state.update_well_var("PROD3", "WOPR" ,    1.0);
+        state.update_well_var("PROD3", "WWPR" ,    2.0);
+        state.update_well_var("PROD3", "WGPR" ,    3.0);
+        state.update_well_var("PROD3", "WVPR" ,    4.0);
+        state.update_well_var("PROD3", "WOPT" ,   10.0);
+        state.update_well_var("PROD3", "WWPT" ,   20.0);
+        state.update_well_var("PROD3", "WGPT" ,   30.0);
+        state.update_well_var("PROD3", "WVPT" ,   40.0);
+        state.update_well_var("PROD3", "WWIR" ,    0.0);
+        state.update_well_var("PROD3", "WGIR" ,    0.0);
+        state.update_well_var("PROD3", "WWIT" ,    0.0);
+        state.update_well_var("PROD3", "WGIT" ,    0.0);
+        state.update_well_var("PROD3", "WVIT" ,    0.0);
+        state.update_well_var("PROD3", "WWCT" ,    0.625);
+        state.update_well_var("PROD3", "WGOR" ,  234.5);
+        state.update_well_var("PROD3", "WBHP" ,  314.15);
+        state.update_well_var("PROD3", "WTHP" ,  123.45);
+        state.update_well_var("PROD3", "WOPTH",  345.6);
+        state.update_well_var("PROD3", "WWPTH",  456.7);
+        state.update_well_var("PROD3", "WGPTH",  567.8);
+        state.update_well_var("PROD3", "WWITH",    0.0);
+        state.update_well_var("PROD3", "WGITH",    0.0);
+        state.update_well_var("PROD3", "WGVIR",    0.0);
+        state.update_well_var("PROD3", "WWVIR",    0.0);
+        state.update_well_var("PROD3", "WOPGR",    4.9);
+        state.update_well_var("PROD3", "WWPGR",    3.8);
+        state.update_well_var("PROD3", "WGPGR",    2.7);
+        state.update_well_var("PROD3", "WVPGR",    6.1);
+
+        state.update_well_var("PROD4", "WOPR" ,    1.0);
+        state.update_well_var("PROD4", "WWPR" ,    2.0);
+        state.update_well_var("PROD4", "WGPR" ,    3.0);
+        state.update_well_var("PROD4", "WVPR" ,    4.0);
+        state.update_well_var("PROD4", "WOPT" ,   10.0);
+        state.update_well_var("PROD4", "WWPT" ,   20.0);
+        state.update_well_var("PROD4", "WGPT" ,   30.0);
+        state.update_well_var("PROD4", "WVPT" ,   40.0);
+        state.update_well_var("PROD4", "WWIR" ,    0.0);
+        state.update_well_var("PROD4", "WGIR" ,    0.0);
+        state.update_well_var("PROD4", "WWIT" ,    0.0);
+        state.update_well_var("PROD4", "WGIT" ,    0.0);
+        state.update_well_var("PROD4", "WVIT" ,    0.0);
+        state.update_well_var("PROD4", "WWCT" ,    0.625);
+        state.update_well_var("PROD4", "WGOR" ,  234.5);
+        state.update_well_var("PROD4", "WBHP" ,  314.15);
+        state.update_well_var("PROD4", "WTHP" ,  123.45);
+        state.update_well_var("PROD4", "WOPTH",  345.6);
+        state.update_well_var("PROD4", "WWPTH",  456.7);
+        state.update_well_var("PROD4", "WGPTH",  567.8);
+        state.update_well_var("PROD4", "WWITH",    0.0);
+        state.update_well_var("PROD4", "WGITH",    0.0);
+        state.update_well_var("PROD4", "WGVIR",    0.0);
+        state.update_well_var("PROD4", "WWVIR",    0.0);
+        state.update_well_var("PROD4", "WOPGR",    4.9);
+        state.update_well_var("PROD4", "WWPGR",    3.8);
+        state.update_well_var("PROD4", "WGPGR",    2.7);
+        state.update_well_var("PROD4", "WVPGR",    6.1);
 
         state.update_well_var("INJ", "WOPR" ,    0.0);
         state.update_well_var("INJ", "WWPR" ,    0.0);
@@ -2345,6 +2614,424 @@ BOOST_AUTO_TEST_CASE (Declared_WellDynamicDataLGR)
         BOOST_CHECK_CLOSE(xwell[i1 + Ix::VoidPrGuideRate], 0.0, 1.0e-10);
         BOOST_CHECK_EQUAL(xwell[i1 + Ix::VoidPrGuideRate], xwell[i1 + Ix::VoidPrGuideRate_2]);
     }
+
+}
+
+BOOST_AUTO_TEST_CASE (Declared_GroupDataLGR)
+{
+
+    const auto tol = 1e-6;
+    const std::vector<float> expected_field_lgr_sgrp = {
+        1.0e+20f, 1.0e+20f, 0.0f, 1.0e+20f, 0.0f,
+        0.0f, 1.0e+20f, 1.0e+20f, 1.0e+20f, 1.0e+20f,
+        1.0e+20f, 1.0e+20f, 1.0e+20f, 1.0e+20f, 0.0f,
+        1.0e+20f, 1.0e+20f, 1.0e+20f, 1.0e+20f, 0.0f,
+        1.0e+20f, 1.0e+20f, 1.0e+20f, 1.0e+20f, 0.0f,
+        0.0f, 0.0f, 0.0f, -2.0e+20f, 0.0f,
+        0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
+        1.0e+20f, 0.0f, 0.0f, 0.0f, 1.0e+20f,
+        0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
+        0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
+        0.0f, 1.0e+20f, 1.0e+20f, 1.0e+20f, 1.0e+20f,
+        1.0e+20f, 1.0e+20f, 1.0e+20f, 1.0e+20f, 1.0e+20f,
+        1.0e+20f, 1.0e+20f, 1.0e+20f, 1.0e+20f, 1.0e+20f,
+        1.0e+20f, 1.0e+20f, 1.0e+20f, 1.0e+20f, 0.0f,
+        0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
+        0.0f, 0.0f, 0.0f, 0.0f, 1.0e+20f,
+        1.0e+20f, 0.0f, 1.0e+20f, 0.0f, 0.0f,
+        0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
+        0.0f, 0.0f, 1.0e+00f, 0.0f, 0.0f,
+        0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
+        0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
+        0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
+        0.0f, 0.0f
+    };
+
+    const auto simCase = SimulationCase{msw_sim("LGR_GROUP_EX04.DATA")};
+    const auto es_state =  simCase.es;
+    const auto grid    =  simCase.es.getInputGrid();
+    const auto sched =  simCase.sched;
+    const auto num_solver_steps = 1;
+    const auto smry = sim_stateLGR_example04();
+    auto simTime = 1.0;
+    auto report_step = 1;
+    auto lookup_step = 1;
+
+    std::vector<int> ih = Opm::RestartIO::Helpers::
+                                          createInteHead(es_state, grid, sched, simTime, num_solver_steps, report_step, lookup_step);
+
+    std::vector<int> ih_lgr1   = Opm::RestartIO::Helpers::
+                                          createInteHead(es_state, grid.getLGRCell("LGR1"), sched, simTime, num_solver_steps, report_step, lookup_step);
+
+    std::vector<int> ih_lgr2   = Opm::RestartIO::Helpers::
+                                          createInteHead(es_state, grid.getLGRCell("LGR2"), sched, simTime, num_solver_steps, report_step, lookup_step);
+
+    std::vector<int> ih_lgr3   = Opm::RestartIO::Helpers::
+                                          createInteHead(es_state, grid.getLGRCell("LGR3"), sched, simTime, num_solver_steps, report_step, lookup_step);
+
+    const auto rptStep = std::size_t{1};
+
+    // -------------------------- GROUP DATA FOR GLOBAL GRID --------------------------
+    auto group_aggregator = Opm::RestartIO::Helpers::AggregateGroupData(ih);
+    const auto& units    = simCase.es.getUnits();
+    group_aggregator.captureDeclaredGroupData(simCase.sched, units, rptStep, smry, ih);
+
+    // -------------------------- GROUP DATA FOR LGR GRID LGR1--------------------------
+    auto group_aggregator_lgr1 = Opm::RestartIO::Helpers::AggregateGroupData(ih_lgr1);
+    group_aggregator_lgr1.captureDeclaredGroupDataLGR(simCase.sched, units, rptStep, smry, "LGR1");
+
+    // -------------------------- GROUP DATA FOR LGR GRID LGR2--------------------------
+    auto group_aggregator_lgr2 = Opm::RestartIO::Helpers::AggregateGroupData(ih_lgr2);
+    group_aggregator_lgr2.captureDeclaredGroupDataLGR(simCase.sched, units, rptStep, smry, "LGR2");
+
+    // -------------------------- GROUP DATA FOR LGR GRID LGR2--------------------------
+    auto group_aggregator_lgr3 = Opm::RestartIO::Helpers::AggregateGroupData(ih_lgr2);
+    group_aggregator_lgr3.captureDeclaredGroupDataLGR(simCase.sched, units, rptStep, smry, "LGR3");
+
+    // IGR (LGR PSEUDOGROUP1 from LGR1)
+    {
+        using IGroup = ::Opm::RestartIO::Helpers::VectorItems::IGroup::index;
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::intehead;
+        int nwgmax = ih_lgr1[Ix::NWGMAX];
+        int nigrpz = ih_lgr1[Ix::NIGRPZ];
+        auto start = 0*nigrpz;
+        const auto& iGrp = group_aggregator_lgr1.getIGroup();
+        BOOST_CHECK_EQUAL(iGrp[start + 0] ,  1);
+        BOOST_CHECK_EQUAL(iGrp[start + 1] ,  2);
+        BOOST_CHECK_EQUAL(iGrp[start + 2],   3);
+        BOOST_CHECK_EQUAL(iGrp[start + 3] ,  4);
+        BOOST_CHECK_EQUAL(iGrp[start + nwgmax] ,  4);                        // Pseudogroup - Num of elements in group
+        BOOST_CHECK_EQUAL(iGrp[start + nwgmax + IGroup::GroupType] ,    0);  // Pseudogroup is always well group
+        BOOST_CHECK_EQUAL(iGrp[start + nwgmax + IGroup::GroupLevel] ,   1);  // Pseudogroup level is always 1
+        BOOST_CHECK_EQUAL(iGrp[start + nwgmax +  IGroup::ParentGroup] , 2);  // Pseudogroup - index of parent group (= 2 for FIELD)
+    }
+
+    // IGR (FIELD from LGR1)
+    {
+        using IGroup = ::Opm::RestartIO::Helpers::VectorItems::IGroup::index;
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::intehead;
+        int nwgmax = ih_lgr1[Ix::NWGMAX];
+        int nigrpz = ih_lgr1[Ix::NIGRPZ];
+        auto start = 1*nigrpz;
+        const auto& iGrp = group_aggregator_lgr1.getIGroup();
+        BOOST_CHECK_EQUAL(iGrp[start + 0] ,  1); // Note: FIELD group in LGR always contains the pseudo well group
+        BOOST_CHECK_EQUAL(iGrp[start + 1] ,  0);
+        BOOST_CHECK_EQUAL(iGrp[start + 2],   0);
+        BOOST_CHECK_EQUAL(iGrp[start + 3] ,  0);
+        BOOST_CHECK_EQUAL(iGrp[start + nwgmax] ,  1);                        // FIELD - Num of elements in group (only the pseudo well group)
+        BOOST_CHECK_EQUAL(iGrp[start + nwgmax + IGroup::GroupType] ,    1);  // FIELD is always a node group
+        BOOST_CHECK_EQUAL(iGrp[start + nwgmax + IGroup::GroupLevel] ,   0);  // FIELD has no group level
+        BOOST_CHECK_EQUAL(iGrp[start + nwgmax +  IGroup::ParentGroup] , 0);  // FIELD has no parent group
+        // the following flags are default to zero if IGR field for LGR contains any well
+        BOOST_CHECK_EQUAL(iGrp[start + nwgmax + IGroup::flag_88] ,          0);
+        BOOST_CHECK_EQUAL(iGrp[start + nwgmax + IGroup::VoidageGroupIndex] ,0);
+        BOOST_CHECK_EQUAL(iGrp[start + nwgmax + IGroup::flag_95] ,          0);
+        BOOST_CHECK_EQUAL(iGrp[start + nwgmax + IGroup::flag_96] ,          0);
+    }
+
+    // IGR (LGR PSEUDOGROUP2 from LGR2) (EMPTY - NO WELLS IN LGR2)
+    {
+        using IGroup = ::Opm::RestartIO::Helpers::VectorItems::IGroup::index;
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::intehead;
+        int nwgmax = ih_lgr2[Ix::NWGMAX];
+        int nigrpz = ih_lgr2[Ix::NIGRPZ];
+        auto start = 0*nigrpz;
+        const auto& iGrp = group_aggregator_lgr2.getIGroup();
+        BOOST_CHECK_EQUAL(iGrp[start + 0] , 0);
+        BOOST_CHECK_EQUAL(iGrp[start + 1] ,  0);
+        BOOST_CHECK_EQUAL(iGrp[start + 2],   0);
+        BOOST_CHECK_EQUAL(iGrp[start + 3] ,  0);
+        BOOST_CHECK_EQUAL(iGrp[start + nwgmax] ,  0);                        // Pseudogroup - Num of elements in group
+        BOOST_CHECK_EQUAL(iGrp[start + nwgmax + IGroup::GroupType] ,    0);  // Pseudogroup is always well group
+        BOOST_CHECK_EQUAL(iGrp[start + nwgmax + IGroup::GroupLevel] ,   0);  // Pseudogroup level is always 1
+        BOOST_CHECK_EQUAL(iGrp[start + nwgmax +  IGroup::ParentGroup] , 0);  // Pseudogroup - index of parent group (= 2 for FIELD)
+        bool all_equal = std::all_of(iGrp.begin() + start, iGrp.begin() + start + nigrpz,
+                         [](int x) { return x == 0; });
+        BOOST_CHECK_EQUAL(all_equal, true);
+
+    }
+
+    // IGR (FIELD from LGR2)
+    {
+        using IGroup = ::Opm::RestartIO::Helpers::VectorItems::IGroup::index;
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::intehead;
+        int nwgmax = ih_lgr2[Ix::NWGMAX];
+        int nigrpz = ih_lgr2[Ix::NIGRPZ];
+        auto start = 1*nigrpz;
+        const auto& iGrp = group_aggregator_lgr2.getIGroup();
+        BOOST_CHECK_EQUAL(iGrp[start + 0] ,  0);
+        BOOST_CHECK_EQUAL(iGrp[start + 1] ,  0);
+        BOOST_CHECK_EQUAL(iGrp[start + 2],   0);
+        BOOST_CHECK_EQUAL(iGrp[start + 3] ,  0);
+        BOOST_CHECK_EQUAL(iGrp[start + nwgmax] ,  0);                        // FIELD - Num of elements in group
+        BOOST_CHECK_EQUAL(iGrp[start + nwgmax + IGroup::GroupType] ,    0);  // FIELD is always a node group
+        BOOST_CHECK_EQUAL(iGrp[start + nwgmax + IGroup::GroupLevel] ,   0);  // FIELD has no group level1
+        BOOST_CHECK_EQUAL(iGrp[start + nwgmax +  IGroup::ParentGroup] , 0);  // FIELD has no parent group
+        // the following flags are default to zero if IGR field for LGR contains any well
+        BOOST_CHECK_EQUAL(iGrp[start + nwgmax + IGroup::flag_88] ,          2);
+        BOOST_CHECK_EQUAL(iGrp[start + nwgmax + IGroup::VoidageGroupIndex], 2);
+        BOOST_CHECK_EQUAL(iGrp[start + nwgmax + IGroup::flag_95] ,          2);
+        BOOST_CHECK_EQUAL(iGrp[start + nwgmax + IGroup::flag_96] ,          2);
+    }
+
+    // IGR (LGR PSEUDOGROUP2 from LGR3) (EMPTY - NO WELLS IN LGR2)
+    {
+        using IGroup = ::Opm::RestartIO::Helpers::VectorItems::IGroup::index;
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::intehead;
+        int nwgmax = ih_lgr3[Ix::NWGMAX];
+        int nigrpz = ih_lgr3[Ix::NIGRPZ];
+        auto start = 0*nigrpz;
+        const auto& iGrp = group_aggregator_lgr3.getIGroup();
+        BOOST_CHECK_EQUAL(iGrp[start + 0] , 0);
+        BOOST_CHECK_EQUAL(iGrp[start + 1] ,  0);
+        BOOST_CHECK_EQUAL(iGrp[start + 2],   0);
+        BOOST_CHECK_EQUAL(iGrp[start + 3] ,  0);
+        BOOST_CHECK_EQUAL(iGrp[start + nwgmax] ,  0);                        // Pseudogroup - Num of elements in group
+        BOOST_CHECK_EQUAL(iGrp[start + nwgmax + IGroup::GroupType] ,    0);  // Pseudogroup is always well group
+        BOOST_CHECK_EQUAL(iGrp[start + nwgmax + IGroup::GroupLevel] ,   0);  // Pseudogroup level is always 1
+        BOOST_CHECK_EQUAL(iGrp[start + nwgmax +  IGroup::ParentGroup] , 0);  // Pseudogroup - index of parent group (= 2 for FIELD)
+        bool all_equal = std::all_of(iGrp.begin() + start, iGrp.begin() + start + nigrpz,
+                         [](int x) { return x == 0; });
+        BOOST_CHECK_EQUAL(all_equal, true);
+
+    }
+
+    // IGR (FIELD from LGR3)
+    {
+        using IGroup = ::Opm::RestartIO::Helpers::VectorItems::IGroup::index;
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::intehead;
+        int nwgmax = ih_lgr3[Ix::NWGMAX];
+        int nigrpz = ih_lgr3[Ix::NIGRPZ];
+        auto start = 1*nigrpz;
+        const auto& iGrp = group_aggregator_lgr3.getIGroup();
+        BOOST_CHECK_EQUAL(iGrp[start + 0] ,  0);
+        BOOST_CHECK_EQUAL(iGrp[start + 1] ,  0);
+        BOOST_CHECK_EQUAL(iGrp[start + 2],   0);
+        BOOST_CHECK_EQUAL(iGrp[start + 3] ,  0);
+        BOOST_CHECK_EQUAL(iGrp[start + nwgmax] ,  0);                        // FIELD - Num of elements in group
+        BOOST_CHECK_EQUAL(iGrp[start + nwgmax + IGroup::GroupType]  ,  0);  // FIELD is always a node group
+        BOOST_CHECK_EQUAL(iGrp[start + nwgmax + IGroup::GroupLevel] ,  0);  // FIELD has no group level1
+        BOOST_CHECK_EQUAL(iGrp[start + nwgmax + IGroup::ParentGroup],  0);  // FIELD has no parent group
+        // the following flags are default to zero if IGR field for LGR contains any well
+        BOOST_CHECK_EQUAL(iGrp[start + nwgmax + IGroup::flag_88] ,          2);
+        BOOST_CHECK_EQUAL(iGrp[start + nwgmax + IGroup::VoidageGroupIndex], 2);
+        BOOST_CHECK_EQUAL(iGrp[start + nwgmax + IGroup::flag_95] ,          2);
+        BOOST_CHECK_EQUAL(iGrp[start + nwgmax + IGroup::flag_96] ,          2);
+    }
+
+
+
+    // SGRP (LGR PSEUDOGROUP1 from LGR1)
+    {
+        using SGroup = ::Opm::RestartIO::Helpers::VectorItems::SGroup::index;
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::intehead;
+        int nsgrpz = ih_lgr1[Ix::NSGRPZ];
+        auto start = 0*nsgrpz;
+        const auto& sGrp = group_aggregator_lgr1.getSGroup();
+        BOOST_CHECK_EQUAL(sGrp[start + SGroup::EfficiencyFactor] ,  1);
+    }
+
+    // SGRP (LGR FIELD from LGR1)
+    {
+        using SGroup = ::Opm::RestartIO::Helpers::VectorItems::SGroup::index;
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::intehead;
+        int nsgrpz = ih_lgr1[Ix::NSGRPZ];
+        auto start = 1*nsgrpz;
+        const auto& sGrp = group_aggregator_lgr1.getSGroup();
+        BOOST_CHECK_EQUAL(sGrp[start + SGroup::EfficiencyFactor] ,  1);
+    }
+
+    // SGRP (LGR PSEUDOGROUP1 from LGR2)
+    {
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::intehead;
+        int nsgrpz = ih_lgr1[Ix::NSGRPZ];
+        auto start = 0*nsgrpz;
+        const auto& sGrp = group_aggregator_lgr2.getSGroup();
+        bool all_equal = std::all_of(sGrp.begin() + start, sGrp.begin() + start + nsgrpz,
+                         [](int x) { return x == 0; });
+        BOOST_CHECK_EQUAL(all_equal, true);
+    }
+
+    // SGRP (LGR FIELD from LGR2)
+    {
+        using SGroup = ::Opm::RestartIO::Helpers::VectorItems::SGroup::index;
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::intehead;
+        int nsgrpz = ih_lgr1[Ix::NSGRPZ];
+        auto start = 1*nsgrpz;
+        const auto& sGrp = group_aggregator_lgr2.getSGroup();
+        BOOST_CHECK_EQUAL(sGrp[start + SGroup::EfficiencyFactor] ,  1);
+            // Compare element by element
+        for (std::size_t i = 0; i < expected_field_lgr_sgrp.size(); ++i) {
+            BOOST_CHECK_CLOSE_FRACTION(sGrp[start + i], expected_field_lgr_sgrp[i],tol);
+        }
+    }
+    // SGRP (LGR PSEUDOGROUP1 from LGR3)
+    {
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::intehead;
+        int nsgrpz = ih_lgr1[Ix::NSGRPZ];
+        auto start = 0*nsgrpz;
+        const auto& sGrp = group_aggregator_lgr3.getSGroup();
+        bool all_equal = std::all_of(sGrp.begin() + start, sGrp.begin() + start + nsgrpz,
+                         [](int x) { return x == 0; });
+        BOOST_CHECK_EQUAL(all_equal, true);
+    }
+
+    // SGRP (LGR FIELD from LGR3)
+    {
+        using SGroup = ::Opm::RestartIO::Helpers::VectorItems::SGroup::index;
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::intehead;
+        int nsgrpz = ih_lgr1[Ix::NSGRPZ];
+        auto start = 1*nsgrpz;
+        const auto& sGrp = group_aggregator_lgr3.getSGroup();
+        BOOST_CHECK_EQUAL(sGrp[start + SGroup::EfficiencyFactor] ,  1);
+            // Compare element by element
+        for (std::size_t i = 0; i < expected_field_lgr_sgrp.size(); ++i) {
+            BOOST_CHECK_CLOSE_FRACTION(sGrp[start + i], expected_field_lgr_sgrp[i],tol);
+        }
+    }
+
+    // ZGRP (LGR1)
+    {
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::intehead;
+        int nzgrpz = ih_lgr1[Ix::NZGRPZ];
+        auto start = 0*nzgrpz;
+        const auto& zGrp = group_aggregator_lgr1.getZGroup();
+        std::string group_string = "G5      ";
+        std::string field_string = "FIELD   ";
+
+        BOOST_CHECK_EQUAL(zGrp[start].c_str(), group_string.c_str());
+        BOOST_CHECK_EQUAL(zGrp[start+nzgrpz].c_str(), field_string.c_str());
+    }
+
+    // ZGRP (LGR2)
+    {
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::intehead;
+        int nzgrpz = ih_lgr2[Ix::NZGRPZ];
+        auto start = 0*nzgrpz;
+        const auto& zGrp = group_aggregator_lgr2.getZGroup();
+        std::string group_string = "        ";
+        std::string field_string = "FIELD   ";
+
+        BOOST_CHECK_EQUAL(zGrp[start].c_str(), group_string.c_str());
+        BOOST_CHECK_EQUAL(zGrp[start+nzgrpz].c_str(), field_string.c_str());
+    }
+    // ZGRP (LGR3)
+    {
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::intehead;
+        int nzgrpz = ih_lgr3[Ix::NZGRPZ];
+        auto start = 0*nzgrpz;
+        const auto& zGrp = group_aggregator_lgr3.getZGroup();
+        std::string group_string = "        ";
+        std::string field_string = "FIELD   ";
+
+        BOOST_CHECK_EQUAL(zGrp[start].c_str(), group_string.c_str());
+        BOOST_CHECK_EQUAL(zGrp[start+nzgrpz].c_str(), field_string.c_str());
+    }
+
+
+    {
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::intehead;
+        const auto& xGrp_global = group_aggregator.getXGroup();
+        std::vector<double> xgrp_g1, xgrp_g3, xgrp_g4, xgrp_g5;
+        int nxgrpz_global = ih[Ix::NXGRPZ];
+        xgrp_g1.resize(nxgrpz_global, 0.0);
+        xgrp_g3.resize(nxgrpz_global, 0.0);
+        xgrp_g4.resize(nxgrpz_global, 0.0);
+        xgrp_g5.resize(nxgrpz_global, 0.0);
+        auto copy_xgrp = [nxgrpz_global](const auto& source, auto& dest, int start) {
+            std::copy(source.begin() + start,
+                      source.begin() + start + nxgrpz_global,
+                      dest.begin());
+        };
+
+        // Filling  G1 to G4 Groups of  GLOBAL
+        copy_xgrp(xGrp_global, xgrp_g1, 0 * nxgrpz_global);
+        copy_xgrp(xGrp_global, xgrp_g3, 1 * nxgrpz_global);
+        copy_xgrp(xGrp_global, xgrp_g4, 2 * nxgrpz_global);
+        copy_xgrp(xGrp_global, xgrp_g5, 3 * nxgrpz_global);
+
+        auto element_sum = [&xgrp_g1,&xgrp_g3, &xgrp_g4, &xgrp_g5](const std::vector<double>::size_type index) {
+            return xgrp_g1[index] + xgrp_g3[index] + xgrp_g4[index] + xgrp_g5[index];
+        };
+        // XGRP (LGR PSEUDOGROUP1 from LGR1)
+        {
+            using XGroup = ::Opm::RestartIO::Helpers::VectorItems::XGroup::index;
+            int nxgrpz = ih_lgr1[Ix::NXGRPZ];
+            auto start = 0*nxgrpz;
+            const auto& xGrp = group_aggregator_lgr1.getXGroup();
+            BOOST_CHECK_CLOSE_FRACTION(xGrp[start + XGroup::OilPrRate] , element_sum(XGroup::OilPrRate), tol);
+            BOOST_CHECK_CLOSE_FRACTION(xGrp[start + XGroup::WatPrRate] , element_sum(XGroup::WatPrRate), tol);
+            BOOST_CHECK_CLOSE_FRACTION(xGrp[start + XGroup::GasPrRate] , element_sum(XGroup::GasPrRate), tol);
+            BOOST_CHECK_CLOSE_FRACTION(xGrp[start + XGroup::LiqPrRate] , element_sum(XGroup::LiqPrRate), tol);
+            BOOST_CHECK_CLOSE_FRACTION(xGrp[start + XGroup::WatInjRate] , element_sum(XGroup::WatInjRate), tol);
+            BOOST_CHECK_CLOSE_FRACTION(xGrp[start + XGroup::GasInjRate] , element_sum(XGroup::GasInjRate), tol);
+            BOOST_CHECK_CLOSE_FRACTION(xGrp[start + XGroup::WatCut] , element_sum(XGroup::WatCut), tol);
+            BOOST_CHECK_CLOSE_FRACTION(xGrp[start + XGroup::GORatio] , element_sum(XGroup::GORatio), tol);
+            BOOST_CHECK_CLOSE_FRACTION(xGrp[start + XGroup::OilPrTotal] , element_sum(XGroup::OilPrTotal), tol);
+            BOOST_CHECK_CLOSE_FRACTION(xGrp[start + XGroup::WatPrTotal] , element_sum(XGroup::WatPrTotal), tol);
+            BOOST_CHECK_CLOSE_FRACTION(xGrp[start + XGroup::GasPrTotal] , element_sum(XGroup::GasPrTotal), tol);
+            BOOST_CHECK_CLOSE_FRACTION(xGrp[start + XGroup::VoidPrTotal] , element_sum(XGroup::VoidPrTotal), tol);
+
+            BOOST_CHECK_CLOSE_FRACTION(xGrp[start + XGroup::WatInjTotal] , element_sum(XGroup::WatInjTotal), tol);
+            BOOST_CHECK_CLOSE_FRACTION(xGrp[start + XGroup::GasInjTotal] , element_sum(XGroup::GasInjTotal), tol);
+            BOOST_CHECK_CLOSE_FRACTION(xGrp[start + XGroup::VoidInjTotal] , element_sum(XGroup::VoidInjTotal), tol);
+
+            BOOST_CHECK_CLOSE_FRACTION(xGrp[start + XGroup::GasConsumptionRate] , element_sum(XGroup::GasConsumptionRate), tol);
+            BOOST_CHECK_CLOSE_FRACTION(xGrp[start + XGroup::GasConsumptionTotal] , element_sum(XGroup::GasConsumptionTotal), tol);
+            BOOST_CHECK_CLOSE_FRACTION(xGrp[start + XGroup::OilPrPot] , element_sum(XGroup::OilPrPot), tol);
+            BOOST_CHECK_CLOSE_FRACTION(xGrp[start + XGroup::WatPrPot] , element_sum(XGroup::WatPrPot), tol);
+
+            BOOST_CHECK_CLOSE_FRACTION(xGrp[start + XGroup::GasImportRate] , element_sum(XGroup::GasImportRate), tol);
+            BOOST_CHECK_CLOSE_FRACTION(xGrp[start + XGroup::GasImportTotal] , element_sum(XGroup::GasImportTotal), tol);
+            BOOST_CHECK_CLOSE_FRACTION(xGrp[start + XGroup::OilPrTotalSolution] , element_sum(XGroup::OilPrTotalSolution), tol);
+            BOOST_CHECK_CLOSE_FRACTION(xGrp[start + XGroup::GasPrTotalSolution] , element_sum(XGroup::GasPrTotalSolution), tol);
+
+            // NO GUIDE RATES FOR PSEUDO GROUP
+            BOOST_CHECK_CLOSE_FRACTION(xGrp[start + XGroup::OilPrGuideRate] , 0, tol);
+            BOOST_CHECK_CLOSE_FRACTION(xGrp[start + XGroup::WatPrGuideRate] , 0, tol);
+            BOOST_CHECK_CLOSE_FRACTION(xGrp[start + XGroup::GasPrGuideRate] , 0, tol);
+            BOOST_CHECK_CLOSE_FRACTION(xGrp[start + XGroup::VoidPrGuideRate] , 0, tol);
+            BOOST_CHECK_CLOSE_FRACTION(xGrp[start + XGroup::OilInjGuideRate] , 0, tol);
+            BOOST_CHECK_CLOSE_FRACTION(xGrp[start + XGroup::WatInjGuideRate] , 0, tol);
+            BOOST_CHECK_CLOSE_FRACTION(xGrp[start + XGroup::WatInjGuideRate_2] , 0, tol);
+            BOOST_CHECK_CLOSE_FRACTION(xGrp[start + XGroup::GasInjGuideRate] , 0, tol);
+            BOOST_CHECK_CLOSE_FRACTION(xGrp[start + XGroup::OilPrGuideRate_2] , 0, tol);
+            BOOST_CHECK_CLOSE_FRACTION(xGrp[start + XGroup::WatPrGuideRate_2] , 0, tol);
+            BOOST_CHECK_CLOSE_FRACTION(xGrp[start + XGroup::GasPrGuideRate_2] , 0 , tol);
+            BOOST_CHECK_CLOSE_FRACTION(xGrp[start + XGroup::VoidPrGuideRate_2] , 0, tol);
+
+            BOOST_CHECK_CLOSE_FRACTION(xGrp[start + XGroup::HistOilPrTotal] , element_sum(XGroup::HistOilPrTotal), tol);
+            BOOST_CHECK_CLOSE_FRACTION(xGrp[start + XGroup::HistWatPrTotal] , element_sum(XGroup::HistWatPrTotal), tol);
+            BOOST_CHECK_CLOSE_FRACTION(xGrp[start + XGroup::HistWatInjTotal] , element_sum(XGroup::HistWatInjTotal), tol);
+            BOOST_CHECK_CLOSE_FRACTION(xGrp[start + XGroup::HistGasPrTotal] , element_sum(XGroup::HistGasPrTotal), tol);
+            BOOST_CHECK_CLOSE_FRACTION(xGrp[start + XGroup::HistGasInjTotal] , element_sum(XGroup::HistGasInjTotal), tol);
+            BOOST_CHECK_CLOSE_FRACTION(xGrp[start + XGroup::TracerOffset] , element_sum(XGroup::TracerOffset), tol);
+
+        }
+
+        // XGRP (LGR FIELD from LGR1)
+        {
+            int nxgrpz = ih_lgr1[Ix::NXGRPZ];
+            auto start = 0*nxgrpz;
+            const auto& xGrp = group_aggregator_lgr1.getXGroup();
+            for (auto i = 0; i < nxgrpz; ++i) {
+                BOOST_CHECK_CLOSE_FRACTION(xGrp[start + i], xGrp[start + nxgrpz + i], tol);
+            }
+        }
+        // XGRP (LGR for LGR2)
+        {
+            const auto& xGrp = group_aggregator_lgr2.getXGroup();
+            bool all_equal = std::all_of(xGrp.begin(), xGrp.end(), [](int x) { return x == 0; });
+            BOOST_CHECK_EQUAL(all_equal, true);
+        }
+        // XGRP (LGR for LGR2)
+        {
+            const auto& xGrp = group_aggregator_lgr3.getXGroup();
+            bool all_equal = std::all_of(xGrp.begin(), xGrp.end(), [](int x) { return x == 0; });
+            BOOST_CHECK_EQUAL(all_equal, true);
+        }
+
+        }
 
 }
 
