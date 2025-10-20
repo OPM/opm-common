@@ -1322,7 +1322,7 @@ void assignGasLiftOptimisation(const Opm::GasLiftGroup& group,
 }
 
 
-const std::vector<float>& defaultSGRP()
+std::vector<float> defaultSGRP()
 {
     const auto dflt   = -1.0e+20f;
     const auto dflt_2 = -2.0e+20f;
@@ -1371,7 +1371,7 @@ void staticContrib(const Opm::Group&         group,
     using Isp = ::Opm::RestartIO::Helpers::VectorItems::SGroup::prod_index;
     using M   = ::Opm::UnitSystem::measure;
 
-    const auto& init = defaultSGRP();
+    const auto init = defaultSGRP();
     const auto sz = static_cast<decltype(init.size())>(sGrp.size());
 
     auto b = std::begin(init);
@@ -1443,7 +1443,7 @@ void staticContrib_empty_field_group_LGR(SGrpArray& sGrp)
     using Ix  = ::Opm::RestartIO::Helpers::VectorItems::SGroup::index;
     using Isp = ::Opm::RestartIO::Helpers::VectorItems::SGroup::prod_index;
 
-    const auto& init = defaultSGRP();
+    const auto init = defaultSGRP();
 
     const auto sz = static_cast<decltype(init.size())>(sGrp.size());
 
