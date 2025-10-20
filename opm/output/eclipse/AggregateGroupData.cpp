@@ -36,6 +36,7 @@
 #include <opm/input/eclipse/Schedule/ScheduleState.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
+#include <opm/output/data/Wells.hpp>
 
 #include <algorithm>
 #include <cassert>
@@ -786,7 +787,7 @@ void storeGroupTreeLGR(const Opm::Schedule& sched,
     const bool is_field = group.name() == "FIELD";
 
     auto group_insert_index_lgr = [&sched, &group, simStep](const Opm::Group& child_group, const std::string& lgr_label) -> int {
-        //This function assumes thatt the group is not a well group.
+        //This function assumes that the group is not a well group.
         // A well group cannot own a general group.
         const auto& father_group =  sched.getGroup(child_group.parent(), simStep);
         const std::size_t num_father_child = group.groups().size() ;
@@ -929,6 +930,51 @@ void staticContrib(const Opm::Schedule&     sched,
         iGrp[nwgmax+95] = group.insert_index();
         iGrp[nwgmax+96] = group.insert_index();
     }
+}
+
+
+template <class IGrpArray>
+void staticContrib_pseudo_well_group_LGR(std::vector<std::reference_wrapper<const Opm::Well>>& filtered_wells,
+                                         const int                nwgmax,
+                                         IGrpArray&               iGrp)
+{
+    using IGroup = ::Opm::RestartIO::Helpers::VectorItems::IGroup::index;
+    namespace Value = ::Opm::RestartIO::Helpers::VectorItems::IGroup::Value;
+    int igrpCount = 0;
+
+    for (const auto& well : filtered_wells) {
+        iGrp[igrpCount] = well.get().seqIndexLGR() + 1;
+        igrpCount += 1;
+    }
+
+    iGrp[nwgmax] = igrpCount;
+    iGrp[nwgmax + IGroup::GroupType] = Value::GroupType::WellGroup;
+    iGrp[nwgmax + IGroup::GroupLevel] = 1; // Pseudo well group is always at level 1
+    iGrp[nwgmax + IGroup::ParentGroup] = 2; // Pseudo well group always has FIELD as parent group
+}
+
+
+template <class IGrpArray>
+void staticContrib_field_group_LGR(const int                nwgmax,
+                                   IGrpArray&               iGrp)
+{
+    using IGroup = ::Opm::RestartIO::Helpers::VectorItems::IGroup::index;
+    iGrp[0] = 1; // Pseudo well group for LGRs alls belong to FIELD LGR
+    iGrp[nwgmax + IGroup::NoOfChildGroupsWells] = 1; // FIELD always has one child group - the pseudo well group for LGRs
+    iGrp[nwgmax + IGroup::GroupType] = 1; // NodeGroup is default for lgr field group
+}
+
+
+template <class IGrpArray>
+void staticContrib_empty_field_group_LGR(const int          nwgmax,
+                                         IGrpArray&         iGrp)
+{
+    using IGroup = ::Opm::RestartIO::Helpers::VectorItems::IGroup::index;
+    // These seems to be default values for empty LGR FIELD IGRP
+    iGrp[nwgmax + IGroup::flag_88] = 2;
+    iGrp[nwgmax + IGroup::VoidageGroupIndex] = 2;
+    iGrp[nwgmax + IGroup::flag_95] = 2;
+    iGrp[nwgmax + IGroup::flag_96] = 2;
 }
 
 } // Igrp
@@ -1529,7 +1575,7 @@ captureDeclaredGroupData(const Opm::Schedule&     sched,
 void
 Opm::RestartIO::Helpers::AggregateGroupData::
 captureDeclaredGroupDataLGR(const Opm::Schedule&     sched,
-                            const Opm::UnitSystem&   units,
+                            [[maybe_unused]] const Opm::UnitSystem&   units,
                             const std::size_t        simStep,
                             const Opm::SummaryState& sumState,
                             const std::string&       lgr_tag)
