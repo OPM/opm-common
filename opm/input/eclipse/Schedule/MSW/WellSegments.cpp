@@ -639,6 +639,21 @@ namespace Opm {
         }
     }
 
+    bool WellSegments::updateICDScalingFactors(const WellConnections& connections)
+    {
+        bool update = false;
+        for (auto& segment : this->m_segments) {
+            if (segment.isSpiralICD() || segment.isAICD()) {
+                const int segment_number = segment.segmentNumber();
+                const auto outlet_segment = this->getFromSegmentNumber(segment_number).outletSegment();
+                const auto outlet_segment_length = this->segmentLength(outlet_segment);
+                const auto completion_length = connections.segment_perf_length(segment_number);
+                update |= segment.updateICDScalingFactor(outlet_segment_length, completion_length);
+            }
+        }
+        return update;
+    }
+
     std::set<int> WellSegments::branches() const {
         std::set<int> bset;
         for (const auto& segment : this->m_segments)

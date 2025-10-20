@@ -106,6 +106,7 @@ namespace Opm {
         void updateAutoICD(const AutoICD& aicd);
         void updateValve(const Valve& valve, const double segment_length);
         void updateValve(const Valve& valve);
+        bool updateICDScalingFactor(const double outlet_segment_length, const double completion_length);
         void addInletSegment(const int segment_number);
 
         bool isRegular() const

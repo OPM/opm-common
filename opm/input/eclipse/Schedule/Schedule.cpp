@@ -582,7 +582,7 @@ namespace
 {
 /// \brief Check whether each MS well has COMPSEGS entry andissue error if not.
 /// \param welsegs All wells with a WELSEGS entry together with the location.
-/// \param compegs All wells with a COMPSEGS entry
+/// \param compsegs All wells with a COMPSEGS entry
 void check_compsegs_consistency(const Opm::WelSegsSet& welsegs,
                                 const std::set<std::string>& compsegs,
                                 const std::vector<::Opm::Well>& wells)
@@ -763,6 +763,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                 keyword_index++;
             }
 
+            this->updateICDScalingFactors();
             check_compsegs_consistency(welsegs_wells, compsegs_wells, this->getWells(report_step));
             this->applyGlobalWPIMULT(wpimult_global_factor);
             this->end_report(report_step);
@@ -783,6 +784,25 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
             if (well.applyGlobalWPIMULT(factor)) {
                 this->snapshots.back().wells.update(std::move(well));
             }
+        }
+    }
+
+    void Schedule::updateICDScalingFactors() {
+        // updating the scaling factors for all SICD and AICD segments in multisegment wells
+        auto& sched_state = this->snapshots.back();
+        auto updated_wells = std::vector<Well>{};
+        for (const auto& well_pair : sched_state.wells) {
+            auto& well = well_pair.second;
+            if ( !well->isMultiSegment() ) { continue; }
+
+            auto new_well = *well;
+            if (new_well.updateICDFlowScalingFactors()) {
+                updated_wells.push_back(std::move(new_well));
+            }
+        }
+
+        for (auto&& updated_well : updated_wells) {
+            sched_state.wells.update(std::move(updated_well));
         }
     }
 

@@ -1853,6 +1853,16 @@ bool Well::updateWSEGAICD(const std::vector<std::pair<int, AutoICD>>& aicd_pairs
     return false;
 }
 
+bool Well::updateICDFlowScalingFactors()
+{
+    auto new_segments = std::make_shared<WellSegments>(*this->segments);
+    if (new_segments->updateICDScalingFactors(this->getConnections())) {
+        this->segments = std::move(new_segments);
+        return true;
+    }
+    return false;
+}
+
 bool Well::updateWSEGVALV(const std::vector<std::pair<int, Valve>>& valve_pairs)
 {
     auto new_segments = std::make_shared<WellSegments>(*this->segments);
