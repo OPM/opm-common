@@ -647,7 +647,7 @@ namespace Opm {
                 const int segment_number = segment.segmentNumber();
                 const auto outlet_segment = this->getFromSegmentNumber(segment_number).outletSegment();
                 const auto outlet_segment_length = this->segmentLength(outlet_segment);
-                const auto completion_length = connections.segment_perf_length(segment_number);;
+                const auto completion_length = connections.segment_perf_length(segment_number);
                 update |= segment.updateICDScalingFactor(outlet_segment_length, completion_length);
             }
         }

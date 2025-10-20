@@ -788,16 +788,21 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
     }
 
     void Schedule::updateICDScalingFactors() {
-        // updating the scaling factors for all SICD and AICD segments
+        // updating the scaling factors for all SICD and AICD segments in multisegment wells
         auto& sched_state = this->snapshots.back();
-        for (const auto& well : sched_state.wells()) {
-            if (!well.get().isMultiSegment()) {
-                continue;;
-            }
-            auto new_well{well.get()};
+        auto updated_wells = std::vector<Well>{};
+        for (const auto& well_pair : sched_state.wells) {
+            auto& well = well_pair.second;
+            if ( !well->isMultiSegment() ) { continue; }
+
+            auto new_well = *well;
             if (new_well.updateICDFlowScalingFactors()) {
-                sched_state.wells.update( std::move(new_well) );
+                updated_wells.push_back(std::move(new_well));
             }
+        }
+
+        for (auto&& updated_well : updated_wells) {
+            sched_state.wells.update(std::move(updated_well));
         }
     }
 
