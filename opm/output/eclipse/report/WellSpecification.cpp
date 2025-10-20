@@ -19,18 +19,21 @@
 
 #include <opm/output/eclipse/report/WellSpecification.hpp>
 
+#include <opm/common/utility/String.hpp>
+
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 
 #include <opm/input/eclipse/Schedule/Group/GTNode.hpp>
 #include <opm/input/eclipse/Schedule/MSW/WellSegments.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
+#include <opm/input/eclipse/Schedule/Well/WList.hpp>
+#include <opm/input/eclipse/Schedule/Well/WListManager.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
 
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 
 #include <algorithm>
 #include <array>
-#include <cassert>
 #include <cstddef>
 #include <ctime>
 #include <functional>
@@ -40,6 +43,10 @@
 #include <string>
 #include <utility>
 #include <vector>
+
+#include <fmt/chrono.h>
+#include <fmt/format.h>
+#include <fmt/ranges.h>
 
 namespace {
 
@@ -1036,39 +1043,192 @@ namespace {
         msw_connection.print_footer(os, {});
     }
 
+    void emitGroupHierarchy(const context&    ctx,
+                            const std::size_t reportStep,
+                            std::ostream&     os)
+    {
+        report_group_hierarchy_data(os, ctx, reportStep);
+        report_group_levels_data(os, ctx, reportStep);
+    }
+
+    void emitWellspec(const std::vector<std::string>& changedWells,
+                      const context&                  ctx,
+                      const Opm::ScheduleState&       sched,
+                      std::ostream&                   os)
+    {
+        auto changed_wells = std::vector<Opm::Well>{};
+        changed_wells.reserve(changedWells.size());
+
+        std::transform(changedWells.begin(), changedWells.end(),
+                       std::back_inserter(changed_wells),
+                       [&sched](const std::string& wname)
+                       { return sched.wells(wname); });
+
+        report_well_specification_data(os, changed_wells, ctx);
+        report_well_connection_data(os, changed_wells, ctx);
+
+        for (const auto& well : changed_wells) {
+            if (! well.isMultiSegment()) {
+                continue;
+            }
+
+            report_mswell_segment_data(os, well, ctx);
+            report_mswell_connection_data(os, well, ctx);
+        }
+    }
+
+    /// Emit well list report for a single well list.
+    ///
+    /// Contains at least the well list name.  If the well list is empty,
+    /// then the only line emitted will be the one containing the well list
+    /// name followed by an empty column of well names.  Otherwise, the
+    /// wells on the named well list will be printed in the report sheet,
+    /// with at most a specified number of wells per line.
+    ///
+    /// \param[in] indent Leading blanks that indent each line.
+    ///
+    /// \param[in] wellsPerLine Maximum number of well names printed on each
+    /// line.
+    ///
+    /// \param[in] wlistName Well list name.
+    ///
+    /// \param[in] wlistWells Wells associated to the named well list.
+    ///
+    /// \param[in,out] Stream to which to write the well list report.
+    void writeWellListWells(const std::string&                        indent,
+                            const std::vector<std::string>::size_type wellsPerLine,
+                            const std::string&                        wlistName,
+                            const std::vector<std::string>&           wlistWells,
+                            std::ostream&                             os)
+    {
+        const auto numRptLines = wlistWells.empty()
+            ? std::vector<std::string>::size_type{1}
+            : (wlistWells.size() + wellsPerLine - 1) / wellsPerLine;
+
+        for (auto line = 0*numRptLines; line < numRptLines; ++line) {
+            const auto start =          (line + 0) * wellsPerLine;
+            const auto end   = std::min((line + 1) * wellsPerLine, wlistWells.size());
+
+            os << indent
+               << fmt::format(": {:<8s} :{:<100s}:\n",
+                              ((line == 0) ? wlistName : ""),
+                              fmt::format(" {:<8s}",
+                                          fmt::join(wlistWells.begin() + start,
+                                                    wlistWells.begin() + end, " ")));
+        }
+    }
+
+    /// Emit well list report.
+    ///
+    /// Will generate a printed sheet of the form shown below detailing the
+    /// contents of all current well lists.
+    ///
+    ///          WELL LISTS (Date)
+    ///          -----------------
+    ///
+    ///    -------------------------------
+    ///    :  LIST  :                    :
+    ///    -------------------------------
+    ///    :        :                    :
+    ///    :  *A    : A1   A2 [---]  A10 :
+    ///    :        : A11  A12           :
+    ///    :        :                    :
+    ///    :  *B    : B1   B2            :
+    ///    :        :                    :
+    ///    -------------------------------
+    ///
+    /// The first column ('LIST') is 10 characters wide and the well name
+    /// column is 100 characters wide.  Well names are each printed in 10
+    /// characters, with at most 10 well names per line.
+    ///
+    /// \param[in] schedule Collection of dynamic simulation objects.
+    ///
+    /// \param[in] reportStep Zero-based report step index for which to
+    /// generate the well list report.
+    ///
+    /// \param[in,out] Stream to which to write the well list report.
+    void emitWellLists(const Opm::Schedule& schedule,
+                       const std::size_t    reportStep,
+                       std::ostream&        os)
+    {
+        const auto indent = std::string(std::string::size_type{10}, field_padding);
+
+        // Sheet header.
+        //
+        //  WELL LISTS (Date)
+        //  -----------------
+        //
+        {
+            // Upper case for "Jan" -> "JAN" &c.  The rest of the sheet is
+            // upper case, so mixed case month names would look out of place.
+            const auto header = ::Opm::uppercase
+                (fmt::format("WELL LISTS ({:%d-%b-%Y})",
+                             fmt::gmtime(schedule.simTime(reportStep))));
+
+            os << "\n\n"
+               << indent << std::string(std::string::size_type{40}, field_padding)
+               << header << '\n'
+               << indent << std::string(std::string::size_type{40}, field_padding)
+               << std::string(header.size(), divider_character) << "\n\n";
+        }
+
+        const auto hline = std::string(std::string::size_type{113}, divider_character);
+        const auto blank = fmt::format(": {0:8s} : {0:98s} :", "");
+
+        // Column headers.
+        //
+        //  ----------------------------
+        //  :  LIST  :                 :
+        //  ----------------------------
+        //  :        :                 :
+        //
+        // Note: First line in report sheet is intentionally left blank.
+        {
+            os << indent << hline << '\n'
+               << indent << fmt::format(":   LIST   : {0:98s} :\n", "")
+               << indent << hline << '\n'
+               << indent << blank << '\n';
+        }
+
+        // Body of well list report.
+        //
+        // One or more report lines for each well list at the current time.
+        // At most wellsPerLine well names per report line.  First (or only)
+        // report line has the well list name in the 'LIST' column.  Empty
+        // well lists reported as a line containing just the well list name.
+        // Each individual well list ends in a blank line.
+        constexpr auto wellsPerLine = std::vector<std::string>::size_type{10};
+
+        for (const auto& [wlname, wlist] : schedule[reportStep].wlist_manager()) {
+            writeWellListWells(indent, wellsPerLine, wlname, wlist.wells(), os);
+
+            // Blank line after each well list.
+            os << indent << blank << '\n';
+        }
+
+        // Final horizontal line in well list report.
+        os << indent << hline << "\n\n\n";
+    }
 }
 
 // ===========================================================================
 
 void Opm::PrtFile::Reports::wellSpecification(const std::vector<std::string>& changedWells,
+                                              const bool                      changedWellLists,
                                               const std::size_t               reportStep,
                                               const Schedule&                 schedule,
                                               BlockDepthCallback              blockDepth,
                                               std::ostream&                   os)
 {
-    assert (! changedWells.empty());
-
     const context ctx { schedule, std::move(blockDepth) };
 
-    std::vector<Well> changed_wells;
-    changed_wells.reserve(changedWells.size());
-    std::transform(changedWells.begin(), changedWells.end(),
-                   std::back_inserter(changed_wells),
-                   [&reportStep, &schedule](const std::string& wname)
-                   { return schedule.getWell(wname, reportStep); });
-
-    report_well_specification_data(os, changed_wells, ctx);
-    report_well_connection_data(os, changed_wells, ctx);
-
-    for (const auto& well : changed_wells) {
-        if (! well.isMultiSegment()) {
-            continue;
-        }
-
-        report_mswell_segment_data(os, well, ctx);
-        report_mswell_connection_data(os, well, ctx);
+    if (! changedWells.empty()) {
+        emitWellspec(changedWells, ctx, schedule[reportStep], os);
     }
 
-    report_group_hierarchy_data(os, ctx, reportStep);
-    report_group_levels_data(os, ctx, reportStep);
+    if (changedWellLists) {
+        emitWellLists(schedule, reportStep, os);
+    }
+
+    emitGroupHierarchy(ctx, reportStep, os);
 }

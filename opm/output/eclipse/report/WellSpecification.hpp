@@ -33,9 +33,44 @@ namespace Opm {
 
 namespace Opm::PrtFile::Reports {
 
+    /// Call-back type for centre point depth of a grid block.
+    ///
+    /// Input argument is a global (Cartesian) cell index, and return value
+    /// is the centre point depth of that global cell.
     using BlockDepthCallback = std::function<double(std::size_t)>;
 
+    /// Emit textual well specification report to output stream
+    ///
+    /// The well specification report includes
+    ///
+    ///    -# well/group name, well head location, BHP reference depth,
+    ///       preferred phase, shut-in instruction, &c
+    ///
+    ///    -# reservoir connection location, CTF, KH, skin, D-factor
+    ///
+    ///    -# segment/branch topology, segment properties
+    ///
+    /// for all wells that have structurally changed.  Furthermore, we show
+    /// the current group tree and the contents of any well lists that have
+    /// changed since the previous report step.
+    ///
+    /// \param[in] changedWells Wells that have structurally changed since
+    /// the previous report step.
+    ///
+    /// \param[in] changedWellLists Whether or not the contents of any of
+    /// the run's well lists have changed since the previous report step.
+    ///
+    /// \param[in] reportStep Zero-based report step index at which to look
+    /// up dynamic simulation objects.
+    ///
+    /// \param[in] schedule Run's collection of dynamic simulation objects.
+    ///
+    /// \param[in] blockDepth Call-back function for retrieving centre point
+    /// depths of active cells.
+    ///
+    /// \param[in,out] os Stream to which to emit well specification report.
     void wellSpecification(const std::vector<std::string>& changedWells,
+                           const bool                      changedWellLists,
                            const std::size_t               reportStep,
                            const Schedule&                 schedule,
                            BlockDepthCallback              blockDepth,

@@ -114,6 +114,14 @@ public:
     WList& newList(const std::string&              name,
                    const std::vector<std::string>& wname);
 
+    /// Start of sequence of run's current well lists.
+    ///
+    /// Sorted by well list name.
+    auto begin() const { return this->wlists.begin(); }
+
+    /// End of sequence of run's current well lists.
+    auto end() const { return this->wlists.end(); }
+
     /// Sequence of well lists containing named well.
     ///
     /// \param[in] wname Well name.
