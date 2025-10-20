@@ -1685,49 +1685,96 @@ captureDeclaredGroupDataLGR(const Opm::Schedule&     sched,
     const auto& curGroups = sched.restart_groups(simStep);
     const auto& sched_state = sched[simStep];
 
-    groupLoop(curGroups,sched_state, lgr_tag,
-              [&sched, simStep, sumState, &lgr_tag, this]
-              (const Group& group, const std::size_t groupID) -> void
-    {
-        auto ig = this->iGroup_[groupID];
+    const auto all_wells = sched.getWells(simStep);
+    std::vector<std::reference_wrapper<const Opm::Well>> filtered_wells;
+    std::vector<std::reference_wrapper<const Opm::Group>> filtered_groups;
 
-        IGrp::staticContrib(sched, group, this->nWGMax_, this->nGMaxz_,
-                            simStep, sumState, ig, lgr_tag);
+    // Filter wells that belong to the specified LGR tag
+    for (const auto& well : all_wells) {
+        auto well_lgr_tag = well.get_lgr_well_tag().value_or("");
+        if ((!well.is_lgr_well()) || (well_lgr_tag != lgr_tag)){
+            continue; // Skip wells that are not tagged with the specified LGR tag
+        }
+        filtered_wells.push_back(std::cref(well));
+    }
+
+
+    std::sort(filtered_wells.begin(), filtered_wells.end(),
+    [](const auto& a, const auto& b) {
+        return a.get().seqIndex() < b.get().seqIndex();
     });
 
-    // Define Static Contributions to SGrp Array.
-    groupLoop(curGroups, sched_state, lgr_tag,
-              [&sumState, &units, &sched_state, this]
-              (const Group& group, const std::size_t groupID) -> void
+    const bool has_lgr_well = !filtered_wells.empty();
+
+    // Filter groups that belong to the specified LGR tag but not FIELD
+    for (std::size_t i = 0; i < curGroups.size() - 1 ; ++i) {
+        const auto* group = curGroups[i];
+        if (group == nullptr)  {
+            continue;
+        }
+        if (sched_state.group_contains_lgr(*group, lgr_tag))
+        {
+            filtered_groups.push_back(std::cref(*group));
+        }
+    }
+
+    // Filling IGRP arrays
+    if (has_lgr_well){
+        {
+            auto ig = this->iGroup_[0];
+            IGrp::staticContrib_pseudo_well_group_LGR( filtered_wells, this->nWGMax_, ig);
+        }
+        {
+            auto ig = this->iGroup_[1];
+            IGrp::staticContrib_field_group_LGR( this->nWGMax_, ig);
+        }
+    }
+    else {
+        auto ig = this->iGroup_[1];
+        IGrp::staticContrib_empty_field_group_LGR( this->nWGMax_, ig);
+    }
+
+
+    // Filling SGRP array
+    if (has_lgr_well){
+        {
+            auto sg = this->sGroup_[0]; // Pseudo-well group
+            SGrp::staticContrib_pseudo_well_group_LGR(sg);
+        }
+        {
+            auto sg = this->sGroup_[1]; // Field Group
+            SGrp::staticContrib_field_group_LGR(sg);
+        }
+    }
+    else {
+        auto sg = this->sGroup_[1]; // Empty Field Group
+        SGrp::staticContrib_empty_field_group_LGR(sg);
+    }
+
+    // Filling XGRP array
+    if (has_lgr_well){
+        {
+            auto xg = this->xGroup_[0];
+            XGrp::dynamicContribLGR(filtered_wells, this->restart_well_keys, this->wellKeyToIndex,
+                                          sumState, xg);
+        }
+        {
+            auto xg = this->xGroup_[1];
+            XGrp::dynamicContribLGR(filtered_wells, this->restart_well_keys, this->wellKeyToIndex,
+                                          sumState, xg);
+        }
+    }
+
+    // Filling ZGRP array
+    const std::string group_name =
+                                 has_lgr_well ? filtered_groups.back().get().name() : "";
+
     {
-        auto sg = this->sGroup_[groupID];
-
-        SGrp::staticContrib(group, sched_state, sumState, units, sg);
-    });
-
-    // Define Dynamic Contributions to XGrp Array.
-    groupLoop(curGroups, sched_state, lgr_tag,
-              [&sumState, this]
-              (const Group& group, const std::size_t groupID) -> void
+        auto zg = this->zGroup_[0];
+        ZGrp::staticContribLGR(group_name, zg);
+    }
     {
-        auto xg = this->xGroup_[groupID];
-
-        XGrp::dynamicContrib(this->restart_group_keys, this->restart_field_keys,
-                             this->groupKeyToIndex, this->fieldKeyToIndex, group,
-                             sumState, xg);
-    });
-
-    // Define Static Contributions to ZGrp Array.
-    groupLoop(curGroups,sched_state, lgr_tag, [this]
-              (const Group& group, const std::size_t groupID) -> void
-    {
-        // bug here
-        // std::size_t group_index = group.insert_index() - 1;
-        // if (group.name() == "FIELD")
-        //     group_index = ngmaxz(inteHead) - 1;
-        std::size_t group_index = groupID;
-        auto zg = this->zGroup_[ group_index ];
-
-        ZGrp::staticContrib(group, zg);
-    });
+        auto zg = this->zGroup_[1];
+        ZGrp::staticContribLGR("FIELD", zg);
+    }
 }
