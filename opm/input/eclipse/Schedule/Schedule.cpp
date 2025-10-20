@@ -104,7 +104,6 @@
 #include "KeywordHandlers.hpp"
 #include "MSW/Compsegs.hpp"
 #include "MSW/WelSegsSet.hpp"
-#include "Well/injection.hpp"
 
 #include <algorithm>
 #include <ctime>
@@ -1878,89 +1877,6 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
 
         return sim_update;
     }
-
-    SimulatorUpdate
-    Schedule::modifyCompletions(const std::size_t reportStep,
-                                const std::map<std::string, std::vector<Connection>>& extraConns)
-    {
-        SimulatorUpdate sim_update{};
-
-        this->snapshots.resize(reportStep + 1);
-        for (const auto& [well, newConns] : extraConns) {
-            if (newConns.empty()) { continue; }
-
-            // Note: We go through map_member::get() here rather than
-            // map_member::operator() because the latter returns a reference
-            // to const whereas we need a reference to mutable.
-            auto& conns = this->snapshots[reportStep]
-                .wells.get(well).getConnections();
-
-            auto allConnsExist = true;
-            for (const auto& newConn : newConns) {
-                auto* existingConn = conns
-                    .maybeGetFromGlobalIndex(newConn.global_index());
-
-                if (existingConn != nullptr) {
-                    // Connection 'newConn' already exists in 'conns'.
-                    // Change existing CTF if needed.
-                    if (newConn.CF() > existingConn->CF()) {
-                        existingConn->setCF(newConn.CF());
-                    }
-                }
-                else {
-                    // 'newConn' does not already exist in 'conns'.  Add to
-                    // collection.
-                    allConnsExist = false;
-
-                    const auto seqIndex = conns.size();
-                    conns.addConnection(newConn.getI(),
-                                        newConn.getJ(),
-                                        newConn.getK(),
-                                        newConn.global_index(),
-                                        newConn.state(),
-                                        newConn.depth(),
-                                        newConn.ctfProperties(),
-                                        /* satTableID = */ 1,
-                                        newConn.dir(),
-                                        newConn.kind(),
-                                        seqIndex,
-                                        /* defaultSatTableID = */ false);
-                }
-            }
-
-            if (allConnsExist) {
-                sim_update.welpi_wells.insert(well);
-            }
-            else {
-                sim_update.well_structure_changed = true;
-            }
-        }
-
-        if (reportStep < this->m_sched_deck.size() - 1) {
-            ParseContext parseContext{};
-            if (this->m_treat_critical_as_non_critical) {
-                // Continue with invalid names if parsing strictness is set
-                // to low.
-                parseContext.update(ParseContext::SCHEDULE_INVALID_NAME,
-                                    InputErrorAction::WARN);
-            }
-
-            ErrorGuard errors{};
-            ScheduleGrid grid(this->completed_cells, this->completed_cells_lgr, this->completed_cells_lgr_map);
-
-            const std::string prefix = "| "; /* logger prefix string */
-
-            const auto keepKeywords = true;
-            const auto log_to_debug = true;
-            this->iterateScheduleSection(reportStep + 1, this->m_sched_deck.size(),
-                                         parseContext, errors, grid,
-                                         /* target_wellpi = */ nullptr,
-                                         prefix, keepKeywords, log_to_debug);
-        }
-
-        return sim_update;
-    }
-
 
     // This function will typically be called from the apply_action_callback()
     // which is invoked in a PYACTION plugin, i.e. the arguments here are

@@ -386,9 +386,6 @@ namespace Opm {
                                     SummaryState& summary_state,
                                     const std::unordered_map<std::string, float>& target_wellpi);
 
-        SimulatorUpdate modifyCompletions(const std::size_t reportStep,
-                                          const std::map<std::string, std::vector<Connection>>& extraConns);
-
         const GasLiftOpt& glo(std::size_t report_step) const;
 
         bool operator==(const Schedule& data) const;
