@@ -1321,24 +1321,16 @@ void assignGasLiftOptimisation(const Opm::GasLiftGroup& group,
     sGrp[Ix::GLOMaxRate]   = getGLORate(sgprop, group.max_total_gas());
 }
 
-template <class SGrpArray>
-void staticContrib(const Opm::Group&         group,
-                   const Opm::ScheduleState& sched,
-                   const Opm::SummaryState&  sumState,
-                   const Opm::UnitSystem&    units,
-                   SGrpArray&                sGrp)
-{
-    using Ix  = ::Opm::RestartIO::Helpers::VectorItems::SGroup::index;
-    using Isp = ::Opm::RestartIO::Helpers::VectorItems::SGroup::prod_index;
-    using M   = ::Opm::UnitSystem::measure;
 
+const std::vector<float>& defaultSGRP()
+{
     const auto dflt   = -1.0e+20f;
     const auto dflt_2 = -2.0e+20f;
     const auto infty  =  1.0e+20f;
     const auto zero   =  0.0f;
     const auto one    =  1.0f;
 
-    const auto init = std::vector<float> { // 112 Items (0..111)
+    const std::vector<float> values = {
         // 0     1      2      3      4
         infty, infty, dflt , infty , zero ,     //   0..  4  ( 0)
         zero , infty, infty, infty , infty,     //   5..  9  ( 1)
@@ -1362,9 +1354,24 @@ void staticContrib(const Opm::Group&         group,
         zero , zero , zero , zero  , zero ,     //  95.. 99  (19)
         zero , zero , zero , zero  , zero ,     // 100..104  (20)
         zero , zero , zero , zero  , zero ,     // 105..109  (21)
-        zero , zero                             // 110..111  (22)
+        zero , zero                              // 110..111  (22)
     };
 
+    return values;
+}
+
+template <class SGrpArray>
+void staticContrib(const Opm::Group&         group,
+                   const Opm::ScheduleState& sched,
+                   const Opm::SummaryState&  sumState,
+                   const Opm::UnitSystem&    units,
+                   SGrpArray&                sGrp)
+{
+    using Ix  = ::Opm::RestartIO::Helpers::VectorItems::SGroup::index;
+    using Isp = ::Opm::RestartIO::Helpers::VectorItems::SGroup::prod_index;
+    using M   = ::Opm::UnitSystem::measure;
+
+    const auto& init = defaultSGRP();
     const auto sz = static_cast<decltype(init.size())>(sGrp.size());
 
     auto b = std::begin(init);
@@ -1412,6 +1419,47 @@ void staticContrib(const Opm::Group&         group,
         sGrp[24] = 0.0;
     }
 }
+
+template <class SGrpArray>
+void staticContrib_pseudo_well_group_LGR(SGrpArray& sGrp)
+{
+    using Ix  = ::Opm::RestartIO::Helpers::VectorItems::SGroup::index;
+    //sGrp is already initalized with zeroes
+    sGrp[Ix::EfficiencyFactor] = 1.0f;
+}
+
+template <class SGrpArray>
+void staticContrib_field_group_LGR(SGrpArray& sGrp)
+{
+    using Ix  = ::Opm::RestartIO::Helpers::VectorItems::SGroup::index;
+    //sGrp is already initalized with zeroes
+    sGrp[Ix::EfficiencyFactor] = 1.0f;
+}
+
+
+template <class SGrpArray>
+void staticContrib_empty_field_group_LGR(SGrpArray& sGrp)
+{
+    using Ix  = ::Opm::RestartIO::Helpers::VectorItems::SGroup::index;
+    using Isp = ::Opm::RestartIO::Helpers::VectorItems::SGroup::prod_index;
+
+    const auto& init = defaultSGRP();
+
+    const auto sz = static_cast<decltype(init.size())>(sGrp.size());
+
+    auto b = std::begin(init);
+    auto e = b + std::min(init.size(), sz);
+
+    std::copy(b, e, std::begin(sGrp));
+
+    sGrp[Ix::EfficiencyFactor] = 1.0f;
+    sGrp[Isp::GuideRate] = 0.0;
+    sGrp[14] = 0.0;
+    sGrp[19] = 0.0;
+    sGrp[24] = 0.0;
+
+}
+
 
 } // SGrp
 
