@@ -1518,6 +1518,52 @@ void dynamicContrib(const std::vector<std::string>&      restart_group_keys,
 
     std::fill(xGrp.begin() + Ix::TracerOffset, xGrp.end(), 0);
 }
+
+
+template <class XGrpArray>
+void dynamicContribLGR(std::vector<std::reference_wrapper<const Opm::Well>> filtered_wells,
+                       const std::vector<std::string>&                      restart_well_keys,
+                       const std::map<std::string, size_t>&                 wellKeyToIndex,
+                       const Opm::SummaryState&                             sumState,
+                       XGrpArray&                                           xGrp)
+{
+
+    auto key_list = [filtered_wells](const std::string& local_key) {
+                        std::vector<std::string> all_well_keys;
+                        for (const auto& well : filtered_wells) {
+                            all_well_keys.push_back(local_key + ":" + well.get().name());
+                        }
+                        return all_well_keys;
+                    };
+    using Ix = ::Opm::RestartIO::Helpers::VectorItems::XGroup::index;
+
+    const std::vector<std::string>& keys = restart_well_keys;
+    const std::map<std::string, size_t>& keyToIndex = wellKeyToIndex;
+
+    for (const auto& key : keys) {
+
+        std::vector<std::string> compKeys =  key_list(key);
+        for (const auto& compKey : compKeys) {
+            if (sumState.has(compKey)) {
+                double keyValue = sumState.get(compKey);
+                const auto itr = keyToIndex.find(key);
+                xGrp[itr->second] = xGrp[itr->second] + keyValue;
+            }
+        }
+    }
+
+    xGrp[Ix::OilPrGuideRate_2]  = xGrp[Ix::OilPrGuideRate];
+    xGrp[Ix::WatPrGuideRate_2]  = xGrp[Ix::WatPrGuideRate];
+    xGrp[Ix::GasPrGuideRate_2]  = xGrp[Ix::GasPrGuideRate];
+    xGrp[Ix::VoidPrGuideRate_2] = xGrp[Ix::VoidPrGuideRate];
+
+    xGrp[Ix::WatInjGuideRate_2] = xGrp[Ix::WatInjGuideRate];
+
+    std::fill(xGrp.begin() + Ix::TracerOffset, xGrp.end(), 0);
+}
+
+
+
 } // XGrp
 
 namespace ZGrp {
