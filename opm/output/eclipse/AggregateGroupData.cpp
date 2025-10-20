@@ -1546,6 +1546,14 @@ void staticContrib(const Opm::Group& group, ZGroupArray& zGroup)
 {
     zGroup[0] = group.name();
 }
+
+template <class ZGroupArray>
+void staticContribLGR(const std::string& group_name, ZGroupArray& zGroup)
+{
+    zGroup[0] = group_name;
+}
+
+
 } // ZGrp
 
 } // Namespace anonymous
