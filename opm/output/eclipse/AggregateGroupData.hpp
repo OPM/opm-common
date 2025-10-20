@@ -95,7 +95,17 @@ public:
                                                          "FWIT" , "FGIT" , "FVIT",
                                                          "FOPTH", "FWPTH", "FGPTH",
                                                          "FGCR", "FGCT", "FGIMR", "FGIMT",
+
                                                          "FWITH", "FGITH"};
+
+    const std::vector<std::string> restart_well_keys = {"WOPP",  "WWPP", "WOPR", "WWPR", "WGPR",
+                                                        "WVPR",  "WWIR", /*"WGIR",*/ "WWCT", "WGOR",
+                                                        "WOPT",  "WWPT", "WGPT", "WVPT",
+                                                        "WOPTS", "WGPTS",
+                                                        "WWIT" , /*"WGIT" ,*/ /*"WVIT",*/
+                                                        "WOPTH", "WWPTH", "WGPTH",
+                                                        "WGCR",  "WGCT", "WGIMR", "WGIMT",
+                                                        "WWITH"/*, "WGITH"*/};
 
     const std::map<std::string, size_t> groupKeyToIndex = {
                                                            {"GOPR",  0},
@@ -164,6 +174,44 @@ public:
                                                            {"FWITH", 140},
                                                            {"FGPTH", 143},
                                                            {"FGITH", 144},
+    };
+
+        const std::map<std::string, size_t> wellKeyToIndex = {
+                                                           {"WOPR",  0},
+                                                           {"WWPR",  1},
+                                                           {"WGPR",  2},
+                                                           {"WVPR",  3},
+                                                           {"WWIR",  5},
+                                                           //{"WGIR",  6},
+                                                           {"WWCT",  8},
+                                                           {"WGOR",  9},
+                                                           {"WOPT", 10},
+                                                           {"WWPT", 11},
+                                                           {"WGPT", 12},
+                                                           {"WVPT", 13},
+                                                           {"WWIT", 15},
+                                                           //{"WGIT", 16},
+                                                           //{"WVIT", 17},
+                                                           {"WGCR", 19},
+                                                           {"WGCT", 21},
+                                                           {"WOPP", 22},
+                                                           {"WWPP", 23},
+                                                           {"WGIMR", 51},
+                                                           {"WGIMT", 52},
+                                                           {"WOPTS", 73},
+                                                           {"WGPTS", 74},
+                                                           {"WOPGR", 85},
+                                                           {"WWPGR", 86},
+                                                           {"WGPGR", 87},
+                                                           {"WVPGR", 88},
+                                                           {"WOIGR", 89},
+                                                           {"WWIGR", 91},
+                                                           {"WGIGR", 93},
+                                                           {"WOPTH", 135},
+                                                           {"WWPTH", 139},
+                                                           {"WWITH", 140},
+                                                           {"WGPTH", 143},
+                                                           //{"WGITH", 144},
     };
 
 private:
