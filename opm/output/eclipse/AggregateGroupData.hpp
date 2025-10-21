@@ -104,7 +104,7 @@ public:
                                                         "WOPTS", "WGPTS",
                                                         "WWIT" , /*"WGIT" ,*/ /*"WVIT",*/
                                                         "WOPTH", "WWPTH", "WGPTH",
-                                                        "WGCR",  "WGCT", "WGIMR", "WGIMT",
+                                                        /*"WGCR",*/  "WGCT", "WGIMR", "WGIMT",
                                                         "WWITH"/*, "WGITH"*/};
 
     const std::map<std::string, size_t> groupKeyToIndex = {
@@ -192,7 +192,7 @@ public:
                                                            {"WWIT", 15},
                                                            //{"WGIT", 16},
                                                            //{"WVIT", 17},
-                                                           {"WGCR", 19},
+                                                           //{"WGCR", 19},
                                                            {"WGCT", 21},
                                                            {"WOPP", 22},
                                                            {"WWPP", 23},

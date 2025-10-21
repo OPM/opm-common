@@ -228,7 +228,7 @@ namespace {
 
             { "WWCT",  Opm::EclIO::SummaryNode::Type::Ratio    },
             { "WGOR",  Opm::EclIO::SummaryNode::Type::Ratio    },
-            { "WGCR",  Opm::EclIO::SummaryNode::Type::Ratio    },
+            //{ "WGCR",  Opm::EclIO::SummaryNode::Type::Ratio    },
             { "WGCT",  Opm::EclIO::SummaryNode::Type::Ratio    },
 
             { "WOPT",  Opm::EclIO::SummaryNode::Type::Total    },
