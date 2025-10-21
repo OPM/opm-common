@@ -99,13 +99,13 @@ public:
                                                          "FWITH", "FGITH"};
 
     const std::vector<std::string> restart_well_keys = {"WOPP",  "WWPP", "WOPR", "WWPR", "WGPR",
-                                                        "WVPR",  "WWIR", /*"WGIR",*/ "WWCT", "WGOR",
+                                                        "WVPR",  "WWIR", "WGIR", "WWCT", "WGOR",
                                                         "WOPT",  "WWPT", "WGPT", "WVPT",
                                                         "WOPTS", "WGPTS",
-                                                        "WWIT" , /*"WGIT" ,*/ /*"WVIT",*/
+                                                        "WWIT" , "WGIT", "WVIT",
                                                         "WOPTH", "WWPTH", "WGPTH",
-                                                        /*"WGCR",*/  "WGCT", "WGIMR", "WGIMT",
-                                                        "WWITH"/*, "WGITH"*/};
+                                                        /*"WGCR",*/  /*"WGCT",*/ /*"WGIMR",*/ /*"WGIMT",*/
+                                                        "WWITH", "WGITH"};
 
     const std::map<std::string, size_t> groupKeyToIndex = {
                                                            {"GOPR",  0},

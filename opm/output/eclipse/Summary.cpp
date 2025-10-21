@@ -229,7 +229,7 @@ namespace {
             { "WWCT",  Opm::EclIO::SummaryNode::Type::Ratio    },
             { "WGOR",  Opm::EclIO::SummaryNode::Type::Ratio    },
             //{ "WGCR",  Opm::EclIO::SummaryNode::Type::Ratio    },
-            { "WGCT",  Opm::EclIO::SummaryNode::Type::Ratio    },
+            //{ "WGCT",  Opm::EclIO::SummaryNode::Type::Ratio    },
 
             { "WOPT",  Opm::EclIO::SummaryNode::Type::Total    },
             { "WWPT",  Opm::EclIO::SummaryNode::Type::Total    },
@@ -243,8 +243,8 @@ namespace {
             { "WGIT",  Opm::EclIO::SummaryNode::Type::Total    },
             { "WVIT",  Opm::EclIO::SummaryNode::Type::Total    },
 
-            { "WGIMR", Opm::EclIO::SummaryNode::Type::Rate     },
-            { "WGIMT", Opm::EclIO::SummaryNode::Type::Total    },
+            //{ "WGIMR", Opm::EclIO::SummaryNode::Type::Rate     },
+            //{ "WGIMT", Opm::EclIO::SummaryNode::Type::Total    },
 
             { "WOPTH", Opm::EclIO::SummaryNode::Type::Total    },
             { "WWPTH", Opm::EclIO::SummaryNode::Type::Total    },
