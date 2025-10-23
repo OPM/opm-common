@@ -971,10 +971,10 @@ void staticContrib_empty_field_group_LGR(const int          nwgmax,
 {
     using IGroup = ::Opm::RestartIO::Helpers::VectorItems::IGroup::index;
     // These seems to be default values for empty LGR FIELD IGRP
-    iGrp[nwgmax + IGroup::flag_88] = 2;
+    iGrp[nwgmax + 88] = 2;
     iGrp[nwgmax + IGroup::VoidageGroupIndex] = 2;
-    iGrp[nwgmax + IGroup::flag_95] = 2;
-    iGrp[nwgmax + IGroup::flag_96] = 2;
+    iGrp[nwgmax + 95] = 2;
+    iGrp[nwgmax + 96] = 2;
 }
 
 } // Igrp

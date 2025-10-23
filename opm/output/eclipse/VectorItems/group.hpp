@@ -59,10 +59,7 @@ namespace Opm::RestartIO::Helpers::VectorItems {
             // model (NODEPROP(4)).
             AddGLiftGasAsProducedGas = 53,
             // The following indices get a default value 2 for LGR IGRP groups with no LGR well.
-            flag_88 = 88,
             VoidageGroupIndex = 89,
-            flag_95 = 95,
-            flag_96 = 96,
         };
 
         namespace Value {

@@ -2723,10 +2723,10 @@ BOOST_AUTO_TEST_CASE (Declared_GroupDataLGR)
         BOOST_CHECK_EQUAL(iGrp[start + nwgmax + IGroup::GroupLevel] ,   0);  // FIELD has no group level
         BOOST_CHECK_EQUAL(iGrp[start + nwgmax +  IGroup::ParentGroup] , 0);  // FIELD has no parent group
         // the following flags are default to zero if IGR field for LGR contains any well
-        BOOST_CHECK_EQUAL(iGrp[start + nwgmax + IGroup::flag_88] ,          0);
+        BOOST_CHECK_EQUAL(iGrp[start + nwgmax + 88] ,          0);
         BOOST_CHECK_EQUAL(iGrp[start + nwgmax + IGroup::VoidageGroupIndex] ,0);
-        BOOST_CHECK_EQUAL(iGrp[start + nwgmax + IGroup::flag_95] ,          0);
-        BOOST_CHECK_EQUAL(iGrp[start + nwgmax + IGroup::flag_96] ,          0);
+        BOOST_CHECK_EQUAL(iGrp[start + nwgmax + 95] ,          0);
+        BOOST_CHECK_EQUAL(iGrp[start + nwgmax + 96] ,          0);
     }
 
     // IGR (LGR PSEUDOGROUP2 from LGR2) (EMPTY - NO WELLS IN LGR2)
@@ -2768,10 +2768,10 @@ BOOST_AUTO_TEST_CASE (Declared_GroupDataLGR)
         BOOST_CHECK_EQUAL(iGrp[start + nwgmax + IGroup::GroupLevel] ,   0);  // FIELD has no group level1
         BOOST_CHECK_EQUAL(iGrp[start + nwgmax +  IGroup::ParentGroup] , 0);  // FIELD has no parent group
         // the following flags are default to zero if IGR field for LGR contains any well
-        BOOST_CHECK_EQUAL(iGrp[start + nwgmax + IGroup::flag_88] ,          2);
+        BOOST_CHECK_EQUAL(iGrp[start + nwgmax + 88] ,          2);
         BOOST_CHECK_EQUAL(iGrp[start + nwgmax + IGroup::VoidageGroupIndex], 2);
-        BOOST_CHECK_EQUAL(iGrp[start + nwgmax + IGroup::flag_95] ,          2);
-        BOOST_CHECK_EQUAL(iGrp[start + nwgmax + IGroup::flag_96] ,          2);
+        BOOST_CHECK_EQUAL(iGrp[start + nwgmax + 95] ,          2);
+        BOOST_CHECK_EQUAL(iGrp[start + nwgmax + 96] ,          2);
     }
 
     // IGR (LGR PSEUDOGROUP2 from LGR3) (EMPTY - NO WELLS IN LGR2)
@@ -2813,10 +2813,10 @@ BOOST_AUTO_TEST_CASE (Declared_GroupDataLGR)
         BOOST_CHECK_EQUAL(iGrp[start + nwgmax + IGroup::GroupLevel] ,  0);  // FIELD has no group level1
         BOOST_CHECK_EQUAL(iGrp[start + nwgmax + IGroup::ParentGroup],  0);  // FIELD has no parent group
         // the following flags are default to zero if IGR field for LGR contains any well
-        BOOST_CHECK_EQUAL(iGrp[start + nwgmax + IGroup::flag_88] ,          2);
+        BOOST_CHECK_EQUAL(iGrp[start + nwgmax + 88] ,          2);
         BOOST_CHECK_EQUAL(iGrp[start + nwgmax + IGroup::VoidageGroupIndex], 2);
-        BOOST_CHECK_EQUAL(iGrp[start + nwgmax + IGroup::flag_95] ,          2);
-        BOOST_CHECK_EQUAL(iGrp[start + nwgmax + IGroup::flag_96] ,          2);
+        BOOST_CHECK_EQUAL(iGrp[start + nwgmax + 95] ,          2);
+        BOOST_CHECK_EQUAL(iGrp[start + nwgmax + 96] ,          2);
     }
 
 
