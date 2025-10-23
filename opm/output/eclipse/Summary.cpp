@@ -217,6 +217,44 @@ namespace {
             { "WWIGR", Opm::EclIO::SummaryNode::Type::Rate     },
             { "WMCTL", Opm::EclIO::SummaryNode::Type::Mode     },
             { "WGLIR", Opm::EclIO::SummaryNode::Type::Rate     },
+
+            { "WOPP",  Opm::EclIO::SummaryNode::Type::Pressure },
+            { "WWPP",  Opm::EclIO::SummaryNode::Type::Pressure },
+
+            { "WOPR",  Opm::EclIO::SummaryNode::Type::Rate     },
+            { "WWPR",  Opm::EclIO::SummaryNode::Type::Rate     },
+            { "WGPR",  Opm::EclIO::SummaryNode::Type::Rate     },
+            { "WVPR",  Opm::EclIO::SummaryNode::Type::Rate     },
+
+            { "WWCT",  Opm::EclIO::SummaryNode::Type::Ratio    },
+            { "WGOR",  Opm::EclIO::SummaryNode::Type::Ratio    },
+            //{ "WGCR",  Opm::EclIO::SummaryNode::Type::Ratio    },
+            //{ "WGCT",  Opm::EclIO::SummaryNode::Type::Ratio    },
+
+            { "WOPT",  Opm::EclIO::SummaryNode::Type::Total    },
+            { "WWPT",  Opm::EclIO::SummaryNode::Type::Total    },
+            { "WGPT",  Opm::EclIO::SummaryNode::Type::Total    },
+            { "WVPT",  Opm::EclIO::SummaryNode::Type::Total    },
+
+            { "WOPTS", Opm::EclIO::SummaryNode::Type::Total    },
+            { "WGPTS", Opm::EclIO::SummaryNode::Type::Total    },
+
+            { "WWIT",  Opm::EclIO::SummaryNode::Type::Total    },
+            { "WGIT",  Opm::EclIO::SummaryNode::Type::Total    },
+            { "WVIT",  Opm::EclIO::SummaryNode::Type::Total    },
+
+            //{ "WGIMR", Opm::EclIO::SummaryNode::Type::Rate     },
+            //{ "WGIMT", Opm::EclIO::SummaryNode::Type::Total    },
+
+            { "WOPTH", Opm::EclIO::SummaryNode::Type::Total    },
+            { "WWPTH", Opm::EclIO::SummaryNode::Type::Total    },
+            { "WGPTH", Opm::EclIO::SummaryNode::Type::Total    },
+
+            { "WWITH", Opm::EclIO::SummaryNode::Type::Total    },
+            { "WGITH", Opm::EclIO::SummaryNode::Type::Total    },
+
+
+
         };
         const auto extra_group_vectors = std::vector<ParamCTorArgs> {
             { "GOPGR", Opm::EclIO::SummaryNode::Type::Rate },

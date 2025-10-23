@@ -58,7 +58,7 @@ namespace Opm::RestartIO::Helpers::VectorItems {
             // entering the network at this node in the extended network
             // model (NODEPROP(4)).
             AddGLiftGasAsProducedGas = 53,
-
+            // The following indices get a default value 2 for LGR IGRP groups with no LGR well.
             VoidageGroupIndex = 89,
         };
 
