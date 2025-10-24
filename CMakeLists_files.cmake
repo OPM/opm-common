@@ -507,7 +507,8 @@ list (APPEND TEST_SOURCE_FILES
       tests/material/test_spline.cpp
       tests/material/test_tabulation.cpp
       tests/test_Visitor.cpp
-      tests/ml/ml_model_test.cpp
+      tests/ml/test_ml_model.cpp
+      tests/ml/test_ml_layer.cpp
 )
 
 if(OpenMP_FOUND)
