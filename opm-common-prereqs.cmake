@@ -21,9 +21,14 @@ set (opm-common_DEPS
 	"Valgrind"
 )
 
+# CMake 3.30.0 requires to find Boost in CONFIG mode
+if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.30.0)
+	set(_Boost_CONFIG_MODE CONFIG)
+endif()
+
 list(APPEND opm-common_DEPS
       # various runtime library enhancements
-      "Boost 1.44.0 COMPONENTS system unit_test_framework REQUIRED"
+      "Boost 1.44.0 COMPONENTS unit_test_framework REQUIRED ${_Boost_CONFIG_MODE}"
       "cjson"
       # Still it produces compile errors complaining that it
       # cannot format UDQVarType. Hence we use the same version
