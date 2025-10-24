@@ -412,9 +412,10 @@ void handleWCONPROD(HandlerContext& handlerContext)
                                                                    ParserKeywords::WCONPROD::BHP::defaultValue.get<double>());
             }
 
+            const auto& phases = handlerContext.static_schedule().m_runspec.phases();
             properties->handleWCONPROD(alq_type, table_nr, default_bhp_target,
                                        handlerContext.static_schedule().m_unit_system,
-                                       well_name, record, handlerContext.keyword.location());
+                                       well_name, phases, record, handlerContext.keyword.location());
 
             if (switching_from_injector) {
                 if (properties->bhp_hist_limit_defaulted) {

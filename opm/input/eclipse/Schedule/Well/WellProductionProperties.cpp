@@ -23,6 +23,7 @@
 #include <opm/input/eclipse/Deck/DeckItem.hpp>
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
 #include <opm/input/eclipse/Deck/UDAValue.hpp>
+#include <opm/input/eclipse/EclipseState/Runspec.hpp>
 #include <opm/input/eclipse/Units/Units.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQActive.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
@@ -36,6 +37,7 @@
 
 #include <ostream>
 #include <string>
+#include <string_view>
 
 namespace Opm {
 
@@ -171,6 +173,7 @@ namespace Opm {
                                                         const double bhp_def,
                                                         const UnitSystem& unit_system_arg,
                                                         const std::string& well_name,
+                                                        const Phases& phases,
                                                         const DeckRecord& record,
                                                         const KeywordLocation& location)
     {
@@ -194,10 +197,8 @@ namespace Opm {
             { "LRAT", ProducerCMode::LRAT }, { "RESV", ProducerCMode::RESV }, { "THP", ProducerCMode::THP }
         };
 
-
         for( const auto& cmode : modes ) {
             if( !record.getItem( cmode.first ).defaultApplied( 0 ) ) {
-
                 if (cmode.first == "THP") {
                     // a zero value THP limit will not be handled as a THP limit
                     if (this->THPTarget.is<double>() && this->THPTarget.zero()) {
@@ -209,6 +210,38 @@ namespace Opm {
                                                          " non-zero THP constraint", well_name);
                             throw OpmInputError(msg, location);
                     }
+                }
+
+                auto warnIfInactive = [&](bool cond, std::string_view constraint, std::string_view inactive_text) -> bool {
+                    if (!cond) {
+                        OpmLog::warning(fmt::format(
+                                "WCONPROD at {}:{} : Well {} specifies a {} constraint, but {}; the constraint will be ignored.",
+                                location.filename, location.lineno, well_name, constraint, inactive_text));
+                        return true;
+                    }
+                    return false;
+                };
+
+                switch (cmode.second) {
+                case ProducerCMode::ORAT: {
+                    if (warnIfInactive(phases.active(Phase::OIL), "oil-rate", "the oil phase is inactive")) continue;
+                    break;
+                }
+                case ProducerCMode::WRAT: {
+                    if (warnIfInactive(phases.active(Phase::WATER), "water-rate", "the water phase is inactive")) continue;
+                    break;
+                }
+                case ProducerCMode::GRAT: {
+                    if (warnIfInactive(phases.active(Phase::GAS), "gas-rate", "the gas phase is inactive")) continue;
+                    break;
+                }
+                case ProducerCMode::LRAT: {
+                    if (warnIfInactive(phases.active(Phase::OIL) || phases.active(Phase::WATER),
+                                       "liquid-rate", "neither oil nor water phase is active") ) continue;
+                    break;
+                }
+                default:
+                    break;
                 }
 
                 this->addProductionControl( cmode.second );
