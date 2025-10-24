@@ -163,6 +163,11 @@ WELSPECS
     std::string createDeckWTEST()
     {
         return { R"(
+RUNSPEC
+OIL
+WATER
+GAS
+
 START             -- 0
 10 MAI 2007 /
 GRID
@@ -266,6 +271,11 @@ WCONINJH
     std::string createDeckForTestingCrossFlow()
     {
         return { R"(
+RUNSPEC
+OIL
+WATER
+GAS
+
 START             -- 0
 10 MAI 2007 /
 GRID
@@ -532,6 +542,10 @@ BOOST_AUTO_TEST_CASE(EmptyScheduleHasFIELDGroup) {
 
 BOOST_AUTO_TEST_CASE(HasGroup_At_Time) {
     const auto input = std::string { R"(
+RUNSPEC
+OIL
+WATER
+
 SCHEDULE
 WELSPECS
 -- Group 'P' exists from the first report step
@@ -1226,6 +1240,11 @@ DATES             -- 6
 
 BOOST_AUTO_TEST_CASE(createDeckWithWeltArg) {
     std::string input = R"(
+RUNSPEC
+OIL
+WATER
+GAS
+
 START             -- 0
 19 JUN 2007 /
 GRID
@@ -1347,6 +1366,11 @@ I1 THP 4 /
 
 BOOST_AUTO_TEST_CASE(createDeckWithWeltArg_UDA) {
     std::string input = R"(
+RUNSPEC
+OIL
+WATER
+GAS
+
 START             -- 0
 19 JUN 2007 /
 GRID
@@ -2453,6 +2477,11 @@ WCONHIST
 
 BOOST_AUTO_TEST_CASE(fromWCONHISTtoWCONPROD) {
     std::string input = R"(
+RUNSPEC
+OIL
+WATER
+GAS
+
 START             -- 0
 19 JUN 2007 /
 GRID
@@ -3738,6 +3767,11 @@ WEFAC
 
 BOOST_AUTO_TEST_CASE(historic_BHP_and_THP) {
     const std::string input = R"(
+RUNSPEC
+OIL
+WATER
+GAS
+
 START             -- 0
 19 JUN 2007 /
 SCHEDULE
@@ -4449,6 +4483,11 @@ DATES             -- 1
 
 BOOST_AUTO_TEST_CASE(TESTGuideRateConfig) {
     const std::string input = R"(
+RUNSPEC
+OIL
+WATER
+GAS
+
 START             -- 0
 10 MAI 2007 /
 GRID
@@ -4661,6 +4700,9 @@ END
 
 BOOST_AUTO_TEST_CASE(Production_Control_Mode_From_Well) {
     const auto input = R"(RUNSPEC
+OIL
+WATER
+GAS
 
 SCHEDULE
 VFPPROD
@@ -5391,6 +5433,10 @@ END
 
 BOOST_AUTO_TEST_CASE(WELL_STATUS) {
     const std::string deck_string = R"(
+RUNSPEC
+OIL
+WATER
+
 START
 7 OCT 2020 /
 
@@ -5601,6 +5647,11 @@ BOOST_AUTO_TEST_CASE(ScheduleDeckTest) {
 
 BOOST_AUTO_TEST_CASE(WCONPROD_UDA) {
     const std::string deck_string = R"(
+RUNSPEC
+OIL
+WATER
+GAS
+
 START
 7 OCT 2020 /
 

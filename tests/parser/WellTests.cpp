@@ -1674,6 +1674,10 @@ END
 BOOST_AUTO_TEST_CASE(Update_Group_Single_Well)
 {
     const auto deck = Parser{}.parseString(R"(RUNSPEC
+OIL
+GAS
+WATER
+
 DIMENS
 10 10 3 /
 GRID
@@ -1738,6 +1742,10 @@ END
 BOOST_AUTO_TEST_CASE(Update_Group_Multi_Well)
 {
     const auto deck = Parser{}.parseString(R"(RUNSPEC
+OIL
+GAS
+WATER
+
 DIMENS
 10 10 3 /
 GRID
@@ -1814,6 +1822,10 @@ END
 BOOST_AUTO_TEST_CASE(Update_Group_WList)
 {
     const auto deck = Parser{}.parseString(R"(RUNSPEC
+OIL
+GAS
+WATER
+
 DIMENS
 10 10 3 /
 GRID
@@ -1900,6 +1912,10 @@ END
 BOOST_AUTO_TEST_CASE(FBHPDEF_Basic)
 {
     const auto deck = Parser{}.parseString(R"(RUNSPEC
+OIL
+GAS
+WATER
+
 DIMENS
 10 10 3 /
 GRID
@@ -1988,6 +2004,10 @@ END
 BOOST_AUTO_TEST_CASE(WCYCLE_Basic)
 {
     const auto deck = Parser{}.parseString(R"(RUNSPEC
+OIL
+GAS
+WATER
+
 DIMENS
 10 10 3 /
 GRID

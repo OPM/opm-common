@@ -167,6 +167,11 @@ TSTEP
 )"};
 
     const auto WITH_WELSPECS = std::string{ R"(
+RUNSPEC
+OIL
+WATER
+GAS
+
 SCHEDULE
 
 WELSPECS
