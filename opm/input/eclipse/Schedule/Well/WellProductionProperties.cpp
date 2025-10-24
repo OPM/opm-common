@@ -197,6 +197,14 @@ namespace Opm {
             { "LRAT", ProducerCMode::LRAT }, { "RESV", ProducerCMode::RESV }, { "THP", ProducerCMode::THP }
         };
 
+        auto warnInactive = [&location, &well_name](std::string_view constraint, std::string_view context) {
+            const auto msg_format = fmt::format(R"(Problem with keyword {{keyword}}
+In {{file}} line {{line}}
+Well {} specifies {} constraint, but {}. The constraint will be ignored.)",
+                                    well_name, constraint, context);
+            OpmLog::warning(OpmInputError::format(msg_format, location));
+        };
+
         for( const auto& cmode : modes ) {
             if( !record.getItem( cmode.first ).defaultApplied( 0 ) ) {
                 if (cmode.first == "THP") {
@@ -212,32 +220,33 @@ namespace Opm {
                     }
                 }
 
-                auto warnIfInactive = [&](bool cond, std::string_view constraint, std::string_view inactive_text) -> bool {
-                    if (!cond) {
-                        OpmLog::warning(fmt::format(
-                                "WCONPROD at {}:{} : Well {} specifies a {} constraint, but {}; the constraint will be ignored.",
-                                location.filename, location.lineno, well_name, constraint, inactive_text));
-                        return true;
-                    }
-                    return false;
-                };
-
                 switch (cmode.second) {
                 case ProducerCMode::ORAT: {
-                    if (warnIfInactive(phases.active(Phase::OIL), "oil-rate", "the oil phase is inactive")) continue;
+                    if ( !phases.active(Phase::OIL) ) {
+                        warnInactive("an oil rate", "the oil phase is inactive");
+                        continue;
+                    }
                     break;
                 }
                 case ProducerCMode::WRAT: {
-                    if (warnIfInactive(phases.active(Phase::WATER), "water-rate", "the water phase is inactive")) continue;
+                    if ( !phases.active(Phase::WATER) ) {
+                        warnInactive("a water rate", "the water phase is inactive");
+                        continue;
+                    }
                     break;
                 }
                 case ProducerCMode::GRAT: {
-                    if (warnIfInactive(phases.active(Phase::GAS), "gas-rate", "the gas phase is inactive")) continue;
+                    if ( !phases.active(Phase::GAS) ) {
+                        warnInactive("a gas rate", "the gas phase is inactive");
+                        continue;
+                    }
                     break;
                 }
                 case ProducerCMode::LRAT: {
-                    if (warnIfInactive(phases.active(Phase::OIL) || phases.active(Phase::WATER),
-                                       "liquid-rate", "neither oil nor water phase is active") ) continue;
+                    if ( !phases.active(Phase::OIL) && !phases.active(Phase::WATER) ) {
+                        warnInactive("a liquid rate", "neither oil nor water phase is active");
+                        continue;
+                    }
                     break;
                 }
                 default:
