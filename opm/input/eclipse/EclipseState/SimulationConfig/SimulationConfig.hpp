@@ -24,6 +24,7 @@
 #include <opm/input/eclipse/EclipseState/SimulationConfig/DatumDepth.hpp>
 #include <opm/input/eclipse/EclipseState/SimulationConfig/RockConfig.hpp>
 #include <opm/input/eclipse/EclipseState/SimulationConfig/ThresholdPressure.hpp>
+#include <opm/material/thermal/EnergyModuleType.hpp>
 
 namespace Opm {
 
@@ -57,6 +58,7 @@ namespace Opm {
         bool hasVAPOIL() const;
         bool hasVAPWAT() const;
         bool isThermal() const;
+        EnergyModules energyModuleType() const;
         bool useEnthalpy() const;
         bool isDiffusive() const;
         bool hasPRECSALT() const;
@@ -79,7 +81,7 @@ namespace Opm {
             serializer(m_DISGASW);
             serializer(m_VAPOIL);
             serializer(m_VAPWAT);
-            serializer(m_isThermal);
+            serializer(m_energy_type);
             serializer(m_useEnthalpy);
             serializer(m_diffuse);
             serializer(m_PRECSALT);
@@ -93,13 +95,13 @@ namespace Opm {
         BCConfig m_bcconfig{};
         RockConfig m_rock_config{};
         DatumDepth m_datum_depth{};
+        EnergyModules m_energy_type = EnergyModules::NoTemperature;
         bool m_useCPR{false};
         bool m_useNONNC{false};
         bool m_DISGAS{false};
         bool m_DISGASW{false};
         bool m_VAPOIL{false};
         bool m_VAPWAT{false};
-        bool m_isThermal{false};
         bool m_useEnthalpy{false};
         bool m_diffuse{false};
         bool m_PRECSALT{false};

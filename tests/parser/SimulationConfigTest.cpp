@@ -173,6 +173,42 @@ DIMENS
   10 3 4 /
 )";
     }
+
+    std::string simDeckStringCO2STORE()
+    {
+        return R"(
+RUNSPEC
+
+CO2STORE
+
+DIMENS
+  10 3 4 /
+)";
+    }
+
+    std::string simDeckStringCO2SOL()
+    {
+        return R"(
+RUNSPEC
+
+CO2SOL
+
+DIMENS
+  10 3 4 /
+)";
+    }
+
+    std::string simDeckStringH2STORE()
+    {
+        return R"(
+RUNSPEC
+
+H2STORE
+
+DIMENS
+  10 3 4 /
+)";
+    }
 }
 
 static Deck createDeck(const std::string& input) {
@@ -321,6 +357,7 @@ BOOST_AUTO_TEST_CASE(SimulationConfig_TEMP_THERMAL)
         const auto simulationConfig = Opm::SimulationConfig(false, deck, fp);
 
         BOOST_CHECK(! simulationConfig.isThermal());
+        BOOST_CHECK(simulationConfig.energyModuleType() == EnergyModules::NoTemperature);
     }
 
     {
@@ -331,6 +368,7 @@ BOOST_AUTO_TEST_CASE(SimulationConfig_TEMP_THERMAL)
         const auto simulationConfig = Opm::SimulationConfig(false, deck, fp);
 
         BOOST_CHECK(simulationConfig.isThermal());
+        BOOST_CHECK(simulationConfig.energyModuleType() == EnergyModules::FullyImplicitThermal);
     }
 
     {
@@ -341,6 +379,37 @@ BOOST_AUTO_TEST_CASE(SimulationConfig_TEMP_THERMAL)
         const auto simulationConfig = Opm::SimulationConfig(false, deck, fp);
 
         BOOST_CHECK(simulationConfig.isThermal());
+        BOOST_CHECK(simulationConfig.energyModuleType() == EnergyModules::FullyImplicitThermal);
+    }
+
+    {
+        const auto deck = createDeck(simDeckStringCO2STORE());
+        const auto tm = TableManager(deck);
+        auto eg = EclipseGrid(10, 3, 4);
+        const auto fp = FieldPropsManager(deck, Phases{true, true, true}, eg, tm);
+        const auto simulationConfig = Opm::SimulationConfig(false, deck, fp);
+
+        BOOST_CHECK(simulationConfig.energyModuleType() == EnergyModules::ConstantTemperature);
+    }
+
+    {
+        const auto deck = createDeck(simDeckStringCO2SOL());
+        const auto tm = TableManager(deck);
+        auto eg = EclipseGrid(10, 3, 4);
+        const auto fp = FieldPropsManager(deck, Phases{true, true, true}, eg, tm);
+        const auto simulationConfig = Opm::SimulationConfig(false, deck, fp);
+
+        BOOST_CHECK(simulationConfig.energyModuleType() == EnergyModules::ConstantTemperature);
+    }
+
+    {
+        const auto deck = createDeck(simDeckStringH2STORE());
+        const auto tm = TableManager(deck);
+        auto eg = EclipseGrid(10, 3, 4);
+        const auto fp = FieldPropsManager(deck, Phases{true, true, true}, eg, tm);
+        const auto simulationConfig = Opm::SimulationConfig(false, deck, fp);
+
+        BOOST_CHECK(simulationConfig.energyModuleType() == EnergyModules::ConstantTemperature);
     }
 }
 
