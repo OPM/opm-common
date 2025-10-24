@@ -52,8 +52,8 @@ namespace Opm
     template<class>
 inline constexpr bool always_false_v = false;
 
-// Poison iterator is a helper class that will allow for compilation but will fail at run-time
-// Its intetion is to be used so that we can have a SparseTable of GPU data, which requires the
+// Poison iterator is a helper class that will allow for compilation only when it is not used.
+// Its intention is to be used so that we can have a SparseTable of GPU data, which requires the
 // GPUBuffer intermediate storage type, which does not support iterators.
 template<class T>
 struct PoisonIterator {
@@ -69,7 +69,6 @@ struct PoisonIterator {
     // Dereference
     reference operator*() const {
         static_assert(always_false_v<T>, "PoisonIterator: operator*() is not allowed.");
-        // Unreachable, but keeps the signature well-formed:
         return *ptr_;
     }
 
@@ -133,8 +132,8 @@ private:
         }
 
         SparseTable (Storage<T>&& data, Storage<int>&& row_starts)
-            : data_(data)
-            , row_start_(row_starts)
+            : data_(std::move(data))
+            , row_start_(std::move(row_starts))
         {
             // removed for non-default template instantiations
             // because we cannot access the zero'th element if Storage is a GpuBuffer
