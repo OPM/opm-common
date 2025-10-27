@@ -931,6 +931,11 @@ namespace {
     SimulationCase wdfaccorCase()
     {
         return SimulationCase { Opm::Parser{}.parseString(R"(
+RUNSPEC
+
+OIL
+WATER
+
 DIMENS
  10 10 10 /
 

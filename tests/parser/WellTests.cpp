@@ -661,11 +661,12 @@ namespace {
             auto deck = parser.parseString(input);
             const auto& kwd     = deck["WCONPROD"].back();
             const auto&  record = kwd.getRecord(0);
+            const Phases phases { true, true, true };
             auto table_nr = record.getItem("VFP_TABLE").get< int >(0);
             Opm::Well::WellProductionProperties pred(unit_system, "W");
             pred.handleWCONPROD(alq_type, table_nr,
                                 Opm::ParserKeywords::FBHPDEF::TARGET_BHP::defaultValue * unit::barsa,
-                                unit_system, "WELL", record, {});
+                                unit_system, "WELL", phases, record, {});
 
             return pred;
         }
@@ -1673,6 +1674,10 @@ END
 BOOST_AUTO_TEST_CASE(Update_Group_Single_Well)
 {
     const auto deck = Parser{}.parseString(R"(RUNSPEC
+OIL
+GAS
+WATER
+
 DIMENS
 10 10 3 /
 GRID
@@ -1737,6 +1742,10 @@ END
 BOOST_AUTO_TEST_CASE(Update_Group_Multi_Well)
 {
     const auto deck = Parser{}.parseString(R"(RUNSPEC
+OIL
+GAS
+WATER
+
 DIMENS
 10 10 3 /
 GRID
@@ -1813,6 +1822,10 @@ END
 BOOST_AUTO_TEST_CASE(Update_Group_WList)
 {
     const auto deck = Parser{}.parseString(R"(RUNSPEC
+OIL
+GAS
+WATER
+
 DIMENS
 10 10 3 /
 GRID
@@ -1899,6 +1912,10 @@ END
 BOOST_AUTO_TEST_CASE(FBHPDEF_Basic)
 {
     const auto deck = Parser{}.parseString(R"(RUNSPEC
+OIL
+GAS
+WATER
+
 DIMENS
 10 10 3 /
 GRID
@@ -1987,6 +2004,10 @@ END
 BOOST_AUTO_TEST_CASE(WCYCLE_Basic)
 {
     const auto deck = Parser{}.parseString(R"(RUNSPEC
+OIL
+GAS
+WATER
+
 DIMENS
 10 10 3 /
 GRID

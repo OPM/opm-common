@@ -88,6 +88,12 @@
 using namespace Opm;
 
 std::string WTEST_deck = R"(
+RUNSPEC
+
+OIL
+GAS
+WATER
+
 START             -- 0
 10 MAI 2007 /
 GRID

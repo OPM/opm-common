@@ -163,6 +163,11 @@ WELSPECS
     std::string createDeckWTEST()
     {
         return { R"(
+RUNSPEC
+OIL
+WATER
+GAS
+
 START             -- 0
 10 MAI 2007 /
 GRID
@@ -266,6 +271,11 @@ WCONINJH
     std::string createDeckForTestingCrossFlow()
     {
         return { R"(
+RUNSPEC
+OIL
+WATER
+GAS
+
 START             -- 0
 10 MAI 2007 /
 GRID
@@ -532,6 +542,10 @@ BOOST_AUTO_TEST_CASE(EmptyScheduleHasFIELDGroup) {
 
 BOOST_AUTO_TEST_CASE(HasGroup_At_Time) {
     const auto input = std::string { R"(
+RUNSPEC
+OIL
+WATER
+
 SCHEDULE
 WELSPECS
 -- Group 'P' exists from the first report step
@@ -1226,6 +1240,11 @@ DATES             -- 6
 
 BOOST_AUTO_TEST_CASE(createDeckWithWeltArg) {
     std::string input = R"(
+RUNSPEC
+OIL
+WATER
+GAS
+
 START             -- 0
 19 JUN 2007 /
 GRID
@@ -1347,6 +1366,11 @@ I1 THP 4 /
 
 BOOST_AUTO_TEST_CASE(createDeckWithWeltArg_UDA) {
     std::string input = R"(
+RUNSPEC
+OIL
+WATER
+GAS
+
 START             -- 0
 19 JUN 2007 /
 GRID
@@ -2453,6 +2477,11 @@ WCONHIST
 
 BOOST_AUTO_TEST_CASE(fromWCONHISTtoWCONPROD) {
     std::string input = R"(
+RUNSPEC
+OIL
+WATER
+GAS
+
 START             -- 0
 19 JUN 2007 /
 GRID
@@ -3738,6 +3767,11 @@ WEFAC
 
 BOOST_AUTO_TEST_CASE(historic_BHP_and_THP) {
     const std::string input = R"(
+RUNSPEC
+OIL
+WATER
+GAS
+
 START             -- 0
 19 JUN 2007 /
 SCHEDULE
@@ -4449,6 +4483,11 @@ DATES             -- 1
 
 BOOST_AUTO_TEST_CASE(TESTGuideRateConfig) {
     const std::string input = R"(
+RUNSPEC
+OIL
+WATER
+GAS
+
 START             -- 0
 10 MAI 2007 /
 GRID
@@ -4661,6 +4700,9 @@ END
 
 BOOST_AUTO_TEST_CASE(Production_Control_Mode_From_Well) {
     const auto input = R"(RUNSPEC
+OIL
+WATER
+GAS
 
 SCHEDULE
 VFPPROD
@@ -5391,6 +5433,10 @@ END
 
 BOOST_AUTO_TEST_CASE(WELL_STATUS) {
     const std::string deck_string = R"(
+RUNSPEC
+OIL
+WATER
+
 START
 7 OCT 2020 /
 
@@ -5427,7 +5473,7 @@ COMPDAT
 /
 
 WCONPROD
-  'P1' 'OPEN' 'ORAT'  123.4  4*  50.0 /
+  'P1' 'OPEN' 'ORAT'  123.4 456. 789. 2*  50.0 /
 /
 
 
@@ -5601,6 +5647,11 @@ BOOST_AUTO_TEST_CASE(ScheduleDeckTest) {
 
 BOOST_AUTO_TEST_CASE(WCONPROD_UDA) {
     const std::string deck_string = R"(
+RUNSPEC
+OIL
+WATER
+GAS
+
 START
 7 OCT 2020 /
 
@@ -5689,6 +5740,67 @@ WCONPROD
     BOOST_CHECK_CLOSE(controls2.alq_value, dim.convertRawToSi(123), 1e-13);
 
     BOOST_CHECK(!sched[0].has_gpmaint());
+}
+
+BOOST_AUTO_TEST_CASE(WCONPROD)
+{
+    const std::string deck_string = R"(
+RUNSPEC
+GAS
+
+START
+7 OCT 2020 /
+
+DIMENS
+  10 10 3 /
+
+GRID
+DXV
+  10*100.0 /
+DYV
+  10*100.0 /
+DZV
+  3*10.0 /
+
+DEPTHZ
+  121*2000.0 /
+
+PORO
+  300*0.3 /
+PERMX
+    300*1 /
+PERMY
+    300*0.1 /
+PERMZ
+    300*0.01 /
+
+SCHEDULE
+
+WELSPECS -- 0
+  'P1' 'G' 10 10 2005 'GAS' /
+/
+
+COMPDAT
+  'P1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+/
+
+WCONPROD
+  'P1' 'OPEN' 'GRAT'  123.4  1.0  2.0  3.0  9.0 100/
+/
+
+)";
+    const auto deck = Parser{}.parseString(deck_string);
+    const auto es    = EclipseState{ deck };
+    auto       sched = Schedule{ deck, es };
+    const auto& well1 = sched.getWell("P1", 0);
+    SummaryState st(TimeService::now(), 0.0);
+    const auto& controls1 = well1.productionControls(st);
+    BOOST_CHECK(!controls1.hasControl(WellProducerCMode::ORAT));
+    BOOST_CHECK(!controls1.hasControl(WellProducerCMode::WRAT));
+    BOOST_CHECK(controls1.hasControl(WellProducerCMode::GRAT));
+    BOOST_CHECK(!controls1.hasControl(WellProducerCMode::LRAT));
+    BOOST_CHECK(controls1.hasControl(WellProducerCMode::RESV));
+    BOOST_CHECK(controls1.hasControl(WellProducerCMode::BHP));
 }
 
 BOOST_AUTO_TEST_CASE(WCONHIST_WCONINJH_VFP) {

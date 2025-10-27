@@ -112,9 +112,9 @@ BOOST_AUTO_TEST_CASE(WCONPROD_MissingCmode) {
     auto deck =  parser.parseFile(scheduleFile);
     EclipseGrid grid(10,10,3);
     TableManager table ( deck );
-    FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
+    const Runspec runspec (deck);
+    const FieldPropsManager fp(deck, runspec.phases(), grid, table);
     auto python = std::make_shared<Python>();
-    Runspec runspec (deck);
     BOOST_CHECK_NO_THROW( Schedule(deck, grid, fp, NumericalAquifers{}, runspec, python) );
 }
 
@@ -125,8 +125,8 @@ BOOST_AUTO_TEST_CASE(WCONPROD_Missing_DATA) {
     auto deck =  parser.parseFile(scheduleFile);
     EclipseGrid grid(10,10,3);
     TableManager table ( deck );
-    FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
-    Runspec runspec (deck);
+    const Runspec runspec (deck);
+    const FieldPropsManager fp(deck, runspec.phases(), grid, table);
     auto python = std::make_shared<Python>();
     BOOST_CHECK_THROW( Schedule(deck, grid, fp, NumericalAquifers{}, runspec, python) , std::exception );
 }
@@ -137,8 +137,8 @@ BOOST_AUTO_TEST_CASE(WellTestRefDepth) {
     const auto deck = Parser{}.parseFile(scheduleFile);
     EclipseGrid grid(40,60,30);
     const TableManager table ( deck );
-    const FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
     const Runspec runspec (deck);
+    const FieldPropsManager fp(deck, runspec.phases(), grid, table);
     const Schedule sched {
         deck, grid, fp, NumericalAquifers{},
         runspec, std::make_shared<Python>()
@@ -158,8 +158,8 @@ BOOST_AUTO_TEST_CASE(WellTesting) {
     const auto deck = Parser{}.parseFile(scheduleFile);
     EclipseGrid grid(40,60,30);
     const TableManager table ( deck );
-    const FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
     const Runspec runspec (deck);
+    const FieldPropsManager fp(deck, runspec.phases(), grid, table);
     const Schedule sched {
         deck, grid, fp, NumericalAquifers{},
         runspec, std::make_shared<Python>()
@@ -297,8 +297,8 @@ BOOST_AUTO_TEST_CASE(WellTestCOMPDAT_DEFAULTED_ITEMS) {
     const auto deck = Parser{}.parseFile(scheduleFile);
     EclipseGrid grid(10,10,10);
     const TableManager table ( deck );
-    const FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
     const Runspec runspec (deck);
+    const FieldPropsManager fp(deck, runspec.phases(), grid, table);
     const Schedule sched {
         deck, grid, fp, NumericalAquifers{},
         runspec, std::make_shared<Python>()
@@ -311,8 +311,8 @@ BOOST_AUTO_TEST_CASE(WellTestCOMPDAT) {
     const auto deck = Parser{}.parseFile(scheduleFile);
     EclipseGrid grid(40,60,30);
     const TableManager table ( deck );
-    const FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
     const Runspec runspec (deck);
+    const FieldPropsManager fp(deck, runspec.phases(), grid, table);
     const Schedule sched {
         deck, grid, fp, NumericalAquifers{},
         runspec, std::make_shared<Python>()
@@ -605,8 +605,8 @@ BOOST_AUTO_TEST_CASE(WELLS_SHUT) {
     const auto deck = Parser{}.parseFile(scheduleFile);
     EclipseGrid grid(20,40,1);
     const TableManager table ( deck );
-    const FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
     const Runspec runspec (deck);
+    const FieldPropsManager fp(deck, runspec.phases(), grid, table);
     const Schedule sched {
         deck, grid, fp, NumericalAquifers{},
         runspec, std::make_shared<Python>()

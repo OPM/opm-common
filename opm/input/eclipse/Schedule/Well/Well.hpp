@@ -51,6 +51,7 @@ class ErrorGuard;
 class EclipseGrid;
 class KeywordLocation;
 class ParseContext;
+class Phases;
 class ScheduleGrid;
 class SICD;
 class SummaryState;
@@ -330,6 +331,7 @@ public:
                             const double bhp_def,
                             const UnitSystem& unit_system,
                             const std::string& well,
+                            const Phases& phases,
                             const DeckRecord& record,
                             const KeywordLocation& location);
 

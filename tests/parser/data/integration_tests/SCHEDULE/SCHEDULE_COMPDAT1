@@ -1,6 +1,10 @@
 
 RUNSPEC
 
+OIL
+GAS
+WATER
+
 DIMENS
   10 10 10  /
 

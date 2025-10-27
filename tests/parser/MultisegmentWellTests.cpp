@@ -430,6 +430,11 @@ BOOST_AUTO_TEST_CASE(SICDAfterCOMPSEGS)
 //   http://opendatacommons.org/licenses/dbcl/1.0/
 
     const auto deck = ::Opm::Parser{}.parseString(R"(RUNSPEC
+
+OIL
+GAS
+WATER
+
 DIMENS
   20 20 20 /
 
