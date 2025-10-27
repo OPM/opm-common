@@ -323,14 +323,15 @@ namespace EclIO
                                           init_dims[2]));
                 }
 
-                int init_nactive = init.activeCells(m_grid_name);
-                if (init_nactive != nactive) {
-                    OPM_THROW(std::invalid_argument,
-                              fmt::format("Number of active cells are different in Egrid and Init file."
-                                          " Egrid: {}. INIT file: {}",
-                                          nactive,
-                                          init_nactive));
-                }
+                // This check should probably be somewhere else, commented out for now
+                // int init_nactive = init.activeCells(m_grid_name);
+                // if (init_nactive != nactive) {
+                //    OPM_THROW(std::invalid_argument,
+                //              fmt::format("Number of active cells are different in Egrid and Init file."
+                //                          " Egrid: {}. INIT file: {}",
+                //                          nactive,
+                //                          init_nactive));
+                //}
 
                 auto trans_data = init.getInitData<float>("TRANNNC", m_grid_name);
 

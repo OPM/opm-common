@@ -73,7 +73,7 @@ namespace EclIO
                 if (lgrname == "global") {
                     auto logi = getImpl(n, LOGI, logi_array, "bool");
 
-                    if (logi_array.size() > 14) {
+                    if (logi.size() > 14) {
                         dual_porosity = logi[14];
                         if (dual_porosity) {
                             global_nijk[2] /= 2;
