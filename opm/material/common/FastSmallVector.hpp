@@ -99,7 +99,7 @@ public:
     FastSmallVector& operator=(FastSmallVector&& other)
     {
         size_ = other.size_;
-        if (size_ <= N) {
+        if (other.usingSmallBuf()) {
             smallBuf_ = std::move(other.smallBuf_);
             dataPtr_ = smallBuf_.data();
         }
@@ -119,7 +119,7 @@ public:
     {
         size_ = other.size_;
 
-        if (size_ <= N) {
+        if (other.usingSmallBuf()) {
             smallBuf_ = other.smallBuf_;
             dataPtr_ = smallBuf_.data();
         }
@@ -176,26 +176,54 @@ public:
     { return dataPtr_ + size_; }
 
     size_type capacity()
-    { return size_ <= N ? N : data_.capacity(); }
+    { return this->usingSmallBuf() ? N : data_.capacity(); }
 
     void push_back(const ValueType& value)
     {
-        if (size_ < N) {
-            // Data is contained in smallBuf_
-            smallBuf_[size_++] = value;
-        } else if (size_ == N) {
-            // Must switch from using smallBuf_ to using data_
-            data_.reserve(N + 1);
-            data_.assign(smallBuf_.begin(), smallBuf_.end());
-            data_.push_back(value);
-            ++size_;
-            dataPtr_ = data_.data();
+        if (this->usingSmallBuf()) {
+            if (size_ < N) {
+                // Data is contained in smallBuf_
+                smallBuf_[size_++] = value;
+            } else if (size_ == N) {
+                // Must switch from using smallBuf_ to using data_
+                data_.reserve(N + 1); // Since we will push_back to it later
+                data_.resize(N);      // So we can move the existing data to it
+                std::move(smallBuf_.begin(), smallBuf_.end(), data_.begin());
+                data_.push_back(value);
+                ++size_;
+                dataPtr_ = data_.data();
+            }
         } else {
             // Data is contained in data_
             data_.push_back(value);
             ++size_;
             dataPtr_ = data_.data();
         }
+    }
+
+    void resize(size_t numElem)
+    {
+        if (numElem == size_) return; // nothing to do
+
+        if (this->usingSmallBuf()) {
+            if (numElem > N) {
+                data_.resize(numElem);
+                if (size_ > 0 && N > 0) {
+                    std::copy(smallBuf_.begin(), smallBuf_.begin() + size_, data_.begin());
+                }
+                dataPtr_ = data_.data();
+            } else if (numElem < size_) {
+                // when shrinking, remove the values after numElem so that the space
+                // is ready to use in the potentional future resize
+                for (auto ii = numElem; ii < size_; ++ii) {
+                    smallBuf_[ii].~ValueType();
+                }
+            }
+        } else {
+            // when shriking to numElem < N, we do not switch back to use smallBuf_
+            data_.resize(numElem);
+        }
+        size_ = numElem;
     }
 
 private:
@@ -208,6 +236,11 @@ private:
             dataPtr_ = data_.data();
         } else
             dataPtr_ = smallBuf_.data();
+    }
+
+    bool usingSmallBuf() const
+    {
+        return dataPtr_ == smallBuf_.data();
     }
 
     std::array<ValueType, N> smallBuf_{};
