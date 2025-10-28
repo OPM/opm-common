@@ -208,7 +208,9 @@ public:
         if (this->usingSmallBuf()) {
             if (numElem > N) {
                 data_.resize(numElem);
-                std::copy(smallBuf_.begin(), smallBuf_.begin() + size_, data_.begin());
+                if (size_ > 0 && N > 0) {
+                    std::copy(smallBuf_.begin(), smallBuf_.begin() + size_, data_.begin());
+                }
                 dataPtr_ = data_.data();
             } else if (numElem < size_) {
                 // when shrinking, remove the values after numElem so that the space
