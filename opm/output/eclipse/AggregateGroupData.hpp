@@ -191,7 +191,7 @@ public:
                                                            {"WVPT", 13},
                                                            {"WWIT", 15},
                                                            {"WGIT", 16},
-                                                           //{"WVIT", 17},
+                                                           {"WVIT", 17},
                                                            //{"WGCR", 19},
                                                            {"WGCT", 21},
                                                            {"WOPP", 22},
@@ -211,7 +211,7 @@ public:
                                                            {"WWPTH", 139},
                                                            {"WWITH", 140},
                                                            {"WGPTH", 143},
-                                                           //{"WGITH", 144},
+                                                           {"WGITH", 144},
     };
 
 private:
