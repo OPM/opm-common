@@ -182,7 +182,7 @@ public:
                                                            {"WGPR",  2},
                                                            {"WVPR",  3},
                                                            {"WWIR",  5},
-                                                           //{"WGIR",  6},
+                                                           {"WGIR",  6},
                                                            {"WWCT",  8},
                                                            {"WGOR",  9},
                                                            {"WOPT", 10},
@@ -190,8 +190,8 @@ public:
                                                            {"WGPT", 12},
                                                            {"WVPT", 13},
                                                            {"WWIT", 15},
-                                                           //{"WGIT", 16},
-                                                           //{"WVIT", 17},
+                                                           {"WGIT", 16},
+                                                           {"WVIT", 17},
                                                            //{"WGCR", 19},
                                                            {"WGCT", 21},
                                                            {"WOPP", 22},
@@ -211,7 +211,7 @@ public:
                                                            {"WWPTH", 139},
                                                            {"WWITH", 140},
                                                            {"WGPTH", 143},
-                                                           //{"WGITH", 144},
+                                                           {"WGITH", 144},
     };
 
 private:
