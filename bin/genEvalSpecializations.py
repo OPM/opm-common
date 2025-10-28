@@ -247,7 +247,7 @@ public:
     // derivatives being zero.
     template <class RhsValueType>
     OPM_HOST_DEVICE Evaluation(const RhsValueType& c)
-            : Evaluation(0, c)
+        : Evaluation(0, c)
     {
     }
 {% else %}\
@@ -270,7 +270,7 @@ public:
 {% if numDerivs < 0 %}\
     template <class RhsValueType>
     OPM_HOST_DEVICE Evaluation(int nVars, const RhsValueType& c, int varPos)
-     : data_(1 + nVars, 0.0)
+        : data_(1 + nVars, 0.0)
     {
         // The variable position must be in represented by the given variable descriptor
         assert(0 <= varPos && varPos < size());
@@ -704,7 +704,7 @@ public:
 
         if (thisSize == 0) {
             assert(otherSize > 0);
-            // if this is a constant, we divide all values and derivatives by the value
+            // if *this is a constant, extend to hold derivatives before division
             this->appendDerivativesToConstant(otherSize);
 
             // values are divided, derivatives follow the rule for division, i.e., (u/v)' = (v'u -

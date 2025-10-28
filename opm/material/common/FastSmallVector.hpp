@@ -186,8 +186,9 @@ public:
                 smallBuf_[size_++] = value;
             } else if (size_ == N) {
                 // Must switch from using smallBuf_ to using data_
-                data_.reserve(N + 1);
-                data_.assign(smallBuf_.begin(), smallBuf_.end());
+                data_.reserve(N + 1); // Since we will push_back to it later
+                data_.resize(N);      // So we can move the existing data to it
+                std::move(smallBuf_.begin(), smallBuf_.end(), data_.begin());
                 data_.push_back(value);
                 ++size_;
                 dataPtr_ = data_.data();
@@ -212,7 +213,9 @@ public:
             } else if (numElem < size_) {
                 // when shrinking, remove the values after numElem so that the space
                 // is ready to use in the potentional future resize
-                std::fill(smallBuf_.begin() + numElem, smallBuf_.begin() + size_, ValueType{});
+                for (auto ii = numElem; ii < size_; ++ii) {
+                    smallBuf_[ii].~ValueType();
+                }
             }
         } else {
             // when shriking to numElem < N, we do not switch back to use smallBuf_
