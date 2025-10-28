@@ -107,13 +107,14 @@ macro (config_hook)
       set(OPM_PROJECT_EXTRA_CODE_INSTALLED "${OPM_PROJECT_EXTRA_CODE_INSTALLED}
                                             set(HAVE_ECL_OUTPUT 1)")
     endif()
-    # We need to use the correct search mode. Otherwise not finding one
-    # boost component beloq will mark the previously found ones as not
-    # found again. (Code stolen from UseDynamicBoost.cmake
-    if(Boost_DIR)
+    # CMake 3.30.0 requires to find Boost in CONFIG mode or
+    # we need to use the correct search mode in previous cmake versions too.
+    # Otherwise not finding one boost component below will mark the previously found ones as not
+    # found again. (Code stolen from UseDynamicBoost.cmake)
+    if(Boost_DIR OR (CMAKE_VERSION VERSION_GREATER_EQUAL 3.30.0))
       set(_Boost_CONFIG_MODE CONFIG)
     endif()
-    find_package(Boost COMPONENTS filesystem regex system unit_test_framework ${_Boost_CONFIG_MODE})
+    find_package(Boost COMPONENTS filesystem regex unit_test_framework ${_Boost_CONFIG_MODE})
 
     if (HAVE_DYNAMIC_BOOST_TEST)
       set_target_properties(Boost::unit_test_framework PROPERTIES INTERFACE_COMPILE_DEFINITIONS BOOST_TEST_DYN_LINK=1)
