@@ -22,30 +22,34 @@
 
 #include <string>
 
-namespace Opm {
+// to avoid conflicts on some platforms
+#undef IGNORE
 
-    enum ParserKeywordSizeEnum {
-        SLASH_TERMINATED = 0,
-        FIXED = 1,
-        OTHER_KEYWORD_IN_DECK = 2,
-        UNKNOWN = 3,
-        FIXED_CODE = 4,
-        DOUBLE_SLASH_TERMINATED = 5,
-        SPECIAL_CASE_ROCK = 6,
-    };
+namespace Opm
+{
 
-    enum ParserKeywordActionEnum {
-        INTERNALIZE = 0,
-        IGNORE = 1,
-        IGNORE_WARNING = 2,
-        THROW_EXCEPTION = 3,
-    };
+enum ParserKeywordSizeEnum {
+    SLASH_TERMINATED = 0,
+    FIXED = 1,
+    OTHER_KEYWORD_IN_DECK = 2,
+    UNKNOWN = 3,
+    FIXED_CODE = 4,
+    DOUBLE_SLASH_TERMINATED = 5,
+    SPECIAL_CASE_ROCK = 6,
+};
 
-    std::string ParserKeywordActionEnum2String(ParserKeywordActionEnum enumValue);
-    std::string ParserKeywordSizeEnum2String(ParserKeywordSizeEnum enumValue);
+enum ParserKeywordActionEnum {
+    INTERNALIZE = 0,
+    IGNORE = 1,
+    IGNORE_WARNING = 2,
+    THROW_EXCEPTION = 3,
+};
 
-    ParserKeywordSizeEnum ParserKeywordSizeEnumFromString(const std::string& stringValue);
-    ParserKeywordActionEnum ParserKeywordActionEnumFromString(const std::string& stringValue);
-}
+std::string ParserKeywordActionEnum2String(ParserKeywordActionEnum enumValue);
+std::string ParserKeywordSizeEnum2String(ParserKeywordSizeEnum enumValue);
+
+ParserKeywordSizeEnum ParserKeywordSizeEnumFromString(const std::string& stringValue);
+ParserKeywordActionEnum ParserKeywordActionEnumFromString(const std::string& stringValue);
+} // namespace Opm
 
 #endif
