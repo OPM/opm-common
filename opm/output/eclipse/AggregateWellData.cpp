@@ -1949,6 +1949,6 @@ captureDynamicWellDataLGR(const Opm::Schedule&       sched,
     {
         auto xwell = this->xWell_[wellID];
 
-        XWell::dynamicContrib(well, tracers, sched.runspec().tracers(), smry, xwell);
+        XWell::dynamicContrib(well, tracers, sched.runspec().tracers(), smry, sched.runspec().temp(), xwell);
     });
 }

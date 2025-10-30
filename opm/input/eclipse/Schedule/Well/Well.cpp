@@ -489,7 +489,7 @@ Well::Well(const RestartIO::RstWell& rst_well,
                         // currently there is no support to UDA tracer concentrations from restart files
                         tracer->setConcentration(WellTracerProperties::Tracer { trName } , UDAValue { free_conc });
                         if (sol_conc > 0.0) {
-                            OpmLog::warning(fmt::format("Well {}: Restoring a non-zero solution concentration of tracer {} is not yet supported.", rst_well.name, tname));
+                            OpmLog::warning(fmt::format("Well {}: Restoring a non-zero solution concentration of tracer {} is not yet supported.", rst_well.name, trName));
                         }
                     }
                 }
