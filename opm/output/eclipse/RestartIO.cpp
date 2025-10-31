@@ -1030,9 +1030,10 @@ namespace {
         writeHeader(report_step, sim_step, nextStepSize(values[lgrIndex+1]),
         seconds_elapsed, schedule, lgr_grid, es, rstFile);
 
-        writeDynamicDataLGR(sim_step, grid, es, schedule, values[lgrIndex+1].wells,
-                            action_state, wtest_state, sumState, inteHD,rstFile, lgr_grid_name);
-
+        if (report_step > 0) {
+            writeDynamicDataLGR(sim_step, grid, es, schedule, values[lgrIndex+1].wells,
+                                action_state, wtest_state, sumState, inteHD,rstFile, lgr_grid_name);
+        }
         writeSolutionLGR(values[lgrIndex+1], es, schedule, udqState, report_step, sim_step,
         ecl_compatible_rst, write_double, inteHD, rstFile, lgr_grid_name);
 
