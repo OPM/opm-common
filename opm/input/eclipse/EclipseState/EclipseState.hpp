@@ -42,6 +42,7 @@
 #include <cstddef>
 #include <memory>
 #include <optional>
+#include <string>
 #include <vector>
 
 namespace Opm {
@@ -80,6 +81,7 @@ namespace Opm {
 
         const SimulationConfig& getSimulationConfig() const;
         virtual const EclipseGrid& getInputGrid() const;
+        void set_lgr_refinement(std::string lgr_label, std::vector<double> coord, std::vector<double> zcorn);
 
         const FaultCollection& getFaults() const;
         const TransMult& getTransMult() const;
