@@ -97,37 +97,36 @@
 #define OPM_ERROR_IF(condition, message) do {if(condition){ OPM_THROW(std::logic_error, message);}} while(false)
 
 #else // On GPU
-// On the GPU, we cannot throw exceptions, so we use assert(false) instead.
+// On the GPU, we cannot throw exceptions, so we use abort() instead.
 // This will allow us to keep the same code for both CPU and GPU when using
-// the macros. The assert(false) will only cause the CUDA kernel to terminate,
-// but it will not throw an exception. However, later calls to cudaGetLastError
-// or similar functions that check for errors will report the error, and if
-// they are wrapped in the OPM_GPU_SAFE_CALL macro, that will throw an exception.
+// the macros. The abort() will only cause the CUDA kernel to terminate,
+// but it will not throw an exception. However, it will terminate the execution of the
+// program, at least on ROCm.
 //
-// Notice however, that once we assert(false) in a CUDA kernel, the CUDA context
+// Notice however, that once we abort() in a CUDA kernel, the CUDA context
 // is broken for the rest of the process, see
 // https://forums.developer.nvidia.com/t/how-to-clear-cuda-errors/296393/5
 
 /**
- * @brief assert(false) is only used on the GPU, as throwing exceptions is not supported.
+ * @brief abort() is only used on the GPU, as throwing exceptions is not supported.
  */
 #define OPM_THROW(Exception, message) \
     abort()
 
 /**
- * @brief assert(false) is only used on the GPU, as throwing exceptions is not supported.
+ * @brief abort() is only used on the GPU, as throwing exceptions is not supported.
  */
 #define OPM_THROW_PROBLEM(Exception, message) \
    abort()
 
 /**
- * @brief assert(false) is only used on the GPU, as throwing exceptions is not supported.
+ * @brief abort() is only used on the GPU, as throwing exceptions is not supported.
  */
 #define OPM_THROW_NOLOG(Exception, message) \
    abort()
 
 /**
- * @brief assert(condition) is only used on the GPU, as throwing exceptions is not supported.
+ * @brief abort() is only used on the GPU, as throwing exceptions is not supported.
  */
 #define OPM_ERROR_IF(condition, message)                                    \
     do {if(condition){abort();}} while(false)
