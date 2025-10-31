@@ -33,6 +33,7 @@
 #include <opm/input/eclipse/Parser/ParserKeywords/S.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/V.hpp>
 
+#include <array>
 #include <memory>
 #include <optional>
 #include <utility>
@@ -70,9 +71,8 @@ namespace {
         return rptonly;
     }
 
-    std::optional<Opm::OilVaporizationProperties>
-    vappars_solution_section(const Opm::SOLUTIONSection& section,
-                             const Opm::Runspec&         runspec)
+    std::optional<std::array<double,2>>
+    vappars_solution_section(const Opm::SOLUTIONSection& section)
     {
         using Kw = Opm::ParserKeywords::VAPPARS;
 
@@ -80,16 +80,12 @@ namespace {
             return {};
         }
 
-        auto ovp = Opm::OilVaporizationProperties { runspec.tabdims().getNumPVTTables() };
-
         const auto& record = section.getKeyword(Kw::keywordName).getRecord(0);
 
         const auto vap1 = record.getItem<Kw::OIL_VAP_PROPENSITY>().get<double>(0);
         const auto vap2 = record.getItem<Kw::OIL_DENSITY_PROPENSITY>().get<double>(0);
 
-        Opm::OilVaporizationProperties::updateVAPPARS(ovp, vap1, vap2);
-
-        return ovp;
+        return { std::array { vap1, vap2 } };
     }
 
     std::optional<Opm::RPTConfig>
@@ -125,7 +121,7 @@ Opm::ScheduleStatic::ScheduleStatic(std::shared_ptr<const Python> python_handle,
     , sumthin         { sumthin_summary_section(SUMMARYSection{ deck }) }
     , rptonly         { rptonly_summary_section(SUMMARYSection{ deck }) }
     , gaslift_opt_active { deck.hasKeyword<ParserKeywords::LIFTOPT>() }
-    , oilVap          { vappars_solution_section(SOLUTIONSection { deck }, runspec) }
+    , oilVap          { vappars_solution_section(SOLUTIONSection { deck }) }
     , slave_mode      { slave_mode_ }
     , rpt_config      { rptConfigSolutionSection(SOLUTIONSection { deck }) }
 {}
@@ -144,7 +140,7 @@ Opm::ScheduleStatic Opm::ScheduleStatic::serializationTestObject()
     st.sumthin = 1.618;
     st.rptonly = true;
     st.gaslift_opt_active = true;
-    st.oilVap.emplace(OilVaporizationProperties::serializationTestObject());
+    st.oilVap.emplace(std::array {1.23, 0.456});
     st.slave_mode = true;
     st.rpt_config.emplace(RPTConfig::serializationTestObject());
 

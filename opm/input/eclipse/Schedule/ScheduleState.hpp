@@ -467,10 +467,6 @@ namespace Opm {
         void update_nupcol(int nupcol);
         int nupcol() const;
 
-        void update_oilvap(OilVaporizationProperties oilvap);
-        const OilVaporizationProperties& oilvap() const;
-        OilVaporizationProperties& oilvap();
-
         void update_events(Events events);
         Events& events();
         const Events& events() const;
@@ -535,6 +531,8 @@ namespace Opm {
         ptr_member<RFTConfig> rft_config;
         ptr_member<RSTConfig> rst_config;
 
+        ptr_member<OilVaporizationProperties> oilvap;
+
         ptr_member<BHPDefaults> bhp_defaults;
         ptr_member<Source> source;
         ptr_member<WCYCLE> wcycle;
@@ -591,6 +589,8 @@ namespace Opm {
                                   return this->rft_config;
             else if constexpr ( std::is_same_v<T, RSTConfig> )
                                   return this->rst_config;
+            else if constexpr ( std::is_same_v<T, OilVaporizationProperties> )
+                                  return this->oilvap;
             else if constexpr ( std::is_same_v<T, BHPDefaults> )
                                   return this->bhp_defaults;
             else if constexpr ( std::is_same_v<T, Source> )
@@ -650,6 +650,7 @@ namespace Opm {
             serializer(rpt_config);
             serializer(rft_config);
             serializer(rst_config);
+            serializer(this->oilvap);
             serializer(bhp_defaults);
             serializer(source);
             serializer(wcycle);
@@ -675,7 +676,6 @@ namespace Opm {
             serializer(m_save_step);
             serializer(m_tuning);
             serializer(m_nupcol);
-            serializer(m_oilvap);
             serializer(m_events);
             serializer(m_wellgroup_events);
             serializer(m_geo_keywords);
@@ -698,7 +698,6 @@ namespace Opm {
 
         Tuning m_tuning{};
         Nupcol m_nupcol{};
-        OilVaporizationProperties m_oilvap{};
         Events m_events{};
         WellGroupEvents m_wellgroup_events{};
         std::vector<DeckKeyword> m_geo_keywords{};
