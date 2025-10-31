@@ -380,6 +380,16 @@ public:
                           const bool           write_double,
                           RestartValue&&       value);
 
+    void writeRestartFile(const Action::State&        action_state,
+                          const WellTestState&        wtest_state,
+                          const SummaryState&         st,
+                          const UDQState&             udq_state,
+                          const int                   report_step,
+                          std::optional<int>          time_step,
+                          const double                secs_elapsed,
+                          const bool                  write_double,
+                          std::vector<RestartValue>&& value);
+
     /// Create RSM file.
     ///
     /// Loads the run's summary output files and writes the "transposed"
@@ -753,6 +763,30 @@ void Opm::EclipseIO::Impl::writeRestartFile(const Action::State& action_state,
                     udq_state, this->aquiferData_, write_double);
 }
 
+void Opm::EclipseIO::Impl::writeRestartFile(const Action::State&        action_state,
+                                            const WellTestState&        wtest_state,
+                                            const SummaryState&         st,
+                                            const UDQState&             udq_state,
+                                            const int                   report_step,
+                                            std::optional<int>          time_step,
+                                            const double                secs_elapsed,
+                                            const bool                  write_double,
+                                            std::vector<RestartValue>&& value)
+{
+    EclIO::OutputStream::Restart rstFile {
+        EclIO::OutputStream::ResultSet { this->outputDir_, this->baseName_ },
+        this->reportIndex(report_step, time_step),
+        EclIO::OutputStream::Formatted { this->es_.get().cfg().io().getFMTOUT() },
+        EclIO::OutputStream::Unified   { this->es_.get().cfg().io().getUNIFOUT() }
+    };
+
+    RestartIO::save(rstFile, report_step, secs_elapsed,
+                    std::move(value),
+                    this->es_, this->grid_, this->schedule_,
+                    action_state, wtest_state, st,
+                    udq_state, this->aquiferData_, write_double);
+}
+
 void Opm::EclipseIO::Impl::writeRunSummary() const
 {
     const auto formatted = this->es_.get().cfg().io().getFMTOUT();
@@ -960,6 +994,50 @@ void Opm::EclipseIO::writeTimeStep(const Action::State& action_state,
 
     this->impl->countTimeStep();
 }
+
+
+void Opm::EclipseIO::writeTimeStep(const Action::State&      action_state,
+                                   const WellTestState&      wtest_state,
+                                   const SummaryState&       st,
+                                   const UDQState&           udq_state,
+                                   const int                 report_step,
+                                   const bool                isSubstep,
+                                   const double              secs_elapsed,
+                                   std::vector<RestartValue> value,
+                                   const bool                write_double,
+                                   std::optional<int>        time_step)
+{
+    if (! this->impl->outputEnabled()) {
+        // Run does not request any output.  Uncommon, but might be useful
+        // in the case of performance testing.
+        return;
+    }
+
+    // RFT file is currently skipped for LGR grids.
+
+    if (this->impl->wantSummaryOutput(report_step, isSubstep, secs_elapsed, time_step)) {
+        this->impl->writeSummaryFile(st, report_step, time_step,
+                                     secs_elapsed, isSubstep);
+    }
+
+    if (this->impl->wantRestartOutput(report_step, isSubstep, time_step)) {
+        // Restart file output (RPTRST &c).
+        this->impl->writeRestartFile(action_state, wtest_state, st, udq_state,
+                                     report_step, time_step, secs_elapsed,
+                                     write_double, std::move(value));
+    }
+
+    if (! isSubstep &&
+        this->impl->isFinalStep(report_step) &&
+        this->impl->summaryConfig().createRunSummary())
+    {
+        // Write RSM file at end of simulation.
+        this->impl->writeRunSummary();
+    }
+
+    this->impl->countTimeStep();
+}
+
 
 Opm::RestartValue
 Opm::EclipseIO::loadRestart(Action::State&                 action_state,
