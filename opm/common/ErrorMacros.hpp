@@ -29,6 +29,10 @@
 #include <stdexcept>
 #include <cassert>
 
+#if OPM_IS_COMPILING_WITH_GPU_COMPILER
+#include <stdlib.h> // for abort()
+#endif
+
 // macros for reporting to stderr
 #ifdef OPM_VERBOSE // Verbose mode
 # include <iostream>
@@ -108,24 +112,24 @@
  * @brief assert(false) is only used on the GPU, as throwing exceptions is not supported.
  */
 #define OPM_THROW(Exception, message) \
-    assert(false)
+    abort()
 
 /**
  * @brief assert(false) is only used on the GPU, as throwing exceptions is not supported.
  */
 #define OPM_THROW_PROBLEM(Exception, message) \
-   assert(false)
+   abort()
 
 /**
  * @brief assert(false) is only used on the GPU, as throwing exceptions is not supported.
  */
 #define OPM_THROW_NOLOG(Exception, message) \
-   assert(false)
+   abort()
 
 /**
  * @brief assert(condition) is only used on the GPU, as throwing exceptions is not supported.
  */
 #define OPM_ERROR_IF(condition, message)                                    \
-    do {if(condition){assert(false);}} while(false)
+    do {if(condition){abort();}} while(false)
 #endif // GPU
 #endif // OPM_ERRORMACROS_HPP
