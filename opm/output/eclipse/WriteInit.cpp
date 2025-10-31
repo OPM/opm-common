@@ -489,7 +489,7 @@ namespace {
         auto depth = singlePrecision(lgr_grid.getLGRCell_all_depth(grid));
 
         for (auto cell = 0*nAct; cell < nAct; ++cell) {
-            const auto  globCell = lgr_grid.getGlobalIndex(cell);
+            const auto globCell = grid.getLGR_father(cell, lgr_grid.get_lgr_tag());
             const auto& dims     = grid.getCellDims(globCell);
 
             dx   .push_back(units.from_si(length, dims[0])/nx);
