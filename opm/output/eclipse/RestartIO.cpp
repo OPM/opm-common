@@ -211,7 +211,7 @@ namespace {
                     EclIO::OutputStream::Restart& rstFile)
     {
         // write IGRP to restart file
-        const std::size_t simStep = static_cast<size_t> (sim_step);
+        const std::size_t simStep = static_cast<std::size_t> (sim_step);
 
         auto  groupData = Helpers::AggregateGroupData(ih);
 
@@ -231,7 +231,7 @@ namespace {
                        EclIO::OutputStream::Restart& rstFile,
                        const std::string&            lgr_tag)
     {
-        const std::size_t simStep = static_cast<size_t> (sim_step);
+        const std::size_t simStep = static_cast<std::size_t> (sim_step);
         auto  groupData = Helpers::AggregateGroupData(ih);
 
         groupData.captureDeclaredGroupDataLGR(schedule, units, simStep, sumState, lgr_tag);
@@ -251,7 +251,7 @@ namespace {
                       EclIO::OutputStream::Restart& rstFile)
     {
         // write network data to restart file
-        const size_t simStep = static_cast<size_t> (sim_step);
+        const std::size_t simStep = static_cast<std::size_t> (sim_step);
 
         auto  networkData = Helpers::AggregateNetworkData(ih);
 
