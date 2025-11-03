@@ -1,4 +1,4 @@
-#! /usr/bin/python3
+#!/usr/bin/env python3
 #
 # This script provides "hand loop-unrolled" specializations of the
 # Evaluation class of dense automatic differentiation so that the
