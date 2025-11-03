@@ -517,8 +517,8 @@ namespace EclIO
     {
         auto start = std::chrono::system_clock::now();
 
-        // try to read data 20 times, 100 ms between each attempt
-        const int max_attempts = 20;
+        // try to read data 10 times, 100 ms between each attempt
+        const int max_attempts = 10;
         const int wait_ms = 100;
         bool read_ok = true;
 
