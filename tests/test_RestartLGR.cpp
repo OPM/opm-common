@@ -505,31 +505,53 @@ BOOST_AUTO_TEST_CASE(ECL_LGRFORMATTED)
                                                   expected_lgrnames_global.begin(), expected_lgrnames_global.end());
 
                     for (const auto& lgrname : expected_lgrnames_global) {
-                        BOOST_CHECK_EQUAL(rst.hasArray("LGRHEADI", 1, lgrname), true);
-                        BOOST_CHECK_EQUAL(rst.hasArray("LGRHEADQ", 1, lgrname), true);
-                        BOOST_CHECK_EQUAL(rst.hasArray("LGRHEADD", 1, lgrname), true);
+                        BOOST_CHECK_MESSAGE(rst.hasArray("LGRHEADI", 1, lgrname),
+                                            "LGRHEADI array must exist at report step 1 for local grid " << lgrname);
+                        BOOST_CHECK_MESSAGE(rst.hasArray("LGRHEADQ", 1, lgrname),
+                                            "LGRHEADQ array must exist at report step 1 for local grid " << lgrname);
+                        BOOST_CHECK_MESSAGE(rst.hasArray("LGRHEADD", 1, lgrname),
+                                            "LGRHEADD array must exist at report step 1 for local grid " << lgrname);
 
-                        BOOST_CHECK_EQUAL(rst.hasArray("INTEHEAD", 1, lgrname), true);
-                        BOOST_CHECK_EQUAL(rst.hasArray("LOGIHEAD", 1, lgrname), true);
-                        BOOST_CHECK_EQUAL(rst.hasArray("DOUBHEAD", 1, lgrname), true);
+                        BOOST_CHECK_MESSAGE(rst.hasArray("INTEHEAD", 1, lgrname),
+                                            "INTEHEAD array must exist at report step 1 for local grid " << lgrname);
+                        BOOST_CHECK_MESSAGE(rst.hasArray("LOGIHEAD", 1, lgrname),
+                                            "LOGIHEAD array must exist at report step 1 for local grid " << lgrname);
+                        BOOST_CHECK_MESSAGE(rst.hasArray("DOUBHEAD", 1, lgrname),
+                                            "DOUBHEAD array must exist at report step 1 for local grid " << lgrname);
 
-                        BOOST_CHECK_EQUAL(rst.hasArray("IGRP", 1, lgrname), true);
-                        BOOST_CHECK_EQUAL(rst.hasArray("SGRP", 1, lgrname), true);
-                        BOOST_CHECK_EQUAL(rst.hasArray("XGRP", 1, lgrname), true);
-                        BOOST_CHECK_EQUAL(rst.hasArray("ZGRP", 1, lgrname), true);
+                        BOOST_CHECK_MESSAGE(rst.hasArray("IGRP", 1, lgrname),
+                                            "IGRP array must exist at report step 1 for local grid " << lgrname);
+                        BOOST_CHECK_MESSAGE(rst.hasArray("SGRP", 1, lgrname),
+                                            "SGRP array must exist at report step 1 for local grid " << lgrname);
+                        BOOST_CHECK_MESSAGE(rst.hasArray("XGRP", 1, lgrname),
+                                            "XGRP array must exist at report step 1 for local grid " << lgrname);
+                        BOOST_CHECK_MESSAGE(rst.hasArray("ZGRP", 1, lgrname),
+                                            "ZGRP array must exist at report step 1 for local grid " << lgrname);
 
-                        BOOST_CHECK_EQUAL(rst.hasArray("IWEL", 1, lgrname), true);
-                        BOOST_CHECK_EQUAL(rst.hasArray("SWEL", 1, lgrname), true);
-                        BOOST_CHECK_EQUAL(rst.hasArray("XWEL", 1, lgrname), true);
-                        BOOST_CHECK_EQUAL(rst.hasArray("ZWEL", 1, lgrname), true);
-                        BOOST_CHECK_EQUAL(rst.hasArray("LGWEL", 1, lgrname), true);
-                        BOOST_CHECK_EQUAL(rst.hasArray("ICON", 1, lgrname), true);
-                        BOOST_CHECK_EQUAL(rst.hasArray("SCON", 1, lgrname), true);
 
-                        BOOST_CHECK_EQUAL(rst.hasArray("PRESSURE", 1, lgrname), true);
-                        BOOST_CHECK_EQUAL(rst.hasArray("SWAT", 1, lgrname), true);
-                        BOOST_CHECK_EQUAL(rst.hasArray("SGAS", 1, lgrname), true);
-                        BOOST_CHECK_EQUAL(rst.hasArray("RS", 1, lgrname), true);
+                        BOOST_CHECK_MESSAGE(rst.hasArray("IWEL", 1, lgrname),
+                                            "IWEL array must exist at report step 1 for local grid " << lgrname);
+                        BOOST_CHECK_MESSAGE(rst.hasArray("SWEL", 1, lgrname),
+                                            "SWEL array must exist at report step 1 for local grid " << lgrname);
+                        BOOST_CHECK_MESSAGE(rst.hasArray("XWEL", 1, lgrname),
+                                            "XWEL array must exist at report step 1 for local grid " << lgrname);
+                        BOOST_CHECK_MESSAGE(rst.hasArray("ZWEL", 1, lgrname),
+                                            "ZWEL array must exist at report step 1 for local grid " << lgrname);
+                        BOOST_CHECK_MESSAGE(rst.hasArray("LGWEL", 1, lgrname),
+                                            "LGWEL array must exist at report step 1 for local grid " << lgrname);
+                        BOOST_CHECK_MESSAGE(rst.hasArray("ICON", 1, lgrname),
+                                            "ICON array must exist at report step 1 for local grid " << lgrname);
+                        BOOST_CHECK_MESSAGE(rst.hasArray("SCON", 1, lgrname),
+                                            "SCON array must exist at report step 1 for local grid " << lgrname);
+
+                        BOOST_CHECK_MESSAGE(rst.hasArray("PRESSURE", 1, lgrname),
+                                            "PRESSURE array must exist at report step 1 for local grid " << lgrname);
+                        BOOST_CHECK_MESSAGE(rst.hasArray("SWAT", 1, lgrname),
+                                            "SWAT array must exist at report step 1 for local grid " << lgrname);
+                        BOOST_CHECK_MESSAGE(rst.hasArray("SGAS", 1, lgrname),
+                                            "SGAS array must exist at report step 1 for local grid " << lgrname);
+                        BOOST_CHECK_MESSAGE(rst.hasArray("RS", 1, lgrname),
+                                            "RS array must exist at report step 1 for local grid " << lgrname);
                     }
 
                 }
@@ -699,31 +721,52 @@ BOOST_AUTO_TEST_CASE(ECL_LGRFORMATTEDCOMPLEX)
                                                   expected_lgrnames_global.begin(), expected_lgrnames_global.end());
 
                     for (const auto& lgrname : expected_lgrnames_global) {
-                        BOOST_CHECK_EQUAL(rst.hasArray("LGRHEADI", 1, lgrname), true);
-                        BOOST_CHECK_EQUAL(rst.hasArray("LGRHEADQ", 1, lgrname), true);
-                        BOOST_CHECK_EQUAL(rst.hasArray("LGRHEADD", 1, lgrname), true);
+                        BOOST_CHECK_MESSAGE(rst.hasArray("LGRHEADI", 1, lgrname),
+                                            "LGRHEADI array must exist at report step 1 for local grid " << lgrname);
+                        BOOST_CHECK_MESSAGE(rst.hasArray("LGRHEADQ", 1, lgrname),
+                                            "LGRHEADQ array must exist at report step 1 for local grid " << lgrname);
+                        BOOST_CHECK_MESSAGE(rst.hasArray("LGRHEADD", 1, lgrname),
+                                            "LGRHEADD array must exist at report step 1 for local grid " << lgrname);
 
-                        BOOST_CHECK_EQUAL(rst.hasArray("INTEHEAD", 1, lgrname), true);
-                        BOOST_CHECK_EQUAL(rst.hasArray("LOGIHEAD", 1, lgrname), true);
-                        BOOST_CHECK_EQUAL(rst.hasArray("DOUBHEAD", 1, lgrname), true);
+                        BOOST_CHECK_MESSAGE(rst.hasArray("INTEHEAD", 1, lgrname),
+                                            "INTEHEAD array must exist at report step 1 for local grid " << lgrname);
+                        BOOST_CHECK_MESSAGE(rst.hasArray("LOGIHEAD", 1, lgrname),
+                                            "LOGIHEAD array must exist at report step 1 for local grid " << lgrname);
+                        BOOST_CHECK_MESSAGE(rst.hasArray("DOUBHEAD", 1, lgrname),
+                                            "DOUBHEAD array must exist at report step 1 for local grid " << lgrname);
 
-                        BOOST_CHECK_EQUAL(rst.hasArray("IGRP", 1, lgrname), true);
-                        BOOST_CHECK_EQUAL(rst.hasArray("SGRP", 1, lgrname), true);
-                        BOOST_CHECK_EQUAL(rst.hasArray("XGRP", 1, lgrname), true);
-                        BOOST_CHECK_EQUAL(rst.hasArray("ZGRP", 1, lgrname), true);
+                        BOOST_CHECK_MESSAGE(rst.hasArray("IGRP", 1, lgrname),
+                                            "IGRP array must exist at report step 1 for local grid " << lgrname);
+                        BOOST_CHECK_MESSAGE(rst.hasArray("SGRP", 1, lgrname),
+                                            "SGRP array must exist at report step 1 for local grid " << lgrname);
+                        BOOST_CHECK_MESSAGE(rst.hasArray("XGRP", 1, lgrname),
+                                            "XGRP array must exist at report step 1 for local grid " << lgrname);
+                        BOOST_CHECK_MESSAGE(rst.hasArray("ZGRP", 1, lgrname),
+                                            "ZGRP array must exist at report step 1 for local grid " << lgrname);
 
-                        BOOST_CHECK_EQUAL(rst.hasArray("IWEL", 1, lgrname), true);
-                        BOOST_CHECK_EQUAL(rst.hasArray("SWEL", 1, lgrname), true);
-                        BOOST_CHECK_EQUAL(rst.hasArray("XWEL", 1, lgrname), true);
-                        BOOST_CHECK_EQUAL(rst.hasArray("ZWEL", 1, lgrname), true);
-                        BOOST_CHECK_EQUAL(rst.hasArray("LGWEL", 1, lgrname), true);
-                        BOOST_CHECK_EQUAL(rst.hasArray("ICON", 1, lgrname), true);
-                        BOOST_CHECK_EQUAL(rst.hasArray("SCON", 1, lgrname), true);
+                        BOOST_CHECK_MESSAGE(rst.hasArray("IWEL", 1, lgrname),
+                                            "IWEL array must exist at report step 1 for local grid " << lgrname);
+                        BOOST_CHECK_MESSAGE(rst.hasArray("SWEL", 1, lgrname),
+                                            "SWEL array must exist at report step 1 for local grid " << lgrname);
+                        BOOST_CHECK_MESSAGE(rst.hasArray("XWEL", 1, lgrname),
+                                            "XWEL array must exist at report step 1 for local grid " << lgrname);
+                        BOOST_CHECK_MESSAGE(rst.hasArray("ZWEL", 1, lgrname),
+                                            "ZWEL array must exist at report step 1 for local grid " << lgrname);
+                        BOOST_CHECK_MESSAGE(rst.hasArray("LGWEL", 1, lgrname),
+                                            "LGWEL array must exist at report step 1 for local grid " << lgrname);
+                        BOOST_CHECK_MESSAGE(rst.hasArray("ICON", 1, lgrname),
+                                            "ICON array must exist at report step 1 for local grid " << lgrname);
+                        BOOST_CHECK_MESSAGE(rst.hasArray("SCON", 1, lgrname),
+                                            "SCON array must exist at report step 1 for local grid " << lgrname);
 
-                        BOOST_CHECK_EQUAL(rst.hasArray("PRESSURE", 1, lgrname), true);
-                        BOOST_CHECK_EQUAL(rst.hasArray("SWAT", 1, lgrname), true);
-                        BOOST_CHECK_EQUAL(rst.hasArray("SGAS", 1, lgrname), true);
-                        BOOST_CHECK_EQUAL(rst.hasArray("RS", 1, lgrname), true);
+                        BOOST_CHECK_MESSAGE(rst.hasArray("PRESSURE", 1, lgrname),
+                                            "PRESSURE array must exist at report step 1 for local grid " << lgrname);
+                        BOOST_CHECK_MESSAGE(rst.hasArray("SWAT", 1, lgrname),
+                                            "SWAT array must exist at report step 1 for local grid " << lgrname);
+                        BOOST_CHECK_MESSAGE(rst.hasArray("SGAS", 1, lgrname),
+                                            "SGAS array must exist at report step 1 for local grid " << lgrname);
+                        BOOST_CHECK_MESSAGE(rst.hasArray("RS", 1, lgrname),
+                                            "RS array must exist at report step 1 for local grid " << lgrname);
                     }
 
                 }
