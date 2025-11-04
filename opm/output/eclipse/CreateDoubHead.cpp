@@ -187,7 +187,7 @@ createDoubHead(const EclipseState& es,
     auto dh = DoubHEAD{}
         .tuningParameters(sched[lookup_step].tuning(), tconv)
         .timeStamp       (computeTimeStamp(sched, simTime))
-        .drsdt           (sched, lookup_step, tconv)
+        .drsdt           (sched[lookup_step].oilvap(), usys)
         .udq_param       (rspec.udqParams())
         .guide_rate_param(computeGuideRate(sched, lookup_step))
         .lift_opt_param  (computeLiftOptParam(sched, usys, lookup_step))

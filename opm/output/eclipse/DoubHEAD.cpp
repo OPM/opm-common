@@ -22,6 +22,7 @@
 #include <opm/output/eclipse/InteHEAD.hpp> // Opm::RestartIO::makeUTCTime()
 #include <opm/output/eclipse/VectorItems/doubhead.hpp>
 
+#include <opm/input/eclipse/Schedule/OilVaporizationProperties.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Schedule/Tuning.hpp>
 
@@ -633,16 +634,13 @@ Opm::RestartIO::DoubHEAD::nextStep(const double nextTimeStep)
 }
 
 Opm::RestartIO::DoubHEAD&
-Opm::RestartIO::DoubHEAD::drsdt(const Schedule&   sched,
-                                const std::size_t lookup_step,
-				const double      cnvT)
+Opm::RestartIO::DoubHEAD::drsdt(const OilVaporizationProperties& oilvap,
+                                const UnitSystem&                usys)
 {
-    const auto& vappar = sched[lookup_step].oilvap();
-
-    this->data_[dRsdt] =
-        (vappar.getType() == Opm::OilVaporizationProperties::OilVaporization::DRDT)
-        ? vappar.getMaxDRSDT(0)*cnvT
-        : 1.0e+20;
+    if (oilvap.getType() == OilVaporizationProperties::OilVaporization::DRDT) {
+        this->data_[dRsdt] = usys.from_si(UnitSystem::measure::gas_oil_ratio_rate,
+                                          oilvap.getMaxDRSDT(0));
+    }
 
     return *this;
 }

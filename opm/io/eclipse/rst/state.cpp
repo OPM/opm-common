@@ -356,14 +356,18 @@ void RstState::load_oil_vaporization(const std::vector<int>& intehead,
                                      const std::vector<double>& doubhead)
 {
     if (!(doubhead[VI::doubhead::dRsDt] < 1.0e+20)) {
-        // DRSDT is not defined in the restart file, so we don't need to update the oilvap object.
+        // DRSDT is not defined in the restart file, so we don't need to
+        // update the oilvap object.
         return;
     }
 
-    const std::size_t numPvtRegions = this->oilvap.numPvtRegions();
-    const auto tconv = this->unit_system.to_si(::Opm::UnitSystem::measure::time, 1.0);
-    std::vector<double> maximums(numPvtRegions, doubhead[VI::doubhead::dRsDt]/tconv);
-    std::vector<std::string> options(numPvtRegions, intehead[VI::intehead::DRSDT_FREE]==1 ? "FREE" : "ALL");
+    const auto dRsdt = this->unit_system.to_si(UnitSystem::measure::gas_oil_ratio_rate,
+                                               doubhead[VI::doubhead::dRsDt]);
+
+    const auto maximums = std::vector<double>(this->oilvap.numPvtRegions(), dRsdt);
+    const auto options  = std::vector<std::string>
+        (maximums.size(), (intehead[VI::intehead::DRSDT_FREE] == 1) ? "FREE" : "ALL");
+
     OilVaporizationProperties::updateDRSDT(this->oilvap, maximums, options);
 }
 
