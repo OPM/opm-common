@@ -174,10 +174,16 @@ namespace {
         rstFile.write("INTEHEAD", ih);
 
         // write LOGIHEAD to restart file
-        rstFile.write("LOGIHEAD", Helpers::createLogiHead(es));
+        if (report_step == 0) {
+            rstFile.write("LOGIHEAD", Helpers::createLogiHead(es));
+        }
+        else {
+            rstFile.write("LOGIHEAD", Helpers::createLogiHead(es, schedule[report_step - 1]));
+        }
 
         // write DOUBHEAD to restart file
-        const auto dh = Helpers::createDoubHead(es, schedule, sim_step, report_step,
+        const auto dh = Helpers::createDoubHead(es, schedule,
+                                                sim_step, report_step,
                                                 simTime, next_step_size);
         rstFile.write("DOUBHEAD", dh);
 
