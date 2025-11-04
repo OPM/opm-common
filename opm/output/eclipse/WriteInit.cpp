@@ -490,8 +490,7 @@ namespace {
 
         for (auto cell = 0*nAct; cell < nAct; ++cell) {
             const auto local_global_cell = lgr_grid.getGlobalIndex(cell);
-            const auto activeCell = grid.getLGR_father(local_global_cell, lgr_grid.get_lgr_tag());
-            const auto  globCell = grid.getGlobalIndex(activeCell);
+            const auto globCell = grid.getLGR_father(local_global_cell, lgr_grid.get_lgr_tag());
             const auto& dims     = grid.getCellDims(globCell);
 
             dx   .push_back(units.from_si(length, dims[0])/nx);
@@ -499,9 +498,6 @@ namespace {
             dz   .push_back(units.from_si(length, dims[2])/nz);
         }
 
-        // VectorUtil::scalarVectorOperation(static_cast<float>(nx), dx, std::divides<float>{});
-        // VectorUtil::scalarVectorOperation(static_cast<float>(ny), dy, std::divides<float>{});
-        // VectorUtil::scalarVectorOperation(static_cast<float>(nz), dz, std::divides<float>{});
         convert_length(depth);
         initFile.write("DEPTH", depth);
         initFile.write("DX"   , dx);
