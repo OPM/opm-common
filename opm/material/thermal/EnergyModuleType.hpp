@@ -24,15 +24,19 @@
  * \file
  * \copydoc Opm::EnergyModuleType.hpp
  */
+
 #ifndef OPM_ENERGY_MODULE_TYPE_HPP
 #define OPM_ENERGY_MODULE_TYPE_HPP
+
+#include <cstdint>
 
 namespace Opm {
     enum class EnergyModules : std::uint8_t {
         NoTemperature = 0,
         ConstantTemperature = 1,
         SequentialImplicitThermal = 2,
-        FullyImplicitThermal = 3
+        FullyImplicitThermal = 3,
     };
 } // namespace Opm
-#endif
+
+#endif // OPM_ENERGY_MODULE_TYPE_HPP
