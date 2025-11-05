@@ -224,19 +224,26 @@ namespace EclIO
         for (size_t i = 0; i < active_cell_info.size(); i++) {
             const int an = active_cell_info[i];
             if (an > 0) {
-                if (an == 1) {
+                if (m_porosity_mode == 0) {
                     act_index.push_back(nglobsize);
                     act_frac_index.push_back(-1);
                     nactive++;
-                } else if (an == 2) {
-                    act_index.push_back(-1);
-                    act_frac_index.push_back(nglobsize);
-                    nactive_frac++;
-                } else if (an == 3) {
-                    act_index.push_back(nglobsize);
-                    nactive++;
-                    act_frac_index.push_back(nglobsize);
-                    nactive_frac++;
+                }
+                else {
+                    if (an == 1) {
+                        act_index.push_back(nglobsize);
+                        act_frac_index.push_back(-1);
+                        nactive++;
+                    } else if (an == 2) {
+                        act_index.push_back(-1);
+                        act_frac_index.push_back(nglobsize);
+                        nactive_frac++;
+                    } else if (an == 3) {
+                        act_index.push_back(nglobsize);
+                        nactive++;
+                        act_frac_index.push_back(nglobsize);
+                        nactive_frac++;
+                    }
                 }
                 glob_index.push_back(i);
                 nglobsize++;
@@ -324,14 +331,14 @@ namespace EclIO
                 }
 
                 // This check should probably be somewhere else, commented out for now
-                // int init_nactive = init.activeCells(m_grid_name);
-                // if (init_nactive != nactive) {
-                //    OPM_THROW(std::invalid_argument,
-                //              fmt::format("Number of active cells are different in Egrid and Init file."
-                //                          " Egrid: {}. INIT file: {}",
-                //                          nactive,
-                //                          init_nactive));
-                //}
+                int init_nactive = init.activeCells(m_grid_name);
+                if (init_nactive != nactive) {
+                   OPM_THROW(std::invalid_argument,
+                             fmt::format("Number of active cells are different in Egrid and Init file."
+                                         " Egrid: {}. INIT file: {}",
+                                         nactive,
+                                         init_nactive));
+                }
 
                 auto trans_data = init.getInitData<float>("TRANNNC", m_grid_name);
 
