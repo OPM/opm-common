@@ -1199,6 +1199,9 @@ Group::InjectionCMode2String(const InjectionCMode enumValue)
     case InjectionCMode::FLD:
         return "FLD";
 
+    case InjectionCMode::SALE:
+        return "SALE";
+
     default:
         throw std::invalid_argument("Unhandled enum value");
     }
