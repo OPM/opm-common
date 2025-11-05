@@ -344,13 +344,18 @@ namespace {
             (   const char kwpref,
                 const Cat cat,
                 const std::vector<ParamCTorArgs>& tracer_vectors,
-                const std::string& name
+                const std::string& name,
+                const bool isTemp
             )
         {
             const auto dflt_num = Opm::EclIO::SummaryNode::default_number;
             std::string kwp(1, kwpref);
-            for (const auto& tracer : trConfig) {
-                for (const auto& tvec : tracer_vectors) {
+            for (const auto& tvec : tracer_vectors) {
+                if (isTemp) {
+                    entities.push_back(Opm::EclIO::SummaryNode({kwp + tvec.kw + "HEA", cat,
+                                                                tvec.type, name, dflt_num, {}, {}}));
+                }
+                for (const auto& tracer : trConfig) {
                     entities.push_back(Opm::EclIO::SummaryNode({kwp + tvec.kw + tracer.name, cat,
                                                                 tvec.type, name, dflt_num, {}, {}}));
                     if (tracer.phase == ::Opm::Phase::OIL || tracer.phase == ::Opm::Phase::GAS) {
@@ -363,9 +368,10 @@ namespace {
             }
         };
 
+        const bool isTemp = sched.runspec().temp();
         for (const auto& well_name : sched.wellNames()) {
             makeEntities('W', Cat::Well, extra_well_vectors, well_name);
-            makeTracerEntities('W', Cat::Well, required_tracer_vectors, well_name);
+            makeTracerEntities('W', Cat::Well, required_tracer_vectors, well_name, isTemp);
 
             const auto& well = sched.getWellatEnd(well_name);
             for (const auto& conn : well.getConnections()) {

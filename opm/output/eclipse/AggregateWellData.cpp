@@ -1461,7 +1461,7 @@ namespace {
                               XWellArray& xWell,
                               const bool isTemp)
         {
-            if (tracers.empty() || tracer_dims.water_tracers() == 0)
+            if (tracers.empty() && !isTemp)
                 return;
 
             using Ix = ::Opm::RestartIO::Helpers::VectorItems::XWell::index;

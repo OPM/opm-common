@@ -1292,6 +1292,7 @@ namespace {
                                  const Opm::Tracers& tracer_dims,
                                  const Opm::TracerConfig& tracer_config,
                                  const WellVectors& wellData,
+                                 const bool isTemp,
                                  Opm::SummaryState& smry)
     {
         if (! wellData.hasDefinedWellValues()) {
@@ -1337,13 +1338,37 @@ namespace {
         smry.update_well_var(well, "WWITH", xwel[VI::XWell::index::HistWatInjTotal]);
         smry.update_well_var(well, "WGITH", xwel[VI::XWell::index::HistGasInjTotal]);
 
-        for (std::size_t tracer_index = 0; tracer_index < tracer_config.size(); tracer_index++) {
-            const auto& tracer_name = tracer_config[tracer_index].name;
-            auto wtpt_offset = VI::XWell::index::TracerOffset +   tracer_dims.water_tracers();
-            auto wtit_offset = VI::XWell::index::TracerOffset + 2*tracer_dims.water_tracers();
-
-            smry.update_well_var(well, fmt::format("WTPT{}", tracer_name), xwel[wtpt_offset + tracer_index]);
-            smry.update_well_var(well, fmt::format("WTIT{}", tracer_name), xwel[wtit_offset + tracer_index]);
+        const auto num_tracer_comps = tracer_dims.water_tracers() + 2* (tracer_dims.oil_tracers() + tracer_dims.gas_tracers()) + (isTemp ? 1 : 0);
+        auto offset = VI::XWell::index::TracerOffset + num_tracer_comps; // First num_tracer_comps are the rates
+        // Production totals
+        if (isTemp) {
+            smry.update_well_var(well, "WTPTHEA", xwel[offset++]);
+        }
+        for (const auto& tracer : tracer_config) {
+            if (tracer.phase == Opm::Phase::WATER) {
+                smry.update_well_var(well, fmt::format("WTPT{}", tracer.name), xwel[offset++]);
+            } else {
+                const auto free_total = xwel[offset++];
+                const auto solution_total = xwel[offset++];
+                smry.update_well_var(well, fmt::format("WTPTF{}", tracer.name), free_total);
+                smry.update_well_var(well, fmt::format("WTPTS{}", tracer.name), solution_total);
+                smry.update_well_var(well, fmt::format("WTPT{}", tracer.name), free_total + solution_total);
+            }
+        }
+        // Injection totals
+        if (isTemp) {
+            smry.update_well_var(well, "WTITHEA", xwel[offset++]);
+        }
+        for (const auto& tracer : tracer_config) {
+            if (tracer.phase == Opm::Phase::WATER) {
+                smry.update_well_var(well, fmt::format("WTIT{}", tracer.name), xwel[offset++]);
+            } else {
+                const auto free_total = xwel[offset++];
+                const auto solution_total = xwel[offset++];
+                smry.update_well_var(well, fmt::format("WTITF{}", tracer.name), free_total);
+                smry.update_well_var(well, fmt::format("WTITS{}", tracer.name), solution_total);
+                smry.update_well_var(well, fmt::format("WTIT{}", tracer.name), free_total + solution_total);
+            }
         }
     }
 
@@ -1563,13 +1588,15 @@ namespace {
 
         // Well cumulatives
         {
+            const auto isTemp = schedule.runspec().temp();
             const auto  wellData = WellVectors { intehead, rst_view };
             const auto& wells    = schedule.wellNames(sim_step);
 
             for (auto nWells = wells.size(), wellID = 0*nWells;
                  wellID < nWells; ++wellID)
             {
-                assign_well_cumulatives(wells[wellID], wellID, schedule.runspec().tracers(), tracer_config, wellData, smry);
+                assign_well_cumulatives(wells[wellID], wellID, schedule.runspec().tracers(), tracer_config,
+                                        wellData, isTemp, smry);
             }
         }
 
