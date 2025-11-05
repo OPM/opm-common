@@ -174,6 +174,19 @@ DIMENS
 )";
     }
 
+    std::string simDeckStringTEMPTHERMAL()
+    {
+        return R"(
+RUNSPEC
+
+THERMAL
+TEMP
+
+DIMENS
+  10 3 4 /
+)";
+    }
+
     std::string simDeckStringCO2STORE()
     {
         return R"(
@@ -367,8 +380,9 @@ BOOST_AUTO_TEST_CASE(SimulationConfig_TEMP_THERMAL)
         const auto fp = FieldPropsManager(deck, Phases{true, true, true}, eg, tm);
         const auto simulationConfig = Opm::SimulationConfig(false, deck, fp);
 
-        BOOST_CHECK(simulationConfig.isThermal());
-        BOOST_CHECK(simulationConfig.energyModuleType() == EnergyModules::FullyImplicitThermal);
+        BOOST_CHECK(simulationConfig.isTemp());
+        BOOST_CHECK(!simulationConfig.isThermal());
+        BOOST_CHECK(simulationConfig.energyModuleType() == EnergyModules::SequentialImplicitThermal);
     }
 
     {
@@ -379,7 +393,16 @@ BOOST_AUTO_TEST_CASE(SimulationConfig_TEMP_THERMAL)
         const auto simulationConfig = Opm::SimulationConfig(false, deck, fp);
 
         BOOST_CHECK(simulationConfig.isThermal());
+        BOOST_CHECK(!simulationConfig.isTemp());
         BOOST_CHECK(simulationConfig.energyModuleType() == EnergyModules::FullyImplicitThermal);
+    }
+
+    {
+        const auto deck = createDeck(simDeckStringTEMPTHERMAL());
+        const auto tm = TableManager(deck);
+        auto eg = EclipseGrid(10, 3, 4);
+        const auto fp = FieldPropsManager(deck, Phases{true, true, true}, eg, tm);
+        BOOST_CHECK_THROW(Opm::SimulationConfig(false, deck, fp), std::invalid_argument);
     }
 
     {
@@ -388,7 +411,7 @@ BOOST_AUTO_TEST_CASE(SimulationConfig_TEMP_THERMAL)
         auto eg = EclipseGrid(10, 3, 4);
         const auto fp = FieldPropsManager(deck, Phases{true, true, true}, eg, tm);
         const auto simulationConfig = Opm::SimulationConfig(false, deck, fp);
-
+        BOOST_CHECK(!simulationConfig.isTemp());
         BOOST_CHECK(simulationConfig.energyModuleType() == EnergyModules::ConstantTemperature);
     }
 
@@ -398,7 +421,7 @@ BOOST_AUTO_TEST_CASE(SimulationConfig_TEMP_THERMAL)
         auto eg = EclipseGrid(10, 3, 4);
         const auto fp = FieldPropsManager(deck, Phases{true, true, true}, eg, tm);
         const auto simulationConfig = Opm::SimulationConfig(false, deck, fp);
-
+        BOOST_CHECK(!simulationConfig.isTemp());
         BOOST_CHECK(simulationConfig.energyModuleType() == EnergyModules::ConstantTemperature);
     }
 
