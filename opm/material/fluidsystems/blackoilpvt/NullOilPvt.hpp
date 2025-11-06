@@ -142,6 +142,13 @@ public:
     {
         return 0.0;
     }
+
+    OPM_HOST_DEVICE Scalar oilReferenceDensity(unsigned /*regionIdx*/) const
+    {
+        // TODO: switch from assert to the proper way of handling errors on gpu
+        assert(false && "NullOilPvt::oilReferenceDensity() should not be called.");
+        return Scalar(0);
+    }
 };
 
 } // namespace Opm
