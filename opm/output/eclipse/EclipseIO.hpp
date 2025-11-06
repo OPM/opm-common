@@ -274,6 +274,19 @@ public:
     /// \return Collection of per-cell, per-well, per-connection,
     /// per-segment, per-group, and per-aquifer dynamic results at
     /// simulation restart time.
+
+    void writeTimeStep(const Action::State&      action_state,
+                       const WellTestState&      wtest_state,
+                       const SummaryState&       st,
+                       const UDQState&           udq_state,
+                       int                       report_step,
+                       bool                      isSubstep,
+                       double                    seconds_elapsed,
+                       std::vector<RestartValue> value,
+                       const bool                write_double = false,
+                       std::optional<int>        time_step = std::nullopt);
+
+
     RestartValue loadRestart(Action::State&                 action_state,
                              SummaryState&                  summary_state,
                              const std::vector<RestartKey>& solution_keys,
