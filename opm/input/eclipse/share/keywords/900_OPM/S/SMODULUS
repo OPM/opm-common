@@ -1,0 +1,11 @@
+{
+  "name": "SMODULUS",
+  "sections": [
+    "GRID"
+  ],
+  "description": "The SMODULUS item is used to set the shear modulus (Lame's second parameter) for a cell in mechanics models.",
+  "data": {
+    "value_type": "DOUBLE",
+    "dimension": "Ymodule"
+  }
+}
