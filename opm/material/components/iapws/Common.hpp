@@ -56,34 +56,34 @@ class Common
 {
 public:
     //! The molar mass of water \f$\mathrm{[kg/mol]}\f$
-    static const Scalar molarMass;
+    static constexpr Scalar molarMass = Scalar(18.01518e-3);
 
     //! Specific gas constant of water \f$\mathrm{[J/(kg*K)]}\f$
-    static const Scalar Rs;
+    static constexpr Scalar Rs = Constants<Scalar>::R / molarMass;
 
     //! Critical temperature of water \f$\mathrm{[K]}\f$
-    static const Scalar criticalTemperature;
+    static constexpr Scalar criticalTemperature = Scalar(647.096);
 
     //! Critical pressure of water \f$\mathrm{[Pa]}\f$
-    static const Scalar criticalPressure;
+    static constexpr Scalar criticalPressure = Scalar(22.064e6);
 
     //! Density of water at the critical point \f$\mathrm{[kg/m^3]}\f$
-    static const Scalar criticalDensity;
+    static constexpr Scalar criticalDensity = Scalar(322.0);
 
     //! Critical volume of water \f$\mathrm{[m^3/kmol]}\f$
-    static const Scalar criticalVolume;
+    static constexpr Scalar criticalVolume = Scalar(5.595e-2);
 
     //! Critical molar volume of water \f$\mathrm{[m^3/mol]}\f$
-    static const Scalar criticalMolarVolume;
+    static constexpr Scalar criticalMolarVolume = molarMass / criticalDensity;
 
     //! The acentric factor of water \f$\mathrm{[-]}\f$
-    static const Scalar acentricFactor;
+    static constexpr Scalar acentricFactor = Scalar(0.344);
 
     //! Triple temperature of water \f$\mathrm{[K]}\f$
-    static const Scalar tripleTemperature;
+    static constexpr Scalar tripleTemperature = Scalar(273.16);
 
     //! Triple pressure of water \f$\mathrm{[Pa]}\f$
-    static const Scalar triplePressure;
+    static constexpr Scalar triplePressure = Scalar(611.657);
 
     /*!
      * \brief The dynamic viscosity \f$\mathrm{[(N/m^2)*s]}\f$of pure water.
@@ -104,6 +104,7 @@ public:
     {
         Evaluation rhoBar = rho/322.0;
         Evaluation TBar = temperature/criticalTemperature;
+        // Evaluation TBar = temperature/Scalar(647.096);
 
         // muBar = muBar_1
         const Scalar Hij[6][7] = {
@@ -232,27 +233,6 @@ public:
         return /*thcond_kstar * */ lam;
     }
 };
-
-template <class Scalar>
-const Scalar Common<Scalar>::molarMass = 18.01518e-3;
-template <class Scalar>
-const Scalar Common<Scalar>::Rs = Constants<Scalar>::R/molarMass;
-template <class Scalar>
-const Scalar Common<Scalar>::criticalTemperature = 647.096;
-template <class Scalar>
-const Scalar Common<Scalar>::criticalPressure = 22.064e6;
-template <class Scalar>
-const Scalar Common<Scalar>::criticalDensity = 322.0;
-template <class Scalar>
-const Scalar Common<Scalar>::criticalMolarVolume = molarMass/criticalDensity;
-template <class Scalar>
-const Scalar Common<Scalar>::criticalVolume = 5.595e-2;
-template <class Scalar>
-const Scalar Common<Scalar>::acentricFactor = 0.344;
-template <class Scalar>
-const Scalar Common<Scalar>::tripleTemperature = 273.16;
-template <class Scalar>
-const Scalar Common<Scalar>::triplePressure = 611.657;
 
 } // namespace IAPWS
 } // namespace Opm

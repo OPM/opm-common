@@ -30,6 +30,7 @@
 
 #include <opm/material/IdealGas.hpp>
 #include <opm/material/common/Valgrind.hpp>
+#include <opm/common/ErrorMacros.hpp>
 #include <opm/common/TimingMacros.hpp>
 #include <opm/common/utility/gpuDecorators.hpp>
 
@@ -182,7 +183,7 @@ public:
      * \brief Henry coefficent \f$\mathrm{[N/m^2]}\f$ for CO2 in brine.
      */
     template <class Evaluation>
-    static Evaluation henry(const Evaluation& temperature, bool extrapolate = false)
+    OPM_HOST_DEVICE static Evaluation henry(const Evaluation& temperature, bool extrapolate = false)
     { return fugacityCoefficientCO2(temperature, /*pressure=*/1e5, extrapolate)*1e5; }
 
     /*!
@@ -199,13 +200,13 @@ public:
      * \param spycherPruess2005 True to Spycher-Pruess (2005) model
      */
     template <class Evaluation, class CO2Params>
-    static Evaluation fugacityCoefficientCO2(const CO2Params& params,
-                                             const Evaluation& temperature,
-                                             const Evaluation& pg,
-                                             const Evaluation& yH2O,
-                                             const bool highTemp,
-                                             bool extrapolate = false,
-                                             bool spycherPruess2005 = false)
+    OPM_HOST_DEVICE static Evaluation fugacityCoefficientCO2(const CO2Params& params,
+                                                             const Evaluation& temperature,
+                                                             const Evaluation& pg,
+                                                             const Evaluation& yH2O,
+                                                             const bool highTemp,
+                                                             bool extrapolate = false,
+                                                             bool spycherPruess2005 = false)
     {
         OPM_TIMEFUNCTION_LOCAL(Subsystem::PvtProps);
         Valgrind::CheckDefined(temperature);
@@ -261,13 +262,13 @@ public:
      * \param spycherPruess2005 True to Spycher-Pruess (2005) model
      */
     template <class Evaluation, class CO2Params>
-    static Evaluation fugacityCoefficientH2O(const CO2Params& params,
-                                             const Evaluation& temperature,
-                                             const Evaluation& pg,
-                                             const Evaluation& yH2O,
-                                             const bool highTemp,
-                                             bool extrapolate = false,
-                                             bool spycherPruess2005 = false)
+    OPM_HOST_DEVICE static Evaluation fugacityCoefficientH2O(const CO2Params& params,
+                                                             const Evaluation& temperature,
+                                                             const Evaluation& pg,
+                                                             const Evaluation& yH2O,
+                                                             const bool highTemp,
+                                                             bool extrapolate = false,
+                                                             bool spycherPruess2005 = false)
     {
         OPM_TIMEFUNCTION_LOCAL(Subsystem::PvtProps);
         Valgrind::CheckDefined(temperature);
@@ -486,8 +487,8 @@ private:
     */
     template <class Evaluation>
     OPM_HOST_DEVICE static Evaluation activityCoefficientCO2_(const Evaluation& temperature,
-                                              const Evaluation& xCO2,
-                                              const bool& highTemp)
+                                                              const Evaluation& xCO2,
+                                                              const bool& highTemp)
     {
         if (highTemp) {
             // Eq. (13)
@@ -505,8 +506,8 @@ private:
     */
     template <class Evaluation>
     OPM_HOST_DEVICE static Evaluation activityCoefficientH2O_(const Evaluation& temperature,
-                                              const Evaluation& xCO2,
-                                              const bool& highTemp)
+                                                              const Evaluation& xCO2,
+                                                              const bool& highTemp)
     {
         if (highTemp) {
             // Eq. (12)
@@ -574,11 +575,11 @@ private:
     */
     template <class Evaluation, class CO2Parameters>
     OPM_HOST_DEVICE static std::pair<Evaluation, Evaluation> fixPointIterSolubility_(const CO2Parameters& params,
-                                                                     const Evaluation& temperature,
-                                                                     const Evaluation& pg,
-                                                                     const Evaluation& m_NaCl,
-                                                                     const int& activityModel,
-                                                                     bool extrapolate = false)
+                                                                                     const Evaluation& temperature,
+                                                                                     const Evaluation& pg,
+                                                                                     const Evaluation& m_NaCl,
+                                                                                     const int& activityModel,
+                                                                                     bool extrapolate = false)
     {
         OPM_TIMEFUNCTION_LOCAL(Subsystem::PvtProps);
 	    // Start point for fixed-point iterations as recommended below in section 2.2
@@ -633,11 +634,11 @@ private:
     */
     template <class Evaluation, class CO2Parameters>
     OPM_HOST_DEVICE static std::pair<Evaluation, Evaluation> nonIterSolubility_(const CO2Parameters& params,
-                                                                const Evaluation& temperature,
-                                                                const Evaluation& pg,
-                                                                const Evaluation& m_NaCl,
-                                                                const int& activityModel,
-                                                                bool extrapolate = false)
+                                                                                const Evaluation& temperature,
+                                                                                const Evaluation& pg,
+                                                                                const Evaluation& m_NaCl,
+                                                                                const int& activityModel,
+                                                                                bool extrapolate = false)
     {
         // Calculate activity coefficient for salt
         Evaluation gammaNaCl = 1.0;
@@ -660,15 +661,15 @@ private:
     */
     template <class Evaluation, class CO2Parameters>
     OPM_HOST_DEVICE static std::pair<Evaluation, Evaluation> mutualSolubility_(const CO2Parameters& params,
-                                                               const Evaluation& temperature,
-                                                               const Evaluation& pg,
-                                                               const Evaluation& xCO2,
-                                                               const Evaluation& yH2O,
-                                                               const Evaluation& m_NaCl,
-                                                               const Evaluation& gammaNaCl,
-                                                               const bool& highTemp,
-                                                               const bool& iterate,
-                                                               bool extrapolate = false)
+                                                                               const Evaluation& temperature,
+                                                                               const Evaluation& pg,
+                                                                               const Evaluation& xCO2,
+                                                                               const Evaluation& yH2O,
+                                                                               const Evaluation& m_NaCl,
+                                                                               const Evaluation& gammaNaCl,
+                                                                               const bool& highTemp,
+                                                                               const bool& iterate,
+                                                                               bool extrapolate = false)
     {
         // Calculate A and B (without salt effect); Eqs. (8) and (9)
         const Evaluation& A = computeA_(params, temperature, pg, yH2O, xCO2, highTemp, extrapolate);
@@ -695,10 +696,10 @@ private:
     */
     template <class Evaluation, class CO2Parameters>
     OPM_HOST_DEVICE static std::pair<Evaluation, Evaluation> mutualSolubilitySpycherPruess2005_(const CO2Parameters& params,
-                                                                                const Evaluation& temperature,
-                                                                                const Evaluation& pg,
-                                                                                const Evaluation& m_NaCl,
-                                                                                bool extrapolate = false)
+                                                                                                const Evaluation& temperature,
+                                                                                                const Evaluation& pg,
+                                                                                                const Evaluation& m_NaCl,
+                                                                                                bool extrapolate = false)
     {
         // Calculate A and B (without salt effect); Eqs. (8) and (9)
         const Evaluation& A = computeA_(params, temperature, pg, Evaluation(0.0), Evaluation(0.0), false, extrapolate, true);
@@ -735,13 +736,13 @@ private:
      */
     template <class Evaluation, class CO2Params>
     OPM_HOST_DEVICE static Evaluation computeA_(const CO2Params& params,
-                                const Evaluation& temperature,
-                                const Evaluation& pg,
-                                const Evaluation& yH2O,
-                                const Evaluation& xCO2,
-                                const bool& highTemp,
-                                bool extrapolate = false,
-                                bool spycherPruess2005 = false)
+                                                const Evaluation& temperature,
+                                                const Evaluation& pg,
+                                                const Evaluation& yH2O,
+                                                const Evaluation& xCO2,
+                                                const bool& highTemp,
+                                                bool extrapolate = false,
+                                                bool spycherPruess2005 = false)
     {
         OPM_TIMEFUNCTION_LOCAL(Subsystem::PvtProps);
 	    // Intermediate calculations
@@ -776,14 +777,14 @@ private:
      * \param pg the gas phase pressure [Pa]
      */
     template <class Evaluation, class CO2Parameters>
-    static Evaluation computeB_(const CO2Parameters& params,
-                                const Evaluation& temperature,
-                                const Evaluation& pg,
-                                const Evaluation& yH2O,
-                                const Evaluation& xCO2,
-                                const bool& highTemp,
-                                bool extrapolate = false,
-                                bool spycherPruess2005 = false)
+    OPM_HOST_DEVICE static Evaluation computeB_(const CO2Parameters& params,
+                                                const Evaluation& temperature,
+                                                const Evaluation& pg,
+                                                const Evaluation& yH2O,
+                                                const Evaluation& xCO2,
+                                                const bool& highTemp,
+                                                bool extrapolate = false,
+                                                bool spycherPruess2005 = false)
     {
         OPM_TIMEFUNCTION_LOCAL(Subsystem::PvtProps);
 	    // Intermediate calculations
@@ -814,10 +815,10 @@ private:
     */
     template <class Evaluation>
     OPM_HOST_DEVICE static Evaluation activityCoefficientSalt_(const Evaluation& temperature,
-                                               const Evaluation& pg,
-                                               const Evaluation& m_NaCl,
-                                               const Evaluation& xCO2,
-                                               const int& activityModel)
+                                                               const Evaluation& pg,
+                                                               const Evaluation& m_NaCl,
+                                                               const Evaluation& xCO2,
+                                                               const int& activityModel)
     {
         OPM_TIMEFUNCTION_LOCAL(Subsystem::PvtProps);
 	    // Lambda and xi parameter for either Rumpf et al (1994) (activityModel = 1) or Duan-Sun as modified by Spycher
@@ -843,7 +844,7 @@ private:
             convTerm = 1.0;
         }
         else {
-            throw std::runtime_error("Activity model for salt-out effect has not been implemented!");
+            OPM_THROW(std::invalid_argument, "Activity model for salt-out effect has not been implemented!.");
         }
 
         // Eq. (18)
@@ -934,10 +935,10 @@ private:
      * \param temperature the temperature [K]
      */
     template <class Evaluation>
-    static Evaluation equilibriumConstantCO2_(const Evaluation& temperature,
-                                              const Evaluation& pg,
-                                              const bool& highTemp,
-                                              bool spycherPruess2005 = false)
+    OPM_HOST_DEVICE static Evaluation equilibriumConstantCO2_(const Evaluation& temperature,
+                                                              const Evaluation& pg,
+                                                              const bool& highTemp,
+                                                              bool spycherPruess2005 = false)
     {
         OPM_TIMEFUNCTION_LOCAL(Subsystem::PvtProps);
         Evaluation temperatureCelcius = temperature - 273.15;

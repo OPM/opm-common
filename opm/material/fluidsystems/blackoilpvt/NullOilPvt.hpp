@@ -15,7 +15,9 @@
 #ifndef OPM_NULL_OIL_PVT_HPP
 #define OPM_NULL_OIL_PVT_HPP
 
+#include <opm/common/ErrorMacros.hpp>
 #include <opm/common/utility/gpuDecorators.hpp>
+
 #include <opm/material/fluidsystems/blackoilpvt/OilPvtMultiplexer.hpp>
 
 namespace Opm
@@ -141,6 +143,11 @@ public:
                                                     unsigned /*compIdx*/) const
     {
         return 0.0;
+    }
+
+    OPM_HOST_DEVICE Scalar oilReferenceDensity(unsigned /*regionIdx*/) const
+    {
+        OPM_THROW(std::logic_error, "NullOilPvt does not support oil reference density.");
     }
 };
 

@@ -32,6 +32,7 @@
 #include "opm/material/fluidsystems/blackoilpvt/BrineCo2Pvt.hpp"
 #include "opm/material/fluidsystems/blackoilpvt/NullOilPvt.hpp"
 
+#include <opm/common/ErrorMacros.hpp>
 #include <opm/common/TimingMacros.hpp>
 #include <opm/common/utility/VectorWithDefaultAllocator.hpp>
 #include <opm/common/utility/gpuDecorators.hpp>
@@ -1134,7 +1135,7 @@ public:
         }
         }
 
-        throw std::logic_error("Unhandled phase index "+std::to_string(phaseIdx));
+        OPM_THROW(std::logic_error, "Unhandled phase index "+std::to_string(phaseIdx));
     }
 
     template <class FluidState, class LhsEval = typename FluidState::Scalar>
@@ -1742,7 +1743,7 @@ public:
         enthalpy_eq_energy_ = enthalpy_eq_energy;
     }
 
-    STATIC_OR_DEVICE bool enthalpyEqualEnergy(){
+    STATIC_OR_DEVICE bool enthalpyEqualEnergy() NOTHING_OR_CONST{
         return enthalpy_eq_energy_;
     }
 
@@ -1883,7 +1884,7 @@ phaseName(unsigned phaseIdx) NOTHING_OR_CONST
         return "gas";
 
     default:
-        throw std::logic_error(std::string("Phase index ") + std::to_string(phaseIdx) + " is unknown");
+        OPM_THROW(std::logic_error, "Phase index " + std::to_string(phaseIdx) + " is unknown");
     }
 }
 
@@ -1900,7 +1901,7 @@ solventComponentIndex(unsigned phaseIdx) NOTHING_OR_CONST
         return gasCompIdx;
 
     default:
-        throw std::logic_error(std::string("Phase index ") + std::to_string(phaseIdx) + " is unknown");
+        OPM_THROW(std::logic_error, "Phase index " + std::to_string(phaseIdx) + " is unknown");
     }
 }
 
@@ -1912,7 +1913,7 @@ soluteComponentIndex(unsigned phaseIdx) NOTHING_OR_CONST
     case waterPhaseIdx:
         if (enableDissolvedGasInWater())
             return gasCompIdx;
-        throw std::logic_error("The water phase does not have any solutes in the black oil model!");
+        OPM_THROW(std::logic_error, "The water phase does not have any solutes in the black oil model!");
     case oilPhaseIdx:
         return gasCompIdx;
     case gasPhaseIdx:
@@ -1922,7 +1923,7 @@ soluteComponentIndex(unsigned phaseIdx) NOTHING_OR_CONST
         return oilCompIdx;
 
     default:
-        throw std::logic_error(std::string("Phase index ") + std::to_string(phaseIdx) + " is unknown");
+        OPM_THROW(std::logic_error, "Phase index " + std::to_string(phaseIdx) + " is unknown");
     }
 }
 
@@ -1939,7 +1940,7 @@ componentName(unsigned compIdx) NOTHING_OR_CONST
         return "Gas";
 
     default:
-        throw std::logic_error(std::string("Component index ") + std::to_string(compIdx) + " is unknown");
+        OPM_THROW(std::logic_error, "Component index " + std::to_string(compIdx) + " is unknown");
     }
 }
 
