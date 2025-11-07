@@ -2489,7 +2489,7 @@ namespace {
         this->snapshots.back().update_tuning(rst_state.tuning);
         this->snapshots.back().events().addEvent( ScheduleEvents::TUNING_CHANGE );
 
-        this->snapshots.back().update_oilvap(rst_state.oilvap);
+        this->snapshots.back().oilvap.update(rst_state.oilvap);
 
         {
             const auto& header = rst_state.header;
@@ -2981,20 +2981,20 @@ std::vector<ScheduleState>::const_iterator Schedule::end() const {
     return this->snapshots.end();
 }
 
-void Schedule::create_first(const time_point& start_time, const std::optional<time_point>& end_time) {
-    if (end_time.has_value())
+void Schedule::create_first(const time_point& start_time, const std::optional<time_point>& end_time)
+{
+    if (end_time.has_value()) {
         this->snapshots.emplace_back( start_time, end_time.value() );
-    else
+    }
+    else {
         this->snapshots.emplace_back(start_time);
+    }
 
     const auto& run_spec = this->m_static.m_runspec;
+
     auto& sched_state = snapshots.back();
     sched_state.init_nupcol(run_spec.nupcol());
-    if (this->m_static.oilVap.has_value()) {
-        sched_state.update_oilvap(*this->m_static.oilVap);
-    } else {
-        sched_state.update_oilvap( OilVaporizationProperties(run_spec.tabdims().getNumPVTTables()));
-    }
+
     sched_state.update_message_limits( this->m_static.m_deck_message_limits );
     sched_state.pavg.update( PAvg() );
     sched_state.wtest_config.update( WellTestConfig() );
@@ -3015,6 +3015,17 @@ void Schedule::create_first(const time_point& start_time, const std::optional<ti
     sched_state.guide_rate.update( GuideRateConfig() );
     sched_state.rft_config.update( RFTConfig() );
     sched_state.rst_config.update( RSTConfig::first( this->m_static.rst_config ) );
+
+    sched_state.oilvap.update(OilVaporizationProperties { run_spec.tabdims().getNumPVTTables() });
+
+    if (this->m_static.oilVap.has_value()) {
+        const auto& vappars = *this->m_static.oilVap;
+        auto oilvap = sched_state.oilvap();
+
+        OilVaporizationProperties::updateVAPPARS(oilvap, vappars[0], vappars[1]);
+        sched_state.oilvap.update(std::move(oilvap));
+    }
+
     sched_state.network_balance.update(Network::Balance{run_spec.networkDimensions().active()});
     sched_state.update_sumthin(this->m_static.sumthin);
     sched_state.rptonly(this->m_static.rptonly);
@@ -3022,7 +3033,7 @@ void Schedule::create_first(const time_point& start_time, const std::optional<ti
     sched_state.source.update( Source() );
     sched_state.wcycle.update( WCYCLE() );
     sched_state.wlist_tracker.update(ScheduleState::WellListChangeTracker{});
-    //sched_state.update_date( start_time );
+
     this->addGroup("FIELD", 0);
 }
 

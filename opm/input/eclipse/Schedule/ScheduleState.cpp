@@ -301,18 +301,6 @@ int ScheduleState::nupcol() const {
     return this->m_nupcol.value();
 }
 
-void ScheduleState::update_oilvap(OilVaporizationProperties oilvap) {
-    this->m_oilvap = std::move(oilvap);
-}
-
-const OilVaporizationProperties& ScheduleState::oilvap() const {
-    return this->m_oilvap;
-}
-
-OilVaporizationProperties& ScheduleState::oilvap() {
-    return this->m_oilvap;
-}
-
 void ScheduleState::update_geo_keywords(std::vector<DeckKeyword> geo_keywords) {
     this->m_geo_keywords = std::move(geo_keywords);
 }
@@ -369,7 +357,6 @@ void ScheduleState::rptonly(const bool only)
 bool ScheduleState::operator==(const ScheduleState& other) const {
 
     return this->m_start_time == other.m_start_time
-        && this->m_oilvap == other.m_oilvap
         && this->m_sim_step == other.m_sim_step
         && this->m_month_num == other.m_month_num
         && this->m_save_step == other.m_save_step
@@ -401,6 +388,7 @@ bool ScheduleState::operator==(const ScheduleState& other) const {
         && this->guide_rate.get() == other.guide_rate.get()
         && this->rft_config.get() == other.rft_config.get()
         && this->udq.get() == other.udq.get()
+        && this->oilvap() == other.oilvap()
         && this->bhp_defaults.get() == other.bhp_defaults.get()
         && this->source.get() == other.source.get()
         && this->wcycle() == other.wcycle()
@@ -431,7 +419,6 @@ ScheduleState ScheduleState::serializationTestObject() {
     ts.groups = map_member<std::string, Group>::serializationTestObject();
     ts.m_events = Events::serializationTestObject();
     ts.m_nupcol = Nupcol::serializationTestObject();
-    ts.update_oilvap( Opm::OilVaporizationProperties::serializationTestObject() );
     ts.m_message_limits = MessageLimits::serializationTestObject();
     ts.m_whistctl_mode = Well::ProducerCMode::THP;
     ts.target_wellpi = {{"WELL1", 1000}, {"WELL2", 2000}};
@@ -460,6 +447,7 @@ ScheduleState ScheduleState::serializationTestObject() {
     ts.glo.update( GasLiftOpt::serializationTestObject() );
     ts.rft_config.update( RFTConfig::serializationTestObject() );
     ts.rst_config.update( RSTConfig::serializationTestObject() );
+    ts.oilvap.update(OilVaporizationProperties::serializationTestObject());
     ts.source.update( Source::serializationTestObject() );
     ts.wcycle.update(WCYCLE::serializationTestObject());
     ts.wlist_tracker.update(WellListChangeTracker::serializationTestObject());

@@ -22,13 +22,13 @@
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
 
 #include <opm/input/eclipse/Schedule/MessageLimits.hpp>
-#include <opm/input/eclipse/Schedule/OilVaporizationProperties.hpp>
 #include <opm/input/eclipse/Schedule/RPTConfig.hpp>
 #include <opm/input/eclipse/Schedule/RSTConfig.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleRestartInfo.hpp>
 
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 
+#include <array>
 #include <memory>
 #include <optional>
 #include <string>
@@ -91,9 +91,8 @@ struct ScheduleStatic
     /// Whether or not run activates the gas-lift optimisation facility.
     bool gaslift_opt_active{false};
 
-    /// Limits on gas re-solution and oil vaporisation rates (e.g., DRSTD in
-    /// SOLUTION section).
-    std::optional<OilVaporizationProperties> oilVap{};
+    /// Oil vaporisation propensities (i.e., VAPPARS in SOLUTION section).
+    std::optional<std::array<double,2>> oilVap{};
 
     /// Whether or not this run is externally controlled by another
     /// simulation run (reservoir coupling facility).
