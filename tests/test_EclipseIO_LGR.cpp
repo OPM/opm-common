@@ -584,7 +584,6 @@ namespace {
         Opm::Schedule     sched;
     };
 
-} // Anonymous namespace
 
 const std::string deckStringLGR = std::string { R"(RUNSPEC
     TITLE
@@ -772,7 +771,7 @@ void checkInitFile(const Deck& deck,[[maybe_unused]] const data::Solution& simPr
 }
 
 
- // Anonymous namespace
+} // Anonymous namespace
 
 BOOST_AUTO_TEST_CASE(EclipseIOLGR_INIT)
 {
