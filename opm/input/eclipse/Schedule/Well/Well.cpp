@@ -67,6 +67,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <iostream>
 
 #include <fmt/format.h>
 
@@ -1855,9 +1856,12 @@ bool Well::updateWSEGAICD(const std::vector<std::pair<int, AutoICD>>& aicd_pairs
 
 bool Well::updateICDFlowScalingFactors()
 {
-    auto new_segments = std::make_shared<WellSegments>(*this->segments);
-    if (new_segments->updateICDScalingFactors(this->getConnections())) {
-        this->segments = std::move(new_segments);
+//    std::cout << "segments use_count: " << this->segments.use_count() << std::endl;
+//    assert(this->segments.use_count() == 1 && "Modifying shared WellSegments!");
+//    auto new_segments = std::make_shared<WellSegments>(*this->segments);
+    WellSegments new_segments {*this->segments};
+    if (new_segments.updateICDScalingFactors(this->getConnections())) {
+        *(this->segments) = std::move(new_segments);
         return true;
     }
     return false;
