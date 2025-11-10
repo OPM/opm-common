@@ -22,7 +22,7 @@
 
 #include <vector>
 
-namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems {
+namespace Opm::RestartIO::Helpers::VectorItems {
 
     // This is a subset of the items in src/opm/output/eclipse/LogiHEAD.cpp .
     // Promote items from that list to this in order to make them public.
@@ -40,10 +40,14 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
         DirEPS     = 17,    // Directional end-point scaling
         RevEPS     = 18,    // Reversible end-point scaling
         AltEPS     = 19,    // Alternative (3-pt) end-point scaling
-        HasNetwork = 37,     // Indicates Network option used
+        HasNetwork = 37,    // Indicates Network option used
         ConstCo    = 38,    // Constant oil compressibility (PVCDO)
+
+        VapPars    = 53,    // Whether or not VAPPARS is currently active.
+
         HasMSWells = 75,    // Whether or not model has MS Wells.
     };
-}}}} // Opm::RestartIO::Helpers::VectorItems
+
+} // Opm::RestartIO::Helpers::VectorItems
 
 #endif // OPM_OUTPUT_ECLIPSE_VECTOR_LOGIHEAD_HPP

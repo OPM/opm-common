@@ -2,12 +2,14 @@
 
 #include <opm/output/eclipse/VectorItems/logihead.hpp>
 
+#include <opm/input/eclipse/Schedule/OilVaporizationProperties.hpp>
+
 #include <utility>
 #include <vector>
 
 namespace VI = ::Opm::RestartIO::Helpers::VectorItems;
 
-enum index : std::vector<int>::size_type {
+enum index : std::vector<bool>::size_type {
     // Flag to signify live oil (dissolved gas) PVT
     IsLiveOil = VI::logihead::IsLiveOil,
 
@@ -79,6 +81,7 @@ lh_036	=	36	,		//	FALSE
 
     // Flag to indicate that the network option is used
     HasNetwork = VI::logihead::HasNetwork,
+
     // Flag to signify constant oil compressibility
     ConstCo = VI::logihead::ConstCo,
 
@@ -96,7 +99,10 @@ lh_049	=	49	,		//	FALSE
 lh_050	=	50	,		//	FALSE
 lh_051	=	51	,		//	FALSE
 lh_052	=	52	,		//	FALSE
-lh_053	=	53	,		//	FALSE
+
+    // Whether or not VAPPARS is currently active.
+    VapPars = VI::logihead::VapPars,
+
 lh_054	=	54	,		//	FALSE
 lh_055	=	55	,		//	FALSE
 lh_056	=	56	,		//	FALSE
@@ -171,7 +177,7 @@ lh_120	=	120	,		//	FALSE
 // ---------------------------------------------------------------------
 // ---------------------------------------------------------------------
 
-    LOGIHEAD_NUMBER_OF_ITEMS        // MUST be last element of enum.
+    LOGIHEAD_NUMBER_OF_ITEMS,       // MUST be last enumerator.
 };
 
 // =====================================================================
@@ -223,7 +229,16 @@ Opm::RestartIO::LogiHEAD::saturationFunction(const SatfuncFlags& satfunc)
 Opm::RestartIO::LogiHEAD&
 Opm::RestartIO::LogiHEAD::network(const int maxNoNodes)
 {
-    this->data_[HasNetwork  ] = (maxNoNodes >= 1) ? true : false;
+    this->data_[HasNetwork] = maxNoNodes >= 1;
+
+    return *this;
+}
+
+Opm::RestartIO::LogiHEAD&
+Opm::RestartIO::LogiHEAD::phaseMixing(const OilVaporizationProperties& oilvap)
+{
+    this->data_[VapPars] = oilvap.defined() &&
+        (oilvap.getType() == OilVaporizationProperties::OilVaporization::VAPPARS);
 
     return *this;
 }

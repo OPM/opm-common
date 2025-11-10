@@ -24,7 +24,42 @@
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Phase.hpp>
 
+#include <opm/input/eclipse/Schedule/OilVaporizationProperties.hpp>
+#include <opm/input/eclipse/Schedule/ScheduleState.hpp>
+
 #include <vector>
+
+namespace {
+
+    Opm::RestartIO::LogiHEAD staticSettings(const Opm::EclipseState& es)
+    {
+        const auto& rspec   = es.runspec();
+        const auto& tabMgr  = es.getTableManager();
+        const auto& phases  = rspec.phases();
+        const auto& wsd     = rspec.wellSegmentDimensions();
+        const auto& hystPar = rspec.hysterPar();
+
+        auto pvt = ::Opm::RestartIO::LogiHEAD::PVTModel{};
+
+        pvt.isLiveOil = phases.active(::Opm::Phase::OIL) &&
+            !tabMgr.getPvtoTables().empty();
+
+        pvt.isWetGas = phases.active(::Opm::Phase::GAS) &&
+            !tabMgr.getPvtgTables().empty();
+
+        pvt.constComprOil = phases.active(::Opm::Phase::OIL) &&
+            !(pvt.isLiveOil ||
+              tabMgr.hasTables("PVDO") ||
+              tabMgr.getPvcdoTable().empty());
+
+        return Opm::RestartIO::LogiHEAD{}
+            .variousParam(false, false, wsd.maxSegmentedWells(), hystPar.active())
+            .pvtModel(pvt)
+            .network(rspec.networkDimensions().maxNONodes())
+            ;
+    }
+
+} // Anonymous namespace
 
 // #####################################################################
 // Public Interface (createLogiHead()) Below Separator
@@ -34,29 +69,16 @@ std::vector<bool>
 Opm::RestartIO::Helpers::
 createLogiHead(const EclipseState& es)
 {
-    const auto& rspec = es.runspec();
-    const auto& tabMgr = es.getTableManager();
-    const auto& phases = rspec.phases();
-    const auto& wsd   = rspec.wellSegmentDimensions();
-    const auto& hystPar = rspec.hysterPar();
+    return staticSettings(es).data();
+}
 
-    auto pvt = ::Opm::RestartIO::LogiHEAD::PVTModel{};
-
-    pvt.isLiveOil = phases.active(::Opm::Phase::OIL) &&
-        !tabMgr.getPvtoTables().empty();
-
-    pvt.isWetGas = phases.active(::Opm::Phase::GAS) &&
-        !tabMgr.getPvtgTables().empty();
-
-    pvt.constComprOil = phases.active(::Opm::Phase::OIL) &&
-        !(pvt.isLiveOil ||
-          tabMgr.hasTables("PVDO") ||
-          tabMgr.getPvcdoTable().empty());
-
-    const auto lh = LogiHEAD{}
-        .variousParam(false, false, wsd.maxSegmentedWells(), hystPar.active())
-        .pvtModel(pvt)
-        .network(rspec.networkDimensions().maxNONodes())
+std::vector<bool>
+Opm::RestartIO::Helpers::
+createLogiHead(const EclipseState&  es,
+               const ScheduleState& sched)
+{
+    const auto lh = staticSettings(es)
+        .phaseMixing(sched.oilvap())
         ;
 
     return lh.data();

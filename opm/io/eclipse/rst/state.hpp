@@ -81,7 +81,8 @@ struct RstState
     std::unordered_map<std::string, std::vector<std::string>> wlists;
 
 private:
-    void load_oil_vaporization(const std::vector<int>& intehead,
+    void load_oil_vaporization(const std::vector<int>&    intehead,
+                               const std::vector<bool>&   logihead,
                                const std::vector<double>& doubhead);
 
     void load_tuning(const std::vector<int>& intehead,

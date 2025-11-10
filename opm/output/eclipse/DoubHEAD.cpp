@@ -26,6 +26,7 @@
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Schedule/Tuning.hpp>
 
+#include <opm/input/eclipse/Units/Dimension.hpp>
 #include <opm/input/eclipse/Units/Units.hpp>
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 
@@ -76,8 +77,8 @@ enum Index : std::vector<double>::size_type {
     dh_023  =  23,
     dh_024  =  24,
     dRsdt   =  VI::doubhead::dRsDt,
-    dh_026  =  26,
-    dh_027  =  27,
+    OilVapPropensity = VI::doubhead::OilVapPropensity,
+    OilVapDensPropensity = VI::doubhead::OilVapDensPropensity,
     dh_028  =  28,
     dh_029  =  29,
 
@@ -414,18 +415,16 @@ Opm::RestartIO::DoubHEAD::NetBalanceParams::NetBalanceParams(const UnitSystem& u
 Opm::RestartIO::DoubHEAD::DoubHEAD()
     : data_(Index::NUMBER_OF_ITEMS, 0.0)
 {
-    // Numbers below have unknown usage, values have been determined by
-    // experiments to be constant across a range of reference cases.
-    this->data_[Index::dh_024] = 1.0e+20;
-    this->data_[Index::dh_026] = 0.0;
-    this->data_[Index::dh_027] = 0.0;
+    constexpr auto infty = 1.0e+20;
+
+    this->data_[Index::dh_024] = infty;
     this->data_[Index::dh_028] = 0.0;
-    this->data_[Index::dh_054] = 1.0e+20;
-    this->data_[Index::dh_055] = 1.0e+20;
+    this->data_[Index::dh_054] = infty;
+    this->data_[Index::dh_055] = infty;
     this->data_[Index::dh_065] = 0.0;
     this->data_[Index::dh_069] = -1.0;
-    this->data_[Index::dh_080] = 1.0e+20;
-    this->data_[Index::dh_081] = 1.0e+20;
+    this->data_[Index::dh_080] = infty;
+    this->data_[Index::dh_081] = infty;
     this->data_[grpar_e] = 0.0;
     this->data_[grpar_f] = 0.0;
     this->data_[LOmini] = 0.0;
@@ -487,19 +486,19 @@ Opm::RestartIO::DoubHEAD::DoubHEAD()
     this->data_[Index::dh_184] = 1.0e-4;
     this->data_[Index::dh_185] = 0.0;
     this->data_[Index::dh_186] = 0.0;
-    this->data_[Index::dh_187] = 1.0e+20;
-    this->data_[Index::dh_188] = 1.0e+20;
-    this->data_[Index::dh_189] = 1.0e+20;
+    this->data_[Index::dh_187] = infty;
+    this->data_[Index::dh_188] = infty;
+    this->data_[Index::dh_189] = infty;
 
-    this->data_[Index::dh_190] = 1.0e+20;
-    this->data_[Index::dh_191] = 1.0e+20;
-    this->data_[Index::dh_192] = 1.0e+20;
-    this->data_[Index::dh_193] = 1.0e+20;
-    this->data_[Index::dh_194] = 1.0e+20;
-    this->data_[Index::dh_195] = 1.0e+20;
-    this->data_[Index::dh_196] = 1.0e+20;
-    this->data_[Index::dh_197] = 1.0e+20;
-    this->data_[Index::dh_198] = 1.0e+20;
+    this->data_[Index::dh_190] = infty;
+    this->data_[Index::dh_191] = infty;
+    this->data_[Index::dh_192] = infty;
+    this->data_[Index::dh_193] = infty;
+    this->data_[Index::dh_194] = infty;
+    this->data_[Index::dh_195] = infty;
+    this->data_[Index::dh_196] = infty;
+    this->data_[Index::dh_197] = infty;
+    this->data_[Index::dh_198] = infty;
     this->data_[Index::dh_199] = 1.0;
 
     this->data_[Index::dh_200] = 0.0;
@@ -515,7 +514,7 @@ Opm::RestartIO::DoubHEAD::DoubHEAD()
 
     this->data_[Index::dh_210] = 0.0;
     this->data_[Index::dh_211] = 0.0;
-    this->data_[UdqPar_2]      = 1.0E+20;
+    this->data_[UdqPar_2]      = infty;
     this->data_[UdqPar_3]      = 0.0;
     this->data_[UdqPar_4]      = 1.0e-4;
     this->data_[Index::dh_215] = -2.0e+20;
@@ -526,7 +525,7 @@ Opm::RestartIO::DoubHEAD::DoubHEAD()
     this->data_[Index::dh_220] = 0.01;
     this->data_[Index::dh_221] = 1.0;
     this->data_[Index::dh_222] = 0.0;
-    this->data_[Index::dh_223] = 1.0e+20;
+    this->data_[Index::dh_223] = infty;
     this->data_[Index::dh_225] = 0.0;
     this->data_[Index::dh_226] = 0.0;
     this->data_[Index::dh_227] = 0.0;
@@ -549,17 +548,17 @@ Opm::RestartIO::DoubHEAD::DoubHEAD()
     this->data_[Index::XxxLCV] = 0.001;
     this->data_[Index::XxxWFL] = 0.001;
 
-    this->data_[Index::dRsdt]  = 1.0e+20; // "Infinity"
+    this->data_[Index::dRsdt]  = infty;
 
     this->data_[Index::TrgDPR] = 1.0e+6;
     this->data_[Index::TfDIFF] = 1.25;
     this->data_[Index::DdpLim] = 1.0e+6;
     this->data_[Index::DdsLim] = 1.0e+6;
 
-    this->data_[Index::ThrUPT] = 1.0e+20;
-    this->data_[Index::XxxDPR] = 1.0e+20;
+    this->data_[Index::ThrUPT] = infty;
+    this->data_[Index::XxxDPR] = infty;
     this->data_[Index::TrgFIP] = 0.025;
-    this->data_[Index::TrgSFT] = 1.0e+20;
+    this->data_[Index::TrgSFT] = infty;
 }
 
 Opm::RestartIO::DoubHEAD&
@@ -567,7 +566,10 @@ Opm::RestartIO::DoubHEAD::tuningParameters(const Tuning&     tuning,
                                            const double      cnvT)
 {
     // Record 1
-    this->data_[Index::TsInit] = tuning.TSINIT.has_value() ? tuning.TSINIT.value() / cnvT : VI::DoubHeadValue::TSINITNoValue ;
+    this->data_[Index::TsInit] = tuning.TSINIT.has_value()
+        ? tuning.TSINIT.value() / cnvT
+        : VI::DoubHeadValue::TSINITNoValue;
+
     this->data_[Index::TsMaxz] = tuning.TSMAXZ / cnvT;
     this->data_[Index::TsMinz] = tuning.TSMINZ / cnvT;
     this->data_[Index::TsMchp] = tuning.TSMCHP / cnvT;
@@ -634,12 +636,26 @@ Opm::RestartIO::DoubHEAD::nextStep(const double nextTimeStep)
 }
 
 Opm::RestartIO::DoubHEAD&
-Opm::RestartIO::DoubHEAD::drsdt(const OilVaporizationProperties& oilvap,
-                                const UnitSystem&                usys)
+Opm::RestartIO::DoubHEAD::phaseMixing(const OilVaporizationProperties& oilvap,
+                                      const UnitSystem&                usys)
 {
-    if (oilvap.getType() == OilVaporizationProperties::OilVaporization::DRDT) {
+    using VapType = OilVaporizationProperties::OilVaporization;
+
+    switch (oilvap.getType()) {
+    case VapType::DRDT:
         this->data_[dRsdt] = usys.from_si(UnitSystem::measure::gas_oil_ratio_rate,
                                           oilvap.getMaxDRSDT(0));
+        break;
+
+    case VapType::VAPPARS:
+        // No unit conversion needed.  The propensities are dimensionless
+        // parameters.
+        this->data_[OilVapPropensity]     = oilvap.vap1();
+        this->data_[OilVapDensPropensity] = oilvap.vap2();
+        break;
+
+    default:
+        break;
     }
 
     return *this;

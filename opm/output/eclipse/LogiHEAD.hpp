@@ -23,7 +23,13 @@
 
 #include <vector>
 
-namespace Opm { namespace RestartIO {
+namespace Opm {
+
+    class OilVaporizationProperties;
+
+} // namespace Opm
+
+namespace Opm::RestartIO {
 
     class LogiHEAD
     {
@@ -83,8 +89,12 @@ namespace Opm { namespace RestartIO {
         LogiHEAD& variousParam(const bool e300_radial,
                                const bool e100_radial,
                                const int  nswlmx,
-			       const bool enableHyster
-			      );
+                               const bool enableHyster);
+
+        /// Assign oil vaporisation characteristics.
+        ///
+        /// In particular, whether or not VAPPARS is currently active.
+        LogiHEAD& phaseMixing(const OilVaporizationProperties& oilvap);
 
         /// Assign PVT model characteristics.
         ///
@@ -101,18 +111,21 @@ namespace Opm { namespace RestartIO {
         /// \return \code *this \endcode.
         LogiHEAD& saturationFunction(const SatfuncFlags& satfunc);
 
+        /// Logical switch to indicate that the network option is used.
+        LogiHEAD& network(const int maxNoNodes);
+
+        /// Linearised result array.
+        ///
+        /// This is the final output of LogiHEAD assembly.
         const std::vector<bool>& data() const
         {
             return this->data_;
         }
 
-        /// Logical switch to indicate that the network option is used
-        ///
-        LogiHEAD& network(const int maxNoNodes);
     private:
         std::vector<bool> data_;
     };
 
-}} // Opm::RestartIO
+} // Opm::RestartIO
 
 #endif // OPM_LOGIHEAD_HEADER_INCLUDED

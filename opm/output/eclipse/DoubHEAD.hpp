@@ -79,14 +79,14 @@ namespace Opm { namespace RestartIO {
         DoubHEAD& operator=(const DoubHEAD& rhs) = default;
         DoubHEAD& operator=(DoubHEAD&& rhs) = default;
 
-        DoubHEAD& tuningParameters(const Tuning&     tuning,
-                                   const double      cnvT);
+        DoubHEAD& tuningParameters(const Tuning& tuning,
+                                   const double  cnvT);
 
         DoubHEAD& timeStamp(const TimeStamp& ts);
         DoubHEAD& nextStep(const double nextTimeStep);
 
-        DoubHEAD& drsdt(const OilVaporizationProperties& oilvap,
-                        const UnitSystem&                usys);
+        DoubHEAD& phaseMixing(const OilVaporizationProperties& oilvap,
+                              const UnitSystem&                usys);
 
         DoubHEAD& udq_param(const UDQParams& udqPar);
         DoubHEAD& guide_rate_param(const guideRate& guide_rp);

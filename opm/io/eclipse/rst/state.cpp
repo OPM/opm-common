@@ -39,12 +39,14 @@
 #include <opm/output/eclipse/VectorItems/connection.hpp>
 #include <opm/output/eclipse/VectorItems/doubhead.hpp>
 #include <opm/output/eclipse/VectorItems/intehead.hpp>
+#include <opm/output/eclipse/VectorItems/logihead.hpp>
 #include <opm/output/eclipse/VectorItems/well.hpp>
 
 #include <opm/output/eclipse/WriteRestartHelpers.hpp>
 
 #include <opm/input/eclipse/Schedule/Action/Actdims.hpp>
 #include <opm/input/eclipse/Schedule/Action/Condition.hpp>
+#include <opm/input/eclipse/Schedule/OilVaporizationProperties.hpp>
 
 #include <opm/input/eclipse/Deck/Deck.hpp>
 
@@ -334,6 +336,32 @@ namespace {
 
         udq.commitValues();
     }
+
+    void restoreDRsDt(const std::vector<int>&         intehead,
+                      const std::vector<double>&      doubhead,
+                      const Opm::UnitSystem&          usys,
+                      Opm::OilVaporizationProperties& oilvap)
+    {
+        const auto dRsdt = usys.to_si(Opm::UnitSystem::measure::gas_oil_ratio_rate,
+                                      doubhead[VI::doubhead::dRsDt]);
+
+        const auto maximums = std::vector<double>(oilvap.numPvtRegions(), dRsdt);
+        const auto options  = std::vector<std::string>
+            (maximums.size(), (intehead[VI::intehead::DRSDT_FREE] == 1) ? "FREE" : "ALL");
+
+        Opm::OilVaporizationProperties::updateDRSDT(oilvap, maximums, options);
+    }
+
+    void restoreVapPars(const std::vector<double>&      doubhead,
+                        Opm::OilVaporizationProperties& oilvap)
+    {
+        // No unit conversion needed.  The propensities are dimensionless
+        // scalars.
+        Opm::OilVaporizationProperties::
+            updateVAPPARS(oilvap,
+                          doubhead[VI::doubhead::OilVapPropensity],
+                          doubhead[VI::doubhead::OilVapDensPropensity]);
+    }
 }
 
 namespace Opm::RestartIO {
@@ -349,26 +377,24 @@ RstState::RstState(std::shared_ptr<EclIO::RestartFileView> rstView,
     , oilvap(runspec.tabdims().getNumPVTTables())
 {
     this->load_tuning(rstView->intehead(), rstView->doubhead());
-    this->load_oil_vaporization(rstView->intehead(), rstView->doubhead());
+
+    this->load_oil_vaporization(rstView->intehead(),
+                                rstView->logihead(),
+                                rstView->doubhead());
 }
 
-void RstState::load_oil_vaporization(const std::vector<int>& intehead,
+void RstState::load_oil_vaporization(const std::vector<int>&    intehead,
+                                     const std::vector<bool>&   logihead,
                                      const std::vector<double>& doubhead)
 {
-    if (!(doubhead[VI::doubhead::dRsDt] < 1.0e+20)) {
-        // DRSDT is not defined in the restart file, so we don't need to
-        // update the oilvap object.
-        return;
+    if (doubhead[VI::doubhead::dRsDt] < 1.0e+20) {
+        // DRSDT is active.
+        restoreDRsDt(intehead, doubhead, this->unit_system, this->oilvap);
     }
-
-    const auto dRsdt = this->unit_system.to_si(UnitSystem::measure::gas_oil_ratio_rate,
-                                               doubhead[VI::doubhead::dRsDt]);
-
-    const auto maximums = std::vector<double>(this->oilvap.numPvtRegions(), dRsdt);
-    const auto options  = std::vector<std::string>
-        (maximums.size(), (intehead[VI::intehead::DRSDT_FREE] == 1) ? "FREE" : "ALL");
-
-    OilVaporizationProperties::updateDRSDT(this->oilvap, maximums, options);
+    else if (logihead[VI::logihead::VapPars]) {
+        // VAPPARS is active.
+        restoreVapPars(doubhead, this->oilvap);
+    }
 }
 
 void RstState::load_tuning(const std::vector<int>& intehead,
