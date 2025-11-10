@@ -228,10 +228,26 @@ namespace {
         this->limit_.mu  = 1.0 /
             (this->limit_.fvf * linInterp(this->p_, recipBmu, this->limit_.p));
 
-        const auto p0 = 1.0*Opm::unit::barsa;
+        // We should pad the table if extrapolating b to one bar
+        // yields a smaller b factor than (typically) 0.1 * b[0].
+        const auto p1bar = 1.0 * Opm::unit::barsa;
+        this->needPadding_
+            = (this->p_[0] > p1bar) && (linInterp(this->p_, b, p1bar) < 1.0 / this->limit_.fvf);
 
-        this->needPadding_ = (this->p_[0] > p0) &&
-            (linInterp(this->p_, b, p0) < 1.0 / this->limit_.fvf);
+        if (!this->needPadding_) {
+            // We should also pad the table if extrapolating b yields
+            // negative b factor at zero pressure.
+            const auto p0bar = 0.0 * Opm::unit::barsa;
+            this->needPadding_ = (this->p_[0] > p0bar) && (linInterp(this->p_, b, p0bar) < 0.0);
+            if (this->needPadding_) {
+                // Set the limit object to contain the extra entry at
+                // zero pressure we want to insert
+                this->limit_.fvf = 1.1 * prop.fvf(0);
+                this->limit_.p   = p0bar;
+                this->limit_.rv  = prop.vaporisedOil(0);
+                this->limit_.mu  = prop.viscosity(0);
+            }
+        }
     }
 
     Opm::SimpleTable LowPressureTablePadding::padding() const
@@ -244,11 +260,11 @@ namespace {
 
         auto padTable = Opm::SimpleTable { std::move(padSchema) };
 
-        const auto p0 = 1.0*Opm::unit::barsa;
+        const auto p1bar = 1.0 * Opm::unit::barsa;
 
         if (this->limit_.p < this->p_[0]) {
-            if (p0 < this->limit_.p) {
-                padTable.addRow({ p0, this->limit_.rv, 1.1*this->limit_.fvf, this->limit_.mu }, "PAD");
+            if (p1bar < this->limit_.p) {
+                padTable.addRow({ p1bar, this->limit_.rv, 1.1 * this->limit_.fvf, this->limit_.mu }, "PAD");
             }
 
             padTable.addRow({ this->limit_.p, this->limit_.rv, this->limit_.fvf, this->limit_.mu }, "PAD");
