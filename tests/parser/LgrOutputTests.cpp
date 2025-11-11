@@ -245,6 +245,10 @@ SCHEDULE
     Opm::EclipseGrid eclipse_grid_file(global_grid_dim, coord_g, zcorn_g);
     //  LgrCollection is used to initalize LGR Cells in the Eclipse Grid.
     eclipse_grid_file.init_lgr_cells(lgr_col);
+    //
+    auto lgr1_coord = eclipse_grid_file.getLGRCell("LGR1").getCOORD();
+    auto lgr1_zcorn = eclipse_grid_file.getLGRCell("LGR1").getZCORN();
+
     // LGR COORD and ZCORN is parsed to EclipseGridLGR children cell. (Simulates the process of recieving the LGR refinement.)
     eclipse_grid_file.set_lgr_refinement("LGR1",coord_l,zcorn_l);
     // Intialize host_cell numbering.

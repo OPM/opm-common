@@ -277,9 +277,6 @@ SCHEDULE
     BOOST_CHECK_EQUAL(eclipse_grid.getActiveIndexLGR("LGR2",0,0,0), 9U);
     BOOST_CHECK_EQUAL(eclipse_grid.getActiveIndexLGR("LGR2",1,3,0), 16U);
 
-    auto LGR_coord = eclipse_grid.getLGRCell("LGR1").getCOORD();
-    auto LGR_zcorn = eclipse_grid.getLGRCell("LGR1").getZCORN();
-
   }
 
 
