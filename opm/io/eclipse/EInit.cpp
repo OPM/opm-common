@@ -140,6 +140,12 @@ namespace EclIO
             return true;
     }
 
+    bool EInit::hasArray(const std::string& name) const
+    {
+        auto it = std::find(array_name.begin(), array_name.end(), name);
+        return (it != array_name.end());
+    }
+
     int EInit::get_lgr_index(const std::string& grid_name) const
     {
         auto it = std::find(lgr_names.begin(), lgr_names.end(), grid_name);

@@ -46,6 +46,7 @@ namespace EclIO
         int activeCells(const std::string& grid_name = "global") const;
 
         bool hasLGR(const std::string& name) const;
+        bool hasArray(const std::string& name) const;
 
         template <typename T>
         const std::vector<T>& getInitData(const std::string& name, const std::string& grid_name = "global")
