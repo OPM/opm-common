@@ -75,21 +75,13 @@ using namespace Opm;
 namespace {
 
     template<typename Vec>
-    void checkVectorsClose(const Vec& obtained, const Vec& expected, double tol)
+    void checkVectorsClose(const Vec& obtained, const Vec& expected, double tol, const std::string& context)
     {
         BOOST_REQUIRE_EQUAL(obtained.size(), expected.size());
 
         for (std::size_t i = 0; i < obtained.size(); ++i) {
-            const auto diff = std::abs(obtained[i] - expected[i]);
-            if (diff > tol) {
-                std::ostringstream msg;
-                msg << "Vectors differ at index " << i
-                    << ": obtained=" << obtained[i]
-                    << ", expected=" << expected[i]
-                    << ", |diff|=" << diff
-                    << ", tolerance=" << tol;
-                BOOST_CHECK_MESSAGE(false, msg.str());
-            }
+            BOOST_TEST_MESSAGE(context << '[' << i << ']');
+            BOOST_CHECK_CLOSE(obtained[i], expected[i], tol);
         }
     }
 
@@ -940,8 +932,8 @@ BOOST_AUTO_TEST_CASE(EclipseIOLGR_Integration)
         zcorn_expected.begin(),
                        [K](double v) { return v * K; });
 
-        checkVectorsClose(coord_obtained, coord_expected, tol);
-        checkVectorsClose(zcorn_obtained, zcorn_expected, tol);
+        checkVectorsClose(coord_obtained, coord_expected, tol, "coord_obtained");
+        checkVectorsClose(zcorn_obtained, zcorn_expected, tol, "zcorn_obtained");
     }
 
     {
@@ -952,7 +944,7 @@ BOOST_AUTO_TEST_CASE(EclipseIOLGR_Integration)
         std::vector<float> dy_file = init.get<float>("DY");
         std::vector<double> dy_obtained(dy_file.begin(), dy_file.end());
         std::vector<double> dy_expected(9, 0.11666666E+04);
-        checkVectorsClose(dy_obtained, dy_expected, 1e-4);
+        checkVectorsClose(dy_obtained, dy_expected, 1e-4, "dy_obtained");
     }
 
     {
@@ -964,15 +956,15 @@ BOOST_AUTO_TEST_CASE(EclipseIOLGR_Integration)
         auto lgr2_pressure = rst.getRestartData<float>("PRESSURE",1, "LGR2");
         auto lgr3_pressure = rst.getRestartData<float>("PRESSURE",1, "LGR3");
 
-        checkVectorsClose(global_pressure, std::vector<float> {0.0f, 1.0f, 2.0f, 3.0f, 4.0f}, tol);
+        checkVectorsClose(global_pressure, std::vector<float> {0.0f, 1.0f, 2.0f, 3.0f, 4.0f}, tol, "global_pressure");
         checkVectorsClose(lgr1_pressure, std::vector<float> {5.0f, 6.0f, 7.0f,
                                                                                 8.0f, 9.0f, 10.0f,
-                                                                                11.0f, 12.0f, 13.0f,}, tol);
+                                                                                11.0f, 12.0f, 13.0f,}, tol, "lgr1_pressure");
         checkVectorsClose(lgr2_pressure, std::vector<float> {14.0f, 15.0f, 16.0f,
                                                                                 17.0f, 18.0f, 19.0f,
-                                                                                20.0f, 21.0f, 22.0f,}, tol);
+                                                                                20.0f, 21.0f, 22.0f,}, tol, "lgr2_pressure");
         checkVectorsClose(lgr3_pressure, std::vector<float> {23.0f, 24.0f, 25.0f,
                                                                                 26.0f, 27.0f, 28.0f,
-                                                                                29.0f, 30.0f, 31.0f,}, tol);
+                                                                                29.0f, 30.0f, 31.0f,}, tol, "lgr3_pressure");
     }
 }
