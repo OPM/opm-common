@@ -273,7 +273,9 @@ public:
     ///
     /// \param[in] value Collection of per-cell, per-well, per-connection,
     /// per-segment, per-group, and per-aquifer dynamic results pertaining
-    /// to this time point.
+    /// to this time point. The vector must contain one `RestartValue` per grid,
+    /// including the global grid. POS = 0 is the global grid, POS = 1
+    ///  is LGR1, and so on.
     ///
     /// \param[in] write_double Whether or not to output simulation results
     /// as double precision floating-point numbers.  Compatibility
