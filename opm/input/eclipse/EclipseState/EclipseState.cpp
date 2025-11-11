@@ -193,6 +193,10 @@ namespace Opm {
         return m_inputGrid;
     }
 
+    void EclipseState::set_lgr_refinement(const std::string& lgr_label, const std::vector<double>& coord, const std::vector<double>& zcorn) {
+        // Set LGR refinement in EclipseGrid. coords and zcorns must be in SI units.
+        m_inputGrid.set_lgr_refinement(lgr_label, coord, zcorn);
+    }
 
     const SimulationConfig& EclipseState::getSimulationConfig() const {
         return m_simulationConfig;

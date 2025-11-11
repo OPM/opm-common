@@ -228,6 +228,76 @@ public:
                        const bool           write_double = false,
                        std::optional<int>   time_step = std::nullopt);
 
+    /// Write reservoir state and summary information to disk for LGR
+    // simulations.
+    ///
+    /// Calling this method is only meaningful after the first time step has
+    /// been completed.
+    ///
+    /// The std::vector<RestartValue> contains fields which have been calculated
+    //  by the simulator for each all global and LGR grids. POS = 0 is the global
+    //  grid, POS = 1 is LGR1, and so on. Each position corresponds to a
+    //  RestartValue of the associated grid.
+    ///
+    /// If the optional argument write_double is sent in as true the fields
+    /// in the solution container will be written in double precision.  OPM
+    /// can load and restart from files with double precision keywords, but
+    /// this is non-standard, and other third party applications might choke
+    /// on those.
+    ///
+    /// \param[in] action_state Run's current action system state.  Expected
+    /// to hold current values for the number of times each action has run
+    /// and the time of each action's last run.
+    ///
+    /// \param[in] wtest_state Run's current WTEST information.  Expected to
+    /// hold information about those wells that have been closed due to
+    /// various runtime conditions.
+    ///
+    /// \param[in] st Summary values from most recent call to
+    /// Summary::eval().  Source object from which to retrieve the values
+    /// that go into the output buffer.
+    ///
+    /// \param[in] udq_state Run's current UDQ values.
+    ///
+    /// \param[in] report_step One-based report step index for which to
+    /// create output.  This is the number that gets incorporated into the
+    /// file extension of "separate" restart and summary output files (e.g.,
+    /// .X000n and .S000n).  Report_step=0 represents time zero.
+    ///
+    /// \param[in] isSubstep Whether or not we're being called in the middle
+    /// of a report step.  We typically output summary file information only
+    /// for sub-steps.
+    ///
+    /// \param[in] seconds_elapsed Elapsed physical (i.e., simulated) time
+    /// in seconds since start of simulation.
+    ///
+    /// \param[in] value Collection of per-cell, per-well, per-connection,
+    /// per-segment, per-group, and per-aquifer dynamic results pertaining
+    /// to this time point. The vector must contain one `RestartValue` per grid,
+    /// including the global grid. POS = 0 is the global grid, POS = 1
+    ///  is LGR1, and so on.
+    ///
+    /// \param[in] write_double Whether or not to output simulation results
+    /// as double precision floating-point numbers.  Compatibility
+    /// considerations may dictate outputting arrays as single precision
+    /// ("float") only.
+    ///
+    /// \param[in] time_step Current time step index.  Passing something
+    /// different than nullopt will generate restart file output even for
+    /// time steps that are not report steps.  This is a poor-man's
+    /// approximation of the BASIC=6 setting of the RPTRST keyword.
+    void writeTimeStep(const Action::State&      action_state,
+                       const WellTestState&      wtest_state,
+                       const SummaryState&       st,
+                       const UDQState&           udq_state,
+                       int                       report_step,
+                       bool                      isSubstep,
+                       double                    seconds_elapsed,
+                       std::vector<RestartValue> value,
+                       const bool                write_double = false,
+                       std::optional<int>        time_step = std::nullopt);
+
+
     /// Load per-cell solution data and wellstate from restart file.
     ///
     /// Name of restart file and report step from which to restart inferred

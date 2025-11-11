@@ -425,41 +425,38 @@ void generate_opm_rst(Setup& base_setup,
                     true);
     }
 
-
-
-
-void check_content_existence(const std::vector<std::string>& lgr_grid_list, EclIO::ERst& rst)
+void check_grid_content_existence(std::string gridname, EclIO::ERst& rst, bool contains_lgr_well = true)
 {
-    for (const auto& lgrname : lgr_grid_list) {
-        BOOST_CHECK_EQUAL(rst.hasArray("LGRHEADI", 1, lgrname), true);
-        BOOST_CHECK_EQUAL(rst.hasArray("LGRHEADQ", 1, lgrname), true);
-        BOOST_CHECK_EQUAL(rst.hasArray("LGRHEADD", 1, lgrname), true);
+        BOOST_CHECK_EQUAL(rst.hasArray("LGRHEADI", 1, gridname), true);
+        BOOST_CHECK_EQUAL(rst.hasArray("LGRHEADQ", 1, gridname), true);
+        BOOST_CHECK_EQUAL(rst.hasArray("LGRHEADD", 1, gridname), true);
 
-        BOOST_CHECK_EQUAL(rst.hasArray("INTEHEAD", 1, lgrname), true);
-        BOOST_CHECK_EQUAL(rst.hasArray("LOGIHEAD", 1, lgrname), true);
-        BOOST_CHECK_EQUAL(rst.hasArray("DOUBHEAD", 1, lgrname), true);
+        BOOST_CHECK_EQUAL(rst.hasArray("INTEHEAD", 1, gridname), true);
+        BOOST_CHECK_EQUAL(rst.hasArray("LOGIHEAD", 1, gridname), true);
+        BOOST_CHECK_EQUAL(rst.hasArray("DOUBHEAD", 1, gridname), true);
 
-        // temporary disabled until aggregateGroupData LGR is fixed
-        // BOOST_CHECK_EQUAL(rst.hasArray("IGRP", 1, lgrname), true);
-        // BOOST_CHECK_EQUAL(rst.hasArray("SGRP", 1, lgrname), true);
-        // BOOST_CHECK_EQUAL(rst.hasArray("XGRP", 1, lgrname), true);
-        // BOOST_CHECK_EQUAL(rst.hasArray("ZGRP", 1, lgrname), true);
+        BOOST_CHECK_EQUAL(rst.hasArray("IGRP", 1, gridname), true);
+        BOOST_CHECK_EQUAL(rst.hasArray("SGRP", 1, gridname), true);
+        BOOST_CHECK_EQUAL(rst.hasArray("XGRP", 1, gridname), true);
+        BOOST_CHECK_EQUAL(rst.hasArray("ZGRP", 1, gridname), true);
 
-        BOOST_CHECK_EQUAL(rst.hasArray("IWEL", 1, lgrname), true);
-        BOOST_CHECK_EQUAL(rst.hasArray("SWEL", 1, lgrname), true);
-        BOOST_CHECK_EQUAL(rst.hasArray("XWEL", 1, lgrname), true);
-        BOOST_CHECK_EQUAL(rst.hasArray("ZWEL", 1, lgrname), true);
-        BOOST_CHECK_EQUAL(rst.hasArray("LGWEL", 1, lgrname), true);
-        BOOST_CHECK_EQUAL(rst.hasArray("ICON", 1, lgrname), true);
-        BOOST_CHECK_EQUAL(rst.hasArray("SCON", 1, lgrname), true);
+        if (contains_lgr_well) {
+            BOOST_CHECK_EQUAL(rst.hasArray("IWEL", 1, gridname), true);
+            BOOST_CHECK_EQUAL(rst.hasArray("SWEL", 1, gridname), true);
+            BOOST_CHECK_EQUAL(rst.hasArray("XWEL", 1, gridname), true);
+            BOOST_CHECK_EQUAL(rst.hasArray("ZWEL", 1, gridname), true);
+            BOOST_CHECK_EQUAL(rst.hasArray("LGWEL", 1,gridname), true);
+            BOOST_CHECK_EQUAL(rst.hasArray("ICON", 1, gridname), true);
+            BOOST_CHECK_EQUAL(rst.hasArray("SCON", 1, gridname), true);
+        }
 
-        BOOST_CHECK_EQUAL(rst.hasArray("PRESSURE", 1, lgrname), true);
-        BOOST_CHECK_EQUAL(rst.hasArray("SWAT", 1, lgrname), true);
-        BOOST_CHECK_EQUAL(rst.hasArray("SGAS", 1, lgrname), true);
-        BOOST_CHECK_EQUAL(rst.hasArray("RS", 1, lgrname), true);
+        BOOST_CHECK_EQUAL(rst.hasArray("PRESSURE", 1, gridname), true);
+        BOOST_CHECK_EQUAL(rst.hasArray("SWAT", 1, gridname), true);
+        BOOST_CHECK_EQUAL(rst.hasArray("SGAS", 1, gridname), true);
+        BOOST_CHECK_EQUAL(rst.hasArray("RS", 1, gridname), true);
     }
 
-}
+
 
 } // Anonymous namespace
 
@@ -485,7 +482,8 @@ BOOST_AUTO_TEST_CASE(LGRHEADERS_3WELLS)
 
         {
             auto expected_lgrnames_global = base_setup.grid.get_all_lgr_labels();
-            check_content_existence(expected_lgrnames_global,rst);
+            check_grid_content_existence("LGR1",rst);
+            check_grid_content_existence("LGR2",rst);
             //INTEHEAD GLOBAL GRID
             {
                 using Ix = ::Opm::RestartIO::Helpers::VectorItems::intehead;
@@ -568,7 +566,8 @@ BOOST_AUTO_TEST_CASE(LGRHEADERS_DIFFGROUP)
 
         {
             auto expected_lgrnames_global = base_setup.grid.get_all_lgr_labels();
-            check_content_existence(expected_lgrnames_global,rst);
+            check_grid_content_existence("LGR1", rst);
+            check_grid_content_existence("LGR2", rst, false); // LGR2 has no wells
             //INTEHEAD GLOBAL GRID
             {
                 using Ix = ::Opm::RestartIO::Helpers::VectorItems::intehead;
@@ -650,7 +649,11 @@ BOOST_AUTO_TEST_CASE(LGRHEADERS_GROUPEX01)
 
         {
             auto expected_lgrnames_global = base_setup.grid.get_all_lgr_labels();
-            check_content_existence(expected_lgrnames_global,rst);
+
+            check_grid_content_existence("LGR1",rst);
+            check_grid_content_existence("LGR2",rst, false); // LGR2 has no wells
+            check_grid_content_existence("LGR3",rst, false);
+
             //INTEHEAD GLOBAL GRID
             {
                 using Ix = ::Opm::RestartIO::Helpers::VectorItems::intehead;
