@@ -17,6 +17,7 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <opm/input/eclipse/EclipseState/Grid/GridDims.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 
 #include <opm/common/ErrorMacros.hpp>
@@ -2153,7 +2154,6 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         }
     }
 
-
     void EclipseGrid::init_children_host_cells(bool logical){
         if (logical)
             init_children_host_cells_logical();
@@ -2356,11 +2356,17 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
             }
             return global_ind_active;
         };
+
+        auto retrieve_lowIJK_coord = [this](const std::array<int,3> ijk){
+            std::array<double,8>  X,Y,Z;
+            getCellCorners(ijk, this->getNXYZ(), X, Y, Z);
+            return std::array<double,3> {X[0], Y[0], Z[0]};
+        };
+
          for (std::size_t index = 0; index < lgr_input.size(); index++) {
             const auto& lgr_cell = lgr_input.getLgr(index);
             if (this->lgr_label == lgr_cell.PARENT_NAME()){
                 lgr_grid = true;
-                // auto [i_list, j_list, k_list] = lgr_cell.parent_cellsIJK();
                 auto [i_list, j_list, k_list] = VectorUtil::generate_cartesian_product(lgr_cell.I1(), lgr_cell.I2(),
                                                                                                                            lgr_cell.J1(), lgr_cell.J2(),
                                                                                                                            lgr_cell.K1(), lgr_cell.K2());
@@ -2370,9 +2376,26 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
                 std::array<int,3> lowIJK = {lgr_cell.I1(), lgr_cell.J1(),lgr_cell.K1()};
                 std::array<int,3> upIJK  = {lgr_cell.I2(), lgr_cell.J2(),lgr_cell.K2()};
 
+                int multX = upIJK[0]+1 - lowIJK[0];
+                int multY = upIJK[1]+1 - lowIJK[1];
+                int multZ = upIJK[2]+1 - lowIJK[2];
+
+                auto [dx, dy, dz] = this->getCellDims(lgr_cell.I1(), lgr_cell.J1(), lgr_cell.K1());
+                dx /= static_cast<double>(lgr_cell.NX());
+                dy /= static_cast<double>(lgr_cell.NY());
+                dz /= static_cast<double>(lgr_cell.NZ());
+
+                // this assumes that dx, dy, dz are constant over the refinement region
+                dx = dx * static_cast<double>(multX);
+                dy = dy * static_cast<double>(multY);
+                dz = dz * static_cast<double>(multZ);
+
                 lgr_children_cells.emplace_back(lgr_cell.NAME(), this->lgr_label,
-                                                lgr_cell.NX(), lgr_cell.NY(), lgr_cell.NZ(), father_lgr_index,
-                                                lowIJK,upIJK);
+                                                lgr_cell.NX(), lgr_cell.NY(), lgr_cell.NZ(),
+                                                dx, dy, dz, father_lgr_index, lowIJK,upIJK);
+                std::array<double,3> coord_trans = retrieve_lowIJK_coord(lowIJK);
+
+                lgr_children_cells.back().setLGRCoordinates(coord_trans);
 
                 lgr_children_cells.back().create_lgr_cells_tree(lgr_input);
             }
@@ -2666,9 +2689,10 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
 namespace Opm {
     EclipseGridLGR::EclipseGridLGR(const std::string& self_label, const std::string& father_label_,
                                    std::size_t nx, std::size_t ny, std::size_t nz,
+                                   double dx, double dy, double dz,
                                    const vec_size_t& father_lgr_index, const std::array<int,3>& low_fatherIJK_,
                                    const std::array<int,3>& up_fatherIJK_)
-    : EclipseGrid(nx,ny,nz), father_label(father_label_), father_global(father_lgr_index),
+    : EclipseGrid(nx, ny, nz, dx, dy, dz), father_label(father_label_), father_global(father_lgr_index),
                              low_fatherIJK(low_fatherIJK_), up_fatherIJK(up_fatherIJK_)
     {
         init_father_global();
@@ -2782,6 +2806,23 @@ namespace Opm {
         m_coord = coord;
         m_zcorn = zcorn;
     }
+
+    void EclipseGridLGR::setLGRCoordinates(const std::array<double,3>& coord_trans)
+    {
+        // Apply translation to coordinates and zcorn
+        std::size_t index = 0;
+        std::transform(m_coord.begin(), m_coord.end(), m_coord.begin(),
+            [&index, &coord_trans](double val) {
+                double result = val + ((index % 2 == 0) ? coord_trans[0] : coord_trans[1]);
+                ++index;
+                return result;
+            });
+        std::transform(m_zcorn.begin(), m_zcorn.end(), m_zcorn.begin(), [&index, &coord_trans](double val) {
+            double result = val + coord_trans[2];
+            return result;
+        });
+    }
+
 
     void EclipseGridLGR::init_father_global()
     {

@@ -443,6 +443,9 @@ namespace Opm {
                        size_t nx,
                        size_t ny,
                        size_t nz,
+                       double dx,
+                       double dy,
+                       double dz,
                        const vec_size_t& father_lgr_index,
                        const std::array<int, 3>& low_fatherIJK_,
                        const std::array<int, 3>& up_fatherIJK_);
@@ -496,6 +499,8 @@ namespace Opm {
                                 const std::vector<double>& zcorn) override;
 
         void set_lgr_refinement(const std::vector<double>&, const std::vector<double>&);
+
+        void setLGRCoordinates(const std::array<double,3>& coord_trans);
 
     private:
         void init_father_global();
