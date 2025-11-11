@@ -236,7 +236,8 @@ public:
     ///
     /// The std::vector<RestartValue> contains fields which have been calculated
     //  by the simulator for each all global and LGR grids. POS = 0 is the global
-    //  grid, POS = 1 is LGR1, and so on.
+    //  grid, POS = 1 is LGR1, and so on. Each position corresponds to a
+    //  RestartValue of the associated grid.
     ///
     /// If the optional argument write_double is sent in as true the fields
     /// in the solution container will be written in double precision.  OPM
@@ -341,7 +342,6 @@ public:
     /// \return Collection of per-cell, per-well, per-connection,
     /// per-segment, per-group, and per-aquifer dynamic results at
     /// simulation restart time.
-
     RestartValue loadRestart(Action::State&                 action_state,
                              SummaryState&                  summary_state,
                              const std::vector<RestartKey>& solution_keys,
