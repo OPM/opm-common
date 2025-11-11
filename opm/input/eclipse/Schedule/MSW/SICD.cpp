@@ -186,19 +186,20 @@ namespace Opm {
         return m_scaling_factor.value();
     }
 
-    void SICD::updateScalingFactor(const double outlet_segment_length,
+    bool SICD::updateScalingFactor(const double outlet_segment_length,
                                    const double completion_length)
     {
+        double scaling_factor;
         if (m_method_flow_scaling < 0) {
             if (m_length > 0.) { // icd length / outlet segment length
-                m_scaling_factor = m_length / outlet_segment_length;
+                scaling_factor = m_length / outlet_segment_length;
             }
             else if (m_length < 0.) {
-                m_scaling_factor = std::abs(m_length);
+                scaling_factor = std::abs(m_length);
             }
             else { // icd length is zero, not sure the proper way to handle this yet
                 throw std::logic_error {
-                    "Zero-value length of SICD is found when calcuating scaling factor"
+                    "Zero-value length of SICD is found when calculating scaling factor"
                 };
             }
         }
@@ -209,10 +210,10 @@ namespace Opm {
                 };
             }
 
-            m_scaling_factor = m_length / outlet_segment_length;
+            scaling_factor = m_length / outlet_segment_length;
         }
         else if (m_method_flow_scaling == 1) {
-            m_scaling_factor = std::abs(m_length);
+            scaling_factor = std::abs(m_length);
         }
         else if (m_method_flow_scaling == 2) {
             if (completion_length == 0.) {
@@ -222,13 +223,19 @@ namespace Opm {
                 };
             }
 
-            m_scaling_factor = m_length / completion_length;
+            scaling_factor = m_length / completion_length;
         }
         else {
             throw std::logic_error {
                 "Invalid method specified to calculate flow scaling factor for SICD"
             };
         }
+
+        if (!this->m_scaling_factor.has_value() || this->m_scaling_factor.value() != scaling_factor) {
+            this->m_scaling_factor = scaling_factor;
+            return true;
+        }
+        return false;
     }
 
     bool SICD::operator==(const SICD& data) const

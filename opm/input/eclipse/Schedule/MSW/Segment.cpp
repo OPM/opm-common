@@ -411,15 +411,17 @@ namespace Opm {
     {
         if (this->isSpiralICD()) {
             auto sicd = this->spiralICD();
-            sicd.updateScalingFactor(outlet_segment_length, completion_length);
-            this->updateSpiralICD(sicd);
-            return true;
+            if (sicd.updateScalingFactor(outlet_segment_length, completion_length) ) {
+                this->updateSpiralICD(sicd);
+                return true;
+            }
         }
         if (this->isAICD()) {
             auto aicd = this->autoICD();
-            aicd.updateScalingFactor(outlet_segment_length, completion_length);
-            this->updateAutoICD(aicd);
-            return true;
+            if ( aicd.updateScalingFactor(outlet_segment_length, completion_length) ) {
+                this->updateAutoICD(aicd);
+                return true;
+            }
         }
         return false;
     }
