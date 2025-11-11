@@ -81,7 +81,7 @@ namespace Opm {
 
         const SimulationConfig& getSimulationConfig() const;
         virtual const EclipseGrid& getInputGrid() const;
-        void set_lgr_refinement(std::string lgr_label, std::vector<double> coord, std::vector<double> zcorn);
+        void set_lgr_refinement(const std::string& lgr_label, const std::vector<double>& coord, const std::vector<double>& zcorn);
 
         const FaultCollection& getFaults() const;
         const TransMult& getTransMult() const;
