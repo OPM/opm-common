@@ -1894,6 +1894,99 @@ PVDG
     check_is_close(pvdg, expect_pvdg);
 }
 
+BOOST_AUTO_TEST_CASE (PVDG_Padded)
+{
+    const auto rspec = std::string { R"(RUNSPEC
+DIMENS
+  10 10 10 /
+
+TITLE
+  Test PVDG Output with padding
+
+GAS
+
+METRIC
+
+TABDIMS
+-- NTSFUN  NTPVT  NSSFUN  NPPVT  NTFIP  NRPVT
+   1*      4      1*      3     1*     1*
+/
+)"  };
+
+
+    const auto props = std::string { R"(
+PVDG
+    2.0      2.0      0.01
+   22.0      0.05     0.02
+   50.0      0.02     0.03 /
+    1.0      2.0      0.01
+   21.0      0.05     0.02
+   50.0      0.02     0.03 /
+    0.5      4.0      0.01
+   20.5      0.05     0.02
+   50.0      0.02     0.03 /
+    1.0      0.1      0.01
+   21.0      0.05     0.02
+   50.0      0.02     0.03 /
+)"  };
+
+    const auto es = parse(rspec, props);
+
+    auto tables = ::Opm::Tables(es.getUnits());
+    tables.addPVTTables(es);
+
+    const auto& tabdims = tables.tabdims();
+    const auto& tab     = tables.tab();
+
+    const auto ibpvtg = tabdims[ Ix::PvtgMainStart ] - 1;
+    const auto nppvtg = tabdims[ Ix::NumPvtgPressNodes ];
+    const auto ntpvtg = tabdims[ Ix::NumPvtgTables ];
+    const auto ncol   = 5;
+
+    // Pg table defaulted
+    BOOST_CHECK_EQUAL(tabdims[Ix::PvtgPressStart], 1);
+    BOOST_CHECK_EQUAL(tabdims[Ix::NumPvtgCompNodes], 1);
+
+    BOOST_CHECK_EQUAL(nppvtg, 5);
+    BOOST_CHECK_EQUAL(ntpvtg, 4);
+
+    const auto pvdg = std::vector<double> {
+        &tab[ ibpvtg ] + 0,
+        &tab[ ibpvtg ] + ntpvtg*nppvtg*ncol
+    };
+
+    const auto expect_pvdg = makeTable(5, {
+        // Pg                     1/Bg                      1/(Bg*mu_g)               d(1/Bg)/dPg               d(1/(Bg*mu_g))/dPg
+        //
+        // Table 1: padded with p at 10x highest B, and at 1 bar.
+                        1,  0.04545454545454546,     25.5244755244755,                2e+20,                2e+20,
+        1.538461538461538,                 0.05,    28.07692307692305, 0.008441558441558446,    4.740259740259736,
+                        2,                  0.5,                   50,   0.9749999999999998,    47.50000000000004,
+                       22,                   20,                 1000,   0.9749999999999999,    47.49999999999999,
+        50.00000000000001,                   50,    1666.666666666667,    1.071428571428571,     23.8095238095238,
+        // Table 2: padded at 0 bar, even while having entry at 1 bar.
+                        0,   0.4545454545454545,    45.45454545454545,                2e+20,                2e+20,
+                        1,                  0.5,                   50,  0.04545454545454547,    4.545454545454547,
+                       21,                   20,                 1000,                0.975,                 47.5,
+        50.00000000000001,                   50,    1666.666666666667,     1.03448275862069,    22.98850574712642,
+                    2e+20,                2e+20,                2e+20,                2e+20,                2e+20,
+        // Table 3: padded at 0 bar, even with entry at 0.5 bar.
+                        0,   0.2272727272727273,    22.72727272727273,                2e+20,                2e+20,
+                      0.5,                 0.25,                   25,  0.04545454545454547,    4.545454545454547,
+                     20.5,                   20,                 1000,               0.9875,                48.75,
+        50.00000000000001,                   50,    1666.666666666667,    1.016949152542373,    22.59887005649717,
+                    2e+20,                2e+20,                2e+20,                2e+20,                2e+20,
+        // Table 4: no padding necessary.
+                        1,                   10,                 1000,                2e+20,                2e+20,
+                       21,                   20,                 1000,                  0.5,                    0,
+        50.00000000000001,                   50,    1666.666666666667,     1.03448275862069,    22.98850574712642,
+                    2e+20,                2e+20,                2e+20,                2e+20,                2e+20,
+                    2e+20,                2e+20,                2e+20,                2e+20,                2e+20,
+    });
+
+    check_is_close(pvdg, expect_pvdg);
+}
+
 BOOST_AUTO_TEST_CASE (PVDG_Exceed_Tabdims_Limits)
 {
     // This checks that Flow's extended table allocation scheme does what
