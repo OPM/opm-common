@@ -418,7 +418,7 @@ WSEGSICD
 
 BOOST_AUTO_TEST_CASE(SICDAfterCOMPSEGS)
 {
-// This test uses small excerpts from reservoir simulation decks in OPM-tests.
+// This test uses/modified small excerpts from reservoir simulation decks in OPM-tests.
 // Source files: wells.sch3, wells.sch5
 // Available from:
 //   https://github.com/OPM/opm-tests/blob/master/model3/include/wells.sch3
@@ -547,24 +547,28 @@ WSEGSICD
 COMPSEGS
  'OP1' /
 --   I     J     K BRNCH       MD_S       MD_E   DIR IJK_E       CDEP  CLEN SEGNO
-     4     4    15     2 2647.89796 2727.90295    1*    1*       2643    1*    16 /
-     4     5    15     3 2727.90295 2807.90789    1*    1*       2643    1*    17 /
-     4     6    15     4 2807.90789 2887.91282    1*    1*       2643    1*    18 /
-     4     7    15     5 2887.91282 2967.91779    1*    1*       2643    1*    19 /
-     4     8    15     6 2967.91779 3047.92274    1*    1*       2643    1*    20 /
-     4     9    15     7 3047.92274 3127.92769    1*    1*       2643    1*    21 /
-     4    10    15     8 3127.92769 3207.93264    1*    1*       2643    1*    22 /
-     4    11    15     9 3207.93264 3287.93758    1*    1*       2643    1*    23 /
-     4    12    15    10 3287.93758 3367.94254    1*    1*       2643    1*    24 /
-     4    13    15    11 3367.94254  3447.9475    1*    1*       2643    1*    25 /
-     4    14    15    12  3447.9475 3527.95244    1*    1*       2643    1*    26 /
-     4    15    15    13 3527.95244  3607.9574    1*    1*       2643    1*    27 /
-     4    16    15    14  3607.9574 3687.96236    1*    1*       2643    1*    28 /
+     4     4    15     2 2647 2727    1*    1*       2643    1*    16 /
+     4     5    15     3 2727 2807    1*    1*       2643    1*    17 /
+     4     6    15     4 2807 2887    1*    1*       2643    1*    18 /
+     4     7    15     5 2887 2967    1*    1*       2643    1*    19 /
+     4     8    15     6 2967 3047    1*    1*       2643    1*    20 /
+     4     9    15     7 3047 3127   1*    1*       2643    1*    21 /
+     4    10    15     8 3127 3207    1*    1*       2643    1*    22 /
+     4    11    15     9 3207 3287    1*    1*       2643    1*    23 /
+     4    12    15    10 3287 3367    1*    1*       2643    1*    24 /
+     4    13    15    11 3367  3447    1*    1*       2643    1*    25 /
+     4    14    15    12  3447 3527    1*    1*       2643    1*    26 /
+     4    15    15    13 3527  3607    1*    1*       2643    1*    27 /
+     4    16    15    14  3607 3687    1*    1*       2643    1*    28 /
 /
 
 WCONPROD
 --WELL OP/SH   CTL       ORAT       WRAT       GRAT       LRAT       RRAT        BHP        THP   VFP        ALQ
  'OP1'  OPEN  ORAT       3000       3000     300000       3000         1*         60          3*     /
+/
+
+DATES             -- 2
+ 10  JUL 2008 /
 /
 
 WELSPECS
@@ -676,74 +680,157 @@ COMPSEGS
      4    16    15    14  3607.9574 3687.96236    1*    1*       2643    1*    28 /
 /
 
+
+-- modified some connection lengths to test the scaling factor
+COMPSEGS
+ 'OP1' /
+--   I     J     K BRNCH       MD_S       MD_E   DIR IJK_E       CDEP  CLEN SEGNO
+     4     4    15     2 2647 2687    1*    1*       2643    1*    16 / -- modified connection length - 40
+     4     5    15     3 2687 2727    1*    1*       2643    1*    17 / -- modified connection length - 40
+     4     6    15     4 2727 2767    1*    1*       2643    1*    18 / -- modified connection length - 40
+     4     7    15     5 2767 2847    1*    1*       2643    1*    19 / -- modified connection length - 80
+     4     8    15     6 2847 3047    1*    1*       2643    1*    20 / -- modified connection length - 200
+     4     9    15     7 3047 3127    1*    1*       2643    1*    21 /
+     4    10    15     8 3127 3207    1*    1*       2643    1*    22 /
+     4    11    15     9 3207 3287    1*    1*       2643    1*    23 /
+     4    12    15    10 3287 3367    1*    1*       2643    1*    24 /
+     4    13    15    11 3367  3447    1*    1*       2643    1*    25 /
+     4    14    15    12  3447 3527    1*    1*       2643    1*    26 /
+     4    15    15    13 3527  3607    1*    1*       2643    1*    27 /
+     4    16    15    14  3607 3687    1*    1*       2643    1*    28 /
+/
+
 WCONPROD
 --WELL OP/SH   CTL       ORAT       WRAT       GRAT       LRAT       RRAT        BHP        THP   VFP        ALQ
  'OP2'  OPEN  ORAT       3000       3000     300000       3000         1*        120          3* /
 /
 
-DATES             -- 2
+DATES             -- 3
  10  JUL 2008 /
 /
 )");
     const auto es    = ::Opm::EclipseState { deck };
     const auto sched = ::Opm::Schedule { deck, es };// std::make_shared<const ::Opm::Python>() };
-    const auto& well_op1 = sched.getWell("OP1", 1);
-    BOOST_CHECK(well_op1.isMultiSegment());
-    const auto& segment_set = well_op1.getSegments();
-    BOOST_CHECK_EQUAL(segment_set.size(), 28U);
     {
-        const auto& segment = segment_set.getFromSegmentNumber(15);
-        BOOST_CHECK(!segment.isSpiralICD());
-    }
-    {
-        const auto& segment = segment_set.getFromSegmentNumber(16);
-        BOOST_CHECK(segment.isSpiralICD());
-        BOOST_CHECK(!segment.isAICD());
-    }
-    {
-        const auto& segment = segment_set.getFromSegmentNumber(17);
-        BOOST_CHECK(segment.isSpiralICD());
-        BOOST_CHECK(!segment.isAICD());
-    }
-    {
-        const auto& segment = segment_set.getFromSegmentNumber(27);
-        BOOST_CHECK(segment.isSpiralICD());
-        BOOST_CHECK(!segment.isAICD());
-    }
-    {
-        const auto& segment = segment_set.getFromSegmentNumber(28);
-        BOOST_CHECK(segment.isSpiralICD());
-        BOOST_CHECK(!segment.isAICD());
+        // check well OP1 at the first report step
+        const auto& well_op1 = sched.getWell("OP1", 1);
+        BOOST_CHECK(well_op1.isMultiSegment());
+        const auto& segment_set = well_op1.getSegments();
+        BOOST_CHECK_EQUAL(segment_set.size(), 28U);
+        {
+            const auto& segment = segment_set.getFromSegmentNumber(15);
+            BOOST_CHECK(!segment.isSpiralICD());
+        }
+        {
+            const auto& segment = segment_set.getFromSegmentNumber(16);
+            BOOST_CHECK(segment.isSpiralICD());
+            BOOST_CHECK_EQUAL(segment.spiralICD().scalingFactor(), 12./80.);
+            BOOST_CHECK(!segment.isAICD());
+        }
+        {
+            const auto& segment = segment_set.getFromSegmentNumber(17);
+            BOOST_CHECK(segment.isSpiralICD());
+            BOOST_CHECK_EQUAL(segment.spiralICD().scalingFactor(), 12./80.);
+            BOOST_CHECK(!segment.isAICD());
+        }
+        {
+            const auto& segment = segment_set.getFromSegmentNumber(27);
+            BOOST_CHECK(segment.isSpiralICD());
+            BOOST_CHECK_EQUAL(segment.spiralICD().scalingFactor(), 12./80.);
+            BOOST_CHECK(!segment.isAICD());
+        }
+        {
+            const auto& segment = segment_set.getFromSegmentNumber(28);
+            BOOST_CHECK(segment.isSpiralICD());
+            BOOST_CHECK_EQUAL(segment.spiralICD().scalingFactor(), 12./80.);
+            BOOST_CHECK(!segment.isAICD());
+        }
     }
 
 
-    const auto& well_op2 = sched.getWell("OP2", 1);
-    BOOST_CHECK(well_op2.isMultiSegment());
-    const auto& segment_set2 = well_op2.getSegments();
-    BOOST_CHECK_EQUAL(segment_set2.size(), 28U);
     {
-        const auto& segment = segment_set2.getFromSegmentNumber(15);
-        BOOST_CHECK(!segment.isAICD());
+        // check well OP2 at the second report step
+        const auto& well_op2 = sched.getWell("OP2", 2);
+        BOOST_CHECK(well_op2.isMultiSegment());
+        const auto& segment_set2 = well_op2.getSegments();
+        BOOST_CHECK_EQUAL(segment_set2.size(), 28U);
+        {
+            const auto& segment = segment_set2.getFromSegmentNumber(15);
+            BOOST_CHECK(!segment.isAICD());
+        }
+        {
+            const auto& segment = segment_set2.getFromSegmentNumber(16);
+            BOOST_CHECK(segment.isAICD());
+            BOOST_CHECK(!segment.isSpiralICD());
+        }
+        {
+            const auto& segment = segment_set2.getFromSegmentNumber(17);
+            BOOST_CHECK(segment.isAICD());
+            BOOST_CHECK(!segment.isSpiralICD());
+        }
+        {
+            const auto& segment = segment_set2.getFromSegmentNumber(27);
+            BOOST_CHECK(segment.isAICD());
+            BOOST_CHECK(!segment.isSpiralICD());
+        }
+        {
+            const auto& segment = segment_set2.getFromSegmentNumber(28);
+            BOOST_CHECK(segment.isAICD());
+            BOOST_CHECK(!segment.isSpiralICD());
+        }
     }
     {
-        const auto& segment = segment_set2.getFromSegmentNumber(16);
-        BOOST_CHECK(segment.isAICD());
-        BOOST_CHECK(!segment.isSpiralICD());
-    }
-    {
-        const auto& segment = segment_set2.getFromSegmentNumber(17);
-        BOOST_CHECK(segment.isAICD());
-        BOOST_CHECK(!segment.isSpiralICD());
-    }
-    {
-        const auto& segment = segment_set2.getFromSegmentNumber(27);
-        BOOST_CHECK(segment.isAICD());
-        BOOST_CHECK(!segment.isSpiralICD());
-    }
-    {
-        const auto& segment = segment_set2.getFromSegmentNumber(28);
-        BOOST_CHECK(segment.isAICD());
-        BOOST_CHECK(!segment.isSpiralICD());
+        // check well OP1 at the second report step
+        const auto& well_op1 = sched.getWell("OP1", 2);
+        BOOST_CHECK(well_op1.isMultiSegment());
+        const auto& segment_set = well_op1.getSegments();
+        BOOST_CHECK_EQUAL(segment_set.size(), 28U);
+        {
+            const auto& segment = segment_set.getFromSegmentNumber(15);
+            BOOST_CHECK(!segment.isSpiralICD());
+        }
+        {
+            const auto& segment = segment_set.getFromSegmentNumber(16);
+            BOOST_CHECK(segment.isSpiralICD());
+            BOOST_CHECK_EQUAL(segment.spiralICD().scalingFactor(), 12./40.);
+            BOOST_CHECK(!segment.isAICD());
+        }
+        {
+            const auto& segment = segment_set.getFromSegmentNumber(17);
+            BOOST_CHECK(segment.isSpiralICD());
+            BOOST_CHECK_EQUAL(segment.spiralICD().scalingFactor(), 12./40.);
+            BOOST_CHECK(!segment.isAICD());
+        }
+        {
+            const auto& segment = segment_set.getFromSegmentNumber(18);
+            BOOST_CHECK(segment.isSpiralICD());
+            BOOST_CHECK_EQUAL(segment.spiralICD().scalingFactor(), 12./40.);
+            BOOST_CHECK(!segment.isAICD());
+        }
+        {
+            const auto& segment = segment_set.getFromSegmentNumber(19);
+            BOOST_CHECK(segment.isSpiralICD());
+            BOOST_CHECK_EQUAL(segment.spiralICD().scalingFactor(), 12./80.);
+            BOOST_CHECK(!segment.isAICD());
+        }
+        {
+            const auto& segment = segment_set.getFromSegmentNumber(20);
+            BOOST_CHECK(segment.isSpiralICD());
+            BOOST_CHECK_EQUAL(segment.spiralICD().scalingFactor(), 12./200.);
+            BOOST_CHECK(!segment.isAICD());
+        }
+        {
+            const auto& segment = segment_set.getFromSegmentNumber(27);
+            BOOST_CHECK(segment.isSpiralICD());
+            BOOST_CHECK_EQUAL(segment.spiralICD().scalingFactor(), 12./80.);
+            BOOST_CHECK(!segment.isAICD());
+        }
+        {
+            const auto& segment = segment_set.getFromSegmentNumber(28);
+            BOOST_CHECK(segment.isSpiralICD());
+            BOOST_CHECK_EQUAL(segment.spiralICD().scalingFactor(), 12./80.);
+            BOOST_CHECK(!segment.isAICD());
+        }
     }
 }
 

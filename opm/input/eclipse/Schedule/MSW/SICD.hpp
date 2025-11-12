@@ -83,7 +83,7 @@ namespace Opm {
         double maxViscosityRatio() const;
         int methodFlowScaling() const;
 
-        void updateScalingFactor(const double segment_length, const double completion_length);
+        bool updateScalingFactor(const double segment_length, const double completion_length);
         double scalingFactor() const;
         int ecl_status() const;
         bool operator==(const SICD& data) const;
@@ -118,7 +118,7 @@ namespace Opm {
 
         // scaling factor is the only one can not be gotten from deck
         // directly, needs to be updated afterwards
-        std::optional<double> m_scaling_factor { 1.0 };
+        std::optional<double> m_scaling_factor { std::nullopt };
     };
 
 } // namespace Opm
