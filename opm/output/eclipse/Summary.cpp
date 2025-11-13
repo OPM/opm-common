@@ -1633,6 +1633,24 @@ quantity roew(const fn_args& args) {
     return { oil_prod / initial_inplace.get( region_name, Opm::Inplace::Phase::OIL, args.num ) , measure::identity };
 }
 
+quantity roe(const fn_args& args) {
+    const quantity zero = { 0, measure::identity };
+    const auto& region_name = std::get<std::string>(*args.extra_data);
+    if (!args.initial_inplace.has_value())
+        return zero;
+
+    const auto& initial_inplace = args.initial_inplace.value();
+    if (!initial_inplace.has( region_name, Opm::Inplace::Phase::OIL, args.num))
+        return zero;
+
+    const auto initial = initial_inplace.get( region_name, Opm::Inplace::Phase::OIL, args.num );
+    if (initial < 1.0e-15)
+        return zero;
+
+    const auto current = args.inplace.get( region_name, Opm::Inplace::Phase::OIL, args.num );
+    return { (initial - current) / initial, measure::identity };
+}
+
 template <bool injection = true>
 quantity temperature(const fn_args& args)
 {
@@ -3132,6 +3150,7 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "RGPT"  , mul( region_rate< rt::gas, producer >, duration ) },
     { "RWPT"  , mul( region_rate< rt::wat, producer >, duration ) },
     { "RHPV"  , rhpv },
+    { "ROE"   , roe },
 
     // Segment summary vectors for multi-segmented wells.
     { "SDENM", segment_density<Opm::data::SegmentPhaseDensity::Item::Mixture> },
