@@ -790,7 +790,11 @@ namespace {
                 zatracer.push_back(unit_system.name(UnitSystem::measure::temperature));
                 rstFile.write("ZATRACER", zatracer);
                 const auto& data = vector.data<double>();
-                rstFile.write("TEMP", std::vector<float> {data.begin(), data.end()});
+                if (write_double) {
+                    rstFile.write(tracer_rst_name, data);
+                } else {
+                    rstFile.write(tracer_rst_name, std::vector<float> {data.begin(), data.end()});
+                }
                 continue;
             }
 
