@@ -703,8 +703,6 @@ Opm::RestartIO::InteHEAD::variousParam(const int version,
     // ih_200: Usage unknown, value fixed across reference cases.
     this->data_[ih_200] = 1;
 
-    // NSTRA2  = 240
-    this->data_[NSTRA2] = 1 + (num_tracer_comps > 0) + num_tracer_comps;
     return *this;
 }
 

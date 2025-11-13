@@ -1338,36 +1338,26 @@ namespace {
         smry.update_well_var(well, "WWITH", xwel[VI::XWell::index::HistWatInjTotal]);
         smry.update_well_var(well, "WGITH", xwel[VI::XWell::index::HistGasInjTotal]);
 
+        // Tracer production/injection totals
         const auto num_tracer_comps = tracer_dims.water_tracers() + 2* (tracer_dims.oil_tracers() + tracer_dims.gas_tracers()) + (isTemp ? 1 : 0);
         auto offset = VI::XWell::index::TracerOffset + num_tracer_comps; // First num_tracer_comps are the rates
-        // Production totals
-        if (isTemp) {
-            smry.update_well_var(well, "WTPTHEA", xwel[offset++]);
-        }
-        for (const auto& tracer : tracer_config) {
-            if (tracer.phase == Opm::Phase::WATER) {
-                smry.update_well_var(well, fmt::format("WTPT{}", tracer.name), xwel[offset++]);
-            } else {
-                const auto free_total = xwel[offset++];
-                const auto solution_total = xwel[offset++];
-                smry.update_well_var(well, fmt::format("WTPTF{}", tracer.name), free_total);
-                smry.update_well_var(well, fmt::format("WTPTS{}", tracer.name), solution_total);
-                smry.update_well_var(well, fmt::format("WTPT{}", tracer.name), free_total + solution_total);
+        for (const auto* type : { "P", "I", }) { // Production followed by injection
+            if (isTemp) {
+                smry.update_well_var(well, fmt::format("WT{}THEA", type), xwel[offset++]);
             }
-        }
-        // Injection totals
-        if (isTemp) {
-            smry.update_well_var(well, "WTITHEA", xwel[offset++]);
-        }
-        for (const auto& tracer : tracer_config) {
-            if (tracer.phase == Opm::Phase::WATER) {
-                smry.update_well_var(well, fmt::format("WTIT{}", tracer.name), xwel[offset++]);
-            } else {
-                const auto free_total = xwel[offset++];
-                const auto solution_total = xwel[offset++];
-                smry.update_well_var(well, fmt::format("WTITF{}", tracer.name), free_total);
-                smry.update_well_var(well, fmt::format("WTITS{}", tracer.name), solution_total);
-                smry.update_well_var(well, fmt::format("WTIT{}", tracer.name), free_total + solution_total);
+
+            for (const auto& tracer : tracer_config) {
+                if (tracer.phase == Opm::Phase::WATER) {
+                    smry.update_well_var(well, fmt::format("WT{}T{}", type, tracer.name), xwel[offset++]);
+                }
+                else {
+                    const auto free_total = xwel[offset++];
+                    const auto solution_total = xwel[offset++];
+
+                    smry.update_well_var(well, fmt::format("WT{}TF{}", type, tracer.name), free_total);
+                    smry.update_well_var(well, fmt::format("WT{}TS{}", type, tracer.name), solution_total);
+                    smry.update_well_var(well, fmt::format("WT{}T{}", type, tracer.name), free_total + solution_total);
+                }
             }
         }
     }
