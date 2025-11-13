@@ -259,4 +259,16 @@ function build_module_full {
       test $? -eq 0 || exit 1
     fi
   done
+
+  # Optionally generate a failure report.
+  # The report is always generated from the 'mpi' configuration data
+  # since that is the configuration we have reference data for.
+  if grep -q "failure_report" <<< $ghprbCommentBody
+  then
+    $WORKSPACE/deps/opm-simulators/tests/make_failure_report.sh \
+    $WORKSPACE/deps/opm-tests \
+    $WORKSPACE/mpi/build-opm-simulators \
+    $WORKSPACE/mpi/build-opm-simulators
+    test $? -eq 0 || exit 1
+  fi
 }
