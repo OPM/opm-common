@@ -77,6 +77,8 @@ public:
     }
 
     [[nodiscard]] short activeToCanonicalCompIdx(unsigned activeCompIdx) const {
+        // assert to remove an analyzer warning, at the current stage, numPhases == numComponents for black oil
+        assert(numActivePhases_ <= numComponents);
         if (activeCompIdx >= numActivePhases()) {
             return activeCompIdx; // e.g. for solvent
         }
