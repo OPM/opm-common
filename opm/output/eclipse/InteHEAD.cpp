@@ -681,7 +681,7 @@ Opm::RestartIO::InteHEAD::tuningParam(const TuningPar& tunpar)
 Opm::RestartIO::InteHEAD&
 Opm::RestartIO::InteHEAD::variousParam(const int version,
                                        const int iprog,
-                                       const int num_tracer_comps)
+                      [[maybe_unused]] const int num_tracer_comps)
 {
     this->data_[VERSION] = version;
     this->data_[IPROG]   = iprog;
