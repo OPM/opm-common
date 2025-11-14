@@ -441,13 +441,17 @@ namespace Opm {
         this->m_transMult.applyNumericalAquifer(numerical_aquifer.allAquiferCellIds());
     }
 
-    void EclipseState::applyMULTXYZ() {
-        static const std::vector<std::pair<std::string, FaceDir::DirEnum>> multipliers = {{"MULTX" , FaceDir::XPlus},
-                                                                                          {"MULTX-", FaceDir::XMinus},
-                                                                                          {"MULTY" , FaceDir::YPlus},
-                                                                                          {"MULTY-", FaceDir::YMinus},
-                                                                                          {"MULTZ" , FaceDir::ZPlus},
-                                                                                          {"MULTZ-", FaceDir::ZMinus}};
+    void EclipseState::applyMULTXYZ()
+    {
+        using namespace std::string_literals;
+        const auto multipliers = std::array{
+           std::pair{"MULTX"s , FaceDir::XPlus},
+           std::pair{"MULTX-"s, FaceDir::XMinus},
+           std::pair{"MULTY"s , FaceDir::YPlus},
+           std::pair{"MULTY-"s, FaceDir::YMinus},
+           std::pair{"MULTZ"s , FaceDir::ZPlus},
+           std::pair{"MULTZ-"s, FaceDir::ZMinus},
+        };
 
         const auto& fp = this->field_props;
         for (const auto& [field, face] : multipliers) {
