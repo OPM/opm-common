@@ -10,8 +10,8 @@ $ python3 generateunittests.py
 
 -To compile run the unit tests:
 
-$ make ml_model_test
-$ ./bin/ml_model_test
+$ make test_ml_model
+$ ./bin/test_ml_model
 TEST tensor_test
 TEST dense_1x1
 TEST dense_10x1
