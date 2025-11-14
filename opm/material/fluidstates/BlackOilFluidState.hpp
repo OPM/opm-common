@@ -305,7 +305,7 @@ public:
      */
     OPM_HOST_DEVICE void setEnthalpy(unsigned phaseIdx, const Scalar& value)
     {
-        assert(enableTemperature || enableEnergy);
+        assert(enableEnergy);
 
         (*enthalpy_)[canonicalToStoragePhaseIndex_(phaseIdx, fluidSystem())] = value;
     }
