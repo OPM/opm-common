@@ -83,6 +83,13 @@ void HandlerContext::compsegs_handled(const std::string& well_name)
     }
 }
 
+void HandlerContext::comptraj_handled(const std::string& well_name)
+{
+    if (comptraj_wells) {
+        comptraj_wells->insert(well_name);
+    }
+}
+
 ScheduleState& HandlerContext::state()
 {
     return schedule_.snapshots[currentStep];
