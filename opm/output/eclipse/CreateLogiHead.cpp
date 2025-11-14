@@ -53,7 +53,7 @@ namespace {
               tabMgr.getPvcdoTable().empty());
 
         return Opm::RestartIO::LogiHEAD{}
-            .variousParam(false, false, wsd.maxSegmentedWells(), hystPar.active())
+            .variousParam(false, false, wsd.maxSegmentedWells(), hystPar.active(), rspec.temp())
             .pvtModel(pvt)
             .network(rspec.networkDimensions().maxNONodes())
             ;

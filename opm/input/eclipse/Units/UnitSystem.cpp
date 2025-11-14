@@ -208,7 +208,7 @@ namespace {
         "BARSA",
         "BARS",
         "K",
-        "C",
+        "DEG C",
         "CP",
         "MD",
         "SM2",
