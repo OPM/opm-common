@@ -2,8 +2,11 @@
 #include <opm/io/eclipse/EclFile.hpp>
 #include <opm/io/eclipse/EclOutput.hpp>
 
+#include <opm/output/eclipse/VectorItems/intehead.hpp>
+
 #include <cctype>
 #include <chrono>
+#include <ctime>
 #include <filesystem>
 #include <iomanip>
 #include <iostream>
@@ -119,6 +122,35 @@ void writeArrayList(std::vector<EclEntry>& arrayList, ERst file1, int reportStep
         eclArrType arrType = std::get<1>(arrayList[index]);
         writeArray(name, arrType, file1, index , reportStepNumber, outFile);
     }
+}
+
+void listReportSteps(const std::string& filename)
+{
+    using Ix = Opm::RestartIO::Helpers::VectorItems::intehead;
+
+    ERst rst1(filename);
+    rst1.loadData("INTEHEAD");
+
+    for (const auto& seqn : rst1.listOfReportStepNumbers()) {
+        const auto& inteh = rst1.getRestartData<int>("INTEHEAD", seqn, 0);
+
+        auto timepoint = std::tm{};
+
+        timepoint.tm_year = inteh[Ix::YEAR]  - 1900;
+        timepoint.tm_mon  = inteh[Ix::MONTH] -    1;
+        timepoint.tm_mday = inteh[Ix::DAY];
+
+        timepoint.tm_hour = inteh[Ix::IHOURZ];
+        timepoint.tm_min  = inteh[Ix::IMINTS];
+        timepoint.tm_sec  = inteh[Ix::ISECND] / (1000 * 1000);
+
+        std::cout << "Report step number: "
+                  << std::setfill(' ') << std::setw(4) << seqn
+                  << "   Date: "
+                  << std::put_time(&timepoint, "%d-%b-%Y %T") << '\n';
+    }
+
+    std::cout << std::endl;
 }
 
 void printHelp() {
@@ -287,8 +319,8 @@ int main(int argc, char **argv)
     }
 
     // start reading
-    auto start = std::chrono::system_clock::now();
-    std::string filename = argv[argOffset];
+    const auto start = std::chrono::system_clock::now();
+    const auto filename = std::string { argv[argOffset] };
 
     EclFile file1(filename);
     bool formattedOutput = file1.formattedInput() ? false : true;
@@ -348,27 +380,12 @@ int main(int argc, char **argv)
     }
 
     if (listProperties) {
-        if (extension == ".UNRST") {
-            ERst rst1(filename);
-            rst1.loadData("INTEHEAD");
-
-            std::vector<int> reportStepList = rst1.listOfReportStepNumbers();
-
-            for (auto seqn : reportStepList) {
-                std::vector<int> inteh = rst1.getRestartData<int>("INTEHEAD", seqn, 0);
-
-                std::cout << "Report step number: "
-                          << std::setfill(' ') << std::setw(4) << seqn << "   Date: " << inteh[66] << "/"
-                          << std::setfill('0') << std::setw(2) << inteh[65] << "/"
-                          << std::setfill('0') << std::setw(2) << inteh[64] << std::endl;
-            }
-
-            std::cout << std::endl;
-        }
-        else {
-            std::cout << "\n!ERROR, option -l only only available for unified restart files (*.UNRST) " << std::endl;
+        if (extension != ".UNRST") {
+            std::cerr << "\n!ERROR, option -l available only for unified restart files (*.UNRST)" << std::endl;
             exit(1);
         }
+
+        listReportSteps(filename);
 
         return 0;
     }
