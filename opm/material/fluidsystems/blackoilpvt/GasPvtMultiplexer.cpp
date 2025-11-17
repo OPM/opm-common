@@ -74,12 +74,11 @@ GasPvtMultiplexer<Scalar, enableThermal>::initFromState(const EclipseState& eclS
 {
     if (!eclState.runspec().phases().active(Phase::GAS))
         return;
-
     if (eclState.runspec().co2Storage())
         setApproach(GasPvtApproach::Co2Gas);
     else if (eclState.runspec().h2Storage())
         setApproach(GasPvtApproach::H2Gas);
-    else if (enableThermal && eclState.getSimulationConfig().isThermal())
+    else if (enableThermal && (eclState.getSimulationConfig().isTemp() || eclState.getSimulationConfig().isThermal()))
         setApproach(GasPvtApproach::ThermalGas);
     else if (!eclState.getTableManager().getPvtgwTables().empty()
              && !eclState.getTableManager().getPvtgTables().empty())
@@ -90,7 +89,6 @@ GasPvtMultiplexer<Scalar, enableThermal>::initFromState(const EclipseState& eclS
         setApproach(GasPvtApproach::DryGas);
     else if (!eclState.getTableManager().getPvtgwTables().empty())
         setApproach(GasPvtApproach::DryHumidGas);
-
 
     OPM_GAS_PVT_MULTIPLEXER_CALL(pvtImpl.initFromState(eclState, schedule), break);
 }

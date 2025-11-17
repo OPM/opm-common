@@ -58,6 +58,7 @@ namespace Opm {
         bool hasVAPOIL() const;
         bool hasVAPWAT() const;
         bool isThermal() const;
+        bool isTemp() const;
         EnergyModules energyModuleType() const;
         bool useEnthalpy() const;
         bool isDiffusive() const;
