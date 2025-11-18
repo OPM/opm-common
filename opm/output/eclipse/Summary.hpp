@@ -56,25 +56,97 @@ namespace Opm::out {
 class Summary
 {
 public:
-    /// Collection of named scalar quantities such as field-wide pressures,
-    /// rates, and volumes, as well as performance related quantities such
-    /// as CPU time, number of linear iterations &c.
-    using GlobalProcessParameters = std::map<std::string, double>;
-
-    /// Collection of named per-region quantities.  Name may or may not
-    /// include a region set identifier.
-    using RegionParameters = std::map<std::string, std::vector<double>>;
-
-    /// Collection of per-block (cell) quantities.
+    /// Layer of indirection for transferring dynamic state objects into
+    /// vector calculation engine.
     ///
-    /// Identifier associates a summary keyword and a block ID (linearised
-    /// Cartesian cell index).
-    using BlockValues = std::map<std::pair<std::string, int>, double>;
+    /// These values are typically computed by the simulator and the engine
+    /// derives vectors from the values.
+    struct DynamicSimulatorState
+    {
+        /// Collection of named scalar quantities such as field-wide pressures,
+        /// rates, and volumes, as well as performance related quantities such
+        /// as CPU time, number of linear iterations &c.
+        using GlobalProcessParameters = std::map<std::string, double>;
 
-    /// Collection of named inter-region flows (rates and cumulatives)
-    ///
-    /// Name may or may not include a region set identifier.
-    using InterRegFlowValues = std::unordered_map<std::string, data::InterRegFlowMap>;
+        /// Collection of named per-region quantities.  Name may or may not
+        /// include a region set identifier.
+        using RegionParameters = std::map<std::string, std::vector<double>>;
+
+        /// Collection of per-block (cell) quantities.
+        ///
+        /// Identifier associates a summary keyword and a block ID (linearised
+        /// Cartesian cell index).
+        using BlockValues = std::map<std::pair<std::string, int>, double>;
+
+        /// Collection of named inter-region flows (rates and cumulatives)
+        ///
+        /// Name may or may not include a region set identifier.
+        using InterRegFlowValues = std::unordered_map<std::string, data::InterRegFlowMap>;
+
+        /// Volumes of fluids-in-place.
+        struct VolumeInPlace
+        {
+            /// Current fluids-in-place.
+            ///
+            /// Nullptr if unavailable.
+            const Inplace* current {nullptr};
+
+            /// Initial fluids-in-place.
+            ///
+            /// Nullptr if unavailable.
+            const Inplace* initial {nullptr};
+        };
+
+        /// Dynamic state variables at the well, connection, and segment levels.
+        ///
+        /// Nullptr if unavailable.
+        const data::Wells* well_solution {nullptr};
+
+        /// Well-block averaged pressures.
+        ///
+        /// Goes into the WBP* and WPI* summary quantities.
+        ///
+        /// Nullptr if unavailable.
+        const data::WellBlockAveragePressures* wbp {nullptr};
+
+        /// Dynamic state at the group and network levels (e.g., mode of
+        /// control and node pressures).
+        ///
+        /// Nullptr if unavailable.
+        const data::GroupAndNetworkValues* group_and_nwrk_solution {nullptr};
+
+        /// Aggregate information about the simulation process such as
+        /// number of linear and non-linear iterations or CPU time.
+        ///
+        /// Nullptr if unavailable.
+        const GlobalProcessParameters* single_values {nullptr};
+
+        /// Per region dynamic state such as pressures.
+        ///
+        /// Nullptr if unavailable.
+        const RegionParameters* region_values {nullptr};
+
+        /// Block (cell) level dynamic state values.
+        ///
+        /// Selection configured by the SummaryConfig object.  Nullptr if
+        /// unavailable.
+        const BlockValues* block_values {nullptr};
+
+        /// Aquifer level dynamic state values.
+        ///
+        /// Pressures, flow rates and cumulatives.  Nullptr if unavailable.
+        const data::Aquifers* aquifer_values {nullptr};
+
+        /// Inter-region flows (rates and cumulatives).
+        ///
+        /// Nullptr if unavailable.
+        const InterRegFlowValues* interreg_flows {nullptr};
+
+        /// Fluid phase volumes in place at the field and region levels.
+        ///
+        /// Selection configured by SummaryConfig object.
+        VolumeInPlace inplace{};
+    };
 
     /// Constructor
     ///
@@ -187,19 +259,10 @@ public:
     /// \param[in] interreg_flows Inter-region flows (rates and
     /// cumulatives).  Empty if no such values exist (e.g., in unit tests)
     /// or if no such summary vectors have been requested.
-    void eval(SummaryState&                          summary_state,
-              const int                              report_step,
-              const double                           secs_elapsed,
-              const data::Wells&                     well_solution,
-              const data::WellBlockAveragePressures& wbp,
-              const data::GroupAndNetworkValues&     group_and_nwrk_solution,
-              const GlobalProcessParameters&         single_values,
-              const std::optional<Inplace>&          initial_inplace,
-              const Inplace&                         inplace,
-              const RegionParameters&                region_values = {},
-              const BlockValues&                     block_values  = {},
-              const data::Aquifers&                  aquifers_values = {},
-              const InterRegFlowValues&              interreg_flows = {}) const;
+    void eval(const int                    report_step,
+              const double                 secs_elapsed,
+              const DynamicSimulatorState& values,
+              SummaryState&                summary_state) const;
 
     /// Write all current summary vector buffers to output files.
     ///

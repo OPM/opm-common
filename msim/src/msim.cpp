@@ -188,15 +188,11 @@ void msim::run_step(const WellTestState& wtest_state,
 
         seconds_elapsed += time_step;
 
-        io.summary().eval(this->st,
-                          report_step,
-                          seconds_elapsed,
-                          well_data,
-                          /* wbp = */ {},
-                          group_nwrk_data,
-                          /* sing_values = */ {},
-                          /* initial_inplace = */ {},
-                          /* inplace = */ {});
+        auto values = out::Summary::DynamicSimulatorState{};
+        values.well_solution = &well_data;
+        values.group_and_nwrk_solution = &group_nwrk_data;
+
+        io.summary().eval(report_step, seconds_elapsed, values, this->st);
 
         this->schedule.getUDQConfig(report_step - 1)
             .eval(report_step,

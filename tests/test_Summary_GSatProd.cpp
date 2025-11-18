@@ -177,22 +177,17 @@ END
         cse.es.runspec().udqParams().undefinedValue()
     };
 
-    const auto xw = Opm::data::Wells{};
-    const auto wbp = Opm::data::WellBlockAveragePressures{};
-    const auto grp_nwrk = Opm::data::GroupAndNetworkValues{};
-    const auto single = Opm::out::Summary::GlobalProcessParameters{};
+    // No dynamic simulator state in this test.
+    const auto values = Opm::out::Summary::DynamicSimulatorState{};
 
-    const auto ivip = std::optional<Opm::Inplace>{};
-    const auto cvip = Opm::Inplace{};
+    smry.eval(/* report_step = */ 0, /* secs_elapsed = */ 0.0*day(), values, st);
+    smry.add_timestep(st, /* report_step = */ 0, /* ministep_id = */ 0, /* isSubstep = */ false);
 
-    smry.eval(st, 0, 0*day(), xw, wbp, grp_nwrk, single, ivip, cvip);
-    smry.add_timestep(st, 0, 0, false);
+    smry.eval(/* report_step = */ 1, /* secs_elapsed = */ 1.0*day(), values, st);
+    smry.add_timestep(st, /* report_step = */ 1, /* ministep_id = */ 1, /* isSubstep = */ false);
 
-    smry.eval(st, 1, 1*day(), xw, wbp, grp_nwrk, single, ivip, cvip);
-    smry.add_timestep(st, 1, 1, false);
-
-    smry.eval(st, 2, 2*day(), xw, wbp, grp_nwrk, single, ivip, cvip);
-    smry.add_timestep(st, 2, 2, false);
+    smry.eval(/* report_step = */ 2, /* secs_elapsed = */ 2.0*day(), values, st);
+    smry.add_timestep(st, /* report_step = */ 2, /* ministep_id = */ 2, /* isSubstep = */ false);
 
     smry.write();
 
@@ -327,21 +322,18 @@ END
     };
 
     const auto xw = wellSol();
-    const auto wbp = Opm::data::WellBlockAveragePressures{};
-    const auto grp_nwrk = Opm::data::GroupAndNetworkValues{};
-    const auto single = Opm::out::Summary::GlobalProcessParameters{};
+    auto values = Opm::out::Summary::DynamicSimulatorState{};
 
-    const auto ivip = std::optional<Opm::Inplace>{};
-    const auto cvip = Opm::Inplace{};
+    values.well_solution = &xw;
 
-    smry.eval(st, 0, 0*day(), xw, wbp, grp_nwrk, single, ivip, cvip);
-    smry.add_timestep(st, 0, 0, false);
+    smry.eval(/* report_step = */ 0, /* secs_elapsed = */ 0.0*day(), values, st);
+    smry.add_timestep(st, /* report_step = */ 0, /* ministep_id = */ 0, /* isSubstep = */ false);
 
-    smry.eval(st, 1, 1*day(), xw, wbp, grp_nwrk, single, ivip, cvip);
-    smry.add_timestep(st, 1, 1, false);
+    smry.eval(/* report_step = */ 1, /* secs_elapsed = */ 1.0*day(), values, st);
+    smry.add_timestep(st, /* report_step = */ 1, /* ministep_id = */ 1, /* isSubstep = */ false);
 
-    smry.eval(st, 2, 2*day(), xw, wbp, grp_nwrk, single, ivip, cvip);
-    smry.add_timestep(st, 2, 2, false);
+    smry.eval(/* report_step = */ 2, /* secs_elapsed = */ 2.0*day(), values, st);
+    smry.add_timestep(st, /* report_step = */ 2, /* ministep_id = */ 2, /* isSubstep = */ false);
 
     smry.write();
 
@@ -485,21 +477,18 @@ END
     };
 
     const auto xw = wellSol();
-    const auto wbp = Opm::data::WellBlockAveragePressures{};
-    const auto grp_nwrk = Opm::data::GroupAndNetworkValues{};
-    const auto single = Opm::out::Summary::GlobalProcessParameters{};
+    auto values = Opm::out::Summary::DynamicSimulatorState{};
 
-    const auto ivip = std::optional<Opm::Inplace>{};
-    const auto cvip = Opm::Inplace{};
+    values.well_solution = &xw;
 
-    smry.eval(st, 0, 0*day(), xw, wbp, grp_nwrk, single, ivip, cvip);
-    smry.add_timestep(st, 0, 0, false);
+    smry.eval(/* report_step = */ 0, /* secs_elapsed = */ 0.0*day(), values, st);
+    smry.add_timestep(st, /* report_step = */ 0, /* ministep_id = */ 0, /* isSubstep = */ false);
 
-    smry.eval(st, 1, 1*day(), xw, wbp, grp_nwrk, single, ivip, cvip);
-    smry.add_timestep(st, 1, 1, false);
+    smry.eval(/* report_step = */ 1, /* secs_elapsed = */ 1.0*day(), values, st);
+    smry.add_timestep(st, /* report_step = */ 1, /* ministep_id = */ 1, /* isSubstep = */ false);
 
-    smry.eval(st, 2, 2*day(), xw, wbp, grp_nwrk, single, ivip, cvip);
-    smry.add_timestep(st, 2, 2, false);
+    smry.eval(/* report_step = */ 2, /* secs_elapsed = */ 2.0*day(), values, st);
+    smry.add_timestep(st, /* report_step = */ 2, /* ministep_id = */ 2, /* isSubstep = */ false);
 
     smry.write();
 
@@ -638,21 +627,18 @@ END
     };
 
     const auto xw = wellSol();
-    const auto wbp = Opm::data::WellBlockAveragePressures{};
-    const auto grp_nwrk = Opm::data::GroupAndNetworkValues{};
-    const auto single = Opm::out::Summary::GlobalProcessParameters{};
+    auto values = Opm::out::Summary::DynamicSimulatorState{};
 
-    const auto ivip = std::optional<Opm::Inplace>{};
-    const auto cvip = Opm::Inplace{};
+    values.well_solution = &xw;
 
-    smry.eval(st, 0, 0*day(), xw, wbp, grp_nwrk, single, ivip, cvip);
-    smry.add_timestep(st, 0, 0, false);
+    smry.eval(/* report_step = */ 0, /* secs_elapsed = */ 0.0*day(), values, st);
+    smry.add_timestep(st, /* report_step = */ 0, /* ministep_id = */ 0, /* isSubstep = */ false);
 
-    smry.eval(st, 1, 1*day(), xw, wbp, grp_nwrk, single, ivip, cvip);
-    smry.add_timestep(st, 1, 1, false);
+    smry.eval(/* report_step = */ 1, /* secs_elapsed = */ 1.0*day(), values, st);
+    smry.add_timestep(st, /* report_step = */ 1, /* ministep_id = */ 1, /* isSubstep = */ false);
 
-    smry.eval(st, 2, 2*day(), xw, wbp, grp_nwrk, single, ivip, cvip);
-    smry.add_timestep(st, 2, 2, false);
+    smry.eval(/* report_step = */ 2, /* secs_elapsed = */ 2.0*day(), values, st);
+    smry.add_timestep(st, /* report_step = */ 2, /* ministep_id = */ 2, /* isSubstep = */ false);
 
     smry.write();
 
@@ -792,21 +778,18 @@ END
     };
 
     const auto xw = wellSol();
-    const auto wbp = Opm::data::WellBlockAveragePressures{};
-    const auto grp_nwrk = Opm::data::GroupAndNetworkValues{};
-    const auto single = Opm::out::Summary::GlobalProcessParameters{};
+    auto values = Opm::out::Summary::DynamicSimulatorState{};
 
-    const auto ivip = std::optional<Opm::Inplace>{};
-    const auto cvip = Opm::Inplace{};
+    values.well_solution = &xw;
 
-    smry.eval(st, 0, 0*day(), xw, wbp, grp_nwrk, single, ivip, cvip);
-    smry.add_timestep(st, 0, 0, false);
+    smry.eval(/* report_step = */ 0, /* secs_elapsed = */ 0.0*day(), values, st);
+    smry.add_timestep(st, /* report_step = */ 0, /* ministep_id = */ 0, /* isSubstep = */ false);
 
-    smry.eval(st, 1, 1*day(), xw, wbp, grp_nwrk, single, ivip, cvip);
-    smry.add_timestep(st, 1, 1, false);
+    smry.eval(/* report_step = */ 1, /* secs_elapsed = */ 1.0*day(), values, st);
+    smry.add_timestep(st, /* report_step = */ 1, /* ministep_id = */ 1, /* isSubstep = */ false);
 
-    smry.eval(st, 2, 2*day(), xw, wbp, grp_nwrk, single, ivip, cvip);
-    smry.add_timestep(st, 2, 2, false);
+    smry.eval(/* report_step = */ 2, /* secs_elapsed = */ 2.0*day(), values, st);
+    smry.add_timestep(st, /* report_step = */ 2, /* ministep_id = */ 2, /* isSubstep = */ false);
 
     smry.write();
 
@@ -955,21 +938,18 @@ END
     };
 
     const auto xw = wellSol();
-    const auto wbp = Opm::data::WellBlockAveragePressures{};
-    const auto grp_nwrk = Opm::data::GroupAndNetworkValues{};
-    const auto single = Opm::out::Summary::GlobalProcessParameters{};
+    auto values = Opm::out::Summary::DynamicSimulatorState{};
 
-    const auto ivip = std::optional<Opm::Inplace>{};
-    const auto cvip = Opm::Inplace{};
+    values.well_solution = &xw;
 
-    smry.eval(st, 0, 0*day(), xw, wbp, grp_nwrk, single, ivip, cvip);
-    smry.add_timestep(st, 0, 0, false);
+    smry.eval(/* report_step = */ 0, /* secs_elapsed = */ 0.0*day(), values, st);
+    smry.add_timestep(st, /* report_step = */ 0, /* ministep_id = */ 0, /* isSubstep = */ false);
 
-    smry.eval(st, 1, 1*day(), xw, wbp, grp_nwrk, single, ivip, cvip);
-    smry.add_timestep(st, 1, 1, false);
+    smry.eval(/* report_step = */ 1, /* secs_elapsed = */ 1.0*day(), values, st);
+    smry.add_timestep(st, /* report_step = */ 1, /* ministep_id = */ 1, /* isSubstep = */ false);
 
-    smry.eval(st, 2, 2*day(), xw, wbp, grp_nwrk, single, ivip, cvip);
-    smry.add_timestep(st, 2, 2, false);
+    smry.eval(/* report_step = */ 2, /* secs_elapsed = */ 2.0*day(), values, st);
+    smry.add_timestep(st, /* report_step = */ 2, /* ministep_id = */ 2, /* isSubstep = */ false);
 
     smry.write();
 
@@ -1125,21 +1105,18 @@ END
     };
 
     const auto xw = wellSol();
-    const auto wbp = Opm::data::WellBlockAveragePressures{};
-    const auto grp_nwrk = Opm::data::GroupAndNetworkValues{};
-    const auto single = Opm::out::Summary::GlobalProcessParameters{};
+    auto values = Opm::out::Summary::DynamicSimulatorState{};
 
-    const auto ivip = std::optional<Opm::Inplace>{};
-    const auto cvip = Opm::Inplace{};
+    values.well_solution = &xw;
 
-    smry.eval(st, 0, 0*day(), xw, wbp, grp_nwrk, single, ivip, cvip);
-    smry.add_timestep(st, 0, 0, false);
+    smry.eval(/* report_step = */ 0, /* secs_elapsed = */ 0.0*day(), values, st);
+    smry.add_timestep(st, /* report_step = */ 0, /* ministep_id = */ 0, /* isSubstep = */ false);
 
-    smry.eval(st, 1, 1*day(), xw, wbp, grp_nwrk, single, ivip, cvip);
-    smry.add_timestep(st, 1, 1, false);
+    smry.eval(/* report_step = */ 1, /* secs_elapsed = */ 1.0*day(), values, st);
+    smry.add_timestep(st, /* report_step = */ 1, /* ministep_id = */ 1, /* isSubstep = */ false);
 
-    smry.eval(st, 2, 2*day(), xw, wbp, grp_nwrk, single, ivip, cvip);
-    smry.add_timestep(st, 2, 2, false);
+    smry.eval(/* report_step = */ 2, /* secs_elapsed = */ 2.0*day(), values, st);
+    smry.add_timestep(st, /* report_step = */ 2, /* ministep_id = */ 2, /* isSubstep = */ false);
 
     smry.write();
 

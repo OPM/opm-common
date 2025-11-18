@@ -269,14 +269,23 @@ BOOST_AUTO_TEST_CASE(group_keywords)
     cfg.ta.makeSubDir( "PATH" );
     cfg.name = "PATH/CASE";
 
-    SummaryState st(TimeService::now(), 0.0);
+    auto writer = out::Summary {
+        cfg.config, cfg.es, cfg.grid, cfg.schedule, cfg.name
+    };
 
-    out::Summary writer(cfg.config, cfg.es, cfg.grid, cfg.schedule, cfg.name);
-    writer.eval(st, 0, 0*day, cfg.wells, cfg.wbp, cfg.grp_nwrk, {}, {}, {}, {});
-    writer.add_timestep(st, 0, 0, false);
+    auto st = SummaryState { TimeService::now(), 0.0 };
 
-    writer.eval(st, 1, 1*day, cfg.wells, cfg.wbp, cfg.grp_nwrk, {}, {}, {}, {});
-    writer.add_timestep(st, 1, 1, false);
+    auto values = out::Summary::DynamicSimulatorState{};
+
+    values.well_solution = &cfg.wells;
+    values.wbp = &cfg.wbp;
+    values.group_and_nwrk_solution = &cfg.grp_nwrk;
+
+    writer.eval(/* report_step = */ 0, /* secs_elapsed = */ 0.0*day, values, st);
+    writer.add_timestep(st, /* report_step = */ 0, /* ministep_id = */ 0, /* isSubstep = */ false);
+
+    writer.eval(/* report_step = */ 1, /* secs_elapsed = */ 1.0*day, values, st);
+    writer.add_timestep(st, /* report_step = */ 1, /* ministep_id = */ 1, /* isSubstep = */ false);
 
     writer.write();
 
