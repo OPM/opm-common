@@ -71,6 +71,12 @@ namespace Opm {
         WellSegments(CompPressureDrop compDrop,
                      const std::vector<Segment>& segments);
         void loadWELSEGS( const DeckKeyword& welsegsKeyword, const UnitSystem& unit_system);
+        explicit WellSegments(const std::string &wname,
+                              std::vector<std::pair<double, double>>& lengths_and_depths,
+                              double diameter, const UnitSystem& unit_system);
+        void addWellSegmentsFromLengthsAndDepths(const std::string &wname,
+                                                 std::vector<std::pair<double, double>>& lengths_and_depths,
+                                                 double diameter, const UnitSystem& unit_system);
 
         static WellSegments serializationTestObject();
 
@@ -120,6 +126,12 @@ namespace Opm {
             serializer(m_comp_pressure_drop);
             serializer(m_segments);
             serializer(segment_number_to_index);
+            serializer(m_length_depth_type);
+        }
+        
+        LengthDepth getLengthDepthType() const 
+        {
+            return this->m_length_depth_type;
         }
 
     private:
@@ -151,6 +163,9 @@ namespace Opm {
         // the mapping from the segment number to the
         // storage index in the vector
         std::map<int, int> segment_number_to_index{};
+
+        // The length/depth type, incremental or absolute
+        LengthDepth m_length_depth_type{LengthDepth::ABS};
     };
 }
 

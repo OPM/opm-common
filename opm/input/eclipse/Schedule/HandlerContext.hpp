@@ -68,6 +68,7 @@ public:
     /// \param wpimult_global_factor_ Global well production index multipliers
     /// \param welsegs_wells_ All wells with a WELSEGS entry for checks.
     /// \param compsegs_wells_ All wells with a COMPSEGS entry for checks.
+    /// \param comptraj_wells_ All wells with a COMPTRAJ entry for checks.
     HandlerContext(Schedule& schedule,
                    const ScheduleBlock& block_,
                    const DeckKeyword& keyword_,
@@ -81,7 +82,8 @@ public:
                    const std::unordered_map<std::string, double>* target_wellpi_,
                    std::unordered_map<std::string, double>& wpimult_global_factor_,
                    WelSegsSet* welsegs_wells_,
-                   std::set<std::string>* compsegs_wells_)
+                   std::set<std::string>* compsegs_wells_,
+                   std::set<std::string>* comptraj_wells_)
         : block(block_)
         , keyword(keyword_)
         , currentStep(currentStep_)
@@ -94,6 +96,7 @@ public:
         , target_wellpi(target_wellpi_)
         , welsegs_wells(welsegs_wells_)
         , compsegs_wells(compsegs_wells_)
+        , comptraj_wells(comptraj_wells_)
         , sim_update(sim_update_)
         , schedule_(schedule)
     {}
@@ -121,6 +124,9 @@ public:
 
     /// \brief Mark that the well occured in a COMPSEGS keyword.
     void compsegs_handled(const std::string& well_name);
+
+    /// \brief Mark that the well occured in a COMPTRAJ keyword.
+    void comptraj_handled(const std::string& well_name);
 
     //! \brief Set exit code.
     void setExitCode(int code);
@@ -208,6 +214,7 @@ private:
     const std::unordered_map<std::string, double>* target_wellpi{nullptr};
     WelSegsSet* welsegs_wells{nullptr};
     std::set<std::string>* compsegs_wells{nullptr};
+    std::set<std::string>* comptraj_wells{nullptr};
     SimulatorUpdate* sim_update{nullptr};
     Schedule& schedule_;
 };
