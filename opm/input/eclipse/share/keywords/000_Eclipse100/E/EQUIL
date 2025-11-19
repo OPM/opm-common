@@ -67,8 +67,7 @@
       "item": 9,
       "name": "OIP_INIT",
       "value_type": "INT",
-      "default": -5,
-      "comment": "Only values less than or equal to zero supported"
+      "default": -5
     },
     {
       "item": 10,
