@@ -56,25 +56,6 @@ int main()
 
     // mixed-precision matrix-vector multiplication
     vmmv3(A,x,y);
-
-    // display matrix
-    printf("A=\n[\n");
-    for(int i=0;i<3;i++)
-    {
-        for(int j=0;j<3;j++) printf(" %+.2f",A[3*i+j]);
-        printf("\n");
-    }
-    printf("]\n\n");
-
-    // display input vector
-    printf("x=\n[\n");
-    for(int i=0;i<3;i++) printf(" %+.2f\n",x[i]);
-    printf("]\n\n");
-
-    // display outout vector
-    printf("y=\n[\n");
-    for(int i=0;i<4;i++) printf(" %+.2f\n",y[i]);
-    printf("]\n\n");
 }
 "
       HAVE_AVX2_EXTENSION)
