@@ -34,6 +34,7 @@
 
 #include <array>
 #include <cstddef>
+#include <fstream>
 #include <filesystem>
 #include <optional>
 #include <string>
@@ -44,6 +45,35 @@
 using namespace Opm;
 
 namespace {
+
+  auto write_coord_to_txt = [](const std::vector<double>& coord, const std::string& filename) {
+    std::ofstream outfile(filename);
+    if (!outfile.is_open()) {
+        throw std::runtime_error("Failed to open file: " + filename);
+    }
+
+    for (const auto& value : coord) {
+        outfile << value << "\n";
+    }
+
+    outfile.close();
+};
+
+std::array<double,3> dimensions_collumn_lgr(){
+    const double i = 500;
+    const double j = 500;
+    const double k = 20;
+    return {i, j, k};
+}
+
+std::tuple<double,double, double, double> solution_nestedLGR(){
+    const double depth_lgr1 = 8335;
+    const double depth_lgr2 = 8335;
+    const double vol_lgr1 = 2222222.222222222;
+    const double vol_lgr2 = 246913.58024691296;
+    return std::make_tuple(depth_lgr1, vol_lgr1, depth_lgr2, vol_lgr2);
+}
+
 
 LgrCollection read_lgr(const std::string& deck_string,
                        const std::size_t nx,
@@ -246,11 +276,23 @@ SCHEDULE
     //  LgrCollection is used to initalize LGR Cells in the Eclipse Grid.
     eclipse_grid_file.init_lgr_cells(lgr_col);
     // LGR COORD and ZCORN is parsed to EclipseGridLGR children cell. (Simulates the process of recieving the LGR refinement.)
-    eclipse_grid_file.set_lgr_refinement("LGR1",coord_l,zcorn_l);
+    const auto& lgr1 = eclipse_grid_file.getLGRCell("LGR1");
+    const auto& coordlgr1 = lgr1.getCOORD();
+    eclipse_grid_file.set_lgr_refinement("LGR1",coordlgr1,zcorn_l);
     // Intialize host_cell numbering.
-    eclipse_grid_file.init_children_host_cells();
-    // Save EclipseGrid.
+    eclipse_grid_file.init_children_host_cells();    // Save EclipseGrid.
+
+    const std::array<double,3> dim_lgr1_calculated = lgr1.getCellDimensions(0,0,0);
+    const std::array<double,3> dim_lgr1_value = dimensions_collumn_lgr();
+
+
+    const double tol = 1e-6;
+    BOOST_CHECK_CLOSE( dim_lgr1_calculated[0] , dim_lgr1_value[0], tol);
+    BOOST_CHECK_CLOSE( dim_lgr1_calculated[1] , dim_lgr1_value[1], tol);
+    BOOST_CHECK_CLOSE( dim_lgr1_calculated[2] , dim_lgr1_value[2], tol);
+
     eclipse_grid_file.save("OPMCARFIN-COLUMN.EGRID",false,vecNNC,units);
+
     // Once the new EGRID is saved, another EclipseGrid Object is created for the sake of comparison.
     std::tie(coord_g_opm, zcorn_g_opm)  = read_cpg_from_egrid("OPMCARFIN-COLUMN.EGRID", "global");
     //  Read LGR CELL COORD and ZCORN from reference simulator output.
@@ -465,12 +507,28 @@ SCHEDULE
     //  LgrCollection is used to initalize LGR Cells in the Eclipse Grid.
     eclipse_grid_file.init_lgr_cells(lgr_col);
     // LGR COORD and ZCORN is parsed to EclipseGridLGR children cell. (Simulates the process of recieving the LGR refinement.)
-    eclipse_grid_file.set_lgr_refinement("LGR1",coord_l1,zcorn_l1);
-    eclipse_grid_file.set_lgr_refinement("LGR2",coord_l2,zcorn_l2);
+
+    const auto& lgr1 = eclipse_grid_file.getLGRCell("LGR1");
+    const auto& coordlgr1 = lgr1.getCOORD();
+    const auto& lgr2 = eclipse_grid_file.getLGRCell("LGR2");
+    const auto& coordlgr2 = lgr2.getCOORD();
+
+
+    eclipse_grid_file.set_lgr_refinement("LGR1",coordlgr1,zcorn_l1);
+    eclipse_grid_file.set_lgr_refinement("LGR2",coordlgr2,zcorn_l2);
     // Intialize host_cell numbering.
     eclipse_grid_file.init_children_host_cells();
     // Save EclipseGrid.
     eclipse_grid_file.save("OPMCARFIN-NESTED.EGRID",false,vecNNC,units);
+    const auto [depth_lgr1, vol_lgr1, depth_lgr2, vol_lgr2] = solution_nestedLGR();
+    const double tol = 1e-6;
+
+    BOOST_CHECK_CLOSE(depth_lgr1, lgr1.getCellDepth(0), tol );
+    BOOST_CHECK_CLOSE(vol_lgr1, lgr1.getCellVolume(0), tol );
+    BOOST_CHECK_CLOSE(depth_lgr2, lgr2.getCellDepth(0), tol );
+    BOOST_CHECK_CLOSE(vol_lgr2, lgr2.getCellVolume(0), tol );
+
+
   }
 
   BOOST_AUTO_TEST_CASE(Test_lgr_host_cells_logical) {
