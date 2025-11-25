@@ -175,6 +175,9 @@ namespace Opm {
         void init_children_host_cells_geometrical(void);
         std::array<int,3> getCellSubdivisionRatioLGR(const std::string&  lgr_tag,
                                                      std::array<int,3>   acum = {1,1,1}) const;
+
+        void perform_refinement();
+
         using GridDims::getGlobalIndex;
         size_t getGlobalIndex(size_t active_index) const;
 
@@ -447,9 +450,9 @@ namespace Opm {
         EclipseGridLGR() = default;
         EclipseGridLGR(const std::string& self_label,
                        const std::string& father_label_,
-                       size_t nx,
-                       size_t ny,
-                       size_t nz,
+                       std::size_t nx,
+                       std::size_t ny,
+                       std::size_t nz,
                        const vec_size_t& father_lgr_index,
                        const std::array<int, 3>& low_fatherIJK_,
                        const std::array<int, 3>& up_fatherIJK_);
@@ -504,6 +507,10 @@ namespace Opm {
                                 const std::vector<double>& zcorn) override;
 
         void set_lgr_refinement(const std::vector<double>&, const std::vector<double>&);
+        void perform_refinement(const std::vector<double>& coord,
+                                const std::vector<double>& zcorn,
+                                const std::array<int,3>& parent_nxyz);
+
 
     private:
         void init_father_global();
@@ -515,7 +522,12 @@ namespace Opm {
         std::array<int, 3> low_fatherIJK {};
         std::array<int, 3> up_fatherIJK {};
         std::vector<int> m_hostnum;
+        std::vector<double> generate_refined_coord(const std::vector<double>& coord,
+                                                   const std::array<int,3>&   parent_nxyz);
 
+        std::vector<double> generate_refined_zcorn(const std::vector<double>& coord,
+                                                   const std::vector<double>& zcorn,
+                                                   const std::array<int,3>&   parent_nxyz);
     };
 
 

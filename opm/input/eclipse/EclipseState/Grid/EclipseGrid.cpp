@@ -2323,6 +2323,15 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         // because the standard algorithm is based on topological information
         // it does not need for the refinement information to be parsed.
         init_children_host_cells();
+        // initialize CPG refinement based parents COORD and ZCORN
+        perform_refinement();
+
+    }
+
+    void EclipseGrid::perform_refinement(){
+        for (auto& cell : lgr_children_cells) {
+            cell.perform_refinement(getCOORD(), getZCORN(), getNXYZ());
+        }
     }
 
     void EclipseGrid::propagateParentIndicesToLGRChildren(int index){
