@@ -27,7 +27,8 @@
       "WMOPR",
       "WMOPT",
       "WMUPR",
-      "WMUPT"
+      "WMUPT",
+      "WWIRFRAC"
   ],
   "size": 1,
   "items": [
