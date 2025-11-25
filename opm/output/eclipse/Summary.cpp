@@ -2513,6 +2513,7 @@ using UnitTable = std::unordered_map<std::string, Opm::UnitSystem::measure>;
 
 static const auto funs = std::unordered_map<std::string, ofun> {
     { "WWIR", rate< rt::wat, injector > },
+    { "WWIRFRAC", rate< rt::wat_frac, injector > },
     { "WOIR", rate< rt::oil, injector > },
     { "WGIR", rate< rt::gas, injector > },
     { "WEIR", rate< rt::energy, injector > },
@@ -2946,6 +2947,12 @@ static const auto funs = std::unordered_map<std::string, ofun> {
       measure::length, injector> },
     { "CFRAVGFW", fracture_connection_quantities<&Opm::data::ConnectionFracture::avg_filter_width,
       measure::length, injector> },
+    { "CFRINJPR", fracture_connection_quantities<&Opm::data::ConnectionFracture::inj_pressure,
+      measure::pressure, injector> },
+    { "CFRINJBH", fracture_connection_quantities<&Opm::data::ConnectionFracture::inj_bhp,
+      measure::pressure, injector> },
+    { "CFRINJRA", fracture_connection_quantities<&Opm::data::ConnectionFracture::inj_wellrate,
+      measure::geometric_volume_rate, injector> },
 
     // Fracture pressure statistics
     { "CFRPMAX", connFracStatistics<&Opm::data::ConnectionFracturing::press,
