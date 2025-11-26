@@ -63,14 +63,6 @@ namespace Opm {
     }
 
 
-    WellSegments::WellSegments(const std::string &wname,
-        std::vector<std::pair<double, double>>& lengths_and_depths,
-        double diameter, const UnitSystem& unit_system)
-    {
-        this->addWellSegmentsFromLengthsAndDepths(wname, lengths_and_depths, diameter, unit_system);
-    }
-
-
     WellSegments WellSegments::serializationTestObject()
     {
         WellSegments result;

@@ -306,14 +306,13 @@ namespace {
         processCOMPSEGS__(compsegs, segments);
         return compsegs;
     }
-}
 
 
     std::pair<WellConnections, WellSegments>
-    processCOMPSEGSfromRecords(const std::vector<Record>& compsegs_vector,
-                    const WellConnections& input_connections,
-                    const WellSegments& input_segments,
-                    const ScheduleGrid& grid)
+    process_compsegs_records(const std::vector<Record>& compsegs_vector,
+                             const WellConnections& input_connections,
+                             const WellSegments& input_segments,
+                             const ScheduleGrid& grid)
     {
             WellSegments new_segment_set = input_segments;
             WellConnections new_connection_set = input_connections;
@@ -348,6 +347,8 @@ namespace {
                                    WellSegments( std::move(new_segment_set)));
     }
 
+}
+
     std::pair<WellConnections, WellSegments>
     processCOMPSEGS(const DeckKeyword& compsegs,
                     const WellConnections& input_connections,
@@ -356,16 +357,16 @@ namespace {
                     const ParseContext& parseContext,
                     ErrorGuard& errors)
     {
-        const auto& compsegs_vector = Compsegs::compsegsFromCOMPSEGSKeyword(compsegs, input_segments, grid, parseContext, errors);
-        return processCOMPSEGSfromRecords(compsegs_vector, input_connections, input_segments, grid);
+        const auto compsegs_vector = compsegsFromCOMPSEGSKeyword(compsegs, input_segments, grid, parseContext, errors);
+        return process_compsegs_records(compsegs_vector, input_connections, input_segments, grid);
     }
 
     std::pair<WellConnections, WellSegments>
-    processCOMPSEGS(std::vector<std::tuple<double, double, std::array<int, 3>>>& segments_md_and_ijk,
-                    const WellSegments& segments,
-                    const WellConnections& input_connections,
-                    const WellSegments& input_segments,
-                    const ScheduleGrid& grid)
+    getConnectionsAndSegmentsFromTrajectory(std::vector<std::tuple<double, double, std::array<int, 3>>>& segments_md_and_ijk,
+                                            const WellSegments& segments,
+                                            const WellConnections& input_connections,
+                                            const WellSegments& input_segments,
+                                            const ScheduleGrid& grid)
     {
         std::vector<Record> compsegs;
 
@@ -382,7 +383,7 @@ namespace {
         }
 
         processCOMPSEGS__(compsegs, segments);
-        return processCOMPSEGSfromRecords(compsegs, input_connections, input_segments, grid);
+        return process_compsegs_records(compsegs, input_connections, input_segments, grid);
     }
 
 namespace {

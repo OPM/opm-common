@@ -600,7 +600,7 @@ void report_welsegs_error(const std::vector<Opm::WelSegsSet::Entry>& segments, s
     }
 }
 
-/// \brief Check whether each MS well has COMPSEGS entry andissue error if not.
+/// \brief Check whether each MS well has COMPSEGS entry and issue error if not.
 /// \param welsegs All wells with a WELSEGS entry together with the location.
 /// \param compsegs All wells with a COMPSEGS entry
 /// \param comptraj All wells with a COMPTRAJ entry

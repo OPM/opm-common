@@ -12,7 +12,8 @@
 
 -- Note: This is a modified version of SPE1CASE1
 -- This model specifies the well trajectories independent of grid indexes
--- This model use keywords WELTRAJ and COMPTRAJ instead of WELSPECS and COMPDAT
+-- This model use keywords WELTRAJ and COMPTRAJ instead of COMPDAT
+-- This model generates multi-segment wells from WELSEGS without segment structure
 
 
 ---------------------------------------------------------------------------

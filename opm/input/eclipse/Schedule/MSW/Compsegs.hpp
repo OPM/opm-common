@@ -59,11 +59,11 @@ namespace Compsegs {
                     ErrorGuard& errors);
 
     std::pair<WellConnections, WellSegments>
-    processCOMPSEGS(std::vector<std::tuple<double, double, std::array<int, 3>>>& segments_md_and_ijk,
-                    const WellSegments& segments,
-                    const WellConnections& input_connections,
-                    const WellSegments& input_segments,
-                    const ScheduleGrid& grid);
+    getConnectionsAndSegmentsFromTrajectory(std::vector<std::tuple<double, double, std::array<int, 3>>>& segments_md_and_ijk,
+                                            const WellSegments& segments,
+                                            const WellConnections& input_connections,
+                                            const WellSegments& input_segments,
+                                            const ScheduleGrid& grid);
 
 
     std::pair<WellConnections, WellSegments>

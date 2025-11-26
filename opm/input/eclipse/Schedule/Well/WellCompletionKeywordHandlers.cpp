@@ -36,8 +36,7 @@
 
 #include <opm/input/eclipse/Parser/ParserKeywords/C.hpp>
 
-#include <external/resinsight/ReservoirDataModel/RigWellLogExtractor.h>
-#include <external/resinsight/ReservoirDataModel/RigWellPath.h>
+#include <external/resinsight/LibGeometry/cvfBoundingBoxTree.h>
 
 
 #include "../HandlerContext.hpp"
@@ -213,7 +212,7 @@ Well {} is not connected to grid - will remain SHUT)",
                     const auto ijk = ecl_grid->getIJK(intersection.globCellIndex);
                     intersections_md_and_ijk.emplace_back(intersection.startMD, intersection.endMD, ijk);
                     double cell_md = 0.5 * (intersection.startMD + intersection.endMD);
-                    double cell_tvd =  wellPathGeometry->interpolatedPointAlongWellPath(cell_md)[2];
+                    double cell_tvd = wellPathGeometry->interpolatedPointAlongWellPath(cell_md)[2];
                     cell_md_and_tvd.emplace_back(cell_md, cell_tvd);
                 }
 
@@ -229,14 +228,14 @@ Well {} is not connected to grid - will remain SHUT)",
                     throw Opm::OpmInputError(msg, handlerContext.keyword.location());
                 }
                 // Generate WELSEGS data:
-                const auto& diameter = record.getItem("DIAMETER").getSIDouble(0);
-                well.addWellSegmentsFromLengthsAndDepths(cell_md_and_tvd, diameter);
+                const auto diameter = record.getItem("DIAMETER").getSIDouble(0);
+                well.addWellSegmentsFromLengthsAndDepths(cell_md_and_tvd, diameter, handlerContext.keyword.location());
                 handlerContext.state().wells.update(std::move(well));
                 handlerContext.record_well_structure_change();
 
                 // Generate COMPSEGS data:
                 well = handlerContext.state().wells.get(name);
-                auto [new_connections, new_segments] = Compsegs::processCOMPSEGS(
+                auto [new_connections, new_segments] = Compsegs::getConnectionsAndSegmentsFromTrajectory(
                     intersections_md_and_ijk, well.getSegments(), well.getConnections(), well.getSegments(), handlerContext.grid
                 );
                 well.updateConnections(std::make_shared<WellConnections>(std::move(new_connections)), false);

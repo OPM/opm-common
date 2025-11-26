@@ -66,8 +66,8 @@ WelSegsSet::intersection(const std::set<std::string>& wells1,
     intersection.reserve(entries_.size());
 
     for (const auto& entry : entries_) {
-        if (std::count(wells1.begin(), wells1.end(), std::get<0>(entry)) &&
-            std::count(wells2.begin(), wells2.end(), std::get<0>(entry))) {
+        const auto& name = std::get<0>(entry);
+        if (wells1.find(name) != wells1.end() && wells2.find(name) != wells2.end()) {
             intersection.push_back(entry);
         }
     }
