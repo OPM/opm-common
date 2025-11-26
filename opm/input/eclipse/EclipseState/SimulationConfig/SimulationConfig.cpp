@@ -111,12 +111,10 @@ namespace Opm {
                 || runspec.hasKeyword<ParserKeywords::H2STORE>() || runspec.hasKeyword<ParserKeywords::H2SOL>();
 
             if (isTemp) {
-                // TODO implement sequential approach for TEMP
-                m_energy_type = EnergyModules::FullyImplicitThermal;
+                m_energy_type = EnergyModules::SequentialImplicitThermal;
                 if (isThermal) {
                     throw std::invalid_argument {
-                        "ERROR: In the RUNSPEC section the BOTH TEMP and THERMAL keyword "
-                        "only one should be spesified"
+                        "ERROR: In the RUNSPEC section Both TEMP and THERMAL keyword is given."
                     };
                 }
             } else if (isThermal) {
@@ -217,6 +215,11 @@ namespace Opm {
     bool SimulationConfig::isThermal() const
     {
         return this->m_energy_type == EnergyModules::FullyImplicitThermal;
+    }
+
+    bool SimulationConfig::isTemp() const
+    {
+        return this->m_energy_type == EnergyModules::SequentialImplicitThermal;
     }
 
     EnergyModules SimulationConfig::energyModuleType() const
