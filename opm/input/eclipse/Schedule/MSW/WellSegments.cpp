@@ -186,7 +186,7 @@ namespace Opm {
 
 
     void WellSegments::addWellSegmentsFromLengthsAndDepths(const std::string &wname,
-                                                           std::vector<std::pair<double, double>>& lengths_and_depths,
+                                                           const std::vector<std::pair<double, double>>& lengths_and_depths,
                                                            double diameter, const UnitSystem& unit_system)
     {
         // Only LengthDepth::ABS is supported:

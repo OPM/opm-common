@@ -1837,7 +1837,7 @@ bool Well::handleWELSEGS(const DeckKeyword& keyword)
     return true;
 }
 
-void Well::addWellSegmentsFromLengthsAndDepths(std::vector<std::pair<double, double>>& lengths_and_depths, double diameter, const KeywordLocation& location)
+void Well::addWellSegmentsFromLengthsAndDepths(const std::vector<std::pair<double, double>>& lengths_and_depths, double diameter, const KeywordLocation& location)
 {
     if (this->segments == nullptr) {
         throw OpmInputError{
