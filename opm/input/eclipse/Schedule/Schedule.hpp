@@ -606,7 +606,8 @@ namespace Opm {
                            const std::unordered_map<std::string, double>* target_wellpi,
                            std::unordered_map<std::string, double>& wpimult_global_factor,
                            WelSegsSet* welsegs_wells = nullptr,
-                           std::set<std::string>* compsegs_wells = nullptr);
+                           std::set<std::string>* compsegs_wells = nullptr,
+                           std::set<std::string>* comptraj_wells = nullptr);
 
         void internalWELLSTATUSACTIONXFromPYACTION(const std::string& well_name, std::size_t report_step, const std::string& wellStatus);
         void prefetchPossibleFutureConnections(const ScheduleGrid& grid, const DeckKeyword& keyword,
