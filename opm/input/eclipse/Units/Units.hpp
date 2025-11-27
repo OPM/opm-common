@@ -57,13 +57,13 @@ namespace Opm {
     namespace prefix
     /// Conversion prefix for units.
     {
-        constexpr const double micro = 1.0e-6;  /**< Unit prefix [\f$\mu\f$] */
-        constexpr const double milli = 1.0e-3;  /**< Unit prefix [m] */
-        constexpr const double centi = 1.0e-2;  /**< Non-standard unit prefix [c] */
-        constexpr const double deci  = 1.0e-1;  /**< Non-standard unit prefix [d] */
-        constexpr const double kilo  = 1.0e3;   /**< Unit prefix [k] */
-        constexpr const double mega  = 1.0e6;   /**< Unit prefix [M] */
-        constexpr const double giga  = 1.0e9;   /**< Unit prefix [G] */
+        constexpr double micro = 1.0e-6;  /**< Unit prefix [\f$\mu\f$] */
+        constexpr double milli = 1.0e-3;  /**< Unit prefix [m] */
+        constexpr double centi = 1.0e-2;  /**< Non-standard unit prefix [c] */
+        constexpr double deci  = 1.0e-1;  /**< Non-standard unit prefix [d] */
+        constexpr double kilo  = 1.0e3;   /**< Unit prefix [k] */
+        constexpr double mega  = 1.0e6;   /**< Unit prefix [M] */
+        constexpr double giga  = 1.0e9;   /**< Unit prefix [G] */
     } // namespace prefix
 
     namespace unit
@@ -94,40 +94,40 @@ namespace Opm {
 
         /// \name Length
         /// @{
-        constexpr const double meter =  1;
-        constexpr const double inch  =  2.54 * prefix::centi*meter;
-        constexpr const double feet  = 12    * inch;
+        constexpr double meter =  1;
+        constexpr double inch  =  2.54 * prefix::centi*meter;
+        constexpr double feet  = 12    * inch;
         /// @}
 
         /// \name Time
         /// @{
-        constexpr const double second   =   1;
-        constexpr const double minute   =  60    * second;
-        constexpr const double hour     =  60    * minute;
-        constexpr const double day      =  24    * hour;
-        constexpr const double year     = 365    * day;
-        constexpr const double ecl_year = 365.25 * day;
+        constexpr double second   =   1;
+        constexpr double minute   =  60    * second;
+        constexpr double hour     =  60    * minute;
+        constexpr double day      =  24    * hour;
+        constexpr double year     = 365    * day;
+        constexpr double ecl_year = 365.25 * day;
         /// @}
 
         /// \name Volume
         /// @{
-        constexpr const double gallon = 231 * cubic(inch);
-        constexpr const double stb    =  42 * gallon;
-        constexpr const double liter  =   1 * cubic(prefix::deci*meter);
+        constexpr double gallon = 231 * cubic(inch);
+        constexpr double stb    =  42 * gallon;
+        constexpr double liter  =   1 * cubic(prefix::deci*meter);
         /// @}
 
         /// \name Mass
         /// @{
-        constexpr const double kilogram = 1;
-        constexpr const double gram     = 1.0e-3 * kilogram;
+        constexpr double kilogram = 1;
+        constexpr double gram     = 1.0e-3 * kilogram;
         // http://en.wikipedia.org/wiki/Pound_(mass)#Avoirdupois_pound
-        constexpr const double pound    = 0.45359237 * kilogram;
+        constexpr double pound    = 0.45359237 * kilogram;
         /// @}
 
         /// \name Energy
         /// @{
-        constexpr const double joule = 1;
-        constexpr const double btu = 1054.3503*joule; // "british thermal units"
+        constexpr double joule = 1;
+        constexpr double btu = 1054.3503*joule; // "british thermal units"
         /// @}
 
         // --------------------------------------------------------------
@@ -136,30 +136,30 @@ namespace Opm {
 
         /// \name Standardised constant
         /// @{
-        constexpr const double gravity = 9.80665 * meter/square(second);
+        constexpr double gravity = 9.80665 * meter/square(second);
         /// @}
 
-        constexpr const double mol = 1;
+        constexpr double mol = 1;
         // --------------------------------------------------------------
         // Derived units and conversions
         // --------------------------------------------------------------
 
         /// \name Force
         /// @{
-        constexpr const double Newton = kilogram*meter / square(second); // == 1
-        constexpr const double dyne   = 1e-5*Newton;
-        constexpr const double lbf    = pound * gravity; // Pound-force
+        constexpr double Newton = kilogram*meter / square(second); // == 1
+        constexpr double dyne   = 1e-5*Newton;
+        constexpr double lbf    = pound * gravity; // Pound-force
         /// @}
 
         /// \name Pressure
         /// @{
-        constexpr const double Pascal = Newton / square(meter); // == 1
-        constexpr const double barsa  = 100000 * Pascal;
-        constexpr const double bars   = 100000 * Pascal;
-        constexpr const double atma   = 101325 * Pascal;
-        constexpr const double atm    = 101325 * Pascal;
-        constexpr const double psia   = lbf / square(inch);
-        constexpr const double psi    = lbf / square(inch);
+        constexpr double Pascal = Newton / square(meter); // == 1
+        constexpr double barsa  = 100000 * Pascal;
+        constexpr double bars   = 100000 * Pascal;
+        constexpr double atma   = 101325 * Pascal;
+        constexpr double atm    = 101325 * Pascal;
+        constexpr double psia   = lbf / square(inch);
+        constexpr double psi    = lbf / square(inch);
         /// @}
 
         /// \name Temperature. This one is more complicated
@@ -168,28 +168,28 @@ namespace Opm {
         /// subtract an offset for the conversion between from/to
         /// Kelvin
         /// @{
-        constexpr const double degCelsius = 1.0; // scaling factor °C -> K
-        constexpr const double degCelsiusOffset = 273.15; // offset for the °C -> K conversion
+        constexpr double degCelsius = 1.0; // scaling factor °C -> K
+        constexpr double degCelsiusOffset = 273.15; // offset for the °C -> K conversion
 
-        constexpr const double degFahrenheit = 5.0/9.0; // factor to convert a difference in °F to a difference in K
-        constexpr const double degFahrenheitOffset = 459.67*degFahrenheit; // °F -> K offset (i.e. how many K is 0 °F?)
+        constexpr double degFahrenheit = 5.0/9.0; // factor to convert a difference in °F to a difference in K
+        constexpr double degFahrenheitOffset = 459.67*degFahrenheit; // °F -> K offset (i.e. how many K is 0 °F?)
         /// @}
 
         /// \name Viscosity
         /// @{
-        constexpr const double Pas   = Pascal * second; // == 1
-        constexpr const double Poise = prefix::deci*Pas;
+        constexpr double Pas   = Pascal * second; // == 1
+        constexpr double Poise = prefix::deci*Pas;
         /// @}
 
-        constexpr const double ppm = 1. / prefix::mega;
+        constexpr double ppm = 1. / prefix::mega;
 
         namespace perm_details {
-            constexpr const double p_grad   = atm / (prefix::centi*meter);
-            constexpr const double area     = square(prefix::centi*meter);
-            constexpr const double flux     = cubic (prefix::centi*meter) / second;
-            constexpr const double velocity = flux / area;
-            constexpr const double visc     = prefix::centi*Poise;
-            constexpr const double darcy    = (velocity * visc) / p_grad;
+            constexpr double p_grad   = atm / (prefix::centi*meter);
+            constexpr double area     = square(prefix::centi*meter);
+            constexpr double flux     = cubic (prefix::centi*meter) / second;
+            constexpr double velocity = flux / area;
+            constexpr double visc     = prefix::centi*Poise;
+            constexpr double darcy    = (velocity * visc) / p_grad;
             //                    == 1e-7 [m^2] / 101325
             //                    == 9.869232667160130e-13 [m^2]
         }
@@ -202,7 +202,7 @@ namespace Opm {
         /// of \f$1\,\mathit{atm}/\mathit{cm}\f$ acting across an area of
         /// \f$1\,\mathit{cm}^2\f$.
         ///
-        constexpr const double darcy = perm_details::darcy;
+        constexpr double darcy = perm_details::darcy;
         /// @}
 
         /**
@@ -260,140 +260,140 @@ namespace Opm {
     namespace Metric {
         using namespace prefix;
         using namespace unit;
-        constexpr const double Pressure             = barsa;
-        constexpr const double PressureDrop         = bars;
-        constexpr const double Temperature          = degCelsius;
-        constexpr const double TemperatureOffset    = degCelsiusOffset;
-        constexpr const double AbsoluteTemperature  = degCelsius; // actually [K], but the these two are identical
-        constexpr const double Length               = meter;
-        constexpr const double Time                 = day;
-        constexpr const double RunTime              = second;
-        constexpr const double Mass                 = kilogram;
-        constexpr const double Permeability         = milli*darcy;
-        constexpr const double Transmissibility     = centi*Poise*cubic(meter)/(day*barsa);
-        constexpr const double LiquidSurfaceVolume  = cubic(meter);
-        constexpr const double GasSurfaceVolume     = cubic(meter);
-        constexpr const double ReservoirVolume      = cubic(meter);
-        constexpr const double Area                 = square(meter);
-        constexpr const double GeomVolume           = cubic(meter);
-        constexpr const double GasDissolutionFactor = GasSurfaceVolume/LiquidSurfaceVolume;
-        constexpr const double OilDissolutionFactor = LiquidSurfaceVolume/GasSurfaceVolume;
-        constexpr const double Density              = kilogram/cubic(meter);
-        constexpr const double Concentration        = kilogram/cubic(meter);
-        constexpr const double FoamDensity          = kilogram/cubic(meter);
-        constexpr const double Viscosity            = centi*Poise;
-        constexpr const double Timestep             = day;
-        constexpr const double SurfaceTension       = dyne/(centi*meter);
-        constexpr const double Energy               = kilo*joule;
-        constexpr const double Moles                = kilo*mol;
-        constexpr const double PPM                  = ppm;
-        constexpr const double Ymodule              = giga*Pascal;
-        constexpr const double ThermalConductivity  = kilo*joule/(meter*day*degCelsius);
+        constexpr double Pressure             = barsa;
+        constexpr double PressureDrop         = bars;
+        constexpr double Temperature          = degCelsius;
+        constexpr double TemperatureOffset    = degCelsiusOffset;
+        constexpr double AbsoluteTemperature  = degCelsius; // actually [K], but the these two are identical
+        constexpr double Length               = meter;
+        constexpr double Time                 = day;
+        constexpr double RunTime              = second;
+        constexpr double Mass                 = kilogram;
+        constexpr double Permeability         = milli*darcy;
+        constexpr double Transmissibility     = centi*Poise*cubic(meter)/(day*barsa);
+        constexpr double LiquidSurfaceVolume  = cubic(meter);
+        constexpr double GasSurfaceVolume     = cubic(meter);
+        constexpr double ReservoirVolume      = cubic(meter);
+        constexpr double Area                 = square(meter);
+        constexpr double GeomVolume           = cubic(meter);
+        constexpr double GasDissolutionFactor = GasSurfaceVolume/LiquidSurfaceVolume;
+        constexpr double OilDissolutionFactor = LiquidSurfaceVolume/GasSurfaceVolume;
+        constexpr double Density              = kilogram/cubic(meter);
+        constexpr double Concentration        = kilogram/cubic(meter);
+        constexpr double FoamDensity          = kilogram/cubic(meter);
+        constexpr double Viscosity            = centi*Poise;
+        constexpr double Timestep             = day;
+        constexpr double SurfaceTension       = dyne/(centi*meter);
+        constexpr double Energy               = kilo*joule;
+        constexpr double Moles                = kilo*mol;
+        constexpr double PPM                  = ppm;
+        constexpr double Ymodule              = giga*Pascal;
+        constexpr double ThermalConductivity  = kilo*joule/(meter*day*degCelsius);
     }
 
 
     namespace Field {
         using namespace prefix;
         using namespace unit;
-        constexpr const double Pressure             = psia;
-        constexpr const double PressureDrop         = psi;
-        constexpr const double Temperature          = degFahrenheit;
-        constexpr const double TemperatureOffset    = degFahrenheitOffset;
-        constexpr const double AbsoluteTemperature  = degFahrenheit; // actually [°R], but the these two are identical
-        constexpr const double Length               = feet;
-        constexpr const double Time                 = day;
-        constexpr const double RunTime              = second;
-        constexpr const double Mass                 = pound;
-        constexpr const double Permeability         = milli*darcy;
-        constexpr const double Transmissibility     = centi*Poise*stb/(day*psia);
-        constexpr const double LiquidSurfaceVolume  = stb;
-        constexpr const double GasSurfaceVolume     = 1000*cubic(feet);
-        constexpr const double ReservoirVolume      = stb;
-        constexpr const double Area                 = square(feet);
-        constexpr const double GeomVolume           = cubic(feet);
-        constexpr const double GasDissolutionFactor = GasSurfaceVolume/LiquidSurfaceVolume;
-        constexpr const double OilDissolutionFactor = LiquidSurfaceVolume/GasSurfaceVolume;
-        constexpr const double Density              = pound/cubic(feet);
-        constexpr const double Concentration        = pound/stb;
-        constexpr const double FoamDensity          = pound/GasSurfaceVolume;
-        constexpr const double Viscosity            = centi*Poise;
-        constexpr const double Timestep             = day;
-        constexpr const double SurfaceTension       = dyne/(centi*meter);
-        constexpr const double Energy               = btu;
-        constexpr const double Moles                = kilo*pound*mol;
-        constexpr const double PPM                  = ppm;
-        constexpr const double Ymodule              = giga*Pascal;
-        constexpr const double ThermalConductivity  = btu/(feet*day*degFahrenheit);
+        constexpr double Pressure             = psia;
+        constexpr double PressureDrop         = psi;
+        constexpr double Temperature          = degFahrenheit;
+        constexpr double TemperatureOffset    = degFahrenheitOffset;
+        constexpr double AbsoluteTemperature  = degFahrenheit; // actually [°R], but the these two are identical
+        constexpr double Length               = feet;
+        constexpr double Time                 = day;
+        constexpr double RunTime              = second;
+        constexpr double Mass                 = pound;
+        constexpr double Permeability         = milli*darcy;
+        constexpr double Transmissibility     = centi*Poise*stb/(day*psia);
+        constexpr double LiquidSurfaceVolume  = stb;
+        constexpr double GasSurfaceVolume     = 1000*cubic(feet);
+        constexpr double ReservoirVolume      = stb;
+        constexpr double Area                 = square(feet);
+        constexpr double GeomVolume           = cubic(feet);
+        constexpr double GasDissolutionFactor = GasSurfaceVolume/LiquidSurfaceVolume;
+        constexpr double OilDissolutionFactor = LiquidSurfaceVolume/GasSurfaceVolume;
+        constexpr double Density              = pound/cubic(feet);
+        constexpr double Concentration        = pound/stb;
+        constexpr double FoamDensity          = pound/GasSurfaceVolume;
+        constexpr double Viscosity            = centi*Poise;
+        constexpr double Timestep             = day;
+        constexpr double SurfaceTension       = dyne/(centi*meter);
+        constexpr double Energy               = btu;
+        constexpr double Moles                = kilo*pound*mol;
+        constexpr double PPM                  = ppm;
+        constexpr double Ymodule              = giga*Pascal;
+        constexpr double ThermalConductivity  = btu/(feet*day*degFahrenheit);
     }
 
 
     namespace Lab {
         using namespace prefix;
         using namespace unit;
-        constexpr const double Pressure             = atma;
-        constexpr const double PressureDrop         = atm;
-        constexpr const double Temperature          = degCelsius;
-        constexpr const double TemperatureOffset    = degCelsiusOffset;
-        constexpr const double AbsoluteTemperature  = degCelsius; // actually [K], but the these two are identical
-        constexpr const double Length               = centi*meter;
-        constexpr const double Time                 = hour;
-        constexpr const double RunTime              = second;
-        constexpr const double Mass                 = gram;
-        constexpr const double Permeability         = milli*darcy;
-        constexpr const double Transmissibility     = centi*Poise*cubic(centi*meter)/(hour*atm);
-        constexpr const double LiquidSurfaceVolume  = cubic(centi*meter);
-        constexpr const double GasSurfaceVolume     = cubic(centi*meter);
-        constexpr const double ReservoirVolume      = cubic(centi*meter);
-        constexpr const double Area                 = square(centi*meter);
-        constexpr const double GeomVolume           = cubic(centi*meter);
-        constexpr const double GasDissolutionFactor = GasSurfaceVolume/LiquidSurfaceVolume;
-        constexpr const double OilDissolutionFactor = LiquidSurfaceVolume/GasSurfaceVolume;
-        constexpr const double Density              = gram/cubic(centi*meter);
-        constexpr const double Concentration        = gram/cubic(centi*meter);
-        constexpr const double FoamDensity          = gram/cubic(centi*meter);
-        constexpr const double Viscosity            = centi*Poise;
-        constexpr const double Timestep             = hour;
-        constexpr const double SurfaceTension       = dyne/(centi*meter);
-        constexpr const double Energy               = joule;
-        constexpr const double Moles                = mol;
-        constexpr const double PPM                  = ppm;
-        constexpr const double Ymodule              = giga*Pascal;
-        constexpr const double ThermalConductivity  = joule/(centi*meter*hour*degCelsius);
+        constexpr double Pressure             = atma;
+        constexpr double PressureDrop         = atm;
+        constexpr double Temperature          = degCelsius;
+        constexpr double TemperatureOffset    = degCelsiusOffset;
+        constexpr double AbsoluteTemperature  = degCelsius; // actually [K], but the these two are identical
+        constexpr double Length               = centi*meter;
+        constexpr double Time                 = hour;
+        constexpr double RunTime              = second;
+        constexpr double Mass                 = gram;
+        constexpr double Permeability         = milli*darcy;
+        constexpr double Transmissibility     = centi*Poise*cubic(centi*meter)/(hour*atm);
+        constexpr double LiquidSurfaceVolume  = cubic(centi*meter);
+        constexpr double GasSurfaceVolume     = cubic(centi*meter);
+        constexpr double ReservoirVolume      = cubic(centi*meter);
+        constexpr double Area                 = square(centi*meter);
+        constexpr double GeomVolume           = cubic(centi*meter);
+        constexpr double GasDissolutionFactor = GasSurfaceVolume/LiquidSurfaceVolume;
+        constexpr double OilDissolutionFactor = LiquidSurfaceVolume/GasSurfaceVolume;
+        constexpr double Density              = gram/cubic(centi*meter);
+        constexpr double Concentration        = gram/cubic(centi*meter);
+        constexpr double FoamDensity          = gram/cubic(centi*meter);
+        constexpr double Viscosity            = centi*Poise;
+        constexpr double Timestep             = hour;
+        constexpr double SurfaceTension       = dyne/(centi*meter);
+        constexpr double Energy               = joule;
+        constexpr double Moles                = mol;
+        constexpr double PPM                  = ppm;
+        constexpr double Ymodule              = giga*Pascal;
+        constexpr double ThermalConductivity  = joule/(centi*meter*hour*degCelsius);
     }
 
 
     namespace PVT_M {
         using namespace prefix;
         using namespace unit;
-        constexpr const double Pressure             = atma;
-        constexpr const double PressureDrop         = atm;
-        constexpr const double Temperature          = degCelsius;
-        constexpr const double TemperatureOffset    = degCelsiusOffset;
-        constexpr const double AbsoluteTemperature  = degCelsius; // actually [K], but the these two are identical
-        constexpr const double Length               = meter;
-        constexpr const double Time                 = day;
-        constexpr const double RunTime              = second;
-        constexpr const double Mass                 = kilogram;
-        constexpr const double Permeability         = milli*darcy;
-        constexpr const double Transmissibility     = centi*Poise*cubic(meter)/(day*atm);
-        constexpr const double LiquidSurfaceVolume  = cubic(meter);
-        constexpr const double GasSurfaceVolume     = cubic(meter);
-        constexpr const double ReservoirVolume      = cubic(meter);
-        constexpr const double Area                 = square(meter);
-        constexpr const double GeomVolume           = cubic(meter);
-        constexpr const double GasDissolutionFactor = GasSurfaceVolume/LiquidSurfaceVolume;
-        constexpr const double OilDissolutionFactor = LiquidSurfaceVolume/GasSurfaceVolume;
-        constexpr const double Density              = kilogram/cubic(meter);
-        constexpr const double Concentration        = kilogram/cubic(meter);
-        constexpr const double FoamDensity          = kilogram/cubic(meter);
-        constexpr const double Viscosity            = centi*Poise;
-        constexpr const double Timestep             = day;
-        constexpr const double SurfaceTension       = dyne/(centi*meter);
-        constexpr const double Energy               = kilo*joule;
-        constexpr const double Moles                = kilo*mol;
-        constexpr const double PPM                  = ppm;
-        constexpr const double Ymodule              = giga*Pascal;
-        constexpr const double ThermalConductivity  = kilo*joule/(meter*day*degCelsius);
+        constexpr double Pressure             = atma;
+        constexpr double PressureDrop         = atm;
+        constexpr double Temperature          = degCelsius;
+        constexpr double TemperatureOffset    = degCelsiusOffset;
+        constexpr double AbsoluteTemperature  = degCelsius; // actually [K], but the these two are identical
+        constexpr double Length               = meter;
+        constexpr double Time                 = day;
+        constexpr double RunTime              = second;
+        constexpr double Mass                 = kilogram;
+        constexpr double Permeability         = milli*darcy;
+        constexpr double Transmissibility     = centi*Poise*cubic(meter)/(day*atm);
+        constexpr double LiquidSurfaceVolume  = cubic(meter);
+        constexpr double GasSurfaceVolume     = cubic(meter);
+        constexpr double ReservoirVolume      = cubic(meter);
+        constexpr double Area                 = square(meter);
+        constexpr double GeomVolume           = cubic(meter);
+        constexpr double GasDissolutionFactor = GasSurfaceVolume/LiquidSurfaceVolume;
+        constexpr double OilDissolutionFactor = LiquidSurfaceVolume/GasSurfaceVolume;
+        constexpr double Density              = kilogram/cubic(meter);
+        constexpr double Concentration        = kilogram/cubic(meter);
+        constexpr double FoamDensity          = kilogram/cubic(meter);
+        constexpr double Viscosity            = centi*Poise;
+        constexpr double Timestep             = day;
+        constexpr double SurfaceTension       = dyne/(centi*meter);
+        constexpr double Energy               = kilo*joule;
+        constexpr double Moles                = kilo*mol;
+        constexpr double PPM                  = ppm;
+        constexpr double Ymodule              = giga*Pascal;
+        constexpr double ThermalConductivity  = kilo*joule/(meter*day*degCelsius);
     }
 }
 
