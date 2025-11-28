@@ -89,7 +89,8 @@ namespace Opm {
             ymodule,
             thermalconductivity,
             dfactor,
-            _count // New entries must be added *before* this
+            foamdensity,
+            _count, // New entries must be added *before* this
         };
 
         explicit UnitSystem(int ecl_id);
