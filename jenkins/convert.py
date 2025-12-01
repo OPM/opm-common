@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # coding: utf-8
 # originally from:
 #  http://www.warp1337.com/content/how-use-ctest-jenkins-xunit-or-junit-plugin
