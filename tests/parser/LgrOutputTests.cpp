@@ -34,9 +34,6 @@
 
 #include <array>
 #include <cstddef>
-#include <fstream>
-#include <filesystem>
-#include <optional>
 #include <string>
 #include <tuple>
 #include <utility>
@@ -46,18 +43,11 @@ using namespace Opm;
 
 namespace {
 
-  auto write_coord_to_txt = [](const std::vector<double>& coord, const std::string& filename) {
-    std::ofstream outfile(filename);
-    if (!outfile.is_open()) {
-        throw std::runtime_error("Failed to open file: " + filename);
-    }
+  auto init_deck(const std::string& deck_string) {
+    Opm::Parser parser;
+    return parser.parseString(deck_string);
+  };
 
-    for (const auto& value : coord) {
-        outfile << value << "\n";
-    }
-
-    outfile.close();
-};
 
 std::array<double,3> dimensions_collumn_lgr(){
     const double i = 500;
@@ -176,7 +166,6 @@ SCHEDULE
     //  LgrCollection is used to initalize LGR Cells in the Eclipse Grid.
     eclipse_grid_file.init_lgr_cells(lgr_col);
     // LGR COORD and ZCORN is parsed to EclipseGridLGR children cell. (Simulates the process of recieving the LGR refinement.)
-    eclipse_grid_file.set_lgr_refinement("LGR1",coord_l,zcorn_l);
     // Intialize host_cell numbering.
     eclipse_grid_file.init_children_host_cells();
     // Save EclipseGrid.
@@ -277,8 +266,6 @@ SCHEDULE
     eclipse_grid_file.init_lgr_cells(lgr_col);
     // LGR COORD and ZCORN is parsed to EclipseGridLGR children cell. (Simulates the process of recieving the LGR refinement.)
     const auto& lgr1 = eclipse_grid_file.getLGRCell("LGR1");
-    const auto& coordlgr1 = lgr1.getCOORD();
-    eclipse_grid_file.set_lgr_refinement("LGR1",coordlgr1,zcorn_l);
     // Intialize host_cell numbering.
     eclipse_grid_file.init_children_host_cells();    // Save EclipseGrid.
 
@@ -302,7 +289,6 @@ SCHEDULE
 //  LgrCollection is used to initalize LGR Cells in the Eclipse Grid.
     eclipse_grid_OPM.init_lgr_cells(lgr_col);
     // LGR COORD and ZCORN is parsed to EclipseGridLGR children cell. (Simulates the process of recieving the LGR refinement.)
-    eclipse_grid_OPM.getLGRCell(0).set_lgr_refinement(coord_l_opm,zcorn_l_opm);
     // Intialize host_cell numbering.
     eclipse_grid_OPM.init_children_host_cells();
     BOOST_CHECK_EQUAL( coord_g_opm.size() , coord_g.size());
@@ -395,8 +381,6 @@ SCHEDULE
     //  LgrCollection is used to initalize LGR Cells in the Eclipse Grid.
     eclipse_grid_file.init_lgr_cells(lgr_col);
     // LGR COORD and ZCORN is parsed to EclipseGridLGR children cell. (Simulates the process of recieving the LGR refinement.)
-    eclipse_grid_file.getLGRCell(1).set_lgr_refinement(coord_l1,zcorn_l1);
-    eclipse_grid_file.getLGRCell(0).set_lgr_refinement(coord_l2,zcorn_l2);
     // Intialize host_cell numbering.
     eclipse_grid_file.init_children_host_cells();
     // Save EclipseGrid.
@@ -410,10 +394,6 @@ SCHEDULE
     Opm::EclipseGrid eclipse_grid_OPM(global_grid_dim, coord_g_opm, zcorn_g_opm);
 //  LgrCollection is used to initalize LGR Cells in the Eclipse Grid.
     eclipse_grid_OPM.init_lgr_cells(lgr_col);
-    // LGR COORD and ZCORN is parsed to EclipseGridLGR children cell. (Simulates the process of recieving the LGR refinement.)
-    eclipse_grid_OPM.getLGRCell(1).set_lgr_refinement(coord_l1_opm,zcorn_l1_opm);
-    eclipse_grid_OPM.getLGRCell(0).set_lgr_refinement(coord_l2_opm,zcorn_l2_opm);
-
     // Intialize host_cell numbering.
     eclipse_grid_OPM.init_children_host_cells();
     BOOST_CHECK_EQUAL( coord_g_opm.size() , coord_g.size());
@@ -509,13 +489,8 @@ SCHEDULE
     // LGR COORD and ZCORN is parsed to EclipseGridLGR children cell. (Simulates the process of recieving the LGR refinement.)
 
     const auto& lgr1 = eclipse_grid_file.getLGRCell("LGR1");
-    const auto& coordlgr1 = lgr1.getCOORD();
     const auto& lgr2 = eclipse_grid_file.getLGRCell("LGR2");
-    const auto& coordlgr2 = lgr2.getCOORD();
 
-
-    eclipse_grid_file.set_lgr_refinement("LGR1",coordlgr1,zcorn_l1);
-    eclipse_grid_file.set_lgr_refinement("LGR2",coordlgr2,zcorn_l2);
     // Intialize host_cell numbering.
     eclipse_grid_file.init_children_host_cells();
     // Save EclipseGrid.
