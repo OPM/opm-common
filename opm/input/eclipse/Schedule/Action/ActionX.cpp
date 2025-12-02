@@ -97,7 +97,7 @@ namespace Opm::Action {
 bool ActionX::valid_keyword(const std::string& keyword)
 {
     static const auto actionx_allowed_list = std::unordered_set<std::string> {
-        "BOX",
+        "BOX", "BRANPROP",
 
         "COMPLUMP", "COMPDAT", "COMPSEGS",
 
@@ -117,6 +117,7 @@ bool ActionX::valid_keyword(const std::string& keyword)
 
         "WCONHIST", "WCONINJH",
         "WCONINJE", "WCONPROD",
+        "WDFAC",
         "WECON", "WEFAC",
         "WELOPEN", "WELPI", "WELSEGS", "WELSPECS", "WELTARG",
         "WGRUPCON",
