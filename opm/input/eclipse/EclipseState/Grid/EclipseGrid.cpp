@@ -1864,7 +1864,41 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         return m_zcorn;
     }
 
+    void EclipseGrid::save_children(Opm::EclIO::EclOutput& egridfile, const Opm::UnitSystem& units) const {
+        for (std::size_t index : m_print_order_lgr_cells) {
+            lgr_children_cells[index].save(egridfile, units);
+        }
+    }
+
     void EclipseGrid::save(const std::string& filename, bool formatted, const std::vector<Opm::NNCdata>& nnc, const Opm::UnitSystem& units) const {
+        Opm::EclIO::EclOutput egridfile(filename, formatted);
+        save_core(egridfile, units);
+        save_children(egridfile, units);
+        save_nnc(egridfile, nnc);
+    }
+
+    void EclipseGrid::save_nnc(Opm::EclIO::EclOutput& egridfile, const std::vector<Opm::NNCdata>& nnc) const {
+        std::vector<int> nnchead(10, 0);
+        std::vector<int> nnc1;
+        std::vector<int> nnc2;
+
+        for (const NNCdata& n : nnc ) {
+            nnc1.push_back(n.cell1 + 1);
+            nnc2.push_back(n.cell2 + 1);
+        }
+
+        nnchead[0] = nnc1.size();
+        if (nnc1.size() > 0){
+            egridfile.write("NNCHEAD", nnchead);
+            egridfile.write("NNC1", nnc1);
+            egridfile.write("NNC2", nnc2);
+
+        }
+
+    }
+
+
+    void EclipseGrid::save_core(Opm::EclIO::EclOutput& egridfile, const Opm::UnitSystem& units) const {
 
         Opm::UnitSystem::UnitType unitSystemType = units.getType();
         constexpr auto length = ::Opm::UnitSystem::measure::length;
@@ -1911,17 +1945,6 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         gridhead[24] = 1;                   // NUMRES (number of reservoirs)
         //gridhead[25] = 1;                 // TODO: This value depends on LGRs?
 
-        std::vector<int> nnchead(10, 0);
-        std::vector<int> nnc1;
-        std::vector<int> nnc2;
-
-        for (const NNCdata& n : nnc ) {
-            nnc1.push_back(n.cell1 + 1);
-            nnc2.push_back(n.cell2 + 1);
-        }
-
-        nnchead[0] = nnc1.size();
-
         std::vector<std::string> gridunits;
 
         switch (unitSystemType) {
@@ -1944,9 +1967,6 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
 
         // Writing vectors to egrid file
 
-        Opm::EclIO::EclOutput egridfile(filename, formatted);
-        egridfile.write("FILEHEAD", filehead);
-
         if (this->m_mapaxes.has_value()) {
             const auto& mapunits = this->m_mapaxes.value().mapunits();
             if (mapunits.has_value())
@@ -1963,22 +1983,7 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
 
         egridfile.write("ACTNUM", m_actnum);
         egridfile.write("ENDGRID", endgrid);
-        // nnc for LGR is not currently supported.
-        for (std::size_t index : m_print_order_lgr_cells) {
-            lgr_children_cells[index].save(egridfile, nnc, units);
-        }
 
-        if (nnc1.size() > 0){
-            egridfile.write("NNCHEAD", nnchead);
-            egridfile.write("NNC1", nnc1);
-            egridfile.write("NNC2", nnc2);
-            // Placeholder the method that handles  LGR nnc
-            // nnc in LGR is currently not supportd
-            // for (const EclipseGridLGR& lgr_cell : lgr_children_cells) {
-            //     lgr_cell.save_nnc(egridfile);
-            // }
-
-        }
     }
 
     EclipseGridLGR& EclipseGrid::getLGRCell(std::size_t index){
@@ -2793,7 +2798,12 @@ namespace Opm {
         return father_global;
     }
 
-    void EclipseGridLGR::save(Opm::EclIO::EclOutput& egridfile, const std::vector<Opm::NNCdata>& nnc, const Opm::UnitSystem& units) const {
+    void EclipseGridLGR::save(Opm::EclIO::EclOutput& egridfile, const Opm::UnitSystem& units) const {
+        save_core(egridfile, units);
+        save_children(egridfile, units);
+    }
+
+    void EclipseGridLGR::save_core(Opm::EclIO::EclOutput& egridfile, const Opm::UnitSystem& units) const{
         const auto lgr_name_label = std::vector{ Opm::EclIO::PaddedOutputString<8>{ lgr_label }};
         egridfile.write("LGR",lgr_name_label);
         //std::vector<Opm::EclIO::PaddedOutputString<8>> lgr_father_name_label;
@@ -2858,16 +2868,6 @@ namespace Opm {
         gridhead[31] = up_fatherIJK[1] + 1; // Upper J-index-host
         gridhead[32] = up_fatherIJK[2] + 1; // Upper K-index-host
 
-        [[maybe_unused]] std::vector<int> nnchead(10, 0);
-        [[maybe_unused]] std::vector<int> nnc1;
-        [[maybe_unused]] std::vector<int> nnc2;
-
-        for (const NNCdata& n : nnc ) {
-            nnc1.push_back(n.cell1 + 1);
-            nnc2.push_back(n.cell2 + 1);
-        }
-
-        nnchead[0] = nnc1.size();
 
         std::vector<int> endgrid = {};
 
@@ -2882,26 +2882,7 @@ namespace Opm {
         egridfile.write("HOSTNUM", save_hostnum());
         egridfile.write("ENDGRID", endgrid);
         egridfile.write("ENDLGR", endgrid);
-        for (std::size_t index: m_print_order_lgr_cells ){
-            lgr_children_cells[index].save(egridfile, nnc, units);
-        }
+
+
     }
-
-
-      void EclipseGridLGR::save_nnc(Opm::EclIO::EclOutput& egridfile) const{
-
-        //std::vector<int> nnchead(10, 0);
-        std::vector<int> nnc1;
-        std::vector<int> nnc2;
-
-        /* to be implemented based on how the NNC is input */
-        // for (const NNCdata& n : nnc ) {
-        //     nnc1.push_back(n.cell1 + 1);
-        //     nnc2.push_back(n.cell2 + 1);
-        // }
-        egridfile.write("NNCL", nnc1);
-        egridfile.write("NNCG", nnc2);
-        //nnchead[0] = nnc1.size();
-      }
-
 }
