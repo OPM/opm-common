@@ -1073,12 +1073,15 @@ bool Well::handleCOMPSEGS(const DeckKeyword& keyword,
         };
     }
 
-    auto [new_connections, new_segments] = Compsegs::processCOMPSEGS
+    auto new_connections = Compsegs::processCOMPSEGS
         (keyword, *this->connections, *this->segments,
          grid, parseContext, errors);
 
     this->updateConnections(std::make_shared<WellConnections>(std::move(new_connections)), false);
-    this->updateSegments(std::make_shared<WellSegments>(std::move(new_segments)));
+
+    // for multi-segment wells, we always use the top segment depth as the reference depth
+    this->updateRefDepth(this->segments->depthTopSegment());
+    this->derive_refdepth_from_conns_ = false;
 
     return true;
 }

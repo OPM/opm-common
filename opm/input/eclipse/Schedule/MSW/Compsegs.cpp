@@ -309,7 +309,7 @@ namespace {
 } // end namespace
 
 
-    std::pair<WellConnections, WellSegments>
+    WellConnections
     processCOMPSEGS(const DeckKeyword& compsegs,
                     const WellConnections& input_connections,
                     const WellSegments& input_segments,
@@ -318,7 +318,6 @@ namespace {
                     ErrorGuard& errors)
     {
         const auto& compsegs_vector = Compsegs::compsegsFromCOMPSEGSKeyword( compsegs, input_segments, grid, parseContext, errors);
-        WellSegments new_segment_set = input_segments;
         WellConnections new_connection_set = input_connections;
 
         for (const auto& compseg : compsegs_vector) {
@@ -347,8 +346,7 @@ namespace {
                                      "The information from COMPSEGS is not complete");
         }
 
-        return std::make_pair( WellConnections( std::move( new_connection_set ) ),
-                               WellSegments( std::move(new_segment_set)));
+        return new_connection_set;
     }
 
 namespace {
