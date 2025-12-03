@@ -306,10 +306,10 @@ namespace {
         processCOMPSEGS__(compsegs, segments);
         return compsegs;
     }
-}
+} // end namespace
 
 
-    std::pair<WellConnections, WellSegments>
+    WellConnections
     processCOMPSEGS(const DeckKeyword& compsegs,
                     const WellConnections& input_connections,
                     const WellSegments& input_segments,
@@ -317,38 +317,36 @@ namespace {
                     const ParseContext& parseContext,
                     ErrorGuard& errors)
     {
-            const auto& compsegs_vector = Compsegs::compsegsFromCOMPSEGSKeyword( compsegs, input_segments, grid, parseContext, errors);
-            WellSegments new_segment_set = input_segments;
-            WellConnections new_connection_set = input_connections;
+        const auto& compsegs_vector = Compsegs::compsegsFromCOMPSEGSKeyword( compsegs, input_segments, grid, parseContext, errors);
+        WellConnections new_connection_set = input_connections;
 
-            for (const auto& compseg : compsegs_vector) {
-                const int i = compseg.m_i;
-                const int j = compseg.m_j;
-                const int k = compseg.m_k;
-                if (grid.get_cell(i, j, k).is_active()) {
-                    // Negative values to indicate cell depths should be used
-                    double cdepth = compseg.center_depth >= 0. ? compseg.center_depth : grid.get_cell(i, j, k).depth;
-                    Connection& connection = new_connection_set.getFromIJK(i, j, k);
-                    connection.updateSegment(compseg.segment_number,
-                                             cdepth,
-                                             compseg.m_seqIndex,
-                                             std::make_pair(compseg.m_distance_start,
-                                                            compseg.m_distance_end));
-                }
+        for (const auto& compseg : compsegs_vector) {
+            const int i = compseg.m_i;
+            const int j = compseg.m_j;
+            const int k = compseg.m_k;
+            if (grid.get_cell(i, j, k).is_active()) {
+                // Negative values to indicate cell depths should be used
+                double cdepth = compseg.center_depth >= 0. ? compseg.center_depth : grid.get_cell(i, j, k).depth;
+                Connection& connection = new_connection_set.getFromIJK(i, j, k);
+                connection.updateSegment(compseg.segment_number,
+                                         cdepth,
+                                         compseg.m_seqIndex,
+                                         std::make_pair(compseg.m_distance_start,
+                                                        compseg.m_distance_end));
             }
+        }
 
-            if (std::any_of(new_connection_set.begin(), new_connection_set.end(),
-                            [](const auto& connection)
-                            {
-                                return !connection.attachedToSegment();
-                            }))
-            {
-                    throw std::runtime_error("Not all the connections are attached with a segment. "
-                                             "The information from COMPSEGS is not complete");
-            }
+        if (std::any_of(new_connection_set.begin(), new_connection_set.end(),
+                        [](const auto& connection)
+                        {
+                            return !connection.attachedToSegment();
+                        }))
+        {
+            throw std::runtime_error("Not all the connections are attached with a segment. "
+                                     "The information from COMPSEGS is not complete");
+        }
 
-            return std::make_pair( WellConnections( std::move( new_connection_set ) ),
-                                   WellSegments( std::move(new_segment_set)));
+        return new_connection_set;
     }
 
 namespace {

@@ -50,7 +50,7 @@ namespace Compsegs {
   established.
 */
 
-    std::pair<WellConnections, WellSegments>
+    WellConnections
     processCOMPSEGS(const DeckKeyword& compsegs,
                     const WellConnections& input_connections,
                     const WellSegments& input_segments,

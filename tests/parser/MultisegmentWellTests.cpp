@@ -145,7 +145,7 @@ WSEGAICD
     parseContext.update(Opm::ParseContext::SCHEDULE_COMPSEGS_NOT_SUPPORTED, Opm::InputErrorAction::THROW_EXCEPTION);
     Opm::CompletedCells cells(grid);
     Opm::FieldPropsManager fp(deck, Opm::Phases{true, true, true}, grid, Opm::TableManager());
-    const auto& [new_connection_set, new_segment_set] = Opm::Compsegs::processCOMPSEGS(compsegs, connection_set, segment_set, Opm::ScheduleGrid(grid, fp, cells), parseContext, errorGuard);
+    const auto new_connection_set = Opm::Compsegs::processCOMPSEGS(compsegs, connection_set, segment_set, Opm::ScheduleGrid(grid, fp, cells), parseContext, errorGuard);
 
     // checking the ICD segment
     const Opm::DeckKeyword wsegaicd = deck["WSEGAICD"].back();
@@ -198,7 +198,7 @@ WSEGAICD
     const auto connection_length = perf_range->second - perf_range->first;
     aicd.updateScalingFactor(outlet_segment_length, connection_length);
 
-    BOOST_CHECK_EQUAL(7U, new_segment_set.size());
+    BOOST_CHECK_EQUAL(7U, segment_set.size());
 
     // updated, so it should not throw
     BOOST_CHECK_NO_THROW(aicd.scalingFactor());
@@ -323,7 +323,7 @@ WSEGSICD
     Opm::FieldPropsManager fp(deck, Opm::Phases{true, true, true}, grid, Opm::TableManager());
     parseContext.update(Opm::ParseContext::SCHEDULE_COMPSEGS_INVALID, Opm::InputErrorAction::THROW_EXCEPTION);
     parseContext.update(Opm::ParseContext::SCHEDULE_COMPSEGS_NOT_SUPPORTED, Opm::InputErrorAction::THROW_EXCEPTION);
-    const auto& [new_connection_set, new_segment_set] = Opm::Compsegs::processCOMPSEGS(compsegs, connection_set, segment_set, Opm::ScheduleGrid(grid, fp, cells), parseContext, errorGuard);
+    const auto new_connection_set = Opm::Compsegs::processCOMPSEGS(compsegs, connection_set, segment_set, Opm::ScheduleGrid(grid, fp, cells), parseContext, errorGuard);
 
     // checking the ICD segment
     const Opm::DeckKeyword wsegsicd = deck["WSEGSICD"].back();
@@ -380,7 +380,7 @@ WSEGSICD
     BOOST_CHECK_NO_THROW(sicd.scalingFactor());
     BOOST_CHECK_EQUAL(0.7, sicd.scalingFactor());
 
-    BOOST_CHECK_EQUAL(7U, new_segment_set.size());
+    BOOST_CHECK_EQUAL(7U, segment_set.size());
 
     BOOST_CHECK_EQUAL(7U, new_connection_set.size());
 
