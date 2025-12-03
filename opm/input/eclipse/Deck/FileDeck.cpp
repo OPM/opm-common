@@ -129,6 +129,15 @@ FileDeck::Index& FileDeck::Index::operator++()
     else {
         ++this->file_index;
         this->keyword_index = 0;
+        while (this->file_index < this->deck->blocks.size())
+        {
+            if (this->deck->blocks[this->file_index].size() == 0) {
+                ++this->file_index;
+            }
+            else {
+                break;
+            }
+        }
     }
 
     return *this;
