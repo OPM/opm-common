@@ -606,6 +606,12 @@ measure mul_unit( measure lhs, measure rhs ) {
     if(  lhs == measure::energy_rate && rhs == measure::time)
         return measure::energy;
 
+    if (((lhs == measure::geometric_volume_rate) && (rhs == measure::time)) ||
+        ((lhs == measure::time) && (rhs == measure::geometric_volume_rate)))
+    {
+        return measure::geometric_volume;
+    }
+
     return lhs;
 }
 
@@ -1124,6 +1130,32 @@ inline quantity filtrate_connection_quantities(const fn_args& args)
     return (connection == nullptr)
         ? quantity { 0.0, unit }
         : quantity { connection->filtrate.*q, unit };
+}
+
+template <double Opm::data::ConnectionFiltrate::* q, measure unit, bool injection = true>
+inline quantity sum_filtrate_connection_quantities(const fn_args& args)
+{
+    const auto zero = quantity { 0.0, unit };
+
+    if (args.schedule_wells.empty()) {
+        // Typically in the first call which configures the summary nodes.
+        return zero;
+    }
+
+    auto xwPos = args.wells.find(args.schedule_wells.front()->name());
+    if ((xwPos == args.wells.end()) ||
+        (xwPos->second.dynamicStatus == Opm::Well::Status::SHUT) ||
+        (xwPos->second.current_control.isProducer == injection))
+    {
+        return zero;
+    }
+
+    const auto sum = std::accumulate(xwPos->second.connections.begin(),
+                                     xwPos->second.connections.end(), 0.0,
+                                     [](const double s, const auto& conn)
+                                     { return s + conn.filtrate.*q; });
+
+    return { sum, unit };
 }
 
 template <double Opm::data::WellFiltrate::* q, measure unit, bool injection = true>
@@ -2670,6 +2702,22 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "WTHP", thp },
 
     // Well level filter cake quantities (OPM extension)
+    { "WFCFVIR", sum(sum_filtrate_connection_quantities<&Opm::data::ConnectionFiltrate::rate,
+                     measure::geometric_volume_rate, injector>,
+                     sum_filtrate_connection_quantities<&Opm::data::ConnectionFiltrate::fracture_rate,
+                     measure::geometric_volume_rate, injector>) },
+    { "WFCFVIT", mul(sum(sum_filtrate_connection_quantities<&Opm::data::ConnectionFiltrate::rate,
+                         measure::geometric_volume_rate, injector>,
+                         sum_filtrate_connection_quantities<&Opm::data::ConnectionFiltrate::fracture_rate,
+                         measure::geometric_volume_rate, injector>), duration) },
+    { "WFCFFVIR", sum_filtrate_connection_quantities<&Opm::data::ConnectionFiltrate::fracture_rate,
+      measure::geometric_volume_rate, injector> },
+    { "WFCFFVIT", mul(sum_filtrate_connection_quantities<&Opm::data::ConnectionFiltrate::fracture_rate,
+                      measure::geometric_volume_rate, injector>, duration)},
+    { "WFCWFVIR", sum_filtrate_connection_quantities<&Opm::data::ConnectionFiltrate::rate,
+      measure::geometric_volume_rate, injector> },
+    { "WFCWFVIT", mul(sum_filtrate_connection_quantities<&Opm::data::ConnectionFiltrate::rate,
+                      measure::geometric_volume_rate, injector>, duration)},
     { "WINJFVR", filtrate_well_quantities<&Opm::data::WellFiltrate::rate,
       measure::geometric_volume_rate, injector> },
     { "WINJFVT", filtrate_well_quantities<&Opm::data::WellFiltrate::total,
@@ -2909,6 +2957,22 @@ static const auto funs = std::unordered_map<std::string, ofun> {
       measure::geometric_volume_rate, injector> },
     { "CINJFVT", filtrate_connection_quantities<&Opm::data::ConnectionFiltrate::total,
       measure::geometric_volume, injector> },
+    { "CFCFVIR", sum(filtrate_connection_quantities<&Opm::data::ConnectionFiltrate::rate,
+                     measure::geometric_volume_rate, injector>,
+                     filtrate_connection_quantities<&Opm::data::ConnectionFiltrate::fracture_rate,
+                     measure::geometric_volume_rate, injector>)},
+    { "CFCFVIT", mul(sum(filtrate_connection_quantities<&Opm::data::ConnectionFiltrate::rate,
+                         measure::geometric_volume_rate, injector>,
+                         filtrate_connection_quantities<&Opm::data::ConnectionFiltrate::fracture_rate,
+                         measure::geometric_volume_rate, injector>), duration) },
+    { "CFCWFVIR", filtrate_connection_quantities<&Opm::data::ConnectionFiltrate::rate,
+      measure::geometric_volume_rate, injector>},
+    { "CFCWFVIT", mul(filtrate_connection_quantities<&Opm::data::ConnectionFiltrate::rate,
+                      measure::geometric_volume_rate, injector>, duration)},
+    { "CFCFFVIR", filtrate_connection_quantities<&Opm::data::ConnectionFiltrate::fracture_rate,
+      measure::geometric_volume_rate, injector>},
+    { "CFCFFVIT", mul(filtrate_connection_quantities<&Opm::data::ConnectionFiltrate::fracture_rate,
+                      measure::geometric_volume_rate, injector>, duration)},
     { "CFCWIDTH", filtrate_connection_quantities<&Opm::data::ConnectionFiltrate::thickness,
       measure::length, injector> },
     { "CFCSKIN", filtrate_connection_quantities<&Opm::data::ConnectionFiltrate::skin_factor,
