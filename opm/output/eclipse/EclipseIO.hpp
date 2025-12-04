@@ -27,10 +27,12 @@
 #include <opm/output/data/Solution.hpp>
 #include <opm/output/eclipse/RestartValue.hpp>
 
+#include <cstddef>
 #include <map>
 #include <memory>
 #include <optional>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace Opm {
@@ -60,6 +62,8 @@ namespace Opm {
 class EclipseIO
 {
 public:
+    using DynamicConns = std::vector<std::pair<std::string, std::vector<std::size_t>>>;
+
     /// Constructor.
     ///
     /// \param[in] es Run's static parameters such as region definitions.
@@ -320,6 +324,7 @@ public:
                        const bool                write_double = false,
                        std::optional<int>        time_step = std::nullopt);
 
+    void recordNewDynamicWellConns(const DynamicConns& newConns);
 
     /// Load per-cell solution data and wellstate from restart file.
     ///

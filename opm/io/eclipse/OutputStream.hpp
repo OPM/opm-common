@@ -400,6 +400,18 @@ namespace Opm { namespace EclIO { namespace OutputStream {
                      const int          num,
                      const std::string& unit);
 
+            /// Assign NUMBER value of a single summary vector.
+            ///
+            /// This is a special purpose modifier to support connection
+            /// level vectors that arise dynamically as a result of a
+            /// geomechanical fracturing process.
+            ///
+            /// \param[in] paramIx Vector index.
+            ///
+            /// \param[in] num Vector's new NUMBER value.
+            void setNumber(const std::size_t paramIx,
+                           const int         num);
+
             friend class SummarySpecification;
 
         private:

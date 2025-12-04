@@ -50,6 +50,7 @@
 #include <opm/input/eclipse/Schedule/UDQ/UDQContext.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQParams.hpp>
 #include <opm/input/eclipse/Schedule/VFPProdTable.hpp>
+#include <opm/input/eclipse/Schedule/Well/NameOrder.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
 
@@ -76,6 +77,7 @@
 #include <chrono>
 #include <cstddef>
 #include <ctime>
+#include <deque>
 #include <exception>
 #include <filesystem>
 #include <functional>
@@ -84,10 +86,13 @@
 #include <limits>
 #include <memory>
 #include <numeric>
+#include <optional>
+#include <queue>
 #include <regex>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <variant>
 #include <vector>
@@ -4058,17 +4063,29 @@ namespace Evaluator {
                             Opm::SummaryState&      st) const = 0;
     };
 
+    bool useNumber(Opm::EclIO::SummaryNode::Category cat)
+    {
+        using Cat = Opm::EclIO::SummaryNode::Category;
+
+        return ! ((cat == Cat::Well) ||
+                  (cat == Cat::Group) ||
+                  (cat == Cat::Field) ||
+                  (cat == Cat::Node) ||
+                  (cat == Cat::Miscellaneous));
+    }
+
     class FunctionRelation : public Base
     {
     public:
+        enum class State { Complete, Deferred };
+
         explicit FunctionRelation(Opm::EclIO::SummaryNode node, ofun fcn)
-            : node_(std::move(node))
-            , fcn_ (std::move(fcn))
-        {
-            if (this->use_number()) {
-                this->number_ = std::max(0, this->node_.number);
-            }
-        }
+            : node_      (std::move(node))
+            , fcn_       (std::move(fcn))
+            , use_number_(useNumber(node_.category))
+            , state_     (use_number_ && (node_.number <= 0)
+                          ? State::Deferred : State::Complete)
+        {}
 
         void update(const std::size_t       sim_step,
                     const double            stepSize,
@@ -4076,6 +4093,10 @@ namespace Evaluator {
                     const SimulatorResults& simRes,
                     Opm::SummaryState&      st) const override
         {
+            if (! this->isComplete()) {
+                return;
+            }
+
             const auto wells = need_wells(this->node_)
                 ? find_wells(input.sched, this->node_,
                              static_cast<int>(sim_step), input.reg)
@@ -4087,7 +4108,7 @@ namespace Evaluator {
             const fn_args args {
                 wells, this->group_name(), this->node_.keyword,
                 stepSize, static_cast<int>(sim_step),
-                this->number_, this->node_.fip_region,
+                this->number(), this->node_.fip_region,
                 st,
                 simRes.wellSol, simRes.wbp, simRes.grpNwrkSol,
                 input.reg, input.grid, input.sched,
@@ -4102,10 +4123,31 @@ namespace Evaluator {
             updateValue(this->node_, usys.from_si(prm.unit, prm.value), st);
         }
 
+        void setNumber(const int numValue)
+        {
+            if (this->isComplete()) {
+                throw std::invalid_argument {
+                    "Cannot reset SMSPEC node number "
+                    "after it has been fully assigned"
+                };
+            }
+
+            if (numValue > 0) {
+                this->node_.number = numValue;
+                this->state_ = State::Complete;
+            }
+        }
+
+        std::string uniqueKey() const
+        {
+            return this->node_.unique_key();
+        }
+
     private:
         Opm::EclIO::SummaryNode node_;
         ofun                    fcn_;
-        int                     number_{0};
+        bool                    use_number_;
+        State                   state_;
 
         std::string group_name() const
         {
@@ -4122,16 +4164,16 @@ namespace Evaluator {
                 ? this->node_.wgname : def_gr_name;
         }
 
-        bool use_number() const
+        bool isComplete() const
         {
-            using Cat = ::Opm::EclIO::SummaryNode::Category;
-            const auto cat = this->node_.category;
+            return this->state_ == State::Complete;
+        }
 
-            return ! ((cat == Cat::Well) ||
-                      (cat == Cat::Group) ||
-                      (cat == Cat::Field) ||
-                      (cat == Cat::Node) ||
-                      (cat == Cat::Miscellaneous));
+        int number() const
+        {
+            return this->use_number_
+                ? this->node_.number
+                : -1;
         }
     };
 
@@ -5046,6 +5088,55 @@ public:
         this->evaluators_.push_back(std::move(evaluator));
     }
 
+    void recordExtraParameter(std::string keyword,
+                              std::string name,
+                              const int   num,
+                              std::string unit,
+                              EvalPtr     evaluator)
+    {
+        this->recordExtraParameter(keyword, name);
+
+        this->makeParameter(std::move(keyword), std::move(name),
+                            num, std::move(unit), std::move(evaluator));
+    }
+
+    std::optional<std::pair<std::string, std::vector<EvalPtr>::size_type>>
+    createExtraParameter(const std::string& keyword,
+                         const std::string& name,
+                         const int          num)
+    {
+        const auto paramPos = this->extra_.find(VectorID { name, keyword });
+        if ((paramPos == this->extra_.end()) || paramPos->second.empty()) {
+            // No extra vectors registered for (keyword,name), or all have
+            // already been allocated/consumed.
+            return {};
+        }
+
+        const auto ix = paramPos->second.front();
+
+        if (auto* func = dynamic_cast<Evaluator::FunctionRelation*>(this->evaluators_[ix].get());
+            func != nullptr)
+        {
+            // evaluators_[ix] is a FunctionRelation.  This is the expected case.
+
+            // Finalise summary node for this function by recording its "NUMBER".
+            func->setNumber(num);
+            this->smspec_.setNumber(ix, num);
+
+            // Make sure evaluators_[ix] is ineligible for future allocation.
+            paramPos->second.pop();
+
+            // Inform caller about the exact SummaryState query key it needs
+            // to use for evaluators_[ix].
+            return { std::pair { func->uniqueKey(), ix } };
+        }
+
+        // Evaluators_[ix] is not a FunctionRelation.  This is unexpected,
+        // but we can't do anything in this case.  Let the caller know this
+        // by returning nullopt.
+        return {};
+    }
+
     const SMSpecPrm& summarySpecification() const
     {
         return this->smspec_;
@@ -5057,8 +5148,18 @@ public:
     }
 
 private:
+    using VectorID = std::pair<std::string, std::string>;
+    using VectorIdxQueue = std::queue<std::vector<EvalPtr>::size_type>;
+    using ExtraVectors = std::map<VectorID, VectorIdxQueue>;
+
     SMSpecPrm smspec_{};
     std::vector<EvalPtr> evaluators_{};
+    ExtraVectors extra_{};
+
+    void recordExtraParameter(const std::string& keyword, const std::string& name)
+    {
+        this->extra_[ VectorID { name, keyword } ].push(this->evaluators_.size());
+    }
 };
 
 class SMSpecStreamDeferredCreation
@@ -5197,6 +5298,8 @@ public:
     SummaryImplementation& operator=(const SummaryImplementation& rhs) = delete;
     SummaryImplementation& operator=(SummaryImplementation&& rhs) = default;
 
+    void recordNewDynamicWellConns(const DynamicConns& newConns);
+
     void eval(const int                    sim_step,
               const double                 secs_elapsed,
               const DynamicSimulatorState& values,
@@ -5245,6 +5348,8 @@ private:
     std::unique_ptr<Opm::EclIO::EclOutput> stream_{};
 
     std::unique_ptr<Opm::EclIO::ExtSmryOutput> esmry_;
+
+    std::unordered_map<std::string, std::unordered_set<std::string>> extraConnVectors_{};
 
     void configureTimeVector(const EclipseState& es, const std::string& kw);
     void configureTimeVectors(const EclipseState& es, const SummaryConfig& sumcfg);
@@ -5310,10 +5415,9 @@ SummaryImplementation(SummaryConfig&      sumcfg,
                                es.globalFieldProps(),
                                grid, sched);
 
-    const auto esmryFileName = EclIO::OutputStream::
-        outputFileName(this->rset_, "ESMRY");
-
-    if (std::filesystem::exists(esmryFileName)) {
+    if (const auto esmryFileName = EclIO::OutputStream::outputFileName(this->rset_, "ESMRY");
+        std::filesystem::exists(esmryFileName))
+    {
         std::filesystem::remove(esmryFileName);
     }
 
@@ -5344,6 +5448,32 @@ internal_store(const SummaryState& st,
             continue;
 
         ms.params[i] = st.get(this->valueKeys_[i]);
+    }
+}
+
+void Opm::out::Summary::SummaryImplementation::
+recordNewDynamicWellConns(const DynamicConns& newConns)
+{
+    for (const auto& [wname, dynConns] : newConns) {
+        const auto extraPos = this->extraConnVectors_.find(wname);
+        if (extraPos == this->extraConnVectors_.end()) {
+            // No dynamic vectors configured for this well ('wname').
+            continue;
+        }
+
+        for (const auto& vector : extraPos->second) {
+            for (const auto& connId : dynConns) {
+                const auto param =
+                    this->outputParameters_.createExtraParameter
+                    (vector, wname, static_cast<int>(connId) + 1);
+
+                if (param.has_value()) {
+                    const auto& [valueKey, ix] = *param;
+
+                    this->valueKeys_[ix] = valueKey;
+                }
+            }
+        }
     }
 }
 
@@ -5412,9 +5542,8 @@ eval(const int                    sim_step,
         evalPtr->update(sim_step, duration, input, simRes, st);
     }
 
-    for (auto& [_, evalPtr] : this->extra_parameters) {
-        (void)_;
-        evalPtr->update(sim_step, duration, input, simRes, st);
+    for (const auto& paramPair : this->extra_parameters) {
+        paramPair.second->update(sim_step, duration, input, simRes, st);
     }
 
     st.update_elapsed(duration);
@@ -5570,6 +5699,25 @@ configureSummaryInput(const SummaryConfig& sumcfg,
 
     if (! unsuppkw.empty()) {
         reportUnsupportedKeywords(std::move(unsuppkw));
+    }
+
+    for (const auto& fracturingVector : sumcfg.extraFracturingVectors()) {
+        auto prmDescr = evaluatorFactory.create(fracturingVector);
+
+        assert (prmDescr.evaluator != nullptr);
+
+        this->valueKeys_.push_back(std::move(prmDescr.uniquekey));
+        this->valueUnits_.push_back(prmDescr.unit);
+
+        const auto name = makeWGName(fracturingVector.namedEntity());
+
+        this->outputParameters_
+            .recordExtraParameter(fracturingVector.keyword(), name,
+                                  fracturingVector.number(), // Expected to be '-1'.
+                                  std::move(prmDescr.unit),
+                                  std::move(prmDescr.evaluator));
+
+        this->extraConnVectors_[name].insert(fracturingVector.keyword());
     }
 }
 
@@ -5849,6 +5997,11 @@ Summary::Summary(SummaryConfig&       sumcfg,
                  const bool           writeEsmry)
     : pImpl_ { std::make_unique<SummaryImplementation>(sumcfg, es, grid, sched, basename, writeEsmry) }
 {}
+
+void Summary::recordNewDynamicWellConns(const DynamicConns& newConns)
+{
+    this->pImpl_->recordNewDynamicWellConns(newConns);
+}
 
 void Summary::eval(const int                    report_step,
                    const double                 secs_elapsed,

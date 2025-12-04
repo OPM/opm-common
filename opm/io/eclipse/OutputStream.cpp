@@ -707,6 +707,13 @@ Parameters::add(const std::string& keyword,
     this->units   .emplace_back(unit);
 }
 
+void
+Opm::EclIO::OutputStream::SummarySpecification::
+Parameters::setNumber(const std::size_t paramIx, const int num)
+{
+    this->nums[paramIx] = num;
+}
+
 Opm::EclIO::OutputStream::SummarySpecification::
 SummarySpecification(const ResultSet&            rset,
                      const Formatted&            fmt,

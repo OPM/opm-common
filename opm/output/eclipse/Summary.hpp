@@ -148,6 +148,8 @@ public:
         VolumeInPlace inplace{};
     };
 
+    using DynamicConns = std::vector<std::pair<std::string, std::vector<std::size_t>>>;
+
     /// Constructor
     ///
     /// \param[in,out] sumcfg On input, the full collection of summary
@@ -208,6 +210,8 @@ public:
                       const int           report_step,
                       const int           ministep_id,
                       const bool          isSubstep);
+
+    void recordNewDynamicWellConns(const DynamicConns& newConns);
 
     /// Calculate summary vector values.
     ///
