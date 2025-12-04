@@ -75,6 +75,37 @@ namespace Opm {
 
 namespace {
 
+    class ConnectionSet
+    {
+    public:
+        decltype(auto) insert(const std::size_t connCell)
+        {
+            return this->conns_.insert(connCell);
+        }
+
+    private:
+        std::unordered_set<std::size_t> conns_{};
+    };
+
+    class KnownWellConnections
+    {
+    public:
+        ConnectionSet& connections(const std::string& wellName)
+        {
+            const auto& [wellPos, inserted] =
+                this->wellConns_.try_emplace(wellName);
+
+            if (inserted) {
+                wellPos->second = std::make_unique<ConnectionSet>();
+            }
+
+            return *wellPos->second;
+        }
+
+    private:
+        std::unordered_map<std::string, std::unique_ptr<ConnectionSet>> wellConns_;
+    };
+
     /// Basic information about run's region sets
     ///
     /// Simplifies creating region-level and inter-region summary vectors.
@@ -116,6 +147,11 @@ namespace {
             this->regSets_
                 .emplace_back(this->declaredMaxRegID_)
                 .summariseContents(regIDs);
+        }
+
+        KnownWellConnections& wellConnsForConnVector(const std::string& connVector)
+        {
+            return this->uniqueConnVectors_.try_emplace(connVector).first->second;
         }
 
         /// Retrieve maximum supported region ID in named region set.
@@ -194,6 +230,10 @@ namespace {
 
         /// Currently known region sets.
         std::vector<RegSet> regSets_{};
+
+        /// Currently known connection vectors and their associated
+        /// well/connection IDs.
+        std::unordered_map<std::string, KnownWellConnections> uniqueConnVectors_{};
     };
 
     void SummaryConfigContext::RegSet::summariseContents(const std::vector<int>& regIDs)
@@ -1318,17 +1358,38 @@ void keywordMISC(SummaryConfig::keyword_list& list,
     keywordMISC(list, keyword.name(), keyword.location());
 }
 
-void handleConnectionCell(const std::size_t            connCell,
+void handleConnectionCell(const bool                   isGeomechRun,
+                          const std::size_t            connCell,
                           SummaryConfigNode&           param,
-                          SummaryConfig::keyword_list& list)
+                          ConnectionSet&               knownConns,
+                          SummaryConfig::keyword_list& list,
+                          SummaryConfig::keyword_list& extraFracturingVectors)
 {
-    list.push_back(param.number(static_cast<int>(connCell) + 1));
+    const auto& [global_index, inserted] = knownConns.insert(connCell);
+
+    if (! inserted) {
+        return;
+    }
+
+    // New vector identified.
+    list.push_back(param.number(static_cast<int>(*global_index) + 1));
+
+    if (isGeomechRun) {
+        constexpr auto NumExtraAllocatedGeomechConns = std::size_t{20};
+
+        extraFracturingVectors.insert(extraFracturingVectors.end(),
+                                      NumExtraAllocatedGeomechConns,
+                                      param.number(-1));
+    }
 }
 
-void connKeywordDefaultedConns(const SummaryConfigNode&        param0,
+void connKeywordDefaultedConns(const bool                      isGeomechRun,
+                               const SummaryConfigNode&        param0,
                                const Schedule&                 schedule,
                                const std::vector<std::string>& wellNames,
-                               SummaryConfig::keyword_list&    list)
+                               KnownWellConnections&           keywordWellConns,
+                               SummaryConfig::keyword_list&    list,
+                               SummaryConfig::keyword_list&    extraFracturingVectors)
 {
     auto param = param0;
 
@@ -1337,20 +1398,23 @@ void connKeywordDefaultedConns(const SummaryConfigNode&        param0,
     for (const auto& wellName : wellNames) {
         param.namedEntity(wellName);
 
+        auto& knownConns = keywordWellConns.connections(wellName);
+
         if (auto wellPos = possibleFutureConns.find(wellName);
             wellPos != possibleFutureConns.end())
         {
             std::ranges::for_each(wellPos->second,
-                                  [&param, &list]
+                                  [isGeomechRun, &knownConns, &param, &list, &extraFracturingVectors]
                                   (const int global_index)
-                                  { handleConnectionCell(global_index, param, list); });
+                                  { handleConnectionCell(isGeomechRun, global_index, param,
+                                                         knownConns, list, extraFracturingVectors); });
         }
 
-        const auto& connections = schedule.getWellatEnd(wellName).getConnections();
-        std::ranges::for_each(connections,
-                              [&param, &list]
+        std::ranges::for_each(schedule.getWellatEnd(wellName).getConnections(),
+                              [isGeomechRun, &knownConns, &param, &list, &extraFracturingVectors]
                               (const Connection& conn)
-                              { handleConnectionCell(conn.global_index(), param, list); });
+                              { handleConnectionCell(isGeomechRun, conn.global_index(), param,
+                                                     knownConns, list, extraFracturingVectors); });
     }
 }
 
@@ -1358,9 +1422,16 @@ void connKeywordSpecifiedConn(const SummaryConfigNode&        param0,
                               const int                       global_index,
                               const Schedule&                 schedule,
                               const std::vector<std::string>& wellNames,
+                              KnownWellConnections&           keywordWellConns,
                               SummaryConfig::keyword_list&    list)
 {
     auto param = param0;
+
+    // We're processing a vector pertaining to a specific connection cell.
+    // No need to allocate space for extra connections that might result
+    // from fracturing processes.
+    const auto isGeomechRun = false;
+    auto extraFracturingVectors = SummaryConfig::keyword_list{};
 
     const auto& possibleFutureConns = schedule.getPossibleFutureConnections();
 
@@ -1373,17 +1444,22 @@ void connKeywordSpecifiedConn(const SummaryConfigNode&        param0,
         {
             param.namedEntity(wellName);
 
-            handleConnectionCell(global_index, param, list);
+            handleConnectionCell(isGeomechRun, global_index, param,
+                                 keywordWellConns.connections(wellName),
+                                 list, extraFracturingVectors);
         }
     }
 }
 
-void connectionKeyword(const DeckKeyword&           keyword,
+void connectionKeyword(const bool                   isGeomechRun,
+                       const DeckKeyword&           keyword,
                        const Schedule&              schedule,
                        const GridDims&              dims,
                        const ParseContext&          parseContext,
                        ErrorGuard&                  errors,
-                       SummaryConfig::keyword_list& list)
+                       SummaryConfigContext&        context,
+                       SummaryConfig::keyword_list& list,
+                       SummaryConfig::keyword_list& extraFracturingVectors)
 {
     if (is_connection_completion(keyword.name())) {
         keywordCL(list, parseContext, errors,
@@ -1391,6 +1467,10 @@ void connectionKeyword(const DeckKeyword&           keyword,
 
         return;
     }
+
+    // Recall: unordered_map<>::operator[]() always creates a new element
+    // and, if needed, inserts it into the map.
+    auto& uniqueVectors = context.wellConnsForConnVector(keyword.name());
 
     auto param = SummaryConfigNode {
         keyword.name(), SummaryConfigNode::Category::Connection, keyword.location()
@@ -1412,7 +1492,8 @@ void connectionKeyword(const DeckKeyword&           keyword,
 
         if (record.getItem(1).defaultApplied(0)) {
             // (I,J,K) coordinate tuple defaulted.  Match all connections.
-            connKeywordDefaultedConns(param, schedule, well_names, list);
+            connKeywordDefaultedConns(isGeomechRun, param, schedule, well_names,
+                                      uniqueVectors, list, extraFracturingVectors);
         }
         else {
             // (I,J,K) coordinate specified.  Match that connection for all
@@ -1420,7 +1501,7 @@ void connectionKeyword(const DeckKeyword&           keyword,
             const auto ijk = getijk(record);
 
             connKeywordSpecifiedConn(param, dims.getGlobalIndex(ijk[0], ijk[1], ijk[2]),
-                                     schedule, well_names, list);
+                                     schedule, well_names, uniqueVectors, list);
         }
     }
 }
@@ -1649,6 +1730,7 @@ void connectionKeyword(const DeckKeyword&           keyword,
 void handleKW(const std::vector<std::string>& node_names,
               const std::vector<int>&         analyticAquiferIDs,
               const std::vector<int>&         numericAquiferIDs,
+              const bool                      isGeomechRun,
               const DeckKeyword&              keyword,
               const Schedule&                 schedule,
               const FieldPropsManager&        field_props,
@@ -1657,6 +1739,7 @@ void handleKW(const std::vector<std::string>& node_names,
               ErrorGuard&                     errors,
               SummaryConfigContext&           context,
               SummaryConfig::keyword_list&    list,
+              SummaryConfig::keyword_list&    extraFracturingVectors,
               const bool                      excludeFieldFromGroupKw = true)
 {
     using Cat = SummaryConfigNode::Category;
@@ -1693,8 +1776,9 @@ void handleKW(const std::vector<std::string>& node_names,
         break;
 
     case Cat::Connection:
-        connectionKeyword(keyword, schedule, dims,
-                          parseContext, errors, list);
+        connectionKeyword(isGeomechRun, keyword, schedule, dims,
+                          parseContext, errors, context,
+                          list, extraFracturingVectors);
         break;
 
     case Cat::Completion:
@@ -2054,6 +2138,7 @@ SummaryConfig::SummaryConfig(const Deck&              deck,
 
         const auto analyticAquifers = analyticAquiferIDs(aquiferConfig);
         const auto numericAquifers = numericAquiferIDs(aquiferConfig);
+        const auto isGeomechRun = Runspec { deck }.mech();
 
         for (const auto& kw : section) {
             if (is_processing_instruction(kw.name())) {
@@ -2061,8 +2146,9 @@ SummaryConfig::SummaryConfig(const Deck&              deck,
             }
             else {
                 handleKW(node_names, analyticAquifers, numericAquifers,
-                         kw, schedule, field_props, dims,
-                         parseContext, errors, context, this->m_keywords);
+                         isGeomechRun, kw, schedule, field_props, dims,
+                         parseContext, errors, context,
+                         this->m_keywords, this->extraFracturingVectors_);
             }
         }
 
@@ -2213,6 +2299,13 @@ SummaryConfig::registerRequisiteUDQorActionSummaryKeys(const std::vector<std::st
         const auto analyticAquifers = analyticAquiferIDs(es.aquifer());
         const auto numericAquifers = numericAquiferIDs(es.aquifer());
 
+        // For all we know, we're in a geomechanical run.  However, for
+        // this particular aspect of configuring summary vectors we can
+        // ignore that additional complexity.
+        const auto isGeomechRun = false;
+
+        auto extraFracturing = keyword_list{};
+
         const auto parseCtx = ParseContext { InputErrorAction::IGNORE };
         auto errors = ErrorGuard {};
 
@@ -2222,10 +2315,12 @@ SummaryConfig::registerRequisiteUDQorActionSummaryKeys(const std::vector<std::st
 
         for (const auto& vector_name : extraKeys) {
             handleKW(node_names, analyticAquifers, numericAquifers,
+                     isGeomechRun,
                      DeckKeyword { KeywordLocation{}, vector_name },
                      sched, es.globalFieldProps(),
                      es.gridDims(), parseCtx, errors,
                      ctxt, candidateSummaryNodes,
+                     extraFracturing,
                      excludeFieldFromGroupKw);
         }
     }
