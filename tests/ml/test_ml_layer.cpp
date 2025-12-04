@@ -170,9 +170,10 @@ BOOST_AUTO_TEST_CASE(NNLayerDenseApply)
     using Opm::ML::NNLayerDense;
 
     // Dense: 2 outputs, 3 inputs
-    Tensor<float> W(2, 3);
-    W(0,0) = 1.0; W(0,1) = 2.0; W(0,2) = 3.0;
-    W(1,0) = 4.0; W(1,1) = 5.0; W(1,2) = 6.0;
+    Tensor<float> W(3,2);
+    W(0,0) = 1.0; W(0,1) = 4.0;
+    W(1,0) = 2.0; W(1,1) = 5.0;
+    W(2,0) = 3.0; W(2,1) = 6.0;
 
     Tensor<float> b(2);
     b(0) = 0.5; b(1) = -1.0;
