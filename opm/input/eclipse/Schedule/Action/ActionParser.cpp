@@ -64,6 +64,11 @@ Opm::Action::FuncType functionType(const std::string& arg)
     case Cat::Region:     return FuncType::region;
     case Cat::Block:      return FuncType::block;
     case Cat::Segment:    return FuncType::well_segment;
+    // ACTIONX does not support conditions on well completions
+    // with a special syntax like for connections and wells.
+    // But it can have conditions on Quanttties defined for completions
+    // (e.g. WWCTL__3) and then this will change wells
+    case Cat::Completion: return FuncType::well;
     default:              return FuncType::none;
     }
 }
