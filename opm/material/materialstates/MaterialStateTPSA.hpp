@@ -52,7 +52,7 @@ public:
     *
     * \param dirIdx Direction component index
     */
-    const Scalar& displacement(unsigned dirIdx) const
+    const Scalar displacement(unsigned dirIdx) const
     {
         return displacement_[dirIdx];
     }
@@ -62,7 +62,7 @@ public:
     *
     * \param dirIdx Direction component index
     */
-    const Scalar& rotation(unsigned dirIdx) const
+    const Scalar rotation(unsigned dirIdx) const
     {
         return rotation_[dirIdx];
     }
@@ -70,7 +70,7 @@ public:
     /*!
     * \brief Return solid pressure
     */
-    const Scalar& solidPressure() const
+    const Scalar solidPressure() const
     {
         return solidPressure_;
     }
@@ -81,7 +81,7 @@ public:
     * \param dirIdx Direction component index
     * \param value Displacement value
     */
-    void setDisplacement(unsigned dirIdx, const Scalar& value)
+    void setDisplacement(unsigned dirIdx, const Scalar value)
     {
         Opm::Valgrind::CheckDefined(value);
         Opm::Valgrind::SetUndefined(displacement_[dirIdx]);
@@ -95,7 +95,7 @@ public:
     * \param dirIdx Direction component index
     * \param value Rotation value
     */
-    void setRotation(unsigned dirIdx, const Scalar& value)
+    void setRotation(unsigned dirIdx, const Scalar value)
     {
         Opm::Valgrind::CheckDefined(value);
         Opm::Valgrind::SetUndefined(rotation_[dirIdx]);
@@ -108,7 +108,7 @@ public:
     *
     * \param value Solid pressure value
     */
-    void setSolidPressure(const Scalar& value)
+    void setSolidPressure(const Scalar value)
     {
         Opm::Valgrind::CheckDefined(value);
         Opm::Valgrind::SetUndefined(solidPressure_);

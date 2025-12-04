@@ -452,7 +452,8 @@ private:
 };
 
 
-class Tpsa {
+class Tpsa
+{
 public:
     enum class CouplingScheme {
         Lagged,

@@ -604,7 +604,7 @@ Tpsa::Tpsa(const Deck& deck)
             this->m_coupling = Tpsa::CouplingScheme::FixedStress;
         }
         else {
-            std::string msg = fmt::format("TPSA item 1 = {} not valid!", scheme);
+            const std::string msg = fmt::format("TPSA item 1 = {} not valid!", scheme);
             OpmLog::error(msg);
             throw std::runtime_error(msg);
         }
@@ -615,12 +615,11 @@ Tpsa::Tpsa(const Deck& deck)
 
         if (this->fixedStressScheme() &&
             (this->m_fixed_stress_min_iter > this->m_fixed_stress_max_iter)) {
-            std::string msg = fmt::format("TPSA item 2 (={}) is lager than item 3 (={}).\n"
-                                          "Maximum fixed-stress iterations set equal to minimum!",
-                                          this->m_fixed_stress_min_iter,
-                                          this->m_fixed_stress_max_iter);
             this->m_fixed_stress_max_iter = this->m_fixed_stress_min_iter;
-            OpmLog::warning(msg);
+            OpmLog::warning(fmt::format("TPSA item 2 (={}) is larger than item 3 (={}).\n"
+                                        "Maximum fixed-stress iterations set equal to minimum!",
+                                        this->m_fixed_stress_min_iter,
+                                        this->m_fixed_stress_max_iter));
         }
 
         // Turn on TPSA
@@ -648,7 +647,8 @@ Tpsa Tpsa::serializationTestObject()
     return tpsa;
 }
 
-const Tpsa& Runspec::tpsa() const {
+const Tpsa& Runspec::tpsa() const
+{
     return this->m_tpsa;
 }
 
