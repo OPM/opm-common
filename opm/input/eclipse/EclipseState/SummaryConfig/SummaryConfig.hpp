@@ -25,6 +25,7 @@
 #include <opm/common/OpmLog/KeywordLocation.hpp>
 
 #include <array>
+#include <cstddef>
 #include <limits>
 #include <optional>
 #include <set>
@@ -45,40 +46,128 @@ namespace Opm {
 
 namespace Opm {
 
+    /// Definition of a single summary vector.
+    ///
+    /// Collects the vector name (summary keyword), the vector entity (e.g.,
+    /// a well or group name), the vector "number" (e.g., a cell or segment
+    /// index), and any applicable region names (for region level vectors).
     class SummaryConfigNode
     {
     public:
+        /// Summary vector level (field, well, region, &c).
         using Category = Opm::EclIO::SummaryNode::Category;
+
+        /// Summary vector type (rates, cumulative, pressure, &c)
         using Type = Opm::EclIO::SummaryNode::Type;
 
+        /// Default constructor.
+        ///
+        /// Resulting object is mostly usable as the target of a
+        /// deserialisation operation.
         SummaryConfigNode() = default;
+
+        /// Constructor
+        ///
+        /// \param[in] keyword Summary vector name.
+        ///
+        /// \param[in] cat Summary vector level.
+        ///
+        /// \param[in] loc_arg Keyword location.  Mostly for diagnostic
+        /// purposes.
         explicit SummaryConfigNode(std::string keyword,
                                    const Category cat,
                                    KeywordLocation loc_arg);
 
+        /// Create a serialisation test object.
         static SummaryConfigNode serializationTestObject();
 
+        /// Assign vector type.
+        ///
+        /// \param[in] type Summary vector type (e.g., rate, cumulative,
+        /// ratio, pressure).
+        ///
+        /// \return \code *this \endcode
         SummaryConfigNode& parameterType(const Type type);
+
+        /// Assign vector's named entity.
+        ///
+        /// \param[in] name Summary vector's named entity such as a well or
+        /// group name.
+        ///
+        /// \return \code *this \endcode
         SummaryConfigNode& namedEntity(std::string name);
+
+        /// Assign vector's numeric ID.
+        ///
+        /// \param[in] num Summary vector's "number" such as a
+        /// cell/connection index, a completion number or a segment number.
+        ///
+        /// \return \code *this \endcode
         SummaryConfigNode& number(const int num);
+
+        /// Assign vector's UDQ flag.
+        ///
+        /// \param[in] userDefined Whether or not vector is a user defined
+        /// quantity.
+        ///
+        /// \return \code *this \endcode
         SummaryConfigNode& isUserDefined(const bool userDefined);
+
+        /// Assign vector's associated region name.
+        ///
+        /// \param[in] fip_region Summary vector's associated region.
+        ///
+        /// \return \code *this \endcode
         SummaryConfigNode& fip_region(const std::string& fip_region);
 
+        /// Retrieve summary vector name.
         const std::string& keyword() const { return this->keyword_; }
+
+        /// Retrieve summary vector's level.
         Category category() const { return this->category_; }
+
+        /// Retrieve summary vector's type.
         Type type() const { return this->type_; }
+
+        /// Retrieve summary vector's named entity.
         const std::string& namedEntity() const { return this->name_; }
+
+        /// Retrieve summary vector's associated numeric ID.
         int number() const { return this->number_; }
+
+        /// Retrieve summary vector's UDQ flag.
         bool isUserDefined() const { return this->userDefined_; }
+
+        /// Retrieve summary vector's associated region.
         const std::string& fip_region() const { return *this->fip_region_ ; }
 
+        /// Retrieve a unique distinguishing identifier for this summary vector.
         std::string uniqueNodeKey() const;
+
+        /// Retrieve summary keyword location in input.
+        ///
+        /// Mostly provided for diagnostic purposes.
         const KeywordLocation& location() const { return this->loc; }
 
-        operator Opm::EclIO::SummaryNode() const {
-            return { keyword_, category_, type_, name_, number_, fip_region_, {}};
+        /// Convert summary vector definition to low-level SummaryNode object.
+        operator EclIO::SummaryNode() const
+        {
+            return {
+                /* keyword = */    this->keyword_,
+                /* category = */   this->category_,
+                /* type = */       this->type_,
+                /* wgname = */     this->name_,
+                /* number = */     this->number_,
+                /* fip_region = */ this->fip_region_,
+                /* lgr = */        {} // std::optional<>
+            };
         }
 
+        /// Convert between byte array and object representation.
+        ///
+        /// \tparam Serializer Byte array conversion protocol.
+        ///
+        /// \param[in,out] serializer Byte array conversion object.
         template<class Serializer>
         void serializeOp(Serializer& serializer)
         {
@@ -93,162 +182,480 @@ namespace Opm {
         }
 
     private:
+        /// Summary vector name.
         std::string keyword_{};
-        Category    category_{};
-        KeywordLocation loc{};
-        Type        type_{ Type::Undefined };
+
+        /// Summary vector level (e.g., field, group, well, segment, region).
+        Category category_{};
+
+        /// Summary vector's type (e.g., rate, cumulative, ratio, pressure).
+        Type type_{ Type::Undefined };
+
+        /// Summary vector's named entity (e.g., well or group name).
         std::string name_{};
-        int         number_{std::numeric_limits<int>::min()};
-        std::optional<std::string> fip_region_;
-        bool        userDefined_{false};
+
+        /// Summary vector's associated numeric ID.
+        ///
+        /// Common examples are cell/connection indices or
+        /// completion/segment/region numbers.
+        int number_{std::numeric_limits<int>::min()};
+
+        /// Summary vector's associated region (for region level vectors).
+        std::optional<std::string> fip_region_{};
+
+        /// Whether or not this vector is a user-defined quantity.
+        bool userDefined_{false};
+
+        /// Summary keyword's location in input file.
+        ///
+        /// Mostly for diagnostic purposes.
+        KeywordLocation loc{};
     };
 
+    /// Infer summary vector level from keyword name.
+    ///
+    /// \param[in] keyword Summary vector name.
+    ///
+    /// \return Summary vector level (e.g., field, group, well, connection,
+    /// cell, region, segment) for \p keyword.
     SummaryConfigNode::Category parseKeywordCategory(const std::string& keyword);
+
+    /// Infer summary vector type from keyword name.
+    ///
+    /// \param[in] keyword Summary vector name.
+    ///
+    /// \return Summary vector type (e.g., rate, cumulative, ratio,
+    /// pressure) for \p keyword.
     SummaryConfigNode::Type parseKeywordType(std::string keyword);
 
+    /// Equality predicate for SummaryConfigNode objects.
+    ///
+    /// \param[in] lhs Left-hand side object.
+    ///
+    /// \param[in] rhs Right-hand side object.
+    ///
+    /// \return Whether or not \p lhs is the same as (equal to) \p rhs.
     bool operator==(const SummaryConfigNode& lhs, const SummaryConfigNode& rhs);
+
+    /// Canonical comparison operator for SummaryConfigNode objects.
+    ///
+    /// \param[in] lhs Left-hand side object.
+    ///
+    /// \param[in] rhs Right-hand side object.
+    ///
+    /// \return Whether or not \p lhs is less than \p rhs.
     bool operator<(const SummaryConfigNode& lhs, const SummaryConfigNode& rhs);
 
+    /// Inequality operator for SummaryConfigNode objects
+    ///
+    /// \param[in] lhs Left-hand side object.
+    ///
+    /// \param[in] rhs Right-hand side object.
+    ///
+    /// \return Whether or not \p lhs is different from \p rhs.
     inline bool operator!=(const SummaryConfigNode& lhs, const SummaryConfigNode& rhs)
     {
         return ! (lhs == rhs);
     }
 
+    /// Less-than-or-equal comparison operator for SummaryConfigNode objects.
+    ///
+    /// \param[in] lhs Left-hand side object.
+    ///
+    /// \param[in] rhs Right-hand side object.
+    ///
+    /// \return Whether or not \p lhs is less than or equal to \p rhs.
     inline bool operator<=(const SummaryConfigNode& lhs, const SummaryConfigNode& rhs)
     {
         return ! (rhs < lhs);
     }
 
+    /// Greater-than comparison operator for SummaryConfigNode objects.
+    ///
+    /// \param[in] lhs Left-hand side object.
+    ///
+    /// \param[in] rhs Right-hand side object.
+    ///
+    /// \return Whether or not \p lhs is greater than \p rhs.
     inline bool operator>(const SummaryConfigNode& lhs, const SummaryConfigNode& rhs)
     {
         return rhs < lhs;
     }
 
+    /// Greater-than-or-equal comparison operator for SummaryConfigNode objects.
+    ///
+    /// \param[in] lhs Left-hand side object.
+    ///
+    /// \param[in] rhs Right-hand side object.
+    ///
+    /// \return Whether or not \p lhs is greater than or equal to \p rhs.
     inline bool operator>=(const SummaryConfigNode& lhs, const SummaryConfigNode& rhs)
     {
         return ! (lhs < rhs);
     }
 
+    /// Collection of run's summary vectors.
     class SummaryConfig
     {
-        public:
-            typedef SummaryConfigNode keyword_type;
-            typedef std::vector< keyword_type > keyword_list;
-            typedef keyword_list::const_iterator const_iterator;
+    public:
+        /// Convenience type alias for a linear sequence of summary vector
+        /// definitions.
+        using keyword_list = std::vector<SummaryConfigNode>;
 
-            SummaryConfig() = default;
-            SummaryConfig( const Deck&,
-                           const Schedule&,
-                           const FieldPropsManager&,
-                           const AquiferConfig&,
-                           const ParseContext&,
-                           ErrorGuard&);
+        /// Default constructor.
+        SummaryConfig() = default;
 
-            template <typename T>
-            SummaryConfig( const Deck&,
-                           const Schedule&,
-                           const FieldPropsManager&,
-                           const AquiferConfig&,
-                           const ParseContext&,
-                           T&&);
+        /// Constructor.
+        ///
+        /// Parses the SUMMARY section of the run's model description and
+        /// configures the initial collection of summary vectors.  Parse
+        /// failures such as missing or incorrect well names are reported
+        /// through the normal ErrorGuard mechanism.
+        ///
+        /// \param[in] deck Run's model description.
+        ///
+        /// \param[in] schedule Run's collection of dynamic objects (wells,
+        /// groups, &c).  Needed to configure vectors for keywords that
+        /// apply to "all" entities such as
+        ///
+        ///    WOPR
+        ///    /
+        ///
+        /// \param[in] field_props Run's static property container.  Needed
+        /// to define region-level vectors, especially for those that use
+        /// user-defined region sets such as FIPABC.
+        ///
+        /// \param[in] aquiferConfig Run's collection of analytic and
+        /// numerical aquifers.  Needed to define aquifer level vectors that
+        /// apply to "all" aquifers.
+        ///
+        /// \param[in] parseContext Error handling controls.
+        ///
+        /// \param[in,out] errors Collection of parse errors encountered
+        /// thus far.  Behaviour controlled by \p parseContext.
+        SummaryConfig(const Deck&              deck,
+                      const Schedule&          schedule,
+                      const FieldPropsManager& field_props,
+                      const AquiferConfig&     aquiferConfig,
+                      const ParseContext&      parseContext,
+                      ErrorGuard&              errors);
 
-            SummaryConfig( const Deck&,
-                           const Schedule&,
-                           const FieldPropsManager&,
-                           const AquiferConfig&);
+        /// Constructor.
+        ///
+        /// Trampoline for expiring ErrorGuard objects.  This constructor
+        /// should arguably not exist.
+        ///
+        /// Parses the SUMMARY section of the run's model description and
+        /// configures the initial collection of summary vectors.  Parse
+        /// failures such as missing or incorrect well names are reported
+        /// through the normal ErrorGuard mechanism, though the ErrorGuard
+        /// object does not exist when the constructor completes.
+        ///
+        /// \tparam T Error guard type.  Must be ErrorGuard.
+        ///
+        /// \param[in] deck Run's model description.
+        ///
+        /// \param[in] schedule Run's collection of dynamic objects (wells,
+        /// groups, &c).  Needed to configure vectors for keywords that
+        /// apply to "all" entities such as
+        ///
+        ///    WOPR
+        ///    /
+        ///
+        /// \param[in] field_props Run's static property container.  Needed
+        /// to define region-level vectors, especially for those that use
+        /// user-defined region sets such as FIPABC.
+        ///
+        /// \param[in] aquiferConfig Run's collection of analytic and
+        /// numerical aquifers.  Needed to define aquifer level vectors that
+        /// apply to "all" aquifers.
+        ///
+        /// \param[in] parseContext Error handling controls.
+        ///
+        /// \param[in,out] errors Collection of parse errors encountered
+        /// thus far.  Behaviour controlled by \p parseContext.
+        template <typename T>
+        SummaryConfig(const Deck&              deck,
+                      const Schedule&          schedule,
+                      const FieldPropsManager& field_props,
+                      const AquiferConfig&     aquiferConfig,
+                      const ParseContext&      parseContext,
+                      T&&                      errors);
 
-            SummaryConfig(const keyword_list& kwds,
-                          const std::set<std::string>& shortKwds,
-                          const std::set<std::string>& smryKwds);
+        /// Constructor.
+        ///
+        /// Parses the SUMMARY section of the run's model description and
+        /// configures the initial collection of summary vectors.  Parse
+        /// failures such as missing or incorrect well names generate
+        /// exceptions and stop the simulation run.
+        ///
+        /// \param[in] deck Run's model description.
+        ///
+        /// \param[in] schedule Run's collection of dynamic objects (wells,
+        /// groups, &c).  Needed to configure vectors for keywords that
+        /// apply to "all" entities such as
+        ///
+        ///    WOPR
+        ///    /
+        ///
+        /// \param[in] field_props Run's static property container.  Needed
+        /// to define region-level vectors, especially for those that use
+        /// user-defined region sets such as FIPABC.
+        ///
+        /// \param[in] aquiferConfig Run's collection of analytic and
+        /// numerical aquifers.  Needed to define aquifer level vectors that
+        /// apply to "all" aquifers.
+        SummaryConfig(const Deck&              deck,
+                      const Schedule&          schedule,
+                      const FieldPropsManager& field_props,
+                      const AquiferConfig&     aquiferConfig);
 
-            static SummaryConfig serializationTestObject();
+        /// Constructor.
+        ///
+        /// Forms collection from existing set of summary vector
+        /// definitions.
+        ///
+        /// \param[in] keywords Summary vector definitions.
+        ///
+        /// \param[in] shortKwds Unique vector names in \p keywords.
+        ///
+        /// \param[in] smryKwds Unique vector keys in \p keywords.
+        SummaryConfig(const keyword_list&          keywords,
+                      const std::set<std::string>& shortKwds,
+                      const std::set<std::string>& smryKwds);
 
-            const_iterator begin() const;
-            const_iterator end() const;
-            size_t size() const;
-            SummaryConfig& merge( const SummaryConfig& );
-            SummaryConfig& merge( SummaryConfig&& );
+        /// Create a serialisation test object.
+        static SummaryConfig serializationTestObject();
 
-            keyword_list
-            registerRequisiteUDQorActionSummaryKeys(const std::vector<std::string>& extraKeys,
-                                                    const EclipseState&             es,
-                                                    const Schedule&                 sched);
+        /// Beginning of sequence of summary vector definitions.
+        ///
+        /// Exists to support using standard algorithms and range-for.
+        auto begin() const { return this->m_keywords.begin(); }
 
-            /*
-              The hasKeyword() method will consult the internal set
-              'short_keywords', i.e. the query should be based on pure
-              keywords like 'WWCT' and 'BPR' - and *not* fully
-              identifiers like 'WWCT:OPX' and 'BPR:10,12,3'.
-            */
-            bool hasKeyword( const std::string& keyword ) const;
+        /// One past the end of the sequence of summary vector definitions.
+        ///
+        /// Exists to support using standard algorithms and range-for.
+        auto end() const { return this->m_keywords.end(); }
 
+        /// Number of summary vectors in current collection.
+        std::size_t size() const { return this->m_keywords.size(); }
 
-            /*
-              Will check if the SummaryConfig object contains any keyword
-              matching the pattern argument. The matching is done with
-              fnmatch().
-            */
-            bool match(const std::string& keywordPattern) const;
+        /// Incorporate other vector collection into current.
+        ///
+        /// \param[in] other Collection of vector definitions.
+        ///
+        /// \return \code *this \endcode
+        SummaryConfig& merge(const SummaryConfig& other);
 
+        /// Incorporate other vector collection into current.
+        ///
+        /// Assumes ownership over the vector definitions in the other
+        /// collection.
+        ///
+        /// \param[in,out] other Collection of vector definitions.  Will be
+        /// empty on return.
+        ///
+        /// \return \code *this \endcode
+        SummaryConfig& merge(SummaryConfig&& other);
 
-            keyword_list keywords(const std::string& keywordPattern) const;
+        /// Form definitions from vectors used in UDQs and ACTIONX.
+        ///
+        /// \param[in] extraKeys Vector names used in defining expressions
+        /// for UDQs or in ACTIONX condition blocks.
+        ///
+        /// \param[in] es Run's static objects such as property arrays,
+        /// region definitions, and aquifers.  Note that this function will
+        /// create vector definitions for all applicable entities.  In other
+        /// words, we will create one vector for each well when processing a
+        /// well level vector name and similarly for groups, connections,
+        /// segments, and regions.  Moreover, for the purpose of this
+        /// function, FIELD is treated as a regular group name.  This
+        /// treatment enables using expressions such as "GOPR FIELD" in an
+        /// ACTIONX condition block.
+        ///
+        /// \param[in] sched Run's dynamic objects such as wells and groups.
+        ///
+        /// \return Vector definitions for the vectors in \p extraKeys that
+        /// did not already exist.
+        keyword_list
+        registerRequisiteUDQorActionSummaryKeys(const std::vector<std::string>& extraKeys,
+                                                const EclipseState&             es,
+                                                const Schedule&                 sched);
 
-            /*
-               The hasSummaryKey() method will look for fully
-               qualified keys like 'RPR:3' and 'BPR:10,15,20.
-            */
-            bool hasSummaryKey(const std::string& keyword ) const;
-            /*
-              Can be used to query if a certain 3D field, e.g. PRESSURE,
-              is required to calculate the summary variables.
-            */
-            bool require3DField( const std::string& keyword) const;
-            std::set<std::string> fip_regions() const;
-            std::set<std::string> fip_regions_interreg_flow() const;
-            std::unordered_set<std::string> wbp_wells() const;
+        /// Query existence of summary vector name.
+        ///
+        /// \param[in] keyword Summary vector name.  Should be a regular
+        /// summary keyword like "WWCT" or "FOPR" rather than a fully
+        /// qualified vector key.
+        ///
+        /// \return Whether or not \p keyword exists in the current
+        /// collection.
+        bool hasKeyword(const std::string& keyword) const;
 
-            bool operator==(const SummaryConfig& data) const;
+        /// Query existence of summary vector name with pattern matching.
+        ///
+        /// \param[in] keywordPattern Shell-style pattern for summary vector
+        /// names.  Should be a regular summary keyword names like "WWCT" or
+        /// "FOPR" rather than a fully qualified vector key.  As an example,
+        /// \code match("W*") \endcode will query whether or not any
+        /// well-level summary vectors have been defined.
+        ///
+        /// \return Whether or not any vectors matching the \p
+        /// keywordPattern exist in the current collection.
+        bool match(const std::string& keywordPattern) const;
 
-            template<class Serializer>
-            void serializeOp(Serializer& serializer)
-            {
-               serializer(m_keywords);
-               serializer(short_keywords);
-               serializer(summary_keywords);
-            }
+        /// Retrieve all vector definitions matching a vector name pattern.
+        ///
+        /// \param[in] keywordPattern Shell-style pattern for summary vector
+        /// names.  Should be a regular summary keyword names like "WWCT" or
+        /// "FOPR" rather than a fully qualified vector key.  As an example,
+        /// \code keywords("ROFT*") \endcode will retrieve all existing
+        /// vector definitions for all inter-region cumulative oil flow.
+        ///
+        /// \return List of definitions mathcing the \p keywordPattern.
+        keyword_list keywords(const std::string& keywordPattern) const;
 
-            bool createRunSummary() const {
-                return runSummaryConfig.create;
-            }
+        /// Query existence of fully qualified summary vector key.
+        ///
+        /// \param[in] key Fully qualified summary key like "SOFR:P-123:42".
+        ///
+        /// \return Whether or not the summary \p key exists in the current
+        /// collection.
+        bool hasSummaryKey(const std::string& key) const;
 
-            const SummaryConfigNode& operator[](std::size_t index) const;
+        /// Query whether or not a 3D dynamic property is needed to evaluate
+        /// some/all summary vectors.
+        ///
+        /// \param[in] keyword Name of 3D dynamic property (e.g., "PRESSURE"
+        /// or "OIP").
+        ///
+        /// \return Whether or not the \p keyword property is needed to
+        /// evaluate some or all of the summary vectors in this collection.
+        bool require3DField(const std::string& keyword) const;
 
+        /// Named region sets needed across all known region level vectors.
+        std::set<std::string> fip_regions() const;
 
-        private:
-            SummaryConfig( const Deck& deck,
-                           const Schedule& schedule,
-                           const FieldPropsManager& field_props,
-                           const AquiferConfig& aquiferConfig,
-                           const ParseContext& parseContext,
-                           ErrorGuard& errors,
-                           const GridDims& dims);
+        /// Named region sets needed across all known inter-region vectors.
+        std::set<std::string> fip_regions_interreg_flow() const;
 
-            /*
-              The short_keywords set contains only the pure keyword
-              part, e.g. "WWCT", and not the qualification with
-              well/group name or a numerical value.
-            */
-            keyword_list m_keywords;
-            std::set<std::string> short_keywords;
-            std::set<std::string> summary_keywords;
+        /// Equality predicate.
+        ///
+        /// \param[in] data Object against which \code *this \endcode will
+        /// be tested for equality.
+        ///
+        /// \return Whether or not \code *this \endcode is the same as \p data.
+        bool operator==(const SummaryConfig& data) const;
 
-            struct {
-                bool create { false };
-                bool narrow { false };
-                bool separate { true };
-            } runSummaryConfig;
+        /// Convert between byte array and object representation.
+        ///
+        /// \tparam Serializer Byte array conversion protocol.
+        ///
+        /// \param[in,out] serializer Byte array conversion object.
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(m_keywords);
+            serializer(short_keywords);
+            serializer(summary_keywords);
+        }
 
-            void handleProcessingInstruction(const std::string& keyword);
+        /// Whether or not to create a human-readable .RSM file at the end
+        /// of the simulation run.
+        bool createRunSummary() const
+        { return runSummaryConfig.create; }
+
+        /// Retrieve summary vector definition from linear index
+        ///
+        /// \param[in] index Linear index in the range [0..size()).
+        ///
+        /// \return Vector definition at position \p index in the internal
+        /// collection.
+        const SummaryConfigNode& operator[](std::size_t index) const;
+
+    private:
+        /// Primary constructor.
+        ///
+        /// Final delegate from constructor chain.
+        ///
+        /// Parses the SUMMARY section of the run's model description and
+        /// configures the initial collection of summary vectors.  Parse
+        /// failures such as missing or incorrect well names are reported
+        /// through the normal ErrorGuard mechanism.
+        ///
+        /// \param[in] deck Run's model description.
+        ///
+        /// \param[in] schedule Run's collection of dynamic objects (wells,
+        /// groups, &c).  Needed to configure vectors for keywords that
+        /// apply to "all" entities such as
+        ///
+        ///    WOPR
+        ///    /
+        ///
+        /// \param[in] field_props Run's static property container.  Needed
+        /// to define region-level vectors, especially for those that use
+        /// user-defined region sets such as FIPABC.
+        ///
+        /// \param[in] aquiferConfig Run's collection of analytic and
+        /// numerical aquifers.  Needed to define aquifer level vectors that
+        /// apply to "all" aquifers.
+        ///
+        /// \param[in] parseContext Error handling controls.
+        ///
+        /// \param[in,out] errors Collection of parse errors encountered
+        /// thus far.  Behaviour controlled by \p parseContext.
+        ///
+        /// \param[in] dims Model dimensions.  Used to translate IJK cell
+        /// index triplets to linear Cartesian indices and for diagnostic
+        /// purposes.
+        SummaryConfig(const Deck&              deck,
+                      const Schedule&          schedule,
+                      const FieldPropsManager& field_props,
+                      const AquiferConfig&     aquiferConfig,
+                      const ParseContext&      parseContext,
+                      ErrorGuard&              errors,
+                      const GridDims&          dims);
+
+        /// Run's configured summary vectors.
+        keyword_list m_keywords{};
+
+        /// Summary vector names.
+        ///
+        /// Acceleration structure for vector name existence queries.
+        /// Contains only the vector names such as FOPR, WWCT, SOFR, or
+        /// COPT, without any assocated named entities or numeric IDs.
+        std::set<std::string> short_keywords{};
+
+        /// Unique keys for all vectors in current collection.
+        std::set<std::string> summary_keywords{};
+
+        /// Configuration for run's .RSM file output.
+        struct {
+            /// Whether or not to create a human-readable .RSM file at the
+            /// end of the simulation run.
+            bool create { false };
+
+            /// Whether or not to output the .RSM file in "narrow" format.
+            ///
+            /// Ignored.
+            bool narrow { false };
+
+            /// Whether or not to create a separate .RSM file instead of
+            /// placing the run summary at the end of the .PRT file.
+            ///
+            /// Ignored.
+            bool separate { true };
+        } runSummaryConfig{};
+
+        /// Configure run's .RSM file output.
+        ///
+        /// This function assigns specific members of \c runSummaryConfig.
+        ///
+        /// \param[in] keyword Run summary directive.  Expected to be one of
+        /// "RUNSUM", "NARROW", or "SEPARATE" which affect the 'create',
+        /// 'narrow', and 'separate' members of \c runSummaryConfig
+        /// respectively.
+        void handleProcessingInstruction(const std::string& keyword);
     };
 
 } // namespace Opm
