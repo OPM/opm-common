@@ -788,6 +788,26 @@ Parameters::add(const std::string&                          keyword,
     // else: pure non-LGR run — nothing to do.
 }
 
+void
+Opm::EclIO::OutputStream::SummarySpecification::
+Parameters::setNumber(const std::size_t paramIx, const int num)
+{
+    if (paramIx >= this->nums.size()) {
+        std::ostringstream msgStr;
+
+        msgStr << "Parameter index "       << paramIx
+               << " for entity number "    << num
+               << " is out of bounds for " << this->nums.size()
+               << " registered parameter"
+               << ((this->nums.size() == 1) ? "" : "s")
+               << '.';
+
+        throw std::invalid_argument { msgStr.str() };
+    }
+
+    this->nums[paramIx] = num;
+}
+
 Opm::EclIO::OutputStream::SummarySpecification::
 SummarySpecification(const ResultSet&            rset,
                      const Formatted&            fmt,

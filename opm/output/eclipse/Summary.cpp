@@ -85,10 +85,13 @@
 #include <limits>
 #include <memory>
 #include <numeric>
+#include <optional>
+#include <queue>
 #include <regex>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <variant>
 #include <vector>
@@ -4332,17 +4335,29 @@ namespace Evaluator {
                             Opm::SummaryState&      st) const = 0;
     };
 
+    bool useNumber(Opm::EclIO::SummaryNode::Category cat)
+    {
+        using Cat = Opm::EclIO::SummaryNode::Category;
+
+        return ! ((cat == Cat::Well) ||
+                  (cat == Cat::Group) ||
+                  (cat == Cat::Field) ||
+                  (cat == Cat::Node) ||
+                  (cat == Cat::Miscellaneous));
+    }
+
     class FunctionRelation : public Base
     {
     public:
+        enum class State { Complete, Deferred };
+
         explicit FunctionRelation(Opm::EclIO::SummaryNode node, ofun fcn)
-            : node_(std::move(node))
-            , fcn_ (std::move(fcn))
-        {
-            if (this->use_number()) {
-                this->number_ = std::max(0, this->node_.number);
-            }
-        }
+            : node_      (std::move(node))
+            , fcn_       (std::move(fcn))
+            , use_number_(useNumber(node_.category))
+            , state_     (use_number_ && (node_.number <= 0)
+                          ? State::Deferred : State::Complete)
+        {}
 
         void update(const std::size_t       sim_step,
                     const double            stepSize,
@@ -4350,6 +4365,10 @@ namespace Evaluator {
                     const SimulatorResults& simRes,
                     Opm::SummaryState&      st) const override
         {
+            if (! this->isComplete()) {
+                return;
+            }
+
             const auto wells = need_wells(this->node_)
                 ? find_wells(input.sched, this->node_,
                              static_cast<int>(sim_step), input.reg)
@@ -4361,7 +4380,7 @@ namespace Evaluator {
             const fn_args args {
                 wells, this->group_name(), this->node_.keyword,
                 stepSize, static_cast<int>(sim_step),
-                this->number_, this->node_.fip_region,
+                this->number(), this->node_.fip_region,
                 st,
                 simRes.wellSol, simRes.wbp, simRes.grpNwrkSol,
                 input.reg, input.grid, input.sched,
@@ -4377,10 +4396,31 @@ namespace Evaluator {
             updateValue(this->node_, usys.from_si(prm.unit, prm.value), st);
         }
 
+        void setNumber(const int numValue)
+        {
+            if (this->isComplete()) {
+                throw std::invalid_argument {
+                    "Cannot reset SMSPEC node number "
+                    "after it has been fully assigned"
+                };
+            }
+
+            if (numValue > 0) {
+                this->node_.number = numValue;
+                this->state_ = State::Complete;
+            }
+        }
+
+        std::string uniqueKey() const
+        {
+            return this->node_.unique_key();
+        }
+
     private:
         Opm::EclIO::SummaryNode node_;
         ofun                    fcn_;
-        int                     number_{0};
+        bool                    use_number_;
+        State                   state_;
 
         std::string group_name() const
         {
@@ -4397,16 +4437,16 @@ namespace Evaluator {
                 ? this->node_.wgname : def_gr_name;
         }
 
-        bool use_number() const
+        bool isComplete() const
         {
-            using Cat = ::Opm::EclIO::SummaryNode::Category;
-            const auto cat = this->node_.category;
+            return this->state_ == State::Complete;
+        }
 
-            return ! ((cat == Cat::Well) ||
-                      (cat == Cat::Group) ||
-                      (cat == Cat::Field) ||
-                      (cat == Cat::Node) ||
-                      (cat == Cat::Miscellaneous));
+        int number() const
+        {
+            return this->use_number_
+                ? this->node_.number
+                : -1;
         }
     };
 
@@ -5565,6 +5605,45 @@ std::string makeWGName(std::string name)
     return use_dflt ? std::string(":+:+:+:+") : std::move(name);
 }
 
+/// Owns SMSPEC parameter metadata and evaluator objects for summary output.
+///
+/// This helper centralises construction of summary vectors and keeps the
+/// vector metadata (\c smspec_) and runtime evaluators (\c evaluators_)
+/// index-aligned: the evaluator at index \c i computes the value for the
+/// SMSPEC parameter at index \c i.
+///
+/// It also manages a two-phase workflow for "extra" connection vectors used
+/// by dynamic fracturing:
+/// - Registration phase: \c recordExtraParameter(...) stores placeholder
+///   vectors (typically with NUMBER = -1, clamped to 0 in SMSPEC) and records
+///   their indices in \c extra_.
+/// - Activation phase: \c createExtraParameter(...) consumes one queued
+///   placeholder index, assigns the concrete connection number, and returns
+///   the corresponding SummaryState key and evaluator index.
+///
+/// The separation lets the output layer pre-allocate a bounded number of
+/// potential vectors during initialisation, then bind only the ones that are
+/// actually needed at runtime when new dynamic well connections appear.
+///
+/// \par Design Overview
+/// The class enforces one critical invariant: \c smspec_ and \c evaluators_
+/// are append-only and share identical indexing.  This keeps the runtime
+/// evaluation path simple because an evaluator index can always be reused as
+/// the SMSPEC parameter index.
+///
+/// Dynamic connection vectors are handled with an explicit reservation-and-
+/// activation protocol keyed by \c (WGNAME, keyword):
+/// - Reservation records indices in \c extra_ before insertion, so each queue
+///   element points to a specific future slot in the aligned
+///   \c smspec_/\c evaluators_ arrays.
+/// - Activation consumes queue entries FIFO to produce deterministic binding
+///   between discovered dynamic connections and pre-allocated slots.
+/// - Activation mutates both representations of the vector identity:
+///   \c FunctionRelation::setNumber(num) for runtime key generation and
+///   \c smspec_.setNumber(ix, num) for persisted metadata.
+///
+/// This protocol deliberately avoids structural edits (erase/reorder) after
+/// initial insertion, so existing indices remain stable across the run.
 class SummaryOutputParameters
 {
 public:
@@ -5584,6 +5663,19 @@ public:
     SummaryOutputParameters&
     operator=(SummaryOutputParameters&& rhs) = default;
 
+    /// Append one summary parameter/evaluator pair.
+    ///
+    /// This is the low-level insertion primitive.  It updates \c smspec_
+    /// and \c evaluators_ in lockstep so the new parameter gets index
+    /// \c evaluators_.size() before insertion.
+    ///
+    /// \param[in] keyword Summary keyword (e.g., "WBHP").
+    /// \param[in] name    WGNAME/entity identifier associated with the
+    ///   parameter.
+    /// \param[in] num     Parameter NUMBER.  Negative values are clamped to
+    ///   zero for SMSPEC storage.
+    /// \param[in] unit    Unit string for the parameter.
+    /// \param[in] evaluator Evaluator used to compute parameter values.
     void makeParameter(std::string keyword,
                        std::string name,
                        const int   num,
@@ -5602,6 +5694,88 @@ public:
         this->evaluators_.push_back(std::move(evaluator));
     }
 
+    /// Register one "extra" parameter slot and append its evaluator.
+    ///
+    /// This is the high-level entry point for pre-allocated dynamic
+    /// connection vectors.  It first records the index that the next
+    /// parameter will get (via the private \c recordExtraParameter(keyword,
+    /// name) helper), then appends the parameter/evaluator via
+    /// \c makeParameter(...).
+    ///
+    /// The queued indices can later be claimed by \c createExtraParameter()
+    /// when concrete dynamic connection numbers become known.
+    ///
+    /// \param[in] keyword Summary keyword for the extra vector.
+    /// \param[in] name    WGNAME/entity identifier.
+    /// \param[in] num     Initial NUMBER (often a placeholder value).
+    /// \param[in] unit    Unit string for the parameter.
+    /// \param[in] evaluator Evaluator used to compute parameter values.
+    void recordExtraParameter(std::string keyword,
+                              std::string name,
+                              const int   num,
+                              std::string unit,
+                              EvalPtr     evaluator)
+    {
+        this->recordExtraParameter(keyword, name);
+
+        this->makeParameter(std::move(keyword), std::move(name),
+                            num, std::move(unit), std::move(evaluator));
+    }
+
+    /// Activate one previously registered extra parameter slot.
+    ///
+    /// Looks up the queue of pre-registered indices for (\p name, \p keyword),
+    /// takes the oldest available slot, and assigns it the concrete
+    /// connection NUMBER \p num.  Activation currently requires the evaluator
+    /// at that slot to be \c Evaluator::FunctionRelation so both the evaluator
+    /// and SMSPEC metadata can be updated consistently.
+    ///
+    /// \param[in] keyword Summary keyword identifying an extra vector family.
+    /// \param[in] name    WGNAME/entity identifier.
+    /// \param[in] num     Concrete connection NUMBER to bind to the vector.
+    ///
+    /// \return \c std::nullopt if no unclaimed slot exists for
+    ///   (\p name, \p keyword), or if the corresponding evaluator is not a
+    ///   \c FunctionRelation.  Otherwise returns
+    ///   \c {uniqueSummaryStateKey, evaluatorIndex} for the activated slot.
+    std::optional<std::pair<std::string, std::vector<EvalPtr>::size_type>>
+    createExtraParameter(const std::string& keyword,
+                         const std::string& name,
+                         const int          num)
+    {
+        const auto paramPos = this->extra_.find(VectorID { name, keyword });
+        if ((paramPos == this->extra_.end()) || paramPos->second.empty()) {
+            // No extra vectors registered for (keyword,name), or all have
+            // already been allocated/consumed.
+            return {};
+        }
+
+        const auto ix = paramPos->second.front();
+
+        // Make sure evaluators_[ix] is ineligible for future allocation,
+        // whether it's a FunctionRelation or not.
+        paramPos->second.pop();
+
+        if (auto* func = dynamic_cast<Evaluator::FunctionRelation*>(this->evaluators_[ix].get());
+            func != nullptr)
+        {
+            // evaluators_[ix] is a FunctionRelation.  This is the expected case.
+
+            // Finalise summary node for this function by recording its "NUMBER".
+            func->setNumber(num);
+            this->smspec_.setNumber(ix, num);
+
+            // Inform caller about the exact SummaryState query key it needs
+            // to use for evaluators_[ix].
+            return { std::pair { func->uniqueKey(), ix } };
+        }
+
+        // Evaluators_[ix] is not a FunctionRelation.  This is unexpected,
+        // but we can't do anything in this case.  Let the caller know this
+        // by returning nullopt.
+        return {};
+    }
+
     const SMSpecPrm& summarySpecification() const
     {
         return this->smspec_;
@@ -5613,8 +5787,24 @@ public:
     }
 
 private:
+    using VectorID = std::pair<std::string, std::string>;
+    using VectorIdxQueue = std::queue<std::vector<EvalPtr>::size_type>;
+    using ExtraVectors = std::map<VectorID, VectorIdxQueue>;
+
     SMSpecPrm smspec_{};
     std::vector<EvalPtr> evaluators_{};
+    ExtraVectors extra_{};
+
+    /// Enqueue the index of the next parameter for later extra-slot
+    /// activation.
+    ///
+    /// Must be called immediately before \c makeParameter(...) so the queued
+    /// index matches the parameter/evaluator pair that is about to be
+    /// appended.
+    void recordExtraParameter(const std::string& keyword, const std::string& name)
+    {
+        this->extra_[ VectorID { name, keyword } ].push(this->evaluators_.size());
+    }
 };
 
 class SMSpecStreamDeferredCreation
@@ -5758,6 +5948,34 @@ public:
     SummaryImplementation& operator=(const SummaryImplementation& rhs) = delete;
     SummaryImplementation& operator=(SummaryImplementation&& rhs) = default;
 
+    /// Activate pre-allocated summary vector slots for newly established
+    /// well connections arising from dynamic fracturing.
+    ///
+    /// During initialisation, a geomechanics run pre-allocates a fixed
+    /// number of placeholder output parameter slots (with connection number
+    /// -1) for each well that is configured to produce fracturing-related
+    /// connection vectors.  When the simulator informs the output layer
+    /// that new connections have actually been created during the run, this
+    /// function claims those slots and assigns them to the concrete
+    /// connection cell indices supplied by the caller.
+    ///
+    /// For each (well name, connection IDs) pair in \p newConns the
+    /// function looks up the set of connection summary vectors that were
+    /// pre-allocated for that well (via \c extraConnVectors_).  For every
+    /// such vector and every new connection index it requests a concrete
+    /// parameter slot from \c outputParameters_, then records the
+    /// resulting unique key in \c valueKeys_ so that the vector is
+    /// evaluated and written from the next time step onwards.
+    ///
+    /// \param[in] newConns Each element is a pair of
+    ///   - a well name, and
+    ///   - a list of zero-based connection cell global indices that have
+    ///     become active since the last report step as a result of
+    ///     fracturing.
+    ///   Wells that have no pre-allocated fracturing vectors are silently
+    ///   ignored.
+    void recordNewDynamicWellConns(const DynamicConns& newConns);
+
     void eval(const int                    sim_step,
               const double                 secs_elapsed,
               const DynamicSimulatorState& values,
@@ -5807,10 +6025,21 @@ private:
 
     std::unique_ptr<Opm::EclIO::ExtSmryOutput> esmry_;
 
+    /// Extra connection level summary vectors that may be needed for dynamic fracturing.
+    ///
+    /// Keyed by well name.
+    ///
+    /// In particular, extraConnVectors_[wname] is the set of summary vector keywords
+    /// (e.g., "CPR") that are configured for dynamic connection reporting for well
+    /// 'wname'.  When new connections are reported for 'wname' during the run, each
+    /// of those vectors will need to be activated for the new connections.
+    std::unordered_map<std::string, std::unordered_set<std::string>> extraConnVectors_{};
+
     void configureTimeVector(const EclipseState& es, const std::string& kw);
     void configureTimeVectors(const EclipseState& es, const SummaryConfig& sumcfg);
 
     void configureSummaryInput(const SummaryConfig& sumcfg,
+                               const bool           enableDynamicVectors,
                                Evaluator::Factory&  evaluatorFactory);
 
     void configureRequiredRestartParameters(const SummaryConfig& sumcfg,
@@ -5860,8 +6089,19 @@ SummaryImplementation(SummaryConfig&      sumcfg,
         es, grid, sched, st, sched.getUDQConfig(sched.size() - 1)
     };
 
+    const auto isGeomechWithFracturingRun =
+        es.runspec().mech() && es.runspec().frac() &&
+        !sumcfg.extraFracturingVectors().empty();
+
+    if (isGeomechWithFracturingRun && writeEsmry) {
+        OpmLog::warning("ESMRY is incompatible with MECH/FRAC. "
+                        "Request for ESMRY output ignored.");
+    }
+
     this->configureTimeVectors(es, sumcfg);
-    this->configureSummaryInput(sumcfg, evaluatorFactory);
+    this->configureSummaryInput(sumcfg,
+                                isGeomechWithFracturingRun,
+                                evaluatorFactory);
     this->configureRequiredRestartParameters(sumcfg, es.aquifer(), es.tracer(),
                                              sched, evaluatorFactory);
 
@@ -5871,20 +6111,24 @@ SummaryImplementation(SummaryConfig&      sumcfg,
                                es.globalFieldProps(),
                                grid, sched);
 
-    const auto esmryFileName = EclIO::OutputStream::
-        outputFileName(this->rset_, "ESMRY");
-
-    if (std::filesystem::exists(esmryFileName)) {
+    if (const auto esmryFileName = EclIO::OutputStream::outputFileName(this->rset_, "ESMRY");
+        std::filesystem::exists(esmryFileName))
+    {
         std::filesystem::remove(esmryFileName);
     }
 
-    if (writeEsmry && !es.cfg().io().getFMTOUT()) {
-        this->esmry_ = std::make_unique<Opm::EclIO::ExtSmryOutput>
-            (this->valueKeys_, this->valueUnits_, es, sched.posixStartTime());
-    }
-
-    if (writeEsmry && es.cfg().io().getFMTOUT()) {
-        OpmLog::warning("ESMRY only supported for unformatted output. Request ignored.");
+    if (!isGeomechWithFracturingRun && writeEsmry) {
+        if (!es.cfg().io().getFMTOUT()) {
+            // Run requests unformatted output files.  Typical case.  Create
+            // an ESMRY file writing object for this run.  Constructor takes
+            // a snapshot of the configured nodes.
+            this->esmry_ = std::make_unique<Opm::EclIO::ExtSmryOutput>
+                (this->valueKeys_, this->valueUnits_, es, sched.posixStartTime());
+        }
+        else {
+            // We don't support formatted ESMRY files.
+            OpmLog::warning("ESMRY only supported for unformatted output. Request ignored.");
+        }
     }
 }
 
@@ -5905,6 +6149,50 @@ internal_store(const SummaryState& st,
             continue;
 
         ms.params[i] = st.get(this->valueKeys_[i]);
+    }
+}
+
+void Opm::out::Summary::SummaryImplementation::
+recordNewDynamicWellConns(const DynamicConns& newConns)
+{
+    for (const auto& [wname, dynConns] : newConns) {
+        const auto extraPos = this->extraConnVectors_.find(wname);
+        if (extraPos == this->extraConnVectors_.end()) {
+            // No dynamic vectors configured for this well ('wname').
+            continue;
+        }
+
+        for (const auto& vector : extraPos->second) {
+            for (const auto& connId : dynConns) {
+                if (connId > static_cast<std::size_t>(std::numeric_limits<int>::max() - 1)) {
+                    OpmLog::warning(
+                        fmt::format("Dynamic connection cell index {} for well '{}' is too large to be represented in SMSPEC NUMBER. "
+                                    "This connection summary vector will not be written.",
+                                    connId,
+                                    wname));
+                    continue;
+                }
+
+                const auto connNumber = static_cast<int>(connId) + 1;
+                const auto param =
+                    this->outputParameters_.createExtraParameter(vector, wname, connNumber);
+
+                if (param.has_value()) {
+                    const auto& [valueKey, ix] = *param;
+
+                    this->valueKeys_[ix] = valueKey;
+                }
+                else {
+                    OpmLog::warning(
+                        fmt::format("Failed to allocate dynamic connection summary vector '{}' "
+                                    "for well '{}' at connection number {}. "
+                                    "This summary vector will not be written.",
+                                    vector,
+                                    wname,
+                                    connNumber));
+                }
+            }
+        }
     }
 }
 
@@ -5978,9 +6266,8 @@ eval(const int                    sim_step,
         evalPtr->update(sim_step, duration, input, simRes, st);
     }
 
-    for (auto& [_, evalPtr] : this->extra_parameters) {
-        (void)_;
-        evalPtr->update(sim_step, duration, input, simRes, st);
+    for (const auto& paramPair : this->extra_parameters) {
+        paramPair.second->update(sim_step, duration, input, simRes, st);
     }
 
     st.update_elapsed(duration);
@@ -6118,6 +6405,7 @@ configureTimeVectors(const EclipseState&  es,
 void
 Opm::out::Summary::SummaryImplementation::
 configureSummaryInput(const SummaryConfig& sumcfg,
+                      const bool           enableDynamicVectors,
                       Evaluator::Factory&  evaluatorFactory)
 {
     auto unsuppkw = std::vector<SummaryConfigNode>{};
@@ -6148,6 +6436,30 @@ configureSummaryInput(const SummaryConfig& sumcfg,
                            std::move(prmDescr.unit),
                            std::move(prmDescr.evaluator),
                            std::move(lgr));
+    }
+
+    if (enableDynamicVectors) {
+        for (const auto& fracturingVector : sumcfg.extraFracturingVectors()) {
+            auto prmDescr = evaluatorFactory.create(fracturingVector);
+
+            if (! prmDescr.evaluator) {
+                unsuppkw.push_back(fracturingVector);
+                continue;
+            }
+
+            this->valueKeys_.push_back(std::move(prmDescr.uniquekey));
+            this->valueUnits_.push_back(prmDescr.unit);
+
+            const auto name = makeWGName(fracturingVector.namedEntity());
+
+            this->outputParameters_
+                .recordExtraParameter(fracturingVector.keyword(), name,
+                                      fracturingVector.number(), // Expected to be '-1'.
+                                      std::move(prmDescr.unit),
+                                      std::move(prmDescr.evaluator));
+
+            this->extraConnVectors_[name].insert(fracturingVector.keyword());
+        }
     }
 
     if (! unsuppkw.empty()) {
@@ -6431,6 +6743,11 @@ Summary::Summary(SummaryConfig&       sumcfg,
                  const bool           writeEsmry)
     : pImpl_ { std::make_unique<SummaryImplementation>(sumcfg, es, grid, sched, basename, writeEsmry) }
 {}
+
+void Summary::recordNewDynamicWellConns(const DynamicConns& newConns)
+{
+    this->pImpl_->recordNewDynamicWellConns(newConns);
+}
 
 void Summary::eval(const int                    report_step,
                    const double                 secs_elapsed,

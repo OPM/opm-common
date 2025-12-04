@@ -462,6 +462,12 @@ namespace Opm {
         /// Number of summary vectors in current collection.
         std::size_t size() const { return this->m_keywords.size(); }
 
+        /// Partially defined summary vectors relating to fracturing processes.
+        const keyword_list& extraFracturingVectors() const
+        {
+            return this->extraFracturingVectors_;
+        }
+
         /// Incorporate other vector collection into current.
         ///
         /// \param[in] other Collection of vector definitions.
@@ -577,10 +583,11 @@ namespace Opm {
         template<class Serializer>
         void serializeOp(Serializer& serializer)
         {
-            serializer(m_keywords);
-            serializer(short_keywords);
-            serializer(summary_keywords);
-            serializer(noSumLgr_);
+            serializer(this->m_keywords);
+            serializer(this->extraFracturingVectors_);
+            serializer(this->short_keywords);
+            serializer(this->summary_keywords);
+            serializer(this->noSumLgr_);
         }
 
         /// Whether or not to create a human-readable .RSM file at the end
@@ -648,6 +655,10 @@ namespace Opm {
     private:
         /// Run's configured summary vectors.
         keyword_list m_keywords{};
+
+        /// Additional and incomplete summary vectors defined for run-time
+        /// allocation in runs featuring fracturing processes.
+        keyword_list extraFracturingVectors_{};
 
         /// Summary vector names.
         ///
