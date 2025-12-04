@@ -26,6 +26,7 @@
 #include <opm/io/eclipse/SummaryNode.hpp>
 
 #include <algorithm>
+#include <cassert>
 #include <cstddef>
 #include <cstring>
 #include <ctime>
@@ -83,6 +84,19 @@ namespace {
         return (keyword.size() > sz_t{1})
             && (keyword.compare(0, 2, "SU") == 0);
     }
+
+    bool is_encoded_well_completion_quantity(std::string_view keyword)
+    {
+        // Does 'keyword' match the pattern
+        //   W?C*:
+        using sz_t = std::string_view::size_type;
+
+        return keyword.size() > sz_t{6}
+            && keyword.find(':') != std::string::npos
+            && keyword.compare(0, 1, "W") == 0
+            && keyword.compare(2, 1, "C") == 0;
+    }
+
 
     bool is_total(const std::string& key)
     {
@@ -167,6 +181,20 @@ namespace {
                        [](const auto& pair) { return pair.first; });
 
         return l;
+    }
+
+    std::string normalise_encoded_well_completion_quantity(std::string_view keyword)
+    {
+        // Does 'keyword' match the pattern W?C*:
+        using sz_t = std::string_view::size_type;
+        auto sep = keyword.find(':');
+        assert(sep != std::string::npos && keyword.size() > sz_t{6});
+        auto numstart  =  keyword.find_last_of('_', sep);
+        assert(numstart != std::string::npos);
+        ++numstart;
+        return  fmt::format("{}{}:{}", keyword.substr(0, keyword.find('_')),
+                            keyword.substr(sep, keyword.size()),
+                            keyword.substr(numstart, sep-numstart));
     }
 
     std::string normalise_region_set_name(const std::string& regSet)
@@ -488,6 +516,14 @@ namespace Opm
 
         if (is_udq(key)) {
             return this->udq_undefined;
+        }
+
+        if (is_encoded_well_completion_quantity(key)) {
+            auto key1 = normalise_encoded_well_completion_quantity(key);
+            auto iter1 = this->values.find(key1);
+            if (iter1 != this->values.end()) {
+                return iter1->second;
+            }
         }
 
         throw std::out_of_range {
