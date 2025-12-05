@@ -269,7 +269,7 @@ public:
     std::optional<WellTestState::RestartWell> restart_well(const Opm::WellTestConfig& config, const std::string& wname) const;
 
 private:
-    std::unordered_map<std::string, WTestWell> wells;
+    std::map<std::string, WTestWell> wells; // distributed wells must be ordered uniformly across ranks
     std::unordered_map<std::string, std::unordered_map<int, ClosedCompletion>> completions;
 
     std::vector<std::pair<std::string, int>> updateCompletion(const WellTestConfig& config, double sim_time);
