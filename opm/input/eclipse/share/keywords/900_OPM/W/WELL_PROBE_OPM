@@ -34,7 +34,8 @@
       "WMOPT",
       "WMUPR",
       "WMUPT",
-      "WWIRFRAC"
+      "WWIRFRAC",
+      "WWITFRAC"
   ],
   "size": 1,
   "items": [
