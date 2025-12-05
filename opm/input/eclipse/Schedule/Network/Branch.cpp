@@ -40,7 +40,7 @@ Branch::Branch(const std::string& downtree_node,
     : m_downtree_node(downtree_node)
     , m_uptree_node(uptree_node)
     , m_vfp_table(vfp_table)
-    , m_alq_value(alq)
+    , m_alq_raw_value(alq)
     , m_alq_eq(AlqEQ::ALQ_INPUT)
 {
 }
@@ -78,7 +78,7 @@ bool Branch::operator==(const Branch& other) const
     return this->m_downtree_node == other.m_downtree_node &&
            this->m_uptree_node == other.m_uptree_node &&
            this->m_vfp_table == other.m_vfp_table &&
-           this->m_alq_value == other.m_alq_value &&
+           this->m_alq_raw_value == other.m_alq_raw_value &&
            this->m_alq_eq == other.m_alq_eq;
 }
 
@@ -113,9 +113,13 @@ Branch::AlqEQ Branch::alq_eq() const
     return this->m_alq_eq;
 }
 
-std::optional<double> Branch::alq_value() const
+std::optional<double> Branch::alq_value(const Dimension& alq_dimension) const
 {
-    return this->m_alq_value;
+    if (!m_alq_raw_value) {
+        return std::nullopt;
+    }
+    // We have a value, but it is a raw value, not converted to SI.
+    return alq_dimension.convertRawToSi(*this->m_alq_raw_value);
 }
 
 }

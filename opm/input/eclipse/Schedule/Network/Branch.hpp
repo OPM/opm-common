@@ -21,6 +21,8 @@
 #ifndef NETWORK_BRANCH_HPP
 #define NETWORK_BRANCH_HPP
 
+#include <opm/input/eclipse/Units/Dimension.hpp>
+
 #include <optional>
 #include <string>
 
@@ -52,7 +54,13 @@ public:
     void set_uptree_node(const std::string& new_uptree_node);
     std::optional<int> vfp_table() const;
     AlqEQ alq_eq() const;
-    std::optional<double> alq_value() const;
+    /// Artificial lift quantity for the branch.
+    ///
+    /// Returns nullopt if the alq was defaulted.
+    /// Otherwise the value will be converted to SI using the
+    /// alq_dimension, which depends on the unit system and
+    /// the ALQ type set in the branch's VFP table.
+    std::optional<double> alq_value(const Dimension& alq_dimension) const;
 
     static Branch serializationTestObject();
     bool operator==(const Branch& other) const;
@@ -63,14 +71,14 @@ public:
         serializer(m_downtree_node);
         serializer(m_uptree_node);
         serializer(m_vfp_table);
-        serializer(m_alq_value);
+        serializer(m_alq_raw_value);
         serializer(m_alq_eq);
     }
 private:
     std::string m_downtree_node{};
     std::string m_uptree_node{};
     int m_vfp_table = 0;
-    std::optional<double> m_alq_value{};
+    std::optional<double> m_alq_raw_value{};
     AlqEQ m_alq_eq{AlqEQ::OIL_DENSITY};
 };
 
