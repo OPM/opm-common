@@ -32,9 +32,7 @@
 #include <tests/ml/ml_tools/include/test_dense_10x10x10.hpp>
 #include <tests/ml/ml_tools/include/test_dense_1x1.hpp>
 #include <tests/ml/ml_tools/include/test_dense_2x2.hpp>
-#include <tests/ml/ml_tools/include/test_dense_relu_10.hpp>
-#include <tests/ml/ml_tools/include/test_dense_tanh_10.hpp>
-#include <tests/ml/ml_tools/include/test_relu_10.hpp>
+#include <tests/ml/ml_tools/include/test_dense_activation_10.hpp>
 #include <tests/ml/ml_tools/include/test_scalingdense_10x1.hpp>
 
 #include <cstdio>
@@ -195,9 +193,7 @@ int main()
         test_dense_2x2<Evaluation>(&load_time, &apply_time);
         test_dense_10x10<Evaluation>(&load_time, &apply_time);
         test_dense_10x10x10<Evaluation>(&load_time, &apply_time);
-        test_relu_10<Evaluation>(&load_time, &apply_time);
-        test_dense_relu_10<Evaluation>(&load_time, &apply_time);
-        test_dense_tanh_10<Evaluation>(&load_time, &apply_time);
+        test_dense_activation_10<Evaluation>(&load_time, &apply_time);
         test_scalingdense_10x1<Evaluation>(&load_time, &apply_time);
     }
     catch(...) {
