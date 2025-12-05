@@ -188,9 +188,17 @@ namespace {
         // Does 'keyword' match the pattern W?C*:
         using sz_t = std::string_view::size_type;
         auto sep = keyword.find(':');
+        if (sep == std::string::npos) {
+            // no number part
+            return std::string(keyword);
+        }
         assert(sep != std::string::npos && keyword.size() > sz_t{6});
         auto numstart  =  keyword.find_last_of('_', sep);
-        assert(numstart != std::string::npos);
+        if (numstart == std::string::npos) {
+            // no number part
+            return std::string(keyword);
+        }
+
         ++numstart;
         return  fmt::format("{}{}:{}", keyword.substr(0, keyword.find('_')),
                             keyword.substr(sep, keyword.size()),
