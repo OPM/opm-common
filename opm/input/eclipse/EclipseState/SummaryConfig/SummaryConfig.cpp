@@ -55,6 +55,7 @@
 #include <array>
 #include <cassert>
 #include <cstddef>
+#include <functional>
 #include <iterator>
 #include <map>
 #include <regex>
@@ -217,108 +218,92 @@ namespace {
 
     // -----------------------------------------------------------------------
 
-    const std::vector<std::string> ALL_keywords = {
-        "FAQR",  "FAQRG", "FAQT", "FAQTG", "FGIP", "FGIPG", "FGIPL",
-        "FGIR",  "FGIT",  "FGOR", "FGPR",  "FGPT", "FOIP",  "FOIPG",
-        "FOIPL", "FOIR",  "FOIT", "FOPR",  "FOPT", "FPR",   "FVIR",
-        "FVIT",  "FVPR",  "FVPT", "FWCT",  "FWGR", "FWIP",  "FWIR",
-        "FWIT",  "FWPR",  "FWPT",
-        "GGIR",  "GGIT",  "GGOR", "GGPR",  "GGPT", "GOIR",  "GOIT",
-        "GOPR",  "GOPT",  "GVIR", "GVIT",  "GVPR", "GVPT",  "GWCT",
-        "GWGR",  "GWIR",  "GWIT", "GWPR",  "GWPT",
-        "WBHP",  "WGIR",  "WGIT", "WGOR",  "WGPR", "WGPT",  "WOIR",
-        "WOIT",  "WOPR",  "WOPT", "WPI",   "WTHP", "WVIR",  "WVIT",
-        "WVPR",  "WVPT",  "WWCT", "WWGR",  "WWIR", "WWIT",  "WWPR",
-        "WWPT",  "WGLIR",
-        // ALL will not expand to these keywords yet
-        // Analytical aquifer keywords
-        "AAQR",  "AAQRG", "AAQT", "AAQTG"
-    };
+    std::vector<std::string> ALL_keywords()
+    {
+        return {
+            "FAQR",  "FAQRG", "FAQT", "FAQTG", "FGIP", "FGIPG", "FGIPL",
+            "FGIR",  "FGIT",  "FGOR", "FGPR",  "FGPT", "FOIP",  "FOIPG",
+            "FOIPL", "FOIR",  "FOIT", "FOPR",  "FOPT", "FPR",   "FVIR",
+            "FVIT",  "FVPR",  "FVPT", "FWCT",  "FWGR", "FWIP",  "FWIR",
+            "FWIT",  "FWPR",  "FWPT",
 
-    const std::vector<std::string> GMWSET_keywords = {
-        "GMWPT", "GMWPR", "GMWPA", "GMWPU", "GMWPG", "GMWPO", "GMWPS",
-        "GMWPV", "GMWPP", "GMWPL", "GMWIT", "GMWIN", "GMWIA", "GMWIU", "GMWIG",
-        "GMWIS", "GMWIV", "GMWIP", "GMWDR", "GMWDT", "GMWWO", "GMWWT"
-    };
+            "GGIR",  "GGIT",  "GGOR", "GGPR",  "GGPT", "GOIR",  "GOIT",
+            "GOPR",  "GOPT",  "GVIR", "GVIT",  "GVPR", "GVPT",  "GWCT",
+            "GWGR",  "GWIR",  "GWIT", "GWPR",  "GWPT",
 
-    const std::vector<std::string> FMWSET_keywords = {
-        "FMCTF", "FMWPT", "FMWPR", "FMWPA", "FMWPU", "FMWPF", "FMWPO", "FMWPS",
-        "FMWPV", "FMWPP", "FMWPL", "FMWIT", "FMWIN", "FMWIA", "FMWIU", "FMWIF",
-        "FMWIS", "FMWIV", "FMWIP", "FMWDR", "FMWDT", "FMWWO", "FMWWT"
-    };
+            "WBHP",  "WGIR",  "WGIT", "WGOR",  "WGPR", "WGPT",  "WOIR",
+            "WOIT",  "WOPR",  "WOPT", "WPI",   "WTHP", "WVIR",  "WVIT",
+            "WVPR",  "WVPT",  "WWCT", "WWGR",  "WWIR", "WWIT",  "WWPR",
+            "WWPT",  "WGLIR",
 
+            // ALL will not expand to these keywords yet
+            // Analytical aquifer keywords
+            "AAQR", "AAQRG", "AAQT", "AAQTG",
+        };
+    }
 
-    const std::vector<std::string> PERFORMA_keywords = {
-        "TCPU", "ELAPSED","NEWTON","NLINEARS","NLINSMIN", "NLINSMAX","MLINEARS",
-        "MSUMLINS","MSUMNEWT","TIMESTEP","TCPUTS","TCPUDAY","STEPTYPE","TELAPLIN"
-    };
+    std::vector<std::string> GMWSET_keywords()
+    {
+        return {
+            "GMWPT", "GMWPR", "GMWPA", "GMWPU", "GMWPG", "GMWPO", "GMWPS",
+            "GMWPV", "GMWPP", "GMWPL", "GMWIT", "GMWIN", "GMWIA", "GMWIU", "GMWIG",
+            "GMWIS", "GMWIV", "GMWIP", "GMWDR", "GMWDT", "GMWWO", "GMWWT",
+        };
+    }
 
-    const std::vector<std::string> NMESSAGE_keywords = {
-        "MSUMBUG", "MSUMCOMM", "MSUMERR", "MSUMMESS", "MSUMPROB", "MSUMWARN"
-    };
+    std::vector<std::string> FMWSET_keywords()
+    {
+        return {
+            "FMCTF", "FMWPT", "FMWPR", "FMWPA", "FMWPU", "FMWPF", "FMWPO", "FMWPS",
+            "FMWPV", "FMWPP", "FMWPL", "FMWIT", "FMWIN", "FMWIA", "FMWIU", "FMWIF",
+            "FMWIS", "FMWIV", "FMWIP", "FMWDR", "FMWDT", "FMWWO", "FMWWT",
+        };
+    }
 
-    const std::vector<std::string> DATE_keywords = {
-         "DAY", "MONTH", "YEAR"
-    };
+    std::vector<std::string> PERFORMA_keywords()
+    {
+        return {
+            "ELAPSED",
+            "MLINEARS", "MSUMLINS", "MSUMNEWT",
+            "NEWTON", "NLINEARS", "NLINSMIN", "NLINSMAX",
+            "STEPTYPE",
+            "TCPU", "TCPUTS", "TCPUDAY",
+            "TELAPLIN",
+            "TIMESTEP",
+        };
+    }
 
-    const std::map<std::string, std::vector<std::string>> meta_keywords = {
-        {"PERFORMA", PERFORMA_keywords},
-        {"NMESSAGE", NMESSAGE_keywords},
-        {"DATE",     DATE_keywords},
-        {"ALL",      ALL_keywords},
-        {"FMWSET",   FMWSET_keywords},
-        {"GMWSET",   GMWSET_keywords},
-    };
+    std::vector<std::string> NMESSAGE_keywords()
+    {
+        return {
+            "MSUMBUG", "MSUMCOMM", "MSUMERR", "MSUMMESS", "MSUMPROB", "MSUMWARN",
+        };
+    }
 
-    // This is a hardcoded mapping between 3D field keywords,
-    // e.g. 'PRESSURE' and 'SWAT' and summary keywords like 'RPR' and
-    // 'BPR'. The purpose of this mapping is to maintain an overview of
-    // which 3D field keywords are needed by the Summary calculation
-    // machinery, based on which summary keywords are requested.
-    const std::map<std::string, std::set<std::string>> required_fields = {
-         {"PRESSURE", {"FPR", "RPR*", "BPR"}},
-         {"RPV",      {"FRPV", "RRPV*"}},
-         {"OIP",      {"ROIP*", "FOIP", "FOE"}},
-         {"OIPR",     {"FOIPR"}},
-         {"OIPL",     {"ROIPL*", "FOIPL"}},
-         {"OIPG",     {"ROIPG*", "FOIPG"}},
-         {"GIP",      {"RGIP*", "FGIP" }},
-         {"GIPR",     {"FGIPR"}},
-         {"GIPL",     {"RGIPL*", "FGIPL"}},
-         {"GIPG",     {"RGIPG*", "FGIPG"}},
-         {"WIP",      {"RWIP*", "FWIP" }},
-         {"WIPR",     {"FWIPR"}},
-         {"WIPL",     {"RWIPL*", "FWIPL"}},
-         {"WIPG",     {"RWIPG*", "FWIPG"}},
-         {"WCD",      {"RWCD", "FWCD" }},
-         {"GCDI",     {"RGCDI", "FGCDI"}},
-         {"GCDM",     {"RGCDM", "FGCDM"}},
-         {"GKDI",     {"RGKDI", "FGKDI"}},
-         {"GKDM",     {"RGKDM", "FGKDM"}},
-         {"SWAT",     {"BSWAT"}},
-         {"SGAS",     {"BSGAS"}},
-         {"SALT",     {"FSIP"}},
-         {"TEMP",     {"BTCNFHEA"}},
-         {"GMIP",     {"RGMIP", "FGMIP"}},
-         {"GMGP",     {"RGMGP", "FGMGP"}},
-         {"GMDS",     {"RGMDS", "FGMDS"}},
-         {"GMTR",     {"RGMTR", "FGMTR"}},
-         {"GMST",     {"RGMST", "FGMST"}},
-         {"GMMO",     {"RGMMO", "FGMMO"}},
-         {"GMUS",     {"RGMUS", "FGMUS"}},
-         {"GKTR",     {"RGKTR", "FGKTR"}},
-         {"GKMO",     {"RGKMO", "FGKMO"}},
-         {"MMIP",     {"RMMIP", "FMMIP"}},
-         {"MOIP",     {"RMOIP", "FMOIP"}},
-         {"MUIP",     {"RMUIP", "FMUIP"}},
-         {"MBIP",     {"RMBIP", "FMBIP"}},
-         {"MCIP",     {"RMCIP", "FMCIP"}},
-         {"AMIP",     {"RAMIP", "FAMIP"}},
-    };
+    std::vector<std::string> DATE_keywords()
+    {
+        return {
+            "DAY", "MONTH", "YEAR",
+        };
+    }
+
+    auto meta_keywords()
+    {
+        using namespace std::string_literals;
+
+        return std::array {
+            std::pair {"PERFORMA"s, &PERFORMA_keywords},
+            std::pair {"NMESSAGE"s, &NMESSAGE_keywords},
+            std::pair {"DATE"s,     &DATE_keywords},
+            std::pair {"ALL"s,      &ALL_keywords},
+            std::pair {"FMWSET"s,   &FMWSET_keywords},
+            std::pair {"GMWSET"s,   &GMWSET_keywords},
+        };
+    }
 
     using keyword_set = std::unordered_set<std::string>;
 
-    inline bool is_in_set(const keyword_set& set, const std::string& keyword) {
+    bool is_in_set(const keyword_set& set, const std::string& keyword) {
         return set.find(keyword) != set.end();
     }
 
@@ -626,41 +611,59 @@ namespace {
             : SummaryConfigNode::Category::Well;
     }
 
-void handleMissingWell( const ParseContext& parseContext, ErrorGuard& errors, const KeywordLocation& location, const std::string& well) {
-    std::string msg_fmt = fmt::format("Request for missing well {} in {{keyword}}\n"
-                                      "In {{file}} line {{line}}", well);
-    parseContext.handleError( ParseContext::SUMMARY_UNKNOWN_WELL , msg_fmt, location, errors );
-}
-
-
-void handleMissingGroup( const ParseContext& parseContext , ErrorGuard& errors, const KeywordLocation& location, const std::string& group) {
-    std::string msg_fmt = fmt::format("Request for missing group {} in {{keyword}}\n"
-                                      "In {{file}} line {{line}}", group);
-    parseContext.handleError( ParseContext::SUMMARY_UNKNOWN_GROUP , msg_fmt, location, errors );
-}
-
-void handleMissingNode( const ParseContext& parseContext, ErrorGuard& errors, const KeywordLocation& location, const std::string& node_name )
-{
-    std::string msg_fmt = fmt::format("Request for missing network node {} in {{keyword}}\n"
-                                      "In {{file}} line {{line}}", node_name);
-    parseContext.handleError( ParseContext::SUMMARY_UNKNOWN_NODE, msg_fmt, location, errors );
-}
-
-void handleMissingAquifer( const ParseContext& parseContext,
+    void handleMissingWell(const ParseContext& parseContext,
                            ErrorGuard& errors,
                            const KeywordLocation& location,
-                           const int id,
-                           const bool is_numeric)
-{
-    std::string msg_fmt = fmt::format("Request for missing {} aquifer {} in {{keyword}}\n"
-                                      "In {{file}} line {{line}}",
-                                      is_numeric ? "numeric" : "anlytic", id);
-    parseContext.handleError(ParseContext::SUMMARY_UNKNOWN_AQUIFER, msg_fmt, location, errors);
-}
+                           const std::string& well)
+    {
+        const auto msg_fmt = fmt::format("Request for missing well {} in {{keyword}}\n"
+                                         "In {{file}} line {{line}}", well);
 
-inline void keywordW( SummaryConfig::keyword_list& list,
-                      const std::vector<std::string>& well_names,
-                      SummaryConfigNode baseWellParam)
+        parseContext.handleError(ParseContext::SUMMARY_UNKNOWN_WELL,
+                                 msg_fmt, location, errors);
+    }
+
+    void handleMissingGroup(const ParseContext& parseContext,
+                            ErrorGuard& errors,
+                            const KeywordLocation& location,
+                            const std::string& group)
+    {
+        const auto msg_fmt = fmt::format("Request for missing group {} in {{keyword}}\n"
+                                         "In {{file}} line {{line}}", group);
+
+        parseContext.handleError(ParseContext::SUMMARY_UNKNOWN_GROUP,
+                                 msg_fmt, location, errors);
+    }
+
+    void handleMissingNode(const ParseContext& parseContext,
+                           ErrorGuard& errors,
+                           const KeywordLocation& location,
+                           const std::string& node_name)
+    {
+        const auto msg_fmt = fmt::format("Request for missing network node {} in {{keyword}}\n"
+                                         "In {{file}} line {{line}}", node_name);
+
+        parseContext.handleError(ParseContext::SUMMARY_UNKNOWN_NODE,
+                                 msg_fmt, location, errors);
+    }
+
+    void handleMissingAquifer(const ParseContext& parseContext,
+                              ErrorGuard& errors,
+                              const KeywordLocation& location,
+                              const int id,
+                              const bool is_numeric)
+    {
+        const auto msg_fmt = fmt::format("Request for missing {} aquifer {} in {{keyword}}\n"
+                                         "In {{file}} line {{line}}",
+                                         is_numeric ? "numeric" : "anlytic", id);
+
+        parseContext.handleError(ParseContext::SUMMARY_UNKNOWN_AQUIFER,
+                                 msg_fmt, location, errors);
+    }
+
+void keywordW(SummaryConfig::keyword_list& list,
+              const std::vector<std::string>& well_names,
+              SummaryConfigNode baseWellParam)
 {
     std::transform(well_names.begin(), well_names.end(),
                    std::back_inserter(list),
@@ -670,9 +673,9 @@ inline void keywordW( SummaryConfig::keyword_list& list,
                    });
 }
 
-inline void keywordAquifer( SummaryConfig::keyword_list& list,
-                            const std::vector<int>& aquiferIDs,
-                            SummaryConfigNode baseAquiferParam)
+void keywordAquifer(SummaryConfig::keyword_list& list,
+                    const std::vector<int>& aquiferIDs,
+                    SummaryConfigNode baseAquiferParam)
 {
     std::transform(aquiferIDs.begin(), aquiferIDs.end(),
                    std::back_inserter(list),
@@ -682,30 +685,28 @@ inline void keywordAquifer( SummaryConfig::keyword_list& list,
                    });
 }
 
-// later check whether parseContext and errors are required
-// maybe loc will be needed
-void keywordAquifer( SummaryConfig::keyword_list& list,
-                     const std::vector<int>& analyticAquiferIDs,
-                     const std::vector<int>& numericAquiferIDs,
-                     const ParseContext& parseContext,
-                     ErrorGuard& errors,
-                     const DeckKeyword& keyword)
+// Later check whether parseContext and errors are required maybe loc will
+// be needed
+void keywordAquifer(SummaryConfig::keyword_list& list,
+                    const std::vector<int>& analyticAquiferIDs,
+                    const std::vector<int>& numericAquiferIDs,
+                    const ParseContext& parseContext,
+                    ErrorGuard& errors,
+                    const DeckKeyword& keyword)
 {
-    /*
-      The keywords starting with AL take as arguments a list of Aquiferlists -
-      this is not supported at all.
-    */
+    // The keywords starting with AL take as arguments a list of Aquiferlists -
+    // this is not supported at all.
     if (keyword.name().find("AL") == std::string::size_type{0}) {
-        Opm::OpmLog::warning(Opm::OpmInputError::format("Unhandled summary keyword {keyword}\n"
-                                                        "In {file} line {line}", keyword.location()));
+        OpmLog::warning(OpmInputError::format("Unhandled summary keyword {keyword}\n"
+                                              "In {file} line {line}", keyword.location()));
         return;
     }
 
     auto param = SummaryConfigNode {
         keyword.name(), SummaryConfigNode::Category::Aquifer, keyword.location()
     }
-    .parameterType( parseKeywordType(keyword.name()) )
-    .isUserDefined( is_udq(keyword.name()) );
+    .parameterType(parseKeywordType(keyword.name()))
+    .isUserDefined(is_udq(keyword.name()));
 
     const auto is_numeric = is_numeric_aquifer(keyword.name());
     const auto& pertinentIDs = is_numeric
@@ -726,7 +727,9 @@ void keywordAquifer( SummaryConfig::keyword_list& list,
             // small (< 10) so there's no big gain from a log(N) algorithm
             // in the common case.
             if (std::find(pertinentIDs.begin(), end, id) == end) {
-                handleMissingAquifer(parseContext, errors, keyword.location(), id, is_numeric);
+                handleMissingAquifer(parseContext, errors,
+                                     keyword.location(),
+                                     id, is_numeric);
                 continue;
             }
 
@@ -737,22 +740,21 @@ void keywordAquifer( SummaryConfig::keyword_list& list,
     }
 }
 
-
-inline std::array< int, 3 > getijk( const DeckRecord& record ) {
-    return {{
-        record.getItem( "I" ).get< int >( 0 ) - 1,
-        record.getItem( "J" ).get< int >( 0 ) - 1,
-        record.getItem( "K" ).get< int >( 0 ) - 1
-    }};
+std::array<int, 3> getijk(const DeckRecord& record)
+{
+    return {
+        record.getItem("I").get<int>(0) - 1,
+        record.getItem("J").get<int>(0) - 1,
+        record.getItem("K").get<int>(0) - 1,
+    };
 }
 
-
-inline void keywordCL(SummaryConfig::keyword_list& list,
-                      const ParseContext& parseContext,
-                      ErrorGuard& errors,
-                      const DeckKeyword& keyword,
-                      const Schedule& schedule,
-                      const GridDims& dims)
+void keywordCL(SummaryConfig::keyword_list& list,
+               const ParseContext&          parseContext,
+               ErrorGuard&                  errors,
+               const DeckKeyword&           keyword,
+               const Schedule&              schedule,
+               const GridDims&              dims)
 {
     auto node = SummaryConfigNode {
         keyword.name(), SummaryConfigNode::Category::Completion, keyword.location()
@@ -781,30 +783,34 @@ inline void keywordCL(SummaryConfig::keyword_list& list,
                                {
                                     return node.number(1 + conn.global_index());
                                });
-            } else {
+            }
+            else {
                 const auto& ijk = getijk(record);
                 auto global_index = dims.getGlobalIndex(ijk[0], ijk[1], ijk[2]);
 
                 if (all_connections.hasGlobalIndex(global_index)) {
                     const auto& conn = all_connections.getFromGlobalIndex(global_index);
-                    list.push_back( node.number( 1 + conn.global_index()));
-                } else {
+                    list.push_back(node.number(1 + conn.global_index()));
+                }
+                else {
                     std::string msg = fmt::format("Problem with keyword {{keyword}}\n"
                                                   "In {{file}} line {{line}}\n"
                                                   "Connection ({},{},{}) not defined for well {}",
                                                   ijk[0] + 1, ijk[1] + 1, ijk[2] + 1, wname);
-                    parseContext.handleError( ParseContext::SUMMARY_UNHANDLED_KEYWORD, msg, keyword.location(), errors);
+
+                    parseContext.handleError(ParseContext::SUMMARY_UNHANDLED_KEYWORD,
+                                             msg, keyword.location(), errors);
                 }
             }
         }
     }
 }
 
-inline void keywordWL(SummaryConfig::keyword_list& list,
-                      const ParseContext& parseContext,
-                      ErrorGuard& errors,
-                      const DeckKeyword& keyword,
-                      const Schedule& schedule)
+void keywordWL(SummaryConfig::keyword_list& list,
+               const ParseContext&          parseContext,
+               ErrorGuard&                  errors,
+               const DeckKeyword&           keyword,
+               const Schedule&              schedule)
 {
     for (const auto& record : keyword) {
         const auto& pattern = record.getItem(0).get<std::string>(0);
@@ -845,45 +851,51 @@ inline void keywordWL(SummaryConfig::keyword_list& list,
     }
 }
 
-inline void keywordW( SummaryConfig::keyword_list& list,
-                      const std::string& keyword,
-                      KeywordLocation loc,
-                      const Schedule& schedule) {
+void keywordW(SummaryConfig::keyword_list& list,
+              const std::string& keyword,
+              KeywordLocation loc,
+              const Schedule& schedule)
+{
     auto param = SummaryConfigNode {
         keyword, SummaryConfigNode::Category::Well , std::move(loc)
     }
-    .parameterType( parseKeywordType(keyword) )
-    .isUserDefined( is_udq(keyword) );
+    .parameterType(parseKeywordType(keyword))
+    .isUserDefined(is_udq(keyword));
 
-    keywordW( list, schedule.wellNames(), param );
+    keywordW(list, schedule.wellNames(), param);
 }
 
-
-inline void keywordW( SummaryConfig::keyword_list& list,
-                      const ParseContext& parseContext,
-                      ErrorGuard& errors,
-                      const DeckKeyword& keyword,
-                      const Schedule& schedule ) {
-    if (is_well_completion(keyword.name()))
-        return keywordWL(list, parseContext, errors, keyword, schedule);
+void keywordW(SummaryConfig::keyword_list& list,
+              const ParseContext&          parseContext,
+              ErrorGuard&                  errors,
+              const DeckKeyword&           keyword,
+              const Schedule&              schedule)
+{
+    if (is_well_completion(keyword.name())) {
+        keywordWL(list, parseContext, errors, keyword, schedule);
+        return;
+    }
 
     auto param = SummaryConfigNode {
         keyword.name(), SummaryConfigNode::Category::Well, keyword.location()
     }
-    .parameterType( parseKeywordType(keyword.name()) )
-    .isUserDefined( is_udq(keyword.name()) );
+    .parameterType(parseKeywordType(keyword.name()))
+    .isUserDefined(is_udq(keyword.name()));
 
     if (!keyword.empty() && keyword.getDataRecord().getDataItem().hasValue(0)) {
-        for( const std::string& pattern : keyword.getStringData()) {
-          auto well_names = schedule.wellNames( pattern, schedule.size() - 1 );
+        for (const auto& pattern : keyword.getStringData()) {
+            const auto well_names = schedule.wellNames(pattern);
 
-            if( well_names.empty() )
-                handleMissingWell( parseContext, errors, keyword.location(), pattern );
+            if (well_names.empty()) {
+                handleMissingWell(parseContext, errors, keyword.location(), pattern);
+            }
 
-            keywordW( list, well_names, param );
+            keywordW(list, well_names, param);
         }
-    } else
-        keywordW( list, schedule.wellNames(), param );
+    }
+    else {
+        keywordW(list, schedule.wellNames(), param);
+    }
 }
 
 void keywordG(SummaryConfig::keyword_list& list,
@@ -939,7 +951,7 @@ void keywordG(SummaryConfig::keyword_list& list,
 
     for (const auto& group : item.getData<std::string>()) {
         if (schedule.back().groups.has(group)) {
-            list.push_back( param.namedEntity(group));
+            list.push_back(param.namedEntity(group));
         }
         else {
             handleMissingGroup(parseContext, errors, keyword.location(), group);
@@ -947,28 +959,32 @@ void keywordG(SummaryConfig::keyword_list& list,
     }
 }
 
-void keyword_node( SummaryConfig::keyword_list& list,
-                   const std::vector<std::string>& node_names,
-                   const ParseContext& parseContext,
-                   ErrorGuard& errors,
-                   const DeckKeyword& keyword)
+void keyword_node(SummaryConfig::keyword_list& list,
+                  const std::vector<std::string>& node_names,
+                  const ParseContext& parseContext,
+                  ErrorGuard& errors,
+                  const DeckKeyword& keyword)
 {
     if (node_names.empty()) {
-        const auto& location = keyword.location();
-        std::string msg = "The network node keyword {keyword} is not supported in runs without networks\n"
-                          "In {file} line {line}";
-        parseContext.handleError( ParseContext::SUMMARY_UNHANDLED_KEYWORD, msg, location, errors);
+        const auto msg = std::string {
+            "The network node keyword {keyword} is not "
+            "supported in runs without networks\n"
+            "In {file} line {line}"
+        };
+
+        parseContext.handleError(ParseContext::SUMMARY_UNHANDLED_KEYWORD,
+                                 msg, keyword.location(), errors);
         return;
     }
 
     auto param = SummaryConfigNode {
         keyword.name(), SummaryConfigNode::Category::Node, keyword.location()
     }
-    .parameterType( parseKeywordType(keyword.name()) )
-    .isUserDefined( is_udq(keyword.name()) );
+    .parameterType(parseKeywordType(keyword.name()))
+    .isUserDefined(is_udq(keyword.name()));
 
-    if( keyword.empty() ||
-        !keyword.getDataRecord().getDataItem().hasValue( 0 ) )
+    if (keyword.empty() ||
+        !keyword.getDataRecord().getDataItem().hasValue(0))
     {
         std::transform(node_names.begin(), node_names.end(),
                        std::back_inserter(list),
@@ -984,36 +1000,27 @@ void keyword_node( SummaryConfig::keyword_list& list,
     for (const auto& node_name : item.getData<std::string>()) {
         auto pos = std::find(node_names.begin(),
                              node_names.end(), node_name);
-        if (pos != node_names.end())
-            list.push_back( param.namedEntity(node_name) );
-        else
-            handleMissingNode( parseContext, errors, keyword.location(), node_name );
+
+        if (pos != node_names.end()) {
+            list.push_back(param.namedEntity(node_name));
+        }
+        else {
+            handleMissingNode(parseContext, errors, keyword.location(), node_name );
+        }
     }
 }
 
-inline void keywordF( SummaryConfig::keyword_list& list,
-                      const std::string& keyword,
-                      KeywordLocation loc) {
-    auto param = SummaryConfigNode {
-        keyword, SummaryConfigNode::Category::Field, std::move(loc)
-    }
-    .parameterType( parseKeywordType(keyword) )
-    .isUserDefined( is_udq(keyword) );
-
-    list.push_back( std::move(param) );
-}
-
-inline void keywordAquifer( SummaryConfig::keyword_list& list,
-                            const std::string& keyword,
-                            const std::vector<int>& analyticAquiferIDs,
-                            const std::vector<int>& numericAquiferIDs,
-                            KeywordLocation loc)
+void keywordAquifer(SummaryConfig::keyword_list& list,
+                    const std::string&           keyword,
+                    const std::vector<int>&      analyticAquiferIDs,
+                    const std::vector<int>&      numericAquiferIDs,
+                    KeywordLocation              loc)
 {
     auto param = SummaryConfigNode {
         keyword, SummaryConfigNode::Category::Aquifer, std::move(loc)
     }
-    .parameterType( parseKeywordType(keyword) )
-    .isUserDefined( is_udq(keyword) );
+    .parameterType(parseKeywordType(keyword))
+    .isUserDefined(is_udq(keyword));
 
     const auto& pertinentIDs = is_numeric_aquifer(keyword)
         ? numericAquiferIDs
@@ -1022,26 +1029,34 @@ inline void keywordAquifer( SummaryConfig::keyword_list& list,
     keywordAquifer(list, pertinentIDs, param);
 }
 
-inline void keywordF( SummaryConfig::keyword_list& list,
-                      const DeckKeyword& keyword ) {
-    if( keyword.name() == "FMWSET" ) return;
-    keywordF( list, keyword.name(), keyword.location() );
+void keywordF(SummaryConfig::keyword_list& list,
+              const std::string&           keyword,
+              KeywordLocation              loc)
+{
+    list.emplace_back(keyword, SummaryConfigNode::Category::Field, std::move(loc))
+    .parameterType(parseKeywordType(keyword))
+    .isUserDefined(is_udq(keyword));
 }
 
+void keywordF(SummaryConfig::keyword_list& list,
+              const DeckKeyword&           keyword)
+{
+    if (keyword.name() == "FMWSET") {
+        return;
+    }
 
-inline std::array< int, 3 > getijk( const Connection& completion ) {
-    return { { completion.getI(), completion.getJ(), completion.getK() }};
+    keywordF(list, keyword.name(), keyword.location());
 }
 
-
-inline void keywordB( SummaryConfig::keyword_list& list,
-                      const DeckKeyword& keyword,
-                      const GridDims& dims) {
+void keywordB(SummaryConfig::keyword_list& list,
+              const DeckKeyword&           keyword,
+              const GridDims&              dims)
+{
     auto param = SummaryConfigNode {
         keyword.name(), SummaryConfigNode::Category::Block, keyword.location()
     }
-    .parameterType( parseKeywordType(keyword.name()) )
-    .isUserDefined( is_udq(keyword.name()) );
+    .parameterType(parseKeywordType(keyword.name()))
+    .isUserDefined(is_udq(keyword.name()));
 
     auto isValid = [&dims](const std::array<int,3>& ijk)
     {
@@ -1050,32 +1065,34 @@ inline void keywordB( SummaryConfig::keyword_list& list,
             && (static_cast<std::size_t>(ijk[2]) < dims.getNZ());
     };
 
-  for( const auto& record : keyword ) {
-      auto ijk = getijk( record );
+    for (const auto& record : keyword) {
+        const auto ijk = getijk(record);
 
-      if (! isValid(ijk)) {
-          const auto msg_fmt =
-              fmt::format("Block level summary keyword "
-                          "{{keyword}}\n"
-                          "In {{file}} line {{line}}\n"
-                          "References invalid cell "
-                          "{},{},{} in grid of dimensions "
-                          "{},{},{}.\nThis block summary "
-                          "vector request is ignored.",
-                          ijk[0] + 1  , ijk[1] + 1  , ijk[2] + 1,
-                          dims.getNX(), dims.getNY(), dims.getNZ());
+        if (! isValid(ijk)) {
+            const auto msg_fmt =
+                fmt::format("Block level summary keyword "
+                            "{{keyword}}\n"
+                            "In {{file}} line {{line}}\n"
+                            "References invalid cell "
+                            "{},{},{} in grid of dimensions "
+                            "{},{},{}.\nThis block summary "
+                            "vector request is ignored.",
+                            ijk[0] + 1  , ijk[1] + 1  , ijk[2] + 1,
+                            dims.getNX(), dims.getNY(), dims.getNZ());
 
-          OpmLog::warning(OpmInputError::format(msg_fmt, keyword.location()));
+            OpmLog::warning(OpmInputError::format(msg_fmt, keyword.location()));
 
-          continue;
-      }
+            continue;
+        }
 
-      int global_index = 1 + dims.getGlobalIndex(ijk[0], ijk[1], ijk[2]);
-      list.push_back( param.number(global_index) );
-  }
+        const int global_index =
+            1 + dims.getGlobalIndex(ijk[0], ijk[1], ijk[2]);
+
+        list.push_back(param.number(global_index));
+    }
 }
 
-inline std::optional<std::string>
+std::optional<std::string>
 establishRegionContext(const DeckKeyword&       keyword,
                        const FieldPropsManager& field_props,
                        const ParseContext&      parseContext,
@@ -1267,9 +1284,9 @@ void keywordR(SummaryConfig::keyword_list& list,
             copt_node.namedEntity(wname);
 
             const auto& well = schedule.getWellatEnd(wname);
-            for( const auto& connection : well.getConnections() ) {
-                copt_node.number( connection.global_index() + 1 );
-                list.push_back( copt_node );
+            for (const auto& connection : well.getConnections()) {
+                copt_node.number(connection.global_index() + 1);
+                list.push_back(copt_node);
             }
         }
     }
@@ -1289,64 +1306,130 @@ void keywordR(SummaryConfig::keyword_list& list,
                    });
 }
 
-inline void keywordMISC( SummaryConfig::keyword_list& list,
-                         const std::string& keyword,
-                         KeywordLocation loc)
+void keywordMISC(SummaryConfig::keyword_list& list,
+                 const std::string& keyword,
+                 KeywordLocation loc)
 {
-    if (meta_keywords.find(keyword) == meta_keywords.end())
-        list.emplace_back( keyword, SummaryConfigNode::Category::Miscellaneous , std::move(loc));
+    const auto metaKw = meta_keywords();
+
+    auto pos = std::find_if(metaKw.begin(), metaKw.end(),
+                            [&keyword](const auto& meta)
+                            { return meta.first == keyword; });
+
+    if (pos == metaKw.end()) {
+        list.emplace_back(keyword, SummaryConfigNode::Category::Miscellaneous, std::move(loc));
+    }
 }
 
-inline void keywordMISC( SummaryConfig::keyword_list& list,
-                         const DeckKeyword& keyword)
+void keywordMISC(SummaryConfig::keyword_list& list,
+                 const DeckKeyword& keyword)
 {
     keywordMISC(list, keyword.name(), keyword.location());
 }
 
-  inline void keywordC( SummaryConfig::keyword_list& list,
-                        const ParseContext& parseContext,
-                        ErrorGuard& errors,
-                        const DeckKeyword& keyword,
-                        const Schedule& schedule,
-                        const GridDims& dims) {
+void handleConnectionCell(const std::size_t            connCell,
+                          SummaryConfigNode&           param,
+                          SummaryConfig::keyword_list& list)
+{
+    list.push_back(param.number(static_cast<int>(connCell) + 1));
+}
 
-    if (is_connection_completion(keyword.name()))
-        return keywordCL(list, parseContext, errors, keyword, schedule, dims);
+void connKeywordDefaultedConns(const SummaryConfigNode&        param0,
+                               const Schedule&                 schedule,
+                               const std::vector<std::string>& wellNames,
+                               SummaryConfig::keyword_list&    list)
+{
+    auto param = param0;
+
+    const auto& possibleFutureConns = schedule.getPossibleFutureConnections();
+
+    for (const auto& wellName : wellNames) {
+        param.namedEntity(wellName);
+
+        if (auto wellPos = possibleFutureConns.find(wellName);
+            wellPos != possibleFutureConns.end())
+        {
+            std::for_each(wellPos->second.begin(), wellPos->second.end(),
+                          [&param, &list]
+                          (const int global_index)
+                          { handleConnectionCell(global_index, param, list); });
+        }
+
+        const auto& connections = schedule.getWellatEnd(wellName).getConnections();
+        std::for_each(connections.begin(), connections.end(),
+                      [&param, &list]
+                      (const Connection& conn)
+                      { handleConnectionCell(conn.global_index(), param, list); });
+    }
+}
+
+void connKeywordSpecifiedConn(const SummaryConfigNode&        param0,
+                              const int                       global_index,
+                              const Schedule&                 schedule,
+                              const std::vector<std::string>& wellNames,
+                              SummaryConfig::keyword_list&    list)
+{
+    auto param = param0;
+
+    const auto& possibleFutureConns = schedule.getPossibleFutureConnections();
+
+    for (const auto& wellName : wellNames) {
+        const auto wellPos = possibleFutureConns.find(wellName);
+
+        if (((wellPos != possibleFutureConns.end()) &&
+             (wellPos->second.find(global_index) != wellPos->second.end())) ||
+            schedule.back().wells(wellName).getConnections().hasGlobalIndex(global_index))
+        {
+            param.namedEntity(wellName);
+
+            handleConnectionCell(global_index, param, list);
+        }
+    }
+}
+
+void connectionKeyword(const DeckKeyword&           keyword,
+                       const Schedule&              schedule,
+                       const GridDims&              dims,
+                       const ParseContext&          parseContext,
+                       ErrorGuard&                  errors,
+                       SummaryConfig::keyword_list& list)
+{
+    if (is_connection_completion(keyword.name())) {
+        keywordCL(list, parseContext, errors,
+                  keyword, schedule, dims);
+
+        return;
+    }
 
     auto param = SummaryConfigNode {
         keyword.name(), SummaryConfigNode::Category::Connection, keyword.location()
     }
-    .parameterType( parseKeywordType( keyword.name()) )
-    .isUserDefined( is_udq(keyword.name()) );
+    .parameterType(parseKeywordType(keyword.name()))
+    .isUserDefined(is_udq(keyword.name()));
 
-    for( const auto& record : keyword ) {
+    for (const auto& record : keyword) {
+        const auto& wellitem = record.getItem(0);
 
-        const auto& wellitem = record.getItem( 0 );
+        const auto well_names = wellitem.defaultApplied(0)
+            ? schedule.wellNames()
+            : schedule.wellNames(wellitem.getTrimmedString(0));
 
-        const auto well_names = wellitem.defaultApplied( 0 )
-                              ? schedule.wellNames()
-                              : schedule.wellNames( wellitem.getTrimmedString( 0 ) );
-        const auto ijk_defaulted = record.getItem( 1 ).defaultApplied( 0 );
+        if (well_names.empty()) {
+            handleMissingWell(parseContext, errors, keyword.location(),
+                              wellitem.getTrimmedString(0));
+        }
 
-        if( well_names.empty() )
-            handleMissingWell( parseContext, errors, keyword.location(), wellitem.getTrimmedString( 0 ) );
+        if (record.getItem(1).defaultApplied(0)) {
+            // (I,J,K) coordinate tuple defaulted.  Match all connections.
+            connKeywordDefaultedConns(param, schedule, well_names, list);
+        }
+        else {
+            // (I,J,K) coordinate specified.  Match that connection for all
+            // matching wells.
+            const auto ijk = getijk(record);
 
-        for(const auto& name : well_names) {
-            param.namedEntity(name);
-            const auto& well = schedule.getWellatEnd(name);
-            /*
-             * we don't want to add connections that don't exist, so we iterate
-             * over a well's connections regardless of the desired block is
-             * defaulted or not
-             */
-            for( const auto& connection : well.getConnections() ) {
-                auto cijk = getijk( connection );
-
-                if( ijk_defaulted || ( cijk == getijk(record) ) ) {
-                    const int global_index = 1 + dims.getGlobalIndex(cijk[0], cijk[1], cijk[2]);
-                    list.push_back( param.number(global_index) );
-                }
-            }
+            connKeywordSpecifiedConn(param, dims.getGlobalIndex(ijk[0], ijk[1], ijk[2]),
+                                     schedule, well_names, list);
         }
     }
 }
@@ -1381,7 +1464,6 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
         })
         || is_in_set({ "STFR", "STFC" }, kw.substr(0, 4));
     }
-
 
     int maxNumWellSegments(const Well& well)
     {
@@ -1485,11 +1567,11 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
         }
     }
 
-    inline void keywordS(SummaryConfig::keyword_list& list,
-                         const ParseContext&          parseContext,
-                         ErrorGuard&                  errors,
-                         const DeckKeyword&           keyword,
-                         const Schedule&              schedule)
+    void keywordS(SummaryConfig::keyword_list& list,
+                  const ParseContext&          parseContext,
+                  ErrorGuard&                  errors,
+                  const DeckKeyword&           keyword,
+                  const Schedule&              schedule)
     {
         // Generate SMSPEC nodes for SUMMARY keywords of the form
         //
@@ -1547,13 +1629,15 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
         };
     }
 
-    void check_udq( const KeywordLocation& location,
-                    const Schedule& schedule,
-                    const ParseContext& parseContext,
-                    ErrorGuard& errors ) {
-        if (! is_udq(location.keyword))
+    void check_udq(const KeywordLocation& location,
+                   const Schedule&        schedule,
+                   const ParseContext&    parseContext,
+                   ErrorGuard&            errors)
+    {
+        if (! is_udq(location.keyword)) {
             // Nothing to do
             return;
+        }
 
         const auto& udq = schedule.getUDQConfig(schedule.size() - 1);
 
@@ -1573,30 +1657,29 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
         }
     }
 
-void handleKW(SummaryConfig::keyword_list&    list,
-              SummaryConfigContext&           context,
-              const std::vector<std::string>& node_names,
+void handleKW(const std::vector<std::string>& node_names,
               const std::vector<int>&         analyticAquiferIDs,
               const std::vector<int>&         numericAquiferIDs,
               const DeckKeyword&              keyword,
               const Schedule&                 schedule,
               const FieldPropsManager&        field_props,
+              const GridDims&                 dims,
               const ParseContext&             parseContext,
               ErrorGuard&                     errors,
-              const GridDims&                 dims,
-              const bool excludeFieldFromGroupKw = true)
+              SummaryConfigContext&           context,
+              SummaryConfig::keyword_list&    list,
+              const bool                      excludeFieldFromGroupKw = true)
 {
     using Cat = SummaryConfigNode::Category;
 
-    const auto& name = keyword.name();
     check_udq(keyword.location(), schedule, parseContext, errors);
 
-    const auto cat = parseKeywordCategory(name);
+    const auto cat = parseKeywordCategory(keyword.name());
     switch (cat) {
     case Cat::Well:
         if (is_well_comp(keyword.name())) {
-            Opm::OpmLog::warning(Opm::OpmInputError::format("Unhandled summary keyword {keyword}\n"
-                                                            "In {file} line {line}", keyword.location()));
+            OpmLog::warning(OpmInputError::format("Unhandled summary keyword {keyword}\n"
+                                                  "In {file} line {line}", keyword.location()));
             return;
         }
 
@@ -1621,11 +1704,12 @@ void handleKW(SummaryConfig::keyword_list&    list,
         break;
 
     case Cat::Connection:
-        keywordC(list, parseContext, errors, keyword, schedule, dims);
+        connectionKeyword(keyword, schedule, dims,
+                          parseContext, errors, list);
         break;
 
     case Cat::Completion:
-        if (is_well_completion(name)) {
+        if (is_well_completion(keyword.name())) {
             keywordWL(list, parseContext, errors, keyword, schedule);
         }
         else {
@@ -1662,14 +1746,14 @@ void handleKW(SummaryConfig::keyword_list&    list,
     }
 }
 
-inline void handleKW( SummaryConfig::keyword_list& list,
-                      const std::string& keyword,
-                      const std::vector<int>& analyticAquiferIDs,
-                      const std::vector<int>& numericAquiferIDs,
-                      const KeywordLocation& location,
-                      const Schedule& schedule,
-                      const ParseContext& /* parseContext */,
-                      ErrorGuard& /* errors */)
+void handleKW(SummaryConfig::keyword_list& list,
+              const std::string&           keyword,
+              const std::vector<int>&      analyticAquiferIDs,
+              const std::vector<int>&      numericAquiferIDs,
+              const KeywordLocation&       location,
+              const Schedule&              schedule,
+              const ParseContext&          /* parseContext */,
+              ErrorGuard&                  /* errors */)
 {
     if (is_udq(keyword)) {
         throw std::logic_error {
@@ -1711,33 +1795,34 @@ inline void handleKW( SummaryConfig::keyword_list& list,
     }
 }
 
+void uniq(SummaryConfig::keyword_list& vec)
+{
+    if (vec.empty()) {
+        return;
+    }
 
-  inline void uniq( SummaryConfig::keyword_list& vec ) {
-      std::sort( vec.begin(), vec.end());
-      auto logical_end = std::unique( vec.begin(), vec.end() );
-      vec.erase( logical_end, vec.end() );
-      if (vec.empty())
-          return;
+    std::sort(vec.begin(), vec.end());
+    vec.erase(std::unique(vec.begin(), vec.end()), vec.end());
 
-      /*
-        This is a desperate hack to ensure that the ROEW keywords come after
-        WOPT keywords, to ensure that the WOPT keywords have been fully
-        evaluated in the SummaryState when we evaluate the ROEW keywords.
-      */
-      std::size_t tail_index = vec.size() - 1;
-      std::size_t item_index = 0;
-      while (true) {
-          if (item_index >= tail_index)
-              break;
+    // This is a desperate hack to ensure that the ROEW keywords come after
+    // WOPT keywords, to ensure that the WOPT keywords have been fully
+    // evaluated in the SummaryState when we evaluate the ROEW keywords.
+    std::size_t tail_index = vec.size() - 1;
+    std::size_t item_index = 0;
+    while (true) {
+        if (item_index >= tail_index) {
+            break;
+        }
 
-          auto& node = vec[item_index];
-          if (node.keyword().rfind("ROEW", 0) == 0) {
-              std::swap( node, vec[tail_index] );
-              tail_index--;
-          }
-          item_index++;
-      }
-  }
+        auto& node = vec[item_index];
+        if (node.keyword().rfind("ROEW", 0) == 0) {
+            std::swap(node, vec[tail_index]);
+            --tail_index;
+        }
+
+        ++item_index;
+    }
+}
 
 } // Anonymous namespace
 
@@ -1790,8 +1875,9 @@ SummaryConfigNode::Category parseKeywordCategory(const std::string& keyword)
     return Cat::Miscellaneous;
 }
 
-
-SummaryConfigNode::SummaryConfigNode(std::string keyword, const Category cat, KeywordLocation loc_arg)
+SummaryConfigNode::SummaryConfigNode(std::string     keyword,
+                                     const Category  cat,
+                                     KeywordLocation loc_arg)
     : keyword_ (std::move(keyword))
     , category_(cat)
     , loc      (std::move(loc_arg))
@@ -1816,7 +1902,6 @@ SummaryConfigNode& SummaryConfigNode::fip_region(const std::string& fip_region)
     this->fip_region_ = fip_region;
     return *this;
 }
-
 
 SummaryConfigNode& SummaryConfigNode::parameterType(const Type type)
 {
@@ -1873,35 +1958,37 @@ std::string SummaryConfigNode::uniqueNodeKey() const
 
 bool operator==(const SummaryConfigNode& lhs, const SummaryConfigNode& rhs)
 {
-    if (lhs.keyword() != rhs.keyword()) return false;
+    if (lhs.keyword() != rhs.keyword()) {
+        return false;
+    }
 
     assert (lhs.category() == rhs.category());
 
-    switch( lhs.category() ) {
-        case SummaryConfigNode::Category::Field: [[fallthrough]];
-        case SummaryConfigNode::Category::Miscellaneous:
-            // Fully identified by keyword
-            return true;
+    switch (lhs.category()) {
+    case SummaryConfigNode::Category::Field:
+    case SummaryConfigNode::Category::Miscellaneous:
+        // Fully identified by keyword.
+        return true;
 
-        case SummaryConfigNode::Category::Well: [[fallthrough]];
-        case SummaryConfigNode::Category::Node: [[fallthrough]];
-        case SummaryConfigNode::Category::Group:
-            // Equal if associated to same named entity
-            return lhs.namedEntity() == rhs.namedEntity();
+    case SummaryConfigNode::Category::Well:
+    case SummaryConfigNode::Category::Node:
+    case SummaryConfigNode::Category::Group:
+        // Equal if associated to same named entity.
+        return lhs.namedEntity() == rhs.namedEntity();
 
-        case SummaryConfigNode::Category::Aquifer: [[fallthrough]];
-        case SummaryConfigNode::Category::Region: [[fallthrough]];
-        case SummaryConfigNode::Category::Block:
-            // Equal if associated to same numeric entity
-            return lhs.number() == rhs.number();
+    case SummaryConfigNode::Category::Aquifer:
+    case SummaryConfigNode::Category::Region:
+    case SummaryConfigNode::Category::Block:
+        // Equal if associated to same numeric entity.
+        return lhs.number() == rhs.number();
 
-        case SummaryConfigNode::Category::Connection: [[fallthrough]];
-        case SummaryConfigNode::Category::Completion: [[fallthrough]];
-        case SummaryConfigNode::Category::Segment:
-            // Equal if associated to same numeric
-            // sub-entity of same named entity
-            return (lhs.namedEntity() == rhs.namedEntity())
-                && (lhs.number()      == rhs.number());
+    case SummaryConfigNode::Category::Connection:
+    case SummaryConfigNode::Category::Completion:
+    case SummaryConfigNode::Category::Segment:
+        // Equal if associated to same numeric sub-entity of
+        // same named entity.
+        return (lhs.namedEntity() == rhs.namedEntity())
+            && (lhs.number()      == rhs.number());
     }
 
     return false;
@@ -1909,49 +1996,49 @@ bool operator==(const SummaryConfigNode& lhs, const SummaryConfigNode& rhs)
 
 bool operator<(const SummaryConfigNode& lhs, const SummaryConfigNode& rhs)
 {
-    if (lhs.keyword() < rhs.keyword()) return true;
-    if (rhs.keyword() < lhs.keyword()) return false;
+    if (lhs.keyword() < rhs.keyword()) { return true; }
+    if (rhs.keyword() < lhs.keyword()) { return false; }
 
-    // If we get here, the keyword are equal.
+    // If we get here, the keywords in 'lhs' and 'rhs' are equal.
 
-    switch( lhs.category() ) {
-        case SummaryConfigNode::Category::Field: [[fallthrough]];
-        case SummaryConfigNode::Category::Miscellaneous:
-            // Fully identified by keyword.
-            // Return false for equal keywords.
-            return false;
+    switch (lhs.category()) {
+    case SummaryConfigNode::Category::Field:
+    case SummaryConfigNode::Category::Miscellaneous:
+        // Fully identified by keyword.  Return false for equal keywords.
+        return false;
 
-        case SummaryConfigNode::Category::Well: [[fallthrough]];
-        case SummaryConfigNode::Category::Node: [[fallthrough]];
-        case SummaryConfigNode::Category::Group:
-            // Ordering determined by namedEntityd entity
-            return lhs.namedEntity() < rhs.namedEntity();
+    case SummaryConfigNode::Category::Well:
+    case SummaryConfigNode::Category::Node:
+    case SummaryConfigNode::Category::Group:
+        // Ordering determined by named entity.
+        return lhs.namedEntity() < rhs.namedEntity();
 
-        case SummaryConfigNode::Category::Aquifer: [[fallthrough]];
-        case SummaryConfigNode::Category::Region: [[fallthrough]];
-        case SummaryConfigNode::Category::Block:
-            // Ordering determined by numeric entity
-            return lhs.number() < rhs.number();
+    case SummaryConfigNode::Category::Aquifer:
+    case SummaryConfigNode::Category::Region:
+    case SummaryConfigNode::Category::Block:
+        // Ordering determined by numeric entity.
+        return lhs.number() < rhs.number();
 
-        case SummaryConfigNode::Category::Connection: [[fallthrough]];
-        case SummaryConfigNode::Category::Completion: [[fallthrough]];
-        case SummaryConfigNode::Category::Segment:
-        {
-            // Ordering determined by pair of named entity and numeric ID.
-            //
-            // Would ideally implement this in terms of operator< for
-            // std::tuple<std::string,int>, with objects generated by std::tie(),
-            // but `namedEntity()` does not return an lvalue.
-            const auto& lnm = lhs.namedEntity();
-            const auto& rnm = rhs.namedEntity();
+    case SummaryConfigNode::Category::Connection:
+    case SummaryConfigNode::Category::Completion:
+    case SummaryConfigNode::Category::Segment:
+    {
+        // Ordering determined by pair of named entity and numeric ID.
+        //
+        // Would ideally implement this in terms of operator< for
+        // std::tuple<std::string,int>, with objects generated by
+        // std::tie(), but `namedEntity()` does not return an lvalue.
+        const auto& lnm = lhs.namedEntity();
+        const auto& rnm = rhs.namedEntity();
 
-            return ( lnm <  rnm)
-                || ((lnm == rnm) && (lhs.number() < rhs.number()));
-        }
+        return ( lnm <  rnm)
+            || ((lnm == rnm) && (lhs.number() < rhs.number()));
+    }
     }
 
     throw std::invalid_argument {
-        "Unhandled Summary Parameter Category '" + to_string(lhs.category()) + '\''
+        fmt::format("Unhandled summary parameter category '{}'",
+                    to_string(lhs.category()))
     };
 }
 
@@ -1982,26 +2069,36 @@ SummaryConfig::SummaryConfig(const Deck&              deck,
         for (const auto& kw : section) {
             if (is_processing_instruction(kw.name())) {
                 handleProcessingInstruction(kw.name());
-            } else {
-                handleKW(this->m_keywords, context,
-                         node_names, analyticAquifers, numericAquifers,
-                         kw, schedule, field_props, parseContext, errors, dims);
+            }
+            else {
+                handleKW(node_names, analyticAquifers, numericAquifers,
+                         kw, schedule, field_props, dims,
+                         parseContext, errors, context, this->m_keywords);
             }
         }
 
-        for (const auto& meta_pair : meta_keywords) {
-            if (section.hasKeyword(meta_pair.first)) {
-                const auto& deck_keyword = section.getKeyword(meta_pair.first);
-                for (const auto& kw : meta_pair.second) {
-                    if (!this->hasKeyword(kw)) {
-                        KeywordLocation location = deck_keyword.location();
-                        location.keyword = fmt::format("{}/{}", meta_pair.first, kw);
+        for (const auto& [meta_keyword, kw_list] : meta_keywords()) {
+            if (! section.hasKeyword(meta_keyword)) {
+                // 'Meta_keyword'--e.g., PERFORMA or ALL--is not present in
+                // the SUMMARY section.  Nothing to do.
+                continue;
+            }
 
-                        handleKW(this->m_keywords, kw,
-                                 analyticAquifers, numericAquifers,
-                                 location, schedule, parseContext, errors);
-                    }
+            auto location = section.getKeyword(meta_keyword).location();
+
+            for (const auto& kw : kw_list()) {
+                if (this->hasKeyword(kw)) {
+                    // 'Kw' is already configured through an explicit
+                    // request.  Ignore the implicit request in
+                    // 'meta_keyword'.
+                    continue;
                 }
+
+                location.keyword = fmt::format("{}/{}", meta_keyword, kw);
+
+                handleKW(this->m_keywords, kw,
+                         analyticAquifers, numericAquifers,
+                         location, schedule, parseContext, errors);
             }
         }
 
@@ -2023,40 +2120,41 @@ SummaryConfig::SummaryConfig(const Deck&              deck,
     }
 }
 
-
-SummaryConfig::SummaryConfig( const Deck& deck,
-                              const Schedule& schedule,
-                              const FieldPropsManager& field_props,
-                              const AquiferConfig& aquiferConfig,
-                              const ParseContext& parseContext,
-                              ErrorGuard& errors) :
-    SummaryConfig( deck , schedule, field_props, aquiferConfig, parseContext, errors, GridDims( deck ))
-{ }
-
+SummaryConfig::SummaryConfig(const Deck&              deck,
+                             const Schedule&          schedule,
+                             const FieldPropsManager& field_props,
+                             const AquiferConfig&     aquiferConfig,
+                             const ParseContext&      parseContext,
+                             ErrorGuard&              errors)
+    : SummaryConfig { deck, schedule, field_props,
+                      aquiferConfig, parseContext,
+                      errors, GridDims(deck) }
+{}
 
 template <typename T>
-SummaryConfig::SummaryConfig( const Deck& deck,
-                              const Schedule& schedule,
-                              const FieldPropsManager& field_props,
-                              const AquiferConfig& aquiferConfig,
-                              const ParseContext& parseContext,
-                              T&& errors) :
-    SummaryConfig(deck, schedule, field_props, aquiferConfig, parseContext, errors)
+SummaryConfig::SummaryConfig(const Deck&              deck,
+                             const Schedule&          schedule,
+                             const FieldPropsManager& field_props,
+                             const AquiferConfig&     aquiferConfig,
+                             const ParseContext&      parseContext,
+                             T&&                      errors)
+    : SummaryConfig { deck, schedule, field_props, aquiferConfig, parseContext, errors }
 {}
 
-
-SummaryConfig::SummaryConfig( const Deck& deck,
-                              const Schedule& schedule,
-                              const FieldPropsManager& field_props,
-                              const AquiferConfig& aquiferConfig) :
-    SummaryConfig(deck, schedule, field_props, aquiferConfig, ParseContext(), ErrorGuard())
+SummaryConfig::SummaryConfig(const Deck&              deck,
+                             const Schedule&          schedule,
+                             const FieldPropsManager& field_props,
+                             const AquiferConfig&     aquiferConfig)
+    : SummaryConfig { deck, schedule, field_props, aquiferConfig,
+                      ParseContext{}, ErrorGuard{} }
 {}
 
-
-SummaryConfig::SummaryConfig(const keyword_list& kwds,
+SummaryConfig::SummaryConfig(const keyword_list&          keywords,
                              const std::set<std::string>& shortKwds,
-                             const std::set<std::string>& smryKwds) :
-    m_keywords(kwds), short_keywords(shortKwds), summary_keywords(smryKwds)
+                             const std::set<std::string>& smryKwds)
+    : m_keywords       { keywords }
+    , short_keywords   { shortKwds }
+    , summary_keywords { smryKwds }
 {}
 
 SummaryConfig SummaryConfig::serializationTestObject()
@@ -2069,22 +2167,27 @@ SummaryConfig SummaryConfig::serializationTestObject()
     return result;
 }
 
-SummaryConfig& SummaryConfig::merge( const SummaryConfig& other ) {
-    this->m_keywords.insert( this->m_keywords.end(),
-                             other.m_keywords.begin(),
-                             other.m_keywords.end() );
+SummaryConfig& SummaryConfig::merge(const SummaryConfig& other)
+{
+    this->m_keywords.insert(this->m_keywords.end(),
+                            other.m_keywords.begin(),
+                            other.m_keywords.end());
 
-    uniq( this->m_keywords );
+    uniq(this->m_keywords);
+
     return *this;
 }
 
-SummaryConfig& SummaryConfig::merge( SummaryConfig&& other ) {
-    auto fst = std::make_move_iterator( other.m_keywords.begin() );
-    auto lst = std::make_move_iterator( other.m_keywords.end() );
-    this->m_keywords.insert( this->m_keywords.end(), fst, lst );
+SummaryConfig& SummaryConfig::merge(SummaryConfig&& other)
+{
+    auto fst = std::make_move_iterator(other.m_keywords.begin());
+    auto lst = std::make_move_iterator(other.m_keywords.end());
+    this->m_keywords.insert(this->m_keywords.end(), fst, lst);
+
     other.m_keywords.clear();
 
-    uniq( this->m_keywords );
+    uniq(this->m_keywords);
+
     return *this;
 }
 
@@ -2129,11 +2232,11 @@ SummaryConfig::registerRequisiteUDQorActionSummaryKeys(const std::vector<std::st
         };
 
         for (const auto& vector_name : extraKeys) {
-            handleKW(candidateSummaryNodes, ctxt, node_names,
-                     analyticAquifers, numericAquifers,
+            handleKW(node_names, analyticAquifers, numericAquifers,
                      DeckKeyword { KeywordLocation{}, vector_name },
                      sched, es.globalFieldProps(),
-                     parseCtx, errors, es.gridDims(),
+                     es.gridDims(), parseCtx, errors,
+                     ctxt, candidateSummaryNodes,
                      excludeFieldFromGroupKw);
         }
     }
@@ -2167,19 +2270,20 @@ SummaryConfig::registerRequisiteUDQorActionSummaryKeys(const std::vector<std::st
     return summaryNodes;
 }
 
-bool SummaryConfig::hasKeyword( const std::string& keyword ) const {
+bool SummaryConfig::hasKeyword(const std::string& keyword) const
+{
     return short_keywords.find(keyword) != short_keywords.end();
 }
 
-
-bool SummaryConfig::hasSummaryKey(const std::string& keyword ) const {
+bool SummaryConfig::hasSummaryKey(const std::string& keyword) const
+{
     return summary_keywords.find(keyword) != summary_keywords.end();
 }
 
-const SummaryConfigNode& SummaryConfig::operator[](std::size_t index) const {
+const SummaryConfigNode& SummaryConfig::operator[](std::size_t index) const
+{
     return this->m_keywords[index];
 }
-
 
 bool SummaryConfig::match(const std::string& keywordPattern) const
 {
@@ -2207,6 +2311,52 @@ SummaryConfig::keywords(const std::string& keywordPattern) const
 // calculate a summary variable.
 bool SummaryConfig::require3DField(const std::string& keyword) const
 {
+    // This is a hardcoded mapping between 3D field keywords,
+    // e.g. 'PRESSURE' and 'SWAT' and summary keywords like 'RPR' and
+    // 'BPR'. The purpose of this mapping is to maintain an overview of
+    // which 3D field keywords are needed by the Summary calculation
+    // machinery, based on which summary keywords are requested.
+    const auto required_fields = std::unordered_map<std::string, std::vector<std::string>> {
+         {"PRESSURE", {"FPR", "RPR*", "BPR"}},
+         {"RPV",      {"FRPV", "RRPV*"}},
+         {"OIP",      {"ROIP*", "FOIP", "FOE"}},
+         {"OIPR",     {"FOIPR"}},
+         {"OIPL",     {"ROIPL*", "FOIPL"}},
+         {"OIPG",     {"ROIPG*", "FOIPG"}},
+         {"GIP",      {"RGIP*", "FGIP" }},
+         {"GIPR",     {"FGIPR"}},
+         {"GIPL",     {"RGIPL*", "FGIPL"}},
+         {"GIPG",     {"RGIPG*", "FGIPG"}},
+         {"WIP",      {"RWIP*", "FWIP" }},
+         {"WIPR",     {"FWIPR"}},
+         {"WIPL",     {"RWIPL*", "FWIPL"}},
+         {"WIPG",     {"RWIPG*", "FWIPG"}},
+         {"WCD",      {"RWCD", "FWCD" }},
+         {"GCDI",     {"RGCDI", "FGCDI"}},
+         {"GCDM",     {"RGCDM", "FGCDM"}},
+         {"GKDI",     {"RGKDI", "FGKDI"}},
+         {"GKDM",     {"RGKDM", "FGKDM"}},
+         {"SWAT",     {"BSWAT"}},
+         {"SGAS",     {"BSGAS"}},
+         {"SALT",     {"FSIP"}},
+         {"TEMP",     {"BTCNFHEA"}},
+         {"GMIP",     {"RGMIP", "FGMIP"}},
+         {"GMGP",     {"RGMGP", "FGMGP"}},
+         {"GMDS",     {"RGMDS", "FGMDS"}},
+         {"GMTR",     {"RGMTR", "FGMTR"}},
+         {"GMST",     {"RGMST", "FGMST"}},
+         {"GMMO",     {"RGMMO", "FGMMO"}},
+         {"GMUS",     {"RGMUS", "FGMUS"}},
+         {"GKTR",     {"RGKTR", "FGKTR"}},
+         {"GKMO",     {"RGKMO", "FGKMO"}},
+         {"MMIP",     {"RMMIP", "FMMIP"}},
+         {"MOIP",     {"RMOIP", "FMOIP"}},
+         {"MUIP",     {"RMUIP", "FMUIP"}},
+         {"MBIP",     {"RMBIP", "FMBIP"}},
+         {"MCIP",     {"RMCIP", "FMCIP"}},
+         {"AMIP",     {"RAMIP", "FAMIP"}},
+    };
+
     auto iter = required_fields.find(keyword);
     if (iter == required_fields.end()) {
         return false;
@@ -2217,13 +2367,16 @@ bool SummaryConfig::require3DField(const std::string& keyword) const
                        { return this->match(smryKw); });
 }
 
-
-std::set<std::string> SummaryConfig::fip_regions() const {
+std::set<std::string> SummaryConfig::fip_regions() const
+{
     std::set<std::string> reg_set;
+
     for (const auto& node : this->m_keywords) {
-        if (node.category() == EclIO::SummaryNode::Category::Region)
-            reg_set.insert( node.fip_region() );
+        if (node.category() == EclIO::SummaryNode::Category::Region) {
+            reg_set.insert(node.fip_region());
+        }
     }
+
     return reg_set;
 }
 
@@ -2244,20 +2397,25 @@ std::set<std::string> SummaryConfig::fip_regions_interreg_flow() const
     return reg_set;
 }
 
-bool SummaryConfig::operator==(const Opm::SummaryConfig& data) const {
-    return this->m_keywords == data.m_keywords &&
-           this->short_keywords == data.short_keywords &&
-           this->summary_keywords == data.summary_keywords;
+bool SummaryConfig::operator==(const Opm::SummaryConfig& data) const
+{
+    return (this->m_keywords == data.m_keywords)
+        && (this->short_keywords == data.short_keywords)
+        && (this->summary_keywords == data.summary_keywords)
+        ;
 }
 
-void SummaryConfig::handleProcessingInstruction(const std::string& keyword) {
+void SummaryConfig::handleProcessingInstruction(const std::string& keyword)
+{
     if (keyword == "RUNSUM") {
         runSummaryConfig.create = true;
-    } else if (keyword == "NARROW") {
+    }
+    else if (keyword == "NARROW") {
         runSummaryConfig.narrow = true;
-    } else if (keyword == "SEPARATE") {
+    }
+    else if (keyword == "SEPARATE") {
         runSummaryConfig.separate = true;
     }
 }
 
-}
+} // namespace Opm
