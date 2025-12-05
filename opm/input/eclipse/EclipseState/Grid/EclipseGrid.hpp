@@ -161,7 +161,15 @@ namespace Opm {
 
         void assertLabelLGR(const std::string& label) const;
 
+        void save_children(Opm::EclIO::EclOutput& egridfile, const Opm::UnitSystem& units) const;
+
+        void save_nnc(Opm::EclIO::EclOutput& egridfile, const std::vector<Opm::NNCdata>& nnc) const;
+
+        void save_core(Opm::EclIO::EclOutput& egridfile, const Opm::UnitSystem& units) const;
+
         void save(const std::string& filename, bool formatted, const std::vector<Opm::NNCdata>& nnc, const Opm::UnitSystem& units) const;
+
+
         /*
           Observe that the there is a getGlobalIndex(i,j,k)
           implementation in the base class. This method - translating
@@ -447,8 +455,11 @@ namespace Opm {
                        const std::array<int, 3>& low_fatherIJK_,
                        const std::array<int, 3>& up_fatherIJK_);
         const vec_size_t& getFatherGlobalID() const;
-        void save(Opm::EclIO::EclOutput&, const std::vector<Opm::NNCdata>&, const Opm::UnitSystem&) const;
-        void save_nnc(Opm::EclIO::EclOutput&) const;
+
+        void save(Opm::EclIO::EclOutput&, const Opm::UnitSystem&) const;
+
+        void save_core(Opm::EclIO::EclOutput&, const Opm::UnitSystem&) const;
+
         void set_lgr_global_counter(std::size_t counter)
         {
             lgr_global_counter = counter;
