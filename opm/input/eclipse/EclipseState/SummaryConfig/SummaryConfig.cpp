@@ -2069,14 +2069,6 @@ SummaryConfig SummaryConfig::serializationTestObject()
     return result;
 }
 
-SummaryConfig::const_iterator SummaryConfig::begin() const {
-    return this->m_keywords.cbegin();
-}
-
-SummaryConfig::const_iterator SummaryConfig::end() const {
-    return this->m_keywords.cend();
-}
-
 SummaryConfig& SummaryConfig::merge( const SummaryConfig& other ) {
     this->m_keywords.insert( this->m_keywords.end(),
                              other.m_keywords.begin(),
@@ -2211,11 +2203,6 @@ SummaryConfig::keywords(const std::string& keywordPattern) const
     return kw_list;
 }
 
-
-size_t SummaryConfig::size() const {
-    return this->m_keywords.size();
-}
-
 // Can be used to query if a certain 3D field, e.g. PRESSURE, is required to
 // calculate a summary variable.
 bool SummaryConfig::require3DField(const std::string& keyword) const
@@ -2228,14 +2215,6 @@ bool SummaryConfig::require3DField(const std::string& keyword) const
     return std::any_of(iter->second.begin(), iter->second.end(),
                        [this](const std::string& smryKw)
                        { return this->match(smryKw); });
-}
-
-
-std::unordered_set<std::string> SummaryConfig::wbp_wells() const {
-    std::unordered_set<std::string> wells;
-    for (const auto& node : this->keywords("WBP*"))
-        wells.insert( node.namedEntity() );
-    return wells;
 }
 
 
