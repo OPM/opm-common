@@ -84,7 +84,9 @@
     "CMUPR",
     "CMUPT",
     "CMUPRL",
-    "CMUPTL"
+    "CMUPTL",
+    "CWIRFRAC",
+    "CWITFRAC"
   ],
   "items": [
     {
