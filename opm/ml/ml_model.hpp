@@ -498,23 +498,6 @@ namespace ML
         NNLayerActivation<Evaluation> activation_;
     };
 
-    /** \class Embedding Layer class
-     * Turns nonnegative integers (indexes) into dense vectors of fixed size.
-     */
-    template <class Evaluation>
-    class NNLayerEmbedding : public NNLayer<Evaluation>
-    {
-    public:
-        NNLayerEmbedding(Tensor<float> weights = {});
-
-        bool loadLayer(std::ifstream& file) override;
-
-        bool apply(const Tensor<Evaluation>& in, Tensor<Evaluation>& out) override;
-
-    private:
-        Tensor<float> weights_;
-    };
-
     /** \class Neural Network Model class
      * A model grouping layers into an object
      */
@@ -760,6 +743,40 @@ namespace ML
         return true;
     }
 
+    /**
+     * @brief Applies the forward pass of a dense (fully connected) neural-network layer.
+     *
+     * This method performs a matrix–vector multiplication between the layer's weight
+     * matrix and the input tensor, adds the bias vector, and then applies the
+     * configured activation function.
+     *
+     * ### Shape conventions
+     * - `in` is treated as a 1D row vector of length `weights_.dims_[0]`.
+     * - `weights_` has shape `(input_dim, output_dim)`:
+     *      - rows = input features
+     *      - columns = output neurons
+     * - `biases_` is a vector of length `output_dim`.
+     * - `out` is a 1D vector of length `output_dim`.
+     *
+     * This implements:
+     * @f[
+     *     \text{tmp}_j = \sum_i \text{in}_i \cdot W_{i,j} + b_j,
+     *     \qquad \text{out} = \text{activation}(\text{tmp})
+     * @f]
+     *
+     * ### Note on row-major vs column-major
+     * The current implementation assumes row-major access to `W` and is efficient
+     * when using larger batch sizes. For inference with very small batches
+     * (especially `(1 × input_dim)`), a column-major layout or transposed multiply
+     * could improve cache locality because each output neuron would read contiguous
+     * memory. Whether to switch depends on expected inference batch sizes and the
+     * storage layout of `Tensor<Evaluation>`. This will depend on future applications
+     * of ML. 
+     * Current applications and best related convention:
+     * - Hybrid Newton: 
+     *      - input (1, N_cells x N_in_feat)  --> output(1, N_cells x N_out_feat)
+     *      - Best convention: column-major
+     */
     template <class Evaluation>
     bool NNLayerDense<Evaluation>::apply(const Tensor<Evaluation>& in, Tensor<Evaluation>& out)
     {
@@ -776,50 +793,6 @@ namespace ML
         }
 
         OPM_ERROR_IF(!activation_.apply(tmp, out), "Failed to apply activation");
-
-        return true;
-    }
-
-    template <class Evaluation>
-    NNLayerEmbedding<Evaluation>::NNLayerEmbedding(Tensor<float> weights)
-        : weights_(weights)
-    {
-        OPM_ERROR_IF(weights_.dims_.size() != 2, "Invalid weights shape");
-    }
-
-    template <class Evaluation>
-    bool NNLayerEmbedding<Evaluation>::loadLayer(std::ifstream& file)
-    {
-        unsigned int weights_rows = 0;
-        OPM_ERROR_IF(!readFile<unsigned int>(file, weights_rows), "Expected weight rows");
-        OPM_ERROR_IF(!(weights_rows > 0), "Invalid weights # rows");
-
-        unsigned int weights_cols = 0;
-        OPM_ERROR_IF(!readFile<unsigned int>(file, weights_cols), "Expected weight cols");
-        OPM_ERROR_IF(!(weights_cols > 0), "Invalid weights shape");
-
-        weights_.resizeI<std::vector<unsigned int>>({weights_rows, weights_cols});
-        OPM_ERROR_IF(!readFile<float>(file, weights_.data_.data(), weights_rows * weights_cols), "Expected weights");
-
-        return true;
-    }
-
-    template <class Evaluation>
-    bool NNLayerEmbedding<Evaluation>::apply(const Tensor<Evaluation>& in, Tensor<Evaluation>& out)
-    {
-        int output_rows = in.dims_[1];
-        int output_cols = weights_.dims_[1];
-        out.dims_ = {output_rows, output_cols};
-        out.data_.reserve(output_rows * output_cols);
-        const auto wbegin = weights_.data_.cbegin();
-        std::for_each(in.data_.begin(), in.data_.end(), [&out, wbegin, output_cols](Evaluation i) {
-            typename std::vector<Evaluation>::const_iterator first
-                = wbegin + (getValue(i) * output_cols);
-            typename std::vector<Evaluation>::const_iterator last
-                = wbegin + (getValue(i) + 1) * output_cols;
-
-            out.data_.insert(out.data_.end(), first, last);
-        });
 
         return true;
     }

@@ -192,23 +192,5 @@ BOOST_AUTO_TEST_CASE(NNLayerDenseApply)
         1.0*1.0 + 2.0*0.0 + 3.0*(-1.0) + 0.5,   // = -1.5
         4.0*1.0 + 5.0*0.0 + 6.0*(-1.0) - 1.0    // = -3.0
     };
-    check_vector_close(out, expected); // wrong?
-}
-
-BOOST_AUTO_TEST_CASE(NNLayerEmbeddingApply)
-{
-    using Opm::ML::Tensor;
-    using Opm::ML::NNLayerEmbedding;
-
-    // Embedding matrix: 4 tokens, embedding dim 3
-    Tensor<float> embedW(4, 3);
-    embedW(0, 0) = 0.1f; embedW(0, 1) = 0.2f; embedW(0, 2) = 0.3f;
-    embedW(1, 0) = 1.0f; embedW(1, 1) = 1.1f; embedW(1, 2) = 1.2f;
-    embedW(2, 0) = 2.0f; embedW(2, 1) = 2.1f; embedW(2, 2) = 2.2f;
-    embedW(3, 0) = 3.0f; embedW(3, 1) = 3.1f; embedW(3, 2) = 3.2f;
-
-    NNLayerEmbedding<float> embedLayer(embedW);
-
-
-    // ?
+    check_vector_close(out, expected);
 }
