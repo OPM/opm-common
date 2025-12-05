@@ -33,6 +33,7 @@
 #include <iomanip>
 #include <limits>
 #include <ostream>
+#include <regex>
 #include <set>
 #include <stdexcept>
 #include <string>
@@ -183,26 +184,18 @@ namespace {
         return l;
     }
 
-    std::string normalise_encoded_well_completion_quantity(std::string_view keyword)
+    std::string normalise_encoded_well_completion_quantity(const std::string& keyword)
     {
         // Does 'keyword' match the pattern W?C*:
-        using sz_t = std::string_view::size_type;
-        auto sep = keyword.find(':');
-        if (sep == std::string::npos) {
-            // no number part
+        static const auto comp_kw_regex = std::regex {
+           R"((W[A-Z]C[A-Z+-]*)_*([0-9]+):(.+))"
+        };
+        std::smatch matched;
+        if (!std::regex_match(keyword, matched, comp_kw_regex)) {
             return std::string(keyword);
+        } else {
+            return  fmt::format("{}:{}:{}", matched[1].str(), matched[3].str(), matched[2].str());
         }
-        assert(sep != std::string::npos && keyword.size() > sz_t{6});
-        auto numstart  =  keyword.find_last_of('_', sep);
-        if (numstart == std::string::npos) {
-            // no number part
-            return std::string(keyword);
-        }
-
-        ++numstart;
-        return  fmt::format("{}{}:{}", keyword.substr(0, keyword.find('_')),
-                            keyword.substr(sep, keyword.size()),
-                            keyword.substr(numstart, sep-numstart));
     }
 
     std::string normalise_region_set_name(const std::string& regSet)
