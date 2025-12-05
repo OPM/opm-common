@@ -517,21 +517,23 @@ namespace {
 
         bool ret = std::regex_match(keyword, conn_compl_kw);
 
-        auto numstart  = keyword.find_first_of({"_1234567889"});
-        if (numstart == std::string::npos) {
-            return ret;
-        }
-        auto numend = keyword.find(':');
-        if ( numend == std::string::npos || numend < numstart ) {
-            numend = keyword.size();
-        }
-        if ((numend - numstart) != 3) {
-            throw std::invalid_argument {
+        if (ret) {
+            auto numstart  = keyword.find_first_of({"_1234567889"});
+            if (numstart == std::string::npos) {
+                return ret;
+            }
+            auto numend = keyword.find(':');
+            if ( numend == std::string::npos || numend < numstart ) {
+                numend = keyword.size();
+            }
+            if ((numend - numstart) != 3) {
+                throw std::invalid_argument {
                     fmt::format("Well completion quantity {} needs to have "
                                 "three consecutive characters that are "
                                 " a number or an underline character "
                                 " (e.g. WWCTL123:W1, WWCTL_23:W or WWCTL__3:W1)",
                                 keyword)};
+            }
         }
         return ret;
     }
