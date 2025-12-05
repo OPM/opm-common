@@ -78,7 +78,8 @@ namespace Opm { namespace data {
                 urea             = (1 << 22),
                 vaporized_water  = (1 << 23),
                 mass_gas         = (1 << 24),
-                mass_wat         = (1 << 25)
+                mass_wat         = (1 << 25),
+                wat_frac         = (1 << 26),
             };
 
             using enum_size = std::underlying_type< opt >::type;
@@ -141,6 +142,7 @@ namespace Opm { namespace data {
                 serializer(vaporized_water);
                 serializer(mass_gas);
                 serializer(mass_wat);
+                serializer(wat_frac);
             }
 
             static Rates serializationTestObject()
@@ -171,6 +173,7 @@ namespace Opm { namespace data {
                 rat1.set(opt::vaporized_water, 23.0);
                 rat1.set(opt::mass_gas, 24.0);
                 rat1.set(opt::mass_wat, 25.0);
+                rat1.set(opt::wat_frac, 26.0);
                 rat1.tracer.insert({"test_tracer", 1.0});
 
                 return rat1;
@@ -210,6 +213,7 @@ namespace Opm { namespace data {
             double vaporized_water = 0.0;
             double mass_gas = 0.0;
             double mass_wat = 0.0;
+            double wat_frac = 0.0;
     };
 
     struct ConnectionFiltrate
@@ -279,6 +283,9 @@ namespace Opm { namespace data {
         double filter_volume{};
         double avg_width{};
         double avg_filter_width{};
+        double inj_pressure{};
+        double inj_bhp{};
+        double inj_wellrate{};
 
         template <class Serializer>
         void serializeOp(Serializer& serializer)
@@ -292,6 +299,9 @@ namespace Opm { namespace data {
             serializer(filter_volume);
             serializer(avg_width);
             serializer(avg_filter_width);
+            serializer(inj_pressure);
+            serializer(inj_bhp);
+            serializer(inj_wellrate);
         }
 
         bool operator==(const ConnectionFracture& fraccon) const
@@ -305,12 +315,15 @@ namespace Opm { namespace data {
                 && (this->filter_volume == fraccon.filter_volume)
                 && (this->avg_width == fraccon.avg_width)
                 && (this->avg_filter_width == fraccon.avg_filter_width)
+                && (this->inj_pressure == fraccon.inj_pressure)
+                && (this->inj_bhp == fraccon.inj_bhp)
+                && (this->inj_wellrate == fraccon.inj_wellrate)
                 ;
         }
 
         static ConnectionFracture serializationTestObject()
         {
-            return {0.8, 100.0, 1.3, 1.4, 10.0, 4.0, 0.4, 0.5, 0.05};
+            return {0.8, 100.0, 1.3, 1.4, 10.0, 4.0, 0.4, 0.5, 0.05, 200.0, 150.0, 500.0};
         }
 
         template <class MessageBufferType>
@@ -325,6 +338,9 @@ namespace Opm { namespace data {
             buffer.write(this->filter_volume);
             buffer.write(this->avg_width);
             buffer.write(this->avg_filter_width);
+            buffer.write(this->inj_pressure);
+            buffer.write(this->inj_bhp);
+            buffer.write(this->inj_wellrate);
         }
 
         template <class MessageBufferType>
@@ -339,6 +355,9 @@ namespace Opm { namespace data {
             buffer.read(this->filter_volume);
             buffer.read(this->avg_width);
             buffer.read(this->avg_filter_width);
+            buffer.read(this->inj_pressure);
+            buffer.read(this->inj_bhp);
+            buffer.read(this->inj_wellrate);
         }
     };
 
@@ -1401,7 +1420,8 @@ namespace Opm { namespace data {
              urea == rate.urea &&
              vaporized_water == rate.vaporized_water &&
              mass_gas == rate.mass_gas &&
-             mass_wat == rate.mass_wat;
+             mass_wat == rate.mass_wat &&
+             wat_frac == rate.wat_frac;
     }
 
 
@@ -1443,6 +1463,7 @@ namespace Opm { namespace data {
             case opt::vaporized_water: return this->vaporized_water;
             case opt::mass_gas: return this->mass_gas;
             case opt::mass_wat: return this->mass_wat;
+            case opt::wat_frac: return this->wat_frac;
         }
 
         throw std::invalid_argument(
@@ -1530,6 +1551,7 @@ namespace Opm { namespace data {
             buffer.write(this->vaporized_water);
             buffer.write(this->mass_gas);
             buffer.write(this->mass_wat);
+            buffer.write(this->wat_frac);
     }
 
     template <class MessageBufferType>
@@ -1714,6 +1736,7 @@ namespace Opm { namespace data {
             buffer.read(this->vaporized_water);
             buffer.read(this->mass_gas);
             buffer.read(this->mass_wat);
+            buffer.read(this->wat_frac);
     }
 
     template <class MessageBufferType>

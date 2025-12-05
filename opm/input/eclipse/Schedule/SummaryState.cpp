@@ -95,6 +95,12 @@ namespace {
             "OFT", "OFT+", "OFT-", "OFTG", "OFTL",
             "GFT", "GFT+", "GFT-", "GFTG", "GFTL",
             "WFT", "WFT+", "WFT-", "GMIT", "GMPT", "AMIT", "AMPT",
+
+            // Filtrate injection volumes.
+            "FCFFVIT", "FCFVIT", "FCFWVIT",
+
+            // Water injection volumes in fracture.
+            "WITFRAC",
         };
 
         auto sep_pos = key.find(':');
