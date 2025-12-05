@@ -2544,6 +2544,7 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "WWIGR", well_guiderate<injector, Opm::data::GuideRateValue::Item::Water> },
 
     { "WWIT", mul( rate< rt::wat, injector >, duration ) },
+    { "WWITFRAC", mul(rate<rt::wat_frac, injector>, duration) },
     { "WOIT", mul( rate< rt::oil, injector >, duration ) },
     { "WGIT", mul( rate< rt::gas, injector >, duration ) },
     { "WEIT", mul( rate< rt::energy, injector >, duration ) },
@@ -2912,6 +2913,7 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "CWCTL", div( cratel< rt::wat, producer >,
                     sum( cratel< rt::wat, producer >, cratel< rt::oil, producer > ) ) },
     { "CWIR", crate< rt::wat, injector > },
+    { "CWIRFRAC", crate<rt::wat_frac, injector> },
     { "CGIR", crate< rt::gas, injector > },
     { "COIR", crate< rt::oil, injector > },
     { "CVIR", crate_resv<injector> },
@@ -3016,6 +3018,7 @@ static const auto funs = std::unordered_map<std::string, ofun> {
 
     { "COIT", mul( crate< rt::oil, injector >, duration ) },
     { "CWIT", mul( crate< rt::wat, injector >, duration ) },
+    { "CWITFRAC", mul(crate<rt::wat_frac, injector>, duration) },
     { "CGIT", mul( crate< rt::gas, injector >, duration ) },
     { "CVIT", mul( crate_resv<injector>, duration ) },
     { "CNIT", mul( crate< rt::solvent, injector >, duration ) },
