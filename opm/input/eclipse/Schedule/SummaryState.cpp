@@ -123,7 +123,10 @@ namespace {
             // those cumulative values to the summary. Also in is_total() from SummaryConfig.cpp.
 
             // Filtrate injection volumes.
-            "FCFFVIT", "FCFVIT", "FCFWVIT",
+            "FCFFVIT", "FCFVIT", "FCWFVIT",
+
+            // Water injection volumes in fracture.
+            "WITFRAC",
         };
 
         auto sep_pos = key.find(':');
