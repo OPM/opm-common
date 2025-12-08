@@ -3803,7 +3803,8 @@ void updateValue(const Opm::EclIO::SummaryNode& node, const double value, Opm::S
 
     case Cat::Region:
         st.update_region_var(node.fip_region.value_or("FIPNUM"),
-                             node.keyword, node.number, value);
+                             node.keyword.substr(0, 5),
+                             node.number, value);
         break;
 
     default:

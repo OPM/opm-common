@@ -95,6 +95,10 @@ FIP_A
   500*2
 /
 
+COPY
+  FIPNUM FIPABC /
+/
+
 EQUALS
   FIP_BC 4 4* 1 5 /
   FIP_BC 3 4* 6 7 /
@@ -363,6 +367,30 @@ ROFT
  1 11 /
  1  2 /
  9 10 /
+/
+
+ROFT+ABC
+  1 2 /
+/
+
+ROFT-ABC
+  1 2 /
+/
+
+RGFT+ABC
+  1 2 /
+/
+
+RGFT-ABC
+  1 2 /
+/
+
+RWFT+ABC
+  1 2 /
+/
+
+RWFT-ABC
+  1 2 /
 /
 
 RWFR-
