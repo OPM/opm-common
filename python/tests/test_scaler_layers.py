@@ -57,10 +57,10 @@ class TestScalerLayer(unittest.TestCase):
 
 class TestMinMaxScalerLayer(unittest.TestCase):
 
-    def test_call_without_adapt_raises(self):
+    def test_forward_without_adapt_raises(self):
         layer = MinMaxScalerLayer()
         with self.assertRaises(RuntimeError):
-            _ = layer.call([1, 2, 3])
+            _ = layer.forward([1, 2, 3])
 
     def test_scaling_simple(self):
         data = np.array([0, 5, 10], dtype=float)
@@ -111,10 +111,10 @@ class TestMinMaxScalerLayer(unittest.TestCase):
 
 class TestMinMaxUnScalerLayer(unittest.TestCase):
 
-    def test_call_without_adapt_raises(self):
+    def test_forward_without_adapt_raises(self):
         layer = MinMaxUnScalerLayer()
         with self.assertRaises(RuntimeError):
-            _ = layer.call([0.1, 0.2])
+            _ = layer.forward([0.1, 0.2])
 
     def test_unscaling(self):
         data_min = np.array([0.0])

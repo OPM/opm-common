@@ -117,7 +117,7 @@ class MinMaxScalerLayer(ScalerLayer):
 
     def __call__(self, inputs: ArrayLike) -> np.ndarray:
         """Enable calling the layer like a Keras layer: layer(x)."""
-        return self.call(inputs)
+        return self.forward(inputs)
 
 
 class MinMaxUnScalerLayer(ScalerLayer):
