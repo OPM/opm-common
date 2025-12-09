@@ -40,7 +40,7 @@ bool test_dense_1x1(Evaluation* load_time, Evaluation* apply_time)
     in.data_ = {10.};
 
     Opm::ML::Tensor<Evaluation> out{1};
-    out.data_ = {-0.06774394};
+    out.data_ = {0.13491948};
 
     Opm::ML::NNTimer load_timer;
     load_timer.start();

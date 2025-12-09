@@ -38,8 +38,10 @@ def sigmoid(x):
 def tanh(x):
     return np.tanh(x)
 
+
 def hard_sigmoid(x):
     return np.clip(0.2 * x + 0.5, 0, 1)
+
 
 # Mapping of activation names to functions
 ACTIVATIONS = {
@@ -120,3 +122,4 @@ class Sequential:
 
     def __call__(self, x) -> np.ndarray:
         return self.forward(x)
+    

@@ -143,27 +143,22 @@ def output_testcase(model, test_x, name, eps):
     with open('include/test_%s.hpp' % name, 'w') as f:
         x_shape, x_data = c_array(test_x[0])
         y_shape, y_data = c_array(predict_y[0])
-
         f.write(TEST_CASE % (name, name, x_shape, x_data, y_shape, y_data, path, eps))
 
 
 # scaling 10x1
-data: np.ndarray = np.random.uniform(-500, 500, (5, 1))
-feature_ranges: list[tuple[float, float]] = [(0.0, 1.0), (-3.7, 0.0)]
-test_x = np.random.rand(10, 10).astype('f')
-test_y = np.random.rand(10).astype('f')
-data_min = 10.0
+test_x = np.random.uniform(0.0, 1.0, (10, 1)).astype('f')
+test_y = np.random.uniform(-3.7, 0.0, (10, 1)).astype('f')
 model = Sequential([
-    MinMaxScalerLayer(feature_range=(0.0, 1.0)),
+    MinMaxScalerLayer(feature_range=[0.0, 1.0]),
+    Dense(input_dim=1, output_dim=10, activation='tanh'),
     Dense(input_dim=10, output_dim=10, activation='tanh'),
     Dense(input_dim=10, output_dim=10, activation='tanh'),
-    Dense(input_dim=10, output_dim=10, activation='tanh'),
-    Dense(input_dim=10, output_dim=10, activation='tanh'),
-    MinMaxUnScalerLayer(feature_range=(-3.7, -1.0))
+    Dense(input_dim=10, output_dim=1, activation='tanh'),
+    MinMaxUnScalerLayer(feature_range=[-3.7, 0.0])
 ])
-
-model.layers[0].adapt(data=data)
-model.layers[-1].adapt(data=data)
+model.layers[0].adapt(data=test_x)
+model.layers[-1].adapt(data=test_y)
 output_testcase(model, test_x, 'scalingdense_10x1', '1e-3')
 
 # Dense 1x1
