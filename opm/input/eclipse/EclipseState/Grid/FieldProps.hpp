@@ -749,9 +749,9 @@ private:
 
     template <typename T>
     Fieldprops::FieldData<T>&
-    init_get(const std::string& keyword,
+    init_get(const std::string&                           keyword,
              const Fieldprops::keywords::keyword_info<T>& kw_info,
-             const bool multiplier_in_edit = false);
+             const bool                                   multiplier_in_edit = false);
 
     std::string region_name(const DeckItem& region_item) const;
 
@@ -803,6 +803,8 @@ private:
         return "__MULT__"sv;
     }
 
+    void resetWorkArrays();
+
     const UnitSystem unit_system;
     std::size_t nx,ny,nz;
     Phases m_phases;
@@ -819,6 +821,11 @@ private:
     std::unordered_map<std::string, Fieldprops::FieldData<int>> int_data;
     std::unordered_map<std::string, Fieldprops::FieldData<double>> double_data;
     std::unordered_map<std::string, std::string> fipreg_shortname_translation{};
+
+    /// Backing store for intermediate WORK<n> arrays.
+    ///
+    /// Cleared at end of each section.
+    std::unordered_map<std::string, Fieldprops::FieldData<double>> work_arrays{};
 
     std::unordered_map<std::string,Fieldprops::TranCalculator> tran;
 

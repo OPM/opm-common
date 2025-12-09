@@ -54,6 +54,7 @@
 #include <cstddef>
 #include <functional>
 #include <optional>
+#include <regex>
 #include <set>
 #include <stdexcept>
 #include <string>
@@ -128,6 +129,13 @@ bool is_oper_keyword(const std::string& name)
             || region_oper_keywords.find(name) != region_oper_keywords.end());
 }
 
+bool is_work(const std::string& name)
+{
+    static const auto work_array_regex = std::regex { R"(WORK\d+)" };
+
+    return std::regex_match(name, work_array_regex);
+}
+
 template <>
 keyword_info<double>
 global_kw_info(const std::string& name, const bool allow_unsupported)
@@ -170,6 +178,10 @@ global_kw_info(const std::string& name, const bool allow_unsupported)
         kwPos != SCHEDULE::double_keywords.end())
     {
         return kwPos->second;
+    }
+
+    if (is_work(name)) {
+        return keyword_info<double>{}.init(0.0);
     }
 
     if (allow_unsupported) {
@@ -748,9 +760,9 @@ bool FieldProps::rst_cmp(const FieldProps& full_arg, const FieldProps& rst_arg)
 // constructor below. Otherwise we get a compilation error.
 template <>
 Fieldprops::FieldData<double>&
-FieldProps::init_get(const std::string& keyword_name,
+FieldProps::init_get(const std::string&                                keyword_name,
                      const Fieldprops::keywords::keyword_info<double>& kw_info,
-                     const bool multiplier_in_edit)
+                     const bool                                        multiplier_in_edit)
 {
     if (multiplier_in_edit && !kw_info.scalar_init.has_value()) {
         OPM_THROW(std::logic_error, "Keyword " +  keyword_name +
@@ -758,10 +770,16 @@ FieldProps::init_get(const std::string& keyword_name,
     }
 
     const auto keyword = Fieldprops::keywords::get_keyword_from_alias(keyword_name);
-    const auto mult_keyword = std::string(multiplier_in_edit ? getMultiplierPrefix() : "") + keyword;
 
-    auto iter = this->double_data.find(mult_keyword);
-    if (iter != this->double_data.end()) {
+    const auto mult_keyword = multiplier_in_edit
+        ? std::string { this->getMultiplierPrefix() } + keyword
+        : keyword;
+
+    auto& props = (!multiplier_in_edit && Fieldprops::keywords::is_work(keyword))
+        ? this->work_arrays
+        : this->double_data;
+
+    if (auto iter = props.find(mult_keyword); iter != props.end()) {
         return iter->second;
     }
     else if (multiplier_in_edit) {
@@ -773,7 +791,7 @@ FieldProps::init_get(const std::string& keyword_name,
         this->multiplier_kw_infos_.insert_or_assign(mult_keyword, kw_info);
     }
 
-    auto elmDescr = this->double_data
+    const auto elmDescr = props
         .try_emplace(mult_keyword, kw_info, this->active_size,
                      kw_info.global ? this->global_size : std::size_t{0});
 
@@ -862,6 +880,8 @@ FieldProps::FieldProps(const Deck& deck,
         this->processMULTREGP(deck);
     }
 
+    this->resetWorkArrays();
+
     if (DeckSection::hasGRID(deck)) {
         if (grid.getMinpvMode() == MinpvMode::EclSTD) {
             // Intial values were set via MINPV/MINPORV in the grid
@@ -874,9 +894,13 @@ FieldProps::FieldProps(const Deck& deck,
         this->scanGRIDSection(GRIDSection(deck));
     }
 
+    this->resetWorkArrays();
+
     if (DeckSection::hasEDIT(deck)) {
         this->scanEDITSection(EDITSection(deck));
     }
+
+    this->resetWorkArrays();
 
     grid.resetACTNUM(this->actnum());
     this->reset_actnum(grid.getACTNUM());
@@ -884,6 +908,8 @@ FieldProps::FieldProps(const Deck& deck,
     if (DeckSection::hasREGIONS(deck)) {
         this->scanREGIONSSection(REGIONSSection(deck));
     }
+
+    this->resetWorkArrays();
 
     // Update PVTNUM/SATNUM for numerical aquifer cells
     {
@@ -905,9 +931,13 @@ FieldProps::FieldProps(const Deck& deck,
         this->scanPROPSSection(PROPSSection(deck));
     }
 
+    this->resetWorkArrays();
+
     if (DeckSection::hasSOLUTION(deck)) {
         this->scanSOLUTIONSection(SOLUTIONSection(deck), ncomps);
     }
+
+    this->resetWorkArrays();
 }
 
 
@@ -1445,7 +1475,9 @@ void FieldProps::handle_operateR(const DeckKeyword& keyword)
         const auto target_kw = Fieldprops::keywords::
             get_keyword_from_alias(record.getItem(0).getTrimmedString(0));
 
-        if (! FieldProps::supported<double>(target_kw)) {
+        if (! FieldProps::supported<double>(target_kw) &&
+            ! Fieldprops::keywords::is_work(target_kw))
+        {
             continue;
         }
 
@@ -2337,4 +2369,10 @@ void FieldProps::set_active_indices(const std::vector<int>& indices)
 
 template std::vector<bool> FieldProps::defaulted<int>(const std::string& keyword);
 template std::vector<bool> FieldProps::defaulted<double>(const std::string& keyword);
+
+void FieldProps::resetWorkArrays()
+{
+    this->work_arrays.clear();
+}
+
 }
