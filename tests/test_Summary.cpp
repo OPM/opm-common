@@ -2324,14 +2324,17 @@ namespace {
     {
         auto values = Opm::out::Summary::InterRegFlowValues{};
 
-        auto& ireg = values["FIPNUM"];
-        ireg.addConnection(0, 10, ireg_flow_1_11());
-        ireg.addConnection(0,  1, ireg_flow_1_2 ());
-        ireg.addConnection(8,  9, ireg_flow_9_10());
-        ireg.addConnection(1, 11, ireg_flow_2_12());
-        ireg.addConnection(4,  5, ireg_flow_5_6 ());
+        for (const auto* regset : { "NUM", "ABC", }) {
+            auto& ireg = values[fmt::format("FIP{}", regset)];
 
-        ireg.compress(20);
+            ireg.addConnection(0, 10, ireg_flow_1_11());
+            ireg.addConnection(0,  1, ireg_flow_1_2 ());
+            ireg.addConnection(8,  9, ireg_flow_9_10());
+            ireg.addConnection(1, 11, ireg_flow_2_12());
+            ireg.addConnection(4,  5, ireg_flow_5_6 ());
+
+            ireg.compress(20);
+        }
 
         return values;
     }
@@ -2448,6 +2451,74 @@ BOOST_AUTO_TEST_CASE(inter_region_flows)
     BOOST_CHECK_CLOSE(ecl_sum_get_general_var(resp, 0, "RGFR:9-10"), 86400.0f * 3.1415926f, 1.0e-6f);
     BOOST_CHECK_CLOSE(ecl_sum_get_general_var(resp, 1, "RGFR:9-10"), 86400.0f * 3.1415926f, 1.0e-6f);
     BOOST_CHECK_CLOSE(ecl_sum_get_general_var(resp, 2, "RGFR:9-10"), 86400.0f * 3.1415926f, 1.0e-6f);
+}
+
+BOOST_AUTO_TEST_CASE(inter_region_flows_user_def_regset)
+{
+    auto cfg = setup{ "inter_region_flows" };
+
+    {
+        auto st = SummaryState {
+            TimeService::now(),
+            cfg.es.runspec().udqParams().undefinedValue()
+        };
+
+        auto writer = out::Summary {
+            cfg.config, cfg.es, cfg.grid, cfg.schedule, cfg.name
+        };
+
+        const auto values = interRegionFlows();
+
+        for (auto i = 0; i < 3; ++i) {
+            writer.eval(st, i, i * day, cfg.wells, cfg.wbp, cfg.grp_nwrk,
+                        {}, {}, {}, {}, {}, {}, values);
+            writer.add_timestep(st, 0, 0, false);
+        }
+
+        writer.write();
+    }
+
+    const auto res = readsum(cfg.name);
+    const auto* resp = res.get();
+
+    BOOST_CHECK_MESSAGE(ecl_sum_has_general_var(resp, "ROFT+ABC:1-2"),
+                        "Summary data must have ROFT+ABC:1-2");
+
+    BOOST_CHECK_CLOSE(ecl_sum_get_general_var(resp, 0, "ROFT+ABC:1-2"), 0 * 86400.0f * 0.1234f, 1.0e-6f);
+    BOOST_CHECK_CLOSE(ecl_sum_get_general_var(resp, 1, "ROFT+ABC:1-2"), 1 * 86400.0f * 0.1234f, 1.0e-6f);
+    BOOST_CHECK_CLOSE(ecl_sum_get_general_var(resp, 2, "ROFT+ABC:1-2"), 2 * 86400.0f * 0.1234f, 1.0e-6f);
+
+    BOOST_CHECK_MESSAGE(ecl_sum_has_general_var(resp, "ROFT-ABC:1-2"),
+                        "Summary data must have ROFT+ABC:1-2");
+
+    BOOST_CHECK_CLOSE(ecl_sum_get_general_var(resp, 0, "ROFT-ABC:1-2"), 0 * 86400.0f * 0.0f, 1.0e-6f);
+    BOOST_CHECK_CLOSE(ecl_sum_get_general_var(resp, 1, "ROFT-ABC:1-2"), 1 * 86400.0f * 0.0f, 1.0e-6f);
+    BOOST_CHECK_CLOSE(ecl_sum_get_general_var(resp, 2, "ROFT-ABC:1-2"), 2 * 86400.0f * 0.0f, 1.0e-6f);
+
+    BOOST_CHECK_MESSAGE(ecl_sum_has_general_var(resp, "RGFT+ABC:1-2"),
+                        "Summary data must have RGFT+ABC:1-2");
+
+    BOOST_CHECK_CLOSE(ecl_sum_get_general_var(resp, 0, "RGFT+ABC:1-2"), 0 * 86400.0f * 0.0f, 1.0e-6f);
+    BOOST_CHECK_CLOSE(ecl_sum_get_general_var(resp, 1, "RGFT+ABC:1-2"), 1 * 86400.0f * 0.0f, 1.0e-6f);
+    BOOST_CHECK_CLOSE(ecl_sum_get_general_var(resp, 2, "RGFT+ABC:1-2"), 2 * 86400.0f * 0.0f, 1.0e-6f);
+
+    BOOST_CHECK_MESSAGE(ecl_sum_has_general_var(resp, "RGFT-ABC:1-2"),
+                        "Summary data must have RGFT+ABC:1-2");
+
+    BOOST_CHECK_CLOSE(ecl_sum_get_general_var(resp, 0, "RGFT-ABC:1-2"), 0 * 86400.0f * (-2.345f), 1.0e-6f);
+    BOOST_CHECK_CLOSE(ecl_sum_get_general_var(resp, 1, "RGFT-ABC:1-2"), 1 * 86400.0f * (-2.345f), 1.0e-6f);
+    BOOST_CHECK_CLOSE(ecl_sum_get_general_var(resp, 2, "RGFT-ABC:1-2"), 2 * 86400.0f * (-2.345f), 1.0e-6f);
+
+    BOOST_CHECK_CLOSE(ecl_sum_get_general_var(resp, 0, "RWFT+ABC:1-2"), 0 * 86400.0f * 1.729f, 1.0e-6f);
+    BOOST_CHECK_CLOSE(ecl_sum_get_general_var(resp, 1, "RWFT+ABC:1-2"), 1 * 86400.0f * 1.729f, 1.0e-6f);
+    BOOST_CHECK_CLOSE(ecl_sum_get_general_var(resp, 2, "RWFT+ABC:1-2"), 2 * 86400.0f * 1.729f, 1.0e-6f);
+
+    BOOST_CHECK_MESSAGE(ecl_sum_has_general_var(resp, "RWFT-ABC:1-2"),
+                        "Summary data must have RWFT+ABC:1-2");
+
+    BOOST_CHECK_CLOSE(ecl_sum_get_general_var(resp, 0, "RWFT-ABC:1-2"), 0 * 86400.0f * 0.0f, 1.0e-6f);
+    BOOST_CHECK_CLOSE(ecl_sum_get_general_var(resp, 1, "RWFT-ABC:1-2"), 1 * 86400.0f * 0.0f, 1.0e-6f);
+    BOOST_CHECK_CLOSE(ecl_sum_get_general_var(resp, 2, "RWFT-ABC:1-2"), 2 * 86400.0f * 0.0f, 1.0e-6f);
 }
 
 BOOST_AUTO_TEST_CASE(BLOCK_VARIABLES)
