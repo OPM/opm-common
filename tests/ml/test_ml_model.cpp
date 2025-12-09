@@ -197,8 +197,7 @@ int main()
         test_scalingdense_10x1<Evaluation>(&load_time, &apply_time);
     }
     catch(...) {
-        // return 1;
-        throw;
+        return 1;
     }
 
     return 0;
