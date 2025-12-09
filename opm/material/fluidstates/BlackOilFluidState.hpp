@@ -823,6 +823,16 @@ public:
         }
     }
 
+    OPM_HOST_DEVICE FluidSystem const* fluidSystemPtr() const
+    {
+        if constexpr (fluidSystemIsStatic) {
+            static FluidSystem instance;
+            return &instance;
+        } else {
+            return fluidSystemPtr_;
+        }
+    }
+
 private:
     OPM_HOST_DEVICE static unsigned storageToCanonicalPhaseIndex_(unsigned storagePhaseIdx, const FluidSystem& fluidSystem)
     {
