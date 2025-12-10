@@ -277,4 +277,12 @@ function build_module_full {
     $WORKSPACE/deps/opm-common/jenkins/handle-run-trigger.sh
     test $? -eq 0 || exit 1
   fi
+
+  if grep -q -i "update_data" <<< $ghprbCommentBody
+  then
+    export configuration=mpi
+    export OPM_TESTS_ROOT=$WORKSPACE/deps/opm-tests
+    $WORKSPACE/deps/opm-common/jenkins/update-opm-tests.sh $1
+    test $? -eq 0 || exit 1
+  fi
 }
