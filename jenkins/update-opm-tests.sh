@@ -24,6 +24,7 @@ upstreamRev[$MAIN_REPO]=$sha1
 
 # Create branch name
 BRANCH_NAME="update"
+REASON="Unknown"
 for repo in ${upstreams[*]}
 do
   if [ "${upstreamRev[$repo]}" != "master" ]
@@ -31,6 +32,10 @@ do
     rev=${upstreamRev[$repo]}
     prnumber=${rev//[!0-9]/}
     BRANCH_NAME="${BRANCH_NAME}_${repo}_$prnumber"
+    if [ "$REASON" = "Unknown" ]
+    then
+      REASON=""
+    fi
     test -n "$REASON" && REASON+="        "
     REASON+="PR https://github.com/OPM/$repo/pull/$prnumber\n"
   fi
