@@ -1,3 +1,20 @@
+#   Copyright (C) 2025 NORCE Research AS.
+
+#   This file is part of the Open Porous Media project (OPM).
+
+#   OPM is free software: you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation, either version 3 of the License, or
+#   (at your option) any later version.
+
+#   OPM is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+
+#   You should have received a copy of the GNU General Public License
+#   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
+
 import struct
 import numpy as np
 
@@ -6,6 +23,7 @@ from opm.ml.ml_tools.kerasify import (
     ACTIVATION_LINEAR, ACTIVATION_RELU, ACTIVATION_SOFTPLUS, 
     ACTIVATION_TANH, ACTIVATION_SIGMOID, ACTIVATION_HARD_SIGMOID,
 )
+
 from opm.ml.ml_tools.scaler_layers import (
     MinMaxScalerLayer,
     MinMaxUnScalerLayer,
