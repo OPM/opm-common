@@ -113,8 +113,9 @@ def export_model(model, filename):
 
             if layer_type == 'MinMaxScalerLayer':
                 write_scaling(f)
-                feat_inf = layer.get_weights()[0]
-                feat_sup = layer.get_weights()[1]
+                feat_range = layer.get_weights()[2]
+                feat_inf = feat_range[0]
+                feat_sup = feat_range[1]
                 f.write(struct.pack('f', layer.data_min))
                 f.write(struct.pack('f', layer.data_max))
                 f.write(struct.pack('f', feat_inf))
@@ -123,8 +124,9 @@ def export_model(model, filename):
 
             elif layer_type == 'MinMaxUnScalerLayer':
                 write_unscaling(f)
-                feat_inf = layer.get_weights()[0]
-                feat_sup = layer.get_weights()[1]
+                feat_range = layer.get_weights()[2]
+                feat_inf = feat_range[0]
+                feat_sup = feat_range[1]
                 f.write(struct.pack('f', layer.data_min))
                 f.write(struct.pack('f', layer.data_max))
                 f.write(struct.pack('f', feat_inf))

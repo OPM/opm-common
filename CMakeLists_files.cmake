@@ -704,9 +704,7 @@ list (APPEND TEST_DATA_FILES
       tests/ml/ml_tools/models/test_dense_10x1.model
       tests/ml/ml_tools/models/test_dense_10x10.model
       tests/ml/ml_tools/models/test_dense_10x10x10.model
-      tests/ml/ml_tools/models/test_dense_relu_10.model
-      tests/ml/ml_tools/models/test_dense_tanh_10.model
-      tests/ml/ml_tools/models/test_relu_10.model
+      tests/ml/ml_tools/models/test_dense_activation_10.model
       tests/ml/ml_tools/models/test_scalingdense_10x1.model
 )
 if(ENABLE_ECL_OUTPUT)

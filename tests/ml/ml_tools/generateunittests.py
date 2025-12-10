@@ -24,16 +24,12 @@
 
 import numpy as np
 import os, sys
-from tensorflow import keras
 
-from keras.models import Sequential
-from keras.layers import Conv2D, Dense, Activation, ELU, Embedding
+sys.path.insert(0, '../../../python')
 
-sys.path.insert(0, '../../../python/opm/ml')
-
-from ml_tools import export_model
-from ml_tools import  MinMaxScalerLayer, MinMaxUnScalerLayer
-
+from opm.ml.ml_tools import export_model
+from opm.ml.ml_tools import  MinMaxScalerLayer, MinMaxUnScalerLayer
+from opm.ml.ml_tools import Dense, Sequential
 
 np.set_printoptions(precision=25, threshold=10000000)
 
@@ -136,11 +132,9 @@ else:
     os.makedirs(path2)
 
 
-def output_testcase(model, test_x, test_y, name, eps):
+def output_testcase(model, test_x, name, eps):
     print("Processing %s" % name)
-    model.compile(loss='mean_squared_error', optimizer='adamax')
-    model.fit(test_x, test_y, epochs=1, verbose=False)
-    predict_y = model.predict(test_x).astype('f')
+    predict_y = model.forward(test_x).astype('f')
     print(model.summary())
 
     export_model(model, 'models/test_%s.model' % name)
@@ -149,89 +143,70 @@ def output_testcase(model, test_x, test_y, name, eps):
     with open('include/test_%s.hpp' % name, 'w') as f:
         x_shape, x_data = c_array(test_x[0])
         y_shape, y_data = c_array(predict_y[0])
-
         f.write(TEST_CASE % (name, name, x_shape, x_data, y_shape, y_data, path, eps))
 
 
 # scaling 10x1
-data: np.ndarray = np.random.uniform(-500, 500, (5, 1))
-feature_ranges: list[tuple[float, float]] = [(0.0, 1.0), (-3.7, 0.0)]
-test_x = np.random.rand(10, 10).astype('f')
-test_y = np.random.rand(10).astype('f')
-data_min = 10.0
-model = Sequential()
-model.add(keras.layers.Input([10]))
-model.add(MinMaxScalerLayer(feature_range=(0.0, 1.0)))
-model.add(Dense(10,activation='tanh'))
-model.add(Dense(10,activation='tanh'))
-model.add(Dense(10,activation='tanh'))
-model.add(Dense(10,activation='tanh'))
-model.add(MinMaxUnScalerLayer(feature_range=(-3.7, -1.0)))
-# #
-model.get_layer(model.layers[0].name).adapt(data=data)
-model.get_layer(model.layers[-1].name).adapt(data=data)
-output_testcase(model, test_x, test_y, 'scalingdense_10x1', '1e-3')
+test_x = np.random.uniform(0.0, 1.0, (10, 1)).astype('f')
+test_y = np.random.uniform(-3.7, 0.0, (10, 1)).astype('f')
+model = Sequential([
+    MinMaxScalerLayer(feature_range=[0.0, 1.0]),
+    Dense(input_dim=1, output_dim=10, activation='tanh'),
+    Dense(input_dim=10, output_dim=10, activation='tanh'),
+    Dense(input_dim=10, output_dim=10, activation='tanh'),
+    Dense(input_dim=10, output_dim=1, activation='tanh'),
+    MinMaxUnScalerLayer(feature_range=[-3.7, 0.0])
+])
+model.layers[0].adapt(data=test_x)
+model.layers[-1].adapt(data=test_y)
+output_testcase(model, test_x, 'scalingdense_10x1', '1e-3')
 
 # Dense 1x1
-test_x = np.arange(10)
-test_y = test_x * 10 + 1
-model = Sequential()
-model.add(Dense(1, input_dim=1))
-output_testcase(model, test_x, test_y, 'dense_1x1', '1e-6')
+test_x = np.array([10.])
+model = Sequential([
+    Dense(input_dim=1, output_dim=1, activation='linear')
+])
+output_testcase(model, test_x, 'dense_1x1', '1e-6')
 
 # Dense 10x1
 test_x = np.random.rand(10, 10).astype('f')
-test_y = np.random.rand(10).astype('f')
-model = Sequential()
-model.add(Dense(1, input_dim=10))
-output_testcase(model, test_x, test_y, 'dense_10x1', '1e-6')
+model = Sequential([
+    Dense(input_dim=10, output_dim=1, activation='linear')
+])
+output_testcase(model, test_x, 'dense_10x1', '1e-6')
 
 # Dense 2x2
 test_x = np.random.rand(10, 2).astype('f')
-test_y = np.random.rand(10).astype('f')
-model = Sequential()
-model.add(Dense(2, input_dim=2))
-model.add(Dense(1))
-output_testcase(model, test_x, test_y, 'dense_2x2', '1e-6')
+model = Sequential([
+    Dense(input_dim=2, output_dim=2, activation='linear'),
+    Dense(input_dim=2, output_dim=1)
+])
+output_testcase(model, test_x, 'dense_2x2', '1e-6')
 
 # Dense 10x10
 test_x = np.random.rand(10, 10).astype('f')
-test_y = np.random.rand(10).astype('f')
-model = Sequential()
-model.add(Dense(10, input_dim=10))
-model.add(Dense(1))
-output_testcase(model, test_x, test_y, 'dense_10x10', '1e-6')
+model = Sequential([
+    Dense(input_dim=10, output_dim=10, activation='linear'),
+    Dense(input_dim=10, output_dim=1)
+])
+output_testcase(model, test_x, 'dense_10x10', '1e-6')
 
 # Dense 10x10x10
 test_x = np.random.rand(10, 10).astype('f')
-test_y = np.random.rand(10, 10).astype('f')
-model = Sequential()
-model.add(Dense(10, input_dim=10))
-model.add(Dense(10))
-output_testcase(model, test_x, test_y, 'dense_10x10x10', '1e-6')
+model = Sequential([
+    Dense(input_dim=10, output_dim=10, activation='linear'),
+    Dense(input_dim=10, output_dim=10)
+])
+output_testcase(model, test_x, 'dense_10x10x10', '1e-6')
 
-# Activation relu
+# Dense activations
 test_x = np.random.rand(1, 10).astype('f')
-test_y = np.random.rand(1, 10).astype('f')
-model = Sequential()
-model.add(Dense(10, input_dim=10))
-model.add(Activation('relu'))
-output_testcase(model, test_x, test_y, 'relu_10', '1e-6')
-
-# Dense relu
-test_x = np.random.rand(1, 10).astype('f')
-test_y = np.random.rand(1, 10).astype('f')
-model = Sequential()
-model.add(Dense(10, input_dim=10, activation='relu'))
-model.add(Dense(10, input_dim=10, activation='relu'))
-model.add(Dense(10, input_dim=10, activation='relu'))
-output_testcase(model, test_x, test_y, 'dense_relu_10', '1e-6')
-
-#  Dense tanh
-test_x = np.random.rand(1, 10).astype('f')
-test_y = np.random.rand(1, 10).astype('f')
-model = Sequential()
-model.add(Dense(10, input_dim=10, activation='tanh'))
-model.add(Dense(10, input_dim=10, activation='tanh'))
-model.add(Dense(10, input_dim=10, activation='tanh'))
-output_testcase(model, test_x, test_y, 'dense_tanh_10', '1e-6')
+model = Sequential([
+    Dense(input_dim=10, output_dim=10, activation='linear'),
+    Dense(input_dim=10, output_dim=10, activation='relu'),
+    Dense(input_dim=10, output_dim=10, activation='softplus'),
+    Dense(input_dim=10, output_dim=10, activation='sigmoid'),
+    Dense(input_dim=10, output_dim=10, activation='tanh'),
+    Dense(input_dim=10, output_dim=10, activation='hard_sigmoid'),
+])
+output_testcase(model, test_x, 'dense_activation_10', '1e-6')
