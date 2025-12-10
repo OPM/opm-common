@@ -271,4 +271,10 @@ function build_module_full {
     $WORKSPACE/mpi/build-opm-simulators
     test $? -eq 0 || exit 1
   fi
+
+  if grep -q -i " run " <<< $ghprbCommentBody
+  then
+    $WORKSPACE/deps/opm-common/jenkins/handle-run-trigger.sh
+    test $? -eq 0 || exit 1
+  fi
 }
