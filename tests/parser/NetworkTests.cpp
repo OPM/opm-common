@@ -72,7 +72,19 @@ BOOST_AUTO_TEST_CASE(CreateNetwork) {
 
 
 BOOST_AUTO_TEST_CASE(Branch) {
+    // Test illegal construction.
     BOOST_CHECK_THROW( Network::Branch("down", "up", 100, Network::Branch::AlqEQ::ALQ_INPUT), std::logic_error);
+
+    // Test ALQ behaviour.
+    Network::Branch b("down", "up", 101, 864.0);
+    // Assume we have a GRAT ALQ type in a METRIC unit system:
+    //   864 m^3/day, equal to 0.01 m^3/s
+    const auto alq_type = VFPProdTable::ALQ_TYPE::ALQ_GRAT;
+    const UnitSystem usys; // Defaults to METRIC.
+    const Dimension dim = VFPProdTable::ALQDimension(alq_type, usys);
+    const auto alq_val = b.alq_value(dim);
+    BOOST_REQUIRE(alq_val.has_value());
+    BOOST_CHECK_CLOSE(*alq_val, 0.01, 1e-8);
 }
 
 
