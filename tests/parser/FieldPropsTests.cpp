@@ -54,6 +54,7 @@
 #include <opm/input/eclipse/Parser/Parser.hpp>
 
 #include <algorithm>
+#include <array>
 #include <cstddef>
 #include <iomanip>
 #include <memory>
@@ -913,6 +914,323 @@ OPERATE
     const auto& multz = fpm.get_double("MULTZ");
     BOOST_CHECK_EQUAL(multz[0], 0.5);
     BOOST_CHECK_EQUAL(multz[3], 0.75);
+}
+
+BOOST_AUTO_TEST_CASE(OPERATE_With_Work_Arrays)
+{
+    const auto deck = Parser{}.parseString(R"(RUNSPEC
+DIMENS
+1 5 1 /
+GRID
+DXV
+100 /
+DYV
+5*100 /
+DZV
+10 /
+DEPTHZ
+12*2000 /
+EQUALS
+  PORO 0.1 /
+/
+OPERATE
+  WORK1  1 1  3 3  1 1    INV         PORO  /       -- WORK1 = 1 / PORO
+  WORK2  1 1  3 3  1 1    MAXLIM      WORK1 6.78 /  -- WORK2 = MIN(WORK1, 6.78)
+  WORK2  1 1  3 3  1 1    MULTIPLY    PORO  /       -- WORK2 = PORO * WORK2
+  PORO   1 1  2 4  1 1    MINLIM      WORK2 0.12 /  -- PORO  = MAX(WORK2, 0.12)
+/
+PROPS
+EQUALS
+  SWL  0.123 /
+/
+OPERATE
+  SWCR  6*           MULTA     SWL     1.0   0.001 /  SWCR  = SWL + 0.001
+  SGU   6*           MULTA     SWL    -1.0   1.0   /  SGU   = 1 - SWL
+--
+  WORK1 6*           MULTA     SGU     2.33  1.0   /  WORK1 = 2.33*SGU + 1
+  SGCR  6*           INV       WORK1 /                SGCR  = 1 / WORK1 (= 1 / (2.33*SGU + 1))
+  SGCR  2*  2 4  2*  MULTIPLY  SGU /                  SGCR  = SGU * SGCR
+--
+  WORK2 2*  3 3  2*  MULTA     SWL    -1.0   1.0 /    WORK2 = 1 - SWL
+  WORK2 2*  2 4  2*  ADDX      WORK2  -0.002 /        WORK2 = WORK2 - 0.002 (= 1 - SWL - 0.002)
+  SOWCR 6*           MAXLIM    WORK2   0.249 /        SOWCR = MIN(WORK2, 0.249)
+--
+  WORK3 2*  2 4  2*  MULTA     SWL    -1.0   1.0 /    WORK3 = 1 - SWL
+  WORK3 2*  2 4  2*  POLY      SGCR   -1.0   1.0 /    WORK3 = WORK3 - SGCR (= 1 - SWL - SGCR)
+  WORK3 2*  2 2  2*  ADDX      WORK3  -0.1   /        WORK3 = WORK3 - 0.1   (= 1 - SWL - SGCR - 0.1)
+  WORK3 2*  3 3  2*  ADDX      WORK3  -0.002 /        WORK3 = WORK3 - 0.002 (= 1 - SWL - SGCR - 0.002)
+  WORK3 2*  4 4  2*  ADDX      WORK3  -0.1   /        WORK3 = WORK3 - 0.1   (= 1 - SWL - SGCR - 0.1)
+  SOGCR 2*  1 5  2*  MAXLIM    WORK3   0.55  /        SOGCR = MIN(WORK3, 0.55)
+/
+END
+)");
+
+    const auto es = EclipseState { deck };
+
+    {
+        const auto& poro = es.fieldProps().get_double("PORO");
+
+        const auto expect = std::array {
+            0.1, 0.12, 0.678, 0.12, 0.1,
+        };
+
+        BOOST_REQUIRE_EQUAL(poro.size(), expect.size());
+
+        for (auto i = 0*poro.size(); i != poro.size(); ++i) {
+            const auto ijk = es.getInputGrid().getIJK(i);
+
+            BOOST_TEST_MESSAGE("PORO[" << i << " (= "
+                               << (ijk[0] + 1) << ", "
+                               << (ijk[1] + 1) << ", "
+                               << (ijk[2] + 1) << ")]");
+
+            BOOST_CHECK_CLOSE(poro[i], expect[i], 1.0e-8);
+        }
+    }
+
+    {
+        const auto& sgcr = es.fieldProps().get_double("SGCR");
+
+        const auto expect = std::array {
+            // K = 1
+            0.3285787981244722,  // J = 1
+            0.28816360595516216, // J = 2
+            0.28816360595516216, // J = 3
+            0.28816360595516216, // J = 4
+            0.3285787981244722,  // J = 5
+        };
+
+        BOOST_REQUIRE_EQUAL(sgcr.size(), expect.size());
+
+        for (auto i = 0*sgcr.size(); i != sgcr.size(); ++i) {
+            const auto ijk = es.getInputGrid().getIJK(i);
+
+            BOOST_TEST_MESSAGE("SGCR[" << i << " (= "
+                               << (ijk[0] + 1) << ", "
+                               << (ijk[1] + 1) << ", "
+                               << (ijk[2] + 1) << ")]");
+
+            BOOST_CHECK_CLOSE(sgcr[i], expect[i], 1.0e-8);
+        }
+    }
+
+    {
+        const auto& sowcr = es.fieldProps().get_double("SOWCR");
+
+        const auto expect = std::array {
+            0.0,  -0.002,  0.249,  -0.002,  0.0,
+        };
+
+        BOOST_REQUIRE_EQUAL(sowcr.size(), expect.size());
+
+        for (auto i = 0*sowcr.size(); i != sowcr.size(); ++i) {
+            const auto ijk = es.getInputGrid().getIJK(i);
+
+            BOOST_TEST_MESSAGE("SOWCR[" << i << " (= "
+                               << (ijk[0] + 1) << ", "
+                               << (ijk[1] + 1) << ", "
+                               << (ijk[2] + 1) << ")]");
+
+            BOOST_CHECK_CLOSE(sowcr[i], expect[i], 1.0e-8);
+        }
+    }
+
+    {
+        const auto& sogcr = es.fieldProps().get_double("SOGCR");
+
+        const auto expect = std::array {
+            0.0,
+            0.4888363940448378,
+            0.55,
+            0.4888363940448378,
+            0.0,
+        };
+
+        BOOST_REQUIRE_EQUAL(sogcr.size(), expect.size());
+
+        for (auto i = 0*sogcr.size(); i != sogcr.size(); ++i) {
+            const auto ijk = es.getInputGrid().getIJK(i);
+
+            BOOST_TEST_MESSAGE("SOGCR[" << i << " (= "
+                               << (ijk[0] + 1) << ", "
+                               << (ijk[1] + 1) << ", "
+                               << (ijk[2] + 1) << ")]");
+
+            BOOST_CHECK_CLOSE(sogcr[i], expect[i], 1.0e-8);
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(OPERATE_R_With_Work_Arrays)
+{
+    const auto deck = Parser{}.parseString(R"(RUNSPEC
+DIMENS
+1 5 1 /
+REGDIMS
+ 6* 2 /
+GRID
+DXV
+100 /
+DYV
+5*100 /
+DZV
+10 /
+DEPTHZ
+12*2000 /
+OPERNUM
+  1 1 2 2 1 /
+EQUALS
+  PORO 0.1 /
+/
+OPERATER
+  WORK1  1    INV         PORO  /       -- WORK1 = 1 / PORO
+  WORK2  1    MAXLIM      WORK1 6.78 /  -- WORK2 = MIN(WORK1, 6.78)
+  WORK2  1    MULTIPLY    PORO  /       -- WORK2 = PORO * WORK2
+  PORO   1    MINLIM      WORK2 0.12 /  -- PORO  = MAX(WORK2, 0.12)
+  PORO   2    MINLIM      WORK2 0.02 /  -- PORO  = MAX(WORK2, 0.02)
+/
+PROPS
+EQUALREG
+  SWL  0.123 1 O /
+  SWL  0.234 2 O /
+  SGU  0.877 1 O / -- = 1 - SWL
+  SGU  0.766 2 O / -- = 1 - SWL
+/
+OPERATER
+  WORK1  1  MULTA      SGU    2.33 1.0 / -- WORK1 = 1 + 2.33*SGU
+  SGCR   1  INV        WORK1  2*       / -- SGCR  = 1/WORK1
+  SGCR   1  MULTIPLY   SGU    2*       / -- SGCR = SGCR*SGU
+
+  WORK2  2  MULTA      SGU    2.33 1.0 / -- WORK1 = 1 + 2.33*SGU
+  SGCR   2  INV        WORK2  2*       / -- SGCR  = 1/WORK2
+  SGCR   2  MULTIPLY   SGU    2*       / -- SGCR = SGCR*SGU
+
+-- WORK3 = 1.0 - SWL - 0.002
+-- SOWCR = min(0.249, WORK3)
+
+  WORK3  1  MULTA     SWL     -1.0  1.0 /
+  WORK3  1  ADDX      WORK3   -0.002 /
+  SOWCR  1  MAXLIM    WORK3   0.249  /
+
+-- WORK4 = 1.0 - SWL - 0.002
+-- SOWCR = min(0.82, WORK4)
+
+  WORK4  2  MULTA     SWL     -1.0  1.0 /
+  WORK4  2  ADDX      WORK4   -0.002 /
+  SOWCR  2  MAXLIM    WORK4   0.82  /
+
+-- WORK5 = 1.0 - SWL - SGCR - 0.002
+-- SOGCR = min(0.72, WORK5)
+
+  WORK5  1  MULTA     SWL     -1.0  1.0 /
+  WORK5  1  POLY      SGCR   -1.0  1.0   /
+  WORK5  1  ADDX      WORK5   -0.002 /
+  SOGCR  1  MAXLIM    WORK5   0.72  /
+
+-- WORK6 = 1.0 - SWL - SGCR - 0.002
+-- SOGCR = min(0.030, WORK6)
+
+  WORK6  2  MULTA     SWL     -1.0  1.0 /
+  WORK6  2  POLY      SGCR   -1.0  1.0   /
+  WORK6  2  ADDX      WORK6   -0.002 /
+  SOGCR  2  MAXLIM    WORK6   0.03  /
+/
+END
+)");
+
+    const auto es = EclipseState { deck };
+
+    {
+        const auto& poro = es.fieldProps().get_double("PORO");
+
+        const auto expect = std::array {
+            0.678, 0.678, 0.02, 0.02, 0.678,
+        };
+
+        BOOST_REQUIRE_EQUAL(poro.size(), expect.size());
+
+        for (auto i = 0*poro.size(); i != poro.size(); ++i) {
+            const auto ijk = es.getInputGrid().getIJK(i);
+
+            BOOST_TEST_MESSAGE("PORO[" << i << " (= "
+                               << (ijk[0] + 1) << ", "
+                               << (ijk[1] + 1) << ", "
+                               << (ijk[2] + 1) << ")]");
+
+            BOOST_CHECK_CLOSE(poro[i], expect[i], 1.0e-8);
+        }
+    }
+
+    {
+        const auto& sgcr = es.fieldProps().get_double("SGCR");
+
+        const auto expect = std::array {
+            0.28816360595516216,
+            0.28816360595516216,
+            0.27506661208425803,
+            0.27506661208425803,
+            0.28816360595516216,
+        };
+
+        BOOST_REQUIRE_EQUAL(sgcr.size(), expect.size());
+
+        for (auto i = 0*sgcr.size(); i != sgcr.size(); ++i) {
+            const auto ijk = es.getInputGrid().getIJK(i);
+
+            BOOST_TEST_MESSAGE("SGCR[" << i << " (= "
+                               << (ijk[0] + 1) << ", "
+                               << (ijk[1] + 1) << ", "
+                               << (ijk[2] + 1) << ")]");
+
+            BOOST_CHECK_CLOSE(sgcr[i], expect[i], 1.0e-8);
+        }
+    }
+
+    {
+        const auto& sowcr = es.fieldProps().get_double("SOWCR");
+
+        const auto expect = std::array {
+            0.249, 0.249, 0.764, 0.764, 0.249,
+        };
+
+        BOOST_REQUIRE_EQUAL(sowcr.size(), expect.size());
+
+        for (auto i = 0*sowcr.size(); i != sowcr.size(); ++i) {
+            const auto ijk = es.getInputGrid().getIJK(i);
+
+            BOOST_TEST_MESSAGE("SOWCR[" << i << " (= "
+                               << (ijk[0] + 1) << ", "
+                               << (ijk[1] + 1) << ", "
+                               << (ijk[2] + 1) << ")]");
+
+            BOOST_CHECK_CLOSE(sowcr[i], expect[i], 1.0e-8);
+        }
+    }
+
+    {
+        const auto& sogcr = es.fieldProps().get_double("SOGCR");
+
+        const auto expect = std::array {
+            0.5868363940448378,
+            0.5868363940448378,
+            0.03,
+            0.03,
+            0.5868363940448378,
+        };
+
+        BOOST_REQUIRE_EQUAL(sogcr.size(), expect.size());
+
+        for (auto i = 0*sogcr.size(); i != sogcr.size(); ++i) {
+            const auto ijk = es.getInputGrid().getIJK(i);
+
+            BOOST_TEST_MESSAGE("SOGCR[" << i << " (= "
+                               << (ijk[0] + 1) << ", "
+                               << (ijk[1] + 1) << ", "
+                               << (ijk[2] + 1) << ")]");
+
+            BOOST_CHECK_CLOSE(sogcr[i], expect[i], 1.0e-8);
+        }
+    }
 }
 
 BOOST_AUTO_TEST_CASE(EPS_Props_Inconsistent) {
