@@ -26,12 +26,14 @@
 #include <opm/io/eclipse/SummaryNode.hpp>
 
 #include <algorithm>
+#include <cassert>
 #include <cstddef>
 #include <cstring>
 #include <ctime>
 #include <iomanip>
 #include <limits>
 #include <ostream>
+#include <regex>
 #include <set>
 #include <stdexcept>
 #include <string>
@@ -83,6 +85,19 @@ namespace {
         return (keyword.size() > sz_t{1})
             && (keyword.compare(0, 2, "SU") == 0);
     }
+
+    bool is_encoded_well_completion_quantity(std::string_view keyword)
+    {
+        // Does 'keyword' match the pattern
+        //   W?C*:
+        using sz_t = std::string_view::size_type;
+
+        return keyword.size() > sz_t{6}
+            && keyword.find(':') != std::string::npos
+            && keyword.compare(0, 1, "W") == 0
+            && keyword.compare(2, 1, "C") == 0;
+    }
+
 
     bool is_total(const std::string& key)
     {
@@ -167,6 +182,20 @@ namespace {
                        [](const auto& pair) { return pair.first; });
 
         return l;
+    }
+
+    std::string normalise_encoded_well_completion_quantity(const std::string& keyword)
+    {
+        // Does 'keyword' match the pattern W?C*:
+        static const auto comp_kw_regex = std::regex {
+           R"((W[A-Z]C[A-Z+-]*)_*([0-9]+):(.+))"
+        };
+        std::smatch matched;
+        if (!std::regex_match(keyword, matched, comp_kw_regex)) {
+            return std::string(keyword);
+        } else {
+            return  fmt::format("{}:{}:{}", matched[1].str(), matched[3].str(), matched[2].str());
+        }
     }
 
     std::string normalise_region_set_name(const std::string& regSet)
@@ -488,6 +517,14 @@ namespace Opm
 
         if (is_udq(key)) {
             return this->udq_undefined;
+        }
+
+        if (is_encoded_well_completion_quantity(key)) {
+            auto key1 = normalise_encoded_well_completion_quantity(key);
+            auto iter1 = this->values.find(key1);
+            if (iter1 != this->values.end()) {
+                return iter1->second;
+            }
         }
 
         throw std::out_of_range {
