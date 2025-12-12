@@ -261,14 +261,14 @@ function build_module_full {
   done
 
   # Optionally generate a failure report.
-  # The report is always generated from the 'mpi' configuration data
+  # The report is always generated from the 'default' configuration data
   # since that is the configuration we have reference data for.
   if grep -q "failure_report" <<< $ghprbCommentBody
   then
     $WORKSPACE/deps/opm-simulators/tests/make_failure_report.sh \
     $WORKSPACE/deps/opm-tests \
-    $WORKSPACE/mpi/build-opm-simulators \
-    $WORKSPACE/mpi/build-opm-simulators
+    $WORKSPACE/default/build-opm-simulators \
+    $WORKSPACE/default/build-opm-simulators
     test $? -eq 0 || exit 1
   fi
 
@@ -280,7 +280,7 @@ function build_module_full {
 
   if grep -q -i "update_data" <<< $ghprbCommentBody
   then
-    export configuration=mpi
+    export configuration=default
     export OPM_TESTS_ROOT=$WORKSPACE/deps/opm-tests
     $WORKSPACE/deps/opm-common/jenkins/update-opm-tests.sh $1
     test $? -eq 0 || exit 1

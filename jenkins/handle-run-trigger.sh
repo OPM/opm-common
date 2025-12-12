@@ -7,12 +7,12 @@ then
   then
     $WORKSPACE/deps/opm-simulators/jenkins/run-norne.sh serial
   else
-    $WORKSPACE/deps/opm-simulators/jenkins/run-norne.sh mpi
+    $WORKSPACE/deps/opm-simulators/jenkins/run-norne.sh default
   fi
   test $? -eq 0 || exit 1
 fi
 if grep -q " norne_parallel" <<< $ghprbCommentBody
 then
-  $WORKSPACE/deps/opm-simulators/jenkins/run-norne.sh mpi 4
+  $WORKSPACE/deps/opm-simulators/jenkins/run-norne.sh default 4
   test $? -eq 0 || exit 1
 fi
