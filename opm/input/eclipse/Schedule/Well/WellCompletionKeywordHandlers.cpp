@@ -20,11 +20,7 @@
 #include "WellCompletionKeywordHandlers.hpp"
 
 #include <opm/common/OpmLog/OpmLog.hpp>
-#include <opm/common/utility/OpmInputError.hpp>
 
-#include <opm/input/eclipse/Deck/DeckKeyword.hpp>
-
-#include <opm/input/eclipse/Schedule/Action/WGNames.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleState.hpp>
 #include <opm/input/eclipse/Schedule/Well/WDFAC.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
@@ -153,69 +149,6 @@ void handleCOMPLUMP(HandlerContext& handlerContext)
 void handleCOMPORD(HandlerContext&)
 {}
 
-void handleCOMPTRAJ(HandlerContext& handlerContext)
-{
-    // Keyword WELTRAJ must be read first
-    std::unordered_set<std::string> wells;
-    external::cvf::ref<external::cvf::BoundingBoxTree> cellSearchTree{};
-
-    for (const auto& record : handlerContext.keyword) {
-        const auto wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-        const auto wellnames = handlerContext.wellNames(wellNamePattern, false);
-
-        for (const auto& name : wellnames) {
-            auto well2 = handlerContext.state().wells.get(name);
-            auto connections = std::make_shared<WellConnections>(well2.getConnections());
-
-            // cellsearchTree is calculated only once and is used to
-            // calculated cell intersections of the perforations
-            // specified in COMPTRAJ
-            connections->loadCOMPTRAJ(record, handlerContext.grid, name,
-                                      handlerContext.keyword.location(),
-                                      cellSearchTree);
-
-            // In the case that defaults are used in WELSPECS for
-            // headI/J the headI/J are calculated based on the well
-            // trajectory data
-            well2.updateHead(connections->getHeadI(), connections->getHeadJ());
-            if (well2.updateConnections(connections, handlerContext.grid)) {
-                handlerContext.state().wells.update( well2 );
-                wells.insert( name );
-            }
-
-            if (connections->empty() && well2.getConnections().empty()) {
-                const auto& location = handlerContext.keyword.location();
-                const auto msg = fmt::format(R"(Problem with COMPTRAJ/{}
-In {} line {}
-Well {} is not connected to grid - will remain SHUT)",
-                                             name, location.filename,
-                                             location.lineno, name);
-                OpmLog::warning(msg);
-            }
-
-            handlerContext.state().wellgroup_events()
-                .addEvent(name, ScheduleEvents::COMPLETION_CHANGE);
-        }
-    }
-
-    handlerContext.state().events().addEvent(ScheduleEvents::COMPLETION_CHANGE);
-
-    // In the case the wells reference depth has been defaulted in the
-    // WELSPECS keyword we need to force a calculation of the wells
-    // reference depth exactly when the COMPTRAJ keyword has been
-    // completely processed.
-    for (const auto& wname : wells) {
-        auto well = handlerContext.state().wells.get(wname);
-        well.updateRefDepth();
-
-        handlerContext.state().wells.update(std::move(well));
-    }
-
-    if (! wells.empty()) {
-        handlerContext.record_well_structure_change();
-    }
-}
-
 
 void handleCSKIN(HandlerContext& handlerContext)
 {
@@ -250,7 +183,6 @@ getWellCompletionHandlers()
         { "COMPDATL", &handleCOMPDATL },
         { "COMPLUMP", &handleCOMPLUMP },
         { "COMPORD" , &handleCOMPORD  },
-        { "COMPTRAJ", &handleCOMPTRAJ },
         { "CSKIN",    &handleCSKIN    },
     };
 }

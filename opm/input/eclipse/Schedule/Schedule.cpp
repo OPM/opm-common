@@ -430,12 +430,13 @@ namespace Opm {
                                  const std::unordered_map<std::string, double>* target_wellpi,
                                  std::unordered_map<std::string, double>& wpimult_global_factor,
                                  WelSegsSet* welsegs_wells,
-                                 std::set<std::string>* compsegs_wells)
+                                 std::set<std::string>* compsegs_wells,
+                                 std::set<std::string>* comptraj_wells)
     {
         HandlerContext handlerContext { *this, block, keyword, grid, currentStep,
                                         matches, action_mode,
                                         parseContext, errors, sim_update, target_wellpi,
-                                        wpimult_global_factor, welsegs_wells, compsegs_wells};
+                                        wpimult_global_factor, welsegs_wells, compsegs_wells, comptraj_wells};
 
         if (!KeywordHandlers::getInstance().handleKeyword(handlerContext)) {
             OpmLog::warning(fmt::format("No handler registered for keyword {} "
@@ -580,30 +581,49 @@ private:
 
 namespace
 {
-/// \brief Check whether each MS well has COMPSEGS entry andissue error if not.
-/// \param welsegs All wells with a WELSEGS entry together with the location.
-/// \param compsegs All wells with a COMPSEGS entry
-void check_compsegs_consistency(const Opm::WelSegsSet& welsegs,
-                                const std::set<std::string>& compsegs,
-                                const std::vector<::Opm::Well>& wells)
-{
-    const auto difference = welsegs.difference(compsegs, wells);
 
-    if (!difference.empty()) {
+void report_welsegs_error(const std::vector<Opm::WelSegsSet::Entry>& segments, std::string format_str)
+{
+    if (!segments.empty()) {
         std::string well_str = "well";
-        if (difference.size() > 1) {
+        if (segments.size() > 1) {
             well_str.append("s");
         }
         well_str.append(":");
 
-        for(const auto& [name, location] : difference) {
+        for(const auto& [name, location] : segments) {
             well_str.append(fmt::format("\n   {} in {} at line {}",
                                         name, location.filename, location.lineno));
         }
-        auto msg = fmt::format("Missing COMPSEGS keyword for the following multisegment {}.", well_str);
-        throw Opm::OpmInputError(msg, std::get<1>(difference[0]));
+        auto msg = fmt::format(format_str, well_str);
+        throw Opm::OpmInputError(msg, std::get<1>(segments[0]));
     }
 }
+
+/// \brief Check whether each MS well has COMPSEGS entry and issue error if not.
+/// \param welsegs All wells with a WELSEGS entry together with the location.
+/// \param compsegs All wells with a COMPSEGS entry
+/// \param comptraj All wells with a COMPTRAJ entry
+void check_compsegs_and_comptraj_consistency(const Opm::WelSegsSet& welsegs,
+                                             const std::set<std::string>& compsegs,
+                                             const std::set<std::string>& comptraj,
+                                             const std::vector<::Opm::Well>& wells)
+{
+    std::set<std::string> compsegs_comptraj_union = compsegs;
+    std::set_union(compsegs.begin(), compsegs.end(),
+                   comptraj.begin(), comptraj.end(),
+                   std::inserter(compsegs_comptraj_union, compsegs_comptraj_union.begin()));
+    const auto difference = welsegs.difference(compsegs_comptraj_union, wells);
+    report_welsegs_error(
+        difference, "Missing COMPSEGS or COMPTRAJ keyword for the following multisegment {}."
+    );
+
+    const auto intersection = welsegs.intersection(compsegs, comptraj);
+    report_welsegs_error(
+        intersection, "Overlapping COMPSEGS and COMPTRAJ keywords for the following multisegment {}."
+    );
+}
+
 }// end anonymous namespace
 
 namespace Opm
@@ -666,6 +686,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
         }
 
         std::set<std::string> compsegs_wells;
+        std::set<std::string> comptraj_wells;
         WelSegsSet welsegs_wells;
 
         const auto matches = Action::Result { false }.matches();
@@ -759,12 +780,13 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                                     target_wellpi,
                                     wpimult_global_factor,
                                     &welsegs_wells,
-                                    &compsegs_wells);
+                                    &compsegs_wells,
+                                    &comptraj_wells);
                 keyword_index++;
             }
 
             this->updateICDScalingFactors();
-            check_compsegs_consistency(welsegs_wells, compsegs_wells, this->getWells(report_step));
+            check_compsegs_and_comptraj_consistency(welsegs_wells, compsegs_wells, comptraj_wells, this->getWells(report_step));
             this->applyGlobalWPIMULT(wpimult_global_factor);
             this->end_report(report_step);
 

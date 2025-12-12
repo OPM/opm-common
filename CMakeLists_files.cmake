@@ -318,6 +318,7 @@ if(ENABLE_ECL_INPUT)
     opm/input/eclipse/Schedule/Well/Connection.cpp
     opm/input/eclipse/Schedule/Well/FilterCake.cpp
     opm/input/eclipse/Schedule/Well/injection.cpp
+    opm/input/eclipse/Schedule/Well/GridIndependentWellKeywordHandlers.cpp
     opm/input/eclipse/Schedule/Well/NameOrder.cpp
     opm/input/eclipse/Schedule/Well/PAvg.cpp
     opm/input/eclipse/Schedule/Well/PAvgCalculator.cpp
@@ -734,6 +735,7 @@ if(ENABLE_ECL_OUTPUT)
           tests/SPE1CASE1B.DATA
           tests/SPE1CASE1_WELTRAJ.DATA
           tests/SPE1CASE1_WELTRAJ_2.DATA
+          tests/SPE1CASE1_WELTRAJ_MSW.DATA
           tests/props_spe1case1b.inc
           tests/SPE9_CP_PACKED.DATA
           tests/SOFR_TEST.DATA

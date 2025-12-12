@@ -40,6 +40,8 @@ public:
 
     std::vector<Entry> difference(const std::set<std::string>& compsegs,
                                   const std::vector<Well>& wells) const;
+    std::vector<Entry> intersection(const std::set<std::string>& compsegs,
+                                    const std::set<std::string>& comptraj) const;
 
 private:
     struct PairComp

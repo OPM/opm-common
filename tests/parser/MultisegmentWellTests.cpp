@@ -1590,3 +1590,48 @@ WELSEGS
     const auto es    = ::Opm::EclipseState { deck };
     BOOST_CHECK_THROW(::Opm::Schedule(deck, es, std::make_shared<const ::Opm::Python>()), ::Opm::OpmInputError);
 }
+
+
+BOOST_AUTO_TEST_CASE(loadCOMPTRAJTESTSPE1_MSW) {
+  Opm::Parser parser;
+
+  const auto deck = parser.parseFile("SPE1CASE1_WELTRAJ_MSW.DATA");
+  auto python = std::make_shared<Opm::Python>();
+  Opm::EclipseState state(deck);
+  Opm::Schedule sched(deck, state, python);
+  const auto& units = deck.getActiveUnitSystem();
+
+  const auto& prod = sched.getWell("PROD", 0);
+  const auto& connections = prod.getConnections();
+  const auto& segments = prod.getSegments();
+
+  /* Comparison values (CFs and intersected cells) are from ResInsight through importing a deviation file with contents
+        WELLNAME: 'PROD'
+        # X   Y    TVDMSL   MDMSL
+        3400.00     4500.00     8325.00     8325.00
+        3858.19     4688.67     8374.60     8825.00
+        5326.76     6005.95     8403.97     10825.00
+        6500.00     7300.00     8410.00     12571.74
+        -999
+     and adjusting the completion data in agreement with the COMPTRAJ data in the input file
+   */
+  const std::array<double, 9> connection_factor{
+    110.5461, 17.75799, 36.04859, 60.75019, 235.1933, 94.73938, 222.7472, 74.7769, 89.2022
+  };
+  const std::array<int, 9> global_index{11, 111, 211, 212, 222, 223, 233, 234, 244};
+  BOOST_CHECK_EQUAL(connections.size(), 9);
+  for (size_t i = 0 ; i < connections.size();  ++i ) {
+       BOOST_CHECK_CLOSE(connections[i].CF(), units.to_si(Opm::UnitSystem::measure::transmissibility, connection_factor[i]), 2e-2);
+       BOOST_CHECK_EQUAL(connections[i].global_index(), global_index[i]);
+  }
+
+  const std::array<double, 10> lengths{
+    8325.0, 8425.8, 8689.4, 8935.1, 9157.9, 9838.8, 10597.0, 11321.0, 11997.0, 12369.0
+  };
+  BOOST_CHECK_EQUAL(segments.size(), 10);
+  for (size_t i = 0; i < segments.size(); ++i) {
+    BOOST_CHECK_EQUAL(segments[i].segmentNumber(), i + 1);
+    BOOST_CHECK_EQUAL(segments[i].outletSegment(), i);
+    BOOST_CHECK_CLOSE(segments[i].totalLength(), units.to_si(Opm::UnitSystem::measure::length, lengths[i]), 2e-2);
+  }
+}
