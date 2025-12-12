@@ -161,12 +161,6 @@ namespace Opm {
 
         void assertLabelLGR(const std::string& label) const;
 
-        void save_children(Opm::EclIO::EclOutput& egridfile, const Opm::UnitSystem& units) const;
-
-        void save_nnc(Opm::EclIO::EclOutput& egridfile, const std::vector<Opm::NNCdata>& nnc) const;
-
-        void save_core(Opm::EclIO::EclOutput& egridfile, const Opm::UnitSystem& units) const;
-
         void save(const std::string& filename, bool formatted, const std::vector<Opm::NNCdata>& nnc, const Opm::UnitSystem& units) const;
 
 
@@ -355,6 +349,8 @@ namespace Opm {
         // Input grid data.
         mutable std::optional<std::vector<double>> m_input_zcorn;
         mutable std::optional<std::vector<double>> m_input_coord;
+        void save_children(Opm::EclIO::EclOutput& egridfile, const Opm::UnitSystem& units) const;
+
 
     private:
         std::vector<double> m_minpvVector;
@@ -437,6 +433,9 @@ namespace Opm {
                             std::array<double,8>& X,
                             std::array<double,8>& Y,
                             std::array<double,8>& Z) const;
+
+        void save_nnc(Opm::EclIO::EclOutput& egridfile, const std::vector<Opm::NNCdata>& nnc) const;
+        void save_core(Opm::EclIO::EclOutput& egridfile, const Opm::UnitSystem& units) const;
 
     };
 
