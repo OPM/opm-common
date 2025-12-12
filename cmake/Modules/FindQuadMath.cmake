@@ -42,7 +42,7 @@ if(QuadMath_FOUND AND NOT TARGET QuadMath::QuadMath)
 
   # Somehow needed for DUNE 2.9/g++-12
   target_compile_options(QuadMath::QuadMath INTERFACE
-    $<$<CXX_COMPILER_ID:GNU>:-fext-numeric-literals>
+    $<$<CXX_COMPILER_ID:GNU>:$<$<COMPILE_LANGUAGE:CXX>:-fext-numeric-literals>>
   )
 
   # Check for numeric_limits specialization
