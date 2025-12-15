@@ -3,8 +3,8 @@
 source `dirname $0`/build-opm-module.sh
 
 # Create symlink so build_module can find the test result converter
-mkdir deps
-ln -sf $WORKSPACE deps/opm-common
+mkdir -p $WORKSPACE/deps
+ln -sf $WORKSPACE $WORKSPACE/deps/opm-common
 
 # No upstreams
 declare -a upstreams
