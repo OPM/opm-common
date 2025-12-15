@@ -242,9 +242,8 @@ function build_module_full {
     build_upstreams
 
     # Build main module
-    pushd .
-    mkdir -p $configuration/build-$1
-    cd $configuration/build-$1
+    mkdir -p $WORKSPACE/$configuration/build-$1
+    pushd $WORKSPACE/$configuration/build-$1
     echo "Building main module $1=$sha1 configuration=$configuration"
     build_module "-DCMAKE_INSTALL_PREFIX=$WORKSPACE/$configuration/install -DOPM_TESTS_ROOT=$OPM_TESTS_ROOT ${EXTRA_MODULE_FLAGS[$1]}" 1 $WORKSPACE
     test $? -eq 0 || exit 1
