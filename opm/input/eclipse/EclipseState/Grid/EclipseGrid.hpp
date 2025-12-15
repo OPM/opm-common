@@ -162,6 +162,8 @@ namespace Opm {
         void assertLabelLGR(const std::string& label) const;
 
         void save(const std::string& filename, bool formatted, const std::vector<Opm::NNCdata>& nnc, const Opm::UnitSystem& units) const;
+
+
         /*
           Observe that the there is a getGlobalIndex(i,j,k)
           implementation in the base class. This method - translating
@@ -347,6 +349,8 @@ namespace Opm {
         // Input grid data.
         mutable std::optional<std::vector<double>> m_input_zcorn;
         mutable std::optional<std::vector<double>> m_input_coord;
+        void save_children(Opm::EclIO::EclOutput& egridfile, const Opm::UnitSystem& units) const;
+
 
     private:
         std::vector<double> m_minpvVector;
@@ -430,6 +434,9 @@ namespace Opm {
                             std::array<double,8>& Y,
                             std::array<double,8>& Z) const;
 
+        void save_nnc(Opm::EclIO::EclOutput& egridfile, const std::vector<Opm::NNCdata>& nnc) const;
+        void save_core(Opm::EclIO::EclOutput& egridfile, const Opm::UnitSystem& units) const;
+
     };
 
     /// Specialized Class to describe LGR refined cells.
@@ -447,8 +454,9 @@ namespace Opm {
                        const std::array<int, 3>& low_fatherIJK_,
                        const std::array<int, 3>& up_fatherIJK_);
         const vec_size_t& getFatherGlobalID() const;
-        void save(Opm::EclIO::EclOutput&, const std::vector<Opm::NNCdata>&, const Opm::UnitSystem&) const;
-        void save_nnc(Opm::EclIO::EclOutput&) const;
+
+        void save(Opm::EclIO::EclOutput&, const Opm::UnitSystem&) const;
+
         void set_lgr_global_counter(std::size_t counter)
         {
             lgr_global_counter = counter;
@@ -499,12 +507,15 @@ namespace Opm {
 
     private:
         void init_father_global();
+        void save_core(Opm::EclIO::EclOutput&, const Opm::UnitSystem&) const;
+
         std::string father_label;
         // references global on the father label
         vec_size_t father_global;
         std::array<int, 3> low_fatherIJK {};
         std::array<int, 3> up_fatherIJK {};
         std::vector<int> m_hostnum;
+
     };
 
 
