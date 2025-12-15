@@ -457,8 +457,6 @@ namespace Opm {
 
         void save(Opm::EclIO::EclOutput&, const Opm::UnitSystem&) const;
 
-        void save_core(Opm::EclIO::EclOutput&, const Opm::UnitSystem&) const;
-
         void set_lgr_global_counter(std::size_t counter)
         {
             lgr_global_counter = counter;
@@ -509,12 +507,15 @@ namespace Opm {
 
     private:
         void init_father_global();
+        void save_core(Opm::EclIO::EclOutput&, const Opm::UnitSystem&) const;
+
         std::string father_label;
         // references global on the father label
         vec_size_t father_global;
         std::array<int, 3> low_fatherIJK {};
         std::array<int, 3> up_fatherIJK {};
         std::vector<int> m_hostnum;
+
     };
 
 
