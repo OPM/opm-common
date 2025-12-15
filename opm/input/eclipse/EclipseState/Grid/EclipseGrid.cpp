@@ -2323,6 +2323,15 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         // because the standard algorithm is based on topological information
         // it does not need for the refinement information to be parsed.
         init_children_host_cells();
+        // initialize CPG refinement based parents COORD and ZCORN
+        perform_refinement();
+
+    }
+
+    void EclipseGrid::perform_refinement(){
+        for (auto& cell : lgr_children_cells) {
+            cell.perform_refinement(getCOORD(), getZCORN(), getNXYZ());
+        }
     }
 
     void EclipseGrid::propagateParentIndicesToLGRChildren(int index){
@@ -2803,6 +2812,297 @@ namespace Opm {
     void EclipseGridLGR::save(Opm::EclIO::EclOutput& egridfile, const Opm::UnitSystem& units) const {
         save_core(egridfile, units);
         save_children(egridfile, units);
+    }
+
+    void EclipseGridLGR::perform_refinement(const std::vector<double>&  parent_coord,
+                                             const std::vector<double>& parent_zcorn,
+                                             const std::array<int,3>&   parent_nxyz)
+    {
+        m_coord = generate_refined_coord(parent_coord,  parent_nxyz);
+        m_zcorn = generate_refined_zcorn(parent_coord, parent_zcorn, parent_nxyz);
+        EclipseGrid::perform_refinement();
+    }
+
+
+    std::vector<double> EclipseGridLGR::generate_refined_zcorn([[maybe_unused]] const std::vector<double>& parent_coord,
+                                                               [[maybe_unused]] const std::vector<double>& parent_zcorn,
+                                                               [[maybe_unused]] const std::array<int,3>&   parent_nxyz)
+    {
+
+        const std::vector<double> refined_zcorn;
+        return refined_zcorn;
+    }
+
+    std::vector<double> EclipseGridLGR::generate_refined_coord(const std::vector<double>& parent_coord,
+                                                               const std::array<int,3>&   parent_nxyz)
+    {
+
+    //     2 ---- 3                          6 ---- 7
+    //     /      /   bottom face            /      /    top face
+    //    0 ---- 1                          4 ---- 5
+
+        auto generate_all_ij_elements = [this] (){
+            auto [i_list, j_list, _ ] =  VectorUtil::generate_cartesian_product(
+                                                                                            low_fatherIJK[0], up_fatherIJK[0],
+                                                                                            low_fatherIJK[1], up_fatherIJK[1],
+                                                                                            1, 1);
+
+
+            return std::make_tuple(i_list, j_list);
+        };
+
+        auto generate_dest_ij_refinement_intervals = [this](const std::vector<std::size_t>& i_elem,
+                                                                      const std::vector<std::size_t>& j_elem)
+        {
+
+            std::size_t totalX = getNX();
+            std::size_t totalY = getNY();
+
+            std::size_t min_i = *std::min_element(i_elem.begin(), i_elem.end());
+            std::size_t max_i = *std::max_element(i_elem.begin(), i_elem.end());
+            std::size_t min_j = *std::min_element(j_elem.begin(), j_elem.end());
+            std::size_t max_j = *std::max_element(j_elem.begin(), j_elem.end());
+
+            std::size_t num_el_i = max_i - min_i + 1;
+            std::size_t num_el_j = max_j - min_j + 1;
+
+            if (num_el_i == 0 || num_el_j == 0)
+            {
+            throw std::invalid_argument("Invalid number of elements.");
+            }
+            if (totalX % num_el_i != 0 || totalY % num_el_j != 0) {
+                // Either handle remainder properly or fail fast
+                throw std::runtime_error("Refinement factors must exactly divide parent NX/NY");
+            }
+
+            auto dX = totalX/num_el_i;
+            auto dY = totalY/num_el_j;
+
+            std::vector<std::size_t> refined_i_indices;
+            std::vector<std::size_t> refined_j_indices;
+
+            refined_i_indices.resize(i_elem.size());
+            refined_j_indices.resize(j_elem.size());
+
+            std::transform(i_elem.begin(), i_elem.end(), refined_i_indices.begin(),
+                           [min_i, dX](std::size_t i){
+                            return (i - min_i) * dX;
+                           });
+
+            std::transform(j_elem.begin(), j_elem.end(), refined_j_indices.begin(),
+                           [min_j, dY](std::size_t j){
+                            return (j - min_j) * dY;
+                           });
+
+            return std::make_tuple(refined_i_indices, refined_j_indices, dX, dY);
+        };
+
+        auto generate_dest_ij_refinement = [&generate_dest_ij_refinement_intervals](const std::vector<std::size_t>& i_elem,  const std::vector<std::size_t>& j_elem)
+        {
+            using PillarCoordRef = std::array<std::array<std::size_t, 2>, 4>;
+            std::vector<PillarCoordRef> dest_pillar_indices{};
+            dest_pillar_indices.resize(i_elem.size());
+            const auto [dest_i_ref, dest_j_ref, dx, dy] = generate_dest_ij_refinement_intervals(i_elem, j_elem);
+            for (std::size_t n = 0; n < i_elem.size(); n++) {
+                const std::size_t i = dest_i_ref[n];
+                const std::size_t j = dest_j_ref[n];
+                dest_pillar_indices[n] = {{
+                    {{i,     j,   }},
+                    {{i + dx, j,   }},
+                    {{i,     j + dy}},
+                    {{i + dx, j + dy}}
+                }};
+            }
+            return std::make_tuple(dest_pillar_indices, dx , dy);
+        };
+
+
+        auto pillarIJ2GlobalMainGrid = [&parent_nxyz](int i, int j) -> int {
+            return j * (parent_nxyz[0]+1) + i;
+        };
+
+        auto generate_ij_pillars_ref = [] (const std::vector<std::size_t>& i_elem, const std::vector<std::size_t>& j_elem ) {
+            std::vector<std::array<std::array<std::size_t,2>, 4>> pillar_indices{};
+            pillar_indices.resize(i_elem.size());
+
+            for (std::size_t n = 0; n < i_elem.size(); n++) {
+                const std::size_t i = i_elem[n];
+                const std::size_t j = j_elem[n];
+                pillar_indices[n] = {{
+                    {{i,     j,   }},
+                    {{i + 1, j,   }},
+                    {{i,     j + 1}},
+                    {{i + 1, j + 1}}
+                }};
+            }
+            return pillar_indices;
+        };
+
+        auto generate_pillar_coords_from_father_ref = [&parent_coord, &generate_ij_pillars_ref,  &pillarIJ2GlobalMainGrid](const std::vector<std::size_t>& i_elem, const std::vector<std::size_t>& j_elem) {
+            using PillarCoordType = std::array<std::array<double, 3>, 2>;
+            const auto ij_pillars_ref = generate_ij_pillars_ref(i_elem, j_elem);
+
+            std::vector<std::array<PillarCoordType,4>> pillar_coords{};
+            pillar_coords.resize(i_elem.size());
+
+            for (std::size_t n = 0; n < i_elem.size(); n++) {
+                const auto & ij_pillar_elem_n = ij_pillars_ref[n];
+
+                for (std::size_t index = 0; index < 4; index++) {
+                    const auto [pillar_i, pillar_j] = ij_pillar_elem_n[index];
+
+                    const int global_pillar_indices = pillarIJ2GlobalMainGrid(pillar_i, pillar_j);
+                    const int parent_coord_ref = global_pillar_indices * 6;
+
+                    pillar_coords[n][index] = std::array<std::array<double, 3>, 2>{
+                        std::array<double, 3>{
+                            parent_coord[parent_coord_ref + 0],
+                            parent_coord[parent_coord_ref + 1],
+                            parent_coord[parent_coord_ref + 2]
+                        },
+                        std::array<double, 3>{
+                            parent_coord[parent_coord_ref + 3],
+                            parent_coord[parent_coord_ref + 4],
+                            parent_coord[parent_coord_ref + 5]
+                        }
+                    };
+                }
+            }
+            return pillar_coords;
+        };
+
+        using PillarCoordType = std::array<std::array<double, 3>, 2>;
+
+        const std::size_t NX = getNX() + 1;
+        const std::size_t NY = getNY() + 1;
+        std::vector<double> refined_pillars_coords;
+        refined_pillars_coords.resize(NX * NY*6);
+        auto pillarIJ2GlobalRefinedGrid = [&NX](int i, int j) -> int {
+            return j * NX + i;
+        };
+
+        auto flatten_pillar = [](const PillarCoordType& p)  -> std::array<double, 6> {
+            return std::array<double, 6>{ p[0][0], p[0][1], p[0][2], p[1][0], p[1][1], p[1][2] };
+        };
+
+        auto set_refined_pillar = [&refined_pillars_coords, &flatten_pillar, &pillarIJ2GlobalRefinedGrid](std::size_t i, std::size_t j,
+                                                                                const PillarCoordType& pillar_coord)  -> void {
+            const std::size_t index = pillarIJ2GlobalRefinedGrid(i, j);
+            if ((index*6) > refined_pillars_coords.size()){
+                throw std::out_of_range("Index out of range when setting refined pillar coordinates.");
+            }
+            auto flat = flatten_pillar(pillar_coord);
+            std::copy(flat.begin(), flat.end(), refined_pillars_coords.begin() + index * 6);
+        };
+
+        auto get_refined_pillar = [&refined_pillars_coords, &pillarIJ2GlobalRefinedGrid](std::size_t i, std::size_t j) -> PillarCoordType {
+            const std::size_t index = pillarIJ2GlobalRefinedGrid(i, j);
+            PillarCoordType pillar_coord;
+            pillar_coord[0][0] = refined_pillars_coords[index * 6 + 0];
+            pillar_coord[0][1] = refined_pillars_coords[index * 6 + 1];
+            pillar_coord[0][2] = refined_pillars_coords[index * 6 + 2];
+            pillar_coord[1][0] = refined_pillars_coords[index * 6 + 3];
+            pillar_coord[1][1] = refined_pillars_coords[index * 6 + 4];
+            pillar_coord[1][2] = refined_pillars_coords[index * 6 + 5];
+            return pillar_coord;
+        };
+
+        auto make_indices = [](std::size_t start, std::size_t end) -> std::vector<std::size_t> {
+            std::vector<std::size_t> indices(end - start);
+            std::iota(indices.begin(), indices.end(), start);
+            return indices;
+        };
+
+        // i and j max are inclusive
+        auto set_range_refined_pillars = [&set_refined_pillar, &make_indices](const std::size_t i_min, const std::size_t i_max,
+                                                                                        const std::size_t j_min, const std::size_t j_max,
+                                                                                        const std::vector<PillarCoordType>& vec_pillar) -> void
+        {
+            const std::size_t num_i = i_max - i_min + 1;
+            const std::size_t num_j = j_max - j_min + 1;
+            if (num_i * num_j != vec_pillar.size())
+            {
+                throw std::invalid_argument("Number of refined pillars does not match range specified.");
+            }
+
+            const auto i_range = num_i != 1 ? make_indices(i_min, i_max + 1) : std::vector<std::size_t>{i_min};
+            const auto j_range = num_j != 1 ? make_indices(j_min, j_max + 1) : std::vector<std::size_t>{j_min};
+
+            std::size_t index = 0;
+            for (std::size_t jj = 0; jj < j_range.size(); jj++) {
+                for (std::size_t ii = 0; ii < i_range.size(); ii++) {
+                    const std::size_t i_ref = i_range[ii];
+                    const std::size_t j_ref = j_range[jj];
+                    set_refined_pillar(i_ref, j_ref, vec_pillar[index]);
+                    index++;
+                }
+            }
+        };
+
+        auto pillar_interpolation = [](const PillarCoordType& p1, const PillarCoordType& p2, std::size_t num) -> std::vector<PillarCoordType> {
+            std::vector<PillarCoordType> result;
+            result.reserve(num);
+            for (std::size_t step = 0; step < num; step++) {
+                double t = static_cast<double>(step) / static_cast<double>(num - 1);
+                PillarCoordType interp_pillar;
+                for (std::size_t layer = 0; layer < 2; layer++) {
+                    for (std::size_t dim = 0; dim < 3; dim++) {
+                        interp_pillar[layer][dim] = (1.0 - t) * p1[layer][dim] + t * p2[layer][dim];
+                    }
+                }
+                result.push_back(interp_pillar);
+            }
+            return result;
+        };
+
+        const auto [i_list, j_list] =  generate_all_ij_elements();
+        const auto pillar_coords = generate_pillar_coords_from_father_ref(i_list, j_list);
+        const auto [dest_pillar_ij_ref, dx, dy] =  generate_dest_ij_refinement(i_list, j_list);
+
+        // Set the refined grid pillars at the element corners
+        for (std::size_t n = 0; n < pillar_coords.size(); n++) {
+            const auto& elem_pillar = pillar_coords[n];
+            const auto& elem_pillar_index = dest_pillar_ij_ref[n];
+
+            set_refined_pillar(elem_pillar_index[0][0], elem_pillar_index[0][1], elem_pillar[0]);
+            set_refined_pillar(elem_pillar_index[1][0], elem_pillar_index[1][1], elem_pillar[1]);
+            set_refined_pillar(elem_pillar_index[2][0], elem_pillar_index[2][1], elem_pillar[2]);
+            set_refined_pillar(elem_pillar_index[3][0], elem_pillar_index[3][1], elem_pillar[3]);
+        }
+        // Fill in the refined grid pillars by iinterpolating Edges
+
+        for (std::size_t n = 0; n < pillar_coords.size(); n++) {
+            const auto & elem_pillar_index = dest_pillar_ij_ref[n];
+            // Interpolating Edges along j direction
+            //     2 ---- 3
+            //     /      /
+            //    0 ---- 1
+            const std::size_t i_min = elem_pillar_index[0][0];
+            const std::size_t i_max = elem_pillar_index[1][0];
+            const std::size_t j_min = elem_pillar_index[0][1];
+            const std::size_t j_max = elem_pillar_index[2][1];
+
+            set_range_refined_pillars(i_min, i_min, j_min, j_max,
+                                      pillar_interpolation(get_refined_pillar(i_min, j_min),
+                                                                       get_refined_pillar(i_min, j_max), dy + 1));
+            set_range_refined_pillars(i_max, i_max, j_min, j_max,
+                                      pillar_interpolation(get_refined_pillar(i_max, j_min),
+                                                                       get_refined_pillar(i_max, j_max), dy + 1));
+        }
+
+
+        for (std::size_t n = 0; n < pillar_coords.size(); n++) {
+            const auto & elem_pillar_index = dest_pillar_ij_ref[n];
+            // interporlating rowwise along every j
+            for (std::size_t j = elem_pillar_index[0][1]; j <= elem_pillar_index[2][1]; j++) {
+                const std::size_t min_i = elem_pillar_index[0][0];
+                const std::size_t max_i = elem_pillar_index[1][0];
+                set_range_refined_pillars(min_i,max_i, j, j,
+                                            pillar_interpolation(get_refined_pillar(min_i, j), get_refined_pillar(max_i ,j), dx + 1));
+            }
+        }
+        return refined_pillars_coords;
+
     }
 
     void EclipseGridLGR::save_core(Opm::EclIO::EclOutput& egridfile, const Opm::UnitSystem& units) const{
