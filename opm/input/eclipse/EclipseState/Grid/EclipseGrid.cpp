@@ -2809,6 +2809,11 @@ namespace Opm {
         return father_global;
     }
 
+    void EclipseGridLGR::save(Opm::EclIO::EclOutput& egridfile, const Opm::UnitSystem& units) const {
+        save_core(egridfile, units);
+        save_children(egridfile, units);
+    }
+
     void EclipseGridLGR::perform_refinement(const std::vector<double>&  parent_coord,
                                              const std::vector<double>& parent_zcorn,
                                              const std::array<int,3>&   parent_nxyz)
