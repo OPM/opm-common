@@ -2824,23 +2824,11 @@ namespace Opm {
     }
 
 
-    std::vector<double> EclipseGridLGR::generate_refined_zcorn(const std::vector<double>& parent_coord,
-                                                               const std::vector<double>& parent_zcorn,
-                                                               const std::array<int,3>&   parent_nxyz)
+    std::vector<double> EclipseGridLGR::generate_refined_zcorn([[maybe_unused]] const std::vector<double>& parent_coord,
+                                                               [[maybe_unused]] const std::vector<double>& parent_zcorn,
+                                                               [[maybe_unused]] const std::array<int,3>&   parent_nxyz)
     {
 
-        // auto finding_all_corner_elements = [this, &finding_bottom_face_corner_elements] (){
-        //     const std::array<std::array<std::size_t,3>, 4> bottom_layer_el = finding_bottom_face_corner_elements();
-        //     std::array<std::array<std::size_t,3>, 8> all_corner_elements{};
-        //     std::copy_n(bottom_layer_el.begin(), 4, all_corner_elements.begin());
-        //     std::copy_n(bottom_layer_el.begin(), 4, all_corner_elements.begin() + 4);
-        //     all_corner_elements[4][2] = up_fatherIJK[2];
-        //     all_corner_elements[5][2] = up_fatherIJK[2];
-        //     all_corner_elements[6][2] = up_fatherIJK[2];
-        //     all_corner_elements[7][2] = up_fatherIJK[2];
-        //     return all_corner_elements;
-        // };
-        // TO BE IMPLEMENTED
         const std::vector<double> refined_zcorn;
         return refined_zcorn;
     }
