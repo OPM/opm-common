@@ -1937,6 +1937,8 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         filehead[1] = 2007;                  // release year
         filehead[6] = 1;                     // corner point grid
 
+        egridfile.write("FILEHEAD", filehead);
+
         std::vector<int> gridhead(100,0);
         gridhead[0] = 1;                    // corner point grid
         gridhead[1] = dims[0];              // nI
