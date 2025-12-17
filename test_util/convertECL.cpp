@@ -1,3 +1,26 @@
+/*
+  Copyright 2019-2025 Equinor ASA
+
+  This file is part of the Open Porous Media project (OPM).
+
+  OPM is free software: you can redistribute it and/or modify it under the
+  terms of the GNU General Public License as published by the Free Software
+  Foundation, either version 3 of the License, or (at your option) any later
+  version.
+
+  OPM is distributed in the hope that it will be useful, but WITHOUT ANY
+  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+  FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+  details.
+
+  You should have received a copy of the GNU General Public License along
+  with OPM.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+#include <config.h>
+
+#include <opm/common/OpmLog/OpmLog.hpp>
+
 #include <opm/io/eclipse/ERst.hpp>
 #include <opm/io/eclipse/EclFile.hpp>
 #include <opm/io/eclipse/EclOutput.hpp>
@@ -10,6 +33,7 @@
 #include <filesystem>
 #include <iomanip>
 #include <iostream>
+#include <string_view>
 #include <type_traits>
 
 #include <getopt.h>
@@ -163,6 +187,22 @@ void printHelp() {
               << "-o Specify output file name (only valid with grdecl option).\n"
               << "-i Enforce IX standard on output file.\n"
               << "-r Extract and convert a specific report time step number from a unified restart file. \n\n";
+}
+
+void logConvert(const bool stdoutIsTerminal,
+                std::string_view sourceFile,
+                std::string_view resultFile)
+{
+    const auto colourOn  = stdoutIsTerminal ? std::string_view { "\033[1;31m" } : std::string_view {};
+    const auto colourOff = stdoutIsTerminal ? std::string_view { "\033[0m"    } : std::string_view {};
+
+    std::cout << colourOn
+              << "\nconverting  "
+              << sourceFile << " -> " << resultFile
+              << colourOff
+              << "\n\n";
+
+    std::cout.flush();
 }
 
 struct GrdeclDataFormatParams
@@ -423,7 +463,7 @@ int main(int argc, char **argv)
         }
     }
 
-    std::cout << "\033[1;31m" << "\nconverting  " << argv[argOffset] << " -> " << resFile << "\033[0m\n" << std::endl;
+    logConvert(Opm::OpmLog::stdoutIsTerminal(), argv[argOffset], resFile);
 
     EclOutput outFile(resFile, formattedOutput);
 
