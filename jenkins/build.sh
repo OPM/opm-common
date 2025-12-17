@@ -1,11 +1,5 @@
 #!/bin/bash
 
-source `dirname $0`/build-opm-module.sh
-
-# Create symlink so build_module can find the test result converter
-mkdir -p $WORKSPACE/deps
-ln -sf $WORKSPACE $WORKSPACE/deps/opm-common
-
 # No upstreams
 declare -a upstreams
 declare -A upstreamRev
@@ -22,10 +16,14 @@ downstreamRev[opm-grid]=master
 downstreamRev[opm-simulators]=master
 downstreamRev[opm-upscaling]=master
 
+source `dirname $0`/build-opm-module.sh
+
 parseRevisions
 printHeader opm-common
 
-# Setup opm-data
+clone_repositories opm-common
+
+# Setup opm-tests
 source $WORKSPACE/deps/opm-common/jenkins/setup-opm-tests.sh
 
 build_module_full opm-common

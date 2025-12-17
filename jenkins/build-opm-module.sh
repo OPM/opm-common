@@ -152,9 +152,8 @@ function build_module {
 function clone_module {
   # Already cloned by an earlier configuration
   test -d $WORKSPACE/deps/$1 && return 0
-  pushd .
   mkdir -p $WORKSPACE/deps/$1
-  cd $WORKSPACE/deps/$1
+  pushd $WORKSPACE/deps/$1
   git init .
   git remote add origin https://github.com/OPM/$1
   git fetch --depth 1 origin $2:branch_to_build
@@ -164,19 +163,17 @@ function clone_module {
   popd
 }
 
-# $1 = Module to clone
+# $1 = Name of module
 # $2 = Additional cmake parameters
-# $3 = git-rev to use for module
-# $4 = Build root
-function clone_and_build_module {
-  clone_module $1 $3
-  pushd .
-  mkdir -p $4/build-$1
-  cd $4/build-$1
+# $3 = Build root
+# $4 = 1 to run tests
+function init_and_build_module {
+  mkdir -p $3/build-$1
+  pushd $3/build-$1
   test_build=0
-  if test -n "$5"
+  if test -n "$4"
   then
-    test_build=$5
+    test_build=$4
   fi
   build_module "$2" $test_build $WORKSPACE/deps/$1
   test $? -eq 0 || exit 1
@@ -190,7 +187,7 @@ function build_upstreams {
   do
     echo "Building upstream $upstream=${upstreamRev[$upstream]} configuration=$configuration"
     # Build upstream and execute installation
-    clone_and_build_module $upstream "-DCMAKE_PREFIX_PATH=$WORKSPACE/$configuration/install -DCMAKE_INSTALL_PREFIX=$WORKSPACE/$configuration/install ${EXTRA_MODULE_FLAGS[$upstream]}" ${upstreamRev[$upstream]} $WORKSPACE/$configuration
+    init_and_build_module $upstream "-DCMAKE_PREFIX_PATH=$WORKSPACE/$configuration/install -DCMAKE_INSTALL_PREFIX=$WORKSPACE/$configuration/install ${EXTRA_MODULE_FLAGS[$upstream]}" $WORKSPACE/$configuration
     test $? -eq 0 || exit 1
   done
   test $? -eq 0 || exit 1
@@ -205,7 +202,7 @@ function build_downstreams {
   do
     echo "Building downstream $downstream=${downstreamRev[$downstream]} configuration=$configuration"
     # Build downstream and execute installation
-    clone_and_build_module $downstream "-DCMAKE_PREFIX_PATH=$WORKSPACE/$configuration/install -DCMAKE_INSTALL_PREFIX=$WORKSPACE/$configuration/install -DOPM_TESTS_ROOT=$OPM_TESTS_ROOT ${EXTRA_MODULE_FLAGS[$downstream]}" ${downstreamRev[$downstream]} $WORKSPACE/$configuration 1
+    init_and_build_module $downstream "-DCMAKE_PREFIX_PATH=$WORKSPACE/$configuration/install -DCMAKE_INSTALL_PREFIX=$WORKSPACE/$configuration/install -DOPM_TESTS_ROOT=$OPM_TESTS_ROOT ${EXTRA_MODULE_FLAGS[$downstream]}" $WORKSPACE/$configuration 1
     test $? -eq 0 || exit 1
 
     # Installation for downstream
@@ -228,6 +225,28 @@ function build_downstreams {
   sed -e "s/classname=\"TestSuite\"/classname=\"${configuration}\"/g" -i $WORKSPACE/$configuration/testoutput.xml
 
   test $? -eq 0 || exit 1
+}
+
+# $1 = Name of main module
+function clone_repositories {
+  mkdir -p $WORKSPACE/deps
+  for upstream in ${upstreams[*]}
+  do
+    if test "$upstream" != "opm-common"
+    then
+      clone_module ${upstream} ${upstreamRev[$upstream]}
+    fi
+  done
+
+  if grep -q "with downstreams" <<< $ghprbCommentBody
+  then
+    for downstream in ${downstreams[*]}
+    do
+      clone_module ${downstream} ${downstreamRev[$downstream]}
+    done
+  fi
+
+  ln -sf $WORKSPACE $WORKSPACE/deps/$1
 }
 
 # $1 = Name of main module
