@@ -1,5 +1,10 @@
 #!/bin/bash
 
+if test -z "$BTYPES"
+then
+  source $TOOLCHAIN_DIR/build-configurations.sh
+fi
+
 declare -A configurations
 
 declare -A EXTRA_MODULE_FLAGS
