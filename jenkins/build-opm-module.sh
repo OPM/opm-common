@@ -309,3 +309,49 @@ function build_module_full {
     test $? -eq 0 || exit 1
   fi
 }
+
+# Run static analysis checks for a given module
+# Assumes coverage_gcov, debug_iterator and clang_lto build configurations
+# has been built.
+# $1 - Name of main module
+function run_static_analysis {
+  if test -d $WORKSPACE/coverage_gcov
+  then
+    pushd $WORKSPACE/coverage_gcov/build-$1
+    gcovr -j$TESTTHREADS --xml -r /build -o /build/coverage.xml
+    popd
+  fi
+
+  if test -d $WORKSPACE/debug_iterator
+  then
+    pushd $WORKSPACE/debug_iterator/build-$1
+    ninja doc
+    popd
+  fi
+
+  COMPILE_COMMANDS=$WORKSPACE/clang_lto/build-$1/compile_commands.json
+  if test -d $WORKSPACE/clang_lto
+  then
+    pushd $WORKSPACE
+    infer run \
+          --compilation-database $COMPILE_COMMANDS \
+          --keep-going \
+          --pmd-xml \
+          -j $TESTTHREADS
+    popd
+
+    run-clang-tidy -checks='clang-analyzer.*' \
+                   -p $WORKSPACE/clang_lto/build-$1/ \
+                   -j$TESTTHREADS | tee $WORKSPACE/clang-tidy-report.log
+
+    cppcheck --project=${COMPILE_COMMANDS} \
+             -q \
+              --force \
+              --enable=all \
+              --xml \
+              --xml-version=2 \
+              -i$WORKSPACE/tests/material/test_fluidmatrixinteractions.cpp \
+              -j$TESTTHREADS \
+              --output-file=$WORKSPACE/cppcheck-result.xml
+  fi
+}
