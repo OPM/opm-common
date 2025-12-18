@@ -126,7 +126,14 @@ function build_module {
     fi
     test $? -eq 0 || exit 2
     TESTTHREADS=${TESTTHREADS:-1}
-    ctest -T Test --no-compress-output -j$TESTTHREADS -LE "gpu_.*"
+    if test -n "${CTEST_TIMEOUT}"
+    then
+      TIMEOUT="--timeout ${CTEST_TIMEOUT}"
+    else
+      TIMEOUT=""
+    fi
+
+    ctest -T Test --no-compress-output -j$TESTTHREADS -LE "gpu_.*" ${TIMEOUT}
 
     # Convert to junit format
     $WORKSPACE/deps/opm-common/jenkins/convert.py -x $WORKSPACE/deps/opm-common/jenkins/conv.xsl -t . > testoutput.xml
