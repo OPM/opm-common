@@ -113,6 +113,13 @@ SymmTensor<T> operator+(SymmTensor<T> t1, const SymmTensor<T>& t2)
     return t1;
 }
 
+template<class T>
+bool SymmTensor<T>::operator==(const SymmTensor<T>& t1) const
+{
+    return this->data_ == t1.data_;
+}
+
+
 #define INSTANTIATE_OPS(T1, T2)                                  \
     template SymmTensor<T1> operator*(const T2, SymmTensor<T1>); \
     template SymmTensor<T1> operator*(SymmTensor<T1>, const T2);
