@@ -126,12 +126,7 @@ function build_module {
     fi
     test $? -eq 0 || exit 2
     TESTTHREADS=${TESTTHREADS:-1}
-    if test -z "$CTEST_CONFIGURATION"
-    then
-      ctest -T Test --no-compress-output -j$TESTTHREADS -LE "gpu_.*"
-    else
-      ctest -j$TESTTHREADS -C $CTEST_CONFIGURATION --timeout 5000 -T Test --no-compress-output -LE "gpu_.*"
-    fi
+    ctest -T Test --no-compress-output -j$TESTTHREADS -LE "gpu_.*"
 
     # Convert to junit format
     $WORKSPACE/deps/opm-common/jenkins/convert.py -x $WORKSPACE/deps/opm-common/jenkins/conv.xsl -t . > testoutput.xml
