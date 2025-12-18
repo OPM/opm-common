@@ -9,3 +9,9 @@ This expects to run on a jenkins instance with opm-common as the 'origin' remote
 
 It will build and test opm-common. It can be used both for post-merge builds
 of the master branch and for a github pull request builder job.
+
+**static_analysis.sh**:
+This expects to run on a jenkins instance with opm-common as the 'origin' remote.
+
+It will run and build opm-common using various configurations, and then
+run static analysis.
