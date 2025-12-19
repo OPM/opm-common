@@ -413,7 +413,7 @@ if(dune-common_FOUND)
         test_blackoilfluidsystem_nonstatic test_fluidmatrixinteractions
         test_fluidsystems test_tabulation test_h2brinepvt test_co2brinepvt
         test_eclblackoilfluidsystem test_eclblackoilfluidsystemnonstatic
-        test_eclblackoilpvt)
+        test_eclblackoilpvt test_materialstates)
       target_link_libraries(${tst} dunecommon)
     endforeach()
   endif()
