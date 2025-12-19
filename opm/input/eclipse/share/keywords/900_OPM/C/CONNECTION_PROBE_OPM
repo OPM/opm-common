@@ -19,6 +19,10 @@
     "CFCWIDTH",
     "CFCFFRAC",
     "CFCFRATE",
+    "CFCFFVIR",
+    "CFCFFVIT",
+    "CFCWFVIR",
+    "CFCWFVIT",
     "CGMIR",
     "CGMIRL",
     "CGMIT",
@@ -29,6 +33,8 @@
     "CGMPTL",
     "CINJFVR",
     "CINJFVT",
+    "CFCFVIR",
+    "CFCFVIT",
     "CFCRAD",
     "CFCAOF",
     "CFRAREA",
@@ -40,6 +46,9 @@
     "CFRFVOLU",
     "CFRAVGW",
     "CFRAVGFW",
+    "CFRINJPR",
+    "CFRINJBH",
+    "CFRINJRA",
     "CFRPMAX",
     "CFRPMIN",
     "CFRPAVG",
@@ -75,7 +84,9 @@
     "CMUPR",
     "CMUPT",
     "CMUPRL",
-    "CMUPTL"
+    "CMUPTL",
+    "CWIRFRAC",
+    "CWITFRAC"
   ],
   "items": [
     {
