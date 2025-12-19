@@ -159,10 +159,11 @@ function build_module {
 function clone_module {
   # Already cloned by an earlier configuration
   test -d $WORKSPACE/deps/$1 && return 0
+  local repo_root=${OPM_REPO_ROOT:-https://github.com/OPM}
   mkdir -p $WORKSPACE/deps/$1
   pushd $WORKSPACE/deps/$1
   git init .
-  git remote add origin https://github.com/OPM/$1
+  git remote add origin ${repo_root}/$1
   git fetch --depth 1 origin $2:branch_to_build
   git checkout branch_to_build
   git log HEAD -1 | cat
