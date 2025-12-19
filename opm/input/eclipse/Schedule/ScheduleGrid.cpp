@@ -270,14 +270,10 @@ populate_props_lgr(const std::string& tag, CompletedCells::Cell& cell) const
 
     auto [fi, fj, fk] = this->grid->getIJK(father_global_id);
 
-    // This part relies on the ZCORN and COORDS of the host cells that
-    // have not been parsed yet.  The following implementations are a
-    // path that compute depths and dimensions of the LGR cells based on
-    // the host cells.
-    cell.depth = this->grid->getCellDepthLGR(cell.i, cell.j, cell.k, tag);
-    cell.dimensions = this->grid->getCellDimensionsLGR(fi, fj, fk, tag);
-
     const auto& lgr_grid = this->grid->getLGRCell(tag);
+    cell.depth = lgr_grid.getCellDepth(cell.i, cell.j, cell.k);
+    cell.dimensions = lgr_grid.getCellDims(cell.i, cell.j, cell.k);
+
 
     if (!this->grid->cellActive(fi, fj, fk) ||
         !lgr_grid.cellActive(cell.i, cell.j, cell.k))

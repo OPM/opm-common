@@ -2048,81 +2048,6 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         return this->getIJK(global_id);
     }
 
-
-    /**
-    * @brief Computes the dimensions of a local grid refinement (LGR) cell.
-    *
-    * This function calculates the dimensions of an LGR cell by dividing
-    * the parent cell's dimensions by the subdivision ratio for the given
-    * LGR tag.
-    *
-    * @param i Local index of the parent cell in the x-direction.
-    * @param j Local index of the parent cell in the y-direction.
-    * @param k Local index of the parent cell in the z-direction.
-    * @param lgr_tag Identifier for the LGR region.
-    * @return std::array<double,3> The computed dimensions of the LGR cell
-    *         in the x, y, and z directions.
-    */
-    std::array<double,3> EclipseGrid::getCellDimensionsLGR(const std::size_t  i,
-                                                           const std::size_t  j,
-                                                           const std::size_t  k,
-                                                           const std::string& lgr_tag) const
-    {
-        std::array<int,3> subdivision = getCellSubdivisionRatioLGR(lgr_tag);
-        std::array<double,3> cell_dims = getCellDims(i, j, k);
-
-        return {cell_dims[0] / static_cast<double>(subdivision[0]),
-                cell_dims[1] / static_cast<double>(subdivision[1]),
-                cell_dims[2] / static_cast<double>(subdivision[2])};
-    }
-
-    double EclipseGrid::getCellDepthLGR(size_t i, size_t j, size_t k, const std::string& lgr_tag) const
-    {
-        auto split_domain = [](double start_val, double end_val, int num_points, int index) {
-            if (index < 0 || index >= num_points)
-            {
-                throw std::out_of_range("Index must be between 1 and num_points.");
-            }
-            double step = (end_val - start_val) / (num_points - 1);
-            return start_val + (index * step);
-        };
-
-        auto refine_cell = [&split_domain](std::array<double, 8>& Z, int nz, int k_pos) {
-            std::array<double, 8> Zdiv;
-            for (int index = 0; index < 4; index++)
-            {
-                Zdiv[index] = split_domain(Z[index], Z[index + 4], nz + 1, k_pos);
-                Zdiv[index + 4] = split_domain(Z[index], Z[index + 4], nz + 1, k_pos + 1);
-            }
-            Z = Zdiv;
-        };
-
-        std::vector<std::reference_wrapper<const std::string>> label_list;
-        std::vector<std::size_t> recurrent_global_index;
-        std::size_t fater_global_index;
-
-        std::array<double,8> X;
-        std::array<double,8> Y;
-        std::array<double,8> Z;
-
-        getLGRCell(lgr_tag).get_label_child_to_top_father(label_list);
-        getLGRCell(lgr_tag).get_global_index_child_to_top_father(recurrent_global_index, i,j,k);
-        fater_global_index = recurrent_global_index.back();
-        recurrent_global_index.pop_back();
-
-        this->getCellCorners(fater_global_index, X, Y, Z );
-        for (size_t index = 0; index < label_list.size(); index++)
-        {
-            int nz = getLGRCell(label_list[index].get()).getNZ();
-            int k_pos = getLGRCell(label_list[index].get()).getIJK(recurrent_global_index[index])[2];
-            refine_cell(Z, nz, k_pos);
-        }
-        double z1 = (Z[0]+Z[1]+Z[2]+Z[3])/4.0;
-        double z2 = (Z[4]+Z[5]+Z[6]+Z[7])/4.0;
-        return (z1 + z2) / 2.0;
-    }
-
-
     std::array<int,3> EclipseGrid::getCellSubdivisionRatioLGR(const std::string& lgr_tag,
                                                                     std::array<int,3> acum ) const
     {
@@ -2714,9 +2639,13 @@ namespace Opm {
         const std::size_t n = getCartesianSize();
         const auto& lgr_label_ref = get_lgr_tag();
         std::vector<double> lgr_depths(n);
+
+        const auto& local_lgr_grid = father_grid.getLGRCell(lgr_label_ref);
+
         for (std::size_t index = 0; index < n; ++index) {
             auto [i, j, k] = getIJK(index);
-            lgr_depths[index] = father_grid.getCellDepthLGR(i,j,k, lgr_label_ref);
+
+            lgr_depths[index] = local_lgr_grid.getCellDepth(i,j,k);
         }
         return lgr_depths;
     }
