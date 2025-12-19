@@ -277,8 +277,14 @@ COMPDATL
     BOOST_CHECK_CLOSE(cell1.depth, 8333.333333, TOLERANCE_PERCENT);
     BOOST_CHECK_CLOSE(cell2.depth,8366.666666, TOLERANCE_PERCENT);
 
-    BOOST_CHECK_EQUAL(dim_original[0]/3,dim_cell1[0]);
-    BOOST_CHECK_EQUAL(dim_original[1]/1,dim_cell1[1]);
-    BOOST_CHECK_EQUAL(dim_original[2]/3,dim_cell1[2]);
-    BOOST_CHECK_EQUAL_COLLECTIONS(dim_cell1.begin(), dim_cell1.end(), dim_cell2.begin(), dim_cell2.end());
+    const auto tol = 1e-8;
+    BOOST_CHECK_CLOSE(dim_original[0]/3,dim_cell1[0],tol);
+    BOOST_CHECK_CLOSE(dim_original[1]/1,dim_cell1[1],tol);
+    BOOST_CHECK_CLOSE(dim_original[2]/3,dim_cell1[2], tol);
+    BOOST_REQUIRE_EQUAL(dim_cell1.size(), dim_cell2.size());
+
+    for (std::size_t i = 0; i < dim_cell1.size(); ++i) {
+        BOOST_TEST_MESSAGE("Cell dimension " << i);
+        BOOST_CHECK_CLOSE(dim_cell1[i], dim_cell2[i], tol);
+    }
 }

@@ -257,11 +257,6 @@ namespace Opm {
         std::array<double, 3> getCellDimensions(size_t i, size_t j, size_t k) const {
             return getCellDims(i, j, k);
         }
-        std::array<double,3> getCellDimensionsLGR(const std::size_t  i,
-                                                  const std::size_t  j,
-                                                  const std::size_t  k,
-                                                  const std::string& lgr_tag) const;
-        double getCellDepthLGR(size_t i, size_t j, size_t k, const std::string& lgr_tag) const;
 
 
         bool isCellActive(size_t i, size_t j, size_t k) const {
