@@ -131,6 +131,14 @@ public:
     bool hasPotentials(const std::string& name) const;
     bool has(const std::string& name, const Phase& phase) const;
 
+    /// \brief Erase the guide rate for a well or group
+    ///
+    /// Removes the guide rate entry for the specified name. After calling this, has(name) will return false.
+    ///
+    /// \note This is primarily intended for testing purposes, to allow tests to selectively remove guide rates
+    ///       after calling updateGuideRates() to verify behavior
+    void erase(const std::string& name);
+
     double get(const std::string& well, const WellGuideRateTarget target, const RateVector& rates) const;
     double get(const std::string& group, const Group::GuideRateProdTarget target, const RateVector& rates) const;
     double get(const std::string& name, const GuideRateModel::Target model_target, const RateVector& rates) const;

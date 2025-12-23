@@ -236,6 +236,40 @@ BOOST_AUTO_TEST_CASE(P1_First)
     }
 }
 
+BOOST_AUTO_TEST_CASE(Erase)
+{
+    auto cse = case_10x10x10_model4();
+
+    const auto wopp = 1.0;
+    const auto wgpp = 5.0;
+    const auto wwpp = 0.1;
+    const auto stm  = 0.0;
+    const auto rpt  = size_t{1};
+
+    cse.gr.updateGuideRateExpiration(stm, rpt);
+    // NOTE: The default guide rate for the production well P1 is computed based on the GUIDERAT keyword,
+    //       see WGRUPCON keyword in the manual for more information.
+    cse.gr.compute("P1", rpt, stm, wopp, wgpp, wwpp);
+
+    // Verify guide rate exists
+    BOOST_CHECK(cse.gr.has("P1"));
+    BOOST_CHECK(cse.gr.hasPotentials("P1"));
+
+    // Erase guide rate
+    cse.gr.erase("P1");
+
+    // Verify guide rate no longer exists
+    BOOST_CHECK(!cse.gr.has("P1"));
+    BOOST_CHECK(!cse.gr.hasPotentials("P1"));
+
+    // Re-compute guide rate for P1
+    cse.gr.compute("P1", rpt, stm, wopp, wgpp, wwpp);
+
+    // Verify guide rate exists
+    BOOST_CHECK(cse.gr.has("P1"));
+    BOOST_CHECK(cse.gr.hasPotentials("P1"));
+}
+
 BOOST_AUTO_TEST_CASE(P2_Second)
 {
     auto cse = case_10x10x10_model4();

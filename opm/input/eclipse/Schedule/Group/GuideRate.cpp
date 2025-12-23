@@ -215,6 +215,17 @@ bool Opm::GuideRate::has(const std::string& name, const Phase& phase) const
     return this->injection_group_values.count(std::pair(phase, name)) > 0;
 }
 
+void Opm::GuideRate::erase(const std::string& name)
+{
+    this->values.erase(name);
+    this->potentials.erase(name);
+
+    // Also erase any injection group guide rates for all phases
+    for (int p = 0; p < NUM_PHASES_IN_ENUM; ++p) {
+        this->injection_group_values.erase(std::make_pair(static_cast<Phase>(p), name));
+    }
+}
+
 void Opm::GuideRate::compute(const std::string& wgname,
                              const std::size_t  report_step,
                              const double       sim_time,
