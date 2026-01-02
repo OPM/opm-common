@@ -1,5 +1,6 @@
 /*
   Copyright (c) 2019 Equinor ASA
+  Copyroght (c) 2026 OPM-OP AS
 
   This file is part of the Open Porous Media project (OPM).
 
@@ -414,7 +415,8 @@ namespace Opm { namespace EclIO { namespace OutputStream {
                                       const UnitConvention        uconv,
                                       const std::array<int,3>&    cartDims,
                                       const RestartSpecification& restart,
-                                      const StartTime             start);
+                                      const StartTime             start,
+                                      const StartTime             computeStart);
 
         ~SummarySpecification();
 
@@ -424,13 +426,22 @@ namespace Opm { namespace EclIO { namespace OutputStream {
         SummarySpecification& operator=(const SummarySpecification& rhs) = delete;
         SummarySpecification& operator=(SummarySpecification&& rhs);
 
-        void write(const Parameters& params);
+        /// \brief Write SMSPEC file
+        ///
+        /// \param[in] simulationFinished Whether the simulation has finished (i.e.
+        ///                           this is the last written for it)
+        /// \param[in] currentStep        Index of the current report step
+        /// \param[in] basic              The value assigned to BASIC in RPRTRST
+        void write(const Parameters& params, const bool simulationFinished,
+                   const int currentStep, const int basic);
 
     private:
         int unit_;
         int restartStep_;
         std::array<int,3> cartDims_;
         StartTime startDate_;
+        /// \brief When the simulation started
+        StartTime computeStart_;
         std::vector<PaddedOutputString<8>> restart_;
 
         /// Summary specification (SMSPEC) file output stream.
