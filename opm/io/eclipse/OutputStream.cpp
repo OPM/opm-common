@@ -1,5 +1,6 @@
 /*
   Copyright (c) 2019 Equinor ASA
+  Copyright (c) 2026 OPM-OP AS
 
   This file is part of the Open Porous Media project (OPM).
 
@@ -684,6 +685,28 @@ namespace {
     }
 
     std::vector<int>
+    makeRuntimeiDate(const SummarySpecification::StartTime start)
+    {
+        const auto timepoint = std::chrono::system_clock::to_time_t(start);
+        const auto tm = *std::gmtime(&timepoint);
+
+        // { Day, Month, Year, Hour, Minute, Seconds }
+
+        return {
+            tm.tm_year + 1900,
+
+            // 1..12    1..32
+            tm.tm_mon + 1, tm.tm_mday,
+
+            // 0..23    0..59
+            tm.tm_hour, tm.tm_min,
+
+            // 0..59
+            std::min(tm.tm_sec, 59)
+        };
+    }
+
+    std::vector<int>
     makeDimens(const int                 nparam,
                const std::array<int, 3>& cartDims,
                const int                 istart)
@@ -713,12 +736,14 @@ SummarySpecification(const ResultSet&            rset,
                      const UnitConvention        uconv,
                      const std::array<int,3>&    cartDims,
                      const RestartSpecification& restart,
-                     const StartTime             start)
-    : unit_       (unitConvention(uconv))
-    , restartStep_(makeRestartStep(restart))
-    , cartDims_   (cartDims)
-    , startDate_  (start)
-    , restart_    (restartRoot(restart))
+                     const StartTime             start,
+                     const StartTime             computeStart)
+    : unit_         (unitConvention(uconv))
+    , restartStep_  (makeRestartStep(restart))
+    , cartDims_     (cartDims)
+    , startDate_    (start)
+    , computeStart_ (computeStart)
+    , restart_      (restartRoot(restart))
 {
     const auto fname = outputFileName(rset, FileExtension::smspec(fmt.set));
 
@@ -755,7 +780,9 @@ operator=(SummarySpecification&& rhs)
 
 void
 Opm::EclIO::OutputStream::
-SummarySpecification::write(const Parameters& params)
+SummarySpecification::write(const Parameters& params,
+                            const bool simulationFinished, const int currentStep,
+                            const int basic)
 {
     this->rewindStream();
 
@@ -777,6 +804,21 @@ SummarySpecification::write(const Parameters& params)
     smspec.write("UNITS",    params.units);
 
     smspec.write("STARTDAT", makeStartDate(this->startDate_));
+
+    // Create and write RUNTIMEI
+    std::vector<int> runtimei(50, 0);
+    runtimei[0] = simulationFinished ? 2 : 1;
+    runtimei[1] = (this->restartStep_ == -1)? 1 : this->restartStep_+1;
+    runtimei[2] = currentStep + 1;
+    const auto computeStart = makeRuntimeiDate(this->computeStart_);
+    std::copy(computeStart.begin(), computeStart.end(), runtimei.begin()+3);
+
+    using std::chrono::system_clock;
+    const auto now = makeRuntimeiDate(Opm::TimeService::now());
+    std::copy(now.begin(), now.end(), runtimei.begin()+9);
+    runtimei[34] = basic;
+
+    smspec.write("RUNTIMEI", runtimei);
 
     this->flushStream();
 }

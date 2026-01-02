@@ -1,7 +1,6 @@
 /*
-  Copyright 2021 Equinor ASA.
-  Copyright 2019 Equinor ASA.
-  Copyright 2016 Statoil ASA.
+  Copyright 2016-2021 Equinor ASA.
+  Copyright 2026 OPM-OP AS.
 
   This file is part of the Open Porous Media project (OPM).
 
@@ -4950,13 +4949,16 @@ public:
     {
         return std::make_unique<Spec>(rset, fmt, this->uconv(),
                                       this->cartDims_, this->restart_,
-                                      this->start_);
+                                      this->start_,
+                                      this->computeStart_);
     }
 
 private:
     Opm::UnitSystem::UnitType  utype_;
     std::array<int,3>          cartDims_;
     Spec::StartTime            start_;
+    /// \brief Time when the simulation started.
+    Spec::StartTime            computeStart_;
     Spec::RestartSpecification restart_{};
 
     Spec::UnitConvention uconv() const;
@@ -4970,6 +4972,8 @@ SMSpecStreamDeferredCreation(const Opm::InitConfig&          initcfg,
     : utype_   (utype)
     , cartDims_(grid.getNXYZ())
     , start_   (Opm::TimeService::from_time_t(start))
+    // This is not exactly when the simulation started, but should make the tools happy enough.
+    , computeStart_(Opm::TimeService::now())
 {
     if (initcfg.restartRequested()) {
         this->restart_.root = initcfg.getRestartRootNameInput();
@@ -5278,10 +5282,16 @@ void Opm::out::Summary::SummaryImplementation::write(const bool is_final_summary
         return;
     }
 
+    const auto& last = this->lastUnwritten();
+
     this->createSMSpecIfNecessary();
 
-    if (this->prevReportStepID_ < this->lastUnwritten().seq) {
-        this->smspec_->write(this->outputParameters_.summarySpecification());
+    if (this->prevReportStepID_ < last.seq) {
+        this->smspec_->write(this->outputParameters_.summarySpecification(),
+                             // pass additional parameters for RUNTIMEI keyword
+                             is_final_summary, last.seq,
+                             sched_.get()[last.seq].get<RSTConfig>().get()
+                             .basic.value_or(0));
     }
 
     for (auto i = 0*this->numUnwritten_; i < this->numUnwritten_; ++i) {
