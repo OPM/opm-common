@@ -770,11 +770,13 @@ public:
     OPM_HOST_DEVICE Evaluation operator+(const Evaluation& other) const
     {
 {% if numDerivs < 0 %}\
+#ifndef NDEBUG
         const int thisSize = size();
         const int otherSize = other.size();
 
         // Allow operation if sizes match or one is constant (size == 0)
         assert(thisSize == otherSize || thisSize == 0 || otherSize == 0);
+#endif
 {% else %}\
         assert(size() == other.size());
 {% endif %}\
@@ -801,11 +803,13 @@ public:
     OPM_HOST_DEVICE Evaluation operator-(const Evaluation& other) const
     {
 {% if numDerivs < 0 %}\
+#ifndef NDEBUG
         const int thisSize = size();
         const int otherSize = other.size();
 
         // Allow operation if sizes match or one is constant (size == 0)
         assert(thisSize == otherSize || thisSize == 0 || otherSize == 0);
+#endif
 {% else %}\
         assert(size() == other.size());
 {% endif %}\
@@ -853,11 +857,13 @@ public:
     OPM_HOST_DEVICE Evaluation operator*(const Evaluation& other) const
     {
 {% if numDerivs < 0 %}\
+#ifndef NDEBUG
         const int thisSize = size();
         const int otherSize = other.size();
 
         // Allow operation if sizes match or one is constant (size == 0)
         assert(thisSize == otherSize || thisSize == 0 || otherSize == 0);
+#endif
 {% else %}\
         assert(size() == other.size());
 {% endif %}\
@@ -882,11 +888,13 @@ public:
     OPM_HOST_DEVICE Evaluation operator/(const Evaluation& other) const
     {
 {% if numDerivs < 0 %}\
+#ifndef NDEBUG
         const int thisSize = size();
         const int otherSize = other.size();
 
         // Allow operation if sizes match or one is constant (size == 0)
         assert(thisSize == otherSize || thisSize == 0 || otherSize == 0);
+#endif
 {% else %}\
         assert(size() == other.size());
 {% endif %}\
