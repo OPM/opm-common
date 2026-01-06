@@ -454,11 +454,13 @@ public:
     // add two evaluation objects
     OPM_HOST_DEVICE Evaluation operator+(const Evaluation& other) const
     {
+#ifndef NDEBUG
         const int thisSize = size();
         const int otherSize = other.size();
 
         // Allow operation if sizes match or one is constant (size == 0)
         assert(thisSize == otherSize || thisSize == 0 || otherSize == 0);
+#endif
 
         Evaluation result(*this);
 
@@ -481,11 +483,13 @@ public:
     // subtract two evaluation objects
     OPM_HOST_DEVICE Evaluation operator-(const Evaluation& other) const
     {
+#ifndef NDEBUG
         const int thisSize = size();
         const int otherSize = other.size();
 
         // Allow operation if sizes match or one is constant (size == 0)
         assert(thisSize == otherSize || thisSize == 0 || otherSize == 0);
+#endif
 
         Evaluation result(*this);
 
@@ -519,11 +523,13 @@ public:
 
     OPM_HOST_DEVICE Evaluation operator*(const Evaluation& other) const
     {
+#ifndef NDEBUG
         const int thisSize = size();
         const int otherSize = other.size();
 
         // Allow operation if sizes match or one is constant (size == 0)
         assert(thisSize == otherSize || thisSize == 0 || otherSize == 0);
+#endif
 
         Evaluation result(*this);
 
@@ -544,11 +550,13 @@ public:
 
     OPM_HOST_DEVICE Evaluation operator/(const Evaluation& other) const
     {
+#ifndef NDEBUG
         const int thisSize = size();
         const int otherSize = other.size();
 
         // Allow operation if sizes match or one is constant (size == 0)
         assert(thisSize == otherSize || thisSize == 0 || otherSize == 0);
+#endif
 
         Evaluation result(*this);
 
