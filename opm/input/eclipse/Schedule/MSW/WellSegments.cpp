@@ -35,6 +35,7 @@
 #include <cassert>
 #include <cmath>
 #include <cstddef>
+#include <fstream>
 #include <iterator>
 #include <map>
 #include <numeric>
@@ -858,6 +859,85 @@ WellSegments::MultiPhaseModel WellSegments::MultiPhaseModelFromString(const std:
     } else {
         throw std::invalid_argument("Unknown enum string_value: " + string_value + " for MultiPhaseModel");
     }
+}
+
+void WellSegments::writeGraphviz(const std::string& well_name, const WellConnections& connections) const
+{
+    const std::string filename = well_name + ".gv";
+    std::ofstream os(filename);
+
+    if (!os) {
+        throw std::runtime_error("Outputting well segment structure failed. Could not open '" + filename + "'.");
+    }
+
+    os << "strict digraph \"" << well_name << "\"\n{\n";
+    os << "    rankdir=BT;\n";
+    os << "    node [style=filled];\n";
+
+    // Well name
+    os << "    0 [label=\"" << well_name << "\""
+       << ", shape=doublecircle, fillcolor=lightgrey];\n";
+    for (const auto& segment : m_segments) {
+        const int id = segment.segmentNumber();
+        const int outlet = segment.outletSegment();
+        const int branch = segment.branchNumber();
+
+        // style for regular segments
+        std::string shape = "box";
+        std::string color = "white";
+
+        // different colors for different type of segments
+        if (segment.isValve()) {
+            shape = "diamond";
+            color = "lightblue";
+        } else if (segment.isSpiralICD()) {
+            shape = "box";
+            color = "gold";
+        } else if (segment.isAICD()) {
+            shape = "box";
+            color = "orange";
+        }
+        else if (branch == 1) {
+            // main branch / branch 1
+            color = "ivory";
+        }
+
+        os << "    " << id << " [label=\"Seg " << id << "\\n(Branch " << branch << ")\""
+           << ", shape=" << shape << ", fillcolor=" << color << "];\n";
+
+        // pointing to outlet segment
+        assert(outlet >= 0);
+        os << "    " << id << " -> " << outlet << ";\n";
+    }
+
+    // Add connections to the graph
+    for (const auto& conn : connections) {
+        if (conn.attachedToSegment()) {
+            const int seg_id = conn.segment();
+            const std::string conn_node = "conn_" + std::to_string(conn.global_index());
+            os << "    " << conn_node << " [label=\"(" << conn.getI() << "," << conn.getJ() << ","
+               << conn.getK() << ")\""
+               << ", shape=ellipse, fillcolor=lightgreen, style=filled];\n"
+               << "    " << conn_node << " -> " << seg_id << ";\n";
+        }
+    }
+
+    os << "    {\n";
+    os << "        rank=sink;\n";
+    os << "        Legend [shape=none, margin=0, label=<\n";
+    os << "            <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n";
+    os << "                <TR><TD COLSPAN=\"2\"><B>Legend</B></TD></TR>\n";
+    os << "                <TR><TD BGCOLOR=\"white\">Regular Segments</TD></TR>\n";
+    os << "                <TR><TD BGCOLOR=\"ivory\">Main Branch</TD></TR>\n";
+    os << "                <TR><TD BGCOLOR=\"gold\">SICD</TD></TR>\n";
+    os << "                <TR><TD BGCOLOR=\"orange\">AICD</TD></TR>\n";
+    os << "                <TR><TD BGCOLOR=\"lightblue\">Valve</TD></TR>\n";
+    os << "                <TR><TD BGCOLOR=\"lightgreen\">Connections</TD></TR>\n";
+    os << "            </TABLE>\n";
+    os << "        >];\n";
+    os << "    }\n";
+
+    os << "}\n";
 }
 
 }

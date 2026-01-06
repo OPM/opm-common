@@ -117,6 +117,9 @@ namespace Opm {
 
         bool updateICDScalingFactors(const WellConnections& connections);
 
+        // write the graphviz representation of the segments to the output stream
+        void writeGraphviz(const std::string& well_name, const WellConnections& connections) const;
+
         template<class Serializer>
         void serializeOp(Serializer& serializer)
         {
