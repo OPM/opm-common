@@ -9,6 +9,7 @@ upstreams=(opm-common
            opm-grid
            opm-simulators
            opm-upscaling
+           opm-tests
           )
 
 declare -A upstreamRev
