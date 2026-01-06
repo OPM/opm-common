@@ -6,7 +6,12 @@ then
   OPM_TESTS_REVISION="master"
   if grep -q "opm-tests=" <<< $ghprbCommentBody
   then
-    OPM_TESTS_REVISION=pull/`echo $ghprbCommentBody | sed -r 's/.*opm-tests=([0-9]+).*/\1/g'`/merge
+    if test -n "$absolute_revisions"
+    then
+      OPM_TESTS_REVISION=$(echo $ghprbCommentBody | sed -r "s/.*opm-tests=([^ ]+).*/\1/g")
+    else
+      OPM_TESTS_REVISION=pull/$(echo $ghprbCommentBody | sed -r "s/.*opm-tests=([0-9]+).*/\1/g")/merge
+    fi
   fi
   # Not specified in trigger, use shared copy
   if [[ "$OPM_TESTS_REVISION" = "master" ]] && [[ ! "$OPM_TESTS_ROOT_PREDEFINED" = "" ]]
@@ -15,7 +20,7 @@ then
     then
       cp $OPM_TESTS_ROOT_PREDEFINED $WORKSPACE/deps/opm-tests -R
       pushd $WORKSPACE/deps/opm-tests
-      echo "opm-tests revision: `git rev-parse HEAD`"
+      echo "opm-tests revision: $(git rev-parse HEAD)"
       popd
     fi
   else
@@ -23,7 +28,7 @@ then
     cp $OPM_TESTS_ROOT_PREDEFINED $WORKSPACE/deps/opm-tests -R
     pushd $WORKSPACE/deps/opm-tests
     # Then we fetch the PR branch
-    git remote add PR https://github.com/OPM/opm-tests
+    git remote add PR ${OPM_TESTS_UPSTREAM:-https://github.com/OPM/opm-tests}
     git fetch --depth 1 PR $OPM_TESTS_REVISION:branch_to_build
     git checkout branch_to_build
     popd
@@ -33,7 +38,7 @@ else
   then
     cp $OPM_TESTS_ROOT $WORKSPACE/deps/opm-tests -R
     pushd $WORKSPACE/deps/opm-tests
-    echo "opm-tests-revision: `git rev-parse HEAD`"
+    echo "opm-tests-revision: $(git rev-parse HEAD)"
     popd
   fi
 fi
