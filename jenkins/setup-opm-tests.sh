@@ -28,7 +28,7 @@ then
     cp $OPM_TESTS_ROOT_PREDEFINED $WORKSPACE/deps/opm-tests -R
     pushd $WORKSPACE/deps/opm-tests
     # Then we fetch the PR branch
-    git remote add PR https://github.com/OPM/opm-tests
+    git remote add PR ${OPM_TESTS_UPSTREAM:-https://github.com/OPM/opm-tests}
     git fetch --depth 1 PR $OPM_TESTS_REVISION:branch_to_build
     git checkout branch_to_build
     popd
