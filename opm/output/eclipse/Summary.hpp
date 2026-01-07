@@ -211,11 +211,6 @@ public:
 
     /// Calculate summary vector values.
     ///
-    /// \param[in,out] summary_state Summary vector values.  On exit, holds
-    /// updated values for all vectors that are not user-defined quantities.
-    /// UDQs are calculated in UDQConfig::eval() which should be called
-    /// shortly after calling Summary::eval().
-    ///
     /// \param[in] report_step One-based report step index for which to
     /// create output.  This is the number that gets incorporated into the
     /// file extension of "separate" summary output files (i.e., .S000n).
@@ -224,41 +219,12 @@ public:
     /// \param[in] secs_elapsed Elapsed physical time in seconds since start
     /// of simulation.
     ///
-    /// \param[in] well_solution Collection of per-well, per-connection, and
-    /// per-segment solution variables.
+    /// \param[in] values Dynamic state values from simulator.
     ///
-    /// \param[in] wbp Well-block average pressures inferred from WPAVE (or
-    /// WWPAVE) settings.
-    ///
-    /// \param[in] group_and_nwrk_solution Constraints, guide rates and
-    /// nodal pressures for the extended network model.
-    ///
-    /// \param[in] single_values named scalar quantities such as field-wide
-    /// pressures, rates, and volumes, as well as performance related
-    /// quantities such as CPU time, number of linear iterations &c.
-    ///
-    /// \param[in] initial_inplace Volumes initially in place.  Needed to
-    /// calculate recovery factors.  Nullopt if such initial volumes are not
-    /// available.
-    ///
-    /// \param[in] inplace Current volumes in place.
-    ///
-    /// \param[in] region_values Per-region quantities.  Empty if such
-    /// values do not exist--typically in unit tests or if per-region
-    /// summary output has not been requested.
-    ///
-    /// \param[in] block_values Per-block (cell) quantities.  Empty if such
-    /// values do not exist (e.g., in unit tests) or if no per-block summary
-    /// vectors have been requested.
-    ///
-    /// \param[in] aquifers_values Flow rates, cumulatives, and pressures
-    /// attributed to aquifers--both analytic and numerical aquifers.  Empty
-    /// if such values do not exist (e.g., in unit tests) or if per-aquifer
-    /// summary vectors have not been requested.
-    ///
-    /// \param[in] interreg_flows Inter-region flows (rates and
-    /// cumulatives).  Empty if no such values exist (e.g., in unit tests)
-    /// or if no such summary vectors have been requested.
+    /// \param[in,out] summary_state Summary vector values.  On exit, holds
+    /// updated values for all vectors that are not user-defined quantities.
+    /// UDQs are calculated in UDQConfig::eval() which should be called
+    /// shortly after calling Summary::eval().
     void eval(const int                    report_step,
               const double                 secs_elapsed,
               const DynamicSimulatorState& values,
