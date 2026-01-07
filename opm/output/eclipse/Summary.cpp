@@ -89,6 +89,7 @@
 #include <string>
 #include <unordered_map>
 #include <utility>
+#include <variant>
 #include <vector>
 
 #include <fmt/format.h>
@@ -1657,7 +1658,10 @@ quantity roew(const fn_args& args)
 {
     const auto zero = quantity { 0.0, measure::identity };
 
-    if (args.initial_inplace == nullptr) {
+    if ((args.initial_inplace == nullptr) ||
+        ! args.extra_data.has_value() ||
+        ! std::holds_alternative<std::string>(*args.extra_data))
+    {
         return zero;
     }
 
@@ -1688,7 +1692,10 @@ quantity roe(const fn_args& args)
 {
     const auto zero = quantity { 0.0, measure::identity };
 
-    if (args.initial_inplace == nullptr) {
+    if ((args.initial_inplace == nullptr) ||
+        ! args.extra_data.has_value() ||
+        ! std::holds_alternative<std::string>(*args.extra_data))
+    {
         return zero;
     }
 
@@ -2013,8 +2020,16 @@ inline quantity duration( const fn_args& args ) {
 }
 
 template<rt phase , bool injection>
-quantity region_rate( const fn_args& args ) {
+quantity region_rate( const fn_args& args )
+{
     double sum = 0;
+
+    if (! args.extra_data.has_value() ||
+        ! std::holds_alternative<std::string>(*args.extra_data))
+    {
+        return { sum, rate_unit<phase>() };
+    }
+
     const auto& well_connections = args.regionCache.connections( std::get<std::string>(*args.extra_data), args.num );
 
     for (const auto& pair : well_connections) {
@@ -2038,8 +2053,16 @@ quantity region_rate( const fn_args& args ) {
         return { -sum, rate_unit< phase >() };
 }
 
-quantity rhpv(const fn_args& args) {
+quantity rhpv(const fn_args& args)
+{
+    if (! args.extra_data.has_value() ||
+        ! std::holds_alternative<std::string>(*args.extra_data))
+    {
+        return { 0.0, measure::volume };
+    }
+
     const auto& inplace = args.inplace;
+
     const auto& region_name = std::get<std::string>(*args.extra_data);
     if (inplace.has( region_name, Opm::Inplace::Phase::HydroCarbonPV, args.num ))
         return { inplace.get( region_name, Opm::Inplace::Phase::HydroCarbonPV, args.num ), measure::volume };
