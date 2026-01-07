@@ -655,8 +655,8 @@ struct fn_args
     const Opm::out::RegionCache& regionCache;
     const Opm::EclipseGrid& grid;
     const Opm::Schedule& schedule;
-    const std::vector< std::pair< std::string, double > > eff_factors;
-    const std::optional<Opm::Inplace>& initial_inplace;
+    const std::vector<std::pair<std::string, double>> eff_factors{};
+    const Opm::Inplace* initial_inplace{nullptr};
     const Opm::Inplace& inplace;
     const Opm::UnitSystem& unit_system;
 };
@@ -1653,41 +1653,57 @@ inline quantity bhp( const fn_args& args ) {
   hack in SummaryConfig which should ensure that this is safe.
 */
 
-quantity roew(const fn_args& args) {
-    const quantity zero = { 0, measure::identity };
-    const auto& region_name = std::get<std::string>(*args.extra_data);
-    if (!args.initial_inplace.has_value())
-        return zero;
+quantity roew(const fn_args& args)
+{
+    const auto zero = quantity { 0.0, measure::identity };
 
-    const auto& initial_inplace = args.initial_inplace.value();
-    if (!initial_inplace.has( region_name, Opm::Inplace::Phase::OIL, args.num))
+    if (args.initial_inplace == nullptr) {
         return zero;
+    }
+
+    const auto& region_name = std::get<std::string>(*args.extra_data);
+
+    if (! args.initial_inplace->has(region_name, Opm::Inplace::Phase::OIL, args.num)) {
+        return zero;
+    }
 
     double oil_prod = 0;
     for (const auto& [well, global_index] : args.regionCache.connections(region_name, args.num)) {
-        const auto copt_key = fmt::format("COPT:{}:{}" , well, global_index + 1);
-        if (args.st.has(copt_key))
+        const auto copt_key = fmt::format("COPT:{}:{}", well, global_index + 1);
+
+        if (args.st.has(copt_key)) {
             oil_prod += args.st.get(copt_key);
+        }
     }
+
     oil_prod = args.unit_system.to_si(Opm::UnitSystem::measure::volume, oil_prod);
-    return { oil_prod / initial_inplace.get( region_name, Opm::Inplace::Phase::OIL, args.num ) , measure::identity };
+
+    return {
+        oil_prod / args.initial_inplace->get(region_name, Opm::Inplace::Phase::OIL, args.num),
+        measure::identity
+    };
 }
 
-quantity roe(const fn_args& args) {
-    const quantity zero = { 0, measure::identity };
+quantity roe(const fn_args& args)
+{
+    const auto zero = quantity { 0.0, measure::identity };
+
+    if (args.initial_inplace == nullptr) {
+        return zero;
+    }
+
     const auto& region_name = std::get<std::string>(*args.extra_data);
-    if (!args.initial_inplace.has_value())
-        return zero;
 
-    const auto& initial_inplace = args.initial_inplace.value();
-    if (!initial_inplace.has( region_name, Opm::Inplace::Phase::OIL, args.num))
+    if (! args.initial_inplace->has(region_name, Opm::Inplace::Phase::OIL, args.num)) {
         return zero;
+    }
 
-    const auto initial = initial_inplace.get( region_name, Opm::Inplace::Phase::OIL, args.num );
-    if (initial < 1.0e-15)
+    const auto initial = args.initial_inplace->get(region_name, Opm::Inplace::Phase::OIL, args.num);
+    if (initial < 1.0e-15) {
         return zero;
+    }
 
-    const auto current = args.inplace.get( region_name, Opm::Inplace::Phase::OIL, args.num );
+    const auto current = args.inplace.get(region_name, Opm::Inplace::Phase::OIL, args.num);
     return { (initial - current) / initial, measure::identity };
 }
 
@@ -3897,7 +3913,7 @@ namespace Evaluator {
         const Opm::Schedule& sched;
         const Opm::EclipseGrid& grid;
         const Opm::out::RegionCache& reg;
-        const std::optional<Opm::Inplace>& initial_inplace;
+        const Opm::Inplace* initial_inplace;
     };
 
     struct SimulatorResults
@@ -3906,7 +3922,7 @@ namespace Evaluator {
         const Opm::data::WellBlockAveragePressures& wbp;
         const Opm::data::GroupAndNetworkValues& grpNwrkSol;
         const std::map<std::string, double>& single;
-        const Opm::Inplace inplace;
+        const Opm::Inplace& inplace;
         const std::map<std::string, std::vector<double>>& region;
         const std::map<std::pair<std::string, int>, double>& block;
         const Opm::data::Aquifers& aquifers;
@@ -4030,7 +4046,7 @@ namespace Evaluator {
         Opm::EclIO::SummaryNode  node_;
         Opm::UnitSystem::measure m_;
 
-        Opm::out::Summary::BlockValues::key_type lookupKey() const
+        Opm::out::Summary::DynamicSimulatorState::BlockValues::key_type lookupKey() const
         {
             return { this->node_.keyword, this->node_.number };
         }
@@ -5067,19 +5083,10 @@ public:
     SummaryImplementation& operator=(const SummaryImplementation& rhs) = delete;
     SummaryImplementation& operator=(SummaryImplementation&& rhs) = default;
 
-    void eval(const int                              sim_step,
-              const double                           secs_elapsed,
-              const data::Wells&                     well_solution,
-              const data::WellBlockAveragePressures& wbp,
-              const data::GroupAndNetworkValues&     grp_nwrk_solution,
-              GlobalProcessParameters                single_values,
-              const std::optional<Inplace>&          initial_inplace,
-              const Opm::Inplace&                    inplace,
-              const RegionParameters&                region_values,
-              const BlockValues&                     block_values,
-              const data::Aquifers&                  aquifer_values,
-              const InterRegFlowValues&              interreg_flows,
-              SummaryState&                          st) const;
+    void eval(const int                    sim_step,
+              const double                 secs_elapsed,
+              const DynamicSimulatorState& values,
+              SummaryState&                st) const;
 
     void internal_store(const SummaryState& st,
                         const int           report_step,
@@ -5228,34 +5235,63 @@ internal_store(const SummaryState& st,
 
 void
 Opm::out::Summary::SummaryImplementation::
-eval(const int                              sim_step,
-     const double                           secs_elapsed,
-     const data::Wells&                     well_solution,
-     const data::WellBlockAveragePressures& wbp,
-     const data::GroupAndNetworkValues&     grp_nwrk_solution,
-     GlobalProcessParameters                single_values,
-     const std::optional<Inplace>&          initial_inplace,
-     const Opm::Inplace&                    inplace,
-     const RegionParameters&                region_values,
-     const BlockValues&                     block_values,
-     const data::Aquifers&                  aquifer_values,
-     const InterRegFlowValues&              interreg_flows,
-     Opm::SummaryState&                     st) const
+eval(const int                    sim_step,
+     const double                 secs_elapsed,
+     const DynamicSimulatorState& values,
+     Opm::SummaryState&           st) const
 {
     validateElapsedTime(secs_elapsed, this->es_, st);
 
     const auto duration = secs_elapsed - st.get_elapsed();
 
-    single_values["TIMESTEP"] = duration;
-    st.update("TIMESTEP", this->es_.get().getUnits().from_si(Opm::UnitSystem::measure::time, duration));
+    auto single_values = (values.single_values != nullptr)
+        ? *values.single_values
+        : DynamicSimulatorState::GlobalProcessParameters{};
+
+    single_values.insert_or_assign("TIMESTEP", duration);
+
+    st.update("TIMESTEP", this->es_.get().getUnits()
+              .from_si(Opm::UnitSystem::measure::time, duration));
 
     const Evaluator::InputData input {
-        this->es_, this->sched_, this->grid_, this->regCache_, initial_inplace
+        this->es_, this->sched_, this->grid_, this->regCache_,
+        values.inplace.initial
     };
 
+    const auto& well_solution = (values.well_solution != nullptr)
+        ? *values.well_solution : data::Wells{};
+
+    const auto& wbp = (values.wbp != nullptr)
+        ? *values.wbp : data::WellBlockAveragePressures{};
+
+    const auto& group_and_nwrk_solution = (values.group_and_nwrk_solution != nullptr)
+        ? *values.group_and_nwrk_solution : data::GroupAndNetworkValues{};
+
+    const auto& inplace = (values.inplace.current != nullptr)
+        ? *values.inplace.current : Inplace{};
+
+    const auto& region_values = (values.region_values != nullptr)
+        ? *values.region_values : DynamicSimulatorState::RegionParameters{};
+
+    const auto& block_values = (values.block_values != nullptr)
+        ? *values.block_values : DynamicSimulatorState::BlockValues{};
+
+    const auto& aquifer_values = (values.aquifer_values != nullptr)
+        ? *values.aquifer_values : data::Aquifers{};
+
+    const auto& interreg_flows = (values.interreg_flows != nullptr)
+        ? *values.interreg_flows : DynamicSimulatorState::InterRegFlowValues{};
+
     const Evaluator::SimulatorResults simRes {
-        well_solution, wbp, grp_nwrk_solution, single_values, inplace,
-        region_values, block_values, aquifer_values, interreg_flows
+        well_solution,
+        wbp,
+        group_and_nwrk_solution,
+        single_values,
+        inplace,
+        region_values,
+        block_values,
+        aquifer_values,
+        interreg_flows
     };
 
     for (auto& evalPtr : this->outputParameters_.getEvaluators()) {
@@ -5706,19 +5742,10 @@ Summary::Summary(SummaryConfig&       sumcfg,
     : pImpl_ { std::make_unique<SummaryImplementation>(sumcfg, es, grid, sched, basename, writeEsmry) }
 {}
 
-void Summary::eval(SummaryState&                          st,
-                   const int                              report_step,
-                   const double                           secs_elapsed,
-                   const data::Wells&                     well_solution,
-                   const data::WellBlockAveragePressures& wbp,
-                   const data::GroupAndNetworkValues&     grp_nwrk_solution,
-                   const GlobalProcessParameters&         single_values,
-                   const std::optional<Inplace>&          initial_inplace,
-                   const Inplace&                         inplace,
-                   const RegionParameters&                region_values,
-                   const BlockValues&                     block_values,
-                   const Opm::data::Aquifers&             aquifer_values,
-                   const InterRegFlowValues&              interreg_flows) const
+void Summary::eval(const int                    report_step,
+                   const double                 secs_elapsed,
+                   const DynamicSimulatorState& values,
+                   SummaryState&                st) const
 {
     // Report_step is the one-based sequence number of the containing report.
     // Report_step = 0 for the initial condition, before simulation starts.
@@ -5731,14 +5758,7 @@ void Summary::eval(SummaryState&                          st,
     // wells, groups, connections &c in the Schedule object.
     const auto sim_step = std::max(0, report_step - 1);
 
-    auto process_values = single_values;
-
-    this->pImpl_->eval(sim_step, secs_elapsed,
-                       well_solution, wbp, grp_nwrk_solution,
-                       std::move(process_values),
-                       initial_inplace, inplace,
-                       region_values, block_values,
-                       aquifer_values, interreg_flows, st);
+    this->pImpl_->eval(sim_step, secs_elapsed, values, st);
 }
 
 void Summary::add_timestep(const SummaryState& st,
