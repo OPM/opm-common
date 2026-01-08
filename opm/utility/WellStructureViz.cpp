@@ -37,6 +37,8 @@ void writeWellStructure(const std::string& well_name,
         throw std::runtime_error("Outputting well segment structure failed. Could not open '" + filename + "'.");
     }
 
+    os << "// Convert output to PDF with 'dot -Tpdf " << well_name << ".gv -o " << well_name << ".pdf'\n";
+
     os << "strict digraph \"" << well_name << "\"\n{\n";
     os << "    rankdir=BT;\n";
     os << "    node [style=filled];\n";
@@ -82,8 +84,8 @@ void writeWellStructure(const std::string& well_name,
         if (conn.attachedToSegment()) {
             const int seg_id = conn.segment();
             const std::string conn_node = "conn_" + std::to_string(conn.global_index());
-            os << "    " << conn_node << " [label=\"(" << conn.getI() << "," << conn.getJ() << ","
-               << conn.getK() << ")\""
+            os << "    " << conn_node << " [label=\"(" << conn.getI() + 1 << "," << conn.getJ() + 1 << ","
+               << conn.getK() + 1 << ")\""
                << ", shape=ellipse, fillcolor=lightgreen, style=filled];\n"
                << "    " << conn_node << " -> " << seg_id << ";\n";
         }

@@ -843,6 +843,7 @@ if(ENABLE_ECL_INPUT)
     examples/opmi.cpp
     examples/opmpack.cpp
     examples/opmhash.cpp
+    examples/plot_ms_wells.cpp
     examples/rst_deck.cpp
     examples/wellgraph.cpp
     examples/networkgraph.cpp
