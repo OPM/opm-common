@@ -43,10 +43,12 @@ EGrid::EGrid(const std::string& filename, const std::string& grid_name)
 {
     initFileName = inputFileName.parent_path() / inputFileName.stem();
 
-    if (this->formattedInput())
+    if (this->formattedInput()) {
         initFileName += ".FINIT";
-    else
+    }
+    else {
         initFileName += ".INIT";
+    }
 
     std::string lgrname = "global";
 
@@ -61,116 +63,128 @@ EGrid::EGrid(const std::string& filename, const std::string& grid_name)
 
     int hostnum_index = -1;
 
-    for (size_t n = 0; n < array_name.size(); n++) {
+    auto parse_lgr = [this, &hostnum_index](const std::size_t n)
+    {
+        if (array_name[n] == "GRIDHEAD") {
+            const auto& gridhead = get<int>(n);
+            nijk[0] = gridhead[1];
+            nijk[1] = gridhead[2];
+            nijk[2] = gridhead[3];
 
-        if (array_name[n] == "ENDLGR")
+            numres = (gridhead.size() > 24)
+                ? gridhead[24] : 1;
+
+            m_radial = gridhead.size() > 26 && gridhead[26] > 0;
+        }
+        else if (array_name[n] == "COORD") {
+            coord_array_index = n;
+        }
+        else if (array_name[n] == "COORDSYS") {
+            coordsys_array_index = n;
+        }
+        else if (array_name[n] == "ZCORN") {
+            zcorn_array_index = n;
+        }
+        else if (array_name[n] == "ACTNUM") {
+            actnum_array_index= n;
+        }
+        else if (array_name[n] == "NNC1") {
+            nnc1_array_index = n;
+        }
+        else if (array_name[n] == "NNC2") {
+            nnc2_array_index = n;
+        }
+        else if (array_name[n] == "HOSTNUM") {
+            hostnum_index = n;
+        }
+        else {
+            return false;
+        }
+
+        return true;
+    };
+
+    for (std::size_t n = 0; n < array_name.size(); n++) {
+        if (lgrname == grid_name && parse_lgr(n)) {
+            continue;
+        }
+        else if (array_name[n] == "ENDLGR") {
             lgrname = "global";
-
-        if (array_name[n] == "LGR") {
+        }
+        else if (array_name[n] == "LGR") {
             auto lgr = this->get<std::string>(n);
             lgrname = lgr[0];
             lgr_names.push_back(lgr[0]);
         }
-
-        if (array_name[n] == "NNCHEAD"){
+        else if (array_name[n] == "NNCHEAD") {
             auto nnchead = this->get<int>(n);
-
-            if (nnchead[1] == 0)
-               lgrname = "global";
-            else
-               lgrname = lgr_names[nnchead[1] - 1];
+            lgrname = nnchead[1] == 0 ? "global" : lgr_names[nnchead[1] - 1];
         }
-
-        if (array_name[n] == "MAPUNITS"){
+        else if (array_name[n] == "MAPUNITS") {
             auto mapunits = this->get<std::string>(n);
             m_mapunits = mapunits[0];
-            if (m_mapunits == "METRES")
+            if (m_mapunits == "METRES") {
                 length_factor = 1.0;
-            else if (m_mapunits == "FEET")
+            }
+            else if (m_mapunits == "FEET") {
                 length_factor = 0.3048;
-            else if (m_mapunits == "CM")
+            }
+            else if (m_mapunits == "CM") {
                 length_factor = 0.01;
-            else{
+            }
+            else {
                 std::string message = "Unit system " + m_mapunits + " not supported for MAPUNITS";
                 OPM_THROW(std::invalid_argument, message);
             }
         }
-
-        if (array_name[n] == "MAPAXES"){
+        else if (array_name[n] == "MAPAXES") {
             const auto& mapAx = this->get<float>(n);
             std::transform(mapAx.begin(), mapAx.end(), this->m_mapaxes.begin(),
                            [length_factor](const float elm) { return elm * length_factor; });
             mapaxes_init();
             m_mapaxes_loaded = true;
         }
-
-        if (lgrname == grid_name) {
-            if (array_name[n] == "GRIDHEAD") {
-                auto gridhead = get<int>(n);
-                nijk[0] = gridhead[1];
-                nijk[1] = gridhead[2];
-                nijk[2] = gridhead[3];
-
-                numres = (gridhead.size() > 24)
-                    ? gridhead[24] : 1;
-
-                m_radial = (gridhead.size() > 26)
-                    && (gridhead[26] > 0);
-            }
-
-            if (array_name[n] == "COORD")
-                coord_array_index = n;
-            else if (array_name[n] == "COORDSYS")
-                coordsys_array_index = n;
-            else if (array_name[n] == "ZCORN")
-                zcorn_array_index = n;
-            else if (array_name[n] == "ACTNUM")
-                actnum_array_index= n;
-            else if (array_name[n] == "NNC1")
-                nnc1_array_index = n;
-            else if (array_name[n] == "NNC2")
-                nnc2_array_index = n;
-            else if (array_name[n] == "HOSTNUM")
-                hostnum_index = n;
-        }
-
-        if ((lgrname == "global") && (array_name[n] == "GRIDHEAD")) {
+        else if ((lgrname == "global") && (array_name[n] == "GRIDHEAD")) {
             auto gridhead = get<int>(n);
             host_nijk[0] = gridhead[1];
             host_nijk[1] = gridhead[2];
             host_nijk[2] = gridhead[3];
         }
-
     }
 
-    if (coordsys_array_index == -1){
-        for (int l = 0; l < nijk[2]; l ++)
+    if (coordsys_array_index == -1) {
+        for (int l = 0; l < nijk[2]; ++l) {
             res[l] = 0;
-    } else {
-        auto coordsys = get<int>(coordsys_array_index);
+        }
+    }
+    else {
+        const auto& coordsys = get<int>(coordsys_array_index);
 
-        for (int r = 0; r < numres; r++){
+        for (int r = 0; r < numres; ++r) {
             int l1 = coordsys[r*6 + 0];
             int l2 = coordsys[r*6 + 1];
 
-            for (int l = l1 -1; l < l2; l++)
+            for (int l = l1 - 1; l < l2; ++l) {
                 res[l] = r;
+            }
         }
     }
 
     if (actnum_array_index != -1) {
         auto actnum = this->get<int>(actnum_array_index);
         nactive = 0;
-        for (size_t i = 0; i < actnum.size(); i++) {
+        for (size_t i = 0; i < actnum.size(); ++i) {
             if (actnum[i] > 0) {
                 act_index.push_back(nactive);
                 glob_index.push_back(i);
                 nactive++;
-            } else {
+            }
+            else {
                act_index.push_back(-1);
             }
         }
-    } else {
+    }
+    else {
         int nCells = nijk[0] * nijk[1] * nijk[2];
         act_index.resize(nCells);
         glob_index.resize(nCells);
@@ -178,16 +192,13 @@ EGrid::EGrid(const std::string& filename, const std::string& grid_name)
         std::iota(glob_index.begin(), glob_index.end(), 0);
     }
 
-    if (hostnum_index > -1){
+    if (hostnum_index > -1) {
         auto hostnum = getImpl(hostnum_index, INTE, inte_array, "integer");
         host_cells.reserve(hostnum.size());
 
         std::transform(hostnum.begin(), hostnum.end(),
                        std::back_inserter(host_cells),
-                       [](const auto& val)
-                       {
-                           return val - 1;
-                       });
+                       [](const auto& val) { return val - 1; });
     }
 }
 
