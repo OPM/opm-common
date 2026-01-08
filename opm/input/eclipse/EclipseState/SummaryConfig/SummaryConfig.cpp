@@ -1101,7 +1101,7 @@ establishRegionContext(const DeckKeyword&       keyword,
 {
     auto region_name = std::string { "FIPNUM" };
 
-    if (keyword.name().size() > 5) {
+    if (keyword.name().size() > 5 && keyword.name().substr(0, 2) != "RT") {
         region_name = "FIP" + keyword.name().substr(5, 3);
 
         if (! field_props.has_int(region_name)) {
