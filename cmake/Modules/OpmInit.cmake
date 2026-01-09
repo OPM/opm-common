@@ -41,6 +41,11 @@ macro(OpmSetPolicies)
   if(POLICY CMP0074)
     cmake_policy(SET CMP0074 NEW)
   endif()
+
+  # de-duplicates libraries for capable linkers (Apple ld64, lld, MSVC)
+  if(POLICY CMP0156)
+    cmake_policy(SET CMP0156 NEW)
+  endif()
 endmacro()
 
 
