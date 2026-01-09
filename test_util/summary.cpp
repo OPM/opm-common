@@ -23,6 +23,7 @@
 #include <algorithm>
 #include <cmath>
 #include <filesystem>
+#include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <memory>
@@ -44,23 +45,26 @@ static void printHelp() {
     std::cout << "\nsummary needs a minimum of two arguments. First is smspec filename and then list of vectors  \n"
               << "\nIn addition, the program takes these options (which must be given before the arguments):\n\n"
               << "-h Print help and exit.\n"
+              << "-o Write output to given file instead of stdout.\n"
               << "-l list all summary vectors.\n"
               << "-n print summary vectors without headers.\n"
               << "-r extract data only for report steps. \n\n";
 }
 
-void printHeader(const std::vector<std::string>& keyList, const std::vector<int>& width){
-
-    std::cout << std::endl;
+void printHeader(std::ostream& os,
+                 const std::vector<std::string>& keyList,
+                 const std::vector<int>& width)
+{
+    os << std::endl;
 
     for (size_t n= 0; n < keyList.size(); n++){
         if (width[n] < 14)
-            std::cout << std::setw(16) << keyList[n];
+            os << std::setw(16) << keyList[n];
         else
-            std::cout << std::setw(width[n] + 2) << keyList[n];
+            os << std::setw(width[n] + 2) << keyList[n];
     }
 
-    std::cout << std::endl;
+    os << std::endl;
 }
 
 std::string formatString(float data, int width){
@@ -87,8 +91,9 @@ int main(int argc, char **argv) {
     bool reportStepsOnly           = false;
     bool listKeys                  = false;
     bool headers                   = true;
+    std::string output;
 
-    while ((c = getopt(argc, argv, "hrnl")) != -1) {
+    while ((c = getopt(argc, argv, "hrnlo:")) != -1) {
         switch (c) {
         case 'h':
             printHelp();
@@ -101,6 +106,9 @@ int main(int argc, char **argv) {
             break;
         case 'l':
             listKeys=true;
+            break;
+        case 'o':
+            output=optarg;
             break;
         default:
             return EXIT_FAILURE;
@@ -138,6 +146,16 @@ int main(int argc, char **argv) {
         throw std::runtime_error("invalid input file for summary");
     }
 
+    std::ofstream of;
+    if (!output.empty()) {
+        of.open(output, std::ios_base::trunc);
+        if (!of) {
+            throw std::runtime_error("Error opening specified output file");
+        }
+    }
+
+    std::ostream& os = output.empty() ? std::cout : of;
+
     if (listKeys){
         std::vector<std::string> list;
 
@@ -147,14 +165,14 @@ int main(int argc, char **argv) {
         }
 
         for (size_t n = 0; n < list.size(); n++){
-            std::cout << std::setw(20) << list[n];
+            os << std::setw(20) << list[n];
 
             if (((n+1) % 5)==0){
-                std::cout << std::endl;
+                os << std::endl;
             }
         }
 
-        std::cout << std::endl;
+        os << std::endl;
 
         return 0;
     }
@@ -188,8 +206,8 @@ int main(int argc, char **argv) {
             }
 
             if (list.size()==0) {
-                std::string message = "Key " + std::string(argv[i+argOffset+1]) + " not found in summary file " + filename;
-                std::cout << "\n!Runtime Error \n >> " << message << "\n\n";
+                const std::string message = "Key " + std::string(argv[i+argOffset+1]) + " not found in summary file " + filename;
+                std::cerr << "\n!Runtime Error \n >> " << message << "\n\n";
                 return EXIT_FAILURE;
             }
 
@@ -198,8 +216,8 @@ int main(int argc, char **argv) {
     }
 
     if (smryList.size()==0){
-        std::string message = "No summary keys specified on command line";
-        std::cout << "\n!Runtime Error \n >> " << message << "\n\n";
+        const std::string message = "No summary keys specified on command line";
+        std::cerr << "\n!Runtime Error \n >> " << message << "\n\n";
         return EXIT_FAILURE;
     }
 
@@ -225,20 +243,20 @@ int main(int argc, char **argv) {
     }
 
     if (headers)
-        printHeader(smryList, width);
+        printHeader(os, smryList, width);
 
     for (size_t s=0; s<smryData[0].size(); s++){
         for (size_t n=0; n < smryData.size(); n++){
             if (headers)
-                std::cout << formatString(smryData[n][s], width[n]);
+                os << formatString(smryData[n][s], width[n]);
             else
-                std::cout << std::scientific << std::setprecision(8) << smryData[n][s] << " ";
+                os << std::scientific << std::setprecision(8) << smryData[n][s] << " ";
         }
-        std::cout << std::endl;
+        os << std::endl;
     }
 
     if (headers)
-        std::cout << std::endl;
+        os << std::endl;
 
     return 0;
 }
