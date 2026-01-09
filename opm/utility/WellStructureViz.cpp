@@ -37,7 +37,8 @@ void writeWellStructure(const std::string& well_name,
         throw std::runtime_error("Outputting well segment structure failed. Could not open '" + filename + "'.");
     }
 
-    os << "// Convert output to PDF with 'dot -Tpdf " << well_name << ".gv -o " << well_name << ".pdf'\n";
+    os << "// Convert output to PDF or PNG with 'dot -Tpdf " << well_name << ".gv -o " << well_name << ".pdf'"
+       << " or 'dot -Tpng " << well_name << ".gv -o " << well_name << ".png'\n";
 
     os << "strict digraph \"" << well_name << "\"\n{\n";
     os << "    rankdir=BT;\n";

@@ -17,8 +17,6 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <filesystem>
-#include <fstream>
 #include <iostream>
 #include <sstream>
 
@@ -44,7 +42,7 @@
 
 inline void createDot(const Opm::Schedule& schedule)
 {
-    // the following is up to adjustment
+    // the following is up to adjustment to specify the report step or specific wells
     for (const auto& wellname : schedule.wellNames()) {
         const auto& well = schedule.getWellatEnd(wellname);
         if (well.isMultiSegment()) {
@@ -52,7 +50,8 @@ inline void createDot(const Opm::Schedule& schedule)
             const auto& connections = well.getConnections();
             writeWellStructure(wellname, segments, connections);
             std::cout << "Wrote well structure for well '" << wellname << "' to file '" << wellname << ".gv'.\n";
-            std::cout << "Convert output to PDF with 'dot -Tpdf " << wellname << ".gv -o " << wellname << ".pdf'\n";
+            std::cout << "Convert output to PDF or PNG with 'dot -Tpdf " << wellname << ".gv -o " << wellname << ".pdf'"
+                      << " or 'dot -Tpng " << wellname << ".gv -o " << wellname << ".png'\n";
         }
     }
 }
