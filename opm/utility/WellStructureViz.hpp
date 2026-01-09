@@ -25,10 +25,11 @@
 namespace Opm {
 class WellSegments;
 class WellConnections;
-} // namespace Opm
 
 void writeWellStructure(const std::string& well_name,
-                        const Opm::WellSegments& segments,
-                        const Opm::WellConnections& connections);
+                        const WellSegments& segments,
+                        const WellConnections& connections);
+
+} // namespace Opm
 
 #endif // OPM_WELLSTRUCTUREVIZ_HPP

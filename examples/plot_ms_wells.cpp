@@ -48,7 +48,7 @@ inline void createDot(const Opm::Schedule& schedule)
         if (well.isMultiSegment()) {
             const auto& segments = well.getSegments();
             const auto& connections = well.getConnections();
-            writeWellStructure(wellname, segments, connections);
+            Opm::writeWellStructure(wellname, segments, connections);
             std::cout << "Wrote well structure for well '" << wellname << "' to file '" << wellname << ".gv'.\n";
             std::cout << "Convert output to PDF or PNG with 'dot -Tpdf " << wellname << ".gv -o " << wellname << ".pdf'"
                       << " or 'dot -Tpng " << wellname << ".gv -o " << wellname << ".png'\n";

@@ -26,9 +26,11 @@
 #include <fstream>
 #include <string>
 
+namespace Opm
+{
 void writeWellStructure(const std::string& well_name,
-                        const Opm::WellSegments& segments,
-                        const Opm::WellConnections& connections)
+                        const WellSegments& segments,
+                        const WellConnections& connections)
 {
     const std::string filename = well_name + ".gv";
     std::ofstream os(filename);
@@ -109,3 +111,5 @@ void writeWellStructure(const std::string& well_name,
 
     os << "}\n";
 }
+
+} // namespace Opm
