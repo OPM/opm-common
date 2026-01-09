@@ -26,6 +26,8 @@
 #include <fstream>
 #include <string>
 
+#include <fmt/format.h>
+
 namespace Opm
 {
 void writeWellStructure(const std::string& well_name,
@@ -36,19 +38,17 @@ void writeWellStructure(const std::string& well_name,
     std::ofstream os(filename);
 
     if (!os) {
-        throw std::runtime_error("Outputting well segment structure failed. Could not open '" + filename + "'.");
+        throw std::runtime_error(fmt::format("Outputting well segment structure failed. Could not open '{}'.", filename));
     }
 
-    os << "// Convert output to PDF or PNG with 'dot -Tpdf " << well_name << ".gv -o " << well_name << ".pdf'"
-       << " or 'dot -Tpng " << well_name << ".gv -o " << well_name << ".png'\n";
+    os << fmt::format("// Convert output to PDF or PNG with 'dot -Tpdf {0}.gv -o {0}.pdf' or 'dot -Tpng {0}.gv -o {0}.png'\n", well_name);
 
-    os << "strict digraph \"" << well_name << "\"\n{\n";
+    os << fmt::format("strict digraph \"{}\"\n{{\n", well_name);
     os << "    rankdir=BT;\n";
     os << "    node [style=filled];\n";
 
     // Well name
-    os << "    0 [label=\"" << well_name << "\""
-       << ", shape=doublecircle, fillcolor=lightgrey];\n";
+    os << fmt::format("    0 [label=\"{}\", shape=doublecircle, fillcolor=lightgrey];\n", well_name);
     for (const auto& segment : segments) {
         const int id = segment.segmentNumber();
         const int outlet = segment.outletSegment();
@@ -74,23 +74,22 @@ void writeWellStructure(const std::string& well_name,
             color = "ivory";
         }
 
-        os << "    " << id << " [label=\"Seg " << id << "\\n(Branch " << branch << ")\""
-           << ", shape=" << shape << ", fillcolor=" << color << "];\n";
+        os << fmt::format("    {} [label=\"Seg {}\\n(Branch {})\", shape={}, fillcolor={}];\n",
+                  id, id, branch, shape, color);
 
         // pointing to outlet segment
         assert(outlet >= 0);
-        os << "    " << id << " -> " << outlet << ";\n";
+        os << fmt::format("    {} -> {};\n", id, outlet);
     }
 
     // Add connections to the graph
     for (const auto& conn : connections) {
         if (conn.attachedToSegment()) {
             const int seg_id = conn.segment();
-            const std::string conn_node = "conn_" + std::to_string(conn.global_index());
-            os << "    " << conn_node << " [label=\"(" << conn.getI() + 1 << "," << conn.getJ() + 1 << ","
-               << conn.getK() + 1 << ")\""
-               << ", shape=ellipse, fillcolor=lightgreen, style=filled];\n"
-               << "    " << conn_node << " -> " << seg_id << ";\n";
+            const std::string conn_node = fmt::format("conn_{}", conn.global_index());
+            os << fmt::format("    {} [label=\"({},{},{})\", shape=ellipse, fillcolor=lightgreen, style=filled];\n",
+                  conn_node, conn.getI() + 1, conn.getJ() + 1, conn.getK() + 1);
+            os << fmt::format("    {} -> {};\n", conn_node, seg_id);
         }
     }
 

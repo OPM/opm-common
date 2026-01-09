@@ -40,6 +40,8 @@
 
 #include <opm/utility/WellStructureViz.hpp>
 
+#include <fmt/format.h>
+
 inline void createDot(const Opm::Schedule& schedule)
 {
     // the following is up to adjustment to specify the report step or specific wells
@@ -49,9 +51,8 @@ inline void createDot(const Opm::Schedule& schedule)
             const auto& segments = well.getSegments();
             const auto& connections = well.getConnections();
             Opm::writeWellStructure(wellname, segments, connections);
-            std::cout << "Wrote well structure for well '" << wellname << "' to file '" << wellname << ".gv'.\n";
-            std::cout << "Convert output to PDF or PNG with 'dot -Tpdf " << wellname << ".gv -o " << wellname << ".pdf'"
-                      << " or 'dot -Tpng " << wellname << ".gv -o " << wellname << ".png'\n";
+            std::cout << fmt::format("Wrote well structure for well '{0}' to file '{0}.gv'.\n", wellname);
+            std::cout << fmt::format("Convert output to PDF or PNG with 'dot -Tpdf {0}.gv -o {0}.pdf' or 'dot -Tpng {0}.gv -o {0}.png'\n", wellname);
         }
     }
 }
@@ -66,8 +67,7 @@ inline Opm::Schedule loadSchedule(const std::string& deck_file)
     Opm::Parser parser;
     auto python = std::make_shared<Opm::Python>();
 
-    std::cout << "Loading and parsing deck: " << deck_file << " ..... ";
-    std::cout.flush();
+    std::cout << fmt::format("Loading and parsing deck: {} ..... ", deck_file);  std::cout.flush();
     auto deck = parser.parseFile(deck_file, parseContext, errors);
     std::cout << "complete.\n";
 
@@ -95,9 +95,9 @@ int main(int argc, char** argv)
             createDot(sched);
         }
     } catch (const std::exception& e) {
-        std::cout << "\n\n***** Caught an exception: " << e.what() << std::endl;
-        std::cout << "\n\n***** Printing log: "<< std::endl;
-        std::cout << os.str();
-        std::cout << "\n\n***** Exiting due to errors." << std::endl;
+        std::cerr << "\n\n***** Caught an exception: " << e.what() << std::endl;
+        std::cerr << "\n\n***** Printing log: "<< std::endl;
+        std::cerr << os.str();
+        std::cerr << "\n\n***** Exiting due to errors." << std::endl;
     }
 }
