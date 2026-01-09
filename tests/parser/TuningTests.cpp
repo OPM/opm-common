@@ -393,3 +393,122 @@ BOOST_AUTO_TEST_CASE(TuningTest)
       BOOST_CHECK_EQUAL(NEWTMX, 13);
   }
 }
+
+const std::string& deckWithTUNINGDP = R"(
+START
+    1 JAN 2026 /
+
+SCHEDULE
+TSTEP
+    1 2 /
+
+TUNINGDP
+/
+
+TSTEP
+    3 4 /
+
+TUNINGDP
+    0.025 0.125 10.0 20.0 /
+
+TSTEP
+    5 6 /
+
+TUNINGDP
+    1* 1* 15.0 1* /
+
+TSTEP
+    7 8 /
+
+TUNINGDP
+    1* 1* 1* 25.0 /
+)";
+
+BOOST_AUTO_TEST_CASE(TuningDpTest)
+{
+    // Set up deck with schedule
+    const auto deck = createDeck(deckWithTUNINGDP);
+    EclipseGrid grid(10,10,10);
+    TableManager table ( deck );
+    FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
+    Runspec runspec (deck);
+    const Schedule schedule {
+        deck, grid, fp, NumericalAquifers{},
+        runspec, std::make_shared<Python>()
+    };
+
+    // TUNINGDP_CHANGE events checks
+    {
+        for (std::size_t timestep = 1; timestep < 9; ++timestep) {
+            const auto& event = schedule[timestep].events();
+            bool tuning_change = event.hasEvent(ScheduleEvents::TUNINGDP_CHANGE);
+            bool expected_tuning_change = (timestep % 2 == 0);  // even time steps have tuning changes
+            BOOST_CHECK_MESSAGE(tuning_change == expected_tuning_change,
+                                "Unexpected TUNINGDP_CHANGE event = " << tuning_change << " for time step "
+                                << timestep);
+        }
+    }
+
+    // Test tolerance
+    const double tol = 1e-6;
+
+    // TIMESTEP 1:
+    {
+        // Check that values when TUNINGDP is not set
+        // For TRGLCV and XXXLCV defaults are equal to TUNING defaults, while TRGDDP and TRGDDS are 0.0
+        const std::size_t timestep = 1;
+        const auto& tuning_dp = schedule[timestep].tuning_dp();
+        const auto& tuning = schedule[timestep].tuning();
+
+        BOOST_CHECK_CLOSE(tuning_dp.TRGLCV, tuning.TRGLCV , tol);
+        BOOST_CHECK_CLOSE(tuning_dp.XXXLCV, tuning.XXXLCV, tol);
+        BOOST_CHECK_CLOSE(tuning_dp.TRGDDP, 0.0 * Metric::Pressure, tol);
+        BOOST_CHECK_CLOSE(tuning_dp.TRGDDS, 0.0, tol);
+    }
+
+    // TIMESTEP 2
+    {
+        // Check defaults when TUNINGDP is set but defaulted in the deck, which should be the defaults set in TUNINGDP
+        // keyword
+        const std::size_t timestep = 2;
+        const auto& tuning_dp = schedule[timestep].tuning_dp();
+
+        BOOST_CHECK_CLOSE(tuning_dp.TRGLCV, 0.00001, tol);
+        BOOST_CHECK_CLOSE(tuning_dp.XXXLCV, 0.001, tol);
+        BOOST_CHECK_CLOSE(tuning_dp.TRGDDP, 1.0 * Metric::Pressure, tol);
+        BOOST_CHECK_CLOSE(tuning_dp.TRGDDS, 0.01, tol);
+    }
+
+    // TIMESTEP 4:
+    {
+        const std::size_t timestep = 4;
+        const auto& tuning_dp = schedule[timestep].tuning_dp();
+
+        BOOST_CHECK_CLOSE(tuning_dp.TRGLCV, 0.025, tol);
+        BOOST_CHECK_CLOSE(tuning_dp.XXXLCV, 0.125, tol);
+        BOOST_CHECK_CLOSE(tuning_dp.TRGDDP, 10.0 * Metric::Pressure, tol);
+        BOOST_CHECK_CLOSE(tuning_dp.TRGDDS, 20.0, tol);
+    }
+
+    // TIMESTEP 6:
+    {
+        const std::size_t timestep = 6;
+        const auto& tuning_dp = schedule[timestep].tuning_dp();
+
+        BOOST_CHECK_CLOSE(tuning_dp.TRGLCV, 0.025, tol);
+        BOOST_CHECK_CLOSE(tuning_dp.XXXLCV, 0.125, tol);
+        BOOST_CHECK_CLOSE(tuning_dp.TRGDDP, 15.0 * Metric::Pressure, tol);
+        BOOST_CHECK_CLOSE(tuning_dp.TRGDDS, 20.0, tol);
+    }
+
+    // TIMESTEP 8:
+    {
+        const std::size_t timestep = 8;
+        const auto& tuning_dp = schedule[timestep].tuning_dp();
+
+        BOOST_CHECK_CLOSE(tuning_dp.TRGLCV, 0.025, tol);
+        BOOST_CHECK_CLOSE(tuning_dp.XXXLCV, 0.125, tol);
+        BOOST_CHECK_CLOSE(tuning_dp.TRGDDP, 15.0 * Metric::Pressure, tol);
+        BOOST_CHECK_CLOSE(tuning_dp.TRGDDS, 25.0, tol);
+    }
+}
