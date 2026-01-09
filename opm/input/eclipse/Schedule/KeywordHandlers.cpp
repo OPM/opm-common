@@ -333,6 +333,44 @@ void handleTUNING(HandlerContext& handlerContext)
     handlerContext.state().events().addEvent(ScheduleEvents::TUNING_CHANGE);
 }
 
+void handleTUNINGDP(HandlerContext& handlerContext)
+{
+    // Get TUNINGDP state and records
+    auto tuning_dp = handlerContext.state().tuning_dp();
+    const auto& record = handlerContext.keyword.getRecord(0);
+
+    // Update defaults if first time handling TUNINGDP
+    if (!tuning_dp.defaults_updated) {
+        tuning_dp.set_defaults();
+    }
+
+    // Local helpers
+    auto nondefault_or_previous_double = [](const Opm::DeckRecord& rec, const std::string& item_name, double previous_value) {
+        const auto& deck_item = rec.getItem(item_name);
+        return deck_item.defaultApplied(0) ? previous_value : rec.getItem(item_name).get< double >(0);
+    };
+
+    auto nondefault_or_previous_sidouble = [](const Opm::DeckRecord& rec, const std::string& item_name, double previous_value) {
+        const auto& deck_item = rec.getItem(item_name);
+        return deck_item.defaultApplied(0) ? previous_value : rec.getItem(item_name).getSIDouble(0);
+    };
+
+    // Parse records
+    // NOTE: TRGLCV and XXXLCV are the same as in TUNING and must be parsed the same way
+    tuning_dp.TRGLCV = nondefault_or_previous_double(record, "TRGLCV", tuning_dp.TRGLCV);
+    tuning_dp.XXXLCV = nondefault_or_previous_double(record, "XXXLCV", tuning_dp.XXXLCV);
+    tuning_dp.TRGDDP = nondefault_or_previous_sidouble(record, "TRGDDP", tuning_dp.TRGDDP);
+    tuning_dp.TRGDDS = nondefault_or_previous_double(record, "TRGDDS", tuning_dp.TRGDDS);
+
+    // See handleTUNING for TRGLCV_has_value and XXXLCV_has_value
+    tuning_dp.TRGLCV_has_value = !record.getItem("TRGLCV").defaultApplied(0);
+    tuning_dp.XXXLCV_has_value = !record.getItem("XXXLCV").defaultApplied(0);
+
+    // Update state and events
+    handlerContext.state().update_tuning_dp( std::move(tuning_dp) );
+    handlerContext.state().events().addEvent(ScheduleEvents::TUNINGDP_CHANGE);
+}
+
 void handleVFPINJ(HandlerContext& handlerContext)
 {
     auto table = VFPInjTable(handlerContext.keyword,
@@ -391,6 +429,7 @@ KeywordHandlers::KeywordHandlers()
         { "SOURCE",   &handleSource },
         { "SUMTHIN" , &handleSUMTHIN    },
         { "TUNING"  , &handleTUNING     },
+        { "TUNINGDP", &handleTUNINGDP   },
         { "VFPINJ"  , &handleVFPINJ     },
         { "VFPPROD" , &handleVFPPROD    },
     }
