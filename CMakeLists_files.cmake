@@ -866,6 +866,7 @@ if(ENABLE_ECL_INPUT)
     examples/make_esmry.cpp
     examples/co2brinepvt.cpp
     examples/hysteresis.cpp
+    examples/plot_ms_wells.cpp
   )
 endif()
 

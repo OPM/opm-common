@@ -82,9 +82,38 @@ inline Opm::Schedule loadSchedule(const std::string& deck_file)
     return schedule;
 }
 
+void print_help_and_exit()
+{
+    const char *help_text = R"(Usage: plot_ms_wells <deck_file> [deck_file ...]
+
+Description:
+  Reads reservoir simulation deck(s), parses Multi-Segment Well (MSW) structures,
+  and generates Graphviz (.gv) files for each multi-segment well for visualization.
+  Each .gv file can be converted to PDF or PNG using Graphviz tools (e.g. dot).
+
+Options:
+  -h, --help    Display this help message and exit.
+
+Example:
+  plot_ms_wells MSW.DATA
+)";
+    std::cerr << help_text;
+}
+
 
 int main(int argc, char** argv)
 {
+
+    if (argc < 2) {
+        print_help_and_exit();
+        std::exit(EXIT_FAILURE);
+    }
+
+    const std::string arg1 = argv[1];
+    if (arg1 == "-h" || arg1 == "--help") {
+        print_help_and_exit();
+        std::exit(EXIT_SUCCESS);
+    }
     std::ostringstream os;
     std::shared_ptr<Opm::StreamLog> string_log = std::make_shared<Opm::StreamLog>(os, Opm::Log::DefaultMessageTypes);
     Opm::OpmLog::addBackend( "STRING" , string_log);
