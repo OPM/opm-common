@@ -471,6 +471,7 @@ if(ENABLE_ECL_OUTPUT)
           opm/output/eclipse/WriteRFT.cpp
           opm/output/eclipse/report/WellSpecification.cpp
           opm/utility/EModel.cpp
+          opm/utility/WellStructureViz.cpp
       )
 endif()
 
@@ -842,6 +843,7 @@ if(ENABLE_ECL_INPUT)
     examples/opmi.cpp
     examples/opmpack.cpp
     examples/opmhash.cpp
+    examples/plot_ms_wells.cpp
     examples/rst_deck.cpp
     examples/wellgraph.cpp
     examples/networkgraph.cpp
@@ -864,6 +866,7 @@ if(ENABLE_ECL_INPUT)
     examples/make_esmry.cpp
     examples/co2brinepvt.cpp
     examples/hysteresis.cpp
+    examples/plot_ms_wells.cpp
   )
 endif()
 
@@ -1608,6 +1611,7 @@ if(ENABLE_ECL_OUTPUT)
         opm/output/eclipse/report/WellSpecification.hpp
         opm/utility/CopyablePtr.hpp
         opm/utility/EModel.hpp
+        opm/utility/WellStructureViz.hpp
         )
 endif()
 
