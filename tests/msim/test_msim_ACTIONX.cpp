@@ -309,6 +309,41 @@ BOOST_AUTO_TEST_CASE(WELL_CLOSE_EXAMPLE) {
     }
 }
 
+BOOST_AUTO_TEST_CASE(ACTIONX_WWCTL) {
+#include "actionx_wwctl.include"
+
+    test_data td(actionx_wwctl);
+    msim sim(td.state, td.schedule);
+    {
+        WorkArea work_area("test_msim");
+        EclipseIO io(td.state, td.state.getInputGrid(), td.schedule, td.summary_config);
+        // Make sure the summary vector used by actionX is there.
+        sim.st.update("WWCTL:P1:2", .6);
+
+        sim.well_rate("P1", data::Rates::opt::oil, prod_opr);
+        sim.well_rate("P2", data::Rates::opt::oil, prod_opr);
+        sim.well_rate("P3", data::Rates::opt::oil, prod_opr);
+        sim.well_rate("P4", data::Rates::opt::oil, prod_opr);
+
+        sim.well_rate("P1", data::Rates::opt::wat, prod_wpr_P1);
+        sim.well_rate("P2", data::Rates::opt::wat, prod_wpr_P2);
+        sim.well_rate("P3", data::Rates::opt::wat, prod_wpr_P3);
+        sim.well_rate("P4", data::Rates::opt::wat, prod_wpr_P4);
+
+        sim.run(io, false);
+
+        const auto& base_name = td.state.getIOConfig().getBaseName();
+
+        const EclIO::ESmry ecl_sum(base_name + ".SMSPEC");
+
+        // Check that no summary keywords have been created
+        // THis is not really checking anything as msim never created those
+        BOOST_CHECK( !ecl_sum_has_general_var(ecl_sum, "WWCTL__1:P1") );
+        BOOST_CHECK( !ecl_sum_has_general_var(ecl_sum, "WWCTL_2:P1") );
+        BOOST_CHECK( !ecl_sum_has_general_var(ecl_sum, "WWCTL2:P1") );
+    }
+}
+
 BOOST_AUTO_TEST_CASE(UDQ_ASSIGN) {
 #include "actionx1.include"
 

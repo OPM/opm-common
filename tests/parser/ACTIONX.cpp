@@ -1772,6 +1772,23 @@ END
     BOOST_CHECK(result.matches().wells().asVector() == std::vector<std::string>{"P1"});
 }
 
+BOOST_AUTO_TEST_CASE(MatchingWellsConnectionQuant)
+{
+    std::vector<std::string> varnames{"WWCTL2", "WWCTL_2", "WWCTL__2"};
+    for(const auto& var: varnames)
+    {
+        Action::AST ast({var, "P1", ">", "0.1"});
+        auto st = SummaryState{ TimeService::now(), 0.0 };
+        Opm::WListManager wlm;
+
+        st.update("WWCTL:P1:2", .5);
+        Opm::Action::Context context(st, wlm);
+        auto result = ast.eval(context);
+        BOOST_CHECK(result.conditionSatisfied());
+        BOOST_CHECK(result.matches().wells().asVector() == std::vector<std::string>{"P1"});
+    }
+}
+
 BOOST_AUTO_TEST_CASE(MaxConditions)
 {
     const auto deck_string = std::string{ R"(

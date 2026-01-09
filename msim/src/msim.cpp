@@ -82,8 +82,9 @@ msim::msim(const EclipseState& state_arg, const Schedule& schedule_arg)
 {}
 
 
-void msim::run(EclipseIO& io, bool report_only)
+bool msim::run(EclipseIO& io, bool report_only)
 {
+    bool any_actions_applied = false;
     const double week = 7 * 86400;
 
     data::Solution sol;
@@ -107,13 +108,15 @@ void msim::run(EclipseIO& io, bool report_only)
         }
 
         const auto sim_time = TimeService::from_time_t(schedule.simTime(report_step));
-        post_step(sol, well_data, group_nwrk_data, report_step, sim_time);
+        auto action_applied = post_step(sol, well_data, group_nwrk_data, report_step, sim_time);
+        any_actions_applied = any_actions_applied || action_applied;
 
         const auto& exit_status = schedule.exitStatus();
         if (exit_status.has_value()) {
-            return;
+            return any_actions_applied;
         }
     }
+    return any_actions_applied;
 }
 
 
@@ -123,15 +126,16 @@ UDAValue msim::uda_val()
 }
 
 
-void msim::post_step(data::Solution& /* sol */,
+bool msim::post_step(data::Solution& /* sol */,
                      data::Wells& /* well_data */,
                      data::GroupAndNetworkValues& /* grp_nwrk_data */,
                      const size_t report_step,
                      const time_point& sim_time)
 {
+    bool action_applied = false;
     const auto& actions = this->schedule[report_step].actions.get();
     if (actions.empty()) {
-        return;
+        return action_applied;
     }
 
     const auto context = Action::Context {
@@ -143,6 +147,7 @@ void msim::post_step(data::Solution& /* sol */,
         if (result.conditionSatisfied()) {
             this->schedule.applyAction(report_step, *action, result.matches(),
                                        std::unordered_map<std::string,double>{}, true);
+            action_applied = true;
         }
     }
 
@@ -150,6 +155,7 @@ void msim::post_step(data::Solution& /* sol */,
         this->schedule.runPyAction(report_step, *pyaction,
                                    this->action_state, this->state, this->st);
     }
+    return action_applied;
 }
 
 

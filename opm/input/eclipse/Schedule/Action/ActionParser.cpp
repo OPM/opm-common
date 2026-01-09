@@ -26,6 +26,7 @@
 #include <cstdlib>              // std::strtod()
 #include <cstring>              // std::strlen()
 #include <memory>
+#include <regex>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -64,6 +65,11 @@ Opm::Action::FuncType functionType(const std::string& arg)
     case Cat::Region:     return FuncType::region;
     case Cat::Block:      return FuncType::block;
     case Cat::Segment:    return FuncType::well_segment;
+    // ACTIONX does not support conditions on well completions
+    // with a special syntax like for connections and wells.
+    // But it can have conditions on Quanttties defined for completions
+    // (e.g. WWCTL__3) and then this will change wells
+    case Cat::Completion: return FuncType::well;
     default:              return FuncType::none;
     }
 }
@@ -366,8 +372,25 @@ Opm::Action::ASTNode ActionParser::parse_left()
 
     // Note: Func must be an independent object here--i.e., not a
     // reference--since we update 'curr' in the loop below.
-    const auto func = curr.value;
+    auto func = curr.value;
     const auto func_type = functionType(curr.value);
+    if(func_type == Opm::Action::FuncType::well && func.size() > 2 && func[2] == 'C' ) {
+        // Normalize number to have 3 digits if this is actually a completion
+        // function mimicking as a well. We fill up missing digits at the front with _
+        static const auto num_kw_regex = std::regex {
+            R"((W[A-Z]C[A-Z+-]*)(_[0-9]+))"
+        };
+        std::smatch matched;
+        if (std::regex_match(func, matched, num_kw_regex)) {
+            auto numchars = matched.length(2);
+            if (numchars < 3) {
+                const auto prefix = "___";
+                func =  fmt::format("{}{}{}", matched[1].str(),
+                                    std::string_view(prefix, 3 - numchars),
+                                    matched[2].str());
+            }
+        }
+    }
 
     auto arg_list = std::vector<std::string>{};
 
