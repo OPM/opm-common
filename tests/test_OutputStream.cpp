@@ -1,5 +1,6 @@
 /*
   Copyright 2019 Equinor
+  Copyright 2026 OPM-OP AS
 
   This file is part of the Open Porous Media project (OPM).
 
@@ -1840,7 +1841,8 @@ BOOST_AUTO_TEST_CASE(Unformatted_Base)
         const auto uconv = static_cast<UConv>(1729);
 
         BOOST_CHECK_THROW(SMSpec(rset, fmt, uconv, cartDims, noRestart(),
-                                 start(2019, 10, 1, 12, 34, 56)),
+                                 start(2019, 10, 1, 12, 34, 56),
+                                 Opm::TimeService::now()),
                           std::invalid_argument);
     }
 
@@ -1850,10 +1852,12 @@ BOOST_AUTO_TEST_CASE(Unformatted_Base)
 
         auto smspec = SMSpec {
             rset, fmt, uconv, cartDims, noRestart(),
-            start(2019, 10, 1, 12, 34, 56)
+            start(2019, 10, 1, 12, 34, 56),
+            start(2026, 1, 2, 15, 2, 51)
         };
 
-        smspec.write(summaryParameters());
+        smspec.write(summaryParameters(), /* simulationFinished = */ false,
+                     /* currentStep = */ 0, /*rprtrst_basic = */ 0);
     }
 
     {
@@ -1875,6 +1879,7 @@ BOOST_AUTO_TEST_CASE(Unformatted_Base)
                 Opm::EclIO::EclFile::EclEntry{"NUMS", Opm::EclIO::eclArrType::INTE, 4},
                 Opm::EclIO::EclFile::EclEntry{"UNITS", Opm::EclIO::eclArrType::CHAR, 4},
                 Opm::EclIO::EclFile::EclEntry{"STARTDAT", Opm::EclIO::eclArrType::INTE, 6},
+                Opm::EclIO::EclFile::EclEntry{"RUNTIMEI", Opm::EclIO::eclArrType::INTE, 50},
             };
 
             BOOST_CHECK_EQUAL_COLLECTIONS(vectors.begin(), vectors.end(),
@@ -1950,6 +1955,40 @@ BOOST_AUTO_TEST_CASE(Unformatted_Base)
             BOOST_CHECK_EQUAL_COLLECTIONS(S.begin(), S.end(),
                                           expect.begin(), expect.end());
         }
+
+        {
+            const auto& R = smspec.get<int>("RUNTIMEI");
+            auto  expect = std::vector<int>(10, 0);
+            expect[0] = 1; // simulation finished
+            expect[1] = 1; // first report step index
+            expect[2] = 1; // current report step index
+            expect[3] = 2026; // Year simulation started
+            expect[4] = 1; // Month simulation started
+            expect[5] = 2; // Day simulation started
+            expect[6] = 15; // Hour simulation started
+            expect[7] = 2; // Minute simulation started
+            expect[8] = 51; // Second simulation started
+            // We neglect the current simulation time in items 10-15 as we cannot really determine it
+            // 10th entry is BASIC of RPTRST
+            expect[9] = 0;
+
+            for(std::size_t i = 0; i< 9; ++i)
+            {
+                BOOST_CHECK_EQUAL(R[i], expect[i]);
+            }
+
+            for(std::size_t i = 15; i < 34; ++i)
+            {
+                BOOST_CHECK_EQUAL(R[i], 0);
+            }
+
+            BOOST_CHECK_EQUAL(R[34], expect[9]);
+
+            for(std::size_t i = 35; i < 50; ++i)
+            {
+                BOOST_CHECK_EQUAL(R[i], 0);
+            }
+        }
     }
 
     // ========================= FIELD =======================
@@ -1958,10 +1997,12 @@ BOOST_AUTO_TEST_CASE(Unformatted_Base)
 
         auto smspec = SMSpec {
             rset, fmt, uconv, cartDims, noRestart(),
-            start(1970, 1, 1, 0, 0, 0)
+            start(1970, 1, 1, 0, 0, 0),
+            start(2026, 1, 2, 15, 2, 51)
         };
 
-        smspec.write(summaryParameters());
+        smspec.write(summaryParameters(), /* simulationFinished = */ true,
+                     /* currentStep = */ 3, /*rprtrst_basic = */ 6);
     }
 
     {
@@ -1981,6 +2022,7 @@ BOOST_AUTO_TEST_CASE(Unformatted_Base)
                 Opm::EclIO::EclFile::EclEntry{"NUMS", Opm::EclIO::eclArrType::INTE, 4},
                 Opm::EclIO::EclFile::EclEntry{"UNITS", Opm::EclIO::eclArrType::CHAR, 4},
                 Opm::EclIO::EclFile::EclEntry{"STARTDAT", Opm::EclIO::eclArrType::INTE, 6},
+                Opm::EclIO::EclFile::EclEntry{"RUNTIMEI", Opm::EclIO::eclArrType::INTE, 50},
             };
 
             BOOST_CHECK_EQUAL_COLLECTIONS(vectors.begin(), vectors.end(),
@@ -2056,6 +2098,40 @@ BOOST_AUTO_TEST_CASE(Unformatted_Base)
             BOOST_CHECK_EQUAL_COLLECTIONS(S.begin(), S.end(),
                                           expect.begin(), expect.end());
         }
+
+        {
+            const auto& R = smspec.get<int>("RUNTIMEI");
+            auto  expect = std::vector<int>(10, 0);
+            expect[0] = 2; // simulation finished
+            expect[1] = 1; // first report step index
+            expect[2] = 4; // current report step index
+            expect[3] = 2026; // Year simulation started
+            expect[4] = 1; // Month simulation started
+            expect[5] = 2; // Day simulation started
+            expect[6] = 15; // Hour simulation started
+            expect[7] = 2; // Minute simulation started
+            expect[8] = 51; // Second simulation started
+            // We neglect the current simulation time in items 10-15 as we cannot really determine it
+            // 10th entry is BASIC of RPTRST
+            expect[9] = 6;
+
+            for(std::size_t i = 0; i< 9; ++i)
+            {
+                BOOST_CHECK_EQUAL(R[i], expect[i]);
+            }
+
+            for(std::size_t i = 15; i < 34; ++i)
+            {
+                BOOST_CHECK_EQUAL(R[i], 0);
+            }
+
+            BOOST_CHECK_EQUAL(R[34], expect[9]);
+
+            for(std::size_t i = 35; i < 50; ++i)
+            {
+                BOOST_CHECK_EQUAL(R[i], 0);
+            }
+        }
     }
 
     // ========================= LAB =======================
@@ -2064,10 +2140,12 @@ BOOST_AUTO_TEST_CASE(Unformatted_Base)
 
         auto smspec = SMSpec {
             rset, fmt, uconv, cartDims, noRestart(),
-            start(2018, 12, 24, 17, 0, 0)
+            start(2018, 12, 24, 17, 0, 0),
+            Opm::TimeService::now()
         };
 
-        smspec.write(summaryParameters());
+        smspec.write(summaryParameters(), /* simulationFinished = */ false,
+                     /* currentStep = */ 0, /*rprtrst_basic = */ 0);
     }
 
     {
@@ -2087,6 +2165,7 @@ BOOST_AUTO_TEST_CASE(Unformatted_Base)
                 Opm::EclIO::EclFile::EclEntry{"NUMS", Opm::EclIO::eclArrType::INTE, 4},
                 Opm::EclIO::EclFile::EclEntry{"UNITS", Opm::EclIO::eclArrType::CHAR, 4},
                 Opm::EclIO::EclFile::EclEntry{"STARTDAT", Opm::EclIO::eclArrType::INTE, 6},
+                Opm::EclIO::EclFile::EclEntry{"RUNTIMEI", Opm::EclIO::eclArrType::INTE, 50},
             };
 
             BOOST_CHECK_EQUAL_COLLECTIONS(vectors.begin(), vectors.end(),
@@ -2170,10 +2249,12 @@ BOOST_AUTO_TEST_CASE(Unformatted_Base)
 
         auto smspec = SMSpec {
             rset, fmt, uconv, cartDims, noRestart(),
-            start(1983, 1, 1, 1, 2, 3)
+            start(1983, 1, 1, 1, 2, 3),
+            Opm::TimeService::now()
         };
 
-        smspec.write(summaryParameters());
+        smspec.write(summaryParameters(), /* simulationFinished = */ false,
+                     /* currentStep = */ 0, /*rprtrst_basic = */ 0);
     }
 
     {
@@ -2193,6 +2274,7 @@ BOOST_AUTO_TEST_CASE(Unformatted_Base)
                 Opm::EclIO::EclFile::EclEntry{"NUMS", Opm::EclIO::eclArrType::INTE, 4},
                 Opm::EclIO::EclFile::EclEntry{"UNITS", Opm::EclIO::eclArrType::CHAR, 4},
                 Opm::EclIO::EclFile::EclEntry{"STARTDAT", Opm::EclIO::eclArrType::INTE, 6},
+                Opm::EclIO::EclFile::EclEntry{"RUNTIMEI", Opm::EclIO::eclArrType::INTE, 50},
             };
 
             BOOST_CHECK_EQUAL_COLLECTIONS(vectors.begin(), vectors.end(),
@@ -2286,11 +2368,13 @@ BOOST_AUTO_TEST_CASE(Formatted_Restarted)
         auto smspec = SMSpec {
             rset, fmt, UConv::Pvt_M, cartDims,
             restartedSimulationTooLongBasename(),
-            start(2019, 10, 1, 12, 34, 56)
+            start(2019, 10, 1, 12, 34, 56),
+            Opm::TimeService::now()
         };
 
         // Should *NOT* write RESTART vector (name too long).
-        smspec.write(summaryParameters());
+        smspec.write(summaryParameters(), /* simulationFinished = */ false,
+                     /* currentStep = */ 0, /*rprtrst_basic = */ 0);
     }
 
     {
@@ -2312,10 +2396,12 @@ BOOST_AUTO_TEST_CASE(Formatted_Restarted)
 
         auto smspec = SMSpec {
             rset, fmt, uconv, cartDims, restartedSimulation(),
-            start(2019, 10, 1, 12, 34, 56)
+            start(2019, 10, 1, 12, 34, 56),
+            start(2026, 1, 2, 15, 2, 51)
         };
 
-        smspec.write(summaryParameters());
+        smspec.write(summaryParameters(), /* simulationFinished = */ false,
+                     /* currentStep = */ 127, /*rprtrst_basic = */ 0);
     }
 
     {
@@ -2335,6 +2421,7 @@ BOOST_AUTO_TEST_CASE(Formatted_Restarted)
                 Opm::EclIO::EclFile::EclEntry{"NUMS", Opm::EclIO::eclArrType::INTE, 4},
                 Opm::EclIO::EclFile::EclEntry{"UNITS", Opm::EclIO::eclArrType::CHAR, 4},
                 Opm::EclIO::EclFile::EclEntry{"STARTDAT", Opm::EclIO::eclArrType::INTE, 6},
+                Opm::EclIO::EclFile::EclEntry{"RUNTIMEI", Opm::EclIO::eclArrType::INTE, 50},
             };
 
             BOOST_CHECK_EQUAL_COLLECTIONS(vectors.begin(), vectors.end(),
@@ -2421,6 +2508,40 @@ BOOST_AUTO_TEST_CASE(Formatted_Restarted)
 
             BOOST_CHECK_EQUAL_COLLECTIONS(S.begin(), S.end(),
                                           expect.begin(), expect.end());
+        }
+
+        {
+            const auto& R = smspec.get<int>("RUNTIMEI");
+            auto  expect = std::vector<int>(10, 0);
+            expect[0] = 1; // simulation finished
+            expect[1] = 124; // first report step index
+            expect[2] = 128; // current report step index
+            expect[3] = 2026; // Year simulation started
+            expect[4] = 1; // Month simulation started
+            expect[5] = 2; // Day simulation started
+            expect[6] = 15; // Hour simulation started
+            expect[7] = 2; // Minute simulation started
+            expect[8] = 51; // Second simulation started
+            // We neglect the current simulation time in items 10-15 as we cannot really determine it
+            // 10th entry is BASIC of RPTRST
+            expect[9] = 0;
+
+            for(std::size_t i = 0; i< 9; ++i)
+            {
+                BOOST_CHECK_EQUAL(R[i], expect[i]);
+            }
+
+            for(std::size_t i = 15; i < 34; ++i)
+            {
+                BOOST_CHECK_EQUAL(R[i], 0);
+            }
+
+            BOOST_CHECK_EQUAL(R[34], expect[9]);
+
+            for(std::size_t i = 35; i < 50; ++i)
+            {
+                BOOST_CHECK_EQUAL(R[i], 0);
+            }
         }
     }
 }
