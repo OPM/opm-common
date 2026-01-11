@@ -452,6 +452,61 @@ private:
 };
 
 
+class Tpsa
+{
+public:
+    enum class CouplingScheme {
+        Lagged,
+        FixedStress
+    };
+
+    Tpsa() = default;
+    explicit Tpsa(const Deck&);
+    bool operator==(const Tpsa& data) const;
+    static Tpsa serializationTestObject();
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(this->m_coupling);
+        serializer(this->m_fixed_stress_min_iter);
+        serializer(this->m_fixed_stress_max_iter);
+        serializer(this->m_active);
+    }
+
+    bool laggedScheme() const
+    {
+        return this->m_coupling == CouplingScheme::Lagged;
+    }
+
+    bool fixedStressScheme() const
+    {
+        return this->m_coupling == CouplingScheme::FixedStress;
+    }
+
+    int fixedStressMinIter() const
+    {
+        return this->m_fixed_stress_min_iter;
+    }
+
+    int fixedStressMaxIter() const
+    {
+        return this->m_fixed_stress_max_iter;
+    }
+
+    bool active() const
+    {
+        return this->m_active;
+    }
+
+private:
+    CouplingScheme m_coupling = CouplingScheme::Lagged;
+    int m_fixed_stress_min_iter{};
+    int m_fixed_stress_max_iter{};
+    bool m_active{false};
+};
+
+
 class Tracers {
 public:
     Tracers() = default;
@@ -510,6 +565,7 @@ public:
     const Actdims& actdims() const noexcept;
     const SatFuncControls& saturationFunctionControls() const noexcept;
     const Nupcol& nupcol() const noexcept;
+    const Tpsa& tpsa() const;
     const Tracers& tracers() const;
     bool compositionalMode() const;
     size_t numComps() const;
@@ -554,6 +610,7 @@ public:
         serializer(m_mech);
         serializer(m_frac);
         serializer(m_temp);
+        serializer(m_tpsa);
         serializer(m_biof);
     }
 
@@ -572,6 +629,7 @@ private:
     Actdims m_actdims{};
     SatFuncControls m_sfuncctrl{};
     Nupcol m_nupcol{};
+    Tpsa m_tpsa{};
     Tracers m_tracers{};
     size_t m_comps = 0;
     bool m_co2storage{false};
