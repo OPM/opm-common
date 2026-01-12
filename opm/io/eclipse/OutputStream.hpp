@@ -426,12 +426,12 @@ namespace Opm { namespace EclIO { namespace OutputStream {
         SummarySpecification& operator=(const SummarySpecification& rhs) = delete;
         SummarySpecification& operator=(SummarySpecification&& rhs);
 
-        /// \brief wirte SMSPEC file
+        /// \brief Write SMSPEC file
         ///
-        /// \param simulationFinished whether the simulation has finished (i.e.
+        /// \param[in] simulationFinished Whether the simulation has finished (i.e.
         ///                           this is the last written for it)
-        /// \param currentStep        Index of the current report step
-        /// \param basic              The value assigned to BASIC in RPRTRST
+        /// \param[in] currentStep        Index of the current report step
+        /// \param[in] basic              The value assigned to BASIC in RPRTRST
         void write(const Parameters& params, const bool simulationFinished,
                    const int currentStep, const int basic);
 
