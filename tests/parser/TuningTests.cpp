@@ -409,27 +409,39 @@ TSTEP
     3 4 /
 
 TUNINGDP
-    0.025 0.125 10.0 20.0 /
+    0.025 0.125 10.0 20.0 30.0 40.0 /
 
 TSTEP
     5 6 /
 
 TUNINGDP
-    1* 1* 15.0 1* /
+    1* 1* 15.0 1* 1* 1* /
 
 TSTEP
     7 8 /
 
 TUNINGDP
-    1* 1* 1* 25.0 /
+    1* 1* 1* 25.0 1* 1* /
+
+TSTEP
+    9 10 /
+
+TUNINGDP
+    1* 1* 1* 1* 35.0 1* /
+
+TSTEP
+    11 12 /
+
+TUNINGDP
+    1* 1* 1* 1* 1* 45.0 /
 )";
 
 BOOST_AUTO_TEST_CASE(TuningDpTest)
 {
     // Set up deck with schedule
     const auto deck = createDeck(deckWithTUNINGDP);
-    EclipseGrid grid(10,10,10);
-    TableManager table ( deck );
+    EclipseGrid grid(10, 10, 10);
+    TableManager table (deck);
     FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
     Runspec runspec (deck);
     const Schedule schedule {
@@ -439,7 +451,7 @@ BOOST_AUTO_TEST_CASE(TuningDpTest)
 
     // TUNINGDP_CHANGE events checks
     {
-        for (std::size_t timestep = 1; timestep < 9; ++timestep) {
+        for (std::size_t timestep = 1; timestep < 13; ++timestep) {
             const auto& event = schedule[timestep].events();
             bool tuning_change = event.hasEvent(ScheduleEvents::TUNINGDP_CHANGE);
             bool expected_tuning_change = (timestep % 2 == 0);  // even time steps have tuning changes
@@ -460,10 +472,12 @@ BOOST_AUTO_TEST_CASE(TuningDpTest)
         const auto& tuning_dp = schedule[timestep].tuning_dp();
         const auto& tuning = schedule[timestep].tuning();
 
-        BOOST_CHECK_CLOSE(tuning_dp.TRGLCV, tuning.TRGLCV , tol);
+        BOOST_CHECK_CLOSE(tuning_dp.TRGLCV, tuning.TRGLCV, tol);
         BOOST_CHECK_CLOSE(tuning_dp.XXXLCV, tuning.XXXLCV, tol);
         BOOST_CHECK_CLOSE(tuning_dp.TRGDDP, 0.0 * Metric::Pressure, tol);
         BOOST_CHECK_CLOSE(tuning_dp.TRGDDS, 0.0, tol);
+        BOOST_CHECK_CLOSE(tuning_dp.TRGDDRS, 0.0, tol);
+        BOOST_CHECK_CLOSE(tuning_dp.TRGDDRV, 0.0, tol);
     }
 
     // TIMESTEP 2
@@ -477,6 +491,8 @@ BOOST_AUTO_TEST_CASE(TuningDpTest)
         BOOST_CHECK_CLOSE(tuning_dp.XXXLCV, 0.001, tol);
         BOOST_CHECK_CLOSE(tuning_dp.TRGDDP, 1.0 * Metric::Pressure, tol);
         BOOST_CHECK_CLOSE(tuning_dp.TRGDDS, 0.01, tol);
+        BOOST_CHECK_CLOSE(tuning_dp.TRGDDRS, 0.0, tol);
+        BOOST_CHECK_CLOSE(tuning_dp.TRGDDRV, 0.0, tol);
     }
 
     // TIMESTEP 4:
@@ -488,6 +504,8 @@ BOOST_AUTO_TEST_CASE(TuningDpTest)
         BOOST_CHECK_CLOSE(tuning_dp.XXXLCV, 0.125, tol);
         BOOST_CHECK_CLOSE(tuning_dp.TRGDDP, 10.0 * Metric::Pressure, tol);
         BOOST_CHECK_CLOSE(tuning_dp.TRGDDS, 20.0, tol);
+        BOOST_CHECK_CLOSE(tuning_dp.TRGDDRS, 30.0, tol);
+        BOOST_CHECK_CLOSE(tuning_dp.TRGDDRV, 40.0, tol);
     }
 
     // TIMESTEP 6:
@@ -499,6 +517,8 @@ BOOST_AUTO_TEST_CASE(TuningDpTest)
         BOOST_CHECK_CLOSE(tuning_dp.XXXLCV, 0.125, tol);
         BOOST_CHECK_CLOSE(tuning_dp.TRGDDP, 15.0 * Metric::Pressure, tol);
         BOOST_CHECK_CLOSE(tuning_dp.TRGDDS, 20.0, tol);
+        BOOST_CHECK_CLOSE(tuning_dp.TRGDDRS, 30.0, tol);
+        BOOST_CHECK_CLOSE(tuning_dp.TRGDDRV, 40.0, tol);
     }
 
     // TIMESTEP 8:
@@ -510,5 +530,33 @@ BOOST_AUTO_TEST_CASE(TuningDpTest)
         BOOST_CHECK_CLOSE(tuning_dp.XXXLCV, 0.125, tol);
         BOOST_CHECK_CLOSE(tuning_dp.TRGDDP, 15.0 * Metric::Pressure, tol);
         BOOST_CHECK_CLOSE(tuning_dp.TRGDDS, 25.0, tol);
+        BOOST_CHECK_CLOSE(tuning_dp.TRGDDRS, 30.0, tol);
+        BOOST_CHECK_CLOSE(tuning_dp.TRGDDRV, 40.0, tol);
+    }
+
+    // TIMESTEP 10:
+    {
+        const std::size_t timestep = 10;
+        const auto& tuning_dp = schedule[timestep].tuning_dp();
+
+        BOOST_CHECK_CLOSE(tuning_dp.TRGLCV, 0.025, tol);
+        BOOST_CHECK_CLOSE(tuning_dp.XXXLCV, 0.125, tol);
+        BOOST_CHECK_CLOSE(tuning_dp.TRGDDP, 15.0 * Metric::Pressure, tol);
+        BOOST_CHECK_CLOSE(tuning_dp.TRGDDS, 25.0, tol);
+        BOOST_CHECK_CLOSE(tuning_dp.TRGDDRS, 35.0, tol);
+        BOOST_CHECK_CLOSE(tuning_dp.TRGDDRV, 40.0, tol);
+    }
+
+    // TIMESTEP 12:
+    {
+        const std::size_t timestep = 12;
+        const auto& tuning_dp = schedule[timestep].tuning_dp();
+
+        BOOST_CHECK_CLOSE(tuning_dp.TRGLCV, 0.025, tol);
+        BOOST_CHECK_CLOSE(tuning_dp.XXXLCV, 0.125, tol);
+        BOOST_CHECK_CLOSE(tuning_dp.TRGDDP, 15.0 * Metric::Pressure, tol);
+        BOOST_CHECK_CLOSE(tuning_dp.TRGDDS, 25.0, tol);
+        BOOST_CHECK_CLOSE(tuning_dp.TRGDDRS, 35.0, tol);
+        BOOST_CHECK_CLOSE(tuning_dp.TRGDDRV, 45.0, tol);
     }
 }

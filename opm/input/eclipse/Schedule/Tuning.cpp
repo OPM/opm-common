@@ -221,6 +221,8 @@ TuningDp::TuningDp()
     , XXXLCV(TuningKw::XXXLCV::defaultValue)
     , TRGDDP(0.0 * Metric::Pressure)
     , TRGDDS(0.0)
+    , TRGDDRS(0.0)
+    , TRGDDRV(0.0)
 {
 }
 
@@ -231,6 +233,8 @@ void TuningDp::set_defaults()
     this->XXXLCV = TUNINGDP::XXXLCV::defaultValue;
     this->TRGDDP = TUNINGDP::TRGDDP::defaultValue * Metric::Pressure;
     this->TRGDDS = TUNINGDP::TRGDDS::defaultValue;
+    this->TRGDDRS = TUNINGDP::TRGDDRS::defaultValue;
+    this->TRGDDRV = TUNINGDP::TRGDDRV::defaultValue;
 
     this->defaults_updated = true;
 }
@@ -244,6 +248,8 @@ TuningDp TuningDp::serializationTestObject()
     result.XXXLCV_has_value = true;
     result.TRGDDP = 3.0;
     result.TRGDDS = 4.0;
+    result.TRGDDRS = 5.0;
+    result.TRGDDRV = 6.0;
 
     return result;
 }
@@ -255,6 +261,8 @@ bool TuningDp::operator==(const TuningDp& other) const
            this->XXXLCV == other.XXXLCV &&
            this->XXXLCV_has_value == other.XXXLCV_has_value &&
            this->TRGDDP == other.TRGDDP &&
-           this->TRGDDS == other.TRGDDS;
+           this->TRGDDS == other.TRGDDS &&
+           this->TRGDDRS == other.TRGDDRS &&
+           this->TRGDDRV == other.TRGDDRV;
 }
 }

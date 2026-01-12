@@ -25,6 +25,16 @@
       "name": "TRGDDS",
       "value_type": "DOUBLE",
       "default": 0.01
+    },
+    {
+      "name": "TRGDDRS",
+      "value_type": "DOUBLE",
+      "default": 0.0
+    },
+    {
+      "name": "TRGDDRV",
+      "value_type": "DOUBLE",
+      "default": 0.0
     }
   ]
 }

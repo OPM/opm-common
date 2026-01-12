@@ -204,6 +204,8 @@ namespace Opm {
         bool XXXLCV_has_value = false;
         double TRGDDP;
         double TRGDDS;
+        double TRGDDRS;
+        double TRGDDRV;
 
         bool defaults_updated{false};
 
