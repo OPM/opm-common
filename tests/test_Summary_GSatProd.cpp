@@ -156,12 +156,13 @@ FOPR
 FOPT
 FWPR
 FWPT
+FGLIR
 SCHEDULE
 GRUPTREE
   G FIELD /
 /
 GSATPROD
-  G 1000 500 10E3 /
+  G 1000 500 10E3 1* 1000/
 /
 TSTEP
   5*1 /
@@ -253,6 +254,15 @@ END
         BOOST_CHECK_CLOSE(fwpt[1], 1*500.0f, 1.0e-5f);
         BOOST_CHECK_CLOSE(fwpt[2], 2*500.0f, 1.0e-5f);
     }
+
+    {
+        const auto& fglir = res.get("FGLIR");
+        BOOST_REQUIRE_EQUAL(fglir.size(), std::size_t{3});
+
+        BOOST_CHECK_CLOSE(fglir[0], 1000.0f, 1.0e-5f);
+        BOOST_CHECK_CLOSE(fglir[1], 1000.0f, 1.0e-5f);
+        BOOST_CHECK_CLOSE(fglir[2], 1000.0f, 1.0e-5f);
+    }
 }
 
 BOOST_AUTO_TEST_CASE(Satprod_And_Wells)
@@ -290,13 +300,14 @@ FOPR
 FOPT
 FWPR
 FWPT
+FGLIR
 SCHEDULE
 GRUPTREE
   P FIELD /
   S FIELD /
 /
 GSATPROD
-  S 1000 500 10E3 /
+  S 1000 500 10E3 1* 1000/
 /
 WELSPECS
   'PROD' 'P' 1 1 1* OIL /
@@ -399,6 +410,15 @@ END
         BOOST_CHECK_CLOSE(fwpt[1], 1*600.0f, 1.0e-5f);
         BOOST_CHECK_CLOSE(fwpt[2], 2*600.0f, 1.0e-5f);
     }
+
+    {
+        const auto& fglir = res.get("FGLIR");
+        BOOST_REQUIRE_EQUAL(fglir.size(), std::size_t{3});
+
+        BOOST_CHECK_CLOSE(fglir[0], 1000.0f, 1.0e-5f);
+        BOOST_CHECK_CLOSE(fglir[1], 1000.0f, 1.0e-5f);
+        BOOST_CHECK_CLOSE(fglir[2], 1000.0f, 1.0e-5f);
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()     // No_Efficiency_Factor
@@ -442,13 +462,14 @@ FOPR
 FOPT
 FWPR
 FWPT
+FGLIR
 SCHEDULE
 GRUPTREE
   P FIELD /
   S FIELD /
 /
 GSATPROD
-  S 1000 500 10E3 /
+  S 1000 500 10E3 1* 1000/
 /
 GEFAC
   P 0.5 /
@@ -554,6 +575,14 @@ END
         BOOST_CHECK_CLOSE(fwpt[1], 1*550.0f, 1.0e-5f);
         BOOST_CHECK_CLOSE(fwpt[2], 2*550.0f, 1.0e-5f);
     }
+    {
+        const auto& fglir = res.get("FGLIR");
+        BOOST_REQUIRE_EQUAL(fglir.size(), std::size_t{3});
+
+        BOOST_CHECK_CLOSE(fglir[0], 1000.0f, 1.0e-5f);
+        BOOST_CHECK_CLOSE(fglir[1], 1000.0f, 1.0e-5f);
+        BOOST_CHECK_CLOSE(fglir[2], 1000.0f, 1.0e-5f);
+    }
 }
 
 BOOST_AUTO_TEST_CASE(Group_Level_EFact_Affects_Both)
@@ -591,6 +620,7 @@ FOPR
 FOPT
 FWPR
 FWPT
+FGLIR
 SCHEDULE
 GRUPTREE
   PLAT FIELD /
@@ -598,7 +628,7 @@ GRUPTREE
   SAT PLAT /
 /
 GSATPROD
-  SAT 1000 500 10E3 /
+  SAT 1000 500 10E3 1* 1000/
 /
 GEFAC
   PLAT 0.5 /
@@ -704,6 +734,14 @@ END
         BOOST_CHECK_CLOSE(fwpt[1], 1*300.0f, 1.0e-5f);
         BOOST_CHECK_CLOSE(fwpt[2], 2*300.0f, 1.0e-5f);
     }
+    {
+        const auto& fglir = res.get("FGLIR");
+        BOOST_REQUIRE_EQUAL(fglir.size(), std::size_t{3});
+
+        BOOST_CHECK_CLOSE(fglir[0], 500.0f, 1.0e-5f);
+        BOOST_CHECK_CLOSE(fglir[1], 500.0f, 1.0e-5f);
+        BOOST_CHECK_CLOSE(fglir[2], 500.0f, 1.0e-5f);
+    }
 }
 
 BOOST_AUTO_TEST_CASE(Group_Level_EFact_Affects_Sat)
@@ -741,6 +779,7 @@ FOPR
 FOPT
 FWPR
 FWPT
+FGLIR
 SCHEDULE
 GRUPTREE
   PLAT FIELD /
@@ -749,7 +788,7 @@ GRUPTREE
   SAT COLL /
 /
 GSATPROD
-  SAT 1000 500 10E3 /
+  SAT 1000 500 10E3 1* 1000/
 /
 GEFAC
   COLL 0.5 /
@@ -855,6 +894,14 @@ END
         BOOST_CHECK_CLOSE(fwpt[1], 1*350.0f, 1.0e-5f);
         BOOST_CHECK_CLOSE(fwpt[2], 2*350.0f, 1.0e-5f);
     }
+    {
+        const auto& fglir = res.get("FGLIR");
+        BOOST_REQUIRE_EQUAL(fglir.size(), std::size_t{3});
+
+        BOOST_CHECK_CLOSE(fglir[0], 500.0f, 1.0e-5f);
+        BOOST_CHECK_CLOSE(fglir[1], 500.0f, 1.0e-5f);
+        BOOST_CHECK_CLOSE(fglir[2], 500.0f, 1.0e-5f);
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()     // Single_Level_EFac
@@ -898,6 +945,7 @@ FOPR
 FOPT
 FWPR
 FWPT
+FGLIR
 SCHEDULE
 GRUPTREE
   PLAT FIELD /
@@ -906,7 +954,7 @@ GRUPTREE
   SAT COLL /
 /
 GSATPROD
-  SAT 1000 500 10E3 /
+  SAT 1000 500 10E3 1* 1000/
 /
 GEFAC
   COLL 0.5 /
@@ -1015,6 +1063,14 @@ END
         BOOST_CHECK_CLOSE(fwpt[1], 1*275.0f, 1.0e-5f);
         BOOST_CHECK_CLOSE(fwpt[2], 2*275.0f, 1.0e-5f);
     }
+    {
+        const auto& fglir = res.get("FGLIR");
+        BOOST_REQUIRE_EQUAL(fglir.size(), std::size_t{3});
+
+        BOOST_CHECK_CLOSE(fglir[0], 500.0f, 1.0e-5f);
+        BOOST_CHECK_CLOSE(fglir[1], 500.0f, 1.0e-5f);
+        BOOST_CHECK_CLOSE(fglir[2], 500.0f, 1.0e-5f);
+    }
 }
 
 BOOST_AUTO_TEST_CASE(All_Levels)
@@ -1052,6 +1108,7 @@ FOPR
 FOPT
 FWPR
 FWPT
+FGLIR
 GGPR
  COLL WELL /
 GGPT
@@ -1072,7 +1129,7 @@ GRUPTREE
   SAT COLL /
 /
 GSATPROD
-  SAT 1000 500 10E3 /
+  SAT 1000 500 10E3 1* 1000/
 /
 GEFAC
   PLAT 0.5 /
@@ -1200,6 +1257,15 @@ END
         BOOST_CHECK_CLOSE(fwpt[0], 0*200.0f, 1.0e-5f);
         BOOST_CHECK_CLOSE(fwpt[1], 1*200.0f, 1.0e-5f);
         BOOST_CHECK_CLOSE(fwpt[2], 2*200.0f, 1.0e-5f);
+    }
+
+    {
+        const auto& fglir = res.get("FGLIR");
+        BOOST_REQUIRE_EQUAL(fglir.size(), std::size_t{3});
+
+        BOOST_CHECK_CLOSE(fglir[0], 0.5*0.75*1000.0f, 1.0e-5f);
+        BOOST_CHECK_CLOSE(fglir[1], 0.5*0.75*1000.0f, 1.0e-5f);
+        BOOST_CHECK_CLOSE(fglir[2], 0.5*0.75*1000.0f, 1.0e-5f);
     }
 
     // --------------------------------------------------------------------

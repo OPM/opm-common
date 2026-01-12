@@ -810,6 +810,9 @@ double satellite_prod(const Opm::SummaryState&  st,
     else if constexpr (phase == rt::wat) {
         return gs.rate[Rate::Water];
     }
+    else if constexpr (phase == rt::alq) {
+        return gs.rate[Rate::GLift];
+    }
 
     return 0.0;
 }
@@ -989,9 +992,6 @@ inline quantity artificial_lift_quantity( const fn_args& args ) {
 }
 
 inline quantity glir( const fn_args& args ) {
-    if (args.schedule_wells.empty()) {
-        return { 0.0, measure::gas_surface_rate };
-    }
 
     const auto& sched_state = args.schedule[args.sim_step];
 
@@ -1029,6 +1029,7 @@ inline quantity glir( const fn_args& args ) {
             alq_rate -= eff_fac * glr * (wpr + opr);
         }
     }
+    alq_rate += satellite_rate<rt::alq, false, true>(args);
 
     return { alq_rate, measure::gas_surface_rate };
 }
