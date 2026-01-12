@@ -706,6 +706,25 @@ namespace {
         };
     }
 
+std::vector<int> makeRuntimei(const bool simulationFinished, const int restartStep,
+                              const int currentStep,
+                              const SummarySpecification::StartTime& computeStart,
+                              const int basic)
+{
+    std::vector<int> runtimei(50, 0);
+    runtimei[0] = simulationFinished ? 2 : 1;
+    runtimei[1] = (restartStep == -1) ? 1 : restartStep + 1;
+    runtimei[2] = currentStep + 1;
+    const auto computeStartI = makeRuntimeiDate(computeStart);
+    std::copy(computeStartI.begin(), computeStartI.end(), runtimei.begin()+3);
+
+    using std::chrono::system_clock;
+    const auto now = makeRuntimeiDate(Opm::TimeService::now());
+    std::copy(now.begin(), now.end(), runtimei.begin()+9);
+    runtimei[34] = basic;
+    return runtimei;
+}
+
     std::vector<int>
     makeDimens(const int                 nparam,
                const std::array<int, 3>& cartDims,
@@ -806,19 +825,8 @@ SummarySpecification::write(const Parameters& params,
     smspec.write("STARTDAT", makeStartDate(this->startDate_));
 
     // Create and write RUNTIMEI
-    std::vector<int> runtimei(50, 0);
-    runtimei[0] = simulationFinished ? 2 : 1;
-    runtimei[1] = (this->restartStep_ == -1)? 1 : this->restartStep_+1;
-    runtimei[2] = currentStep + 1;
-    const auto computeStart = makeRuntimeiDate(this->computeStart_);
-    std::copy(computeStart.begin(), computeStart.end(), runtimei.begin()+3);
-
-    using std::chrono::system_clock;
-    const auto now = makeRuntimeiDate(Opm::TimeService::now());
-    std::copy(now.begin(), now.end(), runtimei.begin()+9);
-    runtimei[34] = basic;
-
-    smspec.write("RUNTIMEI", runtimei);
+    smspec.write("RUNTIMEI", makeRuntimei(simulationFinished, this->restartStep_,
+                                          currentStep, this->computeStart_, basic));
 
     this->flushStream();
 }

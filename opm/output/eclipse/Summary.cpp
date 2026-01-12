@@ -5282,11 +5282,9 @@ void Opm::out::Summary::SummaryImplementation::write(const bool is_final_summary
         return;
     }
 
-    const auto& last = this->lastUnwritten();
-
     this->createSMSpecIfNecessary();
 
-    if (this->prevReportStepID_ < last.seq) {
+    if (const auto& last = this->lastUnwritten(); this->prevReportStepID_ < last.seq) {
         this->smspec_->write(this->outputParameters_.summarySpecification(),
                              is_final_summary, last.seq,
                              sched_.get()[last.seq].get<RSTConfig>().get()
