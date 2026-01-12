@@ -5288,7 +5288,6 @@ void Opm::out::Summary::SummaryImplementation::write(const bool is_final_summary
 
     if (this->prevReportStepID_ < last.seq) {
         this->smspec_->write(this->outputParameters_.summarySpecification(),
-                             // pass additional parameters for RUNTIMEI keyword
                              is_final_summary, last.seq,
                              sched_.get()[last.seq].get<RSTConfig>().get()
                              .basic.value_or(0));

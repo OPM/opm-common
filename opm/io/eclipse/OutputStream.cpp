@@ -690,7 +690,7 @@ namespace {
         const auto timepoint = std::chrono::system_clock::to_time_t(start);
         const auto tm = *std::gmtime(&timepoint);
 
-        // { Day, Month, Year, Hour, Minute, Seconds }
+        // { Year, Month, Day, Hour, Minute, Seconds }
 
         return {
             tm.tm_year + 1900,
