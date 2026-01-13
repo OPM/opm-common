@@ -353,7 +353,7 @@ function run_static_analysis {
               --enable=all \
               --xml \
               --xml-version=2 \
-              -i$WORKSPACE/tests/material/test_fluidmatrixinteractions.cpp \
+              $CPPCHECK_IGNORE_LIST \
               -j$TESTTHREADS \
               --output-file=$WORKSPACE/cppcheck-result.xml
   fi
