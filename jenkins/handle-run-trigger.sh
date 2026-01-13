@@ -13,6 +13,6 @@ then
 fi
 if grep -q " norne_parallel" <<< $ghprbCommentBody
 then
-  $WORKSPACE/deps/opm-simulators/jenkins/run-norne.sh default 4
+  $WORKSPACE/deps/opm-simulators/jenkins/run-norne.sh default 8
   test $? -eq 0 || exit 1
 fi
