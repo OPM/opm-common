@@ -24,6 +24,9 @@
 
 #include <fstream>
 #include <iostream>
+#include <string>
+
+#include <fmt/format.h>
 
 namespace Opm
 {
@@ -33,12 +36,20 @@ void writeGroupStructure(const Schedule& schedule, const std::string& casename)
     std::cout << "Writing " << casename << ".gv .... ";
     std::cout.flush();
     std::ofstream os(casename + ".gv");
-    os << "// This file was written by the 'wellgraph' utility from OPM.\n";
+
+    if (!os) {
+        throw std::runtime_error(fmt::format(
+            "Writing the group structure for case {0} failed. Could not open '{0}.gv'.",
+            casename
+        ));
+    }
+
+    os << "// This file was written using utility function 'writeGroupStructure' from OPM.\n";
     os << "// Find the source code at github.com/OPM.\n";
     os << "// Convert output to PDF with 'dot -Tpdf " << casename << ".gv > " << casename
        << ".pdf'\n";
     os << "strict digraph \"" << casename << "\"\n{\n";
-    const auto groupnames = schedule.groupNames();
+    const auto& groupnames = schedule.groupNames();
     const std::size_t last = schedule.size() - 1;
     // Group -> Group relations.
     for (const auto& gn : groupnames) {
