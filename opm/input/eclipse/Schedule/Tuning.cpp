@@ -256,7 +256,8 @@ TuningDp TuningDp::serializationTestObject()
 
 bool TuningDp::operator==(const TuningDp& other) const
 {
-    return this->TRGLCV == other.TRGLCV &&
+    return this->defaults_updated == other.defaults_updated &&
+           this->TRGLCV == other.TRGLCV &&
            this->TRGLCV_has_value == other.TRGLCV_has_value &&
            this->XXXLCV == other.XXXLCV &&
            this->XXXLCV_has_value == other.XXXLCV_has_value &&

@@ -199,9 +199,9 @@ namespace Opm {
 
         // NOTE: TRGLCV and XXXLCV are the same as in TUNING, since they define a different default value in TUNINGDP
         double TRGLCV;
-        bool TRGLCV_has_value = false;
+        bool TRGLCV_has_value{false};
         double XXXLCV;
-        bool XXXLCV_has_value = false;
+        bool XXXLCV_has_value{false};
         double TRGDDP;
         double TRGDDS;
         double TRGDDRS;
@@ -221,9 +221,14 @@ namespace Opm {
         void serializeOp(Serializer& serializer)
         {
             serializer(TRGLCV);
+            serializer(TRGLCV_has_value);
             serializer(XXXLCV);
+            serializer(XXXLCV_has_value);
             serializer(TRGDDP);
             serializer(TRGDDS);
+            serializer(TRGDDRS);
+            serializer(TRGDDRV);
+            serializer(defaults_updated);
         }
     };
 
