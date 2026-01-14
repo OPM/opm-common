@@ -31,77 +31,164 @@
 namespace Opm
 {
 
-void writeGroupStructure(const Schedule& schedule, const std::string& casename)
+namespace
 {
-    std::cout << "Writing " << casename << ".gv .... ";
+
+void writeWellGroupRelations(const Schedule& schedule,
+                             const std::string& casename)
+{
+    std::string fname = casename + "_well_groups.gv";
+    std::cout << "Writing " << fname << " .... ";
     std::cout.flush();
-    std::ofstream os(casename + ".gv");
+    std::ofstream os(fname);
 
     if (!os) {
         throw std::runtime_error(fmt::format(
-            "Writing the group structure for case {0} failed. Could not open '{0}.gv'.",
+            "Writing the well-group relations for case {0} failed. Could not open '{0}_well_groups.gv'.",
             casename
         ));
     }
 
     os << "// This file was written using utility function 'writeGroupStructure' from OPM.\n";
     os << "// Find the source code at github.com/OPM.\n";
-    os << "// Convert output to PDF with 'dot -Tpdf " << casename << ".gv > " << casename
-       << ".pdf'\n";
-    os << "strict digraph \"" << casename << "\"\n{\n";
+    os << "// Convert output to PDF with 'dot -Tpdf " << fname << " -o "
+       << casename << "_well_groups.pdf'\n";
+    os << "strict digraph \"" << casename << "_well_groups\"\n{\n";
+
+    os << "    node [shape=box, style=normal, fillcolor=white];\n";
+
     const auto& groupnames = schedule.groupNames();
     const std::size_t last = schedule.size() - 1;
-    // Group -> Group relations.
+
     for (const auto& gn : groupnames) {
         const auto& g = schedule.getGroup(gn, last);
-        const auto& children = g.groups();
-        if (!children.empty()) {
-            os << "    \"" << gn << "\" -> {";
-            for (const auto& child : children) {
-                {
+        const auto& wells = g.wells();
+
+        if (!wells.empty()) {
+            os << "    subgraph \"cluster_wells_" << gn << "\" {\n";
+            os << "        label = < <b>Group: " << gn << "</b> >;\n";
+            os << "        color = lightgrey;\n";
+
+            std::string previousWell;
+            for (const auto& w_name : wells) {
+                const auto& w = schedule.getWell(w_name, last);
+
+                std::string color =
+                    (w.isProducer() && w.isInjector()) ? "purple" :
+                    (w.isProducer() ? "red" : "blue");
+
+                os << "        \"" << w_name
+                   << "\" [color=" << color
+                   << ", fillcolor=white, style=filled];\n";
+
+                if (!previousWell.empty()) {
+                    os << "        \"" << previousWell
+                       << "\" -> \"" << w_name
+                       << "\" [style=invis];\n";
+                }
+                previousWell = w_name;
+            }
+            os << "    }\n";
+        }
+    }
+
+    os << "}\n";
+    std::cout << "complete." << std::endl;
+    std::cout << "Convert output to PDF with 'dot -Tpdf " << fname << " -o "
+              << casename << "_well_groups.pdf'\n\n";
+}
+
+void writeGroupStructure(const Schedule& schedule, const std::string& casename, const bool separateWellGroups)
+{
+    const auto& groupnames = schedule.groupNames();
+    const std::size_t last = schedule.size() - 1;
+
+    // file 1: group structure (group -> group)
+    // if separateWellGroups == false, also group -> well relations.
+    {
+        const std::string fname
+            = separateWellGroups ? casename + "_group_structure.gv" : casename + ".gv";
+        std::cout << "Writing " << fname << " .... ";
+        std::cout.flush();
+        std::ofstream os(fname);
+
+        if (!os) {
+            throw std::runtime_error(fmt::format("Writing the group structure for case {0} failed. "
+                                                 "Could not open '{0}_group_structure.gv'.",
+                                                 casename));
+        }
+
+        os << "// This file was written using utility function 'writeGroupStructure' from OPM.\n";
+        os << "// Find the source code at github.com/OPM.\n";
+        os << "// Convert output to PDF with 'dot -Tpdf " << fname << " -o " << casename
+           << "_group_structure.pdf'\n";
+        os << "strict digraph \"" << casename << "_groups\"\n{\n";
+
+        // Group -> Group relations.
+        for (const auto& gn : groupnames) {
+            const auto& g = schedule.getGroup(gn, last);
+            const auto& children = g.groups();
+            if (!children.empty()) {
+                os << "    \"" << gn << "\" -> {";
+                for (const auto& child : children) {
                     const auto& child_group = schedule.getGroup(child, last);
                     const auto& grand_children = child_group.groups();
                     if (grand_children.empty() && !child_group.wells().empty()) {
-                        // Leaf groups are drawn with doublecircle.
-                        // os << "    \"" << child << "\" [fillcolor=gold];\n";
-                        os << "    \"" << child << "\" [style=filled, fillcolor=orange];\n";
-
+                        // Leaf groups are drawn with filled orange style.
+                        os << "\n    \"" << child << "\" [style=filled, fillcolor=orange];";
                     }
+                    os << " \"" << child << '"';
                 }
-                os << " \"" << child << '"';
+                os << " }\n";
             }
-            os << " }\n";
         }
-    }
-    // Group -> Well relations.
-    os << "    node [shape=box]\n";
-    for (const auto& gn : groupnames) {
-        const auto& g = schedule.getGroup(gn, last);
-        const auto& children = g.wells();
-        if (!children.empty()) {
-            os << "    \"" << gn << "\" -> {";
-            for (const auto& child : children) {
-                os << " \"" << child << '"';
+
+        if (!separateWellGroups) {
+            // Group -> Well relations.
+            os << "    node [shape=box]\n";
+            for (const auto& gn : groupnames) {
+                const auto& g = schedule.getGroup(gn, last);
+                const auto& children = g.wells();
+                if (!children.empty()) {
+                    os << "    \"" << gn << "\" -> {";
+                    for (const auto& child : children) {
+                        os << " \"" << child << '"';
+                    }
+                    os << " }\n";
+                }
             }
-            os << " }\n";
-        }
-    }
-    // Color wells by injector or producer.
-    for (const auto& w : schedule.getWellsatEnd()) {
-        os << "    \"" << w.name() << '"';
-        if (w.isProducer() && w.isInjector()) {
-            os << " [color=purple]\n";
-        } else if (w.isProducer()) {
-            os << " [color=red]\n";
+            // Color wells by injector or producer.
+            for (const auto& w : schedule.getWellsatEnd()) {
+                os << "    \"" << w.name() << '"';
+                if (w.isProducer() && w.isInjector()) {
+                    os << " [color=purple]\n";
+                } else if (w.isProducer()) {
+                    os << " [color=red]\n";
+                } else {
+                    os << " [color=blue]\n";
+                }
+            }
+            os << "}\n";
+            std::cout << "complete." << std::endl;
+            std::cout << "Convert output to PDF with 'dot -Tpdf " << fname << " -o " << casename
+                      << ".pdf'\n\n";
         } else {
-            os << " [color=blue]\n";
+            os << "}\n";
+            std::cout << "complete." << std::endl;
+            std::cout << "Convert output to PDF with 'dot -Tpdf " << fname << " -o " << casename
+                      << "_group_structure.pdf'\n\n";
         }
     }
-    os << "}\n";
-    std::cout << "complete." << std::endl;
-    std::cout << "Convert output to PDF with 'dot -Tpdf " << casename << ".gv > " << casename
-              << ".pdf'\n"
-              << std::endl;
+}
+
+} // anonymous namespace
+
+void writeWellGroupGraph(const Schedule& schedule, const std::string& casename, const bool separateWellGroups)
+{
+    writeGroupStructure(schedule, casename, separateWellGroups);
+    if (separateWellGroups) {
+        writeWellGroupRelations(schedule, casename);
+    }
 }
 
 } // end of namespace Opm

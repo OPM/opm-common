@@ -25,7 +25,9 @@
 namespace Opm {
 class Schedule;
 
-void writeGroupStructure(const Schedule& schedule, const std::string& casename);
+void writeWellGroupGraph(const Schedule& schedule,
+                         const std::string& casename,
+                         const bool separateWellGroups = false);
 
 } // namespace Opm
 
