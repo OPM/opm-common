@@ -158,7 +158,7 @@ namespace Opm {
             field_props.deleteMINPVV();
         }
         this->initLgrs(deck);
-        this->aquifer_config.load_connections(deck, this->getInputGrid());
+        this->aquifer_config.load_connections(deck, m_inputGrid);
 
         this->applyMULTXYZ();
         this->initFaults(deck);

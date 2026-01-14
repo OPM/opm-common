@@ -30,12 +30,17 @@
 #ifndef OPM_COMPOSITIONAL_FLUID_STATE_HPP
 #define OPM_COMPOSITIONAL_FLUID_STATE_HPP
 
-
-#include "ModularFluidState.hpp"
-
 #include <opm/common/utility/gpuDecorators.hpp>
-#include <opm/material/common/Valgrind.hpp>
-#include <algorithm>
+
+#include <opm/material/fluidstates/FluidStateCompositionModules.hpp>
+#include <opm/material/fluidstates/FluidStateDensityModules.hpp>
+#include <opm/material/fluidstates/FluidStateEnthalpyModules.hpp>
+#include <opm/material/fluidstates/FluidStateFugacityModules.hpp>
+#include <opm/material/fluidstates/FluidStatePressureModules.hpp>
+#include <opm/material/fluidstates/FluidStateSaturationModules.hpp>
+#include <opm/material/fluidstates/FluidStateTemperatureModules.hpp>
+#include <opm/material/fluidstates/FluidStateViscosityModules.hpp>
+#include <opm/material/fluidstates/ModularFluidState.hpp>
 
 namespace Opm {
 

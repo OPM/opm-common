@@ -42,12 +42,12 @@
 #include <opm/input/eclipse/EclipseState/Compositional/CompositionalConfig.hpp>
 
 // include all fluid states
+#include <opm/material/fluidstates/CompositionalFluidState.hpp>
+#include <opm/material/fluidstates/ImmiscibleFluidState.hpp>
+#include <opm/material/fluidstates/NonEquilibriumFluidState.hpp>
 #include <opm/material/fluidstates/PressureOverlayFluidState.hpp>
 #include <opm/material/fluidstates/SaturationOverlayFluidState.hpp>
 #include <opm/material/fluidstates/TemperatureOverlayFluidState.hpp>
-#include <opm/material/fluidstates/CompositionalFluidState.hpp>
-#include <opm/material/fluidstates/NonEquilibriumFluidState.hpp>
-#include <opm/material/fluidstates/ImmiscibleFluidState.hpp>
 
 #include <iostream>
 #include <string>
