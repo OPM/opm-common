@@ -30,13 +30,15 @@
 #ifndef OPM_IMMISCIBLE_FLUID_STATE_HPP
 #define OPM_IMMISCIBLE_FLUID_STATE_HPP
 
-#include "ModularFluidState.hpp"
-
-#include <opm/material/common/Valgrind.hpp>
-
-#include <algorithm>
-
-#include <string.h>
+#include <opm/material/fluidstates/FluidStateCompositionModules.hpp>
+#include <opm/material/fluidstates/FluidStateDensityModules.hpp>
+#include <opm/material/fluidstates/FluidStateEnthalpyModules.hpp>
+#include <opm/material/fluidstates/FluidStateFugacityModules.hpp>
+#include <opm/material/fluidstates/FluidStatePressureModules.hpp>
+#include <opm/material/fluidstates/FluidStateSaturationModules.hpp>
+#include <opm/material/fluidstates/FluidStateTemperatureModules.hpp>
+#include <opm/material/fluidstates/FluidStateViscosityModules.hpp>
+#include <opm/material/fluidstates/ModularFluidState.hpp>
 
 namespace Opm {
 
@@ -63,9 +65,6 @@ class ImmiscibleFluidState<Scalar, FluidSystem, true>
                                FluidStateExplicitViscosityModule<Scalar, FluidSystem::numPhases, ImmiscibleFluidState<Scalar, FluidSystem, true> >,
                                FluidStateExplicitEnthalpyModule<Scalar, FluidSystem::numPhases, ImmiscibleFluidState<Scalar, FluidSystem, true> > >
 {
-public:
-    ImmiscibleFluidState()
-    {}
 };
 
 // specialization for the enthalpy disabled case
@@ -83,10 +82,8 @@ class ImmiscibleFluidState<Scalar, FluidSystem, false>
                                FluidStateExplicitViscosityModule<Scalar, FluidSystem::numPhases, ImmiscibleFluidState<Scalar, FluidSystem, false> >,
                                FluidStateNullEnthalpyModule<Scalar, FluidSystem::numPhases, ImmiscibleFluidState<Scalar, FluidSystem, false> > >
 {
-public:
-    ImmiscibleFluidState()
-    {}
 };
+
 } // namespace Opm
 
 #endif

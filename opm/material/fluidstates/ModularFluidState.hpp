@@ -27,18 +27,6 @@
 #ifndef OPM_MODULAR_FLUID_STATE_HPP
 #define OPM_MODULAR_FLUID_STATE_HPP
 
-#include "FluidStatePressureModules.hpp"
-#include "FluidStateTemperatureModules.hpp"
-#include "FluidStateCompositionModules.hpp"
-#include "FluidStateFugacityModules.hpp"
-#include "FluidStateSaturationModules.hpp"
-#include "FluidStateDensityModules.hpp"
-#include "FluidStateViscosityModules.hpp"
-#include "FluidStateEnthalpyModules.hpp"
-
-#include <opm/material/common/Valgrind.hpp>
-#include <algorithm>
-
 namespace Opm {
 
 /*!
