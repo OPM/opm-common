@@ -58,6 +58,16 @@ void writeGroupStructure(const Schedule& schedule, const std::string& casename)
         if (!children.empty()) {
             os << "    \"" << gn << "\" -> {";
             for (const auto& child : children) {
+                {
+                    const auto& child_group = schedule.getGroup(child, last);
+                    const auto& grand_children = child_group.groups();
+                    if (grand_children.empty() && !child_group.wells().empty()) {
+                        // Leaf groups are drawn with doublecircle.
+                        // os << "    \"" << child << "\" [fillcolor=gold];\n";
+                        os << "    \"" << child << "\" [style=filled, fillcolor=orange];\n";
+
+                    }
+                }
                 os << " \"" << child << '"';
             }
             os << " }\n";
