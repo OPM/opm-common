@@ -115,6 +115,7 @@
 #include <optional>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
@@ -582,7 +583,8 @@ private:
 namespace
 {
 
-void report_welsegs_error(const std::vector<Opm::WelSegsSet::Entry>& segments, std::string format_str)
+void report_welsegs_error(const std::vector<Opm::WelSegsSet::Entry>& segments,
+                          std::string_view format_str)
 {
     if (!segments.empty()) {
         std::string well_str = "well";
@@ -595,7 +597,7 @@ void report_welsegs_error(const std::vector<Opm::WelSegsSet::Entry>& segments, s
             well_str.append(fmt::format("\n   {} in {} at line {}",
                                         name, location.filename, location.lineno));
         }
-        auto msg = fmt::format(format_str, well_str);
+        auto msg = fmt::format(fmt::runtime(format_str), well_str);
         throw Opm::OpmInputError(msg, std::get<1>(segments[0]));
     }
 }
