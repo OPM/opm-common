@@ -47,7 +47,7 @@
 
 inline void createDot(const Opm::Schedule& schedule, const std::string& casename)
 {
-    Opm::writeGroupStructure(schedule, casename);
+    Opm::writeWellGroupGraph(schedule, casename);
 }
 
 
