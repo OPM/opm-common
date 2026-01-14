@@ -314,7 +314,7 @@ NetWork::parse_data_deck(const std::filesystem::path& inputFileName)
     bool restart = false;
     bool skiprest = false;
 
-    time_t last_time;
+    time_t last_time{};
 
     auto network_keyw = deck_schecule["NETWORK"];
 
