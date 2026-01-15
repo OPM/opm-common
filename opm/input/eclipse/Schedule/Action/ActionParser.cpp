@@ -374,11 +374,12 @@ Opm::Action::ASTNode ActionParser::parse_left()
     // reference--since we update 'curr' in the loop below.
     auto func = curr.value;
     const auto func_type = functionType(curr.value);
-    if(func_type == Opm::Action::FuncType::well && func.size() > 2 && func[2] == 'C' ) {
+    if(func_type == Opm::Action::FuncType::well && func.size() > 4 && func[1] != 'U'
+       && func[1] != 'T') {
         // Normalize number to have 3 digits if this is actually a completion
         // function mimicking as a well. We fill up missing digits at the front with _
         static const auto num_kw_regex = std::regex {
-            R"((W[A-Z]C[A-Z+-]*)(_[0-9]+))"
+            R"(^((?!WMCTL)(?!WPIL)W[A-Z]*L)_?([0-9]+))"
         };
         std::smatch matched;
         if (std::regex_match(func, matched, num_kw_regex)) {

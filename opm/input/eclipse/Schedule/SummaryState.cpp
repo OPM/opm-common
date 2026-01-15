@@ -89,13 +89,17 @@ namespace {
     bool is_encoded_well_completion_quantity(std::string_view keyword)
     {
         // Does 'keyword' match the pattern
-        //   W?C*:
+        //   W*L:* and not WMCTL:* , WPIL*, WU* WT*
         using sz_t = std::string_view::size_type;
 
-        return keyword.size() > sz_t{6}
-            && keyword.find(':') != std::string::npos
-            && keyword.compare(0, 1, "W") == 0
-            && keyword.compare(2, 1, "C") == 0;
+        if (keyword.size() <= sz_t{6}) {
+            return false;
+        }
+
+        static const auto comp_kw_regex = std::regex {
+           R"(^(?!WMCTL)(?!WPIL)W[^UT][A-Z]*L_*[0-9]+:)"
+        };
+        return std::regex_search(keyword.begin(), keyword.end(), comp_kw_regex);
     }
 
 
@@ -186,9 +190,9 @@ namespace {
 
     std::string normalise_encoded_well_completion_quantity(const std::string& keyword)
     {
-        // Does 'keyword' match the pattern W?C*:
+        // Does 'keyword' match the pattern W*L:
         static const auto comp_kw_regex = std::regex {
-           R"((W[A-Z]C[A-Z+-]*)_*([0-9]+):(.+))"
+           R"((W[A-Z]+L)_*([0-9]+):(.+))"
         };
         std::smatch matched;
         if (!std::regex_match(keyword, matched, comp_kw_regex)) {

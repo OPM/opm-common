@@ -181,6 +181,11 @@ WWCTL
  'P1' 2 /
 /
 
+WOPRL
+ 'P1' 1 /
+ 'P1' 2 /
+/
+
 FGOR
 
 BPR
@@ -312,8 +317,8 @@ ENDACTIO
 
 
 ACTIONX
-  TEST2 100 0.1 /
-  WWCTL__2 'P1' > 0.1 /
+  TEST3 100 0.1 /
+  WOPRL__2 'P1' > 0.1 /
 /
 
 WELOPEN
