@@ -710,24 +710,24 @@ namespace {
         };
     }
 
-std::vector<int> makeRuntimei(const bool simulationFinished, const int restartStep,
-                              const int currentStep,
-                              const SummarySpecification::StartTime& computeStart,
-                              const int basic)
-{
-    std::vector<int> runtimei(50, 0);
-    runtimei[0] = simulationFinished ? 2 : 1;
-    runtimei[1] = (restartStep == -1) ? 1 : restartStep + 1;
-    runtimei[2] = currentStep + 1;
-    const auto computeStartI = makeRuntimeiDate(computeStart);
-    std::copy(computeStartI.begin(), computeStartI.end(), runtimei.begin()+3);
+    std::vector<int> makeRuntimei(const bool simulationFinished, const int restartStep,
+                                  const int currentStep,
+                                  const SummarySpecification::StartTime& computeStart,
+                                  const int basic)
+    {
+        std::vector<int> runtimei(50, 0);
+        runtimei[0] = simulationFinished ? 2 : 1;
+        runtimei[1] = (restartStep == -1) ? 1 : restartStep + 1;
+        runtimei[2] = currentStep + 1;
+        const auto computeStartI = makeRuntimeiDate(computeStart);
+        std::copy(computeStartI.begin(), computeStartI.end(), runtimei.begin()+3);
 
-    using std::chrono::system_clock;
-    const auto now = makeRuntimeiDate(Opm::TimeService::now());
-    std::copy(now.begin(), now.end(), runtimei.begin()+9);
-    runtimei[34] = basic;
-    return runtimei;
-}
+        using std::chrono::system_clock;
+        const auto now = makeRuntimeiDate(Opm::TimeService::now());
+        std::copy(now.begin(), now.end(), runtimei.begin()+9);
+        runtimei[34] = basic;
+        return runtimei;
+    }
 
     std::vector<int>
     makeDimens(const int                 nparam,
