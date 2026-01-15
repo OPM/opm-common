@@ -662,11 +662,16 @@ namespace {
         return static_cast<int>(us.count());
     }
 
+    std::tm startTimeToGmtime(const SummarySpecification::StartTime start)
+    {
+        const auto timepoint = std::chrono::system_clock::to_time_t(start);
+        return *std::gmtime(&timepoint);
+    }
+
     std::vector<int>
     makeStartDate(const SummarySpecification::StartTime start)
     {
-        const auto timepoint = std::chrono::system_clock::to_time_t(start);
-        const auto tm = *std::gmtime(&timepoint);
+        const auto tm = startTimeToGmtime(start);
 
         // { Day, Month, Year, Hour, Minute, Seconds }
 
@@ -687,8 +692,7 @@ namespace {
     std::vector<int>
     makeRuntimeiDate(const SummarySpecification::StartTime start)
     {
-        const auto timepoint = std::chrono::system_clock::to_time_t(start);
-        const auto tm = *std::gmtime(&timepoint);
+        const auto tm = startTimeToGmtime(start);
 
         // { Year, Month, Day, Hour, Minute, Seconds }
 
