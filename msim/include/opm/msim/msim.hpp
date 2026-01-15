@@ -40,8 +40,12 @@ public:
 
     void well_rate(const std::string& well, data::Rates::opt rate, std::function<well_rate_function> func);
     void solution(const std::string& field, std::function<solution_function> func);
-    void run(EclipseIO& io, bool report_only);
-    void post_step(data::Solution& sol, data::Wells& well_data, data::GroupAndNetworkValues& group_nwrk_data, size_t report_step, const time_point& sim_time);
+    /// \brief Mimick runnung all steps of the simulation
+    /// \return True if any ACTIONX was applied.
+    bool run(EclipseIO& io, bool report_only);
+    /// \brief Mimick postprocessing after a simulation step
+    /// \return True if any ACTIONX was applied.
+    bool post_step(data::Solution& sol, data::Wells& well_data, data::GroupAndNetworkValues& group_nwrk_data, size_t report_step, const time_point& sim_time);
 
 private:
     void run_step(const WellTestState& wtest_state,
