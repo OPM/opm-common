@@ -1530,9 +1530,11 @@ void dynamicContribLGR(const std::vector<std::reference_wrapper<const Opm::Well>
 
     auto key_list = [&filtered_wells](const std::string& local_key) {
                         std::vector<std::string> all_well_keys;
-                        for (const auto& well : filtered_wells) {
-                            all_well_keys.push_back(local_key + ":" + well.get().name());
-                        }
+                        all_well_keys.reserve(filtered_wells.size());
+                        std::transform(filtered_wells.begin(), filtered_wells.end(),
+                                       std::back_inserter(all_well_keys),
+                                       [&local_key](const auto& well)
+                                       { return local_key + ":" + well.get().name(); });
                         return all_well_keys;
                     };
     using Ix = ::Opm::RestartIO::Helpers::VectorItems::XGroup::index;
