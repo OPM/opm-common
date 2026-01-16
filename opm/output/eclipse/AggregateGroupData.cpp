@@ -1528,7 +1528,7 @@ void dynamicContribLGR(const std::vector<std::reference_wrapper<const Opm::Well>
                        XGrpArray&                                           xGrp)
 {
 
-    auto key_list = [filtered_wells](const std::string& local_key) {
+    auto key_list = [&filtered_wells](const std::string& local_key) {
                         std::vector<std::string> all_well_keys;
                         for (const auto& well : filtered_wells) {
                             all_well_keys.push_back(local_key + ":" + well.get().name());
