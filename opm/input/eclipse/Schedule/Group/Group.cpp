@@ -797,7 +797,7 @@ const std::vector<std::string>& Group::groups() const
 
 bool Group::wellgroup() const
 {
-    return this->m_groups.empty();
+    return this->m_groups.empty() && !groupIsSatellite(this->satellite_status);
 }
 
 bool Group::addWell(const std::string& well_name)
