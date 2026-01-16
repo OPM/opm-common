@@ -1521,7 +1521,7 @@ void dynamicContrib(const std::vector<std::string>&      restart_group_keys,
 
 
 template <class XGrpArray>
-void dynamicContribLGR(std::vector<std::reference_wrapper<const Opm::Well>> filtered_wells,
+void dynamicContribLGR(const std::vector<std::reference_wrapper<const Opm::Well>>& filtered_wells,
                        const std::vector<std::string>&                      restart_well_keys,
                        const std::map<std::string, size_t>&                 wellKeyToIndex,
                        const Opm::SummaryState&                             sumState,
