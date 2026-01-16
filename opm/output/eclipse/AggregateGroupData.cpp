@@ -1503,7 +1503,7 @@ void dynamicContrib(const std::vector<std::string>&      restart_group_keys,
                               ? key : key + ":" + groupName;
 
         if (sumState.has(compKey)) {
-            double keyValue = sumState.get(compKey);
+            const double keyValue = sumState.get(compKey);
             const auto itr = keyToIndex.find(key);
             xGrp[itr->second] = keyValue;
         }
@@ -1539,18 +1539,18 @@ void dynamicContribLGR(const std::vector<std::reference_wrapper<const Opm::Well>
                     };
     using Ix = ::Opm::RestartIO::Helpers::VectorItems::XGroup::index;
 
-    const std::vector<std::string>& keys = restart_well_keys;
-    const std::map<std::string, size_t>& keyToIndex = wellKeyToIndex;
-
-    for (const auto& key : keys) {
-
-        std::vector<std::string> compKeys =  key_list(key);
-        for (const auto& compKey : compKeys) {
-            if (sumState.has(compKey)) {
-                double keyValue = sumState.get(compKey);
-                const auto itr = keyToIndex.find(key);
-                xGrp[itr->second] = xGrp[itr->second] + keyValue;
+    for (const auto& key : restart_well_keys) {
+        const auto keyPos = wellKeyToIndex.find(key);
+        if (keyPos == wellKeyToIndex.end()) {
+            // Shouldn't really happen...
+            continue;
+        }
+        auto& xGrpValue = xGrp[keyPos->second];
+        for (const auto& compKey : key_list(key)) {
+            if (!sumState.has(compKey)) {
+                continue;
             }
+            xGrpValue += sumState.get(compKey);
         }
     }
 
