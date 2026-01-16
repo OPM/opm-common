@@ -90,15 +90,11 @@ class KeywordLocation;
         void handleError( const std::string& errorKey, const std::string& msg, const std::optional<KeywordLocation>& location, ErrorGuard& errors)  const;
         void handleUnknownKeyword(const std::string& keyword, const std::optional<KeywordLocation>& location, ErrorGuard& errors) const;
         bool hasKey(const std::string& key) const;
-        ParseContext  withKey(const std::string& key, InputErrorAction action) const;
-        ParseContext& withKey(const std::string& key, InputErrorAction action);
         void updateKey(const std::string& key , InputErrorAction action);
         void update(InputErrorAction action);
         void update(const std::string& keyString , InputErrorAction action);
         void ignoreKeyword(const std::string& keyword);
         InputErrorAction get(const std::string& key) const;
-        std::map<std::string,InputErrorAction>::const_iterator begin() const;
-        std::map<std::string,InputErrorAction>::const_iterator end() const;
         /*
           When the key is added it is inserted in 'strict mode',
           i.e. with the value 'InputError::THROW_EXCEPTION. If you
