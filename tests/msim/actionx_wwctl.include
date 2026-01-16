@@ -318,7 +318,7 @@ ENDACTIO
 
 ACTIONX
   TEST3 100 0.1 /
-  WOPRL__2 'P1' > 0.1 /
+  WOPRL__1 'P1' > 0.1 /
 /
 
 WELOPEN
