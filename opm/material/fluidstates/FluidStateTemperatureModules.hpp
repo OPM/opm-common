@@ -32,7 +32,7 @@
 
 #include <opm/material/common/MathToolbox.hpp>
 
-#include <algorithm>
+#include <array>
 #include <cassert>
 
 namespace Opm {
@@ -88,7 +88,7 @@ public:
     }
 
 protected:
-    Scalar temperature_[numPhases];
+    std::array<Scalar, numPhases> temperature_{};
 };
 
 /*!

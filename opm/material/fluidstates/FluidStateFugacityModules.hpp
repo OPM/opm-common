@@ -30,7 +30,7 @@
 
 #include <opm/material/common/Valgrind.hpp>
 
-#include <algorithm>
+#include <array>
 #include <limits>
 #include <stdexcept>
 
@@ -101,7 +101,7 @@ protected:
     const Implementation& asImp_() const
     { return *static_cast<const Implementation*>(this); }
 
-    Scalar fugacityCoefficient_[numPhases][numComponents];
+    std::array<std::array<Scalar, numComponents>, numPhases> fugacityCoefficient_{};
 };
 
 /*!
@@ -168,7 +168,7 @@ protected:
     const Implementation& asImp_() const
     { return *static_cast<const Implementation*>(this); }
 
-    Scalar fugacityCoefficient_[numPhases];
+    std::array<Scalar, numPhases> fugacityCoefficient_{};
 };
 
 /*!
