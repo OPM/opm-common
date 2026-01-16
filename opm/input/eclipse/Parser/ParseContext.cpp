@@ -205,26 +205,6 @@ namespace Opm {
         }
     }
 
-    std::map<std::string,InputErrorAction>::const_iterator ParseContext::begin() const {
-        return m_errorContexts.begin();
-    }
-
-
-    std::map<std::string,InputErrorAction>::const_iterator ParseContext::end() const {
-        return m_errorContexts.end();
-    }
-
-    ParseContext ParseContext::withKey(const std::string& key, InputErrorAction action) const {
-        ParseContext pc(*this);
-        pc.addKey(key, action);
-        return pc;
-    }
-
-    ParseContext& ParseContext::withKey(const std::string& key, InputErrorAction action) {
-        this->addKey(key, action);
-        return *this;
-    }
-
     bool ParseContext::hasKey(const std::string& key) const {
         if (m_errorContexts.find( key ) == m_errorContexts.end())
             return false;
