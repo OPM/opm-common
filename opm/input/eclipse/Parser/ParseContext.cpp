@@ -17,62 +17,53 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <cstdlib>
-#include <iostream>
+#include <opm/input/eclipse/Parser/ParseContext.hpp>
 
+#include <opm/common/OpmLog/KeywordLocation.hpp>
 #include <opm/common/OpmLog/OpmLog.hpp>
 
 #include <opm/input/eclipse/Parser/ErrorGuard.hpp>
 #include <opm/input/eclipse/Parser/InputErrorAction.hpp>
-#include <opm/input/eclipse/Parser/ParseContext.hpp>
-#include <opm/common/OpmLog/KeywordLocation.hpp>
-#include <opm/common/utility/String.hpp>
-#include <opm/common/utility/shmatch.hpp>
+
 #include <opm/common/utility/OpmInputError.hpp>
+#include <opm/common/utility/shmatch.hpp>
+#include <opm/common/utility/String.hpp>
+
+#include <cstdlib>
+#include <iostream>
 
 namespace Opm {
 
-
-    /*
-      A set of predefined error modes are added, with the default
-      setting 'InputErrorAction::IGNORE, then afterwards the environment
-      variables 'OPM_ERRORS_EXCEPTION', 'OPM_ERRORS_WARN' and
-      'OPM_ERRORS_IGNORE' are consulted
-    */
-
-    ParseContext::ParseContext() {
+    ParseContext::ParseContext()
+    {
         initDefault();
         initEnv();
     }
 
-    /*
-      If you intend to hardwire settings you should use this
-      constructor, as that way the environment variables are applied
-      after the hawrdwired settings.
-    */
-
-    ParseContext::ParseContext(const std::vector<std::pair<std::string , InputErrorAction>>& initial) {
+    // If you intend to hardwire settings you should use this constructor,
+    // since environment variables are applied after the hardwired settings.
+    ParseContext::ParseContext(const std::vector<std::pair<std::string, InputErrorAction>>& initial)
+    {
         initDefault();
 
-        for (const auto& pair : initial)
-            update( pair.first , pair.second );
+        for (const auto& pair : initial) {
+            update(pair.first, pair.second);
+        }
 
         initEnv();
     }
 
-
-    /*
-      This constructor will initialize all actions to @default_action. The
-      environment variables will be used.
-    */
-
-    ParseContext::ParseContext(InputErrorAction default_action) {
+    // This constructor will initialize all actions to default_action. The
+    // environment variables will be used.
+    ParseContext::ParseContext(const InputErrorAction default_action)
+    {
         initDefault();
         update(default_action);
         initEnv();
     }
 
-    void ParseContext::initDefault() {
+    void ParseContext::initDefault()
+    {
         addKey(PARSE_EXTRA_RECORDS, InputErrorAction::THROW_EXCEPTION);
         addKey(PARSE_UNKNOWN_KEYWORD, InputErrorAction::THROW_EXCEPTION);
         addKey(PARSE_RANDOM_TEXT, InputErrorAction::THROW_EXCEPTION);
@@ -136,33 +127,36 @@ namespace Opm {
         this->addKey(SCHEDULE_COMPSEGS_INVALID, InputErrorAction::THROW_EXCEPTION);
         this->addKey(SCHEDULE_COMPSEGS_NOT_SUPPORTED, InputErrorAction::THROW_EXCEPTION);
         this->addKey(SCHEDULE_COMPDAT_INVALID, InputErrorAction::THROW_EXCEPTION);
+
         addKey(SCHEDULE_INVALID_NAME, InputErrorAction::THROW_EXCEPTION);
     }
 
-    void ParseContext::initEnv() {
-        envUpdate( "OPM_ERRORS_EXCEPTION" , InputErrorAction::THROW_EXCEPTION );
-        envUpdate( "OPM_ERRORS_WARN" , InputErrorAction::WARN );
-        envUpdate( "OPM_ERRORS_IGNORE" , InputErrorAction::IGNORE );
-        envUpdate( "OPM_ERRORS_EXIT1", InputErrorAction::EXIT1);
-        envUpdate( "OPM_ERRORS_EXIT", InputErrorAction::EXIT1);
-        envUpdate( "OPM_ERRORS_DELAYED_EXIT1", InputErrorAction::DELAYED_EXIT1);
-        envUpdate( "OPM_ERRORS_DELAYED_EXIT", InputErrorAction::DELAYED_EXIT1);
+    void ParseContext::initEnv()
+    {
+        envUpdate("OPM_ERRORS_EXCEPTION", InputErrorAction::THROW_EXCEPTION);
+        envUpdate("OPM_ERRORS_WARN", InputErrorAction::WARN);
+        envUpdate("OPM_ERRORS_IGNORE", InputErrorAction::IGNORE);
+        envUpdate("OPM_ERRORS_EXIT1", InputErrorAction::EXIT1);
+        envUpdate("OPM_ERRORS_EXIT", InputErrorAction::EXIT1);
+        envUpdate("OPM_ERRORS_DELAYED_EXIT1", InputErrorAction::DELAYED_EXIT1);
+        envUpdate("OPM_ERRORS_DELAYED_EXIT", InputErrorAction::DELAYED_EXIT1);
     }
 
-
-    void ParseContext::ignoreKeyword(const std::string& keyword) {
+    void ParseContext::ignoreKeyword(const std::string& keyword)
+    {
         this->ignore_keywords.insert(keyword);
     }
 
+    void ParseContext::handleError(const std::string&                    errorKey,
+                                   const std::string&                    msg_fmt,
+                                   const std::optional<KeywordLocation>& location,
+                                   ErrorGuard&                           errors) const
+    {
+        const auto action = this->get(errorKey);
 
-    void ParseContext::handleError(
-            const std::string& errorKey,
-            const std::string& msg_fmt,
-            const std::optional<KeywordLocation>& location,
-            ErrorGuard& errors) const {
-
-        InputErrorAction action = get( errorKey );
-        std::string msg = location ? OpmInputError::format(msg_fmt, *location) : msg_fmt;
+        const auto msg = location.has_value()
+            ? OpmInputError::format(msg_fmt, *location)
+            : msg_fmt;
 
         if (action == InputErrorAction::IGNORE) {
             errors.addWarning(errorKey, msg);
@@ -177,19 +171,22 @@ namespace Opm {
 
         if (action == InputErrorAction::THROW_EXCEPTION) {
             OpmLog::error(msg);
-            // If we decide to throw immediately - we clear the error stack to
-            // make sure the error object does not terminate the application
-            // when it goes out of scope.
+
+            // Clear the error stack if we decide to throw immediately.
+            // This ensures that the error object does not terminate the
+            // application when it goes out of scope.
             errors.clear();
 
-            throw OpmInputError(msg, location.value_or(KeywordLocation{}));
+            throw OpmInputError { msg, location.value_or(KeywordLocation{}) };
         }
 
         if (action == InputErrorAction::EXIT1) {
             OpmLog::error(msg);
-            std::cerr << "A fatal error has occurred and the application will stop." << std::endl;
-            std::cerr << msg << std::endl;
-            std::exit(1);
+
+            std::cerr << "A fatal error has occurred and the application will stop.\n"
+                      << msg << std::endl;
+
+            std::exit(EXIT_FAILURE);
         }
 
         if (action == InputErrorAction::DELAYED_EXIT1) {
@@ -198,133 +195,145 @@ namespace Opm {
         }
     }
 
-    void ParseContext::handleUnknownKeyword(const std::string& keyword, const std::optional<KeywordLocation>& location, ErrorGuard& errors) const {
+    void ParseContext::handleUnknownKeyword(const std::string&                    keyword,
+                                            const std::optional<KeywordLocation>& location,
+                                            ErrorGuard&                           errors) const
+    {
         if (this->ignore_keywords.find(keyword) == this->ignore_keywords.end()) {
-            std::string msg = "Unknown keyword: " + keyword;
+            const std::string msg = "Unknown keyword: " + keyword;
             this->handleError(ParseContext::PARSE_UNKNOWN_KEYWORD, msg, location, errors);
         }
     }
 
-    bool ParseContext::hasKey(const std::string& key) const {
-        if (m_errorContexts.find( key ) == m_errorContexts.end())
-            return false;
-        else
-            return true;
+    bool ParseContext::hasKey(const std::string& key) const
+    {
+        return this->m_errorContexts.find(key) != this->m_errorContexts.end();
     }
 
+    void ParseContext::addKey(const std::string& key,
+                              const InputErrorAction default_action)
+    {
+        if (key.find_first_of("|:*") != std::string::npos) {
+            throw std::invalid_argument {
+                "The ParseContext keys can not contain '|', '*' or ':'"
+            };
+        }
 
-    void ParseContext::addKey(const std::string& key, InputErrorAction default_action) {
-        if (key.find_first_of("|:*") != std::string::npos)
-            throw std::invalid_argument("The ParseContext keys can not contain '|', '*' or ':'");
-
-        if (!hasKey(key))
-            m_errorContexts.insert( std::pair<std::string , InputErrorAction>( key , default_action));
+        this->m_errorContexts.try_emplace(key, default_action);
     }
 
+    InputErrorAction ParseContext::get(const std::string& key) const
+    {
+        const auto actionPos = this->m_errorContexts.find(key);
 
-    InputErrorAction ParseContext::get(const std::string& key) const {
-        if (hasKey( key ))
-            return m_errorContexts.find( key )->second;
-        else
-            throw std::invalid_argument("The errormode key: " + key + " has not been registered");
+        if (actionPos == this->m_errorContexts.end()) {
+            throw std::invalid_argument {
+                "The errormode key '" + key + "' has not been registered"
+            };
+        }
+
+        return actionPos->second;
     }
 
-    /*****************************************************************/
+    // ---------------------------------------------------------------------------
 
-    /*
-      This is the 'strict' update function, it will throw an exception
-      if the input string is not a defined error mode. This should
-      typically be used in a downstream module where the policy
-      regarding an error mode is hardcoded. When using this method the
-      static string constanst for the different error modes should be
-      used as arguments:
+    // This is the 'strict' update function.  It will throw an exception if
+    // the input string is not a defined context category.  This should
+    // typically be used in a downstream module where the policy regarding
+    // category is hardcoded.  When using this function, the static string
+    // constants for the different categories should be used as arguments.
+    //
+    //   parseContext.updateKey(ParseContext::PARSE_RANDOM_SLASH, InputErrorAction::IGNORE)
 
-        parseContext.updateKey( ParseContext::PARSE_RANDOM_SLASH , InputErrorAction::IGNORE )
+    void ParseContext::updateKey(const std::string& key, const InputErrorAction action)
+    {
+        const auto actionPos = this->m_errorContexts.find(key);
 
-    */
-
-    void ParseContext::updateKey(const std::string& key , InputErrorAction action) {
-        if (hasKey(key))
-            m_errorContexts[key] = action;
-        else
-            throw std::invalid_argument("The errormode key: " + key + " has not been registered");
-    }
-
-
-    void ParseContext::envUpdate( const std::string& envVariable , InputErrorAction action ) {
-        const char * userSetting = getenv(envVariable.c_str());
-        if (userSetting )
-            update( userSetting , action);
-    }
-
-
-    void ParseContext::update(InputErrorAction action) {
-        for (const auto& pair : m_errorContexts) {
-            const std::string& key = pair.first;
-            updateKey( key , action );
-         }
-    }
-
-
-    void ParseContext::patternUpdate( const std::string& pattern , InputErrorAction action) {
-        for (const auto& pair : m_errorContexts) {
-            const std::string& key = pair.first;
-            if (shmatch( pattern , key))
-                updateKey( key , action );
-         }
-    }
-
-
-    /*
-      This is the most general update function. The input keyString is
-      "selector string", and all matching error modes will be set to
-      @action. The algorithm for decoding the @keyString is:
-
-        1. The input string is split into several tokens on occurences
-           of ':' or ':' - and then each element is treated
-           seperately.
-
-        2. For each element in the list from 1):
-
-           a) If it contains at least one '*' - update all error modes
-              matching the input string.
-
-           b) If it is exactly equal to recognized error mode - update
-              that.
-
-           c) Otherwise - silently ignore.
-    */
-
-    void ParseContext::update(const std::string& keyString , InputErrorAction action) {
-        std::vector<std::string> keys = split_string(keyString, ":|");
-        for (const auto& input_key : keys) {
-            size_t wildcard_pos = input_key.find("*");
-
-            if (wildcard_pos == std::string::npos) {
-                if (hasKey( input_key ))
-                    updateKey( input_key , action );
-            } else
-                patternUpdate( input_key , action );
-
+        if (actionPos == this->m_errorContexts.end()) {
+            throw std::invalid_argument {
+                "The errormode key: " + key + " has not been registered"
+            };
+        }
+        else {
+            actionPos->second = action;
         }
     }
 
-    void ParseContext::setInputSkipMode(const std::string& skip_mode) {
+    void ParseContext::envUpdate(const std::string& envVariable,
+                                 const InputErrorAction action)
+    {
+        const char* userSetting = std::getenv(envVariable.c_str());
+
+        if (userSetting != nullptr) {
+            update(userSetting, action);
+        }
+    }
+
+    void ParseContext::update(const InputErrorAction action)
+    {
+        for (auto& actionPair : m_errorContexts) {
+            actionPair.second = action;
+         }
+    }
+
+    void ParseContext::patternUpdate(const std::string& pattern,
+                                     const InputErrorAction action)
+    {
+        for (const auto& pair : m_errorContexts) {
+            const std::string& key = pair.first;
+            if (shmatch(pattern, key)) {
+                updateKey(key, action);
+            }
+         }
+    }
+
+    void ParseContext::update(const std::string& keyString,
+                              const InputErrorAction action)
+    {
+        const auto keys = split_string(keyString, ":|");
+
+        for (const auto& input_key : keys) {
+            const auto wildcard_pos = input_key.find("*");
+
+            if (wildcard_pos == std::string::npos) {
+                if (hasKey(input_key)) {
+                    updateKey(input_key, action);
+                }
+            }
+            else {
+                patternUpdate(input_key, action);
+            }
+        }
+    }
+
+    void ParseContext::setInputSkipMode(const std::string& skip_mode)
+    {
         this->m_input_skip_mode = skip_mode;
     }
 
-    bool ParseContext::isActiveSkipKeyword(const std::string& deck_name) const {
-        if (deck_name.compare(0, 4, "SKIP") != 0)
+    bool ParseContext::isActiveSkipKeyword(const std::string& deck_name) const
+    {
+        if (deck_name.compare(0, 4, "SKIP") != 0) {
             return false;
+        }
 
-        if (deck_name == "SKIP")
+        if (deck_name == "SKIP") {
             return true;
+        }
 
-        if (deck_name == "SKIP100" && (this->m_input_skip_mode == "100" || this->m_input_skip_mode == "all"))
+        if ((deck_name == "SKIP100") &&
+            ((this->m_input_skip_mode == "100") ||
+             (this->m_input_skip_mode == "all")))
+        {
             return true;
+        }
 
-        if (deck_name == "SKIP300" && (this->m_input_skip_mode == "300" || this->m_input_skip_mode == "all"))
+        if ((deck_name == "SKIP300") &&
+            ((this->m_input_skip_mode == "300") ||
+             (this->m_input_skip_mode == "all")))
+        {
             return true;
+        }
 
         return false;
     }
@@ -394,4 +403,5 @@ namespace Opm {
     const std::string ParseContext::SCHEDULE_COMPSEGS_NOT_SUPPORTED = "SCHEDULE_COMPSEGS_NOT_SUPPORTED";
 
     const std::string ParseContext::SCHEDULE_COMPDAT_INVALID = "SCHEDULE_COMPDAT_INVALID";
+
 }
