@@ -41,14 +41,21 @@ along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 #include <opm/input/eclipse/Deck/DeckItem.hpp>
 #include <opm/input/eclipse/Deck/Deck.hpp>
 
+#include <filesystem>
+
 using namespace Opm;
 
 inline std::string prepath() {
+    int idx;
 #if BOOST_VERSION / 100000 == 1 && BOOST_VERSION / 100 % 1000 < 71
-    return boost::unit_test::framework::master_test_suite().argv[2];
+    idx = 2;
 #else
-    return boost::unit_test::framework::master_test_suite().argv[1];
+    idx = 1;
 #endif
+    const std::filesystem::path path {
+        boost::unit_test::framework::master_test_suite().argv[idx]
+    };
+    return std::filesystem::canonical(path).generic_string();
 }
 
 static Deck createDeckTOP() {
@@ -448,11 +455,11 @@ BOOST_AUTO_TEST_CASE(WithGridOptsDefaultRegion) {
 
 BOOST_AUTO_TEST_CASE(TestIOConfigBaseName) {
     Parser parser;
-    auto deck = parser.parseFile(prepath() + "IOConfig/SPE1CASE2.DATA");
+    auto deck = parser.parseFile(prepath() + "/IOConfig/SPE1CASE2.DATA");
     EclipseState state(deck);
     const auto& io = state.cfg().io();
     BOOST_CHECK_EQUAL(io.getBaseName(), "SPE1CASE2");
-    BOOST_CHECK_EQUAL(io.getOutputDir(), prepath() + "IOConfig");
+    BOOST_CHECK_EQUAL(io.getOutputDir(), prepath() + "/IOConfig");
 
     Parser parser2;
     auto deck2 = createDeckWithGridOpts();
