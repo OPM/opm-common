@@ -192,6 +192,46 @@ namespace Opm {
         }
     };
 
+    struct TuningDp {
+        TuningDp();
+
+        static TuningDp serializationTestObject();
+
+        // NOTE: TRGLCV and XXXLCV are the same as in TUNING, since they define a different default value in TUNINGDP
+        double TRGLCV;
+        bool TRGLCV_has_value{false};
+        double XXXLCV;
+        bool XXXLCV_has_value{false};
+        double TRGDDP;
+        double TRGDDS;
+        double TRGDDRS;
+        double TRGDDRV;
+
+        bool defaults_updated{false};
+
+        void set_defaults();
+
+        bool operator==(const TuningDp& other) const;
+        bool operator!=(const TuningDp& other) const
+        {
+            return !(*this == other);
+        }
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(TRGLCV);
+            serializer(TRGLCV_has_value);
+            serializer(XXXLCV);
+            serializer(XXXLCV_has_value);
+            serializer(TRGDDP);
+            serializer(TRGDDS);
+            serializer(TRGDDRS);
+            serializer(TRGDDRV);
+            serializer(defaults_updated);
+        }
+    };
+
 } //namespace Opm
 
 #endif

@@ -144,6 +144,9 @@ BOOST_AUTO_TEST_CASE(MergeEvents)
 
     BOOST_CHECK_MESSAGE(! ev1.hasEvent(SchEvt::REQUEST_SHUT_WELL),
                         R"(Merged collection must NOT have REQUEST_SHUT_WELL)");
+
+    BOOST_CHECK_MESSAGE(! ev1.hasEvent(SchEvt::TUNINGDP_CHANGE),
+                        R"(Merged collection must NOT have TUNINGDP_CHANGE)");
 }
 
 BOOST_AUTO_TEST_CASE(MergeEventCollections)

@@ -365,6 +365,7 @@ bool ScheduleState::operator==(const ScheduleState& other) const {
         && this->m_year_num == other.m_year_num
         && this->target_wellpi == other.target_wellpi
         && this->m_tuning == other.m_tuning
+        && this->m_tuning_dp == other.m_tuning_dp
         && this->m_end_time == other.m_end_time
         && this->m_events == other.m_events
         && this->m_wellgroup_events == other.m_wellgroup_events
@@ -455,6 +456,7 @@ ScheduleState ScheduleState::serializationTestObject() {
     return ts;
 }
 
+// ---- TUNING ----
 void ScheduleState::update_tuning(Tuning tuning) {
     this->m_tuning = std::move(tuning);
 }
@@ -473,6 +475,21 @@ double ScheduleState::max_next_tstep(const bool enableTUNING) const {
     double next_value = this->next_tstep.has_value() ? this->next_tstep->value() : -1.0;
     return std::max(next_value, tuning_value);
 }
+// ---------
+
+// ---- TUNINGDP ----
+void ScheduleState::update_tuning_dp(TuningDp tuning_dp) {
+    this->m_tuning_dp = std::move(tuning_dp);
+}
+
+const TuningDp& ScheduleState::tuning_dp() const {
+    return this->m_tuning_dp;
+}
+
+TuningDp& ScheduleState::tuning_dp() {
+    return this->m_tuning_dp;
+}
+// ---------
 
 void ScheduleState::update_events(Events events) {
     this->m_events = events;

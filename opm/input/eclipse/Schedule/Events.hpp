@@ -104,6 +104,9 @@ namespace Opm
 
             /// Analogue to above but when SCHEDULE set it to SHUT
             REQUEST_SHUT_WELL = (UINT64_C(1) << 22),
+
+            /// TUNINGDP has changed
+            TUNINGDP_CHANGE = (UINT64_C(1) << 23),
         };
     } // namespace ScheduleEvents
 
