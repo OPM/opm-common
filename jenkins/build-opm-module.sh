@@ -272,7 +272,7 @@ function build_module_full {
     mkdir -p $WORKSPACE/$configuration/build-$1
     pushd $WORKSPACE/$configuration/build-$1
     echo "Building main module $1=$sha1 configuration=$configuration"
-    build_module "-DCMAKE_INSTALL_PREFIX=$WORKSPACE/$configuration/install -DOPM_TESTS_ROOT=$OPM_TESTS_ROOT ${EXTRA_MODULE_FLAGS[$1]}" 1 $WORKSPACE
+    build_module "-DCMAKE_INSTALL_PREFIX=$WORKSPACE/$configuration/install -DOPM_TESTS_ROOT=$OPM_TESTS_ROOT ${EXTRA_MODULE_FLAGS[$1]}" 1 $WORKSPACE/deps/$1
     test $? -eq 0 || exit 1
     cmake --build . --target install
     test $? -eq 0 || exit 1
