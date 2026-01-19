@@ -65,7 +65,7 @@ void writeNetworkStructure(const Schedule& schedule, const std::string& casename
 
     // Highlight leaf nodes
     for (const auto& leaf : network.leaf_nodes()) {
-        os << "    \"" << leaf << "\" [shape=oval];\n";
+        os << "    \"" << leaf << "\" [shape=oval, style=filled, fillcolor=orange];\n";
     }
 
     // Group -> Well relations.
