@@ -263,6 +263,22 @@ namespace {
                 ? record.getItem<Kw::SEGMENT_NUMBER>().get<int>(0)
                 : 0;
 
+            if ((segment_number > 0) && (segments.segmentNumberToIndex(segment_number) < 0)) {
+                // COMPSEGS references a nonexistent segment.  This segment
+                // should have been entered in WELSEGS ahead of COMPSEGS.
+
+                const auto msg = fmt::format("Segment {} on branch {} has not "
+                                             "been defined in WELSEGS for well "
+                                             "{}, connection ({},{},{}).",
+                                             segment_number, branch, well_name,
+                                             I + 1, J + 1, K + 1);
+
+                parseContext.handleError(Opm::ParseContext::SCHEDULE_COMPSEGS_INVALID,
+                                         msg, location, errors);
+
+                continue;
+            }
+
             double distance_start = 0.0;
             if (record.getItem<Kw::DISTANCE_START>().hasValue(0)) {
                 distance_start = record.getItem<Kw::DISTANCE_START>().getSIDouble(0);
