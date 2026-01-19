@@ -28,6 +28,7 @@
 
 #include <opm/input/eclipse/Schedule/Action/WGNames.hpp>
 #include <opm/input/eclipse/Schedule/MSW/AICD.hpp>
+#include <opm/input/eclipse/Schedule/MSW/SICD.hpp>
 #include <opm/input/eclipse/Schedule/MSW/WellSegments.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleState.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQConfig.hpp>
@@ -75,7 +76,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
     if (well.handleCOMPSEGS(handlerContext.keyword, handlerContext.grid,
                             handlerContext.parseContext, handlerContext.errors))
     {
-        handlerContext.state().wells.update( std::move(well) );
+        handlerContext.state().wells.update(std::move(well));
         handlerContext.record_well_structure_change();
     }
 
@@ -107,16 +108,21 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
 
 void handleWSEGAICD(HandlerContext& handlerContext)
 {
-    std::map<std::string, std::vector<std::pair<int, AutoICD> > > auto_icds = AutoICD::fromWSEGAICD(handlerContext.keyword);
+    const auto auto_icds = AutoICD::fromWSEGAICD(handlerContext.keyword);
 
     for (const auto& [well_name_pattern, aicd_pairs] : auto_icds) {
         const auto well_names = handlerContext.wellNames(well_name_pattern, true);
 
         for (const auto& well_name : well_names) {
-            auto well = handlerContext.state().wells( well_name );
+            auto well = handlerContext.state().wells(well_name);
 
-            if (well.updateWSEGAICD(aicd_pairs, handlerContext.keyword.location()) )
-                handlerContext.state().wells.update( std::move(well) );
+            const auto did_update = well.updateWSEGAICD
+                (aicd_pairs, handlerContext.keyword.location(),
+                 handlerContext.parseContext, handlerContext.errors);
+
+            if (did_update) {
+                handlerContext.state().wells.update(std::move(well));
+            }
         }
     }
 }
@@ -136,19 +142,21 @@ void handleWSEGITER(HandlerContext& handlerContext)
 
 void handleWSEGSICD(HandlerContext& handlerContext)
 {
-    std::map<std::string, std::vector<std::pair<int, SICD> > > spiral_icds = SICD::fromWSEGSICD(handlerContext.keyword);
+    const auto spiral_icds = SICD::fromWSEGSICD(handlerContext.keyword);
 
-    for (const auto& map_elem : spiral_icds) {
-        const std::string& well_name_pattern = map_elem.first;
+    for (const auto& [well_name_pattern, sicd_pairs] : spiral_icds) {
         const auto well_names = handlerContext.wellNames(well_name_pattern, false);
 
-        const std::vector<std::pair<int, SICD> >& sicd_pairs = map_elem.second;
-
         for (const auto& well_name : well_names) {
-            auto well = handlerContext.state().wells( well_name );
+            auto well = handlerContext.state().wells(well_name);
 
-            if (well.updateWSEGSICD(sicd_pairs) )
-                handlerContext.state().wells.update( std::move(well) );
+            const auto did_update = well.updateWSEGSICD
+                (sicd_pairs, handlerContext.keyword.location(),
+                 handlerContext.parseContext, handlerContext.errors);
+
+            if (did_update) {
+                handlerContext.state().wells.update(std::move(well));
+            }
         }
     }
 }
@@ -156,20 +164,24 @@ void handleWSEGSICD(HandlerContext& handlerContext)
 void handleWSEGVALV(HandlerContext& handlerContext)
 {
     const double udq_default = handlerContext.state().udq.get().params().undefinedValue();
-    const std::map<std::string, std::vector<std::pair<int, Valve> > > valves = Valve::fromWSEGVALV(handlerContext.keyword, udq_default);
 
-    for (const auto& map_elem : valves) {
-        const std::string& well_name_pattern = map_elem.first;
+    const auto valves = Valve::fromWSEGVALV(handlerContext.keyword, udq_default);
+
+    for (const auto& [well_name_pattern, valve_pairs] : valves) {
         const auto well_names = handlerContext.wellNames(well_name_pattern);
 
-        const std::vector<std::pair<int, Valve> >& valve_pairs = map_elem.second;
-
         for (const auto& well_name : well_names) {
-            auto well = handlerContext.state().wells( well_name );
-            if (well.updateWSEGVALV(valve_pairs))
-                handlerContext.state().wells.update( std::move(well) );
+            auto well = handlerContext.state().wells(well_name);
 
-            handlerContext.affected_well(well_name);
+            const auto did_update = well.updateWSEGVALV
+                (valve_pairs, handlerContext.keyword.location(),
+                 handlerContext.parseContext, handlerContext.errors);
+
+            if (did_update) {
+                handlerContext.state().wells.update(std::move(well));
+
+                handlerContext.affected_well(well_name);
+            }
         }
     }
 }

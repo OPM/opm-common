@@ -565,6 +565,14 @@ namespace Opm {
         /// Connection data (COMPDAT keyword) invalid in some way.
         const static std::string SCHEDULE_COMPDAT_INVALID;
 
+        /// ICD keyword (WSEGAICD, WSEGSICD, WSEGVALV) references a missing
+        /// well segment.
+        ///
+        /// Typically generates a warning and drops the device.  Note,
+        /// however, that there are likely to be other issues in the input
+        /// deck when this situation occurs.
+        const static std::string SCHEDULE_ICD_MISSING_SEGMENT;
+
         // The SIMULATOR_KEYWORD_ categories are intended to define the
         // parser behaviour for when the parser itself recognises an input
         // keyword, but the simulator does not support the intended use of

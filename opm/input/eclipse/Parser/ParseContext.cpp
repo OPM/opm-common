@@ -128,6 +128,8 @@ namespace Opm {
         this->addKey(SCHEDULE_COMPSEGS_NOT_SUPPORTED, InputErrorAction::THROW_EXCEPTION);
         this->addKey(SCHEDULE_COMPDAT_INVALID, InputErrorAction::THROW_EXCEPTION);
 
+        this->addKey(SCHEDULE_ICD_MISSING_SEGMENT, InputErrorAction::WARN);
+
         addKey(SCHEDULE_INVALID_NAME, InputErrorAction::THROW_EXCEPTION);
     }
 
@@ -403,5 +405,7 @@ namespace Opm {
     const std::string ParseContext::SCHEDULE_COMPSEGS_NOT_SUPPORTED = "SCHEDULE_COMPSEGS_NOT_SUPPORTED";
 
     const std::string ParseContext::SCHEDULE_COMPDAT_INVALID = "SCHEDULE_COMPDAT_INVALID";
+
+    const std::string ParseContext::SCHEDULE_ICD_MISSING_SEGMENT = "SCHEDULE_ICD_MISSING_SEGMENT";
 
 }

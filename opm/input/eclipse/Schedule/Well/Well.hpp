@@ -548,9 +548,22 @@ public:
     bool updateProduction(std::shared_ptr<WellProductionProperties> production);
     bool updateInjection(std::shared_ptr<WellInjectionProperties> injection);
     bool updateWellProductivityIndex();
-    bool updateWSEGSICD(const std::vector<std::pair<int, SICD> >& sicd_pairs);
-    bool updateWSEGVALV(const std::vector<std::pair<int, Valve> >& valve_pairs);
-    bool updateWSEGAICD(const std::vector<std::pair<int, AutoICD> >& aicd_pairs, const KeywordLocation& location);
+
+    bool updateWSEGAICD(const std::vector<std::pair<int, AutoICD>>& aicd_pairs,
+                        const KeywordLocation&                      location,
+                        const ParseContext&                         parseContext,
+                        ErrorGuard&                                 errors);
+
+    bool updateWSEGSICD(const std::vector<std::pair<int, SICD>>& sicd_pairs,
+                        const KeywordLocation&                   location,
+                        const ParseContext&                      parseContext,
+                        ErrorGuard&                              errors);
+
+    bool updateWSEGVALV(const std::vector<std::pair<int, Valve>>& valve_pairs,
+                        const KeywordLocation&                    location,
+                        const ParseContext&                       parseContext,
+                        ErrorGuard&                               errors);
+
     bool updateICDFlowScalingFactors();
     bool updateWPAVE(const PAvg& pavg);
 

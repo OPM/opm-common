@@ -1058,10 +1058,10 @@ bool Well::updateSolventFraction(const double solvent_fraction_arg)
     return false;
 }
 
-bool Well::handleCOMPSEGS(const DeckKeyword& keyword,
+bool Well::handleCOMPSEGS(const DeckKeyword&  keyword,
                           const ScheduleGrid& grid,
                           const ParseContext& parseContext,
-                          ErrorGuard& errors)
+                          ErrorGuard&         errors)
 {
     if (this->segments == nullptr) {
         throw OpmInputError{
@@ -1865,11 +1865,14 @@ bool Well::updatePVTTable(std::optional<int> pvt_table_)
     return false;
 }
 
-bool Well::updateWSEGSICD(const std::vector<std::pair<int, SICD>>& sicd_pairs)
+bool Well::updateWSEGAICD(const std::vector<std::pair<int, AutoICD>>& aicd_pairs,
+                          const KeywordLocation&                      location,
+                          const ParseContext&                         parseContext,
+                          ErrorGuard&                                 errors)
 {
     auto new_segments = std::make_shared<WellSegments>(*this->segments);
 
-    if (new_segments->updateWSEGSICD(sicd_pairs)) {
+    if (new_segments->updateWSEGAICD(this->name(), aicd_pairs, location, parseContext, errors)) {
         this->segments = std::move(new_segments);
         return true;
     }
@@ -1877,12 +1880,29 @@ bool Well::updateWSEGSICD(const std::vector<std::pair<int, SICD>>& sicd_pairs)
     return false;
 }
 
-bool Well::updateWSEGAICD(const std::vector<std::pair<int, AutoICD>>& aicd_pairs,
-                          const KeywordLocation& location)
+bool Well::updateWSEGSICD(const std::vector<std::pair<int, SICD>>& sicd_pairs,
+                          const KeywordLocation&                   location,
+                          const ParseContext&                      parseContext,
+                          ErrorGuard&                              errors)
 {
     auto new_segments = std::make_shared<WellSegments>(*this->segments);
 
-    if (new_segments->updateWSEGAICD(aicd_pairs, location)) {
+    if (new_segments->updateWSEGSICD(this->name(), sicd_pairs, location, parseContext, errors)) {
+        this->segments = std::move(new_segments);
+        return true;
+    }
+
+    return false;
+}
+
+bool Well::updateWSEGVALV(const std::vector<std::pair<int, Valve>>& valve_pairs,
+                          const KeywordLocation&                    location,
+                          const ParseContext&                       parseContext,
+                          ErrorGuard&                               errors)
+{
+    auto new_segments = std::make_shared<WellSegments>(*this->segments);
+
+    if (new_segments->updateWSEGVALV(this->name(), valve_pairs, location, parseContext, errors)) {
         this->segments = std::move(new_segments);
         return true;
     }
@@ -1897,18 +1917,6 @@ bool Well::updateICDFlowScalingFactors()
         this->segments = std::move(new_segments);
         return true;
     }
-    return false;
-}
-
-bool Well::updateWSEGVALV(const std::vector<std::pair<int, Valve>>& valve_pairs)
-{
-    auto new_segments = std::make_shared<WellSegments>(*this->segments);
-
-    if (new_segments->updateWSEGVALV(valve_pairs)) {
-        this->segments = std::move(new_segments);
-        return true;
-    }
-
     return false;
 }
 
