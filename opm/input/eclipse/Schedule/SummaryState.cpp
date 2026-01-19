@@ -89,7 +89,8 @@ namespace {
     bool is_encoded_well_completion_quantity(std::string_view keyword)
     {
         // Does 'keyword' match the pattern
-        //   W*L:* and not WMCTL:* , WPIL*, WU* WT*
+        //  W*L:* and not any of WMCTL:*, WPIL*, WU* (well UDQ),
+        // WT* (well tracer)
         using sz_t = std::string_view::size_type;
 
         if (keyword.size() <= sz_t{6}) {
@@ -190,7 +191,8 @@ namespace {
 
     std::string normalise_encoded_well_completion_quantity(const std::string& keyword)
     {
-        // Does 'keyword' match the pattern W*L:
+        // regular expresssion to extarct kezword, completion number and
+        // wellname from W*L(number):(completion)
         static const auto comp_kw_regex = std::regex {
            R"((W[A-Z]+L)_*([0-9]+):(.+))"
         };
