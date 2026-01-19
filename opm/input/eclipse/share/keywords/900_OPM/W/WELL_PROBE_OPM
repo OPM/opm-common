@@ -12,6 +12,12 @@
       "WINJFC",
       "WINJFVR",
       "WINJFVT",
+      "WFCFVIR",
+      "WFCFVIT",
+      "WFCFFVIR",
+      "WFCFFVIT",
+      "WFCWFVIR",
+      "WFCWFVIT",
       "WGMIR",
       "WGMIT",
       "WGMPR",
@@ -27,7 +33,9 @@
       "WMOPR",
       "WMOPT",
       "WMUPR",
-      "WMUPT"
+      "WMUPT",
+      "WWIRFRAC",
+      "WWITFRAC"
   ],
   "size": 1,
   "items": [
