@@ -31,7 +31,7 @@
 #include <opm/material/common/MathToolbox.hpp>
 #include <opm/material/common/Valgrind.hpp>
 
-#include <algorithm>
+#include <array>
 
 namespace Opm {
 
@@ -86,7 +86,7 @@ public:
     }
 
 protected:
-    Scalar saturation_[numPhases];
+    std::array<Scalar, numPhases> saturation_{};
 };
 
 /*!

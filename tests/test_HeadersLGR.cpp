@@ -425,7 +425,7 @@ void generate_opm_rst(Setup& base_setup,
                     true);
     }
 
-void check_grid_content_existence(std::string gridname, EclIO::ERst& rst, bool contains_lgr_well = true)
+void check_grid_content_existence(const std::string& gridname, EclIO::ERst& rst, bool contains_lgr_well = true)
 {
         BOOST_CHECK_EQUAL(rst.hasArray("LGRHEADI", 1, gridname), true);
         BOOST_CHECK_EQUAL(rst.hasArray("LGRHEADQ", 1, gridname), true);

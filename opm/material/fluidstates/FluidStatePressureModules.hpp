@@ -31,7 +31,7 @@
 #include <opm/material/common/MathToolbox.hpp>
 #include <opm/material/common/Valgrind.hpp>
 
-#include <algorithm>
+#include <array>
 
 namespace Opm {
 
@@ -87,7 +87,7 @@ public:
     }
 
 protected:
-    Scalar pressure_[numPhases];
+    std::array<Scalar, numPhases> pressure_{};
 };
 
 /*!

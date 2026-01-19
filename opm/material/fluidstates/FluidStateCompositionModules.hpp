@@ -31,7 +31,6 @@
 #include <opm/material/common/Valgrind.hpp>
 #include <opm/material/common/MathToolbox.hpp>
 
-#include <algorithm>
 #include <array>
 #include <cmath>
 

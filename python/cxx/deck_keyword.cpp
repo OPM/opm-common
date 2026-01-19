@@ -68,7 +68,7 @@ bool is_int(const std::string& s)
 void push_string_as_deck_value(
     const ParserItem& parser_item,
     std::vector<DeckValue>& record,
-    const std::string str)
+    const std::string& str)
 {
 
     std::size_t star_pos = str.find('*');

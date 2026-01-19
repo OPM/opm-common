@@ -1503,7 +1503,7 @@ void dynamicContrib(const std::vector<std::string>&      restart_group_keys,
                               ? key : key + ":" + groupName;
 
         if (sumState.has(compKey)) {
-            double keyValue = sumState.get(compKey);
+            const double keyValue = sumState.get(compKey);
             const auto itr = keyToIndex.find(key);
             xGrp[itr->second] = keyValue;
         }
@@ -1521,34 +1521,36 @@ void dynamicContrib(const std::vector<std::string>&      restart_group_keys,
 
 
 template <class XGrpArray>
-void dynamicContribLGR(std::vector<std::reference_wrapper<const Opm::Well>> filtered_wells,
+void dynamicContribLGR(const std::vector<std::reference_wrapper<const Opm::Well>>& filtered_wells,
                        const std::vector<std::string>&                      restart_well_keys,
                        const std::map<std::string, size_t>&                 wellKeyToIndex,
                        const Opm::SummaryState&                             sumState,
                        XGrpArray&                                           xGrp)
 {
 
-    auto key_list = [filtered_wells](const std::string& local_key) {
+    auto key_list = [&filtered_wells](const std::string& local_key) {
                         std::vector<std::string> all_well_keys;
-                        for (const auto& well : filtered_wells) {
-                            all_well_keys.push_back(local_key + ":" + well.get().name());
-                        }
+                        all_well_keys.reserve(filtered_wells.size());
+                        std::transform(filtered_wells.begin(), filtered_wells.end(),
+                                       std::back_inserter(all_well_keys),
+                                       [&local_key](const auto& well)
+                                       { return local_key + ":" + well.get().name(); });
                         return all_well_keys;
                     };
     using Ix = ::Opm::RestartIO::Helpers::VectorItems::XGroup::index;
 
-    const std::vector<std::string>& keys = restart_well_keys;
-    const std::map<std::string, size_t>& keyToIndex = wellKeyToIndex;
-
-    for (const auto& key : keys) {
-
-        std::vector<std::string> compKeys =  key_list(key);
-        for (const auto& compKey : compKeys) {
-            if (sumState.has(compKey)) {
-                double keyValue = sumState.get(compKey);
-                const auto itr = keyToIndex.find(key);
-                xGrp[itr->second] = xGrp[itr->second] + keyValue;
+    for (const auto& key : restart_well_keys) {
+        const auto keyPos = wellKeyToIndex.find(key);
+        if (keyPos == wellKeyToIndex.end()) {
+            // Shouldn't really happen...
+            continue;
+        }
+        auto& xGrpValue = xGrp[keyPos->second];
+        for (const auto& compKey : key_list(key)) {
+            if (!sumState.has(compKey)) {
+                continue;
             }
+            xGrpValue += sumState.get(compKey);
         }
     }
 
