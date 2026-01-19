@@ -110,8 +110,9 @@ namespace Opm {
 
         bool updateWSEGVALV(const std::vector<std::pair<int, Valve> >& valve_pairs);
         bool updateWSEGAICD(const std::vector<std::pair<int, AutoICD> >& aicd_pairs, const KeywordLocation& location);
-        const std::vector<Segment>::const_iterator begin() const;
-        const std::vector<Segment>::const_iterator end() const;
+
+        auto begin() const { return this->m_segments.begin(); }
+        auto end() const { return this->m_segments.end(); }
 
         void checkSegmentDepthConsistency(const std::string& well_name, const UnitSystem& unit_system) const;
 

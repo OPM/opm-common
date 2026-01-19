@@ -19,74 +19,96 @@
 
 #include <opm/input/eclipse/Schedule/MSW/Compsegs.hpp>
 
-#include <opm/input/eclipse/Parser/ParserKeywords/C.hpp>
-#include <opm/input/eclipse/Parser/ParseContext.hpp>
+#include <opm/output/eclipse/VectorItems/well.hpp>
+
+#include <opm/io/eclipse/rst/well.hpp>
+
+#include <opm/input/eclipse/Schedule/MSW/Segment.hpp>
+#include <opm/input/eclipse/Schedule/MSW/WellSegments.hpp>
+#include <opm/input/eclipse/Schedule/ScheduleGrid.hpp>
+#include <opm/input/eclipse/Schedule/Well/Connection.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
 
 #include <opm/input/eclipse/Deck/DeckItem.hpp>
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
-#include <opm/output/eclipse/VectorItems/well.hpp>
-#include <opm/io/eclipse/rst/well.hpp>
 
-#include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
-#include <opm/input/eclipse/Schedule/MSW/WellSegments.hpp>
-#include <opm/input/eclipse/Schedule/Well/Connection.hpp>
-#include <opm/input/eclipse/Schedule/ScheduleGrid.hpp>
+#include <opm/input/eclipse/Parser/ParseContext.hpp>
+
+#include <opm/input/eclipse/Parser/ParserKeywords/C.hpp>
 
 #include <algorithm>
 #include <cmath>
+#include <cstddef>
+#include <stdexcept>
+#include <string>
+#include <string_view>
+#include <unordered_map>
+#include <utility>
+#include <vector>
 
 #include <fmt/format.h>
 
-namespace Opm {
-namespace Compsegs {
+namespace {
 
-struct Record {
-    int m_i;
-    int m_j;
-    int m_k;
-    // the branch number on the main stem is always 1.
-    // lateral branches should be numbered bigger than 1.
-    // a suboridnate branch must have a higher branch number than parent branch.
-    int m_branch_number;
-    double m_distance_start;
-    double m_distance_end;
-    Connection::Direction m_dir;
-
-    double center_depth;
-    // we do not handle thermal length for the moment
-    // double m_thermal_length;
-    int segment_number;
-    std::size_t m_seqIndex;
-
-    Record(int i_in, int j_in, int k_in, int branch_number_in, double distance_start_in, double distance_end_in,
-           Connection::Direction dir_in, double center_depth_in, int segment_number_in, std::size_t seqIndex_in);
-
-    void calculateCenterDepthWithSegments(const WellSegments& segment_set);
-
-
-};
-
-    Record::Record(int i_in, int j_in, int k_in, int branch_number_in, double distance_start_in, double distance_end_in,
-                       Connection::Direction dir_in, double center_depth_in, int segment_number_in, size_t seqIndex_in)
-    : m_i(i_in),
-      m_j(j_in),
-      m_k(k_in),
-      m_branch_number(branch_number_in),
-      m_distance_start(distance_start_in),
-      m_distance_end(distance_end_in),
-      m_dir(dir_in),
-      center_depth(center_depth_in),
-      segment_number(segment_number_in),
-      m_seqIndex(seqIndex_in)
+    struct Record
     {
-    }
+        Record(int i_in, int j_in, int k_in,
+               int branch_number_in,
+               double distance_start_in,
+               double distance_end_in,
+               Opm::Connection::Direction dir_in,
+               double center_depth_in,
+               int segment_number_in,
+               std::size_t seqIndex_in);
 
+        int m_i;
+        int m_j;
+        int m_k;
 
-    void Record::calculateCenterDepthWithSegments(const WellSegments& segment_set) {
+        // The branch number on the main stem is always 1.  Subordinate
+        // branches must have branch number higher than their
+        // kick-off/parent branch.
+        int m_branch_number;
+        double m_distance_start;
+        double m_distance_end;
+        Opm::Connection::Direction m_dir;
 
+        double center_depth;
+        // we do not handle thermal length for the moment
+        // double m_thermal_length;
+        int segment_number;
+        std::size_t m_seqIndex;
+
+        void calculateCenterDepthWithSegments(const Opm::WellSegments& segment_set);
+    };
+
+    Record::Record(const int i_in, const int j_in, const int k_in,
+                   const int branch_number_in,
+                   const double distance_start_in,
+                   const double distance_end_in,
+                   const Opm::Connection::Direction dir_in,
+                   const double center_depth_in,
+                   const int segment_number_in,
+                   const std::size_t seqIndex_in)
+        : m_i              { i_in }
+        , m_j              { j_in }
+        , m_k              { k_in }
+        , m_branch_number  { branch_number_in }
+        , m_distance_start { distance_start_in }
+        , m_distance_end   { distance_end_in }
+        , m_dir            { dir_in }
+        , center_depth     { center_depth_in }
+        , segment_number   { segment_number_in }
+        , m_seqIndex       { seqIndex_in }
+    {}
+
+    void Record::calculateCenterDepthWithSegments(const Opm::WellSegments& segment_set)
+    {
         // the depth and distance of the segment to the well head
-        const Segment& segment = segment_set.getFromSegmentNumber(segment_number);
+        const Opm::Segment& segment = segment_set
+            .getFromSegmentNumber(this->segment_number);
+
         const double segment_depth = segment.depth();
         const double segment_distance = segment.totalLength();
 
@@ -100,11 +122,14 @@ struct Record {
         // for other cases, interpolation between two segments is needed.
         // looking for the other segment needed for interpolation
         // by default, it uses the outlet segment to do the interpolation
-        int interpolation_segment_number = segment.outletSegment();
 
         const double center_distance = (m_distance_start + m_distance_end) / 2.0;
-        // if the perforation is further than the segment and the segment has inlet segments in the same branch
-        // we use the inlet segment to do the interpolation
+
+        int interpolation_segment_number = segment.outletSegment();
+
+        // if the perforation is further than the segment and the segment
+        // has inlet segments in the same branch we use the inlet segment to
+        // do the interpolation
         if (center_distance > segment_distance) {
             for (const int inlet : segment.inletSegments()) {
                 const int inlet_index = segment_set.segmentNumberToIndex(inlet);
@@ -116,12 +141,16 @@ struct Record {
         }
 
         if (interpolation_segment_number == 0) {
-            throw std::runtime_error("Failed in finding a segment to do the interpolation with segment "
-                                      + std::to_string(segment_number));
+            throw std::runtime_error {
+                fmt::format("Failed in finding a segment to do the "
+                            "interpolation with segment {}", this->segment_number)
+            };
         }
 
         // performing the interpolation
-        const Segment& interpolation_segment = segment_set.getFromSegmentNumber(interpolation_segment_number);
+        const Opm::Segment& interpolation_segment = segment_set
+            .getFromSegmentNumber(interpolation_segment_number);
+
         const double interpolation_detph = interpolation_segment.depth();
         const double interpolation_distance = interpolation_segment.totalLength();
 
@@ -131,332 +160,455 @@ struct Record {
         // Use segment depth if length of sement is 0
         if (segment_length == 0.) {
             center_depth = segment_depth;
-        } else {
-            center_depth = segment_depth + (center_distance - segment_distance) / segment_length * depth_change_segment;
+        }
+        else {
+            center_depth = segment_depth +
+                (center_distance - segment_distance) / segment_length * depth_change_segment;
         }
     }
 
+    // ---------------------------------------------------------------------------
 
+    int connectionSegmentFromMeasuredDepth(const Record&            connection,
+                                           const Opm::WellSegments& segment_set)
+    {
+        const auto center_distance =
+            (connection.m_distance_start + connection.m_distance_end) / 2.0;
 
-namespace {
+        const auto segmentPos = std::min_element
+            (segment_set.begin(), segment_set.end(),
+             [center_distance, branch_num = connection.m_branch_number]
+             (const Opm::Segment& s1, const Opm::Segment& s2)
+             {
+                 if (s1.branchNumber() != branch_num) { return false; }
+                 if (s2.branchNumber() != branch_num) { return true;  }
 
-    void processCOMPSEGS__(std::vector< Record >& compsegs, const WellSegments& segment_set) {
-        // for the current cases we have at the moment, the distance information is specified explicitly,
-        // while the depth information is defaulted though, which need to be obtained from the related segment
-        for( auto& compseg : compsegs ) {
+                 return std::abs(center_distance - s1.totalLength())
+                     <  std::abs(center_distance - s2.totalLength());
+             });
 
+        return ((segmentPos != segment_set.end()) &&
+                (segmentPos->branchNumber() == connection.m_branch_number))
+            ? segmentPos->segmentNumber()
+            : 0;
+    }
+
+    void processCOMPSEGS__(std::string_view         well_name,
+                           const Opm::WellSegments& segment_set,
+                           std::vector<Record>&     compsegs)
+    {
+        // for the current cases we have at the moment, the distance
+        // information is specified explicitly, while the depth information
+        // is defaulted though, which need to be obtained from the related
+        // segment
+        for (auto& compseg : compsegs) {
             // need to determine the related segment number first, if not defined
             if (compseg.segment_number == 0) {
-
-                const double center_distance = (compseg.m_distance_start + compseg.m_distance_end) / 2.0;
-                const int branch_number = compseg.m_branch_number;
-
-                int segment_number = 0;
-                double min_distance_difference = 1.e100; // begin with a big value
-                for (std::size_t i_segment = 0; i_segment < segment_set.size(); ++i_segment) {
-                    const Segment& current_segment = segment_set[i_segment];
-                    if( branch_number != current_segment.branchNumber() ) continue;
-
-                    const double distance = current_segment.totalLength();
-                    const double distance_difference = std::abs(center_distance - distance);
-                    if (distance_difference < min_distance_difference) {
-                        min_distance_difference = distance_difference;
-                        segment_number = current_segment.segmentNumber();
-                    }
-                }
+                const auto segment_number =
+                    connectionSegmentFromMeasuredDepth(compseg, segment_set);
 
                 if (segment_number == 0) {
-                    const std::string msg =
-                        fmt::format("The connection specified in COMPSEGS with index of "
-                                    "{} {} {} failed in finding a related segment",
-                                    compseg.m_i + 1, compseg.m_j + 1, compseg.m_k + 1);
-                    throw std::runtime_error(msg);
+                    throw std::runtime_error {
+                        fmt::format("Connection ({},{},{}) for well {} cannot "
+                                    "be allocated to a well segment based on MD",
+                                    compseg.m_i + 1,
+                                    compseg.m_j + 1,
+                                    compseg.m_k + 1,
+                                    well_name)
+                    };
                 }
 
                 compseg.segment_number = segment_number;
-
             }
 
-            // when depth is default or zero, we obtain the depth of the connection based on the information
-            // of the related segments
-            if (compseg.center_depth == 0.) {
+            // when depth is default or zero, we obtain the depth of the
+            // connection based on the information of the related segments
+            if (compseg.center_depth == 0.0) {
                 compseg.calculateCenterDepthWithSegments(segment_set);
             }
         }
     }
 
-    std::vector< Record > compsegsFromCOMPSEGSKeyword(const DeckKeyword& compsegsKeyword,
-                                                      const WellSegments& segments,
-                                                      const ScheduleGrid& grid,
-                                                      const ParseContext& parseContext,
-                                                      ErrorGuard& errors) {
+    // ---------------------------------------------------------------------------
 
-        std::vector< Record > compsegs;
+    std::vector<Record>
+    compsegsFromCOMPSEGSKeyword(std::string_view         well_name,
+                                const Opm::DeckKeyword&  compsegsKeyword,
+                                const Opm::WellSegments& segments,
+                                const Opm::ScheduleGrid& grid,
+                                const Opm::ParseContext& parseContext,
+                                Opm::ErrorGuard&         errors)
+    {
+        using Kw = Opm::ParserKeywords::COMPSEGS;
+
+        auto compsegs = std::vector<Record> {};
+        compsegs.reserve(compsegsKeyword.size() - 1); // -1 since first record is well name.
+
         const auto& location = compsegsKeyword.location();
 
         // The first record in the keyword only contains the well name
         // looping from the second record in the keyword
-        for (size_t recordIndex = 1; recordIndex < compsegsKeyword.size(); ++recordIndex) {
+        for (std::size_t recordIndex = 1; recordIndex < compsegsKeyword.size(); ++recordIndex) {
             const auto& record = compsegsKeyword.getRecord(recordIndex);
-            // following the coordinate rule for connections
-            const int I = record.getItem<ParserKeywords::COMPSEGS::I>().get< int >(0) - 1;
-            const int J = record.getItem<ParserKeywords::COMPSEGS::J>().get< int >(0) - 1;
-            const int K = record.getItem<ParserKeywords::COMPSEGS::K>().get< int >(0) - 1;
-            const int branch = record.getItem<ParserKeywords::COMPSEGS::BRANCH>().get< int >(0);
 
-            const std::string& well_name = compsegsKeyword.getRecord(0).getItem("WELL").getTrimmedString(0);
+            // following the coordinate rule for connections
+            const int I = record.getItem<Kw::I>().get<int>(0) - 1;
+            const int J = record.getItem<Kw::J>().get<int>(0) - 1;
+            const int K = record.getItem<Kw::K>().get<int>(0) - 1;
+            const int branch = record.getItem<Kw::BRANCH>().get<int>(0);
+
+            // A defaulted or explicitly zeroed segment number will be
+            // replaced later in the process.
+            const int segment_number = record.getItem<Kw::SEGMENT_NUMBER>().hasValue(0)
+                ? record.getItem<Kw::SEGMENT_NUMBER>().get<int>(0)
+                : 0;
 
             double distance_start = 0.0;
-            double distance_end = -1.0;
-            if (record.getItem<ParserKeywords::COMPSEGS::DISTANCE_START>().hasValue(0)) {
-                distance_start = record.getItem<ParserKeywords::COMPSEGS::DISTANCE_START>().getSIDouble(0);
-            } else if (recordIndex == 1) {
-                distance_start = 0.;
-            } else {
-                // TODO: the end of the previous connection or range
-                // 'previous' should be in term of the input order
-                // since basically no specific order for the connections
-                const std::string msg_fmt = "Must specify start of segment in item 5 in {keyword}\nIn {file} line {line}";
-                parseContext.handleError(ParseContext::SCHEDULE_COMPSEGS_NOT_SUPPORTED, msg_fmt, location, errors);
+            if (record.getItem<Kw::DISTANCE_START>().hasValue(0)) {
+                distance_start = record.getItem<Kw::DISTANCE_START>().getSIDouble(0);
             }
-            if (record.getItem<ParserKeywords::COMPSEGS::DISTANCE_END>().hasValue(0)) {
-                distance_end = record.getItem<ParserKeywords::COMPSEGS::DISTANCE_END>().getSIDouble(0);
-            } else {
+            else if (recordIndex != 1) {
+                // TODO: the end of the previous connection or range
+                // 'previous' should be in term of the input order since
+                // basically no specific order for the connections
+                const auto msg_fmt = std::string {
+                    R"(Must specify start of segment in item 5 in {keyword}
+In {file} line {line})"
+                };
+
+                parseContext.handleError(Opm::ParseContext::SCHEDULE_COMPSEGS_NOT_SUPPORTED,
+                                         msg_fmt, location, errors);
+            }
+
+            double distance_end = -1.0;
+            if (record.getItem<Kw::DISTANCE_END>().hasValue(0)) {
+                distance_end = record.getItem<Kw::DISTANCE_END>().getSIDouble(0);
+            }
+            else {
                 // TODO: the distance_start plus the thickness of the grid block
-                const std::string msg_fmt = "Must specify end of segment in item 6 in {keyword}\nIn {file} line {line}";
-                parseContext.handleError(ParseContext::SCHEDULE_COMPSEGS_NOT_SUPPORTED, msg_fmt, location, errors);
+                const auto msg_fmt = std::string {
+                    R"(Must specify end of segment in item 6 in {keyword}
+In {file} line {line})"
+                };
+
+                parseContext.handleError(Opm::ParseContext::SCHEDULE_COMPSEGS_NOT_SUPPORTED,
+                                         msg_fmt, location, errors);
             }
 
             if (distance_end < distance_start) {
-                std::string msg_fmt = fmt::format("Problems with {{keyword}}\n"
-                                                  "In {{file}} line {{line}}\n"
-                                                  "The end of the perforation must be below the start for well {} connection({},{},{})", well_name, I+1, J+1, K+1);
-                parseContext.handleError(ParseContext::SCHEDULE_COMPSEGS_INVALID, msg_fmt, location, errors);
+                const auto msg_fmt = fmt::format(R"(Problems with {{keyword}}
+In {{file}} line {{line}}
+The end of the perforation must be below the start for well {} connection ({},{},{}))",
+                                                 well_name, I+1, J+1, K+1);
+
+                parseContext.handleError(Opm::ParseContext::SCHEDULE_COMPSEGS_INVALID,
+                                         msg_fmt, location, errors);
             }
 
-            if( !record.getItem< ParserKeywords::COMPSEGS::DIRECTION >().hasValue( 0 ) &&
-                !record.getItem< ParserKeywords::COMPSEGS::DISTANCE_END >().hasValue( 0 ) ) {
-                std::string msg_fmt = fmt::format("Problems with {{keyword}}\n"
-                                                  "In {{file}} line {{line}}\n"
-                                                  "The direction must be specified when DISTANCE_END is defaulted. Well: {}", well_name);
-                parseContext.handleError(ParseContext::SCHEDULE_COMPSEGS_INVALID, msg_fmt, location, errors);
+            const auto& dirItem = record.getItem<Kw::DIRECTION>();
+
+            if (!dirItem.hasValue(0) &&
+                !record.getItem<Kw::DISTANCE_END>().hasValue(0))
+            {
+                const auto msg_fmt = fmt::format(R"(Problems with {{keyword}}
+In {{file}} line {{line}}
+The direction must be specified when DISTANCE_END is defaulted. Well: {})", well_name);
+
+                parseContext.handleError(Opm::ParseContext::SCHEDULE_COMPSEGS_INVALID,
+                                         msg_fmt, location, errors);
             }
 
-            if( record.getItem< ParserKeywords::COMPSEGS::END_IJK >().hasValue( 0 ) &&
-               !record.getItem< ParserKeywords::COMPSEGS::DIRECTION >().hasValue( 0 ) ) {
-                std::string msg_fmt = fmt::format("Problems with {{keyword}}\n"
-                                                  "In {{file}} line {{line}}\n"
-                                                  "The direction must be specified when END_IJK is specified. Well: {}", well_name);
-                parseContext.handleError(ParseContext::SCHEDULE_COMPSEGS_INVALID, msg_fmt, location, errors);
+            if (record.getItem<Kw::END_IJK>().hasValue(0) &&
+                !dirItem.hasValue(0))
+            {
+                const auto msg_fmt = fmt::format(R"(Problems with {{keyword}}
+In {{file}} line {{line}}
+The direction must be specified when END_IJK is specified. Well: {})", well_name);
+
+                parseContext.handleError(Opm::ParseContext::SCHEDULE_COMPSEGS_INVALID,
+                                         msg_fmt, location, errors);
             }
 
-            /*
-             * Defaulted well connection. Must be non-defaulted if DISTANCE_END
-             * is set or a range is specified. If not this is effectively ignored.
-             */
-            auto direction = Connection::Direction::X;
-            if( record.getItem< ParserKeywords::COMPSEGS::DIRECTION >().hasValue( 0 ) ) {
-                direction = Connection::DirectionFromString(record.getItem<ParserKeywords::COMPSEGS::DIRECTION>().get< std::string >(0));
+            // 0.0 is also the defaulted value which is used to indicate to
+            // obtain the final value through related segment
+            const auto center_depth = !record.getItem<Kw::CENTER_DEPTH>().defaultApplied(0)
+                ? record.getItem<Kw::CENTER_DEPTH>().getSIDouble(0)
+                : 0.0;
+
+            if (center_depth < 0.0) {
+                // TODO: get the depth from COMPDAT data.
+                const auto msg_fmt = fmt::format(R"(Problems with {{keyword}}
+In {{file}} line {{line}}
+The use of negative center depth in item 9 is not supported. Well: {})", well_name);
+
+                parseContext.handleError(Opm::ParseContext::SCHEDULE_COMPSEGS_NOT_SUPPORTED,
+                                         msg_fmt, location, errors);
             }
 
-            double center_depth;
-            if (!record.getItem<ParserKeywords::COMPSEGS::CENTER_DEPTH>().defaultApplied(0)) {
-                center_depth = record.getItem<ParserKeywords::COMPSEGS::CENTER_DEPTH>().getSIDouble(0);
-            } else {
-                // 0.0 is also the defaulted value
-                // which is used to indicate to obtain the final value through related segment
-                center_depth = 0.;
-            }
+            // Direction must be defined if the record applies to a range of
+            // connections or if the DISTANCE_END item is set.  Otherwise,
+            // this value is ignored and we use 'X' as a placeholder.
+            const auto direction = dirItem.hasValue(0)
+                ? Opm::Connection::DirectionFromString(dirItem.getTrimmedString(0))
+                : Opm::Connection::Direction::X;
 
-            if (center_depth < 0.) {
-                //TODO: get the depth from COMPDAT data.
-                std::string msg_fmt = fmt::format("Problems with {{keyword}}\n"
-                                                  "In {{file}} line {{line}}\n"
-                                                  "The use of negative center depth in item 9 is not supported. Well: {}", well_name);
-                parseContext.handleError(ParseContext::SCHEDULE_COMPSEGS_NOT_SUPPORTED, msg_fmt, location, errors);
+            if (! record.getItem<Kw::END_IJK>().hasValue(0)) { // only one compsegs
+                if (grid.get_cell(I, J, K).is_active()) {
+                    const std::size_t seqIndex = compsegs.size();
+                    compsegs.emplace_back(I, J, K,
+                                          branch,
+                                          distance_start, distance_end,
+                                          direction,
+                                          center_depth,
+                                          segment_number,
+                                          seqIndex);
+                }
             }
+            else {
+                // Input applies to a range of connections, so generate a
+                // sequence of Record objects.
+                const auto msg_fmt = fmt::format(R"(Problem with {{keyword}}"
+In {{file}} line {{line}}
+Entering COMPEGS with a range of connections is not yet supported
+Well: {}, connection: ({},{},{}))", well_name, I+1, J+1 , K+1);
 
-            int segment_number;
-            if (record.getItem<ParserKeywords::COMPSEGS::SEGMENT_NUMBER>().hasValue(0)) {
-                segment_number = record.getItem<ParserKeywords::COMPSEGS::SEGMENT_NUMBER>().get< int >(0);
-            } else {
-                segment_number = 0;
-                // will decide the segment number based on the distance in a process later.
-            }
-            if (!record.getItem<ParserKeywords::COMPSEGS::END_IJK>().hasValue(0)) { // only one compsegs
-              if (grid.get_cell(I, J, K).is_active()) {
-                std::size_t seqIndex = compsegs.size();
-                compsegs.emplace_back( I, J, K,
-                                       branch,
-                                       distance_start, distance_end,
-                                       direction,
-                                       center_depth,
-                                       segment_number,
-                                       seqIndex);
-              }
-            } else { // a range is defined. genrate a range of Record
-                std::string msg_fmt = fmt::format("Problems with {{keyword}}\n"
-                                                  "In {{file}} line {{line}}\n"
-                                                  "Entering COMPEGS with a range of connections is not yet supported\n"
-                                                  "Well: {} Connection: ({},{},{})", well_name, I+1, J+1 , K+1);
-                parseContext.handleError(ParseContext::SCHEDULE_COMPSEGS_NOT_SUPPORTED, msg_fmt, location, errors);
+                parseContext.handleError(Opm::ParseContext::SCHEDULE_COMPSEGS_NOT_SUPPORTED,
+                                         msg_fmt, location, errors);
             }
         }
 
-        processCOMPSEGS__(compsegs, segments);
+        processCOMPSEGS__(well_name, segments, compsegs);
+
         return compsegs;
     }
-} // end namespace
 
-
-    WellConnections
-    process_compsegs_records(const std::vector<Record>& compsegs_vector,
-                             const WellConnections& input_connections,
-                             const ScheduleGrid& grid,
-                             const std::string& keyword)
+    std::vector<Record>
+    compsegsFromTrajectory(std::string_view                                     well_name,
+                           const std::vector<Opm::Compsegs::TrajectorySegment>& trajectory_segments,
+                           const Opm::WellSegments&                             segments)
     {
-        WellConnections new_connection_set = input_connections;
+        auto compsegs = std::vector<Record> {};
+
+        compsegs.reserve(trajectory_segments.size());
+
+        for (const auto& trajectory_point : trajectory_segments) {
+            // Defaulted values:
+            const auto direction = Opm::Connection::Direction::X;
+            const auto center_depth = 0.0;
+            const auto segment_number = 0;
+            const auto branch = 1;
+
+            const auto seqIndex = compsegs.size();
+
+            compsegs.emplace_back(trajectory_point.ijk[0],
+                                  trajectory_point.ijk[1],
+                                  trajectory_point.ijk[2],
+                                  branch,
+                                  trajectory_point.startMD, trajectory_point.endMD,
+                                  direction,
+                                  center_depth,
+                                  segment_number, seqIndex);
+        }
+
+        processCOMPSEGS__(well_name, segments, compsegs);
+
+        return compsegs;
+    }
+
+    // ---------------------------------------------------------------------------
+
+    void identifyUnattachedConnections(std::string_view            well_name,
+                                       const Opm::WellConnections& new_connection_set,
+                                       const Opm::KeywordLocation& location,
+                                       const Opm::ParseContext&    parseContext,
+                                       Opm::ErrorGuard&            errors)
+    {
+        auto noSeg = std::vector<Opm::Connection>{};
+
+        std::copy_if(new_connection_set.begin(), new_connection_set.end(),
+                     std::back_inserter(noSeg),
+                     [](const auto& conn) { return !conn.attachedToSegment(); });
+
+        if (noSeg.empty()) {
+            return;
+        }
+
+        const auto* pl1 = (noSeg.size() == 1) ? ""   : "s";
+        const auto* pl2 = (noSeg.size() == 1) ? "is" : "are";
+
+        auto msg_fmt = fmt::format("Well {} connection{} that {} "
+                                   "not attached to a segment:",
+                                   well_name, pl1, pl2);
+
+        for (const auto& conn : noSeg) {
+            msg_fmt += fmt::format("\n  * ({},{},{})",
+                                   conn.getI() + 1,
+                                   conn.getJ() + 1,
+                                   conn.getK() + 1);
+        }
+
+        parseContext.handleError(Opm::ParseContext::SCHEDULE_COMPSEGS_INVALID,
+                                 msg_fmt, location, errors);
+    }
+
+    Opm::WellConnections
+    process_compsegs_records(std::string_view            well_name,
+                             const std::vector<Record>&  compsegs_vector,
+                             const Opm::WellConnections& input_connections,
+                             const Opm::ScheduleGrid&    grid,
+                             const Opm::KeywordLocation& location,
+                             const Opm::ParseContext&    parseContext,
+                             Opm::ErrorGuard&            errors)
+    {
+        auto new_connection_set = input_connections; // Intentional copy.
 
         for (const auto& compseg : compsegs_vector) {
             const int i = compseg.m_i;
             const int j = compseg.m_j;
             const int k = compseg.m_k;
-            if (grid.get_cell(i, j, k).is_active()) {
+
+            if (const auto& cell = grid.get_cell(i, j, k); cell.is_active()) {
                 // Negative values to indicate cell depths should be used
-                double cdepth = compseg.center_depth >= 0. ? compseg.center_depth : grid.get_cell(i, j, k).depth;
-                Connection& connection = new_connection_set.getFromIJK(i, j, k);
-                connection.updateSegment(compseg.segment_number,
-                                         cdepth,
-                                         compseg.m_seqIndex,
-                                         std::make_pair(compseg.m_distance_start,
-                                                        compseg.m_distance_end));
+                const double cdepth = (compseg.center_depth >= 0.0)
+                    ? compseg.center_depth
+                    : cell.depth;
+
+                new_connection_set.getFromIJK(i, j, k)
+                    .updateSegment(compseg.segment_number,
+                                   cdepth,
+                                   compseg.m_seqIndex,
+                                   std::make_pair(compseg.m_distance_start,
+                                                  compseg.m_distance_end));
             }
         }
 
-        if (std::any_of(new_connection_set.begin(), new_connection_set.end(),
-                        [](const auto& connection)
-                        {
-                            return !connection.attachedToSegment();
-                        }))
-        {
-            const std::string msg = fmt::format("Not all the connections are attached with a segment. "
-                                                "The information from {} is not complete", keyword);
-            throw std::runtime_error(msg);
-        }
+        identifyUnattachedConnections(well_name, new_connection_set,
+                                      location, parseContext, errors);
 
         return new_connection_set;
     }
 
-    WellConnections
-    processCOMPSEGS(const DeckKeyword& compsegs,
-                    const WellConnections& input_connections,
-                    const WellSegments& input_segments,
-                    const ScheduleGrid& grid,
-                    const ParseContext& parseContext,
-                    ErrorGuard& errors)
-    {
-        const auto compsegs_vector = compsegsFromCOMPSEGSKeyword(compsegs, input_segments, grid, parseContext, errors);
-        return process_compsegs_records(compsegs_vector, input_connections, grid, "COMPSEGS");
-    }
+    // ---------------------------------------------------------------------------
 
-    WellConnections
-    getConnectionsAndSegmentsFromTrajectory(const std::vector<TrajectorySegment>& trajectory_segments,
-                                            const WellSegments& segments,
-                                            const WellConnections& input_connections,
-                                            const ScheduleGrid& grid)
-    {
-        std::vector<Record> compsegs;
-
-        for (const auto& trajectory_point : trajectory_segments) {
-            // Defaulted values:
-            const auto direction = Connection::Direction::X;
-            const double center_depth = 0.0;
-            int segment_number = 0;
-            const int branch = 1;
-
-            const std::size_t seqIndex = compsegs.size();
-            compsegs.emplace_back(
-                trajectory_point.ijk[0],trajectory_point.ijk[1], trajectory_point.ijk[2],
-                branch, trajectory_point.startMD, trajectory_point.endMD, direction, center_depth,
-                segment_number, seqIndex
-            );
-        }
-
-        processCOMPSEGS__(compsegs, segments);
-        return process_compsegs_records(compsegs, input_connections, grid, "COMPTRAJ");
-    }
-
-namespace {
     // Duplicated from Well.cpp
-    Connection::Order order_from_int(int int_value) {
-        switch(int_value) {
-        case 0:
-            return Connection::Order::TRACK;
-        case 1:
-            return Connection::Order::DEPTH;
-        case 2:
-            return Connection::Order::INPUT;
+    Opm::Connection::Order order_from_int(int int_value)
+    {
+        switch (int_value) {
+        case 0: return Opm::Connection::Order::TRACK;
+        case 1: return Opm::Connection::Order::DEPTH;
+        case 2: return Opm::Connection::Order::INPUT;
+
         default:
-            throw std::invalid_argument("Invalid integer value: " + std::to_string(int_value) + " encountered when determining connection ordering");
+            throw std::invalid_argument {
+                fmt::format("Invalid integer value: {} encountered "
+                            "when determining connection ordering", int_value)
+            };
         }
     }
 
+    Opm::WellSegments::CompPressureDrop pressure_drop_from_int(int ecl_id)
+    {
+        using PLM = Opm::RestartIO::Helpers::VectorItems::IWell::Value::PLossMod;
 
-    WellSegments::CompPressureDrop pressure_drop_from_int(int ecl_id) {
-        using PLM = RestartIO::Helpers::VectorItems::IWell::Value::PLossMod;
         switch (ecl_id) {
         case PLM::HFA:
-            return WellSegments::CompPressureDrop::HFA;
+            return Opm::WellSegments::CompPressureDrop::HFA;
+
         case PLM::HF_:
-            return WellSegments::CompPressureDrop::HF_;
+            return Opm::WellSegments::CompPressureDrop::HF_;
+
         case PLM::H__:
-            return WellSegments::CompPressureDrop::H__;
+            return Opm::WellSegments::CompPressureDrop::H__;
+
         default:
             throw std::logic_error("Converting to pressure loss value failed");
         }
     }
 
-}
+} // Anonymous namespace
+
+namespace Opm::Compsegs {
+
+    WellConnections
+    processCOMPSEGS(const DeckKeyword&     compsegs,
+                    const WellConnections& input_connections,
+                    const WellSegments&    input_segments,
+                    const ScheduleGrid&    grid,
+                    const ParseContext&    parseContext,
+                    ErrorGuard&            errors)
+    {
+        const auto well_name = compsegs.getRecord(0)
+            .getItem<ParserKeywords::COMPSEGS::WELL>()
+            .getTrimmedString(0);
+
+        const auto compsegs_vector =
+            compsegsFromCOMPSEGSKeyword(well_name, compsegs, input_segments,
+                                        grid, parseContext, errors);
+
+        return process_compsegs_records(well_name, compsegs_vector, input_connections,
+                                        grid, compsegs.location(), parseContext, errors);
+    }
+
+    WellConnections
+    getConnectionsAndSegmentsFromTrajectory(std::string_view                      well_name,
+                                            const std::vector<TrajectorySegment>& trajectory_segments,
+                                            const WellSegments&                   segments,
+                                            const WellConnections&                input_connections,
+                                            const ScheduleGrid&                   grid,
+                                            const KeywordLocation&                location,
+                                            const ParseContext&                   parseContext,
+                                            ErrorGuard&                           errors)
+    {
+        const auto compsegs_vector =
+            compsegsFromTrajectory(well_name, trajectory_segments, segments);
+
+        return process_compsegs_records(well_name, compsegs_vector, input_connections,
+                                        grid, location, parseContext, errors);
+    }
 
     std::pair<WellConnections, WellSegments>
-    rstUpdate(const RestartIO::RstWell& rst_well,
-              std::vector<Connection> rst_connections,
+    rstUpdate(const RestartIO::RstWell&               rst_well,
+              std::vector<Connection>                 rst_connections,
               const std::unordered_map<int, Segment>& rst_segments)
     {
         for (auto& connection : rst_connections) {
-            int segment_id = connection.segment();
+            const auto segment_id = connection.segment();
             if (segment_id > 0) {
                 const auto& segment = rst_segments.at(segment_id);
                 connection.updateSegmentRST(segment.segmentNumber(),
                                             segment.depth());
             }
         }
-        WellConnections connections(order_from_int(rst_well.completion_ordering),
-                                    rst_well.ij[0],
-                                    rst_well.ij[1],
-                                    rst_connections);
 
+        auto connections = WellConnections {
+            order_from_int(rst_well.completion_ordering),
+            rst_well.ij[0], rst_well.ij[1], rst_connections
+        };
 
-        std::vector<Segment> segments_list;
-        /*
-          The ordering of the segments in the WellSegments structure seems a
-          bit random; in some parts of the code the segment_number seems to
-          be treated like a random integer ID, whereas in other parts it
-          seems to be treated like a running index. Here the segments in
-          WellSegments are sorted according to the segment number - observe
-          that this is somewhat important because the first top segment is
-          treated differently from the other segment.
-        */
+        auto segments_list = std::vector<Segment> {};
+        segments_list.reserve(rst_segments.size());
+
+        // The ordering of the segments in the WellSegments structure seems
+        // a bit random.  In some parts of the code, the segment number
+        // seems to be treated like a random integer ID, whereas in other
+        // parts it seems to be treated like a running index.  Here the
+        // segments in WellSegments are sorted according to the segment
+        // number.  Observe that this is somewhat important because the top
+        // segment--segment number 1--is treated differently from the other
+        // segments.
         std::transform(rst_segments.begin(), rst_segments.end(),
                        std::back_inserter(segments_list),
                        [](const auto& segment_pair) { return segment_pair.second; });
 
-        std::sort( segments_list.begin(), segments_list.end(),[](const Segment& seg1, const Segment& seg2) { return seg1.segmentNumber() < seg2.segmentNumber(); } );
+        std::sort(segments_list.begin(), segments_list.end(),
+                  [](const Segment& seg1, const Segment& seg2)
+                  { return seg1.segmentNumber() < seg2.segmentNumber(); } );
+
         auto comp_pressure_drop = pressure_drop_from_int(rst_well.msw_pressure_drop_model);
 
         WellSegments segments( comp_pressure_drop, segments_list);
 
         return std::make_pair( std::move(connections), std::move(segments));
     }
-}
-}
+
+} // namespace Opm::Compsegs
