@@ -289,8 +289,12 @@ VFPProdTable::VFPProdTable(const DeckKeyword& table,
     m_data.resize(nt*nw*ng*na*nf);
     std::fill_n(m_data.data(), m_data.size(), std::nan("0"));
 
-    //Check that size of table matches size of axis:
-    if (table.size() != nt*nw*ng*na + 6) {
+    // Calculate expected and actual records
+    size_t expected_full_records = nt * nw * ng * na;
+    size_t actual_data_records = table.size() - 6;
+    // Check that size of table matches size of axis
+    // Allow single-line tables as a special case (constant delta pressure for all combinations)
+    if (actual_data_records != 1 && table.size() != expected_full_records + 6) {
         throw std::invalid_argument("VFPPROD table does not contain enough records.");
     }
 
@@ -328,6 +332,56 @@ VFPProdTable::VFPProdTable(const DeckKeyword& table,
         }
     }
 
+    // After reading all specified records, handle single-line tables
+    if (actual_data_records == 1 && actual_data_records < expected_full_records) {
+    // This is a single-line table
+       const auto& record = table.getRecord(6);
+       int t_base = record.getItem<VFPPROD::THP_INDEX>().get< int >(0) - 1;
+       int w_base = record.getItem<VFPPROD::WFR_INDEX>().get< int >(0) - 1;
+       int g_base = record.getItem<VFPPROD::GFR_INDEX>().get< int >(0) - 1;
+       int a_base = record.getItem<VFPPROD::ALQ_INDEX>().get< int >(0) - 1;
+
+       const std::vector<double>& bhp_tht = record.getItem<VFPPROD::VALUES>().getData< double >();
+
+       // For single-line tables: Calculate BHP based on constant (BHP - THP) for each flow rate
+       // We assume constant delta pressure for all combinations
+       double original_thp = m_thp_data[t_base];
+       std::vector<double> deltas(nf);
+       for (size_t f=0; f<nf; ++f) {
+           double original_bhp = table_scaling_factor * bhp_tht[f];
+           deltas[f] = original_bhp - original_thp;
+       }
+
+       for (size_t t=0; t<nt; ++t) {
+           double current_thp = m_thp_data[t];
+           for (size_t w=0; w<nw; ++w) {
+               for (size_t g=0; g<ng; ++g) {
+                   for (size_t a=0; a<na; ++a) {
+                       if (t == static_cast<size_t>(t_base) &&
+                          w == static_cast<size_t>(w_base) &&
+                          g == static_cast<size_t>(g_base) &&
+                          a == static_cast<size_t>(a_base)) {
+                          continue;
+                       }
+
+                       for (size_t f=0; f<nf; ++f) {
+                           double new_bhp = current_thp + deltas[f];
+                           (*this)(t,w,g,a,f) = new_bhp;
+                       }
+                   }
+               }
+           }
+       }
+    
+       // Log a message about the single-line table handling
+       auto msg = fmt::format("VFPPROD table {}\n"
+                           "In {} line {}\n"
+                           "Table has only one data record."
+                           "We are assuming constant delta pressure (BHP-THP) for all sensitivity combinations.",
+                           this->m_table_num,
+                           this->m_location.filename, this->m_location.lineno);
+       OpmLog::info(msg);
+    }
     check();
 }
 
