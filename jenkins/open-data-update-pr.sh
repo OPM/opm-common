@@ -44,5 +44,5 @@ if [ -n "$DATA_PR" ]
 then
   curl -d "{ \"body\": \"Existing PR https://github.com/OPM/opm-tests/pull/$DATA_PR was updated\" }" -H "Authorization: token ${GH_TOKEN}" -X POST https://api.github.com/repos/OPM/$MAIN_REPO/issues/$PRNUMBER/comments
 else
-  $WORKSPACE/deps/opm-common/jenkins/git-open-pull -u jenkins4opm --base-account OPM --base-repo opm-tests -r /tmp/cmsg $BRANCH_NAME
+  $WORKSPACE/deps/opm-common/jenkins/git-open-pull -u jenkins4opm --base-account OPM --base-repo opm-tests -r $WORKSPACE/deps/cmsg $BRANCH_NAME
 fi
