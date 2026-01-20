@@ -281,22 +281,26 @@ VFPProdTable::VFPProdTable(const DeckKeyword& table,
     m_alq_data = table.getRecord(5).getItem<VFPPROD::ALQ_VALUES>().getData< double >();
     convertAlqToSI(m_alq_type, m_alq_data, deck_unit_system);
     //Finally, read the actual table itself.
-    size_t nt = m_thp_data.size();
-    size_t nw = m_wfr_data.size();
-    size_t ng = m_gfr_data.size();
-    size_t na = m_alq_data.size();
-    size_t nf = m_flo_data.size();
+    const std::size_t nt = m_thp_data.size();
+    const std::size_t nw = m_wfr_data.size();
+    const std::size_t ng = m_gfr_data.size();
+    const std::size_t na = m_alq_data.size();
+    const std::size_t nf = m_flo_data.size();
     m_data.resize(nt*nw*ng*na*nf);
     std::fill_n(m_data.data(), m_data.size(), std::nan("0"));
 
-    //Check that size of table matches size of axis:
-    if (table.size() != nt*nw*ng*na + 6) {
+    // Calculate expected and actual records
+    const std::size_t expected_full_records = nt * nw * ng * na;
+    const std::size_t actual_data_records = table.size() - 6;
+    // Check that size of table matches size of axis
+    // Allow single-line tables as a special case (constant delta pressure for all combinations)
+    if (actual_data_records != 1 && table.size() != expected_full_records + 6) {
         throw std::invalid_argument("VFPPROD table does not contain enough records.");
     }
 
     //FIXME: Unit for TEMP=Tubing head temperature is not Pressure, see BODY_DEF
     const double table_scaling_factor = deck_unit_system.getDimension(UnitSystem::measure::pressure).getSIScaling();
-    for (size_t i=6; i<table.size(); ++i) {
+    for (std::size_t i = 6; i < table.size(); ++i) {
         const auto& record = table.getRecord(i);
         //Get indices (subtract 1 to get 0-based index)
         int t = record.getItem<VFPPROD::THP_INDEX>().get< int >(0) - 1;
@@ -311,7 +315,7 @@ VFPProdTable::VFPProdTable(const DeckKeyword& table,
             throw std::invalid_argument("VFPPROD table does not contain enough FLO values.");
         }
 
-        for (size_t f=0; f<bhp_tht.size(); ++f) {
+        for (std::size_t f = 0; f < bhp_tht.size(); ++f) {
             //Check that all data is within reasonable ranges, defined to be up-to 1.0e10...
             if (bhp_tht[f] > 1.0e10) {
                 //TODO: Replace with proper log message
@@ -328,6 +332,56 @@ VFPProdTable::VFPProdTable(const DeckKeyword& table,
         }
     }
 
+    // After reading all specified records, handle single-line tables
+    if (actual_data_records == 1 && actual_data_records < expected_full_records) {
+        // This is a single-line table
+        const auto& record = table.getRecord(6);
+        int t_base = record.getItem<VFPPROD::THP_INDEX>().get< int >(0) - 1;
+        int w_base = record.getItem<VFPPROD::WFR_INDEX>().get< int >(0) - 1;
+        int g_base = record.getItem<VFPPROD::GFR_INDEX>().get< int >(0) - 1;
+        int a_base = record.getItem<VFPPROD::ALQ_INDEX>().get< int >(0) - 1;
+
+        const std::vector<double>& bhp_tht = record.getItem<VFPPROD::VALUES>().getData< double >();
+
+        // For single-line tables: Calculate BHP based on constant (BHP - THP) for each flow rate
+        // We assume constant delta pressure for all combinations
+        const double original_thp = m_thp_data[t_base];
+        std::vector<double> deltas(nf);
+        for (std::size_t f = 0; f < nf; ++f) {
+            const double original_bhp = table_scaling_factor * bhp_tht[f];
+            deltas[f] = original_bhp - original_thp;
+        }
+
+        for (std::size_t t = 0; t < nt; ++t) {
+            const double current_thp = m_thp_data[t];
+            for (std::size_t w = 0; w < nw; ++w) {
+                for (std::size_t g = 0; g < ng; ++g) {
+                    for (std::size_t a = 0; a < na; ++a) {
+                        if (t == static_cast<std::size_t>(t_base) &&
+                            w == static_cast<std::size_t>(w_base) &&
+                            g == static_cast<std::size_t>(g_base) &&
+                            a == static_cast<std::size_t>(a_base)) {
+                            continue;
+                        }
+
+                        for (std::size_t f = 0; f < nf; ++f) {
+                            const double new_bhp = current_thp + deltas[f];
+                            (*this)(t, w, g, a, f) = new_bhp;
+                        }
+                    }
+                }
+            }
+        }
+    
+        // Log a message about the single-line table handling
+        const auto msg = fmt::format("VFPPROD table {}\n"
+                                                       "In {} line {}\n"
+                                                       "Table has only one data record."
+                                                       "We are assuming constant delta pressure (BHP-THP) for all sensitivity combinations.",
+                                                       this->m_table_num,
+                                                       this->m_location.filename, this->m_location.lineno);
+        OpmLog::info(msg);
+    }
     check();
 }
 
@@ -428,7 +482,7 @@ void VFPProdTable::scaleValues(std::vector<double>& values,
         return;
     }
     else {
-        for (size_t i=0; i<values.size(); ++i) {
+        for (size_t i=0; i < values.size(); ++i) {
             values[i] *= scaling_factor;
         }
     }
