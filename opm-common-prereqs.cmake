@@ -15,8 +15,6 @@ set (opm-common_CONFIG_VAR
 
 # dependencies
 set (opm-common_DEPS
-	# compile with C99 support if available
-	"C99"
 	# valgrind client requests
 	"Valgrind"
 )
