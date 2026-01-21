@@ -34,7 +34,6 @@
 #include <opm/input/eclipse/Schedule/ScheduleGrid.hpp>
 #include <opm/input/eclipse/Schedule/Well/Connection.hpp>
 #include <opm/input/eclipse/Schedule/Well/WDFAC.hpp>
-#include <opm/input/eclipse/Schedule/WellTraj/RigEclipseWellLogExtractor.hpp>
 
 #include <opm/input/eclipse/Units/Units.hpp>
 
@@ -49,6 +48,7 @@
 #include <external/resinsight/ReservoirDataModel/RigWellLogExtractor.h>
 #include <external/resinsight/ReservoirDataModel/RigWellPath.h>
 
+#include "../WellTraj/RigEclipseWellLogExtractor.hpp"
 #include "WellTrajInfo.hpp"
 
 #include <algorithm>
