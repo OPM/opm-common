@@ -19,6 +19,14 @@ macro (opm_install opm)
 	  DESTINATION include${${opm}_VER_DIR}/${_rel_dir}
 	  )
   endforeach (_hdr)
+  foreach (_hdr IN LISTS ${opm}_GENERATED_HEADERS)
+	get_filename_component (_dir ${_hdr} PATH)
+        file (RELATIVE_PATH _rel_dir "${PROJECT_BINARY_DIR}" "${_dir}")
+	install (
+	  FILES ${_hdr}
+	  DESTINATION include${${opm}_VER_DIR}/${_rel_dir}
+	  )
+  endforeach (_hdr)
   install (
 	TARGETS ${${opm}_TARGET} ${${opm}_EXTRA_TARGETS}
 	EXPORT ${opm}-targets
