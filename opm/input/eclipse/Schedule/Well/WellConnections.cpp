@@ -49,6 +49,8 @@
 #include <external/resinsight/ReservoirDataModel/RigWellLogExtractor.h>
 #include <external/resinsight/ReservoirDataModel/RigWellPath.h>
 
+#include "WellTrajInfo.hpp"
+
 #include <algorithm>
 #include <array>
 #include <cassert>
@@ -582,15 +584,14 @@ The cell ({},{},{}) in well {} is not active and the connection will be ignored)
         this->loadCOMPDATX(record, grid, wname, wdfac, location, lgr_tag);
     }
 
-    std::vector<external::WellPathCellIntersectionInfo>
+    void
     WellConnections::loadCOMPTRAJ(const DeckRecord&      record,
                                   const ScheduleGrid&    grid,
                                   const std::string&     wname,
                                   const KeywordLocation& location,
-                                  external::cvf::ref<external::cvf::BoundingBoxTree>& cellSearchTree,
-                                  external::cvf::ref<external::RigWellPath>& wellPathGeometry)
-                                      {
-        if (this->coord[0].size() == 0) return {};  // No path.
+                                  WellTrajInfo&          wellTraj)
+    {
+        if (this->coord[0].size() == 0) return;  // No path.
 
         const auto& perf_top = record.getItem("PERF_TOP");
         const auto& perf_bot = record.getItem("PERF_BOT");
@@ -649,25 +650,25 @@ The cell ({},{},{}) in well {} is not active and the connection will be ignored)
         points.push_back(p_bot);
         measured_depths.push_back(m_bot);
 
-        wellPathGeometry->setWellPathPoints(points);
-        wellPathGeometry->setMeasuredDepths(measured_depths);
+        wellTraj.wellPathGeometry->setWellPathPoints(points);
+        wellTraj.wellPathGeometry->setMeasuredDepths(measured_depths);
 
         external::cvf::ref<external::RigEclipseWellLogExtractor> e {
             new external::RigEclipseWellLogExtractor {
-                wellPathGeometry.p(), *ecl_grid, cellSearchTree
+                wellTraj.wellPathGeometry.p(), *ecl_grid, wellTraj.cellSearchTree
             }
         };
 
         // Keep the AABB search tree of the grid to avoid redoing an
         // expensive calulation.
-        cellSearchTree = e->getCellSearchTree();
+        wellTraj.cellSearchTree = e->getCellSearchTree();
 
         // This gives the intersected grid cells IJK, cell face entrance &
         // exit cell face point and connection length.
-        auto intersections = e->cellIntersectionInfosAlongWellPath();
+        wellTraj.intersections = e->cellIntersectionInfosAlongWellPath();
 
-        for (size_t is = 0; is < intersections.size(); ++is) {
-            const auto ijk = ecl_grid->getIJK(intersections[is].globCellIndex);
+        for (size_t is = 0; is < wellTraj.intersections.size(); ++is) {
+            const auto ijk = ecl_grid->getIJK(wellTraj.intersections[is].globCellIndex);
 
             // When using WELTRAJ & COMPTRAJ one may use default settings in
             // WELSPECS for headI/J and let the headI/J be calculated by the
@@ -729,7 +730,7 @@ The cell ({},{},{}) in well {} is not active and the connection will be ignored)
                 ctf_kind = ::Opm::Connection::CTFKind::Defaulted;
 
                 const auto& connection_vector =
-                    intersections[is].intersectionLengthsInCellCS;
+                    wellTraj.intersections[is].intersectionLengthsInCellCS;
 
                 const auto perm_thickness =
                     permThickness(connection_vector, cell_perm, props->ntg);
@@ -800,8 +801,6 @@ CF and Kh items for well {} must both be specified or both defaulted/negative)",
                 prev->updateSegment(conSegNo, cell.depth, css_ind, *perf_range);
             }
         }
-
-        return intersections;
     }
 
     void WellConnections::loadWELTRAJ(const DeckRecord& record,
