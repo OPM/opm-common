@@ -55,7 +55,7 @@ void EclEpsConfig::initFromState(const EclipseState& eclState,
     }
 
     // endpoint scaling is used, i.e., at least saturation scaling needs to be enabled
-    enableSatScaling_ = true;
+    enableSatScaling_ = false;
     enableThreePointKrSatScaling_ = endscale.threepoint();
 
     if (eclState.getTableManager().useJFunc()) {
@@ -65,7 +65,8 @@ void EclEpsConfig::initFromState(const EclipseState& eclState,
             || ((twoPhaseSystemType == EclTwoPhaseSystemType::OilWater) &&
                 (flag == JFunc::Flag::WATER))
             || ((twoPhaseSystemType == EclTwoPhaseSystemType::GasOil) &&
-                (flag == JFunc::Flag::GAS));
+                (flag == JFunc::Flag::GAS))
+            || (twoPhaseSystemType == EclTwoPhaseSystemType::GasWater);
     }
 
     const auto& fp = eclState.fieldProps();
@@ -78,6 +79,11 @@ void EclEpsConfig::initFromState(const EclipseState& eclState,
         return fp.has_double(prefix + "PC" + scaling);
     };
 
+    auto hasS = [&fp, &prefix](const std::string& scaling)
+    {
+        return fp.has_double(prefix + "S" + scaling);
+    };
+
     // check if we are supposed to scale the Y axis of the capillary pressure
     if (twoPhaseSystemType == EclTwoPhaseSystemType::OilWater) {
         this->setEnableThreePointKrwScaling(hasKR("WR"));
@@ -86,6 +92,7 @@ void EclEpsConfig::initFromState(const EclipseState& eclState,
         this->enableKrnScaling_ = hasKR("O") || this->enableThreePointKrnScaling();
         this->enableKrwScaling_ = hasKR("W") || this->enableThreePointKrwScaling();
         this->enablePcScaling_  = hasPC("W") || fp.has_double("SWATINIT");
+        this->enableSatScaling_ = hasS("WL") || hasS("WCR") || hasS("WU") || hasS("OWCR");
     }
     else if (twoPhaseSystemType == EclTwoPhaseSystemType::GasOil) {
         this->setEnableThreePointKrwScaling(hasKR("ORG"));
@@ -94,9 +101,20 @@ void EclEpsConfig::initFromState(const EclipseState& eclState,
         this->enableKrnScaling_ = hasKR("G") || this->enableThreePointKrnScaling();
         this->enableKrwScaling_ = hasKR("O") || this->enableThreePointKrwScaling();
         this->enablePcScaling_  = hasPC("G");
+        this->enableSatScaling_ = hasS("GL") || hasS("GCR") || hasS("GU") || hasS("OGCR");
     }
     else {
-        assert(twoPhaseSystemType == EclTwoPhaseSystemType::GasWater);
+        this->setEnableThreePointKrwScaling(hasKR("WR"));
+        this->setEnableThreePointKrnScaling(hasKR("GR"));
+
+        this->enableKrnScaling_ = hasKR("G") || this->enableThreePointKrnScaling();
+        this->enableKrwScaling_ = hasKR("W") || this->enableThreePointKrwScaling();
+        // Do we support all these options????
+        this->enablePcScaling_  = hasPC("G") || hasPC("W");
+        this->enableSatScaling_ = hasS("GL") || hasS("GCR") || hasS("GU") || hasS("WL") || hasS("WCR") || hasS("WU");
+        //throw std::runtime_error {
+        //    "Not supported."
+        //};
         //TODO enable endpoint scaling for gaswater system
     }
 

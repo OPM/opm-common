@@ -267,7 +267,7 @@ public:
     template <class Evaluation>
     static Evaluation scaledToUnscaledSatPc(const Params& params, const Evaluation& SwScaled)
     {
-        if (!params.config().enablePcScaling())
+        if (!params.config().enableSatScaling())
             return SwScaled;
 
         // the saturations of capillary pressure are always scaled using two-point
@@ -280,7 +280,7 @@ public:
     template <class Evaluation>
     static Evaluation unscaledToScaledSatPc(const Params& params, const Evaluation& SwUnscaled)
     {
-        if (!params.config().enablePcScaling())
+        if (!params.config().enableSatScaling())
             return SwUnscaled;
 
         // the saturations of capillary pressure are always scaled using two-point
@@ -297,7 +297,7 @@ public:
     template <class Evaluation>
     static Evaluation scaledToUnscaledSatKrw(const Params& params, const Evaluation& SwScaled)
     {
-        if (!params.config().enableKrwScaling())
+        if (!params.config().enableSatScaling())
             return SwScaled;
 
         if (params.config().enableThreePointKrSatScaling()) {
@@ -315,7 +315,7 @@ public:
     template <class Evaluation>
     static Evaluation unscaledToScaledSatKrw(const Params& params, const Evaluation& SwUnscaled)
     {
-        if (!params.config().enableKrwScaling())
+        if (!params.config().enableSatScaling())
             return SwUnscaled;
 
         if (params.config().enableThreePointKrSatScaling()) {
@@ -337,7 +337,7 @@ public:
     template <class Evaluation>
     static Evaluation scaledToUnscaledSatKrn(const Params& params, const Evaluation& SwScaled)
     {
-        if (!params.config().enableKrnScaling())
+        if (!params.config().enableSatScaling())
             return SwScaled;
 
         if (params.config().enableThreePointKrSatScaling())
@@ -354,7 +354,7 @@ public:
     template <class Evaluation>
     static Evaluation unscaledToScaledSatKrn(const Params& params, const Evaluation& SwUnscaled)
     {
-        if (!params.config().enableKrnScaling())
+        if (!params.config().enableSatScaling())
             return SwUnscaled;
 
         if (params.config().enableThreePointKrSatScaling()) {
