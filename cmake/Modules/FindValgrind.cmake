@@ -15,6 +15,7 @@ find_path(VALGRIND_INCLUDE_DIR valgrind/memcheck.h
 # path, but this does not hurt...
 find_program(VALGRIND_PROGRAM NAMES valgrind PATH ${VALGRIND_ROOT}/bin)
 
+include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(Valgrind DEFAULT_MSG
   VALGRIND_INCLUDE_DIR
   VALGRIND_PROGRAM)

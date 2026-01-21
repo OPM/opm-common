@@ -75,11 +75,6 @@ if(NOT @opm-project_NAME@_FOUND)
     endif()
   endif (NOT "@opm-project_TARGET@" STREQUAL "")
 
-  # same as above, but for C99
-  string (REPLACE "@C_STD99_FLAGS@" "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
-  string (STRIP "${CMAKE_C_FLAGS}" CMAKE_C_FLAGS)
-  set (CMAKE_C_FLAG "@C_STD99_FLAGS@ ${CMAKE_C_FLAGS}")
-
   # build with OpenMP if that was found
   if (NOT "@OpenMP_C_FLAGS@" STREQUAL "")
     string (REPLACE "@OpenMP_C_FLAGS@" "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
