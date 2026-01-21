@@ -37,12 +37,10 @@
 
 #include <external/resinsight/LibGeometry/cvfBoundingBoxTree.h>
 
-
 #include "../HandlerContext.hpp"
+#include "WellTrajInfo.hpp"
 
 #include <fmt/format.h>
-
-#include <unordered_set>
 
 namespace Opm
 {
@@ -103,8 +101,7 @@ namespace
     void
     handleCOMPTRAJ(HandlerContext& handlerContext)
     {
-        external::cvf::ref<external::cvf::BoundingBoxTree> cellSearchTree {};
-
+        WellTrajInfo wellTraj;
         for (const auto& record : handlerContext.keyword) {
             const auto wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto wellnames = handlerContext.wellNames(wellNamePattern, false);
@@ -119,13 +116,13 @@ namespace
                 // cellsearchTree is calculated only once and is used to
                 // calculate cell intersections of the specified perforations.
                 auto connections = std::make_shared<WellConnections>(well.getConnections());
-                external::cvf::ref<external::RigWellPath> wellPathGeometry{new external::RigWellPath};
-                const auto intersections = connections->loadCOMPTRAJ(record,
-                                                                     handlerContext.grid,
-                                                                     name,
-                                                                     handlerContext.keyword.location(),
-                                                                     cellSearchTree,
-                                                                     wellPathGeometry);
+                wellTraj.intersections.clear();
+                wellTraj.wellPathGeometry = new external::RigWellPath;
+                connections->loadCOMPTRAJ(record,
+                                          handlerContext.grid,
+                                          name,
+                                          handlerContext.keyword.location(),
+                                          wellTraj);
 
                 // In the case that defaults are used in WELSPECS for headI/J
                 // the headI/J are calculated based on the well trajectory data
@@ -143,7 +140,7 @@ Well {} has no connections to the grid. The well will remain SHUT)", name);
                 }
 
                 const double diameter = record.getItem("DIAMETER").getSIDouble(0);
-                process_segments(handlerContext, well, intersections, wellPathGeometry, diameter);
+                process_segments(handlerContext, well, wellTraj.intersections, wellTraj.wellPathGeometry, diameter);
 
                 handlerContext.state().wells.update(well);
                 handlerContext.state().wellgroup_events().addEvent(name, ScheduleEvents::COMPLETION_CHANGE);

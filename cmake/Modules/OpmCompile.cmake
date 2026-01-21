@@ -40,7 +40,9 @@ macro (opm_compile opm)
   endif()
   set (${opm}_VERSION "${${opm}_VERSION_MAJOR}.${${opm}_VERSION_MINOR}")
   if (${opm}_SOURCES)
-        add_library (${${opm}_TARGET} ${${opm}_LIBRARY_TYPE} ${${opm}_SOURCES} ${${opm}_HEADERS})
+        add_library (${${opm}_TARGET} ${${opm}_LIBRARY_TYPE}
+                     ${${opm}_SOURCES} ${${opm}_HEADERS}
+                     ${${opm}_PRIVATE_HEADERS}  ${${opm}_GENERATED_HEADERS})
         set_target_properties (${${opm}_TARGET} PROPERTIES
           SOVERSION ${${opm}_VERSION}
           VERSION ${${opm}_VERSION}

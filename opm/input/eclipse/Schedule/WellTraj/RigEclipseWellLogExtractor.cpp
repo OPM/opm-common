@@ -24,10 +24,10 @@
 //     ApplicationLibCode\ReservoirDataModel\RigWellPathIntersectionTools.cpp
 
 
+#include "RigEclipseWellLogExtractor.hpp"
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleGrid.hpp>
 
-#include <opm/input/eclipse/Schedule/WellTraj/RigEclipseWellLogExtractor.hpp>
 #include <external/resinsight/ReservoirDataModel/RigWellLogExtractionTools.h>
 #include <external/resinsight/ReservoirDataModel/RigWellPath.h>
 #include <external/resinsight/ReservoirDataModel/cvfGeometryTools.h>
