@@ -44,9 +44,6 @@ message (STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 # use tricks to do faster builds
 include (UseFastBuilds)
 
-# precompiled headers
-include (UsePrecompHeaders)
-
 # optimize full if we're not doing a debug build
 include (UseOptimization)
 

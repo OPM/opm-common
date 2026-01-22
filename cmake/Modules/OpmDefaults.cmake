@@ -38,16 +38,6 @@ macro (opm_defaults opm)
 	set (${opm}_LIBRARY_TYPE STATIC)
   endif (DEFINED BUILD_SHARED_LIBS)
 
-  # precompile standard headers to speed up compilation
-  # unfortunately, this functionality is buggy and tends to segfault at
-  # least up to version 4.7.2, so it should be disabled by default there
-  set (_precomp_def OFF)
-  option (PRECOMPILE_HEADERS "Precompile common headers for speed." ${_precomp_def})
-  mark_as_advanced (PRECOMPILE_HEADERS)
-  if (NOT PRECOMPILE_HEADERS)
-	message (STATUS "Precompiled headers: disabled")
-  endif(NOT PRECOMPILE_HEADERS)
-
   # Use of OpenMP is considered experimental
   set (USE_OPENMP_DEFAULT ON)
 endmacro (opm_defaults opm)
