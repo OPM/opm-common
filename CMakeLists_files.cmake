@@ -1617,6 +1617,15 @@ if(ENABLE_ECL_OUTPUT)
         opm/utility/EModel.hpp
         opm/utility/WellStructureViz.hpp
         )
+    foreach (name A B C D E F G H I J K L M N O P Q R S T U V W X Y Z)
+      list(APPEND GENERATED_HEADER_FILES
+          opm/input/eclipse/Parser/ParserKeywords/${name}.hpp
+          opm/input/eclipse/Parser/ParserKeywords/ParserInit${name}.hpp
+      )
+    endforeach()
+    list(APPEND GENERATED_HEADER_FILES
+        opm/input/eclipse/Parser/ParserKeywords/Builtin.hpp
+    )
 endif()
 
 if(ENABLE_ECL_INPUT OR ENABLE_ECL_OUTPUT)

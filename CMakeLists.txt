@@ -88,12 +88,9 @@ include (CMakeLists_files.cmake)
 
 macro (config_hook)
   if(ENABLE_ECL_INPUT)
-    # For this project
-    include_directories(${EXTRA_INCLUDES} ${PROJECT_BINARY_DIR}/include)
-    # For downstreams
-    list(APPEND EXTRA_INCLUDES ${PROJECT_BINARY_DIR}/include)
+    include_directories(${EXTRA_INCLUDES} ${PROJECT_BINARY_DIR})
     set(OPM_PROJECT_EXTRA_CODE_INTREE "${OPM_PROJECT_EXTRA_CODE_INTREE}
-                                       list(APPEND opm-common_INCLUDE_DIRS ${EXTRA_INCLUDES})")
+                                        list(APPEND opm-common_INCLUDE_DIRS ${EXTRA_INCLUDES} ${PROJECT_BINARY_DIR})")
     if(ENABLE_ECL_INPUT)
       set(OPM_PROJECT_EXTRA_CODE_INTREE "${OPM_PROJECT_EXTRA_CODE_INTREE}
                                          set(HAVE_ECL_INPUT 1)")
@@ -153,7 +150,6 @@ macro (sources_hook)
         list(INSERT opm-common_SOURCES 0 ${PROJECT_BINARY_DIR}/ParserKeywords/${name}.cpp)
         list(INSERT opm-common_SOURCES 0 ${PROJECT_BINARY_DIR}/ParserKeywords/ParserInit${name}.cpp)
         list(INSERT opm-common_SOURCES 0 ${PROJECT_BINARY_DIR}/ParserKeywords/Builtin${name}.cpp)
-        list(INSERT opm-common_GENERATED_HEADERS 0 ${PROJECT_BINARY_DIR}/include/opm/input/eclipse/Parser/ParserKeywords/${name}.hpp)
     endforeach()
     if (OPM_ENABLE_EMBEDDED_PYTHON)
       list(INSERT opm-common_SOURCES 0 ${PROJECT_BINARY_DIR}/python/cxx/builtin_pybind11.cpp)
@@ -207,9 +203,6 @@ macro (tests_hook)
 endmacro (tests_hook)
 
 macro (install_hook)
-  install(DIRECTORY ${PROJECT_BINARY_DIR}/include/
-          DESTINATION include
-          PATTERN *.hpp)
 endmacro (install_hook)
 
 # Used to append entries from one list to another.

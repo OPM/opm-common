@@ -18,7 +18,7 @@
  */
 
 #include <opm/input/eclipse/EclipseState/Aquifer/AquiferFlux.hpp>
-#include <include/opm/input/eclipse/Parser/ParserKeywords/A.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/A.hpp>
 
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>

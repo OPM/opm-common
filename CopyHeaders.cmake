@@ -14,7 +14,7 @@ endif()
 
 execute_process(COMMAND ${CMAKE_COMMAND} -E copy_if_different
                         ${BASE_DIR}/tmp_gen/include/opm/input/eclipse/Parser/ParserKeywords/Builtin.hpp
-                        ${BASE_DIR}/include/opm/input/eclipse/Parser/ParserKeywords/Builtin.hpp)
+                        ${BASE_DIR}/opm/input/eclipse/Parser/ParserKeywords/Builtin.hpp)
 
 
 file(GLOB HDRS ${BASE_DIR}/tmp_gen/include/opm/input/eclipse/Parser/ParserKeywords/*.hpp)
@@ -23,7 +23,7 @@ foreach(HDR ${HDRS})
   file(RELATIVE_PATH hdr ${BASE_DIR}/tmp_gen/include/opm/input/eclipse/Parser/ParserKeywords ${HDR})
   execute_process(COMMAND ${CMAKE_COMMAND} -E copy_if_different
                           ${HDR}
-                          ${BASE_DIR}/include/opm/input/eclipse/Parser/ParserKeywords/${hdr})
+                          ${BASE_DIR}/opm/input/eclipse/Parser/ParserKeywords/${hdr})
 
 endforeach()
 
