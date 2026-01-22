@@ -22,7 +22,6 @@
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/common/utility/OpmInputError.hpp>
 
-#include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 
 #include <opm/input/eclipse/Schedule/MSW/Compsegs.hpp>
@@ -32,6 +31,8 @@
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
 
+#include <opm/input/eclipse/Deck/DeckKeyword.hpp>
+
 #include <opm/input/eclipse/Parser/ParserKeywords/C.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/W.hpp>
 
@@ -39,6 +40,14 @@
 
 #include "../HandlerContext.hpp"
 #include "WellTrajInfo.hpp"
+
+#include <algorithm>
+#include <functional>
+#include <memory>
+#include <string>
+#include <unordered_set>
+#include <utility>
+#include <vector>
 
 #include <fmt/format.h>
 
@@ -48,66 +57,91 @@ namespace Opm
 namespace
 {
 
-
-    auto
-    get_segment_geometries(HandlerContext& handlerContext,
+    std::pair<std::vector<Compsegs::TrajectorySegment>, std::vector<std::pair<double, double>>>
+    get_segment_geometries(HandlerContext&                                            handlerContext,
                            const std::vector<external::WellPathCellIntersectionInfo>& intersections,
-                           const external::cvf::ref<external::RigWellPath>& wellPathGeometry)
+                           const external::cvf::ref<external::RigWellPath>&           wellPathGeometry)
     {
-        std::vector<Compsegs::TrajectorySegment> trajectory_segments;
-        std::vector<std::pair<double, double>> cell_md_and_tvd;
+        std::vector<Compsegs::TrajectorySegment> trajectory_segments{};
+        std::vector<std::pair<double, double>> cell_md_and_tvd{};
+
         trajectory_segments.reserve(intersections.size());
         cell_md_and_tvd.reserve(intersections.size());
+
         const auto& ecl_grid = handlerContext.grid.get_grid();
+
         for (const auto& intersection : intersections) {
-            const auto ijk = ecl_grid->getIJK(intersection.globCellIndex);
-            trajectory_segments.push_back({intersection.startMD, intersection.endMD, ijk});
-            double cell_md = 0.5 * (intersection.startMD + intersection.endMD);
-            double cell_tvd = wellPathGeometry->interpolatedPointAlongWellPath(cell_md)[2];
+            trajectory_segments.push_back({
+                    intersection.startMD,
+                    intersection.endMD,
+                    ecl_grid->getIJK(intersection.globCellIndex)
+                });
+
+            const double cell_md = 0.5 * (intersection.startMD + intersection.endMD);
+            const double cell_tvd = wellPathGeometry->interpolatedPointAlongWellPath(cell_md)[2];
+
             cell_md_and_tvd.emplace_back(cell_md, cell_tvd);
         }
-        return std::pair {trajectory_segments, cell_md_and_tvd};
+
+        return { std::move(trajectory_segments), std::move(cell_md_and_tvd) };
     }
 
 
     void
-    process_segments(HandlerContext& handlerContext,
-                     Well& well,
+    process_segments(HandlerContext&                                            handlerContext,
+                     Well&                                                      well,
                      const std::vector<external::WellPathCellIntersectionInfo>& intersections,
-                     const external::cvf::ref<external::RigWellPath>& wellPathGeometry,
-                     double diameter)
+                     const external::cvf::ref<external::RigWellPath>&           wellPathGeometry,
+                     const double                                               diameter)
     {
-        if (well.isMultiSegment()) {
-            // For now, no segments may be defined via WELSEGS, except for the top:
-            if (well.getSegments().size() > 1) {
-                const auto msg
-                    = fmt::format("   {} already defines segments with the WELSEGS keyword", well.name());
-                throw OpmInputError(msg, handlerContext.keyword.location());
-            }
-
-            auto [trajectory_segments, cell_md_and_tvd]
-                = get_segment_geometries(handlerContext, intersections, wellPathGeometry);
-            well.addWellSegmentsFromLengthsAndDepths(
-                cell_md_and_tvd, diameter, handlerContext.keyword.location());
-            auto new_connections = Compsegs::getConnectionsAndSegmentsFromTrajectory(
-                trajectory_segments, well.getSegments(), well.getConnections(), handlerContext.grid);
-            well.updateConnections(
-                std::make_shared<WellConnections>(std::move(new_connections)), false);
-            handlerContext.record_well_structure_change();
+        if (! well.isMultiSegment()) {
+            return;
         }
+
+        // For now, no segments may be defined via WELSEGS, except for the top:
+        if (well.getSegments().size() > 1) {
+            const auto msg = fmt::format("   {} already defines segments "
+                                         "with the WELSEGS keyword", well.name());
+
+            throw OpmInputError(msg, handlerContext.keyword.location());
+        }
+
+        const auto& [trajectory_segments, cell_md_and_tvd] =
+            get_segment_geometries(handlerContext, intersections, wellPathGeometry);
+
+        well.addWellSegmentsFromLengthsAndDepths
+            (cell_md_and_tvd, diameter, handlerContext.keyword.location());
+
+        auto new_connections = Compsegs::getConnectionsAndSegmentsFromTrajectory
+            (well.name(),
+             trajectory_segments,
+             well.getSegments(),
+             well.getConnections(),
+             handlerContext.grid,
+             handlerContext.keyword.location(),
+             handlerContext.parseContext,
+             handlerContext.errors);
+
+        well.updateConnections
+            (std::make_shared<WellConnections>(std::move(new_connections)), false);
+
+        handlerContext.record_well_structure_change();
     }
 
 
     void
     handleCOMPTRAJ(HandlerContext& handlerContext)
     {
+        using Kw = ParserKeywords::COMPTRAJ;
+
         WellTrajInfo wellTraj;
         for (const auto& record : handlerContext.keyword) {
-            const auto wellNamePattern = record.getItem("WELL").getTrimmedString(0);
+            const auto wellNamePattern = record.getItem<Kw::WELL>().getTrimmedString(0);
             const auto wellnames = handlerContext.wellNames(wellNamePattern, false);
 
             for (const auto& name : wellnames) {
                 auto well = handlerContext.state().wells.get(name);
+
                 if (!well.getConnections().empty()) {
                     const auto msg = fmt::format(R"(   {} is already connected)", name);
                     throw OpmInputError(msg, handlerContext.keyword.location());
@@ -115,19 +149,18 @@ namespace
 
                 // cellsearchTree is calculated only once and is used to
                 // calculate cell intersections of the specified perforations.
-                auto connections = std::make_shared<WellConnections>(well.getConnections());
                 wellTraj.intersections.clear();
                 wellTraj.wellPathGeometry = new external::RigWellPath;
-                connections->loadCOMPTRAJ(record,
-                                          handlerContext.grid,
-                                          name,
+
+                auto connections = std::make_shared<WellConnections>(well.getConnections());
+                connections->loadCOMPTRAJ(record, handlerContext.grid, name,
                                           handlerContext.keyword.location(),
                                           wellTraj);
 
                 // In the case that defaults are used in WELSPECS for headI/J
                 // the headI/J are calculated based on the well trajectory data
                 well.updateHead(connections->getHeadI(), connections->getHeadJ());
-                if (well.updateConnections(connections, handlerContext.grid)) {
+                if (well.updateConnections(std::move(connections), handlerContext.grid)) {
                     well.updateRefDepth();
                     handlerContext.record_well_structure_change();
                 }
@@ -136,14 +169,20 @@ namespace
                     const auto msg = fmt::format(R"(Problem with keyword {{keyword}}:
 In {{file}} line {{line}}
 Well {} has no connections to the grid. The well will remain SHUT)", name);
+
                     OpmLog::warning(OpmInputError::format(msg, handlerContext.keyword.location()));
                 }
 
-                const double diameter = record.getItem("DIAMETER").getSIDouble(0);
-                process_segments(handlerContext, well, wellTraj.intersections, wellTraj.wellPathGeometry, diameter);
+                process_segments(handlerContext, well,
+                                 wellTraj.intersections,
+                                 wellTraj.wellPathGeometry,
+                                 record.getItem<Kw::DIAMETER>().getSIDouble(0));
 
-                handlerContext.state().wells.update(well);
-                handlerContext.state().wellgroup_events().addEvent(name, ScheduleEvents::COMPLETION_CHANGE);
+                handlerContext.state().wells.update(std::move(well));
+
+                handlerContext.state().wellgroup_events()
+                    .addEvent(name, ScheduleEvents::COMPLETION_CHANGE);
+
                 handlerContext.comptraj_handled(name);
             }
         }
@@ -155,37 +194,43 @@ Well {} has no connections to the grid. The well will remain SHUT)", name);
     void
     handleWELTRAJ(HandlerContext& handlerContext)
     {
+        using Kw = ParserKeywords::WELTRAJ;
+
         for (const auto& record : handlerContext.keyword) {
-            const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
+            const auto wellNamePattern = record.getItem<Kw::WELL>().getTrimmedString(0);
             const auto wellnames = handlerContext.wellNames(wellNamePattern, false);
 
             for (const auto& name : wellnames) {
                 auto well = handlerContext.state().wells.get(name);
-                auto connections
-                    = std::make_shared<WellConnections>(WellConnections(well.getConnections()));
-                connections->loadWELTRAJ(
-                    record, handlerContext.grid, name, handlerContext.keyword.location());
-                const auto& md = connections->getMD();
-                if (md.size() > 1) {
-                    const bool strictly_increasing = std::adjacent_find(
-                        md.begin(), md.end(), std::greater_equal<double>()) == md.end();
+
+                auto connections = std::make_shared<WellConnections>(well.getConnections());
+                connections->loadWELTRAJ(record, handlerContext.grid, name,
+                                         handlerContext.keyword.location());
+
+                if (const auto& md = connections->getMD(); md.size() > 1) {
+                    const bool strictly_increasing = std::adjacent_find
+                        (md.begin(), md.end(), std::greater_equal<>{}) == md.end();
+
                     if (!strictly_increasing) {
-                        const auto msg = fmt::format(
-                            "Well {} measured depth column is not strictly increasing", name);
+                        const auto msg = fmt::format("Well {} measured depth column "
+                                                     "is not strictly increasing", name);
+
                         throw OpmInputError(msg, handlerContext.keyword.location());
                     }
                 }
-                if (well.updateConnections(connections, handlerContext.grid)) {
-                    handlerContext.state().wells.update(well);
+
+                if (well.updateConnections(std::move(connections), handlerContext.grid)) {
+                    handlerContext.state().wells.update(std::move(well));
                     handlerContext.record_well_structure_change();
                 }
-                handlerContext.state().wellgroup_events().addEvent(
-                    name, ScheduleEvents::COMPLETION_CHANGE);
+
+                handlerContext.state().wellgroup_events()
+                    .addEvent(name, ScheduleEvents::COMPLETION_CHANGE);
             }
         }
+
         handlerContext.state().events().addEvent(ScheduleEvents::COMPLETION_CHANGE);
     }
-
 
 } // Anonymous namespace
 
