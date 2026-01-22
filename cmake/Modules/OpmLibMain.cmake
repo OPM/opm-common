@@ -85,9 +85,6 @@ list (REMOVE_ITEM "${project}_LIBRARIES" "${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}")
 # don't import more libraries than we need to
 include (UseOnlyNeeded)
 
-# put debug information into every executable
-include (UseDebugSymbols)
-
 # detect if Boost is in a shared library
 include (UseDynamicBoost)
 
