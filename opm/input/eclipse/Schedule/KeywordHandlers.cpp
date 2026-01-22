@@ -361,8 +361,8 @@ void handleTUNINGDP(HandlerContext& handlerContext)
     tuning_dp.XXXLCV = nondefault_or_previous_double(record, "XXXLCV", tuning_dp.XXXLCV);
     tuning_dp.TRGDDP = nondefault_or_previous_sidouble(record, "TRGDDP", tuning_dp.TRGDDP);
     tuning_dp.TRGDDS = nondefault_or_previous_double(record, "TRGDDS", tuning_dp.TRGDDS);
-    tuning_dp.TRGDDRS = nondefault_or_previous_double(record, "TRGDDRS", tuning_dp.TRGDDRS);
-    tuning_dp.TRGDDRV = nondefault_or_previous_double(record, "TRGDDRV", tuning_dp.TRGDDRV);
+    tuning_dp.TRGDDRS = nondefault_or_previous_sidouble(record, "TRGDDRS", tuning_dp.TRGDDRS);
+    tuning_dp.TRGDDRV = nondefault_or_previous_sidouble(record, "TRGDDRV", tuning_dp.TRGDDRV);
 
     // See handleTUNING for TRGLCV_has_value and XXXLCV_has_value
     tuning_dp.TRGLCV_has_value = !record.getItem("TRGLCV").defaultApplied(0);

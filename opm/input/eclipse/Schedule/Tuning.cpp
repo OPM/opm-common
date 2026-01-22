@@ -221,8 +221,8 @@ TuningDp::TuningDp()
     , XXXLCV(TuningKw::XXXLCV::defaultValue)
     , TRGDDP(0.0 * Metric::Pressure)
     , TRGDDS(0.0)
-    , TRGDDRS(0.0)
-    , TRGDDRV(0.0)
+    , TRGDDRS(0.0 * Metric::GasDissolutionFactor)
+    , TRGDDRV(0.0 * Metric::OilDissolutionFactor)
 {
 }
 
@@ -233,8 +233,8 @@ void TuningDp::set_defaults()
     this->XXXLCV = TUNINGDP::XXXLCV::defaultValue;
     this->TRGDDP = TUNINGDP::TRGDDP::defaultValue * Metric::Pressure;
     this->TRGDDS = TUNINGDP::TRGDDS::defaultValue;
-    this->TRGDDRS = TUNINGDP::TRGDDRS::defaultValue;
-    this->TRGDDRV = TUNINGDP::TRGDDRV::defaultValue;
+    this->TRGDDRS = TUNINGDP::TRGDDRS::defaultValue * Metric::GasDissolutionFactor;
+    this->TRGDDRV = TUNINGDP::TRGDDRV::defaultValue * Metric::OilDissolutionFactor;
 
     this->defaults_updated = true;
 }

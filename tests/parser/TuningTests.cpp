@@ -476,8 +476,8 @@ BOOST_AUTO_TEST_CASE(TuningDpTest)
         BOOST_CHECK_CLOSE(tuning_dp.XXXLCV, tuning.XXXLCV, tol);
         BOOST_CHECK_CLOSE(tuning_dp.TRGDDP, 0.0 * Metric::Pressure, tol);
         BOOST_CHECK_CLOSE(tuning_dp.TRGDDS, 0.0, tol);
-        BOOST_CHECK_CLOSE(tuning_dp.TRGDDRS, 0.0, tol);
-        BOOST_CHECK_CLOSE(tuning_dp.TRGDDRV, 0.0, tol);
+        BOOST_CHECK_CLOSE(tuning_dp.TRGDDRS, 0.0 * Metric::GasDissolutionFactor, tol);
+        BOOST_CHECK_CLOSE(tuning_dp.TRGDDRV, 0.0 * Metric::OilDissolutionFactor, tol);
     }
 
     // TIMESTEP 2
@@ -491,8 +491,8 @@ BOOST_AUTO_TEST_CASE(TuningDpTest)
         BOOST_CHECK_CLOSE(tuning_dp.XXXLCV, 0.001, tol);
         BOOST_CHECK_CLOSE(tuning_dp.TRGDDP, 1.0 * Metric::Pressure, tol);
         BOOST_CHECK_CLOSE(tuning_dp.TRGDDS, 0.01, tol);
-        BOOST_CHECK_CLOSE(tuning_dp.TRGDDRS, 0.0, tol);
-        BOOST_CHECK_CLOSE(tuning_dp.TRGDDRV, 0.0, tol);
+        BOOST_CHECK_CLOSE(tuning_dp.TRGDDRS, 0.0 * Metric::GasDissolutionFactor, tol);
+        BOOST_CHECK_CLOSE(tuning_dp.TRGDDRV, 0.0 * Metric::OilDissolutionFactor, tol);
     }
 
     // TIMESTEP 4:
@@ -504,8 +504,8 @@ BOOST_AUTO_TEST_CASE(TuningDpTest)
         BOOST_CHECK_CLOSE(tuning_dp.XXXLCV, 0.125, tol);
         BOOST_CHECK_CLOSE(tuning_dp.TRGDDP, 10.0 * Metric::Pressure, tol);
         BOOST_CHECK_CLOSE(tuning_dp.TRGDDS, 20.0, tol);
-        BOOST_CHECK_CLOSE(tuning_dp.TRGDDRS, 30.0, tol);
-        BOOST_CHECK_CLOSE(tuning_dp.TRGDDRV, 40.0, tol);
+        BOOST_CHECK_CLOSE(tuning_dp.TRGDDRS, 30.0 * Metric::GasDissolutionFactor, tol);
+        BOOST_CHECK_CLOSE(tuning_dp.TRGDDRV, 40.0 * Metric::OilDissolutionFactor, tol);
     }
 
     // TIMESTEP 6:
@@ -517,8 +517,8 @@ BOOST_AUTO_TEST_CASE(TuningDpTest)
         BOOST_CHECK_CLOSE(tuning_dp.XXXLCV, 0.125, tol);
         BOOST_CHECK_CLOSE(tuning_dp.TRGDDP, 15.0 * Metric::Pressure, tol);
         BOOST_CHECK_CLOSE(tuning_dp.TRGDDS, 20.0, tol);
-        BOOST_CHECK_CLOSE(tuning_dp.TRGDDRS, 30.0, tol);
-        BOOST_CHECK_CLOSE(tuning_dp.TRGDDRV, 40.0, tol);
+        BOOST_CHECK_CLOSE(tuning_dp.TRGDDRS, 30.0 * Metric::GasDissolutionFactor, tol);
+        BOOST_CHECK_CLOSE(tuning_dp.TRGDDRV, 40.0 * Metric::OilDissolutionFactor, tol);
     }
 
     // TIMESTEP 8:
@@ -530,8 +530,8 @@ BOOST_AUTO_TEST_CASE(TuningDpTest)
         BOOST_CHECK_CLOSE(tuning_dp.XXXLCV, 0.125, tol);
         BOOST_CHECK_CLOSE(tuning_dp.TRGDDP, 15.0 * Metric::Pressure, tol);
         BOOST_CHECK_CLOSE(tuning_dp.TRGDDS, 25.0, tol);
-        BOOST_CHECK_CLOSE(tuning_dp.TRGDDRS, 30.0, tol);
-        BOOST_CHECK_CLOSE(tuning_dp.TRGDDRV, 40.0, tol);
+        BOOST_CHECK_CLOSE(tuning_dp.TRGDDRS, 30.0 * Metric::GasDissolutionFactor, tol);
+        BOOST_CHECK_CLOSE(tuning_dp.TRGDDRV, 40.0 * Metric::OilDissolutionFactor, tol);
     }
 
     // TIMESTEP 10:
@@ -543,8 +543,8 @@ BOOST_AUTO_TEST_CASE(TuningDpTest)
         BOOST_CHECK_CLOSE(tuning_dp.XXXLCV, 0.125, tol);
         BOOST_CHECK_CLOSE(tuning_dp.TRGDDP, 15.0 * Metric::Pressure, tol);
         BOOST_CHECK_CLOSE(tuning_dp.TRGDDS, 25.0, tol);
-        BOOST_CHECK_CLOSE(tuning_dp.TRGDDRS, 35.0, tol);
-        BOOST_CHECK_CLOSE(tuning_dp.TRGDDRV, 40.0, tol);
+        BOOST_CHECK_CLOSE(tuning_dp.TRGDDRS, 35.0 * Metric::GasDissolutionFactor, tol);
+        BOOST_CHECK_CLOSE(tuning_dp.TRGDDRV, 40.0 * Metric::OilDissolutionFactor, tol);
     }
 
     // TIMESTEP 12:
@@ -556,7 +556,7 @@ BOOST_AUTO_TEST_CASE(TuningDpTest)
         BOOST_CHECK_CLOSE(tuning_dp.XXXLCV, 0.125, tol);
         BOOST_CHECK_CLOSE(tuning_dp.TRGDDP, 15.0 * Metric::Pressure, tol);
         BOOST_CHECK_CLOSE(tuning_dp.TRGDDS, 25.0, tol);
-        BOOST_CHECK_CLOSE(tuning_dp.TRGDDRS, 35.0, tol);
-        BOOST_CHECK_CLOSE(tuning_dp.TRGDDRV, 45.0, tol);
+        BOOST_CHECK_CLOSE(tuning_dp.TRGDDRS, 35.0 * Metric::GasDissolutionFactor, tol);
+        BOOST_CHECK_CLOSE(tuning_dp.TRGDDRV, 45.0 * Metric::OilDissolutionFactor, tol);
     }
 }
