@@ -71,30 +71,6 @@ macro (opm_compile opm)
 	set (${opm}_TARGET)
   endif (${opm}_SOURCES)
 
-  # pre-compile common headers; this is setup *after* the library to pick
-  # up extra options set there
-  if (PRECOMPILE_HEADERS)
-	# if we have no library, then use the static setting as this will
-	# build the same way as any test programs (no -fPIC option)
-	if (${opm}_TARGET)
-	  get_target_property (_type ${${opm}_TARGET} TYPE)
-	else ()
-	  set (_type "STATIC")
-	endif ()
-	precompile_header (CXX ${_type}
-	  HEADER "${${opm}_PRECOMP_CXX_HEADER}"
-	  TARGET ${opm}_CXX_pch
-	  FLAGS  ${opm}_PRECOMP_CXX_FLAGS
-	  )
-	# must set property on source files instead of entire target, because
-	# it only applies to C++ modules (and cannot be used for C)
-	set_source_files_properties (${${opm}_CXX_SOURCES} PROPERTIES
-	  OBJECT_DEPENDS "${${opm}_CXX_pch}"
-	  COMPILE_FLAGS  "${${opm}_PRECOMP_CXX_FLAGS}"
-	  )
-	message (STATUS "Precompiled headers: ${${opm}_CXX_pch}")
-  endif (PRECOMPILE_HEADERS)
-
   # we need to know the name of the library which is generated
   if (${opm}_TARGET)
     set(${opm}_LIBRARY $<TARGET_FILE:${${opm}_TARGET}>)
