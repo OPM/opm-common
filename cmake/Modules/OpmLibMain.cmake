@@ -252,10 +252,6 @@ add_custom_target(check-commits
 include (OpmDoc)
 opm_doc (${project} ${doxy_dir})
 
-### clean in-source builds ###
-include (OpmDistClean)
-opm_dist_clean (${project})
-
 ### emulate the with-xxx feature of autotools;
 include (OpmKnown)
 
