@@ -2,8 +2,6 @@
 
 include(OpmInterproceduralOptimization)
 
-option (STRIP_DEBUGGING_SYMBOLS "use separate files for the executable code and the debugging symbols" OFF)
-
 macro (opm_compile opm)
   # some CMake properties do not do list expansion
   string (REPLACE ";" " " ${opm}_LINKER_FLAGS_STR "${${opm}_LINKER_FLAGS}")
@@ -68,10 +66,6 @@ macro (opm_compile opm)
         target_link_libraries (${${opm}_TARGET} PUBLIC ${_public_libs}
           INTERFACE ${_interface_libs})
 
-        if (STRIP_DEBUGGING_SYMBOLS)
-	  # queue this executable to be stripped
-	  strip_debug_symbols (${${opm}_TARGET} ${opm}_DEBUG)
-        endif()
   else (${opm}_SOURCES)
 	# unset this variable to signal that no library is generated
 	set (${opm}_TARGET)
