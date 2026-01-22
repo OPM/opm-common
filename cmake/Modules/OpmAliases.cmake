@@ -9,7 +9,6 @@ function (set_aliases)
   # are separated by space
   set (aliases
 	"HAVE_SUITESPARSE_UMFPACK  HAVE_SUITESPARSE_UMFPACK_H"
-	"HAVE_DUNE_BOOST          HAVE_BOOST"
 	)
   foreach (alias IN LISTS aliases)
 	# convert entry "X Y" into a list "X;Y", then pick apart
