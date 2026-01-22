@@ -246,9 +246,6 @@ add_custom_target(check-commits
 include (OpmDoc)
 opm_doc (${project} ${doxy_dir})
 
-### emulate the with-xxx feature of autotools;
-include (OpmKnown)
-
 # make sure we rebuild if dune.module changes
 configure_file (
 	"${CMAKE_CURRENT_SOURCE_DIR}/dune.module"
