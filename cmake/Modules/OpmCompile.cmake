@@ -38,9 +38,41 @@ macro (opm_compile opm)
   endif()
   set (${opm}_VERSION "${${opm}_VERSION_MAJOR}.${${opm}_VERSION_MINOR}")
   if (${opm}_SOURCES)
-        add_library (${${opm}_TARGET} ${${opm}_LIBRARY_TYPE}
-                     ${${opm}_SOURCES} ${${opm}_HEADERS}
-                     ${${opm}_PRIVATE_HEADERS}  ${${opm}_GENERATED_HEADERS})
+        add_library(${${opm}_TARGET} ${${opm}_LIBRARY_TYPE})
+        target_sources(${${opm}_TARGET}
+          PRIVATE
+            ${${opm}_SOURCES}
+        )
+        target_sources(${${opm}_TARGET}
+          PRIVATE
+          FILE_SET
+            private_headers
+          TYPE
+            HEADERS
+          FILES
+            ${${opm}_PRIVATE_HEADERS}
+        )
+        target_sources(${${opm}_TARGET}
+          PUBLIC
+          FILE_SET
+            HEADERS
+          BASE_DIRS
+            ${PROJECT_SOURCE_DIR}
+          FILES
+            ${${opm}_HEADERS}
+        )
+        target_sources(${${opm}_TARGET}
+          PUBLIC
+          FILE_SET
+            generated_headers
+          TYPE
+            HEADERS
+          BASE_DIRS
+            ${PROJECT_BINARY_DIR}
+          FILES
+            ${${opm}_GENERATED_HEADERS}
+        )
+
         set_target_properties (${${opm}_TARGET} PROPERTIES
           SOVERSION ${${opm}_VERSION}
           VERSION ${${opm}_VERSION}
