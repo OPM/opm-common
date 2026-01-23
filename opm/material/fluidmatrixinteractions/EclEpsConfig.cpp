@@ -37,8 +37,8 @@ namespace Opm {
 
 void EclEpsConfig::initFromState(const EclipseState& eclState,
                                  EclTwoPhaseSystemType twoPhaseSystemType,
-                                const std::string& prefix,
-                                const std::string& suffix)
+                                 const std::string& prefix,
+                                 const std::string& suffix)
 {
     const auto& endscale = eclState.runspec().endpointScaling();
     // find out if endpoint scaling is used in the first place
@@ -65,7 +65,8 @@ void EclEpsConfig::initFromState(const EclipseState& eclState,
             || ((twoPhaseSystemType == EclTwoPhaseSystemType::OilWater) &&
                 (flag == JFunc::Flag::WATER))
             || ((twoPhaseSystemType == EclTwoPhaseSystemType::GasOil) &&
-                (flag == JFunc::Flag::GAS));
+                (flag == JFunc::Flag::GAS))
+            || (twoPhaseSystemType == EclTwoPhaseSystemType::GasWater);
     }
 
     const auto& fp = eclState.fieldProps();
