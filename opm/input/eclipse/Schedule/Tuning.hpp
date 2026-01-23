@@ -206,6 +206,7 @@ namespace Opm {
         double TRGDDS;
         double TRGDDRS;
         double TRGDDRV;
+        double TRGDDT;
 
         bool defaults_updated{false};
 
@@ -228,6 +229,7 @@ namespace Opm {
             serializer(TRGDDS);
             serializer(TRGDDRS);
             serializer(TRGDDRV);
+            serializer(TRGDDT);
             serializer(defaults_updated);
         }
     };
