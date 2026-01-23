@@ -80,7 +80,7 @@ macro (opm_compile_satellites opm satellite excl_all test_regexp)
     else (NOT "${test_regexp}" STREQUAL "")
       set (_test_lib "")
     endif (NOT "${test_regexp}" STREQUAL "")
-    target_link_libraries (${_sat_NAME} ${${opm}_TARGET} ${${opm}_LIBRARIES} ${_test_lib})
+    target_link_libraries (${_sat_NAME} PRIVATE ${${opm}_TARGET} ${${opm}_LIBRARIES} ${_test_lib})
 
     # variable with regular expression doubles as a flag for
     # whether tests should be setup or not
@@ -296,7 +296,7 @@ macro(opm_add_test TestName)
     if (CURTEST_ONLY_COMPILE)
       # only compile the binary but do not run it as a test
       add_executable("${CURTEST_EXE_NAME}" ${CURTEST_EXCLUDE_FROM_ALL} ${CURTEST_SOURCES})
-      target_link_libraries (${CURTEST_EXE_NAME} ${CURTEST_LIBRARIES})
+      target_link_libraries (${CURTEST_EXE_NAME} PRIVATE ${CURTEST_LIBRARIES})
       get_property(dirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)
       if(HAVE_DYNAMIC_BOOST_TEST)
         set_target_properties (${CURTEST_EXE_NAME} PROPERTIES
@@ -318,7 +318,7 @@ macro(opm_add_test TestName)
           set_target_properties (${CURTEST_EXE_NAME} PROPERTIES
                                  COMPILE_DEFINITIONS BOOST_TEST_DYN_LINK)
         endif()
-        target_link_libraries (${CURTEST_EXE_NAME} ${CURTEST_LIBRARIES})
+        target_link_libraries (${CURTEST_EXE_NAME} PRIVATE ${CURTEST_LIBRARIES})
         get_property(dirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)
 
         if(CURTEST_DEPENDS)

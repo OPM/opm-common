@@ -305,10 +305,10 @@ include (OpmLibMain)
 if (ENABLE_MOCKSIM AND ENABLE_ECL_INPUT)
   add_library(mocksim
               msim/src/msim.cpp)
-  target_link_libraries(mocksim opmcommon)
+  target_link_libraries(mocksim PRIVATE opmcommon)
   target_include_directories(mocksim PUBLIC msim/include)
   add_executable(msim examples/msim.cpp)
-  target_link_libraries(msim mocksim)
+  target_link_libraries(msim PRIVATE mocksim)
 
   if (Boost_UNIT_TEST_FRAMEWORK_FOUND)
     set(_libs mocksim opmcommon
@@ -350,7 +350,7 @@ if(ENABLE_ECL_INPUT)
     )
 
   foreach(target compareECL convertECL summary rewriteEclFile arraylist)
-    target_link_libraries(${target} opmcommon)
+    target_link_libraries(${target} PRIVATE opmcommon)
     install(TARGETS ${target} DESTINATION bin)
   endforeach()
 
@@ -398,7 +398,7 @@ if(dune-common_FOUND)
   if(Boost_UNIT_TEST_FRAMEWORK_FOUND)
     foreach(src ${DUNE_TEST_SOURCE_FILES})
       get_filename_component(tgt ${src} NAME_WE)
-      target_link_libraries(${tgt} dunecommon)
+      target_link_libraries(${tgt} PRIVATE dunecommon)
     endforeach()
 
     foreach(tst test_SymmTensor test_densead test_EvaluationFormat
@@ -407,11 +407,11 @@ if(dune-common_FOUND)
         test_fluidsystems test_tabulation test_h2brinepvt test_co2brinepvt
         test_eclblackoilfluidsystem test_eclblackoilfluidsystemnonstatic
         test_eclblackoilpvt)
-      target_link_libraries(${tst} dunecommon)
+      target_link_libraries(${tst} PRIVATE dunecommon)
     endforeach()
   endif()
   if(BUILD_EXAMPLES)
-    target_link_libraries(co2brinepvt dunecommon)
+    target_link_libraries(co2brinepvt PRIVATE dunecommon)
   endif()
 endif()
 
