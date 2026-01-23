@@ -211,4 +211,59 @@ bool Tuning::operator==(const Tuning& data) const {
            WSEG_INCREASE_FACTOR == data.WSEG_INCREASE_FACTOR;
 }
 
+// ////
+// TUNINGDP
+// ////
+using TUNINGDP = ParserKeywords::TUNINGDP;
+// OBS: When TUNINGDP is _not_ set, we use default from TUNING for TRGLCV and XXXLCV and 0.0 for TRGDDP and TRGDDS
+TuningDp::TuningDp()
+    : TRGLCV(TuningKw::TRGLCV::defaultValue)
+    , XXXLCV(TuningKw::XXXLCV::defaultValue)
+    , TRGDDP(0.0 * Metric::Pressure)
+    , TRGDDS(0.0)
+    , TRGDDRS(0.0 * Metric::GasDissolutionFactor)
+    , TRGDDRV(0.0 * Metric::OilDissolutionFactor)
+{
+}
+
+// OBS: When TUNINGDP _is_ set, we must change the defaults!
+void TuningDp::set_defaults()
+{
+    this->TRGLCV = TUNINGDP::TRGLCV::defaultValue;
+    this->XXXLCV = TUNINGDP::XXXLCV::defaultValue;
+    this->TRGDDP = TUNINGDP::TRGDDP::defaultValue * Metric::Pressure;
+    this->TRGDDS = TUNINGDP::TRGDDS::defaultValue;
+    this->TRGDDRS = TUNINGDP::TRGDDRS::defaultValue * Metric::GasDissolutionFactor;
+    this->TRGDDRV = TUNINGDP::TRGDDRV::defaultValue * Metric::OilDissolutionFactor;
+
+    this->defaults_updated = true;
+}
+
+TuningDp TuningDp::serializationTestObject()
+{
+    TuningDp result;
+    result.TRGLCV = 1.0;
+    result.TRGLCV_has_value = true;
+    result.XXXLCV = 2.0;
+    result.XXXLCV_has_value = true;
+    result.TRGDDP = 3.0;
+    result.TRGDDS = 4.0;
+    result.TRGDDRS = 5.0;
+    result.TRGDDRV = 6.0;
+
+    return result;
+}
+
+bool TuningDp::operator==(const TuningDp& other) const
+{
+    return this->defaults_updated == other.defaults_updated &&
+           this->TRGLCV == other.TRGLCV &&
+           this->TRGLCV_has_value == other.TRGLCV_has_value &&
+           this->XXXLCV == other.XXXLCV &&
+           this->XXXLCV_has_value == other.XXXLCV_has_value &&
+           this->TRGDDP == other.TRGDDP &&
+           this->TRGDDS == other.TRGDDS &&
+           this->TRGDDRS == other.TRGDDRS &&
+           this->TRGDDRV == other.TRGDDRV;
+}
 }

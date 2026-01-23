@@ -7,19 +7,36 @@
   "items": [
     {
       "name": "TRGLCV",
-      "value_type": "DOUBLE"
+      "value_type": "DOUBLE",
+      "default": 0.00001
     },
     {
       "name": "XXXLCV",
-      "value_type": "DOUBLE"
+      "value_type": "DOUBLE",
+      "default": 0.001
     },
     {
       "name": "TRGDDP",
-      "value_type": "DOUBLE"
+      "value_type": "DOUBLE",
+      "dimension": "Pressure",
+      "default": 1.0
     },
     {
       "name": "TRGDDS",
-      "value_type": "DOUBLE"
+      "value_type": "DOUBLE",
+      "default": 0.01
+    },
+    {
+      "name": "TRGDDRS",
+      "value_type": "DOUBLE",
+      "dimension": "GasDissolutionFactor",
+      "default": 0.0
+    },
+    {
+      "name": "TRGDDRV",
+      "value_type": "DOUBLE",
+      "dimension": "OilDissolutionFactor",
+      "default": 0.0
     }
   ]
 }
