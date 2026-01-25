@@ -112,11 +112,6 @@ public:
         return *this;
     }
 
-    // create a "blank" dynamic evaluation
-    OPM_HOST_DEVICE explicit Evaluation(int numDerivatives)
-        : data_(1 + numDerivatives)
-    {}
-
     // create a dynamic evaluation which represents a constant function
     //
     // i.e., f(x) = c. this implies an evaluation with the given value and all
