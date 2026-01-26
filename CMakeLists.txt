@@ -299,6 +299,7 @@ include (OpmLibMain)
 if(NOT TARGET cjson)
   include(DownloadCjson)
   target_sources(opmcommon PRIVATE $<TARGET_OBJECTS:cjson>)
+  target_include_directories(opmcommon PRIVATE ${PROJECT_BINARY_DIR}/_deps)
 endif()
 
 if (ENABLE_MOCKSIM AND ENABLE_ECL_INPUT)
