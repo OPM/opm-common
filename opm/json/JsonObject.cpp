@@ -17,15 +17,13 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <opm/json/JsonObject.hpp>
 
-#include <string>
+#include <cjson/cJSON.h>
+
 #include <fstream>
 #include <stdexcept>
-
-#include <opm/common/utility/FileSystem.hpp>
-
-#include <opm/json/JsonObject.hpp>
-#include <cJSON.h>
+#include <string>
 
 namespace Json {
 

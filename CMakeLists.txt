@@ -134,12 +134,6 @@ macro (prereqs_hook)
 endmacro (prereqs_hook)
 
 macro (sources_hook)
-  if(NOT cjson_FOUND)
-    include(DownloadCjson)
-    include_directories(${cjson_SOURCE_DIR})
-    list(APPEND opm-common_SOURCES ${cjson_SOURCE_DIR}/cJSON.c)
-  endif()
-
   if(ENABLE_ECL_INPUT)
     # Keyword generation
     include(GenerateKeywords.cmake)
@@ -301,6 +295,11 @@ endif()
 
 # all setup common to the OPM library modules is done here
 include (OpmLibMain)
+
+if(NOT TARGET cjson)
+  include(DownloadCjson)
+  target_sources(opmcommon PRIVATE $<TARGET_OBJECTS:cjson>)
+endif()
 
 if (ENABLE_MOCKSIM AND ENABLE_ECL_INPUT)
   add_library(mocksim
