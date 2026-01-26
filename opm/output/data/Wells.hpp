@@ -25,8 +25,6 @@
 #include <opm/output/data/GuideRateValue.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellEnums.hpp>
 
-#include <opm/json/JsonObject.hpp>
-
 #include <algorithm>
 #include <array>
 #include <climits>
@@ -108,8 +106,6 @@ namespace Opm { namespace data {
             void read(MessageBufferType& buffer);
 
             bool operator==(const Rates& rat2) const;
-
-            inline void init_json(Json::JsonObject& json_data) const;
 
             template<class Serializer>
             void serializeOp(Serializer& serializer)
@@ -550,8 +546,6 @@ namespace Opm { namespace data {
         template <class MessageBufferType>
         void read(MessageBufferType& buffer);
 
-        inline void init_json(Json::JsonObject& json_data) const;
-
         template<class Serializer>
         void serializeOp(Serializer& serializer)
         {
@@ -914,19 +908,6 @@ namespace Opm { namespace data {
                     (!this->isProducer && (this->inj == rhs.inj)));
         }
 
-        void init_json(Json::JsonObject& json_data) const
-        {
-            if (this->inj == ::Opm::WellInjectorCMode::CMODE_UNDEFINED)
-                json_data.add_item("inj", "CMODE_UNDEFINED");
-            else
-                json_data.add_item("inj", ::Opm::WellInjectorCMode2String(this->inj));
-
-            if (this->prod == ::Opm::WellProducerCMode::CMODE_UNDEFINED)
-                json_data.add_item("prod", "CMODE_UNDEFINED");
-            else
-                json_data.add_item("prod", ::Opm::WellProducerCMode2String(this->prod));
-        }
-
         template <class MessageBufferType>
         void write(MessageBufferType& buffer) const;
 
@@ -1104,8 +1085,6 @@ namespace Opm { namespace data {
         template <class MessageBufferType>
         void read(MessageBufferType& buffer);
 
-        inline void init_json(Json::JsonObject& json_data) const;
-
         const Connection*
         find_connection(const Connection::global_index connection_grid_index) const
         {
@@ -1259,20 +1238,6 @@ namespace Opm { namespace data {
                     OpmLog::warning("Received consistently duplicated output data for well " + name + " from more than one process - this might be problematic!");
                 }
             }
-        }
-
-        void init_json(Json::JsonObject& json_data) const {
-            for (const auto& [wname, well] : *this) {
-                auto json_well = json_data.add_object(wname);
-                well.init_json(json_well);
-            }
-        }
-
-
-        Json::JsonObject json() const {
-            Json::JsonObject json_data;
-            this->init_json(json_data);
-            return json_data;
         }
 
         template<class Serializer>
@@ -1470,19 +1435,6 @@ namespace Opm { namespace data {
         return this->tracer.at(tracer_name);
     }
 
-    void Rates::init_json(Json::JsonObject& json_data) const {
-
-        if (this->has(opt::wat))
-            json_data.add_item("wat", this->get(opt::wat));
-
-        if (this->has(opt::oil))
-            json_data.add_item("oil", this->get(opt::oil));
-
-        if (this->has(opt::gas))
-            json_data.add_item("gas", this->get(opt::gas));
-
-    }
-
     bool inline Rates::flowing() const {
         return ((this->wat != 0) ||
                 (this->oil != 0) ||
@@ -1563,22 +1515,6 @@ namespace Opm { namespace data {
             this->filtrate.write(buffer);
             this->fracture.write(buffer);
             this->fract.write(buffer);
-    }
-
-    void Connection::init_json(Json::JsonObject& json_data) const {
-        auto json_rates = json_data.add_object("rates");
-        this->rates.init_json(json_rates);
-
-        json_data.add_item("global_index", static_cast<int>(this->index));
-        json_data.add_item("pressure", this->pressure);
-        json_data.add_item("reservoir_rate", this->reservoir_rate);
-        json_data.add_item("cell_pressure", this->cell_pressure);
-        json_data.add_item("swat", this->cell_saturation_water);
-        json_data.add_item("sgas", this->cell_saturation_gas);
-        json_data.add_item("Kh", this->effective_Kh);
-        json_data.add_item("trans_factor", this->trans_factor);
-        json_data.add_item("d_factor", this->d_factor);
-        json_data.add_item("compact_mult", this->compact_mult);
     }
 
     template <class MessageBufferType>
@@ -1860,27 +1796,6 @@ namespace Opm { namespace data {
         }
     }
 
-    void Well::init_json(Json::JsonObject& json_data) const {
-        auto json_connections = json_data.add_array("connections");
-        for (const auto& conn : this->connections) {
-            auto json_conn = json_connections.add_object();
-            conn.init_json(json_conn);
-        }
-        auto json_rates = json_data.add_object("rates");
-        this->rates.init_json(json_rates);
-
-        json_data.add_item("bhp", this->bhp);
-        json_data.add_item("thp", this->thp);
-        json_data.add_item("temperature", this->temperature);
-        json_data.add_item("status", ::Opm::WellStatus2String(this->dynamicStatus));
-
-        auto json_control = json_data.add_object("control");
-        this->current_control.init_json(json_control);
-
-        auto json_guiderate = json_data.add_object("guiderate");
-        this->guide_rates.init_json(json_guiderate);
-    }
-
 }} // Opm::data
 
-#endif //OPM_OUTPUT_WELLS_HPP
+#endif // OPM_OUTPUT_WELLS_HPP

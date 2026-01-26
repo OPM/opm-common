@@ -25,7 +25,6 @@
 #include <stdexcept>
 
 #include <opm/output/data/Wells.hpp>
-#include <opm/json/JsonObject.hpp>
 
 using namespace Opm;
 using rt = data::Rates::opt;
@@ -41,17 +40,6 @@ BOOST_AUTO_TEST_CASE(has) {
     rates.set( rt::gas, 0 );
     BOOST_CHECK( rates.has( rt::gas ) );
     BOOST_CHECK( !rates.has( rt::oil ) );
-
-
-
-    Json::JsonObject json_data;
-    rates.init_json(json_data);
-    BOOST_CHECK( json_data.has_item("wat") );
-    BOOST_CHECK( json_data.has_item("gas") );
-    BOOST_CHECK( !json_data.has_item("oil") );
-
-    BOOST_CHECK_EQUAL( json_data.get_double("wat"), 10);
-    BOOST_CHECK_EQUAL( json_data.get_double("gas"), 0);
 }
 
 BOOST_AUTO_TEST_CASE(set_and_get) {
@@ -119,16 +107,6 @@ BOOST_AUTO_TEST_CASE(get_connections) {
     w1.connections.push_back( { 88, rc1, 30.45, 123.45, 543.21, 0.123, 0.5, 17.29, 0.1729, 0.0, 1.23, {}} );
     w1.connections.push_back( { 288, rc2, 33.19, 67.89, 98.76, 0.5, 0.125, 355.113, 0.355113, 0.0, 0.98, {}} );
 
-    {
-        Json::JsonObject json_data;
-        auto connection_list = json_data.add_array("connections");
-
-        auto conn1 = connection_list.add_object();
-        w1.connections[0].init_json(conn1);
-        auto conn2 = connection_list.add_object();
-        w1.connections[1].init_json(conn2);
-        BOOST_CHECK(json_data.is_object());
-    }
     w2.rates = r2;
     w2.bhp = 2.34;
     w2.temperature = 4.56;
@@ -151,8 +129,4 @@ BOOST_AUTO_TEST_CASE(get_connections) {
     const auto& conn = w1.find_connection(88);
     BOOST_CHECK_EQUAL( 20.41, conn->rates.get(data::Rates::opt::wat));
     BOOST_CHECK_EQUAL( 22.41, conn->rates.get(data::Rates::opt::gas));
-
-    auto json = wellRates.json();
-    BOOST_CHECK(json.has_item("OP_1"));
-    BOOST_CHECK(json.has_item("OP_2"));
 }
