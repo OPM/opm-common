@@ -32,12 +32,9 @@ set(genkw_SOURCES opm/json/JsonObject.cpp
                   opm/common/OpmLog/LogBackend.cpp
                   opm/common/OpmLog/LogUtil.cpp
 )
-if(NOT cjson_FOUND)
-  list(APPEND genkw_SOURCES ${cjson_SOURCE_DIR}/cJSON.c)
-endif()
 add_executable(genkw ${genkw_SOURCES})
 
-target_link_libraries(genkw ${opm-common_LIBRARIES})
+target_link_libraries(genkw ${opm-common_LIBRARIES} cjson)
 
 # Generate keyword list
 include(opm/input/eclipse/share/keywords/keyword_list.cmake)

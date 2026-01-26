@@ -5,14 +5,10 @@ FetchContent_Declare(cjson
                      URL_HASH SHA512=3a894de03c33d89f1e7ee572418d5483c844d38e1e64aa4f6297ddaa01f4111f07601f8d26617b424b5af15d469e3955dae075d9f30b5c25e16ec348fdb06e6f)
 FetchContent_Populate(cjson)
 
-# set(ENABLE_CJSON_TEST OFF CACHE BOOL "")
-# set(BUILD_SHARED_AND_STATIC_LIBS OFF CACHE BOOL "")
-# set(CJSON_BUILD_SHARED_LIBS OFF CACHE BOOL "")
-# set(CJSON_OVERRIDE_BUILD_SHARED_LIBS ON CACHE BOOL "")
-
-# add_subdirectory(${cjson_SOURCE_DIR} ${cjson_BINARY_DIR})
-
-# add_library(cjson::cjson STATIC IMPORTED)
-# set_target_properties(cjson::cjson PROPERTIES
-#                       INTERFACE_INCLUDE_DIRECTORIES ${cjson_SOURCE_DIR}
-#                       IMPORTED_LOCATION lib/libcjson.a)
+add_library(cjson OBJECT)
+target_sources(cjson PRIVATE ${cjson_SOURCE_DIR}/cJSON.c)
+execute_process(
+  COMMAND
+    ${CMAKE_COMMAND} -E create_symlink ${cjson_SOURCE_DIR} ${PROJECT_BINARY_DIR}/_deps/cjson
+)
+target_include_directories(cjson INTERFACE ${PROJECT_BINARY_DIR}/_deps)
