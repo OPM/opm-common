@@ -1845,18 +1845,6 @@ std::vector<std::string> Parser::getAllDeckNames () const {
 }
 
 
-    bool Parser::loadKeywordFromFile(const std::filesystem::path& configFile) {
-
-        try {
-            Json::JsonObject jsonKeyword(configFile);
-            addParserKeyword( ParserKeyword( jsonKeyword ) );
-            return true;
-        }
-        catch (...) {
-            return false;
-        }
-    }
-
     const std::vector<std::pair<std::string,std::string>> Parser::codeKeywords() const {
         return this->code_keywords;
     }

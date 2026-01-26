@@ -175,31 +175,11 @@ BOOST_AUTO_TEST_CASE(empty_sizeReturns0) {
 /*****************************************************************/
 
 
-BOOST_AUTO_TEST_CASE(loadKeywordFromFile_fileDoesNotExist_returnsFalse) {
-    Parser parser;
-    std::filesystem::path configFile("File/does/not/exist");
-    BOOST_CHECK_EQUAL( false , parser.loadKeywordFromFile( configFile ));
-}
-
-
-BOOST_AUTO_TEST_CASE(loadKeywordFromFile_invalidJson_returnsFalse) {
-    Parser parser;
-    std::filesystem::path configFile(prefix() + "json/example_invalid_json");
-    BOOST_CHECK_EQUAL( false , parser.loadKeywordFromFile( configFile ));
-}
-
-
-BOOST_AUTO_TEST_CASE(loadKeywordFromFile_invalidConfig_returnsFalse) {
-    Parser parser;
-    std::filesystem::path configFile(prefix() + "json/example_missing_name.json");
-    BOOST_CHECK_EQUAL( false , parser.loadKeywordFromFile( configFile ));
-}
-
-
 BOOST_AUTO_TEST_CASE(loadKeywordFromFile_validKeyword_returnsTrueHasKeyword) {
     Parser parser( false );
     std::filesystem::path configFile(prefix() + "json/BPR");
-    BOOST_CHECK_EQUAL( true , parser.loadKeywordFromFile( configFile ));
+    ParserKeyword kw(configFile.generic_string());
+    parser.addParserKeyword(kw);
     BOOST_CHECK_EQUAL( 1U , parser.size() );
     BOOST_CHECK_EQUAL( true , parser.isRecognizedKeyword("BPR") );
 }
@@ -208,7 +188,9 @@ BOOST_AUTO_TEST_CASE(loadKeywordFromFile_validKeyword_returnsTrueHasKeyword) {
 
 BOOST_AUTO_TEST_CASE(ReplaceKeyword) {
     Parser parser;
-    BOOST_CHECK( parser.loadKeywordFromFile( prefix() + "parser/EQLDIMS2" ) );
+    std::filesystem::path configFile(prefix() + "json/EQLDIMS2");
+    ParserKeyword kw(configFile.generic_string());
+    parser.addParserKeyword(kw);
 
     const auto& eqldims = parser.getParserKeywordFromDeckName("EQLDIMS");
     const auto& record = eqldims.getRecord(0);

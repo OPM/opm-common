@@ -123,8 +123,6 @@ namespace Opm {
         const ParserKeyword& getParserKeywordFromDeckName(const std::string_view& deckKeywordName) const;
         std::vector<std::string> getAllDeckNames () const;
 
-        bool loadKeywordFromFile(const std::filesystem::path& configFile);
-
         void applyUnitsToDeck(Deck& deck) const;
 
         /*!
