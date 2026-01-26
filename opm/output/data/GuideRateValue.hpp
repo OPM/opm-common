@@ -25,7 +25,6 @@
 #include <cstddef>
 #include <stdexcept>
 #include <string>
-#include <opm/json/JsonObject.hpp>
 
 namespace Opm { namespace data {
 
@@ -122,13 +121,6 @@ namespace Opm { namespace data {
 
             for (auto& x : this->value_) {
                 buffer.read(x);
-            }
-        }
-
-        void init_json(Json::JsonObject& json_data) const {
-            for (const auto& item : {Item::Oil, Item::Gas, Item::Water, Item::ResV}) {
-                if (this->has(item))
-                    json_data.add_item(this->itemName(item), this->get(item));
             }
         }
 
