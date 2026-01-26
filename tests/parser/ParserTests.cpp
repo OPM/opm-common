@@ -166,50 +166,10 @@ BOOST_AUTO_TEST_CASE(addParserKeywordJSON_size_isObject_allGood) {
 }
 
 
-
-BOOST_AUTO_TEST_CASE(loadKeywordsJSON_notArray_throw) {
-    Parser parser;
-    Json::JsonObject jsonConfig( "{\"name\" : \"BPR\" , \"size\" : 100, \"sections\":[\"SUMMARY\"]}");
-
-    BOOST_CHECK_THROW(parser.loadKeywords( jsonConfig ) , std::invalid_argument);
-}
-
-BOOST_AUTO_TEST_CASE(loadKeywordsJSON_noSectionsItem_throw) {
-    Parser parser;
-    Json::JsonObject jsonConfig( "[{\"name\" : \"BPR\" , \"size\" : 100, \"items\" :[{\"name\":\"ItemX\" , \"size_type\":\"SINGLE\" , \"value_type\" : \"DOUBLE\"}]}]");
-
-    BOOST_CHECK_THROW(parser.loadKeywords( jsonConfig ) , std::invalid_argument);
-}
-
-
-BOOST_AUTO_TEST_CASE(loadKeywordsJSON_isRecognizedKeyword_returnstrue) {
-    Parser parser;
-    Json::JsonObject jsonConfig( "[{\"name\" : \"BPR\" , \"size\" : 100, \"sections\":[\"SUMMARY\"], \"items\" :[{\"name\":\"ItemX\" , \"size_type\":\"SINGLE\" , \"value_type\" : \"DOUBLE\"}]}]");
-
-    parser.loadKeywords( jsonConfig );
-    BOOST_CHECK(parser.isRecognizedKeyword("BPR"));
-}
-
-
 BOOST_AUTO_TEST_CASE(empty_sizeReturns0) {
     Parser parser( false );
     BOOST_CHECK_EQUAL( 0U , parser.size());
 }
-
-
-
-BOOST_AUTO_TEST_CASE(loadKeywordsJSON_manyKeywords_returnstrue) {
-    Parser parser( false );
-    Json::JsonObject jsonConfig( "[{\"name\" : \"BPR\" , \"size\" : 100, \"sections\":[\"SUMMARY\"] ,  \"items\" :[{\"name\":\"ItemX\" , \"size_type\":\"SINGLE\" , \"value_type\" : \"DOUBLE\"}]}, {\"name\" : \"WWCT\", \"sections\":[\"SUMMARY\"], \"size\" : 0} , {\"name\" : \"EQUIL\", \"sections\":[\"PROPS\"], \"size\" : 0}]");
-
-    parser.loadKeywords( jsonConfig );
-    BOOST_CHECK(parser.isRecognizedKeyword("BPR"));
-    BOOST_CHECK(parser.isRecognizedKeyword("WWCT"));
-    BOOST_CHECK(parser.isRecognizedKeyword("EQUIL"));
-    BOOST_CHECK_EQUAL( 3U , parser.size() );
-}
-
-
 
 
 /*****************************************************************/

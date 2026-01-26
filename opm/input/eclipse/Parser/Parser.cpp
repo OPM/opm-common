@@ -1845,16 +1845,6 @@ std::vector<std::string> Parser::getAllDeckNames () const {
 }
 
 
-    void Parser::loadKeywords(const Json::JsonObject& jsonKeywords) {
-        if (jsonKeywords.is_array()) {
-            for (size_t index = 0; index < jsonKeywords.size(); index++) {
-                Json::JsonObject jsonKeyword = jsonKeywords.get_array_item(index);
-                addParserKeyword( ParserKeyword( jsonKeyword ) );
-            }
-        } else
-            throw std::invalid_argument("Input JSON object is not an array");
-    }
-
     bool Parser::loadKeywordFromFile(const std::filesystem::path& configFile) {
 
         try {

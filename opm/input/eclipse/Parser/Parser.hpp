@@ -123,7 +123,6 @@ namespace Opm {
         const ParserKeyword& getParserKeywordFromDeckName(const std::string_view& deckKeywordName) const;
         std::vector<std::string> getAllDeckNames () const;
 
-        void loadKeywords(const Json::JsonObject& jsonKeywords);
         bool loadKeywordFromFile(const std::filesystem::path& configFile);
 
         void loadKeywordsFromDirectory(const std::filesystem::path& directory , bool recursive = true);
