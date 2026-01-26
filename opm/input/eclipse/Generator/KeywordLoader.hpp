@@ -21,27 +21,28 @@
 #ifndef KEYWORD_LOADER_HPP
 #define KEYWORD_LOADER_HPP
 
+#include <opm/input/eclipse/Parser/ParserKeyword.hpp>
+
 #include <map>
 #include <string>
 #include <vector>
 
-#include <opm/input/eclipse/Parser/ParserKeyword.hpp>
-
 namespace Opm {
 
+class KeywordLoader
+{
+public:
+    KeywordLoader(const std::vector<std::string>& keyword_files, bool verbose);
+    std::string getJsonFile(const std::string& keyword) const;
 
-    class KeywordLoader {
+    auto begin() const { return keywords.begin(); }
+    auto end() const { return keywords.end(); }
 
-    public:
-        KeywordLoader(const std::vector<std::string>& keyword_files, bool verbose);
-        std::string getJsonFile(const std::string& keyword) const;
+private:
+    std::map<char, std::vector<ParserKeyword>> keywords;
+    std::map<std::string, std::string> m_jsonFile;
+};
 
-        std::map<char , std::vector<ParserKeyword> >::const_iterator begin( ) const;
-        std::map<char , std::vector<ParserKeyword> >::const_iterator end( ) const;
-    private:
-        std::map<char, std::vector<ParserKeyword>> keywords;
-        std::map<std::string , std::string > m_jsonFile;
-    };
 }
 
 #endif
