@@ -151,7 +151,8 @@ BOOST_AUTO_TEST_CASE(getAllDeckNames_hasNoKeywords_returnsEmptyList) {
 BOOST_AUTO_TEST_CASE(addParserKeywordJSON_isRecognizedKeyword_returnstrue) {
     Parser parser;
     Json::JsonObject jsonConfig("{\"name\": \"BPR\", \"sections\":[\"SUMMARY\"], \"size\" : 100 ,  \"items\" :[{\"name\":\"ItemX\" , \"size_type\":\"SINGLE\" , \"value_type\" : \"DOUBLE\"}]}");
-    parser.addParserKeyword( jsonConfig );
+    ParserKeyword kw(jsonConfig);
+    parser.addParserKeyword(kw);
     BOOST_CHECK(parser.isRecognizedKeyword("BPR"));
 }
 
@@ -159,7 +160,8 @@ BOOST_AUTO_TEST_CASE(addParserKeywordJSON_isRecognizedKeyword_returnstrue) {
 BOOST_AUTO_TEST_CASE(addParserKeywordJSON_size_isObject_allGood) {
     Parser parser;
     Json::JsonObject jsonConfig("{\"name\": \"EQUIXL\", \"sections\":[], \"size\" : {\"keyword\":\"EQLDIMS\" , \"item\" : \"NTEQUL\"},  \"items\" :[{\"name\":\"ItemX\" , \"size_type\":\"SINGLE\" , \"value_type\" : \"DOUBLE\"}]}");
-    parser.addParserKeyword( jsonConfig );
+    ParserKeyword kw(jsonConfig);
+    parser.addParserKeyword(kw);
     BOOST_CHECK(parser.isRecognizedKeyword("EQUIXL"));
 }
 

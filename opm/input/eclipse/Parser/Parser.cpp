@@ -1811,11 +1811,6 @@ void Parser::addParserKeyword( ParserKeyword parserKeyword ) {
         this->code_keywords.emplace_back( ptr->getName(), ptr->codeEnd() );
 }
 
-
-void Parser::addParserKeyword(const Json::JsonObject& jsonKeyword) {
-    addParserKeyword( ParserKeyword( jsonKeyword ) );
-}
-
 bool Parser::hasKeyword( const std::string& name ) const {
     return this->m_deckParserKeywords.find( std::string_view( name ) )
         != this->m_deckParserKeywords.end();
