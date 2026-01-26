@@ -33,10 +33,6 @@
 
 #include <opm/input/eclipse/Parser/ParserKeyword.hpp>
 
-namespace Json {
-    class JsonObject;
-}
-
 namespace Opm {
 
     namespace Ecl {

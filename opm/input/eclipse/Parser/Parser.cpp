@@ -47,8 +47,6 @@
 
 #include <opm/input/eclipse/Python/Python.hpp>
 
-#include <opm/json/JsonObject.hpp>
-
 #include <opm/common/utility/String.hpp>
 
 #include "raw/RawConsts.hpp"
