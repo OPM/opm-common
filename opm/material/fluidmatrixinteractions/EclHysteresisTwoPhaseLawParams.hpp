@@ -247,7 +247,7 @@ public:
                 Swmaxi_ = 1.0 - info.Sgl - info.Swl;
                 pcmaxi_ = info.maxPcgo;
             } else if (twoPhaseSystem == EclTwoPhaseSystemType::GasWater) {
-                Swmaxi_ = 1.0 - info.Sgl;
+                Swmaxi_ = info.Swu;
                 pcmaxi_ = info.maxPcgo + info.maxPcow;
             }
             else {

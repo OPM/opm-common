@@ -305,8 +305,8 @@ init(const EclEpsScalingPointsInfo<Scalar>& epsInfo,
         assert(epsSystemType == EclTwoPhaseSystemType::GasWater);
 
         // saturation scaling for capillary pressure
-        saturationPcPoints_[0] = 1 - epsInfo.Sgl;
-        saturationPcPoints_[2] = saturationPcPoints_[1] = 1- epsInfo.Sgu;
+        saturationPcPoints_[0] = epsInfo.Swl;
+        saturationPcPoints_[2] = saturationPcPoints_[1] = epsInfo.Swu;
 
         // krw saturation scaling endpoints
         saturationKrwPoints_[0] = epsInfo.Swcr;
