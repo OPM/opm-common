@@ -206,58 +206,6 @@ BOOST_AUTO_TEST_CASE(loadKeywordFromFile_validKeyword_returnsTrueHasKeyword) {
 
 
 
-BOOST_AUTO_TEST_CASE(loadConfigFromDirectory_directoryDoesNotexist_throws) {
-        Parser parser;
-        std::filesystem::path configPath("path/does/not/exist");
-        BOOST_CHECK_THROW(parser.loadKeywordsFromDirectory( configPath), std::invalid_argument);
-}
-
-BOOST_AUTO_TEST_CASE(loadConfigFromDirectory_notRecursive_allNames) {
-        Parser parser( false );
-        BOOST_CHECK_EQUAL(false , parser.isRecognizedKeyword("BPR"));
-        std::filesystem::path configPath(prefix() + "config/directory1");
-        BOOST_CHECK_NO_THROW(parser.loadKeywordsFromDirectory( configPath, false));
-        BOOST_CHECK(parser.isRecognizedKeyword("WWCT"));
-        BOOST_CHECK_EQUAL(true , parser.isRecognizedKeyword("BPR"));
-        BOOST_CHECK_EQUAL(false , parser.isRecognizedKeyword("DIMENS"));
-}
-
-
-BOOST_AUTO_TEST_CASE(loadConfigFromDirectory_notRecursive_strictNames) {
-        Parser parser( false );
-        std::filesystem::path configPath(prefix() + "config/directory1");
-        BOOST_CHECK_NO_THROW(parser.loadKeywordsFromDirectory( configPath, false));
-        BOOST_CHECK(parser.isRecognizedKeyword("WWCT"));
-        // the file name for the following keyword is "Bpr", but that
-        // does not matter
-        BOOST_CHECK_EQUAL(true , parser.isRecognizedKeyword("BPR"));
-        BOOST_CHECK_EQUAL(false , parser.isRecognizedKeyword("DIMENS"));
-}
-
-
-BOOST_AUTO_TEST_CASE(loadConfigFromDirectory_Recursive_allNames) {
-        Parser parser( false );
-        BOOST_CHECK_EQUAL(false , parser.isRecognizedKeyword("BPR"));
-        std::filesystem::path configPath(prefix() + "config/directory1");
-        BOOST_CHECK_NO_THROW(parser.loadKeywordsFromDirectory( configPath, true));
-        BOOST_CHECK(parser.isRecognizedKeyword("WWCT"));
-        BOOST_CHECK_EQUAL(true , parser.isRecognizedKeyword("BPR"));
-        BOOST_CHECK_EQUAL(true , parser.isRecognizedKeyword("DIMENS"));
-}
-
-
-BOOST_AUTO_TEST_CASE(loadConfigFromDirectory_default) {
-        Parser parser( false );
-        BOOST_CHECK_EQUAL(false , parser.isRecognizedKeyword("BPR"));
-        std::filesystem::path configPath(prefix() + "config/directory1");
-        BOOST_CHECK_NO_THROW(parser.loadKeywordsFromDirectory( configPath ));
-        BOOST_CHECK(parser.isRecognizedKeyword("WWCT"));
-        // the file name for the following keyword is "Bpr", but that
-        // does not matter
-        BOOST_CHECK_EQUAL(true , parser.isRecognizedKeyword("BPR"));
-        BOOST_CHECK_EQUAL(true , parser.isRecognizedKeyword("DIMENS"));
-}
-
 BOOST_AUTO_TEST_CASE(ReplaceKeyword) {
     Parser parser;
     BOOST_CHECK( parser.loadKeywordFromFile( prefix() + "parser/EQLDIMS2" ) );

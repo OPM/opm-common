@@ -125,7 +125,6 @@ namespace Opm {
 
         bool loadKeywordFromFile(const std::filesystem::path& configFile);
 
-        void loadKeywordsFromDirectory(const std::filesystem::path& directory , bool recursive = true);
         void applyUnitsToDeck(Deck& deck) const;
 
         /*!
