@@ -128,6 +128,7 @@ public:
         drainageParams_ = value;
 
         oilWaterSystem_ = (twoPhaseSystem == EclTwoPhaseSystemType::OilWater);
+        gasWaterSystem_ = (twoPhaseSystem == EclTwoPhaseSystemType::GasWater);
         gasOilSystem_ = (twoPhaseSystem == EclTwoPhaseSystemType::GasOil);
 
         if (!config().enableHysteresis())
@@ -246,7 +247,7 @@ public:
                 Swmaxi_ = 1.0 - info.Sgl - info.Swl;
                 pcmaxi_ = info.maxPcgo;
             } else if (twoPhaseSystem == EclTwoPhaseSystemType::GasWater) {
-                Swmaxi_ = 1.0 - info.Sgl;
+                Swmaxi_ = info.Swu;
                 pcmaxi_ = info.maxPcgo + info.maxPcow;
             }
             else {
@@ -587,7 +588,7 @@ public:
         bool updateParams = false;
 
         if (config().pcHysteresisModel() == 0 && pcSw < pcSwMdc_) {
-            if (pcSwMdc_ == 2.0 && pcSw+1.0e-6 < Swcrd_ && oilWaterSystem_) {
+            if (pcSwMdc_ == 2.0 && pcSw+1.0e-6 < Swcrd_ && (oilWaterSystem_ || gasWaterSystem_)) {
                initialImb_ = true;
             }
             pcSwMdc_ = pcSw;
@@ -803,6 +804,7 @@ private:
 
     bool oilWaterSystem_{false};
     bool gasOilSystem_{false};
+    bool gasWaterSystem_{false};
 
 
     // offsets added to wetting phase saturation uf using the imbibition curves need to

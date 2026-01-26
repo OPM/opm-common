@@ -272,8 +272,8 @@ readScaledEpsPoints_(const EclEpsGridProperties& epsGridProperties,
 {
     const EclEpsConfig& config =
         (type == EclTwoPhaseSystemType::OilWater) ?
-            this->parent_.oilWaterConfig()        :
-            this->parent_.gasOilConfig();
+            this->parent_.oilWaterConfig() : ( (type == EclTwoPhaseSystemType::GasOil) ?
+            this->parent_.gasOilConfig() : this->parent_.gasWaterConfig() );
     // For CpGrids with LGRs, field prop is inherited from parent/equivalent cell from level 0.
     // 'lookupIdx' is the index on level zero of the parent cell or the equivalent cell of the
     // leaf grid view cell with index 'elemIdx'.

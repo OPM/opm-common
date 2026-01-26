@@ -698,6 +698,132 @@ static constexpr const char* hysterDeckStringKillough3phaseBaker = R"(
     IMBNUM
     1*2 / )";
 
+//Test Killogh hysteresis Gas Water System
+static const char* hysterDeckStringKilloughGasWater = R"(
+
+    RUNSPEC
+
+    DIMENS
+       1 1 1 /
+
+    TABDIMS
+     2 /
+
+    WATER
+    GAS
+
+    GRID
+
+    DX
+       1*1000 /
+    DY
+       1*1000 /
+    DZ
+       1*50 /
+
+    TOPS
+       1*0 /
+
+    PORO
+      1*0.15 /
+
+    EHYSTR
+      0.1 2 /
+
+    SATOPTS
+      HYSTER /
+
+    PROPS
+
+    SGFN
+    0	0	0.0
+    0.9	0.9	0.0 /
+    0.5	0	0.0
+    0.9	0.9	0.0 /
+
+    SWFN
+    0.1	0	0.0
+    0.2	0	0.0
+    1	1 	0.0 /
+    0.1	0	0.0
+    0.2	0	0.0
+    1	1 	0.0 /
+
+    REGIONS
+
+    SATNUM
+    1*1 /
+    IMBNUM
+    1*2 / )";
+
+//Test Killogh hysteresis Gas Water System Scaling
+static const char* hysterDeckStringKilloughGasWaterEndScale = R"(
+
+    RUNSPEC
+
+    DIMENS
+       1 1 1 /
+
+    TABDIMS
+     2 /
+
+    WATER
+    GAS
+
+    GRID
+
+    DX
+       1*1000 /
+    DY
+       1*1000 /
+    DZ
+       1*50 /
+
+    TOPS
+       1*0 /
+
+    PORO
+      1*0.15 /
+
+    EHYSTR
+      0.1 2 /
+
+    SATOPTS
+      HYSTER /
+
+    PROPS
+
+    SGFN
+    0	0	0.0
+    0.9	0.9 	0.0 /
+    0.0	0	0.0
+    0.9	0.9 	0.0 /
+
+    SWFN
+    0.1	0	0.0
+    1	1 	0.0 /
+    0.1	0	0.0
+    1	1 	0.0 /
+
+    SWCR
+    1*0.2
+    /
+
+    ISWCR
+    1*0.2
+    /
+
+    ISGCR
+    1*0.5
+    /
+
+    REGIONS
+
+    SATNUM
+    1*1 /
+    IMBNUM
+    1*2 / )";
+
 template<class Scalar>
 struct Fixture {
     enum { numPhases = 3 };
@@ -2201,5 +2327,120 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisKilloughWetting3phaseBaker, Scalar, Type
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             BOOST_CHECK_CLOSE(kr_restart[phaseIdx], kr[phaseIdx], tol);
         }
+    }
+}
+BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisKilloughGasWater, Scalar, Types)
+{
+    using MaterialLaw = typename Fixture<Scalar>::MaterialLaw;
+    using MaterialLawManager = typename Fixture<Scalar>::MaterialLawManager;
+    constexpr int numPhases = Fixture<Scalar>::numPhases;
+
+    Opm::Parser parser;
+
+    const auto deck = parser.parseString(hysterDeckStringKilloughGasWater);
+    const Opm::EclipseState eclState(deck);
+
+    const auto& eclGrid = eclState.getInputGrid();
+    std::size_t n = eclGrid.getCartesianSize();
+
+    MaterialLawManager hysteresis;
+    hysteresis.initFromState(eclState);
+    hysteresis.initParamsForElements(eclState, n, doOldLookup, doNothing);
+    auto& param = hysteresis.materialLawParams(0);
+    Scalar So = 0.0;
+    Scalar tol = 1e-3;
+    std::array<Scalar,numPhases> kr = {0.0, 0.0, 0.0};
+    for (int i = 0; i <= 90; ++ i) {
+        Scalar Sg = Scalar(i) / 100;
+        Scalar Sw = 1 - Sg;
+        typename Fixture<Scalar>::FluidState fs;
+        fs.setSaturation(Fixture<Scalar>::waterPhaseIdx, Sw);
+        fs.setSaturation(Fixture<Scalar>::oilPhaseIdx, So);
+        fs.setSaturation(Fixture<Scalar>::gasPhaseIdx, Sg);
+
+        MaterialLaw::relativePermeabilities(kr,
+                                            param,
+                                            fs);
+        MaterialLaw::updateHysteresis(param, fs);
+        Scalar Krw = linearScaledRelperm(Sw, Scalar(0.2), Scalar(1.0), Scalar(1.0));
+        BOOST_CHECK_CLOSE(Krw, kr[Fixture<Scalar>::waterPhaseIdx], tol);
+        BOOST_CHECK_CLOSE(So, kr[Fixture<Scalar>::oilPhaseIdx], tol);
+        BOOST_CHECK_CLOSE(Sg, kr[Fixture<Scalar>::gasPhaseIdx], tol);
+    }
+    for (int i = 90; i >= 0; -- i) {
+        Scalar Sg = Scalar(i) / 100;
+        Scalar Sw = 1 - Sg;
+        typename Fixture<Scalar>::FluidState fs;
+        fs.setSaturation(Fixture<Scalar>::waterPhaseIdx, Sw);
+        fs.setSaturation(Fixture<Scalar>::oilPhaseIdx, So);
+        fs.setSaturation(Fixture<Scalar>::gasPhaseIdx, Sg);
+
+        MaterialLaw::relativePermeabilities(kr,
+                                            param,
+                                            fs);
+        MaterialLaw::updateHysteresis(param, fs);
+        Scalar Krw = linearScaledRelperm(Sw, Scalar(0.2), Scalar(1.0), Scalar(1.0));
+        Scalar Khyst = linearScaledRelperm(Sg, Scalar(0.5), Scalar(0.9), Scalar(0.9));
+        BOOST_CHECK_CLOSE(Krw, kr[Fixture<Scalar>::waterPhaseIdx], tol);
+        BOOST_CHECK_CLOSE(So, kr[Fixture<Scalar>::oilPhaseIdx], tol);
+        BOOST_CHECK_CLOSE(Khyst, kr[Fixture<Scalar>::gasPhaseIdx], tol);
+    }
+}
+
+BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisKilloughGasWaterEndScale, Scalar, Types)
+{
+    using MaterialLaw = typename Fixture<Scalar>::MaterialLaw;
+    using MaterialLawManager = typename Fixture<Scalar>::MaterialLawManager;
+    constexpr int numPhases = Fixture<Scalar>::numPhases;
+
+    Opm::Parser parser;
+
+    const auto deck = parser.parseString(hysterDeckStringKilloughGasWaterEndScale);
+    const Opm::EclipseState eclState(deck);
+
+    const auto& eclGrid = eclState.getInputGrid();
+    std::size_t n = eclGrid.getCartesianSize();
+
+    MaterialLawManager hysteresis;
+    hysteresis.initFromState(eclState);
+    hysteresis.initParamsForElements(eclState, n, doOldLookup, doNothing);
+    auto& param = hysteresis.materialLawParams(0);
+    Scalar So = 0.0;
+    Scalar tol = 1e-3;
+    std::array<Scalar,numPhases> kr = {0.0, 0.0, 0.0};
+    for (int i = 0; i <= 90; ++ i) {
+        Scalar Sg = Scalar(i) / 100;
+        Scalar Sw = 1 - Sg;
+        typename Fixture<Scalar>::FluidState fs;
+        fs.setSaturation(Fixture<Scalar>::waterPhaseIdx, Sw);
+        fs.setSaturation(Fixture<Scalar>::oilPhaseIdx, So);
+        fs.setSaturation(Fixture<Scalar>::gasPhaseIdx, Sg);
+
+        MaterialLaw::relativePermeabilities(kr,
+                                            param,
+                                            fs);
+        MaterialLaw::updateHysteresis(param, fs);
+        Scalar Krw = linearScaledRelperm(Sw, Scalar(0.2), Scalar(1.0), Scalar(1.0));
+        BOOST_CHECK_CLOSE(Krw, kr[Fixture<Scalar>::waterPhaseIdx], tol);
+        BOOST_CHECK_CLOSE(So, kr[Fixture<Scalar>::oilPhaseIdx], tol);
+        BOOST_CHECK_CLOSE(Sg, kr[Fixture<Scalar>::gasPhaseIdx], tol);
+    }
+    for (int i = 90; i >= 0; -- i) {
+        Scalar Sg = Scalar(i) / 100;
+        Scalar Sw = 1 - Sg;
+        typename Fixture<Scalar>::FluidState fs;
+        fs.setSaturation(Fixture<Scalar>::waterPhaseIdx, Sw);
+        fs.setSaturation(Fixture<Scalar>::oilPhaseIdx, So);
+        fs.setSaturation(Fixture<Scalar>::gasPhaseIdx, Sg);
+
+        MaterialLaw::relativePermeabilities(kr,
+                                            param,
+                                            fs);
+        MaterialLaw::updateHysteresis(param, fs);
+        Scalar Krw = linearScaledRelperm(Sw, Scalar(0.2), Scalar(1.0), Scalar(1.0));
+        Scalar Khyst = linearScaledRelperm(Sg, Scalar(0.5), Scalar(0.9), Scalar(0.9));
+        BOOST_CHECK_CLOSE(Krw, kr[Fixture<Scalar>::waterPhaseIdx], tol);
+        BOOST_CHECK_CLOSE(So, kr[Fixture<Scalar>::oilPhaseIdx], tol);
+        BOOST_CHECK_CLOSE(Khyst, kr[Fixture<Scalar>::gasPhaseIdx], tol);
     }
 }
