@@ -304,7 +304,7 @@ endif()
 if (ENABLE_MOCKSIM AND ENABLE_ECL_INPUT)
   add_library(mocksim
               msim/src/msim.cpp)
-  target_link_libraries(mocksim PRIVATE opmcommon)
+  target_link_libraries(mocksim PUBLIC opmcommon)
   target_include_directories(mocksim PUBLIC msim/include)
   add_executable(msim examples/msim.cpp)
   target_link_libraries(msim PRIVATE mocksim)
