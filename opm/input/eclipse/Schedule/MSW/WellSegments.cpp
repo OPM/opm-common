@@ -72,6 +72,23 @@ Segment {} is not defined in WELSEGS for well {}.)", segment_number, well_name);
         parseContext.handleError(Opm::ParseContext::SCHEDULE_ICD_MISSING_SEGMENT,
                                  msg_fmt, location, errors);
     }
+
+    void handleIncompatiblePDropModel(std::string_view                       well_name,
+                                      const Opm::WellSegmentCompPressureDrop pdrop_model,
+                                      std::string_view                       msg_header,
+                                      const Opm::KeywordLocation&            location,
+                                      const Opm::ParseContext&               parseContext,
+                                      Opm::ErrorGuard&                       errors)
+    {
+        const auto msg = fmt::format("{} incompatible with segment "
+                                     "pressure drop model '{}' defined in "
+                                     "keyword WELSEGS for well {}.", msg_header,
+                                     Opm::WellSegments::CompPressureDropToString(pdrop_model),
+                                     well_name);
+
+        parseContext.handleError(Opm::ParseContext::SCHEDULE_ICD_INCOMPATIBLE_PDROP_MODEL,
+                                 msg, location, errors);
+    }
 }
 
 namespace Opm {
@@ -750,12 +767,10 @@ namespace Opm {
         }
 
         if (m_comp_pressure_drop == CompPressureDrop::H__) {
-            throw std::runtime_error {
-                fmt::format("to use Autonomous ICD segment with keyword {} "
-                            "at line {} in file {},\n"
-                            "you have to activate frictional pressure drop calculation in WELSEGS",
-                            location.keyword, location.lineno, location.filename)
-            };
+            handleIncompatiblePDropModel(well_name,
+                                         this->m_comp_pressure_drop,
+                                         "Autonomous ICDs are",
+                                         location, parseContext, errors);
         }
 
         for (const auto& [segment_number, auto_icd] : aicd_pairs) {
@@ -784,10 +799,10 @@ namespace Opm {
         }
 
         if (m_comp_pressure_drop == CompPressureDrop::H__) {
-            throw std::runtime_error {
-                "Cannot use spiral ICDs unless the frictional "
-                "pressure drop calculation is active in WELSEGS"
-            };
+            handleIncompatiblePDropModel(well_name,
+                                         this->m_comp_pressure_drop,
+                                         "Spiral ICDs are",
+                                         location, parseContext, errors);
         }
 
         for (const auto& [segment_number, spiral_icd] : sicd_pairs) {
@@ -816,10 +831,10 @@ namespace Opm {
         }
 
         if (m_comp_pressure_drop == CompPressureDrop::H__) {
-            throw std::runtime_error {
-                "Cannot use WSEGVALV unless the frictional "
-                "pressure drop calculation is active in WELSEGS"
-            };
+            handleIncompatiblePDropModel(well_name,
+                                         this->m_comp_pressure_drop,
+                                         "Valves are",
+                                         location, parseContext, errors);
         }
 
         for (const auto& [segment_number, valve] : valve_pairs) {
