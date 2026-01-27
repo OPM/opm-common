@@ -20,15 +20,22 @@
 #ifndef SEGMENTSET_HPP_HEADER_INCLUDED
 #define SEGMENTSET_HPP_HEADER_INCLUDED
 
-#include <map>
-#include <set>
-#include <vector>
-
 #include <opm/input/eclipse/Schedule/MSW/Segment.hpp>
 
+#include <cstddef>
+#include <map>
+#include <set>
+#include <string>
+#include <string_view>
+#include <utility>
+#include <vector>
+
 namespace Opm {
-    class SICD;
     class AutoICD;
+    class ErrorGuard;
+    class KeywordLocation;
+    class ParseContext;
+    class SICD;
     class UnitSystem;
     class Valve;
     class WellConnections;
@@ -90,8 +97,6 @@ namespace Opm {
         // mapping the segment number to the index in the vector of segments
         int segmentNumberToIndex(const int segment_number) const;
 
-
-
         const Segment& getFromSegmentNumber(const int segment_number) const;
 
         const Segment& operator[](size_t idx) const;
@@ -106,10 +111,24 @@ namespace Opm {
         std::set<int> branches() const;
 
         // it returns true if there is no error encountered during the update
-        bool updateWSEGSICD(const std::vector<std::pair<int, SICD> >& sicd_pairs);
 
-        bool updateWSEGVALV(const std::vector<std::pair<int, Valve> >& valve_pairs);
-        bool updateWSEGAICD(const std::vector<std::pair<int, AutoICD> >& aicd_pairs, const KeywordLocation& location);
+        bool updateWSEGAICD(std::string_view                            well_name,
+                            const std::vector<std::pair<int, AutoICD>>& aicd_pairs,
+                            const KeywordLocation&                      location,
+                            const ParseContext&                         parseContext,
+                            ErrorGuard&                                 errors);
+
+        bool updateWSEGSICD(std::string_view                         well_name,
+                            const std::vector<std::pair<int, SICD>>& sicd_pairs,
+                            const KeywordLocation&                   location,
+                            const ParseContext&                      parseContext,
+                            ErrorGuard&                              errors);
+
+        bool updateWSEGVALV(std::string_view                          well_name,
+                            const std::vector<std::pair<int, Valve>>& valve_pairs,
+                            const KeywordLocation&                    location,
+                            const ParseContext&                       parseContext,
+                            ErrorGuard&                               errors);
 
         auto begin() const { return this->m_segments.begin(); }
         auto end() const { return this->m_segments.end(); }
