@@ -197,7 +197,6 @@ opm_compile_satellites (${project} additionals EXCLUDE_FROM_ALL "")
 opm_compile_satellites (${project} attic EXCLUDE_FROM_ALL "")
 
 # infrastructure for testing
-enable_testing ()
 include (CTest)
 
 # conditionally disable tests when features aren't available
