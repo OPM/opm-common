@@ -1031,7 +1031,16 @@ public:
     // set value of variable
     template <class RhsValueType>
     OPM_HOST_DEVICE constexpr void setValue(const RhsValueType& val)
+{%if numDerivs < 0 %}\
+    {
+        if (data_.size() == 0) {
+            data_.resize(1);
+        }
+        data_[valuepos_()] = val;
+    }
+{% else %}\
     { data_[valuepos_()] = val; }
+{% endif %}\
 
     // return varIdx'th derivative
     OPM_HOST_DEVICE const ValueType& derivative(int varIdx) const
