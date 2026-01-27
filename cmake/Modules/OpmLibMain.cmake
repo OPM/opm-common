@@ -47,9 +47,6 @@ include (UseFastBuilds)
 # optimize full if we're not doing a debug build
 include (UseOptimization)
 
-# parallel programming
-include (UseOpenMP)
-find_openmp (${project})
 include (UseThreads)
 find_threads (${project})
 
@@ -160,6 +157,10 @@ opm_compile (${project})
 # optionally turn on all warnings
 include(UseWarnings)
 use_warnings(${${project}_TARGET})
+
+# parallel programming
+include (UseOpenMP)
+use_openmp(TARGET ${${project}_TARGET})
 
 # installation of CMake modules to help user programs locate the library
 include (OpmProject)
