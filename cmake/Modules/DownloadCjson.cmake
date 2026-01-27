@@ -7,6 +7,9 @@ FetchContent_Populate(cjson)
 
 add_library(cjson OBJECT)
 target_sources(cjson PRIVATE ${cjson_SOURCE_DIR}/cJSON.c)
+if(OPM_ENABLE_PYTHON)
+  set_target_properties(cjson PROPERTIES POSITION_INDEPENDENT_CODE ON)
+endif()
 execute_process(
   COMMAND
     ${CMAKE_COMMAND} -E create_symlink ${cjson_SOURCE_DIR} ${CMAKE_BINARY_DIR}/_deps/cjson
