@@ -112,11 +112,6 @@ public:
         return *this;
     }
 
-    // create a "blank" dynamic evaluation
-    OPM_HOST_DEVICE explicit Evaluation(int numDerivatives)
-        : data_(1 + numDerivatives)
-    {}
-
     // create a dynamic evaluation which represents a constant function
     //
     // i.e., f(x) = c. this implies an evaluation with the given value and all
@@ -669,7 +664,12 @@ public:
     // set value of variable
     template <class RhsValueType>
     OPM_HOST_DEVICE constexpr void setValue(const RhsValueType& val)
-    { data_[valuepos_()] = val; }
+    {
+        if (data_.size() == 0) {
+            data_.resize(1);
+        }
+        data_[valuepos_()] = val;
+    }
 
     // return varIdx'th derivative
     OPM_HOST_DEVICE const ValueType& derivative(int varIdx) const
