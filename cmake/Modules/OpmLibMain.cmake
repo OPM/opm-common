@@ -187,16 +187,6 @@ opm_compile_satellites (${project} attic EXCLUDE_FROM_ALL "")
 # infrastructure for testing
 include (CTest)
 
-# conditionally disable tests when features aren't available
-macro (cond_disable_test name)
-	if ((NOT DEFINED HAVE_${name}) OR (NOT HAVE_${name}))
-		message (STATUS "${name} test disabled, since ${name} is not found.")
-		string (TOLOWER "${name}" name_lower)
-		get_filename_component (test_${name}_FILE "tests/test_${name_lower}.cpp" ABSOLUTE)
-		list (REMOVE_ITEM tests_SOURCES "${test_${name}_FILE}")
-	endif ((NOT DEFINED HAVE_${name}) OR (NOT HAVE_${name}))
-endmacro (cond_disable_test name)
-
 # use this target to run all tests, with parallel execution
 cmake_host_system_information(RESULT TESTJOBS QUERY NUMBER_OF_PHYSICAL_CORES)
 if(TESTJOBS EQUAL 0)
