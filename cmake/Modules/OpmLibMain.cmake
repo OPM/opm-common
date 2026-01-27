@@ -167,15 +167,6 @@ execute_process (COMMAND
 include (OpmCompile)
 opm_compile (${project})
 
-# installation target: copy the library together with debug and
-# configuration files to system directories
-include (OpmInstall)
-if (COMMAND install_hook)
-	install_hook ()
-endif (COMMAND install_hook)
-opm_install (${project})
-message (STATUS "This build defaults to installing in ${CMAKE_INSTALL_PREFIX}")
-
 # installation of CMake modules to help user programs locate the library
 include (OpmProject)
 opm_cmake_config (${project})
@@ -232,6 +223,16 @@ if(NOT BUILD_TESTING)
   set(excl_all EXCLUDE_FROM_ALL)
 endif()
 opm_compile_satellites (${project} tests "${excl_all}" "${tests_REGEXP}")
+
+# installation target: copy the library together with debug and
+# configuration files to system directories
+include (OpmInstall)
+if (COMMAND install_hook)
+	install_hook ()
+endif (COMMAND install_hook)
+opm_install (${project})
+message (STATUS "This build defaults to installing in ${CMAKE_INSTALL_PREFIX}")
+
 
 # use this target to check local git commits
 add_custom_target(check-commits

@@ -40,17 +40,6 @@ set(OPM_PROJECT_EXTRA_CODE_INTREE "#ENABLE_ECL_INPUT is needed by opm-common-pre
                                    set(OPM_MACROS_ROOT ${OPM_MACROS_ROOT})
                                    list(APPEND CMAKE_MODULE_PATH \${OPM_MACROS_ROOT}/cmake/Modules)
                                    include(OpmPackage) #Make macros available after find_package(opm-common)")
-if(ENABLE_ECL_OUTPUT)
-  set(OPM_PROJECT_EXTRA_CODE_INSTALLED "${OPM_PROJECT_EXTRA_CODE_INSTALLED}
-                                        set(COMPARE_ECL_COMMAND ${CMAKE_INSTALL_PREFIX}/bin${${name}_VER_DIR}/compareECL)
-                                        set(OPM_PACK_COMMAND ${CMAKE_INSTALL_PREFIX}/bin${${name}_VER_DIR}/opmpack)
-                                        set(RST_DECK_COMMAND ${CMAKE_INSTALL_PREFIX}/bin${${name}_VER_DIR}/rst_deck)")
-
-  set(OPM_PROJECT_EXTRA_CODE_INTREE "${OPM_PROJECT_EXTRA_CODE_INTREE}
-                                     set(COMPARE_ECL_COMMAND ${PROJECT_BINARY_DIR}/bin/compareECL)
-                                     set(OPM_PACK_COMMAND ${PROJECT_BINARY_DIR}/bin/opmpack)
-                                     set(RST_DECK_COMMAND ${PROJECT_BINARY_DIR}/bin/rst_deck)")
-endif()
 
 # project information is in dune.module. Read this file and set variables.
 # we cannot generate dune.module since it is read by dunecontrol before
@@ -188,7 +177,65 @@ macro (files_hook)
 endmacro (files_hook)
 
 macro (tests_hook)
+  # Build the compare utilities
   if(ENABLE_ECL_INPUT)
+    add_executable(compareECL
+      test_util/EclFilesComparator.cpp
+      test_util/EclRegressionTest.cpp
+      test_util/compareECL.cpp
+      )
+
+    add_executable(convertECL
+      test_util/convertECL.cpp
+      )
+
+    add_executable(summary
+      test_util/summary.cpp
+      )
+
+    add_executable(arraylist
+      test_util/arraylist.cpp
+      )
+
+    add_executable(rewriteEclFile
+      test_util/rewriteEclFile.cpp
+      )
+
+    foreach(target compareECL convertECL summary rewriteEclFile arraylist)
+      target_link_libraries(${target} PRIVATE opmcommon)
+      install(TARGETS ${target} DESTINATION bin)
+    endforeach()
+    list(APPEND opm-common_EXTRA_TARGETS compareECL rst_deck)
+
+    # Add the tests
+    set(_libs opmcommon
+              ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+
+    opm_add_test(test_EclFilesComparator
+      CONDITION
+        ENABLE_ECL_INPUT AND Boost_UNIT_TEST_FRAMEWORK_FOUND
+      SOURCES
+        tests/test_EclFilesComparator.cpp
+        test_util/EclFilesComparator.cpp
+      LIBRARIES
+        ${_libs}
+      WORKING_DIRECTORY
+        ${PROJECT_BINARY_DIR}/tests
+      )
+
+    opm_add_test(test_EclRegressionTest
+      CONDITION
+        ENABLE_ECL_INPUT AND Boost_UNIT_TEST_FRAMEWORK_FOUND
+      SOURCES
+        tests/test_EclRegressionTest.cpp
+        test_util/EclFilesComparator.cpp
+        test_util/EclRegressionTest.cpp
+      LIBRARIES
+        ${_libs}
+      WORKING_DIRECTORY
+        ${PROJECT_BINARY_DIR}/tests
+      )
+
     include(ExtraTests.cmake)
   endif()
   if (dune-common_FOUND)
@@ -323,66 +370,6 @@ if (ENABLE_MOCKSIM AND ENABLE_ECL_INPUT)
     set_tests_properties(msim_ACTIONX PROPERTIES
                         ENVIRONMENT "PYTHONPATH=${PROJECT_BINARY_DIR}/python:$ENV{PYTHONPATH}")
   endif()
-endif()
-
-# Build the compare utilities
-if(ENABLE_ECL_INPUT)
-  add_executable(compareECL
-    test_util/EclFilesComparator.cpp
-    test_util/EclRegressionTest.cpp
-    test_util/compareECL.cpp
-    )
-
-  add_executable(convertECL
-    test_util/convertECL.cpp
-    )
-
-  add_executable(summary
-    test_util/summary.cpp
-    )
-
-  add_executable(arraylist
-    test_util/arraylist.cpp
-    )
-
-  add_executable(rewriteEclFile
-    test_util/rewriteEclFile.cpp
-    )
-
-  foreach(target compareECL convertECL summary rewriteEclFile arraylist)
-    target_link_libraries(${target} PRIVATE opmcommon)
-    install(TARGETS ${target} DESTINATION bin)
-  endforeach()
-
-  # Add the tests
-  set(_libs opmcommon
-            ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
-
-  opm_add_test(test_EclFilesComparator
-    CONDITION
-      ENABLE_ECL_INPUT AND Boost_UNIT_TEST_FRAMEWORK_FOUND
-    SOURCES
-      tests/test_EclFilesComparator.cpp
-      test_util/EclFilesComparator.cpp
-    LIBRARIES
-      ${_libs}
-    WORKING_DIRECTORY
-      ${PROJECT_BINARY_DIR}/tests
-    )
-
-  opm_add_test(test_EclRegressionTest
-    CONDITION
-      ENABLE_ECL_INPUT AND Boost_UNIT_TEST_FRAMEWORK_FOUND
-    SOURCES
-      tests/test_EclRegressionTest.cpp
-      test_util/EclFilesComparator.cpp
-      test_util/EclRegressionTest.cpp
-    LIBRARIES
-      ${_libs}
-    WORKING_DIRECTORY
-      ${PROJECT_BINARY_DIR}/tests
-    )
-
 endif()
 
 if(dune-common_FOUND)
