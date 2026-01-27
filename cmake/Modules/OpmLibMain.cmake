@@ -60,9 +60,6 @@ find_openmp (${project})
 include (UseThreads)
 find_threads (${project})
 
-# PETSc is optional
-option (USE_PETSC "Use PETSc iterative solvers" OFF)
-
 # callback hook to setup additional dependencies
 if (COMMAND prereqs_hook)
 	prereqs_hook ()
