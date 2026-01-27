@@ -1401,6 +1401,11 @@ Defaulted grid coordinates is not allowed for COMPDAT as part of ACTIONX)"
         return this->snapshots[timeStep].groups.get(groupName);
     }
 
+    bool Schedule::hasChoke(const std::string& nodeName, std::size_t timeStep) const {
+       const auto& network = this->snapshots[timeStep].network();
+       return network.has_node(nodeName) && network.node(nodeName).as_choke();
+    }
+
     void Schedule::updateGuideRateModel(const GuideRateModel& new_model, std::size_t report_step) {
         auto new_config = this->snapshots[report_step].guide_rate();
         if (new_config.update_model(new_model))
