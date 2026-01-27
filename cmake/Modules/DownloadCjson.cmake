@@ -9,6 +9,6 @@ add_library(cjson OBJECT)
 target_sources(cjson PRIVATE ${cjson_SOURCE_DIR}/cJSON.c)
 execute_process(
   COMMAND
-    ${CMAKE_COMMAND} -E create_symlink ${cjson_SOURCE_DIR} ${PROJECT_BINARY_DIR}/_deps/cjson
+    ${CMAKE_COMMAND} -E create_symlink ${cjson_SOURCE_DIR} ${CMAKE_BINARY_DIR}/_deps/cjson
 )
-target_include_directories(cjson INTERFACE ${PROJECT_BINARY_DIR}/_deps)
+target_include_directories(cjson INTERFACE ${CMAKE_BINARY_DIR}/_deps)
