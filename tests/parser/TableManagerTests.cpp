@@ -1913,9 +1913,9 @@ VFPPROD \n\
 
         //Unit of FLO is SM3/day, convert to SM3/second
         double conversion_factor = 1.0 / (60*60*24);
-        BOOST_CHECK_EQUAL(flo[0], 1*conversion_factor);
-        BOOST_CHECK_EQUAL(flo[1], 3*conversion_factor);
-        BOOST_CHECK_EQUAL(flo[2], 5*conversion_factor);
+        BOOST_CHECK_CLOSE(flo[0], 1.0 * conversion_factor, 1e-6);
+        BOOST_CHECK_CLOSE(flo[1], 3.0 * conversion_factor, 1e-6);
+        BOOST_CHECK_CLOSE(flo[2], 5.0 * conversion_factor, 1e-6);
     }
 
     //THP axis
@@ -1924,9 +1924,8 @@ VFPPROD \n\
         BOOST_REQUIRE_EQUAL(thp.size(), 2);
 
         //Unit of THP is barsa => convert to pascal
-        double conversion_factor = 100000.0;
-        BOOST_CHECK_EQUAL(thp[0], 7*conversion_factor);
-        BOOST_CHECK_EQUAL(thp[1], 11*conversion_factor);
+        BOOST_CHECK_CLOSE(thp[0], 7.0 * unit::barsa, 1e-6);
+        BOOST_CHECK_CLOSE(thp[1], 11.0 * unit::barsa, 1e-6);
     }
 
     //WFR axis
@@ -1935,8 +1934,8 @@ VFPPROD \n\
         BOOST_REQUIRE_EQUAL(wfr.size(), 2);
 
         //Unit of WFR is SM3/SM3
-        BOOST_CHECK_EQUAL(wfr[0], 13);
-        BOOST_CHECK_EQUAL(wfr[1], 17);
+        BOOST_CHECK_CLOSE(wfr[0], 13.0, 1e-12);
+        BOOST_CHECK_CLOSE(wfr[1], 17.0, 1e-12);
     }
 
     //GFR axis
@@ -1945,8 +1944,8 @@ VFPPROD \n\
         BOOST_REQUIRE_EQUAL(gfr.size(), 2);
 
         //Unit of GFR is SM3/SM3
-        BOOST_CHECK_EQUAL(gfr[0], 19);
-        BOOST_CHECK_EQUAL(gfr[1], 23);
+        BOOST_CHECK_CLOSE(gfr[0], 19.0, 1e-12);
+        BOOST_CHECK_CLOSE(gfr[1], 23.0, 1e-12);
     }
 
     //ALQ axis
@@ -1955,50 +1954,60 @@ VFPPROD \n\
         BOOST_REQUIRE_EQUAL(alq.size(), 2);
 
         //Unit of ALQ undefined
-        BOOST_CHECK_EQUAL(alq[0], 29);
-        BOOST_CHECK_EQUAL(alq[1], 31);
+        BOOST_CHECK_CLOSE(alq[0], 29.0, 1e-12);
+        BOOST_CHECK_CLOSE(alq[1], 31.0, 1e-12);
     }
 
     //The data itself - should be filled for all combinations
     {
-        typedef Opm::VFPProdTable::array_type::size_type size_type;
         const Opm::VFPProdTable::array_type& data = vfpprodTable.getTable();
-        const size_type* size = data.shape();
+        const auto* size = data.shape();
 
-        BOOST_CHECK_EQUAL(size[0], 2);  // THP
-        BOOST_CHECK_EQUAL(size[1], 2);  // WFR
-        BOOST_CHECK_EQUAL(size[2], 2);  // GFR
-        BOOST_CHECK_EQUAL(size[3], 2);  // ALQ
-        BOOST_CHECK_EQUAL(size[4], 3);  // FLO
+        const std::size_t nThp = static_cast<std::size_t>(size[0]);  // THP
+        const std::size_t nWfr = static_cast<std::size_t>(size[1]);  // WFR
+        const std::size_t nGfr = static_cast<std::size_t>(size[2]);  // GFR
+        const std::size_t nAlq = static_cast<std::size_t>(size[3]);  // ALQ
+        const std::size_t nFlo = static_cast<std::size_t>(size[4]);  // FLO
 
-        //Table given as BHP => barsa. Convert to pascal
-        double conversion_factor = 100000.0;
+        BOOST_CHECK_EQUAL(nThp, 2u);
+        BOOST_CHECK_EQUAL(nWfr, 2u);
+        BOOST_CHECK_EQUAL(nGfr, 2u);
+        BOOST_CHECK_EQUAL(nAlq, 2u);
+        BOOST_CHECK_EQUAL(nFlo, 3u);
 
-        // Original values from single line (THP=7, WFR=13, GFR=19, ALQ=29)
-        BOOST_CHECK_EQUAL(data[0][0][0][0][0], 1.5*conversion_factor);
-        BOOST_CHECK_EQUAL(data[0][0][0][0][1], 2.5*conversion_factor);
-        BOOST_CHECK_EQUAL(data[0][0][0][0][2], 3.5*conversion_factor);
+        // Extract axes for computing expected values
+        const auto& thpAxis = vfpprodTable.getTHPAxis();
+        const auto& wfrAxis = vfpprodTable.getWFRAxis();
+        const auto& gfrAxis = vfpprodTable.getGFRAxis();
+        const auto& alqAxis = vfpprodTable.getALQAxis();
 
-        // Constant delta pressure calculation:
-        // For THP=11 (index 1): delta = BHP(THP=7) - THP(7)
-        // So BHP(THP=11) = THP(11) + delta
-        // For flow=1: delta = 1.5 - 7 = -5.5
-        // BHP at THP=11: 11 + (-5.5) = 5.5
-        BOOST_CHECK_EQUAL(data[1][0][0][0][0], 5.5*conversion_factor);
+        // Baseline values: the single input row corresponds to index 0 along sensitivity dims
+        // baselineBhp[f] is BHP at THP index 0, WFR index 0, GFR index 0, ALQ index 0 for flow f
+        std::vector<double> baselineBhp(nFlo);
+        for (std::size_t iflo = 0; iflo < nFlo; ++iflo) {
+            baselineBhp[iflo] = data[0][0][0][0][iflo];
+        }
 
-        // For flow=3: delta = 2.5 - 7 = -4.5
-        // BHP at THP=11: 11 + (-4.5) = 6.5
-        BOOST_CHECK_EQUAL(data[1][0][0][0][1], 6.5*conversion_factor);
+        // Compute delta for each flow: delta = baselineBhp - THP_at_index0
+        std::vector<double> deltaBhp(nFlo);
+        for (std::size_t iflo = 0; iflo < nFlo; ++iflo) {
+            deltaBhp[iflo] = baselineBhp[iflo] - thpAxis[0];
+        }
 
-        // For flow=5: delta = 3.5 - 7 = -3.5
-        // BHP at THP=11: 11 + (-3.5) = 7.5
-        BOOST_CHECK_EQUAL(data[1][0][0][0][2], 7.5*conversion_factor);
-
-        // Check that all WFR/GFR/ALQ combinations have same values
-        // (constant delta pressure across sensitivity dimensions)
-        BOOST_CHECK_EQUAL(data[0][1][0][0][0], 1.5*conversion_factor);  // WFR=17, same as WFR=13
-        BOOST_CHECK_EQUAL(data[0][0][1][0][0], 1.5*conversion_factor);  // GFR=23, same as GFR=19
-        BOOST_CHECK_EQUAL(data[0][0][0][1][0], 1.5*conversion_factor);  // ALQ=31, same as ALQ=29
+        // Now enumerate all combinations and check the value is THP + delta (replicated across sensitivity dims)
+        for (std::size_t iThp = 0; iThp < nThp; ++iThp) {
+            for (std::size_t iWfr = 0; iWfr < nWfr; ++iWfr) {
+                for (std::size_t iGfr = 0; iGfr < nGfr; ++iGfr) {
+                    for (std::size_t iAlq = 0; iAlq < nAlq; ++iAlq) {
+                        for (std::size_t iFlo = 0; iFlo < nFlo; ++iFlo) {
+                            const double actual = data[iThp][iWfr][iGfr][iAlq][iFlo];
+                            const double expected = thpAxis[iThp] + deltaBhp[iFlo];
+                            BOOST_CHECK_CLOSE(actual, expected, 1e-6);
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -2037,9 +2046,6 @@ VFPPROD\n\
     // Should NOT throw - single-line tables are now supported
     BOOST_CHECK_NO_THROW(vfpprodTable.init(vfpprodKeyword, units));
 
-    // Unit conversion: BHP in barsa → pascal
-    const double table_scaling_factor = 100000.0;
-
     // TEST 1: Verify constant delta pressure calculation for EACH flow rate independently
     // ---------------------------------------------------------
     // Formula: BHP(THP2) = THP2 + (BHP(THP1) - THP1)
@@ -2049,17 +2055,17 @@ VFPPROD\n\
     //   delta = 150.0 - 100.0 = 50.0
     //   BHP at THP=200.0: 200.0 + 50.0 = 250.0
     // Tests: vfpprodTable(THP_index=1, WFR_index=0, GFR_index=0, ALQ_index=0, Flow_index=0)
-    BOOST_CHECK_CLOSE(vfpprodTable(1, 0, 0, 0, 0), 250.0 * table_scaling_factor, 0.001);
+    BOOST_CHECK_CLOSE(vfpprodTable(1, 0, 0, 0, 0), 250.0 * unit::barsa, 0.001);
 
     // For flow=500.0 (index 1):
     //   delta = 250.0 - 100.0 = 150.0
     //   BHP at THP=200.0: 200.0 + 150.0 = 350.0
-    BOOST_CHECK_CLOSE(vfpprodTable(1, 0, 0, 0, 1), 350.0 * table_scaling_factor, 0.001);
+    BOOST_CHECK_CLOSE(vfpprodTable(1, 0, 0, 0, 1), 350.0 * unit::barsa, 0.001);
 
     // For flow=1000.0 (index 2):
     //   delta = 350.0 - 100.0 = 250.0
     //   BHP at THP=200.0: 200.0 + 250.0 = 450.0
-    BOOST_CHECK_CLOSE(vfpprodTable(1, 0, 0, 0, 2), 450.0 * table_scaling_factor, 0.001);
+    BOOST_CHECK_CLOSE(vfpprodTable(1, 0, 0, 0, 2), 450.0 * unit::barsa, 0.001);
 }
 
 /**
