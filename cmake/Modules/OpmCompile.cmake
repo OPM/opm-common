@@ -36,42 +36,50 @@ macro(opm_compile opm)
     add_definitions(${${opm}_DEFINITIONS})
   endif()
   set(${opm}_VERSION "${${opm}_VERSION_MAJOR}.${${opm}_VERSION_MINOR}")
+
+  if(NOT ${opm}_SOURCES)
+    set(${opm}_LIBRARY_TYPE INTERFACE)
+  endif()
+  add_library(${${opm}_TARGET} ${${opm}_LIBRARY_TYPE})
+
   if(${opm}_SOURCES)
-    add_library(${${opm}_TARGET} ${${opm}_LIBRARY_TYPE})
     target_sources(${${opm}_TARGET}
       PRIVATE
         ${${opm}_SOURCES}
     )
-    target_sources(${${opm}_TARGET}
-      PRIVATE
-      FILE_SET
-        private_headers
-      TYPE
-        HEADERS
-      FILES
-        ${${opm}_PRIVATE_HEADERS}
-    )
-    target_sources(${${opm}_TARGET}
-      PUBLIC
-      FILE_SET
-        HEADERS
-      BASE_DIRS
-        ${PROJECT_SOURCE_DIR}
-      FILES
-        ${${opm}_HEADERS}
-    )
-    target_sources(${${opm}_TARGET}
-      PUBLIC
-      FILE_SET
-        generated_headers
-      TYPE
-        HEADERS
-      BASE_DIRS
-        ${PROJECT_BINARY_DIR}
-      FILES
-        ${${opm}_GENERATED_HEADERS}
-    )
+    set(${opm}_LIBRARY $<TARGET_FILE:${${opm}_TARGET}>)
+  endif()
+  target_sources(${${opm}_TARGET}
+    PRIVATE
+    FILE_SET
+      private_headers
+    TYPE
+      HEADERS
+    FILES
+      ${${opm}_PRIVATE_HEADERS}
+  )
+  target_sources(${${opm}_TARGET}
+    PUBLIC
+    FILE_SET
+      HEADERS
+    BASE_DIRS
+      ${PROJECT_SOURCE_DIR}
+    FILES
+      ${${opm}_HEADERS}
+  )
+  target_sources(${${opm}_TARGET}
+    PUBLIC
+    FILE_SET
+      generated_headers
+    TYPE
+      HEADERS
+    BASE_DIRS
+      ${PROJECT_BINARY_DIR}
+    FILES
+      ${${opm}_GENERATED_HEADERS}
+  )
 
+  if(${opm}_LIBRARY)
     set_target_properties(${${opm}_TARGET}
       PROPERTIES
       SOVERSION
@@ -83,35 +91,26 @@ macro(opm_compile opm)
       POSITION_INDEPENDENT_CODE
         TRUE
     )
-
     opm_interprocedural_optimization(TARGET ${${opm}_TARGET})
+  endif()
 
-    if ${${opm}_LIBRARY_TYPE} STREQUAL "SHARED")
-      # libs that will be linked with the main lib
-      string(REGEX REPLACE "([;^])[^;]+\\.a[;$]" "\\1" _public_libs
-        "${${opm}_LIBRARIES}")
-      # libs that will not actually linked to the library but
-      # transitively linked to binaries that link to the main library
-      string(REGEX REPLACE "([^;]+\\.[^a][a-zA-Z0-9]*|-[a-z]*)[;$]" "" _interface_libs
-             "${${opm}_LIBRARIES}")
-    else()
-      # Use all libs for real and transitive linking
-      set(_public_libs ${${opm}_LIBRARIES})
-      unset(_interface)
-    endif()
-    target_link_libraries (${${opm}_TARGET}
-      PUBLIC
-        ${_public_libs}
-      INTERFACE
-        ${_interface_libs}
-    )
+  if(${${opm}_LIBRARY_TYPE} STREQUAL "SHARED")
+    # libs that will be linked with the main lib
+    string(REGEX REPLACE "([;^])[^;]+\\.a[;$]" "\\1" _public_libs
+           "${${opm}_LIBRARIES}")
+    # libs that will not actually linked to the library but
+    # transitively linked to binaries that link to the main library
+    string(REGEX REPLACE "([^;]+\\.[^a][a-zA-Z0-9]*|-[a-z]*)[;$]" "" _interface_libs
+           "${${opm}_LIBRARIES}")
   else()
-    # unset this variable to signal that no library is generated
-    set(${opm}_TARGET)
+    # Use all libs for real and transitive linking
+    set(_public_libs ${${opm}_LIBRARIES})
+    unset(_interface)
   endif()
-
-  # we need to know the name of the library which is generated
-  if(${opm}_TARGET)
-    set(${opm}_LIBRARY $<TARGET_FILE:${${opm}_TARGET}>)
-  endif()
+  target_link_libraries(${${opm}_TARGET}
+    PUBLIC
+      ${_public_libs}
+    INTERFACE
+      ${_interface_libs}
+  )
 endmacro (opm_compile opm)
