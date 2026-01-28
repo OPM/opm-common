@@ -61,6 +61,7 @@ macro (opm_compile_satellites opm satellite excl_all test_regexp)
     endif()
     get_filename_component (_sat_NAME "${_sat_FILE}" NAME_WE)
     add_executable (${_sat_NAME} ${excl_all} ${_sat_FILE})
+    use_warnings(${_sat_NAME})
     add_dependencies (${satellite} ${_sat_NAME})
     # Ensure individual test executables depend on data files so they can be built independently
     if (${satellite}_DATAFILES)
@@ -296,6 +297,7 @@ macro(opm_add_test TestName)
     if (CURTEST_ONLY_COMPILE)
       # only compile the binary but do not run it as a test
       add_executable("${CURTEST_EXE_NAME}" ${CURTEST_EXCLUDE_FROM_ALL} ${CURTEST_SOURCES})
+      use_warnings(${CURTEST_EXE_NAME})
       target_link_libraries (${CURTEST_EXE_NAME} PRIVATE ${CURTEST_LIBRARIES})
       get_property(dirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)
       if(HAVE_DYNAMIC_BOOST_TEST)
@@ -314,6 +316,7 @@ macro(opm_add_test TestName)
         # run-only case occurs if the binary is already compiled by an
         # earlier test.)
         add_executable("${CURTEST_EXE_NAME}" ${CURTEST_EXCLUDE_FROM_ALL} ${CURTEST_SOURCES})
+        use_warnings(${CURTEST_EXE_NAME})
         if(HAVE_DYNAMIC_BOOST_TEST)
           set_target_properties (${CURTEST_EXE_NAME} PROPERTIES
                                  COMPILE_DEFINITIONS BOOST_TEST_DYN_LINK)

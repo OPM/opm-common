@@ -394,11 +394,13 @@ if(dune-common_FOUND)
         test_fluidsystems test_tabulation test_h2brinepvt test_co2brinepvt
         test_eclblackoilfluidsystem test_eclblackoilfluidsystemnonstatic
         test_eclblackoilpvt)
+      use_warnings(${tst})
       target_link_libraries(${tst} PRIVATE dunecommon)
     endforeach()
   endif()
   if(BUILD_EXAMPLES)
     target_link_libraries(co2brinepvt PRIVATE dunecommon)
+    use_warnings(co2brinepvt)
   endif()
 endif()
 
@@ -440,6 +442,7 @@ if (OPM_ENABLE_PYTHON)
   if(TARGET pybind11::pybind11)
     target_link_libraries(opmcommon_python PRIVATE
                           pybind11::pybind11)
+    use_warnings(opmcommon_python)
   else()
     target_include_directories(opmcommon_python SYSTEM PRIVATE ${pybind11_INCLUDE_DIRS})
   endif()
