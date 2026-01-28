@@ -47,13 +47,6 @@ include (UseFastBuilds)
 # optimize full if we're not doing a debug build
 include (UseOptimization)
 
-# turn on all warnings; this must be done before adding any
-# dependencies, in case they alter the list of warnings
-option(OPM_ENABLE_WARNINGS "Enable warning flags?" ON)
-if(OPM_ENABLE_WARNINGS)
-  include (UseWarnings)
-endif()
-
 # parallel programming
 include (UseOpenMP)
 find_openmp (${project})
@@ -164,6 +157,10 @@ execute_process (COMMAND
 include (OpmCompile)
 opm_compile (${project})
 
+# optionally turn on all warnings
+include(UseWarnings)
+use_warnings(${${project}_TARGET})
+
 # installation of CMake modules to help user programs locate the library
 include (OpmProject)
 opm_cmake_config (${project})
@@ -219,7 +216,6 @@ if (COMMAND install_hook)
 endif (COMMAND install_hook)
 opm_install (${project})
 message (STATUS "This build defaults to installing in ${CMAKE_INSTALL_PREFIX}")
-
 
 # use this target to check local git commits
 add_custom_target(check-commits
