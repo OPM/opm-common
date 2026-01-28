@@ -94,23 +94,8 @@ macro(opm_compile opm)
     opm_interprocedural_optimization(TARGET ${${opm}_TARGET})
   endif()
 
-  if(${${opm}_LIBRARY_TYPE} STREQUAL "SHARED")
-    # libs that will be linked with the main lib
-    string(REGEX REPLACE "([;^])[^;]+\\.a[;$]" "\\1" _public_libs
-           "${${opm}_LIBRARIES}")
-    # libs that will not actually linked to the library but
-    # transitively linked to binaries that link to the main library
-    string(REGEX REPLACE "([^;]+\\.[^a][a-zA-Z0-9]*|-[a-z]*)[;$]" "" _interface_libs
-           "${${opm}_LIBRARIES}")
-  else()
-    # Use all libs for real and transitive linking
-    set(_public_libs ${${opm}_LIBRARIES})
-    unset(_interface)
-  endif()
   target_link_libraries(${${opm}_TARGET}
     PUBLIC
-      ${_public_libs}
-    INTERFACE
-      ${_interface_libs}
+      ${${opm}_LIBRARIES}
   )
 endmacro (opm_compile opm)
