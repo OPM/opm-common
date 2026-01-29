@@ -471,6 +471,7 @@ if(ENABLE_ECL_OUTPUT)
           opm/output/eclipse/WriteRFT.cpp
           opm/output/eclipse/report/WellSpecification.cpp
           opm/utility/EModel.cpp
+          opm/utility/GroupStructureViz.cpp
           opm/utility/WellStructureViz.cpp
       )
 endif()
@@ -1615,6 +1616,7 @@ if(ENABLE_ECL_OUTPUT)
         opm/output/eclipse/report/WellSpecification.hpp
         opm/utility/CopyablePtr.hpp
         opm/utility/EModel.hpp
+        opm/utility/GroupStructureViz.hpp
         opm/utility/WellStructureViz.hpp
         )
     foreach (name A B C D E F G H I J K L M N O P Q R S T U V W X Y Z)
