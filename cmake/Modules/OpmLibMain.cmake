@@ -41,9 +41,6 @@ include (OpmDefaults)
 opm_defaults (${project})
 message (STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
-# use tricks to do faster builds
-include (UseFastBuilds)
-
 # optimize full if we're not doing a debug build
 include (UseOptimization)
 
@@ -153,6 +150,10 @@ execute_process (COMMAND
 # compile main library; pull in all required includes and libraries
 include (OpmCompile)
 opm_compile (${project})
+
+# use tricks to do faster builds
+include(UseFastBuilds)
+use_fast_build(TARGET ${${project}_TARGET})
 
 # optionally turn on all warnings
 include(UseWarnings)
