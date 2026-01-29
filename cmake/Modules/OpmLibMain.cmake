@@ -41,9 +41,6 @@ include (OpmDefaults)
 opm_defaults (${project})
 message (STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
-# optimize full if we're not doing a debug build
-include (UseOptimization)
-
 include (UseThreads)
 find_threads (${project})
 
@@ -158,6 +155,10 @@ use_fast_build(TARGET ${${project}_TARGET})
 # optionally turn on all warnings
 include(UseWarnings)
 use_warnings(TARGET ${${project}_TARGET})
+
+# additional optimization flags
+include(UseOptimization)
+use_additional_optimization(TARGET ${${project}_TARGET})
 
 # parallel programming
 include (UseOpenMP)
