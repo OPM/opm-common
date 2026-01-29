@@ -156,7 +156,7 @@ opm_compile (${project})
 
 # optionally turn on all warnings
 include(UseWarnings)
-use_warnings(${${project}_TARGET})
+use_warnings(TARGET ${${project}_TARGET})
 
 # parallel programming
 include (UseOpenMP)
