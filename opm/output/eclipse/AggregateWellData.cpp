@@ -562,9 +562,6 @@ namespace {
             const auto topIJK = grid
                 .getLGR_fatherIJK(I - 1, J - 1, firstK, lgrTag);
 
-            I = topIJK[0] + 1;
-            J = topIJK[1] + 1;
-
             if (! well.isMultiSegment()) {
                 const auto botIJK = grid
                     .getLGR_fatherIJK(I - 1, J - 1, lastK, lgrTag);
@@ -572,6 +569,9 @@ namespace {
                 iWell[Ix::FirstK] = topIJK[2] + 1;
                 iWell[Ix::LastK]  = botIJK[2] + 1;
             }
+
+            I = topIJK[0] + 1;
+            J = topIJK[1] + 1;
         }
 
         template <class IWellArray>
