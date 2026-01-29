@@ -16,10 +16,6 @@
 #	files_hook      Do special processing before final targets are added
 
 
-# don't write default flags into the cache, preserve that for user set values
-include (AddOptions)
-no_default_options ()
-
 # Various compiler extension checks
 include(OpmCompilerChecks)
 
