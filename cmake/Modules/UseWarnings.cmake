@@ -14,16 +14,21 @@ if(CXX_COMPAT_GCC AND OPM_ENABLE_WARNINGS)
   message(STATUS "All warnings enabled: ${_warn_flag}")
 endif()
 
-macro(use_warnings target)
+function(use_warnings)
+  cmake_parse_arguments(PARAM "" "TARGET" "" ${ARGN})
+  if(NOT PARAM_TARGET)
+    message(FATAL_ERROR "Function needs a TARGET parameter")
+  endif()
+
   if (CXX_COMPAT_GCC AND OPM_ENABLE_WARNINGS)
     # default warnings flags, if not set by user
-    target_compile_options(${target}
+    target_compile_options(${PARAM_TARGET}
       PRIVATE
         $<$<COMPILE_LANGUAGE:CXX>:-Wall -Wextra -Wshadow>
         $<$<COMPILE_LANGUAGE:C>:-Wall -Wextra -Wshadow>
     )
     if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 13)
-      target_compile_options(${target}
+      target_compile_options(${PARAM_TARGET}
         PRIVATE
           $<$<COMPILE_LANGUAGE:CXX>:-Wno-dangling-reference>
       )
@@ -31,6 +36,6 @@ macro(use_warnings target)
   endif ()
 
   if(SILENCE_EXTERNAL_WARNINGS AND CXX_COMPAT_GCC)
-    target_compile_definitions(${${opm_}_TARGET} PRIVATE SILENCE_EXTERNAL_WARNINGS)
+    target_compile_definitions(${PARAM_TARGET} PRIVATE SILENCE_EXTERNAL_WARNINGS)
   endif()
-endmacro()
+endfunction()
