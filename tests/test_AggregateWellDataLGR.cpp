@@ -173,6 +173,237 @@ BOOST_AUTO_TEST_SUITE(LGR_Aggregate_WD)
 
 namespace {
 
+    Opm::Deck simLGR_full()
+    {
+        const auto input = std::string {
+            R"~(
+            RUNSPEC
+            TITLE
+            SPE1 - CASE 1
+            DIMENS
+            10 10 3 /
+            EQLDIMS
+            /
+            TABDIMS
+            /
+            OIL
+            GAS
+            WATER
+            DISGAS
+            FIELD
+            START
+            1 'JAN' 2015 /
+            WELLDIMS
+            2 3 1 2 /
+            UNIFOUT
+            GRID
+            CARFIN
+            'LGR1'  1  1  1  1  1  3  3  3  9 /
+            ENDFIN
+            CARFIN
+            'LGR2'  10  10  10  10  1  3  3  3  9 /
+            ENDFIN
+            INIT
+            DX
+                300*1000 /
+            DY
+                300*1000 /
+            DZ
+                100*20 100*30 100*50 /
+            TOPS
+                100*8325 /
+            PORO
+                300*0.3 /
+            PERMX
+                100*500 100*50 100*200 /
+            PERMY
+                100*500 100*50 100*200 /
+            PERMZ
+                100*500 100*50 100*200 /
+            ECHO
+            SCHEDULE
+            RPTSCHED
+                'PRES' 'SGAS' 'RS' 'WELLS' /
+            RPTRST
+                'BASIC=1' /
+            DRSDT
+            0 /
+            WELSPECL
+                    'PROD'	'G1'  'LGR2'	2	2	8400	'OIL' /
+                'INJ'	'G1'  'LGR1'    2	2	8335	'GAS' /
+            /
+            COMPDATL
+                'PROD'	'LGR2'  2	2	7	9	'OPEN'	1*	1*	0.5 /
+                'INJ'	'LGR1'  2	2	1	3	'OPEN'	1*	1*	0.5 /
+            /
+            WCONPROD
+                'PROD' 'OPEN' 'ORAT' 20000 4* 1000 /
+            /
+            WCONINJE
+                'INJ'	'GAS'	'OPEN'	'RATE'	100000 1* 9014 /
+            /
+            TSTEP
+            31 28 31 30 31 30 31 31 30 31 30 31
+            /
+            END
+            )~" };
+        return Opm::Parser{}.parseString(input);
+    }
+
+
+    Opm::Deck simLGR_full_crossing()
+    {
+        const auto input = std::string {
+            R"~(
+            RUNSPEC
+            TITLE
+            SPE1 - CASE 1
+            DIMENS
+            10 10 3 /
+            EQLDIMS
+            /
+            TABDIMS
+            /
+            OIL
+            GAS
+            WATER
+            DISGAS
+            FIELD
+            START
+            1 'JAN' 2015 /
+            WELLDIMS
+            2 3 1 2 /
+            UNIFOUT
+            GRID
+            CARFIN
+            'LGR1'  1  1  1  1  1  3  3  3  9 /
+            ENDFIN
+            CARFIN
+            'LGR2'  10  10  10  10  1  3  3  3  9 /
+            ENDFIN
+            INIT
+            DX
+                300*1000 /
+            DY
+                300*1000 /
+            DZ
+                100*20 100*30 100*50 /
+            TOPS
+                100*8325 /
+            PORO
+                300*0.3 /
+            PERMX
+                100*500 100*50 100*200 /
+            PERMY
+                100*500 100*50 100*200 /
+            PERMZ
+                100*500 100*50 100*200 /
+            ECHO
+            SCHEDULE
+            RPTSCHED
+                'PRES' 'SGAS' 'RS' 'WELLS' /
+            RPTRST
+                'BASIC=1' /
+            DRSDT
+            0 /
+            WELSPECL
+                'PROD'	'G1'  'LGR2'	2	2	8400	'OIL' /
+                'INJ'	'G1'  'LGR1'    2	2	8335	'GAS' /
+            /
+            COMPDATL
+                'PROD'	'LGR2'  2	2	1	9	'OPEN'	1*	1*	0.5 /
+                'INJ'	'LGR1'  2	2	1	3	'OPEN'	1*	1*	0.5 /
+            /
+            WCONPROD
+                'PROD' 'OPEN' 'ORAT' 20000 4* 1000 /
+            /
+            WCONINJE
+                'INJ'	'GAS'	'OPEN'	'RATE'	100000 1* 9014 /
+            /
+            TSTEP
+            31 28 31 30 31 30 31 31 30 31 30 31
+            /
+            END
+            )~" };
+        return Opm::Parser{}.parseString(input);
+    }
+
+
+    Opm::Deck simLGR_CARFIN_GR()
+    {
+        const auto input = std::string {
+        R"~(
+        RUNSPEC
+        TITLE
+        SPE1 - CASE 1
+        DIMENS
+        10 10 3 /
+        EQLDIMS
+        /
+        TABDIMS
+        /
+        OIL
+        GAS
+        WATER
+        DISGAS
+        FIELD
+        START
+        1 'JAN' 2015 /
+        WELLDIMS
+        2 3 1 2 /
+        UNIFOUT
+        GRID
+        CARFIN
+        'LGR1'   1  10  1  10  1  3   30  30  9 /
+        ENDFIN
+        INIT
+        DX
+            300*1000 /
+        DY
+            300*1000 /
+        DZ
+            100*20 100*30 100*50 /
+        TOPS
+            100*8325 /
+        PORO
+            300*0.3 /
+        PERMX
+            100*500 100*50 100*200 /
+        PERMY
+            100*500 100*50 100*200 /
+        PERMZ
+            100*500 100*50 100*200 /
+        ECHO
+        SCHEDULE
+        RPTSCHED
+            'PRES' 'SGAS' 'RS' 'WELLS' /
+        RPTRST
+            'BASIC=1' /
+        DRSDT
+        0 /
+        WELSPECL
+            'PROD'	'G1'  'LGR1'   29	29	8400	'OIL' /
+            'INJ'	'G1'  'LGR1'   2	2	8335	'GAS' /
+        /
+        COMPDATL
+            'PROD'	'LGR1' 29	29	7	9	'OPEN'	1*	1*	0.5 /
+            'INJ'	'LGR1' 2	2	1	3	'OPEN'	1*	1*	0.5 /
+        /
+        WCONPROD
+            'PROD' 'OPEN' 'ORAT' 20000 4* 1000 /
+        /
+        WCONINJE
+            'INJ'	'GAS'	'OPEN'	'RATE'	100000 1* 9014 /
+        /
+        TSTEP
+        31 28 31 30 31 30 31 31 30 31 30 31
+        /
+        END
+        )~" };
+        return Opm::Parser{}.parseString(input);
+    }
+
+
     Opm::Deck simLGR_1global2lgrwellmixed()
     {
         // ONE LGR Cells with wells with 1 Global Well and 2 LGR Wells in the same cell
@@ -1917,6 +2148,402 @@ BOOST_AUTO_TEST_CASE (Declared_Well_Data3Wells1G2LGR)
     }
 
 }
+
+
+BOOST_AUTO_TEST_CASE (LGR_WellingitSameHostGrid)
+{
+    const auto simCase = SimulationCase{simLGR_full()};
+
+    Opm::Action::State action_state;
+    Opm::WellTestState wtest_state;
+
+    // Report Step 1: 2008-10-10 --> 2011-01-20
+    const auto rptStep = std::size_t{1};
+
+    auto countWells = [&simCase](const std::string& lgr_tag) -> int {
+        const auto wnames = simCase.sched.wellNames(rptStep);
+        return std::count_if(wnames.begin(), wnames.end(),
+                             [&lgr_tag, &sched = simCase.sched[rptStep]](const auto& wname)
+                             { return sched.wells(wname).get_lgr_well_tag().value_or("") == lgr_tag; });
+    };
+
+    auto ih = MockIH {
+        static_cast<int>(simCase.sched.getWells(rptStep).size())
+    };
+
+    ih.add_icon_data(26, 42 ,58 , 3);
+    BOOST_CHECK_EQUAL(ih.nwells, MockIH::Sz{2});
+
+
+    int num_lgr1 = countWells("LGR1");
+    int num_lgr2 = countWells("LGR2");
+
+    auto ih_lgr1 = MockIH {
+        static_cast<int>(num_lgr1)
+    };
+    auto ih_lgr2 = MockIH {
+        static_cast<int>(num_lgr2)
+    };
+    ih_lgr1.add_icon_data(26, 42 ,58 , 1);
+    ih_lgr2.add_icon_data(26, 42 ,58 , 1);
+
+
+    const auto smry = sim_stateLGR();
+    auto awd = Opm::RestartIO::Helpers::AggregateWellData{ih.value};
+    auto awd_lgr1 = Opm::RestartIO::Helpers::AggregateWellData{ih_lgr1.value};
+
+    auto awd_lgr2 = Opm::RestartIO::Helpers::AggregateWellData{ih_lgr2.value};
+
+    awd.captureDeclaredWellData(simCase.sched,
+                            simCase.grid,
+                            simCase.es.tracer(),
+                            rptStep,
+                            action_state,
+                            wtest_state,
+                            smry,
+                            ih.value);
+
+    awd_lgr1.captureDeclaredWellDataLGR(simCase.sched,
+                                        simCase.grid,
+                                        simCase.es.tracer(),
+                                        rptStep,
+                                        action_state,
+                                        wtest_state,
+                                        smry,
+                                        ih.value,
+                                        "LGR1");
+
+    awd_lgr2.captureDeclaredWellDataLGR(simCase.sched,
+                                        simCase.grid,
+                                        simCase.es.tracer(),
+                                        rptStep,
+                                        action_state,
+                                        wtest_state,
+                                        smry,
+                                        ih.value,
+                                        "LGR2");
+
+
+    // -------------------------- IWEL FOR GLOBAL WELLS --------------------------
+    // GLOBAL WELLS
+    // IWEL (PROD)
+    {
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::IWell::index;
+
+        const auto start = 0*ih.niwelz;
+        const auto& iwell = awd.getIWell();
+        BOOST_CHECK_EQUAL(iwell[start + Ix::IHead] , 10); // PROD -> I
+        BOOST_CHECK_EQUAL(iwell[start + Ix::JHead] , 10); // PROD -> J
+        BOOST_CHECK_EQUAL(iwell[start + Ix::FirstK], 3); // PROD/Head -> K
+        BOOST_CHECK_EQUAL(iwell[start + Ix::LastK], 3); // PROD/Head -> K
+        BOOST_CHECK_EQUAL(iwell[start + Ix::NConn] , 3); // PROD #Compl
+        BOOST_CHECK_EQUAL(iwell[start + Ix::WType] , 1); // PROD -> Producer
+        BOOST_CHECK_EQUAL(iwell[start + Ix::LGRIndex] , 2); // LOCATED IN LGR2
+    }
+    // GLOBAL WELLS
+    // IWEL (INJ)
+    {
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::IWell::index;
+
+        const auto start = 1*ih.niwelz;
+        const auto& iwell = awd.getIWell();
+        BOOST_CHECK_EQUAL(iwell[start + Ix::IHead] , 1); // INJ -> I
+        BOOST_CHECK_EQUAL(iwell[start + Ix::JHead] , 1); // INJ -> J
+        BOOST_CHECK_EQUAL(iwell[start + Ix::FirstK], 1); // INJ/Head -> K
+        BOOST_CHECK_EQUAL(iwell[start + Ix::LastK], 1); // INJ/Head -> K (TOP STILL LOCATED IN THE SAME HOST)
+        BOOST_CHECK_EQUAL(iwell[start + Ix::NConn] , 3); // INJ #Compl
+        BOOST_CHECK_EQUAL(iwell[start + Ix::WType] , 4); // INJ -> Injector
+        BOOST_CHECK_EQUAL(iwell[start + Ix::LGRIndex] , 1); // LOCATRED IN LGR1
+    }
+    // -------------------------- IWEL FOR LGR WELLS --------------------------
+    // LGR01 WELL
+    // IWEL (PROD)
+    {
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::IWell::index;
+
+        const auto start = 0*ih_lgr1.niwelz;
+        const auto& iwell = awd_lgr2.getIWell();
+        BOOST_CHECK_EQUAL(iwell[start + Ix::IHead] , 2); // PROD -> I
+        BOOST_CHECK_EQUAL(iwell[start + Ix::JHead] ,2); // PROD -> J
+        BOOST_CHECK_EQUAL(iwell[start + Ix::FirstK], 7); // PROD/Head -> K
+        BOOST_CHECK_EQUAL(iwell[start + Ix::LastK], 9); // PROD/Head -> K
+        BOOST_CHECK_EQUAL(iwell[start + Ix::NConn] , 3); // PROD #Compl
+        BOOST_CHECK_EQUAL(iwell[start + Ix::WType] , 1); // PROD -> Producer
+    }
+
+    // LGR02 WELL
+    // IWEL (INJ)
+    {
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::IWell::index;
+
+        const auto start = 0*ih_lgr2.niwelz;
+        const auto& iwell = awd_lgr1.getIWell();
+        BOOST_CHECK_EQUAL(iwell[start + Ix::IHead] , 2); // INJ -> I
+        BOOST_CHECK_EQUAL(iwell[start + Ix::JHead] , 2); // INK -> J
+        BOOST_CHECK_EQUAL(iwell[start + Ix::FirstK], 1); // INJ/Head -> K
+        BOOST_CHECK_EQUAL(iwell[start + Ix::LastK], 3); // INJ/Head -> K
+        BOOST_CHECK_EQUAL(iwell[start + Ix::NConn] , 3); // INJ #Compl
+        BOOST_CHECK_EQUAL(iwell[start + Ix::WType] , 4); // INJ -> Producer
+    }
+}
+
+
+BOOST_AUTO_TEST_CASE (LGR_BugFixCrossingLGRWell)
+{
+    const auto simCase = SimulationCase{simLGR_full_crossing()};
+
+    Opm::Action::State action_state;
+    Opm::WellTestState wtest_state;
+
+    // Report Step 1: 2008-10-10 --> 2011-01-20
+    const auto rptStep = std::size_t{1};
+
+    auto countWells = [&simCase](const std::string& lgr_tag) -> int {
+        const auto wnames = simCase.sched.wellNames(rptStep);
+        return std::count_if(wnames.begin(), wnames.end(),
+                             [&lgr_tag, &sched = simCase.sched[rptStep]](const auto& wname)
+                             { return sched.wells(wname).get_lgr_well_tag().value_or("") == lgr_tag; });
+    };
+
+    auto ih = MockIH {
+        static_cast<int>(simCase.sched.getWells(rptStep).size())
+    };
+
+    ih.add_icon_data(26, 42 ,58 , 3);
+    BOOST_CHECK_EQUAL(ih.nwells, MockIH::Sz{2});
+
+
+    int num_lgr1 = countWells("LGR1");
+    int num_lgr2 = countWells("LGR2");
+
+    auto ih_lgr1 = MockIH {
+        static_cast<int>(num_lgr1)
+    };
+    auto ih_lgr2 = MockIH {
+        static_cast<int>(num_lgr2)
+    };
+    ih_lgr1.add_icon_data(26, 42 ,58 , 1);
+    ih_lgr2.add_icon_data(26, 42 ,58 , 1);
+
+
+    const auto smry = sim_stateLGR();
+    auto awd = Opm::RestartIO::Helpers::AggregateWellData{ih.value};
+    auto awd_lgr1 = Opm::RestartIO::Helpers::AggregateWellData{ih_lgr1.value};
+
+    auto awd_lgr2 = Opm::RestartIO::Helpers::AggregateWellData{ih_lgr2.value};
+
+    awd.captureDeclaredWellData(simCase.sched,
+                            simCase.grid,
+                            simCase.es.tracer(),
+                            rptStep,
+                            action_state,
+                            wtest_state,
+                            smry,
+                            ih.value);
+
+    awd_lgr1.captureDeclaredWellDataLGR(simCase.sched,
+                                        simCase.grid,
+                                        simCase.es.tracer(),
+                                        rptStep,
+                                        action_state,
+                                        wtest_state,
+                                        smry,
+                                        ih.value,
+                                        "LGR1");
+
+    awd_lgr2.captureDeclaredWellDataLGR(simCase.sched,
+                                        simCase.grid,
+                                        simCase.es.tracer(),
+                                        rptStep,
+                                        action_state,
+                                        wtest_state,
+                                        smry,
+                                        ih.value,
+                                        "LGR2");
+
+
+    // -------------------------- IWEL FOR GLOBAL WELLS --------------------------
+    // GLOBAL WELLS
+    // IWEL (PROD)
+    {
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::IWell::index;
+
+        const auto start = 0*ih.niwelz;
+        const auto& iwell = awd.getIWell();
+        BOOST_CHECK_EQUAL(iwell[start + Ix::IHead] , 10); // PROD -> I
+        BOOST_CHECK_EQUAL(iwell[start + Ix::JHead] , 10); // PROD -> J
+        BOOST_CHECK_EQUAL(iwell[start + Ix::FirstK],1); // PROD/Head -> K
+        BOOST_CHECK_EQUAL(iwell[start + Ix::LastK], 3); // PROD/Head -> K
+        BOOST_CHECK_EQUAL(iwell[start + Ix::NConn] , 9); // PROD #Compl
+        BOOST_CHECK_EQUAL(iwell[start + Ix::WType] , 1); // PROD -> Producer
+        BOOST_CHECK_EQUAL(iwell[start + Ix::LGRIndex] , 2); // LOCATED IN LGR2
+    }
+    // GLOBAL WELLS
+    // IWEL (INJ)
+    {
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::IWell::index;
+
+        const auto start = 1*ih.niwelz;
+        const auto& iwell = awd.getIWell();
+        BOOST_CHECK_EQUAL(iwell[start + Ix::IHead] , 1); // INJ -> I
+        BOOST_CHECK_EQUAL(iwell[start + Ix::JHead] , 1); // INJ -> J
+        BOOST_CHECK_EQUAL(iwell[start + Ix::FirstK], 1); // INJ/Head -> K
+        BOOST_CHECK_EQUAL(iwell[start + Ix::LastK], 1); // INJ/Head -> K (TOP STILL LOCATED IN THE SAME HOST)
+        BOOST_CHECK_EQUAL(iwell[start + Ix::NConn] , 3); // INJ #Compl
+        BOOST_CHECK_EQUAL(iwell[start + Ix::WType] , 4); // INJ -> Injector
+        BOOST_CHECK_EQUAL(iwell[start + Ix::LGRIndex] , 1); // LOCATRED IN LGR1
+    }
+    // -------------------------- IWEL FOR LGR WELLS --------------------------
+    // LGR01 WELL
+    // IWEL (PROD)
+    {
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::IWell::index;
+
+        const auto start = 0*ih_lgr1.niwelz;
+        const auto& iwell = awd_lgr2.getIWell();
+        BOOST_CHECK_EQUAL(iwell[start + Ix::IHead] , 2); // PROD -> I
+        BOOST_CHECK_EQUAL(iwell[start + Ix::JHead] ,2); // PROD -> J
+        BOOST_CHECK_EQUAL(iwell[start + Ix::FirstK], 1); // PROD/Head -> K
+        BOOST_CHECK_EQUAL(iwell[start + Ix::LastK], 9); // PROD/Head -> K
+        BOOST_CHECK_EQUAL(iwell[start + Ix::NConn] , 9); // PROD #Compl
+        BOOST_CHECK_EQUAL(iwell[start + Ix::WType] , 1); // PROD -> Producer
+    }
+
+    // LGR02 WELL
+    // IWEL (INJ)
+    {
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::IWell::index;
+
+        const auto start = 0*ih_lgr2.niwelz;
+        const auto& iwell = awd_lgr1.getIWell();
+        BOOST_CHECK_EQUAL(iwell[start + Ix::IHead] , 2); // INJ -> I
+        BOOST_CHECK_EQUAL(iwell[start + Ix::JHead] , 2); // INK -> J
+        BOOST_CHECK_EQUAL(iwell[start + Ix::FirstK], 1); // INJ/Head -> K
+        BOOST_CHECK_EQUAL(iwell[start + Ix::LastK], 3); // INJ/Head -> K
+        BOOST_CHECK_EQUAL(iwell[start + Ix::NConn] , 3); // INJ #Compl
+        BOOST_CHECK_EQUAL(iwell[start + Ix::WType] , 4); // INJ -> Producer
+    }
+}
+
+
+BOOST_AUTO_TEST_CASE (LGR_CARFINGR)
+{
+    const auto simCase = SimulationCase{simLGR_CARFIN_GR()};
+
+    Opm::Action::State action_state;
+    Opm::WellTestState wtest_state;
+
+    // Report Step 1: 2008-10-10 --> 2011-01-20
+    const auto rptStep = std::size_t{1};
+
+    auto countWells = [&simCase](const std::string& lgr_tag) -> int {
+        const auto wnames = simCase.sched.wellNames(rptStep);
+        return std::count_if(wnames.begin(), wnames.end(),
+                             [&lgr_tag, &sched = simCase.sched[rptStep]](const auto& wname)
+                             { return sched.wells(wname).get_lgr_well_tag().value_or("") == lgr_tag; });
+    };
+
+    auto ih = MockIH {
+        static_cast<int>(simCase.sched.getWells(rptStep).size())
+    };
+
+    ih.add_icon_data(26, 42 ,58 , 3);
+    BOOST_CHECK_EQUAL(ih.nwells, MockIH::Sz{2});
+
+
+    int num_lgr1 = countWells("LGR1");
+
+    auto ih_lgr1 = MockIH {
+        static_cast<int>(num_lgr1)
+    };
+
+    ih_lgr1.add_icon_data(26, 42 ,58 , 1);
+
+
+    const auto smry = sim_stateLGR();
+    auto awd = Opm::RestartIO::Helpers::AggregateWellData{ih.value};
+    auto awd_lgr1 = Opm::RestartIO::Helpers::AggregateWellData{ih_lgr1.value};
+
+
+    awd.captureDeclaredWellData(simCase.sched,
+                            simCase.grid,
+                            simCase.es.tracer(),
+                            rptStep,
+                            action_state,
+                            wtest_state,
+                            smry,
+                            ih.value);
+
+    awd_lgr1.captureDeclaredWellDataLGR(simCase.sched,
+                                        simCase.grid,
+                                        simCase.es.tracer(),
+                                        rptStep,
+                                        action_state,
+                                        wtest_state,
+                                        smry,
+                                        ih.value,
+                                        "LGR1");
+
+
+    // -------------------------- IWEL FOR GLOBAL WELLS --------------------------
+    // GLOBAL WELLS
+    // IWEL (PROD)
+    {
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::IWell::index;
+
+        const auto start = 0*ih.niwelz;
+        const auto& iwell = awd.getIWell();
+        BOOST_CHECK_EQUAL(iwell[start + Ix::IHead] , 10); // PROD -> I
+        BOOST_CHECK_EQUAL(iwell[start + Ix::JHead] , 10); // PROD -> J
+        BOOST_CHECK_EQUAL(iwell[start + Ix::FirstK],3); // PROD/Head -> K
+        BOOST_CHECK_EQUAL(iwell[start + Ix::LastK], 3); // PROD/Head -> K
+        BOOST_CHECK_EQUAL(iwell[start + Ix::NConn] , 3); // PROD #Compl
+        BOOST_CHECK_EQUAL(iwell[start + Ix::WType] , 1); // PROD -> Producer
+        BOOST_CHECK_EQUAL(iwell[start + Ix::LGRIndex] , 1); // LOCATED IN LGR1
+    }
+    // GLOBAL WELLS
+    // IWEL (INJ)
+    {
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::IWell::index;
+
+        const auto start = 1*ih.niwelz;
+        const auto& iwell = awd.getIWell();
+        BOOST_CHECK_EQUAL(iwell[start + Ix::IHead] , 1); // INJ -> I
+        BOOST_CHECK_EQUAL(iwell[start + Ix::JHead] , 1); // INJ -> J
+        BOOST_CHECK_EQUAL(iwell[start + Ix::FirstK], 1); // INJ/Head -> K
+        BOOST_CHECK_EQUAL(iwell[start + Ix::LastK], 1); // INJ/Head -> K (TOP STILL LOCATED IN THE SAME HOST)
+        BOOST_CHECK_EQUAL(iwell[start + Ix::NConn] , 3); // INJ #Compl
+        BOOST_CHECK_EQUAL(iwell[start + Ix::WType] , 4); // INJ -> Injector
+        BOOST_CHECK_EQUAL(iwell[start + Ix::LGRIndex] , 1); // LOCATRED IN LGR1
+    }
+
+    // LGR01 WELL
+    // IWEL (INJ)
+    {
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::IWell::index;
+
+        const auto start = 0*ih_lgr1.niwelz;
+        const auto& iwell = awd_lgr1.getIWell();
+        BOOST_CHECK_EQUAL(iwell[start + Ix::IHead] , 29); // INJ -> I
+        BOOST_CHECK_EQUAL(iwell[start + Ix::JHead] , 29); // INK -> J
+        BOOST_CHECK_EQUAL(iwell[start + Ix::FirstK], 7); // INJ/Head -> K
+        BOOST_CHECK_EQUAL(iwell[start + Ix::LastK], 9); // INJ/Head -> K
+        BOOST_CHECK_EQUAL(iwell[start + Ix::NConn] , 3); // INJ #Compl
+    }
+    // IWEL (INJ)
+    {
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::IWell::index;
+
+        const auto start = 1*ih_lgr1.niwelz;
+        const auto& iwell = awd_lgr1.getIWell();
+        BOOST_CHECK_EQUAL(iwell[start + Ix::IHead] , 2); // INJ -> I
+        BOOST_CHECK_EQUAL(iwell[start + Ix::JHead] , 2); // INK -> J
+        BOOST_CHECK_EQUAL(iwell[start + Ix::FirstK], 1); // INJ/Head -> K
+        BOOST_CHECK_EQUAL(iwell[start + Ix::LastK], 3); // INJ/Head -> K
+        BOOST_CHECK_EQUAL(iwell[start + Ix::NConn] , 3); // INJ #Compl
+    }
+}
+
 
 
 BOOST_AUTO_TEST_CASE (Declared_Well_Data3MixedGroupsWells)
