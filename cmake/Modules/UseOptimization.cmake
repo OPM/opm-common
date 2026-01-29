@@ -26,10 +26,6 @@ if (CXX_COMPAT_GCC)
 	endif (HAVE_MTUNE)
   endif (WITH_NATIVE)
 
-  # default optimization flags, if not set by user
-  set_default_option (CXX _opt_dbg "-O0" "(^|\ )-O")
-  set_default_option (CXX _opt_rel "-O3" "(^|\ )-O")
-
   # use these options for debug builds - no optimizations
   add_options (ALL_LANGUAGES "${_prof_DEBUG}" ${_opt_dbg} "-DDEBUG")
 
@@ -46,20 +42,4 @@ if (CXX_COMPAT_GCC)
   else()
     add_options (ALL_LANGUAGES "${_prof_RELEASE}" -UNDEBUG)
   endif()
-
-else ()
-  # default information from system
-  foreach (lang IN ITEMS C CXX Fortran)
-	if (lang STREQUAL "Fortran")
-	  set (_lang F)
-	else (lang STREQUAL "Fortran")
-	  set (_lang ${lang})
-	endif (lang STREQUAL "Fortran")
-	foreach (profile IN ITEMS DEBUG RELEASE)
-	  if (NOT CMAKE_${lang}_FLAGS_${profile})
-		add_options (${lang} "${_prof_${profile}}"
-		  "$ENV{${_lang}FLAGS} ${CMAKE_${lang}_FLAGS_${profile}_INIT}")
-	  endif (NOT CMAKE_${lang}_FLAGS_${profile})
-	endforeach (profile)
-  endforeach (lang)
-endif ()
+endif()
