@@ -56,9 +56,6 @@ include (OpmAliases)
 # it is not possible to query for Boost twice with different components.
 list (REMOVE_ITEM "${project}_LIBRARIES" "${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}")
 
-# don't import more libraries than we need to
-include (UseOnlyNeeded)
-
 # detect if Boost is in a shared library
 include (UseDynamicBoost)
 
@@ -143,6 +140,10 @@ execute_process (COMMAND
 # compile main library; pull in all required includes and libraries
 include (OpmCompile)
 opm_compile (${project})
+
+# don't import more libraries than we need to
+include (UseOnlyNeeded)
+use_only_needed(TARGET ${${project}_TARGET})
 
 # use tricks to do faster builds
 include(UseFastBuilds)
