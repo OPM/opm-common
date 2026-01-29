@@ -1888,7 +1888,7 @@ VFPPROD \n\
 1 1 1 1 1.5 2.5 3.5 /    \n";
 
     Opm::Parser parser;
-    auto deck = parser.parseString(deckData, Opm::ParseContext());
+    auto deck = parser.parseString(deckData);
     auto units = Opm::UnitSystem::newMETRIC();
     const auto& vfpprodKeyword = deck.getKeyword("VFPPROD");
 
@@ -2038,7 +2038,7 @@ VFPPROD\n\
 /\n";
 
     Opm::Parser parser;
-    auto deck = parser.parseString(deckData, Opm::ParseContext());
+    auto deck = parser.parseString(deckData);
     const auto& vfpprodKeyword = deck.getKeyword("VFPPROD");
     auto units = Opm::UnitSystem::newMETRIC();
 
@@ -2088,7 +2088,7 @@ VFPPROD\n\
 /\n";
 
     Opm::Parser parser;
-    auto deck = parser.parseString(missing_values, Opm::ParseContext());
+    auto deck = parser.parseString(missing_values);
     const auto& vfpprodKeyword = deck.getKeyword("VFPPROD");
     auto units = Opm::UnitSystem::newMETRIC();
 
