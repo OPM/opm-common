@@ -18,9 +18,10 @@
 include(OpmCompile)
 include(UseOnlyNeeded)
 include(UseFastBuilds)
-include(UseWarnings)
-include(UseOptimization)
 include(UseOpenMP)
+include(UseOptimization)
+include(UseThreads)
+include(UseWarnings)
 
 # Various compiler extension checks
 include(OpmCompilerChecks)
@@ -42,9 +43,6 @@ linker_info ()
 include (OpmDefaults)
 opm_defaults (${project})
 message (STATUS "Build type: ${CMAKE_BUILD_TYPE}")
-
-include (UseThreads)
-find_threads (${project})
 
 # callback hook to setup additional dependencies
 if (COMMAND prereqs_hook)
@@ -159,6 +157,7 @@ use_warnings(TARGET ${${project}_TARGET})
 use_additional_optimization(TARGET ${${project}_TARGET})
 
 # parallel programming
+use_threads(TARGET ${${project}_TARGET})
 use_openmp(TARGET ${${project}_TARGET})
 
 # installation of CMake modules to help user programs locate the library
