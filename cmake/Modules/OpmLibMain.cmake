@@ -71,7 +71,6 @@ linker_info ()
 
 # default settings: build static debug library
 include (OpmDefaults)
-opm_defaults (${project})
 message (STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
 # callback hook to setup additional dependencies
