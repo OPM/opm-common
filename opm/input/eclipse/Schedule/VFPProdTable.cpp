@@ -324,7 +324,7 @@ VFPProdTable::VFPProdTable(const DeckKeyword& table,
 
                 OpmLog::warning(msg);
             }
-            (*this)(t,w,g,a,f) = table_scaling_factor*bhp_tht[f];
+            this->mutableData(t,w,g,a,f) = table_scaling_factor*bhp_tht[f];
         }
     }
 
@@ -593,7 +593,7 @@ double VFPProdTable::operator()(size_t thp_idx, size_t wfr_idx, size_t gfr_idx, 
 }
 
 
-double& VFPProdTable::operator()(size_t thp_idx, size_t wfr_idx, size_t gfr_idx, size_t alq_idx, size_t flo_idx) {
+double& VFPProdTable::mutableData(size_t thp_idx, size_t wfr_idx, size_t gfr_idx, size_t alq_idx, size_t flo_idx) {
     size_t nw = m_wfr_data.size();
     size_t ng = m_gfr_data.size();
     size_t na = m_alq_data.size();

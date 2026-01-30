@@ -208,7 +208,7 @@ private:
 
     void check();
 
-    double& operator()(size_t thp_idx, size_t wfr_idx, size_t gfr_idx, size_t alq_idx, size_t flo_idx);
+    double& mutableData(size_t thp_idx, size_t wfr_idx, size_t gfr_idx, size_t alq_idx, size_t flo_idx);
 
     static void scaleValues(std::vector<double>& values,
                             const double& scaling_factor);
