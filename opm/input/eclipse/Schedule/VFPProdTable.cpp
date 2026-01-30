@@ -366,7 +366,7 @@ VFPProdTable::VFPProdTable(const DeckKeyword& table,
 
                         for (std::size_t f = 0; f < nf; ++f) {
                             const double new_bhp = current_thp + deltas[f];
-                            (*this)(t, w, g, a, f) = new_bhp;
+                             this->mutableData(t, w, g, a, f) = new_bhp;
                         }
                     }
                 }
