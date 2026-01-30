@@ -15,6 +15,12 @@
 #	tests_hook      Do special processing before tests are compiled
 #	files_hook      Do special processing before final targets are added
 
+include(OpmCompile)
+include(UseOnlyNeeded)
+include(UseFastBuilds)
+include(UseWarnings)
+include(UseOptimization)
+include(UseOpenMP)
 
 # Various compiler extension checks
 include(OpmCompilerChecks)
@@ -138,27 +144,21 @@ execute_process (COMMAND
 	)
 
 # compile main library; pull in all required includes and libraries
-include (OpmCompile)
 opm_compile (${project})
 
 # don't import more libraries than we need to
-include (UseOnlyNeeded)
 use_only_needed(TARGET ${${project}_TARGET})
 
 # use tricks to do faster builds
-include(UseFastBuilds)
 use_fast_build(TARGET ${${project}_TARGET})
 
 # optionally turn on all warnings
-include(UseWarnings)
 use_warnings(TARGET ${${project}_TARGET})
 
 # additional optimization flags
-include(UseOptimization)
 use_additional_optimization(TARGET ${${project}_TARGET})
 
 # parallel programming
-include (UseOpenMP)
 use_openmp(TARGET ${${project}_TARGET})
 
 # installation of CMake modules to help user programs locate the library

@@ -30,6 +30,9 @@ if(USE_OPENMP)
   # enabling OpenMP is supposedly enough to make the compiler link with
   # the appropriate libraries
   find_package(OpenMP)
+  if(OpenMP_FOUND)
+    set(HAVE_OPENMP 1)
+  endif()
 endif()
 
 function(use_openmp)
@@ -45,7 +48,6 @@ function(use_openmp)
     if(TARGET OpenMP::OpenMP_C)
       target_link_libraries(${PARAM_TARGET} PUBLIC OpenMP::OpenMP_C)
     endif()
-    set(HAVE_OPENMP 1)
     # threading library (search for this *after* OpenMP)
     set(CMAKE_THREAD_PREFER_PTHREAD ON)
     find_package(Threads ${${opm}_QUIET})
