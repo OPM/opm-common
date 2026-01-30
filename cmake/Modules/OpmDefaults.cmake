@@ -1,45 +1,21 @@
 # - Default settings for the build
 
-include (UseCompVer)
-is_compiler_gcc_compatible ()
-include(TestCXXAcceptsFlag)
-
-macro (opm_defaults opm)
-
-  message("Processing opm_defaults ${opm}")
-  # if we are installing a development version (default when checking out of
-  # VCS), then remember which directories were used when configuring. package
-  # distribution should disable this option.
-  option (USE_RUNPATH "Embed original dependency paths in installed library" ON)
-  if (USE_RUNPATH)
-	if (CXX_COMPAT_GCC)
-	  check_cxx_accepts_flag ("-Wl,--enable-new-dtags" HAVE_RUNPATH)
-	  if (HAVE_RUNPATH)
-		list (APPEND ${opm}_LINKER_FLAGS "-Wl,--enable-new-dtags")
-	  endif (HAVE_RUNPATH)
-	endif ()
-	# set this to avoid CMake stripping it off again
-	set (CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
-  endif (USE_RUNPATH)
-
+macro(opm_defaults opm)
   # build release by default
   if (NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
-	set (CMAKE_BUILD_TYPE "Release")
-  endif (NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
+    set (CMAKE_BUILD_TYPE "Release")
+  endif()
 
   # default to building a static library, but let user override
   if (DEFINED BUILD_SHARED_LIBS)
-	if (BUILD_SHARED_LIBS)
-	  set (${opm}_LIBRARY_TYPE SHARED)
-	else (BUILD_SHARED_LIBS)
-	  set (${opm}_LIBRARY_TYPE STATIC)
-	endif (BUILD_SHARED_LIBS)
-  else (DEFINED BUILD_SHARED_LIBS)
-	set (${opm}_LIBRARY_TYPE STATIC)
-  endif (DEFINED BUILD_SHARED_LIBS)
-
-  # Use of OpenMP is considered experimental
-  set (USE_OPENMP_DEFAULT ON)
+    if (BUILD_SHARED_LIBS)
+      set (${opm}_LIBRARY_TYPE SHARED)
+    else()
+      set (${opm}_LIBRARY_TYPE STATIC)
+    endif()
+  else()
+    set(${opm}_LIBRARY_TYPE STATIC)
+  endif()
 endmacro (opm_defaults opm)
 
 # overwrite a cache entry's value, but keep docstring and type
