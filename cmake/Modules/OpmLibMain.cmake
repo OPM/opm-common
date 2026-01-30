@@ -27,6 +27,32 @@ include(UseWarnings)
 # needed for Debian installation scheme
 include (GNUInstallDirs)
 
+# This adds all optional parameters to targets
+function(opm_add_target_options)
+  cmake_parse_arguments(PARAM "" "TARGET" "" ${ARGN})
+  if(NOT PARAM_TARGET)
+    message(FATAL_ERROR "Function needs a TARGET parameter")
+  endif()
+
+  # don't import more libraries than we need to
+  use_only_needed(TARGET ${PARAM_TARGET})
+
+  # setup rpath options
+  use_runpath(TARGET ${PARAM_TARGET})
+
+  # use tricks to do faster builds
+  use_fast_build(TARGET ${PARAM_TARGET})
+
+  # optionally turn on all warnings
+  use_warnings(TARGET ${PARAM_TARGET})
+
+  # additional optimization flags
+  use_additional_optimization(TARGET ${PARAM_TARGET})
+
+  # parallel programming
+  use_threads(TARGET ${PARAM_TARGET})
+endfunction()
+
 # Various compiler extension checks
 include(OpmCompilerChecks)
 
@@ -45,7 +71,6 @@ linker_info ()
 
 # default settings: build static debug library
 include (OpmDefaults)
-opm_defaults (${project})
 message (STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
 # callback hook to setup additional dependencies
@@ -145,24 +170,13 @@ execute_process (COMMAND
 # compile main library; pull in all required includes and libraries
 opm_compile (${project})
 
-# don't import more libraries than we need to
-use_only_needed(TARGET ${${project}_TARGET})
-
-# setup rpath options
-use_runpath(TARGET ${${project}_TARGET})
-
-# use tricks to do faster builds
-use_fast_build(TARGET ${${project}_TARGET})
-
-# optionally turn on all warnings
-use_warnings(TARGET ${${project}_TARGET})
-
-# additional optimization flags
-use_additional_optimization(TARGET ${${project}_TARGET})
-
-# parallel programming
-use_threads(TARGET ${${project}_TARGET})
+# Parallel programming.
+# Note: This needs to be linked only to libraries and not binaries
+# when building with static libraries to get correct linker order.
+# Thus it is kept outside opm_add_target_options function.
 use_openmp(TARGET ${${project}_TARGET})
+
+opm_add_target_options(TARGET ${${project}_TARGET})
 
 # installation of CMake modules to help user programs locate the library
 include (OpmProject)
@@ -241,6 +255,3 @@ configure_file (
 
 # make sure updated version information is available in the source code
 include (UseVersion)
-
-# update the cache for next run
-write_back_options ()
