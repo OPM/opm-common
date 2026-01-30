@@ -20,8 +20,12 @@ include(UseOnlyNeeded)
 include(UseFastBuilds)
 include(UseOpenMP)
 include(UseOptimization)
+include(UseRunPath)
 include(UseThreads)
 include(UseWarnings)
+
+# needed for Debian installation scheme
+include (GNUInstallDirs)
 
 # Various compiler extension checks
 include(OpmCompilerChecks)
@@ -62,9 +66,6 @@ list (REMOVE_ITEM "${project}_LIBRARIES" "${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}")
 
 # detect if Boost is in a shared library
 include (UseDynamicBoost)
-
-# needed for Debian installation scheme
-include (GNUInstallDirs)
 
 # Run conditional file hook
 files_hook()
@@ -146,6 +147,9 @@ opm_compile (${project})
 
 # don't import more libraries than we need to
 use_only_needed(TARGET ${${project}_TARGET})
+
+# setup rpath options
+use_runpath(TARGET ${${project}_TARGET})
 
 # use tricks to do faster builds
 use_fast_build(TARGET ${${project}_TARGET})
