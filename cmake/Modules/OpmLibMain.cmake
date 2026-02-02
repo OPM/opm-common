@@ -47,6 +47,17 @@ function(opm_add_target_options)
 
   # additional optimization flags
   use_additional_optimization(TARGET ${PARAM_TARGET})
+
+  # output binaries in 'bin' folder
+  set_target_properties(${PARAM_TARGET}
+    PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY
+      bin
+    ARCHIVE_OUTPUT_DIRECTORY
+      lib
+    LIBRARY_OUTPUT_DIRECTORY
+      lib
+  )
 endfunction()
 
 # Various compiler extension checks
@@ -93,9 +104,6 @@ files_hook()
 
 # this module contains code to figure out which files is where
 include (OpmFiles)
-
-# put libraries in lib/
-opm_out_dirs ()
 
 # identify the compilation units in the library; sources in opm/,
 # tests files in tests/, examples in tutorials/ and examples/

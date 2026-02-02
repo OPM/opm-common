@@ -1,15 +1,5 @@
 # - Identify source code
 
-macro (opm_out_dirs)
-  # put libraries in lib/ (no multi-arch support in build tree)
-  if(MAIN_SOURCE_FILES)
-    set (CMAKE_LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/lib")
-    set (CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/lib")
-  endif()
-  set (CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/bin")
-  set (CMAKE_Fortran_MODULE_DIRECTORY "${PROJECT_BINARY_DIR}/CMakeFiles")
-endmacro (opm_out_dirs)
-
 macro (opm_sources opm)
   # this is necessary to set so that we know where we are going to
   # execute the test programs (and make datafiles available)
