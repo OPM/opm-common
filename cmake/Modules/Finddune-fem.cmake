@@ -11,6 +11,9 @@
 # This code is licensed under The GNU General Public License v3.0
 
 include (OpmPackage)
+
+set (CMAKE_THREAD_PREFER_PTHREAD TRUE)
+
 find_opm_package (
   # module name
   "dune-fem"
@@ -26,7 +29,8 @@ find_opm_package (
    ZLIB;
    ZOLTAN;
    METIS;
-   QuadMath
+   QuadMath;
+   Threads
   "
   # header to search for
   "dune/fem/space/shapefunctionset/legendre.hh"
@@ -48,10 +52,15 @@ int main (void) {
   "HAVE_DUNE_FEM;
    HAVE_METIS;
    HAVE_ZLIB;
-   HAVE_ZOLTAN
+   HAVE_ZOLTAN;
+   HAVE_PTHREAD
   ")
 
 #debug_find_vars ("dune-grid")
+
+if(CMAKE_USE_PTHREADS_INIT)
+  set(HAVE_PTHREAD 1)
+endif()
 
 # make version number available in config.h
 include (UseDuneVer)
