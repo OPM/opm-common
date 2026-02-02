@@ -706,7 +706,7 @@ WCONPROD
 /
 
 DATES             -- 3
- 10  JUL 2008 /
+ 11  JUL 2008 /
 /
 )");
     const auto es    = ::Opm::EclipseState { deck };

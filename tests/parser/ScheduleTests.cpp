@@ -1847,7 +1847,7 @@ WPIMULT
  'OP_2'  7.0 /
 /
 DATES             -- 7
- 20  FEB 2014 /
+ 21  FEB 2014 /
 /
 END
 )";
@@ -5643,7 +5643,69 @@ BOOST_AUTO_TEST_CASE(ScheduleDeckTest) {
     }
 }
 
+BOOST_AUTO_TEST_CASE(ScheduleDeck_DATES_RESTART_Too_Early_Missing_SKIPREST)
+{
+    const auto start = asTimePoint(TimeStampUTC { TimeStampUTC::YMD { 2025, 12, 24 }, 17, 0, 0, 0 });
 
+    auto restart = ScheduleRestartInfo{};
+    restart.time = asTimeT(TimeStampUTC { TimeStampUTC::YMD { 2026, 2, 3 }, 10, 0, 0, 0 });
+    restart.report_step = 42;
+    restart.skiprest = false;
+
+    const auto deck = Parser{}.parseString(R"(SCHEDULE
+DATES
+  3 FEB 2026 10:00:00 /
+  4 FEB 2026 00:00:00 /
+/
+END
+)");
+
+    BOOST_CHECK_THROW(ScheduleDeck(start, deck, restart), OpmInputError);
+}
+
+BOOST_AUTO_TEST_CASE(ScheduleDeck_DATES_RESTART_Have_SKIPREST)
+{
+    const auto start = asTimePoint(TimeStampUTC { TimeStampUTC::YMD { 2025, 12, 24 }, 17, 0, 0, 0 });
+
+    auto restart = ScheduleRestartInfo{};
+    restart.time = asTimeT(TimeStampUTC { TimeStampUTC::YMD { 2026, 2, 3 }, 10, 0, 0, 0 });
+    restart.report_step = 42;
+    restart.skiprest = true;
+
+    const auto deck = Parser{}.parseString(R"(SCHEDULE
+DATES
+  3 FEB 2026 10:00:00 /
+  4 FEB 2026 00:00:00 /
+/
+END
+)");
+
+    const auto sd = ScheduleDeck { start, deck, restart };
+
+    BOOST_CHECK_EQUAL(sd.size(), restart.report_step + std::size_t{2});
+}
+
+BOOST_AUTO_TEST_CASE(ScheduleDeck_DATES_RESTART_Later)
+{
+    const auto start = asTimePoint(TimeStampUTC { TimeStampUTC::YMD { 2025, 12, 24 }, 17, 0, 0, 0 });
+
+    auto restart = ScheduleRestartInfo{};
+    restart.time = asTimeT(TimeStampUTC { TimeStampUTC::YMD { 2026, 2, 3 }, 10, 0, 0, 0 });
+    restart.report_step = 42;
+    restart.skiprest = false;
+
+    const auto deck = Parser{}.parseString(R"(SCHEDULE
+DATES
+  3 FEB 2026 10:00:01 /
+  4 FEB 2026 00:00:00 /
+/
+END
+)");
+
+    const auto sd = ScheduleDeck { start, deck, restart };
+
+    BOOST_CHECK_EQUAL(sd.size(), restart.report_step + std::size_t{3});
+}
 
 BOOST_AUTO_TEST_CASE(WCONPROD_UDA) {
     const std::string deck_string = R"(
