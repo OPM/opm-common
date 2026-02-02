@@ -21,7 +21,6 @@ include(UseFastBuilds)
 include(UseOpenMP)
 include(UseOptimization)
 include(UseRunPath)
-include(UseThreads)
 include(UseWarnings)
 
 # needed for Debian installation scheme
@@ -48,9 +47,6 @@ function(opm_add_target_options)
 
   # additional optimization flags
   use_additional_optimization(TARGET ${PARAM_TARGET})
-
-  # parallel programming
-  use_threads(TARGET ${PARAM_TARGET})
 endfunction()
 
 # Various compiler extension checks
