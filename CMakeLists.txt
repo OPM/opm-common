@@ -250,63 +250,38 @@ endmacro()
 # OpmLibMain function. Here only the library dependency is implemented, the
 # bulk of the python configuration is further down in the file.
 if (OPM_ENABLE_PYTHON)
-  # We need to be compatible with older CMake versions
-  # that do not offer FindPython3
-  # e.g. Ubuntu LTS 18.04 uses cmake 3.10
-  if(${CMAKE_VERSION} VERSION_LESS "3.12.0")
-    find_package(PythonInterp REQUIRED)
-    if (OPM_ENABLE_EMBEDDED_PYTHON)
-      find_package(PythonLibs REQUIRED)
-      list(APPEND opm-common_LIBRARIES ${PYTHON_LIBRARIES})
-    endif()
-    if(PYTHON_VERSION_MAJOR LESS 3)
-      message(SEND_ERROR "OPM requires version 3 of Python but only version ${PYTHON_VERSION_STRING} was found")
-    endif()
+  # Be backwards compatible.
+  if(PYTHON_EXECUTABLE AND NOT Python3_EXECUTABLE)
     set(Python3_EXECUTABLE ${PYTHON_EXECUTABLE})
-    set(Python3_LIBRARIES ${PYTHON_LIBRARIES})
-    set(Python3_VERSION "${PYTHON_VERSION_STRING}")
-    set(Python3_VERSION_MINOR ${PYTHON_VERSION_MINOR})
-  else()
-    # Be backwards compatible.
-    if(PYTHON_EXECUTABLE AND NOT Python3_EXECUTABLE)
-      set(Python3_EXECUTABLE ${PYTHON_EXECUTABLE})
-    endif()
-    # We always need to search for Development as we use
-    # pybind11_add_module even if don't embed Python
-    if (NOT OPM_ENABLE_EMBEDDED_PYTHON)
-      if(${CMAKE_VERSION} VERSION_LESS "3.18.0")
-        find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
-      else()
-        find_package(Python3 REQUIRED COMPONENTS Interpreter Development.Module)
-      endif()
-    else()
-      if(${CMAKE_VERSION} VERSION_LESS "3.18.0")
-        find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
-      else()
-        find_package(Python3 REQUIRED COMPONENTS Interpreter Development.Embed Development.Module)
-      endif()
-      get_target_property(_lib_path Python3::Python IMPORTED_LOCATION)
-      set(PYTHON_LIBRARY ${_lib_path})
-      set(PYTHON_LIBRARIES {PYTHON_LIBRARY})
-      list(APPEND opm-common_LIBRARIES ${PYTHON_LIBRARY})
-      set(PYTHON_INCLUDE_DIRS ${Python3_INCLUDE_DIRS})
-    endif()
-    if(Python3_VERSION_MINOR LESS 3)
-      # Python native namespace packages requires python >= 3.3
-      message(SEND_ERROR "OPM requires python >= 3.3 but only version ${Python3_VERSION} was found")
-    endif()
-
-    # Compatibility settings for PythonInterp and PythonLibs
-    # used e.g. in FindCwrap, pybind11
-    set(PYTHON_EXECUTABLE ${Python3_EXECUTABLE})
-    # Directory to install common (for opm modules) python scripts
-    include (GNUInstallDirs)
-    set(OPM_PYTHON_COMMON_DIR "${CMAKE_INSTALL_DATAROOTDIR}/opm/python")
-    set(OPM_PROJECT_EXTRA_CODE_INTREE "${OPM_PROJECT_EXTRA_CODE_INTREE}
-                                       set(opm-common_PYTHON_COMMON_DIR ${PROJECT_SOURCE_DIR}/python)")
-    set(OPM_PROJECT_EXTRA_CODE_INSTALLED "${OPM_PROJECT_EXTRA_CODE_INSTALLED}
-                                         set(opm-common_PYTHON_COMMON_DIR ${CMAKE_INSTALL_PREFIX}/${OPM_PYTHON_COMMON_DIR})")
   endif()
+  # We always need to search for Development as we use
+  # pybind11_add_module even if don't embed Python
+  if (NOT OPM_ENABLE_EMBEDDED_PYTHON)
+    find_package(Python3 REQUIRED COMPONENTS Interpreter Development.Module)
+  else()
+    find_package(Python3 REQUIRED COMPONENTS Interpreter Development.Embed Development.Module)
+    get_target_property(_lib_path Python3::Python IMPORTED_LOCATION)
+    set(PYTHON_LIBRARY ${_lib_path})
+    set(PYTHON_LIBRARIES {PYTHON_LIBRARY})
+    list(APPEND opm-common_LIBRARIES ${PYTHON_LIBRARY})
+    set(PYTHON_INCLUDE_DIRS ${Python3_INCLUDE_DIRS})
+  endif()
+  if(Python3_VERSION_MINOR LESS 3)
+    # Python native namespace packages requires python >= 3.3
+    message(SEND_ERROR "OPM requires python >= 3.3 but only version ${Python3_VERSION} was found")
+  endif()
+
+  # Compatibility settings for PythonInterp and PythonLibs
+  # used e.g. in FindCwrap, pybind11
+  set(PYTHON_EXECUTABLE ${Python3_EXECUTABLE})
+  # Directory to install common (for opm modules) python scripts
+  include (GNUInstallDirs)
+  set(OPM_PYTHON_COMMON_DIR "${CMAKE_INSTALL_DATAROOTDIR}/opm/python")
+  set(OPM_PROJECT_EXTRA_CODE_INTREE "${OPM_PROJECT_EXTRA_CODE_INTREE}
+                                     set(opm-common_PYTHON_COMMON_DIR ${PROJECT_SOURCE_DIR}/python)")
+  set(OPM_PROJECT_EXTRA_CODE_INSTALLED "${OPM_PROJECT_EXTRA_CODE_INSTALLED}
+                                       set(opm-common_PYTHON_COMMON_DIR ${CMAKE_INSTALL_PREFIX}/${OPM_PYTHON_COMMON_DIR})")
+
   # We always need the PYTHON_INCLUDE_DIR. Unfortunately
   # When we build pypi packages CMake will fail to determine
   # these via the usual find_package(PythonLibs or
@@ -327,7 +302,6 @@ if (OPM_ENABLE_PYTHON)
     include(DownloadPyBind11)
   endif()
 endif()
-
 
 # all setup common to the OPM library modules is done here
 include (OpmLibMain)
