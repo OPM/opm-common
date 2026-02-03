@@ -1,0 +1,18 @@
+function(mpi_checks)
+  cmake_parse_arguments(PARAM "" "TARGET" "" ${ARGN})
+  if(NOT PARAM_TARGET)
+    message(FATAL_ERROR "Function needs a TARGET parameter")
+  endif()
+  get_target_property(TARGET_LINKS ${PARAM_TARGET} INTERFACE_LINK_LIBRARIES)
+  if("${TARGET_LINKS}" MATCHES "libmpi.so") # TODO: change to target name
+    # check for MPI version 2
+    include(CMakePushCheckState)
+    include(CheckFunctionExists)
+    cmake_push_check_state()
+    set(CMAKE_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES};${MPI_C_LIBRARIES})
+    set(CMAKE_REQUIRED_INCLUDES ${CMAKE_REQUIRED_INCLUDES};${MPI_C_INCLUDES})
+    check_function_exists(MPI_Finalized MPI_2)
+    cmake_pop_check_state()
+    target_compile_definitions(${PARAM_TARGET} PUBLIC MPI_2=${MPI_2})
+  endif()
+endfunction()
