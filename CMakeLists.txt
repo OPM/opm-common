@@ -51,15 +51,6 @@ include(Findopm-tests)
 # with the find module
 include (${project}-prereqs)
 
-# source_hook runs before config_hook and the former needs fmt, hence this
-# needs to be here.
-if(fmt_FOUND)
-  # OpmSatellites will not add the library, do it here.
-  list(APPEND opm-common_LIBRARIES fmt::fmt)
-else()
-  include(DownloadFmt)
-endif()
-
 if(OPM_ENABLE_EMBEDDED_PYTHON AND NOT OPM_ENABLE_PYTHON)
   # This needs to be here to run before source_hook
   message(WARNING "Inconsistent settings: OPM_ENABLE_PYTHON=OFF and "
@@ -73,6 +64,13 @@ include (CMakeLists_files.cmake)
 macro(${project}_prereqs_hook)
   if(NOT TARGET cjson)
     include(DownloadCjson)
+  endif()
+
+  if(TARGET fmt::fmt)
+    # OpmSatellites will not add the library, do it here.
+    list(APPEND opm-common_LIBRARIES fmt::fmt)
+  else()
+    include(DownloadFmt)
   endif()
 endmacro()
 
