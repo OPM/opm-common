@@ -56,7 +56,7 @@ macro (opm_compile_satellites opm satellite excl_all test_regexp)
 
   # compile each of these separately
   foreach (_sat_FILE IN LISTS ${satellite}_SOURCES)
-    if (NOT "${test_regexp}" STREQUAL "" AND NOT Boost_UNIT_TEST_FRAMEWORK_FOUND)
+    if (NOT "${test_regexp}" STREQUAL "" AND NOT TARGET Boost::unit_test_framework)
         continue()
     endif()
     get_filename_component (_sat_NAME "${_sat_FILE}" NAME_WE)
@@ -76,7 +76,7 @@ macro (opm_compile_satellites opm satellite excl_all test_regexp)
     # require anything else, so we don't have to figure out where it
     # should go in the library list
     if (NOT "${test_regexp}" STREQUAL "")
-      set (_test_lib "${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}")
+      set (_test_lib Boost::unit_test_framework)
     else (NOT "${test_regexp}" STREQUAL "")
       set (_test_lib "")
     endif (NOT "${test_regexp}" STREQUAL "")
