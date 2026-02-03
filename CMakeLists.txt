@@ -353,9 +353,11 @@ endif()
 if (ENABLE_MOCKSIM AND ENABLE_ECL_INPUT)
   add_library(mocksim
               msim/src/msim.cpp)
+  opm_add_target_options(TARGET mocksim)
   target_link_libraries(mocksim PUBLIC opmcommon)
   target_include_directories(mocksim PUBLIC msim/include)
   add_executable(msim examples/msim.cpp)
+  opm_add_target_options(TARGET msim)
   target_link_libraries(msim PRIVATE mocksim)
 
   if (Boost_UNIT_TEST_FRAMEWORK_FOUND)
