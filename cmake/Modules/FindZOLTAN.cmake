@@ -81,4 +81,20 @@ if(ZOLTAN_FOUND)
     "  Include directory: ${ZOLTAN_INCLUDE_DIRS}\n"
     "  Library directory: ${ZOLTAN_LIBRARIES}\n\n"
   )
+  if(NOT TARGET Zoltan::Zoltan)
+    add_library(Zoltan::Zoltan UNKNOWN IMPORTED)
+    set_target_properties(Zoltan::Zoltan
+      PROPERTIES
+      IMPORTED_LOCATION
+        ${ZOLTAN_LIBRARY}
+      INTERFACE_INCLUDE_DIRECTORIES
+        ${ZOLTAN_INCLUDE_DIR}
+    )
+    if(TARGET PTScotch::Scotch)
+      target_link_libraries(Zoltan::Zoltan INTERFACE PTScotch::Scotch)
+    endif()
+    if(TARGET PTScotch::PTScotch)
+      target_link_libraries(Zoltan::Zoltan INTERFACE PTScotch::PTScotch)
+    endif()
+  endif()
 endif()
