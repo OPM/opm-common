@@ -75,7 +75,7 @@ endif()
 # it should set various lists with the names of the files to include
 include (CMakeLists_files.cmake)
 
-macro (config_hook)
+macro(${project}_config_hook)
   if(ENABLE_ECL_INPUT)
     include_directories(${EXTRA_INCLUDES} ${PROJECT_BINARY_DIR})
     set(OPM_PROJECT_EXTRA_CODE_INTREE "${OPM_PROJECT_EXTRA_CODE_INTREE}
@@ -117,12 +117,9 @@ macro (config_hook)
     find_package(dune-common REQUIRED)
     opm_need_version_of ("dune-common")
   endif()
-endmacro (config_hook)
+endmacro()
 
-macro (prereqs_hook)
-endmacro (prereqs_hook)
-
-macro (sources_hook)
+macro(${project}_sources_hook)
   if(ENABLE_ECL_INPUT)
     # Keyword generation
     include(GenerateKeywords.cmake)
@@ -168,15 +165,9 @@ macro (sources_hook)
                                 PROPERTIES COMPILE_DEFINITIONS "${qm_defs}"
                                 COMPILE_OPTIONS "${qm_options}")
   endif()
-endmacro (sources_hook)
+endmacro()
 
-macro (fortran_hook)
-endmacro (fortran_hook)
-
-macro (files_hook)
-endmacro (files_hook)
-
-macro (tests_hook)
+macro(${project}_tests_hook)
   # Build the compare utilities
   if(ENABLE_ECL_INPUT)
     add_executable(compareECL
@@ -242,10 +233,7 @@ macro (tests_hook)
   if (dune-common_FOUND)
     list(APPEND tests_SOURCES ${DUNE_TEST_SOURCE_FILES})
   endif()
-endmacro (tests_hook)
-
-macro (install_hook)
-endmacro (install_hook)
+endmacro()
 
 # Used to append entries from one list to another.
 # The output list is suitable for use in setup.py subtitution

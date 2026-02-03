@@ -81,9 +81,9 @@ include (OpmDefaults)
 message (STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
 # callback hook to setup additional dependencies
-if (COMMAND prereqs_hook)
-  rereqs_hook ()
-endif (COMMAND prereqs_hook)
+if(COMMAND ${project}_prereqs_hook)
+  cmake_language(CALL ${project}_prereqs_hook)
+endif()
 
 # macro to set standard variables (INCLUDE_DIRS, LIBRARIES etc.)
 include (OpmFind)
@@ -100,8 +100,8 @@ list (REMOVE_ITEM "${project}_LIBRARIES" "${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}")
 include (UseDynamicBoost)
 
 # Run conditional file hook
-if(COMMAND files_hook)
-  files_hook()
+if(COMMAND ${project}_files_hook)
+  cmake_language(CALL ${project}_files_hook)
 endif()
 
 # this module contains code to figure out which files is where
@@ -112,9 +112,9 @@ include (OpmFiles)
 opm_sources (${project})
 
 # processing after base sources have been identified
-if (COMMAND sources_hook)
-  sources_hook ()
-endif (COMMAND sources_hook)
+if(COMMAND ${project}_sources_hook)
+  cmake_language(CALL ${project}_sources_hook)
+endif()
 
 # convenience macro to add version of another suite, e.g. dune-common
 macro (opm_need_version_of what)
@@ -126,9 +126,9 @@ macro (opm_need_version_of what)
 endmacro (opm_need_version_of suite module)
 
 # use this hook to add version macros before we write to config.h
-if (COMMAND config_hook)
-  onfig_hook ()
-endif (COMMAND config_hook)
+if(COMMAND ${project}_config_hook)
+  cmake_language(CALL ${project}_config_hook)
+endif()
 
 # create configuration header which describes available features
 # necessary to compile this library. singular version is the names that
@@ -153,9 +153,9 @@ configure_vars (
 )
 
 # call this hook to let it setup necessary conditions for Fortran support
-if (COMMAND fortran_hook)
-  fortran_hook ()
-endif (COMMAND fortran_hook)
+if(COMMAND ${project}_fortran_hook)
+  cmake_language(CALL ${project}_fortran_hook)
+endif()
 
 if (${project}_FORTRAN_IF)
   include (UseFortranWrappers)
@@ -219,9 +219,9 @@ add_custom_target (check
 )
 
 # special processing for tests
-if (COMMAND tests_hook)
-  tests_hook ()
-endif (COMMAND tests_hook)
+if(COMMAND ${project}_tests_hook)
+  cmake_language(CALL ${project}_tests_hook)
+endif()
 
 # make datafiles necessary for tests available in output directory
 opm_data (tests datafiles "${tests_DIR}")
@@ -233,9 +233,9 @@ opm_compile_satellites (${project} tests "${excl_all}" "${tests_REGEXP}")
 # installation target: copy the library together with debug and
 # configuration files to system directories
 include (OpmInstall)
-if (COMMAND install_hook)
-  install_hook ()
-endif (COMMAND install_hook)
+if(COMMAND ${project}_install_hook)
+  cmake_language(CALL ${project}_install_hook)
+endif()
 opm_install (${project})
 message (STATUS "This build defaults to installing in ${CMAKE_INSTALL_PREFIX}")
 
