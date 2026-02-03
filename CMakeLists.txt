@@ -70,6 +70,12 @@ endif()
 # it should set various lists with the names of the files to include
 include (CMakeLists_files.cmake)
 
+macro(${project}_prereqs_hook)
+  if(NOT TARGET cjson)
+    include(DownloadCjson)
+  endif()
+endmacro()
+
 macro(${project}_config_hook)
   if(ENABLE_ECL_INPUT)
     include_directories(${EXTRA_INCLUDES} ${PROJECT_BINARY_DIR})
@@ -291,8 +297,7 @@ endif()
 # all setup common to the OPM library modules is done here
 include (OpmLibMain)
 
-if(NOT TARGET cjson)
-  include(DownloadCjson)
+if(NOT cJSON_FOUND) # TODO: Remove once json is split out
   target_sources(opmcommon PRIVATE $<TARGET_OBJECTS:cjson>)
   target_include_directories(opmcommon PRIVATE ${CMAKE_BINARY_DIR}/_deps)
 endif()
