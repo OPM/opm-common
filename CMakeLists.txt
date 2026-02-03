@@ -93,18 +93,6 @@ macro(${project}_config_hook)
       set(OPM_PROJECT_EXTRA_CODE_INSTALLED "${OPM_PROJECT_EXTRA_CODE_INSTALLED}
                                             set(HAVE_ECL_OUTPUT 1)")
     endif()
-    # CMake 3.30.0 requires to find Boost in CONFIG mode or
-    # we need to use the correct search mode in previous cmake versions too.
-    # Otherwise not finding one boost component below will mark the previously found ones as not
-    # found again. (Code stolen from UseDynamicBoost.cmake)
-    if(Boost_DIR OR (CMAKE_VERSION VERSION_GREATER_EQUAL 3.30.0))
-      set(_Boost_CONFIG_MODE CONFIG)
-    endif()
-    find_package(Boost COMPONENTS filesystem regex unit_test_framework ${_Boost_CONFIG_MODE})
-
-    if (HAVE_DYNAMIC_BOOST_TEST)
-      set_target_properties(Boost::unit_test_framework PROPERTIES INTERFACE_COMPILE_DEFINITIONS BOOST_TEST_DYN_LINK=1)
-    endif()
   endif()
 
   include(CheckIncludeFile)
@@ -200,12 +188,11 @@ macro(${project}_tests_hook)
     list(APPEND opm-common_EXTRA_TARGETS compareECL rst_deck)
 
     # Add the tests
-    set(_libs opmcommon
-              ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+    set(_libs opmcommon Boost::unit_test_framework)
 
     opm_add_test(test_EclFilesComparator
       CONDITION
-        ENABLE_ECL_INPUT AND Boost_UNIT_TEST_FRAMEWORK_FOUND
+        ENABLE_ECL_INPUT AND TARGET Boost::unit_test_framework
       SOURCES
         tests/test_EclFilesComparator.cpp
         test_util/EclFilesComparator.cpp
@@ -217,7 +204,7 @@ macro(${project}_tests_hook)
 
     opm_add_test(test_EclRegressionTest
       CONDITION
-        ENABLE_ECL_INPUT AND Boost_UNIT_TEST_FRAMEWORK_FOUND
+        ENABLE_ECL_INPUT AND TARGET Boost::unit_test_framework
       SOURCES
         tests/test_EclRegressionTest.cpp
         test_util/EclFilesComparator.cpp
@@ -322,9 +309,8 @@ if (ENABLE_MOCKSIM AND ENABLE_ECL_INPUT)
   opm_add_target_options(TARGET msim)
   target_link_libraries(msim PRIVATE mocksim)
 
-  if (Boost_UNIT_TEST_FRAMEWORK_FOUND)
-    set(_libs mocksim opmcommon
-      ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+  if (TARGET Boost::unit_test_framework)
+    set(_libs mocksim opmcommon Boost::unit_test_framework)
 
     foreach( test test_msim test_msim_ACTIONX test_msim_EXIT)
       opm_add_test(${test} SOURCES tests/msim/${test}.cpp
@@ -369,7 +355,7 @@ if(dune-common_FOUND)
   endif()
 endif()
 
-if(Boost_UNIT_TEST_FRAMEWORK_FOUND)
+if(TARGET Boost::unit_test_framework)
   foreach(test ACTIONX EmbeddedPython PYACTION)
     set_tests_properties(${test} PROPERTIES
                          ENVIRONMENT "PYTHONPATH=${PROJECT_BINARY_DIR}/python:$ENV{PYTHONPATH}")

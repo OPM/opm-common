@@ -26,7 +26,7 @@ endif()
 
 list(APPEND opm-common_DEPS
       # various runtime library enhancements
-      "Boost 1.44.0 COMPONENTS unit_test_framework REQUIRED ${_Boost_CONFIG_MODE}"
+      "Boost 1.44.0 REQUIRED ${_Boost_CONFIG_MODE}"
       "cJSON"
       # Still it produces compile errors complaining that it
       # cannot format UDQVarType. Hence we use the same version
