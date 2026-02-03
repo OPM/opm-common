@@ -34,8 +34,11 @@
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 
 #include <chrono>
+#include <cstddef>
 #include <ctime>
+#include <string>
 #include <unordered_set>
+#include <vector>
 
 #include <fmt/format.h>
 #include <fmt/chrono.h>
@@ -44,91 +47,88 @@ namespace Opm {
 
 /*****************************************************************************/
 
-struct ScheduleDeckContext {
-    bool rst_skip;
-    time_point last_time;
+struct ScheduleDeckContext
+{
+    bool rst_skip{};
+    time_point last_time{};
 
-    ScheduleDeckContext(bool skip, time_point t) :
-        rst_skip(skip),
-        last_time(t)
+    ScheduleDeckContext(bool skip, const time_point& t)
+        : rst_skip (skip)
+        , last_time(t)
     {}
 };
 
-
-const KeywordLocation& ScheduleDeck::location() const {
+const KeywordLocation& ScheduleDeck::location() const
+{
     return this->m_location;
 }
 
-
-std::size_t ScheduleDeck::restart_offset() const {
+std::size_t ScheduleDeck::restart_offset() const
+{
     return this->m_restart_offset;
 }
 
-
-ScheduleDeck::ScheduleDeck(time_point start_time, const Deck& deck, const ScheduleRestartInfo& rst_info) {
-    const std::unordered_set<std::string> skiprest_include = {"VFPPROD", "VFPINJ", "RPTSCHED", "RPTRST", "TUNING", "MESSAGES"};
+ScheduleDeck::ScheduleDeck(const time_point&          start_time,
+                           const Deck&                deck,
+                           const ScheduleRestartInfo& rst_info)
+{
+    const auto skiprest_include = std::unordered_set<std::string> {
+        "VFPPROD", "VFPINJ", "RPTSCHED", "RPTRST", "TUNING", "MESSAGES",
+    };
 
     this->m_restart_time = TimeService::from_time_t(rst_info.time);
     this->m_restart_offset = rst_info.report_step;
     this->skiprest = rst_info.skiprest;
+
     if (this->m_restart_offset > 0) {
-        for (std::size_t it = 0; it < this->m_restart_offset; it++) {
-            if (it == 0)
-                this->m_blocks.emplace_back(KeywordLocation{}, ScheduleTimeType::START, start_time);
-            else
-                this->m_blocks.emplace_back(KeywordLocation{}, ScheduleTimeType::RESTART, start_time);
+        for (auto it = 0*this->m_restart_offset; it != this->m_restart_offset; ++it) {
+            const auto time_type = (it == 0)
+                ? ScheduleTimeType::START
+                : ScheduleTimeType::RESTART;
+
+            this->m_blocks.emplace_back(KeywordLocation{}, time_type, start_time);
             this->m_blocks.back().end_time(start_time);
         }
-        if (!this->skiprest) {
+
+        if (! this->skiprest) {
             this->m_blocks.back().end_time(this->m_restart_time);
-            this->m_blocks.emplace_back(KeywordLocation{}, ScheduleTimeType::RESTART, this->m_restart_time);
+            this->m_blocks.emplace_back(KeywordLocation{},
+                                        ScheduleTimeType::RESTART,
+                                        this->m_restart_time);
         }
-    } else
-        this->m_blocks.emplace_back(KeywordLocation{}, ScheduleTimeType::START, start_time);
+    }
+    else {
+        this->m_blocks.emplace_back(KeywordLocation{},
+                                    ScheduleTimeType::START,
+                                    start_time);
+    }
 
-    ScheduleDeckContext context(this->skiprest, this->m_blocks.back().start_time());
-    for( const auto& keyword : SCHEDULESection(deck)) {
-        if (keyword.name() == "DATES") {
-            for (size_t recordIndex = 0; recordIndex < keyword.size(); recordIndex++) {
-                const auto &record = keyword.getRecord(recordIndex);
-                std::time_t nextTime;
+    auto context = ScheduleDeckContext {
+        this->skiprest, this->m_blocks.back().start_time()
+    };
 
-                try {
-                    nextTime = TimeService::timeFromEclipse(record);
-                } catch (const std::exception& e) {
-                    const OpmInputError opm_error { e, keyword.location() } ;
-                    OpmLog::error(opm_error.what());
-                    std::throw_with_nested(opm_error);
-                }
-
-                const auto currenTime = std::chrono::system_clock::to_time_t(context.last_time);
-                if (nextTime < currenTime) {
-                    auto msg = fmt::format(
-                               "Keyword DATES specifies a time {:%d-%b-%Y %H:%M:%S} earlier than the end time of previous report step {:%d-%b-%Y %H:%M:%S}",
-                               fmt::gmtime(nextTime), fmt::gmtime(currenTime));
-                    if (rst_info.time > 0 && !this->skiprest) { // the situation with SKIPREST is handled in function add_block
-                        msg += "\nin a RESTARTing simulation, Please check whether SKIPREST is supposed to be used for this circumstance";
-                    }
-                    throw OpmInputError(msg, keyword.location());
-                }
-                this->add_block(ScheduleTimeType::DATES, TimeService::from_time_t( nextTime ), context, keyword.location());
-            }
-            continue;
-        }
-        if (keyword.name() == "TSTEP") {
-            this->add_TSTEP(keyword, context);
-            continue;
-        }
-
+    for (const auto& keyword : SCHEDULESection { deck }) {
         if (keyword.name() == "SCHEDULE") {
             this->m_location = keyword.location();
             continue;
         }
 
+        if (keyword.name() == "DATES") {
+            this->handleDATES(keyword, rst_info.time, context);
+            continue;
+        }
+
+        if (keyword.name() == "TSTEP") {
+            this->add_TSTEP(keyword, context);
+            continue;
+        }
+
         if (context.rst_skip) {
-            if (skiprest_include.count(keyword.name()) != 0)
-                this->m_blocks[0].push_back(keyword);
-        } else {
+            if (skiprest_include.find(keyword.name()) != skiprest_include.end()) {
+                this->m_blocks.front().push_back(keyword);
+            }
+        }
+        else {
             this->m_blocks.back().push_back(keyword);
         }
     }
@@ -169,6 +169,7 @@ namespace {
 
         const auto* keyword = (time_type == ScheduleTimeType::DATES)
             ? "DATES" : "TSTEP";
+
         const auto* record = (time_type == ScheduleTimeType::DATES)
             ? "record" : "report step";
 
@@ -179,109 +180,117 @@ namespace {
     }
 }
 
-void ScheduleDeck::add_block(ScheduleTimeType time_type,
-                             const time_point& t,
-                             ScheduleDeckContext& context,
-                             const KeywordLocation& location)
+void ScheduleDeck::add_block(const ScheduleTimeType time_type,
+                             const time_point&      t,
+                             const KeywordLocation& location,
+                             ScheduleDeckContext&   context)
 {
     context.last_time = t;
-    if (context.rst_skip) {
-        if (t < this->m_restart_time)
-            return;
 
-        if (t == this->m_restart_time)
+    if (context.rst_skip) {
+        if (t < this->m_restart_time) {
+            return;
+        }
+
+        if (t == this->m_restart_time) {
             context.rst_skip = false;
+        }
 
         if (t > this->m_restart_time) {
             if (this->skiprest) {
                 const auto reason =
                     format_skiprest_error(time_type, this->m_restart_time, t);
 
-                throw OpmInputError(reason, location);
+                throw OpmInputError { reason, location };
             }
+
             context.rst_skip = false;
         }
     }
+
     this->m_blocks.back().end_time(t);
-    this->m_blocks.emplace_back( location, time_type, t );
+    this->m_blocks.emplace_back(location, time_type, t);
 }
 
+void ScheduleDeck::add_TSTEP(const DeckKeyword& TSTEPKeyword,
+                             ScheduleDeckContext& context)
+{
+    const auto& item = TSTEPKeyword.getRecord(0).getItem(0);
 
-void ScheduleDeck::add_TSTEP(const DeckKeyword& TSTEPKeyword, ScheduleDeckContext& context) {
-    const auto &item = TSTEPKeyword.getRecord(0).getItem(0);
-    for (size_t itemIndex = 0; itemIndex < item.data_size(); itemIndex++) {
-        {
-            const auto tstep = item.get<double>(itemIndex);
-            if (tstep < 0) {
-                const auto msg = fmt::format("a negative TSTEP value {} is input", tstep);
-                throw OpmInputError(msg, TSTEPKeyword.location());
-            }
+    for (auto itemIndex = 0*item.data_size(); itemIndex < item.data_size(); ++itemIndex) {
+        if (const auto tstep = item.get<double>(itemIndex); tstep < 0.0) {
+            const auto msg = fmt::format("a negative TSTEP value {} is input", tstep);
+
+            throw OpmInputError { msg, TSTEPKeyword.location() };
         }
-        // The duration_cast on the next line is converting to
-        // millisecond accuracy, which is what is used for storing
-        // times internally.  This should be sufficient also for lab
-        // scale simulations, so the duration_cast is left in the code
-        // (converting from float to integer representation generally
-        // required such a cast).
+
+        // The duration_cast on the next line is converting to millisecond
+        // accuracy, which is what is used for storing times internally.
+        // This should be sufficient also for lab scale simulations, so the
+        // duration_cast is left in the code (converting from float to
+        // integer representation generally required such a cast).
+
         auto next_time = context.last_time + std::chrono::duration_cast<time_point::duration>(std::chrono::duration<double>(item.getSIDouble(itemIndex)));
-        this->add_block(ScheduleTimeType::TSTEP, next_time, context, TSTEPKeyword.location());
+
+        this->add_block(ScheduleTimeType::TSTEP, next_time,
+                        TSTEPKeyword.location(), context);
     }
 }
 
-
-double ScheduleDeck::seconds(std::size_t timeStep) const {
-    if (this->m_blocks.empty())
+double ScheduleDeck::seconds(const std::size_t timeStep) const
+{
+    if (this->m_blocks.empty()) {
         return 0;
+    }
 
-    if (timeStep >= this->m_blocks.size())
-        throw std::logic_error(fmt::format("seconds({}) - invalid timeStep. Valid range [0,{}>", timeStep, this->m_blocks.size()));
+    if (timeStep >= this->m_blocks.size()) {
+        throw std::logic_error {
+            fmt::format("seconds({}) - invalid timeStep. "
+                        "Expected time step in range range 0 .. {}-1",
+                        timeStep, this->m_blocks.size())
+        };
+    }
 
-    std::chrono::duration<double> elapsed = this->m_blocks[timeStep].start_time() - this->m_blocks[0].start_time();
+    const std::chrono::duration<double> elapsed =
+        this->m_blocks[timeStep].start_time() - this->m_blocks[0].start_time();
+
     return elapsed.count();
 }
 
-
-ScheduleDeck::ScheduleDeck() {
-    time_point start_time;
+ScheduleDeck::ScheduleDeck()
+{
+    time_point start_time{};
     this->m_blocks.emplace_back(KeywordLocation{}, ScheduleTimeType::START, start_time);
 }
 
-
-ScheduleBlock& ScheduleDeck::operator[](const std::size_t index) {
+ScheduleBlock& ScheduleDeck::mutableKeywordBlock(const std::size_t index)
+{
     return this->m_blocks.at(index);
 }
 
-const ScheduleBlock& ScheduleDeck::operator[](const std::size_t index) const {
+const ScheduleBlock& ScheduleDeck::operator[](const std::size_t index) const
+{
     return this->m_blocks.at(index);
 }
 
-std::size_t ScheduleDeck::size() const {
-    return this->m_blocks.size();
-}
-
-std::vector<ScheduleBlock>::const_iterator ScheduleDeck::begin() const {
-    return this->m_blocks.begin();
-}
-
-std::vector<ScheduleBlock>::const_iterator ScheduleDeck::end() const {
-    return this->m_blocks.end();
-}
-
-
-bool ScheduleDeck::operator==(const ScheduleDeck& other) const {
-    return this->m_restart_time == other.m_restart_time &&
-           this->m_restart_offset == other.m_restart_offset &&
-           this->m_blocks == other.m_blocks;
+bool ScheduleDeck::operator==(const ScheduleDeck& other) const
+{
+    return (this->m_restart_time == other.m_restart_time)
+        && (this->m_restart_offset == other.m_restart_offset)
+        && (this->m_blocks == other.m_blocks)
+        ;
 }
 
 ScheduleDeck ScheduleDeck::serializationTestObject()
 {
     ScheduleDeck deck;
+
     deck.m_restart_time = TimeService::from_time_t( asTimeT( TimeStampUTC( 2013, 12, 12 )));
     deck.m_restart_offset = 123;
     deck.m_location = KeywordLocation::serializationTestObject();
     deck.m_blocks = { ScheduleBlock::serializationTestObject(), ScheduleBlock::serializationTestObject() };
     deck.skiprest = true;
+
     return deck;
 }
 
@@ -303,5 +312,56 @@ void ScheduleDeck::clearKeywords(const std::size_t idx)
     m_blocks[idx].clearKeywords();
 }
 
+void ScheduleDeck::handleDATES(const DeckKeyword&   dates,
+                               const std::time_t    restart_time,
+                               ScheduleDeckContext& context)
+{
+    for (const auto& record : dates) {
+        auto nextTime = std::time_t{};
 
+        try {
+            nextTime = TimeService::timeFromEclipse(record);
+        }
+        catch (const std::exception& e) {
+            const auto opm_error = OpmInputError {
+                e, dates.location()
+            };
+
+            OpmLog::error(opm_error.what());
+
+            std::throw_with_nested(opm_error);
+        }
+
+        const auto currentTime = TimeService::to_time_t(context.last_time);
+
+        if (nextTime < currentTime) {
+            const auto* prevstepID = (restart_time > 0)
+                ? "restart time"
+                : "end time of previous report step";
+
+            auto msg = fmt::format("Keyword DATES includes time "
+                                   "{:%d-%b-%Y %H:%M:%S} which "
+                                   "is earlier than the {}, "
+                                   "{:%d-%b-%Y %H:%M:%S}.",
+                                   fmt::gmtime(nextTime),
+                                   prevstepID,
+                                   fmt::gmtime(currentTime));
+
+            if ((restart_time > 0) && !this->skiprest) {
+                // SKIPREST is handled in member function
+                // add_block().
+                msg += std::string { R"(
+Is keyword SKIPREST missing for the restarted simulation run?)"
+                        };
+            }
+
+            throw OpmInputError { msg, dates.location() };
+        }
+
+        this->add_block(ScheduleTimeType::DATES,
+                        TimeService::from_time_t(nextTime),
+                        dates.location(), context);
+    }
 }
+
+} // namespace Opm

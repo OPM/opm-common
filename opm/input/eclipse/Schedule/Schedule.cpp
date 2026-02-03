@@ -695,7 +695,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
 
         for (auto report_step = load_start; report_step < load_end; report_step++) {
             std::size_t keyword_index = 0;
-            auto& block = this->m_sched_deck[report_step];
+            const auto& block = this->m_sched_deck[report_step];
             auto time_type = block.time_type();
             if (time_type == ScheduleTimeType::DATES || time_type == ScheduleTimeType::TSTEP) {
                 const auto& start_date = Schedule::formatDate(std::chrono::system_clock::to_time_t(block.start_time()));
@@ -1777,7 +1777,7 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
 
         this->snapshots.resize(reportStep + 1);
 
-        auto& input_block = this->m_sched_deck[reportStep];
+        auto& input_block = this->m_sched_deck.mutableKeywordBlock(reportStep);
         ScheduleLogger logger(ScheduleLogger::select_stream(true, false), // will log to OpmLog::debug
                               prefix, this->m_sched_deck.location());
 
@@ -1883,7 +1883,7 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
                                   prefix, action.name()));
 
         this->snapshots.resize(reportStep + 1);
-        auto& input_block = this->m_sched_deck[reportStep];
+        auto& input_block = this->m_sched_deck.mutableKeywordBlock(reportStep);
 
         std::unordered_map<std::string, double> wpimult_global_factor;
         for (const auto& keyword : action) {
