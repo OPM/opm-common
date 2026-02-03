@@ -18,6 +18,7 @@
 include(OpmCompile)
 include(UseOnlyNeeded)
 include(UseFastBuilds)
+include(MPIChecks)
 include(UseOpenMP)
 include(UseOptimization)
 include(UseRunPath)
@@ -180,6 +181,9 @@ opm_compile (${project})
 # when building with static libraries to get correct linker order.
 # Thus it is kept outside opm_add_target_options function.
 use_openmp(TARGET ${${project}_TARGET})
+
+# MPI version probes
+mpi_checks(TARGET ${${project}_TARGET})
 
 opm_add_target_options(TARGET ${${project}_TARGET})
 
