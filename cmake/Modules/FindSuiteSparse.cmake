@@ -33,7 +33,7 @@
 # Copyright (C) 2012 Uni Research AS
 # This file is licensed under the GNU General Public License v3.0
 
-function (try_compile_umfpack varname)
+function(try_compile_umfpack varname)
   include (CMakePushCheckState)
   include (CheckCSourceCompiles)
   cmake_push_check_state ()
@@ -56,265 +56,303 @@ int main (void) {
   umfpack_timer ();
   return 0;
 }" ${varname})
-  cmake_pop_check_state ()
-  set (${varname} "${${varname}}" PARENT_SCOPE)
-endfunction (try_compile_umfpack varname)
+  cmake_pop_check_state()
+  set(${varname} "${${varname}}" PARENT_SCOPE)
+endfunction()
 
 # variables to pass on to other packages
-if (FIND_QUIETLY)
-  set (SuiteSparse_QUIET "QUIET")
-else (FIND_QUIETLY)
-  set (SuiteSparse_QUIET "")
-endif (FIND_QUIETLY)
+if(FIND_QUIETLY)
+  set(SuiteSparse_QUIET "QUIET")
+else()
+  set(SuiteSparse_QUIET "")
+endif()
 
 # we need to link to BLAS and LAPACK
-if (NOT BLAS_FOUND)
-  find_package (BLAS ${SuiteSparse_QUIET} REQUIRED)
-endif (NOT BLAS_FOUND)
-if (NOT LAPACK_FOUND)
-  find_package (LAPACK ${SuiteSparse_QUIET} REQUIRED)
-endif (NOT LAPACK_FOUND)
+if(NOT BLAS_FOUND)
+  find_package(BLAS ${SuiteSparse_QUIET} REQUIRED)
+endif()
+if(NOT LAPACK_FOUND)
+  find_package(LAPACK ${SuiteSparse_QUIET} REQUIRED)
+endif()
 
 # we also need the math part of the runtime library
-find_library (MATH_LIBRARY NAMES "m")
-set (SuiteSparse_EXTRA_LIBS ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES} ${MATH_LIBRARY})
+find_library(MATH_LIBRARY NAMES "m")
+set(SuiteSparse_EXTRA_LIBS ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES} ${MATH_LIBRARY})
 
 # if we don't get any further clues about where to look, then start
 # roaming around the system
-set (_no_default_path "")
+set(_no_default_path "")
 
 # search system directories by default
-set (SuiteSparse_SEARCH_PATH)
+set(SuiteSparse_SEARCH_PATH)
 
 # pick up paths from the environment if specified there; these replace the
 # pre-defined paths so that we don't accidentially pick up old stuff
-if (NOT $ENV{SuiteSparse_DIR} STREQUAL "")
-  set (SuiteSparse_SEARCH_PATH "$ENV{SuiteSparse_DIR}")
-endif (NOT $ENV{SuiteSparse_DIR} STREQUAL "")
-if (SuiteSparse_DIR)
-  set (SuiteSparse_SEARCH_PATH "${SuiteSparse_DIR}")
-endif (SuiteSparse_DIR)
+if(NOT $ENV{SuiteSparse_DIR} STREQUAL "")
+  set(SuiteSparse_SEARCH_PATH "$ENV{SuiteSparse_DIR}")
+endif()
+
+if(SuiteSparse_DIR)
+  set(SuiteSparse_SEARCH_PATH "${SuiteSparse_DIR}")
+endif()
+
 # CMake uses _DIR suffix as default for config-mode files; it is unlikely
 # that we are building SuiteSparse ourselves; use _ROOT suffix to specify
 # location to pre-canned binaries
-if (NOT $ENV{SuiteSparse_ROOT} STREQUAL "")
-  set (SuiteSparse_SEARCH_PATH "$ENV{SuiteSparse_ROOT}")
-endif (NOT $ENV{SuiteSparse_ROOT} STREQUAL "")
-if (SuiteSparse_ROOT)
-  set (SuiteSparse_SEARCH_PATH "${SuiteSparse_ROOT}")
-endif (SuiteSparse_ROOT)
+if(NOT $ENV{SuiteSparse_ROOT} STREQUAL "")
+  set(SuiteSparse_SEARCH_PATH "$ENV{SuiteSparse_ROOT}")
+endif(NOT $ENV{SuiteSparse_ROOT} STREQUAL "")
+
+if(SuiteSparse_ROOT)
+  set(SuiteSparse_SEARCH_PATH "${SuiteSparse_ROOT}")
+endif()
+
 # most commonly, we use the uppercase version of this variable
-if (SUITESPARSE_ROOT)
+if(SUITESPARSE_ROOT)
   set (SuiteSparse_SEARCH_PATH "${SUITESPARSE_ROOT}")
-endif (SUITESPARSE_ROOT)
+endif()
 
 # if we have specified a search path, then confine ourselves to that
-if (SuiteSparse_SEARCH_PATH)
-  set (_no_default_path "NO_DEFAULT_PATH")
-endif (SuiteSparse_SEARCH_PATH)
+if(SuiteSparse_SEARCH_PATH)
+  set(_no_default_path "NO_DEFAULT_PATH")
+endif()
 
 # transitive closure of dependencies; after this SuiteSparse_MODULES is the
 # full list of modules that must be found to satisfy the user's link demands
-set (SuiteSparse_MODULES ${SuiteSparse_FIND_COMPONENTS})
-list (TRANSFORM SuiteSparse_MODULES TOUPPER)
-list (FIND SuiteSparse_MODULES "UMFPACK" UMFPACK_DESIRED)
-if (NOT UMFPACK_DESIRED EQUAL -1)
-  list (APPEND SuiteSparse_MODULES AMD CHOLMOD)
-endif (NOT UMFPACK_DESIRED EQUAL -1)
-list (FIND SuiteSparse_MODULES "CHOLMOD" CHOLMOD_DESIRED)
-if (NOT CHOLMOD_DESIRED EQUAL -1)
-  list (APPEND SuiteSparse_MODULES AMD CAMD COLAMD)
-endif (NOT CHOLMOD_DESIRED EQUAL -1)
-if (SuiteSparse_MODULES)
-  list (REMOVE_DUPLICATES SuiteSparse_MODULES)
-endif (SuiteSparse_MODULES)
+set(SuiteSparse_MODULES ${SuiteSparse_FIND_COMPONENTS})
+list(TRANSFORM SuiteSparse_MODULES TOUPPER)
+list(FIND SuiteSparse_MODULES "UMFPACK" UMFPACK_DESIRED)
+if(NOT UMFPACK_DESIRED EQUAL -1)
+  list(APPEND SuiteSparse_MODULES AMD CHOLMOD)
+endif()
+
+list(FIND SuiteSparse_MODULES "CHOLMOD" CHOLMOD_DESIRED)
+if(NOT CHOLMOD_DESIRED EQUAL -1)
+  list(APPEND SuiteSparse_MODULES AMD CAMD COLAMD)
+endif()
+
+if(SuiteSparse_MODULES)
+  list(REMOVE_DUPLICATES SuiteSparse_MODULES)
+endif()
 
 # if someone else already have found all the packages for us, then don't do anything
-set (SuiteSparse_EVERYTHING_FOUND TRUE)
-foreach (MODULE IN LISTS SuiteSparse_MODULES)
-  if (NOT SuiteSparse_${MODULE}_FOUND)
-	set (SuiteSparse_EVERYTHING_FOUND FALSE)
-	break ()
-  endif (NOT SuiteSparse_${MODULE}_FOUND)
-endforeach (MODULE)
-if (SuiteSparse_EVERYTHING_FOUND)
+set(SuiteSparse_EVERYTHING_FOUND TRUE)
+foreach(MODULE IN LISTS SuiteSparse_MODULES)
+  if(NOT SuiteSparse_${MODULE}_FOUND)
+    set(SuiteSparse_EVERYTHING_FOUND FALSE)
+    break()
+  endif()
+endforeach()
+if(SuiteSparse_EVERYTHING_FOUND)
   return ()
-endif (SuiteSparse_EVERYTHING_FOUND)
+endif()
 
 # only search in architecture-relevant directory
-if (CMAKE_SIZEOF_VOID_P)
-  math (EXPR _BITS "8 * ${CMAKE_SIZEOF_VOID_P}")
-endif (CMAKE_SIZEOF_VOID_P)
+if(CMAKE_SIZEOF_VOID_P)
+  math(EXPR _BITS "8 * ${CMAKE_SIZEOF_VOID_P}")
+endif()
 
 # if we are told to link SuiteSparse statically, add these parts
 # to the name so we always match only that particular type of lib
-option (SUITESPARSE_USE_STATIC "Link SuiteSparse statically" OFF)
+option(SUITESPARSE_USE_STATIC "Link SuiteSparse statically" OFF)
 mark_as_advanced (SUITESPARSE_USE_STATIC)
-if (SUITESPARSE_USE_STATIC)
-  set (_pref_ "${CMAKE_STATIC_LIBRARY_PREFIX}")
-  set (_suff_ "${CMAKE_STATIC_LIBRARY_SUFFIX}")
-else (SUITESPARSE_USE_STATIC)
-  set (_pref_ "")
-  set (_suff_ "")
-endif (SUITESPARSE_USE_STATIC)
+if(SUITESPARSE_USE_STATIC)
+  set(_pref_ "${CMAKE_STATIC_LIBRARY_PREFIX}")
+  set(_suff_ "${CMAKE_STATIC_LIBRARY_SUFFIX}")
+else()
+  set(_pref_ "")
+  set(_suff_ "")
+endif()
 
 # if SuiteSparse >= 4.0 we must also link with libsuitesparseconfig
 # assume that this is the case if we find the library; otherwise just
 # ignore it (older versions don't have a file named like this)
-find_library (config_LIBRARY
-  NAMES "${_pref_}suitesparseconfig${_suff_}"
-  PATHS ${SuiteSparse_SEARCH_PATH}
-  PATH_SUFFIXES ".libs" "lib" "lib${_BITS}" "lib/${CMAKE_LIBRARY_ARCHITECTURE}" "lib/ufsparse"
+find_library(config_LIBRARY
+  NAMES
+    ${_pref_}suitesparseconfig${_suff_}
+  PATHS
+    ${SuiteSparse_SEARCH_PATH}
+  PATH_SUFFIXES
+    .libs
+    lib
+    lib${_BITS}
+    lib/${CMAKE_LIBRARY_ARCHITECTURE}
+    lib/ufsparse
   ${_no_default_path}
-  )
-if (config_LIBRARY)
-  list (APPEND SuiteSparse_EXTRA_LIBS ${config_LIBRARY})
+)
+
+if(config_LIBRARY)
+  list(APPEND SuiteSparse_EXTRA_LIBS ${config_LIBRARY})
   # POSIX.1-2001 REALTIME portion require us to link this library too for
   # clock_gettime() which is used by suitesparseconfig
-  if ("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
-	list (APPEND SuiteSparse_EXTRA_LIBS "-lrt")
-  endif ("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
-endif (config_LIBRARY)
+  if("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
+    list(APPEND SuiteSparse_EXTRA_LIBS "-lrt")
+  endif()
+endif()
 
 # search filesystem for each of the module individually
-foreach (MODULE IN LISTS SuiteSparse_MODULES)
-  string (TOLOWER ${MODULE} _module_lower)
+foreach(MODULE IN LISTS SuiteSparse_MODULES)
+  string(TOLOWER ${MODULE} _module_lower)
   # search for files which implements this module
-  find_path (${MODULE}_INCLUDE_DIR
-	NAMES ${_module_lower}.h
-	PATHS ${SuiteSparse_SEARCH_PATH}
-	PATH_SUFFIXES "include" "include/suitesparse" "include/ufsparse" "${MODULE}/Include"
-	${_no_default_path}
-	)
+  find_path(${MODULE}_INCLUDE_DIR
+    NAMES
+      ${_module_lower}.h
+    PATHS
+      ${SuiteSparse_SEARCH_PATH}
+    PATH_SUFFIXES
+      include
+      include/suitesparse
+      include/ufsparse
+      ${MODULE}/Include
+    ${_no_default_path}
+  )
 
-  find_library (${MODULE}_LIBRARY
-	NAMES "${_pref_}${_module_lower}${_suff_}"
-	PATHS ${SuiteSparse_SEARCH_PATH}
-	PATH_SUFFIXES "lib/.libs" "lib" "lib${_BITS}" "lib/${CMAKE_LIBRARY_ARCHITECTURE}" "lib/ufsparse" "${MODULE}/Lib"
-	${_no_default_path}
-	)
+  find_library(${MODULE}_LIBRARY
+    NAMES
+      ${_pref_}${_module_lower}${_suff_}
+    PATHS
+      ${SuiteSparse_SEARCH_PATH}
+    PATH_SUFFIXES
+      lib/.libs
+      lib
+      lib${_BITS}
+      lib/${CMAKE_LIBRARY_ARCHITECTURE}
+      lib/ufsparse
+      ${MODULE}/Lib
+    ${_no_default_path}
+  )
   # start out by including the module itself; other dependencies will be added later
-  set (${MODULE}_INCLUDE_DIRS ${${MODULE}_INCLUDE_DIR})
-  set (${MODULE}_LIBRARIES ${${MODULE}_LIBRARY})
-endforeach (MODULE)
+  set(${MODULE}_INCLUDE_DIRS ${${MODULE}_INCLUDE_DIR})
+  set(${MODULE}_LIBRARIES ${${MODULE}_LIBRARY})
+endforeach()
 
 # insert any inter-modular dependencies here
-if (CHOLMOD_LIBRARY)
+if(CHOLMOD_LIBRARY)
   list (APPEND CHOLMOD_LIBRARIES ${AMD_LIBRARIES} ${COLAMD_LIBRARIES})
   # optional libraries; don't insert any -NOT_FOUND paths
-  if (CAMD_LIBRARY)
-	list (APPEND CHOLMOD_LIBRARIES ${CAMD_LIBRARIES})
-  endif (CAMD_LIBRARY)
-  if (CCOLAMD_LIBRARY)
-	list (APPEND CHOLMOD_LIBRARIES ${CCOLAMD_LIBRARIES})
-  endif (CCOLAMD_LIBRARY)
-  list (REVERSE CHOLMOD_LIBRARIES)
+  if(CAMD_LIBRARY)
+    list(APPEND CHOLMOD_LIBRARIES ${CAMD_LIBRARIES})
+  endif()
+  if(CCOLAMD_LIBRARY)
+    list(APPEND CHOLMOD_LIBRARIES ${CCOLAMD_LIBRARIES})
+  endif()
+  list(REVERSE CHOLMOD_LIBRARIES)
   # always remove the *first* library from the list
-  list (REMOVE_DUPLICATES CHOLMOD_LIBRARIES)
-  list (REVERSE CHOLMOD_LIBRARIES)
-endif (CHOLMOD_LIBRARY)
-if (UMFPACK_LIBRARY)
-  set (UMFPACK_EXTRA_LIBS)
-  # test if umfpack is usable with only amd and not cholmod
-  try_compile_umfpack (HAVE_UMFPACK_WITHOUT_CHOLMOD ${AMD_LIBRARIES})
-  if (HAVE_UMFPACK_WITHOUT_CHOLMOD)
-	list (APPEND UMFPACK_EXTRA_LIBS ${AMD_LIBRARIES})
-  else (HAVE_UMFPACK_WITHOUT_CHOLMOD)
-	if (CHOLMOD_LIBRARIES)
-	  try_compile_umfpack (HAVE_UMFPACK_WITH_CHOLMOD ${CHOLMOD_LIBRARIES})
-	  if (HAVE_UMFPACK_WITH_CHOLMOD)
-		list (APPEND UMFPACK_EXTRA_LIBS ${CHOLMOD_LIBRARIES})
-	  else (HAVE_UMFPACK_WITH_CHOLMOD)
-		set (UMFPACK_EXTRA_LIBS "-NOTFOUND")
-	  endif (HAVE_UMFPACK_WITH_CHOLMOD)
-	else (CHOLMOD_LIBRARIES)
-	  # if we don't have cholmod, then we certainly cannot have umfpack with cholmod
-	  set (UMFPACK_EXTRA_LIBS "-NOTFOUND")
-	endif (CHOLMOD_LIBRARIES)
-  endif (HAVE_UMFPACK_WITHOUT_CHOLMOD)
-  list (APPEND UMFPACK_LIBRARIES ${UMFPACK_EXTRA_LIBS})
-  list (REVERSE UMFPACK_LIBRARIES)
-  list (REMOVE_DUPLICATES UMFPACK_LIBRARIES)
-  list (REVERSE UMFPACK_LIBRARIES)
-endif (UMFPACK_LIBRARY)
+  list(REMOVE_DUPLICATES CHOLMOD_LIBRARIES)
+  list(REVERSE CHOLMOD_LIBRARIES)
+endif()
 
-# don't reset these sets; if two packages request SuiteSparse with
-# different modules, we want the sets to be merged
-#set (SuiteSparse_LIBRARIES "")
-#set (SuiteSparse_INCLUDE_DIRS "")
+if(UMFPACK_LIBRARY)
+  set(UMFPACK_EXTRA_LIBS)
+  # test if umfpack is usable with only amd and not cholmod
+  try_compile_umfpack(HAVE_UMFPACK_WITHOUT_CHOLMOD ${AMD_LIBRARIES})
+  if(HAVE_UMFPACK_WITHOUT_CHOLMOD)
+    list(APPEND UMFPACK_EXTRA_LIBS ${AMD_LIBRARIES})
+  else()
+    if(CHOLMOD_LIBRARIES)
+      try_compile_umfpack (HAVE_UMFPACK_WITH_CHOLMOD ${CHOLMOD_LIBRARIES})
+      if(HAVE_UMFPACK_WITH_CHOLMOD)
+        list (APPEND UMFPACK_EXTRA_LIBS ${CHOLMOD_LIBRARIES})
+      else()
+        set (UMFPACK_EXTRA_LIBS "-NOTFOUND")
+      endif()
+    else()
+      # if we don't have cholmod, then we certainly cannot have umfpack with cholmod
+      set(UMFPACK_EXTRA_LIBS "-NOTFOUND")
+    endif()
+  endif()
+  list(APPEND UMFPACK_LIBRARIES ${UMFPACK_EXTRA_LIBS})
+  list(REVERSE UMFPACK_LIBRARIES)
+  list(REMOVE_DUPLICATES UMFPACK_LIBRARIES)
+  list(REVERSE UMFPACK_LIBRARIES)
+endif()
 
 # determine which modules were found based on whether all dependencies
 # were satisfied; create a list of ALL modules (specified) that was found
 # (to be included in one swoop in CMakeLists.txt)
-set (SuiteSparse_FOUND TRUE)
-foreach (module IN LISTS SuiteSparse_FIND_COMPONENTS)
-  string (TOUPPER ${module} MODULE)
-  set (SuiteSparse_${MODULE}_FOUND TRUE)
-  foreach (file IN LISTS ${MODULE}_INCLUDE_DIRS ${MODULE}_LIBRARIES)
-	if (NOT EXISTS ${file})
-	  set (SuiteSparse_${MODULE}_FOUND FALSE)
-	endif (NOT EXISTS ${file})
-  endforeach (file)
-  if (NOT SuiteSparse_${MODULE}_FOUND)
-	set (SuiteSparse_FOUND FALSE)
-	# use empty string instead of zero, so it can be tested with #ifdef
-	# as well as #if in the source code
-    set (HAVE_SUITESPARSE_${MODULE}_H "" CACHE STRING "Is ${module} header present?")
-  else (NOT SuiteSparse_${MODULE}_FOUND)
-    set (HAVE_SUITESPARSE_${MODULE}_H 1 CACHE STRING "Is ${module} header present?")
-	list (APPEND SuiteSparse_LIBRARIES "${${MODULE}_LIBRARIES}")
-	list (APPEND SuiteSparse_LINKER_FLAGS "${${MODULE}_LINKER_FLAGS}")
-	list (APPEND SuiteSparse_INCLUDE_DIRS "${${MODULE}_INCLUDE_DIRS}")
-  endif (NOT SuiteSparse_${MODULE}_FOUND)
-  mark_as_advanced (HAVE_SUITESPARSE_${MODULE}_H)
-  mark_as_advanced (${MODULE}_INCLUDE_DIR)
-  mark_as_advanced (${MODULE}_LIBRARY)
-endforeach (module)
+set(SuiteSparse_FOUND TRUE)
+foreach(module IN LISTS SuiteSparse_FIND_COMPONENTS)
+  string(TOUPPER ${module} MODULE)
+  set(SuiteSparse_${MODULE}_FOUND TRUE)
+  foreach(file IN LISTS ${MODULE}_INCLUDE_DIRS ${MODULE}_LIBRARIES)
+    if(NOT EXISTS ${file})
+      set(SuiteSparse_${MODULE}_FOUND FALSE)
+    endif (NOT EXISTS ${file})
+  endforeach()
+  if(NOT SuiteSparse_${MODULE}_FOUND)
+    set(SuiteSparse_FOUND FALSE)
+    # use empty string instead of zero, so it can be tested with #ifdef
+    # as well as #if in the source code
+    set(HAVE_SUITESPARSE_${MODULE}_H "" CACHE STRING "Is ${module} header present?")
+  else()
+    set(HAVE_SUITESPARSE_${MODULE}_H 1 CACHE STRING "Is ${module} header present?")
+    list(APPEND SuiteSparse_LIBRARIES "${${MODULE}_LIBRARIES}")
+    list(APPEND SuiteSparse_LINKER_FLAGS "${${MODULE}_LINKER_FLAGS}")
+    list(APPEND SuiteSparse_INCLUDE_DIRS "${${MODULE}_INCLUDE_DIRS}")
+  endif()
+  mark_as_advanced(HAVE_SUITESPARSE_${MODULE}_H)
+  mark_as_advanced(${MODULE}_INCLUDE_DIR)
+  mark_as_advanced(${MODULE}_LIBRARY)
+endforeach()
 
-if (SuiteSparse_INCLUDE_DIRS)
-  list (REMOVE_DUPLICATES SuiteSparse_INCLUDE_DIRS)
-endif (SuiteSparse_INCLUDE_DIRS)
-if (SuiteSparse_LIBRARIES)
-  list (REVERSE SuiteSparse_LIBRARIES)
-  list (REMOVE_DUPLICATES SuiteSparse_LIBRARIES)
-  list (REVERSE SuiteSparse_LIBRARIES)
-endif (SuiteSparse_LIBRARIES)
+if(SuiteSparse_INCLUDE_DIRS)
+  list(REMOVE_DUPLICATES SuiteSparse_INCLUDE_DIRS)
+endif()
+if(SuiteSparse_LIBRARIES)
+  list(REVERSE SuiteSparse_LIBRARIES)
+  list(REMOVE_DUPLICATES SuiteSparse_LIBRARIES)
+  list(REVERSE SuiteSparse_LIBRARIES)
+endif()
 
 if(SuiteSparse_FOUND)
   if(NOT TARGET SuiteSparse::SuiteSparse)
     add_library(SuiteSparse::SuiteSparse INTERFACE IMPORTED GLOBAL)
-    set_property(TARGET SuiteSparse::SuiteSparse PROPERTY
-      INTERFACE_INCLUDE_DIRECTORIES ${SuiteSparse_INCLUDE_DIRS})
+    set_target_properties(SuiteSparse::SuiteSparse
+      PROPERTIES
+      INTERFACE_INCLUDE_DIRECTORIES
+        ${SuiteSparse_INCLUDE_DIRS}
+    )
     if(config_LIBRARY)
-      set_property(TARGET SuiteSparse::SuiteSparse PROPERTY
-	INTERFACE_LINK_LIBRARIES ${config_LIBRARY})
+      set_target_properties(SuiteSparse::SuiteSparse
+        PROPERTIES
+        INTERFACE_LINK_LIBRARIES
+          ${config_LIBRARY}
+      )
     endif()
   endif()
   foreach(_module ${SuiteSparse_MODULES})
-    string (TOUPPER ${_module} _MODULE)
+    string(TOUPPER ${_module} _MODULE)
     if(SuiteSparse_${_MODULE}_FOUND)
       if(NOT TARGET SuiteSparse::${_module})
-	message(STATUS "Creating target SuiteSparse::${_MODULE}")
-	add_library(SuiteSparse::${_MODULE} UNKNOWN IMPORTED GLOBAL)
-	set_target_properties(SuiteSparse::${_MODULE} PROPERTIES
-	  IMPORTED_LOCATION ${${_MODULE}_LIBRARY}
-	  INCLUDE_DIRECTORIES ${${_MODULE}_INCLUDE_DIRS}
-	  INTERFACE_LINK_LIBRARIES "${config_LIBRARY}")
-	target_link_libraries(SuiteSparse::SuiteSparse
-          INTERFACE SuiteSparse::${_MODULE})
+        message(STATUS "Creating target SuiteSparse::${_MODULE}")
+        add_library(SuiteSparse::${_MODULE} UNKNOWN IMPORTED GLOBAL)
+        set_target_properties(SuiteSparse::${_MODULE}
+          PROPERTIES
+          IMPORTED_LOCATION
+            ${${_MODULE}_LIBRARY}
+          INTERFACE_INCLUDE_DIRECTORIES
+            ${${_MODULE}_INCLUDE_DIRS}
+          INTERFACE_LINK_LIBRARIES
+            ${config_LIBRARY}
+        )
+        target_link_libraries(SuiteSparse::SuiteSparse
+          INTERFACE
+            SuiteSparse::${_MODULE}
+        )
       endif()
     endif()
-  endforeach(_module)
+  endforeach()
 endif()
+
 # print a message to indicate status of this package
 include (FindPackageHandleStandardArgs)
-find_package_handle_standard_args (SuiteSparse
+find_package_handle_standard_args(SuiteSparse
   DEFAULT_MSG
   SuiteSparse_LIBRARIES
   SuiteSparse_INCLUDE_DIRS
-  )
+)
 
 # add these after checking to not pollute the message output (checking for
 # BLAS and LAPACK is REQUIRED so if they are not found, we'll have failed
 # already; suitesparseconfig is "optional" anyway)
-list (APPEND SuiteSparse_LIBRARIES ${SuiteSparse_EXTRA_LIBS})
+list(APPEND SuiteSparse_LIBRARIES ${SuiteSparse_EXTRA_LIBS})

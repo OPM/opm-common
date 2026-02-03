@@ -26,16 +26,16 @@ set(SUPERLU_FOUND "FALSE")
 
 # find out the size of a pointer. this is required to only search for
 # libraries in the directories relevant for the architecture
-if (CMAKE_SIZEOF_VOID_P)
+if(CMAKE_SIZEOF_VOID_P)
   math (EXPR _BITS "8 * ${CMAKE_SIZEOF_VOID_P}")
-endif (CMAKE_SIZEOF_VOID_P)
+endif()
 
 # look for files only at the positions given by the user if
 # an explicit path is specified
 if(SUPERLU_ROOT)
-  set (_no_default_path "NO_DEFAULT_PATH")
+  set(_no_default_path "NO_DEFAULT_PATH")
 else()
-  set (_no_default_path "")
+  set(_no_default_path "")
 endif()
 
 # look for a system-wide BLAS library
@@ -47,10 +47,16 @@ find_package(BLAS QUIET)
 set(SUPERLU_BLAS_LIBRARY "")
 if(NOT BLAS_FOUND AND SUPERLU_ROOT)
   find_library(SUPERLU_BLAS_LIBRARY
-    NAMES "blas"
-    PATHS ${SUPERLU_ROOT}
-    PATH_SUFFIXES "lib" "lib${_BITS}" "lib/${CMAKE_LIBRARY_ARCHITECTURE}"
-    NO_DEFAULT_PATH)
+    NAMES
+      blas
+    PATHS
+      ${SUPERLU_ROOT}
+    PATH_SUFFIXES
+      lib
+      lib${_BITS}
+      lib/${CMAKE_LIBRARY_ARCHITECTURE}
+    NO_DEFAULT_PATH
+  )
 endif()
 
 # print message if there was still no blas found!
@@ -61,28 +67,38 @@ endif()
 list(APPEND CMAKE_REQUIRED_LIBRARIES "${SUPERLU_BLAS_LIBRARY}")
 
 # find the directory containing the SuperLU include files
-if (NOT SUPERLU_INCLUDE_DIR)
+if(NOT SUPERLU_INCLUDE_DIR)
   find_path(SUPERLU_INCLUDE_DIR
-    NAMES "supermatrix.h"
-    PATHS ${SUPERLU_ROOT}
-    PATH_SUFFIXES "superlu" "include/superlu" "include" "SRC"
+    NAMES
+      supermatrix.h
+    PATHS
+      ${SUPERLU_ROOT}
+    PATH_SUFFIXES
+      superlu
+      include/superlu
+      include
+      SRC
     ${_no_default_path}
-    )
+  )
 endif()
 if(NOT SUPERLU_INCLUDE_DIR)
   message(STATUS "Directory with the SuperLU include files not found")
   return()
 endif()
-#list(APPEND CMAKE_REQUIRED_INCLUDES "${SUPERLU_INCLUDE_DIR}")
 
 # look for actual SuperLU library
-if (NOT SUPERLU_LIBRARY)
+if(NOT SUPERLU_LIBRARY)
   find_library(SUPERLU_LIBRARY
-    NAMES "superlu" # skipping "superlu_5.2.1" "superlu_5.2" "superlu_5.1.1" "superlu_5.1" "superlu_5.0"
-    PATHS ${SUPERLU_ROOT}
-    PATH_SUFFIXES "lib" "lib${_BITS}" "lib/${CMAKE_LIBRARY_ARCHITECTURE}"
+    NAMES
+      superlu
+    PATHS
+      ${SUPERLU_ROOT}
+    PATH_SUFFIXES
+      lib
+      lib${_BITS}
+      lib/${CMAKE_LIBRARY_ARCHITECTURE}
     ${_no_default_path}
-    )
+  )
 endif()
 if(NOT SUPERLU_LIBRARY)
   message(STATUS "Directory with the SuperLU library not found")
@@ -110,15 +126,17 @@ if(SUPERLU_FOUND)
   endif()
   if(NOT TARGET SuperLU::SuperLU)
     add_library(SuperLU::SuperLU UNKNOWN IMPORTED GLOBAL)
-    set_target_properties(SuperLU::SuperLU PROPERTIES
-      IMPORTED_LOCATION ${SUPERLU_LIBRARY}
-      INCLUDE_DIRECTORIES ${SUPERLU_INCLUDE_DIR})
+    set_target_properties(SuperLU::SuperLU
+      PROPERTIES
+      IMPORTED_LOCATION
+        ${SUPERLU_LIBRARY}
+      INTERFACE_INCLUDE_DIRECTORIES
+        ${SUPERLU_INCLUDE_DIR}
+    )
     if(TARGET BLAS::BLAS)
-      set_property(TARGET SuperLU::SuperLU PROPERTY
-        INTERFACE_LINK_LIBRARIES BLAS::BLAS)
+      target_link_libraries(SuperLU::SuperLU INTERFACE BLAS::BLAS)
     else()
-      set_property(TARGET SuperLU::SuperLU PROPERTY
-	INTERFACE_LINK_LIBRARIES ${SUPERLU_BLAS_LIBRARY})
+      target_link_libraries(SuperLU::SuperLU INTERFACE ${SUPERLU_BLAS_LIBRARY})
     endif()
   endif()
 endif()
