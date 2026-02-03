@@ -100,7 +100,9 @@ list (REMOVE_ITEM "${project}_LIBRARIES" "${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}")
 include (UseDynamicBoost)
 
 # Run conditional file hook
-files_hook()
+if(COMMAND files_hook)
+  files_hook()
+endif()
 
 # this module contains code to figure out which files is where
 include (OpmFiles)
