@@ -309,7 +309,7 @@ if(SuiteSparse_FOUND)
     add_library(SuiteSparse::SuiteSparse INTERFACE IMPORTED GLOBAL)
     set_target_properties(SuiteSparse::SuiteSparse
       PROPERTIES
-      INCLUDE_DIRECTORIES
+      INTERFACE_INCLUDE_DIRECTORIES
         ${SuiteSparse_INCLUDE_DIRS}
     )
     if(config_LIBRARY)
@@ -330,7 +330,7 @@ if(SuiteSparse_FOUND)
           PROPERTIES
           IMPORTED_LOCATION
             ${${_MODULE}_LIBRARY}
-          INCLUDE_DIRECTORIES
+          INTERFACE_INCLUDE_DIRECTORIES
             ${${_MODULE}_INCLUDE_DIRS}
           INTERFACE_LINK_LIBRARIES
             ${config_LIBRARY}
