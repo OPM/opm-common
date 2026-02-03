@@ -36,6 +36,7 @@
 
 # <http://www.vtk.org/Wiki/CMake:How_To_Find_Libraries>
 
+include(OpmAddDependencies)
 include (OpmFind)
 include (OpmSiblingSearch)
 

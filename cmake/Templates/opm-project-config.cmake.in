@@ -29,6 +29,7 @@ if(NOT @opm-project_NAME@_FOUND)
   set (@opm-project_NAME@_LIBRARY_DIRS "@opm-project_LIBRARY_DIRS@" "@CMAKE_LIBRARY_OUTPUT_DIRECTORY@")
   set (@opm-project_NAME@_LINKER_FLAGS "@opm-project_LINKER_FLAGS@")
   set (@opm-project_NAME@_CONFIG_VARS "@opm-project_CONFIG_VARS@")
+  set (@opm-project_NAME@_TARGET "@opm-project_TARGET@")
 
   # The flag whether embedded Python is supported or not is passed to downstream modules,
   # it is only used to enable/disable regression testing with Python enabled input. The

@@ -30,6 +30,11 @@ find_package_handle_standard_args(Valgrind DEFAULT_MSG
   VALGRIND_PROGRAM)
 
 mark_as_advanced(VALGRIND_ROOT VALGRIND_INCLUDE_DIR VALGRIND_PROGRAM)
+if(VALGRIND_FOUND)
+  set(HAVE_VALGRIND 1)
+else()
+  unset(HAVE_VALGRIND)
+endif()
 
 if(VALGRIND_FOUND AND NOT TARGET Valgrind::Valgrind)
   add_library(Valgrind::Valgrind INTERFACE IMPORTED)
