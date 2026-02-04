@@ -216,6 +216,61 @@ macro(${project}_sources_hook)
   endif()
 endmacro()
 
+macro(${project}_files_hook)
+  if (OPM_ENABLE_PYTHON)
+    make_directory(${PROJECT_BINARY_DIR}/python)
+
+    file(
+      COPY
+        ${PROJECT_SOURCE_DIR}/python/README.md
+        ${PROJECT_SOURCE_DIR}/python/MANIFEST.in
+      DESTINATION
+        ${PROJECT_BINARY_DIR}/python
+    )
+
+    # Generate versioned setup.py
+    configure_file(${PROJECT_SOURCE_DIR}/python/setup.py.in
+                   ${PROJECT_BINARY_DIR}/python/setup.py.tmp)
+    file(GENERATE OUTPUT ${PROJECT_BINARY_DIR}/python/setup.py
+                  INPUT ${PROJECT_BINARY_DIR}/python/setup.py.tmp)
+
+    # -------------------------------------------------------------------------
+    # Let cmake configure some small shell scripts which can be used to simplify
+    # building, testing and installation of the Python extensions.
+    configure_file(python/setup-build.sh.in tmp/setup-build.sh)
+    file(
+      COPY
+        ${PROJECT_BINARY_DIR}/tmp/setup-build.sh
+      DESTINATION
+        ${PROJECT_BINARY_DIR}
+       FILE_PERMISSIONS
+        OWNER_READ OWNER_WRITE OWNER_EXECUTE
+    )
+
+    configure_file(python/setup-test.sh.in tmp/setup-test.sh)
+    file(
+      COPY
+        ${PROJECT_BINARY_DIR}/tmp/setup-test.sh
+      DESTINATION
+        ${PROJECT_BINARY_DIR}
+      FILE_PERMISSIONS
+        OWNER_READ OWNER_WRITE OWNER_EXECUTE
+    )
+
+    configure_file(python/setup-install.sh.in tmp/setup-install.sh)
+    file(
+      COPY
+        ${PROJECT_BINARY_DIR}/tmp/setup-install.sh
+      DESTINATION
+        ${PROJECT_BINARY_DIR}
+      FILE_PERMISSIONS
+        OWNER_READ OWNER_WRITE OWNER_EXECUTE
+    )
+
+    configure_file(python/enable-python.sh.in enable-python.sh)
+  endif()
+endmacro()
+
 macro(${project}_tests_hook)
   # Build the compare utilities
   if(ENABLE_ECL_INPUT)
@@ -279,9 +334,43 @@ macro(${project}_tests_hook)
 
     include(ExtraTests.cmake)
   endif()
+
   if (dune-common_FOUND)
     list(APPEND tests_SOURCES ${DUNE_TEST_SOURCE_FILES})
   endif()
+
+  if(OPM_ENABLE_PYTHON)
+    add_test(
+      NAME
+        python_tests
+      WORKING_DIRECTORY
+        ${PROJECT_BINARY_DIR}/python
+      COMMAND
+        ${Python3_EXECUTABLE} -m unittest discover
+     )
+ endif()
+endmacro()
+
+macro(${project}_install_hook)
+  # Install build system files and documentation
+  install(DIRECTORY cmake
+    DESTINATION share/opm USE_SOURCE_PERMISSIONS
+    PATTERN "OPM-CMake.md" EXCLUDE)
+
+  install(FILES cmake/OPM-CMake.md
+    DESTINATION ${CMAKE_INSTALL_DOCDIR})
+
+  # Install tab completion skeleton
+  install(FILES etc/opm_bash_completion.sh.in DESTINATION share/opm/etc)
+
+  install(
+    DIRECTORY
+      docs/man1
+    DESTINATION
+      ${CMAKE_INSTALL_MANDIR}
+    FILES_MATCHING PATTERN
+      "*.1"
+  )
 endmacro()
 
 # all setup common to the OPM library modules is done here
@@ -356,20 +445,7 @@ if(Boost_UNIT_TEST_FRAMEWORK_FOUND)
   endforeach()
 endif()
 
-# Install build system files and documentation
-install(DIRECTORY cmake
-  DESTINATION share/opm USE_SOURCE_PERMISSIONS
-  PATTERN "OPM-CMake.md" EXCLUDE)
-
-install(FILES cmake/OPM-CMake.md
-  DESTINATION ${CMAKE_INSTALL_DOCDIR})
-
-# Install tab completion skeleton
-install(FILES etc/opm_bash_completion.sh.in DESTINATION share/opm/etc)
-
 if (OPM_ENABLE_PYTHON)
-  make_directory(${PROJECT_BINARY_DIR}/python)
-
   set(opm-common_PYTHON_PACKAGE_VERSION ${OPM_PYTHON_PACKAGE_VERSION_TAG})
 
   add_custom_target(copy_python ALL
@@ -379,14 +455,6 @@ if (OPM_ENABLE_PYTHON)
       ${PROJECT_SOURCE_DIR}/python
       ${PROJECT_BINARY_DIR}
       0
-  )
-
-  file(
-    COPY
-      ${PROJECT_SOURCE_DIR}/python/README.md
-      ${PROJECT_SOURCE_DIR}/python/MANIFEST.in
-    DESTINATION
-      ${PROJECT_BINARY_DIR}/python
   )
 
   pybind11_add_module(opmcommon_python
@@ -405,12 +473,6 @@ if (OPM_ENABLE_PYTHON)
   set_target_properties(opmcommon_python PROPERTIES
                         LIBRARY_OUTPUT_DIRECTORY python/opm)
   add_dependencies(opmcommon_python copy_python)
-
-  # Generate versioned setup.py
-  configure_file(${PROJECT_SOURCE_DIR}/python/setup.py.in
-                 ${PROJECT_BINARY_DIR}/python/setup.py.tmp)
-  file(GENERATE OUTPUT ${PROJECT_BINARY_DIR}/python/setup.py
-                INPUT ${PROJECT_BINARY_DIR}/python/setup.py.tmp)
 
   # Since the installation of Python code is nonstandard it is protected by an
   # extra cmake switch, OPM_INSTALL_PYTHON. If you prefer you can still invoke
@@ -478,57 +540,8 @@ if (OPM_ENABLE_PYTHON)
     )
   endif()
 
-  # Observe that if the opmcommon library has been built as a shared library the
-  # python library opmcommon_python will in general not find it runtime while
-  # testing.
-  add_test(
-    NAME
-      python_tests
-    WORKING_DIRECTORY
-      ${PROJECT_BINARY_DIR}/python
-    COMMAND
-      ${CMAKE_COMMAND} -E env
-      LD_LIBRARY_PATH=${PROJECT_BINARY_DIR}/lib
-      ${Python3_EXECUTABLE} -m unittest discover
-   )
-
   set_target_properties(opmcommon PROPERTIES POSITION_INDEPENDENT_CODE ON)
   set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES ${PROJECT_BINARY_DIR}/python)
-
-  # -------------------------------------------------------------------------
-  # Let cmake configure some small shell scripts which can be used to simplify
-  # building, testing and installation of the Python extensions.
-  configure_file(python/setup-build.sh.in tmp/setup-build.sh)
-  file(
-    COPY
-      ${PROJECT_BINARY_DIR}/tmp/setup-build.sh
-    DESTINATION
-      ${PROJECT_BINARY_DIR}
-     FILE_PERMISSIONS
-      OWNER_READ OWNER_WRITE OWNER_EXECUTE
-  )
-
-  configure_file(python/setup-test.sh.in tmp/setup-test.sh)
-  file(
-    COPY
-      ${PROJECT_BINARY_DIR}/tmp/setup-test.sh
-    DESTINATION
-      ${PROJECT_BINARY_DIR}
-    FILE_PERMISSIONS
-      OWNER_READ OWNER_WRITE OWNER_EXECUTE
-  )
-
-  configure_file(python/setup-install.sh.in tmp/setup-install.sh)
-  file(
-    COPY
-      ${PROJECT_BINARY_DIR}/tmp/setup-install.sh
-    DESTINATION
-      ${PROJECT_BINARY_DIR}
-    FILE_PERMISSIONS
-      OWNER_READ OWNER_WRITE OWNER_EXECUTE
-  )
-
-  configure_file(python/enable-python.sh.in enable-python.sh)
 
   # -------------------------------------------------------------------------
   # 2: Embed the Python interpreter for keywords like PYACTION and PYINPUT
@@ -538,12 +551,3 @@ if (OPM_ENABLE_PYTHON)
     add_definitions(-DEMBEDDED_PYTHON)
   endif()
 endif()
-
-install(
-  DIRECTORY
-    docs/man1
-  DESTINATION
-    ${CMAKE_INSTALL_MANDIR}
-  FILES_MATCHING PATTERN
-    "*.1"
-)
