@@ -242,14 +242,6 @@ macro(${project}_tests_hook)
   endif()
 endmacro()
 
-# Used to append entries from one list to another.
-# The output list is suitable for use in setup.py subtitution
-macro(append_quoted OUT IN)
-  foreach(ENTRY ${${IN}})
-    list(APPEND ${OUT} "'${ARGN}${ENTRY}'")
-  endforeach()
-endmacro()
-
 # If opm-common is configured to embed the python interpreter we must make sure
 # that all downstream modules link libpython transitively. Due to the required
 # integration with Python+cmake machinery provided by pybind11 this is done by
