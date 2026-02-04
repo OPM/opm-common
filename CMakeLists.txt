@@ -72,6 +72,48 @@ macro(${project}_prereqs_hook)
   else()
     include(DownloadFmt)
   endif()
+
+  # If opm-common is configured to embed the python interpreter we must make sure
+  # that all downstream modules link libpython transitively. Due to the required
+  # integration with Python+cmake machinery provided by pybind11 this is done by
+  # manually adding to the opm-common_LIBRARIES variable here, and not in the
+  # OpmLibMain function. Here only the library dependency is implemented, the
+  # bulk of the python configuration is further down in the file.
+  if (OPM_ENABLE_PYTHON)
+    # Be backwards compatible.
+    if(PYTHON_EXECUTABLE AND NOT Python3_EXECUTABLE)
+      set(Python3_EXECUTABLE ${PYTHON_EXECUTABLE})
+    endif()
+    # We always need to search for Development as we use
+    # pybind11_add_module even if don't embed Python
+    if (OPM_ENABLE_EMBEDDED_PYTHON)
+      find_package(Python3 REQUIRED COMPONENTS Interpreter Development.Embed Development.Module)
+      get_target_property(_lib_path Python3::Python IMPORTED_LOCATION)
+      set(PYTHON_LIBRARY ${_lib_path})
+      list(APPEND opm-common_LIBRARIES ${_lib_path})
+    else()
+      find_package(Python3 REQUIRED COMPONENTS Interpreter Development.Module)
+    endif()
+    if(Python3_VERSION_MINOR LESS 3)
+      # Python native namespace packages requires python >= 3.3
+      message(SEND_ERROR "OPM requires python >= 3.3 but only version ${Python3_VERSION} was found")
+    endif()
+
+    # Directory to install common (for opm modules) python scripts
+    include (GNUInstallDirs)
+    set(OPM_PYTHON_COMMON_DIR "${CMAKE_INSTALL_DATAROOTDIR}/opm/python")
+    set(OPM_PROJECT_EXTRA_CODE_INTREE
+      "${OPM_PROJECT_EXTRA_CODE_INTREE}
+       set(opm-common_PYTHON_COMMON_DIR ${PROJECT_SOURCE_DIR}/python)")
+    set(OPM_PROJECT_EXTRA_CODE_INSTALLED
+        "${OPM_PROJECT_EXTRA_CODE_INSTALLED}
+         set(opm-common_PYTHON_COMMON_DIR ${CMAKE_INSTALL_PREFIX}/${OPM_PYTHON_COMMON_DIR})")
+
+    find_package(pybind11 CONFIG)
+    if (NOT pybind11_FOUND)
+      include(DownloadPyBind11)
+    endif()
+  endif()
 endmacro()
 
 macro(${project}_config_hook)
@@ -241,48 +283,6 @@ macro(${project}_tests_hook)
     list(APPEND tests_SOURCES ${DUNE_TEST_SOURCE_FILES})
   endif()
 endmacro()
-
-# If opm-common is configured to embed the python interpreter we must make sure
-# that all downstream modules link libpython transitively. Due to the required
-# integration with Python+cmake machinery provided by pybind11 this is done by
-# manually adding to the opm-common_LIBRARIES variable here, and not in the
-# OpmLibMain function. Here only the library dependency is implemented, the
-# bulk of the python configuration is further down in the file.
-if (OPM_ENABLE_PYTHON)
-  # Be backwards compatible.
-  if(PYTHON_EXECUTABLE AND NOT Python3_EXECUTABLE)
-    set(Python3_EXECUTABLE ${PYTHON_EXECUTABLE})
-  endif()
-  # We always need to search for Development as we use
-  # pybind11_add_module even if don't embed Python
-  if (NOT OPM_ENABLE_EMBEDDED_PYTHON)
-    find_package(Python3 REQUIRED COMPONENTS Interpreter Development.Module)
-  else()
-    find_package(Python3 REQUIRED COMPONENTS Interpreter Development.Embed Development.Module)
-    get_target_property(_lib_path Python3::Python IMPORTED_LOCATION)
-    set(PYTHON_LIBRARY ${_lib_path})
-    list(APPEND opm-common_LIBRARIES ${_lib_path})
-  endif()
-  if(Python3_VERSION_MINOR LESS 3)
-    # Python native namespace packages requires python >= 3.3
-    message(SEND_ERROR "OPM requires python >= 3.3 but only version ${Python3_VERSION} was found")
-  endif()
-
-  # Directory to install common (for opm modules) python scripts
-  include (GNUInstallDirs)
-  set(OPM_PYTHON_COMMON_DIR "${CMAKE_INSTALL_DATAROOTDIR}/opm/python")
-  set(OPM_PROJECT_EXTRA_CODE_INTREE
-    "${OPM_PROJECT_EXTRA_CODE_INTREE}
-     set(opm-common_PYTHON_COMMON_DIR ${PROJECT_SOURCE_DIR}/python)")
-  set(OPM_PROJECT_EXTRA_CODE_INSTALLED
-      "${OPM_PROJECT_EXTRA_CODE_INSTALLED}
-       set(opm-common_PYTHON_COMMON_DIR ${CMAKE_INSTALL_PREFIX}/${OPM_PYTHON_COMMON_DIR})")
-
-  find_package(pybind11 CONFIG)
-  if (NOT pybind11_FOUND)
-    include(DownloadPyBind11)
-  endif()
-endif()
 
 # all setup common to the OPM library modules is done here
 include (OpmLibMain)
