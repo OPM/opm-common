@@ -143,11 +143,19 @@ macro(${project}_sources_hook)
     set(PYTHON_DOCSTRINGS_GENERATED_HPP "${PROJECT_BINARY_DIR}/python/cxx/OpmCommonPythonDoc.hpp")
     # Command to run the Python script
     add_custom_command(
-        OUTPUT ${PYTHON_DOCSTRINGS_GENERATED_HPP}
-        COMMAND ${PYTHON_EXECUTABLE} ${PROJECT_SOURCE_DIR}/python/generate_docstring_hpp.py
-                ${PYTHON_DOCSTRINGS_FILE} ${PYTHON_DOCSTRINGS_GENERATED_HPP} OPMCOMMONPYTHONDOC_HPP "Opm::Common::DocStrings"
-        DEPENDS ${PYTHON_DOCSTRINGS_FILE}
-        COMMENT "Generating OpmCommonPythonDoc.hpp from JSON file"
+        OUTPUT
+          ${PYTHON_DOCSTRINGS_GENERATED_HPP}
+        COMMAND
+          $<TARGET_FILE:Python3::Interpreter>
+          ${PROJECT_SOURCE_DIR}/python/generate_docstring_hpp.py
+          ${PYTHON_DOCSTRINGS_FILE}
+          ${PYTHON_DOCSTRINGS_GENERATED_HPP}
+          OPMCOMMONPYTHONDOC_HPP
+          "Opm::Common::DocStrings"
+        DEPENDS
+          ${PYTHON_DOCSTRINGS_FILE}
+        COMMENT
+          "Generating OpmCommonPythonDoc.hpp from JSON file"
     )
     list(INSERT opm-common_SOURCES 0 ${PYTHON_DOCSTRINGS_GENERATED_HPP})
   endif()
@@ -277,10 +285,12 @@ if (OPM_ENABLE_PYTHON)
   # Directory to install common (for opm modules) python scripts
   include (GNUInstallDirs)
   set(OPM_PYTHON_COMMON_DIR "${CMAKE_INSTALL_DATAROOTDIR}/opm/python")
-  set(OPM_PROJECT_EXTRA_CODE_INTREE "${OPM_PROJECT_EXTRA_CODE_INTREE}
-                                     set(opm-common_PYTHON_COMMON_DIR ${PROJECT_SOURCE_DIR}/python)")
-  set(OPM_PROJECT_EXTRA_CODE_INSTALLED "${OPM_PROJECT_EXTRA_CODE_INSTALLED}
-                                       set(opm-common_PYTHON_COMMON_DIR ${CMAKE_INSTALL_PREFIX}/${OPM_PYTHON_COMMON_DIR})")
+  set(OPM_PROJECT_EXTRA_CODE_INTREE
+    "${OPM_PROJECT_EXTRA_CODE_INTREE}
+     set(opm-common_PYTHON_COMMON_DIR ${PROJECT_SOURCE_DIR}/python)")
+  set(OPM_PROJECT_EXTRA_CODE_INSTALLED
+      "${OPM_PROJECT_EXTRA_CODE_INSTALLED}
+       set(opm-common_PYTHON_COMMON_DIR ${CMAKE_INSTALL_PREFIX}/${OPM_PYTHON_COMMON_DIR})")
 
   # We always need the PYTHON_INCLUDE_DIR. Unfortunately
   # When we build pypi packages CMake will fail to determine
@@ -393,10 +403,21 @@ if (OPM_ENABLE_PYTHON)
   set(opm-common_PYTHON_PACKAGE_VERSION ${OPM_PYTHON_PACKAGE_VERSION_TAG})
 
   add_custom_target(copy_python ALL
-    COMMAND ${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/python/install.py ${PROJECT_SOURCE_DIR}/python ${PROJECT_BINARY_DIR} 0)
+    COMMAND
+      $<TARGET_FILE:Python3::Interpreter>
+      ${PROJECT_SOURCE_DIR}/python/install.py
+      ${PROJECT_SOURCE_DIR}/python
+      ${PROJECT_BINARY_DIR}
+      0
+  )
 
-  file(COPY ${PROJECT_SOURCE_DIR}/python/README.md ${PROJECT_SOURCE_DIR}/python/MANIFEST.in
-       DESTINATION ${PROJECT_BINARY_DIR}/python)
+  file(
+    COPY
+      ${PROJECT_SOURCE_DIR}/python/README.md
+      ${PROJECT_SOURCE_DIR}/python/MANIFEST.in
+    DESTINATION
+      ${PROJECT_BINARY_DIR}/python
+  )
 
   pybind11_add_module(opmcommon_python
                       ${PYTHON_CXX_SOURCE_FILES}
@@ -429,42 +450,77 @@ if (OPM_ENABLE_PYTHON)
   # to make it available in a Python console and for e.g. opm-simulators.
   if (OPM_INSTALL_PYTHON OR OPM_ENABLE_EMBEDDED_PYTHON)
       include(PyInstallPrefix)
-      install(TARGETS opmcommon_python DESTINATION ${DEST_PREFIX}${CMAKE_INSTALL_PREFIX}/${PYTHON_INSTALL_PREFIX}/opm)
+      install(
+        TARGETS
+          opmcommon_python
+        DESTINATION
+          ${DEST_PREFIX}${CMAKE_INSTALL_PREFIX}/${PYTHON_INSTALL_PREFIX}/opm
+      )
       if (OPM_INSTALL_PYTHON)
         install(
-          CODE "execute_process(
-            COMMAND ${PYTHON_EXECUTABLE}
-                    python/install.py
-                    ${PROJECT_BINARY_DIR}/python/opm
-                    ${DEST_PREFIX}${CMAKE_INSTALL_PREFIX}/${PYTHON_INSTALL_PREFIX} 1)")
+          CODE
+            "execute_process(
+               COMMAND
+                 $<TARGET_FILE:Python3::Interpreter>
+                 python/install.py
+                 ${PROJECT_BINARY_DIR}/python/opm
+                 ${DEST_PREFIX}${CMAKE_INSTALL_PREFIX}/${PYTHON_INSTALL_PREFIX}
+                 1)"
+        )
       endif()
       if (OPM_ENABLE_EMBEDDED_PYTHON)
         install(
-          CODE "execute_process(
-            COMMAND ${PYTHON_EXECUTABLE}
-                    python/install.py
-                    ${PROJECT_BINARY_DIR}/python/opm_embedded
-                    ${DEST_PREFIX}${CMAKE_INSTALL_PREFIX}/${PYTHON_INSTALL_PREFIX} 1)")
+          CODE
+            "execute_process(
+               COMMAND
+                 $<TARGET_FILE:Python3::Interpreter>
+                 python/install.py
+                 ${PROJECT_BINARY_DIR}/python/opm_embedded
+                 ${DEST_PREFIX}${CMAKE_INSTALL_PREFIX}/${PYTHON_INSTALL_PREFIX}
+                 1)"
+        )
       endif()
-      ## Need to install this Python script such that it can be used by opm-simulators when building against an installed
-      ##  opm-common
-      install( PROGRAMS "python/install.py" DESTINATION "${OPM_PYTHON_COMMON_DIR}" )
+      # Need to install this Python script such that it can be used by
+      # opm-simulators when building against an installed opm-common
+      install(
+        PROGRAMS
+          python/install.py
+        DESTINATION
+          ${OPM_PYTHON_COMMON_DIR}
+      )
   endif()
 
-  if (OPM_ENABLE_PYTHON OR OPM_INSTALL_PYTHON) # if OPM_ENABLE_EMBEDDED_PYTHON is true, then OPM_ENABLE_PYTHON is also automatically true
-    ## Need to install this Python script such that it can be used by opm-simulators when building against an installed
-    ##  opm-common
-    install( PROGRAMS "python/generate_docstring_hpp.py" DESTINATION "${OPM_PYTHON_COMMON_DIR}" )
-    install( FILES "python/docstrings_common.json" DESTINATION "${OPM_PYTHON_COMMON_DIR}" )
+  # if OPM_ENABLE_EMBEDDED_PYTHON is true, then OPM_ENABLE_PYTHON is also automatically true
+  if (OPM_ENABLE_PYTHON OR OPM_INSTALL_PYTHON)
+    ## Need to install this Python script such that it can be used
+    # by opm-simulators when building against an installed opm-common
+    install(
+      PROGRAMS
+        python/generate_docstring_hpp.py
+      DESTINATION
+        ${OPM_PYTHON_COMMON_DIR}
+    )
+    install(
+      FILES
+        python/docstrings_common.json
+      DESTINATION
+        ${OPM_PYTHON_COMMON_DIR}
+    )
   endif()
 
   # Observe that if the opmcommon library has been built as a shared library the
   # python library opmcommon_python will in general not find it runtime while
   # testing.
-  add_test(NAME python_tests
-           WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/python
-           COMMAND ${CMAKE_COMMAND} -E env LD_LIBRARY_PATH=${PROJECT_BINARY_DIR}/lib ${Python3_EXECUTABLE} -m unittest discover
-           )
+  add_test(
+    NAME
+      python_tests
+    WORKING_DIRECTORY
+      ${PROJECT_BINARY_DIR}/python
+    COMMAND
+      ${CMAKE_COMMAND} -E env
+      LD_LIBRARY_PATH=${PROJECT_BINARY_DIR}/lib
+      ${Python3_EXECUTABLE} -m unittest discover
+   )
 
   set_target_properties(opmcommon PROPERTIES POSITION_INDEPENDENT_CODE ON)
   set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES ${PROJECT_BINARY_DIR}/python)
@@ -473,19 +529,34 @@ if (OPM_ENABLE_PYTHON)
   # Let cmake configure some small shell scripts which can be used to simplify
   # building, testing and installation of the Python extensions.
   configure_file(python/setup-build.sh.in tmp/setup-build.sh)
-  file( COPY ${PROJECT_BINARY_DIR}/tmp/setup-build.sh
-        DESTINATION ${PROJECT_BINARY_DIR}
-        FILE_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE )
+  file(
+    COPY
+      ${PROJECT_BINARY_DIR}/tmp/setup-build.sh
+    DESTINATION
+      ${PROJECT_BINARY_DIR}
+     FILE_PERMISSIONS
+      OWNER_READ OWNER_WRITE OWNER_EXECUTE
+  )
 
   configure_file(python/setup-test.sh.in tmp/setup-test.sh)
-  file( COPY ${PROJECT_BINARY_DIR}/tmp/setup-test.sh
-        DESTINATION ${PROJECT_BINARY_DIR}
-        FILE_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE )
+  file(
+    COPY
+      ${PROJECT_BINARY_DIR}/tmp/setup-test.sh
+    DESTINATION
+      ${PROJECT_BINARY_DIR}
+    FILE_PERMISSIONS
+      OWNER_READ OWNER_WRITE OWNER_EXECUTE
+  )
 
   configure_file(python/setup-install.sh.in tmp/setup-install.sh)
-  file( COPY ${PROJECT_BINARY_DIR}/tmp/setup-install.sh
-        DESTINATION ${PROJECT_BINARY_DIR}
-        FILE_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE )
+  file(
+    COPY
+      ${PROJECT_BINARY_DIR}/tmp/setup-install.sh
+    DESTINATION
+      ${PROJECT_BINARY_DIR}
+    FILE_PERMISSIONS
+      OWNER_READ OWNER_WRITE OWNER_EXECUTE
+  )
 
   configure_file(python/enable-python.sh.in enable-python.sh)
 
@@ -498,5 +569,11 @@ if (OPM_ENABLE_PYTHON)
   endif()
 endif()
 
-install(DIRECTORY docs/man1 DESTINATION ${CMAKE_INSTALL_MANDIR}
-  FILES_MATCHING PATTERN "*.1")
+install(
+  DIRECTORY
+    docs/man1
+  DESTINATION
+    ${CMAKE_INSTALL_MANDIR}
+  FILES_MATCHING PATTERN
+    "*.1"
+)
