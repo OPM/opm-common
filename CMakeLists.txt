@@ -265,35 +265,13 @@ macro(${project}_files_hook)
 endmacro()
 
 macro(${project}_tests_hook)
-  # Build the compare utilities
   if(ENABLE_ECL_INPUT)
-    add_executable(compareECL
-      test_util/EclFilesComparator.cpp
-      test_util/EclRegressionTest.cpp
-      test_util/compareECL.cpp
-      )
+    target_sources(compareECL
+      PRIVATE
+        test_util/EclFilesComparator.cpp
+        test_util/EclRegressionTest.cpp
+    )
 
-    add_executable(convertECL
-      test_util/convertECL.cpp
-      )
-
-    add_executable(summary
-      test_util/summary.cpp
-      )
-
-    add_executable(arraylist
-      test_util/arraylist.cpp
-      )
-
-    add_executable(rewriteEclFile
-      test_util/rewriteEclFile.cpp
-      )
-
-    foreach(target compareECL convertECL summary rewriteEclFile arraylist)
-      opm_add_target_options(TARGET ${target})
-      target_link_libraries(${target} PRIVATE opmcommon)
-      install(TARGETS ${target} DESTINATION bin)
-    endforeach()
     list(APPEND opm-common_EXTRA_TARGETS compareECL rst_deck)
 
     # Add the tests
