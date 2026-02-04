@@ -270,18 +270,13 @@ if (OPM_ENABLE_PYTHON)
     find_package(Python3 REQUIRED COMPONENTS Interpreter Development.Embed Development.Module)
     get_target_property(_lib_path Python3::Python IMPORTED_LOCATION)
     set(PYTHON_LIBRARY ${_lib_path})
-    set(PYTHON_LIBRARIES {PYTHON_LIBRARY})
-    list(APPEND opm-common_LIBRARIES ${PYTHON_LIBRARY})
-    set(PYTHON_INCLUDE_DIRS ${Python3_INCLUDE_DIRS})
+    list(APPEND opm-common_LIBRARIES ${_lib_path})
   endif()
   if(Python3_VERSION_MINOR LESS 3)
     # Python native namespace packages requires python >= 3.3
     message(SEND_ERROR "OPM requires python >= 3.3 but only version ${Python3_VERSION} was found")
   endif()
 
-  # Compatibility settings for PythonInterp and PythonLibs
-  # used e.g. in FindCwrap, pybind11
-  set(PYTHON_EXECUTABLE ${Python3_EXECUTABLE})
   # Directory to install common (for opm modules) python scripts
   include (GNUInstallDirs)
   set(OPM_PYTHON_COMMON_DIR "${CMAKE_INSTALL_DATAROOTDIR}/opm/python")
@@ -292,22 +287,7 @@ if (OPM_ENABLE_PYTHON)
       "${OPM_PROJECT_EXTRA_CODE_INSTALLED}
        set(opm-common_PYTHON_COMMON_DIR ${CMAKE_INSTALL_PREFIX}/${OPM_PYTHON_COMMON_DIR})")
 
-  # We always need the PYTHON_INCLUDE_DIR. Unfortunately
-  # When we build pypi packages CMake will fail to determine
-  # these via the usual find_package(PythonLibs or
-  # find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
-  # Hence we overwrite them here.
-  if(NOT PYTHON_INCLUDE_DIRS)
-    execute_process(COMMAND "${PYTHON_EXECUTABLE}" "-c" "from distutils import sysconfig; print(sysconfig.get_python_inc(plat_specific=True), end=\"\");"
-      RESULT_VARIABLE _PYTHON_DIR_SUCCESS
-      OUTPUT_VARIABLE PYTHON_INCLUDE_DIR
-      ERROR_VARIABLE _PYTHON_ERROR_VALUE)
-    if(NOT _PYTHON_DIR_SUCCESS MATCHES 0)
-      message(FATAL_ERROR "Could not determine Python include directory. Error: ${_PYTHON_ERROR_VALUE}.")
-    endif()
-    set(PYTHON_INCLUDE_DIRS ${PYTHON_INCLUDE_DIR})
-  endif()
-  find_package(pybind11 2.2 CONFIG)
+  find_package(pybind11 CONFIG)
   if (NOT pybind11_FOUND)
     include(DownloadPyBind11)
   endif()
