@@ -219,8 +219,13 @@ macro(${project}_files_hook)
     # Generate versioned setup.py
     configure_file(${PROJECT_SOURCE_DIR}/python/setup.py.in
                    ${PROJECT_BINARY_DIR}/python/setup.py.tmp)
-    file(GENERATE OUTPUT ${PROJECT_BINARY_DIR}/python/setup.py
-                  INPUT ${PROJECT_BINARY_DIR}/python/setup.py.tmp)
+    file(
+      GENERATE
+        OUTPUT
+          ${PROJECT_BINARY_DIR}/python/setup.py
+        INPUT
+          ${PROJECT_BINARY_DIR}/python/setup.py.tmp
+    )
 
     # -------------------------------------------------------------------------
     # Let cmake configure some small shell scripts which can be used to simplify
@@ -334,21 +339,36 @@ macro(${project}_tests_hook)
         ${PROJECT_BINARY_DIR}/python
       COMMAND
         ${Python3_EXECUTABLE} -m unittest discover
-     )
+    )
  endif()
 endmacro()
 
 macro(${project}_install_hook)
   # Install build system files and documentation
-  install(DIRECTORY cmake
-    DESTINATION share/opm USE_SOURCE_PERMISSIONS
-    PATTERN "OPM-CMake.md" EXCLUDE)
+  install(
+    DIRECTORY
+      cmake
+    DESTINATION
+      share/opm
+    USE_SOURCE_PERMISSIONS
+    PATTERN
+      "OPM-CMake.md" EXCLUDE
+  )
 
-  install(FILES cmake/OPM-CMake.md
-    DESTINATION ${CMAKE_INSTALL_DOCDIR})
+  install(
+    FILES
+      cmake/OPM-CMake.md
+    DESTINATION
+      ${CMAKE_INSTALL_DOCDIR}
+  )
 
   # Install tab completion skeleton
-  install(FILES etc/opm_bash_completion.sh.in DESTINATION share/opm/etc)
+  install(
+    FILES
+      etc/opm_bash_completion.sh.in
+    DESTINATION
+      share/opm/etc
+  )
 
   install(
     DIRECTORY
