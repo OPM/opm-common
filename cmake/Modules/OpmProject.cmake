@@ -99,20 +99,27 @@ function (opm_cmake_config name)
     APPEND
       "${${name}_CONFIG_VARS}"
   )
+
   # this file gets copied to the final installation directory
-  install (
+  get_target_property(lib_type ${${name}_TARGET} TYPE)
+  if(lib_type MATCHES "INTERFACE")
+    set(cmake_config_dir ${CMAKE_INSTALL_DATADIR}/cmake/${${name}_NAME})
+  else()
+    set(cmake_config_dir ${CMAKE_INSTALL_LIBDIR}/cmake/${${name}_NAME})
+  endif()
+  install(
     FILES
       ${PROJECT_BINARY_DIR}/${${name}_NAME}-install.cmake
     DESTINATION
-      share/cmake/${${name}_NAME}
+      ${cmake_config_dir}
     RENAME
       ${${name}_NAME}-config.cmake
   )
   # assume that there exists a version file already
-  install (
+  install(
     FILES
       ${PROJECT_BINARY_DIR}/${${name}_NAME}-config-version.cmake
     DESTINATION
-      share/cmake/${${name}_NAME}
+      ${cmake_config_dir}
   )
 endfunction()
