@@ -351,6 +351,28 @@ macro(${project}_tests_hook)
  endif()
 endmacro()
 
+macro(${project}_install_hook)
+  # Install build system files and documentation
+  install(DIRECTORY cmake
+    DESTINATION share/opm USE_SOURCE_PERMISSIONS
+    PATTERN "OPM-CMake.md" EXCLUDE)
+
+  install(FILES cmake/OPM-CMake.md
+    DESTINATION ${CMAKE_INSTALL_DOCDIR})
+
+  # Install tab completion skeleton
+  install(FILES etc/opm_bash_completion.sh.in DESTINATION share/opm/etc)
+
+  install(
+    DIRECTORY
+      docs/man1
+    DESTINATION
+      ${CMAKE_INSTALL_MANDIR}
+    FILES_MATCHING PATTERN
+      "*.1"
+  )
+endmacro()
+
 # all setup common to the OPM library modules is done here
 include (OpmLibMain)
 
@@ -422,17 +444,6 @@ if(Boost_UNIT_TEST_FRAMEWORK_FOUND)
                          ENVIRONMENT "PYTHONPATH=${PROJECT_BINARY_DIR}/python:$ENV{PYTHONPATH}")
   endforeach()
 endif()
-
-# Install build system files and documentation
-install(DIRECTORY cmake
-  DESTINATION share/opm USE_SOURCE_PERMISSIONS
-  PATTERN "OPM-CMake.md" EXCLUDE)
-
-install(FILES cmake/OPM-CMake.md
-  DESTINATION ${CMAKE_INSTALL_DOCDIR})
-
-# Install tab completion skeleton
-install(FILES etc/opm_bash_completion.sh.in DESTINATION share/opm/etc)
 
 if (OPM_ENABLE_PYTHON)
   set(opm-common_PYTHON_PACKAGE_VERSION ${OPM_PYTHON_PACKAGE_VERSION_TAG})
@@ -540,12 +551,3 @@ if (OPM_ENABLE_PYTHON)
     add_definitions(-DEMBEDDED_PYTHON)
   endif()
 endif()
-
-install(
-  DIRECTORY
-    docs/man1
-  DESTINATION
-    ${CMAKE_INSTALL_MANDIR}
-  FILES_MATCHING PATTERN
-    "*.1"
-)
