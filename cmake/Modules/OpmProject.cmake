@@ -4,22 +4,22 @@ function (configure_cmake_file name variant version)
   # declarative list of the variable names that are used in the template
   # and that must be defined in the project to be exported
   set (variable_suffices
-	DESCRIPTION
-	VERSION
-	DEFINITIONS
-	INCLUDE_DIRS
-	LIBRARY_DIRS
-	LINKER_FLAGS
-	CONFIG_VARS
-	LIBRARY
-	LIBRARIES
-	TARGET
-	)
+    DESCRIPTION
+    VERSION
+    DEFINITIONS
+    INCLUDE_DIRS
+    LIBRARY_DIRS
+    LINKER_FLAGS
+    CONFIG_VARS
+    LIBRARY
+    LIBRARIES
+    TARGET
+  )
 
   # set these variables temporarily (this is in a function scope) so
   # they are available to the template (only)
   foreach (suffix IN LISTS variable_suffices)
-	set (opm-project_${suffix} "${${name}_${suffix}}")
+    set (opm-project_${suffix} "${${name}_${suffix}}")
   endforeach (suffix)
 
   set (opm-project_NAME "${${name}_NAME}")
@@ -29,10 +29,10 @@ function (configure_cmake_file name variant version)
 
   # make the file substitutions
   configure_file (
-	${template_dir}/opm-project-config${version}.cmake.in
-	${PROJECT_BINARY_DIR}/${${name}_NAME}-${variant}${version}.cmake
-	@ONLY
-	)
+    ${template_dir}/opm-project-config${version}.cmake.in
+    ${PROJECT_BINARY_DIR}/${${name}_NAME}-${variant}${version}.cmake
+    @ONLY
+  )
 endfunction (configure_cmake_file name)
 
 # installation of CMake modules to help user programs locate the library
@@ -49,9 +49,11 @@ function (opm_cmake_config name)
   configure_cmake_file (${name} "config" "")
   configure_cmake_file (${name} "config" "-version")
   configure_vars (
-	FILE CMAKE "${PROJECT_BINARY_DIR}/${${name}_NAME}-config.cmake"
-	APPEND "${${name}_CONFIG_VARS}"
-	)
+    FILE CMAKE
+      ${PROJECT_BINARY_DIR}/${${name}_NAME}-config.cmake
+    APPEND
+      ${${name}_CONFIG_VARS}
+  )
 
   # The next replace will result in bogus entries if install directory is
   # a subdirectory of source tree,
@@ -63,7 +65,7 @@ function (opm_cmake_config name)
   string(FIND "${${name}_INCLUDE_DIRS}" "${PROJECT_SOURCE_DIR}" _source_in_include)
 
   if(_source_in_include GREATER "-1")
-    string(REGEX REPLACE "${CMAKE_INSTALL_PREFIX}/include${${name}_VER_DIR}[;$]" "" ${name}_INCLUDE_DIRS "${${name}_INCLUDE_DIRS}")
+    string(REGEX REPLACE "${CMAKE_INSTALL_PREFIX}/include[;$]" "" ${name}_INCLUDE_DIRS "${${name}_INCLUDE_DIRS}")
     # Get rid of empty entries
     string(REPLACE ";;" ";" ${name}_INCLUDE_DIRS "${${name}_INCLUDE_DIRS}")
 
@@ -71,20 +73,20 @@ function (opm_cmake_config name)
     # variables that contains build paths
     string (REPLACE
       "${PROJECT_SOURCE_DIR}"
-      "${CMAKE_INSTALL_PREFIX}/include${${name}_VER_DIR}"
+      "${CMAKE_INSTALL_PREFIX}/include"
       ${name}_INCLUDE_DIRS
       "${${name}_INCLUDE_DIRS}"
       )
   endif()
   string (REPLACE
-	"${CMAKE_LIBRARY_OUTPUT_DIRECTORY}"
-	"${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}${${name}_VER_DIR}"
-	${name}_LIBRARY
-	"${${name}_LIBRARY}"
-	)
+    "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}"
+    "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}"
+    ${name}_LIBRARY
+    "${${name}_LIBRARY}"
+  )
   set (CMAKE_LIBRARY_OUTPUT_DIRECTORY
-	"${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}${${name}_VER_DIR}"
-	)
+    "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}"
+  )
   # create a config mode file which targets the install directory instead
   # of the build directory (using the same input template)
   set(OPM_PROJECT_EXTRA_CODE ${OPM_PROJECT_EXTRA_CODE_INSTALLED})
@@ -92,18 +94,32 @@ function (opm_cmake_config name)
   set(DUNE_PREFIX ${CMAKE_INSTALL_PREFIX})
   configure_cmake_file (${name} "install" "")
   configure_vars (
-	FILE CMAKE "${PROJECT_BINARY_DIR}/${${name}_NAME}-install.cmake"
-	APPEND "${${name}_CONFIG_VARS}"
-	)
+    FILE CMAKE
+      "${PROJECT_BINARY_DIR}/${${name}_NAME}-install.cmake"
+    APPEND
+      "${${name}_CONFIG_VARS}"
+  )
+
   # this file gets copied to the final installation directory
-  install (
-	FILES ${PROJECT_BINARY_DIR}/${${name}_NAME}-install.cmake
-	DESTINATION share/cmake${${name}_VER_DIR}/${${name}_NAME}
-	RENAME ${${name}_NAME}-config.cmake
-	)
+  get_target_property(lib_type ${${name}_TARGET} TYPE)
+  if(lib_type MATCHES "INTERFACE")
+    set(cmake_config_dir ${CMAKE_INSTALL_DATADIR}/cmake/${${name}_NAME})
+  else()
+    set(cmake_config_dir ${CMAKE_INSTALL_LIBDIR}/cmake/${${name}_NAME})
+  endif()
+  install(
+    FILES
+      ${PROJECT_BINARY_DIR}/${${name}_NAME}-install.cmake
+    DESTINATION
+      ${cmake_config_dir}
+    RENAME
+      ${${name}_NAME}-config.cmake
+  )
   # assume that there exists a version file already
-  install (
-	FILES ${PROJECT_BINARY_DIR}/${${name}_NAME}-config-version.cmake
-	DESTINATION share/cmake${${name}_VER_DIR}/${${name}_NAME}
-	)
-endfunction (opm_cmake_config name)
+  install(
+    FILES
+      ${PROJECT_BINARY_DIR}/${${name}_NAME}-config-version.cmake
+    DESTINATION
+      ${cmake_config_dir}
+  )
+endfunction()

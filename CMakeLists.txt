@@ -23,10 +23,11 @@ if(NOT ENABLE_ECL_INPUT)
   set(ENABLE_ECL_OUTPUT OFF)
 endif()
 
+include(GNUInstallDirs)
 # We need to define this variable in the installed cmake config file.
 set(OPM_PROJECT_EXTRA_CODE_INSTALLED  "#ENABLE_ECL_INPUT is needed by opm-common-prereq.cmake
                                        set(ENABLE_ECL_INPUT ${ENABLE_ECL_INPUT})
-                                       set(OPM_MACROS_ROOT ${CMAKE_INSTALL_PREFIX}/share/opm)
+                                       set(OPM_MACROS_ROOT ${CMAKE_INSTALL_FULL_DATADIR}/opm)
                                        list(APPEND CMAKE_MODULE_PATH \${OPM_MACROS_ROOT}/cmake/Modules)
                                        include(OpmPackage) #Make macros available after find_package(opm-common)")
 
@@ -100,7 +101,6 @@ macro(${project}_prereqs_hook)
     endif()
 
     # Directory to install common (for opm modules) python scripts
-    include (GNUInstallDirs)
     set(OPM_PYTHON_COMMON_DIR "${CMAKE_INSTALL_DATAROOTDIR}/opm/python")
     set(OPM_PROJECT_EXTRA_CODE_INTREE
       "${OPM_PROJECT_EXTRA_CODE_INTREE}
@@ -219,8 +219,13 @@ macro(${project}_files_hook)
     # Generate versioned setup.py
     configure_file(${PROJECT_SOURCE_DIR}/python/setup.py.in
                    ${PROJECT_BINARY_DIR}/python/setup.py.tmp)
-    file(GENERATE OUTPUT ${PROJECT_BINARY_DIR}/python/setup.py
-                  INPUT ${PROJECT_BINARY_DIR}/python/setup.py.tmp)
+    file(
+      GENERATE
+        OUTPUT
+          ${PROJECT_BINARY_DIR}/python/setup.py
+        INPUT
+          ${PROJECT_BINARY_DIR}/python/setup.py.tmp
+    )
 
     # -------------------------------------------------------------------------
     # Let cmake configure some small shell scripts which can be used to simplify
@@ -334,21 +339,36 @@ macro(${project}_tests_hook)
         ${PROJECT_BINARY_DIR}/python
       COMMAND
         ${Python3_EXECUTABLE} -m unittest discover
-     )
+    )
  endif()
 endmacro()
 
 macro(${project}_install_hook)
   # Install build system files and documentation
-  install(DIRECTORY cmake
-    DESTINATION share/opm USE_SOURCE_PERMISSIONS
-    PATTERN "OPM-CMake.md" EXCLUDE)
+  install(
+    DIRECTORY
+      cmake
+    DESTINATION
+      ${CMAKE_INSTALL_DATADIR}/opm
+    USE_SOURCE_PERMISSIONS
+    PATTERN
+      "OPM-CMake.md" EXCLUDE
+  )
 
-  install(FILES cmake/OPM-CMake.md
-    DESTINATION ${CMAKE_INSTALL_DOCDIR})
+  install(
+    FILES
+      cmake/OPM-CMake.md
+    DESTINATION
+      ${CMAKE_INSTALL_DOCDIR}
+  )
 
   # Install tab completion skeleton
-  install(FILES etc/opm_bash_completion.sh.in DESTINATION share/opm/etc)
+  install(
+    FILES
+      etc/opm_bash_completion.sh.in
+    DESTINATION
+      ${CMAKE_INSTALL_DATADIR}/opm/etc
+  )
 
   install(
     DIRECTORY
