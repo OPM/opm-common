@@ -23,10 +23,11 @@ if(NOT ENABLE_ECL_INPUT)
   set(ENABLE_ECL_OUTPUT OFF)
 endif()
 
+include(GNUInstallDirs)
 # We need to define this variable in the installed cmake config file.
 set(OPM_PROJECT_EXTRA_CODE_INSTALLED  "#ENABLE_ECL_INPUT is needed by opm-common-prereq.cmake
                                        set(ENABLE_ECL_INPUT ${ENABLE_ECL_INPUT})
-                                       set(OPM_MACROS_ROOT ${CMAKE_INSTALL_PREFIX}/share/opm)
+                                       set(OPM_MACROS_ROOT ${CMAKE_INSTALL_FULL_DATADIR}/opm)
                                        list(APPEND CMAKE_MODULE_PATH \${OPM_MACROS_ROOT}/cmake/Modules)
                                        include(OpmPackage) #Make macros available after find_package(opm-common)")
 
@@ -100,7 +101,6 @@ macro(${project}_prereqs_hook)
     endif()
 
     # Directory to install common (for opm modules) python scripts
-    include (GNUInstallDirs)
     set(OPM_PYTHON_COMMON_DIR "${CMAKE_INSTALL_DATAROOTDIR}/opm/python")
     set(OPM_PROJECT_EXTRA_CODE_INTREE
       "${OPM_PROJECT_EXTRA_CODE_INTREE}
@@ -349,7 +349,7 @@ macro(${project}_install_hook)
     DIRECTORY
       cmake
     DESTINATION
-      share/opm
+      ${CMAKE_INSTALL_DATADIR}/opm
     USE_SOURCE_PERMISSIONS
     PATTERN
       "OPM-CMake.md" EXCLUDE
@@ -367,7 +367,7 @@ macro(${project}_install_hook)
     FILES
       etc/opm_bash_completion.sh.in
     DESTINATION
-      share/opm/etc
+      ${CMAKE_INSTALL_DATADIR}/opm/etc
   )
 
   install(
