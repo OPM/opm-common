@@ -334,14 +334,15 @@ void ScheduleDeck::handleDATES(const DeckKeyword&   dates,
 
         const auto currentTime = TimeService::to_time_t(context.last_time);
 
-        if (nextTime < currentTime) {
+        // Recall: difftime(b,a) is portably equivalent to "b-a".
+        if (! (std::difftime(nextTime, currentTime) > 0.0)) {
             const auto* prevstepID = (restart_time > 0)
                 ? "restart time"
                 : "end time of previous report step";
 
             auto msg = fmt::format("Keyword DATES includes time "
                                    "{:%d-%b-%Y %H:%M:%S} which "
-                                   "is earlier than the {}, "
+                                   "is not later than the {}, "
                                    "{:%d-%b-%Y %H:%M:%S}.",
                                    fmt::gmtime(nextTime),
                                    prevstepID,
