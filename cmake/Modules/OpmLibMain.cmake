@@ -15,6 +15,7 @@
 # tests_hook      Do special processing before tests are compiled
 # files_hook      Do special processing before final targets are added
 
+include(OpmAddDependencies)
 include(OpmCompile)
 include(UseOnlyNeeded)
 include(UseFastBuilds)
@@ -81,14 +82,17 @@ linker_info ()
 include (OpmDefaults)
 message (STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
+include(${project}-prereqs)
+
 # callback hook to setup additional dependencies
 if(COMMAND ${project}_prereqs_hook)
   cmake_language(CALL ${project}_prereqs_hook)
 endif()
 
-# macro to set standard variables (INCLUDE_DIRS, LIBRARIES etc.)
-include (OpmFind)
-find_and_append_package_list_to (${project} ${${project}_DEPS})
+if(${project}_DEPS)
+  include (OpmFind)
+  find_and_append_package_list_to (${project} ${${project}_DEPS})
+endif()
 
 # set aliases to probed variables
 include (OpmAliases)

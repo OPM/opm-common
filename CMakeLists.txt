@@ -23,11 +23,6 @@ if(NOT ENABLE_ECL_INPUT)
   set(ENABLE_ECL_OUTPUT OFF)
 endif()
 
-
-# not the same location as most of the other projects; this hook overrides
-macro (dir_hook)
-endmacro (dir_hook)
-
 # We need to define this variable in the installed cmake config file.
 set(OPM_PROJECT_EXTRA_CODE_INSTALLED  "#ENABLE_ECL_INPUT is needed by opm-common-prereq.cmake
                                        set(ENABLE_ECL_INPUT ${ENABLE_ECL_INPUT})
@@ -51,20 +46,6 @@ OpmSetPolicies()
 # HAVE_OPM_TESTS will be set to true.
 include(Findopm-tests)
 
-# list of prerequisites for this particular project; this is in a
-# separate file (in cmake/Modules sub-directory) because it is shared
-# with the find module
-include (${project}-prereqs)
-
-# source_hook runs before config_hook and the former needs fmt, hence this
-# needs to be here.
-if(fmt_FOUND)
-  # OpmSatellites will not add the library, do it here.
-  list(APPEND opm-common_LIBRARIES fmt::fmt)
-else()
-  include(DownloadFmt)
-endif()
-
 if(OPM_ENABLE_EMBEDDED_PYTHON AND NOT OPM_ENABLE_PYTHON)
   # This needs to be here to run before source_hook
   message(WARNING "Inconsistent settings: OPM_ENABLE_PYTHON=OFF and "
@@ -74,6 +55,15 @@ endif()
 # read the list of components from this file (in the project directory);
 # it should set various lists with the names of the files to include
 include (CMakeLists_files.cmake)
+
+macro(${project}_prereqs_hook)
+  if(NOT TARGET cjson)
+    include(DownloadCjson)
+  endif()
+  if(NOT TARGET fmt::fmt)
+    include(DownloadFmt)
+  endif()
+endmacro()
 
 macro(${project}_config_hook)
   if(ENABLE_ECL_INPUT)
@@ -296,8 +286,7 @@ endif()
 # all setup common to the OPM library modules is done here
 include (OpmLibMain)
 
-if(NOT TARGET cjson)
-  include(DownloadCjson)
+if(NOT cJSON_FOUND) # TODO: Remove once json is split out
   target_sources(opmcommon PRIVATE $<TARGET_OBJECTS:cjson>)
   target_include_directories(opmcommon PRIVATE ${CMAKE_BINARY_DIR}/_deps)
 endif()
