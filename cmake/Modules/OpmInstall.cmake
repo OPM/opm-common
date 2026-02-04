@@ -17,9 +17,9 @@ macro (opm_install opm)
     EXPORT
       ${opm}-targets
     LIBRARY DESTINATION
-      ${CMAKE_INSTALL_LIBDIR}${${opm}_VER_DIR}
+      ${CMAKE_INSTALL_LIBDIR}
     ARCHIVE DESTINATION
-      ${CMAKE_INSTALL_LIBDIR}${${opm}_VER_DIR}
+      ${CMAKE_INSTALL_LIBDIR}
     FILE_SET
       HEADERS
     FILE_SET
@@ -35,7 +35,7 @@ macro (opm_install opm)
   # multiarch-aware and will thus put in lib64/ on RHEL and lib/ on Debian
   install (
 	FILES ${PROJECT_SOURCE_DIR}/dune.module
-	DESTINATION lib/${${opm}_VER_DIR}/dunecontrol/${${opm}_NAME}
+	DESTINATION lib/dunecontrol/${${opm}_NAME}
 	)
   install (
         FILES ${PROJECT_SOURCE_DIR}/${CMAKE_PROJECT_NAME}-prereqs.cmake

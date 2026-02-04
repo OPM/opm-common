@@ -104,17 +104,7 @@ OpmInitDirVars ()
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR})
 include(OpmPackage)
 
-# if we are backporting this release to a system which already have an
-# earlier version, set this flag to have everything scoped into a directory
-# which incorporates the label of the release. this is done by interjecting
-# the ${project}_VER_DIR into the installation path.
-option (USE_VERSIONED_DIR "Put files in release-specific directories" OFF)
 set (${project}_SUITE "opm")
-if (USE_VERSIONED_DIR)
-  set (${project}_VER_DIR "/${${project}_SUITE}-${${project}_LABEL}")
-else ()
-  set (${project}_VER_DIR "")
-endif ()
 
 # parallel computing must be explicitly enabled
 # This needs to be in OpmInit as prereqs is called before OpmLibMain is included.

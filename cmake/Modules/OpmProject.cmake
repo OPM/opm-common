@@ -65,7 +65,7 @@ function (opm_cmake_config name)
   string(FIND "${${name}_INCLUDE_DIRS}" "${PROJECT_SOURCE_DIR}" _source_in_include)
 
   if(_source_in_include GREATER "-1")
-    string(REGEX REPLACE "${CMAKE_INSTALL_PREFIX}/include${${name}_VER_DIR}[;$]" "" ${name}_INCLUDE_DIRS "${${name}_INCLUDE_DIRS}")
+    string(REGEX REPLACE "${CMAKE_INSTALL_PREFIX}/include[;$]" "" ${name}_INCLUDE_DIRS "${${name}_INCLUDE_DIRS}")
     # Get rid of empty entries
     string(REPLACE ";;" ";" ${name}_INCLUDE_DIRS "${${name}_INCLUDE_DIRS}")
 
@@ -73,19 +73,19 @@ function (opm_cmake_config name)
     # variables that contains build paths
     string (REPLACE
       "${PROJECT_SOURCE_DIR}"
-      "${CMAKE_INSTALL_PREFIX}/include${${name}_VER_DIR}"
+      "${CMAKE_INSTALL_PREFIX}/include"
       ${name}_INCLUDE_DIRS
       "${${name}_INCLUDE_DIRS}"
       )
   endif()
   string (REPLACE
     "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}"
-    "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}${${name}_VER_DIR}"
+    "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}"
     ${name}_LIBRARY
     "${${name}_LIBRARY}"
   )
   set (CMAKE_LIBRARY_OUTPUT_DIRECTORY
-    "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}${${name}_VER_DIR}"
+    "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}"
   )
   # create a config mode file which targets the install directory instead
   # of the build directory (using the same input template)
@@ -104,7 +104,7 @@ function (opm_cmake_config name)
     FILES
       ${PROJECT_BINARY_DIR}/${${name}_NAME}-install.cmake
     DESTINATION
-      share/cmake${${name}_VER_DIR}/${${name}_NAME}
+      share/cmake/${${name}_NAME}
     RENAME
       ${${name}_NAME}-config.cmake
   )
@@ -113,6 +113,6 @@ function (opm_cmake_config name)
     FILES
       ${PROJECT_BINARY_DIR}/${${name}_NAME}-config-version.cmake
     DESTINATION
-      share/cmake${${name}_VER_DIR}/${${name}_NAME}
+      share/cmake/${${name}_NAME}
   )
 endfunction()
