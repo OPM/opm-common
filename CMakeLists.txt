@@ -334,9 +334,21 @@ macro(${project}_tests_hook)
 
     include(ExtraTests.cmake)
   endif()
+
   if (dune-common_FOUND)
     list(APPEND tests_SOURCES ${DUNE_TEST_SOURCE_FILES})
   endif()
+
+  if(OPM_ENABLE_PYTHON)
+    add_test(
+      NAME
+        python_tests
+      WORKING_DIRECTORY
+        ${PROJECT_BINARY_DIR}/python
+      COMMAND
+        ${Python3_EXECUTABLE} -m unittest discover
+     )
+ endif()
 endmacro()
 
 # all setup common to the OPM library modules is done here
@@ -516,20 +528,6 @@ if (OPM_ENABLE_PYTHON)
         ${OPM_PYTHON_COMMON_DIR}
     )
   endif()
-
-  # Observe that if the opmcommon library has been built as a shared library the
-  # python library opmcommon_python will in general not find it runtime while
-  # testing.
-  add_test(
-    NAME
-      python_tests
-    WORKING_DIRECTORY
-      ${PROJECT_BINARY_DIR}/python
-    COMMAND
-      ${CMAKE_COMMAND} -E env
-      LD_LIBRARY_PATH=${PROJECT_BINARY_DIR}/lib
-      ${Python3_EXECUTABLE} -m unittest discover
-   )
 
   set_target_properties(opmcommon PROPERTIES POSITION_INDEPENDENT_CODE ON)
   set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES ${PROJECT_BINARY_DIR}/python)
