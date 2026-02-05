@@ -296,6 +296,26 @@ macro(${project}_tests_hook)
     )
 
     include(ExtraTests.cmake)
+
+    if(ENABLE_MOCKSIM AND TARGET Boost::unit_test_framework)
+      foreach(test test_msim test_msim_ACTIONX test_msim_EXIT)
+        opm_add_test(${test}
+          SOURCES
+            tests/msim/${test}.cpp
+          LIBRARIES
+            mocksim
+            opmcommon
+            Boost::unit_test_framework
+          WORKING_DIRECTORY
+            ${PROJECT_BINARY_DIR}/tests
+        )
+      endforeach()
+      set_tests_properties(msim_ACTIONX
+        PROPERTIES
+        ENVIRONMENT_MODIFICATION
+          PYTHONPATH=path_list_prepend:${PROJECT_BINARY_DIR}/python
+      )
+    endif()
   endif()
 
   if (dune-common_FOUND)
@@ -326,6 +346,16 @@ macro(${project}_targets_hook)
         test_util/EclFilesComparator.cpp
         test_util/EclRegressionTest.cpp
     )
+
+    if(ENABLE_MOCKSIM)
+      add_library(mocksim msim/src/msim.cpp)
+      opm_add_target_options(TARGET mocksim)
+      target_link_libraries(mocksim PUBLIC opmcommon)
+      target_include_directories(mocksim PUBLIC msim/include)
+      add_executable(msim examples/msim.cpp)
+      opm_add_target_options(TARGET msim)
+      target_link_libraries(msim PRIVATE mocksim)
+    endif()
 
     list(APPEND opm-common_EXTRA_TARGETS compareECL rst_deck)
   endif()
@@ -370,30 +400,6 @@ endmacro()
 
 # all setup common to the OPM library modules is done here
 include (OpmLibMain)
-
-if (ENABLE_MOCKSIM AND ENABLE_ECL_INPUT)
-  add_library(mocksim
-              msim/src/msim.cpp)
-  opm_add_target_options(TARGET mocksim)
-  target_link_libraries(mocksim PUBLIC opmcommon)
-  target_include_directories(mocksim PUBLIC msim/include)
-  add_executable(msim examples/msim.cpp)
-  opm_add_target_options(TARGET msim)
-  target_link_libraries(msim PRIVATE mocksim)
-
-  if (TARGET Boost::unit_test_framework)
-    set(_libs mocksim opmcommon Boost::unit_test_framework)
-
-    foreach( test test_msim test_msim_ACTIONX test_msim_EXIT)
-      opm_add_test(${test} SOURCES tests/msim/${test}.cpp
-        LIBRARIES ${_libs}
-        WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/tests
-        CONDITION ${HAVE_ECL_INPUT})
-    endforeach()
-    set_tests_properties(msim_ACTIONX PROPERTIES
-                        ENVIRONMENT "PYTHONPATH=${PROJECT_BINARY_DIR}/python:$ENV{PYTHONPATH}")
-  endif()
-endif()
 
 if(dune-common_FOUND)
   # Explicitly link tests needing dune-common.
