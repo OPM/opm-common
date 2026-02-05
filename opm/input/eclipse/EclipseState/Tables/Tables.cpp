@@ -61,6 +61,7 @@
 #include <opm/input/eclipse/EclipseState/Tables/RocktabTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/RockwnodTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/RsvdTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/RsconstTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/RtempvdTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/RvvdTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/RvwvdTable.hpp>
@@ -1800,6 +1801,26 @@ RsvdTable::getDepthColumn() const
 
 const TableColumn&
 RsvdTable::getRsColumn() const
+{
+    return SimpleTable::getColumn(1);
+}
+
+RsconstTable::RsconstTable(const DeckItem& item, const int tableID)
+{
+    m_schema.addColumn(ColumnSchema("RS", Table::RANDOM, Table::DEFAULT_NONE));
+    m_schema.addColumn(ColumnSchema("PB", Table::RANDOM, Table::DEFAULT_NONE));
+
+    SimpleTable::init("RSCONST", item, tableID);
+}
+
+const TableColumn&
+RsconstTable::getRsColumn() const
+{
+    return SimpleTable::getColumn(0);
+}
+
+const TableColumn&
+RsconstTable::getPbubColumn() const
 {
     return SimpleTable::getColumn(1);
 }

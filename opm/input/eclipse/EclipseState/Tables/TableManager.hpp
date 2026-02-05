@@ -95,6 +95,7 @@ namespace Opm {
         const TableContainer& getSgfnTables() const;
         const TableContainer& getSsfnTables() const;
         const TableContainer& getRsvdTables() const;
+        const TableContainer& getRsconstTables() const;
         const TableContainer& getRvvdTables() const;
         const TableContainer& getRvwvdTables() const;
         const TableContainer& getPbvdTables() const;
@@ -184,6 +185,7 @@ namespace Opm {
         const std::map<int, SkprwatTable>& getSkprwatTables() const;
         const std::map<int, SkprpolyTable>& getSkprpolyTables() const;
         const std::map<std::string, TableContainer>& getSimpleTables() const;
+
 
         /// deck has keyword "IMPTVD" --- Imbition end-point versus depth tables
         bool useImptvd() const;
@@ -419,6 +421,7 @@ namespace Opm {
         double m_rtemp {288.7056}; // 60 Fahrenheit in Kelvin
         double m_salinity {0.0};
         bool m_diff_mole_fraction {true};
+
 
         struct SplitSimpleTables {
           size_t plyshMax = 0;
