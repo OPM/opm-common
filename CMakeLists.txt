@@ -164,8 +164,12 @@ macro(${project}_sources_hook)
       list(INSERT opm-common_SOURCES 0 ${PROJECT_BINARY_DIR}/python/cxx/builtin_pybind11.cpp)
     endif()
   endif()
-  set_source_files_properties(src/opm/input/eclipse/Python/Python.cpp
-                              PROPERTIES COMPILE_FLAGS -Wno-shadow)
+  set_source_files_properties(
+    opm/input/eclipse/Python/Python.cpp
+    PROPERTIES
+    COMPILE_FLAGS
+      -Wno-shadow
+  )
   if (OPM_ENABLE_PYTHON)
     # Set the path to the input docstrings.json file and the output .hpp file
     set(PYTHON_DOCSTRINGS_FILE "${PROJECT_SOURCE_DIR}/python/docstrings_common.json")
