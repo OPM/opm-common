@@ -4453,6 +4453,38 @@ BOOST_AUTO_TEST_CASE(nupcol) {
 RUNSPEC
 START             -- 0
 19 JUN 2007 /
+
+NUPCOL
+  20 /
+SCHEDULE
+DATES             -- 1
+ 10  OKT 2008 /
+/
+NUPCOL
+  1* /
+DATES             -- 1
+ 10  OKT 2009 /
+/
+NUPCOL
+  4 /
+DATES             -- 1
+ 10  OKT 2010 /
+/
+)";
+    const auto& schedule = make_schedule(input);
+    {
+        // Flow uses 3 as default
+        BOOST_CHECK_EQUAL(schedule[0].nupcol(),20);
+        BOOST_CHECK_EQUAL(schedule[1].nupcol(), 3);
+        BOOST_CHECK_EQUAL(schedule[2].nupcol(), 4);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(nupcol_minnpcol) {
+    std::string input = R"(
+RUNSPEC
+START             -- 0
+19 JUN 2007 /
 MINNPCOL
   6 /
 NUPCOL
@@ -4474,9 +4506,10 @@ DATES             -- 1
 )";
     const auto& schedule = make_schedule(input);
     {
-        // Flow uses 12 as default
+        // Flow uses 3 as default, but this deck
+        // has MINNPCOL 6
         BOOST_CHECK_EQUAL(schedule[0].nupcol(),20);
-        BOOST_CHECK_EQUAL(schedule[1].nupcol(),12);
+        BOOST_CHECK_EQUAL(schedule[1].nupcol(), 6);
         BOOST_CHECK_EQUAL(schedule[2].nupcol(), 6);
     }
 }
