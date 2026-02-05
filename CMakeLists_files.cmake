@@ -4,6 +4,9 @@
 #	                      part of the library. Please try to keep it sorted to
 #	                      maintain sanity.
 #
+# ADDITIONAL_SOURCE_FILES List of programs that will always be built and
+#                         installed, even if BUILD_EXAMPLES if OFF
+#
 #	TEST_SOURCE_FILES     List of programs that will be run as unit tests.
 #
 #	TEST_DATA_FILES       Files from the source three that should be made
@@ -401,6 +404,14 @@ if(ENABLE_ECL_INPUT)
   list( APPEND PYTHON_CXX_DEPENDS ${PYTHON_CXX_SOURCE_FILES}
     python/cxx/converters.hpp
     python/cxx/export.hpp)
+
+  list(APPEND ADDITIONAL_SOURCE_FILES
+    test_util/arraylist.cpp
+    test_util/compareECL.cpp
+    test_util/convertECL.cpp
+    test_util/rewriteEclFile.cpp
+    test_util/summary.cpp
+  )
 endif()
 if(ENABLE_ECL_OUTPUT)
   list( APPEND MAIN_SOURCE_FILES
