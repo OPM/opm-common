@@ -406,6 +406,40 @@ macro(${project}_targets_hook)
       endif()
     endforeach()
   endif()
+
+  if(dune-common_FOUND)
+    target_include_directories(opmcommon PRIVATE ${dune-common_INCLUDE_DIRS})
+    if(dune-common_VERSION VERSION_LESS 2.11)
+      # Explicitly link tests needing dune-common.
+      # To avoid pulling dune-common into the opm-common interface
+      target_include_directories(dunecommon INTERFACE ${dune-common_INCLUDE_DIRS})
+      string(REPLACE " " ";" dflags "${dune-common_CXX_FLAGS}")
+      target_compile_options(dunecommon INTERFACE ${dflags})
+      target_compile_definitions(dunecommon INTERFACE DUNE_COMMON_VERSION_MAJOR=${DUNE_COMMON_VERSION_MAJOR})
+      target_compile_definitions(dunecommon INTERFACE DUNE_COMMON_VERSION_MINOR=${DUNE_COMMON_VERSION_MINOR})
+      target_compile_definitions(dunecommon INTERFACE DUNE_COMMON_VERSION_REVISION=${DUNE_COMMON_VERSION_REVISION})
+    endif()
+    if(TARGET Boost::unit_test_framework)
+      foreach(src ${DUNE_TEST_SOURCE_FILES})
+        get_filename_component(tgt ${src} NAME_WE)
+        target_link_libraries(${tgt} PRIVATE dunecommon)
+      endforeach()
+
+      foreach(tst test_SymmTensor test_densead test_EvaluationFormat
+          test_binarycoefficients test_components test_blackoilfluidstate
+          test_blackoilfluidsystem_nonstatic test_fluidmatrixinteractions
+          test_fluidsystems test_tabulation test_h2brinepvt test_co2brinepvt
+          test_eclblackoilfluidsystem test_eclblackoilfluidsystemnonstatic
+          test_eclblackoilpvt)
+        opm_add_target_options(TARGET ${tst})
+        target_link_libraries(${tst} PRIVATE dunecommon)
+      endforeach()
+    endif()
+    if(BUILD_EXAMPLES)
+      target_link_libraries(co2brinepvt PRIVATE dunecommon)
+      opm_add_target_options(TARGET co2brinepvt)
+    endif()
+  endif()
 endmacro()
 
 macro(${project}_install_hook)
@@ -515,35 +549,3 @@ endmacro()
 
 # all setup common to the OPM library modules is done here
 include (OpmLibMain)
-
-if(dune-common_FOUND)
-  # Explicitly link tests needing dune-common.
-  # To avoid pulling dune-common into the opm-common interface
-  target_include_directories(dunecommon INTERFACE ${dune-common_INCLUDE_DIRS})
-  target_include_directories(opmcommon PRIVATE ${dune-common_INCLUDE_DIRS})
-  string(REPLACE " " ";" dflags "${dune-common_CXX_FLAGS}")
-  target_compile_options(dunecommon INTERFACE ${dflags})
-  target_compile_definitions(dunecommon INTERFACE DUNE_COMMON_VERSION_MAJOR=${DUNE_COMMON_VERSION_MAJOR})
-  target_compile_definitions(dunecommon INTERFACE DUNE_COMMON_VERSION_MINOR=${DUNE_COMMON_VERSION_MINOR})
-  target_compile_definitions(dunecommon INTERFACE DUNE_COMMON_VERSION_REVISION=${DUNE_COMMON_VERSION_REVISION})
-  if(TARGET Boost::unit_test_framework)
-    foreach(src ${DUNE_TEST_SOURCE_FILES})
-      get_filename_component(tgt ${src} NAME_WE)
-      target_link_libraries(${tgt} PRIVATE dunecommon)
-    endforeach()
-
-    foreach(tst test_SymmTensor test_densead test_EvaluationFormat
-        test_binarycoefficients test_components test_blackoilfluidstate
-        test_blackoilfluidsystem_nonstatic test_fluidmatrixinteractions
-        test_fluidsystems test_tabulation test_h2brinepvt test_co2brinepvt
-        test_eclblackoilfluidsystem test_eclblackoilfluidsystemnonstatic
-        test_eclblackoilpvt)
-      opm_add_target_options(TARGET ${tst})
-      target_link_libraries(${tst} PRIVATE dunecommon)
-    endforeach()
-  endif()
-  if(BUILD_EXAMPLES)
-    target_link_libraries(co2brinepvt PRIVATE dunecommon)
-    opm_add_target_options(TARGET co2brinepvt)
-  endif()
-endif()
