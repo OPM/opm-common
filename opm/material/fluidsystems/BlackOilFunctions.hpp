@@ -37,6 +37,8 @@
 #include <opm/material/common/Valgrind.hpp>
 #include <opm/material/fluidsystems/NullParameterCache.hpp>
 
+#include <opm/common/utility/gpuDecorators.hpp>
+
 #include <array>
 #include <cstddef>
 #include <memory>
@@ -56,7 +58,7 @@ OPM_GENERATE_HAS_MEMBER(saltSaturation, )
 
 template <class FluidSystem, class FluidState, class LhsEval>
 LhsEval
-getRs_(typename std::enable_if<!HasMember_Rs<FluidState>::value, const FluidState&>::type fluidState,
+OPM_HOST_DEVICE getRs_(typename std::enable_if<!HasMember_Rs<FluidState>::value, const FluidState&>::type fluidState,
        unsigned regionIdx)
 {
     const auto& XoG = decay<LhsEval>(fluidState.massFraction(FluidSystem::oilPhaseIdx, FluidSystem::gasCompIdx));
@@ -65,7 +67,7 @@ getRs_(typename std::enable_if<!HasMember_Rs<FluidState>::value, const FluidStat
 
 template <class FluidSystem, class FluidState, class LhsEval>
 auto
-getRs_(typename std::enable_if<HasMember_Rs<FluidState>::value, const FluidState&>::type fluidState, unsigned)
+OPM_HOST_DEVICE getRs_(typename std::enable_if<HasMember_Rs<FluidState>::value, const FluidState&>::type fluidState, unsigned)
     -> decltype(decay<LhsEval>(fluidState.Rs()))
 {
     return decay<LhsEval>(fluidState.Rs());
@@ -73,7 +75,7 @@ getRs_(typename std::enable_if<HasMember_Rs<FluidState>::value, const FluidState
 
 template <class FluidSystem, class FluidState, class LhsEval>
 LhsEval
-getRv_(typename std::enable_if<!HasMember_Rv<FluidState>::value, const FluidState&>::type fluidState,
+OPM_HOST_DEVICE getRv_(typename std::enable_if<!HasMember_Rv<FluidState>::value, const FluidState&>::type fluidState,
        unsigned regionIdx)
 {
     const auto& XgO = decay<LhsEval>(fluidState.massFraction(FluidSystem::gasPhaseIdx, FluidSystem::oilCompIdx));
@@ -82,7 +84,7 @@ getRv_(typename std::enable_if<!HasMember_Rv<FluidState>::value, const FluidStat
 
 template <class FluidSystem, class FluidState, class LhsEval>
 auto
-getRv_(typename std::enable_if<HasMember_Rv<FluidState>::value, const FluidState&>::type fluidState, unsigned)
+OPM_HOST_DEVICE getRv_(typename std::enable_if<HasMember_Rv<FluidState>::value, const FluidState&>::type fluidState, unsigned)
     -> decltype(decay<LhsEval>(fluidState.Rv()))
 {
     return decay<LhsEval>(fluidState.Rv());
@@ -90,7 +92,7 @@ getRv_(typename std::enable_if<HasMember_Rv<FluidState>::value, const FluidState
 
 template <class FluidSystem, class FluidState, class LhsEval>
 LhsEval
-getRvw_(typename std::enable_if<!HasMember_Rvw<FluidState>::value, const FluidState&>::type fluidState,
+OPM_HOST_DEVICE getRvw_(typename std::enable_if<!HasMember_Rvw<FluidState>::value, const FluidState&>::type fluidState,
         unsigned regionIdx)
 {
     const auto& XgW = decay<LhsEval>(fluidState.massFraction(FluidSystem::gasPhaseIdx, FluidSystem::waterCompIdx));
@@ -99,7 +101,7 @@ getRvw_(typename std::enable_if<!HasMember_Rvw<FluidState>::value, const FluidSt
 
 template <class FluidSystem, class FluidState, class LhsEval>
 auto
-getRvw_(typename std::enable_if<HasMember_Rvw<FluidState>::value, const FluidState&>::type fluidState, unsigned)
+OPM_HOST_DEVICE getRvw_(typename std::enable_if<HasMember_Rvw<FluidState>::value, const FluidState&>::type fluidState, unsigned)
     -> decltype(decay<LhsEval>(fluidState.Rvw()))
 {
     return decay<LhsEval>(fluidState.Rvw());
@@ -107,7 +109,7 @@ getRvw_(typename std::enable_if<HasMember_Rvw<FluidState>::value, const FluidSta
 
 template <class FluidSystem, class FluidState, class LhsEval>
 LhsEval
-getRsw_(typename std::enable_if<!HasMember_Rsw<FluidState>::value, const FluidState&>::type fluidState,
+OPM_HOST_DEVICE getRsw_(typename std::enable_if<!HasMember_Rsw<FluidState>::value, const FluidState&>::type fluidState,
         unsigned regionIdx)
 {
     const auto& XwG = decay<LhsEval>(fluidState.massFraction(FluidSystem::waterPhaseIdx, FluidSystem::gasCompIdx));
@@ -116,7 +118,7 @@ getRsw_(typename std::enable_if<!HasMember_Rsw<FluidState>::value, const FluidSt
 
 template <class FluidSystem, class FluidState, class LhsEval>
 auto
-getRsw_(typename std::enable_if<HasMember_Rsw<FluidState>::value, const FluidState&>::type fluidState, unsigned)
+OPM_HOST_DEVICE getRsw_(typename std::enable_if<HasMember_Rsw<FluidState>::value, const FluidState&>::type fluidState, unsigned)
     -> decltype(decay<LhsEval>(fluidState.Rsw()))
 {
     return decay<LhsEval>(fluidState.Rsw());
@@ -124,7 +126,7 @@ getRsw_(typename std::enable_if<HasMember_Rsw<FluidState>::value, const FluidSta
 
 template <class FluidState, class LhsEval>
 LhsEval
-getSaltConcentration_(typename std::enable_if<!HasMember_saltConcentration<FluidState>::value, const FluidState&>::type,
+OPM_HOST_DEVICE getSaltConcentration_(typename std::enable_if<!HasMember_saltConcentration<FluidState>::value, const FluidState&>::type,
                       unsigned)
 {
     return 0.0;
@@ -132,7 +134,7 @@ getSaltConcentration_(typename std::enable_if<!HasMember_saltConcentration<Fluid
 
 template <class FluidState, class LhsEval>
 auto
-getSaltConcentration_(
+OPM_HOST_DEVICE getSaltConcentration_(
     typename std::enable_if<HasMember_saltConcentration<FluidState>::value, const FluidState&>::type fluidState,
     unsigned) -> decltype(decay<LhsEval>(fluidState.saltConcentration()))
 {
@@ -141,7 +143,7 @@ getSaltConcentration_(
 
 template <class FluidSystem, class FluidState, class LhsEval>
 LhsEval
-getSaltSaturation_(typename std::enable_if<!HasMember_saltSaturation<FluidState>::value, const FluidState&>::type,
+OPM_HOST_DEVICE getSaltSaturation_(typename std::enable_if<!HasMember_saltSaturation<FluidState>::value, const FluidState&>::type,
                    unsigned)
 {
     return 0.0;
@@ -149,7 +151,7 @@ getSaltSaturation_(typename std::enable_if<!HasMember_saltSaturation<FluidState>
 
 template <class FluidSystem, class FluidState, class LhsEval>
 auto
-getSaltSaturation_(
+OPM_HOST_DEVICE getSaltSaturation_(
     typename std::enable_if<HasMember_saltSaturation<FluidState>::value, const FluidState&>::type fluidState, unsigned)
     -> decltype(decay<LhsEval>(fluidState.saltSaturation()))
 {

@@ -103,7 +103,8 @@ public:
     OPM_HOST_DEVICE static Evaluation viscosity(const Evaluation& temperature, const Evaluation& rho)
     {
         Evaluation rhoBar = rho/322.0;
-        Evaluation TBar = temperature/criticalTemperature;
+        // Evaluation TBar = temperature/criticalTemperature;
+        Evaluation TBar = temperature/Scalar(647.096);
 
         // muBar = muBar_1
         const Scalar Hij[6][7] = {

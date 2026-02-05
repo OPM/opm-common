@@ -1134,7 +1134,8 @@ public:
         }
         }
 
-        throw std::logic_error("Unhandled phase index "+std::to_string(phaseIdx));
+        assert(false && "something went wrong in viscosity"); // temporary
+        // throw std::logic_error("Unhandled phase index "+std::to_string(phaseIdx));
     }
 
     template <class FluidState, class LhsEval = typename FluidState::Scalar>
@@ -1742,7 +1743,7 @@ public:
         enthalpy_eq_energy_ = enthalpy_eq_energy;
     }
 
-    STATIC_OR_DEVICE bool enthalpyEqualEnergy(){
+    STATIC_OR_DEVICE bool enthalpyEqualEnergy() NOTHING_OR_CONST{
         return enthalpy_eq_energy_;
     }
 
@@ -1883,7 +1884,8 @@ phaseName(unsigned phaseIdx) NOTHING_OR_CONST
         return "gas";
 
     default:
-        throw std::logic_error(std::string("Phase index ") + std::to_string(phaseIdx) + " is unknown");
+        assert(false); // TODO: make this nicer
+        // throw std::logic_error(std::string("Phase index ") + std::to_string(phaseIdx) + " is unknown");
     }
 }
 
@@ -1900,7 +1902,8 @@ solventComponentIndex(unsigned phaseIdx) NOTHING_OR_CONST
         return gasCompIdx;
 
     default:
-        throw std::logic_error(std::string("Phase index ") + std::to_string(phaseIdx) + " is unknown");
+        assert(false); // TODO: make this nicer
+        // throw std::logic_error(std::string("Phase index ") + std::to_string(phaseIdx) + " is unknown");
     }
 }
 
@@ -1912,7 +1915,8 @@ soluteComponentIndex(unsigned phaseIdx) NOTHING_OR_CONST
     case waterPhaseIdx:
         if (enableDissolvedGasInWater())
             return gasCompIdx;
-        throw std::logic_error("The water phase does not have any solutes in the black oil model!");
+        assert(false); // TODO: make this nicer
+        // throw std::logic_error("The water phase does not have any solutes in the black oil model!");
     case oilPhaseIdx:
         return gasCompIdx;
     case gasPhaseIdx:
@@ -1922,7 +1926,8 @@ soluteComponentIndex(unsigned phaseIdx) NOTHING_OR_CONST
         return oilCompIdx;
 
     default:
-        throw std::logic_error(std::string("Phase index ") + std::to_string(phaseIdx) + " is unknown");
+        assert(false); // TODO: make this nicer
+        // throw std::logic_error(std::string("Phase index ") + std::to_string(phaseIdx) + " is unknown");
     }
 }
 
@@ -1939,7 +1944,8 @@ componentName(unsigned compIdx) NOTHING_OR_CONST
         return "Gas";
 
     default:
-        throw std::logic_error(std::string("Component index ") + std::to_string(compIdx) + " is unknown");
+        assert(false); // TODO: make this nicer
+        // throw std::logic_error(std::string("Component index ") + std::to_string(compIdx) + " is unknown");
     }
 }
 
