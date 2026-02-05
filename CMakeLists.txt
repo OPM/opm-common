@@ -444,15 +444,8 @@ if (OPM_ENABLE_PYTHON)
                       ${PYTHON_CXX_SOURCE_FILES}
                       ${PROJECT_BINARY_DIR}/python/cxx/builtin_pybind11.cpp)
 
-  target_link_libraries(opmcommon_python PRIVATE
-                        opmcommon)
-  if(TARGET pybind11::pybind11)
-    target_link_libraries(opmcommon_python PRIVATE
-                          pybind11::pybind11)
-    opm_add_target_options(TARGET opmcommon_python)
-  else()
-    target_include_directories(opmcommon_python SYSTEM PRIVATE ${pybind11_INCLUDE_DIRS})
-  endif()
+  target_link_libraries(opmcommon_python PRIVATE opmcommon pybind11::module)
+  opm_add_target_options(TARGET opmcommon_python)
   set_target_properties(opmcommon_python PROPERTIES
                         LIBRARY_OUTPUT_DIRECTORY python/opm)
   add_dependencies(opmcommon_python copy_python)
@@ -530,7 +523,7 @@ if (OPM_ENABLE_PYTHON)
   # 2: Embed the Python interpreter for keywords like PYACTION and PYINPUT
   target_include_directories(opmcommon SYSTEM PRIVATE "${pybind11_INCLUDE_DIRS}")
   if (OPM_ENABLE_EMBEDDED_PYTHON)
-    target_link_libraries(opmcommon PUBLIC ${PYTHON_LIBRARY})
+    target_link_libraries(opmcommon PRIVATE $<BUILD_INTERFACE:pybind11::embed>)
     add_definitions(-DEMBEDDED_PYTHON)
   endif()
 endif()
