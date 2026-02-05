@@ -517,6 +517,7 @@ list (APPEND TEST_SOURCE_FILES
       tests/material/test_binarycoefficients.cpp
       tests/material/test_fluidmatrixinteractions.cpp
       tests/material/test_fluidsystems.cpp
+      tests/material/test_materialstates.cpp
       tests/material/test_spline.cpp
       tests/material/test_tabulation.cpp
       tests/test_Visitor.cpp
@@ -1099,6 +1100,7 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/material/fluidmatrixinteractions/BrooksCoreyParams.hpp
       opm/material/fluidmatrixinteractions/BrooksCorey.hpp
       opm/material/fluidmatrixinteractions/PiecewiseLinearTwoPhaseMaterial.hpp
+      opm/material/materialstates/MaterialStateTPSA.hpp
       opm/material/checkFluidSystem.hpp
       opm/material/viscositymodels/LBC.hpp
       opm/material/viscositymodels/LBCco2rich.hpp

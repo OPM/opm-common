@@ -1,0 +1,11 @@
+{
+  "name": "LAME",
+  "sections": [
+    "GRID"
+  ],
+  "description": "The LAME item is used to set Lame's first parameter for a cell in mechanics models.",
+  "data": {
+    "value_type": "DOUBLE",
+    "dimension": "Ymodule"
+  }
+}

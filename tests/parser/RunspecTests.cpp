@@ -1136,6 +1136,44 @@ BOOST_AUTO_TEST_CASE(Mech) {
     BOOST_CHECK( runspec.mech() );
 }
 
+BOOST_AUTO_TEST_CASE(TpsaLaggedTest) {
+    const std::string input = R"(
+        MECH
+        TPSA
+        LAGGED /
+        )";
+
+    Parser parser;
+
+    auto deck = parser.parseString(input);
+    Runspec runspec(deck);
+    const auto& tpsa = runspec.tpsa();
+
+    BOOST_CHECK(tpsa.active());
+    BOOST_CHECK(tpsa.laggedScheme());
+    BOOST_CHECK(!tpsa.fixedStressScheme());
+}
+
+BOOST_AUTO_TEST_CASE(TpsaFixedStressTest) {
+    const std::string input = R"(
+        MECH
+        TPSA
+        FIXED-STRESS 3 7 /
+        )";
+
+    Parser parser;
+
+    auto deck = parser.parseString(input);
+    Runspec runspec(deck);
+    const auto& tpsa = runspec.tpsa();
+
+    BOOST_CHECK(tpsa.active());
+    BOOST_CHECK(tpsa.fixedStressScheme());
+    BOOST_CHECK_EQUAL(tpsa.fixedStressMinIter(), 3);
+    BOOST_CHECK_EQUAL(tpsa.fixedStressMaxIter(), 7);
+    BOOST_CHECK(!tpsa.laggedScheme());
+}
+
 BOOST_AUTO_TEST_CASE(NetworkDims_no_network)
 {
     {
