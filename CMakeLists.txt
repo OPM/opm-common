@@ -207,6 +207,7 @@ endmacro()
 macro(${project}_files_hook)
   if (OPM_ENABLE_PYTHON)
     make_directory(${PROJECT_BINARY_DIR}/python)
+    set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES ${PROJECT_BINARY_DIR}/python)
     set(opm-common_PYTHON_PACKAGE_VERSION ${OPM_PYTHON_PACKAGE_VERSION_TAG})
 
     file(
@@ -366,6 +367,46 @@ macro(${project}_targets_hook)
       endif()
     endforeach()
   endif()
+
+  if(OPM_ENABLE_PYTHON)
+    add_custom_target(copy_python ALL
+      COMMAND
+        $<TARGET_FILE:Python3::Interpreter>
+        ${PROJECT_SOURCE_DIR}/python/install.py
+        ${PROJECT_SOURCE_DIR}/python
+        ${PROJECT_BINARY_DIR}
+        0
+    )
+
+    pybind11_add_module(opmcommon_python
+                        ${PYTHON_CXX_SOURCE_FILES}
+                        ${PROJECT_BINARY_DIR}/python/cxx/builtin_pybind11.cpp)
+
+    target_link_libraries(opmcommon_python PRIVATE opmcommon pybind11::module)
+    opm_add_target_options(TARGET opmcommon_python)
+    set_target_properties(opmcommon_python
+      PROPERTIES
+      LIBRARY_OUTPUT_DIRECTORY
+        python/opm
+    )
+    add_dependencies(opmcommon_python copy_python)
+
+    set_target_properties(opmcommon PROPERTIES POSITION_INDEPENDENT_CODE ON)
+  endif()
+
+  if(OPM_ENABLE_EMBEDDED_PYTHON)
+    target_link_libraries(opmcommon PRIVATE $<BUILD_INTERFACE:pybind11::embed>)
+    set_target_properties(
+      TARGETS 
+        opmcommon
+        test_msim_ACTIONX
+        EmbeddedPython
+        PYACTION
+      PROPERTIES
+      COMPILE_DEFINITIONS
+        EMBEDDED_PYTHON=1
+    )
+  endif()
 endmacro()
 
 macro(${project}_install_hook)
@@ -441,25 +482,6 @@ if(dune-common_FOUND)
 endif()
 
 if (OPM_ENABLE_PYTHON)
-  add_custom_target(copy_python ALL
-    COMMAND
-      $<TARGET_FILE:Python3::Interpreter>
-      ${PROJECT_SOURCE_DIR}/python/install.py
-      ${PROJECT_SOURCE_DIR}/python
-      ${PROJECT_BINARY_DIR}
-      0
-  )
-
-  pybind11_add_module(opmcommon_python
-                      ${PYTHON_CXX_SOURCE_FILES}
-                      ${PROJECT_BINARY_DIR}/python/cxx/builtin_pybind11.cpp)
-
-  target_link_libraries(opmcommon_python PRIVATE opmcommon pybind11::module)
-  opm_add_target_options(TARGET opmcommon_python)
-  set_target_properties(opmcommon_python PROPERTIES
-                        LIBRARY_OUTPUT_DIRECTORY python/opm)
-  add_dependencies(opmcommon_python copy_python)
-
   # Since the installation of Python code is nonstandard it is protected by an
   # extra cmake switch, OPM_INSTALL_PYTHON. If you prefer you can still invoke
   # setup.py install manually - optionally with the generated script
@@ -524,16 +546,5 @@ if (OPM_ENABLE_PYTHON)
       DESTINATION
         ${OPM_PYTHON_COMMON_DIR}
     )
-  endif()
-
-  set_target_properties(opmcommon PROPERTIES POSITION_INDEPENDENT_CODE ON)
-  set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES ${PROJECT_BINARY_DIR}/python)
-
-  # -------------------------------------------------------------------------
-  # 2: Embed the Python interpreter for keywords like PYACTION and PYINPUT
-  target_include_directories(opmcommon SYSTEM PRIVATE "${pybind11_INCLUDE_DIRS}")
-  if (OPM_ENABLE_EMBEDDED_PYTHON)
-    target_link_libraries(opmcommon PRIVATE $<BUILD_INTERFACE:pybind11::embed>)
-    add_definitions(-DEMBEDDED_PYTHON)
   endif()
 endif()
