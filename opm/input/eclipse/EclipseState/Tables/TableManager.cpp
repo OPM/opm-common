@@ -78,6 +78,7 @@
 #include <opm/input/eclipse/EclipseState/Tables/RockwnodTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/OverburdTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/RsvdTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/RsconstTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/PbvdTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/PdvdTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/RtempvdTable.hpp>
@@ -480,6 +481,7 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
         addTables( "PCFACT",  m_tabdims.getNumSatTables());
         addTables( "BIOFPARA", m_tabdims.getNumSatTables());
         addTables( "DIFFMICP", m_tabdims.getNumPVTTables());
+        addTables( "RSCONST", 1);
 
         addTables( "AQUTAB", m_aqudims.getNumInfluenceTablesCT());
         {
@@ -553,6 +555,7 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
         initSimpleTableContainer<BiofilmTable>(deck, "BIOFPARA" , m_tabdims.getNumSatTables());
         initSimpleTableContainer<DiffMICPTable>(deck, "DIFFMICP" , m_tabdims.getNumPVTTables());
         initSimpleTableContainer<AqutabTable>(deck, "AQUTAB" , m_aqudims.getNumInfluenceTablesCT());
+        initSimpleTableContainer<RsconstTable>(deck, "RSCONST" , 1);
         {
             size_t numEndScaleTables = ParserKeywords::ENDSCALE::NTENDP::defaultValue;
 
@@ -939,6 +942,10 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
     const TableContainer& TableManager::getRvvdTables() const {
         return getTables("RVVD");
     }
+
+     const TableContainer& TableManager::getRsconstTables() const {
+        return getTables("RSCONST");
+   }
 
     const TableContainer& TableManager::getRvwvdTables() const {
         return getTables("RVWVD");
