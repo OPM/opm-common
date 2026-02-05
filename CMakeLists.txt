@@ -267,17 +267,7 @@ endmacro()
 
 macro(${project}_tests_hook)
   if(ENABLE_ECL_INPUT)
-    target_sources(compareECL
-      PRIVATE
-        test_util/EclFilesComparator.cpp
-        test_util/EclRegressionTest.cpp
-    )
-
-    list(APPEND opm-common_EXTRA_TARGETS compareECL rst_deck)
-
     # Add the tests
-    set(_libs opmcommon Boost::unit_test_framework)
-
     opm_add_test(test_EclFilesComparator
       CONDITION
         ENABLE_ECL_INPUT AND TARGET Boost::unit_test_framework
@@ -285,10 +275,11 @@ macro(${project}_tests_hook)
         tests/test_EclFilesComparator.cpp
         test_util/EclFilesComparator.cpp
       LIBRARIES
-        ${_libs}
+        opmcommon
+        Boost::unit_test_framework
       WORKING_DIRECTORY
         ${PROJECT_BINARY_DIR}/tests
-      )
+    )
 
     opm_add_test(test_EclRegressionTest
       CONDITION
@@ -298,10 +289,11 @@ macro(${project}_tests_hook)
         test_util/EclFilesComparator.cpp
         test_util/EclRegressionTest.cpp
       LIBRARIES
-        ${_libs}
+        opmcommon
+        Boost::unit_test_framework
       WORKING_DIRECTORY
         ${PROJECT_BINARY_DIR}/tests
-      )
+    )
 
     include(ExtraTests.cmake)
   endif()
@@ -320,6 +312,18 @@ macro(${project}_tests_hook)
         ${Python3_EXECUTABLE} -m unittest discover
     )
  endif()
+endmacro()
+
+macro(${project}_targets_hook)
+  if(ENABLE_ECL_INPUT)
+    target_sources(compareECL
+      PRIVATE
+        test_util/EclFilesComparator.cpp
+        test_util/EclRegressionTest.cpp
+    )
+
+    list(APPEND opm-common_EXTRA_TARGETS compareECL rst_deck)
+  endif()
 endmacro()
 
 macro(${project}_install_hook)
