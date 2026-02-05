@@ -35,7 +35,6 @@ macro(opm_compile opm)
   else()
     add_definitions(${${opm}_DEFINITIONS})
   endif()
-  set(${opm}_VERSION "${${opm}_VERSION_MAJOR}.${${opm}_VERSION_MINOR}")
 
   if(NOT ${opm}_SOURCES)
     set(${opm}_LIBRARY_TYPE INTERFACE)
