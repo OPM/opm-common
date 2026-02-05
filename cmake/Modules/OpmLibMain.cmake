@@ -9,11 +9,12 @@
 #
 # Customize the module configuration by defining these "callback" macros:
 #
-# prereqs_hook    Do special processing before prerequisites are found
-# fortran_hook    Determine whether Fortran support is necessary or not
-# sources_hook    Do special processing before sources are compiled
-# tests_hook      Do special processing before tests are compiled
-# files_hook      Do special processing before final targets are added
+# ${project}_prereqs_hook     Do special processing before prerequisites are found
+# ${project}_fortran_hook     Determine whether Fortran support is necessary or not
+# ${project}_sources_hook     Do special processing before sources are compiled
+# ${project}_tests_hook       Do special processing before tests are compiled
+# ${project}_files_hook       Do special processing before final targets are added
+# ${project}_targets_hook     Add additional targets, set additional target properties
 
 include(OpmCompile)
 include(UseOnlyNeeded)
@@ -229,6 +230,10 @@ if(NOT BUILD_TESTING)
   set(excl_all EXCLUDE_FROM_ALL)
 endif()
 opm_compile_satellites (${project} tests "${excl_all}" "${tests_REGEXP}")
+
+if(COMMAND ${project}_targets_hook)
+  cmake_language(CALL ${project}_targets_hook)
+endif()
 
 # installation target: copy the library together with debug and
 # configuration files to system directories
