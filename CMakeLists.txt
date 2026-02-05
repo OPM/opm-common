@@ -315,6 +315,11 @@ macro(${project}_tests_hook)
 endmacro()
 
 macro(${project}_targets_hook)
+  if(NOT cJSON_FOUND) # TODO: Remove once json is split out
+    target_sources(opmcommon PRIVATE $<TARGET_OBJECTS:cjson>)
+    target_include_directories(opmcommon PRIVATE ${CMAKE_BINARY_DIR}/_deps)
+  endif()
+
   if(ENABLE_ECL_INPUT)
     target_sources(compareECL
       PRIVATE
@@ -365,11 +370,6 @@ endmacro()
 
 # all setup common to the OPM library modules is done here
 include (OpmLibMain)
-
-if(NOT cJSON_FOUND) # TODO: Remove once json is split out
-  target_sources(opmcommon PRIVATE $<TARGET_OBJECTS:cjson>)
-  target_include_directories(opmcommon PRIVATE ${CMAKE_BINARY_DIR}/_deps)
-endif()
 
 if (ENABLE_MOCKSIM AND ENABLE_ECL_INPUT)
   add_library(mocksim
