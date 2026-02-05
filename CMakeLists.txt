@@ -396,16 +396,15 @@ macro(${project}_targets_hook)
 
   if(OPM_ENABLE_EMBEDDED_PYTHON)
     target_link_libraries(opmcommon PRIVATE $<BUILD_INTERFACE:pybind11::embed>)
-    set_target_properties(
-      TARGETS 
-        opmcommon
-        test_msim_ACTIONX
-        EmbeddedPython
-        PYACTION
-      PROPERTIES
-      COMPILE_DEFINITIONS
-        EMBEDDED_PYTHON=1
-    )
+    foreach(target opmcommon test_msim_ACTIONX EmbeddedPython PYACTION)
+      if(TARGET ${target})
+        set_target_properties(${target}
+          PROPERTIES
+          COMPILE_DEFINITIONS
+            EMBEDDED_PYTHON=1
+        )
+      endif()
+    endforeach()
   endif()
 endmacro()
 
@@ -444,6 +443,74 @@ macro(${project}_install_hook)
     FILES_MATCHING PATTERN
       "*.1"
   )
+
+  # Since the installation of Python code is nonstandard it is protected by an
+  # extra cmake switch, OPM_INSTALL_PYTHON. If you prefer you can still invoke
+  # setup.py install manually - optionally with the generated script
+  # setup-install.sh - and completely bypass cmake in the installation phase.
+  # If OPM_ENABLE_EMBEDDED_PYTHON is enabled, we also install opmcommon_python,
+  # to make it available in a Python console and for e.g. opm-simulators.
+  if (OPM_INSTALL_PYTHON OR OPM_ENABLE_EMBEDDED_PYTHON)
+    include(PyInstallPrefix)
+    install(
+      TARGETS
+        opmcommon_python
+      DESTINATION
+        ${PYTHON_INSTALL_PREFIX}/opm
+    )
+    if (OPM_INSTALL_PYTHON)
+      install(
+        CODE
+          "execute_process(
+             COMMAND
+               $<TARGET_FILE:Python3::Interpreter>
+               python/install.py
+               ${PROJECT_BINARY_DIR}/python/opm
+               ${CMAKE_INSTALL_PREFIX}/${PYTHON_INSTALL_PREFIX}
+               1
+           )"
+      )
+    endif()
+    if (OPM_ENABLE_EMBEDDED_PYTHON)
+      install(
+        CODE
+          "execute_process(
+             COMMAND
+               $<TARGET_FILE:Python3::Interpreter>
+               python/install.py
+               ${PROJECT_BINARY_DIR}/python/opm_embedded
+               ${CMAKE_INSTALL_PREFIX}/${PYTHON_INSTALL_PREFIX}
+               1
+           )"
+      )
+    endif()
+    # Need to install this Python script such that it can be used by
+    # opm-simulators when building against an installed opm-common
+    install(
+      PROGRAMS
+        python/install.py
+      DESTINATION
+        ${OPM_PYTHON_COMMON_DIR}
+    )
+  endif()
+
+  # if OPM_ENABLE_EMBEDDED_PYTHON is true, then OPM_ENABLE_PYTHON is also automatically true
+  if (OPM_ENABLE_PYTHON OR OPM_INSTALL_PYTHON)
+    ## Need to install this Python script such that it can be used
+    # by opm-simulators when building against an installed opm-common
+    install(
+      PROGRAMS
+        python/generate_docstring_hpp.py
+      DESTINATION
+        ${OPM_PYTHON_COMMON_DIR}
+    )
+    install(
+      FILES
+        python/docstrings_common.json
+      DESTINATION
+        ${OPM_PYTHON_COMMON_DIR}
+    )
+  endif()
 endmacro()
 
 # all setup common to the OPM library modules is done here
@@ -478,73 +545,5 @@ if(dune-common_FOUND)
   if(BUILD_EXAMPLES)
     target_link_libraries(co2brinepvt PRIVATE dunecommon)
     opm_add_target_options(TARGET co2brinepvt)
-  endif()
-endif()
-
-if (OPM_ENABLE_PYTHON)
-  # Since the installation of Python code is nonstandard it is protected by an
-  # extra cmake switch, OPM_INSTALL_PYTHON. If you prefer you can still invoke
-  # setup.py install manually - optionally with the generated script
-  # setup-install.sh - and completely bypass cmake in the installation phase.
-  # If OPM_ENABLE_EMBEDDED_PYTHON is enabled, we also install opmcommon_python,
-  # to make it available in a Python console and for e.g. opm-simulators.
-  if (OPM_INSTALL_PYTHON OR OPM_ENABLE_EMBEDDED_PYTHON)
-      include(PyInstallPrefix)
-      install(
-        TARGETS
-          opmcommon_python
-        DESTINATION
-          ${DEST_PREFIX}${CMAKE_INSTALL_PREFIX}/${PYTHON_INSTALL_PREFIX}/opm
-      )
-      if (OPM_INSTALL_PYTHON)
-        install(
-          CODE
-            "execute_process(
-               COMMAND
-                 $<TARGET_FILE:Python3::Interpreter>
-                 python/install.py
-                 ${PROJECT_BINARY_DIR}/python/opm
-                 ${DEST_PREFIX}${CMAKE_INSTALL_PREFIX}/${PYTHON_INSTALL_PREFIX}
-                 1)"
-        )
-      endif()
-      if (OPM_ENABLE_EMBEDDED_PYTHON)
-        install(
-          CODE
-            "execute_process(
-               COMMAND
-                 $<TARGET_FILE:Python3::Interpreter>
-                 python/install.py
-                 ${PROJECT_BINARY_DIR}/python/opm_embedded
-                 ${DEST_PREFIX}${CMAKE_INSTALL_PREFIX}/${PYTHON_INSTALL_PREFIX}
-                 1)"
-        )
-      endif()
-      # Need to install this Python script such that it can be used by
-      # opm-simulators when building against an installed opm-common
-      install(
-        PROGRAMS
-          python/install.py
-        DESTINATION
-          ${OPM_PYTHON_COMMON_DIR}
-      )
-  endif()
-
-  # if OPM_ENABLE_EMBEDDED_PYTHON is true, then OPM_ENABLE_PYTHON is also automatically true
-  if (OPM_ENABLE_PYTHON OR OPM_INSTALL_PYTHON)
-    ## Need to install this Python script such that it can be used
-    # by opm-simulators when building against an installed opm-common
-    install(
-      PROGRAMS
-        python/generate_docstring_hpp.py
-      DESTINATION
-        ${OPM_PYTHON_COMMON_DIR}
-    )
-    install(
-      FILES
-        python/docstrings_common.json
-      DESTINATION
-        ${OPM_PYTHON_COMMON_DIR}
-    )
   endif()
 endif()
