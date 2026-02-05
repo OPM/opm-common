@@ -310,11 +310,6 @@ macro(${project}_tests_hook)
             ${PROJECT_BINARY_DIR}/tests
         )
       endforeach()
-      set_tests_properties(msim_ACTIONX
-        PROPERTIES
-        ENVIRONMENT_MODIFICATION
-          PYTHONPATH=path_list_prepend:${PROJECT_BINARY_DIR}/python
-      )
     endif()
   endif()
 
@@ -358,6 +353,18 @@ macro(${project}_targets_hook)
     endif()
 
     list(APPEND opm-common_EXTRA_TARGETS compareECL rst_deck)
+  endif()
+
+  if(TARGET Boost::unit_test_framework)
+    foreach(test ACTIONX EmbeddedPython msim_ACTIONX PYACTION)
+      if(TEST ${test})
+        set_tests_properties(${test}
+          PROPERTIES
+          ENVIRONMENT_MODIFICATION
+            PYTHONPATH=path_list_prepend:${PROJECT_BINARY_DIR}/python
+        )
+      endif()
+    endforeach()
   endif()
 endmacro()
 
@@ -431,13 +438,6 @@ if(dune-common_FOUND)
     target_link_libraries(co2brinepvt PRIVATE dunecommon)
     opm_add_target_options(TARGET co2brinepvt)
   endif()
-endif()
-
-if(TARGET Boost::unit_test_framework)
-  foreach(test ACTIONX EmbeddedPython PYACTION)
-    set_tests_properties(${test} PROPERTIES
-                         ENVIRONMENT "PYTHONPATH=${PROJECT_BINARY_DIR}/python:$ENV{PYTHONPATH}")
-  endforeach()
 endif()
 
 if (OPM_ENABLE_PYTHON)
