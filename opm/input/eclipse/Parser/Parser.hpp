@@ -33,10 +33,6 @@
 
 #include <opm/input/eclipse/Parser/ParserKeyword.hpp>
 
-namespace Json {
-    class JsonObject;
-}
-
 namespace Opm {
 
     namespace Ecl {
@@ -88,7 +84,6 @@ namespace Opm {
         Deck parseStream(std::unique_ptr<std::istream>&& inputStream , const ParseContext& parseContext, ErrorGuard& errors) const;
 
         /// Method to add ParserKeyword instances, these holding type and size information about the keywords and their data.
-        void addParserKeyword(const Json::JsonObject& jsonKeyword);
         void addParserKeyword(ParserKeyword parserKeyword);
 
         /*!
@@ -124,10 +119,6 @@ namespace Opm {
         const ParserKeyword& getParserKeywordFromDeckName(const std::string_view& deckKeywordName) const;
         std::vector<std::string> getAllDeckNames () const;
 
-        void loadKeywords(const Json::JsonObject& jsonKeywords);
-        bool loadKeywordFromFile(const std::filesystem::path& configFile);
-
-        void loadKeywordsFromDirectory(const std::filesystem::path& directory , bool recursive = true);
         void applyUnitsToDeck(Deck& deck) const;
 
         /*!

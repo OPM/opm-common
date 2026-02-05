@@ -47,8 +47,6 @@
 
 #include <opm/input/eclipse/Python/Python.hpp>
 
-#include <opm/json/JsonObject.hpp>
-
 #include <opm/common/utility/String.hpp>
 
 #include "raw/RawConsts.hpp"
@@ -1811,11 +1809,6 @@ void Parser::addParserKeyword( ParserKeyword parserKeyword ) {
         this->code_keywords.emplace_back( ptr->getName(), ptr->codeEnd() );
 }
 
-
-void Parser::addParserKeyword(const Json::JsonObject& jsonKeyword) {
-    addParserKeyword( ParserKeyword( jsonKeyword ) );
-}
-
 bool Parser::hasKeyword( const std::string& name ) const {
     return this->m_deckParserKeywords.find( std::string_view( name ) )
         != this->m_deckParserKeywords.end();
@@ -1849,48 +1842,6 @@ std::vector<std::string> Parser::getAllDeckNames () const {
     return keywords;
 }
 
-
-    void Parser::loadKeywords(const Json::JsonObject& jsonKeywords) {
-        if (jsonKeywords.is_array()) {
-            for (size_t index = 0; index < jsonKeywords.size(); index++) {
-                Json::JsonObject jsonKeyword = jsonKeywords.get_array_item(index);
-                addParserKeyword( ParserKeyword( jsonKeyword ) );
-            }
-        } else
-            throw std::invalid_argument("Input JSON object is not an array");
-    }
-
-    bool Parser::loadKeywordFromFile(const std::filesystem::path& configFile) {
-
-        try {
-            Json::JsonObject jsonKeyword(configFile);
-            addParserKeyword( ParserKeyword( jsonKeyword ) );
-            return true;
-        }
-        catch (...) {
-            return false;
-        }
-    }
-
-
-    void Parser::loadKeywordsFromDirectory(const std::filesystem::path& directory, bool recursive) {
-        if (!std::filesystem::exists(directory))
-            throw std::invalid_argument("Directory: " + directory.string() + " does not exist.");
-        else {
-            std::filesystem::directory_iterator end;
-            for (std::filesystem::directory_iterator iter(directory); iter != end; iter++) {
-                if (std::filesystem::is_directory(*iter)) {
-                    if (recursive)
-                        loadKeywordsFromDirectory(*iter, recursive);
-                } else {
-                    if (ParserKeyword::validInternalName(iter->path().filename().string())) {
-                        if (!loadKeywordFromFile(*iter))
-                            std::cerr << "** Warning: failed to load keyword from file:" << iter->path() << std::endl;
-                    }
-                }
-            }
-        }
-    }
 
     const std::vector<std::pair<std::string,std::string>> Parser::codeKeywords() const {
         return this->code_keywords;
