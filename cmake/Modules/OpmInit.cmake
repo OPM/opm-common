@@ -6,6 +6,7 @@
 #	project                     From the Module: field
 #	${project}_NAME             Same as above
 #	${project}_DESCRIPTION      From the Description: field
+#	${project}_VERSION          From the Version: field
 #	${project}_VERSION_MAJOR    From the Version: field
 #	${project}_VERSION_MINOR    From the Version: field also
 #
@@ -80,6 +81,7 @@ function (OpmInitProjVars)
   set (${project}_DESCRIPTION "${description}" PARENT_SCOPE)
   set (${project}_VERSION_MAJOR "${major}" PARENT_SCOPE)
   set (${project}_VERSION_MINOR "${minor}" PARENT_SCOPE)
+  set (${project}_VERSION "${major}.${minor}" PARENT_SCOPE)
   set (${project}_LABEL "${label}" PARENT_SCOPE)
 endfunction ()
 

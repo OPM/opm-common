@@ -207,6 +207,7 @@ endmacro()
 macro(${project}_files_hook)
   if (OPM_ENABLE_PYTHON)
     make_directory(${PROJECT_BINARY_DIR}/python)
+    set(opm-common_PYTHON_PACKAGE_VERSION ${OPM_PYTHON_PACKAGE_VERSION_TAG})
 
     file(
       COPY
@@ -430,8 +431,6 @@ if(TARGET Boost::unit_test_framework)
 endif()
 
 if (OPM_ENABLE_PYTHON)
-  set(opm-common_PYTHON_PACKAGE_VERSION ${OPM_PYTHON_PACKAGE_VERSION_TAG})
-
   add_custom_target(copy_python ALL
     COMMAND
       $<TARGET_FILE:Python3::Interpreter>
