@@ -534,7 +534,7 @@ END
     ctf_props.rw = 0.234;
     ctf_props.r0 = 0.157;
 
-    connP.addConnection(9, 9, 1, // 10, 10, 2
+    connP.addConnection(8, 9, 0, // 9, 10, 1
                         199,
                         Opm::Connection::State::OPEN,
                         2015.0, ctf_props, 1);
@@ -569,7 +569,7 @@ END
     }
 
     // Reset CF -- simulating COMPDAT record (active cell)
-    connP.addConnection(8, 9, 1, // 10, 10, 2
+    connP.addConnection(8, 9, 1, // 9, 10, 2
                         198,
                         Opm::Connection::State::OPEN,
                         2015.0, ctf_props, 1);
@@ -586,27 +586,14 @@ END
         BOOST_CHECK_CLOSE(connP[3].CF(),  50.0*cp_rm3_per_db(), 1.0e-10);
     }
 
-    const auto& grid = es.getInputGrid();
-    const auto actCells = Opm::ActiveGridCells {
-        std::size_t{10}, std::size_t{10}, std::size_t{3},
-        grid.getActiveMap().data(),
-        grid.getNumActive()
-    };
-
-    connP.filter(actCells);
-
-    BOOST_REQUIRE_EQUAL(connP.size(), std::size_t{3});
-    BOOST_CHECK_CLOSE(connP[0].CF(), 16.0*expectCF       , 1.0e-10);
-    BOOST_CHECK_CLOSE(connP[1].CF(), 16.0*expectCF       , 1.0e-10);
-    BOOST_CHECK_CLOSE(connP[2].CF(), 50.0*cp_rm3_per_db(), 1.0e-10);
-
     {
         std::vector<bool> scalingApplicable;
 
         connP.applyWellPIScaling(2.0, scalingApplicable);
         BOOST_CHECK_CLOSE(connP[0].CF(), 32.0*expectCF       , 1.0e-10);
         BOOST_CHECK_CLOSE(connP[1].CF(), 32.0*expectCF       , 1.0e-10);
-        BOOST_CHECK_CLOSE(connP[2].CF(), 50.0*cp_rm3_per_db(), 1.0e-10);
+        BOOST_CHECK_CLOSE(connP[2].CF(), 400.0*cp_rm3_per_db(), 1.0e-10);
+        BOOST_CHECK_CLOSE(connP[3].CF(), 50.0*cp_rm3_per_db(), 1.0e-10);
     }
 }
 

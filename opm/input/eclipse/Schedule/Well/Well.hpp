@@ -587,7 +587,6 @@ public:
     bool applyGlobalWPIMULT(double scale_factor);
     void addWellSegmentsFromLengthsAndDepths(const std::vector<std::pair<double, double>>& lengths_and_depths, double diameter, const KeywordLocation& location);
 
-    void filterConnections(const ActiveGridCells& grid);
     ProductionControls productionControls(const SummaryState& st) const;
     InjectionControls injectionControls(const SummaryState& st) const;
     int vfp_table_number() const;

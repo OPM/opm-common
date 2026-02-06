@@ -132,7 +132,6 @@ namespace Opm {
         const_iterator end() const { return this->m_connections.end(); }
         auto begin() { return this->m_connections.begin(); }
         auto end() { return this->m_connections.end(); }
-        void filter(const ActiveGridCells& grid);
         bool allConnectionsShut() const;
         /// Order connections irrespective of input order.
         /// The algorithm used is the following:

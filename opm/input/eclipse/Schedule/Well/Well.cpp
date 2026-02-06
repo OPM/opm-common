@@ -1920,11 +1920,6 @@ bool Well::updateICDFlowScalingFactors()
     return false;
 }
 
-void Well::filterConnections(const ActiveGridCells& grid)
-{
-    this->connections->filter(grid);
-}
-
 std::size_t Well::firstTimeStep() const
 {
     return this->init_step;

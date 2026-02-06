@@ -369,11 +369,6 @@ namespace Opm {
         const Group& getGroup(const std::string& groupName, std::size_t timeStep) const;
 
         std::optional<std::size_t> first_RFT() const;
-        /*
-          Will remove all completions which are connected to cell which is not
-          active. Will scan through all wells and all timesteps.
-        */
-        void filterConnections(const ActiveGridCells& grid);
         std::size_t size() const;
 
         bool write_rst_file(std::size_t report_step) const;
