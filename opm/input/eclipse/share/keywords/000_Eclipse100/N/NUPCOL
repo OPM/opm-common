@@ -9,7 +9,7 @@
     {
       "name": "NUM_ITER",
       "value_type": "INT",
-      "default": 12,
+      "default": 3,
       "comment": "The default is 3 in Eclipse100 and 2 in Eclipse300"
     }
   ]
