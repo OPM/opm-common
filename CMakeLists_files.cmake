@@ -71,6 +71,7 @@ list (APPEND MAIN_SOURCE_FILES
       opm/material/fluidsystems/blackoilpvt/ConstantCompressibilityOilPvt.cpp
       opm/material/fluidsystems/blackoilpvt/ConstantCompressibilityWaterPvt.cpp
       opm/material/fluidsystems/blackoilpvt/DeadOilPvt.cpp
+       opm/material/fluidsystems/blackoilpvt/ConstantRsDeadOilPvt.cpp
       opm/material/fluidsystems/blackoilpvt/DryGasPvt.cpp
       opm/material/fluidsystems/blackoilpvt/DryHumidGasPvt.cpp
       opm/material/fluidsystems/blackoilpvt/GasPvtMultiplexer.cpp
