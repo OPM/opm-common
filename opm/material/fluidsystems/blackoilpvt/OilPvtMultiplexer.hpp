@@ -33,6 +33,7 @@
 #include <opm/material/fluidsystems/blackoilpvt/DeadOilPvt.hpp>
 #include <opm/material/fluidsystems/blackoilpvt/LiveOilPvt.hpp>
 #include <opm/material/fluidsystems/blackoilpvt/OilPvtThermal.hpp>
+#include <opm/material/fluidsystems/blackoilpvt/ConstantRsDeadOilPvt.hpp>
 
 namespace Opm {
 
@@ -73,6 +74,11 @@ class Schedule;
         codeToCall;                                                               \
         __VA_ARGS__;                                                              \
     }                                                                             \
+    case OilPvtApproach::ConstantRsDeadOil: {                                     \
+        auto& pvtImpl = getRealPvt<OilPvtApproach::ConstantRsDeadOil>();          \
+        codeToCall;                                                               \
+        __VA_ARGS__;                                                              \
+    }                                                                             \
     default:                                                                      \
     case OilPvtApproach::NoOil:                                                   \
         throw std::logic_error("Not implemented: Oil PVT of this deck!");         \
@@ -85,7 +91,8 @@ enum class OilPvtApproach {
     ConstantCompressibilityOil,
     ThermalOil,
     BrineCo2,
-    BrineH2
+    BrineH2,
+    ConstantRsDeadOil
 };
 
 /*!
@@ -352,6 +359,20 @@ public:
     {
         assert(approach() == approachV);
         return *static_cast<const BrineH2Pvt<Scalar>* >(realOilPvt_);
+    }
+
+    template <OilPvtApproach approachV>
+    typename std::enable_if<approachV == OilPvtApproach::ConstantRsDeadOil, ConstantRsDeadOilPvt<Scalar> >::type& getRealPvt()
+    {
+        assert(approach() == approachV);
+        return *static_cast<ConstantRsDeadOilPvt<Scalar>* >(realOilPvt_);
+    }
+
+    template <OilPvtApproach approachV>
+    typename std::enable_if<approachV == OilPvtApproach::ConstantRsDeadOil, const ConstantRsDeadOilPvt<Scalar> >::type& getRealPvt() const
+    {
+        assert(approach() == approachV);
+        return *static_cast<const ConstantRsDeadOilPvt<Scalar>* >(realOilPvt_);
     }
 
     OilPvtMultiplexer<Scalar,enableThermal>&
