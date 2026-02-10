@@ -1688,16 +1688,6 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
         this->checkIfAllConnectionsIsShut(report_step);
     }
 
-
-    void Schedule::filterConnections(const ActiveGridCells& grid) {
-        for (auto& sched_state : this->snapshots) {
-            for (auto& well : sched_state.wells()) {
-                well.get().filterConnections(grid);
-            }
-        }
-    }
-
-
     const UDQConfig& Schedule::getUDQConfig(std::size_t timeStep) const {
         return this->snapshots[timeStep].udq.get();
     }

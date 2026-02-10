@@ -387,48 +387,6 @@ WELSPECS
 )" };
     }
 
-    std::string createDeckWithWellsAndCompletionData()
-    {
-        return { R"(
-START             -- 0
-1 NOV 1979 /
-GRID
-PORO
-    1000*0.1 /
-PERMX
-    1000*1 /
-PERMY
-    1000*0.1 /
-PERMZ
-    1000*0.01 /
-SCHEDULE
-DATES             -- 1
- 1 DES 1979/
-/
-WELSPECS
-    'OP_1'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
-    'OP_2'       'OP'   8   8 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
-    'OP_3'       'OP'   7   7 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
-/
-COMPDAT
- 'OP_1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
- 'OP_1'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 /
- 'OP_2'  8  8   1   3 'OPEN' 1*    1.168   0.311   107.872 1*  1*  'Y'  21.925 /
- 'OP_2'  8  7   3   3 'OPEN' 1*   15.071   0.311  1391.859 1*  1*  'Y'  21.920 /
- 'OP_2'  8  7   3   6 'OPEN' 1*    6.242   0.311   576.458 1*  1*  'Y'  21.915 /
- 'OP_3'  7  7   1   1 'OPEN' 1*   27.412   0.311  2445.337 1*  1*  'Y'  18.521 /
- 'OP_3'  7  7   2   2 'OPEN' 1*   55.195   0.311  4923.842 1*  1*  'Y'  18.524 /
-/
-DATES             -- 2,3
- 10  JUL 2007 /
- 10  AUG 2007 /
-/
-COMPDAT // with defaulted I and J
- 'OP_1'  0  *   3  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
-/
-)" };
-    }
-
     bool has_name(const std::vector<std::string>& names,
                   const std::string& name)
     {
@@ -3825,48 +3783,6 @@ WCONINJH
             const auto& wtest_config = schedule[1].wtest_config.get();
             BOOST_CHECK(wtest_config.empty());
         }
-    }
-}
-
-BOOST_AUTO_TEST_CASE(FilterCompletions2) {
-    const auto& deck = Parser{}.parseString(createDeckWithWellsAndCompletionData());
-    EclipseGrid grid1(10,10,10);
-    const TableManager table ( deck );
-    const FieldPropsManager fp( deck, Phases{true, true, true}, grid1, table);
-    const Runspec runspec (deck);
-
-    /* mutable */ Schedule schedule {
-        deck, grid1, fp, NumericalAquifers{},
-        runspec, std::make_shared<Python>()
-    };
-
-    std::vector<int> actnum = grid1.getACTNUM();
-
-    {
-        const auto& c1_1 = schedule.getWell("OP_1", 1).getConnections();
-        const auto& c1_3 = schedule.getWell("OP_1", 3).getConnections();
-        BOOST_CHECK_EQUAL(2U, c1_1.size());
-        BOOST_CHECK_EQUAL(9U, c1_3.size());
-    }
-
-    actnum[grid1.getGlobalIndex(8,8,1)] = 0;
-    {
-        std::vector<int> globalCell(grid1.getNumActive());
-        for(std::size_t i = 0; i < grid1.getNumActive(); ++i) {
-            if (actnum[grid1.getGlobalIndex(i)]) {
-                globalCell[i] = grid1.getGlobalIndex(i);
-            }
-        }
-
-        ActiveGridCells active(grid1.getNXYZ(), globalCell.data(),
-                               grid1.getNumActive());
-
-        schedule.filterConnections(active);
-
-        const auto& c1_1 = schedule.getWell("OP_1", 1).getConnections();
-        const auto& c1_3 = schedule.getWell("OP_1", 3).getConnections();
-        BOOST_CHECK_EQUAL(1U, c1_1.size());
-        BOOST_CHECK_EQUAL(8U, c1_3.size());
     }
 }
 
