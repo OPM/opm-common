@@ -1049,10 +1049,10 @@ public:
     STATIC_OR_DEVICE LhsEval viscosity(const FluidState& fluidState,
                              unsigned phaseIdx,
                              unsigned regionIdx) NOTHING_OR_CONST
-    {
+    { // SCRATCH INTENSIVE
         OPM_TIMEBLOCK_LOCAL(viscosity, Subsystem::PvtProps);
-        assert(phaseIdx <= numPhases);
-        assert(regionIdx <= numRegions());
+        // assert(phaseIdx <= numPhases);
+        // assert(regionIdx <= numRegions());
 
         const LhsEval& p = decay<LhsEval>(fluidState.pressure(phaseIdx));
         const LhsEval& T = decay<LhsEval>(fluidState.temperature(phaseIdx));

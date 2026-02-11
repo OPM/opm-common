@@ -70,7 +70,7 @@ public:
 
     OPM_HOST_DEVICE ConditionalStorage(const ConditionalStorage& t)
         : data_(t.data_)
-    {};
+    {}; // SCRATCH INTENSIVE
 
     OPM_HOST_DEVICE ConditionalStorage(ConditionalStorage&& t)
         : data_(std::move(t.data_))
