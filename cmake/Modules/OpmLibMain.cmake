@@ -221,17 +221,17 @@ add_custom_target (check
   VERBATIM
 )
 
-# special processing for tests
-if(COMMAND ${project}_tests_hook)
-  cmake_language(CALL ${project}_tests_hook)
-endif()
-
 # make datafiles necessary for tests available in output directory
 opm_data (tests datafiles "${tests_DIR}")
 if(NOT BUILD_TESTING)
   set(excl_all EXCLUDE_FROM_ALL)
 endif()
 opm_compile_satellites (${project} tests "${excl_all}" "${tests_REGEXP}")
+
+# special processing for tests
+if(COMMAND ${project}_tests_hook)
+  cmake_language(CALL ${project}_tests_hook)
+endif()
 
 if(COMMAND ${project}_targets_hook)
   cmake_language(CALL ${project}_targets_hook)

@@ -493,8 +493,6 @@ list (APPEND TEST_SOURCE_FILES
       tests/test_ConditionalStorage.cpp
       tests/test_critical_error.cpp
       tests/test_cubic.cpp
-      tests/test_EvaluationFormat.cpp
-      tests/test_densead.cpp
       tests/test_FastSmallVector.cpp
       tests/test_messagelimiter.cpp
       tests/test_nonuniformtablelinear.cpp
@@ -506,38 +504,52 @@ list (APPEND TEST_SOURCE_FILES
       tests/test_ScheduleGrid.cpp
       tests/test_SegmentMatcher.cpp
       tests/test_sparsevector.cpp
-      tests/test_SymmTensor.cpp
       tests/test_uniformtablelinear.cpp
       tests/test_Uns2CPG.cpp
       tests/test_VoigtArray.cpp
       tests/material/test_2dtables.cpp
-      tests/material/test_blackoilfluidstate.cpp
-      tests/material/test_blackoilfluidsystem_nonstatic.cpp
-      tests/material/test_components.cpp
-      tests/material/test_binarycoefficients.cpp
-      tests/material/test_fluidmatrixinteractions.cpp
-      tests/material/test_fluidsystems.cpp
       tests/material/test_spline.cpp
-      tests/material/test_tabulation.cpp
       tests/test_Visitor.cpp
       tests/ml/test_ml_model.cpp
       tests/ml/test_ml_layer.cpp
 )
 
 if(OpenMP_FOUND)
-list (APPEND TEST_SOURCE_FILES
+  list(APPEND
+    TEST_SOURCE_FILES
       tests/test_ThreadSafeMapBuilder.cpp
-)
+  )
 endif()
 
 # tests that need to be linked to dune-common
 list(APPEND DUNE_TEST_SOURCE_FILES
+      tests/material/test_binarycoefficients.cpp
+      tests/test_densead.cpp
+      tests/test_EvaluationFormat.cpp
+      tests/test_SymmTensor.cpp
+      tests/material/test_blackoilfluidstate.cpp
+      tests/material/test_blackoilfluidsystem_nonstatic.cpp
+      tests/material/test_co2brinepvt.cpp
       tests/material/test_co2brine_ptflash.cpp
+      tests/material/test_components.cpp
+      tests/material/test_eclblackoilfluidsystem.cpp
+      tests/material/test_eclblackoilfluidsystemnonstatic.cpp
+      tests/material/test_eclblackoilpvt.cpp
+      tests/material/test_fluidmatrixinteractions.cpp
+      tests/material/test_fluidsystems.cpp
+      tests/material/test_h2brinepvt.cpp
       tests/material/test_immiscibleflash.cpp
       tests/material/test_ncpflash.cpp
       tests/material/test_pengrobinson.cpp
+      tests/material/test_tabulation.cpp
       tests/material/test_threecomponents_ptflash.cpp
 )
+if(dune-common_FOUND)
+  list(APPEND
+    TEST_SOURCE_FILES
+      ${DUNE_TEST_SOURCE_FILES}
+  )
+endif()
 
 if(ENABLE_ECL_INPUT)
   list(APPEND TEST_SOURCE_FILES
@@ -564,12 +576,7 @@ if(ENABLE_ECL_INPUT)
     tests/test_PAvgDynamicSourceData.cpp
     tests/test_Serialization.cpp
     tests/test_WellFractureSeeds.cpp
-    tests/material/test_co2brinepvt.cpp
-    tests/material/test_h2brinepvt.cpp
     tests/material/test_hysteresis.cpp
-    tests/material/test_eclblackoilfluidsystem.cpp
-    tests/material/test_eclblackoilfluidsystemnonstatic.cpp
-    tests/material/test_eclblackoilpvt.cpp
     tests/material/test_eclmateriallawmanager.cpp
     tests/parser/ACTIONX.cpp
     tests/parser/ADDREGTests.cpp
