@@ -552,9 +552,5 @@ if(OPM_ENABLE_EMBEDDED_PYTHON AND NOT OPM_ENABLE_PYTHON)
   set(OPM_ENABLE_PYTHON ON CACHE BOOL "Enable python bindings?" FORCE)
 endif()
 
-# read the list of components from this file (in the project directory);
-# it should set various lists with the names of the files to include
-include (CMakeLists_files.cmake)
-
 # all setup common to the OPM library modules is done here
 include (OpmLibMain)

@@ -102,6 +102,8 @@ if(COMMAND ${project}_files_hook)
   cmake_language(CALL ${project}_files_hook)
 endif()
 
+include(CMakeLists_files.cmake)
+
 # this module contains code to figure out which files is where
 include (OpmFiles)
 
