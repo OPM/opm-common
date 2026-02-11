@@ -269,10 +269,6 @@ macro(opm-common_tests_hook)
     endif()
   endif()
 
-  if (dune-common_FOUND)
-    list(APPEND tests_SOURCES ${DUNE_TEST_SOURCE_FILES})
-  endif()
-
   if(OPM_ENABLE_PYTHON)
     add_test(
       NAME
@@ -378,16 +374,6 @@ macro(opm-common_targets_hook)
       foreach(src ${DUNE_TEST_SOURCE_FILES})
         get_filename_component(tgt ${src} NAME_WE)
         target_link_libraries(${tgt} PRIVATE dunecommon)
-      endforeach()
-
-      foreach(tst test_SymmTensor test_densead test_EvaluationFormat
-          test_binarycoefficients test_components test_blackoilfluidstate
-          test_blackoilfluidsystem_nonstatic test_fluidmatrixinteractions
-          test_fluidsystems test_tabulation test_h2brinepvt test_co2brinepvt
-          test_eclblackoilfluidsystem test_eclblackoilfluidsystemnonstatic
-          test_eclblackoilpvt)
-        opm_add_target_options(TARGET ${tst})
-        target_link_libraries(${tst} PRIVATE dunecommon)
       endforeach()
     endif()
     if(BUILD_EXAMPLES)
