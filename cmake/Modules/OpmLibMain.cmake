@@ -50,6 +50,9 @@ function(opm_add_target_options)
   # additional optimization flags
   use_additional_optimization(TARGET ${PARAM_TARGET})
 
+  # Parallel programming.
+  use_openmp(TARGET ${PARAM_TARGET})
+
   # output binaries in 'bin' folder
   set_target_properties(${PARAM_TARGET}
     PROPERTIES
@@ -174,12 +177,6 @@ execute_process (COMMAND
 
 # compile main library; pull in all required includes and libraries
 opm_compile (${project})
-
-# Parallel programming.
-# Note: This needs to be linked only to libraries and not binaries
-# when building with static libraries to get correct linker order.
-# Thus it is kept outside opm_add_target_options function.
-use_openmp(TARGET ${${project}_TARGET})
 
 # MPI version probes
 mpi_checks(TARGET ${${project}_TARGET})
