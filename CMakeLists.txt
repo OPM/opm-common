@@ -346,7 +346,8 @@ macro(opm-common_targets_hook)
   endif()
 
   if(OPM_ENABLE_EMBEDDED_PYTHON)
-    target_link_libraries(opmcommon PRIVATE $<BUILD_INTERFACE:pybind11::embed>)
+    target_link_libraries(opmcommon PRIVATE $<BUILD_INTERFACE:Python3::Python>)
+    target_include_directories(opmcommon PRIVATE ${pybind11_INCLUDE_DIRS})
     foreach(target opmcommon test_msim_ACTIONX EmbeddedPython PYACTION)
       if(TARGET ${target})
         set_target_properties(${target}
