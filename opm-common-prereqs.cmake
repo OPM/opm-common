@@ -34,4 +34,11 @@ list(APPEND opm-common_DEPS
       "fmt 8.0"
       "QuadMath"
 )
+
+if(opm-common_EMBEDDED_PYTHON)
+  list(APPEND opm-common_DEPS
+    "Python3 COMPONENTS Development.Embed REQUIRED"
+  )
+endif()
+
 find_package_deps(opm-common)
