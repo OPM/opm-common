@@ -75,18 +75,6 @@ if(NOT @opm-project_NAME@_FOUND)
     endif()
   endif (NOT "@opm-project_TARGET@" STREQUAL "")
 
-  # build with OpenMP if that was found
-  if (NOT "@OpenMP_C_FLAGS@" STREQUAL "")
-    string (REPLACE "@OpenMP_C_FLAGS@" "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
-    string (STRIP "${CMAKE_C_FLAGS}" CMAKE_C_FLAGS)
-    set (CMAKE_C_FLAG "@OpenMP_C_FLAGS@ ${CMAKE_C_FLAGS}")
-  endif (NOT "@OpenMP_C_FLAGS@" STREQUAL "")
-  if (NOT "@OpenMP_CXX_FLAGS@" STREQUAL "")
-    string (REPLACE "@OpenMP_CXX_FLAGS@" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-    string (STRIP "${CMAKE_CXX_FLAGS}" CMAKE_CXX_FLAGS)
-    set (CMAKE_C_FLAG "@OpenMP_CXX_FLAGS@ ${CMAKE_CXX_FLAGS}")
-  endif (NOT "@OpenMP_CXX_FLAGS@" STREQUAL "")
-
   # this is the contents of config.h as far as our probes can tell:
 
   # Require correct CMake standard. Needed for user modules as

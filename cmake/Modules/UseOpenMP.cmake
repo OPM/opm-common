@@ -49,7 +49,8 @@ function(use_openmp)
       target_link_libraries(${PARAM_TARGET} PUBLIC OpenMP::OpenMP_C)
     endif()
   else()
-    message(STATUS "OpenMP: disabled")
+    include(FindPackageMessage)
+    find_package_message(OpenMP "OpenMP: disabled" omp_status)
     # if we don't have OpenMP support, then don't show warnings that these
     # pragmas are unknown
     if(CXX_COMPAT_GCC)
