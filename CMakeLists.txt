@@ -524,7 +524,6 @@ set(OPM_PROJECT_EXTRA_CODE_INTREE "#ENABLE_ECL_INPUT is needed by opm-common-pre
 # we cannot generate dune.module since it is read by dunecontrol before
 # the build starts, so it makes sense to keep the data there then.
 include (OpmInit)
-OpmSetPolicies()
 
 # Look for the opm-tests repository; if found the variable
 # HAVE_OPM_TESTS will be set to true.
