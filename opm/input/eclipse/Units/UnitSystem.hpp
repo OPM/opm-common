@@ -89,6 +89,7 @@ namespace Opm {
             ymodule,
             thermalconductivity,
             dfactor,
+            velocity,
             _count // New entries must be added *before* this
         };
 

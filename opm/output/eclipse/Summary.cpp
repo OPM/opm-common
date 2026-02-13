@@ -3547,6 +3547,12 @@ static const auto block_units = UnitTable {
     {"BSGAS"    , Opm::UnitSystem::measure::identity},
     {"BGVIS"    , Opm::UnitSystem::measure::viscosity},
     {"BVGAS"    , Opm::UnitSystem::measure::viscosity},
+    {"BVELGI"   , Opm::UnitSystem::measure::velocity},
+    {"BVELGI-"  , Opm::UnitSystem::measure::velocity},
+    {"BVELGJ"   , Opm::UnitSystem::measure::velocity},
+    {"BVELGJ-"  , Opm::UnitSystem::measure::velocity},
+    {"BVELGK"   , Opm::UnitSystem::measure::velocity},
+    {"BVELGK-"  , Opm::UnitSystem::measure::velocity},
 
     // Oil quantities
     {"BODEN"    , Opm::UnitSystem::measure::density},
@@ -3569,6 +3575,12 @@ static const auto block_units = UnitTable {
     {"BSOIL"    , Opm::UnitSystem::measure::identity},
     {"BOVIS"    , Opm::UnitSystem::measure::viscosity},
     {"BVOIL"    , Opm::UnitSystem::measure::viscosity},
+    {"BVELOI"   , Opm::UnitSystem::measure::velocity},
+    {"BVELOI-"  , Opm::UnitSystem::measure::velocity},
+    {"BVELOJ"   , Opm::UnitSystem::measure::velocity},
+    {"BVELOJ-"  , Opm::UnitSystem::measure::velocity},
+    {"BVELOK"   , Opm::UnitSystem::measure::velocity},
+    {"BVELOK-"  , Opm::UnitSystem::measure::velocity},
 
     // Water quantities
     {"BWDEN"    , Opm::UnitSystem::measure::density},
@@ -3588,8 +3600,14 @@ static const auto block_units = UnitTable {
     {"BWSAT"    , Opm::UnitSystem::measure::identity},
     {"BSWAT"    , Opm::UnitSystem::measure::identity},
     {"BWVIS"    , Opm::UnitSystem::measure::viscosity},
-    {"BVWAT"    , Opm::UnitSystem::measure::viscosity},
     {"BAMIP"    , Opm::UnitSystem::measure::mass},
+    {"BVELWI"   , Opm::UnitSystem::measure::velocity},
+    {"BVELWI-"  , Opm::UnitSystem::measure::velocity},
+    {"BVELWJ"   , Opm::UnitSystem::measure::velocity},
+    {"BVELWJ-"  , Opm::UnitSystem::measure::velocity},
+    {"BVELWK"   , Opm::UnitSystem::measure::velocity},
+    {"BVELWK-"  , Opm::UnitSystem::measure::velocity},
+    {"BVWAT"    , Opm::UnitSystem::measure::viscosity},
 
     // Pressure quantities
     {"BPR"      , Opm::UnitSystem::measure::pressure},
