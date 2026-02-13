@@ -51,7 +51,7 @@ if(AMGX_FOUND)
         )
 
         # Since AMGX is basically unversioned we need to use cuda version to decide
-        if(CUDA_VERSION VERSION_LESS 12.9)
+        if(CMAKE_CUDA_COMPILER_VERSION VERSION_LESS 12.9)
           set(EXTRA_LIBS CUDA::nvToolsExt)
         endif()
 
