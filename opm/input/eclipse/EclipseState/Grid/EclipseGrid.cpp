@@ -2748,315 +2748,110 @@ namespace Opm {
                                              const std::array<int,3>&   parent_nxyz)
     {
         m_coord = generate_refined_coord(parent_coord,  parent_nxyz);
-        m_zcorn = generate_refined_zcorn(parent_coord, parent_zcorn, parent_nxyz);
+        m_zcorn = generate_refined_zcorn(parent_zcorn, parent_nxyz);
         EclipseGrid::perform_refinement();
     }
 
-    std::vector<double> EclipseGridLGR::generate_refined_zcorn(const std::vector<double>& parent_coord,
-                                                               const std::vector<double>& parent_zcorn,
+    std::vector<double> EclipseGridLGR::generate_refined_zcorn(const std::vector<double>& zcorn_h,
                                                                const std::array<int,3>&   parent_nxyz)
     {
-        using CoordinateType = std::array<double,3>;
-        using PillarType = std::array<std::array<double,3>, 2>;
-        using ZCornType = double;
-
-        struct Matrix {
-            std::size_t rows, cols;
-            std::vector<ZCornType> data;
-
-            Matrix() : rows(0), cols(0), data() {}
-
-            Matrix(std::size_t r, std::size_t c)
-                : rows(r), cols(c), data(r * c, 0)
-            {}
-
-            ZCornType & operator()(std::size_t i, std::size_t j) {
-                return data[i * cols + j];
-            }
-
-            const ZCornType& operator()(std::size_t i, std::size_t j) const {
-                return data[i * cols + j];
-            }
-        };
-
-
-        /**
-         * Bilinear interpolation on a single layer of a quadrilateral,
-         * selected from an 8-point array (bottom + top layers).
-         *
-         * Point order in each layer (0-3):
-         *
-         *     2 ---- 3    (top-left → top-right)
-         *     |      |
-         *     0 ---- 1    (bottom-left → bottom-right)
-         *
-         * points[0..3] -> bottom layer
-         * points[4..7] -> top layer
-         *
-         * I,J: indices inside the grid cell
-         * NI,NJ: maximum indices along each direction (size of the cell)
-         * topLayer: false = use bottom layer, true = use top layer
-         */
-
-        auto bilinearInterpolation = [](const std::array<CoordinateType,8>& points,
-                                                  int I, int J, int NI, int NJ,
-                                                  bool topLayer) -> CoordinateType
+        auto trilinear_interpolation  = [](const std::array<double,8>& z,
+                                                     double ti, double tj, double tk)
         {
-            int offset = topLayer ? 4 : 0;
+            const double one_i = 1.0 - ti;
+            const double one_j = 1.0 - tj;
+            const double one_k = 1.0 - tk;
 
-            // Normalize indices to [0,1]
-            double x = static_cast<double>(I) / NI;
-            double y = static_cast<double>(J) / NJ;
-
-            double w00 = (1 - x) * (1 - y);
-            double w10 =      x  * (1 - y);
-            double w01 = (1 - x) *      y;
-            double w11 =      x  *      y;
-
-            CoordinateType P;
-            P[0] = w00*points[offset + 0][0] + w10*points[offset + 1][0] +
-                   w01*points[offset + 2][0] + w11*points[offset + 3][0];
-
-            P[1] = w00*points[offset + 0][1] + w10*points[offset + 1][1] +
-                   w01*points[offset + 2][1] + w11*points[offset + 3][1];
-
-            P[2] = w00*points[offset + 0][2] + w10*points[offset + 1][2] +
-                   w01*points[offset + 2][2] + w11*points[offset + 3][2];
-
-            return P;
+            return
+                z[0] * one_i * one_j * one_k +
+                z[1] * ti    * one_j * one_k +
+                z[2] * ti    * tj    * one_k +
+                z[3] * one_i * tj    * one_k +
+                z[4] * one_i * one_j * tk +
+                z[5] * ti    * one_j * tk +
+                z[6] * ti    * tj    * tk +
+                z[7] * one_i * tj    * tk;
         };
 
-        auto generate_dest_ijk_refinement_intervals = [this](const std::vector<std::size_t>& i_elem,
-                                                                       const std::vector<std::size_t>& j_elem,
-                                                                       const std::vector<std::size_t>& k_elem)
-        {
+        constexpr std::array<std::array<int,3>,8> corner_offset = {{
+            {0,0,0}, // 0
+            {1,0,0}, // 1
+            {1,1,0}, // 2
+            {0,1,0}, // 3
+            {0,0,1}, // 4
+            {1,0,1}, // 5
+            {1,1,1}, // 6
+            {0,1,1}  // 7
+        }};
 
-            std::size_t totalX = getNX();
-            std::size_t totalY = getNY();
-            std::size_t totalZ = getNZ();
 
-            std::size_t min_i = *std::min_element(i_elem.begin(), i_elem.end());
-            std::size_t max_i = *std::max_element(i_elem.begin(), i_elem.end());
-            std::size_t min_j = *std::min_element(j_elem.begin(), j_elem.end());
-            std::size_t max_j = *std::max_element(j_elem.begin(), j_elem.end());
-            std::size_t min_k = *std::min_element(k_elem.begin(), k_elem.end());
-            std::size_t max_k = *std::max_element(k_elem.begin(), k_elem.end());
+        const std::size_t nx = getNX();
+        const std::size_t ny = getNY();
+        const std::size_t nz = getNZ();
 
-            std::size_t num_el_i = max_i - min_i + 1;
-            std::size_t num_el_j = max_j - min_j + 1;
-            std::size_t num_el_k = max_k - min_k + 1;
+        const std::size_t NX = parent_nxyz[0];
+        const std::size_t NY = parent_nxyz[1];
+        const std::size_t NZ = parent_nxyz[2];
 
-            if (num_el_i == 0 || num_el_j == 0 || num_el_k == 0)
-            {
-                throw std::invalid_argument("Invalid number of elements.");
-            }
-            if (totalX % num_el_i != 0 || totalY % num_el_j != 0 || totalZ % num_el_k != 0) {
-                // Either handle remainder properly or fail fast
-                throw std::runtime_error("Refinement factors must exactly divide parent NX,NY and NZ");
-            }
+        const std::size_t Imin = low_fatherIJK[0];
+        const std::size_t Imax = up_fatherIJK[0];
 
-            auto dX = totalX/num_el_i;
-            auto dY = totalY/num_el_j;
-            auto dZ = totalZ/num_el_k;
+        const std::size_t Jmin = low_fatherIJK[1];
+        const std::size_t Jmax = up_fatherIJK[1];
 
-            std::vector<std::size_t> refined_i_indices;
-            std::vector<std::size_t> refined_j_indices;
-            std::vector<std::size_t> refined_k_indices;
+        const std::size_t Kmin = low_fatherIJK[2];
+        const std::size_t Kmax = up_fatherIJK[2];
 
-            refined_i_indices.resize(i_elem.size());
-            refined_j_indices.resize(j_elem.size());
-            refined_k_indices.resize(k_elem.size());
+        const auto zh = ZcornMapper { NX, NY,NZ }; // Host grid dimensions Mapper
+        const auto zc = ZcornMapper { nx, ny, nz }; // Child/LGR grid dimensions Mapper
 
-            std::transform(i_elem.begin(), i_elem.end(), refined_i_indices.begin(),
-                           [min_i, dX](std::size_t i){
-                            return (i - min_i) * dX;
-                           });
-            std::transform(j_elem.begin(), j_elem.end(), refined_j_indices.begin(),
-                           [min_j, dY](std::size_t j){
-                            return (j - min_j) * dY;
-                           });
-            std::transform(k_elem.begin(), k_elem.end(), refined_k_indices.begin(),
-                           [min_k, dZ](std::size_t k){
-                            return (k - min_k) * dZ;
-                           });
+        const auto si = nx / (Imax - Imin + 1);
+        const auto sj = ny / (Jmax - Jmin + 1);
+        const auto sk = nz / (Kmax - Kmin + 1);
 
-            return std::make_tuple(refined_i_indices, refined_j_indices, refined_k_indices, dX, dY, dZ);
-        };
+        std::vector<double> zcorn_c;
+        zcorn_c.resize(nx*ny*nz*8);
 
-        CoordMapper parent_coord_mapper(parent_nxyz[0], parent_nxyz[1]);
-        ZcornMapper parent_zcorn_mapper(parent_nxyz[0], parent_nxyz[1], parent_nxyz[2]);
 
-        CoordMapper local_coord_mapper(this->getNX(), this->getNY());
-        ZcornMapper local_zcorn_mapper(this->getNX(), this->getNY(), this->getNZ());
-
-        auto get_father_pillar = [&parent_coord_mapper, &parent_coord]( std::size_t i,
-                                                                                 std::size_t j)
-        {
-            PillarType P;
-            // Top point
-            P[0][0] = parent_coord[ parent_coord_mapper.index(i, j, 0, 0) ]; // x_top
-            P[0][1] = parent_coord[ parent_coord_mapper.index(i, j, 1, 0) ]; // y_top
-            P[0][2] = parent_coord[ parent_coord_mapper.index(i, j, 2, 0) ]; // z_top
-            // Bottom point
-            P[1][0] = parent_coord[ parent_coord_mapper.index(i, j, 0, 1) ]; // x_bot
-            P[1][1] = parent_coord[ parent_coord_mapper.index(i, j, 1, 1) ]; // y_bot
-            P[1][2] = parent_coord[ parent_coord_mapper.index(i, j, 2, 1) ]; // z_bot
-            return P;
-        };
-
-        auto get_local_pillar = [this, &local_coord_mapper]( std::size_t i, std::size_t j)
-        {
-            PillarType P;
-            // Top point
-            P[0][0] = m_coord[ local_coord_mapper.index(i, j, 0, 0) ]; // x_top
-            P[0][1] = m_coord[ local_coord_mapper.index(i, j, 1, 0) ]; // y_top
-            P[0][2] = m_coord[ local_coord_mapper.index(i, j, 2, 0) ]; // z_top
-            // Bottom point
-            P[1][0] = m_coord[ local_coord_mapper.index(i, j, 0, 1) ]; // x_bot
-            P[1][1] = m_coord[ local_coord_mapper.index(i, j, 1, 1) ]; // y_bot
-            P[1][2] = m_coord[ local_coord_mapper.index(i, j, 2, 1) ]; // z_bot
-            return P;
-        };
-
-        auto get_zcorn_index = [&parent_zcorn_mapper]( std::size_t i,
-                                                                 std::size_t j,
-                                                                 std::size_t k)
-        {
-            std::array<std::size_t,8> father_zcorn_indices;
-            for (int c = 0; c < 8; c++) {
-                father_zcorn_indices[c] = parent_zcorn_mapper.index(i, j, k, c);
-            }
-            return father_zcorn_indices;
-        };
-
-        auto get_zcorn_value = [&parent_zcorn](std::array<std::size_t,8> indices)
-        {
-            std::array<double,8> zcorn_values;
-            for (int idx = 0; idx < 8; idx++) {
-                zcorn_values[idx] = parent_zcorn[ indices[idx] ];
-            }
-            return zcorn_values;
-        };
-
-        auto pillar_zcorn_to_coord = [](const PillarType& pillar, double zcorn_value) {
-            double t = (zcorn_value - pillar[0][2]) / (pillar[1][2] - pillar[0][2]);
-            double x = pillar[0][0] + t * (pillar[1][0] - pillar[0][0]);
-            double y = pillar[0][1] + t * (pillar[1][1] - pillar[0][1]);
-            return std::array<double, 3>{x, y, zcorn_value};
-        };
-
-        auto coord_pillar_to_zcorn = [](const PillarType& pillar, const std::array<double, 3>& coord) {
-            double total_height = pillar[1][2] - pillar[0][2];
-            if (total_height == 0.0) {
-                return pillar[0][2]; // or pillar[1][2], they are the same
-            }
-            double t = (coord[2] - pillar[0][2]) / total_height;
-            return pillar[0][2] + t * total_height;
-        };
-
-        auto find_coord_coorners = [&](const std::array<PillarType,4>& pillars,
-                                                 const std::array<double,8>& father_zcorn_values)
-        {
-            auto coord_corners = std::array<std::array<double,3>,8>{};
-            for (int c = 0; c < 8; c++) {
-                coord_corners[c] = pillar_zcorn_to_coord(pillars[c % 4], father_zcorn_values[c]);
-            }
-            return coord_corners;
-        };
-
-        auto interpolate_inner_zcorn = [](std::vector<Matrix>& pillars_matrix)
-        {
-            std::size_t nz = pillars_matrix.size();
-            for (std::size_t k = 1; k < nz - 1; k++) {
-                double t = static_cast<double>(k) / (nz - 1);
-                for (std::size_t j = 0; j < pillars_matrix[0].cols; j++) {
-                    for (std::size_t i = 0; i < pillars_matrix[0].rows; i++) {
-                        pillars_matrix[k](i,j) = (1 - t) * pillars_matrix[0](i,j) + t * pillars_matrix.back()(i,j);
+        for (std::size_t K = Kmin; K <= Kmax; ++K) {
+            for (std::size_t J = Jmin; J <= Jmax; ++J) {
+                for (std::size_t I = Imin; I <= Imax; ++I) {
+                    std::array<double, 8> h_vertices;
+                    for (std::size_t idx = 0; idx < 8; ++idx) {
+                        const auto h = zh.index(I, J, K, idx);
+                        h_vertices[idx] = zcorn_h[h + idx];
                     }
-                }
-            }
 
-        };
+                    for (std::size_t k = 0; k < sk; ++k) {
+                        const auto tk = static_cast<double>(k) / sk;
+                        const auto tk_next = static_cast<double>(k + 1) / sk;
+                        for (std::size_t j = 0; j < sj; ++j) {
+                            const auto tj = static_cast<double>(j) / sj;
+                            const auto tj_next = static_cast<double>(j + 1) / sj;
+                            for (std::size_t i = 0; i < si; ++i) {
+                                const auto ti = static_cast<double>(i) / si;
+                                const auto ti_next = static_cast<double>(i + 1) / si;
+                                for (std::size_t idx = 0; idx < 8; ++idx) {
+                                    const auto& offset = corner_offset[idx];
 
-
-        const auto [NX, NY, NZ]  = getNXYZ();
-        std::vector<double> refined_zcorn;
-        refined_zcorn.resize(NX*NY*NZ*8);
-
-        const auto [i_list, j_list, k_list ] =  VectorUtil::generate_cartesian_product(
-            low_fatherIJK[0], up_fatherIJK[0],
-            low_fatherIJK[1], up_fatherIJK[1],
-            low_fatherIJK[2], up_fatherIJK[2]);
-
-        const auto [dest_i_ref, dest_j_ref, dest_k_ref, dx , dy, dz] = generate_dest_ijk_refinement_intervals(i_list, j_list, k_list);
-
-
-        for (std::size_t n = 0; n < i_list.size(); n++) {
-            const std::size_t i_father = i_list[n];
-            const std::size_t j_father = j_list[n];
-            const std::size_t k_father = k_list[n];
-
-            const std::size_t i_ref = dest_i_ref[n];
-            const std::size_t j_ref = dest_j_ref[n];
-            const std::size_t k_ref = dest_k_ref[n];
-
-            std::vector<Matrix> local_zcorn_volumes;
-            local_zcorn_volumes.resize(dz+1);
-            for (std::size_t k = 0; k <= dz; k++) {
-                local_zcorn_volumes[k] = Matrix(dx+1, dy+1);
-            }
-
-            std::array<PillarType,4> pillars;
-            pillars[0] = get_father_pillar(i_father, j_father);
-            pillars[1] = get_father_pillar(i_father+1, j_father);
-            pillars[2] = get_father_pillar(i_father, j_father+1);
-            pillars[3] = get_father_pillar(i_father+1, j_father+1);
-
-            auto father_zcorn_indices = get_zcorn_index(i_father, j_father, k_father);
-            auto father_zcorn_values = get_zcorn_value(father_zcorn_indices);
-            auto coord_corners = find_coord_coorners(pillars, father_zcorn_values);
-
-            // fill in the refined zcorn values of top and bottom layers
-            for (std::size_t jj = 0; jj <= dy; jj++) {
-                for (std::size_t ii = 0; ii <= dx; ii++) {
-                    auto interpolated_coord_bottom = bilinearInterpolation(coord_corners, ii, jj, dx, dy, false);
-                    auto interpolated_coord_top = bilinearInterpolation(coord_corners, ii, jj, dx, dy, true);
-                    auto local_pillar = get_local_pillar(i_ref + ii, j_ref + jj);
-                    local_zcorn_volumes[0](ii,jj) = coord_pillar_to_zcorn(local_pillar, interpolated_coord_bottom);
-                    local_zcorn_volumes.back()(ii,jj) = coord_pillar_to_zcorn(local_pillar, interpolated_coord_top);
-                }
-            }
-
-            // interpolate inner layers
-            interpolate_inner_zcorn(local_zcorn_volumes);
-
-            // assign to refined_zcorn
-            for (std::size_t kk = 0; kk < dz; kk++) {
-                for (std::size_t jj = 0; jj < dy; jj++) {
-                    for (std::size_t ii = 0; ii < dx; ii++) {
-                        std::size_t global_i = i_ref + ii;
-                        std::size_t global_j = j_ref + jj;
-                        std::size_t global_k = k_ref + kk;
-                        std::array<double,8>  refined_zcorn_values = {local_zcorn_volumes[kk](ii,jj),
-                                                                      local_zcorn_volumes[kk](ii+1,jj),
-                                                                      local_zcorn_volumes[kk](ii,jj+1),
-                                                                      local_zcorn_volumes[kk](ii+1,jj+1),
-                                                                      local_zcorn_volumes[kk+1](ii,jj),
-                                                                      local_zcorn_volumes[kk+1](ii+1,jj),
-                                                                      local_zcorn_volumes[kk+1](ii,jj+1),
-                                                                      local_zcorn_volumes[kk+1](ii+1,jj+1)};
-
-                        for (std::size_t idx = 0; idx < 8; idx++) {
-                            const std::size_t zcorn_idx = local_zcorn_mapper.index(global_i, global_j, global_k, idx);
-                            refined_zcorn[zcorn_idx] = refined_zcorn_values[idx];
+                                    const double ti_c = offset[0] ? ti_next : ti;
+                                    const double tj_c = offset[1] ? tj_next : tj;
+                                    const double tk_c = offset[2] ? tk_next : tk;
+                                    const auto c = zc.index((I - Imin) * si + i,
+                                                                               (J - Jmin) * sj + j,
+                                                                               (K - Kmin) * sk + k,
+                                                                             idx);
+                                    zcorn_c[c] = trilinear_interpolation(h_vertices,ti_c, tj_c, tk_c);
+                                }
+                            }
                         }
-
                     }
                 }
             }
         }
-        return refined_zcorn;
+        return zcorn_c;
     }
+
 
     std::vector<double> EclipseGridLGR::generate_refined_coord(const std::vector<double>& parent_coord,
                                                                const std::array<int,3>&   parent_nxyz)
