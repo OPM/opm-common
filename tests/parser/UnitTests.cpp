@@ -322,6 +322,7 @@ BOOST_AUTO_TEST_CASE(METRIC_UNITS)
     BOOST_CHECK_CLOSE( metric.to_si( Meas::moles , 1.0 ) , 1000 , 1.0e-10 );
     BOOST_CHECK_CLOSE( metric.to_si( Meas::ppm , 1.0 ) , 1.0e-6 , 1.0e-10 );
     BOOST_CHECK_CLOSE( metric.to_si( Meas::thermalconductivity , 1.0 ) , 1.1574074074074073e-02 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( metric.to_si( Meas::velocity , 1.0 ) , 1.1574074074074073e-05 , 1.0e-10 );
 
     // ----------------------------------------------------------------
     // SI -> METRIC
@@ -365,6 +366,7 @@ BOOST_AUTO_TEST_CASE(METRIC_UNITS)
     BOOST_CHECK_CLOSE( metric.from_si( Meas::moles , 1 ) , 0.001 , 1.0e-10 );
     BOOST_CHECK_CLOSE( metric.from_si( Meas::ppm , 1.0 ) , 1.0e6 , 1.0e-10 );
     BOOST_CHECK_CLOSE( metric.from_si( Meas::thermalconductivity , 1.1574074074074073e-02 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( metric.from_si( Meas::velocity , 1.0 ) , 86.400e3 , 1.0e-10 );
 
 }
 
@@ -418,6 +420,7 @@ BOOST_AUTO_TEST_CASE(FIELD_UNITS)
     BOOST_CHECK_CLOSE( field.to_si( Meas::moles, 1.0 ) , 453.59237 , 1.0e-5 );
     BOOST_CHECK_CLOSE( field.to_si( Meas::ppm, 1.0 ) , 1.0e-6 , 1.0e-10 );
     BOOST_CHECK_CLOSE( field.to_si( Meas::thermalconductivity , 1.0 ) , 7.2065719324146973e-02 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( field.to_si( Meas::velocity , 1.0 ) , 3.5277777777777779e-06 , 1.0e-10 );
 
 
     // ----------------------------------------------------------------
@@ -461,6 +464,7 @@ BOOST_AUTO_TEST_CASE(FIELD_UNITS)
     BOOST_CHECK_CLOSE( field.from_si( Meas::moles , 1.0 ) , 0.0022046226 , 1.0e-5 );
     BOOST_CHECK_CLOSE( field.from_si( Meas::ppm , 1.0 ) , 1.0e6 , 1.0e-10 );
     BOOST_CHECK_CLOSE( field.from_si( Meas::thermalconductivity , 7.2065719324146973e-02 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( field.from_si( Meas::velocity, 1.0 ) , 283464.56692913384 , 1.0e-10 );
 
 }
 
@@ -514,6 +518,7 @@ BOOST_AUTO_TEST_CASE(LAB_UNITS)
     BOOST_CHECK_CLOSE( lab.to_si( Meas::moles , 1 ) , 1, 1.0e-10 );
     BOOST_CHECK_CLOSE( lab.to_si( Meas::ppm , 1.0 ) , 1.0e-6 , 1.0e-10 );
     BOOST_CHECK_CLOSE( lab.to_si( Meas::thermalconductivity , 1.0 ) , 2.777777777777778e-02 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( lab.to_si( Meas::velocity, 1.0 ) , 2.7777777777777779e-06 , 1.0e-10 );
 
 
     // ----------------------------------------------------------------
@@ -558,6 +563,7 @@ BOOST_AUTO_TEST_CASE(LAB_UNITS)
     BOOST_CHECK_CLOSE( lab.from_si( Meas::moles , 1 ) , 1, 1.0e-10 );
     BOOST_CHECK_CLOSE( lab.from_si( Meas::ppm , 1.0 ) , 1.0e6 , 1.0e-10 );
     BOOST_CHECK_CLOSE( lab.from_si( Meas::thermalconductivity , 2.777777777777778e-02 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( lab.from_si( Meas::velocity, 1.0 ) , 3.6e+05 , 1.0e-10 );
 
 }
 
@@ -611,6 +617,7 @@ BOOST_AUTO_TEST_CASE(PVT_M_UNITS)
     BOOST_CHECK_CLOSE( pvt_m.to_si( Meas::moles , 1 ) , 1000 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.to_si( Meas::ppm , 1.0 ) , 1.0e-6 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.to_si( Meas::thermalconductivity , 1.0 ) , 1.1574074074074073e-02 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( pvt_m.to_si( Meas::velocity , 1.0 ) , 1.1574074074074073e-05 , 1.0e-10 );
 
 
     // ----------------------------------------------------------------
@@ -655,6 +662,7 @@ BOOST_AUTO_TEST_CASE(PVT_M_UNITS)
     BOOST_CHECK_CLOSE( pvt_m.from_si( Meas::moles , 1 ) , 0.001 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.from_si( Meas::ppm , 1) , 1.e6 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.from_si( Meas::thermalconductivity , 1.1574074074074073e-02 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( pvt_m.from_si( Meas::velocity , 1.0 ) , 86.400e3 , 1.0e-10 );
 
 }
 
