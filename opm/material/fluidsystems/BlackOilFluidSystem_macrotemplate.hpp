@@ -2035,11 +2035,11 @@ copy_to_gpu(const FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits>& oldFluidSystem) {
     using GpuBuffer9Array = GpuBuffer<std::array<Scalar, 9>>;
 
     OPM_ERROR_IF(oldFluidSystem.gasPvt_.approach() != GasPvtApproach::Co2Gas,
-        fmt::format("Incompatible gas PVT approach. Given {}, expected {} (GasPvtApproach::Co2Gas).",
+        fmt::format(fmt::runtime("Incompatible gas PVT approach. Given {}, expected {} (GasPvtApproach::Co2Gas)."),
                      int(oldFluidSystem.gasPvt_.approach()), int(GasPvtApproach::Co2Gas)));
 
     OPM_ERROR_IF(oldFluidSystem.waterPvt_.approach() != WaterPvtApproach::BrineCo2,
-        fmt::format("Incompatible water PVT approach. Given {}, expected {} (WaterPvtApproach::BrineCo2).",
+        fmt::format(fmt::runtime("Incompatible water PVT approach. Given {}, expected {} (WaterPvtApproach::BrineCo2)."),
                     int(oldFluidSystem.waterPvt_.approach()), int(WaterPvtApproach::BrineCo2)));
 
     OPM_ERROR_IF(oldFluidSystem.oilPvt_.isActive(),

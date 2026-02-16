@@ -111,10 +111,10 @@ namespace ML
             OPM_ERROR_IF(dims_.size() != 1, "Invalid indexing for tensor");
 
             OPM_ERROR_IF(!(i < dims_[0] && i >= 0),
-                         fmt::format(" Invalid i:  "
+                         fmt::format(fmt::runtime(" Invalid i:  "
                                      "{}"
                                      "  max: "
-                                     "{}",
+                                     "{}"),
                                      i,
                                      dims_[0]));
 
@@ -126,10 +126,10 @@ namespace ML
             OPM_ERROR_IF(dims_.size() != 1, "Invalid indexing for tensor");
 
             OPM_ERROR_IF(!(i < dims_[0] && i >= 0),
-                         fmt::format(" Invalid i:  "
+                         fmt::format(fmt::runtime(" Invalid i:  "
                                      "{}"
                                      "  max: "
-                                     "{}",
+                                     "{}"),
                                      i,
                                      dims_[0]));
 
@@ -140,17 +140,17 @@ namespace ML
         {
             OPM_ERROR_IF(dims_.size() != 2, "Invalid indexing for tensor");
             OPM_ERROR_IF(!(i < dims_[0] && i >= 0),
-                         fmt::format(" Invalid i:  "
+                         fmt::format(fmt::runtime(" Invalid i:  "
                                      "{}"
                                      "  max: "
-                                     "{}",
+                                     "{}"),
                                      i,
                                      dims_[0]));
             OPM_ERROR_IF(!(j < dims_[1] && j >= 0),
-                         fmt::format(" Invalid j:  "
+                         fmt::format(fmt::runtime(" Invalid j:  "
                                      "{}"
                                      "  max: "
-                                     "{}",
+                                     "{}"),
                                      j,
                                      dims_[1]));
 
@@ -161,17 +161,17 @@ namespace ML
         {
             OPM_ERROR_IF(dims_.size() != 2, "Invalid indexing for tensor");
             OPM_ERROR_IF(!(i < dims_[0] && i >= 0),
-                         fmt::format(" Invalid i:  "
+                         fmt::format(fmt::runtime(" Invalid i:  "
                                      "{}"
                                      "  max: "
-                                     "{}",
+                                     "{}"),
                                      i,
                                      dims_[0]));
             OPM_ERROR_IF(!(j < dims_[1] && j >= 0),
-                         fmt::format(" Invalid j:  "
+                         fmt::format(fmt::runtime(" Invalid j:  "
                                      "{}"
                                      "  max: "
-                                     "{}",
+                                     "{}"),
                                      j,
                                      dims_[1]));
             return data_[dims_[1] * i + j];
@@ -181,24 +181,24 @@ namespace ML
         {
             OPM_ERROR_IF(dims_.size() != 3, "Invalid indexing for tensor");
             OPM_ERROR_IF(!(i < dims_[0] && i >= 0),
-                         fmt::format(" Invalid i:  "
+                         fmt::format(fmt::runtime(" Invalid i:  "
                                      "{}"
                                      "  max: "
-                                     "{}",
+                                     "{}"),
                                      i,
                                      dims_[0]));
             OPM_ERROR_IF(!(j < dims_[1] && j >= 0),
-                         fmt::format(" Invalid j:  "
+                         fmt::format(fmt::runtime(" Invalid j:  "
                                      "{}"
                                      "  max: "
-                                     "{}",
+                                     "{}"),
                                      j,
                                      dims_[1]));
             OPM_ERROR_IF(!(k < dims_[2] && k >= 0),
-                         fmt::format(" Invalid k:  "
+                         fmt::format(fmt::runtime(" Invalid k:  "
                                      "{}"
                                      "  max: "
-                                     "{}",
+                                     "{}"),
                                      k,
                                      dims_[2]));
 
@@ -209,24 +209,24 @@ namespace ML
         {
             OPM_ERROR_IF(dims_.size() != 3, "Invalid indexing for tensor");
             OPM_ERROR_IF(!(i < dims_[0] && i >= 0),
-                         fmt::format(" Invalid i:  "
+                         fmt::format(fmt::runtime(" Invalid i:  "
                                      "{}"
                                      "  max: "
-                                     "{}",
+                                     "{}"),
                                      i,
                                      dims_[0]));
             OPM_ERROR_IF(!(j < dims_[1] && j >= 0),
-                         fmt::format(" Invalid j:  "
+                         fmt::format(fmt::runtime(" Invalid j:  "
                                      "{}"
                                      "  max: "
-                                     "{}",
+                                     "{}"),
                                      j,
                                      dims_[1]));
             OPM_ERROR_IF(!(k < dims_[2] && k >= 0),
-                         fmt::format(" Invalid k:  "
+                         fmt::format(fmt::runtime(" Invalid k:  "
                                      "{}"
                                      "  max: "
-                                     "{}",
+                                     "{}"),
                                      k,
                                      dims_[2]));
 
@@ -237,31 +237,31 @@ namespace ML
         {
             OPM_ERROR_IF(dims_.size() != 4, "Invalid indexing for tensor");
             OPM_ERROR_IF(!(i < dims_[0] && i >= 0),
-                         fmt::format(" Invalid i:  "
+                         fmt::format(fmt::runtime(" Invalid i:  "
                                      "{}"
                                      "  max: "
-                                     "{}",
+                                     "{}"),
                                      i,
                                      dims_[0]));
             OPM_ERROR_IF(!(j < dims_[1] && j >= 0),
-                         fmt::format(" Invalid j:  "
+                         fmt::format(fmt::runtime(" Invalid j:  "
                                      "{}"
                                      "  max: "
-                                     "{}",
+                                     "{}"),
                                      j,
                                      dims_[1]));
             OPM_ERROR_IF(!(k < dims_[2] && k >= 0),
-                         fmt::format(" Invalid k:  "
+                         fmt::format(fmt::runtime(" Invalid k:  "
                                      "{}"
                                      "  max: "
-                                     "{}",
+                                     "{}"),
                                      k,
                                      dims_[2]));
             OPM_ERROR_IF(!(l < dims_[3] && l >= 0),
-                         fmt::format(" Invalid l:  "
+                         fmt::format(fmt::runtime(" Invalid l:  "
                                      "{}"
                                      "  max: "
-                                     "{}",
+                                     "{}"),
                                      l,
                                      dims_[3]));
 
@@ -272,31 +272,31 @@ namespace ML
         {
             OPM_ERROR_IF(dims_.size() != 4, "Invalid indexing for tensor");
             OPM_ERROR_IF(!(i < dims_[0] && i >= 0),
-                         fmt::format(" Invalid i:  "
+                         fmt::format(fmt::runtime(" Invalid i:  "
                                      "{}"
                                      "  max: "
-                                     "{}",
+                                     "{}"),
                                      i,
                                      dims_[0]));
             OPM_ERROR_IF(!(j < dims_[1] && j >= 0),
-                         fmt::format(" Invalid j:  "
+                         fmt::format(fmt::runtime(" Invalid j:  "
                                      "{}"
                                      "  max: "
-                                     "{}",
+                                     "{}"),
                                      j,
                                      dims_[1]));
             OPM_ERROR_IF(!(k < dims_[2] && k >= 0),
-                         fmt::format(" Invalid k:  "
+                         fmt::format(fmt::runtime(" Invalid k:  "
                                      "{}"
                                      "  max: "
-                                     "{}",
+                                     "{}"),
                                      k,
                                      dims_[2]));
             OPM_ERROR_IF(!(l < dims_[3] && l >= 0),
-                         fmt::format(" Invalid l:  "
+                         fmt::format(fmt::runtime(" Invalid l:  "
                                      "{}"
                                      "  max: "
-                                     "{}",
+                                     "{}"),
                                      l,
                                      dims_[3]));
 
@@ -576,8 +576,8 @@ namespace ML
             break;
         default:
             OPM_ERROR_IF(true,
-                         fmt::format("\n Unsupported activation type "
-                                     "{}",
+                         fmt::format(fmt::runtime("\n Unsupported activation type "
+                                     "{}"),
                                      activation));
         }
 
@@ -802,8 +802,8 @@ namespace ML
     {
         std::ifstream file(filename.c_str(), std::ios::binary);
         OPM_ERROR_IF(!file.is_open(),
-                     fmt::format("\n Unable to open file "
-                                 "{}",
+                     fmt::format(fmt::runtime("\n Unable to open file "
+                                 "{}"),
                                  filename.c_str()));
 
         unsigned int num_layers = 0;
@@ -833,12 +833,12 @@ namespace ML
             }
 
             OPM_ERROR_IF(!layer,
-                         fmt::format("\n Unknown layer type "
-                                     "{}",
+                         fmt::format(fmt::runtime("\n Unknown layer type "
+                                     "{}"),
                                      layer_type));
             OPM_ERROR_IF(!layer->loadLayer(file),
-                         fmt::format("\n Failed to load layer "
-                                     "{}",
+                         fmt::format(fmt::runtime("\n Failed to load layer "
+                                     "{}"),
                                      i));
 
             layers_.emplace_back(std::move(layer));
@@ -859,8 +859,8 @@ namespace ML
             }
 
             OPM_ERROR_IF(!(layers_[i]->apply(temp_in, out)),
-                         fmt::format("\n Failed to apply layer "
-                                     "{}",
+                         fmt::format(fmt::runtime("\n Failed to apply layer "
+                                     "{}"),
                                      i));
         }
         return true;
