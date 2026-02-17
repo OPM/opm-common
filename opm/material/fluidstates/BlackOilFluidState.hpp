@@ -124,7 +124,7 @@ template <class ScalarT,
           bool enableDissolutionInWater = false,
           unsigned numStoragePhases = FluidSystemT::numPhases>
 class BlackOilFluidState
-{ // SCRATCH INTENSIVE
+{
 public:
     using FluidSystem = FluidSystemT;
     using Scalar = ScalarT;
@@ -522,7 +522,7 @@ public:
      * pressure and temperature at reservoir conditions compared to surface conditions.
      */
     OPM_HOST_DEVICE const Scalar& invB(unsigned phaseIdx) const
-    { return invB_[canonicalToStoragePhaseIndex_(phaseIdx, fluidSystem())]; } // SCRATCH INTENSIVE
+    { return invB_[canonicalToStoragePhaseIndex_(phaseIdx, fluidSystem())]; }
 
     /*!
      * \brief Return the gas dissolution factor of oil [m^3/m^3].
@@ -564,7 +564,7 @@ public:
      * conditions. This method is specific to the black-oil model.
      */
     OPM_HOST_DEVICE Scalar Rvw() const
-    { // SCRATCH INTENSIVE
+    {
         if constexpr (enableVapwat) {
             return *Rvw_;
         } else {
@@ -623,7 +623,7 @@ public:
      * \brief Return the density [kg/m^3] of a given fluid phase.
       */
     OPM_HOST_DEVICE Scalar density(unsigned phaseIdx) const
-    { return density_[canonicalToStoragePhaseIndex_(phaseIdx, fluidSystem())]; } // SCRATCH INTENSIVE
+    { return density_[canonicalToStoragePhaseIndex_(phaseIdx, fluidSystem())]; }
 
     /*!
      * \brief Return the specific enthalpy [J/kg] of a given fluid phase.
@@ -641,7 +641,7 @@ public:
      * exception!
      */
     OPM_HOST_DEVICE Scalar internalEnergy(unsigned phaseIdx) const
-    {   auto energy = (*enthalpy_)[canonicalToStoragePhaseIndex_(phaseIdx, fluidSystem())]; // SCRATCH INTENSIVE
+    {   auto energy = (*enthalpy_)[canonicalToStoragePhaseIndex_(phaseIdx, fluidSystem())];
         if(!fluidSystem().enthalpyEqualEnergy()){
             energy -= pressure(phaseIdx)/density(phaseIdx);
         }
@@ -680,7 +680,7 @@ public:
      * \brief Return the dynamic viscosity of a fluid phase [Pa s].
      */
     OPM_HOST_DEVICE Scalar viscosity(unsigned phaseIdx) const
-    { return fluidSystem().viscosity(*this, phaseIdx, pvtRegionIdx_); } // SCRATCH INTENSIVE
+    { return fluidSystem().viscosity(*this, phaseIdx, pvtRegionIdx_); }
 
     /*!
      * \brief Return the mass fraction of a component in a fluid phase [-].

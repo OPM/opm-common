@@ -62,15 +62,15 @@ public:
 
     [[nodiscard]] OPM_HOST_DEVICE bool phaseIsActive(unsigned phaseIdx) const {
         assert(phaseIdx < numPhases);
-        return phaseIsActive_[phaseIdx]; // SCRATCH INTENSIVE
+        return phaseIsActive_[phaseIdx];
     }
 
     [[nodiscard]] OPM_HOST_DEVICE short canonicalToActivePhaseIdx(unsigned phaseIdx) const {
-        if (!phaseIsActive(phaseIdx)) { // SCRATCH INTENSIVE
+        if (!phaseIsActive(phaseIdx)) {
             assert(false);
             // throw std::logic_error("Canonical phase " + std::to_string(phaseIdx) + " is not active.");
         }
-        return canonicalToActivePhaseIdx_[phaseIdx]; // SCRATCH INTENSIVE
+        return canonicalToActivePhaseIdx_[phaseIdx];
     }
 
     [[nodiscard]] OPM_HOST_DEVICE short activeToCanonicalPhaseIdx(unsigned activePhaseIdx) const {

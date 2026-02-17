@@ -284,8 +284,8 @@ public:
      */
     OPM_HOST_DEVICE Scalar getSamplePoint(unsigned i, unsigned j) const
     {
-        // assert(i < m_);
-        // assert(j < n_);
+        assert(i < m_);
+        assert(j < n_);
 
         return samples_[j*m_ + i];
     }

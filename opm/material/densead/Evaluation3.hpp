@@ -88,11 +88,8 @@ protected:
 
 public:
     //! default constructor
-    OPM_HOST_DEVICE Evaluation() : data_() // SCRATCH INTENSIVE
+    OPM_HOST_DEVICE Evaluation() : data_()
     {}
-
-    struct NoInit {};
-    OPM_HOST_DEVICE explicit Evaluation(NoInit) {}
 
     //! copy other function evaluation
     Evaluation(const Evaluation& other) = default;
@@ -224,7 +221,9 @@ public:
 
     // add value and derivatives from other to this value and derivatives
     OPM_HOST_DEVICE Evaluation& operator+=(const Evaluation& other)
-    { // SCRATCH INTENSIVE
+    {
+        assert(size() == other.size());
+
         data_[0] += other.data_[0];
         data_[1] += other.data_[1];
         data_[2] += other.data_[2];
@@ -268,7 +267,7 @@ public:
 
     // multiply values and apply chain rule to derivatives: (u*v)' = (v'u + u'v)
     OPM_HOST_DEVICE Evaluation& operator*=(const Evaluation& other)
-    { // SCRATCH INTENSIVE
+    {
         assert(size() == other.size());
 
         // while the values are multiplied, the derivatives follow the product rule,
@@ -290,7 +289,7 @@ public:
     // m(c*u)' = c*u'
     template <class RhsValueType>
     OPM_HOST_DEVICE Evaluation& operator*=(const RhsValueType& other)
-    { // SCRATCH INTENSIVE
+    {
         data_[0] *= other;
         data_[1] *= other;
         data_[2] *= other;
@@ -331,23 +330,14 @@ public:
     }
 
     // add two evaluation objects
-    // OPM_HOST_DEVICE Evaluation operator+(const Evaluation& other) const
-    // {
-    //     assert(size() == other.size());
-
-    //     Evaluation result(*this);
-
-    //     result += other;
-
-    //     return result;
-    // }
     OPM_HOST_DEVICE Evaluation operator+(const Evaluation& other) const
     {
-        Evaluation result(NoInit{});
-        result.data_[0] = data_[0] + other.data_[0];
-        result.data_[1] = data_[1] + other.data_[1];
-        result.data_[2] = data_[2] + other.data_[2];
-        result.data_[3] = data_[3] + other.data_[3];
+        assert(size() == other.size());
+
+        Evaluation result(*this);
+
+        result += other;
+
         return result;
     }
 
@@ -412,7 +402,7 @@ public:
 
     template <class RhsValueType>
     OPM_HOST_DEVICE Evaluation operator*(const RhsValueType& other) const
-    { // SCRATCH INTENSIVE
+    {
         Evaluation result(*this);
 
         result *= other;

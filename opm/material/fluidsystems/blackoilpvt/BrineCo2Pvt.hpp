@@ -557,7 +557,7 @@ public:
                      const Evaluation& temperature,
                      const Evaluation& pressure,
                      const Evaluation& salinity) const
-    { // SCRATCH INTENSIVE
+    {
         OPM_TIMEFUNCTION_LOCAL(Subsystem::PvtProps);
         if (!enableDissolution_) {
             return 0.0;
@@ -684,7 +684,7 @@ private:
      */
     template <class LhsEval>
     OPM_HOST_DEVICE LhsEval convertXoGToxoG_(const LhsEval& XoG, const LhsEval& salinity) const
-    { // SCRATCH INTENSIVE
+    {
         OPM_TIMEFUNCTION_LOCAL(Subsystem::PvtProps);
         Scalar M_CO2 = CO2::molarMass();
         LhsEval M_Brine = Brine::molarMass(salinity);
@@ -811,7 +811,7 @@ private:
                                             const LhsEval&T,
                                             const LhsEval& P,
                                             const LhsEval& saltConcentration) const
-    { // SCRATCH INTENSIVE
+    {
         if (enableSaltConcentration_) {
             return saltConcentration/H2O::liquidDensity(T, P, true);
         }

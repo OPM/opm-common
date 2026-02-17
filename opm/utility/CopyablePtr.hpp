@@ -73,7 +73,7 @@ template <class T>
 class CopyablePtr {
 public:
     OPM_HOST_DEVICE CopyablePtr() {}
-    OPM_HOST_DEVICE CopyablePtr(const CopyablePtr& other) : m_value(other.m_value), m_has_value(other.m_has_value) {} // SCRATCH INTENSIVE
+    OPM_HOST_DEVICE CopyablePtr(const CopyablePtr& other) : m_value(other.m_value), m_has_value(other.m_has_value) {}
     
     // assignment operator
     OPM_HOST_DEVICE CopyablePtr<T>& operator=(const CopyablePtr<T>& other) {
