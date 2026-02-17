@@ -193,6 +193,7 @@ public:
                           bool _enableDissolvedGasInWater_,
                           bool _enableVaporizedOil_,
                           bool _enableVaporizedWater_,
+                          bool _enableConstantRs_,
                           bool _enableDiffusion_,
                           Storage<std::array<Scalar, 3>>&& _referenceDensity_,
                           Storage<std::array<Scalar, 3>>&& _molarMass_,
@@ -211,6 +212,7 @@ public:
         , enableDissolvedGasInWater_(_enableDissolvedGasInWater_)
         , enableVaporizedOil_(_enableVaporizedOil_)
         , enableVaporizedWater_(_enableVaporizedWater_)
+        , enableConstantRs_(_enableConstantRs_)
         , enableDiffusion_(_enableDiffusion_)
         , referenceDensity_(std::move(_referenceDensity_))
         , molarMass_(std::move(_molarMass_))
@@ -306,6 +308,16 @@ public:
      */
     STATIC_OR_DEVICE void setEnableDissolvedGasInWater(bool yesno)
     { enableDissolvedGasInWater_ = yesno; }
+
+     /*!
+     * \brief Specify whether the fluid system should use constant Rs tables
+     *
+     * This is used when DISGAS is not active and gas phase is inactive,
+     * but constant Rs tables are provided.
+     */
+     STATIC_OR_DEVICE void setEnableConstantRs(bool yesno)
+    { enableConstantRs_ = yesno; }
+
     /*!
      * \brief Specify whether the fluid system should consider diffusion
      *
@@ -512,6 +524,12 @@ public:
     STATIC_OR_DEVICE bool enableVaporizedWater() NOTHING_OR_CONST
     { return enableVaporizedWater_; }
 
+     /*!
+     * \brief Returns whether constant Rs tables should be used
+     */
+     STATIC_OR_DEVICE bool enableConstantRs() NOTHING_OR_CONST
+     { return enableConstantRs_; }
+
     /*!
      * \brief Returns whether the fluid system should consider diffusion
      *
@@ -598,7 +616,7 @@ public:
 
         switch (phaseIdx) {
         case oilPhaseIdx: {
-            if (enableDissolvedGas()) {
+            if (enableDissolvedGas()||enableConstantRs()) {
                 // miscible oil
                 const LhsEval& Rs = BlackOil::template getRs_<ThisType, FluidState, LhsEval>(fluidState, regionIdx);
                 const LhsEval& bo = oilPvt_.inverseFormationVolumeFactor(regionIdx, T, p, Rs);
@@ -1759,6 +1777,7 @@ private:
     STATIC_OR_NOTHING bool enableDissolvedGasInWater_;
     STATIC_OR_NOTHING bool enableVaporizedOil_;
     STATIC_OR_NOTHING bool enableVaporizedWater_;
+    STATIC_OR_NOTHING bool enableConstantRs_;
     STATIC_OR_NOTHING bool enableDiffusion_;
 
     // HACK for GCC 4.4: the array size has to be specified using the literal value '3'
@@ -1787,6 +1806,7 @@ private:
         , enableDissolvedGasInWater_(other.enableDissolvedGasInWater_)
         , enableVaporizedOil_(other.enableVaporizedOil_)
         , enableVaporizedWater_(other.enableVaporizedWater_)
+        , enableConstantRs_(other.enableConstantRs_)
         , enableDiffusion_(other.enableDiffusion_)
         , referenceDensity_(StorageT<typename decltype(referenceDensity_)::value_type>(other.referenceDensity_))
         , molarMass_(StorageT<typename decltype(molarMass_)::value_type>(other.molarMass_))
@@ -1818,6 +1838,7 @@ initBegin(std::size_t numPvtRegions)
     enableDissolvedGasInWater_ = false;
     enableVaporizedOil_ = false;
     enableVaporizedWater_ = false;
+    enableConstantRs_ = false;
     enableDiffusion_ = false;
 
     surfaceTemperature = 273.15 + 15.56; // [K]
@@ -2004,7 +2025,8 @@ template<> T BOFS<T>::reservoirTemperature_;                                    
 template<> bool BOFS<T>::enableDissolvedGas_;                                         \
 template<> bool BOFS<T>::enableDissolvedGasInWater_;                                  \
 template<> bool BOFS<T>::enableVaporizedOil_;                                         \
-template<> bool BOFS<T>::enableVaporizedWater_;                                       \
+template<> bool BOFS<T>::enableVaporizedWater_;                                  \
+template<> bool BOFS<T>::enableConstantRs_;                                     \
 template<> bool BOFS<T>::enableDiffusion_;                                            \
 template<> BOFS<T>::OilPvt BOFS<T>::oilPvt_;                                          \
 template<> BOFS<T>::GasPvt BOFS<T>::gasPvt_;                                          \
@@ -2066,6 +2088,7 @@ copy_to_gpu(const FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits>& oldFluidSystem) {
         oldFluidSystem.enableDissolvedGasInWater_,
         oldFluidSystem.enableVaporizedOil_,
         oldFluidSystem.enableVaporizedWater_,
+        oldFluidSystem.enableConstantRs_,
         oldFluidSystem.enableDiffusion_,
         std::move(newReferenceDensity),
         std::move(newMolarMass),
@@ -2103,6 +2126,7 @@ make_view(FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, GpuBuffer>& oldFluidSystem)
         oldFluidSystem.enableDissolvedGasInWater_,
         oldFluidSystem.enableVaporizedOil_,
         oldFluidSystem.enableVaporizedWater_,
+        oldFluidSystem.enableConstantRs_,
         oldFluidSystem.enableDiffusion_,
         std::move(newReferenceDensity),
         std::move(newMolarMass),

@@ -26,7 +26,7 @@ namespace Opm {
 
     class RsconstTable : public SimpleTable {
     public:
-        RsconstTable( const DeckItem& item, const int tableID );
+       explicit RsconstTable( const DeckRecord& record);
         const TableColumn& getRsColumn() const;
         const TableColumn& getPbubColumn() const;
     };
