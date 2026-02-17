@@ -114,8 +114,7 @@ void writeGroupStructure(const Schedule& schedule, const std::string& casename, 
 
         if (!os) {
             throw std::runtime_error(fmt::format("Writing the group structure for case {0} failed. "
-                                                 "Could not open '{0}_group_structure.gv'.",
-                                                 casename));
+                                                 "Could not open {}.", fname));
         }
 
         os << "// This file was written using utility function 'writeGroupStructure' from OPM.\n";

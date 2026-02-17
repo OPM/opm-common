@@ -45,9 +45,9 @@
 #include <opm/utility/GroupStructureViz.hpp>
 
 
-inline void createDot(const Opm::Schedule& schedule, const std::string& casename)
+inline void createDot(const Opm::Schedule& schedule, const std::string& casename, const bool separateWellGroups)
 {
-    Opm::writeWellGroupGraph(schedule, casename);
+    Opm::writeWellGroupGraph(schedule, casename, separateWellGroups);
 }
 
 
@@ -77,17 +77,65 @@ inline Opm::Schedule loadSchedule(const std::string& deck_file)
 }
 
 
+void print_help()
+{
+    const char *help_text = R"(Usage: wellgraph [--separate-well-groups] <deck_file> [deck_file ...]
+
+Description:
+  Reads reservoir simulation deck(s), parsing the group and well hierarchy structures,
+  and generates Graphviz (.gv) files to visualize the relationships between groups and also wells.
+  The .gv file can be converted to PDF or PNG using Graphviz tools (e.g. dot).
+  For the cases with many groups and wells, the generated graph can be very large,
+  and it is recommended to visualize the group relations and group-wells relations separately
+  for better readability. This can be achieved by using --separate-well-groups option, which will
+  generate two .gv files for each deck: <casename>_group_structure.gv and <casename>_group_wells.gv.
+
+Options:
+  -h, --help             Display this help message and exit.
+  --separate-well-groups Generate separate graphs for group relationships and
+                         group-well relationships for better readability.
+
+Example:
+  wellgraph --separate-well-groups GROUPWELL.DATA
+)";
+    std::cerr << help_text;
+}
+
+
 int main(int argc, char** argv)
 {
+
+    if (argc < 2) {
+        print_help();
+        std::exit(EXIT_FAILURE);
+    }
+
+    const std::string arg1 = argv[1];
+    if (arg1 == "-h" || arg1 == "--help") {
+        print_help();
+        std::exit(EXIT_SUCCESS);
+    }
+
+    bool separateWellGroups = false;
+    std::vector<std::string> files;
+
+    for (int iarg = 1; iarg < argc; iarg++) {
+        const std::string arg = argv[iarg];
+        if (arg == "--separate-well-groups") {
+            separateWellGroups = true;
+        } else {
+            files.push_back(arg);
+        }
+    }
+
     std::ostringstream os;
     std::shared_ptr<Opm::StreamLog> string_log = std::make_shared<Opm::StreamLog>(os, Opm::Log::DefaultMessageTypes);
     Opm::OpmLog::addBackend( "STRING" , string_log);
     try {
-        for (int iarg = 1; iarg < argc; iarg++) {
-            const std::string filename = argv[iarg];
+        for (const auto& filename : files) {
             const auto sched = loadSchedule(filename);
             const auto casename = std::filesystem::path(filename).stem();
-            createDot(sched, casename);
+            createDot(sched, casename, separateWellGroups);
         }
     } catch (const std::exception& e) {
         std::cout << "\n\n***** Caught an exception: " << e.what() << std::endl;
