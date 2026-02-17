@@ -2776,14 +2776,13 @@ namespace Opm {
         constexpr std::array<std::array<int,3>,8> corner_offset = {{
             {0,0,0}, // 0
             {1,0,0}, // 1
-            {1,1,0}, // 2
-            {0,1,0}, // 3
+            {0,1,0}, // 2
+            {1,1,0}, // 3
             {0,0,1}, // 4
             {1,0,1}, // 5
-            {1,1,1}, // 6
-            {0,1,1}  // 7
+            {0,1,1}, // 6
+            {1,1,1}  // 7
         }};
-
 
         const std::size_t nx = getNX();
         const std::size_t ny = getNY();
@@ -2819,7 +2818,7 @@ namespace Opm {
                     std::array<double, 8> h_vertices;
                     for (std::size_t idx = 0; idx < 8; ++idx) {
                         const auto h = zh.index(I, J, K, idx);
-                        h_vertices[idx] = zcorn_h[h + idx];
+                        h_vertices[idx] = zcorn_h[h];
                     }
 
                     for (std::size_t k = 0; k < sk; ++k) {
