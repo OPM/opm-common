@@ -70,10 +70,12 @@ if(HYPRE_FOUND AND NOT TARGET HYPRE::HYPRE)
       INTERFACE_COMPILE_DEFINITIONS HYPRE_USING_CUDA)
     set_property(TARGET HYPRE::HYPRE APPEND PROPERTY
       INTERFACE_LINK_LIBRARIES
+        CUDA::cublas
         CUDA::cudart
-        CUDA::cusparse
         CUDA::curand
-        CUDA::cublas)
+        CUDA::cusolver
+        CUDA::cusparse
+    )
     message(STATUS "HYPRE was built with CUDA support")
   endif()
 
