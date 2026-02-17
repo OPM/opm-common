@@ -52,6 +52,7 @@
 #include <opm/input/eclipse/EclipseState/Tables/PmiscTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/PvdgTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/PvdoTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/RsconstTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/PvdsTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/PvtgTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/PvtgwTable.hpp>
@@ -61,7 +62,6 @@
 #include <opm/input/eclipse/EclipseState/Tables/RocktabTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/RockwnodTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/RsvdTable.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/RsconstTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/RtempvdTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/RvvdTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/RvwvdTable.hpp>
@@ -1152,6 +1152,26 @@ PvdoTable::getViscosityColumn() const
     return SimpleTable::getColumn(2);
 }
 
+//RsconstTable::RsconstTable(const DeckItem& item, const int tableID)
+//{
+//    m_schema.addColumn(ColumnSchema("RS", Table::RANDOM, Table::DEFAULT_NONE));
+//    m_schema.addColumn(ColumnSchema("PBUB", Table::RANDOM, Table::DEFAULT_NONE));
+
+//    SimpleTable::init("RSCONST", item, tableID);
+//}
+
+const TableColumn&
+RsconstTable::getRsColumn() const
+{
+    return SimpleTable::getColumn(0);
+}
+
+const TableColumn&
+RsconstTable::getPbubColumn() const
+{
+    return SimpleTable::getColumn(1);
+}
+
 SwfnTable::SwfnTable(const DeckItem& item, const bool jfunc, const int tableID)
 {
     m_schema.addColumn(ColumnSchema("SW", Table::STRICTLY_INCREASING, Table::DEFAULT_NONE));
@@ -1401,6 +1421,24 @@ PlymaxTable::PlymaxTable(const DeckRecord& record)
 
         column.addValue(record.getItem(colIdx).getSIDouble(0), "PLYMAX");
     }
+}
+
+RsconstTable::RsconstTable(const DeckRecord& record)
+{
+    m_schema.addColumn(ColumnSchema("RS", Table::RANDOM, Table::DEFAULT_NONE));
+    m_schema.addColumn(ColumnSchema("PBUB", Table::RANDOM, Table::DEFAULT_NONE));
+
+    addColumns();
+
+    // RSCONST has two items - get them by index
+    const auto& rsItem = record.getItem(0);
+    const auto& pbItem = record.getItem(1);
+
+    auto& rsColumn = getColumn(0);
+    auto& pbColumn = getColumn(1);
+
+    rsColumn.addValue(rsItem.getSIDouble(0), "RSCONST");
+    pbColumn.addValue(pbItem.getSIDouble(0), "RSCONST");
 }
 
 const TableColumn&
@@ -1801,26 +1839,6 @@ RsvdTable::getDepthColumn() const
 
 const TableColumn&
 RsvdTable::getRsColumn() const
-{
-    return SimpleTable::getColumn(1);
-}
-
-RsconstTable::RsconstTable(const DeckItem& item, const int tableID)
-{
-    m_schema.addColumn(ColumnSchema("RS", Table::RANDOM, Table::DEFAULT_NONE));
-    m_schema.addColumn(ColumnSchema("PB", Table::RANDOM, Table::DEFAULT_NONE));
-
-    SimpleTable::init("RSCONST", item, tableID);
-}
-
-const TableColumn&
-RsconstTable::getRsColumn() const
-{
-    return SimpleTable::getColumn(0);
-}
-
-const TableColumn&
-RsconstTable::getPbubColumn() const
 {
     return SimpleTable::getColumn(1);
 }

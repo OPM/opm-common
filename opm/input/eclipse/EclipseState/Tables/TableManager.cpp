@@ -459,6 +459,7 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
 
         addTables( "PVDG", m_tabdims.getNumPVTTables());
         addTables( "PVDO", m_tabdims.getNumPVTTables());
+        addTables( "RSCONST", m_tabdims.getNumPVTTables());
         addTables( "PVDS", m_tabdims.getNumPVTTables());
 
         addTables( "SPECHEAT", m_tabdims.getNumPVTTables());
@@ -481,7 +482,6 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
         addTables( "PCFACT",  m_tabdims.getNumSatTables());
         addTables( "BIOFPARA", m_tabdims.getNumSatTables());
         addTables( "DIFFMICP", m_tabdims.getNumPVTTables());
-        addTables( "RSCONST", 1);
 
         addTables( "AQUTAB", m_aqudims.getNumInfluenceTablesCT());
         {
@@ -555,7 +555,6 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
         initSimpleTableContainer<BiofilmTable>(deck, "BIOFPARA" , m_tabdims.getNumSatTables());
         initSimpleTableContainer<DiffMICPTable>(deck, "DIFFMICP" , m_tabdims.getNumPVTTables());
         initSimpleTableContainer<AqutabTable>(deck, "AQUTAB" , m_aqudims.getNumInfluenceTablesCT());
-        initSimpleTableContainer<RsconstTable>(deck, "RSCONST" , 1);
         {
             size_t numEndScaleTables = ParserKeywords::ENDSCALE::NTENDP::defaultValue;
 
@@ -614,6 +613,7 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
 
         initPlyrockTables(deck);
         initPlymaxTables(deck);
+        initRsconstTables(deck);
         initRTempTables(deck);
         initRocktabTables(deck);
         initPlyshlogTables(deck);
@@ -809,7 +809,22 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
         }
     }
 
+    void TableManager::initRsconstTables(const Deck& deck) {
+        const std::string keywordName = "RSCONST";
+        if (!deck.hasKeyword(keywordName)) {
+            return;
+        }
 
+        size_t numTables = m_tabdims.getNumPVTTables();
+        auto& container = forceGetTables(keywordName, numTables);
+        const auto& keyword = deck[keywordName].back();
+
+        for (size_t tableIdx = 0; tableIdx < keyword.size(); ++tableIdx) {
+            const auto& tableRecord = keyword.getRecord(tableIdx);
+            std::shared_ptr<RsconstTable> table = std::make_shared<RsconstTable>(tableRecord);
+            container.addTable(tableIdx, table);
+        }
+    }
 
     void TableManager::initRocktabTables(const Deck& deck) {
         if (!deck.hasKeyword("ROCKTAB"))
@@ -943,10 +958,6 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
         return getTables("RVVD");
     }
 
-     const TableContainer& TableManager::getRsconstTables() const {
-        return getTables("RSCONST");
-   }
-
     const TableContainer& TableManager::getRvwvdTables() const {
         return getTables("RVWVD");
     }
@@ -1071,6 +1082,10 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
     const TableContainer& TableManager::getAqutabTables() const {
         return getTables("AQUTAB");
     }
+
+     const TableContainer& TableManager::getRsconstTables() const {
+        return getTables("RSCONST");
+   }
 
     const TableContainer& TableManager::getFoamadsTables() const {
         return getTables("FOAMADS");

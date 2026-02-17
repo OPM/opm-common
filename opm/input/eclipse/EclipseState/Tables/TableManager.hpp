@@ -95,7 +95,6 @@ namespace Opm {
         const TableContainer& getSgfnTables() const;
         const TableContainer& getSsfnTables() const;
         const TableContainer& getRsvdTables() const;
-        const TableContainer& getRsconstTables() const;
         const TableContainer& getRvvdTables() const;
         const TableContainer& getRvwvdTables() const;
         const TableContainer& getPbvdTables() const;
@@ -113,6 +112,7 @@ namespace Opm {
         const TableContainer& getImptvdTables() const;
         const TableContainer& getPvdgTables() const;
         const TableContainer& getPvdoTables() const;
+        const TableContainer& getRsconstTables() const;
         const TableContainer& getPvdsTables() const;
         const TableContainer& getSpecheatTables() const;
         const TableContainer& getSpecrockTables() const;
@@ -185,7 +185,6 @@ namespace Opm {
         const std::map<int, SkprwatTable>& getSkprwatTables() const;
         const std::map<int, SkprpolyTable>& getSkprpolyTables() const;
         const std::map<std::string, TableContainer>& getSimpleTables() const;
-
 
         /// deck has keyword "IMPTVD" --- Imbition end-point versus depth tables
         bool useImptvd() const;
@@ -302,6 +301,7 @@ namespace Opm {
         void initRocktabTables(const Deck& deck);
 
         void initPlymaxTables(const Deck& deck);
+        void initRsconstTables(const Deck& deck);
         void initPlyrockTables(const Deck& deck);
         void initPlyshlogTables(const Deck& deck);
 
@@ -421,7 +421,6 @@ namespace Opm {
         double m_rtemp {288.7056}; // 60 Fahrenheit in Kelvin
         double m_salinity {0.0};
         bool m_diff_mole_fraction {true};
-
 
         struct SplitSimpleTables {
           size_t plyshMax = 0;
