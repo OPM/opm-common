@@ -2763,25 +2763,25 @@ namespace Opm {
             const double one_k = 1.0 - tk;
 
             return
-                z[0] * one_i * one_j * one_k +
-                z[1] * ti    * one_j * one_k +
-                z[2] * ti    * tj    * one_k +
-                z[3] * one_i * tj    * one_k +
-                z[4] * one_i * one_j * tk +
-                z[5] * ti    * one_j * tk +
-                z[6] * ti    * tj    * tk +
-                z[7] * one_i * tj    * tk;
+                z[0] * one_i * one_j * one_k +  // (0,0,0)
+                z[1] * ti    * one_j * one_k +  // (1,0,0)
+                z[2] * one_i * tj    * one_k +  // (0,1,0) - FIXED
+                z[3] * ti    * tj    * one_k +  // (1,1,0) - FIXED
+                z[4] * one_i * one_j * tk +     // (0,0,1)
+                z[5] * ti    * one_j * tk +     // (1,0,1)
+                z[6] * one_i * tj    * tk +     // (0,1,1) - FIXED
+                z[7] * ti    * tj    * tk;      // (1,1,1) - FIXED
         };
 
         constexpr std::array<std::array<int,3>,8> corner_offset = {{
-            {0,0,0}, // 0
-            {1,0,0}, // 1
-            {0,1,0}, // 2
-            {1,1,0}, // 3
-            {0,0,1}, // 4
-            {1,0,1}, // 5
-            {0,1,1}, // 6
-            {1,1,1}  // 7
+            {0,0,0}, // 1: (I,   J,   K  ) - top face, back-left
+            {1,0,0}, // 2: (I+1, J,   K  ) - top face, back-right
+            {0,1,0}, // 3: (I,   J+1, K  ) - top face, front-left
+            {1,1,0}, // 4: (I+1, J+1, K  ) - top face, front-right
+            {0,0,1}, // 5: (I,   J,   K+1) - bottom face, back-left
+            {1,0,1}, // 6: (I+1, J,   K+1) - bottom face, back-right
+            {0,1,1}, // 7: (I,   J+1, K+1) - bottom face, front-left
+            {1,1,1}  // 8: (I+1, J+1, K+1) - bottom face, front-right
         }};
 
         const std::size_t nx = getNX();
