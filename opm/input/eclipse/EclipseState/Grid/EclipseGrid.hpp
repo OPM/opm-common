@@ -520,8 +520,7 @@ namespace Opm {
         std::vector<double> generate_refined_coord(const std::vector<double>& coord,
                                                    const std::array<int,3>&   parent_nxyz);
 
-        std::vector<double> generate_refined_zcorn(const std::vector<double>& coord,
-                                                   const std::vector<double>& zcorn,
+        std::vector<double> generate_refined_zcorn(const std::vector<double>& zcorn_h,
                                                    const std::array<int,3>&   parent_nxyz);
     };
 
