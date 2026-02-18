@@ -194,7 +194,7 @@ namespace Opm {
             }
 
             throw std::runtime_error {
-                fmt::format("Unknown D-Factor model '{}'",
+                fmt::format(fmt::runtime("Unknown D-Factor model '{}'"),
                             static_cast<int>(this->m_type))
             };
         }
