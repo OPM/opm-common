@@ -616,7 +616,17 @@ public:
 
         switch (phaseIdx) {
         case oilPhaseIdx: {
-            if (enableDissolvedGas()||enableConstantRs()) {
+            if (enableConstantRs()) {
+                // dead oil but positive constant Rs
+                const LhsEval& Rs = oilPvt_.saturatedGasDissolutionFactor(regionIdx, T, p);
+                const LhsEval& bo = oilPvt_.inverseFormationVolumeFactor(regionIdx, T, p, Rs);
+
+                return
+                    bo*referenceDensity(oilPhaseIdx, regionIdx)
+                    + Rs*bo*referenceDensity(gasPhaseIdx, regionIdx);
+            }
+
+            if (enableDissolvedGas()) {
                 // miscible oil
                 const LhsEval& Rs = BlackOil::template getRs_<ThisType, FluidState, LhsEval>(fluidState, regionIdx);
                 const LhsEval& bo = oilPvt_.inverseFormationVolumeFactor(regionIdx, T, p, Rs);
@@ -713,6 +723,16 @@ public:
 
         switch (phaseIdx) {
         case oilPhaseIdx: {
+            if (enableConstantRs()) {
+                // dead oil but positive constant Rs
+                const LhsEval& Rs = oilPvt_.saturatedGasDissolutionFactor(regionIdx, T, p);
+                const LhsEval& bo = oilPvt_.inverseFormationVolumeFactor(regionIdx, T, p, Rs);
+
+                return
+                    bo*referenceDensity(oilPhaseIdx, regionIdx)
+                    + Rs*bo*referenceDensity(gasPhaseIdx, regionIdx);
+            }
+
             if (enableDissolvedGas()) {
                 // miscible oil
                 const LhsEval& Rs = saturatedDissolutionFactor<FluidState, LhsEval>(fluidState, oilPhaseIdx, regionIdx);
