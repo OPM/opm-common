@@ -44,12 +44,12 @@ void writeWellGroupRelations(const Schedule& schedule,
 
     if (!os) {
         throw std::runtime_error(fmt::format(
-            "Writing the well-group relations for case {0} failed. Could not open '{0}_well_groups.gv'.",
-            casename
+            "Writing the well-group relations for case {0} failed. Could not open '{1}'.",
+            casename, fname
         ));
     }
 
-    os << "// This file was written using utility function 'writeGroupStructure' from OPM.\n";
+    os << "// This file was written using utility function 'writeWellGroupRelations' from OPM.\n";
     os << "// Find the source code at github.com/OPM.\n";
     os << "// Convert output to PDF with 'dot -Tpdf " << fname << " -o "
        << casename << "_well_groups.pdf'\n";
@@ -114,13 +114,17 @@ void writeGroupStructure(const Schedule& schedule, const std::string& casename, 
 
         if (!os) {
             throw std::runtime_error(fmt::format("Writing the group structure for case {0} failed. "
-                                                 "Could not open {}.", fname));
+                                                 "Could not open '{1}'.", casename, fname));
         }
 
         os << "// This file was written using utility function 'writeGroupStructure' from OPM.\n";
         os << "// Find the source code at github.com/OPM.\n";
-        os << "// Convert output to PDF with 'dot -Tpdf " << fname << " -o " << casename
-           << "_group_structure.pdf'\n";
+        os << "// Convert output to PDF with 'dot -Tpdf " << fname;
+        if (separateWellGroups) {
+            os << " -o " << casename << "_group_structure.pdf'\n";
+        } else {
+            os << " -o " << casename << ".pdf'\n";
+        }
         os << "strict digraph \"" << casename << "_groups\"\n{\n";
 
         // Group -> Group relations.

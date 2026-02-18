@@ -88,7 +88,7 @@ Description:
   For the cases with many groups and wells, the generated graph can be very large,
   and it is recommended to visualize the group relations and group-wells relations separately
   for better readability. This can be achieved by using --separate-well-groups option, which will
-  generate two .gv files for each deck: <casename>_group_structure.gv and <casename>_group_wells.gv.
+  generate two .gv files for each deck: <casename>_group_structure.gv and <casename>_well_groups.gv.
 
 Options:
   -h, --help             Display this help message and exit.
