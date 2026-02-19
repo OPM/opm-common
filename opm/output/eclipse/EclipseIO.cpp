@@ -20,11 +20,14 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
+
 #include "config.h"
 
 #include <opm/output/eclipse/EclipseIO.hpp>
 
 #include <opm/common/OpmLog/OpmLog.hpp>
+
+#include <opm/common/utility/TimeService.hpp>
 
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
@@ -54,10 +57,12 @@
 
 #include <algorithm>
 #include <cctype>
+#include <chrono>
 #include <cstddef>
 #include <cstdlib>
 #include <filesystem>
 #include <functional>
+#include <iterator>
 #include <limits>
 #include <map>
 #include <memory>     // unique_ptr
@@ -107,6 +112,19 @@ void ensure_directory_exists(const std::filesystem::path& odir)
 
         throw std::runtime_error { msg.str() };
     }
+}
+
+std::vector<Opm::time_point> reportStepStartTimes(const Opm::Schedule& sched)
+{
+    auto rptStepStart = std::vector<Opm::time_point>{};
+    rptStepStart.reserve(sched.size());
+
+    std::transform(sched.begin(), sched.end(),
+                   std::back_inserter(rptStepStart),
+                   [](const Opm::ScheduleState& state)
+                   { return state.start_time(); });
+
+    return rptStepStart;
 }
 
 } // Anonymous namespace
@@ -482,6 +500,10 @@ private:
     /// tests.
     bool output_enabled_{false};
 
+    /// Cached copy of ScheduleState::start_time() to avoid race conditions
+    /// in elapsedTimeAccepted().
+    std::vector<time_point> rptStepStart_{};
+
     /// Run's current time step ID.
     int miniStepId_{0};
 
@@ -623,6 +645,7 @@ Opm::EclipseIO::Impl::Impl(const EclipseState&  eclipseState,
     , summaryConfig_ (summaryConfig)
     , summary_       (summaryConfig_, es_, grid_, schedule, base_name, writeEsmry)
     , output_enabled_(eclipseState.getIOConfig().getOutputEnabled())
+    , rptStepStart_  (reportStepStartTimes(schedule))
 {
     if (const auto& aqConfig = this->es_.get().aquifer();
         aqConfig.connections().active() || aqConfig.hasNumericalAquifer())
@@ -936,10 +959,12 @@ bool Opm::EclipseIO::Impl::elapsedTimeAccepted(const int    report_step,
     const auto float_elapsed = static_cast<float>(secs_elapsed);
 
     // Recall: 'report_step' is a one-based index, so using this directly as
-    // an argument to Schedule::seconds() means we get the start time of the
+    // a subscript in rptStepStart_ means we get the start time of the
     // *next* report step.
-    const auto float_nextrpt = static_cast<float>
-        (this->schedule_.get().seconds(report_step));
+    const auto float_nextrpt = std::chrono::duration
+        <float, std::chrono::seconds::period> {
+        this->rptStepStart_[report_step] - this->rptStepStart_.front()
+    }.count();
 
     // We accept the elapsed time if, when treated as a float, it is
     // *strictly* between the previous summary file output time and the end
