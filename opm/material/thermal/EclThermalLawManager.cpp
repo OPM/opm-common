@@ -276,13 +276,9 @@ initNullCond_()
 }
 
 template<class T>
-using ThermalLawManager =
-    EclThermalLawManager<
-        T,
-        BlackOilFluidSystem<T, BlackOilDefaultFluidSystemIndices>
-    >;
+using FS = BlackOilFluidSystem<T, BlackOilDefaultFluidSystemIndices>;
 
-template class ThermalLawManager<double>;
-template class ThermalLawManager<float>;
+template class EclThermalLawManager<double, FS<double>>;
+template class EclThermalLawManager<float,  FS<float>>;
 
 } // namespace Opm
