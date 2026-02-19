@@ -898,7 +898,7 @@ private:
     {
         double tau = Region1::tau(temperature);
         double num = Region1::dgamma_dpi(temperature, pressure) - tau * Region1::ddgamma_dtaudpi(temperature, pressure);
-        double diff = std::pow(num, 2) / Region1::ddgamma_ddpi(temperature, pressure);
+        double diff = (std::pow(num, 2)) / Region1::ddgamma_ddpi(temperature, pressure);
 
         return
             - std::pow(tau, 2 ) *
