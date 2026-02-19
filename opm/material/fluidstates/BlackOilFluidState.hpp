@@ -189,8 +189,8 @@ public:
     auto withOtherFluidSystem(const OtherFluidSystemType* other) const
     {
         return BlackOilFluidState<Scalar, OtherFluidSystemType,
-                                  enableTemperature,
-                                  enableEnergy,
+                                  storeTemperature,
+                                  storeEnthalpy,
                                   enableDissolution,
                                   enableVapwat,
                                   enableBrine,
