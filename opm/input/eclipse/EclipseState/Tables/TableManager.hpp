@@ -112,6 +112,7 @@ namespace Opm {
         const TableContainer& getImptvdTables() const;
         const TableContainer& getPvdgTables() const;
         const TableContainer& getPvdoTables() const;
+        const TableContainer& getRsconstTables() const;
         const TableContainer& getPvdsTables() const;
         const TableContainer& getSpecheatTables() const;
         const TableContainer& getSpecrockTables() const;
@@ -300,6 +301,7 @@ namespace Opm {
         void initRocktabTables(const Deck& deck);
 
         void initPlymaxTables(const Deck& deck);
+        void initRsconstTables(const Deck& deck);
         void initPlyrockTables(const Deck& deck);
         void initPlyshlogTables(const Deck& deck);
 
