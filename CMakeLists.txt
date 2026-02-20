@@ -366,6 +366,7 @@ macro(opm-common_targets_hook)
       # To avoid pulling dune-common into the opm-common interface
       target_include_directories(dunecommon INTERFACE ${dune-common_INCLUDE_DIRS})
       string(REPLACE " " ";" dflags "${dune-common_CXX_FLAGS}")
+      list(FILTER dflags EXCLUDE REGEX std=c\\+\\+17)
       target_compile_options(dunecommon INTERFACE ${dflags})
       target_compile_definitions(dunecommon INTERFACE DUNE_COMMON_VERSION_MAJOR=${DUNE_COMMON_VERSION_MAJOR})
       target_compile_definitions(dunecommon INTERFACE DUNE_COMMON_VERSION_MINOR=${DUNE_COMMON_VERSION_MINOR})
