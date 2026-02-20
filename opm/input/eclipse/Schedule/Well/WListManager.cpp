@@ -235,9 +235,9 @@ namespace Opm {
         auto wellIx = std::vector<std::vector<std::string>::size_type>(allWells.size());
         std::iota(wellIx.begin(), wellIx.end(), std::vector<std::string>::size_type{0});
 
-        std::sort(wellIx.begin(), wellIx.end(),
-                  [&allWells](const auto i1, const auto i2)
-                  { return allWells[i1] < allWells[i2]; });
+        std::ranges::sort(wellIx,
+                          [&allWells](const auto i1, const auto i2)
+                          { return allWells[i1] < allWells[i2]; });
 
         wellIx.erase(std::unique(wellIx.begin(), wellIx.end(),
                                  [&allWells](const auto i1, const auto i2)
@@ -250,7 +250,7 @@ namespace Opm {
         }
 
         // Re-sort unique well names based on order of appearance.
-        std::sort(wellIx.begin(), wellIx.end());
+        std::ranges::sort(wellIx);
 
         auto uniqueWells = std::vector<std::string>(wellIx.size());
         std::ranges::transform(wellIx, uniqueWells.begin(),
@@ -269,10 +269,10 @@ namespace Opm {
 
         {
             auto wlistWells = this->getList(wlistName).wells();
-            std::sort(wlistWells.begin(), wlistWells.end());
+            std::ranges::sort(wlistWells);
 
             auto newWellsCpy = newWells;
-            std::sort(newWellsCpy.begin(), newWellsCpy.end());
+            std::ranges::sort(newWellsCpy);
 
             std::set_difference(wlistWells.begin(), wlistWells.end(),
                                 newWellsCpy.begin(), newWellsCpy.end(),

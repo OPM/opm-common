@@ -44,7 +44,7 @@ namespace {
 
 std::vector<int> unique(std::vector<int> data)
 {
-    std::sort(data.begin(), data.end());
+    std::ranges::sort(data);
     data.erase(std::unique(data.begin(), data.end()), data.end());
 
     return data;
@@ -246,7 +246,7 @@ namespace Opm {
                                    aquifer_cells_arg.begin(),
                                    aquifer_cells_arg.end());
 
-        std::sort(this->aquifer_cells.begin(), this->aquifer_cells.end());
+        std::ranges::sort(this->aquifer_cells);
         this->aquifer_cells.erase(std::unique(this->aquifer_cells.begin(),
                                               this->aquifer_cells.end()),
                                   this->aquifer_cells.end());

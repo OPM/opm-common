@@ -55,7 +55,7 @@ namespace {
 
     std::vector<std::string> sorted(std::vector<std::string> strings)
     {
-        std::sort(strings.begin(), strings.end());
+        std::ranges::sort(strings);
         return strings;
     }
 

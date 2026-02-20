@@ -2323,13 +2323,13 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         std::ranges::transform(lgr_children_cells, father_label_sorting.begin(),
                                [](const auto& cell) { return cell.get_father_global()[0]; });
 
-        std::sort(m_print_order_lgr_cells.begin(), m_print_order_lgr_cells.end(), [&](std::size_t i1, std::size_t i2) {
-            return father_label_sorting[i1] < father_label_sorting[i2]; //
-        });
+        std::ranges::sort(m_print_order_lgr_cells,
+                          [&](std::size_t i1, std::size_t i2)
+                          { return father_label_sorting[i1] < father_label_sorting[i2]; });
 
-        std::sort(lgr_children_cells.begin(), lgr_children_cells.end(),[](const EclipseGridLGR& a, const EclipseGridLGR& b) {
-                return a.get_father_global()[0] < b.get_father_global()[0]; //
-        });
+        std::ranges::sort(lgr_children_cells,
+                          [](const EclipseGridLGR& a, const EclipseGridLGR& b)
+                          { return a.get_father_global()[0] < b.get_father_global()[0]; });
 
         lgr_children_labels.reserve(lgr_children_cells.size());
         std::ranges::transform(lgr_children_cells, std::back_inserter(lgr_children_labels),
@@ -2727,7 +2727,7 @@ namespace Opm {
 
     void EclipseGridLGR::init_father_global()
     {
-        std::sort(father_global.begin(),father_global.end());
+        std::ranges::sort(father_global);
     }
 
     const EclipseGridLGR::vec_size_t& EclipseGridLGR::getFatherGlobalID() const

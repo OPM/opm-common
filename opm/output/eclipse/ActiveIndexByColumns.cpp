@@ -104,11 +104,9 @@ namespace {
 
         const auto colGlobIx = computeColumnarGlobalIndex(activeCells, cartDims, getIJK);
 
-        std::sort(activeCells.begin(), activeCells.end(),
-            [&colGlobIx](const std::size_t cell1, const std::size_t cell2)
-        {
-            return colGlobIx[cell1] < colGlobIx[cell2];
-        });
+        std::ranges::sort(activeCells,
+                          [&colGlobIx](const std::size_t cell1, const std::size_t cell2)
+                          { return colGlobIx[cell1] < colGlobIx[cell2]; });
 
         auto columnarActiveID = 0;
         for (const auto& naturalActiveID : activeCells) {

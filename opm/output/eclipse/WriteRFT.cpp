@@ -803,7 +803,7 @@ namespace {
 
         this->ix_.resize(size);
         std::iota(this->ix_.begin(), this->ix_.end(), 0);
-        std::sort(this->ix_.begin(), this->ix_.end(), std::forward<Cmp>(cmp));
+        std::ranges::sort(this->ix_, std::forward<Cmp>(cmp));
 
         // Sort must respect binId(i1) <= binId(i2)
         auto inconsistentId =

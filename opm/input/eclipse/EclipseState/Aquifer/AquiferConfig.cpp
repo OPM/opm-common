@@ -161,7 +161,7 @@ std::vector<int> Opm::analyticAquiferIDs(const AquiferConfig& cfg)
     std::ranges::transform(cfg.aquflux(), std::back_inserter(aquiferIDs),
                            [](const auto& aquifer) { return aquifer.second.id; });
 
-    std::sort(aquiferIDs.begin(), aquiferIDs.end());
+    std::ranges::sort(aquiferIDs);
 
     return aquiferIDs;
 }
@@ -179,7 +179,7 @@ std::vector<int> Opm::numericAquiferIDs(const AquiferConfig& cfg)
                            [](const auto& aquifer)
                            { return static_cast<int>(aquifer.first); });
 
-    std::sort(aquiferIDs.begin(), aquiferIDs.end());
+    std::ranges::sort(aquiferIDs);
 
     return aquiferIDs;
 }

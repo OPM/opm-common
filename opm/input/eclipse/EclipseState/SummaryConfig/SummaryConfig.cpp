@@ -582,7 +582,7 @@ namespace {
         }
 
         node_names.assign(names.begin(), names.end());
-        std::sort(node_names.begin(), node_names.end());
+        std::ranges::sort(node_names);
 
         return node_names;
     }
@@ -1786,7 +1786,7 @@ void uniq(SummaryConfig::keyword_list& vec)
         return;
     }
 
-    std::sort(vec.begin(), vec.end());
+    std::ranges::sort(vec);
     vec.erase(std::unique(vec.begin(), vec.end()), vec.end());
 
     // This is a desperate hack to ensure that the ROEW keywords come after
@@ -2226,7 +2226,7 @@ SummaryConfig::registerRequisiteUDQorActionSummaryKeys(const std::vector<std::st
         }
     }
 
-    std::sort(candidateSummaryNodes.begin(), candidateSummaryNodes.end());
+    std::ranges::sort(candidateSummaryNodes);
 
     summaryNodes.reserve(candidateSummaryNodes.size());
     std::set_difference(candidateSummaryNodes.begin(), candidateSummaryNodes.end(),

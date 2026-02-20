@@ -174,7 +174,7 @@ namespace {
     template <typename T>
     std::vector<T> sort(std::vector<T> v)
     {
-        std::sort(v.begin(), v.end());
+        std::ranges::sort(v);
         return v;
     }
 

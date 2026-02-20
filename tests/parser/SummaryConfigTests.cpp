@@ -186,7 +186,7 @@ std::vector<std::string> sorted_names(const SummaryConfig& summary)
         }
     }
 
-    std::sort(ret.begin(), ret.end());
+    std::ranges::sort(ret);
 
     return ret;
 }
@@ -198,7 +198,7 @@ std::vector<std::string> sorted_keywords(const SummaryConfig& summary)
     std::ranges::transform(summary, std::back_inserter(ret),
                            [](const auto& x) { return x.keyword(); });
 
-    std::sort(ret.begin(), ret.end());
+    std::ranges::sort(ret);
 
     return ret;
 }
@@ -210,7 +210,7 @@ std::vector<std::string> sorted_key_names(const SummaryConfig& summary)
     std::ranges::transform(summary, std::back_inserter(ret),
                            [](const auto& x) { return x.uniqueNodeKey(); });
 
-    std::sort(ret.begin(), ret.end());
+    std::ranges::sort(ret);
 
     return ret;
 }
@@ -741,7 +741,7 @@ BOOST_AUTO_TEST_CASE(summary_ALL) {
         }
     }
 
-    std::sort(all.begin(), all.end());
+    std::ranges::sort(all);
 
     BOOST_CHECK_EQUAL_COLLECTIONS(
         all.begin(), all.end(),
@@ -942,7 +942,7 @@ BOOST_AUTO_TEST_CASE( summary_GMWSET ) {
         all.emplace_back(kw + ":OP"s);
     }
 
-    std::sort( all.begin(), all.end() );
+    std::ranges::sort(all);
 
     BOOST_CHECK_EQUAL_COLLECTIONS( all.begin(), all.end(),
                                    key_names.begin(), key_names.end() );
@@ -968,7 +968,7 @@ BOOST_AUTO_TEST_CASE( summary_FMWSET ) {
 
     std::vector< std::string > all( FMWSET_keywords.begin(),
                                     FMWSET_keywords.end() );
-    std::sort( all.begin(), all.end() );
+    std::ranges::sort(all);
 
     BOOST_CHECK_EQUAL_COLLECTIONS( all.begin(), all.end(),
                                    key_names.begin(), key_names.end() );

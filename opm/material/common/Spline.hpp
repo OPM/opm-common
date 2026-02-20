@@ -1023,7 +1023,7 @@ protected:
         // sort the indices according to the x values of the sample
         // points
         ComparatorX_ cmp(xPos_);
-        std::sort(idxVector.begin(), idxVector.end(), cmp);
+        std::ranges::sort(idxVector, cmp);
 
         // reorder the sample points
         std::vector<Scalar> tmpX(n), tmpY(n);

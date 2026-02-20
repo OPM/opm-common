@@ -708,7 +708,7 @@ namespace {
 
         {
             auto regSets = es.fieldProps().fip_regions();
-            std::sort(regSets.begin(), regSets.end());
+            std::ranges::sort(regSets);
             rstFile.write("FIPFAMNA", regSets);
         }
 

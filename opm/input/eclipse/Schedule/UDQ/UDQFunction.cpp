@@ -381,11 +381,10 @@ UDQSet sortOrder(const UDQSet& arg, Compare&& cmp)
         return result;
     }
 
-    std::sort(ix.begin(), ix.end(), [&arg, cmp = std::forward<Compare>(cmp)]
-              (const int i1, const int i2)
-    {
-        return cmp(*arg[i1].value(), *arg[i2].value());
-    });
+    std::ranges::sort(ix,
+                      [&arg, cmp = std::forward<Compare>(cmp)]
+                      (const int i1, const int i2)
+                      { return cmp(*arg[i1].value(), *arg[i2].value()); });
 
     auto sort_value = 1.0;
     for (const auto& i : ix) {

@@ -324,11 +324,9 @@ void Opm::RegionSetMatchResult::establishNameLookupIndex()
 
     this->regionSetIndex_.resize(this->regionSets_.size());
     std::iota(this->regionSetIndex_.begin(), this->regionSetIndex_.end(), Ix{0});
-    std::sort(this->regionSetIndex_.begin(), this->regionSetIndex_.end(),
-              [this](const Ix i1, const Ix i2)
-              {
-                  return this->regionSets_[i1] < this->regionSets_[i2];
-              });
+    std::ranges::sort(this->regionSetIndex_,
+                      [this](const Ix i1, const Ix i2)
+                      { return this->regionSets_[i1] < this->regionSets_[i2]; });
 }
 
 void Opm::RegionSetMatchResult::addRegionIndices(const std::string& regSet,
