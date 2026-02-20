@@ -195,8 +195,8 @@ std::vector<std::string> sorted_keywords(const SummaryConfig& summary)
 {
     std::vector<std::string> ret;
 
-    std::transform(summary.begin(), summary.end(), std::back_inserter(ret),
-                   [](const auto& x) { return x.keyword(); });
+    std::ranges::transform(summary, std::back_inserter(ret),
+                           [](const auto& x) { return x.keyword(); });
 
     std::sort(ret.begin(), ret.end());
 
@@ -207,8 +207,8 @@ std::vector<std::string> sorted_key_names(const SummaryConfig& summary)
 {
     std::vector<std::string> ret;
 
-    std::transform(summary.begin(), summary.end(), std::back_inserter(ret),
-                   [](const auto& x) { return x.uniqueNodeKey(); });
+    std::ranges::transform(summary, std::back_inserter(ret),
+                           [](const auto& x) { return x.uniqueNodeKey(); });
 
     std::sort(ret.begin(), ret.end());
 
@@ -571,8 +571,8 @@ RGFT
         const auto roft_nodes = summary.keywords("ROFT");
 
         auto roft = std::vector<int>(roft_nodes.size());
-        std::transform(roft_nodes.begin(), roft_nodes.end(), roft.begin(),
-                       [](const auto& node) { return node.number(); });
+        std::ranges::transform(roft_nodes, roft.begin(),
+                               [](const auto& node) { return node.number(); });
 
         BOOST_REQUIRE_EQUAL(roft.size(), std::size_t{3}); // Active records only
 

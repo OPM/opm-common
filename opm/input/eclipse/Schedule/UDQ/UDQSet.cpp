@@ -404,8 +404,8 @@ std::vector<std::string> UDQSet::wgnames() const
     auto names = std::vector<std::string> {};
     names.reserve(this->values.size());
 
-    std::transform(this->values.begin(), this->values.end(), std::back_inserter(names),
-                   [](const UDQScalar& value) { return value.wgname(); });
+    std::ranges::transform(this->values, std::back_inserter(names),
+                           [](const UDQScalar& value) { return value.wgname(); });
 
     return names;
 }

@@ -741,12 +741,12 @@ void checkInitFile(const Deck& deck,[[maybe_unused]] const data::Solution& simPr
         auto        permx_lgr1  = initFile.getInitData<float>("PERMX", lgr_names[0]);
         auto        permx_lgr2  = initFile.getInitData<float>("PERMX", lgr_names[1]);
 
-        std::transform(permx.begin(), permx.end(), permx.begin(),
-                       [](const auto& kx) { return kx * 9.869233e-16; });
-        std::transform(permx_lgr1.begin(), permx_lgr1.end(), permx_lgr1.begin(),
-                       [](const auto& kx) { return kx * 9.869233e-16; });
-        std::transform(permx_lgr2.begin(), permx_lgr2.end(), permx_lgr2.begin(),
-                       [](const auto& kx) { return kx * 9.869233e-16; });
+        std::ranges::transform(permx, permx.begin(),
+                               [](const auto& kx) { return kx * 9.869233e-16; });
+        std::ranges::transform(permx_lgr1, permx_lgr1.begin(),
+                               [](const auto& kx) { return kx * 9.869233e-16; });
+        std::ranges::transform(permx_lgr2, permx_lgr2.begin(),
+                               [](const auto& kx) { return kx * 9.869233e-16; });
 
         compareSequences(expect, permx, 1e-4);
         compareSequencesToScalar(permx_lgr1, expect[0], 1e-4);
@@ -862,14 +862,13 @@ BOOST_AUTO_TEST_CASE(EclipseIOLGR_Integration)
     std::iota(lgr_grid_ids.begin(), lgr_grid_ids.end(), 1);
     std::vector <std::size_t> num_cells(num_lgr_cells+1);
     num_cells[0] = simCase.grid.getNumActive();
-    std::transform(lgr_labels.begin(), lgr_labels.end(),
-                  num_cells.begin() + 1 ,
-                [&simCase](const std::string& lgr_tag) {
-                            return simCase.grid.getLGRCell(lgr_tag).getNumActive();});
+    std::ranges::transform(lgr_labels, num_cells.begin() + 1 ,
+                           [&simCase](const std::string& lgr_tag)
+                           { return simCase.grid.getLGRCell(lgr_tag).getNumActive(); });
 
     std::vector<data::Solution> cells(num_lgr_cells+1);
-    std::transform(num_cells.begin(), num_cells.end(), cells.begin(),
-                    [](int n) { return mkSolution(n); });
+    std::ranges::transform(num_cells, cells.begin(),
+                           [](int n) { return mkSolution(n); });
     data::Wells lwells = mkWellsLGR_Global();
     auto groups = mkGroups();
 
@@ -925,12 +924,10 @@ BOOST_AUTO_TEST_CASE(EclipseIOLGR_Integration)
         std::vector<double> zcorn_obtained(zcorn_file.begin(), zcorn_file.end());
         auto [_, __, ___, ____, coord_expected, zcorn_expected] = simulate_lgr_refinement();
         double K = 1/0.3048;
-        std::transform(coord_expected.begin(), coord_expected.end(),
-                       coord_expected.begin(),
-                       [K](double v) { return v * K; });
-        std::transform(zcorn_expected.begin(), zcorn_expected.end(),
-        zcorn_expected.begin(),
-                       [K](double v) { return v * K; });
+        std::ranges::transform(coord_expected, coord_expected.begin(),
+                               [K](double v) { return v * K; });
+        std::ranges::transform(zcorn_expected, zcorn_expected.begin(),
+                               [K](double v) { return v * K; });
 
         checkVectorsClose(coord_obtained, coord_expected, tol, "coord_obtained");
         checkVectorsClose(zcorn_obtained, zcorn_expected, tol, "zcorn_obtained");

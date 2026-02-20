@@ -103,8 +103,8 @@ TracerConfig::TracerConfig(const UnitSystem& unit_system, const Deck& deck)
                 unit_system.getDimension(UnitSystem::measure::liquid_surface_volume); //hush unused-warning ...
 
                 // Convert unit names to upper-case
-                std::transform(unit_string.begin(), unit_string.end(), unit_string.begin(),
-                    [](unsigned char c){ return std::toupper(c); });
+                std::ranges::transform(unit_string, unit_string.begin(),
+                                       [](unsigned char c){ return std::toupper(c); });
             }
 
             std::string tracer_field = "TBLKF" + name;
@@ -113,9 +113,8 @@ TracerConfig::TracerConfig(const UnitSystem& unit_system, const Deck& deck)
                 auto free_concentration = tracer_keyword.getRecord(0).getItem(0).getData<double>();
                 logger(tracer_keyword.location().format("Loading tracer concentration from {keyword} in {file} line {line}"));
 
-                std::transform(free_concentration.begin(), free_concentration.end(),
-                               free_concentration.begin(),
-                               [inv_volume](const auto& c) { return c * inv_volume; });
+                std::ranges::transform(free_concentration, free_concentration.begin(),
+                                       [inv_volume](const auto& c) { return c * inv_volume; });
 
                 std::string tracer_field_solution = "TBLKS" + name;
                 if (deck.hasKeyword(tracer_field_solution)) {
@@ -123,9 +122,8 @@ TracerConfig::TracerConfig(const UnitSystem& unit_system, const Deck& deck)
                     auto solution_concentration = tracer_keyword_solution.getRecord(0).getItem(0).getData<double>();
                     logger(tracer_keyword_solution.location().format("Loading tracer concentration from {keyword} in {file} line {line}"));
 
-                    std::transform(solution_concentration.begin(), solution_concentration.end(),
-                                   solution_concentration.begin(),
-                                   [inv_volume](const auto& c) { return c * inv_volume; });
+                    std::ranges::transform(solution_concentration,solution_concentration.begin(),
+                                           [inv_volume](const auto& c) { return c * inv_volume; });
 
                     this->tracers.emplace_back(name, unit_string, phase, std::move(free_concentration), std::move(solution_concentration)) ;
                     continue;

@@ -1200,20 +1200,18 @@ void FieldProps::apply_multipliers()
                 .first;
         }
 
-        std::transform(iter->second.data.begin(), iter->second.data.end(),
-                       mult_iter->second.data.begin(), iter->second.data.begin(),
-                       std::multiplies<>());
+        std::ranges::transform(iter->second.data, mult_iter->second.data,
+                               iter->second.data.begin(), std::multiplies<>());
 
         // If data is global, then we also need to set the global_data. I think they should be the same at this stage, though!
         if (kw_info.global)
         {
             assert(mult_iter->second.global_data.has_value());
             assert(iter->second.global_data.has_value());
-            std::transform(iter->second.global_data->begin(),
-                           iter->second.global_data->end(),
-                           mult_iter->second.global_data->begin(),
-                           iter->second.global_data->begin(),
-                           std::multiplies<>());
+            std::ranges::transform(*iter->second.global_data,
+                                   *mult_iter->second.global_data,
+                                   iter->second.global_data->begin(),
+                                   std::multiplies<>());
         }
         // If this is MULTPV we also need to apply the additional multiplier to PORV if that was initialized already.
         // Note that the check for PORV is essential as otherwise the value constructed durig init_get will already apply
@@ -1221,7 +1219,7 @@ void FieldProps::apply_multipliers()
         if (keyword == ParserKeywords::MULTPV::keywordName && !hasPorvBefore) {
             auto& porv = this->init_get<double>(ParserKeywords::PORV::keywordName);
             auto& porv_data = porv.data;
-            std::transform(porv_data.begin(), porv_data.end(), mult_iter->second.data.begin(), porv_data.begin(), std::multiplies<>());
+            std::ranges::transform(porv_data, mult_iter->second.data, porv_data.begin(), std::multiplies<>());
         }
         this->double_data.erase(mult_iter);
     }
@@ -1934,7 +1932,7 @@ void FieldProps::init_porv(Fieldprops::FieldData<double>& porv)
 
     if (this->has<double>("MULTPV")) {
         const auto& multpv = this->get<double>("MULTPV");
-        std::transform(porv_data.begin(), porv_data.end(), multpv.begin(), porv_data.begin(), std::multiplies<>());
+        std::ranges::transform(porv_data, multpv, porv_data.begin(), std::multiplies<>());
     }
 
     for (const auto& mregp: this->multregp) {

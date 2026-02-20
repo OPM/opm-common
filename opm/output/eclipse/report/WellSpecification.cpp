@@ -413,10 +413,9 @@ namespace {
         std::vector<WellWrapper> wrapper_data;
         wrapper_data.reserve(data.size());
 
-        std::transform(data.begin(), data.end(),
-                       std::back_inserter(wrapper_data),
-                       [](const Opm::Well& well)
-                       { return WellWrapper { well }; });
+        std::ranges::transform(data, std::back_inserter(wrapper_data),
+                               [](const Opm::Well& well)
+                               { return WellWrapper { well }; });
 
         well_specification.print_header(os);
         well_specification.print_data(os, wrapper_data);
@@ -956,11 +955,9 @@ namespace {
             std::vector<WellConnection> wrapper_data{};
             wrapper_data.reserve(connections.size());
 
-            std::transform(connections.begin(),
-                           connections.end(),
-                           std::back_inserter(wrapper_data),
-                           [&well](const Opm::Connection& connection)
-                           { return WellConnection { well, connection }; });
+            std::ranges::transform(connections, std::back_inserter(wrapper_data),
+                                   [&well](const Opm::Connection& connection)
+                                   { return WellConnection { well, connection }; });
 
             well_connection.print_data(os, wrapper_data, sub_report);
             ++sub_report;
@@ -992,11 +989,9 @@ namespace {
             std::vector<WellSegment> wrapper_data;
             wrapper_data.reserve(branch_segments.size());
 
-            std::transform(branch_segments.begin(),
-                           branch_segments.end(),
-                           std::back_inserter(wrapper_data),
-                           [&well](const Opm::Segment& segment)
-                           { return WellSegment { well, segment }; });
+            std::ranges::transform(branch_segments, std::back_inserter(wrapper_data),
+                                   [&well](const Opm::Segment& segment)
+                                   { return WellSegment { well, segment }; });
 
             const auto separator = (sub_report + 1 == segments.branches().size())
                 ? '=' : '-';
@@ -1027,16 +1022,16 @@ namespace {
         std::vector<SegmentConnection> wrapper_data;
         wrapper_data.reserve(connections.size());
 
-        std::transform(connections.begin(), connections.end(),
-                       std::back_inserter(wrapper_data),
-                       [&well, &segments] (const Opm::Connection& connection)
-                       {
-                           return SegmentConnection {
-                               well, connection,
-                               segments.getFromSegmentNumber(connection.segment()),
-                               *connection.perf_range()
-                           };
-                       });
+        std::ranges::transform(connections, std::back_inserter(wrapper_data),
+                               [&well, &segments] (const Opm::Connection& connection)
+                               {
+                                   return SegmentConnection {
+                                       well,
+                                       connection,
+                                       segments.getFromSegmentNumber(connection.segment()),
+                                       *connection.perf_range()
+                                   };
+                               });
 
         msw_connection.print_data(os, wrapper_data, 0, '=');
 
@@ -1059,10 +1054,9 @@ namespace {
         auto changed_wells = std::vector<Opm::Well>{};
         changed_wells.reserve(changedWells.size());
 
-        std::transform(changedWells.begin(), changedWells.end(),
-                       std::back_inserter(changed_wells),
-                       [&sched](const std::string& wname)
-                       { return sched.wells(wname); });
+        std::ranges::transform(changedWells, std::back_inserter(changed_wells),
+                               [&sched](const std::string& wname)
+                               { return sched.wells(wname); });
 
         report_well_specification_data(os, changed_wells, ctx);
         report_well_connection_data(os, changed_wells, ctx);

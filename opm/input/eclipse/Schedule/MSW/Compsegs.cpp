@@ -612,9 +612,8 @@ namespace Opm::Compsegs {
         // number.  Observe that this is somewhat important because the top
         // segment--segment number 1--is treated differently from the other
         // segments.
-        std::transform(rst_segments.begin(), rst_segments.end(),
-                       std::back_inserter(segments_list),
-                       [](const auto& segment_pair) { return segment_pair.second; });
+        std::ranges::transform(rst_segments, std::back_inserter(segments_list),
+                               [](const auto& segment_pair) { return segment_pair.second; });
 
         std::sort(segments_list.begin(), segments_list.end(),
                   [](const Segment& seg1, const Segment& seg2)

@@ -36,7 +36,7 @@ template<typename T, typename U>
 U& uppercase(const T& src, U& dst)
 {
     const auto up = [](char c) { return std::toupper(c); };
-    std::transform(std::begin(src), std::end(src), std::begin(dst), up);
+    std::ranges::transform(src, std::begin(dst), up);
     return dst;
 }
 

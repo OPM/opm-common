@@ -64,8 +64,8 @@ std::vector<T> vectorOperation(const std::vector<T>& vecA, const std::vector<T>&
     }
     std::vector<T> result;
     result.reserve(vecA.size());
-    // Use std::transform with the passed operation
-    std::transform(vecA.begin(), vecA.end(), vecB.begin(), std::back_inserter(result), op);
+    // Use std::ranges::transform with the passed operation
+    std::ranges::transform(vecA, vecB.begin(), std::back_inserter(result), op);
     return result;
 }
 
@@ -74,9 +74,9 @@ template <typename T, typename Operation>
 std::vector<T> vectorScalarOperation(const std::vector<T>& vecA, const T& scalar, Operation op) {
     std::vector<T> result;
     result.reserve(vecA.size());
-    // Use std::transform with the passed operation
-    std::transform(vecA.begin(), vecA.end(), std::back_inserter(result),
-        [&scalar, &op](const T& a) { return op(scalar, a); });
+    // Use std::ranges::transform with the passed operation
+    std::ranges::transform(vecA, std::back_inserter(result),
+                           [&scalar, &op](const T& a) { return op(scalar, a); });
     return result;
 }
 
@@ -85,17 +85,17 @@ template <typename T, typename Operation>
 std::vector<T> scalarVectorOperation(const T& scalar, const std::vector<T>& vecA,  Operation op) {
     std::vector<T> result;
     result.reserve(vecA.size());
-    // Use std::transform with the passed operation
-    std::transform(vecA.begin(), vecA.end(), std::back_inserter(result),
-        [&scalar, &op](const T& a) { return op(a, scalar); });
+    // Use std::ranges::transform with the passed operation
+    std::ranges::transform(vecA, std::back_inserter(result),
+                          [&scalar, &op](const T& a) { return op(a, scalar); });
     return result;
 }
 
 
 template <typename T, typename Operation>
 void scalarVectorOperation(const T& scalar, std::vector<T>& vecA, Operation op) {
-    std::transform(vecA.begin(), vecA.end(), vecA.begin(),
-        [&scalar, &op](const T& a) { return op(a, scalar); });
+    std::ranges::transform(vecA, vecA.begin(),
+                           [&scalar, &op](const T& a) { return op(a, scalar); });
 }
 
 

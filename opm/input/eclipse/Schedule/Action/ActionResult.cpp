@@ -253,8 +253,8 @@ void SortedVectorSet<T>::commit(Compare&& cmp, Equivalent&& eq)
     auto unique_sorted_elems = std::vector<T>{};
     unique_sorted_elems.reserve(i.size());
 
-    std::transform(i.begin(), i.end(), std::back_inserter(unique_sorted_elems),
-                   [this](const auto& ix) { return std::move(this->elems_[ix]); });
+    std::ranges::transform(i, std::back_inserter(unique_sorted_elems),
+                           [this](const auto& ix) { return std::move(this->elems_[ix]); });
 
     this->elems_.swap(unique_sorted_elems);
 }

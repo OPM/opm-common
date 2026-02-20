@@ -2781,16 +2781,15 @@ DensityTable::DensityTable(const GravityTable& gravity)
     //
     // with SG being the specific gravity of oil relative to pure water.
 
-    std::transform(gravity.begin(), gravity.end(),
-                   std::back_inserter(this->table_),
-        [](const GRAVITYRecord& record)
-    {
-        return DENSITYRecord {
-            (141.5 / (record.oil_api + 131.5)) * default_water_density,
-            record.water_sg * default_water_density,
-            record.gas_sg * default_air_density
-        };
-    });
+    std::ranges::transform(gravity, std::back_inserter(this->table_),
+                           [](const GRAVITYRecord& record)
+                           {
+                               return DENSITYRecord {
+                                   (141.5 / (record.oil_api + 131.5)) * default_water_density,
+                                   record.water_sg * default_water_density,
+                                   record.gas_sg * default_air_density
+                               };
+                           });
 }
 
 // ------------------------------------------------------------------------

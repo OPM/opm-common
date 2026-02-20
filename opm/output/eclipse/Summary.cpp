@@ -333,12 +333,10 @@ namespace {
                 };
 
             // Recall: Cannot use emplace_back() for PODs.
-            std::transform(vectors.begin(), vectors.end(),
-                           std::back_inserter(entities), toNode);
+            std::ranges::transform(vectors, std::back_inserter(entities), toNode);
 
             kwp = "";
-            std::transform(extra_vectors.begin(), extra_vectors.end(),
-                           std::back_inserter(entities), toNode);
+            std::ranges::transform(extra_vectors, std::back_inserter(entities), toNode);
         };
 
         auto makeTracerEntities = [&entities, &trConfig]
@@ -376,16 +374,17 @@ namespace {
 
             const auto& well = sched.getWellatEnd(well_name);
             for (const auto& conn : well.getConnections()) {
-                std::transform(extra_connection_vectors.begin(), extra_connection_vectors.end(),
-                               std::back_inserter(entities),
-                               [&well, &conn](const auto& conn_vector) -> Opm::EclIO::SummaryNode
-                               {
-                                   return {conn_vector.kw,
-                                           Cat::Connection,
-                                           conn_vector.type,
-                                           well.name(),
-                                           static_cast<int>(conn.global_index() + 1), {}, {}};
-                               });
+                std::ranges::transform(extra_connection_vectors, std::back_inserter(entities),
+                                       [&well, &conn](const auto& conn_vector) -> Opm::EclIO::SummaryNode
+                                       {
+                                           return {
+                                               conn_vector.kw,
+                                               Cat::Connection,
+                                               conn_vector.type,
+                                               well.name(),
+                                               static_cast<int>(conn.global_index() + 1), {}, {}
+                                           };
+                                       });
             }
         }
 
@@ -429,13 +428,19 @@ namespace {
             const auto  nSeg  = static_cast<int>(well.getSegments().size());
 
             for (auto segID = 0*nSeg + 1; segID <= nSeg; ++segID) {
-                std::transform(vectors.begin(), vectors.end(),
-                               std::back_inserter(entities),
-                               [&wname, &segID](const auto& vector) -> Opm::EclIO::SummaryNode
-                               {
-                                   return {vector.kw, Cat::Segment,
-                                           vector.type, wname, segID, {}, {} };
-                               });
+                std::ranges::transform(vectors, std::back_inserter(entities),
+                                       [&wname, &segID](const auto& vector) -> Opm::EclIO::SummaryNode
+                                       {
+                                           return {
+                                               vector.kw,
+                                               Cat::Segment,
+                                               vector.type,
+                                               wname,
+                                               segID,
+                                               {},
+                                               {}
+                                           };
+                                       });
             }
         };
 
@@ -469,13 +474,19 @@ namespace {
         using Cat = Opm::EclIO::SummaryNode::Category;
 
         for (const auto& aquiferID : aquiferIDs) {
-            std::transform(vectors.begin(), vectors.end(),
-                           std::back_inserter(entities),
-                           [&aquiferID](const auto& vector) -> Opm::EclIO::SummaryNode
-                           {
-                               return {vector.kw, Cat::Aquifer,
-                                       vector.type, "", aquiferID, {}, {}};
-                           });
+            std::ranges::transform(vectors, std::back_inserter(entities),
+                                   [&aquiferID](const auto& vector) -> Opm::EclIO::SummaryNode
+                                   {
+                                       return {
+                                           vector.kw,
+                                           Cat::Aquifer,
+                                           vector.type,
+                                           "",
+                                           aquiferID,
+                                           {},
+                                           {}
+                                       };
+                                   });
         }
 
         return entities;
@@ -495,13 +506,19 @@ namespace {
         using Cat = Opm::EclIO::SummaryNode::Category;
 
         for (const auto& aquiferID : aquiferIDs) {
-            std::transform(vectors.begin(), vectors.end(),
-                           std::back_inserter(entities),
-                           [&aquiferID](const auto& vector) -> Opm::EclIO::SummaryNode
-                           {
-                               return {vector.kw, Cat::Aquifer,
-                                       vector.type, "", aquiferID, {}, {}};
-                           });
+            std::ranges::transform(vectors, std::back_inserter(entities),
+                                   [&aquiferID](const auto& vector) -> Opm::EclIO::SummaryNode
+                                   {
+                                       return {
+                                           vector.kw,
+                                           Cat::Aquifer,
+                                           vector.type,
+                                           "",
+                                           aquiferID,
+                                           {},
+                                           {}
+                                       };
+                                   });
         }
 
         return entities;
@@ -3740,12 +3757,9 @@ find_group_wells(const Opm::Schedule& schedule,
         const auto& group = schedState.groups.get(downtree[i]);
 
         if (group.wellgroup()) {
-            std::transform(group.wells().begin(), group.wells().end(),
-                           std::back_inserter(groupwells),
-                           [&schedState](const auto& wname)
-                           {
-                               return &schedState.wells.get(wname);
-                           });
+            std::ranges::transform(group.wells(), std::back_inserter(groupwells),
+                                   [&schedState](const auto& wname)
+                                   { return &schedState.wells.get(wname); });
         }
         else {
             const auto& children = group.groups();
@@ -3766,12 +3780,9 @@ find_field_wells(const Opm::Schedule& schedule,
 
     const auto& wells = schedule[sim_step].wells;
     const auto keys = wells.keys();
-    std::transform(keys.begin(), keys.end(),
-                   std::back_inserter(fieldwells),
-                   [&wells](const auto& well)
-                   {
-                       return &wells.get(well);
-                   });
+    std::ranges::transform(keys, std::back_inserter(fieldwells),
+                           [&wells](const auto& well)
+                           { return &wells.get(well); });
 
     sort_wells_by_insert_index(fieldwells);
 
@@ -5601,12 +5612,9 @@ namespace {
         const auto newNodes = smcfg
             .registerRequisiteUDQorActionSummaryKeys(extraKeys, es, sched);
 
-        std::transform(newNodes.begin(), newNodes.end(),
-                       std::back_inserter(nodes),
-                       [](const auto& newNode)
-                       {
-                           return translate_node(newNode);
-                       });
+        std::ranges::transform(newNodes, std::back_inserter(nodes),
+                               [](const auto& newNode)
+                               { return translate_node(newNode); });
 
         return nodes;
     }

@@ -182,9 +182,8 @@ namespace {
             return {};
 
         std::vector<std::string> l;
-        std::transform(var1_iter->second.begin(), var1_iter->second.end(),
-                       std::back_inserter(l),
-                       [](const auto& pair) { return pair.first; });
+        std::ranges::transform(var1_iter->second, std::back_inserter(l),
+                               [](const auto& pair) { return pair.first; });
 
         return l;
     }

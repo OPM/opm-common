@@ -119,10 +119,9 @@ std::vector<Opm::time_point> reportStepStartTimes(const Opm::Schedule& sched)
     auto rptStepStart = std::vector<Opm::time_point>{};
     rptStepStart.reserve(sched.size());
 
-    std::transform(sched.begin(), sched.end(),
-                   std::back_inserter(rptStepStart),
-                   [](const Opm::ScheduleState& state)
-                   { return state.start_time(); });
+    std::ranges::transform(sched, std::back_inserter(rptStepStart),
+                           [](const Opm::ScheduleState& state)
+                           { return state.start_time(); });
 
     return rptStepStart;
 }

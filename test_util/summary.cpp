@@ -224,8 +224,8 @@ int main(int argc, char **argv) {
     std::vector<std::vector<float>> smryData;
     std::vector<int> width;
 
-    std::transform(smryList.begin(), smryList.end(), std::back_inserter(width),
-                   [](const auto& name) { return name.size(); });
+    std::ranges::transform(smryList, std::back_inserter(width),
+                           [](const auto& name) { return name.size(); });
 
     for (const auto& key : smryList) {
         std::vector<float> vect;

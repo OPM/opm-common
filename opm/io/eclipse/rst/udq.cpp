@@ -289,13 +289,14 @@ RstUDQActive(const int rstFileVersion,
     }
 
     this->ig_phase.assign(igph.size(), Phase::OIL);
-    std::transform(igph.begin(), igph.end(), this->ig_phase.begin(),
-                   [](const int phase)
-                   {
-                       if (phase == 1) { return Phase::OIL;   }
-                       if (phase == 2) { return Phase::WATER; }
-                       if (phase == 3) { return Phase::GAS;   }
-
-                       return Phase::OIL;
-                   });
+    std::ranges::transform(igph, this->ig_phase.begin(),
+                           [](const int phase)
+                           {
+                               switch (phase) {
+                                   case 1: return Phase::OIL;
+                                   case 2: return Phase::WATER;
+                                   case 3: return Phase::GAS;
+                                   default: return Phase::OIL;
+                               }
+                           });
 }

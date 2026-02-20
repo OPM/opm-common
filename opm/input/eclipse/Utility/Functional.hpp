@@ -89,7 +89,7 @@ namespace fun {
         std::vector<Val> ret{};
         ret.reserve(std::size(std::forward<C>(c)));
 
-        std::transform(std::begin(c), std::end(c), std::back_inserter(ret), std::forward<F>(f));
+        std::ranges::transform(c, std::back_inserter(ret), std::forward<F>(f));
         return ret;
     }
     /*

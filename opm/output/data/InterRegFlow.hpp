@@ -165,11 +165,7 @@ namespace Opm { namespace data {
             std::is_convertible_v<typename InterRegFlow<OtherRandIt>::ElmT, ElmT>,
         InterRegFlow&> operator+=(const InterRegFlow<OtherRandIt>& rhs)
         {
-            std::transform(this->begin(),
-                           this->end(),
-                           rhs  .begin(),
-                           this->begin(),
-                           std::plus<>{});
+            std::ranges::transform(*this, rhs, this->begin(), std::plus<>{});
 
             return *this;
         }

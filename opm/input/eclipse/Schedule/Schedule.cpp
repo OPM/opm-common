@@ -1271,10 +1271,9 @@ Defaulted grid coordinates is not allowed for COMPDAT as part of ACTIONX)"
 
         if (report_step == initialStep) {
             // Time = 0 or time = simulation restart.
-            std::transform(currWells.begin(), currWells.end(),
-                           std::back_inserter(changedWells),
-                           [](const auto& wellPair)
-                           { return wellPair.first; });
+            std::ranges::transform(currWells, std::back_inserter(changedWells),
+                                   [](const auto& wellPair)
+                                   { return wellPair.first; });
         }
         else {
             const auto& prevWells = this->snapshots[report_step - 1].wells;
@@ -1316,11 +1315,10 @@ Defaulted grid coordinates is not allowed for COMPDAT as part of ACTIONX)"
         }
 
         const auto& well_order = this->snapshots[timeStep].well_order();
-        std::transform(well_order.begin(), well_order.end(),
-                       std::back_inserter(wells),
-                       [&wells = this->snapshots[timeStep].wells]
-                       (const auto& wname) -> decltype(auto)
-                       { return wells.get(wname); });
+        std::ranges::transform(well_order, std::back_inserter(wells),
+                               [&wells = this->snapshots[timeStep].wells]
+                               (const auto& wname) -> decltype(auto)
+                               { return wells.get(wname); });
 
         return wells;
     }
@@ -2466,12 +2464,9 @@ namespace {
             };
 
             auto rst_connections = std::vector<Connection> {};
-            std::transform(rst_well.connections.begin(), rst_well.connections.end(),
-                           std::back_inserter(rst_connections),
-                           [&grid, &fp](const auto& rst_conn)
-                           {
-                               return Connection{rst_conn, grid, fp};
-                           });
+            std::ranges::transform(rst_well.connections, std::back_inserter(rst_connections),
+                                   [&grid, &fp](const auto& rst_conn)
+                                   { return Connection{rst_conn, grid, fp}; });
 
             if (rst_well.segments.empty()) {
                 auto connections = std::make_shared<WellConnections>

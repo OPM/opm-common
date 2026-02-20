@@ -1237,9 +1237,8 @@ void cleanup_deck_keyword_list(ParserState& parserState, const std::set<Opm::Ecl
     std::vector<std::string> keyw_names;
     keyw_names.reserve(parserState.deck.size());
 
-    std::transform(parserState.deck.begin(), parserState.deck.end(),
-                   std::back_inserter(keyw_names),
-                   [](const auto& dk_keyw) { return dk_keyw.name(); });
+    std::ranges::transform(parserState.deck, std::back_inserter(keyw_names),
+                           [](const auto& dk_keyw) { return dk_keyw.name(); });
 
     if (ignore_runspec){
 

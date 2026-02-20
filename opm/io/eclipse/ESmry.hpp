@@ -143,12 +143,9 @@ private:
         std::vector<T> result;
         result.reserve(seqIndex.size());
 
-        std::transform(seqIndex.begin(), seqIndex.end(),
-                       std::back_inserter(result),
-                       [&full_vector](const auto& ind)
-                       {
-                           return full_vector[ind];
-                       });
+        std::ranges::transform(seqIndex, std::back_inserter(result),
+                               [&full_vector](const auto& ind)
+                               { return full_vector[ind]; });
 
         return result;
     }

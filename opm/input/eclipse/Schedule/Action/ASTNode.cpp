@@ -57,12 +57,9 @@ namespace {
         std::vector<std::string> strings{};
         strings.reserve(quoted_strings.size());
 
-        std::transform(quoted_strings.begin(), quoted_strings.end(),
-                       std::back_inserter(strings),
-                       [](const std::string& qs)
-                       {
-                           return strip_quotes(qs);
-                       });
+        std::ranges::transform(quoted_strings, std::back_inserter(strings),
+                               [](const std::string& qs)
+                               { return strip_quotes(qs); });
 
         return strings;
     }

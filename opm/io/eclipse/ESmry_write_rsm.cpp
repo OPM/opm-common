@@ -266,20 +266,14 @@ void ESmry::write_rsm(std::ostream& os) const
     if (this->hasKey("DAY") && this->hasKey("MONTH") && this->hasKey("YEAR")) {
         write_dates = true;
         const auto dates = this->dates();
-        std::transform(dates.begin(), dates.end(),
-                       std::back_inserter(time_column),
-                       [](const auto& t)
-                       {
-                           return format_date(t);
-                       });
+        std::ranges::transform(dates, std::back_inserter(time_column),
+                               [](const auto& t)
+                               { return format_date(t); });
     } else {
         const auto& time_data = this->get("TIME");
-        std::transform(time_data.begin(), time_data.end(),
-                       std::back_inserter(time_column),
-                       [](const auto& t)
-                       {
-                           return format_float_element(t);
-                       });
+        std::ranges::transform(time_data, std::back_inserter(time_column),
+                               [](const auto& t)
+                               { return format_float_element(t); });
     }
 
     for (const auto& data_vector_block : data_vector_blocks) {

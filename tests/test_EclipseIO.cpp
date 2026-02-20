@@ -180,8 +180,8 @@ void checkInitFile(const Deck& deck, const data::Solution& simProps)
         const auto& expect = deck["PERMX"].back().getSIDoubleData();
         auto        permx  = initFile.get<float>("PERMX");
 
-        std::transform(permx.begin(), permx.end(), permx.begin(),
-                       [](const auto& kx) { return kx * 9.869233e-16; });
+        std::ranges::transform(permx, permx.begin(),
+                               [](const auto& kx) { return kx * 9.869233e-16; });
 
         compareErtData(expect, permx, 1e-4);
     }
@@ -216,10 +216,8 @@ void checkRestartFile( int timeStepIdx ) {
 
         if (keywordExists(knownVec, "PRESSURE")) {
             const auto& press = rstFile.getRestartData<float>("PRESSURE", i, 0);
-            std::transform(sol.data<double>("PRESSURE").begin(),
-                           sol.data<double>("PRESSURE").end(),
-                           sol.data<double>("PRESSURE").begin(),
-                           [](const auto& x) { return x / Metric::Pressure; });
+            std::ranges::transform(sol.data<double>("PRESSURE"), sol.data<double>("PRESSURE").begin(),
+                                   [](const auto& x) { return x / Metric::Pressure; });
 
             compareErtData( sol.data<double>("PRESSURE"), press, 1e-4 );
         }
@@ -673,17 +671,15 @@ EQUALS
 )"};
          auto mult = edit_mult_x.begin();
          if (doxyz[0].test(0)) {
-             std::transform(exspected_multipliers[0][0].begin(),
-                            exspected_multipliers[0][0].end(),
-                            exspected_multipliers[0][0].begin(),
-                            [&mult](const auto& val) { return val * (*mult++); });
+             std::ranges::transform(exspected_multipliers[0][0],
+                                    exspected_multipliers[0][0].begin(),
+                                    [&mult](const auto& val) { return val * (*mult++); });
          }
          mult = edit_mult_z.begin();
          if (doxyz[2].test(1)) {
-             std::transform(exspected_multipliers[2][1].begin(),
-                            exspected_multipliers[2][1].end(),
-                            exspected_multipliers[2][1].begin(),
-                            [&mult](const auto& val) { return val * (*mult++); });
+             std::ranges::transform(exspected_multipliers[2][1],
+                                    exspected_multipliers[2][1].begin(),
+                                    [&mult](const auto& val) { return val * (*mult++); });
          }
      }
 

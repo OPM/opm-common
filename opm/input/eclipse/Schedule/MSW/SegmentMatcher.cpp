@@ -179,8 +179,8 @@ Opm::SegmentMatcher::Impl::matchingSegments(const std::string& wellname) const
     const auto& segSet = well.getSegments();
 
     segments.reserve(segSet.size());
-    std::transform(segSet.begin(), segSet.end(), std::back_inserter(segments),
-                   [](const Segment& segment) { return segment.segmentNumber(); });
+    std::ranges::transform(segSet, std::back_inserter(segments),
+                           [](const Segment& segment) { return segment.segmentNumber(); });
 
     return segments;
 }

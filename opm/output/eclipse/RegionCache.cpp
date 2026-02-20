@@ -54,12 +54,9 @@ void Opm::out::RegionCache::buildCache(const std::set<std::string>& fip_regions,
     }
 
     auto regions = std::vector<std::reference_wrapper<const std::vector<int>>>{};
-    std::transform(fip_regions.begin(), fip_regions.end(),
-                   std::back_inserter(regions),
-                   [&fp](const auto& fipReg)
-                   {
-                       return std::cref(fp.get_int(fipReg));
-                   });
+    std::ranges::transform(fip_regions, std::back_inserter(regions),
+                           [&fp](const auto& fipReg)
+                           { return std::cref(fp.get_int(fipReg)); });
 
     for (const auto& wname : schedule.back().well_order()) {
         const auto& conns = schedule.back().wells(wname).getConnections();

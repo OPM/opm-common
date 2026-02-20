@@ -64,8 +64,8 @@ public:
         storage_type::const_iterator inner;
     };
 
-    Iterator begin() const { return Iterator(this->keywords.begin()); }
-    Iterator end() const { return Iterator(this->keywords.end()); }
+    auto begin() const { return Iterator(this->keywords.begin()); }
+    auto end() const { return Iterator(this->keywords.end()); }
 
     const DeckKeyword& operator[](std::size_t index) const;
     DeckView operator[](const std::string& keyword) const;

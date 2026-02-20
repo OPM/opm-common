@@ -139,8 +139,8 @@ EGrid::EGrid(const std::string& filename, const std::string& grid_name)
         }
         else if (array_name[n] == "MAPAXES") {
             const auto& mapAx = this->get<float>(n);
-            std::transform(mapAx.begin(), mapAx.end(), this->m_mapaxes.begin(),
-                           [length_factor](const float elm) { return elm * length_factor; });
+            std::ranges::transform(mapAx, this->m_mapaxes.begin(),
+                                   [length_factor](const float elm) { return elm * length_factor; });
             mapaxes_init();
             m_mapaxes_loaded = true;
         }
@@ -196,9 +196,8 @@ EGrid::EGrid(const std::string& filename, const std::string& grid_name)
         auto hostnum = getImpl(hostnum_index, INTE, inte_array, "integer");
         host_cells.reserve(hostnum.size());
 
-        std::transform(hostnum.begin(), hostnum.end(),
-                       std::back_inserter(host_cells),
-                       [](const auto& val) { return val - 1; });
+        std::ranges::transform(hostnum, std::back_inserter(host_cells),
+                               [](const auto& val) { return val - 1; });
     }
 }
 

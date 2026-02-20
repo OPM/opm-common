@@ -63,8 +63,8 @@ std::vector<int> ActiveGridCells::actNum() const
 {
     std::vector<int> actnum;
     actnum.reserve(localCell_.size());
-    std::transform(localCell_.begin(), localCell_.end(),
-                   std::back_inserter(actnum), [](int i){ return i>=0;});
+    std::ranges::transform(localCell_, std::back_inserter(actnum),
+                           [](int i) { return i >= 0; });
     return actnum;
 }
 }

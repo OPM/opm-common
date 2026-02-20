@@ -253,8 +253,8 @@ namespace Opm {
         std::sort(wellIx.begin(), wellIx.end());
 
         auto uniqueWells = std::vector<std::string>(wellIx.size());
-        std::transform(wellIx.begin(), wellIx.end(), uniqueWells.begin(),
-                       [&allWells](const auto i) { return allWells[i]; });
+        std::ranges::transform(wellIx, uniqueWells.begin(),
+                               [&allWells](const auto i) { return allWells[i]; });
 
         return uniqueWells;
     }

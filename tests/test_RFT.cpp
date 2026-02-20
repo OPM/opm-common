@@ -3224,13 +3224,13 @@ END
         auto cellIx = std::vector<int>{};
         cellIx.reserve(ijk.size());
 
-        std::transform(ijk.begin(), ijk.end(), std::back_inserter(cellIx),
-                       [&grid](const auto& ijk_entry)
-                       {
-                           return grid.getGlobalIndex(ijk_entry[0] - 1,
-                                                      ijk_entry[1] - 1,
-                                                      ijk_entry[2] - 1);
-                       });
+        std::ranges::transform(ijk, std::back_inserter(cellIx),
+                             [&grid](const auto& ijk_entry)
+                             {
+                                 return grid.getGlobalIndex(ijk_entry[0] - 1,
+                                                            ijk_entry[1] - 1,
+                                                            ijk_entry[2] - 1);
+                             });
 
         return cellIx;
     }
@@ -4210,13 +4210,13 @@ END
         auto cellIx = std::vector<int>{};
         cellIx.reserve(ijk.size());
 
-        std::transform(ijk.begin(), ijk.end(), std::back_inserter(cellIx),
-                       [&grid](const auto& ijk_entry)
-                       {
-                           return grid.getGlobalIndex(ijk_entry[0] - 1,
-                                                      ijk_entry[1] - 1,
-                                                      ijk_entry[2] - 1);
-                       });
+        std::ranges::transform(ijk, std::back_inserter(cellIx),
+                               [&grid](const auto& ijk_entry)
+                               {
+                                   return grid.getGlobalIndex(ijk_entry[0] - 1,
+                                                              ijk_entry[1] - 1,
+                                                              ijk_entry[2] - 1);
+                               });
 
         return cellIx;
     }

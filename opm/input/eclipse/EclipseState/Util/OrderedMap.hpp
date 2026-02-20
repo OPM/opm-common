@@ -43,14 +43,13 @@ findSimilarStrings(std::string str,
                    const std::vector<std::pair<std::string, T>,A>& storage)
 {
     auto toUpper = [](const char c){ return std::toupper(c);};
-    std::transform(str.begin(), str.end(), str.begin(), toUpper);
+    std::ranges::transform(str, str.begin(), toUpper);
     std::set<std::string> alternatives;
 
     for(const auto& entry: storage)
     {
         std::string upper = entry.first;
-        std::transform(upper.begin(), upper.end(), upper.begin(),
-                       toUpper);
+        std::ranges::transform(upper, upper.begin(), toUpper);
 
         if(upper.find(str) != std::string::npos || str.find(upper) != std::string::npos)
         {

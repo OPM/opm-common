@@ -56,8 +56,8 @@ BOOST_AUTO_TEST_CASE(Create)
         std::vector<std::string> actual;
 
 
-        std::transform(c.begin(), c.end(), std::back_inserter(actual),
-                       [](const auto& prop) { return prop.first; });
+        std::ranges::transform(c, std::back_inserter(actual),
+                               [](const auto& prop) { return prop.first; });
 
         BOOST_CHECK_EQUAL_COLLECTIONS( expected.begin() , expected.end() , actual.begin() , actual.end() );
     }

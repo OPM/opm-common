@@ -1786,9 +1786,8 @@ BOOST_AUTO_TEST_CASE(WELL_POD)
     std::vector<Opm::RestartIO::RstWell> wells;
 
     auto zwel = std::vector<std::string>{};
-    std::transform(wellData.getZWell().begin(), wellData.getZWell().end(),
-                   std::back_inserter(zwel),
-                   [](const auto& s8) { return s8.c_str(); });
+    std::ranges::transform(wellData.getZWell(), std::back_inserter(zwel),
+                           [](const auto& s8) { return s8.c_str(); });
 
     for (auto iw = 0; iw < header.num_wells; ++iw) {
         std::size_t zwel_offset = header.nzwelz * iw;
