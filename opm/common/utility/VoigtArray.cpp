@@ -46,8 +46,7 @@ template<class Scalar>
 void VoigtArray<Scalar>::
 resize(const std::size_t size)
 {
-    std::for_each(this->data_.begin(), this->data_.end(),
-                  [size](auto& d) { d.resize(size); });
+    std::ranges::for_each(this->data_, [size](auto& d) { d.resize(size); });
 }
 
 template<class Scalar>

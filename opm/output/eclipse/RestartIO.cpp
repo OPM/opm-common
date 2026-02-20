@@ -1157,8 +1157,9 @@ void save(EclIO::OutputStream::Restart&                 rstFile,
     }
 
     // Convert solution fields and extra values from SI to user units.
-    std::for_each(values.begin(), values.end(),
-                    [&units](RestartValue& value ) { return value.convertFromSI(units); });
+    std::ranges::for_each(values,
+                          [&units](RestartValue& value )
+                          { return value.convertFromSI(units); });
 
 
     const std::vector<int>& inteHD = writeGlobalRestart(report_step, sim_step, seconds_elapsed, schedule, grid, es,

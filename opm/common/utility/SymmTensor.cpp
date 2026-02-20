@@ -31,8 +31,7 @@ template<class T>
 void SymmTensor<T>::
 operator+=(const T data)
 {
-    std::for_each(this->data_.begin(), this->data_.end(),
-                  [&data](auto& v) { v += data; });
+    std::ranges::for_each(this->data_, [&data](auto& v) { v += data; });
 }
 
 template<class T>
@@ -40,16 +39,14 @@ void SymmTensor<T>::
 operator+=(const SymmTensor& data)
 {
     auto it = data.data_.begin();
-    std::for_each(this->data_.begin(), this->data_.end(),
-                  [&it](auto& v) { v += *it++; });
+    std::ranges::for_each(this->data_, [&it](auto& v) { v += *it++; });
 }
 
 template<class T>
 void SymmTensor<T>::
 operator*=(const T value)
 {
-    std::for_each(this->data_.begin(), this->data_.end(),
-                  [&value](auto& v) { v *= value; });
+    std::ranges::for_each(this->data_, [&value](auto& v) { v *= value; });
 }
 
 template<class T>

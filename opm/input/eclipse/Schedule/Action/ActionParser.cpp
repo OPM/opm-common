@@ -84,10 +84,9 @@ std::string makeLowercase(const std::string& arg)
 {
     std::string lower_arg = arg;
 
-    std::for_each(lower_arg.begin(), lower_arg.end(),
-                  [](char& c) {
-                      c = std::tolower(static_cast<unsigned char>(c));
-                  });
+    std::ranges::for_each(lower_arg,
+                          [](char& c)
+                          { c = std::tolower(static_cast<unsigned char>(c)); });
 
     return lower_arg;
 }
