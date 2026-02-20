@@ -380,6 +380,40 @@ public:
                           const bool           write_double,
                           RestartValue&&       value);
 
+    /// Create restart file output for simulation runs with local grids.
+    ///
+    /// Calls RestartIO::save().
+    ///
+    /// \param[in] action_state Run's current action system state.  Expected
+    /// to hold current values for the number of times each action has run
+    /// and the time of each action's last run.
+    ///
+    /// \param[in] wtest_state Run's current WTEST information.  Expected to
+    /// hold information about those wells that have been closed due to
+    /// various runtime conditions.
+    ///
+    /// \param[in] st Summary values from most recent call to
+    /// Summary::eval().  Source object from which to retrieve the values
+    /// that go into the output buffer.
+    ///
+    /// \param[in] udq_state Run's current UDQ values.
+    ///
+    /// \param[in] report_step One-based report step index for which to
+    /// create output.  Report_step=0 represents time zero.
+    ///
+    /// \param[in] time_step Current time step index.  Nullopt if the
+    /// sequence number should be the same as the report step index.
+    ///
+    /// \param[in] secs_elapsed Elapsed physical (i.e., simulated) time in
+    /// seconds since start of simulation.
+    ///
+    /// \param[in] write_double Whether or not to output simulation results
+    /// as double precision floating-point numbers.
+    ///
+    /// \param[in] value Collection of per-cell, per-well, per-connection,
+    /// per-segment, per-group, and per-aquifer dynamic results pertaining
+    /// to this time point.  One collection per grid, with \code
+    /// value.front() \endcode representing the main/global grid.
     void writeRestartFile(const Action::State&        action_state,
                           const WellTestState&        wtest_state,
                           const SummaryState&         st,

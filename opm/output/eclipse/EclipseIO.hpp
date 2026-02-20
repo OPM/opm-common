@@ -170,7 +170,7 @@ public:
     /// simulator and are written to the restart file.  Examples of such
     /// fields would be the relative permeabilities KRO, KRW and KRG and
     /// fluxes.  The keywords which can be added here are represented with
-    /// mnenonics in the RPTRST keyword.
+    /// mnemonics in the RPTRST keyword.
     ///
     /// If the optional argument write_double is sent in as true the fields
     /// in the solution container will be written in double precision.  OPM
@@ -228,16 +228,17 @@ public:
                        const bool           write_double = false,
                        std::optional<int>   time_step = std::nullopt);
 
-    /// Write reservoir state and summary information to disk for LGR
-    // simulations.
+    /// Write reservoir state and summary information to disk for runs with
+    /// local grid refinement.
     ///
     /// Calling this method is only meaningful after the first time step has
     /// been completed.
     ///
-    /// The std::vector<RestartValue> contains fields which have been calculated
-    //  by the simulator for each all global and LGR grids. POS = 0 is the global
-    //  grid, POS = 1 is LGR1, and so on. Each position corresponds to a
-    //  RestartValue of the associated grid.
+    /// The RestartValue contains fields which have been calculated by the
+    /// simulator and are written to the restart file.  Examples of such
+    /// fields would be the relative permeabilities KRO, KRW and KRG and
+    /// fluxes.  The keywords which can be added here are represented with
+    /// mnemonics in the RPTRST keyword.
     ///
     /// If the optional argument write_double is sent in as true the fields
     /// in the solution container will be written in double precision.  OPM
@@ -273,9 +274,9 @@ public:
     ///
     /// \param[in] value Collection of per-cell, per-well, per-connection,
     /// per-segment, per-group, and per-aquifer dynamic results pertaining
-    /// to this time point. The vector must contain one `RestartValue` per grid,
-    /// including the global grid. POS = 0 is the global grid, POS = 1
-    ///  is LGR1, and so on.
+    /// to this time point.  One collection per grid, with \code
+    /// value.front() \endcode being results for the main/global grid and
+    /// each additional element being results for a separate local grid.
     ///
     /// \param[in] write_double Whether or not to output simulation results
     /// as double precision floating-point numbers.  Compatibility
@@ -317,7 +318,7 @@ public:
     /// file an exception will be raised.  This also happens if the size of
     /// a vector does not match the expected size.
     ///
-    /// The extra_keys argument can be used to request additional kewyords
+    /// The extra_keys argument can be used to request additional keywords
     /// from the restart value.  The extra vectors will be stored in the
     /// 'extra' field of the return value.  These values must have been
     /// added to the restart file previosuly with the extra argument to the
