@@ -166,10 +166,10 @@ Connections::applyVertexMerges(const std::unordered_map<VertexID, VertexID>& ver
     // Apply merges to all connections directly in one pass
     // We can leverage that vertex_merges is already fully resolved from our disjoint set union
     // structure, so we don't need nested lookups
-    std::transform(i_.begin(), i_.end(), i_.begin(),
+    std::ranges::transform(i_, i_.begin(),
                   [this, &vertex_merges](VertexID v) { return findMergedVertexID(v, vertex_merges); });
 
-    std::transform(j_.begin(), j_.end(), j_.begin(),
+    std::ranges::transform(j_, j_.begin(),
                   [this, &vertex_merges](VertexID v) { return findMergedVertexID(v, vertex_merges); });
 
     // Remove self-connections if required using erase-remove idiom
@@ -210,8 +210,8 @@ Connections::applyVertexMerges(const std::unordered_map<VertexID, VertexID>& ver
         return vertex_map.at(v);
     };
 
-    std::transform(i_.begin(), i_.end(), i_.begin(), remap);
-    std::transform(j_.begin(), j_.end(), j_.begin(), remap);
+    std::ranges::transform(i_, i_.begin(), remap);
+    std::ranges::transform(j_, j_.begin(), remap);
 
     // Build final mapping (original -> compact ID)
     std::unordered_map<VertexID, VertexID> final_mapping;
@@ -614,12 +614,9 @@ remapCompressedIndex([[maybe_unused]] Start&&                                  c
                      [[maybe_unused]] std::optional<typename Start::size_type> numOrig)
 {
     if constexpr (TrackCompressedIdx) {
-        std::transform(compressedIdx.begin(), compressedIdx.end(),
-                       compressedIdx.begin(),
-                       [this](const auto& i)
-                       {
-                           return this->compressedIdx_[i];
-                       });
+        std::ranges::transform(compressedIdx, compressedIdx.begin(),
+                               [this](const auto& i)
+                               { return this->compressedIdx_[i]; });
 
         if (numOrig.has_value() && (*numOrig < this->compressedIdx_.size())) {
             // Client called add() after compress().  Remap existing portion

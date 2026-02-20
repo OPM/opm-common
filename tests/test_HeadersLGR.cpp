@@ -373,15 +373,13 @@ void generate_opm_rst(Setup& base_setup,
     std::vector<std::size_t> num_cells(num_lgr_cells + 1);
     num_cells[0] = base_setup.grid.getNumActive();
 
-    std::transform(lgr_labels.begin(), lgr_labels.end(),
-                   num_cells.begin() + 1,
-                   [&base_setup](const std::string& lgr_tag) {
-                       return base_setup.grid.getLGRCell(lgr_tag).getNumActive();
-                   });
+    std::ranges::transform(lgr_labels, num_cells.begin() + 1,
+                           [&base_setup](const std::string& lgr_tag)
+                           { return base_setup.grid.getLGRCell(lgr_tag).getNumActive(); });
 
     std::vector<data::Solution> cells(num_lgr_cells + 1);
-    std::transform(num_cells.begin(), num_cells.end(), cells.begin(),
-                   [](int n) { return mkSolution(n); });
+    std::ranges::transform(num_cells, cells.begin(),
+                           [](int n) { return mkSolution(n); });
 
     auto groups = mkGroups();
     auto udqState = UDQState{1};
@@ -396,13 +394,13 @@ void generate_opm_rst(Setup& base_setup,
 
     io_config.setEclCompatibleRST(false);
 
-    std::transform(restart_value.begin(), restart_value.end(),
-                   restart_value.begin(),
-                   [](RestartValue& rv) {
-                       rv.addExtra("EXTRA", UnitSystem::measure::pressure,
-                                   std::vector<double>{10.0,1.0,2.0,3.0});
-                       return rv;
-                   });
+    std::ranges::transform(restart_value, restart_value.begin(),
+                           [](RestartValue& rv)
+                           {
+                               rv.addExtra("EXTRA", UnitSystem::measure::pressure,
+                                           std::vector<double>{10.0,1.0,2.0,3.0});
+                               return rv;
+                           });
 
     const auto outputDir = test_area.currentWorkingDirectory();
     const auto seqnum = 1;

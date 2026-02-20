@@ -230,12 +230,9 @@ std::vector<float> ExtESmry::get_at_rstep(const std::string& name)
     std::vector<float> rs_vect;
     rs_vect.reserve(m_seqIndex.size());
 
-    std::transform(m_seqIndex.begin(), m_seqIndex.end(),
-                   std::back_inserter(rs_vect),
-                   [&full_vect](const auto& r)
-                   {
-                       return full_vect[r];
-                   });
+    std::ranges::transform(m_seqIndex, std::back_inserter(rs_vect),
+                           [&full_vect](const auto& r)
+                           { return full_vect[r]; });
 
     return rs_vect;
 }
@@ -582,12 +579,13 @@ std::vector<Opm::time_point> ExtESmry::dates()
     std::vector<Opm::time_point> d;
 
     const auto time = this->get("TIME");
-    std::transform(time.begin(), time.end(), std::back_inserter(d),
-                  [this, time_unit](const auto& t)
-                  {
-                      using Seconds = std::chrono::duration<double, std::chrono::seconds::period>;
-                      return this->m_startdat + std::chrono::duration_cast<time_point::duration>(Seconds{t * time_unit});
-                  });
+    std::ranges::transform(time, std::back_inserter(d),
+                           [this, time_unit](const auto& t)
+                           {
+                               using Seconds = std::chrono::duration<double, std::chrono::seconds::period>;
+                               return this->m_startdat +
+                                      std::chrono::duration_cast<time_point::duration>(Seconds{t * time_unit});
+                           });
 
     return d;
 }

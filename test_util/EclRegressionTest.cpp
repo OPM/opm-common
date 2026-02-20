@@ -803,13 +803,11 @@ void ECLRegressionTest::results_rst()
             std::vector<std::string> seqnStrList1;
             std::vector<std::string> seqnStrList2;
 
-            std::transform(seqnums1.begin(), seqnums1.end(),
-                           std::back_inserter(seqnStrList1),
-                           [](const auto& val) { return std::to_string(val); });
+            std::ranges::transform(seqnums1, std::back_inserter(seqnStrList1),
+                                   [](const auto& val) { return std::to_string(val); });
 
-            std::transform(seqnums2.begin(), seqnums2.end(),
-                           std::back_inserter(seqnStrList2),
-                           [](const auto& val) { return std::to_string(val); });
+            std::ranges::transform(seqnums2, std::back_inserter(seqnStrList2),
+                                   [](const auto& val) { return std::to_string(val); });
 
             std::cout << "\nrestart sequences " << std::endl;
             printComparisonForKeywordLists(seqnStrList1, seqnStrList2);

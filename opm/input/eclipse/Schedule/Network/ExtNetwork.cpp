@@ -188,9 +188,8 @@ std::vector<Branch> ExtNetwork::downtree_branches(const std::string& node) const
 std::vector<const Branch*> ExtNetwork::branches() const
 {
     std::vector<const Branch*> branch_pointer;
-    std::transform(this->m_branches.begin(), this->m_branches.end(),
-                   std::back_inserter(branch_pointer),
-                   [](const auto& br) { return &br; });
+    std::ranges::transform(this->m_branches, std::back_inserter(branch_pointer),
+                           [](const auto& br) { return &br; });
     return branch_pointer;
 }
 

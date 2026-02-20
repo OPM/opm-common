@@ -247,8 +247,8 @@ get_xVector() const
 {
   vector<double> outputvector;
   outputvector.reserve(data.size());
-  std::transform(data.begin(), data.end(), std::back_inserter(outputvector),
-                 [](const auto& xf) { return xf.first; });
+  std::ranges::transform(data, std::back_inserter(outputvector),
+                         [](const auto& xf) { return xf.first; });
   return outputvector;
 }
 
@@ -259,8 +259,8 @@ get_fVector() const
 {
   vector<double> outputvector;
   outputvector.reserve(data.size());
-  std::transform(data.begin(), data.end(), std::back_inserter(outputvector),
-                 [](const auto& xf) { return xf.second; });
+  std::ranges::transform(data, std::back_inserter(outputvector),
+                         [](const auto& xf) { return xf.second; });
   return outputvector;
 }
 

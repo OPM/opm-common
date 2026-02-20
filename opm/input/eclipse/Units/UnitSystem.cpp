@@ -1676,7 +1676,7 @@ namespace {
         double factor = this->measure_table_from_si[ static_cast< int >( m ) ];
         double offset = this->measure_table_to_si_offset[ static_cast< int >( m ) ];
         auto scale = [=](double x) { return (x - offset) * factor; };
-        std::transform( data.begin() , data.end() , data.begin() , scale);
+        std::ranges::transform(data, data.begin(), scale);
     }
 
 
@@ -1684,7 +1684,7 @@ namespace {
         double factor = this->measure_table_to_si[ static_cast< int >( m ) ];
         double offset = this->measure_table_to_si_offset[ static_cast< int >( m ) ];
         auto scale = [=](double x) { return x * factor + offset; };
-        std::transform( data.begin() , data.end() , data.begin() , scale);
+        std::ranges::transform(data, data.begin(), scale);
     }
 
     const char* UnitSystem::name( measure m ) const {

@@ -84,12 +84,10 @@ namespace {
 
         const auto& [outer, middle] = inferOuterLoopOrdering(cartDims);
 
-        std::transform(colGlobIx.begin(), colGlobIx.end(), colGlobIx.begin(),
-                       [&cartDims, &getIJK, Outer=outer, Middle=middle]
-            (const std::size_t cell)
-        {
-            return columnarGlobalIdx(cartDims, getIJK(cell), Outer, Middle);
-        });
+        std::ranges::transform(colGlobIx, colGlobIx.begin(),
+                               [&cartDims, &getIJK, Outer=outer, Middle=middle]
+                               (const std::size_t cell)
+                               { return columnarGlobalIdx(cartDims, getIJK(cell), Outer, Middle); });
 
         return colGlobIx;
     }

@@ -48,8 +48,7 @@ namespace {
             regSets.push_back("FIPNUM");
         }
 
-        std::transform(regSets.begin(), regSets.end(), regSets.begin(),
-                        &normalisedRegsetName);
+        std::ranges::transform(regSets, regSets.begin(), &normalisedRegsetName);
 
         return regSets;
     }
@@ -74,11 +73,9 @@ namespace {
     {
         auto maxRegionID = std::vector<int>(regSets.size());
 
-        std::transform(regSets.begin(), regSets.end(), maxRegionID.begin(),
-                       [&fldPropsMgr](const std::string& regSet)
-                       {
-                           return localMaxRegionID("FIP" + regSet, fldPropsMgr);
-                       });
+        std::ranges::transform(regSets, maxRegionID.begin(),
+                               [&fldPropsMgr](const std::string& regSet)
+                               { return localMaxRegionID("FIP" + regSet, fldPropsMgr); });
 
         return maxRegionID;
     }

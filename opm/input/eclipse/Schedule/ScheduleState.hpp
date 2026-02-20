@@ -182,7 +182,8 @@ namespace Opm {
         public:
             std::vector<K> keys() const {
                 std::vector<K> key_vector;
-                std::transform( this->m_data.begin(), this->m_data.end(), std::back_inserter(key_vector), [](const auto& pair) { return pair.first; });
+                std::ranges::transform(this->m_data, std::back_inserter(key_vector),
+                                       [](const auto& pair) { return pair.first; });
                 return key_vector;
             }
 

@@ -479,8 +479,8 @@ namespace {
         const auto length = ::Opm::UnitSystem::measure::length;
         auto convert_length = [&units](std::vector<float>& depth)
         {
-            std::transform(depth.begin(), depth.end(), depth.begin(),
-                      [&units](const auto d) { return units.from_si(length, d);});
+            std::ranges::transform(depth, depth.begin(),
+                                   [&units](const auto d) { return units.from_si(length, d);});
         };
         const auto nAct   = lgr_grid.getNumActive();
         auto dx    = std::vector<float>{};  dx   .reserve(nAct);
@@ -798,8 +798,8 @@ namespace {
         auto tran = std::vector<double>{};
         tran.reserve(nnc.size());
 
-        std::transform(nnc.begin(), nnc.end(), std::back_inserter(tran),
-                       [](const auto& nd) { return nd.trans; });
+        std::ranges::transform(nnc, std::back_inserter(tran),
+                               [](const auto& nd) { return nd.trans; });
 
         units.from_si(::Opm::UnitSystem::measure::transmissibility, tran);
 

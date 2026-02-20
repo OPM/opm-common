@@ -113,7 +113,7 @@ std::vector<EclFile::EclEntry> ERst::listOfRstArrays(int reportStepNumber, const
     }
 
     std::string lgr_name_upper = lgr_name;
-    std::transform(lgr_name_upper.begin(), lgr_name_upper.end(),lgr_name_upper.begin(), ::toupper);
+    std::ranges::transform(lgr_name_upper, lgr_name_upper.begin(), ::toupper);
 
     int start_ind_lgr;
     std::string last_array_name;

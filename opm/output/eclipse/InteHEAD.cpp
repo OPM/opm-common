@@ -953,12 +953,9 @@ namespace {
             }
         }
 
-        std::transform(sched.aqufluxs.begin(), sched.aqufluxs.end(),
-                       std::back_inserter(aquiferIDs),
-                       [](const auto& aq)
-                       {
-                           return aq.first;
-                       });
+        std::ranges::transform(sched.aqufluxs, std::back_inserter(aquiferIDs),
+                               [](const auto& aq)
+                               { return aq.first; });
 
         return numUnique(std::move(aquiferIDs));
     }

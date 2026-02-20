@@ -242,8 +242,8 @@ namespace Opm {
              * equivalent values in Psi (unit::psia).
              * \code
              *    using namespace Opm::unit;
-             *    std::transform(p.begin(), p.end(), p.begin(),
-             *                   std::bind(convert::to, std::placeholders::_1, psia));
+             *    std::ranges::transform(p, p.begin(),
+              *                         std::bind(convert::to, std::placeholders::_1, psia));
              * \endcode
              *
              * @param[in] q    Physical quantity, measured in SI units.

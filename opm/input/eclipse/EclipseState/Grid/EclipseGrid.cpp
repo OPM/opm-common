@@ -98,8 +98,8 @@ std::optional<UnitSystem> make_grid_units(const std::string& grid_unit) {
 void apply_GRIDUNIT(const UnitSystem& deck_units, const UnitSystem& grid_units, std::vector<double>& data)
 {
     double scale_factor = grid_units.getDimension(UnitSystem::measure::length).getSIScaling() / deck_units.getDimension(UnitSystem::measure::length).getSIScaling();
-    std::transform(data.begin(), data.end(), data.begin(),
-                   [scale_factor](const auto& v) { return v * scale_factor; });
+    std::ranges::transform(data, data.begin(),
+                           [scale_factor](const auto& v) { return v * scale_factor; });
 }
 
 }
@@ -1696,21 +1696,20 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
             std::array<double,3> newCorner{ *(X.begin() + cornerIndex), *(Y.begin() + cornerIndex),
                                             *(Z.begin() + cornerIndex) };
             std::array<double,3> side1, side2, normalTriangle;
-            std::transform(oldCorner.begin(), oldCorner.end(), bottomCenter.begin(),
-                           side1.begin(), std::minus<double>());
-            std::transform(newCorner.begin(), newCorner.end(), bottomCenter.begin(),
-                           side2.begin(), std::minus<double>());
+            std::ranges::transform(oldCorner, bottomCenter,
+                                   side1.begin(), std::minus<double>());
+            std::ranges::transform(newCorner, bottomCenter,
+                                   side2.begin(), std::minus<double>());
 
             cross(side1, side2, normalTriangle);
             // use std::plus to make normal point outwards (Z-axis points downwards)
-            std::transform(bottomFaceNormal.begin(), bottomFaceNormal.end(),
-                           normalTriangle.begin(), bottomFaceNormal.begin(),
-                           std::plus<double>());
+            std::ranges::transform(bottomFaceNormal, normalTriangle,
+                                   bottomFaceNormal.begin(), std::plus<double>());
             oldCorner = newCorner;
         }
 
-        std::transform(bottomFaceNormal.begin(), bottomFaceNormal.end(),
-                       bottomFaceNormal.begin(), [](const double& a){ return 0.5 * a;});
+        std::ranges::transform(bottomFaceNormal, bottomFaceNormal.begin(),
+                               [](const double& a){ return 0.5 * a;});
         std::array<double,3> cellCenter = { std::accumulate(X.begin(), X.end(), 0.0) / 8.0,
                                              std::accumulate(Y.begin(), Y.end(), 0.0) / 8.0,
                                              std::accumulate(Z.begin(), Z.end(), 0.0) / 8.0 };
@@ -1914,9 +1913,9 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         auto convert_length = [&units](const double x) { return static_cast<float>(units.from_si(length, x)); };
 
         if (m_input_coord.has_value()) {
-            std::transform(m_input_coord.value().begin(), m_input_coord.value().end(), coord_f.begin(), convert_length);
+            std::ranges::transform(m_input_coord.value(), coord_f.begin(), convert_length);
         } else {
-            std::transform(m_coord.begin(), m_coord.end(), coord_f.begin(), convert_length);
+            std::ranges::transform(m_coord, coord_f.begin(), convert_length);
         }
 
         // create zcorn vector of floats with input units, converted from SI
@@ -1924,9 +1923,9 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         zcorn_f.resize(m_zcorn.size());
 
         if (m_input_zcorn.has_value()) {
-            std::transform(m_input_zcorn.value().begin(), m_input_zcorn.value().end(), zcorn_f.begin(), convert_length);
+            std::ranges::transform(m_input_zcorn.value(), zcorn_f.begin(), convert_length);
         } else {
-            std::transform(m_zcorn.begin(), m_zcorn.end(), zcorn_f.begin(), convert_length);
+            std::ranges::transform(m_zcorn, zcorn_f.begin(), convert_length);
         }
 
         m_input_coord.reset();
@@ -2321,8 +2320,8 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         EclipseGridLGR::vec_size_t father_label_sorting(lgr_children_cells.size(),0);
         m_print_order_lgr_cells.resize(lgr_children_cells.size());
         std::iota(m_print_order_lgr_cells.begin(), m_print_order_lgr_cells.end(), 0); //
-        std::transform(lgr_children_cells.begin(), lgr_children_cells.end(), father_label_sorting.begin(),
-                       [](const auto& cell){return cell.get_father_global()[0];});
+        std::ranges::transform(lgr_children_cells, father_label_sorting.begin(),
+                               [](const auto& cell) { return cell.get_father_global()[0]; });
 
         std::sort(m_print_order_lgr_cells.begin(), m_print_order_lgr_cells.end(), [&](std::size_t i1, std::size_t i2) {
             return father_label_sorting[i1] < father_label_sorting[i2]; //
@@ -2333,10 +2332,8 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         });
 
         lgr_children_labels.reserve(lgr_children_cells.size());
-        std::transform(lgr_children_cells.begin(),
-                       lgr_children_cells.end(),
-                       std::back_inserter(lgr_children_labels),
-                       [](const auto& it) { return it.lgr_label; });
+        std::ranges::transform(lgr_children_cells, std::back_inserter(lgr_children_labels),
+                               [](const auto& it) { return it.lgr_label; });
         lgr_active_index.resize(lgr_children_cells.size(),0);
     }
 
@@ -2619,7 +2616,7 @@ namespace Opm {
     std::vector<int> EclipseGridLGR::save_hostnum(void) const
     {
         std::vector<int> hostnum{this->m_hostnum};
-        std::transform(hostnum.begin(),hostnum.end(), hostnum.begin(), [](int a){return a+1;});
+        std::ranges::transform(hostnum, hostnum.begin(), [](int a) { return a + 1; });
         return hostnum;
     }
 
@@ -2867,18 +2864,15 @@ namespace Opm {
             refined_j_indices.resize(j_elem.size());
             refined_k_indices.resize(k_elem.size());
 
-            std::transform(i_elem.begin(), i_elem.end(), refined_i_indices.begin(),
-                           [min_i, dX](std::size_t i){
-                            return (i - min_i) * dX;
-                           });
-            std::transform(j_elem.begin(), j_elem.end(), refined_j_indices.begin(),
-                           [min_j, dY](std::size_t j){
-                            return (j - min_j) * dY;
-                           });
-            std::transform(k_elem.begin(), k_elem.end(), refined_k_indices.begin(),
-                           [min_k, dZ](std::size_t k){
-                            return (k - min_k) * dZ;
-                           });
+            std::ranges::transform(i_elem, refined_i_indices.begin(),
+                                   [min_i, dX](std::size_t i)
+                                   { return (i - min_i) * dX; });
+            std::ranges::transform(j_elem, refined_j_indices.begin(),
+                                   [min_j, dY](std::size_t j)
+                                   { return (j - min_j) * dY; });
+            std::ranges::transform(k_elem, refined_k_indices.begin(),
+                                   [min_k, dZ](std::size_t k)
+                                   { return (k - min_k) * dZ; });
 
             return std::make_tuple(refined_i_indices, refined_j_indices, refined_k_indices, dX, dY, dZ);
         };
@@ -3209,9 +3203,9 @@ namespace Opm {
         auto convert_length = [&units](const double x) { return static_cast<float>(units.from_si(length, x)); };
 
         if (m_input_coord.has_value()) {
-            std::transform(m_input_coord.value().begin(), m_input_coord.value().end(), coord_f.begin(), convert_length);
+            std::ranges::transform(m_input_coord.value(), coord_f.begin(), convert_length);
         } else {
-            std::transform(m_coord.begin(), m_coord.end(), coord_f.begin(), convert_length);
+            std::ranges::transform(m_coord, coord_f.begin(), convert_length);
         }
 
         // create zcorn vector of floats with input units, converted from SI
@@ -3219,9 +3213,9 @@ namespace Opm {
         zcorn_f.resize(m_zcorn.size());
 
         if (m_input_zcorn.has_value()) {
-            std::transform(m_input_zcorn.value().begin(), m_input_zcorn.value().end(), zcorn_f.begin(), convert_length);
+            std::ranges::transform(m_input_zcorn.value(), zcorn_f.begin(), convert_length);
         } else {
-            std::transform(m_zcorn.begin(), m_zcorn.end(), zcorn_f.begin(), convert_length);
+            std::ranges::transform(m_zcorn, zcorn_f.begin(), convert_length);
         }
 
         m_input_coord.reset();

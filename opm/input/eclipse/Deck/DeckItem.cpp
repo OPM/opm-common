@@ -508,7 +508,7 @@ bool DeckItem::operator!=(const DeckItem& other) const {
 
 
 bool DeckItem::to_bool(std::string string_value) {
-    std::transform(string_value.begin(), string_value.end(), string_value.begin(), toupper);
+    std::ranges::transform(string_value, string_value.begin(), toupper);
 
     if (string_value == "TRUE")
         return true;

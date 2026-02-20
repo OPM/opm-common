@@ -317,11 +317,8 @@ namespace ML
             result.dims_ = dims_;
             result.data_.resize(data_.size());
 
-            std::transform(data_.begin(),
-                           data_.end(),
-                           other.data_.begin(),
-                           result.data_.begin(),
-                           [](const T& x, const T& y) { return x + y; });
+            std::ranges::transform(data_, other.data_, result.data_.begin(),
+                                   [](const T& x, const T& y) { return x + y; });
 
             return result;
         }
@@ -336,11 +333,8 @@ namespace ML
             result.dims_ = dims_;
             result.data_.resize(data_.size());
 
-            std::transform(data_.begin(),
-                           data_.end(),
-                           other.data_.begin(),
-                           result.data_.begin(),
-                           [](const T& x, const T& y) { return x * y; });
+            std::ranges::transform(data_, other.data_, result.data_.begin(),
+                                   [](const T& x, const T& y) { return x * y; });
 
             return result;
         }

@@ -64,12 +64,9 @@ initFromState(const EclipseState& eclState)
             stoneEtas_.clear();
             stoneEtas_.reserve(numSatRegions);
 
-            std::transform(stone1exTables.begin(), stone1exTables.end(),
-                           std::back_inserter(stoneEtas_),
-                           [](const auto& table)
-                           {
-                               return table.eta;
-                           });
+            std::ranges::transform(stone1exTables, std::back_inserter(stoneEtas_),
+                                   [](const auto& table)
+                                   { return table.eta; });
         }
 
         const auto& ppcwmaxTables = tables.getPpcwmax();

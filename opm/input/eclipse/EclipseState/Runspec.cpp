@@ -368,10 +368,7 @@ EclHysterConfig::EclHysterConfig(const Opm::Deck& deck)
         const auto& satoptsItem = deck["SATOPTS"].back().getRecord(0).getItem(0);
         for (unsigned i = 0; i < satoptsItem.data_size(); ++i) {
             std::string satoptsValue = satoptsItem.get< std::string >(0);
-            std::transform(satoptsValue.begin(),
-                           satoptsValue.end(),
-                           satoptsValue.begin(),
-                           ::toupper);
+            std::ranges::transform(satoptsValue, satoptsValue.begin(), ::toupper);
 
             if (satoptsValue == "HYSTER")
                 activeHyst = true;

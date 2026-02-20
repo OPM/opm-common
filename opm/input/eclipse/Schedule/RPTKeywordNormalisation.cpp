@@ -56,10 +56,9 @@ namespace {
         auto controlValues = std::vector<int>{};
         controlValues.reserve(deckItems.size());
 
-        std::transform(deckItems.begin(), deckItems.end(),
-                       std::back_inserter(controlValues),
-                       [](const std::string& controlItem)
-                       { return std::stoi(controlItem); });
+        std::ranges::transform(deckItems, std::back_inserter(controlValues),
+                               [](const std::string& controlItem)
+                               { return std::stoi(controlItem); });
 
         return controlValues;
     }

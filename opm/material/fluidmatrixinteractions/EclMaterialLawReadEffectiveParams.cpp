@@ -83,9 +83,9 @@ ReadEffectiveParams<Traits>::
 normalizeKrValues_(const double tolcrit, const TableColumn& krValues) const
 {
     auto kr = krValues.vectorCopy();
-    std::transform(kr.begin(), kr.end(), kr.begin(),
-                   [tolcrit](const double kri)
-                   { return (kri > tolcrit) ? kri : 0.0; });
+    std::ranges::transform(kr, kr.begin(),
+                           [tolcrit](const double kri)
+                           { return (kri > tolcrit) ? kri : 0.0; });
 
     return kr;
 }
