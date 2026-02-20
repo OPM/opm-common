@@ -209,7 +209,7 @@ namespace {
                            ? rptRstCompositionalMnemonics()
                            : rptRstBaseMnemonics() }
         {
-            std::sort(mnemonics_.begin(), mnemonics_.end());
+            std::ranges::sort(mnemonics_);
         }
 
         bool operator()(const std::string& mnemonic) const

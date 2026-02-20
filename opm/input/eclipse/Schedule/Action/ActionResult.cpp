@@ -238,10 +238,9 @@ void SortedVectorSet<T>::commit(Compare&& cmp, Equivalent&& eq)
     auto i = std::vector<typename std::vector<T>::size_type>(this->elems_.size());
     std::iota(i.begin(), i.end(), typename std::vector<T>::size_type{});
 
-    std::sort(i.begin(), i.end(), [this, cmp](const auto& i1, const auto& i2)
-    {
-        return cmp(this->elems_[i1], this->elems_[i2]);
-    });
+    std::ranges::sort(i,
+                      [this, cmp](const auto& i1, const auto& i2)
+                      { return cmp(this->elems_[i1], this->elems_[i2]); });
 
     auto u = std::unique(i.begin(), i.end(), [this, eq](const auto& i1, const auto& i2)
     {

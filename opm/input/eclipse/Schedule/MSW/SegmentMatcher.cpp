@@ -348,11 +348,9 @@ void Opm::SegmentSet::establishNameLookupIndex()
 
     this->wellNameIndex_.resize(this->wells_.size());
     std::iota(this->wellNameIndex_.begin(), this->wellNameIndex_.end(), Ix{0});
-    std::sort(this->wellNameIndex_.begin(), this->wellNameIndex_.end(),
-              [this](const Ix i1, const Ix i2)
-              {
-                  return this->wells_[i1] < this->wells_[i2];
-              });
+    std::ranges::sort(this->wellNameIndex_,
+                      [this](const Ix i1, const Ix i2)
+                      { return this->wells_[i1] < this->wells_[i2]; });
 }
 
 void Opm::SegmentSet::addWellSegments(const std::string&      well,

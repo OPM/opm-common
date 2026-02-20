@@ -919,7 +919,7 @@ namespace {
         if (elems.empty())     { return 0; }
         if (elems.size() == 1) { return 1; }
 
-        std::sort(elems.begin(), elems.end());
+        std::ranges::sort(elems);
         auto end = std::unique(elems.begin(), elems.end());
 
         return std::distance(elems.begin(), end);

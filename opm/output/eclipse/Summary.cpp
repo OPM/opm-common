@@ -3693,11 +3693,9 @@ static const auto aquifer_units = UnitTable {
 
 void sort_wells_by_insert_index(std::vector<const Opm::Well*>& wells)
 {
-    std::sort(wells.begin(), wells.end(),
-        [](const Opm::Well* w1, const Opm::Well* w2)
-    {
-        return w1->seqIndex() < w2->seqIndex();
-    });
+    std::ranges::sort(wells,
+                      [](const Opm::Well* w1, const Opm::Well* w2)
+                      { return w1->seqIndex() < w2->seqIndex(); });
 }
 
 std::vector<const Opm::Well*>
@@ -4940,7 +4938,7 @@ void reportUnsupportedKeywords(std::vector<Opm::SummaryConfigNode> keywords)
         }
         return n1.location().filename < n2.location().filename;
     };
-    std::sort(keywords.begin(), keywords.end(), loc_kw_ordering);
+    std::ranges::sort(keywords, loc_kw_ordering);
 
     // Reorder to remove duplicate { keyword, location } pairs, since
     // that will give duplicate and therefore useless warnings.

@@ -110,9 +110,9 @@ void Opm::WellFractureSeeds::establishLookup()
     this->lookup_.assign(this->seedNormal_.size(), NormalVectorIx{});
     std::iota(this->lookup_.begin(), this->lookup_.end(), NormalVectorIx{});
 
-    std::sort(this->lookup_.begin(), this->lookup_.end(),
-              [this](const auto i1, const auto i2)
-              { return this->seedCell_[i1] < this->seedCell_[i2]; });
+    std::ranges::sort(this->lookup_,
+                      [this](const auto i1, const auto i2)
+                      { return this->seedCell_[i1] < this->seedCell_[i2]; });
 }
 
 Opm::WellFractureSeeds::NormalVectorIx

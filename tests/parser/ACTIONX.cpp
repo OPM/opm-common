@@ -1952,7 +1952,7 @@ BOOST_AUTO_TEST_CASE(ParseNestedExpression)
     auto sortedVectors = std::vector<std::string> {
         requisiteVectors.begin(), requisiteVectors.end()
     };
-    std::sort(sortedVectors.begin(), sortedVectors.end());
+    std::ranges::sort(sortedVectors);
 
     const auto expected = std::vector {
         "FGOR"s, "GUWIRMIN"s, "GWIR"s, "WMCTL"s,
@@ -1977,7 +1977,7 @@ BOOST_AUTO_TEST_CASE(RegionVector_In_Condition)
     auto sortedVectors = std::vector<std::string> {
         requisiteVectors.begin(), requisiteVectors.end()
     };
-    std::sort(sortedVectors.begin(), sortedVectors.end());
+    std::ranges::sort(sortedVectors);
 
     const auto expected = std::vector {
         "RPR__RE3"s,
@@ -2002,7 +2002,7 @@ BOOST_AUTO_TEST_CASE(RegionVector_In_Condition_Default_RegSet)
     auto sortedVectors = std::vector<std::string> {
         requisiteVectors.begin(), requisiteVectors.end()
     };
-    std::sort(sortedVectors.begin(), sortedVectors.end());
+    std::ranges::sort(sortedVectors);
 
     const auto expected = std::vector {
         "RPR"s,
@@ -2027,7 +2027,7 @@ BOOST_AUTO_TEST_CASE(RegionVector_In_Condition_Default_RegSet_2)
     auto sortedVectors = std::vector<std::string> {
         requisiteVectors.begin(), requisiteVectors.end()
     };
-    std::sort(sortedVectors.begin(), sortedVectors.end());
+    std::ranges::sort(sortedVectors);
 
     const auto expected = std::vector {
         "RPR"s,

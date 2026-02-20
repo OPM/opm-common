@@ -69,11 +69,9 @@ const std::vector<std::string>& NameOrder::names() const
 std::vector<std::string>
 NameOrder::sort(std::vector<std::string> names) const
 {
-    std::sort(names.begin(), names.end(),
-        [this](const std::string& w1, const std::string& w2) -> bool
-    {
-        return this->m_index_map.at(w1) < this->m_index_map.at(w2);
-    });
+    std::ranges::sort(names,
+                     [this](const std::string& w1, const std::string& w2) -> bool
+                     { return this->m_index_map.at(w1) < this->m_index_map.at(w2); });
 
     return names;
 }

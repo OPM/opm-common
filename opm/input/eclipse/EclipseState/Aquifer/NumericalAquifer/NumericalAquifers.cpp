@@ -182,7 +182,7 @@ namespace Opm {
             }
         }
 
-        std::sort(cellIds.begin(), cellIds.end());
+        std::ranges::sort(cellIds);
         cellIds.erase(std::unique(cellIds.begin(), cellIds.end()), cellIds.end());
 
         return cellIds;

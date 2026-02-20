@@ -1699,11 +1699,9 @@ captureDeclaredGroupDataLGR(const Opm::Schedule&     sched,
         filtered_wells.push_back(std::cref(well));
     }
 
-
-    std::sort(filtered_wells.begin(), filtered_wells.end(),
-    [](const auto& a, const auto& b) {
-        return a.get().seqIndex() < b.get().seqIndex();
-    });
+    std::ranges::sort(filtered_wells,
+                      [](const auto& a, const auto& b)
+                      { return a.get().seqIndex() < b.get().seqIndex(); });
 
     const bool has_lgr_well = !filtered_wells.empty();
 

@@ -615,9 +615,9 @@ namespace Opm::Compsegs {
         std::ranges::transform(rst_segments, std::back_inserter(segments_list),
                                [](const auto& segment_pair) { return segment_pair.second; });
 
-        std::sort(segments_list.begin(), segments_list.end(),
-                  [](const Segment& seg1, const Segment& seg2)
-                  { return seg1.segmentNumber() < seg2.segmentNumber(); } );
+        std::ranges::sort(segments_list,
+                          [](const Segment& seg1, const Segment& seg2)
+                          { return seg1.segmentNumber() < seg2.segmentNumber(); });
 
         auto comp_pressure_drop = pressure_drop_from_int(rst_well.msw_pressure_drop_model);
 

@@ -285,11 +285,10 @@ namespace Opm {
         if (! this->m_connections[0].attachedToSegment() &&
             (this->m_ordering != Connection::Order::INPUT))
         {
-            std::sort(out.begin(), out.end(), [](const Opm::Connection* conn1,
-                                                 const Opm::Connection* conn2)
-            {
-                return conn1->sort_value() < conn2->sort_value();
-            });
+            std::ranges::sort(out,
+                              [](const Opm::Connection* conn1,
+                                 const Opm::Connection* conn2)
+                              { return conn1->sort_value() < conn2->sort_value(); });
         }
 
         return out;
@@ -970,11 +969,9 @@ CF and Kh items for well {} must both be specified or both defaulted/negative)",
 
     void WellConnections::orderMSW()
     {
-        std::sort(this->m_connections.begin(), this->m_connections.end(),
-                  [](const Opm::Connection& conn1, const Opm::Connection& conn2)
-                  {
-                      return conn1.sort_value() < conn2.sort_value();
-                  });
+        std::ranges::sort(this->m_connections,
+                          [](const Opm::Connection& conn1, const Opm::Connection& conn2)
+                          { return conn1.sort_value() < conn2.sort_value(); });
     }
 
     void WellConnections::orderTRACK()
@@ -1033,11 +1030,9 @@ CF and Kh items for well {} must both be specified or both defaulted/negative)",
 
     void WellConnections::orderDEPTH()
     {
-        std::sort(this->m_connections.begin(), this->m_connections.end(),
-                  [](const Opm::Connection& conn1, const Opm::Connection& conn2)
-                  {
-                      return conn1.depth() < conn2.depth();
-                  });
+        std::ranges::sort(this->m_connections,
+                          [](const Opm::Connection& conn1, const Opm::Connection& conn2)
+                          { return conn1.depth() < conn2.depth(); });
     }
 
     bool WellConnections::operator==(const WellConnections& rhs) const

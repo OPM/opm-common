@@ -388,7 +388,7 @@ BRANPROP
     };
 
     auto nodes = sched[0].network.get().node_names();
-    std::sort(nodes.begin(), nodes.end());
+    std::ranges::sort(nodes);
 
     BOOST_CHECK_EQUAL_COLLECTIONS(nodes.begin(), nodes.end(), expect.begin(), expect.end());
 }
@@ -443,7 +443,7 @@ BRANPROP
     };
 
     auto nodes = sched[0].network.get().node_names();
-    std::sort(nodes.begin(), nodes.end());
+    std::ranges::sort(nodes);
 
     BOOST_CHECK_EQUAL_COLLECTIONS(nodes.begin(), nodes.end(), expect.begin(), expect.end());
 }

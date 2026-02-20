@@ -734,7 +734,7 @@ namespace Opm {
         this->pending_assignments_.swap(pending);
 
         {
-            std::sort(pending.begin(), pending.end());
+            std::ranges::sort(pending);
             auto u = std::unique(pending.begin(), pending.end());
             pending.erase(u, pending.end());
         }

@@ -2704,7 +2704,7 @@ DEFINE WUGASRA  750000 - WGLIR '*' /
         udq.required_summary(keys);
 
         auto required = std::vector<std::string>{ keys.begin(), keys.end() };
-        std::sort(required.begin(), required.end());
+        std::ranges::sort(required);
 
         return required;
     }();
@@ -2961,7 +2961,7 @@ UDQ
         udq.required_summary(keys);
 
         auto required = std::vector<std::string>{ keys.begin(), keys.end() };
-        std::sort(required.begin(), required.end());
+        std::ranges::sort(required);
 
         return required;
     }();

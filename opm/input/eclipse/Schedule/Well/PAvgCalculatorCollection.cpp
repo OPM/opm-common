@@ -120,7 +120,7 @@ allWBPCells() const
         wbpCells.insert(wbpCells.end(), calcWBPCells.begin(), calcWBPCells.end());
     }
 
-    std::sort(wbpCells.begin(), wbpCells.end());
+    std::ranges::sort(wbpCells);
 
     return { wbpCells.begin(), std::unique(wbpCells.begin(), wbpCells.end()) };
 }

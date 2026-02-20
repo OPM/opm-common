@@ -686,7 +686,7 @@ void handleWELSPECS(HandlerContext& handlerContext)
     }
 
     if (! fieldWells.empty()) {
-        std::sort(fieldWells.begin(), fieldWells.end());
+        std::ranges::sort(fieldWells);
         fieldWells.erase(std::unique(fieldWells.begin(), fieldWells.end()),
                          fieldWells.end());
 

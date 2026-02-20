@@ -1160,7 +1160,7 @@ std::vector<std::string> ESmry::checkForMultipleResultFiles(const std::filesyste
         }
     }
 
-    std::sort(fileList.begin(), fileList.end());
+    std::ranges::sort(fileList);
 
     return fileList;
 }
