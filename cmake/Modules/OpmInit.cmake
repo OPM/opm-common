@@ -116,15 +116,8 @@ if (NOT USE_MPI)
   set (CMAKE_DISABLE_FIND_PACKAGE_MPI TRUE)
 endif ()
 
-# Compiler standard version needs to be requested here as prereqs is included
-# before OpmLibMain and some tests need/use CXX_STANDARD_VERSION (e.g. pybind11)
-# Languages and global compiler settings
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
+# We do not want language extensions enabled
 set(CMAKE_CXX_EXTENSIONS OFF)
-
-set(CMAKE_C_STANDARD 11)
-set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
 
 option (USE_SUPERLU "Use SuperLU direct solvers for AMG (if umfpack is not found)" ON)

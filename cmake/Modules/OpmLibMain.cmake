@@ -63,6 +63,9 @@ function(opm_add_target_options)
     LIBRARY_OUTPUT_DIRECTORY
       lib
   )
+
+  # Set C11 and C++-20
+  target_compile_features(${PARAM_TARGET} PUBLIC cxx_std_20 c_std_11)
 endfunction()
 
 # Various compiler extension checks
