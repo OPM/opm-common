@@ -3058,276 +3058,129 @@ namespace Opm {
         return refined_zcorn;
     }
 
-    std::vector<double> EclipseGridLGR::generate_refined_coord(const std::vector<double>& parent_coord,
+    std::vector<double> EclipseGridLGR::generate_refined_coord(const std::vector<double>& coord_h,
                                                                const std::array<int,3>&   parent_nxyz)
     {
 
-    //     2 ---- 3                          6 ---- 7
-    //     /      /   bottom face            /      /    top face
-    //    0 ---- 1                          4 ---- 5
+        constexpr std::array<std::array<int,2>,4> corner_offset = {{
+            {0,0}, // 0
+            {1,0}, // 1
+            {1,1}, // 2
+            {0,1}, // 3
+        }};
 
-        auto generate_all_ij_elements = [this] (){
-            auto [i_list, j_list, _ ] =  VectorUtil::generate_cartesian_product(
-                                                                                            low_fatherIJK[0], up_fatherIJK[0],
-                                                                                            low_fatherIJK[1], up_fatherIJK[1],
-                                                                                            1, 1);
-
-
-            return std::make_tuple(i_list, j_list);
-        };
-
-        auto generate_dest_ij_refinement_intervals = [this](const std::vector<std::size_t>& i_elem,
-                                                                      const std::vector<std::size_t>& j_elem)
+        auto interpolatePillar = [](const double* p1,
+                                              const double* p2,
+                                              const double t,
+                                              double* p)
         {
-
-            std::size_t totalX = getNX();
-            std::size_t totalY = getNY();
-
-            std::size_t min_i = *std::min_element(i_elem.begin(), i_elem.end());
-            std::size_t max_i = *std::max_element(i_elem.begin(), i_elem.end());
-            std::size_t min_j = *std::min_element(j_elem.begin(), j_elem.end());
-            std::size_t max_j = *std::max_element(j_elem.begin(), j_elem.end());
-
-            std::size_t num_el_i = max_i - min_i + 1;
-            std::size_t num_el_j = max_j - min_j + 1;
-
-            if (num_el_i == 0 || num_el_j == 0)
+            for (std::size_t ix = 0; ix < std::size_t{6}; ++ix)
             {
-            throw std::invalid_argument("Invalid number of elements.");
+                p[ix] = t * p2[ix] + (1.0 - t) * p1[ix];
             }
-            if (totalX % num_el_i != 0 || totalY % num_el_j != 0) {
-                // Either handle remainder properly or fail fast
-                throw std::runtime_error("Refinement factors must exactly divide parent NX/NY");
-            }
-
-            auto dX = totalX/num_el_i;
-            auto dY = totalY/num_el_j;
-
-            std::vector<std::size_t> refined_i_indices;
-            std::vector<std::size_t> refined_j_indices;
-
-            refined_i_indices.resize(i_elem.size());
-            refined_j_indices.resize(j_elem.size());
-
-            std::transform(i_elem.begin(), i_elem.end(), refined_i_indices.begin(),
-                           [min_i, dX](std::size_t i){
-                            return (i - min_i) * dX;
-                           });
-
-            std::transform(j_elem.begin(), j_elem.end(), refined_j_indices.begin(),
-                           [min_j, dY](std::size_t j){
-                            return (j - min_j) * dY;
-                           });
-
-            return std::make_tuple(refined_i_indices, refined_j_indices, dX, dY);
         };
 
-        auto generate_dest_ij_refinement = [&generate_dest_ij_refinement_intervals](const std::vector<std::size_t>& i_elem,  const std::vector<std::size_t>& j_elem)
+        auto bilinear_interpolation = [](std::array<const double*, 4>& z,
+                                                              double ti, double tj, auto* interpolated_coord)
         {
-            using PillarCoordRef = std::array<std::array<std::size_t, 2>, 4>;
-            std::vector<PillarCoordRef> dest_pillar_indices{};
-            dest_pillar_indices.resize(i_elem.size());
-            const auto [dest_i_ref, dest_j_ref, dx, dy] = generate_dest_ij_refinement_intervals(i_elem, j_elem);
-            for (std::size_t n = 0; n < i_elem.size(); n++) {
-                const std::size_t i = dest_i_ref[n];
-                const std::size_t j = dest_j_ref[n];
-                dest_pillar_indices[n] = {{
-                    {{i,     j,   }},
-                    {{i + dx, j,   }},
-                    {{i,     j + dy}},
-                    {{i + dx, j + dy}}
-                }};
+            for (std::size_t dim = 0; dim < std::size_t{6}; ++dim) {
+                const double one_i = 1.0 - ti;
+                const double one_j = 1.0 - tj;
+                interpolated_coord[dim] =
+                    z[0][dim] * one_i * one_j +
+                    z[1][dim] * ti    * one_j +
+                    z[2][dim] * ti    * tj    +
+                    z[3][dim] * one_i * tj;
             }
-            return std::make_tuple(dest_pillar_indices, dx , dy);
         };
 
+        const std::size_t nx = getNX();
+        const std::size_t ny = getNY();
 
-        auto pillarIJ2GlobalMainGrid = [&parent_nxyz](int i, int j) -> int {
-            return j * (parent_nxyz[0]+1) + i;
-        };
+        const std::size_t NX = parent_nxyz[0];
+        const std::size_t NY = parent_nxyz[1];
 
-        auto generate_ij_pillars_ref = [] (const std::vector<std::size_t>& i_elem, const std::vector<std::size_t>& j_elem ) {
-            std::vector<std::array<std::array<std::size_t,2>, 4>> pillar_indices{};
-            pillar_indices.resize(i_elem.size());
+        const std::size_t Imin = low_fatherIJK[0];
+        const std::size_t Imax = up_fatherIJK[0];
 
-            for (std::size_t n = 0; n < i_elem.size(); n++) {
-                const std::size_t i = i_elem[n];
-                const std::size_t j = j_elem[n];
-                pillar_indices[n] = {{
-                    {{i,     j,   }},
-                    {{i + 1, j,   }},
-                    {{i,     j + 1}},
-                    {{i + 1, j + 1}}
-                }};
-            }
-            return pillar_indices;
-        };
+        const std::size_t Jmin = low_fatherIJK[1];
+        const std::size_t Jmax = up_fatherIJK[1];
 
-        auto generate_pillar_coords_from_father_ref = [&parent_coord, &generate_ij_pillars_ref,  &pillarIJ2GlobalMainGrid](const std::vector<std::size_t>& i_elem, const std::vector<std::size_t>& j_elem) {
-            using PillarCoordType = std::array<std::array<double, 3>, 2>;
-            const auto ij_pillars_ref = generate_ij_pillars_ref(i_elem, j_elem);
+        const auto ch = CoordMapper { NX, NY }; // Host grid dimensions Mapper
+        const auto cc = CoordMapper { nx, ny }; // Child/LGR grid dimensions Mapper
 
-            std::vector<std::array<PillarCoordType,4>> pillar_coords{};
-            pillar_coords.resize(i_elem.size());
+        const auto si = nx / (Imax - Imin + 1);
+        const auto sj = ny / (Jmax - Jmin + 1);
 
-            for (std::size_t n = 0; n < i_elem.size(); n++) {
-                const auto & ij_pillar_elem_n = ij_pillars_ref[n];
+        std::vector<double> coord_c;
+        coord_c.resize(6 * (nx + 1) * (ny + 1));
 
-                for (std::size_t index = 0; index < 4; index++) {
-                    const auto [pillar_i, pillar_j] = ij_pillar_elem_n[index];
-
-                    const int global_pillar_indices = pillarIJ2GlobalMainGrid(pillar_i, pillar_j);
-                    const int parent_coord_ref = global_pillar_indices * 6;
-
-                    pillar_coords[n][index] = std::array<std::array<double, 3>, 2>{
-                        std::array<double, 3>{
-                            parent_coord[parent_coord_ref + 0],
-                            parent_coord[parent_coord_ref + 1],
-                            parent_coord[parent_coord_ref + 2]
-                        },
-                        std::array<double, 3>{
-                            parent_coord[parent_coord_ref + 3],
-                            parent_coord[parent_coord_ref + 4],
-                            parent_coord[parent_coord_ref + 5]
-                        }
-                    };
+        // Element loop: for each element in the parent grid, identified by (I,J) in between Imin and Imax and Jmin and Jmax
+        for (auto J = Jmin; J <= Jmax; ++J) {
+            for (auto I = Imin; I <= Imax; ++I) {
+                // Retrieve Pillars Coordinates for the corners of the element (I,J) in the parent grid
+                std::array<const double*, 4> pillars = {};
+                for (std::size_t idx = 0; idx < corner_offset.size(); ++idx) {
+                    const auto& offset = corner_offset[idx];
+                    pillars[idx] = &coord_h[ch.index(I + offset[0], J + offset[1], 0, 0)];
                 }
-            }
-            return pillar_coords;
-        };
-
-        using PillarCoordType = std::array<std::array<double, 3>, 2>;
-
-        const std::size_t NX = getNX() + 1;
-        const std::size_t NY = getNY() + 1;
-        std::vector<double> refined_pillars_coords;
-        refined_pillars_coords.resize(NX * NY*6);
-        auto pillarIJ2GlobalRefinedGrid = [&NX](int i, int j) -> int {
-            return j * NX + i;
-        };
-
-        auto flatten_pillar = [](const PillarCoordType& p)  -> std::array<double, 6> {
-            return std::array<double, 6>{ p[0][0], p[0][1], p[0][2], p[1][0], p[1][1], p[1][2] };
-        };
-
-        auto set_refined_pillar = [&refined_pillars_coords, &flatten_pillar, &pillarIJ2GlobalRefinedGrid](std::size_t i, std::size_t j,
-                                                                                const PillarCoordType& pillar_coord)  -> void {
-            const std::size_t index = pillarIJ2GlobalRefinedGrid(i, j);
-            if ((index*6) > refined_pillars_coords.size()){
-                throw std::out_of_range("Index out of range when setting refined pillar coordinates.");
-            }
-            auto flat = flatten_pillar(pillar_coord);
-            std::copy(flat.begin(), flat.end(), refined_pillars_coords.begin() + index * 6);
-        };
-
-        auto get_refined_pillar = [&refined_pillars_coords, &pillarIJ2GlobalRefinedGrid](std::size_t i, std::size_t j) -> PillarCoordType {
-            const std::size_t index = pillarIJ2GlobalRefinedGrid(i, j);
-            PillarCoordType pillar_coord;
-            pillar_coord[0][0] = refined_pillars_coords[index * 6 + 0];
-            pillar_coord[0][1] = refined_pillars_coords[index * 6 + 1];
-            pillar_coord[0][2] = refined_pillars_coords[index * 6 + 2];
-            pillar_coord[1][0] = refined_pillars_coords[index * 6 + 3];
-            pillar_coord[1][1] = refined_pillars_coords[index * 6 + 4];
-            pillar_coord[1][2] = refined_pillars_coords[index * 6 + 5];
-            return pillar_coord;
-        };
-
-        auto make_indices = [](std::size_t start, std::size_t end) -> std::vector<std::size_t> {
-            std::vector<std::size_t> indices(end - start);
-            std::iota(indices.begin(), indices.end(), start);
-            return indices;
-        };
-
-        // i and j max are inclusive
-        auto set_range_refined_pillars = [&set_refined_pillar, &make_indices](const std::size_t i_min, const std::size_t i_max,
-                                                                                        const std::size_t j_min, const std::size_t j_max,
-                                                                                        const std::vector<PillarCoordType>& vec_pillar) -> void
-        {
-            const std::size_t num_i = i_max - i_min + 1;
-            const std::size_t num_j = j_max - j_min + 1;
-            if (num_i * num_j != vec_pillar.size())
-            {
-                throw std::invalid_argument("Number of refined pillars does not match range specified.");
-            }
-
-            const auto i_range = num_i != 1 ? make_indices(i_min, i_max + 1) : std::vector<std::size_t>{i_min};
-            const auto j_range = num_j != 1 ? make_indices(j_min, j_max + 1) : std::vector<std::size_t>{j_min};
-
-            std::size_t index = 0;
-            for (std::size_t jj = 0; jj < j_range.size(); jj++) {
-                for (std::size_t ii = 0; ii < i_range.size(); ii++) {
-                    const std::size_t i_ref = i_range[ii];
-                    const std::size_t j_ref = j_range[jj];
-                    set_refined_pillar(i_ref, j_ref, vec_pillar[index]);
-                    index++;
-                }
-            }
-        };
-
-        auto pillar_interpolation = [](const PillarCoordType& p1, const PillarCoordType& p2, std::size_t num) -> std::vector<PillarCoordType> {
-            std::vector<PillarCoordType> result;
-            result.reserve(num);
-            for (std::size_t step = 0; step < num; step++) {
-                double t = static_cast<double>(step) / static_cast<double>(num - 1);
-                PillarCoordType interp_pillar;
-                for (std::size_t layer = 0; layer < 2; layer++) {
-                    for (std::size_t dim = 0; dim < 3; dim++) {
-                        interp_pillar[layer][dim] = (1.0 - t) * p1[layer][dim] + t * p2[layer][dim];
+                // Loop through interal divisons inside the corners of element (I,J)
+                // Looping from 0 to si or sj included means, looping through t=0 to t=1 included, thus covering
+                // the whole area of the element (I,J) and including the corners.
+                for (auto j = 0*sj; j < sj; ++j) {
+                    const auto tj = static_cast<double>(j) / sj;
+                    for (auto i = 0*si; i < si; ++i) {
+                        const auto ti = static_cast<double>(i) / si;
+                        const auto refined_index = &coord_c[cc.index((I - Imin)*si + i, (J - Jmin)*sj + j, 0, 0)];
+                        bilinear_interpolation( pillars, ti, tj, refined_index);
                     }
                 }
-                result.push_back(interp_pillar);
-            }
-            return result;
-        };
-
-        const auto [i_list, j_list] =  generate_all_ij_elements();
-        const auto pillar_coords = generate_pillar_coords_from_father_ref(i_list, j_list);
-        const auto [dest_pillar_ij_ref, dx, dy] =  generate_dest_ij_refinement(i_list, j_list);
-
-        // Set the refined grid pillars at the element corners
-        for (std::size_t n = 0; n < pillar_coords.size(); n++) {
-            const auto& elem_pillar = pillar_coords[n];
-            const auto& elem_pillar_index = dest_pillar_ij_ref[n];
-
-            set_refined_pillar(elem_pillar_index[0][0], elem_pillar_index[0][1], elem_pillar[0]);
-            set_refined_pillar(elem_pillar_index[1][0], elem_pillar_index[1][1], elem_pillar[1]);
-            set_refined_pillar(elem_pillar_index[2][0], elem_pillar_index[2][1], elem_pillar[2]);
-            set_refined_pillar(elem_pillar_index[3][0], elem_pillar_index[3][1], elem_pillar[3]);
-        }
-        // Fill in the refined grid pillars by iinterpolating Edges
-
-        for (std::size_t n = 0; n < pillar_coords.size(); n++) {
-            const auto & elem_pillar_index = dest_pillar_ij_ref[n];
-            // Interpolating Edges along j direction
-            //     2 ---- 3
-            //     /      /
-            //    0 ---- 1
-            const std::size_t i_min = elem_pillar_index[0][0];
-            const std::size_t i_max = elem_pillar_index[1][0];
-            const std::size_t j_min = elem_pillar_index[0][1];
-            const std::size_t j_max = elem_pillar_index[2][1];
-
-            set_range_refined_pillars(i_min, i_min, j_min, j_max,
-                                      pillar_interpolation(get_refined_pillar(i_min, j_min),
-                                                                       get_refined_pillar(i_min, j_max), dy + 1));
-            set_range_refined_pillars(i_max, i_max, j_min, j_max,
-                                      pillar_interpolation(get_refined_pillar(i_max, j_min),
-                                                                       get_refined_pillar(i_max, j_max), dy + 1));
-        }
-
-
-        for (std::size_t n = 0; n < pillar_coords.size(); n++) {
-            const auto & elem_pillar_index = dest_pillar_ij_ref[n];
-            // interporlating rowwise along every j
-            for (std::size_t j = elem_pillar_index[0][1]; j <= elem_pillar_index[2][1]; j++) {
-                const std::size_t min_i = elem_pillar_index[0][0];
-                const std::size_t max_i = elem_pillar_index[1][0];
-                set_range_refined_pillars(min_i,max_i, j, j,
-                                            pillar_interpolation(get_refined_pillar(min_i, j), get_refined_pillar(max_i ,j), dx + 1));
             }
         }
-        return refined_pillars_coords;
 
+        // Interpolating the Pillars coords
+        for (auto I = Imin; I <= Imax; ++I) {
+                // Retrieve Pillars Coordinates for the corners of the element (I,J) in the parent grid
+                std::array<const double*, 2> pillars = {};
+                std::size_t index = 0;
+                // Retrieve TOP Pillars Coordinates of Host Cell for the top row of elements in the LGR
+                for (const auto& offset : {corner_offset[3], corner_offset[2]}) {
+                    pillars[index++] = &coord_h[ch.index(I + offset[0], Jmax + offset[1], 0, 0)];
+                }
+                for (auto i = 0*si; i < si; ++i) {
+                    const auto ti = static_cast<double>(i) / si;
+                    const auto refined_index = &coord_c[cc.index((I - Imin)*si + i, ny , 0, 0)];
+                    interpolatePillar(pillars[0], pillars[1], ti, refined_index);
+                }
+        }
+
+        for (auto J = Jmin; J <= Jmax; ++J) {
+            // Retrieve Pillars Coordinates for the corners of the element (I,J) in the parent grid
+            std::array<const double*, 2> pillars = {};
+            std::size_t index = 0;
+            // Retrieve RIGHT Pillars Coordinates of Host Cell between for Pillar
+            //  {Imax+1,J} to 2 {Imax+1,J+1} . I.e. RIGHT Pillars of the rightmost column of elements in the LGR
+            for (const auto& offset : {corner_offset[1], corner_offset[2]}) {
+                pillars[index++] = &coord_h[ch.index(Imax + offset[0], J + offset[1], 0, 0)];
+            }
+            for (auto j = 0*sj; j < sj; ++j) {
+                const auto tj = static_cast<double>(j) / sj;
+                const auto refined_index = &coord_c[cc.index(nx, (J - Jmin)*sj + j, 0, 0)];
+                interpolatePillar(pillars[0], pillars[1], tj, refined_index);
+            }
+        }
+
+        // adding the coordinate of the top right corner of the LGR, which is the only one not covered by the previous loops
+        {
+            // Retrieve TOP Right Pillars Coordinates of Host Cell between for Pillar
+            const double* host_top_right_pillar = &coord_h[ch.index(Imax + 1, Jmax + 1, 0, 0)];
+            double* refined_index = &coord_c[cc.index(nx, ny, 0, 0)];
+            for (std::size_t dim = 0; dim < 6; ++dim) {
+                refined_index[dim] = host_top_right_pillar[dim];
+            }
+        }
+
+        return coord_c;
     }
 
     void EclipseGridLGR::save_core(Opm::EclIO::EclOutput& egridfile, const Opm::UnitSystem& units) const{
