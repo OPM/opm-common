@@ -204,9 +204,9 @@ namespace {
 
         auto active = std::vector<bool>(this->maxID + 1, false);
 
-        std::for_each(regIDs.begin(), regIDs.end(),
-                      [&active](const int regID)
-                      { active[regID] = true; });
+        std::ranges::for_each(regIDs,
+                              [&active](const int regID)
+                              { active[regID] = true; });
 
         this->activeIDs.clear();
         for (auto activeID = 0*active.size(); activeID < active.size(); ++activeID) {
@@ -1334,17 +1334,17 @@ void connKeywordDefaultedConns(const SummaryConfigNode&        param0,
         if (auto wellPos = possibleFutureConns.find(wellName);
             wellPos != possibleFutureConns.end())
         {
-            std::for_each(wellPos->second.begin(), wellPos->second.end(),
-                          [&param, &list]
-                          (const int global_index)
-                          { handleConnectionCell(global_index, param, list); });
+            std::ranges::for_each(wellPos->second,
+                                  [&param, &list]
+                                  (const int global_index)
+                                  { handleConnectionCell(global_index, param, list); });
         }
 
         const auto& connections = schedule.getWellatEnd(wellName).getConnections();
-        std::for_each(connections.begin(), connections.end(),
-                      [&param, &list]
-                      (const Connection& conn)
-                      { handleConnectionCell(conn.global_index(), param, list); });
+        std::ranges::for_each(connections,
+                              [&param, &list]
+                              (const Connection& conn)
+                              { handleConnectionCell(conn.global_index(), param, list); });
     }
 }
 

@@ -242,10 +242,10 @@ protected:
                 (*this)(size);
                 auto& data_mut = const_cast<Vector&>(data);
                 data_mut.resize(size);
-                std::for_each(data_mut.begin(), data_mut.end(), std::ref(*this));
+                std::ranges::for_each(data_mut, std::ref(*this));
             } else {
                 (*this)(data.size());
-                std::for_each(data.begin(), data.end(), std::ref(*this));
+                std::ranges::for_each(data, std::ref(*this));
             }
         }
     }
@@ -291,7 +291,7 @@ protected:
                 m_packer.unpack(data_mut.data(), data_mut.size(), m_buffer, m_position);
             }
         } else {
-            std::for_each(data.begin(), data.end(), std::ref(*this));
+            std::ranges::for_each(data, std::ref(*this));
         }
     }
 
@@ -361,7 +361,7 @@ protected:
             }
         } else {
             (*this)(data.size());
-            std::for_each(data.begin(), data.end(), std::ref(*this));
+            std::ranges::for_each(data, std::ref(*this));
         }
     }
 
@@ -382,7 +382,7 @@ protected:
             }
         } else {
             (*this)(data.size());
-            std::for_each(data.begin(), data.end(), std::ref(*this));
+            std::ranges::for_each(data, std::ref(*this));
         }
     }
 

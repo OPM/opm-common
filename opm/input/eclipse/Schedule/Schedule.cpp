@@ -484,11 +484,9 @@ public:
 
     void operator()(const std::vector<std::string>& msg_list)
     {
-        std::for_each(msg_list.begin(), msg_list.end(),
-                      [this](const std::string& record)
-                      {
-                          (*this)(record);
-                      });
+        std::ranges::for_each(msg_list,
+                              [this](const std::string& record)
+                              { (*this)(record); });
     }
 
     void info(const std::string& msg)

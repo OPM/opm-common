@@ -185,7 +185,7 @@ namespace Opm {
             throw std::invalid_argument("Input to DeckKeyword '" + name() + "': cannot be std::vector<int>.");
 
         DeckItem item(parser_item.name(), int() );
-        std::for_each(data.begin(), data.end(), [&item](const int val) { item.push_back(val); });
+        std::ranges::for_each(data, [&item](const int val) { item.push_back(val); });
 
         DeckRecord deck_record;
         deck_record.addItem( std::move(item) );
@@ -214,7 +214,7 @@ namespace Opm {
              default_dimensions.push_back( system_default.parse(dim[0]) );
         }
         DeckItem item(parser_item.name(), double(), active_dimensions, default_dimensions);
-        std::for_each(data.begin(), data.end(), [&item](const double val) { item.push_back(val); });
+        std::ranges::for_each(data, [&item](const double val) { item.push_back(val); });
 
         DeckRecord deck_record;
         deck_record.addItem( std::move(item) );
