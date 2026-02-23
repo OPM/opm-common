@@ -335,13 +335,11 @@ private:
             os << "Number of rows: " << size() << '\n';
 
             os << "Row starts = [";
-            std::copy(row_start_.begin(), row_start_.end(),
-                      std::ostream_iterator<int>(os, " "));
+            std::ranges::copy(row_start_, std::ostream_iterator<int>(os, " "));
             os << "\b]\n";
 
             os << "Data values = [";
-            std::copy(data_.begin(), data_.end(),
-                      std::ostream_iterator<T>(os, " "));
+            std::ranges::copy(data_, std::ostream_iterator<T>(os, " "));
             os << "\b]\n";
         }
         const T data(int i)const {
