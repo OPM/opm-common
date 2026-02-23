@@ -23,6 +23,7 @@ include(MPIChecks)
 include(UseOpenMP)
 include(UseOptimization)
 include(UseRunPath)
+include(UseValgrind)
 include(UseTracy)
 include(UseWarnings)
 
@@ -56,6 +57,9 @@ function(opm_add_target_options)
 
   # Tracy profiler
   use_tracy(TARGET ${PARAM_TARGET})
+
+  # Valgrind memory error checker
+  use_valgrind(TARGET ${PARAM_TARGET})
 
   # output binaries in 'bin' folder
   set_target_properties(${PARAM_TARGET}
