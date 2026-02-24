@@ -109,12 +109,13 @@ namespace {
         static const std::vector<std::string> totals = {
             "OPT"  , "GPT"  , "WPT" , "GIT", "WIT", "GLIT", "OPTF" , "OPTS" , "OIT"  , "OVPT" , "OVIT" , "MWT" ,
             "WVPT" , "WVIT" , "GMT"  , "GPTF" , "SGT"  , "GST" , "FGT" , "GCT" , "GIMT" ,
-            "WGPT" , "WGIT" , "EGT"  , "EXGT" , "GVPT" , "GVIT" , "LPT" , "VPT" , "VIT" , "NPT" , "NIT",
+            "WGPT" , "WGIT" , "EGT"  , "EXGT" , "GVPT" , "GVIT" , "LPT" , "VPT" , "VIT" , "NPT" , "NIT" , "LIT",
             "TPT", "TIT", "CPT", "CIT", "SPT", "SIT", "EPT", "EIT", "TPTHEA", "TITHEA",
             "MMIT", "MOIT", "MUIT", "MMPT", "MOPT", "MUPT",
             "OFT", "OFT+", "OFT-", "OFTG", "OFTL",
             "GFT", "GFT+", "GFT-", "GFTG", "GFTL",
             "WFT", "WFT+", "WFT-", "GMIT", "GMPT", "AMIT", "AMPT",
+            "AQT", "NQT",
         };
 
         auto sep_pos = key.find(':');

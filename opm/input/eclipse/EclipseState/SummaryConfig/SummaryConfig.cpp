@@ -421,7 +421,10 @@ namespace {
 
             "WIT", "OIT", "GIT", "LIT", "NIT", "CIT", "VIT", "TIT",
             "WITH", "OITH", "GITH", "WVIT", "OVIT", "GVIT", "GMIT",
-            "AMIT",
+            "AMIT", "MWT",
+
+            "WGPT", "WGIT", "SGT", "GST", "FGT", "GCT", "GIMT", "GMT",
+            "EGT", "EXGT", "SPT", "SIT", "EPT", "EIT",
 
             "AQT", "AQTG", "NQT",
 
