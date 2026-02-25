@@ -19,6 +19,7 @@
 #include <chrono>
 
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
+#include <opm/io/eclipse/SummaryNode.hpp>
 #include <opm/common/utility/TimeService.hpp>
 
 #include <pybind11/stl.h>
@@ -45,12 +46,27 @@ std::vector<std::string> wells(const SummaryState * st) {
 void python::common::export_SummaryState(py::module& module) {
 
     using namespace Opm::Common::DocStrings;
+    using Type = Opm::EclIO::SummaryNode::Type;
+
+    py::enum_<Type>(module, "SummaryNodeType")
+        .value("Rate", Type::Rate)
+        .value("Total", Type::Total)
+        .value("Ratio", Type::Ratio)
+        .value("Pressure", Type::Pressure)
+        .value("Count", Type::Count)
+        .value("Mode", Type::Mode)
+        .value("ProdIndex", Type::ProdIndex)
+        .value("Undefined", Type::Undefined)
+        .export_values();
 
     py::class_<SummaryState, std::shared_ptr<SummaryState>>(module, "SummaryState", SummaryStateClass_docstring)
         .def(py::init<std::time_t>())
         .def("update", &SummaryState::update, py::arg("variable_name"), py::arg("value"), SummaryState_update_docstring)
         .def("update_well_var", &SummaryState::update_well_var, py::arg("well_name"), py::arg("variable_name"), py::arg("new_value"), SummaryState_update_well_var_docstring)
-        .def("update_group_var", &SummaryState::update_group_var, py::arg("group_name"), py::arg("variable_name"), py::arg("new_value"), SummaryState_update_group_var_docstring)
+        .def("update_group_var", py::overload_cast<const std::string&, const std::string&, double>(&SummaryState::update_group_var), py::arg("group_name"), py::arg("variable_name"), py::arg("new_value"), SummaryState_update_group_var_docstring)
+        .def("update_group_var", py::overload_cast<const std::string&, const std::string&, Type, double>(&SummaryState::update_group_var), py::arg("group_name"), py::arg("variable_name"), py::arg("var_type"), py::arg("new_value"), "Update or create a group variable with specified type.")
+        .def("update_conn_var", py::overload_cast<const std::string&, const std::string&, std::size_t, double>(&SummaryState::update_conn_var), py::arg("well_name"), py::arg("variable_name"), py::arg("global_index"), py::arg("new_value"), "Update or create a connection variable.")
+        .def("update_conn_var", py::overload_cast<const std::string&, const std::string&, Type, std::size_t, double>(&SummaryState::update_conn_var), py::arg("well_name"), py::arg("variable_name"), py::arg("var_type"), py::arg("global_index"), py::arg("new_value"), "Update or create a connection variable with specified type.")
         .def("well_var", py::overload_cast<const std::string&, const std::string&>(&SummaryState::get_well_var, py::const_), py::arg("well_name"), py::arg("variable_name"), SummaryState_well_var_docstring)
         .def("group_var", py::overload_cast<const std::string&, const std::string&>(&SummaryState::get_group_var, py::const_), py::arg("group_name"), py::arg("variable_name"), SummaryState_group_var_docstring)
         .def("elapsed", &SummaryState::get_elapsed, SummaryState_elapsed_docstring)
