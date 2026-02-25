@@ -19,8 +19,10 @@
 
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
 
+
 #include <opm/common/utility/TimeService.hpp>
 
+#include <opm/input/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQSet.hpp>
 
 #include <opm/io/eclipse/SummaryNode.hpp>
@@ -410,10 +412,18 @@ namespace Opm
                                         const std::string& var,
                                         const double       value)
     {
+        this->update_group_var(group, var, parseKeywordType(var), value);
+    }
+
+    void SummaryState::update_group_var(const std::string& group,
+                                        const std::string& var,
+                                        const SummaryConfigNode::Type type,
+                                        const double       value)
+    {
         auto& val_ref  = this->values[fmt::format("{}:{}", var, group)];
         auto& gval_ref = this->group_values[var][group];
 
-        if (is_total(var)) {
+        if (type == SummaryConfigNode::Type::Total) {
             val_ref  += value;
             gval_ref += value;
         }
@@ -442,7 +452,10 @@ namespace Opm
         }
         else if (var_type == UDQVarType::GROUP_VAR) {
             for (const auto& udq_value : udq_set) {
-                this->update_group_var(udq_value.wgname(), udq_set.name(), udq_value.value().value_or(this->udq_undefined));
+                this->update_group_var(udq_value.wgname(),
+                                       udq_set.name(),
+                                       SummaryConfigNode::Type::Undefined,
+                                       udq_value.value().value_or(this->udq_undefined));
             }
         }
         else if (var_type == UDQVarType::SEGMENT_VAR) {
@@ -464,10 +477,19 @@ namespace Opm
                                        const std::size_t  global_index,
                                        const double       value)
     {
+        this->update_conn_var(well, var, parseKeywordType(var), global_index, value);
+    }
+
+    void SummaryState::update_conn_var(const std::string& well,
+                                       const std::string& var,
+                                       const SummaryConfigNode::Type type,
+                                       const std::size_t  global_index,
+                                       const double       value)
+    {
         auto& val_ref  = this->values[fmt::format("{}:{}:{}", var, well, global_index)];
         auto& cval_ref = this->conn_values[var][well][global_index];
 
-        if (is_total(var)) {
+        if (type == SummaryConfigNode::Type::Total) {
             val_ref  += value;
             cval_ref += value;
         }
