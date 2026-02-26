@@ -489,7 +489,9 @@ namespace Opm
                                        const std::size_t  global_index,
                                        const double       value)
     {
-        auto& val_ref  = this->values[fmt::format("{}:{}:{}", var, well, global_index)];
+        this->conn_key_buffer_.clear();
+        fmt::format_to(std::back_inserter(this->conn_key_buffer_), "{}:{}:{}", var, well, global_index);
+        auto& val_ref  = this->values[this->conn_key_buffer_];
         auto& cval_ref = this->conn_values[var][well][global_index];
 
         if (type == SummaryConfigNode::Type::Total) {

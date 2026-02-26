@@ -190,6 +190,9 @@ private:
     // First key is variable (e.g., ROIP), second key is region set (e.g.,
     // FIPNUM, FIPABC), and the third key is the one-based region number.
     std::unordered_map<std::string, std::unordered_map<std::string, std::unordered_map<std::size_t, double>>> region_values;
+
+    // Reusable buffer for formatting connection keys in update_conn_var to avoid allocation.
+    mutable std::string conn_key_buffer_;
 };
 
 std::ostream& operator<<(std::ostream& stream, const SummaryState& st);
