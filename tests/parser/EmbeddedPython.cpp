@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(INSTANTIATE)
     BOOST_CHECK_MESSAGE(python->enabled(), "Python interpreter must be enabled in a default-constructed Python object when we have Embedded Python support");
     BOOST_CHECK_NO_THROW(python->exec("import sys"));
 
-    Parser parser;
+    Parser parser{python};
     Deck deck;
     const std::string python_code = R"(
 print('Parser: {}'.format(context.parser))
@@ -134,17 +134,22 @@ END
 
 BOOST_AUTO_TEST_CASE(PYACTION)
 {
-    Parser parser;
     auto python = std::make_shared<Python>(Python::Enable::ON);
-    auto deck = parser.parseFile("EMBEDDED_PYTHON.DATA");
+
+    const auto deck = Parser{python}.parseFile("EMBEDDED_PYTHON.DATA");
+
     auto ecl_state = EclipseState(deck);
     auto schedule = Schedule(deck, ecl_state, python);
+    auto st = SummaryState {
+        TimeService::now(), ecl_state.runspec().udqParams().undefinedValue()
+    };
 
-    SummaryState st(TimeService::now(), ecl_state.runspec().udqParams().undefinedValue());
     const auto& pyaction_kw = deck.get<ParserKeywords::PYACTION>().front();
     const std::string& fname = pyaction_kw.getRecord(1).getItem(0).get<std::string>(0);
+
     Action::PyAction py_action(python, "WCLOSE", Action::PyAction::RunCount::unlimited, deck.makeDeckPath(fname));
-    auto actionx_callback = [] (const std::string&, const std::vector<std::string>&) { ;};
+    auto actionx_callback = [] (const std::string&, const std::vector<std::string>&) {};
+
     Action::State action_state;
 
     st.update_well_var("PROD1", "WWCT", 0);
