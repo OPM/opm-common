@@ -116,8 +116,11 @@ namespace {
             "MMIT", "MOIT", "MUIT", "MMPT", "MOPT", "MUPT",
             "OFT", "OFT+", "OFT-", "OFTG", "OFTL",
             "GFT", "GFT+", "GFT-", "GFTG", "GFTL",
-            "WFT", "WFT+", "WFT-", "GMIT", "GMPT", "AMIT", "AMPT",
-            "AQT", "NQT",
+            "WFT", "WFT+", "WFT-", "GMIT", "GMPT", "AMIT", "AMPT"
+            // TODO: Add AQT and NQT when the aquifer code is modified
+            // to produce incremental rather than cumulative aquifer quantities.
+            // Currently the aquifer code does the cumulation internally and reports
+            // those cumulative values to the summary. Also in is_total() from SummaryConfig.cpp.
         };
 
         auto sep_pos = key.find(':');

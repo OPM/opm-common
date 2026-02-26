@@ -426,7 +426,11 @@ namespace {
             "WGPT", "WGIT", "SGT", "GST", "FGT", "GCT", "GIMT", "GMT",
             "EGT", "EXGT", "SPT", "SIT", "EPT", "EIT",
 
-            "AQT", "AQTG", "NQT",
+            // TODO: Add AQT and NQT when the aquifer code is modified
+            // to produce incremental rather than cumulative aquifer quantities.
+            // Currently the aquifer code does the cumulation internally and reports
+            // those cumulative values to the summary. Also in is_total() from SummaryState.cpp.
+            "AQTG",
 
             "MMIT", "MOIT", "MUIT", "MMPT", "MOPT", "MUPT",
         };
