@@ -1273,6 +1273,7 @@ void keywordR(SummaryConfig::keyword_list& list,
     // See comment on function roew() in Summary.cpp for this weirdness.
     if (keyword.rfind("ROEW", 0) == 0) {
         auto copt_node = SummaryConfigNode("COPT", SummaryConfigNode::Category::Connection, {});
+        copt_node.parameterType(SummaryConfigNode::Type::Total);
         for (const auto& wname : schedule.wellNames()) {
             copt_node.namedEntity(wname);
 
