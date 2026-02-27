@@ -519,7 +519,7 @@ namespace {
     bool is_connection_completion(const std::string& keyword)
     {
         static const auto conn_compl_kw = std::regex {
-            R"(C[OGW][IP][RT]L)"
+            R"(C(?:GM|MM|MO|MU|AM|O|G|W)[IP][RT]L)"
         };
 
         return std::regex_match(keyword, conn_compl_kw);

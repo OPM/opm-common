@@ -114,6 +114,12 @@ BOOST_AUTO_TEST_CASE(WOPT)
                       Opm::SummaryConfigNode::Type::Total);
 }
 
+BOOST_AUTO_TEST_CASE(CGMITL)
+{
+    BOOST_CHECK_EQUAL(Opm::parseKeywordType("CGMITL"),
+                      Opm::SummaryConfigNode::Type::Total);
+}
+
 BOOST_AUTO_TEST_SUITE_END()     // Total
 
 BOOST_AUTO_TEST_SUITE_END()     // Type
