@@ -858,3 +858,63 @@ BOOST_AUTO_TEST_CASE(EclipseIOLGR_Integration)
                                                                                 29.0f, 30.0f, 31.0f,}, tol, "lgr3_pressure");
     }
 }
+
+
+BOOST_AUTO_TEST_CASE(EclipseIOLGR_IntegrationLGR)
+{
+    WorkArea test_area("test_EclioseIO_LGR_PROP");
+    test_area.copyIn("LGR_GROUP_EX04.DATA");
+
+    const auto deck = msw_sim("LGR_GROUP_EX04.DATA");
+    const auto simCase = SimulationCase{deck};
+    auto es = simCase.es;
+    const auto& eclGrid = es.getInputGrid();
+
+    const Schedule& schedule = simCase.sched;
+    const SummaryConfig summary_config( deck, schedule, es.fieldProps(), es.aquifer());
+    const SummaryState st = sim_stateLGR_example04();
+    es.getIOConfig().setBaseName( "TESTE_LGR_INTEGRATION_PROP" );
+    EclipseIO eclWriter( es, eclGrid , schedule, summary_config);
+
+    using measure = UnitSystem::measure;
+    using TargetType = data::TargetType;
+
+    auto createEGridProps = [](int nx, int ny, int nz) {
+        std::vector<double> tranx(nx * ny * nz);
+        std::vector<double> trany(nx * ny * nz);
+        std::vector<double> tranz(nx * ny * nz);
+        // Fill tranx, trany, tranz with some test data if needed
+        double step = 0.5e-12;
+        std::generate(tranx.begin(), tranx.end(), [n = 1e-12, step]() mutable { double val = n; n += step; return val; });
+        std::generate(trany.begin(), trany.end(), [n = 1e-12, step]() mutable { double val = n; n += step; return val; });
+        std::generate(tranz.begin(), tranz.end(), [n = 1e-12, step]() mutable { double val = n; n += step; return val; });
+
+        return data::Solution {
+            { "TRANX", data::CellData { measure::transmissibility, tranx, TargetType::INIT } },
+            { "TRANY", data::CellData { measure::transmissibility, trany, TargetType::INIT } },
+            { "TRANZ", data::CellData { measure::transmissibility, tranz, TargetType::INIT } },
+        };
+    };
+
+    std::vector<data::Solution> eGridPropsList;
+    eGridPropsList.reserve(4);
+    eGridPropsList.emplace_back(createEGridProps(5, 1, 1));
+    eGridPropsList.emplace_back(createEGridProps(3, 3, 1));
+    eGridPropsList.emplace_back(createEGridProps(3, 3, 1));
+    eGridPropsList.emplace_back(createEGridProps(3, 3, 1));
+
+    eclWriter.writeInitial(eGridPropsList, {});
+
+    std::vector<float> expected_tranx_lgr2 =  {0.37468846E+01,   0.56203265E+01,   0.74937692E+01,   0.93672113E+01,
+                                               0.11240653E+02,   0.13114096E+02,   0.14987538E+02,   0.16860981E+02,
+                                               0.18734423E+02, };
+    {
+        const auto egridFile = ::Opm::EclIO::OutputStream::
+                     outputFileName({test_area.currentWorkingDirectory(), "TESTE_LGR_INTEGRATION_PROP"}, "INIT");
+        Opm::EclIO::EGrid init(egridFile, "LGR2");
+        init.loadData("TRANX");
+        std::vector<float> tranx_file = init.get<float>("TRANX");
+        checkVectorsClose(tranx_file, expected_tranx_lgr2, 1e-4, "tranx_file");
+    }
+
+}
