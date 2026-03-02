@@ -437,12 +437,13 @@ public:
     Scalar krnWght() const
     { return KrndHy_/KrndMax_; }
 
-    Scalar krwWght() const
+    template <class Evaluation>
+    Evaluation krwWght(const Evaluation& Krwd) const
     {
         // a = 1 (deltaKrw)^a Formulation according to KILLOUGH 1976
         Scalar deltaKrw = Krwi_snrmax() - Krwd_sncri();
         Scalar Krwi_snr = Krwd_sncrt() + deltaKrw * (Sncrt() / max(1e-12, Sncri()));
-        return (Krwi_snr - KrwdHy()) / ( Krwi_snrmax() - Krwi_snmax());
+        return (Krwi_snr - Krwd) / ( Krwi_snrmax() - Krwi_snmax());
     }
 
     Scalar krwdMax() const
