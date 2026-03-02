@@ -350,13 +350,15 @@ macro(opm-common_targets_hook)
     target_include_directories(opmcommon SYSTEM PRIVATE ${pybind11_INCLUDE_DIRS})
     foreach(target opmcommon test_msim_ACTIONX EmbeddedPython PYACTION)
       if(TARGET ${target})
-        set_target_properties(${target}
-          PROPERTIES
-          COMPILE_DEFINITIONS
-            EMBEDDED_PYTHON=1
-        )
+        target_compile_definitions(${target} PRIVATE EMBEDDED_PYTHON=1)
       endif()
     endforeach()
+    set_target_properties(opmcommon
+      PROPERTIES
+        EMBEDDED_PYTHON ON
+      EXPORT_PROPERTIES
+        EMBEDDED_PYTHON
+    )
   endif()
 
   if(dune-common_FOUND)
