@@ -15,7 +15,7 @@
     {
       "name": "MASS_DENSITY",
       "value_type": "DOUBLE",
-      "dimension": "Mass/Length*Length*Length"
+      "dimension": "Mass/ReservoirVolume"
     },
     {
       "name": "INIT_MODEL",
