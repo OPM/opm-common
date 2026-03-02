@@ -35,6 +35,10 @@ list(APPEND opm-common_DEPS
       "QuadMath"
 )
 
+if(TARGET opmcommon)
+  get_property(opm-common_EMBEDDED_PYTHON TARGET opmcommon PROPERTY EMBEDDED_PYTHON)
+endif()
+
 if(opm-common_EMBEDDED_PYTHON)
   list(APPEND opm-common_DEPS
     "Python3 COMPONENTS Development.Embed REQUIRED"
