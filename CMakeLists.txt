@@ -50,12 +50,10 @@ macro(opm-common_prereqs_hook)
 
     # Directory to install common (for opm modules) python scripts
     set(OPM_PYTHON_COMMON_DIR "${CMAKE_INSTALL_DATAROOTDIR}/opm/python")
-    set(OPM_PROJECT_EXTRA_CODE_INTREE
-      "${OPM_PROJECT_EXTRA_CODE_INTREE}
-       set(opm-common_PYTHON_COMMON_DIR ${PROJECT_SOURCE_DIR}/python)")
-    set(OPM_PROJECT_EXTRA_CODE_INSTALLED
-        "${OPM_PROJECT_EXTRA_CODE_INSTALLED}
-         set(opm-common_PYTHON_COMMON_DIR ${CMAKE_INSTALL_PREFIX}/${OPM_PYTHON_COMMON_DIR})")
+    string(APPEND OPM_PROJECT_EXTRA_CODE_INTREE
+      "\n  set(opm-common_PYTHON_COMMON_DIR ${PROJECT_SOURCE_DIR}/python)")
+    string(APPEND OPM_PROJECT_EXTRA_CODE_INSTALLED
+        "\n  set(opm-common_PYTHON_COMMON_DIR ${CMAKE_INSTALL_PREFIX}/${OPM_PYTHON_COMMON_DIR})")
 
     find_package(pybind11 CONFIG)
     if (NOT pybind11_FOUND)
@@ -70,16 +68,12 @@ endmacro()
 
 macro(opm-common_config_hook)
   if(ENABLE_ECL_INPUT)
-    set(OPM_PROJECT_EXTRA_CODE_INTREE "${OPM_PROJECT_EXTRA_CODE_INTREE}
-                                       set(HAVE_ECL_INPUT 1)")
-    set(OPM_PROJECT_EXTRA_CODE_INSTALLED "${OPM_PROJECT_EXTRA_CODE_INSTALLED}
-                                          set(HAVE_ECL_INPUT 1)")
+    string(APPEND OPM_PROJECT_EXTRA_CODE_INTREE "\n  set(HAVE_ECL_INPUT 1)")
+    string(APPEND OPM_PROJECT_EXTRA_CODE_INSTALLED "\n  set(HAVE_ECL_INPUT 1)")
     set(HAVE_ECL_INPUT 1)
     if(ENABLE_ECL_OUTPUT)
-      set(OPM_PROJECT_EXTRA_CODE_INTREE "${OPM_PROJECT_EXTRA_CODE_INTREE}
-                                           set(HAVE_ECL_OUTPUT 1)")
-      set(OPM_PROJECT_EXTRA_CODE_INSTALLED "${OPM_PROJECT_EXTRA_CODE_INSTALLED}
-                                          set(HAVE_ECL_OUTPUT 1)")
+      string(APPEND OPM_PROJECT_EXTRA_CODE_INTREE "\n  set(HAVE_ECL_OUTPUT 1)")
+      string(APPEND OPM_PROJECT_EXTRA_CODE_INSTALLED "\n  set(HAVE_ECL_OUTPUT 1)")
     endif()
   endif()
 
@@ -506,17 +500,17 @@ endif()
 
 include(GNUInstallDirs)
 # We need to define this variable in the installed cmake config file.
-set(OPM_PROJECT_EXTRA_CODE_INSTALLED  "#ENABLE_ECL_INPUT is needed by opm-common-prereq.cmake
-                                       set(ENABLE_ECL_INPUT ${ENABLE_ECL_INPUT})
-                                       set(OPM_MACROS_ROOT ${CMAKE_INSTALL_FULL_DATADIR}/opm)
-                                       list(APPEND CMAKE_MODULE_PATH \${OPM_MACROS_ROOT}/cmake/Modules)
-                                       include(OpmPackage) #Make macros available after find_package(opm-common)")
+set(OPM_PROJECT_EXTRA_CODE_INSTALLED
+  "set(OPM_MACROS_ROOT ${CMAKE_INSTALL_FULL_DATADIR}/opm)
+  list(APPEND CMAKE_MODULE_PATH \${OPM_MACROS_ROOT}/cmake/Modules)
+  include(OpmPackage)"
+)
 
-set(OPM_PROJECT_EXTRA_CODE_INTREE "#ENABLE_ECL_INPUT is needed by opm-common-prereq.cmake
-                                   set(ENABLE_ECL_INPUT ${ENABLE_ECL_INPUT})
-                                   set(OPM_MACROS_ROOT ${OPM_MACROS_ROOT})
-                                   list(APPEND CMAKE_MODULE_PATH \${OPM_MACROS_ROOT}/cmake/Modules)
-                                   include(OpmPackage) #Make macros available after find_package(opm-common)")
+set(OPM_PROJECT_EXTRA_CODE_INTREE
+  "set(OPM_MACROS_ROOT ${OPM_MACROS_ROOT})
+  list(APPEND CMAKE_MODULE_PATH \${OPM_MACROS_ROOT}/cmake/Modules)
+  include(OpmPackage)"
+)
 
 # project information is in dune.module. Read this file and set variables.
 # we cannot generate dune.module since it is read by dunecontrol before

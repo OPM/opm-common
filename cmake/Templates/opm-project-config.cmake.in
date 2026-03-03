@@ -60,14 +60,11 @@ if(NOT @opm-project_NAME@_FOUND)
     find_package(opm-common CONFIG)
   endif()
 
+  @OPM_PROJECT_EXTRA_CODE@
+
   # This is required to include OpmPackage /opm-common-prereq.cmake
   list(PREPEND CMAKE_MODULE_PATH @PREREQ_LOCATION@)
 
-  # extra code from variable OPM_PROJECT_EXTRA_CODE
-  @OPM_PROJECT_EXTRA_CODE@
-  # end extra code
-
-  include(OpmPackage)
   include(@opm-project_NAME@-prereqs)
 
   # remove the temporarily added path again to not pollute downstream modules
