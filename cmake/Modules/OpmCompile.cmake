@@ -46,7 +46,7 @@ macro(opm_compile opm)
       PRIVATE
         ${${opm}_SOURCES}
     )
-    set(${opm}_LIBRARY $<TARGET_FILE:${${opm}_TARGET}>)
+    set(${opm}_LIBRARY ${${opm}_TARGET})
   endif()
   target_sources(${${opm}_TARGET}
     PRIVATE
