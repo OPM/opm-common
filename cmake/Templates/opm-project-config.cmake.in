@@ -47,15 +47,11 @@ if(NOT @opm-project_NAME@_FOUND)
     endif()
   endif (NOT "@opm-project_TARGET@" STREQUAL "")
 
-  # this is the contents of config.h as far as our probes can tell:
-
   # if this file is not processed using the OPM CMake system but
   # simply by a call to find_package(module) then the CMAKE_MODULE_PATH
   # might not include the location of the OPM cmake module yet.
   # Hence we search for opm-common using config mode to set it up.
-  # The check for opm-common_PREFIX is there to not do this in
-  # opm-common-config.cmake
-  if(NOT opm-common_PREFIX AND NOT opm-common_FOUND)
+  if(NOT TARGET opmcommon)
     # This needed to find the path to the CMake modules
     find_package(opm-common CONFIG)
   endif()
@@ -70,3 +66,5 @@ if(NOT @opm-project_NAME@_FOUND)
   # remove the temporarily added path again to not pollute downstream modules
   list(POP_FRONT CMAKE_MODULE_PATH)
 endif()
+
+# this is the contents of config.h as far as our probes can tell:
