@@ -22,7 +22,8 @@
 
 #include <cstdlib>
 
-#if HAVE_CXA_DEMANGLE
+#if __has_include(<cxxabi.h>)
+#define HAVE_CXA_DEMANGLE 1
 #include <cxxabi.h>
 #endif
 

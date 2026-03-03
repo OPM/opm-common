@@ -8,7 +8,7 @@
 include(CheckCXXSourceCompiles)
 
 # __attribute__((always_inline))
-CHECK_CXX_SOURCE_COMPILES("
+check_cxx_source_compiles("
    void __attribute__((always_inline)) foo(void) {}
    int main(void)
    {
@@ -19,7 +19,7 @@ CHECK_CXX_SOURCE_COMPILES("
 )
 
 # __attribute__((unused))
-CHECK_CXX_SOURCE_COMPILES("
+check_cxx_source_compiles("
    int main(void)
    {
      int __attribute__((unused)) foo;
@@ -29,7 +29,7 @@ CHECK_CXX_SOURCE_COMPILES("
 )
 
 # __attribute__((deprecated))
-CHECK_CXX_SOURCE_COMPILES("
+check_cxx_source_compiles("
 #define DEP __attribute__((deprecated))
    class bar
    {
@@ -61,7 +61,7 @@ CHECK_CXX_SOURCE_COMPILES("
 )
 
 # __attribute__((deprecated("msg")))
-CHECK_CXX_SOURCE_COMPILES("
+check_cxx_source_compiles("
 #define DEP __attribute__((deprecated(\"message\")))
    class bar {
      bar() DEP;

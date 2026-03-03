@@ -4,7 +4,6 @@
 # defines that must be present in config.h for our headers
 set (opm-common_CONFIG_VAR
   HAVE_ECL_INPUT
-  HAVE_CXA_DEMANGLE
   HAVE_DUNE_COMMON
 )
 

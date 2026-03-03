@@ -18,7 +18,6 @@ find_opm_package (
   # dependencies
   "BLAS REQUIRED;
   LAPACK REQUIRED;
-  CxaDemangle;
   MPI;
   TBB;
   GMP
