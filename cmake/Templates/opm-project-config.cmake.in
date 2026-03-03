@@ -34,29 +34,6 @@ if(NOT @opm-project_NAME@_FOUND)
   set (@opm-project_NAME@_LIBRARY "@opm-project_LIBRARY@")
   set (@opm-project_NAME@_LIBRARIES ${@opm-project_NAME@_LIBRARY} "@opm-project_LIBRARIES@")
 
-  # The purpose of this string replacement operation is to enable use of the
-  # generated opm-project-config.cmake file also in the situation where 'make
-  # install' has been invoked with the DESTDIR option:
-  #
-  # opm-common/build> cmake .. -DCMAKE_INSTALL_PREFIX=/real/prefix
-  # opm-common/budil> make install DESTDIR=/tmp/prefix
-  #
-  # downstream/build> cmake .. -DDEST_PREFIX=/tmp/prefix -DCMAKE_PREFIX_PATH=/tmp/prefix
-  # downstream/build> make install
-  #
-  # That way the downstream dependency can still use find_package( opm-common )
-  # even though the opm-common-config.cmake file is not internally consistent
-  # with it's own location in the filesystem.
-
-  if(DEST_PREFIX)
-    set(DEST_PREFIX "${DEST_PREFIX}${@opm-project_NAME@_PREFIX}")
-    string(REPLACE ${@opm-project_NAME@_PREFIX} ${DEST_PREFIX} @opm-project_NAME@_INCLUDE_DIRS "${@opm-project_NAME@_INCLUDE_DIRS}")
-    string(REPLACE ${@opm-project_NAME@_PREFIX} ${DEST_PREFIX} @opm-project_NAME@_LIBRARY_DIRS "${@opm-project_NAME@_LIBRARY_DIRS}")
-    string(REPLACE ${@opm-project_NAME@_PREFIX} ${DEST_PREFIX} @opm-project_NAME@_LIBRARY      "${@opm-project_NAME@_LIBRARY}")
-    string(REPLACE ${@opm-project_NAME@_PREFIX} ${DEST_PREFIX} @opm-project_NAME@_PYTHON_COMMON_DIR "${@opm-project_NAME@_PYTHON_COMMON_DIR}")
-  endif()
-
-
   set (HAVE_@opm-project_NAME_UC@ 1)
   mark_as_advanced (@opm-project_NAME@_LIBRARY)
 
@@ -72,31 +49,27 @@ if(NOT @opm-project_NAME@_FOUND)
 
   # this is the contents of config.h as far as our probes can tell:
 
-  # The settings in this block do not mix well with the DEST_PREFIX
-  # setting.
-  if (NOT DEST_PREFIX)
-    # if this file is not processed using the OPM CMake system but
-    # simply by a call to find_package(module) then the CMAKE_MODULE_PATH
-    # might not include the location of the OPM cmake module yet.
-    # Hence we search for opm-common using config mode to set it up.
-    # The check for opm-common_PREFIX is there to not do this in
-    # opm-common-config.cmake
-    if(NOT opm-common_PREFIX
-        AND NOT opm-common_FOUND)
-      # This needed to find the path to the CMake modules
-      find_package(opm-common CONFIG)
-    endif()
-    # This is required to include OpmPackage /opm-common-prereq.cmake
-    list(PREPEND CMAKE_MODULE_PATH @PREREQ_LOCATION@)
-
-    # extra code from variable OPM_PROJECT_EXTRA_CODE
-    @OPM_PROJECT_EXTRA_CODE@
-    # end extra code
-
-    include(OpmPackage)
-    include(@opm-project_NAME@-prereqs)
-
-    # remove the temporarily added path again to not pollute downstream modules
-    list(POP_FRONT CMAKE_MODULE_PATH)
+  # if this file is not processed using the OPM CMake system but
+  # simply by a call to find_package(module) then the CMAKE_MODULE_PATH
+  # might not include the location of the OPM cmake module yet.
+  # Hence we search for opm-common using config mode to set it up.
+  # The check for opm-common_PREFIX is there to not do this in
+  # opm-common-config.cmake
+  if(NOT opm-common_PREFIX AND NOT opm-common_FOUND)
+    # This needed to find the path to the CMake modules
+    find_package(opm-common CONFIG)
   endif()
+
+  # This is required to include OpmPackage /opm-common-prereq.cmake
+  list(PREPEND CMAKE_MODULE_PATH @PREREQ_LOCATION@)
+
+  # extra code from variable OPM_PROJECT_EXTRA_CODE
+  @OPM_PROJECT_EXTRA_CODE@
+  # end extra code
+
+  include(OpmPackage)
+  include(@opm-project_NAME@-prereqs)
+
+  # remove the temporarily added path again to not pollute downstream modules
+  list(POP_FRONT CMAKE_MODULE_PATH)
 endif()
