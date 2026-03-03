@@ -21,6 +21,7 @@
 #define SUMMARY_STATE_H
 
 #include <opm/common/utility/TimeService.hpp>
+#include <opm/io/eclipse/SummaryNode.hpp>
 
 #include <cstddef>
 #include <ctime>
@@ -105,9 +106,12 @@ public:
     void update(const std::string& key, double value);
     void update_well_var(const std::string& well, const std::string& var, double value);
     void update_group_var(const std::string& group, const std::string& var, double value);
+    void update_group_var(const std::string& group, const std::string& var, EclIO::SummaryNode::Type type, double value);
     void update_elapsed(double delta);
     void update_udq(const UDQSet& udq_set);
     void update_conn_var(const std::string& well, const std::string& var, std::size_t global_index, double value);
+    void update_conn_var(const std::string& well, const std::string& var, EclIO::SummaryNode::Type type, std::size_t global_index, double value);
+
     void update_segment_var(const std::string& well, const std::string& var, std::size_t segment, double value);
     void update_region_var(const std::string& regSet, const std::string& var, std::size_t region, double value);
 
@@ -186,6 +190,9 @@ private:
     // First key is variable (e.g., ROIP), second key is region set (e.g.,
     // FIPNUM, FIPABC), and the third key is the one-based region number.
     std::unordered_map<std::string, std::unordered_map<std::string, std::unordered_map<std::size_t, double>>> region_values;
+
+    // Reusable buffer for formatting connection keys in update_conn_var to avoid allocation.
+    mutable std::string conn_key_buffer_;
 };
 
 std::ostream& operator<<(std::ostream& stream, const SummaryState& st);

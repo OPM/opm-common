@@ -46,6 +46,7 @@
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
+#include <opm/input/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
 #include <opm/input/eclipse/EclipseState/TracerConfig.hpp>
 
 #include <opm/input/eclipse/Schedule/MSW/WellSegments.hpp>
@@ -828,7 +829,7 @@ namespace {
             restoreConnCumulatives(xcon, [globCell, &wname, &smry]
                 (const std::string& vector, const double value)
             {
-                smry.update_conn_var(wname, vector, globCell + 1, value);
+                smry.update_conn_var(wname, vector, Opm::SummaryConfigNode::Type::Total, globCell + 1, value);
             });
 
             auto* xc = xw.find_connection(globCell);
@@ -1382,7 +1383,7 @@ namespace {
             }
             else {
                 // Initialise the G* vectors for all non-FIELD groups
-                smry.update_group_var(group, 'G' + vector, value);
+                smry.update_group_var(group, 'G' + vector, Opm::SummaryConfigNode::Type::Total, value);
             }
         };
 
@@ -1455,7 +1456,7 @@ namespace {
                 continue;
             }
 
-            smry.update_group_var(groups[iGrp]->name(), quantity, dudg[iGrp]);
+            smry.update_group_var(groups[iGrp]->name(), quantity, Opm::SummaryConfigNode::Type::Undefined, dudg[iGrp]);
         }
     }
 

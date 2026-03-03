@@ -19,8 +19,10 @@
 
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
 
+
 #include <opm/common/utility/TimeService.hpp>
 
+#include <opm/input/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQSet.hpp>
 
 #include <opm/io/eclipse/SummaryNode.hpp>
@@ -109,12 +111,16 @@ namespace {
         static const std::vector<std::string> totals = {
             "OPT"  , "GPT"  , "WPT" , "GIT", "WIT", "GLIT", "OPTF" , "OPTS" , "OIT"  , "OVPT" , "OVIT" , "MWT" ,
             "WVPT" , "WVIT" , "GMT"  , "GPTF" , "SGT"  , "GST" , "FGT" , "GCT" , "GIMT" ,
-            "WGPT" , "WGIT" , "EGT"  , "EXGT" , "GVPT" , "GVIT" , "LPT" , "VPT" , "VIT" , "NPT" , "NIT",
+            "WGPT" , "WGIT" , "EGT"  , "EXGT" , "GVPT" , "GVIT" , "LPT" , "VPT" , "VIT" , "NPT" , "NIT" , "LIT",
             "TPT", "TIT", "CPT", "CIT", "SPT", "SIT", "EPT", "EIT", "TPTHEA", "TITHEA",
             "MMIT", "MOIT", "MUIT", "MMPT", "MOPT", "MUPT",
             "OFT", "OFT+", "OFT-", "OFTG", "OFTL",
             "GFT", "GFT+", "GFT-", "GFTG", "GFTL",
-            "WFT", "WFT+", "WFT-", "GMIT", "GMPT", "AMIT", "AMPT",
+            "WFT", "WFT+", "WFT-", "GMIT", "GMPT", "AMIT", "AMPT"
+            // TODO: Add AQT and NQT when the aquifer code is modified
+            // to produce incremental rather than cumulative aquifer quantities.
+            // Currently the aquifer code does the cumulation internally and reports
+            // those cumulative values to the summary. Also in is_total() from SummaryConfig.cpp.
         };
 
         auto sep_pos = key.find(':');
@@ -409,10 +415,18 @@ namespace Opm
                                         const std::string& var,
                                         const double       value)
     {
+        this->update_group_var(group, var, parseKeywordType(var), value);
+    }
+
+    void SummaryState::update_group_var(const std::string& group,
+                                        const std::string& var,
+                                        const SummaryConfigNode::Type type,
+                                        const double       value)
+    {
         auto& val_ref  = this->values[fmt::format("{}:{}", var, group)];
         auto& gval_ref = this->group_values[var][group];
 
-        if (is_total(var)) {
+        if (type == SummaryConfigNode::Type::Total) {
             val_ref  += value;
             gval_ref += value;
         }
@@ -441,7 +455,10 @@ namespace Opm
         }
         else if (var_type == UDQVarType::GROUP_VAR) {
             for (const auto& udq_value : udq_set) {
-                this->update_group_var(udq_value.wgname(), udq_set.name(), udq_value.value().value_or(this->udq_undefined));
+                this->update_group_var(udq_value.wgname(),
+                                       udq_set.name(),
+                                       SummaryConfigNode::Type::Undefined,
+                                       udq_value.value().value_or(this->udq_undefined));
             }
         }
         else if (var_type == UDQVarType::SEGMENT_VAR) {
@@ -463,10 +480,21 @@ namespace Opm
                                        const std::size_t  global_index,
                                        const double       value)
     {
-        auto& val_ref  = this->values[fmt::format("{}:{}:{}", var, well, global_index)];
+        this->update_conn_var(well, var, parseKeywordType(var), global_index, value);
+    }
+
+    void SummaryState::update_conn_var(const std::string& well,
+                                       const std::string& var,
+                                       const SummaryConfigNode::Type type,
+                                       const std::size_t  global_index,
+                                       const double       value)
+    {
+        this->conn_key_buffer_.clear();
+        fmt::format_to(std::back_inserter(this->conn_key_buffer_), "{}:{}:{}", var, well, global_index);
+        auto& val_ref  = this->values[this->conn_key_buffer_];
         auto& cval_ref = this->conn_values[var][well][global_index];
 
-        if (is_total(var)) {
+        if (type == SummaryConfigNode::Type::Total) {
             val_ref  += value;
             cval_ref += value;
         }

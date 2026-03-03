@@ -3849,11 +3849,11 @@ void updateValue(const Opm::EclIO::SummaryNode& node, const double value, Opm::S
 
     case Cat::Group:
     case Cat::Node:
-        st.update_group_var(node.wgname, node.keyword, value);
+        st.update_group_var(node.wgname, node.keyword, node.type, value);
         break;
 
     case Cat::Connection:
-        st.update_conn_var(node.wgname, node.keyword, node.number, value);
+        st.update_conn_var(node.wgname, node.keyword, node.type, node.number, value);
         break;
 
     case Cat::Segment:

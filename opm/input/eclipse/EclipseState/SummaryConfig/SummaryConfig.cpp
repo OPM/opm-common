@@ -421,9 +421,16 @@ namespace {
 
             "WIT", "OIT", "GIT", "LIT", "NIT", "CIT", "VIT", "TIT",
             "WITH", "OITH", "GITH", "WVIT", "OVIT", "GVIT", "GMIT",
-            "AMIT",
+            "AMIT", "MWT",
 
-            "AQT", "AQTG", "NQT",
+            "WGPT", "WGIT", "SGT", "GST", "FGT", "GCT", "GIMT", "GMT",
+            "EGT", "EXGT", "SPT", "SIT", "EPT", "EIT",
+
+            // TODO: Add AQT and NQT when the aquifer code is modified
+            // to produce incremental rather than cumulative aquifer quantities.
+            // Currently the aquifer code does the cumulation internally and reports
+            // those cumulative values to the summary. Also in is_total() from SummaryState.cpp.
+            "AQTG",
 
             "MMIT", "MOIT", "MUIT", "MMPT", "MOPT", "MUPT",
         };
@@ -512,7 +519,7 @@ namespace {
     bool is_connection_completion(const std::string& keyword)
     {
         static const auto conn_compl_kw = std::regex {
-            R"(C[OGW][IP][RT]L)"
+            R"(C(?:GM|MM|MO|MU|AM|O|G|W)[IP][RT]L)"
         };
 
         return std::regex_match(keyword, conn_compl_kw);
@@ -1266,6 +1273,7 @@ void keywordR(SummaryConfig::keyword_list& list,
     // See comment on function roew() in Summary.cpp for this weirdness.
     if (keyword.rfind("ROEW", 0) == 0) {
         auto copt_node = SummaryConfigNode("COPT", SummaryConfigNode::Category::Connection, {});
+        copt_node.parameterType(SummaryConfigNode::Type::Total);
         for (const auto& wname : schedule.wellNames()) {
             copt_node.namedEntity(wname);
 

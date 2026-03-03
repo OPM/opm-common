@@ -1651,5 +1651,6 @@ endif()
 if(ENABLE_ECL_INPUT OR ENABLE_ECL_OUTPUT)
   list(APPEND TEST_SOURCE_FILES
       tests/test_SummaryNode.cpp
+      tests/test_SummaryConfigNode.cpp
 )
 endif()
