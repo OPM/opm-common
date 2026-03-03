@@ -228,16 +228,23 @@ public:
                            const bool         isSubstep,
                            std::optional<int> time_step) const;
 
-    /// Whether or not this is the run's final report step.
+    /// Whether or not this is the run's final write operation.
     ///
     /// Simplifies checking for whether or not to to create an RSM file.
     ///
     /// \param[in] report_step One-based report step index for which to
     /// create output.  Report_step=0 represents time zero.
     ///
+    /// \param[in] is_substep Whether this is just a sub step and not the
+    ///                       end of a full report step,
+    ///
+    /// \param[in] force_final_report_step If true then this is final write no
+    ///                                    matter what report_step actually is.
+    ///                                    Used if there was an EXIT in an ACTIONX
     /// \return Whether or not \p report_step is the run's final report
     /// step.
-    bool isFinalStep(const int report_step) const;
+    bool isFinalWrite(const int report_step, const bool is_substep,
+                      const bool force_final_report_step) const;
 
     /// Name of run's output directory.
     const std::string& outputDir() const { return this->outputDir_; }
@@ -356,7 +363,8 @@ public:
                           const int                report_step,
                           const std::optional<int> time_step,
                           const double             secs_elapsed,
-                          const bool               isSubstep);
+                          const bool               isSubstep,
+                          const bool               isFinalSummmary);
 
     /// Create restart file output.
     ///
@@ -685,9 +693,12 @@ Opm::EclipseIO::Impl::wantRFTOutput(const int  report_step,
     };
 }
 
-bool Opm::EclipseIO::Impl::isFinalStep(const int report_step) const
+bool Opm::EclipseIO::Impl::isFinalWrite(const int report_step, const bool is_substep,
+                                        const bool force_final_report_step) const
 {
-    return report_step == static_cast<int>(this->schedule_.get().size()) - 1;
+    return (force_final_report_step ||
+            report_step == static_cast<int>(this->schedule_.get().size()) - 1)
+        && !is_substep;
 }
 
 bool Opm::EclipseIO::Impl::wantSummaryOutput(const int          report_step,
@@ -802,14 +813,15 @@ void Opm::EclipseIO::Impl::writeSummaryFile(const SummaryState&      st,
                                             const int                report_step,
                                             const std::optional<int> time_step,
                                             const double             secs_elapsed,
-                                            const bool               isSubstep)
+                                            const bool               isSubstep,
+                                            const bool               forceFinalWrite)
 {
     this->summary_.add_timestep(st, this->reportIndex(report_step, time_step),
                                 this->miniStepId_,
                                 !time_step.has_value() || isSubstep);
 
     const auto is_final_summary =
-        this->isFinalStep(report_step) && !isSubstep;
+        this->isFinalWrite(report_step, isSubstep, forceFinalWrite);
 
     this->summary_.write(is_final_summary);
 
@@ -1068,7 +1080,8 @@ void Opm::EclipseIO::writeTimeStep(const Action::State& action_state,
                                    const double         secs_elapsed,
                                    RestartValue         value,
                                    const bool           write_double,
-                                   std::optional<int>   time_step)
+                                   std::optional<int>   time_step,
+                                   const bool           forceFinalWrite)
 {
     if (! this->impl->outputEnabled()) {
         // Run does not request any output.  Uncommon, but might be useful
@@ -1087,7 +1100,7 @@ void Opm::EclipseIO::writeTimeStep(const Action::State& action_state,
 
     if (this->impl->wantSummaryOutput(report_step, isSubstep, secs_elapsed, time_step)) {
         this->impl->writeSummaryFile(st, report_step, time_step,
-                                     secs_elapsed, isSubstep);
+                                     secs_elapsed, isSubstep, forceFinalWrite);
     }
 
     if (this->impl->wantRestartOutput(report_step, isSubstep, time_step)) {
@@ -1097,8 +1110,7 @@ void Opm::EclipseIO::writeTimeStep(const Action::State& action_state,
                                      write_double, std::move(value));
     }
 
-    if (! isSubstep &&
-        this->impl->isFinalStep(report_step) &&
+    if ( this->impl->isFinalWrite(report_step, isSubstep, forceFinalWrite)  &&
         this->impl->summaryConfig().createRunSummary())
     {
         // Write RSM file at end of simulation.
@@ -1118,7 +1130,8 @@ void Opm::EclipseIO::writeTimeStep(const Action::State&      action_state,
                                    const double              secs_elapsed,
                                    std::vector<RestartValue> value,
                                    const bool                write_double,
-                                   std::optional<int>        time_step)
+                                   std::optional<int>        time_step,
+                                   const bool                forceFinalWrite)
 {
     if (! this->impl->outputEnabled()) {
         // Run does not request any output.  Uncommon, but might be useful
@@ -1130,7 +1143,7 @@ void Opm::EclipseIO::writeTimeStep(const Action::State&      action_state,
 
     if (this->impl->wantSummaryOutput(report_step, isSubstep, secs_elapsed, time_step)) {
         this->impl->writeSummaryFile(st, report_step, time_step,
-                                     secs_elapsed, isSubstep);
+                                     secs_elapsed, isSubstep, forceFinalWrite);
     }
 
     if (this->impl->wantRestartOutput(report_step, isSubstep, time_step)) {
@@ -1140,8 +1153,7 @@ void Opm::EclipseIO::writeTimeStep(const Action::State&      action_state,
                                      write_double, std::move(value));
     }
 
-    if (! isSubstep &&
-        this->impl->isFinalStep(report_step) &&
+    if ( this->impl->isFinalWrite(report_step, isSubstep, forceFinalWrite) &&
         this->impl->summaryConfig().createRunSummary())
     {
         // Write RSM file at end of simulation.
