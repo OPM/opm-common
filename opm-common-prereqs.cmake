@@ -8,9 +8,8 @@ set (opm-common_CONFIG_VAR
   HAVE_FINAL
   HAVE_ECL_INPUT
   HAVE_CXA_DEMANGLE
-  HAVE_FNMATCH_H
   HAVE_DUNE_COMMON
-  )
+)
 
 # CMake 3.30.0 requires to find Boost in CONFIG mode
 if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.30.0)

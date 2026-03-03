@@ -80,7 +80,7 @@ macro(opm-common_config_hook)
   include(CheckIncludeFile)
   check_include_file(fnmatch.h FNMATCH_H_FOUND)
   if (FNMATCH_H_FOUND)
-    set(HAVE_FNMATCH_H 1)
+    target_compile_definitions(opmcommon PRIVATE HAVE_FNMATCH_H=1)
   endif()
 
   if(dune-common_FOUND)
