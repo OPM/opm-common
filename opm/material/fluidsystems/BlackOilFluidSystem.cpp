@@ -26,11 +26,9 @@
 
 #include <opm/common/ErrorMacros.hpp>
 
-#if HAVE_ECL_INPUT
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/FlatTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
-#endif
 
 #include <string_view>
 
@@ -38,7 +36,6 @@
 
 namespace Opm {
 
-#if HAVE_ECL_INPUT
 template <class Scalar, class IndexTraits, template<typename> typename Storage>
 void BlackOilFluidSystem<Scalar,IndexTraits, Storage>::
 initFromState(const EclipseState& eclState, const Schedule& schedule)
@@ -196,7 +193,6 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
         }
     }
 }
-#endif
 
 #define INSTANTIATE_TYPE(T) \
     template<> PhaseUsageInfo<BlackOilDefaultFluidSystemIndices> \

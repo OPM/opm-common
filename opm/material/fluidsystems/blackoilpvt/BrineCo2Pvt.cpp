@@ -62,7 +62,6 @@ BrineCo2Pvt(const ContainerT& salinity,
     }
 }
 
-#if HAVE_ECL_INPUT
 template<class Scalar, template<class> class Storage>
 void BrineCo2Pvt<Scalar, Storage>::
 initFromState(const EclipseState& eclState, const Schedule&)
@@ -146,7 +145,6 @@ initFromState(const EclipseState& eclState, const Schedule&)
                     ezrokhiViscNaClCoeff_[0], ezrokhiViscNaClCoeff_[1], ezrokhiViscNaClCoeff_[2]));
     }
 }
-#endif
 
 template<class Scalar, template<class> class Storage>
 void BrineCo2Pvt<Scalar, Storage>::

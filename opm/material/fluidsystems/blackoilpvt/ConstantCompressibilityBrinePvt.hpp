@@ -38,10 +38,8 @@ namespace Opm {
 template <class Scalar, bool enableThermal, bool enableBrine>
 class WaterPvtMultiplexer;
 
-#if HAVE_ECL_INPUT
 class EclipseState;
 class Schedule;
-#endif
 
 /*!
  * \brief This class represents the Pressure-Volume-Temperature relations of the gas phase
@@ -53,13 +51,11 @@ class ConstantCompressibilityBrinePvt
 public:
     using TabulatedFunction = Tabulated1DFunction<Scalar>;
 
-#if HAVE_ECL_INPUT
     /*!
      * \brief Sets the pressure-dependent water viscosity and density
      *        using a table stemming from the Eclipse PVTWSALT keyword.
      */
     void initFromState(const EclipseState& eclState, const Schedule&);
-#endif
 
     void setNumRegions(std::size_t numRegions);
 

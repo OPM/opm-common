@@ -32,9 +32,7 @@
 
 namespace Opm {
 
-#if HAVE_ECL_INPUT
 class EclipseState;
-#endif
 
 /*!
  * \brief Collects all grid properties which are relevant for end point scaling.
@@ -47,10 +45,8 @@ class EclEpsGridProperties
 {
 
 public:
-#if HAVE_ECL_INPUT
     EclEpsGridProperties(const EclipseState& eclState,
                          bool useImbibition);
-#endif
 
     int satRegion(const std::size_t active_index) const
     {

@@ -36,11 +36,9 @@
 
 namespace Opm {
 
-#if HAVE_ECL_INPUT
 class EclipseState;
 class Schedule;
 class SimpleTable;
-#endif
 
 /*!
  * \brief This class represents the Pressure-Volume-Temperature relations of the oil phas
@@ -55,7 +53,6 @@ public:
     using TabulatedTwoDFunction = UniformXTabulated2DFunction<Scalar>;
     using TabulatedOneDFunction = Tabulated1DFunction<Scalar>;
 
-#if HAVE_ECL_INPUT
     /*!
      * \brief Initialize the oil parameters via the data specified by the PVTO ECL keyword.
      */
@@ -68,8 +65,6 @@ private:
                           const SimpleTable& masterTable);
 
 public:
-#endif // HAVE_ECL_INPUT
-
     void setNumRegions(size_t numRegions);
 
     void setVapPars(const Scalar, const Scalar par2)

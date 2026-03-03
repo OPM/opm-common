@@ -35,7 +35,6 @@ namespace Opm {
 class EclEpsConfig;
 enum class EclTwoPhaseSystemType;
 
-#if HAVE_ECL_INPUT
 class EclipseState;
 class EclEpsGridProperties;
 
@@ -43,7 +42,6 @@ namespace satfunc {
 struct RawTableEndPoints;
 struct RawFunctionValues;
 }
-#endif
 
 /*!
  * \brief This structure represents all values which can be possibly used as scaling
@@ -117,7 +115,6 @@ struct EclEpsScalingPointsInfo
 
     void print() const;
 
-#if HAVE_ECL_INPUT
     /*!
      * \brief Extract the values of the unscaled scaling parameters.
      *
@@ -141,7 +138,6 @@ private:
     void calculateLeverettFactors(const EclipseState& eclState,
                                   const EclEpsGridProperties& epsProperties,
                                   unsigned activeIndex);
-#endif  // HAVE_ECL_INPUT
 };
 
 /*!

@@ -31,9 +31,7 @@
 
 namespace Opm {
 
-#if HAVE_ECL_INPUT
 class EclipseState;
-#endif
 
 /*!
  * \brief Specified which fluids are involved in a given twophase material law for
@@ -165,7 +163,6 @@ public:
     bool enableLeverettScaling() const
     { return enableLeverettScaling_; }
 
-#if HAVE_ECL_INPUT
     /*!
      * \brief Reads all relevant material parameters form a cell of a parsed ECL deck.
      *
@@ -175,7 +172,6 @@ public:
                        EclTwoPhaseSystemType twoPhaseSystemType,
                        const std::string& prefix = "",
                        const std::string& suffix = "");
-#endif
 
 private:
     // enable scaling of the input saturations (i.e., rescale the x-Axis)
