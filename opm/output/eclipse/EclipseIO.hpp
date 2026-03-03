@@ -226,7 +226,8 @@ public:
                        double               seconds_elapsed,
                        RestartValue         value,
                        const bool           write_double = false,
-                       std::optional<int>   time_step = std::nullopt);
+                       std::optional<int>   time_step = std::nullopt,
+                       const bool           isFinalWriteOut = false);
 
     /// Write reservoir state and summary information to disk for runs with
     /// local grid refinement.
@@ -296,7 +297,8 @@ public:
                        double                    seconds_elapsed,
                        std::vector<RestartValue> value,
                        const bool                write_double = false,
-                       std::optional<int>        time_step = std::nullopt);
+                       std::optional<int>        time_step = std::nullopt,
+                       const bool                isFinalWriteOut = false);
 
 
     /// Load per-cell solution data and wellstate from restart file.
