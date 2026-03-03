@@ -26,10 +26,8 @@
 #include <boost/test/unit_test.hpp>
 #include "config.h"
 
-#if HAVE_ECL_INPUT
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/Parser/Parser.hpp>
-#endif
 
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
 #include <opm/material/fluidsystems/BlackOilDefaultFluidSystemIndices.hpp>
@@ -62,7 +60,6 @@ BOOST_AUTO_TEST_CASE(default_constructor)
     BOOST_TEST_MESSAGE("Default constructor test passed.");
 }
 
-#if HAVE_ECL_INPUT
 BOOST_AUTO_TEST_CASE(constructor_with_phases)
 {
     // water and oil active, gas inactive
@@ -211,5 +208,5 @@ END
     BOOST_CHECK(pu.activeCompToActivePhaseIdx(1) == pu.canonicalToActivePhaseIdx(PhaseUsage::gasPhaseIdx) );
     BOOST_CHECK(pu.activePhaseToActiveCompIdx(2) == 2);
 }
-#endif
+
 }

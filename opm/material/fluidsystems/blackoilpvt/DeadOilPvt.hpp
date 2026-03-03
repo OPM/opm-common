@@ -34,10 +34,8 @@
 
 namespace Opm {
 
-#if HAVE_ECL_INPUT
 class EclipseState;
 class Schedule;
-#endif
 
 /*!
  * \brief This class represents the Pressure-Volume-Temperature relations of the oil phase
@@ -49,12 +47,10 @@ class DeadOilPvt
 public:
     using TabulatedOneDFunction = Tabulated1DFunction<Scalar>;
 
-#if HAVE_ECL_INPUT
     /*!
      * \brief Initialize the oil parameters via the data specified by the PVDO ECL keyword.
      */
     void initFromState(const EclipseState& eclState, const Schedule&);
-#endif // HAVE_ECL_INPUT
 
     void setNumRegions(std::size_t numRegions);
 

@@ -30,10 +30,6 @@
  */
 #include "config.h"
 
-#if !HAVE_ECL_INPUT
-#error "The test for hysteresis requires eclipse input support in opm-common"
-#endif
-
 #include <boost/mpl/list.hpp>
 
 #define BOOST_TEST_MODULE HYSTERESIS

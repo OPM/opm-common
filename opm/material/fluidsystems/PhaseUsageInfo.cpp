@@ -28,9 +28,7 @@
 #include <opm/material/fluidsystems/PhaseUsageInfo.hpp>
 #include <opm/material/fluidsystems/BlackOilDefaultFluidSystemIndices.hpp>
 
-#if HAVE_ECL_INPUT
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
-#endif
 
 #include <opm/common/ErrorMacros.hpp>
 #include <opm/input/eclipse/EclipseState/Phase.hpp>
@@ -82,7 +80,6 @@ void PhaseUsageInfo<IndexTraits>::reset_() {
     std::fill_n(&canonicalToActiveCompIdx_[0], numComponents, -1);
 }
 
-#if HAVE_ECL_INPUT
 template <typename IndexTraits>
 void PhaseUsageInfo<IndexTraits>::initFromState(const EclipseState& eclState)
 {
@@ -130,7 +127,6 @@ void PhaseUsageInfo<IndexTraits>::initFromPhases(const Phases& phases) {
 
     this->updateIndexMapping_();
 }
-#endif
 
 // Explicit template instantiations for commonly used IndexTraits
 template class PhaseUsageInfo<BlackOilDefaultFluidSystemIndices>;

@@ -26,18 +26,15 @@
 
 #include <opm/common/ErrorMacros.hpp>
 
-#if HAVE_ECL_INPUT
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/Schedule/OilVaporizationProperties.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
-#endif
 
 #include <fmt/format.h>
 
 namespace Opm {
 
-#if HAVE_ECL_INPUT
 template<class Scalar>
 void LiveOilPvt<Scalar>::
 initFromState(const EclipseState& eclState, const Schedule& schedule)
@@ -213,7 +210,6 @@ extendPvtoTable_(unsigned regionIdx,
         oilMu.appendSamplePoint(xIdx, newPo, newMuo);
     }
 }
-#endif
 
 template<class Scalar>
 void LiveOilPvt<Scalar>::setNumRegions(std::size_t numRegions)

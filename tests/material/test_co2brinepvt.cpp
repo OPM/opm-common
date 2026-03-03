@@ -34,10 +34,6 @@
 #define BOOST_TEST_MODULE Co2BrinePvt
 #include <boost/test/unit_test.hpp>
 
-#if !HAVE_ECL_INPUT
-#error "The test for the co2 brine PVT classes requires eclipse input support in opm-common"
-#endif
-
 //#include <opm/material/fluidsystems/blackoilpvt/Co2GasPvt.hpp>
 //#include <opm/material/fluidsystems/blackoilpvt/BrineCo2Pvt.hpp>
 

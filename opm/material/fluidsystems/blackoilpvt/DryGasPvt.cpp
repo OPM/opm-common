@@ -26,17 +26,14 @@
 
 #include <opm/common/ErrorMacros.hpp>
 
-#if HAVE_ECL_INPUT
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/PvdgTable.hpp>
-#endif
 
 #include <fmt/format.h>
 
 namespace Opm {
 
-#if HAVE_ECL_INPUT
 template<class Scalar>
 void DryGasPvt<Scalar>::
 initFromState(const EclipseState& eclState, const Schedule&)
@@ -87,7 +84,6 @@ initFromState(const EclipseState& eclState, const Schedule&)
 
     initEnd();
 }
-#endif
 
 template<class Scalar>
 void DryGasPvt<Scalar>::setNumRegions(std::size_t numRegions)

@@ -33,10 +33,8 @@
 
 namespace Opm {
 
-#if HAVE_ECL_INPUT
 class EclipseState;
 class Schedule;
-#endif
 
 template <class Scalar, bool enableThermal>
 class OilPvtMultiplexer;
@@ -94,12 +92,10 @@ public:
     ~OilPvtThermal()
     { delete isothermalPvt_; }
 
-#if HAVE_ECL_INPUT
     /*!
      * \brief Implement the temperature part of the oil PVT properties.
      */
     void initFromState(const EclipseState& eclState, const Schedule& schedule);
-#endif // HAVE_ECL_INPUT
 
     /*!
      * \brief Set the number of PVT-regions considered by this object.

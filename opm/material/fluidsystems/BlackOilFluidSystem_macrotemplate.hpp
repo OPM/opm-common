@@ -58,13 +58,8 @@
 
 namespace Opm {
 
-#if HAVE_ECL_INPUT
 class EclipseState;
 class Schedule;
-#endif
-
-
-
 
 /*!
  * \brief A fluid system which uses the black-oil model assumptions to calculate
@@ -254,12 +249,10 @@ public:
     /****************************************
      * Initialization
      ****************************************/
-#if HAVE_ECL_INPUT
     /*!
      * \brief Initialize the fluid system using an ECL deck object
      */
     STATIC_OR_NOTHING void initFromState(const EclipseState& eclState, const Schedule& schedule);
-#endif // HAVE_ECL_INPUT
 
     /*!
      * \brief Begin the initialization of the black oil fluid system.

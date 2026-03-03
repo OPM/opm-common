@@ -24,10 +24,8 @@
 #ifndef OPM_PHASEUSAGEINFO_HPP
 #define OPM_PHASEUSAGEINFO_HPP
 
-#if HAVE_ECL_INPUT
 #include <opm/common/ErrorMacros.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
-#endif
 
 #include <array>
 #include <cassert>
@@ -110,11 +108,9 @@ public:
         return activePhaseIdx;
     }
 
-#if HAVE_ECL_INPUT
     void initFromPhases(const Phases& phases);
 
     void initFromState(const EclipseState& eclState);
-#endif
 
     bool hasSolvent() const noexcept {
         return has_solvent;

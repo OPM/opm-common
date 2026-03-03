@@ -112,9 +112,7 @@ public:
     assert(enableEzrokhiDensity == false && "Ezrokhi density not supported by GPUs");
 }
 
-#if HAVE_ECL_INPUT
     void initFromState(const EclipseState& eclState, const Schedule&);
-#endif
 
     void setNumRegions(std::size_t numRegions);
 

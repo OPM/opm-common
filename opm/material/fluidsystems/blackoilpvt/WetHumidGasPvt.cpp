@@ -26,17 +26,14 @@
 
 #include <opm/common/ErrorMacros.hpp>
 
-#if HAVE_ECL_INPUT
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
-#endif
 
 #include <fmt/format.h>
 
 namespace Opm {
 
-#if HAVE_ECL_INPUT
 template<class Scalar>
 void WetHumidGasPvt<Scalar>::
 initFromState(const EclipseState& eclState, const Schedule& schedule)
@@ -395,7 +392,6 @@ extendPvtgTable_(unsigned regionIdx,
         gasMuRvwSat.appendSamplePoint(xIdx, newRv, newMug);
     }
 }
-#endif
 
 template<class Scalar>
 void WetHumidGasPvt<Scalar>::setNumRegions(std::size_t numRegions)
