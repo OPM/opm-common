@@ -70,21 +70,16 @@ endmacro()
 
 macro(opm-common_config_hook)
   if(ENABLE_ECL_INPUT)
-    include_directories(${EXTRA_INCLUDES} ${PROJECT_BINARY_DIR})
     set(OPM_PROJECT_EXTRA_CODE_INTREE "${OPM_PROJECT_EXTRA_CODE_INTREE}
-                                        list(APPEND opm-common_INCLUDE_DIRS ${EXTRA_INCLUDES} ${PROJECT_BINARY_DIR})")
-    if(ENABLE_ECL_INPUT)
-      set(OPM_PROJECT_EXTRA_CODE_INTREE "${OPM_PROJECT_EXTRA_CODE_INTREE}
-                                         set(HAVE_ECL_INPUT 1)")
-      set(OPM_PROJECT_EXTRA_CODE_INSTALLED "${OPM_PROJECT_EXTRA_CODE_INSTALLED}
-                                            set(HAVE_ECL_INPUT 1)")
-      set(HAVE_ECL_INPUT 1)
-    endif()
+                                       set(HAVE_ECL_INPUT 1)")
+    set(OPM_PROJECT_EXTRA_CODE_INSTALLED "${OPM_PROJECT_EXTRA_CODE_INSTALLED}
+                                          set(HAVE_ECL_INPUT 1)")
+    set(HAVE_ECL_INPUT 1)
     if(ENABLE_ECL_OUTPUT)
       set(OPM_PROJECT_EXTRA_CODE_INTREE "${OPM_PROJECT_EXTRA_CODE_INTREE}
-                                         set(HAVE_ECL_OUTPUT 1)")
+                                           set(HAVE_ECL_OUTPUT 1)")
       set(OPM_PROJECT_EXTRA_CODE_INSTALLED "${OPM_PROJECT_EXTRA_CODE_INSTALLED}
-                                            set(HAVE_ECL_OUTPUT 1)")
+                                          set(HAVE_ECL_OUTPUT 1)")
     endif()
   endif()
 
