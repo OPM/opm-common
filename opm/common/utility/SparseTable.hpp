@@ -35,15 +35,19 @@
 #ifndef OPM_SPARSETABLE_HEADER
 #define OPM_SPARSETABLE_HEADER
 
-#include <vector>
-#include <numeric>
-#include <algorithm>
-#include <ostream>
-#include <type_traits>
-#include <opm/common/ErrorMacros.hpp>
+#include <opm/grid/utility/ErrorMacros.hpp>
 #include <opm/grid/utility/IteratorRange.hpp>
 
+#if HAVE_OPM_COMMON
 #include <opm/common/utility/gpuistl_if_available.hpp>
+#endif
+
+#include <algorithm>
+#include <cassert>
+#include <numeric>
+#include <ostream>
+#include <type_traits>
+#include <vector>
 
 namespace Opm
 {

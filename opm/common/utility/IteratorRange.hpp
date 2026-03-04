@@ -23,7 +23,11 @@
 #include <iterator>
 #include <type_traits>
 
+#if HAVE_OPM_COMMON
 #include <opm/common/utility/gpuDecorators.hpp>
+#else
+#define OPM_HOST_DEVICE
+#endif
 
 namespace Opm {
 
