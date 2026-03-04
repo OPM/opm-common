@@ -85,114 +85,6 @@ namespace {
         }
     }
 
-    std::tuple<std::vector<double>, std::vector< double>,
-               std::vector<double>, std::vector< double>,
-               std::vector<double>, std::vector< double>>
-        simulate_lgr_refinement()
-    {
-        std::vector<double> coord_lgr1 = {
-            0.00000000e+00,    0.00000000e+00,    0.00000000e+00,    0.00000000e+00,    0.00000000e+00,    3.04800000e+02,
-            2.37032807e+02,    0.00000000e+00,    0.00000000e+00,    2.37032807e+02,    0.00000000e+00,    3.04800000e+02,
-            4.74065620e+02,    0.00000000e+00,    0.00000000e+00,    4.74065620e+02,    0.00000000e+00,    3.04800000e+02,
-            7.11098400e+02,    0.00000000e+00,    0.00000000e+00,    7.11098400e+02,    0.00000000e+00,    3.04800000e+02,
-            0.00000000e+00,    3.55599980e+02,    0.00000000e+00,    0.00000000e+00,    3.55599980e+02,    3.04800000e+02,
-            2.37032807e+02,    3.55599980e+02,    0.00000000e+00,    2.37032807e+02,    3.55599980e+02,    3.04800000e+02,
-            4.74065620e+02,    3.55599980e+02,    0.00000000e+00,    4.74065620e+02,    3.55599980e+02,    3.04800000e+02,
-            7.11098400e+02,    3.55599980e+02,    0.00000000e+00,    7.11098400e+02,    3.55599980e+02,    3.04800000e+02,
-            0.00000000e+00,    7.11199990e+02,    0.00000000e+00,    0.00000000e+00,    7.11199990e+02,    3.04800000e+02,
-            2.37032807e+02,    7.11199990e+02,    0.00000000e+00,    2.37032807e+02,    7.11199990e+02,    3.04800000e+02,
-            4.74065620e+02,    7.11199990e+02,    0.00000000e+00,    4.74065620e+02,    7.11199990e+02,    3.04800000e+02,
-            7.11098400e+02,    7.11199990e+02,    0.00000000e+00,    7.11098400e+02,    7.11199990e+02,    3.04800000e+02,
-            0.00000000e+00,    1.06680000e+03,    0.00000000e+00,    0.00000000e+00,    1.06680000e+03,    3.04800000e+02,
-            2.37032807e+02,    1.06680000e+03,    0.00000000e+00,    2.37032807e+02,    1.06680000e+03,    3.04800000e+02,
-            4.74065620e+02,    1.06680000e+03,    0.00000000e+00,    4.74065620e+02,    1.06680000e+03,    3.04800000e+02,
-            7.11098400e+02,    1.06680000e+03,    0.00000000e+00,    7.11098400e+02,    1.06680000e+03,    3.04800000e+02
-        };
-
-        std::vector<double> coord_lgr2 = {
-            1.42219680e+03,    0.00000000e+00,    0.00000000e+00,    1.42219680e+03,    0.00000000e+00,    3.04800000e+02,
-            1.65922955e+03,    0.00000000e+00,    0.00000000e+00,    1.65922955e+03,    0.00000000e+00,    3.04800000e+02,
-            1.89626245e+03,    0.00000000e+00,    0.00000000e+00,    1.89626245e+03,    0.00000000e+00,    3.04800000e+02,
-            2.13329520e+03,    0.00000000e+00,    0.00000000e+00,    2.13329520e+03,    0.00000000e+00,    3.04800000e+02,
-            1.42219680e+03,    3.55599980e+02,    0.00000000e+00,    1.42219680e+03,    3.55599980e+02,    3.04800000e+02,
-            1.65922955e+03,    3.55599980e+02,    0.00000000e+00,    1.65922955e+03,    3.55599980e+02,    3.04800000e+02,
-            1.89626245e+03,    3.55599980e+02,    0.00000000e+00,    1.89626245e+03,    3.55599980e+02,    3.04800000e+02,
-            2.13329520e+03,    3.55599980e+02,    0.00000000e+00,    2.13329520e+03,    3.55599980e+02,    3.04800000e+02,
-            1.42219680e+03,    7.11199990e+02,    0.00000000e+00,    1.42219680e+03,    7.11199990e+02,    3.04800000e+02,
-            1.65922955e+03,    7.11199990e+02,    0.00000000e+00,    1.65922955e+03,    7.11199990e+02,    3.04800000e+02,
-            1.89626245e+03,    7.11199990e+02,    0.00000000e+00,    1.89626245e+03,    7.11199990e+02,    3.04800000e+02,
-            2.13329520e+03,    7.11199990e+02,    0.00000000e+00,    2.13329520e+03,    7.11199990e+02,    3.04800000e+02,
-            1.42219680e+03,    1.06680000e+03,    0.00000000e+00,    1.42219680e+03,    1.06680000e+03,    3.04800000e+02,
-            1.65922955e+03,    1.06680000e+03,    0.00000000e+00,    1.65922955e+03,    1.06680000e+03,    3.04800000e+02,
-            1.89626245e+03,    1.06680000e+03,    0.00000000e+00,    1.89626245e+03,    1.06680000e+03,    3.04800000e+02,
-            2.13329520e+03,    1.06680000e+03,    0.00000000e+00,    2.13329520e+03,    1.06680000e+03,    3.04800000e+02
-        };
-        std::vector<double> coord_lgr3 = {
-            2.84439360e+03,    0.00000000e+00,    0.00000000e+00,    2.84439360e+03,    0.00000000e+00,    3.04800000e+02,
-            3.08142650e+03,    0.00000000e+00,    0.00000000e+00,    3.08142650e+03,    0.00000000e+00,    3.04800000e+02,
-            3.31845910e+03,    0.00000000e+00,    0.00000000e+00,    3.31845910e+03,    0.00000000e+00,    3.04800000e+02,
-            3.55549200e+03,    0.00000000e+00,    0.00000000e+00,    3.55549200e+03,    0.00000000e+00,    3.04800000e+02,
-            2.84439360e+03,    3.55599980e+02,    0.00000000e+00,    2.84439360e+03,    3.55599980e+02,    3.04800000e+02,
-            3.08142650e+03,    3.55599980e+02,    0.00000000e+00,    3.08142650e+03,    3.55599980e+02,    3.04800000e+02,
-            3.31845910e+03,    3.55599980e+02,    0.00000000e+00,    3.31845910e+03,    3.55599980e+02,    3.04800000e+02,
-            3.55549200e+03,    3.55599980e+02,    0.00000000e+00,    3.55549200e+03,    3.55599980e+02,    3.04800000e+02,
-            2.84439360e+03,    7.11199990e+02,    0.00000000e+00,    2.84439360e+03,    7.11199990e+02,    3.04800000e+02,
-            3.08142650e+03,    7.11199990e+02,    0.00000000e+00,    3.08142650e+03,    7.11199990e+02,    3.04800000e+02,
-            3.31845910e+03,    7.11199990e+02,    0.00000000e+00,    3.31845910e+03,    7.11199990e+02,    3.04800000e+02,
-            3.55549200e+03,    7.11199990e+02,    0.00000000e+00,    3.55549200e+03,    7.11199990e+02,    3.04800000e+02,
-            2.84439360e+03,    1.06680000e+03,    0.00000000e+00,    2.84439360e+03,    1.06680000e+03,    3.04800000e+02,
-            3.08142650e+03,    1.06680000e+03,    0.00000000e+00,    3.08142650e+03,    1.06680000e+03,    3.04800000e+02,
-            3.31845910e+03,    1.06680000e+03,    0.00000000e+00,    3.31845910e+03,    1.06680000e+03,    3.04800000e+02,
-            3.55549200e+03,    1.06680000e+03,    0.00000000e+00,    3.55549200e+03,    1.06680000e+03,    3.04800000e+02
-        };
-        std::vector<double> zcorn_lgr1 = {
-            2.53746000e+03,    2.53746000e+03,    2.53746000e+03,    2.53746000e+03,    2.53746000e+03,    2.53746000e+03,
-            2.53746000e+03,    2.53746000e+03,    2.53746000e+03,    2.53746000e+03,    2.53746000e+03,    2.53746000e+03,
-            2.53746000e+03,    2.53746000e+03,    2.53746000e+03,    2.53746000e+03,    2.53746000e+03,    2.53746000e+03,
-            2.53746000e+03,    2.53746000e+03,    2.53746000e+03,    2.53746000e+03,    2.53746000e+03,    2.53746000e+03,
-            2.53746000e+03,    2.53746000e+03,    2.53746000e+03,    2.53746000e+03,    2.53746000e+03,    2.53746000e+03,
-            2.53746000e+03,    2.53746000e+03,    2.53746000e+03,    2.53746000e+03,    2.53746000e+03,    2.53746000e+03,
-            2.55270000e+03,    2.55270000e+03,    2.55270000e+03,    2.55270000e+03,    2.55270000e+03,    2.55270000e+03,
-            2.55270000e+03,    2.55270000e+03,    2.55270000e+03,    2.55270000e+03,    2.55270000e+03,    2.55270000e+03,
-            2.55270000e+03,    2.55270000e+03,    2.55270000e+03,    2.55270000e+03,    2.55270000e+03,    2.55270000e+03,
-            2.55270000e+03,    2.55270000e+03,    2.55270000e+03,    2.55270000e+03,    2.55270000e+03,    2.55270000e+03,
-            2.55270000e+03,    2.55270000e+03,    2.55270000e+03,    2.55270000e+03,    2.55270000e+03,    2.55270000e+03,
-            2.55270000e+03,    2.55270000e+03,    2.55270000e+03,    2.55270000e+03,    2.55270000e+03,    2.55270000e+03
-        };
-        std::vector<double> zcorn_lgr2 = {
-            2.53746000e+03,    2.53746000e+03,    2.53746000e+03,    2.53746000e+03,    2.53746000e+03,    2.53746000e+03,
-            2.53746000e+03,    2.53746000e+03,    2.53746000e+03,    2.53746000e+03,    2.53746000e+03,    2.53746000e+03,
-            2.53746000e+03,    2.53746000e+03,    2.53746000e+03,    2.53746000e+03,    2.53746000e+03,    2.53746000e+03,
-            2.53746000e+03,    2.53746000e+03,    2.53746000e+03,    2.53746000e+03,    2.53746000e+03,    2.53746000e+03,
-            2.53746000e+03,    2.53746000e+03,    2.53746000e+03,    2.53746000e+03,    2.53746000e+03,    2.53746000e+03,
-            2.53746000e+03,    2.53746000e+03,    2.53746000e+03,    2.53746000e+03,    2.53746000e+03,    2.53746000e+03,
-            2.55270000e+03,    2.55270000e+03,    2.55270000e+03,    2.55270000e+03,    2.55270000e+03,    2.55270000e+03,
-            2.55270000e+03,    2.55270000e+03,    2.55270000e+03,    2.55270000e+03,    2.55270000e+03,    2.55270000e+03,
-            2.55270000e+03,    2.55270000e+03,    2.55270000e+03,    2.55270000e+03,    2.55270000e+03,    2.55270000e+03,
-            2.55270000e+03,    2.55270000e+03,    2.55270000e+03,    2.55270000e+03,    2.55270000e+03,    2.55270000e+03,
-            2.55270000e+03,    2.55270000e+03,    2.55270000e+03,    2.55270000e+03,    2.55270000e+03,    2.55270000e+03,
-            2.55270000e+03,    2.55270000e+03,    2.55270000e+03,    2.55270000e+03,    2.55270000e+03,    2.55270000e+03
-        };
-        std::vector<double> zcorn_lgr3 = {
-            2.53746000e+03,    2.53746000e+03,    2.53746000e+03,    2.53746000e+03,    2.53746000e+03,    2.53746000e+03,
-            2.53746000e+03,    2.53746000e+03,    2.53746000e+03,    2.53746000e+03,    2.53746000e+03,    2.53746000e+03,
-            2.53746000e+03,    2.53746000e+03,    2.53746000e+03,    2.53746000e+03,    2.53746000e+03,    2.53746000e+03,
-            2.53746000e+03,    2.53746000e+03,    2.53746000e+03,    2.53746000e+03,    2.53746000e+03,    2.53746000e+03,
-            2.53746000e+03,    2.53746000e+03,    2.53746000e+03,    2.53746000e+03,    2.53746000e+03,    2.53746000e+03,
-            2.53746000e+03,    2.53746000e+03,    2.53746000e+03,    2.53746000e+03,    2.53746000e+03,    2.53746000e+03,
-            2.55270000e+03,    2.55270000e+03,    2.55270000e+03,    2.55270000e+03,    2.55270000e+03,    2.55270000e+03,
-            2.55270000e+03,    2.55270000e+03,    2.55270000e+03,    2.55270000e+03,    2.55270000e+03,    2.55270000e+03,
-            2.55270000e+03,    2.55270000e+03,    2.55270000e+03,    2.55270000e+03,    2.55270000e+03,    2.55270000e+03,
-            2.55270000e+03,    2.55270000e+03,    2.55270000e+03,    2.55270000e+03,    2.55270000e+03,    2.55270000e+03,
-            2.55270000e+03,    2.55270000e+03,    2.55270000e+03,    2.55270000e+03,    2.55270000e+03,    2.55270000e+03,
-            2.55270000e+03,    2.55270000e+03,    2.55270000e+03,    2.55270000e+03,    2.55270000e+03,    2.55270000e+03
-        };
-
-        return {coord_lgr1, zcorn_lgr1,
-                coord_lgr2, zcorn_lgr2,
-                coord_lgr3, zcorn_lgr3};
-    }
-
     Opm::SummaryState sim_stateLGR_example04()
     {
         auto state = Opm::SummaryState{Opm::TimeService::now(), 0.0};
@@ -824,17 +716,6 @@ BOOST_AUTO_TEST_CASE(EclipseIOLGR_Integration)
     auto es = simCase.es;
     const auto& eclGrid = es.getInputGrid();
 
-    {
-        auto [coord_lgr1, zcorn_lgr1,
-                    coord_lgr2, zcorn_lgr2,
-                    coord_lgr3, zcorn_lgr3] = simulate_lgr_refinement();
-
-              es.set_lgr_refinement("LGR1", coord_lgr1, zcorn_lgr1);
-              es.set_lgr_refinement("LGR2", coord_lgr2, zcorn_lgr2);
-              es.set_lgr_refinement("LGR3", coord_lgr3, zcorn_lgr3);
-    }
-
-
     const Schedule& schedule = simCase.sched;
     const SummaryConfig summary_config( deck, schedule, es.fieldProps(), es.aquifer());
     const SummaryState st = sim_stateLGR_example04();
@@ -908,29 +789,41 @@ BOOST_AUTO_TEST_CASE(EclipseIOLGR_Integration)
     {
         const auto egridFile = ::Opm::EclIO::OutputStream::
                      outputFileName({test_area.currentWorkingDirectory(), "TESTE_LGR_INTEGRATION"}, "EGRID");
-        Opm::EclIO::EGrid egrid(egridFile,"LGR3");
+        Opm::EclIO::EGrid egrid1(egridFile,"LGR1");
+        Opm::EclIO::EGrid egrid2(egridFile,"LGR2");
+        Opm::EclIO::EGrid egrid3(egridFile,"LGR3");
+
+
         std::vector<std::string> lgr_names   = simCase.grid.get_all_lgr_labels();
-        std::vector<std::string> expected_lgr = egrid.list_of_lgrs();
+        std::vector<std::string> expected_lgr = egrid1.list_of_lgrs();
 
         BOOST_CHECK_EQUAL_COLLECTIONS(
             lgr_names.begin(), lgr_names.end(),
             expected_lgr.begin(), expected_lgr.end()
         );
 
-        egrid.load_grid_data();
-        std::vector<float> coord_file = egrid.get_coord();
-        std::vector<double> coord_obtained(coord_file.begin(), coord_file.end());
-        std::vector<float> zcorn_file  = egrid.get_zcorn();
-        std::vector<double> zcorn_obtained(zcorn_file.begin(), zcorn_file.end());
-        auto [_, __, ___, ____, coord_expected, zcorn_expected] = simulate_lgr_refinement();
-        double K = 1/0.3048;
-        std::ranges::transform(coord_expected, coord_expected.begin(),
-                               [K](double v) { return v * K; });
-        std::ranges::transform(zcorn_expected, zcorn_expected.begin(),
-                               [K](double v) { return v * K; });
+        egrid3.load_grid_data();
 
-        checkVectorsClose(coord_obtained, coord_expected, tol, "coord_obtained");
-        checkVectorsClose(zcorn_obtained, zcorn_expected, tol, "zcorn_obtained");
+        std::array<double,8> Xi = {0.0};
+        std::array<double,8> Yi = {0.0};
+        std::array<double,8> Zi = {0.0};
+
+        auto lgr_grid = simCase.grid.getLGRCell("LGR3");
+
+        auto computeAverage = [](const std::array<double, 8>& X, const std::array<double, 8>& Y, const std::array<double, 8>& Z) {
+            const float unit_conv = 0.3048;
+            double xavg = std::accumulate(X.begin(), X.end(), 0.0) / X.size();
+            double yavg = std::accumulate(Y.begin(), Y.end(), 0.0) / Y.size();
+            double zavg = std::accumulate(Z.begin(), Z.end(), 0.0) / Z.size();
+            return std::array<double, 3>{xavg*unit_conv, yavg*unit_conv, zavg*unit_conv};
+        };
+
+        for (std::size_t i = 0; i < 9; ++i) {
+            egrid3.getCellCorners(i,  Xi, Yi, Zi);
+            auto avg_corners = computeAverage(Xi, Yi, Zi);
+            auto center_computed = lgr_grid.getCellCenter(i);
+            checkVectorsClose(avg_corners, center_computed, tol, "Cell Center");
+        }
     }
 
     {
@@ -964,4 +857,64 @@ BOOST_AUTO_TEST_CASE(EclipseIOLGR_Integration)
                                                                                 26.0f, 27.0f, 28.0f,
                                                                                 29.0f, 30.0f, 31.0f,}, tol, "lgr3_pressure");
     }
+}
+
+
+BOOST_AUTO_TEST_CASE(EclipseIOLGR_IntegrationLGR)
+{
+    WorkArea test_area("test_EclioseIO_LGR_PROP");
+    test_area.copyIn("LGR_GROUP_EX04.DATA");
+
+    const auto deck = msw_sim("LGR_GROUP_EX04.DATA");
+    const auto simCase = SimulationCase{deck};
+    auto es = simCase.es;
+    const auto& eclGrid = es.getInputGrid();
+
+    const Schedule& schedule = simCase.sched;
+    const SummaryConfig summary_config( deck, schedule, es.fieldProps(), es.aquifer());
+    const SummaryState st = sim_stateLGR_example04();
+    es.getIOConfig().setBaseName( "TESTE_LGR_INTEGRATION_PROP" );
+    EclipseIO eclWriter( es, eclGrid , schedule, summary_config);
+
+    using measure = UnitSystem::measure;
+    using TargetType = data::TargetType;
+
+    auto createEGridProps = [](int nx, int ny, int nz) {
+        std::vector<double> tranx(nx * ny * nz);
+        std::vector<double> trany(nx * ny * nz);
+        std::vector<double> tranz(nx * ny * nz);
+        // Fill tranx, trany, tranz with some test data if needed
+        double step = 0.5e-12;
+        std::generate(tranx.begin(), tranx.end(), [n = 1e-12, step]() mutable { double val = n; n += step; return val; });
+        std::generate(trany.begin(), trany.end(), [n = 1e-12, step]() mutable { double val = n; n += step; return val; });
+        std::generate(tranz.begin(), tranz.end(), [n = 1e-12, step]() mutable { double val = n; n += step; return val; });
+
+        return data::Solution {
+            { "TRANX", data::CellData { measure::transmissibility, tranx, TargetType::INIT } },
+            { "TRANY", data::CellData { measure::transmissibility, trany, TargetType::INIT } },
+            { "TRANZ", data::CellData { measure::transmissibility, tranz, TargetType::INIT } },
+        };
+    };
+
+    std::vector<data::Solution> eGridPropsList;
+    eGridPropsList.reserve(4);
+    eGridPropsList.emplace_back(createEGridProps(5, 1, 1));
+    eGridPropsList.emplace_back(createEGridProps(3, 3, 1));
+    eGridPropsList.emplace_back(createEGridProps(3, 3, 1));
+    eGridPropsList.emplace_back(createEGridProps(3, 3, 1));
+
+    eclWriter.writeInitial(eGridPropsList, {});
+
+    std::vector<float> expected_tranx_lgr2 =  {0.37468846E+01,   0.56203265E+01,   0.74937692E+01,   0.93672113E+01,
+                                               0.11240653E+02,   0.13114096E+02,   0.14987538E+02,   0.16860981E+02,
+                                               0.18734423E+02, };
+    {
+        const auto egridFile = ::Opm::EclIO::OutputStream::
+                     outputFileName({test_area.currentWorkingDirectory(), "TESTE_LGR_INTEGRATION_PROP"}, "INIT");
+        Opm::EclIO::EGrid init(egridFile, "LGR2");
+        init.loadData("TRANX");
+        std::vector<float> tranx_file = init.get<float>("TRANX");
+        checkVectorsClose(tranx_file, expected_tranx_lgr2, 1e-4, "tranx_file");
+    }
+
 }

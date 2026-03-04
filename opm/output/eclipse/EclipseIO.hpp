@@ -161,6 +161,28 @@ public:
                       std::map<std::string, std::vector<int>> int_data = {},
                       const std::vector<NNCdata>& nnc = {});
 
+
+    /// \param[in] simProps Vector of initial per-cell properties such as
+    /// transmissibilities.  Will be output to the INIT file.
+    /// simProps[0] is expected to contain the properties for the "Global" grid
+    /// simProps[i] for i > 0 is expected to contain the properties for the
+    /// "LGR" grid, if it exists.
+    ///
+    /// \param[in] int_data Additional integer arrays defined by simulator.
+    /// May contain things like the MPI partition arrays.  Will be output to
+    /// the INIT file.
+    ///
+    /// \param[in] nnc Run's non-neighbouring connections.  Includes those
+    /// connections that are derived from corner-point grid processing and
+    /// those connections that are explicitly entered using keywords like
+    /// NNC, EDITNNC, or EDITNNCR.  The cell pairs will be output to the
+    /// EGRID file while the associate transmissibility will be output to
+    /// the INIT file.
+    void writeInitial(std::vector<data::Solution>,
+                      std::map<std::string, std::vector<int>> int_data = {},
+                      const std::vector<NNCdata>& nnc = {});
+
+
     /// Write reservoir state and summary information to disk.
     ///
     /// Calling this method is only meaningful after the first time step has

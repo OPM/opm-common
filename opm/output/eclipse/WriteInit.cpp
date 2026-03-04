@@ -705,11 +705,19 @@ namespace {
     void writeSimulatorPropertiesLGRCell(const ::Opm::EclipseGrid&         grid,
                                          const ::Opm::data::Solution&      simProps,
                                          ::Opm::EclIO::OutputStream::Init& initFile,
-                                         const std::vector<int>&          global_fathers)
+                                         const std::vector<int>&           global_fathers,
+                                         bool fullProperties = false)
     {
         for (const auto& prop : simProps) {
             const auto& value = grid.compressedVector(prop.second.data<double>());
-            initFile.write(prop.first, singlePrecision(VectorUtil::filterArray(value, global_fathers)));
+            if (!fullProperties)
+            {
+                initFile.write(prop.first, singlePrecision(VectorUtil::filterArray(value, global_fathers)));
+            }
+            else
+            {
+                initFile.write(prop.first, singlePrecision(value));
+            }
         }
     }
 
@@ -866,11 +874,12 @@ namespace {
     void writeLGRLocalProperties(const ::Opm::EclipseState& es,
                                  const ::Opm::EclipseGrid& grid,
                                  const ::Opm::Schedule& schedule,
-                                 const ::Opm::data::Solution& simProps,
+                                 const std::vector<std::reference_wrapper<const ::Opm::data::Solution>> simProps,
                                  const std::vector<double>& porv,
                                  const ::Opm::UnitSystem& units,
                                        ::Opm::EclIO::OutputStream::Init& initFile)
     {
+        bool fullProperties = simProps.size() > 1;
         if (grid.is_lgr()) {
             std::vector<std::string> all_lgr_tag = grid.get_all_lgr_labels();
             for (std::size_t index : grid.get_print_order_lgr())
@@ -885,7 +894,8 @@ namespace {
                 writeGridGeometryLGRCell(grid, lgr_grid, units, initFile,
                                 subdivisions[0], subdivisions[1], subdivisions[2]);
                 writeDoubleCellProperties(es, units, initFile, global_fathers);
-                writeSimulatorPropertiesLGRCell(grid, simProps, initFile, global_fathers);
+                const auto& simProp = fullProperties ? simProps[index + 1] : simProps[0];
+                writeSimulatorPropertiesLGRCell(fullProperties ? lgr_grid : grid, simProp, initFile, global_fathers, fullProperties);
                 {
                     const auto writeAll = es.cfg().io().writeAllTransMultipliers();
                     auto multipliers = es.getTransMult()
@@ -895,6 +905,7 @@ namespace {
                     es.globalFieldProps().get_double("MULTPV"),
                     ::Opm::data::TargetType::INIT);
                 }
+                    // needs to be changed to support different multipliers for different LGRs if fullProperties is true
                     writeSimulatorPropertiesLGRCell(grid, multipliers, initFile, global_fathers);
                 }
             }
@@ -942,13 +953,26 @@ namespace {
 
 } // Anonymous namespace
 
-void Opm::InitIO::write(const ::Opm::EclipseState&              es,
-                        const ::Opm::EclipseGrid&               grid,
-                        const ::Opm::Schedule&                  schedule,
-                        const ::Opm::data::Solution&            simProps,
-                        std::map<std::string, std::vector<int>> int_data,
-                        const std::vector<::Opm::NNCdata>&      nnc,
-                        ::Opm::EclIO::OutputStream::Init&       initFile)
+void Opm::InitIO::write(const ::Opm::EclipseState&                  es,
+                        const ::Opm::EclipseGrid&                   grid,
+                        const ::Opm::Schedule&                      schedule,
+                        const ::Opm::data::Solution&                simProps,
+                        std::map<std::string, std::vector<int>>     int_data,
+                        const std::vector<::Opm::NNCdata>&          nnc,
+                        ::Opm::EclIO::OutputStream::Init&           initFile)
+    {
+        const std::vector<std::reference_wrapper<const ::Opm::data::Solution>> simPropsVec{simProps};
+        Opm::InitIO::write(es, grid, schedule, simPropsVec, std::move(int_data), nnc, initFile);
+    }
+
+
+void Opm::InitIO::write(const ::Opm::EclipseState&                  es,
+                        const ::Opm::EclipseGrid&                   grid,
+                        const ::Opm::Schedule&                      schedule,
+                        const std::vector<std::reference_wrapper<const ::Opm::data::Solution>>   simProps,
+                        std::map<std::string, std::vector<int>>     int_data,
+                        const std::vector<::Opm::NNCdata>&          nnc,
+                        ::Opm::EclIO::OutputStream::Init&           initFile)
 {
     // The INIT file is a binary file.  The data is written in the
     const auto& units = es.getUnits();
@@ -969,7 +993,7 @@ void Opm::InitIO::write(const ::Opm::EclipseState&              es,
 
     writeDoubleCellProperties(es, units, initFile);
 
-    writeSimulatorProperties(grid, simProps, initFile);
+    writeSimulatorProperties(grid, simProps.front(), initFile);
 
     // Size defaulted MULT* arrays according to the number of active cells
     // in the processed simulation grid--i.e., grid.getNumActive().
