@@ -17,9 +17,12 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <deque>
-#include <cstddef>
 #include <algorithm>
+#include <cstddef>
+#include <deque>
+#include <stdexcept>
+#include <string>
+#include <utility>
 
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/Deck/DeckItem.hpp>
@@ -29,7 +32,6 @@
 #include <opm/input/eclipse/EclipseState/Grid/NNC.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/E.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/N.hpp>
-#include <utility>
 
 namespace Opm
 {
