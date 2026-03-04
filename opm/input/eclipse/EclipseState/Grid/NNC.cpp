@@ -17,10 +17,12 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <array>
-#include <deque>
-#include <cstddef>
 #include <algorithm>
+#include <cstddef>
+#include <deque>
+#include <stdexcept>
+#include <string>
+#include <utility>
 
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/Deck/DeckItem.hpp>
@@ -340,4 +342,100 @@ bool is_neighbor(const EclipseGrid& grid, std::size_t g1, std::size_t g2) {
         else
             return {};
     }
+
+
+    NNCCollection::NNCCollection(NNC nnc_global)
+    {
+        addNNC(std::move(nnc_global));
+    }
+
+    void NNCCollection::addNNC(std::size_t grid1, std::size_t grid2, NNC nnc)
+    {
+        const auto key = std::make_pair(grid1, grid2);
+        if (m_diffGridNNCs.count(key)) {
+            throw std::runtime_error(
+                "NNCCollection::addNNC: cross-grid NNC already exists for grid pair ("
+                + std::to_string(grid1) + ", " + std::to_string(grid2) + ")");
+        }
+        m_diffGridNNCs.emplace(key, std::move(nnc));
+    }
+
+    const NNC& NNCCollection::getNNC(std::size_t grid1, std::size_t grid2) const
+    {
+        const auto key = std::make_pair(grid1, grid2);
+        const auto it  = m_diffGridNNCs.find(key);
+        if (it == m_diffGridNNCs.end()) {
+            throw std::runtime_error(
+                "NNCCollection::getNNC: no cross-grid NNC for grid pair ("
+                + std::to_string(grid1) + ", " + std::to_string(grid2) + ")");
+        }
+        return it->second;
+    }
+
+    NNC& NNCCollection::getNNC(std::size_t grid1, std::size_t grid2)
+    {
+        return const_cast<NNC&>(std::as_const(*this).getNNC(grid1, grid2));
+    }
+
+    bool NNCCollection::hasCrossGridNNC(std::size_t grid1, std::size_t grid2) const
+    {
+        return m_diffGridNNCs.count(std::make_pair(grid1, grid2)) > 0;
+    }
+
+    void NNCCollection::addNNC(std::size_t grid, NNC nnc)
+    {
+        if (m_sameGridNNCs.count(grid)) {
+            throw std::runtime_error(
+                "NNCCollection::addNNC: same-grid NNC already exists for grid "
+                + std::to_string(grid));
+        }
+        m_sameGridNNCs.emplace(grid, std::move(nnc));
+    }
+
+    const NNC& NNCCollection::getNNC(std::size_t grid) const
+    {
+        const auto it = m_sameGridNNCs.find(grid);
+        if (it == m_sameGridNNCs.end()) {
+            throw std::runtime_error(
+                "NNCCollection::getNNC: no same-grid NNC for grid "
+                + std::to_string(grid));
+        }
+        return it->second;
+    }
+
+    NNC& NNCCollection::getNNC(std::size_t grid)
+    {
+        return const_cast<NNC&>(std::as_const(*this).getNNC(grid));
+    }
+
+    bool NNCCollection::hasSameGridNNC(std::size_t grid) const
+    {
+        return m_sameGridNNCs.count(grid) > 0;
+    }
+
+    void NNCCollection::addNNC(NNC nnc)
+    {
+        addNNC(std::size_t{0}, std::move(nnc));
+    }
+
+    NNC& NNCCollection::getGlobalNNC()
+    {
+        if (!hasGlobalNNC()) {
+            throw std::runtime_error(
+                "NNCCollection::getGlobalNNC: no global NNC found.");
+        }
+        return getNNC(std::size_t{0});
+    }
+
+    const NNC& NNCCollection::getGlobalNNC() const
+    {
+        if (!hasGlobalNNC()) {
+            throw std::runtime_error(
+                "NNCCollection::getGlobalNNC: no global NNC found.");
+        }
+        return getNNC(std::size_t{0});
+    }
+
+
+
 } // namespace Opm

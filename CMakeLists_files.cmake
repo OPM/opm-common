@@ -654,6 +654,7 @@ if(ENABLE_ECL_INPUT)
     tests/parser/UDTTests.cpp
     tests/parser/UnitTests.cpp
     tests/parser/integration/NNCTests.cpp
+    tests/parser/integration/NNCTestsLGR.cpp
     tests/parser/WellSolventTests.cpp
     tests/parser/WellTracerTests.cpp
     tests/parser/WellTests.cpp

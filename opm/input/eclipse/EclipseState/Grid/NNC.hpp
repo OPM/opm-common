@@ -23,6 +23,7 @@
 #include <cstddef>
 #include <optional>
 #include <tuple>
+#include <map>
 #include <vector>
 
 #include <opm/common/OpmLog/KeywordLocation.hpp>
@@ -153,6 +154,72 @@ private:
     std::optional<KeywordLocation> m_editr_location;
 };
 
+
+class NNCCollection
+{
+public:
+    NNCCollection() = default;
+    explicit NNCCollection(NNC nnc_global);
+
+    // ---- insertion --------------------------------------------------------
+
+    /// Add a cross-grid NNC between grid1 and grid2.
+    void addNNC(std::size_t grid1, std::size_t grid2, NNC nnc);
+
+    /// Add a same-grid NNC for the given grid index.
+    void addNNC(std::size_t grid, NNC nnc);
+
+    /// Add the global (main-grid) NNC.  Equivalent to addNNC(0, nnc).
+    void addNNC(NNC nnc);
+
+    // ---- cross-grid access ------------------------------------------------
+
+    const NNC& getNNC(std::size_t grid1, std::size_t grid2) const;
+    NNC&       getNNC(std::size_t grid1, std::size_t grid2);
+
+    bool hasCrossGridNNC(std::size_t grid1, std::size_t grid2) const;
+
+    // ---- same-grid access -------------------------------------------------
+
+    const NNC& getNNC(std::size_t grid) const;
+    NNC&       getNNC(std::size_t grid);
+
+    bool hasSameGridNNC(std::size_t grid) const;
+
+    // ---- global (grid 0) access -------------------------------------------
+
+    const NNC& getGlobalNNC() const;
+    NNC&       getGlobalNNC();
+
+    bool hasGlobalNNC() const { return hasSameGridNNC(0); };
+
+
+    /// Returns a view of all same-grid NNCs as (grid_index, NNC) pairs.
+    const std::map<std::size_t, NNC>& same_grid_nnc() const
+    {
+        return m_sameGridNNCs;
+    }
+
+    /// Returns a view of all cross-grid NNCs keyed by normalised (g1,g2) pairs.
+    const std::map<std::pair<std::size_t,std::size_t>, NNC>& diff_grid_nnc() const
+    {
+        return m_diffGridNNCs;
+    }
+
+    bool operator==(const NNCCollection& other) const
+    {
+        return m_sameGridNNCs == other.m_sameGridNNCs &&
+               m_diffGridNNCs == other.m_diffGridNNCs;
+    }
+
+private:
+
+    /// Same-grid NNCs, keyed by grid index (0 == global/main grid).
+    std::map<std::size_t, NNC> m_sameGridNNCs;
+
+    /// Cross-grid NNCs, keyed by normalised (min_grid, max_grid) pair.
+    std::map<std::pair<std::size_t,std::size_t>, NNC> m_diffGridNNCs;
+};
 
 } // namespace Opm
 
