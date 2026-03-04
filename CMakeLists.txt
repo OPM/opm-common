@@ -84,7 +84,7 @@ macro(opm-common_config_hook)
   endif()
 
   if(dune-common_FOUND)
-    opm_need_version_of ("dune-common")
+    target_compile_definitions(opmcommon PUBLIC HAVE_DUNE_COMMON=1)
   endif()
 endmacro()
 

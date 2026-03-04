@@ -4,7 +4,6 @@
 # defines that must be present in config.h for our headers
 set (opm-common_CONFIG_VAR
   HAVE_ECL_INPUT
-  HAVE_DUNE_COMMON
 )
 
 # CMake 3.30.0 requires to find Boost in CONFIG mode
@@ -25,11 +24,18 @@ list(APPEND opm-common_DEPS
 
 if(TARGET opmcommon)
   get_property(opm-common_EMBEDDED_PYTHON TARGET opmcommon PROPERTY EMBEDDED_PYTHON)
+  get_property(opm-common_COMPILE_DEFINITIONS TARGET opmcommon PROPERTY INTERFACE_COMPILE_DEFINITIONS)
 endif()
 
 if(opm-common_EMBEDDED_PYTHON)
   list(APPEND opm-common_DEPS
     "Python3 COMPONENTS Development.Embed REQUIRED"
+  )
+endif()
+
+if(opm-common_COMPILE_DEFINITIONS MATCHES HAVE_DUNE_COMMON)
+  list(APPEND opm-common_DEPS
+    "dune-common REQUIRED"
   )
 endif()
 
