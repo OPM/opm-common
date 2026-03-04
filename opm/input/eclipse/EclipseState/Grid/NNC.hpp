@@ -198,25 +198,18 @@ public:
     const std::map<std::size_t, NNC>& same_grid_nnc() const
     {
         return m_sameGridNNCs;
-    };
+    }
 
     /// Returns a view of all cross-grid NNCs keyed by normalised (g1,g2) pairs.
     const std::map<std::pair<std::size_t,std::size_t>, NNC>& diff_grid_nnc() const
     {
         return m_diffGridNNCs;
-    };
+    }
 
     bool operator==(const NNCCollection& other) const
     {
         return m_sameGridNNCs == other.m_sameGridNNCs &&
                m_diffGridNNCs == other.m_diffGridNNCs;
-    }
-
-    template<class Serializer>
-    void serializeOp(Serializer& serializer)
-    {
-        serializer(m_sameGridNNCs);
-        serializer(m_diffGridNNCs);
     }
 
 private:
