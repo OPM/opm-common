@@ -52,6 +52,7 @@ namespace Opm {
     class ParseContext;
     class ErrorGuard;
     class RawKeyword;
+    class Python;
 
     /// The hub of the parsing process.
     /// An input file in the eclipse data format is specified, several steps of parsing is performed
@@ -60,6 +61,7 @@ namespace Opm {
     class Parser {
     public:
         explicit Parser(bool addDefault = true);
+        explicit Parser(std::shared_ptr<Python> python, bool addDefault = true);
 
         static std::string stripComments(const std::string& inputString);
 
@@ -170,24 +172,30 @@ namespace Opm {
 
         bool silent() const { return silentMode; }
         void silent(bool newSilentMode) { silentMode = newSilentMode; }
+
         static constexpr int SILENT_MODE_MIN_DEBUG_VERBOSITY_LEVEL {3}; // Debug level at which to emit silenced messeages to the debug log
+
     private:
-        bool hasWildCardKeyword(const std::string& keyword) const;
+        std::shared_ptr<Python> m_python{};
+
         bool silentMode {false}; // Silence information messages (warnings and errors are still emitted)
-        const ParserKeyword* matchingKeyword(const std::string_view& keyword) const;
-        void addDefaultKeywords();
 
         // std::vector< std::unique_ptr< const ParserKeyword > > keyword_storage;
-        std::list<ParserKeyword> keyword_storage;
+        std::list<ParserKeyword> keyword_storage{};
 
         // associative map of deck names and the corresponding ParserKeyword object
-        std::map< std::string_view, const ParserKeyword* > m_deckParserKeywords;
+        std::map<std::string_view, const ParserKeyword*> m_deckParserKeywords{};
 
         // associative map of the parser internal names and the corresponding
         // ParserKeyword object for keywords which match a regular expression
-        std::map< std::string_view, const ParserKeyword* > m_wildCardKeywords;
+        std::map<std::string_view, const ParserKeyword*> m_wildCardKeywords{};
 
-        std::vector<std::pair<std::string,std::string>> code_keywords;
+        std::vector<std::pair<std::string,std::string>> code_keywords{};
+
+        bool hasWildCardKeyword(const std::string& keyword) const;
+
+        const ParserKeyword* matchingKeyword(const std::string_view& keyword) const;
+        void addDefaultKeywords();
     };
 
 } // namespace Opm

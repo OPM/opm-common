@@ -16,17 +16,16 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
+
 #include "config.h"
-#include <memory>
-#include <sstream>
 
 #define BOOST_TEST_MODULE PY_ACTION_TESTER
+
 #include <boost/test/unit_test.hpp>
-#include <opm/input/eclipse/Deck/Deck.hpp>
-#include <opm/input/eclipse/Parser/Parser.hpp>
-#include <opm/input/eclipse/Parser/ParserKeywords/P.hpp>
+
 #include <opm/input/eclipse/Python/Python.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
+
 #include <opm/input/eclipse/Schedule/Action/PyAction.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
@@ -34,38 +33,54 @@
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/common/OpmLog/StreamLog.hpp>
 
+#include <opm/input/eclipse/Deck/Deck.hpp>
+
+#include <opm/input/eclipse/Parser/Parser.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/P.hpp>
+
+#include <functional>
+#include <memory>
+#include <sstream>
+#include <stdexcept>
+#include <string>
+#include <vector>
+
 using namespace Opm;
 
 BOOST_AUTO_TEST_CASE(ParsePYACTION) {
-    Parser parser;
     auto python = std::make_shared<Python>();
-    auto deck = parser.parseFile("PYACTION.DATA");
 
-    auto keyword = deck.get<ParserKeywords::PYACTION>().front();
+    const auto deck = Parser{python}.parseFile("PYACTION.DATA");
+
+    const auto keyword = deck.get<ParserKeywords::PYACTION>().front();
     const auto& record0 = keyword.getRecord(0);
     const auto& record1 = keyword.getRecord(1);
 
     auto run_count = Action::PyAction::from_string(record0.getItem(1).get<std::string>(0));
     const std::string& ok_module = deck.makeDeckPath(record1.getItem(0).get<std::string>(0));
+
     Action::PyAction pyaction(python, "ACT1", run_count, ok_module);
     BOOST_CHECK_EQUAL(pyaction.name(), "ACT1");
 }
 
-
 #ifdef EMBEDDED_PYTHON
+
 BOOST_AUTO_TEST_CASE(ParsePYACTION_Module_Syntax_Error) {
-    Parser parser;
     auto python = std::make_shared<Python>();
-    auto deck = parser.parseFile("PYACTION.DATA");
-    auto keyword = deck.get<ParserKeywords::PYACTION>().front();
+
+    const auto deck = Parser{python}.parseFile("PYACTION.DATA");
+    const auto keyword = deck.get<ParserKeywords::PYACTION>().front();
     const auto& record0 = keyword.getRecord(0);
     const auto& record1 = keyword.getRecord(1);
 
     auto run_count = Action::PyAction::from_string(record0.getItem(1).get<std::string>(0));
+
     const std::string& ok_module = deck.makeDeckPath(record1.getItem(0).get<std::string>(0));
     Action::PyAction pyaction1(python, "ACT1", run_count, ok_module);
+
     const std::string& broken_module2 = deck.makeDeckPath("action_syntax_error.py");
-    Action::PyAction pyaction2(python , "ACT2", run_count, broken_module2);
+    Action::PyAction pyaction2(python, "ACT2", run_count, broken_module2);
+
     EclipseState state;
     Schedule schedule;
     SummaryState summary_state;
@@ -75,9 +90,9 @@ BOOST_AUTO_TEST_CASE(ParsePYACTION_Module_Syntax_Error) {
 }
 
 BOOST_AUTO_TEST_CASE(ParsePYACTION_ModuleMissing) {
-    Parser parser;
     auto python = std::make_shared<Python>();
-    auto deck = parser.parseFile("PYACTION.DATA");
+
+    auto deck = Parser{python}.parseFile("PYACTION.DATA");
     auto keyword = deck.get<ParserKeywords::PYACTION>().front();
     const auto& record0 = keyword.getRecord(0);
     const auto& record1 = keyword.getRecord(1);
@@ -96,11 +111,11 @@ BOOST_AUTO_TEST_CASE(PYACTION_Log) {
 
     OpmLog::addBackend( "STREAM" , stream_log);
 
-    Parser parser;
-    auto deck = parser.parseFile("PYACTION.DATA");
+    auto python = std::make_shared<Python>();
+
+    auto deck = Parser{python}.parseFile("PYACTION.DATA");
     const std::string& logger_module = deck.makeDeckPath("logger.py");
 
-    auto python = std::make_shared<Python>();
     Action::PyAction pyaction(python , "ACT3", Action::PyAction::RunCount::unlimited, logger_module);
 
     const std::function<void(const std::string&, const std::vector<std::string>&)> actionx_callback;
@@ -118,7 +133,6 @@ BOOST_AUTO_TEST_CASE(PYACTION_Log) {
     BOOST_CHECK(log_output.find("Bug from logger.py!") != std::string::npos);
     BOOST_CHECK(log_output.find("Debug from logger.py!") != std::string::npos);
     BOOST_CHECK(log_output.find("Note from logger.py!") != std::string::npos);
-
 }
 
-#endif
+#endif // EMBEDDED_PYTHON
