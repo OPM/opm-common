@@ -503,6 +503,11 @@ public:
     template<class Serializer>
     void serializeOp(Serializer& serializer) {
         serializer(this->m_file_name);
+        serializer(this->m_mbal_tol);
+        serializer(this->m_ph_tol);
+        serializer(this->m_charge_balance);
+        serializer(this->m_activated);
+        serializer(this->m_splay_tree);
     }
     static Geochem serializationTestObject();
 
