@@ -82,10 +82,11 @@ public:
 
     static GenericSpeciesConfig serializationTestObject();
 
-    std::size_t size() const;
-    bool empty() const;
-    const std::vector<SpeciesEntry>::const_iterator begin() const;
-    const std::vector<SpeciesEntry>::const_iterator end() const;
+    auto size() const { return this->species.size(); };
+    auto empty() const { return this->species.empty(); };
+    auto begin() const { return this->species.begin(); };
+    auto end() const { return this->species.end(); };
+
     const SpeciesEntry& operator[](const std::string& name) const;
     const SpeciesEntry& operator[](std::size_t index) const;
     bool operator==(const GenericSpeciesConfig& data) const;

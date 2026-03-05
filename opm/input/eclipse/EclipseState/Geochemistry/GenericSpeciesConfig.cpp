@@ -163,22 +163,6 @@ const GenericSpeciesConfig::SpeciesEntry& GenericSpeciesConfig::operator[](const
     return *iter;
 }
 
-std::size_t GenericSpeciesConfig::size() const {
-    return this->species.size();
-}
-
-bool GenericSpeciesConfig::empty() const {
-    return this->species.empty();
-}
-
-const std::vector<GenericSpeciesConfig::SpeciesEntry>::const_iterator GenericSpeciesConfig::begin() const {
-    return this->species.begin();
-}
-
-const std::vector<GenericSpeciesConfig::SpeciesEntry>::const_iterator GenericSpeciesConfig::end() const {
-    return this->species.end();
-}
-
 bool GenericSpeciesConfig::operator==(const GenericSpeciesConfig& other) const {
     return this->species == other.species;
 }
