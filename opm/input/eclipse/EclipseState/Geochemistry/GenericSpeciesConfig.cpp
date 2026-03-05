@@ -57,7 +57,7 @@ void GenericSpeciesConfig::initializeSpeciesType(const DeckItem& item, const Dec
         checkSpeciesName(species_name, s);
 
         // Naming rule: First letter in fromSpeciesType() + BLK or VDP + first four characters of species name
-        std::string blk_name = species_type.substr(0, 1) + "BLK" + species_name.substr(0, 4);
+        const std::string blk_name = species_type.substr(0, 1) + "BLK" + species_name.substr(0, 4);
         std::string vdp_name = species_type.substr(0, 1) + "VDP" + species_name.substr(0, 4);
 
         if (deck.hasKeyword(blk_name)) {
@@ -75,28 +75,23 @@ void GenericSpeciesConfig::initializeSpeciesType(const DeckItem& item, const Dec
 }
 
 void GenericSpeciesConfig::initFromXBLK(const DeckKeyword& sblk_keyword,
-                            const std::string& species_name,
-                            InfoLogger& logger)
+                                        const std::string& species_name,
+                                        InfoLogger& logger)
 {
-    double inv_volume = 1.0;
     auto sblk_conc = sblk_keyword.getRecord(0).getItem(0).getData<double>();
     logger(sblk_keyword.location().format("Loading concentration from {keyword} in {file} line {line}"));
-
-    std::transform(sblk_conc.begin(), sblk_conc.end(), sblk_conc.begin(),
-                    [inv_volume](const auto& c) { return c * inv_volume; });
 
     this->species.emplace_back(species_name, std::move(sblk_conc));
 }
 
 void GenericSpeciesConfig::initFromXVDP(const DeckKeyword& svdp_keyword,
-                      const std::string& species_name,
-                      InfoLogger& logger)
+                                        const std::string& species_name,
+                                        InfoLogger& logger)
 {
-    double inv_volume = 1.0;
     auto svdp_table = svdp_keyword.getRecord(0).getItem(0);
     logger(svdp_keyword.location().format("Loading concentration from {keyword} in {file} line {line}"));
 
-    this->species.emplace_back(species_name, SpeciesVdTable(svdp_table, inv_volume, species.size()));
+    this->species.emplace_back(species_name, SpeciesVdTable(svdp_table, 1.0, species.size()));
 }
 
 void GenericSpeciesConfig::initEmpty(const std::string& species_name)
@@ -117,10 +112,10 @@ void GenericSpeciesConfig::checkSpeciesName(const std::string& species_name, Spe
     }
 
     // If species name with four characters already exist there will be possible ambiguities in other keywords
-    auto iter = std::find_if(this->species.begin(), this->species.end(),
-                             [&species_name](const SpeciesEntry& single_species)
-                             { return single_species.name.substr(0, 4) == species_name.substr(0, 4);}
-                            );
+    auto iter = std::ranges::find_if(this->species,
+                                     [&species_name](const SpeciesEntry& single_species)
+                                     { return single_species.name.substr(0, 4) == species_name.substr(0, 4);}
+                                    );
     if (iter != this->species.end()) {
         if (iter->name == species_name) {
             msg = fmt::format("Duplicate items {} in {} are not allowed!", species_name, species_type);
@@ -152,10 +147,10 @@ const GenericSpeciesConfig::SpeciesEntry& GenericSpeciesConfig::operator[](std::
 }
 
 const GenericSpeciesConfig::SpeciesEntry& GenericSpeciesConfig::operator[](const std::string& name) const {
-    auto iter = std::find_if(this->species.begin(), this->species.end(),
-                                [&name](const SpeciesEntry& single_species)
-                                { return single_species.name == name;}
-                            );
+    auto iter = std::ranges::find_if(this->species,
+                                     [&name](const SpeciesEntry& single_species)
+                                     { return single_species.name == name;}
+                                    );
 
     if (iter == this->species.end())
         throw std::logic_error(fmt::format("No such species: {}", name));

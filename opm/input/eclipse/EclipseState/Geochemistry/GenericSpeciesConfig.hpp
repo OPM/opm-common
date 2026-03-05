@@ -20,10 +20,7 @@
 #ifndef SPECIES_CONFIG_HPP
 #define SPECIES_CONFIG_HPP
 
-#include <opm/common/OpmLog/InfoLogger.hpp>
-
 #include <opm/input/eclipse/EclipseState/Tables/SpeciesVdTable.hpp>
-#include <opm/input/eclipse/Parser/ParserKeyword.hpp>
 
 #include <optional>
 #include <string>
@@ -32,6 +29,8 @@ namespace Opm {
 
 class Deck;
 class DeckItem;
+class DeckKeyword;
+class InfoLogger;
 
 enum class SpeciesType {
     SPECIES,
@@ -77,7 +76,6 @@ public:
         }
     }; // struct SpeciesEntry
 
-    GenericSpeciesConfig() = default;
     virtual ~GenericSpeciesConfig() = default;
 
     static GenericSpeciesConfig serializationTestObject();
