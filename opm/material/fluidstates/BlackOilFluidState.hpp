@@ -154,41 +154,13 @@ public:
         }
     }
 
-    // Constructor that initializes all member variables
-    // Only members enabled in SPE11C are initialized
-    OPM_HOST_DEVICE BlackOilFluidState(
-        const FluidSystem* fluidSystem,
-        Scalar temperature,
-        std::array<Scalar, numStoragePhases> enthalpy,
-        Scalar totalSaturation,
-        std::array<Scalar, numStoragePhases> pressure,
-        std::array<Scalar, numStoragePhases> saturation,
-        std::array<Scalar, numStoragePhases> invB,
-        std::array<Scalar, numStoragePhases> density,
-        Scalar Rvw,
-        Scalar Rsw,
-        unsigned short pvtRegionIdx
-    ) : temperature_(temperature),
-        enthalpy_(enthalpy),
-        totalSaturation_(totalSaturation),
-        pressure_(pressure),
-        saturation_(saturation),
-        invB_(invB),
-        density_(density),
-        Rvw_(Rvw),
-        Rsw_(Rsw),
-        pvtRegionIdx_(pvtRegionIdx),
-        fluidSystemPtr_(fluidSystem)
-    {
-    }
-
     // This is intended to be used when we are converting fluid
     // state from a version that uses the static fluidsystem to
     // a version that uses a dynamic fluid system.
     template<class OtherFluidSystemType>
     auto withOtherFluidSystem(const OtherFluidSystemType* other) const
     {
-        return BlackOilFluidState<Scalar, OtherFluidSystemType,
+        auto bfstate = BlackOilFluidState<Scalar, OtherFluidSystemType,
                                   storeTemperature,
                                   storeEnthalpy,
                                   enableDissolution,
@@ -196,30 +168,15 @@ public:
                                   enableBrine,
                                   enableSaltPrecipitation,
                                   enableDissolutionInWater,
-                                  numStoragePhases>(
-            other,
-            *temperature_,
-            *enthalpy_,
-            totalSaturation_,
-            pressure_,
-            saturation_,
-            invB_,
-            density_,
-            *Rvw_,
-            *Rsw_,
-            pvtRegionIdx_
-        );
+                                  numStoragePhases>();
+        bfstate.assign(*this, other);
+        return bfstate;
     }
 
     /**
      * \brief Construct a fluid state object.
-     *
-     * The fluid system used is assumed to be stateless.
      */
-    OPM_HOST_DEVICE BlackOilFluidState()
-    {
-        static_assert(fluidSystemIsStatic);
-    }
+    OPM_HOST_DEVICE BlackOilFluidState() = default;
 
     /*!
      * \brief Make sure that all attributes are defined.
@@ -275,13 +232,21 @@ public:
      *        state.
      */
     template <class FluidState>
-    OPM_HOST_DEVICE void assign(const FluidState& fs)
+    OPM_HOST_DEVICE void assign(const FluidState& fs, const FluidSystem* fsPtr = nullptr)
     {
+        if constexpr (!fluidSystemIsStatic) {
+            if (fsPtr != nullptr) {
+                fluidSystemPtr_ = fsPtr;
+            }
+        }
+
         if constexpr (storeTemperature)
             setTemperature(fs.temperature(/*phaseIdx=*/0));
 
         unsigned pvtRegionIdx = getPvtRegionIndex_<FluidState>(fs);
         setPvtRegionIndex(pvtRegionIdx);
+
+        setTotalSaturation(fs.totalSaturation());
 
         if constexpr (enableDissolution) {
             setRs(BlackOil::getRs_<FluidSystem, FluidState, Scalar>(fs, pvtRegionIdx));
@@ -332,13 +297,6 @@ public:
      */
     OPM_HOST_DEVICE void setSaturation(unsigned phaseIdx, const Scalar& S)
     { saturation_[canonicalToStoragePhaseIndex_(phaseIdx, fluidSystem())] = S; }
-
-    OPM_HOST_DEVICE void setFluidSystemPtr(FluidSystem* fluidSystemPtr)
-    {
-        if constexpr (!fluidSystemIsStatic) {
-            fluidSystemPtr_ = fluidSystemPtr;
-        }
-    }
 
     /*!
      * \brief Set the total saturation used for sequential methods
