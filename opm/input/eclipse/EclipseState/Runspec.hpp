@@ -491,6 +491,15 @@ private:
 class Geochem {
 public:
     Geochem() = default;
+    Geochem(std::string file_name, double mbal_tol, double ph_tol, bool charge_balance,
+            bool activated, int splay_tree)
+        : m_file_name(file_name)
+        , m_mbal_tol(mbal_tol)
+        , m_ph_tol(ph_tol)
+        , m_charge_balance(charge_balance)
+        , m_activated(activated)
+        , m_splay_tree(splay_tree)
+    { };
     explicit Geochem(const Deck&);
 
     const std::string& geochem_file_name() const;

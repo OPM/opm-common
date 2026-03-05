@@ -595,13 +595,7 @@ bool Geochem::operator==(const Geochem& other) const
 
 Geochem Geochem::serializationTestObject()
 {
-    Geochem geochem;
-    geochem.m_file_name = "test";
-    geochem.m_mbal_tol = 1e-5;
-    geochem.m_ph_tol = 1e-9;
-    geochem.m_charge_balance = true;
-    geochem.m_activated = false;
-    return geochem;
+    return Geochem("test", 1e-5, 1e-9, true, false, 10);
 }
 
 const std::string& Geochem::geochem_file_name() const
