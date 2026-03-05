@@ -158,7 +158,7 @@ public:
     // state from a version that uses the static fluidsystem to
     // a version that uses a dynamic fluid system.
     template<class OtherFluidSystemType>
-    auto withOtherFluidSystem(const OtherFluidSystemType* other) const
+    auto withOtherFluidSystem(const OtherFluidSystemType& other) const
     {
         auto bfstate = BlackOilFluidState<Scalar, OtherFluidSystemType,
                                   storeTemperature,
@@ -169,7 +169,7 @@ public:
                                   enableSaltPrecipitation,
                                   enableDissolutionInWater,
                                   numStoragePhases>();
-        bfstate.assign(*this, other);
+        bfstate.assign(*this, &other);
         return bfstate;
     }
 
