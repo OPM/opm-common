@@ -26,6 +26,7 @@ list(APPEND opm-common_DEPS
       # as the embedded one.
       "fmt 8.0"
       "QuadMath"
+      "OpenMP COMPONENTS CXX"
 )
 
 if(TARGET opmcommon)
