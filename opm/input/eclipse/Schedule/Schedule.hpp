@@ -367,6 +367,7 @@ namespace Opm {
         GTNode groupTree(std::size_t report_step) const;
         GTNode groupTree(const std::string& root_node, std::size_t report_step) const;
         const Group& getGroup(const std::string& groupName, std::size_t timeStep) const;
+        bool hasChoke(const std::string& groupName, std::size_t timeStep) const;
 
         std::optional<std::size_t> first_RFT() const;
         std::size_t size() const;
