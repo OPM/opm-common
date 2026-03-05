@@ -16,8 +16,8 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef AQUEOUS_SPECIES_CONFIG_HPP
-#define AQUEOUS_SPECIES_CONFIG_HPP
+#ifndef SPECIES_CONFIG_HPP
+#define SPECIES_CONFIG_HPP
 
 #include <opm/input/eclipse/EclipseState/Geochemistry/GenericSpeciesConfig.hpp>
 

@@ -17,8 +17,8 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef SPECIES_CONFIG_HPP
-#define SPECIES_CONFIG_HPP
+#ifndef GENERIC_SPECIES_CONFIG_HPP
+#define GENERIC_SPECIES_CONFIG_HPP
 
 #include <opm/input/eclipse/EclipseState/Tables/SpeciesVdTable.hpp>
 
