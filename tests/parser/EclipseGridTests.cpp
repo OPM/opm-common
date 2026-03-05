@@ -3482,3 +3482,37 @@ PORO
     SPIDER with DR/DRV, DTHETA/DTHETAV, DZ/DZV and TOPS creates a spider grid)");
     });
 }
+
+
+BOOST_AUTO_TEST_CASE(TEST_GDFILE_1_ADDZCORN) {
+
+    const char* deckData1 =
+        "RUNSPEC\n"
+        "DIMENS\n"
+        "1 1 2 /\n"
+        "GRID\n"
+        "COORD\n"
+        "10.0000    10.0000  2000.0000      9.8255    10.0000  2014.9977\n"
+        "109.9848   10.0000  2001.7452    109.8102    10.0000  2016.7430\n"
+        "10.0000   110.0000  2000.0000      9.8255   110.0000  2014.9977\n"
+        "109.9848   110.0000  2001.7452    109.8102   110.0000  2016.7430 /\n"
+        "ZCORN\n"
+        "2000.0000  2001.7452  2000.0000  2001.7452  2004.9992  2006.7445\n"
+        "2004.9992  2006.7445  2004.9992  2006.7445  2004.9992  2006.7445\n"
+        "2014.9977  2016.7430  2014.9977  2016.7430 /\n"
+        "ADDZCORN\n"
+        "   1.0 1 1 1 1 1 2 /\n"
+        "/\n";
+
+    Opm::Parser parser;
+    auto deck1 = parser.parseString( deckData1) ;
+    Opm::EclipseGrid grid1(deck1);
+    auto zcorn = grid1.getZCORN();
+    // all zcorns are moved 1.0
+    grid1.addZCORN(deck1);
+    auto zcorn_mod = grid1.getZCORN();
+    for (int i = 0; i < 16; i++) {
+        BOOST_CHECK_CLOSE( zcorn[i] + 1.0, zcorn_mod[i], 1e-8);
+    }
+
+}

@@ -51,7 +51,8 @@
     },
     {
       "name": "ACTION",
-      "value_type": "STRING"
+      "value_type": "STRING",
+      "default": "BOTH"
     }
   ]
 }

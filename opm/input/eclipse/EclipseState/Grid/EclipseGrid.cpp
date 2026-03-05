@@ -1858,6 +1858,55 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         return mapper.fixupZCORN( m_zcorn );
     }
 
+    void EclipseGrid::addZCORN(const Deck& deck) {
+        using ADDZCORN = Opm::ParserKeywords::ADDZCORN;
+        std::vector<AddZCornInput> addzcorns;
+
+        for (const auto& input : deck.get<ADDZCORN>()) {
+            const auto& record = input.getRecord(0);
+            const double value = record.getItem<ADDZCORN::ADDED_VALUE>().getSIDouble(0);
+            const std::size_t ix1 = record.getItem<ADDZCORN::IX1>().get<int>(0);
+            const std::size_t ix2 = record.getItem<ADDZCORN::IX2>().get<int>(0);
+            const std::size_t jy1 = record.getItem<ADDZCORN::JY1>().get<int>(0);
+            const std::size_t jy2 = record.getItem<ADDZCORN::JY2>().get<int>(0);
+            const std::size_t kz1 = record.getItem<ADDZCORN::KZ1>().get<int>(0);
+            const std::size_t kz2 = record.getItem<ADDZCORN::KZ2>().get<int>(0);
+
+            if (kz2 < kz1) {
+                throw("obs");
+            }
+            for (size_t k = kz1-1; k < kz2; k++) {
+                if (jy1 == 0) {
+
+                } else if (jy2 == 0) {
+
+                } else if (jy2 < jy1 ) {
+                    throw("obs");
+                } else {
+                    for (size_t j = jy1-1; j < jy2; j++) {
+                        if (ix1 == 0) {
+
+                        } else if (ix2 == 0) {
+
+                        } else if (ix2 < ix1 ) {
+                            throw("obs");
+                        } else {
+                            for (size_t i = ix1-1; i < ix2; i++) {
+                                // assume all zorners (FLAG = BOTH)
+                                for (size_t c = 0; c < 8; c++) {
+                                    AddZCornInput entry = {value,i,j,k,c};
+                                    addzcorns.emplace_back(entry);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        ZcornMapper mapper( getNX(), getNY(), getNZ());
+        mapper.addZCORN( m_zcorn, addzcorns);
+    }
+
     const std::vector<double>& EclipseGrid::getZCORN( ) const {
 
         return m_zcorn;
@@ -2570,6 +2619,14 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
                     }
         return cells_adjusted;
     }
+
+    void ZcornMapper::addZCORN( std::vector<double>& zcorn, const std::vector<AddZCornInput>& addzcorns) const {
+        for (const auto& addzcorn : addzcorns) {
+            std::size_t index = this->index(addzcorn.i,addzcorn.j,addzcorn.k,addzcorn.c);
+            zcorn[index] += addzcorn.value;
+        }
+    }
+
 
     CoordMapper::CoordMapper(std::size_t nx_, std::size_t ny_) :
         nx(nx_),
