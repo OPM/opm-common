@@ -149,7 +149,7 @@ public:
      */
     explicit OPM_HOST_DEVICE BlackOilFluidState(const FluidSystem& fluidSystem)
     {
-        if constexpr (fluidSystemIsStatic) {
+        if constexpr (!fluidSystemIsStatic) {
             fluidSystemPtr_ = &fluidSystem;
         }
     }
@@ -168,15 +168,20 @@ public:
                                   enableBrine,
                                   enableSaltPrecipitation,
                                   enableDissolutionInWater,
-                                  numStoragePhases>();
-        bfstate.assign(*this, &other);
+                                  numStoragePhases>(other);
+        bfstate.assign(*this);
         return bfstate;
     }
 
     /**
      * \brief Construct a fluid state object.
+     *
+     * The fluid system used is assumed to be stateless.
      */
-    OPM_HOST_DEVICE BlackOilFluidState() = default;
+    OPM_HOST_DEVICE BlackOilFluidState()
+    {
+        static_assert(fluidSystemIsStatic);
+    }
 
     /*!
      * \brief Make sure that all attributes are defined.
