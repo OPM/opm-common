@@ -479,12 +479,12 @@ Well::Well(const RestartIO::RstWell& rst_well,
                 const auto& trName = tracer_config[tracer_index].name;
                 const auto phase = tracer_config[tracer_index].phase;
                 if (phase == Phase::WATER) {
-                    const auto concentration = rst_well.tracer_concentration_injection[tracer_conc_index];
+                    const auto concentration = rst_well.tracer_concentration_injection[tracer_conc_index++];
                     tracer->setConcentration(WellTracerProperties::Tracer { trName },
                                                 UDAValue { concentration } );
                 } else {
-                    const auto free_conc = rst_well.tracer_concentration_injection[tracer_conc_index];
-                    const auto sol_conc = rst_well.tracer_concentration_injection[++tracer_conc_index];
+                    const auto free_conc = rst_well.tracer_concentration_injection[tracer_conc_index++];
+                    const auto sol_conc = rst_well.tracer_concentration_injection[tracer_conc_index++];
                     if (WellType::gas_injector(this->wtype.ecl_wtype()) || WellType::oil_injector(this->wtype.ecl_wtype())) {
                         tracer->setConcentration( WellTracerProperties::Tracer { trName },
                                                     UDAValue { free_conc } );
