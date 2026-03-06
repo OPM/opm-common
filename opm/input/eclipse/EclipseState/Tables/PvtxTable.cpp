@@ -197,6 +197,7 @@ namespace Opm {
                                            ranges[*tableIdx].first,
                                            ranges[*tableIdx].second);
 
+        this->populateMissingUndersaturatedStates();
 
         this->populateSaturatedTable(keyword.name());
     }
@@ -238,6 +239,55 @@ namespace Opm {
 
             this->m_saturatedTable.addRow(row, tableName);
         }
+    }
+
+    void PvtxTable::populateMissingUndersaturatedStates()
+    {
+        for (const auto& [src, dest] : this->missingUSatTables()) {
+            this->makeScaledUSatTableCopy(src, dest);
+        }
+    }
+
+    std::vector<std::pair<std::size_t, std::size_t>>
+    PvtxTable::missingUSatTables() const
+    {
+        auto missing = std::vector<std::pair<std::size_t, std::size_t>>{};
+
+        if (this->m_underSaturatedTables.empty()) {
+            return missing;
+        }
+
+        auto src = this->m_underSaturatedTables.size() - 1;
+
+        for (auto destIx = src + 1; destIx > 0; --destIx) {
+            const auto dest = destIx - 1;
+
+            if (this->m_underSaturatedTables[dest].numRows() > 1) {
+                // There are undersaturated states in 'dest'.  This is the
+                // new 'src'.
+                src = dest;
+            }
+            else {
+                // There are no undersaturated states in 'dest'.  Schedule
+                // generation of a scaled copy of 'src's undersaturated
+                // states in 'dest'.
+                missing.emplace_back(src, dest);
+            }
+        }
+
+        return missing;
+    }
+
+    void PvtxTable::makeScaledUSatTableCopy([[maybe_unused]] const std::size_t src,
+                                            [[maybe_unused]] const std::size_t dest)
+    {
+        // Implemented only because we need to be able to create objects of
+        // type 'PvtxTable' for serialisation purposes.  Ideally, this would
+        // be a pure virtual function.
+
+        throw std::runtime_error {
+            "Derived type does not implement makeScaledUSatTableCopy()"
+        };
     }
 
 } // namespace Opm
