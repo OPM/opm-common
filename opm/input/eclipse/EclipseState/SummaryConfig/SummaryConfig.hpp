@@ -440,6 +440,12 @@ namespace Opm {
         /// Number of summary vectors in current collection.
         std::size_t size() const { return this->m_keywords.size(); }
 
+        /// Partially defined summary vectors relating to fracturing processes.
+        const keyword_list& extraFracturingVectors() const
+        {
+            return this->extraFracturingVectors_;
+        }
+
         /// Incorporate other vector collection into current.
         ///
         /// \param[in] other Collection of vector definitions.
@@ -618,6 +624,10 @@ namespace Opm {
 
         /// Run's configured summary vectors.
         keyword_list m_keywords{};
+
+        /// Additional and incomplete summary vectors defined for run-time
+        /// allocation in runs featuring fracturing processes.
+        keyword_list extraFracturingVectors_{};
 
         /// Summary vector names.
         ///

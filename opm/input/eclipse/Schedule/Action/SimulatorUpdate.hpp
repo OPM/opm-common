@@ -20,8 +20,11 @@
 #ifndef SIMULATOR_UPDATE_HPP
 #define SIMULATOR_UPDATE_HPP
 
+#include <cstddef>
 #include <string>
 #include <unordered_set>
+#include <utility>
+#include <vector>
 
 namespace Opm {
 
@@ -57,6 +60,10 @@ struct SimulatorUpdate
     /// Wells affected only by WELPI for which the simulator needs to update
     /// its internal notion of the connection transmissibility factors.
     std::unordered_set<std::string> welpi_wells{};
+
+    /// New well connections created as a result of a geomechanical
+    /// fracturing process.
+    std::vector<std::pair<std::string, std::vector<std::size_t>>> new_frac_wconns{};
 
     /// Whether or not a transmissibility multiplier keyword was invoked in
     /// an ACTIONX block.
