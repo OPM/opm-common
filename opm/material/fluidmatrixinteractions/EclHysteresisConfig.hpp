@@ -134,6 +134,12 @@ public:
     bool enablePcScalingHyst() const
     { return enablePcScalingHyst_; }
 
+    /*!
+     * \brief Returns whether fix for wetting phase killough is enabled.
+     */
+    bool enableWettingPhaseKilloughFix() const
+    { return enableWettingPhaseKilloughFix_; }
+
 #if HAVE_ECL_INPUT
     /*!
      * \brief Reads all relevant material parameters form a cell of a parsed ECL deck.
@@ -158,6 +164,9 @@ private:
 
     // Enable bug fix for capillary pressure scaling
     bool enablePcScalingHyst_{false};
+
+    // Enable bug fix for wetting phase killough hysteresis
+    bool enableWettingPhaseKilloughFix_{false};
 };
 
 } // namespace Opm

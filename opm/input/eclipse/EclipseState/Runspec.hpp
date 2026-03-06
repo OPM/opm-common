@@ -341,6 +341,11 @@ public:
      */
     bool doPcScaling() const;
 
+    /*!
+     * \brief Activate fix for wetting phase killough
+     */
+    bool fixWettingPhaseKillough() const;
+
     bool operator==(const EclHysterConfig& data) const;
 
     template<class Serializer>
@@ -353,6 +358,7 @@ public:
         serializer(curvatureCapPrsValue);
         serializer(activeWagHyst);
         serializer(enablePcScaling);
+        serializer(enableKilloughWettingFix);
     }
 
 private:
@@ -372,6 +378,9 @@ private:
 
     // flag to enable Pc scaling
     bool enablePcScaling { false };
+
+    // flag to enable Fix for wetting phase Killough
+    bool enableKilloughWettingFix { false };
 };
 
 class SatFuncControls {
