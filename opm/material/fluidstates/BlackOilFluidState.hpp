@@ -149,9 +149,28 @@ public:
      */
     explicit OPM_HOST_DEVICE BlackOilFluidState(const FluidSystem& fluidSystem)
     {
-        if constexpr (fluidSystemIsStatic) {
+        if constexpr (!fluidSystemIsStatic) {
             fluidSystemPtr_ = &fluidSystem;
         }
+    }
+
+    // This is intended to be used when we are converting fluid
+    // state from a version that uses the static fluidsystem to
+    // a version that uses a dynamic fluid system.
+    template<class OtherFluidSystemType>
+    auto withOtherFluidSystem(const OtherFluidSystemType& other) const
+    {
+        auto bfstate = BlackOilFluidState<Scalar, OtherFluidSystemType,
+                                  storeTemperature,
+                                  storeEnthalpy,
+                                  enableDissolution,
+                                  enableVapwat,
+                                  enableBrine,
+                                  enableSaltPrecipitation,
+                                  enableDissolutionInWater,
+                                  numStoragePhases>(other);
+        bfstate.assign(*this);
+        return bfstate;
     }
 
     /**
@@ -225,6 +244,8 @@ public:
 
         unsigned pvtRegionIdx = getPvtRegionIndex_<FluidState>(fs);
         setPvtRegionIndex(pvtRegionIdx);
+
+        setTotalSaturation(fs.totalSaturation());
 
         if constexpr (enableDissolution) {
             setRs(BlackOil::getRs_<FluidSystem, FluidState, Scalar>(fs, pvtRegionIdx));
