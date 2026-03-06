@@ -76,7 +76,6 @@
 #include <vector>
 
 #include <fmt/format.h>
-#include <iostream>
 namespace Opm {
 
 namespace {
@@ -412,6 +411,8 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
             this->initBinaryGrid(deck);
             break;
         }
+        // Apply ADDZCORN if active
+        this->addZCORN(deck);
 
         if (deck.hasKeyword<ParserKeywords::PINCH>()) {
             const auto& record = deck.get<ParserKeywords::PINCH>( ).back().getRecord(0);
@@ -1876,7 +1877,7 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
                 int jy1a = record.getItem<ADDZCORN::JY1A>().get<int>(0);
                 int jy2a = record.getItem<ADDZCORN::JY2A>().get<int>(0);
                 const std::string flag = record.getItem<ADDZCORN::ACTION>().get<std::string>(0);
-                
+
                 // check continuity parameter
                 if (ix1a == -1) {
                     ix1a = std::max(0, ix1 - 1);
@@ -1892,21 +1893,25 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
                 }
                 // we dont support moving neighbouring corners yet
                 if (ix1a != ix1 || ix2a != ix2 || jy1a != jy1 || jy2a != jy2) {
-                    throw("obs");
+                    std::string message = "ADDZCORN: We dont support moving neighbouring corners i.e. ix1a == ix1 etc.";
+                    throw std::invalid_argument(message);
                 }
 
                 // if one of the ix jy indices is 0 we are in single cell mode
                 const bool single_cell_mode = (ix1 == 0 || ix2 == 0 || jy1 == 0 || jy2 == 0);
-               
+
                 // some sanity checks
                 if (!single_cell_mode && ix2 < ix1) {
-                    throw("obs");
+                    std::string message = "ADDZCORN: ix2 >= ix1";
+                    throw std::invalid_argument(message);
                 }
                 if (!single_cell_mode && jy2 < jy1) {
-                    throw("obs");
+                    std::string message = "ADDZCORN: jy2 >= jy1";
+                    throw std::invalid_argument(message);
                 }
                 if (kz2 < kz1) {
-                    throw("obs");
+                    std::string message = "ADDZCORN: kz2 >= kz1";
+                    throw std::invalid_argument(message);
                 }
                 for (size_t k = kz1-1; k < (std::size_t)kz2; k++) {
                     if (single_cell_mode) {
@@ -1915,7 +1920,7 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
                         const std::vector<std::string> sides = {"TOP", "BOTTOM"};
                         size_t offset = 0;
                         for (const auto& side : sides) {
-                            // if flag is top we dont do bottom and if it 
+                            // if flag is top we dont do bottom and if it
                             // is bottom we dont do top
                             if (flag != side && flag != "BOTH") {
                                 continue;
@@ -1940,7 +1945,6 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
                                 addzcorns.emplace_back(entry);
                             }
                         }
-                        
                     } else {
                         for (size_t j = jy1-1; j < (std::size_t)jy2; j++) {
                             for (size_t i = ix1-1; i < (std::size_t)ix2; i++) {

@@ -300,7 +300,6 @@ namespace Opm {
 
         size_t fixupZCORN();
         size_t getZcornFixed() { return zcorn_fixed; };
-        
         void addZCORN(const Deck& deck);
 
         // resetACTNUM with no arguments will make all cells in the grid active.
