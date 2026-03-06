@@ -465,7 +465,9 @@ protected:
         Evaluation b4 = a4 + V*b3;
 
         // invert resulting cubic polynomial analytically
-        std::array<Evaluation,4> allV;
+        // a vector is used instead of an array due to faulty
+        // compiler diagnostics with gcc 14.2
+        std::vector<Evaluation> allV(4);
         allV[0] = V;
         const decltype(allV.size()) numSol = 1 + invertCubicPolynomial<Evaluation>(allV.data() + 1, b1, b2, b3, b4);
 
