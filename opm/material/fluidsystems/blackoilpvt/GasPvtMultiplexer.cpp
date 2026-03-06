@@ -67,7 +67,6 @@ GasPvtMultiplexer<Scalar, enableThermal>::hVap(unsigned regionIdx) const
     OPM_GAS_PVT_MULTIPLEXER_CALL(return pvtImpl.hVap(regionIdx));
 }
 
-#if HAVE_ECL_INPUT
 template <class Scalar, bool enableThermal>
 void
 GasPvtMultiplexer<Scalar, enableThermal>::initFromState(const EclipseState& eclState, const Schedule& schedule)
@@ -92,7 +91,6 @@ GasPvtMultiplexer<Scalar, enableThermal>::initFromState(const EclipseState& eclS
 
     OPM_GAS_PVT_MULTIPLEXER_CALL(pvtImpl.initFromState(eclState, schedule), break);
 }
-#endif
 
 // Helper function to keep the switch case tidy when constructing different pvts
 template <class Scalar, bool enableThermal>

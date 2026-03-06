@@ -2,8 +2,6 @@ cmake_minimum_required (VERSION 3.23)
 project(opm-common C CXX)
 
 option(SIBLING_SEARCH "Search for other modules in sibling directories?" ON)
-option(ENABLE_ECL_INPUT "Enable eclipse input support?" ON)
-option(ENABLE_ECL_OUTPUT "Enable eclipse output support?" ON)
 option(ENABLE_MOCKSIM "Build the mock simulator for io testing" ON)
 option(OPM_ENABLE_PYTHON "Enable python bindings?" OFF)
 option(OPM_INSTALL_PYTHON "Install python bindings?" ON)
@@ -67,16 +65,6 @@ macro(opm-common_prereqs_hook)
 endmacro()
 
 macro(opm-common_config_hook)
-  if(ENABLE_ECL_INPUT)
-    string(APPEND OPM_PROJECT_EXTRA_CODE_INTREE "\n  set(HAVE_ECL_INPUT 1)")
-    string(APPEND OPM_PROJECT_EXTRA_CODE_INSTALLED "\n  set(HAVE_ECL_INPUT 1)")
-    set(HAVE_ECL_INPUT 1)
-    if(ENABLE_ECL_OUTPUT)
-      string(APPEND OPM_PROJECT_EXTRA_CODE_INTREE "\n  set(HAVE_ECL_OUTPUT 1)")
-      string(APPEND OPM_PROJECT_EXTRA_CODE_INSTALLED "\n  set(HAVE_ECL_OUTPUT 1)")
-    endif()
-  endif()
-
   include(CheckIncludeFile)
   check_include_file(fnmatch.h FNMATCH_H_FOUND)
   if (FNMATCH_H_FOUND)
@@ -86,24 +74,29 @@ macro(opm-common_config_hook)
   if(dune-common_FOUND)
     opm_need_version_of ("dune-common")
   endif()
+
+  target_compile_definitions(opmcommon INTERFACE HAVE_OPM_COMMON=1)
 endmacro()
 
 macro(opm-common_sources_hook)
-  if(ENABLE_ECL_INPUT)
-    # Keyword generation
-    include(GenerateKeywords.cmake)
+  # Keyword generation
+  include(GenerateKeywords.cmake)
 
-    # Append generated sources
-    list(INSERT opm-common_SOURCES 0 ${PROJECT_BINARY_DIR}/ParserInit.cpp)
-    foreach (name A B C D E F G H I J K L M N O P Q R S T U V W X Y Z)
-        list(INSERT opm-common_SOURCES 0 ${PROJECT_BINARY_DIR}/ParserKeywords/${name}.cpp)
-        list(INSERT opm-common_SOURCES 0 ${PROJECT_BINARY_DIR}/ParserKeywords/ParserInit${name}.cpp)
-        list(INSERT opm-common_SOURCES 0 ${PROJECT_BINARY_DIR}/ParserKeywords/Builtin${name}.cpp)
-    endforeach()
-    if (OPM_ENABLE_EMBEDDED_PYTHON)
-      list(INSERT opm-common_SOURCES 0 ${PROJECT_BINARY_DIR}/python/cxx/builtin_pybind11.cpp)
-    endif()
+  # Append generated sources
+  list(INSERT opm-common_SOURCES 0 ${PROJECT_BINARY_DIR}/ParserInit.cpp)
+  foreach (name A B C D E F G H I J K L M N O P Q R S T U V W X Y Z)
+    list(INSERT opm-common_SOURCES 0 ${PROJECT_BINARY_DIR}/ParserKeywords/${name}.cpp)
+    list(INSERT opm-common_SOURCES 0 ${PROJECT_BINARY_DIR}/ParserKeywords/ParserInit${name}.cpp)
+    list(INSERT opm-common_SOURCES 0 ${PROJECT_BINARY_DIR}/ParserKeywords/Builtin${name}.cpp)
+  endforeach()
+
+  if (OPM_ENABLE_EMBEDDED_PYTHON)
+    list(INSERT opm-common_SOURCES 0 ${PROJECT_BINARY_DIR}/python/cxx/builtin_pybind11.cpp)
+    set_source_files_properties(${PYTHON_CXX_SOURCE_FILES} PROPERTIES COMPILE_FLAGS -Wno-shadow)
+    set_source_files_properties(opm/input/eclipse/Python/PythonInterp.cpp PROPERTIES COMPILE_FLAGS -Wno-shadow)
+    set_source_files_properties(opm/input/eclipse/Schedule/Action/PyAction.cpp PROPERTIES COMPILE_FLAGS -Wno-shadow)
   endif()
+
   set_source_files_properties(
     opm/input/eclipse/Python/Python.cpp
     PROPERTIES
@@ -211,51 +204,49 @@ macro(opm-common_files_hook)
 endmacro()
 
 macro(opm-common_tests_hook)
-  if(ENABLE_ECL_INPUT)
-    # Add the tests
-    opm_add_test(test_EclFilesComparator
-      CONDITION
-        ENABLE_ECL_INPUT AND TARGET Boost::unit_test_framework
-      SOURCES
-        tests/test_EclFilesComparator.cpp
-        test_util/EclFilesComparator.cpp
-      LIBRARIES
-        opmcommon
-        Boost::unit_test_framework
-      WORKING_DIRECTORY
-        ${PROJECT_BINARY_DIR}/tests
-    )
+  # Add the tests
+  opm_add_test(test_EclFilesComparator
+    CONDITION
+      TARGET Boost::unit_test_framework
+    SOURCES
+      tests/test_EclFilesComparator.cpp
+      test_util/EclFilesComparator.cpp
+    LIBRARIES
+      opmcommon
+      Boost::unit_test_framework
+    WORKING_DIRECTORY
+      ${PROJECT_BINARY_DIR}/tests
+  )
 
-    opm_add_test(test_EclRegressionTest
-      CONDITION
-        ENABLE_ECL_INPUT AND TARGET Boost::unit_test_framework
-      SOURCES
-        tests/test_EclRegressionTest.cpp
-        test_util/EclFilesComparator.cpp
-        test_util/EclRegressionTest.cpp
-      LIBRARIES
-        opmcommon
-        Boost::unit_test_framework
-      WORKING_DIRECTORY
-        ${PROJECT_BINARY_DIR}/tests
-    )
+  opm_add_test(test_EclRegressionTest
+    CONDITION
+      TARGET Boost::unit_test_framework
+    SOURCES
+      tests/test_EclRegressionTest.cpp
+      test_util/EclFilesComparator.cpp
+      test_util/EclRegressionTest.cpp
+    LIBRARIES
+      opmcommon
+      Boost::unit_test_framework
+    WORKING_DIRECTORY
+      ${PROJECT_BINARY_DIR}/tests
+  )
 
-    include(ExtraTests.cmake)
+  include(ExtraTests.cmake)
 
-    if(ENABLE_MOCKSIM AND TARGET Boost::unit_test_framework)
-      foreach(test test_msim test_msim_ACTIONX test_msim_EXIT)
-        opm_add_test(${test}
-          SOURCES
-            tests/msim/${test}.cpp
-          LIBRARIES
-            mocksim
-            opmcommon
-            Boost::unit_test_framework
-          WORKING_DIRECTORY
-            ${PROJECT_BINARY_DIR}/tests
-        )
-      endforeach()
-    endif()
+  if(ENABLE_MOCKSIM AND TARGET Boost::unit_test_framework)
+    foreach(test test_msim test_msim_ACTIONX test_msim_EXIT)
+      opm_add_test(${test}
+        SOURCES
+          tests/msim/${test}.cpp
+        LIBRARIES
+          mocksim
+          opmcommon
+          Boost::unit_test_framework
+        WORKING_DIRECTORY
+          ${PROJECT_BINARY_DIR}/tests
+      )
+    endforeach()
   endif()
 
   if(OPM_ENABLE_PYTHON)
@@ -276,25 +267,23 @@ macro(opm-common_targets_hook)
     target_include_directories(opmcommon PRIVATE ${CMAKE_BINARY_DIR}/_deps)
   endif()
 
-  if(ENABLE_ECL_INPUT)
-    target_sources(compareECL
-      PRIVATE
-        test_util/EclFilesComparator.cpp
-        test_util/EclRegressionTest.cpp
-    )
+  target_sources(compareECL
+    PRIVATE
+      test_util/EclFilesComparator.cpp
+      test_util/EclRegressionTest.cpp
+  )
 
-    if(ENABLE_MOCKSIM)
-      add_library(mocksim msim/src/msim.cpp)
-      opm_add_target_options(TARGET mocksim)
-      target_link_libraries(mocksim PUBLIC opmcommon)
-      target_include_directories(mocksim PUBLIC msim/include)
-      add_executable(msim examples/msim.cpp)
-      opm_add_target_options(TARGET msim)
-      target_link_libraries(msim PRIVATE mocksim)
-    endif()
-
-    list(APPEND opm-common_EXTRA_TARGETS compareECL rst_deck)
+  if(ENABLE_MOCKSIM)
+    add_library(mocksim msim/src/msim.cpp)
+    opm_add_target_options(TARGET mocksim)
+    target_link_libraries(mocksim PUBLIC opmcommon)
+    target_include_directories(mocksim PUBLIC msim/include)
+    add_executable(msim examples/msim.cpp)
+    opm_add_target_options(TARGET msim)
+    target_link_libraries(msim PRIVATE mocksim)
   endif()
+
+  list(APPEND opm-common_EXTRA_TARGETS compareECL rst_deck)
 
   if(TARGET Boost::unit_test_framework)
     foreach(test ACTIONX EmbeddedPython msim_ACTIONX PYACTION)
@@ -483,16 +472,6 @@ endmacro()
 
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/Modules)
 set(OPM_MACROS_ROOT ${PROJECT_SOURCE_DIR})
-
-# Output implies input
-if(ENABLE_ECL_OUTPUT)
-  set(ENABLE_ECL_INPUT ON)
-endif()
-
-# And likewise, no input means no output
-if(NOT ENABLE_ECL_INPUT)
-  set(ENABLE_ECL_OUTPUT OFF)
-endif()
 
 if(NOT OPM_ENABLE_PYTHON)
   set(OPM_INSTALL_PYTHON OFF)

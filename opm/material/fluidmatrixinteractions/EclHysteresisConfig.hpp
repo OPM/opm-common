@@ -29,9 +29,7 @@
 
 namespace Opm {
 
-#if HAVE_ECL_INPUT
 class Runspec;
-#endif
 
 /*!
  * \ingroup FluidMatrixInteractions
@@ -134,14 +132,12 @@ public:
     bool enablePcScalingHyst() const
     { return enablePcScalingHyst_; }
 
-#if HAVE_ECL_INPUT
     /*!
      * \brief Reads all relevant material parameters form a cell of a parsed ECL deck.
      *
      * This requires that the opm-parser module is available.
      */
     void initFromState(const Runspec& runspec);
-#endif
 
 private:
     // enable hysteresis at all

@@ -35,10 +35,8 @@
 
 namespace Opm {
 
-#if HAVE_ECL_INPUT
 class EclipseState;
 class Schedule;
-#endif
 
 /*!
  * \brief This class represents the Pressure-Volume-Temperature relations of the oil phase
@@ -48,7 +46,6 @@ template <class Scalar>
 class ConstantCompressibilityOilPvt
 {
 public:
-#if HAVE_ECL_INPUT
     /*!
      * \brief Sets the pressure-dependent oil viscosity and density
      *        using the Eclipse PVCDO keyword.
@@ -57,7 +54,6 @@ public:
      * \brief Initialize the oil parameters via the data specified by the PVTO ECL keyword.
      */
     void initFromState(const EclipseState& eclState, const Schedule&);
-#endif
 
     void setNumRegions(std::size_t numRegions);
 

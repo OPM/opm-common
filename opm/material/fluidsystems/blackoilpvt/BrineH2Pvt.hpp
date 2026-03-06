@@ -42,10 +42,8 @@ copyright holders.
 
 namespace Opm {
 
-#if HAVE_ECL_INPUT
 class EclipseState;
 class Schedule;
-#endif
 
 /*!
 * \brief This class represents the Pressure-Volume-Temperature relations of the liquid phase for a H2-Brine system
@@ -68,13 +66,11 @@ public:
                         Scalar T_ref = 288.71, //(273.15 + 15.56)
                         Scalar P_ref = 101325);
 
-#if HAVE_ECL_INPUT
     /*!
      * \brief Initialize the parameters for Brine-H2 system using an ECL deck.
      *
      */
     void initFromState(const EclipseState& eclState, const Schedule&);
-#endif
 
     void setNumRegions(std::size_t numRegions);
 

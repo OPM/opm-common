@@ -63,7 +63,6 @@ Co2GasPvt(const ContainerT& salinity,
     }
 }
 
-#if HAVE_ECL_INPUT
 template<class Scalar, template<class> class Storage>
 void Co2GasPvt<Scalar, Storage>::
 initFromState(const EclipseState& eclState, const Schedule&)
@@ -108,7 +107,6 @@ initFromState(const EclipseState& eclState, const Schedule&)
 
     initEnd();
 }
-#endif
 
 template<class Scalar, template<class> class Storage>
 OPM_HOST_DEVICE void Co2GasPvt<Scalar, Storage>::

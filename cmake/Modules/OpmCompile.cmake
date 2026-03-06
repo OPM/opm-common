@@ -1,7 +1,5 @@
 # - Compile main library target
 
-include(OpmInterproceduralOptimization)
-
 macro(opm_compile opm)
   # some CMake properties do not do list expansion
   string(REPLACE ";" " " ${opm}_LINKER_FLAGS_STR "${${opm}_LINKER_FLAGS}")
@@ -35,11 +33,6 @@ macro(opm_compile opm)
   else()
     add_definitions(${${opm}_DEFINITIONS})
   endif()
-
-  if(NOT ${opm}_SOURCES)
-    set(${opm}_LIBRARY_TYPE INTERFACE)
-  endif()
-  add_library(${${opm}_TARGET} ${${opm}_LIBRARY_TYPE})
 
   if(${opm}_SOURCES)
     target_sources(${${opm}_TARGET}
@@ -90,7 +83,6 @@ macro(opm_compile opm)
       POSITION_INDEPENDENT_CODE
         TRUE
     )
-    opm_interprocedural_optimization(TARGET ${${opm}_TARGET})
   endif()
 
   target_link_libraries(${${opm}_TARGET}

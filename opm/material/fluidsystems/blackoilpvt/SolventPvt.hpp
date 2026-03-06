@@ -34,10 +34,8 @@
 
 namespace Opm {
 
-#if HAVE_ECL_INPUT
 class EclipseState;
 class Schedule;
-#endif
 
 /*!
  * \brief This class represents the Pressure-Volume-Temperature relations of the "second"
@@ -51,14 +49,12 @@ class SolventPvt
 public:
     using TabulatedOneDFunction = Tabulated1DFunction<Scalar>;
 
-#if HAVE_ECL_INPUT
     /*!
      * \brief Initialize the parameters for "solvent gas" using an ECL deck.
      *
      * This method assumes that the deck features valid SDENSITY and PVDS keywords.
      */
     void initFromState(const EclipseState& eclState, const Schedule&);
-#endif
 
     void setNumRegions(std::size_t numRegions);
 

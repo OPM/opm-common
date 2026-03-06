@@ -28,10 +28,8 @@
 
 #include <opm/common/OpmLog/OpmLog.hpp>
 
-#if HAVE_ECL_INPUT
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
-#endif
 
 #include <opm/material/eos/CubicEOS.hpp>
 #include <opm/material/fluidsystems/blackoilpvt/WaterPvtMultiplexer.hpp>
@@ -132,7 +130,6 @@ namespace Opm {
             }
         }
 
-#if HAVE_ECL_INPUT
         /*!
          * \brief Initialize the fluid system using an ECL deck object
          */
@@ -166,7 +163,6 @@ namespace Opm {
             waterPvt_->initFromState(eclState, schedule);
 
         }
-#endif // HAVE_ECL_INPUT
 
         static void init()
         {

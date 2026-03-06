@@ -50,7 +50,6 @@ BrineH2Pvt(const std::vector<Scalar>& salinity,
     }
 }
 
-#if HAVE_ECL_INPUT
 template<class Scalar>
 void BrineH2Pvt<Scalar>::
 initFromState(const EclipseState& eclState, const Schedule&)
@@ -112,7 +111,6 @@ initFromState(const EclipseState& eclState, const Schedule&)
                              usys.from_si(Meas::pressure , P_ref), usys.name(Meas::pressure),
                              usys.from_si(Meas::temperature , T_ref), usys.name(Meas::temperature)));
 }
-#endif
 
 template<class Scalar>
 void BrineH2Pvt<Scalar>::

@@ -38,10 +38,8 @@
 #include <functional>
 namespace Opm {
 
-#if HAVE_ECL_INPUT
 class EclipseState;
 class Schedule;
-#endif
 
 #define OPM_GAS_PVT_MULTIPLEXER_CALL(codeToCall, ...)                     \
     switch (gasPvtApproach_) {                                            \
@@ -137,14 +135,12 @@ public:
         return gasPvtApproach_ != GasPvtApproach::NoGas;
     }
 
-#if HAVE_ECL_INPUT
     /*!
      * \brief Initialize the parameters for gas using an ECL deck.
      *
      * This method assumes that the deck features valid DENSITY and PVDG keywords.
      */
     void initFromState(const EclipseState& eclState, const Schedule& schedule);
-#endif // HAVE_ECL_INPUT
 
     void setApproach(GasPvtApproach gasPvtAppr);
 

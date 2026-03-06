@@ -36,7 +36,6 @@
 
 namespace Opm {
 
-#if HAVE_ECL_INPUT
 template<class Scalar, bool enableBrine>
 void WaterPvtThermal<Scalar,enableBrine>::
 initFromState(const EclipseState& eclState, const Schedule& schedule)
@@ -178,7 +177,6 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
         }
     }
 }
-#endif
 
 template<class Scalar, bool enableBrine>
 void WaterPvtThermal<Scalar,enableBrine>::

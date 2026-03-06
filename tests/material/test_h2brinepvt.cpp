@@ -34,10 +34,6 @@
 #define BOOST_TEST_MODULE H2BrinePvt
 #include <boost/test/unit_test.hpp>
 
-#if !HAVE_ECL_INPUT
-#error "The test for the H2-brine PVT classes requires eclipse input support in opm-common"
-#endif
-
 #include <opm/material/fluidsystems/blackoilpvt/GasPvtMultiplexer.hpp>
 #include <opm/material/fluidsystems/blackoilpvt/OilPvtMultiplexer.hpp>
 #include <opm/material/fluidsystems/blackoilpvt/WaterPvtMultiplexer.hpp>

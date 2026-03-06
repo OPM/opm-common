@@ -72,11 +72,9 @@
 #include <opm/material/common/UniformTabulated2DFunction.hpp>
 
 #include <opm/input/eclipse/Python/Python.hpp>
-#if HAVE_ECL_INPUT
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
-#endif
 
 // check that the blackoil fluid system implements all non-standard functions
 template <class Evaluation, class FluidSystem>
@@ -85,13 +83,11 @@ void ensureBlackoilApi()
     // here we don't want to call these methods at runtime, we just want to make sure
     // that they compile
     while (false) {
-#if HAVE_ECL_INPUT
         auto python = std::make_shared<Opm::Python>();
         Opm::Deck deck;
         Opm::EclipseState eclState(deck);
         Opm::Schedule schedule(deck, eclState, python);
         FluidSystem::initFromState(eclState, schedule);
-#endif
 
         using Scalar = typename FluidSystem::Scalar;
         using FluidState = Opm::BlackOilFluidState<Evaluation, FluidSystem>;

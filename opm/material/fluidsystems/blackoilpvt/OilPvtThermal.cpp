@@ -36,7 +36,6 @@
 
 namespace Opm {
 
-#if HAVE_ECL_INPUT
 template<class Scalar>
 void OilPvtThermal<Scalar>::
 initFromState(const EclipseState& eclState, const Schedule& schedule)
@@ -176,7 +175,6 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
         }
     }
 }
-#endif
 
 template<class Scalar>
 void OilPvtThermal<Scalar>::
