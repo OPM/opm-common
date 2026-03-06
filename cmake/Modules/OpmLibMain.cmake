@@ -17,64 +17,11 @@
 # ${project}_targets_hook     Add additional targets, set additional target properties
 
 include(OpmCompile)
-include(UseOnlyNeeded)
-include(UseFastBuilds)
+include(OpmTargets)
 include(MPIChecks)
-include(UseOpenMP)
-include(UseOptimization)
-include(UseRunPath)
-include(UseValgrind)
-include(UseTracy)
-include(UseWarnings)
 
 # needed for Debian installation scheme
 include (GNUInstallDirs)
-
-# This adds all optional parameters to targets
-function(opm_add_target_options)
-  cmake_parse_arguments(PARAM "" "TARGET" "" ${ARGN})
-  if(NOT PARAM_TARGET)
-    message(FATAL_ERROR "Function needs a TARGET parameter")
-  endif()
-
-  # don't import more libraries than we need to
-  use_only_needed(TARGET ${PARAM_TARGET})
-
-  # setup rpath options
-  use_runpath(TARGET ${PARAM_TARGET})
-
-  # use tricks to do faster builds
-  use_fast_build(TARGET ${PARAM_TARGET})
-
-  # optionally turn on all warnings
-  use_warnings(TARGET ${PARAM_TARGET})
-
-  # additional optimization flags
-  use_additional_optimization(TARGET ${PARAM_TARGET})
-
-  # Parallel programming.
-  use_openmp(TARGET ${PARAM_TARGET})
-
-  # Tracy profiler
-  use_tracy(TARGET ${PARAM_TARGET})
-
-  # Valgrind memory error checker
-  use_valgrind(TARGET ${PARAM_TARGET})
-
-  # output binaries in 'bin' folder
-  set_target_properties(${PARAM_TARGET}
-    PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY
-      bin
-    ARCHIVE_OUTPUT_DIRECTORY
-      lib
-    LIBRARY_OUTPUT_DIRECTORY
-      lib
-  )
-
-  # Set C11 and C++-20
-  target_compile_features(${PARAM_TARGET} PUBLIC cxx_std_20 c_std_11)
-endfunction()
 
 # Various compiler extension checks
 include(OpmCompilerChecks)
@@ -95,6 +42,17 @@ linker_info ()
 # default settings: build static debug library
 include (OpmDefaults)
 message (STATUS "Build type: ${CMAKE_BUILD_TYPE}")
+
+# name of the library should not contain dashes, as CMake will
+# define a symbol with that name, and those cannot contain dashes
+string(REPLACE "-" "" ${project}_TARGET "${PROJECT_NAME}")
+
+opm_add_library(
+  TARGET
+    ${${project}_TARGET}
+  VERSION
+    ${${project}_VERSION}
+)
 
 # callback hook to setup additional dependencies
 if(COMMAND ${project}_prereqs_hook)
@@ -191,8 +149,6 @@ opm_compile (${project})
 
 # MPI version probes
 mpi_checks(TARGET ${${project}_TARGET})
-
-opm_add_target_options(TARGET ${${project}_TARGET})
 
 # installation of CMake modules to help user programs locate the library
 include (OpmProject)
