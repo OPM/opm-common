@@ -52,6 +52,9 @@ if(COMMAND ${project}_language_hook)
   cmake_language(CALL ${project}_language_hook)
 endif()
 
+# Setup prereqs
+include(${project}-prereqs)
+
 opm_add_library(
   TARGET
     ${${project}_TARGET}
@@ -59,20 +62,16 @@ opm_add_library(
     ${${project}_VERSION}
 )
 
-# callback hook to setup additional dependencies
+# set aliases to probed variables
+include (OpmAliases)
+
+# callback hook to link to dependencies
 if(COMMAND ${project}_prereqs_hook)
   cmake_language(CALL ${project}_prereqs_hook)
 endif()
 
-# macro to set standard variables (INCLUDE_DIRS, LIBRARIES etc.)
-include (OpmFind)
-find_and_append_package_list_to (${project} ${${project}_DEPS})
-
-# set aliases to probed variables
-include (OpmAliases)
-
 # find Boost::unit_test_framework and detect if Boost is in a shared library
-include (UseDynamicBoost)
+include(UseDynamicBoost)
 
 # Run conditional file hook
 if(COMMAND ${project}_files_hook)
