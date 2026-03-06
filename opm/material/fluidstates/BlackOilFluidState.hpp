@@ -237,14 +237,8 @@ public:
      *        state.
      */
     template <class FluidState>
-    OPM_HOST_DEVICE void assign(const FluidState& fs, const FluidSystem* fsPtr = nullptr)
+    OPM_HOST_DEVICE void assign(const FluidState& fs)
     {
-        if constexpr (!fluidSystemIsStatic) {
-            if (fsPtr != nullptr) {
-                fluidSystemPtr_ = fsPtr;
-            }
-        }
-
         if constexpr (storeTemperature)
             setTemperature(fs.temperature(/*phaseIdx=*/0));
 
