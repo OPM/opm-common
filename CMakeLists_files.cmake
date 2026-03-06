@@ -540,6 +540,7 @@ list(APPEND DUNE_TEST_SOURCE_FILES
       tests/material/test_fluidsystems.cpp
       tests/material/test_h2brinepvt.cpp
       tests/material/test_immiscibleflash.cpp
+      tests/material/test_materialstates.cpp
       tests/material/test_ncpflash.cpp
       tests/material/test_pengrobinson.cpp
       tests/material/test_tabulation.cpp
@@ -1108,6 +1109,8 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/material/fluidmatrixinteractions/BrooksCoreyParams.hpp
       opm/material/fluidmatrixinteractions/BrooksCorey.hpp
       opm/material/fluidmatrixinteractions/PiecewiseLinearTwoPhaseMaterial.hpp
+      opm/material/materialstates/GenericMaterialState.hpp
+      opm/material/materialstates/MaterialStateTPSA.hpp
       opm/material/checkFluidSystem.hpp
       opm/material/viscositymodels/LBC.hpp
       opm/material/viscositymodels/LBCco2rich.hpp
