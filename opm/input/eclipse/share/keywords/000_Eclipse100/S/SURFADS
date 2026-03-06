@@ -13,7 +13,7 @@
       "value_type": "DOUBLE",
       "size_type": "ALL",
       "dimension": [
-        "Mass/Length*Length*Length",
+        "Concentration",
         "1"
       ]
     }

@@ -44,12 +44,12 @@
     {
       "name": "POLYMER",
       "value_type": "DOUBLE",
-      "dimension": "Mass/ReservoirVolume"
+      "dimension": "Concentration"
     },
     {
       "name": "BRINE",
       "value_type": "DOUBLE",
-      "dimension": "Mass/ReservoirVolume"
+      "dimension": "Concentration"
     }
   ]
 }

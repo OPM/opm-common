@@ -11,7 +11,7 @@
     {
       "name": "SURFACT",
       "value_type": "UDA",
-      "dimension": "Mass/Length*Length*Length"
+      "dimension": "Concentration"
     }
   ]
 }
