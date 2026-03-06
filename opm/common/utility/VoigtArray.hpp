@@ -86,6 +86,12 @@ public:
 
     constexpr std::size_t size() const { return data_.size(); }
 
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(data_);
+    }
+
 protected:
     std::array<T, 6> data_{};
 };

@@ -384,12 +384,12 @@ BOOST_AUTO_TEST_CASE(StrEquilOperations)
     BOOST_CHECK_CLOSE(1.0, record.datumDepth(), 1.0);
     BOOST_CHECK_CLOSE(2.0, record.datumPosX(), 1e-12);
     BOOST_CHECK_CLOSE(3.0, record.datumPosY(), 1e-12);
-    BOOST_CHECK_CLOSE(4.0 * unit::barsa, record.stressXX(), 1e-12);
-    BOOST_CHECK_CLOSE(5.0 * unit::barsa, record.stressXX_grad(), 1e-12);
-    BOOST_CHECK_CLOSE(6.0 * unit::barsa, record.stressYY(), 1e-12);
-    BOOST_CHECK_CLOSE(7.0 * unit::barsa, record.stressYY_grad(), 1e-12);
-    BOOST_CHECK_CLOSE(8.0 * unit::barsa, record.stressZZ(), 1e-12);
-    BOOST_CHECK_CLOSE(9.0 * unit::barsa, record.stressZZ_grad(), 1e-12);
+    BOOST_CHECK_CLOSE(4.0 * unit::barsa, record.stress()[VoigtIndex::XX], 1e-12);
+    BOOST_CHECK_CLOSE(5.0 * unit::barsa, record.stress_grad()[VoigtIndex::XX], 1e-12);
+    BOOST_CHECK_CLOSE(6.0 * unit::barsa, record.stress()[VoigtIndex::YY], 1e-12);
+    BOOST_CHECK_CLOSE(7.0 * unit::barsa, record.stress_grad()[VoigtIndex::YY], 1e-12);
+    BOOST_CHECK_CLOSE(8.0 * unit::barsa, record.stress()[VoigtIndex::ZZ], 1e-12);
+    BOOST_CHECK_CLOSE(9.0 * unit::barsa, record.stress_grad()[VoigtIndex::ZZ], 1e-12);
 }
 
 BOOST_AUTO_TEST_CASE(RestartCWD)
