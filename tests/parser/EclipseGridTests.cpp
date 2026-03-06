@@ -3520,21 +3520,51 @@ BOOST_AUTO_TEST_CASE(TEST_GDFILE_1_ADDZCORN) {
     "ACTNUM\n"
     " 1 1 1 1 0 1 0 1 /\n";
 
-    const char* test1 =
-    "ADDZCORN\n"
-    "   1.0 1 2 1 2 1 2 /\n"
-    "/\n";
+    {
+        const char* test1 =
+        "ADDZCORN\n"
+        "   1.0 1 2 1 2 1 2 1 2 1 2/\n"
+        "/\n";
 
-    std::string deckData1 = std::string(deckDataBase) + test1;
-    Opm::Parser parser;
-    auto deck1 = parser.parseString( deckData1) ;
-    Opm::EclipseGrid grid1(deck1);
-    auto zcorn = grid1.getZCORN();
-    // all zcorns are moved 1.0
-    grid1.addZCORN(deck1);
-    auto zcorn_mod = grid1.getZCORN();
-    for (int i = 0; i < 64; i++) {
-        BOOST_CHECK_CLOSE( zcorn[i] + 1.0, zcorn_mod[i], 1e-8);
+        std::string deckData1 = std::string(deckDataBase) + test1;
+        Opm::Parser parser;
+        auto deck1 = parser.parseString( deckData1) ;
+        Opm::EclipseGrid grid1(deck1);
+        auto zcorn = grid1.getZCORN();
+        // all zcorns are moved 1.0
+        grid1.addZCORN(deck1);
+        auto zcorn_mod = grid1.getZCORN();
+        for (int i = 0; i < 64; i++) {
+            BOOST_CHECK_CLOSE( zcorn[i] + 1.0, zcorn_mod[i], 1e-8);
+        }
     }
+
+    {
+        const char* test1 =
+        "ADDZCORN\n"
+        "   1.0 0 1 0 1 1 1 0 1 0 1/\n"
+        "   -1.0 1 0 1 0 2 2 1 0 1 0/\n"
+        "/\n";
+
+        std::string deckData1 = std::string(deckDataBase) + test1;
+        Opm::Parser parser;
+        auto deck1 = parser.parseString( deckData1) ;
+        Opm::EclipseGrid grid1(deck1);
+        auto zcorn = grid1.getZCORN();
+        // all zcorns are moved 1.0
+        grid1.addZCORN(deck1);
+        auto zcorn_mod = grid1.getZCORN();
+        for (int i = 0; i < 64; i++) {
+            std::cout << i << std::endl;
+            if (i == 1 || i == 17) { // move right front corner of cell 1, 1 m
+                BOOST_CHECK_CLOSE( zcorn[i]+1.0, zcorn_mod[i], 1e-8);
+            } else if (i == 36 || i == 52) { // move left back corner of cell 2, -1m
+                BOOST_CHECK_CLOSE( zcorn[i]-1.0, zcorn_mod[i], 1e-8);
+            } else {
+                BOOST_CHECK_CLOSE( zcorn[i], zcorn_mod[i], 1e-8);
+            }
+        }
+    }
+
 
 }

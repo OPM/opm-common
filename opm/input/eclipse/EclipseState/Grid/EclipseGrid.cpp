@@ -76,7 +76,7 @@
 #include <vector>
 
 #include <fmt/format.h>
-
+#include <iostream>
 namespace Opm {
 
 namespace {
@@ -1863,43 +1863,166 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         std::vector<AddZCornInput> addzcorns;
 
         for (const auto& input : deck.get<ADDZCORN>()) {
-            const auto& record = input.getRecord(0);
-            const double value = record.getItem<ADDZCORN::ADDED_VALUE>().getSIDouble(0);
-            const std::size_t ix1 = record.getItem<ADDZCORN::IX1>().get<int>(0);
-            const std::size_t ix2 = record.getItem<ADDZCORN::IX2>().get<int>(0);
-            const std::size_t jy1 = record.getItem<ADDZCORN::JY1>().get<int>(0);
-            const std::size_t jy2 = record.getItem<ADDZCORN::JY2>().get<int>(0);
-            const std::size_t kz1 = record.getItem<ADDZCORN::KZ1>().get<int>(0);
-            const std::size_t kz2 = record.getItem<ADDZCORN::KZ2>().get<int>(0);
-
-            if (kz2 < kz1) {
-                throw("obs");
-            }
-            for (size_t k = kz1-1; k < kz2; k++) {
-                if (jy1 == 0) {
-
-                } else if (jy2 == 0) {
-
-                } else if (jy2 < jy1 ) {
+            for (const auto& record : input){
+                const double value = record.getItem<ADDZCORN::ADDED_VALUE>().getSIDouble(0);
+                const int ix1 = record.getItem<ADDZCORN::IX1>().get<int>(0);
+                const int ix2 = record.getItem<ADDZCORN::IX2>().get<int>(0);
+                const int jy1 = record.getItem<ADDZCORN::JY1>().get<int>(0);
+                const int jy2 = record.getItem<ADDZCORN::JY2>().get<int>(0);
+                const int kz1 = record.getItem<ADDZCORN::KZ1>().get<int>(0);
+                const int kz2 = record.getItem<ADDZCORN::KZ2>().get<int>(0);
+                int ix1a = record.getItem<ADDZCORN::IX1A>().get<int>(0);
+                int ix2a = record.getItem<ADDZCORN::IX2A>().get<int>(0);
+                int jy1a = record.getItem<ADDZCORN::JY1A>().get<int>(0);
+                int jy2a = record.getItem<ADDZCORN::JY2A>().get<int>(0);
+                const std::string flag = record.getItem<ADDZCORN::ACTION>().get<std::string>(0);
+                
+                // check continuity parameter
+                if (ix1a == -1) {
+                    ix1a = std::max(0, ix1 - 1);
+                }
+                if (ix2a == -1) {
+                    ix2a = std::min((int)getNX(), ix1 + 1);
+                }
+                if (jy1a == -1) {
+                    jy1a = std::max(0, jy1 - 1);
+                }
+                if (jy2a == -1) {
+                    jy2a = std::min((int)getNY(), jy2 + 1);
+                }
+                // we dont support moving neighbouring corners yet
+                if (ix1a != ix1 || ix2a != ix2 || jy1a != jy1 || jy2a != jy2) {
                     throw("obs");
-                } else {
-                    for (size_t j = jy1-1; j < jy2; j++) {
-                        if (ix1 == 0) {
+                }
 
-                        } else if (ix2 == 0) {
-
-                        } else if (ix2 < ix1 ) {
-                            throw("obs");
-                        } else {
-                            for (size_t i = ix1-1; i < ix2; i++) {
-                                // assume all zorners (FLAG = BOTH)
-                                for (size_t c = 0; c < 8; c++) {
-                                    AddZCornInput entry = {value,i,j,k,c};
-                                    addzcorns.emplace_back(entry);
+                // if one of the ix jy indices is 0 we are in single cell mode
+                const bool single_cell_mode = (ix1 == 0 || ix2 == 0 || jy1 == 0 || jy2 == 0);
+               
+                // some sanity checks
+                if (!single_cell_mode && ix2 < ix1) {
+                    throw("obs");
+                }
+                if (!single_cell_mode && jy2 < jy1) {
+                    throw("obs");
+                }
+                if (kz2 < kz1) {
+                    throw("obs");
+                }
+                for (size_t k = kz1-1; k < (std::size_t)kz2; k++) {
+                    if (single_cell_mode) {
+                        const size_t i = std::max(ix1, ix2) - 1;
+                        const size_t j = std::max(jy1, jy2) - 1;
+                        const std::vector<std::string> sides = {"TOP", "BOTTOM"};
+                        size_t offset = 0;
+                        for (const auto& side : sides) {
+                            // if flag is top we dont do bottom and if it 
+                            // is bottom we dont do top
+                            if (flag != side && flag != "BOTH") {
+                                continue;
+                            }
+                            if (side == "BOTTOM") {
+                                offset = 4;
+                            }
+                            if (ix1 > 0 && jy2 > 0) {
+                                AddZCornInput entry = {value,i,j,k,0+offset};
+                                addzcorns.emplace_back(entry);
+                            }
+                            if (ix2 > 0 && jy2 > 0) {
+                                AddZCornInput entry = {value,i,j,k,1+offset};
+                                addzcorns.emplace_back(entry);
+                            }
+                            if (ix1 > 0 && jy1 > 0) {
+                                AddZCornInput entry = {value,i,j,k,2+offset};
+                                addzcorns.emplace_back(entry);
+                            }
+                            if (ix2 > 0 && jy1 > 0) {
+                                AddZCornInput entry = {value,i,j,k,3+offset};
+                                addzcorns.emplace_back(entry);
+                            }
+                        }
+                        
+                    } else {
+                        for (size_t j = jy1-1; j < (std::size_t)jy2; j++) {
+                            for (size_t i = ix1-1; i < (std::size_t)ix2; i++) {
+                                // move top corners
+                                if (flag == "TOP" || flag == "BOTH") {
+                                    for (size_t c = 0; c < 4; c++) {
+                                        AddZCornInput entry = {value,i,j,k,c};
+                                        addzcorns.emplace_back(entry);
+                                    }
+                                }
+                                // move bottom corners
+                                if (flag == "BOTTOM" || flag == "BOTH") {
+                                    for (size_t c = 4; c < 8; c++) {
+                                        AddZCornInput entry = {value,i,j,k,c};
+                                        addzcorns.emplace_back(entry);
+                                    }
                                 }
                             }
                         }
                     }
+/*                     // adjustment of neigbouring cells for continuity
+                    if (ix1a == ix1 - 1 && jy1a == jy1 - 1) {
+                        const std::size_t i = ix1 - 1;
+                        const std::size_t j = jy1 - 1;
+                        AddZCornInput entry = {value,i-1,j-1,k,3};
+                        addzcorns.emplace_back(entry);
+                        entry = {value,i,j-1,k,1};
+                        addzcorns.emplace_back(entry);
+                        entry = {value,i,j-1,k,3};
+                        addzcorns.emplace_back(entry);
+                        entry = {value,i-1,j,k,2};
+                        addzcorns.emplace_back(entry);
+                        entry = {value,i-1,j,k,3};
+                        addzcorns.emplace_back(entry);
+                    } else if (ix1a == ix1 - 1 && jy2a == jy2 + 1) {
+                        const std::size_t i = ix1 - 1;
+                        const std::size_t j = jy2 - 1;
+                        AddZCornInput entry = {value,i-1,j+1,k,1};
+                        addzcorns.emplace_back(entry);
+                        entry = {value,i,j+1,k,0};
+                        addzcorns.emplace_back(entry);
+                        entry = {value,i,j+1,k,1};
+                        addzcorns.emplace_back(entry);
+                        entry = {value,i-1,j,k,1};
+                        addzcorns.emplace_back(entry);
+                        entry = {value,i-1,j,k,3};
+                        addzcorns.emplace_back(entry);
+                    } else if (ix2a == ix2 + 1 && jy1a == jy1 - 1) {
+                        const std::size_t i = ix2 - 1;
+                        const std::size_t j = jy1 - 1;
+                        AddZCornInput entry = {value,i+1,j-1,k,2};
+                        addzcorns.emplace_back(entry);
+                        entry = {value,i,j+1,k,2};
+                        addzcorns.emplace_back(entry);
+                        entry = {value,i,j+1,k,0};
+                        addzcorns.emplace_back(entry);
+                        entry = {value,i+1,j,k,2};
+                        addzcorns.emplace_back(entry);
+                        entry = {value,i+1,j,k,3};
+                        addzcorns.emplace_back(entry);
+                    } else if (ix2a == ix2 + 1 && jy2a == jy2 + 1) {
+                        const std::size_t i = ix2 - 1;
+                        const std::size_t j = jy2 - 1;
+                        AddZCornInput entry = {value,i-1,j-1,k,3};
+                        addzcorns.emplace_back(entry);
+                        entry = {value,i,j-1,k,1};
+                        addzcorns.emplace_back(entry);
+                        entry = {value,i,j-1,k,3};
+                        addzcorns.emplace_back(entry);
+                        entry = {value,i-1,j,k,2};
+                        addzcorns.emplace_back(entry);
+                        entry = {value,i-1,j,k,3};
+                        addzcorns.emplace_back(entry);
+                    } else if (ix1a == ix1 - 1) {
+
+                    } else if (ix2a == ix1 + 1) {
+
+                    } else if (jy1a == jy1 - 1) {
+
+                    } else if (jy2a == jy2 + 1) {
+
+                    } */
                 }
             }
         }

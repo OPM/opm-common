@@ -35,19 +35,23 @@
     },
     {
       "name": "IX1A",
-      "value_type": "INT"
+      "value_type": "INT",
+      "default": -1
     },
     {
       "name": "IX2A",
-      "value_type": "INT"
+      "value_type": "INT",
+      "default": -1
     },
     {
       "name": "JY1A",
-      "value_type": "INT"
+      "value_type": "INT",
+      "default": -1
     },
     {
       "name": "JY2A",
-      "value_type": "INT"
+      "value_type": "INT",
+      "default": -1
     },
     {
       "name": "ACTION",
