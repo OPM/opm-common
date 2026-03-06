@@ -1,0 +1,12 @@
+{
+  "name": "SPECIES",
+  "sections": [
+    "PROPS"
+  ],
+  "requires": [
+    "GEOCHEM"
+  ],
+  "data": {
+      "value_type": "STRING"
+    }
+}

@@ -83,6 +83,11 @@
 #include <opm/input/eclipse/EclipseState/Tables/TableSchema.hpp>
 #include <opm/input/eclipse/EclipseState/TracerConfig.hpp>
 
+#include <opm/input/eclipse/EclipseState/Geochemistry/SpeciesConfig.hpp>
+#include <opm/input/eclipse/EclipseState/Geochemistry/MineralConfig.hpp>
+#include <opm/input/eclipse/EclipseState/Geochemistry/IonExchangeConfig.hpp>
+#include <opm/input/eclipse/EclipseState/Geochemistry/GenericSpeciesConfig.hpp>
+
 #include <opm/input/eclipse/Schedule/Action/ASTNode.hpp>
 #include <opm/input/eclipse/Schedule/Action/ActionAST.hpp>
 #include <opm/input/eclipse/Schedule/Action/ActionResult.hpp>
@@ -264,6 +269,7 @@ TEST_FOR_TYPE(FIPRegionStatistics)
 TEST_FOR_TYPE_NAMED(Fieldprops::TranCalculator, TranCalculator)
 TEST_FOR_TYPE(FoamConfig)
 TEST_FOR_TYPE(FoamData)
+TEST_FOR_TYPE(GenericSpeciesConfig)
 TEST_FOR_TYPE(GConSale)
 TEST_FOR_TYPE(GConSump)
 TEST_FOR_TYPE(GSatProd)
@@ -278,9 +284,11 @@ TEST_FOR_TYPE(GuideRateConfig)
 TEST_FOR_TYPE(GuideRateModel)
 TEST_FOR_TYPE(InitConfig)
 TEST_FOR_TYPE(IOConfig)
+TEST_FOR_TYPE(IonExchangeConfig)
 TEST_FOR_TYPE(JFunc)
 TEST_FOR_TYPE(KeywordLocation)
 TEST_FOR_TYPE(MessageLimits)
+TEST_FOR_TYPE(MineralConfig)
 TEST_FOR_TYPE(MULTREGTScanner)
 TEST_FOR_TYPE(NNC)
 TEST_FOR_TYPE_NAMED(Network::ExtNetwork, ExtNetwork)
@@ -317,6 +325,7 @@ TEST_FOR_TYPE(SkprpolyTable)
 TEST_FOR_TYPE(SkprwatTable)
 TEST_FOR_TYPE(SICD)
 TEST_FOR_TYPE(SolventDensityTable)
+TEST_FOR_TYPE(SpeciesConfig)
 TEST_FOR_TYPE(SummaryConfig)
 TEST_FOR_TYPE(SummaryConfigNode)
 TEST_FOR_TYPE(SummaryState)
