@@ -91,6 +91,14 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
         waterPvt_.initFromState(eclState, schedule);
     }
 
+    // set if we are using constrs tables
+   if ((!eclState.getSimulationConfig().hasDISGAS()) && (!phaseIsActive(gasPhaseIdx))) {
+      const auto& rsConstTables = eclState.getTableManager().getRsconstTables();
+      if (!rsConstTables.empty()) {
+          setEnableConstantRs(oilPvt_.approach() == OilPvtApproach::ConstantRsDeadOil);
+      }
+   }
+
     // set the reference densities of all PVT regions
     for (unsigned regionIdx = 0; regionIdx < num_regions; ++regionIdx) {
         setReferenceDensities(oilPvt_.approach()   == OilPvtApproach::NoOil     ? 700.0  : oilPvt_.oilReferenceDensity(regionIdx),
@@ -206,6 +214,7 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
     template<> T BlackOilFluidSystem<T, BlackOilDefaultFluidSystemIndices, VectorWithDefaultAllocator>::reservoirTemperature_ = 0.0; \
     template<> bool BlackOilFluidSystem<T, BlackOilDefaultFluidSystemIndices, VectorWithDefaultAllocator>::enableDissolvedGas_ = true; \
     template<> bool BlackOilFluidSystem<T, BlackOilDefaultFluidSystemIndices, VectorWithDefaultAllocator>::enableDissolvedGasInWater_ = false; \
+    template<> bool BlackOilFluidSystem<T, BlackOilDefaultFluidSystemIndices, VectorWithDefaultAllocator>::enableConstantRs_ = false; \
     template<> bool BlackOilFluidSystem<T, BlackOilDefaultFluidSystemIndices, VectorWithDefaultAllocator>::enableVaporizedOil_ = false; \
     template<> bool BlackOilFluidSystem<T, BlackOilDefaultFluidSystemIndices, VectorWithDefaultAllocator>::enableVaporizedWater_ = false; \
     template<> bool BlackOilFluidSystem<T, BlackOilDefaultFluidSystemIndices, VectorWithDefaultAllocator>::enableDiffusion_ = false; \
