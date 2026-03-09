@@ -36,10 +36,8 @@
 
 namespace Opm {
 
-#if HAVE_ECL_INPUT
 class EclipseState;
 class Schedule;
-#endif
 
 #define OPM_OIL_PVT_MULTIPLEXER_CALL(codeToCall, ...)                             \
     switch (approach_) {                                                          \
@@ -126,15 +124,13 @@ public:
     {
         return approach_ == OilPvtApproach::ThermalOil;
     }
-#if HAVE_ECL_INPUT
+
     /*!
      * \brief Initialize the parameters for water using an ECL state.
      *
      * This method assumes that the deck features valid DENSITY and PVTO/PVDO/PVCDO keywords.
      */
     void initFromState(const EclipseState& eclState, const Schedule& schedule);
-#endif // HAVE_ECL_INPUT
-
 
     void initEnd();
 

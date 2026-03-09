@@ -76,10 +76,8 @@ enum class WaterPvtApproach {
     BrineH2
 };
 
-#if HAVE_ECL_INPUT
 class EclipseState;
 class Schedule;
-#endif
 
 /*!
  * \brief This class represents the Pressure-Volume-Temperature relations of the water
@@ -112,14 +110,12 @@ public:
         return approach_ == WaterPvtApproach::ThermalWater;
     }
 
-#if HAVE_ECL_INPUT
     /*!
      * \brief Initialize the parameters for water using an ECL deck.
      *
      * This method assumes that the deck features valid DENSITY and PVDG keywords.
      */
     void initFromState(const EclipseState& eclState, const Schedule& schedule);
-#endif // HAVE_ECL_INPUT
 
     void initEnd();
 

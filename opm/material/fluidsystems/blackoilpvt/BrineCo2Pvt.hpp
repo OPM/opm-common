@@ -124,13 +124,11 @@ public:
 {
 }
 
-#if HAVE_ECL_INPUT
     /*!
      * \brief Initialize the parameters for Brine-CO2 system using an ECL deck.
      *
      */
     void initFromState(const EclipseState& eclState, const Schedule&);
-#endif
 
     void setNumRegions(std::size_t numRegions);
 

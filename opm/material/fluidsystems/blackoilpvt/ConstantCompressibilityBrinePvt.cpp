@@ -33,7 +33,6 @@
 
 namespace Opm {
 
-#if HAVE_ECL_INPUT
 template<class Scalar>
 void ConstantCompressibilityBrinePvt<Scalar>::
 initFromState(const EclipseState& eclState, const Schedule&)
@@ -88,7 +87,6 @@ initFromState(const EclipseState& eclState, const Schedule&)
 
     initEnd();
 }
-#endif
 
 template<class Scalar>
 void ConstantCompressibilityBrinePvt<Scalar>::

@@ -29,10 +29,6 @@
  */
 #include "config.h"
 
-#if !HAVE_ECL_INPUT
-#error "The test for the black oil PVT classes requires eclipse input support in opm-common"
-#endif
-
 #include <boost/mpl/list.hpp>
 
 #define BOOST_TEST_MODULE EclBlackOilPvt
