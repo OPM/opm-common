@@ -47,6 +47,11 @@ message (STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 # define a symbol with that name, and those cannot contain dashes
 string(REPLACE "-" "" ${project}_TARGET "${PROJECT_NAME}")
 
+# Run language setup hook
+if(COMMAND ${project}_language_hook)
+  cmake_language(CALL ${project}_language_hook)
+endif()
+
 opm_add_library(
   TARGET
     ${${project}_TARGET}
@@ -123,19 +128,6 @@ configure_vars (
         ${${project}_CONFIG_IMPL_VARS}
         ${TESTING_CONFIG_VARS}
 )
-
-# call this hook to let it setup necessary conditions for Fortran support
-if(COMMAND ${project}_fortran_hook)
-  cmake_language(CALL ${project}_fortran_hook)
-endif()
-
-if (${project}_FORTRAN_IF)
-  include (UseFortranWrappers)
-  define_fc_func (
-    APPEND ${CONFIG_H}
-    IF ${${project}_FORTRAN_IF}
-  )
-endif (${project}_FORTRAN_IF)
 
 # overwrite the config.h that is used by the code only if we have some
 # real changes. thus, we don't have to recompile if a reconfigure is run
