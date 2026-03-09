@@ -667,8 +667,10 @@ namespace {
             {"BIOTCOEF" , ::Opm::UnitSystem::measure::identity},
             {"CSTRESS"  , ::Opm::UnitSystem::measure::identity},
             {"DISPERC"  , ::Opm::UnitSystem::measure::length},
+            {"LAME"     , ::Opm::UnitSystem::measure::ymodule},
             {"POELCOEF" , ::Opm::UnitSystem::measure::identity},
             {"PRATIO"   , ::Opm::UnitSystem::measure::identity},
+            {"SMODULUS" , ::Opm::UnitSystem::measure::ymodule},
             {"THERMEXR" , ::Opm::UnitSystem::measure::identity}, // 1/(temperature difference)
             {"THELCOEF" , ::Opm::UnitSystem::measure::identity}, // Pressure/Temperature
             {"YMODULE"  , ::Opm::UnitSystem::measure::ymodule},

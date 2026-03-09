@@ -461,6 +461,70 @@ private:
 };
 
 
+class MechSolver
+{
+public:
+    enum class Solver
+    {
+        TPSA
+    };
+
+    enum class CouplingScheme
+    {
+        Lagged,
+        FixedStress
+    };
+
+    MechSolver() = default;
+
+    explicit MechSolver(const Deck&);
+
+    bool operator==(const MechSolver& data) const;
+
+    static MechSolver serializationTestObject();
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(this->m_solver);
+        serializer(this->m_coupling);
+        serializer(this->m_fixed_stress_min_iter);
+        serializer(this->m_fixed_stress_max_iter);
+    }
+
+    bool laggedScheme() const
+    {
+        return this->m_coupling == CouplingScheme::Lagged;
+    }
+
+    bool fixedStressScheme() const
+    {
+        return this->m_coupling == CouplingScheme::FixedStress;
+    }
+
+    int fixedStressMinIter() const
+    {
+        return this->m_fixed_stress_min_iter;
+    }
+
+    int fixedStressMaxIter() const
+    {
+        return this->m_fixed_stress_max_iter;
+    }
+
+    bool tpsa() const
+    {
+        return this->m_solver == Solver::TPSA;
+    }
+
+private:
+    Solver m_solver{};
+    CouplingScheme m_coupling = CouplingScheme::Lagged;
+    int m_fixed_stress_min_iter{};
+    int m_fixed_stress_max_iter{};
+};
+
+
 class Tracers {
 public:
     Tracers() = default;
@@ -519,6 +583,9 @@ public:
     const Actdims& actdims() const noexcept;
     const SatFuncControls& saturationFunctionControls() const noexcept;
     const Nupcol& nupcol() const noexcept;
+
+    const MechSolver& mechSolver() const;
+
     const Tracers& tracers() const;
     bool compositionalMode() const;
     size_t numComps() const;
@@ -563,6 +630,7 @@ public:
         serializer(m_mech);
         serializer(m_frac);
         serializer(m_temp);
+        serializer(m_mechsolver);
         serializer(m_biof);
     }
 
@@ -581,6 +649,7 @@ private:
     Actdims m_actdims{};
     SatFuncControls m_sfuncctrl{};
     Nupcol m_nupcol{};
+    MechSolver m_mechsolver{};
     Tracers m_tracers{};
     size_t m_comps = 0;
     bool m_co2storage{false};
