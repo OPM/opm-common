@@ -287,7 +287,8 @@ public:
         assert(params.config().krHysteresisModel() == 4);
         Evaluation Snorm = params.Sncri()+(1.0-Sw-params.Sncrt())*(params.Snmaxd()-params.Sncri())/(params.Snhy()-params.Sncrt());
         Evaluation Krwi_snorm = EffectiveLaw::template twoPhaseSatKrw<Evaluation, Args...>(params.imbibitionParams(), 1 - Snorm);
-        return params.KrwdHy() +  params.krwWght() * (Krwi_snorm - params.Krwi_snmax());
+        Evaluation Krwd = params.config().enableWettingPhaseKilloughFix()? EffectiveLaw::template twoPhaseSatKrw<Evaluation, Args...>(params.drainageParams(), Sw) : params.KrwdHy();
+        return Krwd + params.krwWght(Krwd) * (Krwi_snorm - params.Krwi_snmax());
     }
 
     /*!

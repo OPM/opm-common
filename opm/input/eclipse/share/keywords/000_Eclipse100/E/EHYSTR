@@ -90,7 +90,7 @@
     },
     {
       "item": 13,
-      "name": "FLAG_SOMETHING",
+      "name": "fix_wetting_phase_killough",
       "value_type": "INT",
       "default": 0,
       "comment": "Not used"

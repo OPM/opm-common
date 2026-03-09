@@ -444,6 +444,16 @@ EclHysterConfig::EclHysterConfig(const Opm::Deck& deck)
         if (pcHystMod == 0 || krHystMod == 2 || krHystMod == 3)
             modParamTrappedValue = ehystrKeyword.getRecord(0).getItem("mod_param_trapped").get<double>(0);
 
+        if (krHystMod >= 0) {
+            const int fix_wetting_phase_killough = ehystrKeyword.getRecord(0).getItem("fix_wetting_phase_killough").get<int>(0);
+            if (fix_wetting_phase_killough != 0 && fix_wetting_phase_killough != 1) {
+                throw std::runtime_error(
+                    "Only 0 and 1 allowed for the 'fix wetting phase killough flag' "
+                    "(the 13 item of the 'EHYSTR' keyword).");
+            }
+            enableKilloughWettingFix = fix_wetting_phase_killough;
+        }
+
         if (pcHystMod >= 0) {
             const int pc_scaling_value = ehystrKeyword.getRecord(0).getItem("enable_pc_scaling").get<int>(0);
             if (pc_scaling_value != 0 && pc_scaling_value != 1) {
@@ -465,6 +475,7 @@ EclHysterConfig EclHysterConfig::serializationTestObject()
     result.curvatureCapPrsValue = 4;
     result.activeWagHyst = true;
     result.enablePcScaling = false;
+    result.enableKilloughWettingFix = false;
 
     return result;
 }
@@ -490,6 +501,9 @@ bool EclHysterConfig::activeWag() const
 bool EclHysterConfig::doPcScaling() const
 { return enablePcScaling; }
 
+bool EclHysterConfig::fixWettingPhaseKillough() const
+{ return enableKilloughWettingFix; }
+
 bool EclHysterConfig::operator==(const EclHysterConfig& data) const
 {
     return (this->active() == data.active())
@@ -499,6 +513,7 @@ bool EclHysterConfig::operator==(const EclHysterConfig& data) const
         && (this->curvatureCapPrs() == data.curvatureCapPrs())
         && (this->activeWag() == data.activeWag())
         && (this->doPcScaling() == data.doPcScaling())
+        && (this->fixWettingPhaseKillough() == data.fixWettingPhaseKillough())
         ;
 }
 
