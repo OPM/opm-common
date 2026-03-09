@@ -1904,12 +1904,10 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
                 num_nnc = 0;
             }
 
-            bool local_global = nnc_col.hasCrossGridNNC(index + 1 ,0);
             bool global_local = nnc_col.hasCrossGridNNC(0,index + 1);
-            if (local_global || global_local){
-                bool local_first = local_global ? true : false;
-                const auto& nnc_gl = local_global ? nnc_col.getNNC(index + 1,0) : nnc_col.getNNC(0,index + 1);
-                save_nnc_local_global(egridfile, nnc_gl.input(), index + 1, num_nnc, local_first);
+            if (global_local){
+                const auto& nnc_gl = nnc_col.getNNC(0,index + 1);
+                save_nnc_local_global(egridfile, nnc_gl.input(), index + 1, num_nnc, global_local);
             }
          }
     }

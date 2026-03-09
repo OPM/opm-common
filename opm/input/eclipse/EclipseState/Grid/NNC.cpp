@@ -355,23 +355,21 @@ bool is_neighbor(const EclipseGrid& grid, std::size_t g1, std::size_t g2) {
         auto old_size = m_input.size();
         m_input.insert(m_input.end(), data.begin(), data.end());
         // No swap of cell1/cell2 — preserve direction as given
-        std::sort(m_input.begin() + old_size, m_input.end());
-        std::inplace_merge(m_input.begin(),
-                           m_input.begin() + old_size,
-                           m_input.end());
+        auto comp = [](const NNCdata& a, const NNCdata& b) {
+            return std::tie(a.cell1, a.cell2) < std::tie(b.cell1, b.cell2);
+        };
+
+        std::ranges::sort(m_input.begin() + old_size, m_input.end(), comp);
+        std::ranges::inplace_merge(m_input, m_input.begin() + old_size, comp);
     }
 
     void NNCDiffGrid::swap_adj(std::size_t grid1, std::size_t grid2)
     {
-        if (grid2 > grid1) {
+        if (grid1 > grid2) {
             for (auto& item : m_input) {
                 std::swap(item.cell1, item.cell2);
             }
         }
-    }
-
-    void NNCDiffGrid::sort(){
-        std::sort(m_input.begin(), m_input.end());
     }
 
     NNCCollection::NNCCollection(NNC nnc_global)

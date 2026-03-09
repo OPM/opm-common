@@ -173,8 +173,6 @@ public:
     void merge(const std::vector<NNCdata>& data) override;
 
     void swap_adj(std::size_t grid1, std::size_t grid2);
-
-    void sort();
 };
 
 
