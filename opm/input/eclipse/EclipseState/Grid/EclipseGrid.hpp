@@ -23,6 +23,7 @@
 #include <opm/input/eclipse/EclipseState/Grid/GridDims.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/MapAxes.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/MinpvMode.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/NNC.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/PinchMode.hpp>
 
 #include <algorithm>
@@ -163,7 +164,7 @@ namespace Opm {
         void assertLabelLGR(const std::string& label) const;
 
         void save(const std::string& filename, bool formatted, const std::vector<Opm::NNCdata>& nnc, const Opm::UnitSystem& units) const;
-
+        void save(const std::string& filename, bool formatted, const NNCCollection& nnc_col, const Opm::UnitSystem& units) const;
 
         /*
           Observe that the there is a getGlobalIndex(i,j,k)
@@ -434,6 +435,11 @@ namespace Opm {
                             std::array<double,8>& Z) const;
 
         void save_nnc(Opm::EclIO::EclOutput& egridfile, const std::vector<Opm::NNCdata>& nnc) const;
+        void save_nnc(Opm::EclIO::EclOutput& egridfile, const Opm::NNCCollection& nnc_col) const;
+
+        void save_nnc_same_grid(Opm::EclIO::EclOutput& egridfile, const std::vector<Opm::NNCdata>& nnc, std::size_t grid_num = 0) const;
+        void save_nnc_local_global(Opm::EclIO::EclOutput& egridfile, const std::vector<Opm::NNCdata>& nnc, std::size_t grid_num, std::size_t num_nnc, bool local_first) const;
+
         void save_core(Opm::EclIO::EclOutput& egridfile, const Opm::UnitSystem& units) const;
 
     };

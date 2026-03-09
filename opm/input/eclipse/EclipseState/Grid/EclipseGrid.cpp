@@ -1873,10 +1873,68 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         Opm::EclIO::EclOutput egridfile(filename, formatted);
         save_core(egridfile, units);
         save_children(egridfile, units);
-        save_nnc(egridfile, nnc);
+        save_nnc_same_grid(egridfile, nnc);
     }
 
-    void EclipseGrid::save_nnc(Opm::EclIO::EclOutput& egridfile, const std::vector<Opm::NNCdata>& nnc) const {
+
+    void EclipseGrid::save(const std::string& filename, bool formatted, const NNCCollection& nnc_col, const Opm::UnitSystem& units) const {
+        Opm::EclIO::EclOutput egridfile(filename, formatted);
+        save_core(egridfile, units);
+        save_children(egridfile, units);
+        save_nnc(egridfile, nnc_col);
+    }
+
+    void EclipseGrid::save_nnc(Opm::EclIO::EclOutput& egridfile, const NNCCollection& nnc_col) const {
+
+        // Global Grid NNC
+        save_nnc_same_grid(egridfile, nnc_col.getGlobalNNC().input(), 0);
+
+        // LGR NNC
+         for (std::size_t index : m_print_order_lgr_cells) {
+            //SAME GRID PLOTS HEADER THAT CONTAINS THE GRID NUMBER
+            std::size_t num_nnc;
+            if (nnc_col.hasSameGridNNC(index + 1))
+            {
+                const auto& nnc = nnc_col.getNNC(index + 1).input();
+                num_nnc = nnc.size();
+                save_nnc_same_grid(egridfile, nnc, index + 1);
+            }
+            else {
+                save_nnc_same_grid(egridfile, {}, index + 1);
+                num_nnc = 0;
+            }
+
+            bool local_global = nnc_col.hasCrossGridNNC(index + 1 ,0);
+            bool global_local = nnc_col.hasCrossGridNNC(0,index + 1);
+            if (local_global || global_local){
+                bool local_first = local_global ? true : false;
+                const auto& nnc_gl = local_global ? nnc_col.getNNC(index + 1,0) : nnc_col.getNNC(0,index + 1);
+                save_nnc_local_global(egridfile, nnc_gl.input(), index + 1, num_nnc, local_first);
+            }
+         }
+    }
+
+    void EclipseGrid::save_nnc_local_global(Opm::EclIO::EclOutput& egridfile, const std::vector<Opm::NNCdata>& nnc, std::size_t grid_num, std::size_t num_nnc, bool local_first) const {
+        std::vector<int> nnchead(10, 0);
+        std::vector<int> nncl;
+        std::vector<int> nncg;
+        for (const NNCdata& n : nnc ) {
+            if (local_first){
+                nncl.push_back(n.cell1 + 1);
+                nncg.push_back(n.cell2 + 1);
+            } else {
+                nncl.push_back(n.cell2 + 1);
+                nncg.push_back(n.cell1 + 1);
+            }
+        }
+        nnchead[0] = num_nnc;
+        nnchead[1] = grid_num;
+        egridfile.write("NNCHEAD", nnchead);
+        egridfile.write("NNCL", nncl);
+        egridfile.write("NNCG", nncg);
+    }
+
+    void EclipseGrid::save_nnc_same_grid(Opm::EclIO::EclOutput& egridfile, const std::vector<Opm::NNCdata>& nnc, std::size_t grid_num) const {
         std::vector<int> nnchead(10, 0);
         std::vector<int> nnc1;
         std::vector<int> nnc2;
@@ -1887,11 +1945,11 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         }
 
         nnchead[0] = nnc1.size();
+        nnchead[1] = grid_num;
         if (nnc1.size() > 0){
             egridfile.write("NNCHEAD", nnchead);
             egridfile.write("NNC1", nnc1);
             egridfile.write("NNC2", nnc2);
-
         }
 
     }
