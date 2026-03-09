@@ -35,6 +35,35 @@ static NNC make_nnc(std::size_t c1, std::size_t c2, double trans)
     return n;
 }
 
+static NNCDiffGrid make_nnc_diffgrid(std::size_t c1, std::size_t c2, double trans)
+{
+    NNCDiffGrid n;
+    n.addNNC(c1, c2, trans);
+    return n;
+}
+
+
+Opm::Deck msw_sim(const std::string& fname)
+{
+    return Opm::Parser{}.parseFile(fname);
+}
+
+struct SimulationCase
+{
+    explicit SimulationCase(const Opm::Deck& deck)
+        : es   { deck }
+        , grid { es.getInputGrid() }
+        , sched{ deck, es, std::make_shared<Opm::Python>() }
+    {}
+
+    // Order requirement: 'es' must be declared/initialised before 'sched'.
+    // EclipseState calls routines that initialize EclipseGrid LGR cells.
+    Opm::EclipseState es;
+    Opm::EclipseGrid  grid;
+    Opm::Schedule     sched;
+};
+
+
 // ===========================================================================
 // Same-grid NNC
 // ===========================================================================
@@ -157,7 +186,7 @@ BOOST_AUTO_TEST_SUITE(CrossGrid)
 BOOST_AUTO_TEST_CASE(add_and_get)
 {
     NNCCollection col;
-    NNC nnc = make_nnc(3, 4, 0.5);
+    NNCDiffGrid nnc = make_nnc_diffgrid(3, 4, 0.5);
     col.addNNC(std::size_t{0}, std::size_t{1}, nnc);
 
     BOOST_CHECK(col.getNNC(std::size_t{0}, std::size_t{1}) == nnc);
@@ -167,7 +196,7 @@ BOOST_AUTO_TEST_CASE(order_dependent_test)
 {
     // getNNC(g1,g2) and getNNC(g2,g1) must resolve to the same entry.
     NNCCollection col;
-    NNC nnc = make_nnc(10, 20, 2.5);
+    NNCDiffGrid nnc = make_nnc_diffgrid(10, 20, 2.5);
     col.addNNC(std::size_t{2}, std::size_t{5}, nnc);
 
     BOOST_CHECK(col.getNNC(std::size_t{2}, std::size_t{5}) == nnc);
@@ -177,9 +206,9 @@ BOOST_AUTO_TEST_CASE(order_dependent_test)
 BOOST_AUTO_TEST_CASE(create_add_retrieve_each)
 {
     NNCCollection col;
-    NNC n01 = make_nnc(1, 2, 1.0);
-    NNC n02 = make_nnc(3, 4, 2.0);
-    NNC n12 = make_nnc(5, 6, 3.0);
+    NNCDiffGrid n01 = make_nnc_diffgrid(1, 2, 1.0);
+    NNCDiffGrid n02 = make_nnc_diffgrid(3, 4, 2.0);
+    NNCDiffGrid n12 = make_nnc_diffgrid(5, 6, 3.0);
 
     col.addNNC(std::size_t{0}, std::size_t{1}, n01);
     col.addNNC(std::size_t{0}, std::size_t{2}, n02);
@@ -193,7 +222,7 @@ BOOST_AUTO_TEST_CASE(create_add_retrieve_each)
 BOOST_AUTO_TEST_CASE(check_if_returns_mutable_reference)
 {
     NNCCollection col;
-    col.addNNC(std::size_t{0}, std::size_t{1}, make_nnc(3, 4, 1.0));
+    col.addNNC(std::size_t{0}, std::size_t{1}, make_nnc_diffgrid(3, 4, 1.0));
 
     col.getNNC(std::size_t{0}, std::size_t{1}).addNNC(7, 9, 5.0);
 
@@ -204,17 +233,17 @@ BOOST_AUTO_TEST_CASE(check_if_returns_mutable_reference)
 BOOST_AUTO_TEST_CASE(check_duplicate_input)
 {
     NNCCollection col;
-    col.addNNC(std::size_t{0}, std::size_t{1}, make_nnc(1, 2, 1.0));
+    col.addNNC(std::size_t{0}, std::size_t{1}, make_nnc_diffgrid(1, 2, 1.0));
     BOOST_CHECK_THROW(
-        col.addNNC(std::size_t{0}, std::size_t{1}, make_nnc(3, 4, 2.0)),
+        col.addNNC(std::size_t{0}, std::size_t{1}, make_nnc_diffgrid(3, 4, 2.0)),
         std::runtime_error);
 }
 
 BOOST_AUTO_TEST_CASE(check_duplicate_input_inverted)
 {
     NNCCollection col;
-    col.addNNC(std::size_t{0}, std::size_t{1}, make_nnc(1, 2, 1.0));
-    col.addNNC(std::size_t{1}, std::size_t{0}, make_nnc(3, 4, 2.0));
+    col.addNNC(std::size_t{0}, std::size_t{1}, make_nnc_diffgrid(1, 2, 1.0));
+    col.addNNC(std::size_t{1}, std::size_t{0}, make_nnc_diffgrid(3, 4, 2.0));
     BOOST_CHECK(!(col.getNNC(0,1) ==  col.getNNC(1,0)));
 }
 
@@ -256,8 +285,8 @@ BOOST_AUTO_TEST_CASE(same_grid_map_contains_added_entries)
 BOOST_AUTO_TEST_CASE(diff_grid_map_contains_added_entries)
 {
     NNCCollection col;
-    NNC n01 = make_nnc(1, 2, 1.0);
-    NNC n23 = make_nnc(3, 4, 2.0);
+    NNCDiffGrid n01 = make_nnc_diffgrid(1, 2, 1.0);
+    NNCDiffGrid n23 = make_nnc_diffgrid(3, 4, 2.0);
 
     col.addNNC(std::size_t{0}, std::size_t{1}, n01);
     col.addNNC(std::size_t{2}, std::size_t{3}, n23);
@@ -283,7 +312,7 @@ BOOST_AUTO_TEST_SUITE(StoreIsolation)
 BOOST_AUTO_TEST_CASE(cross_grid_add_does_not_affect_same_grid)
 {
     NNCCollection col;
-    col.addNNC(std::size_t{0}, std::size_t{1}, make_nnc(5, 6, 3.0));
+    col.addNNC(std::size_t{0}, std::size_t{1}, make_nnc_diffgrid(5, 6, 3.0));
 
     BOOST_CHECK_THROW(col.getNNC(std::size_t{0}), std::runtime_error);
 }
