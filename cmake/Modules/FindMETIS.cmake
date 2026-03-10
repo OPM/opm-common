@@ -76,23 +76,21 @@ if (METIS_INCLUDE_DIRS OR METIS_LIBRARY)
   endif()
   if (NOT TARGET METIS::METIS)
     add_library(METIS::METIS UNKNOWN IMPORTED)
-    set_target_properties(METIS::METIS PROPERTIES
-      IMPORTED_LOCATION ${METIS_LIBRARY}
-      INTERFACE_INCLUDE_DIRECTORIES ${METIS_INCLUDE_DIRS}
-      INTERFACE_COMPILE_DEFINITIONS METIS_API_VERSION=${METIS_API_VERSION})
+    set_target_properties(METIS::METIS
+      PROPERTIES
+      IMPORTED_LOCATION
+        ${METIS_LIBRARY}
+    )
+    target_include_directories(METIS::METIS INTERFACE ${METIS_INCLUDE_DIRS})
+    target_compile_definitions(METIS::METIS INTERFACE METIS_API_VERSION=${METIS_API_VERSION})
     # Link against Scotch library if option is enabled
     if(IS_SCOTCH_METIS_HEADER AND PTScotch_FOUND)
-      set_property(TARGET METIS::METIS APPEND PROPERTY
-        INTERFACE_LINK_LIBRARIES PTScotch::Scotch)
-      set_property(TARGET METIS::METIS APPEND PROPERTY
-        INTERFACE_COMPILE_DEFINITIONS
-         SCOTCH_METIS_VERSION=${METIS_API_VERSION})
+      target_link_libraries(METIS::METIS INTERFACE PTScotch::Scotch)
+      target_compile_definitions(METIS::METIS INTERFACE SCOTCH_METIS_VERSION=${METIS_API_VERSION})
     endif()
     if(IS_SCOTCH_METIS_HEADER AND Scotch_FOUND)
-        set_property(TARGET METIS::METIS APPEND PROPERTY
-          INTERFACE_INCLUDE_DIRECTORIES ${SCOTCH_INCLUDE_DIRS})
-        set_property(TARGET METIS::METIS APPEND PROPERTY
-          INTERFACE_LINK_LIBRARIES ${SCOTCH_LIBRARIES})
+      target_link_libraries(METIS::METIS INTERFACE Scotch::Scotch)
+      target_compile_definitions(METIS::METIS INTERFACE IS_SCOTCH_METIS_HEADER=1)
     endif()
     if(IS_SCOTCH_METIS_HEADER AND NOT Scotch_FOUND)
         message(FATAL_ERROR "ScotchMETIS is installed but the Scotch library is not found!")

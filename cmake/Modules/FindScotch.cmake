@@ -40,4 +40,14 @@ find_package_handle_standard_args(
   SCOTCH_LIBRARIES
 )
 
+if(Scotch_FOUND AND NOT TARGET Scotch::Scotch)
+  add_library(Scotch::Scotch UNKNOWN IMPORTED)
+  target_include_directories(Scotch::Scotch INTERFACE ${SCOTCH_INCLUDE_DIRS})
+  set_target_properties(Scotch::Scotch
+    PROPERTIES
+    IMPORTED_LOCATION
+    ${SCOTCH_LIBRARIES}
+  )
+endif()
+
 mark_as_advanced(SCOTCH_INCLUDE_DIRS SCOTCH_LIBRARIES)
