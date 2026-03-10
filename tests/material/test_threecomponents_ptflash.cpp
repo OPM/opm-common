@@ -49,13 +49,16 @@
 
 #include <opm/json/JsonObject.hpp>
 
+#include <iomanip>
+
 // It is a three component system
 using Scalar = double;
 using EOSType = Opm::CompositionalConfig::EOSType;
 using FluidSystem = Opm::ThreeComponentFluidSystem<Scalar>;
 
 constexpr auto numComponents = FluidSystem::numComponents;
-using Evaluation = Opm::DenseAd::Evaluation<double, numComponents>;
+constexpr auto numPrimaryVariables = numComponents + 1; // pressure + temperature + molar fractions of the first n-1 component
+using Evaluation = Opm::DenseAd::Evaluation<double, numPrimaryVariables>;
 using ComponentVector = Dune::FieldVector<Evaluation, numComponents>;
 using FluidState = Opm::CompositionalFluidState<Evaluation, FluidSystem>;
 
@@ -79,14 +82,14 @@ for (const auto& sample : test_methods) {
 
     // Initial: the primary variables are, pressure, molar fractions of the first and second component
     Evaluation p_init = Evaluation::createVariable(10e5, 0); // 10 bar
+    Evaluation T_init = Evaluation::createVariable(300.0, 1); // 300 K
+
     ComponentVector comp;
-    comp[0] = Evaluation::createVariable(0.5, 1);
-    comp[1] = Evaluation::createVariable(0.3, 2);
+    comp[0] = Evaluation::createVariable(0.5, 2);
+    comp[1] = Evaluation::createVariable(0.3, 3);
     comp[2] = 1. - comp[0] - comp[1];
 
-    const Scalar temp = 300.0;
 
-    // Loop over EOS types
     for (const auto& eos_type : test_eos_types) {
         // FluidState will be the input for the flash calculation
         FluidState fluid_state;
@@ -97,7 +100,7 @@ for (const auto& sample : test_methods) {
         fluid_state.setMoleFraction(FluidSystem::Comp1Idx, comp[1]);
         fluid_state.setMoleFraction(FluidSystem::Comp2Idx, comp[2]);
 
-        fluid_state.setTemperature(temp);
+        fluid_state.setTemperature(T_init);
 
         const double flash_tolerance = 1.e-8; // just to test the setup in co2-compositional
         const int flash_verbosity = 0;
@@ -111,7 +114,8 @@ for (const auto& sample : test_methods) {
         const Evaluation Ltmp = 1.;
         fluid_state.setLvalue(Ltmp);
 
-        using Flash = Opm::PTFlash<double, FluidSystem>;
+        // thermal PTFlash
+        using Flash = Opm::PTFlash<double, FluidSystem, true>;
         Flash::solve(fluid_state, sample, flash_tolerance, eos_type, flash_verbosity);
 
         ComponentVector x, y;
@@ -122,25 +126,53 @@ for (const auto& sample : test_methods) {
         }
 
         if (flash_verbosity >= 1) {
-            std::cout << "Results for " << Opm::CompositionalConfig::eosTypeToString(eos_type) << " :" << std::endl;
-            for (unsigned comp_idx = 0; comp_idx < numComponents; ++comp_idx) {
-                std::cout << " x for component " << comp_idx << " :" << std::endl;
-                std::cout << " \tvalue = " << x[comp_idx].value() << std::endl;
-                for (int i = 0; i < 3; ++i) {
-                    std::cout << " \tderiv " << i << " = " << x[comp_idx].derivative(i) << std::endl;
-                }
+            // print the jason format simulation results
+            std::cout << std::setprecision(17);
+            std::cout << "{" << std::endl;
+            const auto eos_string = Opm::CompositionalConfig::eosTypeToString(eos_type);
+            std::cout << std::setprecision(17);
+            std::cout << "    \"" << eos_string << "\": {" << std::endl;
 
-                std::cout << " y for component " << comp_idx << ":" << std::endl;
-                std::cout << " \tvalue = " << y[comp_idx].value() << std::endl;
-                for (int i = 0; i < 3; ++i) {
-                    std::cout << " \tderiv " << i << " = " << y[comp_idx].derivative(i) << std::endl;
+            // Print x
+            std::cout << "        \"x\" : [" << std::endl;
+            for (unsigned comp_idx = 0; comp_idx < numComponents; ++comp_idx) {
+                std::cout << "            [" << x[comp_idx].value();
+                for (int i = 0; i < numPrimaryVariables; ++i) {
+                    std::cout << ", " << x[comp_idx].derivative(i);
                 }
+                std::cout << "]";
+                if (comp_idx < numComponents - 1) std::cout << ",";
+                std::cout << std::endl;
             }
-            std::cout << " L: " << std::endl;
-            std::cout << " \tvalue = " << L.value() << std::endl;
+            std::cout << "        ]," << std::endl;
+
+            // Print y
+            std::cout << "        \"y\" : [" << std::endl;
+            for (unsigned comp_idx = 0; comp_idx < numComponents; ++comp_idx) {
+                std::cout << "            [" << y[comp_idx].value();
+                for (int i = 0; i < numPrimaryVariables; ++i) {
+                    std::cout << ", " << y[comp_idx].derivative(i);
+                }
+                std::cout << "]";
+                if (comp_idx < numComponents - 1) std::cout << ",";
+                std::cout << std::endl;
+            }
+            std::cout << "        ]," << std::endl;
+
+            // Print L
+            std::cout << "        \"L\" : [" << L.value();
             for (int i = 0; i < L.size(); ++i) {
-                    std::cout << " \tderiv " << i << " = " << L.derivative(i) << std::endl;
+                std::cout << ", " << L.derivative(i);
             }
+            std::cout << "]" << std::endl;
+
+            std::cout << "    }," << std::endl;
+            std::cout << std::endl;
+            std::cout << "    \"T\" : " << T_init.value() << "," << std::endl;
+            std::cout << "    \"P\" : " << p_init.value() << "," << std::endl;
+            std::cout << "    \"z\" : [" << comp[0].value() << ", " << comp[1].value() << ", " << comp[2].value() << "]" << std::endl;
+            std::cout << std::endl;
+            std::cout << "}" << std::endl;
         }
 
         // Reference values from JSON file
@@ -149,7 +181,7 @@ for (const auto& sample : test_methods) {
 
         Json::JsonObject L_ref_array = eos_ref.get_item("L");
         Evaluation ref_L = L_ref_array.get_array_item(0).as_double();
-        for (unsigned i = 0; i < 3; ++i) {
+        for (unsigned i = 0; i < numPrimaryVariables; ++i) {
             ref_L.setDerivative(i, L_ref_array.get_array_item(i + 1).as_double());
         }
 
@@ -158,7 +190,7 @@ for (const auto& sample : test_methods) {
         for (unsigned comp_idx = 0; comp_idx < numComponents; ++comp_idx) {
             Json::JsonObject x_ref_row = x_ref_array.get_array_item(comp_idx);
             ref_x[comp_idx].setValue(x_ref_row.get_array_item(0).as_double());
-            for (unsigned i = 0; i < 3; ++i) {
+            for (unsigned i = 0; i < numPrimaryVariables; ++i) {
                 ref_x[comp_idx].setDerivative(i, x_ref_row.get_array_item(i + 1).as_double());
             }
         }
@@ -168,7 +200,7 @@ for (const auto& sample : test_methods) {
         for (unsigned comp_idx = 0; comp_idx < numComponents; ++comp_idx) {
             Json::JsonObject y_ref_row = y_ref_array.get_array_item(comp_idx);
             ref_y[comp_idx].setValue(y_ref_row.get_array_item(0).as_double());
-            for (unsigned i = 0; i < 3; ++i) {
+            for (unsigned i = 0; i < numPrimaryVariables; ++i) {
                 ref_y[comp_idx].setDerivative(i, y_ref_row.get_array_item(i + 1).as_double());
             }
         }
