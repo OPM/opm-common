@@ -4,7 +4,8 @@ function(mpi_checks)
     message(FATAL_ERROR "Function needs a TARGET parameter")
   endif()
   get_target_property(TARGET_LINKS ${PARAM_TARGET} INTERFACE_LINK_LIBRARIES)
-  if("${TARGET_LINKS}" MATCHES "libmpi${CMAKE_SHARED_LIBRARY_SUFFIX}") # TODO: change to target name
+  if(TARGET_LINKS MATCHES "libmpi${CMAKE_SHARED_LIBRARY_SUFFIX}" OR
+     TARGET_LINKS MATCHES MPI::MPI_C)
     # check for MPI version 2
     include(CMakePushCheckState)
     include(CheckFunctionExists)
