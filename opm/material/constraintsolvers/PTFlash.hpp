@@ -60,7 +60,7 @@ namespace Opm {
  *        given the total mass of all components for the chiwoms problem.
  *
  */
-template <class Scalar, class FluidSystem>
+template <class Scalar, class FluidSystem, bool isThermal = false>
 class PTFlash
 {
     static constexpr int numPhases = FluidSystem::numPhases;
@@ -864,8 +864,9 @@ protected:
 
         // getting the secondary Jocobian matrix
         constexpr size_t num_equations = numMisciblePhases * numMiscibleComponents + 1;
-        constexpr size_t secondary_num_pv = numComponents + 1; // pressure, z for all the components
-        using SecondaryEval = Opm::DenseAd::Evaluation<double, secondary_num_pv>; // three z and one pressure
+        constexpr size_t secondary_num_pv = isThermal ? numComponents + 2 : numComponents + 1;
+        // secondary variables: pressure, [temperature if thermal], z for all the components
+        using SecondaryEval = Opm::DenseAd::Evaluation<double, secondary_num_pv>;
         using SecondaryComponentVector = Dune::FieldVector<SecondaryEval, numComponents>;
         using SecondaryFlashFluidState = Opm::CompositionalFluidState<SecondaryEval, FluidSystem>;
 
@@ -877,11 +878,20 @@ protected:
         secondary_fluid_state.setPressure(FluidSystem::oilPhaseIdx, sec_p);
         secondary_fluid_state.setPressure(FluidSystem::gasPhaseIdx, sec_p);
 
-        // set the temperature // TODO: currently we are not considering the temperature derivatives
-        secondary_fluid_state.setTemperature(Opm::getValue(fluid_state_scalar.temperature(0)));
+        if constexpr (isThermal) {
+            // set the temperature with derivatives
+            const SecondaryEval sec_T = SecondaryEval(fluid_state_scalar.temperature(0), 1);
+            secondary_fluid_state.setTemperature(sec_T);
+        } else {
+            // set the temperature as a scalar
+            secondary_fluid_state.setTemperature(Opm::getValue(fluid_state_scalar.temperature(0)));
+        }
 
+        // composition variable offset: 2 for thermal (pressure=0, temperature=1, z starts at 2)
+        //                               1 for non-thermal (pressure=0, z starts at 1)
+        constexpr unsigned z_offset = isThermal ? 2 : 1;
         for (unsigned idx = 0; idx < numComponents; ++idx) {
-            secondary_z[idx] = SecondaryEval(Opm::getValue(z[idx]), idx + 1);
+            secondary_z[idx] = SecondaryEval(Opm::getValue(z[idx]), idx + z_offset);
         }
         // set up the mole fractions
         for (unsigned idx = 0; idx < numComponents; ++idx) {
@@ -990,7 +1000,7 @@ protected:
             y[compIdx] = fluid_state_scalar.moleFraction(FluidSystem::gasPhaseIdx,compIdx);//;x[compIdx] * K[compIdx];
         }
 
-        // then we try to set the derivatives for x, y and L against P and x.
+        // then we try to set the derivatives for x, y and L against P, [T] and z.
         // p_l and p_v are the same here, in the future, there might be slightly more complicated scenarios when capillary
         // pressure joins
 
@@ -1001,9 +1011,16 @@ protected:
             for (unsigned idx = 0; idx < num_deri; ++idx) {
                 deri[idx] = -sec_jac[compIdx][0] * p_l.derivative(idx);
             }
+            // derivatives from T (only for thermal case)
+            if constexpr (isThermal) {
+                const auto T_input = fluid_state.temperature(0);
+                for (unsigned idx = 0; idx < num_deri; ++idx) {
+                    deri[idx] += -sec_jac[compIdx][1] * T_input.derivative(idx);
+                }
+            }
 
             for (unsigned cIdx = 0; cIdx < numComponents; ++cIdx) {
-                const double pz = -sec_jac[compIdx][cIdx + 1];
+                const double pz = -sec_jac[compIdx][cIdx + z_offset];
                 const auto& zi = z[cIdx];
                 for (unsigned idx = 0; idx < num_deri; ++idx) {
                     deri[idx] += pz * zi.derivative(idx);
@@ -1016,8 +1033,15 @@ protected:
             for (unsigned idx = 0; idx < num_deri; ++idx) {
                 deri[idx] = -sec_jac[compIdx + numComponents][0] * p_v.derivative(idx);
             }
+            // derivatives from T (only for thermal case)
+            if constexpr (isThermal) {
+                const auto T_input = fluid_state.temperature(0);
+                for (unsigned idx = 0; idx < num_deri; ++idx) {
+                    deri[idx] += -sec_jac[compIdx + numComponents][1] * T_input.derivative(idx);
+                }
+            }
             for (unsigned cIdx = 0; cIdx < numComponents; ++cIdx) {
-                const double pz = -sec_jac[compIdx + numComponents][cIdx + 1];
+                const double pz = -sec_jac[compIdx + numComponents][cIdx + z_offset];
                 const auto& zi = z[cIdx];
                 for (unsigned idx = 0; idx < num_deri; ++idx) {
                     deri[idx] += pz * zi.derivative(idx);
@@ -1032,8 +1056,15 @@ protected:
             for (unsigned idx = 0; idx < num_deri; ++idx) {
                 deriL[idx] = -sec_jac[2 * numComponents][0] * p_v.derivative(idx);
             }
+            // derivatives from T (only for thermal case)
+            if constexpr (isThermal) {
+                const auto T_input = fluid_state.temperature(0);
+                for (unsigned idx = 0; idx < num_deri; ++idx) {
+                    deriL[idx] += -sec_jac[2 * numComponents][1] * T_input.derivative(idx);
+                }
+            }
             for (unsigned cIdx = 0; cIdx < numComponents; ++cIdx) {
-                const double pz = -sec_jac[2 * numComponents][cIdx + 1];
+                const double pz = -sec_jac[2 * numComponents][cIdx + z_offset];
                 const auto& zi = z[cIdx];
                 for (unsigned idx = 0; idx < num_deri; ++idx) {
                     deriL[idx] += pz * zi.derivative(idx);
