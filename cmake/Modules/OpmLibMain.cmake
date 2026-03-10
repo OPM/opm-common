@@ -17,6 +17,7 @@
 # ${project}_targets_hook     Add additional targets, set additional target properties
 
 include(OpmCompile)
+include(OpmPolicies)
 include(OpmTargets)
 include(MPIChecks)
 
@@ -38,6 +39,8 @@ vcs_info ()
 include (UseCompVer)
 compiler_info ()
 linker_info ()
+
+OpmSetPolicies()
 
 # default settings: build static debug library
 include (OpmDefaults)

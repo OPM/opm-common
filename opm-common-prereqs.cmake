@@ -1,12 +1,7 @@
 # -*- mode: cmake; tab-width: 2; indent-tabs-mode: nil; truncate-lines: t; compile-command: "cmake -Wdev" -*-
 # vim: set filetype=cmake autoindent tabstop=2 shiftwidth=2 expandtab softtabstop=2 nowrap:
 
-# CMake 3.30.0 requires to find Boost in CONFIG mode
-if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.30.0)
-  set(_Boost_CONFIG_MODE CONFIG)
-endif()
-
-find_package(Boost REQUIRED ${_Boost_CONFIG_MODE})
+find_package(Boost REQUIRED)
 find_package(cJSON)
 find_package(fmt)
 find_package(QuadMath)
