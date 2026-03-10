@@ -14,10 +14,10 @@ macro(opm-common_prereqs_hook)
   endif()
 
   if(TARGET fmt::fmt)
-    # OpmSatellites will not add the library, do it here.
     list(APPEND opm-common_LIBRARIES fmt::fmt)
   else()
     include(DownloadFmt)
+    DownloadFmt(opmcommon)
   endif()
 
   # If opm-common is configured to embed the python interpreter we must make sure
