@@ -34,7 +34,7 @@ set(genkw_SOURCES opm/json/JsonObject.cpp
 )
 add_executable(genkw ${genkw_SOURCES})
 
-target_link_libraries(genkw PRIVATE ${opm-common_LIBRARIES} cjson)
+target_link_libraries(genkw PRIVATE fmt::fmt cjson)
 opm_add_target_options(TARGET genkw)
 
 # Generate keyword list
