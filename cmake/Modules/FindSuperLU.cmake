@@ -12,10 +12,6 @@
 # SUPERLU_LIBRARIES           Name to the SuperLU library.
 #
 
-if(NOT USE_SUPERLU)
-  return()
-endif()
-
 include(CheckIncludeFiles)
 include(CMakePushCheckState)
 include(CheckCSourceCompiles)

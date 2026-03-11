@@ -82,9 +82,4 @@ endif ()
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_C_EXTENSIONS OFF)
 
-option (USE_SUPERLU "Use SuperLU direct solvers for AMG (if umfpack is not found)" ON)
-if (NOT USE_SUPERLU)
-  set (CMAKE_DISABLE_FIND_PACKAGE_SuperLU TRUE)
-endif ()
-
 include(UseHDF5)
