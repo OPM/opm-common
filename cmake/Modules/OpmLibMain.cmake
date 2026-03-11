@@ -20,6 +20,7 @@ include(OpmCompile)
 include(OpmPolicies)
 include(OpmTargets)
 include(MPIChecks)
+include(UseHDF5)
 
 # needed for Debian installation scheme
 include (GNUInstallDirs)

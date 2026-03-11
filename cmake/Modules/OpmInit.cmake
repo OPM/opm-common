@@ -81,5 +81,3 @@ endif ()
 # We do not want language extensions enabled
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_C_EXTENSIONS OFF)
-
-include(UseHDF5)
