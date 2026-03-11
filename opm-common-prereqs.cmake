@@ -16,8 +16,5 @@ if(TARGET opmcommon)
 
   if(opm-common_COMPILE_DEFINITIONS MATCHES HAVE_DUNE_COMMON)
     find_package(dune-common REQUIRED)
-    if(dune-common_VERSION VERSION_LESS 2.11)
-      target_include_directories(dunecommon INTERFACE ${dune-common_INCLUDE_DIRS})
-    endif()
   endif()
 endif()

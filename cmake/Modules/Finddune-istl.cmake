@@ -59,3 +59,9 @@ int main (void) {
 # make version number available in config.h
 include (UseDuneVer)
 find_dune_version ("dune" "istl")
+
+if(dune-istl_FOUND AND NOT TARGET Dune::ISTL)
+  add_library(Dune::ISTL INTERFACE IMPORTED)
+  target_link_libraries(Dune::ISTL INTERFACE dunecommon)
+  target_include_directories(Dune::ISTL INTERFACE ${dune-istl_INCLUDE_DIRS})
+endif()

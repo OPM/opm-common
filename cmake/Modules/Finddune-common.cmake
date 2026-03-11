@@ -69,6 +69,6 @@ int main (void) {
 include (UseDuneVer)
 find_dune_version ("dune" "common")
 
-if(${DUNE_COMMON_VERSION_MAJOR}.${DUNE_COMMON_VERSION_MINOR} VERSION_GREATER_EQUAL "2.11")
-  set(CMAKE_CXX_STANDARD 20)
+if(dune-common_VERSION VERSION_LESS 2.11)
+  target_include_directories(dunecommon INTERFACE ${dune-common_INCLUDE_DIRS})
 endif()
