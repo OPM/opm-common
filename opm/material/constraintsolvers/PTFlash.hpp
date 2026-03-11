@@ -994,6 +994,9 @@ protected:
 
         const auto p_l = fluid_state.pressure(FluidSystem::oilPhaseIdx);
         const auto p_v = fluid_state.pressure(FluidSystem::gasPhaseIdx);
+        // at the moment, the temperature is the same for both phases
+        // T_input is not used for non-thermal case
+        [[maybe_unused]] const auto& T_input = fluid_state.temperature(0);
 
         for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
             x[compIdx] = fluid_state_scalar.moleFraction(FluidSystem::oilPhaseIdx,compIdx);//;z[compIdx] * 1. / (L + (1 - L) * K[compIdx]);
@@ -1013,7 +1016,6 @@ protected:
             }
             // derivatives from T (only for thermal case)
             if constexpr (isThermal) {
-                const auto T_input = fluid_state.temperature(0);
                 for (unsigned idx = 0; idx < num_deri; ++idx) {
                     deri[idx] += -sec_jac[compIdx][1] * T_input.derivative(idx);
                 }
@@ -1035,7 +1037,6 @@ protected:
             }
             // derivatives from T (only for thermal case)
             if constexpr (isThermal) {
-                const auto T_input = fluid_state.temperature(0);
                 for (unsigned idx = 0; idx < num_deri; ++idx) {
                     deri[idx] += -sec_jac[compIdx + numComponents][1] * T_input.derivative(idx);
                 }
@@ -1058,7 +1059,6 @@ protected:
             }
             // derivatives from T (only for thermal case)
             if constexpr (isThermal) {
-                const auto T_input = fluid_state.temperature(0);
                 for (unsigned idx = 0; idx < num_deri; ++idx) {
                     deriL[idx] += -sec_jac[2 * numComponents][1] * T_input.derivative(idx);
                 }
