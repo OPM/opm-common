@@ -19,4 +19,10 @@ macro(DownloadFmt target)
   add_library(fmt::fmt INTERFACE IMPORTED)
   target_compile_definitions(fmt::fmt INTERFACE FMT_HEADER_ONLY)
   target_include_directories(fmt::fmt INTERFACE ${fmt_SOURCE_DIR}/include)
+
+  # Required for super-build
+  if(NOT PROJECT_IS_TOP_LEVEL)
+    set(fmt_POPULATED ${fmt_POPULATED} PARENT_SCOPE)
+    set(fmt_SOURCE_DIR ${fmt_SOURCE_DIR} PARENT_SCOPE)
+  endif()
 endmacro()
