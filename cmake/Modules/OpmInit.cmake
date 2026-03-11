@@ -71,20 +71,6 @@ include(OpmPackage)
 
 set (${project}_SUITE "opm")
 
-# parallel computing must be explicitly enabled
-# This needs to be in OpmInit as prereqs is called before OpmLibMain is included.
-option (USE_MPI "Use Message Passing Interface for parallel computing" ON)
-if (NOT USE_MPI)
-  set (CMAKE_DISABLE_FIND_PACKAGE_MPI TRUE)
-endif ()
-
 # We do not want language extensions enabled
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_C_EXTENSIONS OFF)
-
-option (USE_SUPERLU "Use SuperLU direct solvers for AMG (if umfpack is not found)" ON)
-if (NOT USE_SUPERLU)
-  set (CMAKE_DISABLE_FIND_PACKAGE_SuperLU TRUE)
-endif ()
-
-include(UseHDF5)

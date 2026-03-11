@@ -19,7 +19,8 @@
 include(OpmCompile)
 include(OpmPolicies)
 include(OpmTargets)
-include(MPIChecks)
+include(UseMPI) # Must be included before UseHDF5 as UseHDF5 checks for MPI
+include(UseHDF5)
 
 # needed for Debian installation scheme
 include (GNUInstallDirs)
