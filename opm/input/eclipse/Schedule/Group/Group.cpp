@@ -445,6 +445,34 @@ bool has_control(int controls, Group::ProductionCMode cmode)
     return (controls & static_cast<int>(cmode)) != 0;
 }
 
+// Determine the unique top-up phase for a group's injection properties.
+// Only RESV and VREP controls define a top-up phase (not REIN).
+// Returns the phase if exactly one phase has RESV/VREP controls,
+// or nullopt if no phase qualifies or multiple phases conflict.
+std::optional<Phase>
+topup_phase(const std::map<Phase, Group::GroupInjectionProperties>& injection_properties)
+{
+    std::optional<Phase> topup_phase;
+    for (const auto& [phase, injection] : injection_properties) {
+        if (!has_control(injection.injection_controls, Group::InjectionCMode::RESV) &&
+            !has_control(injection.injection_controls, Group::InjectionCMode::VREP))
+        {
+            continue;
+        }
+
+        if (topup_phase.has_value() && topup_phase.value() != phase) {
+            // Multiple phases have RESV/VREP controls — no unique top-up phase.
+            return {};
+        }
+
+        topup_phase = phase;
+    }
+
+    // Returns nullopt if no phase has RESV/VREP controls, including
+    // when injection_properties is empty (group has no injection config).
+    return topup_phase;
+}
+
 }} // namespace <anonymous>::detail
 
 bool Group::updateInjection(const GroupInjectionProperties& injection)
@@ -468,22 +496,10 @@ bool Group::updateInjection(const GroupInjectionProperties& injection)
         }
     }
 
-    if (detail::has_control(injection.injection_controls, Group::InjectionCMode::RESV) ||
-        detail::has_control(injection.injection_controls, Group::InjectionCMode::REIN) ||
-        detail::has_control(injection.injection_controls, Group::InjectionCMode::VREP))
-    {
-        auto topUp_phase = injection.phase;
-        if (topUp_phase != this->m_topup_phase) {
-            this->m_topup_phase = topUp_phase;
-            update = true;
-        }
-    }
-    else {
-        if (this->m_topup_phase.has_value()) {
-            update = true;
-        }
-
-        this->m_topup_phase = {};
+    const auto new_topup_phase = detail::topup_phase(this->injection_properties);
+    if (new_topup_phase != this->m_topup_phase) {
+        this->m_topup_phase = new_topup_phase;
+        update = true;
     }
 
     return update;
@@ -950,6 +966,12 @@ std::optional<std::string> Group::flow_group() const
     return this->parent();
 }
 
+// Returns the group's unique top-up phase, computed by detail::topup_phase()
+// and cached in m_topup_phase during updateInjection().
+//
+// - Returns a Phase if exactly one phase has RESV or VREP injection controls.
+// - Returns nullopt if no phase has RESV/VREP controls, or if multiple
+//   phases conflict (e.g., both WATER RESV and GAS RESV are active).
 const std::optional<Phase>& Group::topup_phase() const
 {
     return this->m_topup_phase;
