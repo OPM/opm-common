@@ -124,6 +124,8 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
             }
             for (unsigned regionIdx = 0; regionIdx < regions; ++ regionIdx) {
                 referenceSaltConcentration_[regionIdx] = pvtwSaltTables[regionIdx].getReferenceSaltConcentrationValue();
+                pvtwViscosity_[regionIdx] = pvtwSaltTables[regionIdx].getViscosityColumn()[0];
+                pvtwViscosibility_[regionIdx] = pvtwSaltTables[regionIdx].getViscosibilityColumn()[0];
             }
         }
         else {
