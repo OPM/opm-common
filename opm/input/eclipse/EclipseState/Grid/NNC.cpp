@@ -344,13 +344,46 @@ bool is_neighbor(const EclipseGrid& grid, std::size_t g1, std::size_t g2) {
     }
 
 
+    bool NNCDiffGrid::addNNC(const size_t cell1, const size_t cell2, const double trans)
+    {
+        m_input.emplace_back(cell1, cell2, trans);
+        return true;
+    }
+
+    void NNCDiffGrid::merge(const std::vector<NNCdata>& data)
+    {
+        auto old_size = m_input.size();
+        m_input.insert(m_input.end(), data.begin(), data.end());
+        // No swap of cell1/cell2 — preserve direction as given
+        auto comp = [](const NNCdata& a, const NNCdata& b) {
+            return std::tie(a.cell1, a.cell2) < std::tie(b.cell1, b.cell2);
+        };
+
+        std::ranges::sort(m_input.begin() + old_size, m_input.end(), comp);
+        std::ranges::inplace_merge(m_input, m_input.begin() + old_size, comp);
+    }
+
+    void NNCDiffGrid::swap_adj(std::size_t grid1, std::size_t grid2)
+    {
+        if (grid1 > grid2) {
+            for (auto& item : m_input) {
+                std::swap(item.cell1, item.cell2);
+            }
+        }
+    }
+
     NNCCollection::NNCCollection(NNC nnc_global)
     {
         addNNC(std::move(nnc_global));
     }
 
-    void NNCCollection::addNNC(std::size_t grid1, std::size_t grid2, NNC nnc)
+    void NNCCollection::addNNC(std::size_t grid1, std::size_t grid2, NNCDiffGrid nnc)
     {
+        if (grid1 > grid2) {
+            nnc.swap_adj(grid1, grid2);
+            std::swap(grid1, grid2);
+        }
+
         const auto key = std::make_pair(grid1, grid2);
         if (m_diffGridNNCs.count(key)) {
             throw std::runtime_error(
@@ -362,6 +395,7 @@ bool is_neighbor(const EclipseGrid& grid, std::size_t g1, std::size_t g2) {
 
     const NNC& NNCCollection::getNNC(std::size_t grid1, std::size_t grid2) const
     {
+        if (grid1 > grid2) std::swap(grid1, grid2);
         const auto key = std::make_pair(grid1, grid2);
         const auto it  = m_diffGridNNCs.find(key);
         if (it == m_diffGridNNCs.end()) {

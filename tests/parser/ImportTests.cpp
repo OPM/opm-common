@@ -108,7 +108,7 @@ IMPORT
     EclipseGrid grid(nx,ny,nz);
     fs::create_directory("import");
     fs::create_directory("cwd");
-    grid.save("import/GRID", false, {}, unit_system);
+    grid.save("import/GRID", false, std::vector<Opm::NNCdata>{}, unit_system);
     {
         EclIO::EclOutput output {"import/PROPS", false};
 

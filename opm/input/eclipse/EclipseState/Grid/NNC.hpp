@@ -103,15 +103,16 @@ class NNC
 {
 public:
     NNC() = default;
+    virtual ~NNC() = default;
     /// Construct from input deck.
     NNC(const EclipseGrid& grid, const Deck& deck);
 
     static NNC serializationTestObject();
 
-    bool addNNC(const size_t cell1, const size_t cell2, const double trans);
+    virtual bool addNNC(const size_t cell1, const size_t cell2, const double trans);
 
     /// \brief Merge additional NNCs into sorted NNCs
-    void merge(const std::vector<NNCdata>& nncs);
+    virtual void merge(const std::vector<NNCdata>& nncs);
     /// \brief Get the combined information from NNC
     const std::vector<NNCdata>& input() const { return m_input; }
     /// \brief Get the information from EDITNNC keyword
@@ -152,6 +153,26 @@ private:
     std::optional<KeywordLocation> m_nnc_location;
     std::optional<KeywordLocation> m_edit_location;
     std::optional<KeywordLocation> m_editr_location;
+
+    friend class NNCDiffGrid;
+};
+
+/*
+  NNCDiffGrid is derived class of NNC.  NNC Class as it does not preserve the
+  order of NNC, therefore not suitable for storing NNC data from different grids.
+*/
+class NNCDiffGrid : public NNC
+{
+public:
+    NNCDiffGrid() = default;
+    ~NNCDiffGrid() override = default;
+
+    bool addNNC(const size_t cell1, const size_t cell2,
+                const double trans) override;
+
+    void merge(const std::vector<NNCdata>& data) override;
+
+    void swap_adj(std::size_t grid1, std::size_t grid2);
 };
 
 
@@ -164,7 +185,7 @@ public:
     // ---- insertion --------------------------------------------------------
 
     /// Add a cross-grid NNC between grid1 and grid2.
-    void addNNC(std::size_t grid1, std::size_t grid2, NNC nnc);
+    void addNNC(std::size_t grid1, std::size_t grid2, NNCDiffGrid nnc);
 
     /// Add a same-grid NNC for the given grid index.
     void addNNC(std::size_t grid, NNC nnc);
@@ -201,7 +222,7 @@ public:
     }
 
     /// Returns a view of all cross-grid NNCs keyed by normalised (g1,g2) pairs.
-    const std::map<std::pair<std::size_t,std::size_t>, NNC>& diff_grid_nnc() const
+    const std::map<std::pair<std::size_t,std::size_t>, NNCDiffGrid>& diff_grid_nnc() const
     {
         return m_diffGridNNCs;
     }
@@ -218,7 +239,7 @@ private:
     std::map<std::size_t, NNC> m_sameGridNNCs;
 
     /// Cross-grid NNCs, keyed by normalised (min_grid, max_grid) pair.
-    std::map<std::pair<std::size_t,std::size_t>, NNC> m_diffGridNNCs;
+    std::map<std::pair<std::size_t,std::size_t>, NNCDiffGrid> m_diffGridNNCs;
 };
 
 } // namespace Opm
