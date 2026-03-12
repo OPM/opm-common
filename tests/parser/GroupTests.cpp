@@ -963,6 +963,85 @@ GCONINJE
     }
 }
 
+BOOST_AUTO_TEST_CASE(GCONINJE_RESV_SETS_TOPUP_PHASE) {
+    const std::string input = R"(
+START             -- 0
+31 AUG 1993 /
+SCHEDULE
+
+GRUPTREE
+  'G1'  'FIELD' /
+/
+
+GCONINJE
+  'G1'   'GAS'     'RESV' 1* 1000 /
+/)";
+
+    auto schedule = create_schedule(input);
+    const auto& g1 = schedule.getGroup("G1", 0);
+    BOOST_CHECK(g1.topup_phase().has_value());
+    BOOST_CHECK(g1.topup_phase().value() == Phase::GAS);
+}
+
+BOOST_AUTO_TEST_CASE(GCONINJE_VREP_SETS_TOPUP_PHASE) {
+    const std::string input = R"(
+START             -- 0
+31 AUG 1993 /
+SCHEDULE
+
+GRUPTREE
+  'G1'  'FIELD' /
+/
+
+GCONINJE
+  'G1'   'WATER'   'VREP' 3* 1.0 /
+/)";
+
+    auto schedule = create_schedule(input);
+    const auto& g1 = schedule.getGroup("G1", 0);
+    BOOST_CHECK(g1.topup_phase().has_value());
+    BOOST_CHECK(g1.topup_phase().value() == Phase::WATER);
+}
+
+BOOST_AUTO_TEST_CASE(GCONINJE_REIN_DOES_NOT_SET_TOPUP_PHASE) {
+    const std::string input = R"(
+START             -- 0
+31 AUG 1993 /
+SCHEDULE
+
+GRUPTREE
+  'G1'  'FIELD' /
+/
+
+GCONINJE
+  'G1'   'GAS'     'REIN' 2* 0.8 /
+/)";
+
+    auto schedule = create_schedule(input);
+    const auto& g1 = schedule.getGroup("G1", 0);
+    BOOST_CHECK(!g1.topup_phase().has_value());
+}
+
+BOOST_AUTO_TEST_CASE(GCONINJE_MULTIPLE_TOPUP_PHASES_RETURNS_NULLOPT) {
+    const std::string input = R"(
+START             -- 0
+31 AUG 1993 /
+SCHEDULE
+
+GRUPTREE
+  'G1'  'FIELD' /
+/
+
+GCONINJE
+  'G1'   'WATER'   'RESV' 1* 1000 /
+  'G1'   'GAS'     'RESV' 1* 1000 /
+/)";
+
+    auto schedule = create_schedule(input);
+    const auto& g1 = schedule.getGroup("G1", 0);
+    BOOST_CHECK(!g1.topup_phase().has_value());
+}
+
 BOOST_AUTO_TEST_CASE(GCONINJE_GUIDERATE) {
     const std::string input = R"(
 START             -- 0
