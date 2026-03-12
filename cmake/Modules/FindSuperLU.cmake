@@ -122,6 +122,7 @@ if(SUPERLU_FOUND)
   endif()
   if(NOT TARGET SuperLU::SuperLU)
     add_library(SuperLU::SuperLU UNKNOWN IMPORTED GLOBAL)
+    target_compile_definitions(SuperLU::SuperLU INTERFACE SUPERLU_INT_TYPE=int)
     set_target_properties(SuperLU::SuperLU
       PROPERTIES
       IMPORTED_LOCATION
