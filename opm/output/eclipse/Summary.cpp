@@ -725,6 +725,9 @@ template<> constexpr
 measure rate_unit< rt::mass_wat >() { return measure::mass_rate; }
 
 template<> constexpr
+measure rate_unit< rt::wat_frac >() { return measure::geometric_volume_rate; }
+
+template<> constexpr
 measure rate_unit< rt::microbial >() { return measure::mass_rate; }
 
 template<> constexpr

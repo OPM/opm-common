@@ -391,6 +391,12 @@ namespace {
             "AQR", "AQRG", "NQR",
 
             "MMIR", "MOIR", "MUIR", "MMPR", "MOPR", "MUPR",
+
+            // Filtrate injection rates
+            "FCFFVIR", "FCWFVIR", "FCFVIR",
+
+            // Water injection rate in fracture
+            "WIRFRAC",
         };
 
         return is_in_set(ratekw, keyword.substr(1))
@@ -433,6 +439,12 @@ namespace {
             "AQTG",
 
             "MMIT", "MOIT", "MUIT", "MMPT", "MOPT", "MUPT",
+
+            // Filtrate injection volumes
+            "FCFFVIT", "FCWFVIT", "FCFVIT",
+
+            // Water injection volumes in fracture
+            "WITFRAC",
         };
 
         return is_in_set(totalkw, keyword.substr(1))
