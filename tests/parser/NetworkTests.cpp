@@ -273,7 +273,10 @@ BRANPROP
     C1         PLAT-A    0 1*      /
 /
 
-
+NODEPROP
+--  Node_name Pr    autoChock?      addGasLift?     Group_name
+     C1    1*  NO     NO     1* /
+/
 )";
 
     auto sched = make_schedule(deck_string);
@@ -310,6 +313,7 @@ BRANPROP
         BOOST_CHECK_EQUAL(B1_uptree->uptree_node(), "PLAT-A");
 
         BOOST_CHECK(network.active());
+        BOOST_CHECK(sched.hasChoke("B1", 0));
     }
     {
         const auto& network = sched[1].network.get();
@@ -338,6 +342,7 @@ BRANPROP
         BOOST_CHECK( !network.uptree_branch("C1") );
 
         BOOST_CHECK(network.active());
+        BOOST_CHECK(!sched.hasChoke("C1", 1));
     }
 }
 
