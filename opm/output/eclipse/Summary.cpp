@@ -5356,7 +5356,12 @@ void Opm::out::Summary::SummaryImplementation::write(const bool is_final_summary
 
     this->createSMSpecIfNecessary();
 
-    if (this->prevReportStepID_ < this->lastUnwritten().seq) {
+    // We are forcing a final write at the end of the last report step to get all changes
+    // to the SMSPEC file (WGNAMES, KEYWORDS) that might have changed due ACTIONX at an
+    // intermediate timestep.
+    // Because of adaptive time stepping there could have been previous writes for the same
+    // report step that missed information.
+    if (this->prevReportStepID_ < this->lastUnwritten().seq || is_final_summary) {
         this->smspec_->write(this->outputParameters_.summarySpecification());
     }
 
