@@ -656,15 +656,17 @@ BOOST_AUTO_TEST_CASE(write_nnc_lgr_test_nnc)
         BOOST_REQUIRE_EQUAL(nncl.size(), 4u);
         BOOST_REQUIRE_EQUAL(nncg.size(), 4u);
 
-        BOOST_CHECK_EQUAL(nncl[0], 2);  // cell2=1 → 2
-        BOOST_CHECK_EQUAL(nncl[1], 2);  // cell2=1 → 2
-        BOOST_CHECK_EQUAL(nncl[2], 4);  // cell2=3 → 4
-        BOOST_CHECK_EQUAL(nncl[3], 4);  // cell2=3 → 4
+        // cell1=[0,2,1,3] = LGR cells → NNCL (1-indexed)
+        BOOST_CHECK_EQUAL(nncl[0], 1);  // cell1=0 → 1
+        BOOST_CHECK_EQUAL(nncl[1], 3);  // cell1=2 → 3
+        BOOST_CHECK_EQUAL(nncl[2], 2);  // cell1=1 → 2
+        BOOST_CHECK_EQUAL(nncl[3], 4);  // cell1=3 → 4
 
-        BOOST_CHECK_EQUAL(nncg[0], 1);  // cell1=0 → 1
-        BOOST_CHECK_EQUAL(nncg[1], 3);  // cell1=2 → 3
-        BOOST_CHECK_EQUAL(nncg[2], 2);  // cell1=1 → 2
-        BOOST_CHECK_EQUAL(nncg[3], 4);  // cell1=3 → 4
+        // cell2=[1,1,3,3] = global cells → NNCG (1-indexed)
+        BOOST_CHECK_EQUAL(nncg[0], 2);  // cell2=1 → 2
+        BOOST_CHECK_EQUAL(nncg[1], 2);  // cell2=1 → 2
+        BOOST_CHECK_EQUAL(nncg[2], 4);  // cell2=3 → 4
+        BOOST_CHECK_EQUAL(nncg[3], 4);  // cell2=3 → 4
     }
 
     // --- NNCHEAD for the cross-grid section ---
@@ -695,9 +697,10 @@ BOOST_AUTO_TEST_CASE(local_global_insertion_normalises_to_same_output)
     col.addNNC(NNC{});
 
     NNCDiffGrid cross;
-    cross.addNNC(5, 2, 100.0);
-    // addNNC(1, 0, ...): grid1=1 > grid2=0 → swap_adj(1,0) (no cell swap),
-    // then grid indices become (0,1).  Stored identically to addNNC(0,1,...).
+    cross.addNNC(5, 2, 100.0);  // cell1=5=LGR cell, cell2=2=global cell
+    // addNNC(grid1=1=LGR, grid2=0=global): grid indices normalise to (0,1),
+    // cells are NOT swapped → cell1 stays associated with grid1 (LGR),
+    // cell2 stays associated with grid2 (global).
     col.addNNC(std::size_t{1}, std::size_t{0}, cross);
 
     Opm::UnitSystem units(Opm::UnitSystem::UnitType::UNIT_TYPE_FIELD);
@@ -715,8 +718,10 @@ BOOST_AUTO_TEST_CASE(local_global_insertion_normalises_to_same_output)
     BOOST_REQUIRE_EQUAL(nncl.size(), 1u);
     BOOST_REQUIRE_EQUAL(nncg.size(), 1u);
 
-    BOOST_CHECK_EQUAL(nncl[0], 3);
-    BOOST_CHECK_EQUAL(nncg[0], 6);
+    // NNCL = cell1+1 = LGR cell 5 → 6
+    // NNCG = cell2+1 = global cell 2 → 3
+    BOOST_CHECK_EQUAL(nncl[0], 6);
+    BOOST_CHECK_EQUAL(nncg[0], 3);
 }
 
 
