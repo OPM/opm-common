@@ -5,6 +5,6 @@
   ],
   "data": {
     "value_type": "DOUBLE",
-    "dimension": "Mass/Length*Length*Length"
+    "dimension": "FoamDensity"
   }
 }

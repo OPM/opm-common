@@ -12,7 +12,7 @@
       "name": "SALT_CONCENTRATION",
       "size_type": "ALL",
       "value_type": "DOUBLE",
-      "dimension": "Mass/Length*Length*Length"
+      "dimension": "Concentration"
     }
   ]
 }
