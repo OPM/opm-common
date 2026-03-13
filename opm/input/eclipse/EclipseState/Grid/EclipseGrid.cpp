@@ -1936,6 +1936,23 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         egridfile.write("NNCG", nncg);
     }
 
+    void EclipseGrid::save_nna(Opm::EclIO::EclOutput& egridfile, const std::vector<Opm::NNCdata>& nnc, std::size_t grid1, std::size_t grid2) const
+    {
+        std::vector<int> nncheada(10, 0);
+        std::vector<int> nna1;
+        std::vector<int> nna2;
+        for (const NNCdata& n : nnc ) {
+            nna1.push_back(n.cell1 + 1);
+            nna2.push_back(n.cell2 + 1);
+        }
+        nncheada[0] = grid1;
+        nncheada[1] = grid2;
+        egridfile.write("NNCHEADA", nncheada);
+        egridfile.write("NNA1", nna1);
+        egridfile.write("NNA2", nna2);
+    }
+
+
     void EclipseGrid::save_nnc_same_grid(Opm::EclIO::EclOutput& egridfile, const std::vector<Opm::NNCdata>& nnc, std::size_t grid_num) const {
         std::vector<int> nnchead(10, 0);
         std::vector<int> nnc1;
