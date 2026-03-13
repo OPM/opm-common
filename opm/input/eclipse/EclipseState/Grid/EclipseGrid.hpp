@@ -438,8 +438,8 @@ namespace Opm {
         void save_nnc(Opm::EclIO::EclOutput& egridfile, const Opm::NNCCollection& nnc_col) const;
 
         void save_nnc_same_grid(Opm::EclIO::EclOutput& egridfile, const std::vector<Opm::NNCdata>& nnc, std::size_t grid_num = 0) const;
-        void save_nnc_local_global(Opm::EclIO::EclOutput& egridfile, const std::vector<Opm::NNCdata>& nnc, std::size_t grid_num, std::size_t num_nnc, bool local_first) const;
-
+        void save_nnc_local_global(Opm::EclIO::EclOutput& egridfile, const std::vector<Opm::NNCdata>& nnc, std::size_t grid_num, std::size_t num_nnc) const;
+        void save_nna(Opm::EclIO::EclOutput& egridfile, const std::vector<Opm::NNCdata>& nnc, std::size_t grid1, std::size_t grid2) const;
         void save_core(Opm::EclIO::EclOutput& egridfile, const Opm::UnitSystem& units) const;
 
     };
