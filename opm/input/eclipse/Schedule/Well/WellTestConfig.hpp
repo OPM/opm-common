@@ -60,6 +60,7 @@ enum class Reason {
     GROUP = 4,
     THP_DESIGN=8,
     COMPLETION=16,
+    CONVERGENCE=32,
 };
 
 }
