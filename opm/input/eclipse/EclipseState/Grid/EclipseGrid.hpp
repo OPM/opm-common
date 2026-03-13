@@ -58,6 +58,13 @@ namespace Opm {
          - Real world position of cells
          - Active/inactive status of cells
     */
+    struct AddZCornInput {
+        double value;
+        size_t i;
+        size_t j;
+        size_t k;
+        size_t c;
+    };
 
     class EclipseGrid : public GridDims {
     public:
@@ -294,6 +301,7 @@ namespace Opm {
 
         size_t fixupZCORN();
         size_t getZcornFixed() { return zcorn_fixed; };
+        void addZCORN(const Deck& deck);
 
         // resetACTNUM with no arguments will make all cells in the grid active.
 
@@ -576,6 +584,8 @@ namespace Opm {
         */
         size_t fixupZCORN( std::vector<double>& zcorn);
         bool validZCORN( const std::vector<double>& zcorn) const;
+        void addZCORN( std::vector<double>& zcorn, const std::vector<AddZCornInput>& addzcorns) const;
+
     private:
         std::array<size_t,3> dims;
         std::array<size_t,3> stride;

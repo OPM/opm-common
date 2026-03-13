@@ -3482,3 +3482,89 @@ PORO
     SPIDER with DR/DRV, DTHETA/DTHETAV, DZ/DZV and TOPS creates a spider grid)");
     });
 }
+
+
+BOOST_AUTO_TEST_CASE(TEST_GDFILE_1_ADDZCORN) {
+
+    const char* deckDataBase =
+    "RUNSPEC\n"
+    "\n"
+    "DIMENS\n"
+    "2 2 2 /\n"
+    "GRID\n"
+    "SPECGRID\n"
+    " 2 2 2 1 F /\n"
+    "COORD\n"
+    "  2002.0000  2002.0000   100.0000   1999.8255  1999.9127   108.4935\n"
+    "  2011.9939  2000.0000   100.3490   2009.8194  1999.9127   108.8425\n"
+    "  2015.9878  2000.0000   100.6980   2019.8133  1999.9127   109.1915\n"
+    "  2000.0000  2009.9985   100.1745   1999.8255  2009.9112   108.6681 \n"
+    "  2010.9939  2011.9985   100.5235   2009.8194  2009.9112   109.0170\n"
+    "  2019.9878  2009.9985   100.8725   2019.8133  2009.9112   109.3660\n"
+    "  2005.0000  2019.9970   100.3490   1999.8255  2019.9097   108.8426\n"
+    "  2009.9939  2019.9970   100.6980   2009.8194  2019.9097   109.1916\n"
+    "  2016.9878  2019.9970   101.0470   2019.8133  2019.9097   109.5406 /\n"
+    "ZCORN\n"
+    "    98.0000   100.3490    97.3490   100.6980   100.1745   100.5235\n"
+    "   100.5235   100.8725   100.1745   100.5235   100.5235   100.8725\n"
+    "   100.3490   101.6980   101.6980   102.5470   102.4973   102.1463\n"
+    "   103.2463   104.1953   103.6719   104.0209   104.0209   104.3698\n"
+    "   103.6719   104.0209   104.0209   104.3698   103.8464   104.1954\n"
+    "   104.1954   104.5444   103.4973   103.8463   103.8463   104.1953\n"
+    "   103.6719   104.0209   104.0209   104.3698   103.6719   104.0209\n"
+    "   104.0209   104.3698   103.8464   104.1954   104.1954   104.5444\n"
+    "   108.4935   108.8425   108.8425   109.1915   108.6681   109.0170\n"
+    "   109.0170   109.3660   108.6681   109.0170   109.0170   109.3660\n"
+    "   108.8426   109.1916   109.1916   109.5406  /\n"
+    "\n"
+    "ACTNUM\n"
+    " 1 1 1 1 0 1 0 1 /\n";
+
+    {
+        const char* test1 =
+        "ADDZCORN\n"
+        "   1.0 1 2 1 2 1 2 1 2 1 2/\n"
+        "/\n";
+
+        std::string deckData1 = std::string(deckDataBase) + test1;
+        Opm::Parser parser;
+        auto deck1 = parser.parseString( deckData1) ;
+        Opm::EclipseGrid grid1(deck1);
+        auto zcorn = grid1.getZCORN();
+        // all zcorns are moved 1.0
+        grid1.addZCORN(deck1);
+        auto zcorn_mod = grid1.getZCORN();
+        for (int i = 0; i < 64; i++) {
+            BOOST_CHECK_CLOSE( zcorn[i] + 1.0, zcorn_mod[i], 1e-8);
+        }
+    }
+
+    {
+        const char* test1 =
+        "ADDZCORN\n"
+        "   1.0 0 1 0 1 1 1 0 1 0 1/\n"
+        "   -1.0 1 0 1 0 2 2 1 0 1 0/\n"
+        "/\n";
+
+        std::string deckData1 = std::string(deckDataBase) + test1;
+        Opm::Parser parser;
+        auto deck1 = parser.parseString( deckData1) ;
+        Opm::EclipseGrid grid1(deck1);
+        auto zcorn = grid1.getZCORN();
+        // all zcorns are moved 1.0
+        grid1.addZCORN(deck1);
+        auto zcorn_mod = grid1.getZCORN();
+        for (int i = 0; i < 64; i++) {
+            std::cout << i << std::endl;
+            if (i == 1 || i == 17) { // move right front corner of cell 1, 1 m
+                BOOST_CHECK_CLOSE( zcorn[i]+1.0, zcorn_mod[i], 1e-8);
+            } else if (i == 36 || i == 52) { // move left back corner of cell 2, -1m
+                BOOST_CHECK_CLOSE( zcorn[i]-1.0, zcorn_mod[i], 1e-8);
+            } else {
+                BOOST_CHECK_CLOSE( zcorn[i], zcorn_mod[i], 1e-8);
+            }
+        }
+    }
+
+
+}
