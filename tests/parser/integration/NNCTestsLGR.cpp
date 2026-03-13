@@ -71,6 +71,106 @@ NNCCollection nnc_collection_opm_lgr_nnc_test()
 }
 
 
+NNCCollection nnc_collection_opm_lgr_nnc_same_diff()
+{
+    NNCCollection ncol;
+    // Global NNCS
+    {
+        NNC global_nnc;
+        // the first entry is invalid because the host cell is refined
+        // it should be filtered out
+        global_nnc.addNNC(0, 2, 0.45600000E+01);
+        global_nnc.addNNC(0, 3, 0.12340000E+02);
+        ncol.addNNC(global_nnc);
+    }
+
+    {
+        NNC lgr1_nnc;
+        lgr1_nnc.addNNC(0, 1,0.78900000E+03);
+        lgr1_nnc.addNNC(2, 1,0.78900000E+03);
+        lgr1_nnc.addNNC(1, 3,0.78900000E+03);
+        ncol.addNNC(1, lgr1_nnc);
+    }
+
+    {
+        NNC lgr2_nnc;
+        lgr2_nnc.addNNC(0, 1,0.78900000E+03);
+        lgr2_nnc.addNNC(2, 1,0.78900000E+03);
+        lgr2_nnc.addNNC(1, 3,0.78900000E+03);
+        ncol.addNNC(2, lgr2_nnc);
+    }
+
+    {
+        NNC lgr3_nnc;
+        lgr3_nnc.addNNC(0, 1,0.78900000E+03);
+        lgr3_nnc.addNNC(2, 1,0.78900000E+03);
+        lgr3_nnc.addNNC(1, 3,0.78900000E+03);
+        ncol.addNNC(3, lgr3_nnc);
+    }
+
+
+    // different type NNCs
+    {
+        // NNCL NNCG
+        // LGR1 and GLOBAL GRID (1,0)
+        //NNC sorts the cell indices, so we can add them in any order
+        // FOR THIS WE REQUIRE SPECIFIC ORDER, HERE IS THE BUG
+        NNCDiffGrid lgr1_nnc;
+        lgr1_nnc.addNNC(0, 1,0.78900000E+03);
+        lgr1_nnc.addNNC(2, 1,0.78900000E+03);
+        lgr1_nnc.addNNC(1, 3,0.78900000E+03);
+        lgr1_nnc.addNNC(3, 3,0.78900000E+03);
+        ncol.addNNC(1, 0, lgr1_nnc);
+    }
+
+    {
+        // NNCL NNCG
+        // grid LGR2 and GLOBAL GRID (2,0)
+        //NNC sorts the cell indices, so we can add them in any order
+        // FOR THIS WE REQUIRE SPECIFIC ORDER, HERE IS THE BUG
+        NNCDiffGrid lgr2_nnc;
+        lgr2_nnc.addNNC(0, 2,0.78900000E+03);
+        lgr2_nnc.addNNC(2, 2,0.78900000E+03);
+        lgr2_nnc.addNNC(1, 4,0.78900000E+03);
+        lgr2_nnc.addNNC(3, 4,0.78900000E+03);
+        ncol.addNNC(2, 0, lgr2_nnc);
+    }
+
+    {
+        // NNCL NNCG
+        // grid LGR2 and GLOBAL GRID (2,0)
+
+        NNCDiffGrid lgr3_nnc;
+        lgr3_nnc.addNNC(0, 3,0.78900000E+03);
+        lgr3_nnc.addNNC(2, 3,0.78900000E+03);
+        ncol.addNNC(3, 0, lgr3_nnc);
+    }
+
+    {
+        // LGR1 LGR3
+        NNCDiffGrid lgr1_lgr2_nnc;
+        lgr1_lgr2_nnc.addNNC(0, 1,0.78900000E+03);
+        lgr1_lgr2_nnc.addNNC(2, 1,0.78900000E+03);
+        lgr1_lgr2_nnc.addNNC(1, 3,0.78900000E+03);
+        lgr1_lgr2_nnc.addNNC(3, 3,0.78900000E+03);
+        ncol.addNNC(1, 2, lgr1_lgr2_nnc);
+    }
+
+    {
+        // LGR1 LGR2
+        NNCDiffGrid lgr1_lgr3_nnc;
+        lgr1_lgr3_nnc.addNNC(0, 1,0.78900000E+03);
+        lgr1_lgr3_nnc.addNNC(2, 1,0.78900000E+03);
+        lgr1_lgr3_nnc.addNNC(1, 3,0.78900000E+03);
+        lgr1_lgr3_nnc.addNNC(3, 3,0.78900000E+03);
+        ncol.addNNC(1, 3, lgr1_lgr3_nnc);
+    }
+
+   return ncol;
+}
+
+
+
 
 const std::string opm_lgr_nnc_test = std::string { R"(
     RUNSPEC
@@ -744,5 +844,200 @@ BOOST_AUTO_TEST_CASE(no_cross_grid_nnc_produces_no_nncl_nncg)
     BOOST_CHECK(!f.hasKey("NNCL"));
     BOOST_CHECK(!f.hasKey("NNCG"));
 }
+
+BOOST_AUTO_TEST_CASE(nnc_collection_opm_lgr_diff)
+{
+    auto deck = msw_sim("LGR_BASESIM3WELLS.DATA");
+    EclipseState es(deck);
+    const auto& egrid = es.getInputGrid();
+    auto nnc_case = nnc_collection_opm_lgr_nnc_same_diff();
+    Opm::UnitSystem units(Opm::UnitSystem::UnitType::UNIT_TYPE_METRIC);
+    egrid.save("opm-test-allnnc.FEGRID", true, nnc_case, units);
+
+    Opm::EclIO::EclFile egrid_file("opm-test-allnnc.FEGRID",
+                                   Opm::EclIO::EclFile::Formatted{true});
+
+    // Collect all array indices by keyword, in file order
+    const auto& array_names = egrid_file.arrayNames();
+    std::vector<int> nnchead_idx, nnc1_idx, nnc2_idx;
+    std::vector<int> nncl_idx, nncg_idx;
+    std::vector<int> nncheada_idx, nna1_idx, nna2_idx;
+
+    for (int i = 0; i < static_cast<int>(array_names.size()); ++i) {
+        if      (array_names[i] == "NNCHEAD")  nnchead_idx.push_back(i);
+        else if (array_names[i] == "NNC1")     nnc1_idx.push_back(i);
+        else if (array_names[i] == "NNC2")     nnc2_idx.push_back(i);
+        else if (array_names[i] == "NNCL")     nncl_idx.push_back(i);
+        else if (array_names[i] == "NNCG")     nncg_idx.push_back(i);
+        else if (array_names[i] == "NNCHEADA") nncheada_idx.push_back(i);
+        else if (array_names[i] == "NNA1")    nna1_idx.push_back(i);
+        else if (array_names[i] == "NNA2")    nna2_idx.push_back(i);
+    }
+
+    // Expect 4 NNC1/NNC2 blocks: global + LGR1 + LGR2 + LGR3
+    BOOST_REQUIRE_EQUAL(nnc1_idx.size(), 4u);
+    BOOST_REQUIRE_EQUAL(nnc2_idx.size(), 4u);
+    // Expect 3 NNCL/NNCG blocks: LGR1-global, LGR2-global, LGR3-global
+    BOOST_REQUIRE_EQUAL(nncl_idx.size(), 3u);
+    BOOST_REQUIRE_EQUAL(nncg_idx.size(), 3u);
+    // Expect 2 NNA blocks: LGR1-LGR2 and LGR1-LGR3
+    BOOST_REQUIRE_EQUAL(nncheada_idx.size(), 2u);
+    BOOST_REQUIRE_EQUAL(nna1_idx.size(), 2u);
+    BOOST_REQUIRE_EQUAL(nna2_idx.size(), 2u);
+
+    // -----------------------------------------------------------------------
+    // Global NNC (grid 0): entries (0,2) and (0,3) → 1-indexed: (1,3) (1,4)
+    // -----------------------------------------------------------------------
+    {
+        const auto& nnc1 = egrid_file.get<int>(nnc1_idx[0]);
+        const auto& nnc2 = egrid_file.get<int>(nnc2_idx[0]);
+        BOOST_REQUIRE_EQUAL(nnc1.size(), 2u);
+        BOOST_CHECK_EQUAL(nnc1[0], 1);  BOOST_CHECK_EQUAL(nnc2[0], 3);
+        BOOST_CHECK_EQUAL(nnc1[1], 1);  BOOST_CHECK_EQUAL(nnc2[1], 4);
+    }
+
+    // -----------------------------------------------------------------------
+    // LGR1 same-grid NNC (grid 1)
+    // NNC sorts and enforces cell1<=cell2:
+    //   addNNC(0,1)→(0,1), addNNC(2,1)→(1,2), addNNC(1,3)→(1,3)
+    //   sorted: (0,1),(1,2),(1,3) → NNC1=[1,2,2], NNC2=[2,3,4]
+    // -----------------------------------------------------------------------
+    {
+        const auto& nnc1 = egrid_file.get<int>(nnc1_idx[1]);
+        const auto& nnc2 = egrid_file.get<int>(nnc2_idx[1]);
+        BOOST_REQUIRE_EQUAL(nnc1.size(), 3u);
+        BOOST_CHECK_EQUAL(nnc1[0], 1);  BOOST_CHECK_EQUAL(nnc2[0], 2);
+        BOOST_CHECK_EQUAL(nnc1[1], 2);  BOOST_CHECK_EQUAL(nnc2[1], 3);
+        BOOST_CHECK_EQUAL(nnc1[2], 2);  BOOST_CHECK_EQUAL(nnc2[2], 4);
+    }
+
+    // -----------------------------------------------------------------------
+    // LGR2 same-grid NNC (grid 2) — identical structure to LGR1
+    // -----------------------------------------------------------------------
+    {
+        const auto& nnc1 = egrid_file.get<int>(nnc1_idx[2]);
+        const auto& nnc2 = egrid_file.get<int>(nnc2_idx[2]);
+        BOOST_REQUIRE_EQUAL(nnc1.size(), 3u);
+        BOOST_CHECK_EQUAL(nnc1[0], 1);  BOOST_CHECK_EQUAL(nnc2[0], 2);
+        BOOST_CHECK_EQUAL(nnc1[1], 2);  BOOST_CHECK_EQUAL(nnc2[1], 3);
+        BOOST_CHECK_EQUAL(nnc1[2], 2);  BOOST_CHECK_EQUAL(nnc2[2], 4);
+    }
+
+    // -----------------------------------------------------------------------
+    // LGR3 same-grid NNC (grid 3) — identical structure to LGR1
+    // -----------------------------------------------------------------------
+    {
+        const auto& nnc1 = egrid_file.get<int>(nnc1_idx[3]);
+        const auto& nnc2 = egrid_file.get<int>(nnc2_idx[3]);
+        BOOST_REQUIRE_EQUAL(nnc1.size(), 3u);
+        BOOST_CHECK_EQUAL(nnc1[0], 1);  BOOST_CHECK_EQUAL(nnc2[0], 2);
+        BOOST_CHECK_EQUAL(nnc1[1], 2);  BOOST_CHECK_EQUAL(nnc2[1], 3);
+        BOOST_CHECK_EQUAL(nnc1[2], 2);  BOOST_CHECK_EQUAL(nnc2[2], 4);
+    }
+
+    // -----------------------------------------------------------------------
+    // LGR1-GLOBAL cross-grid (NNCL/NNCG, block 0)
+    // addNNC(1, 0, lgr1_nnc) with input (0,1),(2,1),(1,3),(3,3)
+    // cell1=[0,2,1,3] → LGR1 cells → NNCL (1-indexed: [1,3,2,4])
+    // cell2=[1,1,3,3] → global cells → NNCG (1-indexed: [2,2,4,4])
+    // NNCHEAD[0]=num_same_grid_nnc=3, NNCHEAD[1]=1 (LGR1 grid number)
+    // -----------------------------------------------------------------------
+    {
+        const auto& nnchead = egrid_file.get<int>(nnchead_idx[2]);  // 3rd NNCHEAD block
+        BOOST_CHECK_EQUAL(nnchead[0], 3);
+        BOOST_CHECK_EQUAL(nnchead[1], 1);
+
+        const auto& nncl = egrid_file.get<int>(nncl_idx[0]);
+        const auto& nncg = egrid_file.get<int>(nncg_idx[0]);
+        BOOST_REQUIRE_EQUAL(nncl.size(), 4u);
+        BOOST_CHECK_EQUAL(nncl[0], 1);  BOOST_CHECK_EQUAL(nncg[0], 2);
+        BOOST_CHECK_EQUAL(nncl[1], 3);  BOOST_CHECK_EQUAL(nncg[1], 2);
+        BOOST_CHECK_EQUAL(nncl[2], 2);  BOOST_CHECK_EQUAL(nncg[2], 4);
+        BOOST_CHECK_EQUAL(nncl[3], 4);  BOOST_CHECK_EQUAL(nncg[3], 4);
+    }
+
+    // -----------------------------------------------------------------------
+    // LGR2-GLOBAL cross-grid (NNCL/NNCG, block 1)
+    // addNNC(2, 0, lgr2_nnc) with input (0,2),(2,2),(1,4),(3,4)
+    // cell1=[0,2,1,3] → LGR2 cells → NNCL (1-indexed: [1,3,2,4])
+    // cell2=[2,2,4,4] → global cells → NNCG (1-indexed: [3,3,5,5])
+    // NNCHEAD[1]=2 (LGR2 grid number)
+    // -----------------------------------------------------------------------
+    {
+        const auto& nnchead = egrid_file.get<int>(nnchead_idx[4]);  // 5th NNCHEAD block
+        BOOST_CHECK_EQUAL(nnchead[0], 3);
+        BOOST_CHECK_EQUAL(nnchead[1], 2);
+
+        const auto& nncl = egrid_file.get<int>(nncl_idx[1]);
+        const auto& nncg = egrid_file.get<int>(nncg_idx[1]);
+        BOOST_REQUIRE_EQUAL(nncl.size(), 4u);
+        BOOST_CHECK_EQUAL(nncl[0], 1);  BOOST_CHECK_EQUAL(nncg[0], 3);
+        BOOST_CHECK_EQUAL(nncl[1], 3);  BOOST_CHECK_EQUAL(nncg[1], 3);
+        BOOST_CHECK_EQUAL(nncl[2], 2);  BOOST_CHECK_EQUAL(nncg[2], 5);
+        BOOST_CHECK_EQUAL(nncl[3], 4);  BOOST_CHECK_EQUAL(nncg[3], 5);
+    }
+
+    // -----------------------------------------------------------------------
+    // LGR3-GLOBAL cross-grid (NNCL/NNCG, block 2)
+    // addNNC(3, 0, lgr3_nnc) with input (0,3),(2,3)
+    // cell1=[0,2] → LGR3 cells → NNCL (1-indexed: [1,3])
+    // cell2=[3,3] → global cells → NNCG (1-indexed: [4,4])
+    // NNCHEAD[1]=3 (LGR3 grid number)
+    // -----------------------------------------------------------------------
+    {
+        const auto& nnchead = egrid_file.get<int>(nnchead_idx[6]);  // 7th NNCHEAD block
+        BOOST_CHECK_EQUAL(nnchead[0], 3);
+        BOOST_CHECK_EQUAL(nnchead[1], 3);
+
+        const auto& nncl = egrid_file.get<int>(nncl_idx[2]);
+        const auto& nncg = egrid_file.get<int>(nncg_idx[2]);
+        BOOST_REQUIRE_EQUAL(nncl.size(), 2u);
+        BOOST_CHECK_EQUAL(nncl[0], 1);  BOOST_CHECK_EQUAL(nncg[0], 4);
+        BOOST_CHECK_EQUAL(nncl[1], 3);  BOOST_CHECK_EQUAL(nncg[1], 4);
+    }
+
+    // -----------------------------------------------------------------------
+    // NNA: LGR1-LGR2 (first NNA block)
+    // addNNC(1, 2, lgr1_lgr2_nnc) with input (0,1),(2,1),(1,3),(3,3)
+    // grid1=1 < grid2=2 → no swap_adj
+    // NNCHEADA[0]=1 (LGR1), NNCHEADA[1]=2 (LGR2)
+    // NNA1=cell1+1=[1,3,2,4], NNA2=cell2+1=[2,2,4,4]
+    // -----------------------------------------------------------------------
+    {
+        const auto& nncheada = egrid_file.get<int>(nncheada_idx[0]);
+        BOOST_CHECK_EQUAL(nncheada[0], 1);
+        BOOST_CHECK_EQUAL(nncheada[1], 2);
+
+        const auto& nna1 = egrid_file.get<int>(nna1_idx[0]);
+        const auto& nna2 = egrid_file.get<int>(nna2_idx[0]);
+        BOOST_REQUIRE_EQUAL(nna1.size(), 4u);
+        BOOST_CHECK_EQUAL(nna1[0], 1);  BOOST_CHECK_EQUAL(nna2[0], 2);
+        BOOST_CHECK_EQUAL(nna1[1], 3);  BOOST_CHECK_EQUAL(nna2[1], 2);
+        BOOST_CHECK_EQUAL(nna1[2], 2);  BOOST_CHECK_EQUAL(nna2[2], 4);
+        BOOST_CHECK_EQUAL(nna1[3], 4);  BOOST_CHECK_EQUAL(nna2[3], 4);
+    }
+
+    // -----------------------------------------------------------------------
+    // NNA: LGR1-LGR3 (second NNA block)
+    // addNNC(1, 3, lgr1_lgr3_nnc) with input (0,1),(2,1),(1,3),(3,3)
+    // grid1=1 < grid2=3 → no swap_adj
+    // NNCHEADA[0]=1 (LGR1), NNCHEADA[1]=3 (LGR3)
+    // NNA1=cell1+1=[1,3,2,4], NNA2=cell2+1=[2,2,4,4]
+    // -----------------------------------------------------------------------
+    {
+        const auto& nncheada = egrid_file.get<int>(nncheada_idx[1]);
+        BOOST_CHECK_EQUAL(nncheada[0], 1);
+        BOOST_CHECK_EQUAL(nncheada[1], 3);
+
+        const auto& nna1 = egrid_file.get<int>(nna1_idx[1]);
+        const auto& nna2 = egrid_file.get<int>(nna2_idx[1]);
+        BOOST_REQUIRE_EQUAL(nna1.size(), 4u);
+        BOOST_CHECK_EQUAL(nna1[0], 1);  BOOST_CHECK_EQUAL(nna2[0], 2);
+        BOOST_CHECK_EQUAL(nna1[1], 3);  BOOST_CHECK_EQUAL(nna2[1], 2);
+        BOOST_CHECK_EQUAL(nna1[2], 2);  BOOST_CHECK_EQUAL(nna2[2], 4);
+        BOOST_CHECK_EQUAL(nna1[3], 4);  BOOST_CHECK_EQUAL(nna2[3], 4);
+    }
+}
+
 
 BOOST_AUTO_TEST_SUITE_END()
