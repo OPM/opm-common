@@ -38,7 +38,8 @@ namespace {
 
     void add_keyword(Parser* parser, const std::string& json_string) {
         const Json::JsonObject keyword(json_string);
-        parser->addParserKeyword(keyword);
+        ParserKeyword kw(keyword);
+        parser->addParserKeyword(kw);
     }
 
 }
