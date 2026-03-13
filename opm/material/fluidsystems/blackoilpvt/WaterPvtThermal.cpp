@@ -55,6 +55,7 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
     enableJouleThomson_ = tables.WatJT().size() > 0;
     enableThermalViscosity_ = tables.hasTables("WATVISCT");
     enableInternalEnergy_ = tables.hasTables("SPECHEAT");
+    enableBrineViscosity_ = eclState.runspec().phases().active(Phase::BRINE);
 
     unsigned regions = isothermalPvt_->numRegions();
     setNumRegions(regions);
@@ -114,13 +115,32 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
         const auto& watvisctTables = tables.getWatvisctTables();
         const auto& viscrefTables = tables.getViscrefTable();
 
-        const auto& pvtwTables = tables.getPvtwTable();
-
-        if (pvtwTables.size() != regions) {
-            OPM_THROW(std::runtime_error,
-                      fmt::format("Table sizes mismatch. PVTW: {}, numRegions: {}\n",
-                                  pvtwTables.size(), regions));
+        if (enableBrineViscosity_) {
+            const auto& pvtwSaltTables = tables.getPvtwSaltTables();
+            if (pvtwSaltTables.size() != regions) {
+                OPM_THROW(std::runtime_error,
+                          fmt::format("Table sizes mismatch. PVTWSALT: {}, numRegions: {}\n",
+                                      pvtwSaltTables.size(), regions));
+            }
+            for (unsigned regionIdx = 0; regionIdx < regions; ++ regionIdx) {
+                referenceSaltConcentration_[regionIdx] = pvtwSaltTables[regionIdx].getReferenceSaltConcentrationValue();
+                pvtwViscosity_[regionIdx] = pvtwSaltTables[regionIdx].getViscosityColumn()[0];
+                pvtwViscosibility_[regionIdx] = pvtwSaltTables[regionIdx].getViscosibilityColumn()[0];
+            }
         }
+        else {
+            const auto& pvtwTables = tables.getPvtwTable();
+            if (pvtwTables.size() != regions) {
+                OPM_THROW(std::runtime_error,
+                          fmt::format("Table sizes mismatch. PVTW: {}, numRegions: {}\n",
+                                      pvtwTables.size(), regions));
+            }
+            for (unsigned regionIdx = 0; regionIdx < regions; ++ regionIdx) {
+                pvtwViscosity_[regionIdx] = pvtwTables[regionIdx].viscosity;
+                pvtwViscosibility_[regionIdx] = pvtwTables[regionIdx].viscosibility;
+            }
+        }
+
         if (watvisctTables.size() != regions) {
             OPM_THROW(std::runtime_error,
                       fmt::format("Table sizes mismatch. WATVISCT: {}, numRegions: {}\n",
@@ -138,11 +158,6 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
             watvisctCurves_[regionIdx].setXYContainers(T, mu);
 
             viscrefPress_[regionIdx] = viscrefTables[regionIdx].reference_pressure;
-        }
-
-        for (unsigned regionIdx = 0; regionIdx < regions; ++ regionIdx) {
-            pvtwViscosity_[regionIdx] = pvtwTables[regionIdx].viscosity;
-            pvtwViscosibility_[regionIdx] = pvtwTables[regionIdx].viscosibility;
         }
     }
 
@@ -187,6 +202,7 @@ setNumRegions(std::size_t numRegions)
     pvtwCompressibility_.resize(numRegions);
     pvtwViscosity_.resize(numRegions);
     pvtwViscosibility_.resize(numRegions);
+    referenceSaltConcentration_.resize(numRegions);
     viscrefPress_.resize(numRegions);
     watvisctCurves_.resize(numRegions);
     watdentRefTemp_.resize(numRegions);
@@ -220,12 +236,14 @@ operator==(const WaterPvtThermal<Scalar, enableBrine>& data) const
            this->pvtwCompressibility() == data.pvtwCompressibility() &&
            this->pvtwViscosity() == data.pvtwViscosity() &&
            this->pvtwViscosibility() == data.pvtwViscosibility() &&
+           this->referenceSaltConcentration() == data.referenceSaltConcentration() &&
            this->watvisctCurves() == data.watvisctCurves() &&
            this->internalEnergyCurves() == data.internalEnergyCurves() &&
            this->enableThermalDensity() == data.enableThermalDensity() &&
            this->enableJouleThomson() == data.enableJouleThomson() &&
            this->enableThermalViscosity() == data.enableThermalViscosity() &&
-           this->enableInternalEnergy() == data.enableInternalEnergy();
+           this->enableInternalEnergy() == data.enableInternalEnergy() &&
+           this->enableBrineViscosity() == data.enableBrineViscosity();
 }
 
 template<class Scalar, bool enableBrine>
@@ -250,12 +268,14 @@ operator=(const WaterPvtThermal<Scalar, enableBrine>& data)
     pvtwCompressibility_ = data.pvtwCompressibility_;
     pvtwViscosity_ = data.pvtwViscosity_;
     pvtwViscosibility_ = data.pvtwViscosibility_;
+    referenceSaltConcentration_ = data.referenceSaltConcentration_;
     watvisctCurves_ = data.watvisctCurves_;
     internalEnergyCurves_ = data.internalEnergyCurves_;
     enableThermalDensity_ = data.enableThermalDensity_;
     enableJouleThomson_ = data.enableJouleThomson_;
     enableThermalViscosity_ = data.enableThermalViscosity_;
     enableInternalEnergy_ = data.enableInternalEnergy_;
+    enableBrineViscosity_ = data.enableBrineViscosity_;
 
     return *this;
 }
