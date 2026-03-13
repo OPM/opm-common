@@ -5362,7 +5362,10 @@ void Opm::out::Summary::SummaryImplementation::write(const bool is_final_summary
 
     this->createSMSpecIfNecessary();
 
-    if (const auto& last = this->lastUnwritten(); this->prevReportStepID_ < last.seq) {
+    // We are forcing a final write at the end of the last report step to get correct RUNTIMEI
+    // Because of adaptive time stepping there could habe been previous writes for the same
+    // report step.
+    if (const auto& last = this->lastUnwritten(); this->prevReportStepID_ < last.seq || is_final_summary) {
         this->smspec_->write(this->outputParameters_.summarySpecification(),
                              is_final_summary, last.seq,
                              sched_.get()[last.seq].get<RSTConfig>().get()
