@@ -145,39 +145,48 @@ bool is_neighbor(const EclipseGrid& grid, std::size_t g1, std::size_t g2) {
 
         std::sort(nnc_edit.begin(), nnc_edit.end());
 
-        // If we have a corresponding NNC already, then we apply
-        // the multiplier from EDITNNC to it. Otherwise we internalize
-        // it into m_edit
-        auto current_input = this->m_input.begin();
-        for (const auto& current_edit : nnc_edit) {
-            if (current_input == this->m_input.end()) {
+        if ( EclipseGrid::hasCornerPointKeywords(deck) ) {
+            // For corner-point grids we keep all valid EDITNNC,
+            // to handle overlaping cases with generated and inputed NNCs.
+            for (const auto& current_edit : nnc_edit) {
                 this->add_edit(current_edit);
-                continue;
             }
-
-            if (current_input->cell1 != current_edit.cell1 || current_input->cell2 != current_edit.cell2) {
-                current_input = std::lower_bound(this->m_input.begin(),
-                                                 this->m_input.end(),
-                                                 NNCdata(current_edit.cell1, current_edit.cell2, 0));
+        }
+        else {
+            // If we have a corresponding NNC already, then we apply
+            // the multiplier from EDITNNC to it. Otherwise we internalize
+            // it into m_edit (valid for non-corner-point grids).
+            auto current_input = this->m_input.begin();
+            for (const auto& current_edit : nnc_edit) {
                 if (current_input == this->m_input.end()) {
                     this->add_edit(current_edit);
                     continue;
                 }
 
-            }
+                if (current_input->cell1 != current_edit.cell1 || current_input->cell2 != current_edit.cell2) {
+                    current_input = std::lower_bound(this->m_input.begin(),
+                                                    this->m_input.end(),
+                                                    NNCdata(current_edit.cell1, current_edit.cell2, 0));
+                    if (current_input == this->m_input.end()) {
+                        this->add_edit(current_edit);
+                        continue;
+                    }
 
-            bool edit_processed = false;
-            while (current_input != this->m_input.end()
-                   && current_input->cell1 == current_edit.cell1
-                   && current_input->cell2 == current_edit.cell2)
-            {
-                current_input->trans *= current_edit.trans;
-                ++current_input;
-                edit_processed = true;
-            }
+                }
 
-            if (!edit_processed)
-                this->add_edit(current_edit);
+                bool edit_processed = false;
+                while (current_input != this->m_input.end()
+                    && current_input->cell1 == current_edit.cell1
+                    && current_input->cell2 == current_edit.cell2)
+                {
+                    current_input->trans *= current_edit.trans;
+                    ++current_input;
+                    edit_processed = true;
+                }
+
+                if (!edit_processed)
+                    this->add_edit(current_edit);
+            }
         }
     }
 
