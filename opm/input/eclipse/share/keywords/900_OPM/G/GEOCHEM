@@ -1,0 +1,39 @@
+{
+  "name": "GEOCHEM",
+  "sections": [
+    "RUNSPEC"
+  ],
+  "size": 1,
+  "items": [
+    {
+     "item": 1,
+     "name": "INIT_FILE_NAME",
+     "value_type": "STRING",
+     "default": ""
+    },
+    {
+      "item": 2,
+      "name": "MBAL_TOL",
+      "value_type": "DOUBLE",
+      "default": 1e-7
+    },
+    {
+      "item": 3,
+      "name": "PH_TOL",
+      "value_type": "DOUBLE",
+      "default": 1e-8
+    },
+    {
+      "item": 4,
+      "name": "ENFORCE_CHARGE_BALANCE",
+      "value_type": "STRING",
+      "default": "NOCHARGE"
+    },
+    {
+      "item": 5,
+      "name": "SPLAY_TREE",
+      "value_type": "INT",
+      "default": 0
+    }
+  ]
+}

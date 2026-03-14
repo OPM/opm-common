@@ -4803,6 +4803,18 @@ namespace Evaluator {
             return false;
         }
 
+        // HACK: Well geochemistry species use tracer keywords
+        if (this->es_.runspec().geochem().enabled()) {
+            // NOTE: species only in water; no F or S subdivision, hence species name come after 4 characters
+            auto species_tag = normKw.substr(0, 4) + "#W";
+            pos = funs.find(species_tag);
+            if (pos != funs.end()) {
+                this->paramFunction_ = pos->second;
+                return true;
+            }
+            return false;
+        }
+
         const auto& tracers = this->es_.tracer();
 
         // Check for tracer names twice to allow for tracers starting with S or F

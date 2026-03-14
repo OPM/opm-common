@@ -23,6 +23,9 @@
 #include <opm/input/eclipse/EclipseState/Aquifer/AquiferConfig.hpp>
 #include <opm/input/eclipse/EclipseState/Compositional/CompositionalConfig.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseConfig.hpp>
+#include <opm/input/eclipse/EclipseState/Geochemistry/SpeciesConfig.hpp>
+#include <opm/input/eclipse/EclipseState/Geochemistry/MineralConfig.hpp>
+#include <opm/input/eclipse/EclipseState/Geochemistry/IonExchangeConfig.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FIPRegionStatistics.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FaultCollection.hpp>
@@ -129,6 +132,9 @@ namespace Opm {
         const AquiferConfig& aquifer() const;
         const CompositionalConfig& compositionalConfig() const;
         const TracerConfig& tracer() const;
+        const SpeciesConfig& species() const;
+        const MineralConfig& mineral() const;
+        const IonExchangeConfig& ionExchange() const;
         const WagHysteresisConfig& getWagHysteresis() const;
         const Co2StoreConfig& getCo2StoreConfig() const;
 
@@ -165,6 +171,9 @@ namespace Opm {
             serializer(m_transMult);
             serializer(m_faults);
             serializer(m_title);
+            serializer(species_config);
+            serializer(mineral_config);
+            serializer(ionex_config);
             serializer(tracer_config);
             serializer(wag_hyst_config);
             serializer(co2_store_config);
@@ -203,6 +212,9 @@ namespace Opm {
         AquiferConfig aquifer_config;
         CompositionalConfig compositional_config;
         TransMult m_transMult;
+        SpeciesConfig species_config;
+        MineralConfig mineral_config;
+        IonExchangeConfig ionex_config;
         TracerConfig tracer_config;
         WagHysteresisConfig wag_hyst_config;
         Co2StoreConfig co2_store_config;
