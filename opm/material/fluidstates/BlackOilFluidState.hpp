@@ -106,6 +106,18 @@ OPM_HOST_DEVICE auto getSaltSaturation_(typename std::enable_if<!HasMember_saltS
                                                     const FluidState&>::type)
 { return 0.0; }
 
+OPM_GENERATE_HAS_MEMBER(solventSaturation, ) // Creates 'HasMember_solventSaturation<T>'.
+
+template <class FluidState>
+OPM_HOST_DEVICE auto getSolventSaturation_(typename std::enable_if<HasMember_solventSaturation<FluidState>::value,
+                                                    const FluidState&>::type fluidState)
+{ return fluidState.solventSaturation(); }
+
+template <class FluidState>
+OPM_HOST_DEVICE auto getSolventSaturation_(typename std::enable_if<!HasMember_solventSaturation<FluidState>::value,
+                                                    const FluidState&>::type)
+{ return 0.0; }
+
 /*!
  * \brief Implements a "tailor-made" fluid state class for the black-oil model.
  *
@@ -122,6 +134,7 @@ template <class ScalarT,
           bool enableBrine = false,
           bool enableSaltPrecipitation = false,
           bool enableDissolutionInWater = false,
+          bool enableSolvent = false,
           unsigned numStoragePhases = FluidSystemT::numPhases>
 class BlackOilFluidState
 {
@@ -168,6 +181,7 @@ public:
                                   enableBrine,
                                   enableSaltPrecipitation,
                                   enableDissolutionInWater,
+                                  enableSolvent,
                                   numStoragePhases>(other);
         bfstate.assign(*this);
         return bfstate;
@@ -227,6 +241,13 @@ public:
             Valgrind::CheckDefined(*saltSaturation_);
         }
 
+        if constexpr (enableSolvent) {
+            Valgrind::CheckDefined(*solventSaturation_);
+            Valgrind::CheckDefined(*solventDensity_);
+            Valgrind::CheckDefined(*solventInvB_);
+            Valgrind::CheckDefined(*rsSolw_);
+        }
+
         if constexpr (storeTemperature)
             Valgrind::CheckDefined(*temperature_);
 #endif // NDEBUG
@@ -262,6 +283,12 @@ public:
         }
         if constexpr (enableSaltPrecipitation){
             setSaltSaturation(BlackOil::getSaltSaturation_<FluidSystem, FluidState, Scalar>(fs, pvtRegionIdx));
+        }
+        if constexpr (enableSolvent) {
+            setSolventSaturation(BlackOil::getSolventSaturation_<FluidState, Scalar>(fs, pvtRegionIdx));
+            setSolventDensity(BlackOil::getSolventDensity_<FluidState, Scalar>(fs, pvtRegionIdx));
+            setSolventInvB(BlackOil::getSolventInvB_<FluidState, Scalar>(fs, pvtRegionIdx));
+            setRsSolw(BlackOil::getRsSolw_<FluidState, Scalar>(fs, pvtRegionIdx));
         }
         for (unsigned storagePhaseIdx = 0; storagePhaseIdx < numStoragePhases; ++storagePhaseIdx) {
             unsigned phaseIdx = storageToCanonicalPhaseIndex_(storagePhaseIdx, fluidSystem());
@@ -388,6 +415,30 @@ public:
     { *saltSaturation_ = newSaltSaturation; }
 
     /*!
+     * \brief Set the solvent saturation.
+     */
+    OPM_HOST_DEVICE void setSolventSaturation(const Scalar& newSolventSaturation)
+    { *solventSaturation_ = newSolventSaturation; }
+
+    /*!
+     * \brief Set the solvent density [kg/m^3].
+     */
+    OPM_HOST_DEVICE void setSolventDensity(const Scalar& newSolventDensity)
+    { *solventDensity_ = newSolventDensity; }
+
+    /*!
+     * \brief Set the solvent inverse formation volume factor [-].
+     */
+    OPM_HOST_DEVICE void setSolventInvB(const Scalar& newSolventInvB)
+    { *solventInvB_ = newSolventInvB; }
+
+    /*!
+     * \brief Set the solvent dissolution factor in water [m^3/m^3].
+     */
+    OPM_HOST_DEVICE void setRsSolw(const Scalar& newRsSolw)
+    { *rsSolw_ = newRsSolw; }
+
+    /*!
      * \brief Return the pressure of a fluid phase [Pa]
      */
     OPM_HOST_DEVICE const Scalar& pressure(unsigned phaseIdx) const
@@ -511,6 +562,54 @@ public:
     {
         if constexpr (enableSaltPrecipitation) {
             return *saltSaturation_;
+        } else {
+            return Scalar(0.0);
+        }
+    }
+
+    /*!
+     * \brief Return the solvent saturation [-]
+     */
+    OPM_HOST_DEVICE Scalar solventSaturation() const
+    {
+        if constexpr (enableSolvent) {
+            return *solventSaturation_;
+        } else {
+            return Scalar(0.0);
+        }
+    }
+
+    /*!
+     * \brief Return the solvent density [kg/m^3]
+     */
+    OPM_HOST_DEVICE Scalar solventDensity() const
+    {
+        if constexpr (enableSolvent) {
+            return *solventDensity_;
+        } else {
+            return Scalar(0.0);
+        }
+    }
+
+    /*!
+     * \brief Return the solvent inverse formation volume factor [-]
+     */
+    OPM_HOST_DEVICE Scalar solventInvB() const
+    {
+        if constexpr (enableSolvent) {
+            return *solventInvB_;
+        } else {
+            return Scalar(0.0);
+        }
+    }
+
+    /*!
+     * \brief Return the solvent dissolution factor in water [m^3/m^3]
+     */
+    OPM_HOST_DEVICE Scalar rsSolw() const
+    {
+        if constexpr (enableSolvent) {
+            return *rsSolw_;
         } else {
             return Scalar(0.0);
         }
@@ -757,6 +856,10 @@ private:
     ConditionalStorage<enableDissolutionInWater,Scalar> Rsw_{};
     ConditionalStorage<enableBrine, Scalar> saltConcentration_{};
     ConditionalStorage<enableSaltPrecipitation, Scalar> saltSaturation_{};
+    ConditionalStorage<enableSolvent, Scalar> solventSaturation_{};
+    ConditionalStorage<enableSolvent, Scalar> solventDensity_{};
+    ConditionalStorage<enableSolvent, Scalar> solventInvB_{};
+    ConditionalStorage<enableSolvent, Scalar> rsSolw_{};
 
     unsigned short pvtRegionIdx_{};
 
