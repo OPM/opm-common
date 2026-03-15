@@ -24,6 +24,7 @@
 #include <cassert>
 #include <cmath>
 #include <cstddef>
+#include <numbers>
 
 namespace {
 
@@ -146,5 +147,5 @@ double calculateCellVol(const std::array<double,8>& X,
 */
 double calculateCylindricalCellVol(const double r_inner, const double r_outer, const double delta_theta, const double delta_z)
 {
-    return M_PI * std::abs((std::pow(r_outer,2) - std::pow(r_inner,2)) * delta_theta * delta_z) / 360.0;
+    return std::numbers::pi * std::abs((std::pow(r_outer,2) - std::pow(r_inner,2)) * delta_theta * delta_z) / 360.0;
 }

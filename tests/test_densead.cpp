@@ -37,10 +37,11 @@
 #include <opm/material/densead/Evaluation.hpp>
 #include <opm/material/densead/Math.hpp>
 
-#include <iostream>
-#include <cmath>
 #include <algorithm>
 #include <cassert>
+#include <cmath>
+#include <iostream>
+#include <numbers>
 #include <stdexcept>
 #include <tuple>
 
@@ -528,7 +529,7 @@ struct TestEnvBase
         std::cout << "  Testing sin()\n";
         test1DFunction(Opm::DenseAd::sin<Scalar, numVars, staticSize>,
                        static_cast<Scalar (*)(Scalar)>(std::sin),
-                       0, 2*M_PI);
+                       0, 2*std::numbers::pi);
 
         std::cout << "  Testing asin()\n";
         test1DFunction(Opm::DenseAd::asin<Scalar, numVars, staticSize>,
@@ -538,7 +539,7 @@ struct TestEnvBase
         std::cout << "  Testing cos()\n";
         test1DFunction(Opm::DenseAd::cos<Scalar, numVars, staticSize>,
                        static_cast<Scalar (*)(Scalar)>(std::cos),
-                       0, 2*M_PI);
+                       0, 2*std::numbers::pi);
 
         std::cout << "  Testing acos()\n";
         test1DFunction(Opm::DenseAd::acos<Scalar, numVars, staticSize>,
@@ -548,7 +549,7 @@ struct TestEnvBase
         std::cout << "  Testing tan()\n";
         test1DFunction(Opm::DenseAd::tan<Scalar, numVars, staticSize>,
                        static_cast<Scalar (*)(Scalar)>(std::tan),
-                       -M_PI / 2 * 0.95, M_PI / 2 * 0.95);
+                       -std::numbers::pi / 2 * 0.95, std::numbers::pi / 2 * 0.95);
 
         std::cout << "  Testing atan()\n";
         test1DFunction(Opm::DenseAd::atan<Scalar, numVars, staticSize>,

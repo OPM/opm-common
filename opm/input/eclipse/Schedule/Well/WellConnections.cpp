@@ -57,6 +57,7 @@
 #include <cmath>
 #include <cstddef>
 #include <limits>
+#include <numbers>
 #include <optional>
 #include <stdexcept>
 #include <string>
@@ -219,7 +220,7 @@ namespace {
             Opm::Connection::Direction::Z,
         };
 
-        const double angle = 6.2831853071795864769252867665590057683943387987502116419498;
+        const double angle = 2 * std::numbers::pi;
 
         for (size_t i = 0; i < 3; ++i) {
             const auto K = permComponents(direction[i], cell_perm);
@@ -410,7 +411,7 @@ namespace Opm {
 
         // Angle of completion exposed to flow.  We assume centre
         // placement so there's complete exposure (= 2\pi).
-        const auto angle = 6.2831853071795864769252867665590057683943387987502116419498;
+        const auto angle = 2 * std::numbers::pi;
 
         for (int k = K1; k <= K2; ++k) {
             const auto& cell = grid.get_cell(I, J, k, lgr_label);

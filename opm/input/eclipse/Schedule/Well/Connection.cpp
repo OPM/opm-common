@@ -35,6 +35,7 @@
 #include <cassert>
 #include <cstddef>
 #include <exception>
+#include <numbers>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -661,8 +662,7 @@ double Connection::getFilterCakeArea() const
         return *flow_area;
     }
     else {
-        constexpr double two_pi = 2 * 3.14159265358979323846264;
-        return two_pi * this->getFilterCakeRadius() * this->connectionLength();
+        return 2*std::numbers::pi * this->getFilterCakeRadius() * this->connectionLength();
     }
 }
 

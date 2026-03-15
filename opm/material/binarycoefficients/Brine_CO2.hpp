@@ -35,6 +35,7 @@
 #include <opm/common/utility/gpuDecorators.hpp>
 
 #include <array>
+#include <numbers>
 
 namespace Opm {
 namespace BinaryCoeff {
@@ -71,7 +72,7 @@ public:
         Scalar c = 4; // slip parameter, can vary between 4 (slip condition) and 6 (stick condition)
         Scalar R_h = 1.72e-10; // hydrodynamic radius of the solute
         const Evaluation& mu = CO2::gasViscosity(params, temperature, pressure, extrapolate); // CO2 viscosity
-        return k / (c * M_PI * R_h) * (temperature / mu);
+        return k / (c * std::numbers::pi * R_h) * (temperature / mu);
     }
 
     /*!
