@@ -47,6 +47,7 @@
 #include <ctime>
 #include <math.h>
 #include <memory>
+#include <numbers>
 #include <optional>
 #include <numeric>
 #include <stdexcept>
@@ -2009,8 +2010,8 @@ BOOST_AUTO_TEST_CASE(RadialDetails) {
     Opm::Deck deck = radial_details();
     Opm::EclipseGrid grid( deck );
 
-    BOOST_CHECK_CLOSE( grid.getCellVolume( 0 , 0 , 0 ) , 0.75 * M_PI, 0.0001);
-    BOOST_CHECK_CLOSE( grid.getCellVolume( 0 , 3 , 0 ) , 0.5 * M_PI , 0.0001);
+    BOOST_CHECK_CLOSE( grid.getCellVolume( 0 , 0 , 0 ) , 0.75 * std::numbers::pi, 0.0001);
+    BOOST_CHECK_CLOSE( grid.getCellVolume( 0 , 3 , 0 ) , 0.5 * std::numbers::pi , 0.0001);
     auto pos0 = grid.getCellCenter(0,0,0);
     auto pos2 = grid.getCellCenter(0,2,0);
 
@@ -2066,8 +2067,8 @@ BOOST_AUTO_TEST_CASE(RadialDetailsDZ) {
     Opm::Deck deck = radial_details_dz();
     Opm::EclipseGrid grid( deck );
 
-    BOOST_CHECK_CLOSE( grid.getCellVolume( 0 , 0 , 0 ) , 0.75 * M_PI, 0.0001);
-    BOOST_CHECK_CLOSE( grid.getCellVolume( 0 , 3 , 0 ) , 0.5 * M_PI , 0.0001);
+    BOOST_CHECK_CLOSE( grid.getCellVolume( 0 , 0 , 0 ) , 0.75 * std::numbers::pi, 0.0001);
+    BOOST_CHECK_CLOSE( grid.getCellVolume( 0 , 3 , 0 ) , 0.5 * std::numbers::pi , 0.0001);
     auto pos0 = grid.getCellCenter(0,0,0);
     auto pos2 = grid.getCellCenter(0,2,0);
 

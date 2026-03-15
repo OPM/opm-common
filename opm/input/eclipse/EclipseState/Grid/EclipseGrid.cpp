@@ -58,8 +58,6 @@
 #include <opm/input/eclipse/Parser/ParserKeywords/T.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/Z.hpp>
 
-#define _USE_MATH_DEFINES
-
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
@@ -68,6 +66,7 @@
 #include <cstring>
 #include <functional>
 #include <initializer_list>
+#include <numbers>
 #include <numeric>
 #include <optional>
 #include <stdexcept>
@@ -1189,7 +1188,7 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
                     /*
                       The theta value is supposed to go counterclockwise, starting at 'twelve o clock'.
                     */
-                    double t = M_PI * (90 - tj[j]) / 180;
+                    double t = std::numbers::pi * (90 - tj[j]) / 180;
                     double c = cos( t );
                     double s = sin( t );
                     for (std::size_t i = 0; i <= this->getNX(); i++) {

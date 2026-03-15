@@ -27,10 +27,11 @@
 #ifndef OPM_POLYNOMIAL_UTILS_HH
 #define OPM_POLYNOMIAL_UTILS_HH
 
-#include <cmath>
-#include <algorithm>
-
 #include <opm/material/common/MathToolbox.hpp>
+
+#include <algorithm>
+#include <cmath>
+#include <numbers>
 
 namespace Opm {
 /*!
@@ -260,7 +261,7 @@ unsigned invertCubicPolynomial(SolContainer* sol,
             // calculate the three real roots of the polynomial:
             for (int i = 0; i < 3; ++i) {
                 sol[i] = cos(phi)*(uAbs - p/(3*uAbs)) - b/3;
-                phi += 2*M_PI/3;
+                phi += 2*std::numbers::pi/3;
             }
 
             // post process the obtained solution to increase numerical
@@ -355,8 +356,8 @@ unsigned cubicRoots(SolContainer* sol,
 
         // Calculate the three roots
         sol[0] = 2.0 * sqrt(-p / 3.0) * cos( theta ) - b / (3.0 * a);
-        sol[1] = 2.0 * sqrt(-p / 3.0) * cos( theta - ((2.0 * M_PI) / 3.0) ) - b / (3.0 * a);
-        sol[2] = 2.0 * sqrt(-p / 3.0) * cos( theta - ((4.0 * M_PI) / 3.0) ) - b / (3.0 * a);
+        sol[1] = 2.0 * sqrt(-p / 3.0) * cos( theta - ((2.0 * std::numbers::pi) / 3.0) ) - b / (3.0 * a);
+        sol[2] = 2.0 * sqrt(-p / 3.0) * cos( theta - ((4.0 * std::numbers::pi) / 3.0) ) - b / (3.0 * a);
 
         // Sort in ascending order
         std::sort(sol, sol + 3);

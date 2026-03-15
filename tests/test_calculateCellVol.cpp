@@ -29,6 +29,7 @@
 
 #include <array>
 #include <cmath>
+#include <numbers>
 
 BOOST_AUTO_TEST_SUITE (CalculateCellVolume)
 
@@ -63,19 +64,19 @@ BOOST_AUTO_TEST_CASE (calc_cellvol_cylindric)
 {
   {
     double r_inner = 0.0, r_outer = 1.0, delta_theta = 360.0, delta_z = 1.0;
-    BOOST_REQUIRE_CLOSE(calculateCylindricalCellVol(r_inner, r_outer, delta_theta, delta_z), M_PI, 1e-9);
+    BOOST_REQUIRE_CLOSE(calculateCylindricalCellVol(r_inner, r_outer, delta_theta, delta_z), std::numbers::pi, 1e-9);
   }
   {
     double r_inner = 1.0, r_outer = 2.0, delta_theta = 360.0, delta_z = 1.0;
-    BOOST_REQUIRE_CLOSE(calculateCylindricalCellVol(r_inner, r_outer, delta_theta, delta_z), 3.0 * M_PI, 1e-9);
+    BOOST_REQUIRE_CLOSE(calculateCylindricalCellVol(r_inner, r_outer, delta_theta, delta_z), 3.0 * std::numbers::pi, 1e-9);
   }
   {
     double r_inner = 1.0, r_outer = 2.0, delta_theta = 120.0, delta_z = 1.0;
-    BOOST_REQUIRE_CLOSE(calculateCylindricalCellVol(r_inner, r_outer, delta_theta, delta_z), M_PI, 1e-9);
+    BOOST_REQUIRE_CLOSE(calculateCylindricalCellVol(r_inner, r_outer, delta_theta, delta_z), std::numbers::pi, 1e-9);
   }
   {
     double r_inner = 1.0, r_outer = 2.0, delta_theta = 120.0, delta_z = 1.5;
-    BOOST_REQUIRE_CLOSE(calculateCylindricalCellVol(r_inner, r_outer, delta_theta, delta_z), 1.5 * M_PI, 1e-9);
+    BOOST_REQUIRE_CLOSE(calculateCylindricalCellVol(r_inner, r_outer, delta_theta, delta_z), 1.5 * std::numbers::pi, 1e-9);
   }
 }
 

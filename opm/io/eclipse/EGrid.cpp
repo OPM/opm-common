@@ -28,9 +28,10 @@
 #include <filesystem>
 #include <fstream>
 #include <iterator>
+#include <numbers>
 #include <numeric>
-#include <string>
 #include <stdexcept>
+#include <string>
 
 #include <fmt/format.h>
 
@@ -412,10 +413,10 @@ void EGrid::getCellCorners(const std::array<int, 3>& ijk,
         double zb = coord_array[pind[n] + 5];
 
         if (m_radial) {
-            xt = coord_array[pind[n]] * cos(coord_array[pind[n] + 1] / 180.0 * M_PI);
-            yt = coord_array[pind[n]] * sin(coord_array[pind[n] + 1] / 180.0 * M_PI);
-            xb = coord_array[pind[n] + 3] * cos(coord_array[pind[n] + 4] / 180.0 * M_PI);
-            yb = coord_array[pind[n] + 3] * sin(coord_array[pind[n] + 4] / 180.0 * M_PI);
+            xt = coord_array[pind[n]] * cos(coord_array[pind[n] + 1] / 180.0 * std::numbers::pi);
+            yt = coord_array[pind[n]] * sin(coord_array[pind[n] + 1] / 180.0 * std::numbers::pi);
+            xb = coord_array[pind[n] + 3] * cos(coord_array[pind[n] + 4] / 180.0 * std::numbers::pi);
+            yb = coord_array[pind[n] + 3] * sin(coord_array[pind[n] + 4] / 180.0 * std::numbers::pi);
         } else {
             xt = coord_array[pind[n]];
             yt = coord_array[pind[n] + 1];

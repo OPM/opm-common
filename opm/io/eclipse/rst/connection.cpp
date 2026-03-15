@@ -25,6 +25,7 @@
 
 #include <array>
 #include <cmath>
+#include <numbers>
 #include <cstddef>
 #include <stdexcept>
 #include <string>
@@ -103,7 +104,7 @@ double pressEquivRadius(const Opm::UnitSystem& usys,
 
 double Opm::RestartIO::RstConnection::inverse_peaceman(double cf, double kh, double rw, double skin)
 {
-    auto alpha = 3.14159265 * 2 * kh / cf - skin;
+    const auto alpha = 2*std::numbers::pi * kh / cf - skin;
     return rw * std::exp(alpha);
 }
 

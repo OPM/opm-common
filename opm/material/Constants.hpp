@@ -27,10 +27,12 @@
 #ifndef OPM_CONSTANTS_HPP
 #define OPM_CONSTANTS_HPP
 
-#include <cmath>
 #if HAVE_QUAD
 #include <opm/material/common/quad.hpp>
 #endif
+
+#include <cmath>
+#include <numbers>
 
 namespace Opm
 {
@@ -72,7 +74,7 @@ public:
     /*!
      * \brief Reduced Planck constant [J s]
      */
-    static constexpr Scalar hRed = h / (2 * M_PI);
+    static constexpr Scalar hRed = h / (2 * std::numbers::pi_v<Scalar>);
 };
 
 } // namespace Opm

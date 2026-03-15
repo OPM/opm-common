@@ -42,6 +42,7 @@
 #include <cstddef>
 #include <iterator>
 #include <map>
+#include <numbers>
 #include <numeric>
 #include <set>
 #include <stdexcept>
@@ -50,11 +51,6 @@
 #include <unordered_set>
 #include <utility>
 #include <vector>
-
-#ifdef _WIN32
-#define _USE_MATH_DEFINES
-#include <math.h>
-#endif
 
 #include <fmt/format.h>
 
@@ -223,7 +219,7 @@ namespace Opm {
         const int branchID = 1;  // Only main branch for now.
 
         const double roughness = 0.0;  // Defaulted: ROUGHNESS in WELSEGS.
-        const double area = M_PI * diameter * diameter / 4.0;
+        const double area = std::numbers::pi * diameter * diameter / 4.0;
         const double volume = Segment::invalidValue();
 
         // Add segments:
@@ -332,7 +328,7 @@ namespace Opm {
             }
 
             const double diameter = record.getItem("DIAMETER").getSIDouble(0);
-            double area = M_PI * diameter * diameter / 4.0;
+            double area = std::numbers::pi * diameter * diameter / 4.0;
             {
                 const auto& itemArea = record.getItem("AREA");
                 if (itemArea.hasValue(0)) {
