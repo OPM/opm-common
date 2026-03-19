@@ -460,6 +460,16 @@ friend class BlackOilFluidState;
     { *rsSolw_ = newRsSolw; }
 
     /*!
+     * \brief Set the reservoir volume per unit surface volume [-].
+     *
+     * This quantity is used in wellbore accumulation term calculation.
+     * It is only meaningful in a wellbore context and is not set for
+     * regular reservoir fluid states for now
+     */
+    OPM_HOST_DEVICE void setVolumeRatio(const ValueType& value)
+    { volume_ratio_ = value; }
+
+    /*!
      * \brief Return the pressure of a fluid phase [Pa]
      */
     OPM_HOST_DEVICE const ValueType& pressure(unsigned phaseIdx) const
@@ -634,6 +644,27 @@ friend class BlackOilFluidState;
         } else {
             return ValueType{0.0};
         }
+    }
+
+    /*!
+     * \brief Return whether the volume ratio has been set.
+     *
+     * This is only true for wellbore fluid states; regular reservoir
+     * fluid states do not carry this quantity for now.
+     */
+    OPM_HOST_DEVICE bool hasVolumeRatio() const
+    { return volume_ratio_.has_value(); }
+
+    /*!
+     * \brief Return the reservoir volume per unit surface volume [-].
+     *
+     * This quantity is used in wellbore accumulation term calculation.
+     * Only valid if hasVolumeRatio() returns true.
+     */
+    OPM_HOST_DEVICE ValueType volumeRatio() const
+    {
+        assert(volume_ratio_.has_value());
+        return *volume_ratio_;
     }
 
     /*!
@@ -867,6 +898,9 @@ private:
     ConditionalStorage<storeTemperature, ValueType> temperature_{};
     ConditionalStorage<storeEnthalpy, std::array<ValueType, numStoragePhases> > enthalpy_{};
     ValueType totalSaturation_{};
+    // reservoir volume per unit surface volume
+    // currently, it is used in wellbore accumulation term calculation
+    std::optional<ValueType> volume_ratio_{};
     std::array<ValueType, numStoragePhases> pressure_{};
     std::array<ValueType, numStoragePhases> saturation_{};
     std::array<ValueType, numStoragePhases> invB_{};
@@ -881,6 +915,8 @@ private:
     ConditionalStorage<enableSolvent, ValueType> solventDensity_{};
     ConditionalStorage<enableSolvent, ValueType> solventInvB_{};
     ConditionalStorage<enableSolvent, ValueType> rsSolw_{};
+
+
 
     unsigned short pvtRegionIdx_{};
 
