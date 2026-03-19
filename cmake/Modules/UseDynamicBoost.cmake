@@ -1,12 +1,8 @@
-if(TARGET Boost::unit_test_framework AND DEFINED HAVE_DYNAMIC_BOOST_TEST)
+if(TARGET Boost::unit_test_framework)
   return()
 endif()
 
-if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.30.0)
-	set(_Boost_CONFIG_MODE CONFIG)
-endif()
-
-find_package (Boost 1.44.0 COMPONENTS unit_test_framework QUIET ${_Boost_CONFIG_MODE})
+find_package (Boost COMPONENTS unit_test_framework QUIET)
 
 if(TARGET Boost::unit_test_framework)
   # setup to do a test compile
@@ -36,13 +32,5 @@ else()
 endif()
 
 if(HAVE_DYNAMIC_BOOST_TEST)
-  set_target_properties(Boost::unit_test_framework PROPERTIES INTERFACE_COMPILE_DEFINITIONS BOOST_TEST_DYN_LINK=1)
+  target_compile_definitions(Boost::unit_test_framework INTERFACE BOOST_TEST_DYN_LINK=1)
 endif()
-
-# save this for later
-set(HAVE_DYNAMIC_BOOST_TEST "${HAVE_DYNAMIC_BOOST_TEST}"
-  CACHE BOOL "Whether Boost::Test is dynamically linked or not"
-)
-
-# include in config.h
-list (APPEND TESTING_CONFIG_VARS "HAVE_DYNAMIC_BOOST_TEST")
