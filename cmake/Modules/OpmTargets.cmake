@@ -71,6 +71,7 @@ function(opm_add_library)
   add_library(${PARAM_TARGET} ${PARAM_TYPE})
   if(PARAM_PIC)
     set_target_properties(${PARAM_TARGET}
+      PROPERTIES
       POSITION_INDEPENDENT_CODE
         ON
     )
