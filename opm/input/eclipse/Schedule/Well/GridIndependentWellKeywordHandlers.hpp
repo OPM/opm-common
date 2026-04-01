@@ -24,11 +24,21 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <array>
+#include <optional>
+
+#include <external/resinsight/ReservoirDataModel/RigWellPath.h>
 
 namespace Opm {
 
 //! \brief Obtain a list of grid independent well keyword handlers.
 std::vector<std::pair<std::string,KeywordHandlers::handler_function>> getGridIndependentWellKeywordHandlers();
+
+void initWellPathGeometry(
+    external::cvf::ref<external::RigWellPath>& wellPathGeometry,         
+    const std::array<std::vector<double>, 3>& coords, const std::vector<double>& mds,
+    std::optional<double> top_opt = std::nullopt, std::optional<double> bot_opt = std::nullopt
+);
 
 }
 

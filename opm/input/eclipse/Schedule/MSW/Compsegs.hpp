@@ -85,26 +85,32 @@ namespace Opm::Compsegs {
                     const ParseContext&    parseContext,
                     ErrorGuard&            errors);
 
-    /// Single well segment of a grid-independent well (WELTRAJ/COMPTRAJ
+    /// Single well connection to a segment of a grid-independent well (WELTRAJ/COMPTRAJ
     /// keywords).
-    struct TrajectorySegment
+    struct TrajectoryConnection
     {
-        /// Measured depth along well bore at the start of the segment.
+        /// Measured depth along well bore at the start of the connection to the segment.
         double startMD{};
 
-        /// Measured depth along well bore at the end of the segment.
+        /// Measured depth along well bore at the end of the connection to the segment.
         double endMD{};
+        
+        /// True vertical depth along well bore at the measured center depth of the connection to the segment.
+        double centerTVD{};
 
-        /// Cartesian IJK tuple of the cell intersected by this segment.
+        /// Cartesian IJK tuple of the cell intersected by this connection.
         std::array<int, 3> ijk{};
     };
 
-    /// Allocate well/reservoir connections to well segements.
+    /// Allocate well/reservoir connections to well segments.
     ///
     /// \param[in] well_name Named well for which to allocate connections to
     /// well segments.
     ///
-    /// \param[in] trajectory_segments Cells intersected by the well bore
+    /// \param[in] branch Branch number for which to allocate connections to
+    /// well segments.
+    ///
+    /// \param[in] trajectory_connections Cells intersected by the well bore
     /// trajectory.
     ///
     /// \param[in] segments All well segments defined for well \p well_name,
@@ -127,14 +133,15 @@ namespace Opm::Compsegs {
     /// \return Input connections \p input_connections amended to include
     /// well segment allocation.
     WellConnections
-    getConnectionsAndSegmentsFromTrajectory(std::string_view                      well_name,
-                                            const std::vector<TrajectorySegment>& trajectory_segments,
-                                            const WellSegments&                   segments,
-                                            const WellConnections&                input_connections,
-                                            const ScheduleGrid&                   grid,
-                                            const KeywordLocation&                location,
-                                            const ParseContext&                   parseContext,
-                                            ErrorGuard&                           errors);
+    getConnectionsToSegmentsFromTrajectory(std::string_view                         well_name,
+                                           const int                                branch,
+                                           const std::vector<TrajectoryConnection>& trajectory_connections,
+                                           const WellSegments&                      segments,
+                                           const WellConnections&                   input_connections,
+                                           const ScheduleGrid&                      grid,
+                                           const KeywordLocation&                   location,
+                                           const ParseContext&                      parseContext,
+                                           ErrorGuard&                              errors);
 
     /// Form connection and segment structures for a single well from
     /// restart file information.

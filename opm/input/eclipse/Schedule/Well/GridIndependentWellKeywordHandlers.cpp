@@ -21,6 +21,7 @@
 
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/common/utility/OpmInputError.hpp>
+#include <opm/common/utility/numeric/linearInterpolation.hpp>
 
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 
@@ -57,70 +58,39 @@ namespace Opm
 namespace
 {
 
-    std::pair<std::vector<Compsegs::TrajectorySegment>, std::vector<std::pair<double, double>>>
-    get_segment_geometries(HandlerContext&                                            handlerContext,
-                           const std::vector<external::WellPathCellIntersectionInfo>& intersections,
-                           const external::cvf::ref<external::RigWellPath>&           wellPathGeometry)
-    {
-        std::vector<Compsegs::TrajectorySegment> trajectory_segments{};
-        std::vector<std::pair<double, double>> cell_md_and_tvd{};
-
-        trajectory_segments.reserve(intersections.size());
-        cell_md_and_tvd.reserve(intersections.size());
-
-        const auto& ecl_grid = handlerContext.grid.get_grid();
-
-        for (const auto& intersection : intersections) {
-            trajectory_segments.push_back({
-                    intersection.startMD,
-                    intersection.endMD,
-                    ecl_grid->getIJK(intersection.globCellIndex)
-                });
-
-            const double cell_md = 0.5 * (intersection.startMD + intersection.endMD);
-            const double cell_tvd = wellPathGeometry->interpolatedPointAlongWellPath(cell_md)[2];
-
-            cell_md_and_tvd.emplace_back(cell_md, cell_tvd);
-        }
-
-        return { std::move(trajectory_segments), std::move(cell_md_and_tvd) };
-    }
-
-
     void
     process_segments(HandlerContext&                                            handlerContext,
                      Well&                                                      well,
+                     const int                                                  branch,
                      const std::vector<external::WellPathCellIntersectionInfo>& intersections,
-                     const external::cvf::ref<external::RigWellPath>&           wellPathGeometry,
-                     const double                                               diameter)
+                     const external::cvf::ref<external::RigWellPath>&           wellPathGeometry)
     {
-        if (! well.isMultiSegment()) {
+        if (!well.isMultiSegment()) {
             return;
         }
 
-        // For now, no segments may be defined via WELSEGS, except for the top:
-        if (well.getSegments().size() > 1) {
-            const auto msg = fmt::format("   {} already defines segments "
-                                         "with the WELSEGS keyword", well.name());
-
-            throw OpmInputError(msg, handlerContext.keyword.location());
+        std::vector<Compsegs::TrajectoryConnection> trajectory_connections {};
+        trajectory_connections.reserve(intersections.size());
+        const auto& ecl_grid = handlerContext.grid.get_grid();
+        for (const auto& intersection : intersections) {
+            const double center_tvd = wellPathGeometry->interpolatedPointAlongWellPath(
+                0.5 * (intersection.startMD + intersection.endMD))[2];
+            trajectory_connections.push_back({intersection.startMD,
+                                              intersection.endMD,
+                                              center_tvd,
+                                              ecl_grid->getIJK(intersection.globCellIndex)});
         }
 
-        const auto& [trajectory_segments, cell_md_and_tvd] =
-            get_segment_geometries(handlerContext, intersections, wellPathGeometry);
-
-        well.addWellSegmentsFromLengthsAndDepths
-            (cell_md_and_tvd, diameter, handlerContext.keyword.location());
-
-        auto new_connections = Compsegs::getConnectionsAndSegmentsFromTrajectory
-            (well.name(),
-             trajectory_segments,
-             well.getSegments(),
-             well.getConnections(),
-             handlerContext.grid,
-             handlerContext.keyword.location(),
-             handlerContext.parseContext,
-             handlerContext.errors);
+        auto new_connections = Compsegs::getConnectionsToSegmentsFromTrajectory
+            (well.name(), 
+            branch,
+            trajectory_connections,
+            well.getSegments(),
+            well.getConnections(),
+            handlerContext.grid,
+            handlerContext.keyword.location(),
+            handlerContext.parseContext,
+            handlerContext.errors);
 
         well.updateConnections
             (std::make_shared<WellConnections>(std::move(new_connections)), false);
@@ -174,9 +144,9 @@ Well {} has no connections to the grid. The well will remain SHUT)", name);
                 }
 
                 process_segments(handlerContext, well,
+                                 record.getItem<Kw::BRANCH_NUMBER>().get<int>(0),
                                  wellTraj.intersections,
-                                 wellTraj.wellPathGeometry,
-                                 record.getItem<Kw::DIAMETER>().getSIDouble(0));
+                                 wellTraj.wellPathGeometry);
 
                 handlerContext.state().wells.update(std::move(well));
 
@@ -203,19 +173,29 @@ Well {} has no connections to the grid. The well will remain SHUT)", name);
             for (const auto& name : wellnames) {
                 auto well = handlerContext.state().wells.get(name);
 
+                if (well.isMultiSegment()) {
+                    const auto msg = fmt::format(
+                        "Well {} is a segmented grid-independent well, but its WELSEGS keyword "
+                        "must be defined after the corresponding WELTRAJ keyword. Please check "
+                        "the order of the keywords in the input file.",
+                        name);
+                    throw OpmInputError(msg, handlerContext.keyword.location());
+                }
+
                 auto connections = std::make_shared<WellConnections>(well.getConnections());
                 connections->loadWELTRAJ(record, name, handlerContext.grid,
                                          handlerContext.keyword.location());
+                for (auto const& [branch, md] : connections->getMD()) {
+                    if (md.size() > 1) {
+                        const bool strictly_increasing = std::adjacent_find
+                            (md.begin(), md.end(), std::greater_equal<>{}) == md.end();
 
-                if (const auto& md = connections->getMD(); md.size() > 1) {
-                    const bool strictly_increasing = std::adjacent_find
-                        (md.begin(), md.end(), std::greater_equal<>{}) == md.end();
+                        if (!strictly_increasing) {
+                            const auto msg = fmt::format("Well {} measured depth column "
+                                                         "is not strictly increasing", name);
 
-                    if (!strictly_increasing) {
-                        const auto msg = fmt::format("Well {} measured depth column "
-                                                     "is not strictly increasing", name);
-
-                        throw OpmInputError(msg, handlerContext.keyword.location());
+                            throw OpmInputError(msg, handlerContext.keyword.location());
+                        }
                     }
                 }
 
@@ -241,6 +221,47 @@ getGridIndependentWellKeywordHandlers()
         {"COMPTRAJ", &handleCOMPTRAJ},
         {"WELTRAJ", &handleWELTRAJ},
     };
+}
+
+void initWellPathGeometry(
+    external::cvf::ref<external::RigWellPath>& wellPathGeometry,         
+    const std::array<std::vector<double>, 3>& coords, const std::vector<double>& mds,
+    std::optional<double> top_opt, std::optional<double> bot_opt
+) {
+    std::vector<external::cvf::Vec3d> points;
+    std::vector<double> measured_depths;
+
+    const double top = top_opt.value_or(mds.front());
+    const double bot = bot_opt.value_or(mds.back());
+
+    // Calulate the x,y,z coordinates of the begin and end of a perforation
+    if (top < mds.front() || bot > mds.back()) {
+        throw std::logic_error(fmt::format("Perforation interval [{}, {}] is outside of the well path range [{}, {}]",
+            top, bot, mds.front(), mds.back()));
+    }
+        
+    external::cvf::Vec3d p_top, p_bot;
+    for (std::size_t i = 0; i < 3 ; ++i) {
+        p_top[i] = linearInterpolation(mds, coords[i], top);
+        p_bot[i] = linearInterpolation(mds, coords[i], bot);
+    }
+    points.push_back(p_top);
+    measured_depths.push_back(top);
+
+    points.reserve(coords[0].size());
+    measured_depths.reserve(coords[0].size());
+    for (std::size_t i = 0; i < coords[0].size(); ++i) {
+        if (mds[i] > top and mds[i] < bot) {
+            points.push_back(external::cvf::Vec3d(coords[0][i], coords[1][i], coords[2][i]));
+            measured_depths.push_back(mds[i]);
+        }
+    }
+
+    points.push_back(p_bot);
+    measured_depths.push_back(bot);
+
+    wellPathGeometry->setWellPathPoints(points);
+    wellPathGeometry->setMeasuredDepths(measured_depths);
 }
 
 } // namespace Opm
