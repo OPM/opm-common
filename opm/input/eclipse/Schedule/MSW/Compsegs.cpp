@@ -410,7 +410,6 @@ Well: {}, connection: ({},{},{}))", well_name, I+1, J+1 , K+1);
         for (const auto& trajectory_point : trajectory_segments) {
             // Defaulted values:
             const auto direction = Opm::Connection::Direction::X;
-            const auto center_depth = 0.0;
             const auto segment_number = 0;
             const auto branch = 1;
 
@@ -422,7 +421,7 @@ Well: {}, connection: ({},{},{}))", well_name, I+1, J+1 , K+1);
                                   branch,
                                   trajectory_point.startMD, trajectory_point.endMD,
                                   direction,
-                                  center_depth,
+                                  trajectory_point.centerTVD,
                                   segment_number, seqIndex);
         }
 

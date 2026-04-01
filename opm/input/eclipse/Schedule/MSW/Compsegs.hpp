@@ -95,6 +95,9 @@ namespace Opm::Compsegs {
         /// Measured depth along well bore at the end of the segment.
         double endMD{};
 
+        /// True depth at the measured center depth of the segment.
+        double centerTVD{};
+
         /// Cartesian IJK tuple of the cell intersected by this segment.
         std::array<int, 3> ijk{};
     };

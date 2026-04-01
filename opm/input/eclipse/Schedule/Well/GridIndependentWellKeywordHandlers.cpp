@@ -71,16 +71,17 @@ namespace
         const auto& ecl_grid = handlerContext.grid.get_grid();
 
         for (const auto& intersection : intersections) {
-            trajectory_segments.push_back({
-                    intersection.startMD,
-                    intersection.endMD,
-                    ecl_grid->getIJK(intersection.globCellIndex)
-                });
-
             const double cell_md = 0.5 * (intersection.startMD + intersection.endMD);
             const double cell_tvd = wellPathGeometry->interpolatedPointAlongWellPath(cell_md)[2];
 
             cell_md_and_tvd.emplace_back(cell_md, cell_tvd);
+            
+            trajectory_segments.push_back({
+                    intersection.startMD,
+                    intersection.endMD,
+                    cell_tvd,
+                    ecl_grid->getIJK(intersection.globCellIndex)
+                });
         }
 
         return { std::move(trajectory_segments), std::move(cell_md_and_tvd) };
