@@ -136,7 +136,7 @@ WSEGAICD
     const Opm::DeckKeyword welsegs = deck["WELSEGS"].back();
     Opm::WellSegments segment_set{};
     const Opm::UnitSystem unit_system {}; // Metric by default
-    segment_set.loadWELSEGS(welsegs, unit_system);
+    segment_set.loadWELSEGS(welsegs, {}, {}, unit_system);
 
     BOOST_CHECK_EQUAL(7U, segment_set.size());
 
@@ -314,7 +314,7 @@ WSEGSICD
     const Opm::DeckKeyword welsegs = deck["WELSEGS"].back();
     Opm::WellSegments segment_set{};
     const Opm::UnitSystem unit_system {}; // Metric by default
-    segment_set.loadWELSEGS(welsegs, unit_system);
+    segment_set.loadWELSEGS(welsegs, {}, {}, unit_system);
 
     BOOST_CHECK_EQUAL(7U, segment_set.size());
 
@@ -902,7 +902,7 @@ BOOST_AUTO_TEST_CASE(WrongDistanceCOMPSEGS)
     const Opm::DeckKeyword welsegs = deck["WELSEGS"].back();
     Opm::WellSegments segment_set{};
     const Opm::UnitSystem unit_system {}; // Metric by default
-    segment_set.loadWELSEGS(welsegs, unit_system);
+    segment_set.loadWELSEGS(welsegs, {}, {}, unit_system);
 
     BOOST_CHECK_EQUAL(6U, segment_set.size());
 
@@ -986,7 +986,7 @@ BOOST_AUTO_TEST_CASE(NegativeDepthCOMPSEGS)
     const Opm::DeckKeyword welsegs = deck["WELSEGS"].back();
     Opm::WellSegments segment_set{};
     const Opm::UnitSystem unit_system {}; // Metric by default
-    segment_set.loadWELSEGS(welsegs, unit_system);
+    segment_set.loadWELSEGS(welsegs, {}, {}, unit_system);
 
     BOOST_CHECK_EQUAL(6U, segment_set.size());
 
@@ -1075,7 +1075,7 @@ BOOST_AUTO_TEST_CASE(testwsegvalv)
     const Opm::DeckKeyword welsegs = deck["WELSEGS"].back();
     Opm::WellSegments segment_set{};
     const Opm::UnitSystem unit_system {}; // Metric by default
-    segment_set.loadWELSEGS(welsegs, unit_system);
+    segment_set.loadWELSEGS(welsegs, {}, {}, unit_system);
 
     BOOST_CHECK_EQUAL(8U, segment_set.size());
 
@@ -1605,29 +1605,37 @@ BOOST_AUTO_TEST_CASE(loadCOMPTRAJTESTSPE1_MSW) {
         WELLNAME: 'PROD'
         # X   Y    TVDMSL   MDMSL
         3400.00     4500.00     8325.00     8325.00
-        3858.19     4688.67     8374.60     8825.00
-        5326.76     6005.95     8403.97     10825.00
-        6500.00     7300.00     8410.00     12571.74
+        3858.19     4688.67     8374.60     8822.99
+        5326.76     6005.95     8403.97     10796.0
+        6500.00     7300.00     8410.00     12542.7
         -999
-     and adjusting the completion data in agreement with the COMPTRAJ data in the input file
+    and adjusting the completion data in agreement with the COMPTRAJ data in the input file
+
+    Both connection depths and segment depths are calculated by interpolating into the trajectory. Because
+    the trajectory is piece-wise linear, in this case the results should be the same as the reference
+    values obtained by using ResInsight.     
    */
-  const std::array<double, 9> connection_factor{
+  const std::array<double, 9> connection_factors{
     110.5461, 17.75799, 36.04859, 60.75019, 235.1933, 94.73938, 222.7472, 74.7769, 89.2022
+  };
+  const std::array<double, 9> connection_depths{
+    8335.0, 8361.1, 8376.2, 8379.4, 8389.4, 8400.6, 8405.6, 8408.0, 8409.3
   };
   const std::array<int, 9> global_index{11, 111, 211, 212, 222, 223, 233, 234, 244};
   BOOST_CHECK_EQUAL(connections.size(), 9);
   for (std::size_t i = 0 ; i < connections.size();  ++i ) {
-       BOOST_CHECK_CLOSE(connections[i].CF(), units.to_si(Opm::UnitSystem::measure::transmissibility, connection_factor[i]), 2e-2);
+       BOOST_CHECK_CLOSE(connections[i].CF(), units.to_si(Opm::UnitSystem::measure::transmissibility, connection_factors[i]), 2e-2);
        BOOST_CHECK_EQUAL(connections[i].global_index(), global_index[i]);
+       BOOST_CHECK_CLOSE(connections[i].depth(), units.to_si(Opm::UnitSystem::measure::length, connection_depths[i]), 2e-2);
   }
 
-  const std::array<double, 10> lengths{
-    8325.0, 8425.8, 8689.4, 8935.1, 9157.9, 9838.8, 10597.0, 11321.0, 11997.0, 12369.0
-  };
+  const std::array<double, 10> depths{
+    8325.0, 8335.0, 8361.1, 8376.2, 8379.4, 8389.4, 8400.6, 8405.6, 8408.0, 8409.3
+};
   BOOST_CHECK_EQUAL(segments.size(), 10);
   for (std::size_t i = 0; i < segments.size(); ++i) {
     BOOST_CHECK_EQUAL(segments[i].segmentNumber(), i + 1);
     BOOST_CHECK_EQUAL(segments[i].outletSegment(), i);
-    BOOST_CHECK_CLOSE(segments[i].totalLength(), units.to_si(Opm::UnitSystem::measure::length, lengths[i]), 2e-2);
+    BOOST_CHECK_CLOSE(segments[i].depth(), units.to_si(Opm::UnitSystem::measure::length, depths[i]), 2e-2);
   }
 }

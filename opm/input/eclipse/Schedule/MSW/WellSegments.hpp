@@ -29,6 +29,8 @@
 #include <string_view>
 #include <utility>
 #include <vector>
+#include <array>
+#include <map>
 
 namespace Opm {
     class AutoICD;
@@ -77,10 +79,10 @@ namespace Opm {
         WellSegments() = default;
         WellSegments(CompPressureDrop compDrop,
                      const std::vector<Segment>& segments);
-        void loadWELSEGS( const DeckKeyword& welsegsKeyword, const UnitSystem& unit_system);
-        void addWellSegmentsFromLengthsAndDepths(const std::string &wname,
-                                                 const std::vector<std::pair<double, double>>& lengths_and_depths,
-                                                 double diameter, const UnitSystem& unit_system);
+        void loadWELSEGS(const DeckKeyword& welsegsKeyword,
+                         const std::map<int, std::array<std::vector<double>, 3>>& coords,
+                         const std::map<int, std::vector<double>>& mds,
+                         const UnitSystem& unit_system);
 
         static WellSegments serializationTestObject();
 
@@ -146,10 +148,19 @@ namespace Opm {
         }
 
     private:
-        void processABS();
-        void processINC(double depth_top, double length_top);
-        void process(const std::string& well_name, const UnitSystem& unit_system,
-                     LengthDepth length_depth, double depth_top, double length_top);
+        void processABS(const std::map<int, std::array<std::vector<double>, 3>>& coords,
+                        const std::map<int, std::vector<double>>& mds);
+        void processINC(const std::map<int, std::array<std::vector<double>, 3>>& coords,
+                        const std::map<int, std::vector<double>>& mds,
+                        double depth_top,
+                        double length_top);
+        void process(const std::string& well_name,
+                     const std::map<int, std::array<std::vector<double>, 3>>& coords,
+                     const std::map<int, std::vector<double>>& mds,
+                     const UnitSystem& unit_system,
+                     LengthDepth length_depth,
+                     double depth_top,
+                     double length_top);
         void addSegment(const Segment& new_segment);
         void addSegment(const int segment_number,
                         const int branch,

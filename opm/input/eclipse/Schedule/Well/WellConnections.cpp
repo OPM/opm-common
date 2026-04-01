@@ -25,7 +25,6 @@
 #include <opm/common/OpmLog/OpmLog.hpp>
 
 #include <opm/common/utility/ActiveGridCells.hpp>
-#include <opm/common/utility/numeric/linearInterpolation.hpp>
 
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
@@ -45,11 +44,12 @@
 #include <opm/input/eclipse/Parser/ParserKeywords/C.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/W.hpp>
 
+#include <opm/input/eclipse/Schedule/Well/GridIndependentWellKeywordHandlers.hpp>
+
 #include <external/resinsight/LibCore/cvfVector3.h>
 #include <external/resinsight/ReservoirDataModel/RigHexIntersectionTools.h>
 #include <external/resinsight/ReservoirDataModel/RigWellLogExtractionTools.h>
 #include <external/resinsight/ReservoirDataModel/RigWellLogExtractor.h>
-#include <external/resinsight/ReservoirDataModel/RigWellPath.h>
 
 #include "../WellTraj/RigEclipseWellLogExtractor.hpp"
 #include "WellTrajInfo.hpp"
@@ -293,6 +293,7 @@ Connection ({},{},{}) (direction '{}') for well {} ignored because
 
         return connection_factor;
     }
+
 
 } // anonymous namespace
 
@@ -685,17 +686,20 @@ The cell ({},{},{}) in well {} is not active and the connection will be ignored)
                                   WellTrajInfo&          wellTraj)
     {
         if (this->coord[0].size() == 0) return;  // No path.
+        
+        using Kw = ParserKeywords::COMPTRAJ;
 
-        const auto& perf_top = record.getItem("PERF_TOP");
-        const auto& perf_bot = record.getItem("PERF_BOT");
+        const auto& branch = record.getItem<Kw::BRANCH_NUMBER>().get<int>(0);
+        const auto& perf_top = record.getItem<Kw::PERF_TOP>();
+        const auto& perf_bot = record.getItem<Kw::PERF_BOT>();
 
-        const auto& CFItem = record.getItem("CONNECTION_TRANSMISSIBILITY_FACTOR");
-        const auto& diameterItem = record.getItem("DIAMETER");
-        const auto& KhItem = record.getItem("Kh");
-        const auto skin_factor = record.getItem("SKIN").getSIDouble(0);
-        const auto d_factor = record.getItem("D_FACTOR").getSIDouble(0);
-        const auto& satTableIdItem = record.getItem("SAT_TABLE");
-        const auto state = Connection::StateFromString(record.getItem("STATE").getTrimmedString(0));
+        const auto& CFItem = record.getItem<Kw::CONNECTION_TRANSMISSIBILITY_FACTOR>();
+        const auto& diameterItem = record.getItem<Kw::DIAMETER>();
+        const auto& KhItem = record.getItem<Kw::Kh>();
+        const auto skin_factor = record.getItem<Kw::SKIN>().getSIDouble(0);
+        const auto d_factor = record.getItem<Kw::D_FACTOR>().getSIDouble(0);
+        const auto& satTableIdItem = record.getItem<Kw::SAT_TABLE>();
+        const auto state = Connection::StateFromString(record.getItem<Kw::STATE>().getTrimmedString(0));
 
         int satTableId = -1;
         bool defaultSatTable = true;
@@ -718,34 +722,9 @@ The cell ({},{},{}) in well {} is not active and the connection will be ignored)
         // Get the grid
         const auto& ecl_grid = grid.get_grid();
 
-        std::vector<external::cvf::Vec3d> points;
-        std::vector<double> measured_depths;
-
         // Calulate the x,y,z coordinates of the begin and end of a perforation
-        const auto m_top = perf_top.getSIDouble(0);
-        const auto m_bot = perf_bot.getSIDouble(0);
-        external::cvf::Vec3d p_top, p_bot;
-        for (std::size_t i = 0; i < 3 ; ++i) {
-            p_top[i] = linearInterpolation(this->md, this->coord[i], m_top);
-            p_bot[i] = linearInterpolation(this->md, this->coord[i], m_bot);
-        }
-        points.push_back(p_top);
-        measured_depths.push_back(m_top);
-
-        points.reserve(this->coord[0].size());
-        measured_depths.reserve(this->coord[0].size());
-        for (std::size_t i = 0; i < coord[0].size(); ++i) {
-            if (this->md[i] > m_top and this->md[i] < m_bot) {
-                points.push_back(external::cvf::Vec3d(coord[0][i], coord[1][i], coord[2][i]));
-                measured_depths.push_back(this->md[i]);
-            }
-        }
-
-        points.push_back(p_bot);
-        measured_depths.push_back(m_bot);
-
-        wellTraj.wellPathGeometry->setWellPathPoints(points);
-        wellTraj.wellPathGeometry->setMeasuredDepths(measured_depths);
+        initWellPathGeometry(wellTraj.wellPathGeometry, this->coord.at(branch), this->md.at(branch), 
+                             perf_top.getSIDouble(0), perf_bot.getSIDouble(0));
 
         external::cvf::ref<external::RigEclipseWellLogExtractor> e {
             new external::RigEclipseWellLogExtractor {
@@ -769,8 +748,8 @@ The cell ({},{},{}) in well {} is not active and the connection will be ignored)
             // trajectory data.
             //
             // If these defaults are used the headI/J are set to the first
-            // intersection.
-            if (is == 0) {
+            // intersection of the main branch.
+            if (branch == 1 && is == 0) {
                 if (this->headI < 0) { this->headI = ijk[0]; }
                 if (this->headJ < 0) { this->headJ = ijk[1]; }
             }
@@ -902,6 +881,7 @@ CF and Kh items for well {} must both be specified or both defaulted/negative)",
                                       [[maybe_unused]] const ScheduleGrid&    grid,
                                       [[maybe_unused]] const KeywordLocation& location)
     {
+        int branch = record.getItem("BRANCH_NUMBER").get<int>(0);
         double x = record.getItem("X").getSIDouble(0);
         double y = record.getItem("Y").getSIDouble(0);
 
@@ -911,11 +891,11 @@ CF and Kh items for well {} must both be specified or both defaulted/negative)",
             mapaxes->inv_transform(x, y);
         }
 
-        this->coord[0].push_back(x);
-        this->coord[1].push_back(y);
-        this->coord[2].push_back(record.getItem("TVD").getSIDouble(0));
+        this->coord[branch][0].push_back(x);
+        this->coord[branch][1].push_back(y);
+        this->coord[branch][2].push_back(record.getItem("TVD").getSIDouble(0));
 
-        this->md.push_back(record.getItem("MD").getSIDouble(0));
+        this->md[branch].push_back(record.getItem("MD").getSIDouble(0));
     }
 
     void WellConnections::applyDFactorCorrelation(const ScheduleGrid& grid,
@@ -1165,9 +1145,14 @@ CF and Kh items for well {} must both be specified or both defaulted/negative)",
         return this->headJ;
     }
 
-    const std::vector<double>& WellConnections::getMD() const
+    const std::map<int, std::vector<double>>& WellConnections::getMD() const
     {
         return this->md;
+    }
+
+    const std::map<int, std::array<std::vector<double>, 3>>& WellConnections::getCoord() const
+    {
+        return this->coord;
     }
 
     std::optional<int>
