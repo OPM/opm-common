@@ -21,6 +21,7 @@
 #include <opm/io/eclipse/EclIOdata.hpp>
 #include <opm/io/eclipse/PaddedOutputString.hpp>
 
+#include <cstdint>
 #include <fstream>
 #include <ios>
 #include <stdexcept>
@@ -106,7 +107,7 @@ public:
     friend class OutputStream::SummarySpecification;
 
 private:
-    void writeBinaryHeader(const std::string& arrName, int64_t size, eclArrType arrType, int element_size);
+    void writeBinaryHeader(const std::string& arrName, std::int64_t size, eclArrType arrType, int element_size);
 
     template <typename T>
     void writeBinaryArray(const std::vector<T>& data);
@@ -131,7 +132,6 @@ private:
     bool isFormatted, ix_standard;
     std::ofstream ofileH;
 };
-
 
 template<>
 void EclOutput::write<std::string>(const std::string& name,

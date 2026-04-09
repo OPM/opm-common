@@ -33,6 +33,7 @@
 #include <opm/material/binarycoefficients/Brine_H2.hpp>
 #include <opm/material/common/UniformTabulated2DFunction.hpp>
 
+#include <cstddef>
 #include <vector>
 
 namespace Opm {
@@ -66,7 +67,7 @@ public:
     */
     void initFromState(const EclipseState& eclState, const Schedule&);
 
-    void setNumRegions(size_t numRegions);
+    void setNumRegions(std::size_t numRegions);
 
     void setVapPars(const Scalar, const Scalar)
     {

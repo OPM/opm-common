@@ -21,6 +21,7 @@
 #include <opm/common/ErrorMacros.hpp>
 
 #include <algorithm>
+#include <cstddef>
 #include <cstring>
 #include <exception>
 #include <iterator>
@@ -177,7 +178,7 @@ void ERst::initUnified()
 
     std::vector<int> firstIndex;
 
-    for (size_t i = 0;  i < array_name.size(); i++) {
+    for (std::size_t i = 0;  i < array_name.size(); i++) {
         if (array_name[i] == "SEQNUM") {
             auto seqn = get<int>(i);
             seqnum.push_back(seqn[0]);
@@ -191,7 +192,7 @@ void ERst::initUnified()
         }
     }
 
-    for (size_t i = 0; i < seqnum.size(); i++) {
+    for (std::size_t i = 0; i < seqnum.size(); i++) {
         std::pair<int,int> range;
         range.first = firstIndex[i];
 

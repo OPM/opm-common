@@ -22,9 +22,10 @@
 #define BOOST_TEST_MODULE FLOAT_CMP_TESTS
 #include <boost/test/unit_test.hpp>
 
-#include <stdexcept>
-
 #include <opm/common/utility/numeric/cmp.hpp>
+
+#include <cstddef>
+#include <stdexcept>
 
 using namespace Opm;
 
@@ -42,8 +43,6 @@ BOOST_AUTO_TEST_CASE(TestSCalarcmp) {
     BOOST_CHECK_EQUAL( false , cmp::scalar_equal<double>(1,0));
     BOOST_CHECK_EQUAL( false , cmp::scalar_equal<double>(0,1));
     BOOST_CHECK_EQUAL( false , cmp::scalar_equal<double>(-1,1));
-
-
 
     double v1,v2;
     /* Should be equal: */
@@ -67,7 +66,6 @@ BOOST_AUTO_TEST_CASE(TestSCalarcmp) {
         v1 = 0;
         v2 = 0.5 * abs_epsilon;
         BOOST_CHECK( cmp::scalar_equal<double>( v1 , v2));
-
 
         v1 = 1e7;
         v2 = 1e7 + 2*abs_epsilon;
@@ -110,7 +108,7 @@ BOOST_AUTO_TEST_CASE(TestSCalarcmp) {
 BOOST_AUTO_TEST_CASE(TestFloatcmp) {
     std::vector<float> v1;
     std::vector<float> v2;
-    for (size_t i =0; i < 10; i++) {
+    for (std::size_t i =0; i < 10; i++) {
         v1.push_back( i * 1.0 );
         v2.push_back( i * 1.0 );
     }

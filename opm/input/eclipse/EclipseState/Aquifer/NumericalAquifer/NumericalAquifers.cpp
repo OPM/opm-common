@@ -38,9 +38,9 @@
 #include <algorithm>
 #include <cstddef>
 #include <limits>
+#include <stdexcept>
 #include <unordered_set>
 #include <utility>
-#include <stdexcept>
 #include <vector>
 
 namespace Opm {
@@ -84,12 +84,12 @@ namespace Opm {
 
 
     void NumericalAquifers::addAquiferCell(const NumericalAquiferCell& aqu_cell) {
-        const size_t id = aqu_cell.aquifer_id;
+        const std::size_t id = aqu_cell.aquifer_id;
         auto& aquifer = this->m_aquifers.at(id);
         aquifer.addAquiferCell(aqu_cell);
     }
 
-    bool NumericalAquifers::hasAquifer(const size_t aquifer_id) const {
+    bool NumericalAquifers::hasAquifer(const std::size_t aquifer_id) const {
         return (this->m_aquifers.find(aquifer_id) != this->m_aquifers.end());
     }
 
@@ -98,7 +98,7 @@ namespace Opm {
         const auto aquifer_connections = NumericalAquiferConnection::generateConnections(deck, grid);
 
         for (auto& pair : this->m_aquifers) {
-            const size_t aqu_id = pair.first;
+            const std::size_t aqu_id = pair.first;
             const auto& aqu_cons = aquifer_connections.find(aqu_id);
             if (aqu_cons == aquifer_connections.end()) {
                 const auto msg = fmt::format("Numerical aquifer {} does not have any connections\n", aqu_id);
@@ -113,10 +113,10 @@ namespace Opm {
             // aquifer can not connect to aquifer cells
             for (const auto& con : cons) {
                 const auto& aqu_con = con.second;
-                const size_t con_global_index = aqu_con.global_index;
+                const std::size_t con_global_index = aqu_con.global_index;
                 const auto cell_iter = all_aquifer_cells.find(con_global_index);
                 if (cell_iter != all_aquifer_cells.end()) {
-                    const size_t cell_aquifer_id = cell_iter->second->aquifer_id;
+                    const std::size_t cell_aquifer_id = cell_iter->second->aquifer_id;
                     auto msg = fmt::format("Problem with keyword AQUCON \n"
                                            "Aquifer connection declared at grid cell ({}, {}, {}), is a aquifer cell "
                                            "of Aquifer {}, and will be removed",
@@ -141,7 +141,7 @@ namespace Opm {
             && (this->m_num_records == other.m_num_records);
     }
 
-    size_t NumericalAquifers::size() const {
+    std::size_t NumericalAquifers::size() const {
         return this->m_aquifers.size();
     }
 
@@ -151,7 +151,7 @@ namespace Opm {
         return result;
     }
 
-    const SingleNumericalAquifer& NumericalAquifers::getAquifer(const size_t aquifer_id) const {
+    const SingleNumericalAquifer& NumericalAquifers::getAquifer(const std::size_t aquifer_id) const {
         const auto iter = this->m_aquifers.find(aquifer_id);
         if ( iter != this->m_aquifers.end() ) {
             return iter->second;
@@ -161,10 +161,10 @@ namespace Opm {
         }
     }
 
-    std::unordered_map<size_t, const NumericalAquiferCell*> NumericalAquifers::allAquiferCells() const {
-        std::unordered_map<size_t, const NumericalAquiferCell*> cells;
+    std::unordered_map<std::size_t, const NumericalAquiferCell*> NumericalAquifers::allAquiferCells() const {
+        std::unordered_map<std::size_t, const NumericalAquiferCell*> cells;
         for (const auto& [id, aquifer] : this->m_aquifers) {
-            for (size_t i = 0; i < aquifer.numCells(); ++i) {
+            for (std::size_t i = 0; i < aquifer.numCells(); ++i) {
                 const NumericalAquiferCell* cell_ptr = aquifer.getCellPrt(i);
                 cells.insert(std::make_pair(cell_ptr->global_index, cell_ptr));
             }
@@ -188,12 +188,12 @@ namespace Opm {
         return cellIds;
     }
 
-    const std::map<size_t, SingleNumericalAquifer>& NumericalAquifers::aquifers() const {
+    const std::map<std::size_t, SingleNumericalAquifer>& NumericalAquifers::aquifers() const {
         return this->m_aquifers;
     }
 
-    std::unordered_map<size_t, AquiferCellProps> NumericalAquifers::aquiferCellProps() const {
-        std::unordered_map<size_t, AquiferCellProps> cell_props;
+    std::unordered_map<std::size_t, AquiferCellProps> NumericalAquifers::aquiferCellProps() const {
+        std::unordered_map<std::size_t, AquiferCellProps> cell_props;
         for ([[maybe_unused]]const auto& [id, aquifer] : this->m_aquifers ) {
             auto aqu_cell_props = aquifer.aquiferCellProps();
             cell_props.insert(aqu_cell_props.begin(), aqu_cell_props.end());
@@ -201,8 +201,8 @@ namespace Opm {
         return cell_props;
     }
 
-    std::unordered_map<size_t, double> NumericalAquifers::aquiferCellVolumes() const {
-        std::unordered_map<size_t, double> cell_volumes;
+    std::unordered_map<std::size_t, double> NumericalAquifers::aquiferCellVolumes() const {
+        std::unordered_map<std::size_t, double> cell_volumes;
         const auto aquifer_cells = this->allAquiferCells();
         for (const auto& [global_index, cell] : aquifer_cells) {
             cell_volumes.insert(std::make_pair(global_index, cell->cellVolume()));

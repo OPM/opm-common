@@ -82,7 +82,7 @@ ParserKeyword createDynamicSized(const std::string& kw) {
     return pkw;
 }
 
-ParserKeyword createFixedSized(const std::string& kw , size_t size) {
+ParserKeyword createFixedSized(const std::string& kw , std::size_t size) {
     ParserKeyword pkw(kw, KeywordSize(size));
     return pkw;
 }
@@ -1330,7 +1330,7 @@ BOOST_AUTO_TEST_CASE(construct_withname_nameSet) {
 
 BOOST_AUTO_TEST_CASE(NamedInit) {
     std::string keyword("KEYWORD");
-    const auto& parserKeyword = createFixedSized(keyword, (size_t) 100);
+    const auto& parserKeyword = createFixedSized(keyword, (std::size_t) 100);
     BOOST_CHECK_EQUAL(parserKeyword.getName(), keyword);
 }
 
@@ -1343,7 +1343,7 @@ BOOST_AUTO_TEST_CASE(ParserKeyword_default_SizeTypedefault) {
 
 BOOST_AUTO_TEST_CASE(ParserKeyword_withSize_SizeTypeFIXED) {
     std::string keyword("KEYWORD");
-    const auto& parserKeyword = createFixedSized(keyword, (size_t) 100);
+    const auto& parserKeyword = createFixedSized(keyword, (std::size_t) 100);
     BOOST_CHECK_EQUAL(parserKeyword.getSizeType() , FIXED);
 }
 
@@ -1392,7 +1392,7 @@ BOOST_AUTO_TEST_CASE(ParserKeyword_validInternalName) {
 }
 
 BOOST_AUTO_TEST_CASE(ParserKeywordMatches) {
-    auto parserKeyword = createFixedSized("HELLO", (size_t) 1);
+    auto parserKeyword = createFixedSized("HELLO", (std::size_t) 1);
     parserKeyword.clearDeckNames();
     parserKeyword.setMatchRegex("WORLD.+");
     BOOST_CHECK_EQUAL( false , parserKeyword.matches("HELLO"));
@@ -1402,7 +1402,7 @@ BOOST_AUTO_TEST_CASE(ParserKeywordMatches) {
 }
 
 BOOST_AUTO_TEST_CASE(AddDataKeyword_correctlyConfigured) {
-    auto parserKeyword = createFixedSized("PORO", (size_t) 1);
+    auto parserKeyword = createFixedSized("PORO", (std::size_t) 1);
     ParserItem item( "ACTNUM", INT);
     ParserRecord record;
 
@@ -1607,14 +1607,14 @@ BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_WithoutDescription_DescriptionPrope
 /* </Json> */
 /*****************************************************************/
 BOOST_AUTO_TEST_CASE(getFixedSize_sizeObjectHasFixedSize_sizeReturned) {
-    const auto& parserKeyword = createFixedSized("JA", (size_t) 3);
+    const auto& parserKeyword = createFixedSized("JA", (std::size_t) 3);
     BOOST_CHECK_EQUAL(3U, parserKeyword.getFixedSize());
 
 }
 
 
 BOOST_AUTO_TEST_CASE(hasFixedSize_hasFixedSizeObject_returnstrue) {
-    const auto& parserKeyword = createFixedSized("JA", (size_t) 2);
+    const auto& parserKeyword = createFixedSized("JA", (std::size_t) 2);
     BOOST_CHECK(parserKeyword.hasFixedSize());
 }
 

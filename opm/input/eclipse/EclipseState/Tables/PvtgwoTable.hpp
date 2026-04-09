@@ -22,6 +22,8 @@
 
 #include <opm/input/eclipse/EclipseState/Tables/PvtxTable.hpp>
 
+#include <cstddef>
+
 namespace Opm {
 
     class DeckKeyword;
@@ -29,7 +31,7 @@ namespace Opm {
     class PvtgwoTable : public PvtxTable {
     public:
         PvtgwoTable() = default;
-        PvtgwoTable( const DeckKeyword& keyword, size_t tableIdx);
+        PvtgwoTable( const DeckKeyword& keyword, std::size_t tableIdx);
 
         static PvtgwoTable serializationTestObject();
 

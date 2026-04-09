@@ -1039,7 +1039,7 @@ RPTSCHED
 
     auto sched = make_schedule(data);
     BOOST_CHECK(sched.write_rst_file(0));
-    for( size_t ts = 1; ts < 4; ++ts )
+    for( std::size_t ts = 1; ts < 4; ++ts )
         BOOST_CHECK( !sched.write_rst_file( ts ) );
 }
 
@@ -1065,7 +1065,7 @@ BASIC=1
 
     auto sched = make_schedule(data);
     BOOST_CHECK(sched.write_rst_file(0));
-    for( size_t ts = 1; ts < 3; ++ts )
+    for( std::size_t ts = 1; ts < 3; ++ts )
         BOOST_CHECK( !sched.write_rst_file( ts ) );
 
     BOOST_CHECK( sched.write_rst_file( 3 ) );

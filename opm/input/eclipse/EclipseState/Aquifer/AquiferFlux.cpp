@@ -18,10 +18,13 @@
  */
 
 #include <opm/input/eclipse/EclipseState/Aquifer/AquiferFlux.hpp>
-#include <opm/input/eclipse/Parser/ParserKeywords/A.hpp>
 
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
+
+#include <opm/input/eclipse/Parser/ParserKeywords/A.hpp>
+
+#include <cstddef>
 
 namespace Opm {
     SingleAquiferFlux::SingleAquiferFlux(const DeckRecord& record)
@@ -103,7 +106,7 @@ namespace Opm {
         return this->m_aquifers.count(id) > 0;
     }
 
-    size_t AquiferFlux::size() const {
+    std::size_t AquiferFlux::size() const {
         return this->m_aquifers.size();
     }
 

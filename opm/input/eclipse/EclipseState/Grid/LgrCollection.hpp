@@ -16,19 +16,20 @@
 #ifndef OPM_PARSER_LGR_COLLECTION_HPP
 #define OPM_PARSER_LGR_COLLECTION_HPP
 
-#include <string>
-
 #include <opm/input/eclipse/EclipseState/Util/OrderedMap.hpp>
-#include <opm/input/eclipse/EclipseState/Grid/CarfinManager.hpp>
+
 #include <opm/input/eclipse/EclipseState/Grid/Carfin.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/CarfinManager.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+
+#include <cstddef>
+#include <string>
 
 namespace Opm {
 
     class DeckRecord;
     class GridDims;
     class GRIDSection;
-
 
 class LgrCollection {
 public:
@@ -39,12 +40,12 @@ public:
 
    explicit LgrCollection(const Deck& deck);
 
-    size_t size() const;
+    std::size_t size() const;
     bool hasLgr(const std::string& lgrName) const;
     Carfin& getLgr(const std::string& lgrName);
     const Carfin& getLgr(const std::string& lgrName) const;
-    Carfin& getLgr(size_t lgrIndex);
-    const Carfin& getLgr(size_t lgrIndex) const;
+    Carfin& getLgr(std::size_t lgrIndex);
+    const Carfin& getLgr(std::size_t lgrIndex) const;
 
     void addLgr(const EclipseGrid& grid, const DeckRecord& lgrRecord);
 

@@ -25,6 +25,7 @@
 #include <boost/spirit/include/qi.hpp>
 
 #include <cctype>
+#include <cstddef>
 #include <cstdlib>
 #include <stdexcept>
 #include <string>
@@ -44,7 +45,7 @@ namespace Opm {
                            std::string& countString,
                            std::string& valueString) {
         // find first character which is not a digit
-        size_t pos = 0;
+        std::size_t pos = 0;
         for (; pos < token.length(); ++pos)
             if (!std::isdigit(token[pos]))
                 break;

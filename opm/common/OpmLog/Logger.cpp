@@ -18,12 +18,15 @@
 */
 
 #include <config.h>
-#include <opm/common/OpmLog/Logger.hpp>
 
-#include <stdexcept>
+#include <opm/common/OpmLog/Logger.hpp>
 
 #include <opm/common/OpmLog/LogBackend.hpp>
 #include <opm/common/OpmLog/LogUtil.hpp>
+
+#include <cstddef>
+#include <cstdint>
+#include <stdexcept>
 
 namespace Opm {
 
@@ -40,7 +43,7 @@ namespace Opm {
         addMessageType( Log::MessageType::Note , "note");
     }
 
-    void Logger::addTaggedMessage(int64_t messageType, const std::string& tag, const std::string& message) const {
+    void Logger::addTaggedMessage(std::int64_t messageType, const std::string& tag, const std::string& message) const {
         if ((m_enabledTypes & messageType) == 0)
             throw std::invalid_argument("Tried to issue message with unrecognized message ID");
 
@@ -52,15 +55,13 @@ namespace Opm {
         }
     }
 
-    void Logger::addMessage(int64_t messageType , const std::string& message) const {
+    void Logger::addMessage(std::int64_t messageType , const std::string& message) const {
         addTaggedMessage(messageType, "", message);
     }
 
-
-    void Logger::updateGlobalMask( int64_t mask ) {
+    void Logger::updateGlobalMask( std::int64_t mask ) {
         m_globalMask |= mask;
     }
-
 
     bool Logger::hasBackend(const std::string& name) {
         if (m_backends.find( name ) == m_backends.end())
@@ -75,26 +76,24 @@ namespace Opm {
     }
 
     bool Logger::removeBackend(const std::string& name) {
-        size_t eraseCount = m_backends.erase( name );
+        std::size_t eraseCount = m_backends.erase( name );
         if (eraseCount == 1)
             return true;
         else
             return false;
     }
 
-
     void Logger::addBackend(const std::string& name , std::shared_ptr<LogBackend> backend) {
         updateGlobalMask( backend->getMask() );
         m_backends[ name ] = backend;
     }
 
-
-    int64_t Logger::enabledMessageTypes() const {
+    std::int64_t Logger::enabledMessageTypes() const {
         return m_enabledTypes;
     }
 
     //static:
-    bool Logger::enabledMessageType( int64_t enabledTypes , int64_t messageType) {
+    bool Logger::enabledMessageType( std::int64_t enabledTypes , std::int64_t messageType) {
         if (Log::isPower2( messageType)) {
             if ((messageType & enabledTypes) == 0)
                 return false;
@@ -104,18 +103,16 @@ namespace Opm {
             throw std::invalid_argument("The message type id must be ~ 2^n");
     }
 
-
     //static:
-    bool Logger::enabledDefaultMessageType( int64_t messageType) {
+    bool Logger::enabledDefaultMessageType( std::int64_t messageType) {
         return enabledMessageType( Log::DefaultMessageTypes , messageType );
     }
 
-    bool Logger::enabledMessageType( int64_t messageType) const {
+    bool Logger::enabledMessageType( std::int64_t messageType) const {
         return enabledMessageType( m_enabledTypes , messageType );
     }
 
-
-    void Logger::addMessageType( int64_t messageType , const std::string& /* prefix */) {
+    void Logger::addMessageType( std::int64_t messageType , const std::string& /* prefix */) {
         if (Log::isPower2( messageType)) {
             m_enabledTypes |= messageType;
         } else

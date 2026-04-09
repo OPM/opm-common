@@ -21,15 +21,15 @@
 
 #include <boost/test/unit_test.hpp>
 
-
 #include <opm/input/eclipse/EclipseState/Tables/ColumnSchema.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/SimpleTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableColumn.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableIndex.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableSchema.hpp>
 
-using namespace Opm;
+#include <cstddef>
 
+using namespace Opm;
 
 BOOST_AUTO_TEST_CASE( CreateTest ) {
     TableSchema schema;
@@ -51,7 +51,6 @@ BOOST_AUTO_TEST_CASE( CreateTest ) {
         const auto& col1 = table.getColumn( 0 );
         const auto& col2 = table.getColumn( 1 );
 
-
         BOOST_CHECK_EQUAL( col1[0] , 1 );
         BOOST_CHECK_EQUAL( col2[0] , 2 );
         BOOST_CHECK_EQUAL( col1[1] , 3 );
@@ -63,7 +62,6 @@ BOOST_AUTO_TEST_CASE( CreateTest ) {
 
     BOOST_CHECK_THROW( table.get("Name1" , 3) , std::invalid_argument);
     BOOST_CHECK_THROW( table.get(0 , 3) , std::invalid_argument);
-
 
     BOOST_CHECK_EQUAL( table.get("Name1" , 0) , 1 );
     BOOST_CHECK_EQUAL( table.get("Name1" , 1) , 3 );
@@ -80,7 +78,7 @@ BOOST_AUTO_TEST_CASE( CreateTest ) {
         auto exportCol = col.vectorCopy();
 
         BOOST_CHECK_EQUAL( col.size() , exportCol.size());
-        for (size_t i = 0; i < col.size(); i++)
+        for (std::size_t i = 0; i < col.size(); i++)
             BOOST_CHECK_EQUAL( col[i] , exportCol[i]);
     }
 }

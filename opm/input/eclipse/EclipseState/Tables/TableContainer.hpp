@@ -60,35 +60,35 @@ namespace Opm {
     class TableContainer
     {
     public:
-        using TableMap = std::map<size_t, std::shared_ptr<SimpleTable>>;
+        using TableMap = std::map<std::size_t, std::shared_ptr<SimpleTable>>;
 
         TableContainer();
-        explicit TableContainer(size_t maxTables);
+        explicit TableContainer(std::size_t maxTables);
 
         static TableContainer serializationTestObject();
 
         bool empty() const;
 
         // This is the number of actual tables in the container.
-        size_t size() const;
-        size_t max() const;
+        std::size_t size() const;
+        std::size_t max() const;
 
         const TableMap& tables() const;
 
-        void addTable(size_t tableNumber, std::shared_ptr<SimpleTable> table);
+        void addTable(std::size_t tableNumber, std::shared_ptr<SimpleTable> table);
 
         // Observe that the hasTable() method does not invoke the "If table
         // N is not implemented use table N - 1 behavior.
-        bool hasTable(size_t tableNumber) const;
-        const SimpleTable& getTable(size_t tableNumber) const;
+        bool hasTable(std::size_t tableNumber) const;
+        const SimpleTable& getTable(std::size_t tableNumber) const;
 
-        const SimpleTable& operator[](size_t tableNumber) const
+        const SimpleTable& operator[](std::size_t tableNumber) const
         {
             return this->getTable(tableNumber);
         }
 
         template <class TableType>
-        const TableType& getTable(size_t tableNumber) const
+        const TableType& getTable(std::size_t tableNumber) const
         {
             // This is, strictly speaking, a downcast so we should prefer
             // dynamic_cast<>() instead.  However, serializeOp() by
@@ -111,7 +111,7 @@ namespace Opm {
         }
 
     private:
-        size_t m_maxTables;
+        std::size_t m_maxTables;
         TableMap m_tables;
     };
 

@@ -19,18 +19,21 @@
 
 #include <opm/input/eclipse/Parser/ParserRecord.hpp>
 
-#include <fmt/format.h>
-
-#include <opm/input/eclipse/Deck/DeckRecord.hpp>
-#include <opm/input/eclipse/Parser/ParseContext.hpp>
-#include <opm/input/eclipse/Parser/ParserItem.hpp>
-#include <opm/input/eclipse/Units/UnitSystem.hpp>
-
 #include <opm/common/OpmLog/KeywordLocation.hpp>
 
-#include "raw/RawRecord.hpp"
+#include <opm/input/eclipse/Units/UnitSystem.hpp>
 
+#include <opm/input/eclipse/Deck/DeckRecord.hpp>
+
+#include <opm/input/eclipse/Parser/ParseContext.hpp>
+#include <opm/input/eclipse/Parser/ParserItem.hpp>
+
+#include <cstddef>
 #include <ostream>
+
+#include <fmt/format.h>
+
+#include "raw/RawRecord.hpp"
 
 namespace Opm {
 
@@ -49,7 +52,7 @@ namespace {
     {
     }
 
-    size_t ParserRecord::size() const {
+    std::size_t ParserRecord::size() const {
         return m_items.size();
     }
 
@@ -80,17 +83,13 @@ namespace {
         m_dataRecord = true;
     }
 
-
-
     std::vector< ParserItem >::const_iterator ParserRecord::begin() const {
         return m_items.begin();
     }
 
-
     std::vector< ParserItem >::const_iterator ParserRecord::end() const {
         return m_items.end();
     }
-
 
     bool ParserRecord::hasDimension() const
     {
@@ -99,10 +98,7 @@ namespace {
                                    { return x.dimensions().size() > 0; } );
     }
 
-
-
-
-    const ParserItem& ParserRecord::get(size_t index) const {
+    const ParserItem& ParserRecord::get(std::size_t index) const {
         return this->m_items.at( index );
     }
 
@@ -146,7 +142,7 @@ namespace {
     bool ParserRecord::equal(const ParserRecord& other) const {
         bool equal_ = true;
         if (size() == other.size()) {
-           size_t itemIndex = 0;
+           std::size_t itemIndex = 0;
            while (true) {
                if (itemIndex == size())
                    break;
@@ -186,7 +182,6 @@ namespace {
 
         return stream << "    }";
     }
-
 
     const std::string& ParserRecord::end_string() const {
         return this->record_end;

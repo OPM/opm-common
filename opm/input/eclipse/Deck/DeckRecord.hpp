@@ -20,12 +20,13 @@
 #ifndef DECKRECORD_HPP
 #define DECKRECORD_HPP
 
+#include <opm/input/eclipse/Deck/DeckItem.hpp>
+
+#include <cstddef>
+#include <iosfwd>
+#include <memory>
 #include <string>
 #include <vector>
-#include <memory>
-#include <iosfwd>
-
-#include <opm/input/eclipse/Deck/DeckItem.hpp>
 
 namespace Opm {
 
@@ -38,14 +39,14 @@ namespace Opm {
 
         static DeckRecord serializationTestObject();
 
-        size_t size() const;
+        std::size_t size() const;
         void addItem( DeckItem deckItem );
 
-        DeckItem& getItem( size_t index );
+        DeckItem& getItem( std::size_t index );
         DeckItem& getItem( const std::string& name );
         DeckItem& getDataItem();
 
-        const DeckItem& getItem( size_t index ) const;
+        const DeckItem& getItem( std::size_t index ) const;
         const DeckItem& getItem( const std::string& name ) const;
         const DeckItem& getDataItem() const;
 

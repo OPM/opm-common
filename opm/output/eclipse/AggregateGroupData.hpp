@@ -107,7 +107,7 @@ public:
                                                         /*"WGCR",*/  /*"WGCT",*/ /*"WGIMR",*/ /*"WGIMT",*/
                                                         "WWITH", "WGITH"};
 
-    const std::map<std::string, size_t> groupKeyToIndex = {
+    const std::map<std::string, std::size_t> groupKeyToIndex = {
                                                            {"GOPR",  0},
                                                            {"GWPR",  1},
                                                            {"GGPR",  2},
@@ -145,7 +145,7 @@ public:
                                                            {"GGITH", 144},
     };
 
-    const std::map<std::string, size_t> fieldKeyToIndex = {
+    const std::map<std::string, std::size_t> fieldKeyToIndex = {
                                                            {"FOPR",  0},
                                                            {"FWPR",  1},
                                                            {"FGPR",  2},
@@ -176,7 +176,7 @@ public:
                                                            {"FGITH", 144},
     };
 
-        const std::map<std::string, size_t> wellKeyToIndex = {
+        const std::map<std::string, std::size_t> wellKeyToIndex = {
                                                            {"WOPR",  0},
                                                            {"WWPR",  1},
                                                            {"WGPR",  2},

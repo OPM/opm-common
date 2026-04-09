@@ -162,6 +162,7 @@
 #include <opm/common/utility/Serializer.hpp>
 #include <opm/common/utility/MemPacker.hpp>
 
+#include <cstddef>
 #include <memory>
 #include <tuple>
 #include <utility>
@@ -173,10 +174,10 @@ namespace {
         Opm::Serialization::MemPacker packer;
         Opm::Serializer ser(packer);
         ser.pack(in);
-        const size_t pos1 = ser.position();
+        const std::size_t pos1 = ser.position();
         T out{};
         ser.unpack(out);
-        const size_t pos2 = ser.position();
+        const std::size_t pos2 = ser.position();
 
         return std::make_tuple(out, pos1, pos2);
     }
@@ -196,7 +197,6 @@ BOOST_AUTO_TEST_CASE(NAME) \
 
 #define TEST_FOR_TYPE(TYPE) \
     TEST_FOR_TYPE_NAMED(TYPE, TYPE)
-
 
 TEST_FOR_TYPE(Actdims)
 TEST_FOR_TYPE(Aqudims)

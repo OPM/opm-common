@@ -270,7 +270,7 @@ END
 
 void check_vectors_close(const std::vector<double>& v1, const std::vector<double>& v2, double tolerance) {
     BOOST_CHECK_EQUAL(v1.size(), v2.size());
-    for(size_t i = 0; i < v1.size(); ++i) {
+    for(std::size_t i = 0; i < v1.size(); ++i) {
         BOOST_CHECK_CLOSE(v1[i], v2[i], tolerance);
     }
 }

@@ -58,7 +58,7 @@ public:
     static Phases serializationTestObject();
 
     bool active( Phase ) const noexcept;
-    size_t size() const noexcept;
+    std::size_t size() const noexcept;
 
     bool operator==(const Phases& data) const;
 
@@ -633,7 +633,7 @@ public:
     const Tracers& tracers() const;
     const Geochem& geochem() const;
     bool compositionalMode() const;
-    size_t numComps() const;
+    std::size_t numComps() const;
     bool co2Storage() const noexcept;
     bool co2Sol() const noexcept;
     bool h2Sol() const noexcept;
@@ -698,7 +698,7 @@ private:
     MechSolver m_mechsolver{};
     Tracers m_tracers{};
     Geochem m_geochem{};
-    size_t m_comps = 0;
+    std::size_t m_comps = 0;
     bool m_co2storage{false};
     bool m_co2sol{false};
     bool m_h2sol{false};

@@ -43,6 +43,7 @@
 #include <opm/input/eclipse/Parser/ParserKeywords/W.hpp>
 
 #include <algorithm>
+#include <cstddef>
 #include <ctime>
 #include <stdexcept>
 #include <string>
@@ -175,7 +176,7 @@ bool Phases::active( Phase p ) const noexcept {
     return this->bits[ static_cast< int >( p ) ];
 }
 
-size_t Phases::size() const noexcept {
+std::size_t Phases::size() const noexcept {
     return this->bits.count();
 }
 
@@ -1064,7 +1065,7 @@ bool Runspec::compositionalMode() const
     return this->m_comps > 0;
 }
 
-size_t Runspec::numComps() const
+std::size_t Runspec::numComps() const
 {
     return this->m_comps;
 }

@@ -29,13 +29,12 @@
 #ifndef OPM_PARSER_TRANSMULT_HPP
 #define OPM_PARSER_TRANSMULT_HPP
 
+#include <opm/input/eclipse/EclipseState/Grid/FaceDir.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/MULTREGTScanner.hpp>
 
 #include <cstddef>
 #include <map>
 #include <memory>
-
-#include <opm/input/eclipse/EclipseState/Grid/FaceDir.hpp>
-#include <opm/input/eclipse/EclipseState/Grid/MULTREGTScanner.hpp>
 
 namespace Opm {
     namespace data {
@@ -57,9 +56,9 @@ namespace Opm {
 
         static TransMult serializationTestObject();
 
-        double getMultiplier(size_t globalIndex, FaceDir::DirEnum faceDir) const;
-        double getMultiplier(size_t i , size_t j , size_t k, FaceDir::DirEnum faceDir) const;
-        double getRegionMultiplier( size_t globalCellIndex1, size_t globalCellIndex2, FaceDir::DirEnum faceDir) const;
+        double getMultiplier(std::size_t globalIndex, FaceDir::DirEnum faceDir) const;
+        double getMultiplier(std::size_t i , std::size_t j , std::size_t k, FaceDir::DirEnum faceDir) const;
+        double getRegionMultiplier( std::size_t globalCellIndex1, std::size_t globalCellIndex2, FaceDir::DirEnum faceDir) const;
         double getRegionMultiplierNNC(std::size_t globalCellIndex1, std::size_t globalCellIndex2) const;
         void applyMULT(const std::vector<double>& srcMultProp, FaceDir::DirEnum faceDir);
         void applyMULTFLT(const FaultCollection& faults);
@@ -88,13 +87,13 @@ namespace Opm {
         }
 
     private:
-        size_t getGlobalIndex(size_t i , size_t j , size_t k) const;
-        void assertIJK(size_t i , size_t j , size_t k) const;
-        double getMultiplier__(size_t globalIndex , FaceDir::DirEnum faceDir) const;
+        std::size_t getGlobalIndex(std::size_t i , std::size_t j , std::size_t k) const;
+        void assertIJK(std::size_t i , std::size_t j , std::size_t k) const;
+        double getMultiplier__(std::size_t globalIndex , FaceDir::DirEnum faceDir) const;
         bool hasDirectionProperty(FaceDir::DirEnum faceDir) const;
         std::vector<double>& getDirectionProperty(FaceDir::DirEnum faceDir);
 
-        size_t m_nx = 0, m_ny = 0, m_nz = 0;
+        std::size_t m_nx = 0, m_ny = 0, m_nz = 0;
         std::map<FaceDir::DirEnum , std::vector<double> > m_trans;
         std::map<FaceDir::DirEnum , std::string> m_names;
         MULTREGTScanner m_multregtScanner;

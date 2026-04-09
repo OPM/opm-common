@@ -27,17 +27,17 @@
 #ifndef OPM_PIECEWISE_LINEAR_TWO_PHASE_MATERIAL_PARAMS_HPP
 #define OPM_PIECEWISE_LINEAR_TWO_PHASE_MATERIAL_PARAMS_HPP
 
-#include <algorithm>
-#include <cassert>
-#include <vector>
-#include <stdexcept>
-#include <type_traits>
-
 #include <opm/common/ErrorMacros.hpp>
 #include <opm/material/common/EnsureFinalized.hpp>
-#include <vector>
 
 #include <opm/common/utility/gpuDecorators.hpp>
+
+#include <algorithm>
+#include <cassert>
+#include <cstddef>
+#include <stdexcept>
+#include <type_traits>
+#include <vector>
 
 // forward declaration of the class so the function in the next namespace can be declared
 template <class TraitsT, class VectorT = std::vector<typename TraitsT::Scalar>>
@@ -169,7 +169,7 @@ public:
     {
         assert(SwValues.size() == values.size());
 
-        size_t n = SwValues.size();
+        std::size_t n = SwValues.size();
         SwPcwnSamples_.resize(n);
         pcwnSamples_.resize(n);
 
@@ -200,7 +200,7 @@ public:
     {
         assert(SwValues.size() == values.size());
 
-        size_t n = SwValues.size();
+        std::size_t n = SwValues.size();
         SwKrwSamples_.resize(n);
         krwSamples_.resize(n);
 
@@ -231,7 +231,7 @@ public:
     {
         assert(SwValues.size() == values.size());
 
-        size_t n = SwValues.size();
+        std::size_t n = SwValues.size();
         SwKrnSamples_.resize(n);
         krnSamples_.resize(n);
 
@@ -249,7 +249,7 @@ private:
             // The const expr ensures we can create constant parameter views.
             if constexpr (!std::is_const_v<typename ValueVector::value_type> && !std::is_const_v<ValueVector>) {
                 for (unsigned origSampleIdx = 0; origSampleIdx < swValues.size() / 2; ++origSampleIdx) {
-                    size_t newSampleIdx = swValues.size() - origSampleIdx - 1;
+                    std::size_t newSampleIdx = swValues.size() - origSampleIdx - 1;
 
                     std::swap(swValues[origSampleIdx], swValues[newSampleIdx]);
                     std::swap(values[origSampleIdx], values[newSampleIdx]);

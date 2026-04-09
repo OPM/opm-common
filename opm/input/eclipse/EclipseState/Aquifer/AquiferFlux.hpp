@@ -20,6 +20,7 @@
 #ifndef OPM_AQUIFERFLUX_HPP
 #define OPM_AQUIFERFLUX_HPP
 
+#include <cstddef>
 #include <optional>
 #include <unordered_map>
 #include <unordered_set>
@@ -84,7 +85,7 @@ namespace  Opm {
 
         bool operator==(const AquiferFlux& other) const;
 
-        size_t size() const;
+        std::size_t size() const;
 
         AquFluxs::const_iterator begin() const;
         AquFluxs::const_iterator end() const;

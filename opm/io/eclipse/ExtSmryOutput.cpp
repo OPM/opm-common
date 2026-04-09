@@ -26,12 +26,12 @@
 
 #include <opm/common/utility/TimeService.hpp>
 
+#include <cstddef>
+#include <filesystem>
 #include <stdexcept>
 #include <string>
-#include <filesystem>
 
 namespace Opm { namespace EclIO {
-
 
 ExtSmryOutput::ExtSmryOutput(const std::vector<std::string>& valueKeys, const std::vector<std::string>& valueUnits,
                  const EclipseState& es, const time_t start_time)
@@ -68,15 +68,14 @@ ExtSmryOutput::ExtSmryOutput(const std::vector<std::string>& valueKeys, const st
     m_start_date_vect = {ts.day(), ts.month(), ts.year(),
         ts.hour(), ts.minutes(), ts.seconds(), 0 };
 
-    for (size_t n = 0; n < static_cast<size_t>(m_nVect); n++)
+    for (std::size_t n = 0; n < static_cast<std::size_t>(m_nVect); n++)
         m_smrydata.push_back({});
 }
-
 
 void ExtSmryOutput::write(const std::vector<float>& ts_data, int report_step, bool is_final_summary)
 {
 
-    if (ts_data.size() != static_cast<size_t>(m_nVect))
+    if (ts_data.size() != static_cast<std::size_t>(m_nVect))
         throw std::invalid_argument("size of ts_data vector not same as number of smry vectors");
 
     auto current = std::chrono::system_clock::now();
@@ -95,7 +94,7 @@ void ExtSmryOutput::write(const std::vector<float>& ts_data, int report_step, bo
     else
         m_tstep.push_back(m_tstep.back()+1);
 
-    for (size_t n = 0; n < static_cast<size_t>(m_nVect); n++)
+    for (std::size_t n = 0; n < static_cast<std::size_t>(m_nVect); n++)
         m_smrydata[n].push_back(ts_data[n]);
 
     if ((is_final_summary) || (elapsed_seconds.count() > m_min_write_interval))
@@ -124,7 +123,7 @@ void ExtSmryOutput::write(const std::vector<float>& ts_data, int report_step, bo
             outFile.write<int>("RSTEP", m_rstep);
             outFile.write<int>("TSTEP", m_tstep);
 
-            for (size_t n = 0; n < static_cast<size_t>(m_nVect); n++ ) {
+            for (std::size_t n = 0; n < static_cast<std::size_t>(m_nVect); n++ ) {
                 std::string vect_name="V" + std::to_string(n);
                 outFile.write<float>(vect_name, m_smrydata[n]);
             }
@@ -155,15 +154,14 @@ bool ExtSmryOutput::rename_tmpfile(const std::string& tmp_fname)
     return true;
 }
 
-
 std::vector<std::string> ExtSmryOutput::make_modified_keys(const std::vector<std::string>& valueKeys, const GridDims& dims)
 {
     std::vector<std::string> mod_keys;
     mod_keys.reserve(valueKeys.size());
 
-    for (size_t n=0; n < valueKeys.size(); n++){
+    for (std::size_t n=0; n < valueKeys.size(); n++){
         if (valueKeys[n].substr(0,1) == "C"){
-            size_t p = valueKeys[n].find_first_of(":");
+            std::size_t p = valueKeys[n].find_first_of(":");
             p = valueKeys[n].find_first_of(":", p + 1);
 
             int num = std::stod(valueKeys[n].substr(p + 1)) - 1;
@@ -177,7 +175,7 @@ std::vector<std::string> ExtSmryOutput::make_modified_keys(const std::vector<std
 
         } else if (valueKeys[n].substr(0,1) == "B"){
 
-            size_t p = valueKeys[n].find_first_of(":");
+            std::size_t p = valueKeys[n].find_first_of(":");
 
             int num = std::stod(valueKeys[n].substr(p + 1)) - 1;
 
@@ -222,7 +220,7 @@ std::vector<std::string> ExtSmryOutput::make_modified_keys(const std::vector<std
 std::array<int, 3> ExtSmryOutput::ijk_from_global_index(const GridDims& dims, int globInd) const
 {
 
-    if (globInd < 0 || static_cast<size_t>(globInd) >= dims[0] * dims[1] * dims[2])
+    if (globInd < 0 || static_cast<std::size_t>(globInd) >= dims[0] * dims[1] * dims[2])
         throw std::invalid_argument("global index out of range");
 
     std::array<int, 3> result;
@@ -234,6 +232,5 @@ std::array<int, 3> ExtSmryOutput::ijk_from_global_index(const GridDims& dims, in
 
     return result;
 }
-
 
 }} // namespace Opm::EclIO

@@ -43,9 +43,10 @@
 #include <cstddef>
 #include <cstring>
 #include <exception>
-#include <string>
-#include <stdexcept>
 #include <optional>
+#include <stdexcept>
+#include <string>
+
 #include <fmt/format.h>
 
 #define ENABLE_GCNTL_DEBUG_OUTPUT 0
@@ -186,7 +187,7 @@ std::vector<int> inobrFunc( const Opm::Schedule&    sched,
 
 bool fixedPressureNode(const Opm::Schedule&         sched,
                        const std::string&           nodeName,
-                       const size_t                 lookup_step
+                       const std::size_t                 lookup_step
                       )
 {
     auto& network = sched[lookup_step].network();
@@ -198,7 +199,7 @@ double nodePressure(const Opm::Schedule&               sched,
                     const ::Opm::SummaryState&         smry,
                     const std::string&                 nodeName,
                     const Opm::UnitSystem&             units,
-                    const size_t                       lookup_step
+                    const std::size_t                       lookup_step
                    )
 {
     using M = ::Opm::UnitSystem::measure;
@@ -271,7 +272,7 @@ nodeProps wellGroupRateDensity(const Opm::EclipseState&                  es,
                                const Opm::Schedule&                      sched,
                                const ::Opm::SummaryState&                smry,
                                const std::string&                        groupName,
-                               const size_t                              lookup_step
+                               const std::size_t                              lookup_step
                               )
 {
     const auto& stdDensityTable = es.getTableManager().getDensityTable();
@@ -314,7 +315,7 @@ nodeProps nodeRateDensity(const Opm::EclipseState&                  es,
                           const ::Opm::SummaryState&                smry,
                           const std::string&                        nodeName,
                           const Opm::UnitSystem&                    units,
-                          const size_t                              lookup_step
+                          const std::size_t                              lookup_step
                          )
 {
     const auto& network = sched[lookup_step].network();
@@ -400,7 +401,7 @@ allocate(const std::vector<int>& inteHead)
     };
 }
 
-int numberOfBranchesConnToNode(const Opm::Schedule& sched, const std::string& nodeName, const size_t lookup_step)
+int numberOfBranchesConnToNode(const Opm::Schedule& sched, const std::string& nodeName, const std::size_t lookup_step)
 {
     auto& network = sched[lookup_step].network();
     if (network.has_node(nodeName)) {
@@ -413,7 +414,7 @@ int numberOfBranchesConnToNode(const Opm::Schedule& sched, const std::string& no
     }
 }
 
-int cumNumberOfBranchesConnToNode(const Opm::Schedule& sched, const std::string& nodeName, const size_t lookup_step)
+int cumNumberOfBranchesConnToNode(const Opm::Schedule& sched, const std::string& nodeName, const std::size_t lookup_step)
 {
     auto& network = sched[lookup_step].network();
     auto result = findInVector<std::string>(network.node_names(), nodeName);

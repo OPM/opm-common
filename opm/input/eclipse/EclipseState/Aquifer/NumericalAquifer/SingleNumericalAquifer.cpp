@@ -17,22 +17,25 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
-#include <opm/input/eclipse/EclipseState/Grid/NNC.hpp>
-#include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
-
-#include <opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquiferConnection.hpp>
-#include <opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquiferCell.hpp>
 #include <opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/SingleNumericalAquifer.hpp>
-#include "../AquiferHelpers.hpp"
 
 #include <opm/common/OpmLog/OpmLog.hpp>
 
-#include <fmt/format.h>
+#include <opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquiferCell.hpp>
+#include <opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquiferConnection.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/NNC.hpp>
+
+#include "../AquiferHelpers.hpp"
+
+#include <cstddef>
 #include <unordered_set>
 
+#include <fmt/format.h>
+
 namespace Opm {
-    SingleNumericalAquifer::SingleNumericalAquifer(const size_t aqu_id)
+    SingleNumericalAquifer::SingleNumericalAquifer(const std::size_t aqu_id)
             : id_(aqu_id)
     {
     }
@@ -41,11 +44,11 @@ namespace Opm {
         cells_.push_back(aqu_cell);
     }
 
-    size_t SingleNumericalAquifer::numCells() const {
+    std::size_t SingleNumericalAquifer::numCells() const {
         return this->cells_.size();
     }
 
-    const NumericalAquiferCell* SingleNumericalAquifer::getCellPrt(const size_t index) const {
+    const NumericalAquiferCell* SingleNumericalAquifer::getCellPrt(const std::size_t index) const {
         return &this->cells_[index];
     }
 
@@ -59,11 +62,11 @@ namespace Opm {
                 this->id_ == other.id_;
     }
 
-    size_t SingleNumericalAquifer::numConnections() const {
+    std::size_t SingleNumericalAquifer::numConnections() const {
         return this->connections_.size();
     }
 
-    size_t SingleNumericalAquifer::id() const {
+    std::size_t SingleNumericalAquifer::id() const {
         return this->id_;
     }
 
@@ -84,8 +87,8 @@ namespace Opm {
         }
     }
 
-    std::unordered_map<size_t, AquiferCellProps> SingleNumericalAquifer::aquiferCellProps() const {
-        std::unordered_map<size_t, AquiferCellProps> aqucellprops;
+    std::unordered_map<std::size_t, AquiferCellProps> SingleNumericalAquifer::aquiferCellProps() const {
+        std::unordered_map<std::size_t, AquiferCellProps> aqucellprops;
         for (const auto& cell : this->cells_) {
             aqucellprops.emplace(std::make_pair(cell.global_index,
                                AquiferCellProps{cell.cellVolume(), cell.poreVolume(), cell.depth,
@@ -100,12 +103,12 @@ namespace Opm {
             return nncs;
 
         // aquifer cells are connected to each other through NNCs to form the aquifer
-        for (size_t i = 0; i < this->cells_.size() - 1; ++i) {
+        for (std::size_t i = 0; i < this->cells_.size() - 1; ++i) {
             const double trans1 = this->cells_[i].transmissiblity();
             const double trans2 = this->cells_[i + 1].transmissiblity();
             const double tran = 1. / (1. / trans1 + 1. / trans2);
-            const size_t gc1 = this->cells_[i].global_index;
-            const size_t gc2 = this->cells_[i + 1].global_index;
+            const std::size_t gc1 = this->cells_[i].global_index;
+            const std::size_t gc2 = this->cells_[i + 1].global_index;
             if (gc1 < gc2) {
                 nncs.emplace_back(gc1, gc2, tran);
             } else {
@@ -124,9 +127,9 @@ namespace Opm {
         const std::vector<double>& ntg = fp.get_double("NTG");
         const auto& cell1 = this->cells_[0];
         // all the connections connect to the first numerical aquifer cell
-        const size_t gc1 = cell1.global_index;
+        const std::size_t gc1 = cell1.global_index;
         for (const auto& con : this->connections_) {
-            const size_t gc2 = con.global_index;
+            const std::size_t gc2 = con.global_index;
             // TODO: the following is based on Cartesian grids, it turns out working for more general grids.
             //  We should keep in mind this can be something causing problems for specific grids
             const auto& cell_dims = grid.getCellDims(gc2);
@@ -185,16 +188,16 @@ namespace Opm {
     }
 
     void SingleNumericalAquifer::postProcessConnections(const EclipseGrid& grid, const std::vector<int>& actnum) {
-        std::unordered_set<size_t> cell_global_indices;
+        std::unordered_set<std::size_t> cell_global_indices;
         for (const auto& cell : this->cells_) {
             cell_global_indices.insert(cell.global_index);
         }
 
         std::vector<NumericalAquiferConnection> conns;
         for (const auto& con : this->connections_) {
-            const size_t i = con.I;
-            const size_t j = con.J;
-            const size_t k = con.K;
+            const std::size_t i = con.I;
+            const std::size_t j = con.J;
+            const std::size_t k = con.K;
             // Need to check for out-of-bounds access (eventually gives throw in aquiferConnectionNNCs also).
             if (! (i < grid.getNX() && j < grid.getNY() && k < grid.getNZ()) ) {
                 OpmLog::warning(

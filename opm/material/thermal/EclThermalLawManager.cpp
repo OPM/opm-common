@@ -22,6 +22,7 @@
 */
 
 #include <config.h>
+
 #include <opm/material/thermal/EclThermalLawManager.hpp>
 
 #include <opm/common/ErrorMacros.hpp>
@@ -33,13 +34,14 @@
 #include <opm/material/fluidsystems/BlackOilFluidSystem.hpp>
 
 #include <cassert>
+#include <cstddef>
 #include <stdexcept>
 
 namespace Opm {
 
 template<class Scalar, class FluidSystem>
 void EclThermalLawManager<Scalar,FluidSystem>::
-initParamsForElements(const EclipseState& eclState, size_t numElems,
+initParamsForElements(const EclipseState& eclState, std::size_t numElems,
                       const std::function<std::vector<double>(const FieldPropsManager&, const std::string&)>& fieldPropsDoubleOnLeafAssigner,
                       const std::function<std::vector<unsigned int>(const FieldPropsManager&, const std::string&, bool)>&
                       fieldPropsIntOnLeafAssigner)
@@ -119,7 +121,7 @@ thermalConductionLawParams(unsigned elemIdx) const
 
 template<class Scalar, class FluidSystem>
 void EclThermalLawManager<Scalar,FluidSystem>::
-initHeatcr_(const EclipseState& eclState, size_t numElems,
+initHeatcr_(const EclipseState& eclState, std::size_t numElems,
             const std::function<std::vector<double>(const FieldPropsManager&, const std::string&)>& fieldPropsDoubleOnLeafAssigner)
 {
     solidEnergyApproach_ = EclSolidEnergyApproach::Heatcr;
@@ -186,7 +188,7 @@ initNullRockEnergy_()
 
 template<class Scalar, class FluidSystem>
 void EclThermalLawManager<Scalar,FluidSystem>::
-initThconr_(const EclipseState& eclState, size_t numElems,
+initThconr_(const EclipseState& eclState, std::size_t numElems,
             const std::function<std::vector<double>(const FieldPropsManager&, const std::string&)>& fieldPropsDoubleOnLeafAssigner)
 {
     thermalConductivityApproach_ = EclThermalConductionApproach::Thconr;
@@ -218,7 +220,7 @@ initThconr_(const EclipseState& eclState, size_t numElems,
 
 template<class Scalar, class FluidSystem>
 void EclThermalLawManager<Scalar,FluidSystem>::
-initThc_(const EclipseState& eclState, size_t numElems,
+initThc_(const EclipseState& eclState, std::size_t numElems,
          const std::function<std::vector<double>(const FieldPropsManager&, const std::string&)>& fieldPropsDoubleOnLeafAssigner)
 {
     thermalConductivityApproach_ = EclThermalConductionApproach::Thc;

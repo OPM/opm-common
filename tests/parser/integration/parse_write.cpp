@@ -17,15 +17,20 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <iostream>
-#include <sstream>
+#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/input/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
+
+#include <opm/input/eclipse/Python/Python.hpp>
+
+#include <opm/input/eclipse/Schedule/Schedule.hpp>
+
+#include <opm/input/eclipse/Deck/Deck.hpp>
 
 #include <opm/input/eclipse/Parser/Parser.hpp>
-#include <opm/input/eclipse/Deck/Deck.hpp>
-#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
-#include <opm/input/eclipse/Schedule/Schedule.hpp>
-#include <opm/input/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
-#include <opm/input/eclipse/Python/Python.hpp>
+
+#include <cstddef>
+#include <iostream>
+#include <sstream>
 
 inline void loadDeck( const char * deck_file) {
     Opm::Parser parser;
@@ -45,7 +50,7 @@ inline void loadDeck( const char * deck_file) {
             std::exit( 1 );
         }
 
-        for (size_t index=0; index < deck.size(); index++) {
+        for (std::size_t index=0; index < deck.size(); index++) {
             const auto& kw1 = deck[index];
             const auto& kw2 = deck2[index];
 
@@ -59,7 +64,6 @@ inline void loadDeck( const char * deck_file) {
         }
     }
 }
-
 
 int main(int argc, char** argv) {
     for (int iarg = 1; iarg < argc; iarg++)

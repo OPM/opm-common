@@ -13,19 +13,24 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <opm/input/eclipse/EclipseState/Grid/LgrCollection.hpp>
+
 #include <opm/common/utility/OpmInputError.hpp>
 #include <opm/common/OpmLog/OpmLog.hpp>
-#include <opm/input/eclipse/Deck/DeckRecord.hpp>
-#include <opm/input/eclipse/Deck/DeckSection.hpp>
+
+#include <opm/input/eclipse/EclipseState/Grid/Carfin.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/CarfinManager.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/GridDims.hpp>
-#include <opm/input/eclipse/EclipseState/Grid/LgrCollection.hpp>
-#include <opm/input/eclipse/EclipseState/Grid/CarfinManager.hpp>
-#include <opm/input/eclipse/EclipseState/Grid/Carfin.hpp>
+
+#include <opm/input/eclipse/Deck/DeckRecord.hpp>
+#include <opm/input/eclipse/Deck/DeckSection.hpp>
+
 #include <opm/input/eclipse/Parser/ParserKeywords/C.hpp>
 
-namespace Opm {
+#include <cstddef>
 
+namespace Opm {
 
     LgrCollection::LgrCollection()
     {}
@@ -47,7 +52,7 @@ namespace Opm {
         }
     }
 
-    size_t LgrCollection::size() const {
+    std::size_t LgrCollection::size() const {
         return m_lgrs.size();
     }
 
@@ -63,14 +68,13 @@ namespace Opm {
         return m_lgrs.get( lgrName );
     }
 
-    const Carfin& LgrCollection::getLgr(size_t lgrIndex) const {
+    const Carfin& LgrCollection::getLgr(std::size_t lgrIndex) const {
         return m_lgrs.iget( lgrIndex );
     }
 
-    Carfin& LgrCollection::getLgr(size_t lgrIndex) {
+    Carfin& LgrCollection::getLgr(std::size_t lgrIndex) {
         return m_lgrs.iget( lgrIndex );
     }
-
 
     void LgrCollection::addLgr(const EclipseGrid& grid, const DeckRecord&  lgrRecord) {
        Carfin lgr(grid,

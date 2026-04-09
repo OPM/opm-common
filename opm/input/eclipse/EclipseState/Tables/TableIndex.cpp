@@ -17,19 +17,18 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
-
 #include <opm/input/eclipse/EclipseState/Tables/TableIndex.hpp>
+
+#include <cstddef>
 
 namespace Opm {
 
-    TableIndex::TableIndex( size_t index1 , double weight1) :
+    TableIndex::TableIndex( std::size_t index1 , double weight1) :
         m_index1( index1 ),
         m_weight1( weight1 )
     {
 
     }
-
 
     TableIndex::TableIndex(const TableIndex& tableIndex)
         : m_index1( tableIndex.m_index1 ),
@@ -37,24 +36,20 @@ namespace Opm {
     {
     }
 
-
-    size_t TableIndex::getIndex1( ) const {
+    std::size_t TableIndex::getIndex1( ) const {
         return m_index1;
     }
 
-    size_t TableIndex::getIndex2( ) const {
+    std::size_t TableIndex::getIndex2( ) const {
         return m_index1 + 1;
     }
-
 
     double TableIndex::getWeight1( ) const {
         return m_weight1;
     }
 
-
     double TableIndex::getWeight2( ) const {
         return 1 - m_weight1;
     }
-
 
 }

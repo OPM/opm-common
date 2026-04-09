@@ -17,6 +17,7 @@
    */
 
 #include <opm/io/eclipse/EclFile.hpp>
+
 #include <opm/io/eclipse/EclUtil.hpp>
 #include <opm/common/ErrorMacros.hpp>
 
@@ -243,7 +244,7 @@ void EclFile::loadData(const std::string& name)
             OPM_THROW(std::runtime_error, "Could not open file: '" + inputFilename +"'");
         }
 
-        for (size_t i = 0; i < array_name.size(); i++) {
+        for (std::size_t i = 0; i < array_name.size(); i++) {
             if (array_name[i] == name) {
                 loadBinaryArray(fileH, i);
             }
@@ -336,7 +337,7 @@ bool EclFile::is_ix() const
     //   >> if logi array exists in file, look for IX spes binary representation of true value
 
     if (formatted) {
-        for (size_t n=0; n < array_type.size(); n++) {
+        for (std::size_t n=0; n < array_type.size(); n++) {
             if (array_type[n] == Opm::EclIO::C0NN) {
                 return true;
             } else if (array_type[n] == Opm::EclIO::REAL) {
@@ -359,7 +360,7 @@ bool EclFile::is_ix() const
             }
         }
     } else {
-        for (size_t n=0; n < array_type.size(); n++) {
+        for (std::size_t n=0; n < array_type.size(); n++) {
             if (array_type[n] == Opm::EclIO::C0NN) {
                 return true;
             } else if (array_type[n] == Opm::EclIO::LOGI) {
@@ -430,7 +431,7 @@ std::vector<EclFile::EclEntry> EclFile::getList() const
     std::vector<EclEntry> list;
     list.reserve(this->array_name.size());
 
-    for (size_t i = 0; i < array_name.size(); i++) {
+    for (std::size_t i = 0; i < array_name.size(); i++) {
         list.emplace_back(array_name[i], array_type[i], array_size[i]);
     }
 
@@ -484,7 +485,7 @@ bool EclFile::hasKey(const std::string &name) const
     return search != array_index.end();
 }
 
-size_t EclFile::count(const std::string &name) const
+std::size_t EclFile::count(const std::string &name) const
 {
     return std::count (array_name.begin(), array_name.end(), name);
 }

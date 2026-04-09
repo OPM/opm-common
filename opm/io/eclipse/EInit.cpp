@@ -30,7 +30,7 @@ EInit::EInit(const std::string &filename) : EclFile(filename)
 
     lgrname = "global";
 
-    for (size_t n = 0; n < array_name.size(); n++) {
+    for (std::size_t n = 0; n < array_name.size(); n++) {
         if (array_name[n] == "LGR"){
             auto lgr = this->get<std::string>(n);
             lgrname = lgr[0];

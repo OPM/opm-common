@@ -71,8 +71,6 @@
 
 #include <fmt/format.h>
 
-#include <stddef.h>
-
 namespace {
 
     // Compute direction permutation corresponding to completion's
@@ -727,7 +725,7 @@ The cell ({},{},{}) in well {} is not active and the connection will be ignored)
         const auto m_top = perf_top.getSIDouble(0);
         const auto m_bot = perf_bot.getSIDouble(0);
         external::cvf::Vec3d p_top, p_bot;
-        for (size_t i = 0; i < 3 ; ++i) {
+        for (std::size_t i = 0; i < 3 ; ++i) {
             p_top[i] = linearInterpolation(this->md, this->coord[i], m_top);
             p_bot[i] = linearInterpolation(this->md, this->coord[i], m_bot);
         }
@@ -736,7 +734,7 @@ The cell ({},{},{}) in well {} is not active and the connection will be ignored)
 
         points.reserve(this->coord[0].size());
         measured_depths.reserve(this->coord[0].size());
-        for (size_t i = 0; i < coord[0].size(); ++i) {
+        for (std::size_t i = 0; i < coord[0].size(); ++i) {
             if (this->md[i] > m_top and this->md[i] < m_bot) {
                 points.push_back(external::cvf::Vec3d(coord[0][i], coord[1][i], coord[2][i]));
                 measured_depths.push_back(this->md[i]);
@@ -763,7 +761,7 @@ The cell ({},{},{}) in well {} is not active and the connection will be ignored)
         // exit cell face point and connection length.
         wellTraj.intersections = e->cellIntersectionInfosAlongWellPath();
 
-        for (size_t is = 0; is < wellTraj.intersections.size(); ++is) {
+        for (std::size_t is = 0; is < wellTraj.intersections.size(); ++is) {
             const auto ijk = ecl_grid->getIJK(wellTraj.intersections[is].globCellIndex);
 
             // When using WELTRAJ & COMPTRAJ one may use default settings in
@@ -949,15 +947,15 @@ CF and Kh items for well {} must both be specified or both defaulted/negative)",
 
     bool WellConnections::empty() const
     {
-        return this->size() == size_t{0};
+        return this->size() == std::size_t{0};
     }
 
-    const Connection& WellConnections::get(size_t index) const
+    const Connection& WellConnections::get(std::size_t index) const
     {
         return (*this)[index];
     }
 
-    const Connection& WellConnections::operator[](size_t index) const
+    const Connection& WellConnections::operator[](std::size_t index) const
     {
         return this->m_connections.at(index);
     }
@@ -986,7 +984,7 @@ CF and Kh items for well {} must both be specified or both defaulted/negative)",
     const Connection&
     WellConnections::getFromIJK(const int i, const int j, const int k) const
     {
-        for (size_t ic = 0; ic < size(); ++ic) {
+        for (std::size_t ic = 0; ic < size(); ++ic) {
             if (get(ic).sameCoordinate(i, j, k)) {
                 return get(ic);
             }
@@ -1011,7 +1009,7 @@ CF and Kh items for well {} must both be specified or both defaulted/negative)",
 
     Connection& WellConnections::getFromIJK(const int i, const int j, const int k)
     {
-        for (size_t ic = 0; ic < size(); ++ic) {
+        for (std::size_t ic = 0; ic < size(); ++ic) {
             if (get(ic).sameCoordinate(i, j, k)) {
                 return this->m_connections[ic];
             }
@@ -1073,7 +1071,7 @@ CF and Kh items for well {} must both be specified or both defaulted/negative)",
     {
         // Find the first connection and swap it into the 0-position.
         const double surface_z = 0.0;
-        size_t first_index = findClosestConnection(this->headI, this->headJ, surface_z, 0);
+        std::size_t first_index = findClosestConnection(this->headI, this->headJ, surface_z, 0);
         std::swap(m_connections[first_index], m_connections[0]);
 
         // Repeat for remaining connections.
@@ -1086,20 +1084,20 @@ CF and Kh items for well {} must both be specified or both defaulted/negative)",
             return;
         }
 
-        for (size_t pos = 1; pos < m_connections.size() - 1; ++pos) {
+        for (std::size_t pos = 1; pos < m_connections.size() - 1; ++pos) {
             const auto& prev = m_connections[pos - 1];
             const double prevz = prev.depth();
-            size_t next_index = findClosestConnection(prev.getI(), prev.getJ(), prevz, pos);
+            std::size_t next_index = findClosestConnection(prev.getI(), prev.getJ(), prevz, pos);
             std::swap(m_connections[next_index], m_connections[pos]);
         }
     }
 
-    size_t WellConnections::findClosestConnection(int oi, int oj, double oz, size_t start_pos)
+    std::size_t WellConnections::findClosestConnection(int oi, int oj, double oz, std::size_t start_pos)
     {
-        size_t closest = std::numeric_limits<size_t>::max();
+        std::size_t closest = std::numeric_limits<std::size_t>::max();
         int min_ijdist2 = std::numeric_limits<int>::max();
         double min_zdiff = std::numeric_limits<double>::max();
-        for (size_t pos = start_pos; pos < m_connections.size(); ++pos) {
+        for (std::size_t pos = start_pos; pos < m_connections.size(); ++pos) {
             const auto& connection = m_connections[ pos ];
 
             const double depth = connection.depth();
@@ -1119,7 +1117,7 @@ CF and Kh items for well {} must both be specified or both defaulted/negative)",
                 }
             }
         }
-        assert(closest != std::numeric_limits<size_t>::max());
+        assert(closest != std::numeric_limits<std::size_t>::max());
         return closest;
     }
 

@@ -25,11 +25,6 @@
 #include <boost/test/unit_test.hpp>
 #include <opm/common/utility/platform_dependent/reenable_warnings.h>
 
-#include <stdexcept>
-#include <iostream>
-#include <sstream>
-
-
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/common/OpmLog/LogBackend.hpp>
 #include <opm/common/OpmLog/CounterLog.hpp>
@@ -38,14 +33,17 @@
 #include <opm/common/OpmLog/LogUtil.hpp>
 #include <opm/common/OpmLog/KeywordLocation.hpp>
 
-using namespace Opm;
+#include <cstdint>
+#include <iostream>
+#include <sstream>
+#include <stdexcept>
 
+using namespace Opm;
 
 BOOST_AUTO_TEST_CASE(DoLogging) {
     OpmLog::addMessage(Log::MessageType::Warning , "Warning1");
     OpmLog::addMessage(Log::MessageType::Warning , "Warning2");
 }
-
 
 BOOST_AUTO_TEST_CASE(Test_Format) {
     BOOST_CHECK_EQUAL( "There is an error here?\nIn file /path/to/file, line 100\n" , Log::fileMessage(KeywordLocation("Keyword", "/path/to/file" , 100) , "There is an error here?"));
@@ -54,8 +52,6 @@ BOOST_AUTO_TEST_CASE(Test_Format) {
     BOOST_CHECK_EQUAL( "\nWarning: This is the warning" , Log::prefixMessage(Log::MessageType::Warning , "This is the warning"));
     BOOST_CHECK_EQUAL( "Info: This is the info" ,       Log::prefixMessage(Log::MessageType::Info , "This is the info"));
 }
-
-
 
 BOOST_AUTO_TEST_CASE(Test_Logger) {
     Logger logger;
@@ -78,7 +74,6 @@ BOOST_AUTO_TEST_CASE(Test_Logger) {
 
     BOOST_CHECK_EQUAL( log_stream.str() , "Warning\n");
 
-
     BOOST_CHECK_THROW( logger.getBackend<LogBackend>("No") , std::invalid_argument );
     {
         auto counter2 = logger.getBackend<CounterLog>("COUNTER");
@@ -98,11 +93,10 @@ BOOST_AUTO_TEST_CASE(Test_Logger) {
     }
 }
 
-
 BOOST_AUTO_TEST_CASE(LoggerAddTypes_PowerOf2) {
     Logger logger;
-    int64_t not_power_of2 = 13;
-    int64_t power_of2 = 4096;
+    std::int64_t not_power_of2 = 13;
+    std::int64_t power_of2 = 4096;
 
     BOOST_CHECK_THROW( logger.addMessageType( not_power_of2 , "Prefix") , std::invalid_argument);
     BOOST_CHECK_THROW( logger.enabledMessageType( not_power_of2 ) , std::invalid_argument);
@@ -112,16 +106,15 @@ BOOST_AUTO_TEST_CASE(LoggerAddTypes_PowerOf2) {
     BOOST_CHECK_EQUAL( false , logger.enabledMessageType( 2*power_of2 ));
 }
 
-
 class TestLog: public LogBackend {
 public:
-    explicit TestLog( int64_t messageMask ) : LogBackend( messageMask )
+    explicit TestLog( std::int64_t messageMask ) : LogBackend( messageMask )
     {
         m_defaultMessages = 0;
         m_specialMessages = 0;
     }
 
-    void addMessageUnconditionally(int64_t messageType , const std::string& /* message */) override
+    void addMessageUnconditionally(std::int64_t messageType , const std::string& /* message */) override
     {
         if (messageType & Log::DefaultMessageTypes)
             m_defaultMessages +=1;
@@ -140,7 +133,7 @@ public:
 
 BOOST_AUTO_TEST_CASE(LoggerMasksTypes) {
     Logger logger;
-    int64_t power_of2 = 4096;
+    std::int64_t power_of2 = 4096;
 
     std::shared_ptr<TestLog> testLog = std::make_shared<TestLog>(Log::DefaultMessageTypes + power_of2);
     logger.addBackend("TEST" , testLog);
@@ -158,10 +151,6 @@ BOOST_AUTO_TEST_CASE(LoggerMasksTypes) {
     logger.addMessage( power_of2 , "Passing through");
     BOOST_CHECK_EQUAL( testLog->m_specialMessages , 1 );
 }
-
-
-
-
 
 BOOST_AUTO_TEST_CASE(LoggerDefaultTypesEnabled) {
     Logger logger;
@@ -181,8 +170,8 @@ BOOST_AUTO_TEST_CASE( CounterLogTesting) {
     BOOST_CHECK_EQUAL(1U  , counter.numMessages( Log::MessageType::Note ));
 
     {
-        int64_t not_enabled = 4096;
-        int64_t not_power2  = 4095;
+        std::int64_t not_enabled = 4096;
+        std::int64_t not_power2  = 4095;
 
         BOOST_CHECK_EQUAL( 0U , counter.numMessages( not_enabled ));
         BOOST_CHECK_THROW( counter.numMessages( not_power2 ) , std::invalid_argument);
@@ -202,7 +191,6 @@ BOOST_AUTO_TEST_CASE(TestTimerLog) {
     std::cout << sstream.str() << std::endl;
 }
 
-
 /*****************************************************************/
 void initLogger(std::ostringstream& log_stream);
 
@@ -217,8 +205,6 @@ void initLogger(std::ostringstream& log_stream) {
     BOOST_CHECK_EQUAL( true , OpmLog::hasBackend("COUNTER"));
     BOOST_CHECK_EQUAL( true , OpmLog::hasBackend("STREAM"));
 }
-
-
 
 BOOST_AUTO_TEST_CASE(TestOpmLog) {
     std::ostringstream log_stream;
@@ -238,8 +224,6 @@ BOOST_AUTO_TEST_CASE(TestOpmLog) {
 
     BOOST_CHECK_EQUAL( log_stream.str() , "Warning\n");
 }
-
-
 
 BOOST_AUTO_TEST_CASE(TestHelperFunctions)
 {
@@ -265,8 +249,6 @@ BOOST_AUTO_TEST_CASE(TestHelperFunctions)
     BOOST_CHECK_EQUAL(colorCodeMessage(MessageType::Warning, "message"), AnsiTerminalColors::blue_strong + "message" + AnsiTerminalColors::none);
     BOOST_CHECK_EQUAL(colorCodeMessage(MessageType::Error, "message"), AnsiTerminalColors::red_strong + "message" + AnsiTerminalColors::none);
 }
-
-
 
 BOOST_AUTO_TEST_CASE(TestOpmLogWithColors)
 {
@@ -307,12 +289,8 @@ BOOST_AUTO_TEST_CASE(TestOpmLogWithColors)
         BOOST_CHECK_EQUAL( 1U , counter->numMessages(Log::MessageType::Bug) );
     }
 
-
     std::cout << log_stream.str() << std::endl;
 }
-
-
-
 
 BOOST_AUTO_TEST_CASE(TestOpmLogWithLimits)
 {
@@ -367,17 +345,12 @@ BOOST_AUTO_TEST_CASE(TestOpmLogWithLimits)
     std::cout << log_stream2.str() << std::endl;
 }
 
-
-
-
 BOOST_AUTO_TEST_CASE(TestsetupSimpleLog)
 {
     bool use_prefix = false;
     OpmLog::setupSimpleDefaultLogging(use_prefix);
     BOOST_CHECK_EQUAL(true, OpmLog::hasBackend("SimpleDefaultLog"));
 }
-
-
 
 BOOST_AUTO_TEST_CASE(TestFormat)
 {

@@ -17,29 +17,35 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <stdexcept>
-
-#include <fmt/format.h>
+#include <opm/input/eclipse/EclipseState/Grid/TransMult.hpp>
 
 #include <opm/common/OpmLog/LogUtil.hpp>
+#include <opm/common/OpmLog/OpmLog.hpp>
+
 #include <opm/common/utility/OpmInputError.hpp>
 
-#include <opm/common/OpmLog/OpmLog.hpp>
-#include <opm/input/eclipse/Deck/Deck.hpp>
-#include <opm/input/eclipse/Deck/DeckKeyword.hpp>
-#include <opm/input/eclipse/Deck/DeckSection.hpp>
-#include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
-#include <opm/input/eclipse/EclipseState/Grid/Fault.hpp>
-#include <opm/input/eclipse/EclipseState/Grid/FaultFace.hpp>
-#include <opm/input/eclipse/EclipseState/Grid/FaultCollection.hpp>
-#include <opm/input/eclipse/EclipseState/Grid/TransMult.hpp>
-#include <opm/input/eclipse/EclipseState/Grid/GridDims.hpp>
-#include <opm/input/eclipse/EclipseState/Grid/MULTREGTScanner.hpp>
-#include <opm/input/eclipse/Parser/ParserKeywords/M.hpp>
-#include <opm/input/eclipse/Units/UnitSystem.hpp>
 #include <opm/output/data/Cells.hpp>
 #include <opm/output/data/Solution.hpp>
 
+#include <opm/input/eclipse/EclipseState/Grid/FaultCollection.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/FaultFace.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/Fault.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/GridDims.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/MULTREGTScanner.hpp>
+
+#include <opm/input/eclipse/Units/UnitSystem.hpp>
+
+#include <opm/input/eclipse/Deck/Deck.hpp>
+#include <opm/input/eclipse/Deck/DeckKeyword.hpp>
+#include <opm/input/eclipse/Deck/DeckSection.hpp>
+
+#include <opm/input/eclipse/Parser/ParserKeywords/M.hpp>
+
+#include <stdexcept>
+#include <cstddef>
+
+#include <fmt/format.h>
 
 namespace Opm {
 
@@ -78,26 +84,24 @@ namespace Opm {
         return result;
     }
 
-    void TransMult::assertIJK(size_t i , size_t j , size_t k) const {
+    void TransMult::assertIJK(std::size_t i , std::size_t j , std::size_t k) const {
         if ((i >= m_nx) || (j >= m_ny) || (k >= m_nz))
             throw std::invalid_argument("Invalid ijk");
     }
 
-
-    size_t TransMult::getGlobalIndex(size_t i , size_t j , size_t k) const {
+    std::size_t TransMult::getGlobalIndex(std::size_t i , std::size_t j , std::size_t k) const {
         assertIJK(i,j,k);
         return i + j*m_nx + k*m_nx*m_ny;
     }
 
-
-    double TransMult::getMultiplier(size_t globalIndex,  FaceDir::DirEnum faceDir) const {
+    double TransMult::getMultiplier(std::size_t globalIndex,  FaceDir::DirEnum faceDir) const {
         if (globalIndex < m_nx * m_ny * m_nz)
             return this->getMultiplier__(globalIndex , faceDir);
         else
             throw std::invalid_argument("Invalid global index");
     }
 
-    double TransMult::getMultiplier__(size_t globalIndex,  FaceDir::DirEnum faceDir) const {
+    double TransMult::getMultiplier__(std::size_t globalIndex,  FaceDir::DirEnum faceDir) const {
         if (hasDirectionProperty( faceDir )) {
             const auto& data = m_trans.at(faceDir);
             return data[globalIndex];
@@ -105,15 +109,12 @@ namespace Opm {
             return 1.0;
     }
 
-
-
-
-    double TransMult::getMultiplier(size_t i , size_t j , size_t k, FaceDir::DirEnum faceDir) const {
-        size_t globalIndex = this->getGlobalIndex(i,j,k);
+    double TransMult::getMultiplier(std::size_t i , std::size_t j , std::size_t k, FaceDir::DirEnum faceDir) const {
+        std::size_t globalIndex = this->getGlobalIndex(i,j,k);
         return getMultiplier__( globalIndex , faceDir );
     }
 
-    double TransMult::getRegionMultiplier(size_t globalCellIndex1,  size_t globalCellIndex2, FaceDir::DirEnum faceDir) const {
+    double TransMult::getRegionMultiplier(std::size_t globalCellIndex1,  std::size_t globalCellIndex2, FaceDir::DirEnum faceDir) const {
         return m_multregtScanner.getRegionMultiplier(globalCellIndex1, globalCellIndex2, faceDir);
     }
 
@@ -124,7 +125,6 @@ namespace Opm {
     bool TransMult::hasDirectionProperty(FaceDir::DirEnum faceDir) const {
         return m_trans.count(faceDir) == 1;
     }
-
 
     std::vector<double>& TransMult::getDirectionProperty(FaceDir::DirEnum faceDir) {
         if (m_trans.count(faceDir) == 0) {
@@ -138,10 +138,9 @@ namespace Opm {
     void TransMult::applyMULT(const std::vector<double>& srcData, FaceDir::DirEnum faceDir)
     {
         auto& dstProp = this->getDirectionProperty(faceDir);
-        for (size_t i = 0; i < srcData.size(); ++i)
+        for (std::size_t i = 0; i < srcData.size(); ++i)
             dstProp[i] *= srcData[i];
     }
-
 
     void TransMult::applyMULTFLT(const Fault& fault) {
         double transMult = fault.getTransMult();
@@ -155,9 +154,8 @@ namespace Opm {
         }
     }
 
-
     void TransMult::applyMULTFLT(const FaultCollection& faults) {
-        for (size_t faultIndex = 0; faultIndex < faults.size(); faultIndex++) {
+        for (std::size_t faultIndex = 0; faultIndex < faults.size(); faultIndex++) {
             auto& fault = faults.getFault(faultIndex);
             this->applyMULTFLT(fault);
         }

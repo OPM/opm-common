@@ -33,11 +33,11 @@
 
 #include <opm/input/eclipse/Parser/ParserKeywords/F.hpp>
 
+#include <cstddef>
 #include <string>
 #include <vector>
 
 namespace Opm {
-
 
     FaultCollection::FaultCollection()
     {}
@@ -79,9 +79,9 @@ namespace Opm {
         int K2 = faultRecord.getItem(6).get<int>(0) - 1;
         FaceDir::DirEnum faceDir = FaceDir::FromString(faultRecord.getItem(7).get<std::string>(0));
         FaultFace face { grid.getNX(), grid.getNY(), grid.getNZ(),
-                         size_t(I1), size_t(I2),
-                         size_t(J1), size_t(J2),
-                         size_t(K1), size_t(K2),
+                         std::size_t(I1), std::size_t(I2),
+                         std::size_t(J1), std::size_t(J2),
+                         std::size_t(K1), std::size_t(K2),
                          faceDir };
 
         if (!hasFault(faultName))
@@ -90,7 +90,7 @@ namespace Opm {
         getFault( faultName ).addFace( face );
     }
 
-    size_t FaultCollection::size() const {
+    std::size_t FaultCollection::size() const {
         return m_faults.size();
     }
 
@@ -106,11 +106,11 @@ namespace Opm {
         return m_faults.get( faultName );
     }
 
-    Fault& FaultCollection::getFault(size_t faultIndex) {
+    Fault& FaultCollection::getFault(std::size_t faultIndex) {
         return m_faults.iget( faultIndex );
     }
 
-    const Fault& FaultCollection::getFault(size_t faultIndex) const {
+    const Fault& FaultCollection::getFault(std::size_t faultIndex) const {
         return m_faults.iget( faultIndex );
     }
 

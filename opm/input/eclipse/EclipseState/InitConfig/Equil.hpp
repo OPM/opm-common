@@ -154,7 +154,7 @@ namespace Opm {
 
             const RecordType& getRecord(std::size_t id) const;
 
-            size_t size() const;
+            std::size_t size() const;
             bool empty() const;
 
             const_iterator begin() const;

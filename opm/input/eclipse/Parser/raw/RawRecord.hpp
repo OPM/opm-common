@@ -20,11 +20,12 @@
 #ifndef RECORD_HPP
 #define RECORD_HPP
 
+#include <cstddef>
 #include <deque>
+#include <list>
 #include <memory>
 #include <string>
 #include <string_view>
-#include <list>
 
 namespace Opm {
 class KeywordLocation;
@@ -41,11 +42,11 @@ class KeywordLocation;
         inline std::string_view pop_front();
         inline std::string_view front() const;
         void push_front( std::string_view token, std::size_t count );
-        inline size_t size() const;
+        inline std::size_t size() const;
         std::size_t max_size() const;
 
         std::string getRecordString() const;
-        inline std::string_view getItem(size_t index) const;
+        inline std::string_view getItem(std::size_t index) const;
 
     private:
         std::string_view m_sanitizedRecordString;
@@ -67,11 +68,11 @@ class KeywordLocation;
         return this->m_recordItems.front();
     }
 
-    size_t RawRecord::size() const {
+    std::size_t RawRecord::size() const {
         return m_recordItems.size();
     }
 
-    std::string_view RawRecord::getItem(size_t index) const {
+    std::string_view RawRecord::getItem(std::size_t index) const {
         return this->m_recordItems.at( index );
     }
 }

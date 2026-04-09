@@ -36,6 +36,8 @@
 #include <opm/material/fluidmatrixinteractions/LinearMaterial.hpp>
 #include <opm/material/fluidmatrixinteractions/MaterialTraits.hpp>
 
+#include <cstddef>
+
 template <class FluidSystem, class FluidState>
 void createSurfaceGasFluidSystem(FluidState& gasFluidState)
 {
@@ -254,20 +256,20 @@ Scalar bringOilToSurface(FluidState& surfaceFluidState, Scalar alpha, const Flui
 template <class RawTable>
 void printResult(const RawTable& rawTable,
                  const std::string& fieldName,
-                 size_t firstIdx,
-                 size_t secondIdx,
+                 std::size_t firstIdx,
+                 std::size_t secondIdx,
                  double hiresThres)
 {
     std::cout << "std::vector<std::pair<Scalar, Scalar> > "<<fieldName<<" = {\n";
 
-    size_t sampleIdx = 0;
-    size_t numSamples = 20;
-    size_t numRawHires = 0;
+    std::size_t sampleIdx = 0;
+    std::size_t numSamples = 20;
+    std::size_t numRawHires = 0;
     for (; rawTable[numRawHires][firstIdx] > hiresThres; ++numRawHires)
     {}
 
     for (; sampleIdx < numSamples; ++sampleIdx) {
-        size_t rawIdx = sampleIdx*numRawHires/numSamples;
+        std::size_t rawIdx = sampleIdx*numRawHires/numSamples;
         std::cout << "{ " << rawTable[rawIdx][firstIdx] << ", "
                   << rawTable[rawIdx][secondIdx] << " }"
                   << ",\n";
@@ -275,7 +277,7 @@ void printResult(const RawTable& rawTable,
 
     numSamples = 15;
     for (sampleIdx = 0; sampleIdx < numSamples; ++sampleIdx) {
-        size_t rawIdx = sampleIdx*(rawTable.size() - numRawHires)/numSamples + numRawHires;
+        std::size_t rawIdx = sampleIdx*(rawTable.size() - numRawHires)/numSamples + numRawHires;
         std::cout << "{ " << rawTable[rawIdx][firstIdx] << ", "
                   << rawTable[rawIdx][secondIdx] << " }";
         if (sampleIdx < numSamples - 1)

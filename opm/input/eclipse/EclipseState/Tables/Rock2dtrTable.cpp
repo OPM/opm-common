@@ -17,11 +17,14 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <vector>
+#include <opm/input/eclipse/EclipseState/Tables/Rock2dtrTable.hpp>
+
 #include <opm/input/eclipse/Deck/DeckItem.hpp>
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/Rock2dtrTable.hpp>
+
+#include <vector>
+#include <cstddef>
 
 namespace Opm {
 
@@ -39,28 +42,28 @@ namespace Opm {
             return result;
         }
 
-        void Rock2dtrTable::init(const DeckRecord& record, size_t /* tableIdx */)
+        void Rock2dtrTable::init(const DeckRecord& record, std::size_t /* tableIdx */)
         {
             m_pressureValues.push_back(record.getItem("PRESSURE").getSIDoubleData()[0]);
             m_transMultValues.push_back(record.getItem("TRANSMULT").getSIDoubleData());
         }
 
-        size_t Rock2dtrTable::size() const
+        std::size_t Rock2dtrTable::size() const
         {
             return m_pressureValues.size();
         }
 
-        size_t Rock2dtrTable::sizeMultValues() const
+        std::size_t Rock2dtrTable::sizeMultValues() const
         {
             return m_transMultValues[0].size();
         }
 
-        double Rock2dtrTable::getPressureValue(size_t index) const
+        double Rock2dtrTable::getPressureValue(std::size_t index) const
         {
             return m_pressureValues[index];
         }
 
-        double Rock2dtrTable::getTransMultValue(size_t pressureIndex, size_t saturationIndex) const
+        double Rock2dtrTable::getTransMultValue(std::size_t pressureIndex, std::size_t saturationIndex) const
         {
             return m_transMultValues[pressureIndex][saturationIndex];
         }

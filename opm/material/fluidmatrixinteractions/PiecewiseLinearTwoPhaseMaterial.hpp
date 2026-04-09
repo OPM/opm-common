@@ -28,14 +28,15 @@
 #define OPM_PIECEWISE_LINEAR_TWO_PHASE_MATERIAL_HPP
 
 #include "PiecewiseLinearTwoPhaseMaterialParams.hpp"
+
 #include <opm/common/TimingMacros.hpp>
 #include <opm/material/common/MathToolbox.hpp>
 
+#include <opm/common/utility/gpuDecorators.hpp>
+
+#include <cstddef>
 #include <stdexcept>
 #include <type_traits>
-
-
-#include <opm/common/utility/gpuDecorators.hpp>
 
 namespace Opm {
 /*!
@@ -231,12 +232,12 @@ public:
     { return eval_(params.krnSamples(), params.SwKrnSamples(), krn); }
 
     template <class Evaluation>
-    OPM_HOST_DEVICE static size_t findSegmentIndex(const ValueVector& xValues, const Evaluation& x){
+    OPM_HOST_DEVICE static std::size_t findSegmentIndex(const ValueVector& xValues, const Evaluation& x){
         return findSegmentIndex_(xValues, scalarValue(x));
     }
 
     template <class Evaluation>
-    OPM_HOST_DEVICE static size_t findSegmentIndexDescending(const ValueVector& xValues, const Evaluation& x){
+    OPM_HOST_DEVICE static std::size_t findSegmentIndexDescending(const ValueVector& xValues, const Evaluation& x){
         return findSegmentIndexDescending_(xValues, scalarValue(x));
     }
 
@@ -276,7 +277,7 @@ private:
         if (x >= xValues.back())
             return yValues.back();
 
-        size_t segIdx = findSegmentIndex_(xValues, scalarValue(x));
+        std::size_t segIdx = findSegmentIndex_(xValues, scalarValue(x));
 
         return eval(xValues, yValues, x, segIdx);
     }
@@ -292,7 +293,7 @@ private:
         if (x <= xValues.back())
             return yValues.back();
 
-        size_t segIdx = findSegmentIndexDescending_(xValues, scalarValue(x));
+        std::size_t segIdx = findSegmentIndexDescending_(xValues, scalarValue(x));
 
         return eval(xValues, yValues, x, segIdx);
     }
@@ -308,7 +309,7 @@ private:
         if (x >= xValues.back())
             return 0.0;
 
-        size_t segIdx = findSegmentIndex_(xValues, scalarValue(x));
+        std::size_t segIdx = findSegmentIndex_(xValues, scalarValue(x));
 
         Scalar x0 = xValues[segIdx];
         Scalar x1 = xValues[segIdx + 1];
@@ -319,20 +320,20 @@ private:
         return (y1 - y0)/(x1 - x0);
     }
     template<class ScalarT>
-    OPM_HOST_DEVICE static size_t findSegmentIndex_(const ValueVector& xValues, const ScalarT& x)
+    OPM_HOST_DEVICE static std::size_t findSegmentIndex_(const ValueVector& xValues, const ScalarT& x)
     {
         OPM_TIMEFUNCTION_LOCAL(Subsystem::SatProps);
         assert(xValues.size() > 1); // we need at least two sampling points!
-        size_t n = xValues.size() - 1;
+        std::size_t n = xValues.size() - 1;
         if (xValues.back() <= x)
             return n - 1;
         else if (x <= xValues.front())
             return 0;
 
         // bisection
-        size_t lowIdx = 0, highIdx = n;
+        std::size_t lowIdx = 0, highIdx = n;
         while (lowIdx + 1 < highIdx) {
-            size_t curIdx = (lowIdx + highIdx)/2;
+            std::size_t curIdx = (lowIdx + highIdx)/2;
             if (xValues[curIdx] < x)
                 lowIdx = curIdx;
             else
@@ -342,20 +343,20 @@ private:
         return lowIdx;
     }
 
-    OPM_HOST_DEVICE static size_t findSegmentIndexDescending_(const ValueVector& xValues, Scalar x)
+    OPM_HOST_DEVICE static std::size_t findSegmentIndexDescending_(const ValueVector& xValues, Scalar x)
     {
         OPM_TIMEFUNCTION_LOCAL(Subsystem::SatProps);
         assert(xValues.size() > 1); // we need at least two sampling points!
-        size_t n = xValues.size() - 1;
+        std::size_t n = xValues.size() - 1;
         if (x <= xValues.back())
             return n;
         else if (xValues.front() <= x)
             return 0;
 
         // bisection
-        size_t lowIdx = 0, highIdx = n;
+        std::size_t lowIdx = 0, highIdx = n;
         while (lowIdx + 1 < highIdx) {
-            size_t curIdx = (lowIdx + highIdx)/2;
+            std::size_t curIdx = (lowIdx + highIdx)/2;
             if (xValues[curIdx] >= x)
                 lowIdx = curIdx;
             else

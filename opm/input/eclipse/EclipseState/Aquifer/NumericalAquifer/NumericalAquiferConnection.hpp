@@ -21,8 +21,10 @@
 #define OPM_NUMERICALAQUIFERCONNECTION_HPP
 
 #include <opm/input/eclipse/EclipseState/Grid/FaceDir.hpp>
-#include <map>
+
 #include <array>
+#include <cstddef>
+#include <map>
 #include <vector>
 
 namespace Opm {
@@ -34,9 +36,9 @@ namespace Opm {
     struct NumericalAquiferConnection
     {
         // TODO: I do not think we need all the values here
-        size_t aquifer_id{};
-        size_t I{}, J{}, K{};
-        size_t global_index{};
+        std::size_t aquifer_id{};
+        std::size_t I{}, J{}, K{};
+        std::size_t global_index{};
         FaceDir::DirEnum face_dir{FaceDir::Unknown};
         double trans_multipler{};
         int trans_option{};
@@ -46,7 +48,7 @@ namespace Opm {
         double ve_frac_relperm{};
         double ve_frac_cappress{};
 
-        NumericalAquiferConnection(size_t i, size_t j, size_t k, size_t global_index, bool allow_connect_active, const DeckRecord& record);
+        NumericalAquiferConnection(std::size_t i, std::size_t j, std::size_t k, std::size_t global_index, bool allow_connect_active, const DeckRecord& record);
         NumericalAquiferConnection() = default;
 
         bool operator==(const NumericalAquiferConnection& other) const;
@@ -66,7 +68,7 @@ namespace Opm {
             serializer(this->ve_frac_cappress);
         }
 
-        static std::map<size_t, std::map<size_t, NumericalAquiferConnection>>
+        static std::map<std::size_t, std::map<std::size_t, NumericalAquiferConnection>>
                 generateConnections(const Deck& deck, const EclipseGrid& grid);
 
     private:

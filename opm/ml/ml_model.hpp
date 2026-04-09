@@ -27,19 +27,20 @@
 #ifndef ML_MODEL_H_
 #define ML_MODEL_H_
 
-#include <fmt/format.h>
-
 #include <opm/common/ErrorMacros.hpp>
 #include <opm/material/densead/Math.hpp>
 
 #include <algorithm>
 #include <chrono>
 #include <cmath>
+#include <cstddef>
 #include <cstdio>
+#include <fstream>
 #include <numeric>
 #include <string>
 #include <vector>
-#include <fstream>
+
+#include <fmt/format.h>
 
 namespace Opm
 {
@@ -537,7 +538,7 @@ namespace ML
     }
 
     template <typename T>
-    bool readFile(std::ifstream& file, T* data, size_t n)
+    bool readFile(std::ifstream& file, T* data, std::size_t n)
     {
         file.read(reinterpret_cast<char*>(data), sizeof(T) * n);
         return !file.fail();
@@ -587,19 +588,19 @@ namespace ML
         case ActivationType::kLinear:
             break;
         case ActivationType::kRelu:
-            for (size_t i = 0; i < out.data_.size(); i++) {
+            for (std::size_t i = 0; i < out.data_.size(); i++) {
                 if (out.data_[i] < 0.0) {
                     out.data_[i] = 0.0;
                 }
             }
             break;
         case ActivationType::kSoftPlus:
-            for (size_t i = 0; i < out.data_.size(); i++) {
+            for (std::size_t i = 0; i < out.data_.size(); i++) {
                 out.data_[i] = log(1.0 + exp(out.data_[i]));
             }
             break;
         case ActivationType::kHardSigmoid:
-            for (size_t i = 0; i < out.data_.size(); i++) {
+            for (std::size_t i = 0; i < out.data_.size(); i++) {
                 constexpr double sigmoid_scale = 0.2;
                 const Evaluation& x = (out.data_[i] * sigmoid_scale) + 0.5;
 
@@ -613,7 +614,7 @@ namespace ML
             }
             break;
         case ActivationType::kSigmoid:
-            for (size_t i = 0; i < out.data_.size(); i++) {
+            for (std::size_t i = 0; i < out.data_.size(); i++) {
                 const Evaluation& x = out.data_[i];
 
                 if (x >= 0) {
@@ -625,7 +626,7 @@ namespace ML
             }
             break;
         case ActivationType::kTanh:
-            for (size_t i = 0; i < out.data_.size(); i++) {
+            for (std::size_t i = 0; i < out.data_.size(); i++) {
                 out.data_[i] = sinh(out.data_[i]) / cosh(out.data_[i]);
             }
             break;
@@ -660,7 +661,7 @@ namespace ML
     {
         out.data_.resize(in.data_.size());
         out.dims_ = in.dims_;
-        for (size_t i = 0; i < out.data_.size(); i++) {
+        for (std::size_t i = 0; i < out.data_.size(); i++) {
             auto tempscale = (in.data_[i] - data_min_) / (data_max_ - data_min_);
             out.data_[i] = tempscale * (feat_sup_ - feat_inf_) + feat_inf_;
         }
@@ -694,7 +695,7 @@ namespace ML
     {
         out.data_.resize(in.data_.size());
         out.dims_ = in.dims_;
-        for (size_t i = 0; i < out.data_.size(); i++) {
+        for (std::size_t i = 0; i < out.data_.size(); i++) {
             auto tempscale = (in.data_[i] - feat_inf_) / (feat_sup_ - feat_inf_);
 
             out.data_[i] = tempscale * (data_max_ - data_min_) + data_min_;

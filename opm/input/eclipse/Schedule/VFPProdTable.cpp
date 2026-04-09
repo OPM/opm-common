@@ -33,6 +33,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cmath>
+#include <cstddef>
 
 #include <fmt/format.h>
 
@@ -420,11 +421,11 @@ void VFPProdTable::check() {
     check_axis(this->m_gfr_data);
     check_axis(this->m_alq_data);
 
-    size_t nt = this->m_thp_data.size();
-    size_t nw = this->m_wfr_data.size();
-    size_t ng = this->m_gfr_data.size();
-    size_t na = this->m_alq_data.size();
-    size_t nf = this->m_flo_data.size();
+    std::size_t nt = this->m_thp_data.size();
+    std::size_t nw = this->m_wfr_data.size();
+    std::size_t ng = this->m_gfr_data.size();
+    std::size_t na = this->m_alq_data.size();
+    std::size_t nf = this->m_flo_data.size();
 
     //Check that bhp(thp) is a monotonic increasing function.
     //If this is not the case, we might not be able to determine
@@ -482,7 +483,7 @@ void VFPProdTable::scaleValues(std::vector<double>& values,
         return;
     }
     else {
-        for (size_t i=0; i < values.size(); ++i) {
+        for (std::size_t i=0; i < values.size(); ++i) {
             values[i] *= scaling_factor;
         }
     }
@@ -637,32 +638,32 @@ bool VFPProdTable::operator==(const VFPProdTable& data) const {
 }
 
 
-double VFPProdTable::operator()(size_t thp_idx, size_t wfr_idx, size_t gfr_idx, size_t alq_idx, size_t flo_idx) const {
-    size_t nw = m_wfr_data.size();
-    size_t ng = m_gfr_data.size();
-    size_t na = m_alq_data.size();
-    size_t nf = m_flo_data.size();
+double VFPProdTable::operator()(std::size_t thp_idx, std::size_t wfr_idx, std::size_t gfr_idx, std::size_t alq_idx, std::size_t flo_idx) const {
+    std::size_t nw = m_wfr_data.size();
+    std::size_t ng = m_gfr_data.size();
+    std::size_t na = m_alq_data.size();
+    std::size_t nf = m_flo_data.size();
 
     return m_data[thp_idx*nw*ng*na*nf + wfr_idx*ng*na*nf + gfr_idx*na*nf + alq_idx*nf + flo_idx];
 }
 
 
-double& VFPProdTable::mutableData(size_t thp_idx, size_t wfr_idx, size_t gfr_idx, size_t alq_idx, size_t flo_idx) {
-    size_t nw = m_wfr_data.size();
-    size_t ng = m_gfr_data.size();
-    size_t na = m_alq_data.size();
-    size_t nf = m_flo_data.size();
+double& VFPProdTable::mutableData(std::size_t thp_idx, std::size_t wfr_idx, std::size_t gfr_idx, std::size_t alq_idx, std::size_t flo_idx) {
+    std::size_t nw = m_wfr_data.size();
+    std::size_t ng = m_gfr_data.size();
+    std::size_t na = m_alq_data.size();
+    std::size_t nf = m_flo_data.size();
 
     return m_data[thp_idx*nw*ng*na*nf + wfr_idx*ng*na*nf + gfr_idx*na*nf + alq_idx*nf + flo_idx];
 }
 
 
-std::array<size_t,5> VFPProdTable::shape() const {
-    size_t nt = m_thp_data.size();
-    size_t nw = m_wfr_data.size();
-    size_t ng = m_gfr_data.size();
-    size_t na = m_alq_data.size();
-    size_t nf = m_flo_data.size();
+std::array<std::size_t,5> VFPProdTable::shape() const {
+    std::size_t nt = m_thp_data.size();
+    std::size_t nw = m_wfr_data.size();
+    std::size_t ng = m_gfr_data.size();
+    std::size_t na = m_alq_data.size();
+    std::size_t nf = m_flo_data.size();
 
     return {nt, nw, ng, na, nf};
 }

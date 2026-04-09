@@ -19,17 +19,16 @@
 #ifndef EMODEL_HPP
 #define EMODEL_HPP
 
-
 #include <opm/io/eclipse/EclFile.hpp>
 #include <opm/io/eclipse/ERst.hpp>
 
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 
-#include <string>
-#include <vector>
+#include <cstddef>
 #include <ctime>
 #include <map>
-
+#include <string>
+#include <vector>
 
 class EModel
 {
@@ -64,16 +63,14 @@ public:
 
     int getNumberOfActiveCells();
 
-
     std::tuple<int, int, int> gridDims(){ return std::make_tuple(nI, nJ, nK); };
-
 
 private:
 
     int nI, nJ, nK;
     int activeReportStep;
 
-    size_t nActive;
+    std::size_t nActive;
 
     bool activeFilter, celVolCalculated;
 
@@ -88,7 +85,6 @@ private:
     Opm::EclIO::EclFile initfile;
     std::optional<Opm::EclipseGrid> grid;
     std::optional<Opm::EclIO::ERst> rstfile;
-
 
     std::map<std::string, int> initParam;
     std::vector<std::string> initParamName;

@@ -30,6 +30,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cstddef>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -383,10 +384,10 @@ BOOST_AUTO_TEST_CASE(TestESmry_5) {
     std::vector<float> timeVect = smry1.get_at_rstep("TIME");
     std::vector<float> wopr_prod2 = smry1.get_at_rstep("WOPR:PROD-2");
 
-    for (size_t n = 0; n < timeVect.size() ; n ++)
+    for (std::size_t n = 0; n < timeVect.size() ; n ++)
         BOOST_CHECK_CLOSE(timeVect[n], report_timesteps[n], 1e-6);
 
-    for (size_t n = 0; n < wopr_prod2.size() ; n ++)
+    for (std::size_t n = 0; n < wopr_prod2.size() ; n ++)
         BOOST_CHECK_CLOSE(wopr_prod2[n], qoil_p2[n], 1e-6);
 }
 

@@ -32,6 +32,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <cstddef>
 #include <iosfwd>
 #include <stdexcept>
 #include <vector>
@@ -39,7 +40,7 @@
 namespace Opm {
 
 struct SegmentIndex {
-    size_t value;
+    std::size_t value;
 };
 
 /*!
@@ -67,7 +68,7 @@ public:
      * \param sortInputs True to sort inputs
      */
     template <class ScalarArrayX, class ScalarArrayY>
-    Tabulated1DFunction(size_t nSamples,
+    Tabulated1DFunction(std::size_t nSamples,
                         const ScalarArrayX& x,
                         const ScalarArrayY& y,
                         bool sortInputs = true)
@@ -106,7 +107,7 @@ public:
      * This method takes C-style arrays (pointers) as arguments.
      */
     template <class ScalarArrayX, class ScalarArrayY>
-    void setXYArrays(size_t nSamples,
+    void setXYArrays(std::size_t nSamples,
                      const ScalarArrayX& x,
                      const ScalarArrayY& y,
                      bool sortInputs = true)
@@ -114,7 +115,7 @@ public:
         assert(nSamples > 1);
 
         resizeArrays_(nSamples);
-        for (size_t i = 0; i < nSamples; ++i) {
+        for (std::size_t i = 0; i < nSamples; ++i) {
             xValues_[i] = x[i];
             yValues_[i] = y[i];
         }
@@ -153,7 +154,7 @@ public:
      * \brief Set the sampling points for the piecewise linear function
      */
     template <class PointArray>
-    void setArrayOfPoints(size_t nSamples,
+    void setArrayOfPoints(std::size_t nSamples,
                           const PointArray& points,
                           bool sortInputs = true)
     {
@@ -162,7 +163,7 @@ public:
         assert(nSamples > 1);
 
         resizeArrays_(nSamples);
-        for (size_t i = 0; i < nSamples; ++i) {
+        for (std::size_t i = 0; i < nSamples; ++i) {
             xValues_[i] = points[i][0];
             yValues_[i] = points[i][1];
         }
@@ -212,7 +213,7 @@ public:
     /*!
      * \brief Returns the number of sampling points.
      */
-    size_t numSamples() const
+    std::size_t numSamples() const
     { return xValues_.size(); }
 
     /*!
@@ -230,7 +231,7 @@ public:
     /*!
      * \brief Return the x value of the a sample point with a given index.
      */
-    Scalar xAt(size_t i) const
+    Scalar xAt(std::size_t i) const
     { return xValues_[i]; }
 
     const std::vector<Scalar>& xValues() const
@@ -242,7 +243,7 @@ public:
     /*!
      * \brief Return the value of the a sample point with a given index.
      */
-    Scalar valueAt(size_t i) const
+    Scalar valueAt(std::size_t i) const
     { return yValues_[i]; }
 
     /*!
@@ -271,7 +272,7 @@ public:
     template <class Evaluation>
     Evaluation eval(const Evaluation& x, SegmentIndex segIdxIn) const
     {
-        size_t segIdx = segIdxIn.value;
+        std::size_t segIdx = segIdxIn.value;
         Scalar x0 = xValues_[segIdx];
         Scalar x1 = xValues_[segIdx + 1];
 
@@ -295,7 +296,7 @@ public:
     template <class Evaluation>
     Evaluation evalDerivative(const Evaluation& x, bool extrapolate = false) const
     {
-        size_t segIdx = findSegmentIndex(x, extrapolate).value;
+        std::size_t segIdx = findSegmentIndex(x, extrapolate).value;
         return evalDerivative_(x, segIdx);
     }
 
@@ -361,7 +362,7 @@ public:
             x0 = xMin();
         };
 
-        size_t i = findSegmentIndex(x0, extrapolate).value;
+        std::size_t i = findSegmentIndex(x0, extrapolate).value;
         if (xValues_[i + 1] >= x1) {
             // interval is fully contained within a single function
             // segment
@@ -376,7 +377,7 @@ public:
 
         // make sure that the segments which are completly in the
         // interval [x0, x1] all exhibit the same monotonicity.
-        size_t iEnd = findSegmentIndex(x1, extrapolate).value;
+        std::size_t iEnd = findSegmentIndex(x1, extrapolate).value;
         for (; i < iEnd - 1; ++i) {
             updateMonotonicity_(i, r);
             if (!r)
@@ -461,10 +462,10 @@ public:
             return SegmentIndex{xValues_.size() - 2};
         else {
             // bisection
-            size_t lowerIdx = 1;
-            size_t upperIdx = xValues_.size() - 2;
+            std::size_t lowerIdx = 1;
+            std::size_t upperIdx = xValues_.size() - 2;
             while (lowerIdx + 1 < upperIdx) {
-                size_t pivotIdx = (lowerIdx + upperIdx) / 2;
+                std::size_t pivotIdx = (lowerIdx + upperIdx) / 2;
                 if (x < xValues_[pivotIdx])
                     upperIdx = pivotIdx;
                 else
@@ -486,7 +487,7 @@ public:
                                   ", respectively.\n";
                 msg += "Outputting the problematic table for more information "
                        "(with *** marking the found segment):";
-                for (size_t i = 0; i < numSamples(); ++i) {
+                for (std::size_t i = 0; i < numSamples(); ++i) {
                     if (i % 10 == 0)
                         msg += "\n";
                     if (i == lowerIdx)
@@ -505,7 +506,7 @@ public:
 
 private:
     template <class Evaluation>
-    Evaluation evalDerivative_(const Evaluation& x, size_t segIdx) const
+    Evaluation evalDerivative_(const Evaluation& x, std::size_t segIdx) const
     {
 
         Scalar x0 = xValues_[segIdx];
@@ -527,7 +528,7 @@ private:
     // 1: function is monotonously increasing in the specified interval
     // 0: function is not monotonic in the specified interval
     // -1: function is monotonously decreasing in the specified interval
-    int updateMonotonicity_(size_t i, int& r) const
+    int updateMonotonicity_(std::size_t i, int& r) const
     {
         if (yValues_[i] < yValues_[i + 1]) {
             // monotonically increasing?
@@ -558,7 +559,7 @@ private:
             : x_(x)
         {}
 
-        bool operator ()(size_t idxA, size_t idxB) const
+        bool operator ()(std::size_t idxA, std::size_t idxB) const
         { return x_.at(idxA) < x_.at(idxB); }
 
         const std::vector<Scalar>& x_;
@@ -569,7 +570,7 @@ private:
      */
     void sortInput_()
     {
-        size_t n = numSamples();
+        std::size_t n = numSamples();
 
         // create a vector containing 0...n-1
         std::vector<unsigned> idxVector(n);
@@ -583,7 +584,7 @@ private:
 
         // reorder the sample points
         std::vector<Scalar> tmpX(n), tmpY(n);
-        for (size_t i = 0; i < idxVector.size(); ++ i) {
+        for (std::size_t i = 0; i < idxVector.size(); ++ i) {
             tmpX[i] = xValues_[idxVector[i]];
             tmpY[i] = yValues_[idxVector[i]];
         }
@@ -598,8 +599,8 @@ private:
     void reverseSamplingPoints_()
     {
         // reverse the arrays
-        size_t n = numSamples();
-        for (size_t i = 0; i <= (n - 1)/2; ++i) {
+        std::size_t n = numSamples();
+        for (std::size_t i = 0; i <= (n - 1)/2; ++i) {
             std::swap(xValues_[i], xValues_[n - i - 1]);
             std::swap(yValues_[i], yValues_[n - i - 1]);
         }
@@ -608,7 +609,7 @@ private:
     /*!
      * \brief Resizes the internal vectors to store the sample points.
      */
-    void resizeArrays_(size_t nSamples)
+    void resizeArrays_(std::size_t nSamples)
     {
         xValues_.resize(nSamples);
         yValues_.resize(nSamples);

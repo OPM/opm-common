@@ -19,23 +19,24 @@
 #ifndef OPM_IO_ESMRY_HPP
 #define OPM_IO_ESMRY_HPP
 
-#include <algorithm>
-#include <chrono>
-#include <filesystem>
-#include <iosfwd>
-#include <string>
-#include <unordered_map>
-#include <vector>
-#include <map>
-#include <stdint.h>
-
 #include <opm/common/utility/TimeService.hpp>
 #include <opm/io/eclipse/SummaryNode.hpp>
 
+#include <algorithm>
+#include <chrono>
+#include <cstddef>
+#include <cstdint>
+#include <filesystem>
+#include <iosfwd>
+#include <map>
+#include <string>
+#include <unordered_map>
+#include <vector>
+
 namespace Opm { namespace EclIO {
 
-using ArrSourceEntry = std::tuple<std::string, std::string, int, uint64_t>;
-using TimeStepEntry = std::tuple<int, int, uint64_t>;
+using ArrSourceEntry = std::tuple<std::string, std::string, int, std::uint64_t>;
+using TimeStepEntry = std::tuple<int, int, std::uint64_t>;
 using RstEntry = std::tuple<std::string, int>;
 
 class ESmry
@@ -71,7 +72,7 @@ public:
 
     int timestepIdxAtReportstepStart(const int reportStep) const;
 
-    size_t numberOfTimeSteps() const { return nTstep; }
+    std::size_t numberOfTimeSteps() const { return nTstep; }
 
     const std::string& get_unit(const std::string& name) const;
     const std::string& get_unit(const SummaryNode& node) const;
@@ -89,7 +90,7 @@ private:
 
     int nI, nJ, nK, nSpecFiles;
     bool fromSingleRun;
-    size_t nVect, nTstep;
+    std::size_t nVect, nTstep;
 
     std::vector<bool> formattedFiles;
     std::vector<std::string> dataFileList;
@@ -128,13 +129,11 @@ private:
 
     void updatePathAndRootName(std::filesystem::path& dir, std::filesystem::path& rootN) const;
 
-
     std::string makeKeyString(const std::string& keyword, const std::string& wgname, int num,
                               const std::optional<Opm::EclIO::lgr_info> lgr_info) const;
 
     std::string unpackNumber(const SummaryNode&) const;
     std::string lookupKey(const SummaryNode&) const;
-
 
     void write_block(std::ostream &, bool write_dates, const std::vector<std::string>& time_column, const std::vector<SummaryNode>&) const;
 
@@ -150,11 +149,11 @@ private:
         return result;
     }
 
-    std::vector<std::tuple <std::string, uint64_t>>
+    std::vector<std::tuple <std::string, std::uint64_t>>
     getListOfArrays(const std::string& filename, bool formatted);
 
     std::vector<int> makeKeywPosVector(int speInd) const;
-    std::string read_string_from_disk(std::fstream& fileH, uint64_t size) const;
+    std::string read_string_from_disk(std::fstream& fileH, std::uint64_t size) const;
 
     void read_ministeps_from_disk();
     int read_ministep_formatted(std::fstream& fileH);

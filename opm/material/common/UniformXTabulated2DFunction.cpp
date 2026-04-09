@@ -22,8 +22,10 @@
 */
 
 #include <config.h>
+
 #include <opm/material/common/UniformXTabulated2DFunction.hpp>
 
+#include <cstddef>
 #include <ostream>
 
 namespace Opm {
@@ -37,7 +39,7 @@ void UniformXTabulated2DFunction<Scalar>::print(std::ostream& os) const
 
     Scalar y0 = 1e30;
     Scalar y1 = -1e30;
-    size_t n = 0;
+    std::size_t n = 0;
     for (int i = 0; i < m; ++ i) {
         y0 = std::min(y0, yMin(i));
         y1 = std::max(y1, yMax(i));
@@ -48,7 +50,7 @@ void UniformXTabulated2DFunction<Scalar>::print(std::ostream& os) const
     n *= 3;
     for (int i = 0; i <= m; ++i) {
         Scalar x = x0 + (x1 - x0)*i/m;
-        for (size_t j = 0; j <= n; ++j) {
+        for (std::size_t j = 0; j <= n; ++j) {
             Scalar y = y0 + (y1 - y0)*j/n;
             os << x << " " << y << " " << eval(x, y) << "\n";
         }

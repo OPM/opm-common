@@ -16,14 +16,17 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 #ifndef OPM_COUNTERLOG_HPP
 #define OPM_COUNTERLOG_HPP
 
-#include <string>
-#include <memory>
-#include <map>
-
 #include <opm/common/OpmLog/LogBackend.hpp>
+
+#include <cstddef>
+#include <cstdint>
+#include <map>
+#include <memory>
+#include <string>
 
 namespace Opm {
 /*!
@@ -33,18 +36,18 @@ namespace Opm {
     class CounterLog : public LogBackend
     {
     public:
-        explicit CounterLog(int64_t messageMask);
+        explicit CounterLog(std::int64_t messageMask);
         CounterLog();
 
-        size_t numMessages(int64_t messageType) const;
+        std::size_t numMessages(std::int64_t messageType) const;
 
         void clear();
 
     protected:
-        void addMessageUnconditionally(int64_t messageFlag,
+        void addMessageUnconditionally(std::int64_t messageFlag,
                                        const std::string& message) override;
     private:
-        std::map<int64_t , size_t> m_count;
+        std::map<std::int64_t , std::size_t> m_count;
     };
 
 } // namespace Opm

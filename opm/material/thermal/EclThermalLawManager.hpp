@@ -33,6 +33,7 @@
 #include "EclThermalConductionLawMultiplexer.hpp"
 #include "EclThermalConductionLawMultiplexerParams.hpp"
 
+#include <cstddef>
 #include <functional>
 #include <vector>
 
@@ -59,7 +60,7 @@ public:
     using ThermalConductionLaw = EclThermalConductionLawMultiplexer<Scalar, FluidSystem>;
     using ThermalConductionLawParams = typename ThermalConductionLaw::Params;
 
-    void initParamsForElements(const EclipseState& eclState, size_t numElems,
+    void initParamsForElements(const EclipseState& eclState, std::size_t numElems,
                                const std::function<std::vector<double>(const FieldPropsManager&, const std::string&)>&
                                fieldPropDoubleOnLeafAssigner,
                                const std::function<std::vector<unsigned int>(const FieldPropsManager&, const std::string&,
@@ -73,7 +74,7 @@ private:
     /*!
      * \brief Initialize the parameters for the solid energy law using using HEATCR and friends.
      */
-    void initHeatcr_(const EclipseState& eclState, size_t numElems,
+    void initHeatcr_(const EclipseState& eclState, std::size_t numElems,
                      const std::function<std::vector<double>(const FieldPropsManager&, const std::string&)>&
                      fieldPropDoubleOnLeafAssigner);
 
@@ -92,14 +93,14 @@ private:
     /*!
      * \brief Initialize the parameters for the thermal conduction law using THCONR and friends.
      */
-    void initThconr_(const EclipseState& eclState, size_t numElems,
+    void initThconr_(const EclipseState& eclState, std::size_t numElems,
                      const std::function<std::vector<double>(const FieldPropsManager&, const std::string&)>&
                      fieldPropsDoubleOnLeafAssigner);
 
     /*!
      * \brief Initialize the parameters for the thermal conduction law using THCROCK and friends.
      */
-    void initThc_(const EclipseState& eclState, size_t numElems,
+    void initThc_(const EclipseState& eclState, std::size_t numElems,
                   const std::function<std::vector<double>(const FieldPropsManager&, const std::string&)>&
                   fieldPropsDoubleOnLeafAssigner);
 

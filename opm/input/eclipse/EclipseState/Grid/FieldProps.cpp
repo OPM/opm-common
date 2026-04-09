@@ -341,7 +341,7 @@ void assign_deck(const Fieldprops::keywords::keyword_info<T>& kw_info,
     for (const auto& cell_index : box.index_list()) {
         auto active_index = cell_index.active_index;
         auto data_index = cell_index.data_index;
-        for (size_t i = 0; i < kw_info.num_value; ++i) {
+        for (std::size_t i = 0; i < kw_info.num_value; ++i) {
             auto deck_data_index = i* box.size() + data_index;
             if (value::has_value(deck_status[deck_data_index])) {
                 auto data_active_index = i * box.size() + active_index;
@@ -1926,7 +1926,7 @@ void FieldProps::init_tempi(Fieldprops::FieldData<double>& tempi)
         const auto& depth = this->init_get<double>("DEPTH").data;
         std::vector< double > tempi_values( this->active_size, 0 );
 
-        for (size_t active_index = 0; active_index < this->active_size; active_index++) {
+        for (std::size_t active_index = 0; active_index < this->active_size; active_index++) {
             const auto& table = rtempvd.getTable<RtempvdTable>(eqlnum[active_index] - 1);
             tempi_values[active_index] = table.evaluate("Temperature", depth[active_index]);
         }
@@ -2343,7 +2343,7 @@ void FieldProps::apply_tran(const std::string& keyword, std::vector<double>& dat
 }
 
 
-void FieldProps::apply_tranz_global(const std::vector<size_t>& indices, std::vector<double>& data) const
+void FieldProps::apply_tranz_global(const std::vector<std::size_t>& indices, std::vector<double>& data) const
 {
     ::Opm::apply_tran(this->tran.at("TRANZ"), this->double_data, indices, data);
 }
@@ -2368,7 +2368,7 @@ void FieldProps::apply_numerical_aquifers(const NumericalAquifers& numerical_aqu
 
     const auto& aqu_cell_props = numerical_aquifers.aquiferCellProps();
     for (const auto& [global_index, cellprop] : aqu_cell_props) {
-        const size_t active_index = this->grid_ptr->activeIndex(global_index);
+        const std::size_t active_index = this->grid_ptr->activeIndex(global_index);
         this->cell_volume[active_index] = cellprop.volume;
         depth_data[active_index] = cellprop.depth;
 

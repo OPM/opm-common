@@ -399,13 +399,13 @@ BOOST_AUTO_TEST_CASE(DEPTHZ_EQUAL_TOPS) {
         BOOST_CHECK_THROW( grid1.getCellVolume(0,10,0) , std::invalid_argument);
         BOOST_CHECK_THROW( grid1.getCellVolume(0,0,10) , std::invalid_argument);
 
-        for (size_t g=0; g < 1000; g++)
+        for (std::size_t g=0; g < 1000; g++)
             BOOST_CHECK_CLOSE( grid1.getCellVolume(g) , 0.25*0.25*0.25 , 0.001);
 
 
-        for (size_t k= 0; k < 10; k++)
-            for (size_t j= 0; j < 10; j++)
-                for (size_t i= 0; i < 10; i++)
+        for (std::size_t k= 0; k < 10; k++)
+            for (std::size_t j= 0; j < 10; j++)
+                for (std::size_t i= 0; i < 10; i++)
                     BOOST_CHECK_CLOSE( grid1.getCellVolume(i, j, k) , 0.25*0.25*0.25 , 0.001 );
 
     }
@@ -416,9 +416,9 @@ BOOST_AUTO_TEST_CASE(DEPTHZ_EQUAL_TOPS) {
         BOOST_CHECK_THROW( grid1.getCellCenter(0,10,0) , std::invalid_argument);
         BOOST_CHECK_THROW( grid1.getCellCenter(0,0,10) , std::invalid_argument);
 
-        for (size_t k= 0; k < 10; k++) {
-            for (size_t j= 0; j < 10; j++) {
-                for (size_t i= 0; i < 10; i++) {
+        for (std::size_t k= 0; k < 10; k++) {
+            for (std::size_t j= 0; j < 10; j++) {
+                for (std::size_t i= 0; i < 10; i++) {
                     auto pos = grid1.getCellCenter(i, j, k);
 
                     BOOST_CHECK_CLOSE( std::get<0>(pos) , i*0.25 + 0.125, 0.001);
@@ -1149,7 +1149,7 @@ BOOST_AUTO_TEST_CASE(GridBoxActnum) {
 
     BOOST_CHECK_NO_THROW(fp.get_int("ACTNUM"));
 
-    size_t active = 10 * 10 * 10     // 1000
+    std::size_t active = 10 * 10 * 10     // 1000
                     - (10 * 10 * 1)  // - top layer
                     - ( 3 *  3 * 3)  // - [5,7]^3 box
                     - ( 3 *  3 * 3)  // - [6,8]^3 box
@@ -1161,13 +1161,13 @@ BOOST_AUTO_TEST_CASE(GridBoxActnum) {
     BOOST_CHECK_EQUAL(es.getInputGrid().getNumActive(), active);
 
     {
-        size_t active_index = 0;
+        std::size_t active_index = 0;
         // NB: The implementation of this test actually assumes that
         //     the loops are running with z as the outer and x as the
         //     inner direction.
-        for (size_t z = 0; z < grid.getNZ(); z++) {
-            for (size_t y = 0; y < grid.getNY(); y++) {
-                for (size_t x = 0; x < grid.getNX(); x++) {
+        for (std::size_t z = 0; z < grid.getNZ(); z++) {
+            for (std::size_t y = 0; y < grid.getNY(); y++) {
+                for (std::size_t x = 0; x < grid.getNX(); x++) {
                     if (z == 0)
                         BOOST_CHECK(!grid.cellActive(x, y, z));
                     else if (x >= 4 && x <= 6 && y >= 4 && y <= 6 && z >= 4 && z <= 6)
@@ -1175,7 +1175,7 @@ BOOST_AUTO_TEST_CASE(GridBoxActnum) {
                     else if (x >= 5 && x <= 7 && y >= 5 && y <= 7 && z >= 5 && z <= 7)
                         BOOST_CHECK(!grid.cellActive(x, y, z));
                     else {
-                        size_t g = grid.getGlobalIndex( x,y,z );
+                        std::size_t g = grid.getGlobalIndex( x,y,z );
 
                         BOOST_CHECK(grid.cellActive(x, y, z));
                         BOOST_CHECK_EQUAL( grid.activeIndex(x,y,z) , active_index );
@@ -1250,7 +1250,7 @@ BOOST_AUTO_TEST_CASE(GridBoxActnum2) {
 
     BOOST_CHECK_NO_THROW(fp.get_int("ACTNUM"));
 
-    size_t active = 10 * 10 * 10     // 1000
+    std::size_t active = 10 * 10 * 10     // 1000
                     - (10 * 10 * 1)  // - top layer
                     - ( 3 *  3 * 3)  // - [5,7]^3 box
                     - ( 3 *  3 * 3)  // - [6,8]^3 box
@@ -1262,19 +1262,19 @@ BOOST_AUTO_TEST_CASE(GridBoxActnum2) {
     BOOST_CHECK_EQUAL(es.getInputGrid().getNumActive(), active);
 
     {
-        size_t active_index = 0;
+        std::size_t active_index = 0;
         // NB: The implementation of this test actually assumes that
         //     the loops are running with z as the outer and x as the
         //     inner direction.
-        for (size_t z = 0; z < grid.getNZ(); z++) {
-            for (size_t y = 0; y < grid.getNY(); y++) {
-                for (size_t x = 0; x < grid.getNX(); x++) {
+        for (std::size_t z = 0; z < grid.getNZ(); z++) {
+            for (std::size_t y = 0; y < grid.getNY(); y++) {
+                for (std::size_t x = 0; x < grid.getNX(); x++) {
                     if (z == 0)
                         BOOST_CHECK(!grid.cellActive(x, y, z));
                     else if (x == 6 && y == 6 && z == 6) {
                         BOOST_CHECK(grid.cellActive(x, y, z));
                         BOOST_CHECK_EQUAL( grid.activeIndex(x,y,z) , active_index );
-                        size_t g = grid.getGlobalIndex( x,y,z );
+                        std::size_t g = grid.getGlobalIndex( x,y,z );
                         BOOST_CHECK_EQUAL( grid.activeIndex(g) , active_index );
                         ++active_index;
                     } else if (x >= 4 && x <= 6 && y >= 4 && y <= 6 && z >= 4 && z <= 6)
@@ -1282,7 +1282,7 @@ BOOST_AUTO_TEST_CASE(GridBoxActnum2) {
                     else if (x >= 5 && x <= 7 && y >= 5 && y <= 7 && z >= 5 && z <= 7)
                         BOOST_CHECK(!grid.cellActive(x, y, z));
                     else {
-                        size_t g = grid.getGlobalIndex( x,y,z );
+                        std::size_t g = grid.getGlobalIndex( x,y,z );
 
                         BOOST_CHECK(grid.cellActive(x, y, z));
                         BOOST_CHECK_EQUAL( grid.activeIndex(x,y,z) , active_index );
@@ -2155,8 +2155,8 @@ BOOST_AUTO_TEST_CASE(RadialDetailsDZ) {
 }
 
 BOOST_AUTO_TEST_CASE(CoordMapper) {
-    size_t nx = 10;
-    size_t ny = 7;
+    std::size_t nx = 10;
+    std::size_t ny = 7;
     Opm::CoordMapper cmp = Opm::CoordMapper( nx , ny );
     BOOST_CHECK_THROW( cmp.index(12,6,0,0), std::invalid_argument );
     BOOST_CHECK_THROW( cmp.index(10,8,0,0), std::invalid_argument );
@@ -2225,13 +2225,13 @@ BOOST_AUTO_TEST_CASE(CART_Deck_3x4x2) {
 
     BOOST_CHECK_EQUAL( t_coord.size() , ref_coord.size());
 
-    for (size_t i=0; i< t_coord.size(); i++) {
+    for (std::size_t i=0; i< t_coord.size(); i++) {
         BOOST_CHECK_CLOSE( t_coord[i] , ref_coord[i], 1.0e-5);
     }
 
     BOOST_CHECK_EQUAL( t_zcorn.size() , ref_zcorn.size());
 
-    for (size_t i=0; i< t_zcorn.size(); i++) {
+    for (std::size_t i=0; i< t_zcorn.size(); i++) {
         BOOST_CHECK_CLOSE( t_zcorn[i] , ref_zcorn[i], 1.0e-5);
     }
 }
@@ -2284,13 +2284,13 @@ BOOST_AUTO_TEST_CASE(CART_Deck_DEPTHZ_2x3x2) {
 
     BOOST_CHECK_EQUAL( t_coord.size() , ref_coord.size());
 
-    for (size_t i=0; i< t_coord.size(); i++) {
+    for (std::size_t i=0; i< t_coord.size(); i++) {
         BOOST_CHECK_CLOSE( t_coord[i] , ref_coord[i], 1.0e-5);
     }
 
     BOOST_CHECK_EQUAL( t_zcorn.size() , ref_zcorn.size());
 
-    for (size_t i=0; i< t_zcorn.size(); i++) {
+    for (std::size_t i=0; i< t_zcorn.size(); i++) {
         BOOST_CHECK_CLOSE( t_zcorn[i] , ref_zcorn[i], 1.0e-5);
     }
 }
@@ -2400,7 +2400,7 @@ BOOST_AUTO_TEST_CASE(SAVE_FIELD_UNITS) {
         std::vector<float> coord_input_f;
         coord_input_f.reserve(coord_input_si.size());
 
-        for (size_t n = 0; n < coord_egrid.size(); n++) {
+        for (std::size_t n = 0; n < coord_egrid.size(); n++) {
             coord_input_f.push_back(static_cast<float>(units.from_si(length, coord_input_si[n])));
             BOOST_CHECK_CLOSE(coord_input_f[n], coord_egrid[n], 1e-6);
         }
@@ -2414,7 +2414,7 @@ BOOST_AUTO_TEST_CASE(SAVE_FIELD_UNITS) {
         std::vector<float> zcorn_input_f;
         zcorn_input_f.reserve(zcorn_input_si.size());
 
-        for (size_t n = 0; n < zcorn_egrid.size(); n++) {
+        for (std::size_t n = 0; n < zcorn_egrid.size(); n++) {
             zcorn_input_f.push_back(static_cast<float>(units.from_si(length, zcorn_input_si[n])));
             BOOST_CHECK_CLOSE(zcorn_input_f[n], zcorn_egrid[n], 1e-6);
         }
@@ -2478,7 +2478,7 @@ BOOST_AUTO_TEST_CASE(SAVE_FIELD_UNITS) {
 
         BOOST_CHECK(test_mapaxes2.size() == ref2_mapaxes.size());
 
-        for (size_t n = 0; n < ref2_mapaxes.size(); n++) {
+        for (std::size_t n = 0; n < ref2_mapaxes.size(); n++) {
             BOOST_CHECK_EQUAL(ref2_mapaxes[n], test_mapaxes2[n]);
         }
 
@@ -2528,7 +2528,7 @@ BOOST_AUTO_TEST_CASE(SAVE_FIELD_UNITS) {
 
         BOOST_CHECK(test_mapaxes3.size() == ref3_mapaxes.size());
 
-        for (size_t n = 0; n < ref3_mapaxes.size(); n++) {
+        for (std::size_t n = 0; n < ref3_mapaxes.size(); n++) {
             BOOST_CHECK(ref3_mapaxes[n] == test_mapaxes3[n]);
         }
     }
@@ -2601,7 +2601,7 @@ BOOST_AUTO_TEST_CASE(SAVE_METRIC_UNITS) {
         std::vector<float> coord_input_f;
         coord_input_f.reserve(coord_input_si.size());
 
-        for (size_t n = 0; n < coord_egrid.size(); n++) {
+        for (std::size_t n = 0; n < coord_egrid.size(); n++) {
             coord_input_f.push_back(static_cast<float>(units1.from_si(length, coord_input_si[n])));
             BOOST_CHECK_CLOSE(coord_input_f[n], coord_egrid[n], 1e-6);
         }
@@ -2615,7 +2615,7 @@ BOOST_AUTO_TEST_CASE(SAVE_METRIC_UNITS) {
         std::vector<float> zcorn_input_f;
         zcorn_input_f.reserve(zcorn_input_si.size());
 
-        for (size_t n = 0; n < zcorn_egrid.size(); n++) {
+        for (std::size_t n = 0; n < zcorn_egrid.size(); n++) {
             zcorn_input_f.push_back(static_cast<float>(units1.from_si(length, zcorn_input_si[n])));
             BOOST_CHECK_CLOSE(zcorn_input_f[n], zcorn_egrid[n], 1e-6);
         }
@@ -2628,7 +2628,7 @@ BOOST_AUTO_TEST_CASE(SAVE_METRIC_UNITS) {
         BOOST_CHECK(file1.hasKey("MAPAXES"));
         std::vector<float> mapaxes = file1.get<float>("MAPAXES");
 
-        for (size_t n = 0; n < 6; n++) {
+        for (std::size_t n = 0; n < 6; n++) {
             BOOST_CHECK_CLOSE(mapaxes[n], ref_mapaxes1[n], 1e-6);
         }
 
@@ -2651,11 +2651,11 @@ BOOST_AUTO_TEST_CASE(SAVE_METRIC_UNITS) {
 
         BOOST_CHECK(nnc1.size() == nnc2.size());
 
-        for (size_t n = 0; n < nnc1.size(); n++) {
+        for (std::size_t n = 0; n < nnc1.size(); n++) {
             BOOST_CHECK(nnc1[n] == ref_nnc1[n]);
         }
 
-        for (size_t n = 0; n < nnc2.size(); n++) {
+        for (std::size_t n = 0; n < nnc2.size(); n++) {
             BOOST_CHECK(nnc2[n] == ref_nnc2[n]);
         }
 
@@ -2709,7 +2709,7 @@ BOOST_AUTO_TEST_CASE(SAVE_METRIC_UNITS) {
 
         BOOST_CHECK(test_mapaxes2.size() == ref_mapaxes2.size());
 
-        for (size_t n = 0; n < ref_mapaxes2.size(); n++) {
+        for (std::size_t n = 0; n < ref_mapaxes2.size(); n++) {
             BOOST_CHECK(ref_mapaxes2[n] == test_mapaxes2[n]);
         }
     }
@@ -2722,7 +2722,7 @@ BOOST_AUTO_TEST_CASE(CalcCellDims) {
 
     std::array<int, 3> dims = grid.getNXYZ();
 
-    size_t nCells = dims[0]*dims[1]*dims[2];
+    std::size_t nCells = dims[0]*dims[1]*dims[2];
 
     std::vector<double> dz_ref = { 0.33223500E+01, 0.40973248E+01, 0.32474000E+01, 0.28723750E+01, 0.49961748E+01, 0.49961748E+01,
                                    0.49961748E+01, 0.49961748E+01
@@ -2740,7 +2740,7 @@ BOOST_AUTO_TEST_CASE(CalcCellDims) {
                                       0.10660616E+03, 0.10643174E+03, 0.10678072E+03
                                     };
 
-    for (size_t n=0; n<nCells; n++) {
+    for (std::size_t n=0; n<nCells; n++) {
 
         BOOST_CHECK_CLOSE( grid.getCellThickness(n) , dz_ref[n], 1e-5 );
 
@@ -2756,7 +2756,7 @@ BOOST_AUTO_TEST_CASE(CalcCellDims) {
     for (int k = 0; k < dims[2]; k++) {
         for (int j = 0; j < dims[1]; j++) {
             for (int i = 0; i < dims[0]; i++) {
-                size_t globInd = i + j*dims[0] + k*dims[0]*dims[1];
+                std::size_t globInd = i + j*dims[0] + k*dims[0]*dims[1];
                 BOOST_CHECK_CLOSE( grid.getCellThickness(i, j, k) , dz_ref[globInd], 1e-5 );
 
                 std::array<double, 3> cellDims = grid.getCellDims(i, j, k);
@@ -2822,7 +2822,7 @@ BOOST_AUTO_TEST_CASE(TESTCP_ACTNUM_UPDATE) {
 
     BOOST_CHECK( actGrid1.size() == actGrid2.size());
 
-    for (size_t n=0; n< actGrid1.size(); n++) {
+    for (std::size_t n=0; n< actGrid1.size(); n++) {
         BOOST_CHECK_EQUAL( actGrid1[n], actInDeck[n]);
         BOOST_CHECK_EQUAL( actGrid2[n], newAct[n]);
     }
@@ -2884,7 +2884,7 @@ BOOST_AUTO_TEST_CASE(TESTCP_ACTNUM_AQUNUM) {
 
     BOOST_CHECK( grid_actnum.size() == desired_actnum.size() );
 
-    for (size_t n=0; n< grid_actnum.size(); n++) {
+    for (std::size_t n=0; n< grid_actnum.size(); n++) {
         BOOST_CHECK_EQUAL( grid_actnum[n], desired_actnum[n] );
     }
 
@@ -2892,7 +2892,7 @@ BOOST_AUTO_TEST_CASE(TESTCP_ACTNUM_AQUNUM) {
     const auto& grid_actnum2 = es.getInputGrid().getACTNUM();
 
     BOOST_CHECK( desired_actnum.size() == grid_actnum2.size());
-    for (size_t n=0; n< grid_actnum.size(); n++) {
+    for (std::size_t n=0; n< grid_actnum.size(); n++) {
         BOOST_CHECK_EQUAL( grid_actnum2[n], desired_actnum[n] );
     }
 }
@@ -3040,7 +3040,7 @@ BOOST_AUTO_TEST_CASE(TEST_getCellCenters) {
         std::array<double, 3> cellC = grid1.getCellCenter(ind);
         std::array<double, 3> cellD = grid1.getCellDims(ind);
 
-        for (size_t i = 0; i < 3; i++) {
+        for (std::size_t i = 0; i < 3; i++) {
             BOOST_CHECK_CLOSE( ref_centers_prev[n][i], cellC[i], 1e-10);
             BOOST_CHECK_CLOSE( ref_dims_prev[n][i], cellD[i], 1e-10);
         }
@@ -3090,7 +3090,7 @@ BOOST_AUTO_TEST_CASE(TEST_constructFromEgrid) {
 
     BOOST_CHECK( actGrid1.size() == actGrid2.size() );
 
-    for (size_t n= 0; n< actGrid1.size(); n++) {
+    for (std::size_t n= 0; n< actGrid1.size(); n++) {
         BOOST_CHECK( actGrid1[n] == actGrid2[n] );
     }
 
@@ -3105,13 +3105,13 @@ BOOST_AUTO_TEST_CASE(TEST_constructFromEgrid) {
 
     BOOST_CHECK( zcornGrid1.size() == zcornGrid2.size() );
 
-    for (size_t n = 0; n < zcornGrid1.size(); n++){
+    for (std::size_t n = 0; n < zcornGrid1.size(); n++){
         BOOST_CHECK_CLOSE( zcornGrid1[n], zcornGrid2[n], 1.0e-6 );
     }
 
     BOOST_CHECK( grid1.getCartesianSize() == grid2.getCartesianSize() );
 
-    for (size_t n=0; n < grid1.getCartesianSize(); n++){
+    for (std::size_t n=0; n < grid1.getCartesianSize(); n++){
         BOOST_CHECK_CLOSE( grid1.getCellVolume(n), grid2.getCellVolume(n), 1e-6);
 
     }
@@ -3304,17 +3304,17 @@ BOOST_AUTO_TEST_CASE(TEST_GDFILE_2) {
         BOOST_CHECK(coordGrid1.size() == coord_egrid_f.size());
         BOOST_CHECK(zcornGrid1.size() == zcorn_egrid_f.size());
 
-        for (size_t n = 0; n < coordGrid1.size(); n++) {
+        for (std::size_t n = 0; n < coordGrid1.size(); n++) {
             BOOST_CHECK(coordGrid1_f[n] == coord_egrid_f[n]);
         }
 
-        for (size_t n = 0; n < zcornGrid1.size(); n++) {
+        for (std::size_t n = 0; n < zcornGrid1.size(); n++) {
             BOOST_CHECK(zcornGrid1_f[n] == zcorn_egrid_f[n]);
         }
 
         // all cells are active, since ACTNUM not present
         std::vector<int> actGrid1 = grid1.getACTNUM();
-        for (size_t n = 0; n < actGrid1.size(); n++) {
+        for (std::size_t n = 0; n < actGrid1.size(); n++) {
             BOOST_CHECK(actGrid1[n] == 1);
         }
 
@@ -3335,7 +3335,7 @@ BOOST_AUTO_TEST_CASE(TEST_GDFILE_2) {
 
         // check that actnum is reset from gdfile
 
-        for (size_t n = 0; n < actGrid2.size(); n++) {
+        for (std::size_t n = 0; n < actGrid2.size(); n++) {
             BOOST_CHECK(actGrid2[n] == ref_act_egrid[n]);
         }
 
@@ -3365,12 +3365,12 @@ BOOST_AUTO_TEST_CASE(TEST_GDFILE_2) {
         // check that actnum is reset from gdfile, ACTNUM input in deck
         // but before keyword GDFILE
 
-        for (size_t n = 0; n < actGrid3.size(); n++) {
+        for (std::size_t n = 0; n < actGrid3.size(); n++) {
             BOOST_CHECK(actGrid3[n] == ref_act_egrid[n]);
         }
 
         // check that depth values are in SI units
-        for (size_t n = 0; n < refDepthGrid3a.size(); n++) {
+        for (std::size_t n = 0; n < refDepthGrid3a.size(); n++) {
             BOOST_CHECK_CLOSE(grid3a.getCellDepth(n), refDepthGrid3a[n], 1e-3);
         }
 
@@ -3399,12 +3399,12 @@ BOOST_AUTO_TEST_CASE(TEST_GDFILE_2) {
         actGrid3 = grid3b.getACTNUM();
 
         // check that actnum is reset from deck since input after keyword GDFILE
-        for (size_t n = 0; n < actGrid3.size(); n++) {
+        for (std::size_t n = 0; n < actGrid3.size(); n++) {
             BOOST_CHECK(actGrid3[n] == ref_act_deck3[n]);
         }
 
         // check that depth values are converted from Field to SI units
-        for (size_t n = 0; n < refDepthGrid3b.size(); n++) {
+        for (std::size_t n = 0; n < refDepthGrid3b.size(); n++) {
             BOOST_CHECK_CLOSE(grid3b.getCellDepth(n), refDepthGrid3b[n], 1e-3);
         }
 

@@ -40,7 +40,7 @@ namespace Opm {
 
         explicit Regdims(const Deck& deck);
 
-        Regdims(size_t ntfip , size_t nmfipr , size_t nrfregr , size_t ntfreg , size_t nplmix) :
+        Regdims(std::size_t ntfip , std::size_t nmfipr , std::size_t nrfregr , std::size_t ntfreg , std::size_t nplmix) :
             m_NTFIP( ntfip ),
             m_NMFIPR( nmfipr ),
             m_NRFREG( nrfregr ),
@@ -54,27 +54,27 @@ namespace Opm {
         }
 
 
-        size_t getNTFIP() const {
+        std::size_t getNTFIP() const {
             return m_NTFIP;
         }
 
 
-        size_t getNMFIPR() const {
+        std::size_t getNMFIPR() const {
             return m_NMFIPR;
         }
 
 
-        size_t getNRFREG() const {
+        std::size_t getNRFREG() const {
             return m_NRFREG;
         }
 
 
-        size_t getNTFREG() const {
+        std::size_t getNTFREG() const {
             return m_NTFREG;
         }
 
 
-        size_t getNPLMIX() const {
+        std::size_t getNPLMIX() const {
             return m_NPLMIX;
         }
 
@@ -98,11 +98,11 @@ namespace Opm {
         }
 
     private:
-        size_t m_NTFIP;
-        size_t m_NMFIPR;
-        size_t m_NRFREG;
-        size_t m_NTFREG;
-        size_t m_NPLMIX;
+        std::size_t m_NTFIP;
+        std::size_t m_NMFIPR;
+        std::size_t m_NRFREG;
+        std::size_t m_NTFREG;
+        std::size_t m_NPLMIX;
     };
 }
 

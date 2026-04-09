@@ -21,43 +21,48 @@
 #ifndef OPM_TABLE_MANAGER_HPP
 #define OPM_TABLE_MANAGER_HPP
 
-#include <cassert>
-#include <optional>
-#include <set>
-
+#include <opm/input/eclipse/EclipseState/Tables/Aqudims.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/BrineDensityTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/DenT.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/Eqldims.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/FlatTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/JFunc.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/JouleThomson.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/MiscTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/MsfnTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/PlymwinjTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/PlyshlogTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/PmiscTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/Ppcwmax.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/PvtgTable.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/PvtgwTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/PvtgwoTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/PvtgwTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/PvtoTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/PvtsolTable.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/RocktabTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/PvtwsaltTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/Regdims.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/Rock2dTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/Rock2dtrTable.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/PlyshlogTable.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/PvtwsaltTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/RocktabTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/RwgsaltTable.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/BrineDensityTable.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/SolventDensityTable.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/StandardCond.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/FlatTable.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/SorwmisTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/SgcwmisTable.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/MiscTable.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/PmiscTable.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/MsfnTable.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/JFunc.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/SkprpolyTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/SkprwatTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/SolventDensityTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/SorwmisTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/StandardCond.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/Tabdims.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableContainer.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/Aqudims.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/PlymwinjTable.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/SkprwatTable.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/SkprpolyTable.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/Eqldims.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/Regdims.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TLMixpar.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/Ppcwmax.hpp>
+
+#include <cassert>
+#include <cstddef>
+#include <map>
+#include <optional>
+#include <set>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace Opm {
 
@@ -83,7 +88,7 @@ namespace Opm {
         /*
           WIll return max{ Tabdims::NTFIP , Regdims::NTFIP }.
         */
-        size_t numFIPRegions() const;
+        std::size_t numFIPRegions() const;
 
         const TableContainer& getSwofTables() const;
         const TableContainer& getSgwfnTables() const;
@@ -292,11 +297,11 @@ namespace Opm {
         }
 
     private:
-        TableContainer& forceGetTables( const std::string& tableName , size_t numTables);
+        TableContainer& forceGetTables( const std::string& tableName , std::size_t numTables);
 
         void complainAboutAmbiguousKeyword(const Deck& deck, const std::string& keywordName);
 
-        void addTables( const std::string& tableName , size_t numTables);
+        void addTables( const std::string& tableName , std::size_t numTables);
         void initSimpleTables(const Deck& deck);
         void initRTempTables(const Deck& deck);
         void initZmfvdTables(const Deck& deck);
@@ -336,23 +341,23 @@ namespace Opm {
         void initSimpleTableContainerWithJFunc(const Deck& deck,
                                       const std::string& keywordName,
                                       const std::string& tableName,
-                                      size_t numTables);
+                                      std::size_t numTables);
 
         template <class TableType>
         void initSimpleTableContainer(const Deck& deck,
                                       const std::string& keywordName,
                                       const std::string& tableName,
-                                      size_t numTables);
+                                      std::size_t numTables);
 
         template <class TableType>
         void initSimpleTableContainer(const Deck& deck,
                                       const std::string& keywordName,
-                                      size_t numTables);
+                                      std::size_t numTables);
 
         template <class TableType>
         void initSimpleTableContainerWithJFunc(const Deck& deck,
                                                const std::string& keywordName,
-                                               size_t numTables);
+                                               std::size_t numTables);
 
         template <class TableType>
         void initSimpleTable(const Deck& deck,
@@ -427,15 +432,14 @@ namespace Opm {
         bool m_diff_mole_fraction {true};
 
         struct SplitSimpleTables {
-          size_t plyshMax = 0;
-          size_t rockMax = 0;
-          std::map<size_t, std::shared_ptr<PlyshlogTable>> plyshMap;
-          std::map<size_t, std::shared_ptr<RocktabTable>> rockMap;
+          std::size_t plyshMax = 0;
+          std::size_t rockMax = 0;
+          std::map<std::size_t, std::shared_ptr<PlyshlogTable>> plyshMap;
+          std::map<std::size_t, std::shared_ptr<RocktabTable>> rockMap;
         };
 
         SplitSimpleTables splitSimpleTable(std::map<std::string,TableContainer>& simpleTables);
     };
 }
-
 
 #endif

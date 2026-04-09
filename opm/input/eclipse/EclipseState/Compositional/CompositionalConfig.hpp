@@ -57,14 +57,14 @@ public:
     double standardTemperature() const;
     double standardPressure() const;
     const std::vector<std::string>& compName() const;
-    EOSType eosType(size_t eos_region) const;
+    EOSType eosType(std::size_t eos_region) const;
     const std::vector<double>& molecularWeights(std::size_t eos_region) const;
     const std::vector<double>& acentricFactors(std::size_t eos_region) const;
     const std::vector<double>& criticalPressure(std::size_t eos_region) const;
     const std::vector<double>& criticalTemperature(std::size_t eos_region) const;
     const std::vector<double>& criticalVolume(std::size_t eos_region) const;
     const std::vector<double>& volumeShifts(std::size_t eos_region) const;
-    const std::vector<double>& binaryInteractionCoefficient(size_t eos_region) const;
+    const std::vector<double>& binaryInteractionCoefficient(std::size_t eos_region) const;
     std::size_t numComps() const;
 
     template<class Serializer>

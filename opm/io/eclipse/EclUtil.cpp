@@ -24,6 +24,7 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <cstdint>
 #include <cstring>
 #include <filesystem>
 #include <fstream>
@@ -48,14 +49,14 @@ int Opm::EclIO::flipEndianInt(int num)
 #endif
 }
 
-std::int64_t Opm::EclIO::flipEndianLongInt(int64_t num)
+std::int64_t Opm::EclIO::flipEndianLongInt(std::int64_t num)
 {
 #ifdef _MSC_VER
     std::uint64_t tmp = _byteswap_uint64(num);
-    return static_cast<int64_t>(tmp);
+    return static_cast<std::int64_t>(tmp);
 #else
     std::uint64_t tmp = __builtin_bswap64(num);
-    return static_cast<int64_t>(tmp);
+    return static_cast<std::int64_t>(tmp);
 #endif
 }
 

@@ -673,10 +673,10 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
         auto ny = this->getNY();
         auto nz = this->getNZ();
 
-        assertVectorSize( DEPTHZ , static_cast<size_t>( (nx + 1)*(ny +1 )) , "DEPTHZ");
-        assertVectorSize( DXV    , static_cast<size_t>( nx ) , "DXV");
-        assertVectorSize( DYV    , static_cast<size_t>( ny ) , "DYV");
-        assertVectorSize( DZV    , static_cast<size_t>( nz ) , "DZV");
+        assertVectorSize( DEPTHZ , static_cast<std::size_t>( (nx + 1)*(ny +1 )) , "DEPTHZ");
+        assertVectorSize( DXV    , static_cast<std::size_t>( nx ) , "DXV");
+        assertVectorSize( DYV    , static_cast<std::size_t>( ny ) , "DYV");
+        assertVectorSize( DZV    , static_cast<std::size_t>( nz ) , "DZV");
 
         m_coord = makeCoordDxvDyvDzvDepthz(DXV, DYV, DZV, DEPTHZ);
         m_zcorn = makeZcornDzvDepthz(DZV, DEPTHZ);
@@ -1271,7 +1271,7 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
         {
             const auto& ZCORNKeyWord = deck.get<ParserKeywords::ZCORN>().back();
 
-            if (ZCORNKeyWord.getDataSize() != static_cast<size_t>(8*nx*ny*nz)) {
+            if (ZCORNKeyWord.getDataSize() != static_cast<std::size_t>(8*nx*ny*nz)) {
                 const std::string msg =
                     "Wrong size of the ZCORN keyword: Expected 8*nx*ny*nz = "
                     + std::to_string(static_cast<long long>(8*nx*ny*nz)) + " is "
@@ -1283,7 +1283,7 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
 
         {
             const auto& COORDKeyWord = deck.get<ParserKeywords::COORD>().back();
-            if (COORDKeyWord.getDataSize() != static_cast<size_t>(6*(nx + 1)*(ny + 1))) {
+            if (COORDKeyWord.getDataSize() != static_cast<std::size_t>(6*(nx + 1)*(ny + 1))) {
                 const std::string msg =
                     "Wrong size of the COORD keyword: Expected 6*(nx + 1)*(ny + 1) = "
                     + std::to_string(static_cast<long long>(6*(nx + 1)*(ny + 1))) + " is "
@@ -2372,7 +2372,7 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         std::vector<double> element_centerX, element_centerY, element_centerZ;
         for (EclipseGridLGR& lgr_cell : lgr_children_cells) {
             std::tie(element_centerX, element_centerY,element_centerZ) =
-                VectorUtil::callMethodForEachInputOnObjectXYZ<EclipseGridLGR, std::array<double,3>, int,std::array<double, 3> (EclipseGridLGR::*)(size_t) const>
+                VectorUtil::callMethodForEachInputOnObjectXYZ<EclipseGridLGR, std::array<double,3>, int,std::array<double, 3> (EclipseGridLGR::*)(std::size_t) const>
                 (lgr_cell, &EclipseGridLGR::getCellCenter, lgr_cell.getActiveMap());
             auto [host_cellX, host_cellY, host_cellZ]  =  getAllCellCorners(lgr_cell.get_father_global());
             auto inside_el = GeometryUtil::isInsideElement(element_centerX, element_centerY, element_centerZ, host_cellX, host_cellY, host_cellZ);

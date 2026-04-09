@@ -21,6 +21,7 @@
 #define OPM_TIMESERVICE_HEADER_INCLUDED
 
 #include <chrono>
+#include <cstdint>
 #include <ctime>
 #include <string>
 #include <unordered_map>
@@ -29,7 +30,7 @@ namespace Opm {
 
     class DeckRecord;
 
-    using time_point = std::chrono::time_point<std::chrono::system_clock, std::chrono::duration<int64_t, std::ratio<1,1000>>>;
+    using time_point = std::chrono::time_point<std::chrono::system_clock, std::chrono::duration<std::int64_t, std::ratio<1,1000>>>;
 
     namespace TimeService {
     std::time_t to_time_t(const time_point& tp);

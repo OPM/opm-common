@@ -29,6 +29,7 @@
 #include <array>
 #include <climits>
 #include <cstddef>
+#include <cstdint>
 #include <map>
 #include <stdexcept>
 #include <string>
@@ -50,7 +51,7 @@ namespace Opm { namespace data {
 
         public:
             Rates() = default;
-            enum class opt : uint32_t {
+            enum class opt : std::uint32_t {
                 wat               = (1 << 0),
                 oil               = (1 << 1),
                 gas               = (1 << 2),
@@ -1244,7 +1245,7 @@ namespace Opm { namespace data {
         void read(MessageBufferType& buffer) {
             unsigned int size;
             buffer.read(size);
-            for (size_t i = 0; i < size; ++i) {
+            for (std::size_t i = 0; i < size; ++i) {
                 std::string name;
                 buffer.read(name);
                 Well well;
@@ -1659,7 +1660,7 @@ namespace Opm { namespace data {
             //tracer:
             unsigned int size;
             buffer.read(size);
-            for (size_t i = 0; i < size; ++i) {
+            for (std::size_t i = 0; i < size; ++i) {
                 std::string tracer_name;
                 buffer.read(tracer_name);
                 double tracer_rate;

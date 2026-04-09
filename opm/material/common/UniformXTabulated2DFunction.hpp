@@ -35,6 +35,7 @@
 
 #include <cassert>
 #include <cmath>
+#include <cstddef>
 #include <iosfwd>
 #include <limits>
 #include <tuple>
@@ -101,25 +102,25 @@ public:
     /*!
      * \brief Returns the value of the X coordinate of the sampling points.
      */
-    Scalar xAt(size_t i) const
+    Scalar xAt(std::size_t i) const
     { return xPos_[i]; }
 
     /*!
      * \brief Returns the value of the Y coordinate of a sampling point.
      */
-    Scalar yAt(size_t i, size_t j) const
+    Scalar yAt(std::size_t i, std::size_t j) const
     { return std::get<1>(samples_[i][j]); }
 
     /*!
      * \brief Returns the value of a sampling point.
      */
-    Scalar valueAt(size_t i, size_t j) const
+    Scalar valueAt(std::size_t i, std::size_t j) const
     { return std::get<2>(samples_[i][j]); }
 
     /*!
      * \brief Returns the number of sampling points in X direction.
      */
-    size_t numX() const
+    std::size_t numX() const
     { return xPos_.size(); }
 
     /*!
@@ -137,7 +138,7 @@ public:
     /*!
      * \brief Returns the number of sampling points in Y direction a given column.
      */
-    size_t numY(unsigned i) const
+    std::size_t numY(unsigned i) const
     { return samples_.at(i).size(); }
 
     /*!
@@ -176,7 +177,7 @@ public:
     Scalar jToY(unsigned i, unsigned j) const
     {
         assert(i < numX());
-        assert(size_t(j) < samples_[i].size());
+        assert(std::size_t(j) < samples_[i].size());
 
         return std::get<1>(samples_.at(i).at(j));
     }
@@ -414,7 +415,7 @@ public:
      *
      * Returns the i index of that line.
      */
-    size_t appendXPos(Scalar nextX)
+    std::size_t appendXPos(Scalar nextX)
     {
         if (xPos_.empty() || xPos_.back() < nextX) {
             xPos_.push_back(nextX);
@@ -438,7 +439,7 @@ public:
      *
      * Returns the i index of the new point within its line.
      */
-    size_t appendSamplePoint(size_t i, Scalar y, Scalar value)
+    std::size_t appendSamplePoint(std::size_t i, Scalar y, Scalar value)
     {
         assert(i < numX());
         Scalar x = iToX(i);

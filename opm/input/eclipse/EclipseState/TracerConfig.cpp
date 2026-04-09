@@ -18,21 +18,27 @@
 */
 
 #include <config.h>
+
 #include <opm/input/eclipse/EclipseState/TracerConfig.hpp>
 
 #include <opm/common/utility/OpmInputError.hpp>
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/common/OpmLog/InfoLogger.hpp>
-#include <opm/input/eclipse/Deck/Deck.hpp>
+
 #include <opm/input/eclipse/EclipseState/Tables/TracerVdTable.hpp>
-#include <opm/input/eclipse/Parser/ParserKeywords/T.hpp>
+
 #include <opm/input/eclipse/Units/Dimension.hpp>
 #include <opm/input/eclipse/Units/Units.hpp>
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 
+#include <opm/input/eclipse/Deck/Deck.hpp>
+
+#include <opm/input/eclipse/Parser/ParserKeywords/T.hpp>
+
 #include <fmt/format.h>
 
 #include <algorithm>
+#include <cstddef>
 
 namespace Opm {
 
@@ -168,7 +174,7 @@ TracerConfig TracerConfig::serializationTestObject()
     return result;
 }
 
-size_t TracerConfig::size() const {
+std::size_t TracerConfig::size() const {
     return this->tracers.size();
 }
 

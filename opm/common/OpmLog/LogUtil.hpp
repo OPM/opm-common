@@ -29,18 +29,18 @@ class KeywordLocation;
 
 namespace Log {
     namespace MessageType {
-        const int64_t Debug     =  1;   /* Excessive information */
-        const int64_t Note      =  2;  /* Information that should only go into print file.*/
-        const int64_t Info      =  4;   /* Normal status information */
-        const int64_t Warning   =  8;   /* Input anomaly - possible error */
-        const int64_t Error     = 16;   /* Error in the input data - should probably exit. */
-        const int64_t Problem   = 32;   /* Calculation problems - e.g. convergence failure. */
-        const int64_t Bug       = 64;   /* An inconsistent state has been encountered in the simulator - should probably exit. */
+        const std::int64_t Debug     =  1;   /* Excessive information */
+        const std::int64_t Note      =  2;  /* Information that should only go into print file.*/
+        const std::int64_t Info      =  4;   /* Normal status information */
+        const std::int64_t Warning   =  8;   /* Input anomaly - possible error */
+        const std::int64_t Error     = 16;   /* Error in the input data - should probably exit. */
+        const std::int64_t Problem   = 32;   /* Calculation problems - e.g. convergence failure. */
+        const std::int64_t Bug       = 64;   /* An inconsistent state has been encountered in the simulator - should probably exit. */
     }
 
-    const int64_t DefaultMessageTypes = MessageType::Debug + MessageType::Note + MessageType::Info + MessageType::Warning + MessageType::Error + MessageType::Problem + MessageType::Bug;
-    const int64_t NoDebugMessageTypes = MessageType::Info + MessageType::Note + MessageType::Warning + MessageType::Error + MessageType::Problem + MessageType::Bug;
-    const int64_t StdoutMessageTypes = MessageType::Info + MessageType::Warning + MessageType::Error + MessageType::Problem + MessageType::Bug;
+    const std::int64_t DefaultMessageTypes = MessageType::Debug + MessageType::Note + MessageType::Info + MessageType::Warning + MessageType::Error + MessageType::Problem + MessageType::Bug;
+    const std::int64_t NoDebugMessageTypes = MessageType::Info + MessageType::Note + MessageType::Warning + MessageType::Error + MessageType::Problem + MessageType::Bug;
+    const std::int64_t StdoutMessageTypes = MessageType::Info + MessageType::Warning + MessageType::Error + MessageType::Problem + MessageType::Bug;
 
     /// Terminal codes for ANSI/vt100 compatible terminals.
     /// See for example http://ascii-table.com/ansi-escape-sequences.php
@@ -58,11 +58,11 @@ namespace Log {
     }
 
 
-    bool isPower2(int64_t x);
+    bool isPower2(std::int64_t x);
     std::string fileMessage(const KeywordLocation& location, const std::string& msg);
-    std::string fileMessage(int64_t messageType , const KeywordLocation& location , const std::string& msg);
-    std::string prefixMessage(int64_t messageType , const std::string& msg);
-    std::string colorCodeMessage(int64_t messageType , const std::string& msg);
+    std::string fileMessage(std::int64_t messageType , const KeywordLocation& location , const std::string& msg);
+    std::string prefixMessage(std::int64_t messageType , const std::string& msg);
+    std::string colorCodeMessage(std::int64_t messageType , const std::string& msg);
 
 }
 }

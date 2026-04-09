@@ -33,6 +33,7 @@
 #include <limits>
 #include <tuple>
 #include <cmath>
+#include <cstddef>
 #include <numeric>
 
 #include <math.h>
@@ -128,7 +129,7 @@ BOOST_AUTO_TEST_CASE(TestEclFile_X231)
     EclFile test1(filename);
     auto array = test1.get<int>(arrName);
 
-    for (size_t n = 0; n < 10; n++) {
+    for (std::size_t n = 0; n < 10; n++) {
         BOOST_CHECK_EQUAL(array[n], ivect[n]);
     }
 }
@@ -261,7 +262,7 @@ BOOST_AUTO_TEST_CASE(TestEclFile_IX)
 
     auto logih = file1.get<bool>("LOGIHEAD");
 
-    for (size_t n = 0 ; n < refLogihead.size(); n++)
+    for (std::size_t n = 0 ; n < refLogihead.size(); n++)
         BOOST_CHECK_EQUAL(refLogihead[n], logih[n]);
 }
 
@@ -429,7 +430,7 @@ BOOST_AUTO_TEST_CASE(TestEcl_Write_CHAR)
         EclFile file1(testFile1);
         std::vector<std::string> strList=file1.get<std::string>("TEST1");
 
-        for (size_t n = 0; n < refStrList1.size(); n++) {
+        for (std::size_t n = 0; n < refStrList1.size(); n++) {
             BOOST_CHECK(refStrList1[n] == strList[n]);
         }
 
@@ -447,7 +448,7 @@ BOOST_AUTO_TEST_CASE(TestEcl_Write_CHAR)
         EclFile file1(testFile1);
         std::vector<std::string> strList=file1.get<std::string>("TEST2");
 
-        for (size_t n = 0; n < refStrList2.size(); n++) {
+        for (std::size_t n = 0; n < refStrList2.size(); n++) {
             BOOST_CHECK(refStrList2[n] == strList[n]);
         }
 
@@ -466,7 +467,7 @@ BOOST_AUTO_TEST_CASE(TestEcl_Write_CHAR)
         EclFile file1(testFile1);
         std::vector<std::string> strList=file1.get<std::string>("TEST3");
 
-        for (size_t n = 0; n < refStrList1.size(); n++) {
+        for (std::size_t n = 0; n < refStrList1.size(); n++) {
             BOOST_CHECK(refStrList1[n] == strList[n]);
         }
 
@@ -485,7 +486,7 @@ BOOST_AUTO_TEST_CASE(TestEcl_Write_CHAR)
         EclFile file1(testFile2);
         std::vector<std::string> strList=file1.get<std::string>("TEST4");
 
-        for (size_t n = 0; n < refStrList1.size(); n++) {
+        for (std::size_t n = 0; n < refStrList1.size(); n++) {
             BOOST_CHECK(refStrList1[n] == strList[n]);
         }
 
@@ -503,7 +504,7 @@ BOOST_AUTO_TEST_CASE(TestEcl_Write_CHAR)
         EclFile file1(testFile2);
         std::vector<std::string> strList=file1.get<std::string>("TEST5");
 
-        for (size_t n = 0; n < refStrList2.size(); n++) {
+        for (std::size_t n = 0; n < refStrList2.size(); n++) {
             BOOST_CHECK(refStrList2[n] == strList[n]);
         }
 
@@ -522,7 +523,7 @@ BOOST_AUTO_TEST_CASE(TestEcl_Write_CHAR)
         EclFile file1(testFile2);
         std::vector<std::string> strList=file1.get<std::string>("TEST6");
 
-        for (size_t n = 0; n < refStrList1.size(); n++) {
+        for (std::size_t n = 0; n < refStrList1.size(); n++) {
             BOOST_CHECK(refStrList1[n] == strList[n]);
         }
 

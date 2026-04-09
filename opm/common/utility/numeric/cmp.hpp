@@ -94,7 +94,7 @@ namespace Opm {
                 return false;
             }
 
-            for (size_t i = 0; i < v1.size(); i++) {
+            for (std::size_t i = 0; i < v1.size(); i++) {
                 if (!scalar_equal<T>( v1[i], v2[i], abs_eps, rel_eps ))
                     return false;
             }
@@ -109,11 +109,11 @@ namespace Opm {
 
 
         template<typename T>
-        bool array_equal(const T* p1, const T* p2, size_t num_elements, T abs_eps, T rel_eps) {
+        bool array_equal(const T* p1, const T* p2, std::size_t num_elements, T abs_eps, T rel_eps) {
             if (std::memcmp(p1 , p2 , num_elements * sizeof * p1) == 0)
                 return true;
             else {
-                size_t index;
+                std::size_t index;
                 for (index = 0; index < num_elements; index++) {
                     if (!scalar_equal<T>( p1[index] , p2[index] , abs_eps , rel_eps)) {
                         return false;
@@ -125,7 +125,7 @@ namespace Opm {
 
 
         template<typename T>
-        bool array_equal(const T* p1, const T* p2, size_t num_elements) {
+        bool array_equal(const T* p1, const T* p2, std::size_t num_elements) {
              return array_equal<T>(p1, p2, num_elements , default_abs_epsilon, default_rel_epsilon);
         }
     }

@@ -84,8 +84,8 @@ namespace Opm {
         //! \brief Returns threshold pressure for a fault.
         double getThresholdPressureFault(int idx) const;
 
-        size_t ftSize() const;
-        size_t size() const;
+        std::size_t ftSize() const;
+        std::size_t size() const;
         bool active() const;
         bool restart() const;
         bool irreversible() const;

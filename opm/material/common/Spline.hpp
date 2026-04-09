@@ -32,6 +32,7 @@
 #include <opm/material/common/TridiagonalMatrix.hpp>
 #include <opm/material/common/PolynomialUtils.hpp>
 
+#include <cstddef>
 #include <iosfwd>
 #include <vector>
 
@@ -138,7 +139,7 @@ public:
      * \param sortInputs True to sort inputs
      */
     template <class ScalarArrayX, class ScalarArrayY>
-    Spline(size_t nSamples,
+    Spline(std::size_t nSamples,
            const ScalarArrayX& x,
            const ScalarArrayY& y,
            SplineType splineType = Natural,
@@ -154,7 +155,7 @@ public:
      * \param sortInputs True to sort inputs
      */
     template <class PointArray>
-    Spline(size_t nSamples,
+    Spline(std::size_t nSamples,
            const PointArray& points,
            SplineType splineType = Natural,
            bool sortInputs = true)
@@ -199,7 +200,7 @@ public:
      * \param sortInputs Indicates whether the sample points should be sorted (this is not necessary if they are already sorted in ascending or descending order)
      */
     template <class ScalarArray>
-    Spline(size_t nSamples,
+    Spline(std::size_t nSamples,
            const ScalarArray& x,
            const ScalarArray& y,
            Scalar m0,
@@ -217,7 +218,7 @@ public:
      * \param sortInputs Indicates whether the sample points should be sorted (this is not necessary if they are already sorted in ascending or descending order)
      */
     template <class PointArray>
-    Spline(size_t nSamples,
+    Spline(std::size_t nSamples,
            const PointArray& points,
            Scalar m0,
            Scalar m1,
@@ -302,7 +303,6 @@ public:
         this->setSlopesFromMoments_(slopeVec_, moments);
     }
 
-
     ///////////////////////////////////////
     ///////////////////////////////////////
     ///////////////////////////////////////
@@ -323,7 +323,7 @@ public:
      * sampling points must be larger than 1.
      */
     template <class ScalarArrayX, class ScalarArrayY>
-    void setXYArrays(size_t nSamples,
+    void setXYArrays(std::size_t nSamples,
                      const ScalarArrayX& x,
                      const ScalarArrayY& y,
                      Scalar m0, Scalar m1,
@@ -332,7 +332,7 @@ public:
         assert(nSamples > 1);
 
         setNumSamples_(nSamples);
-        for (size_t i = 0; i < nSamples; ++i) {
+        for (std::size_t i = 0; i < nSamples; ++i) {
             xPos_[i] = x[i];
             yPos_[i] = y[i];
         }
@@ -391,7 +391,7 @@ public:
      * the number of sampling points must be larger than 1.
      */
     template <class PointArray>
-    void setArrayOfPoints(size_t nSamples,
+    void setArrayOfPoints(std::size_t nSamples,
                           const PointArray& points,
                           Scalar m0,
                           Scalar m1,
@@ -402,7 +402,7 @@ public:
         assert(nSamples > 1);
 
         setNumSamples_(nSamples);
-        for (size_t i = 0; i < nSamples; ++i) {
+        for (std::size_t i = 0; i < nSamples; ++i) {
             xPos_[i] = points[i][0];
             yPos_[i] = points[i][1];
         }
@@ -440,7 +440,7 @@ public:
         setNumSamples_(points.size());
         typename XYContainer::const_iterator it = points.begin();
         typename XYContainer::const_iterator endIt = points.end();
-        for (size_t i = 0; it != endIt; ++i, ++it) {
+        for (std::size_t i = 0; it != endIt; ++i, ++it) {
             xPos_[i] = (*it)[0];
             yPos_[i] = (*it)[1];
         }
@@ -511,7 +511,7 @@ public:
      * sampling points must be larger than 1.
      */
     template <class ScalarArrayX, class ScalarArrayY>
-    void setXYArrays(size_t nSamples,
+    void setXYArrays(std::size_t nSamples,
                      const ScalarArrayX& x,
                      const ScalarArrayY& y,
                      SplineType splineType = Natural,
@@ -520,7 +520,7 @@ public:
         assert(nSamples > 1);
 
         setNumSamples_(nSamples);
-        for (size_t i = 0; i < nSamples; ++i) {
+        for (std::size_t i = 0; i < nSamples; ++i) {
             xPos_[i] = x[i];
             yPos_[i] = y[i];
         }
@@ -592,7 +592,7 @@ public:
      * the number of sampling points must be larger than 1.
      */
     template <class PointArray>
-    void setArrayOfPoints(size_t nSamples,
+    void setArrayOfPoints(std::size_t nSamples,
                           const PointArray& points,
                           SplineType splineType = Natural,
                           bool sortInputs = true)
@@ -602,7 +602,7 @@ public:
         assert(nSamples > 1);
 
         setNumSamples_(nSamples);
-        for (size_t i = 0; i < nSamples; ++i) {
+        for (std::size_t i = 0; i < nSamples; ++i) {
             xPos_[i] = points[i][0];
             yPos_[i] = points[i][1];
         }
@@ -645,7 +645,7 @@ public:
         setNumSamples_(points.size());
         typename XYContainer::const_iterator it = points.begin();
         typename XYContainer::const_iterator endIt = points.end();
-        for (size_t i = 0; it != endIt; ++ i, ++it) {
+        for (std::size_t i = 0; it != endIt; ++ i, ++it) {
             xPos_[i] = (*it)[0];
             yPos_[i] = (*it)[1];
         }
@@ -718,19 +718,19 @@ public:
     /*!
      * \brief Return the number of (x, y) values.
      */
-    size_t numSamples() const
+    std::size_t numSamples() const
     { return xPos_.size(); }
 
     /*!
      * \brief Return the x value of a given sampling point.
      */
-    Scalar xAt(size_t sampleIdx) const
+    Scalar xAt(std::size_t sampleIdx) const
     { return x_(sampleIdx); }
 
     /*!
      * \brief Return the x value of a given sampling point.
      */
-    Scalar valueAt(size_t sampleIdx) const
+    Scalar valueAt(std::size_t sampleIdx) const
     { return y_(sampleIdx); }
 
     /*!
@@ -750,7 +750,7 @@ public:
      "spline.csv" using 1:4 w p ti "Monotonic"
      ----------- snap -----------
     */
-    void printCSV(Scalar xi0, Scalar xi1, size_t k, std::ostream& os) const;
+    void printCSV(Scalar xi0, Scalar xi1, std::size_t k, std::ostream& os) const;
 
     /*!
      * \brief Evaluate the spline at a given position.
@@ -776,11 +776,11 @@ public:
                 Scalar y0 = y_(0);
                 return y0 + m*(x - xAt(0));
             }
-            else if (x > xAt(static_cast<size_t>(static_cast<long int>(numSamples()) - 1))) {
-                Scalar m = evalDerivative_(xAt(static_cast<size_t>(numSamples() - 1)),
-                                           /*segmentIdx=*/static_cast<size_t>(numSamples()-2));
-                Scalar y0 = y_(static_cast<size_t>(numSamples() - 1));
-                return y0 + m*(x - xAt(static_cast<size_t>(numSamples() - 1)));
+            else if (x > xAt(static_cast<std::size_t>(static_cast<long int>(numSamples()) - 1))) {
+                Scalar m = evalDerivative_(xAt(static_cast<std::size_t>(numSamples() - 1)),
+                                           /*segmentIdx=*/static_cast<std::size_t>(numSamples()-2));
+                Scalar y0 = y_(static_cast<std::size_t>(numSamples() - 1));
+                return y0 + m*(x - xAt(static_cast<std::size_t>(numSamples() - 1)));
             }
         }
 
@@ -893,12 +893,12 @@ public:
         assert(applies(x0) && applies(x1));
 
         Evaluation tmpSol[3], sol = 0;
-        size_t nSol = 0;
-        size_t iFirst = segmentIdx_(x0);
-        size_t iLast = segmentIdx_(x1);
-        for (size_t i = iFirst; i <= iLast; ++i)
+        std::size_t nSol = 0;
+        std::size_t iFirst = segmentIdx_(x0);
+        std::size_t iLast = segmentIdx_(x1);
+        for (std::size_t i = iFirst; i <= iLast; ++i)
         {
-            size_t nCur = intersectSegment_(tmpSol, i, a, b, c, d, x0, x1);
+            std::size_t nCur = intersectSegment_(tmpSol, i, a, b, c, d, x0, x1);
             if (nCur == 1)
                 sol = tmpSol[0];
 
@@ -942,7 +942,7 @@ public:
             x0 = xAt(0);
         };
 
-        size_t i = segmentIdx_(x0);
+        std::size_t i = segmentIdx_(x0);
         if (x_(i + 1) >= x1) {
             // interval is fully contained within a single spline
             // segment
@@ -957,7 +957,7 @@ public:
 
         // make sure that the segments which are completly in the
         // interval [x0, x1] all exhibit the same monotonicity.
-        size_t iEnd = segmentIdx_(x1);
+        std::size_t iEnd = segmentIdx_(x1);
         for (; i < iEnd - 1; ++i) {
             monotonic_(i, x_(i), x_(i + 1), r);
             if (!r)
@@ -1013,7 +1013,7 @@ protected:
      */
     void sortInput_()
     {
-        size_t n = numSamples();
+        std::size_t n = numSamples();
 
         // create a vector containing 0...n-1
         std::vector<unsigned> idxVector(n);
@@ -1027,7 +1027,7 @@ protected:
 
         // reorder the sample points
         std::vector<Scalar> tmpX(n), tmpY(n);
-        for (size_t i = 0; i < idxVector.size(); ++ i) {
+        for (std::size_t i = 0; i < idxVector.size(); ++ i) {
             tmpX[i] = xPos_[idxVector[i]];
             tmpY[i] = yPos_[idxVector[i]];
         }
@@ -1042,7 +1042,7 @@ protected:
     void reverseSamplingPoints_()
     {
         // reverse the arrays
-        size_t n = numSamples();
+        std::size_t n = numSamples();
         for (unsigned i = 0; i <= (n - 1)/2; ++i) {
             std::swap(xPos_[i], xPos_[n - i - 1]);
             std::swap(yPos_[i], yPos_[n - i - 1]);
@@ -1052,7 +1052,7 @@ protected:
     /*!
      * \brief Resizes the internal vectors to store the sample points.
      */
-    void setNumSamples_(size_t nSamples)
+    void setNumSamples_(std::size_t nSamples)
     {
         xPos_.resize(nSamples);
         yPos_.resize(nSamples);
@@ -1231,7 +1231,7 @@ protected:
     {
         makeNaturalSystem_(M, d);
 
-        size_t n = numSamples() - 1;
+        std::size_t n = numSamples() - 1;
         // first row
         M[0][1] = 1;
         d[0] = 6/h_(1) * ( (y_(1) - y_(0))/h_(1) - m0);
@@ -1257,10 +1257,10 @@ protected:
 
         // See: J. Stoer: "Numerische Mathematik 1", 9th edition,
         // Springer, 2005, p. 111
-        size_t n = numSamples() - 1;
+        std::size_t n = numSamples() - 1;
 
         // second to next to last rows
-        for (size_t i = 1; i < n; ++i) {
+        for (std::size_t i = 1; i < n; ++i) {
             Scalar lambda_i = h_(i + 1) / (h_(i) + h_(i + 1));
             Scalar mu_i = 1 - lambda_i;
             Scalar d_i =
@@ -1303,12 +1303,12 @@ protected:
 
         // See: J. Stoer: "Numerische Mathematik 1", 9th edition,
         // Springer, 2005, p. 111
-        size_t n = numSamples() - 1;
+        std::size_t n = numSamples() - 1;
 
         assert(M.rows() == n);
 
         // second to next to last rows
-        for (size_t i = 2; i < n; ++i) {
+        for (std::size_t i = 2; i < n; ++i) {
             Scalar lambda_i = h_(i + 1) / (h_(i) + h_(i + 1));
             Scalar mu_i = 1 - lambda_i;
             Scalar d_i =
@@ -1335,7 +1335,6 @@ protected:
             6 / (h_(n) + h_(1))
             *
             ( (y_(1) - y_(n))/h_(1) - (y_(n) - y_(n-1))/h_(n));
-
 
         // first row
         M[0][0] = 2;
@@ -1365,17 +1364,17 @@ protected:
 
         // calculate the slopes of the secant lines
         std::vector<Scalar> delta(n);
-        for (size_t k = 0; k < n - 1; ++k)
+        for (std::size_t k = 0; k < n - 1; ++k)
             delta[k] = (y_(k + 1) - y_(k))/(x_(k + 1) - x_(k));
 
         // calculate the "raw" slopes at the sample points
-        for (size_t k = 1; k < n - 1; ++k)
+        for (std::size_t k = 1; k < n - 1; ++k)
             slopes[k] = (delta[k - 1] + delta[k])/2;
         slopes[0] = delta[0];
         slopes[n - 1] = delta[n - 2];
 
         // post-process the "raw" slopes at the sample points
-        for (size_t k = 0; k < n - 1; ++k) {
+        for (std::size_t k = 0; k < n - 1; ++k) {
             if (std::abs(delta[k]) < 1e-50) {
                 // make the spline flat if the inputs are equal
                 slopes[k] = 0;
@@ -1410,7 +1409,7 @@ protected:
     template <class MomentsVector, class SlopeVector>
     void setSlopesFromMoments_(SlopeVector& slopes, const MomentsVector& moments)
     {
-        size_t n = numSamples();
+        std::size_t n = numSamples();
 
         // evaluate slope at the rightmost point.
         // See: J. Stoer: "Numerische Mathematik 1", 9th edition,
@@ -1436,7 +1435,7 @@ protected:
         }
 
         // evaluate the slope for the first n-1 sample points
-        for (size_t i = 0; i < n - 1; ++ i) {
+        for (std::size_t i = 0; i < n - 1; ++ i) {
             // See: J. Stoer: "Numerische Mathematik 1", 9th edition,
             // Springer, 2005, p. 109
             Scalar h_i = this->h_(i + 1);
@@ -1459,11 +1458,10 @@ protected:
         slopes[n - 1] = mRight;
     }
 
-
     // evaluate the spline at a given the position and given the
     // segment index
     template <class Evaluation>
-    Evaluation eval_(const Evaluation& x, size_t i) const
+    Evaluation eval_(const Evaluation& x, std::size_t i) const
     {
         // See http://en.wikipedia.org/wiki/Cubic_Hermite_spline
         Scalar delta = h_(i + 1);
@@ -1479,7 +1477,7 @@ protected:
     // evaluate the derivative of a spline given the actual position
     // and the segment index
     template <class Evaluation>
-    Evaluation evalDerivative_(const Evaluation& x, size_t i) const
+    Evaluation evalDerivative_(const Evaluation& x, std::size_t i) const
     {
         // See http://en.wikipedia.org/wiki/Cubic_Hermite_spline
         Scalar delta = h_(i + 1);
@@ -1497,7 +1495,7 @@ protected:
     // evaluate the second derivative of a spline given the actual
     // position and the segment index
     template <class Evaluation>
-    Evaluation evalDerivative2_(const Evaluation& x, size_t i) const
+    Evaluation evalDerivative2_(const Evaluation& x, std::size_t i) const
     {
         // See http://en.wikipedia.org/wiki/Cubic_Hermite_spline
         Scalar delta = h_(i + 1);
@@ -1515,7 +1513,7 @@ protected:
     // evaluate the third derivative of a spline given the actual
     // position and the segment index
     template <class Evaluation>
-    Evaluation evalDerivative3_(const Evaluation& x, size_t i) const
+    Evaluation evalDerivative3_(const Evaluation& x, std::size_t i) const
     {
         // See http://en.wikipedia.org/wiki/Cubic_Hermite_spline
         Scalar delta = h_(i + 1);
@@ -1606,7 +1604,7 @@ protected:
     // 1: spline is monotonously increasing in the specified interval
     // 0: spline is not monotonic (or constant) in the specified interval
     // -1: spline is monotonously decreasing in the specified interval
-    int monotonic_(size_t i, Scalar x0, Scalar x1, int& r) const
+    int monotonic_(std::size_t i, Scalar x0, Scalar x1, int& r) const
     {
         // coefficients of derivative in monomial basis
         Scalar a = 3*a_(i);
@@ -1674,8 +1672,8 @@ protected:
      *        with a cubic polynomial within a specified interval.
      */
     template <class Evaluation>
-    size_t intersectSegment_(Evaluation* sol,
-                             size_t segIdx,
+    std::size_t intersectSegment_(Evaluation* sol,
+                             std::size_t segIdx,
                              const Evaluation& a,
                              const Evaluation& b,
                              const Evaluation& c,
@@ -1692,7 +1690,7 @@ protected:
         x1 = std::min(x_(segIdx+1), x1);
 
         // filter the intersections outside of the specified interval
-        size_t k = 0;
+        std::size_t k = 0;
         for (unsigned j = 0; j < n; ++j) {
             if (x0 <= sol[j] && sol[j] <= x1) {
                 sol[k] = sol[j];
@@ -1703,14 +1701,14 @@ protected:
     }
 
     // find the segment index for a given x coordinate
-    size_t segmentIdx_(Scalar x) const
+    std::size_t segmentIdx_(Scalar x) const
     {
         // bisection
-        size_t iLow = 0;
-        size_t iHigh = numSamples() - 1;
+        std::size_t iLow = 0;
+        std::size_t iHigh = numSamples() - 1;
 
         while (iLow + 1 < iHigh) {
-            size_t i = (iLow + iHigh) / 2;
+            std::size_t i = (iLow + iHigh) / 2;
             if (x_(i) > x)
                 iHigh = i;
             else
@@ -1722,7 +1720,7 @@ protected:
     /*!
      * \brief Returns x[i] - x[i - 1]
      */
-    Scalar h_(size_t i) const
+    Scalar h_(std::size_t i) const
     {
         assert(x_(i) > x_(i-1)); // the sampling points must be given
                                  // in ascending order
@@ -1732,40 +1730,40 @@ protected:
     /*!
      * \brief Returns the y coordinate of the i-th sampling point.
      */
-    Scalar x_(size_t i) const
+    Scalar x_(std::size_t i) const
     { return xPos_[i]; }
 
     /*!
      * \brief Returns the y coordinate of the i-th sampling point.
      */
-    Scalar y_(size_t i) const
+    Scalar y_(std::size_t i) const
     { return yPos_[i]; }
 
     /*!
      * \brief Returns the slope (i.e. first derivative) of the spline at
      *        the i-th sampling point.
      */
-    Scalar slope_(size_t i) const
+    Scalar slope_(std::size_t i) const
     { return slopeVec_[i]; }
 
     // returns the coefficient in front of the x^3 term. In Stoer this
     // is delta.
-    Scalar a_(size_t i) const
+    Scalar a_(std::size_t i) const
     { return evalDerivative3_(/*x=*/Scalar(0.0), i)/6.0; }
 
     // returns the coefficient in front of the x^2 term In Stoer this
     // is gamma.
-    Scalar b_(size_t i) const
+    Scalar b_(std::size_t i) const
     { return evalDerivative2_(/*x=*/Scalar(0.0), i)/2.0; }
 
     // returns the coefficient in front of the x^1 term. In Stoer this
     // is beta.
-    Scalar c_(size_t i) const
+    Scalar c_(std::size_t i) const
     { return evalDerivative_(/*x=*/Scalar(0.0), i); }
 
     // returns the coefficient in front of the x^0 term. In Stoer this
     // is alpha.
-    Scalar d_(size_t i) const
+    Scalar d_(std::size_t i) const
     { return eval_(/*x=*/Scalar(0.0), i); }
 
     Vector xPos_;

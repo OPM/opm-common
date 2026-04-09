@@ -137,7 +137,7 @@ BOOST_AUTO_TEST_CASE( END ) {
     std::string fileWithTitleKeyword = pathprefix() + "END/END1.txt";
     auto deck = parser.parseFile(fileWithTitleKeyword);
 
-    BOOST_CHECK_EQUAL(size_t(1), deck.size());
+    BOOST_CHECK_EQUAL(std::size_t(1), deck.size());
     BOOST_CHECK_EQUAL(true,  deck.hasKeyword("OIL"));
     BOOST_CHECK_EQUAL(false, deck.hasKeyword("GAS"));
     BOOST_CHECK_EQUAL(false, deck.hasKeyword("END"));
@@ -148,7 +148,7 @@ BOOST_AUTO_TEST_CASE( ENDINC ) {
     std::string fileWithTitleKeyword(pathprefix() + "END/ENDINC1.txt");
     auto deck = parser.parseFile(fileWithTitleKeyword);
 
-    BOOST_CHECK_EQUAL(size_t(1), deck.size());
+    BOOST_CHECK_EQUAL(std::size_t(1), deck.size());
     BOOST_CHECK_EQUAL(true,  deck.hasKeyword("OIL"));
     BOOST_CHECK_EQUAL(false, deck.hasKeyword("GAS"));
     BOOST_CHECK_EQUAL(false, deck.hasKeyword("ENDINC"));
@@ -291,7 +291,7 @@ BOOST_AUTO_TEST_CASE( SGCWMIS ) {
     const auto& sgcwmis1 = sgcwmis.getRecord(1);
 
     // test number of columns
-    size_t ntmisc = miscible0.getItem(0).get< int >(0);
+    std::size_t ntmisc = miscible0.getItem(0).get< int >(0);
     Opm::SgcwmisTable sgcwmisTable0(sgcwmis0.getItem(0), 0);
     BOOST_CHECK_EQUAL(sgcwmisTable0.numColumns(),ntmisc);
 
@@ -1149,7 +1149,7 @@ BOOST_AUTO_TEST_CASE( TITLE ) {
 
     auto deck = parser.parseFile(fileWithTitleKeyword);
 
-    BOOST_CHECK_EQUAL(size_t(2), deck.size());
+    BOOST_CHECK_EQUAL(std::size_t(2), deck.size());
     BOOST_CHECK_EQUAL (true, deck.hasKeyword("TITLE"));
 
     const auto& titleKeyword = deck["TITLE"].back();
@@ -1173,12 +1173,12 @@ BOOST_AUTO_TEST_CASE( TOPS ) {
     BOOST_CHECK_EQUAL( grid.getNY() , 9 );
     BOOST_CHECK_EQUAL( grid.getNZ() , 2 );
 
-    for (size_t g=0; g < 9*9*2; g++)
+    for (std::size_t g=0; g < 9*9*2; g++)
         BOOST_CHECK_CLOSE( grid.getCellVolume( g ) , 400*300*10 , 0.1);
 
-    for (size_t k=0; k < grid.getNZ(); k++) {
-        for (size_t j=0; j < grid.getNY(); j++) {
-            for (size_t i=0; i < grid.getNX(); i++) {
+    for (std::size_t k=0; k < grid.getNZ(); k++) {
+        for (std::size_t j=0; j < grid.getNY(); j++) {
+            for (std::size_t i=0; i < grid.getNX(); i++) {
                 auto pos = grid.getCellCenter( i,j,k );
                 BOOST_CHECK_CLOSE( std::get<0>(pos) , i*400 + 200 , 0.10 );
                 BOOST_CHECK_CLOSE( std::get<1>(pos) , j*300 + 150 , 0.10 );

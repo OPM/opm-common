@@ -23,6 +23,7 @@
 #include <opm/input/eclipse/EclipseState/Tables/TableSchema.hpp>
 #include <opm/input/eclipse/EclipseState/Util/OrderedMap.hpp>
 
+#include <cstddef>
 #include <map>
 #include <memory>
 #include <string>
@@ -53,18 +54,18 @@ namespace Opm {
                    const DeckItem& deckItem,
                    const int tableID,
                    double scaling_factor = 0.0);
-        size_t numColumns() const;
-        size_t numRows() const;
+        std::size_t numColumns() const;
+        std::size_t numRows() const;
         void addRow( const std::vector<double>& row, const std::string& tableName);
         const TableColumn& getColumn(const std::string &name) const;
-        const TableColumn& getColumn(size_t colIdx) const;
+        const TableColumn& getColumn(std::size_t colIdx) const;
         bool hasColumn(const std::string& name) const;
 
         TableColumn& getColumn(const std::string &name);
-        TableColumn& getColumn(size_t colIdx);
+        TableColumn& getColumn(std::size_t colIdx);
 
-        double get(const std::string& column  , size_t row) const;
-        double get(size_t column  , size_t row) const;
+        double get(const std::string& column  , std::size_t row) const;
+        double get(std::size_t column  , std::size_t row) const;
         /*!
          * \brief Evaluate a column of the table at a given position.
          *

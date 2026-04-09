@@ -21,12 +21,12 @@
 
 #include <opm/io/eclipse/EclFile.hpp>
 
+#include <cstddef>
 #include <ios>
 #include <map>
 #include <string>
 #include <unordered_map>
 #include <vector>
-
 
 namespace Opm { namespace EclIO { namespace OutputStream {
     class Restart;
@@ -71,7 +71,7 @@ public:
     const std::vector<T>& getRestartData(int index, int reportStepNumber, const std::string& lgr_name);
 
     int occurrence_count(const std::string& name, int reportStepNumber) const;
-    size_t numberOfReportSteps() const { return seqnum.size(); };
+    std::size_t numberOfReportSteps() const { return seqnum.size(); };
 
     const std::vector<int>& listOfReportStepNumbers() const { return seqnum; }
 

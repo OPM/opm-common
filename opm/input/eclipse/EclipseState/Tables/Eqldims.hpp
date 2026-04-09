@@ -34,7 +34,7 @@ namespace Opm {
 
         Eqldims();
 
-        Eqldims( size_t ntequl , size_t depth_nodes_p , size_t depth_nodes_tab , size_t nttrvd , size_t nstrvd) :
+        Eqldims( std::size_t ntequl , std::size_t depth_nodes_p , std::size_t depth_nodes_tab , std::size_t nttrvd , std::size_t nstrvd) :
             m_ntequl( ntequl ),
             m_depth_nodes_p( depth_nodes_p ),
             m_depth_nodes_tab( depth_nodes_tab ),
@@ -47,28 +47,28 @@ namespace Opm {
             return Eqldims(1, 2, 3, 4, 5);
         }
 
-        size_t getNumEquilRegions() const
+        std::size_t getNumEquilRegions() const
         {
             return m_ntequl;
         }
 
-        size_t getNumDepthNodesP() const
+        std::size_t getNumDepthNodesP() const
         {
             return m_depth_nodes_p;
         }
 
 
-        size_t getNumDepthNodesTable() const
+        std::size_t getNumDepthNodesTable() const
         {
             return m_depth_nodes_tab;
         }
 
-        size_t getNumTracerTables() const
+        std::size_t getNumTracerTables() const
         {
             return m_nttrvd;
         }
 
-        size_t getNumDepthNodesTracer() const
+        std::size_t getNumDepthNodesTracer() const
         {
             return m_nstrvd;
         }
@@ -93,7 +93,7 @@ namespace Opm {
         }
 
     private:
-        size_t m_ntequl , m_depth_nodes_p , m_depth_nodes_tab , m_nttrvd , m_nstrvd;
+        std::size_t m_ntequl , m_depth_nodes_p , m_depth_nodes_tab , m_nttrvd , m_nstrvd;
 
     };
 }

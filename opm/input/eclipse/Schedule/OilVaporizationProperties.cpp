@@ -16,8 +16,10 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
+
 #include <opm/input/eclipse/Schedule/OilVaporizationProperties.hpp>
 
+#include <cstddef>
 #include <stdexcept>
 
 namespace Opm {
@@ -28,7 +30,7 @@ namespace Opm {
         m_vap1 = m_vap2 = -1.0;
     }
 
-    OilVaporizationProperties::OilVaporizationProperties(const size_t numPvtRegionIdx):
+    OilVaporizationProperties::OilVaporizationProperties(const std::size_t numPvtRegionIdx):
          m_vap1(-1.0),
          m_vap2(-1.0),
          m_maxDRSDT(numPvtRegionIdx, -1.0),
@@ -53,7 +55,7 @@ namespace Opm {
         return result;
     }
 
-    double OilVaporizationProperties::getMaxDRVDT(const size_t pvtRegionIdx) const{
+    double OilVaporizationProperties::getMaxDRVDT(const std::size_t pvtRegionIdx) const{
         if (drvdtActive(pvtRegionIdx)){
             return m_maxDRVDT[pvtRegionIdx];
         }else{
@@ -61,7 +63,7 @@ namespace Opm {
         }
     }
 
-    double OilVaporizationProperties::getMaxDRSDT(const size_t pvtRegionIdx) const{
+    double OilVaporizationProperties::getMaxDRSDT(const std::size_t pvtRegionIdx) const{
         if (drsdtActive(pvtRegionIdx)){
             return m_maxDRSDT[pvtRegionIdx];
         }else{
@@ -69,7 +71,7 @@ namespace Opm {
         }
     }
 
-    bool OilVaporizationProperties::getOption(const size_t pvtRegionIdx) const{
+    bool OilVaporizationProperties::getOption(const std::size_t pvtRegionIdx) const{
         if (drsdtActive(pvtRegionIdx)){
             return m_maxDRSDT_allCells[pvtRegionIdx];
         }else{
@@ -77,7 +79,7 @@ namespace Opm {
         }
     }
 
-    double OilVaporizationProperties::getOmega(const size_t pvtRegionIdx) const{
+    double OilVaporizationProperties::getOmega(const std::size_t pvtRegionIdx) const{
         if (drsdtConvective(pvtRegionIdx)){
             return m_omega[pvtRegionIdx];
         }else{
@@ -85,7 +87,7 @@ namespace Opm {
         }
     }
 
-    double OilVaporizationProperties::getPsi(const size_t pvtRegionIdx) const{
+    double OilVaporizationProperties::getPsi(const std::size_t pvtRegionIdx) const{
         if (drsdtConvective(pvtRegionIdx)){
             return m_psi[pvtRegionIdx];
         }else{
@@ -100,7 +102,7 @@ namespace Opm {
     void OilVaporizationProperties::updateDRSDT(OilVaporizationProperties& ovp, const std::vector<double>& maximums, const std::vector<std::string>& options){
         ovp.m_type = OilVaporization::DRDT;
         ovp.m_maxDRSDT = maximums;
-        for (size_t pvtRegionIdx = 0; pvtRegionIdx < options.size(); ++pvtRegionIdx) {
+        for (std::size_t pvtRegionIdx = 0; pvtRegionIdx < options.size(); ++pvtRegionIdx) {
             if (options[pvtRegionIdx] == "ALL"){
                 ovp.m_maxDRSDT_allCells[pvtRegionIdx] = true;
             } else if (options[pvtRegionIdx] == "FREE") {
@@ -117,7 +119,7 @@ namespace Opm {
         ovp.m_maxDRSDT = maximums;
         ovp.m_omega = omega;
         ovp.m_psi = psi;
-        for (size_t pvtRegionIdx = 0; pvtRegionIdx < options.size(); ++pvtRegionIdx) {
+        for (std::size_t pvtRegionIdx = 0; pvtRegionIdx < options.size(); ++pvtRegionIdx) {
             if (options[pvtRegionIdx] == "ALL"){
                 ovp.m_maxDRSDT_allCells[pvtRegionIdx] = true;
             } else if (options[pvtRegionIdx] == "FREE") {
@@ -145,7 +147,7 @@ namespace Opm {
 
     bool OilVaporizationProperties::drsdtActive() const {
         // return true if one region is active
-         for (size_t pvtRegionIdx = 0; pvtRegionIdx < m_maxDRSDT.size(); ++pvtRegionIdx) {
+         for (std::size_t pvtRegionIdx = 0; pvtRegionIdx < m_maxDRSDT.size(); ++pvtRegionIdx) {
             if (drsdtActive(pvtRegionIdx))
                 return true;
          }
@@ -154,7 +156,7 @@ namespace Opm {
 
     bool OilVaporizationProperties::drsdtConvective() const {
         // return true if one region is active
-         for (size_t pvtRegionIdx = 0; pvtRegionIdx < m_maxDRSDT.size(); ++pvtRegionIdx) {
+         for (std::size_t pvtRegionIdx = 0; pvtRegionIdx < m_maxDRSDT.size(); ++pvtRegionIdx) {
             if (drsdtConvective(pvtRegionIdx))
                 return true;
          }
@@ -163,22 +165,22 @@ namespace Opm {
 
     bool OilVaporizationProperties::drvdtActive() const {
         // return true if one region is active
-         for (size_t pvtRegionIdx = 0; pvtRegionIdx < m_maxDRSDT.size(); ++pvtRegionIdx) {
+         for (std::size_t pvtRegionIdx = 0; pvtRegionIdx < m_maxDRSDT.size(); ++pvtRegionIdx) {
             if (drvdtActive(pvtRegionIdx))
                 return true;
          }
          return false;
     }
 
-    bool OilVaporizationProperties::drsdtActive(const size_t pvtRegionIdx) const {
+    bool OilVaporizationProperties::drsdtActive(const std::size_t pvtRegionIdx) const {
         return (m_maxDRSDT[pvtRegionIdx] >= 0 && (m_type == OilVaporization::DRDT || m_type == OilVaporization::DRSDTCON));
     }
 
-    bool OilVaporizationProperties::drsdtConvective(const size_t pvtRegionIdx) const {
+    bool OilVaporizationProperties::drsdtConvective(const std::size_t pvtRegionIdx) const {
         return (m_maxDRSDT[pvtRegionIdx] >= 0 && this->m_type == OilVaporization::DRSDTCON);
     }
 
-    bool OilVaporizationProperties::drvdtActive(const size_t pvtRegionIdx) const {
+    bool OilVaporizationProperties::drvdtActive(const std::size_t pvtRegionIdx) const {
         return (m_maxDRVDT[pvtRegionIdx] >= 0 && m_type == OilVaporization::DRDT);
     }
 

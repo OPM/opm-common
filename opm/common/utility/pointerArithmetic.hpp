@@ -20,12 +20,15 @@
 #ifndef OPM_POINTERARITHMETIC_HPP
 #define OPM_POINTERARITHMETIC_HPP
 
+#include <cstddef>
+#include <stdexcept>
+
 namespace Opm {
 
     // Utility function motivated by for instance computing GPU pointers from the cpu without entering a kernel
     // Given a Buffer A with a starting pointer and a pointer into the buffer, compute the pointer with the same offset from the start of a buffer B
     template <class PtrType>
-    PtrType* ComputePtrBasedOnOffsetInOtherBuffer(PtrType* bufBStart, size_t bufBLength, PtrType* bufAStart, size_t bufALength, PtrType* ptrInA)
+    PtrType* ComputePtrBasedOnOffsetInOtherBuffer(PtrType* bufBStart, std::size_t bufBLength, PtrType* bufAStart, std::size_t bufALength, PtrType* ptrInA)
     {
         if (bufAStart == nullptr || bufBStart == nullptr || ptrInA == nullptr) {
             throw std::invalid_argument("ComputePtrBasedOnOffsetInOtherBuffer: One or more input pointers are null.");
@@ -33,7 +36,10 @@ namespace Opm {
 
         auto offset = ptrInA - bufAStart;
 
-        if (offset < 0 || static_cast<size_t>(offset) >= bufALength || static_cast<size_t>(offset) >= bufBLength) {
+        if ((offset < 0) ||
+            (static_cast<std::size_t>(offset) >= bufALength) ||
+            (static_cast<std::size_t>(offset) >= bufBLength))
+        {
             throw std::out_of_range("ComputePtrBasedOnOffsetInOtherBuffer: Pointer into A is out of range.");
         }
 

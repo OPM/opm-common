@@ -2494,14 +2494,14 @@ BOOST_AUTO_TEST_CASE(region_vars)
 
     {
         std::vector<double> values(10, 0.0);
-        for (size_t r=1; r <= 10; r++) {
+        for (std::size_t r=1; r <= 10; r++) {
             values[r - 1] = r *1.0;
         }
         region_values["RPR"] = values;
     }
     {
         std::vector<double> values(10, 0.0);
-        for (size_t r=1; r <= 10; r++) {
+        for (std::size_t r=1; r <= 10; r++) {
             values[r - 1] = r * r * 2.5;
         }
         region_values["RPRH"] = values;
@@ -2509,7 +2509,7 @@ BOOST_AUTO_TEST_CASE(region_vars)
     {
         double area = cfg.grid.getNX() * cfg.grid.getNY();
         std::vector<double> values(10, 0.0);
-        for (size_t r=1; r <= 10; r++) {
+        for (std::size_t r=1; r <= 10; r++) {
             if (r == 10)
                 area -= 1;
 
@@ -2520,7 +2520,7 @@ BOOST_AUTO_TEST_CASE(region_vars)
     {
         double area = cfg.grid.getNX() * cfg.grid.getNY();
         std::vector<double> values(10, 0.0);
-        for (size_t r=1; r <= 10; r++) {
+        for (std::size_t r=1; r <= 10; r++) {
             if (r == 10)
                 area -= 1;
 
@@ -2531,7 +2531,7 @@ BOOST_AUTO_TEST_CASE(region_vars)
     {
         double area = cfg.grid.getNX() * cfg.grid.getNY();
         std::vector<double> values(10, 0.0);
-        for (size_t r=1; r <= 10; r++) {
+        for (std::size_t r=1; r <= 10; r++) {
             if (r == 10)
                 area -= 1;
 
@@ -2542,7 +2542,7 @@ BOOST_AUTO_TEST_CASE(region_vars)
     {
         double area = cfg.grid.getNX() * cfg.grid.getNY();
         std::vector<double> values(10, 0.0);
-        for (size_t r=1; r <= 10; r++) {
+        for (std::size_t r=1; r <= 10; r++) {
             if (r == 10)
                 area -= 1;
 
@@ -2553,7 +2553,7 @@ BOOST_AUTO_TEST_CASE(region_vars)
     {
         double area = cfg.grid.getNX() * cfg.grid.getNY();
         std::vector<double> values(10, 0.0);
-        for (size_t r=1; r <= 10; r++) {
+        for (std::size_t r=1; r <= 10; r++) {
             if (r == 10)
                 area -= 1;
 
@@ -2564,7 +2564,7 @@ BOOST_AUTO_TEST_CASE(region_vars)
     {
         double area = cfg.grid.getNX() * cfg.grid.getNY();
         std::vector<double> values(10, 0.0);
-        for (size_t r=1; r <= 10; r++) {
+        for (std::size_t r=1; r <= 10; r++) {
             if (r == 10)
                 area -= 1;
 
@@ -2575,7 +2575,7 @@ BOOST_AUTO_TEST_CASE(region_vars)
     {
         double area = cfg.grid.getNX() * cfg.grid.getNY();
         std::vector<double> values(10, 0.0);
-        for (size_t r=1; r <= 10; r++) {
+        for (std::size_t r=1; r <= 10; r++) {
             if (r == 10)
                 area -= 1;
 
@@ -2630,7 +2630,7 @@ BOOST_AUTO_TEST_CASE(region_vars)
 
     UnitSystem units( UnitSystem::UnitType::UNIT_TYPE_METRIC );
 
-    for (size_t r=1; r <= 10; r++) {
+    for (std::size_t r=1; r <= 10; r++) {
         std::string rpr_key   = "RPR:"   + std::to_string( r );
         std::string rprh_key  = "RPRH:"  + std::to_string( r );
         std::string roip_key  = "ROIP:"  + std::to_string( r );

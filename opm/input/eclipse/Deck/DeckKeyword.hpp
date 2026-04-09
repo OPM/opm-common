@@ -20,12 +20,14 @@
 #ifndef DECKKEYWORD_HPP
 #define DECKKEYWORD_HPP
 
-#include <string>
-#include <vector>
+#include <opm/common/OpmLog/KeywordLocation.hpp>
 
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
 #include <opm/input/eclipse/Deck/value_status.hpp>
-#include <opm/common/OpmLog/KeywordLocation.hpp>
+
+#include <cstddef>
+#include <string>
+#include <vector>
 
 namespace Opm {
     class DeckOutput;
@@ -35,7 +37,6 @@ namespace Opm {
 
     class DeckKeyword {
     public:
-
 
         typedef std::vector< DeckRecord >::const_iterator const_iterator;
 
@@ -54,11 +55,11 @@ namespace Opm {
         const KeywordLocation& location() const;
         DeckKeyword emptyStructuralCopy() const;
 
-        size_t size() const;
+        std::size_t size() const;
         bool empty() const;
         void addRecord(DeckRecord&& record);
-        const DeckRecord& getRecord(size_t index) const;
-        DeckRecord& getRecord(size_t index);
+        const DeckRecord& getRecord(std::size_t index) const;
+        DeckRecord& getRecord(std::size_t index);
         const DeckRecord& getDataRecord() const;
         const DeckRecord& operator[](std::size_t index) const;
         DeckRecord& operator[](std::size_t index);
@@ -75,7 +76,7 @@ namespace Opm {
         const std::vector<double>& getSIDoubleData() const;
         const std::vector<std::string>& getStringData() const;
         const std::vector<value::status>& getValueStatus() const;
-        size_t getDataSize() const;
+        std::size_t getDataSize() const;
         void write( DeckOutput& output ) const;
         void write_data( DeckOutput& output ) const;
         void write_TITLE( DeckOutput& output ) const;

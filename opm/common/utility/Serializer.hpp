@@ -22,6 +22,7 @@
 #define SERIALIZER_HPP
 
 #include <algorithm>
+#include <cstddef>
 #include <cstdint>
 #include <functional>
 #include <map>
@@ -30,9 +31,9 @@
 #include <set>
 #include <stdexcept>
 #include <type_traits>
-#include <utility>
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
 #include <variant>
 #include <vector>
 
@@ -198,7 +199,7 @@ public:
     }
 
     //! \brief Returns current position in buffer.
-    size_t position() const
+    std::size_t position() const
     {
         return m_position;
     }
@@ -260,7 +261,7 @@ protected:
             auto& data_mut = const_cast<std::vector<bool>&>(data);
             data_mut.clear();
             data_mut.reserve(size);
-            for (size_t i = 0; i < size; ++i) {
+            for (std::size_t i = 0; i < size; ++i) {
                 bool entry = false;
                 (*this)(entry);
                 data_mut.push_back(entry);
@@ -354,7 +355,7 @@ protected:
             std::size_t size = 0;
             (*this)(size);
             auto& data_mut = const_cast<Map&>(data);
-            for (size_t i = 0; i < size; ++i) {
+            for (std::size_t i = 0; i < size; ++i) {
                 typename Map::value_type entry;
                 (*this)(entry);
                 data_mut.insert(std::move(entry));
@@ -375,7 +376,7 @@ protected:
             std::size_t size = 0;
             (*this)(size);
             auto& data_mut = const_cast<Set&>(data);
-            for (size_t i = 0; i < size; ++i) {
+            for (std::size_t i = 0; i < size; ++i) {
                 typename Set::value_type entry{};
                 (*this)(entry);
                 data_mut.insert(entry);
@@ -600,8 +601,8 @@ protected:
 
     const Packer& m_packer; //!< Packer to use
     Operation m_op = Operation::PACKSIZE; //!< Current operation
-    size_t m_packSize = 0; //!< Required buffer size after PACKSIZE has been done
-    size_t m_position = 0; //!< Current position in buffer
+    std::size_t m_packSize = 0; //!< Required buffer size after PACKSIZE has been done
+    std::size_t m_position = 0; //!< Current position in buffer
     std::vector<char> m_buffer; //!< Buffer for serialized data
     std::map<std::uintptr_t, std::shared_ptr<void>> m_ptrmap; //!< Map to keep track of which pointer data has been serialized and actual pointers during unpacking
 };

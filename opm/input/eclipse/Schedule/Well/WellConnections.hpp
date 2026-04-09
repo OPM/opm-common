@@ -28,8 +28,6 @@
 #include <string>
 #include <vector>
 
-#include <stddef.h>
-
 namespace Opm {
     class ActiveGridCells;
     class DeckRecord;
@@ -124,8 +122,8 @@ namespace Opm {
         std::size_t size() const;
         bool empty() const;
         std::size_t num_open() const;
-        const Connection& operator[](size_t index) const;
-        const Connection& get(size_t index) const;
+        const Connection& operator[](std::size_t index) const;
+        const Connection& get(std::size_t index) const;
         const Connection& getFromIJK(const int i, const int j, const int k) const;
         const Connection& getFromGlobalIndex(std::size_t global_index) const;
         const Connection& lowest() const;
@@ -212,7 +210,7 @@ namespace Opm {
                            int lgr_grid_number,
                            const bool defaultSatTabId);
 
-        size_t findClosestConnection(int oi, int oj, double oz, size_t start_pos);
+        std::size_t findClosestConnection(int oi, int oj, double oz, std::size_t start_pos);
         void orderTRACK();
         void orderMSW();
         void orderDEPTH();

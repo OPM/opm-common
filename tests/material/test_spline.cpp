@@ -44,6 +44,7 @@ gnuplot> plot "spline.csv" using 1:2 w l ti "Curve", \
 #include <opm/material/common/Spline.hpp>
 
 #include <array>
+#include <cstddef>
 #include <iostream>
 
 template <class Spline, class Array>
@@ -53,8 +54,8 @@ void testCommon(const Spline& sp,
 {
     static double eps = 1e-10;
     static double epsFD = 1e-7;
-    size_t n = sp.numSamples();
-    for (size_t i = 0; i < n; ++i) {
+    std::size_t n = sp.numSamples();
+    for (std::size_t i = 0; i < n; ++i) {
         // sure that we hit all sampling points
         double y0 = (i>0)?sp.eval(x[i]-eps):y[0];
         double y1 = sp.eval(x[i]);
@@ -72,8 +73,8 @@ void testCommon(const Spline& sp,
                             "Spline seems to exhibit a discontinuous derivative at sampling point " << i);
     }
     // make sure the derivatives are consistent with the curve
-    size_t np = 3*n;
-    for (size_t i = 0; i < np; ++i) {
+    std::size_t np = 3*n;
+    for (std::size_t i = 0; i < np; ++i) {
         double xMin = sp.xAt(0);
         double xMax = sp.xAt(sp.numSamples() - 1);
         double xval = xMin + (xMax - xMin)*i/np;
@@ -114,7 +115,7 @@ void testFull(const Spline& sp,
     // test the common properties of splines
     testCommon(sp, x, y);
     static double eps = 1e-5;
-    size_t n = sp.numSamples();
+    std::size_t n = sp.numSamples();
     // make sure the derivative at both end points is correct
     double d0 = sp.evalDerivative(x[0]);
     double d1 = sp.evalDerivative(x[n-1]);
@@ -134,7 +135,7 @@ void testNatural(const Spline& sp,
     // test the common properties of splines
     testCommon(sp, x, y);
     static double eps = 1e-5;
-    size_t n = sp.numSamples();
+    std::size_t n = sp.numSamples();
     // make sure the second derivatives at both end points are 0
     double d0 = sp.evalDerivative(x[0]);
     double d1 = sp.evalDerivative(x[0] + eps);
@@ -155,8 +156,8 @@ void testMonotonic(const Spline& sp,
 {
     // test the common properties of splines
     testCommon(sp, x, y);
-    size_t n = sp.numSamples();
-    for (size_t i = 0; i < n - 1; ++ i) {
+    std::size_t n = sp.numSamples();
+    for (std::size_t i = 0; i < n - 1; ++ i) {
         // make sure that the spline is monotonic for each interval
         // between sampling points
         BOOST_CHECK_MESSAGE(sp.monotonic(x[i], x[i + 1]),
@@ -177,7 +178,7 @@ void testMonotonic(const Spline& sp,
                        "Spline says it is not monotonic on left side where it should be");
     BOOST_CHECK_MESSAGE(sp.monotonic((x[n - 2]+ x[n - 1])/2, x[n-1] + 1.0, /*extrapolate=*/true),
                        "Spline says it is not monotonic on right side where it should be");
-    for (size_t i = 0; i < n - 2; ++ i) {
+    for (std::size_t i = 0; i < n - 2; ++ i) {
         // make sure that the spline says that it is non-monotonic for
         // if extrema are within the queried interval
         BOOST_CHECK_MESSAGE(!sp.monotonic((x[i] + x[i + 1])/2, (x[i + 1] + x[i + 2])/2),
@@ -232,7 +233,7 @@ BOOST_AUTO_TEST_CASE(TwoPointArray)
 
 BOOST_AUTO_TEST_CASE(TwoPoint2DArray)
 {
-    Opm::Spline<double> sp(static_cast<size_t>(2), points, m0, m1);
+    Opm::Spline<double> sp(static_cast<std::size_t>(2), points, m0, m1);
     sp.setArrayOfPoints(2, points, m0, m1);
     testFull(sp, x, y, m0, m1);
 }

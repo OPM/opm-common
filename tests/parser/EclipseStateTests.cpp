@@ -25,22 +25,28 @@ along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <boost/version.hpp>
 
-#include <opm/input/eclipse/Python/Python.hpp>
-#include <opm/input/eclipse/Schedule/Schedule.hpp>
-#include <opm/input/eclipse/EclipseState/SimulationConfig/ThresholdPressure.hpp>
-#include <opm/input/eclipse/EclipseState/SimulationConfig/SimulationConfig.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/Box.hpp>
-#include <opm/input/eclipse/EclipseState/Grid/Fault.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FaultCollection.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/Fault.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/TransMult.hpp>
 #include <opm/input/eclipse/EclipseState/IOConfig/IOConfig.hpp>
+#include <opm/input/eclipse/EclipseState/SimulationConfig/SimulationConfig.hpp>
+#include <opm/input/eclipse/EclipseState/SimulationConfig/ThresholdPressure.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
+
+#include <opm/input/eclipse/Python/Python.hpp>
+
+#include <opm/input/eclipse/Schedule/Schedule.hpp>
+
 #include <opm/input/eclipse/Units/Units.hpp>
-#include <opm/input/eclipse/Parser/Parser.hpp>
+
 #include <opm/input/eclipse/Deck/DeckItem.hpp>
 #include <opm/input/eclipse/Deck/Deck.hpp>
 
+#include <opm/input/eclipse/Parser/Parser.hpp>
+
+#include <cstddef>
 #include <filesystem>
 
 using namespace Opm;
@@ -111,7 +117,7 @@ BOOST_AUTO_TEST_CASE(GetPOROTOPBased) {
     const auto& poro  = fp.get_double( "PORO" );
     const auto& permx = fp.get_double( "PERMX" );
 
-    for (size_t i=0; i < poro.size(); i++) {
+    for (std::size_t i=0; i < poro.size(); i++) {
         BOOST_CHECK_EQUAL( 0.10 , poro[i]);
         BOOST_CHECK_EQUAL( 0.25 * Metric::Permeability , permx[i]);
     }
@@ -168,7 +174,6 @@ const char *deckData =
     return parser.parseString( deckData );
 }
 
-
 static Deck createDeckNoFaults() {
 const char *deckData =
 "RUNSPEC\n"
@@ -214,8 +219,6 @@ BOOST_AUTO_TEST_CASE(CreateSchedule) {
     BOOST_CHECK_EQUAL(schedule.getStartTime(), asTimeT(TimeStampUTC( 1998 , 3 , 8)));
 }
 
-
-
 static Deck createDeckSimConfig() {
 const std::string& inputStr = "RUNSPEC\n"
                 "EQLOPTS\n"
@@ -245,7 +248,6 @@ const std::string& inputStr = "RUNSPEC\n"
                 "2 3 7.0/\n"
                 "/\n"
                 "\n";
-
 
     Parser parser;
     return parser.parseString( inputStr );
@@ -286,14 +288,13 @@ BOOST_AUTO_TEST_CASE(IntProperties) {
     BOOST_CHECK_EQUAL( true,  state.fieldProps().has_int( "SATNUM" ) );
 }
 
-
 BOOST_AUTO_TEST_CASE(GetProperty) {
     auto deck = createDeck();
     EclipseState state(deck);
 
     const auto& satnum = state.fieldProps().get_global_int("SATNUM");
     BOOST_CHECK_EQUAL(1000U , satnum.size() );
-    for (size_t i=0; i < satnum.size(); i++)
+    for (std::size_t i=0; i < satnum.size(); i++)
         BOOST_CHECK_EQUAL( 2 , satnum[i]);
 }
 
@@ -325,7 +326,6 @@ BOOST_AUTO_TEST_CASE(GetFaults) {
     BOOST_CHECK_EQUAL( transMult.getMultiplier( 4, 3, 0, FaceDir::XMinus ), 0.25 );
     BOOST_CHECK_EQUAL( transMult.getMultiplier( 4, 3, 0, FaceDir::ZPlus ), 1.00 );
 }
-
 
 BOOST_AUTO_TEST_CASE(FaceTransMults) {
     auto deck = createDeckNoFaults();
@@ -369,7 +369,6 @@ BOOST_AUTO_TEST_CASE(FaceTransMults) {
     }
 }
 
-
 static Deck createDeckNoGridOpts() {
     const char *deckData =
         "RUNSPEC\n"
@@ -395,7 +394,6 @@ static Deck createDeckNoGridOpts() {
     Parser parser;
     return parser.parseString(deckData) ;
 }
-
 
 static Deck createDeckWithGridOpts() {
     const char *deckData =
@@ -425,7 +423,6 @@ static Deck createDeckWithGridOpts() {
     return parser.parseString( deckData );
 }
 
-
 BOOST_AUTO_TEST_CASE(NoGridOptsDefaultRegion) {
     auto deck = createDeckNoGridOpts();
     EclipseState state(deck);
@@ -438,7 +435,6 @@ BOOST_AUTO_TEST_CASE(NoGridOptsDefaultRegion) {
     BOOST_CHECK_EQUAL( &fluxnum  , &def_pro );
     BOOST_CHECK_NE( &fluxnum  , &multnum );
 }
-
 
 BOOST_AUTO_TEST_CASE(WithGridOptsDefaultRegion) {
     auto deck = createDeckWithGridOpts();
@@ -468,7 +464,6 @@ BOOST_AUTO_TEST_CASE(TestIOConfigBaseName) {
     BOOST_CHECK_EQUAL(io2.getBaseName(), "");
     BOOST_CHECK_EQUAL(io2.getOutputDir(), ".");
 }
-
 
 BOOST_AUTO_TEST_CASE(TestBox) {
     const char * regionData =
