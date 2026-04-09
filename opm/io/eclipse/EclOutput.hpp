@@ -18,21 +18,22 @@
 #ifndef OPM_IO_ECLOUTPUT_HPP
 #define OPM_IO_ECLOUTPUT_HPP
 
-#include <fstream>
-#include <ios>
-#include <string>
-#include <typeinfo>
-#include <vector>
-
 #include <opm/io/eclipse/EclIOdata.hpp>
 #include <opm/io/eclipse/PaddedOutputString.hpp>
 
-namespace Opm { namespace EclIO { namespace OutputStream {
+#include <fstream>
+#include <ios>
+#include <stdexcept>
+#include <string>
+#include <type_traits>
+#include <vector>
+
+namespace Opm::EclIO::OutputStream {
     class Restart;
     class SummarySpecification;
-}}}
+} // namespace Opm::EclIO::OutputStream
 
-namespace Opm { namespace EclIO {
+namespace Opm::EclIO {
 
 class EclOutput
 {
@@ -45,32 +46,49 @@ public:
     void write(const std::string& name,
                const std::vector<T>& data)
     {
+        static_assert(std::is_same_v<T, int>    ||
+                      std::is_same_v<T, float>  ||
+                      std::is_same_v<T, double> ||
+                      std::is_same_v<T, bool>   ||
+                      std::is_same_v<T, char>,
+                      "EclOutput::write<T>: T must be int, float, double, bool, or char");
+
         eclArrType arrType = MESS;
         int element_size = 4;
 
-        if (typeid(T) == typeid(int))
+        if constexpr (std::is_same_v<T, int>) {
             arrType = INTE;
-        else if (typeid(T) == typeid(float))
+        }
+        else if constexpr (std::is_same_v<T, float>) {
             arrType = REAL;
-        else if (typeid(T) == typeid(double)){
+        }
+        else if constexpr (std::is_same_v<T, double>) {
             arrType = DOUB;
             element_size = 8;
-        } else if (typeid(T) == typeid(bool))
-            arrType = LOGI;
-        else if (typeid(T) == typeid(char))
-            arrType = MESS;
-
-        if (isFormatted)
-        {
-            writeFormattedHeader(name, data.size(), arrType, element_size);
-            if (arrType != MESS)
-                writeFormattedArray(data);
         }
-        else
-        {
+        else if constexpr (std::is_same_v<T, bool>) {
+            arrType = LOGI;
+        }
+        else if constexpr (std::is_same_v<T, char>) {
+            if (!data.empty()) {
+                throw std::invalid_argument {
+                    "EclOutput::write<char>: non-empty data is not supported; "
+                    "use message() for MESS-type records"
+                };
+            }
+        }
+
+        if (isFormatted) {
+            writeFormattedHeader(name, data.size(), arrType, element_size);
+            if (arrType != MESS) {
+                writeFormattedArray(data);
+            }
+        }
+        else {
             writeBinaryHeader(name, data.size(), arrType, element_size);
-            if (arrType != MESS)
+            if (arrType != MESS) {
                 writeBinaryArray(data);
+            }
         }
     }
 
@@ -124,6 +142,6 @@ void EclOutput::write<PaddedOutputString<8>>
     (const std::string&                        name,
      const std::vector<PaddedOutputString<8>>& data);
 
-}} // namespace Opm::EclIO
+} // namespace Opm::EclIO
 
 #endif // OPM_IO_ECLOUTPUT_HPP
