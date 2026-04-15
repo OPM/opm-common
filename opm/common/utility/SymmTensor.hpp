@@ -48,6 +48,8 @@ public:
 
     SymmTensor<T>& operator=(const T value);
 
+    bool operator==(const SymmTensor&) const;
+
     void reset();
 
     T trace() const;
