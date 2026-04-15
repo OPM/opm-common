@@ -301,27 +301,27 @@ int main(int argc, char **argv)
     bool to_grdecl                 = false;
 
     const std::map<std::string, std::string> to_formatted {
-        {".GRID"  , ".FGRID"  },
         {".EGRID" , ".FEGRID" },
-        {".INIT"  , ".FINIT"  },
-        {".SMSPEC", ".FSMSPEC"},
-        {".UNSMRY", ".FUNSMRY"},
-        {".UNRST" , ".FUNRST" },
-        {".RFT"   , ".FRFT"   },
         {".ESMRY" , ".FESMRY" },
-        {".LGR"  , ".FLGR"},
+        {".GRID"  , ".FGRID"  },
+        {".INIT"  , ".FINIT"  },
+        {".LGR"   , ".FLGR"   },
+        {".RFT"   , ".FRFT"   },
+        {".SMSPEC", ".FSMSPEC"},
+        {".UNRST" , ".FUNRST" },
+        {".UNSMRY", ".FUNSMRY"},
     };
 
     const std::map<std::string, std::string> to_binary {
-        {".FGRID"  , ".GRID"  },
         {".FEGRID" , ".EGRID" },
-        {".FINIT"  , ".INIT"  },
-        {".FSMSPEC", ".SMSPEC"},
-        {".FUNSMRY", ".UNSMRY"},
-        {".FUNRST" , ".UNRST" },
-        {".FRFT"   , ".RFT"   },
         {".FESMRY" , ".ESMRY" },
-        {".FLGR"  , ".LGR"},
+        {".FGRID"  , ".GRID"  },
+        {".FINIT"  , ".INIT"  },
+        {".FLGR"   , ".LGR"   },
+        {".FRFT"   , ".RFT"   },
+        {".FSMSPEC", ".SMSPEC"},
+        {".FUNRST" , ".UNRST" },
+        {".FUNSMRY", ".UNSMRY"},
     };
 
     std::string output_fname{};
