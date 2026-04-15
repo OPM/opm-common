@@ -365,6 +365,8 @@ public:
     ///
     /// \param[in] isSubstep Whether or not we're being called in the middle
     /// of a report step.
+    ///
+    /// \param[in] isFinalSummmary True if this is the final summary output.
     void writeSummaryFile(const SummaryState&      st,
                           const int                report_step,
                           const std::optional<int> time_step,

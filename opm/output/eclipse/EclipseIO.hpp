@@ -244,6 +244,8 @@ public:
     /// different than nullopt will generate restart file output even for
     /// time steps that are not report steps.  This is a poor-man's
     /// approximation of the BASIC=6 setting of the RPTRST keyword.
+    ///
+    /// \param[in] isFinalWriteOut True if this is the final write.
     void writeTimeStep(const Action::State& action_state,
                        const WellTestState& wtest_state,
                        const SummaryState&  st,
@@ -315,6 +317,8 @@ public:
     /// different than nullopt will generate restart file output even for
     /// time steps that are not report steps.  This is a poor-man's
     /// approximation of the BASIC=6 setting of the RPTRST keyword.
+    ///
+    /// \param[in] isFinalWriteOut True if this is the final write.
     void writeTimeStep(const Action::State&      action_state,
                        const WellTestState&      wtest_state,
                        const SummaryState&       st,
