@@ -1185,7 +1185,11 @@ namespace {
         std::vector<float> y_coord_{};
         std::vector<float> pressure_{};
         std::vector<float> strength_{};
+
         std::vector<float> icd_setting_{};
+        std::vector<float> icd_length_{};
+        std::vector<float> icd_max_flow_rate_{};
+        std::vector<float> icd_flow_scaling_{};
 
         void defineBranches(const ::Opm::WellSegments& segments);
 
@@ -1237,7 +1241,11 @@ namespace {
         this->y_coord_.reserve(nseg);
         this->pressure_.reserve(nseg);
         this->strength_.reserve(nseg);
+
         this->icd_setting_.reserve(nseg);
+        this->icd_length_.reserve(nseg);
+        this->icd_max_flow_rate_.reserve(nseg);
+        this->icd_flow_scaling_.reserve(nseg);
     }
 
     void SegmentRecord::write(::Opm::EclIO::OutputStream::RFT& rftFile) const
@@ -1269,8 +1277,13 @@ namespace {
 
         rftFile.write("SEGSSTR", this->strength_);
         rftFile.write("SEGSFOPN", this->icd_setting_);
+
         rftFile.write("SEGBRNO", this->branch_id_);
         rftFile.write("SEGNXT", this->neighbour_id_);
+
+        rftFile.write("SEGLEN", this->icd_length_);
+        rftFile.write("SEGQICD", this->icd_max_flow_rate_);
+        rftFile.write("SEGFSCAL", this->icd_flow_scaling_);
 
         rftFile.write("BRNST", this->branch_start_segment_);
         rftFile.write("BRNEN", this->branch_end_segment_);
@@ -1422,12 +1435,50 @@ namespace {
         this->viscosity_.addSegment(usys, segSol);
     }
 
+    float icdMaxAbsRate(const ::Opm::SICD& sicd, const ::Opm::UnitSystem& usys)
+    {
+        return static_cast<float>
+            (usys.from_si(::Opm::UnitSystem::measure::geometric_volume_rate,
+                          sicd.maxAbsoluteRate().value_or(0.0)));
+    }
+
+    float icdScalingFactor(const ::Opm::SICD& sicd, const ::Opm::UnitSystem& usys)
+    {
+        // The scalingFactor's output value depends on the scaling method
+        // (item 11 of WSEGAICD/WSEGSICD).  If either
+        //
+        //   1. Item 11 is 1, or
+        //   2. Item 11 is negative and LENGTH is negative
+        //      (that is, methodFlowScaling() < 0 && length() < 0.0)
+        //
+        // then the ICD keyword's scalingFactor is a length quantity which
+        // needs unit conversion.  Otherwise the scalingFactor is a
+        // dimensionless relative measure and does not need unit conversion.
+        const auto convertScalingFactor =
+            (sicd.methodFlowScaling() == 1) ||
+            ((sicd.methodFlowScaling() < 0) && (sicd.length() < 0.0));
+
+        const auto fscal = convertScalingFactor
+            ? usys.from_si(::Opm::UnitSystem::measure::length, sicd.scalingFactor())
+            : sicd.scalingFactor();
+
+        return static_cast<float>(fscal);
+    }
+
     void SegmentRecord::recordAutoICDTypeProperties(const ::Opm::UnitSystem& usys,
                                                     const ::Opm::Segment&    segment)
     {
+        const auto& aicd = segment.autoICD();
+
         this->strength_.push_back(usys.from_si(::Opm::UnitSystem::measure::aicd_strength,
-                                               segment.autoICD().strength()));
+                                               aicd.strength()));
         this->icd_setting_.push_back(1.0f);
+
+        this->icd_length_.push_back(usys.from_si(::Opm::UnitSystem::measure::length,
+                                                 aicd.length()));
+
+        this->icd_max_flow_rate_.push_back(icdMaxAbsRate(aicd, usys));
+        this->icd_flow_scaling_.push_back(icdScalingFactor(aicd, usys));
     }
 
     void SegmentRecord::recordRegularTypeProperties([[maybe_unused]] const ::Opm::UnitSystem& usys,
@@ -1435,14 +1486,26 @@ namespace {
     {
         this->strength_.push_back(0.0f);
         this->icd_setting_.push_back(1.0f);
+
+        this->icd_length_.push_back(0.0f);
+        this->icd_max_flow_rate_.push_back(0.0f);
+        this->icd_flow_scaling_.push_back(0.0f);
     }
 
     void SegmentRecord::recordSpiralICDTypeProperties(const ::Opm::UnitSystem& usys,
                                                       const ::Opm::Segment&    segment)
     {
+        const auto& sicd = segment.spiralICD();
+
         this->strength_.push_back(usys.from_si(::Opm::UnitSystem::measure::icd_strength,
-                                               segment.spiralICD().strength()));
+                                               sicd.strength()));
         this->icd_setting_.push_back(1.0f);
+
+        this->icd_length_.push_back(usys.from_si(::Opm::UnitSystem::measure::length,
+                                                 sicd.length()));
+
+        this->icd_max_flow_rate_.push_back(icdMaxAbsRate(sicd, usys));
+        this->icd_flow_scaling_.push_back(icdScalingFactor(sicd, usys));
     }
 
     double valveMaximumCrossSectionalArea(const ::Opm::Segment& segment)
@@ -1485,6 +1548,10 @@ namespace {
     {
         this->strength_.push_back(0.0f);
         this->icd_setting_.push_back(valveICDSetting(segment));
+
+        this->icd_length_.push_back(0.0f);
+        this->icd_max_flow_rate_.push_back(0.0f);
+        this->icd_flow_scaling_.push_back(0.0f);
     }
 
     // =======================================================================
