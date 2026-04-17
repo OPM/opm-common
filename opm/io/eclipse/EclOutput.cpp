@@ -31,7 +31,7 @@
 #include <ios>
 #include <sstream>
 #include <stdexcept>
-#include <typeinfo>
+#include <type_traits>
 
 namespace Opm { namespace EclIO {
 
@@ -99,8 +99,9 @@ void EclOutput::write(const std::string& name, const std::vector<std::string>& d
                                      [](const std::string& str1, const std::string& str2)
                                      { return str2.size() > str1.size(); });
 
-        if (it->size() > static_cast<size_t>(element_size))
+        if (it->size() > static_cast<size_t>(element_size)) {
             OPM_THROW(std::runtime_error, "specified element size for type C0NN less than maximum string length in output data");
+        }
     }
 
     if (isFormatted)
@@ -227,13 +228,16 @@ void EclOutput::writeBinaryArray(const std::vector<T>& data)
 
     eclArrType arrType = MESS;
 
-    if (typeid(std::vector<T>) == typeid(std::vector<int>)) {
+    if constexpr (std::is_same_v<T, int>) {
         arrType = INTE;
-    } else if (typeid(std::vector<T>) == typeid(std::vector<float>)) {
+    }
+    else if constexpr (std::is_same_v<T, float>) {
         arrType = REAL;
-    } else if (typeid(std::vector<T>) == typeid(std::vector<double>)) {
+    }
+    else if constexpr (std::is_same_v<T, double>) {
         arrType = DOUB;
-    } else if (typeid(std::vector<T>) == typeid(std::vector<bool>)) {
+    }
+    else if constexpr (std::is_same_v<T, bool>) {
         arrType = LOGI;
     }
 
@@ -271,8 +275,9 @@ void EclOutput::writeBinaryArray(const std::vector<T>& data)
             std::vector<int> flipped_data;
             flipped_data.resize(num, 0);
 
-            for (int m = 0; m < num; m++)
+            for (int m = 0; m < num; ++m) {
                 flipped_data[m] = flipEndianInt(data[m + offset]);
+            }
 
             ofileH.write(reinterpret_cast<char*>(flipped_data.data()), flipped_data.size() * sizeof(int)) ;
 
@@ -281,8 +286,9 @@ void EclOutput::writeBinaryArray(const std::vector<T>& data)
             std::vector<float> flipped_data;
             flipped_data.resize(num, 0);
 
-            for (int m = 0; m < num; m++)
+            for (int m = 0; m < num; ++m) {
                 flipped_data[m] = flipEndianFloat(data[m + offset]);
+            }
 
             ofileH.write(reinterpret_cast<char*>(flipped_data.data()), flipped_data.size() * sizeof(float)) ;
 
@@ -291,8 +297,9 @@ void EclOutput::writeBinaryArray(const std::vector<T>& data)
             std::vector<double> flipped_data;
             flipped_data.resize(num, 0);
 
-            for (int m = 0; m < num; m++)
+            for (int m = 0; m < num; ++m) {
                 flipped_data[m] = flipEndianDouble(data[m + offset]);
+            }
 
             ofileH.write(reinterpret_cast<char*>(flipped_data.data()), flipped_data.size() * sizeof(double)) ;
 
@@ -301,11 +308,14 @@ void EclOutput::writeBinaryArray(const std::vector<T>& data)
             std::vector<int> logi_data;
             logi_data.resize(num, 0);
 
-            for (int m = 0; m < num; m++)
-                if (data[m + offset])
+            for (int m = 0; m < num; ++m) {
+                if (data[m + offset]) {
                     logi_data[m] = logi_true_val;
-                else
+                }
+                else {
                     logi_data[m] = false_value;
+                }
+            }
 
             ofileH.write(reinterpret_cast<char*>(logi_data.data()), logi_data.size() * sizeof(int)) ;
 
@@ -365,10 +375,10 @@ void EclOutput::writeBinaryCharArray(const std::vector<std::string>& data, int e
 
         ofileH.write(reinterpret_cast<char*>(&dhead), sizeof(dhead));
 
-        for (int i = 0; i < num; i++) {
+        for (int i = 0; i < num; ++i) {
             std::string tmpStr = data[n] + std::string(sizeOfElement - data[n].size(),' ');
             ofileH.write(tmpStr.c_str(), sizeOfElement);
-            n++;
+            ++n;
         }
 
         ofileH.write(reinterpret_cast<char*>(&dhead), sizeof(dhead));
@@ -461,14 +471,17 @@ std::string EclOutput::make_real_string_ecl(float value) const
     if (value == 0.0) {
         return "0.00000000E+00";
     } else {
-        if (std::isnan(value))
+        if (std::isnan(value)) {
             return "NAN";
+        }
 
         if (std::isinf(value)) {
-            if (value > 0)
+            if (value > 0) {
                 return "INF";
-            else
+            }
+            else {
                 return "-INF";
+            }
         }
 
         std::string tmpstr(buffer);
@@ -497,14 +510,17 @@ std::string EclOutput::make_real_string_ix(float value) const
     if (value == 0.0) {
         return " 0.0000000E+00";
     } else {
-        if (std::isnan(value))
+        if (std::isnan(value)) {
             return "NAN";
+        }
 
         if (std::isinf(value)) {
-            if (value > 0)
+            if (value > 0) {
                 return "INF";
-            else
+            }
+            else {
                 return "-INF";
+            }
         }
 
         std::string tmpstr(buffer);
@@ -522,14 +538,17 @@ std::string EclOutput::make_doub_string_ecl(double value) const
     if (value == 0.0) {
         return "0.00000000000000D+00";
     } else {
-        if (std::isnan(value))
+        if (std::isnan(value)) {
             return "NAN";
+        }
 
         if (std::isinf(value)) {
-            if (value > 0)
+            if (value > 0) {
                 return "INF";
-            else
+            }
+            else {
                 return "-INF";
+            }
         }
 
         std::string tmpstr(buffer);
@@ -564,14 +583,17 @@ std::string EclOutput::make_doub_string_ix(double value) const
     if (value == 0.0) {
         return " 0.0000000000000E+00";
     } else {
-        if (std::isnan(value))
+        if (std::isnan(value)) {
             return "NAN";
+        }
 
         if (std::isinf(value)) {
-            if (value > 0)
+            if (value > 0) {
                 return "INF";
-            else
+            }
+            else {
                 return "-INF";
+            }
         }
 
         std::string tmpstr(buffer);
@@ -588,16 +610,15 @@ void EclOutput::writeFormattedArray(const std::vector<T>& data)
     int n = 0;
 
     eclArrType arrType = MESS;
-    if (typeid(T) == typeid(int)) {
+    if constexpr (std::is_same_v<T, int>) {
         arrType = INTE;
-    } else if (typeid(T) == typeid(float)) {
+    } else if constexpr (std::is_same_v<T, float>) {
         arrType = REAL;
-    } else if (typeid(T) == typeid(double)) {
+    } else if constexpr (std::is_same_v<T, double>) {
         arrType = DOUB;
-    } else if (typeid(T) == typeid(bool)) {
+    } else if constexpr (std::is_same_v<T, bool>) {
         arrType = LOGI;
     }
-
 
     auto sizeData = block_size_data_formatted(arrType);
 
@@ -605,29 +626,34 @@ void EclOutput::writeFormattedArray(const std::vector<T>& data)
     int nColumns = std::get<1>(sizeData);
     int columnWidth = std::get<2>(sizeData);
 
-    for (int i = 0; i < size; i++) {
-        n++;
+    for (int i = 0; i < size; ++i) {
+        ++n;
 
         switch (arrType) {
         case INTE:
             ofileH << std::setw(columnWidth) << data[i];
             break;
         case REAL:
-            if (ix_standard)
+            if (ix_standard) {
                 ofileH << std::setw(columnWidth) << make_real_string_ix(data[i]);
-            else
+            }
+            else {
                 ofileH << std::setw(columnWidth) << make_real_string_ecl(data[i]);
+            }
             break;
         case DOUB:
-            if (ix_standard)
+            if (ix_standard) {
                 ofileH << std::setw(columnWidth) << make_doub_string_ix(data[i]);
-            else
+            }
+            else {
                 ofileH << std::setw(columnWidth) << make_doub_string_ecl(data[i]);
+            }
             break;
         case LOGI:
             if (data[i]) {
                 ofileH << "  T";
-            } else {
+            }
+            else {
                 ofileH << "  F";
             }
             break;
@@ -664,12 +690,13 @@ void EclOutput::writeFormattedCharArray(const std::vector<std::string>& data, in
 
     int nColumns;
 
-    if (element_size < 9)
-    {
+    if (element_size < 9) {
         element_size = 8;
         nColumns = std::get<1>(sizeData);
-    } else
+    }
+    else {
         nColumns = 80 / (element_size + 3);
+    }
 
     int rest = data.size();
     int n = 0;
@@ -677,14 +704,15 @@ void EclOutput::writeFormattedCharArray(const std::vector<std::string>& data, in
     while (rest > 0) {
         int size = rest;
 
-        if (size > maxBlockSize)
+        if (size > maxBlockSize) {
             size = maxBlockSize;
+        }
 
-        for (int i = 0; i < size; i++) {
+        for (int i = 0; i < size; ++i) {
             std::string str1(element_size,' ');
             str1 = data[n] + std::string(element_size - data[n].size(),' ');
 
-            n++;
+            ++n;
             ofileH << " '" << str1 << "'";
 
             if ((i+1) % nColumns == 0) {
