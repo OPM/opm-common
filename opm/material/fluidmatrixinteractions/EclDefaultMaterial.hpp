@@ -136,8 +136,13 @@ public:
      */
     template <class ContainerT, class FluidState, class ...Args>
     OPM_HOST_DEVICE static void capillaryPressures(ContainerT& values,
+<<<<<<< HEAD
                                                    const Params& params,
                                                    const FluidState& state)
+=======
+                                   const Params& params,
+                                   const FluidState& state)
+>>>>>>> 2ae970437 (First version)
     {
         OPM_TIMEFUNCTION_LOCAL(Subsystem::SatProps);
         using Evaluation = typename std::remove_reference<decltype(values[0])>::type;
@@ -263,7 +268,11 @@ public:
      */
     template <class FluidState, class Evaluation, class ...Args>
     OPM_HOST_DEVICE static Evaluation pcgn(const Params& params,
+<<<<<<< HEAD
                                            const FluidState& fs)
+=======
+                           const FluidState& fs)
+>>>>>>> 2ae970437 (First version)
     {
         OPM_TIMEFUNCTION_LOCAL(Subsystem::SatProps);
         // Maximum attainable oil saturation is 1-SWL.
@@ -282,7 +291,11 @@ public:
      */
     template <class FluidState, class Evaluation, class ...Args>
     OPM_HOST_DEVICE static Evaluation pcnw(const Params& params,
+<<<<<<< HEAD
                                            const FluidState& fs)
+=======
+                           const FluidState& fs)
+>>>>>>> 2ae970437 (First version)
     {
         OPM_TIMEFUNCTION_LOCAL(Subsystem::SatProps);
         const auto Sw = decay<Evaluation>(fs.saturation(waterPhaseIdx));
@@ -347,8 +360,13 @@ public:
      */
     template <class ContainerT, class FluidState, class ...Args>
     OPM_HOST_DEVICE static void relativePermeabilities(ContainerT& values,
+<<<<<<< HEAD
                                                        const Params& params,
                                                        const FluidState& fluidState)
+=======
+                                       const Params& params,
+                                       const FluidState& fluidState)
+>>>>>>> 2ae970437 (First version)
     {
         OPM_TIMEFUNCTION_LOCAL(Subsystem::SatProps);
         using Evaluation = typename std::remove_reference<decltype(values[0])>::type;
@@ -363,7 +381,11 @@ public:
      */
     template <class FluidState, class Evaluation, class ...Args>
     OPM_HOST_DEVICE static Evaluation krg(const Params& params,
+<<<<<<< HEAD
                                           const FluidState& fluidState)
+=======
+                          const FluidState& fluidState)
+>>>>>>> 2ae970437 (First version)
     {
         OPM_TIMEFUNCTION_LOCAL(Subsystem::SatProps);
         // Maximum attainable oil saturation is 1-SWL.
@@ -376,7 +398,11 @@ public:
      */
     template <class FluidState, class Evaluation, class ...Args>
     OPM_HOST_DEVICE static Evaluation krw(const Params& params,
+<<<<<<< HEAD
                                           const FluidState& fluidState)
+=======
+                          const FluidState& fluidState)
+>>>>>>> 2ae970437 (First version)
     {
         OPM_TIMEFUNCTION_LOCAL(Subsystem::SatProps);
         const Evaluation sw = decay<Evaluation>(fluidState.saturation(waterPhaseIdx));
@@ -388,7 +414,11 @@ public:
      */
     template <class FluidState, class Evaluation, class ...Args>
     OPM_HOST_DEVICE static Evaluation krn(const Params& params,
+<<<<<<< HEAD
                                           const FluidState& fluidState)
+=======
+                          const FluidState& fluidState)
+>>>>>>> 2ae970437 (First version)
     {
         OPM_TIMEFUNCTION_LOCAL(Subsystem::SatProps);
         const Scalar Swco = params.Swl();
@@ -427,7 +457,11 @@ public:
      */
     template <class Evaluation, class FluidState, class ...Args>
     OPM_HOST_DEVICE static Evaluation relpermOilInOilGasSystem(const Params& params,
+<<<<<<< HEAD
                                                                const FluidState& fluidState)
+=======
+                                               const FluidState& fluidState)
+>>>>>>> 2ae970437 (First version)
     {
         OPM_TIMEFUNCTION_LOCAL(Subsystem::SatProps);
         const Evaluation sw =
@@ -445,7 +479,11 @@ public:
      */
     template <class Evaluation, class FluidState, class ...Args>
     OPM_HOST_DEVICE static Evaluation relpermOilInOilWaterSystem(const Params& params,
+<<<<<<< HEAD
                                                                  const FluidState& fluidState)
+=======
+                                                 const FluidState& fluidState)
+>>>>>>> 2ae970437 (First version)
     {
         OPM_TIMEFUNCTION_LOCAL(Subsystem::SatProps);
         const Evaluation sw =

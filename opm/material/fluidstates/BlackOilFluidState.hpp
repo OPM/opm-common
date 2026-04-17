@@ -152,7 +152,10 @@ template <class OtherScalarT,
           bool otherEnableSolvent,
           unsigned otherNumStoragePhases>
 friend class BlackOilFluidState;
+<<<<<<< HEAD
 
+=======
+>>>>>>> 2cee7df46 (First version)
     using FluidSystem = FluidSystemT;
     using ValueType = ValueT;
 
@@ -174,6 +177,40 @@ friend class BlackOilFluidState;
      *
      * \param fluidSystem The fluid system which is used to compute various quantities
      */
+    explicit OPM_HOST_DEVICE BlackOilFluidState(const FluidSystem* fluidSystem)
+    {
+        if constexpr (!fluidSystemIsStatic) {
+            fluidSystemPtr_ = fluidSystem;
+        }
+    }
+
+    // Pointer version
+    template<class OtherFluidSystemType, unsigned NewNumStoragePhases = numStoragePhases>
+        requires std::is_pointer_v<std::decay_t<OtherFluidSystemType>>
+    auto withOtherFluidSystem(OtherFluidSystemType other) const
+    {
+        using Raw = std::decay_t<OtherFluidSystemType>;
+        using FS  = std::remove_pointer_t<Raw>;
+
+        auto bfstate = BlackOilFluidState<
+            ValueType,
+            FS,
+            storeTemperature,
+            storeEnthalpy,
+            enableDissolution,
+            enableVapwat,
+            enableBrine,
+            enableSaltPrecipitation,
+            enableDissolutionInWater,
+            enableSolvent,
+            NewNumStoragePhases
+        >(other);
+
+        bfstate.assign(*this);
+        return bfstate;
+    }
+
+
     explicit OPM_HOST_DEVICE BlackOilFluidState(const FluidSystem& fluidSystem)
     {
         if constexpr (!fluidSystemIsStatic) {
@@ -188,7 +225,8 @@ friend class BlackOilFluidState;
      * \return A new BlackOilFluidState object with the specified fluid system.
      */
     template<class OtherFluidSystemType>
-    auto withOtherFluidSystem(const OtherFluidSystemType& other) const
+    auto withOtherFluidSystem(typename std::enable_if<!std::is_pointer_v<OtherFluidSystemType>,
+                                                      const OtherFluidSystemType&>::type other) const
     {
         using FS = std::decay_t<OtherFluidSystemType>;
 
