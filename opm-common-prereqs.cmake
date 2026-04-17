@@ -15,7 +15,11 @@ if(TARGET opmcommon)
     find_package(Python3 COMPONENTS Development.Embed REQUIRED)
   endif()
 
-  if(opm-common_COMPILE_LIBS MATCHES dunecommon)
+  if(opm-common_LIBS MATCHES dunecommon)
     find_package(dune-common REQUIRED)
+  endif()
+
+  if(opm-common_LIBS MATCHES OpenMP::OpenMP)
+    find_package(OpenMP REQUIRED)
   endif()
 endif()
