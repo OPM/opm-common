@@ -804,7 +804,7 @@ public:
      *       usage we must avoid static, so making it a regular
      *       member function to simplify future refactoring.
      */
-    bool phaseIsActive(int phaseIdx) const
+    OPM_HOST_DEVICE bool phaseIsActive(int phaseIdx) const
     {
         return fluidSystem().phaseIsActive(phaseIdx);
     }

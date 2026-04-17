@@ -29,6 +29,7 @@
 
 #include <opm/common/TimingMacros.hpp>
 
+#include <opm/common/utility/gpuDecorators.hpp>
 #include <opm/material/common/MathToolbox.hpp>
 #include <opm/material/common/Valgrind.hpp>
 #include <opm/material/fluidmatrixinteractions/EclDefaultMaterialParams.hpp>
@@ -134,7 +135,7 @@ public:
      * \param state The fluid state
      */
     template <class ContainerT, class FluidState, class ...Args>
-    static void capillaryPressures(ContainerT& values,
+    OPM_HOST_DEVICE static void capillaryPressures(ContainerT& values,
                                    const Params& params,
                                    const FluidState& state)
     {
@@ -261,7 +262,7 @@ public:
      * \f]
      */
     template <class FluidState, class Evaluation, class ...Args>
-    static Evaluation pcgn(const Params& params,
+    OPM_HOST_DEVICE static Evaluation pcgn(const Params& params,
                            const FluidState& fs)
     {
         OPM_TIMEFUNCTION_LOCAL(Subsystem::SatProps);
@@ -280,7 +281,7 @@ public:
      * \f]
      */
     template <class FluidState, class Evaluation, class ...Args>
-    static Evaluation pcnw(const Params& params,
+    OPM_HOST_DEVICE static Evaluation pcnw(const Params& params,
                            const FluidState& fs)
     {
         OPM_TIMEFUNCTION_LOCAL(Subsystem::SatProps);
@@ -345,7 +346,7 @@ public:
      * technical description.
      */
     template <class ContainerT, class FluidState, class ...Args>
-    static void relativePermeabilities(ContainerT& values,
+    OPM_HOST_DEVICE static void relativePermeabilities(ContainerT& values,
                                        const Params& params,
                                        const FluidState& fluidState)
     {
@@ -361,7 +362,7 @@ public:
      * \brief The relative permeability of the gas phase.
      */
     template <class FluidState, class Evaluation, class ...Args>
-    static Evaluation krg(const Params& params,
+    OPM_HOST_DEVICE static Evaluation krg(const Params& params,
                           const FluidState& fluidState)
     {
         OPM_TIMEFUNCTION_LOCAL(Subsystem::SatProps);
@@ -374,7 +375,7 @@ public:
      * \brief The relative permeability of the wetting phase.
      */
     template <class FluidState, class Evaluation, class ...Args>
-    static Evaluation krw(const Params& params,
+    OPM_HOST_DEVICE static Evaluation krw(const Params& params,
                           const FluidState& fluidState)
     {
         OPM_TIMEFUNCTION_LOCAL(Subsystem::SatProps);
@@ -386,7 +387,7 @@ public:
      * \brief The relative permeability of the non-wetting (i.e., oil) phase.
      */
     template <class FluidState, class Evaluation, class ...Args>
-    static Evaluation krn(const Params& params,
+    OPM_HOST_DEVICE static Evaluation krn(const Params& params,
                           const FluidState& fluidState)
     {
         OPM_TIMEFUNCTION_LOCAL(Subsystem::SatProps);
@@ -425,7 +426,7 @@ public:
      * \brief The relative permeability of oil in oil/gas system.
      */
     template <class Evaluation, class FluidState, class ...Args>
-    static Evaluation relpermOilInOilGasSystem(const Params& params,
+    OPM_HOST_DEVICE static Evaluation relpermOilInOilGasSystem(const Params& params,
                                                const FluidState& fluidState)
     {
         OPM_TIMEFUNCTION_LOCAL(Subsystem::SatProps);
@@ -443,7 +444,7 @@ public:
      * \brief The relative permeability of oil in oil/water system.
      */
     template <class Evaluation, class FluidState, class ...Args>
-    static Evaluation relpermOilInOilWaterSystem(const Params& params,
+    OPM_HOST_DEVICE static Evaluation relpermOilInOilWaterSystem(const Params& params,
                                                  const FluidState& fluidState)
     {
         OPM_TIMEFUNCTION_LOCAL(Subsystem::SatProps);

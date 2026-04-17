@@ -254,7 +254,7 @@ public:
      * \brief Returns the formation volume factor [-] and viscosity [Pa s] of the fluid phase.
      */
     template <class FluidState, class LhsEval = typename FluidState::ValueType>
-    std::pair<LhsEval, LhsEval>
+    OPM_HOST_DEVICE std::pair<LhsEval, LhsEval>
     inverseFormationVolumeFactorAndViscosity(const FluidState& fluidState, unsigned regionIdx)
     {
         const LhsEval& T = decay<LhsEval>(fluidState.temperature(FluidState::gasPhaseIdx));

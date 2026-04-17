@@ -35,11 +35,21 @@
 
 #include <opm/common/TimingMacros.hpp>
 
+#include <opm/common/utility/gpuDecorators.hpp>
+
 #include <algorithm>
 #include <stdexcept>
 
 namespace Opm {
-
+#if OPM_IS_INSIDE_DEVICE_FUNCTION
+#define OPM_ECL_MULTIPLEXER_MATERIAL_CALL(codeToCall, onePhaseCode)                                                    \
+    {                                                                                                                  \
+        [[maybe_unused]] constexpr EclMultiplexerApproach approach = EclMultiplexerApproach::Default;                  \
+        auto& realParams = params.template getRealParams<approach>();                                                  \
+        using ActualLaw = DefaultMaterial;                                                                             \
+        codeToCall;                                                                                                    \
+    }
+#else
 #define OPM_ECL_MULTIPLEXER_MATERIAL_CALL(codeToCall, onePhaseCode)                                                    \
     switch (params.approach()) {                                                                                       \
     case EclMultiplexerApproach::Stone1: {                                                                             \
@@ -64,7 +74,7 @@ namespace Opm {
         break;                                                                                                         \
     }                                                                                                                  \
     case EclMultiplexerApproach::TwoPhase: {                                                                           \
-        [[maybe_unused]] constexpr EclMultiplexerApproach approach = EclMultiplexerApproach::TwoPhase;                  \
+        [[maybe_unused]] constexpr EclMultiplexerApproach approach = EclMultiplexerApproach::TwoPhase;                 \
         auto& realParams = params.template getRealParams<approach>();                                                  \
         using ActualLaw = TwoPhaseMaterial;                                                                            \
         codeToCall;                                                                                                    \
@@ -76,6 +86,7 @@ namespace Opm {
         break;                                                                                                         \
     }                                                                                                                  \
     }
+#endif
 
 // The static_assert does not compile with gcc 12 and earlier (or nvcc) when placed in the multiplexer below.
 #if (defined(__GNUC__) && (__GNUC__ < 13)) || defined(__CUDACC__)
@@ -84,6 +95,16 @@ namespace Opm {
     #define STATIC_ASSERT_ECL_MULTIPLEXER_UNLESS_GCC_LT_13 static_assert(false, "Unhandled EclMultiplexerApproach")
 #endif
 
+#if OPM_IS_INSIDE_DEVICE_FUNCTION
+#define OPM_ECL_MULTIPLEXER_MATERIAL_CALL_COMPILETIME(codeToCall, onePhaseCode)                                        \
+    if constexpr (Head::approach == EclMultiplexerApproach::Default) {                                                 \
+        [[maybe_unused]] constexpr EclMultiplexerApproach approach = EclMultiplexerApproach::Default;                  \
+        auto& realParams = params.template getRealParams<approach>();                                                  \
+        using ActualLaw = DefaultMaterial;                                                                             \
+        codeToCall;                                                                                                    \
+    }
+
+#else 
 #define OPM_ECL_MULTIPLEXER_MATERIAL_CALL_COMPILETIME(codeToCall, onePhaseCode)                                        \
     if constexpr (Head::approach == EclMultiplexerApproach::Stone1) {                                                  \
         [[maybe_unused]] constexpr EclMultiplexerApproach approach = EclMultiplexerApproach::Stone1;                   \
@@ -111,7 +132,7 @@ namespace Opm {
     } else {                                                                                                           \
         STATIC_ASSERT_ECL_MULTIPLEXER_UNLESS_GCC_LT_13;                                                                \
     }
-
+#endif
 // Pass this for the onePhaseCode argument if nothing is to be done.
 inline void doNothing() { };
 
@@ -207,7 +228,7 @@ public:
      * \param fluidState The fluid state
      */
     template <class ContainerT, class FluidState, class ...Args>
-    static void capillaryPressures(ContainerT& values,
+    OPM_HOST_DEVICE static void capillaryPressures(ContainerT& values,
                                    const Params& params,
                                    const FluidState& fluidState)
     {
@@ -422,7 +443,7 @@ public:
      * technical description.
      */
     template <class ContainerT, class FluidState, class ...Args>
-    static void relativePermeabilities(ContainerT& values,
+    OPM_HOST_DEVICE static void relativePermeabilities(ContainerT& values,
                                        const Params& params,
                                        const FluidState& fluidState)
     {
