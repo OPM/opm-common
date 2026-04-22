@@ -174,11 +174,29 @@
 
 
 
-  What is not supported?
-  ----------------------
+   What is not supported?
+   ----------------------
 
-  The SAVE keyword is not supported in OPM at all, this implies that
-  the SAVE and SFREQ mneomics are not supported.
+   The SAVE keyword is not supported in OPM at all, this implies that
+   the SAVE and SFREQ mneomics are not supported.
+
+
+   Graphics-Only Restart Files (NORST)
+   -----------------------------------
+
+   The NORST mnemonic controls the generation of graphics-only restart
+   files, which are suitable for visualization but cannot be used for
+   restarting simulations. When NORST > 0:
+
+   NORST = 1: Excludes arrays not required for visualization (e.g.,
+              hysteresis arrays).
+
+   NORST = 2: Excludes well arrays; keeps only essential data including
+              SEQNUM, INTEHEAD, IWEL, XWEL, ZWEL, XCON, and solution
+              arrays (PRESSURE, SWAT, SGAS, RS, RV, etc.).
+
+   Graphics-only restart files are marked internally and will fail if
+   used in a restart attempt.
 */
 
 #include <map>
@@ -214,26 +232,28 @@ public:
     static RSTConfig first(const RSTConfig& src);
     static RSTConfig serializationTestObject();
 
-    template<class Serializer>
-    void serializeOp(Serializer& serializer)
-    {
-        serializer(write_rst_file);
-        serializer(keywords);
-        serializer(basic);
-        serializer(freq);
-        serializer(save);
-        serializer(compositional);
-        serializer(this->solution_only_keywords);
-    }
+     template<class Serializer>
+     void serializeOp(Serializer& serializer)
+     {
+         serializer(write_rst_file);
+         serializer(keywords);
+         serializer(basic);
+         serializer(freq);
+         serializer(save);
+         serializer(compositional);
+         serializer(this->solution_only_keywords);
+         serializer(norst);
+     }
 
-    bool operator==(const RSTConfig& other) const;
+     bool operator==(const RSTConfig& other) const;
 
-    std::optional<bool> write_rst_file{};
-    std::map<std::string, int> keywords{};
-    std::optional<int> basic{};
-    std::optional<int> freq{};
-    bool save { false };
-    bool compositional { false };
+     std::optional<bool> write_rst_file{};
+     std::map<std::string, int> keywords{};
+     std::optional<int> basic{};
+     std::optional<int> freq{};
+     bool save { false };
+     bool compositional { false };
+     std::optional<int> norst{};  // Graphics-only restart file control
 
 private:
     std::unordered_set<std::string> solution_only_keywords{};

@@ -382,29 +382,35 @@ namespace {
                    const Opm::WellTestState&     wtest_state,
                    const Opm::SummaryState&      sumState,
                    const std::vector<int>&       ih,
-                   EclIO::OutputStream::Restart& rstFile)
+                   EclIO::OutputStream::Restart& rstFile,
+                   const int                     norst = 0)
     {
         auto wellData = Helpers::AggregateWellData(ih);
         wellData.captureDeclaredWellData(schedule, grid, tracers, sim_step, action_state, wtest_state, sumState, ih);
         wellData.captureDynamicWellData(schedule, tracers, sim_step, wells, sumState);
 
         rstFile.write("IWEL", wellData.getIWell());
-        rstFile.write("SWEL", wellData.getSWell());
+        if (norst < 2) {
+            rstFile.write("SWEL", wellData.getSWell());
+        }
         rstFile.write("XWEL", wellData.getXWell());
         rstFile.write("ZWEL", wellData.getZWell());
 
-        auto wListData = Helpers::AggregateWListData(ih);
-        wListData.captureDeclaredWListData(schedule, sim_step, ih);
-
-        rstFile.write("ZWLS", wListData.getZWls());
-        rstFile.write("IWLS", wListData.getIWls());
+        if (norst < 2) {
+            auto wListData = Helpers::AggregateWListData(ih);
+            wListData.captureDeclaredWListData(schedule, sim_step, ih);
+            rstFile.write("ZWLS", wListData.getZWls());
+            rstFile.write("IWLS", wListData.getIWls());
+        }
 
         auto connectionData = Helpers::AggregateConnectionData(ih);
         connectionData.captureDeclaredConnData(schedule, grid, schedule.getUnits(),
                                                wells, sumState, sim_step);
 
-        rstFile.write("ICON", connectionData.getIConn());
-        rstFile.write("SCON", connectionData.getSConn());
+        if (norst < 2) {
+            rstFile.write("ICON", connectionData.getIConn());
+            rstFile.write("SCON", connectionData.getSConn());
+        }
         rstFile.write("XCON", connectionData.getXConn());
     }
 
@@ -519,6 +525,8 @@ namespace {
                           std::optional<Helpers::AggregateAquiferData>& aquiferData,
                           EclIO::OutputStream::Restart&                 rstFile)
     {
+        const int norst = schedule[sim_step].rst_config().norst.value_or(0);
+
         writeGroup(sim_step, schedule.getUnits(), schedule, sumState, inteHD, rstFile);
 
         // Write network data if the network option is used and network defined
@@ -537,13 +545,14 @@ namespace {
                                     [&schedule, sim_step](const std::string& well)
                                     { return schedule.getWell(well, sim_step).isMultiSegment(); });
 
-            if (haveMSW) {
+            // MSW data is well-specific detail; skip for graphics-only restart (NORST=2)
+            if (haveMSW && norst < 2) {
                 writeMSWData(sim_step, schedule.getUnits(), schedule, grid,
                              sumState, wellSol, inteHD, rstFile);
             }
 
             writeWell(sim_step, grid, schedule, es.tracer(), wellSol,
-                      action_state, wtest_state, sumState, inteHD, rstFile);
+                      action_state, wtest_state, sumState, inteHD, rstFile, norst);
         }
 
         if (const auto& aqCfg = es.aquifer();
