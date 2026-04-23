@@ -720,6 +720,16 @@ RstState RstState::load(std::shared_ptr<EclIO::RestartFileView> rstView,
                         const Parser&                           parser,
                         const ::Opm::EclipseGrid*               grid)
 {
+    if (rstView->isGraphicsOnly()) {
+        throw std::runtime_error {
+            fmt::format("Cannot load state from a graphics-only restart file "
+                        "(report step {}). This file was written with NORST >= 2 "
+                        "and is missing arrays required for simulation restart. "
+                        "Please use a standard restart file instead.",
+                        rstView->reportStep())
+        };
+    }
+
     RstState state(rstView, runspec, grid);
 
     // At minimum we need any applicable constraint data for FIELD.  Load

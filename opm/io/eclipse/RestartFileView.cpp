@@ -161,12 +161,17 @@ public:
     bool valid() const
     { return rst_file_.operator bool(); }
 
-    // IWEL is always written when wells exist; SWEL is skipped for NORST >= 2.
-    // A file with wells (IWEL present) but no SWEL is a graphics-only restart.
+    // Detect graphics-only restart (NORST >= 2).
+    // ZGRP is always written in full restarts (even for FIELD group).
+    // In case SWEL is omitted while IWEL is present, that is also a graphics-only indicator.
     bool isGraphicsOnly() const
     {
-        return this->hasKeyword<int>("IWEL") &&
-               !this->hasKeyword<float>("SWEL");
+        // Not a valid restart file — not a graphics-only file either.
+        if (!this->hasKeyword<int>("INTEHEAD")) { return false; }
+        // ZGRP absent in a valid file: graphics-only indicator.
+        if (!this->hasKeyword<std::string>("ZGRP")) { return true; }
+        // In case ZGRP is present but SWEL is omitted: graphics-only indicator.
+        return this->hasKeyword<int>("IWEL") && !this->hasKeyword<float>("SWEL");
     }
 
 private:
