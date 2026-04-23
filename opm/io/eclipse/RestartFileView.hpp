@@ -62,6 +62,7 @@ public:
     const std::vector<double>& doubhead() const;
 
     bool valid() const;
+    bool isGraphicsOnly() const;
 
 private:
     class Implementation;

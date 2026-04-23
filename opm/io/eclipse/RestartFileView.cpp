@@ -161,6 +161,14 @@ public:
     bool valid() const
     { return rst_file_.operator bool(); }
 
+    // IWEL is always written when wells exist; SWEL is skipped for NORST >= 2.
+    // A file with wells (IWEL present) but no SWEL is a graphics-only restart.
+    bool isGraphicsOnly() const
+    {
+        return this->hasKeyword<int>("IWEL") &&
+               !this->hasKeyword<float>("SWEL");
+    }
+
 private:
     using RstFile = std::shared_ptr<ERst>;
 
@@ -279,6 +287,11 @@ const std::vector<double>& Opm::EclIO::RestartFileView::doubhead() const
 bool Opm::EclIO::RestartFileView::valid() const
 {
     return this->pImpl_->valid();
+}
+
+bool Opm::EclIO::RestartFileView::isGraphicsOnly() const
+{
+    return this->pImpl_->isGraphicsOnly();
 }
 
 template <typename ElmType>
