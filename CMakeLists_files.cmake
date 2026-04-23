@@ -544,6 +544,7 @@ list(APPEND TEST_SOURCE_FILES
   tests/test_RegionSetMatcher.cpp
   tests/test_Restart.cpp
   tests/test_RestartFileView.cpp
+  tests/test_NORST.cpp
   tests/test_RestartLGR.cpp
   tests/test_restartwellinfo.cpp
   tests/test_RFT.cpp
@@ -712,6 +713,7 @@ list(APPEND TEST_DATA_FILES
   tests/BASE.UNRST
   tests/BASE_SIM.DATA
   tests/BASE_SIM_THPRES.DATA
+  tests/NORST_SIM.DATA
   tests/CARFIN-COLUMN.EGRID
   tests/CARFIN-DOUBLE.EGRID
   tests/CARFIN-NESTED.EGRID

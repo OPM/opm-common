@@ -1,0 +1,68 @@
+RUNSPEC
+OIL
+GAS
+WATER
+DISGAS
+VAPOIL
+UNIFOUT
+UNIFIN
+DIMENS
+ 10 10 10 /
+
+START             -- 0
+1 NOV 1979 /
+
+WELLDIMS
+   6      3       1      6
+/
+
+GRID
+DXV
+10*0.25 /
+DYV
+10*0.25 /
+DZV
+10*0.25 /
+TOPS
+100*0.25 /
+
+PORO
+1000*0.2 /
+PERMX
+1000*1 /
+PERMY
+1000*0.1 /
+PERMZ
+1000*0.01 /
+
+SOLUTION
+
+
+SCHEDULE
+RPTRST
+ 'BASIC=2' 'NORST=2' /
+
+WELSPECS
+      'OP_1'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
+      'OP_2'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
+/
+COMPDAT
+      'OP_1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+      'OP_2'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 /
+/
+WCONPROD
+      'OP_1' 'OPEN' 'ORAT' 20000  4* 1000 /
+/
+WCONINJE
+      'OP_2' 'GAS' 'OPEN' 'RATE' 100 200 400 /
+/
+
+DATES             -- 1
+ 20  JAN 2011 /
+/
+
+DATES             -- 2
+ 15  JUN 2013 /
+/
+
+END

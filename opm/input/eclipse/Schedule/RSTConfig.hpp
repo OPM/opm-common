@@ -174,29 +174,29 @@
 
 
 
-   What is not supported?
-   ----------------------
+  What is not supported?
+  ----------------------
 
-   The SAVE keyword is not supported in OPM at all, this implies that
-   the SAVE and SFREQ mneomics are not supported.
+  The SAVE keyword is not supported in OPM at all, this implies that
+  the SAVE and SFREQ mneomics are not supported.
 
 
-   Graphics-Only Restart Files (NORST)
-   -----------------------------------
+  Graphics-Only Restart Files (NORST)
+  -----------------------------------
 
-   The NORST mnemonic controls the generation of graphics-only restart
-   files, which are suitable for visualization but cannot be used for
-   restarting simulations. When NORST > 0:
+  The NORST mnemonic controls the generation of graphics-only restart
+  files, which are suitable for visualization but cannot be used for
+  restarting simulations. When NORST > 0:
 
-   NORST = 1: Excludes arrays not required for visualization (e.g.,
-              hysteresis arrays).
+  NORST = 1: Excludes arrays not required for visualization (e.g.,
+             hysteresis arrays).
 
-   NORST = 2: Excludes well arrays; keeps only essential data including
-              SEQNUM, INTEHEAD, IWEL, XWEL, ZWEL, XCON, and solution
-              arrays (PRESSURE, SWAT, SGAS, RS, RV, etc.).
+  NORST = 2: Excludes well arrays; keeps only essential data including
+             SEQNUM, INTEHEAD, IWEL, XWEL, ZWEL, XCON, and solution
+             arrays (PRESSURE, SWAT, SGAS, RS, RV, etc.).
 
-   Graphics-only restart files are marked internally and will fail if
-   used in a restart attempt.
+  Graphics-only restart files are marked internally and will fail if
+  used in a restart attempt.
 */
 
 #include <map>
