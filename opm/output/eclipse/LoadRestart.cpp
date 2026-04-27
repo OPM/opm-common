@@ -1636,9 +1636,9 @@ namespace Opm::RestartIO  {
 
         if (rst_view->isGraphicsOnly()) {
             throw std::runtime_error {
-                fmt::format("Cannot restart from graphics-only restart file '{}' "
-                            "(report step {}). This file was written with NORST >= 2 "
-                            "and is missing well arrays required for simulation restart. "
+                fmt::format("Cannot restart from restart file '{}' "
+                            "report step {}): the file appears to be graphics-only "
+                            "or is missing well arrays required for simulation restart. "
                             "Please use a standard restart file instead.",
                             filename, report_step)
             };
