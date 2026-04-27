@@ -428,6 +428,7 @@ namespace Opm { namespace EclIO { namespace OutputStream {
 
         /// \brief Write SMSPEC file
         ///
+        /// \param[in] params Summary vector definitions
         /// \param[in] simulationFinished Whether the simulation has finished (i.e.
         ///                           this is the last written for it)
         /// \param[in] currentStep        Index of the current report step
