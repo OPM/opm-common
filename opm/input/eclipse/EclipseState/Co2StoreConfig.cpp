@@ -127,14 +127,28 @@ namespace Opm {
             initEzrokhiTable(deck, "VISCAQA", num_eos_res, cnames, viscaqa_tables);
         }
 
-        // SALINITY or SALTMF convert to mass fraction.
-        if (props_section.hasKeyword<ParserKeywords::SALINITY>()) {
+        // SALINITP / SALINITY / SALTMF convert to mass fraction.
+        // SALINITP (OPM-specific): per-PVT-region salinity, sized by NTPVT.
+        // SALINITY (commercial Eclipse): single scalar value, broadcast to all regions.
+        // SALTMF (OPM-specific): single mole-fraction value, broadcast to all regions.
+        if (props_section.hasKeyword<ParserKeywords::SALINITP>()) {
+            const auto& keyword = deck["SALINITP"].back();
+            const auto numRecords = keyword.size();
+            salt.resize(numRecords);
+            for (std::size_t i = 0; i < numRecords; ++i) {
+                const auto& molality = keyword.getRecord(i).getItem("MOLALITY").get<double>(0);
+                salt[i] = 1.0 / (1.0 + 1.0 / (molality * MmNaCl));
+            }
+        }
+        else if (props_section.hasKeyword<ParserKeywords::SALINITY>()) {
             const auto& molality = deck["SALINITY"].back().getRecord(0).getItem("MOLALITY").get<double>(0);
-            salt = 1.0 / (1.0 + 1.0 / (molality * MmNaCl));
+            salt.resize(1);
+            salt[0] = 1.0 / (1.0 + 1.0 / (molality * MmNaCl));
         }
         else if (props_section.hasKeyword<ParserKeywords::SALTMF>()) {
             const auto& mole_frac = deck["SALTMF"].back().getRecord(0).getItem("MOLE_FRACTION").get<double>(0);
-            salt = mole_frac * MmNaCl / (mole_frac * (MmNaCl - MmH2O) + MmH2O);
+            salt.resize(1);
+            salt[0] = mole_frac * MmNaCl / (mole_frac * (MmNaCl - MmH2O) + MmH2O);
         }
 
         // ACTCO2S
@@ -155,7 +169,20 @@ namespace Opm {
     }
 
     double Co2StoreConfig::salinity() const {
-        return salt;
+        return salt.empty() ? 0.0 : salt[0];
+    }
+
+    double Co2StoreConfig::salinity(std::size_t regionIdx) const {
+        if (salt.empty())
+            return 0.0;
+        // Broadcast single-record (SALINITY/SALTMF) value to all regions.
+        if (regionIdx >= salt.size())
+            return salt[0];
+        return salt[regionIdx];
+    }
+
+    std::size_t Co2StoreConfig::numSalinityRegions() const {
+        return salt.size();
     }
 
     int Co2StoreConfig::actco2s() const {

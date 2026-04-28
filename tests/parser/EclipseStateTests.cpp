@@ -681,3 +681,132 @@ BOOST_AUTO_TEST_CASE(SALTMFTest) {
     const double epsilon = 0.00001;
     BOOST_CHECK_CLOSE(salinity, saltmf, epsilon);
 }
+
+// SALINITP supplies one salinity (molality) value per PVT region. The
+// stored salt array must therefore have NTPVT entries, the per-region
+// accessor must return the correct cell value, and the no-arg accessor
+// must continue to return the first region (back-compat).
+BOOST_AUTO_TEST_CASE(SALINITPTest) {
+    const auto deck_salinitp_input = R"(
+        RUNSPEC
+
+        DIMENS
+        2 2 1 /
+
+        TABDIMS
+        2 2 /
+
+        GRID
+
+        DX
+        4*1 /
+        DY
+        4*1 /
+        DZ
+        4*1 /
+        TOPS
+        4*0.0 /
+
+        PORO
+        4*0.3 /
+
+        PROPS
+
+        SALINITP
+        0.7 /
+        1.4 /
+    )";
+
+    Opm::Parser parser;
+    auto deck = parser.parseString(deck_salinitp_input);
+    EclipseState state(deck);
+    const auto& config = state.getCo2StoreConfig();
+
+    BOOST_CHECK_EQUAL(config.numSalinityRegions(), 2u);
+    const double epsilon = 1e-5;
+    BOOST_CHECK_CLOSE(config.salinity(0), config.salinity(), epsilon);
+    BOOST_CHECK_GT(config.salinity(1), config.salinity(0));
+}
+
+// Scalar SALINITY (and SALTMF) must broadcast to any region index via the
+// per-region accessor — existing single-region decks must keep working.
+BOOST_AUTO_TEST_CASE(SALINITYBroadcastTest) {
+    const auto deck_input = R"(
+        RUNSPEC
+
+        DIMENS
+        2 2 1 /
+
+        TABDIMS
+        2 3 /
+
+        GRID
+
+        DX
+        4*1 /
+        DY
+        4*1 /
+        DZ
+        4*1 /
+        TOPS
+        4*0.0 /
+
+        PORO
+        4*0.3 /
+
+        PROPS
+
+        SALINITY
+        0.7 /
+    )";
+
+    Opm::Parser parser;
+    auto deck = parser.parseString(deck_input);
+    EclipseState state(deck);
+    const auto& config = state.getCo2StoreConfig();
+
+    BOOST_CHECK_EQUAL(config.numSalinityRegions(), 1u);
+    const double epsilon = 1e-5;
+    BOOST_CHECK_CLOSE(config.salinity(0), config.salinity(), epsilon);
+    BOOST_CHECK_CLOSE(config.salinity(2), config.salinity(), epsilon);
+}
+
+// SALINITP and SALINITY are mutually exclusive — declaring both must be
+// rejected by the parser (matches the SALTMF/SALINITY pattern).
+BOOST_AUTO_TEST_CASE(SALINITPProhibitsSALINITYTest) {
+    const auto deck_input = R"(
+        RUNSPEC
+
+        DIMENS
+        2 2 1 /
+
+        TABDIMS
+        2 2 /
+
+        GRID
+
+        DX
+        4*1 /
+        DY
+        4*1 /
+        DZ
+        4*1 /
+        TOPS
+        4*0.0 /
+
+        PORO
+        4*0.3 /
+
+        PROPS
+
+        SALINITY
+        0.5 /
+
+        SALINITP
+        0.7 /
+        1.4 /
+    )";
+
+    Opm::Parser parser;
+    BOOST_CHECK_THROW(parser.parseString(deck_input), std::exception);
+}
