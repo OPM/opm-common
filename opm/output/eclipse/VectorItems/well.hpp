@@ -228,7 +228,6 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
                 Stop      = 0,
                 Open      = 1,
                 Auto      = 3,
-                Undefined = -987, // Well defined but never opened at this step.
             };
 
             namespace WGrupCon {

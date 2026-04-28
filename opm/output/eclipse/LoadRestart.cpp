@@ -1634,6 +1634,14 @@ namespace Opm::RestartIO  {
         auto rst_view = std::make_shared<Opm::EclIO::RestartFileView>
             (std::make_shared<Opm::EclIO::ERst>(filename), report_step);
 
+        // Check for missing headers first
+        if (!rst_view->hasHeaderArrays()) {
+            throw std::runtime_error {
+                fmt::format("Restart file '{}' report step {} is missing required header arrays (INTEHEAD/LOGIHEAD/DOUBHEAD)",
+                            filename, report_step)
+            };
+        }
+
         if (rst_view->isGraphicsOnly()) {
             throw std::runtime_error {
                 fmt::format("Cannot restart from restart file '{}' "

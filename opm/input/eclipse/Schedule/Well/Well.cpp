@@ -131,7 +131,6 @@ Opm::Well::Status status_from_int(const int int_value)
     case Value::Stop: return Opm::Well::Status::STOP;
     case Value::Open: return Opm::Well::Status::OPEN;
     case Value::Auto: return Opm::Well::Status::AUTO;
-    case Value::Undefined: return Opm::Well::Status::SHUT;
     default:
         throw std::logic_error {
             fmt::format("integer value: {} could not be "

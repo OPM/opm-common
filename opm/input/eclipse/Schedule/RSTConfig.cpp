@@ -456,8 +456,8 @@ void RSTConfig::handleRPTRST(const DeckKeyword&  keyword,
 
     // Extract NORST for graphics-only restart file control
     auto mnemonics_copy = mnemonics;
-    const auto norst = extractNORST(mnemonics_copy);
-    update_optional(this->norst, norst);
+    const auto norst_value = extractNORST(mnemonics_copy);
+    update_optional(this->norst, norst_value);
 
     for (const auto& [kw, num] : mnemonics) {
         // Insert_or_assign() to overwrite existing 'kw' elements.
@@ -476,8 +476,8 @@ void RSTConfig::handleRPTRSTSOLUTION(const DeckKeyword&  keyword,
 
     // Extract NORST for graphics-only restart file control
     auto mnemonics_copy = mnemonics;
-    const auto norst = extractNORST(mnemonics_copy);
-    update_optional(this->norst, norst);
+    const auto norst_value = extractNORST(mnemonics_copy);
+    update_optional(this->norst, norst_value);
 
     for (const auto& [kw, num] : mnemonics) {
         // Insert_or_assign() to overwrite existing 'kw' elements.

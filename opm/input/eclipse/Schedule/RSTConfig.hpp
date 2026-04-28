@@ -188,12 +188,19 @@
   files, which are suitable for visualization but cannot be used for
   restarting simulations. When NORST > 0:
 
-  NORST = 1: Excludes arrays not required for visualization (e.g.,
-             hysteresis arrays).
+  NORST = 1: The restart file does not contain arrays that are required for restarting
+             but are not normally needed for graphical output. Example: hysteresis arrays
+             (if present in the simulation) are omitted. All standard solution arrays
+             (pressure, saturations, dissolved gas, etc.) and well arrays are included.
+             This gives a reasonably compact file that still allows well results to be
+             visualized.
 
-  NORST = 2: Excludes well arrays; keeps only essential data including
-             SEQNUM, INTEHEAD, IWEL, XWEL, ZWEL, XCON, and solution
-             arrays (PRESSURE, SWAT, SGAS, RS, RV, etc.).
+  NORST = 2: The restart file further excludes all well arrays (IWEL, XWEL, ZWEL, XCON, and
+             any other well‑related arrays). In a standard black‑oil simulation, the file
+             then contains only: the main solution arrays (PRESSURE, SWAT, SGAS, RS) and any
+             additional arrays requested by other restart controls (e.g., RPTRST). This produces
+             the smallest possible restart file, suitable for fast loading of reservoir‑wide
+             properties.
 
   Graphics-only restart files are marked internally and will fail if
   used in a restart attempt.
@@ -232,28 +239,28 @@ public:
     static RSTConfig first(const RSTConfig& src);
     static RSTConfig serializationTestObject();
 
-     template<class Serializer>
-     void serializeOp(Serializer& serializer)
-     {
-         serializer(write_rst_file);
-         serializer(keywords);
-         serializer(basic);
-         serializer(freq);
-         serializer(save);
-         serializer(compositional);
-         serializer(this->solution_only_keywords);
-         serializer(norst);
-     }
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(write_rst_file);
+        serializer(keywords);
+        serializer(basic);
+        serializer(freq);
+        serializer(save);
+        serializer(compositional);
+        serializer(this->solution_only_keywords);
+        serializer(norst);
+    }
 
-     bool operator==(const RSTConfig& other) const;
+    bool operator==(const RSTConfig& other) const;
 
-     std::optional<bool> write_rst_file{};
-     std::map<std::string, int> keywords{};
-     std::optional<int> basic{};
-     std::optional<int> freq{};
-     bool save { false };
-     bool compositional { false };
-     std::optional<int> norst{};  // Graphics-only restart file control
+    std::optional<bool> write_rst_file{};
+    std::map<std::string, int> keywords{};
+    std::optional<int> basic{};
+    std::optional<int> freq{};
+    bool save { false };
+    bool compositional { false };
+    std::optional<int> norst{};  // Graphics-only restart file control
 
 private:
     std::unordered_set<std::string> solution_only_keywords{};
