@@ -106,7 +106,7 @@ if(PARMETIS_FOUND)
     add_library(ParMETIS::ParMETIS UNKNOWN IMPORTED GLOBAL)
     set_target_properties(ParMETIS::ParMETIS PROPERTIES
       IMPORTED_LOCATION ${PARMETIS_LIBRARY})
-    target_link_libraries(ParMETIS::ParMETIS INTERFACE  "${METIS_LIBRARIES};${MPI_C_LIBRARIES}")
+    target_link_libraries(ParMETIS::ParMETIS INTERFACE METIS::METIS MPI::MPI_C)
     target_compile_definitions(ParMETIS::ParMETIS INTERFACE HAVE_PARMETIS=1)
     target_include_directories(ParMETIS::ParMETIS INTERFACE ${PARMETIS_INCLUDE_DIRS})
   endif()
