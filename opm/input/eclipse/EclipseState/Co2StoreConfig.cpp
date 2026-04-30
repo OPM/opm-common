@@ -34,8 +34,15 @@
 #include <opm/input/eclipse/Parser/ParserKeywords/V.hpp>
 
 #include <cstddef>
+#include <opm/input/eclipse/EclipseState/Tables/TableSchema.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/Tabdims.hpp>
 
 namespace {
+    double molalityToMassFraction(const double molality, const double mmNaCl)
+    {
+        return 1.0 / (1.0 + 1.0 / (molality * mmNaCl));
+    }
+
     template <class EzrokhiTable>
     void initEzrokhiTable(const Opm::Deck& deck,
                           const std::string& keyword_name,
@@ -69,6 +76,36 @@ namespace {
                 }
                 ezrokhitable[tableIdx].init(record, cname, index);
             }
+        }
+    }
+
+    void initSalinivdTable(const Opm::Deck& deck,
+                           std::vector<Opm::SimpleTable>& salinivd_tables,
+                           const double mmNaCl)
+    {
+        if (!deck.hasKeyword("SALINIVD")) {
+            return;
+        }
+
+        const auto& keyword = deck["SALINIVD"].back();
+        salinivd_tables.resize(keyword.size());
+
+        for (std::size_t tableIdx = 0; tableIdx < keyword.size(); ++tableIdx) {
+            Opm::TableSchema schema;
+            schema.addColumn(Opm::ColumnSchema("DEPTH", Opm::Table::STRICTLY_INCREASING, Opm::Table::DEFAULT_NONE));
+            schema.addColumn(Opm::ColumnSchema("SALINITY", Opm::Table::RANDOM, Opm::Table::DEFAULT_NONE));
+
+            Opm::SimpleTable table{schema};
+            table.init("SALINIVD", keyword.getRecord(tableIdx).getItem("DATA"), tableIdx);
+
+            auto& salinity_column = table.getColumn("SALINITY");
+            for (std::size_t rowIdx = 0; rowIdx < salinity_column.size(); ++rowIdx) {
+                salinity_column.updateValue(rowIdx,
+                                            molalityToMassFraction(salinity_column[rowIdx], mmNaCl),
+                                            "SALINIVD");
+            }
+
+            salinivd_tables[tableIdx] = std::move(table);
         }
     }
 }
@@ -132,10 +169,14 @@ namespace Opm {
             initEzrokhiTable(deck, "VISCAQA", num_eos_res, cnames, viscaqa_tables);
         }
 
+        if (props_section.hasKeyword<ParserKeywords::SALINIVD>()) {
+            initSalinivdTable(deck, salinivd_tables, MmNaCl);
+        }
+
         // SALINITY or SALTMF convert to mass fraction.
         if (props_section.hasKeyword<ParserKeywords::SALINITY>()) {
             const auto& molality = deck["SALINITY"].back().getRecord(0).getItem("MOLALITY").get<double>(0);
-            salt = 1.0 / (1.0 + 1.0 / (molality * MmNaCl));
+            salt = molalityToMassFraction(molality, MmNaCl);
         }
         else if (props_section.hasKeyword<ParserKeywords::SALTMF>()) {
             const auto& mole_frac = deck["SALTMF"].back().getRecord(0).getItem("MOLE_FRACTION").get<double>(0);
@@ -159,8 +200,20 @@ namespace Opm {
         return viscaqa_tables;
     }
 
+    const std::vector<SimpleTable>& Co2StoreConfig::getSalinivdTables() const {
+        return salinivd_tables;
+    }
+
     double Co2StoreConfig::salinity() const {
         return salt;
+    }
+
+    double Co2StoreConfig::salinity(double depth) const {
+        if (salinivd_tables.empty()) {
+            return salt;
+        }
+
+        return salinivd_tables.front().evaluate("SALINITY", depth);
     }
 
     int Co2StoreConfig::actco2s() const {
@@ -173,6 +226,7 @@ namespace Opm {
                 && this->gas_type == other.gas_type
                 && this->denaqa_tables == other.denaqa_tables
                 && this->viscaqa_tables == other.viscaqa_tables
+                && this->salinivd_tables == other.salinivd_tables
                 && this->salt == other.salt
                 && this->activityModel == other.activityModel
                 && this->cnames == other.cnames;

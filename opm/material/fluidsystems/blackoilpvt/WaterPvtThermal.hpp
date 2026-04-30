@@ -155,7 +155,8 @@ public:
                               const Evaluation& temperature,
                               const Evaluation& pressure,
                               const Evaluation& Rsw,
-                              const Evaluation& saltconcentration) const
+                              const Evaluation& saltconcentration,
+                              const Evaluation& depth) const
     {
         if (!enableInternalEnergy_) {
             throw std::runtime_error("Requested the internal energy of water but it is disabled");
@@ -172,7 +173,7 @@ public:
             Evaluation Pref = watJTRefPres_[regionIdx];
             Scalar JTC = watJTC_[regionIdx]; // if JTC is default then JTC is calculated
 
-            Evaluation invB = inverseFormationVolumeFactor(regionIdx, temperature, pressure, Rsw, saltconcentration);
+            Evaluation invB = inverseFormationVolumeFactor(regionIdx, temperature, pressure, Rsw, saltconcentration, depth);
             Evaluation Cp = internalEnergyCurves_[regionIdx].eval(temperature, /*extrapolate=*/true)/temperature;
             Evaluation density = invB * waterReferenceDensity(regionIdx);
 
@@ -193,7 +194,7 @@ public:
                 for (std::size_t i = 0; i < N; ++i) {
                     Evaluation Pnew = Pref + i * deltaP;
                     Evaluation rho = inverseFormationVolumeFactor(regionIdx, temperature,
-                                                                  Pnew, Rsw, saltconcentration) *
+                                                                  Pnew, Rsw, saltconcentration, depth) *
                                       waterReferenceDensity(regionIdx);
                     Evaluation jouleThomsonCoefficient = -(1.0 / Cp) * (1.0 - alpha * temperature) / rho;
                     Evaluation deltaEnthalpyPres = -Cp * jouleThomsonCoefficient * deltaP;
@@ -220,17 +221,18 @@ public:
                          const Evaluation& temperature,
                          const Evaluation& pressure,
                          const Evaluation& Rsw,
-                         const Evaluation& saltconcentration) const
+                         const Evaluation& saltconcentration,
+                         const Evaluation& depth) const
     {
         const auto& isothermalMu = isothermalPvt_->viscosity(regionIdx, temperature,
-                                                             pressure, Rsw, saltconcentration);
+                                                             pressure, Rsw, saltconcentration, depth);
         if (!enableThermalViscosity()) {
             return isothermalMu;
         }
         
         const auto& muWatvisct = watvisctCurves_[regionIdx].eval(temperature, true);
         if (enableBrineViscosity()) {
-            auto muRef = isothermalPvt_->viscosity(regionIdx, temperature, Evaluation(viscrefPress_[regionIdx]), Rsw, Evaluation(referenceSaltConcentration_[regionIdx]));
+            auto muRef = isothermalPvt_->viscosity(regionIdx, temperature, Evaluation(viscrefPress_[regionIdx]), Rsw, Evaluation(referenceSaltConcentration_[regionIdx]), depth);
             return isothermalMu * muWatvisct / muRef;
         } else {
             Scalar x = -pvtwViscosibility_[regionIdx] * (viscrefPress_[regionIdx] - pvtwRefPress_[regionIdx]);
@@ -246,10 +248,11 @@ public:
     Evaluation saturatedViscosity(unsigned regionIdx,
                                   const Evaluation& temperature,
                                   const Evaluation& pressure,
-                                  const Evaluation& saltconcentration) const
+                                  const Evaluation& saltconcentration,
+                                  const Evaluation& depth) const
     {
         const auto& isothermalMu = isothermalPvt_->saturatedViscosity(regionIdx, temperature,
-                                                                      pressure, saltconcentration);
+                                                                      pressure, saltconcentration, depth);
         if (!enableThermalViscosity()) {
             return isothermalMu;
         }
@@ -270,11 +273,12 @@ public:
     Evaluation saturatedInverseFormationVolumeFactor(unsigned regionIdx,
                                                      const Evaluation& temperature,
                                                      const Evaluation& pressure,
-                                                     const Evaluation& saltconcentration) const
+                                                     const Evaluation& saltconcentration,
+                                                     const Evaluation& depth) const
     {
         Evaluation Rsw = 0.0;
         return inverseFormationVolumeFactor(regionIdx, temperature, pressure,
-                                            Rsw, saltconcentration);
+                                            Rsw, saltconcentration, depth);
     }
     /*!
      * \brief Returns the formation volume factor [-] of the fluid phase.
@@ -284,11 +288,12 @@ public:
                                             const Evaluation& temperature,
                                             const Evaluation& pressure,
                                             const Evaluation& Rsw,
-                                            const Evaluation& saltconcentration) const
+                                            const Evaluation& saltconcentration,
+                                            const Evaluation& depth) const
     {
         if (!enableThermalDensity()) {
             return isothermalPvt_->inverseFormationVolumeFactor(regionIdx, temperature,
-                                                                pressure, Rsw, saltconcentration);
+                                                                pressure, Rsw, saltconcentration, depth);
         }
 
         Scalar BwRef = pvtwRefB_[regionIdx];
@@ -310,9 +315,9 @@ public:
      */
     template <class FluidState, class LhsEval = typename FluidState::ValueType>
     std::pair<LhsEval, LhsEval>
-    inverseFormationVolumeFactorAndViscosity(const FluidState& fluidState, unsigned regionIdx)
+    inverseFormationVolumeFactorAndViscosity(const FluidState& fluidState, unsigned regionIdx, const LhsEval& depth)
     {
-        auto [b, mu] = isothermalPvt_->inverseFormationVolumeFactorAndViscosity(fluidState, regionIdx);
+        auto [b, mu] = isothermalPvt_->inverseFormationVolumeFactorAndViscosity(fluidState, regionIdx, depth);
         const LhsEval& pressure = decay<LhsEval>(fluidState.pressure(FluidState::waterPhaseIdx));
         const LhsEval& temperature = decay<LhsEval>(fluidState.temperature(FluidState::waterPhaseIdx));
         if (enableThermalDensity()) {
@@ -351,7 +356,8 @@ public:
     Evaluation saturationPressure(unsigned /*regionIdx*/,
                                   const Evaluation& /*temperature*/,
                                   const Evaluation& /*Rs*/,
-                                  const Evaluation& /*saltconcentration*/) const
+                                  const Evaluation& /*saltconcentration*/,
+                                  const Evaluation& /*depth*/) const
     { return 0.0; /* this is dead water, so there isn't any meaningful saturation pressure! */ }
 
     /*!
@@ -361,7 +367,8 @@ public:
     Evaluation saturatedGasDissolutionFactor(unsigned /*regionIdx*/,
                                              const Evaluation& /*temperature*/,
                                              const Evaluation& /*pressure*/,
-                                             const Evaluation& /*saltconcentration*/) const
+                                             const Evaluation& /*saltconcentration*/,
+                                             const Evaluation& /*depth*/) const
     { return 0.0; /* this is dead water! */ }
 
     template <class Evaluation>
