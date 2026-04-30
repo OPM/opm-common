@@ -30,6 +30,7 @@
 #include <opm/material/fluidmatrixinteractions/EclTwoPhaseMaterialParams.hpp>
 
 #include <opm/common/TimingMacros.hpp>
+#include <opm/common/utility/gpuDecorators.hpp>
 
 #include <opm/material/common/Valgrind.hpp>
 #include <opm/material/common/MathToolbox.hpp>
@@ -142,9 +143,9 @@ public:
      */
 
     template <class ContainerT, class FluidState, class ...Args>
-    static void capillaryPressures(ContainerT& values,
-                                   const Params& params,
-                                   const FluidState& fluidState)
+    OPM_HOST_DEVICE static void capillaryPressures(ContainerT& values,
+                                                   const Params& params,
+                                                   const FluidState& fluidState)
     {
         OPM_TIMEFUNCTION_LOCAL(Subsystem::SatProps);
         using Evaluation = typename std::remove_reference<decltype(values[0])>::type;
@@ -380,9 +381,9 @@ public:
      * technical description.
      */
     template <class ContainerT, class FluidState, class ...Args>
-    static void relativePermeabilities(ContainerT& values,
-                                       const Params& params,
-                                       const FluidState& fluidState)
+    OPM_HOST_DEVICE static void relativePermeabilities(ContainerT& values,
+                                                       const Params& params,
+                                                       const FluidState& fluidState)
     {
         OPM_TIMEFUNCTION_LOCAL(Subsystem::SatProps);
         using Evaluation = typename std::remove_reference<decltype(values[0])>::type;

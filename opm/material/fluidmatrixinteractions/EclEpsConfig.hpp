@@ -27,6 +27,8 @@
 #ifndef OPM_ECL_EPS_CONFIG_HPP
 #define OPM_ECL_EPS_CONFIG_HPP
 
+#include <opm/common/utility/gpuDecorators.hpp>
+
 #include <string>
 
 namespace Opm {
@@ -62,7 +64,7 @@ public:
     /*!
      * \brief Returns whether saturation scaling is enabled.
      */
-    bool enableSatScaling() const
+    OPM_HOST_DEVICE bool enableSatScaling() const
     { return enableSatScaling_; }
 
     /*!
@@ -76,7 +78,7 @@ public:
      * \brief Returns whether three point saturation scaling is enabled for the relative
      *        permeabilities.
      */
-    bool enableThreePointKrSatScaling() const
+    OPM_HOST_DEVICE bool enableThreePointKrSatScaling() const
     { return enableThreePointKrSatScaling_; }
 
     /*!
@@ -88,7 +90,7 @@ public:
     /*!
      * \brief Returns whether relative permeability scaling is enabled for the wetting phase.
      */
-    bool enableKrwScaling() const
+    OPM_HOST_DEVICE bool enableKrwScaling() const
     { return enableKrwScaling_; }
 
     /*!
@@ -102,7 +104,7 @@ public:
      * \brief Whether or not three-point relative permeability value scaling
      * is enabled for the wetting phase (KRWR + KRW).
      */
-    bool enableThreePointKrwScaling() const
+    OPM_HOST_DEVICE bool enableThreePointKrwScaling() const
     { return this->enableThreePointKrwScaling_; }
 
     /*!
@@ -116,7 +118,7 @@ public:
      * \brief Whether or not three-point relative permeability value scaling
      * is enabled for the non-wetting phase (e.g., KRORW + KRO).
      */
-    bool enableThreePointKrnScaling() const
+    OPM_HOST_DEVICE bool enableThreePointKrnScaling() const
     { return this->enableThreePointKrnScaling_; }
 
     /*!
@@ -128,7 +130,7 @@ public:
     /*!
      * \brief Returns whether relative permeability scaling is enabled for the non-wetting phase.
      */
-    bool enableKrnScaling() const
+    OPM_HOST_DEVICE bool enableKrnScaling() const
     { return enableKrnScaling_; }
 
     /*!
@@ -140,7 +142,7 @@ public:
     /*!
      * \brief Returns whether capillary pressure scaling is enabled.
      */
-    bool enablePcScaling() const
+    OPM_HOST_DEVICE bool enablePcScaling() const
     { return enablePcScaling_; }
 
     /*!
@@ -160,7 +162,7 @@ public:
      * the normal capillary pressure scaling and the value of enablePcScaling() does not
      * matter anymore.
      */
-    bool enableLeverettScaling() const
+    OPM_HOST_DEVICE bool enableLeverettScaling() const
     { return enableLeverettScaling_; }
 
     /*!

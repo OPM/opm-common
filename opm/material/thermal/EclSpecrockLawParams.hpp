@@ -27,29 +27,55 @@
 #ifndef OPM_ECL_SPECROCK_LAW_PARAMS_HPP
 #define OPM_ECL_SPECROCK_LAW_PARAMS_HPP
 
+#include <opm/common/utility/VectorWithDefaultAllocator.hpp>
+#include <opm/common/utility/gpuDecorators.hpp>
+#include <opm/common/utility/gpuistl_if_available.hpp>
+
 #include <opm/material/common/EnsureFinalized.hpp>
 #include <opm/material/common/Tabulated1DFunction.hpp>
 
 #include <cassert>
+#include <utility>
 
 namespace Opm {
 
 /*!
  * \brief The default implementation of a parameter object for the
  *        ECL thermal law based on SPECROCK.
+ *
+ * The internal-energy table is stored in a templated \c Storage
+ * container so the same class can be used both on the CPU
+ * (\c VectorWithDefaultAllocator) and on the GPU (\c GpuBuffer for
+ * owning device memory and \c GpuView for a non-owning view usable
+ * from a kernel).
  */
-template <class ScalarT>
+template <class ScalarT, template <class> class Storage = ::Opm::VectorWithDefaultAllocator>
 class EclSpecrockLawParams : public EnsureFinalized
 {
-    using InternalEnergyFunction = Tabulated1DFunction<ScalarT>;
+    using InternalEnergyFunction = Tabulated1DFunction<ScalarT, Storage>;
 
 public:
     using Scalar = ScalarT;
 
-    EclSpecrockLawParams(const EclSpecrockLawParams&) = default;
+    OPM_HOST_DEVICE EclSpecrockLawParams() = default;
 
-    EclSpecrockLawParams()
-    { }
+    OPM_HOST_DEVICE explicit EclSpecrockLawParams(InternalEnergyFunction internalEnergyFunction)
+        : internalEnergyFunction_(std::move(internalEnergyFunction))
+    {
+        EnsureFinalized::finalize();
+    }
+
+    /*!
+     * \brief Construct directly from temperature and internal-energy storage
+     *        containers (used by the GPU thermal-law manager).
+     */
+    OPM_HOST_DEVICE EclSpecrockLawParams(Storage<Scalar> temperatureSamples,
+                                         Storage<Scalar> internalEnergySamples)
+        : internalEnergyFunction_(std::move(temperatureSamples),
+                                  std::move(internalEnergySamples))
+    {
+        EnsureFinalized::finalize();
+    }
 
     /*!
      * \brief Specify the volumetric internal energy of rock via heat capacities.
@@ -85,6 +111,17 @@ public:
     }
 
     /*!
+     * \brief Set the temperature/internal-energy sample table directly. Marks
+     *        the object as finalized.
+     */
+    template <class Container>
+    void setSamples(const Container& temperature, const Container& internalEnergy)
+    {
+        internalEnergyFunction_.setXYContainers(temperature, internalEnergy);
+        EnsureFinalized::finalize();
+    }
+
+    /*!
      * \brief Return the function which maps temparature to the rock's volumetric
      *        internal energy
      *
@@ -92,13 +129,51 @@ public:
      * linear heat capacity, the real function is quadratic, but the difference should be
      * negligible.)
      */
-    const InternalEnergyFunction& internalEnergyFunction() const
+    OPM_HOST_DEVICE const InternalEnergyFunction& internalEnergyFunction() const
     { EnsureFinalized::check(); return internalEnergyFunction_; }
+
+    InternalEnergyFunction& internalEnergyFunctionMutable()
+    { return internalEnergyFunction_; }
+
+    /*! \brief Convenience accessors for the per-region sample tables used by
+     *         the GPU thermal-law manager. */
+    OPM_HOST_DEVICE const auto& temperatureSamples() const
+    { return internalEnergyFunction_.xValues(); }
+
+    OPM_HOST_DEVICE const auto& internalEnergySamples() const
+    { return internalEnergyFunction_.yValues(); }
 
 private:
     InternalEnergyFunction internalEnergyFunction_;
 };
 
 } // namespace Opm
+
+#if HAVE_CUDA
+namespace Opm::gpuistl {
+
+template <class ScalarT>
+::Opm::EclSpecrockLawParams<ScalarT, GpuBuffer>
+copy_to_gpu(const ::Opm::EclSpecrockLawParams<ScalarT>& cpu)
+{
+    using GpuFunction = ::Opm::Tabulated1DFunction<ScalarT, GpuBuffer>;
+    return ::Opm::EclSpecrockLawParams<ScalarT, GpuBuffer>(
+        GpuFunction(GpuBuffer<ScalarT>(cpu.temperatureSamples()),
+                    GpuBuffer<ScalarT>(cpu.internalEnergySamples())));
+}
+
+template <class ScalarT>
+::Opm::EclSpecrockLawParams<ScalarT, GpuView>
+make_view(::Opm::EclSpecrockLawParams<ScalarT, GpuBuffer>& gpuBuffers)
+{
+    auto& f = gpuBuffers.internalEnergyFunctionMutable();
+    using ViewFunction = ::Opm::Tabulated1DFunction<ScalarT, GpuView>;
+    return ::Opm::EclSpecrockLawParams<ScalarT, GpuView>(
+        ViewFunction(GpuView<ScalarT>(f.xValuesMutable().data(), f.xValuesMutable().size()),
+                     GpuView<ScalarT>(f.yValuesMutable().data(), f.yValuesMutable().size())));
+}
+
+} // namespace Opm::gpuistl
+#endif // HAVE_CUDA
 
 #endif
