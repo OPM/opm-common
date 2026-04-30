@@ -29,6 +29,7 @@
 
 #include "EclThconrLawParams.hpp"
 
+#include <opm/common/utility/gpuDecorators.hpp>
 #include <opm/material/densead/Math.hpp>
 
 namespace Opm
@@ -52,13 +53,13 @@ public:
      *        medium.
      */
     template <class FluidState, class Evaluation = typename FluidState::ValueType>
-    static Evaluation thermalConductivity(const Params& params,
-                                          const FluidState& fluidState)
+    OPM_HOST_DEVICE static Evaluation thermalConductivity(const Params& params,
+                                                          const FluidState& fluidState)
     {
         // THCONR + THCONSF approach.
         Scalar lambdaRef = params.referenceTotalThermalConductivity();
-        static constexpr int gasPhaseIdx = FluidSystem::gasPhaseIdx;
-        if (FluidSystem::phaseIsActive(gasPhaseIdx)) {
+        constexpr int gasPhaseIdx = FluidSystem::gasPhaseIdx;
+        if (fluidState.fluidSystem().phaseIsActive(gasPhaseIdx)) {
             Scalar alpha = params.dTotalThermalConductivity_dSg();
             const Evaluation& Sg = decay<Evaluation>(fluidState.saturation(gasPhaseIdx));
             return lambdaRef*(1.0 - alpha*Sg);

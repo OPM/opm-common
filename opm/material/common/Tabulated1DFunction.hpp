@@ -28,6 +28,8 @@
 #define OPM_TABULATED_1D_FUNCTION_HPP
 
 #include <opm/common/OpmLog/OpmLog.hpp>
+#include <opm/common/utility/VectorWithDefaultAllocator.hpp>
+#include <opm/common/utility/gpuDecorators.hpp>
 #include <opm/material/densead/Math.hpp>
 
 #include <algorithm>
@@ -45,17 +47,32 @@ struct SegmentIndex {
 /*!
  * \brief Implements a linearly interpolated scalar function that depends on one
  *        variable.
+ *
+ * The samples are stored in a templated \c Storage container so the
+ * same class can be used both on the CPU (\c VectorWithDefaultAllocator)
+ * and on the GPU (\c GpuBuffer for owning device memory and \c GpuView
+ * for a non-owning device-side view usable from a kernel).
  */
-template <class Scalar>
+template <class Scalar, template <class> class Storage = ::Opm::VectorWithDefaultAllocator>
 class Tabulated1DFunction
 {
 public:
+    using ValueVector = Storage<Scalar>;
+
     /*!
      * \brief Default constructor for a piecewise linear function.
      *
      * To specfiy the acutal curve, use one of the set() methods.
      */
-    Tabulated1DFunction()
+    OPM_HOST_DEVICE Tabulated1DFunction() = default;
+
+    /*!
+     * \brief Construct directly from sample-value containers. Mainly used to
+     *        build GPU instantiations from device-resident buffers/views.
+     */
+    OPM_HOST_DEVICE Tabulated1DFunction(ValueVector xValues, ValueVector yValues)
+        : xValues_(std::move(xValues))
+        , yValues_(std::move(yValues))
     {}
 
     /*!
@@ -212,44 +229,50 @@ public:
     /*!
      * \brief Returns the number of sampling points.
      */
-    size_t numSamples() const
+    OPM_HOST_DEVICE size_t numSamples() const
     { return xValues_.size(); }
 
     /*!
      * \brief Return the x value of the leftmost sampling point.
      */
-    Scalar xMin() const
+    OPM_HOST_DEVICE Scalar xMin() const
     { return xValues_[0]; }
 
     /*!
      * \brief Return the x value of the rightmost sampling point.
      */
-    Scalar xMax() const
+    OPM_HOST_DEVICE Scalar xMax() const
     { return xValues_[numSamples() - 1]; }
 
     /*!
      * \brief Return the x value of the a sample point with a given index.
      */
-    Scalar xAt(size_t i) const
+    OPM_HOST_DEVICE Scalar xAt(size_t i) const
     { return xValues_[i]; }
 
-    const std::vector<Scalar>& xValues() const
+    OPM_HOST_DEVICE const ValueVector& xValues() const
     { return xValues_; }
 
-    const std::vector<Scalar>& yValues() const
+    OPM_HOST_DEVICE const ValueVector& yValues() const
+    { return yValues_; }
+
+    ValueVector& xValuesMutable()
+    { return xValues_; }
+
+    ValueVector& yValuesMutable()
     { return yValues_; }
 
     /*!
      * \brief Return the value of the a sample point with a given index.
      */
-    Scalar valueAt(size_t i) const
+    OPM_HOST_DEVICE Scalar valueAt(size_t i) const
     { return yValues_[i]; }
 
     /*!
      * \brief Return true iff the given x is in range [x1, xn].
      */
     template <class Evaluation>
-    bool applies(const Evaluation& x) const
+    OPM_HOST_DEVICE bool applies(const Evaluation& x) const
     { return xValues_[0] <= x && x <= xValues_[numSamples() - 1]; }
 
     /*!
@@ -262,14 +285,14 @@ public:
      *                    failed assertation.
      */
     template <class Evaluation>
-    Evaluation eval(const Evaluation& x, bool extrapolate = false) const
+    OPM_HOST_DEVICE Evaluation eval(const Evaluation& x, bool extrapolate = false) const
     {
         SegmentIndex segIdx = findSegmentIndex(x, extrapolate);
         return eval(x, segIdx);
     }
 
     template <class Evaluation>
-    Evaluation eval(const Evaluation& x, SegmentIndex segIdxIn) const
+    OPM_HOST_DEVICE Evaluation eval(const Evaluation& x, SegmentIndex segIdxIn) const
     {
         size_t segIdx = segIdxIn.value;
         Scalar x0 = xValues_[segIdx];
@@ -429,14 +452,15 @@ public:
     */
     void printCSV(Scalar xi0, Scalar xi1, unsigned k, std::ostream& os) const;
 
-    bool operator==(const Tabulated1DFunction<Scalar>& data) const {
+    bool operator==(const Tabulated1DFunction<Scalar, Storage>& data) const {
         return xValues_ == data.xValues_ &&
                yValues_ == data.yValues_;
     }
 
     template <class Evaluation>
-    SegmentIndex findSegmentIndex(const Evaluation& x, bool extrapolate = false) const
+    OPM_HOST_DEVICE SegmentIndex findSegmentIndex(const Evaluation& x, bool extrapolate = false) const
     {
+#if !OPM_IS_INSIDE_DEVICE_FUNCTION
         if (!isfinite(x)) {
             throw std::runtime_error("We can not search for extrapolation/interpolation "
                                      "segment in an 1D table for non-finite value " +
@@ -454,6 +478,9 @@ public:
                                    std::to_string(numSamples()) +
                                    " sampling points");
         }
+#else
+        (void)extrapolate;
+#endif
 
         if (x <= xValues_[1])
             return SegmentIndex{0};
@@ -471,6 +498,7 @@ public:
                     lowerIdx = pivotIdx;
             }
 
+#if !OPM_IS_INSIDE_DEVICE_FUNCTION
             if (xValues_[lowerIdx] > x || x > xValues_[lowerIdx + 1]) {
                 std::string msg = "Problematic interpolation/extrapolation "
                                   "segment is found for the input value " +
@@ -499,6 +527,7 @@ public:
                 OpmLog::debug(msg);
                 throw std::runtime_error(msg);
             }
+#endif
             return SegmentIndex{lowerIdx};
         }
     }
@@ -554,14 +583,14 @@ private:
      */
     struct ComparatorX_
     {
-        explicit ComparatorX_(const std::vector<Scalar>& x)
+        explicit ComparatorX_(const ValueVector& x)
             : x_(x)
         {}
 
         bool operator ()(size_t idxA, size_t idxB) const
         { return x_.at(idxA) < x_.at(idxB); }
 
-        const std::vector<Scalar>& x_;
+        const ValueVector& x_;
     };
 
     /*!
@@ -582,7 +611,7 @@ private:
         std::ranges::sort(idxVector, cmp);
 
         // reorder the sample points
-        std::vector<Scalar> tmpX(n), tmpY(n);
+        ValueVector tmpX(n), tmpY(n);
         for (size_t i = 0; i < idxVector.size(); ++ i) {
             tmpX[i] = xValues_[idxVector[i]];
             tmpY[i] = yValues_[idxVector[i]];
@@ -614,8 +643,8 @@ private:
         yValues_.resize(nSamples);
     }
 
-    std::vector<Scalar> xValues_;
-    std::vector<Scalar> yValues_;
+    ValueVector xValues_;
+    ValueVector yValues_;
 };
 
 } // namespace Opm

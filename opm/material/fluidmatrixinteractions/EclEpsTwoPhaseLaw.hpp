@@ -29,6 +29,8 @@
 
 #include "EclEpsTwoPhaseLawParams.hpp"
 
+#include <opm/common/utility/gpuDecorators.hpp>
+
 #include <algorithm>
 #include <cstddef>
 #include <type_traits>
@@ -147,7 +149,7 @@ public:
     }
 
     template <class Evaluation, class ...Args>
-    static Evaluation twoPhaseSatPcnw(const Params& params, const Evaluation& SwScaled)
+    OPM_HOST_DEVICE static Evaluation twoPhaseSatPcnw(const Params& params, const Evaluation& SwScaled)
     {
         const Evaluation SwUnscaled = scaledToUnscaledSatPc(params, SwScaled);
         const Evaluation pcUnscaled = EffLaw::template twoPhaseSatPcnw<Evaluation, Args...>(params.effectiveLawParams(), SwUnscaled);
@@ -219,7 +221,7 @@ public:
     }
 
     template <class Evaluation, class ...Args>
-    static Evaluation twoPhaseSatKrw(const Params& params, const Evaluation& SwScaled)
+    OPM_HOST_DEVICE static Evaluation twoPhaseSatKrw(const Params& params, const Evaluation& SwScaled)
     {
         const Evaluation SwUnscaled = scaledToUnscaledSatKrw(params, SwScaled);
         const Evaluation krwUnscaled = EffLaw::template twoPhaseSatKrw<Evaluation, Args...>(params.effectiveLawParams(), SwUnscaled);
@@ -244,7 +246,7 @@ public:
     }
 
     template <class Evaluation, class ...Args>
-    static Evaluation twoPhaseSatKrn(const Params& params, const Evaluation& SwScaled)
+    OPM_HOST_DEVICE static Evaluation twoPhaseSatKrn(const Params& params, const Evaluation& SwScaled)
     {
         const Evaluation SwUnscaled = scaledToUnscaledSatKrn(params, SwScaled);
         const Evaluation krnUnscaled = EffLaw::template twoPhaseSatKrn<Evaluation, Args...>(params.effectiveLawParams(), SwUnscaled);
@@ -265,7 +267,7 @@ public:
      * The effective saturation is then feed into the "raw" capillary pressure law.
      */
     template <class Evaluation>
-    static Evaluation scaledToUnscaledSatPc(const Params& params, const Evaluation& SwScaled)
+    OPM_HOST_DEVICE static Evaluation scaledToUnscaledSatPc(const Params& params, const Evaluation& SwScaled)
     {
         if (!params.config().enableSatScaling())
             return SwScaled;
@@ -278,7 +280,7 @@ public:
     }
 
     template <class Evaluation>
-    static Evaluation unscaledToScaledSatPc(const Params& params, const Evaluation& SwUnscaled)
+    OPM_HOST_DEVICE static Evaluation unscaledToScaledSatPc(const Params& params, const Evaluation& SwUnscaled)
     {
         if (!params.config().enableSatScaling())
             return SwUnscaled;
@@ -295,7 +297,7 @@ public:
      *        relperm of the wetting phase.
      */
     template <class Evaluation>
-    static Evaluation scaledToUnscaledSatKrw(const Params& params, const Evaluation& SwScaled)
+    OPM_HOST_DEVICE static Evaluation scaledToUnscaledSatKrw(const Params& params, const Evaluation& SwScaled)
     {
         if (!params.config().enableSatScaling())
             return SwScaled;
@@ -313,7 +315,7 @@ public:
     }
 
     template <class Evaluation>
-    static Evaluation unscaledToScaledSatKrw(const Params& params, const Evaluation& SwUnscaled)
+    OPM_HOST_DEVICE static Evaluation unscaledToScaledSatKrw(const Params& params, const Evaluation& SwUnscaled)
     {
         if (!params.config().enableSatScaling())
             return SwUnscaled;
@@ -335,7 +337,7 @@ public:
      *        relperm of the non-wetting phase.
      */
     template <class Evaluation>
-    static Evaluation scaledToUnscaledSatKrn(const Params& params, const Evaluation& SwScaled)
+    OPM_HOST_DEVICE static Evaluation scaledToUnscaledSatKrn(const Params& params, const Evaluation& SwScaled)
     {
         if (!params.config().enableSatScaling())
             return SwScaled;
@@ -352,7 +354,7 @@ public:
 
 
     template <class Evaluation>
-    static Evaluation unscaledToScaledSatKrn(const Params& params, const Evaluation& SwUnscaled)
+    OPM_HOST_DEVICE static Evaluation unscaledToScaledSatKrn(const Params& params, const Evaluation& SwUnscaled)
     {
         if (!params.config().enableSatScaling())
             return SwUnscaled;
@@ -371,9 +373,9 @@ public:
 
 private:
     template <class Evaluation, class PointsContainer>
-    static Evaluation scaledToUnscaledSatTwoPoint_(const Evaluation& scaledSat,
-                                                   const PointsContainer& unscaledSats,
-                                                   const PointsContainer& scaledSats)
+    OPM_HOST_DEVICE static Evaluation scaledToUnscaledSatTwoPoint_(const Evaluation& scaledSat,
+                                                                   const PointsContainer& unscaledSats,
+                                                                   const PointsContainer& scaledSats)
     {
         return
             unscaledSats[0]
@@ -382,9 +384,9 @@ private:
     }
 
     template <class Evaluation, class PointsContainer>
-    static Evaluation unscaledToScaledSatTwoPoint_(const Evaluation& unscaledSat,
-                                                   const PointsContainer& unscaledSats,
-                                                   const PointsContainer& scaledSats)
+    OPM_HOST_DEVICE static Evaluation unscaledToScaledSatTwoPoint_(const Evaluation& unscaledSat,
+                                                                   const PointsContainer& unscaledSats,
+                                                                   const PointsContainer& scaledSats)
     {
         return
             scaledSats[0]
@@ -393,9 +395,9 @@ private:
     }
 
     template <class Evaluation, class PointsContainer>
-    static Evaluation scaledToUnscaledSatThreePoint_(const Evaluation& scaledSat,
-                                                     const PointsContainer& unscaledSats,
-                                                     const PointsContainer& scaledSats)
+    OPM_HOST_DEVICE static Evaluation scaledToUnscaledSatThreePoint_(const Evaluation& scaledSat,
+                                                                     const PointsContainer& unscaledSats,
+                                                                     const PointsContainer& scaledSats)
     {
         using UnscaledSat = std::remove_cv_t<std::remove_reference_t<decltype(unscaledSats[0])>>;
 
@@ -433,9 +435,9 @@ private:
     }
 
     template <class Evaluation, class PointsContainer>
-    static Evaluation unscaledToScaledSatThreePoint_(const Evaluation& unscaledSat,
-                                                     const PointsContainer& unscaledSats,
-                                                     const PointsContainer& scaledSats)
+    OPM_HOST_DEVICE static Evaluation unscaledToScaledSatThreePoint_(const Evaluation& unscaledSat,
+                                                                     const PointsContainer& unscaledSats,
+                                                                     const PointsContainer& scaledSats)
     {
         using ScaledSat = std::remove_cv_t<std::remove_reference_t<decltype(scaledSats[0])>>;
 
@@ -473,7 +475,7 @@ private:
      * \brief Scale the capillary pressure according to the given parameters
      */
     template <class Evaluation>
-    static Evaluation unscaledToScaledPcnw_(const Params& params, const Evaluation& unscaledPcnw)
+    OPM_HOST_DEVICE static Evaluation unscaledToScaledPcnw_(const Params& params, const Evaluation& unscaledPcnw)
     {
         if (params.config().enableLeverettScaling()) {
             Scalar alpha = params.scaledPoints().leverettFactor();
@@ -496,7 +498,7 @@ private:
     }
 
     template <class Evaluation>
-    static Evaluation scaledToUnscaledPcnw_(const Params& params, const Evaluation& scaledPcnw)
+    OPM_HOST_DEVICE static Evaluation scaledToUnscaledPcnw_(const Params& params, const Evaluation& scaledPcnw)
     {
         if (params.config().enableLeverettScaling()) {
             Scalar alpha = params.scaledPoints().leverettFactor();
@@ -522,9 +524,9 @@ private:
      * \brief Scale the wetting phase relative permeability of a phase according to the given parameters
      */
     template <class Evaluation>
-    static Evaluation unscaledToScaledKrw_(const Evaluation& SwScaled,
-                                           const Params& params,
-                                           const Evaluation& unscaledKrw)
+    OPM_HOST_DEVICE static Evaluation unscaledToScaledKrw_(const Evaluation& SwScaled,
+                                                           const Params& params,
+                                                           const Evaluation& unscaledKrw)
     {
         const auto& cfg = params.config();
 
@@ -582,7 +584,7 @@ private:
     }
 
     template <class Evaluation>
-    static Evaluation scaledToUnscaledKrw_(const Params& params, const Evaluation& scaledKrw)
+    OPM_HOST_DEVICE static Evaluation scaledToUnscaledKrw_(const Params& params, const Evaluation& scaledKrw)
     {
         if (!params.config().enableKrwScaling())
             return scaledKrw;
@@ -595,9 +597,9 @@ private:
      * \brief Scale the non-wetting phase relative permeability of a phase according to the given parameters
      */
     template <class Evaluation>
-    static Evaluation unscaledToScaledKrn_(const Evaluation& SwScaled,
-                                           const Params& params,
-                                           const Evaluation& unscaledKrn)
+    OPM_HOST_DEVICE static Evaluation unscaledToScaledKrn_(const Evaluation& SwScaled,
+                                                           const Params& params,
+                                                           const Evaluation& unscaledKrn)
     {
         const auto& cfg = params.config();
 
@@ -660,7 +662,7 @@ private:
     }
 
     template <class Evaluation>
-    static Evaluation scaledToUnscaledKrn_(const Params& params, const Evaluation& scaledKrn)
+    OPM_HOST_DEVICE static Evaluation scaledToUnscaledKrn_(const Params& params, const Evaluation& scaledKrn)
     {
         if (!params.config().enableKrnScaling())
             return scaledKrn;

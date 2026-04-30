@@ -28,8 +28,8 @@
 
 namespace Opm {
 
-template<class Scalar>
-void Tabulated1DFunction<Scalar>::
+template<class Scalar, template <class> class Storage>
+void Tabulated1DFunction<Scalar, Storage>::
 printCSV(Scalar xi0, Scalar xi1, unsigned k, std::ostream& os) const
 {
     Scalar x0 = std::min(xi0, xi1);

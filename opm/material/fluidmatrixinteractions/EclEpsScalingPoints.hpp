@@ -27,6 +27,8 @@
 #ifndef OPM_ECL_EPS_SCALING_POINTS_HPP
 #define OPM_ECL_EPS_SCALING_POINTS_HPP
 
+#include <opm/common/utility/gpuDecorators.hpp>
+
 #include <array>
 #include <vector>
 
@@ -166,7 +168,7 @@ public:
     /*!
      * \brief Returns the points used for capillary pressure saturation scaling
      */
-    const std::array<Scalar, 3>& saturationPcPoints() const
+    OPM_HOST_DEVICE const std::array<Scalar, 3>& saturationPcPoints() const
     { return saturationPcPoints_; }
 
     /*!
@@ -178,7 +180,7 @@ public:
     /*!
      * \brief Returns the points used for wetting phase relperm saturation scaling
      */
-    const std::array<Scalar, 3>& saturationKrwPoints() const
+    OPM_HOST_DEVICE const std::array<Scalar, 3>& saturationKrwPoints() const
     { return saturationKrwPoints_; }
 
     /*!
@@ -190,7 +192,7 @@ public:
     /*!
      * \brief Returns the points used for non-wetting phase relperm saturation scaling
      */
-    const std::array<Scalar, 3>& saturationKrnPoints() const
+    OPM_HOST_DEVICE const std::array<Scalar, 3>& saturationKrnPoints() const
     { return saturationKrnPoints_; }
 
     /*!
@@ -202,7 +204,7 @@ public:
     /*!
      * \brief Returns the maximum capillary pressure
      */
-    Scalar maxPcnw() const
+    OPM_HOST_DEVICE Scalar maxPcnw() const
     { return maxPcnwOrLeverettFactor_; }
 
     /*!
@@ -214,7 +216,7 @@ public:
     /*!
      * \brief Returns the Leverett scaling factor for capillary pressure
      */
-    Scalar leverettFactor() const
+    OPM_HOST_DEVICE Scalar leverettFactor() const
     { return maxPcnwOrLeverettFactor_; }
 
     /*!
@@ -228,7 +230,7 @@ public:
      * \brief Returns wetting-phase relative permeability at residual
      * saturation of non-wetting phase.
      */
-    Scalar krwr() const
+    OPM_HOST_DEVICE Scalar krwr() const
     { return this->Krwr_; }
 
     /*!
@@ -240,7 +242,7 @@ public:
     /*!
      * \brief Returns the maximum wetting phase relative permeability
      */
-    Scalar maxKrw() const
+    OPM_HOST_DEVICE Scalar maxKrw() const
     { return maxKrw_; }
 
     /*!
@@ -254,7 +256,7 @@ public:
      * \brief Returns non-wetting phase relative permeability at residual
      * saturation of wetting phase.
      */
-    Scalar krnr() const
+    OPM_HOST_DEVICE Scalar krnr() const
     { return this->Krnr_; }
 
     /*!
@@ -266,7 +268,7 @@ public:
     /*!
      * \brief Returns the maximum wetting phase relative permeability
      */
-    Scalar maxKrn() const
+    OPM_HOST_DEVICE Scalar maxKrn() const
     { return maxKrn_; }
 
     void print() const;

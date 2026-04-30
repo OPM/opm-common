@@ -30,6 +30,8 @@
 #include "EclEpsConfig.hpp"
 #include "EclEpsScalingPoints.hpp"
 
+#include <opm/common/utility/gpuDecorators.hpp>
+
 #include <memory>
 #include <cassert>
 
@@ -80,7 +82,7 @@ public:
     /*!
      * \brief Returns the endpoint scaling configuration object.
      */
-    const EclEpsConfig& config() const
+    OPM_HOST_DEVICE const EclEpsConfig& config() const
     { return config_; }
 
     /*!
@@ -92,7 +94,7 @@ public:
     /*!
      * \brief Returns the scaling points which are seen by the nested material law
      */
-    const ScalingPoints& unscaledPoints() const
+    OPM_HOST_DEVICE const ScalingPoints& unscaledPoints() const
     { return *unscaledPoints_; }
 
     /*!
@@ -104,7 +106,7 @@ public:
     /*!
      * \brief Returns the scaling points which are seen by the physical model
      */
-    const ScalingPoints& scaledPoints() const
+    OPM_HOST_DEVICE const ScalingPoints& scaledPoints() const
     { return scaledPoints_; }
 
     /*!
@@ -137,7 +139,7 @@ public:
     /*!
      * \brief Returns the parameter object for the effective/nested material law.
      */
-    const EffLawParams& effectiveLawParams() const
+    OPM_HOST_DEVICE const EffLawParams& effectiveLawParams() const
     { return *effectiveLawParams_; }
 
     template<class Serializer>
