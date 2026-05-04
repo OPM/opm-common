@@ -2016,9 +2016,9 @@ quantity well_block_average_pressure(const fn_args& args)
 template <Opm::Phase phase>
 inline quantity production_history(const fn_args& args)
 {
-    // Looking up historical well production rates before simulation starts
-    // or the well is flowing is meaningless.  We therefore default to
-    // outputting zero in this case.
+    // During prediction period (after history), use simulated production rates
+    // instead of scheduled rates to match FOPT behavior and allow consistent
+    // cumulative production tracking.
 
     double sum = 0.0;
     for (const auto* sched_well : args.schedule_wells) {
@@ -2034,7 +2034,25 @@ inline quantity production_history(const fn_args& args)
         }
 
         const double eff_fac = efac(args.eff_factors, name);
-        sum += sched_well->production_rate(args.st, phase) * eff_fac;
+
+        // Use simulated production rates from well outputs
+        // This ensures FOPTH tracks actual production like FOPT
+        double rate = 0.0;
+        switch (phase) {
+        case Opm::Phase::WATER:
+            rate = xwPos->second.rates.get(Opm::data::Rates::opt::wat, 0.0);
+            break;
+        case Opm::Phase::OIL:
+            rate = xwPos->second.rates.get(Opm::data::Rates::opt::oil, 0.0);
+            break;
+        case Opm::Phase::GAS:
+            rate = xwPos->second.rates.get(Opm::data::Rates::opt::gas, 0.0);
+            break;
+        default:
+            rate = 0.0;
+        }
+
+        sum -= rate * eff_fac;
     }
 
     return { sum, rate_unit<phase>() };
