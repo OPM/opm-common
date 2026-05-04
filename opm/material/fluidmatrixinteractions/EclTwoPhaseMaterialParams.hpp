@@ -29,15 +29,29 @@
 
 #include <memory>
 
+#include <opm/common/utility/gpuDecorators.hpp>
 #include <opm/material/common/EnsureFinalized.hpp>
 
-namespace Opm {
+namespace Opm
+{
 
-enum class EclTwoPhaseApproach {
-    GasOil,
-    OilWater,
-    GasWater
-};
+enum class EclTwoPhaseApproach { GasOil, OilWater, GasWater };
+
+namespace EclTwoPhaseMaterialParamsDetail
+{
+
+    /*!
+     * \brief Single-argument alias for std::shared_ptr.
+     *
+     * Used as the default storage policy for EclTwoPhaseMaterialParams so the
+     * class can be templated on a `template <class> class` parameter while
+     * retaining full backward compatibility with existing call sites that pass
+     * std::shared_ptr instances.
+     */
+    template <class T>
+    using SharedPointer = std::shared_ptr<T>;
+
+} // namespace EclTwoPhaseMaterialParamsDetail
 
 /*!
  * \brief Implementation for the parameters required by the material law for two-phase
@@ -45,87 +59,128 @@ enum class EclTwoPhaseApproach {
  *
  * Essentially, this class just stores the two parameter objects for
  * the twophase capillary pressure laws.
+ *
+ * The \c StoragePolicy template parameter selects how the per-sub-law
+ * parameter objects are stored. By default they are heap-allocated and
+ * referenced through std::shared_ptr; instantiations targeting the GPU may
+ * pass an inline-storage policy such as \c Opm::gpuistl::ValueAsPointer so
+ * that the resulting object is trivially copyable to the device.
  */
-template<class Traits, class GasOilParamsT, class OilWaterParamsT, class GasWaterParamsT>
+template <class Traits,
+          class GasOilParamsT,
+          class OilWaterParamsT,
+          class GasWaterParamsT,
+          template <class> class StoragePolicy = EclTwoPhaseMaterialParamsDetail::SharedPointer>
 class EclTwoPhaseMaterialParams : public EnsureFinalized
 {
     using Scalar = typename Traits::Scalar;
     enum { numPhases = 3 };
+
 public:
-    using EnsureFinalized :: finalize;
+    using EnsureFinalized::finalize;
 
     using GasOilParams = GasOilParamsT;
     using OilWaterParams = OilWaterParamsT;
     using GasWaterParams = GasWaterParamsT;
 
+    using GasOilParamsStorage = StoragePolicy<GasOilParams>;
+    using OilWaterParamsStorage = StoragePolicy<OilWaterParams>;
+    using GasWaterParamsStorage = StoragePolicy<GasWaterParams>;
+
     /*!
      * \brief The default constructor.
      */
-    EclTwoPhaseMaterialParams()
+    OPM_HOST_DEVICE EclTwoPhaseMaterialParams() = default;
+
+    OPM_HOST_DEVICE void setApproach(EclTwoPhaseApproach newApproach)
     {
+        approach_ = newApproach;
     }
 
-    void setApproach(EclTwoPhaseApproach newApproach)
-    { approach_ = newApproach; }
-
-    EclTwoPhaseApproach approach() const
-    { return approach_; }
-
-    /*!
-     * \brief The parameter object for the gas-oil twophase law.
-     */
-    const GasOilParams& gasOilParams() const
-    { EnsureFinalized::check(); return *gasOilParams_; }
+    OPM_HOST_DEVICE EclTwoPhaseApproach approach() const
+    {
+        return approach_;
+    }
 
     /*!
      * \brief The parameter object for the gas-oil twophase law.
      */
-    GasOilParams& gasOilParams()
-    { EnsureFinalized::check(); return *gasOilParams_; }
+    OPM_HOST_DEVICE const GasOilParams& gasOilParams() const
+    {
+        EnsureFinalized::check();
+        return *gasOilParams_;
+    }
+
+    /*!
+     * \brief The parameter object for the gas-oil twophase law.
+     */
+    OPM_HOST_DEVICE GasOilParams& gasOilParams()
+    {
+        EnsureFinalized::check();
+        return *gasOilParams_;
+    }
 
     /*!
      * \brief Set the parameter object for the gas-oil twophase law.
      */
-    void setGasOilParams(std::shared_ptr<GasOilParams> val)
-    { gasOilParams_ = val; }
+    OPM_HOST_DEVICE void setGasOilParams(GasOilParamsStorage val)
+    {
+        gasOilParams_ = std::move(val);
+    }
 
     /*!
      * \brief The parameter object for the oil-water twophase law.
      */
-    const OilWaterParams& oilWaterParams() const
-    { EnsureFinalized::check(); return *oilWaterParams_; }
+    OPM_HOST_DEVICE const OilWaterParams& oilWaterParams() const
+    {
+        EnsureFinalized::check();
+        return *oilWaterParams_;
+    }
 
     /*!
      * \brief The parameter object for the oil-water twophase law.
      */
-    OilWaterParams& oilWaterParams()
-    { EnsureFinalized::check(); return *oilWaterParams_; }
+    OPM_HOST_DEVICE OilWaterParams& oilWaterParams()
+    {
+        EnsureFinalized::check();
+        return *oilWaterParams_;
+    }
 
     /*!
      * \brief Set the parameter object for the oil-water twophase law.
      */
-    void setOilWaterParams(std::shared_ptr<OilWaterParams> val)
-    { oilWaterParams_ = val; }
-
-  /*!
-     * \brief The parameter object for the gas-water twophase law.
-     */
-    const GasWaterParams& gasWaterParams() const
-    { EnsureFinalized::check(); return *gasWaterParams_; }
+    OPM_HOST_DEVICE void setOilWaterParams(OilWaterParamsStorage val)
+    {
+        oilWaterParams_ = std::move(val);
+    }
 
     /*!
      * \brief The parameter object for the gas-water twophase law.
      */
-    GasWaterParams& gasWaterParams()
-    { EnsureFinalized::check(); return *gasWaterParams_; }
+    OPM_HOST_DEVICE const GasWaterParams& gasWaterParams() const
+    {
+        EnsureFinalized::check();
+        return *gasWaterParams_;
+    }
+
+    /*!
+     * \brief The parameter object for the gas-water twophase law.
+     */
+    OPM_HOST_DEVICE GasWaterParams& gasWaterParams()
+    {
+        EnsureFinalized::check();
+        return *gasWaterParams_;
+    }
 
     /*!
      * \brief Set the parameter object for the gas-water twophase law.
      */
-    void setGasWaterParams(std::shared_ptr<GasWaterParams> val)
-    { gasWaterParams_ = val; }
+    OPM_HOST_DEVICE void setGasWaterParams(GasWaterParamsStorage val)
+    {
+        gasWaterParams_ = std::move(val);
+    }
 
-    template<class Serializer>
+    template <class Serializer>
     void serializeOp(Serializer& serializer)
     {
         // This is for restart serialization.
@@ -135,14 +190,16 @@ public:
         serializer(*gasWaterParams_);
     }
 
-    void setSwl(Scalar) {}
+    void setSwl(Scalar)
+    {
+    }
 
 private:
-    EclTwoPhaseApproach approach_{EclTwoPhaseApproach::GasOil};
+    EclTwoPhaseApproach approach_ {EclTwoPhaseApproach::GasOil};
 
-    std::shared_ptr<GasOilParams> gasOilParams_;
-    std::shared_ptr<OilWaterParams> oilWaterParams_;
-    std::shared_ptr<GasWaterParams> gasWaterParams_;
+    GasOilParamsStorage gasOilParams_ {};
+    OilWaterParamsStorage oilWaterParams_ {};
+    GasWaterParamsStorage gasWaterParams_ {};
 };
 
 } // namespace Opm

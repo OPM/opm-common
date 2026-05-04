@@ -29,6 +29,7 @@
 
 #include <memory>
 
+#include <opm/common/utility/gpuDecorators.hpp>
 #include <opm/material/common/EnsureFinalized.hpp>
 
 namespace Opm {
@@ -55,20 +56,20 @@ public:
     /*!
      * \brief The default constructor.
      */
-    EclDefaultMaterialParams()
+    OPM_HOST_DEVICE EclDefaultMaterialParams()
     {
     }
 
     /*!
      * \brief The parameter object for the gas-oil twophase law.
      */
-    const GasOilParams& gasOilParams() const
+    OPM_HOST_DEVICE const GasOilParams& gasOilParams() const
     { EnsureFinalized::check(); return gasOilParams_; }
 
     /*!
      * \brief The parameter object for the gas-oil twophase law.
      */
-    GasOilParams& gasOilParams()
+    OPM_HOST_DEVICE GasOilParams& gasOilParams()
     { EnsureFinalized::check(); return gasOilParams_; }
 
     /*!
@@ -80,13 +81,13 @@ public:
     /*!
      * \brief The parameter object for the oil-water twophase law.
      */
-    const OilWaterParams& oilWaterParams() const
+    OPM_HOST_DEVICE const OilWaterParams& oilWaterParams() const
     { EnsureFinalized::check(); return oilWaterParams_; }
 
     /*!
      * \brief The parameter object for the oil-water twophase law.
      */
-    OilWaterParams& oilWaterParams()
+    OPM_HOST_DEVICE OilWaterParams& oilWaterParams()
     { EnsureFinalized::check(); return oilWaterParams_; }
 
     /*!
@@ -112,7 +113,7 @@ public:
     /*!
      * \brief Return the saturation of "connate" water.
      */
-    Scalar Swl() const
+    OPM_HOST_DEVICE Scalar Swl() const
     { EnsureFinalized::check(); return Swl_; }
 
     /*!

@@ -19,51 +19,149 @@
 
 #ifndef OPM_COPYABLE_PTR_HPP
 #define OPM_COPYABLE_PTR_HPP
+
+#include <memory>
+#include <type_traits>
+#include <utility>
+#include <opm/common/utility/gpuDecorators.hpp>
+
 namespace Opm {
 namespace Utility {
-// Wraps std::unique_ptr and makes it copyable.
+
+// Wraps a raw pointer and makes it copyable, with GPU support.
+//
+// On the host: owns the pointed-to object (deep copies on copy-construct/assign,
+//   destroys on destruction) — same semantics as the original unique_ptr wrapper.
+// On the device (CUDA/HIP kernel): behaves as a non-owning view; copy/assign
+//   simply copy the raw pointer and the destructor is a no-op.
 //
 // WARNING: This template should not be used with polymorphic classes.
-//  That would require a virtual clone() method to be implemented.
-//  It will only ever copy the static class type of the pointed to class.
-template <class T>
+//   That would require a virtual clone() method. It will only ever copy
+//   the static class type of the pointed-to object.
+template <class T, bool on_gpu = OPM_IS_INSIDE_DEVICE_FUNCTION>
 class CopyablePtr {
 public:
-    CopyablePtr() : ptr_(nullptr) {}
-    CopyablePtr(const CopyablePtr& other) {
-        if (other) { // other does not contain a nullptr
-            ptr_ = std::make_unique<T>(*other.get());
-        }
-        else {
-            ptr_ = nullptr;
+    template <class U, bool B>
+    friend class CopyablePtr;
+
+    using ptr_type = std::conditional_t<on_gpu, T*, std::unique_ptr<T>>;
+
+    OPM_HOST_DEVICE CopyablePtr() : ptr_(nullptr) {}
+
+    OPM_HOST_DEVICE CopyablePtr(const CopyablePtr& other) {
+        if constexpr (on_gpu) {
+            ptr_ = other.ptr_;
+        } else {
+            ptr_ = other ? std::make_unique<T>(*other.get()) : nullptr;
         }
     }
-    // assignment operator
-    CopyablePtr<T>& operator=(const CopyablePtr<T>& other) {
-        if (other) {
-            ptr_ = std::make_unique<T>(*other.get());
+
+    OPM_HOST_DEVICE CopyablePtr(CopyablePtr&& other) noexcept {
+        if constexpr (on_gpu) {
+            ptr_ = other.ptr_;
+            other.ptr_ = nullptr;
+        } else {
+            ptr_ = std::move(other.ptr_);
         }
-        else {
-            ptr_ = nullptr;
+    }
+
+    // copy assignment
+    OPM_HOST_DEVICE CopyablePtr& operator=(const CopyablePtr& other) {
+        if (this != &other) {
+            if constexpr (on_gpu) {
+                ptr_ = other.ptr_;
+            } else {
+                ptr_ = other ? std::make_unique<T>(*other.get()) : nullptr;
+            }
         }
         return *this;
     }
-    // assign directly from a unique_ptr
-    CopyablePtr<T>& operator=(std::unique_ptr<T>&& uptr) {
+
+    // move assignment
+    OPM_HOST_DEVICE CopyablePtr& operator=(CopyablePtr&& other) noexcept {
+        if (this != &other) {
+            if constexpr (on_gpu) {
+                ptr_ = other.ptr_;
+                other.ptr_ = nullptr;
+            } else {
+                ptr_ = std::move(other.ptr_);
+            }
+        }
+        return *this;
+    }
+
+    // Assign directly from a unique_ptr.
+    //
+    // This overload is host-only when on_gpu == true: the GPU-view
+    // configuration has a no-op destructor, so taking ownership of a
+    // \c unique_ptr<T> from the host would leak the object. We therefore
+    // delete this overload in the host pass for GPU-view instantiations
+    // (so user code can only construct GPU views from non-owning raw
+    // pointers via \c to_gpu_view()).
+    //
+    // In a device-compiler pass (CUDA/HIP) we must still allow the
+    // overload to compile, because host-only code that is transitively
+    // instantiated for the device pass (e.g. \c FlowProblem::updateRelperms
+    // with directional mobilities) names it. Such code is never executed
+    // on the device, so the historical \c release()-and-leak fallback is
+    // harmless there.
+#if OPM_IS_INSIDE_DEVICE_FUNCTION
+    CopyablePtr& operator=(std::unique_ptr<T>&& uptr) {
+        if constexpr (on_gpu) {
+            ptr_ = uptr.release();
+        } else {
+            ptr_ = std::move(uptr);
+        }
+        return *this;
+    }
+#else
+    CopyablePtr& operator=(std::unique_ptr<T>&& uptr)
+        requires (!on_gpu)
+    {
         ptr_ = std::move(uptr);
         return *this;
     }
+#endif
+
+    OPM_HOST_DEVICE ~CopyablePtr() = default;
+
     // member access operator
-    T* operator->() const {return ptr_.get(); }
+    OPM_HOST_DEVICE T* operator->() const { return deref_ptr(); }
+
     // boolean context operator
-    explicit operator bool() const noexcept {
-        return ptr_ ? true : false;
+    OPM_HOST_DEVICE explicit operator bool() const noexcept { return deref_ptr() != nullptr; }
+
+    // get a raw pointer to the stored value
+    OPM_HOST_DEVICE T* get() const { return deref_ptr(); }
+
+    // release ownership
+    T* release() {
+        if constexpr (on_gpu) {
+            T* tmp = ptr_;
+            ptr_ = nullptr;
+            return tmp;
+        } else {
+            return ptr_.release();
+        }
     }
-    // get a pointer to the stored value
-    T* get() const {return ptr_.get();}
-    T* release() const {return ptr_.release();}
+
+    // Build a non-owning GPU view of the stored pointer.
+    OPM_HOST_DEVICE CopyablePtr<T, true> to_gpu_view() const {
+        return CopyablePtr<T, true>(this->get());
+    }
+
 private:
-    std::unique_ptr<T> ptr_;
+    explicit OPM_HOST_DEVICE CopyablePtr(T* ptr) : ptr_(ptr) {}
+
+    OPM_HOST_DEVICE T* deref_ptr() const {
+        if constexpr (on_gpu) {
+            return ptr_;
+        } else {
+            return ptr_.get();
+        }
+    }
+
+    ptr_type ptr_;
 };
 
 } // namespace Utility
