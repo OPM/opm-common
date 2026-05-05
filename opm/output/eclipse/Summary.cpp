@@ -2016,10 +2016,6 @@ quantity well_block_average_pressure(const fn_args& args)
 template <Opm::Phase phase>
 inline quantity production_history(const fn_args& args)
 {
-    // During prediction period (after history), use simulated production rates
-    // instead of scheduled rates to match FOPT behavior and allow consistent
-    // cumulative production tracking.
-
     double sum = 0.0;
     for (const auto* sched_well : args.schedule_wells) {
         const auto& name = sched_well->name();
@@ -2028,34 +2024,46 @@ inline quantity production_history(const fn_args& args)
         if ((xwPos == args.wells.end()) ||
             (xwPos->second.dynamicStatus == Opm::Well::Status::SHUT))
         {
-            // Well's not flowing.  Ignore contribution regardless of what's
-            // in WCONHIST.
+            // Well's not flowing or no dynamic results -> ignore contribution
             continue;
         }
 
+        // Only producers contribute to production_history
+        if (! sched_well->isProducer())
+            continue;
+
         const double eff_fac = efac(args.eff_factors, name);
 
-        // Use simulated production rates from well outputs
-        // This ensures FOPTH tracks actual production like FOPT
-        double rate = 0.0;
-        switch (phase) {
-        case Opm::Phase::WATER:
-            rate = xwPos->second.rates.get(Opm::data::Rates::opt::wat, 0.0);
-            break;
-        case Opm::Phase::OIL:
-            rate = xwPos->second.rates.get(Opm::data::Rates::opt::oil, 0.0);
-            break;
-        case Opm::Phase::GAS:
-            rate = xwPos->second.rates.get(Opm::data::Rates::opt::gas, 0.0);
-            break;
-        default:
-            rate = 0.0;
-        }
+        if (! sched_well->predictionMode()) {
+            // History period: use scheduled production rates.
+            const double sched_rate = sched_well->production_rate(args.st, phase);
+            sum += -sched_rate * eff_fac;
+        } else {
+            // Prediction period: use simulated rates.
+            double v = 0.0;
+            switch (phase) {
+            case Opm::Phase::WATER:
+                v = xwPos->second.rates.get(rt::wat, 0.0) * eff_fac;
+                break;
+            case Opm::Phase::OIL:
+                v = xwPos->second.rates.get(rt::oil, 0.0) * eff_fac;
+                break;
+            case Opm::Phase::GAS:
+                v = xwPos->second.rates.get(rt::gas, 0.0) * eff_fac;
+                break;
+            default:
+                // Unknown phase: fall back to scheduled value.
+                v = -sched_well->production_rate(args.st, phase) * eff_fac;
+                break;
+            }
 
-        sum -= rate * eff_fac;
+            sum += v;
+        }
     }
 
-    return { sum, rate_unit<phase>() };
+    // sum is in simulator convention (production negative). Convert once to
+    // summary convention (positive production).
+    return { -sum, rate_unit<phase>() };
 }
 
 template <Opm::Phase phase>
@@ -2079,7 +2087,31 @@ inline quantity injection_history(const fn_args& args)
         }
 
         const double eff_fac = efac(args.eff_factors, name);
-        sum += sched_well->injection_rate(args.st, phase) * eff_fac;
+        double rate = 0.0;
+        if (!sched_well->predictionMode() && sched_well->isInjector())
+        {
+            // History period: use scheduled injection rates from WCONINJH
+            rate = sched_well->injection_rate(args.st, phase);
+        } else if (sched_well->predictionMode() && sched_well->isInjector())
+        {
+            // Prediction period: use simulated rates
+            switch (phase)
+            {
+            case Opm::Phase::WATER:
+                rate = xwPos->second.rates.get(Opm::data::Rates::opt::wat, 0.0);
+                break;
+            case Opm::Phase::OIL:
+                rate = xwPos->second.rates.get(Opm::data::Rates::opt::oil, 0.0);
+                break;
+            case Opm::Phase::GAS:
+                rate = xwPos->second.rates.get(Opm::data::Rates::opt::gas, 0.0);
+                break;
+            default:
+                rate = sched_well->injection_rate(args.st, phase);
+            }
+        }
+
+        sum += rate * eff_fac;
     }
 
     return { sum, rate_unit<phase>() };
