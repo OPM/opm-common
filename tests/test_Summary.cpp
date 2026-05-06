@@ -3665,6 +3665,276 @@ BOOST_AUTO_TEST_CASE(Test_SummaryState)
     BOOST_CHECK_EQUAL(st.get_conn_var("OP2", "COPR", 101, 99), 99);
 }
 
+// -------------------------------------------------------------------------
+// LGR well evaluator tests (PR-003)
+// -------------------------------------------------------------------------
+
+namespace {
+
+// Minimal deck: 3x1x1 global grid, two CARFINs (LGR1 at col 1, LGR2 at col 3),
+// producer PROD placed via WELSPECL in LGR2, injector INJ in LGR1.
+// Requests both W* and LW* vectors so values can be compared.
+const std::string lgr_well_deck = R"(
+RUNSPEC
+TITLE
+   LGR_SUMMARY_PR3_TEST
+DIMENS
+   3 1 1 /
+TABDIMS
+/
+EQLDIMS
+/
+OIL
+GAS
+WATER
+DISGAS
+FIELD
+START
+   1 'JAN' 2015 /
+WELLDIMS
+   2 1 1 2 /
+UNIFOUT
+GRID
+CARFIN
+'LGR1'  1  1  1  1  1  1  3  3  1 /
+ENDFIN
+CARFIN
+'LGR2'  3  3  1  1  1  1  3  3  1 /
+ENDFIN
+DX
+   3*2333 /
+DY
+   3*3500 /
+DZ
+   3*50 /
+TOPS
+   3*8325 /
+PORO
+   3*0.3 /
+PERMX
+   3*500 /
+PERMY
+   3*250 /
+PERMZ
+   3*200 /
+PROPS
+PVTW
+   4017.55 1.038 3.22E-6 0.318 0.0 /
+ROCK
+   14.7 3E-6 /
+SWOF
+   0.12 0.0   1.0  0.0
+   1.0  1.0   0.0  0.0 /
+PVDO
+   400  1.0627  1.180
+   800  1.0483  1.181 /
+PVDG
+   400  5.9e-3  0.013
+   800  2.95e-3 0.014 /
+DENSITY
+   53.0  64.79  0.0702 /
+SOLUTION
+EQUIL
+   8400.0  4800.0  8450.0  0.0  8335.0  0.0 /
+SUMMARY
+WOPR
+   'PROD'
+/
+WBHP
+   'PROD'
+/
+LWOPR
+   'LGR2'  'PROD' /
+/
+LWBHP
+   'LGR2'  'PROD' /
+/
+SCHEDULE
+WELSPECL
+   'PROD'  'G1'  'LGR2'  3  3  8400  'OIL' /
+/
+COMPDATL
+   'PROD'  'LGR2'  3  3  1  1  'OPEN'  1*  1*  0.5 /
+/
+WCONPROD
+   'PROD'  'OPEN'  'ORAT'  20000  4*  1000 /
+/
+TSTEP
+   1 /
+)";
+
+} // anonymous namespace
+
+BOOST_AUTO_TEST_CASE(LGR_well_factory_dispatch)
+{
+    // Verify that the Factory routes LW* nodes to LgrWellValue (not unknownParameter).
+    // We confirm this indirectly: after eval(), the LW* key must be present in
+    // SummaryState with the same value as the equivalent W* key.
+    WorkArea ta { "lgr_summary_pr3" };
+
+    const auto deck     = Parser{}.parseString(lgr_well_deck);
+    const auto es       = EclipseState{ deck };
+    const auto& grid    = es.getInputGrid();
+    const auto  sched   = Schedule{ deck, es, std::make_shared<Python>() };
+    auto        config  = SummaryConfig{ deck, sched, es.fieldProps(), es.aquifer() };
+
+    // Build minimal well solution: PROD produces 100 STB/day oil at 5000 psia.
+    auto wells = data::Wells{};
+    {
+        auto& prod = wells["PROD"];
+        prod.rates.set(rt::oil,   100.0 * unit::stb / unit::day);
+        prod.rates.set(rt::gas,   0.0);
+        prod.rates.set(rt::wat,   0.0);
+        prod.bhp = 5000.0 * unit::psia;
+        prod.thp = 0.0;
+    }
+
+    auto wbp      = data::WellBlockAveragePressures{};
+    auto grp_nwrk = data::GroupAndNetworkValues{};
+
+    auto writer = out::Summary { config, es, grid, sched, "LGR_PR3_CASE" };
+    auto st     = SummaryState { TimeService::now(),
+                                 es.runspec().udqParams().undefinedValue() };
+
+    auto values                   = out::Summary::DynamicSimulatorState{};
+    values.well_solution          = &wells;
+    values.wbp                    = &wbp;
+    values.group_and_nwrk_solution = &grp_nwrk;
+
+    writer.eval(1, 1.0 * day, values, st);
+
+    // LW* key must be populated — non-zero means LgrWellValue ran (not unknownParameter).
+    BOOST_CHECK(st.has_well_var("PROD", "LWOPR"));
+    BOOST_CHECK(st.has_well_var("PROD", "LWBHP"));
+
+    // LW* value must equal the corresponding W* value for the same well.
+    BOOST_CHECK_CLOSE(st.get_well_var("PROD", "LWOPR"),
+                      st.get_well_var("PROD", "WOPR"), 1e-5);
+    BOOST_CHECK_CLOSE(st.get_well_var("PROD", "LWBHP"),
+                      st.get_well_var("PROD", "WBHP"), 1e-5);
+}
+
+BOOST_AUTO_TEST_CASE(LGR_well_wrong_lgr_produces_no_value)
+{
+    // Verify that an LW* node with the wrong LGR name produces no output.
+    // PROD is in LGR2; requesting LWOPR for 'LGR1' must yield nothing.
+    const std::string wrong_lgr_deck = R"(
+RUNSPEC
+TITLE
+   LGR_SUMMARY_WRONG_LGR
+DIMENS
+   3 1 1 /
+TABDIMS
+/
+EQLDIMS
+/
+OIL
+GAS
+WATER
+DISGAS
+FIELD
+START
+   1 'JAN' 2015 /
+WELLDIMS
+   2 1 1 2 /
+UNIFOUT
+GRID
+CARFIN
+'LGR1'  1  1  1  1  1  1  3  3  1 /
+ENDFIN
+CARFIN
+'LGR2'  3  3  1  1  1  1  3  3  1 /
+ENDFIN
+DX
+   3*2333 /
+DY
+   3*3500 /
+DZ
+   3*50 /
+TOPS
+   3*8325 /
+PORO
+   3*0.3 /
+PERMX
+   3*500 /
+PERMY
+   3*250 /
+PERMZ
+   3*200 /
+PROPS
+PVTW
+   4017.55 1.038 3.22E-6 0.318 0.0 /
+ROCK
+   14.7 3E-6 /
+SWOF
+   0.12 0.0   1.0  0.0
+   1.0  1.0   0.0  0.0 /
+PVDO
+   400  1.0627  1.180
+   800  1.0483  1.181 /
+PVDG
+   400  5.9e-3  0.013
+   800  2.95e-3 0.014 /
+DENSITY
+   53.0  64.79  0.0702 /
+SOLUTION
+EQUIL
+   8400.0  4800.0  8450.0  0.0  8335.0  0.0 /
+SUMMARY
+-- PROD is in LGR2; request for LGR1 must produce no value.
+LWOPR
+   'LGR1'  'PROD' /
+/
+SCHEDULE
+WELSPECL
+   'PROD'  'G1'  'LGR2'  3  3  8400  'OIL' /
+/
+COMPDATL
+   'PROD'  'LGR2'  3  3  1  1  'OPEN'  1*  1*  0.5 /
+/
+WCONPROD
+   'PROD'  'OPEN'  'ORAT'  20000  4*  1000 /
+/
+TSTEP
+   1 /
+)";
+
+    WorkArea ta { "lgr_summary_wrong_lgr" };
+
+    const auto deck     = Parser{}.parseString(wrong_lgr_deck);
+    const auto es       = EclipseState{ deck };
+    const auto& grid    = es.getInputGrid();
+    const auto  sched   = Schedule{ deck, es, std::make_shared<Python>() };
+    auto        config  = SummaryConfig{ deck, sched, es.fieldProps(), es.aquifer() };
+
+    auto wells = data::Wells{};
+    {
+        auto& prod = wells["PROD"];
+        prod.rates.set(rt::oil, 100.0 * unit::stb / unit::day);
+        prod.bhp = 5000.0 * unit::psia;
+    }
+
+    auto wbp      = data::WellBlockAveragePressures{};
+    auto grp_nwrk = data::GroupAndNetworkValues{};
+
+    auto writer = out::Summary { config, es, grid, sched, "LGR_PR3_WRONG" };
+    auto st     = SummaryState { TimeService::now(),
+                                 es.runspec().udqParams().undefinedValue() };
+
+    auto values                    = out::Summary::DynamicSimulatorState{};
+    values.well_solution           = &wells;
+    values.wbp                     = &wbp;
+    values.group_and_nwrk_solution = &grp_nwrk;
+
+    writer.eval(1, 1.0 * day, values, st);
+
+    // LWOPR for wrong LGR must not appear as a non-zero well var.
+    // If the key is present it should be 0.0 (no evaluation ran).
+    if (st.has_well_var("PROD", "LWOPR")) {
+        BOOST_CHECK_EQUAL(st.get_well_var("PROD", "LWOPR"), 0.0);
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END() // Summary
 
 // ####################################################################

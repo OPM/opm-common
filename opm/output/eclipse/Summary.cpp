@@ -3796,6 +3796,33 @@ static const auto aquifer_units = UnitTable {
     {"AAQPD", Opm::UnitSystem::measure::identity},
 };
 
+static const auto lgr_well_units = UnitTable {
+    { "LWBHP",  Opm::UnitSystem::measure::pressure              },
+    { "LWTHP",  Opm::UnitSystem::measure::pressure              },
+    { "LWOPR",  Opm::UnitSystem::measure::liquid_surface_rate   },
+    { "LWWPR",  Opm::UnitSystem::measure::liquid_surface_rate   },
+    { "LWGPR",  Opm::UnitSystem::measure::gas_surface_rate      },
+    { "LWWIR",  Opm::UnitSystem::measure::liquid_surface_rate   },
+    { "LWGIR",  Opm::UnitSystem::measure::gas_surface_rate      },
+    { "LWOPT",  Opm::UnitSystem::measure::liquid_surface_volume },
+    { "LWWPT",  Opm::UnitSystem::measure::liquid_surface_volume },
+    { "LWGPT",  Opm::UnitSystem::measure::gas_surface_volume    },
+    { "LWWIT",  Opm::UnitSystem::measure::liquid_surface_volume },
+    { "LWGIT",  Opm::UnitSystem::measure::gas_surface_volume    },
+    { "LWWCT",  Opm::UnitSystem::measure::water_cut             },
+    { "LWGOR",  Opm::UnitSystem::measure::gas_oil_ratio         },
+    { "LWLPR",  Opm::UnitSystem::measure::liquid_surface_rate   },
+    { "LWLPT",  Opm::UnitSystem::measure::liquid_surface_volume },
+};
+
+// Strip leading 'L' from LW*/LC*/LB* keywords: "LWOPR" -> "WOPR"
+static std::string base_keyword(const std::string& lgr_kw)
+{
+    return (lgr_kw.size() > 1 && lgr_kw[0] == 'L')
+        ? lgr_kw.substr(1)
+        : lgr_kw;
+}
+
 void sort_wells_by_insert_index(std::vector<const Opm::Well*>& wells)
 {
     std::ranges::sort(wells,
@@ -4525,6 +4552,68 @@ namespace Evaluator {
         Opm::UnitSystem::measure m_;
     };
 
+    class LgrWellValue : public Base
+    {
+    public:
+        explicit LgrWellValue(Opm::EclIO::SummaryNode        node,
+                              const Opm::UnitSystem::measure m,
+                              ofun                           fcn)
+            : node_(std::move(node))
+            , m_   (m)
+            , fcn_ (std::move(fcn))
+        {}
+
+        void update(const std::size_t       sim_step,
+                    const double            stepSize,
+                    const InputData&        input,
+                    const SimulatorResults& simRes,
+                    Opm::SummaryState&      st) const override
+        {
+            // Verify that the well is actually placed in the specified LGR.
+            // get_lgr_well_tag() returns nullopt for WELSPECS wells and the
+            // LGR name for WELSPECL wells.  Both an absent well and a well
+            // in a different LGR silently produce no output.
+            const auto& well_name = this->node_.wgname;
+            const auto& lgr_name  = this->node_.lgr->name;
+
+            if (!input.sched.hasWell(well_name, sim_step)) {
+                return;
+            }
+
+            const auto& well = input.sched.getWell(well_name, sim_step);
+            const auto  tag  = well.get_lgr_well_tag();
+            if (!tag.has_value() || *tag != lgr_name) {
+                return;
+            }
+
+            const auto wells = find_wells(input.sched, this->node_,
+                                          static_cast<int>(sim_step), input.reg);
+
+            const fn_args args {
+                wells, std::string{}, this->node_.keyword,
+                stepSize, static_cast<int>(sim_step),
+                /*num=*/0, this->node_.fip_region,
+                st,
+                simRes.wellSol, simRes.wbp, simRes.grpNwrkSol,
+                input.reg, input.grid, input.sched,
+                /*eff_factors=*/{},
+                input.initial_inplace, simRes.inplace,
+                input.sched.getUnits(),
+                simRes.rc_rates
+            };
+
+            const auto& usys = input.es.getUnits();
+            const auto  prm  = this->fcn_(args);
+
+            updateValue(this->node_, usys.from_si(prm.unit, prm.value), st);
+        }
+
+    private:
+        Opm::EclIO::SummaryNode  node_;
+        Opm::UnitSystem::measure m_;
+        ofun                     fcn_;
+    };
+
     class UserDefinedValue : public Base
     {
     public:
@@ -4696,6 +4785,7 @@ namespace Evaluator {
         Descriptor regionValue();
         Descriptor interRegionValue();
         Descriptor globalProcessValue();
+        Descriptor lgrWellValue();
         Descriptor userDefinedValue();
         Descriptor unknownParameter();
 
@@ -4704,6 +4794,7 @@ namespace Evaluator {
         bool isRegionValue();
         bool isInterRegionValue();
         bool isGlobalProcessValue();
+        bool isLgrWellValue();
         bool isFunctionRelation();
         bool isUserDefined();
 
@@ -4733,6 +4824,9 @@ namespace Evaluator {
 
         if (this->isGlobalProcessValue())
             return this->globalProcessValue();
+
+        if (this->isLgrWellValue())
+            return this->lgrWellValue();
 
         if (this->isFunctionRelation())
             return this->functionRelation();
@@ -4807,6 +4901,18 @@ namespace Evaluator {
         desc.unit = this->directUnitString();
         desc.evaluator.reset(new GlobalProcessValue {
             *this->node_, this->paramUnit_
+        });
+
+        return desc;
+    }
+
+    Factory::Descriptor Factory::lgrWellValue()
+    {
+        auto desc = this->unknownParameter();
+
+        desc.unit = this->directUnitString();
+        desc.evaluator.reset(new LgrWellValue {
+            *this->node_, this->paramUnit_, std::move(this->paramFunction_)
         });
 
         return desc;
@@ -4912,6 +5018,29 @@ namespace Evaluator {
         // 'node_' represents a single value (i.e., global process)
         // value.  Capture unit of measure and return true.
         this->paramUnit_ = pos->second;
+        return true;
+    }
+
+    bool Factory::isLgrWellValue()
+    {
+        if (!this->node_->lgr.has_value()) return false;
+        if (this->node_->category != Opm::EclIO::SummaryNode::Category::Well) return false;
+
+        auto pos = lgr_well_units.find(this->node_->keyword);
+        if (pos == lgr_well_units.end()) return false;
+
+        // Capture unit of measure.
+        this->paramUnit_ = pos->second;
+
+        // Look up the base W* keyword in funs (e.g. "LWOPR" -> "WOPR").
+        const auto normKw = Opm::EclIO::SummaryNode::normalise_keyword(
+            Opm::EclIO::SummaryNode::Category::Well,
+            base_keyword(this->node_->keyword));
+
+        auto fpos = funs.find(normKw);
+        if (fpos == funs.end()) return false;
+
+        this->paramFunction_ = fpos->second;
         return true;
     }
 
