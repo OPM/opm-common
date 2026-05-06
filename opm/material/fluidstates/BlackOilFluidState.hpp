@@ -190,7 +190,7 @@ friend class BlackOilFluidState;
     auto withOtherFluidSystem(OtherFluidSystemType other) const
     {
         using Raw = std::decay_t<OtherFluidSystemType>;
-        using FS  = std::remove_pointer_t<Raw>;
+        using FS  = std::remove_cv_t<std::remove_pointer_t<Raw>>;
 
         auto bfstate = BlackOilFluidState<
             ValueType,

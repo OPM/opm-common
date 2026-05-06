@@ -374,13 +374,8 @@ public:
 private:
     template <class Evaluation, class PointsContainer>
     OPM_HOST_DEVICE static Evaluation scaledToUnscaledSatTwoPoint_(const Evaluation& scaledSat,
-<<<<<<< HEAD
                                                                    const PointsContainer& unscaledSats,
                                                                    const PointsContainer& scaledSats)
-=======
-                                                   const PointsContainer& unscaledSats,
-                                                   const PointsContainer& scaledSats)
->>>>>>> 2ae970437 (First version)
     {
         return
             unscaledSats[0]
@@ -390,13 +385,8 @@ private:
 
     template <class Evaluation, class PointsContainer>
     OPM_HOST_DEVICE static Evaluation unscaledToScaledSatTwoPoint_(const Evaluation& unscaledSat,
-<<<<<<< HEAD
                                                                    const PointsContainer& unscaledSats,
                                                                    const PointsContainer& scaledSats)
-=======
-                                                   const PointsContainer& unscaledSats,
-                                                   const PointsContainer& scaledSats)
->>>>>>> 2ae970437 (First version)
     {
         return
             scaledSats[0]
@@ -406,13 +396,8 @@ private:
 
     template <class Evaluation, class PointsContainer>
     OPM_HOST_DEVICE static Evaluation scaledToUnscaledSatThreePoint_(const Evaluation& scaledSat,
-<<<<<<< HEAD
                                                                      const PointsContainer& unscaledSats,
                                                                      const PointsContainer& scaledSats)
-=======
-                                                     const PointsContainer& unscaledSats,
-                                                     const PointsContainer& scaledSats)
->>>>>>> 2ae970437 (First version)
     {
         using UnscaledSat = std::remove_cv_t<std::remove_reference_t<decltype(unscaledSats[0])>>;
 
@@ -451,13 +436,8 @@ private:
 
     template <class Evaluation, class PointsContainer>
     OPM_HOST_DEVICE static Evaluation unscaledToScaledSatThreePoint_(const Evaluation& unscaledSat,
-<<<<<<< HEAD
                                                                      const PointsContainer& unscaledSats,
                                                                      const PointsContainer& scaledSats)
-=======
-                                                     const PointsContainer& unscaledSats,
-                                                     const PointsContainer& scaledSats)
->>>>>>> 2ae970437 (First version)
     {
         using ScaledSat = std::remove_cv_t<std::remove_reference_t<decltype(scaledSats[0])>>;
 
@@ -545,13 +525,8 @@ private:
      */
     template <class Evaluation>
     OPM_HOST_DEVICE static Evaluation unscaledToScaledKrw_(const Evaluation& SwScaled,
-<<<<<<< HEAD
                                                            const Params& params,
                                                            const Evaluation& unscaledKrw)
-=======
-                                           const Params& params,
-                                           const Evaluation& unscaledKrw)
->>>>>>> 2ae970437 (First version)
     {
         const auto& cfg = params.config();
 
@@ -623,13 +598,8 @@ private:
      */
     template <class Evaluation>
     OPM_HOST_DEVICE static Evaluation unscaledToScaledKrn_(const Evaluation& SwScaled,
-<<<<<<< HEAD
                                                            const Params& params,
                                                            const Evaluation& unscaledKrn)
-=======
-                                           const Params& params,
-                                           const Evaluation& unscaledKrn)
->>>>>>> 2ae970437 (First version)
     {
         const auto& cfg = params.config();
 

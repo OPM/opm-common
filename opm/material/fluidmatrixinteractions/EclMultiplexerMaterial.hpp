@@ -47,11 +47,7 @@ namespace Opm {
 #if OPM_IS_INSIDE_DEVICE_FUNCTION
 #define OPM_ECL_MULTIPLEXER_MATERIAL_CALL(codeToCall, onePhaseCode)                                                    \
     {                                                                                                                  \
-<<<<<<< HEAD
         constexpr EclMultiplexerApproach approach = EclMultiplexerApproach::Default;                                   \
-=======
-        [[maybe_unused]] constexpr EclMultiplexerApproach approach = EclMultiplexerApproach::Default;                  \
->>>>>>> 2ae970437 (First version)
         auto& realParams = params.template getRealParams<approach>();                                                  \
         using ActualLaw = DefaultMaterial;                                                                             \
         codeToCall;                                                                                                    \
@@ -105,21 +101,13 @@ namespace Opm {
 #if OPM_IS_INSIDE_DEVICE_FUNCTION
 #define OPM_ECL_MULTIPLEXER_MATERIAL_CALL_COMPILETIME(codeToCall, onePhaseCode)                                        \
     if constexpr (Head::approach == EclMultiplexerApproach::Default) {                                                 \
-<<<<<<< HEAD
         constexpr EclMultiplexerApproach approach = EclMultiplexerApproach::Default;                                   \
-=======
-        [[maybe_unused]] constexpr EclMultiplexerApproach approach = EclMultiplexerApproach::Default;                  \
->>>>>>> 2ae970437 (First version)
         auto& realParams = params.template getRealParams<approach>();                                                  \
         using ActualLaw = DefaultMaterial;                                                                             \
         codeToCall;                                                                                                    \
     }
 
-<<<<<<< HEAD
 #else
-=======
-#else 
->>>>>>> 2ae970437 (First version)
 #define OPM_ECL_MULTIPLEXER_MATERIAL_CALL_COMPILETIME(codeToCall, onePhaseCode)                                        \
     if constexpr (Head::approach == EclMultiplexerApproach::Stone1) {                                                  \
         [[maybe_unused]] constexpr EclMultiplexerApproach approach = EclMultiplexerApproach::Stone1;                   \
@@ -244,13 +232,8 @@ public:
      */
     template <class ContainerT, class FluidState, class ...Args>
     OPM_HOST_DEVICE static void capillaryPressures(ContainerT& values,
-<<<<<<< HEAD
                                                    const Params& params,
                                                    const FluidState& fluidState)
-=======
-                                   const Params& params,
-                                   const FluidState& fluidState)
->>>>>>> 2ae970437 (First version)
     {
         OPM_TIMEFUNCTION_LOCAL(Subsystem::SatProps);
         if constexpr (FrontIsEclMultiplexerDispatchV<Args...>) {
@@ -464,13 +447,8 @@ public:
      */
     template <class ContainerT, class FluidState, class ...Args>
     OPM_HOST_DEVICE static void relativePermeabilities(ContainerT& values,
-<<<<<<< HEAD
                                                        const Params& params,
                                                        const FluidState& fluidState)
-=======
-                                       const Params& params,
-                                       const FluidState& fluidState)
->>>>>>> 2ae970437 (First version)
     {
         OPM_TIMEFUNCTION_LOCAL(Subsystem::SatProps);
         if constexpr (FrontIsEclMultiplexerDispatchV<Args...>) {

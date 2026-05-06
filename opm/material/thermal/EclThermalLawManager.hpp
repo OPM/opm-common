@@ -70,6 +70,33 @@ public:
 
     const ThermalConductionLawParams& thermalConductionLawParams(unsigned elemIdx) const;
 
+    /*! \brief Return the approach used for solid energy storage. */
+    EclSolidEnergyApproach solidEnergyApproach() const
+    { return solidEnergyApproach_; }
+
+    /*! \brief Return the approach used for thermal conduction. */
+    EclThermalConductionApproach thermalConductionApproach() const
+    { return thermalConductivityApproach_; }
+
+    /*!
+     * \brief Return the element-index → SATNUM-region-index mapping.
+     *
+     * Only populated (non-empty) when the SPECROCK approach is used.
+     * Each entry is a 0-based satnum region index.
+     */
+    const std::vector<unsigned>& elemToSatnumIdx() const
+    { return elemToSatnumIdx_; }
+
+    /*!
+     * \brief Return the per-region solid-energy law parameter vector.
+     *
+     * For the SPECROCK approach this is indexed by satnum region (use
+     * \c elemToSatnumIdx() to map an element to its region). For the
+     * HEATCR approach it is indexed directly by element index.
+     */
+    const std::vector<SolidEnergyLawParams>& solidEnergyLawParamsVector() const
+    { return solidEnergyLawParams_; }
+
 private:
     /*!
      * \brief Initialize the parameters for the solid energy law using using HEATCR and friends.
