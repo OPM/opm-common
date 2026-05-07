@@ -430,6 +430,9 @@ set( keywords
      000_Eclipse100/L/LKRORW
      000_Eclipse100/L/LKRW
      000_Eclipse100/L/LKRWR
+     000_Eclipse100/L/LOCAL_BLOCK_PROBE
+     000_Eclipse100/L/LOCAL_CONNECTION_PROBE
+     000_Eclipse100/L/LOCAL_WELL_PROBE
      000_Eclipse100/L/LOAD
      000_Eclipse100/L/LOWSALT
      000_Eclipse100/L/LPCW
@@ -537,6 +540,7 @@ set( keywords
      000_Eclipse100/N/NONNC
      000_Eclipse100/N/NORSSPEC
      000_Eclipse100/N/NOSIM
+     000_Eclipse100/N/NOSUMLGR
      000_Eclipse100/N/NOWARN
      000_Eclipse100/N/NOWARNEP
      000_Eclipse100/N/NRSOUT

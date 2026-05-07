@@ -1,0 +1,30 @@
+{
+  "name": "LOCAL_CONNECTION_PROBE",
+  "sections": [
+    "SUMMARY"
+  ],
+  "comment": "LGR connection-level summary vectors (LC*). Item 0 is LGR_NAME. Note: LCOFRU/LCWFRU/LCGFRU are handled by CONNECTION_PROBE.",
+  "deck_name_regex": "LC.+",
+  "items": [
+    {
+      "name": "LGR_NAME",
+      "value_type": "STRING"
+    },
+    {
+      "name": "WELL",
+      "value_type": "STRING"
+    },
+    {
+      "name": "I",
+      "value_type": "INT"
+    },
+    {
+      "name": "J",
+      "value_type": "INT"
+    },
+    {
+      "name": "K",
+      "value_type": "INT"
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "name": "LOCAL_WELL_PROBE",
+  "sections": [
+    "SUMMARY"
+  ],
+  "comment": "LGR well-level summary vectors (LW*). Item 0 is LGR_NAME; item 1 is WELLS.",
+  "deck_name_regex": "LW.+",
+  "items": [
+    {
+      "name": "LGR_NAME",
+      "value_type": "STRING"
+    },
+    {
+      "name": "WELLS",
+      "value_type": "STRING",
+      "size_type": "ALL"
+    }
+  ]
+}
