@@ -337,6 +337,7 @@ namespace {
     bool is_processing_instruction(const std::string& keyword) {
         static const keyword_set processing_instructionkw {
             "NARROW",
+            "NOSUMLGR",
             "RPTONLY",
             "RUNSUM",
             "SEPARATE",
@@ -860,6 +861,41 @@ void keywordWL(SummaryConfig::keyword_list& list,
     }
 }
 
+void keywordLW(SummaryConfig::keyword_list& list,
+               const ParseContext&          parseContext,
+               ErrorGuard&                  errors,
+               const DeckKeyword&           keyword,
+               const Schedule&              schedule)
+{
+    auto param = SummaryConfigNode {
+        keyword.name(), SummaryConfigNode::Category::Well, keyword.location()
+    }
+    .parameterType(parseKeywordType(keyword.name()))
+    .isUserDefined(is_udq(keyword.name()));
+
+    for (const auto& record : keyword) {
+        const auto lgr_name = record.getItem(0).getTrimmedString(0);
+
+        const auto well_pattern = record.getItem(1).defaultApplied(0)
+            ? std::string { "*" }
+            : record.getItem(1).getTrimmedString(0);
+
+        const auto candidates = schedule.wellNames(well_pattern, schedule.size() - 1);
+
+        if (candidates.empty()) {
+            handleMissingWell(parseContext, errors, keyword.location(), well_pattern);
+        }
+
+        for (const auto& wname : candidates) {
+            const auto& well = schedule.getWellatEnd(wname);
+            if (well.get_lgr_well_tag() != lgr_name) {
+                continue;
+            }
+            list.push_back(param.namedEntity(wname).lgr_name(lgr_name));
+        }
+    }
+}
+
 void keywordW(SummaryConfig::keyword_list& list,
               const std::string& keyword,
               KeywordLocation loc,
@@ -1051,6 +1087,24 @@ void keywordF(SummaryConfig::keyword_list& list,
     }
 
     keywordF(list, keyword.name(), keyword.location());
+}
+
+void keywordLB(SummaryConfig::keyword_list& list,
+               const DeckKeyword&           keyword)
+{
+    auto param = SummaryConfigNode {
+        keyword.name(), SummaryConfigNode::Category::Block, keyword.location()
+    }
+    .parameterType(parseKeywordType(keyword.name()))
+    .isUserDefined(is_udq(keyword.name()));
+
+    for (const auto& record : keyword) {
+        const auto lgr_name = record.getItem(0).getTrimmedString(0);
+
+        // number_ (linearised cell index within the LGR) is deferred to follow-up work.
+        // All LB* records for the same LGR currently share number_=INT_MIN.
+        list.push_back(param.lgr_name(lgr_name));
+    }
 }
 
 void keywordB(SummaryConfig::keyword_list& list,
@@ -1390,6 +1444,43 @@ void connKeywordSpecifiedConn(const SummaryConfigNode&        param0,
     }
 }
 
+void keywordLC(SummaryConfig::keyword_list& list,
+               const ParseContext&          parseContext,
+               ErrorGuard&                  errors,
+               const DeckKeyword&           keyword,
+               const Schedule&              schedule)
+{
+    auto param = SummaryConfigNode {
+        keyword.name(), SummaryConfigNode::Category::Connection, keyword.location()
+    }
+    .parameterType(parseKeywordType(keyword.name()))
+    .isUserDefined(is_udq(keyword.name()));
+
+    for (const auto& record : keyword) {
+        const auto lgr_name = record.getItem(0).getTrimmedString(0);
+
+        const auto well_pattern = record.getItem(1).defaultApplied(0)
+            ? std::string { "*" }
+            : record.getItem(1).getTrimmedString(0);
+
+        const auto candidates = schedule.wellNames(well_pattern, schedule.size() - 1);
+
+        if (candidates.empty()) {
+            handleMissingWell(parseContext, errors, keyword.location(), well_pattern);
+        }
+
+        for (const auto& wname : candidates) {
+            const auto& well = schedule.getWellatEnd(wname);
+            if (well.get_lgr_well_tag() != lgr_name) {
+                continue;
+            }
+            // number_ (linearised cell index within the LGR) is deferred to follow-up work.
+            // All LC* records for the same well+LGR currently share number_=INT_MIN.
+            list.push_back(param.namedEntity(wname).lgr_name(lgr_name));
+        }
+    }
+}
+
 void connectionKeyword(const DeckKeyword&           keyword,
                        const Schedule&              schedule,
                        const GridDims&              dims,
@@ -1678,13 +1769,16 @@ void handleKW(const std::vector<std::string>& node_names,
     const auto cat = parseKeywordCategory(keyword.name());
     switch (cat) {
     case Cat::Well:
-        if (is_well_comp(keyword.name())) {
-            OpmLog::warning(OpmInputError::format("Unhandled summary keyword {keyword}\n"
-                                                  "In {file} line {line}", keyword.location()));
-            return;
+        if (keyword.name()[0] == 'L') {
+            keywordLW(list, parseContext, errors, keyword, schedule);
+        } else {
+            if (is_well_comp(keyword.name())) {
+                OpmLog::warning(OpmInputError::format("Unhandled summary keyword {keyword}\n"
+                                                      "In {file} line {line}", keyword.location()));
+                return;
+            }
+            keywordW(list, parseContext, errors, keyword, schedule);
         }
-
-        keywordW(list, parseContext, errors, keyword, schedule);
         break;
 
     case Cat::Group:
@@ -1697,7 +1791,12 @@ void handleKW(const std::vector<std::string>& node_names,
         break;
 
     case Cat::Block:
-        keywordB(list, keyword, dims);
+        if (keyword.name()[0] == 'L') {
+            keywordLB(list, keyword);
+        }
+        else {
+            keywordB(list, keyword, dims);
+        }
         break;
 
     case Cat::Region:
@@ -1705,8 +1804,13 @@ void handleKW(const std::vector<std::string>& node_names,
         break;
 
     case Cat::Connection:
-        connectionKeyword(keyword, schedule, dims,
-                          parseContext, errors, list);
+        if (keyword.name()[0] == 'L') {
+            keywordLC(list, parseContext, errors, keyword, schedule);
+        }
+        else {
+            connectionKeyword(keyword, schedule, dims,
+                              parseContext, errors, list);
+        }
         break;
 
     case Cat::Completion:
@@ -1870,6 +1974,16 @@ SummaryConfigNode::Category parseKeywordCategory(const std::string& keyword)
     case 'B': return Cat::Block;
     case 'S': return Cat::Segment;
     case 'N': return Cat::Node;
+    case 'L':
+        if (keyword.size() >= 2) {
+            switch (keyword[1]) {
+            case 'W': return distinguish_well_from_completion(keyword);
+            case 'C': return distinguish_connection_from_completion(keyword);
+            case 'B': return Cat::Block;
+            default:  break;
+            }
+        }
+        return Cat::Miscellaneous;
     }
 
     // TCPU, MLINEARS, NEWTON, &c
@@ -2163,6 +2277,7 @@ SummaryConfig SummaryConfig::serializationTestObject()
     result.m_keywords = {SummaryConfigNode::serializationTestObject()};
     result.short_keywords = {"test1"};
     result.summary_keywords = {"test2"};
+    result.noSumLgr_ = true;
 
     return result;
 }
@@ -2395,9 +2510,10 @@ std::set<std::string> SummaryConfig::fip_regions_interreg_flow() const
 
 bool SummaryConfig::operator==(const Opm::SummaryConfig& data) const
 {
-    return (this->m_keywords == data.m_keywords)
-        && (this->short_keywords == data.short_keywords)
+    return (this->m_keywords      == data.m_keywords)
+        && (this->short_keywords   == data.short_keywords)
         && (this->summary_keywords == data.summary_keywords)
+        && (this->noSumLgr_        == data.noSumLgr_)
         ;
 }
 
@@ -2411,6 +2527,9 @@ void SummaryConfig::handleProcessingInstruction(const std::string& keyword)
     }
     else if (keyword == "SEPARATE") {
         runSummaryConfig.separate = true;
+    }
+    else if (keyword == "NOSUMLGR") {
+        this->noSumLgr_ = true;
     }
 }
 

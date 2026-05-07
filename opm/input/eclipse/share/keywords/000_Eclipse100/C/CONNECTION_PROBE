@@ -124,10 +124,7 @@
     "CTITALK",
     "COFRU",
     "CWFRU",
-    "CGFRU",
-    "LCOFRU",
-    "LCWFRU",
-    "LCGFRU"
+    "CGFRU"
   ],
   "deck_name_regex": "CU.+|CTFR.+|CTPR.+|CTPT.+|CTPC.+|CTIR.+|CTIT.+|CTIC.+|CTFR.+|CTPR.+|CTPT.+|CTPC.+|CTIR.+|CTIT.+|CTIC.+|CTIRF.+|CTIRS.+|CTPRF.+|CTPRS.+|CTITF.+|CTITS.+|CTPTF.+|CTPTS.+|CTICF.+|CTICS.+|CTPCF.+|CTPCS",
   "items": [

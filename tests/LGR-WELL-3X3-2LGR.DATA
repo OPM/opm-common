@@ -1,0 +1,446 @@
+-- This reservoir simulation deck is made available under the Open Database
+-- License: http://opendatacommons.org/licenses/odbl/1.0/. Any rights in
+-- individual contents of the database are licensed under the Database Contents
+-- License: http://opendatacommons.org/licenses/dbcl/1.0/
+
+-- Copyright (C) 2023 Equinor
+
+-- Minimal dummy case based on SPE1 (Odeh 1981) physics.
+-- Purpose: test bed for LGR summary vector infrastructure (PR00 onwards).
+--
+-- Global grid: 3 x 3 x 1
+--   +-------+-------+-------+
+--   | (1,3) | (2,3) | (3,3) | <- LGR2 host: global cell (3,3,1)
+--   +-------+-------+-------+
+--   | (1,2) | (2,2) | (3,2) |    centre cell: no LGR
+--   +-------+-------+-------+
+--   | (1,1) | (2,1) | (3,1) | <- LGR1 host: global cell (1,1,1)
+--   +-------+-------+-------+
+--   (note: I increases right, J increases up)
+--
+-- LGR1: global cell (1,1,1) refined into 3x3x1 fine cells — INJ here
+-- LGR2: global cell (3,3,1) refined into 3x3x1 fine cells — PROD here
+--
+--   Fine cell layout (same for both LGRs):
+--     (1,3) (2,3) (3,3)
+--     (1,2) (2,2) (3,2)  <- well at centre (2,2,1)
+--     (1,1) (2,1) (3,1)
+--
+-- Wells:
+--   INJ  - gas injector - LGR1 fine cell (2,2,1)
+--   PROD - oil producer - LGR2 fine cell (2,2,1)
+--
+-- PR00 test coverage:
+--   Fix 1: LW*/LC*/LB* all three second-letter branches exercised
+--   Fix 2: lgr_ field populated and converted for both wells
+--   Fix 3: serializeOp / operator== on lgr_info (unit tests)
+--   Fix 4: LBPR requests 'LGR1' 2 2 1 AND 'LGR2' 2 2 1 — same keyword,
+--           same ijk, different LGR name. Without lgr_ in Block operator==
+--           one node is silently dropped. Also exercised for LW* and LC*
+--           via same keyword spanning both LGRs in one keyword block.
+
+---------------------------------------------------------------------------
+------- 3x3x1 2LGR (INJ in LGR1, PROD in LGR2) — Fix 4 stress test -----------------
+---------------------------------------------------------------------------
+
+RUNSPEC
+-- -----------------------------------------------------------------------
+
+TITLE
+   3x3x1 DUMMY - LGR1 at (1,1,1) INJ, LGR2 at (3,3,1) PROD
+
+DIMENS
+   3 3 1 /
+
+EQLDIMS
+/
+
+TABDIMS
+/
+
+OIL
+GAS
+WATER
+DISGAS
+
+FIELD
+
+START
+   1 'JAN' 2015 /
+
+WELLDIMS
+-- MaxWells  MaxCompl  MaxGroups  MaxWellsInGroup
+        2         1         1          2 /
+
+UNIFOUT
+
+GRID
+-- -----------------------------------------------------------------------
+
+-- LGR1: refine global cell (1,1,1) — injector side
+CARFIN
+-- NAME  I1 I2  J1 J2  K1 K2  NX  NY  NZ
+'LGR1'   1  1   1  1   1  1   3   3   1 /
+ENDFIN
+
+-- LGR2: refine global cell (3,3,1) — producer side
+CARFIN
+-- NAME  I1 I2  J1 J2  K1 K2  NX  NY  NZ
+'LGR2'   3  3   3  3   1  1   3   3   1 /
+ENDFIN
+
+INIT
+
+DX
+   9*1000 /
+
+DY
+   9*1000 /
+
+DZ
+   9*50 /
+
+TOPS
+   9*8325 /
+
+PORO
+   9*0.3 /
+
+PERMX
+   9*500 /
+
+PERMY
+   9*200 /
+
+PERMZ
+   9*200 /
+
+ECHO
+
+PROPS
+-- -----------------------------------------------------------------------
+
+PVTW
+-- PRef(psia)  Bw(rb/stb)  Cw(psi-1)   Visc(cP)  Viscosibility
+    4017.55     1.038       3.22E-6      0.318      0.0 /
+
+ROCK
+-- PRef(psia)  Cr(psi-1)
+    14.7        3E-6 /
+
+SWOF
+0.12   0.000000000   1.000   0
+0.18   4.64876E-008  1.000   0
+0.24   1.86000E-007  0.997   0
+0.30   4.18388E-007  0.980   0
+0.36   7.43802E-007  0.700   0
+0.42   1.16219E-006  0.350   0
+0.48   1.67355E-006  0.200   0
+0.54   2.27789E-006  0.090   0
+0.60   2.97521E-006  0.021   0
+0.66   3.76550E-006  0.010   0
+0.72   4.64876E-006  0.001   0
+0.78   5.62500E-006  0.0001  0
+0.84   6.69421E-006  0.000   0
+0.91   8.05914E-006  0.000   0
+1.00   0.000010000   0.000   0 /
+
+SGOF
+0.000  0.000  1.000  0
+0.001  0.000  1.000  0
+0.020  0.000  0.997  0
+0.050  0.005  0.980  0
+0.120  0.025  0.700  0
+0.200  0.075  0.350  0
+0.250  0.125  0.200  0
+0.300  0.190  0.090  0
+0.400  0.410  0.021  0
+0.450  0.600  0.010  0
+0.500  0.720  0.001  0
+0.600  0.870  0.000  0
+0.700  0.940  0.000  0
+0.850  0.980  0.000  0
+0.880  0.984  0.000  0 /
+
+DENSITY
+-- Oil(lb/ft3)  Water(lb/ft3)  Gas(lb/ft3)
+   53.66        64.49          0.0533 /
+
+PVDG
+--  P(psia)   Bg(rb/Mscf)   Visc(cP)
+     14.700   166.666        0.00800
+    264.700    12.093        0.00960
+    514.700     6.274        0.01120
+   1014.700     3.197        0.01400
+   2014.700     1.614        0.01890
+   2514.700     1.294        0.02080
+   3014.700     1.080        0.02280
+   4014.700     0.811        0.02680
+   5014.700     0.649        0.03090
+   9014.700     0.386        0.04700 /
+
+PVTO
+--  Rs(Mscf/stb)  Pbub(psia)  Bo(rb/stb)  Visc(cP)
+    0.0010         14.7        1.0620       1.0400 /
+    0.0905        264.7        1.1500       0.9750 /
+    0.1800        514.7        1.2070       0.9100 /
+    0.3710       1014.7        1.2950       0.8300 /
+    0.6360       2014.7        1.4350       0.6950 /
+    0.7750       2514.7        1.5000       0.6410 /
+    0.9300       3014.7        1.5650       0.5940 /
+    1.2700       4014.7        1.6950       0.5100
+               9014.7        1.5790       0.7400 /
+    1.6180       5014.7        1.8270       0.4490
+               9014.7        1.7370       0.6310 /
+/
+
+SOLUTION
+-- -----------------------------------------------------------------------
+
+RPTSOL
+RESTART=1 SOIL SWAT SGAS /
+
+EQUIL
+-- Datum(ft)  P@datum(psia)  WOC(ft)  Pcow@WOC  GOC(ft)  Pcog@GOC  RSVD  RVVD  NRPVT
+      8400       4800          8450      0         8300      0        1     0     0 /
+
+RSVD
+-- Depth(ft)  Rs(Mscf/stb)
+   8300        1.270
+   8450        1.270 /
+
+SUMMARY
+-- -----------------------------------------------------------------------
+
+-- =========================================================
+-- FIELD LEVEL
+-- =========================================================
+FOPR
+FGOR
+FWCT
+FWIR
+
+-- =========================================================
+-- GLOBAL WELL LEVEL  (W*)
+-- Both wells appear at global timesteps even though both live in LGRs.
+-- Cross-check: W* must equal LW* for the same well.
+-- =========================================================
+WBHP
+  'INJ'
+  'PROD'
+/
+WOPR
+  'INJ'
+  'PROD'
+/
+WGIR
+  'INJ'
+  'PROD'
+/
+WGOR
+  'PROD'
+/
+WWPR
+  'INJ'
+  'PROD'
+/
+
+-- =========================================================
+-- GLOBAL BLOCK LEVEL  (B*)
+-- LGR1 host (1,1,1) and LGR2 host (3,3,1) give coarse aggregates.
+-- Centre cell (2,2,1) has no LGR — undisturbed reference value.
+-- Cross-check: B* of host cell should be close to LB* of centre fine cell.
+-- =========================================================
+BPR
+  1  1  1 /
+  2  2  1 /
+  3  3  1 /
+/
+
+BGSAT
+  1  1  1 /
+  2  2  1 /
+  3  3  1 /
+/
+
+-- =========================================================
+-- LGR WELL LEVEL  (LW*)
+-- Syntax: LWkeyword / 'LGRName'  'WellName' / /
+--
+-- Fix 1: LW* exercises the 'W' branch inside case 'L' in category_from_keyword().
+-- Fix 4 (Well): LWBHP and LWSTAT each carry two records — one per LGR.
+--   If lgr_ is absent from operator==, nodes with the same well name in
+--   two different LGRs would incorrectly deduplicate. Caught cleanly
+--   by the unit test LGR_node_dedup_uses_lgr; exercised here at deck level.
+-- =========================================================
+
+-- BHP — same keyword, both LGRs in one block (primary Fix 4 / Well stress test)
+LWBHP
+  'LGR1'  'INJ' /
+  'LGR2'  'PROD' /
+/
+
+-- Status — same pattern as LWBHP
+LWSTAT
+  'LGR1'  'INJ' /
+  'LGR2'  'PROD' /
+/
+
+-- INJ-specific: gas injection quantities
+LWGIR
+  'LGR1'  'INJ' /
+/
+LWGIT
+  'LGR1'  'INJ' /
+/
+LWVIR
+  'LGR1'  'INJ' /
+/
+LWVIT
+  'LGR1'  'INJ' /
+/
+-- Regression sentinel: must be zero for a pure gas injector
+LWWIR
+  'LGR1'  'INJ' /
+/
+
+-- PROD-specific: oil production quantities
+LWOPR
+  'LGR2'  'PROD' /
+/
+LWOPT
+  'LGR2'  'PROD' /
+/
+LWWPR
+  'LGR2'  'PROD' /
+/
+LWGOR
+  'LGR2'  'PROD' /
+/
+LWVPR
+  'LGR2'  'PROD' /
+/
+
+-- =========================================================
+-- LGR CONNECTION LEVEL  (LC*)
+-- Syntax: LCkeyword / 'LGRName'  'WellName'  I  J  K / /
+-- INJ at LGR1(2,2,1);  PROD at LGR2(2,2,1).
+--
+-- Fix 1: LC* exercises the 'C' branch inside case 'L'.
+-- Fix 4 (Connection): LCPR and LCGFR each span both LGRs.
+--   namedEntity differs (INJ vs PROD) so the dedup bug is not triggered
+--   directly, but the ordering chain through namedEntity → number → lgr_
+--   is fully exercised.
+-- =========================================================
+
+-- Connection pressure — both wells, both LGRs
+LCPR
+  'LGR1'  'INJ'   2  2  1 /
+  'LGR2'  'PROD'  2  2  1 /
+/
+
+-- Gas flow rate — both wells (INJ injects; PROD produces associated gas)
+LCGFR
+  'LGR1'  'INJ'   2  2  1 /
+  'LGR2'  'PROD'  2  2  1 /
+/
+
+-- Oil flow rate — both wells (regression zero for INJ)
+LCOFR
+  'LGR1'  'INJ'   2  2  1 /
+  'LGR2'  'PROD'  2  2  1 /
+/
+
+-- Water flow rate — both wells (regression zero for INJ)
+LCWFR
+  'LGR1'  'INJ'   2  2  1 /
+  'LGR2'  'PROD'  2  2  1 /
+/
+
+-- =========================================================
+-- LGR BLOCK LEVEL  (LB*)
+-- Syntax: LBkeyword / 'LGRName'  I  J  K / /
+--
+-- Fix 1: LB* exercises the 'B' branch inside case 'L'.
+-- Fix 4 (Block) — DIRECT TEST:
+--   LBPR requests 'LGR1' 2 2 1  AND  'LGR2' 2 2 1.
+--   Both nodes share keyword=LBPR and ijk=(2,2,1). The only difference
+--   is the LGR name. Without lgr_ in Block operator==, number() is equal
+--   and one node is silently dropped by uniq(). This is the clearest
+--   possible deck-level trigger of the Fix 4 block dedup bug.
+--   Same applies to LBGSAT, LBSOIL, LBWSAT at (2,2,1).
+-- =========================================================
+
+-- Block pressure: corners + centre for each LGR
+-- Pressure gradient: higher near INJ (LGR1), lower near PROD (LGR2)
+LBPR
+  'LGR1'  1  1  1 /
+  'LGR1'  2  2  1 /
+  'LGR1'  3  3  1 /
+  'LGR2'  1  1  1 /
+  'LGR2'  2  2  1 /
+  'LGR2'  3  3  1 /
+/
+
+-- Gas saturation: grows from LGR1(2,2,1) as gas is injected
+LBGSAT
+  'LGR1'  1  1  1 /
+  'LGR1'  2  2  1 /
+  'LGR1'  3  3  1 /
+  'LGR2'  1  1  1 /
+  'LGR2'  2  2  1 /
+  'LGR2'  3  3  1 /
+/
+
+-- Oil saturation at well cells — Fix 4 block dedup: same ijk, different LGR
+LBSOIL
+  'LGR1'  2  2  1 /
+  'LGR2'  2  2  1 /
+/
+
+-- Water saturation at well cells — same Fix 4 pattern
+LBWSAT
+  'LGR1'  2  2  1 /
+  'LGR2'  2  2  1 /
+/
+
+SCHEDULE
+-- -----------------------------------------------------------------------
+
+RPTSCHED
+   'PRES' 'SGAS' 'RS' 'WELLS' /
+
+RPTRST
+   'BASIC=1' /
+
+DRSDT
+ 0 /
+
+-- Both wells are in LGRs -> WELSPECL + COMPDATL for both
+WELSPECL
+-- WellName  Group  LGRName   I  J  RefDepth(ft)  Phase
+   'INJ'    'G1'   'LGR1'    2  2   8335         'GAS' /
+   'PROD'   'G1'   'LGR2'    2  2   8400         'OIL' /
+/
+
+COMPDATL
+-- WellName  LGRName   I  J  K1 K2  Flag    Tmult  PI     WellRad(ft)
+   'INJ'    'LGR1'     2  2  1  1  'OPEN'   1*     1*     0.5 /
+   'PROD'   'LGR2'     2  2  1  1  'OPEN'   1*     1*     0.5 /
+/
+
+WCONPROD
+-- WellName  Flag   Control  OilRate(stb/d)  ...  BHPmin(psia)
+   'PROD'   'OPEN' 'ORAT'    20000           4*    1000 /
+/
+
+WCONINJE
+-- WellName  Phase  Flag    Control  Rate(Mscf/d)  1*  BHPmax(psia)
+   'INJ'    'GAS' 'OPEN'  'RATE'    100000         1*   9014 /
+/
+
+TSTEP
+-- 12 monthly steps (Jan-Dec 2015)
+   31 28 31 30 31 30 31 31 30 31 30 31 /
+
+END

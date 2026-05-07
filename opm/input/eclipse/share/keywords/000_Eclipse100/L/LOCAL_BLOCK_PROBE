@@ -1,0 +1,26 @@
+{
+  "name": "LOCAL_BLOCK_PROBE",
+  "sections": [
+    "SUMMARY"
+  ],
+  "comment": "LGR block-level summary vectors (LB*).",
+  "deck_name_regex": "LB[A-Z]+",
+  "items": [
+    {
+      "name": "LGR_NAME",
+      "value_type": "STRING"
+    },
+    {
+      "name": "I",
+      "value_type": "INT"
+    },
+    {
+      "name": "J",
+      "value_type": "INT"
+    },
+    {
+      "name": "K",
+      "value_type": "INT"
+    }
+  ]
+}

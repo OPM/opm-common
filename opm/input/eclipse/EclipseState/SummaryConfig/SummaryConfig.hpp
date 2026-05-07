@@ -578,12 +578,16 @@ namespace Opm {
             serializer(m_keywords);
             serializer(short_keywords);
             serializer(summary_keywords);
+            serializer(noSumLgr_);
         }
 
         /// Whether or not to create a human-readable .RSM file at the end
         /// of the simulation run.
         bool createRunSummary() const
         { return runSummaryConfig.create; }
+
+        /// Whether or not to suppress the ROOT.LGR local-grid summary file.
+        bool noSumLgr() const { return this->noSumLgr_; }
 
         /// Retrieve summary vector definition from linear index
         ///
@@ -666,6 +670,10 @@ namespace Opm {
             /// Ignored.
             bool separate { true };
         } runSummaryConfig{};
+
+        /// Whether the NOSUMLGR keyword was present in the deck.
+        /// When true, the ROOT.LGR file should be suppressed (Phase 2).
+        bool noSumLgr_ { false };
 
         /// Configure run's .RSM file output.
         ///
