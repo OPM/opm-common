@@ -1101,6 +1101,8 @@ void keywordLB(SummaryConfig::keyword_list& list,
     for (const auto& record : keyword) {
         const auto lgr_name = record.getItem(0).getTrimmedString(0);
 
+        // number_ (linearised cell index within the LGR) is deferred to follow-up work.
+        // All LB* records for the same LGR currently share number_=INT_MIN.
         list.push_back(param.lgr_name(lgr_name));
     }
 }
@@ -1472,6 +1474,8 @@ void keywordLC(SummaryConfig::keyword_list& list,
             if (well.get_lgr_well_tag() != lgr_name) {
                 continue;
             }
+            // number_ (linearised cell index within the LGR) is deferred to follow-up work.
+            // All LC* records for the same well+LGR currently share number_=INT_MIN.
             list.push_back(param.namedEntity(wname).lgr_name(lgr_name));
         }
     }
@@ -1787,10 +1791,12 @@ void handleKW(const std::vector<std::string>& node_names,
         break;
 
     case Cat::Block:
-        if (keyword.name()[0] == 'L')
+        if (keyword.name()[0] == 'L') {
             keywordLB(list, keyword);
-        else
+        }
+        else {
             keywordB(list, keyword, dims);
+        }
         break;
 
     case Cat::Region:
@@ -1798,11 +1804,13 @@ void handleKW(const std::vector<std::string>& node_names,
         break;
 
     case Cat::Connection:
-        if (keyword.name()[0] == 'L')
+        if (keyword.name()[0] == 'L') {
             keywordLC(list, parseContext, errors, keyword, schedule);
-        else
+        }
+        else {
             connectionKeyword(keyword, schedule, dims,
                               parseContext, errors, list);
+        }
         break;
 
     case Cat::Completion:
@@ -2502,9 +2510,10 @@ std::set<std::string> SummaryConfig::fip_regions_interreg_flow() const
 
 bool SummaryConfig::operator==(const Opm::SummaryConfig& data) const
 {
-    return (this->m_keywords == data.m_keywords)
-        && (this->short_keywords == data.short_keywords)
+    return (this->m_keywords      == data.m_keywords)
+        && (this->short_keywords   == data.short_keywords)
         && (this->summary_keywords == data.summary_keywords)
+        && (this->noSumLgr_        == data.noSumLgr_)
         ;
 }
 

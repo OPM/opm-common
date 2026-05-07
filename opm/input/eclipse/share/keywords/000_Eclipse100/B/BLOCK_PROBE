@@ -147,12 +147,7 @@
     "BWSAT",
     "BWSHY",
     "BWSMA",
-    "BWVIS",
-    "LBCTRA_X",
-    "LBHDF_X",
-    "LBHD_X",
-    "LBPR_X",
-    "LBSCN_X"
+    "BWVIS"
   ],
   "deck_name_regex": "BU.+|BTIPF.+|BTIPS.+|BTCNF.+|BTCNS.+|BTCN[1-9][0-9]*.+|BTIPT.+|BTIPF.+|BTIPS.+|BTIP[1-9][0-9]*.+|BTADS.+|BTDCY",
   "items": [

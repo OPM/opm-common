@@ -4,7 +4,7 @@
     "SUMMARY"
   ],
   "comment": "LGR well-level summary vectors (LW*). Item 0 is LGR_NAME; item 1 is WELLS.",
-  "deck_name_regex": "LW.+",
+  "deck_name_regex": "LW[A-Z]+",
   "items": [
     {
       "name": "LGR_NAME",

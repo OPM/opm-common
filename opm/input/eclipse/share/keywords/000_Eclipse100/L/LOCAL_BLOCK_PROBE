@@ -3,8 +3,8 @@
   "sections": [
     "SUMMARY"
   ],
-  "comment": "LGR block-level summary vectors (LB*). Item 0 is LGR_NAME. Note: LBPR_X/LBSCN_X/LBHD_X/LBHDF_X/LBCTRA_X are handled by BLOCK_PROBE.",
-  "deck_name_regex": "LB.+",
+  "comment": "LGR block-level summary vectors (LB*).",
+  "deck_name_regex": "LB[A-Z]+",
   "items": [
     {
       "name": "LGR_NAME",

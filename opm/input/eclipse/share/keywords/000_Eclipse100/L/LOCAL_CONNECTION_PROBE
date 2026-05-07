@@ -3,8 +3,8 @@
   "sections": [
     "SUMMARY"
   ],
-  "comment": "LGR connection-level summary vectors (LC*). Item 0 is LGR_NAME. Note: LCOFRU/LCWFRU/LCGFRU are handled by CONNECTION_PROBE.",
-  "deck_name_regex": "LC.+",
+  "comment": "LGR connection-level summary vectors (LC*).",
+  "deck_name_regex": "LC[A-Z]+",
   "items": [
     {
       "name": "LGR_NAME",
