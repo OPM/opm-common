@@ -207,6 +207,13 @@ namespace Opm {
             if (con.connect_active_cell
                || !AquiferHelpers::neighborCellInsideReservoirAndActive(grid, i, j, k, con.face_dir, actnum, cell_global_indices)) {
                 conns.push_back(con);
+            } else {
+                OpmLog::warning(
+                    fmt::format(
+                        "Connection in numerical aquifer {} with IJK ({}, {}, {}) adjoins an active cell. Connection "
+                        "skipped!", this->id_, i+1, j+1, k+1
+                    )
+                );
             }
         }
         this->connections_ = std::move(conns);
