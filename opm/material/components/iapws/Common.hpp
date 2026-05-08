@@ -103,8 +103,10 @@ public:
     OPM_HOST_DEVICE static Evaluation viscosity(const Evaluation& temperature, const Evaluation& rho)
     {
         Evaluation rhoBar = rho/322.0;
-        Evaluation TBar = temperature/criticalTemperature;
-        // Evaluation TBar = temperature/Scalar(647.096);
+        // I do not know why, but NVCC will not allow writing out temperature/criticalTemperature
+        // HIPCC does this perfectly fine, should be allowed since it is static constexpr, but for
+        // now I'll have to write out the scalar here instead...
+        Evaluation TBar = temperature/Scalar(647.096);
 
         // muBar = muBar_1
         const Scalar Hij[6][7] = {
