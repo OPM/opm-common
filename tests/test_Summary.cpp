@@ -3224,6 +3224,7 @@ BOOST_AUTO_TEST_CASE(EXTRA)
             BOOST_CHECK_NO_THROW(writer.add_timestep(st, /* report_step = */ 3, /* ministep_id = */ 3, /* isSubstep = */ false));
         }
 
+        values.single_values = nullptr;
         writer.eval(/* report_step = */ 4, /* secs_elapsed = */ 4.0*day, values, st);
         writer.add_timestep(st, /* report_step = */ 2, /* ministep_id = */ 2, /* isSubstep = */ false);
 
