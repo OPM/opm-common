@@ -74,7 +74,6 @@
       "item": 10,
       "name": "COMP_INIT_TYPE",
       "value_type": "INT",
-      "default": 1,
       "comment": "This item is ECLIPSE300 specific"
     },
     {
