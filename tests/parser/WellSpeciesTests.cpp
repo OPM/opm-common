@@ -199,9 +199,11 @@ BOOST_AUTO_TEST_CASE(TestDynamicWSPECIES)
 
     const auto& record = keyword.getRecord(0);
     const std::string& well_name = record.getItem("WELL").getTrimmedString(0);
-    const auto well = WellTracerProperties::Well{"W_1"};
-    const auto ca_species = WellTracerProperties::Tracer{"CA"};
-    const auto k_species = WellTracerProperties::Tracer{"K"};
+    const std::string ca_name{"CA"};
+    const std::string k_name{"K"};
+    const auto well = WellTracerProperties::Well{well_name};
+    const auto ca_species = WellTracerProperties::Tracer{ca_name};
+    const auto k_species = WellTracerProperties::Tracer{k_name};
     BOOST_CHECK_EQUAL(well_name, "W_1");
     BOOST_CHECK_EQUAL(schedule.getWell(well_name, 0).getSpeciesProperties().getConcentration(well, ca_species, st), 0);
     BOOST_CHECK_EQUAL(schedule.getWell(well_name, 0).getSpeciesProperties().getConcentration(well, k_species, st), 0);
