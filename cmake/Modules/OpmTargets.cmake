@@ -91,7 +91,8 @@ function(opm_add_library)
     target_sources(${PARAM_TARGET}
       PRIVATE
       FILE_SET
-      HEADERS
+        HEADERS
+      FILES
         ${PARAM_HEADERS}
     )
   endif()
