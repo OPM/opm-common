@@ -2546,4 +2546,242 @@ BOOST_AUTO_TEST_CASE(Formatted_Restarted)
     }
 }
 
+// -----------------------------------------------------------------------
+// LGR SMSPEC array tests — verify array ordering and values per Eclipse ref
+// -----------------------------------------------------------------------
+
+namespace {
+    // Build Parameters with one LGR ("LGR1", 3x3x1) containing 3 vectors
+    // plus one global vector (FOPR). Reference: 1LGR case.
+    Opm::EclIO::OutputStream::SummarySpecification::Parameters
+    lgrParameters_1LGR()
+    {
+        using lgr = Opm::EclIO::lgr_info;
+        auto prm = Opm::EclIO::OutputStream::
+            SummarySpecification::Parameters{};
+
+        // Global vector — no LGR
+        prm.add("FOPR", ":+:+:+:+", 0, "SM3/DAY");
+
+        // 3 LGR vectors inside LGR1 (3x3x1)
+        prm.add("LWBHP", "PROD01",    0, "BARSA",  lgr{"LGR1", {3, 3, 1}});
+        prm.add("LWBHP", "PROD02",    0, "BARSA",  lgr{"LGR1", {3, 3, 1}});
+        prm.add("LBPR",  ":+:+:+:+", 5, "BARSA",  lgr{"LGR1", {3, 3, 1}});
+
+        return prm;
+    }
+
+    // Build Parameters with two LGRs ("LGRA" 2x2x1, "LGRB" 4x4x2),
+    // 2 vectors in LGRA and 3 vectors in LGRB. Reference: 2LGR case.
+    Opm::EclIO::OutputStream::SummarySpecification::Parameters
+    lgrParameters_2LGR()
+    {
+        using lgr = Opm::EclIO::lgr_info;
+        auto prm = Opm::EclIO::OutputStream::
+            SummarySpecification::Parameters{};
+
+        prm.add("LWBHP", "P1", 0, "BARSA",  lgr{"LGRA", {2, 2, 1}});
+        prm.add("LWBHP", "P2", 0, "BARSA",  lgr{"LGRA", {2, 2, 1}});
+
+        prm.add("LWBHP", "P3", 0, "BARSA",  lgr{"LGRB", {4, 4, 2}});
+        prm.add("LBPR",  ":+:+:+:+", 7, "BARSA",  lgr{"LGRB", {4, 4, 2}});
+        prm.add("LBPR",  ":+:+:+:+", 8, "BARSA",  lgr{"LGRB", {4, 4, 2}});
+
+        return prm;
+    }
+} // Anonymous
+
+BOOST_AUTO_TEST_CASE(LGR_SingleGrid)
+{
+    // Verify that for a single LGR the SMSPEC output contains:
+    //   KEYWORDS → WGNAMES → NUMS → LGRS → NUMLX → NUMLY → NUMLZ
+    //   → UNITS → STARTDAT → LGRNAMES → LGRVEC → LGRTIMES → RUNTIMEI
+    // And that LGRVEC = 2 + count(vectors in that LGR) = 2+3 = 5.
+
+    using SMSpec = ::Opm::EclIO::OutputStream::SummarySpecification;
+
+    const auto rset     = RSet("LGR1CASE");
+    const auto fmt      = ::Opm::EclIO::OutputStream::Formatted{ false };
+    const auto cartDims = std::array<int,3>{ 10, 10, 5 };
+    const int  step     = 7;
+
+    {
+        auto smspec = SMSpec {
+            rset, fmt, SMSpec::UnitConvention::Metric, cartDims,
+            noRestart(),
+            start(2020, 1, 1, 0, 0, 0),
+            start(2020, 1, 1, 0, 0, 0)
+        };
+
+        smspec.write(lgrParameters_1LGR(), false, step, 0);
+    }
+
+    const auto fname = ::Opm::EclIO::OutputStream::
+        outputFileName(rset, "SMSPEC");
+
+    auto smspec = ::Opm::EclIO::EclFile{ fname };
+
+    {
+        const auto vectors        = smspec.getList();
+        const auto expect_vectors = std::vector<Opm::EclIO::EclFile::EclEntry>{
+            { "INTEHEAD", Opm::EclIO::eclArrType::INTE, 2  },
+            { "RESTART",  Opm::EclIO::eclArrType::CHAR, 9  },
+            { "DIMENS",   Opm::EclIO::eclArrType::INTE, 6  },
+            { "KEYWORDS", Opm::EclIO::eclArrType::CHAR, 4  },
+            { "WGNAMES",  Opm::EclIO::eclArrType::CHAR, 4  },
+            { "NUMS",     Opm::EclIO::eclArrType::INTE, 4  },
+            { "LGRS",     Opm::EclIO::eclArrType::CHAR, 4  },
+            { "NUMLX",    Opm::EclIO::eclArrType::INTE, 4  },
+            { "NUMLY",    Opm::EclIO::eclArrType::INTE, 4  },
+            { "NUMLZ",    Opm::EclIO::eclArrType::INTE, 4  },
+            { "UNITS",    Opm::EclIO::eclArrType::CHAR, 4  },
+            { "STARTDAT", Opm::EclIO::eclArrType::INTE, 6  },
+            { "LGRNAMES", Opm::EclIO::eclArrType::CHAR, 1  },
+            { "LGRVEC",   Opm::EclIO::eclArrType::INTE, 1  },
+            { "LGRTIMES", Opm::EclIO::eclArrType::INTE, 1  },
+            { "RUNTIMEI", Opm::EclIO::eclArrType::INTE, 50 },
+        };
+
+        BOOST_CHECK_EQUAL_COLLECTIONS(vectors.begin(), vectors.end(),
+                                      expect_vectors.begin(),
+                                      expect_vectors.end());
+    }
+
+    smspec.loadData();
+
+    // LGRNAMES — unique sorted non-blank LGR names
+    {
+        const auto& L = smspec.get<std::string>("LGRNAMES");
+        const auto  expect = std::vector<std::string>{ "LGR1" };
+        BOOST_CHECK_EQUAL_COLLECTIONS(L.begin(), L.end(),
+                                      expect.begin(), expect.end());
+    }
+
+    // LGRVEC — 2 (TIME+YEARS in ROOT.LGR) + 3 vectors = 5
+    {
+        const auto& V = smspec.get<int>("LGRVEC");
+        const auto  expect = std::vector<int>{ 5 };
+        BOOST_CHECK_EQUAL_COLLECTIONS(V.begin(), V.end(),
+                                      expect.begin(), expect.end());
+    }
+
+    // LGRTIMES — currentStep per LGR
+    {
+        const auto& T = smspec.get<int>("LGRTIMES");
+        const auto  expect = std::vector<int>{ step };
+        BOOST_CHECK_EQUAL_COLLECTIONS(T.begin(), T.end(),
+                                      expect.begin(), expect.end());
+    }
+
+    // LGRS — blank for global FOPR, "LGR1" for the 3 LGR vectors
+    {
+        const auto& L = smspec.get<std::string>("LGRS");
+        BOOST_CHECK_EQUAL(L.size(), 4u);
+        BOOST_CHECK_EQUAL(L[0], ""); // FOPR is global
+        BOOST_CHECK_EQUAL(L[1], "LGR1");
+        BOOST_CHECK_EQUAL(L[2], "LGR1");
+        BOOST_CHECK_EQUAL(L[3], "LGR1");
+    }
+
+    // NUMLX/NUMLY/NUMLZ — 0 for global, LGR dims for LGR vectors
+    {
+        const auto& X = smspec.get<int>("NUMLX");
+        BOOST_CHECK_EQUAL(X[0], 0); // global
+        BOOST_CHECK_EQUAL(X[1], 3);
+        BOOST_CHECK_EQUAL(X[2], 3);
+        BOOST_CHECK_EQUAL(X[3], 3);
+
+        const auto& Y = smspec.get<int>("NUMLY");
+        BOOST_CHECK_EQUAL(Y[0], 0);
+        BOOST_CHECK_EQUAL(Y[1], 3);
+
+        const auto& Z = smspec.get<int>("NUMLZ");
+        BOOST_CHECK_EQUAL(Z[0], 0);
+        BOOST_CHECK_EQUAL(Z[1], 1);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(LGR_TwoGrids)
+{
+    // Verify LGRVEC and LGRTIMES for two LGRs:
+    //   LGRA: 2 vectors → LGRVEC[0] = 2+2 = 4
+    //   LGRB: 3 vectors → LGRVEC[1] = 2+3 = 5
+    // LGRTIMES: {step, step} for both LGRs.
+
+    using SMSpec = ::Opm::EclIO::OutputStream::SummarySpecification;
+
+    const auto rset     = RSet("LGR2CASE");
+    const auto fmt      = ::Opm::EclIO::OutputStream::Formatted{ false };
+    const auto cartDims = std::array<int,3>{ 20, 20, 5 };
+    const int  step     = 13;
+
+    {
+        auto smspec = SMSpec {
+            rset, fmt, SMSpec::UnitConvention::Metric, cartDims,
+            noRestart(),
+            start(2021, 6, 1, 0, 0, 0),
+            start(2021, 6, 1, 0, 0, 0)
+        };
+
+        smspec.write(lgrParameters_2LGR(), false, step, 0);
+    }
+
+    const auto fname = ::Opm::EclIO::OutputStream::
+        outputFileName(rset, "SMSPEC");
+
+    auto smspec = ::Opm::EclIO::EclFile{ fname };
+
+    {
+        const auto vectors        = smspec.getList();
+        const auto expect_vectors = std::vector<Opm::EclIO::EclFile::EclEntry>{
+            { "INTEHEAD", Opm::EclIO::eclArrType::INTE, 2  },
+            { "RESTART",  Opm::EclIO::eclArrType::CHAR, 9  },
+            { "DIMENS",   Opm::EclIO::eclArrType::INTE, 6  },
+            { "KEYWORDS", Opm::EclIO::eclArrType::CHAR, 5  },
+            { "WGNAMES",  Opm::EclIO::eclArrType::CHAR, 5  },
+            { "NUMS",     Opm::EclIO::eclArrType::INTE, 5  },
+            { "LGRS",     Opm::EclIO::eclArrType::CHAR, 5  },
+            { "NUMLX",    Opm::EclIO::eclArrType::INTE, 5  },
+            { "NUMLY",    Opm::EclIO::eclArrType::INTE, 5  },
+            { "NUMLZ",    Opm::EclIO::eclArrType::INTE, 5  },
+            { "UNITS",    Opm::EclIO::eclArrType::CHAR, 5  },
+            { "STARTDAT", Opm::EclIO::eclArrType::INTE, 6  },
+            { "LGRNAMES", Opm::EclIO::eclArrType::CHAR, 2  },
+            { "LGRVEC",   Opm::EclIO::eclArrType::INTE, 2  },
+            { "LGRTIMES", Opm::EclIO::eclArrType::INTE, 2  },
+            { "RUNTIMEI", Opm::EclIO::eclArrType::INTE, 50 },
+        };
+
+        BOOST_CHECK_EQUAL_COLLECTIONS(vectors.begin(), vectors.end(),
+                                      expect_vectors.begin(),
+                                      expect_vectors.end());
+    }
+
+    smspec.loadData();
+
+    // LGRNAMES — sorted: LGRA before LGRB
+    {
+        const auto& L = smspec.get<std::string>("LGRNAMES");
+        BOOST_CHECK_EQUAL(L.size(), 2u);
+        BOOST_CHECK_EQUAL(L[0], "LGRA");
+        BOOST_CHECK_EQUAL(L[1], "LGRB");
+    }
+
+    // LGRVEC — LGRA: 2+2=4, LGRB: 2+3=5
+    {
+        const auto& V = smspec.get<int>("LGRVEC");
+        BOOST_REQUIRE_EQUAL(V.size(), 2u);
+        BOOST_CHECK_EQUAL(V[0], 4); // LGRA
+        BOOST_CHECK_EQUAL(V[1], 5); // LGRB
+    }
+
+    // LGRTIMES — both LGRs at same currentStep
+    {
+        const auto& T = smspec.get<int>("LGRTIMES");
+        BOOST_REQUIRE_EQUAL(T.size(), 2u);
+        BOOST_CHECK_EQUAL(T[0], step);
+        BOOST_CHECK_EQUAL(T[1], step);
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END() // Class_SummarySpecification

@@ -22,12 +22,14 @@
 #define OPM_IO_OUTPUTSTREAM_HPP_INCLUDED
 
 #include <opm/io/eclipse/PaddedOutputString.hpp>
+#include <opm/io/eclipse/SummaryNode.hpp>
 #include <opm/common/utility/TimeService.hpp>
 
 #include <array>
 #include <chrono>
 #include <ios>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -401,6 +403,12 @@ namespace Opm { namespace EclIO { namespace OutputStream {
                      const int          num,
                      const std::string& unit);
 
+            void add(const std::string&                          keyword,
+                     const std::string&                          wgname,
+                     const int                                   num,
+                     const std::string&                          unit,
+                     const std::optional<Opm::EclIO::lgr_info>& lgr);
+
             friend class SummarySpecification;
 
         private:
@@ -408,6 +416,10 @@ namespace Opm { namespace EclIO { namespace OutputStream {
             std::vector<PaddedOutputString<8>> wgnames{};
             std::vector<int>                   nums{};
             std::vector<PaddedOutputString<8>> units{};
+            std::vector<PaddedOutputString<8>> lgrs{};
+            std::vector<int>                   numlx{};
+            std::vector<int>                   numly{};
+            std::vector<int>                   numlz{};
         };
 
         explicit SummarySpecification(const ResultSet&            rset,
@@ -450,6 +462,7 @@ namespace Opm { namespace EclIO { namespace OutputStream {
 
         void rewindStream();
         void flushStream();
+        void writeLgrMetadata(const Parameters& params, int currentStep);
 
         EclOutput& stream();
     };

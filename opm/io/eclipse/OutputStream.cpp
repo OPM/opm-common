@@ -21,6 +21,7 @@
 #include <opm/io/eclipse/OutputStream.hpp>
 
 #include <opm/common/OpmLog/OpmLog.hpp>
+#include <opm/common/utility/String.hpp>
 
 #include <opm/io/eclipse/EclOutput.hpp>
 #include <opm/io/eclipse/ERst.hpp>
@@ -33,6 +34,7 @@
 #include <fstream>
 #include <iomanip>
 #include <ios>
+#include <map>
 #include <memory>
 #include <sstream>
 #include <stdexcept>
@@ -753,6 +755,39 @@ Parameters::add(const std::string& keyword,
     this->units   .emplace_back(unit);
 }
 
+void
+Opm::EclIO::OutputStream::SummarySpecification::
+Parameters::add(const std::string&                          keyword,
+                const std::string&                          wgname,
+                const int                                   num,
+                const std::string&                          unit,
+                const std::optional<Opm::EclIO::lgr_info>& lgr)
+{
+    this->add(keyword, wgname, num, unit);
+
+    if (lgr.has_value()) {
+        if (this->lgrs.empty()) {
+            // First LGR vector — backfill all prior non-LGR entries with blanks/zeros.
+            const auto n = this->keywords.size() - 1;
+            this->lgrs .resize(n);
+            this->numlx.resize(n, 0);
+            this->numly.resize(n, 0);
+            this->numlz.resize(n, 0);
+        }
+        this->lgrs  .emplace_back(lgr->name);
+        this->numlx .push_back(lgr->ijk[0]);
+        this->numly .push_back(lgr->ijk[1]);
+        this->numlz .push_back(lgr->ijk[2]);
+    } else if (!this->lgrs.empty()) {
+        // LGR arrays already started — keep alignment for this non-LGR entry.
+        this->lgrs  .emplace_back();
+        this->numlx .push_back(0);
+        this->numly .push_back(0);
+        this->numlz .push_back(0);
+    }
+    // else: pure non-LGR run — nothing to do.
+}
+
 Opm::EclIO::OutputStream::SummarySpecification::
 SummarySpecification(const ResultSet&            rset,
                      const Formatted&            fmt,
@@ -824,15 +859,61 @@ SummarySpecification::write(const Parameters& params,
     smspec.write("KEYWORDS", params.keywords);
     smspec.write("WGNAMES",  params.wgnames);
     smspec.write("NUMS",     params.nums);
+
+    // LGR metadata arrays — written only when at least one LGR vector is present.
+    // Eclipse reference order: NUMS → LGRS → NUMLX → NUMLY → NUMLZ → UNITS → STARTDAT
+    //                          → LGRNAMES → LGRVEC → LGRTIMES
+    // params.lgrs is non-empty iff at least one LGR-aware add() was called.
+    const bool has_lgr = !params.lgrs.empty();
+
+    if (has_lgr) {
+        smspec.write("LGRS",  params.lgrs);
+        smspec.write("NUMLX", params.numlx);
+        smspec.write("NUMLY", params.numly);
+        smspec.write("NUMLZ", params.numlz);
+    }
+
     smspec.write("UNITS",    params.units);
 
     smspec.write("STARTDAT", makeStartDate(this->startDate_));
+
+    if (has_lgr) {
+        this->writeLgrMetadata(params, currentStep);
+    }
 
     // Create and write RUNTIMEI
     smspec.write("RUNTIMEI", makeRuntimei(simulationFinished, this->restartStep_,
                                           currentStep, this->computeStart_, basic));
 
     this->flushStream();
+}
+
+void
+Opm::EclIO::OutputStream::SummarySpecification::
+writeLgrMetadata(const Parameters& params, const int currentStep)
+{
+    auto& smspec = this->stream();
+    auto lgrCounts = std::map<std::string, int>{};
+    for (const auto& lgr : params.lgrs) {
+        const auto name = trim_copy(lgr);
+        if (!name.empty()) {
+            ++lgrCounts[name];
+        }
+    }
+
+    auto lgrNames = std::vector<PaddedOutputString<8>>{};
+    auto lgrVec   = std::vector<int>{};
+    lgrNames.reserve(lgrCounts.size());
+    lgrVec  .reserve(lgrCounts.size());
+
+    for (const auto& [lgrName, lgrCount] : lgrCounts) {
+        lgrNames.emplace_back(lgrName);
+        lgrVec  .push_back(lgrCount + 2); // +2 for implicit TIME and YEARS per LGR
+    }
+
+    smspec.write("LGRNAMES", lgrNames);
+    smspec.write("LGRVEC",   lgrVec);
+    smspec.write("LGRTIMES", std::vector<int>(lgrCounts.size(), currentStep));
 }
 
 void Opm::EclIO::OutputStream::SummarySpecification::rewindStream()
