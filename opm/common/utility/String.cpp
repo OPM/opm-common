@@ -144,6 +144,7 @@ template std::string ltrim_copy(const std::string&);
 template std::string rtrim_copy(const std::string&);
 template std::string trim_copy(const std::string&);
 template std::string trim_copy(const EclIO::PaddedOutputString<4>&);
+template std::string trim_copy(const EclIO::PaddedOutputString<8>&);
 
 template std::string& uppercase(const std::string&,std::string&);
 template std::string& uppercase(const std::string_view&,std::string&);
