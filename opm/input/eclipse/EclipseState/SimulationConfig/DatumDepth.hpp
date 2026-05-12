@@ -119,7 +119,14 @@ namespace Opm {
             serializer(this->datum_);
         }
 
-    private:
+#ifdef __NVCC__
+        // NVCC struggles with the std::variant in this class and requires
+        // that the nested classes are public. This workaround should
+        // be avoided if a better fix is found.
+        public:
+#else
+        private:
+#endif
         /// Neither DATUM* nor EQUIL specified => datum depth = 0
         class Zero
         {
@@ -380,6 +387,7 @@ namespace Opm {
                               std::vector<double>::difference_type ix) const;
         };
 
+    private:
         /// Datum depth implementation object.
         std::variant<Zero, Global, DefaultRegion, UserDefined> datum_{};
     };
