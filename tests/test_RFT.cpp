@@ -504,6 +504,21 @@ namespace {
             return this->value(segNum, this->icd_setting_);
         }
 
+        float icd_length(const int segNum) const
+        {
+            return this->value(segNum, this->icd_length_);
+        }
+
+        float icd_max_flow_rate(const int segNum) const
+        {
+            return this->value(segNum, this->icd_max_flow_rate_);
+        }
+
+        float icd_flow_scaling(const int segNum) const
+        {
+            return this->value(segNum, this->icd_flow_scaling_);
+        }
+
         int branch(const int segNum) const
         {
             return this->value(segNum, this->branch_id_);
@@ -544,8 +559,12 @@ namespace {
         std::vector<float> ovis_{};
         std::vector<float> wvis_{};
         std::vector<float> gvis_{};
+
         std::vector<float> icd_strength_{};
         std::vector<float> icd_setting_{};
+        std::vector<float> icd_length_{};
+        std::vector<float> icd_max_flow_rate_{};
+        std::vector<float> icd_flow_scaling_{};
 
         std::vector<int> branch_id_{};
         std::vector<int> neighbour_id_{};
@@ -585,6 +604,9 @@ namespace {
         BOOST_REQUIRE(rft.hasArray("SEGSSTR", well, date));
         BOOST_REQUIRE(rft.hasArray("SEGSFOPN", well, date));
         BOOST_REQUIRE(rft.hasArray("SEGBRNO", well, date));
+        BOOST_REQUIRE(rft.hasArray("SEGLEN", well, date));
+        BOOST_REQUIRE(rft.hasArray("SEGQICD", well, date));
+        BOOST_REQUIRE(rft.hasArray("SEGFSCAL", well, date));
         BOOST_REQUIRE(rft.hasArray("SEGNXT", well, date));
         BOOST_REQUIRE(rft.hasArray("BRNST", well, date));
         BOOST_REQUIRE(rft.hasArray("BRNEN", well, date));
@@ -616,7 +638,11 @@ namespace {
         this->gvis_ = rft.getRft<float>("SEGGVIS", well, date);
 
         this->icd_strength_ = rft.getRft<float>("SEGSSTR", well, date);
+
         this->icd_setting_ = rft.getRft<float>("SEGSFOPN", well, date);
+        this->icd_length_ = rft.getRft<float>("SEGLEN", well, date);
+        this->icd_max_flow_rate_ = rft.getRft<float>("SEGQICD", well, date);
+        this->icd_flow_scaling_ = rft.getRft<float>("SEGFSCAL", well, date);
 
         this->branch_id_ = rft.getRft<int>("SEGBRNO", well, date);
         this->neighbour_id_ = rft.getRft<int>("SEGNXT", well, date);
@@ -4204,6 +4230,447 @@ END
 )");
     }
 
+    Opm::Deck icdDataSet()
+    {
+        return ::Opm::Parser{}.parseString(R"(RUNSPEC
+TITLE
+  'BASE1' 'MSW' 'HFA'
+
+NOECHO
+
+DIMENS
+ 6 8 7 /
+
+START
+ 1 'JAN' 2000 /
+
+OIL
+WATER
+GAS
+DISGAS
+VAPOIL
+METRIC
+
+TABDIMS
+ 1 1 5 20 1* 20 /
+
+EQLDIMS
+ 1 /
+
+REGDIMS
+ 1 1 /
+
+WELLDIMS
+ 2 7 2 2 /
+
+WSEGDIMS
+ 1 12 1 /
+
+UNIFIN
+UNIFOUT
+
+-- =====================================================================
+
+GRID
+
+GRIDFILE
+ 0 1 /
+
+INIT
+NEWTRAN
+
+GRIDUNIT
+ 'METRES' /
+
+SPECGRID
+ 6 8 7 1 'F' /
+
+DXV
+ 6*100 /
+
+DYV
+ 8*100 /
+
+DZV
+ 7*10 /
+
+DEPTHZ
+ 63*2700 /
+
+PERMX
+ 48*72 48*135 48*355 48*50 48*200 48*130 48*55 /
+
+PORO
+ 48*0.25 48*0.2 48*0.2 48*0.2 48*0.2 48*0.18 48*0.18 /
+
+COPY
+ 'PERMX' 'PERMY' /
+ 'PERMX' 'PERMZ' /
+/
+
+MULTIPLY
+ 'PERMZ' 0.1 /
+/
+
+MULTZ
+ 48*1 48*1 48*1
+ 48*0
+ 48*1 48*1 48*1 /
+
+MULTNUM
+ 48*1 48*1
+ 48*2 48*2 48*2
+ 48*3 48*3 /
+
+-- =====================================================================
+
+PROPS
+
+SWOF
+ 0 0 1 0
+ 1 1 0 0 /
+
+SGOF
+ 0 0 1 0
+ 1 1 0 0 /
+
+ROCK
+ 280 5.6e-05 /
+
+PVTW
+ 247.7 1.03665 4.1726e-05 0.2912 9.9835e-05 /
+
+DENSITY
+ 861 999.1 1.01735 /
+
+PVTO
+ 0   1   1.07033 0.645
+    25   1.06657 0.668
+    50   1.06293 0.691
+    75   1.05954 0.714
+   100   1.05636 0.736 /
+
+ 17.345  25   1.14075 0.484
+         50   1.1351  0.506
+         75   1.12989 0.527
+        100   1.12508 0.548 /
+
+ 31.462  50   1.1843  0.439
+         75   1.178   0.459
+        100   1.17219 0.479 /
+
+ 45.089  75   1.22415 0.402
+        100   1.21728 0.421
+        150   1.2051  0.458
+        200   1.19461 0.494 /
+
+ 58.99 100   1.26373 0.37
+       150   1.24949 0.405
+       200   1.23732 0.439
+       225   1.23186 0.456 /
+
+ 88.618 150   1.34603 0.316
+        200   1.32975 0.346
+        225   1.32253 0.361
+        250   1.31582 0.376 /
+
+ 120.85 200   1.43292 0.273
+        225   1.42343 0.286
+        250   1.41467 0.299
+        275   1.40656 0.312 /
+
+ 138.134 225   1.47867 0.255
+         250   1.46868 0.267
+         275   1.45945 0.279
+         294.6 1.45269 0.288 /
+
+ 156.324 250   1.52632 0.239
+         275   1.51583 0.25
+         294.6 1.50816 0.258
+         300   1.50613 0.261 /
+
+ 175.509 275   1.5761  0.224
+         294.6 1.56741 0.232
+         300   1.5651  0.234
+         324   1.55533 0.244 /
+
+ 191.323 294.6 1.61682 0.214
+         300   1.61428 0.216
+         324   1.60352 0.225
+         350   1.59271 0.235 /
+
+ 195.818 300 1.62835 0.211
+         324 1.6173  0.22
+         350 1.60621 0.23
+         400 1.58707 0.248 /
+
+ 216.43 324 1.68095 0.199
+        350 1.66851 0.208
+        400 1.64713 0.226
+        450 1.62847 0.243
+        500 1.612   0.26 /
+ /
+
+PVTG
+   1   2.123e-06    1.877001 0.01037
+       0            1.352546 0.011247 /
+  25   5.99e-06     0.050493 0.012925
+       0            0.050477 0.012932 /
+  50   4.9422e-06   0.024609 0.01373
+       0            0.024612 0.013734 /
+  75   6.1628e-06   0.016094 0.014475
+       0            0.016102 0.014475 /
+ 100   8.6829e-06   0.011902 0.015347
+       0            0.011915 0.015334 /
+ 150   1.91019e-05  0.007838 0.017699
+       0            0.00786  0.017591 /
+ 200   4.14858e-05  0.005938 0.020947
+       0            0.005967 0.020506 /
+ 225   5.95434e-05  0.005349 0.022888
+       0            0.005377 0.022116 /
+ 250   8.3633e-05   0.004903 0.025025
+       0            0.004925 0.023767 /
+ 275   0.0001148977 0.004561 0.027355
+       0            0.004571 0.025418 /
+ 294.6 0.0001452455 0.00435  0.029325
+       0            0.004344 0.026696 /
+ 300   0.0001546223 0.004299 0.029893
+       0            0.004288 0.027044 /
+ 324   0.000202062  0.004107 0.032559
+       0.0001546223 0.004098 0.031456
+       0.0001452455 0.004097 0.031237
+       0.0001148977 0.004093 0.030521
+       8.3633e-05   0.004089 0.029767
+       5.95434e-05  0.004088 0.029165
+       4.14858e-05  0.004087 0.028702
+       1.91019e-05  0.004085 0.028173
+       8.6829e-06   0.004068 0.028353
+       0            0.004066 0.028567 /
+ /
+
+-- =====================================================================
+
+REGIONS
+
+SATNUM
+ 48*1 48*1 48*1 48*1 48*1 48*1 48*1 /
+
+EQLNUM
+ 48*1 48*1 48*1 48*1 48*1 48*1 48*1 /
+
+PVTNUM
+ 48*1 48*1 48*1 48*1 48*1 48*1 48*1 /
+
+-- =====================================================================
+
+SOLUTION
+
+EQUIL
+ 2730 300 2750 0 1650 0 1 1 0 /
+
+RSVD
+ 2650 156.324
+ 2750 138.134 /
+
+RVVD
+ 2600 0.00739697
+ 2750 0.00639697 /
+
+RPTSOL
+ 'THPRES' 'FIP=2' /
+
+RPTRST
+ 'BASIC=5' FREQ=6 /
+
+-- =====================================================================
+
+SUMMARY
+
+ALL
+
+-- =====================================================================
+
+SCHEDULE
+
+GRUPTREE
+ 'TEST' 'FIELD' /
+/
+
+WELSPECS
+ 'P1' 'TEST' 1 2 1* 'OIL' 0 'STD' 'STOP' 'YES' 0 'SEG' 0 /
+ 'I1' 'TEST' 6 8 1* 'WATER' /
+/
+
+COMPDAT
+ 'P1' 2 3 2 2 'OPEN' 1* 52.08337 0.216 1* 0 1* 'Z' /
+ 'P1' 2 3 3 3 'OPEN' 1* 366.2544 0.216 1* 0 1* 'Y' /
+ 'P1' 2 4 3 3 'OPEN' 1* 388.4829 0.216 1* 0 1* 'Y' /
+ 'P1' 3 4 3 3 'OPEN' 1* 203.6268 0.216 1* 0 1* 'Y' /
+ 'P1' 3 5 3 3 'OPEN' 1* 571.7222 0.216 1* 0 1* 'Y' /
+ 'P1' 3 6 3 3 'OPEN' 1* 389.4535 0.216 1* 0 1* 'Y' /
+ 'I1' 6 8 5 7 'OPEN' 1* 1*       0.216 1* 0 1* 'Z' /
+/
+
+WELSEGS
+ 'P1' 2620.17107 0 1* 'INC' 'HFA' /
+  2  2 1  1  38.17432  3.32249 0.102 1e-05 /
+  3  3 1  2  62.22322  5.41558 0.102 1e-05 /
+  4  4 1  3  54.33161  4.72874 0.102 1e-05 /
+  5  5 1  4 119.18735 10.34614 0.102 1e-05 /
+  6  6 1  5 263.64361 14.87775 0.102 1e-05 /
+  7  7 1  6 360.47928 11.28317 0.102 1e-05 /
+  8  8 1  7 282.92022  5.30723 0.102 1e-05 /
+  9  9 1  8 370.26595  5.85843 0.102 1e-05 /
+ 10 10 1  9 458.85844  9.23286 0.102 1e-05 /
+ 11 11 1 10 266.98559  6.56172 0.102 1e-05 /
+/
+
+COMPSEGS
+ 'P1' /
+ 2 3 2 1  233.61     362.82114 /
+ 2 3 3 1  362.82114  712.29909 /
+ 2 4 3 1  712.29909 1083.7797  /
+ 3 4 3 1 1083.7797  1278.13953 /
+ 3 5 3 1 1278.13953 1824.3116  /
+ 3 6 3 1 1824.3116  2195.85641 /
+/
+
+WSEGAICD
+ 'P1' 7  7  0.000212345678  1*  5*  1*  10 2.3 1.5 /
+ 'P1' 9  9  0.000212345678  1*  5*  1*  11 2.3 1.5 /
+/
+
+WSEGSICD
+ 'P1'  5  5  0.000212345678  12  1.0 0.45 0.60 1* 1*  1*  9.8765432 /
+ 'P1' 11 11  0.000212345678  12  1.0 0.45 0.60 1* 1*  1*  123.45678 /
+/
+
+WCONPROD
+ 'P1' 'OPEN' 'ORAT' 8000 4* 65 /
+/
+
+WCONINJE
+ 'I1' 'WATER' 'OPEN' 'RATE' 5000 1* 450 /
+/
+
+TSTEP
+ 1 /
+
+WRFTPLT
+ 'P1' 'NO' 'NO' 'YES' /
+/
+
+TSTEP
+ 2 3 5 10*10 20*20 30*30 /
+
+END
+)");
+    }
+
+    Opm::Deck icdDataSetFScalLength()
+    {
+        return Opm::Parser{}.parseString(R"(RUNSPEC
+DIMENS
+  7 7 1 /
+START
+ 6 MAY 2026 /
+OIL
+GAS
+WATER
+DISGAS
+FIELD
+TABDIMS
+/
+WELLDIMS
+2 7 2 2/
+WSEGDIMS
+1 12 6 /
+-- ====================
+GRID
+DXV
+ 7*500 /
+DYV
+ 7*500 /
+DZV
+ 10 /
+DEPTHZ
+ 64*5000 /
+EQUALS
+ PERMX 100 /
+ PERMY 100 /
+ PERMZ  10 /
+ PORO    0.3 /
+/
+DENSITY
+ 52 65 0.03 /
+-- ====================
+SCHEDULE
+WELSPECS
+ 'I' 'G' 1 1  1*  'WATER' /
+ 'P1' 'G' 7 7  1*  'LIQ' /
+/
+COMPDAT
+--   I J K1 K2  STATE  SATNUM  CTF  DIAM  Kh  SKIN  D-FAC  DIR
+ 'I'  1 1  1  1  'OPEN' 1*      1*   2.34  1*  0.12  1*     'Z' /
+ 'P1' 7 1  1  1  'OPEN' 1*      1*   2.34  1*  1*    1*     'Y' /
+ 'P1' 6 2  1  1  'OPEN' 1*      1*   2.34  1*  1*    1*     'Y' /
+ 'P1' 6 4  1  1  'OPEN' 1*      1*   2.34  1*  1*    1*     'Y' /
+ 'P1' 1 7  1  1  'OPEN' 1*      1*   2.34  1*  1*    1*     'X' /
+ 'P1' 2 6  1  1  'OPEN' 1*      1*   2.34  1*  1*    1*     'X' /
+ 'P1' 4 6  1  1  'OPEN' 1*      1*   2.34  1*  1*    1*     'X' /
+/
+WELSEGS
+ 'P1' 5005 0 1*  'INC'  'HFA' /
+  2  2  1  1   1000  0  1  1.0E-5 /
+  3  3  1  2    500  0  1  1.0E-5 /
+  4  4  1  3    500  0  1  1.0E-5 /
+  5  5  3  3    650  0  1  1.0E-5 /
+  6  6  4  2    650  0  1  1.0E-5 /
+  7  7  2  1   1000  0  1  1.0E-5 /
+  8  8  2  7    500  0  1  1.0E-5 /
+  9  9  2  8    500  0  1  1.0E-5 /
+ 10 10  5  8    650  0  1  1.0E-5 /
+ 11 11  6  7    650  0  1  1.0E-5 /
+/
+COMPSEGS
+   'P1' /
+  7 1 1  1  2500 3000  'Y'  1*  5005  0.0  4 /
+  6 2 1  3  2000 2300  'Y'  1*  5005  0.0  5 /
+  6 4 1  4  1500 1800  'Y'  1*  5005  0.0  6 /
+  1 7 1  2  2500 3000  'X'  1*  5005  0.0  9 /
+  2 6 1  5  2000 2300  'X'  1*  5005  0.0 10 /
+  4 6 1  6  1500 1800  'X'  1*  5005  0.0 11 /
+/
+WSEGSICD
+--            STRENGTH  LENGTH  6  7  8  9  10  SCALING
+  'P1' 10 10  0.0123456 45.678  1* 1* 1* 1* 1*   1 /
+  'P1' 11 11  0.04567   -17.29  1* 1* 1* 1* 1*  -1 /
+/
+WSEGAICD
+--            STRENGTH  LENGTH  6  7  8  9  10  SCALING  MAX-ARATE Q-EXP  V-EXP
+  'P1'  5  5  0.01701   98.765  1* 1* 1* 1* 1*   1       55.55     1.05   1.0 /
+  'P1'  6  6  0.002718  -3.141  1* 1* 1* 1* 1*  -1       66.66     1.06   1.0 /
+/
+WCONPROD
+  'P1'  'OPEN'  'LRAT' 3* 25.0E3 1* 25 /
+/
+WCONINJE
+  'I'  'WATER'  'OPEN'  'RATE'  20.0E3 1*  5000 /
+/
+DATES
+  7 MAY 2026 /
+/
+WRFTPLT
+ 'P1' 'NO' 'NO' 'YES' /
+/
+DATES
+ 10 MAY 2026 /
+ 17 MAY 2026 /
+/
+END
+)");
+    }
+
     std::vector<int> cellIndex(const ::Opm::EclipseGrid&             grid,
                                const std::vector<std::array<int,3>>& ijk)
     {
@@ -4382,11 +4849,10 @@ END
         return xw;
     }
 
-    SegmentResults readWriteSegmentRFTData(std::function<Opm::Deck()> dataSet = &segmentDataSet,
-                                           const std::string&         caseName = "TESTSEG")
+    SegmentResults readWriteSegmentRFTData(std::function<Opm::Deck()>      dataSet = &segmentDataSet,
+                                           const std::string&              caseName = "TESTSEG",
+                                           const Opm::EclIO::ERft::RftDate date = Opm::EclIO::ERft::RftDate { 2000, 1, 2 })
     {
-        using RftDate = ::Opm::EclIO::ERft::RftDate;
-
         const auto rset  = RSet { caseName };
         const auto model = Setup{ dataSet() };
 
@@ -4408,9 +4874,7 @@ END
             ::Opm::EclIO::OutputStream::outputFileName(rset, "RFT")
         };
 
-        return SegmentResults {
-            rft, "P1", RftDate{ 2000, 1, 2 }
-        };
+        return SegmentResults { rft, "P1", date };
     }
 
     SegmentResults readWriteSegmentRFTDataNoSegFlow(std::function<Opm::Deck()> dataSet = &segmentDataSet,
@@ -4758,6 +5222,71 @@ BOOST_AUTO_TEST_CASE(Segment_Phase_Viscosity)
     BOOST_CHECK_CLOSE(xSEG.gvis(11), 0.300f, 1.0e-5f);
 }
 
+BOOST_AUTO_TEST_CASE(ICD_Quantities_No_ICD)
+{
+    const auto xSEG = readWriteSegmentRFTData();
+
+    BOOST_CHECK_CLOSE(xSEG.icd_setting( 1), 1.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_setting( 2), 1.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_setting( 3), 1.0f, 1.2e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_setting( 4), 1.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_setting( 5), 1.0f, 1.1e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_setting( 6), 1.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_setting( 7), 1.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_setting( 8), 1.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_setting( 9), 1.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_setting(10), 1.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_setting(11), 1.0f, 1.0e-5f);
+
+    BOOST_CHECK_CLOSE(xSEG.icd_strength( 1), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_strength( 2), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_strength( 3), 0.0f, 1.2e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_strength( 4), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_strength( 5), 0.0f, 1.1e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_strength( 6), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_strength( 7), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_strength( 8), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_strength( 9), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_strength(10), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_strength(11), 0.0f, 1.0e-5f);
+
+    BOOST_CHECK_CLOSE(xSEG.icd_length( 1), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_length( 2), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_length( 3), 0.0f, 1.2e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_length( 4), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_length( 5), 0.0f, 1.1e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_length( 6), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_length( 7), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_length( 8), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_length( 9), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_length(10), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_length(11), 0.0f, 1.0e-5f);
+
+    BOOST_CHECK_CLOSE(xSEG.icd_max_flow_rate( 1), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_max_flow_rate( 2), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_max_flow_rate( 3), 0.0f, 1.2e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_max_flow_rate( 4), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_max_flow_rate( 5), 0.0f, 1.1e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_max_flow_rate( 6), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_max_flow_rate( 7), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_max_flow_rate( 8), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_max_flow_rate( 9), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_max_flow_rate(10), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_max_flow_rate(11), 0.0f, 1.0e-5f);
+
+    BOOST_CHECK_CLOSE(xSEG.icd_flow_scaling( 1), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_flow_scaling( 2), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_flow_scaling( 3), 0.0f, 1.2e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_flow_scaling( 4), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_flow_scaling( 5), 0.0f, 1.1e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_flow_scaling( 6), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_flow_scaling( 7), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_flow_scaling( 8), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_flow_scaling( 9), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_flow_scaling(10), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_flow_scaling(11), 0.0f, 1.0e-5f);
+}
+
 BOOST_AUTO_TEST_CASE(Valve)
 {
     const auto xSEG = readWriteSegmentRFTData(&valveDataSet, "TESTVALVE");
@@ -4777,6 +5306,186 @@ BOOST_AUTO_TEST_CASE(Valve)
     BOOST_CHECK_CLOSE(xSEG.icd_setting( 9), 6.0e-5f / dfltArea(0.102f), 1.0e-5f);
     BOOST_CHECK_CLOSE(xSEG.icd_setting(10), 0.5f                      , 1.0e-5f);
     BOOST_CHECK_CLOSE(xSEG.icd_setting(11), 0.5f                      , 1.0e-5f);
+
+    BOOST_CHECK_CLOSE(xSEG.icd_strength( 1), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_strength( 2), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_strength( 3), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_strength( 4), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_strength( 5), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_strength( 6), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_strength( 7), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_strength( 8), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_strength( 9), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_strength(10), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_strength(11), 0.0f, 1.0e-5f);
+
+    BOOST_CHECK_CLOSE(xSEG.icd_length( 1), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_length( 2), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_length( 3), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_length( 4), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_length( 5), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_length( 6), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_length( 7), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_length( 8), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_length( 9), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_length(10), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_length(11), 0.0f, 1.0e-5f);
+
+    BOOST_CHECK_CLOSE(xSEG.icd_max_flow_rate( 1), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_max_flow_rate( 2), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_max_flow_rate( 3), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_max_flow_rate( 4), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_max_flow_rate( 5), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_max_flow_rate( 6), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_max_flow_rate( 7), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_max_flow_rate( 8), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_max_flow_rate( 9), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_max_flow_rate(10), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_max_flow_rate(11), 0.0f, 1.0e-5f);
+
+    BOOST_CHECK_CLOSE(xSEG.icd_flow_scaling( 1), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_flow_scaling( 2), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_flow_scaling( 3), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_flow_scaling( 4), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_flow_scaling( 5), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_flow_scaling( 6), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_flow_scaling( 7), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_flow_scaling( 8), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_flow_scaling( 9), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_flow_scaling(10), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_flow_scaling(11), 0.0f, 1.0e-5f);
+}
+
+BOOST_AUTO_TEST_CASE(ICD)
+{
+    const auto xSEG = readWriteSegmentRFTData(&icdDataSet, "TESTICD");
+
+    BOOST_CHECK_CLOSE(xSEG.icd_setting( 1), 1.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_setting( 2), 1.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_setting( 3), 1.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_setting( 4), 1.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_setting( 5), 1.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_setting( 6), 1.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_setting( 7), 1.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_setting( 8), 1.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_setting( 9), 1.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_setting(10), 1.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_setting(11), 1.0f, 1.0e-5f);
+
+    BOOST_CHECK_CLOSE(xSEG.icd_strength( 1), 0.0f,           1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_strength( 2), 0.0f,           1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_strength( 3), 0.0f,           1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_strength( 4), 0.0f,           1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_strength( 5), 2.12345678e-4f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_strength( 6), 0.0f,           1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_strength( 7), 2.12345678e-4f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_strength( 8), 0.0f,           1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_strength( 9), 2.12345678e-4f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_strength(10), 0.0f,           1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_strength(11), 2.12345678e-4f, 1.0e-5f);
+
+    BOOST_CHECK_CLOSE(xSEG.icd_length( 1),  0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_length( 2),  0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_length( 3),  0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_length( 4),  0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_length( 5), 12.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_length( 6),  0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_length( 7), 12.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_length( 8),  0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_length( 9), 12.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_length(10),  0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_length(11), 12.0f, 1.0e-5f);
+
+    BOOST_CHECK_CLOSE(xSEG.icd_max_flow_rate( 1),   0.0f,        1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_max_flow_rate( 2),   0.0f,        1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_max_flow_rate( 3),   0.0f,        1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_max_flow_rate( 4),   0.0f,        1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_max_flow_rate( 5),   9.87654305f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_max_flow_rate( 6),   0.0f,        1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_max_flow_rate( 7),  10.0f,        1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_max_flow_rate( 8),   0.0f,        1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_max_flow_rate( 9),  11.0f,        1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_max_flow_rate(10),   0.0f,        1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_max_flow_rate(11), 123.456779f,   1.0e-5f);
+
+    BOOST_CHECK_CLOSE(xSEG.icd_flow_scaling( 1), 0.0f,          1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_flow_scaling( 2), 0.0f,          1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_flow_scaling( 3), 0.0f,          1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_flow_scaling( 4), 0.0f,          1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_flow_scaling( 5), 0.220865905f,  1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_flow_scaling( 6), 0.0f,          1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_flow_scaling( 7), 0.0455159917f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_flow_scaling( 8), 0.0f,          1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_flow_scaling( 9), 0.0424147844f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_flow_scaling(10), 0.0f,          1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_flow_scaling(11), 0.0261518564f, 1.0e-5f);
+}
+
+BOOST_AUTO_TEST_CASE(ICD_Flow_Scaling_Length_Conv)
+{
+    const auto xSEG = readWriteSegmentRFTData
+        (&icdDataSetFScalLength, "ICD_FSCAL_LENGTH",
+         Opm::EclIO::ERft::RftDate { 2026, 5, 7 });
+
+    BOOST_CHECK_CLOSE(xSEG.icd_setting( 1), 1.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_setting( 2), 1.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_setting( 3), 1.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_setting( 4), 1.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_setting( 5), 1.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_setting( 6), 1.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_setting( 7), 1.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_setting( 8), 1.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_setting( 9), 1.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_setting(10), 1.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_setting(11), 1.0f, 1.0e-5f);
+
+    BOOST_CHECK_CLOSE(xSEG.icd_strength( 1), 0.0f,       1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_strength( 2), 0.0f,       1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_strength( 3), 0.0f,       1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_strength( 4), 0.0f,       1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_strength( 5), 0.01701f,   1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_strength( 6), 0.002718f,  1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_strength( 7), 0.0f,       1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_strength( 8), 0.0f,       1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_strength( 9), 0.0f,       1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_strength(10), 0.0123456f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_strength(11), 0.04567f,   1.0e-5f);
+
+    BOOST_CHECK_CLOSE(xSEG.icd_length( 1),   0.0f,   1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_length( 2),   0.0f,   1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_length( 3),   0.0f,   1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_length( 4),   0.0f,   1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_length( 5),  98.765f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_length( 6), - 3.141f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_length( 7),   0.0f,   1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_length( 8),   0.0f,   1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_length( 9),   0.0f,   1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_length(10),  45.678f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_length(11), -17.29f,  1.0e-5f);
+
+    BOOST_CHECK_CLOSE(xSEG.icd_max_flow_rate( 1),   0.0f,  1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_max_flow_rate( 2),   0.0f,  1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_max_flow_rate( 3),   0.0f,  1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_max_flow_rate( 4),   0.0f,  1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_max_flow_rate( 5),  55.55f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_max_flow_rate( 6),  66.66f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_max_flow_rate( 7),   0.0f,  1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_max_flow_rate( 8),   0.0f,  1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_max_flow_rate( 9),   0.0f,  1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_max_flow_rate(10),   0.0f,  1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_max_flow_rate(11),   0.0f,  1.0e-5f);
+
+    BOOST_CHECK_CLOSE(xSEG.icd_flow_scaling( 1),  0.0f,   1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_flow_scaling( 2),  0.0f,   1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_flow_scaling( 3),  0.0f,   1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_flow_scaling( 4),  0.0f,   1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_flow_scaling( 5), 98.765f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_flow_scaling( 6),  3.141f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_flow_scaling( 7),  0.0f,   1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_flow_scaling( 8),  0.0f,   1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_flow_scaling( 9),  0.0f,   1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_flow_scaling(10), 45.678f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xSEG.icd_flow_scaling(11), 17.29f,  1.0e-5f);
 }
 
 BOOST_AUTO_TEST_CASE(Segment_Pressure_NoFlow)
