@@ -218,9 +218,15 @@ void ScheduleDeck::add_TSTEP(const DeckKeyword& TSTEPKeyword,
     const auto& item = TSTEPKeyword.getRecord(0).getItem(0);
 
     for (auto itemIndex = 0*item.data_size(); itemIndex < item.data_size(); ++itemIndex) {
-        if (const auto tstep = item.get<double>(itemIndex); tstep < 0.0) {
+        double tstep = 0.0;
+        try {
+            tstep = item.get<double>(itemIndex); // If this fails for some reason the user gets zero help, hence try/catch...
+        }  catch (const std::exception& e) {
+            const auto msg = fmt::format("Error reading TSTEP value: {}", e.what());
+            throw OpmInputError { msg, TSTEPKeyword.location() };
+        }
+        if (tstep < 0.0) {
             const auto msg = fmt::format("a negative TSTEP value {} is input", tstep);
-
             throw OpmInputError { msg, TSTEPKeyword.location() };
         }
 
