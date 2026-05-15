@@ -23,7 +23,10 @@
 
 #include <opm/input/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/GridDims.hpp>
 
+#include <opm/input/eclipse/Parser/ErrorGuard.hpp>
+#include <opm/input/eclipse/Parser/ParseContext.hpp>
 #include <opm/input/eclipse/Python/Python.hpp>
 
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
@@ -198,12 +201,16 @@ BOOST_AUTO_TEST_CASE(lgr_field_roundtrip)
     Opm::EclIO::SummaryNode sn2 = global;
     BOOST_CHECK(!sn2.lgr.has_value());
 
-    // LB* node — lgr_name set, number_ carries cell index (set separately)
+    // LB* node — only lgr_name propagates to EclIO::SummaryNode (no ijk field)
     auto blk = Node("LBPR", Cat::Block, Opm::KeywordLocation{});
     blk.lgr_name("LGR1");
     Opm::EclIO::SummaryNode sn3 = blk;
     BOOST_CHECK(sn3.lgr.has_value());
     BOOST_CHECK_EQUAL(sn3.lgr->name, "LGR1");
+    // ijk is always {} in the IO layer; NUMS (number_) carries cell identity
+    BOOST_CHECK_EQUAL(sn3.lgr->ijk[0], 0);
+    BOOST_CHECK_EQUAL(sn3.lgr->ijk[1], 0);
+    BOOST_CHECK_EQUAL(sn3.lgr->ijk[2], 0);
 }
 
 BOOST_AUTO_TEST_CASE(lgr_dedup_distinct_lgrs)
@@ -460,7 +467,25 @@ Opm::SummaryConfig makeSummaryConfig(const std::string& path)
     const auto deck  = Opm::Parser{}.parseFile(path);
     const auto es    = Opm::EclipseState { deck };
     const auto sched = Opm::Schedule { deck, es, std::make_shared<Opm::Python>() };
-    return Opm::SummaryConfig { deck, sched, es.fieldProps(), es.aquifer() };
+    // Build a gridDims callback wrapping getInputGrid() so that
+    // keywordLB/keywordLC can resolve linearised Cartesian indices via LGR
+    // geometry.  For gridID=="" (global grid), return the global GridDims.
+    // For an LGR name, return that LGR's GridDims so getGlobalIndex(i,j,k)
+    // gives i + Nx*(j + Ny*k) relative to the LGR — not an active cell index.
+    const auto& grid = es.getInputGrid();
+    auto gridDims = [&grid](const std::string& gridID) -> Opm::GridDims
+    {
+        if (gridID.empty()) {
+            return Opm::GridDims(grid.getNX(), grid.getNY(), grid.getNZ());
+        }
+        const auto& lgr = grid.getLGRCell(gridID);
+        return Opm::GridDims(lgr.getNX(), lgr.getNY(), lgr.getNZ());
+    };
+    const auto parseCtx = Opm::ParseContext{};
+    auto errors = Opm::ErrorGuard{};
+    return Opm::SummaryConfig { deck, sched, es.fieldProps(), es.aquifer(),
+                                parseCtx, errors,
+                                std::move(gridDims) };
 }
 
 } // anonymous namespace
@@ -552,13 +577,14 @@ BOOST_AUTO_TEST_CASE(lgr_2lgr_lw_two_nodes_not_deduped)
 
 BOOST_AUTO_TEST_CASE(lgr_2lgr_lb_dedup_by_lgr_name)
 {
-    // LBPR 'LGR1' 2 2 1 / AND 'LGR2' 2 2 1 /
-    // Same keyword + same ijk — ONLY lgr_.name differs.
-    // Without lgr_ in Block operator==, second node is silently dropped.
+    // The 2LGR deck requests LBPR at 3 cells per LGR (1,1,1), (2,2,1), (3,3,1).
+    // The callback in makeSummaryConfig resolves each to a distinct active index,
+    // so all 3 nodes per LGR survive deduplication.
+    // Regression: nodes with same number_ but different LGR must not be collapsed.
     const auto cfg  = makeSummaryConfig("LGR-WELL-3X3-2LGR.DATA");
     const auto hits = cfg.keywords("LBPR");
 
-    // Expect one node per LGR — same keyword, different LGR name must not dedup
+    // 3 distinct cells per LGR — all must survive
     const auto lgr1_count = std::ranges::count_if(hits,
         [](const Opm::SummaryConfigNode& n) {
             return n.lgr_name().has_value() && *n.lgr_name() == "LGR1";
@@ -567,8 +593,90 @@ BOOST_AUTO_TEST_CASE(lgr_2lgr_lb_dedup_by_lgr_name)
         [](const Opm::SummaryConfigNode& n) {
             return n.lgr_name().has_value() && *n.lgr_name() == "LGR2";
         });
-    BOOST_CHECK_EQUAL(lgr1_count, 1);
-    BOOST_CHECK_EQUAL(lgr2_count, 1);
+    BOOST_CHECK_EQUAL(lgr1_count, 3);
+    BOOST_CHECK_EQUAL(lgr2_count, 3);
+
+    // Regression: a node in LGR1 and LGR2 with the same number_ must be distinct.
+    const bool lgr1_lgr2_distinct = std::ranges::any_of(hits,
+        [](const Opm::SummaryConfigNode& n) {
+            return n.lgr_name().has_value() && *n.lgr_name() == "LGR1";
+        }) &&
+        std::ranges::any_of(hits,
+        [](const Opm::SummaryConfigNode& n) {
+            return n.lgr_name().has_value() && *n.lgr_name() == "LGR2";
+        });
+    BOOST_CHECK(lgr1_lgr2_distinct);
+}
+
+BOOST_AUTO_TEST_CASE(lgr_lb_callback_resolves_distinct_numbers)
+{
+    // Verify that a non-trivial gridDims callback assigns distinct number_ values
+    // per cell so that all nodes survive deduplication.
+    // Uses a mock callback — no real LGR geometry needed.
+
+    const std::string deck_str = R"(
+RUNSPEC
+DIMENS
+ 3 3 1 /
+WELLDIMS
+ 2 1 1 2 /
+START
+ 1 JAN 2020 /
+GRID
+DXV
+ 3*100.0 /
+DYV
+ 3*100.0 /
+DZV
+ 1*10.0 /
+DEPTHZ
+ 16*2000.0 /
+PORO
+ 9*0.3 /
+PROPS
+SOLUTION
+SUMMARY
+LBPR
+ 'LGR1'  1 1 1 /
+ 'LGR1'  2 2 1 /
+ 'LGR1'  3 3 1 /
+/
+SCHEDULE
+END
+)";
+
+    // Mock: LGR1 is treated as a 3x3x1 grid.  The callback returns GridDims
+    // for that grid so getGlobalIndex(i,j,k) = i + 3*j + 9*k (0-based)
+    // gives a linearised Cartesian index relative to the LGR.
+    auto mockGridDims = [](const std::string& /*gridID*/) -> Opm::GridDims
+    {
+        return Opm::GridDims(3, 3, 1);
+    };
+    // Expected 1-based Cartesian indices:
+    //   (1,1,1) → 0-based (0,0,0) → 0 + 1 = 1
+    //   (2,2,1) → 0-based (1,1,0) → 1+3  + 1 = 5
+    //   (3,3,1) → 0-based (2,2,0) → 2+6  + 1 = 9
+
+    const auto deck    = Opm::Parser{}.parseString(deck_str);
+    const auto es      = Opm::EclipseState { deck };
+    const auto sched   = Opm::Schedule { deck, es, std::make_shared<Opm::Python>() };
+    const auto parseCtx = Opm::ParseContext{};
+    auto errors = Opm::ErrorGuard{};
+
+    const auto cfg = Opm::SummaryConfig {
+        deck, sched, es.fieldProps(), es.aquifer(),
+        parseCtx, errors, mockGridDims
+    };
+
+    const auto hits = cfg.keywords("LBPR");
+    BOOST_REQUIRE_EQUAL(hits.size(), 3u);
+
+    std::vector<int> numbers;
+    for (const auto& n : hits) numbers.push_back(n.number());
+    std::ranges::sort(numbers);
+    BOOST_CHECK_EQUAL(numbers[0], 1);   // cell (1,1,1) → Cartesian 0 → 1-based 1
+    BOOST_CHECK_EQUAL(numbers[1], 5);   // cell (2,2,1) → Cartesian 4 → 1-based 5
+    BOOST_CHECK_EQUAL(numbers[2], 9);   // cell (3,3,1) → Cartesian 8 → 1-based 9
 }
 
 BOOST_AUTO_TEST_SUITE_END() // LGR_SummaryConfig_Deck
@@ -683,7 +791,9 @@ BOOST_AUTO_TEST_CASE(lc_multi_record_produces_nodes)
     );
 
     const auto nodes = cfg.keywords("LCOFR");
-    // number_ is deferred to follow-up work — same well+LGR records collapse to 1 after uniq()
+    // The stub deck has no LGR geometry, so the gridDims callback returns
+    // GridDims{} (NX=0) — cell index resolution is skipped.
+    // Both records share number_=INT_MIN and are deduped to 1.
     BOOST_CHECK_EQUAL(nodes.size(), 1u);
     for (const auto& node : nodes) {
         BOOST_CHECK(node.lgr_name().has_value());
@@ -703,7 +813,9 @@ BOOST_AUTO_TEST_CASE(lb_multi_record_produces_nodes)
     );
 
     const auto nodes = cfg.keywords("LBPR");
-    // number_ is deferred to follow-up work — same-LGR records collapse to 1 after uniq()
+    // The stub deck has no LGR geometry, so the gridDims callback returns
+    // GridDims{} (NX=0) — cell index resolution is skipped.
+    // Both records share number_=INT_MIN and are deduped to 1.
     BOOST_REQUIRE_EQUAL(nodes.size(), 1u);
     BOOST_REQUIRE(nodes[0].lgr_name().has_value());
     BOOST_CHECK_EQUAL(*nodes[0].lgr_name(), "LGR1");

@@ -1195,9 +1195,11 @@ void keywordB(SummaryConfig::keyword_list& list,
                             "{{keyword}}\n"
                             "In {{file}} line {{line}}\n"
                             "References invalid cell "
+                            "{},{},{} in grid of dimensions "
                             "{},{},{}.\nThis block summary "
                             "vector request is ignored.",
-                            ijk[0] + 1, ijk[1] + 1, ijk[2] + 1);
+                            ijk[0] + 1  , ijk[1] + 1  , ijk[2] + 1,
+                            dims.getNX(), dims.getNY(), dims.getNZ());
 
             OpmLog::warning(OpmInputError::format(msg_fmt, keyword.location()));
 

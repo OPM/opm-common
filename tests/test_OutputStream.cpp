@@ -2564,9 +2564,11 @@ namespace {
         prm.add("FOPR", ":+:+:+:+", 0, "SM3/DAY");
 
         // 3 LGR vectors inside LGR1 (3x3x1)
-        prm.add("LWBHP", "PROD01",    0, "BARSA",  lgr{"LGR1", {3, 3, 1}});
-        prm.add("LWBHP", "PROD02",    0, "BARSA",  lgr{"LGR1", {3, 3, 1}});
-        prm.add("LBPR",  ":+:+:+:+", 5, "BARSA",  lgr{"LGR1", {3, 3, 1}});
+        // LW* well-level vectors: NUMLX/Y/Z = 0 (no cell coordinate)
+        // LB* block vectors:       NUMLX/Y/Z = 0 (cell identified by NUMS)
+        prm.add("LWBHP", "PROD01",    0, "BARSA",  lgr{"LGR1", {0, 0, 0}});
+        prm.add("LWBHP", "PROD02",    0, "BARSA",  lgr{"LGR1", {0, 0, 0}});
+        prm.add("LBPR",  ":+:+:+:+", 5, "BARSA",  lgr{"LGR1", {0, 0, 0}});
 
         return prm;
     }
@@ -2580,10 +2582,11 @@ namespace {
         auto prm = Opm::EclIO::OutputStream::
             SummarySpecification::Parameters{};
 
-        prm.add("LWBHP", "P1", 0, "BARSA",  lgr{"LGRA", {2, 2, 1}});
-        prm.add("LWBHP", "P2", 0, "BARSA",  lgr{"LGRA", {2, 2, 1}});
+        // LW* well-level vectors: NUMLX/Y/Z = 0 (no cell coordinate)
+        prm.add("LWBHP", "P1", 0, "BARSA",  lgr{"LGRA", {0, 0, 0}});
+        prm.add("LWBHP", "P2", 0, "BARSA",  lgr{"LGRA", {0, 0, 0}});
 
-        prm.add("LWBHP", "P3", 0, "BARSA",  lgr{"LGRB", {4, 4, 2}});
+        prm.add("LWBHP", "P3", 0, "BARSA",  lgr{"LGRB", {0, 0, 0}});
         prm.add("LBPR",  ":+:+:+:+", 7, "BARSA",  lgr{"LGRB", {4, 4, 2}});
         prm.add("LBPR",  ":+:+:+:+", 8, "BARSA",  lgr{"LGRB", {4, 4, 2}});
 
@@ -2683,21 +2686,27 @@ BOOST_AUTO_TEST_CASE(LGR_SingleGrid)
         BOOST_CHECK_EQUAL(L[3], "LGR1");
     }
 
-    // NUMLX/NUMLY/NUMLZ — 0 for global, LGR dims for LGR vectors
+    // NUMLX/NUMLY/NUMLZ:
+    //   [0] global FOPR                → 0,0,0
+    //   [1] LWBHP PROD01 (well-level)  → 0,0,0  (no cell coordinate for LW*)
+    //   [2] LWBHP PROD02 (well-level)  → 0,0,0
+    //   [3] LBPR                       → 0,0,0  (cell identified by NUMS)
     {
         const auto& X = smspec.get<int>("NUMLX");
-        BOOST_CHECK_EQUAL(X[0], 0); // global
-        BOOST_CHECK_EQUAL(X[1], 3);
-        BOOST_CHECK_EQUAL(X[2], 3);
-        BOOST_CHECK_EQUAL(X[3], 3);
+        BOOST_CHECK_EQUAL(X[0], 0); // global FOPR
+        BOOST_CHECK_EQUAL(X[1], 0); // LWBHP PROD01 — well-level, no cell
+        BOOST_CHECK_EQUAL(X[2], 0); // LWBHP PROD02 — well-level, no cell
+        BOOST_CHECK_EQUAL(X[3], 0); // LBPR — cell identified by NUMS
 
         const auto& Y = smspec.get<int>("NUMLY");
         BOOST_CHECK_EQUAL(Y[0], 0);
-        BOOST_CHECK_EQUAL(Y[1], 3);
+        BOOST_CHECK_EQUAL(Y[1], 0); // LWBHP PROD01 — well-level, no cell
+        BOOST_CHECK_EQUAL(Y[3], 0); // LBPR — cell identified by NUMS
 
         const auto& Z = smspec.get<int>("NUMLZ");
         BOOST_CHECK_EQUAL(Z[0], 0);
-        BOOST_CHECK_EQUAL(Z[1], 1);
+        BOOST_CHECK_EQUAL(Z[1], 0); // LWBHP PROD01 — well-level, no cell
+        BOOST_CHECK_EQUAL(Z[3], 0); // LBPR — cell identified by NUMS
     }
 }
 
@@ -2782,6 +2791,118 @@ BOOST_AUTO_TEST_CASE(LGR_TwoGrids)
         BOOST_CHECK_EQUAL(T[0], step);
         BOOST_CHECK_EQUAL(T[1], step);
     }
+}
+
+BOOST_AUTO_TEST_CASE(NoLGR_guard)
+{
+    // Verify that a SMSPEC with only global (non-LGR) vectors omits the
+    // LGR metadata arrays entirely: LGRS, NUMLX, NUMLY, NUMLZ, LGRNAMES,
+    // LGRVEC, LGRTIMES must NOT appear in the output.
+
+    using SMSpec = ::Opm::EclIO::OutputStream::SummarySpecification;
+
+    const auto rset     = RSet("NOLGR");
+    const auto fmt      = ::Opm::EclIO::OutputStream::Formatted{ false };
+    const auto cartDims = std::array<int,3>{ 10, 10, 5 };
+    const int  step     = 3;
+
+    auto prm = SMSpec::Parameters{};
+    prm.add("FOPR", ":+:+:+:+", 0, "SM3/DAY");
+    prm.add("FWCT", ":+:+:+:+", 0, "1");
+
+    {
+        auto smspec = SMSpec {
+            rset, fmt, SMSpec::UnitConvention::Metric, cartDims,
+            noRestart(),
+            start(2022, 1, 1, 0, 0, 0),
+            start(2022, 1, 1, 0, 0, 0)
+        };
+        smspec.write(prm, false, step, 0);
+    }
+
+    const auto fname = ::Opm::EclIO::OutputStream::
+        outputFileName(rset, "SMSPEC");
+    auto smspec = ::Opm::EclIO::EclFile{ fname };
+
+    // LGR arrays must be absent
+    const auto names = smspec.getList();
+    const auto hasArray = [&names](const std::string& kw) {
+        return std::any_of(names.begin(), names.end(),
+                           [&kw](const auto& e) { return std::get<0>(e) == kw; });
+    };
+
+    BOOST_CHECK(!hasArray("LGRS"));
+    BOOST_CHECK(!hasArray("NUMLX"));
+    BOOST_CHECK(!hasArray("NUMLY"));
+    BOOST_CHECK(!hasArray("NUMLZ"));
+    BOOST_CHECK(!hasArray("LGRNAMES"));
+    BOOST_CHECK(!hasArray("LGRVEC"));
+    BOOST_CHECK(!hasArray("LGRTIMES"));
+
+    // But core arrays must still be present
+    BOOST_CHECK(hasArray("KEYWORDS"));
+    BOOST_CHECK(hasArray("WGNAMES"));
+    BOOST_CHECK(hasArray("NUMS"));
+    BOOST_CHECK(hasArray("UNITS"));
+}
+
+BOOST_AUTO_TEST_CASE(LGR_AllLGR_NoGlobal)
+{
+    // Verify that a SMSPEC with only LGR vectors (no global like FOPR)
+    // still correctly writes all LGR metadata arrays.
+
+    using SMSpec = ::Opm::EclIO::OutputStream::SummarySpecification;
+    using lgr    = Opm::EclIO::lgr_info;
+
+    const auto rset     = RSet("LGRONLYCASE");
+    const auto fmt      = ::Opm::EclIO::OutputStream::Formatted{ false };
+    const auto cartDims = std::array<int,3>{ 10, 10, 5 };
+    const int  step     = 5;
+
+    auto prm = SMSpec::Parameters{};
+    prm.add("LWBHP", "INJ01", 0, "BARSA", lgr{"LGR1", {0, 0, 0}});
+    prm.add("LWBHP", "INJ02", 0, "BARSA", lgr{"LGR1", {0, 0, 0}});
+
+    {
+        auto smspec = SMSpec {
+            rset, fmt, SMSpec::UnitConvention::Metric, cartDims,
+            noRestart(),
+            start(2023, 3, 15, 0, 0, 0),
+            start(2023, 3, 15, 0, 0, 0)
+        };
+        smspec.write(prm, false, step, 0);
+    }
+
+    const auto fname = ::Opm::EclIO::OutputStream::
+        outputFileName(rset, "SMSPEC");
+    auto smspec = ::Opm::EclIO::EclFile{ fname };
+
+    const auto names = smspec.getList();
+    const auto hasArray = [&names](const std::string& kw) {
+        return std::any_of(names.begin(), names.end(),
+                           [&kw](const auto& e) { return std::get<0>(e) == kw; });
+    };
+
+    // LGR arrays must be present
+    BOOST_CHECK(hasArray("LGRS"));
+    BOOST_CHECK(hasArray("NUMLX"));
+    BOOST_CHECK(hasArray("NUMLY"));
+    BOOST_CHECK(hasArray("NUMLZ"));
+    BOOST_CHECK(hasArray("LGRNAMES"));
+    BOOST_CHECK(hasArray("LGRVEC"));
+    BOOST_CHECK(hasArray("LGRTIMES"));
+
+    smspec.loadData();
+
+    // LGRNAMES — only LGR1
+    const auto& L = smspec.get<std::string>("LGRNAMES");
+    BOOST_REQUIRE_EQUAL(L.size(), 1u);
+    BOOST_CHECK_EQUAL(L[0], "LGR1");
+
+    // LGRVEC — 2 + 2 vectors = 4
+    const auto& V = smspec.get<int>("LGRVEC");
+    BOOST_REQUIRE_EQUAL(V.size(), 1u);
+    BOOST_CHECK_EQUAL(V[0], 4);
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Class_SummarySpecification
