@@ -24,8 +24,11 @@
 
 #include <opm/common/OpmLog/KeywordLocation.hpp>
 
+#include <opm/input/eclipse/EclipseState/Grid/GridDims.hpp>
+
 #include <array>
 #include <cstddef>
+#include <functional>
 #include <limits>
 #include <optional>
 #include <set>
@@ -39,7 +42,6 @@ namespace Opm {
     class EclipseState;
     class ErrorGuard;
     class FieldPropsManager;
-    class GridDims;
     class ParseContext;
     class Schedule;
 } // namespace Opm
@@ -597,7 +599,6 @@ namespace Opm {
         /// collection.
         const SummaryConfigNode& operator[](std::size_t index) const;
 
-    private:
         /// Primary constructor.
         ///
         /// Final delegate from constructor chain.
@@ -629,17 +630,22 @@ namespace Opm {
         /// \param[in,out] errors Collection of parse errors encountered
         /// thus far.  Behaviour controlled by \p parseContext.
         ///
-        /// \param[in] dims Model dimensions.  Used to translate IJK cell
-        /// index triplets to linear Cartesian indices and for diagnostic
-        /// purposes.
+        /// \param[in] gridDims Callback mapping a grid identifier to its
+        /// \c GridDims object.  Pass an empty string as \p gridID for the
+        /// global grid; pass the LGR name for local grids.  The returned
+        /// \c GridDims is used to translate an (I,J,K) triplet to a
+        /// linearised Cartesian index (i + Nx*(j + Ny*k), zero-based)
+        /// relative to that grid.  Return a default-constructed \c GridDims
+        /// (NX=NY=NZ=0) for unknown or unresolvable grid identifiers.
         SummaryConfig(const Deck&              deck,
                       const Schedule&          schedule,
                       const FieldPropsManager& field_props,
                       const AquiferConfig&     aquiferConfig,
                       const ParseContext&      parseContext,
                       ErrorGuard&              errors,
-                      const GridDims&          dims);
+                      std::function<GridDims(const std::string&)> gridDims);
 
+    private:
         /// Run's configured summary vectors.
         keyword_list m_keywords{};
 

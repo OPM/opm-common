@@ -25,7 +25,6 @@
 
 #include <opm/input/eclipse/EclipseState/Aquifer/AquiferConfig.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
-#include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/GridDims.hpp>
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
@@ -57,6 +56,7 @@
 #include <cstddef>
 #include <functional>
 #include <iterator>
+#include <limits>
 #include <map>
 #include <regex>
 #include <set>
@@ -74,6 +74,26 @@
 namespace Opm {
 
 namespace {
+
+    /// Callback type: given a grid identifier, returns the grid's dimensions.
+    ///
+    /// \param gridID  Empty string for the global grid; LGR name for a local grid.
+    /// Returns a default-constructed GridDims (NX=NY=NZ=0) for unknown grids.
+    using CellIndexMapper =
+        std::function<GridDims(const std::string&)>;
+
+    /// Build a CellIndexMapper that serves the global grid only.
+    /// Any non-empty gridID (i.e., an LGR request) returns GridDims{} (NX=NY=NZ=0).
+    CellIndexMapper makeGlobalCellIndexMapper(const GridDims& dims)
+    {
+        return [dims](const std::string& gridID) -> GridDims
+        {
+            if (gridID.empty()) {
+                return dims;
+            }
+            return GridDims{};
+        };
+    }
 
     /// Basic information about run's region sets
     ///
@@ -767,7 +787,7 @@ void keywordCL(SummaryConfig::keyword_list& list,
                ErrorGuard&                  errors,
                const DeckKeyword&           keyword,
                const Schedule&              schedule,
-               const GridDims&              dims)
+               const CellIndexMapper&       gridDims)
 {
     auto node = SummaryConfigNode {
         keyword.name(), SummaryConfigNode::Category::Completion, keyword.location()
@@ -795,8 +815,28 @@ void keywordCL(SummaryConfig::keyword_list& list,
                                        { return node.number(1 + conn.global_index()); });
             }
             else {
-                const auto& ijk = getijk(record);
-                auto global_index = dims.getGlobalIndex(ijk[0], ijk[1], ijk[2]);
+                const auto ijk = getijk(record);
+                const auto globalDims = gridDims("");
+                const auto ci = static_cast<std::size_t>(ijk[0]);
+                const auto cj = static_cast<std::size_t>(ijk[1]);
+                const auto ck = static_cast<std::size_t>(ijk[2]);
+
+                if (globalDims.getNX() == 0 ||
+                    ci >= globalDims.getNX() ||
+                    cj >= globalDims.getNY() ||
+                    ck >= globalDims.getNZ()) {
+                    std::string msg = fmt::format("Problem with keyword {{keyword}}\n"
+                                                  "In {{file}} line {{line}}\n"
+                                                  "Connection ({},{},{}) not defined for well {}",
+                                                  ijk[0] + 1, ijk[1] + 1, ijk[2] + 1, wname);
+
+                    parseContext.handleError(ParseContext::SUMMARY_UNHANDLED_KEYWORD,
+                                             msg, keyword.location(), errors);
+                    continue;
+                }
+
+                const auto global_index =
+                    globalDims.getGlobalIndex(ci, cj, ck);
 
                 if (all_connections.hasGlobalIndex(global_index)) {
                     const auto& conn = all_connections.getFromGlobalIndex(global_index);
@@ -1090,7 +1130,8 @@ void keywordF(SummaryConfig::keyword_list& list,
 }
 
 void keywordLB(SummaryConfig::keyword_list& list,
-               const DeckKeyword&           keyword)
+               const DeckKeyword&           keyword,
+               const CellIndexMapper&       gridDims)
 {
     auto param = SummaryConfigNode {
         keyword.name(), SummaryConfigNode::Category::Block, keyword.location()
@@ -1101,15 +1142,36 @@ void keywordLB(SummaryConfig::keyword_list& list,
     for (const auto& record : keyword) {
         const auto lgr_name = record.getItem(0).getTrimmedString(0);
 
-        // number_ (linearised cell index within the LGR) is deferred to follow-up work.
-        // All LB* records for the same LGR currently share number_=INT_MIN.
-        list.push_back(param.lgr_name(lgr_name));
+        const auto ijk_1based = std::array<int,3>{
+            record.getItem("I").get<int>(0),
+            record.getItem("J").get<int>(0),
+            record.getItem("K").get<int>(0)
+        };
+
+        auto node = param.lgr_name(lgr_name);
+
+        {
+            // Resolve 1-based (I,J,K) in the named LGR to a 1-based
+            // linearised Cartesian index (i + Nx*(j + Ny*k)) within the LGR.
+            // Stored in number_ — this becomes NUMS in SMSPEC.
+            const auto i = static_cast<std::size_t>(ijk_1based[0] - 1);
+            const auto j = static_cast<std::size_t>(ijk_1based[1] - 1);
+            const auto k = static_cast<std::size_t>(ijk_1based[2] - 1);
+            const auto dims = gridDims(lgr_name);
+            if (dims.getNX() > 0) {
+                node.number(1 + static_cast<int>(dims.getGlobalIndex(i, j, k)));
+            }
+            // else: NX==0 means LGR geometry unavailable (stub deck) —
+            // number_ stays INT_MIN.
+        }
+
+        list.push_back(node);
     }
 }
 
 void keywordB(SummaryConfig::keyword_list& list,
               const DeckKeyword&           keyword,
-              const GridDims&              dims)
+              const CellIndexMapper&       gridDims)
 {
     auto param = SummaryConfigNode {
         keyword.name(), SummaryConfigNode::Category::Block, keyword.location()
@@ -1117,17 +1179,17 @@ void keywordB(SummaryConfig::keyword_list& list,
     .parameterType(parseKeywordType(keyword.name()))
     .isUserDefined(is_udq(keyword.name()));
 
-    auto isValid = [&dims](const std::array<int,3>& ijk)
-    {
-        return (static_cast<std::size_t>(ijk[0]) < dims.getNX())
-            && (static_cast<std::size_t>(ijk[1]) < dims.getNY())
-            && (static_cast<std::size_t>(ijk[2]) < dims.getNZ());
-    };
-
     for (const auto& record : keyword) {
         const auto ijk = getijk(record);
+        const auto dims = gridDims("");
+        const auto i = static_cast<std::size_t>(ijk[0]);
+        const auto j = static_cast<std::size_t>(ijk[1]);
+        const auto k = static_cast<std::size_t>(ijk[2]);
 
-        if (! isValid(ijk)) {
+        if (dims.getNX() == 0 ||
+            i >= dims.getNX() ||
+            j >= dims.getNY() ||
+            k >= dims.getNZ()) {
             const auto msg_fmt =
                 fmt::format("Block level summary keyword "
                             "{{keyword}}\n"
@@ -1144,10 +1206,7 @@ void keywordB(SummaryConfig::keyword_list& list,
             continue;
         }
 
-        const int global_index =
-            1 + dims.getGlobalIndex(ijk[0], ijk[1], ijk[2]);
-
-        list.push_back(param.number(global_index));
+        list.push_back(param.number(1 + static_cast<int>(dims.getGlobalIndex(i, j, k))));
     }
 }
 
@@ -1448,7 +1507,8 @@ void keywordLC(SummaryConfig::keyword_list& list,
                const ParseContext&          parseContext,
                ErrorGuard&                  errors,
                const DeckKeyword&           keyword,
-               const Schedule&              schedule)
+               const Schedule&              schedule,
+               const CellIndexMapper&       gridDims)
 {
     auto param = SummaryConfigNode {
         keyword.name(), SummaryConfigNode::Category::Connection, keyword.location()
@@ -1469,28 +1529,45 @@ void keywordLC(SummaryConfig::keyword_list& list,
             handleMissingWell(parseContext, errors, keyword.location(), well_pattern);
         }
 
+        // I/J/K items (items 2,3,4): optional per-record connection coords.
+        // When defaulted (wildcard — all connections), leave number_=INT_MIN.
+        const bool has_ijk = !record.getItem(2).defaultApplied(0);
+
+        int cell_index = std::numeric_limits<int>::min();
+        if (has_ijk) {
+            const auto i = static_cast<std::size_t>(record.getItem(2).get<int>(0) - 1);
+            const auto j = static_cast<std::size_t>(record.getItem(3).get<int>(0) - 1);
+            const auto k = static_cast<std::size_t>(record.getItem(4).get<int>(0) - 1);
+            const auto dims = gridDims(lgr_name);
+            if (dims.getNX() > 0) {
+                cell_index = 1 + static_cast<int>(dims.getGlobalIndex(i, j, k));
+            }
+        }
+
         for (const auto& wname : candidates) {
             const auto& well = schedule.getWellatEnd(wname);
             if (well.get_lgr_well_tag() != lgr_name) {
                 continue;
             }
-            // number_ (linearised cell index within the LGR) is deferred to follow-up work.
-            // All LC* records for the same well+LGR currently share number_=INT_MIN.
-            list.push_back(param.namedEntity(wname).lgr_name(lgr_name));
+            auto node = param.namedEntity(wname).lgr_name(lgr_name);
+            if (has_ijk) {
+                node.number(cell_index);
+            }
+            list.push_back(node);
         }
     }
 }
 
 void connectionKeyword(const DeckKeyword&           keyword,
                        const Schedule&              schedule,
-                       const GridDims&              dims,
+                       const CellIndexMapper&       gridDims,
                        const ParseContext&          parseContext,
                        ErrorGuard&                  errors,
                        SummaryConfig::keyword_list& list)
 {
     if (is_connection_completion(keyword.name())) {
         keywordCL(list, parseContext, errors,
-                  keyword, schedule, dims);
+                  keyword, schedule, gridDims);
 
         return;
     }
@@ -1521,9 +1598,19 @@ void connectionKeyword(const DeckKeyword&           keyword,
             // (I,J,K) coordinate specified.  Match that connection for all
             // matching wells.
             const auto ijk = getijk(record);
+            const auto globalDims = gridDims("");
+            const auto ci = static_cast<std::size_t>(ijk[0]);
+            const auto cj = static_cast<std::size_t>(ijk[1]);
+            const auto ck = static_cast<std::size_t>(ijk[2]);
 
-            connKeywordSpecifiedConn(param, dims.getGlobalIndex(ijk[0], ijk[1], ijk[2]),
-                                     schedule, well_names, list);
+            if (globalDims.getNX() > 0 &&
+                ci < globalDims.getNX() &&
+                cj < globalDims.getNY() &&
+                ck < globalDims.getNZ()) {
+                connKeywordSpecifiedConn(param,
+                                         globalDims.getGlobalIndex(ci, cj, ck),
+                                         schedule, well_names, list);
+            }
         }
     }
 }
@@ -1755,7 +1842,7 @@ void handleKW(const std::vector<std::string>& node_names,
               const DeckKeyword&              keyword,
               const Schedule&                 schedule,
               const FieldPropsManager&        field_props,
-              const GridDims&                 dims,
+              const CellIndexMapper&          gridDims,
               const ParseContext&             parseContext,
               ErrorGuard&                     errors,
               SummaryConfigContext&           context,
@@ -1792,10 +1879,10 @@ void handleKW(const std::vector<std::string>& node_names,
 
     case Cat::Block:
         if (keyword.name()[0] == 'L') {
-            keywordLB(list, keyword);
+            keywordLB(list, keyword, gridDims);
         }
         else {
-            keywordB(list, keyword, dims);
+            keywordB(list, keyword, gridDims);
         }
         break;
 
@@ -1805,10 +1892,10 @@ void handleKW(const std::vector<std::string>& node_names,
 
     case Cat::Connection:
         if (keyword.name()[0] == 'L') {
-            keywordLC(list, parseContext, errors, keyword, schedule);
+            keywordLC(list, parseContext, errors, keyword, schedule, gridDims);
         }
         else {
-            connectionKeyword(keyword, schedule, dims,
+            connectionKeyword(keyword, schedule, gridDims,
                               parseContext, errors, list);
         }
         break;
@@ -1818,7 +1905,7 @@ void handleKW(const std::vector<std::string>& node_names,
             keywordWL(list, parseContext, errors, keyword, schedule);
         }
         else {
-            keywordCL(list, parseContext, errors, keyword, schedule, dims);
+            keywordCL(list, parseContext, errors, keyword, schedule, gridDims);
         }
         break;
 
@@ -2164,7 +2251,7 @@ SummaryConfig::SummaryConfig(const Deck&              deck,
                              const AquiferConfig&     aquiferConfig,
                              const ParseContext&      parseContext,
                              ErrorGuard&              errors,
-                             const GridDims&          dims)
+                             CellIndexMapper          gridDims)
 {
     try {
         const auto section = SUMMARYSection { deck };
@@ -2186,7 +2273,7 @@ SummaryConfig::SummaryConfig(const Deck&              deck,
             }
             else {
                 handleKW(node_names, analyticAquifers, numericAquifers,
-                         kw, schedule, field_props, dims,
+                         kw, schedule, field_props, gridDims,
                          parseContext, errors, context, this->m_keywords);
             }
         }
@@ -2242,7 +2329,7 @@ SummaryConfig::SummaryConfig(const Deck&              deck,
                              ErrorGuard&              errors)
     : SummaryConfig { deck, schedule, field_props,
                       aquiferConfig, parseContext,
-                      errors, GridDims(deck) }
+                      errors, makeGlobalCellIndexMapper(GridDims(deck)) }
 {}
 
 template <typename T>
@@ -2350,7 +2437,8 @@ SummaryConfig::registerRequisiteUDQorActionSummaryKeys(const std::vector<std::st
             handleKW(node_names, analyticAquifers, numericAquifers,
                      DeckKeyword { KeywordLocation{}, vector_name },
                      sched, es.globalFieldProps(),
-                     es.gridDims(), parseCtx, errors,
+                     makeGlobalCellIndexMapper(es.gridDims()),
+                     parseCtx, errors,
                      ctxt, candidateSummaryNodes,
                      excludeFieldFromGroupKw);
         }
