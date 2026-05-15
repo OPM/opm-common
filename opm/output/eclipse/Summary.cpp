@@ -5107,10 +5107,16 @@ public:
                        std::string name,
                        const int   num,
                        std::string unit,
-                       EvalPtr     evaluator)
+                       EvalPtr     evaluator,
+                       std::optional<Opm::EclIO::lgr_info> lgr = std::nullopt)
     {
-        this->smspec_.add(std::move(keyword), std::move(name),
-                          std::max (num, 0), std::move(unit));
+        if (lgr.has_value()) {
+            this->smspec_.add(std::move(keyword), std::move(name),
+                              std::max(num, 0), std::move(unit), lgr);
+        } else {
+            this->smspec_.add(std::move(keyword), std::move(name),
+                              std::max(num, 0), std::move(unit));
+        }
 
         this->evaluators_.push_back(std::move(evaluator));
     }
@@ -5644,12 +5650,19 @@ configureSummaryInput(const SummaryConfig& sumcfg,
         this->valueKeys_.push_back(std::move(prmDescr.uniquekey));
         this->valueUnits_.push_back(prmDescr.unit);
 
+        auto lgr = node.lgr_name().has_value()
+            ? std::optional<Opm::EclIO::lgr_info>{
+                Opm::EclIO::lgr_info{ *node.lgr_name(), {} }
+              }
+            : std::optional<Opm::EclIO::lgr_info>{};
+
         this->outputParameters_
             .makeParameter(node.keyword(),
                            makeWGName(node.namedEntity()),
                            node.number(),
                            std::move(prmDescr.unit),
-                           std::move(prmDescr.evaluator));
+                           std::move(prmDescr.evaluator),
+                           std::move(lgr));
     }
 
     if (! unsuppkw.empty()) {
