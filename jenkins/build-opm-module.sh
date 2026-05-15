@@ -6,6 +6,7 @@ then
 fi
 
 declare -A configurations
+declare -A configurations_build_type
 
 declare -A EXTRA_MODULE_FLAGS
 EXTRA_MODULE_FLAGS[opm-simulators]="-DBUILD_FLOW_VARIANTS=ON -DOPM_ENABLE_PYTHON=ON -DBUILD_FLOW_POLY_GRID=ON -DBUILD_FLOW_ALU_GRID=ON"
@@ -58,11 +59,14 @@ function parseRevisions {
     BTYPES_ARRAY=(${BTYPES_ARRAY[*]} $btype)
   done
   TOOLCHAIN_ARRAY=($CMAKE_TOOLCHAIN_FILES)
+  CONFIG_BTYPE_ARRAY=($BUILD_CONFIGS)
   for index in ${!BTYPES_ARRAY[*]}
   do
     key=${BTYPES_ARRAY[$index]}
     data=${TOOLCHAIN_ARRAY[$index]}
+    bdata=${CONFIG_BTYPE_ARRAY[$index]}
     configurations[$key]=$data
+    configurations_build_type[$key]=$bdata
   done
 }
 
@@ -101,7 +105,12 @@ function build_module {
   CMAKE_PARAMS="$1"
   DO_TEST_FLAG="$2"
   MOD_SRC_DIR="$3"
-  cmake "$MOD_SRC_DIR" -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=$DO_TEST_FLAG -DCMAKE_TOOLCHAIN_FILE=${configurations[$configuration]} -DOPM_DOXYGEN_LOG_FILE=$PWD/doc/doxygen/Warnings.log $CMAKE_PARAMS
+  cmake "$MOD_SRC_DIR" \
+        -DCMAKE_BUILD_TYPE=${configurations_build_type[$configuration]} \
+        -DBUILD_TESTING=$DO_TEST_FLAG \
+        -DCMAKE_TOOLCHAIN_FILE=${configurations[$configuration]} \
+        -DOPM_DOXYGEN_LOG_FILE=$PWD/doc/doxygen/Warnings.log \
+        $CMAKE_PARAMS
   test $? -eq 0 || exit 1
   if test $DO_TEST_FLAG -eq 1
   then
