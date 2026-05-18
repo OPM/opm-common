@@ -39,6 +39,9 @@
 #include <boost/test/tools/floating_point_comparison.hpp>
 #endif
 
+#include <opm/common/utility/SaltArray.hpp>
+#include <opm/common/utility/String.hpp>
+
 #include <opm/material/densead/Evaluation.hpp>
 #include <opm/material/densead/Math.hpp>
 
@@ -74,6 +77,11 @@
 #include <opm/material/common/UniformTabulated2DFunction.hpp>
 
 #include <opm/json/JsonObject.hpp>
+
+#include <ranges>
+
+#include <fmt/format.h>
+#include <fmt/ranges.h>
 
 template <class Scalar, class Evaluation>
 void testAllComponents()
@@ -705,6 +713,262 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(BrineWithSimpleHuDuanH2OClass, Scalar, Types)
                 //     "} exceeds tolerance {"<<tol<<"} at (T, p, S) = ("<<T.value()<<", "<<p.value()<<", "<<
                 //     S.value()<<")");
             }
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE_TEMPLATE(BrineSingleSaltsWithSimpleHuDuanH2OClass, Scalar, Types)
+{
+    using Evaluation = Opm::DenseAd::Evaluation<Scalar, 3>;
+    using SimpleHuDuanH2O = Opm::SimpleHuDuanH2O<Scalar>;
+    using BrineDyn = Opm::BrineDynamic<Scalar, SimpleHuDuanH2O>;
+
+    // Read JSON file with reference values
+    const std::filesystem::path jsonFileVisc("material/ref_data_viscosity_single_salts.json");
+    const std::filesystem::path jsonFileDens("material/ref_data_density_single_salts.json");
+    const Json::JsonObject parserVisc(jsonFileVisc);
+    const Json::JsonObject parserDens(jsonFileDens);
+
+    // Temperature, pressure, and salinity
+    Evaluation T;
+    Evaluation S;
+    Opm::SaltArray<Evaluation, Opm::SaltMassFraction> saltArray;
+
+    // Tolerances
+    std::unordered_map<std::string, Scalar> tol_visc =
+        {{"nacl", 7.5e-4}, {"kcl", 7.5e-4}, {"cacl2", 7.5e-4}};
+    std::unordered_map<std::string, Scalar> tol_dens =
+        {{"nacl", 1.5e-3}, {"kcl", 1.5e-4}, {"cacl2", 7.5e-3}};
+
+    // List of salts to compare
+    const std::array<std::string, 3> salts = {"nacl", "kcl", "cacl2"};
+    for (const auto& salt : salts) {
+        // Upper case salt string for output
+        std::string saltUpper = Opm::uppercase(salt);
+
+        // Viscosity data
+        const Json::JsonObject saltViscData = parserVisc.get_item(salt);
+        const Json::JsonObject viscosity = saltViscData.get_item("viscosity");
+        const Json::JsonObject tempVisc = saltViscData.get_item("temp");
+        const Json::JsonObject salinityVisc = saltViscData.get_item("salinity");
+
+        // Loop over viscosity data and compare with brine calculations
+        for (std::size_t i = 0; i < viscosity.size(); ++i) {
+            T = Evaluation(tempVisc.get_array_item(i).as_double());
+            S = Evaluation(salinityVisc.get_array_item(i).as_double());
+
+            // Split electrolytes to ions mass fractions
+            saltArray.clear();
+            if (salt == "nacl") {
+              saltArray[Opm::SaltIndex::NA] = S * 0.393;
+              saltArray[Opm::SaltIndex::CL] = S * 0.607;
+            } else if (salt == "kcl") {
+                saltArray[Opm::SaltIndex::K] = S * 0.524;
+                saltArray[Opm::SaltIndex::CL] = S * 0.476;
+            } else if (salt == "cacl2") {
+                saltArray[Opm::SaltIndex::CA] = S * 0.361;
+                saltArray[Opm::SaltIndex::CL] = S * 0.639;
+            }
+
+            // Compare
+            Scalar visc =
+                BrineDyn::liquidViscosityMulticompSalt(T, saltArray).value();
+            Scalar visc_ref = Scalar(viscosity.get_array_item(i).as_double());
+            const std::string msg =
+                fmt::format(
+                    "{}: relative difference between viscosity {} and reference {} exceeds "
+                    "tolerance {} at (T, S) = ({}, {})",
+                    saltUpper,
+                    visc,
+                    visc_ref,
+                    tol_visc[salt],
+                    T.value(),
+                    S.value());
+            BOOST_CHECK_MESSAGE(close_at_tolerance(visc, visc_ref, tol_visc[salt]), msg);
+        }
+
+        // Density data
+        const Json::JsonObject saltDensData = parserDens.get_item(salt);
+        const Json::JsonObject density = saltDensData.get_item("density");
+        const Json::JsonObject tempDens = saltDensData.get_item("temp");
+        const Json::JsonObject salinityDens = saltDensData.get_item("salinity");
+
+        // Loop over density data and compare with brine calculations
+        for (std::size_t i = 0; i < density.size(); ++i) {
+            T = Evaluation(tempDens.get_array_item(i).as_double());
+            S = Evaluation(salinityDens.get_array_item(i).as_double());
+
+            // Split electrolytes to ions mass fractions
+            saltArray.clear();
+            if (salt == "nacl") {
+                saltArray[Opm::SaltIndex::NA] = S * 0.393;
+                saltArray[Opm::SaltIndex::CL] = S * 0.607;
+            } else if (salt == "kcl") {
+                saltArray[Opm::SaltIndex::K] = S * 0.524;
+                saltArray[Opm::SaltIndex::CL] = S * 0.476;
+            } else if (salt == "cacl2") {
+                saltArray[Opm::SaltIndex::CA] = S * 0.361;
+                saltArray[Opm::SaltIndex::CL] = S * 0.639;
+            }
+
+            // Compare
+            Scalar dens =
+                BrineDyn::liquidDensityMulticompSalt(T, saltArray).value();
+            Scalar dens_ref = Scalar(density.get_array_item(i).as_double());
+            const std::string msg =
+                fmt::format(
+                    "{}: relative difference between density {} and reference {} exceeds "
+                    "tolerance {} at (T, S) = ({}, {})",
+                    saltUpper,
+                    dens,
+                    dens_ref,
+                    tol_dens[salt],
+                    T.value(),
+                    S.value());
+            BOOST_CHECK_MESSAGE(close_at_tolerance(dens, dens_ref, tol_dens[salt]), msg);
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE_TEMPLATE(BrineMultiComponentSaltsWithSimpleHuDuanH2OClass, Scalar, Types)
+{
+    using Evaluation = Opm::DenseAd::Evaluation<Scalar, 3>;
+    using H2O = Opm::H2O<Scalar>;
+    using BrineDyn = Opm::BrineDynamic<Scalar, H2O>;
+
+    // Read JSON file with reference values
+    const std::filesystem::path
+        jsonFileVisc("material/ref_data_viscosity_multicomponent_salts.json");
+    const std::filesystem::path
+        jsonFileDens("material/ref_data_density_multicomponent_salts.json");
+    const Json::JsonObject parserVisc(jsonFileVisc);
+    const Json::JsonObject parserDens(jsonFileDens);
+
+    // Temperature, pressure, and salinity
+    Evaluation T;
+    Evaluation S;
+    Opm::SaltArray<Evaluation, Opm::SaltMassFraction> saltArray;
+
+    // Tolerances
+    std::unordered_map<std::string, Scalar> tol_visc = {{"kcl_mgcl2_mgso4_nacl", 2.5e-4}};
+    std::unordered_map<std::string, Scalar> tol_dens = {{"kcl_mgcl2_mgso4_nacl", 7.5e-4}};
+
+    // Helper to split multicomponent salts into individual parts
+    auto stringSplit = [](const std::string& str) {
+        std::vector<std::string> result;
+        for (auto&& substring : std::views::split(str, '_')) {
+            result.emplace_back(substring.begin(), substring.end());
+        }
+        return result;
+    };
+
+    // List of multicomponent salts to compare
+    const std::array<std::string, 1> salts = {"kcl_mgcl2_mgso4_nacl"};
+    for (const auto& multiSalt : salts) {
+        // Get individual salts
+        const auto indivSalts = stringSplit(multiSalt);
+        std::string multiSaltUpper = Opm::uppercase(multiSalt);
+
+        // Viscosity data
+        const Json::JsonObject saltViscData = parserVisc.get_item(multiSalt);
+        const Json::JsonObject viscosity = saltViscData.get_item("viscosity");
+        const Json::JsonObject tempVisc = saltViscData.get_item("temp");
+        std::unordered_map<std::string, Json::JsonObject> salinityVisc;
+        for (const auto& salt : indivSalts) {
+            salinityVisc.emplace(salt, saltViscData.get_item(salt));
+        }
+
+        // Loop over viscosity data and compare with brine calculations
+        for (std::size_t i = 0; i < viscosity.size(); ++i) {
+            T = Evaluation(tempVisc.get_array_item(i).as_double());
+
+            // Split electrolytes to ions mass fractions
+            saltArray.clear();
+            std::vector<Scalar> salinityOutput;
+            for (const auto& salt : indivSalts) {
+                S = Evaluation(salinityVisc[salt].get_array_item(i).as_double());
+                salinityOutput.push_back(S.value());
+                if (salt == "nacl") {
+                    saltArray[Opm::SaltIndex::NA] += S * 0.393;
+                    saltArray[Opm::SaltIndex::CL] += S * 0.607;
+                } else if (salt == "kcl") {
+                    saltArray[Opm::SaltIndex::K] += S * 0.524;
+                    saltArray[Opm::SaltIndex::CL] += S * 0.476;
+                } else if (salt == "mgcl2") {
+                    saltArray[Opm::SaltIndex::MG] += S * 0.255;
+                    saltArray[Opm::SaltIndex::CL] += S * 0.745;
+                } else if (salt == "mgso4") {
+                    saltArray[Opm::SaltIndex::MG] += S * 0.202;
+                    saltArray[Opm::SaltIndex::SO4] += S * 0.798;
+                }
+            }
+
+            // Compare
+            Scalar visc =
+                BrineDyn::liquidViscosityMulticompSalt(T, saltArray).value();
+            Scalar visc_ref = Scalar(viscosity.get_array_item(i).as_double());
+            const std::string msg =
+                fmt::format(
+                    "{}: relative difference between viscosity {} and reference {} exceeds "
+                    "tolerance {} at (T, S) = ({}, {})",
+                    multiSaltUpper,
+                    visc,
+                    visc_ref,
+                    tol_visc[multiSalt],
+                    T.value(),
+                    salinityOutput);
+            BOOST_CHECK_MESSAGE(close_at_tolerance(visc, visc_ref, tol_visc[multiSalt]), msg);
+        }
+
+        // Density data
+        const Json::JsonObject saltDensData = parserDens.get_item(multiSalt);
+        const Json::JsonObject density = saltDensData.get_item("density");
+        const Json::JsonObject tempDens = saltDensData.get_item("temp");
+        std::unordered_map<std::string, Json::JsonObject> salinityDens;
+        for (const auto& salt : indivSalts) {
+            salinityDens.emplace(salt, saltViscData.get_item(salt));
+        }
+
+        // Loop over density data and compare with brine calculations
+        for (std::size_t i = 0; i < density.size(); ++i) {
+            T = Evaluation(tempDens.get_array_item(i).as_double());
+
+            // Split electrolytes to ions mass fractions
+            saltArray.clear();
+            std::vector<Scalar> salinityOutput;
+            for (const auto& salt : indivSalts) {
+                S = Evaluation(salinityDens[salt].get_array_item(i).as_double());
+                salinityOutput.push_back(S.value());
+                if (salt == "nacl") {
+                    saltArray[Opm::SaltIndex::NA] += S * 0.393;
+                    saltArray[Opm::SaltIndex::CL] += S * 0.607;
+                } else if (salt == "kcl") {
+                    saltArray[Opm::SaltIndex::K] += S * 0.524;
+                    saltArray[Opm::SaltIndex::CL] += S * 0.476;
+                } else if (salt == "mgcl2") {
+                    saltArray[Opm::SaltIndex::MG] += S * 0.255;
+                    saltArray[Opm::SaltIndex::CL] += S * 0.745;
+                } else if (salt == "mgso4") {
+                    saltArray[Opm::SaltIndex::MG] += S * 0.202;
+                    saltArray[Opm::SaltIndex::SO4] += S * 0.798;
+                }
+            }
+
+            // Compare
+            Scalar dens =
+                BrineDyn::liquidDensityMulticompSalt(T,saltArray).value();
+            Scalar dens_ref = Scalar(density.get_array_item(i).as_double());
+            const std::string msg =
+                fmt::format(
+                    "{}: relative difference between density {} and reference {} exceeds "
+                    "tolerance {} at (T, S) = ({}, {})",
+                    multiSaltUpper,
+                    dens,
+                    dens_ref,
+                    tol_dens[multiSalt],
+                    T.value(),
+                    salinityOutput);
+            BOOST_CHECK_MESSAGE(close_at_tolerance(dens, dens_ref, tol_dens[multiSalt]), msg);
         }
     }
 }
