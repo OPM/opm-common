@@ -3804,16 +3804,30 @@ void sort_wells_by_insert_index(std::vector<const Opm::Well*>& wells)
 }
 
 std::vector<const Opm::Well*>
-find_single_well(const Opm::Schedule& schedule,
-                 const std::string&   well_name,
-                 const int            sim_step)
+find_single_well(const Opm::Schedule&           schedule,
+                 const Opm::EclIO::SummaryNode& node,
+                 const int                      sim_step)
 {
     auto single_well = std::vector<const Opm::Well*>{};
 
-    if (schedule.hasWell(well_name, sim_step)) {
-        single_well.push_back(&schedule.getWell(well_name, sim_step));
+    if (! schedule.hasWell(node.wgname, sim_step)) {
+        return single_well;
     }
 
+    const auto& well = schedule.getWell(node.wgname, sim_step);
+
+    // LGR ownership filter: when the node carries an LGR designator (LW*/LC*),
+    // the well must have been placed into that LGR via WELSPECL.  Wells declared
+    // with WELSPECS (no LGR tag) and wells assigned to a different LGR fall
+    // through silently, producing no output for this node.
+    if (node.lgr.has_value()) {
+        const auto tag = well.get_lgr_well_tag();
+        if (! tag.has_value() || *tag != node.lgr->name) {
+            return single_well;
+        }
+    }
+
+    single_well.push_back(&well);
     return single_well;
 }
 
@@ -3903,7 +3917,7 @@ find_wells(const Opm::Schedule&           schedule,
     case Opm::EclIO::SummaryNode::Category::Connection:
     case Opm::EclIO::SummaryNode::Category::Completion:
     case Opm::EclIO::SummaryNode::Category::Segment:
-        return find_single_well(schedule, node.wgname, sim_step);
+        return find_single_well(schedule, node, sim_step);
 
     case Opm::EclIO::SummaryNode::Category::Group:
         return find_group_wells(schedule, node.wgname, sim_step);
@@ -4704,6 +4718,7 @@ namespace Evaluator {
         bool isRegionValue();
         bool isInterRegionValue();
         bool isGlobalProcessValue();
+        bool isLgrWellValue();
         bool isFunctionRelation();
         bool isUserDefined();
 
@@ -4734,7 +4749,7 @@ namespace Evaluator {
         if (this->isGlobalProcessValue())
             return this->globalProcessValue();
 
-        if (this->isFunctionRelation())
+        if (this->isLgrWellValue() || this->isFunctionRelation())
             return this->functionRelation();
 
         return this->unknownParameter();
@@ -4912,6 +4927,28 @@ namespace Evaluator {
         // 'node_' represents a single value (i.e., global process)
         // value.  Capture unit of measure and return true.
         this->paramUnit_ = pos->second;
+        return true;
+    }
+
+    bool Factory::isLgrWellValue()
+    {
+        // LGR well summary vectors (LW*) dispatch through the existing
+        // FunctionRelation evaluator after stripping the leading 'L' to
+        // recover the global well keyword used as the funs map key.  The
+        // well-vs-LGR ownership check happens downstream in find_single_well().
+        if ((this->node_->category != Opm::EclIO::SummaryNode::Category::Well) ||
+            !this->node_->keyword.starts_with("LW") ||
+            !this->node_->lgr.has_value())
+        {
+            return false;
+        }
+
+        auto fpos = funs.find(this->node_->keyword.substr(1));
+        if (fpos == funs.end()) {
+            return false;
+        }
+
+        this->paramFunction_ = fpos->second;
         return true;
     }
 
