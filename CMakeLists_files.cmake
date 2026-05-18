@@ -807,6 +807,10 @@ list(APPEND TEST_DATA_FILES
   tests/material/co2_unittest_part2.json
   tests/material/h2_unittest.json
   tests/material/h2o_unittest.json
+  tests/material/ref_data_density_multicomponent_salts.json
+  tests/material/ref_data_density_single_salts.json
+  tests/material/ref_data_viscosity_multicomponent_salts.json
+  tests/material/ref_data_viscosity_single_salts.json
   tests/material/ref_values_threecomponents_ptflash.json
   tests/ml/ml_tools/models/test_dense_10x1.model
   tests/ml/ml_tools/models/test_dense_10x10.model
