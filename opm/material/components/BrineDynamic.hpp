@@ -28,10 +28,13 @@
 #ifndef OPM_BRINEDYNAMIC_HPP
 #define OPM_BRINEDYNAMIC_HPP
 
+#include <opm/common/utility/gpuDecorators.hpp>
+#include <opm/common/utility/SaltArray.hpp>
+#include <opm/common/utility/SaltElectrolytes.hpp>
 #include <opm/material/components/Component.hpp>
 #include <opm/material/common/MathToolbox.hpp>
-#include <opm/common/utility/gpuDecorators.hpp>
 
+#include <span>
 #include <string_view>
 
 namespace Opm {
@@ -84,6 +87,20 @@ public:
         const Scalar M1 = H2O::molarMass();
         const Evaluation X2 = salinity; // mass fraction of salt in brine
         return M1*mM_salt()/(mM_salt() + X2*(M1 - mM_salt()));
+    }
+
+    template <class Evaluation>
+    OPM_HOST_DEVICE static Evaluation
+    invAvgMolarMassFromMassFrac(const SaltArray<Evaluation, SaltMassFraction>& salinity)
+    {
+        const Scalar mH2O = H2O::molarMass();
+        Evaluation s = 1.0 / mH2O;
+        for (std::size_t i = 0; i < salinity.size(); ++i) {
+            auto sIdx = static_cast<SaltIndex>(i);
+            auto mIon = saltMolarMass<Scalar>(sIdx);
+            s += salinity[sIdx] * ((mH2O - mIon) / (mH2O * mIon));
+        }
+        return s;
     }
 
     /*!
@@ -325,6 +342,73 @@ public:
     }
 
     /*!
+     * Density of liquid brine using multicomponent salts from Laliberte & Cooper,
+     * Journal of Chemical and Engineering Data, Vol. 49, No. 5, 2004.
+     *
+     * @param temperature Temperature [K]
+     * @param salinity Array of salt ions [kg ion/kg water]
+     * @return Brine density [kg/m3]
+     */
+    template <class Evaluation>
+    OPM_HOST_DEVICE static Evaluation
+    liquidDensityMulticompSalt(const Evaluation& temperature,
+                               const SaltArray<Evaluation, SaltMassFraction>& salinity)
+    {
+        // Density of pure water
+        const Evaluation rhow = liquidDensityPureWaterLaliberteCooper_(temperature);
+
+        // Return pure water density if salinity is zero
+        if (!salinity.any_nonzero()) {
+            return rhow;
+        }
+        return liquidDensityLaliberteCooper(temperature, salinity, rhow);
+    }
+
+    /*!
+     * Density of liquid brine using multicomponent salts from Laliberte & Cooper,
+     * Journal of Chemical and Engineering Data, Vol. 49, No. 5, 2004 (all equations refs. are
+     * from this paper).
+     *
+     * @param temperature Temperature [K]
+     * @param salinity Array of salt ions [kg ion/kg water]
+     * @param rhow Density pure water [kg/m3]
+     * @return Brine density [kg/m3]
+     */
+    template <class Evaluation>
+    OPM_HOST_DEVICE static Evaluation
+    liquidDensityLaliberteCooper(const Evaluation& temperature,
+                                 const SaltArray<Evaluation, SaltMassFraction>& salinity,
+                                 const Evaluation& rhow)
+    {
+        // Generate (valid) electrolytes from salt components
+        auto electrolytes = SaltElectrolytes<Scalar>::fromSaltComponents(salinity);
+
+        // Calculate brine density with Eq. (6)
+        Evaluation tempC = temperature - 273.15;
+        auto sumSalinity = salinity.sum();
+        Evaluation sumAppVolTimesMf = 0.0;
+        for (const auto& salt : electrolytes) {
+            // Get constants
+            const auto c = densityCoefficients(salt.first);
+
+            // Calculate apparent volume with Eq. (10) (where we use (1 - w_H2O) instead of w_i)
+            // multiplied by mass fraction salt eletrolyte to get the sum term in Eq. (6)
+            Evaluation tmpExponent = tempC + c[4];
+            sumAppVolTimesMf +=
+                salt.second * (sumSalinity + c[2] + c[3] * tempC)
+                / ((c[0] * sumSalinity + c[1]) * exp(1e-6 * tmpExponent * tmpExponent));
+        }
+
+        // Calculate the rest of Eq. (6) to get brine density
+        // OBS: Assume sum of ions mass fractions = sum of electrolyte mass fractions, which is
+        // true if there are no residual molalities when calculating electrolytes
+        auto wH2O = 1.0 - sumSalinity;
+        Evaluation rho = 1.0 / (wH2O / rhow + sumAppVolTimesMf);
+
+        return rho;
+    }
+
+    /*!
      * \copydoc H2O::gasPressure
      */
     template <class Evaluation>
@@ -396,13 +480,200 @@ public:
         return mu_brine/1000.0; // convert to [Pa s] (todo: check if correct cP->Pa s is times 10...)
     }
 
+    /*!
+     * Viscosity of liquid brine using multicomponent salts from Laliberte, Journal of Chemical
+     * and Engineering Data, Vol. 52, No. 2, 2007 and corrections paper Laliberte, Journal of
+     * Chemical and Engineering Data, Vol. 52, No. 4, 2007.
+     *
+     * @param temperature Temperature [K]
+     * @param salinity Array of salt ions [kg ion/kg water]
+     * @return Viscosity of brine [Pa*s]
+     */
+    template <class Evaluation>
+    OPM_HOST_DEVICE static Evaluation
+    liquidViscosityMulticompSalt(const Evaluation& temperature,
+                                 const SaltArray<Evaluation, SaltMassFraction>& salinity)
+    {
+        // Pure water viscosity
+        const Evaluation muW = liquidViscosityPureWaterLaliberte_(temperature);
+
+        // Return pure water viscosity for zero salinity
+        if (!salinity.any_nonzero()) {
+            return muW;
+        }
+
+        return liquidViscosityLaliberte(temperature, salinity, muW);
+    }
+
+    /*!
+     * Viscosity of liquid brine using multicomponent salts from Laliberte, Journal of Chemical
+     * and Engineering Data, Vol. 52, No. 2, 2007 and corrections paper Laliberte, Journal of
+    * Chemical and Engineering Data, Vol. 52, No. 4, 2007 (all equations refs. are from these
+    * papers).
+     *
+     * @param temperature Temperature [K]
+     * @param salinity Array of salt ions [kg ion/kg water]
+     * @param muW Viscosity of pure water [mPa*s]
+     * @return Viscosity of brine [Pa*s]
+     */
+    template <class Evaluation>
+    OPM_HOST_DEVICE static Evaluation
+    liquidViscosityLaliberte(const Evaluation& temperature,
+                             const SaltArray<Evaluation, SaltMassFraction>& salinity,
+                             const Evaluation& muW)
+    {
+        // Generate (valid) electrolytes from salt components
+        auto electrolytes = SaltElectrolytes<Scalar>::fromSaltComponents(salinity);
+
+        // ln-viscosity of mix from Eq. (8)
+        Evaluation tempC = temperature - 273.15;
+        auto sumSalinity = salinity.sum();
+        Evaluation lnMuMix = 0.0;
+        for (const auto& salt : electrolytes) {
+            // Get constants
+            const auto v = viscosityCoefficients(salt.first);
+
+            // Calculate ln of Eq. (12).
+            // OBS: Different from Eq. (13) in correction paper (which seems to be incorrect)
+            lnMuMix += salt.second
+                * ((v[0] * pow(sumSalinity, v[1]) + v[2]) / (v[3] * tempC + 1.0)
+                - log(v[4] * pow(sumSalinity, v[5]) + 1.0));
+        }
+
+        // Calculate the rest of Eq. (8)
+        // OBS: Assume sum of ions mass fractions = sum of electrolyte mass fractions, which is
+        // true if there are no residual molalities when calculating electrolytes
+        lnMuMix += (1.0 - sumSalinity) * log(muW);
+
+        // OBS: mPa*s to Pa*s
+        return exp(lnMuMix) * 1e-3;
+    }
+
 private:
+    using Electrolyte = typename SaltElectrolytes<Scalar>::Electrolyte;
+
     //Molar mass salt (assumes pure NaCl) [kg/mol]
     static constexpr Scalar mM_salt()
     {
         return 58.44e-3;
     }
 
+    /*!
+     * Get coefficients for calculating density with electrolyte
+     *
+     * @param electrolyte Electrolyte index
+     * @return Coefficients for electrolyte
+     */
+    static std::span<const Scalar, 5>
+    densityCoefficients(const Electrolyte electrolyte)
+    {
+        if (electrolyte == Electrolyte::CaCl2) {
+            return cDensCaCl2;
+        }
+        if (electrolyte == Electrolyte::KCl) {
+            return cDensKCl;
+        }
+        if (electrolyte == Electrolyte::K2SO4) {
+            return cDensK2SO4;
+        }
+        if (electrolyte == Electrolyte::MgCl2) {
+            return cDensMgCl2;
+        }
+        if (electrolyte == Electrolyte::MgSO4) {
+            return cDensMgSO4;
+        }
+        if (electrolyte == Electrolyte::NaCl) {
+            return cDensNaCl;
+        }
+        if (electrolyte == Electrolyte::Na2SO4) {
+            return cDensNa2SO4;
+        }
+        throw std::runtime_error("Unknown Electrolyte!");
+    }
+
+    /*!
+     * Get coefficients for calculating viscosity with electrolyte
+     *
+     * @param electrolyte Electrolyte index
+     * @return Coefficients for electrolyte
+     */
+    static std::span<const Scalar, 6>
+    viscosityCoefficients(const Electrolyte electrolyte)
+    {
+        if (electrolyte == Electrolyte::CaCl2) {
+            return cViscCaCl2;
+        }
+        if (electrolyte == Electrolyte::KCl) {
+            return cViscKCl;
+        }
+        if (electrolyte == Electrolyte::K2SO4) {
+            return cViscK2SO4;
+        }
+        if (electrolyte == Electrolyte::MgCl2) {
+            return cViscMgCl2;
+        }
+        if (electrolyte == Electrolyte::MgSO4) {
+            return cViscMgSO4;
+        }
+        if (electrolyte == Electrolyte::NaCl) {
+            return cViscNaCl;
+        }
+        if (electrolyte == Electrolyte::Na2SO4) {
+            return cViscNa2SO4;
+        }
+        throw std::runtime_error("Unknown Electrolyte!");
+    }
+
+    /*!
+     * Density of pure water from Laliberte & Cooper, Journal of Chemical and Engineering Data,
+     * Vol. 49, No. 5, 2004.
+     *
+     * @param temperature Temperature [K]
+     * @return Density [kg/m3]
+     */
+    template <class Evaluation>
+    OPM_HOST_DEVICE static Evaluation
+    liquidDensityPureWaterLaliberteCooper_(const Evaluation& temperature)
+    {
+        const auto tempC = temperature - 273.15;
+        return (((((-2.8054253e-10 * tempC + 1.0556302e-7) * tempC - 4.6170461e-5) * tempC
+                - 0.0079870401) * tempC + 16.945176) * tempC + 999.83952)
+            / (1.0 + 0.01687985 * tempC);
+    }
+
+    /*!
+     * Viscosity of pure water from Laliberte, Journal of Chemical and Engineering Data, Vol. 52,
+     * No. 2, 2007.
+     *
+     * @param temperature Temperature [K]
+     * @return Viscosity [mPa*s]
+     */
+    template <class Evaluation>
+    OPM_HOST_DEVICE static Evaluation
+    liquidViscosityPureWaterLaliberte_(const Evaluation& temperature)
+    {
+        const auto tempC = temperature - 273.15;
+        return (tempC + 246.0) / ((0.05594 * tempC + 5.2842) * tempC + 137.37);
+    }
+
+    // Coefficients for density from Laliberte & Cooper, J. Chem. Eng. Data 49, 2004
+    static constexpr Scalar cDensCaCl2[5] = {-0.63254, 0.93995, 4.2785, 0.048319, 3180.9};
+    static constexpr Scalar cDensKCl[5] = {-0.46782, 4.30800, 2.3780, 0.022044, 2714.0};
+    static constexpr Scalar cDensK2SO4[5] = {-2.6681e-5, 3.0412e-5, 0.97118, 0.019816, 4366.1};
+    static constexpr Scalar cDensMgCl2[5] = {-0.00051500, 0.0013444, 0.58358, 0.0085832, 3843.6};
+    static constexpr Scalar cDensMgSO4[5] = {0.0032447, 0.057246, 0.05136, 0.002146, 3287.8};
+    static constexpr Scalar cDensNaCl[5] = {-0.00433, 0.06471, 1.01660, 0.014624, 3315.6};
+    static constexpr Scalar cDensNa2SO4[5] = {-1.2095e-7, 4.3474e-7, 0.15364, 0.0072514, 4731.5};
+
+    // Coefficients for viscosity from Laliberte, J. Chem. Eng. Data 52 (2), 2007 and the
+    // correction paper Laliberte, J. Chem. Eng. Data 52(4), 2007
+    static constexpr Scalar cViscCaCl2[6] = {32.028, 0.78792, -1.1495, 0.0026995, 780860, 5.8442};
+    static constexpr Scalar cViscKCl[6] = {6.4883, 1.3175, -0.77785, 0.092722, -1.3, 2.0811};
+    static constexpr Scalar cViscK2SO4[6] = {-983.76, 983.76, 984.52, 0.0038473, -9.5001, 2.1916};
+    static constexpr Scalar cViscMgCl2[6] = {24.032, 2.2694, 3.7108, 0.021853, -1.1236, 0.14474};
+    static constexpr Scalar cViscMgSO4[6] = {72.269, 2.2238, 6.6037, 0.0079004, 3340.1, 6.1304};
+    static constexpr Scalar cViscNaCl[6] = {16.222, 1.3229, 1.4849, 0.0074691, 30.78, 2.0583};
+    static constexpr Scalar cViscNa2SO4[6] = {26.519, 1.5746, 3.4966, 0.010388, 106.23, 2.9738};
 };
 
 } // namespace Opm

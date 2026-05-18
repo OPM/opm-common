@@ -572,6 +572,7 @@ list(APPEND TEST_SOURCE_FILES
   tests/test_rst.cpp
   tests/test_rst_netbalan.cpp
   tests/test_SaltArray.cpp
+  tests/test_SaltElectrolytes.cpp
   tests/test_ScheduleGrid.cpp
   tests/test_SegmentMatcher.cpp
   tests/test_makeMSWellFromStandardWell.cpp
@@ -829,6 +830,10 @@ list(APPEND TEST_DATA_FILES
   tests/material/co2_unittest_part2.json
   tests/material/h2_unittest.json
   tests/material/h2o_unittest.json
+  tests/material/ref_data_density_multicomponent_salts.json
+  tests/material/ref_data_density_single_salts.json
+  tests/material/ref_data_viscosity_multicomponent_salts.json
+  tests/material/ref_data_viscosity_single_salts.json
   tests/material/ref_values_threecomponents_ptflash.json
   tests/ml/ml_tools/models/test_dense_10x1.model
   tests/ml/ml_tools/models/test_dense_10x10.model
@@ -913,6 +918,7 @@ list(APPEND PUBLIC_HEADER_FILES
   opm/common/utility/MemPacker.hpp
   opm/common/utility/OpmInputError.hpp
   opm/common/utility/SaltArray.hpp
+  opm/common/utility/SaltElectrolytes.hpp
   opm/common/utility/Serializer.hpp
   opm/common/utility/String.hpp
   opm/common/utility/SymmTensor.hpp
