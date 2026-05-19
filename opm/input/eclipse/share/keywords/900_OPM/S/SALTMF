@@ -4,7 +4,8 @@
     "PROPS"
   ],
   "prohibits": [
-    "SALINITY"
+    "SALINITY",
+    "SALINITC"
   ],
   "size": 1,
   "items": [
