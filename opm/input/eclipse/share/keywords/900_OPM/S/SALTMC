@@ -1,0 +1,21 @@
+{
+  "name": "SALTMC",
+  "sections": [
+    "RUNSPEC"
+  ],
+  "requires": [
+    "CO2STORE"
+  ],
+  "prohibits": [
+    "BRINE"
+  ],
+  "size": 1,
+  "items": [
+    {
+      "item": 1,
+      "name": "LALIBERTE_COOPER_DENSITY",
+      "value_type": "STRING",
+      "default": "NO"
+    }
+  ]
+}
