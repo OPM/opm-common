@@ -638,6 +638,7 @@ public:
     bool compositionalMode() const;
     std::size_t numComps() const;
     std::size_t maxGasPlantTables() const;
+    bool multiCompSalt() const noexcept;
     bool co2Storage() const noexcept;
     bool co2Sol() const noexcept;
     bool h2Sol() const noexcept;
@@ -683,6 +684,7 @@ public:
         serializer(m_mechsolver);
         serializer(m_biof);
         serializer(m_geochem);
+        serializer(m_saltmc);
     }
 
 private:
@@ -714,6 +716,7 @@ private:
     bool m_frac{false};
     bool m_temp{false};
     bool m_biof{false};
+    bool m_saltmc{false};
 };
 
 std::size_t declaredMaxRegionID(const Runspec& rspec);
