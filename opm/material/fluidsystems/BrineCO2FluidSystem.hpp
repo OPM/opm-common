@@ -32,6 +32,7 @@
 #include "NullParameterCache.hpp"
 
 #include <opm/common/Exceptions.hpp>
+#include <opm/common/utility/SaltArray.hpp>
 
 #include <opm/material/IdealGas.hpp>
 
@@ -336,10 +337,14 @@ public:
         // could use some cleanup.
         LhsEval xlH2O, xgH2O;
         LhsEval xlCO2, xgCO2;
+        SaltArray<LhsEval, SaltMassFraction> salinityArray;
+        LhsEval salinity = LhsEval(Brine_IAPWS::salinity);
+        salinityArray[SaltIndex::NA] = 0.3934 * salinity;
+        salinityArray[SaltIndex::CL] = 0.6066 * salinity;
         BinaryCoeffBrineCO2::calculateMoleFractions(getTableInstance(),
                                                     temperature,
                                                     pressure,
-                                                    LhsEval(Brine_IAPWS::salinity),
+                                                    salinityArray,
                                                     /*knownPhaseIdx=*/-1,
                                                     xlCO2,
                                                     xgH2O,

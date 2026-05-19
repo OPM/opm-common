@@ -34,6 +34,7 @@
 #include <opm/material/components/SimpleHuDuanH2O.hpp>
 #include <opm/material/components/CO2.hpp>
 #include <opm/material/components/CO2Tables.hpp>
+#include <opm/common/utility/SaltArray.hpp>
 
 #include <cstdlib>
 #include <iomanip>
@@ -65,10 +66,11 @@ double densityBrine(const BrinePvt& brinePvt, const double p, const double T, co
     return bo * (brinePvt.oilReferenceDensity(0) + Rs * brinePvt.gasReferenceDensity(0));
 }
 
-std::pair<double, double> moleFractionMutualSolubility(const double p,
-                                                       const double T,
-                                                       const double s,
-                                                       const int activityModel)
+std::pair<double, double>
+moleFractionMutualSolubility(const double p,
+                             const double T,
+                             const Opm::SaltArray<double, Opm::SaltMassFraction>& s,
+                             const int activityModel)
 {
     // Init. output
     double yH2O;
@@ -79,14 +81,22 @@ std::pair<double, double> moleFractionMutualSolubility(const double p,
     using CO2 = Opm::CO2<double>;
     using BinaryCoeffBrineCO2 = Opm::BinaryCoeff::Brine_CO2<double, H2O, CO2>;
     Opm::CO2Tables co2Tables;
-    BinaryCoeffBrineCO2::calculateMoleFractions(co2Tables, T, p, s, -1, xCO2, yH2O, activityModel, true);
+    BinaryCoeffBrineCO2::calculateMoleFractions(co2Tables,
+                                                T,
+                                                p,
+                                                s,
+                                                -1,
+                                                xCO2,
+                                                yH2O,
+                                                activityModel,
+                                                true);
 
     return {xCO2, yH2O};
 }
 
 double moleFractionCO2inBrine(const double p,
                               const double T,
-                              const double s,
+                              const Opm::SaltArray<double, Opm::SaltMassFraction>& s,
                               const int activityModel)
 {
     // Calculate mutual solubilities
@@ -97,7 +107,7 @@ double moleFractionCO2inBrine(const double p,
 
 double moleFractionBrineInCO2(const double p,
                               const double T,
-                              const double s,
+                              const Opm::SaltArray<double, Opm::SaltMassFraction>& s,
                               const int activityModel)
 {
     // Calculate mutual solubilities
@@ -108,16 +118,15 @@ double moleFractionBrineInCO2(const double p,
 
 double molalityCO2inBrine(const double p,
                           const double T,
-                          const double m_sal,
+                          const Opm::SaltArray<double, Opm::SaltMolality>& m_sal,
                           const int activityModel)
 {
     // Mole fraction CO2 in brine
-    const double MmNaCl = 58.44e-3; // molar mass of NaCl [kg/mol]
-    const double s = 1 / ( 1 + 1 / (m_sal*MmNaCl));
+    const auto s = m_sal.convert_to<Opm::SaltMassFraction>();
     double xlCO2 = moleFractionCO2inBrine(p, T, s, activityModel);
 
     // return molal co2
-    return xlCO2 * (2 * m_sal + 55.508) / (1 - xlCO2);
+    return xlCO2 * (m_sal.sum() + 55.508) / (1 - xlCO2);
 
 }
 
@@ -139,7 +148,8 @@ int main(int argc, char **argv)
         std::cout << "phase = {CO2, brine}" << std::endl;
         std::cout << "p: pressure in bar" << std::endl;
         std::cout << "T: temperature in celcius" << std::endl;
-        std::cout << "salinity(optional): salt molality in mol/kg" << std::endl;
+        std::cout << "salinity(optional): salt components array in mol/kg; "
+            "six inputs needed for ions = Na+, K+, Ca++, Mg++, Cl- and SO4++ " << std::endl;
         std::cout << "rs(optional): amount of dissolved CO2 in Brine in SM3/SM3" << std::endl;
         std::cout << "rv(optional): amount of vaporized water in Gas in SM3/SM3" << std::endl;
         std::cout << "saltmodel(optional): 0 = no salt activity; 1 = Rumpf et al (1996) [default];"
@@ -162,37 +172,52 @@ int main(int argc, char **argv)
     std::string phase = argv[2];
     double p = atof(argv[3]) * 1e5;
     double T = atof(argv[4]) + 273.15;
-    double molality = 0.0;
+    Opm::SaltArray<double, Opm::SaltMolality> molality;
     double rs = 0.0;
     double rv = 0.0;
     int activityModel = 1;
     int thermalmixgas = 0;
     int thermalmixliquid = 2;
     int thermalmixsalt = 1;
-    if (argc > 5)
-        molality = atof(argv[5]);
-    if (argc > 6)
-        rs = atof(argv[6]);
-    if (argc > 7)
-        rv = atof(argv[7]);
-
-    if (argc > 8)
-        activityModel = atoi(argv[8]);
-    if (argc > 9)
-        thermalmixgas = atoi(argv[9]);
-    if (argc > 10)
-        thermalmixliquid = atoi(argv[10]);
+    if (argc > 5) {
+        if (argc < 11) {
+            throw std::runtime_error("Need at least 6 salt molalities!");
+        }
+        molality[Opm::SaltIndex::NA] = atof(argv[5]);
+        molality[Opm::SaltIndex::K] = atof(argv[6]);
+        molality[Opm::SaltIndex::CA] = atof(argv[7]);
+        molality[Opm::SaltIndex::MG] = atof(argv[8]);
+        molality[Opm::SaltIndex::CL] = atof(argv[9]);
+        molality[Opm::SaltIndex::SO4] = atof(argv[10]);
+    }
     if (argc > 11)
-        thermalmixsalt = atoi(argv[11]);
+        rs = atof(argv[11]);
+    if (argc > 12)
+        rv = atof(argv[12]);
 
-    const double MmNaCl = 58.44e-3; // molar mass of NaCl [kg/mol]
+    if (argc > 13)
+        activityModel = atoi(argv[13]);
+    if (argc > 14)
+        thermalmixgas = atoi(argv[14]);
+    if (argc > 15)
+        thermalmixliquid = atoi(argv[15]);
+    if (argc > 16)
+        thermalmixsalt = atoi(argv[16]);
+
     // convert to mass fraction
-    std::vector<double> salinity = {0.0};
-    if (molality > 0.0)
-        salinity[0] = 1 / ( 1 + 1 / (molality*MmNaCl));
-    Opm::BrineCo2Pvt<double> brineCo2Pvt(salinity, activityModel, thermalmixsalt, thermalmixliquid);
+    std::vector<Opm::SaltArray<double, Opm::SaltMassFraction> > salinity(1);
+    if (molality.any_nonzero()) {
+        salinity[0] = molality.convert_to<Opm::SaltMassFraction>();
+    }
 
-    Opm::Co2GasPvt<double> co2Pvt(salinity, activityModel, thermalmixgas);
+    // Instantiate PVT classes
+    Opm::BrineCo2Pvt<double> brineCo2Pvt(salinity,
+                                         true,
+                                         activityModel,
+                                         thermalmixsalt,
+                                         thermalmixliquid);
+
+    Opm::Co2GasPvt<double> co2Pvt(salinity, true, activityModel, thermalmixgas);
 
     double value;
     if (prop == "density") {
