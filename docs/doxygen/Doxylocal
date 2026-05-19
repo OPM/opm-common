@@ -1,0 +1,9 @@
+# This file contains local changes to the doxygen configuration
+# please use '+=' to add file/directories to the lists
+
+# The INPUT tag can be used to specify the files and/or directories that contain
+# documented source files. You may enter file names like "myfile.cpp" or
+# directories like "/usr/src/myproject". Separate the files or directories
+# with spaces.
+
+INPUT                 += @PROJECT_SOURCE_DIR@/test_util
