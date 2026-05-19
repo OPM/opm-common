@@ -1,0 +1,9 @@
+{
+  "name": "SALTMC",
+  "sections": [
+    "RUNSPEC"
+  ],
+  "requires": [
+    "CO2STORE"
+  ]
+}
