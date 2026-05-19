@@ -21,6 +21,9 @@
 
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
 
+#include <opm/common/ErrorMacros.hpp>
+#include <opm/common/utility/gpuDecorators.hpp>
+
 #include <opm/material/components/CaIon.hpp>
 #include <opm/material/components/ClIon.hpp>
 #include <opm/material/components/KIon.hpp>
@@ -154,7 +157,7 @@ ionStrength(const SaltIndex s)
  * @return Molar mass
  */
 template <class Scalar>
-Scalar
+OPM_HOST_DEVICE Scalar
 saltMolarMass(const SaltIndex ind)
 {
     switch (ind) {
@@ -171,7 +174,12 @@ saltMolarMass(const SaltIndex ind)
     case SaltIndex::SO4:
         return SO4Ion<Scalar>::molarMass();
     default:
-        throw std::invalid_argument("SaltIndex not valid!");
+#if OPM_IS_INSIDE_DEVICE_FUNCTION
+        assert(false && "SaltIndex not valid!");
+        return Scalar{};
+#else
+        OPM_THROW(std::invalid_argument, "SaltIndex not valid!");
+#endif
     }
 }
 
@@ -202,13 +210,11 @@ public:
      * @param other Salt array to convert from
      */
     template <class U>
-    explicit SaltArray(const SaltArray<U, SaltUnit>& other)
+    OPM_HOST_DEVICE explicit SaltArray(const SaltArray<U, SaltUnit>& other)
     {
-        std::ranges::transform(other,
-                               saltData_.begin(),
-                               [](const U& val) {
-                                   return static_cast<T>(val);
-                               });
+        for (std::size_t i = 0; i < size(); ++i) {
+            saltData_[i] = static_cast<T>(other[static_cast<SaltIndex>(i)]);
+        }
     }
 
     /*!
@@ -232,7 +238,7 @@ public:
      * @param ind Index of salt ion
      * @return Array element
      */
-    const T& operator[](const SaltIndex ind) const
+    OPM_HOST_DEVICE const T& operator[](const SaltIndex ind) const
     {
         return saltData_[static_cast<std::size_t>(ind)];
     }
@@ -243,7 +249,7 @@ public:
      * @param ind Index of salt ion
      * @return Array element
      */
-    T& operator[](const SaltIndex ind)
+    OPM_HOST_DEVICE T& operator[](const SaltIndex ind)
     {
         return saltData_[static_cast<std::size_t>(ind)];
     }
@@ -254,7 +260,7 @@ public:
      * @param other Comparison array
      * @return True if arrays are equal
      */
-    bool operator==(const SaltArray& other) const
+    OPM_HOST_DEVICE bool operator==(const SaltArray& other) const
     {
         return saltData_ == other.saltData_;
     }
@@ -265,7 +271,7 @@ public:
      * @param other Array to copy
      * @return Copy of other array
      */
-    SaltArray& operator=(const SaltArray& other) = default;
+    OPM_HOST_DEVICE SaltArray& operator=(const SaltArray& other) = default;
 
     /*!
      * Conversion copy assignment for simple assignment to new value type (that supports conversion)
@@ -275,13 +281,11 @@ public:
      * @return Copy of array
      */
     template <class U>
-    SaltArray& operator=(const SaltArray<U, SaltUnit>& other)
+    OPM_HOST_DEVICE SaltArray& operator=(const SaltArray<U, SaltUnit>& other)
     {
-        std::ranges::transform(other,
-                               saltData_.begin(),
-                               [](const U& val) {
-                                   return static_cast<T>(val);
-                               });
+        for (std::size_t i = 0; i < size(); ++i) {
+            saltData_[i] = static_cast<T>(other[static_cast<SaltIndex>(i)]);
+        }
         return *this;
     }
 
@@ -290,7 +294,7 @@ public:
      *
      * @return Iterator
      */
-    auto begin()
+    OPM_HOST_DEVICE auto begin()
     {
         return saltData_.begin();
     }
@@ -300,7 +304,7 @@ public:
      *
      * @return Iterator
      */
-    auto end()
+    OPM_HOST_DEVICE auto end()
     {
         return saltData_.end();
     }
@@ -310,7 +314,7 @@ public:
      *
      * @return Iterator
      */
-    [[nodiscard]] auto begin() const
+    [[nodiscard]] OPM_HOST_DEVICE auto begin() const
     {
         return saltData_.begin();
     }
@@ -320,7 +324,7 @@ public:
      *
      * @return Iterator
      */
-    [[nodiscard]] auto end() const
+    [[nodiscard]] OPM_HOST_DEVICE auto end() const
     {
         return saltData_.end();
     }
@@ -330,7 +334,7 @@ public:
      *
      * @return Size of array
      */
-    [[nodiscard]] constexpr std::size_t size() const
+    [[nodiscard]] OPM_HOST_DEVICE constexpr std::size_t size() const
     {
         return saltData_.size();
     }
@@ -341,9 +345,13 @@ public:
      *
      * @return Sum
      */
-    T sum() const
+    OPM_HOST_DEVICE T sum() const
     {
-        return std::accumulate(begin(), end(), T{});
+        T s{};
+        for (std::size_t i = 0; i < size(); ++i) {
+            s += saltData_[i];
+        }
+        return s;
     }
 
     /*!
@@ -359,13 +367,14 @@ public:
      *
      * @return True if any element non-zero
      */
-    [[nodiscard]] bool any_nonzero() const noexcept
+    [[nodiscard]] OPM_HOST_DEVICE bool any_nonzero() const noexcept
     {
-        return std::any_of(begin(),
-                           end(),
-                           [](const T& val) {
-                               return val != T{};
-                           });
+        for (std::size_t i = 0; i < size(); ++i) {
+            if (saltData_[i] != T{}) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /*!
@@ -418,7 +427,7 @@ public:
      * @return Converted array
      */
     template <class NewSaltUnit>
-    SaltArray<T, NewSaltUnit> convert_to() const
+    OPM_HOST_DEVICE SaltArray<T, NewSaltUnit> convert_to() const
     {
         return SaltUnitConverter<SaltUnit, NewSaltUnit>::template convert<T>(*this);
     }
@@ -448,7 +457,7 @@ struct SaltUnitConverter<SaltMassFraction, SaltMolality>
      * @return Molality array
      */
     template <class T>
-    static SaltArray<T, SaltMolality> convert(const SaltArray<T, SaltMassFraction>& saltArray)
+    OPM_HOST_DEVICE static SaltArray<T, SaltMolality> convert(const SaltArray<T, SaltMassFraction>& saltArray)
     {
         SaltArray<T, SaltMolality> molalityArray;
         for (std::size_t i = 0; i < saltArray.size(); ++i) {
@@ -477,7 +486,7 @@ struct SaltUnitConverter<SaltMassFraction, SaltMoleFraction>
      * @return Mole fraction array
      */
     template <class T>
-    static SaltArray<T, SaltMoleFraction> convert(const SaltArray<T, SaltMassFraction>& saltArray)
+    OPM_HOST_DEVICE static SaltArray<T, SaltMoleFraction> convert(const SaltArray<T, SaltMassFraction>& saltArray)
     {
         SaltArray<T, SaltMoleFraction> moleFracArray;
         T s = 1.0;
@@ -507,7 +516,7 @@ struct SaltUnitConverter<SaltMoleFraction, SaltMassFraction>
      * @return Mass fraction array
      */
     template <class T>
-    static SaltArray<T, SaltMassFraction> convert(const SaltArray<T, SaltMoleFraction>& saltArray)
+    OPM_HOST_DEVICE static SaltArray<T, SaltMassFraction> convert(const SaltArray<T, SaltMoleFraction>& saltArray)
     {
         SaltArray<T, SaltMassFraction> massFracArray;
         T s = 18.01518e-3;
@@ -537,7 +546,7 @@ struct SaltUnitConverter<SaltMoleFraction, SaltMolality>
      * @return Molality array
      */
     template <class T>
-    static SaltArray<T, SaltMolality> convert(const SaltArray<T, SaltMoleFraction>& saltArray)
+    OPM_HOST_DEVICE static SaltArray<T, SaltMolality> convert(const SaltArray<T, SaltMoleFraction>& saltArray)
     {
         SaltArray<T, SaltMolality> molalityArray;
         for (std::size_t i = 0; i < saltArray.size(); ++i) {
@@ -566,7 +575,7 @@ struct SaltUnitConverter<SaltMolality, SaltMoleFraction>
      * @return Mole fraction array
      */
     template <class T>
-    static SaltArray<T, SaltMoleFraction> convert(const SaltArray<T, SaltMolality>& saltArray)
+    OPM_HOST_DEVICE static SaltArray<T, SaltMoleFraction> convert(const SaltArray<T, SaltMolality>& saltArray)
     {
         SaltArray<T, SaltMoleFraction> moleFracArray;
         T s = 1.0;
@@ -596,7 +605,7 @@ struct SaltUnitConverter<SaltMolality, SaltMassFraction>
      * @return Mass fraction array
      */
     template <class T>
-    static SaltArray<T, SaltMassFraction> convert(const SaltArray<T, SaltMolality>& saltArray)
+    OPM_HOST_DEVICE static SaltArray<T, SaltMassFraction> convert(const SaltArray<T, SaltMolality>& saltArray)
     {
         SaltArray<T, SaltMassFraction> massFracArray;
         T s = 1.0;
