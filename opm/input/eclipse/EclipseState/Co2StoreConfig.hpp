@@ -25,14 +25,15 @@
 #include <map>
 
 #include <opm/input/eclipse/EclipseState/Tables/EzrokhiTable.hpp>
+#include <opm/common/utility/SaltArray.hpp>
 
 namespace Opm {
 
 class Deck;
 
-  class Co2StoreConfig {
-  public:
-
+class Co2StoreConfig
+{
+public:
     enum class SaltMixingType {
         NONE,        // Pure water
         MICHAELIDES, // MICHAELIDES 1971 (default)
@@ -55,8 +56,7 @@ class Deck;
 
     const std::vector<EzrokhiTable>& getDenaqaTables() const;
     const std::vector<EzrokhiTable>& getViscaqaTables() const;
-
-    double salinity() const;
+    const SaltArray<double, SaltMassFraction>& saltComponents() const;
     int actco2s() const;
 
     template<class Serializer>
@@ -68,7 +68,7 @@ class Deck;
        serializer(cnames);
        serializer(denaqa_tables);
        serializer(viscaqa_tables);
-       serializer(salt);
+       serializer(saltArray);
        serializer(activityModel);
     }
     bool operator==(const Co2StoreConfig& other) const;
@@ -77,8 +77,7 @@ class Deck;
     LiquidMixingType liquid_type;
     GasMixingType gas_type;
 
-  private:
-
+private:
     SaltMixingType string2enumSalt(const std::string& input) const;
     LiquidMixingType string2enumLiquid(const std::string& input) const;
     GasMixingType string2enumGas(const std::string& input) const;
@@ -86,11 +85,9 @@ class Deck;
     std::map<std::string, int> cnames;
     std::vector<EzrokhiTable> denaqa_tables;
     std::vector<EzrokhiTable> viscaqa_tables;
-    double salt {0.0};
-    static constexpr double MmNaCl = 58.44e-3;
-    static constexpr double MmH2O = 18e-3;
-    int activityModel {3};
-  };
+    SaltArray<double, SaltMassFraction> saltArray;
+    int activityModel{3};
+};
 }
 
 #endif // OPM_PARSER_CO2STORECONFIG_HPP

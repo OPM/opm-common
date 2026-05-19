@@ -34,6 +34,7 @@
 #include <opm/common/ErrorMacros.hpp>
 #include <opm/common/utility/gpuDecorators.hpp>
 #include <opm/common/utility/gpuistl_if_available.hpp>
+#include <opm/common/utility/SaltArray.hpp>
 
 #include <opm/material/components/CO2.hpp>
 #include <opm/material/components/BrineDynamic.hpp>
@@ -78,6 +79,7 @@ class Co2GasPvt
     using H2O = SimpleHuDuanH2O<Scalar>;
     using Brine = ::Opm::BrineDynamic<Scalar, H2O>;
     using ContainerT = Storage<Scalar>;
+    using SaltContainerT = Storage<SaltArray<Scalar, SaltMassFraction> >;
     static constexpr bool extrapolate = true;
 
 public:
@@ -86,7 +88,8 @@ public:
 
     Co2GasPvt() = default;
 
-    explicit Co2GasPvt(const ContainerT& salinity,
+    explicit Co2GasPvt(const SaltContainerT& salinity,
+                       bool enableMultiCompSalt = true,
                        int activityModel = 3,
                        int thermalMixingModel = 1,
                        Scalar T_ref = 288.71, //(273.15 + 15.56)
@@ -95,7 +98,8 @@ public:
     Co2GasPvt(const Params& params,
               const ContainerT& brineReferenceDensity,
               const ContainerT& gasReferenceDensity,
-              const ContainerT& salinity,
+              const SaltContainerT& salinity,
+              bool enableMultiCompSalt,
               bool enableEzrokhiDensity,
               bool enableVaporization,
               int activityModel,
@@ -103,6 +107,7 @@ public:
         : brineReferenceDensity_(brineReferenceDensity)
         , gasReferenceDensity_(gasReferenceDensity)
         , salinity_(salinity)
+        , enableMultiCompSalt_(enableMultiCompSalt)
         , enableEzrokhiDensity_(enableEzrokhiDensity)
         , enableVaporization_(enableVaporization)
         , activityModel_(activityModel)
@@ -148,9 +153,12 @@ public:
     */
     OPM_HOST_DEVICE void setActivityModelSalt(int activityModel);
 
-   /*!
-    * \brief Set thermal mixing model for co2 in brine
-    */
+    OPM_HOST_DEVICE void setSaltComponents(const SaltArray<double, SaltMassFraction>& saltcomp,
+                                           bool enableMultiCompSalt);
+
+    /*!
+     * \brief Set thermal mixing model for co2 in brine
+     */
     OPM_HOST_DEVICE void setThermalMixingModel(int thermalMixingModel);
 
     /*!
@@ -280,8 +288,8 @@ public:
                                                                      const Evaluation& pressure) const
     {
         OPM_TIMEFUNCTION_LOCAL(Subsystem::PvtProps);
-        const Evaluation rvw = rvwSat_(regionIdx, temperature, pressure,
-                                       Evaluation(salinity_[regionIdx]));
+        SaltArray<Evaluation, SaltMassFraction> evalSalinity(salinity_[regionIdx]);
+        const Evaluation rvw = rvwSat_(regionIdx, temperature, pressure, evalSalinity);
         return inverseFormationVolumeFactor(regionIdx, temperature,
                                             pressure, Evaluation(0.0), rvw);
     }
@@ -306,7 +314,10 @@ public:
     OPM_HOST_DEVICE Evaluation saturatedWaterVaporizationFactor(unsigned regionIdx,
                                                                 const Evaluation& temperature,
                                                                 const Evaluation& pressure) const
-    { return rvwSat_(regionIdx, temperature, pressure, Evaluation(salinity_[regionIdx])); }
+    {
+        SaltArray<Evaluation, SaltMassFraction> evalSalinity(salinity_[regionIdx]);
+        return rvwSat_(regionIdx, temperature, pressure, evalSalinity);
+    }
 
     /*!
     * \brief Returns the water vaporization factor \f$R_vw\f$ [m^3/m^3] of water phase.
@@ -318,8 +329,10 @@ public:
                                                                 const Evaluation& saltConcentration) const
     {
         OPM_TIMEFUNCTION_LOCAL(Subsystem::PvtProps);
-        const Evaluation salinity = salinityFromConcentration(temperature, pressure,
-                                                              saltConcentration);
+        const auto salinity =
+            salinityFromConcentration(temperature,
+                                      pressure,
+                                      saltConcentration);
         return rvwSat_(regionIdx, temperature, pressure, salinity);
     }
 
@@ -332,7 +345,10 @@ public:
                                                               const Evaluation& pressure,
                                                               const Evaluation& /*oilSaturation*/,
                                                               const Evaluation& /*maxOilSaturation*/) const
-    { return rvwSat_(regionIdx, temperature, pressure, Evaluation(salinity_[regionIdx])); }
+    {
+        SaltArray<Evaluation, SaltMassFraction> evalSalinity(salinity_[regionIdx]);
+        return rvwSat_(regionIdx, temperature, pressure, evalSalinity);
+    }
 
     /*!
      * \brief Returns the oil vaporization factor \f$R_v\f$ [m^3/m^3] of the oil phase.
@@ -341,7 +357,10 @@ public:
     OPM_HOST_DEVICE Evaluation saturatedOilVaporizationFactor(unsigned regionIdx,
                                                               const Evaluation& temperature,
                                                               const Evaluation& pressure) const
-    { return rvwSat_(regionIdx, temperature, pressure, Evaluation(salinity_[regionIdx])); }
+    {
+        SaltArray<Evaluation, SaltMassFraction> evalSalinity(salinity_[regionIdx]);
+        return rvwSat_(regionIdx, temperature, pressure, evalSalinity);
+    }
 
     template <class Evaluation>
     OPM_HOST_DEVICE Evaluation diffusionCoefficient(const Evaluation& temperature,
@@ -362,7 +381,7 @@ public:
     OPM_HOST_DEVICE Scalar waterReferenceDensity(unsigned regionIdx) const
     { return brineReferenceDensity_[regionIdx]; }
 
-    OPM_HOST_DEVICE Scalar salinity(unsigned regionIdx) const
+    OPM_HOST_DEVICE const SaltArray<Scalar, SaltMassFraction>& salinity(unsigned regionIdx) const
     { return salinity_[regionIdx]; }
 
     void setEzrokhiDenCoeff(const std::vector<EzrokhiTable>& denaqa);
@@ -374,8 +393,13 @@ public:
     OPM_HOST_DEVICE const ContainerT& getGasReferenceDensity() const
     { return gasReferenceDensity_; }
 
-    OPM_HOST_DEVICE const ContainerT& getSalinity() const
+    OPM_HOST_DEVICE const SaltContainerT& getSalinity() const
     { return salinity_; }
+
+    OPM_HOST_DEVICE bool getEnableMultiCompSalt() const
+    {
+        return enableMultiCompSalt_;
+    }
 
     OPM_HOST_DEVICE bool getEnableEzrokhiDensity() const
     { return enableEzrokhiDensity_; }
@@ -405,7 +429,7 @@ private:
     OPM_HOST_DEVICE LhsEval rvwSat_(unsigned regionIdx,
                                     const LhsEval& temperature,
                                     const LhsEval& pressure,
-                                    const LhsEval& salinity) const
+                                    const SaltArray<LhsEval, SaltMassFraction>& salinity) const
     {
         OPM_TIMEFUNCTION_LOCAL(Subsystem::PvtProps);
         if (!enableVaporization_) {
@@ -429,7 +453,9 @@ private:
         // normalize the phase compositions
         xgH2O = max(0.0, min(1.0, xgH2O));
 
-        return convertXgWToRvw(convertxgWToXgW(xgH2O, salinity), regionIdx);
+        return convertXgWToRvw(
+            convertxgWToXgW(xgH2O, salinity.template convert_to<SaltMoleFraction>()),
+            regionIdx);
     }
 
     /*!
@@ -464,30 +490,45 @@ private:
      * \brief Convert a water mole fraction in the gas phase the corresponding mass fraction.
      */
     template <class LhsEval>
-    OPM_HOST_DEVICE LhsEval convertxgWToXgW(const LhsEval& xgW, const LhsEval& salinity) const
+    OPM_HOST_DEVICE LhsEval
+    convertxgWToXgW(const LhsEval& xgW,
+                    const SaltArray<LhsEval, SaltMoleFraction>& salinity) const
     {
         OPM_TIMEFUNCTION_LOCAL(Subsystem::PvtProps);
-        Scalar M_CO2 = CO2::molarMass();
-        LhsEval M_Brine = Brine::molarMass(salinity);
+        const Scalar M_CO2 = CO2::molarMass();
+        const Scalar M_H2O = H2O::molarMass();
 
-        return xgW * M_Brine / (xgW * (M_Brine - M_CO2) + M_CO2);
+        // Add H2O term to average molar mass
+        LhsEval avgMolarMass = CO2::avgMolarMassFromMoleFrac(salinity);
+        avgMolarMass += xgW * (M_H2O - M_CO2);
+
+        return xgW * M_H2O / avgMolarMass;
     }
 
     #if HAVE_CUDA
     template <class ScalarT>
     friend Co2GasPvt<ScalarT, gpuistl::GpuView>
     gpuistl::make_view(Co2GasPvt<ScalarT, gpuistl::GpuBuffer>&);
-    #endif // HAVE_CUDA
+#endif // HAVE_CUDA
 
     template <class LhsEval>
-    OPM_HOST_DEVICE const LhsEval salinityFromConcentration(const LhsEval&T, const LhsEval& P,
-                                                            const LhsEval& saltConcentration) const
-    { return saltConcentration/H2O::liquidDensity(T, P, true); }
+    OPM_HOST_DEVICE SaltArray<LhsEval, SaltMassFraction>
+    salinityFromConcentration(const LhsEval& T,
+                              const LhsEval& P,
+                              const LhsEval& saltConcentration) const
+    {
+        const LhsEval salt = saltConcentration / H2O::liquidDensity(T, P, true);
+        SaltArray<LhsEval, SaltMassFraction> S;
+        S[SaltIndex::NA] = salt;
+        S[SaltIndex::CL] = salt;
+        return S;
+    }
 
     ContainerT brineReferenceDensity_{};
     ContainerT gasReferenceDensity_{};
-    ContainerT salinity_{};
+    SaltContainerT salinity_{};
     ContainerT ezrokhiDenNaClCoeff_{};
+    bool enableMultiCompSalt_{false};
     bool enableEzrokhiDensity_ = false;
     bool enableVaporization_ = true;
     int activityModel_{};
@@ -507,7 +548,8 @@ namespace Opm::gpuistl {
             copy_to_gpu(cpuCo2.getParams()),
             GpuBuffer<ScalarT>(cpuCo2.getBrineReferenceDensity()),
             GpuBuffer<ScalarT>(cpuCo2.getGasReferenceDensity()),
-            GpuBuffer<ScalarT>(cpuCo2.getSalinity()),
+            GpuBuffer<::Opm::SaltArray<ScalarT, ::Opm::SaltMassFraction>>(cpuCo2.getSalinity()),
+            cpuCo2.getEnableMultiCompSalt(),
             cpuCo2.getEnableEzrokhiDensity(),
             cpuCo2.getEnableVaporization(),
             cpuCo2.getActivityModel(),
@@ -519,16 +561,18 @@ namespace Opm::gpuistl {
     make_view(Co2GasPvt<ScalarT, GpuBuffer>& co2GasPvt)
     {
         using ContainedType = ScalarT;
+        using SaltContainedType = ::Opm::SaltArray<ScalarT, ::Opm::SaltMassFraction>;
 
         auto newBrineReferenceDensity = make_view<ContainedType>(co2GasPvt.brineReferenceDensity_);
         auto newGasReferenceDensity = make_view<ContainedType>(co2GasPvt.gasReferenceDensity_);
-        auto newSalinity = make_view<ContainedType>(co2GasPvt.salinity_);
+        auto newSalinity = make_view<SaltContainedType>(co2GasPvt.salinity_);
 
         return Co2GasPvt<ScalarT, GpuView>(
             make_view(co2GasPvt.co2Tables),
             newBrineReferenceDensity,
             newGasReferenceDensity,
             newSalinity,
+            co2GasPvt.getEnableMultiCompSalt(),
             co2GasPvt.getEnableEzrokhiDensity(),
             co2GasPvt.getEnableVaporization(),
             co2GasPvt.getActivityModel(),

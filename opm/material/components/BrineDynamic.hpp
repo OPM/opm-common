@@ -97,6 +97,34 @@ public:
         return M1*mM_salt()/(mM_salt() + X2*(M1 - mM_salt()));
     }
 
+    template <class Evaluation>
+    OPM_HOST_DEVICE static Evaluation
+    invAvgMolarMassFromMassFrac(const SaltArray<Evaluation, SaltMassFraction>& salinity)
+    {
+        const Scalar mH2O = H2O::molarMass();
+        Evaluation s = 1.0 / mH2O;
+        for (std::size_t i = 0; i < salinity.size(); ++i) {
+            auto sIdx = static_cast<SaltIndex>(i);
+            auto mIon = saltMolarMass<Scalar>(sIdx);
+            s += salinity[sIdx] * ((mH2O - mIon) / (mH2O * mIon));
+        }
+        return s;
+    }
+
+    template <class Evaluation>
+    OPM_HOST_DEVICE static Evaluation
+    avgMolarMassFromMoleFrac(const SaltArray<Evaluation, SaltMoleFraction>& salinity)
+    {
+        const Scalar mH2O = H2O::molarMass();
+        Evaluation s = mH2O;
+        for (std::size_t i = 0; i < salinity.size(); ++i) {
+            auto sIdx = static_cast<SaltIndex>(i);
+            auto mIon = saltMolarMass<Scalar>(sIdx);
+            s += salinity[sIdx] * (mIon - mH2O);
+        }
+        return s;
+    }
+
     /*!
      * \copydoc H2O::criticalTemperature
      */
@@ -747,10 +775,11 @@ private:
         // Warn if there is any leftover molality after generating electrolytes
         if (molalSalinity.sum() > molalTolerance) {
             OpmLog::debug(
-                fmt::format("Sum molality of salt components (={}) > tolerance (={}) "
-                            "after conversion to electrolytes, and will be ignored in the "
-                            "brine property calculations!",
-                            decay<Scalar>(molalSalinity.sum()), molalTolerance)
+                fmt::format(
+                    fmt::runtime("Sum molality of salt components ({}) > tolerance, "
+                        "and will be ignored in the property calculations!"),
+                    decay<Scalar>(molalSalinity.sum())
+                    )
                 );
         }
 
