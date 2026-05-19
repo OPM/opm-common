@@ -671,8 +671,62 @@ BOOST_AUTO_TEST_CASE(SALTMFTest) {
     Co2StoreConfig config_salinity = state_salinity.getCo2StoreConfig();
     Co2StoreConfig config_saltmf = state_saltmf.getCo2StoreConfig();
 
-    const auto& salinity = config_salinity.salinity();
-    const auto& saltmf = config_saltmf.salinity();
-    const double epsilon = 0.00001;
+    const auto& salinity = config_salinity.saltComponents().sum();
+    const auto& saltmf = config_saltmf.saltComponents().sum();
+    const double epsilon = 1e-1;
     BOOST_CHECK_CLOSE(salinity, saltmf, epsilon);
+}
+
+BOOST_AUTO_TEST_CASE(SALINITCtest)
+{
+    const auto deck_salinitc_input = R"(
+        RUNSPEC
+        GAS
+        WATER
+        CO2STORE
+        SALTMC
+
+        DIMENS
+        2 2 1 /
+
+        GRID
+
+        DX
+        4*1 /
+        DY
+        4*1 /
+        DZ
+        4*1 /
+        TOPS
+        4*0.0 /
+
+        PORO
+        4*0.3 /
+
+        PROPS
+
+        SALINITC
+        0.1 0.2 0.3 0.4 0.5 0.6 /
+    )";
+    const Parser parser;
+    const auto deck = parser.parseString(deck_salinitc_input);
+    const EclipseState state(deck);
+    const Co2StoreConfig& config = state.getCo2StoreConfig();
+
+    // Check SALINITC. NOTE: converted internally to mass fractions
+    const auto& salinitc = config.saltComponents();
+    SaltArray<double, SaltMassFraction> expectedSaltMassFrac;
+    expectedSaltMassFrac[SaltIndex::NA] = 0.00207634;
+    expectedSaltMassFrac[SaltIndex::K] = 0.00706239;
+    expectedSaltMassFrac[SaltIndex::CA] = 0.01085904;
+    expectedSaltMassFrac[SaltIndex::MG] = 0.00878051;
+    expectedSaltMassFrac[SaltIndex::CL] = 0.01600849;
+    expectedSaltMassFrac[SaltIndex::SO4] = 0.05205446;
+    constexpr double tol = 1e-3;
+    BOOST_CHECK_CLOSE(salinitc[SaltIndex::NA], expectedSaltMassFrac[SaltIndex::NA], tol);
+    BOOST_CHECK_CLOSE(salinitc[SaltIndex::K], expectedSaltMassFrac[SaltIndex::K], tol);
+    BOOST_CHECK_CLOSE(salinitc[SaltIndex::CA], expectedSaltMassFrac[SaltIndex::CA], tol);
+    BOOST_CHECK_CLOSE(salinitc[SaltIndex::MG], expectedSaltMassFrac[SaltIndex::MG], tol);
+    BOOST_CHECK_CLOSE(salinitc[SaltIndex::CL], expectedSaltMassFrac[SaltIndex::CL], tol);
+    BOOST_CHECK_CLOSE(salinitc[SaltIndex::SO4], expectedSaltMassFrac[SaltIndex::SO4], tol);
 }

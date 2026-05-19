@@ -35,6 +35,8 @@
 #include <boost/mpl/list.hpp>
 #endif
 
+#include <opm/common/utility/SaltArray.hpp>
+
 #include <opm/material/densead/Evaluation.hpp>
 #include <opm/material/densead/Math.hpp>
 
@@ -56,19 +58,11 @@ bool close_at_tolerance(Scalar n1, Scalar n2, Scalar tolerance)
 }
 
 template<class Evaluation>
-Evaluation moleFractionToMolality(Evaluation& xlCO2, Evaluation& s, const int& activityModel)
+Evaluation
+moleFractionToMolality(Evaluation& xlCO2,
+                       Opm::SaltArray<Evaluation, Opm::SaltMolality>& s)
 {
-    Evaluation mCO2;
-
-    // Activity model 3 have been implemented without 2 times salt molality
-    if (activityModel == 3){
-        mCO2 = xlCO2 * (s + 55.508) / (1 - xlCO2);
-    }
-    else {
-        mCO2 = xlCO2 * (2 * s + 55.508) / (1 - xlCO2);
-    }
-
-    return mCO2;
+    return xlCO2 * (s.sum() + 55.508) / (1.0 - xlCO2);
 }
 
 #if BOOST_VERSION / 100000 == 1 && BOOST_VERSION / 100 % 1000 < 67
@@ -86,9 +80,6 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(Brine_CO2, Scalar, Types)
 
     using BinaryCoeffBrineCO2 = Opm::BinaryCoeff::Brine_CO2<Scalar, H2O, CO2>;
 
-    // Molar mass of NaCl [kg/mol]
-    const Scalar MmNaCl = 58.44e-3;
-
     // Extrapolate density?
     const bool extrapolate = true;
 
@@ -101,7 +92,15 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(Brine_CO2, Scalar, Types)
     // Init pressure, temperature, and salinity variables
     std::vector<Evaluation> T = {303.15, 333.15, 363.15, 393.15};  // K
     std::vector<Evaluation> p = {1e5, 5e5, 10e5, 50e5, 100e5, 200e5, 300e5, 400e5, 500e5, 600e5};  // Pa
-    std::vector<Evaluation> s = {0.0, 1.0, 2.0, 4.0};
+    std::vector<Opm::SaltArray<Evaluation, Opm::SaltMolality> > s(4);
+    s[0][Opm::SaltIndex::NA] = 0.0;
+    s[0][Opm::SaltIndex::CL] = 0.0;
+    s[1][Opm::SaltIndex::NA] = 1.0;
+    s[1][Opm::SaltIndex::CL] = 1.0;
+    s[2][Opm::SaltIndex::NA] = 2.0;
+    s[2][Opm::SaltIndex::CL] = 2.0;
+    s[3][Opm::SaltIndex::NA] = 4.0;
+    s[3][Opm::SaltIndex::CL] = 4.0;
 
     // Literature values from Duan & Sun (2003), An improved model calculating CO 2 solubility in pure water and aqueous
     // NaCl solutions from 273 to 533 K and from 0 to 2000 bar, Chemical Geology 193
@@ -140,7 +139,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(Brine_CO2, Scalar, Types)
     Evaluation xgH2O;
     Evaluation xlCO2;
     Evaluation mCO2;
-    Evaluation salinity = 0.0;
+    Opm::SaltArray<Evaluation, Opm::SaltMassFraction> salinity;
     for (std::size_t iS = 0; iS < s.size(); ++iS) {
         for (std::size_t iT = 0; iT < T.size(); ++iT) {
             for (std::size_t iP = 0; iP < p.size(); ++iP) {
@@ -152,23 +151,31 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(Brine_CO2, Scalar, Types)
 
                     // Calculate salinity in mass fraction
                     if (iS > 0) {
-                        salinity = 1 / ( 1 + 1 / (s[iS] * MmNaCl));
-                    }
-                    else {
-                        salinity = 0.0;
+                        salinity = s[iS].template convert_to<Opm::SaltMassFraction>();
                     }
 
                     // Calculate solubility as mole fraction
-                    BinaryCoeffBrineCO2::calculateMoleFractions(params, T[iT], p[iP], salinity, -1, xlCO2, xgH2O,
-                                                                activityModel[iA], extrapolate);
+                    BinaryCoeffBrineCO2::calculateMoleFractions(params,
+                                                                T[iT],
+                                                                p[iP],
+                                                                salinity,
+                                                                -1,
+                                                                xlCO2,
+                                                                xgH2O,
+                                                                activityModel[iA],
+                                                                extrapolate);
 
                     // Convert to molality
-                    mCO2 = moleFractionToMolality(xlCO2, s[iS], activityModel[iA]);
+                    mCO2 = moleFractionToMolality(xlCO2, s[iS]);
 
-                    BOOST_CHECK_MESSAGE(close_at_tolerance(mCO2.value(), m_co2_data[iS][iT][iP], tol[iA]),
-                    "relative difference between solubility {"<<mCO2.value()<<"} and Duan & Sun (2005) {"<<
-                    m_co2_data[iS][iT][iP]<<"} exceeds tolerance {"<<tol[iA]<<"} at (T, p, S) = ("<<T[iT].value()<<
-                    ", "<<p[iP].value()<<", "<<s[iS].value()<<") for salt activity model = "<<activityModel[iA]);
+                    BOOST_CHECK_MESSAGE(
+                        close_at_tolerance(mCO2.value(), m_co2_data[iS][iT][iP], tol[iA]),
+                        "relative difference between solubility {"
+                        << mCO2.value() << "} and Duan & Sun (2005) {" << m_co2_data[iS][iT][iP]
+                        << "} exceeds tolerance {" << tol[iA] << "} at (T, p, S) = ("
+                        << T[iT].value() << ", " << p[iP].value() << ", "
+                        << s[iS][Opm::SaltIndex::NA].value() << ") for salt activity model = "
+                        << activityModel[iA]);
                 }
             }
         }
@@ -180,9 +187,6 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(BrineDensityWithCO2, Scalar, Types)
 {
     using Evaluation = Opm::DenseAd::Evaluation<Scalar, 3>;
 
-    // Molar mass of NaCl [kg/mol]
-    const Scalar MmNaCl = 58.44e-3;
-
     // Activity model for salt
     // 1 = Rumpf et al. (1994) as given in Spycher & Pruess (2005)
     // 2 = Duan-Sun model as modified in Spycher & Pruess (2009)
@@ -191,6 +195,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(BrineDensityWithCO2, Scalar, Types)
 
     // Tolerance for Yan et al. (2011) data
     const Scalar tol_yan = 5e-3;
+    const Scalar tol_yan_multicomp_salt = 1e-2;
 
     // Yan et al, Int. J. Greenh. Gas Control, 5, 2011; Table 4
     static constexpr Scalar rho_Yan_1[3][6][3] = {{
@@ -220,39 +225,65 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(BrineDensityWithCO2, Scalar, Types)
 
     // Temperature, pressure and salinity for Yan et al (2011) data; Table 4
     std::vector<Evaluation> T = {323.2, 373.2, 413.2};  // K
-    std::vector<Evaluation> p = {5e6, 10e6, 15e6, 20e6, 30e6, 40e6};  // Pa
-    std::vector<Scalar> s = {0.0, 1.0, 5.0};
+    std::vector<Evaluation> p = {5e6, 10e6, 15e6, 20e6, 30e6, 40e6}; // Pa
+    std::vector<Opm::SaltArray<Scalar, Opm::SaltMolality> > s(3);
+    s[0][Opm::SaltIndex::NA] = 0.0;
+    s[0][Opm::SaltIndex::CL] = 0.0;
+    s[1][Opm::SaltIndex::NA] = 1.0;
+    s[1][Opm::SaltIndex::CL] = 1.0;
+    s[2][Opm::SaltIndex::NA] = 5.0;
+    s[2][Opm::SaltIndex::CL] = 5.0;
 
     // Test against Yan et al. (2011) data
     Evaluation rs_sat;
     Evaluation rho;
-    std::vector<Scalar> salinity = {0.0};
+    Evaluation rs_sat_multicomp_salt;
+    Evaluation rho_multicomp_salt;
+    std::vector<Opm::SaltArray<Scalar, Opm::SaltMassFraction> > salinity(1);
     for (std::size_t iS = 0; iS < s.size(); ++iS) {
         for (std::size_t iP = 0; iP < p.size(); ++iP) {
             for (std::size_t iT = 0; iT < T.size(); ++iT) {
                 // Calculate salinity in mass fraction for nonzero salinity
                 if (iS > 0) {
-                    salinity[0] = 1 / ( 1 + 1 / (s[iS] * MmNaCl));
-                }
-                else {
-                    salinity[0] = 0.0;
+                    salinity[0] = s[iS].template convert_to<Opm::SaltMassFraction>();
                 }
 
                 // Instantiate BrineCo2Pvt class
-                Opm::BrineCo2Pvt<Scalar> brineCo2Pvt(salinity, activityModel);
+                Opm::BrineCo2Pvt<Scalar> brineCo2Pvt(salinity, false, activityModel);
+                Opm::BrineCo2Pvt<Scalar> brineCo2PvtMultiCompSalt(salinity, true, activityModel);
 
                 // Calculate saturated Rs (dissolved CO2 in brine)
-                rs_sat = brineCo2Pvt.rsSat(/*regionIdx=*/0, T[iT], p[iP], Evaluation(salinity[0]));
+                Opm::SaltArray<Evaluation, Opm::SaltMassFraction> evalSalinity(salinity[0]);
+                rs_sat = brineCo2Pvt.rsSat(/*regionIdx=*/0, T[iT], p[iP], evalSalinity);
+                rs_sat_multicomp_salt =
+                    brineCo2PvtMultiCompSalt.rsSat(0, T[iT], p[iP], evalSalinity);
 
                 // Calculate density of brine with dissolved CO2
-                rho = brineCo2Pvt.density(/*regionIdx=*/0, T[iT], p[iP], rs_sat, Evaluation(salinity[0]));
+                rho = brineCo2Pvt.density(/*regionIdx=*/0, T[iT], p[iP], rs_sat, evalSalinity);
+                rho_multicomp_salt =
+                    brineCo2PvtMultiCompSalt.density(0,
+                                                     T[iT],
+                                                     p[iP],
+                                                     rs_sat_multicomp_salt,
+                                                     evalSalinity);
 
                 // Compare with data
-                BOOST_CHECK_MESSAGE(close_at_tolerance(rho.value(), rho_Yan_1[iS][iP][iT], tol_yan),
-                                    "relative difference between density {"<<rho.value()<<"} and Yan et al. (2011) {"<<
-                                    rho_Yan_1[iS][iP][iT]<<"} exceeds tolerance {"<<tol_yan<<"} at (T, p, S) = ("<<
-                                    T[iT].value()<<", "<<p[iP].value()<<", "<<s[iS]<<")");
+                BOOST_CHECK_MESSAGE(
+                    close_at_tolerance(rho.value(), rho_Yan_1[iS][iP][iT], tol_yan),
+                    "relative difference between density {"<< rho.value()
+                    << "} and Yan et al. (2011) {" << rho_Yan_1[iS][iP][iT]
+                    << "} exceeds tolerance {" << tol_yan << "} at (T, p, S) = (" << T[iT].value()
+                    << ", " << p[iP].value() << ", " << s[iS].sum() << ")");
 
+                BOOST_CHECK_MESSAGE(
+                    close_at_tolerance(rho_multicomp_salt.value(),
+                                       rho_Yan_1[iS][iP][iT],
+                                       tol_yan_multicomp_salt),
+                    "relative difference between density with multicomponent salt {"
+                    << rho_multicomp_salt.value()
+                    << "} and Yan et al. (2011) {" << rho_Yan_1[iS][iP][iT]
+                    << "} exceeds tolerance {" << tol_yan_multicomp_salt << "} at (T, p, S) = ("
+                    << T[iT].value() << ", " << p[iP].value() << ", " << s[iS].sum() << ")");
             }
         }
     }
