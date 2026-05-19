@@ -30,7 +30,7 @@ namespace Opm {
 
         auto offset = ptrInA - bufAStart;
 
-        if (offset < 0 || static_cast<size_t>(offset) >= bufALength) {
+        if (offset < 0 || static_cast<size_t>(offset) >= bufALength || static_cast<size_t>(offset) >= bufBLength) {
             throw std::out_of_range("ComputePtrBasedOnOffsetInOtherBuffer: Pointer into A is out of range.");
         }
 
