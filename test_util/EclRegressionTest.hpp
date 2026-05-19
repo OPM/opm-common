@@ -43,8 +43,8 @@ public:
     //! \brief Sets up the regression test.
     //! \param[in] basename1 Full path without file extension to the first case.
     //! \param[in] basename2 Full path without file extension to the second case.
-    //! \param[in] absTolerance Tolerance for absolute deviation.
-    //! \param[in] relTolerance Tolerance for relative deviation.
+    //! \param[in] absToleranceArg Tolerance for absolute deviation.
+    //! \param[in] relToleranceArg Tolerance for relative deviation.
     //! \details This constructor only calls the constructor of the superclass, see the docs for ECLFilesComparator for more information.
     ECLRegressionTest(const std::string& basename1, const std::string& basename2,
                       double absToleranceArg, double relToleranceArg):

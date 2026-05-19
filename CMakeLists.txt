@@ -8,6 +8,10 @@ option(OPM_INSTALL_PYTHON "Install python bindings?" ON)
 option(OPM_ENABLE_EMBEDDED_PYTHON "Enable embedded python?" OFF)
 option(OPM_ENABLE_DUNE "Enable code requiring dune-common?" ON)
 
+macro(opm-common_dir_hook)
+  set(doxy_dir docs/doxygen)
+endmacro()
+
 macro(opm-common_prereqs_hook)
   if(TARGET cjson)
     target_link_libraries(opmcommon PRIVATE cjson)

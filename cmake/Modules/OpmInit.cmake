@@ -50,13 +50,13 @@ endfunction ()
 
 macro (OpmInitDirVars)
   # these are the most common (and desired locations)
-  set (${project}_DIR "opm")
-  set (doxy_dir "doc/doxygen")
+  set(${project}_DIR "opm")
+  set(doxy_dir "doc/doxygen")
 
   # but for backward compatibility we can override it
-  if (COMMAND dir_hook)
-	dir_hook ()
-  endif (COMMAND dir_hook)
+  if(COMMAND ${project}_dir_hook)
+    cmake_language(CALL ${project}_dir_hook)
+  endif()
 endmacro ()
 
 if("${CMAKE_SIZEOF_VOID_P}" LESS 8)
