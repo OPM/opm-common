@@ -115,3 +115,31 @@ function(opm_add_library)
   opm_add_target_options(TARGET ${PARAM_TARGET})
   opm_interprocedural_optimization(TARGET ${PARAM_TARGET})
 endfunction()
+
+# Add an executable target
+function(opm_add_executable)
+  cmake_parse_arguments(PARAM "" "TARGET" "LIBRARIES;SOURCES;HEADERS" ${ARGN})
+  if(NOT PARAM_TARGET)
+    message(FATAL_ERROR "Function needs a TARGET parameter")
+  endif()
+  if(NOT PARAM_SOURCES)
+    message(FATAL_ERROR "Function needs a SOURCES parameter")
+  endif()
+
+  add_executable(${PARAM_TARGET})
+  target_sources(${PARAM_TARGET} PRIVATE ${PARAM_SOURCES})
+  if(PARAM_HEADERS)
+    target_sources(${PARAM_TARGET}
+      PRIVATE
+      FILE_SET
+        HEADERS
+      FILES
+        ${PARAM_HEADERS}
+    )
+  endif()
+  if(PARAM_LIBRARIES)
+    target_link_libraries(${PARAM_TARGET} PRIVATE ${PARAM_LIBRARIES})
+  endif()
+  opm_add_target_options(TARGET ${PARAM_TARGET})
+  opm_interprocedural_optimization(TARGET ${PARAM_TARGET})
+endfunction()
