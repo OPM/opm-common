@@ -114,6 +114,7 @@
 #include <opm/input/eclipse/EclipseState/Tables/WatvisctTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/AqutabTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/ZmfvdTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/CompvdTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/JFunc.hpp>
 
 #include <opm/input/eclipse/EclipseState/Tables/Tabdims.hpp>
@@ -622,6 +623,7 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
         initRsconstTables(deck);
         initRTempTables(deck);
         initZmfvdTables(deck);
+        initCompvdTables(deck);
         initRocktabTables(deck);
         initPlyshlogTables(deck);
         initPlymwinjTables(deck);
@@ -686,6 +688,50 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
             const auto& dataItem = tableRecord.getItem("DATA");
             if (dataItem.data_size() > 0) {
                 auto table = std::make_shared<ZmfvdTable>(
+                    dataItem, static_cast<int>(tableIdx), numComponents, keyword.location());
+                container.addTable(tableIdx, table);
+            }
+        }
+    }
+
+
+    void TableManager::initCompvdTables(const Deck& deck) {
+        if (!deck.hasKeyword<ParserKeywords::COMPVD>())
+            return;
+
+        const std::string keywordName{"COMPVD"};
+
+        if (deck.count(keywordName) > 1) {
+            complainAboutAmbiguousKeyword(deck, keywordName);
+            return;
+        }
+
+        const auto& tableKeywords = deck[keywordName];
+        if (!deck.hasKeyword<ParserKeywords::COMPS>()) {
+            const std::string reason{
+                "COMPVD keyword requires COMPS to specify the number of components"};
+            throw OpmInputError(reason, tableKeywords[0].location());
+        }
+
+        const auto& compsKeyword = deck.get<ParserKeywords::COMPS>().back();
+        const int numComponents = compsKeyword.getRecord(0)
+                       .getItem<ParserKeywords::COMPS::NUM_COMPS>().get<int>(0);
+
+        if (numComponents < 1) {
+            const std::string reason{
+                "The number of components specified in COMPS must be positive"};
+            throw OpmInputError(reason, compsKeyword.location());
+        }
+
+        const std::size_t numTables = m_eqldims.getNumEquilRegions();
+        auto& container = forceGetTables(keywordName, numTables);
+        const auto& keyword = tableKeywords.back();
+
+        for (std::size_t tableIdx = 0; tableIdx < keyword.size(); ++tableIdx) {
+            const auto& tableRecord = keyword.getRecord(tableIdx);
+            const auto& dataItem = tableRecord.getItem("DATA");
+            if (dataItem.data_size() > 0) {
+                auto table = std::make_shared<CompvdTable>(
                     dataItem, static_cast<int>(tableIdx), numComponents, keyword.location());
                 container.addTable(tableIdx, table);
             }
@@ -1136,6 +1182,10 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
 
     const TableContainer& TableManager::getZmfvdTables() const {
         return getTables("ZMFVD");
+    }
+
+    const TableContainer& TableManager::getCompvdTables() const {
+        return getTables("COMPVD");
     }
 
     const TableContainer& TableManager::getRocktabTables() const {

@@ -89,6 +89,7 @@
 #include <opm/input/eclipse/EclipseState/Tables/WatvisctTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/WsfTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/ZmfvdTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/CompvdTable.hpp>
 
 #include <opm/input/eclipse/Units/Dimension.hpp>
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
@@ -2939,6 +2940,116 @@ ZmfvdTable::getMoleFractionColumn(const int componentIdx) const
     }
 
     return SimpleTable::getColumn(1 + componentIdx);
+}
+
+CompvdTable::CompvdTable(const DeckItem& item,
+                         const int tableID,
+                         const int numComponents,
+                         const KeywordLocation& location)
+    : numComponents_(numComponents)
+{
+    m_schema.addColumn(ColumnSchema("DEPTH", Table::STRICTLY_INCREASING, Table::DEFAULT_NONE));
+    for (int c = 0; c < numComponents; ++c) {
+        m_schema.addColumn(ColumnSchema(fmt::format("Z_COMP{}", c),
+                                        Table::RANDOM, Table::DEFAULT_NONE));
+    }
+    // The phase flag is intentionally NOT added as a SimpleTable column: it is
+    // a discrete integer label (0 = vapor, 1 = liquid), and SimpleTable
+    // columns are hard-coded to std::vector<double> with ordering/interpolation
+    // semantics that do not apply.  We store it separately in phaseFlags_.
+    m_schema.addColumn(ColumnSchema("PSAT", Table::RANDOM, Table::DEFAULT_NONE));
+
+    addColumns();
+
+    // Columns per row in the deck data: depth + Ncomps mole fractions + flag + Psat
+    const auto ncol = static_cast<std::size_t>(numComponents + 3);
+    if (item.data_size() % ncol != 0) {
+        const std::string reason = fmt::format(
+            "COMPVD table {}: number of data elements ({}) is not a multiple "
+            "of expected number of columns (1 depth + {} components + 1 phase flag "
+            "+ 1 Psat = {})",
+            tableID + 1, item.data_size(), numComponents, ncol);
+        throw OpmInputError(reason, location);
+    }
+
+    const auto nrows = item.data_size() / ncol;
+    phaseFlags_.reserve(nrows);
+
+    const std::string tableName{"COMPVD"};
+    for (std::size_t row = 0; row < nrows; ++row) {
+        const std::size_t rowStart = row * ncol;
+
+        // Depth column
+        const double siDepth  = item.getSIDouble(rowStart);
+        getColumn(0).addValue(siDepth, tableName);
+
+        // Component mole-fraction columns (dimensionless).
+        std::vector<double> moles(numComponents, 0.0);
+        for (int c = 0; c < numComponents; ++c) {
+            const auto z = item.get<double>(rowStart + 1 + c);
+            moles[c] = z;
+            getColumn(1 + c).addValue(z, tableName);
+        }
+
+        // Sum-to-one check, same epsilon is used in ZMFVD
+        constexpr double epsilon = 1.e-5;
+        const double sum_fractions = std::accumulate(moles.begin(), moles.end(), 0.);
+        if (std::abs(sum_fractions - 1.) > epsilon) {
+            const std::string reason = fmt::format(
+                "COMPVD table {}: sum of mole fractions in row {} is not 1 (sum is {})",
+                tableID + 1, row + 1, sum_fractions);
+            throw OpmInputError(reason, location);
+        }
+
+        // Phase flag: stored as an int, validated to be exactly 0 or 1.
+        const double flagRaw = item.get<double>(rowStart + 1 + numComponents);
+        if (flagRaw != 0.0 && flagRaw != 1.0) {
+            const std::string reason = fmt::format(
+                "COMPVD table {}: phase flag in row {} must be 0 (vapor) or 1 (liquid), got {}",
+                tableID + 1, row + 1, flagRaw);
+            throw OpmInputError(reason, location);
+        }
+        phaseFlags_.push_back(static_cast<int>(flagRaw));
+
+        // Saturation-pressure column
+        const double siPsat  = item.getSIDouble(rowStart + 2 + numComponents);
+        getColumn(1 + numComponents).addValue(siPsat, tableName);
+    }
+}
+
+const TableColumn&
+CompvdTable::getDepthColumn() const
+{
+    return SimpleTable::getColumn(0);
+}
+
+const TableColumn&
+CompvdTable::getMoleFractionColumn(const int componentIdx) const
+{
+    if (componentIdx < 0 || componentIdx >= this->numComponents_) {
+        throw std::out_of_range(fmt::format(
+            "CompvdTable::getMoleFractionColumn: componentIdx {} out of valid range [0, {})",
+            componentIdx,
+            this->numComponents_ - 1));
+    }
+
+    return SimpleTable::getColumn(1 + componentIdx);
+}
+
+const TableColumn&
+CompvdTable::getSaturationPressureColumn() const
+{
+    return SimpleTable::getColumn(1 + this->numComponents_);
+}
+
+int CompvdTable::phaseFlag(std::size_t rowIdx) const
+{
+    if (rowIdx >= this->phaseFlags_.size()) {
+        throw std::out_of_range(fmt::format(
+            "CompvdTable::phaseFlag: row index {} out of valid range [0, {})",
+            rowIdx, this->phaseFlags_.size()));
+    }
+    return this->phaseFlags_[rowIdx];
 }
 
 } // namespace Opm

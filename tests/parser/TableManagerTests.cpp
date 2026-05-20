@@ -54,6 +54,7 @@
 #include <opm/input/eclipse/EclipseState/Tables/TLMixpar.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/Tabdims.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/ZmfvdTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/CompvdTable.hpp>
 
 #include <opm/input/eclipse/Schedule/VFPProdTable.hpp>
 #include <opm/input/eclipse/Schedule/VFPInjTable.hpp>
@@ -3192,4 +3193,116 @@ END
         BOOST_CHECK_THROW(t2.getMoleFractionColumn(2), std::out_of_range);
         BOOST_CHECK_THROW(t2.getMoleFractionColumn(-1), std::out_of_range);
     }
+}
+
+
+BOOST_AUTO_TEST_CASE(CompvdTable_TwoComponents) {
+    // COMPVD with 2 components, 2 equilibrium regions.
+    // Each row: depth, z1, z2, phase-flag (0=vapor, 1=liquid), Psat.
+    const auto deck = Opm::Parser{}.parseString(R"(
+RUNSPEC
+METRIC
+COMPS
+2 /
+EQLDIMS
+2 /
+PROPS
+COMPVD
+  100.0  0.5  0.5  0  150.0
+  200.0  0.6  0.4  0  160.0
+  300.0  0.7  0.3  1  170.0 /
+  100.0  0.4  0.6  0  140.0
+  200.0  0.5  0.5  1  155.0 /
+END
+)");
+
+    const auto tmgr = Opm::TableManager{ deck };
+    const auto& compvd = tmgr.getCompvdTables();
+    BOOST_REQUIRE_EQUAL(compvd.size(), std::size_t{2});
+
+    // Pressure is in bar; SI is Pa.  150 bar = 1.5e7 Pa.
+    constexpr double bar = 1.0e5;
+
+    // -- Table 1 --
+    {
+        const auto& t1 = compvd.getTable<CompvdTable>(0);
+        BOOST_CHECK_EQUAL(t1.numRows(), 3);
+        // depth + 2 component columns + Psat (phase flag is stored separately as int)
+        BOOST_CHECK_EQUAL(t1.numColumns(), 4);
+        BOOST_CHECK_EQUAL(t1.numComponents(), 2);
+
+        const auto& depth = t1.getDepthColumn();
+        BOOST_REQUIRE_EQUAL(depth.size(), std::size_t{3});
+        BOOST_CHECK_CLOSE(depth[0], 100.0, epsilon());
+        BOOST_CHECK_CLOSE(depth[2], 300.0, epsilon());
+
+        const auto& z0 = t1.getMoleFractionColumn(0);
+        const auto& z1 = t1.getMoleFractionColumn(1);
+        BOOST_CHECK_CLOSE(z0[2], 0.7, epsilon());
+        BOOST_CHECK_CLOSE(z1[2], 0.3, epsilon());
+
+        BOOST_CHECK_EQUAL(t1.phaseFlag(0), 0);
+        BOOST_CHECK_EQUAL(t1.phaseFlag(1), 0);
+        BOOST_CHECK_EQUAL(t1.phaseFlag(2), 1);
+        BOOST_REQUIRE_EQUAL(t1.phaseFlags().size(), std::size_t{3});
+        BOOST_CHECK_THROW(t1.phaseFlag(3), std::out_of_range);
+
+        const auto& psat = t1.getSaturationPressureColumn();
+        BOOST_CHECK_CLOSE(psat[0], 150.0 * bar, epsilon());
+        BOOST_CHECK_CLOSE(psat[1], 160.0 * bar, epsilon());
+        BOOST_CHECK_CLOSE(psat[2], 170.0 * bar, epsilon());
+
+        BOOST_CHECK_THROW(t1.getMoleFractionColumn(2), std::out_of_range);
+    }
+
+    // -- Table 2 --
+    {
+        const auto& t2 = compvd.getTable<CompvdTable>(1);
+        BOOST_CHECK_EQUAL(t2.numRows(), 2);
+        BOOST_CHECK_EQUAL(t2.numColumns(), 4);
+
+        BOOST_CHECK_EQUAL(t2.phaseFlag(0), 0);
+        BOOST_CHECK_EQUAL(t2.phaseFlag(1), 1);
+
+        const auto& psat = t2.getSaturationPressureColumn();
+        BOOST_CHECK_CLOSE(psat[0], 140.0 * bar, epsilon());
+        BOOST_CHECK_CLOSE(psat[1], 155.0 * bar, epsilon());
+    }
+}
+
+
+BOOST_AUTO_TEST_CASE(CompvdTable_InvalidPhaseFlag) {
+    // Phase flag must be 0 or 1; anything else is rejected at parse time.
+    const auto deck = Opm::Parser{}.parseString(R"(
+RUNSPEC
+METRIC
+COMPS
+2 /
+EQLDIMS
+1 /
+PROPS
+COMPVD
+  100.0  0.5  0.5  2  150.0 /
+END
+)");
+
+    BOOST_CHECK_THROW(Opm::TableManager{ deck }, Opm::OpmInputError);
+}
+
+
+BOOST_AUTO_TEST_CASE(CompvdTable_MoleFractionsMustSumToOne) {
+    const auto deck = Opm::Parser{}.parseString(R"(
+RUNSPEC
+METRIC
+COMPS
+2 /
+EQLDIMS
+1 /
+PROPS
+COMPVD
+  100.0  0.5  0.6  0  150.0 /
+END
+)");
+
+    BOOST_CHECK_THROW(Opm::TableManager{ deck }, Opm::OpmInputError);
 }

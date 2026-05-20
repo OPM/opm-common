@@ -994,6 +994,7 @@ list(APPEND PUBLIC_HEADER_FILES
   opm/input/eclipse/EclipseState/Tables/BiofilmTable.hpp
   opm/input/eclipse/EclipseState/Tables/BrineDensityTable.hpp
   opm/input/eclipse/EclipseState/Tables/ColumnSchema.hpp
+  opm/input/eclipse/EclipseState/Tables/CompvdTable.hpp
   opm/input/eclipse/EclipseState/Tables/DenT.hpp
   opm/input/eclipse/EclipseState/Tables/DiffMICPTable.hpp
   opm/input/eclipse/EclipseState/Tables/EnkrvdTable.hpp
