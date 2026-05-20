@@ -1,0 +1,25 @@
+{
+  "name": "COMPVD",
+  "comment": "Total composition versus depth. Each record contains depth, NCOMPS mole fractions, a vapor/liquid flag (0=vapor, 1=liquid), and the observed saturation pressure Psat. The dimension hint below matches the common two-component case; unit conversion is performed explicitly per-column inside the parser using the active UnitSystem.",
+  "sections": [
+    "PROPS"
+  ],
+  "size": {
+      "keyword": "EQLDIMS",
+      "item": "NTEQUL"
+    },
+  "items": [
+    {
+      "name": "DATA",
+      "value_type": "DOUBLE",
+      "size_type": "ALL",
+      "dimension": [
+        "Length",
+        "1",
+        "1",
+        "1",
+        "Pressure"
+      ]
+    }
+  ]
+}

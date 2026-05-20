@@ -1055,6 +1055,7 @@ set( keywords
      001_Eclipse300/C/CIRCLE
      001_Eclipse300/C/CNAMES
      001_Eclipse300/C/COMPS
+     001_Eclipse300/C/COMPVD
      001_Eclipse300/C/CO2SOL
      001_Eclipse300/C/CO2STORE
      001_Eclipse300/C/CREF
