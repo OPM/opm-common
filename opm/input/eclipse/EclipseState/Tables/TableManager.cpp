@@ -726,13 +726,14 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
         const std::size_t numTables = m_eqldims.getNumEquilRegions();
         auto& container = forceGetTables(keywordName, numTables);
         const auto& keyword = tableKeywords.back();
+        const auto& usys = deck.getActiveUnitSystem();
 
         for (std::size_t tableIdx = 0; tableIdx < keyword.size(); ++tableIdx) {
             const auto& tableRecord = keyword.getRecord(tableIdx);
             const auto& dataItem = tableRecord.getItem("DATA");
             if (dataItem.data_size() > 0) {
                 auto table = std::make_shared<CompvdTable>(
-                    dataItem, static_cast<int>(tableIdx), numComponents, keyword.location());
+                    dataItem, static_cast<int>(tableIdx), numComponents, usys, keyword.location());
                 container.addTable(tableIdx, table);
             }
         }

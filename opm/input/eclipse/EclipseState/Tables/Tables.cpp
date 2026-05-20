@@ -2945,6 +2945,7 @@ ZmfvdTable::getMoleFractionColumn(const int componentIdx) const
 CompvdTable::CompvdTable(const DeckItem& item,
                          const int tableID,
                          const int numComponents,
+                         const UnitSystem& unitSystem,
                          const KeywordLocation& location)
     : numComponents_(numComponents)
 {
@@ -2974,19 +2975,20 @@ CompvdTable::CompvdTable(const DeckItem& item,
 
     const auto nrows = item.data_size() / ncol;
     phaseFlags_.reserve(nrows);
+    const auto& data = item.getData<double>();
 
     const std::string tableName{"COMPVD"};
     for (std::size_t row = 0; row < nrows; ++row) {
         const std::size_t rowStart = row * ncol;
 
         // Depth column
-        const double siDepth  = item.getSIDouble(rowStart);
+        const double siDepth = unitSystem.to_si(UnitSystem::measure::length, data.at(rowStart));
         getColumn(0).addValue(siDepth, tableName);
 
         // Component mole-fraction columns (dimensionless).
         std::vector<double> moles(numComponents, 0.0);
         for (int c = 0; c < numComponents; ++c) {
-            const auto z = item.get<double>(rowStart + 1 + c);
+            const auto z = data.at(rowStart + 1 + c);
             moles[c] = z;
             getColumn(1 + c).addValue(z, tableName);
         }
@@ -3002,7 +3004,7 @@ CompvdTable::CompvdTable(const DeckItem& item,
         }
 
         // Phase flag: stored as an int, validated to be exactly 0 or 1.
-        const double flagRaw = item.get<double>(rowStart + 1 + numComponents);
+        const double flagRaw = data.at(rowStart + 1 + numComponents);
         if (flagRaw != 0.0 && flagRaw != 1.0) {
             const std::string reason = fmt::format(
                 "COMPVD table {}: phase flag in row {} must be 0 (vapor) or 1 (liquid), got {}",
@@ -3012,7 +3014,7 @@ CompvdTable::CompvdTable(const DeckItem& item,
         phaseFlags_.push_back(static_cast<int>(flagRaw));
 
         // Saturation-pressure column
-        const double siPsat  = item.getSIDouble(rowStart + 2 + numComponents);
+        const double siPsat = unitSystem.to_si(UnitSystem::measure::pressure, data.at(rowStart + 2 + numComponents));
         getColumn(1 + numComponents).addValue(siPsat, tableName);
     }
 }
