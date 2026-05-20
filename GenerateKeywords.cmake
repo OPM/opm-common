@@ -1,46 +1,48 @@
-set(genkw_SOURCES
-  opm/json/JsonObject.cpp
-  opm/input/eclipse/Deck/DeckTree.cpp
-  opm/input/eclipse/Deck/DeckValue.cpp
-  opm/input/eclipse/Deck/Deck.cpp
-  opm/input/eclipse/Deck/DeckView.cpp
-  opm/input/eclipse/Deck/DeckItem.cpp
-  opm/input/eclipse/Deck/DeckKeyword.cpp
-  opm/input/eclipse/Deck/DeckRecord.cpp
-  opm/input/eclipse/Deck/DeckOutput.cpp
-  opm/input/eclipse/Deck/UDAValue.cpp
-  opm/input/eclipse/Generator/KeywordGenerator.cpp
-  opm/input/eclipse/Generator/KeywordLoader.cpp
-  opm/input/eclipse/Schedule/UDQ/UDQEnums.cpp
-  opm/input/eclipse/Parser/createDefaultKeywordList.cpp
-  opm/input/eclipse/Parser/ErrorGuard.cpp
-  opm/input/eclipse/Parser/ParseContext.cpp
-  opm/input/eclipse/Parser/ParserEnums.cpp
-  opm/input/eclipse/Parser/ParserItem.cpp
-  opm/input/eclipse/Parser/ParserKeyword.cpp
-  opm/input/eclipse/Parser/ParserRecord.cpp
-  opm/input/eclipse/Parser/raw/RawKeyword.cpp
-  opm/input/eclipse/Parser/raw/RawRecord.cpp
-  opm/input/eclipse/Parser/raw/StarToken.cpp
-  opm/input/eclipse/Units/Dimension.cpp
-  opm/input/eclipse/Units/UnitSystem.cpp
-  opm/common/utility/OpmInputError.cpp
-  opm/common/utility/shmatch.cpp
-  opm/common/utility/String.cpp
-  opm/common/OpmLog/OpmLog.cpp
-  opm/common/OpmLog/Logger.cpp
-  opm/common/OpmLog/StreamLog.cpp
-  opm/common/OpmLog/LogBackend.cpp
-  opm/common/OpmLog/LogUtil.cpp
+opm_add_executable(
+  TARGET
+    genkw
+  SOURCES
+    opm/json/JsonObject.cpp
+    opm/input/eclipse/Deck/DeckTree.cpp
+    opm/input/eclipse/Deck/DeckValue.cpp
+    opm/input/eclipse/Deck/Deck.cpp
+    opm/input/eclipse/Deck/DeckView.cpp
+    opm/input/eclipse/Deck/DeckItem.cpp
+    opm/input/eclipse/Deck/DeckKeyword.cpp
+    opm/input/eclipse/Deck/DeckRecord.cpp
+    opm/input/eclipse/Deck/DeckOutput.cpp
+    opm/input/eclipse/Deck/UDAValue.cpp
+    opm/input/eclipse/Generator/KeywordGenerator.cpp
+    opm/input/eclipse/Generator/KeywordLoader.cpp
+    opm/input/eclipse/Schedule/UDQ/UDQEnums.cpp
+    opm/input/eclipse/Parser/createDefaultKeywordList.cpp
+    opm/input/eclipse/Parser/ErrorGuard.cpp
+    opm/input/eclipse/Parser/ParseContext.cpp
+    opm/input/eclipse/Parser/ParserEnums.cpp
+    opm/input/eclipse/Parser/ParserItem.cpp
+    opm/input/eclipse/Parser/ParserKeyword.cpp
+    opm/input/eclipse/Parser/ParserRecord.cpp
+    opm/input/eclipse/Parser/raw/RawKeyword.cpp
+    opm/input/eclipse/Parser/raw/RawRecord.cpp
+    opm/input/eclipse/Parser/raw/StarToken.cpp
+    opm/input/eclipse/Units/Dimension.cpp
+    opm/input/eclipse/Units/UnitSystem.cpp
+    opm/common/utility/OpmInputError.cpp
+    opm/common/utility/shmatch.cpp
+    opm/common/utility/String.cpp
+    opm/common/OpmLog/OpmLog.cpp
+    opm/common/OpmLog/Logger.cpp
+    opm/common/OpmLog/StreamLog.cpp
+    opm/common/OpmLog/LogBackend.cpp
+    opm/common/OpmLog/LogUtil.cpp
+  LIBRARIES
+    fmt::fmt
+    cjson
 )
-add_executable(genkw ${genkw_SOURCES})
-
-target_link_libraries(genkw PRIVATE fmt::fmt cjson)
 target_include_directories(genkw PRIVATE ${PROJECT_BINARY_DIR})
 if(FNMATCH_H_FOUND)
   target_compile_definitions(genkw PRIVATE HAVE_FNMATCH_H=1)
 endif()
-opm_add_target_options(TARGET genkw)
 
 # Generate keyword list
 include(opm/input/eclipse/share/keywords/keyword_list.cmake)
