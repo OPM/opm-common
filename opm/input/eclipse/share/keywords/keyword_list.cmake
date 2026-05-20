@@ -1087,6 +1087,7 @@ set( keywords
      001_Eclipse300/O/OILVTIM
      001_Eclipse300/O/OPTIONS3
      001_Eclipse300/P/PCRIT
+     001_Eclipse300/P/PRCORR
      001_Eclipse300/P/PREF
      001_Eclipse300/P/PREFS
      001_Eclipse300/R/REGION2REGION_PROBE_E300

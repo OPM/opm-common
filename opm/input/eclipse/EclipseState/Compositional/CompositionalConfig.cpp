@@ -146,6 +146,7 @@ namespace {
             std::pair {"SSHIFT"sv, section.hasKeyword<Opm::ParserKeywords::SSHIFT>() },
             std::pair {"ACF"sv,    section.hasKeyword<Opm::ParserKeywords::ACF>() },
             std::pair {"BIC"sv,    section.hasKeyword<Opm::ParserKeywords::BIC>() },
+            std::pair {"PRCORR"sv, section.hasKeyword<Opm::ParserKeywords::PRCORR>() },
         };
 
         bool any_comp_prop_kw = false;
@@ -262,6 +263,28 @@ CompositionalConfig::CompositionalConfig(const Deck& deck, const Runspec& runspe
                 const auto& item = kw.getRecord(i).getItem<KWEOS::EQUATION>();
                 const auto& equ_str = item.getTrimmedString(0);
                 eos_types[i] = eosTypeFromString(equ_str);
+            }
+        }
+    }
+
+    // PRCORR keyword: modifies the Peng-Robinson EOS. For each EOS region using
+    // PR, switch to PRCORR. For regions using a different EOS, log a message
+    // that PRCORR has no effect there.
+    if (props_section.hasKeyword<ParserKeywords::PRCORR>()) {
+        const auto& keywords = props_section.get<ParserKeywords::PRCORR>();
+        if (keywords.size() > 1) {
+            throw OpmInputError("there are multiple PRCORR keyword specifications",
+                                keywords.begin()->location());
+        }
+        for (std::size_t i = 0; i < eos_types.size(); ++i) {
+            if (eos_types[i] == EOSType::PR) {
+                eos_types[i] = EOSType::PRCORR;
+            } else {
+                const auto msg = fmt::format(
+                    "PRCORR has no effect for EOS region {} because its EOS is "
+                    "{}, which is different from PR.",
+                    i + 1, eosTypeToString(eos_types[i]));
+                OpmLog::info(msg);
             }
         }
     }
