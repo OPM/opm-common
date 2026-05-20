@@ -17,6 +17,9 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#ifndef OPM_POINTERARITHMETIC_HPP
+#define OPM_POINTERARITHMETIC_HPP
+
 namespace Opm {
 
     // Utility function motivated by for instance computing GPU pointers from the cpu without entering a kernel
@@ -30,7 +33,7 @@ namespace Opm {
 
         auto offset = ptrInA - bufAStart;
 
-        if (offset < 0 || static_cast<size_t>(offset) >= bufALength) {
+        if (offset < 0 || static_cast<size_t>(offset) >= bufALength || static_cast<size_t>(offset) >= bufBLength) {
             throw std::out_of_range("ComputePtrBasedOnOffsetInOtherBuffer: Pointer into A is out of range.");
         }
 
@@ -39,3 +42,5 @@ namespace Opm {
     }
 
 } // namespace Opm
+
+#endif // OPM_POINTERARITHMETIC_HPP
