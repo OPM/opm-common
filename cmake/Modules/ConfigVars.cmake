@@ -44,6 +44,10 @@ function(configure_vars)
   # only write the current value of each variable once
   list(REMOVE_DUPLICATES PARAM_VARIABLES)
 
+  if(NOT PARAM_VARIABLES)
+    file(WRITE "${PARAM_FILE}" "// No config variables defined")
+  endif()
+
   # process each variable
   foreach(_var IN LISTS PARAM_VARIABLES)
     # check for empty variable; variables that are explicitly set to false
