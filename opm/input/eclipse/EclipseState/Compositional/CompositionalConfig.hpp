@@ -63,6 +63,7 @@ public:
     const std::vector<double>& criticalPressure(std::size_t eos_region) const;
     const std::vector<double>& criticalTemperature(std::size_t eos_region) const;
     const std::vector<double>& criticalVolume(std::size_t eos_region) const;
+    const std::vector<double>& volumeShifts(std::size_t eos_region) const;
     const std::vector<double>& binaryInteractionCoefficient(size_t eos_region) const;
     std::size_t numComps() const;
 
@@ -79,6 +80,7 @@ public:
         serializer(critical_pressure);
         serializer(critical_temperature);
         serializer(critical_volume);
+        serializer(volume_shifts);
         serializer(binary_interaction_coefficient);
     }
 
@@ -95,6 +97,7 @@ private:
     std::vector<std::vector<double>> critical_pressure;
     std::vector<std::vector<double>> critical_temperature;
     std::vector<std::vector<double>> critical_volume;
+    std::vector<std::vector<double>> volume_shifts;
     std::vector<std::vector<double>> binary_interaction_coefficient;
 };
 

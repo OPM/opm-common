@@ -135,6 +135,10 @@ VCRIT
 0.6  0.1  0.1 /
 0.61 0.11 0.11 /
 
+SSHIFT
+0.1 0.2 0.3 /
+0.11 0.21 0.31 /
+
 
 STCOND
 15.0 /
@@ -297,6 +301,15 @@ BOOST_AUTO_TEST_CASE(CompositionalParsingTest) {
         check_vectors_close(ref_mw1, mw1, tolerance);
     }
 
+    {
+        const auto& vs0 = comp_config.volumeShifts(0);
+        BOOST_CHECK_EQUAL(num_comps, vs0.size());
+        check_vectors_close(std::vector<double>{0.1, 0.2, 0.3}, vs0, tolerance);
+        const auto& vs1 = comp_config.volumeShifts(1);
+        BOOST_CHECK_EQUAL(num_comps, vs1.size());
+        check_vectors_close(std::vector<double>{0.11, 0.21, 0.31}, vs1, tolerance);
+    }
+
     EclipseState es(deck);
     const auto& fp = es.fieldProps();
     const std::size_t num_cell = es.getInputGrid().getNumActive();
@@ -426,6 +439,10 @@ MW
 VCRIT
 0.6  0.1  0.1 /
 0.61 0.11 0.11 /
+
+SSHIFT
+0.1 0.2 0.3 /
+0.11 0.21 0.31 /
 
 
 STCOND

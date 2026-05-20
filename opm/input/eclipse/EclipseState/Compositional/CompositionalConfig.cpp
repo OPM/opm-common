@@ -143,6 +143,7 @@ namespace {
             std::pair {"PCRIT"sv,  section.hasKeyword<Opm::ParserKeywords::PCRIT>() },
             std::pair {"TCRIT"sv,  section.hasKeyword<Opm::ParserKeywords::TCRIT>() },
             std::pair {"VCRIT"sv,  section.hasKeyword<Opm::ParserKeywords::VCRIT>() },
+            std::pair {"SSHIFT"sv, section.hasKeyword<Opm::ParserKeywords::SSHIFT>() },
             std::pair {"ACF"sv,    section.hasKeyword<Opm::ParserKeywords::ACF>() },
             std::pair {"BIC"sv,    section.hasKeyword<Opm::ParserKeywords::BIC>() },
         };
@@ -275,6 +276,8 @@ CompositionalConfig::CompositionalConfig(const Deck& deck, const Runspec& runspe
                                           num_eos_res, this->num_comps);
     processKeyword<ParserKeywords::VCRIT>(props_section, this->critical_volume,
                                           num_eos_res, this->num_comps);
+    processKeyword<ParserKeywords::SSHIFT>(props_section, this->volume_shifts,
+                                           num_eos_res, this->num_comps, 0.);
 
     const std::size_t bic_size = this->num_comps * (this->num_comps - 1) / 2;
     processKeyword<ParserKeywords::BIC>(props_section, this->binary_interaction_coefficient,
@@ -292,6 +295,7 @@ bool CompositionalConfig::operator==(const CompositionalConfig& other) const {
            this->critical_pressure == other.critical_pressure &&
            this->critical_temperature == other.critical_temperature &&
            this->critical_volume == other.critical_volume &&
+           this->volume_shifts == other.volume_shifts &&
            this->binary_interaction_coefficient == other.binary_interaction_coefficient;
 }
 
@@ -309,6 +313,7 @@ CompositionalConfig CompositionalConfig::serializationTestObject() {
     result.critical_pressure = {2, std::vector<double>(result.num_comps, 2.)};
     result.critical_temperature = {2, std::vector<double>(result.num_comps, 3.)};
     result.critical_volume = {2, std::vector<double>(result.num_comps, 5.)};
+    result.volume_shifts = {2, std::vector<double>(result.num_comps, 0.1)};
     result.binary_interaction_coefficient = {2, std::vector<double>(result.num_comps * (result.num_comps - 1) / 2, 6.)};
 
     return result;
@@ -368,6 +373,10 @@ const std::vector<double>& CompositionalConfig::criticalTemperature(size_t eos_r
 
 const std::vector<double>& CompositionalConfig::criticalVolume(size_t eos_region) const {
     return this->critical_volume[eos_region];
+}
+
+const std::vector<double>& CompositionalConfig::volumeShifts(size_t eos_region) const {
+    return this->volume_shifts[eos_region];
 }
 
 const std::vector<double>& CompositionalConfig::binaryInteractionCoefficient(size_t eos_region) const {
