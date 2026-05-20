@@ -286,9 +286,14 @@ macro(opm-common_targets_hook)
         STATIC
     )
     target_include_directories(mocksim PUBLIC msim/include)
-    add_executable(msim examples/msim.cpp)
-    opm_add_target_options(TARGET msim)
-    target_link_libraries(msim PRIVATE mocksim)
+    opm_add_executable(
+      TARGET
+        msim
+      SOURCES
+        examples/msim.cpp
+      LIBRARIES
+        mocksim
+    )
   endif()
 
   list(APPEND opm-common_EXTRA_TARGETS compareECL rst_deck)
