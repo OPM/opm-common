@@ -206,32 +206,41 @@ endmacro()
 
 macro(opm-common_tests_hook)
   # Add the tests
-  opm_add_test(test_EclFilesComparator
-    CONDITION
-      TARGET Boost::unit_test_framework
-    SOURCES
-      tests/test_EclFilesComparator.cpp
-      test_util/EclFilesComparator.cpp
-    LIBRARIES
-      opmcommon
-      Boost::unit_test_framework
-    WORKING_DIRECTORY
-      ${PROJECT_BINARY_DIR}/tests
-  )
+  if(TARGET Boost::unit_test_framework AND BUILD_TESTING)
+    opm_add_executable(
+      TARGET
+        test_EclFilesComparator
+      SOURCES
+        tests/test_EclFilesComparator.cpp
+        test_util/EclFilesComparator.cpp
+      LIBRARIES
+        opmcommon
+        Boost::unit_test_framework
+    )
+    opm_add_test(test_EclFilesComparator
+      NO_COMPILE
+      WORKING_DIRECTORY
+        ${PROJECT_BINARY_DIR}/tests
+    )
 
-  opm_add_test(test_EclRegressionTest
-    CONDITION
-      TARGET Boost::unit_test_framework
-    SOURCES
-      tests/test_EclRegressionTest.cpp
-      test_util/EclFilesComparator.cpp
-      test_util/EclRegressionTest.cpp
-    LIBRARIES
-      opmcommon
-      Boost::unit_test_framework
-    WORKING_DIRECTORY
-      ${PROJECT_BINARY_DIR}/tests
-  )
+    opm_add_executable(
+      TARGET
+        test_EclRegressionTest
+      SOURCES
+        tests/test_EclRegressionTest.cpp
+        test_util/EclFilesComparator.cpp
+        test_util/EclRegressionTest.cpp
+      LIBRARIES
+        opmcommon
+        Boost::unit_test_framework
+    )
+
+    opm_add_test(test_EclRegressionTest
+      NO_COMPILE
+      WORKING_DIRECTORY
+        ${PROJECT_BINARY_DIR}/tests
+    )
+  endif()
 
   include(ExtraTests.cmake)
 
