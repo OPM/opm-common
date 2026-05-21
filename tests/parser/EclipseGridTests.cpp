@@ -1602,6 +1602,70 @@ BOOST_AUTO_TEST_CASE(regularCartGrid) {
     }
 }
 
+BOOST_AUTO_TEST_CASE(CellDepthOverride_FromEDIT_DEPTHKeyword)
+{
+    const auto deck = Opm::Parser{}.parseString(R"(RUNSPEC
+DIMENS
+ 2 1 1 /
+GRID
+DX
+ 2*10 /
+DY
+ 2*10 /
+DZ
+ 2*10 /
+TOPS
+ 2*100 /
+
+EDIT
+DEPTH
+ 2*1000 /
+END
+)");
+
+    const Opm::EclipseState es(deck);
+    const auto& grid = es.getInputGrid();
+
+    BOOST_CHECK_CLOSE(grid.getCellDepth(0), 1000.0, 1e-12);
+    BOOST_CHECK_CLOSE(grid.getCellDepth(1), 1000.0, 1e-12);
+    BOOST_CHECK_CLOSE(grid.getCellDepth(0, 0, 0), 1000.0, 1e-12);
+    BOOST_CHECK_CLOSE(grid.getCellDepth(1, 0, 0), 1000.0, 1e-12);
+}
+
+BOOST_AUTO_TEST_CASE(CellDepthOverride_FromEDIT_EQUALSKeyword)
+{
+    const auto deck = Opm::Parser{}.parseString(R"(RUNSPEC
+DIMENS
+ 2 1 1 /
+GRID
+DX
+ 2*10 /
+DY
+ 2*10 /
+DZ
+ 2*10 /
+TOPS
+ 2*100 /
+
+EDIT
+EQUALS
+ DEPTH 2000 2 2 1 1 1 1 /
+/
+END
+)");
+
+    const Opm::EclipseState es(deck);
+    const auto& grid = es.getInputGrid();
+
+    // Unchanged cell should keep depth from grid geometry: TOPS + 0.5 * DZ.
+    BOOST_CHECK_CLOSE(grid.getCellDepth(0), 105.0, 1e-12);
+    BOOST_CHECK_CLOSE(grid.getCellDepth(0, 0, 0), 105.0, 1e-12);
+
+    // EQUALS modifies only cell (2,1,1).
+    BOOST_CHECK_CLOSE(grid.getCellDepth(1), 2000.0, 1e-12);
+    BOOST_CHECK_CLOSE(grid.getCellDepth(1, 0, 0), 2000.0, 1e-12);
+}
+
 BOOST_AUTO_TEST_CASE(ZcornMapper) {
 
     int nx = 3;
@@ -3834,3 +3898,74 @@ BOOST_AUTO_TEST_CASE(TEST_GDFILE_1_ADDZCORN) {
         BOOST_CHECK(moved_in_j_neighbor);
     }
 }
+
+// ---------------------------------------------------------------------------
+// Tests for DEPTH keyword in EDIT section
+// ---------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(CellDepthOverride_DepthNotAllowedInGRID)
+{
+    // DEPTH in the GRID section must be ignored: the FieldProps layer does
+    // not process it there (DEPTH is only in EDIT::double_keywords), so
+    // the final cell depths must remain equal to the grid-computed values.
+    const auto deck = Opm::Parser{}.parseString(R"(RUNSPEC
+DIMENS
+ 2 1 1 /
+GRID
+DX
+ 2*10 /
+DY
+ 2*10 /
+DZ
+ 2*10 /
+TOPS
+ 2*100 /
+DEPTH
+ 2*9999 /
+END
+)");
+
+    const Opm::EclipseState es(deck);
+    const auto& grid = es.getInputGrid();
+
+    // Grid-computed depth: TOPS + 0.5 * DZ = 105 m.  DEPTH in GRID ignored.
+    BOOST_CHECK_CLOSE(grid.getCellDepth(0), 105.0, 1e-12);
+    BOOST_CHECK_CLOSE(grid.getCellDepth(1), 105.0, 1e-12);
+}
+
+BOOST_AUTO_TEST_CASE(CellDepthOverride_FromEDIT_OPERATERKeyword)
+{
+    // OPERATER DEPTH ... ADDX DEPTH -100 in the EDIT section should
+    // subtract 100 m from depths in the specified region and leave
+    // depths in other regions unchanged.
+    const auto deck = Opm::Parser{}.parseString(R"(RUNSPEC
+DIMENS
+ 2 1 1 /
+GRID
+DX
+ 2*10 /
+DY
+ 2*10 /
+DZ
+ 2*10 /
+TOPS
+ 2*100 /
+OPERNUM
+ 1 2 /
+EDIT
+OPERATER
+  DEPTH 2 ADDX DEPTH -100 0 OPERNUM /
+/
+END
+)");
+
+    const Opm::EclipseState es(deck);
+    const auto& grid = es.getInputGrid();
+
+    // Cell 0 (region 1): depth unchanged — grid-computed TOPS + 0.5*DZ = 105 m.
+    BOOST_CHECK_CLOSE(grid.getCellDepth(0), 105.0, 1e-12);
+
+    // Cell 1 (region 2): depth shifted by -100 m → 5 m.
+    BOOST_CHECK_CLOSE(grid.getCellDepth(1), 5.0, 1e-12);
+}
+

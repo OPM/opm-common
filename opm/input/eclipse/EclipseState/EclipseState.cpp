@@ -156,6 +156,9 @@ namespace Opm {
         if (field_props.has_double("MINPVV")) {
             this->m_inputGrid.setMINPVV(field_props.get_global_double("MINPVV"));
         }
+        if (field_props.depth_edited()) {
+            this->m_inputGrid.setDEPTH(field_props.get_double("DEPTH"));
+        }
         this->conveyNumericalAquiferEffects();
         if (field_props.has_double("MINPVV")) {
             field_props.deleteMINPVV();

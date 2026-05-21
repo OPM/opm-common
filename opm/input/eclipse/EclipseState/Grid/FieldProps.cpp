@@ -714,7 +714,6 @@ bool FieldProps::operator==(const FieldProps& other) const
         && (this->m_satfuncctrl == other.m_satfuncctrl)
         && (this->m_actnum == other.m_actnum)
         && (this->cell_volume == other.cell_volume)
-        && (this->cell_depth == other.cell_depth)
         && (this->m_default_region == other.m_default_region)
         && (this->m_rtep == other.m_rtep)
         && (this->tables == other.tables)
@@ -747,7 +746,6 @@ bool FieldProps::rst_cmp(const FieldProps& full_arg, const FieldProps& rst_arg)
         && (full_arg.m_satfuncctrl == rst_arg.m_satfuncctrl)
         && (full_arg.m_actnum == rst_arg.m_actnum)
         && (full_arg.cell_volume == rst_arg.cell_volume)
-        && (full_arg.cell_depth == rst_arg.cell_depth)
         && (full_arg.m_default_region == rst_arg.m_default_region)
         && (full_arg.m_rtep == rst_arg.m_rtep)
         && (full_arg.tables == rst_arg.tables)
@@ -867,7 +865,6 @@ FieldProps::FieldProps(const Deck& deck,
     , m_satfuncctrl(deck)
     , m_actnum(grid.getACTNUM())
     , cell_volume(extract_cell_volume(grid))
-    , cell_depth(extract_cell_depth(grid))
     , m_default_region(default_region_keyword(deck))
     , grid_ptr(&grid)
     , tables(tables_arg)
@@ -881,6 +878,8 @@ FieldProps::FieldProps(const Deck& deck,
     }
 
     this->resetWorkArrays();
+
+    this->initialize_depth_from_grid();
 
     if (DeckSection::hasGRID(deck)) {
         if (grid.getMinpvMode() == MinpvMode::EclSTD) {
@@ -954,7 +953,6 @@ FieldProps::FieldProps(const Deck& deck, const EclipseGrid& grid)
     , m_satfuncctrl(deck)
     , m_actnum(global_size, 1)  // NB! activates all at start!
     , cell_volume()             // NB! empty for this purpose.
-    , cell_depth()              // NB! empty for this purpose.
     , m_default_region(default_region_keyword(deck))
     , grid_ptr(&grid)
     , tables()                  // NB! empty for this purpose.
@@ -1019,8 +1017,6 @@ void FieldProps::reset_actnum(const std::vector<int>& new_actnum)
     }
 
     Fieldprops::compress(this->cell_volume, active_map);
-    Fieldprops::compress(this->cell_depth, active_map);
-
     this->m_actnum = new_actnum;
     this->active_size = new_active_size;
 }
@@ -1369,6 +1365,12 @@ void FieldProps::handle_double_keyword(const Section section,
         assign_deck(kw_info, keyword, field_data, deck_data, deck_status, box);
     }
 
+    if ((section == Section::EDIT) &&
+        (Fieldprops::keywords::get_keyword_from_alias(keyword_name) == "DEPTH"))
+    {
+        this->depth_edited_ = true;
+    }
+
     if (section == Section::GRID) {
         if (field_data.valid()) {
             return;
@@ -1454,7 +1456,8 @@ void FieldProps::operate(const DeckRecord&                   record,
     }
 }
 
-void FieldProps::handle_operateR(const DeckKeyword& keyword)
+void FieldProps::handle_operateR(const Section section,
+                                 const DeckKeyword& keyword)
 {
     // Special case handling for OPERATE*R*.  General keyword structure is
     //
@@ -1504,6 +1507,10 @@ void FieldProps::handle_operateR(const DeckKeyword& keyword)
         const auto& src_data = this->init_get<double>(src_kw);
         FieldProps::operate(record, field_data, src_data, index_list);
 
+        if ((section == Section::EDIT) && (target_kw == "DEPTH")) {
+            this->depth_edited_ = true;
+        }
+
         // Supporting region operations on global storage arrays would
         // require global storage for the *NUM region set arrays (i.e.,
         // FLUXNUM, MULTNUM, OPERNUM).  In order to avoid global storage
@@ -1527,11 +1534,12 @@ Note that this might cause problems for PINCH option 4 or 5 being ALL.)", target
     }
 }
 
-void FieldProps::handle_region_operation(const DeckKeyword& keyword)
+void FieldProps::handle_region_operation(const Section section,
+                                         const DeckKeyword& keyword)
 {
     if (keyword.name() == ParserKeywords::OPERATER::keywordName) {
         // Special case handling for OPERATER.
-        this->handle_operateR(keyword);
+        this->handle_operateR(section, keyword);
         return;
     }
 
@@ -1580,6 +1588,10 @@ void FieldProps::handle_region_operation(const DeckKeyword& keyword)
                   field_data.data, field_data.value_status,
                   scalar_value, index_list);
 
+            if ((section == Section::EDIT) && (target_kw == "DEPTH")) {
+                this->depth_edited_ = true;
+            }
+
             // Supporting region operations on global storage arrays would
             // require global storage for the *NUM region set arrays (i.e.,
             // FLUXNUM, MULTNUM, OPERNUM).  In order to avoid global storage
@@ -1608,7 +1620,9 @@ Note that this might cause problems for PINCH option 4 or 5 being ALL.)", target
     }
 }
 
-void FieldProps::handle_OPERATE(const DeckKeyword& keyword, Box box)
+void FieldProps::handle_OPERATE(const Section section,
+                                const DeckKeyword& keyword,
+                                Box box)
 {
     // Implementation of the OPERATE keyword.  General keyword structure is
     //
@@ -1634,6 +1648,10 @@ void FieldProps::handle_OPERATE(const DeckKeyword& keyword, Box box)
         const auto& src_data = this->init_get<double>(src_kw);
 
         FieldProps::operate(record, field_data, src_data, box.index_list());
+
+        if ((section == Section::EDIT) && (target_kw == "DEPTH")) {
+            this->depth_edited_ = true;
+        }
 
         if (field_data.global_data)
         {
@@ -1746,6 +1764,10 @@ void FieldProps::handle_operation(const Section      section,
                   field_data.data, field_data.value_status,
                   scalar_value, box.index_list());
 
+            if (editSect && (target_kw == "DEPTH")) {
+                this->depth_edited_ = true;
+            }
+
             if (field_data.global_data) {
                 apply(operation, keyword.location(), target_kw,
                       *field_data.global_data,
@@ -1786,7 +1808,8 @@ void FieldProps::handle_operation(const Section      section,
     }
 }
 
-void FieldProps::handle_COPY(const DeckKeyword& keyword,
+void FieldProps::handle_COPY(const Section      section,
+                             const DeckKeyword& keyword,
                              Box                box,
                              const bool         isRegionOperation)
 {
@@ -1830,6 +1853,11 @@ void FieldProps::handle_COPY(const DeckKeyword& keyword,
             target_data.checkInitialisedCopy(src_data.field_data(), index_list,
                                              srcDescr, target_kw,
                                              keyword.location());
+
+            if ((section == Section::EDIT) && (target_kw == "DEPTH")) {
+                this->depth_edited_ = true;
+            }
+
             if (target_data.global_data && !isRegionOperation) {
                 if (!src_data.field_data().global_data) {
                     throw std::logic_error {
@@ -1870,11 +1898,11 @@ void FieldProps::handle_keyword(const Section      section,
     }
 
     else if (name == ParserKeywords::OPERATE::keywordName) {
-        this->handle_OPERATE(keyword, box);
+        this->handle_OPERATE(section, keyword, box);
     }
 
     else if (Fieldprops::keywords::region_oper_keywords.count(name) == 1) {
-        this->handle_region_operation(keyword);
+        this->handle_region_operation(section, keyword);
     }
 
     else if (Fieldprops::keywords::box_keywords.count(name) == 1) {
@@ -1884,7 +1912,7 @@ void FieldProps::handle_keyword(const Section      section,
     else if ((name == ParserKeywords::COPY::keywordName) ||
              (name == ParserKeywords::COPYREG::keywordName))
     {
-        handle_COPY(keyword, box, name == ParserKeywords::COPYREG::keywordName);
+        handle_COPY(section, keyword, box, name == ParserKeywords::COPYREG::keywordName);
     }
 }
 
@@ -1895,12 +1923,12 @@ void FieldProps::init_tempi(Fieldprops::FieldData<double>& tempi)
     if (this->tables.hasTables("RTEMPVD")) {
         const auto& eqlnum = this->get<int>("EQLNUM");
         const auto& rtempvd = this->tables.getRtempvdTables();
+        const auto& depth = this->init_get<double>("DEPTH").data;
         std::vector< double > tempi_values( this->active_size, 0 );
 
         for (size_t active_index = 0; active_index < this->active_size; active_index++) {
             const auto& table = rtempvd.getTable<RtempvdTable>(eqlnum[active_index] - 1);
-            double depth = this->cell_depth[active_index];
-            tempi_values[active_index] = table.evaluate("Temperature", depth);
+            tempi_values[active_index] = table.evaluate("Temperature", depth[active_index]);
         }
 
         tempi.default_update(tempi_values);
@@ -2116,6 +2144,19 @@ void FieldProps::scanGRIDSectionOnlyACTNUM(const GRIDSection& grid_section)
     }
 }
 
+void FieldProps::initialize_depth_from_grid()
+{
+    // Pre-populate the DEPTH property array with cell depths computed from
+    // the grid geometry so that EDIT-section operations (EQUALS, OPERATER,
+    // etc.) can reference and modify depth values cell-by-cell.
+    const auto& kw_info =
+        Fieldprops::keywords::EDIT::double_keywords.at("DEPTH");
+
+    auto& field_data = this->init_get<double>("DEPTH", kw_info);
+
+    field_data.default_assign(extract_cell_depth(*this->grid_ptr));
+}
+
 void FieldProps::scanEDITSection(const EDITSection& edit_section)
 {
     auto box = makeGlobalGridBox(this->grid_ptr);
@@ -2167,7 +2208,7 @@ void FieldProps::init_satfunc(const std::string& keyword,
         ? this->get<int>("IMBNUM")
         : this->get<int>("SATNUM");
 
-    satfunc.default_update(satfunc::init(keyword, this->tables, this->m_phases, this->m_rtep.value(), this->cell_depth, satreg, endnum));
+    satfunc.default_update(satfunc::init(keyword, this->tables, this->m_phases, this->m_rtep.value(), this->get<double>("DEPTH"), satreg, endnum));
 }
 
 void FieldProps::scanPROPSSection(const PROPSSection& props_section)
@@ -2317,6 +2358,7 @@ void FieldProps::apply_numerical_aquifers(const NumericalAquifers& numerical_aqu
 {
     auto& porv_data = this->init_get<double>("PORV").data;
     auto& poro_data = this->init_get<double>("PORO").data;
+    auto& depth_data = this->init_get<double>("DEPTH").data;
     auto& satnum_data = this->init_get<int>("SATNUM").data;
     auto& pvtnum_data = this->init_get<int>("PVTNUM").data;
 
@@ -2328,7 +2370,7 @@ void FieldProps::apply_numerical_aquifers(const NumericalAquifers& numerical_aqu
     for (const auto& [global_index, cellprop] : aqu_cell_props) {
         const size_t active_index = this->grid_ptr->activeIndex(global_index);
         this->cell_volume[active_index] = cellprop.volume;
-        this->cell_depth[active_index] = cellprop.depth;
+        depth_data[active_index] = cellprop.depth;
 
         porv_data[active_index] = cellprop.pore_volume;
         poro_data[active_index] = cellprop.porosity;

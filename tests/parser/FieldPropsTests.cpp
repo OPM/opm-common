@@ -125,15 +125,21 @@ PERMX
 
     BOOST_CHECK(!fpm.has_double("NO-PORO"));
 
+    // DEPTH is computed from grid as default
+    BOOST_CHECK(fpm.has_double("DEPTH"));
+    const auto& depth = fpm.get_double("DEPTH");
+    BOOST_CHECK_EQUAL(depth.size(), grid.getNumActive());
+
     // PERMX keyword is not fully initialized
     BOOST_CHECK(!fpm.try_get<double>("PERMX"));
     BOOST_CHECK(!fpm.has_double("PERMX"));
     BOOST_CHECK_THROW(fpm.get_double("PERMX"), std::runtime_error);
     {
         const auto& keys = fpm.keys<double>();
-        BOOST_CHECK_EQUAL(keys.size(), decltype(keys.size()){1});
+        BOOST_CHECK_EQUAL(keys.size(), decltype(keys.size()){2});
         BOOST_CHECK(std::ranges::find(keys, "PORO")  != keys.end());
         BOOST_CHECK(std::ranges::find(keys, "PERMX") == keys.end());
+        BOOST_CHECK(std::ranges::find(keys, "DEPTH") != keys.end());
 
         // The PORV property should be extracted with the special function
         // fp.porv() and not the general get<double>() functionality.
@@ -2887,7 +2893,8 @@ EQUALS
     FieldPropsManager fpm(deck, Phases{true, true, true}, grid, TableManager());
 
     const auto& keys = fpm.keys<double>();
-    BOOST_CHECK_EQUAL(keys.size(), 2);
+    // DEPTH, PORO and TRANX
+    BOOST_CHECK_EQUAL(keys.size(), 3);
 
     BOOST_CHECK_THROW( fpm.get_double_field_data("TRANX0"), std::exception );
     BOOST_CHECK_NO_THROW( fpm.get_double_field_data("TRANX0", true));

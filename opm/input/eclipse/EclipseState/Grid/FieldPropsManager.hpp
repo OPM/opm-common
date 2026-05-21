@@ -194,6 +194,8 @@ public:
     virtual bool has_int(const std::string& keyword) const { return this->has<int>(keyword); }
     virtual bool has_double(const std::string& keyword) const { return this->has<double>(keyword); }
 
+    bool depth_edited() const;
+
     /*
       The transmissibility keywords TRANX, TRANY and TRANZ do not really fit
       well in the FieldProps system. The opm codebase is based on a full

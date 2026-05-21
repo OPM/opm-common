@@ -187,6 +187,7 @@ namespace EDIT {
 */
 
 static const std::unordered_map<std::string, keyword_info<double>> double_keywords = {{"MULTPV",  keyword_info<double>{}.init(1.0).mult(true)},
+                                                                                      {"DEPTH",   keyword_info<double>{}.unit_string("Length")},
                                                                                       {"PORV",    keyword_info<double>{}.unit_string("ReservoirVolume")},
                                                                                       {"MULTX",   keyword_info<double>{}.init(1.0).mult(true)},
                                                                                       {"MULTX-",  keyword_info<double>{}.init(1.0).mult(true)},
@@ -703,12 +704,18 @@ public:
 
     void deleteMINPVV();
 
+    bool depth_edited() const
+    {
+        return this->depth_edited_;
+    }
+
     void set_active_indices(const std::vector<int>& indices);
 
 private:
     void processMULTREGP(const Deck& deck);
     void scanGRIDSection(const GRIDSection& grid_section);
     void scanGRIDSectionOnlyACTNUM(const GRIDSection& grid_section);
+    void initialize_depth_from_grid();
     void scanEDITSection(const EDITSection& edit_section);
     void scanPROPSSection(const PROPSSection& props_section);
     void scanREGIONSSection(const REGIONSSection& regions_section);
@@ -760,11 +767,11 @@ private:
     std::pair<std::vector<Box::cell_index>,bool>
     region_index(const std::string& region_name, int region_value);
 
-    void handle_OPERATE(const DeckKeyword& keyword, Box box);
+    void handle_OPERATE(Section section, const DeckKeyword& keyword, Box box);
     void handle_operation(Section section, const DeckKeyword& keyword, Box box);
-    void handle_operateR(const DeckKeyword& keyword);
-    void handle_region_operation(const DeckKeyword& keyword);
-    void handle_COPY(const DeckKeyword& keyword, Box box, bool region);
+    void handle_operateR(Section section, const DeckKeyword& keyword);
+    void handle_region_operation(Section section, const DeckKeyword& keyword);
+    void handle_COPY(Section section, const DeckKeyword& keyword, Box box, bool region);
     void distribute_toplayer(Fieldprops::FieldData<double>& field_data,
                              const std::vector<double>& deck_data,
                              const Box& box);
@@ -814,7 +821,6 @@ private:
     std::vector<int> m_actnum;
     std::unordered_map<int,int> m_active_index;
     std::vector<double> cell_volume;
-    std::vector<double> cell_depth;
     const std::string m_default_region;
     const EclipseGrid * grid_ptr;      // A bit undecided whether to properly use the grid or not ...
     TableManager tables;
@@ -830,6 +836,8 @@ private:
     std::unordered_map<std::string, Fieldprops::FieldData<double>> work_arrays{};
 
     std::unordered_map<std::string,Fieldprops::TranCalculator> tran;
+
+    bool depth_edited_ = false;
 
     /// \brief A map of multiplier keywords found in the EDIT/SCHEDULE section
     ///

@@ -302,6 +302,8 @@ namespace Opm {
 
         /// \brief Sets MINPVV if MINPV and MINPORV are not used
         void setMINPVV(const std::vector<double>& minpvv);
+        /// \brief Sets DEPTH values for active cells if present in EDIT.
+        void setDEPTH(const std::vector<double>& depth);
 
         bool equal(const EclipseGrid& other) const;
         static bool hasDVDEPTHZKeywords(const Deck&);
@@ -382,6 +384,7 @@ namespace Opm {
         // Keep track of aquifer cell depths and (pvtnum,satnum)
         std::map<size_t, double> m_aquifer_cell_depths;
         std::map<size_t, std::array<int,2>> m_aquifer_cell_tabnums;
+        std::optional<std::vector<double>> m_depth;
 
         // Radial grids need this for volume calculations.
         std::optional<std::vector<double>> m_thetav;
