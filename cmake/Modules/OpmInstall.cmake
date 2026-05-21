@@ -58,7 +58,7 @@ function(opm_install opm)
   )
   install(
     FILES
-      ${PROJECT_SOURCE_DIR}/${CMAKE_PROJECT_NAME}-prereqs.cmake
+      ${PROJECT_SOURCE_DIR}/${PROJECT_NAME}-prereqs.cmake
     DESTINATION
       ${CMAKE_INSTALL_DATADIR}/opm/cmake/Modules
   )
