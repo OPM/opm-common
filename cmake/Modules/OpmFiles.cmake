@@ -3,13 +3,7 @@
 macro (opm_sources opm)
   # this is necessary to set so that we know where we are going to
   # execute the test programs (and make datafiles available)
-  set (tests_DIR "tests")
-
-  # how to retrieve the "fancy" name from the filename
-  set (tests_REGEXP
-    "^test_([^/]*)$"
-    "^([^/]*)_test$"
-  )
+  set(tests_DIR "tests")
 
   # these are the lists that must be defined in CMakeLists_files
   # - MAIN_SOURCE_FILES

@@ -158,16 +158,32 @@ include (OpmSatellites)
 
 # example programs are found in the tutorials/ and examples/ directory
 option (BUILD_EXAMPLES "Build the examples/ tree" ON)
-if (BUILD_EXAMPLES)
-  opm_compile_satellites (${project} examples "" "")
-endif (BUILD_EXAMPLES)
+if(BUILD_EXAMPLES)
+  opm_compile_satellites(
+    PREFIX
+      ${project}
+    TYPE
+      examples
+  )
+endif()
 
-opm_compile_satellites (${project} additionals "" "")
+opm_compile_satellites(
+  PREFIX
+    ${project}
+  TYPE
+    additionals
+)
 
 # attic are programs which are not quite abandoned yet; however, they
 # are not actively maintained, so they should not be a part of the
 # default compile
-opm_compile_satellites (${project} attic EXCLUDE_FROM_ALL "")
+opm_compile_satellites(
+  PREFIX
+    ${project}
+  TYPE
+    attic
+  EXCLUDE_FROM_ALL
+)
 
 # infrastructure for testing
 include (CTest)
@@ -189,7 +205,13 @@ opm_data (tests datafiles "${tests_DIR}")
 if(NOT BUILD_TESTING)
   set(excl_all EXCLUDE_FROM_ALL)
 endif()
-opm_compile_satellites (${project} tests "${excl_all}" "${tests_REGEXP}")
+opm_compile_satellites(
+  PREFIX
+    ${project}
+  TYPE
+    tests
+  ${excl_all}
+)
 
 # special processing for tests
 if(COMMAND ${project}_tests_hook)
