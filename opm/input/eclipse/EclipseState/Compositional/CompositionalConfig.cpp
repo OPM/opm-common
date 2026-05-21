@@ -50,7 +50,6 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
-#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -63,7 +62,6 @@ namespace {
                         std::vector<std::vector<double>>& target,
                         const std::size_t num_eos_res,
                         const std::size_t num_values,
-                        const std::string& kw_name,
                         const std::optional<double> default_value = std::nullopt)
     {
         if (! props_section.hasKeyword<Keyword>() ) {
@@ -79,6 +77,7 @@ namespace {
             }
         }
 
+        const auto& kw_name = Keyword::keywordName;
         const auto& keywords = props_section.get<Keyword>();
         // we do not allow multiple input of the keyword unless proven otherwise
         if (keywords.size() > 1) {
@@ -267,19 +266,19 @@ CompositionalConfig::CompositionalConfig(const Deck& deck, const Runspec& runspe
     }
 
     processKeyword<ParserKeywords::MW>(props_section, this->molecular_weights,
-                                       num_eos_res, this->num_comps, "MW");
+                                       num_eos_res, this->num_comps);
     processKeyword<ParserKeywords::ACF>(props_section, this->acentric_factors,
-                                        num_eos_res, this->num_comps, "ACF");
+                                        num_eos_res, this->num_comps);
     processKeyword<ParserKeywords::PCRIT>(props_section, this->critical_pressure,
-                                          num_eos_res, this->num_comps, "PCRIT");
+                                          num_eos_res, this->num_comps);
     processKeyword<ParserKeywords::TCRIT>(props_section, this->critical_temperature,
-                                          num_eos_res, this->num_comps, "TCRIT");
+                                          num_eos_res, this->num_comps);
     processKeyword<ParserKeywords::VCRIT>(props_section, this->critical_volume,
-                                          num_eos_res, this->num_comps, "VCRIT");
+                                          num_eos_res, this->num_comps);
 
     const std::size_t bic_size = this->num_comps * (this->num_comps - 1) / 2;
     processKeyword<ParserKeywords::BIC>(props_section, this->binary_interaction_coefficient,
-                                        num_eos_res, bic_size, "ACF", 0.);
+                                        num_eos_res, bic_size, 0.);
 }
 
 bool CompositionalConfig::operator==(const CompositionalConfig& other) const {
