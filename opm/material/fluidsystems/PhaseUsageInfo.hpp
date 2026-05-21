@@ -32,6 +32,8 @@
 #include <stdexcept>
 #include <string>
 
+#include <fmt/format.h>
+
 #include <opm/common/utility/gpuDecorators.hpp>
 
 namespace Opm
@@ -65,7 +67,7 @@ public:
 
     [[nodiscard]] OPM_HOST_DEVICE short canonicalToActivePhaseIdx(unsigned phaseIdx) const {
         if (!phaseIsActive(phaseIdx)) {
-            OPM_THROW(std::logic_error, "Canonical phase " + std::to_string(phaseIdx) + " is not active.");
+            OPM_THROW(std::logic_error, fmt::format("Canonical phase {} is not active.", phaseIdx));
         }
         return canonicalToActivePhaseIdx_[phaseIdx];
     }
