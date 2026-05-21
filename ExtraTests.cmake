@@ -111,13 +111,24 @@ if (Boost_UNIT_TEST_FRAMEWORK_FOUND)
 
   # opm-tests dependent tests
   if(HAVE_OPM_TESTS)
-    opm_add_test(parse_write
-      ONLY_COMPILE
+    set(_excl_all)
+    if(NOT BUILD_TESTING)
+      set(_excl_all EXCLUDE_FROM_ALL)
+    endif()
+    opm_add_executable(
+      TARGET
+        parse_write
       SOURCES
         tests/parser/integration/parse_write.cpp
       LIBRARIES
         ${TEST_LIBS}
+      ${_excl_all}
     )
+    if(NOT TARGET test-suite)
+       add_custom_target(test-suite)
+     endif()
+     add_dependencies(test-suite parse_write)
+
     list(APPEND EXTRA_TESTS parse_write)
     foreach(deck ${OPM_TESTS_ROOT}/norne/NORNE_ATW2013.DATA
                  ${OPM_TESTS_ROOT}/spe1_solvent/SPE1CASE2_SOLVENT.DATA
