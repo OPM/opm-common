@@ -40,16 +40,11 @@
 #  opm_compile_satellites (opm-core test "" "^test_([^/]*)$")
 #
 macro (opm_compile_satellites opm satellite excl_all test_regexp)
-  # if we are going to build the tests always, then make sure that
-  # the datafiles are present too
-  if (NOT (${excl_all} MATCHES "EXCLUDE_FROM_ALL"))
-    set (_incl_all "ALL")
-  else (NOT (${excl_all} MATCHES "EXCLUDE_FROM_ALL"))
-    set (_incl_all "")
-  endif (NOT (${excl_all} MATCHES "EXCLUDE_FROM_ALL"))
-
   # if a set of datafiles has been setup, pull those in
-  add_custom_target (${satellite} ${_incl_all})
+  add_custom_target(${satellite})
+  if(${excl_all} MATCHES "EXCLUDE_FROM_ALL")
+    set_target_properties(${_sat_name} PROPERTIES EXCLUDE_FROM_ALL TRUE)
+  endif()
   if (${satellite}_DATAFILES)
     add_dependencies (${satellite} ${${satellite}_DATAFILES})
   endif (${satellite}_DATAFILES)
@@ -57,31 +52,34 @@ macro (opm_compile_satellites opm satellite excl_all test_regexp)
   # compile each of these separately
   foreach (_sat_FILE IN LISTS ${satellite}_SOURCES)
     if (NOT "${test_regexp}" STREQUAL "" AND NOT TARGET Boost::unit_test_framework)
-        continue()
+      continue()
     endif()
     get_filename_component (_sat_NAME "${_sat_FILE}" NAME_WE)
-    add_executable (${_sat_NAME} ${excl_all} ${_sat_FILE})
+    opm_add_executable(
+      TARGET
+        ${_sat_NAME}
+      SOURCES
+        ${_sat_FILE}
+      LIBRARIES
+        ${${opm}_TARGET}
+    )
+    if(${excl_all} MATCHES "EXCLUDE_FROM_ALL")
+      set_target_properties(${_sat_name} PROPERTIES EXCLUDE_FROM_ALL TRUE)
+    endif()
+
     add_dependencies (${satellite} ${_sat_NAME})
     # Ensure individual test executables depend on data files so they can be built independently
     if (${satellite}_DATAFILES)
       add_dependencies (${_sat_NAME} ${${satellite}_DATAFILES})
     endif (${satellite}_DATAFILES)
-    set_target_properties (${_sat_NAME} PROPERTIES
-                                        LINK_FLAGS "${${opm}_LINKER_FLAGS_STR}")
-    if(HAVE_DYNAMIC_BOOST_TEST)
-      set_target_properties (${_sat_NAME} PROPERTIES
-                             COMPILE_DEFINITIONS BOOST_TEST_DYN_LINK)
-    endif()
-    # are we building a test? luckily, the testing framework doesn't
-    # require anything else, so we don't have to figure out where it
-    # should go in the library list
+
+    # are we building a test?
     if (NOT "${test_regexp}" STREQUAL "")
-      set (_test_lib Boost::unit_test_framework)
-    else (NOT "${test_regexp}" STREQUAL "")
-      set (_test_lib "")
-    endif (NOT "${test_regexp}" STREQUAL "")
-    target_link_libraries (${_sat_NAME} PRIVATE ${${opm}_TARGET} ${${opm}_LIBRARIES} ${_test_lib})
-    opm_add_target_options(TARGET ${_sat_NAME})
+      target_link_libraries(${_sat_NAME}
+        PRIVATE
+          Boost::unit_test_framework
+      )
+    endif()
 
     # variable with regular expression doubles as a flag for
     # whether tests should be setup or not
