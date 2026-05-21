@@ -165,6 +165,13 @@ if(BUILD_EXAMPLES)
     TYPE
       examples
   )
+  opm_compile_satellites(
+    PREFIX
+      ${project}
+    TYPE
+      programs
+    INSTALL
+  )
 endif()
 
 opm_compile_satellites(
@@ -172,6 +179,7 @@ opm_compile_satellites(
     ${project}
   TYPE
     additionals
+  INSTALL
 )
 
 # attic are programs which are not quite abandoned yet; however, they
