@@ -11,7 +11,7 @@
 #  _TARGET         CMake target which creates the library
 
 # Synopsis:
-#  opm_compile_satellites(PREFIX xxx TYPE yyy [EXCLUDE_FROM_ALL])
+#  opm_compile_satellites(PREFIX xxx TYPE yyy [EXCLUDE_FROM_ALL] [INSTALL])
 #
 # Parameters:
 #  PREFIX          Prefix of the variable which contain information
@@ -27,13 +27,14 @@
 #
 # EXCLUDE_FROM_ALL Given iff these targets should not be built by
 #                  default.
+# INSTALL          Given iff these targets should be installed.
 #
 #
 # Example:
 #  opm_compile_satellites(PREFIX opm-common TYPE tests EXCLUDE_FROM_ALL)
 #
 function(opm_compile_satellites)
-  cmake_parse_arguments(PARAM "EXCLUDE_FROM_ALL" "PREFIX;TYPE" "" ${ARGN})
+  cmake_parse_arguments(PARAM "EXCLUDE_FROM_ALL;INSTALL" "PREFIX;TYPE" "" ${ARGN})
   if(NOT PARAM_PREFIX)
     message(FATAL_ERROR "Function needs a PREFIX parameter")
   endif()
@@ -112,10 +113,7 @@ function(opm_compile_satellites)
       add_dependencies(test-suite "${_sat_NAME}")
     endif()
 
-    # if this program on the list of files that should be distributed?
-    # we check by the name of the source file
-    list(FIND ${PARAM_TYPE}_SOURCES_DIST "${_sat_FILE}" _is_util)
-    if(NOT (_is_util EQUAL -1))
+    if(PARAM_INSTALL)
       install(
         TARGETS
           ${_sat_NAME}

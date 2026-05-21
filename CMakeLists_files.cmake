@@ -843,16 +843,8 @@ list(APPEND TEST_DATA_FILES
 )
 
 list(APPEND EXAMPLE_SOURCE_FILES
-  examples/opmi.cpp
-  examples/opmpack.cpp
-  examples/opmhash.cpp
-  examples/plot_ms_wells.cpp
-  examples/rst_deck.cpp
   examples/wellgraph.cpp
   examples/networkgraph.cpp
-  examples/make_ext_smry.cpp
-  examples/co2brinepvt.cpp
-  examples/hysteresis.cpp
 )
 
 # programs listed here will not only be compiled, but also marked for
@@ -862,7 +854,7 @@ list(APPEND PROGRAM_SOURCE_FILES
   examples/opmpack.cpp
   examples/opmhash.cpp
   examples/rst_deck.cpp
-  examples/make_esmry.cpp
+  examples/make_ext_smry.cpp
   examples/co2brinepvt.cpp
   examples/hysteresis.cpp
   examples/plot_ms_wells.cpp
