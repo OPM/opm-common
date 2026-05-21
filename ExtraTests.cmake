@@ -5,7 +5,7 @@ set(EXTRA_TESTS)
 if (Boost_UNIT_TEST_FRAMEWORK_FOUND)
   # Generated source, needs to be here
   opm_add_test(InlineKeywordTest
-    EXE_NAME
+    EXE_TARGET
       TestKeywords
     SOURCES
       ${PROJECT_BINARY_DIR}/TestKeywords.cpp
@@ -159,7 +159,7 @@ if (Boost_UNIT_TEST_FRAMEWORK_FOUND)
       get_filename_component(test_name ${deck} NAME_WE)
       opm_add_test(${test_name}
         NO_COMPILE
-        EXE_NAME
+        EXE_TARGET
           parse_write
         TEST_ARGS
           ${deck}
@@ -167,7 +167,7 @@ if (Boost_UNIT_TEST_FRAMEWORK_FOUND)
     endforeach()
     opm_add_test("SPE9_CP_GROUP"
       NO_COMPILE
-      EXE_NAME
+      EXE_TARGET
         parse_write
       TEST_ARGS
         "${OPM_TESTS_ROOT}/spe9group/SPE9_CP_GROUP.DATA"
