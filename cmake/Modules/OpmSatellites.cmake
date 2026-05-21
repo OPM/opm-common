@@ -191,7 +191,7 @@ endmacro (opm_data satellite target dirname files)
 #       DRIVER             The script which supervises the test (optional, default: ${OPM_TEST_DRIVER})
 #       DRIVER_ARGS        The script which supervises the test (optional, default: ${OPM_TEST_DRIVER_ARGS})
 #       TEST_ARGS          Arguments to pass to test's binary (optional, default: empty)
-#       SOURCES            Source files for the test (optional, default: ${EXE_TARGET}.cpp)
+#       SOURCES            Source files for the test (optional, default: empty)
 #       PROCESSORS         Number of processors to run test on (optional, default: 1)
 #       TEST_DEPENDS       Other tests which must be run before running this test (optional, default: None)
 #       LIBRARIES          Libraries to link test against (optional)
@@ -224,21 +224,6 @@ function(opm_add_test TestName)
     string (REGEX REPLACE "^test_([^/]*)$" "\\1" _FANCY "${TestName}")
   else()
     set(_FANCY ${TestName})
-  endif()
-
-  # try to auto-detect the name of the source file if SOURCES are not
-  # explicitly specified.
-  if (NOT CURTEST_SOURCES)
-    set(CURTEST_SOURCES "")
-    set(_SDir "${PROJECT_SOURCE_DIR}")
-    foreach(CURTEST_CANDIDATE "${CURTEST_EXE_TARGET}.cpp"
-                              "${CURTEST_EXE_TARGET}.cc"
-                              "tests/${CURTEST_EXE_TARGET}.cpp"
-                              "tests/${CURTEST_EXE_TARGET}.cc")
-      if (EXISTS "${_SDir}/${CURTEST_CANDIDATE}")
-        set(CURTEST_SOURCES "${_SDir}/${CURTEST_CANDIDATE}")
-      endif()
-    endforeach()
   endif()
 
   # the default working directory is the content of
@@ -290,7 +275,7 @@ function(opm_add_test TestName)
   endif()
 
   if (NOT SKIP_CUR_TEST)
-    if (NOT CURTEST_NO_COMPILE)
+    if(NOT CURTEST_NO_COMPILE AND CURTEST_SOURCES)
       # in addition to being run, the test must be compiled. (the
       # run-only case occurs if the binary is already compiled by an
       # earlier test.)
