@@ -157,7 +157,8 @@ namespace Opm {
                                                    critic_volume[c] * 1.e3, acentric_factor[c]});
             }
             FluidSystem::printComponentParams();
-            interaction_coefficients_ = comp_config.binaryInteractionCoefficient(0);
+            const auto& bic = comp_config.binaryInteractionCoefficient(0);
+            interaction_coefficients_.assign(bic.begin(), bic.end());
 
             // Init. water pvt from deck
             waterPvt_->initFromState(eclState, schedule);
