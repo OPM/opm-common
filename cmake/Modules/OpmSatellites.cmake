@@ -8,73 +8,76 @@
 # The following suffices must be defined for the opm prefix passed as
 # parameter:
 #
-#  _LINKER_FLAGS   Necessary flags to link with this library
 #  _TARGET         CMake target which creates the library
-#  _LIBRARIES      Other dependencies that must also be linked
 
 # Synopsis:
-#  opm_compile_satellites (opm satellite excl_all test_regexp)
+#  opm_compile_satellites(PREFIX xxx TYPE yyy [EXCLUDE_FROM_ALL])
 #
 # Parameters:
-#  opm             Prefix of the variable which contain information
+#  PREFIX          Prefix of the variable which contain information
 #                  about the library these satellites depends on, e.g.
-#                  pass "opm-core" if opm-core_TARGET is the name of
-#                  the target the builds this library. Variables with
-#                  suffixes _TARGET and _LIBRARIES must exist.
+#                  pass "opm-common" if opm-common_TARGET is the name of
+#                  the target the builds this library.
 #
-#  satellite       Prefix of variable which contain the names of the
-#                  files, e.g. pass "tests" if the files are in the
-#                  variable tests_SOURCES. Variables with suffixes
-#                  _DATAFILES, _SOURCES and _DIR should exist. This
+#  TYPE            Type of satellite to build, e.g. pass "tests" if the
+#                  files are in the variable tests_SOURCES. Variables with
+#                  suffixes  _DATAFILES, _SOURCES and _DIR should exist. This
 #                  name is also used as name of the target that builds
 #                  all these files.
 #
-#  excl_all        EXCLUDE_FROM_ALL if these targets should not be built by
-#                  default, otherwise empty string.
+# EXCLUDE_FROM_ALL Given iff these targets should not be built by
+#                  default.
 #
-#  test_regexp     Regular expression which picks the name of a test
-#                  out of the filename, or blank if no test should be
-#                  setup.
 #
 # Example:
-#  opm_compile_satellites (opm-core test "" "^test_([^/]*)$")
+#  opm_compile_satellites(PREFIX opm-common TYPE tests EXCLUDE_FROM_ALL)
 #
-macro (opm_compile_satellites opm satellite excl_all test_regexp)
-  # if a set of datafiles has been setup, pull those in
-  add_custom_target(${satellite})
-  if(${excl_all} MATCHES "EXCLUDE_FROM_ALL")
-    set_target_properties(${_sat_name} PROPERTIES EXCLUDE_FROM_ALL TRUE)
+function(opm_compile_satellites)
+  cmake_parse_arguments(PARAM "EXCLUDE_FROM_ALL" "PREFIX;TYPE" "" ${ARGN})
+  if(NOT PARAM_PREFIX)
+    message(FATAL_ERROR "Function needs a PREFIX parameter")
   endif()
-  if (${satellite}_DATAFILES)
-    add_dependencies (${satellite} ${${satellite}_DATAFILES})
-  endif (${satellite}_DATAFILES)
+
+  if(NOT PARAM_TYPE)
+    message(FATAL_ERROR "Function needs a TYPE parameter")
+  endif()
+
+  if(PARAM_TYPE STREQUAL "tests" AND NOT TARGET Boost::unit_test_framework)
+    return()
+  endif()
+
+  # if a set of datafiles has been setup, pull those in
+  add_custom_target(${PARAM_TYPE})
+  if(PARAM_EXCLUDE_FROM_ALL)
+    set_target_properties(${PARAM_TYPE} PROPERTIES EXCLUDE_FROM_ALL TRUE)
+  endif()
+
+  if(${PARAM_TYPE}_DATAFILES)
+    add_dependencies(${PARAM_TYPE} ${${PARAM_TYPE}_DATAFILES})
+  endif()
 
   # compile each of these separately
-  foreach (_sat_FILE IN LISTS ${satellite}_SOURCES)
-    if (NOT "${test_regexp}" STREQUAL "" AND NOT TARGET Boost::unit_test_framework)
-      continue()
-    endif()
-    get_filename_component (_sat_NAME "${_sat_FILE}" NAME_WE)
+  foreach(_sat_FILE IN LISTS ${PARAM_TYPE}_SOURCES)
+    get_filename_component(_sat_NAME "${_sat_FILE}" NAME_WE)
     opm_add_executable(
       TARGET
         ${_sat_NAME}
       SOURCES
         ${_sat_FILE}
       LIBRARIES
-        ${${opm}_TARGET}
+        ${${PARAM_PREFIX}_TARGET}
     )
-    if(${excl_all} MATCHES "EXCLUDE_FROM_ALL")
-      set_target_properties(${_sat_name} PROPERTIES EXCLUDE_FROM_ALL TRUE)
+    if(PARAM_EXCLUDE_FROM_ALL)
+      set_target_properties(${_sat_NAME} PROPERTIES EXCLUDE_FROM_ALL TRUE)
     endif()
 
-    add_dependencies (${satellite} ${_sat_NAME})
+    add_dependencies(${PARAM_TYPE} ${_sat_NAME})
     # Ensure individual test executables depend on data files so they can be built independently
-    if (${satellite}_DATAFILES)
-      add_dependencies (${_sat_NAME} ${${satellite}_DATAFILES})
-    endif (${satellite}_DATAFILES)
+    if(${PARAM_TYPE}_DATAFILES)
+      add_dependencies(${_sat_NAME} ${${PARAM_TYPE}_DATAFILES})
+    endif()
 
-    # are we building a test?
-    if (NOT "${test_regexp}" STREQUAL "")
+    if(PARAM_TYPE STREQUAL "tests")
       target_link_libraries(${_sat_NAME}
         PRIVATE
           Boost::unit_test_framework
@@ -84,39 +87,45 @@ macro (opm_compile_satellites opm satellite excl_all test_regexp)
     # variable with regular expression doubles as a flag for
     # whether tests should be setup or not
     set(_sat_FANCY)
-    if (NOT "${test_regexp}" STREQUAL "")
-      foreach (_regexp IN ITEMS ${test_regexp})
-        if ("${_sat_NAME}" MATCHES "${_regexp}")
-          string (REGEX REPLACE "${_regexp}" "\\1" _sat_FANCY "${_sat_NAME}")
+    if(PARAM_TYPE STREQUAL "tests")
+      # how to retrieve the "fancy" name from the filename
+      set(tests_REGEXP
+        "^test_([^/]*)$"
+        "^([^/]*)_test$"
+      )
+      foreach(_regexp IN ITEMS ${tests_REGEXP})
+        if("${_sat_NAME}" MATCHES "${_regexp}")
+          string(REGEX REPLACE "${_regexp}" "\\1" _sat_FANCY "${_sat_NAME}")
         elseif(NOT _sat_FANCY)
           set(_sat_FANCY ${_sat_NAME})
         endif()
-      endforeach (_regexp)
-      # Run tests through mpi-run. Ubuntu 14.04 provided mpi libs will crash
-      # in the MPI_Finalize() call otherwise.
-      if(MPI_FOUND)
-        add_test (NAME ${_sat_FANCY} COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 1 $<TARGET_FILE:${_sat_NAME}>)
-      else()
-        add_test (NAME ${_sat_FANCY} COMMAND $<TARGET_FILE:${_sat_NAME}>)
-      endif()
+      endforeach()
+
+      add_test(NAME ${_sat_FANCY} COMMAND $<TARGET_FILE:${_sat_NAME}>)
+
       # run the test in the directory where the data files are
-      set_tests_properties (${_sat_FANCY} PROPERTIES
-                            WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/${${satellite}_DIR})
+      set_tests_properties(${_sat_FANCY} PROPERTIES
+                           WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/${${PARAM_TYPE}_DIR})
       if(NOT TARGET test-suite)
         add_custom_target(test-suite)
       endif()
       add_dependencies(test-suite "${_sat_NAME}")
-    endif(NOT "${test_regexp}" STREQUAL "")
+    endif()
 
     # if this program on the list of files that should be distributed?
     # we check by the name of the source file
-    list (FIND ${satellite}_SOURCES_DIST "${_sat_FILE}" _is_util)
-    if (NOT (_is_util EQUAL -1))
-      install (TARGETS ${_sat_NAME} RUNTIME
-               DESTINATION bin)
-    endif (NOT (_is_util EQUAL -1))
-  endforeach (_sat_FILE)
-endmacro (opm_compile_satellites opm prefix)
+    list(FIND ${PARAM_TYPE}_SOURCES_DIST "${_sat_FILE}" _is_util)
+    if(NOT (_is_util EQUAL -1))
+      install(
+        TARGETS
+          ${_sat_NAME}
+        RUNTIME
+        DESTINATION
+          ${CMAKE_INSTALL_BINDIR}
+      )
+    endif()
+  endforeach()
+endfunction()
 
 # Synopsis:
 #  opm_data (satellite target dirname files)
