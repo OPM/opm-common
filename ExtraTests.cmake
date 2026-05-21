@@ -124,10 +124,6 @@ if (Boost_UNIT_TEST_FRAMEWORK_FOUND)
         ${TEST_LIBS}
       ${_excl_all}
     )
-    if(NOT TARGET test-suite)
-       add_custom_target(test-suite)
-     endif()
-     add_dependencies(test-suite parse_write)
 
     list(APPEND EXTRA_TESTS parse_write)
     foreach(deck ${OPM_TESTS_ROOT}/norne/NORNE_ATW2013.DATA
@@ -158,7 +154,6 @@ if (Boost_UNIT_TEST_FRAMEWORK_FOUND)
            )
       get_filename_component(test_name ${deck} NAME_WE)
       opm_add_test(${test_name}
-        NO_COMPILE
         EXE_TARGET
           parse_write
         TEST_ARGS
@@ -166,7 +161,6 @@ if (Boost_UNIT_TEST_FRAMEWORK_FOUND)
       )
     endforeach()
     opm_add_test("SPE9_CP_GROUP"
-      NO_COMPILE
       EXE_TARGET
         parse_write
       TEST_ARGS

@@ -207,7 +207,7 @@ endmacro (opm_data satellite target dirname files)
 #              LIBRARIES -lgmp -lm)
 function(opm_add_test TestName)
   cmake_parse_arguments(CURTEST
-                        "NO_COMPILE;ALWAYS_ENABLE" # flags
+                        "ALWAYS_ENABLE" # flags
                         "EXE_TARGET;PROCESSORS;WORKING_DIRECTORY;CONFIGURATION" # one value args
                         "CONDITION;TEST_DEPENDS;DRIVER;DRIVER_ARGS;DEPENDS;TEST_ARGS;SOURCES;LIBRARIES" # multi-value args
                         ${ARGN})
@@ -275,7 +275,7 @@ function(opm_add_test TestName)
   endif()
 
   if (NOT SKIP_CUR_TEST)
-    if(NOT CURTEST_NO_COMPILE AND CURTEST_SOURCES)
+    if(CURTEST_SOURCES)
       # in addition to being run, the test must be compiled. (the
       # run-only case occurs if the binary is already compiled by an
       # earlier test.)
@@ -328,12 +328,10 @@ function(opm_add_test TestName)
       set_tests_properties(${_FANCY} PROPERTIES PROCESSORS "${CURTEST_PROCESSORS}")
     endif()
 
-    if (NOT CURTEST_NO_COMPILE)
-      if(NOT TARGET test-suite)
-        add_custom_target(test-suite)
-      endif()
-      add_dependencies(test-suite ${CURTEST_EXE_TARGET})
+    if(NOT TARGET test-suite)
+      add_custom_target(test-suite)
     endif()
+    add_dependencies(test-suite ${CURTEST_EXE_TARGET})
   endif()
 endfunction()
 
