@@ -24,6 +24,7 @@
 
 #include <opm/common/utility/OpmInputError.hpp>
 #include <opm/common/OpmLog/OpmLog.hpp>
+#include <opm/common/OpmLog/LogUtil.hpp>
 
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
@@ -276,16 +277,26 @@ CompositionalConfig::CompositionalConfig(const Deck& deck, const Runspec& runspe
             throw OpmInputError("there are multiple PRCORR keyword specifications",
                                 keywords.begin()->location());
         }
+
+        std::string unaffected_regions;
         for (std::size_t i = 0; i < eos_types.size(); ++i) {
             if (eos_types[i] == EOSType::PR) {
                 eos_types[i] = EOSType::PRCORR;
             } else {
-                const auto msg = fmt::format(
-                    "PRCORR has no effect for EOS region {} because its EOS is "
-                    "{}, which is different from PR.",
-                    i + 1, eosTypeToString(eos_types[i]));
-                OpmLog::info(msg);
+                if (!unaffected_regions.empty()) {
+                    unaffected_regions += ", ";
+                }
+                fmt::format_to(std::back_inserter(unaffected_regions),
+                               "{} ({})", i + 1, eosTypeToString(eos_types[i]));
             }
+        }
+
+        if (!unaffected_regions.empty()) {
+            const auto& location = keywords.back().location();
+            const auto msg = fmt::format(
+                "PRCORR is ignored for EOS region(s) {} because their EOS is not PR.",
+                unaffected_regions);
+            OpmLog::info(Opm::Log::fileMessage(location, msg));
         }
     }
 
