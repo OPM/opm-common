@@ -206,9 +206,7 @@ endmacro (opm_data satellite target dirname files)
 #              CONDITION FUNKY_GRID_FOUND
 #              SOURCES tests/MyFunkyTest.cpp
 #              LIBRARIES -lgmp -lm)
-include(CMakeParseArguments)
-
-macro(opm_add_test TestName)
+function(opm_add_test TestName)
   cmake_parse_arguments(CURTEST
                         "NO_COMPILE;ALWAYS_ENABLE" # flags
                         "EXE_NAME;PROCESSORS;WORKING_DIRECTORY;CONFIGURATION" # one value args
@@ -302,14 +300,15 @@ macro(opm_add_test TestName)
       # in addition to being run, the test must be compiled. (the
       # run-only case occurs if the binary is already compiled by an
       # earlier test.)
-      add_executable("${CURTEST_EXE_NAME}" ${CURTEST_EXCLUDE_FROM_ALL} ${CURTEST_SOURCES})
-      opm_add_target_options(TARGET ${CURTEST_EXE_NAME})
-      if(HAVE_DYNAMIC_BOOST_TEST)
-        set_target_properties (${CURTEST_EXE_NAME} PROPERTIES
-                               COMPILE_DEFINITIONS BOOST_TEST_DYN_LINK)
-      endif()
-      target_link_libraries (${CURTEST_EXE_NAME} PRIVATE ${CURTEST_LIBRARIES})
-
+      opm_add_executable(
+        TARGET
+          ${CURTEST_EXE_NAME}
+        SOURCES
+          ${CURTEST_SOURCES}
+        LIBRARIES
+          ${CURTEST_LIBRARIES}
+        ${CURTEST_EXCLUDE_FROM_ALL}
+      )
       if(CURTEST_DEPENDS)
         add_dependencies("${CURTEST_EXE_NAME}" ${CURTEST_DEPENDS})
       endif()
@@ -352,7 +351,7 @@ macro(opm_add_test TestName)
       add_dependencies(test-suite "${CURTEST_EXE_NAME}")
     endif()
   endif()
-endmacro()
+endfunction()
 
 # macro to set the default test driver script and the its default
 # arguments
