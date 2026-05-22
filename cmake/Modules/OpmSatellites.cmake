@@ -300,14 +300,15 @@ function(opm_add_test TestName)
       # in addition to being run, the test must be compiled. (the
       # run-only case occurs if the binary is already compiled by an
       # earlier test.)
-      add_executable("${CURTEST_EXE_NAME}" ${CURTEST_EXCLUDE_FROM_ALL} ${CURTEST_SOURCES})
-      opm_add_target_options(TARGET ${CURTEST_EXE_NAME})
-      if(HAVE_DYNAMIC_BOOST_TEST)
-        set_target_properties (${CURTEST_EXE_NAME} PROPERTIES
-                               COMPILE_DEFINITIONS BOOST_TEST_DYN_LINK)
-      endif()
-      target_link_libraries (${CURTEST_EXE_NAME} PRIVATE ${CURTEST_LIBRARIES})
-
+      opm_add_executable(
+        TARGET
+          ${CURTEST_EXE_NAME}
+        SOURCES
+          ${CURTEST_SOURCES}
+        LIBRARIES
+          ${CURTEST_LIBRARIES}
+        ${CURTEST_EXCLUDE_FROM_ALL}
+      )
       if(CURTEST_DEPENDS)
         add_dependencies("${CURTEST_EXE_NAME}" ${CURTEST_DEPENDS})
       endif()
