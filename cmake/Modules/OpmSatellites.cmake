@@ -212,16 +212,14 @@ function(opm_add_test TestName)
                         "CONDITION;TEST_DEPENDS;DRIVER;DRIVER_ARGS;DEPENDS;TEST_ARGS;SOURCES;LIBRARIES" # multi-value args
                         ${ARGN})
 
-  set(BUILD_TESTING "${BUILD_TESTING}")
-
   # set the default values for optional parameters
   if(NOT CURTEST_EXE_TARGET)
     set(CURTEST_EXE_TARGET ${TestName})
   endif()
 
   # Strip test_ prefix from name
-  if ("${TestName}" MATCHES "^test_([^/]*)$")
-    string (REGEX REPLACE "^test_([^/]*)$" "\\1" _FANCY "${TestName}")
+  if("${TestName}" MATCHES "^test_([^/]*)$")
+    string(REGEX REPLACE "^test_([^/]*)$" "\\1" _FANCY "${TestName}")
   else()
     set(_FANCY ${TestName})
   endif()
@@ -229,8 +227,8 @@ function(opm_add_test TestName)
   # the default working directory is the content of
   # OPM_TEST_DEFAULT_WORKING_DIRECTORY or the source directory if this
   # is unspecified
-  if (NOT CURTEST_WORKING_DIRECTORY)
-    if (OPM_TEST_DEFAULT_WORKING_DIRECTORY)
+  if(NOT CURTEST_WORKING_DIRECTORY)
+    if(OPM_TEST_DEFAULT_WORKING_DIRECTORY)
       set(CURTEST_WORKING_DIRECTORY ${OPM_TEST_DEFAULT_WORKING_DIRECTORY})
     else()
       set(CURTEST_WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
@@ -242,23 +240,23 @@ function(opm_add_test TestName)
   # case. They can still be build using 'make test-suite' and they can
   # be build and run using 'make check'
   set(CURTEST_EXCLUDE_FROM_ALL "")
-  if (NOT BUILD_TESTING AND NOT CURTEST_ALWAYS_ENABLE)
+  if(NOT BUILD_TESTING AND NOT CURTEST_ALWAYS_ENABLE)
     set(CURTEST_EXCLUDE_FROM_ALL "EXCLUDE_FROM_ALL")
   endif()
 
   # figure out the test driver script and its arguments. (the variable
   # for the driver script may be empty. In this case the binary is run
   # "bare metal".)
-  if (NOT CURTEST_DRIVER)
+  if(NOT CURTEST_DRIVER)
     set(CURTEST_DRIVER "${OPM_TEST_DRIVER}")
   endif()
-  if (NOT CURTEST_DRIVER_ARGS)
+  if(NOT CURTEST_DRIVER_ARGS)
     set(CURTEST_DRIVER_ARGS "${OPM_TEST_DRIVER_ARGS}")
   endif()
 
   # the libraries to link against
-  if (NOT CURTEST_LIBRARIES)
-    SET(CURTEST_LIBRARIES "${${project}_LIBRARIES}")
+  if(NOT CURTEST_LIBRARIES)
+    set(CURTEST_LIBRARIES "${${project}_TARGET}")
   endif()
 
   # determine if the test should be completely ignored, i.e., the
@@ -266,7 +264,7 @@ function(opm_add_test TestName)
   # which is required to prevent CMake from evaluating the condition
   # in the string. (which might evaluate to an empty string even
   # though "${CURTEST_CONDITION}" is not empty.)
-  if ("AND OR ${CURTEST_CONDITION}" STREQUAL "AND OR ")
+  if("AND OR ${CURTEST_CONDITION}" STREQUAL "AND OR ")
     set(SKIP_CUR_TEST "0")
   elseif(${CURTEST_CONDITION})
     set(SKIP_CUR_TEST "0")
@@ -274,7 +272,7 @@ function(opm_add_test TestName)
     set(SKIP_CUR_TEST "1")
   endif()
 
-  if (NOT SKIP_CUR_TEST)
+  if(NOT SKIP_CUR_TEST)
     if(CURTEST_SOURCES)
       # in addition to being run, the test must be compiled. (the
       # run-only case occurs if the binary is already compiled by an
@@ -299,7 +297,7 @@ function(opm_add_test TestName)
     # figure out how the test should be run. if a test driver script
     # has been specified to supervise the test binary, use it else
     # run the test binary "naked".
-    if (CURTEST_DRIVER)
+    if(CURTEST_DRIVER)
       set(CURTEST_COMMAND
         ${CURTEST_DRIVER}
         ${CURTEST_DRIVER_ARGS}
@@ -308,24 +306,38 @@ function(opm_add_test TestName)
       )
     else()
       set(CURTEST_COMMAND $<TARGET_FILE:${CURTEST_EXE_TARGET}>)
-      if (CURTEST_TEST_ARGS)
+      if(CURTEST_TEST_ARGS)
         list(APPEND CURTEST_COMMAND ${CURTEST_TEST_ARGS})
       endif()
     endif()
 
-    add_test(NAME ${_FANCY}
-             WORKING_DIRECTORY "${CURTEST_WORKING_DIRECTORY}"
-             COMMAND ${CURTEST_COMMAND}
-             CONFIGURATIONS ${CURTEST_CONFIGURATION})
+    add_test(
+      NAME
+        ${_FANCY}
+      WORKING_DIRECTORY
+        "${CURTEST_WORKING_DIRECTORY}"
+      COMMAND
+        ${CURTEST_COMMAND}
+      CONFIGURATIONS
+        ${CURTEST_CONFIGURATION}
+    )
 
     # specify the dependencies between the tests
-    if (CURTEST_TEST_DEPENDS)
-      set_tests_properties(${_FANCY} PROPERTIES DEPENDS "${CURTEST_TEST_DEPENDS}")
+    if(CURTEST_TEST_DEPENDS)
+      set_tests_properties(${_FANCY}
+        PROPERTIES
+        DEPENDS
+          "${CURTEST_TEST_DEPENDS}"
+      )
     endif()
 
     # tell ctest how many cores it should reserve to run the test
     if (CURTEST_PROCESSORS)
-      set_tests_properties(${_FANCY} PROPERTIES PROCESSORS "${CURTEST_PROCESSORS}")
+      set_tests_properties(${_FANCY}
+        PROPERTIES
+        PROCESSORS
+          ${CURTEST_PROCESSORS}
+      )
     endif()
 
     if(NOT TARGET test-suite)
