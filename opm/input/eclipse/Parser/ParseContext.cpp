@@ -133,6 +133,8 @@ namespace Opm {
         this->addKey(SCHEDULE_ICD_INCOMPATIBLE_PDROP_MODEL, InputErrorAction::THROW_EXCEPTION);
 
         addKey(SCHEDULE_INVALID_NAME, InputErrorAction::THROW_EXCEPTION);
+        this->addKey(SCHEDULE_INVALID_INJPHASE, InputErrorAction::WARN);
+        this->addKey(SCHEDULE_INVALID_VFPTABLE, InputErrorAction::THROW_EXCEPTION);
     }
 
     void ParseContext::initEnv()
@@ -385,6 +387,8 @@ namespace Opm {
     const std::string ParseContext::RPT_UNKNOWN_MNEMONIC = "RPT_UNKNOWN_MNEMONIC";
 
     const std::string ParseContext::SCHEDULE_INVALID_NAME = "SCHEDULE_INVALID_NAME";
+    const std::string ParseContext::SCHEDULE_INVALID_INJPHASE = "SCHEDULE_INVALID_INJPHASE";
+    const std::string ParseContext::SCHEDULE_INVALID_VFPTABLE = "SCHEDULE_INVALID_VFPTABLE";
     const std::string ParseContext::ACTIONX_ILLEGAL_KEYWORD = "ACTIONX_ILLEGAL_KEYWORD";
     const std::string ParseContext::PYACTION_ILLEGAL_KEYWORD = "PYACTION_ILLEGAL_KEYWORD";
     const std::string ParseContext::ACTIONX_CONDITION_ERROR = "ACTIONX_CONDITION_ERROR";

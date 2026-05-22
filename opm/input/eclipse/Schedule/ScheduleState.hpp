@@ -24,6 +24,7 @@
 #include <opm/common/utility/TimeService.hpp>
 
 #include <opm/input/eclipse/EclipseState/Aquifer/AquiferFlux.hpp>
+#include <opm/input/eclipse/EclipseState/Phase.hpp>
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
 
 #include <opm/input/eclipse/Schedule/BCProp.hpp>
@@ -622,6 +623,19 @@ namespace Opm {
         /// Group level satellite injection rates.
         map_member<std::string, GroupSatelliteInjection> satelliteInjection;
 
+        /// Injection networks defined by GNETINJE.
+        ///
+        /// At most one network for each injecting phase--GAS and/or WATER.
+        ///
+        /// We represent injection networks with the \code ExtNetwork
+        /// \endcode type, but nodes and branches in that network do not
+        /// necessarily have a fully consistent set of extended network
+        /// properties.  Client code accessing the network objects should be
+        /// restricted to flow line (\code Branch::vfp_table() \endcode) and
+        /// terminal pressure (\code Node::terminal_pressure() \endcode)
+        /// properties only.
+        map_member<Phase, Network::ExtNetwork> injectionNetwork;
+
         /// Well fracturing seed points and associate fracture plane normal
         /// vectors.
         map_member<std::string, WellFractureSeeds> wseed;
@@ -668,6 +682,7 @@ namespace Opm {
             serializer(groups);
             serializer(wells);
             serializer(this->satelliteInjection);
+            serializer(this->injectionNetwork);
             serializer(wseed);
             serializer(aqufluxs);
             serializer(bcprop);

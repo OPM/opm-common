@@ -24,17 +24,597 @@
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/common/utility/OpmInputError.hpp>
 
+#include <opm/input/eclipse/Schedule/Group/Group.hpp>
+#include <opm/input/eclipse/Schedule/Group/GuideRateConfig.hpp>
+#include <opm/input/eclipse/Schedule/Network/Balance.hpp>
+#include <opm/input/eclipse/Schedule/Network/Branch.hpp>
+#include <opm/input/eclipse/Schedule/Network/ExtNetwork.hpp>
+#include <opm/input/eclipse/Schedule/Network/Node.hpp>
+#include <opm/input/eclipse/Schedule/ScheduleState.hpp>
+#include <opm/input/eclipse/Schedule/Well/Well.hpp>
+
+#include <opm/input/eclipse/Deck/DeckItem.hpp>
+#include <opm/input/eclipse/Deck/DeckKeyword.hpp>
+#include <opm/input/eclipse/Deck/DeckRecord.hpp>
+
+#include <opm/input/eclipse/Parser/ParseContext.hpp>
+
 #include <opm/input/eclipse/Parser/ParserKeywords/B.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/G.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/N.hpp>
 
-#include <opm/input/eclipse/Schedule/Network/Balance.hpp>
-#include <opm/input/eclipse/Schedule/Network/ExtNetwork.hpp>
-#include <opm/input/eclipse/Schedule/Group/GuideRateConfig.hpp>
-#include <opm/input/eclipse/Schedule/ScheduleState.hpp>
-#include <opm/input/eclipse/Schedule/Well/Well.hpp>
+#include <algorithm>
+#include <array>
+#include <cassert>
+#include <concepts>
+#include <cstddef>
+#include <map>
+#include <memory>
+#include <optional>
+#include <stdexcept>
+#include <string>
+#include <type_traits>
+#include <utility>
+#include <vector>
 
 #include <fmt/format.h>
+
+namespace {
+    // =======================================================================
+    // Utilities for GNETINJE processing
+    // =======================================================================
+
+    /// Report unsupported injection phase in GNETINJE.
+    ///
+    /// Records a SCHEDULE_INVALID_INJPHASE condition through the normal
+    /// reporting protocol.
+    ///
+    /// \param[in] record GNETINJE record with an unsupported injection
+    /// phase.
+    ///
+    /// \param[in,out] handlerContext Context for the current report step's
+    /// parsing operation.
+    void rejectInvalidGNetInjePhase(const Opm::DeckRecord& record,
+                                    Opm::HandlerContext&   handlerContext)
+    {
+        using Kw = Opm::ParserKeywords::GNETINJE;
+
+        const auto& phaseItem = record.getItem<Kw::PHASE>();
+
+        const auto phase = phaseItem.defaultApplied(0)
+            ? std::string { "<defaulted>" }
+            : phaseItem.getTrimmedString(0);
+
+        const auto msg_fmt = fmt::format(R"(Problem with {{keyword}}
+In {{file}} line {{line}}
+Injection phase '{}' is not permitted.)", phase);
+
+        handlerContext.parseContext
+            .handleError(Opm::ParseContext::SCHEDULE_INVALID_INJPHASE,
+                         msg_fmt, handlerContext.keyword.location(),
+                         handlerContext.errors);
+    }
+
+    /// Extract SI unit terminal pressure from GNETINJE's terminal pressure item.
+    ///
+    /// \param[in] termPress Terminal pressure item from GNETINJE record.
+    ///
+    /// \return Terminal pressure converted to SI units (Pascal) if
+    /// available, nullopt otherwise--e.g., when the terminal pressure is
+    /// defaulted or has a negative value.
+    std::optional<double>
+    parseGNetInjeTerminalPressure(const Opm::DeckItem& termPress)
+    {
+        if (termPress.defaultApplied(0) || (termPress.get<double>(0) < 0.0)) {
+            // Defaulted or negative terminal pressure => not a terminal pressure node.
+            return {};
+        }
+
+        return { termPress.getSIDouble(0) };
+    }
+
+    /// Expanded and internalised but mostly unprocessed GNETINJE data
+    ///
+    /// Terminal pressures in SI units and parent nodes inferred from group
+    /// tree.
+    class GNetInjeRaw
+    {
+    public:
+        /// Raw data for a single node in an injection network.
+        ///
+        /// Node name used as primary lookup key and therefore store
+        /// separately.
+        struct Node
+        {
+            /// Node's parent--i.e., parent group.
+            ///
+            /// Nullopt for fixed-pressure terminal nodes.
+            std::optional<std::string> parent{};
+
+            /// Node's fixed terminal pressure (SI units).
+            ///
+            /// Nullopt if this node is *not* a fixed-pressure terminal
+            /// node.
+            std::optional<double> termPress{};
+
+            /// VFP table (keyword VFPINJ) associated with flow line between
+            /// this node and its \c parent.
+            ///
+            /// Nullopt for fixed-pressure terminal nodes.  Special value
+            /// 9999 to signify a flow line with no pressure loss.
+            /// Otherwise, a positive integer identifying an existing VFP
+            /// table.
+            std::optional<int> vfpTable{};
+        };
+
+        /// Access representation of named injection network node.
+        ///
+        /// Creates node on first access.  Otherwise, returns existing node.
+        ///
+        /// \param[in] name Injection network node name (a group name).
+        ///
+        /// \return Mutable injection network node object.
+        Node& node(const std::string& name)
+        {
+            return this->nodes_.try_emplace(name).first->second;
+        }
+
+        /// Beginning of range of injection network nodes.
+        ///
+        /// Mostly to support range-for and other range-based algorithms.
+        ///
+        /// \return Beginning of injection network node range.
+        auto begin() const { return this->nodes_.begin(); }
+
+        /// End of range of injection network nodes.
+        ///
+        /// Mostly to support range-for and other range-based algorithms.
+        ///
+        /// \return One past the end of the injection network node range.
+        auto end() const { return this->nodes_.end(); }
+
+        /// Query for an empty collection.
+        ///
+        /// \return Whether or not the current collection is empty.
+        auto empty() const { return this->nodes_.empty(); }
+
+    private:
+        /// Collection of injection network nodes.
+        std::map<std::string, Node> nodes_{};
+    };
+
+    /// Facility for internalising all records of a single GNETINJE keyword.
+    ///
+    /// We create sequences of raw keyword nodes, split by the injecting
+    /// phase and expanded so that there is one node for each group that
+    /// matches one of the records.
+    class CollectGNetInje
+    {
+    public:
+        /// \param[in,out] handlerContext Context for the current report
+        /// step's parsing operation.  Mutated in the case of parse failure,
+        /// but is otherwise unchanged by this class.
+        explicit CollectGNetInje(Opm::HandlerContext& handlerContext)
+            : handlerContext_ { handlerContext }
+        {}
+
+        /// Parse GNETINJE keyword into sequence of injection network nodes
+        /// split by injecting phase.
+        ///
+        /// \return Sequence of pairs for which \code .first \endcode is the
+        /// injecting phase and \code .second \endcode is the corresponding
+        /// raw injection network nodes.
+        auto operator()()
+        {
+            auto nodes = std::array {
+                std::pair { Opm::Phase::GAS  , GNetInjeRaw{} },
+                std::pair { Opm::Phase::WATER, GNetInjeRaw{} },
+            };
+
+            // The unsupported phase must be outside the set of valid keys
+            // in 'nodes'.
+            this->unsupportedPhase_ = Opm::Phase::OIL;
+
+            this->phaseIndexMap_.clear();
+            std::ranges::for_each(nodes, [ix = std::size_t{0}, this]
+                                  (const auto& node) mutable
+            {
+                this->phaseIndexMap_.insert_or_assign(node.first, ix++);
+            });
+
+            std::ranges::for_each(this->handlerContext_.keyword,
+                                  [&nodes, this](const auto& record)
+            {
+                this->parseRecord(record);
+
+                if (this->vfpTable_.has_value() &&
+                    this->phaseIx_.has_value() &&
+                    !this->gnames_.empty())
+                {
+                    // Valid record; meaning the injection phase is
+                    // supported (gas or water), we have a consistent VFP
+                    // table/terminal pressure setting, and the record
+                    // matches at least one existing group name.
+                    //
+                    // Create raw nodes for each of the matching groups.
+                    this->createNodes(nodes[*this->phaseIx_].second);
+                }
+            });
+
+            return nodes;
+        }
+
+    private:
+        /// Context for the current report step's parsing operation.
+        ///
+        /// Mutated in the case of parse failure, but is otherwise unchanged
+        /// by this class.
+        Opm::HandlerContext& handlerContext_;
+
+        /// Sequence index for the current record's injecting phase.
+        ///
+        /// Nullopt in case of unsupported injecting phase--anything other
+        /// than gas or water.
+        std::optional<std::size_t> phaseIx_{};
+
+        /// Terminal pressure (SI units) for current record.
+        ///
+        /// Nullopt if the current record does not represent a
+        /// fixed-pressure terminal node.
+        std::optional<double> termPress_{};
+
+        /// Index of current record's injection flow line table (VFP table).
+        ///
+        /// Nullopt in the case of parse failure, zero if the current record
+        /// represents a fixed-pressure terminal node.
+        std::optional<int> vfpTable_{};
+
+        /// Group names matching the current record's name root.
+        ///
+        /// Empty if there are no matching groups.  In that case, the record
+        /// is ignored.
+        std::vector<std::string> gnames_{};
+
+        /// Bookkeeping structure for translating phases to sequence
+        /// indices.
+        std::map<Opm::Phase, std::size_t> phaseIndexMap_{};
+
+        /// Sentinel value for phase parsing failure.
+        ///
+        /// Must be something other than the supported 'GAS' and 'WAT'
+        /// phases.
+        Opm::Phase unsupportedPhase_ { Opm::Phase::SOLVENT };
+
+        /// Internalise items of a single GNETINJE keyword record.
+        ///
+        /// Populates the matching group names (\code gnames_ \endcode), the
+        /// injecting phase (\code phaseIx_ \endcode), the terminal pressure
+        /// value if applicable (\code termPress_ \endcode), and the flow
+        /// line VFP table if applicable (\code vfpTable_ \endcode).
+        ///
+        /// \param[in] record Single record from a GNETINJE keyword.
+        void parseRecord(const Opm::DeckRecord& record);
+
+        /// Internalise injecting phase and matching groups.
+        ///
+        /// Populates the matching group names (\code gnames_ \endcode) and
+        /// the injecting phase (\code phaseIx_ \endcode).
+        ///
+        /// \param[in] record Single record from a GNETINJE keyword.
+        void inferPhaseAndGroups(const Opm::DeckRecord& record);
+
+        /// Internalise items of a single GNETINJE keyword record.
+        ///
+        /// Populates the terminal pressure value (\code termPress_
+        /// \endcode) and the flow line VFP table, if applicable (\code
+        /// vfpTable_ \endcode).
+        ///
+        /// \param[in] record Single record from a GNETINJE keyword.
+        void inferTermPressAndVFP(const Opm::DeckRecord& record);
+
+        /// Create raw injection network nodes corresponding to currently
+        /// active GNETINJE record.
+        ///
+        /// \param[in,out] nodes Current injection network nodes for active
+        /// record's injecting phase.  On return, holds nodes for all the
+        /// current record's matching group names.
+        void createNodes(GNetInjeRaw& nodes);
+    };
+
+    void CollectGNetInje::parseRecord(const Opm::DeckRecord& record)
+    {
+        // Keyword structure:
+        //
+        // GNETINJE
+        //    GroupName  Phase   TermPress   VFPTable /
+        //    GroupName  Phase   TermPress   VFPTable /
+        //    ...                                     /
+        //    GroupName  Phase   TermPress   VFPTable /
+        // /
+        //
+        // The GroupName may be a root like "INJ-*", in which case the
+        // record applies to all groups whose name matches that name root.
+        // The Phase must be 'GAS' or 'WAT'.  The terminal pressure
+        // (TermPress) is non-negative for fixed-pressure injection network
+        // "terminal" nodes, and negative or defaulted otherwise.  The VFP
+        // table (item 4) can be set to the special value 9999 to indicate
+        // no pressure loss between the node and its parent.  If the VFP
+        // table is defaulted or explicitly set to zero, then there is no
+        // flow line connecting this node to its parent node.  That will
+        // typically be the case for a terminal node.
+
+        // Note: The conditional in operator()() depends on these data
+        // members being empty or nullopt if the parsing process fails, so
+        // ensure that they start in that known state.
+        this->phaseIx_.reset();
+        this->vfpTable_.reset();
+        this->gnames_.clear();
+
+        this->inferPhaseAndGroups(record);
+
+        if (!this->phaseIx_.has_value() || this->gnames_.empty()) {
+            // Invalid phase or no matching groups.  Ignore record.
+            return;
+        }
+
+        this->inferTermPressAndVFP(record);
+    }
+
+    void CollectGNetInje::inferPhaseAndGroups(const Opm::DeckRecord& record)
+    {
+        using Kw = Opm::ParserKeywords::GNETINJE;
+
+        const auto ph = [&phaseItem = record.getItem<Kw::PHASE>(),
+                         unsuppPhase = this->unsupportedPhase_]()
+        {
+            try {
+                return phaseItem.defaultApplied(0)
+                    ? unsuppPhase // Default => phase match failure.
+                    : Opm::get_phase(phaseItem.getTrimmedString(0));
+            }
+            catch (const std::invalid_argument&) {
+                // The phaseItem contains something that's not recognised by
+                // get_phase().  Return an unsupported phase enumerator to
+                // indicate phase matching failure.
+                return unsuppPhase;
+            }
+        }();
+
+        auto phaseIxPos = this->phaseIndexMap_.find(ph);
+        if (phaseIxPos == this->phaseIndexMap_.end()) {
+            rejectInvalidGNetInjePhase(record, this->handlerContext_);
+            return;
+        }
+
+        this->phaseIx_.emplace(phaseIxPos->second);
+
+        this->gnames_ = this->handlerContext_.groupNames
+            (record.getItem<Kw::GROUP>().getTrimmedString(0));
+
+        if (this->gnames_.empty()) {
+            this->handlerContext_.invalidNamePattern
+                (record.getItem<Kw::GROUP>().getTrimmedString(0));
+        }
+    }
+
+    void CollectGNetInje::inferTermPressAndVFP(const Opm::DeckRecord& record)
+    {
+        using Kw = Opm::ParserKeywords::GNETINJE;
+
+        this->termPress_ = parseGNetInjeTerminalPressure
+            (record.getItem<Kw::PRESSURE>());
+
+        const auto vfpTable = record.getItem<Kw::VFP_TABLE>().get<int>(0);
+
+        if (vfpTable < 0) {
+            // Negative VFP table ID.  This is an error.
+            const auto msg_fmt = fmt::format(R"(Problem with keyword {{keyword}}
+In {{file}} line {{line}}
+Negative VFP table number {} is not permitted.)", vfpTable);
+
+            this->handlerContext_.parseContext
+                .handleError(Opm::ParseContext::SCHEDULE_INVALID_VFPTABLE,
+                             msg_fmt,
+                             this->handlerContext_.keyword.location(),
+                             this->handlerContext_.errors);
+
+            // HandleError() will *typically* throw an exception here, but
+            // we return--and ignore the record--if user has downgraded this
+            // condition to a warning instead.
+            return;
+        }
+
+        if ((vfpTable > 0) && this->termPress_.has_value()) {
+            // We have a VFP table for a terminal node/group.
+            //
+            // This is an error condition.
+            const auto msg_fmt = fmt::format(R"(Problem with keyword {{keyword}}
+In {{file}} line {{line}}
+Explicit VFP table {} cannot be assigned to terminal group{} '{}'
+with terminal pressure {}.)",
+                                             vfpTable,
+                                             (this->gnames_.size() != 1) ? "s" : "",
+                                             record.getItem<Kw::GROUP>().getTrimmedString(0),
+                                             record.getItem<Kw::PRESSURE>().get<double>(0));
+
+            this->handlerContext_.parseContext
+                .handleError(Opm::ParseContext::SCHEDULE_INVALID_VFPTABLE,
+                             msg_fmt,
+                             this->handlerContext_.keyword.location(),
+                             this->handlerContext_.errors);
+
+            // HandleError() will *typically* throw an exception here, but
+            // we return--and ignore the record--if user has downgraded this
+            // condition to a warning instead.
+            return;
+        }
+
+        // If we get here, the terminal pressure and VFP tables are
+        // internally consistent.  Record the VFP table to allow process to
+        // proceed to creating network nodes.
+        //
+        // Note that we intentionally do not verify that the VFP table
+        // identified in this record actually exists at this point.  A query
+        // of the form
+        //
+        //     handlerContext_.state().vfpinj.has(vfpTable)
+        //
+        // checks existence, but if we enforce the requirement that the VFP
+        // table exists then all unit tests must meet that criterion as
+        // well.  That is too much of a burden so we instead defer VFP table
+        // existence checking until the point of use.
+        this->vfpTable_.emplace(vfpTable);
+    }
+
+    void CollectGNetInje::createNodes(GNetInjeRaw& nodes)
+    {
+        assert (this->vfpTable_.has_value());
+
+        if ((*this->vfpTable_ == 0) && !this->termPress_.has_value()) {
+            // VFP table is defaulted for a non-terminal node/group.
+            //
+            // That node/group is not part of the network.  In update mode,
+            // the previous network is copied first, so clear any existing
+            // node/branch state for the affected groups before returning.
+            std::ranges::for_each(this->gnames_,
+                                  [&nodes, &groups = this->handlerContext_.state().groups]
+                                  (const auto& gname)
+            {
+                auto& node = nodes.node(gname);
+
+                node.parent = groups(gname).flow_group();
+
+                node.vfpTable.reset();
+                node.termPress.reset();
+            });
+
+            return;
+        }
+
+        if (this->termPress_.has_value()) {
+            // Define a set of fixed-pressure terminal nodes.
+            //
+            // Clear any stale non-terminal state first in case the same
+            // group was previously seen as a branch node in this keyword
+            // expansion or inherited from an earlier update.
+            std::ranges::for_each(this->gnames_,
+                                  [tpress = *this->termPress_, &nodes]
+                                  (const auto& gname)
+            {
+                 auto& node = nodes.node(gname);
+
+                 node.parent.reset();
+                 node.vfpTable.reset();
+                 node.termPress.emplace(tpress);
+            });
+
+            return;
+        }
+
+        // If we get here, the nodes in 'gnames_' are not terminal and
+        // therefore define branches in the injection network.
+        std::ranges::for_each(this->gnames_,
+                              [&nodes, vfpTable = *this->vfpTable_,
+                               &groups = this->handlerContext_.state().groups]
+                              (const auto& gname)
+        {
+            const auto parent = groups(gname).flow_group();
+
+            if (! parent.has_value()) {
+                return;
+            }
+
+            // 'Gname' has a parent group in the group tree.  Form a branch
+            // to that parent group and associate the flow line with the
+            // current VFP table.
+            auto& node = nodes.node(gname);
+
+            node.parent.emplace(*parent);
+            node.vfpTable.emplace(vfpTable);
+            node.termPress.reset();
+        });
+    }
+
+    // -----------------------------------------------------------------------
+
+    /// Form or update injection network from sequence of raw GNETINJE nodes.
+    ///
+    /// \param[in] rawInjNetworkNodes Internalised and expanded injection
+    /// network nodes from all records in a single GNETINJE keyword that
+    /// pertain to a particular injecting phase.
+    ///
+    /// \param[in,out] injectionNetwork New or existing injection network
+    /// structure.  On exit, updated to hold the nodes and branches implied
+    /// by \c rawInjNetworkNodes.
+    void constructInjectionNetwork(const GNetInjeRaw&        rawInjNetworkNodes,
+                                   Opm::Network::ExtNetwork& injectionNetwork)
+    {
+        auto deferredNodes = std::vector<Opm::Network::Node>{};
+
+        for (const auto& [nodeName, rawNode] : rawInjNetworkNodes) {
+            if (! rawNode.vfpTable.has_value() &&
+                ! rawNode.termPress.has_value())
+            {
+                // VFP table defaulted for non-terminal node.  Node is not
+                // part of network.
+
+                if (rawNode.parent.has_value()) {
+                    // 'NodeName' is down-tree node of a dropped branch.
+                    // Confer dropped branch onto network.
+                    injectionNetwork.drop_branch(*rawNode.parent, nodeName);
+                }
+
+                continue;
+            }
+            else if (! rawNode.parent.has_value()) {
+                // Typically a fixed-pressure terminal node.  Defer
+                // registration until after the raw nodes have been
+                // processed so branch updates and stale branch cleanup are
+                // handled first.
+
+                if (auto& deferredNode = deferredNodes.emplace_back(nodeName);
+                    rawNode.termPress.has_value())
+                {
+                    deferredNode.terminal_pressure(*rawNode.termPress);
+                }
+
+                if (injectionNetwork.has_node(nodeName)) {
+                    if (const auto up = injectionNetwork.uptree_branch(nodeName);
+                        up.has_value())
+                    {
+                        // 'NodeName' used to be non-terminal, but its role
+                        // has changed.  Drop existing up-tree branch to
+                        // avoid stale network topology.
+                        injectionNetwork.drop_branch(up->uptree_node(), nodeName);
+                    }
+                }
+
+                continue;
+            }
+
+            // If we get here, the 'nodeName' refers to a non-terminal node
+            // in the injection network.  Create a branch to its
+            // parent/up-tree node and ensure that there is a network node
+            // object for 'nodeName'.  We *assume* that the parent will
+            // itself be a node in the network and therefore handled
+            // elsewhere.
+            //
+            // Note: There is no artificial lift in injection networks, so
+            // we always assign an ALQ of zero to these branches.
+            const auto alq = 0.0;
+
+            injectionNetwork.add_or_replace_branch(Opm::Network::Branch {
+                nodeName, *rawNode.parent, *rawNode.vfpTable, alq
+            });
+
+            injectionNetwork.update_node(Opm::Network::Node { nodeName });
+        }
+
+        for (auto&& deferredNode : deferredNodes) {
+            injectionNetwork.update_node(std::move(deferredNode));
+        }
+    }
+}
 
 namespace Opm {
 
@@ -68,6 +648,31 @@ void handleBRANPROP(HandlerContext& handlerContext)
     }
 
     handlerContext.state().network.update( std::move( ext_network ));
+}
+
+void handleGNETINJE(HandlerContext& handlerContext)
+{
+    std::ranges::for_each(CollectGNetInje { handlerContext }(),
+                          [&input = handlerContext.state().injectionNetwork]
+                          (const auto& phaseInjectionNetwork)
+    {
+        const auto& [phase, rawInjNetworkNodes] = phaseInjectionNetwork;
+
+        if (rawInjNetworkNodes.empty()) {
+            // No injection network defined for this 'phase'.
+            return;
+        }
+
+        auto networkUpdate = input.has(phase)
+            ? std::make_shared<Network::ExtNetwork>(input.get(phase))
+            : std::make_shared<Network::ExtNetwork>();
+
+        networkUpdate->set_standard_network(true);
+
+        constructInjectionNetwork(rawInjNetworkNodes, *networkUpdate);
+
+        input.update(phase, std::move(networkUpdate));
+    });
 }
 
 void handleGRUPNET(HandlerContext& handlerContext)
@@ -268,8 +873,9 @@ getNetworkHandlers()
 {
     return {
         { "BRANPROP", &handleBRANPROP },
+        { "GNETINJE", &handleGNETINJE },
         { "GRUPNET",  &handleGRUPNET  },
-        { "NEFAC",    &handleNEFAC   },
+        { "NEFAC",    &handleNEFAC    },
         { "NETBALAN", &handleNETBALAN },
         { "NODEPROP", &handleNODEPROP },
     };

@@ -394,6 +394,7 @@ bool ScheduleState::operator==(const ScheduleState& other) const {
         && this->wlist_tracker() == other.wlist_tracker()
         && this->wells == other.wells
         && this->satelliteInjection == other.satelliteInjection
+        && this->injectionNetwork == other.injectionNetwork
         && this->inj_streams == other.inj_streams
         && this->groups == other.groups
         && this->vfpprod == other.vfpprod
