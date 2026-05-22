@@ -55,8 +55,8 @@
 
 namespace {
 
-    // The following function is used to parse the following keywords:
-    // MW, ACF, BIC, PCRIT, TCRIT and VCRIT
+    // The following function is used to parse compositional related keywords:
+    // MW, ACF, BIC, PCRIT, TCRIT, VCRIT and SSHIFT, and so on.
     template <typename Keyword>
     void processKeyword(const Opm::PROPSSection& props_section,
                         std::vector<std::vector<double>>& target,
@@ -64,18 +64,18 @@ namespace {
                         const std::size_t num_values,
                         const std::optional<double> default_value = std::nullopt)
     {
+        // For keywords with default values, populate the target with the default
+        // value even if the keyword is not specified.
+        // Note: This may need revisiting if more defaultable keywords are added.
         if (! props_section.hasKeyword<Keyword>() ) {
+            if (default_value.has_value()) {
+                target.assign(num_eos_res,std::vector(num_values, default_value.value()));
+            }
+
             return;
         }
 
-        target.resize(num_eos_res);
-        for (auto& vec : target) {
-            if (default_value.has_value()) {
-                vec.resize(num_values, default_value.value());
-            } else {
-                vec.resize(num_values);
-            }
-        }
+        target.assign(num_eos_res,std::vector(num_values, default_value.value_or(0.0)));
 
         const auto& kw_name = Keyword::keywordName;
         const auto& keywords = props_section.get<Keyword>();
