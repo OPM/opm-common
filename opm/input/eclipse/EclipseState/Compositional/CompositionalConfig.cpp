@@ -24,6 +24,7 @@
 
 #include <opm/common/utility/OpmInputError.hpp>
 #include <opm/common/OpmLog/OpmLog.hpp>
+#include <opm/common/OpmLog/LogUtil.hpp>
 
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
@@ -146,6 +147,7 @@ namespace {
             std::pair {"SSHIFT"sv, section.hasKeyword<Opm::ParserKeywords::SSHIFT>() },
             std::pair {"ACF"sv,    section.hasKeyword<Opm::ParserKeywords::ACF>() },
             std::pair {"BIC"sv,    section.hasKeyword<Opm::ParserKeywords::BIC>() },
+            std::pair {"PRCORR"sv, section.hasKeyword<Opm::ParserKeywords::PRCORR>() },
         };
 
         bool any_comp_prop_kw = false;
@@ -263,6 +265,38 @@ CompositionalConfig::CompositionalConfig(const Deck& deck, const Runspec& runspe
                 const auto& equ_str = item.getTrimmedString(0);
                 eos_types[i] = eosTypeFromString(equ_str);
             }
+        }
+    }
+
+    // PRCORR keyword: modifies the Peng-Robinson EOS. For each EOS region using
+    // PR, switch to PRCORR. For regions using a different EOS, log a message
+    // that PRCORR has no effect there.
+    if (props_section.hasKeyword<ParserKeywords::PRCORR>()) {
+        const auto& keywords = props_section.get<ParserKeywords::PRCORR>();
+        if (keywords.size() > 1) {
+            throw OpmInputError("there are multiple PRCORR keyword specifications",
+                                keywords.begin()->location());
+        }
+
+        std::string unaffected_regions;
+        for (std::size_t i = 0; i < eos_types.size(); ++i) {
+            if (eos_types[i] == EOSType::PR) {
+                eos_types[i] = EOSType::PRCORR;
+            } else {
+                if (!unaffected_regions.empty()) {
+                    unaffected_regions += ", ";
+                }
+                fmt::format_to(std::back_inserter(unaffected_regions),
+                               "{} ({})", i + 1, eosTypeToString(eos_types[i]));
+            }
+        }
+
+        if (!unaffected_regions.empty()) {
+            const auto& location = keywords.back().location();
+            const auto msg = fmt::format(
+                "PRCORR is ignored for EOS region(s) {} because their EOS is not PR.",
+                unaffected_regions);
+            OpmLog::info(Opm::Log::fileMessage(location, msg));
         }
     }
 

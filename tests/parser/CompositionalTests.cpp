@@ -719,4 +719,70 @@ BOOST_AUTO_TEST_CASE(CompositionalParsingTestZMF) {
     }
 }
 
+BOOST_AUTO_TEST_CASE(PRCORRKeywordTest) {
+    // Minimal compositional deck used to verify the handling of the PRCORR
+    // keyword. There are two EOS regions: the first uses PR (and must be
+    // promoted to PRCORR by PRCORR), the second uses SRK (and must be left
+    // unchanged by PRCORR).
+    const std::string deck_string = R"(
+RUNSPEC
+
+METRIC
+
+TABDIMS
+ 8* 2 3 /
+
+OIL
+GAS
+
+DIMENS
+ 1 1 1 /
+
+COMPS
+ 2 /
+
+GRID
+
+DX
+ 1*10 /
+DY
+ 1*10 /
+DZ
+ 1*10 /
+TOPS
+ 1*0 /
+PERMX
+ 1*100 /
+PERMY
+ 1*100 /
+PERMZ
+ 1*100 /
+PORO
+ 1*0.1 /
+
+PROPS
+
+CNAMES
+ C1
+ C10
+/
+
+EOS
+ PR /
+ SRK /
+
+PRCORR
+
+END
+)";
+
+    const Deck deck = Parser{}.parseString(deck_string);
+    const Runspec runspec{deck};
+    const CompositionalConfig comp_config{deck, runspec};
+
+    BOOST_CHECK(CompositionalConfig::EOSType::PRCORR == comp_config.eosType(0));
+    // PRCORR should have no effect on the second region since it is SRK.
+    BOOST_CHECK(CompositionalConfig::EOSType::SRK == comp_config.eosType(1));
+}
+
 }
