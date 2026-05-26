@@ -227,6 +227,11 @@ bool FieldPropsManager::tran_active(const std::string& keyword) const {
     return this->fp->tran_active(keyword);
 }
 
+bool FieldPropsManager::depth_edited() const
+{
+    return this->fp && this->fp->depth_edited();
+}
+
 void FieldPropsManager::apply_numerical_aquifers(const NumericalAquifers& aquifers) {
     return this->fp->apply_numerical_aquifers(aquifers);
 }

@@ -4,6 +4,7 @@
     "EDIT"
   ],
   "data": {
-    "value_type": "DOUBLE"
+    "value_type": "DOUBLE",
+    "dimension": "Length"
   }
 }

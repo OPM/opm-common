@@ -1820,7 +1820,17 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         assertGlobalIndex( globalIndex );
 
         auto it = this->m_aquifer_cell_depths.find(globalIndex);
-        return it != this->m_aquifer_cell_depths.end() ? it->second : computeCellGeometricDepth(globalIndex);
+        if (it != this->m_aquifer_cell_depths.end()) {
+            return it->second;
+        }
+
+        if (const auto actIx = this->m_global_to_active[globalIndex];
+            (actIx >= 0) && this->m_depth.has_value())
+        {
+            return (*this->m_depth)[actIx];
+        }
+
+        return computeCellGeometricDepth(globalIndex);
     }
 
     double EclipseGrid::computeCellGeometricDepth(std::size_t globalIndex) const {
@@ -2687,6 +2697,16 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
             m_minpvMode = MinpvMode::EclSTD;
         }
     }
+
+    void EclipseGrid::setDEPTH(const std::vector<double>& depth)
+    {
+        if (depth.size() != this->getNumActive()) {
+            throw std::runtime_error("EclipseGrid::setDEPTH(): DEPTH vector size differs from number of active cells in grid.");
+        }
+
+        this->m_depth = depth;
+    }
+
     void EclipseGrid::resetACTNUM(const std::vector<int>& actnum) {
         if (actnum.size() != getCartesianSize())
             throw std::runtime_error("resetACTNUM(): actnum vector size differs from logical cartesian size of grid.");
