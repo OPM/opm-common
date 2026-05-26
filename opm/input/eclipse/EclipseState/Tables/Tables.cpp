@@ -2955,7 +2955,7 @@ CompvdTable::CompvdTable(const DeckItem& item,
                                         Table::RANDOM, Table::DEFAULT_NONE));
     }
     // The phase flag is intentionally NOT added as a SimpleTable column: it is
-    // a discrete integer label (0 = vapor, 1 = liquid), and SimpleTable
+    // a discrete label (vapor/liquid), and SimpleTable
     // columns are hard-coded to std::vector<double> with ordering/interpolation
     // semantics that do not apply.  We store it separately in phaseFlags_.
     m_schema.addColumn(ColumnSchema("PSAT", Table::RANDOM, Table::DEFAULT_NONE));
@@ -3003,7 +3003,7 @@ CompvdTable::CompvdTable(const DeckItem& item,
             throw OpmInputError(reason, location);
         }
 
-        // Phase flag: stored as an int, validated to be exactly 0 or 1.
+        // Phase flag: stored as a strong enum, validated to be exactly 0 or 1.
         const double flagRaw = data.at(rowStart + 1 + numComponents);
         if (flagRaw != 0.0 && flagRaw != 1.0) {
             const std::string reason = fmt::format(
@@ -3011,7 +3011,7 @@ CompvdTable::CompvdTable(const DeckItem& item,
                 tableID + 1, row + 1, flagRaw);
             throw OpmInputError(reason, location);
         }
-        phaseFlags_.push_back(static_cast<int>(flagRaw));
+        phaseFlags_.push_back(flagRaw == 0.0 ? Phase::Vapor : Phase::Liquid);
 
         // Saturation-pressure column
         const double siPsat = unitSystem.to_si(UnitSystem::measure::pressure, data.at(rowStart + 2 + numComponents));
@@ -3045,12 +3045,12 @@ CompvdTable::getSaturationPressureColumn() const
     return SimpleTable::getColumn(1 + this->numComponents());
 }
 
-int CompvdTable::phaseFlag(std::size_t rowIdx) const
+CompvdTable::Phase CompvdTable::phaseFlag(std::size_t rowIdx) const
 {
     if (rowIdx >= this->phaseFlags_.size()) {
         throw std::out_of_range(fmt::format(
-            "CompvdTable::phaseFlag: row index {} out of valid range [0, {})",
-            rowIdx, this->phaseFlags_.size()));
+            "CompvdTable::phaseFlag: row index {} out of valid range [0, {}]",
+            rowIdx, this->phaseFlags_.size() - 1));
     }
     return this->phaseFlags_[rowIdx];
 }

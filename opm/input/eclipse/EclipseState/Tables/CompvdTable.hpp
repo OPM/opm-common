@@ -49,6 +49,11 @@ namespace Opm {
     /// flag is checked to be either 0 or 1.
     class CompvdTable : public SimpleTable {
     public:
+        enum class Phase {
+            Vapor,
+            Liquid,
+        };
+
         CompvdTable(const DeckItem& item,
                     const int tableID,
                     const int numComponents,
@@ -60,14 +65,14 @@ namespace Opm {
         /// Observed saturation pressure, in SI units (Pa).
         const TableColumn& getSaturationPressureColumn() const;
 
-        /// 0 (vapor) or 1 (liquid) for the given row.
-        int phaseFlag(std::size_t rowIdx) const;
-        const std::vector<int>& phaseFlags() const { return phaseFlags_; }
+        /// Vapor or liquid for the given row.
+        Phase phaseFlag(std::size_t rowIdx) const;
+        const std::vector<Phase>& phaseFlags() const { return phaseFlags_; }
 
         int numComponents() const { return static_cast<int>(SimpleTable::numColumns()) - 2; }
 
     private:
-        std::vector<int> phaseFlags_;
+        std::vector<Phase> phaseFlags_;
     };
 
 }

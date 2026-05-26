@@ -3243,9 +3243,9 @@ END
         BOOST_CHECK_CLOSE(z1[2], 0.1, epsilon());
         BOOST_CHECK_CLOSE(z2[2], 0.5, epsilon());
 
-        BOOST_CHECK_EQUAL(t1.phaseFlag(0), 0);
-        BOOST_CHECK_EQUAL(t1.phaseFlag(1), 0);
-        BOOST_CHECK_EQUAL(t1.phaseFlag(2), 1);
+        BOOST_CHECK(t1.phaseFlag(0) == CompvdTable::Phase::Vapor);
+        BOOST_CHECK(t1.phaseFlag(1) == CompvdTable::Phase::Vapor);
+        BOOST_CHECK(t1.phaseFlag(2) == CompvdTable::Phase::Liquid);
         BOOST_REQUIRE_EQUAL(t1.phaseFlags().size(), std::size_t{3});
         BOOST_CHECK_THROW(t1.phaseFlag(3), std::out_of_range);
 
@@ -3263,8 +3263,8 @@ END
         BOOST_CHECK_EQUAL(t2.numRows(), 2);
         BOOST_CHECK_EQUAL(t2.numColumns(), 5);
 
-        BOOST_CHECK_EQUAL(t2.phaseFlag(0), 0);
-        BOOST_CHECK_EQUAL(t2.phaseFlag(1), 1);
+        BOOST_CHECK(t2.phaseFlag(0) == CompvdTable::Phase::Vapor);
+        BOOST_CHECK(t2.phaseFlag(1) == CompvdTable::Phase::Liquid);
 
         const auto& z0 = t2.getMoleFractionColumn(0);
         const auto& z1 = t2.getMoleFractionColumn(1);
