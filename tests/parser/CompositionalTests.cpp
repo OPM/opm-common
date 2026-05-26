@@ -135,6 +135,10 @@ VCRIT
 0.6  0.1  0.1 /
 0.61 0.11 0.11 /
 
+SSHIFT
+0.1 0.2 0.3 /
+0.11 0.21 0.31 /
+
 
 STCOND
 15.0 /
@@ -187,10 +191,108 @@ END
 )");
 }
 
+Deck createCompositionalDeckWithoutDefaultedKeywords()
+{
+    return Parser{}.parseString(R"(
+------------------------------------------------------------------------
+RUNSPEC
+------------------------------------------------------------------------
+METRIC
+
+TABDIMS
+8* 2 3/
+
+OIL
+GAS
+
+DIMENS
+1 1 1 /
+
+COMPS
+3 /
+
+------------------------------------------------------------------------
+GRID
+------------------------------------------------------------------------
+DX
+1 /
+DY
+1 /
+DZ
+1 /
+TOPS
+0 /
+PERMX
+100 /
+PERMY
+100 /
+PERMZ
+100 /
+PORO
+0.1 /
+
+------------------------------------------------------------------------
+PROPS
+------------------------------------------------------------------------
+CNAMES
+DECANE
+CO2
+METHANE
+/
+
+EOS
+PR /
+SRK /
+
+ACF
+0.4 0.2 0.01 /
+0.5 0.3 0.03 /
+
+PCRIT
+20. 70. 40. /
+21. 71. 41. /
+
+TCRIT
+600. 300. 190. /
+601. 301. 191. /
+
+MW
+142.  44.  16. /
+142.1 44.1 16.1 /
+
+VCRIT
+0.6  0.1  0.1 /
+0.61 0.11 0.11 /
+
+END
+)");
+}
+
 void check_vectors_close(const std::vector<double>& v1, const std::vector<double>& v2, double tolerance) {
     BOOST_CHECK_EQUAL(v1.size(), v2.size());
     for(size_t i = 0; i < v1.size(); ++i) {
         BOOST_CHECK_CLOSE(v1[i], v2[i], tolerance);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(DefaultedCompositionalKeywordsArePopulatedWhenAbsent) {
+    const Deck deck = createCompositionalDeckWithoutDefaultedKeywords();
+    const Runspec runspec{deck};
+    const CompositionalConfig comp_config{deck, runspec};
+
+    constexpr std::size_t num_comps = 3;
+    constexpr std::size_t num_eos_res = 2;
+    constexpr std::size_t bic_size = num_comps * (num_comps - 1) / 2;
+    constexpr double tolerance = 1.e-5;
+
+    for (std::size_t eos_region = 0; eos_region < num_eos_res; ++eos_region) {
+        const auto& bic = comp_config.binaryInteractionCoefficient(eos_region);
+        BOOST_CHECK_EQUAL(bic_size, bic.size());
+        check_vectors_close(std::vector<double>(bic_size, 0.0), bic, tolerance);
+
+        const auto& volume_shift = comp_config.volumeShifts(eos_region);
+        BOOST_CHECK_EQUAL(num_comps, volume_shift.size());
+        check_vectors_close(std::vector<double>(num_comps, 0.0), volume_shift, tolerance);
     }
 }
 
@@ -295,6 +397,15 @@ BOOST_AUTO_TEST_CASE(CompositionalParsingTest) {
                                             usys.to_si( "Mass/Moles", 44.1),
                                             usys.to_si( "Mass/Moles", 16.1) };
         check_vectors_close(ref_mw1, mw1, tolerance);
+    }
+
+    {
+        const auto& vs0 = comp_config.volumeShifts(0);
+        BOOST_CHECK_EQUAL(num_comps, vs0.size());
+        check_vectors_close(std::vector<double>{0.1, 0.2, 0.3}, vs0, tolerance);
+        const auto& vs1 = comp_config.volumeShifts(1);
+        BOOST_CHECK_EQUAL(num_comps, vs1.size());
+        check_vectors_close(std::vector<double>{0.11, 0.21, 0.31}, vs1, tolerance);
     }
 
     EclipseState es(deck);
@@ -426,6 +537,10 @@ MW
 VCRIT
 0.6  0.1  0.1 /
 0.61 0.11 0.11 /
+
+SSHIFT
+0.1 0.2 0.3 /
+0.11 0.21 0.31 /
 
 
 STCOND
