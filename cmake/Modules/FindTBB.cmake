@@ -26,6 +26,8 @@ if(NOT TBB_FOUND)
       if(NOT TARGET TBB::tbb)
 	message(STATUS "Found TBB library using pkg config")
 	add_library(TBB::tbb ALIAS PkgConfig::PkgConfigTBB)
+	# Needed for DUNE 2.11
+	set(TBB_FOUND ON)
       endif()
     endif()
   endif(PKG_CONFIG_FOUND)
