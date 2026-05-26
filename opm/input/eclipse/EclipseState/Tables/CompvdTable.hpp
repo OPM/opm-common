@@ -64,10 +64,9 @@ namespace Opm {
         int phaseFlag(std::size_t rowIdx) const;
         const std::vector<int>& phaseFlags() const { return phaseFlags_; }
 
-        int numComponents() const { return numComponents_; }
+        int numComponents() const { return static_cast<int>(SimpleTable::numColumns()) - 2; }
 
     private:
-        int numComponents_;
         std::vector<int> phaseFlags_;
     };
 

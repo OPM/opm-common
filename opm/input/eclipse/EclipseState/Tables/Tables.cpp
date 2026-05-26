@@ -25,6 +25,7 @@
 
 #include <opm/input/eclipse/EclipseState/Tables/AqutabTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/BiofilmTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/CompvdTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/DiffMICPTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/EnkrvdTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/EnptvdTable.hpp>
@@ -89,7 +90,6 @@
 #include <opm/input/eclipse/EclipseState/Tables/WatvisctTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/WsfTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/ZmfvdTable.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/CompvdTable.hpp>
 
 #include <opm/input/eclipse/Units/Dimension.hpp>
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
@@ -116,6 +116,7 @@
 #include <initializer_list>
 #include <numeric>
 #include <stdexcept>
+#include <string>
 #include <string_view>
 #include <utility>
 #include <vector>
@@ -2877,7 +2878,6 @@ template FlatTable<VISCREFRecord>::FlatTable(const DeckKeyword&);
 template FlatTable<WATDENTRecord>::FlatTable(const DeckKeyword&);
 
 ZmfvdTable::ZmfvdTable(const DeckItem& item, const int tableID, const int numComponents, const KeywordLocation& location)
-    : numComponents_(numComponents)
 {
     m_schema.addColumn(ColumnSchema("DEPTH", Table::STRICTLY_INCREASING, Table::DEFAULT_NONE));
     for (int c = 0; c < numComponents; ++c) {
@@ -2932,11 +2932,12 @@ ZmfvdTable::getDepthColumn() const
 const TableColumn&
 ZmfvdTable::getMoleFractionColumn(const int componentIdx) const
 {
-    if (componentIdx < 0 || componentIdx >= this->numComponents_) {
+    const int numComponents = this->numComponents();
+    if (componentIdx < 0 || componentIdx >= numComponents) {
         throw std::out_of_range(fmt::format(
-            "ZmfvdTable::getMoleFractionColumn: componentIdx {} out of valid range [0, {})",
+            "ZmfvdTable::getMoleFractionColumn: componentIdx {} out of valid range [0, {}]",
             componentIdx,
-            this->numComponents_ - 1));
+            numComponents - 1));
     }
 
     return SimpleTable::getColumn(1 + componentIdx);
@@ -2947,7 +2948,6 @@ CompvdTable::CompvdTable(const DeckItem& item,
                          const int numComponents,
                          const UnitSystem& unitSystem,
                          const KeywordLocation& location)
-    : numComponents_(numComponents)
 {
     m_schema.addColumn(ColumnSchema("DEPTH", Table::STRICTLY_INCREASING, Table::DEFAULT_NONE));
     for (int c = 0; c < numComponents; ++c) {
@@ -3028,11 +3028,12 @@ CompvdTable::getDepthColumn() const
 const TableColumn&
 CompvdTable::getMoleFractionColumn(const int componentIdx) const
 {
-    if (componentIdx < 0 || componentIdx >= this->numComponents_) {
+    const int numComponents = this->numComponents();
+    if (componentIdx < 0 || componentIdx >= numComponents) {
         throw std::out_of_range(fmt::format(
-            "CompvdTable::getMoleFractionColumn: componentIdx {} out of valid range [0, {})",
+            "CompvdTable::getMoleFractionColumn: componentIdx {} out of valid range [0, {}]",
             componentIdx,
-            this->numComponents_ - 1));
+            numComponents - 1));
     }
 
     return SimpleTable::getColumn(1 + componentIdx);
@@ -3041,7 +3042,7 @@ CompvdTable::getMoleFractionColumn(const int componentIdx) const
 const TableColumn&
 CompvdTable::getSaturationPressureColumn() const
 {
-    return SimpleTable::getColumn(1 + this->numComponents_);
+    return SimpleTable::getColumn(1 + this->numComponents());
 }
 
 int CompvdTable::phaseFlag(std::size_t rowIdx) const
