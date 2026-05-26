@@ -1,0 +1,21 @@
+{
+  "name": "COMPVD",
+  "comment": "Each record contains depth, NCOMPS mole fractions, a vapor/liquid flag (0=vapor, 1=liquid), and the observed saturation pressure. The per-column unit is not specified and conversion is done during parsing.",
+  "sections": [
+    "PROPS"
+  ],
+  "size": {
+      "keyword": "EQLDIMS",
+      "item": "NTEQUL"
+    },
+  "items": [
+    {
+      "name": "DATA",
+      "value_type": "DOUBLE",
+      "size_type": "ALL",
+      "dimension": [
+        "1"
+      ]
+    }
+  ]
+}

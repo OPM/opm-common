@@ -34,7 +34,7 @@ namespace Opm {
         const TableColumn& getMoleFractionColumn(int componentIdx) const;
 
     private:
-        int numComponents_;
+        int numComponents() const { return static_cast<int>(SimpleTable::numColumns()) - 1; }
     };
 
 }
