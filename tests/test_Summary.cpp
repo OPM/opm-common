@@ -1687,6 +1687,12 @@ BOOST_AUTO_TEST_CASE(group_keywords)
     BOOST_CHECK_CLOSE( ggor1, ecl_sum_get_group_var( resp, 1, "G_1", "GGORH" ), 1e-5 );
     BOOST_CHECK_CLOSE( ggor2, ecl_sum_get_group_var( resp, 1, "G_2", "GGORH" ), 1e-5 );
 
+    /* gwgr - water-gas ratio */
+    const double gwgr1 = (10.0 + 20.0) / (10.2 + 20.2);
+    const double gwgr2 = 0;
+    BOOST_CHECK_CLOSE( gwgr1, ecl_sum_get_group_var( resp, 1, "G_1", "GWGR" ), 1e-5 );
+    BOOST_CHECK_CLOSE( gwgr2, ecl_sum_get_group_var( resp, 1, "G_2", "GWGR" ), 1e-5 );
+
     const double gglr1 = (10.2 + 20.2) / ( 10.0 + 10.1 + 20.0 + 20.1 );
     const double gglr2 = 0;
     BOOST_CHECK_CLOSE( gglr1, ecl_sum_get_group_var( resp, 1, "G_1", "GGLR" ), 1e-5 );
@@ -2391,6 +2397,10 @@ BOOST_AUTO_TEST_CASE(field_keywords)
     const double ggor = (10.2 + 20.2) / (10.1 + 20.1);
     BOOST_CHECK_CLOSE( ggor, ecl_sum_get_field_var( resp, 1, "FGOR" ), 1e-5 );
     BOOST_CHECK_CLOSE( ggor, ecl_sum_get_field_var( resp, 1, "FGORH" ), 1e-5 );
+
+    /* fwgr - water-gas ratio */
+    const double fwgr = (10.0 + 20.0) / (10.2 + 20.2);
+    BOOST_CHECK_CLOSE( fwgr, ecl_sum_get_field_var( resp, 1, "FWGR" ), 1e-5 );
 
     // Pressures
     BOOST_CHECK_CLOSE(123.45, ecl_sum_get_field_var(resp, 0, "FPR"), 1.0e-5);

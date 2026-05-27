@@ -187,6 +187,7 @@ FWCT
 FWCTH
 FGOR
 FGORH
+FWGR
 
 -- From model2
 FMWPR
@@ -466,6 +467,8 @@ GWCTH
 GGOR
 /
 GGORH
+/
+GWGR
 /
 GWIR
 /

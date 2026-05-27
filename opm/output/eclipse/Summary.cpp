@@ -2774,6 +2774,7 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "WOGR", div( rate< rt::oil, producer >, rate< rt::gas, producer > ) },
     { "WWGR", div( rate< rt::wat, producer >, rate< rt::gas, producer > ) },
     { "GGOR", div( rate< rt::gas, producer >, rate< rt::oil, producer > ) },
+    { "GWGR", div( rate< rt::wat, producer >, rate< rt::gas, producer > ) },
     { "WGLR", div( rate< rt::gas, producer >,
                    sum( rate< rt::wat, producer >, rate< rt::oil, producer > ) ) },
 
@@ -3332,6 +3333,7 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "FWCT", div( rate< rt::wat, producer >,
                    sum( rate< rt::wat, producer >, rate< rt::oil, producer > ) ) },
     { "FGOR", div( rate< rt::gas, producer >, rate< rt::oil, producer > ) },
+    { "FWGR", div( rate< rt::wat, producer >, rate< rt::gas, producer > ) },
     { "FGLR", div( rate< rt::gas, producer >,
                    sum( rate< rt::wat, producer >, rate< rt::oil, producer > ) ) },
     { "FWCTH", div( production_history< Opm::Phase::WATER >,
