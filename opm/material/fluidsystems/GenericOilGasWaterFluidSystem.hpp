@@ -156,7 +156,6 @@ namespace Opm {
                 FluidSystem::addComponent(CompParm{names[c], molar_weight[c], critic_temp[c], critic_pressure[c],
                                                    critic_volume[c] * 1.e3, acentric_factor[c]});
             }
-            FluidSystem::printComponentParams();
             const auto& bic = comp_config.binaryInteractionCoefficient(0);
             interaction_coefficients_.assign(bic.begin(), bic.end());
 
