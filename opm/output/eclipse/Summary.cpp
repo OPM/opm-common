@@ -685,6 +685,16 @@ struct fn_args
     const Opm::Inplace& inplace;
     const Opm::UnitSystem& unit_system;
     const Opm::data::ReservoirCouplingGroupRates* rc_rates{nullptr};
+
+    // When set, restrict per-connection lookups (e.g. crate<>) to the
+    // connection identified by (lgr_grid_filter, lgr_cell_filter) instead
+    // of the (num-1)-derived global Cartesian.  Used by the LC* dispatch
+    // path to address LGR-local connections via the (lgr_grid id,
+    // grid-local linearised Cartesian cell index) pair carried on
+    // data::Connection (lgr_grid / index).  Absent for plain C* and
+    // every non-connection keyword -- existing dispatch is unchanged.
+    const std::optional<int>          lgr_grid_filter{};
+    const std::optional<std::size_t>  lgr_cell_filter{};
 };
 
 /* Since there are several enums in opm scattered about more-or-less
@@ -1450,6 +1460,12 @@ inline quantity crate( const fn_args& args ) {
     // NUMS array in the eclipse SMSPEC file; the values in this array
     // are offset 1 - whereas we need to use this index here to look
     // up a connection with offset 0.
+    //
+    // When args.lgr_grid_filter is set (LC* dispatch path) we match on
+    // the (lgr_grid, grid-local linearised Cartesian) cell-identity pair
+    // carried on data::Connection (lgr_grid / index) instead of on
+    // args.num.  For plain C* keywords both filters are empty and
+    // behaviour is unchanged.
     const size_t global_index = args.num - 1;
     if (args.schedule_wells.empty())
         return zero;
@@ -1464,10 +1480,19 @@ inline quantity crate( const fn_args& args ) {
     }
 
     const auto& well_data = xwPos->second;
-    const auto& completion =
-        std::ranges::find_if(well_data.connections,
-                             [global_index](const Opm::data::Connection& c)
-                             { return c.index == global_index; });
+    // The two LC* filters are engaged together or not at all; the lambda
+    // below dereferences lgr_cell_filter whenever lgr_grid_filter is set.
+    assert(args.lgr_grid_filter.has_value() == args.lgr_cell_filter.has_value());
+    const auto completion = args.lgr_grid_filter.has_value()
+        ? std::ranges::find_if(well_data.connections,
+                               [lgr_grid_match = *args.lgr_grid_filter,
+                                lgr_cell_match = *args.lgr_cell_filter]
+                               (const Opm::data::Connection& c)
+                               { return (c.lgr_grid == lgr_grid_match)
+                                     && (c.index    == lgr_cell_match); })
+        : std::ranges::find_if(well_data.connections,
+                               [global_index](const Opm::data::Connection& c)
+                               { return c.index == global_index; });
 
     if (completion == well_data.connections.end())
         return zero;
@@ -4205,6 +4230,104 @@ namespace Evaluator {
         }
     };
 
+    // LC* connection-summary evaluator.
+    //
+    // LC* nodes carry the deck-side LGR name plus 0-based ijk on
+    // SummaryNode::lgr ({name, ijk}).  At dispatch time we resolve those
+    // once into the cell-identity pair that data::Connection carries
+    // (data::Connection::lgr_grid and data::Connection::index):
+    //
+    //   lgr_grid id  = grid.get_lgr_cell_index(name) + 1
+    //                  (0 = GLOBAL, 1..N matches Connection::get_lgr_level())
+    //   cell index   = grid.getLGRCell(name).getGlobalIndex(i, j, k)
+    //                  (grid-local linearised Cartesian cell index, 0-based)
+    //
+    // The pair is stuffed into fn_args::{lgr_grid_filter, lgr_cell_filter}
+    // before dispatch; the existing crate<> template picks up those
+    // filters and matches the right connection.  The leading 'L' of the
+    // keyword is stripped to look up the underlying C* evaluator
+    // (LCOFR -> COFR, LCWPR -> CWPR, ...).
+    class LgrConnectionValue : public Base
+    {
+    public:
+        explicit LgrConnectionValue(Opm::EclIO::SummaryNode node, ofun fcn)
+            : node_(std::move(node))
+            , fcn_ (std::move(fcn))
+        {}
+
+        void update(const std::size_t       sim_step,
+                    const double            stepSize,
+                    const InputData&        input,
+                    const SimulatorResults& simRes,
+                    Opm::SummaryState&      st) const override
+        {
+            assert(this->node_.lgr.has_value() &&
+                   "LgrConnectionValue dispatched on a node without lgr info");
+
+            const auto wells = find_wells(input.sched, this->node_,
+                                          static_cast<int>(sim_step), input.reg);
+
+            // The well-vs-LGR ownership check already happened in
+            // find_single_well via node.lgr; if no well remains the node
+            // is silently absent from UNSMRY.
+            if (wells.empty()) {
+                return;
+            }
+
+            // Wildcard LC records (no I/J/K) leave node.number ==
+            // default_number.  This decision depends only on node.number, so
+            // resolve it before computing the LGR id -- a wildcard node never
+            // needs it.  (Unfiltered lgr-only dispatch is deferred for now;
+            // the underlying ofun would resolve all matching LGR connections.)
+            if (this->node_.number == Opm::EclIO::SummaryNode::default_number) {
+                return;
+            }
+
+            const auto& lgr_name = this->node_.lgr->name;
+
+            // LGR id matching data::Connection::lgr_grid.  get_lgr_cell_index
+            // returns the 0-based position in the GLOBAL-stripped label list;
+            // +1 recovers the on-disk id.
+            const int lgr_id = static_cast<int>(
+                input.grid.get_lgr_cell_index(lgr_name)) + 1;
+
+            // SummaryConfig::keywordLC already resolved (LGR, I, J, K) to
+            // NUMS = grid-local linearised Cartesian cell index + 1 and stored
+            // it on the node.  Recover the 0-based cell index here and pair it
+            // with lgr_id as the connection's cell identity.
+            const auto gridLocalCellIndex =
+                static_cast<std::size_t>(this->node_.number - 1);
+
+            EfficiencyFactor eFac{};
+            eFac.setFactors(this->node_, input.sched, wells, sim_step,
+                            simRes.wellSol);
+
+            const fn_args args {
+                wells, "", this->node_.keyword,
+                stepSize, static_cast<int>(sim_step),
+                /*num=*/0, /*extra_data=*/std::nullopt,
+                st,
+                simRes.wellSol, simRes.wbp, simRes.grpNwrkSol,
+                input.reg, input.grid, input.sched,
+                std::move(eFac.factors),
+                input.initial_inplace, simRes.inplace,
+                input.sched.getUnits(),
+                simRes.rc_rates,
+                /*lgr_grid_filter=*/lgr_id,
+                /*lgr_cell_filter=*/gridLocalCellIndex,
+            };
+
+            const auto& usys = input.es.getUnits();
+            const auto  prm  = this->fcn_(args);
+
+            updateValue(this->node_, usys.from_si(prm.unit, prm.value), st);
+        }
+
+    private:
+        Opm::EclIO::SummaryNode node_;
+        ofun                    fcn_;
+    };
+
     class BlockValue : public Base
     {
     public:
@@ -4713,12 +4836,15 @@ namespace Evaluator {
         Descriptor userDefinedValue();
         Descriptor unknownParameter();
 
+        Descriptor lgrConnectionValue();
+
         bool isBlockValue();
         bool isAquiferValue();
         bool isRegionValue();
         bool isInterRegionValue();
         bool isGlobalProcessValue();
         bool isLgrWellValue();
+        bool isLgrConnectionValue();
         bool isFunctionRelation();
         bool isUserDefined();
 
@@ -4749,6 +4875,9 @@ namespace Evaluator {
         if (this->isGlobalProcessValue())
             return this->globalProcessValue();
 
+        if (this->isLgrConnectionValue())
+            return this->lgrConnectionValue();
+
         if (this->isLgrWellValue() || this->isFunctionRelation())
             return this->functionRelation();
 
@@ -4761,6 +4890,18 @@ namespace Evaluator {
 
         desc.unit = this->functionUnitString();
         desc.evaluator.reset(new FunctionRelation {
+            *this->node_, std::move(this->paramFunction_)
+        });
+
+        return desc;
+    }
+
+    Factory::Descriptor Factory::lgrConnectionValue()
+    {
+        auto desc = this->unknownParameter();
+
+        desc.unit = this->functionUnitString();
+        desc.evaluator.reset(new LgrConnectionValue {
             *this->node_, std::move(this->paramFunction_)
         });
 
@@ -4938,6 +5079,32 @@ namespace Evaluator {
         // well-vs-LGR ownership check happens downstream in find_single_well().
         if ((this->node_->category != Opm::EclIO::SummaryNode::Category::Well) ||
             !this->node_->keyword.starts_with("LW") ||
+            !this->node_->lgr.has_value())
+        {
+            return false;
+        }
+
+        auto fpos = funs.find(this->node_->keyword.substr(1));
+        if (fpos == funs.end()) {
+            return false;
+        }
+
+        this->paramFunction_ = fpos->second;
+        return true;
+    }
+
+    bool Factory::isLgrConnectionValue()
+    {
+        // LGR connection summary vectors (LC*) dispatch through a thin
+        // LgrConnectionValue evaluator that resolves the (lgr_grid id,
+        // grid-local linearised Cartesian cell index) pair from
+        // node.lgr->{name, ijk} and stuffs it into fn_args before
+        // calling the underlying C* ofun.  The keyword's leading 'L' is
+        // stripped to look up the global connection keyword in the funs
+        // map (LCOFR -> COFR, ...).  The well-vs-LGR ownership check
+        // happens downstream in find_single_well().
+        if ((this->node_->category != Opm::EclIO::SummaryNode::Category::Connection) ||
+            !this->node_->keyword.starts_with("LC") ||
             !this->node_->lgr.has_value())
         {
             return false;

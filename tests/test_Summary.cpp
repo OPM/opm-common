@@ -51,6 +51,8 @@
 #include <opm/input/eclipse/Deck/Deck.hpp>
 
 #include <opm/input/eclipse/Parser/Parser.hpp>
+#include <opm/input/eclipse/Parser/ParseContext.hpp>
+#include <opm/input/eclipse/Parser/ErrorGuard.hpp>
 
 #include <tests/WorkArea.hpp>
 
@@ -3666,7 +3668,7 @@ BOOST_AUTO_TEST_CASE(Test_SummaryState)
 }
 
 // -------------------------------------------------------------------------
-// LGR well evaluator tests (PR-003)
+// LGR well evaluator tests
 // -------------------------------------------------------------------------
 
 namespace {
@@ -3933,6 +3935,172 @@ TSTEP
     if (st.has_well_var("PROD", "LWOPR")) {
         BOOST_CHECK_EQUAL(st.get_well_var("PROD", "LWOPR"), 0.0);
     }
+}
+
+BOOST_AUTO_TEST_CASE(LGR_connection_factory_dispatch)
+{
+    // Verify that the Factory routes LC* nodes to LgrConnectionValue
+    // (not unknownParameter / not generic FunctionRelation).  We confirm
+    // this indirectly: after eval(), the LC* key must be present in
+    // SummaryState with the rate that we attached to the matching LGR
+    // connection via data::Connection::{lgr_grid,index}.
+    const std::string lgr_conn_deck = R"(
+RUNSPEC
+TITLE
+   LGR_SUMMARY_PR4C_TEST
+DIMENS
+   3 1 1 /
+TABDIMS
+/
+EQLDIMS
+/
+OIL
+GAS
+WATER
+DISGAS
+FIELD
+START
+   1 'JAN' 2015 /
+WELLDIMS
+   2 1 1 2 /
+UNIFOUT
+GRID
+CARFIN
+'LGR1'  1  1  1  1  1  1  3  3  1 /
+ENDFIN
+CARFIN
+'LGR2'  3  3  1  1  1  1  3  3  1 /
+ENDFIN
+DX
+   3*2333 /
+DY
+   3*3500 /
+DZ
+   3*50 /
+TOPS
+   3*8325 /
+PORO
+   3*0.3 /
+PERMX
+   3*500 /
+PERMY
+   3*250 /
+PERMZ
+   3*200 /
+PROPS
+PVTW
+   4017.55 1.038 3.22E-6 0.318 0.0 /
+ROCK
+   14.7 3E-6 /
+SWOF
+   0.12 0.0   1.0  0.0
+   1.0  1.0   0.0  0.0 /
+PVDO
+   400  1.0627  1.180
+   800  1.0483  1.181 /
+PVDG
+   400  5.9e-3  0.013
+   800  2.95e-3 0.014 /
+DENSITY
+   53.0  64.79  0.0702 /
+SOLUTION
+EQUIL
+   8400.0  4800.0  8450.0  0.0  8335.0  0.0 /
+SUMMARY
+LCOPR
+   'LGR2'  'PROD'  3 3 1 /
+/
+SCHEDULE
+WELSPECL
+   'PROD'  'G1'  'LGR2'  3  3  8400  'OIL' /
+/
+COMPDATL
+   'PROD'  'LGR2'  3  3  1  1  'OPEN'  1*  1*  0.5 /
+/
+WCONPROD
+   'PROD'  'OPEN'  'ORAT'  20000  4*  1000 /
+/
+TSTEP
+   1 /
+)";
+
+    WorkArea ta { "lgr_summary_pr4c" };
+
+    const auto deck    = Parser{}.parseString(lgr_conn_deck);
+    const auto es      = EclipseState{ deck };
+    const auto& grid   = es.getInputGrid();
+    const auto  sched  = Schedule{ deck, es, std::make_shared<Python>() };
+
+    // SummaryConfig's default constructor uses a global-only CellIndexMapper
+    // — that leaves LCOPR's node.number == default_number.  Provide an
+    // LGR-aware mapper so the (LGR, I, J, K) record resolves to a real
+    // (grid-local linearised Cartesian + 1) NUMS key.
+    auto lgrMapper = [&grid](const std::string& gridID) -> GridDims {
+        if (gridID.empty()) {
+            return GridDims{ grid.getNX(), grid.getNY(), grid.getNZ() };
+        }
+        const auto& lgr = grid.getLGRCell(gridID);
+        return GridDims{ lgr.getNX(), lgr.getNY(), lgr.getNZ() };
+    };
+
+    auto parseCtx = ParseContext{};
+    auto errors   = ErrorGuard{};
+    auto config = SummaryConfig{
+        deck, sched, es.fieldProps(), es.aquifer(),
+        parseCtx, errors, lgrMapper
+    };
+
+    // LGR id: declaration order + 1 (0 reserved for GLOBAL).
+    const int lgr_id = static_cast<int>(grid.get_lgr_cell_index("LGR2")) + 1;
+
+    // Grid-local linearised Cartesian cell index, 0-based.
+    // LGR2 is 3x3x1 and the connection is at (3,3,1) → (i,j,k) = (2,2,0).
+    const std::size_t gridLocalCellIndex = grid.getLGRCell("LGR2").getGlobalIndex(2, 2, 0);
+
+    // Build connection-level result for PROD's single LGR connection.
+    const double conn_oil_rate = 100.0 * unit::stb / unit::day;
+
+    auto wells = data::Wells{};
+    {
+        auto& prod = wells["PROD"];
+        prod.rates.set(rt::oil, conn_oil_rate);
+        prod.rates.set(rt::gas, 0.0);
+        prod.rates.set(rt::wat, 0.0);
+        prod.bhp = 5000.0 * unit::psia;
+        prod.thp = 0.0;
+
+        auto conn = data::Connection{};
+        conn.index    = gridLocalCellIndex;
+        conn.lgr_grid = lgr_id;
+        conn.rates.set(rt::oil, conn_oil_rate);
+        conn.rates.set(rt::gas, 0.0);
+        conn.rates.set(rt::wat, 0.0);
+        conn.pressure = 5000.0 * unit::psia;
+        prod.connections.push_back(std::move(conn));
+    }
+
+    auto wbp      = data::WellBlockAveragePressures{};
+    auto grp_nwrk = data::GroupAndNetworkValues{};
+
+    auto writer = out::Summary { config, es, grid, sched, "LGR_PR4C_CASE" };
+    auto st     = SummaryState { TimeService::now(),
+                                 es.runspec().udqParams().undefinedValue() };
+
+    auto values                    = out::Summary::DynamicSimulatorState{};
+    values.well_solution           = &wells;
+    values.wbp                     = &wbp;
+    values.group_and_nwrk_solution = &grp_nwrk;
+
+    writer.eval(1, 1.0 * day, values, st);
+
+    // LC* key must be populated — non-zero means LgrConnectionValue ran
+    // (and matched on (lgr_grid, index) instead of falling through to 0).
+    // Producer convention: rate is stored as negative; unit system is FIELD,
+    // so the rate is reported in STB/day (= 100).
+    const std::size_t conn_number = gridLocalCellIndex + 1; // node.number is 1-based
+    BOOST_CHECK(st.has_conn_var("PROD", "LCOPR", conn_number));
+    BOOST_CHECK_CLOSE(st.get_conn_var("PROD", "LCOPR", conn_number),
+                      -100.0, 1e-5);
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Summary
