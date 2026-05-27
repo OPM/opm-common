@@ -50,6 +50,8 @@
 
 #include <opm/input/eclipse/Deck/Deck.hpp>
 
+#include <opm/input/eclipse/Parser/ErrorGuard.hpp>
+#include <opm/input/eclipse/Parser/ParseContext.hpp>
 #include <opm/input/eclipse/Parser/Parser.hpp>
 #include <opm/input/eclipse/Parser/ParseContext.hpp>
 #include <opm/input/eclipse/Parser/ErrorGuard.hpp>
@@ -640,6 +642,144 @@ BOOST_AUTO_TEST_SUITE(Summary)
 
 // Tests read the deck, write (synthetic) summary output, read the summary
 // output, and compare those values with the input.
+
+BOOST_AUTO_TEST_CASE(LGR_summaryconfig_grid_ctor_populates_NUMS)
+{
+    // The production EclipseGrid ctor must wire an LGR-aware CellIndexMapper
+    // internally, so an explicit-(I,J,K) LC* record resolves to
+    // NUMS == grid-local linearised Cartesian cell index + 1.
+    //
+    // The global-only convenience ctor leaves node.number ==
+    // SummaryNode::default_number, which makes the runtime LgrConnectionValue
+    // evaluator emit nothing — that is exactly the production gap this closes.
+    const std::string lgr_conn_deck = R"(
+RUNSPEC
+TITLE
+   LGR_SUMMARY_PR4D_TEST
+DIMENS
+   3 1 1 /
+TABDIMS
+/
+EQLDIMS
+/
+OIL
+GAS
+WATER
+DISGAS
+FIELD
+START
+   1 'JAN' 2015 /
+WELLDIMS
+   2 1 1 2 /
+UNIFOUT
+GRID
+CARFIN
+'LGR1'  1  1  1  1  1  1  3  3  1 /
+ENDFIN
+CARFIN
+'LGR2'  3  3  1  1  1  1  3  3  1 /
+ENDFIN
+DX
+   3*2333 /
+DY
+   3*3500 /
+DZ
+   3*50 /
+TOPS
+   3*8325 /
+PORO
+   3*0.3 /
+PERMX
+   3*500 /
+PERMY
+   3*250 /
+PERMZ
+   3*200 /
+PROPS
+PVTW
+   4017.55 1.038 3.22E-6 0.318 0.0 /
+ROCK
+   14.7 3E-6 /
+SWOF
+   0.12 0.0   1.0  0.0
+   1.0  1.0   0.0  0.0 /
+PVDO
+   400  1.0627  1.180
+   800  1.0483  1.181 /
+PVDG
+   400  5.9e-3  0.013
+   800  2.95e-3 0.014 /
+DENSITY
+   53.0  64.79  0.0702 /
+SOLUTION
+EQUIL
+   8400.0  4800.0  8450.0  0.0  8335.0  0.0 /
+SUMMARY
+LCOPR
+   'LGR2'  'PROD'  3 3 1 /
+/
+SCHEDULE
+WELSPECL
+   'PROD'  'G1'  'LGR2'  3  3  8400  'OIL' /
+/
+COMPDATL
+   'PROD'  'LGR2'  3  3  1  1  'OPEN'  1*  1*  0.5 /
+/
+WCONPROD
+   'PROD'  'OPEN'  'ORAT'  20000  4*  1000 /
+/
+TSTEP
+   1 /
+)";
+
+    WorkArea ta { "lgr_summary_pr4d" };
+
+    const auto deck   = Parser{}.parseString(lgr_conn_deck);
+    const auto es     = EclipseState{ deck };
+    const auto& grid  = es.getInputGrid();
+    const auto  sched = Schedule{ deck, es, std::make_shared<Python>() };
+
+    // LGR2 is 3x3x1; the LCOPR record is at (3,3,1) → (i,j,k)=(2,2,0).
+    const int expected_nums =
+        static_cast<int>(grid.getLGRCell("LGR2").getGlobalIndex(2, 2, 0)) + 1;
+
+    // SummaryConfig stays decoupled from EclipseGrid: the client supplies an
+    // LGR-aware GridDims callback (global dims for "", the LGR's own dims for a
+    // known label, default GridDims otherwise) through the std::function ctor.
+    const auto lgrDims = [&grid](const std::string& gridID) -> GridDims {
+        if (gridID.empty()) {
+            return GridDims{ grid.getNX(), grid.getNY(), grid.getNZ() };
+        }
+        const auto labels = grid.get_all_lgr_labels();
+        if (std::ranges::find(labels, gridID) == labels.end()) {
+            return GridDims{};
+        }
+        const auto& lgr = grid.getLGRCell(gridID);
+        return GridDims{ lgr.getNX(), lgr.getNY(), lgr.getNZ() };
+    };
+
+    auto parseCtx = ParseContext{};
+    auto errors   = ErrorGuard{};
+    const auto config = SummaryConfig{
+        deck, sched, es.fieldProps(), es.aquifer(), parseCtx, errors, lgrDims
+    };
+
+    BOOST_CHECK_MESSAGE(config.hasKeyword("LCOPR"),
+                        R"(We must have nodes for "LCOPR".)");
+    const auto lcopr = config.keywords("LCOPR");
+    BOOST_REQUIRE_EQUAL(lcopr.size(), std::size_t{1});
+    BOOST_CHECK_EQUAL(lcopr.front().number(), expected_nums);
+
+    // Contrast: the global-only convenience ctor leaves NUMS unset.
+    const auto config_global =
+        SummaryConfig{ deck, sched, es.fieldProps(), es.aquifer() };
+    BOOST_REQUIRE_MESSAGE(config_global.hasKeyword("LCOPR"),
+                          R"(Global-only ctor still registers "LCOPR".)");
+    const auto lcopr_global = config_global.keywords("LCOPR");
+    BOOST_REQUIRE_EQUAL(lcopr_global.size(), std::size_t{1});
+    BOOST_CHECK_EQUAL(lcopr_global.front().number(),
+                      Opm::EclIO::SummaryNode::default_number);
+}
 
 BOOST_AUTO_TEST_CASE(well_keywords)
 {
