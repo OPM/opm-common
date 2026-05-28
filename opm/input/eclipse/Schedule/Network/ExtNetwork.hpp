@@ -71,6 +71,10 @@ public:
     }
 
 private:
+    // Note to maintainers: If you make changes to this list of data
+    // members, then please update serializeOp(), operator==(), and
+    // serializationTestObject() accordingly.
+
     std::vector<Branch> m_branches;
     std::vector<std::string> insert_indexed_node_names;
     std::map<std::string, Node> m_nodes;
