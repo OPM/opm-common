@@ -38,8 +38,6 @@
 
 #include <opm/common/utility/gpuDecorators.hpp>
 
-#include <opm/common/utility/gpuDecorators.hpp>
-
 #include <algorithm>
 #include <stdexcept>
 
