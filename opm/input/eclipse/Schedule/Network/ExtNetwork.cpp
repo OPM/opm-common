@@ -42,7 +42,7 @@ ExtNetwork ExtNetwork::serializationTestObject()
     object.m_branches = {Branch::serializationTestObject()};
     object.insert_indexed_node_names = {"test1", "test2"};
     object.m_nodes = {{"test3", Node::serializationTestObject()}};
-    object.m_is_standard_network = false;
+    object.m_is_standard_network = true;
     return object;
 }
 
@@ -63,9 +63,11 @@ void ExtNetwork::set_standard_network(bool is_standard_network)
 
 bool ExtNetwork::operator==(const ExtNetwork& rhs) const
 {
-    return this->m_branches == rhs.m_branches
-        && this->insert_indexed_node_names == rhs.insert_indexed_node_names
-        && this->m_nodes == rhs.m_nodes;
+    return (this->m_branches == rhs.m_branches)
+        && (this->insert_indexed_node_names == rhs.insert_indexed_node_names)
+        && (this->m_nodes == rhs.m_nodes)
+        && (this->m_is_standard_network == rhs.m_is_standard_network)
+        ;
 }
 
 bool ExtNetwork::has_node(const std::string& name) const
