@@ -21,20 +21,19 @@
 
 #define BOOST_TEST_MODULE LogTests
 
-#include <opm/common/utility/platform_dependent/disable_warnings.h>
 #include <boost/test/unit_test.hpp>
-#include <opm/common/utility/platform_dependent/reenable_warnings.h>
 
-#include <opm/common/OpmLog/OpmLog.hpp>
-#include <opm/common/OpmLog/LogBackend.hpp>
 #include <opm/common/OpmLog/CounterLog.hpp>
-#include <opm/common/OpmLog/TimerLog.hpp>
-#include <opm/common/OpmLog/StreamLog.hpp>
-#include <opm/common/OpmLog/LogUtil.hpp>
 #include <opm/common/OpmLog/KeywordLocation.hpp>
+#include <opm/common/OpmLog/LogBackend.hpp>
+#include <opm/common/OpmLog/LogUtil.hpp>
+#include <opm/common/OpmLog/OpmLog.hpp>
+#include <opm/common/OpmLog/StreamLog.hpp>
+#include <opm/common/OpmLog/TimerLog.hpp>
 
 #include <cstdint>
 #include <iostream>
+#include <memory>
 #include <sstream>
 #include <stdexcept>
 
@@ -186,9 +185,38 @@ BOOST_AUTO_TEST_CASE(TestTimerLog) {
     logger.addMessageType( TimerLog::StartTimer , "Start");
     logger.addMessageType( TimerLog::StopTimer , "Stop");
 
+    timer->clear();
+
+    logger.addMessage( TimerLog::StopTimer , "Stop without start");
     logger.addMessage( TimerLog::StartTimer , "");
     logger.addMessage( TimerLog::StopTimer , "This was fast");
-    std::cout << sstream.str() << std::endl;
+
+    const std::string logText = sstream.str();
+
+    // Note: Would prefer basic_string<>::contains(), but that requires C++23.
+    BOOST_CHECK_MESSAGE(logText.find("Timer not started when receiving user message") != std::string::npos,
+                        "Log message should indicate that timer was not started when "
+                        "receiving StopTimer message without a preceding StartTimer "
+                        "message. Log text was:\n" << logText);
+
+    const auto lastNonNewline = logText.find_last_not_of('\n');
+    BOOST_REQUIRE(lastNonNewline != std::string::npos);
+
+    const auto lastLineStart = logText.find_last_of('\n', lastNonNewline);
+    const auto timingLine = logText.substr(lastLineStart == std::string::npos ? 0 : lastLineStart + 1,
+                                           lastNonNewline - (lastLineStart == std::string::npos ? 0 : lastLineStart + 1) + 1);
+
+    std::istringstream logged(timingLine);
+    std::string prefix;
+    double elapsed = -1.0;
+    std::string unit;
+
+    std::getline(logged, prefix, ':');
+    logged >> elapsed >> unit;
+
+    BOOST_CHECK_EQUAL(prefix, "This was fast");
+    BOOST_CHECK(elapsed >= 0.0);
+    BOOST_CHECK_EQUAL(unit, "seconds");
 }
 
 /*****************************************************************/
