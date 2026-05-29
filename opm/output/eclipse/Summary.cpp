@@ -1930,8 +1930,8 @@ quantity well_block_average_pressure(const fn_args& args)
     return { p->second[wbp_quantity], measure::pressure };
 }
 
-template <Opm::Phase phase>
-inline quantity production_history(const fn_args& args)
+template <Opm::Phase phase, bool require_history_mode>
+inline quantity production_history_impl(const fn_args& args)
 {
     // Looking up historical well production rates before simulation starts
     // or the well is flowing is meaningless.  We therefore default to
@@ -1939,6 +1939,12 @@ inline quantity production_history(const fn_args& args)
 
     double sum = 0.0;
     for (const auto* sched_well : args.schedule_wells) {
+        if constexpr (require_history_mode) {
+            if (sched_well->predictionMode()) {
+                continue;
+            }
+        }
+
         const auto& name = sched_well->name();
 
         auto xwPos = args.wells.find(name);
@@ -1958,7 +1964,13 @@ inline quantity production_history(const fn_args& args)
 }
 
 template <Opm::Phase phase>
-inline quantity injection_history(const fn_args& args)
+inline quantity production_history(const fn_args& args)
+{
+    return production_history_impl<phase, true>(args);
+}
+
+template <Opm::Phase phase, bool require_history_mode>
+inline quantity injection_history_impl(const fn_args& args)
 {
     // Looking up historical well injection rates before simulation starts
     // or the well is flowing is meaningless.  We therefore default to
@@ -1966,6 +1978,12 @@ inline quantity injection_history(const fn_args& args)
 
     double sum = 0.0;
     for (const auto* sched_well : args.schedule_wells) {
+        if constexpr (require_history_mode) {
+            if (sched_well->predictionMode()) {
+                continue;
+            }
+        }
+
         const auto& name = sched_well->name();
 
         auto xwPos = args.wells.find(name);
@@ -1982,6 +2000,12 @@ inline quantity injection_history(const fn_args& args)
     }
 
     return { sum, rate_unit<phase>() };
+}
+
+template <Opm::Phase phase>
+inline quantity injection_history(const fn_args& args)
+{
+    return injection_history_impl<phase, true>(args);
 }
 
 template< bool injection >
@@ -2931,19 +2955,19 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "WLPRH", sum( production_history< Opm::Phase::WATER >,
                     production_history< Opm::Phase::OIL > ) },
 
-    { "WWPTH", mul( production_history< Opm::Phase::WATER >, duration ) },
-    { "WOPTH", mul( production_history< Opm::Phase::OIL >, duration ) },
-    { "WGPTH", mul( production_history< Opm::Phase::GAS >, duration ) },
-    { "WLPTH", mul( sum( production_history< Opm::Phase::WATER >,
-                         production_history< Opm::Phase::OIL > ),
+    { "WWPTH", mul( rate< rt::wat, producer >, duration ) },
+    { "WOPTH", mul( rate< rt::oil, producer >, duration ) },
+    { "WGPTH", mul( rate< rt::gas, producer >, duration ) },
+    { "WLPTH", mul( sum( rate< rt::wat, producer >,
+                         rate< rt::oil, producer > ),
                     duration ) },
 
     { "WWIRH", injection_history< Opm::Phase::WATER > },
     { "WOIRH", injection_history< Opm::Phase::OIL > },
     { "WGIRH", injection_history< Opm::Phase::GAS > },
-    { "WWITH", mul( injection_history< Opm::Phase::WATER >, duration ) },
-    { "WOITH", mul( injection_history< Opm::Phase::OIL >, duration ) },
-    { "WGITH", mul( injection_history< Opm::Phase::GAS >, duration ) },
+    { "WWITH", mul( rate< rt::wat, injector >, duration ) },
+    { "WOITH", mul( rate< rt::oil, injector >, duration ) },
+    { "WGITH", mul( rate< rt::gas, injector >, duration ) },
 
     /* From our point of view, injectors don't have water cuts and div/sum will return 0.0 */
     { "WWCTH", div( production_history< Opm::Phase::WATER >,
@@ -2978,9 +3002,9 @@ static const auto funs = std::unordered_map<std::string, ofun> {
                     sum( production_history< Opm::Phase::WATER >,
                          production_history< Opm::Phase::OIL > ) ) },
 
-    { "GWPTH", mul( production_history< Opm::Phase::WATER >, duration ) },
-    { "GOPTH", mul( production_history< Opm::Phase::OIL >, duration ) },
-    { "GGPTH", mul( production_history< Opm::Phase::GAS >, duration ) },
+    { "GWPTH", mul( rate< rt::wat, producer >, duration ) },
+    { "GOPTH", mul( rate< rt::oil, producer >, duration ) },
+    { "GGPTH", mul( rate< rt::gas, producer >, duration ) },
     { "GGPRF", sub( rate < rt::gas, producer >, rate< rt::dissolved_gas, producer > )},
     { "GGPRS", rate< rt::dissolved_gas, producer> },
     { "GGPTF", mul( sub( rate < rt::gas, producer >, rate< rt::dissolved_gas, producer > ),
@@ -2992,11 +3016,11 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "GGLRH", div( production_history< Opm::Phase::GAS >,
                     sum( production_history< Opm::Phase::WATER >,
                          production_history< Opm::Phase::OIL > ) ) },
-    { "GLPTH", mul( sum( production_history< Opm::Phase::WATER >,
-                         production_history< Opm::Phase::OIL > ),
+    { "GLPTH", mul( sum( rate< rt::wat, producer >,
+                         rate< rt::oil, producer > ),
                     duration ) },
-    { "GWITH", mul( injection_history< Opm::Phase::WATER >, duration ) },
-    { "GGITH", mul( injection_history< Opm::Phase::GAS >, duration ) },
+    { "GWITH", mul( rate< rt::wat, injector >, duration ) },
+    { "GGITH", mul( rate< rt::gas, injector >, duration ) },
     { "GMWIN", flowing< injector > },
     { "GMWPR", flowing< producer > },
 
@@ -3316,19 +3340,19 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "FGPRH", production_history< Opm::Phase::GAS > },
     { "FLPRH", sum( production_history< Opm::Phase::WATER >,
                     production_history< Opm::Phase::OIL > ) },
-    { "FWPTH", mul( production_history< Opm::Phase::WATER >, duration ) },
-    { "FOPTH", mul( production_history< Opm::Phase::OIL >, duration ) },
-    { "FGPTH", mul( production_history< Opm::Phase::GAS >, duration ) },
-    { "FLPTH", mul( sum( production_history< Opm::Phase::WATER >,
-                         production_history< Opm::Phase::OIL > ),
+    { "FWPTH", mul( rate< rt::wat, producer >, duration ) },
+    { "FOPTH", mul( rate< rt::oil, producer >, duration ) },
+    { "FGPTH", mul( rate< rt::gas, producer >, duration ) },
+    { "FLPTH", mul( sum( rate< rt::wat, producer >,
+                         rate< rt::oil, producer > ),
                     duration ) },
 
     { "FWIRH", injection_history< Opm::Phase::WATER > },
     { "FOIRH", injection_history< Opm::Phase::OIL > },
     { "FGIRH", injection_history< Opm::Phase::GAS > },
-    { "FWITH", mul( injection_history< Opm::Phase::WATER >, duration ) },
-    { "FOITH", mul( injection_history< Opm::Phase::OIL >, duration ) },
-    { "FGITH", mul( injection_history< Opm::Phase::GAS >, duration ) },
+    { "FWITH", mul( rate< rt::wat, injector >, duration ) },
+    { "FOITH", mul( rate< rt::oil, injector >, duration ) },
+    { "FGITH", mul( rate< rt::gas, injector >, duration ) },
 
     { "FWCT", div( rate< rt::wat, producer >,
                    sum( rate< rt::wat, producer >, rate< rt::oil, producer > ) ) },
