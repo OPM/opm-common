@@ -5,65 +5,82 @@
   ],
   "items": [
     {
+      "item": 1,
       "name": "WELLNAME",
       "value_type": "STRING"
     },
     {
+      "item": 2,
       "name": "I",
       "value_type": "INT",
       "default": 0
     },
     {
+      "item": 3,
       "name": "J",
       "value_type": "INT",
       "default": 0
     },
     {
+      "item": 4,
       "name": "K1",
       "value_type": "INT",
       "default": 0
     },
     {
+      "item": 5,
       "name": "K2",
       "value_type": "INT",
       "default": 0
     },
     {
+      "item": 6,
       "name": "MAX_WCUT",
-      "value_type": "DOUBLE",
+      "value_type": "UDA",
       "default": 0
     },
     {
+      "item": 7,
       "name": "MAX_GOR",
-      "value_type": "DOUBLE",
-      "default": 0
+      "value_type": "UDA",
+      "default": 0,
+      "dimension": "GasSurfaceVolume/LiquidSurfaceVolume"
     },
     {
+      "item": 8,
       "name": "MAX_WGR",
-      "value_type": "DOUBLE",
-      "default": 0
+      "value_type": "UDA",
+      "default": 0,
+      "dimension": "LiquidSurfaceVolume/GasSurfaceVolume"
     },
     {
+      "item": 9,
       "name": "WORKOVER_PROCEDURE",
       "value_type": "STRING",
       "default": "CON"
     },
     {
+      "item": 10,
       "name": "CHECK_STOPPED",
       "value_type": "STRING",
       "default": "NO"
     },
     {
+      "item": 11,
       "name": "MIN_OIL",
-      "value_type": "DOUBLE",
-      "default": -1e+20
+      "value_type": "UDA",
+      "default": -1e+20,
+      "dimension": "LiquidSurfaceVolume/Time"
     },
     {
+      "item": 12,
       "name": "MIN_GAS",
-      "value_type": "DOUBLE",
-      "default": -1e+20
+      "value_type": "UDA",
+      "default": -1e+20,
+      "dimension": "GasSurfaceVolume/Time"
     },
     {
+      "item": 13,
       "name": "FOLLOW_ON_WELL",
       "value_type": "STRING",
       "default": ""

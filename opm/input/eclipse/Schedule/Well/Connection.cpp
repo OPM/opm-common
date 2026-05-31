@@ -24,6 +24,7 @@
 #include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 
 #include <opm/input/eclipse/Schedule/ScheduleGrid.hpp>
+#include <opm/input/eclipse/Schedule/Well/ConnectionEconLimits.hpp>
 #include <opm/input/eclipse/Schedule/Well/FilterCake.hpp>
 
 #include <opm/input/eclipse/Deck/DeckItem.hpp>
@@ -192,6 +193,7 @@ namespace Opm
         result.m_wpimult = 0.123;
         result.m_subject_to_welpi = true;
         result.m_filter_cake = FilterCake::serializationTestObject();
+        result.m_econ_limits = ConnectionEconLimits::serializationTestObject();
 
         return result;
     }
@@ -466,6 +468,7 @@ namespace Opm
             && (this->m_perf_range == that.m_perf_range)
             && (this->ctf_properties_ == that.ctf_properties_)
             && (this->m_filter_cake == that.m_filter_cake)
+            && (this->m_econ_limits == that.m_econ_limits)
             ;
     }
 
@@ -664,6 +667,22 @@ double Connection::getFilterCakeArea() const
     else {
         return 2*std::numbers::pi * this->getFilterCakeRadius() * this->connectionLength();
     }
+}
+
+void Connection::setEconLimits(const ConnectionEconLimits& econ_limits)
+{
+    this->m_econ_limits = econ_limits;
+}
+
+bool Connection::hasEconLimits() const
+{
+    return this->m_econ_limits.has_value();
+}
+
+const ConnectionEconLimits& Connection::econLimits() const
+{
+    assert(this->hasEconLimits());
+    return this->m_econ_limits.value();
 }
 
 } // end of namespace Opm

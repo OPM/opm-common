@@ -105,6 +105,122 @@ BOOST_AUTO_TEST_CASE(CreateSchedule_Comments_After_Keywords) {
     BOOST_CHECK_EQUAL(9U, sched.size());
 }
 
+BOOST_AUTO_TEST_CASE(CECON_AssignsConnectionEconomicLimits)
+{
+    const std::string input = R"(
+START
+ 10 'JAN' 2000 /
+
+RUNSPEC
+
+DIMENS
+ 5 5 5 /
+
+OIL
+GAS
+WATER
+
+GRID
+DXV
+ 5*100 /
+DYV
+ 5*100 /
+DZV
+ 5*10 /
+DEPTHZ
+ 36*2000 /
+PORO
+ 125*0.3 /
+PERMX
+ 125*100 /
+PERMY
+ 125*100 /
+PERMZ
+ 125*10 /
+
+SCHEDULE
+WELSPECS
+ 'P1' 'G' 1 1 1* 'OIL' /
+/
+COMPDAT
+ 'P1' 1 1 1 3 'OPEN' /
+/
+CECON
+ 'P1' 1 1 1 3 0.7 3.5 0.1 'WELL' 'YES' 1.0 2.0 'P2' /
+/
+
+DATES
+ 11 'JAN' 2000 /
+/
+
+CECON
+ 'P*' 4* 0.5 /
+/
+    )";
+
+    const auto deck = Parser{}.parseString(input);
+    EclipseGrid grid(5, 5, 5);
+    const TableManager table(deck);
+    const Runspec runspec(deck);
+    const FieldPropsManager fp(deck, runspec.phases(), grid, table);
+    const Schedule schedule {
+        deck, grid, fp, NumericalAquifers{},
+        runspec, std::make_shared<Python>()
+    };
+
+    const auto& conns_step0 = schedule.getWell("P1", 0).getConnections();
+    BOOST_CHECK_EQUAL(conns_step0.size(), 3U);
+
+    for (const auto& conn : conns_step0) {
+        BOOST_CHECK(conn.hasEconLimits());
+
+        const auto& econ_limit = conn.econLimits();
+        BOOST_CHECK_CLOSE(econ_limit.max_water_cut, 0.7, 1.0e-10);
+        BOOST_CHECK_CLOSE(econ_limit.max_gas_oil_ratio, 3.5, 1.0e-10);
+        BOOST_CHECK_CLOSE(econ_limit.max_water_gas_ratio, 0.1, 1.0e-10);
+
+        BOOST_CHECK(econ_limit.onMaxWaterCut());
+        BOOST_CHECK(econ_limit.onMaxGasOilRatio());
+        BOOST_CHECK(econ_limit.onMaxWaterGasRatio());
+        BOOST_CHECK(econ_limit.onMinOilRate());
+        BOOST_CHECK(econ_limit.onMinGasRate());
+        BOOST_CHECK(econ_limit.onAnyEffectiveLimit());
+
+        BOOST_CHECK(econ_limit.workover == ConnectionEconLimits::EconWorkover::WELL);
+        BOOST_CHECK(econ_limit.check_stopped_wells);
+        BOOST_CHECK_CLOSE(econ_limit.min_oil_rate, 1.0 / Metric::Time, 1.0e-10);
+        BOOST_CHECK_CLOSE(econ_limit.min_gas_rate, 2.0 / Metric::Time, 1.0e-10);
+        BOOST_CHECK_EQUAL(econ_limit.followon_well, "P2");
+    }
+
+    const auto& conns_step1 = schedule.getWell("P1", 1).getConnections();
+    BOOST_CHECK_EQUAL(conns_step1.size(), 3U);
+
+    // The second CECON record uses wildcard matching and defaulted values,
+    // so only max water-cut remains active while the other limits are reset.
+    for (const auto& conn : conns_step1) {
+        BOOST_CHECK(conn.hasEconLimits());
+
+        const auto& econ_limit = conn.econLimits();
+        BOOST_CHECK_CLOSE(econ_limit.max_water_cut, 0.5, 1.0e-10);
+        BOOST_CHECK_EQUAL(econ_limit.max_gas_oil_ratio, 0.0);
+        BOOST_CHECK_EQUAL(econ_limit.max_water_gas_ratio, 0.0);
+
+        BOOST_CHECK(econ_limit.onMaxWaterCut());
+        BOOST_CHECK(!econ_limit.onMaxGasOilRatio());
+        BOOST_CHECK(!econ_limit.onMaxWaterGasRatio());
+        BOOST_CHECK(!econ_limit.onMinOilRate());
+        BOOST_CHECK(!econ_limit.onMinGasRate());
+        BOOST_CHECK(econ_limit.onAnyEffectiveLimit());
+
+        BOOST_CHECK(econ_limit.workover == ConnectionEconLimits::EconWorkover::CON);
+        BOOST_CHECK(!econ_limit.check_stopped_wells);
+        BOOST_CHECK(econ_limit.min_oil_rate < 0.0);
+        BOOST_CHECK(econ_limit.min_gas_rate < 0.0);
+        BOOST_CHECK(econ_limit.followon_well.empty());
+    }
+}
+
 
 BOOST_AUTO_TEST_CASE(WCONPROD_MissingCmode) {
     Parser parser;

@@ -286,6 +286,7 @@ list(APPEND MAIN_SOURCE_FILES
   opm/input/eclipse/Schedule/UDQ/UDQToken.cpp
   opm/input/eclipse/Schedule/UDQ/UDT.cpp
   opm/input/eclipse/Schedule/Well/Connection.cpp
+  opm/input/eclipse/Schedule/Well/ConnectionEconLimits.cpp
   opm/input/eclipse/Schedule/Well/FilterCake.cpp
   opm/input/eclipse/Schedule/Well/injection.cpp
   opm/input/eclipse/Schedule/Well/GridIndependentWellKeywordHandlers.cpp
@@ -1192,6 +1193,7 @@ list(APPEND PUBLIC_HEADER_FILES
   opm/input/eclipse/Schedule/VFPInjTable.hpp
   opm/input/eclipse/Schedule/VFPProdTable.hpp
   opm/input/eclipse/Schedule/Well/Connection.hpp
+  opm/input/eclipse/Schedule/Well/ConnectionEconLimits.hpp
   opm/input/eclipse/Schedule/Well/FilterCake.hpp
   opm/input/eclipse/Schedule/Well/NameOrder.hpp
   opm/input/eclipse/Schedule/Well/PAvg.hpp

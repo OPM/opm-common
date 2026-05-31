@@ -198,6 +198,24 @@ void handleCSKIN(HandlerContext& handlerContext)
     }
 }
 
+void handleCECON(HandlerContext& handlerContext)
+{
+    using Kw = ParserKeywords::CECON;
+
+    for (const auto& record : handlerContext.keyword) {
+        const auto wellNamePattern = record.getItem<Kw::WELLNAME>().getTrimmedString(0);
+        const auto well_names = handlerContext.wellNames(wellNamePattern, false);
+
+        for (const auto& wname : well_names) {
+            auto well = handlerContext.state().wells.get(wname);
+
+            if (well.handleCECON(record, handlerContext.keyword.location())) {
+                handlerContext.state().wells.update(std::move(well));
+            }
+        }
+    }
+}
+
 } // Anonymous namespace
 
 namespace Opm {
@@ -211,6 +229,7 @@ getWellCompletionHandlers()
         { "COMPLUMP", &handleCOMPLUMP },
         { "COMPORD" , &handleCOMPORD  },
         { "CSKIN",    &handleCSKIN    },
+        { "CECON",    &handleCECON    },
     };
 }
 

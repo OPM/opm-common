@@ -589,6 +589,7 @@ public:
                                   std::vector<int>& requested_shut_complnums);
 
     bool handleCSKIN(const DeckRecord& record, const KeywordLocation& location);
+    bool handleCECON(const DeckRecord& record, const KeywordLocation& location);
     bool handleCOMPLUMP(const DeckRecord& record);
     bool handleWPIMULT(const DeckRecord& record);
     bool handleWINJCLN(const DeckRecord& record, const KeywordLocation& location);

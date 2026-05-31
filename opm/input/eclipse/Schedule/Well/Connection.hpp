@@ -20,6 +20,7 @@
 #ifndef COMPLETION_HPP_
 #define COMPLETION_HPP_
 
+#include <opm/input/eclipse/Schedule/Well/ConnectionEconLimits.hpp>
 #include <opm/input/eclipse/Schedule/Well/FilterCake.hpp>
 #include <opm/input/eclipse/Schedule/Well/WINJMULT.hpp>
 
@@ -218,6 +219,9 @@ namespace Opm {
         double getFilterCakeRadius() const;
         double getFilterCakeArea() const;
 
+        const ConnectionEconLimits& econLimits() const;
+        bool hasEconLimits() const;
+
         const CTFProperties& ctfProperties() const
         {
             return this->ctf_properties_;
@@ -241,6 +245,7 @@ namespace Opm {
 
         void setInjMult(const InjMult& inj_mult);
         void setFilterCake(const FilterCake& filter_cake);
+        void setEconLimits(const ConnectionEconLimits& econ_limits);
         void setState(State state);
         void setComplnum(int compnum);
         void setSkinFactor(double skin_factor);
@@ -282,6 +287,7 @@ namespace Opm {
             serializer(this->m_wpimult);
             serializer(this->m_subject_to_welpi);
             serializer(this->m_filter_cake);
+            serializer(this->m_econ_limits);
         }
 
     private:
@@ -368,6 +374,8 @@ namespace Opm {
         bool m_subject_to_welpi { false };
 
         std::optional<FilterCake> m_filter_cake{};
+
+        std::optional<ConnectionEconLimits> m_econ_limits{};
 
         static std::string CTFKindToString(const CTFKind);
     };
