@@ -29,8 +29,6 @@
 
 #include <array>
 #include <cassert>
-#include <stdexcept>
-#include <string>
 
 #include <opm/common/utility/gpuDecorators.hpp>
 
@@ -63,12 +61,7 @@ public:
         return phaseIsActive_[phaseIdx];
     }
 
-    [[nodiscard]] OPM_HOST_DEVICE short canonicalToActivePhaseIdx(unsigned phaseIdx) const {
-        if (!phaseIsActive(phaseIdx)) {
-            OPM_THROW(std::logic_error, "Canonical phase " + std::to_string(phaseIdx) + " is not active.");
-        }
-        return canonicalToActivePhaseIdx_[phaseIdx];
-    }
+    [[nodiscard]] OPM_HOST_DEVICE short canonicalToActivePhaseIdx(unsigned phaseIdx) const;
 
     [[nodiscard]] OPM_HOST_DEVICE short activeToCanonicalPhaseIdx(unsigned activePhaseIdx) const {
         assert(activePhaseIdx< numActivePhases_);
