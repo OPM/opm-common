@@ -491,21 +491,24 @@ void RstState::add_wells(const std::vector<std::string>& zwel,
                          const std::vector<float>& scon,
                          const std::vector<double>& xcon)
 {
+    for (int iw = 0; iw < this->header.num_wells; ++iw) {
+        const std::size_t zwel_offset = iw * this->header.nzwelz;
+        const std::size_t iwel_offset = iw * this->header.niwelz;
+        const std::size_t swel_offset = iw * this->header.nswelz;
+        const std::size_t xwel_offset = iw * this->header.nxwelz;
+        const std::size_t icon_offset = iw * this->header.niconz * this->header.ncwmax;
+        const std::size_t scon_offset = iw * this->header.nsconz * this->header.ncwmax;
+        const std::size_t xcon_offset = iw * this->header.nxconz * this->header.ncwmax;
 
-    for (int iw = 0; iw < this->header.num_wells; iw++) {
-        std::size_t zwel_offset = iw * this->header.nzwelz;
-        std::size_t iwel_offset = iw * this->header.niwelz;
-        std::size_t swel_offset = iw * this->header.nswelz;
-        std::size_t xwel_offset = iw * this->header.nxwelz;
-        std::size_t icon_offset = iw * this->header.niconz * this->header.ncwmax;
-        std::size_t scon_offset = iw * this->header.nsconz * this->header.ncwmax;
-        std::size_t xcon_offset = iw * this->header.nxconz * this->header.ncwmax;
-        int group_index = iwel[ iwel_offset + VI::IWell::Group ] - 1;
-        const std::string group = this->groups[group_index].name;
+        const auto groupID = iwel[ iwel_offset + VI::IWell::Group ];
+
+        const auto& group = (groupID == this->header.max_groups_in_field)
+            ? this->groups.back() // Well parented directly to FIELD.
+            : this->groups[groupID - 1];
 
         this->wells.emplace_back(this->unit_system,
                                  this->header,
-                                 group,
+                                 group.name,
                                  zwel.data() + zwel_offset,
                                  iwel.data() + iwel_offset,
                                  swel.data() + swel_offset,
@@ -514,8 +517,17 @@ void RstState::add_wells(const std::vector<std::string>& zwel,
                                  scon.data() + scon_offset,
                                  xcon.data() + xcon_offset);
 
-        if (this->wells.back().msw_index)
-            throw std::logic_error("MSW data not accounted for in this constructor");
+        if (this->wells.back().msw_index != 0) {
+            // Well 'iw' is nominally a standard well, but its reconstituted
+            // RstWell object nevertheless has a non-zero MSW index.  This
+            // is a logic error in the caller as we should use the add_msw()
+            // member function instead.  We could arguably phrase this as
+            // "assert(msw_index == 0)" rather than conditionally throwing
+            // an exception.
+            throw std::logic_error {
+                "MSW data not accounted for in this constructor"
+            };
+        }
     }
 }
 
@@ -529,21 +541,24 @@ void RstState::add_msw(const std::vector<std::string>& zwel,
                        const std::vector<int>& iseg,
                        const std::vector<double>& rseg)
 {
+    for (int iw = 0; iw < this->header.num_wells; ++iw) {
+        const std::size_t zwel_offset = iw * this->header.nzwelz;
+        const std::size_t iwel_offset = iw * this->header.niwelz;
+        const std::size_t swel_offset = iw * this->header.nswelz;
+        const std::size_t xwel_offset = iw * this->header.nxwelz;
+        const std::size_t icon_offset = iw * this->header.niconz * this->header.ncwmax;
+        const std::size_t scon_offset = iw * this->header.nsconz * this->header.ncwmax;
+        const std::size_t xcon_offset = iw * this->header.nxconz * this->header.ncwmax;
 
-    for (int iw = 0; iw < this->header.num_wells; iw++) {
-        std::size_t zwel_offset = iw * this->header.nzwelz;
-        std::size_t iwel_offset = iw * this->header.niwelz;
-        std::size_t swel_offset = iw * this->header.nswelz;
-        std::size_t xwel_offset = iw * this->header.nxwelz;
-        std::size_t icon_offset = iw * this->header.niconz * this->header.ncwmax;
-        std::size_t scon_offset = iw * this->header.nsconz * this->header.ncwmax;
-        std::size_t xcon_offset = iw * this->header.nxconz * this->header.ncwmax;
-        int group_index = iwel[ iwel_offset + VI::IWell::Group ] - 1;
-        const std::string group = this->groups[group_index].name;
+        const auto groupID = iwel[ iwel_offset + VI::IWell::Group ];
+
+        const auto& group = (groupID == this->header.max_groups_in_field)
+            ? this->groups.back() // Well parented directly to FIELD.
+            : this->groups[groupID - 1];
 
         this->wells.emplace_back(this->unit_system,
                                  this->header,
-                                 group,
+                                 group.name,
                                  zwel.data() + zwel_offset,
                                  iwel.data() + iwel_offset,
                                  swel.data() + swel_offset,

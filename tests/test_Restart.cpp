@@ -32,6 +32,10 @@
 #include <opm/io/eclipse/ERst.hpp>
 #include <opm/io/eclipse/EclIOdata.hpp>
 #include <opm/io/eclipse/OutputStream.hpp>
+#include <opm/io/eclipse/RestartFileView.hpp>
+
+#include <opm/io/eclipse/rst/state.hpp>
+#include <opm/io/eclipse/rst/well.hpp>
 
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
@@ -56,6 +60,9 @@
 #include <opm/input/eclipse/Schedule/Well/WellMatcher.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellTestState.hpp>
 
+#include <opm/input/eclipse/Units/Units.hpp>
+#include <opm/input/eclipse/Units/UnitSystem.hpp>
+
 #include <opm/input/eclipse/Utility/Functional.hpp>
 
 #include <opm/common/utility/TimeService.hpp>
@@ -77,6 +84,7 @@
 #include <string>
 #include <string_view>
 #include <tuple>
+#include <utility>
 #include <vector>
 
 #include <tests/WorkArea.hpp>
@@ -1418,4 +1426,185 @@ BOOST_AUTO_TEST_CASE(Fluid_In_Place)
         BOOST_CHECK_MESSAGE(rst.hasKey("SFIPGAS"), R"(Restart file must have "SFIPGAS" vector)");
         checkAllEntriesAre(12.0, "SFIPGAS", rst.getRestartData<double>("SFIPGAS", 1));
     }
+}
+
+namespace {
+    struct CaseIO
+    {
+        explicit CaseIO(const std::string& input, const std::string& caseName = "ONE-GO")
+            : CaseIO { Parser{}.parseString(input), caseName }
+        {}
+
+        explicit CaseIO(const Deck& deck, const std::string& caseName)
+            : es     { deck }
+            , sched  { deck, es }
+            , sumcfg { deck, sched, es.fieldProps(), es.aquifer() }
+        {
+            es.getIOConfig().setBaseName(caseName);
+        }
+
+        EclipseState  es{};
+        Schedule      sched{};
+        SummaryConfig sumcfg{};
+    };
+
+    std::pair<data::Wells, SummaryState> dynamicStateFieldWells()
+    {
+        auto dyn_state = std::pair<data::Wells, SummaryState> {
+            std::piecewise_construct,
+            std::forward_as_tuple(),
+            std::forward_as_tuple(TimeService::now(), 0.0)
+        };
+
+        using o = data::Rates::opt;
+
+        auto& xw = dyn_state.first;
+
+        {
+            const auto wname = std::string { "W2" };
+
+            xw[wname].rates.set(o::wat, 1.0).set(o::oil, 2.0).set(o::gas, 3.0);
+            xw[wname].bhp = 213.0*unit::barsa;
+        }
+
+        {
+            const auto wname = std::string { "W1" };
+
+            xw[wname].bhp = 234.0*unit::barsa;
+            xw[wname].rates
+                .set(o::wat, 5.0*unit::cubic(unit::meter)/unit::day)
+                .set(o::oil, 0.0*unit::cubic(unit::meter)/unit::day)
+                .set(o::gas, 0.0*unit::cubic(unit::meter)/unit::day);
+        }
+
+        return dyn_state;
+    }
+
+    data::Solution reservoirStateFieldWells()
+    {
+        auto xr = data::Solution{};
+
+        xr.insert("PRESSURE", UnitSystem::measure::pressure,
+                  std::vector {
+                      400.0*unit::barsa,
+                      300.0*unit::barsa,
+                      200.0*unit::barsa,
+                      100.0*unit::barsa,
+                  },
+                  data::TargetType::RESTART_SOLUTION);
+
+        xr.insert("SWAT", UnitSystem::measure::identity,
+                  std::vector { 0.75, 0.5, 0.25, 0.10, },
+                  data::TargetType::RESTART_SOLUTION);
+
+        return xr;
+    }
+} // Anonymous namespace
+
+BOOST_AUTO_TEST_CASE(Wells_Parented_to_FIELD)
+{
+    const auto cse = CaseIO { R"(RUNSPEC
+OIL
+WATER
+
+DIMENS
+ 4 1 1 /
+
+WELLDIMS
+-- MAXWELLS  MAXCONN  NGMAX  NWGMAX
+   10        10       4      42 /
+
+START         -- 0
+ 5 JUN 2026 /
+
+UNIFOUT
+GRID
+
+DXV
+ 4*100.0 /
+DYV
+ 100.0 /
+DZV
+ 10.0 /
+DEPTHZ
+10*2000.0 /
+
+EQUALS
+  PORO  0.1 /
+  PERMX 1 /
+  PERMY 0.1 /
+  PERMZ 0.01 /
+/
+
+SCHEDULE
+
+RPTRST
+  BASIC=2 /
+
+DATES        -- 1
+ 10 JUN 2026 /
+/
+
+WELSPECS
+ 'W1' 'FIELD'  1 1 2873.94 'WATER' 0.00 'STD' 'SHUT' 'NO' 0 'SEG' /
+ 'W2' 'FIELD'  4 4 1       'OIL'   0.00 'STD' 'SHUT' 'NO' 0 'SEG' /
+/
+
+COMPDAT
+ 'W1'  1 1   1 1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+ 'W2'  4 1   1 1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+/
+
+WCONINJE
+  'W1' 'WATER' 'OPEN' 'RATE' 4000.0 1* 850.0 /
+/
+
+WCONPROD
+  'W2' 'OPEN' 'ORAT' 5000.0 4* 20.0 /
+/
+
+DATES        -- 2
+ 1 JUL 2026 /
+/
+
+END
+)", "FIELD-WELLS" };
+
+    const auto rstWells = [&cse]() {
+        WorkArea test_area { "save_restore_wells" };
+
+        auto writer = EclipseIO {
+            cse.es, cse.es.getInputGrid(), cse.sched, cse.sumcfg
+        };
+
+        const auto& [xw, st] = dynamicStateFieldWells();
+
+        writer.writeTimeStep(Action::State{},
+                             WellTestState{},
+                             st, UDQState{},
+                             /* report_step = */   2,
+                             /* isSubstep = */     false,
+                             /* seconds_elapsed */ 26 * unit::day, // 5 June 2026 -> 1 July 2026.
+                             RestartValue {
+                                 /* sol = */      reservoirStateFieldWells(),
+                                 /* wells = */    xw,
+                                 /* grp_nwrk = */ {},
+                                 /* aquifer = */  {}
+                             });
+
+        auto rstFile = std::make_shared<EclIO::RestartFileView>
+            (std::make_shared<EclIO::ERst>("FIELD-WELLS.UNRST"), 2);
+
+        return RestartIO::RstState::
+            load(std::move(rstFile), cse.es.runspec(), Parser{})
+            .wells;
+    }();
+
+    BOOST_REQUIRE_EQUAL(rstWells.size(), std::size_t{2});
+
+    BOOST_CHECK_EQUAL(rstWells.front().name, "W1");
+    BOOST_CHECK_EQUAL(rstWells.front().group, "FIELD");
+
+    BOOST_CHECK_EQUAL(rstWells.back().name, "W2");
+    BOOST_CHECK_EQUAL(rstWells.back().group, "FIELD");
 }
