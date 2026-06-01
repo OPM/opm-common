@@ -27,6 +27,7 @@
 #ifndef OPM_ECL_THCONR_LAW_PARAMS_HPP
 #define OPM_ECL_THCONR_LAW_PARAMS_HPP
 
+#include <opm/common/utility/gpuDecorators.hpp>
 #include <opm/material/common/EnsureFinalized.hpp>
 
 namespace Opm {
@@ -41,9 +42,9 @@ class EclThconrLawParams : public EnsureFinalized
 public:
     using Scalar = ScalarT;
 
-    EclThconrLawParams(const EclThconrLawParams&) = default;
+    OPM_HOST_DEVICE EclThconrLawParams(const EclThconrLawParams&) = default;
 
-    EclThconrLawParams()
+    OPM_HOST_DEVICE EclThconrLawParams()
     { }
 
     /*!
@@ -55,7 +56,7 @@ public:
     /*!
      * \brief The total thermal conductivity [J/m^2 / (K/m)] of at Sg = 0
      */
-    Scalar referenceTotalThermalConductivity() const
+    OPM_HOST_DEVICE Scalar referenceTotalThermalConductivity() const
     { EnsureFinalized::check(); return referenceTotalThermalConductivity_; }
 
     /*!
@@ -67,7 +68,7 @@ public:
     /*!
      * \brief The gas saturation dependence of thermal conductivity [-]
      */
-    Scalar dTotalThermalConductivity_dSg() const
+    OPM_HOST_DEVICE Scalar dTotalThermalConductivity_dSg() const
     { EnsureFinalized::check(); return dTotalThermalConductivity_dSg_; }
 
 private:
