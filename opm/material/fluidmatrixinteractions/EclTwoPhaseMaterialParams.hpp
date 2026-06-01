@@ -109,7 +109,7 @@ public:
      */
     OPM_HOST_DEVICE void setGasOilParams(GasOilParamsStorage val)
     {
-        gasOilParams_ = std::move(val);
+        gasOilParams_ = val;
     }
 
     /*!
@@ -135,7 +135,7 @@ public:
      */
     OPM_HOST_DEVICE void setOilWaterParams(OilWaterParamsStorage val)
     {
-        oilWaterParams_ = std::move(val);
+        oilWaterParams_ = val;
     }
 
     /*!
@@ -161,7 +161,7 @@ public:
      */
     OPM_HOST_DEVICE void setGasWaterParams(GasWaterParamsStorage val)
     {
-        gasWaterParams_ = std::move(val);
+        gasWaterParams_ = val;
     }
 
     template <class Serializer>
