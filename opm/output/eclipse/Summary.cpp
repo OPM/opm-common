@@ -4137,6 +4137,7 @@ namespace Evaluator {
         const Opm::Inplace& inplace;
         const std::map<std::string, std::vector<double>>& region;
         const std::map<std::pair<std::string, int>, double>& block;
+        const std::map<std::tuple<std::string, int, int>, double>& lgr_block;
         const Opm::data::Aquifers& aquifers;
         const std::unordered_map<std::string, Opm::data::InterRegFlowMap>& ireg;
         const Opm::data::ReservoirCouplingGroupRates* rc_rates;
@@ -4362,6 +4363,62 @@ namespace Evaluator {
         {
             return { this->node_.keyword, this->node_.number };
         }
+    };
+
+    // LB* block-summary evaluator: a block value for a cell inside a local grid
+    // refinement.  Mirrors LgrConnectionValue.  The cell identity is the
+    // (grid level, level-local linearised Cartesian index) pair — the same pair
+    // data::Connection carries as (lgr_grid, index) for LC* connections.  The
+    // level-local Cartesian index is recovered from node.number - 1, and the
+    // level from the LGR name (0 = GLOBAL, 1..N = LGRs), matching
+    // data::Connection::get_lgr_level().
+    class LgrBlockValue : public Base
+    {
+    public:
+        explicit LgrBlockValue(Opm::EclIO::SummaryNode node,
+                               const Opm::UnitSystem::measure m)
+            : node_(std::move(node))
+            , m_   (m)
+        {}
+
+        void update(const std::size_t    /* sim_step */,
+                    const double         /* stepSize */,
+                    const InputData&        input,
+                    const SimulatorResults& simRes,
+                    Opm::SummaryState&      st) const override
+        {
+            assert(this->node_.lgr.has_value() &&
+                   "LgrBlockValue dispatched on a node without lgr info");
+
+            // SummaryConfig::keywordLB leaves node.number at
+            // default_number (INT_MIN) when LGR geometry is
+            // unavailable -- e.g. an LB* record naming an LGR whose
+            // dimensions the CellIndexMapper call-back could not
+            // resolve.  Bail out before computing number - 1
+            // (otherwise INT_MIN - 1 would be signed overflow).
+            // Same convention LgrConnectionValue uses for its
+            // wildcard records.
+            if (this->node_.number == Opm::EclIO::SummaryNode::default_number) {
+                return;
+            }
+
+            const int level = static_cast<int>(
+                input.grid.get_lgr_cell_index(this->node_.lgr->name)) + 1;
+            const int localCellIndex = this->node_.number - 1;
+
+            auto xPos = simRes.lgr_block.find(
+                { this->node_.keyword, level, localCellIndex });
+            if (xPos == simRes.lgr_block.end()) {
+                return;
+            }
+
+            const auto& usys = input.es.getUnits();
+            updateValue(this->node_, usys.from_si(this->m_, xPos->second), st);
+        }
+
+    private:
+        Opm::EclIO::SummaryNode  node_;
+        Opm::UnitSystem::measure m_;
     };
 
     class AquiferValue: public Base
@@ -4839,6 +4896,7 @@ namespace Evaluator {
         Descriptor unknownParameter();
 
         Descriptor lgrConnectionValue();
+        Descriptor lgrBlockValue();
 
         bool isBlockValue();
         bool isAquiferValue();
@@ -4847,6 +4905,7 @@ namespace Evaluator {
         bool isGlobalProcessValue();
         bool isLgrWellValue();
         bool isLgrConnectionValue();
+        bool isLgrBlockValue();
         bool isFunctionRelation();
         bool isUserDefined();
 
@@ -4880,6 +4939,9 @@ namespace Evaluator {
         if (this->isLgrConnectionValue())
             return this->lgrConnectionValue();
 
+        if (this->isLgrBlockValue())
+            return this->lgrBlockValue();
+
         if (this->isLgrWellValue() || this->isFunctionRelation())
             return this->functionRelation();
 
@@ -4905,6 +4967,18 @@ namespace Evaluator {
         desc.unit = this->functionUnitString();
         desc.evaluator.reset(new LgrConnectionValue {
             *this->node_, std::move(this->paramFunction_)
+        });
+
+        return desc;
+    }
+
+    Factory::Descriptor Factory::lgrBlockValue()
+    {
+        auto desc = this->unknownParameter();
+
+        desc.unit = this->directUnitString();
+        desc.evaluator.reset(new LgrBlockValue {
+            *this->node_, this->paramUnit_
         });
 
         return desc;
@@ -5118,6 +5192,30 @@ namespace Evaluator {
         }
 
         this->paramFunction_ = fpos->second;
+        return true;
+    }
+
+    bool Factory::isLgrBlockValue()
+    {
+        // LB* block summary vectors dispatch through a thin LgrBlockValue
+        // evaluator that resolves the (grid level, level-local linearised
+        // Cartesian cell index) pair from node.lgr->name and node.number,
+        // then looks up the per-LGR block value.  The keyword's leading 'L'
+        // is stripped to find the underlying block keyword's unit
+        // (LBPR -> BPR, LBOSAT -> BOSAT, ...).
+        if ((this->node_->category != Opm::EclIO::SummaryNode::Category::Block) ||
+            !this->node_->keyword.starts_with("LB") ||
+            !this->node_->lgr.has_value())
+        {
+            return false;
+        }
+
+        auto pos = block_units.find(this->node_->keyword.substr(1));
+        if (pos == block_units.end()) {
+            return false;
+        }
+
+        this->paramUnit_ = pos->second;
         return true;
     }
 
@@ -5676,6 +5774,9 @@ eval(const int                    sim_step,
     const auto& block_values = (values.block_values != nullptr)
         ? *values.block_values : DynamicSimulatorState::BlockValues{};
 
+    const auto& lgr_block_values = (values.lgr_block_values != nullptr)
+        ? *values.lgr_block_values : DynamicSimulatorState::LgrBlockValues{};
+
     const auto& aquifer_values = (values.aquifer_values != nullptr)
         ? *values.aquifer_values : data::Aquifers{};
 
@@ -5690,6 +5791,7 @@ eval(const int                    sim_step,
         inplace,
         region_values,
         block_values,
+        lgr_block_values,
         aquifer_values,
         interreg_flows,
         values.rc_group_rates

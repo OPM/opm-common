@@ -4253,6 +4253,175 @@ TSTEP
                       -100.0, 1e-5);
 }
 
+BOOST_AUTO_TEST_CASE(LGR_block_factory_dispatch)
+{
+    // Verify three things at once for LB* block-summary vectors:
+    //   (1) the Factory routes LB* nodes to LgrBlockValue (not unknownParameter,
+    //       not falling through to global isBlockValue and being rejected on the
+    //       global cellActive check);
+    //   (2) values are picked up from DynamicSimulatorState::lgr_block_values
+    //       under the (keyword, grid level, level-local Cartesian index) key;
+    //   (3) two LB* nodes in *different* LGRs that share the same keyword and
+    //       the same level-local Cartesian index do NOT collide in SummaryState
+    //       (each LGR's value lands in its own unique_key, disambiguated by
+    //       SummaryNode::display_name returning the LGR name for Block nodes).
+    const std::string lgr_block_deck = R"(
+RUNSPEC
+TITLE
+   LGR_BLOCK_FACTORY_DISPATCH
+DIMENS
+   3 1 1 /
+TABDIMS
+/
+EQLDIMS
+/
+OIL
+GAS
+WATER
+DISGAS
+FIELD
+START
+   1 'JAN' 2015 /
+WELLDIMS
+   1 1 1 1 /
+UNIFOUT
+GRID
+CARFIN
+'LGR1'  1  1  1  1  1  1  3  3  1 /
+ENDFIN
+CARFIN
+'LGR2'  3  3  1  1  1  1  3  3  1 /
+ENDFIN
+DX
+   3*2333 /
+DY
+   3*3500 /
+DZ
+   3*50 /
+TOPS
+   3*8325 /
+PORO
+   3*0.3 /
+PERMX
+   3*500 /
+PERMY
+   3*250 /
+PERMZ
+   3*200 /
+PROPS
+PVTW
+   4017.55 1.038 3.22E-6 0.318 0.0 /
+ROCK
+   14.7 3E-6 /
+SWOF
+   0.12 0.0   1.0  0.0
+   1.0  1.0   0.0  0.0 /
+PVDO
+   400  1.0627  1.180
+   800  1.0483  1.181 /
+PVDG
+   400  5.9e-3  0.013
+   800  2.95e-3 0.014 /
+DENSITY
+   53.0  64.79  0.0702 /
+SOLUTION
+EQUIL
+   8400.0  4800.0  8450.0  0.0  8335.0  0.0 /
+SUMMARY
+LBPR
+   'LGR1'  3 3 1 /
+   'LGR2'  3 3 1 /
+/
+SCHEDULE
+TSTEP
+   1 /
+)";
+
+    WorkArea ta { "lgr_block_factory_dispatch" };
+
+    const auto deck   = Parser{}.parseString(lgr_block_deck);
+    const auto es     = EclipseState{ deck };
+    const auto& grid  = es.getInputGrid();
+    const auto  sched = Schedule{ deck, es, std::make_shared<Python>() };
+
+    // LGR-aware mapper so the (LGR, I, J, K) records resolve to a
+    // level-local linearised Cartesian + 1 NUMS key.
+    auto lgrMapper = [&grid](const std::string& gridID) -> GridDims {
+        if (gridID.empty()) {
+            return GridDims{ grid.getNX(), grid.getNY(), grid.getNZ() };
+        }
+        const auto& lgr = grid.getLGRCell(gridID);
+        return GridDims{ lgr.getNX(), lgr.getNY(), lgr.getNZ() };
+    };
+
+    auto parseCtx = ParseContext{};
+    auto errors   = ErrorGuard{};
+    auto config = SummaryConfig{
+        deck, sched, es.fieldProps(), es.aquifer(),
+        parseCtx, errors, lgrMapper
+    };
+
+    // Both LGRs are 3x3x1 with the LBPR record at (3,3,1) -> (i,j,k) = (2,2,0)
+    // -> the SAME level-local linearised Cartesian index for both.  This is
+    // the scenario the SummaryNode::display_name LGR disambiguator exists to
+    // handle (two unique_keys, not one shared key that overwrites).
+    const std::size_t levelLocalCellIndex =
+        grid.getLGRCell("LGR1").getGlobalIndex(2, 2, 0);
+    BOOST_REQUIRE_EQUAL(levelLocalCellIndex,
+                        grid.getLGRCell("LGR2").getGlobalIndex(2, 2, 0));
+
+    const int level_lgr1 = static_cast<int>(grid.get_lgr_cell_index("LGR1")) + 1;
+    const int level_lgr2 = static_cast<int>(grid.get_lgr_cell_index("LGR2")) + 1;
+    BOOST_REQUIRE_NE(level_lgr1, level_lgr2);
+
+    // Fabricate distinct pressures for each LGR cell, supplied in SI so the
+    // evaluator's from_si on the BPR unit (Pressure) converts to PSIA under
+    // the deck's FIELD unit system.
+    const double pSI_lgr1 = 100.0 * unit::psia;
+    const double pSI_lgr2 = 250.0 * unit::psia;
+
+    auto lgr_blocks = out::Summary::DynamicSimulatorState::LgrBlockValues{};
+    lgr_blocks[std::make_tuple(std::string{"LBPR"}, level_lgr1,
+                               static_cast<int>(levelLocalCellIndex))] = pSI_lgr1;
+    lgr_blocks[std::make_tuple(std::string{"LBPR"}, level_lgr2,
+                               static_cast<int>(levelLocalCellIndex))] = pSI_lgr2;
+
+    auto wbp      = data::WellBlockAveragePressures{};
+    auto grp_nwrk = data::GroupAndNetworkValues{};
+    auto wells    = data::Wells{};
+
+    auto writer = out::Summary { config, es, grid, sched, "LGR_BLOCK_DISPATCH" };
+    auto st     = SummaryState { TimeService::now(),
+                                 es.runspec().udqParams().undefinedValue() };
+
+    auto values                    = out::Summary::DynamicSimulatorState{};
+    values.well_solution           = &wells;
+    values.wbp                     = &wbp;
+    values.group_and_nwrk_solution = &grp_nwrk;
+    values.lgr_block_values        = &lgr_blocks;
+
+    writer.eval(1, 1.0 * day, values, st);
+
+    // Two SummaryState keys, one per LGR, both populated.  unique_key for a
+    // Block+lgr node is "KEYWORD:LGRNAME:number" (level-local Cartesian + 1).
+    const std::size_t node_number = levelLocalCellIndex + 1;
+    const auto key_lgr1 = "LBPR:LGR1:" + std::to_string(node_number);
+    const auto key_lgr2 = "LBPR:LGR2:" + std::to_string(node_number);
+
+    BOOST_REQUIRE_NE(key_lgr1, key_lgr2);  // disambiguation is real, not a coincidence
+    BOOST_CHECK(st.has(key_lgr1));
+    BOOST_CHECK(st.has(key_lgr2));
+    BOOST_CHECK_CLOSE(st.get(key_lgr1), 100.0, 1e-5);
+    BOOST_CHECK_CLOSE(st.get(key_lgr2), 250.0, 1e-5);
+
+    // Global B* path is untouched when lgr_block_values is empty/absent:
+    // a parallel run with a global BPR keyword and no lgr_block_values
+    // population must still see the global BlockValues map (asserted
+    // indirectly by the +/- zero changes to the global block path here:
+    // no global B* requested in this deck, no global block_values supplied,
+    // and the eval above completes without throwing).
+}
+
 BOOST_AUTO_TEST_SUITE_END() // Summary
 
 // ####################################################################

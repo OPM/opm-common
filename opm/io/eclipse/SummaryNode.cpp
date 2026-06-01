@@ -271,9 +271,19 @@ Opm::EclIO::SummaryNode::normalise_region_keyword(const std::string& keyword)
 std::optional<std::string> Opm::EclIO::SummaryNode::display_name() const {
     if (use_name(category)) {
         return wgname;
-    } else {
-        return std::nullopt;
     }
+
+    // Block-category nodes inside a local grid refinement need the LGR
+    // name in the SummaryState/unique_key namespace: two LGRs with the
+    // same level-local linearised Cartesian cell index (e.g. number=1
+    // in two 3x3x3 LGRs) would otherwise collide on KEYWORD:number and
+    // overwrite each other's stored value.  Connection/Completion nodes
+    // already disambiguate via wgname, which is per-LGR by WELSPECL.
+    if (category == Category::Block && lgr.has_value()) {
+        return lgr->name;
+    }
+
+    return std::nullopt;
 }
 
 std::optional<std::string> Opm::EclIO::SummaryNode::display_number() const {
