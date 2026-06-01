@@ -21,12 +21,10 @@
 
 #include <opm/common/OpmLog/StreamLog.hpp>
 
+#include <chrono>
 #include <cstdint>
 #include <iosfwd>
-#include <memory>
 #include <string>
-
-#include <time.h>
 
 /*
   This class is a simple demonstration of how the logging framework
@@ -35,10 +33,11 @@
 
 namespace Opm {
 
-class TimerLog : public StreamLog {
+class TimerLog : public StreamLog
+{
 public:
-    static const std::int64_t StartTimer = 4096;
-    static const std::int64_t StopTimer  = 8192;
+    static const std::int64_t StartTimer = INT64_C(1) << 12;
+    static const std::int64_t StopTimer  = INT64_C(1) << 13;
 
     explicit TimerLog(const std::string& logFile);
     explicit TimerLog(std::ostream& os);
@@ -48,12 +47,12 @@ public:
 protected:
     void addMessageUnconditionally(std::int64_t messageFlag,
                                    const std::string& message) override;
+
 private:
-    clock_t m_start;
+    std::chrono::steady_clock::time_point m_start{};
+    bool m_started{false};
 };
 
-typedef std::shared_ptr<TimerLog> TimerLogPtr;
-typedef std::shared_ptr<const TimerLog> TimerLogConstPtr;
 } // namespace Opm
 
 #endif

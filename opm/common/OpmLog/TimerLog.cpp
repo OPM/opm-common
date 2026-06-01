@@ -21,46 +21,53 @@
 
 #include <opm/common/OpmLog/TimerLog.hpp>
 
-#include <opm/common/OpmLog/LogUtil.hpp>
-#include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/common/OpmLog/StreamLog.hpp>
 
-#include <cassert>
+#include <chrono>
 #include <cstdint>
-#include <ios>
-#include <sstream>
+#include <ostream>
+#include <string>
+
+#include <fmt/format.h>
 
 namespace Opm {
 
 TimerLog::TimerLog(const std::string& logFile)
-    : StreamLog( logFile , StopTimer | StartTimer )
-    , m_start(0)
-{
-}
+    : StreamLog { logFile, StopTimer | StartTimer }
+{}
 
 TimerLog::TimerLog(std::ostream& os)
-    : StreamLog( os , StopTimer | StartTimer )
-    , m_start(0)
+    : StreamLog { os, StopTimer | StartTimer }
+{}
+
+void TimerLog::clear()
 {
+    m_start = std::chrono::steady_clock::now();
+    m_started = false;
 }
 
-
-
-void TimerLog::addMessageUnconditionally(std::int64_t messageType, const std::string& msg ) {
+void TimerLog::addMessageUnconditionally(const std::int64_t messageType,
+                                         const std::string& msg)
+{
     if (messageType == StopTimer) {
-        clock_t stop = clock();
-        double secondsElapsed = 1.0 * (m_start - stop) / CLOCKS_PER_SEC ;
+        if (!m_started) {
+            StreamLog::addMessageUnconditionally
+                (messageType, fmt::format("Timer not started when receiving user "
+                                          "message '{}'. Elapsed time is zero.", msg));
+            return;
+        }
 
-        std::ostringstream work;
-        work.precision(8);
-        work << std::fixed << msg << ": " << secondsElapsed << " seconds ";
-        StreamLog::addMessageUnconditionally( messageType, work.str());
-    } else {
-        if (messageType == StartTimer)
-            m_start = clock();
+        const auto stop = std::chrono::steady_clock::now();
+        const auto elapsed = std::chrono::duration<double>(stop - m_start);
+
+        const auto logMessage = fmt::format("{}: {:.8f} seconds", msg, elapsed.count());
+        StreamLog::addMessageUnconditionally(messageType, logMessage);
+        m_started = false;
+    }
+    else if (messageType == StartTimer) {
+        m_start = std::chrono::steady_clock::now();
+        m_started = true;
     }
 }
-
-
 
 } // namespace Opm
