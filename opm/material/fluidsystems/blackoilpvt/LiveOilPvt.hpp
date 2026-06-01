@@ -34,6 +34,8 @@
 #include <opm/material/common/UniformXTabulated2DFunction.hpp>
 #include <opm/material/common/Tabulated1DFunction.hpp>
 
+#include <cstddef>
+
 namespace Opm {
 
 class EclipseState;
@@ -65,7 +67,7 @@ private:
                           const SimpleTable& masterTable);
 
 public:
-    void setNumRegions(size_t numRegions);
+    void setNumRegions(std::size_t numRegions);
 
     void setVapPars(const Scalar, const Scalar par2)
     {

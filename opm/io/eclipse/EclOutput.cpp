@@ -23,6 +23,8 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstddef>
+#include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <iterator>
@@ -99,7 +101,7 @@ void EclOutput::write(const std::string& name, const std::vector<std::string>& d
                                      [](const std::string& str1, const std::string& str2)
                                      { return str2.size() > str1.size(); });
 
-        if (it->size() > static_cast<size_t>(element_size)) {
+        if (it->size() > static_cast<std::size_t>(element_size)) {
             OPM_THROW(std::runtime_error, "specified element size for type C0NN less than maximum string length in output data");
         }
     }
@@ -155,15 +157,15 @@ void EclOutput::flushStream()
     this->ofileH.flush();
 }
 
-void EclOutput::writeBinaryHeader(const std::string&arrName, int64_t size, eclArrType arrType, int element_size)
+void EclOutput::writeBinaryHeader(const std::string&arrName, std::int64_t size, eclArrType arrType, int element_size)
 {
     int bhead = flipEndianInt(16);
     std::string name = arrName + std::string(8 - arrName.size(),' ');
 
     // write X231 header if size larger that limits for 4 byte integers
     if (size > std::numeric_limits<int>::max()) {
-        int64_t val231 = std::pow(2,31);
-        int64_t x231 = size / val231;
+        std::int64_t val231 = std::pow(2,31);
+        std::int64_t x231 = size / val231;
 
         int flippedx231 = flipEndianInt(static_cast<int>( (-1)*x231 ));
 
@@ -222,9 +224,9 @@ template <typename T>
 void EclOutput::writeBinaryArray(const std::vector<T>& data)
 {
     int num;
-    int64_t rest, offset;
+    std::int64_t rest, offset;
     int dhead;
-    int64_t size = data.size();
+    std::int64_t size = data.size();
 
     eclArrType arrType = MESS;
 
@@ -253,7 +255,7 @@ void EclOutput::writeBinaryArray(const std::vector<T>& data)
 
     int logi_true_val = ix_standard ? true_value_ix : true_value_ecl;
 
-    rest = size * static_cast<int64_t>(sizeOfElement);
+    rest = size * static_cast<std::int64_t>(sizeOfElement);
 
     offset = 0;
 

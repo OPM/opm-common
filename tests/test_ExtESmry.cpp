@@ -30,6 +30,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cstddef>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -367,7 +368,7 @@ BOOST_AUTO_TEST_CASE(TestESmry_3) {
     // fopt vector not present in base run, should get zeros as not
     // for time step 0, 1, ... 62
 
-    for (size_t n = 0; n < 63; n++)
+    for (std::size_t n = 0; n < 63; n++)
         BOOST_CHECK_EQUAL(fopt[n], 0.0);
 
     std::vector<float> fopt_rst_ref = { 3.19319e+07, 3.2234e+07, 3.25642e+07, 3.28804e+07, 3.32039e+07, 3.35138e+07,
@@ -380,6 +381,6 @@ BOOST_AUTO_TEST_CASE(TestESmry_3) {
             4.48504e+07, 4.50315e+07, 4.52109e+07, 4.53828e+07, 4.55587e+07, 4.57272e+07, 4.58995e+07 };
 
 
-    for (size_t n = 63; n < fopt.size(); n++)
+    for (std::size_t n = 63; n < fopt.size(); n++)
         BOOST_REQUIRE_CLOSE(fopt[n], fopt_rst_ref[n-63], 0.01);
 }

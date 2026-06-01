@@ -21,13 +21,13 @@
 
 #include <boost/test/unit_test.hpp>
 
-
 #include <opm/input/eclipse/EclipseState/Tables/TableIndex.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableColumn.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/ColumnSchema.hpp>
 
-using namespace Opm;
+#include <cstddef>
 
+using namespace Opm;
 
 BOOST_AUTO_TEST_CASE( CreateTest ) {
     ColumnSchema schema("COLUMN" , Table::STRICTLY_INCREASING , Table::DEFAULT_LINEAR );
@@ -50,17 +50,14 @@ BOOST_AUTO_TEST_CASE( CreateTest ) {
         std::vector<double> cp(column.size());
         std::ranges::copy(column, cp.begin());
 
-        for (size_t i = 0; i < column.size(); i++)
+        for (std::size_t i = 0; i < column.size(); i++)
             BOOST_CHECK_EQUAL( column[i] , cp[i] );
     }
 }
 
-
-
 BOOST_AUTO_TEST_CASE( TestDefault ) {
     ColumnSchema schema("COLUMN" , Table::STRICTLY_INCREASING , Table::DEFAULT_LINEAR );
     TableColumn column( schema );
-
 
     column.addDefault( "TableTested"  );
     column.addDefault( "TableTested"  );
@@ -72,7 +69,6 @@ BOOST_AUTO_TEST_CASE( TestDefault ) {
     BOOST_CHECK_EQUAL( column[0] , 10 );
     BOOST_CHECK( column.hasDefault( ) );
 }
-
 
 BOOST_AUTO_TEST_CASE( TestAscending ) {
     ColumnSchema schema("COLUMN" , Table::STRICTLY_INCREASING , Table::DEFAULT_LINEAR);
@@ -100,7 +96,6 @@ BOOST_AUTO_TEST_CASE( TestAscending ) {
     BOOST_CHECK( !column.hasDefault( ) );
 }
 
-
 BOOST_AUTO_TEST_CASE( TestWeaklyAscending ) {
     ColumnSchema schema("COLUMN" , Table::INCREASING  , Table::DEFAULT_LINEAR);
     TableColumn column( schema );
@@ -110,7 +105,6 @@ BOOST_AUTO_TEST_CASE( TestWeaklyAscending ) {
 
     BOOST_CHECK( !column.hasDefault( ) );
 }
-
 
 BOOST_AUTO_TEST_CASE( TestDescending ) {
     ColumnSchema schema("COLUMN" , Table::STRICTLY_DECREASING , Table::DEFAULT_LINEAR);
@@ -136,14 +130,12 @@ BOOST_AUTO_TEST_CASE( TestDescending ) {
     column.updateValue( 5,-15, "TableTested"  );
 }
 
-
 BOOST_AUTO_TEST_CASE( TestDEFAULT_NONE) {
     ColumnSchema schema("COLUMN" , Table::STRICTLY_DECREASING , Table::DEFAULT_NONE);
     TableColumn column( schema );
 
     BOOST_CHECK_THROW( column.addDefault( "TableTested" ) , std::invalid_argument );
 }
-
 
 BOOST_AUTO_TEST_CASE( Test_MIN_MAX) {
     ColumnSchema schema("COLUMN" , Table::RANDOM , Table::DEFAULT_LINEAR);
@@ -181,10 +173,8 @@ BOOST_AUTO_TEST_CASE( Test_IN_RANGE) {
     column.addValue(20, "TableTested" );
     BOOST_CHECK_THROW( column.inRange( 15 ) , std::invalid_argument );
 
-
     ColumnSchema schema2("COLUMN" , Table::INCREASING, Table::DEFAULT_LINEAR);
     TableColumn column2( schema2 );
-
 
     BOOST_CHECK_THROW( column2.inRange( 15 ) , std::invalid_argument );
     column2.addValue(10, "TableTested" );
@@ -200,8 +190,6 @@ BOOST_AUTO_TEST_CASE( Test_IN_RANGE) {
     column2.addDefault( "TableTested" );
     BOOST_CHECK_THROW( column2.inRange( 15 ) , std::invalid_argument );
 }
-
-
 
 BOOST_AUTO_TEST_CASE( Test_Table_Index ) {
     {
@@ -225,11 +213,9 @@ BOOST_AUTO_TEST_CASE( Test_Table_Index ) {
         /* Can not look up in column with defaults */
         BOOST_CHECK_THROW( column.lookup( 0.67 ) , std::invalid_argument );
 
-
         column.updateValue(1 , 20, "TableTested"  );
     }
 }
-
 
 BOOST_AUTO_TEST_CASE( Test_EVAL_INCREASING ) {
     ColumnSchema schema("COLUMN" , Table::INCREASING , Table::DEFAULT_LINEAR);
@@ -240,7 +226,6 @@ BOOST_AUTO_TEST_CASE( Test_EVAL_INCREASING ) {
     /* Out of range - constant end-point extrapolation , size = 1*/
     BOOST_CHECK_EQUAL( column.eval( column.lookup( -1 )) , 0 );
     BOOST_CHECK_EQUAL( column.eval( column.lookup(  1 )) , 0 );
-
 
     column.addValue(1, "TableTested" );
     column.addValue(2, "TableTested" );
@@ -259,7 +244,6 @@ BOOST_AUTO_TEST_CASE( Test_EVAL_INCREASING ) {
     BOOST_CHECK_EQUAL( column.eval( column.lookup( -1 )) , 0 );
     BOOST_CHECK_EQUAL( column.eval( column.lookup(  4 )) , 3 );
 }
-
 
 BOOST_AUTO_TEST_CASE( Test_EVAL_DECREASING ) {
     ColumnSchema schema("COLUMN" , Table::DECREASING , Table::DEFAULT_LINEAR);
@@ -284,9 +268,6 @@ BOOST_AUTO_TEST_CASE( Test_EVAL_DECREASING ) {
     BOOST_CHECK_EQUAL( column.eval( column.lookup(  4 )) , 3 );
 }
 
-
-
-
 BOOST_AUTO_TEST_CASE( Test_CONST_DEFAULT ) {
     ColumnSchema schema("COLUMN" , Table::DECREASING , 1.0);
     TableColumn column( schema );
@@ -297,7 +278,6 @@ BOOST_AUTO_TEST_CASE( Test_CONST_DEFAULT ) {
     BOOST_CHECK_EQUAL( column[0] , 1.0 );
     BOOST_CHECK_EQUAL( column[1] , 1.0 );
 }
-
 
 BOOST_AUTO_TEST_CASE( Test_LINEAR_DEFAULT ) {
     ColumnSchema argSchema("COLUMN" , Table::INCREASING , Table::DEFAULT_NONE);

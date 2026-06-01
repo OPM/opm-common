@@ -30,6 +30,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cmath>
+#include <cstddef>
 #include <iosfwd>
 #include <vector>
 
@@ -49,15 +50,15 @@ template <class Scalar>
 class TridiagonalMatrix
 {
     struct TridiagRow_ {
-        TridiagRow_(TridiagonalMatrix& m, size_t rowIdx)
+        TridiagRow_(TridiagonalMatrix& m, std::size_t rowIdx)
             : matrix_(m)
             , rowIdx_(rowIdx)
         {}
 
-        Scalar& operator[](size_t colIdx)
+        Scalar& operator[](std::size_t colIdx)
         { return matrix_.at(rowIdx_, colIdx); }
 
-        Scalar operator[](size_t colIdx) const
+        Scalar operator[](std::size_t colIdx) const
         { return matrix_.at(rowIdx_, colIdx); }
 
         /*!
@@ -95,27 +96,27 @@ class TridiagonalMatrix
          *
          * 0 is the first row.
          */
-        size_t index() const
+        std::size_t index() const
         { return rowIdx_; }
 
     private:
         TridiagonalMatrix& matrix_;
-        mutable size_t rowIdx_;
+        mutable std::size_t rowIdx_;
     };
 
 public:
     typedef Scalar FieldType;
     typedef TridiagRow_ RowType;
-    typedef size_t SizeType;
+    typedef std::size_t SizeType;
     typedef TridiagRow_ iterator;
     typedef TridiagRow_ const_iterator;
 
-    explicit TridiagonalMatrix(size_t numRows = 0)
+    explicit TridiagonalMatrix(std::size_t numRows = 0)
     {
         resize(numRows);
     }
 
-    TridiagonalMatrix(size_t numRows, Scalar value)
+    TridiagonalMatrix(std::size_t numRows, Scalar value)
     {
         resize(numRows);
         this->operator=(value);
@@ -130,25 +131,25 @@ public:
     /*!
      * \brief Return the number of rows/columns of the matrix.
      */
-    size_t size() const
+    std::size_t size() const
     { return diag_[0].size(); }
 
     /*!
      * \brief Return the number of rows of the matrix.
      */
-    size_t rows() const
+    std::size_t rows() const
     { return size(); }
 
     /*!
      * \brief Return the number of columns of the matrix.
      */
-    size_t cols() const
+    std::size_t cols() const
     { return size(); }
 
     /*!
      * \brief Change the number of rows of the matrix.
      */
-    void resize(size_t n)
+    void resize(std::size_t n)
     {
         if (n == size())
             return;
@@ -160,9 +161,9 @@ public:
     /*!
      * \brief Access an entry.
      */
-    Scalar& at(size_t rowIdx, size_t colIdx)
+    Scalar& at(std::size_t rowIdx, std::size_t colIdx)
     {
-        size_t n = size();
+        std::size_t n = size();
 
         // special cases
         if (n > 2) {
@@ -172,7 +173,7 @@ public:
                 return diag_[0][n - 1];
         }
 
-        size_t diagIdx = 1 + colIdx - rowIdx;
+        std::size_t diagIdx = 1 + colIdx - rowIdx;
         // make sure that the requested column is in range
         assert(diagIdx < 3);
         return diag_[diagIdx][colIdx];
@@ -181,9 +182,9 @@ public:
     /*!
      * \brief Access an entry.
      */
-    Scalar at(size_t rowIdx, size_t colIdx) const
+    Scalar at(std::size_t rowIdx, std::size_t colIdx) const
     {
-        size_t n = size();
+        std::size_t n = size();
 
         // special cases
         if (rowIdx == 0 && colIdx == n - 1)
@@ -191,7 +192,7 @@ public:
         if (rowIdx == n - 1 && colIdx == 0)
             return diag_[0][n - 1];
 
-        size_t diagIdx = 1 + colIdx - rowIdx;
+        std::size_t diagIdx = 1 + colIdx - rowIdx;
         // make sure that the requested column is in range
         assert(diagIdx < 3);
         return diag_[diagIdx][colIdx];
@@ -240,13 +241,13 @@ public:
     /*!
      * \brief Row access operator.
      */
-    TridiagRow_ operator[](size_t rowIdx)
+    TridiagRow_ operator[](std::size_t rowIdx)
     { return TridiagRow_(*this, rowIdx); }
 
     /*!
      * \brief Row access operator.
      */
-    const TridiagRow_ operator[](size_t rowIdx) const
+    const TridiagRow_ operator[](std::size_t rowIdx) const
     { return TridiagRow_(*this, rowIdx); }
 
     /*!
@@ -727,7 +728,7 @@ private:
     template <class XVector, class BVector>
     void solveWithUpperRight_(XVector& x, const BVector& b) const
     {
-        size_t n = size();
+        std::size_t n = size();
 
         std::vector<Scalar> lowerDiag(diag_[0]), mainDiag(diag_[1]), upperDiag(diag_[2]), lastColumn(n);
         std::vector<Scalar> bStar(n);
@@ -736,7 +737,7 @@ private:
         lastColumn[0] = upperDiag[0];
 
         // forward elimination
-        for (size_t i = 1; i < n; ++i) {
+        for (std::size_t i = 1; i < n; ++i) {
             Scalar alpha = lowerDiag[i - 1]/mainDiag[i - 1];
 
             lowerDiag[i - 1] -= alpha * mainDiag[i - 1];
@@ -748,7 +749,7 @@ private:
         // deal with the last row if the entry on the lower left is not zero
         if (lowerDiag[n - 1] != 0.0 && size() > 2) {
             Scalar lastRow = lowerDiag[n - 1];
-            for (size_t i = 0; i < n - 1; ++i) {
+            for (std::size_t i = 0; i < n - 1; ++i) {
                 Scalar alpha = lastRow/mainDiag[i];
                 lastRow = - alpha*upperDiag[i + 1];
                 bStar[n - 1] -= alpha * bStar[i];
@@ -768,14 +769,14 @@ private:
     template <class XVector, class BVector>
     void solveWithoutUpperRight_(XVector& x, const BVector& b) const
     {
-        size_t n = size();
+        std::size_t n = size();
 
         std::vector<Scalar> lowerDiag(diag_[0]), mainDiag(diag_[1]), upperDiag(diag_[2]);
         std::vector<Scalar> bStar(n);
         std::ranges::copy(b, bStar.begin());
 
         // forward elimination
-        for (size_t i = 1; i < n; ++i) {
+        for (std::size_t i = 1; i < n; ++i) {
             Scalar alpha = lowerDiag[i - 1]/mainDiag[i - 1];
 
             lowerDiag[i - 1] -= alpha * mainDiag[i - 1];
@@ -787,7 +788,7 @@ private:
         // deal with the last row if the entry on the lower left is not zero
         if (lowerDiag[n - 1] != 0.0 && size() > 2) {
             Scalar lastRow = lowerDiag[n - 1];
-            for (size_t i = 0; i < n - 1; ++i) {
+            for (std::size_t i = 0; i < n - 1; ++i) {
                 Scalar alpha = lastRow/mainDiag[i];
                 lastRow = - alpha*upperDiag[i + 1];
                 bStar[n - 1] -= alpha * bStar[i];

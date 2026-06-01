@@ -22,14 +22,6 @@
 
 #include <opm/msim/msim.hpp>
 
-#include <algorithm>
-#include <filesystem>
-#include <memory>
-#include <iostream>
-#include <stdexcept>
-#include <utility>
-
-#include <opm/input/eclipse/Python/Python.hpp>
 #include <opm/io/eclipse/ERst.hpp>
 #include <opm/io/eclipse/ESmry.hpp>
 #include <opm/io/eclipse/ERsm.hpp>
@@ -38,13 +30,28 @@
 
 #include <opm/output/data/Wells.hpp>
 #include <opm/output/eclipse/EclipseIO.hpp>
-#include <opm/input/eclipse/Deck/Deck.hpp>
-#include <opm/input/eclipse/Units/Units.hpp>
-#include <opm/input/eclipse/Parser/Parser.hpp>
+
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/input/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
+
+#include <opm/input/eclipse/Python/Python.hpp>
+
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
-#include <opm/input/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
+
+#include <opm/input/eclipse/Units/Units.hpp>
+
+#include <opm/input/eclipse/Deck/Deck.hpp>
+
+#include <opm/input/eclipse/Parser/Parser.hpp>
+
+#include <algorithm>
+#include <cstddef>
+#include <filesystem>
+#include <iostream>
+#include <memory>
+#include <stdexcept>
+#include <utility>
 
 #include <tests/WorkArea.hpp>
 
@@ -52,27 +59,27 @@ using namespace Opm;
 
 namespace {
 
-double prod_opr(const EclipseState&  es, const Schedule& /* sched */, const SummaryState&, const data::Solution& /* sol */, size_t /* report_step */, double seconds_elapsed) {
+double prod_opr(const EclipseState&  es, const Schedule& /* sched */, const SummaryState&, const data::Solution& /* sol */, std::size_t /* report_step */, double seconds_elapsed) {
     const auto& units = es.getUnits();
     return -units.to_si(UnitSystem::measure::rate, seconds_elapsed);
 }
 
-double prod_rft(const EclipseState&  es, const Schedule& /* sched */, const SummaryState&, const data::Solution& /* sol */, size_t /* report_step */, double /* seconds_elapsed */) {
+double prod_rft(const EclipseState&  es, const Schedule& /* sched */, const SummaryState&, const data::Solution& /* sol */, std::size_t /* report_step */, double /* seconds_elapsed */) {
     const auto& units = es.getUnits();
     return -units.to_si(UnitSystem::measure::rate, 0.0);
 }
 
-double inj_rfti(const EclipseState&  es, const Schedule& /* sched */, const SummaryState&, const data::Solution& /* sol */, size_t /* report_step */, double /* seconds_elapsed */) {
+double inj_rfti(const EclipseState&  es, const Schedule& /* sched */, const SummaryState&, const data::Solution& /* sol */, std::size_t /* report_step */, double /* seconds_elapsed */) {
     const auto& units = es.getUnits();
     return units.to_si(UnitSystem::measure::rate, 0.0);
 }
 
-double inj_inj(const EclipseState&  es, const Schedule& /* sched */, const SummaryState&, const data::Solution& /* sol */, size_t /* report_step */, double /* seconds_elapsed */) {
+double inj_inj(const EclipseState&  es, const Schedule& /* sched */, const SummaryState&, const data::Solution& /* sol */, std::size_t /* report_step */, double /* seconds_elapsed */) {
     const auto& units = es.getUnits();
     return units.to_si(UnitSystem::measure::rate, 100);
 }
 
-void pressure(const EclipseState& es, const Schedule& /* sched */, data::Solution& sol, size_t /* report_step */, double seconds_elapsed) {
+void pressure(const EclipseState& es, const Schedule& /* sched */, data::Solution& sol, std::size_t /* report_step */, double seconds_elapsed) {
     const auto& units = es.getUnits();
     if (!sol.has("PRESSURE")) {
         const auto& grid = es.getInputGrid();

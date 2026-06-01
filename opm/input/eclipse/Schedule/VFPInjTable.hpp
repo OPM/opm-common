@@ -17,16 +17,15 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
 #ifndef OPM_PARSER_ECLIPSE_ECLIPSESTATE_TABLES_VFPINJTABLE_HPP_
 #define OPM_PARSER_ECLIPSE_ECLIPSESTATE_TABLES_VFPINJTABLE_HPP_
 
+#include <opm/common/OpmLog/KeywordLocation.hpp>
 
 #include <array>
-#include <vector>
+#include <cstddef>
 #include <string>
-
-#include <opm/common/OpmLog/KeywordLocation.hpp>
+#include <vector>
 
 namespace Opm {
 
@@ -41,7 +40,6 @@ public:
         FLO_WAT,
         FLO_GAS,
     };
-
 
     VFPInjTable();
     VFPInjTable(const DeckKeyword& table, const UnitSystem& deck_unit_system);
@@ -95,9 +93,9 @@ public:
 
     bool operator==(const VFPInjTable& data) const;
 
-    std::array<size_t,2> shape() const;
+    std::array<std::size_t,2> shape() const;
 
-    double operator()(size_t thp_idx, size_t flo_idx) const;
+    double operator()(std::size_t thp_idx, std::size_t flo_idx) const;
 
     template<class Serializer>
     void serializeOp(Serializer& serializer)
@@ -119,13 +117,12 @@ private:
     std::vector<double> m_flo_data;
     std::vector<double> m_thp_data;
 
-
     std::vector<double> m_data;
     KeywordLocation m_location;
 
     void check();
 
-    double& operator()(size_t thp_idx, size_t flo_idx);
+    double& operator()(std::size_t thp_idx, std::size_t flo_idx);
 
     static FLO_TYPE getFloType(const std::string& flo_string);
 
@@ -139,8 +136,6 @@ private:
                             const UnitSystem& unit_system);
 };
 
-
 }
-
 
 #endif

@@ -17,19 +17,18 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
-#include <unordered_set>
-#include <stdexcept>
-#include <string>
-#include <algorithm>
-
-#include <opm/input/eclipse/Deck/DeckOutput.hpp>
-#include <opm/input/eclipse/Deck/DeckItem.hpp>
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
 
+#include <opm/input/eclipse/Deck/DeckItem.hpp>
+#include <opm/input/eclipse/Deck/DeckOutput.hpp>
+
+#include <algorithm>
+#include <cstddef>
+#include <stdexcept>
+#include <string>
+#include <unordered_set>
 
 namespace Opm {
-
 
     DeckRecord::DeckRecord( std::vector< DeckItem >&& items, const bool check_for_duplicate_names ) :
         m_items( std::move( items ) ) {
@@ -63,7 +62,7 @@ namespace Opm {
         return result;
     }
 
-    size_t DeckRecord::size() const {
+    std::size_t DeckRecord::size() const {
         return m_items.size();
     }
 
@@ -77,7 +76,7 @@ namespace Opm {
         m_items.push_back( std::move( deckItem ) );
     }
 
-    DeckItem& DeckRecord::getItem( size_t index ) {
+    DeckItem& DeckRecord::getItem( std::size_t index ) {
         return this->m_items.at( index );
     }
 
@@ -101,7 +100,7 @@ namespace Opm {
             throw std::range_error("Not a data keyword ?");
     }
 
-    const DeckItem& DeckRecord::getItem( size_t index ) const {
+    const DeckItem& DeckRecord::getItem( std::size_t index ) const {
         return this->m_items.at( index );
     }
 
@@ -141,7 +140,6 @@ namespace Opm {
         return this->m_items.end();
     }
 
-
     void DeckRecord::write_data(DeckOutput& writer, std::size_t item_offset) const {
         for (std::size_t item_index = item_offset; item_index < this->size(); item_index++) {
             const auto& item = this->getItem(item_index);
@@ -156,7 +154,6 @@ namespace Opm {
         writer.end_record( );
     }
 
-
     std::ostream& operator<<(std::ostream& os, const DeckRecord& record) {
         DeckOutput output(os);
         record.write( output );
@@ -167,7 +164,7 @@ namespace Opm {
         if (this->size() != other.size())
             return false;
 
-        for (size_t index = 0; index < this->size(); index++) {
+        for (std::size_t index = 0; index < this->size(); index++) {
             const auto& this_item = this->getItem( index );
             const auto& other_item = other.getItem( index );
             if (!this_item.equal( other_item , cmp_default, cmp_numeric))

@@ -29,6 +29,7 @@
 #include <opm/input/eclipse/Units/Units.hpp>
 
 #include <array>
+#include <cstddef>
 #include <memory>
 #include <ostream>
 #include <stdexcept>
@@ -232,7 +233,7 @@ BOOST_AUTO_TEST_CASE( VectorConvert ) {
     UnitSystem units = UnitSystem::newLAB();
 
     units.from_si( UnitSystem::measure::pressure , d0 );
-    for (size_t i = 0; i < d1.size(); i++)
+    for (std::size_t i = 0; i < d1.size(); i++)
         BOOST_CHECK_EQUAL( units.from_si( UnitSystem::measure::pressure , d1[i] ) , d0[i]);
 }
 

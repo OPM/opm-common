@@ -19,12 +19,13 @@
 
 #include <opm/input/eclipse/EclipseState/IOConfig/FIPConfig.hpp>
 
+#include <opm/input/eclipse/Schedule/RPTConfig.hpp>
+
 #include <opm/input/eclipse/Deck/DeckSection.hpp>
 
 #include <opm/input/eclipse/Parser/ParserKeywords/R.hpp>
 
-#include <opm/input/eclipse/Schedule/RPTConfig.hpp>
-
+#include <cstddef>
 #include <vector>
 
 namespace Opm {
@@ -52,7 +53,7 @@ void FIPConfig::parseRPT(const RPTConfig& rptConfig)
     auto parseFlags = [this](const std::vector<int>& flags,
                              const unsigned value)
     {
-        for (size_t i = 0; i < flags.size(); ++i) {
+        for (std::size_t i = 0; i < flags.size(); ++i) {
             if (value > i) {
                 m_flags.set(flags[i]);
             }

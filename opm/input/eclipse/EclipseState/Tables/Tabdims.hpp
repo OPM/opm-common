@@ -60,35 +60,35 @@ namespace Opm {
             return result;
         }
 
-        size_t getNumSatTables() const {
+        std::size_t getNumSatTables() const {
             return m_ntsfun;
         }
 
-        size_t getNumPVTTables() const {
+        std::size_t getNumPVTTables() const {
             return m_ntpvt;
         }
 
-        size_t getNumSatNodes() const {
+        std::size_t getNumSatNodes() const {
             return m_nssfun;
         }
 
-        size_t getNumPressureNodes() const {
+        std::size_t getNumPressureNodes() const {
             return m_nppvt;
         }
 
-        size_t getNumFIPRegions() const {
+        std::size_t getNumFIPRegions() const {
             return m_ntfip;
         }
 
-        size_t getNumRSNodes() const {
+        std::size_t getNumRSNodes() const {
             return m_nrpvt;
         }
 
-        size_t getNumEosRes() const {
+        std::size_t getNumEosRes() const {
             return m_neosres;
         }
 
-        size_t getNumEosSur() const {
+        std::size_t getNumEosSur() const {
             return m_neossur;
         }
 
@@ -117,7 +117,7 @@ namespace Opm {
         }
 
     private:
-        size_t m_ntsfun,m_ntpvt,m_nssfun,m_nppvt,m_ntfip,m_nrpvt, m_neosres, m_neossur;
+        std::size_t m_ntsfun,m_ntpvt,m_nssfun,m_nppvt,m_ntfip,m_nrpvt, m_neosres, m_neossur;
     };
 }
 

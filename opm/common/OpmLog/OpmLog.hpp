@@ -20,11 +20,11 @@
 #ifndef OPMLOG_HPP
 #define OPMLOG_HPP
 
-#include <memory>
-#include <cstdint>
-
 #include <opm/common/OpmLog/Logger.hpp>
 #include <opm/common/OpmLog/LogUtil.hpp>
+
+#include <cstdint>
+#include <memory>
 
 namespace Opm {
 
@@ -38,14 +38,13 @@ namespace Opm {
   Logger instance.
 */
 
-
 class OpmLog {
 
 public:
     constexpr static int defaultDebugVerbosityLevel = 1;
 
-    static void addMessage(int64_t messageFlag , const std::string& message);
-    static void addTaggedMessage(int64_t messageFlag, const std::string& tag, const std::string& message);
+    static void addMessage(std::int64_t messageFlag , const std::string& message);
+    static void addTaggedMessage(std::int64_t messageFlag, const std::string& tag, const std::string& message);
 
     static void info(const std::string& message);
     static void warning(const std::string& message);
@@ -67,9 +66,8 @@ public:
     static void addBackend(const std::string& name , std::shared_ptr<LogBackend> backend);
     static bool removeBackend(const std::string& name);
     static void removeAllBackends();
-    static bool enabledMessageType( int64_t messageType );
-    static void addMessageType( int64_t messageType , const std::string& prefix);
-
+    static bool enabledMessageType( std::int64_t messageType );
+    static void addMessageType( std::int64_t messageType , const std::string& prefix);
 
     static int getDebugVerbosityLevel() { return debug_verbosity_level_; }
     static void setDebugVerbosityLevel(const int verbosity_level) { debug_verbosity_level_ = verbosity_level; }
@@ -95,7 +93,6 @@ public:
         auto logger = getLogger();
         return logger->popBackend<BackendType>(name);
     }
-
 
     static bool stdoutIsTerminal();
 
@@ -124,10 +121,6 @@ private:
     static std::shared_ptr<Logger> m_logger;
 };
 
-
 }
-
-
-
 
 #endif

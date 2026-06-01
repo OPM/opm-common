@@ -19,6 +19,7 @@
 #ifndef DRSDT_HPP
 #define DRSDT_HPP
 
+#include <cstddef>
 #include <string>
 #include <vector>
 
@@ -42,7 +43,7 @@ namespace Opm
 
 
         OilVaporizationProperties();
-        explicit OilVaporizationProperties(const size_t numPvtReginIdx);
+        explicit OilVaporizationProperties(const std::size_t numPvtReginIdx);
 
         static OilVaporizationProperties serializationTestObject();
 
@@ -53,25 +54,25 @@ namespace Opm
         static void updateVAPPARS(Opm::OilVaporizationProperties& ovp, double vap1, double vap2);
 
         OilVaporization getType() const;
-        double getMaxDRSDT(const size_t pvtRegionIdx) const;
-        double getMaxDRVDT(const size_t pvtRegionIdx) const;
-        bool getOption(const size_t pvtRegionIdx) const;
-        bool drsdtActive(const size_t pvtRegionIdx) const;
-        bool drvdtActive(const size_t pvtRegionIdx) const;
-        bool drsdtConvective(const size_t pvtRegionIdx) const;
+        double getMaxDRSDT(const std::size_t pvtRegionIdx) const;
+        double getMaxDRVDT(const std::size_t pvtRegionIdx) const;
+        bool getOption(const std::size_t pvtRegionIdx) const;
+        bool drsdtActive(const std::size_t pvtRegionIdx) const;
+        bool drvdtActive(const std::size_t pvtRegionIdx) const;
+        bool drsdtConvective(const std::size_t pvtRegionIdx) const;
 
         bool drsdtActive() const;
         bool drvdtActive() const;
         bool drsdtConvective() const;
 
         bool defined() const;
-        size_t numPvtRegions() const {return m_maxDRSDT.size();}
+        std::size_t numPvtRegions() const {return m_maxDRSDT.size();}
 
         double vap1() const;
         double vap2() const;
 
-        double getPsi(const size_t pvtRegionIdx) const;
-        double getOmega(const size_t pvtRegionIdx) const;
+        double getPsi(const std::size_t pvtRegionIdx) const;
+        double getOmega(const std::size_t pvtRegionIdx) const;
         /*
          * if either argument was default constructed == will always be false
          * and != will always be true

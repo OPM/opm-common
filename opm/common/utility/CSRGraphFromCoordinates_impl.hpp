@@ -21,6 +21,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <cstddef>
 #include <exception>
 #include <iterator>
 #include <optional>
@@ -684,7 +685,7 @@ addVertexGroup(const std::vector<VertexID>& vertices)
 
     // Union all vertices in the group
     if (vertices.size() > 1) {
-        for (size_t i = 1; i < vertices.size(); ++i) {
+        for (std::size_t i = 1; i < vertices.size(); ++i) {
             unionSets(vertices[0], vertices[i]);
         }
     }

@@ -28,13 +28,14 @@
 
 #include <algorithm>
 #include <array>
+#include <cstddef>
+#include <map>
 #include <memory>
 #include <optional>
 #include <stdexcept>
 #include <string>
 #include <unordered_set>
 #include <vector>
-#include <map>
 
 namespace Opm {
 
@@ -71,7 +72,7 @@ namespace Opm {
         EclipseGrid(const EclipseGrid& src, const std::vector<int>& actnum);
         EclipseGrid(const EclipseGrid& src, const double* zcorn, const std::vector<int>& actnum);
 
-        EclipseGrid(size_t nx, size_t ny, size_t nz,
+        EclipseGrid(std::size_t nx, std::size_t ny, std::size_t nz,
                     double dx = 1.0, double dy = 1.0, double dz = 1.0,
                     double top = 0.0);
         explicit EclipseGrid(const GridDims& gd);
@@ -93,20 +94,20 @@ namespace Opm {
         static bool hasCylindricalKeywords(const Deck& deck);
         static bool hasCornerPointKeywords(const Deck&);
         static bool hasCartesianKeywords(const Deck&);
-        size_t  getNumActive( ) const;
+        std::size_t  getNumActive( ) const;
         bool allActive() const;
 
-        size_t activeIndex(size_t i, size_t j, size_t k) const;
-        size_t activeIndex(size_t globalIndex) const;
+        std::size_t activeIndex(std::size_t i, std::size_t j, std::size_t k) const;
+        std::size_t activeIndex(std::size_t globalIndex) const;
 
-        size_t getTotalActiveLGR() const;
-        size_t getActiveIndexLGR(const std::string& label, size_t i, size_t j, size_t k) const;
-        size_t getActiveIndexLGR(const std::string& label, size_t localIndex) const;
+        std::size_t getTotalActiveLGR() const;
+        std::size_t getActiveIndexLGR(const std::string& label, std::size_t i, std::size_t j, std::size_t k) const;
+        std::size_t getActiveIndexLGR(const std::string& label, std::size_t localIndex) const;
 
-        size_t activeIndexLGR(const std::string& label, size_t i, size_t j, size_t k) const;
-        size_t activeIndexLGR(const std::string& label, size_t localIndex) const;
+        std::size_t activeIndexLGR(const std::string& label, std::size_t i, std::size_t j, std::size_t k) const;
+        std::size_t activeIndexLGR(const std::string& label, std::size_t localIndex) const;
 
-        size_t getActiveIndex(size_t i, size_t j, size_t k) const {
+        std::size_t getActiveIndex(std::size_t i, std::size_t j, std::size_t k) const {
             return activeIndex(i, j, k);
         }
         const std::vector<std::size_t>& get_print_order_lgr () const {
@@ -126,10 +127,10 @@ namespace Opm {
                 throw std::runtime_error("LGR tag not found: " + lgr_tag);
             }
 
-            return static_cast<size_t>(std::distance(labels.begin(), it));
+            return static_cast<std::size_t>(std::distance(labels.begin(), it));
         }
 
-        size_t getActiveIndex(size_t globalIndex) const {
+        std::size_t getActiveIndex(std::size_t globalIndex) const {
             return activeIndex(globalIndex);
         }
 
@@ -159,7 +160,7 @@ namespace Opm {
         std::vector<GridDims> get_lgr_children_gridim() const;
 
 
-        void assertIndexLGR(size_t localIndex) const;
+        void assertIndexLGR(std::size_t localIndex) const;
 
         void assertLabelLGR(const std::string& label) const;
 
@@ -181,7 +182,7 @@ namespace Opm {
         void perform_refinement();
 
         using GridDims::getGlobalIndex;
-        size_t getGlobalIndex(size_t active_index) const;
+        std::size_t getGlobalIndex(std::size_t active_index) const;
 
         /*
           For RADIAL grids you can *optionally* use the keyword
@@ -225,7 +226,7 @@ namespace Opm {
                 std::vector<T> compressed_vector( this->getNumActive() );
                 const auto& active_map = this->getActiveMap( );
 
-                for (size_t i = 0; i < this->getNumActive(); ++i)
+                for (std::size_t i = 0; i < this->getNumActive(); ++i)
                     compressed_vector[i] = input_vector[ active_map[i] ];
 
                 return compressed_vector;
@@ -241,27 +242,27 @@ namespace Opm {
         void create_lgr_cells_tree(const LgrCollection& );
         /// \brief get cell center, and center and normal of bottom face
         std::tuple<std::array<double, 3>,std::array<double, 3>,std::array<double, 3>>
-        getCellAndBottomCenterNormal(size_t globalIndex) const;
-        std::array<double, 3> getCellCenter(size_t i,size_t j, size_t k) const;
-        std::array<double, 3> getCellCenter(size_t globalIndex) const;
-        std::array<double, 3> getCornerPos(size_t i,size_t j, size_t k, size_t corner_index) const;
+        getCellAndBottomCenterNormal(std::size_t globalIndex) const;
+        std::array<double, 3> getCellCenter(std::size_t i,std::size_t j, std::size_t k) const;
+        std::array<double, 3> getCellCenter(std::size_t globalIndex) const;
+        std::array<double, 3> getCornerPos(std::size_t i,std::size_t j, std::size_t k, std::size_t corner_index) const;
         const std::vector<double>& activeVolume() const;
-        double getCellVolume(size_t globalIndex) const;
-        double getCellVolume(size_t i , size_t j , size_t k) const;
-        double getCellThickness(size_t globalIndex) const;
-        double getCellThickness(size_t i , size_t j , size_t k) const;
-        std::array<double, 3> getCellDims(size_t i,size_t j, size_t k) const;
-        std::array<double, 3> getCellDims(size_t globalIndex) const;
-        bool cellActive( size_t globalIndex ) const;
-        bool cellActive( size_t i , size_t j, size_t k ) const;
-        bool cellActiveAfterMINPV( size_t i , size_t j , size_t k, double cell_porv ) const;
+        double getCellVolume(std::size_t globalIndex) const;
+        double getCellVolume(std::size_t i , std::size_t j , std::size_t k) const;
+        double getCellThickness(std::size_t globalIndex) const;
+        double getCellThickness(std::size_t i , std::size_t j , std::size_t k) const;
+        std::array<double, 3> getCellDims(std::size_t i,std::size_t j, std::size_t k) const;
+        std::array<double, 3> getCellDims(std::size_t globalIndex) const;
+        bool cellActive( std::size_t globalIndex ) const;
+        bool cellActive( std::size_t i , std::size_t j, std::size_t k ) const;
+        bool cellActiveAfterMINPV( std::size_t i , std::size_t j , std::size_t k, double cell_porv ) const;
         bool is_lgr() const {return lgr_grid;};
-        std::array<double, 3> getCellDimensions(size_t i, size_t j, size_t k) const {
+        std::array<double, 3> getCellDimensions(std::size_t i, std::size_t j, std::size_t k) const {
             return getCellDims(i, j, k);
         }
 
 
-        bool isCellActive(size_t i, size_t j, size_t k) const {
+        bool isCellActive(std::size_t i, std::size_t j, std::size_t k) const {
             return cellActive(i, j, k);
         }
 
@@ -273,8 +274,8 @@ namespace Opm {
         bool isValidCellGeomtry(const std::size_t globalIndex,
                                 const UnitSystem& usys) const;
 
-        double getCellDepth(size_t i,size_t j, size_t k) const;
-        double getCellDepth(size_t globalIndex) const;
+        double getCellDepth(std::size_t i,std::size_t j, std::size_t k) const;
+        double getCellDepth(std::size_t globalIndex) const;
         ZcornMapper zcornMapper() const;
 
         const std::vector<double>& getCOORD() const;
@@ -283,7 +284,7 @@ namespace Opm {
 
         const std::optional<MapAxes>& getMapAxes() const;
 
-        const std::map<size_t, std::array<int,2>>& getAquiferCellTabnums() const;
+        const std::map<std::size_t, std::array<int,2>>& getAquiferCellTabnums() const;
 
         /*
           The fixupZCORN method is run as part of constructiong the grid. This will adjust the
@@ -292,8 +293,8 @@ namespace Opm {
           stored in private member zcorn_fixed.
         */
 
-        size_t fixupZCORN();
-        size_t getZcornFixed() { return zcorn_fixed; };
+        std::size_t fixupZCORN();
+        std::size_t getZcornFixed() { return zcorn_fixed; };
 
         // resetACTNUM with no arguments will make all cells in the grid active.
 
@@ -370,7 +371,7 @@ namespace Opm {
         mutable std::optional<std::vector<double>> active_volume;
 
         bool m_circle = false;
-        size_t zcorn_fixed = 0;
+        std::size_t zcorn_fixed = 0;
         bool m_useActnumFromGdfile = false;
 
         std::optional<MapAxes> m_mapaxes;
@@ -380,10 +381,10 @@ namespace Opm {
         std::vector<int> m_active_to_global;
         std::vector<int> m_global_to_active;
         // Numerical aquifer cells, needs to be active
-        std::unordered_set<size_t> m_aquifer_cells;
+        std::unordered_set<std::size_t> m_aquifer_cells;
         // Keep track of aquifer cell depths and (pvtnum,satnum)
-        std::map<size_t, double> m_aquifer_cell_depths;
-        std::map<size_t, std::array<int,2>> m_aquifer_cell_tabnums;
+        std::map<std::size_t, double> m_aquifer_cell_depths;
+        std::map<std::size_t, std::array<int,2>> m_aquifer_cell_tabnums;
         std::optional<std::vector<double>> m_depth;
 
         // Radial grids need this for volume calculations.
@@ -394,7 +395,7 @@ namespace Opm {
         void initializeLGRTreeIndices(void);
         void propagateParentIndicesToLGRChildren(int);
         void updateNumericalAquiferCells(const Deck&);
-        double computeCellGeometricDepth(size_t globalIndex) const;
+        double computeCellGeometricDepth(std::size_t globalIndex) const;
 
         void initGridFromEGridFile(Opm::EclIO::EclFile& egridfile,
                                    const std::string& fileName);
@@ -419,11 +420,11 @@ namespace Opm {
         void assertCornerPointKeywords(const Deck&);
         void save_all_lgr_labels(const LgrCollection& );
         static bool hasDTOPSKeywords(const Deck&);
-        static void assertVectorSize(const std::vector<double>& vector, size_t expectedSize, const std::string& msg);
+        static void assertVectorSize(const std::vector<double>& vector, std::size_t expectedSize, const std::string& msg);
 
         static std::vector<double> createTOPSVector(const std::array<int, 3>& dims, const std::vector<double>& DZ, const Deck&);
         static std::vector<double> createDVector(const std::array<int, 3>& dims, std::size_t dim, const std::string& DKey, const std::string& DVKey, const Deck&);
-        static void scatterDim(const std::array<int, 3>& dims , size_t dim , const std::vector<double>& DV , std::vector<double>& D);
+        static void scatterDim(const std::array<int, 3>& dims , std::size_t dim , const std::vector<double>& DV , std::vector<double>& D);
 
 
         std::vector<double> makeCoordDxDyDzTops(const std::vector<double>& dx, const std::vector<double>& dy, const std::vector<double>& dz, const std::vector<double>& tops) const;
@@ -539,8 +540,8 @@ namespace Opm {
 
     class CoordMapper {
     public:
-        CoordMapper(size_t nx, size_t ny);
-        size_t size() const;
+        CoordMapper(std::size_t nx, std::size_t ny);
+        std::size_t size() const;
 
 
         /*
@@ -548,10 +549,10 @@ namespace Opm {
           layer = 0,1 for k=0 and k=nz layers respectively.
         */
 
-        size_t index(size_t i, size_t j, size_t dim, size_t layer) const;
+        std::size_t index(std::size_t i, std::size_t j, std::size_t dim, std::size_t layer) const;
     private:
-        size_t nx;
-        size_t ny;
+        std::size_t nx;
+        std::size_t ny;
     };
 
 
@@ -562,10 +563,10 @@ namespace Opm {
             double value;
             std::size_t index;
         };
-        ZcornMapper(size_t nx, size_t ny, size_t nz);
-        size_t index(size_t i, size_t j, size_t k, int c) const;
-        size_t index(size_t g, int c) const;
-        size_t size() const;
+        ZcornMapper(std::size_t nx, std::size_t ny, std::size_t nz);
+        std::size_t index(std::size_t i, std::size_t j, std::size_t k, int c) const;
+        std::size_t index(std::size_t g, int c) const;
+        std::size_t size() const;
 
         /*
           The fixupZCORN method will take a zcorn vector as input and
@@ -582,14 +583,14 @@ namespace Opm {
              |/
 
         */
-        size_t fixupZCORN( std::vector<double>& zcorn);
+        std::size_t fixupZCORN( std::vector<double>& zcorn);
         bool validZCORN( const std::vector<double>& zcorn) const;
         void addZCORN( std::vector<double>& zcorn, const std::vector<AddZCornInput>& addzcorns) const;
 
     private:
-        std::array<size_t,3> dims;
-        std::array<size_t,3> stride;
-        std::array<size_t,8> cell_shift;
+        std::array<std::size_t,3> dims;
+        std::array<std::size_t,3> stride;
+        std::array<std::size_t,8> cell_shift;
     };
 }
 #endif // OPM_PARSER_ECLIPSE_GRID_HPP

@@ -35,6 +35,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <cstddef>
 #include <limits>
 #include <string>
 #include <type_traits>
@@ -97,13 +98,13 @@ public:
     /*!
      * \brief Returns the number of sampling points in X direction.
      */
-    size_t numX() const
+    std::size_t numX() const
     { return xPos_.size(); }
 
     /*!
      * \brief Returns the number of sampling points in Y direction.
      */
-    size_t numY() const
+    std::size_t numY() const
     { return yPos_.size(); }
 
     /*!
@@ -156,7 +157,7 @@ public:
     /*!
      * \brief Returns the value of a sampling point.
      */
-    Scalar valueAt(size_t i, size_t j) const
+    Scalar valueAt(std::size_t i, std::size_t j) const
     { return samples_[i][j]; }
 
     /*!
@@ -271,10 +272,10 @@ private:
 
         // bisection. this assumes that the vPos array is strictly mononically
         // increasing.
-        size_t lowerIdx = 0;
-        size_t upperIdx = vPos.size() - 1;
+        std::size_t lowerIdx = 0;
+        std::size_t upperIdx = vPos.size() - 1;
         while (lowerIdx + 1 < upperIdx) {
-            size_t pivotIdx = (lowerIdx + upperIdx) / 2;
+            std::size_t pivotIdx = (lowerIdx + upperIdx) / 2;
             if (v < vPos[pivotIdx])
                 upperIdx = pivotIdx;
             else

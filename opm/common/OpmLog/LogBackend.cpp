@@ -20,9 +20,11 @@
 #include <opm/common/OpmLog/LogBackend.hpp>
 #include <opm/common/OpmLog/LogUtil.hpp>
 
+#include <cstdint>
+
 namespace Opm {
 
-    LogBackend::LogBackend( int64_t mask ) :
+    LogBackend::LogBackend( std::int64_t mask ) :
         m_mask(mask)
     {
     }
@@ -41,24 +43,24 @@ namespace Opm {
         m_limiter = limiter;
     }
 
-    void LogBackend::addMessage(int64_t messageFlag, const std::string& message)
+    void LogBackend::addMessage(std::int64_t messageFlag, const std::string& message)
     {
         // Forward the call to the tagged version.
         addTaggedMessage(messageFlag, "", message);
     }
 
-    void LogBackend::addTaggedMessage(int64_t messageType, const std::string& messageTag, const std::string& message) {
+    void LogBackend::addTaggedMessage(std::int64_t messageType, const std::string& messageTag, const std::string& message) {
         if (includeMessage( messageType, messageTag )) {
             addMessageUnconditionally(messageType, message);
         }
     }
 
-    int64_t LogBackend::getMask() const
+    std::int64_t LogBackend::getMask() const
     {
         return m_mask;
     }
 
-    bool LogBackend::includeMessage(int64_t messageFlag, const std::string& messageTag)
+    bool LogBackend::includeMessage(std::int64_t messageFlag, const std::string& messageTag)
     {
         // Check mask.
         const bool included = ((messageFlag & m_mask) == messageFlag) && (messageFlag > 0);
@@ -85,7 +87,7 @@ namespace Opm {
         return res == MessageLimiter::Response::PrintMessage;
     }
 
-    std::string LogBackend::formatMessage(int64_t messageFlag, const std::string& message)
+    std::string LogBackend::formatMessage(std::int64_t messageFlag, const std::string& message)
     {
         if (m_formatter) {
             return m_formatter->format(messageFlag, message);
@@ -93,6 +95,5 @@ namespace Opm {
             return message;
         }
     }
-
 
 }

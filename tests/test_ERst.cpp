@@ -18,28 +18,30 @@
 
 #include "config.h"
 
-#include <opm/io/eclipse/ERst.hpp>
-#include <opm/io/eclipse/EclFile.hpp>
-
 #define BOOST_TEST_MODULE Test EclIO
 #include <boost/test/unit_test.hpp>
 
+#include <opm/io/eclipse/EclFile.hpp>
 #include <opm/io/eclipse/EclOutput.hpp>
+#include <opm/io/eclipse/ERst.hpp>
 #include <opm/io/eclipse/OutputStream.hpp>
 
+#include <opm/common/utility/FileSystem.hpp>
+
 #include <algorithm>
+#include <cstddef>
+#include <cstdint>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <iterator>
-#include <math.h>
+#include <numeric>
 #include <random>
-#include <stdio.h>
 #include <tuple>
 #include <type_traits>
-#include <numeric>
 
-#include <opm/common/utility/FileSystem.hpp>
+#include <math.h>
+#include <stdio.h>
 
 #include "tests/WorkArea.hpp"
 
@@ -111,7 +113,6 @@ BOOST_AUTO_TEST_CASE(TestERst_1) {
         false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,
         false,false,false,false,false,false};
 
-
     std::vector<bool> ref_logih_25 = ref_logih_10;
 
     ERst rst1(testFile);
@@ -130,9 +131,8 @@ BOOST_AUTO_TEST_CASE(TestERst_1) {
     BOOST_CHECK_EQUAL(rst1.hasArray("PRESSURE", 5), true);
     BOOST_CHECK_EQUAL(rst1.hasArray("PRESSURE", 4), false);
 
-
     // try to get a list of vectors from non-existing report step, should throw exception
-    std::vector<std::tuple<std::string, eclArrType, int64_t>> rstArrays; // = rst1.listOfRstArrays(4);
+    std::vector<std::tuple<std::string, eclArrType, std::int64_t>> rstArrays; // = rst1.listOfRstArrays(4);
     BOOST_CHECK_THROW(rstArrays = rst1.listOfRstArrays(4), std::invalid_argument);
 
     // non exising report step number, should throw exception
@@ -231,7 +231,6 @@ BOOST_AUTO_TEST_CASE(TestERst_2) {
     // using API for ERst to read all array from a binary unified restart file1
     // Then write the data back to a new file and check that new file is identical with input file
 
-
     WorkArea work;
     work.copyIn(testFile);
     ERst rst1(testFile);
@@ -240,7 +239,7 @@ BOOST_AUTO_TEST_CASE(TestERst_2) {
 
         std::vector<int> seqnums = rst1.listOfReportStepNumbers();
 
-        for (size_t i = 0; i < seqnums.size(); i++) {
+        for (std::size_t i = 0; i < seqnums.size(); i++) {
             rst1.loadReportStepNumber(seqnums[i]);
             auto rstArrays = rst1.listOfRstArrays(seqnums[i]);
 
@@ -254,7 +253,6 @@ BOOST_AUTO_TEST_CASE(TestERst_2) {
 
     BOOST_CHECK_EQUAL(compare_files(testFile, outFile), true);
 }
-
 
 BOOST_AUTO_TEST_CASE(TestERst_3) {
 
@@ -285,7 +283,6 @@ BOOST_AUTO_TEST_CASE(TestERst_3) {
     }
     BOOST_CHECK_EQUAL(compare_files(testFile, outFile), true);
 }
-
 
 BOOST_AUTO_TEST_CASE(TestERst_4) {
 
@@ -319,7 +316,6 @@ BOOST_AUTO_TEST_CASE(TestERst_4) {
     BOOST_CHECK_EQUAL(pres1==pres3, true);
 }
 
-
 BOOST_AUTO_TEST_CASE(TestERst_5a) {
 
     std::string testRstFile = "LGR_TESTMOD.X0002";
@@ -335,7 +331,6 @@ BOOST_AUTO_TEST_CASE(TestERst_5a) {
     BOOST_CHECK_EQUAL(rst1.hasLGR("LGR1", 2), true);
     BOOST_CHECK_EQUAL(rst1.hasLGR("XXXX", 2), false);
 }
-
 
 BOOST_AUTO_TEST_CASE(TestERst_5b) {
 
@@ -389,12 +384,12 @@ BOOST_AUTO_TEST_CASE(TestERst_5b) {
     BOOST_CHECK_EQUAL(array_list_1.size(), ref_names_global.size());
     BOOST_CHECK_EQUAL(array_list_1.size(), ref_size_global.size());
 
-    for (size_t n = 0; n < array_list_1.size(); n++){
+    for (std::size_t n = 0; n < array_list_1.size(); n++){
         BOOST_CHECK_EQUAL(std::get<0>(array_list_1[n]), ref_names_global[n]);
         BOOST_CHECK_EQUAL(std::get<2>(array_list_1[n]), ref_size_global[n]);
     }
 
-    for (size_t index = 0; index < array_list_1.size(); index++){
+    for (std::size_t index = 0; index < array_list_1.size(); index++){
 
         std::string name = std::get<0>(array_list_1[index]);
 
@@ -440,12 +435,12 @@ BOOST_AUTO_TEST_CASE(TestERst_5b) {
     BOOST_CHECK_EQUAL(array_list_2.size(), ref_names_lgr1.size());
     BOOST_CHECK_EQUAL(array_list_2.size(), ref_size_lgr1.size());
 
-    for (size_t n = 0; n < array_list_2.size(); n++){
+    for (std::size_t n = 0; n < array_list_2.size(); n++){
         BOOST_CHECK_EQUAL(std::get<0>(array_list_2[n]), ref_names_lgr1[n]);
         BOOST_CHECK_EQUAL(std::get<2>(array_list_2[n]), ref_size_lgr1[n]);
     }
 
-    for (size_t index = 0; index < array_list_2.size(); index++){
+    for (std::size_t index = 0; index < array_list_2.size(); index++){
 
         std::string name = std::get<0>(array_list_2[index]);
 
@@ -489,12 +484,12 @@ BOOST_AUTO_TEST_CASE(TestERst_5b) {
     BOOST_CHECK_EQUAL(array_list_3.size(), ref_names_lgr2.size());
     BOOST_CHECK_EQUAL(array_list_3.size(), ref_size_lgr2.size());
 
-    for (size_t n = 0; n < array_list_2.size(); n++){
+    for (std::size_t n = 0; n < array_list_2.size(); n++){
         BOOST_CHECK_EQUAL(std::get<0>(array_list_3[n]), ref_names_lgr2[n]);
         BOOST_CHECK_EQUAL(std::get<2>(array_list_3[n]), ref_size_lgr2[n]);
     }
 
-    for (size_t index = 0; index < array_list_3.size(); index++){
+    for (std::size_t index = 0; index < array_list_3.size(); index++){
 
         std::string name = std::get<0>(array_list_3[index]);
 

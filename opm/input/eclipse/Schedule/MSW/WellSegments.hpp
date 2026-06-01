@@ -99,7 +99,7 @@ namespace Opm {
 
         const Segment& getFromSegmentNumber(const int segment_number) const;
 
-        const Segment& operator[](size_t idx) const;
+        const Segment& operator[](std::size_t idx) const;
         void orderSegments();
 
         bool operator==( const WellSegments& ) const;

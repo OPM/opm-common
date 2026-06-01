@@ -19,27 +19,26 @@
 #ifndef OPM_PARSER_FAULT_FACE_HPP
 #define OPM_PARSER_FAULT_FACE_HPP
 
+#include <opm/input/eclipse/EclipseState/Grid/FaceDir.hpp>
+
 #include <cstddef>
 #include <vector>
 
-#include <opm/input/eclipse/EclipseState/Grid/FaceDir.hpp>
-
 namespace Opm {
-
 
 class FaultFace {
 public:
     FaultFace() = default;
-    FaultFace(size_t nx , size_t ny , size_t nz,
-              size_t I1 , size_t I2,
-              size_t J1 , size_t J2,
-              size_t K1 , size_t K2,
+    FaultFace(std::size_t nx , std::size_t ny , std::size_t nz,
+              std::size_t I1 , std::size_t I2,
+              std::size_t J1 , std::size_t J2,
+              std::size_t K1 , std::size_t K2,
               FaceDir::DirEnum faceDir);
 
     static FaultFace serializationTestObject();
 
-    std::vector<size_t>::const_iterator begin() const;
-    std::vector<size_t>::const_iterator end() const;
+    std::vector<std::size_t>::const_iterator begin() const;
+    std::vector<std::size_t>::const_iterator end() const;
     FaceDir::DirEnum getDir() const;
 
     bool operator==( const FaultFace& rhs ) const;
@@ -53,11 +52,10 @@ public:
     }
 
 private:
-    static void checkCoord(size_t dim , size_t l1 , size_t l2);
+    static void checkCoord(std::size_t dim , std::size_t l1 , std::size_t l2);
     FaceDir::DirEnum m_faceDir = FaceDir::XPlus;
-    std::vector<size_t> m_indexList;
+    std::vector<std::size_t> m_indexList;
 };
-
 
 }
 

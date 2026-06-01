@@ -22,8 +22,10 @@
 */
 
 #include <config.h>
+
 #include <opm/material/common/Spline.hpp>
 
+#include <cstddef>
 #include <ostream>
 
 namespace Opm
@@ -31,13 +33,13 @@ namespace Opm
 
 template<class Scalar>
 void Spline<Scalar>::printCSV(Scalar xi0, Scalar xi1,
-                              size_t k, std::ostream& os) const
+                              std::size_t k, std::ostream& os) const
 {
     Scalar x0 = std::min(xi0, xi1);
     Scalar x1 = std::max(xi0, xi1);
-    const size_t n = numSamples() - 1;
+    const std::size_t n = numSamples() - 1;
 
-    for (size_t i = 0; i <= k; ++i) {
+    for (std::size_t i = 0; i <= k; ++i) {
         const double x = i * (x1 - x0) / k + x0;
         double y;
         double dy_dx;
@@ -68,7 +70,7 @@ void Spline<Scalar>::printCSV(Scalar xi0, Scalar xi1,
     }
 }
 
-template void Spline<double>::printCSV(double,double,size_t,std::ostream&) const;
-template void Spline<float>::printCSV(float,float,size_t,std::ostream&) const;
+template void Spline<double>::printCSV(double,double,std::size_t,std::ostream&) const;
+template void Spline<float>::printCSV(float,float,std::size_t,std::ostream&) const;
 
 }

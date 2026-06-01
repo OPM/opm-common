@@ -17,15 +17,18 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <vector>
+#include <opm/input/eclipse/EclipseState/Tables/PvtwsaltTable.hpp>
+
 #include <opm/input/eclipse/Deck/DeckItem.hpp>
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/PvtwsaltTable.hpp>
+
+#include <cstddef>
+#include <vector>
 
 namespace Opm {
 
-        static const size_t numEntries = 5;
+        static const std::size_t numEntries = 5;
         PvtwsaltTable::PvtwsaltTable()
         {
         }
@@ -38,7 +41,7 @@ namespace Opm {
             m_tableValues = record1.getItem("DATA").getSIDoubleData();
         }
 
-        size_t PvtwsaltTable::size() const
+        std::size_t PvtwsaltTable::size() const
         {
             return m_tableValues.size()/numEntries;
         }
@@ -55,9 +58,9 @@ namespace Opm {
 
         std::vector<double> PvtwsaltTable::getSaltConcentrationColumn() const
         {
-            size_t tableindex = 0;
+            std::size_t tableindex = 0;
             std::vector<double> saltCons(this->size());
-            for(size_t i=0; i<this->size(); ++i){
+            for(std::size_t i=0; i<this->size(); ++i){
                 saltCons[i] = m_tableValues[tableindex];
                 tableindex = tableindex+numEntries;
             }
@@ -67,9 +70,9 @@ namespace Opm {
 
         std::vector<double> PvtwsaltTable::getFormationVolumeFactorColumn() const
         {
-            size_t tableindex = 1;
+            std::size_t tableindex = 1;
             std::vector<double> formationvolumefactor(this->size());
-            for(size_t i=0; i<this->size(); ++i){
+            for(std::size_t i=0; i<this->size(); ++i){
                 formationvolumefactor[i] = m_tableValues[tableindex];
                 tableindex = tableindex+numEntries;
             }
@@ -79,9 +82,9 @@ namespace Opm {
 
         std::vector<double> PvtwsaltTable::getCompressibilityColumn() const
         {
-            size_t tableindex = 2;
+            std::size_t tableindex = 2;
             std::vector<double> compresibility(this->size());
-            for(size_t i=0; i<this->size(); ++i){
+            for(std::size_t i=0; i<this->size(); ++i){
                 compresibility[i] = m_tableValues[tableindex];
                 tableindex = tableindex+numEntries;
             }
@@ -91,9 +94,9 @@ namespace Opm {
 
         std::vector<double> PvtwsaltTable::getViscosityColumn() const
         {
-            size_t tableindex = 3;
+            std::size_t tableindex = 3;
             std::vector<double> viscosity(this->size());
-            for(size_t i=0; i<this->size(); ++i){
+            for(std::size_t i=0; i<this->size(); ++i){
                 viscosity[i] = m_tableValues[tableindex];
                 tableindex = tableindex+numEntries;
             }
@@ -103,9 +106,9 @@ namespace Opm {
 
         std::vector<double> PvtwsaltTable::getViscosibilityColumn() const
         {
-            size_t tableindex = 4;
+            std::size_t tableindex = 4;
             std::vector<double> viscosibility(this->size());
-            for(size_t i=0; i<this->size(); ++i){
+            for(std::size_t i=0; i<this->size(); ++i){
                 viscosibility[i] = m_tableValues[tableindex];
                 tableindex = tableindex+numEntries;
             }

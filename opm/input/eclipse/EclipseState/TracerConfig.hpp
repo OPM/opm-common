@@ -23,6 +23,7 @@
 #include <opm/input/eclipse/EclipseState/Phase.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TracerVdTable.hpp>
 
+#include <cstddef>
 #include <optional>
 
 namespace Opm {
@@ -52,7 +53,6 @@ public:
         std::string wellsname() const {
             return "S" + this->name;
         }
-
 
         TracerEntry() = default;
         TracerEntry(const std::string& name_, const std::string& unit_string_,
@@ -123,7 +123,7 @@ public:
 
     static TracerConfig serializationTestObject();
 
-    size_t size() const;
+    std::size_t size() const;
     bool empty() const;
 
     const std::vector<TracerEntry>::const_iterator begin() const;

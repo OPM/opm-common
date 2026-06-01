@@ -59,16 +59,17 @@
 
 #include <algorithm>
 #include <cctype>
+#include <cstddef>
 #include <cstdio>
 #include <filesystem>
 #include <iostream>
 #include <iterator>
 #include <optional>
+#include <regex>
 #include <stack>
 #include <stdexcept>
 #include <string>
 #include <string_view>
-#include <regex>
 #include <utility>
 #include <vector>
 
@@ -463,7 +464,7 @@ struct file {
     {}
 
     std::string_view input;
-    size_t lineNR = 0;
+    std::size_t lineNR = 0;
     std::filesystem::path path;
 };
 
@@ -512,7 +513,7 @@ class ParserState {
         void addPathAlias( const std::string& alias, const std::string& path );
 
         const std::filesystem::path& current_path() const;
-        size_t line() const;
+        std::size_t line() const;
 
         bool done() const;
         std::string_view getline();
@@ -548,7 +549,7 @@ const std::filesystem::path& ParserState::current_path() const {
     return this->input_stack.top().path;
 }
 
-size_t ParserState::line() const {
+std::size_t ParserState::line() const {
     return this->input_stack.top().lineNR;
 }
 
@@ -745,11 +746,11 @@ std::optional<std::filesystem::path> ParserState::getIncludeFilePath( std::strin
     static const std::string pathKeywordPrefix("$");
     static const std::string validPathNameCharacters("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_");
 
-    size_t positionOfPathName = path.find(pathKeywordPrefix);
+    std::size_t positionOfPathName = path.find(pathKeywordPrefix);
 
     if ( positionOfPathName != std::string::npos) {
         std::string stringStartingAtPathName = path.substr(positionOfPathName+1);
-        size_t cutOffPosition = stringStartingAtPathName.find_first_not_of(validPathNameCharacters);
+        std::size_t cutOffPosition = stringStartingAtPathName.find_first_not_of(validPathNameCharacters);
         std::string stringToFind = stringStartingAtPathName.substr(0, cutOffPosition);
         std::string stringToReplace = this->pathMap.at( stringToFind );
         replaceAll(path, pathKeywordPrefix + stringToFind, stringToReplace);
@@ -1762,7 +1763,7 @@ bool parseState( ParserState& parserState, const Parser& parser, ErrorGuard& err
         return this->parseString(data, ParseContext(), errors);
     }
 
-    size_t Parser::size() const {
+    std::size_t Parser::size() const {
         return m_deckParserKeywords.size();
     }
 
@@ -1869,7 +1870,7 @@ std::vector<std::string> Parser::getAllDeckNames () const {
 
     void Parser::loadKeywords(const Json::JsonObject& jsonKeywords) {
         if (jsonKeywords.is_array()) {
-            for (size_t index = 0; index < jsonKeywords.size(); index++) {
+            for (std::size_t index = 0; index < jsonKeywords.size(); index++) {
                 Json::JsonObject jsonKeyword = jsonKeywords.get_array_item(index);
                 addParserKeyword( ParserKeyword( jsonKeyword ) );
             }
@@ -1964,7 +1965,7 @@ std::vector<std::string> Parser::getAllDeckNames () const {
         // We put errors on the top level to the end of the list to make them
         // more prominent
         std::vector<std::string> topLevelErrors;
-        size_t curKwIdx = 0;
+        std::size_t curKwIdx = 0;
 
         while(curKwIdx < deck.size() && isGlobalKeyword(deck[curKwIdx])) {
             ++curKwIdx;

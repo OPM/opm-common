@@ -825,7 +825,7 @@ namespace {
         // aquifer cells
         const auto& aquifer_cells = num_aquifers.allAquiferCells();
         for ([[maybe_unused]] const auto& [cell_idx, cell] : aquifer_cells) {
-            const size_t active_index = grid.activeIndex(cell->global_index);
+            const std::size_t active_index = grid.activeIndex(cell->global_index);
             aquifern[active_index] = -(1 << (cell->aquifer_id - 1));
         }
 
@@ -834,7 +834,7 @@ namespace {
             const auto& connections = aqu.connections();
             const int exp2_id_1 = 1 << (id - 1);
             for (const auto& con : connections) {
-                const size_t active_index = grid.activeIndex(con.global_index);
+                const std::size_t active_index = grid.activeIndex(con.global_index);
                 aquifern[active_index] += exp2_id_1;
             }
         }
@@ -852,7 +852,7 @@ namespace {
         for (const auto& [id, cons] : cons_data) {
             const int exp2_id_1 = 1 << (id - 1);
             for (const auto& con : cons) {
-                const size_t active_index = grid.activeIndex(con.global_index);
+                const std::size_t active_index = grid.activeIndex(con.global_index);
                 aquifera[active_index] += exp2_id_1;
             }
         }

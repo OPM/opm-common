@@ -48,6 +48,7 @@
 #include <dune/common/fmatrix.hh>
 #include <dune/common/classname.hh>
 
+#include <cstddef>
 #include <limits>
 #include <stdexcept>
 #include <type_traits>
@@ -375,7 +376,6 @@ public:
             }
         }
 
-
         return L;
     }
 
@@ -520,7 +520,6 @@ protected:
                 fluid_state_global.setFugacityCoefficient(phaseIdx2, compIdx, phiGlobal);
             }
 
-
             ComponentVector R;
             for (int compIdx=0; compIdx<numComponents; ++compIdx){
                 if (isGas){
@@ -643,8 +642,8 @@ protected:
     {
         // Note: due to the need for inverse flash update for derivatives, the following two can be different
         // Looking for a good way to organize them
-        constexpr size_t num_equations = numMisciblePhases * numMiscibleComponents + 1;
-        constexpr size_t num_primary_variables = numMisciblePhases * numMiscibleComponents + 1;
+        constexpr std::size_t num_equations = numMisciblePhases * numMiscibleComponents + 1;
+        constexpr std::size_t num_primary_variables = numMisciblePhases * numMiscibleComponents + 1;
         using NewtonVector = Dune::FieldVector<Scalar, num_equations>;
         using NewtonMatrix = Dune::FieldMatrix<Scalar, num_equations, num_primary_variables>;
 
@@ -791,7 +790,7 @@ protected:
     }
 
     // TODO: the interface will need to refactor for later usage
-    template<typename FlashFluidState, typename ComponentVector, size_t num_primary, size_t num_equation >
+    template<typename FlashFluidState, typename ComponentVector, std::size_t num_primary, std::size_t num_equation >
     static void assembleNewton_(const FlashFluidState& fluid_state,
                                 const ComponentVector& global_composition,
                                 Dune::FieldMatrix<double, num_equation, num_primary>& jac,
@@ -867,8 +866,8 @@ protected:
         }
 
         // getting the secondary Jocobian matrix
-        constexpr size_t num_equations = numMisciblePhases * numMiscibleComponents + 1;
-        constexpr size_t secondary_num_pv = isThermal ? numComponents + 2 : numComponents + 1;
+        constexpr std::size_t num_equations = numMisciblePhases * numMiscibleComponents + 1;
+        constexpr std::size_t secondary_num_pv = isThermal ? numComponents + 2 : numComponents + 1;
         // secondary variables: pressure, [temperature if thermal], z for all the components
         using SecondaryEval = Opm::DenseAd::Evaluation<double, secondary_num_pv>;
         using SecondaryComponentVector = Dune::FieldVector<SecondaryEval, numComponents>;
@@ -928,15 +927,13 @@ protected:
         SecondaryNewtonMatrix sec_jac;
         SecondaryNewtonVector sec_res;
 
-
         //use the regular equations
         assembleNewton_<SecondaryFlashFluidState, SecondaryComponentVector, secondary_num_pv, num_equations>
             (secondary_fluid_state, secondary_z, sec_jac, sec_res);
 
-
         // assembly the major matrix here
         // primary variables are x, y and L
-        constexpr size_t primary_num_pv = numMisciblePhases * numMiscibleComponents + 1;
+        constexpr std::size_t primary_num_pv = numMisciblePhases * numMiscibleComponents + 1;
         using PrimaryEval = Opm::DenseAd::Evaluation<double, primary_num_pv>;
         using PrimaryComponentVector = Dune::FieldVector<double, numComponents>;
         using PrimaryFlashFluidState = Opm::CompositionalFluidState<PrimaryEval, FluidSystem>;
@@ -1011,7 +1008,7 @@ protected:
         // p_l and p_v are the same here, in the future, there might be slightly more complicated scenarios when capillary
         // pressure joins
 
-        constexpr size_t num_deri = InputEval::numVars;
+        constexpr std::size_t num_deri = InputEval::numVars;
         for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
             std::vector<double> deri(num_deri, 0.);
             // derivatives from P
@@ -1104,7 +1101,6 @@ protected:
         }
         fluid_state.setLvalue(L_eval);
     } //end updateDerivativesSinglePhase
-
 
     // TODO: or use typename FlashFluidState::ValueType
     template <class FlashFluidState, class ComponentVector>

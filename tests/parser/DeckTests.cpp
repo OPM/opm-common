@@ -221,7 +221,7 @@ BOOST_AUTO_TEST_CASE(PushBackMultipleString) {
     DeckItem stringItem( "TEST", std::string() );
     stringItem.push_back("Heisann ", 100U );
     BOOST_CHECK_EQUAL( 100U , stringItem.data_size() );
-    for (size_t i=0; i < 100; i++)
+    for (std::size_t i=0; i < 100; i++)
         BOOST_CHECK_EQUAL("Heisann " , stringItem.get< std::string >(i));
 }
 
@@ -286,7 +286,7 @@ BOOST_AUTO_TEST_CASE(PushBackMultipleDouble) {
     DeckItem item( "HEI", double() , dims.first, dims.second);
     item.push_back(10.22 , 100 );
     BOOST_CHECK_EQUAL( 100U , item.data_size() );
-    for (size_t i=0; i < 100; i++)
+    for (std::size_t i=0; i < 100; i++)
         BOOST_CHECK_EQUAL(10.22 , item.get< double >(i));
 }
 
@@ -329,7 +329,7 @@ BOOST_AUTO_TEST_CASE(GetSIMultipleDim) {
 
     item.push_back( 1.0, 16 );
 
-    for (size_t i=0; i < 16; i+= 4) {
+    for (std::size_t i=0; i < 16; i+= 4) {
         BOOST_CHECK_EQUAL( 2   , item.getSIDouble(i) );
         BOOST_CHECK_EQUAL( 4   , item.getSIDouble(i+ 1) );
         BOOST_CHECK_EQUAL( 8   , item.getSIDouble(i+2) );
@@ -426,7 +426,7 @@ BOOST_AUTO_TEST_CASE(PushBackMultipleInt) {
     DeckItem item( "HEI", int() );
     item.push_back(10 , 100U );
     BOOST_CHECK_EQUAL( 100U , item.data_size() );
-    for (size_t i=0; i < 100; i++)
+    for (std::size_t i=0; i < 100; i++)
         BOOST_CHECK_EQUAL(10 , item.get< int >(i));
 }
 

@@ -16,17 +16,19 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
+
 #include <opm/input/eclipse/EclipseState/Grid/FaultFace.hpp>
 
 #include <algorithm>
+#include <cstddef>
 #include <stdexcept>
 
 namespace Opm {
 
-    FaultFace::FaultFace(size_t nx , size_t ny , size_t nz,
-                         size_t I1 , size_t I2,
-                         size_t J1 , size_t J2,
-                         size_t K1 , size_t K2,
+    FaultFace::FaultFace(std::size_t nx , std::size_t ny , std::size_t nz,
+                         std::size_t I1 , std::size_t I2,
+                         std::size_t J1 , std::size_t J2,
+                         std::size_t K1 , std::size_t K2,
                          FaceDir::DirEnum faceDir)
         : m_faceDir( faceDir )
     {
@@ -48,10 +50,10 @@ namespace Opm {
                 throw std::invalid_argument("When the face is in Z direction we must have K1 == K2");
 
 
-        for (size_t k=K1; k <= K2; k++)
-            for (size_t j=J1; j <= J2; j++)
-                for (size_t i=I1; i <= I2; i++) {
-                    size_t globalIndex = i + j*nx + k*nx*ny;
+        for (std::size_t k=K1; k <= K2; k++)
+            for (std::size_t j=J1; j <= J2; j++)
+                for (std::size_t i=I1; i <= I2; i++) {
+                    std::size_t globalIndex = i + j*nx + k*nx*ny;
                     m_indexList.push_back( globalIndex );
                 }
     }
@@ -65,7 +67,7 @@ namespace Opm {
         return result;
     }
 
-    void FaultFace::checkCoord(size_t dim , size_t l1 , size_t l2) {
+    void FaultFace::checkCoord(std::size_t dim , std::size_t l1 , std::size_t l2) {
         if (l1 > l2)
             throw std::invalid_argument("Invalid coordinates");
 
@@ -74,11 +76,11 @@ namespace Opm {
     }
 
 
-    std::vector<size_t>::const_iterator FaultFace::begin() const {
+    std::vector<std::size_t>::const_iterator FaultFace::begin() const {
         return m_indexList.begin();
     }
 
-    std::vector<size_t>::const_iterator FaultFace::end() const {
+    std::vector<std::size_t>::const_iterator FaultFace::end() const {
         return m_indexList.end();
     }
 

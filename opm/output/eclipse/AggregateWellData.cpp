@@ -150,22 +150,22 @@ namespace {
             };
         }
 
-        std::map <const std::string, size_t>  currentGroupMapNameIndex(const Opm::Schedule& sched, const size_t simStep, const std::vector<int>& inteHead)
+        std::map <const std::string, std::size_t>  currentGroupMapNameIndex(const Opm::Schedule& sched, const std::size_t simStep, const std::vector<int>& inteHead)
         {
             // make group name to index map for the current time step
-            std::map <const std::string, size_t> groupIndexMap;
+            std::map <const std::string, std::size_t> groupIndexMap;
             for (const auto& group_name : sched.groupNames(simStep)) {
                 const auto& group = sched.getGroup(group_name, simStep);
                 int ind = (group.name() == "FIELD")
                     ? inteHead[VI::intehead::NGMAXZ]-1 : group.insert_index()-1;
-                std::pair<const std::string, size_t> groupPair = std::make_pair(group.name(), ind);
+                std::pair<const std::string, std::size_t> groupPair = std::make_pair(group.name(), ind);
                 groupIndexMap.insert(groupPair);
             }
             return groupIndexMap;
         }
 
         int groupIndex(const std::string&              grpName,
-                       const std::map <const std::string, size_t>&  currentGroupMapNameIndex)
+                       const std::map <const std::string, std::size_t>&  currentGroupMapNameIndex)
         {
             int ind = 0;
             auto searchGTName = currentGroupMapNameIndex.find(grpName);
@@ -581,7 +581,7 @@ namespace {
                            const Opm::WellTestState&       wtest_state,
                            const Opm::SummaryState&        st,
                            const std::size_t               msWellID,
-                           const std::map<const std::string, size_t>& GroupMapNameInd,
+                           const std::map<const std::string, std::size_t>& GroupMapNameInd,
                            IWellArray&                     iWell,
                            const std::optional<std::reference_wrapper<const Opm::EclipseGrid>>&
                                                            grid = std::nullopt,

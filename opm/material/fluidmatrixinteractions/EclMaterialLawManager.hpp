@@ -41,6 +41,7 @@
 #include <opm/material/fluidmatrixinteractions/DirectionalMaterialLawParams.hpp>
 
 #include <cassert>
+#include <cstddef>
 #include <functional>
 #include <memory>
 #include <vector>
@@ -144,7 +145,7 @@ public:
     //        field properties of cells on the leaf grid view for CpGrid with local grid refinement.
     //        Function argument 'lookupIdxOnLevelZeroAssigner' is added to lookup, for each
     //        leaf gridview cell with index 'elemIdx', its 'lookupIdx' (index of the parent/equivalent cell on level zero).
-    void initParamsForElements(const EclipseState& eclState, size_t numCompressedElems,
+    void initParamsForElements(const EclipseState& eclState, std::size_t numCompressedElems,
                                const std::function<std::vector<int>(const FieldPropsManager&, const std::string&, bool)>&
                                fieldPropIntOnLeafAssigner,
                                const std::function<unsigned(unsigned)>& lookupIdxOnLevelZeroAssigner);
@@ -311,7 +312,7 @@ public:
 
     EclEpsScalingPoints<Scalar>& oilWaterScaledEpsPointsDrainage(unsigned elemIdx);
 
-    const EclEpsScalingPointsInfo<Scalar>& oilWaterScaledEpsInfoDrainage(size_t elemIdx) const
+    const EclEpsScalingPointsInfo<Scalar>& oilWaterScaledEpsInfoDrainage(std::size_t elemIdx) const
     { return params_.oilWaterScaledEpsInfoDrainage[elemIdx]; }
 
     template<class Serializer>

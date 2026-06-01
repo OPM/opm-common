@@ -53,42 +53,42 @@ namespace Opm {
             return result;
         }
 
-        size_t getNumAqunum() const
+        std::size_t getNumAqunum() const
         {
             return m_mxnaqn;
         }
 
-        size_t getNumConnectionNumericalAquifer() const
+        std::size_t getNumConnectionNumericalAquifer() const
         {
             return m_mxnaqc;
         }
 
-        size_t getNumInfluenceTablesCT() const
+        std::size_t getNumInfluenceTablesCT() const
         {
             return m_niftbl;
         }
 
-        size_t getNumRowsInfluenceTable() const
+        std::size_t getNumRowsInfluenceTable() const
         {
             return m_nriftb;
         }
 
-        size_t getNumAnalyticAquifers() const
+        std::size_t getNumAnalyticAquifers() const
         {
             return m_nanaqu;
         }
 
-        size_t getNumRowsAquancon() const
+        std::size_t getNumRowsAquancon() const
         {
             return m_ncamax;
         }
 
-        size_t getNumAquiferLists() const
+        std::size_t getNumAquiferLists() const
         {
             return m_mxnali;
         }
 
-        size_t getNumAnalyticAquifersSingleList() const
+        std::size_t getNumAnalyticAquifersSingleList() const
         {
             return m_mxaaql;
         }
@@ -119,7 +119,7 @@ namespace Opm {
         }
 
     private:
-        size_t m_mxnaqn , m_mxnaqc , m_niftbl , m_nriftb , m_nanaqu , m_ncamax , m_mxnali , m_mxaaql;
+        std::size_t m_mxnaqn , m_mxnaqc , m_niftbl , m_nriftb , m_nanaqu , m_ncamax , m_mxnali , m_mxaaql;
 
     };
 }

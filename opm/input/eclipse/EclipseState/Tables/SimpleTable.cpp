@@ -23,15 +23,17 @@
 
 #include <opm/input/eclipse/Deck/DeckItem.hpp>
 
-// <iostream> is for std::cerr in assertJFuncPressure().  This should really
-// go away or at least use the logging system instead.
-#include <iostream>
+#include <cstddef>
 #include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
 
 #include <fmt/format.h>
+
+// <iostream> is for std::cerr in assertJFuncPressure().  This should really
+// go away or at least use the logging system instead.
+#include <iostream>
 
 namespace Opm {
 
@@ -90,12 +92,12 @@ namespace Opm {
         }
     }
 
-    double SimpleTable::get(const std::string& column, size_t row) const
+    double SimpleTable::get(const std::string& column, std::size_t row) const
     {
         return this->getColumn(column)[row];
     }
 
-    double SimpleTable::get(size_t column, size_t row) const
+    double SimpleTable::get(std::size_t column, std::size_t row) const
     {
         return this->getColumn(column)[row];
     }
@@ -119,13 +121,13 @@ namespace Opm {
             };
         }
 
-        const size_t rows = deckItem.data_size() / ncol;
+        const std::size_t rows = deckItem.data_size() / ncol;
 
-        for (size_t colIdx = 0; colIdx < ncol; ++colIdx) {
+        for (std::size_t colIdx = 0; colIdx < ncol; ++colIdx) {
             auto& column = this->getColumn(colIdx);
 
-            for (size_t rowIdx = 0; rowIdx < rows; ++rowIdx) {
-                const size_t deckItemIdx = rowIdx*ncol + colIdx;
+            for (std::size_t rowIdx = 0; rowIdx < rows; ++rowIdx) {
+                const std::size_t deckItemIdx = rowIdx*ncol + colIdx;
 
                 if (deckItem.defaultApplied(deckItemIdx)) {
                     column.addDefault(tableName);
@@ -147,12 +149,12 @@ namespace Opm {
         }
     }
 
-    size_t SimpleTable::numColumns() const
+    std::size_t SimpleTable::numColumns() const
     {
         return m_schema.size();
     }
 
-    size_t SimpleTable::numRows() const
+    std::size_t SimpleTable::numRows() const
     {
         return this->getColumn(0).size();
     }
@@ -170,7 +172,7 @@ namespace Opm {
         return this->m_columns.get(name);
     }
 
-    const TableColumn& SimpleTable::getColumn(size_t columnIndex) const
+    const TableColumn& SimpleTable::getColumn(std::size_t columnIndex) const
     {
         return this->m_columns.iget(columnIndex);
     }
@@ -188,7 +190,7 @@ namespace Opm {
         return this->m_columns.get(name);
     }
 
-    TableColumn& SimpleTable::getColumn(size_t columnIndex)
+    TableColumn& SimpleTable::getColumn(std::size_t columnIndex)
     {
         return this->m_columns.iget(columnIndex);
     }

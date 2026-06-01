@@ -107,6 +107,7 @@
 #include "Well/injection.hpp"
 
 #include <algorithm>
+#include <cstddef>
 #include <ctime>
 #include <functional>
 #include <initializer_list>
@@ -2231,7 +2232,7 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
         return sched_state->wlist_manager.get().hasList(pattern);
     }
 
-    const std::map< std::string, int >& Schedule::rst_keywords( size_t report_step ) const {
+    const std::map< std::string, int >& Schedule::rst_keywords( std::size_t report_step ) const {
         if (report_step == 0)
             return this->m_static.rst_config.keywords;
 

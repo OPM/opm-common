@@ -20,9 +20,12 @@
 #ifndef ECLIPSEPRTLOG_H
 #define ECLIPSEPRTLOG_H
 
+#include <opm/common/OpmLog/StreamLog.hpp>
+
+#include <cstddef>
+#include <cstdint>
 #include <map>
 #include <string>
-#include <opm/common/OpmLog/StreamLog.hpp>
 
 namespace Opm {
 
@@ -31,7 +34,7 @@ class EclipsePRTLog : public StreamLog {
 public:
     using StreamLog::StreamLog;
 
-    size_t numMessages(int64_t messageType) const;
+    std::size_t numMessages(std::int64_t messageType) const;
 
     ~EclipsePRTLog() override;
 
@@ -41,21 +44,21 @@ public:
     /// \param append If true then we append messages to the file.
     ///               Otherwise a new file is created.
     /// \param print_summary If true print a summary to the PRT file.
-    EclipsePRTLog(const std::string& logFile , int64_t messageMask,
+    EclipsePRTLog(const std::string& logFile , std::int64_t messageMask,
                   bool append, bool print_summary);
 
     /// \brief Construct a logger to the <MODEL>.PRT file
     /// \param os The stream to write the log to.
     /// \param messageMask Mask for logging of messages
     /// \param print_summary If true print a summary to the PRT file.
-    EclipsePRTLog(std::ostream& os, int64_t messageMask,
+    EclipsePRTLog(std::ostream& os, std::int64_t messageMask,
                   bool print_summary);
 
 protected:
-    void addMessageUnconditionally(int64_t messageType, const std::string& message) override;
+    void addMessageUnconditionally(std::int64_t messageType, const std::string& message) override;
 
 private:
-    std::map<int64_t, size_t> m_count;
+    std::map<std::int64_t, std::size_t> m_count;
     /// \brief Whether to print a summary to the log file.
     bool print_summary_ = true;
 };

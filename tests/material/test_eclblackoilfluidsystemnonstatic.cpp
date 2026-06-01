@@ -27,7 +27,9 @@
  *
  * This test requires the presence of opm-parser.
  */
+
 #include "config.h"
+
 #include <boost/test/tools/old/interface.hpp>
 
 #include <boost/mpl/list.hpp>
@@ -49,6 +51,7 @@
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 
 #include <cmath>
+#include <cstddef>
 #include <type_traits>
 
 // values of strings based on the SPE1 and NORNE cases of opm-data.
@@ -642,8 +645,8 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(BlackOil, Evaluation, Types)
     // with the nonstatic version as well.
     using ParamCache = typename FluidSystem::template ParameterCache<Scalar>;
 
-    const size_t numberOfRegions = FluidSystem::numRegions();
-    for (size_t regionIndexToUse = 0; regionIndexToUse < numberOfRegions; ++regionIndexToUse) {
+    const std::size_t numberOfRegions = FluidSystem::numRegions();
+    for (std::size_t regionIndexToUse = 0; regionIndexToUse < numberOfRegions; ++regionIndexToUse) {
         ParamCache paramCache(regionIndexToUse);
 
         // create a parameter cache

@@ -121,8 +121,6 @@
 #include <utility>
 #include <vector>
 
-#include <stddef.h>
-
 #include <fmt/format.h>
 
 namespace {
@@ -498,7 +496,7 @@ namespace {
     }
 } // Anonymous namespace
 
-PvtgTable::PvtgTable(const DeckKeyword& keyword, size_t tableIdx)
+PvtgTable::PvtgTable(const DeckKeyword& keyword, std::size_t tableIdx)
     : PvtxTable("P")
 {
     m_underSaturatedSchema.addColumn(ColumnSchema("RV", Table::STRICTLY_DECREASING, Table::DEFAULT_NONE));
@@ -565,7 +563,7 @@ PvtgTable::operator==(const PvtgTable& data) const
     return static_cast<const PvtxTable&>(*this) == static_cast<const PvtxTable&>(data);
 }
 
-PvtgwTable::PvtgwTable(const DeckKeyword& keyword, size_t tableIdx)
+PvtgwTable::PvtgwTable(const DeckKeyword& keyword, std::size_t tableIdx)
     : PvtxTable("P")
 {
     m_underSaturatedSchema.addColumn(ColumnSchema("RW", Table::STRICTLY_DECREASING, Table::DEFAULT_NONE));
@@ -595,7 +593,7 @@ PvtgwTable::operator==(const PvtgwTable& data) const
     return static_cast<const PvtxTable&>(*this) == static_cast<const PvtxTable&>(data);
 }
 
-PvtgwoTable::PvtgwoTable(const DeckKeyword& keyword, size_t tableIdx)
+PvtgwoTable::PvtgwoTable(const DeckKeyword& keyword, std::size_t tableIdx)
     : PvtxTable("P")
 {
 
@@ -628,7 +626,7 @@ PvtgwoTable::operator==(const PvtgwoTable& data) const
     return static_cast<const PvtxTable&>(*this) == static_cast<const PvtxTable&>(data);
 }
 
-PvtoTable::PvtoTable(const DeckKeyword& keyword, size_t tableIdx)
+PvtoTable::PvtoTable(const DeckKeyword& keyword, std::size_t tableIdx)
     : PvtxTable("RS")
 {
     m_underSaturatedSchema.addColumn(ColumnSchema("P", Table::STRICTLY_INCREASING, Table::DEFAULT_NONE));
@@ -685,7 +683,7 @@ PvtoTable::nonMonotonicSaturatedFVF() const
     return nonmonoFVF;
 }
 
-PvtsolTable::PvtsolTable(const DeckKeyword& keyword, size_t tableIdx)
+PvtsolTable::PvtsolTable(const DeckKeyword& keyword, std::size_t tableIdx)
     : PvtxTable("ZCO2")
 {
     m_underSaturatedSchema.addColumn(ColumnSchema("P", Table::STRICTLY_INCREASING, Table::DEFAULT_NONE));
@@ -727,7 +725,7 @@ PvtsolTable::operator==(const PvtsolTable& data) const
     return static_cast<const PvtxTable&>(*this) == static_cast<const PvtxTable&>(data);
 }
 
-RwgsaltTable::RwgsaltTable(const DeckKeyword& keyword, size_t tableIdx)
+RwgsaltTable::RwgsaltTable(const DeckKeyword& keyword, std::size_t tableIdx)
     : PvtxTable("P")
 {
 
@@ -1413,7 +1411,7 @@ PlymaxTable::PlymaxTable(const DeckRecord& record)
     m_schema.addColumn(ColumnSchema("C_POLYMER_MAX", Table::RANDOM, Table::DEFAULT_NONE));
 
     addColumns();
-    for (size_t colIdx = 0; colIdx < record.size(); colIdx++) {
+    for (std::size_t colIdx = 0; colIdx < record.size(); colIdx++) {
         auto& column = getColumn(colIdx);
 
         column.addValue(record.getItem(colIdx).getSIDouble(0), "PLYMAX");
@@ -1459,7 +1457,7 @@ PlyrockTable::PlyrockTable(const DeckRecord& record)
     m_schema.addColumn(ColumnSchema("MaxAdsorbtion", Table::RANDOM, Table::DEFAULT_NONE));
 
     addColumns();
-    for (size_t colIdx = 0; colIdx < record.size(); colIdx++) {
+    for (std::size_t colIdx = 0; colIdx < record.size(); colIdx++) {
         auto& column = getColumn(colIdx);
 
         column.addValue(record.getItem(colIdx).getSIDouble(0), "PLYROCK");

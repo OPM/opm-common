@@ -25,6 +25,7 @@
 #include <opm/input/eclipse/Units/Dimension.hpp>
 
 #include <array>
+#include <cstddef>
 #include <utility>
 #include <vector>
 
@@ -167,9 +168,9 @@ public:
 
     bool operator==(const VFPProdTable& data) const;
 
-    std::array<size_t,5> shape() const;
+    std::array<std::size_t,5> shape() const;
 
-    double operator()(size_t thp_idx, size_t wfr_idx, size_t gfr_idx, size_t alq_idx, size_t flo_idx) const;
+    double operator()(std::size_t thp_idx, std::size_t wfr_idx, std::size_t gfr_idx, std::size_t alq_idx, std::size_t flo_idx) const;
 
     template<class Serializer>
     void serializeOp(Serializer& serializer)
@@ -208,7 +209,7 @@ private:
 
     void check();
 
-    double& mutableData(size_t thp_idx, size_t wfr_idx, size_t gfr_idx, size_t alq_idx, size_t flo_idx);
+    double& mutableData(std::size_t thp_idx, std::size_t wfr_idx, std::size_t gfr_idx, std::size_t alq_idx, std::size_t flo_idx);
 
     static void scaleValues(std::vector<double>& values,
                             const double& scaling_factor);

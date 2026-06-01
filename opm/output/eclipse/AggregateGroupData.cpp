@@ -1484,8 +1484,8 @@ allocate(const std::vector<int>& inteHead)
 template <class XGrpArray>
 void dynamicContrib(const std::vector<std::string>&      restart_group_keys,
                     const std::vector<std::string>&      restart_field_keys,
-                    const std::map<std::string, size_t>& groupKeyToIndex,
-                    const std::map<std::string, size_t>& fieldKeyToIndex,
+                    const std::map<std::string, std::size_t>& groupKeyToIndex,
+                    const std::map<std::string, std::size_t>& fieldKeyToIndex,
                     const Opm::Group&                    group,
                     const Opm::SummaryState&             sumState,
                     XGrpArray&                           xGrp)
@@ -1495,7 +1495,7 @@ void dynamicContrib(const std::vector<std::string>&      restart_group_keys,
     std::string groupName = group.name();
     const std::vector<std::string>& keys = (groupName == "FIELD")
                                            ? restart_field_keys : restart_group_keys;
-    const std::map<std::string, size_t>& keyToIndex = (groupName == "FIELD")
+    const std::map<std::string, std::size_t>& keyToIndex = (groupName == "FIELD")
             ? fieldKeyToIndex : groupKeyToIndex;
 
     for (const auto& key : keys) {
@@ -1523,7 +1523,7 @@ void dynamicContrib(const std::vector<std::string>&      restart_group_keys,
 template <class XGrpArray>
 void dynamicContribLGR(const std::vector<std::reference_wrapper<const Opm::Well>>& filtered_wells,
                        const std::vector<std::string>&                      restart_well_keys,
-                       const std::map<std::string, size_t>&                 wellKeyToIndex,
+                       const std::map<std::string, std::size_t>&                 wellKeyToIndex,
                        const Opm::SummaryState&                             sumState,
                        XGrpArray&                                           xGrp)
 {

@@ -275,14 +275,14 @@ BOOST_AUTO_TEST_CASE( CreateTablesWithJFunc ) {
          0.80, 0.65, 1.00, 0.90, 0.83, 0.50, 1.00, 1.00, 0.00};
 
 
-    for (size_t tab = 0; tab < swfnTab.size(); tab++) {
+    for (std::size_t tab = 0; tab < swfnTab.size(); tab++) {
         const auto& t = swfnTab.getTable(tab);
 
        //TODO uncomment BOOST_CHECK_THROW( t.getColumn("PCOW"), std::invalid_argument );
 
-        for (size_t c_idx = 0; c_idx < t.numColumns(); c_idx++) {
+        for (std::size_t c_idx = 0; c_idx < t.numColumns(); c_idx++) {
             const auto& col = t.getColumn(c_idx);
-            for (size_t i = 0; i < col.size(); i++) {
+            for (std::size_t i = 0; i < col.size(); i++) {
                 int idx = c_idx + i*3;
                 BOOST_CHECK_CLOSE( col[i], swfnDataVerbatim[idx], epsilon());
             }
@@ -293,7 +293,7 @@ BOOST_AUTO_TEST_CASE( CreateTablesWithJFunc ) {
     //TODO uncommentBOOST_CHECK_THROW(tt.getPcowColumn(), std::invalid_argument);
 
     const auto& col = tt.getJFuncColumn();
-    for (size_t i = 0; i < col.size(); i++) {
+    for (std::size_t i = 0; i < col.size(); i++) {
         BOOST_CHECK_CLOSE(col[i], swfnDataVerbatim[i*3 + 2], epsilon());
     }
 

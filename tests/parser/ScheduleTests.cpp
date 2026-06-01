@@ -587,7 +587,7 @@ BOOST_AUTO_TEST_CASE(WellsIterator_Empty_EmptyVectorReturned) {
 
 BOOST_AUTO_TEST_CASE(WellsIterator_HasWells_WellsReturned) {
     const auto& schedule = make_schedule( createDeckWithWells() );
-    size_t timeStep = 0;
+    std::size_t timeStep = 0;
 
     const auto wells_alltimesteps = schedule.getWellsatEnd();
     BOOST_CHECK_EQUAL(3U, wells_alltimesteps.size());
@@ -722,7 +722,7 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsAndSkinFactorChanges)
     {
         const auto& well = schedule.getWell("OP_2", 2);
         const auto& cs = well.getConnections();
-        for (size_t i = 0; i < cs.size(); i++) {
+        for (std::size_t i = 0; i < cs.size(); i++) {
             BOOST_CHECK_CLOSE(cs.get(i).skinFactor(), -1.0, 1e-10);
         }
 
@@ -1639,13 +1639,13 @@ COMPDAT
     const auto& cs2 = schedule.getWell("OP_1", 2).getConnections();
     const auto& cs3 = schedule.getWell("OP_1", 3).getConnections();
     const auto& cs4 = schedule.getWell("OP_1", 4).getConnections();
-    for(size_t i = 0; i < cs2.size(); i++)
+    for(std::size_t i = 0; i < cs2.size(); i++)
         BOOST_CHECK_CLOSE(cs2.get( i ).CF() / cs1.get(i).CF(), 1.3, 1e-13);
 
-    for(size_t i = 0; i < cs3.size(); i++ )
+    for(std::size_t i = 0; i < cs3.size(); i++ )
         BOOST_CHECK_CLOSE(cs3.get( i ).CF() / cs1.get(i).CF(), (1.3*1.3), 1e-13);
 
-    for(size_t i = 0; i < cs4.size(); i++ )
+    for(std::size_t i = 0; i < cs4.size(); i++ )
         BOOST_CHECK_CLOSE(cs4.get( i ).CF(), cs1.get(i).CF(), 1e-13);
 
     auto sim_time1 = TimeStampUTC{ schedule.simTime(1) };
@@ -1822,12 +1822,12 @@ END
     const auto& cs2_2 = schedule.getWell("OP_2", 2).getConnections();
     const auto& cs7_2 = schedule.getWell("OP_2", 7).getConnections();
 
-    for (size_t i = 0; i < cs1_2.size(); ++i ) {
+    for (std::size_t i = 0; i < cs1_2.size(); ++i ) {
         BOOST_CHECK_CLOSE(cs1_2.get(i).CF() / cs0_2.get(i).CF(), 7.0, 1.e-13);
         BOOST_CHECK_CLOSE(cs2_2.get(i).CF() / cs1_2.get(i).CF(), 1.0, 1.e-13);
         BOOST_CHECK_CLOSE(cs7_2.get(i).CF() / cs0_2.get(i).CF(), 7.0, 1.e-13);
     }
-    for (size_t i = 0; i < cs1.size(); ++i ) {
+    for (std::size_t i = 0; i < cs1.size(); ++i ) {
         BOOST_CHECK_CLOSE(cs1.get(i).CF() / cs0.get(i).CF(), 0.8, 1.e-13);
         BOOST_CHECK_CLOSE(cs2.get(i).CF() / cs1.get(i).CF(), 0.5, 1.e-13);
         BOOST_CHECK_CLOSE(cs3.get(i).CF() / cs0.get(i).CF(), 1.6, 1.e-13);
@@ -1835,7 +1835,7 @@ END
         BOOST_CHECK_CLOSE(cs7.get(i).CF() / cs0.get(i).CF(), 0.8, 1.e-13);
     }
 
-    for (size_t i = 0; i < 3; ++i) {
+    for (std::size_t i = 0; i < 3; ++i) {
         BOOST_CHECK_CLOSE(cs5.get(i).CF() / cs0.get(i).CF(), 0.8, 1.e-13);
         BOOST_CHECK_CLOSE(cs6.get(i).CF() / cs0.get(i).CF(), 0.8, 1.e-13);
     }
@@ -2003,7 +2003,7 @@ DRSDT
 )";
 
     const auto& schedule = make_schedule(input);
-    size_t currentStep = 1;
+    std::size_t currentStep = 1;
     const auto& ovap = schedule[currentStep].oilvap();
 
     BOOST_CHECK_EQUAL(true,   ovap.getOption(0));
@@ -2034,7 +2034,7 @@ DRSDTCON
 /
 )";
     const auto& schedule = make_schedule(input);
-    size_t currentStep = 1;
+    std::size_t currentStep = 1;
     const auto& ovap = schedule[currentStep].oilvap();
 
     BOOST_CHECK_EQUAL(true,   ovap.getOption(0));
@@ -2077,7 +2077,7 @@ DRSDTR
 )";
 
     const auto& schedule = make_schedule(input);
-    size_t currentStep = 1;
+    std::size_t currentStep = 1;
     const auto& ovap = schedule[currentStep].oilvap();
     auto unitSystem =  UnitSystem::newMETRIC();
     for (int i = 0; i < 3; ++i) {
@@ -2159,7 +2159,7 @@ VAPPARS
     const auto& schedule = make_schedule(input);
     const OilVaporizationProperties& ovap0 = schedule[0].oilvap();
     BOOST_CHECK(ovap0.getType() == OilVaporizationProperties::OilVaporization::UNDEF);
-    size_t currentStep = 1;
+    std::size_t currentStep = 1;
     const OilVaporizationProperties& ovap = schedule[currentStep].oilvap();
     BOOST_CHECK(ovap.getType() == OilVaporizationProperties::OilVaporization::VAPPARS);
     double vap1 =  ovap.vap1();
@@ -6486,7 +6486,7 @@ BCPROP
 
     const auto& schedule = make_schedule(input);
     {
-        size_t currentStep = 0;
+        std::size_t currentStep = 0;
         const auto& bc = schedule[currentStep].bcprop;
         BOOST_CHECK_EQUAL(bc.size(), 2);
         const auto& bcface0 = bc[0];
@@ -6494,7 +6494,7 @@ BCPROP
     }
 
     {
-        size_t currentStep = 1;
+        std::size_t currentStep = 1;
         const auto& bc = schedule[currentStep].bcprop;
         BOOST_CHECK_EQUAL(bc.size(), 2);
         const auto& bcface0 = bc[0];
@@ -6527,7 +6527,7 @@ SOURCE
 
     const auto& schedule = make_schedule(input);
     {
-        size_t currentStep = 0;
+        std::size_t currentStep = 0;
         const auto& source = schedule[currentStep].source();
         BOOST_CHECK_EQUAL(source.size(), 1);  // num cells
         double rate11 = source.rate({0,0,0},Opm::SourceComponent::GAS);
@@ -6540,7 +6540,7 @@ SOURCE
     }
 
     {
-        size_t currentStep = 1;
+        std::size_t currentStep = 1;
         const auto& source = schedule[currentStep].source();
         BOOST_CHECK_EQUAL(source.size(), 2);  // num cells
         double rate21 = source.rate({0,0,0},Opm::SourceComponent::GAS);

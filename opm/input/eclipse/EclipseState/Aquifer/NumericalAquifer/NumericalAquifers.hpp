@@ -27,8 +27,6 @@
 #include <unordered_map>
 #include <vector>
 
-#include <stddef.h>
-
 namespace Opm {
     class Deck;
     class EclipseGrid;
@@ -41,21 +39,21 @@ namespace Opm {
         NumericalAquifers(const Deck& deck, const EclipseGrid& grid, const FieldPropsManager& field_props);
 
         int numRecords() const { return static_cast<int>(this->m_num_records); }
-        size_t size() const;
-        bool hasAquifer(size_t aquifer_id) const;
-        const SingleNumericalAquifer& getAquifer(size_t aquifer_id) const;
-        const std::map<size_t, SingleNumericalAquifer>& aquifers() const;
+        std::size_t size() const;
+        bool hasAquifer(std::size_t aquifer_id) const;
+        const SingleNumericalAquifer& getAquifer(std::size_t aquifer_id) const;
+        const std::map<std::size_t, SingleNumericalAquifer>& aquifers() const;
         bool operator==(const NumericalAquifers& other) const;
 
-        std::unordered_map<size_t, const NumericalAquiferCell*> allAquiferCells() const;
+        std::unordered_map<std::size_t, const NumericalAquiferCell*> allAquiferCells() const;
         std::vector<std::size_t> allAquiferCellIds() const;
 
-        std::unordered_map<size_t, double> aquiferCellVolumes() const;
+        std::unordered_map<std::size_t, double> aquiferCellVolumes() const;
 
         std::vector<NNCdata> aquiferCellNNCs() const;
         std::vector<NNCdata> aquiferConnectionNNCs(const EclipseGrid& grid, const FieldPropsManager& fp) const;
 
-        std::unordered_map<size_t, AquiferCellProps> aquiferCellProps() const;
+        std::unordered_map<std::size_t, AquiferCellProps> aquiferCellProps() const;
 
         void applyMinPV(const EclipseGrid& grid);
 
@@ -71,8 +69,8 @@ namespace Opm {
         }
 
     private:
-        std::map<size_t, SingleNumericalAquifer> m_aquifers{};
-        size_t m_num_records{0};
+        std::map<std::size_t, SingleNumericalAquifer> m_aquifers{};
+        std::size_t m_num_records{0};
 
         void addAquiferCell(const NumericalAquiferCell& aqu_cell);
     };

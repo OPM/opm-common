@@ -27,6 +27,7 @@
 #include <opm/io/eclipse/EclOutput.hpp>
 
 #include <algorithm>
+#include <cstddef>
 #include <fstream>
 #include <iostream>
 #include <math.h>
@@ -152,14 +153,14 @@ BOOST_AUTO_TEST_CASE(TestERft_1) {
     std::vector<float> vect2a = rft1.getRft<float>("PRESSURE", 3);
     BOOST_CHECK_EQUAL(vect2.size(), vect2a.size());
 
-    for (size_t t = 0; t < vect2.size(); t++){
+    for (std::size_t t = 0; t < vect2.size(); t++){
         BOOST_CHECK_EQUAL(vect2[t], vect2a[t]);
     }
 
     std::vector<std::string> vect3a = rft1.getRft<std::string>("WELLETC", 3);
     BOOST_CHECK_EQUAL(vect2.size(), vect2a.size());
 
-    for (size_t t = 0; t < vect3.size(); t++){
+    for (std::size_t t = 0; t < vect3.size(); t++){
         BOOST_CHECK_EQUAL(vect3[t], vect3a[t]);
     }
 

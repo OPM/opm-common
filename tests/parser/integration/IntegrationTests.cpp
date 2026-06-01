@@ -34,6 +34,7 @@
 
 #include <opm/input/eclipse/Parser/ParserEnums.hpp>
 
+#include <cstddef>
 #include <filesystem>
 
 using namespace Opm;
@@ -48,7 +49,7 @@ inline std::string pathprefix() {
 
 namespace {
 
-ParserKeyword createFixedSized(const std::string& kw , size_t size) {
+ParserKeyword createFixedSized(const std::string& kw , std::size_t size) {
     ParserKeyword pkw(kw, KeywordSize(size));
     return pkw;
 }
@@ -67,7 +68,7 @@ Parser createWWCTParser() {
     record.addItem(item);
     parserKeyword.addRecord( record );
 
-    auto summaryKeyword = createFixedSized("SUMMARY" , (size_t) 0);
+    auto summaryKeyword = createFixedSized("SUMMARY" , (std::size_t) 0);
 
     Parser parser;
     parser.addParserKeyword( std::move( parserKeyword ) );
@@ -155,7 +156,7 @@ static Parser createBPRParser() {
         bprRecord.addItem( ParserItem("K", ParserItem::itype::INT) );
         parserKeyword.addRecord( bprRecord );
     }
-    auto summaryKeyword = createFixedSized("SUMMARY" , (size_t) 0);
+    auto summaryKeyword = createFixedSized("SUMMARY" , (std::size_t) 0);
     Parser parser;
     parser.addParserKeyword( std::move( parserKeyword ) );
     parser.addParserKeyword( std::move( summaryKeyword ) );
@@ -200,7 +201,6 @@ BOOST_AUTO_TEST_CASE(parse_fileWithBPRKeyword_dataiscorrect) {
     BOOST_CHECK_EQUAL(3, record1.getItem("K").get< int >(0));
 }
 
-
 /***************** Testing non-recognized keywords ********************/
 BOOST_AUTO_TEST_CASE(parse_unknownkeyword_exceptionthrown) {
     Parser parser;
@@ -216,8 +216,6 @@ GRUDINT -- A wrong, or unknown keyword
   3 3 3 3 3 3 /
 /
 
-
-
 RADFIN4
  'NAME' 213 123 123 123 7 7 18 18 18 18 /
 )";
@@ -225,7 +223,6 @@ RADFIN4
 }
 
 /*********************Testing truncated (default) records ***************************/
-
 
 // Datafile contains 3 RADFIN4 keywords. One fully specified, one with 2 out of 11 items, and one with no items.
 BOOST_AUTO_TEST_CASE(parse_truncatedrecords_deckFilledWithDefaults) {

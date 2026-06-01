@@ -20,9 +20,16 @@
 #ifndef OPM_PARSER_BRINEDENSITY_TABLE_HPP
 #define	OPM_PARSER_BRINEDENSITY_TABLE_HPP
 
+#include <cstddef>
+#include <vector>
+
 namespace Opm {
 
-    class DeckItem;
+    class DeckRecord;
+
+} // namespace Opm
+
+namespace Opm {
 
     class BrineDensityTable {
     public:

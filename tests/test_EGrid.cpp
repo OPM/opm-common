@@ -29,13 +29,15 @@
 
 #include <algorithm>
 #include <array>
+#include <cstddef>
 #include <fstream>
 #include <initializer_list>
-#include <iostream>
 #include <iomanip>
+#include <iostream>
 #include <math.h>
-#include <stdio.h>
 #include <tuple>
+
+#include <stdio.h>
 
 using Opm::EclIO::EGrid;
 
@@ -208,7 +210,7 @@ BOOST_AUTO_TEST_CASE(lgr_1)
     // cell 2,2,1 => zero based 1,1,0
     grid1.getCellCorners({1, 1, 0}, X, Y, Z);
 
-    for (size_t n = 0; n < 8; n++){
+    for (std::size_t n = 0; n < 8; n++){
         BOOST_REQUIRE_CLOSE(global_X_1_1_0[n], X[n], 1e-3);
         BOOST_REQUIRE_CLOSE(global_Y_1_1_0[n], Y[n], 1e-3);
         BOOST_REQUIRE_CLOSE(global_Z_1_1_0[n], Z[n], 1e-3);
@@ -227,7 +229,7 @@ BOOST_AUTO_TEST_CASE(lgr_1)
 
     BOOST_CHECK_EQUAL(nnc_list.size(), nnc_global_ref.size());
 
-    for (size_t n=0; n< nnc_list.size(); n++){
+    for (std::size_t n=0; n< nnc_list.size(); n++){
         BOOST_CHECK_EQUAL(std::get<0>(nnc_list[n]), std::get<0>(nnc_global_ref[n]));
         BOOST_CHECK_EQUAL(std::get<1>(nnc_list[n]), std::get<1>(nnc_global_ref[n]));
         BOOST_CHECK_EQUAL(std::get<2>(nnc_list[n]), std::get<2>(nnc_global_ref[n]));
@@ -256,7 +258,7 @@ BOOST_AUTO_TEST_CASE(lgr_1)
     // cell 2,3,1 => zero based 1,2,0
     lgr1.getCellCorners({1, 2, 0}, X, Y, Z);
 
-    for (size_t n = 0; n < 8; n++){
+    for (std::size_t n = 0; n < 8; n++){
         BOOST_REQUIRE_CLOSE(lgr1_X_1_2_0[n], X[n], 1e-3);
         BOOST_REQUIRE_CLOSE(lgr1_Y_1_2_0[n], Y[n], 1e-3);
         BOOST_REQUIRE_CLOSE(lgr1_Z_1_2_0[n], Z[n], 1e-3);
@@ -272,7 +274,7 @@ BOOST_AUTO_TEST_CASE(lgr_1)
 
     auto nnc_list_lgr1 = lgr1.get_nnc_ijk();
 
-    for (size_t n=0; n< nnc_list_lgr1.size(); n++){
+    for (std::size_t n=0; n< nnc_list_lgr1.size(); n++){
         BOOST_CHECK_EQUAL(std::get<0>(nnc_list_lgr1[n]), std::get<0>(nnc_lgr1_ref[n]));
         BOOST_CHECK_EQUAL(std::get<1>(nnc_list_lgr1[n]), std::get<1>(nnc_lgr1_ref[n]));
         BOOST_CHECK_EQUAL(std::get<2>(nnc_list_lgr1[n]), std::get<2>(nnc_lgr1_ref[n]));
@@ -302,7 +304,7 @@ BOOST_AUTO_TEST_CASE(lgr_1)
     // cell 5,2,1 => zero based 4,1,0
     lgr2.getCellCorners({4, 1, 0}, X, Y, Z);
 
-    for (size_t n = 0; n < 8; n++){
+    for (std::size_t n = 0; n < 8; n++){
         BOOST_CHECK_EQUAL(abs(lgr2_X_4_1_0[n]- X[n]) < 1e-3, true);
         BOOST_CHECK_EQUAL(abs(lgr2_Y_4_1_0[n]- Y[n]) < 1e-3, true);
         BOOST_CHECK_EQUAL(abs(lgr2_Z_4_1_0[n]- Z[n]) < 1e-3, true);
@@ -311,6 +313,6 @@ BOOST_AUTO_TEST_CASE(lgr_1)
     auto hostcells_ijk = lgr1.hostCellsIJK();
     auto hostcells_gind = lgr1.hostCellsGlobalIndex();
 
-    for (size_t n = 0; n < hostcells_gind.size(); n++)
+    for (std::size_t n = 0; n < hostcells_gind.size(); n++)
         BOOST_CHECK_EQUAL(grid1.ijk_from_global_index(hostcells_gind[n]) == hostcells_ijk[n], true);
 }

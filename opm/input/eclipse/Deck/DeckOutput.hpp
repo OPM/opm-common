@@ -20,9 +20,9 @@
 #ifndef DECK_OUTPUT_HPP
 #define DECK_OUTPUT_HPP
 
+#include <cstddef>
 #include <iosfwd>
 #include <string>
-#include <cstddef>
 
 namespace Opm {
 
@@ -30,7 +30,7 @@ namespace Opm {
     public:
         struct format {
             std::string item_sep = " ";        // Separator between items on a row.
-            size_t      columns = 7;          // The maximum number of columns on a record.
+            std::size_t      columns = 7;          // The maximum number of columns on a record.
             std::string record_indent = " "; // The indentation when starting a new line.
             std::string keyword_sep = "";  // The separation between keywords;
         };
@@ -51,8 +51,8 @@ namespace Opm {
         format fmt;
     private:
         std::ostream& os;
-        size_t default_count;
-        size_t row_count;
+        std::size_t default_count;
+        std::size_t row_count;
         bool record_on;
         int org_precision;
         bool split_line;

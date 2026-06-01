@@ -40,6 +40,7 @@
 #include <algorithm>
 #include <array>
 #include <cassert>
+#include <cstddef>
 #include <exception>
 #include <functional>
 #include <iterator>
@@ -48,8 +49,6 @@
 #include <string>
 #include <type_traits>
 #include <utility>
-
-#include <stddef.h>
 
 // Note on deriving critical saturations: All table scanners are implemented
 // in terms of std::lower_bound(begin, end, tolcrit, predicate) which returns
@@ -1467,7 +1466,7 @@ namespace {
     }
 
     std::vector<double>
-    satnumApply(size_t size,
+    satnumApply(std::size_t size,
                 const std::string& columnName,
                 const std::vector< double >& fallbackValues,
                 const Opm::TableManager& tableManager,
@@ -1485,7 +1484,7 @@ namespace {
         // assign a NaN in this case...
         const bool useEnptvd = tableManager.useEnptvd();
         const auto& enptvdTables = tableManager.getEnptvdTables();
-        for( size_t cellIdx = 0; cellIdx < values.size(); cellIdx++ ) {
+        for( std::size_t cellIdx = 0; cellIdx < values.size(); cellIdx++ ) {
             int satTableIdx = satnum_data[cellIdx] - 1;
             int endNum = endnum_data[cellIdx] - 1;
 
@@ -1504,7 +1503,7 @@ namespace {
     }
 
     std::vector<double>
-    imbnumApply(size_t size,
+    imbnumApply(std::size_t size,
                 const std::string& columnName,
                 const std::vector< double >& fallBackValues,
                 const Opm::TableManager& tableManager,
@@ -1522,7 +1521,7 @@ namespace {
         // assign a NaN in this case...
         const bool useImptvd = tableManager.useImptvd();
         const Opm::TableContainer& imptvdTables = tableManager.getImptvdTables();
-        for( size_t cellIdx = 0; cellIdx < values.size(); cellIdx++ ) {
+        for( std::size_t cellIdx = 0; cellIdx < values.size(); cellIdx++ ) {
             int imbTableIdx = imbnum_data[ cellIdx ] - 1;
             int endNum = endnum_data[ cellIdx ] - 1;
 

@@ -17,6 +17,19 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
+
+#include <opm/input/eclipse/EclipseState/Grid/NNC.hpp>
+
+#include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+
+#include <opm/input/eclipse/Deck/Deck.hpp>
+#include <opm/input/eclipse/Deck/DeckItem.hpp>
+#include <opm/input/eclipse/Deck/DeckKeyword.hpp>
+#include <opm/input/eclipse/Deck/DeckRecord.hpp>
+
+#include <opm/input/eclipse/Parser/ParserKeywords/E.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/N.hpp>
+
 #include <algorithm>
 #include <cstddef>
 #include <deque>
@@ -24,24 +37,15 @@
 #include <string>
 #include <utility>
 
-#include <opm/input/eclipse/Deck/Deck.hpp>
-#include <opm/input/eclipse/Deck/DeckItem.hpp>
-#include <opm/input/eclipse/Deck/DeckKeyword.hpp>
-#include <opm/input/eclipse/Deck/DeckRecord.hpp>
-#include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
-#include <opm/input/eclipse/EclipseState/Grid/NNC.hpp>
-#include <opm/input/eclipse/Parser/ParserKeywords/E.hpp>
-#include <opm/input/eclipse/Parser/ParserKeywords/N.hpp>
-
 namespace Opm
 {
 
 namespace {
 
 std::optional<std::size_t> global_index(const EclipseGrid& grid, const DeckRecord& record, std::size_t item_offset) {
-    std::size_t i = static_cast<size_t>(record.getItem(0 + item_offset).get< int >(0)-1);
-    std::size_t j = static_cast<size_t>(record.getItem(1 + item_offset).get< int >(0)-1);
-    std::size_t k = static_cast<size_t>(record.getItem(2 + item_offset).get< int >(0)-1);
+    std::size_t i = static_cast<std::size_t>(record.getItem(0 + item_offset).get< int >(0)-1);
+    std::size_t j = static_cast<std::size_t>(record.getItem(1 + item_offset).get< int >(0)-1);
+    std::size_t k = static_cast<std::size_t>(record.getItem(2 + item_offset).get< int >(0)-1);
 
     if (i >= grid.getNX())
         return {};
@@ -57,7 +61,6 @@ std::optional<std::size_t> global_index(const EclipseGrid& grid, const DeckRecor
 
     return grid.getGlobalIndex(i,j,k);
 }
-
 
 std::optional<std::pair<std::size_t, std::size_t>> make_index_pair(const EclipseGrid& grid, const DeckRecord& record) {
     auto g1 = global_index(grid, record, 0);
@@ -99,7 +102,6 @@ bool is_neighbor(const EclipseGrid& grid, std::size_t g1, std::size_t g2) {
         this->load_editr(grid, deck);
     }
 
-
     void NNC::load_input(const EclipseGrid& grid, const Deck& deck) {
         for (const auto& keyword_ptr : deck.getKeywordList<ParserKeywords::NNC>()) {
             for (const auto& record : *keyword_ptr) {
@@ -118,7 +120,6 @@ bool is_neighbor(const EclipseGrid& grid, std::size_t g1, std::size_t g2) {
 
         std::sort(this->m_input.begin(), this->m_input.end());
     }
-
 
     void NNC::load_edit(const EclipseGrid& grid, const Deck& deck) {
         std::vector<NNCdata> nnc_edit;
@@ -276,7 +277,7 @@ bool is_neighbor(const EclipseGrid& grid, std::size_t g1, std::size_t g2) {
         return result;
     }
 
-    bool NNC::addNNC(const size_t cell1, const size_t cell2, const double trans) {
+    bool NNC::addNNC(const std::size_t cell1, const std::size_t cell2, const double trans) {
         if (cell1 > cell2)
             return this->addNNC(cell2, cell1, trans);
 
@@ -320,8 +321,6 @@ bool is_neighbor(const EclipseGrid& grid, std::size_t g1, std::size_t g2) {
         this->m_edit.push_back(edit_node);
     }
 
-
-
    /*
      In principle we can have multiple NNC keywords, and to provide a good error
      message we should be able to return the location of the offending NNC. That
@@ -336,7 +335,6 @@ bool is_neighbor(const EclipseGrid& grid, std::size_t g1, std::size_t g2) {
         else
             return {};
     }
-
 
     KeywordLocation NNC::edit_location(const NNCdata& /* nnc */) const {
         if (this->m_edit_location)
@@ -376,7 +374,7 @@ bool is_neighbor(const EclipseGrid& grid, std::size_t g1, std::size_t g2) {
 
 /// Inserts an NNC entry (cell1, cell2, trans) into the container, enforcing
 /// cell1 <= cell2.
-bool NNCDataContainer::addNNC(const size_t cell1, const size_t cell2, const double trans) {
+bool NNCDataContainer::addNNC(const std::size_t cell1, const std::size_t cell2, const double trans) {
     if (cell1 > cell2)
         return this->addNNC(cell2, cell1, trans);
     this->nnc_container.emplace_back(cell1,cell2, trans);
@@ -395,7 +393,6 @@ bool NNCDataContainer::operator==(const NNCDataContainer& other) const
     return nnc_container == other.nnc_container;
 }
 
-
 // ===========================================================================
 // NNCDataContainerDiffGrid — NNC storage for connections between two grids
 // ===========================================================================
@@ -403,7 +400,7 @@ bool NNCDataContainer::operator==(const NNCDataContainer& other) const
 /// Inserts a cross-grid NNC entry without enforcing any cell ordering, since
 /// cell1 and cell2 belong to different grids and swapping them would lose
 /// the grid-association information.
-bool NNCDataContainerDiffGrid::addNNC(const size_t cell1, const size_t cell2, const double trans)
+bool NNCDataContainerDiffGrid::addNNC(const std::size_t cell1, const std::size_t cell2, const double trans)
 {
     nnc_container.emplace_back(cell1, cell2, trans);
     return true;
@@ -424,7 +421,6 @@ bool NNCDataContainerDiffGrid::operator==(const NNCDataContainerDiffGrid& other)
 {
     return NNCDataContainer::operator==(other);
 }
-
 
 // ===========================================================================
 // NNCCollection — indexed collection of same-grid and cross-grid NNCs

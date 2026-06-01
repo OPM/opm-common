@@ -27,9 +27,11 @@
 #include <algorithm>
 #include <chrono>
 #include <cmath>
+#include <cstddef>
+#include <cstdint>
 #include <cstring>
-#include <fstream>
 #include <filesystem>
+#include <fstream>
 #include <iterator>
 #include <stdexcept>
 #include <string>
@@ -108,7 +110,7 @@ ExtESmry::ExtESmry(const std::string &filename, bool loadBaseRunData) :
 
     ExtSmryHeadType ext_esmry_head;
 
-    uint64_t rstep_offset;
+    std::uint64_t rstep_offset;
 
     bool res = open_esmry(m_inputFileName, ext_esmry_head, rstep_offset);
     int n_attempts = 1;
@@ -130,14 +132,14 @@ ExtESmry::ExtESmry(const std::string &filename, bool loadBaseRunData) :
     auto keyword = std::get<2>(ext_esmry_head);
     auto units = std::get<3>(ext_esmry_head);
 
-    for (size_t n = 0; n < keyword.size(); n++){
+    for (std::size_t n = 0; n < keyword.size(); n++){
         key_index[keyword[n]] = n;
         m_keyword.push_back(keyword[n]);
     }
 
     m_keyword_index.push_back(key_index);
 
-    for (size_t n = 0; n < m_keyword.size(); n++)
+    for (std::size_t n = 0; n < m_keyword.size(); n++)
         kwunits[m_keyword[n]] = units[n];
 
     RstEntry rst_entry = std::get<1>(ext_esmry_head);
@@ -178,14 +180,14 @@ ExtESmry::ExtESmry(const std::string &filename, bool loadBaseRunData) :
             m_nTstep_v.push_back(m_tstep_v.back().size());
             const auto it = std::ranges::find(m_rstep_v[sim_ind], rstNum);
 
-            size_t ind =  std::distance(m_rstep_v[sim_ind].begin(), it);
+            std::size_t ind =  std::distance(m_rstep_v[sim_ind].begin(), it);
 
             m_tstep_range.push_back(std::make_tuple(0, ind));
 
             key_index.clear();
             keyword = std::get<2>(ext_esmry_head);
 
-            for (size_t n = 0; n < keyword.size(); n++)
+            for (std::size_t n = 0; n < keyword.size(); n++)
                 key_index[keyword[n]] = n;
 
             m_keyword_index.push_back(key_index);
@@ -212,7 +214,7 @@ ExtESmry::ExtESmry(const std::string &filename, bool loadBaseRunData) :
 
     m_nTstep = m_rstep.size();
 
-    for (size_t m = 0; m < m_rstep.size(); m++)
+    for (std::size_t m = 0; m < m_rstep.size(); m++)
         if (m_rstep[m] > 0)
             m_seqIndex.push_back(m);
 
@@ -247,14 +249,14 @@ std::string& ExtESmry::get_unit(const std::string& name)
 
 bool ExtESmry::all_steps_available()
 {
-    for (size_t n = 1; n < m_tstep.size(); n++)
+    for (std::size_t n = 1; n < m_tstep.size(); n++)
         if ((m_tstep[n] - m_tstep[n-1]) > 1)
             return false;
 
     return true;
 }
 
-bool ExtESmry::open_esmry(const std::filesystem::path& inputFileName, ExtSmryHeadType& ext_smry_head, uint64_t& rstep_offset)
+bool ExtESmry::open_esmry(const std::filesystem::path& inputFileName, ExtSmryHeadType& ext_smry_head, std::uint64_t& rstep_offset)
 {
     std::fstream fileH;
 
@@ -264,7 +266,7 @@ bool ExtESmry::open_esmry(const std::filesystem::path& inputFileName, ExtSmryHea
         return false;
 
     std::string arrName;
-    int64_t arr_size;
+    std::int64_t arr_size;
     Opm::EclIO::eclArrType arrType;
     int sizeOfElement;
 
@@ -308,7 +310,7 @@ bool ExtESmry::open_esmry(const std::filesystem::path& inputFileName, ExtSmryHea
             rst_entry = std::make_tuple(rstfile[0], rst_num[0]);
 
         } else {
-            uint64_t numIgnore = sizeOnDiskBinary(arr_size, arrType, sizeOfElement);
+            std::uint64_t numIgnore = sizeOnDiskBinary(arr_size, arrType, sizeOfElement);
             numIgnore = numIgnore + 24 + sizeOnDiskBinary(1, Opm::EclIO::INTE, Opm::EclIO::sizeOfInte);
             fileH.seekg(static_cast<std::streamoff>(numIgnore), std::ios_base::cur);
         }
@@ -351,7 +353,7 @@ bool ExtESmry::open_esmry(const std::filesystem::path& inputFileName, ExtSmryHea
     if (keywords.size() != units.size())
         OPM_THROW( std::runtime_error, "invalid ESMRY file " + inputFileName.string() + ". Size of UNITS not equal size of KEYCHECK");
 
-    rstep_offset = static_cast<uint64_t>(fileH.tellg());
+    rstep_offset = static_cast<std::uint64_t>(fileH.tellg());
 
     try {
         Opm::EclIO::readBinaryHeader(fileH, arrName, arr_size, arrType, sizeOfElement);
@@ -423,7 +425,7 @@ bool ExtESmry::load_esmry(const std::vector<std::string>& stringVect, const std:
 
     std::string arrName;
     Opm::EclIO::eclArrType arrType;
-    int64_t num_tstep;
+    std::int64_t num_tstep;
     int sizeOfElement;
 
     // Read actual number of time steps on disk from RSTEP array before loading
@@ -445,7 +447,7 @@ bool ExtESmry::load_esmry(const std::vector<std::string>& stringVect, const std:
     std::vector<std::vector<float>> smry_data;
     smry_data.resize(loadKeyIndex.size(), {});
 
-    for (size_t n = 0 ; n < loadKeyIndex.size(); n++) {
+    for (std::size_t n = 0 ; n < loadKeyIndex.size(); n++) {
 
         const auto& key = stringVect[loadKeyIndex[n]];
 
@@ -457,17 +459,17 @@ bool ExtESmry::load_esmry(const std::vector<std::string>& stringVect, const std:
 
             int key_ind = m_keyword_index[ind].at(key);
 
-            uint64_t pos = m_rstep_offset[ind] + smry_arr_size*static_cast<uint64_t>(key_ind);
+            std::uint64_t pos = m_rstep_offset[ind] + smry_arr_size*static_cast<std::uint64_t>(key_ind);
 
             // adding size of TSTEP and RSTEP INTE data
             pos = pos + 2 * sizeOnDiskBinary(num_tstep, Opm::EclIO::INTE, sizeOfInte);
 
-            pos = pos + static_cast<uint64_t>(2 * 24);  // adding size of binary headers (TSTEP and RSTEP)
-            pos = pos + static_cast<uint64_t>(key_ind * 24);  // adding size of binary headers
+            pos = pos + static_cast<std::uint64_t>(2 * 24);  // adding size of binary headers (TSTEP and RSTEP)
+            pos = pos + static_cast<std::uint64_t>(key_ind * 24);  // adding size of binary headers
 
             fileH.seekg (pos, fileH.beg);
 
-            int64_t size;
+            std::int64_t size;
 
             try {
                 readBinaryHeader(fileH, arrName, size, arrType, sizeOfElement);
@@ -494,7 +496,7 @@ bool ExtESmry::load_esmry(const std::vector<std::string>& stringVect, const std:
 
     fileH.close();
 
-    for (size_t n = 0 ; n < loadKeyIndex.size(); n++)
+    for (std::size_t n = 0 ; n < loadKeyIndex.size(); n++)
         m_vectorData[keyIndexVect[n]].insert(m_vectorData[keyIndexVect[n]].end(), smry_data[n].begin(), smry_data[n].begin() + to_ind + 1);
 
     return true;

@@ -192,7 +192,7 @@ CompositionalConfig::CompositionalConfig(const Deck& deck, const Runspec& runspe
         for (const auto& kw : keywords) {
             const auto& item = kw.getRecord(0).getItem<ParserKeywords::NCOMPS::NUM_COMPS>();
             const auto ncomps = item.get<int>(0);
-            if (size_t(ncomps) != this->num_comps) {
+            if (std::size_t(ncomps) != this->num_comps) {
                 const std::string msg = fmt::format("NCOMPS is specified with {}, which is different from the number specified in COMPS {}",
                                                     ncomps, this->num_comps);
                 throw OpmInputError(msg, kw.location());
@@ -216,7 +216,7 @@ CompositionalConfig::CompositionalConfig(const Deck& deck, const Runspec& runspe
                                          names_size, num_comps);
             throw OpmInputError(msg, kw.location());
         }
-        for (size_t c = 0; c < num_comps; ++c) {
+        for (std::size_t c = 0; c < num_comps; ++c) {
             comp_names[c] = item.getTrimmedString(c);
         }
     }
@@ -235,7 +235,7 @@ CompositionalConfig::CompositionalConfig(const Deck& deck, const Runspec& runspe
     }
 
     const Tabdims tabdims{deck};
-    const size_t num_eos_res = tabdims.getNumEosRes();
+    const std::size_t num_eos_res = tabdims.getNumEosRes();
     // EOS keyword can also be in RUNSPEC section, we also parse the EOS in the RUNSPEC section here for simplicity
     // might be suggested to handle in the RUNSPEC section though
     eos_types.resize(num_eos_res, EOSType::PR);
@@ -260,7 +260,7 @@ CompositionalConfig::CompositionalConfig(const Deck& deck, const Runspec& runspe
                                              " of equation of state regions of {}.", kw.size(), num_eos_res);
                 throw OpmInputError(msg, kw.location());
             }
-            for (size_t i = 0; i < kw.size(); ++i) {
+            for (std::size_t i = 0; i < kw.size(); ++i) {
                 const auto& item = kw.getRecord(i).getItem<KWEOS::EQUATION>();
                 const auto& equ_str = item.getTrimmedString(0);
                 eos_types[i] = eosTypeFromString(equ_str);
@@ -385,7 +385,7 @@ const std::vector<std::string>& CompositionalConfig::compName() const {
     return this->comp_names;
 }
 
-CompositionalConfig::EOSType CompositionalConfig::eosType(size_t eos_region) const {
+CompositionalConfig::EOSType CompositionalConfig::eosType(std::size_t eos_region) const {
     return this->eos_types[eos_region];
 }
 
@@ -393,27 +393,27 @@ const std::vector<double>& CompositionalConfig::molecularWeights(std::size_t eos
     return this->molecular_weights[eos_region];
 }
 
-const std::vector<double>& CompositionalConfig::acentricFactors(size_t eos_region) const {
+const std::vector<double>& CompositionalConfig::acentricFactors(std::size_t eos_region) const {
     return this->acentric_factors[eos_region];
 }
 
-const std::vector<double>& CompositionalConfig::criticalPressure(size_t eos_region) const {
+const std::vector<double>& CompositionalConfig::criticalPressure(std::size_t eos_region) const {
     return this->critical_pressure[eos_region];
 }
 
-const std::vector<double>& CompositionalConfig::criticalTemperature(size_t eos_region) const {
+const std::vector<double>& CompositionalConfig::criticalTemperature(std::size_t eos_region) const {
     return this->critical_temperature[eos_region];
 }
 
-const std::vector<double>& CompositionalConfig::criticalVolume(size_t eos_region) const {
+const std::vector<double>& CompositionalConfig::criticalVolume(std::size_t eos_region) const {
     return this->critical_volume[eos_region];
 }
 
-const std::vector<double>& CompositionalConfig::volumeShifts(size_t eos_region) const {
+const std::vector<double>& CompositionalConfig::volumeShifts(std::size_t eos_region) const {
     return this->volume_shifts[eos_region];
 }
 
-const std::vector<double>& CompositionalConfig::binaryInteractionCoefficient(size_t eos_region) const {
+const std::vector<double>& CompositionalConfig::binaryInteractionCoefficient(std::size_t eos_region) const {
     return this->binary_interaction_coefficient[eos_region];
 }
 

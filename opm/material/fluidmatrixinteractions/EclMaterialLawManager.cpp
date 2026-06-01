@@ -22,6 +22,7 @@
 */
 
 #include <config.h>
+
 #include <opm/material/fluidmatrixinteractions/EclMaterialLawManager.hpp>
 
 #include <opm/common/TimingMacros.hpp>
@@ -35,6 +36,7 @@
 #include <opm/material/fluidstates/SimpleModularFluidState.hpp>
 
 #include <algorithm>
+#include <cstddef>
 
 namespace Opm::EclMaterialLaw {
 
@@ -44,7 +46,7 @@ initFromState(const EclipseState& eclState)
 {
     // get the number of saturation regions and the number of cells in the deck
     const auto&  runspec       = eclState.runspec();
-    const size_t numSatRegions = runspec.tabdims().getNumSatTables();
+    const std::size_t numSatRegions = runspec.tabdims().getNumSatTables();
 
     const auto& ph = runspec.phases();
     this->hasGas_ = ph.active(Phase::GAS);
@@ -119,7 +121,7 @@ initFromState(const EclipseState& eclState)
 
 template<class TraitsT>
 void Manager<TraitsT>::
-initParamsForElements(const EclipseState& eclState, size_t numCompressedElems,
+initParamsForElements(const EclipseState& eclState, std::size_t numCompressedElems,
                       const std::function<std::vector<int>(const FieldPropsManager&, const std::string&, bool)>& fieldPropIntOnLeafAssigner,
                       const std::function<unsigned(unsigned)>& lookupIdxOnLevelZeroAssigner)
 {

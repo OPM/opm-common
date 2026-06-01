@@ -35,6 +35,7 @@
 
 #include <array>
 #include <algorithm>
+#include <cstddef>
 #include <vector>
 
 namespace Opm {
@@ -57,14 +58,14 @@ public:
     }
 
     //! constructor based on the number of the element
-    explicit FastSmallVector(const size_t numElem)
+    explicit FastSmallVector(const std::size_t numElem)
     {
         init_(numElem);
     }
 
     //! constructor based on the number of the element, and all the elements
     //! will have the same value
-    FastSmallVector(const size_t numElem, const ValueType value)
+    FastSmallVector(const std::size_t numElem, const ValueType value)
     {
         init_(numElem);
 
@@ -132,11 +133,11 @@ public:
     }
 
     //! access the idx th element
-    ValueType& operator[](size_t idx)
+    ValueType& operator[](std::size_t idx)
     { return dataPtr_[idx]; }
 
     //! const access the idx th element
-    const ValueType& operator[](size_t idx) const
+    const ValueType& operator[](std::size_t idx) const
     { return dataPtr_[idx]; }
 
     using size_type = typename std::vector<ValueType>::size_type;
@@ -201,7 +202,7 @@ public:
         }
     }
 
-    void resize(size_t numElem)
+    void resize(std::size_t numElem)
     {
         if (numElem == size_) return; // nothing to do
 
@@ -227,7 +228,7 @@ public:
     }
 
 private:
-    void init_(size_t numElem)
+    void init_(std::size_t numElem)
     {
         size_ = numElem;
 

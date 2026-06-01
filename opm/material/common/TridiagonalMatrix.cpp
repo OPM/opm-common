@@ -22,8 +22,10 @@
 */
 
 #include <config.h>
+
 #include <opm/material/common/TridiagonalMatrix.hpp>
 
+#include <cstddef>
 #include <ostream>
 
 namespace Opm {
@@ -31,7 +33,7 @@ namespace Opm {
 template<class Scalar>
 void TridiagonalMatrix<Scalar>::print(std::ostream& os) const
 {
-    size_t n = size();
+    std::size_t n = size();
 
     // row 0
     os << at(0, 0) << "\t"

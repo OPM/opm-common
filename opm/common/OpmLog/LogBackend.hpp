@@ -24,9 +24,10 @@
 
 #include <opm/common/OpmLog/MessageFormatter.hpp>
 #include <opm/common/OpmLog/MessageLimiter.hpp>
+
 #include <cstdint>
-#include <string>
 #include <memory>
+#include <string>
 
 namespace Opm
 {
@@ -36,7 +37,7 @@ namespace Opm
     {
     public:
         /// Construct with given message mask.
-        explicit LogBackend(int64_t mask);
+        explicit LogBackend(std::int64_t mask);
 
         /// Virtual destructor to enable inheritance.
         virtual ~LogBackend();
@@ -48,34 +49,34 @@ namespace Opm
         void setMessageLimiter(std::shared_ptr<MessageLimiter> limiter);
 
         /// Add a message to the backend if accepted by the message limiter.
-        void addMessage(int64_t messageFlag, const std::string& message);
+        void addMessage(std::int64_t messageFlag, const std::string& message);
 
         /// Add a tagged message to the backend if accepted by the message limiter.
-        void addTaggedMessage(int64_t messageFlag,
+        void addTaggedMessage(std::int64_t messageFlag,
                               const std::string& messageTag,
                               const std::string& message);
 
         /// The message mask types are specified in the
         /// Opm::Log::MessageType namespace, in file LogUtils.hpp.
-        int64_t getMask() const;
+        std::int64_t getMask() const;
 
     protected:
         /// This is the method subclasses should override.
         ///
         /// Typically a subclass may filter, change, and output
         /// messages based on configuration and the messageFlag.
-        virtual void addMessageUnconditionally(int64_t messageFlag,
+        virtual void addMessageUnconditionally(std::int64_t messageFlag,
                                                const std::string& message) = 0;
 
         /// Return decorated version of message depending on configureDecoration() arguments.
-        std::string formatMessage(int64_t messageFlag, const std::string& message);
+        std::string formatMessage(std::int64_t messageFlag, const std::string& message);
 
     private:
         /// Return true if all bits of messageFlag are also set in our mask,
         /// and the message limiter returns a PrintMessage response.
-        bool includeMessage(int64_t messageFlag, const std::string& messageTag);
+        bool includeMessage(std::int64_t messageFlag, const std::string& messageTag);
 
-        int64_t m_mask;
+        std::int64_t m_mask;
         std::shared_ptr<MessageFormatterInterface> m_formatter;
         std::shared_ptr<MessageLimiter> m_limiter;
     };

@@ -20,13 +20,13 @@
 #ifndef OPM_PARSER_NNC_HPP
 #define OPM_PARSER_NNC_HPP
 
+#include <opm/common/OpmLog/KeywordLocation.hpp>
+
 #include <cstddef>
+#include <map>
 #include <optional>
 #include <tuple>
-#include <map>
 #include <vector>
-
-#include <opm/common/OpmLog/KeywordLocation.hpp>
 
 namespace Opm
 {
@@ -34,7 +34,7 @@ namespace Opm
 class GridDims;
 
 struct NNCdata {
-    NNCdata(size_t c1, size_t c2, double t)
+    NNCdata(std::size_t c1, std::size_t c2, double t)
         : cell1(c1), cell2(c2), trans(t)
     {}
     NNCdata() = default;
@@ -61,12 +61,10 @@ struct NNCdata {
         return std::tie(this->cell1, this->cell2) < std::tie(other.cell1, other.cell2);
     }
 
-    size_t cell1{};
-    size_t cell2{};
+    std::size_t cell1{};
+    std::size_t cell2{};
     double trans{};
 };
-
-
 
 class Deck;
 class EclipseGrid;
@@ -109,7 +107,7 @@ public:
 
     static NNC serializationTestObject();
 
-    virtual bool addNNC(const size_t cell1, const size_t cell2, const double trans);
+    virtual bool addNNC(const std::size_t cell1, const std::size_t cell2, const double trans);
 
     /// \brief Merge additional NNCs into sorted NNCs
     virtual void merge(const std::vector<NNCdata>& nncs);
@@ -122,7 +120,6 @@ public:
     KeywordLocation input_location(const NNCdata& nnc) const;
     KeywordLocation edit_location(const NNCdata& nnc) const;
     KeywordLocation editr_location(const NNCdata& nnc) const;
-
 
     bool operator==(const NNC& data) const;
 
@@ -157,14 +154,13 @@ private:
     friend class NNCDiffGrid;
 };
 
-
 class NNCDataContainer
 {
     public:
     NNCDataContainer() = default;
     virtual ~NNCDataContainer() = default;
 
-    virtual bool addNNC(const size_t cell1, const size_t cell2, const double trans);
+    virtual bool addNNC(const std::size_t cell1, const std::size_t cell2, const double trans);
     bool addNNC(const NNCdata nnc_data);
 
     const std::vector<NNCdata>& input() const { return nnc_container; }
@@ -174,8 +170,6 @@ class NNCDataContainer
     protected:
     std::vector<NNCdata> nnc_container;
 };
-
-
 
 /*
   NNCDiffGrid is derived class of NNC.  NNC Class as it does not preserve the
@@ -187,14 +181,13 @@ public:
     NNCDataContainerDiffGrid() = default;
     ~NNCDataContainerDiffGrid() override = default;
 
-    bool addNNC(const size_t cell1, const size_t cell2,
+    bool addNNC(const std::size_t cell1, const std::size_t cell2,
                 const double trans) override;
 
     void swap_adj(std::size_t grid1, std::size_t grid2);
 
     bool operator==(const NNCDataContainerDiffGrid& other) const;
 };
-
 
 class NNCCollection
 {
@@ -267,7 +260,6 @@ public:
         return false;
     }
 
-
     /// Returns a view of all same-grid NNCs as (grid_index, NNC) pairs.
     const std::map<std::size_t, NNCDataContainer>& same_grid_nnc() const
     {
@@ -321,6 +313,5 @@ private:
 };
 
 } // namespace Opm
-
 
 #endif // OPM_PARSER_NNC_HPP

@@ -732,7 +732,7 @@ BOOST_AUTO_TEST_CASE(loadCOMPTRAJTESTSPE1) {
     const std::array<double, 4> connection_factor{311.783, 7.79428, 38.9674, 62.3465};
     const std::array<int, 4> global_index{0, 100, 111, 211};
     BOOST_CHECK_EQUAL(connections.size(), 4);
-    for (size_t i = 0 ; i < connections.size();  ++i ) {
+    for (std::size_t i = 0 ; i < connections.size();  ++i ) {
          BOOST_CHECK_CLOSE(connections[i].CF(), units.to_si(Opm::UnitSystem::measure::transmissibility, connection_factor[i]), 2e-2);
          BOOST_CHECK_EQUAL(connections[i].global_index(), global_index[i]);
     }
@@ -764,7 +764,7 @@ BOOST_AUTO_TEST_CASE(loadCOMPTRAJTESTSPE1_2) {
     const std::array<double, 5> connection_factor{78.5921, 11.7884, 77.9007, 311.585, 155.784};
     const std::array<int, 5> global_index{0, 100, 200, 211, 222};
     BOOST_CHECK_EQUAL(connections.size(), 5);
-    for (size_t i = 0 ; i < connections.size();  ++i ) {
+    for (std::size_t i = 0 ; i < connections.size();  ++i ) {
          BOOST_CHECK_CLOSE(connections[i].CF(), units.to_si(Opm::UnitSystem::measure::transmissibility, connection_factor[i]), 2e-2);
          BOOST_CHECK_EQUAL(connections[i].global_index(), global_index[i]);
     }

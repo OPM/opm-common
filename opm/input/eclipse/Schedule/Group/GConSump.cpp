@@ -19,9 +19,10 @@
 
 #include <opm/input/eclipse/Schedule/Group/GConSump.hpp>
 
-#include "../eval_uda.hpp"
-
+#include <cstddef>
 #include <stdexcept>
+
+#include "../eval_uda.hpp"
 
 namespace Opm {
 
@@ -38,7 +39,6 @@ bool GConSump::has(const std::string& name) const {
     return (groups.find(name) != groups.end());
 }
 
-
 const GConSump::GCONSUMPGroup& GConSump::get(const std::string& name) const {
 
     auto it = groups.find(name);
@@ -47,7 +47,6 @@ const GConSump::GCONSUMPGroup& GConSump::get(const std::string& name) const {
     else
         return it->second;
 }
-
 
 const GConSump::GCONSUMPGroupProp GConSump::get(const std::string& name, const SummaryState& st) const {
 
@@ -72,8 +71,7 @@ void GConSump::add(const std::string& name, const UDAValue& consumption_rate,
     group.unit_system = unit_system;
 }
 
-
-size_t GConSump::size() const {
+std::size_t GConSump::size() const {
     return groups.size();
 }
 

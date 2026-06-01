@@ -31,6 +31,7 @@
 
 #include <opm/input/eclipse/Deck/DeckSection.hpp>
 #include <opm/input/eclipse/Deck/Deck.hpp>
+
 #include <opm/input/eclipse/Parser/Parser.hpp>
 
 #include <array>
@@ -147,8 +148,8 @@ std::vector<double> gnfloat = {
 int sum_gnint = std::accumulate(gnint.begin(), gnint.end(), 0);
 std::vector<double> zcorn;
 zcorn.reserve(sum_gnint);
-for (size_t i = 0; i < gnint.size(); ++i) {
-    for (size_t j = 0; j < static_cast<size_t>(gnint[i]); ++j) {
+for (std::size_t i = 0; i < gnint.size(); ++i) {
+    for (std::size_t j = 0; j < static_cast<std::size_t>(gnint[i]); ++j) {
         zcorn.push_back(gnfloat[i]);
     }
 }
@@ -1408,7 +1409,7 @@ END
 
     lgr_depth.reserve(27);
     lgr_porv.reserve(27);
-    for (size_t i = 0; i < 27; i++) {
+    for (std::size_t i = 0; i < 27; i++) {
         lgr_depth.push_back(lgr1.getCellDepth(i));
         lgr_porv.push_back(0.3*lgr1.getCellVolume(i));
     }

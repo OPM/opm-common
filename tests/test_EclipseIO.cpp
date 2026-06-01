@@ -54,6 +54,7 @@
 #include <opm/input/eclipse/Parser/Parser.hpp>
 
 #include <algorithm>
+#include <cstddef>
 #include <fstream>
 #include <ios>
 #include <map>
@@ -124,7 +125,7 @@ void compareErtData(const std::vector< T > &src,
                     double tolerance ) {
     BOOST_REQUIRE_EQUAL(src.size(), dst.size());
 
-    for (size_t i = 0; i < src.size(); ++i)
+    for (std::size_t i = 0; i < src.size(); ++i)
         BOOST_CHECK_CLOSE(src[i], dst[i], tolerance);
 }
 

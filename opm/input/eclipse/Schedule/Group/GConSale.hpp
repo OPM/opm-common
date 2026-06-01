@@ -21,8 +21,10 @@
 #define GCONSALE_H
 
 #include <opm/input/eclipse/Deck/UDAValue.hpp>
+
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 
+#include <cstddef>
 #include <map>
 #include <string>
 
@@ -80,7 +82,7 @@ namespace Opm {
         const GCONSALEGroupProp get(const std::string& name, const SummaryState& st) const;
         static MaxProcedure stringToProcedure(const std::string& procedure);
         void add(const std::string& name, const UDAValue& sales_target, const UDAValue& max_rate, const UDAValue& min_rate, const std::string& procedure, double udq_undefined_arg, const UnitSystem& unit_system);
-        size_t size() const;
+        std::size_t size() const;
 
         bool operator==(const GConSale& data) const;
 
@@ -95,6 +97,5 @@ namespace Opm {
     };
 
 }
-
 
 #endif

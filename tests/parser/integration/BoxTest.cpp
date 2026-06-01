@@ -23,13 +23,15 @@
 #include <boost/test/test_tools.hpp>
 #include <boost/version.hpp>
 
-#include <opm/input/eclipse/Deck/Deck.hpp>
-#include <opm/input/eclipse/Parser/Parser.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/Box.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/GridDims.hpp>
-#include <opm/input/eclipse/EclipseState/Grid/Box.hpp>
 
+#include <opm/input/eclipse/Deck/Deck.hpp>
+#include <opm/input/eclipse/Parser/Parser.hpp>
+
+#include <cstddef>
 #include <filesystem>
 
 using namespace Opm;
@@ -62,7 +64,7 @@ BOOST_AUTO_TEST_CASE( PERMX ) {
     const auto& permx = state.fieldProps().get_global_double( "PERMX" );
     const auto& permy = state.fieldProps().get_global_double( "PERMY" );
     const auto& permz = state.fieldProps().get_global_double( "PERMZ" );
-    size_t i, j, k;
+    std::size_t i, j, k;
     const EclipseGrid& grid = state.getInputGrid();
 
     for (k = 0; k < grid.getNZ(); k++) {
@@ -78,19 +80,17 @@ BOOST_AUTO_TEST_CASE( PERMX ) {
     }
 }
 
-
-
 BOOST_AUTO_TEST_CASE( PARSE_BOX_OK ) {
     EclipseState state = makeState( pathprefix() + "BOX/BOXTEST1" );
     const auto& satnum = state.fieldProps().get_global_int( "SATNUM" );
     {
-        size_t i, j, k;
+        std::size_t i, j, k;
         const EclipseGrid& grid = state.getInputGrid();
         for (k = 0; k < grid.getNZ(); k++) {
             for (j = 0; j < grid.getNY(); j++) {
                 for (i = 0; i < grid.getNX(); i++) {
 
-                    size_t g = i + j * grid.getNX() + k * grid.getNX() * grid.getNY();
+                    std::size_t g = i + j * grid.getNX() + k * grid.getNX() * grid.getNY();
                     if (i <= 1 && j <= 1 && k <= 1)
                         BOOST_CHECK_EQUAL( satnum[ g ], 10 );
                     else
@@ -106,14 +106,14 @@ BOOST_AUTO_TEST_CASE( PARSE_MULTIPLY_COPY ) {
     EclipseState state = makeState( pathprefix() + "BOX/BOXTEST1" );
     const auto& satnum = state.fieldProps().get_global_int( "SATNUM" );
     const auto& fipnum = state.fieldProps().get_global_int( "FIPNUM" );
-    size_t i, j, k;
+    std::size_t i, j, k;
     const EclipseGrid& grid = state.getInputGrid();
 
     for (k = 0; k < grid.getNZ(); k++) {
         for (j = 0; j < grid.getNY(); j++) {
             for (i = 0; i < grid.getNX(); i++) {
 
-                size_t g = grid.getGlobalIndex(i,j,k);
+                std::size_t g = grid.getGlobalIndex(i,j,k);
                 if (i <= 1 && j <= 1 && k <= 1)
                     BOOST_CHECK_EQUAL( 4 * satnum[g], fipnum[g] );
                 else
@@ -124,21 +124,18 @@ BOOST_AUTO_TEST_CASE( PARSE_MULTIPLY_COPY ) {
     }
 }
 
-
-
-
 BOOST_AUTO_TEST_CASE( EQUALS ) {
     EclipseState state = makeState( pathprefix() + "BOX/BOXTEST1" );
     const auto& pvtnum = state.fieldProps().get_global_int( "PVTNUM" );
     const auto& eqlnum = state.fieldProps().get_global_int( "EQLNUM" );
     const auto& poro   = state.fieldProps().get_global_double( "PORO" );
-    size_t i, j, k;
+    std::size_t i, j, k;
     const EclipseGrid& grid = state.getInputGrid();
 
     for (k = 0; k < grid.getNZ(); k++) {
         for (j = 0; j < grid.getNY(); j++) {
             for (i = 0; i < grid.getNX(); i++) {
-                size_t g = grid.getGlobalIndex(i,j,k);
+                std::size_t g = grid.getGlobalIndex(i,j,k);
 
                 BOOST_CHECK_EQUAL( pvtnum[g], k );
                 BOOST_CHECK_EQUAL( eqlnum[g], 77 + 2 * k );
@@ -147,7 +144,6 @@ BOOST_AUTO_TEST_CASE( EQUALS ) {
         }
     }
 }
-
 
 BOOST_AUTO_TEST_CASE( OPERATE ) {
     EclipseState state = makeState( pathprefix() + "BOX/BOXTEST1" );
@@ -161,7 +157,6 @@ BOOST_AUTO_TEST_CASE( OPERATE ) {
     BOOST_CHECK_EQUAL( ntg[grid.getGlobalIndex(0,0,3)], 0.5 );   // MAXVALUE
     BOOST_CHECK_EQUAL( ntg[grid.getGlobalIndex(0,0,4)], 1.5 );   // MINVALUE
 }
-
 
 BOOST_AUTO_TEST_CASE( CONSTRUCTOR_AND_UPDATE ) {
     auto deck = makeDeck( pathprefix() + "BOX/BOXTEST1" );

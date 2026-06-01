@@ -17,19 +17,23 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <cassert>
-#include <cmath>
-#include <iostream>
-#include <fmt/format.h>
+#include <opm/input/eclipse/Schedule/VFPInjTable.hpp>
+
+#include <opm/input/eclipse/Units/Dimension.hpp>
+#include <opm/input/eclipse/Units/UnitSystem.hpp>
 
 #include <opm/input/eclipse/Deck/DeckItem.hpp>
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
-#include <opm/input/eclipse/Parser/ParserKeywords/V.hpp>
-#include <opm/input/eclipse/Units/Dimension.hpp>
-#include <opm/input/eclipse/Units/UnitSystem.hpp>
 
-#include <opm/input/eclipse/Schedule/VFPInjTable.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/V.hpp>
+
+#include <cassert>
+#include <cmath>
+#include <cstddef>
+#include <iostream>
+
+#include <fmt/format.h>
 
 //Anonymous namespace
 namespace {
@@ -48,9 +52,6 @@ inline const Opm::DeckItem& getNonEmptyItem( const Opm::DeckRecord& record) {
 
 } //Namespace
 
-
-
-
 namespace Opm {
 
 VFPInjTable::VFPInjTable()
@@ -59,7 +60,6 @@ VFPInjTable::VFPInjTable()
     m_datum_depth = 0.0;
     m_flo_type = FLO_TYPE::FLO_OIL;
 }
-
 
 VFPInjTable::VFPInjTable( const DeckKeyword& table, const UnitSystem& deck_unit_system) :
     m_location(table.location())
@@ -130,7 +130,6 @@ VFPInjTable::VFPInjTable( const DeckKeyword& table, const UnitSystem& deck_unit_
         throw std::invalid_argument("Invalid BODY_DEF string");
     }
 
-
     //Get actual rate / flow values
     m_flo_data = getNonEmptyItem<VFPINJ::FLOW_VALUES>(table.getRecord(1)).getData< double >();
     convertFloToSI(m_flo_type, m_flo_data, deck_unit_system);
@@ -140,8 +139,8 @@ VFPInjTable::VFPInjTable( const DeckKeyword& table, const UnitSystem& deck_unit_
     convertTHPToSI(m_thp_data, deck_unit_system);
 
     //Finally, read the actual table itself.
-    size_t nt = m_thp_data.size();
-    size_t nf = m_flo_data.size();
+    std::size_t nt = m_thp_data.size();
+    std::size_t nf = m_flo_data.size();
     m_data.resize(nt*nf);
     std::fill_n(m_data.data(), m_data.size(), std::nan("0"));
 
@@ -151,7 +150,7 @@ VFPInjTable::VFPInjTable( const DeckKeyword& table, const UnitSystem& deck_unit_
     }
 
     const double table_scaling_factor = deck_unit_system.parse("Pressure").getSIScaling();
-    for (size_t i=3; i<table.size(); ++i) {
+    for (std::size_t i=3; i<table.size(); ++i) {
         const auto& record = table.getRecord(i);
         //Get indices (subtract 1 to get 0-based index)
         int t = getNonEmptyItem<VFPINJ::THP_INDEX>(record).get< int >(0) - 1;
@@ -177,7 +176,6 @@ VFPInjTable::VFPInjTable( const DeckKeyword& table, const UnitSystem& deck_unit_
     check();
 }
 
-
 VFPInjTable VFPInjTable::serializationTestObject()
 {
     VFPInjTable result;
@@ -192,9 +190,6 @@ VFPInjTable VFPInjTable::serializationTestObject()
     return result;
 }
 
-
-
-
 namespace {
 
 void check_axis(const std::vector<double>& axis) {
@@ -206,9 +201,6 @@ void check_axis(const std::vector<double>& axis) {
 }
 
 }
-
-
-
 
 void VFPInjTable::check() {
     if (this->m_table_num <= 0)
@@ -240,14 +232,6 @@ void VFPInjTable::check() {
     }
 }
 
-
-
-
-
-
-
-
-
 VFPInjTable::FLO_TYPE VFPInjTable::getFloType(const std::string& flo_string)
 {
     if (flo_string == "OIL")
@@ -262,13 +246,6 @@ VFPInjTable::FLO_TYPE VFPInjTable::getFloType(const std::string& flo_string)
     throw std::invalid_argument("Invalid RATE_TYPE string");
 }
 
-
-
-
-
-
-
-
 void VFPInjTable::scaleValues(std::vector<double>& values,
                                const double& scaling_factor) {
     if (scaling_factor == 1.0) {
@@ -280,12 +257,6 @@ void VFPInjTable::scaleValues(std::vector<double>& values,
         }
     }
 }
-
-
-
-
-
-
 
 void VFPInjTable::convertFloToSI(const FLO_TYPE& type,
                                   std::vector<double>& values,
@@ -305,18 +276,11 @@ void VFPInjTable::convertFloToSI(const FLO_TYPE& type,
     scaleValues(values, scaling_factor);
 }
 
-
-
-
-
-
-
 void VFPInjTable::convertTHPToSI(std::vector<double>& values,
                                  const UnitSystem& unit_system) {
     double scaling_factor = unit_system.parse("Pressure").getSIScaling();
     scaleValues(values, scaling_factor);
 }
-
 
 bool VFPInjTable::operator==(const VFPInjTable& data) const {
     return this->getTableNum() == data.getTableNum() &&
@@ -328,20 +292,16 @@ bool VFPInjTable::operator==(const VFPInjTable& data) const {
            this->location() == data.location();
 }
 
-
-double VFPInjTable::operator()(size_t thp_idx, size_t flo_idx) const {
+double VFPInjTable::operator()(std::size_t thp_idx, std::size_t flo_idx) const {
     return m_data[thp_idx*m_flo_data.size() + flo_idx];
 }
 
-
-double& VFPInjTable::operator()(size_t thp_idx, size_t flo_idx) {
+double& VFPInjTable::operator()(std::size_t thp_idx, std::size_t flo_idx) {
     return m_data[thp_idx*m_flo_data.size() + flo_idx];
 }
 
-
-std::array<size_t,2> VFPInjTable::shape() const {
+std::array<std::size_t,2> VFPInjTable::shape() const {
     return {m_thp_data.size(), m_flo_data.size()};
 }
-
 
 } //Namespace

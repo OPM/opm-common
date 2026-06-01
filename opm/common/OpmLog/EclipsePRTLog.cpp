@@ -20,17 +20,18 @@
 #include <opm/common/OpmLog/EclipsePRTLog.hpp>
 #include <opm/common/OpmLog/LogUtil.hpp>
 
+#include <cstddef>
+#include <cstdint>
+
 namespace Opm {
 
-
-    void EclipsePRTLog::addMessageUnconditionally(int64_t messageType, const std::string& message)
+    void EclipsePRTLog::addMessageUnconditionally(std::int64_t messageType, const std::string& message)
     {
         StreamLog::addMessageUnconditionally(messageType, message);
         m_count[messageType]++;
     }
 
-
-    size_t EclipsePRTLog::numMessages(int64_t messageType) const
+    std::size_t EclipsePRTLog::numMessages(std::int64_t messageType) const
     {
         if (Log::isPower2( messageType )) {
             auto iter = m_count.find( messageType );
@@ -41,7 +42,6 @@ namespace Opm {
         } else
             throw std::invalid_argument("The messageType ID must be 2^n");
     }
-
 
     EclipsePRTLog::~EclipsePRTLog()
     {
@@ -62,7 +62,7 @@ namespace Opm {
     }
 
     EclipsePRTLog::EclipsePRTLog(const std::string& logFile,
-                                 int64_t messageMask,
+                                 std::int64_t messageMask,
                                  bool append,
                                  bool print_summary)
         : StreamLog(logFile, messageMask, append),
@@ -70,7 +70,7 @@ namespace Opm {
     {}
 
     EclipsePRTLog::EclipsePRTLog(std::ostream& os,
-                                 int64_t messageMask,
+                                 std::int64_t messageMask,
                                  bool print_summary)
         : StreamLog(os, messageMask), print_summary_(print_summary)
     {}

@@ -147,9 +147,9 @@ BOOST_AUTO_TEST_CASE(TestKeywordBox) {
 
 
 BOOST_AUTO_TEST_CASE(BoxNineArg) {
-    const size_t nx = 10;
-    const size_t ny = 7;
-    const size_t nz = 6;
+    const std::size_t nx = 10;
+    const std::size_t ny = 7;
+    const std::size_t nz = 6;
     Opm::GridDims gridDims(nx,ny,nz);
     BOOST_CHECK_NO_THROW( Opm::Box(gridDims, allActive(), identityMapping(), 0,7,0,5,1,2) );
 

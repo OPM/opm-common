@@ -65,6 +65,7 @@
 #include <opm/input/eclipse/Parser/Parser.hpp>
 
 #include <algorithm>
+#include <cstddef>
 #include <cstdlib>
 #include <ctime>
 #include <map>
@@ -799,7 +800,7 @@ BOOST_AUTO_TEST_CASE(ExtraData_content)
                 const std::vector<double> expected = {10,1,2,3};
 
                 BOOST_CHECK_EQUAL( rst_value.solution.has("NO") , false );
-                for (size_t i=0; i < expected.size(); i++)
+                for (std::size_t i=0; i < expected.size(); i++)
                     BOOST_CHECK_CLOSE(extraval[i], expected[i], 1e-5);
             }
         }

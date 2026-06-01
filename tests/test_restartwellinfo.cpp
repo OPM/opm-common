@@ -143,7 +143,7 @@ void verifyWellState(const std::string& rst_filename, const Opm::Schedule& sched
     //Verify number of active wells
     BOOST_CHECK_EQUAL( wellList.size(), static_cast<std::size_t>(intehead[16]));
 
-    for (size_t i=0; i< wellList.size(); i++) {
+    for (std::size_t i=0; i< wellList.size(); i++) {
 
         // Verify wellname
         BOOST_CHECK_EQUAL(zwel[i*3], ref_wellList[step][i]);
@@ -192,7 +192,7 @@ void verifyWellState(const std::string& rst_filename, const Opm::Schedule& sched
         BOOST_CHECK_EQUAL(ref_wellConn[step][i].size(), connections_set.size() );
 
 
-        for (size_t n=0; n< connections_set.size(); n++) {
+        for (std::size_t n=0; n< connections_set.size(); n++) {
             const auto& completion = connections_set.get(n);
 
             // Verify I, J and K indices for each connection
@@ -201,7 +201,7 @@ void verifyWellState(const std::string& rst_filename, const Opm::Schedule& sched
             BOOST_CHECK_EQUAL(completion.getJ()+1 , std::get<1>(ref_wellConn[step][i][n]));
             BOOST_CHECK_EQUAL(completion.getK()+1 , std::get<2>(ref_wellConn[step][i][n]));
 
-            size_t ind = i*ncwmax*niconz+n*niconz;
+            std::size_t ind = i*ncwmax*niconz+n*niconz;
 
             BOOST_CHECK_EQUAL(completion.getI()+1 , icon[ind+1]);
             BOOST_CHECK_EQUAL(completion.getJ()+1 , icon[ind+2]);

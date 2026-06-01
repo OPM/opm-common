@@ -19,6 +19,7 @@
 #ifndef OPM_PARSER_ROCK2D_TABLE_HPP
 #define	OPM_PARSER_ROCK2D_TABLE_HPP
 
+#include <cstddef>
 #include <vector>
 
 namespace Opm {
@@ -31,11 +32,11 @@ namespace Opm {
 
         static Rock2dTable serializationTestObject();
 
-        void init(const Opm::DeckRecord& record, size_t tableIdx);
-        size_t size() const;
-        size_t sizeMultValues() const;
-        double getPressureValue(size_t index) const;
-        double getPvmultValue(size_t pressureIndex, size_t saturationIndex ) const;
+        void init(const Opm::DeckRecord& record, std::size_t tableIdx);
+        std::size_t size() const;
+        std::size_t sizeMultValues() const;
+        double getPressureValue(std::size_t index) const;
+        double getPvmultValue(std::size_t pressureIndex, std::size_t saturationIndex ) const;
 
         bool operator==(const Rock2dTable& data) const;
 

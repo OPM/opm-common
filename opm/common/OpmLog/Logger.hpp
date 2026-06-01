@@ -20,10 +20,10 @@
 #ifndef OPM_LOGGER_HPP
 #define OPM_LOGGER_HPP
 
-#include <stdexcept>
 #include <cstdint>
 #include <map>
 #include <memory>
+#include <stdexcept>
 #include <string>
 
 namespace Opm {
@@ -34,13 +34,13 @@ class Logger {
 
 public:
     Logger();
-    void addMessage(int64_t messageType , const std::string& message) const;
-    void addTaggedMessage(int64_t messageType, const std::string& tag, const std::string& message) const;
+    void addMessage(std::int64_t messageType , const std::string& message) const;
+    void addTaggedMessage(std::int64_t messageType, const std::string& tag, const std::string& message) const;
 
-    static bool enabledDefaultMessageType( int64_t messageType);
-    bool enabledMessageType( int64_t messageType) const;
-    void addMessageType( int64_t messageType , const std::string& prefix);
-    int64_t enabledMessageTypes() const;
+    static bool enabledDefaultMessageType( std::int64_t messageType);
+    bool enabledMessageType( std::int64_t messageType) const;
+    void addMessageType( std::int64_t messageType , const std::string& prefix);
+    std::int64_t enabledMessageTypes() const;
 
     void addBackend(const std::string& name , std::shared_ptr<LogBackend> backend);
     bool hasBackend(const std::string& name);
@@ -70,11 +70,11 @@ public:
 
 
 private:
-    void updateGlobalMask( int64_t mask );
-    static bool enabledMessageType( int64_t enabledTypes , int64_t messageType);
+    void updateGlobalMask( std::int64_t mask );
+    static bool enabledMessageType( std::int64_t enabledTypes , std::int64_t messageType);
 
-    int64_t m_globalMask;
-    int64_t m_enabledTypes;
+    std::int64_t m_globalMask;
+    std::int64_t m_enabledTypes;
     std::map<std::string , std::shared_ptr<LogBackend> > m_backends;
 };
 

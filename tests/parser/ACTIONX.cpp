@@ -72,6 +72,7 @@
 #include <opm/input/eclipse/Parser/Parser.hpp>
 
 #include <algorithm>
+#include <cstddef>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -361,7 +362,7 @@ BOOST_AUTO_TEST_CASE(TestActions)
 
     {
         constexpr double min_wait = 86400;
-        constexpr size_t max_eval = 3;
+        constexpr std::size_t max_eval = 3;
         Opm::Action::ActionX action("NAME", max_eval, min_wait, asTimeT(TimeStampUTC(TimeStampUTC::YMD{ 2000, 7, 1 })) );
         config.add(action);
         BOOST_CHECK_EQUAL(config.ecl_size(), 1U);

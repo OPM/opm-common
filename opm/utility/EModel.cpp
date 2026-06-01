@@ -22,6 +22,7 @@
 #include <fmt/format.h>
 
 #include <algorithm>
+#include <cstddef>
 #include <cstring>
 #include <filesystem>
 #include <iterator>
@@ -105,12 +106,12 @@ EModel::EModel(const std::string& filename) :
 
     auto initArrList = initfile.getList();
 
-    for (size_t m = 0; m < initArrList.size(); m++) {
+    for (std::size_t m = 0; m < initArrList.size(); m++) {
         std::string name = std::get<0>(initArrList[m]);
         auto arrType = std::get<1>(initArrList[m]);
         auto sizeArray=std::get<2>(initArrList[m]);
 
-        if (static_cast<size_t>(sizeArray) == nActive) {
+        if (static_cast<std::size_t>(sizeArray) == nActive) {
             initParam[name] = index;
             initParamName.push_back(name);
             initParamType.push_back(arrType);
@@ -164,7 +165,7 @@ void EModel::initSolutionData(int rstep){
 
     int index = -1;
 
-    for (size_t n = 0; n < rstArrList.size(); n++) {
+    for (std::size_t n = 0; n < rstArrList.size(); n++) {
         std::string name = std::get<0>(rstArrList[n]);
         auto arrType = std::get<1>(rstArrList[n]);
         auto sizeArray=std::get<2>(rstArrList[n]);
@@ -172,7 +173,7 @@ void EModel::initSolutionData(int rstep){
         if (name == "ENDSOL")
             solparam=false;
 
-        if ((solparam == true) && (static_cast<size_t>(sizeArray) == nActive)) {
+        if ((solparam == true) && (static_cast<std::size_t>(sizeArray) == nActive)) {
             index++;
             solutionParam[name] = index;
             solutionParamName.push_back(name);
@@ -197,7 +198,7 @@ void EModel::get_cell_volumes_from_grid()
 
     CELLVOL.clear();
 
-    for (size_t n = 0;n < nActive; n++)
+    for (std::size_t n = 0;n < nActive; n++)
         CELLVOL.push_back(grid->getCellVolume(I[n]-1, J[n]-1, K[n]-1));
 
     celVolCalculated = true;
@@ -207,12 +208,12 @@ std::vector<ParamEntry> EModel::getListOfParameters() const
 {
     std::vector<ParamEntry> res;
 
-    for (size_t i = 0; i < initParamName.size(); i++) {
+    for (std::size_t i = 0; i < initParamName.size(); i++) {
 	    ParamEntry entry = std::make_tuple(initParamName[i],initParamType[i]);
         res.push_back(entry);
     }
 
-    for (size_t i = 0; i<solutionParamName.size(); i++) {
+    for (std::size_t i = 0; i<solutionParamName.size(); i++) {
         ParamEntry entry = std::make_tuple(solutionParamName[i],solutionParamType[i]);
         res.push_back(entry);
     }
@@ -263,17 +264,17 @@ template <typename T>
 void EModel::updateActiveFilter(const std::vector<T>& paramVect, const std::string& opperator, T value)
 {
     if ((opperator == "eq") || (opperator == "==")){
-       for (size_t i = 0; i < paramVect.size(); i++)
+       for (std::size_t i = 0; i < paramVect.size(); i++)
             if ((ActFilter[i]) && (paramVect[i] != value))
                 ActFilter[i] = false;
 
     } else if ((opperator=="lt") || (opperator=="<")) {
-        for (size_t i = 0; i < paramVect.size(); i++)
+        for (std::size_t i = 0; i < paramVect.size(); i++)
             if ((ActFilter[i]) && (paramVect[i] >= value))
                 ActFilter[i] = false;
 
     } else if ((opperator == "gt") || (opperator == ">")){
-        for (size_t i = 0; i < paramVect.size(); i++)
+        for (std::size_t i = 0; i < paramVect.size(); i++)
             if ((ActFilter[i]) && (paramVect[i] <= value))
                 ActFilter[i] = false;
 
@@ -290,7 +291,7 @@ template <typename T>
 void EModel::updateActiveFilter(const std::vector<T>& paramVect, const std::string& opperator, T value1, T value2)
 {
     if ((opperator == "in") || (opperator == "between")) {
-        for (size_t i = 0; i < paramVect.size(); i++)
+        for (std::size_t i = 0; i < paramVect.size(); i++)
             if ((ActFilter[i]) && ((paramVect[i] <= value1) || (paramVect[i] >= value2)))
                 ActFilter[i] = false;
 
@@ -385,7 +386,7 @@ void EModel::addHCvolFilter()
     auto depth = initfile.get<float>("DEPTH");
     activeFilter = true;
 
-    for (size_t n = 0; n < eqlnum.size();n++){
+    for (std::size_t n = 0; n < eqlnum.size();n++){
         int eql = eqlnum[n];
         float fwl = FreeWaterlevel[eql-1];
 
@@ -402,7 +403,7 @@ const std::vector<float>& EModel::getParam<float>(const std::string& name)
         std::vector<float> param = get_filter_param<float>(name);
         filteredFloatVect.clear();
 
-        for (size_t i = 0; i < param.size(); i++)
+        for (std::size_t i = 0; i < param.size(); i++)
             if (ActFilter[i])
                 filteredFloatVect.push_back(param[i]);
 
@@ -422,7 +423,7 @@ const std::vector<int>& EModel::getParam<int>(const std::string& name)
         std::vector<int> param = get_filter_param<int>(name);
         filteredIntVect.clear();
 
-        for (size_t i = 0; i < param.size(); i++)
+        for (std::size_t i = 0; i < param.size(); i++)
             if (ActFilter[i])
                 filteredIntVect.push_back(param[i]);
 

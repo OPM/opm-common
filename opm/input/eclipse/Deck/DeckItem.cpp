@@ -17,16 +17,20 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <opm/input/eclipse/Deck/DeckOutput.hpp>
 #include <opm/input/eclipse/Deck/DeckItem.hpp>
-#include <opm/input/eclipse/Units/Dimension.hpp>
+
 #include <opm/common/utility/String.hpp>
+
+#include <opm/input/eclipse/Deck/DeckOutput.hpp>
+
+#include <opm/input/eclipse/Units/Dimension.hpp>
 
 #include <algorithm>
 #include <cmath>
+#include <cstddef>
 #include <ostream>
-#include <string>
 #include <stdexcept>
+#include <string>
 
 namespace Opm {
 
@@ -150,7 +154,7 @@ const std::string& DeckItem::name() const {
     return this->item_name;
 }
 
-bool DeckItem::defaultApplied( size_t index ) const {
+bool DeckItem::defaultApplied( std::size_t index ) const {
     return value::defaulted( this->value_status.at(index));
 }
 
@@ -158,20 +162,20 @@ const std::vector<value::status>& DeckItem::getValueStatus() const {
     return this->value_status;
 }
 
-bool DeckItem::hasValue( size_t index ) const {
+bool DeckItem::hasValue( std::size_t index ) const {
     if (index >= this->value_status.size())
         return false;
 
     return value::has_value( this->value_status[index] );
 }
 
-size_t DeckItem::data_size() const {
+std::size_t DeckItem::data_size() const {
     return this->value_status.size();
 }
 
 
 template< typename T >
-T DeckItem::get( size_t index ) const {
+T DeckItem::get( std::size_t index ) const {
     if (index >= this->value_status.size())
         throw std::out_of_range("Invalid index");
 
@@ -182,7 +186,7 @@ T DeckItem::get( size_t index ) const {
 }
 
 template<>
-UDAValue DeckItem::get( size_t index ) const {
+UDAValue DeckItem::get( std::size_t index ) const {
     auto value = this->value_ref<UDAValue>().at(index);
     if (this->active_dimensions.empty())
         return value;
@@ -256,26 +260,26 @@ void DeckItem::push_back( UDAValue x ) {
 }
 
 template< typename T >
-void DeckItem::push( T x, size_t n ) {
+void DeckItem::push( T x, std::size_t n ) {
     auto& val = this->value_ref< T >();
 
     val.insert( val.end(), n, x );
     this->value_status.insert( this->value_status.end(), n, value::status::deck_value );
 }
 
-void DeckItem::push_back( int x, size_t n ) {
+void DeckItem::push_back( int x, std::size_t n ) {
     this->push( x, n );
 }
 
-void DeckItem::push_back( double x, size_t n ) {
+void DeckItem::push_back( double x, std::size_t n ) {
     this->push( x, n );
 }
 
-void DeckItem::push_back( std::string x, size_t n ) {
+void DeckItem::push_back( std::string x, std::size_t n ) {
     this->push( std::move( x ), n );
 }
 
-void DeckItem::push_back( UDAValue x, size_t n ) {
+void DeckItem::push_back( UDAValue x, std::size_t n ) {
     this->push( std::move( x ), n );
 }
 
@@ -318,11 +322,11 @@ void DeckItem::push_backDummyDefault( std::size_t n ) {
     this->value_status.insert( this->value_status.end(), n, value::status::empty_default );
 }
 
-std::string DeckItem::getTrimmedString( size_t index ) const {
+std::string DeckItem::getTrimmedString( std::size_t index ) const {
     return trim_copy(this->value_ref< std::string >().at(index));
 }
 
-double DeckItem::getSIDouble( size_t index ) const {
+double DeckItem::getSIDouble( std::size_t index ) const {
     return this->getSIDoubleData().at( index );
 }
 
@@ -333,7 +337,7 @@ const std::vector<double>& DeckItem::getData() const {
         return data;
 
     const auto dim_size = this->active_dimensions.size();
-    for( size_t index = 0; index < data.size(); index++ ) {
+    for( std::size_t index = 0; index < data.size(); index++ ) {
         const auto dimIndex = index % dim_size;
         if (value::defaulted(this->value_status[index])) {
             const auto& dim = this->default_dimensions[dimIndex];
@@ -389,7 +393,7 @@ type_tag DeckItem::getType() const {
 
 template< typename T >
 void DeckItem::write_vector(DeckOutput& stream, const std::vector<T>& data) const {
-    for (size_t index = 0; index < this->data_size(); index++) {
+    for (std::size_t index = 0; index < this->data_size(); index++) {
         if (this->defaultApplied(index))
             stream.stash_default( );
         else
@@ -475,7 +479,7 @@ bool DeckItem::equal(const DeckItem& other, bool cmp_default, bool cmp_numeric) 
             constexpr double abs_eps = 1e-4;
             const auto& this_data = this->getData<double>();
             const auto& other_data = other.getData<double>();
-            for (size_t i=0; i < this_data.size(); i++) {
+            for (std::size_t i=0; i < this_data.size(); i++) {
                 if (!double_equal( this_data[i] , other_data[i], rel_eps, abs_eps))
                     return false;
             }
@@ -553,10 +557,10 @@ void DeckItem::reserve_additionalRawString(std::size_t n)
  * updated with changes in DeckItem so that code is emitted.
  */
 
-template int DeckItem::get< int >( size_t ) const;
-template double DeckItem::get< double >( size_t ) const;
-template std::string DeckItem::get< std::string >( size_t ) const;
-template RawString DeckItem::get< RawString >( size_t ) const;
+template int DeckItem::get< int >( std::size_t ) const;
+template double DeckItem::get< double >( std::size_t ) const;
+template std::string DeckItem::get< std::string >( std::size_t ) const;
+template RawString DeckItem::get< RawString >( std::size_t ) const;
 
 template void DeckItem::push_backDummyDefault<int>( std::size_t );
 template void DeckItem::push_backDummyDefault<double>( std::size_t );

@@ -20,6 +20,7 @@
 #ifndef OPM_CHECK_DECK_HPP
 #define OPM_CHECK_DECK_HPP
 
+#include <cstddef>
 #include <memory>
 
 namespace Opm {
@@ -42,7 +43,7 @@ enum DeckChecks {
 
 // some semantical correctness checks of the deck. this method adds a warning to
 // the deck object if any issue is found ...
-bool checkDeck( const Deck& deck, const Parser& parser, const ParseContext& parseContext, ErrorGuard& errorGuard, size_t enabledChecks  = AllChecks);
+bool checkDeck( const Deck& deck, const Parser& parser, const ParseContext& parseContext, ErrorGuard& errorGuard, std::size_t enabledChecks  = AllChecks);
 
 }
 

@@ -20,14 +20,17 @@
 #ifndef DECKITEM_HPP
 #define DECKITEM_HPP
 
-#include <opm/input/eclipse/Units/Dimension.hpp>
-#include <opm/input/eclipse/Utility/Typetools.hpp>
 #include <opm/input/eclipse/Deck/UDAValue.hpp>
 #include <opm/input/eclipse/Deck/value_status.hpp>
 
+#include <opm/input/eclipse/Utility/Typetools.hpp>
+
+#include <opm/input/eclipse/Units/Dimension.hpp>
+
+#include <cstddef>
+#include <iosfwd>
 #include <string>
 #include <vector>
-#include <iosfwd>
 
 namespace Opm {
     class DeckOutput;
@@ -50,12 +53,12 @@ namespace Opm {
         const std::string& name() const;
 
         // return true if the default value was used for a given data point
-        bool defaultApplied( size_t ) const;
+        bool defaultApplied( std::size_t ) const;
 
         // Return true if the item has a value for the current index;
         // does not differentiate between default values from the
         // config and values which have been set in the deck.
-        bool hasValue( size_t ) const;
+        bool hasValue( std::size_t ) const;
 
         // if the number returned by this method is less than what is semantically
         // expected (e.g. size() is less than the number of cells in the grid for
@@ -63,14 +66,13 @@ namespace Opm {
         // creates the defaulted items if all their sizes are fully specified by the
         // keyword, though...
 
-        size_t data_size() const;
+        std::size_t data_size() const;
 
         template<typename T>
-        T get( size_t index ) const;
+        T get( std::size_t index ) const;
 
-
-        double getSIDouble( size_t ) const;
-        std::string getTrimmedString( size_t ) const;
+        double getSIDouble( std::size_t ) const;
+        std::string getTrimmedString( std::size_t ) const;
 
         template <typename T> std::vector<T>& getData();
         template <typename T> const std::vector<T>& getData() const;
@@ -85,16 +87,15 @@ namespace Opm {
         template< typename T>
         void shrink_to_fit();
 
-
         void push_back( UDAValue );
         void push_back( int );
         void push_back( double );
         void push_back( std::string );
         void push_back( RawString );
-        void push_back( UDAValue, size_t );
-        void push_back( int, size_t );
-        void push_back( double, size_t );
-        void push_back( std::string, size_t );
+        void push_back( UDAValue, std::size_t );
+        void push_back( int, std::size_t );
+        void push_back( double, std::size_t );
+        void push_back( std::string, std::size_t );
         void push_backDefault( UDAValue, std::size_t n = 1 );
         void push_backDefault( int, std::size_t n = 1 );
         void push_backDefault( double, std::size_t n = 1 );
@@ -109,7 +110,6 @@ namespace Opm {
 
         void write(DeckOutput& writer) const;
         friend std::ostream& operator<<(std::ostream& os, const DeckItem& item);
-
 
         /*
           The comparison can be adjusted with the cmp_default and
@@ -180,7 +180,7 @@ namespace Opm {
         template< typename T > std::vector< T >& value_ref();
         template< typename T > const std::vector< T >& value_ref() const;
         template< typename T > void push( T );
-        template< typename T > void push( T, size_t );
+        template< typename T > void push( T, std::size_t );
         template< typename T > void push_default( T, std::size_t n );
         template< typename T > void write_vector(DeckOutput& writer, const std::vector<T>& data) const;
     };

@@ -21,6 +21,7 @@
 #include <opm/common/ErrorMacros.hpp>
 
 #include <algorithm>
+#include <cstddef>
 #include <cstring>
 #include <iterator>
 #include <string>
@@ -39,7 +40,7 @@ ERft::ERft(const std::string &filename) : EclFile(filename)
 
     auto listOfArrays = getList();
 
-    for (size_t i = 0; i < listOfArrays.size(); i++) {
+    for (std::size_t i = 0; i < listOfArrays.size(); i++) {
         std::string name = std::get<0>(listOfArrays[i]);
 
         if (name == "TIME") {
@@ -62,7 +63,7 @@ ERft::ERft(const std::string &filename) : EclFile(filename)
         }
     }
 
-    for (size_t i = 0; i < first.size(); i++) {
+    for (std::size_t i = 0; i < first.size(); i++) {
         std::tuple<int,int> range;
         if (i == first.size() - 1) {
             range = std::make_tuple(first[i], listOfArrays.size());
@@ -75,7 +76,7 @@ ERft::ERft(const std::string &filename) : EclFile(filename)
 
     numReports = first.size();
 
-    for (size_t i = 0; i < wellName.size(); i++) {
+    for (std::size_t i = 0; i < wellName.size(); i++) {
         std::tuple<std::string, RftDate> wellDateTuple = std::make_tuple(wellName[i], dates[i]);
         std::tuple<std::string, RftDate, float> wellDateTimeTuple = std::make_tuple(wellName[i], dates[i], timeList[i]);
         reportIndices[wellDateTuple] = i;

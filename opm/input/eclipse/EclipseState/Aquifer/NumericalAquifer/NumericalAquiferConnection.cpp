@@ -13,31 +13,34 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
-#include <opm/input/eclipse/Parser/ParserKeywords/A.hpp>
-
 #include <opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquiferConnection.hpp>
-
-#include <opm/input/eclipse/Deck/Deck.hpp>
-#include <opm/input/eclipse/Deck/DeckRecord.hpp>
-#include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
-#include <opm/common/utility/OpmInputError.hpp>
-#include <opm/common/OpmLog/OpmLog.hpp>
-#include <fmt/format.h>
 
 #include "../AquiferHelpers.hpp"
 
+#include <opm/common/OpmLog/OpmLog.hpp>
+#include <opm/common/utility/OpmInputError.hpp>
+
+#include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+
+#include <opm/input/eclipse/Deck/Deck.hpp>
+#include <opm/input/eclipse/Deck/DeckRecord.hpp>
+
+#include <opm/input/eclipse/Parser/ParserKeywords/A.hpp>
+
+#include <cstddef>
 #include <string>
+
+#include <fmt/format.h>
 
 namespace Opm {
 
-    std::map<size_t, std::map<size_t, NumericalAquiferConnection>>
+    std::map<std::size_t, std::map<std::size_t, NumericalAquiferConnection>>
     NumericalAquiferConnection::generateConnections(const Deck &deck, const EclipseGrid &grid)
     {
         using AQUCON=ParserKeywords::AQUCON;
         if ( !deck.hasKeyword<AQUCON>() ) return {};
 
-        std::map<size_t, std::map<size_t, NumericalAquiferConnection>> connections;
+        std::map<std::size_t, std::map<std::size_t, NumericalAquiferConnection>> connections;
 
         const auto& aqucon_keywords = deck.getKeywordList<AQUCON>();
         for (const auto& keyword : aqucon_keywords) {
@@ -45,8 +48,8 @@ namespace Opm {
             for (const auto& record : *keyword) {
                 const auto cons_from_record = NumericalAquiferConnection::connectionsFromSingleRecord(grid, record);
                 for (auto con : cons_from_record) {
-                    const size_t aqu_id = con.aquifer_id;
-                    const size_t global_index = con.global_index;
+                    const std::size_t aqu_id = con.aquifer_id;
+                    const std::size_t global_index = con.global_index;
                     auto& aqu_cons = connections[aqu_id];
                     if (aqu_cons.find(global_index) == aqu_cons.end()) {
                         aqu_cons.insert({global_index, con});
@@ -64,8 +67,8 @@ namespace Opm {
 
     // TODO: we should not need all following the information here
     using AQUCON = ParserKeywords::AQUCON;
-    NumericalAquiferConnection::NumericalAquiferConnection(const size_t i, const size_t j, const size_t k,
-                                                           const size_t global_index_in, const bool allow_connection_active, const DeckRecord& record)
+    NumericalAquiferConnection::NumericalAquiferConnection(const std::size_t i, const std::size_t j, const std::size_t k,
+                                                           const std::size_t global_index_in, const bool allow_connection_active, const DeckRecord& record)
     : aquifer_id(record.getItem<AQUCON::ID>().get<int>(0))
     , I(i)
     , J(j)
@@ -85,19 +88,19 @@ namespace Opm {
     connectionsFromSingleRecord(const EclipseGrid& grid, const DeckRecord& record) {
         std::vector<NumericalAquiferConnection> cons;
 
-        const size_t i1 = record.getItem<AQUCON::I1>().get<int>(0) - 1;
-        const size_t j1 = record.getItem<AQUCON::J1>().get<int>(0) - 1;
-        const size_t k1 = record.getItem<AQUCON::K1>().get<int>(0) - 1;
-        const size_t i2 = record.getItem<AQUCON::I2>().get<int>(0) - 1;
-        const size_t j2 = record.getItem<AQUCON::J2>().get<int>(0) - 1;
-        const size_t k2 = record.getItem<AQUCON::K2>().get<int>(0) - 1;
+        const std::size_t i1 = record.getItem<AQUCON::I1>().get<int>(0) - 1;
+        const std::size_t j1 = record.getItem<AQUCON::J1>().get<int>(0) - 1;
+        const std::size_t k1 = record.getItem<AQUCON::K1>().get<int>(0) - 1;
+        const std::size_t i2 = record.getItem<AQUCON::I2>().get<int>(0) - 1;
+        const std::size_t j2 = record.getItem<AQUCON::J2>().get<int>(0) - 1;
+        const std::size_t k2 = record.getItem<AQUCON::K2>().get<int>(0) - 1;
 
         const bool allow_internal_cells = DeckItem::to_bool( record.getItem<AQUCON::ALLOW_INTERNAL_CELLS>().getTrimmedString(0) );
 
-        for (size_t k = k1; k <= k2; ++k) {
-            for (size_t j = j1; j <=j2; ++j) {
-                for (size_t i = i1; i <= i2; ++i) {
-                    const size_t global_index = grid.getGlobalIndex(i, j, k);
+        for (std::size_t k = k1; k <= k2; ++k) {
+            for (std::size_t j = j1; j <=j2; ++j) {
+                for (std::size_t i = i1; i <= i2; ++i) {
+                    const std::size_t global_index = grid.getGlobalIndex(i, j, k);
                     cons.emplace_back(i, j, k, global_index, allow_internal_cells, record);
                 }
             }

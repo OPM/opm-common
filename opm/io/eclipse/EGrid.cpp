@@ -24,6 +24,8 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstddef>
+#include <cstdint>
 #include <cstring>
 #include <filesystem>
 #include <fstream>
@@ -174,7 +176,7 @@ EGrid::EGrid(const std::string& filename, const std::string& grid_name)
     if (actnum_array_index != -1) {
         auto actnum = this->get<int>(actnum_array_index);
         nactive = 0;
-        for (size_t i = 0; i < actnum.size(); ++i) {
+        for (std::size_t i = 0; i < actnum.size(); ++i) {
             if (actnum[i] > 0) {
                 act_index.push_back(nactive);
                 glob_index.push_back(i);
@@ -229,7 +231,7 @@ std::vector<NNCentry> EGrid::get_nnc_ijk()
     std::vector<NNCentry> res_vect;
     res_vect.reserve(nnc1_array.size());
 
-    for (size_t n=0; n< nnc1_array.size(); n++){
+    for (std::size_t n=0; n< nnc1_array.size(); n++){
         auto ijk1 = ijk_from_global_index(nnc1_array[n] - 1);
         auto ijk2 = ijk_from_global_index(nnc2_array[n] - 1);
 
@@ -477,7 +479,7 @@ std::vector<std::array<float, 3>> EGrid::getXYZ_layer(int layer, const std::arra
         coord_array = getImpl(coord_array_index, REAL, real_array, "float");
 
     if (zcorn_array.size() > 0){
-        for (size_t n = 0; n < static_cast<size_t>(nodes_pr_surf); n++)
+        for (std::size_t n = 0; n < static_cast<std::size_t>(nodes_pr_surf); n++)
             layer_zcorn.push_back(zcorn_array[zcorn_offset + n]);
 
     } else {
@@ -499,7 +501,7 @@ std::vector<std::array<float, 3>> EGrid::getXYZ_layer(int layer, const std::arra
 
             this->getCellCorners(ijk, layer_zcorn, X, Y, Z );
 
-            for (size_t n = 0; n < 4; n++){
+            for (std::size_t n = 0; n < 4; n++){
                 std::array<float, 3> xyz;
                 xyz[0] = X[n];
                 xyz[1] = Y[n];
@@ -542,10 +544,10 @@ std::vector<float> EGrid::  get_zcorn_from_disk(int layer, bool bottom)
 
     std::string arrName(8,' ');
     eclArrType arrType;
-    int64_t num;
+    std::int64_t num;
     int sizeOfElement;
 
-    uint64_t zcorn_pos = 0;
+    std::uint64_t zcorn_pos = 0;
 
     while (!isEOF(&fileH)) {
 
@@ -556,7 +558,7 @@ std::vector<float> EGrid::  get_zcorn_from_disk(int layer, bool bottom)
             break;
         }
 
-        uint64_t sizeOfNextArray = sizeOnDiskBinary(num, arrType, sizeOfElement);
+        std::uint64_t sizeOfNextArray = sizeOnDiskBinary(num, arrType, sizeOfElement);
         fileH.seekg(static_cast<std::streamoff>(sizeOfNextArray), std::ios_base::cur);
     }
 
@@ -564,28 +566,28 @@ std::vector<float> EGrid::  get_zcorn_from_disk(int layer, bool bottom)
     int num_blocks_start = zcorn_offset / elements_pr_block;
 
     // adding size of zcorn real data before to ignored
-    uint64_t start_pos = zcorn_pos + Opm::EclIO::sizeOfReal * zcorn_offset;
+    std::uint64_t start_pos = zcorn_pos + Opm::EclIO::sizeOfReal * zcorn_offset;
 
     // adding size of blocks (head and tail flags)
     start_pos = start_pos + (1 + num_blocks_start * 2) * Opm::EclIO::sizeOfInte;
 
     fileH.seekg(start_pos, std::ios_base::beg);
 
-    uint64_t zcorn_to = zcorn_offset + nodes_pr_surf;
+    std::uint64_t zcorn_to = zcorn_offset + nodes_pr_surf;
 
     int i1 = zcorn_offset / 1000 + 1;
-    uint64_t elemets = static_cast<uint64_t>(i1 * elements_pr_block - zcorn_offset);
+    std::uint64_t elemets = static_cast<std::uint64_t>(i1 * elements_pr_block - zcorn_offset);
 
-    uint64_t next_block = elemets < zcorn_to ? elemets : zcorn_to - zcorn_offset + 1 ;
+    std::uint64_t next_block = elemets < zcorn_to ? elemets : zcorn_to - zcorn_offset + 1 ;
 
-    uint64_t p1 = zcorn_offset;
+    std::uint64_t p1 = zcorn_offset;
 
     while (p1 < zcorn_to){
 
         std::vector<float> buf(next_block);
         fileH.read(reinterpret_cast<char*>(buf.data()), buf.size()*sizeof(float));
 
-        for (size_t n = 0; n < next_block; n++)
+        for (std::size_t n = 0; n < next_block; n++)
             zcorn_layer.push_back(Opm::EclIO::flipEndianFloat(buf[n]));
 
         p1 = p1 + next_block;
@@ -596,7 +598,7 @@ std::vector<float> EGrid::  get_zcorn_from_disk(int layer, bool bottom)
             fileH.read(reinterpret_cast<char*>(&dtail), sizeof(dtail));
             dtail = Opm::EclIO::flipEndianInt(dtail);
 
-            next_block = static_cast<uint64_t>(dtail) / static_cast<uint64_t>(Opm::EclIO::sizeOfReal);
+            next_block = static_cast<std::uint64_t>(dtail) / static_cast<std::uint64_t>(Opm::EclIO::sizeOfReal);
 
             if ((p1 + next_block) > zcorn_to)
                 next_block = zcorn_to - p1;

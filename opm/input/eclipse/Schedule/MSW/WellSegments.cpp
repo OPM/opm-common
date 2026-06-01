@@ -158,7 +158,7 @@ namespace Opm {
         return m_comp_pressure_drop;
     }
 
-    const Segment& WellSegments::operator[](size_t idx) const {
+    const Segment& WellSegments::operator[](std::size_t idx) const {
         return m_segments[idx];
     }
 
@@ -300,7 +300,7 @@ namespace Opm {
 
         // Read all the information out from the DECK first then process to
         // get all the requisite information.
-        for (size_t recordIndex = 1; recordIndex < welsegsKeyword.size(); ++recordIndex) {
+        for (std::size_t recordIndex = 1; recordIndex < welsegsKeyword.size(); ++recordIndex) {
             const auto& record = welsegsKeyword.getRecord(recordIndex);
             const int segment1 = record.getItem("SEGMENT1").get<int>(0);
             const int segment2 = record.getItem("SEGMENT2").get<int>(0);

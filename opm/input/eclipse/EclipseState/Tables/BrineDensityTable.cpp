@@ -17,11 +17,13 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <vector>
+#include <opm/input/eclipse/EclipseState/Tables/BrineDensityTable.hpp>
+
 #include <opm/input/eclipse/Deck/DeckItem.hpp>
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/BrineDensityTable.hpp>
+
+#include <vector>
 
 namespace Opm {
         BrineDensityTable BrineDensityTable::serializationTestObject()

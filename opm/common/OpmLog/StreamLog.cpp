@@ -16,13 +16,15 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <stdexcept>
+
 #include <opm/common/OpmLog/StreamLog.hpp>
+
+#include <cstdint>
+#include <stdexcept>
 
 namespace Opm {
 
-
-StreamLog::StreamLog(const std::string& logFile , int64_t messageMask, bool append) : LogBackend(messageMask)
+StreamLog::StreamLog(const std::string& logFile , std::int64_t messageMask, bool append) : LogBackend(messageMask)
 {
     if (append) {
         m_ofstream.open( logFile.c_str() ,  std::ofstream::app );
@@ -36,13 +38,11 @@ StreamLog::StreamLog(const std::string& logFile , int64_t messageMask, bool appe
     m_ostream = &m_ofstream;
 }
 
-
-StreamLog::StreamLog(std::ostream& os , int64_t messageMask) : LogBackend(messageMask)
+StreamLog::StreamLog(std::ostream& os , std::int64_t messageMask) : LogBackend(messageMask)
 {
     m_ostream = &os;
     m_streamOwner = false;
 }
-
 
 void StreamLog::close() {
     if (m_streamOwner && m_ofstream.is_open()) {
@@ -51,14 +51,13 @@ void StreamLog::close() {
     }
 }
 
-void StreamLog::addMessageUnconditionally(int64_t messageType, const std::string& message)
+void StreamLog::addMessageUnconditionally(std::int64_t messageType, const std::string& message)
 {
     (*m_ostream) << formatMessage(messageType, message) << std::endl;
     if (m_ofstream.is_open()) {
         m_ofstream.flush();
     }
 }
-
 
 StreamLog::~StreamLog() {
     close();

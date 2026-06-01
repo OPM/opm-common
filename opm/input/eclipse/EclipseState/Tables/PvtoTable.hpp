@@ -38,7 +38,7 @@ namespace Opm {
         };
 
         PvtoTable() = default;
-        PvtoTable(const DeckKeyword& keyword, size_t tableIdx);
+        PvtoTable(const DeckKeyword& keyword, std::size_t tableIdx);
 
         static PvtoTable serializationTestObject();
 

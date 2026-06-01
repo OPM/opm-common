@@ -19,21 +19,22 @@
 #ifndef OPM_IO_ExtESmry_HPP
 #define OPM_IO_ExtESmry_HPP
 
+#include <opm/common/utility/TimeService.hpp>
+
 #include <chrono>
+#include <cstddef>
+#include <cstdint>
 #include <filesystem>
+#include <map>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
-#include <map>
-#include <stdint.h>
-
-#include <opm/common/utility/TimeService.hpp>
 
 namespace Opm { namespace EclIO {
 
-using ArrSourceEntry = std::tuple<std::string, std::string, int, uint64_t>;
-using TimeStepEntry = std::tuple<int, int, uint64_t>;
+using ArrSourceEntry = std::tuple<std::string, std::string, int, std::uint64_t>;
+using TimeStepEntry = std::tuple<int, int, std::uint64_t>;
 using RstEntry = std::tuple<std::string, int>;
 
 // start, rstart + rstnum, keycheck, units, rstep, tstep
@@ -59,8 +60,8 @@ public:
 
     bool hasKey(const std::string& key) const;
 
-    size_t numberOfTimeSteps() const { return m_nTstep; }
-    size_t numberOfVectors() const { return m_nVect; }
+    std::size_t numberOfTimeSteps() const { return m_nTstep; }
+    std::size_t numberOfVectors() const { return m_nVect; }
 
     const std::vector<std::string>& keywordList() const { return m_keyword;}
     std::vector<std::string> keywordList(const std::string& pattern) const;
@@ -88,12 +89,12 @@ private:
     std::vector<bool> m_vectorLoaded;
     std::unordered_map<std::string, std::string> kwunits;
 
-    size_t m_nVect;
-    std::vector<size_t> m_nTstep_v;
-    size_t m_nTstep;
+    std::size_t m_nVect;
+    std::vector<std::size_t> m_nTstep_v;
+    std::size_t m_nTstep;
     std::vector<int> m_seqIndex;
 
-    std::vector<uint64_t> m_rstep_offset;
+    std::vector<std::uint64_t> m_rstep_offset;
 
     time_point m_startdat;
     std::vector<int> m_start_vect;
@@ -101,7 +102,7 @@ private:
     double m_io_opening;
     double m_io_loading;
 
-    bool open_esmry(const std::filesystem::path& inputFileName, ExtSmryHeadType& ext_smry_head, uint64_t& rstep_offset);
+    bool open_esmry(const std::filesystem::path& inputFileName, ExtSmryHeadType& ext_smry_head, std::uint64_t& rstep_offset);
 
     bool load_esmry(const std::vector<std::string>& stringVect, const std::vector<int>& keyIndexVect,
                                const std::vector<int>& loadKeyIndex, int ind, int to_ind );
@@ -110,6 +111,5 @@ private:
 };
 
 }} // namespace Opm::EclIO
-
 
 #endif // OPM_IO_ExtESmry_HPP

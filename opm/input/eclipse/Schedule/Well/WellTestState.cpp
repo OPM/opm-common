@@ -129,7 +129,7 @@ namespace Opm {
     }
 
 
-    size_t WellTestState::num_closed_wells() const
+    std::size_t WellTestState::num_closed_wells() const
     {
         return std::ranges::count_if(this->wells,
                                      [](const auto& well_pair)
@@ -210,7 +210,7 @@ namespace Opm {
         return true;
     }
 
-    size_t WellTestState::num_closed_completions() const {
+    std::size_t WellTestState::num_closed_completions() const {
         std::size_t count = 0;
         for (const auto& [_, comp_map] : this->completions) {
             (void)_;

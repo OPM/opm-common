@@ -22,6 +22,7 @@
 
 #include <opm/input/eclipse/Deck/UDAValue.hpp>
 
+#include <cstddef>
 #include <map>
 #include <optional>
 #include <string>
@@ -134,7 +135,7 @@ public:
         serializer(m_groups);
     }
     static GroupEconProductionLimits serializationTestObject();
-    size_t size() const;
+    std::size_t size() const;
 
 private:
     std::map<std::string, GEconGroup> m_groups;

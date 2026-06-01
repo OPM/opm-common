@@ -1,10 +1,13 @@
 #ifndef GEOMETRYUTIL_H
 #define GEOMETRYUTIL_H
 
-#include <vector>
 #include <opm/common/utility/numeric/VectorUtil.hpp>
-#include <numeric>
+
 #include <cmath>
+#include <cstddef>
+#include <numeric>
+#include <vector>
+
 namespace GeometryUtil {
 
 constexpr double epslon = 1e-6;
@@ -59,7 +62,7 @@ T calcHexaVol(const std::array<T,8>& x, const std::array<T,8>& y, const std::arr
     // the hexadron is subdivided in terahedrons.
     // calculating the volume of the pyramid with F0 as base and pc as center
     T totalVolume = 0.0;
-    for (size_t i = 0; i < faceConfigurations.size(); i += 2) {
+    for (std::size_t i = 0; i < faceConfigurations.size(); i += 2) {
         auto [fX0, fY0, fZ0] = getNodes(x, y, z, faceConfigurations[i]);
         totalVolume += std::apply(calcTetraVol<T>, VectorUtil::appendNode<double>(fX0, fY0, fZ0, cx, cy, cz));
 
@@ -90,7 +93,7 @@ std::vector<int> isInsideElement(const std::vector<T>& tpX, const std::vector<T>
         pcY = std::accumulate(Y[outerIndex].begin(), Y[outerIndex].end(), 0.0)/8;
         pcZ = std::accumulate(Z[outerIndex].begin(), Z[outerIndex].end(), 0.0)/8;
         element_volume = calcHexaVol(X[outerIndex],Y[outerIndex],Z[outerIndex], pcX, pcY,pcZ);
-        for (size_t innerIndex  = 0; innerIndex < tpX.size(); innerIndex++){
+        for (std::size_t innerIndex  = 0; innerIndex < tpX.size(); innerIndex++){
             // check if center of refined volume is outside the boundary box of a coarse volume.
             // Only computes volumed base test is this condition is met.
             flag  = (minX < tpX[innerIndex]) && (maxX > tpX[innerIndex]) &&

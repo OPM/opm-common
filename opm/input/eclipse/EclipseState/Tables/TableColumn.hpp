@@ -17,15 +17,15 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 #ifndef OPM_TABLE_COLUMN_HPP
 #define OPM_TABLE_COLUMN_HPP
 
-#include <string>
-#include <vector>
-
 #include <opm/input/eclipse/EclipseState/Tables/ColumnSchema.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableIndex.hpp>
+
+#include <cstddef>
+#include <string>
+#include <vector>
 
 namespace Opm {
 
@@ -38,15 +38,15 @@ namespace Opm {
 
         static TableColumn serializationTestObject();
 
-        size_t size( ) const;
+        std::size_t size( ) const;
         const std::string& name() const;
-        void assertOrder(double value1 , double value2, size_t index,
+        void assertOrder(double value1 , double value2, std::size_t index,
                          const std::string& tableName) const;
         void addValue(double, const std::string& tableName);
         void addDefault(const std::string& tableName);
-        void updateValue(size_t index, double value, const std::string& tableName);
-        double operator[](size_t index) const;
-        bool defaultApplied(size_t index) const;
+        void updateValue(std::size_t index, double value, const std::string& tableName);
+        double operator[](std::size_t index) const;
+        bool defaultApplied(std::size_t index) const;
         bool hasDefault( ) const;
         double front() const;
         double back() const;
@@ -83,19 +83,17 @@ namespace Opm {
         }
 
     private:
-        void assertUpdate(const std::string& tableName, size_t index, double value) const;
-        void assertPrevious(const std::string& tableName, size_t index , double value) const;
-        void assertNext(const std::string& tableName, size_t index , double value) const;
+        void assertUpdate(const std::string& tableName, std::size_t index, double value) const;
+        void assertPrevious(const std::string& tableName, std::size_t index , double value) const;
+        void assertNext(const std::string& tableName, std::size_t index , double value) const;
 
         ColumnSchema m_schema;
         std::string m_name;
         std::vector<double> m_values;
         std::vector<bool> m_default;
-        size_t m_defaultCount;
+        std::size_t m_defaultCount;
     };
 
-
 }
-
 
 #endif
