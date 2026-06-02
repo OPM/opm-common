@@ -394,42 +394,36 @@ BOOST_AUTO_TEST_CASE(CompositionalParsingTest) {
     {
         const auto& cp0 = comp_config.criticalPressure(0);
         BOOST_CHECK_EQUAL(num_comps, cp0.size());
-        const std::vector<double> ref_cp0 = {usys.to_si(M::pressure, 20), usys.to_si(M::pressure, 70),
-                                             usys.to_si(M::pressure, 40)};
+        const std::vector<double> ref_cp0 = {usys.to_si(M::pressure, 20), usys.to_si(M::pressure, 70), usys.to_si(M::pressure, 40)};
         check_vectors_close(ref_cp0, cp0, tolerance);
         const auto& cp1 = comp_config.criticalPressure(1);
         BOOST_CHECK_EQUAL(num_comps, cp1.size());
-        const std::vector<double> ref_cp1 = {usys.to_si(M::pressure, 21), usys.to_si(M::pressure, 71),
-                                             usys.to_si(M::pressure, 41)};
+        const std::vector<double> ref_cp1 = {usys.to_si(M::pressure, 21), usys.to_si(M::pressure, 71), usys.to_si(M::pressure, 41)};
         check_vectors_close(ref_cp1, cp1, tolerance);
     }
 
     {
         const auto& ct0 = comp_config.criticalTemperature(0);
         BOOST_CHECK_EQUAL(num_comps, ct0.size());
-        const std::vector<double> ref_ct0 = {usys.to_si(M::temperature_absolute, 600),
-                                             usys.to_si(M::temperature_absolute, 300),
-                                             usys.to_si(M::temperature_absolute, 190)};
+        const std::vector<double> ref_ct0 = {usys.to_si(M::temperature_absolute, 600), usys.to_si(M::temperature_absolute, 300), usys.to_si(M::temperature_absolute, 190)};
         check_vectors_close(ref_ct0, ct0, tolerance);
         const auto& ct1 = comp_config.criticalTemperature(1);
-        const std::vector<double> ref_ct1 = {usys.to_si(M::temperature_absolute, 601),
-                                             usys.to_si(M::temperature_absolute, 301),
-                                             usys.to_si(M::temperature_absolute, 191)};
+        const std::vector<double> ref_ct1 = {usys.to_si(M::temperature_absolute, 601), usys.to_si(M::temperature_absolute, 301), usys.to_si(M::temperature_absolute, 191)};
         check_vectors_close(ref_ct1, ct1, tolerance);
     }
 
     {
         const auto& cv0 = comp_config.criticalVolume(0);
         BOOST_CHECK_EQUAL(num_comps, cv0.size());
-        const std::vector<double> ref_cv0{usys.to_si("GeometricVolume/Moles", 0.6),
-                                          usys.to_si("GeometricVolume/Moles", 0.1),
-                                          usys.to_si("GeometricVolume/Moles", 0.1)};
+        const std::vector<double> ref_cv0 { usys.to_si( "GeometricVolume/Moles", 0.6),
+                                            usys.to_si( "GeometricVolume/Moles", 0.1),
+                                            usys.to_si( "GeometricVolume/Moles", 0.1) };
         check_vectors_close(ref_cv0, cv0, tolerance);
         const auto& cv1 = comp_config.criticalVolume(1);
         BOOST_CHECK_EQUAL(num_comps, cv1.size());
-        const std::vector<double> ref_cv1{usys.to_si("GeometricVolume/Moles", 0.61),
-                                          usys.to_si("GeometricVolume/Moles", 0.11),
-                                          usys.to_si("GeometricVolume/Moles", 0.11)};
+        const std::vector<double> ref_cv1 { usys.to_si( "GeometricVolume/Moles", 0.61),
+                                            usys.to_si( "GeometricVolume/Moles", 0.11),
+                                            usys.to_si( "GeometricVolume/Moles", 0.11) };
         check_vectors_close(ref_cv1, cv1, tolerance);
     }
 
@@ -446,26 +440,26 @@ BOOST_AUTO_TEST_CASE(CompositionalParsingTest) {
         const auto& bic0 = comp_config.binaryInteractionCoefficient(0);
         constexpr std::size_t bic_size = num_comps * (num_comps - 1) / 2;
         BOOST_CHECK_EQUAL(bic_size, bic0.size());
-        const std::vector<double> ref_bic0{0, 1, 2};
+        const std::vector<double> ref_bic0 {0, 1, 2};
         check_vectors_close(ref_bic0, bic0, tolerance);
         const auto& bic1 = comp_config.binaryInteractionCoefficient(1);
         BOOST_CHECK_EQUAL(bic_size, bic1.size());
-        const std::vector<double> ref_bic1{1, 2, 3};
+        const std::vector<double> ref_bic1 {1, 2, 3};
         check_vectors_close(ref_bic1, bic1, tolerance);
     }
 
     {
         const auto& mw0 = comp_config.molecularWeights(0);
         BOOST_CHECK_EQUAL(num_comps, mw0.size());
-        const std::vector<double> ref_mw0{usys.to_si("Mass/Moles", 142.),
-                                          usys.to_si("Mass/Moles", 44.),
-                                          usys.to_si("Mass/Moles", 16)};
+        const std::vector<double> ref_mw0 { usys.to_si( "Mass/Moles", 142.),
+                                            usys.to_si( "Mass/Moles", 44.),
+                                            usys.to_si( "Mass/Moles", 16) };
         check_vectors_close(ref_mw0, mw0, tolerance);
         const auto& mw1 = comp_config.molecularWeights(1);
         BOOST_CHECK_EQUAL(num_comps, mw1.size());
-        const std::vector<double> ref_mw1{usys.to_si("Mass/Moles", 142.1),
-                                          usys.to_si("Mass/Moles", 44.1),
-                                          usys.to_si("Mass/Moles", 16.1)};
+        const std::vector<double> ref_mw1 { usys.to_si( "Mass/Moles", 142.1),
+                                            usys.to_si( "Mass/Moles", 44.1),
+                                            usys.to_si( "Mass/Moles", 16.1) };
         check_vectors_close(ref_mw1, mw1, tolerance);
     }
 
@@ -917,7 +911,10 @@ BOOST_AUTO_TEST_CASE(CompositionalParsingTestZMF) {
 }
 
 BOOST_AUTO_TEST_CASE(PRCORRKeywordTest) {
-    // Minimal deck: PR region should be promoted by PRCORR, SRK region should not.
+    // Minimal compositional deck used to verify the handling of the PRCORR
+    // keyword. There are two EOS regions: the first uses PR (and must be
+    // promoted to PRCORR by PRCORR), the second uses SRK (and must be left
+    // unchanged by PRCORR).
     const std::string deck_string = R"(
 RUNSPEC
 
