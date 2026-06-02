@@ -28,6 +28,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <tuple>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -78,6 +79,15 @@ public:
         /// Identifier associates a summary keyword and a block ID (linearised
         /// Cartesian cell index).
         using BlockValues = std::map<std::pair<std::string, int>, double>;
+
+        /// Collection of per-block quantities for cells inside a local grid
+        /// refinement (LB* summary vectors).
+        ///
+        /// Identifier is (summary keyword, grid level, level-local linearised
+        /// Cartesian cell index) — the same cell identity that data::Connection
+        /// carries as (lgr_grid, index) for LC* connection vectors.  Level 0 is
+        /// the global grid; levels 1.. are the LGRs.  Empty for runs without LGRs.
+        using LgrBlockValues = std::map<std::tuple<std::string, int, int>, double>;
 
         /// Collection of named inter-region flows (rates and cumulatives)
         ///
@@ -155,6 +165,14 @@ public:
         ///
         /// Selection configured by SummaryConfig object.
         VolumeInPlace inplace{};
+
+        /// LGR block (cell) level dynamic state values (LB* vectors).
+        ///
+        /// Empty/nullptr for runs without LGRs.  Appended at the end of the
+        /// struct so existing client code that initialises the public
+        /// DynamicSimulatorState aggregate positionally continues to compile
+        /// unchanged; the field defaults to nullptr at those sites.
+        const LgrBlockValues* lgr_block_values {nullptr};
     };
 
     /// Constructor
