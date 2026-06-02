@@ -17,9 +17,10 @@
    */
 
 #include <opm/io/eclipse/EclOutput.hpp>
-#include <opm/io/eclipse/EclUtil.hpp>
 
 #include <opm/common/ErrorMacros.hpp>
+
+#include <opm/io/eclipse/EclUtil.hpp>
 
 #include <algorithm>
 #include <cmath>
@@ -27,13 +28,32 @@
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
-#include <iterator>
 #include <iomanip>
-#include <iostream>
 #include <ios>
+#include <iostream>
+#include <iterator>
+#include <ranges>
+#include <span>
 #include <sstream>
 #include <stdexcept>
+#include <string>
 #include <type_traits>
+#include <vector>
+
+#include <fmt/format.h>
+
+namespace {
+    // Maximum individual string length among a set of strings.
+    auto maxStringLength(std::span<const std::string> strings)
+    {
+        return strings.empty()
+            ? std::string::size_type{}
+            : std::ranges::max(strings | std::ranges::views::transform(&std::string::size));
+    }
+
+    // Largest string length that fits in exactly three characters.
+    constexpr auto c0nnMaxCharPerStr() { return std::string::size_type{999}; }
+}
 
 namespace Opm { namespace EclIO {
 
@@ -50,82 +70,54 @@ EclOutput::EclOutput(const std::string&            filename,
 
 
 template<>
-void EclOutput::write<std::string>(const std::string& name,
+void EclOutput::write<std::string>(const std::string&              name,
                                    const std::vector<std::string>& data)
 {
-    // array type will be assumed CHAR if maximum string length is 8 or less
-    // If maximum string length is > 8, C0nn will be used with element size equal to
-    // maximum string length
+    const auto max_char   = static_cast<std::string::size_type>(sizeOfChar);
+    const auto max_length = std::max(maxStringLength(data), max_char);
+    const auto isC0nn     = max_length > max_char;
 
-    int maximum_length = 8;
-
-    if (data.size() > 0) {
-        const auto it =
-            std::ranges::max_element(data,
-                                     [](const std::string& str1, const std::string& str2)
-                                     { return str2.size() > str1.size(); });
-
-        maximum_length = it->size();
+    if (isC0nn && (max_length > c0nnMaxCharPerStr())) {
+        OPM_THROW(std::invalid_argument,
+                  fmt::format("Maximum string length {} exceeds C0NN "
+                              "format's upper limit of {} characters",
+                              max_length, c0nnMaxCharPerStr()));
     }
 
+    const auto charType   = isC0nn ? eclArrType::C0NN             : eclArrType::CHAR;
+    const auto charPerStr = isC0nn ? static_cast<int>(max_length) : sizeOfChar;
 
-    if (isFormatted)
-    {
-        if (maximum_length > sizeOfChar){
-            writeFormattedHeader(name, data.size(), C0NN, maximum_length);
-            writeFormattedCharArray(data, maximum_length);
-        } else {
-            writeFormattedHeader(name, data.size(), CHAR, sizeOfChar);
-            writeFormattedCharArray(data, sizeOfChar);
-        }
-    }
-    else
-    {
-        if (maximum_length > sizeOfChar){
-            writeBinaryHeader(name, data.size(), C0NN, maximum_length);
-            writeBinaryCharArray(data, maximum_length);
-        } else {
-            writeBinaryHeader(name, data.size(), CHAR, sizeOfChar);
-            writeBinaryCharArray(data, sizeOfChar);
-       }
-    }
+    this->writeStringVector(name, data, charType, charPerStr);
 }
 
-void EclOutput::write(const std::string& name, const std::vector<std::string>& data, int element_size)
+void EclOutput::write(const std::string&              name,
+                      const std::vector<std::string>& data,
+                      const int                       element_size)
 {
-    // array type will be assumed C0NN (not CHAR). Also in cases where element size is 8 or less
+    // Note: This overload always writes string data as C0NN and always uses
+    // at least "sizeOfChar" characters per string in the output.
 
-    if (data.size() > 0) {
-        const auto it =
-            std::ranges::max_element(data,
-                                     [](const std::string& str1, const std::string& str2)
-                                     { return str2.size() > str1.size(); });
+    const auto charPerStr = std::max(element_size, sizeOfChar);
 
-        if (it->size() > static_cast<std::size_t>(element_size)) {
-            OPM_THROW(std::runtime_error, "specified element size for type C0NN less than maximum string length in output data");
-        }
+    if (static_cast<std::string::size_type>(charPerStr) > c0nnMaxCharPerStr()) {
+        OPM_THROW(std::invalid_argument,
+                  fmt::format("Maximum requested number of characters "
+                              "per string, {}, exceeds C0NN format's "
+                              "upper limit of {} characters",
+                              charPerStr, c0nnMaxCharPerStr()));
     }
 
-    if (isFormatted)
+    if (const auto max_length = maxStringLength(data);
+        max_length > static_cast<std::string::size_type>(charPerStr))
     {
-        if (element_size > sizeOfChar){
-            writeFormattedHeader(name, data.size(), C0NN, element_size);
-            writeFormattedCharArray(data, element_size);
-        } else {
-            writeFormattedHeader(name, data.size(), C0NN, sizeOfChar);
-            writeFormattedCharArray(data, sizeOfChar);
-        }
+        OPM_THROW(std::runtime_error,
+                  fmt::format("Maximum string length {} "
+                              "exceeds permitted size {} "
+                              "(requested element_size {}).",
+                              max_length, charPerStr, element_size));
     }
-    else
-    {
-        if (element_size > sizeOfChar){
-            writeBinaryHeader(name, data.size(), C0NN, element_size);
-            writeBinaryCharArray(data, element_size);
-        } else {
-            writeBinaryHeader(name, data.size(), C0NN, sizeOfChar);
-            writeBinaryCharArray(data, sizeOfChar);
-        }
-    }
+
+    this->writeStringVector(name, data, eclArrType::C0NN, charPerStr);
 }
 
 template <>
@@ -155,6 +147,25 @@ void EclOutput::message(const std::string& msg)
 void EclOutput::flushStream()
 {
     this->ofileH.flush();
+}
+
+// ===========================================================================
+// Private member functions below separator
+// ===========================================================================
+
+void EclOutput::writeStringVector(const std::string&              name,
+                                  const std::vector<std::string>& strings,
+                                  const eclArrType                charType,
+                                  const int                       charPerStr)
+{
+    if (this->isFormatted) {
+        this->writeFormattedHeader(name, strings.size(), charType, charPerStr);
+        this->writeFormattedCharArray(strings, charPerStr);
+    }
+    else {
+        this->writeBinaryHeader(name, strings.size(), charType, charPerStr);
+        this->writeBinaryCharArray(strings, charPerStr);
+    }
 }
 
 void EclOutput::writeBinaryHeader(const std::string&arrName, std::int64_t size, eclArrType arrType, int element_size)

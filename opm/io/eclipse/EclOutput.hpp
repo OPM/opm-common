@@ -107,6 +107,11 @@ public:
     friend class OutputStream::SummarySpecification;
 
 private:
+    void writeStringVector(const std::string&              name,
+                           const std::vector<std::string>& strings,
+                           const eclArrType                charType,
+                           const int                       charPerStr);
+
     void writeBinaryHeader(const std::string& arrName, std::int64_t size, eclArrType arrType, int element_size);
 
     template <typename T>
