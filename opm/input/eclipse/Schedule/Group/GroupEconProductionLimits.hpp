@@ -123,6 +123,7 @@ public:
 
     void add_group(const int report_step, const std::string &group_name, const DeckRecord &record);
     static EconWorkover econWorkoverFromString(const std::string& string_value);
+    static std::string econWorkoverToString(EconWorkover workover);
     const GEconGroup& get_group(const std::string& gname) const;
     GEconGroupProp get_group_prop(
         const Schedule &schedule, const SummaryState &st, const std::string& gname) const;

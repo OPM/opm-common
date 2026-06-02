@@ -155,6 +155,24 @@ GroupEconProductionLimits::econWorkoverFromString(const std::string& string_valu
                                      + string_value + "' for EconWorkover enum");
 }
 
+std::string GroupEconProductionLimits::econWorkoverToString(EconWorkover workover)
+{
+    if (workover == EconWorkover::NONE)
+        return "NONE";
+    else if (workover == EconWorkover::CON)
+        return "CON";
+    else if (workover == EconWorkover::CONP)
+        return "+CON";
+    else if (workover == EconWorkover::WELL)
+        return "WELL";
+    else if (workover == EconWorkover::PLUG)
+        return "PLUG";
+    else if (workover == EconWorkover::ALL)
+        return "ALL";
+    else
+        throw std::invalid_argument("GroupEconProductionLimits: Unknown enum value for EconWorkover enum");
+}
+
 bool GroupEconProductionLimits::GEconGroup::endRun() const {
     return m_end_run;
 }
