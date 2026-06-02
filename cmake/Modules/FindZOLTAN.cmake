@@ -33,6 +33,7 @@ find_path (ZOLTAN_INCLUDE_DIR
   PATH_SUFFIXES
     include
     trilinos
+    zoltan
   ${ZOLTAN_NO_DEFAULT_PATH}
 )
 
