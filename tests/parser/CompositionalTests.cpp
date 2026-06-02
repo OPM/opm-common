@@ -479,74 +479,96 @@ BOOST_AUTO_TEST_CASE(CompositionalParsingTest) {
 
     {
         const auto& acfs0 = comp_config.acentricFactorsSurf(0);
-        BOOST_CHECK_EQUAL(num_comps, acfs0.size());
-        check_vectors_close(std::vector<double>{0.41, 0.21, 0.011}, acfs0, tolerance);
+        const auto& acfs1 = comp_config.acentricFactorsSurf(1);
         const auto& acfs2 = comp_config.acentricFactorsSurf(2);
+        BOOST_CHECK_EQUAL(num_comps, acfs0.size());
+        BOOST_CHECK_EQUAL(num_comps, acfs1.size());
+        BOOST_CHECK_EQUAL(num_comps, acfs2.size());
+        check_vectors_close(std::vector<double>{0.41, 0.21, 0.011}, acfs0, tolerance);
+        check_vectors_close(std::vector<double>{0.51, 0.31, 0.031}, acfs1, tolerance);
         check_vectors_close(std::vector<double>{0.52, 0.32, 0.032}, acfs2, tolerance);
     }
 
     {
-        const auto& cps0 = comp_config.criticalPressureSurf(0);
         const std::vector<double> ref_cps0 = {usys.to_si(M::pressure, 22), usys.to_si(M::pressure, 72),
                                               usys.to_si(M::pressure, 42)};
-        check_vectors_close(ref_cps0, cps0, tolerance);
-        const auto& cps2 = comp_config.criticalPressureSurf(2);
+        const std::vector<double> ref_cps1 = {usys.to_si(M::pressure, 23), usys.to_si(M::pressure, 73),
+                                              usys.to_si(M::pressure, 43)};
         const std::vector<double> ref_cps2 = {usys.to_si(M::pressure, 24), usys.to_si(M::pressure, 74),
                                               usys.to_si(M::pressure, 44)};
-        check_vectors_close(ref_cps2, cps2, tolerance);
+        check_vectors_close(ref_cps0, comp_config.criticalPressureSurf(0), tolerance);
+        check_vectors_close(ref_cps1, comp_config.criticalPressureSurf(1), tolerance);
+        check_vectors_close(ref_cps2, comp_config.criticalPressureSurf(2), tolerance);
     }
 
     {
-        const auto& cts0 = comp_config.criticalTemperatureSurf(0);
         const std::vector<double> ref_cts0 = {usys.to_si(M::temperature_absolute, 602),
                                               usys.to_si(M::temperature_absolute, 302),
                                               usys.to_si(M::temperature_absolute, 192)};
-        check_vectors_close(ref_cts0, cts0, tolerance);
+        const std::vector<double> ref_cts1 = {usys.to_si(M::temperature_absolute, 603),
+                                              usys.to_si(M::temperature_absolute, 303),
+                                              usys.to_si(M::temperature_absolute, 193)};
+        const std::vector<double> ref_cts2 = {usys.to_si(M::temperature_absolute, 604),
+                                              usys.to_si(M::temperature_absolute, 304),
+                                              usys.to_si(M::temperature_absolute, 194)};
+        check_vectors_close(ref_cts0, comp_config.criticalTemperatureSurf(0), tolerance);
+        check_vectors_close(ref_cts1, comp_config.criticalTemperatureSurf(1), tolerance);
+        check_vectors_close(ref_cts2, comp_config.criticalTemperatureSurf(2), tolerance);
     }
 
     {
-        const auto& cvs1 = comp_config.criticalVolumeSurf(1);
+        const std::vector<double> ref_cvs0{usys.to_si("GeometricVolume/Moles", 0.62),
+                                           usys.to_si("GeometricVolume/Moles", 0.12),
+                                           usys.to_si("GeometricVolume/Moles", 0.12)};
         const std::vector<double> ref_cvs1{usys.to_si("GeometricVolume/Moles", 0.63),
                                            usys.to_si("GeometricVolume/Moles", 0.13),
                                            usys.to_si("GeometricVolume/Moles", 0.13)};
-        check_vectors_close(ref_cvs1, cvs1, tolerance);
+        const std::vector<double> ref_cvs2{usys.to_si("GeometricVolume/Moles", 0.64),
+                                           usys.to_si("GeometricVolume/Moles", 0.14),
+                                           usys.to_si("GeometricVolume/Moles", 0.14)};
+        check_vectors_close(ref_cvs0, comp_config.criticalVolumeSurf(0), tolerance);
+        check_vectors_close(ref_cvs1, comp_config.criticalVolumeSurf(1), tolerance);
+        check_vectors_close(ref_cvs2, comp_config.criticalVolumeSurf(2), tolerance);
     }
 
     {
-        const auto& zcs0 = comp_config.criticalZFactorSurf(0);
-        check_vectors_close(std::vector<double>{0.30, 0.27, 0.28}, zcs0, tolerance);
-        const auto& zcs2 = comp_config.criticalZFactorSurf(2);
-        check_vectors_close(std::vector<double>{0.32, 0.29, 0.30}, zcs2, tolerance);
+        check_vectors_close(std::vector<double>{0.30, 0.27, 0.28}, comp_config.criticalZFactorSurf(0), tolerance);
+        check_vectors_close(std::vector<double>{0.31, 0.28, 0.29}, comp_config.criticalZFactorSurf(1), tolerance);
+        check_vectors_close(std::vector<double>{0.32, 0.29, 0.30}, comp_config.criticalZFactorSurf(2), tolerance);
     }
 
     {
-        const auto& bics0 = comp_config.binaryInteractionCoefficientSurf(0);
         constexpr std::size_t bic_size = num_comps * (num_comps - 1) / 2;
-        BOOST_CHECK_EQUAL(bic_size, bics0.size());
-        check_vectors_close(std::vector<double>{0, 0.1, 0.2}, bics0, tolerance);
+        const auto& bics0 = comp_config.binaryInteractionCoefficientSurf(0);
+        const auto& bics1 = comp_config.binaryInteractionCoefficientSurf(1);
         const auto& bics2 = comp_config.binaryInteractionCoefficientSurf(2);
+        BOOST_CHECK_EQUAL(bic_size, bics0.size());
+        BOOST_CHECK_EQUAL(bic_size, bics1.size());
+        BOOST_CHECK_EQUAL(bic_size, bics2.size());
+        check_vectors_close(std::vector<double>{0, 0.1, 0.2}, bics0, tolerance);
+        check_vectors_close(std::vector<double>{0.05, 0.15, 0.25}, bics1, tolerance);
         check_vectors_close(std::vector<double>{0.06, 0.16, 0.26}, bics2, tolerance);
     }
 
     {
-        const auto& mws0 = comp_config.molecularWeightsSurf(0);
         const std::vector<double> ref_mws0{usys.to_si("Mass/Moles", 143.),
                                            usys.to_si("Mass/Moles", 45.),
                                            usys.to_si("Mass/Moles", 17.)};
-        check_vectors_close(ref_mws0, mws0, tolerance);
-        const auto& mws2 = comp_config.molecularWeightsSurf(2);
+        const std::vector<double> ref_mws1{usys.to_si("Mass/Moles", 143.1),
+                                           usys.to_si("Mass/Moles", 45.1),
+                                           usys.to_si("Mass/Moles", 17.1)};
         const std::vector<double> ref_mws2{usys.to_si("Mass/Moles", 143.2),
                                            usys.to_si("Mass/Moles", 45.2),
                                            usys.to_si("Mass/Moles", 17.2)};
-        check_vectors_close(ref_mws2, mws2, tolerance);
+        check_vectors_close(ref_mws0, comp_config.molecularWeightsSurf(0), tolerance);
+        check_vectors_close(ref_mws1, comp_config.molecularWeightsSurf(1), tolerance);
+        check_vectors_close(ref_mws2, comp_config.molecularWeightsSurf(2), tolerance);
     }
 
     {
-        const auto& vss0 = comp_config.volumeShiftsSurf(0);
-        BOOST_CHECK_EQUAL(num_comps, vss0.size());
-        check_vectors_close(std::vector<double>{0.12, 0.22, 0.32}, vss0, tolerance);
-        const auto& vss2 = comp_config.volumeShiftsSurf(2);
-        check_vectors_close(std::vector<double>{0.14, 0.24, 0.34}, vss2, tolerance);
+        check_vectors_close(std::vector<double>{0.12, 0.22, 0.32}, comp_config.volumeShiftsSurf(0), tolerance);
+        check_vectors_close(std::vector<double>{0.13, 0.23, 0.33}, comp_config.volumeShiftsSurf(1), tolerance);
+        check_vectors_close(std::vector<double>{0.14, 0.24, 0.34}, comp_config.volumeShiftsSurf(2), tolerance);
     }
 
     EclipseState es(deck);
@@ -687,52 +709,6 @@ SSHIFT
 ZCRIT
 0.28 0.25 0.26 /
 0.29 0.26 0.27 /
-
-
-BICS
-0
-0.1 0.2 /
-0.05
-0.15 0.25 /
-0.06
-0.16 0.26 /
-
-ACFS
-0.41 0.21 0.011 /
-0.51 0.31 0.031 /
-0.52 0.32 0.032 /
-
-PCRITS
-22. 72. 42. /
-23. 73. 43. /
-24. 74. 44. /
-
-TCRITS
-602. 302. 192. /
-603. 303. 193. /
-604. 304. 194. /
-
-MWS
-143.  45.  17. /
-143.1 45.1 17.1 /
-143.2 45.2 17.2 /
-
-VCRITS
-0.62 0.12 0.12 /
-0.63 0.13 0.13 /
-0.64 0.14 0.14 /
-
-ZCRITS
-0.30 0.27 0.28 /
-0.31 0.28 0.29 /
-0.32 0.29 0.30 /
-
-
-SSHIFTS
-0.12 0.22 0.32 /
-0.13 0.23 0.33 /
-0.14 0.24 0.34 /
-
 
 STCOND
 15.0 /
@@ -1120,18 +1096,26 @@ BOOST_AUTO_TEST_CASE(SurfaceDefaultsFromReservoirTest) {
 
     // Without TCRITS, critical temperature inherits from TCRIT.
     {
+        const std::vector<double> ref_tcs0{usys.to_si(M::temperature_absolute, 600),
+                                           usys.to_si(M::temperature_absolute, 300),
+                                           usys.to_si(M::temperature_absolute, 190)};
         const std::vector<double> ref_tcs1{usys.to_si(M::temperature_absolute, 601),
                                            usys.to_si(M::temperature_absolute, 301),
                                            usys.to_si(M::temperature_absolute, 191)};
+        check_vectors_close(ref_tcs0, comp_config.criticalTemperatureSurf(0), tolerance);
         check_vectors_close(ref_tcs1, comp_config.criticalTemperatureSurf(1), tolerance);
         check_vectors_close(ref_tcs1, comp_config.criticalTemperatureSurf(2), tolerance);
     }
 
     // Without VCRITS, critical volume inherits from VCRIT.
     {
+        const std::vector<double> ref_vcs0{usys.to_si("GeometricVolume/Moles", 0.6),
+                                           usys.to_si("GeometricVolume/Moles", 0.1),
+                                           usys.to_si("GeometricVolume/Moles", 0.1)};
         const std::vector<double> ref_vcs1{usys.to_si("GeometricVolume/Moles", 0.61),
                                            usys.to_si("GeometricVolume/Moles", 0.11),
                                            usys.to_si("GeometricVolume/Moles", 0.11)};
+        check_vectors_close(ref_vcs0, comp_config.criticalVolumeSurf(0), tolerance);
         check_vectors_close(ref_vcs1, comp_config.criticalVolumeSurf(1), tolerance);
         check_vectors_close(ref_vcs1, comp_config.criticalVolumeSurf(2), tolerance);
     }
@@ -1156,6 +1140,8 @@ BOOST_AUTO_TEST_CASE(SurfaceDefaultsFromReservoirTest) {
     {
         constexpr std::size_t bic_size = num_comps * (num_comps - 1) / 2;
         BOOST_CHECK_EQUAL(bic_size, comp_config.binaryInteractionCoefficientSurf(0).size());
+        BOOST_CHECK_EQUAL(bic_size, comp_config.binaryInteractionCoefficientSurf(1).size());
+        BOOST_CHECK_EQUAL(bic_size, comp_config.binaryInteractionCoefficientSurf(2).size());
         check_vectors_close(std::vector<double>{0, 1, 2},
                             comp_config.binaryInteractionCoefficientSurf(0), tolerance);
         check_vectors_close(std::vector<double>{1, 2, 3},
@@ -1278,6 +1264,8 @@ END
 
     constexpr std::size_t num_comps = 3;
     constexpr double tolerance = 1.e-5;
+    const auto& usys = deck.getActiveUnitSystem();
+    using M = UnitSystem::measure;
 
     // Partial EOSS: unspecified records use EOSS default (PR), not reservoir EOS.
     BOOST_CHECK(CompositionalConfig::EOSType::ZJ == comp_config.eosTypeSurf(0));
@@ -1308,6 +1296,59 @@ END
     }
 
     // Keywords not provided at all still inherit from reservoir values.
+    check_vectors_close(std::vector<double>{0.4, 0.2, 0.01},
+                        comp_config.acentricFactorsSurf(0), tolerance);
+    check_vectors_close(std::vector<double>{0.5, 0.3, 0.03},
+                        comp_config.acentricFactorsSurf(1), tolerance);
+    check_vectors_close(std::vector<double>{0.5, 0.3, 0.03},
+                        comp_config.acentricFactorsSurf(2), tolerance);
+
+    check_vectors_close(std::vector<double>{usys.to_si(M::pressure, 20),
+                                            usys.to_si(M::pressure, 70),
+                                            usys.to_si(M::pressure, 40)},
+                        comp_config.criticalPressureSurf(0), tolerance);
+    check_vectors_close(std::vector<double>{usys.to_si(M::pressure, 21),
+                                            usys.to_si(M::pressure, 71),
+                                            usys.to_si(M::pressure, 41)},
+                        comp_config.criticalPressureSurf(1), tolerance);
+    check_vectors_close(std::vector<double>{usys.to_si(M::pressure, 21),
+                                            usys.to_si(M::pressure, 71),
+                                            usys.to_si(M::pressure, 41)},
+                        comp_config.criticalPressureSurf(2), tolerance);
+
+    check_vectors_close(std::vector<double>{usys.to_si(M::temperature_absolute, 600),
+                                            usys.to_si(M::temperature_absolute, 300),
+                                            usys.to_si(M::temperature_absolute, 190)},
+                        comp_config.criticalTemperatureSurf(0), tolerance);
+    check_vectors_close(std::vector<double>{usys.to_si(M::temperature_absolute, 601),
+                                            usys.to_si(M::temperature_absolute, 301),
+                                            usys.to_si(M::temperature_absolute, 191)},
+                        comp_config.criticalTemperatureSurf(1), tolerance);
+    check_vectors_close(std::vector<double>{usys.to_si(M::temperature_absolute, 601),
+                                            usys.to_si(M::temperature_absolute, 301),
+                                            usys.to_si(M::temperature_absolute, 191)},
+                        comp_config.criticalTemperatureSurf(2), tolerance);
+
+    check_vectors_close(std::vector<double>{usys.to_si("GeometricVolume/Moles", 0.6),
+                                            usys.to_si("GeometricVolume/Moles", 0.1),
+                                            usys.to_si("GeometricVolume/Moles", 0.1)},
+                        comp_config.criticalVolumeSurf(0), tolerance);
+    check_vectors_close(std::vector<double>{usys.to_si("GeometricVolume/Moles", 0.61),
+                                            usys.to_si("GeometricVolume/Moles", 0.11),
+                                            usys.to_si("GeometricVolume/Moles", 0.11)},
+                        comp_config.criticalVolumeSurf(1), tolerance);
+    check_vectors_close(std::vector<double>{usys.to_si("GeometricVolume/Moles", 0.61),
+                                            usys.to_si("GeometricVolume/Moles", 0.11),
+                                            usys.to_si("GeometricVolume/Moles", 0.11)},
+                        comp_config.criticalVolumeSurf(2), tolerance);
+
+    check_vectors_close(std::vector<double>{0.28, 0.25, 0.26},
+                        comp_config.criticalZFactorSurf(0), tolerance);
+    check_vectors_close(std::vector<double>{0.29, 0.26, 0.27},
+                        comp_config.criticalZFactorSurf(1), tolerance);
+    check_vectors_close(std::vector<double>{0.29, 0.26, 0.27},
+                        comp_config.criticalZFactorSurf(2), tolerance);
+
     check_vectors_close(comp_config.molecularWeights(0),
                         comp_config.molecularWeightsSurf(0), tolerance);
     check_vectors_close(comp_config.molecularWeights(1),
