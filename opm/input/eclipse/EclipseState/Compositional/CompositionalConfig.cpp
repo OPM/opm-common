@@ -40,6 +40,7 @@
 #include <opm/input/eclipse/Parser/ParserKeywords/S.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/T.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/V.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/Z.hpp>
 
 #include <fmt/format.h>
 
@@ -56,6 +57,82 @@
 
 namespace {
 
+    template <typename Keyword>
+    const Opm::DeckKeyword* getSinglePropsKeyword(const Opm::PROPSSection& props_section)
+    {
+        if (!props_section.hasKeyword<Keyword>()) {
+            return nullptr;
+        }
+
+        const auto& keywords = props_section.get<Keyword>();
+        if (keywords.size() > 1) {
+            throw Opm::OpmInputError {
+                fmt::format("there are multiple {} keyword specifications", Keyword::keywordName),
+                keywords.begin()->location()
+            };
+        }
+
+        return &keywords.back();
+    }
+
+    void validateKeywordRegionCount(const Opm::DeckKeyword& kw,
+                                    const std::size_t       num_regions,
+                                    const std::string_view  region_description,
+                                    const bool              has_default_value)
+    {
+        const auto& kw_name = kw.name();
+        if (kw.size() > num_regions) {
+            throw Opm::OpmInputError {
+                fmt::format("there are {} {}, while {} "
+                            "regions are specified in {}",
+                            num_regions, region_description, kw.size(), kw_name),
+                kw.location()
+            };
+        }
+
+        if (!has_default_value && kw.size() != num_regions) {
+            throw Opm::OpmInputError {
+                fmt::format("there are {} {}, while only {} "
+                            "regions are specified in {}",
+                            num_regions, region_description, kw.size(), kw_name),
+                kw.location()
+            };
+        }
+    }
+
+    template <typename Keyword>
+    void parsingKeywordValues(const Opm::DeckKeyword&        kw,
+                              std::vector<std::vector<double>>& target,
+                              const std::size_t              num_values,
+                              const std::optional<double>    default_value)
+    {
+        const auto& kw_name = Keyword::keywordName;
+
+        for (std::size_t i = 0; i < kw.size(); ++i) {
+            const auto& item = kw.getRecord(i).template getItem<typename Keyword::DATA>();
+            const auto& data = item.getSIDoubleData();
+
+            if (!default_value.has_value()) {
+                if (data.size() != num_values) {
+                    const auto msg = fmt::format("in keyword {}, {} values are specified, "
+                                                 "but {} values are expected",
+                                                 kw_name, data.size(), num_values);
+                    throw Opm::OpmInputError(msg, kw.location());
+                }
+            }
+            else if (data.size() > num_values) {
+                const auto msg = fmt::format("in keyword {}, {} values are specified, "
+                                             "which is bigger than the number "
+                                             "{} should be specified",
+                                             kw_name, data.size(), num_values);
+
+                throw Opm::OpmInputError(msg, kw.location());
+            }
+
+            std::ranges::copy(data, target[i].begin());
+        }
+    }
+
     // The following function is used to parse compositional related keywords:
     // MW, ACF, BIC, PCRIT, TCRIT, VCRIT and SSHIFT, and so on.
     template <typename Keyword>
@@ -65,10 +142,8 @@ namespace {
                         const std::size_t num_values,
                         const std::optional<double> default_value = std::nullopt)
     {
-        // For keywords with default values, populate the target with the default
-        // value even if the keyword is not specified.
-        // Note: This may need revisiting if more defaultable keywords are added.
-        if (! props_section.hasKeyword<Keyword>() ) {
+        const auto* kw = getSinglePropsKeyword<Keyword>(props_section);
+        if (!kw) {
             if (default_value.has_value()) {
                 target.assign(num_eos_res,std::vector(num_values, default_value.value()));
             }
@@ -78,57 +153,104 @@ namespace {
 
         target.assign(num_eos_res,std::vector(num_values, default_value.value_or(0.0)));
 
-        const auto& kw_name = Keyword::keywordName;
-        const auto& keywords = props_section.get<Keyword>();
-        // we do not allow multiple input of the keyword unless proven otherwise
-        if (keywords.size() > 1) {
-            throw Opm::OpmInputError {
-                fmt::format("there are multiple {} "
-                            "keyword specifications", kw_name),
-                keywords.begin()->location()
-            };
+        validateKeywordRegionCount(*kw, num_eos_res, "EOS regions",
+                                   default_value.has_value());
+
+        parsingKeywordValues<Keyword>(*kw, target, num_values, default_value);
+    }
+
+    // Parse one surface keyword. If absent, inherit per-region reservoir values.
+    // If present, use only keyword data/defaults (no reservoir fallback).
+    template <typename Keyword>
+    void processSurfaceKeyword(const Opm::PROPSSection& props_section,
+                               std::vector<std::vector<double>>& target,
+                               const std::vector<std::vector<double>>& res_source,
+                               const std::size_t num_eos_sur,
+                               const std::size_t num_eos_res,
+                               const std::size_t num_values,
+                               const std::optional<double> default_value = std::nullopt)
+    {
+        const auto* kw = getSinglePropsKeyword<Keyword>(props_section);
+
+        if (!kw) {
+            // Missing surface keyword: inherit from reservoir regions.
+            if (!res_source.empty()) {
+                target.resize(num_eos_sur);
+                for (std::size_t i = 0; i < num_eos_sur; ++i) {
+                    const std::size_t res_idx = std::min(i, num_eos_res - 1);
+                    target[i] = res_source[res_idx];
+                }
+            }
+            return;
         }
 
-        // there is no default value, we make sure we specify the exact
-        // number of values for all the EOS regions and components
-        const auto& kw = keywords.back();
-        if (kw.size() != num_eos_res) {
-            throw Opm::OpmInputError {
-                fmt::format("there are {} EOS regions, while only {} "
-                            "regions are specified in {}",
-                            num_eos_res, kw.size(),
-                            kw_name), kw.location()
-            };
+        // Specified surface keyword: require full region coverage if no item default exists.
+        validateKeywordRegionCount(*kw, num_eos_sur, "surface EOS regions",
+                                   default_value.has_value());
+
+        target.assign(num_eos_sur,
+                      std::vector<double>(num_values, default_value.value_or(0.0)));
+
+        parsingKeywordValues<Keyword>(*kw, target, num_values, default_value);
+    }
+
+    // Resolve EOS/EOSS from PROPS or RUNSPEC (exclusive), with at most one instance.
+    template <typename Keyword>
+    const Opm::DeckKeyword*
+    resolveEosKeyword(const Opm::PROPSSection&   props_section,
+                      const Opm::RUNSPECSection& runspec_section)
+    {
+        const auto& kw_name    = Keyword::keywordName;
+        const bool  has_props   = props_section  .hasKeyword<Keyword>();
+        const bool  has_runspec = runspec_section.hasKeyword<Keyword>();
+
+        if (!has_props && !has_runspec) {
+            return nullptr;
+        }
+
+        if (has_props && has_runspec) {
+            throw Opm::OpmInputError(
+                fmt::format("{} is specified in both RUNSPEC and PROPS sections", kw_name),
+                props_section.get<Keyword>().begin()->location());
+        }
+
+        const auto& keywords = has_props
+            ? props_section  .get<Keyword>()
+            : runspec_section.get<Keyword>();
+
+        if (keywords.size() > 1) {
+            throw Opm::OpmInputError(
+                fmt::format("there are multiple {} keyword specifications", kw_name),
+                keywords.begin()->location());
+        }
+
+        return &keywords.back();
+    }
+
+    // Parse EOS/EOSS records into pre-sized output.
+    // Defaulted EQUATION items are skipped, keeping the caller-provided default.
+    template <typename Keyword>
+    void parseEosRecords(const Opm::DeckKeyword&                         kw,
+                         std::vector<Opm::CompositionalConfig::EOSType>& out,
+                         const std::size_t                               max_regions,
+                         const std::string_view                          region_description)
+    {
+        const auto& kw_name = Keyword::keywordName;
+
+        if (kw.size() > max_regions) {
+            throw Opm::OpmInputError(
+                fmt::format("{} equations of state are specified in keyword {}, "
+                            "which is more than the number of {} regions of {}.",
+                            kw.size(), kw_name, region_description, max_regions),
+                kw.location());
         }
 
         for (std::size_t i = 0; i < kw.size(); ++i) {
-            const auto& item = kw.getRecord(i).template getItem<typename Keyword::DATA>();
-            const auto& data = item.getSIDoubleData();
-            if (! default_value.has_value()) {
-                // when there is no default values, we should specify all the values
-                if (data.size() != num_values) {
-                    const auto msg = fmt::format("in keyword {}, {} values are specified, "
-                                                 "which is different from the "
-                                                 "number of components {}",
-                                                 kw_name, data.size(), num_values);
-                    throw Opm::OpmInputError(msg, kw.location());
-                }
+            const auto& item = kw.getRecord(i).template getItem<typename Keyword::EQUATION>();
+            if (item.defaultApplied(0)) {
+                continue;
             }
-            else if (data.size() > num_values) {
-                // when there is default values, we should not specify more
-                // values than needed
-                const auto msg = fmt::format("in keyword {}, {} values are specified, "
-                                             "which is bigger than the number "
-                                             "{} should be specified",
-                                             kw_name, data.size(), num_values);
-
-                throw Opm::OpmInputError(msg, kw.location());
-            }
-
-            // using copy here to consider the situation that there is
-            // default values, we might not specify all the values and keep
-            // the rest to be the default values
-            std::ranges::copy(data, target[i].begin());
+            out[i] = Opm::CompositionalConfig::eosTypeFromString(item.getTrimmedString(0));
         }
     }
 
@@ -140,14 +262,25 @@ namespace {
             std::pair {"NCOMPS"sv, section.hasKeyword<Opm::ParserKeywords::NCOMPS>() },
             std::pair {"CNAMES"sv, section.hasKeyword<Opm::ParserKeywords::CNAMES>() },
             std::pair {"EOS"sv,    section.hasKeyword<Opm::ParserKeywords::EOS>() },
+            std::pair {"EOSS"sv,   section.hasKeyword<Opm::ParserKeywords::EOSS>() },
             std::pair {"STCOND"sv, section.hasKeyword<Opm::ParserKeywords::STCOND>() },
             std::pair {"PCRIT"sv,  section.hasKeyword<Opm::ParserKeywords::PCRIT>() },
+            std::pair {"PCRITS"sv, section.hasKeyword<Opm::ParserKeywords::PCRITS>() },
             std::pair {"TCRIT"sv,  section.hasKeyword<Opm::ParserKeywords::TCRIT>() },
+            std::pair {"TCRITS"sv, section.hasKeyword<Opm::ParserKeywords::TCRITS>() },
             std::pair {"VCRIT"sv,  section.hasKeyword<Opm::ParserKeywords::VCRIT>() },
             std::pair {"SSHIFT"sv, section.hasKeyword<Opm::ParserKeywords::SSHIFT>() },
+            std::pair {"SSHIFTS"sv, section.hasKeyword<Opm::ParserKeywords::SSHIFTS>() },
+            std::pair {"VCRITS"sv, section.hasKeyword<Opm::ParserKeywords::VCRITS>() },
+            std::pair {"ZCRIT"sv,  section.hasKeyword<Opm::ParserKeywords::ZCRIT>() },
+            std::pair {"ZCRITS"sv, section.hasKeyword<Opm::ParserKeywords::ZCRITS>() },
+            std::pair {"MW"sv,     section.hasKeyword<Opm::ParserKeywords::MW>() },
+            std::pair {"MWS"sv,    section.hasKeyword<Opm::ParserKeywords::MWS>() },
             std::pair {"ACF"sv,    section.hasKeyword<Opm::ParserKeywords::ACF>() },
+            std::pair {"ACFS"sv,   section.hasKeyword<Opm::ParserKeywords::ACFS>() },
             std::pair {"BIC"sv,    section.hasKeyword<Opm::ParserKeywords::BIC>() },
             std::pair {"PRCORR"sv, section.hasKeyword<Opm::ParserKeywords::PRCORR>() },
+            std::pair {"BICS"sv,   section.hasKeyword<Opm::ParserKeywords::BICS>() },
         };
 
         bool any_comp_prop_kw = false;
@@ -236,41 +369,43 @@ CompositionalConfig::CompositionalConfig(const Deck& deck, const Runspec& runspe
 
     const Tabdims tabdims{deck};
     const std::size_t num_eos_res = tabdims.getNumEosRes();
-    // EOS keyword can also be in RUNSPEC section, we also parse the EOS in the RUNSPEC section here for simplicity
-    // might be suggested to handle in the RUNSPEC section though
+
+    // EOS may live in RUNSPEC or PROPS; parse it here.
     eos_types.resize(num_eos_res, EOSType::PR);
     {
-        const RUNSPECSection runsec_section {deck};
-        using KWEOS = ParserKeywords::EOS;
-        if (props_section.hasKeyword<KWEOS>() || runsec_section.hasKeyword<KWEOS>()) {
-            // we are not allowing EOS specified in both places
-            if (props_section.hasKeyword<KWEOS>() && runsec_section.hasKeyword<KWEOS>()) {
-                throw std::logic_error("EOS is specified in both RUNSPEC and PROP sections");
-            }
+        const RUNSPECSection runspec_section{deck};
+        if (const auto* kw = resolveEosKeyword<ParserKeywords::EOS>(
+                props_section, runspec_section))
+        {
+            parseEosRecords<ParserKeywords::EOS>(
+                *kw, eos_types, num_eos_res,
+                "reservoir-condition equation of state");
+        }
+    }
 
-            // we do not allow multiple input of the keyword EOS unless proven otherwise
-            // only one section has EOS defined when we reach here
-            const auto& keywords = props_section.hasKeyword<KWEOS>() ? props_section.get<KWEOS>() : runsec_section.get<KWEOS>();
-            if (keywords.size() > 1) {
-                throw OpmInputError("there are multiple EOS keyword specification", keywords.begin()->location());
-            }
-            const auto& kw = keywords.back();
-            if (kw.size() > num_eos_res) {
-                const auto msg = fmt::format(" {} equations of state are specified in keyword EOS, which is more than the number of"
-                                             " of equation of state regions of {}.", kw.size(), num_eos_res);
-                throw OpmInputError(msg, kw.location());
-            }
-            for (std::size_t i = 0; i < kw.size(); ++i) {
-                const auto& item = kw.getRecord(i).getItem<KWEOS::EQUATION>();
-                const auto& equ_str = item.getTrimmedString(0);
-                eos_types[i] = eosTypeFromString(equ_str);
+    // EOSS may be in RUNSPEC or PROPS.
+    // If absent, surface EOS follows reservoir EOS per region (clipped by last reservoir region).
+    const std::size_t num_eos_sur = tabdims.getNumEosSur();
+    {
+        const RUNSPECSection runspec_section{deck};
+        if (const auto* kw = resolveEosKeyword<ParserKeywords::EOSS>(
+                props_section, runspec_section))
+        {
+            eos_types_surf.assign(num_eos_sur, EOSType::PR);
+            parseEosRecords<ParserKeywords::EOSS>(
+                *kw, eos_types_surf, num_eos_sur,
+                "surface-condition equation of state");
+        }
+        else {
+            // No EOSS: inherit surface EOS from reservoir EOS.
+            eos_types_surf.resize(num_eos_sur);
+            for (std::size_t i = 0; i < num_eos_sur; ++i) {
+                eos_types_surf[i] = eos_types[std::min(i, num_eos_res - 1)];
             }
         }
     }
 
-    // PRCORR keyword: modifies the Peng-Robinson EOS. For each EOS region using
-    // PR, switch to PRCORR. For regions using a different EOS, log a message
-    // that PRCORR has no effect there.
+    // PRCORR promotes PR -> PRCORR in reservoir and surface EOS regions.
     if (props_section.hasKeyword<ParserKeywords::PRCORR>()) {
         const auto& keywords = props_section.get<ParserKeywords::PRCORR>();
         if (keywords.size() > 1) {
@@ -278,24 +413,36 @@ CompositionalConfig::CompositionalConfig(const Deck& deck, const Runspec& runspe
                                 keywords.begin()->location());
         }
 
-        std::string unaffected_regions;
-        for (std::size_t i = 0; i < eos_types.size(); ++i) {
-            if (eos_types[i] == EOSType::PR) {
-                eos_types[i] = EOSType::PRCORR;
-            } else {
-                if (!unaffected_regions.empty()) {
-                    unaffected_regions += ", ";
+        auto promote = [](std::vector<EOSType>& types) {
+            std::string unaffected;
+            for (std::size_t i = 0; i < types.size(); ++i) {
+                if (types[i] == EOSType::PR) {
+                    types[i] = EOSType::PRCORR;
+                } else if (types[i] != EOSType::PRCORR) {
+                    if (!unaffected.empty()) {
+                        unaffected += ", ";
+                    }
+                    fmt::format_to(std::back_inserter(unaffected),
+                                   "{} ({})", i + 1, eosTypeToString(types[i]));
                 }
-                fmt::format_to(std::back_inserter(unaffected_regions),
-                               "{} ({})", i + 1, eosTypeToString(eos_types[i]));
             }
-        }
+            return unaffected;
+        };
 
-        if (!unaffected_regions.empty()) {
-            const auto& location = keywords.back().location();
+        const std::string unaffected_res = promote(eos_types);
+        const std::string unaffected_surf = promote(eos_types_surf);
+
+        const auto& location = keywords.back().location();
+        if (!unaffected_res.empty()) {
             const auto msg = fmt::format(
-                "PRCORR is ignored for EOS region(s) {} because their EOS is not PR.",
-                unaffected_regions);
+                "PRCORR is ignored for reservoir EOS region(s) {} because their EOS is not PR.",
+                unaffected_res);
+            OpmLog::info(Opm::Log::fileMessage(location, msg));
+        }
+        if (!unaffected_surf.empty()) {
+            const auto msg = fmt::format(
+                "PRCORR is ignored for surface EOS region(s) {} because their EOS is not PR.",
+                unaffected_surf);
             OpmLog::info(Opm::Log::fileMessage(location, msg));
         }
     }
@@ -312,10 +459,38 @@ CompositionalConfig::CompositionalConfig(const Deck& deck, const Runspec& runspe
                                           num_eos_res, this->num_comps);
     processKeyword<ParserKeywords::SSHIFT>(props_section, this->volume_shifts,
                                            num_eos_res, this->num_comps, 0.);
+    processKeyword<ParserKeywords::ZCRIT>(props_section, this->critical_z_factor,
+                                          num_eos_res, this->num_comps);
 
     const std::size_t bic_size = this->num_comps * (this->num_comps - 1) / 2;
     processKeyword<ParserKeywords::BIC>(props_section, this->binary_interaction_coefficient,
                                         num_eos_res, bic_size, 0.);
+
+    // Surface keywords are sized by NMEOSS and handled independently per keyword.
+    processSurfaceKeyword<ParserKeywords::MWS>(props_section, this->molecular_weights_surf,
+                                               this->molecular_weights,
+                                               num_eos_sur, num_eos_res, this->num_comps);
+    processSurfaceKeyword<ParserKeywords::ACFS>(props_section, this->acentric_factors_surf,
+                                                this->acentric_factors,
+                                                num_eos_sur, num_eos_res, this->num_comps);
+    processSurfaceKeyword<ParserKeywords::PCRITS>(props_section, this->critical_pressure_surf,
+                                                  this->critical_pressure,
+                                                  num_eos_sur, num_eos_res, this->num_comps);
+    processSurfaceKeyword<ParserKeywords::TCRITS>(props_section, this->critical_temperature_surf,
+                                                  this->critical_temperature,
+                                                  num_eos_sur, num_eos_res, this->num_comps);
+    processSurfaceKeyword<ParserKeywords::VCRITS>(props_section, this->critical_volume_surf,
+                                                  this->critical_volume,
+                                                  num_eos_sur, num_eos_res, this->num_comps);
+    processSurfaceKeyword<ParserKeywords::ZCRITS>(props_section, this->critical_z_factor_surf,
+                                                  this->critical_z_factor,
+                                                  num_eos_sur, num_eos_res, this->num_comps);
+    processSurfaceKeyword<ParserKeywords::SSHIFTS>(props_section, this->volume_shifts_surf,
+                                                   this->volume_shifts,
+                                                   num_eos_sur, num_eos_res, this->num_comps, 0.);
+    processSurfaceKeyword<ParserKeywords::BICS>(props_section, this->binary_interaction_coefficient_surf,
+                                                this->binary_interaction_coefficient,
+                                                num_eos_sur, num_eos_res, bic_size, 0.);
 }
 
 bool CompositionalConfig::operator==(const CompositionalConfig& other) const {
@@ -330,7 +505,17 @@ bool CompositionalConfig::operator==(const CompositionalConfig& other) const {
            this->critical_temperature == other.critical_temperature &&
            this->critical_volume == other.critical_volume &&
            this->volume_shifts == other.volume_shifts &&
-           this->binary_interaction_coefficient == other.binary_interaction_coefficient;
+           this->critical_z_factor == other.critical_z_factor &&
+           this->binary_interaction_coefficient == other.binary_interaction_coefficient &&
+           this->eos_types_surf == other.eos_types_surf &&
+           this->molecular_weights_surf == other.molecular_weights_surf &&
+           this->acentric_factors_surf == other.acentric_factors_surf &&
+           this->critical_pressure_surf == other.critical_pressure_surf &&
+           this->critical_temperature_surf == other.critical_temperature_surf &&
+           this->critical_volume_surf == other.critical_volume_surf &&
+           this->critical_z_factor_surf == other.critical_z_factor_surf &&
+           this->volume_shifts_surf == other.volume_shifts_surf &&
+           this->binary_interaction_coefficient_surf == other.binary_interaction_coefficient_surf;
 }
 
 
@@ -348,7 +533,17 @@ CompositionalConfig CompositionalConfig::serializationTestObject() {
     result.critical_temperature = {2, std::vector<double>(result.num_comps, 3.)};
     result.critical_volume = {2, std::vector<double>(result.num_comps, 5.)};
     result.volume_shifts = {2, std::vector<double>(result.num_comps, 0.1)};
+    result.critical_z_factor = {2, std::vector<double>(result.num_comps, 0.29)};
     result.binary_interaction_coefficient = {2, std::vector<double>(result.num_comps * (result.num_comps - 1) / 2, 6.)};
+    result.eos_types_surf = {3, EOSType::PR};
+    result.molecular_weights_surf = {3, std::vector<double>(result.num_comps, 17.)};
+    result.acentric_factors_surf = {3, std::vector<double>(result.num_comps, 1.1)};
+    result.critical_pressure_surf = {3, std::vector<double>(result.num_comps, 2.1)};
+    result.critical_temperature_surf = {3, std::vector<double>(result.num_comps, 3.1)};
+    result.critical_volume_surf = {3, std::vector<double>(result.num_comps, 5.1)};
+    result.critical_z_factor_surf = {3, std::vector<double>(result.num_comps, 0.3)};
+    result.volume_shifts_surf = {3, std::vector<double>(result.num_comps, 0.11)};
+    result.binary_interaction_coefficient_surf = {3, std::vector<double>(result.num_comps * (result.num_comps - 1) / 2, 6.1)};
 
     return result;
 }
@@ -413,8 +608,48 @@ const std::vector<double>& CompositionalConfig::volumeShifts(std::size_t eos_reg
     return this->volume_shifts[eos_region];
 }
 
+const std::vector<double>& CompositionalConfig::criticalZFactor(std::size_t eos_region) const {
+    return this->critical_z_factor[eos_region];
+}
+
 const std::vector<double>& CompositionalConfig::binaryInteractionCoefficient(std::size_t eos_region) const {
     return this->binary_interaction_coefficient[eos_region];
+}
+
+CompositionalConfig::EOSType CompositionalConfig::eosTypeSurf(size_t eos_region) const {
+    return this->eos_types_surf[eos_region];
+}
+
+const std::vector<double>& CompositionalConfig::molecularWeightsSurf(std::size_t eos_region) const {
+    return this->molecular_weights_surf[eos_region];
+}
+
+const std::vector<double>& CompositionalConfig::acentricFactorsSurf(size_t eos_region) const {
+    return this->acentric_factors_surf[eos_region];
+}
+
+const std::vector<double>& CompositionalConfig::criticalPressureSurf(size_t eos_region) const {
+    return this->critical_pressure_surf[eos_region];
+}
+
+const std::vector<double>& CompositionalConfig::criticalTemperatureSurf(size_t eos_region) const {
+    return this->critical_temperature_surf[eos_region];
+}
+
+const std::vector<double>& CompositionalConfig::criticalVolumeSurf(size_t eos_region) const {
+    return this->critical_volume_surf[eos_region];
+}
+
+const std::vector<double>& CompositionalConfig::criticalZFactorSurf(size_t eos_region) const {
+    return this->critical_z_factor_surf[eos_region];
+}
+
+const std::vector<double>& CompositionalConfig::volumeShiftsSurf(size_t eos_region) const {
+    return this->volume_shifts_surf[eos_region];
+}
+
+const std::vector<double>& CompositionalConfig::binaryInteractionCoefficientSurf(size_t eos_region) const {
+    return this->binary_interaction_coefficient_surf[eos_region];
 }
 
 std::size_t CompositionalConfig::numComps() const {
