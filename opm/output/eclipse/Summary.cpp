@@ -1909,6 +1909,89 @@ inline quantity converged_node_pressure(const fn_args& args)
     return { nodePos->second.converged_pressure, measure::pressure };
 }
 
+inline quantity branch_pressure(const fn_args& args)
+{
+    auto nodePos = args.grp_nwrk.branchData.find(args.group_name);
+    if (nodePos == args.grp_nwrk.branchData.end()) {
+        return { 0.0, measure::pressure_drop };
+    }
+
+    return { nodePos->second.pressure_drop, measure::pressure_drop };
+}
+
+inline quantity converged_branch_pressure(const fn_args& args)
+{
+    auto nodePos = args.grp_nwrk.convergedBranchData.find(args.group_name);
+    if (nodePos == args.grp_nwrk.convergedBranchData.end()) {
+        return { 0.0, measure::pressure_drop };
+    }
+
+    return { nodePos->second.pressure_drop, measure::pressure_drop };
+}
+
+inline quantity branch_oil_rate(const fn_args& args)
+{
+    auto nodePos = args.grp_nwrk.branchData.find(args.group_name);
+    if (nodePos == args.grp_nwrk.branchData.end()) {
+        return { 0.0, measure::liquid_surface_rate };
+    }
+
+    return { nodePos->second.oil_rate, measure::liquid_surface_rate };
+}
+
+inline quantity branch_water_rate(const fn_args& args)
+{
+    auto nodePos = args.grp_nwrk.branchData.find(args.group_name);
+    if (nodePos == args.grp_nwrk.branchData.end()) {
+        return { 0.0, measure::liquid_surface_rate };
+    }
+
+    return { nodePos->second.water_rate, measure::liquid_surface_rate };
+}
+
+inline quantity branch_gas_rate(const fn_args& args)
+{
+    auto nodePos = args.grp_nwrk.branchData.find(args.group_name);
+    if (nodePos == args.grp_nwrk.branchData.end()) {
+        return { 0.0, measure::gas_surface_rate };
+    }
+
+    return { nodePos->second.gas_rate, measure::gas_surface_rate };
+}
+
+inline quantity converged_branch_oil_rate(const fn_args& args)
+{
+    auto nodePos = args.grp_nwrk.convergedBranchData.find(args.group_name);
+    if (nodePos == args.grp_nwrk.convergedBranchData.end()) {
+        return { 0.0, measure::liquid_surface_rate };
+    }
+
+    return { nodePos->second.oil_rate, measure::liquid_surface_rate };
+}
+
+inline quantity converged_branch_water_rate(const fn_args& args)
+{
+    auto nodePos = args.grp_nwrk.convergedBranchData.find(args.group_name);
+    if (nodePos == args.grp_nwrk.convergedBranchData.end()) {
+        return { 0.0, measure::liquid_surface_rate };
+    }
+
+    return { nodePos->second.water_rate, measure::liquid_surface_rate };
+}
+
+inline quantity converged_branch_gas_rate(const fn_args& args)
+{
+    auto nodePos = args.grp_nwrk.convergedBranchData.find(args.group_name);
+    if (nodePos == args.grp_nwrk.convergedBranchData.end()) {
+        return { 0.0, measure::gas_surface_rate };
+    }
+
+    return { nodePos->second.gas_rate, measure::gas_surface_rate };
+}
+
+
+
+
 template <Opm::data::WellBlockAvgPress::Quantity wbp_quantity>
 quantity well_block_average_pressure(const fn_args& args)
 {
@@ -2893,8 +2976,19 @@ static const auto funs = std::unordered_map<std::string, ofun> {
 
 
     { "GPR", node_pressure },
+    { "GPR2", converged_node_pressure },
     { "NPR", converged_node_pressure },
     { "GNETPR", converged_node_pressure },
+    { "GPRB", branch_pressure },
+    { "GGPRNB", branch_gas_rate },
+    { "GOPRNB", branch_oil_rate },
+    { "GWPRNB", branch_water_rate },
+    { "GLPRNB", sum( branch_water_rate, branch_oil_rate )},
+    { "GPRB2", converged_branch_pressure },
+    { "GGPRNB2", converged_branch_gas_rate },
+    { "GOPRNB2", converged_branch_oil_rate },
+    { "GWPRNB2", converged_branch_water_rate },
+    { "GLPRNB2", sum( converged_branch_water_rate, converged_branch_oil_rate )},
 
     { "GWPT", mul(rate<rt::wat, producer, /* cumulativeSatellite = */ true>, duration) },
     { "GOPT", mul(rate<rt::oil, producer, /* cumulativeSatellite = */ true>, duration) },

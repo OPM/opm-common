@@ -181,16 +181,68 @@ namespace Opm { namespace data {
         }
     };
 
+    struct BranchData {
+        double pressure_drop { 0.0 };
+        double oil_rate { 0.0 };
+        double water_rate { 0.0 };
+        double gas_rate { 0.0 };
+
+        template <class MessageBufferType>
+        void write(MessageBufferType& buffer) const
+        {
+            buffer.write(this->pressure_drop);
+            buffer.write(this->oil_rate);
+            buffer.write(this->water_rate);
+            buffer.write(this->gas_rate);
+        }
+
+        template <class MessageBufferType>
+        void read(MessageBufferType& buffer)
+        {
+            buffer.read(this->pressure_drop);
+            buffer.read(this->oil_rate);
+            buffer.read(this->water_rate);
+            buffer.read(this->gas_rate);
+        }
+
+        bool operator==(const BranchData& other) const
+        {
+            return this->pressure_drop == other.pressure_drop
+                && this->oil_rate == other.oil_rate
+                && this->water_rate == other.water_rate
+                && this->gas_rate == other.gas_rate;
+        }
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(pressure_drop);
+            serializer(oil_rate);
+            serializer(water_rate);
+            serializer(gas_rate);
+        }
+
+        static BranchData serializationTestObject()
+        {
+            return BranchData{10.0, 100.0, 200.0, 20000.0};
+        }
+    };
+
+
     class GroupAndNetworkValues {
     public:
         std::map<std::string, GroupData> groupData {};
         std::map<std::string, NodeData>  nodeData {};
+        std::map<std::string, BranchData> branchData {};
+        std::map<std::string, BranchData> convergedBranchData {};
 
         template <class MessageBufferType>
         void write(MessageBufferType& buffer) const
         {
             this->writeMap(this->groupData, buffer);
             this->writeMap(this->nodeData, buffer);
+            this->writeMap(this->branchData, buffer);
+            this->writeMap(this->convergedBranchData, buffer);
         }
 
         template <class MessageBufferType>
@@ -198,18 +250,24 @@ namespace Opm { namespace data {
         {
             this->readMap(buffer, this->groupData);
             this->readMap(buffer, this->nodeData);
+            this->readMap(buffer, this->branchData);
+            this->readMap(buffer, this->convergedBranchData);
         }
 
         bool operator==(const GroupAndNetworkValues& other) const
         {
             return (this->groupData == other.groupData)
-                && (this->nodeData  == other.nodeData);
+                && (this->nodeData  == other.nodeData)
+                && (this->branchData == other.branchData)
+                && (this->convergedBranchData == other.convergedBranchData);
         }
 
         void clear()
         {
             this->groupData.clear();
             this->nodeData.clear();
+            this->branchData.clear();
+            this->convergedBranchData.clear();
         }
 
         template<class Serializer>
@@ -217,13 +275,17 @@ namespace Opm { namespace data {
         {
             serializer(groupData);
             serializer(nodeData);
+            serializer(branchData);
+            serializer(convergedBranchData);
         }
 
         static GroupAndNetworkValues serializationTestObject()
         {
             return GroupAndNetworkValues{
                         {{"test_data", GroupData::serializationTestObject()}},
-                        {{"test_node", NodeData::serializationTestObject()}}
+                        {{"test_node", NodeData::serializationTestObject()}},
+                        {{"test_branch", BranchData::serializationTestObject()}},
+                        {{"test_converged_branch", BranchData::serializationTestObject()}}
                    };
         }
 
