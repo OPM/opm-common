@@ -486,6 +486,12 @@ namespace Opm {
         /// through WELSPECS/COMPDAT/GRUPTREE.
         const static std::string SCHEDULE_INVALID_NAME;
 
+        /// A well or group injects an unsupported phase
+        const static std::string SCHEDULE_INVALID_INJPHASE;
+
+        /// A network branch references an invalid flow line.
+        const static std::string SCHEDULE_INVALID_VFPTABLE;
+
         // Only explicitly supported keywords can be included in an ACTIONX
         // or PYACTION block.  These categories control what should happen
         // when encountering an illegal keyword in such blocks.
