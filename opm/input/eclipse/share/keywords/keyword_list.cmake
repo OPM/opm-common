@@ -1088,6 +1088,10 @@ set( keywords
      001_Eclipse300/O/OILCOMPR
      001_Eclipse300/O/OILMW
      001_Eclipse300/O/OILVTIM
+     001_Eclipse300/O/OMEGAA
+     001_Eclipse300/O/OMEGAAS
+     001_Eclipse300/O/OMEGAB
+     001_Eclipse300/O/OMEGABS
      001_Eclipse300/O/OPTIONS3
      001_Eclipse300/P/PCRIT
      001_Eclipse300/P/PCRITS

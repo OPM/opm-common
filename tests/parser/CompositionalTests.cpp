@@ -151,6 +151,15 @@ ZCRIT
 0.29 0.26 0.27 /
 
 
+OMEGAA
+0.5 1* 0.45 /
+1* /
+
+OMEGAB
+1* 0.08 -1 /
+0.09 1* 0.10 /
+
+
 BICS
 0
 0.1 0.2 /
@@ -194,6 +203,17 @@ SSHIFTS
 0.12 0.22 0.32 /
 0.13 0.23 0.33 /
 0.14 0.24 0.34 /
+
+
+OMEGAAS
+1* 0.5 1* /
+0.6 1* 0.7 /
+1* /
+
+OMEGABS
+0.09 1* -1 /
+1* /
+0.085 0.086 1* /
 
 
 STCOND
@@ -473,6 +493,33 @@ BOOST_AUTO_TEST_CASE(CompositionalParsingTest) {
         check_vectors_close(std::vector<double>{0.11, 0.21, 0.31}, vs1, tolerance);
     }
 
+    {
+        // OMEGAA / OMEGAB: region 0 uses PR defaults, region 1 uses SRK defaults.
+        // Only positive deck values override the EOS-type-dependent defaults; the
+        // keyword item default (-1) and 1* keep the per-region default.
+        constexpr double pr_omega_a  = 0.457235529;
+        constexpr double pr_omega_b  = 0.077796074;
+        constexpr double srk_omega_a = 0.4274802;
+        constexpr double srk_omega_b = 0.08664035;
+
+        const auto& oa0 = comp_config.omegaA(0);
+        BOOST_CHECK_EQUAL(num_comps, oa0.size());
+        // second value defaulted (1*), first/third overridden
+        check_vectors_close(std::vector<double>{0.5, pr_omega_a, 0.45}, oa0, tolerance);
+        const auto& oa1 = comp_config.omegaA(1);
+        BOOST_CHECK_EQUAL(num_comps, oa1.size());
+        // entire region defaulted -> SRK defaults
+        check_vectors_close(std::vector<double>{srk_omega_a, srk_omega_a, srk_omega_a}, oa1, tolerance);
+
+        const auto& ob0 = comp_config.omegaB(0);
+        BOOST_CHECK_EQUAL(num_comps, ob0.size());
+        // first value defaulted, second overridden, third explicitly -1 (kept as default)
+        check_vectors_close(std::vector<double>{pr_omega_b, 0.08, pr_omega_b}, ob0, tolerance);
+        const auto& ob1 = comp_config.omegaB(1);
+        BOOST_CHECK_EQUAL(num_comps, ob1.size());
+        check_vectors_close(std::vector<double>{0.09, srk_omega_b, 0.10}, ob1, tolerance);
+    }
+
     // Surface-condition EOS region properties
     BOOST_CHECK(CompositionalConfig::EOSType::PRCORR == comp_config.eosTypeSurf(0));
     BOOST_CHECK(CompositionalConfig::EOSType::RK     == comp_config.eosTypeSurf(1));
@@ -570,6 +617,37 @@ BOOST_AUTO_TEST_CASE(CompositionalParsingTest) {
         check_vectors_close(std::vector<double>{0.12, 0.22, 0.32}, comp_config.volumeShiftsSurf(0), tolerance);
         check_vectors_close(std::vector<double>{0.13, 0.23, 0.33}, comp_config.volumeShiftsSurf(1), tolerance);
         check_vectors_close(std::vector<double>{0.14, 0.24, 0.34}, comp_config.volumeShiftsSurf(2), tolerance);
+    }
+
+    {
+        // OMEGAAS / OMEGABS: surface EOS regions are PRCORR, RK, ZJ.
+        // Defaults follow the surface EOS type; only positive values override.
+        constexpr double prcorr_omega_a = 0.457235529;
+        constexpr double prcorr_omega_b = 0.077796074;
+        constexpr double rk_omega_a     = 0.4274802;
+        constexpr double rk_omega_b     = 0.08664035;
+        constexpr double zj_omega_a     = 0.4274802;
+        constexpr double zj_omega_b     = 0.08664035;
+
+        // OMEGAAS region 0: defaulted, 0.5, defaulted -> PRCORR defaults except second.
+        check_vectors_close(std::vector<double>{prcorr_omega_a, 0.5, prcorr_omega_a},
+                            comp_config.omegaASurf(0), tolerance);
+        // region 1: 0.6, defaulted, 0.7 -> RK default in the middle.
+        check_vectors_close(std::vector<double>{0.6, rk_omega_a, 0.7},
+                            comp_config.omegaASurf(1), tolerance);
+        // region 2: fully defaulted -> ZJ defaults.
+        check_vectors_close(std::vector<double>{zj_omega_a, zj_omega_a, zj_omega_a},
+                            comp_config.omegaASurf(2), tolerance);
+
+        // OMEGABS region 0: 0.09, defaulted, explicit -1 (kept default).
+        check_vectors_close(std::vector<double>{0.09, prcorr_omega_b, prcorr_omega_b},
+                            comp_config.omegaBSurf(0), tolerance);
+        // region 1: fully defaulted -> RK defaults.
+        check_vectors_close(std::vector<double>{rk_omega_b, rk_omega_b, rk_omega_b},
+                            comp_config.omegaBSurf(1), tolerance);
+        // region 2: 0.085, 0.086, defaulted -> ZJ default last.
+        check_vectors_close(std::vector<double>{0.085, 0.086, zj_omega_b},
+                            comp_config.omegaBSurf(2), tolerance);
     }
 
     EclipseState es(deck);

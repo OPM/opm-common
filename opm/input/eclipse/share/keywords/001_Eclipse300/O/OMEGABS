@@ -1,0 +1,20 @@
+{
+  "name": "OMEGABS",
+  "sections": [
+    "PROPS"
+  ],
+  "size": {
+    "keyword": "TABDIMS",
+    "item": "NUM_EOS_SURFACE"
+  },
+  "items": [
+    {
+      "name": "DATA",
+      "value_type": "DOUBLE",
+      "size_type": "ALL",
+      "dimension": "1",
+      "default": -1
+    }
+  ]
+}
+
