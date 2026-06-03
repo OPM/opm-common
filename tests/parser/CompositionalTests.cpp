@@ -26,6 +26,7 @@ along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 #include <opm/input/eclipse/EclipseState/Tables/Tabdims.hpp>
 #include <opm/input/eclipse/Parser/Parser.hpp>
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
+#include <opm/common/utility/OpmInputError.hpp>
 
 #include <cstddef>
 #include <initializer_list>
@@ -1355,6 +1356,71 @@ END
                         comp_config.molecularWeightsSurf(1), tolerance);
     check_vectors_close(comp_config.molecularWeights(1),
                         comp_config.molecularWeightsSurf(2), tolerance);
+}
+
+BOOST_AUTO_TEST_CASE(SurfaceKeywordRequiresReservoirKeywordTest) {
+    const std::string deck_string = R"(
+RUNSPEC
+TITLE
+   SURFACE REQUIRES RESERVOIR TEST
+
+METRIC
+
+TABDIMS
+8* 2 3/
+
+OIL
+GAS
+DIMENS
+4 1 1
+/
+
+COMPS
+3 /
+
+GRID
+DX
+4*10 /
+DY
+4*1 /
+DZ
+4*1 /
+TOPS
+4*0 /
+PERMX
+4*100 /
+PERMY
+4*100 /
+PERMZ
+4*100 /
+PORO
+4*0.1 /
+
+PROPS
+
+CNAMES
+DECANE
+CO2
+METHANE
+/
+
+EOS
+PR /
+SRK /
+
+MWS
+143. 45. 17. /
+143.1 45.1 17.1 /
+143.2 45.2 17.2 /
+
+END
+)";
+
+    const Deck deck = Parser{}.parseString(deck_string);
+    const Runspec runspec{deck};
+
+    const auto construct = [&]() { CompositionalConfig config{deck, runspec}; };
+    BOOST_CHECK_THROW(construct(), OpmInputError);
 }
 
 }

@@ -53,6 +53,7 @@
 #include <string>
 #include <string_view>
 #include <utility>
+#include <unordered_map>
 #include <vector>
 
 namespace {
@@ -133,6 +134,22 @@ namespace {
         }
     }
 
+    std::string_view reservoirKeywordName(std::string_view surface_keyword_name)
+    {
+        static const std::unordered_map<std::string_view, std::string_view> mapping {
+            {Opm::ParserKeywords::MWS::keywordName,    Opm::ParserKeywords::MW::keywordName},
+            {Opm::ParserKeywords::ACFS::keywordName,   Opm::ParserKeywords::ACF::keywordName},
+            {Opm::ParserKeywords::PCRITS::keywordName, Opm::ParserKeywords::PCRIT::keywordName},
+            {Opm::ParserKeywords::TCRITS::keywordName, Opm::ParserKeywords::TCRIT::keywordName},
+            {Opm::ParserKeywords::VCRITS::keywordName, Opm::ParserKeywords::VCRIT::keywordName},
+            {Opm::ParserKeywords::ZCRITS::keywordName, Opm::ParserKeywords::ZCRIT::keywordName},
+            {Opm::ParserKeywords::SSHIFTS::keywordName, Opm::ParserKeywords::SSHIFT::keywordName},
+            {Opm::ParserKeywords::BICS::keywordName,   Opm::ParserKeywords::BIC::keywordName},
+        };
+
+        return mapping.at(surface_keyword_name);
+    }
+
     // The following function is used to parse compositional related keywords:
     // MW, ACF, BIC, PCRIT, TCRIT, VCRIT and SSHIFT, and so on.
     template <typename Keyword>
@@ -182,6 +199,13 @@ namespace {
                 }
             }
             return;
+        }
+
+        if (res_source.empty()) {
+            throw Opm::OpmInputError(
+                fmt::format("surface keyword {} is specified, but reservoir keyword {} is not specified",
+                            Keyword::keywordName, reservoirKeywordName(Keyword::keywordName)),
+                kw->location());
         }
 
         // Specified surface keyword: require full region coverage if no item default exists.
