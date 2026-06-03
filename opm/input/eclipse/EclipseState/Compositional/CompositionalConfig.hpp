@@ -65,6 +65,19 @@ public:
     const std::vector<double>& criticalVolume(std::size_t eos_region) const;
     const std::vector<double>& volumeShifts(std::size_t eos_region) const;
     const std::vector<double>& binaryInteractionCoefficient(std::size_t eos_region) const;
+    const std::vector<double>& criticalZFactor(std::size_t eos_region) const;
+
+    // Accessors for surface EOS regions.
+    EOSType eosTypeSurf(std::size_t eos_region) const;
+    const std::vector<double>& molecularWeightsSurf(std::size_t eos_region) const;
+    const std::vector<double>& acentricFactorsSurf(std::size_t eos_region) const;
+    const std::vector<double>& criticalPressureSurf(std::size_t eos_region) const;
+    const std::vector<double>& criticalTemperatureSurf(std::size_t eos_region) const;
+    const std::vector<double>& criticalVolumeSurf(std::size_t eos_region) const;
+    const std::vector<double>& criticalZFactorSurf(std::size_t eos_region) const;
+    const std::vector<double>& volumeShiftsSurf(std::size_t eos_region) const;
+    const std::vector<double>& binaryInteractionCoefficientSurf(std::size_t eos_region) const;
+
     std::size_t numComps() const;
 
     template<class Serializer>
@@ -81,7 +94,17 @@ public:
         serializer(critical_temperature);
         serializer(critical_volume);
         serializer(volume_shifts);
+        serializer(critical_z_factor);
         serializer(binary_interaction_coefficient);
+        serializer(eos_types_surf);
+        serializer(molecular_weights_surf);
+        serializer(acentric_factors_surf);
+        serializer(critical_pressure_surf);
+        serializer(critical_temperature_surf);
+        serializer(critical_volume_surf);
+        serializer(critical_z_factor_surf);
+        serializer(volume_shifts_surf);
+        serializer(binary_interaction_coefficient_surf);
     }
 
 private:
@@ -98,7 +121,19 @@ private:
     std::vector<std::vector<double>> critical_temperature;
     std::vector<std::vector<double>> critical_volume;
     std::vector<std::vector<double>> volume_shifts;
+    std::vector<std::vector<double>> critical_z_factor;
     std::vector<std::vector<double>> binary_interaction_coefficient;
+
+    // Surface EOS-region properties (EOSS, MWS, ACFS, PCRITS, TCRITS, VCRITS, ZCRITS, SSHIFTS, BICS).
+    std::vector<EOSType> eos_types_surf;
+    std::vector<std::vector<double>> molecular_weights_surf;
+    std::vector<std::vector<double>> acentric_factors_surf;
+    std::vector<std::vector<double>> critical_pressure_surf;
+    std::vector<std::vector<double>> critical_temperature_surf;
+    std::vector<std::vector<double>> critical_volume_surf;
+    std::vector<std::vector<double>> critical_z_factor_surf;
+    std::vector<std::vector<double>> volume_shifts_surf;
+    std::vector<std::vector<double>> binary_interaction_coefficient_surf;
 };
 
 }

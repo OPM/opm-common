@@ -1,18 +1,18 @@
 {
-  "name": "MWS",
+  "name": "ZCRIT",
   "sections": [
     "PROPS"
   ],
   "size": {
     "keyword": "TABDIMS",
-    "item": "NUM_EOS_SURFACE"
+    "item": "NUM_EOS_RES"
   },
   "items": [
     {
       "name": "DATA",
       "value_type": "DOUBLE",
       "size_type": "ALL",
-      "dimension": "Mass/Moles"
+      "dimension": "1"
     }
   ]
 }

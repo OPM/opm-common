@@ -1,5 +1,5 @@
 {
-  "name": "MWS",
+  "name": "SSHIFTS",
   "sections": [
     "PROPS"
   ],
@@ -12,7 +12,8 @@
       "name": "DATA",
       "value_type": "DOUBLE",
       "size_type": "ALL",
-      "dimension": "Mass/Moles"
+      "dimension": "1",
+      "default" : 0
     }
   ]
 }

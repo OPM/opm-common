@@ -1,6 +1,7 @@
 {
-  "name": "MWS",
+  "name": "EOSS",
   "sections": [
+    "RUNSPEC",
     "PROPS"
   ],
   "size": {
@@ -9,10 +10,9 @@
   },
   "items": [
     {
-      "name": "DATA",
-      "value_type": "DOUBLE",
-      "size_type": "ALL",
-      "dimension": "Mass/Moles"
+      "name": "EQUATION",
+      "value_type": "STRING",
+      "default": "PR"
     }
   ]
 }
