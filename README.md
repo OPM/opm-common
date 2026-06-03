@@ -18,6 +18,6 @@ version 3 or later (GPLv3+).
 Requirements
 -----------
 
-- C++17 compatible compiler
+- C++20 compatible compiler
 - CMake >= 3.10
 - Posix compatibility
