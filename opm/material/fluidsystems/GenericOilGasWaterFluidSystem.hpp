@@ -37,10 +37,12 @@
 #include <opm/material/fluidsystems/PTFlashParameterCache.hpp> // TODO: this is something else need to check
 #include <opm/material/viscositymodels/LBC.hpp>
 
+#include <algorithm>
 #include <cassert>
 #include <cstddef>
 #include <string>
 #include <string_view>
+#include <type_traits>
 
 #include <fmt/format.h>
 
@@ -156,8 +158,14 @@ namespace Opm {
                 FluidSystem::addComponent(CompParm{names[c], molar_weight[c], critic_temp[c], critic_pressure[c],
                                                    critic_volume[c] * 1.e3, acentric_factor[c]});
             }
-            FluidSystem::printComponentParams();
-            interaction_coefficients_ = comp_config.binaryInteractionCoefficient(0);
+
+            const auto& bic = comp_config.binaryInteractionCoefficient(0);
+            if constexpr (std::is_same_v<Scalar, double>) {
+                interaction_coefficients_ = bic;
+            } else {
+                interaction_coefficients_.resize(bic.size());
+                std::ranges::copy(bic, interaction_coefficients_.begin());
+            }
 
             // Init. water pvt from deck
             waterPvt_->initFromState(eclState, schedule);
