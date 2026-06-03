@@ -52,8 +52,8 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
-#include <utility>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 namespace {
@@ -68,7 +68,7 @@ namespace {
         const auto& keywords = props_section.get<Keyword>();
         if (keywords.size() > 1) {
             throw Opm::OpmInputError {
-                fmt::format("there are multiple {} keyword specifications", Keyword::keywordName),
+                fmt::format("there are multiple {} keyword specifications", keywords.front().name()),
                 keywords.begin()->location()
             };
         }
@@ -107,7 +107,7 @@ namespace {
                               const std::size_t              num_values,
                               const std::optional<double>    default_value)
     {
-        const auto& kw_name = Keyword::keywordName;
+        const auto& kw_name = kw.name();
 
         for (std::size_t i = 0; i < kw.size(); ++i) {
             const auto& item = kw.getRecord(i).template getItem<typename Keyword::DATA>();
@@ -204,7 +204,7 @@ namespace {
         if (res_source.empty()) {
             throw Opm::OpmInputError(
                 fmt::format("surface keyword {} is specified, but reservoir keyword {} is not specified",
-                            Keyword::keywordName, reservoirKeywordName(Keyword::keywordName)),
+                            kw->name(), reservoirKeywordName(kw->name())),
                 kw->location());
         }
 
@@ -224,7 +224,6 @@ namespace {
     resolveEosKeyword(const Opm::PROPSSection&   props_section,
                       const Opm::RUNSPECSection& runspec_section)
     {
-        const auto& kw_name    = Keyword::keywordName;
         const bool  has_props   = props_section  .hasKeyword<Keyword>();
         const bool  has_runspec = runspec_section.hasKeyword<Keyword>();
 
@@ -234,7 +233,8 @@ namespace {
 
         if (has_props && has_runspec) {
             throw Opm::OpmInputError(
-                fmt::format("{} is specified in both RUNSPEC and PROPS sections", kw_name),
+                fmt::format("{} is specified in both RUNSPEC and PROPS sections",
+                            props_section.get<Keyword>().front().name()),
                 props_section.get<Keyword>().begin()->location());
         }
 
@@ -244,7 +244,7 @@ namespace {
 
         if (keywords.size() > 1) {
             throw Opm::OpmInputError(
-                fmt::format("there are multiple {} keyword specifications", kw_name),
+                fmt::format("there are multiple {} keyword specifications", keywords.front().name()),
                 keywords.begin()->location());
         }
 
@@ -259,7 +259,7 @@ namespace {
                          const std::size_t                               max_regions,
                          const std::string_view                          region_description)
     {
-        const auto& kw_name = Keyword::keywordName;
+        const auto& kw_name = kw.name();
 
         if (kw.size() > max_regions) {
             throw Opm::OpmInputError(
@@ -399,7 +399,8 @@ CompositionalConfig::CompositionalConfig(const Deck& deck, const Runspec& runspe
     {
         const RUNSPECSection runspec_section{deck};
         if (const auto* kw = resolveEosKeyword<ParserKeywords::EOS>(
-                props_section, runspec_section))
+                props_section, runspec_section);
+            kw != nullptr)
         {
             parseEosRecords<ParserKeywords::EOS>(
                 *kw, eos_types, num_eos_res,
@@ -413,7 +414,8 @@ CompositionalConfig::CompositionalConfig(const Deck& deck, const Runspec& runspe
     {
         const RUNSPECSection runspec_section{deck};
         if (const auto* kw = resolveEosKeyword<ParserKeywords::EOSS>(
-                props_section, runspec_section))
+                props_section, runspec_section);
+            kw != nullptr)
         {
             eos_types_surf.assign(num_eos_sur, EOSType::PR);
             parseEosRecords<ParserKeywords::EOSS>(
@@ -640,7 +642,7 @@ const std::vector<double>& CompositionalConfig::binaryInteractionCoefficient(std
     return this->binary_interaction_coefficient[eos_region];
 }
 
-CompositionalConfig::EOSType CompositionalConfig::eosTypeSurf(size_t eos_region) const {
+CompositionalConfig::EOSType CompositionalConfig::eosTypeSurf(std::size_t eos_region) const {
     return this->eos_types_surf[eos_region];
 }
 
@@ -648,31 +650,31 @@ const std::vector<double>& CompositionalConfig::molecularWeightsSurf(std::size_t
     return this->molecular_weights_surf[eos_region];
 }
 
-const std::vector<double>& CompositionalConfig::acentricFactorsSurf(size_t eos_region) const {
+const std::vector<double>& CompositionalConfig::acentricFactorsSurf(std::size_t eos_region) const {
     return this->acentric_factors_surf[eos_region];
 }
 
-const std::vector<double>& CompositionalConfig::criticalPressureSurf(size_t eos_region) const {
+const std::vector<double>& CompositionalConfig::criticalPressureSurf(std::size_t eos_region) const {
     return this->critical_pressure_surf[eos_region];
 }
 
-const std::vector<double>& CompositionalConfig::criticalTemperatureSurf(size_t eos_region) const {
+const std::vector<double>& CompositionalConfig::criticalTemperatureSurf(std::size_t eos_region) const {
     return this->critical_temperature_surf[eos_region];
 }
 
-const std::vector<double>& CompositionalConfig::criticalVolumeSurf(size_t eos_region) const {
+const std::vector<double>& CompositionalConfig::criticalVolumeSurf(std::size_t eos_region) const {
     return this->critical_volume_surf[eos_region];
 }
 
-const std::vector<double>& CompositionalConfig::criticalZFactorSurf(size_t eos_region) const {
+const std::vector<double>& CompositionalConfig::criticalZFactorSurf(std::size_t eos_region) const {
     return this->critical_z_factor_surf[eos_region];
 }
 
-const std::vector<double>& CompositionalConfig::volumeShiftsSurf(size_t eos_region) const {
+const std::vector<double>& CompositionalConfig::volumeShiftsSurf(std::size_t eos_region) const {
     return this->volume_shifts_surf[eos_region];
 }
 
-const std::vector<double>& CompositionalConfig::binaryInteractionCoefficientSurf(size_t eos_region) const {
+const std::vector<double>& CompositionalConfig::binaryInteractionCoefficientSurf(std::size_t eos_region) const {
     return this->binary_interaction_coefficient_surf[eos_region];
 }
 
