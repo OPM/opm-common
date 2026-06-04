@@ -43,24 +43,24 @@
       },
       {
         "item": 7,
-        "name": "TABLE_NUM",
+        "name": "GAS_PLANT_TABLE_NUM",
         "value_type": "INT",
         "default": 0
       },
       {
         "item": 8,
-        "name": "EOS_NUM",
+        "name": "SURFACE_EOS_NUMBER",
         "value_type": "INT"
       },
       {
         "item": 9,
-        "name": "REF_TEMP",
+        "name": "NGL_DENSITY_TEMP",
         "value_type": "DOUBLE",
         "dimension": "Temperature"
       },
       {
         "item": 10,
-        "name": "REF_PRESS",
+        "name": "NGL_DENSITY_PRES",
         "value_type": "DOUBLE",
         "dimension": "Pressure"
       }

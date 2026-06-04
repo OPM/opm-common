@@ -21,6 +21,7 @@
 #define OPM_INIT_CONFIG_HPP
 
 #include <opm/input/eclipse/EclipseState/InitConfig/Equil.hpp>
+#include <opm/input/eclipse/EclipseState/InitConfig/FieldSep.hpp>
 #include <opm/input/eclipse/EclipseState/InitConfig/FoamConfig.hpp>
 
 #include <string>
@@ -99,6 +100,15 @@ namespace Opm {
         /// Only meaningful if hasEquil() returns true.
         const Equil& getEquil() const;
 
+        /// Whether or not run specifies field separator stages (FIELDSEP
+        /// keyword).
+        bool hasFieldSep() const;
+
+        /// Field separator specification.
+        ///
+        /// Only meaningful if hasFieldSep() returns true.
+        const FieldSep& getFieldSep() const;
+
         /// Whether or not run initialises its mechanical stresses by an
         /// equilibration procedure (STREQUIL keyword).
         ///
@@ -169,6 +179,7 @@ namespace Opm {
         void serializeOp(Serializer& serializer)
         {
             serializer(equil);
+            serializer(fieldsep);
             serializer(stress_equil);
             serializer(foamconfig);
             serializer(m_filleps);
@@ -182,6 +193,9 @@ namespace Opm {
     private:
         /// Run's gravity equilibration specification.
         Equil equil{};
+
+        /// Run's field separator specification.
+        FieldSep fieldsep{};
 
         /// Run's mechanical stress equilibration specification.
         StressEquil stress_equil{};

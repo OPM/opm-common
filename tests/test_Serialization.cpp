@@ -49,6 +49,7 @@
 #include <opm/input/eclipse/EclipseState/Grid/TransMult.hpp>
 #include <opm/input/eclipse/EclipseState/IOConfig/IOConfig.hpp>
 #include <opm/input/eclipse/EclipseState/InitConfig/Equil.hpp>
+#include <opm/input/eclipse/EclipseState/InitConfig/FieldSep.hpp>
 #include <opm/input/eclipse/EclipseState/InitConfig/FoamConfig.hpp>
 #include <opm/input/eclipse/EclipseState/InitConfig/InitConfig.hpp>
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
@@ -258,6 +259,7 @@ TEST_FOR_TYPE(EclipseConfig)
 TEST_FOR_TYPE(EndpointScaling)
 TEST_FOR_TYPE(Eqldims)
 TEST_FOR_TYPE(Equil)
+TEST_FOR_TYPE(FieldSep)
 TEST_FOR_TYPE(TLMixpar)
 TEST_FOR_TYPE(Ppcwmax)
 TEST_FOR_TYPE(Events)
