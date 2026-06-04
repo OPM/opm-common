@@ -1,5 +1,6 @@
 {
   "name": "OMEGABS",
+  "description": "Item default -1 is a parser sentinel. Effective defaults are EOS-type dependent and applied per surface EOS region unless a strictly positive value is provided.",
   "sections": [
     "PROPS"
   ],

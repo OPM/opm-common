@@ -1,5 +1,6 @@
 {
   "name": "OMEGAA",
+  "description": "Item default -1 is a parser sentinel. Effective defaults are EOS-type dependent and applied per EOS region unless a strictly positive value is provided.",
   "sections": [
     "PROPS"
   ],

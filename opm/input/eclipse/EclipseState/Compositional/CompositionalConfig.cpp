@@ -712,7 +712,8 @@ CompositionalConfig CompositionalConfig::serializationTestObject() {
     result.binary_interaction_coefficient = {2, std::vector<double>(result.num_comps * (result.num_comps - 1) / 2, 6.)};
     result.omega_a = {2, std::vector<double>(result.num_comps, 0.457235529)};
     result.omega_b = {2, std::vector<double>(result.num_comps, 0.077796074)};
-    result.eos_types_surf = {3, EOSType::PR};    result.molecular_weights_surf = {3, std::vector<double>(result.num_comps, 17.)};
+    result.eos_types_surf = {3, EOSType::PR};
+    result.molecular_weights_surf = {3, std::vector<double>(result.num_comps, 17.)};
     result.acentric_factors_surf = {3, std::vector<double>(result.num_comps, 1.1)};
     result.critical_pressure_surf = {3, std::vector<double>(result.num_comps, 2.1)};
     result.critical_temperature_surf = {3, std::vector<double>(result.num_comps, 3.1)};
