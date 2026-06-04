@@ -140,6 +140,7 @@ namespace {
             {Opm::ParserKeywords::ACFS::keywordName,   Opm::ParserKeywords::ACF::keywordName},
             {Opm::ParserKeywords::PCRITS::keywordName, Opm::ParserKeywords::PCRIT::keywordName},
             {Opm::ParserKeywords::TCRITS::keywordName, Opm::ParserKeywords::TCRIT::keywordName},
+            {Opm::ParserKeywords::TBOILS::keywordName, Opm::ParserKeywords::TBOIL::keywordName},
             {Opm::ParserKeywords::VCRITS::keywordName, Opm::ParserKeywords::VCRIT::keywordName},
             {Opm::ParserKeywords::ZCRITS::keywordName, Opm::ParserKeywords::ZCRIT::keywordName},
             {Opm::ParserKeywords::SSHIFTS::keywordName, Opm::ParserKeywords::SSHIFT::keywordName},
@@ -412,6 +413,8 @@ namespace {
             std::pair {"PCRITS"sv, section.hasKeyword<Opm::ParserKeywords::PCRITS>() },
             std::pair {"TCRIT"sv,  section.hasKeyword<Opm::ParserKeywords::TCRIT>() },
             std::pair {"TCRITS"sv, section.hasKeyword<Opm::ParserKeywords::TCRITS>() },
+            std::pair {"TBOIL"sv,  section.hasKeyword<Opm::ParserKeywords::TBOIL>() },
+            std::pair {"TBOILS"sv, section.hasKeyword<Opm::ParserKeywords::TBOILS>() },
             std::pair {"VCRIT"sv,  section.hasKeyword<Opm::ParserKeywords::VCRIT>() },
             std::pair {"SSHIFT"sv, section.hasKeyword<Opm::ParserKeywords::SSHIFT>() },
             std::pair {"SSHIFTS"sv, section.hasKeyword<Opm::ParserKeywords::SSHIFTS>() },
@@ -605,6 +608,8 @@ CompositionalConfig::CompositionalConfig(const Deck& deck, const Runspec& runspe
                                           num_eos_res, this->num_comps);
     processKeyword<ParserKeywords::TCRIT>(props_section, this->critical_temperature,
                                           num_eos_res, this->num_comps);
+    processKeyword<ParserKeywords::TBOIL>(props_section, this->boiling_temperature,
+                                          num_eos_res, this->num_comps);
     processKeyword<ParserKeywords::VCRIT>(props_section, this->critical_volume,
                                           num_eos_res, this->num_comps);
     processKeyword<ParserKeywords::SSHIFT>(props_section, this->volume_shifts,
@@ -628,6 +633,9 @@ CompositionalConfig::CompositionalConfig(const Deck& deck, const Runspec& runspe
                                                   num_eos_sur, num_eos_res, this->num_comps);
     processSurfaceKeyword<ParserKeywords::TCRITS>(props_section, this->critical_temperature_surf,
                                                   this->critical_temperature,
+                                                  num_eos_sur, num_eos_res, this->num_comps);
+    processSurfaceKeyword<ParserKeywords::TBOILS>(props_section, this->boiling_temperature_surf,
+                                                  this->boiling_temperature,
                                                   num_eos_sur, num_eos_res, this->num_comps);
     processSurfaceKeyword<ParserKeywords::VCRITS>(props_section, this->critical_volume_surf,
                                                   this->critical_volume,
@@ -671,6 +679,7 @@ bool CompositionalConfig::operator==(const CompositionalConfig& other) const {
            this->acentric_factors == other.acentric_factors &&
            this->critical_pressure == other.critical_pressure &&
            this->critical_temperature == other.critical_temperature &&
+           this->boiling_temperature == other.boiling_temperature &&
            this->critical_volume == other.critical_volume &&
            this->volume_shifts == other.volume_shifts &&
            this->critical_z_factor == other.critical_z_factor &&
@@ -682,6 +691,7 @@ bool CompositionalConfig::operator==(const CompositionalConfig& other) const {
            this->acentric_factors_surf == other.acentric_factors_surf &&
            this->critical_pressure_surf == other.critical_pressure_surf &&
            this->critical_temperature_surf == other.critical_temperature_surf &&
+           this->boiling_temperature_surf == other.boiling_temperature_surf &&
            this->critical_volume_surf == other.critical_volume_surf &&
            this->critical_z_factor_surf == other.critical_z_factor_surf &&
            this->volume_shifts_surf == other.volume_shifts_surf &&
@@ -703,6 +713,7 @@ CompositionalConfig CompositionalConfig::serializationTestObject() {
     result.acentric_factors = {2,  std::vector<double>(result.num_comps, 1.)};
     result.critical_pressure = {2, std::vector<double>(result.num_comps, 2.)};
     result.critical_temperature = {2, std::vector<double>(result.num_comps, 3.)};
+    result.boiling_temperature = {2, std::vector<double>(result.num_comps, 3.5)};
     result.critical_volume = {2, std::vector<double>(result.num_comps, 5.)};
     result.volume_shifts = {2, std::vector<double>(result.num_comps, 0.1)};
     result.critical_z_factor = {2, std::vector<double>(result.num_comps, 0.29)};
@@ -714,6 +725,7 @@ CompositionalConfig CompositionalConfig::serializationTestObject() {
     result.acentric_factors_surf = {3, std::vector<double>(result.num_comps, 1.1)};
     result.critical_pressure_surf = {3, std::vector<double>(result.num_comps, 2.1)};
     result.critical_temperature_surf = {3, std::vector<double>(result.num_comps, 3.1)};
+    result.boiling_temperature_surf = {3, std::vector<double>(result.num_comps, 3.6)};
     result.critical_volume_surf = {3, std::vector<double>(result.num_comps, 5.1)};
     result.critical_z_factor_surf = {3, std::vector<double>(result.num_comps, 0.3)};
     result.volume_shifts_surf = {3, std::vector<double>(result.num_comps, 0.11)};
@@ -776,6 +788,10 @@ const std::vector<double>& CompositionalConfig::criticalTemperature(std::size_t 
     return this->critical_temperature[eos_region];
 }
 
+const std::vector<double>& CompositionalConfig::boilingTemperature(std::size_t eos_region) const {
+    return this->boiling_temperature[eos_region];
+}
+
 const std::vector<double>& CompositionalConfig::criticalVolume(std::size_t eos_region) const {
     return this->critical_volume[eos_region];
 }
@@ -818,6 +834,10 @@ const std::vector<double>& CompositionalConfig::criticalPressureSurf(std::size_t
 
 const std::vector<double>& CompositionalConfig::criticalTemperatureSurf(std::size_t eos_region) const {
     return this->critical_temperature_surf[eos_region];
+}
+
+const std::vector<double>& CompositionalConfig::boilingTemperatureSurf(std::size_t eos_region) const {
+    return this->boiling_temperature_surf[eos_region];
 }
 
 const std::vector<double>& CompositionalConfig::criticalVolumeSurf(std::size_t eos_region) const {

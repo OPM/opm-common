@@ -133,6 +133,10 @@ TCRIT
 600. 300. 190. /
 601. 301. 191. /
 
+TBOIL
+350. 450. 550. /
+351. 451. 551. /
+
 MW
 142.  44.  16. /
 142.1 44.1 16.1 /
@@ -182,6 +186,11 @@ TCRITS
 602. 302. 192. /
 603. 303. 193. /
 604. 304. 194. /
+
+TBOILS
+352. 452. 552. /
+353. 453. 553. /
+354. 454. 554. /
 
 MWS
 143.  45.  17. /
@@ -434,6 +443,16 @@ BOOST_AUTO_TEST_CASE(CompositionalParsingTest) {
     }
 
     {
+        const auto& bt0 = comp_config.boilingTemperature(0);
+        BOOST_CHECK_EQUAL(num_comps, bt0.size());
+        const std::vector<double> ref_bt0 = {usys.to_si(M::temperature_absolute, 350), usys.to_si(M::temperature_absolute, 450), usys.to_si(M::temperature_absolute, 550)};
+        check_vectors_close(ref_bt0, bt0, tolerance);
+        const auto& bt1 = comp_config.boilingTemperature(1);
+        const std::vector<double> ref_bt1 = {usys.to_si(M::temperature_absolute, 351), usys.to_si(M::temperature_absolute, 451), usys.to_si(M::temperature_absolute, 551)};
+        check_vectors_close(ref_bt1, bt1, tolerance);
+    }
+
+    {
         const auto& cv0 = comp_config.criticalVolume(0);
         BOOST_CHECK_EQUAL(num_comps, cv0.size());
         const std::vector<double> ref_cv0 { usys.to_si( "GeometricVolume/Moles", 0.6),
@@ -562,6 +581,21 @@ BOOST_AUTO_TEST_CASE(CompositionalParsingTest) {
         check_vectors_close(ref_cts0, comp_config.criticalTemperatureSurf(0), tolerance);
         check_vectors_close(ref_cts1, comp_config.criticalTemperatureSurf(1), tolerance);
         check_vectors_close(ref_cts2, comp_config.criticalTemperatureSurf(2), tolerance);
+    }
+
+    {
+        const std::vector<double> ref_bts0 = {usys.to_si(M::temperature_absolute, 352),
+                                              usys.to_si(M::temperature_absolute, 452),
+                                              usys.to_si(M::temperature_absolute, 552)};
+        const std::vector<double> ref_bts1 = {usys.to_si(M::temperature_absolute, 353),
+                                              usys.to_si(M::temperature_absolute, 453),
+                                              usys.to_si(M::temperature_absolute, 553)};
+        const std::vector<double> ref_bts2 = {usys.to_si(M::temperature_absolute, 354),
+                                              usys.to_si(M::temperature_absolute, 454),
+                                              usys.to_si(M::temperature_absolute, 554)};
+        check_vectors_close(ref_bts0, comp_config.boilingTemperatureSurf(0), tolerance);
+        check_vectors_close(ref_bts1, comp_config.boilingTemperatureSurf(1), tolerance);
+        check_vectors_close(ref_bts2, comp_config.boilingTemperatureSurf(2), tolerance);
     }
 
     {
@@ -1104,6 +1138,10 @@ TCRIT
 600. 300. 190. /
 601. 301. 191. /
 
+TBOIL
+350. 450. 550. /
+351. 451. 551. /
+
 VCRIT
 0.6  0.1  0.1 /
 0.61 0.11 0.11 /
@@ -1184,6 +1222,19 @@ BOOST_AUTO_TEST_CASE(SurfaceDefaultsFromReservoirTest) {
         check_vectors_close(ref_tcs0, comp_config.criticalTemperatureSurf(0), tolerance);
         check_vectors_close(ref_tcs1, comp_config.criticalTemperatureSurf(1), tolerance);
         check_vectors_close(ref_tcs1, comp_config.criticalTemperatureSurf(2), tolerance);
+    }
+
+    // Without TBOILS, boiling temperature inherits from TBOIL.
+    {
+        const std::vector<double> ref_tbs0{usys.to_si(M::temperature_absolute, 350),
+                                           usys.to_si(M::temperature_absolute, 450),
+                                           usys.to_si(M::temperature_absolute, 550)};
+        const std::vector<double> ref_tbs1{usys.to_si(M::temperature_absolute, 351),
+                                           usys.to_si(M::temperature_absolute, 451),
+                                           usys.to_si(M::temperature_absolute, 551)};
+        check_vectors_close(ref_tbs0, comp_config.boilingTemperatureSurf(0), tolerance);
+        check_vectors_close(ref_tbs1, comp_config.boilingTemperatureSurf(1), tolerance);
+        check_vectors_close(ref_tbs1, comp_config.boilingTemperatureSurf(2), tolerance);
     }
 
     // Without VCRITS, critical volume inherits from VCRIT.
@@ -1298,6 +1349,10 @@ TCRIT
 600. 300. 190. /
 601. 301. 191. /
 
+TBOIL
+350. 450. 550. /
+351. 451. 551. /
+
 VCRIT
 0.6  0.1  0.1 /
 0.61 0.11 0.11 /
@@ -1407,6 +1462,19 @@ END
                                             usys.to_si(M::temperature_absolute, 301),
                                             usys.to_si(M::temperature_absolute, 191)},
                         comp_config.criticalTemperatureSurf(2), tolerance);
+
+    check_vectors_close(std::vector<double>{usys.to_si(M::temperature_absolute, 350),
+                                            usys.to_si(M::temperature_absolute, 450),
+                                            usys.to_si(M::temperature_absolute, 550)},
+                        comp_config.boilingTemperatureSurf(0), tolerance);
+    check_vectors_close(std::vector<double>{usys.to_si(M::temperature_absolute, 351),
+                                            usys.to_si(M::temperature_absolute, 451),
+                                            usys.to_si(M::temperature_absolute, 551)},
+                        comp_config.boilingTemperatureSurf(1), tolerance);
+    check_vectors_close(std::vector<double>{usys.to_si(M::temperature_absolute, 351),
+                                            usys.to_si(M::temperature_absolute, 451),
+                                            usys.to_si(M::temperature_absolute, 551)},
+                        comp_config.boilingTemperatureSurf(2), tolerance);
 
     check_vectors_close(std::vector<double>{usys.to_si("GeometricVolume/Moles", 0.6),
                                             usys.to_si("GeometricVolume/Moles", 0.1),

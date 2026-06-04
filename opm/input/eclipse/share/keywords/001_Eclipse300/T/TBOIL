@@ -1,0 +1,19 @@
+{
+  "name": "TBOIL",
+  "sections": [
+    "PROPS"
+  ],
+  "size": {
+    "keyword": "TABDIMS",
+    "item": "NUM_EOS_RES"
+  },
+  "items": [
+    {
+      "name": "DATA",
+      "value_type": "DOUBLE",
+      "size_type": "ALL",
+      "dimension": "AbsoluteTemperature"
+    }
+  ]
+}
+
