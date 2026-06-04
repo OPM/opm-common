@@ -26,18 +26,19 @@
     {
       "item": 4,
       "name": "LIQ_DESTINATION",
-      "value_type": "INT"
+      "value_type": "INT",
+      "default": 0
     },
     {
       "item": 5,
       "name": "VAP_DESTINATION",
-      "value_type":  "INT"
+      "value_type": "INT",
+      "default": 0
     },
     {
         "item": 6,
-        "name": "KVALUE",
-        "value_type": "DOUBLE",
-        "dimension": "1",
+        "name": "KVAL_TABLE_NUM",
+        "value_type": "INT",
         "default": 0
       },
       {
