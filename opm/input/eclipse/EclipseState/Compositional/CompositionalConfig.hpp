@@ -62,6 +62,7 @@ public:
     const std::vector<double>& acentricFactors(std::size_t eos_region) const;
     const std::vector<double>& criticalPressure(std::size_t eos_region) const;
     const std::vector<double>& criticalTemperature(std::size_t eos_region) const;
+    const std::vector<double>& boilingTemperature(std::size_t eos_region) const;
     const std::vector<double>& criticalVolume(std::size_t eos_region) const;
     const std::vector<double>& volumeShifts(std::size_t eos_region) const;
     const std::vector<double>& binaryInteractionCoefficient(std::size_t eos_region) const;
@@ -73,6 +74,7 @@ public:
     const std::vector<double>& acentricFactorsSurf(std::size_t eos_region) const;
     const std::vector<double>& criticalPressureSurf(std::size_t eos_region) const;
     const std::vector<double>& criticalTemperatureSurf(std::size_t eos_region) const;
+    const std::vector<double>& boilingTemperatureSurf(std::size_t eos_region) const;
     const std::vector<double>& criticalVolumeSurf(std::size_t eos_region) const;
     const std::vector<double>& criticalZFactorSurf(std::size_t eos_region) const;
     const std::vector<double>& volumeShiftsSurf(std::size_t eos_region) const;
@@ -92,6 +94,7 @@ public:
         serializer(acentric_factors);
         serializer(critical_pressure);
         serializer(critical_temperature);
+        serializer(boiling_temperature);
         serializer(critical_volume);
         serializer(volume_shifts);
         serializer(critical_z_factor);
@@ -101,6 +104,7 @@ public:
         serializer(acentric_factors_surf);
         serializer(critical_pressure_surf);
         serializer(critical_temperature_surf);
+        serializer(boiling_temperature_surf);
         serializer(critical_volume_surf);
         serializer(critical_z_factor_surf);
         serializer(volume_shifts_surf);
@@ -119,6 +123,7 @@ private:
     std::vector<std::vector<double>> acentric_factors;
     std::vector<std::vector<double>> critical_pressure;
     std::vector<std::vector<double>> critical_temperature;
+    std::vector<std::vector<double>> boiling_temperature;
     std::vector<std::vector<double>> critical_volume;
     std::vector<std::vector<double>> volume_shifts;
     std::vector<std::vector<double>> critical_z_factor;
@@ -130,6 +135,7 @@ private:
     std::vector<std::vector<double>> acentric_factors_surf;
     std::vector<std::vector<double>> critical_pressure_surf;
     std::vector<std::vector<double>> critical_temperature_surf;
+    std::vector<std::vector<double>> boiling_temperature_surf;
     std::vector<std::vector<double>> critical_volume_surf;
     std::vector<std::vector<double>> critical_z_factor_surf;
     std::vector<std::vector<double>> volume_shifts_surf;
