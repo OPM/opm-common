@@ -63,7 +63,7 @@ public:
         return phaseIsActive_[phaseIdx];
     }
 
-    [[nodiscard]] OPM_HOST_DEVICE __attribute__((noinline)) short canonicalToActivePhaseIdx(unsigned phaseIdx) const {
+    [[nodiscard]] OPM_HOST_DEVICE [[gnu::noinline]] short canonicalToActivePhaseIdx(unsigned phaseIdx) const {
         if (!phaseIsActive(phaseIdx)) {
             OPM_THROW(std::logic_error, "Canonical phase " + std::to_string(phaseIdx) + " is not active.");
         }
