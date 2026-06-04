@@ -1,0 +1,21 @@
+{
+  "name": "OMEGAB",
+  "description": "Item default -1 is a parser sentinel. Effective defaults are EOS-type dependent and applied per EOS region unless a strictly positive value is provided.",
+  "sections": [
+    "PROPS"
+  ],
+  "size": {
+    "keyword": "TABDIMS",
+    "item": "NUM_EOS_RES"
+  },
+  "items": [
+    {
+      "name": "DATA",
+      "value_type": "DOUBLE",
+      "size_type": "ALL",
+      "dimension": "1",
+      "default": -1
+    }
+  ]
+}
+

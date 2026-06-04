@@ -66,6 +66,8 @@ public:
     const std::vector<double>& volumeShifts(std::size_t eos_region) const;
     const std::vector<double>& binaryInteractionCoefficient(std::size_t eos_region) const;
     const std::vector<double>& criticalZFactor(std::size_t eos_region) const;
+    const std::vector<double>& omegaA(std::size_t eos_region) const;
+    const std::vector<double>& omegaB(std::size_t eos_region) const;
 
     // Accessors for surface EOS regions.
     EOSType eosTypeSurf(std::size_t eos_region) const;
@@ -77,6 +79,8 @@ public:
     const std::vector<double>& criticalZFactorSurf(std::size_t eos_region) const;
     const std::vector<double>& volumeShiftsSurf(std::size_t eos_region) const;
     const std::vector<double>& binaryInteractionCoefficientSurf(std::size_t eos_region) const;
+    const std::vector<double>& omegaASurf(std::size_t eos_region) const;
+    const std::vector<double>& omegaBSurf(std::size_t eos_region) const;
 
     std::size_t numComps() const;
 
@@ -96,6 +100,8 @@ public:
         serializer(volume_shifts);
         serializer(critical_z_factor);
         serializer(binary_interaction_coefficient);
+        serializer(omega_a);
+        serializer(omega_b);
         serializer(eos_types_surf);
         serializer(molecular_weights_surf);
         serializer(acentric_factors_surf);
@@ -105,6 +111,8 @@ public:
         serializer(critical_z_factor_surf);
         serializer(volume_shifts_surf);
         serializer(binary_interaction_coefficient_surf);
+        serializer(omega_a_surf);
+        serializer(omega_b_surf);
     }
 
 private:
@@ -123,6 +131,8 @@ private:
     std::vector<std::vector<double>> volume_shifts;
     std::vector<std::vector<double>> critical_z_factor;
     std::vector<std::vector<double>> binary_interaction_coefficient;
+    std::vector<std::vector<double>> omega_a;
+    std::vector<std::vector<double>> omega_b;
 
     // Surface EOS-region properties (EOSS, MWS, ACFS, PCRITS, TCRITS, VCRITS, ZCRITS, SSHIFTS, BICS).
     std::vector<EOSType> eos_types_surf;
@@ -134,6 +144,8 @@ private:
     std::vector<std::vector<double>> critical_z_factor_surf;
     std::vector<std::vector<double>> volume_shifts_surf;
     std::vector<std::vector<double>> binary_interaction_coefficient_surf;
+    std::vector<std::vector<double>> omega_a_surf;
+    std::vector<std::vector<double>> omega_b_surf;
 };
 
 }
