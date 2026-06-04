@@ -124,10 +124,8 @@ namespace {
             }
             else if (data.size() > num_values) {
                 const auto msg = fmt::format("in keyword {}, {} values are specified, "
-                                             "which is bigger than the number "
-                                             "{} should be specified",
-                                             kw_name, data.size(), num_values);
-
+                                                   "but at most {} values are expected",
+                                                   kw_name, data.size(), num_values);
                 throw Opm::OpmInputError(msg, kw.location());
             }
 
@@ -262,11 +260,10 @@ namespace {
             const auto& item = kw.getRecord(i).template getItem<typename Keyword::DATA>();
             const auto& data = item.getSIDoubleData();
             if (data.size() > num_values) {
-                throw Opm::OpmInputError(
-                    fmt::format("in keyword {}, {} values are specified, which is bigger "
-                                "than the number {} should be specified",
-                                kw.name(), data.size(), num_values),
-                    kw.location());
+                const auto msg = fmt::format("in keyword {}, {} values are specified, "
+                                             "but at most {} values are expected",
+                                             kw.name(), data.size(), num_values);
+                throw Opm::OpmInputError(msg, kw.location());
             }
             for (std::size_t c = 0; c < data.size(); ++c) {
                 if (data[c] > 0.0) {
