@@ -48,14 +48,6 @@ PhaseUsageInfo<IndexTraits>::PhaseUsageInfo()
 }
 
 template <typename IndexTraits>
-short PhaseUsageInfo<IndexTraits>::canonicalToActivePhaseIdx(unsigned phaseIdx) const {
-    if (!phaseIsActive(phaseIdx)) {
-        OPM_THROW(std::logic_error, fmt::format("Canonical phase {} is not active.", phaseIdx));
-    }
-    return canonicalToActivePhaseIdx_[phaseIdx];
-}
-
-template <typename IndexTraits>
 void PhaseUsageInfo<IndexTraits>::updateIndexMapping_() {
     int activePhaseIdx = 0;
     for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
