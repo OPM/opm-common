@@ -210,7 +210,7 @@ namespace Opm {
                            int lgr_grid_number,
                            const bool defaultSatTabId);
 
-        std::size_t findClosestConnection(int oi, int oj, double oz, std::size_t start_pos);
+        std::size_t findClosestConnection(int oi, int oj, int ok, double oz, std::size_t start_pos);
         void orderTRACK();
         void orderMSW();
         void orderDEPTH();

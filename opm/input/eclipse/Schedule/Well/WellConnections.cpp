@@ -1071,7 +1071,7 @@ CF and Kh items for well {} must both be specified or both defaulted/negative)",
     {
         // Find the first connection and swap it into the 0-position.
         const double surface_z = 0.0;
-        std::size_t first_index = findClosestConnection(this->headI, this->headJ, surface_z, 0);
+        std::size_t first_index = findClosestConnection(this->headI, this->headJ, 0, surface_z, 0);
         std::swap(m_connections[first_index], m_connections[0]);
 
         // Repeat for remaining connections.
@@ -1087,15 +1087,16 @@ CF and Kh items for well {} must both be specified or both defaulted/negative)",
         for (std::size_t pos = 1; pos < m_connections.size() - 1; ++pos) {
             const auto& prev = m_connections[pos - 1];
             const double prevz = prev.depth();
-            std::size_t next_index = findClosestConnection(prev.getI(), prev.getJ(), prevz, pos);
+            std::size_t next_index = findClosestConnection(prev.getI(), prev.getJ(), prev.getK(), prevz, pos);
             std::swap(m_connections[next_index], m_connections[pos]);
         }
     }
 
-    std::size_t WellConnections::findClosestConnection(int oi, int oj, double oz, std::size_t start_pos)
+    std::size_t WellConnections::findClosestConnection(int oi, int oj, int ok, double oz, std::size_t start_pos)
     {
         std::size_t closest = std::numeric_limits<std::size_t>::max();
         int min_ijdist2 = std::numeric_limits<int>::max();
+        int min_kdist = std::numeric_limits<int>::max();
         double min_zdiff = std::numeric_limits<double>::max();
         for (std::size_t pos = start_pos; pos < m_connections.size(); ++pos) {
             const auto& connection = m_connections[ pos ];
@@ -1103,15 +1104,25 @@ CF and Kh items for well {} must both be specified or both defaulted/negative)",
             const double depth = connection.depth();
             const int ci = connection.getI();
             const int cj = connection.getJ();
+            const int ck = connection.getK();
             // Using square of distance to avoid non-integer arithmetics.
             const int ijdist2 = (ci - oi) * (ci - oi) + (cj - oj) * (cj - oj);
+            const int kdist = std::abs(ck - ok);
+            const double zdiff = std::abs(depth - oz);
             if (ijdist2 < min_ijdist2) {
                 min_ijdist2 = ijdist2;
-                min_zdiff = std::abs(depth - oz);
+                min_kdist = kdist;
+                min_zdiff = zdiff;
                 closest = pos;
             } else if (ijdist2 == min_ijdist2) {
-                const double zdiff = std::abs(depth - oz);
-                if (zdiff < min_zdiff) {
+                // K-distance tiebreaker before depth: in corner-point grids
+                // physical depth is not monotonic with K, so same-K adjacency
+                // is more reliable than depth proximity.
+                if (kdist < min_kdist) {
+                    min_kdist = kdist;
+                    min_zdiff = zdiff;
+                    closest = pos;
+                } else if (kdist == min_kdist && zdiff < min_zdiff) {
                     min_zdiff = zdiff;
                     closest = pos;
                 }
