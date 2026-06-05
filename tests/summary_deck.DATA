@@ -424,9 +424,33 @@ ROFTL
  5  6 /
 /
 
---  Group data --
+-- Network data
 GPR
 /
+GPRB
+/
+GOPRNB
+/
+GWPRNB
+/
+GLPRNB
+/
+GGPRNB
+/
+GPR2
+/
+GPRB2
+/
+GOPRNB2
+/
+GWPRNB2
+/
+GLPRNB2
+/
+GGPRNB2
+/
+
+--  Group data --
 GLPR
 /
 GOPT
