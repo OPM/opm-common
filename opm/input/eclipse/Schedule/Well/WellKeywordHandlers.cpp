@@ -558,6 +558,10 @@ void handleWELOPEN(HandlerContext& handlerContext)
             handlerContext.record_well_structure_change();
 
             handlerContext.state().events().addEvent(ScheduleEvents::COMPLETION_CHANGE);
+            if (connection_status == Connection::State::OPEN) {
+                handlerContext.state().wellgroup_events()
+                    .addEvent(wname, ScheduleEvents::COMPLETION_CHANGE);
+            }
         }
     }
 }
