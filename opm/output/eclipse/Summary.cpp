@@ -2070,10 +2070,11 @@ inline quantity production_history(const fn_args& args)
     return { -sum, rate_unit<phase>() };
 }
 
-template <Opm::Phase phase>
+// is_rate=true  → RH keywords: well-level returns 0 in prediction period
+// is_rate=false → TH keywords: well-level continues accumulating from simulated rates
+template <Opm::Phase phase, bool is_rate = true>
 inline quantity injection_history(const fn_args& args)
 {
-    // We treat field-level and group-level the same way except well-level (single-well)
     const bool is_well_level = (args.schedule_wells.size() == 1) && args.group_name.empty();
 
     double sum = 0.0;
@@ -2101,11 +2102,11 @@ inline quantity injection_history(const fn_args& args)
             rate = sched_well->injection_rate(args.st, phase);
         } else
         {
-            // Prediction period: well-level RH is zero (no historical schedule).
-            if (is_well_level)
+            // Prediction period: RH at well level is zero (no historical schedule).
+            if (is_rate && is_well_level)
                 continue;
 
-            // Group/field level: use simulated rates.
+            // Group/field level (or TH at any level): use simulated rates.
             switch (phase)
             {
             case Opm::Phase::WATER:
@@ -3096,9 +3097,9 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "WWIRH", injection_history< Opm::Phase::WATER > },
     { "WOIRH", injection_history< Opm::Phase::OIL > },
     { "WGIRH", injection_history< Opm::Phase::GAS > },
-    { "WWITH", mul( injection_history< Opm::Phase::WATER >, duration ) },
-    { "WOITH", mul( injection_history< Opm::Phase::OIL >, duration ) },
-    { "WGITH", mul( injection_history< Opm::Phase::GAS >, duration ) },
+    { "WWITH", mul( injection_history< Opm::Phase::WATER, false >, duration ) },
+    { "WOITH", mul( injection_history< Opm::Phase::OIL,   false >, duration ) },
+    { "WGITH", mul( injection_history< Opm::Phase::GAS,   false >, duration ) },
 
     /* From our point of view, injectors don't have water cuts and div/sum will return 0.0 */
     { "WWCTH", div( production_history< Opm::Phase::WATER >,
@@ -3150,8 +3151,8 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "GLPTH", mul( sum( production_history< Opm::Phase::WATER, false >,
                          production_history< Opm::Phase::OIL,   false > ),
                     duration ) },
-    { "GWITH", mul( injection_history< Opm::Phase::WATER >, duration ) },
-    { "GGITH", mul( injection_history< Opm::Phase::GAS >, duration ) },
+    { "GWITH", mul( injection_history< Opm::Phase::WATER, false >, duration ) },
+    { "GGITH", mul( injection_history< Opm::Phase::GAS,   false >, duration ) },
     { "GMWIN", flowing< injector > },
     { "GMWPR", flowing< producer > },
 
@@ -3481,9 +3482,9 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "FWIRH", injection_history< Opm::Phase::WATER > },
     { "FOIRH", injection_history< Opm::Phase::OIL > },
     { "FGIRH", injection_history< Opm::Phase::GAS > },
-    { "FWITH", mul( injection_history< Opm::Phase::WATER >, duration ) },
-    { "FOITH", mul( injection_history< Opm::Phase::OIL >, duration ) },
-    { "FGITH", mul( injection_history< Opm::Phase::GAS >, duration ) },
+    { "FWITH", mul( injection_history< Opm::Phase::WATER, false >, duration ) },
+    { "FOITH", mul( injection_history< Opm::Phase::OIL,   false >, duration ) },
+    { "FGITH", mul( injection_history< Opm::Phase::GAS,   false >, duration ) },
 
     { "FWCT", div( rate< rt::wat, producer >,
                    sum( rate< rt::wat, producer >, rate< rt::oil, producer > ) ) },
