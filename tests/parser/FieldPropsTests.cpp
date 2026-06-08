@@ -2785,6 +2785,96 @@ EQUALREG
     }
 }
 
+BOOST_AUTO_TEST_CASE(EQUALREG_PVTNUM) {
+     const std::string valid_pvtnum_region { R"(
+GRID
+
+PORO
+    27*0.10 /
+
+ACTNUM
+    27*1 /
+
+PVTNUM
+    27*1 /
+
+FLUXNUM
+    27*1 /
+
+EQUALREG
+    PVTNUM 2 1 F/
+/
+
+)" };
+
+     const std::string valid_pvtnum_addreg { R"(
+GRID
+
+PORO
+    27*0.10 /
+
+ACTNUM
+    27*1 /
+
+PVTNUM
+    27*1 /
+
+FLUXNUM
+    27*1 /
+
+ADDREG
+    PVTNUM 2 1 F/
+/
+
+)" };
+
+     const std::string valid_pvtnum_multireg { R"(
+GRID
+
+PORO
+    27*0.10 /
+
+ACTNUM
+    27*1 /
+
+PVTNUM
+    27*1 /
+
+FLUXNUM
+    27*1 /
+
+MULTIREG
+    PVTNUM 2 1 F/
+/
+
+)" };
+
+     const auto& fp = make_fp(valid_pvtnum_region);
+     const auto& pvtnum = fp.get_int("PVTNUM");
+
+     for (const auto value : pvtnum) {
+          BOOST_CHECK_EQUAL(value, 2);
+     }
+
+     {
+        const auto& addreg_fp = make_fp(valid_pvtnum_addreg);
+        const auto& addreg_pvtnum = addreg_fp.get_int("PVTNUM");
+
+        for (const auto value : addreg_pvtnum) {
+               BOOST_CHECK_EQUAL(value, 3);
+          }
+     }
+
+     {
+        const auto& multireg_fp = make_fp(valid_pvtnum_multireg);
+        const auto& multireg_pvtnum = multireg_fp.get_int("PVTNUM");
+
+        for (const auto value : multireg_pvtnum) {
+               BOOST_CHECK_EQUAL(value, 2);
+          }
+     }
+}
+
 
 
 BOOST_AUTO_TEST_CASE(TRAN_Calculator) {
