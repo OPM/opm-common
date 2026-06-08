@@ -581,7 +581,18 @@ namespace {
     bool is_node_keyword(const std::string& keyword)
     {
         static const auto nodekw = keyword_set {
-            "GPR", "GPRG", "GPRW", "NPR", "GNETPR"
+            "GPR", "GPR2", "GPRG", "GPRW", "NPR", "GNETPR",
+            "GPRB", "GOPRNB", "GWPRNB", "GLPRNB", "GGPRNB",
+            "GPRB2", "GOPRNB2", "GWPRNB2", "GLPRNB2", "GGPRNB2"
+        };
+
+        return is_in_set(nodekw, keyword);
+    }
+
+    bool is_node_keyword_with_wells(const std::string& keyword)
+    {
+        static const auto nodekw = keyword_set {
+            "GPR", "GPR2", "NPR", "GNETPR",
         };
 
         return is_in_set(nodekw, keyword);
@@ -602,7 +613,7 @@ namespace {
         });
     }
 
-    std::vector<std::string> collect_node_names(const Schedule& sched)
+    std::vector<std::string> collect_node_names(const Schedule& sched, const bool add_wells = false)
     {
         auto node_names = std::vector<std::string>{};
         auto names = std::unordered_set<std::string>{};
@@ -611,7 +622,9 @@ namespace {
         for (auto step = 0*nstep; step < nstep; ++step) {
             const auto& nodes = sched[step].network.get().node_names();
             names.insert(nodes.begin(), nodes.end());
-            // Also insert wells belonging to groups in the network to be able to report network-computed THPs
+            if (!add_wells) continue;
+
+            // Possibly insert wells belonging to groups in the network to be able to report network-computed THPs
             for (const auto& node : nodes) {
                 if (!sched.hasGroup(node, step)) continue;
                 const auto& group = sched.getGroup(node, step);
@@ -1837,6 +1850,7 @@ void connectionKeyword(const DeckKeyword&           keyword,
     }
 
 void handleKW(const std::vector<std::string>& node_names,
+              const std::vector<std::string>& node_names_with_wells,
               const std::vector<int>&         analyticAquiferIDs,
               const std::vector<int>&         numericAquiferIDs,
               const DeckKeyword&              keyword,
@@ -1914,7 +1928,11 @@ void handleKW(const std::vector<std::string>& node_names,
         break;
 
     case Cat::Node:
-        keyword_node(list, node_names, parseContext, errors, keyword);
+        if (is_node_keyword_with_wells(keyword.name())) {
+            keyword_node(list, node_names_with_wells, parseContext, errors, keyword);
+        } else {
+            keyword_node(list, node_names, parseContext, errors, keyword);
+        }
         break;
 
     case Cat::Aquifer:
@@ -2260,8 +2278,13 @@ SummaryConfig::SummaryConfig(const Deck&              deck,
             declaredMaxRegionID(Runspec { deck })
         };
 
-        const auto node_names = need_node_names(section)
+        const bool node_names_needed = need_node_names(section);
+        const auto node_names = node_names_needed
             ? collect_node_names(schedule)
+            : std::vector<std::string> {};
+
+        const auto node_names_with_wells = node_names_needed
+            ? collect_node_names(schedule, /*with_wells=*/true)
             : std::vector<std::string> {};
 
         const auto analyticAquifers = analyticAquiferIDs(aquiferConfig);
@@ -2272,7 +2295,7 @@ SummaryConfig::SummaryConfig(const Deck&              deck,
                 handleProcessingInstruction(kw.name());
             }
             else {
-                handleKW(node_names, analyticAquifers, numericAquifers,
+                handleKW(node_names, node_names_with_wells, analyticAquifers, numericAquifers,
                          kw, schedule, field_props, gridDims,
                          parseContext, errors, context, this->m_keywords);
             }
@@ -2418,9 +2441,15 @@ SummaryConfig::registerRequisiteUDQorActionSummaryKeys(const std::vector<std::st
     {
         const auto excludeFieldFromGroupKw = false;
 
+        const bool node_names_needed = std::ranges::any_of(extraKeys, &is_node_keyword);
         const auto node_names =
-            std::ranges::any_of(extraKeys, &is_node_keyword)
+            node_names_needed
                 ? collect_node_names(sched)
+                : std::vector<std::string>{};
+
+        const auto node_names_with_wells =
+            node_names_needed
+                ? collect_node_names(sched, /*with_wells=*/true)
                 : std::vector<std::string>{};
 
         const auto analyticAquifers = analyticAquiferIDs(es.aquifer());
@@ -2434,7 +2463,7 @@ SummaryConfig::registerRequisiteUDQorActionSummaryKeys(const std::vector<std::st
         };
 
         for (const auto& vector_name : extraKeys) {
-            handleKW(node_names, analyticAquifers, numericAquifers,
+            handleKW(node_names, node_names_with_wells, analyticAquifers, numericAquifers,
                      DeckKeyword { KeywordLocation{}, vector_name },
                      sched, es.globalFieldProps(),
                      makeGlobalCellIndexMapper(es.gridDims()),

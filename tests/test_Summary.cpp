@@ -519,6 +519,21 @@ data::GroupAndNetworkValues result_group_nwrk()
     grp_nwrk.nodeData["G_2"].pressure = 23.45*Opm::unit::barsa;
     grp_nwrk.nodeData["PLAT-A"].pressure = 21.0*Opm::unit::barsa;
 
+    grp_nwrk.nodeData["G_1"].converged_pressure = 33.45*Opm::unit::barsa;
+    grp_nwrk.nodeData["G_2"].converged_pressure = 23.46*Opm::unit::barsa;
+    grp_nwrk.nodeData["PLAT-A"].converged_pressure = 21.0*Opm::unit::barsa;
+
+    grp_nwrk.branchData["G_1"].pressure_drop = 12.44*Opm::unit::barsa;
+    grp_nwrk.branchData["G_1"].oil_rate = 123.456*sm3_pr_day();
+    grp_nwrk.branchData["G_1"].water_rate = 23.456*sm3_pr_day();
+    grp_nwrk.branchData["G_1"].gas_rate = 12345.6*sm3_pr_day();
+
+    grp_nwrk.convergedBranchData["G_1"].pressure_drop = 12.45*Opm::unit::barsa;
+    grp_nwrk.convergedBranchData["G_1"].oil_rate = 123.457*sm3_pr_day();
+    grp_nwrk.convergedBranchData["G_1"].water_rate = 23.457*sm3_pr_day();
+    grp_nwrk.convergedBranchData["G_1"].gas_rate = 12345.7*sm3_pr_day();
+
+
     return grp_nwrk;
 }
 
@@ -3244,6 +3259,23 @@ BOOST_AUTO_TEST_CASE(NODE_VARIABLES)
     BOOST_CHECK_CLOSE( 21.0 , ecl_sum_get_group_var( resp, 1, "PLAT-A", "GPR" ), 1e-5 );
     BOOST_CHECK_CLOSE( 33.44, ecl_sum_get_group_var( resp, 1, "G_1", "GPR" ), 1e-5 );
     BOOST_CHECK_CLOSE( 23.45, ecl_sum_get_group_var( resp, 1, "G_2", "GPR" ), 1e-5 );
+
+    BOOST_CHECK_CLOSE( 21.0 , ecl_sum_get_group_var( resp, 1, "PLAT-A", "GPR2" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 33.45, ecl_sum_get_group_var( resp, 1, "G_1", "GPR2" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 23.46, ecl_sum_get_group_var( resp, 1, "G_2", "GPR2" ), 1e-5 );
+
+    BOOST_CHECK_CLOSE( 12.44 , ecl_sum_get_group_var( resp, 1, "G_1", "GPRB" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 12.45, ecl_sum_get_group_var( resp, 1, "G_1", "GPRB2" ), 1e-5 );
+
+    BOOST_CHECK_CLOSE( 123.456, ecl_sum_get_group_var( resp, 1, "G_1", "GOPRNB" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 23.456,  ecl_sum_get_group_var( resp, 1, "G_1", "GWPRNB" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 12345.6, ecl_sum_get_group_var( resp, 1, "G_1", "GGPRNB" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 146.912, ecl_sum_get_group_var( resp, 1, "G_1", "GLPRNB" ), 1e-5 );
+
+    BOOST_CHECK_CLOSE( 123.457, ecl_sum_get_group_var( resp, 1, "G_1", "GOPRNB2" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 23.457,  ecl_sum_get_group_var( resp, 1, "G_1", "GWPRNB2" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 12345.7, ecl_sum_get_group_var( resp, 1, "G_1", "GGPRNB2" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 146.914, ecl_sum_get_group_var( resp, 1, "G_1", "GLPRNB2" ), 1e-5 );
 }
 
 /*

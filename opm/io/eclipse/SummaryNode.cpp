@@ -76,7 +76,9 @@ std::string default_number_renderer(const Opm::EclIO::SummaryNode& node) {
 bool is_node_keyword(const std::string& keyword)
 {
     static const auto node_kw = std::unordered_set<std::string> {
-        "GPR",
+        "GPR", "GPRB", "GOPRNB", "GWPRNB", "GLPRNB", "GGPRNB",
+        "GPR2", "GPRB2", "GOPRNB2", "GWPRNB2", "GLPRNB2", "GGPRNB2",
+        "NPR", "GNETPR"
     };
 
     return node_kw.find(keyword) != node_kw.end();
