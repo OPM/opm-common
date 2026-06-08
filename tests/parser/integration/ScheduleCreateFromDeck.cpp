@@ -938,3 +938,117 @@ BOOST_AUTO_TEST_CASE(TestWellEvents) {
     BOOST_CHECK( sched[0].wellgroup_events().hasEvent( "W_1", ScheduleEvents::COMPLETION_CHANGE));
     BOOST_CHECK( sched[5].wellgroup_events().hasEvent( "W_1", ScheduleEvents::COMPLETION_CHANGE));
 }
+
+
+BOOST_AUTO_TEST_CASE(TestRequestOpenCompletionEvent)
+{
+    const auto deck = Parser{}.parseString(R"(
+START
+10 MAI 2007 /
+
+GRID
+PERMX
+   9000*0.25 /
+COPY
+   PERMX PERMY /
+   PERMX PERMZ /
+/
+PORO
+  9000*0.3 /
+
+SCHEDULE
+WELSPECS
+     'W1'        'OP'   11   21  3.33       'OIL'  7* /
+/
+COMPDAT
+     'W1'   2*    1    1      'OPEN'  1*     32.948      0.311   3047.839  2*         'X'     22.100 /
+     'W1'   2*    2    2      'OPEN'  1*     32.948      0.311   3047.839  2*         'X'     22.100 /
+/
+
+TSTEP
+ 10 /
+
+WELOPEN
+   'W1'  'SHUT'  3* 1 1 /
+/
+
+TSTEP
+ 10 /
+
+WELOPEN
+   'W1'  'OPEN'  3* 1 1 /
+/
+
+TSTEP
+ 10 /
+
+COMPDAT
+     'W1'   2*    1    1      'SHUT'  1*     32.948      0.311   3047.839  2*         'X'     22.100 /
+/
+
+TSTEP
+ 10 /
+
+COMPDAT
+     'W1'   2*    1    1      'OPEN'  1*     32.948      0.311   3047.839  2*         'X'     22.100 /
+/
+
+TSTEP
+ 10 /
+
+WELOPEN
+   'W1'  'OPEN'  3* 2 2 /
+/
+
+TSTEP
+ 10 /
+
+END
+)");
+
+    EclipseGrid grid(30,30,10);
+    const TableManager table (deck);
+    const FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
+    const Runspec runspec (deck);
+    const Schedule sched {
+        deck, grid, fp, NumericalAquifers{},
+        runspec, std::make_shared<Python>()
+    };
+
+    using SchEvt = ScheduleEvents::Events;
+    constexpr auto request_open = SchEvt::REQUEST_OPEN_COMPLETION;
+
+    // Step 0: initial COMPDAT creates connections 1 and 2 OPEN.
+    // We do not define REQUEST_OPEN_COMPLETION for brand-new connections, so no event.
+    BOOST_CHECK( !sched[0].wellcompletion_events().hasEvent("W1", 1, request_open) );
+    BOOST_CHECK( !sched[0].wellcompletion_events().hasEvent("W1", 2, request_open) );
+
+    // Step 1: WELOPEN SHUT connection 1.  Closing never raises the event.
+    BOOST_CHECK( !sched[1].wellcompletion_events().hasEvent("W1", 1, request_open) );
+    BOOST_CHECK( !sched[1].wellcompletion_events().hasEvent("W1", 2, request_open) );
+
+    // Step 2: WELOPEN OPEN with filter K=1 selects connection 1 only.
+    BOOST_CHECK(  sched[2].wellcompletion_events().hasEvent("W1", 1, request_open) );
+    BOOST_CHECK( !sched[2].wellcompletion_events().hasEvent("W1", 2, request_open) );
+
+    // Step 3: COMPDAT SHUT connection 1.  No event, and the previous step's
+    // event must not linger (events reset each report step).
+    BOOST_CHECK( !sched[3].wellcompletion_events().hasEvent("W1", 1, request_open) );
+    BOOST_CHECK( !sched[3].wellcompletion_events().hasEvent("W1", 2, request_open) );
+
+    // Step 4: COMPDAT OPEN connection 1 again -- COMPDAT raises the event just
+    // like WELOPEN.
+    BOOST_CHECK(  sched[4].wellcompletion_events().hasEvent("W1", 1, request_open) );
+    BOOST_CHECK( !sched[4].wellcompletion_events().hasEvent("W1", 2, request_open) );
+
+    // Step 5: WELOPEN OPEN with filter K=2 selects connection 2, which the
+    // schedule already records OPEN.  The event must still fire: an explicit
+    // OPEN request is always forwarded, since run-time state can diverge from
+    // the schedule (e.g. WTEST closures).
+    BOOST_CHECK( !sched[5].wellcompletion_events().hasEvent("W1", 1, request_open) );
+    BOOST_CHECK(  sched[5].wellcompletion_events().hasEvent("W1", 2, request_open) );
+
+    // Step 6: no connection changes -- events reset again.
+    BOOST_CHECK( !sched[6].wellcompletion_events().hasEvent("W1", 1, request_open) );
+    BOOST_CHECK( !sched[6].wellcompletion_events().hasEvent("W1", 2, request_open) );
+}

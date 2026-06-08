@@ -550,7 +550,12 @@ void handleWELOPEN(HandlerContext& handlerContext)
             const auto connection_status = Connection::StateFromString( status_str );
             {
                 auto well = handlerContext.state().wells.get(wname);
-                well.handleWELOPENConnections(record, connection_status);
+                auto requested_open_complnums = std::vector<int>{};
+                well.handleWELOPENConnections(record, connection_status, requested_open_complnums);
+                for (const int complnum : requested_open_complnums) {
+                    handlerContext.state().wellcompletion_events()
+                        .addEvent(wname, complnum, ScheduleEvents::REQUEST_OPEN_COMPLETION);
+                }
                 handlerContext.state().wells.update( std::move(well) );
             }
 

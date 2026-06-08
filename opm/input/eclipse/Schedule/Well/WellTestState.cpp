@@ -219,6 +219,10 @@ namespace Opm {
         return count;
     }
 
+    double WellTestState::lastCompletionCloseTime(const std::string& well_name, int complnum) const {
+        return this->completions.at(well_name).at(complnum).last_test;
+    }
+
 
     double WellTestState::lastTestTime(const std::string& well_name) const {
         const auto& well = this->wells.at(well_name);

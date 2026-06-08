@@ -577,7 +577,13 @@ public:
 
     bool handleWELSEGS(const DeckKeyword& keyword);
     bool handleCOMPSEGS(const DeckKeyword& keyword, const ScheduleGrid& grid, const ParseContext& parseContext, ErrorGuard& errors);
-    bool handleWELOPENConnections(const DeckRecord& record, Connection::State status);
+    // Apply a WELOPEN connection-level record, assigning 'status' to every
+    // connection matching the record's I/J/K/C1-C2 filter.  Existing
+    // connections assigned OPEN have their complnum appended to
+    // 'requested_open_complnums' (for raising REQUEST_OPEN_COMPLETION events).
+    bool handleWELOPENConnections(const DeckRecord& record, Connection::State status,
+                                  std::vector<int>& requested_open_complnums);
+
     bool handleCSKIN(const DeckRecord& record, const KeywordLocation& location);
     bool handleCOMPLUMP(const DeckRecord& record);
     bool handleWPIMULT(const DeckRecord& record);

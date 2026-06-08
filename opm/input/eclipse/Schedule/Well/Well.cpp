@@ -1516,8 +1516,9 @@ int Well::fip_region_number() const
 // check for all connections closed is not performed.  Therefore, we have a
 // runtime flag here which makes sure to close the well in this case.
 
-bool Well::handleWELOPENConnections(const DeckRecord& record,
-                                    const Connection::State state_arg)
+bool Well::handleWELOPENConnections(const DeckRecord&       record,
+                                    const Connection::State state_arg,
+                                    std::vector<int>&       requested_open_complnums)
 {
     auto match = [&record](const Connection &c) -> bool
     {
@@ -1539,6 +1540,13 @@ bool Well::handleWELOPENConnections(const DeckRecord& record,
             // new connection set.
             new_connections->add(connection);
             continue;
+        }
+
+        if (state_arg == Connection::State::OPEN) {
+            // Report connections requested to open so the caller can raise a
+            // REQUEST_OPEN_COMPLETION event (see WellConnections::loadCOMPDATX
+            // for why this is done regardless of the recorded state).
+            requested_open_complnums.push_back(connection.complnum());
         }
 
         auto connection_copy = connection;

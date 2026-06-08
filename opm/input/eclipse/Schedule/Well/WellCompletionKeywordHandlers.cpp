@@ -58,15 +58,26 @@ void handleCOMPDATX(HandlerContext&    handlerContext,
         for (const auto& name : wellnames) {
             auto well2 = handlerContext.state().wells(name);
 
-            auto connections = std::make_shared<WellConnections>(well2.getConnections());
+            const auto& orig_connections = well2.getConnections();
+            auto connections = std::make_shared<WellConnections>(orig_connections);
             const auto origWellConnSetIsEmpty = connections->empty();
+
+            // Connections opened by this record; used to raise
+            // REQUEST_OPEN_COMPLETION events below.
+            auto requested_open_complnums = std::vector<int>{};
 
             std::invoke(compdatKwHandler, connections,
                         record, name, well2.getWDFAC(),
                         handlerContext.grid,
                         handlerContext.keyword.location(),
                         handlerContext.parseContext,
-                        handlerContext.errors);
+                        handlerContext.errors,
+                        requested_open_complnums);
+
+            for (const int complnum : requested_open_complnums) {
+                handlerContext.state().wellcompletion_events()
+                    .addEvent(name, complnum, ScheduleEvents::REQUEST_OPEN_COMPLETION);
+            }
 
             const auto isConnected = !origWellConnSetIsEmpty || !connections->empty();
 
