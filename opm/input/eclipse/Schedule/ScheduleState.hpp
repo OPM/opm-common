@@ -480,7 +480,6 @@ namespace Opm {
         Events& events();
         const Events& events() const;
 
-        void update_wellgroup_events(WellGroupEvents wgevents);
         WellGroupEvents& wellgroup_events();
         const WellGroupEvents& wellgroup_events() const;
 
