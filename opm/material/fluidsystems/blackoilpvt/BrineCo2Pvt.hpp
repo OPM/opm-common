@@ -409,6 +409,7 @@ public:
     {
 #if OPM_IS_INSIDE_DEVICE_FUNCTION
         assert(false && "Requested the saturation pressure for the brine-co2 pvt module. Not yet implemented.");
+        return {}; // unreachable
 #else
         throw std::runtime_error("Requested the saturation pressure for the brine-co2 pvt module. "
                                  "Not yet implemented.");
@@ -429,6 +430,7 @@ public:
     {
 #if OPM_IS_INSIDE_DEVICE_FUNCTION
         assert(false && "Requested the saturation pressure for the brine-co2 pvt module. Not yet implemented.");
+        return {}; // unreachable
 #else
         throw std::runtime_error("Requested the saturation pressure for the brine-co2 pvt module. "
                                  "Not yet implemented.");
