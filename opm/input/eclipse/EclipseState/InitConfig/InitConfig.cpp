@@ -22,6 +22,7 @@
 #include <opm/common/utility/OpmInputError.hpp>
 
 #include <opm/input/eclipse/EclipseState/InitConfig/Equil.hpp>
+#include <opm/input/eclipse/EclipseState/InitConfig/FieldSep.hpp>
 #include <opm/input/eclipse/EclipseState/InitConfig/FoamConfig.hpp>
 
 #include <opm/input/eclipse/Deck/Deck.hpp>
@@ -54,6 +55,17 @@ namespace {
         };
     }
 
+    Opm::FieldSep fieldseps(const Opm::Deck& deck)
+    {
+        if (! deck.hasKeyword<Opm::ParserKeywords::FIELDSEP>()) {
+            return {};
+        }
+
+        return Opm::FieldSep {
+            deck.get<Opm::ParserKeywords::FIELDSEP>().back()
+        };
+    }
+
     Opm::DeckKeyword stressequils(const Opm::Deck& deck)
     {
         if (! deck.hasKeyword<Opm::ParserKeywords::STREQUIL>()) {
@@ -69,6 +81,7 @@ namespace Opm {
 
     InitConfig::InitConfig(const Deck& deck, const Phases& phases, bool compositional)
         : equil        { equils(deck, phases, compositional) }
+        , fieldsep     { fieldseps(deck) }
         , stress_equil { stressequils(deck), phases, compositional }
         , foamconfig   { deck }
         , m_filleps    { PROPSSection{deck}.hasKeyword(ParserKeywords::FILLEPS::keywordName) }
@@ -81,6 +94,7 @@ namespace Opm {
     {
         InitConfig result;
         result.equil = Equil::serializationTestObject();
+        result.fieldsep = FieldSep::serializationTestObject();
         result.stress_equil = StressEquil::serializationTestObject();
         result.foamconfig = FoamConfig::serializationTestObject();
         result.m_filleps = true;
@@ -136,6 +150,22 @@ namespace Opm {
         return this->equil;
     }
 
+    bool InitConfig::hasFieldSep() const
+    {
+        return !this->fieldsep.empty();
+    }
+
+    const FieldSep& InitConfig::getFieldSep() const
+    {
+        if (!this->hasFieldSep()) {
+            throw std::runtime_error {
+                "Error: No 'FIELDSEP' present"
+            };
+        }
+
+        return this->fieldsep;
+    }
+
     bool InitConfig::hasStressEquil() const
     {
         return !this->stress_equil.empty();
@@ -172,6 +202,7 @@ namespace Opm {
     bool InitConfig::operator==(const InitConfig& data) const
     {
         return (this->equil == data.equil)
+            && (this->fieldsep == data.fieldsep)
             && (this->stress_equil == data.stress_equil)
             && (this->foamconfig == data.foamconfig)
             && (this->m_filleps == data.m_filleps)

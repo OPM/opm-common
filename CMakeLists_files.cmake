@@ -136,6 +136,7 @@ list(APPEND MAIN_SOURCE_FILES
   opm/input/eclipse/EclipseState/Grid/TranCalculator.cpp
   opm/input/eclipse/EclipseState/Grid/TransMult.cpp
   opm/input/eclipse/EclipseState/InitConfig/Equil.cpp
+  opm/input/eclipse/EclipseState/InitConfig/FieldSep.cpp
   opm/input/eclipse/EclipseState/InitConfig/FoamConfig.cpp
   opm/input/eclipse/EclipseState/InitConfig/InitConfig.cpp
   opm/input/eclipse/EclipseState/IOConfig/FIPConfig.cpp
@@ -979,6 +980,7 @@ list(APPEND PUBLIC_HEADER_FILES
   opm/input/eclipse/EclipseState/IOConfig/FIPConfig.hpp
   opm/input/eclipse/EclipseState/IOConfig/IOConfig.hpp
   opm/input/eclipse/EclipseState/InitConfig/Equil.hpp
+  opm/input/eclipse/EclipseState/InitConfig/FieldSep.hpp
   opm/input/eclipse/EclipseState/InitConfig/FoamConfig.hpp
   opm/input/eclipse/EclipseState/InitConfig/InitConfig.hpp
   opm/input/eclipse/EclipseState/Phase.hpp

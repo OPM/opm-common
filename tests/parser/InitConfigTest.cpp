@@ -851,3 +851,114 @@ END
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_CASE(FIELDSEP_parse_and_retrieve)
+{
+    const auto deck = Parser{}.parseString(R"(
+RUNSPEC
+DIMENS
+  1 1 1 /
+OIL
+GAS
+COMPS
+  3 /
+SOLUTION
+FIELDSEP
+-- stage  T(C)   P(bar)  Ldest Vdest Kvtab GPtab EoS
+   1      50.0   10.0    /                          -- items 4-10 defaulted
+   2      15.56  1.01325 1     0     0     7     2 /
+/
+)");
+    const Runspec    runspec{ deck };
+    const InitConfig init{ deck, runspec.phases(), runspec.compositionalMode() };
+
+    BOOST_CHECK( init.hasFieldSep() );
+    const auto& fsep = init.getFieldSep();
+    BOOST_REQUIRE_EQUAL( fsep.size(), std::size_t{2} );
+
+    const auto& s1 = fsep.getRecord(0);                      // corrected defaults (the JSON fix)
+    BOOST_CHECK_EQUAL ( s1.stage(),               1 );
+    BOOST_CHECK_CLOSE ( s1.temperature(),         50.0 + 273.15, 1e-6 );  // 323.15 K
+    BOOST_CHECK_CLOSE ( s1.pressure(),            10.0 * 1e5,    1e-6 );   // 1.0e6 Pa
+    BOOST_CHECK_EQUAL ( s1.liquidDestination(),   0 );                     // item 4 default
+    BOOST_CHECK_EQUAL ( s1.vaporDestination(),    0 );                     // item 5 default
+    BOOST_CHECK_EQUAL ( s1.kvalueTableNumber(),   0 );                     // item 6 INT default
+    BOOST_CHECK_EQUAL ( s1.gasPlantTableNumber(), 0 );
+    BOOST_CHECK ( ! s1.surfaceEosNumber().has_value() );                   // items 8/9/10 defaulted => nullopt
+    BOOST_CHECK ( ! s1.nglDensityTemperature().has_value() );
+    BOOST_CHECK ( ! s1.nglDensityPressure().has_value() );
+
+    const auto& s2 = fsep.getRecord(1);                      // explicit values
+    BOOST_CHECK_EQUAL ( s2.stage(),               2 );
+    BOOST_CHECK_CLOSE ( s2.temperature(),         15.56 + 273.15, 1e-6 );
+    BOOST_CHECK_CLOSE ( s2.pressure(),            1.01325 * 1e5,  1e-6 );  // 101325 Pa
+    BOOST_CHECK_EQUAL ( s2.liquidDestination(),   1 );
+    BOOST_CHECK_EQUAL ( s2.gasPlantTableNumber(), 7 );                     // links to a GPTABLE
+    BOOST_REQUIRE ( s2.surfaceEosNumber().has_value() );                   // item 8 provided (0 is valid => optional)
+    BOOST_CHECK_EQUAL ( *s2.surfaceEosNumber(),   2 );
+}
+
+BOOST_AUTO_TEST_CASE(FIELDSEP_absent_throws_on_get)
+{
+    const auto deck = Parser{}.parseString("RUNSPEC\nDIMENS\n1 1 1 /\nSOLUTION\n");
+    const Runspec    rs{ deck };
+    const InitConfig init{ deck, rs.phases(), rs.compositionalMode() };
+
+    BOOST_CHECK( ! init.hasFieldSep() );
+    BOOST_CHECK_THROW( init.getFieldSep(), std::exception );  // mirrors getEquil()
+}
+
+BOOST_AUTO_TEST_CASE(FIELDSEP_stages_must_increase)
+{
+    const auto deck = Parser{}.parseString(R"(
+RUNSPEC
+DIMENS
+ 1 1 1 /
+COMPS
+ 3 /
+SOLUTION
+FIELDSEP
+  2  15.56 1.01325 /
+  1  50.0  10.0    /
+/
+)");
+    const Runspec rs{ deck };
+    BOOST_CHECK_THROW( InitConfig(deck, rs.phases(), rs.compositionalMode()),
+                       OpmInputError );                       // stage-order validation
+}
+
+BOOST_AUTO_TEST_CASE(FIELDSEP_stage_must_be_positive)
+{
+    const auto deck = Parser{}.parseString(R"(
+RUNSPEC
+DIMENS
+ 1 1 1 /
+COMPS
+ 3 /
+SOLUTION
+FIELDSEP
+  0  50.0 10.0 /
+/
+)");
+    const Runspec rs{ deck };
+    BOOST_CHECK_THROW( InitConfig(deck, rs.phases(), rs.compositionalMode()),
+                       OpmInputError );                       // stage index must be >= 1
+}
+
+BOOST_AUTO_TEST_CASE(FIELDSEP_stage_must_be_specified)
+{
+    const auto deck = Parser{}.parseString(R"(
+RUNSPEC
+DIMENS
+ 1 1 1 /
+COMPS
+ 3 /
+SOLUTION
+FIELDSEP
+  1* 50.0 10.0 /
+/
+)");
+    const Runspec rs{ deck };
+    BOOST_CHECK_THROW( InitConfig(deck, rs.phases(), rs.compositionalMode()),
+                       OpmInputError );                       // STAGE (item 1) cannot be defaulted
+}
