@@ -503,10 +503,6 @@ const Events& ScheduleState::events() const {
     return this->m_events;
 }
 
-void ScheduleState::update_wellgroup_events(WellGroupEvents wgevents) {
-    this->m_wellgroup_events = std::move(wgevents);
-}
-
 WellGroupEvents& ScheduleState::wellgroup_events() {
     return this->m_wellgroup_events;
 }
