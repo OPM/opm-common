@@ -33,6 +33,7 @@
 
 #include <opm/input/eclipse/Schedule/ScheduleGrid.hpp>
 #include <opm/input/eclipse/Schedule/Well/Connection.hpp>
+#include <opm/input/eclipse/Schedule/Well/TrackOrderingTSP.hpp>
 #include <opm/input/eclipse/Schedule/Well/WDFAC.hpp>
 
 #include <opm/input/eclipse/Units/Units.hpp>
@@ -56,10 +57,8 @@
 
 #include <algorithm>
 #include <array>
-#include <cassert>
 #include <cmath>
 #include <cstddef>
-#include <limits>
 #include <numbers>
 #include <optional>
 #include <span>
@@ -1099,56 +1098,20 @@ CF and Kh items for well {} must both be specified or both defaulted/negative)",
 
     void WellConnections::orderTRACK()
     {
-        // Find the first connection and swap it into the 0-position.
-        const double surface_z = 0.0;
-        std::size_t first_index = findClosestConnection(this->headI, this->headJ, surface_z, 0);
-        std::swap(m_connections[first_index], m_connections[0]);
-
-        // Repeat for remaining connections.
-        //
-        // Note that since findClosestConnection() is O(n), this is an
-        // O(n^2) algorithm.  However, it should be acceptable since the
-        // expected number of connections is fairly low (< 100).
-
-        if (this->m_connections.empty()) {
+        if (this->m_connections.size() < 2) {
             return;
         }
 
-        for (std::size_t pos = 1; pos < m_connections.size() - 1; ++pos) {
-            const auto& prev = m_connections[pos - 1];
-            const double prevz = prev.depth();
-            std::size_t next_index = findClosestConnection(prev.getI(), prev.getJ(), prevz, pos);
-            std::swap(m_connections[next_index], m_connections[pos]);
-        }
-    }
+        const auto tsp = TrackOrderingTSP { this->headI, this->headJ };
+        const auto indices = tsp.order(this->m_connections);
 
-    std::size_t WellConnections::findClosestConnection(int oi, int oj, double oz, std::size_t start_pos)
-    {
-        std::size_t closest = std::numeric_limits<std::size_t>::max();
-        int min_ijdist2 = std::numeric_limits<int>::max();
-        double min_zdiff = std::numeric_limits<double>::max();
-        for (std::size_t pos = start_pos; pos < m_connections.size(); ++pos) {
-            const auto& connection = m_connections[ pos ];
-
-            const double depth = connection.depth();
-            const int ci = connection.getI();
-            const int cj = connection.getJ();
-            // Using square of distance to avoid non-integer arithmetics.
-            const int ijdist2 = (ci - oi) * (ci - oi) + (cj - oj) * (cj - oj);
-            if (ijdist2 < min_ijdist2) {
-                min_ijdist2 = ijdist2;
-                min_zdiff = std::abs(depth - oz);
-                closest = pos;
-            } else if (ijdist2 == min_ijdist2) {
-                const double zdiff = std::abs(depth - oz);
-                if (zdiff < min_zdiff) {
-                    min_zdiff = zdiff;
-                    closest = pos;
-                }
-            }
+        auto reordered = std::vector<Connection>{};
+        reordered.reserve(this->m_connections.size());
+        for (const auto idx : indices) {
+            reordered.push_back(std::move(this->m_connections[idx]));
         }
-        assert(closest != std::numeric_limits<std::size_t>::max());
-        return closest;
+
+        this->m_connections.swap(reordered);
     }
 
     void WellConnections::orderDEPTH()
