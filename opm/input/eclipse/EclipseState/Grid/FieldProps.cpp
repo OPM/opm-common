@@ -1615,6 +1615,22 @@ Note that this might cause problems for PINCH option 4 or 5 being ALL.)", target
         }
 
         if (FieldProps::supported<int>(target_kw)) {
+            auto& field_data = this->init_get<int>(target_kw);
+
+            const auto reg_name = this->region_name(record.getItem("REGION_NAME"));
+            const auto& [index_list, all_active] = this->region_index(reg_name, region_value);
+            if (index_list.empty()) {
+                log_empty_region(keyword, reg_name, region_value, target_kw);
+                continue;
+            }
+
+            const auto scalar_value =
+                static_cast<int>(record.getItem(1).get<double>(0));
+
+            apply(operation, keyword.location(), target_kw,
+                  field_data.data, field_data.value_status,
+                  scalar_value, index_list);
+
             continue;
         }
     }
