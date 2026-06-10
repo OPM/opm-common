@@ -48,27 +48,31 @@ template <typename CompdatKwHandler>
 void handleCOMPDATX(HandlerContext&    handlerContext,
                     CompdatKwHandler&& compdatKwHandler)
 {
-    auto wells = std::unordered_set<std::string> {};
-    auto well_connected = std::unordered_map<std::string, bool> {};
+    auto pending_connections =
+        std::unordered_map<std::string, std::shared_ptr<WellConnections>> {};
 
     for (const auto& record : handlerContext.keyword) {
         const auto wellNamePattern = record.getItem("WELL").getTrimmedString(0);
         const auto wellnames = handlerContext.wellNames(wellNamePattern);
 
-        for (const auto& name : wellnames) {
-            auto well2 = handlerContext.state().wells(name);
+        for (const auto& wname : wellnames) {
+            const auto& well = handlerContext.state().wells(wname);
 
-            const auto& orig_connections = well2.getConnections();
-            auto connections = std::make_shared<WellConnections>(orig_connections);
-            const auto origWellConnSetIsEmpty = connections->empty();
+            const auto& [connPos, newConnsInserted] =
+                pending_connections.try_emplace(wname);
 
-            // Connections opened respectively shut by this record; used to
-            // raise respectively clear REQUEST_OPEN_COMPLETION events below.
+            if (newConnsInserted) {
+                connPos->second = std::make_shared<WellConnections>
+                    (well.getConnections());
+            }
+
+            // Connections opened/shut by this record; used to raise/clear
+            // REQUEST_OPEN_COMPLETION events below.
             auto requested_open_complnums = std::vector<int>{};
             auto requested_shut_complnums = std::vector<int>{};
 
-            std::invoke(compdatKwHandler, connections,
-                        record, name, well2.getWDFAC(),
+            std::invoke(compdatKwHandler, *connPos->second,
+                        record, wname, well.getWDFAC(),
                         handlerContext.grid,
                         handlerContext.keyword.location(),
                         handlerContext.parseContext,
@@ -76,53 +80,48 @@ void handleCOMPDATX(HandlerContext&    handlerContext,
                         requested_open_complnums,
                         requested_shut_complnums);
 
-            for (const int complnum : requested_open_complnums) {
+            for (const auto& complnum : requested_open_complnums) {
                 handlerContext.state().wellcompletion_events()
-                    .addEvent(name, complnum, ScheduleEvents::REQUEST_OPEN_COMPLETION);
+                    .addEvent(wname, complnum, ScheduleEvents::REQUEST_OPEN_COMPLETION);
             }
 
-            // A connection shut by this record cancels any REQUEST_OPEN_COMPLETION
-            // raised for the same connection earlier in this keyword.
-            for (const int complnum : requested_shut_complnums) {
+            // A connection shut by this record cancels any
+            // REQUEST_OPEN_COMPLETION raised for the same connection
+            // earlier in this keyword.
+            for (const auto& complnum : requested_shut_complnums) {
                 handlerContext.state().wellcompletion_events()
-                    .clearEvent(name, complnum, ScheduleEvents::REQUEST_OPEN_COMPLETION);
+                    .clearEvent(wname, complnum, ScheduleEvents::REQUEST_OPEN_COMPLETION);
             }
-
-            const auto isConnected = !origWellConnSetIsEmpty || !connections->empty();
-
-            const auto& [connectedPos, inserted] =
-                well_connected.emplace(name, isConnected);
-
-            if ((! inserted) && isConnected) {
-                // Note condition here.  If we inserted a new well, then
-                // ->second is "isConnected".  Otherwise, we leave ->second
-                // unchanged if "isConnected" is false and unconditionally
-                // set it to true if "isConnected" is true.
-                //
-                // This block achieves the same effect as
-                //
-                //   ->second = ->second || isConnected
-                connectedPos->second = true;
-            }
-
-            if (well2.updateConnections(std::move(connections), handlerContext.grid)) {
-                auto wdfac = std::make_shared<WDFAC>(well2.getWDFAC());
-                wdfac->updateWDFACType(well2.getConnections());
-
-                well2.updateWDFAC(std::move(wdfac));
-                handlerContext.state().wells.update( well2 );
-
-                wells.insert(name);
-            }
-
-            handlerContext.state().wellgroup_events()
-                .addEvent(name, ScheduleEvents::COMPLETION_CHANGE);
         }
     }
 
-    // Output warning messages per well/keyword (not per COMPDAT record..)
-    for (const auto& [wname, connected] : well_connected) {
-        if (!connected) {
+    auto connections_updated = false;
+    for (auto& [wname, connections] : pending_connections) {
+        auto well = handlerContext.state().wells(wname);
+
+        const auto is_connected = !well.getConnections().empty()
+            || !connections->empty();
+
+        if (well.updateConnections(std::move(connections), handlerContext.grid)) {
+            auto wdfac = std::make_shared<WDFAC>(well.getWDFAC());
+            wdfac->updateWDFACType(well.getConnections());
+
+            well.updateWDFAC(std::move(wdfac));
+
+            // If the well's reference depth has been defaulted in WELSPECS,
+            // we need to calculate that reference depth when completing
+            // COMPDAT processing for this well.
+            well.updateRefDepth();
+
+            handlerContext.state().wellgroup_events()
+                .addEvent(wname, ScheduleEvents::COMPLETION_CHANGE);
+
+            handlerContext.state().wells.update(std::move(well));
+
+            connections_updated = true;
+        }
+
+        if (! is_connected) {
             const auto& location = handlerContext.keyword.location();
 
             const auto msg = fmt::format(R"(Potential problem with {}/{}
@@ -136,20 +135,10 @@ Well {} is not connected to grid - will remain SHUT)",
         }
     }
 
-    handlerContext.state().events().addEvent(ScheduleEvents::COMPLETION_CHANGE);
+    if (connections_updated) {
+        handlerContext.state().events()
+            .addEvent(ScheduleEvents::COMPLETION_CHANGE);
 
-    // In the case the wells reference depth has been defaulted in the
-    // WELSPECS keyword we need to force a calculation of the wells
-    // reference depth exactly when the COMPDAT keyword has been completely
-    // processed.
-    for (const auto& wname : wells) {
-        auto well = handlerContext.state().wells.get( wname );
-        well.updateRefDepth();
-
-        handlerContext.state().wells.update(std::move(well));
-    }
-
-    if (! wells.empty()) {
         handlerContext.record_well_structure_change();
     }
 }
