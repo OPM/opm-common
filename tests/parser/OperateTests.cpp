@@ -95,6 +95,16 @@ PORV 12 MULTP    PERMY 4 5 /
 PORV 13 ABS      PERMY /
 PORV 14 MULTIPLY PERMY /
 /
+REGIONS
+SATNUM
+14*1 /
+OPERATER
+SATNUM  1  MULTA   PORO 10000 -2222 /
+SATNUM  1 MINLIM SATNUM     0 /
+SATNUM  1   ADDX SATNUM     1 /
+SATNUM  1 MAXLIM SATNUM     2 /
+SATNUM 14   ADDX SATNUM     1 /
+/
 SOLUTION
 PRESSURE
 14*3 /
@@ -132,6 +142,7 @@ BOOST_AUTO_TEST_CASE(Test_metric) {
     const auto& permy = fp.get_double("PERMY");
     const auto& poro = fp.get_double("PORO");
     const auto& pressure = fp.get_double("PRESSURE");
+    const auto& satnum = fp.get_int("SATNUM");
 
     auto perm_to_si = [&unit_system](double raw_value) { return unit_system.to_si(UnitSystem::measure::permeability, raw_value); };
     auto perm_from_si = [&unit_system](double raw_value) { return unit_system.from_si(UnitSystem::measure::permeability, raw_value); };
@@ -182,6 +193,22 @@ BOOST_AUTO_TEST_CASE(Test_metric) {
     BOOST_CHECK_EQUAL(pressure[11], pres_to_si(4.0 * pow(perm_from_si(permy[11]), 5.0)));
     BOOST_CHECK_EQUAL(pressure[12], pres_to_si(std::abs(perm_from_si(permy[12]))));
     BOOST_CHECK_CLOSE(pressure[13], pres_to_si(3.0 * perm_from_si(permy[13])), 1.0e-10);
+
+    // REGIONS OPERATER on integer SATNUM (PINCHHELL-style porosity threshold + ADDX).
+    BOOST_CHECK_EQUAL(satnum[0], 2);   // OPERNUM=1, PORO above threshold
+    BOOST_CHECK_EQUAL(satnum[1], 1);
+    BOOST_CHECK_EQUAL(satnum[2], 1);
+    BOOST_CHECK_EQUAL(satnum[3], 1);
+    BOOST_CHECK_EQUAL(satnum[4], 1);
+    BOOST_CHECK_EQUAL(satnum[5], 1);
+    BOOST_CHECK_EQUAL(satnum[6], 1);
+    BOOST_CHECK_EQUAL(satnum[7], 1);
+    BOOST_CHECK_EQUAL(satnum[8], 1);
+    BOOST_CHECK_EQUAL(satnum[9], 1);
+    BOOST_CHECK_EQUAL(satnum[10], 1);
+    BOOST_CHECK_EQUAL(satnum[11], 1);
+    BOOST_CHECK_EQUAL(satnum[12], 1);
+    BOOST_CHECK_EQUAL(satnum[13], 2);  // OPERNUM=14, ADDX SATNUM 1
 }
 
 BOOST_AUTO_TEST_CASE(Test_field) {

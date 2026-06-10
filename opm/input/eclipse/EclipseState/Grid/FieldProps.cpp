@@ -541,7 +541,7 @@ void update_global_from_local(Fieldprops::FieldData<T>& data,
     if(data.global_data)
     {
         auto& to = *data.global_data;
-        auto to_st = *data.global_value_status;
+        auto& to_st = *data.global_value_status;
         const auto& from = data.data;
         const auto& from_st = data.value_status;
 
@@ -1456,6 +1456,83 @@ void FieldProps::operate(const DeckRecord&                   record,
     }
 }
 
+void FieldProps::operate_int_target(const DeckRecord&                   record,
+                                    Fieldprops::FieldData<int>&           target_data,
+                                    const std::string&                    src_kw,
+                                    const std::vector<Box::cell_index>&   index_list,
+                                    const bool                            global)
+{
+    const auto func_name    = record.getItem("OPERATION").getTrimmedString(0);
+    const auto check_target = (func_name == "MULTIPLY") || (func_name == "POLY");
+    const auto alpha        = record.getItem("PARAM1").get<double>(0);
+    const auto beta         = record.getItem("PARAM2").get<double>(0);
+    const auto func         = Operate::get(func_name, alpha, beta);
+
+    auto& to_data   = global ? *target_data.global_data : target_data.data;
+    auto& to_status = global ? *target_data.global_value_status
+                             : target_data.value_status;
+
+    auto apply = [&](const auto& from_data, const auto& from_status,
+                     const auto  srcDim)
+    {
+        for (const auto& cell_index : index_list) {
+            const auto ix = cell_index.active_index;
+
+            if (!value::has_value(from_status[ix])) {
+                throw std::invalid_argument {
+                    "Tried to use unset property value in "
+                    "OPERATE/OPERATER keyword"
+                };
+            }
+
+            if (check_target && !value::has_value(to_status[ix])) {
+                throw std::invalid_argument {
+                    "Tried to use unset property value "
+                    "in OPERATE/OPERATER keyword"
+                };
+            }
+
+            const auto tgt_raw = static_cast<double>(to_data[ix]);
+            const auto src_raw = srcDim.convertSiToRaw(from_data[ix]);
+            const auto val     = func(tgt_raw, src_raw);
+
+            to_data[ix]   = static_cast<int>(val);
+            to_status[ix] = from_status[ix];
+        }
+    };
+
+    if (FieldProps::supported<double>(src_kw)) {
+        const auto& src_data = this->init_get<double>(src_kw);
+        const auto srcDim = src_data.kw_info.unit.has_value()
+            ? this->unit_system.parse(*src_data.kw_info.unit)
+            : Dimension { 1.0 };
+
+        if (global && src_data.global_data) {
+            apply(*src_data.global_data, *src_data.global_value_status, srcDim);
+        }
+        else {
+            apply(src_data.data, src_data.value_status, srcDim);
+        }
+    }
+    else if (FieldProps::supported<int>(src_kw)) {
+        const Dimension srcDim { 1.0 };
+        const auto& src_data = this->init_get<int>(src_kw);
+
+        if (global && src_data.global_data) {
+            apply(*src_data.global_data, *src_data.global_value_status, srcDim);
+        }
+        else {
+            apply(src_data.data, src_data.value_status, srcDim);
+        }
+    }
+    else {
+        throw std::invalid_argument {
+            fmt::format("Array {} in OPERATE/OPERATER keyword is not supported.",
+                        src_kw)
+        };
+    }
+}
+
 void FieldProps::handle_operateR(const Section section,
                                  const DeckKeyword& keyword)
 {
@@ -1476,12 +1553,6 @@ void FieldProps::handle_operateR(const Section section,
         const auto target_kw = Fieldprops::keywords::
             get_keyword_from_alias(record.getItem(0).getTrimmedString(0));
 
-        if (! FieldProps::supported<double>(target_kw) &&
-            ! Fieldprops::keywords::is_work(target_kw))
-        {
-            continue;
-        }
-
         if (this->tran.find(target_kw) != this->tran.end()) {
             throw std::logic_error {
                 "The region operations cannot be used for "
@@ -1490,8 +1561,6 @@ void FieldProps::handle_operateR(const Section section,
         }
 
         const int region_value = record.getItem("REGION_NUMBER").get<int>(0);
-
-        auto& field_data = this->init_get<double>(target_kw);
 
         // For the OPERATER keyword we fetch the region name from the deck
         // record with no extra hoops.
@@ -1504,33 +1573,64 @@ void FieldProps::handle_operateR(const Section section,
             continue;
         }
 
-        const auto& src_data = this->init_get<double>(src_kw);
-        FieldProps::operate(record, field_data, src_data, index_list);
+        if (FieldProps::supported<double>(target_kw) ||
+            Fieldprops::keywords::is_work(target_kw))
+        {
+            auto& field_data = this->init_get<double>(target_kw);
 
-        if ((section == Section::EDIT) && (target_kw == "DEPTH")) {
-            this->depth_edited_ = true;
-        }
+            const auto& src_data = this->init_get<double>(src_kw);
+            FieldProps::operate(record, field_data, src_data, index_list);
 
-        // Supporting region operations on global storage arrays would
-        // require global storage for the *NUM region set arrays (i.e.,
-        // FLUXNUM, MULTNUM, OPERNUM).  In order to avoid global storage
-        // for a significant portion of the property arrays we have
-        // decided, as a project policy, to not support such operations
-        // at this time.  There is, however, no technical reason for why
-        // the current implementation could not be extended to support
-        // region operations on global storage arrays.
-        // For now regions do not 100% support global storage.
-        // Make sure that the global storage at least reflects the local one.
-        if (field_data.global_data) {
-            if (!all_active) {
-                const auto message =
-                    fmt::format(R"(Region operation on 3D field {} with global storage will not update inactive cells.
+            if ((section == Section::EDIT) && (target_kw == "DEPTH")) {
+                this->depth_edited_ = true;
+            }
+
+            // Supporting region operations on global storage arrays would
+            // require global storage for the *NUM region set arrays (i.e.,
+            // FLUXNUM, MULTNUM, OPERNUM).  In order to avoid global storage
+            // for a significant portion of the property arrays we have
+            // decided, as a project policy, to not support such operations
+            // at this time.  There is, however, no technical reason for why
+            // the current implementation could not be extended to support
+            // region operations on global storage arrays.
+            // For now regions do not 100% support global storage.
+            // Make sure that the global storage at least reflects the local one.
+            if (field_data.global_data) {
+                if (!all_active) {
+                    const auto message =
+                        fmt::format(R"(Region operation on 3D field {} with global storage will not update inactive cells.
 Note that this might cause problems for PINCH option 4 or 5 being ALL.)", target_kw);
 
-                OpmLog::warning(Log::fileMessage(keyword.location(), message));
+                    OpmLog::warning(Log::fileMessage(keyword.location(), message));
+                }
+                update_global_from_local(field_data, index_list);
             }
-            update_global_from_local(field_data, index_list);
+            continue;
         }
+
+        if (FieldProps::supported<int>(target_kw)) {
+            auto& field_data = this->init_get<int>(target_kw);
+
+            this->operate_int_target(record, field_data, src_kw, index_list);
+
+            if (field_data.global_data) {
+                if (!all_active) {
+                    const auto message =
+                        fmt::format(R"(Region operation on 3D field {} with global storage will not update inactive cells.
+Note that this might cause problems for PINCH option 4 or 5 being ALL.)", target_kw);
+
+                    OpmLog::warning(Log::fileMessage(keyword.location(), message));
+                }
+                update_global_from_local(field_data, index_list);
+            }
+            continue;
+        }
+
+        const auto message =
+            fmt::format(R"(Target array {} in {} is not supported.)",
+                        target_kw, keyword.name());
+
+        OpmLog::warning(Log::fileMessage(keyword.location(), message));
     }
 }
 

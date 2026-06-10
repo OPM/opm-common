@@ -752,6 +752,12 @@ private:
                  const std::vector<Box::cell_index>& index_list,
                  const bool global = false);
 
+    void operate_int_target(const DeckRecord& record,
+                            Fieldprops::FieldData<int>& target_data,
+                            const std::string& src_kw,
+                            const std::vector<Box::cell_index>& index_list,
+                            const bool global = false);
+
     template <typename T>
     Fieldprops::FieldData<T>&
     init_get(const std::string& keyword, bool allow_unsupported = false);
