@@ -541,7 +541,7 @@ void update_global_from_local(Fieldprops::FieldData<T>& data,
     if(data.global_data)
     {
         auto& to = *data.global_data;
-        auto to_st = *data.global_value_status;
+        auto& to_st = *data.global_value_status;
         const auto& from = data.data;
         const auto& from_st = data.value_status;
 
