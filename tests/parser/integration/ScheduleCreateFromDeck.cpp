@@ -1003,6 +1003,57 @@ WELOPEN
 TSTEP
  10 /
 
+-- Within a single COMPDAT keyword: re-open both connections (raising
+-- REQUEST_OPEN_COMPLETION for both), then shut connection 1 again.  The
+-- trailing SHUT must clear the event for connection 1 while connection 2
+-- keeps its event.
+COMPDAT
+     'W1'   2*    1    1      'OPEN'  1*     32.948      0.311   3047.839  2*         'X'     22.100 /
+     'W1'   2*    2    2      'OPEN'  1*     32.948      0.311   3047.839  2*         'X'     22.100 /
+     'W1'   2*    1    1      'SHUT'  1*     32.948      0.311   3047.839  2*         'X'     22.100 /
+/
+
+TSTEP
+ 10 /
+
+-- Same idea using WELOPEN: open then shut connection 1 in one keyword.
+WELOPEN
+   'W1'  'OPEN'  3* 1 1 /
+   'W1'  'SHUT'  3* 1 1 /
+/
+
+TSTEP
+ 10 /
+
+-- Two separate COMPDAT keywords within a single report step: the first
+-- re-opens both connections (raising the event for both), the second shuts
+-- connection 1.  The second COMPDAT must clear the event raised by the first;
+-- connection 2 keeps its event.  REQUEST_OPEN_COMPLETION is a per-report-step
+-- event, so the net effect over the step is what matters.
+COMPDAT
+     'W1'   2*    1    1      'OPEN'  1*     32.948      0.311   3047.839  2*         'X'     22.100 /
+     'W1'   2*    2    2      'OPEN'  1*     32.948      0.311   3047.839  2*         'X'     22.100 /
+/
+COMPDAT
+     'W1'   2*    1    1      'SHUT'  1*     32.948      0.311   3047.839  2*         'X'     22.100 /
+/
+
+TSTEP
+ 10 /
+
+-- Two separate WELOPEN keywords within a single report step: the first opens
+-- connection 1 (raising the event), the second shuts it.  The second WELOPEN
+-- must clear the event raised by the first.
+WELOPEN
+   'W1'  'OPEN'  3* 1 1 /
+/
+WELOPEN
+   'W1'  'SHUT'  3* 1 1 /
+/
+
+TSTEP
+ 10 /
+
 END
 )");
 
@@ -1048,7 +1099,31 @@ END
     BOOST_CHECK( !sched[5].wellcompletion_events().hasEvent("W1", 1, request_open) );
     BOOST_CHECK(  sched[5].wellcompletion_events().hasEvent("W1", 2, request_open) );
 
-    // Step 6: no connection changes -- events reset again.
+    // Step 6: COMPDAT re-opens both connections, then shuts connection 1 within
+    // the same keyword.  The OPEN raises REQUEST_OPEN_COMPLETION for both, but
+    // the trailing SHUT of connection 1 cancels its event.  Connection 2 keeps
+    // its event.
     BOOST_CHECK( !sched[6].wellcompletion_events().hasEvent("W1", 1, request_open) );
-    BOOST_CHECK( !sched[6].wellcompletion_events().hasEvent("W1", 2, request_open) );
+    BOOST_CHECK(  sched[6].wellcompletion_events().hasEvent("W1", 2, request_open) );
+
+    // Step 7: WELOPEN opens then shuts connection 1 in one keyword -- the SHUT
+    // likewise cancels the event raised by the OPEN.
+    BOOST_CHECK( !sched[7].wellcompletion_events().hasEvent("W1", 1, request_open) );
+    BOOST_CHECK( !sched[7].wellcompletion_events().hasEvent("W1", 2, request_open) );
+
+    // Step 8: a first COMPDAT opens both connections, a second COMPDAT in the
+    // same report step shuts connection 1.  The later COMPDAT cancels the event
+    // the first one raised for connection 1; connection 2 keeps its event.
+    BOOST_CHECK( !sched[8].wellcompletion_events().hasEvent("W1", 1, request_open) );
+    BOOST_CHECK(  sched[8].wellcompletion_events().hasEvent("W1", 2, request_open) );
+
+    // Step 9: a first WELOPEN opens connection 1, a second WELOPEN in the same
+    // report step shuts it.  The later WELOPEN cancels the event the first one
+    // raised for connection 1.
+    BOOST_CHECK( !sched[9].wellcompletion_events().hasEvent("W1", 1, request_open) );
+    BOOST_CHECK( !sched[9].wellcompletion_events().hasEvent("W1", 2, request_open) );
+
+    // Step 10: no connection changes -- events reset again.
+    BOOST_CHECK( !sched[10].wellcompletion_events().hasEvent("W1", 1, request_open) );
+    BOOST_CHECK( !sched[10].wellcompletion_events().hasEvent("W1", 2, request_open) );
 }

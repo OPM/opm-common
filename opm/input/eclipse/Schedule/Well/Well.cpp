@@ -1518,7 +1518,8 @@ int Well::fip_region_number() const
 
 bool Well::handleWELOPENConnections(const DeckRecord&       record,
                                     const Connection::State state_arg,
-                                    std::vector<int>&       requested_open_complnums)
+                                    std::vector<int>&       requested_open_complnums,
+                                    std::vector<int>&       requested_shut_complnums)
 {
     auto match = [&record](const Connection &c) -> bool
     {
@@ -1547,6 +1548,12 @@ bool Well::handleWELOPENConnections(const DeckRecord&       record,
             // REQUEST_OPEN_COMPLETION event (see WellConnections::loadCOMPDATX
             // for why this is done regardless of the recorded state).
             requested_open_complnums.push_back(connection.complnum());
+        }
+        else {
+            // The connection is shut (or set to AUTO).  Report it so the caller
+            // can clear any pending REQUEST_OPEN_COMPLETION event raised for the
+            // same connection earlier.
+            requested_shut_complnums.push_back(connection.complnum());
         }
 
         auto connection_copy = connection;

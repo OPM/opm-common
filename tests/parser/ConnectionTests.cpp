@@ -92,9 +92,11 @@ namespace {
         const auto sg = Opm::ScheduleGrid { grid, field_props, completed_cells };
 
         std::vector<int> requested_open_complnums;
+        std::vector<int> requested_shut_complnums;
         for (const auto& rec : deck["COMPDAT"][0]) {
             connections.loadCOMPDAT(rec, "WELL", wdfac, sg, loc, ctx, errors,
-                                    requested_open_complnums);
+                                    requested_open_complnums,
+                                    requested_shut_complnums);
         }
 
         return connections;

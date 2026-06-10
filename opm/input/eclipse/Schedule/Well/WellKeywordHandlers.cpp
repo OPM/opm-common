@@ -551,10 +551,19 @@ void handleWELOPEN(HandlerContext& handlerContext)
             {
                 auto well = handlerContext.state().wells.get(wname);
                 auto requested_open_complnums = std::vector<int>{};
-                well.handleWELOPENConnections(record, connection_status, requested_open_complnums);
+                auto requested_shut_complnums = std::vector<int>{};
+                well.handleWELOPENConnections(record, connection_status,
+                                              requested_open_complnums,
+                                              requested_shut_complnums);
                 for (const int complnum : requested_open_complnums) {
                     handlerContext.state().wellcompletion_events()
                         .addEvent(wname, complnum, ScheduleEvents::REQUEST_OPEN_COMPLETION);
+                }
+                // A connection shut by this record cancels any pending
+                // REQUEST_OPEN_COMPLETION event for the same connection.
+                for (const int complnum : requested_shut_complnums) {
+                    handlerContext.state().wellcompletion_events()
+                        .clearEvent(wname, complnum, ScheduleEvents::REQUEST_OPEN_COMPLETION);
                 }
                 handlerContext.state().wells.update( std::move(well) );
             }
