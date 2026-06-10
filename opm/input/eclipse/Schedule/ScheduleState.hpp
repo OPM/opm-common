@@ -483,6 +483,9 @@ namespace Opm {
         WellGroupEvents& wellgroup_events();
         const WellGroupEvents& wellgroup_events() const;
 
+        WellCompletionEvents& wellcompletion_events();
+        const WellCompletionEvents& wellcompletion_events() const;
+
         void update_geo_keywords(std::vector<DeckKeyword> geo_keywords);
         std::vector<DeckKeyword>& geo_keywords();
         const std::vector<DeckKeyword>& geo_keywords() const;
@@ -701,6 +704,7 @@ namespace Opm {
             serializer(m_nupcol);
             serializer(m_events);
             serializer(m_wellgroup_events);
+            serializer(m_wellcompletion_events);
             serializer(m_geo_keywords);
             serializer(m_message_limits);
             serializer(m_whistctl_mode);
@@ -724,6 +728,7 @@ namespace Opm {
         Nupcol m_nupcol{};
         Events m_events{};
         WellGroupEvents m_wellgroup_events{};
+        WellCompletionEvents m_wellcompletion_events{};
         std::vector<DeckKeyword> m_geo_keywords{};
         MessageLimits m_message_limits{};
         WellProducerCMode m_whistctl_mode = WellProducerCMode::CMODE_UNDEFINED;

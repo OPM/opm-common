@@ -107,6 +107,12 @@ namespace Opm
 
             /// TUNINGDP has changed
             TUNINGDP_CHANGE = (UINT64_C(1) << 23),
+
+            /// Analogue to REQUEST_OPEN_WELL, but at the connection/completion
+            /// level.  Triggered when the WELOPEN or COMPDAT keywords explicitly
+            /// request OPEN for an existing connection/completion (regardless of
+            /// the recorded schedule state).
+            REQUEST_OPEN_COMPLETION = (UINT64_C(1) << 24),
         };
     } // namespace ScheduleEvents
 
@@ -292,6 +298,92 @@ namespace Opm
     private:
         /// Event collection for all registered wells and groups.
         std::unordered_map<std::string, Events> m_wellgroup_events{};
+    };
+
+    /// Collection of events associated to specific completions of named wells.
+    ///
+    /// Keyed by well name plus completion number (set by COMPDAT/COMPLNUM,
+    /// referenced by e.g. WELOPEN), since completions have no stable name.
+    /// Unlike WellGroupEvents, pairs need not be registered up front:
+    /// addEvent() creates entries on first use.
+    class WellCompletionEvents
+    {
+    public:
+        /// Create a serialisation test object.
+        static WellCompletionEvents serializationTestObject();
+
+        /// Add a single event for a specific completion of a named well.
+        ///
+        /// \param[in] wname Well name.
+        ///
+        /// \param[in] complnum Completion number within \p wname.
+        ///
+        /// \param[in] event Single named event.  If \p event already exists
+        /// for the (wname, complnum) pair, then this function does nothing.
+        void addEvent(const std::string& wname, int complnum, ScheduleEvents::Events event);
+
+        /// Remove one or more individual events from the collection tied to
+        /// a single completion of a named well.
+        ///
+        /// \param[in] wname Well name.
+        ///
+        /// \param[in] complnum Completion number within \p wname.
+        ///
+        /// \param[in] eventMask One or more events combined using bitwise
+        /// 'or' ('|').  All events for the (wname, complnum) pair that are
+        /// set in \p eventMask will be cleared.
+        void clearEvent(const std::string& wname, int complnum, std::uint64_t eventMask);
+
+        /// Remove all events for all known wells and completions.
+        ///
+        /// Typically used only when preparing the events system for a new
+        /// report step as part of Schedule object initialisation.
+        void reset();
+
+        /// Merge current event collection with other.
+        ///
+        /// Resulting collection (\c *this) has the union of the events for
+        /// all (well, completion) pairs in both collections.
+        void merge(const WellCompletionEvents& events);
+
+        /// Query current collection for one or more specific events
+        /// associated to a specific completion of a named well.
+        ///
+        /// \param[in] wname Well name.
+        ///
+        /// \param[in] complnum Completion number within \p wname.
+        ///
+        /// \param[in] eventMask Bit mask of events for which to check
+        /// existence.
+        ///
+        /// \return Whether or not at least one of the events represented in
+        /// \p eventMask is active for the (wname, complnum) pair in the
+        /// current collection.
+        bool hasEvent(const std::string& wname, int complnum, std::uint64_t eventMask) const;
+
+        /// Equality predicate.
+        ///
+        /// \param[in] data Object against which \code *this \endcode will
+        /// be tested for equality.
+        ///
+        /// \return Whether or not \code *this \endcode is the same as \p
+        /// data.
+        bool operator==(const WellCompletionEvents& data) const;
+
+        /// Convert between byte array and object representation.
+        ///
+        /// \tparam Serializer Byte array conversion protocol.
+        ///
+        /// \param[in,out] serializer Byte array conversion object.
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(m_wellcompletion_events);
+        }
+
+    private:
+        /// Event collection for all known (well, completion number) pairs.
+        std::unordered_map<std::string, std::unordered_map<int, Events>> m_wellcompletion_events{};
     };
 
 } // namespace Opm

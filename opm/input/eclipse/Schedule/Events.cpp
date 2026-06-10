@@ -169,4 +169,83 @@ namespace Opm {
         return this->m_wellgroup_events == data.m_wellgroup_events;
     }
 
+    // ------------------------------------------------------------------------
+
+    WellCompletionEvents WellCompletionEvents::serializationTestObject()
+    {
+        WellCompletionEvents completion_events;
+        completion_events.addEvent("WG1", 1, ScheduleEvents::REQUEST_OPEN_COMPLETION);
+        return completion_events;
+    }
+
+    void WellCompletionEvents::addEvent(const std::string& wname,
+                                        const int          complnum,
+                                        const ScheduleEvents::Events event)
+    {
+        this->m_wellcompletion_events[wname][complnum].addEvent(event);
+    }
+
+    void WellCompletionEvents::clearEvent(const std::string&  wname,
+                                          const int           complnum,
+                                          const std::uint64_t eventMask)
+    {
+        auto well_iter = this->m_wellcompletion_events.find(wname);
+        if (well_iter == this->m_wellcompletion_events.end()) {
+            return;
+        }
+
+        auto conn_iter = well_iter->second.find(complnum);
+        if (conn_iter == well_iter->second.end()) {
+            return;
+        }
+
+        conn_iter->second.clearEvent(eventMask);
+
+        // Drop entries that no longer carry any event so the collection does
+        // not accumulate empty nodes.  hasEvent(~0) is true iff any event
+        // remains.
+        if (! conn_iter->second.hasEvent(~UINT64_C(0))) {
+            well_iter->second.erase(conn_iter);
+            if (well_iter->second.empty()) {
+                this->m_wellcompletion_events.erase(well_iter);
+            }
+        }
+    }
+
+    void WellCompletionEvents::reset()
+    {
+        this->m_wellcompletion_events.clear();
+    }
+
+    void WellCompletionEvents::merge(const WellCompletionEvents& events)
+    {
+        for (const auto& [wname, completion_events] : events.m_wellcompletion_events) {
+            for (const auto& [complnum, ev] : completion_events) {
+                this->m_wellcompletion_events[wname][complnum].merge(ev);
+            }
+        }
+    }
+
+    bool WellCompletionEvents::hasEvent(const std::string&  wname,
+                                        const int           complnum,
+                                        const std::uint64_t eventMask) const
+    {
+        auto well_iter = this->m_wellcompletion_events.find(wname);
+        if (well_iter == this->m_wellcompletion_events.end()) {
+            return false;
+        }
+
+        auto conn_iter = well_iter->second.find(complnum);
+        if (conn_iter == well_iter->second.end()) {
+            return false;
+        }
+
+        return conn_iter->second.hasEvent(eventMask);
+    }
+
+    bool WellCompletionEvents::operator==(const WellCompletionEvents& data) const
+    {
+        return this->m_wellcompletion_events == data.m_wellcompletion_events;
+    }
+
 } // namespace Opm

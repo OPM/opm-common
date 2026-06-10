@@ -194,3 +194,57 @@ BOOST_AUTO_TEST_CASE(MergeEventCollections)
     BOOST_CHECK_MESSAGE(c1.hasEvent("G2", SchEvt::NEW_GROUP),
                         R"(Merged collection must have NEW_GROUP for "G2")");
 }
+
+BOOST_AUTO_TEST_CASE(WellCompletionEvents)
+{
+    using SchEvt = Opm::ScheduleEvents::Events;
+
+    Opm::WellCompletionEvents completion_events;
+
+    BOOST_CHECK_EQUAL(false, completion_events.hasEvent("P1", 1, SchEvt::REQUEST_OPEN_COMPLETION));
+
+    completion_events.addEvent("P1", 1, SchEvt::REQUEST_OPEN_COMPLETION);
+    BOOST_CHECK_EQUAL(true, completion_events.hasEvent("P1", 1, SchEvt::REQUEST_OPEN_COMPLETION));
+
+    // Other connection numbers and other wells must remain unaffected.
+    BOOST_CHECK_EQUAL(false, completion_events.hasEvent("P1", 2, SchEvt::REQUEST_OPEN_COMPLETION));
+    BOOST_CHECK_EQUAL(false, completion_events.hasEvent("P2", 1, SchEvt::REQUEST_OPEN_COMPLETION));
+
+    completion_events.clearEvent("P1", 1, SchEvt::REQUEST_OPEN_COMPLETION);
+    BOOST_CHECK_EQUAL(false, completion_events.hasEvent("P1", 1, SchEvt::REQUEST_OPEN_COMPLETION));
+
+    // Clearing an event for an unknown well/connection must be a no-op.
+    BOOST_CHECK_NO_THROW(completion_events.clearEvent("NO_SUCH_WELL", 1, SchEvt::REQUEST_OPEN_COMPLETION));
+
+    completion_events.addEvent("P1", 1, SchEvt::REQUEST_OPEN_COMPLETION);
+    completion_events.addEvent("P1", 2, SchEvt::REQUEST_OPEN_COMPLETION);
+    completion_events.reset();
+    BOOST_CHECK_EQUAL(false, completion_events.hasEvent("P1", 1, SchEvt::REQUEST_OPEN_COMPLETION));
+    BOOST_CHECK_EQUAL(false, completion_events.hasEvent("P1", 2, SchEvt::REQUEST_OPEN_COMPLETION));
+}
+
+BOOST_AUTO_TEST_CASE(MergeWellCompletionEvents)
+{
+    using SchEvt = Opm::ScheduleEvents::Events;
+
+    auto c1 = Opm::WellCompletionEvents{};
+    c1.addEvent("P1", 1, SchEvt::REQUEST_OPEN_COMPLETION);
+
+    {
+        auto c2 = Opm::WellCompletionEvents{};
+        c2.addEvent("P1", 2, SchEvt::REQUEST_OPEN_COMPLETION);
+        c2.addEvent("P2", 1, SchEvt::REQUEST_OPEN_COMPLETION);
+
+        c1.merge(c2);
+    }
+
+    BOOST_CHECK_MESSAGE(c1.hasEvent("P1", 1, SchEvt::REQUEST_OPEN_COMPLETION),
+                        R"(Merged collection must have REQUEST_OPEN_COMPLETION for "P1" connection 1)");
+    BOOST_CHECK_MESSAGE(c1.hasEvent("P1", 2, SchEvt::REQUEST_OPEN_COMPLETION),
+                        R"(Merged collection must have REQUEST_OPEN_COMPLETION for "P1" connection 2)");
+    BOOST_CHECK_MESSAGE(c1.hasEvent("P2", 1, SchEvt::REQUEST_OPEN_COMPLETION),
+                        R"(Merged collection must have REQUEST_OPEN_COMPLETION for "P2" connection 1)");
+
+    BOOST_CHECK_MESSAGE(! c1.hasEvent("P2", 2, SchEvt::REQUEST_OPEN_COMPLETION),
+                        R"(Merged collection must NOT have REQUEST_OPEN_COMPLETION for "P2" connection 2)");
+}

@@ -136,6 +136,7 @@ ScheduleState::ScheduleState(const ScheduleState& src, const time_point& start_t
     this->m_sim_step = src.sim_step() + 1;
     this->m_events.reset();
     this->m_wellgroup_events.reset();
+    this->m_wellcompletion_events.reset();
     this->m_geo_keywords.clear();
     this->target_wellpi.clear();
     this->m_save_step = false;
@@ -367,6 +368,7 @@ bool ScheduleState::operator==(const ScheduleState& other) const {
         && this->m_end_time == other.m_end_time
         && this->m_events == other.m_events
         && this->m_wellgroup_events == other.m_wellgroup_events
+        && this->m_wellcompletion_events == other.m_wellcompletion_events
         && this->m_geo_keywords == other.m_geo_keywords
         && this->m_message_limits == other.m_message_limits
         && this->m_whistctl_mode == other.m_whistctl_mode
@@ -509,6 +511,14 @@ WellGroupEvents& ScheduleState::wellgroup_events() {
 
 const WellGroupEvents& ScheduleState::wellgroup_events() const {
     return this->m_wellgroup_events;
+}
+
+WellCompletionEvents& ScheduleState::wellcompletion_events() {
+    return this->m_wellcompletion_events;
+}
+
+const WellCompletionEvents& ScheduleState::wellcompletion_events() const {
+    return this->m_wellcompletion_events;
 }
 
 

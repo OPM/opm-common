@@ -428,8 +428,15 @@ namespace Opm {
                                        const KeywordLocation&            location,
                                        const std::optional<std::string>& lgr_label,
                                        const ParseContext&               parseContext,
-                                       ErrorGuard&                       errors)
+                                       ErrorGuard&                       errors,
+                                       std::vector<int>&                 requested_open_complnums,
+                                       std::vector<int>&                 requested_shut_complnums)
     {
+        // Out-parameters: hold exactly the existing connections (re)opened
+        // respectively shut by this record, so clear any previous contents.
+        requested_open_complnums.clear();
+        requested_shut_complnums.clear();
+
         const auto& itemI = record.getItem("I");
         const auto defaulted_I = itemI.defaultApplied(0) || (itemI.get<int>(0) == 0);
         const auto I = !defaulted_I ? itemI.get<int>(0) - 1 : this->headI;
@@ -632,6 +639,23 @@ The cell ({},{},{}) in well {} is not active and the connection will be ignored)
                 const auto conSegNo = prev->segment();
                 const auto perf_range = prev->perf_range();
 
+                if (state == Connection::State::OPEN) {
+                    // Report existing connections this record opens, so the
+                    // caller can raise a REQUEST_OPEN_COMPLETION event.  We
+                    // report regardless of the previously recorded state: at
+                    // run time the connection may be shut (e.g. by WTEST) while
+                    // the schedule still records it OPEN, yet the explicit OPEN
+                    // request must still reach the simulator.
+                    requested_open_complnums.push_back(compl_num);
+                }
+                else {
+                    // The connection is explicitly shut (or set to AUTO) by
+                    // this record.  Report it so the caller can clear any
+                    // pending REQUEST_OPEN_COMPLETION event raised for the same
+                    // connection earlier in this keyword.
+                    requested_shut_complnums.push_back(compl_num);
+                }
+
                 *prev = Connection {
                     I, J, k, cell.global_index, compl_num,
                     state, direction, ctf_kind, satTableId,
@@ -650,13 +674,16 @@ The cell ({},{},{}) in well {} is not active and the connection will be ignored)
                                       const ScheduleGrid&    grid,
                                       const KeywordLocation& location,
                                       const ParseContext&    parseContext,
-                                      ErrorGuard&            errors)
+                                      ErrorGuard&            errors,
+                                      std::vector<int>&      requested_open_complnums,
+                                      std::vector<int>&      requested_shut_complnums)
     {
         // No LGR tag when processing the main grid COMPDAT keyword.
         const auto lgr_tag = std::optional<std::string>{}; // == nullopt.
 
         this->loadCOMPDATX(record, wname, wdfac, grid, location,
-                           lgr_tag, parseContext, errors);
+                           lgr_tag, parseContext, errors,
+                           requested_open_complnums, requested_shut_complnums);
     }
 
     void WellConnections::loadCOMPDATL(const DeckRecord&      record,
@@ -665,7 +692,9 @@ The cell ({},{},{}) in well {} is not active and the connection will be ignored)
                                        const ScheduleGrid&    grid,
                                        const KeywordLocation& location,
                                        const ParseContext&    parseContext,
-                                       ErrorGuard&            errors)
+                                       ErrorGuard&            errors,
+                                       std::vector<int>&      requested_open_complnums,
+                                       std::vector<int>&      requested_shut_complnums)
     {
         // We're processing a local grid's connection data (COMPDATL or
         // COMPDATM keyword).  Convey this information to the keyword
@@ -674,7 +703,8 @@ The cell ({},{},{}) in well {} is not active and the connection will be ignored)
             (record.getItem<ParserKeywords::COMPDATX::LGR>().getTrimmedString(0));
 
         this->loadCOMPDATX(record, wname, wdfac, grid, location,
-                           lgr_tag, parseContext, errors);
+                           lgr_tag, parseContext, errors,
+                           requested_open_complnums, requested_shut_complnums);
     }
 
     void

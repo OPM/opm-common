@@ -227,6 +227,11 @@ public:
     bool completion_is_closed(const std::string& well_name, const int complnum) const;
     std::size_t num_closed_completions() const;
 
+    // Simulation time at which 'well_name's completion 'complnum' was last
+    // closed.  Throws if it is not currently closed (guard with
+    // completion_is_closed()).
+    double lastCompletionCloseTime(const std::string& well_name, int complnum) const;
+
     void clear();
 
 

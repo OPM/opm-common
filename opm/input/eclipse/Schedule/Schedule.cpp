@@ -204,6 +204,7 @@ namespace Opm {
             // restart step to ensure well potentials and guide rates are available at the first step.
             const auto prev_step = std::max(static_cast<int>(restart_step-1), 0);
             this->snapshots[restart_step].wellgroup_events().merge(this->snapshots[prev_step].wellgroup_events());
+            this->snapshots[restart_step].wellcompletion_events().merge(this->snapshots[prev_step].wellcompletion_events());
             this->snapshots[restart_step].events().merge(this->snapshots[prev_step].events());
         } else {
             this->iterateScheduleSection(0, this->m_sched_deck.size(),
@@ -1069,6 +1070,7 @@ Defaulted grid coordinates is not allowed for COMPDAT as part of ACTIONX)"
     {
         this->snapshots[report_step].events().reset();
         this->snapshots[report_step].wellgroup_events().reset();
+        this->snapshots[report_step].wellcompletion_events().reset();
     }
 
 

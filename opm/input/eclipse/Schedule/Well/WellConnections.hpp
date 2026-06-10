@@ -86,13 +86,21 @@ namespace Opm {
                            int lgr_grid_number = 0,
                            const bool defaultSatTabId = true);
 
+        // Out-parameter 'requested_open_complnums' is cleared and then set to
+        // the complnum of every existing connection this record opens (assigns
+        // OPEN), for raising REQUEST_OPEN_COMPLETION events.  Likewise,
+        // 'requested_shut_complnums' is cleared and then set to the complnum of
+        // every existing connection this record shuts (assigns a non-OPEN
+        // state), for clearing any pending REQUEST_OPEN_COMPLETION events.
         void loadCOMPDAT(const DeckRecord&      record,
                          const std::string&     wname,
                          const WDFAC&           wdfac,
                          const ScheduleGrid&    grid,
                          const KeywordLocation& location,
                          const ParseContext&    parseContext,
-                         ErrorGuard&            errors);
+                         ErrorGuard&            errors,
+                         std::vector<int>&      requested_open_complnums,
+                         std::vector<int>&      requested_shut_complnums);
 
         void loadCOMPDATL(const DeckRecord&      record,
                           const std::string&     wname,
@@ -100,7 +108,9 @@ namespace Opm {
                           const ScheduleGrid&    grid,
                           const KeywordLocation& location,
                           const ParseContext&    parseContext,
-                          ErrorGuard&            errors);
+                          ErrorGuard&            errors,
+                          std::vector<int>&      requested_open_complnums,
+                          std::vector<int>&      requested_shut_complnums);
 
         void loadCOMPTRAJ(const DeckRecord&      record,
                           const std::string&     wname,
@@ -222,7 +232,9 @@ namespace Opm {
                           const KeywordLocation&            location,
                           const std::optional<std::string>& lgr_label,
                           const ParseContext&               parseContext,
-                          ErrorGuard&                       errors);
+                          ErrorGuard&                       errors,
+                          std::vector<int>&                 requested_open_complnums,
+                          std::vector<int>&                 requested_shut_complnums);
     };
 
     std::optional<int>
