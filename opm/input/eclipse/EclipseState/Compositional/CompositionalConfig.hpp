@@ -98,70 +98,65 @@ public:
         serializer(standard_temperature);
         serializer(standard_pressure);
         serializer(comp_names);
-        serializer(eos_types);
-        serializer(molecular_weights);
-        serializer(acentric_factors);
-        serializer(critical_pressure);
-        serializer(critical_temperature);
-        serializer(boiling_temperature);
-        serializer(critical_volume);
-        serializer(volume_shifts);
-        serializer(critical_z_factor);
-        serializer(binary_interaction_coefficient);
-        serializer(omega_a);
-        serializer(omega_b);
+        serializer(reservoir_props);
+        serializer(surface_props);
         serializer(lbc_coefficients);
-        serializer(eos_types_surf);
-        serializer(molecular_weights_surf);
-        serializer(acentric_factors_surf);
-        serializer(critical_pressure_surf);
-        serializer(critical_temperature_surf);
-        serializer(boiling_temperature_surf);
-        serializer(critical_volume_surf);
-        serializer(critical_z_factor_surf);
-        serializer(volume_shifts_surf);
-        serializer(binary_interaction_coefficient_surf);
-        serializer(omega_a_surf);
-        serializer(omega_b_surf);
     }
 
 private:
+    // Properties of one EOS region. The same set of properties exists for
+    // reservoir-condition regions (EOS, MW, ACF, ...) and surface-condition
+    // regions (EOSS, MWS, ACFS, ...).
+    struct EOSProps {
+        EOSType eos_type = EOSType::PR;
+        std::vector<double> molecular_weights;
+        std::vector<double> acentric_factors;
+        std::vector<double> critical_pressure;
+        std::vector<double> critical_temperature;
+        std::vector<double> boiling_temperature;
+        std::vector<double> critical_volume;
+        std::vector<double> volume_shifts;
+        std::vector<double> critical_z_factor;
+        std::vector<double> binary_interaction_coefficient;
+        std::vector<double> omega_a;
+        std::vector<double> omega_b;
+
+        bool operator==(const EOSProps& other) const;
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(eos_type);
+            serializer(molecular_weights);
+            serializer(acentric_factors);
+            serializer(critical_pressure);
+            serializer(critical_temperature);
+            serializer(boiling_temperature);
+            serializer(critical_volume);
+            serializer(volume_shifts);
+            serializer(critical_z_factor);
+            serializer(binary_interaction_coefficient);
+            serializer(omega_a);
+            serializer(omega_b);
+        }
+    };
+
     // TODO: num_comps might not be totally necessary, while might be convenient.
     //  We can check the number of components without accessing Runspec
     std::size_t num_comps = 0;
     double standard_temperature = 288.71; // Kelvin
     double standard_pressure = 1.0 * unit::atm; // 1 atm
     std::vector<std::string> comp_names;
-    std::vector<EOSType> eos_types;
-    std::vector<std::vector<double>> molecular_weights;
-    std::vector<std::vector<double>> acentric_factors;
-    std::vector<std::vector<double>> critical_pressure;
-    std::vector<std::vector<double>> critical_temperature;
-    std::vector<std::vector<double>> boiling_temperature;
-    std::vector<std::vector<double>> critical_volume;
-    std::vector<std::vector<double>> volume_shifts;
-    std::vector<std::vector<double>> critical_z_factor;
-    std::vector<std::vector<double>> binary_interaction_coefficient;
-    std::vector<std::vector<double>> omega_a;
-    std::vector<std::vector<double>> omega_b;
 
     // Coefficients for the Lorentz-Bray-Clark viscosity correlation (LBCCOEF).
     // A single set is used for all EOS regions.
     std::array<double, 5> lbc_coefficients = defaultLBCCoefficients();
 
-    // Surface EOS-region properties (EOSS, MWS, ACFS, PCRITS, TCRITS, VCRITS, ZCRITS, SSHIFTS, BICS).
-    std::vector<EOSType> eos_types_surf;
-    std::vector<std::vector<double>> molecular_weights_surf;
-    std::vector<std::vector<double>> acentric_factors_surf;
-    std::vector<std::vector<double>> critical_pressure_surf;
-    std::vector<std::vector<double>> critical_temperature_surf;
-    std::vector<std::vector<double>> boiling_temperature_surf;
-    std::vector<std::vector<double>> critical_volume_surf;
-    std::vector<std::vector<double>> critical_z_factor_surf;
-    std::vector<std::vector<double>> volume_shifts_surf;
-    std::vector<std::vector<double>> binary_interaction_coefficient_surf;
-    std::vector<std::vector<double>> omega_a_surf;
-    std::vector<std::vector<double>> omega_b_surf;
+    // One set of properties for each reservoir condition EOS region
+    std::vector<EOSProps> reservoir_props;
+
+    // One set of properties for each surface condition EOS region
+    std::vector<EOSProps> surface_props;
 };
 
 }
