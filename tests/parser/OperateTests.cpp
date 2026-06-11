@@ -277,3 +277,151 @@ BOOST_AUTO_TEST_CASE(Test_field) {
     BOOST_CHECK_EQUAL(pressure[12], pres_to_si(std::abs(perm_from_si(permy[12]))));
     BOOST_CHECK_CLOSE(pressure[13], pres_to_si(3.0 * perm_from_si(permy[13])), 1.0e-10);
 }
+
+BOOST_AUTO_TEST_CASE(OPERATE_int_SATNUM_fine_fp) {
+    // 4x4x1 grid: one OPERATE record per cell, no MINLIM/MAXLIM/ADDX clamps.
+    // PORO literals match Excel export precision (see proteus OPERATE.DATA).
+    // Cell (2,2): intentional MULTA 3 0 -> SATNUM 0 (Flow may halt on this cell).
+    const std::string deck_string = R"(RUNSPEC
+METRIC
+DIMENS
+4 4 1 /
+GRID
+DX
+16*1 /
+DY
+16*1 /
+DZ
+16*1 /
+-- COPY DX DY / DX DZ / is legal in Flow but EclipseGrid::hasDTOPSKeywords()
+-- checks deck.hasKeyword(DY|DZ) on the parsed deck, before COPY is applied.
+TOPS
+16*0 /
+PORO
+0.75                  0.25                  0.249                 0.249
+0.25                  0.25                  0.249                 0.249
+2.499999999999990E-1  2.499999999999990E-1  2.499999999999999E-1  2.499999999999999E-1
+2.499999999999990E-1  2.499999999999990E-1  2.499999999999999E-1  2.499999999999999E-1
+/
+REGIONS
+SATNUM
+16*1 /
+OPERATE
+ SATNUM  1  4  1  1  1  1  MULTA  PORO  2  1 /
+ SATNUM  1  1  2  2  1  1  MULTA  PORO  2  1 /
+ SATNUM  2  2  2  2  1  1  MULTA  PORO  3  0 /
+ SATNUM  3  4  2  2  1  1  MULTA  PORO  2  1 /
+ SATNUM  1  4  3  4  1  1  MULTA  PORO  2  1 /
+/
+)";
+
+    Parser parser;
+    Deck deck = parser.parseString(deck_string);
+    TableManager tables(deck);
+    EclipseGrid grid(deck);
+    FieldPropsManager fp(deck, Phases{true, true, true}, grid, tables);
+
+    const auto& satnum = fp.get_int("SATNUM");
+
+    // I cycles fastest; K=1 only.  static_cast<int> truncates toward zero.
+    BOOST_CHECK_EQUAL(satnum[0],  2);  // (1,1) PORO=0.75   2*0.75+1=2.5  (Excel ROUND -> 3)
+    BOOST_CHECK_EQUAL(satnum[1],  1);  // (2,1) PORO=0.25   2*0.25+1=1.5  (Excel ROUND -> 2)
+    BOOST_CHECK_EQUAL(satnum[2],  1);  // (3,1) PORO=0.249
+    BOOST_CHECK_EQUAL(satnum[3],  1);  // (4,1) PORO=0.249
+    BOOST_CHECK_EQUAL(satnum[4],  1);  // (1,2) PORO=0.25
+    BOOST_CHECK_EQUAL(satnum[5],  0);  // (2,2) PORO=0.25   3*0.25+0=0.75 -> 0 (sentinel)
+    BOOST_CHECK_EQUAL(satnum[6],  1);  // (3,2) PORO=0.249
+    BOOST_CHECK_EQUAL(satnum[7],  1);  // (4,2) PORO=0.249
+    BOOST_CHECK_EQUAL(satnum[8],  1);  // (1,3) Excel FP ~0.25
+    BOOST_CHECK_EQUAL(satnum[9],  1);  // (2,3)
+    BOOST_CHECK_EQUAL(satnum[10], 1);  // (3,3)
+    BOOST_CHECK_EQUAL(satnum[11], 1);  // (4,3)
+    BOOST_CHECK_EQUAL(satnum[12], 1);  // (1,4)
+    BOOST_CHECK_EQUAL(satnum[13], 1);  // (2,4)
+    BOOST_CHECK_EQUAL(satnum[14], 1);  // (3,4)
+    BOOST_CHECK_EQUAL(satnum[15], 1);  // (4,4)
+}
+
+BOOST_AUTO_TEST_CASE(OPERATE_int_truncation_boundaries) {
+    // Isolated .5 boundaries: OPM truncate vs Excel ROUND would disagree.
+    const std::string deck_string = R"(RUNSPEC
+METRIC
+DIMENS
+3 1 1 /
+GRID
+DX
+3*1 /
+DY
+3*1 /
+DZ
+3*1 /
+TOPS
+3*0 /
+PORO
+0.75 0.25 2.499999999999999E-1 /
+REGIONS
+SATNUM
+3*1 /
+OPERATE
+ SATNUM  1  1  1  1  1  1  MULTX  PORO  2 /
+ SATNUM  2  2  1  1  1  1  MULTA  PORO  10 0 /
+ SATNUM  3  3  1  1  1  1  MULTA  PORO  2 1 /
+/
+)";
+
+    Parser parser;
+    Deck deck = parser.parseString(deck_string);
+    TableManager tables(deck);
+    EclipseGrid grid(deck);
+    FieldPropsManager fp(deck, Phases{true, true, true}, grid, tables);
+
+    const auto& satnum = fp.get_int("SATNUM");
+
+    BOOST_CHECK_EQUAL(satnum[0], 1);  // 2*0.75=1.5 -> 1  (Excel ROUND -> 2)
+    BOOST_CHECK_EQUAL(satnum[1], 2);  // 10*0.25+0=2.5 -> 2  (Excel ROUND -> 3)
+    BOOST_CHECK_EQUAL(satnum[2], 1);  // 2*0.2499999999999999+1=1.5-ε -> 1
+}
+
+BOOST_AUTO_TEST_CASE(OPERATE_int_SATNUM_log_grenades) {
+    // LOG10/LOGE on integer SATNUM have no minimum-region guard in OPM.
+    // log(1)=0 -> SATNUM 0; other logs can yield 0 or negative region IDs.
+    // Not for runnable Flow decks — documents pinned behaviour only.
+    const std::string deck_string = R"(RUNSPEC
+METRIC
+DIMENS
+4 1 1 /
+GRID
+DX
+4*1 /
+DY
+4*1 /
+DZ
+4*1 /
+TOPS
+4*0 /
+PORO
+1.0 0.25 0.25 0.25 /
+REGIONS
+SATNUM
+4*1 /
+OPERATE
+ SATNUM  1  1  1  1  1  1  LOG10  SATNUM /
+ SATNUM  2  2  1  1  1  1  LOGE   SATNUM /
+ SATNUM  3  3  1  1  1  1  LOG10  PORO /
+ SATNUM  4  4  1  1  1  1  LOGE   PORO /
+/
+)";
+
+    Parser parser;
+    Deck deck = parser.parseString(deck_string);
+    TableManager tables(deck);
+    EclipseGrid grid(deck);
+    FieldPropsManager fp(deck, Phases{true, true, true}, grid, tables);
+
+    const auto& satnum = fp.get_int("SATNUM");
+
+    BOOST_CHECK_EQUAL(satnum[0], 0);  // log10(1) -> 0
+    BOOST_CHECK_EQUAL(satnum[1], 0);  // log(1)   -> 0
+    BOOST_CHECK_EQUAL(satnum[2], 0);  // log10(0.25) < 0 -> 0
+    BOOST_CHECK_EQUAL(satnum[3], -1); // log(0.25) ~ -1.39 -> -1 (invalid region ID)
+}

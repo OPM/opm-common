@@ -1758,28 +1758,57 @@ void FieldProps::handle_OPERATE(const Section section,
         const auto target_kw = Fieldprops::keywords::
             get_keyword_from_alias(record.getItem(0).getTrimmedString(0));
 
-        auto& field_data = this->init_get<double>(target_kw);
+        if (this->tran.find(target_kw) != this->tran.end()) {
+            throw std::logic_error {
+                "The OPERATE keyword cannot be used for "
+                "manipulations of TRANX, TRANY or TRANZ"
+            };
+        }
 
         const auto src_kw = record.getItem("ARRAY_PARAMETER").getTrimmedString(0);
-        const auto& src_data = this->init_get<double>(src_kw);
 
-        FieldProps::operate(record, field_data, src_data, box.index_list());
-
-        if ((section == Section::EDIT) && (target_kw == "DEPTH")) {
-            this->depth_edited_ = true;
-        }
-
-        if (field_data.global_data)
+        if (FieldProps::supported<double>(target_kw) ||
+            Fieldprops::keywords::is_work(target_kw))
         {
-            if (!src_data.global_data) {
-                throw std::logic_error {
-                    "The OPERATE and OPERATER keywords are only "
-                    "supported between keywords with same storage"
-                };
+            auto& field_data = this->init_get<double>(target_kw);
+            const auto& src_data = this->init_get<double>(src_kw);
+
+            FieldProps::operate(record, field_data, src_data, box.index_list());
+
+            if ((section == Section::EDIT) && (target_kw == "DEPTH")) {
+                this->depth_edited_ = true;
             }
 
-            FieldProps::operate(record, field_data, src_data, box.global_index_list(), true);
+            if (field_data.global_data) {
+                if (!src_data.global_data) {
+                    throw std::logic_error {
+                        "The OPERATE and OPERATER keywords are only "
+                        "supported between keywords with same storage"
+                    };
+                }
+
+                FieldProps::operate(record, field_data, src_data,
+                                    box.global_index_list(), true);
+            }
+            continue;
         }
+
+        if (FieldProps::supported<int>(target_kw)) {
+            auto& field_data = this->init_get<int>(target_kw);
+
+            this->operate_int_target(record, field_data, src_kw, box.index_list());
+
+            if (field_data.global_data) {
+                update_global_from_local(field_data, box.index_list());
+            }
+            continue;
+        }
+
+        const auto message =
+            fmt::format(R"(Target array {} in {} is not supported.)",
+                        target_kw, keyword.name());
+
+        OpmLog::warning(Log::fileMessage(keyword.location(), message));
     }
 }
 
