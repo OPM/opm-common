@@ -810,6 +810,15 @@ const std::vector<std::string>& CompositionalConfig::compName() const {
     return this->comp_names;
 }
 
+const CompositionalConfig::EOSProps& CompositionalConfig::eosProps(std::size_t eos_region) const {
+    return this->reservoir_props[eos_region];
+}
+
+const CompositionalConfig::EOSProps&
+CompositionalConfig::eosPropsSurf(std::size_t eos_region) const {
+    return this->surface_props[eos_region];
+}
+
 CompositionalConfig::EOSType CompositionalConfig::eosType(std::size_t eos_region) const {
     return this->reservoir_props[eos_region].eos_type;
 }

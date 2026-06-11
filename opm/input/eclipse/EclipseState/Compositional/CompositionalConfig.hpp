@@ -49,6 +49,43 @@ public:
     // The item defaults of the LBCCOEF keyword.
     static std::array<double, 5> defaultLBCCoefficients();
 
+    // Properties of one EOS region. The same set of properties exists for
+    // reservoir-condition regions (EOS, MW, ACF, ...) and surface-condition
+    // regions (EOSS, MWS, ACFS, ...).
+    struct EOSProps {
+        EOSType eos_type = EOSType::PR;
+        std::vector<double> molecular_weights;
+        std::vector<double> acentric_factors;
+        std::vector<double> critical_pressure;
+        std::vector<double> critical_temperature;
+        std::vector<double> boiling_temperature;
+        std::vector<double> critical_volume;
+        std::vector<double> volume_shifts;
+        std::vector<double> critical_z_factor;
+        std::vector<double> binary_interaction_coefficient;
+        std::vector<double> omega_a;
+        std::vector<double> omega_b;
+
+        bool operator==(const EOSProps& other) const;
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(eos_type);
+            serializer(molecular_weights);
+            serializer(acentric_factors);
+            serializer(critical_pressure);
+            serializer(critical_temperature);
+            serializer(boiling_temperature);
+            serializer(critical_volume);
+            serializer(volume_shifts);
+            serializer(critical_z_factor);
+            serializer(binary_interaction_coefficient);
+            serializer(omega_a);
+            serializer(omega_b);
+        }
+    };
+
     CompositionalConfig() = default;
 
     CompositionalConfig(const Deck& deck, const Runspec& runspec);
@@ -61,6 +98,11 @@ public:
     double standardTemperature() const;
     double standardPressure() const;
     const std::vector<std::string>& compName() const;
+
+    // All properties of one reservoir or surface condition EOS region.
+    const EOSProps& eosProps(std::size_t eos_region) const;
+    const EOSProps& eosPropsSurf(std::size_t eos_region) const;
+
     EOSType eosType(std::size_t eos_region) const;
     const std::vector<double>& molecularWeights(std::size_t eos_region) const;
     const std::vector<double>& acentricFactors(std::size_t eos_region) const;
@@ -104,43 +146,6 @@ public:
     }
 
 private:
-    // Properties of one EOS region. The same set of properties exists for
-    // reservoir-condition regions (EOS, MW, ACF, ...) and surface-condition
-    // regions (EOSS, MWS, ACFS, ...).
-    struct EOSProps {
-        EOSType eos_type = EOSType::PR;
-        std::vector<double> molecular_weights;
-        std::vector<double> acentric_factors;
-        std::vector<double> critical_pressure;
-        std::vector<double> critical_temperature;
-        std::vector<double> boiling_temperature;
-        std::vector<double> critical_volume;
-        std::vector<double> volume_shifts;
-        std::vector<double> critical_z_factor;
-        std::vector<double> binary_interaction_coefficient;
-        std::vector<double> omega_a;
-        std::vector<double> omega_b;
-
-        bool operator==(const EOSProps& other) const;
-
-        template<class Serializer>
-        void serializeOp(Serializer& serializer)
-        {
-            serializer(eos_type);
-            serializer(molecular_weights);
-            serializer(acentric_factors);
-            serializer(critical_pressure);
-            serializer(critical_temperature);
-            serializer(boiling_temperature);
-            serializer(critical_volume);
-            serializer(volume_shifts);
-            serializer(critical_z_factor);
-            serializer(binary_interaction_coefficient);
-            serializer(omega_a);
-            serializer(omega_b);
-        }
-    };
-
     // TODO: num_comps might not be totally necessary, while might be convenient.
     //  We can check the number of components without accessing Runspec
     std::size_t num_comps = 0;
