@@ -27,11 +27,11 @@
 
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 
+#include <fmt/format.h>
+
 #include <cmath>
 #include <cstddef>
-#include <iomanip>
 #include <ostream>
-#include <sstream>
 
 #include "raw/RawRecord.hpp"
 #include "raw/StarToken.hpp"
@@ -51,15 +51,12 @@ type_tag get_data_type_json( const std::string& str ) {
 }
 
 /*
-  For very small numbers std::to_string() will just return the string "0.000000"
+  std::to_string() formats with a fixed six decimals, which truncates values
+  needing more decimals (e.g. 0.0093324 -> "0.009332") and returns "0.000000"
+  for very small numbers. Format with 12 significant digits instead.
 */
 std::string as_string(double value) {
-    if (std::fabs(value) < 1e-4) {
-        std::ostringstream ss;
-        ss << std::setprecision(12) << value;
-        return ss.str();
-    } else
-        return std::to_string(value);
+    return fmt::format("{:.12}", value);
 }
 
 }
