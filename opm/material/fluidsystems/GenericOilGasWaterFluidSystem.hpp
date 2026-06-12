@@ -494,7 +494,7 @@ namespace Opm {
     template <class Scalar, int NumComp, bool enableWater>
     std::array<Scalar, 5>
     GenericOilGasWaterFluidSystem<Scalar, NumComp, enableWater>::lbc_coefficients_ =
-        defaultLBCCoefficients<Scalar>;
+        ViscosityModel::defaultLBCCoefficients();
 
     template <class Scalar, int NumComp, bool enableWater>
     std::shared_ptr<WaterPvtMultiplexer<Scalar> >

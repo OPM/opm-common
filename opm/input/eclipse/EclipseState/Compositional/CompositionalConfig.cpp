@@ -679,11 +679,11 @@ CompositionalConfig::CompositionalConfig(const Deck& deck, const Runspec& runspe
         using KW = ParserKeywords::LBCCOEF;
         const auto& record = kw->getRecord(0);
         this->lbc_coefficients = {
-            record.getItem<KW::COEF1>().get<double>(0),
-            record.getItem<KW::COEF2>().get<double>(0),
-            record.getItem<KW::COEF3>().get<double>(0),
-            record.getItem<KW::COEF4>().get<double>(0),
-            record.getItem<KW::COEF5>().get<double>(0),
+            record.getItem<KW::COEF1>().getSIDouble(0),
+            record.getItem<KW::COEF2>().getSIDouble(0),
+            record.getItem<KW::COEF3>().getSIDouble(0),
+            record.getItem<KW::COEF4>().getSIDouble(0),
+            record.getItem<KW::COEF5>().getSIDouble(0),
         };
     }
 }
@@ -740,7 +740,7 @@ CompositionalConfig CompositionalConfig::serializationTestObject() {
     result.binary_interaction_coefficient = {2, std::vector<double>(result.num_comps * (result.num_comps - 1) / 2, 6.)};
     result.omega_a = {2, std::vector<double>(result.num_comps, 0.457235529)};
     result.omega_b = {2, std::vector<double>(result.num_comps, 0.077796074)};
-    result.lbc_coefficients = {0.1023, 0.025, 0.058533, 0.01, 0.0093324};
+    result.lbc_coefficients = {1.234, -17.29, 3.1415, -2.718, 16.18};
     result.eos_types_surf = {3, EOSType::PR};
     result.molecular_weights_surf = {3, std::vector<double>(result.num_comps, 17.)};
     result.acentric_factors_surf = {3, std::vector<double>(result.num_comps, 1.1)};

@@ -49,11 +49,7 @@ type_tag get_data_type_json( const std::string& str ) {
     throw std::invalid_argument( str + " cannot be converted to enum 'tag'" );
 }
 
-/*
-  std::to_string() formats with a fixed six decimals, which truncates values
-  needing more decimals (e.g. 0.0093324 -> "0.009332") and returns "0.000000"
-  for very small numbers. Format with 12 significant digits instead.
-*/
+// Format the input value with twelve digits of precision.
 std::string as_string(double value) {
     return fmt::format("{:.12}", value);
 }

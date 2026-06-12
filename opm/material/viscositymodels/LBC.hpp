@@ -30,26 +30,30 @@
 #ifndef LBC_HPP
 #define LBC_HPP
 
+#include <opm/common/Exceptions.hpp>
+
 #include <array>
 #include <cmath>
 
 namespace Opm
 {
 
-// Standard coefficients of the Lorentz-Bray-Clark viscosity correlation.
-// (Note the fourth coefficient: typo in 1964-paper has -0.40758.)
-template <class Scalar = double>
-inline constexpr std::array<Scalar, 5> defaultLBCCoefficients {Scalar(0.10230),
-                                                               Scalar(0.023364),
-                                                               Scalar(0.058533),
-                                                               Scalar(-0.040758),
-                                                               Scalar(0.0093324)};
-
 template <class Scalar, class FluidSystem>
 class ViscosityModels
 {
 
 public:
+
+    // Standard coefficients of the Lorentz-Bray-Clark viscosity correlation.
+    // (Note the fourth coefficient: typo in 1964-paper has -0.40758.)
+    static constexpr std::array<Scalar, 5> defaultLBCCoefficients()
+    {
+        return {Scalar(0.10230),
+                Scalar(0.023364),
+                Scalar(0.058533),
+                Scalar(-0.040758),
+                Scalar(0.0093324)};
+    }
 
     // Standard LBC model. (Lohrenz, Bray & Clark: "Calculating Viscosities of Reservoir
     //                      fluids from Their Compositions", JPT 16.10 (1964).
@@ -113,21 +117,29 @@ public:
         }
         my0 /= sumxrM;
 
-        // The default coefficients can be overridden (LBCCOEF keyword) by fluid
-        // systems providing a lbcCoefficients() function.
-        std::array<Scalar, 5> LBC;
-        if constexpr (requires { FluidSystem::lbcCoefficients(); }) {
-            LBC = FluidSystem::lbcCoefficients();
-        } else {
-            LBC = defaultLBCCoefficients<Scalar>;
-        }
+        // using reference to avoid copying the coefficients for every evaluation.
+        const auto& LBC = []() -> decltype(auto) {
+            if constexpr (requires { FluidSystem::lbcCoefficients(); }) {
+                return FluidSystem::lbcCoefficients();
+            } else {
+                static constexpr std::array<Scalar, 5> default_lbc = defaultLBCCoefficients();
+                return (default_lbc);
+            }
+        }();
 
         LhsEval sumLBC = 0.0;
         for (int i = 0; i < 5; ++i) {
             sumLBC += Opm::pow(rho_r,i)*LBC[i];
         }
 
-        return (my0 + (Opm::pow(sumLBC,4.0) - 1e-4)/zeta_tot)/1e3; // mPas-> Pas
+        const LhsEval mu = (my0 + (Opm::pow(sumLBC,4.0) - 1e-4)/zeta_tot)/1e3; // mPas-> Pas
+
+        if (mu <= 0.) {
+            throw NumericalProblem("LBC correlation produced a non-positive viscosity; "
+                                   "check the LBC coefficients");
+        }
+
+        return mu;
     }
 
 };
