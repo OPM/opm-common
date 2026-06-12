@@ -397,11 +397,9 @@ namespace {
         // NORST logic:
         //  - NORST=0: Full well and connection data
         //  - NORST=1: Geometry only (IWEL/XWEL/ZWEL, XCON)
-        //  - NORST=2: No well data, solution vectors only
-        if (norst_value <= 1)
-        {
-            rstFile.write("IWEL", wellData.getIWell());
-        }
+        //  - NORST=2: No well-data but (IWEL/ZWEL) still available for plotting wells, and solution vectors only
+
+        rstFile.write("IWEL", wellData.getIWell());
 
         if (norst_value == 0) {
             rstFile.write("SWEL", wellData.getSWell());
@@ -410,8 +408,9 @@ namespace {
         if (norst_value <= 1)
         {
             rstFile.write("XWEL", wellData.getXWell());
-            rstFile.write("ZWEL", wellData.getZWell());
         }
+
+        rstFile.write("ZWEL", wellData.getZWell());
 
         if (norst_value == 0)
         {
@@ -452,10 +451,7 @@ namespace {
         wellData.captureDeclaredWellDataLGR(schedule, grid, tracers, sim_step, action_state, wtest_state, sumState, ih, lgr_tag);
         wellData.captureDynamicWellDataLGR(schedule, tracers, sim_step, wells, sumState,lgr_tag);
 
-        if (norst_value <= 1)
-        {
-            rstFile.write("IWEL", wellData.getIWell());
-        }
+        rstFile.write("IWEL", wellData.getIWell());
 
         if (norst_value == 0)
         {
@@ -465,8 +461,9 @@ namespace {
         if (norst_value <= 1)
         {
             rstFile.write("XWEL", wellData.getXWell());
-            rstFile.write("ZWEL", wellData.getZWell());
         }
+
+        rstFile.write("ZWEL", wellData.getZWell());
 
         if (norst_value == 0)
         {
