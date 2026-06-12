@@ -26,6 +26,11 @@
 // OPM_TIMEFUNCTION - time block of main part of codes which do not effect performance with name from function
 // OPM_TIMEBLOCK_LOCAL - detailed timing which may effect performance
 // OPM_TIMEFUNCTION_LOCAL - detailed timing which may effect performance with name from function
+#if USE_TRACY
+#if USE_TRACY_LOCAL
+#define DETAILED_PROFILING 1
+#endif
+#endif
 
 namespace Opm::Subsystem
 {
@@ -55,6 +60,7 @@ enum Bitfield : std::uint8_t
 // #define DETAILED_PROFILING_SUBSYSTEMS (Opm::Subsystem::PvtProps | Opm::Subsystem::SatProps)
 // #define DETAILED_PROFILING_SUBSYSTEMS (Opm::Subsystem::Assembly)
 #endif
+
 
 #if USE_TRACY
 #define TRACY_ENABLE 1
