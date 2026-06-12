@@ -21,17 +21,16 @@
 
 #include <opm/json/JsonObject.hpp>
 
-#include <opm/input/eclipse/Parser/ParserEnums.hpp>
-
 #include <opm/input/eclipse/Deck/UDAValue.hpp>
 
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 
-#include <fmt/format.h>
-
 #include <cmath>
 #include <cstddef>
 #include <ostream>
+#include <sstream>
+
+#include <fmt/format.h>
 
 #include "raw/RawRecord.hpp"
 #include "raw/StarToken.hpp"

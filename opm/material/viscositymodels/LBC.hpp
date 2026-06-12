@@ -32,18 +32,18 @@
 
 #include <array>
 #include <cmath>
-#include <vector>
 
 namespace Opm
 {
 
 // Standard coefficients of the Lorentz-Bray-Clark viscosity correlation.
 // (Note the fourth coefficient: typo in 1964-paper has -0.40758.)
-inline constexpr std::array<double, 5> defaultLBCCoefficients {0.10230,
-                                                               0.023364,
-                                                               0.058533,
-                                                               -0.040758,
-                                                               0.0093324};
+template <class Scalar = double>
+inline constexpr std::array<Scalar, 5> defaultLBCCoefficients {Scalar(0.10230),
+                                                               Scalar(0.023364),
+                                                               Scalar(0.058533),
+                                                               Scalar(-0.040758),
+                                                               Scalar(0.0093324)};
 
 template <class Scalar, class FluidSystem>
 class ViscosityModels
@@ -115,11 +115,11 @@ public:
 
         // The default coefficients can be overridden (LBCCOEF keyword) by fluid
         // systems providing a lbcCoefficients() function.
-        std::vector<Scalar> LBC;
+        std::array<Scalar, 5> LBC;
         if constexpr (requires { FluidSystem::lbcCoefficients(); }) {
             LBC = FluidSystem::lbcCoefficients();
         } else {
-            LBC.assign(defaultLBCCoefficients.begin(), defaultLBCCoefficients.end());
+            LBC = defaultLBCCoefficients<Scalar>;
         }
 
         LhsEval sumLBC = 0.0;

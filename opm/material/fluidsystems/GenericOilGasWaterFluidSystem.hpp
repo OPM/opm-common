@@ -38,6 +38,7 @@
 #include <opm/material/viscositymodels/LBC.hpp>
 
 #include <algorithm>
+#include <array>
 #include <cassert>
 #include <cstddef>
 #include <string>
@@ -168,7 +169,7 @@ namespace Opm {
             }
 
             const auto& lbc = comp_config.lbcCoefficients();
-            lbc_coefficients_.assign(lbc.begin(), lbc.end());
+            std::ranges::copy(lbc, lbc_coefficients_.begin());
 
             // Init. water pvt from deck
             waterPvt_->initFromState(eclState, schedule);
@@ -251,7 +252,7 @@ namespace Opm {
          * Defaults to the standard LBC coefficients unless modified
          * with the LBCCOEF keyword.
          */
-        static const std::vector<Scalar>& lbcCoefficients()
+        static const std::array<Scalar, 5>& lbcCoefficients()
         { return lbc_coefficients_; }
 
         /*!
@@ -463,7 +464,7 @@ namespace Opm {
 
         static std::vector<ComponentParam> component_param_;
         static std::vector<Scalar> interaction_coefficients_;
-        static std::vector<Scalar> lbc_coefficients_;
+        static std::array<Scalar, 5> lbc_coefficients_;
         static std::shared_ptr<WaterPvt> waterPvt_;
 
     public:
@@ -491,9 +492,9 @@ namespace Opm {
     GenericOilGasWaterFluidSystem<Scalar, NumComp, enableWater>::interaction_coefficients_;
 
     template <class Scalar, int NumComp, bool enableWater>
-    std::vector<Scalar>
-    GenericOilGasWaterFluidSystem<Scalar, NumComp, enableWater>::lbc_coefficients_(
-        defaultLBCCoefficients.begin(), defaultLBCCoefficients.end());
+    std::array<Scalar, 5>
+    GenericOilGasWaterFluidSystem<Scalar, NumComp, enableWater>::lbc_coefficients_ =
+        defaultLBCCoefficients<Scalar>;
 
     template <class Scalar, int NumComp, bool enableWater>
     std::shared_ptr<WaterPvtMultiplexer<Scalar> >
