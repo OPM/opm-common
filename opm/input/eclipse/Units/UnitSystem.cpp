@@ -357,7 +357,7 @@ namespace {
         1 / ( Field::Mass / Field::Time ),
         1 / ( Field::GasSurfaceVolume / Field::LiquidSurfaceVolume ), /* gas-oil ratio */
         1 / ( Field::LiquidSurfaceVolume / Field::GasSurfaceVolume ), /* oil-gas ratio */
-        1 / ( Field::LiquidSurfaceVolume / Field::GasSurfaceVolume ), /* water-gas ratio */
+        1 / Field::WaterVaporizationFactor, /* water-gas ratio */
         1, /* water cut */
         1 / (Field::ReservoirVolume / Field::GasSurfaceVolume), /* gas formation volume factor */
         1, /* oil formation volume factor */
@@ -409,7 +409,7 @@ namespace {
          Field::Mass / Field::Time,
          Field::GasSurfaceVolume / Field::LiquidSurfaceVolume, /* gas-oil ratio */
          Field::LiquidSurfaceVolume / Field::GasSurfaceVolume, /* oil-gas ratio */
-         Field::LiquidSurfaceVolume / Field::GasSurfaceVolume, /* water-gas ratio */
+         Field::WaterVaporizationFactor, /* water-gas ratio */
          1, /* water cut */
          Field::ReservoirVolume / Field::GasSurfaceVolume, /* gas formation volume factor */
          1, /* oil formation volume factor */
@@ -585,7 +585,7 @@ namespace {
         1 / ( Lab::Mass / Lab::Time ),
         1 / Lab::GasDissolutionFactor, /* gas-oil ratio */
         1 / Lab::OilDissolutionFactor, /* oil-gas ratio */
-        1 / Lab::OilDissolutionFactor, /* water-gas ratio */
+        1 / Lab::WaterVaporizationFactor, /* water-gas ratio */
         1, /* water cut */
         1, /* gas formation volume factor */
         1, /* oil formation volume factor */
@@ -637,7 +637,7 @@ namespace {
         Lab::Mass / Lab::Time,
         Lab::GasDissolutionFactor,  /* gas-oil ratio */
         Lab::OilDissolutionFactor,  /* oil-gas ratio */
-        Lab::OilDissolutionFactor,  /* water-gas ratio */
+        Lab::WaterVaporizationFactor,  /* water-gas ratio */
         1, /* water cut */
         1, /* gas formation volume factor */
         1, /* oil formation volume factor */
@@ -813,7 +813,7 @@ namespace {
         1 / ( PVT_M::Mass / PVT_M::Time ),
         1 / (PVT_M::GasSurfaceVolume / PVT_M::LiquidSurfaceVolume), // Rs
         1 / (PVT_M::LiquidSurfaceVolume / PVT_M::GasSurfaceVolume), // Rv
-        1 / (PVT_M::LiquidSurfaceVolume / PVT_M::GasSurfaceVolume), // Rvw (water-gas ratio)
+        1 / PVT_M::WaterVaporizationFactor, // Rvw (water-gas ratio)
         1, /* water cut */
         1 / (PVT_M::ReservoirVolume / PVT_M::GasSurfaceVolume), /* Bg */
         1 / (PVT_M::ReservoirVolume / PVT_M::LiquidSurfaceVolume), /* Bo */
@@ -865,7 +865,7 @@ namespace {
         PVT_M::Mass / PVT_M::Time,
         PVT_M::GasSurfaceVolume / PVT_M::LiquidSurfaceVolume, // Rs
         PVT_M::LiquidSurfaceVolume / PVT_M::GasSurfaceVolume, // Rv
-        PVT_M::LiquidSurfaceVolume / PVT_M::GasSurfaceVolume, // Rvw (water-gas ratio)
+        PVT_M::WaterVaporizationFactor, // Rvw (water-gas ratio)
         1, /* water cut */
         PVT_M::ReservoirVolume / PVT_M::GasSurfaceVolume, /* Bg */
         PVT_M::ReservoirVolume / PVT_M::LiquidSurfaceVolume, /* Bo */

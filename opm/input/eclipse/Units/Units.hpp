@@ -278,6 +278,7 @@ namespace Opm {
         constexpr double GeomVolume           = cubic(meter);
         constexpr double GasDissolutionFactor = GasSurfaceVolume/LiquidSurfaceVolume;
         constexpr double OilDissolutionFactor = LiquidSurfaceVolume/GasSurfaceVolume;
+        constexpr double WaterVaporizationFactor = LiquidSurfaceVolume/GasSurfaceVolume;
         constexpr double Density              = kilogram/cubic(meter);
         constexpr double Concentration        = kilogram/cubic(meter);
         constexpr double FoamDensity          = kilogram/cubic(meter);
@@ -313,6 +314,7 @@ namespace Opm {
         constexpr double GeomVolume           = cubic(feet);
         constexpr double GasDissolutionFactor = GasSurfaceVolume/LiquidSurfaceVolume;
         constexpr double OilDissolutionFactor = LiquidSurfaceVolume/GasSurfaceVolume;
+        constexpr double WaterVaporizationFactor = LiquidSurfaceVolume/GasSurfaceVolume;
         constexpr double Density              = pound/cubic(feet);
         constexpr double Concentration        = pound/stb;
         constexpr double FoamDensity          = pound/GasSurfaceVolume;
@@ -348,6 +350,7 @@ namespace Opm {
         constexpr double GeomVolume           = cubic(centi*meter);
         constexpr double GasDissolutionFactor = GasSurfaceVolume/LiquidSurfaceVolume;
         constexpr double OilDissolutionFactor = LiquidSurfaceVolume/GasSurfaceVolume;
+        constexpr double WaterVaporizationFactor = LiquidSurfaceVolume/GasSurfaceVolume;
         constexpr double Density              = gram/cubic(centi*meter);
         constexpr double Concentration        = gram/cubic(centi*meter);
         constexpr double FoamDensity          = gram/cubic(centi*meter);
@@ -383,6 +386,7 @@ namespace Opm {
         constexpr double GeomVolume           = cubic(meter);
         constexpr double GasDissolutionFactor = GasSurfaceVolume/LiquidSurfaceVolume;
         constexpr double OilDissolutionFactor = LiquidSurfaceVolume/GasSurfaceVolume;
+        constexpr double WaterVaporizationFactor = LiquidSurfaceVolume/GasSurfaceVolume;
         constexpr double Density              = kilogram/cubic(meter);
         constexpr double Concentration        = kilogram/cubic(meter);
         constexpr double FoamDensity          = kilogram/cubic(meter);
