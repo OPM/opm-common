@@ -94,6 +94,9 @@ BOOST_AUTO_TEST_CASE(InPlace_Phases)
     BOOST_CHECK_MESSAGE(contains(phases, Inplace::Phase::PoreVolume),
                         R"(phases() must have "PoreVolume")");
 
+    BOOST_CHECK_MESSAGE(contains(phases, Inplace::Phase::DynamicPoreVolume),
+                        R"(phases() must have "DynamicPoreVolume")");
+
     BOOST_CHECK_MESSAGE(! contains(phases, Inplace::Phase::PressurePV),
                         R"(phases() must NOT have "PressurePV")");
 
@@ -102,9 +105,6 @@ BOOST_AUTO_TEST_CASE(InPlace_Phases)
 
     BOOST_CHECK_MESSAGE(! contains(phases, Inplace::Phase::PressureHydroCarbonPV),
                         R"(phases() must NOT have "PressureHydroCarbonPV")");
-
-    BOOST_CHECK_MESSAGE(! contains(phases, Inplace::Phase::DynamicPoreVolume),
-                        R"(phases() must NOT have "DynamicPoreVolume")");
 
     BOOST_CHECK_MESSAGE(contains(phases, Inplace::Phase::WaterResVolume),
                         R"(phases() must have "WaterResVolume")");
@@ -169,6 +169,12 @@ BOOST_AUTO_TEST_CASE(InPlace_Phases)
                         R"(phases() must have "CO2MassInGasPhaseMaximumUnTrapped")");
 }
 
+BOOST_AUTO_TEST_CASE(InPlace_EclString)
+{
+    BOOST_CHECK_EQUAL(Inplace::EclString(Inplace::Phase::PoreVolume), "PORV");
+    BOOST_CHECK_EQUAL(Inplace::EclString(Inplace::Phase::DynamicPoreVolume), "RPV");
+}
+
 BOOST_AUTO_TEST_CASE(InPlace_Mixing_Phases)
 {
     const auto& phases = Inplace::mixingPhases();
@@ -197,6 +203,9 @@ BOOST_AUTO_TEST_CASE(InPlace_Mixing_Phases)
     BOOST_CHECK_MESSAGE(contains(phases, Inplace::Phase::PoreVolume),
                         R"(mixingPhases() must have "PoreVolume")");
 
+    BOOST_CHECK_MESSAGE(contains(phases, Inplace::Phase::DynamicPoreVolume),
+                        R"(mixingPhases() must have "DynamicPoreVolume")");
+
     BOOST_CHECK_MESSAGE(! contains(phases, Inplace::Phase::PressurePV),
                         R"(mixingPhases() must NOT have "PressurePV")");
 
@@ -205,9 +214,6 @@ BOOST_AUTO_TEST_CASE(InPlace_Mixing_Phases)
 
     BOOST_CHECK_MESSAGE(! contains(phases, Inplace::Phase::PressureHydroCarbonPV),
                         R"(mixingPhases() must NOT have "PressureHydroCarbonPV")");
-
-    BOOST_CHECK_MESSAGE(! contains(phases, Inplace::Phase::DynamicPoreVolume),
-                        R"(mixingPhases() must NOT have "DynamicPoreVolume")");
 
     BOOST_CHECK_MESSAGE(contains(phases, Inplace::Phase::WaterResVolume),
                         R"(mixingPhases() must have "WaterResVolume")");
