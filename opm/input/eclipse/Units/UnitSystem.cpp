@@ -97,6 +97,7 @@ namespace {
         0.0,
         0.0,
         0.0,
+        0.0,
         0.0
     };
 
@@ -128,6 +129,7 @@ namespace {
         1 / ( Metric::Mass / Metric::Time ),
         1, /* gas-oil ratio */
         1, /* oil-gas ratio */
+        1, /* water-gas ratio */
         1, /* water cut */
         1, /* gas formation volume factor */
         1, /* oil formation volume factor */
@@ -179,6 +181,7 @@ namespace {
         Metric::Mass / Metric::Time,
         1, /* gas-oil ratio */
         1, /* oil-gas ratio */
+        1, /* water-gas ratio */
         1, /* water cut */
         1, /* gas formation volume factor */
         1, /* oil formation volume factor */
@@ -230,6 +233,7 @@ namespace {
         "KG/DAY",
         "SM3/SM3",
         "SM3/SM3",
+        "SM3/SM3", /* water-gas ratio */
         "",
         "RM3/SM3", /* gas formation volume factor */
         "RM3/SM3", /* oil formation volume factor */
@@ -321,6 +325,7 @@ namespace {
         0.0,
         0.0,
         0.0,
+        0.0,
         0.0
     };
 
@@ -352,6 +357,7 @@ namespace {
         1 / ( Field::Mass / Field::Time ),
         1 / ( Field::GasSurfaceVolume / Field::LiquidSurfaceVolume ), /* gas-oil ratio */
         1 / ( Field::LiquidSurfaceVolume / Field::GasSurfaceVolume ), /* oil-gas ratio */
+        1 / ( Field::LiquidSurfaceVolume / Field::GasSurfaceVolume ), /* water-gas ratio */
         1, /* water cut */
         1 / (Field::ReservoirVolume / Field::GasSurfaceVolume), /* gas formation volume factor */
         1, /* oil formation volume factor */
@@ -403,6 +409,7 @@ namespace {
          Field::Mass / Field::Time,
          Field::GasSurfaceVolume / Field::LiquidSurfaceVolume, /* gas-oil ratio */
          Field::LiquidSurfaceVolume / Field::GasSurfaceVolume, /* oil-gas ratio */
+         Field::LiquidSurfaceVolume / Field::GasSurfaceVolume, /* water-gas ratio */
          1, /* water cut */
          Field::ReservoirVolume / Field::GasSurfaceVolume, /* gas formation volume factor */
          1, /* oil formation volume factor */
@@ -454,6 +461,7 @@ namespace {
         "LB/DAY",
         "MSCF/STB",
         "STB/MSCF",
+        "STB/MSCF", /* water-gas ratio */
         "",
         "RB/MSCF", /* gas formation volume factor */
         "RB/STB", /* oil formation volume factor */
@@ -545,6 +553,7 @@ namespace {
         0.0,
         0.0,
         0.0,
+        0.0,
         0.0
     };
 
@@ -576,6 +585,7 @@ namespace {
         1 / ( Lab::Mass / Lab::Time ),
         1 / Lab::GasDissolutionFactor, /* gas-oil ratio */
         1 / Lab::OilDissolutionFactor, /* oil-gas ratio */
+        1 / Lab::OilDissolutionFactor, /* water-gas ratio */
         1, /* water cut */
         1, /* gas formation volume factor */
         1, /* oil formation volume factor */
@@ -627,6 +637,7 @@ namespace {
         Lab::Mass / Lab::Time,
         Lab::GasDissolutionFactor,  /* gas-oil ratio */
         Lab::OilDissolutionFactor,  /* oil-gas ratio */
+        Lab::OilDissolutionFactor,  /* water-gas ratio */
         1, /* water cut */
         1, /* gas formation volume factor */
         1, /* oil formation volume factor */
@@ -678,6 +689,7 @@ namespace {
         "G/HR",
         "SCC/SCC",
         "SCC/SCC",
+        "SCC/SCC", /* water-gas ratio */
         "",
         "RCC/SCC", /* gas formation volume factor */
         "RCC/SCC", /* oil formation volume factor */
@@ -769,6 +781,7 @@ namespace {
         0.0,
         0.0,
         0.0,
+        0.0,
         0.0
     };
 
@@ -800,6 +813,7 @@ namespace {
         1 / ( PVT_M::Mass / PVT_M::Time ),
         1 / (PVT_M::GasSurfaceVolume / PVT_M::LiquidSurfaceVolume), // Rs
         1 / (PVT_M::LiquidSurfaceVolume / PVT_M::GasSurfaceVolume), // Rv
+        1 / (PVT_M::LiquidSurfaceVolume / PVT_M::GasSurfaceVolume), // Rvw (water-gas ratio)
         1, /* water cut */
         1 / (PVT_M::ReservoirVolume / PVT_M::GasSurfaceVolume), /* Bg */
         1 / (PVT_M::ReservoirVolume / PVT_M::LiquidSurfaceVolume), /* Bo */
@@ -851,6 +865,7 @@ namespace {
         PVT_M::Mass / PVT_M::Time,
         PVT_M::GasSurfaceVolume / PVT_M::LiquidSurfaceVolume, // Rs
         PVT_M::LiquidSurfaceVolume / PVT_M::GasSurfaceVolume, // Rv
+        PVT_M::LiquidSurfaceVolume / PVT_M::GasSurfaceVolume, // Rvw (water-gas ratio)
         1, /* water cut */
         PVT_M::ReservoirVolume / PVT_M::GasSurfaceVolume, /* Bg */
         PVT_M::ReservoirVolume / PVT_M::LiquidSurfaceVolume, /* Bo */
@@ -902,6 +917,7 @@ namespace {
         "KG/DAY",
         "SM3/SM3",
         "SM3/SM3",
+        "SM3/SM3", /* water-gas ratio */
         "",
         "RM3/SM3", /* gas formation volume factor */
         "RM3/SM3", /* oil formation volume factor */
@@ -946,6 +962,7 @@ namespace {
     // INPUT Unit Conventions
 
     static const double from_input_offset[] = {
+        0.0,
         0.0,
         0.0,
         0.0,
@@ -1044,10 +1061,12 @@ namespace {
         1,
         1,
         1,
+        1,
         1
     };
 
     static const double from_input[] = {
+        1,
         1,
         1,
         1,
@@ -1126,6 +1145,7 @@ namespace {
         "KG/DAY",
         "SM3/SM3",
         "SM3/SM3",
+        "SM3/SM3", /* water-gas ratio */
         "",
         "RM3/SM3", /* gas formation volume factor */
         "RM3/SM3", /* oil formation volume factor */
