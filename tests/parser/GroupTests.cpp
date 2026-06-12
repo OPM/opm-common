@@ -892,6 +892,37 @@ GCONSUMP
 
 }
 
+BOOST_AUTO_TEST_CASE(GECON_FIELD_UNITS) {
+    const std::string input = R"(
+START             -- 0
+31 AUG 1993 /
+FIELD
+SCHEDULE
+
+GRUPTREE
+  'G1'  'FIELD' /
+/
+
+GECON
+ 'G1'  2*  0.7  5.0  0.1  /
+/)";
+
+    auto schedule = create_schedule(input);
+    SummaryState st(TimeService::now(), 0.0);
+
+    const double gor_to_si = 178.1076066790352;     // MSCF/STB -> SM3/SM3
+    const double wgr_to_si = 5.614583333333335e-03; // STB/MSCF -> SM3/SM3
+
+    const auto& gecon = schedule[0].gecon.get();
+    const GroupEconProductionLimits::GEconGroupProp group = gecon.get_group_prop(schedule, st, "G1");
+    BOOST_CHECK(group.maxWaterCut().has_value());
+    BOOST_CHECK_CLOSE(group.maxWaterCut().value(), 0.7, 1.0e-10);
+    BOOST_CHECK(group.maxGasOilRatio().has_value());
+    BOOST_CHECK_CLOSE(group.maxGasOilRatio().value(), 5.0 * gor_to_si, 1.0e-10);
+    BOOST_CHECK(group.maxWaterGasRatio().has_value());
+    BOOST_CHECK_CLOSE(group.maxWaterGasRatio().value(), 0.1 * wgr_to_si, 1.0e-10);
+}
+
 BOOST_AUTO_TEST_CASE(GCONINJE_MULTIPLE_PHASES) {
     const std::string input = R"(
 START             -- 0
