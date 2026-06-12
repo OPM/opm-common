@@ -308,6 +308,7 @@ BOOST_AUTO_TEST_CASE(METRIC_UNITS)
     BOOST_CHECK_CLOSE( metric.to_si( Meas::mass_rate , 1.0 ) , 1.1574074074074073e-05 , 1.0e-10 );
     BOOST_CHECK_CLOSE( metric.to_si( Meas::gas_oil_ratio , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( metric.to_si( Meas::oil_gas_ratio , 1.0 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( metric.to_si( Meas::water_gas_ratio , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( metric.to_si( Meas::water_cut , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( metric.to_si( Meas::gas_formation_volume_factor , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( metric.to_si( Meas::oil_formation_volume_factor , 1.0 ) , 1.0 , 1.0e-10 );
@@ -352,6 +353,7 @@ BOOST_AUTO_TEST_CASE(METRIC_UNITS)
     BOOST_CHECK_CLOSE( metric.from_si( Meas::mass_rate , 1.0 ) , 86.400e3 , 1.0e-10 );
     BOOST_CHECK_CLOSE( metric.from_si( Meas::gas_oil_ratio , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( metric.from_si( Meas::oil_gas_ratio , 1.0 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( metric.from_si( Meas::water_gas_ratio , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( metric.from_si( Meas::water_cut , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( metric.from_si( Meas::gas_formation_volume_factor , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( metric.from_si( Meas::oil_formation_volume_factor , 1.0 ) , 1.0 , 1.0e-10 );
@@ -406,6 +408,7 @@ BOOST_AUTO_TEST_CASE(FIELD_UNITS)
     BOOST_CHECK_CLOSE( field.to_si( Meas::mass_rate , 1.0 ) , 5.249911689814815e-06 , 1.0e-10 );
     BOOST_CHECK_CLOSE( field.to_si( Meas::gas_oil_ratio , 1.0 ) , 178.1076066790352 , 1.0e-10 );
     BOOST_CHECK_CLOSE( field.to_si( Meas::oil_gas_ratio , 1.0 ) , 5.614583333333335e-03 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( field.to_si( Meas::water_gas_ratio , 1.0 ) , 5.614583333333335e-03 , 1.0e-10 );
     BOOST_CHECK_CLOSE( field.to_si( Meas::water_cut , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( field.to_si( Meas::gas_formation_volume_factor , 1.0 ) , 5.614583333333335e-03 , 1.0e-10 );
     BOOST_CHECK_CLOSE( field.to_si( Meas::oil_formation_volume_factor , 1.0 ) , 1.0 , 1.0e-10 );
@@ -450,6 +453,7 @@ BOOST_AUTO_TEST_CASE(FIELD_UNITS)
     BOOST_CHECK_CLOSE( field.from_si( Meas::mass , 1.0 ) , 2.204622621848776e+00 , 1.0e-10 );
     BOOST_CHECK_CLOSE( field.from_si( Meas::gas_oil_ratio , 1.0 ) , 5.614583333333335e-03 , 1.0e-10 );
     BOOST_CHECK_CLOSE( field.from_si( Meas::oil_gas_ratio , 1.0 ) , 178.1076066790352 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( field.from_si( Meas::water_gas_ratio , 1.0 ) , 178.1076066790352 , 1.0e-10 );
     BOOST_CHECK_CLOSE( field.from_si( Meas::water_cut , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( field.from_si( Meas::gas_formation_volume_factor , 1.0 ) , 178.1076066790352 , 1.0e-10 );
     BOOST_CHECK_CLOSE( field.from_si( Meas::oil_formation_volume_factor , 1.0 ) , 1.0 , 1.0e-10 );
@@ -504,6 +508,7 @@ BOOST_AUTO_TEST_CASE(LAB_UNITS)
     BOOST_CHECK_CLOSE( lab.to_si( Meas::mass_rate , 1.0 ) , 2.777777777777778e-07 , 1.0e-10 );
     BOOST_CHECK_CLOSE( lab.to_si( Meas::gas_oil_ratio , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( lab.to_si( Meas::oil_gas_ratio , 1.0 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( lab.to_si( Meas::water_gas_ratio , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( lab.to_si( Meas::water_cut , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( lab.to_si( Meas::gas_formation_volume_factor , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( lab.to_si( Meas::oil_formation_volume_factor , 1.0 ) , 1.0 , 1.0e-10 );
@@ -549,6 +554,7 @@ BOOST_AUTO_TEST_CASE(LAB_UNITS)
     BOOST_CHECK_CLOSE( lab.from_si( Meas::mass_rate , 1.0 ) , 3.6e+06 , 1.0e-10 );
     BOOST_CHECK_CLOSE( lab.from_si( Meas::gas_oil_ratio , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( lab.from_si( Meas::oil_gas_ratio , 1.0 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( lab.from_si( Meas::water_gas_ratio , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( lab.from_si( Meas::water_cut , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( lab.from_si( Meas::gas_formation_volume_factor , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( lab.from_si( Meas::oil_formation_volume_factor , 1.0 ) , 1.0 , 1.0e-10 );
@@ -603,6 +609,7 @@ BOOST_AUTO_TEST_CASE(PVT_M_UNITS)
     BOOST_CHECK_CLOSE( pvt_m.to_si( Meas::mass_rate , 1.0 ) , 1.1574074074074073e-05 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.to_si( Meas::gas_oil_ratio , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.to_si( Meas::oil_gas_ratio , 1.0 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( pvt_m.to_si( Meas::water_gas_ratio , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.to_si( Meas::water_cut , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.to_si( Meas::gas_formation_volume_factor , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.to_si( Meas::oil_formation_volume_factor , 1.0 ) , 1.0 , 1.0e-10 );
@@ -648,6 +655,7 @@ BOOST_AUTO_TEST_CASE(PVT_M_UNITS)
     BOOST_CHECK_CLOSE( pvt_m.from_si( Meas::mass_rate , 1.0 ) , 86.400e3 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.from_si( Meas::gas_oil_ratio , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.from_si( Meas::oil_gas_ratio , 1.0 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( pvt_m.from_si( Meas::water_gas_ratio , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.from_si( Meas::water_cut , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.from_si( Meas::gas_formation_volume_factor , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.from_si( Meas::oil_formation_volume_factor , 1.0 ) , 1.0 , 1.0e-10 );
