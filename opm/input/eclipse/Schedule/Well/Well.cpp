@@ -62,7 +62,6 @@
 #include <cassert>
 #include <cmath>
 #include <cstddef>
-#include <limits>
 #include <memory>
 #include <optional>
 #include <stdexcept>
@@ -1631,52 +1630,17 @@ bool Well::handleCECON(const DeckRecord&      record,
 {
     using Kw = ParserKeywords::CECON;
 
-    // The CECON record allows defaulted K1/K2 to mean "from the top
-    // connection of the well" and "to the bottom connection of the
-    // well" respectively.  Determine the actual k-range we should
-    // accept in that case from the current set of connections.
-    int k_top    = std::numeric_limits<int>::max();
-    int k_bottom = std::numeric_limits<int>::min();
-    for (const auto& connection : *this->connections) {
-        k_top    = std::min(k_top,    connection.getK());
-        k_bottom = std::max(k_bottom, connection.getK());
-    }
-
-    const bool k1_defaulted = defaulted(record, Kw::K1::itemName);
-    const bool k2_defaulted = defaulted(record, Kw::K2::itemName);
-
-    auto need_econ_limits = [&record, k_top, k_bottom,
-                             k1_defaulted, k2_defaulted](const Connection& c)
+    // Defaulted I/J/K1/K2 mean "match the full extent of the well" in that
+    // dimension; match_eq/match_ge/match_le already return true for a
+    // defaulted item, so no explicit handling of the default is needed here.
+    auto need_econ_limits = [&record](const Connection& c)
     {
         constexpr auto value_shift = -1;
 
-        if (!match_eq(c.getI(), record, Kw::I::itemName, value_shift)) {
-            return false;
-        }
-
-        if (!match_eq(c.getJ(), record, Kw::J::itemName, value_shift)) {
-            return false;
-        }
-
-        if (k1_defaulted) {
-            if (c.getK() < k_top) {
-                return false;
-            }
-        }
-        else if (!match_ge(c.getK(), record, Kw::K1::itemName, value_shift)) {
-            return false;
-        }
-
-        if (k2_defaulted) {
-            if (c.getK() > k_bottom) {
-                return false;
-            }
-        }
-        else if (!match_le(c.getK(), record, Kw::K2::itemName, value_shift)) {
-            return false;
-        }
-
-        return true;
+        return match_eq(c.getI(), record, Kw::I::itemName,  value_shift)
+            && match_eq(c.getJ(), record, Kw::J::itemName,  value_shift)
+            && match_ge(c.getK(), record, Kw::K1::itemName, value_shift)
+            && match_le(c.getK(), record, Kw::K2::itemName, value_shift);
     };
 
     const auto connection_econ_limits = ConnectionEconLimits { record };

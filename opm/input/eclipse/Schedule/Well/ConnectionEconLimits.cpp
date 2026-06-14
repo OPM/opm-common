@@ -25,20 +25,25 @@
 
 #include <opm/input/eclipse/Parser/ParserKeywords/C.hpp>
 
+#include <optional>
 #include <stdexcept>
 #include <string>
 
 namespace {
 
-// CECON defaulted MIN_OIL/MIN_GAS value (-1e+20) carries a rate dimension.
-// any value bigger than that considered to be a limit
-// TODO: since it is too small, not sure whether this matters at all
-double minRateSentinel(const Opm::UDAValue& uda) {
-    return uda.get_dim().convertRawToSi(-1e+20);
+double ratioLimit(const Opm::DeckItem& item) {
+    return item.get<Opm::UDAValue>(0).SI_value_or(0.0);
 }
 
-double minRateSI(const Opm::UDAValue& uda) {
-    return uda.SI_value_or(minRateSentinel(uda));
+// A defaulted MIN_OIL/MIN_GAS item, or an explicitly entered "no limit"
+// sentinel value of -1e+20 (or below), means no lower rate limit.
+std::optional<double> minRateLimit(const Opm::DeckItem& item) {
+    const auto uda = item.get<Opm::UDAValue>(0);
+    if (uda.raw_value_or(-1.0e+20) <= -1.0e+20) {
+        return std::nullopt;
+    }
+
+    return uda.getSI();
 }
 
 } // Anonymous namespace
@@ -46,23 +51,14 @@ double minRateSI(const Opm::UDAValue& uda) {
 namespace Opm {
 
 ConnectionEconLimits::ConnectionEconLimits(const DeckRecord& record)
-    : max_water_cut      (record.getItem<ParserKeywords::CECON::MAX_WCUT>()
-                                .get<UDAValue>(0).SI_value_or(0.0))
-    , max_gas_oil_ratio  (record.getItem<ParserKeywords::CECON::MAX_GOR>()
-                                .get<UDAValue>(0).SI_value_or(0.0))
-    , max_water_gas_ratio(record.getItem<ParserKeywords::CECON::MAX_WGR>()
-                                .get<UDAValue>(0).SI_value_or(0.0))
+    : max_water_cut      (ratioLimit(record.getItem<ParserKeywords::CECON::MAX_WCUT>()))
+    , max_gas_oil_ratio  (ratioLimit(record.getItem<ParserKeywords::CECON::MAX_GOR>()))
+    , max_water_gas_ratio(ratioLimit(record.getItem<ParserKeywords::CECON::MAX_WGR>()))
     , workover(ConnectionEconLimits::EconWorkoverFromString(
                    record.getItem<ParserKeywords::CECON::WORKOVER_PROCEDURE>()
                        .getTrimmedString(0)))
-    , min_oil_rate(minRateSI(record.getItem<ParserKeywords::CECON::MIN_OIL>()
-                                 .get<UDAValue>(0)))
-    , min_gas_rate(minRateSI(record.getItem<ParserKeywords::CECON::MIN_GAS>()
-                                 .get<UDAValue>(0)))
-    , min_oil_rate_sentinel(minRateSentinel(record.getItem<ParserKeywords::CECON::MIN_OIL>()
-                                                .get<UDAValue>(0)))
-    , min_gas_rate_sentinel(minRateSentinel(record.getItem<ParserKeywords::CECON::MIN_GAS>()
-                                                .get<UDAValue>(0)))
+    , min_oil_rate(minRateLimit(record.getItem<ParserKeywords::CECON::MIN_OIL>()))
+    , min_gas_rate(minRateLimit(record.getItem<ParserKeywords::CECON::MIN_GAS>()))
     , followon_well(record.getItem<ParserKeywords::CECON::FOLLOW_ON_WELL>()
                         .getTrimmedString(0))
 {
@@ -79,10 +75,8 @@ bool ConnectionEconLimits::operator==(const ConnectionEconLimits& other) const
         && (this->max_water_gas_ratio == other.max_water_gas_ratio)
         && (this->workover            == other.workover)
         && (this->check_stopped_wells == other.check_stopped_wells)
-        && (this->min_oil_rate         == other.min_oil_rate)
-        && (this->min_gas_rate         == other.min_gas_rate)
-        && (this->min_oil_rate_sentinel == other.min_oil_rate_sentinel)
-        && (this->min_gas_rate_sentinel == other.min_gas_rate_sentinel)
+        && (this->min_oil_rate        == other.min_oil_rate)
+        && (this->min_gas_rate        == other.min_gas_rate)
         && (this->followon_well       == other.followon_well)
         ;
 }
@@ -109,22 +103,6 @@ ConnectionEconLimits ConnectionEconLimits::serializationTestObject()
     limits.followon_well       = "P2";
 
     return limits;
-}
-
-std::string ConnectionEconLimits::EconWorkover2String(EconWorkover enumValue)
-{
-    switch (enumValue) {
-    case EconWorkover::CON:
-        return "CON";
-    case EconWorkover::CONP:
-        return "+CON";
-    case EconWorkover::WELL:
-        return "WELL";
-    case EconWorkover::PLUG:
-        return "PLUG";
-    default:
-        throw std::invalid_argument("unhandled CECON EconWorkover value");
-    }
 }
 
 ConnectionEconLimits::EconWorkover

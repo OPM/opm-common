@@ -20,7 +20,7 @@
 #ifndef OPM_CONNECTION_ECON_LIMITS_HPP
 #define OPM_CONNECTION_ECON_LIMITS_HPP
 
-#include <limits>
+#include <optional>
 #include <string>
 
 namespace Opm {
@@ -38,10 +38,7 @@ namespace Opm {
             PLUG = 4,
         };
 
-        static std::string EconWorkover2String(EconWorkover enumValue);
         static EconWorkover EconWorkoverFromString(const std::string& stringValue);
-
-        static constexpr double no_lower_rate_limit = std::numeric_limits<double>::lowest();
 
         /// Maximum water cut (water/liquid ratio); 0.0 means off.
         double max_water_cut{0.0};
@@ -58,17 +55,11 @@ namespace Opm {
         /// Whether to check stopped wells.
         bool check_stopped_wells{false};
 
-        /// Minimum oil production rate (SI); defaults to no_lower_rate_limit.
-        double min_oil_rate{no_lower_rate_limit};
+        /// Minimum oil production rate (SI); empty means no limit.
+        std::optional<double> min_oil_rate{};
 
-        /// Minimum gas production rate (SI); defaults to no_lower_rate_limit.
-        double min_gas_rate{no_lower_rate_limit};
-
-        /// SI equivalent of -1e+20 in LiquidSurfaceVolume/Time (deck "no limit" sentinel).
-        double min_oil_rate_sentinel{no_lower_rate_limit};
-
-        /// SI equivalent of -1e+20 in GasSurfaceVolume/Time (deck "no limit" sentinel).
-        double min_gas_rate_sentinel{no_lower_rate_limit};
+        /// Minimum gas production rate (SI); empty means no limit.
+        std::optional<double> min_gas_rate{};
 
         /// Optional follow-on well.
         std::string followon_well{};
@@ -88,8 +79,8 @@ namespace Opm {
         bool onMaxWaterCut() const     { return this->max_water_cut       > 0.0; }
         bool onMaxGasOilRatio() const  { return this->max_gas_oil_ratio   > 0.0; }
         bool onMaxWaterGasRatio() const{ return this->max_water_gas_ratio > 0.0; }
-        bool onMinOilRate() const      { return this->min_oil_rate        > this->min_oil_rate_sentinel; }
-        bool onMinGasRate() const      { return this->min_gas_rate        > this->min_gas_rate_sentinel; }
+        bool onMinOilRate() const      { return this->min_oil_rate.has_value(); }
+        bool onMinGasRate() const      { return this->min_gas_rate.has_value(); }
 
         static ConnectionEconLimits serializationTestObject();
 
@@ -103,8 +94,6 @@ namespace Opm {
             serializer(this->check_stopped_wells);
             serializer(this->min_oil_rate);
             serializer(this->min_gas_rate);
-            serializer(this->min_oil_rate_sentinel);
-            serializer(this->min_gas_rate_sentinel);
             serializer(this->followon_well);
         }
     };

@@ -188,8 +188,10 @@ CECON
 
         BOOST_CHECK(econ_limit.workover == ConnectionEconLimits::EconWorkover::WELL);
         BOOST_CHECK(econ_limit.check_stopped_wells);
-        BOOST_CHECK_CLOSE(econ_limit.min_oil_rate, 1.0 / Metric::Time, 1.0e-10);
-        BOOST_CHECK_CLOSE(econ_limit.min_gas_rate, 2.0 / Metric::Time, 1.0e-10);
+        BOOST_REQUIRE(econ_limit.min_oil_rate.has_value());
+        BOOST_REQUIRE(econ_limit.min_gas_rate.has_value());
+        BOOST_CHECK_CLOSE(*econ_limit.min_oil_rate, 1.0 / Metric::Time, 1.0e-10);
+        BOOST_CHECK_CLOSE(*econ_limit.min_gas_rate, 2.0 / Metric::Time, 1.0e-10);
         BOOST_CHECK_EQUAL(econ_limit.followon_well, "P2");
     }
 
@@ -215,8 +217,8 @@ CECON
 
         BOOST_CHECK(econ_limit.workover == ConnectionEconLimits::EconWorkover::CON);
         BOOST_CHECK(!econ_limit.check_stopped_wells);
-        BOOST_CHECK(econ_limit.min_oil_rate < 0.0);
-        BOOST_CHECK(econ_limit.min_gas_rate < 0.0);
+        BOOST_CHECK(!econ_limit.min_oil_rate.has_value());
+        BOOST_CHECK(!econ_limit.min_gas_rate.has_value());
         BOOST_CHECK(econ_limit.followon_well.empty());
     }
 }
