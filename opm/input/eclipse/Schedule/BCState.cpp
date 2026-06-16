@@ -18,6 +18,7 @@
   along with OPM.
 */
 
+#include <opm/common/ErrorMacros.hpp>
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/B.hpp>
 #include <opm/input/eclipse/Schedule/BCState.hpp>
@@ -58,6 +59,9 @@ BCMECHType bcmechtype(const std::string& s) {
 
     if (s == "FIXED")
         return BCMECHType::FIXED;
+
+    if (s == "SPRING")
+        return BCMECHType::SPRING;
 
     if (s == "NONE")
         return BCMECHType::NONE;
@@ -149,6 +153,17 @@ BCState::BCFace BCState::BCFace::fromBCMech(const DeckRecord& record)
     mechbcvaluetmp.fixeddir[0] = record.getItem<BCMECHKEY::FIXEDX>().get<int>(0);
     mechbcvaluetmp.fixeddir[1] = record.getItem<BCMECHKEY::FIXEDY>().get<int>(0);
     mechbcvaluetmp.fixeddir[2] = record.getItem<BCMECHKEY::FIXEDZ>().get<int>(0);
+    if (const auto& P = record.getItem<BCMECHKEY::DISTANCE>(); ! P.defaultApplied(0)) {
+        mechbcvaluetmp.distance = P.getSIDouble(0);
+    }
+    if (const auto& P = record.getItem<BCMECHKEY::SHEAR_MODULUS>(); ! P.defaultApplied(0)) {
+        mechbcvaluetmp.shearmodulus = P.getSIDouble(0);
+    }
+    if (bcmechface.bcmechtype == BCMECHType::SPRING && mechbcvaluetmp.shearmodulus == 0.0) {
+        OPM_THROW(std::invalid_argument,
+                  "BCMECH: SHEAR_MODULUS (item 13) must be non-zero when MECHTYPE is SPRING for "
+                  "INDEX " + std::to_string(bcmechface.index));
+    }
     bcmechface.mechbcvalue = mechbcvaluetmp;
 
     return bcmechface;

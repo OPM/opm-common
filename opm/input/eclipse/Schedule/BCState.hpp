@@ -45,6 +45,7 @@ enum class BCType {
 enum class BCMECHType {
      FREE,
      FIXED,
+     SPRING,
      NONE
 };
 
@@ -64,12 +65,16 @@ struct MechBCValue {
     std::array<double,3> disp{};
     std::array<double,6> stress{};
     std::array<bool,3> fixeddir{};
+    double distance = 0.0;
+    double shearmodulus = 0.0;
 
     static MechBCValue serializationTestObject()
     {
         return MechBCValue{{1.0, 2.0, 3.0},
                            {3.0, 4.0, 5.0, 6.0, 7.0, 8.0},
-                           {true, false, true}};
+                           {true, false, true},
+                           9.0,
+                           10.0};
     }
 
     template<class Serializer>
@@ -78,13 +83,17 @@ struct MechBCValue {
         serializer(disp);
         serializer(stress);
         serializer(fixeddir);
+        serializer(distance);
+        serializer(shearmodulus);
     }
 
     bool operator==(const MechBCValue& other) const
     {
         return disp == other.disp &&
                stress == other.stress &&
-               fixeddir == other.fixeddir;
+               fixeddir == other.fixeddir &&
+               distance == other.distance &&
+               shearmodulus == other.shearmodulus;
     }
 };
 

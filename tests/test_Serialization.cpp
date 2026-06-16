@@ -98,6 +98,7 @@
 #include <opm/input/eclipse/Schedule/Action/Condition.hpp>
 #include <opm/input/eclipse/Schedule/Action/PyAction.hpp>
 #include <opm/input/eclipse/Schedule/Action/State.hpp>
+#include <opm/input/eclipse/Schedule/BCState.hpp>
 #include <opm/input/eclipse/Schedule/Events.hpp>
 #include <opm/input/eclipse/Schedule/GasLiftOpt.hpp>
 #include <opm/input/eclipse/Schedule/GasPlantTable.hpp>
@@ -257,6 +258,7 @@ TEST_FOR_TYPE_NAMED(Action::AST, ActionAST)
 TEST_FOR_TYPE_NAMED(Action::ASTNode, ActionASTNode)
 TEST_FOR_TYPE_NAMED(Action::State, ActionState)
 TEST_FOR_TYPE(BCConfig)
+TEST_FOR_TYPE(BCState)
 TEST_FOR_TYPE(BrineDensityTable)
 TEST_FOR_TYPE(Carfin)
 TEST_FOR_TYPE(ColumnSchema)
