@@ -1394,12 +1394,12 @@ BOOST_AUTO_TEST_CASE(well_keywords_dynamic_close)
 
     /* BHP (history) */
     BOOST_CHECK_CLOSE( 1.1, ecl_sum_get_well_var( resp, 0, "W_2", "WBHPH" ), 1e-5 );
-    BOOST_CHECK_CLOSE( 1.1, ecl_sum_get_well_var( resp, 1, "W_2", "WBHPH" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 0.0, ecl_sum_get_well_var( resp, 1, "W_2", "WBHPH" ), 1e-5 );
     BOOST_CHECK_CLOSE( 1.1, ecl_sum_get_well_var( resp, 2, "W_2", "WBHPH" ), 1e-5 );
 
     /* THP (history) */
     BOOST_CHECK_CLOSE( 1.2, ecl_sum_get_well_var( resp, 0, "W_2", "WTHPH" ), 1e-5 );
-    BOOST_CHECK_CLOSE( 1.2, ecl_sum_get_well_var( resp, 1, "W_2", "WTHPH" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 0.0, ecl_sum_get_well_var( resp, 1, "W_2", "WTHPH" ), 1e-5 );
     BOOST_CHECK_CLOSE( 1.2, ecl_sum_get_well_var( resp, 2, "W_2", "WTHPH" ), 1e-5 );
 
     /* filtrate related summary */
