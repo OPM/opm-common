@@ -878,6 +878,7 @@ namespace {
                                  const ::Opm::Schedule& schedule,
                                  const std::vector<std::reference_wrapper<const ::Opm::data::Solution>> simProps,
                                  const std::vector<double>& porv,
+                                 const std::map<std::string, std::vector<int>>& int_data,
                                  const ::Opm::UnitSystem& units,
                                        ::Opm::EclIO::OutputStream::Init& initFile)
     {
@@ -921,6 +922,15 @@ namespace {
                     writeSimulatorPropertiesLGRCell(grid, multipliers, initFile, global_fathers);
                 }
                 writeIntegerCellPropertiesLGRCell(es, global_fathers, initFile);
+
+                // Simulator-supplied integer maps (e.g. MPI_RANK) are written
+                // for the main grid via writeIntegerMaps(); mirror them onto
+                // each LGR so the array also exists on the refined cells.  Each
+                // refined cell inherits its father coarse cell's value, which
+                // for rank-interior LGR boxes equals the box's owning rank.
+                for (const auto& [key, value] : int_data) {
+                    initFile.write(key, VectorUtil::filterArray(value, global_fathers));
+                }
             }
             initFile.message("LGRSGONE");
             }
@@ -1105,7 +1115,9 @@ void Opm::InitIO::write(const ::Opm::EclipseState&                  es,
 
     // GLOBAL REGION ARRAYS (SATNUM, PVTNUM, EQLNUM, FIPNUM, ...) - before NNC per reference output
     writeIntegerCellProperties(es, initFile);
-    writeIntegerMaps(std::move(int_data), initFile);
+    // Note: int_data (simulator integer maps, e.g. MPI_RANK) is reused by
+    // writeLGRLocalProperties() below, so it is not moved-from here.
+    writeIntegerMaps(int_data, initFile);
 
     // GLOBAL NNC - after integer region arrays, before LGR sections
     if (!nnc_col.empty()) {
@@ -1119,7 +1131,7 @@ void Opm::InitIO::write(const ::Opm::EclipseState&                  es,
     // LGR PROPERTY SECTION (per reference: after LGR NNC section)
     // For each LGR: LGRHEADI/Q/D, PORV, DEPTH, TRANX/Y/Z, PERMX/Y/Z, MULTX/Y/Z, PORO, SATNUM, ... + LGRSGONE
     // Not yet supported: LGR-specific aquifer and satfunc scaling - planned for upcoming versions
-    writeLGRLocalProperties(es, grid, schedule, simProps, porv, units, initFile);
+    writeLGRLocalProperties(es, grid, schedule, simProps, porv, int_data, units, initFile);
 
     // TABULAR DATA (TABDIMS, TAB, CON) - after all LGR sections per reference output
     writeTableData(es, units, initFile);
