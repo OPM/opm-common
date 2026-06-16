@@ -23,6 +23,15 @@
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 
+#include <opm/common/utility/OpmInputError.hpp>
+
+#include <opm/input/eclipse/Deck/DeckKeyword.hpp>
+#include <opm/input/eclipse/Deck/DeckRecord.hpp>
+
+#include <opm/input/eclipse/Parser/ParserKeywords/A.hpp>
+
+#include <fmt/format.h>
+
 #include <algorithm>
 #include <cstddef>
 
@@ -36,7 +45,9 @@ AquiferConfig::AquiferConfig(const TableManager& tables,
     , aquiferct(tables, deck)
     , aquiferflux(SOLUTIONSection(deck).getKeywordList("AQUFLUX"))
     , numerical_aquifers(deck, grid, field_props)
-{}
+{
+    this->loadAquiferTracers(deck);
+}
 
 AquiferConfig::AquiferConfig(const Aquifetp& fetp,
                              const AquiferCT& ct,
@@ -77,6 +88,7 @@ AquiferConfig AquiferConfig::serializationTestObject()
     result.aqconn = Aquancon::serializationTestObject();
     result.aquiferflux = AquiferFlux::serializationTestObject();
     result.numerical_aquifers = NumericalAquifers::serializationTestObject();
+    result.aquifer_tracers_ = { AquiferTracerConcentration::serializationTestObject() };
 
     return result;
 }
@@ -91,7 +103,8 @@ bool AquiferConfig::operator==(const AquiferConfig& other) const {
            this->aquiferct == other.aquiferct &&
            this->aquiferflux == other.aquiferflux &&
            this->aqconn == other.aqconn &&
-           this->numerical_aquifers == other.numerical_aquifers;
+           this->numerical_aquifers == other.numerical_aquifers &&
+           this->aquifer_tracers_ == other.aquifer_tracers_;
 }
 
 const AquiferCT& AquiferConfig::ct() const {
@@ -141,6 +154,39 @@ bool AquiferConfig::hasAnalyticalAquifer() const {
 
 void AquiferConfig::appendAqufluxSchedule(const std::unordered_set<int>& ids) {
     this->aquiferflux.appendAqufluxSchedule(ids);
+}
+
+void AquiferConfig::loadAquiferTracers(const Deck& deck)
+{
+    using AQANTRC = ParserKeywords::AQANTRC;
+
+    for (const auto* keyword : SOLUTIONSection(deck).getKeywordList("AQANTRC")) {
+        for (const auto& record : *keyword) {
+            const int aquifer_id =
+                record.getItem<AQANTRC::AQUIFER_ID>().get<int>(0);
+
+            if (!this->hasAquifer(aquifer_id)) {
+                throw OpmInputError {
+                    fmt::format("AQANTRC references unknown aquifer ID {}",
+                                aquifer_id),
+                    keyword->location(),
+                };
+            }
+
+            this->aquifer_tracers_.push_back(
+                AquiferTracerConcentration {
+                    aquifer_id,
+                    record.getItem<AQANTRC::TRACER>().getTrimmedString(0),
+                    record.getItem<AQANTRC::VALUE>().get<double>(0),
+                });
+        }
+    }
+}
+
+const std::vector<AquiferTracerConcentration>&
+AquiferConfig::aquiferTracers() const
+{
+    return this->aquifer_tracers_;
 }
 
 } // end of namespace Opm

@@ -27,8 +27,9 @@
 #include <opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquifers.hpp>
 
 #include <cstddef>
-#include <vector>
+#include <string>
 #include <unordered_set>
+#include <vector>
 
 namespace Opm {
     class TableManager;
@@ -42,6 +43,32 @@ namespace Opm { namespace RestartIO {
 }} // namespace Opm::RestartIO
 
 namespace Opm {
+
+struct AquiferTracerConcentration {
+    int aquifer_id{};
+    std::string tracer_name;
+    double concentration{};
+
+    bool operator==(const AquiferTracerConcentration& other) const
+    {
+        return this->aquifer_id == other.aquifer_id
+            && this->tracer_name == other.tracer_name
+            && this->concentration == other.concentration;
+    }
+
+    static AquiferTracerConcentration serializationTestObject()
+    {
+        return { 1, "WAQ", 1.0 };
+    }
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(this->aquifer_id);
+        serializer(this->tracer_name);
+        serializer(this->concentration);
+    }
+};
 
 class AquiferConfig {
 public:
@@ -78,6 +105,7 @@ public:
     bool hasAnalyticalAquifer() const;
     const NumericalAquifers& numericalAquifers() const;
     NumericalAquifers& mutableNumericalAquifers() const;
+    const std::vector<AquiferTracerConcentration>& aquiferTracers() const;
 
     template<class Serializer>
     void serializeOp(Serializer& serializer)
@@ -87,14 +115,17 @@ public:
         serializer(aqconn);
         serializer(aquiferflux);
         serializer(numerical_aquifers);
+        serializer(aquifer_tracers_);
     }
 
 private:
+    void loadAquiferTracers(const Deck& deck);
     Aquifetp aquifetp{};
     AquiferCT aquiferct{};
     AquiferFlux aquiferflux{};
     mutable NumericalAquifers numerical_aquifers{};
     Aquancon aqconn{};
+    std::vector<AquiferTracerConcentration> aquifer_tracers_{};
 };
 
 std::vector<int> analyticAquiferIDs(const AquiferConfig& cfg);
