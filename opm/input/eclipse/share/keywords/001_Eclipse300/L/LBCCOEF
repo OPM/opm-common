@@ -1,0 +1,39 @@
+{
+  "name": "LBCCOEF",
+  "sections": [
+    "PROPS"
+  ],
+  "size": 1,
+  "items": [
+    {
+      "name": "COEF1",
+      "value_type": "DOUBLE",
+      "dimension": "1",
+      "default": 0.1023
+    },
+    {
+      "name": "COEF2",
+      "value_type": "DOUBLE",
+      "dimension": "1",
+      "default": 0.023364
+    },
+    {
+      "name": "COEF3",
+      "value_type": "DOUBLE",
+      "dimension": "1",
+      "default": 0.058533
+    },
+    {
+      "name": "COEF4",
+      "value_type": "DOUBLE",
+      "dimension": "1",
+      "default": -0.040758
+    },
+    {
+      "name": "COEF5",
+      "value_type": "DOUBLE",
+      "dimension": "1",
+      "default": 0.0093324
+    }
+  ]
+}

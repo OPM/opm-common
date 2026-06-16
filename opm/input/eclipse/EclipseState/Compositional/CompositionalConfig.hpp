@@ -22,6 +22,7 @@
 
 #include <opm/input/eclipse/Units/Units.hpp>
 
+#include <array>
 #include <cstddef>
 #include <string>
 #include <vector>
@@ -44,6 +45,9 @@ public:
     static EOSType eosTypeFromString(const std::string& str);
 
     static std::string eosTypeToString(EOSType eos);
+
+    // The item defaults of the LBCCOEF keyword.
+    static std::array<double, 5> defaultLBCCoefficients();
 
     CompositionalConfig() = default;
 
@@ -69,6 +73,7 @@ public:
     const std::vector<double>& criticalZFactor(std::size_t eos_region) const;
     const std::vector<double>& omegaA(std::size_t eos_region) const;
     const std::vector<double>& omegaB(std::size_t eos_region) const;
+    const std::array<double, 5>& lbcCoefficients() const;
 
     // Accessors for surface EOS regions.
     EOSType eosTypeSurf(std::size_t eos_region) const;
@@ -105,6 +110,7 @@ public:
         serializer(binary_interaction_coefficient);
         serializer(omega_a);
         serializer(omega_b);
+        serializer(lbc_coefficients);
         serializer(eos_types_surf);
         serializer(molecular_weights_surf);
         serializer(acentric_factors_surf);
@@ -138,6 +144,10 @@ private:
     std::vector<std::vector<double>> binary_interaction_coefficient;
     std::vector<std::vector<double>> omega_a;
     std::vector<std::vector<double>> omega_b;
+
+    // Coefficients for the Lorentz-Bray-Clark viscosity correlation (LBCCOEF).
+    // A single set is used for all EOS regions.
+    std::array<double, 5> lbc_coefficients = defaultLBCCoefficients();
 
     // Surface EOS-region properties (EOSS, MWS, ACFS, PCRITS, TCRITS, VCRITS, ZCRITS, SSHIFTS, BICS).
     std::vector<EOSType> eos_types_surf;

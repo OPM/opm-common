@@ -21,17 +21,16 @@
 
 #include <opm/json/JsonObject.hpp>
 
-#include <opm/input/eclipse/Parser/ParserEnums.hpp>
-
 #include <opm/input/eclipse/Deck/UDAValue.hpp>
 
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 
 #include <cmath>
 #include <cstddef>
-#include <iomanip>
 #include <ostream>
 #include <sstream>
+
+#include <fmt/format.h>
 
 #include "raw/RawRecord.hpp"
 #include "raw/StarToken.hpp"
@@ -50,16 +49,9 @@ type_tag get_data_type_json( const std::string& str ) {
     throw std::invalid_argument( str + " cannot be converted to enum 'tag'" );
 }
 
-/*
-  For very small numbers std::to_string() will just return the string "0.000000"
-*/
+// Format the input value with twelve digits of precision.
 std::string as_string(double value) {
-    if (std::fabs(value) < 1e-4) {
-        std::ostringstream ss;
-        ss << std::setprecision(12) << value;
-        return ss.str();
-    } else
-        return std::to_string(value);
+    return fmt::format("{:.12}", value);
 }
 
 }

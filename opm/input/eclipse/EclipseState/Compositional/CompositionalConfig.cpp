@@ -34,6 +34,7 @@
 #include <opm/input/eclipse/Parser/ParserKeywords/B.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/C.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/E.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/L.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/M.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/N.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/O.hpp>
@@ -432,6 +433,7 @@ namespace {
             std::pair {"OMEGAAS"sv, section.hasKeyword<Opm::ParserKeywords::OMEGAAS>() },
             std::pair {"OMEGAB"sv,  section.hasKeyword<Opm::ParserKeywords::OMEGAB>() },
             std::pair {"OMEGABS"sv, section.hasKeyword<Opm::ParserKeywords::OMEGABS>() },
+            std::pair {"LBCCOEF"sv, section.hasKeyword<Opm::ParserKeywords::LBCCOEF>() },
         };
 
         bool any_comp_prop_kw = false;
@@ -667,6 +669,23 @@ CompositionalConfig::CompositionalConfig(const Deck& deck, const Runspec& runspe
     processOmegaSurfaceKeyword<ParserKeywords::OMEGABS>(props_section, this->omega_b_surf,
                                                         this->omega_b, omega_b_defaults_surf,
                                                         num_eos_sur, num_eos_res, this->num_comps);
+
+    // LBCCOEF holds a single set of dimensionless coefficients for the
+    // Lorentz-Bray-Clark viscosity correlation; defaulted items keep the
+    // standard values.
+    if (const auto* kw = getSinglePropsKeyword<ParserKeywords::LBCCOEF>(props_section);
+        kw != nullptr)
+    {
+        using KW = ParserKeywords::LBCCOEF;
+        const auto& record = kw->getRecord(0);
+        this->lbc_coefficients = {
+            record.getItem<KW::COEF1>().getSIDouble(0),
+            record.getItem<KW::COEF2>().getSIDouble(0),
+            record.getItem<KW::COEF3>().getSIDouble(0),
+            record.getItem<KW::COEF4>().getSIDouble(0),
+            record.getItem<KW::COEF5>().getSIDouble(0),
+        };
+    }
 }
 
 bool CompositionalConfig::operator==(const CompositionalConfig& other) const {
@@ -686,6 +705,7 @@ bool CompositionalConfig::operator==(const CompositionalConfig& other) const {
            this->binary_interaction_coefficient == other.binary_interaction_coefficient &&
            this->omega_a == other.omega_a &&
            this->omega_b == other.omega_b &&
+           this->lbc_coefficients == other.lbc_coefficients &&
            this->eos_types_surf == other.eos_types_surf &&
            this->molecular_weights_surf == other.molecular_weights_surf &&
            this->acentric_factors_surf == other.acentric_factors_surf &&
@@ -720,6 +740,7 @@ CompositionalConfig CompositionalConfig::serializationTestObject() {
     result.binary_interaction_coefficient = {2, std::vector<double>(result.num_comps * (result.num_comps - 1) / 2, 6.)};
     result.omega_a = {2, std::vector<double>(result.num_comps, 0.457235529)};
     result.omega_b = {2, std::vector<double>(result.num_comps, 0.077796074)};
+    result.lbc_coefficients = {1.234, -17.29, 3.1415, -2.718, 16.18};
     result.eos_types_surf = {3, EOSType::PR};
     result.molecular_weights_surf = {3, std::vector<double>(result.num_comps, 17.)};
     result.acentric_factors_surf = {3, std::vector<double>(result.num_comps, 1.1)};
@@ -743,6 +764,15 @@ CompositionalConfig::EOSType CompositionalConfig::eosTypeFromString(const std::s
     if (str == "SRK") return EOSType::SRK;
     if (str == "ZJ") return EOSType::ZJ;
     throw std::invalid_argument("Unknown string for EOSType");
+}
+
+std::array<double, 5> CompositionalConfig::defaultLBCCoefficients() {
+    using KW = ParserKeywords::LBCCOEF;
+    return {KW::COEF1::defaultValue,
+            KW::COEF2::defaultValue,
+            KW::COEF3::defaultValue,
+            KW::COEF4::defaultValue,
+            KW::COEF5::defaultValue};
 }
 
 std::string CompositionalConfig::eosTypeToString(Opm::CompositionalConfig::EOSType eos) {
@@ -814,6 +844,10 @@ const std::vector<double>& CompositionalConfig::omegaA(std::size_t eos_region) c
 
 const std::vector<double>& CompositionalConfig::omegaB(std::size_t eos_region) const {
     return this->omega_b[eos_region];
+}
+
+const std::array<double, 5>& CompositionalConfig::lbcCoefficients() const {
+    return this->lbc_coefficients;
 }
 
 CompositionalConfig::EOSType CompositionalConfig::eosTypeSurf(std::size_t eos_region) const {

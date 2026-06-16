@@ -225,6 +225,10 @@ OMEGABS
 0.085 0.086 1* /
 
 
+LBCCOEF
+1* 0.025 1* 0.01 /
+
+
 STCOND
 15.0 /
 
@@ -379,6 +383,11 @@ BOOST_AUTO_TEST_CASE(DefaultedCompositionalKeywordsArePopulatedWhenAbsent) {
         BOOST_CHECK_EQUAL(num_comps, volume_shift.size());
         check_vectors_close(std::vector<double>(num_comps, 0.0), volume_shift, tolerance);
     }
+
+    // Without LBCCOEF, the standard LBC coefficients apply.
+    const auto& lbc = comp_config.lbcCoefficients();
+    check_vectors_close(std::vector<double>{0.1023, 0.023364, 0.058533, -0.040758, 0.0093324},
+                        std::vector<double>(lbc.begin(), lbc.end()), tolerance);
 }
 
 BOOST_AUTO_TEST_CASE(CompositionalParsingTest) {
@@ -537,6 +546,14 @@ BOOST_AUTO_TEST_CASE(CompositionalParsingTest) {
         const auto& ob1 = comp_config.omegaB(1);
         BOOST_CHECK_EQUAL(num_comps, ob1.size());
         check_vectors_close(std::vector<double>{0.09, srk_omega_b, 0.10}, ob1, tolerance);
+    }
+
+    {
+        // LBCCOEF: second and fourth coefficients overridden (1* keeps the
+        // standard LBC defaults).
+        const auto& lbc = comp_config.lbcCoefficients();
+        check_vectors_close(std::vector<double>{0.1023, 0.025, 0.058533, 0.01, 0.0093324},
+                            std::vector<double>(lbc.begin(), lbc.end()), tolerance);
     }
 
     // Surface-condition EOS region properties
