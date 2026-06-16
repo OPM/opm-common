@@ -1481,8 +1481,7 @@ list(APPEND PUBLIC_HEADER_FILES
   opm/material/thermal/NullThermalConductionLaw.hpp
   opm/material/thermal/SomertonThermalConductionLaw.hpp
   opm/material/thermal/SomertonThermalConductionLawParams.hpp
-  opm/material/viscositymodels/LBC.hpp
-  opm/material/viscositymodels/LBCco2rich.hpp
+  opm/material/viscositymodels/ViscosityModels.hpp
   opm/ml/ml_model.hpp
   opm/output/data/Aquifer.hpp
   opm/output/data/Cells.hpp

@@ -35,7 +35,7 @@
 #include <opm/material/fluidsystems/blackoilpvt/WaterPvtMultiplexer.hpp>
 #include <opm/material/fluidsystems/BaseFluidSystem.hpp>
 #include <opm/material/fluidsystems/PTFlashParameterCache.hpp> // TODO: this is something else need to check
-#include <opm/material/viscositymodels/LBC.hpp>
+#include <opm/material/viscositymodels/ViscosityModels.hpp>
 
 #include <algorithm>
 #include <array>
