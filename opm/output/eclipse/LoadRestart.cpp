@@ -1634,6 +1634,24 @@ namespace Opm::RestartIO  {
         auto rst_view = std::make_shared<Opm::EclIO::RestartFileView>
             (std::make_shared<Opm::EclIO::ERst>(filename), report_step);
 
+        // Check for missing headers first
+        if (!rst_view->hasHeaderArrays()) {
+            throw std::runtime_error {
+                fmt::format("Restart file '{}' report step {} is missing required header arrays (INTEHEAD/LOGIHEAD/DOUBHEAD)",
+                            filename, report_step)
+            };
+        }
+
+        if (rst_view->isGraphicsOnly()) {
+            throw std::runtime_error {
+                fmt::format("Cannot restart from restart file '{}' "
+                            "report step {}): the file appears to be graphics-only "
+                            "or is missing well arrays required for simulation restart. "
+                            "Please use a standard restart file instead.",
+                            filename, report_step)
+            };
+        }
+
         auto xr = restoreSOLUTION(solution_keys, grid.getNumActive(), *rst_view);
         xr.convertToSI(es.getUnits());
 

@@ -179,6 +179,31 @@
 
   The SAVE keyword is not supported in OPM at all, this implies that
   the SAVE and SFREQ mneomics are not supported.
+
+
+  Graphics-Only Restart Files (NORST)
+  -----------------------------------
+
+  The NORST mnemonic controls the generation of graphics-only restart
+  files, which are suitable for visualization but cannot be used for
+  restarting simulations. When NORST > 0:
+
+  NORST = 1: The restart file does not contain arrays that are required for restarting
+             but are not normally needed for graphical output. Example: hysteresis arrays
+             (if present in the simulation) are omitted. All standard solution arrays
+             (pressure, saturations, dissolved gas, etc.) and well arrays are included.
+             This gives a reasonably compact file that still allows well results to be
+             visualized.
+
+  NORST = 2: The restart file further excludes all well arrays (IWEL, XWEL, ZWEL, XCON, and
+             any other well‑related arrays). In a standard black‑oil simulation, the file
+             then contains only: the main solution arrays (PRESSURE, SWAT, SGAS, RS) and any
+             additional arrays requested by other restart controls (e.g., RPTRST). This produces
+             the smallest possible restart file, suitable for fast loading of reservoir‑wide
+             properties.
+
+  Graphics-only restart files are marked internally and will fail if
+  used in a restart attempt.
 */
 
 #include <map>
@@ -224,6 +249,7 @@ public:
         serializer(save);
         serializer(compositional);
         serializer(this->solution_only_keywords);
+        serializer(norst);
     }
 
     bool operator==(const RSTConfig& other) const;
@@ -234,6 +260,7 @@ public:
     std::optional<int> freq{};
     bool save { false };
     bool compositional { false };
+    std::optional<int> norst{};  // Graphics-only restart file control
 
 private:
     std::unordered_set<std::string> solution_only_keywords{};

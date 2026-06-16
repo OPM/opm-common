@@ -224,10 +224,10 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
             };*/
 
             enum Status : int {
-                Shut = -1000,
-                Stop = 0,
-                Open = 1,
-                Auto = 3,
+                Shut      = -1000,
+                Stop      = 0,
+                Open      = 1,
+                Auto      = 3,
             };
 
             namespace WGrupCon {

@@ -165,6 +165,7 @@ namespace {
                 const EclipseState&           es,
                 EclIO::OutputStream::Restart& rstFile)
     {
+        const int norst_value = schedule[sim_step].rst_config().norst.value_or(0);
         // write INTEHEAD to restart file
         auto ih = Helpers::
             createInteHead(es, grid, schedule, simTime,
@@ -173,20 +174,24 @@ namespace {
 
         rstFile.write("INTEHEAD", ih);
 
-        // write LOGIHEAD to restart file
-        if (report_step == 0) {
-            rstFile.write("LOGIHEAD", Helpers::createLogiHead(es));
-        }
-        else {
-            rstFile.write("LOGIHEAD", Helpers::createLogiHead(es, schedule[report_step - 1]));
+        // LOGIHEAD and DOUBHEAD are only written for full restarts (NORST=0).
+        if (norst_value == 0) {
+            // write LOGIHEAD to restart file
+            if (report_step == 0) {
+                rstFile.write("LOGIHEAD", Helpers::createLogiHead(es));
+            }
+            else {
+                rstFile.write("LOGIHEAD", Helpers::createLogiHead(es, schedule[report_step - 1]));
+            }
         }
 
-        // write DOUBHEAD to restart file
-        const auto dh = Helpers::createDoubHead(es, schedule,
-                                                sim_step, report_step,
-                                                simTime, next_step_size);
-        rstFile.write("DOUBHEAD", dh);
-
+        if (norst_value == 0) {
+            // write DOUBHEAD to restart file
+            const auto dh = Helpers::createDoubHead(es, schedule,
+                                                    sim_step, report_step,
+                                                    simTime, next_step_size);
+            rstFile.write("DOUBHEAD", dh);
+        }
         // return the inteHead vector
         return ih;
     }
@@ -382,30 +387,51 @@ namespace {
                    const Opm::WellTestState&     wtest_state,
                    const Opm::SummaryState&      sumState,
                    const std::vector<int>&       ih,
+                   const int                     norst_value,
                    EclIO::OutputStream::Restart& rstFile)
     {
         auto wellData = Helpers::AggregateWellData(ih);
         wellData.captureDeclaredWellData(schedule, grid, tracers, sim_step, action_state, wtest_state, sumState, ih);
         wellData.captureDynamicWellData(schedule, tracers, sim_step, wells, sumState);
 
+        // NORST logic:
+        //  - NORST=0: Full well and connection data
+        //  - NORST=1: Geometry only (IWEL/XWEL/ZWEL, XCON)
+        //  - NORST=2: No well-data but (IWEL/ZWEL) still available for plotting wells, and solution vectors only
+
         rstFile.write("IWEL", wellData.getIWell());
-        rstFile.write("SWEL", wellData.getSWell());
-        rstFile.write("XWEL", wellData.getXWell());
+
+        if (norst_value == 0) {
+            rstFile.write("SWEL", wellData.getSWell());
+        }
+
+        if (norst_value <= 1)
+        {
+            rstFile.write("XWEL", wellData.getXWell());
+        }
+
         rstFile.write("ZWEL", wellData.getZWell());
 
-        auto wListData = Helpers::AggregateWListData(ih);
-        wListData.captureDeclaredWListData(schedule, sim_step, ih);
-
-        rstFile.write("ZWLS", wListData.getZWls());
-        rstFile.write("IWLS", wListData.getIWls());
+        if (norst_value == 0)
+        {
+            auto wListData = Helpers::AggregateWListData(ih);
+            wListData.captureDeclaredWListData(schedule, sim_step, ih);
+            rstFile.write("ZWLS", wListData.getZWls());
+            rstFile.write("IWLS", wListData.getIWls());
+        }
 
         auto connectionData = Helpers::AggregateConnectionData(ih);
         connectionData.captureDeclaredConnData(schedule, grid, schedule.getUnits(),
                                                wells, sumState, sim_step);
 
-        rstFile.write("ICON", connectionData.getIConn());
-        rstFile.write("SCON", connectionData.getSConn());
-        rstFile.write("XCON", connectionData.getXConn());
+        if (norst_value == 0) {
+            rstFile.write("ICON", connectionData.getIConn());
+            rstFile.write("SCON", connectionData.getSConn());
+        }
+
+        if (norst_value <= 1) {
+            rstFile.write("XCON", connectionData.getXConn());
+        }
     }
 
     void writeWellLGR(int                           sim_step,
@@ -417,6 +443,7 @@ namespace {
                       const Opm::WellTestState&     wtest_state,
                       const Opm::SummaryState&      sumState,
                       const std::vector<int>&       ih,
+                      const int                     norst_value,
                       EclIO::OutputStream::Restart& rstFile,
                       const std::string&            lgr_tag)
     {
@@ -425,14 +452,24 @@ namespace {
         wellData.captureDynamicWellDataLGR(schedule, tracers, sim_step, wells, sumState,lgr_tag);
 
         rstFile.write("IWEL", wellData.getIWell());
-        rstFile.write("SWEL", wellData.getSWell());
-        rstFile.write("XWEL", wellData.getXWell());
+
+        if (norst_value == 0)
+        {
+            rstFile.write("SWEL", wellData.getSWell());
+        }
+
+        if (norst_value <= 1)
+        {
+            rstFile.write("XWEL", wellData.getXWell());
+        }
+
         rstFile.write("ZWEL", wellData.getZWell());
 
-
-        // write LGWEL
-        rstFile.write("LGWEL", wellData.getLGWell());
-
+        if (norst_value == 0)
+        {
+            // write LGWEL
+            rstFile.write("LGWEL", wellData.getLGWell());
+        }
         // wListData for LGR is currently not supported.
         // the following code is left here for future reference.
         // auto wListData = Helpers::AggregateWListData(ih);
@@ -444,11 +481,17 @@ namespace {
         auto connectionData = Helpers::AggregateConnectionData(ih);
         connectionData.captureDeclaredConnDataLGR(schedule, grid, schedule.getUnits(),
                                                      wells, sumState, sim_step, lgr_tag);
-
-        rstFile.write("ICON", connectionData.getIConn());
-        rstFile.write("SCON", connectionData.getSConn());
-        rstFile.write("XCON", connectionData.getXConn());
+        if (norst_value == 0)
+        {
+            rstFile.write("ICON", connectionData.getIConn());
+            rstFile.write("SCON", connectionData.getSConn());
         }
+
+        if (norst_value <= 1)
+        {
+            rstFile.write("XCON", connectionData.getXConn());
+        }
+    }
 
     void writeAnalyticAquiferData(const Helpers::AggregateAquiferData& aquiferData,
                                   EclIO::OutputStream::Restart&        rstFile)
@@ -519,11 +562,15 @@ namespace {
                           std::optional<Helpers::AggregateAquiferData>& aquiferData,
                           EclIO::OutputStream::Restart&                 rstFile)
     {
-        writeGroup(sim_step, schedule.getUnits(), schedule, sumState, inteHD, rstFile);
+        const int norst_value = schedule[sim_step].rst_config().norst.value_or(0);
+        if (norst_value == 0)
+        {
+            writeGroup(sim_step, schedule.getUnits(), schedule, sumState, inteHD, rstFile);
+        }
 
         // Write network data if the network option is used and network defined
         const auto& network = schedule[sim_step].network();
-        if (network.active())
+        if (network.active() && norst_value == 0)
         {
             writeNetwork(es, sim_step, schedule.getUnits(), schedule, sumState, inteHD, rstFile);
         }
@@ -537,25 +584,30 @@ namespace {
                                     [&schedule, sim_step](const std::string& well)
                                     { return schedule.getWell(well, sim_step).isMultiSegment(); });
 
-            if (haveMSW) {
+            // MSW data is well-structure specific and not written for
+            // reduced (NORST=1) or graphics-only (NORST=2) restarts.
+            if (haveMSW && norst_value == 0) {
                 writeMSWData(sim_step, schedule.getUnits(), schedule, grid,
                              sumState, wellSol, inteHD, rstFile);
             }
 
             writeWell(sim_step, grid, schedule, es.tracer(), wellSol,
-                      action_state, wtest_state, sumState, inteHD, rstFile);
+                      action_state, wtest_state, sumState, inteHD, norst_value, rstFile);
         }
 
-        if (const auto& aqCfg = es.aquifer();
-            aqCfg.active() && aquiferData.has_value())
+        if (norst_value == 0)
         {
-            updateAndWriteAquiferData(es,
-                                      schedule[sim_step],
-                                      aquDynData,
-                                      sumState,
-                                      schedule.getUnits(),
-                                      aquiferData.value(),
-                                      rstFile);
+            if (const auto& aqCfg = es.aquifer();
+                aqCfg.active() && aquiferData.has_value())
+            {
+                updateAndWriteAquiferData(es,
+                                          schedule[sim_step],
+                                          aquDynData,
+                                          sumState,
+                                          schedule.getUnits(),
+                                          aquiferData.value(),
+                                          rstFile);
+            }
         }
     }
 
@@ -571,11 +623,15 @@ namespace {
                              EclIO::OutputStream::Restart&                 rstFile,
                              const std::string&                            lgr_tag)
     {
-        writeGroupLGR(sim_step, schedule.getUnits(), schedule, sumState, inteHD, rstFile, lgr_tag);
+        const int norst_value = schedule[sim_step].rst_config().norst.value_or(0);
 
+        if (norst_value == 0)
+        {
+            writeGroupLGR(sim_step, schedule.getUnits(), schedule, sumState, inteHD, rstFile, lgr_tag);
+        }
         // Write network data if the network option is used and network defined
         const auto& network = schedule[sim_step].network();
-        if (network.active())
+        if (network.active() && norst_value == 0)
         {
             writeNetwork(es, sim_step, schedule.getUnits(), schedule, sumState, inteHD, rstFile);
         }
@@ -603,7 +659,7 @@ namespace {
             }
 
             writeWellLGR(sim_step, grid, schedule, es.tracer(), wellSol,
-                         action_state, wtest_state, sumState, inteHD, rstFile, lgr_tag);
+                         action_state, wtest_state, sumState, inteHD, norst_value, rstFile, lgr_tag);
         }
         // Write aquifer data if the aquifer option for LGR.
         // At the moment LGR and Aquifers are not supported.
@@ -832,16 +888,22 @@ namespace {
                             int                           sim_step,
                             const bool                    ecl_compatible_rst,
                             const std::vector<int>&       inteHD,
+                            const int                     norst_value,
                             EclIO::OutputStream::Restart& rstFile,
                             WriteDorF                     writeDorF,
                             WriteInt                      writeInt,
                             WriteDouble                   writeDouble)
-    {        // Use writeDorF, writeInt, and writeDouble as provided.
-
-        writeUDQ(report_step, sim_step, schedule, udq_state, inteHD, rstFile);
-        writeExtraVectors(value, writeDouble);
-        if (! ecl_compatible_rst) {
-            writeExtendedSolutionVectors(value, writeDorF, writeInt);
+    {
+        // UDQ state, ACTIONX, and extra solution vectors
+        // are only valid for full restarts (NORST=0).
+        if (norst_value == 0)
+        {
+            // Use writeDorF, writeInt, and writeDouble as provided.
+            writeUDQ(report_step, sim_step, schedule, udq_state, inteHD, rstFile);
+            writeExtraVectors(value, writeDouble);
+            if (! ecl_compatible_rst) {
+                writeExtendedSolutionVectors(value, writeDorF, writeInt);
+            }
         }
     }
 
@@ -857,6 +919,7 @@ namespace {
                            EclIO::OutputStream::Restart& rstFile,
                            const bool                    is_lgr_grid = false)
     {
+        const int norst_value = schedule[sim_step].rst_config().norst.value_or(0);
         auto writeDorF = [&rstFile, write_double = write_double_arg]
             (const std::string& key, const std::vector<double>& data)
         {
@@ -889,10 +952,9 @@ namespace {
 
         if (!is_lgr_grid) {
             writeSolutionExtra(value, schedule, udq_state, report_step, sim_step,
-                ecl_compatible_rst, inteHD, rstFile,
+                ecl_compatible_rst, inteHD, norst_value, rstFile,
                 writeDorF, writeInt, writeDouble);
         }
-
     }
 
     //  Writes the solution for Global grids
@@ -1000,6 +1062,7 @@ namespace {
                                                 bool write_double, EclIO::OutputStream::Restart& rstFile, const std::vector<RestartValue>& values,
                                                 std::optional<Helpers::AggregateAquiferData>& aquiferData)
     {
+        const int norst_value = schedule[sim_step].rst_config().norst.value_or(0);
         const auto inteHD =
         writeHeader(report_step, sim_step, nextStepSize(values[0]),
                     seconds_elapsed, schedule, grid, es, rstFile);
@@ -1010,12 +1073,14 @@ namespace {
                         values[0].aquifer, aquiferData, rstFile);
         }
 
-        writeActionx(report_step, sim_step, schedule, action_state, sumState, rstFile);
-
+        if (norst_value == 0)
+        {
+            writeActionx(report_step, sim_step, schedule, action_state, sumState, rstFile);
+        }
         writeSolution(values[0], es, schedule, udqState, report_step, sim_step,
                     ecl_compatible_rst, write_double, inteHD, rstFile);
 
-        if (! ecl_compatible_rst) {
+        if (! ecl_compatible_rst && norst_value == 0) {
             writeExtraData(values[0].extra, rstFile);
         }
 
@@ -1097,6 +1162,7 @@ void save(EclIO::OutputStream::Restart&                 rstFile,
     const auto inteHD =
         writeHeader(report_step, sim_step, nextStepSize(value),
                     seconds_elapsed, schedule, grid, es, rstFile);
+    const int norst_value = schedule[sim_step].rst_config().norst.value_or(0);
 
     if (report_step > 0) {
         writeDynamicData(sim_step, grid, es, schedule, value.wells,
@@ -1104,12 +1170,15 @@ void save(EclIO::OutputStream::Restart&                 rstFile,
                          value.aquifer, aquiferData, rstFile);
     }
 
-    writeActionx(report_step, sim_step, schedule, action_state, sumState, rstFile);
+    if (norst_value == 0)
+    {
+        writeActionx(report_step, sim_step, schedule, action_state, sumState, rstFile);
+    }
 
     writeSolution(value, es, schedule, udqState, report_step, sim_step,
                   ecl_compatible_rst, write_double, inteHD, rstFile);
 
-    if (! ecl_compatible_rst) {
+    if (! ecl_compatible_rst && norst_value == 0) {
         writeExtraData(value.extra, rstFile);
     }
 

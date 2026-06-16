@@ -161,6 +161,26 @@ public:
     bool valid() const
     { return rst_file_.operator bool(); }
 
+    // Returns true if all header arrays are present (INTEHEAD, LOGIHEAD, DOUBHEAD)
+    bool hasHeaderArrays() const
+    {
+        return this->hasKeyword<int>("INTEHEAD")
+            && this->hasKeyword<bool>("LOGIHEAD")
+            && this->hasKeyword<double>("DOUBHEAD");
+    }
+
+    // Detect graphics-only restart (NORST >= 2).
+    // ZGRP is always written in full restarts (even for FIELD group).
+    // In case SWEL is omitted while IWEL is present, that is also a graphics-only indicator.
+    // Only valid if all header arrays are present.
+    bool isGraphicsOnly() const
+    {
+        // ZGRP absent in a valid file: graphics-only indicator.
+        if (!this->hasKeyword<std::string>("ZGRP")) { return true; }
+        // In case ZGRP is present but SWEL is omitted: graphics-only indicator.
+        return this->hasKeyword<int>("IWEL") && !this->hasKeyword<float>("SWEL");
+    }
+
 private:
     using RstFile = std::shared_ptr<ERst>;
 
@@ -279,6 +299,16 @@ const std::vector<double>& Opm::EclIO::RestartFileView::doubhead() const
 bool Opm::EclIO::RestartFileView::valid() const
 {
     return this->pImpl_->valid();
+}
+
+bool Opm::EclIO::RestartFileView::hasHeaderArrays() const
+{
+    return this->pImpl_->hasHeaderArrays();
+}
+
+bool Opm::EclIO::RestartFileView::isGraphicsOnly() const
+{
+    return this->pImpl_->isGraphicsOnly();
 }
 
 template <typename ElmType>

@@ -84,7 +84,7 @@ namespace {
                 "KRG",        // 13
                 "PORO",       // 14
                 "NOGRAD",     // 15
-                "NORST",      // 16 NORST - not supported
+                "NORST",      // 16 NORST - graphics-only restart file control
                 "SAVE",       // 17
                 "SFREQ",      // 18 SFREQ=?? - not supported
                 "ALLPROPS",   // 19
@@ -297,6 +297,13 @@ namespace {
         }
     }
 
+    // Extract NORST value from mnemonics (for graphics-only restart files)
+    std::optional<int>
+    extractNORST(std::map<std::string, int>& mnemonics)
+    {
+        return extract(mnemonics, "NORST");
+    }
+
 } // Anonymous namespace
 
 // ---------------------------------------------------------------------------
@@ -379,6 +386,7 @@ RSTConfig RSTConfig::serializationTestObject()
     rst_config.compositional = false;
     rst_config.keywords = {{"S1", 1}, {"S2", 2}};
     rst_config.solution_only_keywords = { "FIP" };
+    rst_config.norst = 2;
 
     return rst_config;
 }
@@ -392,6 +400,7 @@ bool RSTConfig::operator==(const RSTConfig& other) const
         && (this->save == other.save)
         && (this->compositional == other.compositional)
         && (this->solution_only_keywords == other.solution_only_keywords)
+        && (this->norst == other.norst)
         ;
 }
 
@@ -445,6 +454,11 @@ void RSTConfig::handleRPTRST(const DeckKeyword&  keyword,
 
     this->update_schedule(basic_freq);
 
+    // Extract NORST for graphics-only restart file control
+    auto mnemonics_copy = mnemonics;
+    const auto norst_value = extractNORST(mnemonics_copy);
+    update_optional(this->norst, norst_value);
+
     for (const auto& [kw, num] : mnemonics) {
         // Insert_or_assign() to overwrite existing 'kw' elements.
         this->keywords.insert_or_assign(kw, num);
@@ -459,6 +473,11 @@ void RSTConfig::handleRPTRSTSOLUTION(const DeckKeyword&  keyword,
 
     update_optional(this->basic, basic_freq.first);
     update_optional(this->freq, basic_freq.second);
+
+    // Extract NORST for graphics-only restart file control
+    auto mnemonics_copy = mnemonics;
+    const auto norst_value = extractNORST(mnemonics_copy);
+    update_optional(this->norst, norst_value);
 
     for (const auto& [kw, num] : mnemonics) {
         // Insert_or_assign() to overwrite existing 'kw' elements.

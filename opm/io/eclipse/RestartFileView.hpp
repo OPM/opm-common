@@ -62,6 +62,8 @@ public:
     const std::vector<double>& doubhead() const;
 
     bool valid() const;
+    bool hasHeaderArrays() const;
+    bool isGraphicsOnly() const;
 
 private:
     class Implementation;
