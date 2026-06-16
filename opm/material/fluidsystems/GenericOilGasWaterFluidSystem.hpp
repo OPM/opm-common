@@ -155,8 +155,12 @@ namespace Opm {
             using CompParm = typename FluidSystem::ComponentParam;
             for (std::size_t c = 0; c < num_comps; ++c) {
                 // we use m^3/kmol for the critic volume in the flash calculation, so we multiply 1.e3 for the critic volume
-                FluidSystem::addComponent(CompParm{names[c], molar_weight[c], critic_temp[c], critic_pressure[c],
-                                                   critic_volume[c] * 1.e3, acentric_factor[c]});
+                FluidSystem::addComponent(CompParm{names[c],
+                                                   static_cast<Scalar>(molar_weight[c]),
+                                                   static_cast<Scalar>(critic_temp[c]),
+                                                   static_cast<Scalar>(critic_pressure[c]),
+                                                   static_cast<Scalar>(critic_volume[c] * 1.e3),
+                                                   static_cast<Scalar>(acentric_factor[c])});
             }
 
             const auto& bic = comp_config.binaryInteractionCoefficient(0);
