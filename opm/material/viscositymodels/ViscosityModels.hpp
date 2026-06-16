@@ -212,7 +212,16 @@ public:
         }
         my0 /= sumxrM;
 
-        const auto LBC = defaultLBCCoefficients();
+        // using reference to avoid copying the coefficients for every evaluation.
+        const auto& LBC = []() -> decltype(auto) {
+            if constexpr (requires { FluidSystem::lbcCoefficients(); }) {
+                return FluidSystem::lbcCoefficients();
+            } else {
+                static constexpr std::array<Scalar, 5> default_lbc = defaultLBCCoefficients();
+                return (default_lbc);
+            }
+        }();
+
         LhsEval sumLBC = 0.0;
         for (int i = 0; i < 5; ++i) {
             sumLBC += Opm::pow(rho_r,i)*LBC[i];
