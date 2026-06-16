@@ -103,11 +103,12 @@ namespace {
         }
     }
 
-    template <typename Keyword>
-    void parsingKeywordValues(const Opm::DeckKeyword&        kw,
-                              std::vector<std::vector<double>>& target,
-                              const std::size_t              num_values,
-                              const std::optional<double>    default_value)
+    template <typename Keyword, typename Props>
+    void parsingKeywordValues(const Opm::DeckKeyword&     kw,
+                              std::vector<Props>&         regions,
+                              std::vector<double> Props::* prop,
+                              const std::size_t           num_values,
+                              const std::optional<double> default_value)
     {
         const auto& kw_name = kw.name();
 
@@ -130,7 +131,7 @@ namespace {
                 throw Opm::OpmInputError(msg, kw.location());
             }
 
-            std::ranges::copy(data, target[i].begin());
+            std::ranges::copy(data, (regions[i].*prop).begin());
         }
     }
 
@@ -153,56 +154,63 @@ namespace {
 
     // The following function is used to parse compositional related keywords:
     // MW, ACF, BIC, PCRIT, TCRIT, VCRIT and SSHIFT, and so on.
-    template <typename Keyword>
+    template <typename Keyword, typename Props>
     void processKeyword(const Opm::PROPSSection& props_section,
-                        std::vector<std::vector<double>>& target,
-                        const std::size_t num_eos_res,
+                        std::vector<Props>& regions,
+                        std::vector<double> Props::* prop,
                         const std::size_t num_values,
                         const std::optional<double> default_value = std::nullopt)
     {
         const auto* kw = getSinglePropsKeyword<Keyword>(props_section);
         if (!kw) {
             if (default_value.has_value()) {
-                target.assign(num_eos_res,std::vector(num_values, default_value.value()));
+                for (auto& region : regions) {
+                    (region.*prop).assign(num_values, default_value.value());
+                }
             }
 
             return;
         }
 
-        target.assign(num_eos_res,std::vector(num_values, default_value.value_or(0.0)));
+        for (auto& region : regions) {
+            (region.*prop).assign(num_values, default_value.value_or(0.0));
+        }
 
-        validateKeywordRegionCount(*kw, num_eos_res, "EOS regions",
+        validateKeywordRegionCount(*kw, regions.size(), "EOS regions",
                                    default_value.has_value());
 
-        parsingKeywordValues<Keyword>(*kw, target, num_values, default_value);
+        parsingKeywordValues<Keyword>(*kw, regions, prop, num_values, default_value);
     }
 
     // Parse one surface keyword. If absent, inherit per-region reservoir values.
     // If present, use only keyword data/defaults (no reservoir fallback).
-    template <typename Keyword>
+    template <typename Keyword, typename Props>
     void processSurfaceKeyword(const Opm::PROPSSection& props_section,
-                               std::vector<std::vector<double>>& target,
-                               const std::vector<std::vector<double>>& res_source,
-                               const std::size_t num_eos_sur,
-                               const std::size_t num_eos_res,
+                               std::vector<Props>& surface,
+                               const std::vector<Props>& reservoir,
+                               std::vector<double> Props::* prop,
                                const std::size_t num_values,
                                const std::optional<double> default_value = std::nullopt)
     {
         const auto* kw = getSinglePropsKeyword<Keyword>(props_section);
 
+        // The reservoir property is populated whenever the reservoir keyword
+        // is specified or an item default exists for it.
+        const bool res_specified = default_value.has_value() ||
+            (!reservoir.empty() && !(reservoir.front().*prop).empty());
+
         if (!kw) {
             // Missing surface keyword: inherit from reservoir regions.
-            if (!res_source.empty()) {
-                target.resize(num_eos_sur);
-                for (std::size_t i = 0; i < num_eos_sur; ++i) {
-                    const std::size_t res_idx = std::min(i, num_eos_res - 1);
-                    target[i] = res_source[res_idx];
+            if (res_specified) {
+                for (std::size_t i = 0; i < surface.size(); ++i) {
+                    const std::size_t res_idx = std::min(i, reservoir.size() - 1);
+                    surface[i].*prop = reservoir[res_idx].*prop;
                 }
             }
             return;
         }
 
-        if (res_source.empty()) {
+        if (!res_specified) {
             throw Opm::OpmInputError(
                 fmt::format("surface keyword {} is specified, but reservoir keyword {} is not specified",
                             kw->name(), reservoirKeywordName(kw->name())),
@@ -210,13 +218,14 @@ namespace {
         }
 
         // Specified surface keyword: require full region coverage if no item default exists.
-        validateKeywordRegionCount(*kw, num_eos_sur, "surface EOS regions",
+        validateKeywordRegionCount(*kw, surface.size(), "surface EOS regions",
                                    default_value.has_value());
 
-        target.assign(num_eos_sur,
-                      std::vector<double>(num_values, default_value.value_or(0.0)));
+        for (auto& region : surface) {
+            (region.*prop).assign(num_values, default_value.value_or(0.0));
+        }
 
-        parsingKeywordValues<Keyword>(*kw, target, num_values, default_value);
+        parsingKeywordValues<Keyword>(*kw, surface, prop, num_values, default_value);
     }
 
     // EOS-constant defaults (OMEGAA, OMEGAB) depend on the EOS type of a region.
@@ -237,15 +246,16 @@ namespace {
         throw std::invalid_argument("Unknown EOSType for OMEGAA/OMEGAB defaults");
     }
 
-    // Build the per-region OMEGAA/OMEGAB defaults for a set of EOS types.
-    void buildOmegaDefaults(const std::vector<Opm::CompositionalConfig::EOSType>& types,
+    // Build the per-region OMEGAA/OMEGAB defaults for a set of EOS regions.
+    template <typename Props>
+    void buildOmegaDefaults(const std::vector<Props>& regions,
                             std::vector<double>& omega_a_def,
                             std::vector<double>& omega_b_def)
     {
-        omega_a_def.resize(types.size());
-        omega_b_def.resize(types.size());
-        for (std::size_t r = 0; r < types.size(); ++r) {
-            const auto [a, b] = omegaDefaultsForEosType(types[r]);
+        omega_a_def.resize(regions.size());
+        omega_b_def.resize(regions.size());
+        for (std::size_t r = 0; r < regions.size(); ++r) {
+            const auto [a, b] = omegaDefaultsForEosType(regions[r].eos_type);
             omega_a_def[r] = a;
             omega_b_def[r] = b;
         }
@@ -253,9 +263,10 @@ namespace {
 
     // OMEGAA/OMEGAB use the keyword item default (-1) as a sentinel: only strictly
     // positive deck values override the EOS-type-dependent per-region default.
-    template <typename Keyword>
+    template <typename Keyword, typename Props>
     void applyPositiveOmegaOverride(const Opm::DeckKeyword& kw,
-                                    std::vector<std::vector<double>>& target,
+                                    std::vector<Props>& regions,
+                                    std::vector<double> Props::* prop,
                                     const std::size_t num_values)
     {
         for (std::size_t i = 0; i < kw.size(); ++i) {
@@ -269,7 +280,7 @@ namespace {
             }
             for (std::size_t c = 0; c < data.size(); ++c) {
                 if (data[c] > 0.0) {
-                    target[i][c] = data[c];
+                    (regions[i].*prop)[c] = data[c];
                 }
             }
         }
@@ -278,16 +289,15 @@ namespace {
     // Parse a reservoir EOS-constant keyword (OMEGAA/OMEGAB). The target is
     // pre-populated with the per-region defaults so it always holds valid data,
     // even when the keyword is absent. Only positive deck values override.
-    template <typename Keyword>
+    template <typename Keyword, typename Props>
     void processOmegaKeyword(const Opm::PROPSSection& props_section,
-                             std::vector<std::vector<double>>& target,
+                             std::vector<Props>& regions,
+                             std::vector<double> Props::* prop,
                              const std::vector<double>& region_defaults,
-                             const std::size_t num_eos_res,
                              const std::size_t num_values)
     {
-        target.resize(num_eos_res);
-        for (std::size_t r = 0; r < num_eos_res; ++r) {
-            target[r].assign(num_values, region_defaults[r]);
+        for (std::size_t r = 0; r < regions.size(); ++r) {
+            (regions[r].*prop).assign(num_values, region_defaults[r]);
         }
 
         const auto* kw = getSinglePropsKeyword<Keyword>(props_section);
@@ -297,47 +307,42 @@ namespace {
 
         // OMEGAA/OMEGAB always carry an item default, so fewer than num_eos_res
         // regions is allowed; the remaining regions keep their defaults.
-        validateKeywordRegionCount(*kw, num_eos_res, "EOS regions",
+        validateKeywordRegionCount(*kw, regions.size(), "EOS regions",
                                    /*has_default_value=*/true);
 
-        applyPositiveOmegaOverride<Keyword>(*kw, target, num_values);
+        applyPositiveOmegaOverride<Keyword>(*kw, regions, prop, num_values);
     }
 
     // Parse a surface EOS-constant keyword (OMEGAAS/OMEGABS). If absent, inherit
     // from the reservoir omega regions; if present, pre-populate with the surface
     // EOS-type defaults and let only positive deck values override.
-    template <typename Keyword>
+    template <typename Keyword, typename Props>
     void processOmegaSurfaceKeyword(const Opm::PROPSSection& props_section,
-                                    std::vector<std::vector<double>>& target,
-                                    const std::vector<std::vector<double>>& res_source,
+                                    std::vector<Props>& surface,
+                                    const std::vector<Props>& reservoir,
+                                    std::vector<double> Props::* prop,
                                     const std::vector<double>& region_defaults_surf,
-                                    const std::size_t num_eos_sur,
-                                    const std::size_t num_eos_res,
                                     const std::size_t num_values)
     {
         const auto* kw = getSinglePropsKeyword<Keyword>(props_section);
 
         if (!kw) {
             // Missing surface keyword: inherit from reservoir omega regions.
-            if (!res_source.empty()) {
-                target.resize(num_eos_sur);
-                for (std::size_t i = 0; i < num_eos_sur; ++i) {
-                    const std::size_t res_idx = std::min(i, num_eos_res - 1);
-                    target[i] = res_source[res_idx];
-                }
+            for (std::size_t i = 0; i < surface.size(); ++i) {
+                const std::size_t res_idx = std::min(i, reservoir.size() - 1);
+                surface[i].*prop = reservoir[res_idx].*prop;
             }
             return;
         }
 
-        target.resize(num_eos_sur);
-        for (std::size_t r = 0; r < num_eos_sur; ++r) {
-            target[r].assign(num_values, region_defaults_surf[r]);
+        for (std::size_t r = 0; r < surface.size(); ++r) {
+            (surface[r].*prop).assign(num_values, region_defaults_surf[r]);
         }
 
-        validateKeywordRegionCount(*kw, num_eos_sur, "surface EOS regions",
+        validateKeywordRegionCount(*kw, surface.size(), "surface EOS regions",
                                    /*has_default_value=*/true);
 
-        applyPositiveOmegaOverride<Keyword>(*kw, target, num_values);
+        applyPositiveOmegaOverride<Keyword>(*kw, surface, prop, num_values);
     }
 
     // Resolve EOS/EOSS from PROPS or RUNSPEC (exclusive), with at most one instance.
@@ -375,19 +380,18 @@ namespace {
 
     // Parse EOS/EOSS records into pre-sized output.
     // Defaulted EQUATION items are skipped, keeping the caller-provided default.
-    template <typename Keyword>
-    void parseEosRecords(const Opm::DeckKeyword&                         kw,
-                         std::vector<Opm::CompositionalConfig::EOSType>& out,
-                         const std::size_t                               max_regions,
-                         const std::string_view                          region_description)
+    template <typename Keyword, typename Props>
+    void parseEosRecords(const Opm::DeckKeyword& kw,
+                         std::vector<Props>&     regions,
+                         const std::string_view  region_description)
     {
         const auto& kw_name = kw.name();
 
-        if (kw.size() > max_regions) {
+        if (kw.size() > regions.size()) {
             throw Opm::OpmInputError(
                 fmt::format("{} equations of state are specified in keyword {}, "
                             "which is more than the number of {} regions of {}.",
-                            kw.size(), kw_name, region_description, max_regions),
+                            kw.size(), kw_name, region_description, regions.size()),
                 kw.location());
         }
 
@@ -396,7 +400,8 @@ namespace {
             if (item.defaultApplied(0)) {
                 continue;
             }
-            out[i] = Opm::CompositionalConfig::eosTypeFromString(item.getTrimmedString(0));
+            regions[i].eos_type =
+                Opm::CompositionalConfig::eosTypeFromString(item.getTrimmedString(0));
         }
     }
 
@@ -522,9 +527,13 @@ CompositionalConfig::CompositionalConfig(const Deck& deck, const Runspec& runspe
 
     const Tabdims tabdims{deck};
     const std::size_t num_eos_res = tabdims.getNumEosRes();
+    const std::size_t num_eos_sur = tabdims.getNumEosSur();
+
+    // The EOS type of each region defaults to PR.
+    this->reservoir_props.resize(num_eos_res);
+    this->surface_props.resize(num_eos_sur);
 
     // EOS may live in RUNSPEC or PROPS; parse it here.
-    eos_types.resize(num_eos_res, EOSType::PR);
     {
         const RUNSPECSection runspec_section{deck};
         if (const auto* kw = resolveEosKeyword<ParserKeywords::EOS>(
@@ -532,30 +541,28 @@ CompositionalConfig::CompositionalConfig(const Deck& deck, const Runspec& runspe
             kw != nullptr)
         {
             parseEosRecords<ParserKeywords::EOS>(
-                *kw, eos_types, num_eos_res,
+                *kw, this->reservoir_props,
                 "reservoir-condition equation of state");
         }
     }
 
     // EOSS may be in RUNSPEC or PROPS.
     // If absent, surface EOS follows reservoir EOS per region (clipped by last reservoir region).
-    const std::size_t num_eos_sur = tabdims.getNumEosSur();
     {
         const RUNSPECSection runspec_section{deck};
         if (const auto* kw = resolveEosKeyword<ParserKeywords::EOSS>(
                 props_section, runspec_section);
             kw != nullptr)
         {
-            eos_types_surf.assign(num_eos_sur, EOSType::PR);
             parseEosRecords<ParserKeywords::EOSS>(
-                *kw, eos_types_surf, num_eos_sur,
+                *kw, this->surface_props,
                 "surface-condition equation of state");
         }
         else {
             // No EOSS: inherit surface EOS from reservoir EOS.
-            eos_types_surf.resize(num_eos_sur);
             for (std::size_t i = 0; i < num_eos_sur; ++i) {
-                eos_types_surf[i] = eos_types[std::min(i, num_eos_res - 1)];
+                this->surface_props[i].eos_type =
+                    this->reservoir_props[std::min(i, num_eos_res - 1)].eos_type;
             }
         }
     }
@@ -568,24 +575,25 @@ CompositionalConfig::CompositionalConfig(const Deck& deck, const Runspec& runspe
                                 keywords.begin()->location());
         }
 
-        auto promote = [](std::vector<EOSType>& types) {
+        auto promote = [](std::vector<EOSProps>& regions) {
             std::string unaffected;
-            for (std::size_t i = 0; i < types.size(); ++i) {
-                if (types[i] == EOSType::PR) {
-                    types[i] = EOSType::PRCORR;
-                } else if (types[i] != EOSType::PRCORR) {
+            for (std::size_t i = 0; i < regions.size(); ++i) {
+                auto& type = regions[i].eos_type;
+                if (type == EOSType::PR) {
+                    type = EOSType::PRCORR;
+                } else if (type != EOSType::PRCORR) {
                     if (!unaffected.empty()) {
                         unaffected += ", ";
                     }
                     fmt::format_to(std::back_inserter(unaffected),
-                                   "{} ({})", i + 1, eosTypeToString(types[i]));
+                                   "{} ({})", i + 1, eosTypeToString(type));
                 }
             }
             return unaffected;
         };
 
-        const std::string unaffected_res = promote(eos_types);
-        const std::string unaffected_surf = promote(eos_types_surf);
+        const std::string unaffected_res = promote(this->reservoir_props);
+        const std::string unaffected_surf = promote(this->surface_props);
 
         const auto& location = keywords.back().location();
         if (!unaffected_res.empty()) {
@@ -602,73 +610,76 @@ CompositionalConfig::CompositionalConfig(const Deck& deck, const Runspec& runspe
         }
     }
 
-    processKeyword<ParserKeywords::MW>(props_section, this->molecular_weights,
-                                       num_eos_res, this->num_comps);
-    processKeyword<ParserKeywords::ACF>(props_section, this->acentric_factors,
-                                        num_eos_res, this->num_comps);
-    processKeyword<ParserKeywords::PCRIT>(props_section, this->critical_pressure,
-                                          num_eos_res, this->num_comps);
-    processKeyword<ParserKeywords::TCRIT>(props_section, this->critical_temperature,
-                                          num_eos_res, this->num_comps);
-    processKeyword<ParserKeywords::TBOIL>(props_section, this->boiling_temperature,
-                                          num_eos_res, this->num_comps);
-    processKeyword<ParserKeywords::VCRIT>(props_section, this->critical_volume,
-                                          num_eos_res, this->num_comps);
-    processKeyword<ParserKeywords::SSHIFT>(props_section, this->volume_shifts,
-                                           num_eos_res, this->num_comps, 0.);
-    processKeyword<ParserKeywords::ZCRIT>(props_section, this->critical_z_factor,
-                                          num_eos_res, this->num_comps);
+    processKeyword<ParserKeywords::MW>(props_section, this->reservoir_props,
+                                       &EOSProps::molecular_weights, this->num_comps);
+    processKeyword<ParserKeywords::ACF>(props_section, this->reservoir_props,
+                                        &EOSProps::acentric_factors, this->num_comps);
+    processKeyword<ParserKeywords::PCRIT>(props_section, this->reservoir_props,
+                                          &EOSProps::critical_pressure, this->num_comps);
+    processKeyword<ParserKeywords::TCRIT>(props_section, this->reservoir_props,
+                                          &EOSProps::critical_temperature, this->num_comps);
+    processKeyword<ParserKeywords::TBOIL>(props_section, this->reservoir_props,
+                                          &EOSProps::boiling_temperature, this->num_comps);
+    processKeyword<ParserKeywords::VCRIT>(props_section, this->reservoir_props,
+                                          &EOSProps::critical_volume, this->num_comps);
+    processKeyword<ParserKeywords::SSHIFT>(props_section, this->reservoir_props,
+                                           &EOSProps::volume_shifts, this->num_comps, 0.);
+    processKeyword<ParserKeywords::ZCRIT>(props_section, this->reservoir_props,
+                                          &EOSProps::critical_z_factor, this->num_comps);
 
     const std::size_t bic_size = this->num_comps * (this->num_comps - 1) / 2;
-    processKeyword<ParserKeywords::BIC>(props_section, this->binary_interaction_coefficient,
-                                        num_eos_res, bic_size, 0.);
+    processKeyword<ParserKeywords::BIC>(props_section, this->reservoir_props,
+                                        &EOSProps::binary_interaction_coefficient,
+                                        bic_size, 0.);
 
     // Surface keywords are sized by NMEOSS and handled independently per keyword.
-    processSurfaceKeyword<ParserKeywords::MWS>(props_section, this->molecular_weights_surf,
-                                               this->molecular_weights,
-                                               num_eos_sur, num_eos_res, this->num_comps);
-    processSurfaceKeyword<ParserKeywords::ACFS>(props_section, this->acentric_factors_surf,
-                                                this->acentric_factors,
-                                                num_eos_sur, num_eos_res, this->num_comps);
-    processSurfaceKeyword<ParserKeywords::PCRITS>(props_section, this->critical_pressure_surf,
-                                                  this->critical_pressure,
-                                                  num_eos_sur, num_eos_res, this->num_comps);
-    processSurfaceKeyword<ParserKeywords::TCRITS>(props_section, this->critical_temperature_surf,
-                                                  this->critical_temperature,
-                                                  num_eos_sur, num_eos_res, this->num_comps);
-    processSurfaceKeyword<ParserKeywords::TBOILS>(props_section, this->boiling_temperature_surf,
-                                                  this->boiling_temperature,
-                                                  num_eos_sur, num_eos_res, this->num_comps);
-    processSurfaceKeyword<ParserKeywords::VCRITS>(props_section, this->critical_volume_surf,
-                                                  this->critical_volume,
-                                                  num_eos_sur, num_eos_res, this->num_comps);
-    processSurfaceKeyword<ParserKeywords::ZCRITS>(props_section, this->critical_z_factor_surf,
-                                                  this->critical_z_factor,
-                                                  num_eos_sur, num_eos_res, this->num_comps);
-    processSurfaceKeyword<ParserKeywords::SSHIFTS>(props_section, this->volume_shifts_surf,
-                                                   this->volume_shifts,
-                                                   num_eos_sur, num_eos_res, this->num_comps, 0.);
-    processSurfaceKeyword<ParserKeywords::BICS>(props_section, this->binary_interaction_coefficient_surf,
-                                                this->binary_interaction_coefficient,
-                                                num_eos_sur, num_eos_res, bic_size, 0.);
+    processSurfaceKeyword<ParserKeywords::MWS>(props_section, this->surface_props,
+                                               this->reservoir_props,
+                                               &EOSProps::molecular_weights, this->num_comps);
+    processSurfaceKeyword<ParserKeywords::ACFS>(props_section, this->surface_props,
+                                                this->reservoir_props,
+                                                &EOSProps::acentric_factors, this->num_comps);
+    processSurfaceKeyword<ParserKeywords::PCRITS>(props_section, this->surface_props,
+                                                  this->reservoir_props,
+                                                  &EOSProps::critical_pressure, this->num_comps);
+    processSurfaceKeyword<ParserKeywords::TCRITS>(props_section, this->surface_props,
+                                                  this->reservoir_props,
+                                                  &EOSProps::critical_temperature, this->num_comps);
+    processSurfaceKeyword<ParserKeywords::TBOILS>(props_section, this->surface_props,
+                                                  this->reservoir_props,
+                                                  &EOSProps::boiling_temperature, this->num_comps);
+    processSurfaceKeyword<ParserKeywords::VCRITS>(props_section, this->surface_props,
+                                                  this->reservoir_props,
+                                                  &EOSProps::critical_volume, this->num_comps);
+    processSurfaceKeyword<ParserKeywords::ZCRITS>(props_section, this->surface_props,
+                                                  this->reservoir_props,
+                                                  &EOSProps::critical_z_factor, this->num_comps);
+    processSurfaceKeyword<ParserKeywords::SSHIFTS>(props_section, this->surface_props,
+                                                   this->reservoir_props,
+                                                   &EOSProps::volume_shifts, this->num_comps, 0.);
+    processSurfaceKeyword<ParserKeywords::BICS>(props_section, this->surface_props,
+                                                this->reservoir_props,
+                                                &EOSProps::binary_interaction_coefficient, bic_size, 0.);
 
     // OMEGAA/OMEGAB hold EOS-constant multipliers whose defaults depend on the
     // EOS type of each region; only positive deck values override those defaults.
     std::vector<double> omega_a_defaults, omega_b_defaults;
-    buildOmegaDefaults(this->eos_types, omega_a_defaults, omega_b_defaults);
-    processOmegaKeyword<ParserKeywords::OMEGAA>(props_section, this->omega_a,
-                                                omega_a_defaults, num_eos_res, this->num_comps);
-    processOmegaKeyword<ParserKeywords::OMEGAB>(props_section, this->omega_b,
-                                                omega_b_defaults, num_eos_res, this->num_comps);
+    buildOmegaDefaults(this->reservoir_props, omega_a_defaults, omega_b_defaults);
+    processOmegaKeyword<ParserKeywords::OMEGAA>(props_section, this->reservoir_props,
+                                                &EOSProps::omega_a, omega_a_defaults,
+                                                this->num_comps);
+    processOmegaKeyword<ParserKeywords::OMEGAB>(props_section, this->reservoir_props,
+                                                &EOSProps::omega_b, omega_b_defaults,
+                                                this->num_comps);
 
     std::vector<double> omega_a_defaults_surf, omega_b_defaults_surf;
-    buildOmegaDefaults(this->eos_types_surf, omega_a_defaults_surf, omega_b_defaults_surf);
-    processOmegaSurfaceKeyword<ParserKeywords::OMEGAAS>(props_section, this->omega_a_surf,
-                                                        this->omega_a, omega_a_defaults_surf,
-                                                        num_eos_sur, num_eos_res, this->num_comps);
-    processOmegaSurfaceKeyword<ParserKeywords::OMEGABS>(props_section, this->omega_b_surf,
-                                                        this->omega_b, omega_b_defaults_surf,
-                                                        num_eos_sur, num_eos_res, this->num_comps);
+    buildOmegaDefaults(this->surface_props, omega_a_defaults_surf, omega_b_defaults_surf);
+    processOmegaSurfaceKeyword<ParserKeywords::OMEGAAS>(props_section, this->surface_props,
+                                                        this->reservoir_props, &EOSProps::omega_a,
+                                                        omega_a_defaults_surf, this->num_comps);
+    processOmegaSurfaceKeyword<ParserKeywords::OMEGABS>(props_section, this->surface_props,
+                                                        this->reservoir_props, &EOSProps::omega_b,
+                                                        omega_b_defaults_surf, this->num_comps);
 
     // LBCCOEF holds a single set of dimensionless coefficients for the
     // Lorentz-Bray-Clark viscosity correlation; defaulted items keep the
@@ -688,12 +699,8 @@ CompositionalConfig::CompositionalConfig(const Deck& deck, const Runspec& runspe
     }
 }
 
-bool CompositionalConfig::operator==(const CompositionalConfig& other) const {
-    return this->num_comps == other.num_comps &&
-           this->standard_temperature == other.standard_temperature &&
-           this->standard_pressure == other.standard_pressure &&
-           this->comp_names ==other.comp_names &&
-           this->eos_types == other.eos_types &&
+bool CompositionalConfig::EOSProps::operator==(const EOSProps& other) const {
+    return this->eos_type == other.eos_type &&
            this->molecular_weights == other.molecular_weights &&
            this->acentric_factors == other.acentric_factors &&
            this->critical_pressure == other.critical_pressure &&
@@ -704,20 +711,17 @@ bool CompositionalConfig::operator==(const CompositionalConfig& other) const {
            this->critical_z_factor == other.critical_z_factor &&
            this->binary_interaction_coefficient == other.binary_interaction_coefficient &&
            this->omega_a == other.omega_a &&
-           this->omega_b == other.omega_b &&
-           this->lbc_coefficients == other.lbc_coefficients &&
-           this->eos_types_surf == other.eos_types_surf &&
-           this->molecular_weights_surf == other.molecular_weights_surf &&
-           this->acentric_factors_surf == other.acentric_factors_surf &&
-           this->critical_pressure_surf == other.critical_pressure_surf &&
-           this->critical_temperature_surf == other.critical_temperature_surf &&
-           this->boiling_temperature_surf == other.boiling_temperature_surf &&
-           this->critical_volume_surf == other.critical_volume_surf &&
-           this->critical_z_factor_surf == other.critical_z_factor_surf &&
-           this->volume_shifts_surf == other.volume_shifts_surf &&
-           this->binary_interaction_coefficient_surf == other.binary_interaction_coefficient_surf &&
-           this->omega_a_surf == other.omega_a_surf &&
-           this->omega_b_surf == other.omega_b_surf;
+           this->omega_b == other.omega_b;
+}
+
+bool CompositionalConfig::operator==(const CompositionalConfig& other) const {
+    return this->num_comps == other.num_comps &&
+           this->standard_temperature == other.standard_temperature &&
+           this->standard_pressure == other.standard_pressure &&
+           this->comp_names == other.comp_names &&
+           this->reservoir_props == other.reservoir_props &&
+           this->surface_props == other.surface_props &&
+           this->lbc_coefficients == other.lbc_coefficients;
 }
 
 
@@ -728,31 +732,39 @@ CompositionalConfig CompositionalConfig::serializationTestObject() {
     result.standard_temperature = 5.;
     result.standard_pressure = 1e5;
     result.comp_names = {"C1", "C10"};
-    result.eos_types = {2, EOSType::SRK};
-    result.molecular_weights = {2, std::vector<double>(result.num_comps, 16.)};
-    result.acentric_factors = {2,  std::vector<double>(result.num_comps, 1.)};
-    result.critical_pressure = {2, std::vector<double>(result.num_comps, 2.)};
-    result.critical_temperature = {2, std::vector<double>(result.num_comps, 3.)};
-    result.boiling_temperature = {2, std::vector<double>(result.num_comps, 3.5)};
-    result.critical_volume = {2, std::vector<double>(result.num_comps, 5.)};
-    result.volume_shifts = {2, std::vector<double>(result.num_comps, 0.1)};
-    result.critical_z_factor = {2, std::vector<double>(result.num_comps, 0.29)};
-    result.binary_interaction_coefficient = {2, std::vector<double>(result.num_comps * (result.num_comps - 1) / 2, 6.)};
-    result.omega_a = {2, std::vector<double>(result.num_comps, 0.457235529)};
-    result.omega_b = {2, std::vector<double>(result.num_comps, 0.077796074)};
     result.lbc_coefficients = {1.234, -17.29, 3.1415, -2.718, 16.18};
-    result.eos_types_surf = {3, EOSType::PR};
-    result.molecular_weights_surf = {3, std::vector<double>(result.num_comps, 17.)};
-    result.acentric_factors_surf = {3, std::vector<double>(result.num_comps, 1.1)};
-    result.critical_pressure_surf = {3, std::vector<double>(result.num_comps, 2.1)};
-    result.critical_temperature_surf = {3, std::vector<double>(result.num_comps, 3.1)};
-    result.boiling_temperature_surf = {3, std::vector<double>(result.num_comps, 3.6)};
-    result.critical_volume_surf = {3, std::vector<double>(result.num_comps, 5.1)};
-    result.critical_z_factor_surf = {3, std::vector<double>(result.num_comps, 0.3)};
-    result.volume_shifts_surf = {3, std::vector<double>(result.num_comps, 0.11)};
-    result.binary_interaction_coefficient_surf = {3, std::vector<double>(result.num_comps * (result.num_comps - 1) / 2, 6.1)};
-    result.omega_a_surf = {3, std::vector<double>(result.num_comps, 0.4274802)};
-    result.omega_b_surf = {3, std::vector<double>(result.num_comps, 0.08664035)};
+
+    const std::size_t bic_size = result.num_comps * (result.num_comps - 1) / 2;
+
+    EOSProps res_props;
+    res_props.eos_type = EOSType::SRK;
+    res_props.molecular_weights = std::vector<double>(result.num_comps, 16.);
+    res_props.acentric_factors = std::vector<double>(result.num_comps, 1.);
+    res_props.critical_pressure = std::vector<double>(result.num_comps, 2.);
+    res_props.critical_temperature = std::vector<double>(result.num_comps, 3.);
+    res_props.boiling_temperature = std::vector<double>(result.num_comps, 3.5);
+    res_props.critical_volume = std::vector<double>(result.num_comps, 5.);
+    res_props.volume_shifts = std::vector<double>(result.num_comps, 0.1);
+    res_props.critical_z_factor = std::vector<double>(result.num_comps, 0.29);
+    res_props.binary_interaction_coefficient = std::vector<double>(bic_size, 6.);
+    res_props.omega_a = std::vector<double>(result.num_comps, 0.457235529);
+    res_props.omega_b = std::vector<double>(result.num_comps, 0.077796074);
+    result.reservoir_props.assign(2, res_props);
+
+    EOSProps surf_props;
+    surf_props.eos_type = EOSType::PR;
+    surf_props.molecular_weights = std::vector<double>(result.num_comps, 17.);
+    surf_props.acentric_factors = std::vector<double>(result.num_comps, 1.1);
+    surf_props.critical_pressure = std::vector<double>(result.num_comps, 2.1);
+    surf_props.critical_temperature = std::vector<double>(result.num_comps, 3.1);
+    surf_props.boiling_temperature = std::vector<double>(result.num_comps, 3.6);
+    surf_props.critical_volume = std::vector<double>(result.num_comps, 5.1);
+    surf_props.volume_shifts = std::vector<double>(result.num_comps, 0.11);
+    surf_props.critical_z_factor = std::vector<double>(result.num_comps, 0.3);
+    surf_props.binary_interaction_coefficient = std::vector<double>(bic_size, 6.1);
+    surf_props.omega_a = std::vector<double>(result.num_comps, 0.4274802);
+    surf_props.omega_b = std::vector<double>(result.num_comps, 0.08664035);
+    result.surface_props.assign(3, surf_props);
 
     return result;
 }
@@ -798,52 +810,61 @@ const std::vector<std::string>& CompositionalConfig::compName() const {
     return this->comp_names;
 }
 
+const CompositionalConfig::EOSProps& CompositionalConfig::eosProps(std::size_t eos_region) const {
+    return this->reservoir_props[eos_region];
+}
+
+const CompositionalConfig::EOSProps&
+CompositionalConfig::eosPropsSurf(std::size_t eos_region) const {
+    return this->surface_props[eos_region];
+}
+
 CompositionalConfig::EOSType CompositionalConfig::eosType(std::size_t eos_region) const {
-    return this->eos_types[eos_region];
+    return this->reservoir_props[eos_region].eos_type;
 }
 
 const std::vector<double>& CompositionalConfig::molecularWeights(std::size_t eos_region) const {
-    return this->molecular_weights[eos_region];
+    return this->reservoir_props[eos_region].molecular_weights;
 }
 
 const std::vector<double>& CompositionalConfig::acentricFactors(std::size_t eos_region) const {
-    return this->acentric_factors[eos_region];
+    return this->reservoir_props[eos_region].acentric_factors;
 }
 
 const std::vector<double>& CompositionalConfig::criticalPressure(std::size_t eos_region) const {
-    return this->critical_pressure[eos_region];
+    return this->reservoir_props[eos_region].critical_pressure;
 }
 
 const std::vector<double>& CompositionalConfig::criticalTemperature(std::size_t eos_region) const {
-    return this->critical_temperature[eos_region];
+    return this->reservoir_props[eos_region].critical_temperature;
 }
 
 const std::vector<double>& CompositionalConfig::boilingTemperature(std::size_t eos_region) const {
-    return this->boiling_temperature[eos_region];
+    return this->reservoir_props[eos_region].boiling_temperature;
 }
 
 const std::vector<double>& CompositionalConfig::criticalVolume(std::size_t eos_region) const {
-    return this->critical_volume[eos_region];
+    return this->reservoir_props[eos_region].critical_volume;
 }
 
 const std::vector<double>& CompositionalConfig::volumeShifts(std::size_t eos_region) const {
-    return this->volume_shifts[eos_region];
+    return this->reservoir_props[eos_region].volume_shifts;
 }
 
 const std::vector<double>& CompositionalConfig::criticalZFactor(std::size_t eos_region) const {
-    return this->critical_z_factor[eos_region];
+    return this->reservoir_props[eos_region].critical_z_factor;
 }
 
 const std::vector<double>& CompositionalConfig::binaryInteractionCoefficient(std::size_t eos_region) const {
-    return this->binary_interaction_coefficient[eos_region];
+    return this->reservoir_props[eos_region].binary_interaction_coefficient;
 }
 
 const std::vector<double>& CompositionalConfig::omegaA(std::size_t eos_region) const {
-    return this->omega_a[eos_region];
+    return this->reservoir_props[eos_region].omega_a;
 }
 
 const std::vector<double>& CompositionalConfig::omegaB(std::size_t eos_region) const {
-    return this->omega_b[eos_region];
+    return this->reservoir_props[eos_region].omega_b;
 }
 
 const std::array<double, 5>& CompositionalConfig::lbcCoefficients() const {
@@ -851,51 +872,51 @@ const std::array<double, 5>& CompositionalConfig::lbcCoefficients() const {
 }
 
 CompositionalConfig::EOSType CompositionalConfig::eosTypeSurf(std::size_t eos_region) const {
-    return this->eos_types_surf[eos_region];
+    return this->surface_props[eos_region].eos_type;
 }
 
 const std::vector<double>& CompositionalConfig::molecularWeightsSurf(std::size_t eos_region) const {
-    return this->molecular_weights_surf[eos_region];
+    return this->surface_props[eos_region].molecular_weights;
 }
 
 const std::vector<double>& CompositionalConfig::acentricFactorsSurf(std::size_t eos_region) const {
-    return this->acentric_factors_surf[eos_region];
+    return this->surface_props[eos_region].acentric_factors;
 }
 
 const std::vector<double>& CompositionalConfig::criticalPressureSurf(std::size_t eos_region) const {
-    return this->critical_pressure_surf[eos_region];
+    return this->surface_props[eos_region].critical_pressure;
 }
 
 const std::vector<double>& CompositionalConfig::criticalTemperatureSurf(std::size_t eos_region) const {
-    return this->critical_temperature_surf[eos_region];
+    return this->surface_props[eos_region].critical_temperature;
 }
 
 const std::vector<double>& CompositionalConfig::boilingTemperatureSurf(std::size_t eos_region) const {
-    return this->boiling_temperature_surf[eos_region];
+    return this->surface_props[eos_region].boiling_temperature;
 }
 
 const std::vector<double>& CompositionalConfig::criticalVolumeSurf(std::size_t eos_region) const {
-    return this->critical_volume_surf[eos_region];
+    return this->surface_props[eos_region].critical_volume;
 }
 
 const std::vector<double>& CompositionalConfig::criticalZFactorSurf(std::size_t eos_region) const {
-    return this->critical_z_factor_surf[eos_region];
+    return this->surface_props[eos_region].critical_z_factor;
 }
 
 const std::vector<double>& CompositionalConfig::volumeShiftsSurf(std::size_t eos_region) const {
-    return this->volume_shifts_surf[eos_region];
+    return this->surface_props[eos_region].volume_shifts;
 }
 
 const std::vector<double>& CompositionalConfig::binaryInteractionCoefficientSurf(std::size_t eos_region) const {
-    return this->binary_interaction_coefficient_surf[eos_region];
+    return this->surface_props[eos_region].binary_interaction_coefficient;
 }
 
 const std::vector<double>& CompositionalConfig::omegaASurf(std::size_t eos_region) const {
-    return this->omega_a_surf[eos_region];
+    return this->surface_props[eos_region].omega_a;
 }
 
 const std::vector<double>& CompositionalConfig::omegaBSurf(std::size_t eos_region) const {
-    return this->omega_b_surf[eos_region];
+    return this->surface_props[eos_region].omega_b;
 }
 
 std::size_t CompositionalConfig::numComps() const {
