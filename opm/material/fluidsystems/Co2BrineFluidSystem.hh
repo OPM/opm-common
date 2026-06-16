@@ -33,7 +33,7 @@
 #include <opm/material/components/Brine.hpp>
 
 #include <opm/material/fluidsystems/PTFlashParameterCache.hpp>
-#include <opm/material/viscositymodels/LBC.hpp>
+#include <opm/material/viscositymodels/ViscosityModels.hpp>
 
 #include <string_view>
 

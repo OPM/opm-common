@@ -37,7 +37,7 @@
 
 // TODO: this is something else need to check
 #include <opm/material/fluidsystems/PTFlashParameterCache.hpp>
-#include <opm/material/viscositymodels/LBC.hpp>
+#include <opm/material/viscositymodels/ViscosityModels.hpp>
 
 namespace Opm {
 /*!
