@@ -1663,7 +1663,8 @@ bool Well::handleCECON(const DeckRecord&      record,
 
     if (!matched_any) {
         OpmLog::warning(OpmInputError::format(
-            "Keyword CECON did not match any connection in well " + this->name(),
+            fmt::format("Keyword {{keyword}} did not match any connection in well {}\n"
+                        "In {{file}} line {{line}}", this->name()),
             location));
     }
 
