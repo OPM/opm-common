@@ -104,6 +104,7 @@ namespace Opm
             serializer(m_offset);
             serializer(m_end_offset);
             serializer(name_grid);
+            serializer(parent_name_grid);
         }
 
     private:
