@@ -48,6 +48,9 @@
 #include <opm/common/utility/OpmInputError.hpp>
 #include <opm/common/utility/shmatch.hpp>
 
+#include <opm/input/eclipse/Parser/ErrorGuard.hpp>
+#include <opm/input/eclipse/Parser/ParseContext.hpp>
+
 #include <opm/input/eclipse/Parser/ParserKeywords/C.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/S.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/W.hpp>
@@ -1626,7 +1629,9 @@ bool Well::handleCSKIN(const DeckRecord&      record,
 }
 
 bool Well::handleCECON(const DeckRecord&      record,
-                       const KeywordLocation& location)
+                       const KeywordLocation& location,
+                       const ParseContext&    parseContext,
+                       ErrorGuard&            errors)
 {
     using Kw = ParserKeywords::CECON;
 
@@ -1661,14 +1666,20 @@ bool Well::handleCECON(const DeckRecord&      record,
         new_connections->add(connection_copy);
     }
 
+    // Diagnose a connection set that did not select anything.
     if (!matched_any) {
-        OpmLog::warning(OpmInputError::format(
-            fmt::format("Keyword {{keyword}} did not match any connection in well {}\n"
+        parseContext.handleError(
+            ParseContext::SCHEDULE_CECON_NO_MATCH,
+            fmt::format("Keyword {{keyword}} did not match any connection "
+                        "in well {}\n"
                         "In {{file}} line {{line}}", this->name()),
-            location));
+            location, errors);
+
+        return false;
     }
 
-    return this->updateConnections(std::move(new_connections), false);
+    this->updateConnections(std::move(new_connections), false);
+    return true;
 }
 
 bool Well::handleCOMPLUMP(const DeckRecord& record)

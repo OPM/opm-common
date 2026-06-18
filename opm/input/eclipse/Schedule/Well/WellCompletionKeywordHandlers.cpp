@@ -209,7 +209,9 @@ void handleCECON(HandlerContext& handlerContext)
         for (const auto& wname : well_names) {
             auto well = handlerContext.state().wells.get(wname);
 
-            if (well.handleCECON(record, handlerContext.keyword.location())) {
+            if (well.handleCECON(record, handlerContext.keyword.location(),
+                                 handlerContext.parseContext, handlerContext.errors))
+            {
                 handlerContext.state().wells.update(std::move(well));
             }
         }
