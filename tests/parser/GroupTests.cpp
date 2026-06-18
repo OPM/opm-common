@@ -1022,6 +1022,42 @@ GCONINJE
     BOOST_CHECK(!g1.topup_phase().has_value());
 }
 
+BOOST_AUTO_TEST_CASE(GCONSALE_PRESERVES_EXISTING_GCONINJE_GAS_CONTROL) {
+    // Regression: GCONSALE on a group must not clobber a pre-existing GCONINJE GAS
+    // injection control. GCONINJE GAS REIN + GCONSALE on the same group is a valid
+    // combination: GCONINJE supplies the reinjection control and its surface-rate cap
+    // (item 4) and reinjection fraction (item 6); GCONSALE supplies the sales target.
+    // handleGCONSALE must only ensure a GAS injection control exists, not overwrite an
+    // existing one with a default (cmode=NONE, surface_max_rate=0, fraction=0).
+    const std::string input = R"(
+START             -- 0
+31 AUG 1993 /
+SCHEDULE
+
+GRUPTREE
+  'G1'  'FIELD' /
+/
+
+GCONINJE
+  'G1'   'GAS'   'REIN'   4.0E6  1*  1.0 /
+/
+
+GCONSALE
+  'G1'   1.0E6   1.05E6   0.99E6   RATE /
+/)";
+
+    auto schedule = create_schedule(input);
+    SummaryState st(TimeService::now(), 0.0);
+    const auto& g1 = schedule.getGroup("G1", 0);
+
+    BOOST_CHECK(g1.hasInjectionControl(Phase::GAS));
+    const auto ic = g1.injectionControls(Phase::GAS, st);
+    // Without the fix these are clobbered to NONE / 0 / 0 by GCONSALE.
+    BOOST_CHECK(ic.cmode == Group::InjectionCMode::REIN);
+    BOOST_CHECK(ic.surface_max_rate > 0.0);
+    BOOST_CHECK_CLOSE(ic.target_reinj_fraction, 1.0, 1.0e-8);
+}
+
 BOOST_AUTO_TEST_CASE(GCONINJE_MULTIPLE_TOPUP_PHASES_RETURNS_NULLOPT) {
     const std::string input = R"(
 START             -- 0

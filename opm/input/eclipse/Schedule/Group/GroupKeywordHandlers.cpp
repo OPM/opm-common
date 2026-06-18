@@ -478,7 +478,17 @@ void handleGCONSALE(HandlerContext& handlerContext)
                          udq_undefined, handlerContext.static_schedule().m_unit_system);
 
         auto new_group = handlerContext.state().groups.get( groupName );
-        Group::GroupInjectionProperties injection{groupName};
+        // GCONSALE needs the group to carry a GAS injection control so the sales /
+        // reinjection machinery engages, but it must not clobber a deck-specified
+        // GCONINJE GAS control (e.g. REIN with its surface-rate cap and reinjection
+        // fraction): GCONINJE GAS REIN + GCONSALE on the same group is a valid
+        // combination where GCONINJE provides the reinjection control/cap and GCONSALE
+        // the sales target. Preserve an existing GAS injection control; only create a
+        // default one when none exists.
+        Group::GroupInjectionProperties injection =
+            new_group.hasInjectionControl(Phase::GAS)
+                ? new_group.injectionProperties(Phase::GAS)
+                : Group::GroupInjectionProperties{groupName};
         injection.phase = Phase::GAS;
         if (new_group.updateInjection(injection))
             handlerContext.state().groups.update(new_group);
