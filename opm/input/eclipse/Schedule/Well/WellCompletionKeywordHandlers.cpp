@@ -226,12 +226,12 @@ std::vector<std::pair<std::string,KeywordHandlers::handler_function>>
 getWellCompletionHandlers()
 {
     return {
+        { "CECON",    &handleCECON    },
         { "COMPDAT" , &handleCOMPDAT  },
         { "COMPDATL", &handleCOMPDATL },
         { "COMPLUMP", &handleCOMPLUMP },
         { "COMPORD" , &handleCOMPORD  },
         { "CSKIN",    &handleCSKIN    },
-        { "CECON",    &handleCECON    },
     };
 }
 

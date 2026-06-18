@@ -1670,9 +1670,14 @@ bool Well::handleCECON(const DeckRecord&      record,
     if (!matched_any) {
         parseContext.handleError(
             ParseContext::SCHEDULE_NO_CONNECTION_MATCH,
-            fmt::format("Keyword {{keyword}} did not match any connection "
-                        "in well {}\n"
-                        "In {{file}} line {{line}}", this->name()),
+            fmt::format("Problem with keyword {{keyword}}\n"
+                        "In {{file}} line {{line}}\n"
+                        "No matching connections for ({},{},{}-{}) in well {}.",
+                        record.getItem<Kw::I>() .get<int>(0),
+                        record.getItem<Kw::J>() .get<int>(0),
+                        record.getItem<Kw::K1>().get<int>(0),
+                        record.getItem<Kw::K2>().get<int>(0),
+                        this->name()),
             location, errors);
 
         return false;
