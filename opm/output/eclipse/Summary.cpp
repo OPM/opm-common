@@ -1865,26 +1865,40 @@ inline quantity thp( const fn_args& args ) {
     return { p->second.thp, measure::pressure };
 }
 
-inline quantity bhp_history( const fn_args& args ) {
+    inline quantity bhp_history( const fn_args& args ) {
     if( args.schedule_wells.empty() ) return { 0.0, measure::pressure };
 
     const auto* sched_well = args.schedule_wells.front();
 
+    // Check if well is shut - if so, return 0
+    const auto p = args.wells.find(sched_well->name());
+    if ((p != args.wells.end()) &&
+        (p->second.dynamicStatus == Opm::Well::Status::SHUT)) {
+        return { 0.0, measure::pressure };
+        }
+
     const auto bhp_hist = sched_well->isProducer()
         ? sched_well->getProductionProperties().BHPH
-        : sched_well->getInjectionProperties() .BHPH;
+        : sched_well->getInjectionProperties().BHPH;
 
     return { bhp_hist, measure::pressure };
 }
 
-inline quantity thp_history( const fn_args& args ) {
+    inline quantity thp_history( const fn_args& args ) {
     if( args.schedule_wells.empty() ) return { 0.0, measure::pressure };
 
     const auto* sched_well = args.schedule_wells.front();
 
+    // Check if well is shut - if so, return 0
+    const auto p = args.wells.find(sched_well->name());
+    if ((p != args.wells.end()) &&
+        (p->second.dynamicStatus == Opm::Well::Status::SHUT)) {
+        return { 0.0, measure::pressure };
+        }
+
     const auto thp_hist = sched_well->isProducer()
         ? sched_well->getProductionProperties().THPH
-        : sched_well->getInjectionProperties() .THPH;
+        : sched_well->getInjectionProperties().THPH;
 
     return { thp_hist, measure::pressure };
 }
@@ -2013,14 +2027,13 @@ quantity well_block_average_pressure(const fn_args& args)
     return { p->second[wbp_quantity], measure::pressure };
 }
 
-template <Opm::Phase phase>
+// include_prediction_rate=true  → well-level continues accumulating from simulated rates (TH keywords)
+// include_prediction_rate=false → well-level returns 0 in prediction period (RH keywords at well-level)
+template <Opm::Phase phase, bool include_prediction_rate = true>
 inline quantity production_history(const fn_args& args)
 {
-    // Looking up historical well production rates before simulation starts
-    // or the well is flowing is meaningless.  We therefore default to
-    // outputting zero in this case.
-
     double sum = 0.0;
+
     for (const auto* sched_well : args.schedule_wells) {
         const auto& name = sched_well->name();
 
@@ -2028,25 +2041,55 @@ inline quantity production_history(const fn_args& args)
         if ((xwPos == args.wells.end()) ||
             (xwPos->second.dynamicStatus == Opm::Well::Status::SHUT))
         {
-            // Well's not flowing.  Ignore contribution regardless of what's
-            // in WCONHIST.
             continue;
         }
 
+        // Only producers contribute to production_history
+        if (! sched_well->isProducer())
+            continue;
+
         const double eff_fac = efac(args.eff_factors, name);
-        sum += sched_well->production_rate(args.st, phase) * eff_fac;
+
+        if (! sched_well->predictionMode()) {
+            // History period: use scheduled production rates.
+            const double sched_rate = sched_well->production_rate(args.st, phase);
+            sum += -sched_rate * eff_fac;
+        } else {
+            // Prediction period: skip if not including prediction rates (well-level RH keywords).
+            if (!include_prediction_rate)
+                continue;
+
+            // Use simulated rates for prediction period.
+            double v = 0.0;
+            switch (phase) {
+            case Opm::Phase::WATER:
+                v = xwPos->second.rates.get(rt::wat, 0.0) * eff_fac;
+                break;
+            case Opm::Phase::OIL:
+                v = xwPos->second.rates.get(rt::oil, 0.0) * eff_fac;
+                break;
+            case Opm::Phase::GAS:
+                v = xwPos->second.rates.get(rt::gas, 0.0) * eff_fac;
+                break;
+            default:
+                v = -sched_well->production_rate(args.st, phase) * eff_fac;
+                break;
+            }
+
+            sum += v;
+        }
     }
 
-    return { sum, rate_unit<phase>() };
+    return { -sum, rate_unit<phase>() };
 }
 
-template <Opm::Phase phase>
+// include_prediction_rate=true  → well-level continues accumulating from simulated rates (TH keywords)
+// include_prediction_rate=false → well-level returns 0 in prediction period (RH keywords at well-level)
+// use_target_in_prediction=true → in prediction period, use scheduled injection
+//  target (WCONINJE) in prediction instead of simulated rate
+template <Opm::Phase phase, bool include_prediction_rate = true, bool use_target_in_prediction = false>
 inline quantity injection_history(const fn_args& args)
 {
-    // Looking up historical well injection rates before simulation starts
-    // or the well is flowing is meaningless.  We therefore default to
-    // outputting zero in this case.
-
     double sum = 0.0;
     for (const auto* sched_well : args.schedule_wells) {
         const auto& name = sched_well->name();
@@ -2060,8 +2103,47 @@ inline quantity injection_history(const fn_args& args)
             continue;
         }
 
+        // Only injectors contribute to injection_history
+        if (! sched_well->isInjector())
+            continue;
+
         const double eff_fac = efac(args.eff_factors, name);
-        sum += sched_well->injection_rate(args.st, phase) * eff_fac;
+        double rate = 0.0;
+        if (! sched_well->predictionMode())
+        {
+            // History period: use scheduled injection rates from WCONINJH
+            rate = sched_well->injection_rate(args.st, phase);
+        } else
+        {
+            // Prediction period: skip if not including prediction rates (well-level RH keywords).
+            if (!include_prediction_rate)
+                continue; // WWIRH -> 0
+
+            if (use_target_in_prediction)
+            {
+                // GWIRH/FWIRH: we report scheduled injection target rates from WCONINJH even in prediction period, instead of simulated rates
+                rate = sched_well->injection_rate(args.st, phase);
+            } else
+            {
+                // Use simulated rates for prediction period.
+                switch (phase)
+                {
+                case Opm::Phase::WATER:
+                    rate = xwPos->second.rates.get(Opm::data::Rates::opt::wat, 0.0);
+                    break;
+                case Opm::Phase::OIL:
+                    rate = xwPos->second.rates.get(Opm::data::Rates::opt::oil, 0.0);
+                    break;
+                case Opm::Phase::GAS:
+                    rate = xwPos->second.rates.get(Opm::data::Rates::opt::gas, 0.0);
+                    break;
+                default:
+                    rate = sched_well->injection_rate(args.st, phase);
+                }
+            }
+        }
+
+        sum += rate * eff_fac;
     }
 
     return { sum, rate_unit<phase>() };
@@ -3019,11 +3101,11 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "GMCTW", group_control< true, false, true,  false >},
     { "GMCTG", group_control< true, false, false, true  >},
 
-    { "WWPRH", production_history< Opm::Phase::WATER > },
-    { "WOPRH", production_history< Opm::Phase::OIL > },
-    { "WGPRH", production_history< Opm::Phase::GAS > },
-    { "WLPRH", sum( production_history< Opm::Phase::WATER >,
-                    production_history< Opm::Phase::OIL > ) },
+    { "WWPRH", production_history< Opm::Phase::WATER, false > },
+    { "WOPRH", production_history< Opm::Phase::OIL, false > },
+    { "WGPRH", production_history< Opm::Phase::GAS, false > },
+    { "WLPRH", sum( production_history< Opm::Phase::WATER, false >,
+                    production_history< Opm::Phase::OIL, false > ) },
 
     { "WWPTH", mul( production_history< Opm::Phase::WATER >, duration ) },
     { "WOPTH", mul( production_history< Opm::Phase::OIL >, duration ) },
@@ -3032,28 +3114,28 @@ static const auto funs = std::unordered_map<std::string, ofun> {
                          production_history< Opm::Phase::OIL > ),
                     duration ) },
 
-    { "WWIRH", injection_history< Opm::Phase::WATER > },
-    { "WOIRH", injection_history< Opm::Phase::OIL > },
-    { "WGIRH", injection_history< Opm::Phase::GAS > },
+    { "WWIRH", injection_history< Opm::Phase::WATER, false > },
+    { "WOIRH", injection_history< Opm::Phase::OIL, false > },
+    { "WGIRH", injection_history< Opm::Phase::GAS, false > },
     { "WWITH", mul( injection_history< Opm::Phase::WATER >, duration ) },
     { "WOITH", mul( injection_history< Opm::Phase::OIL >, duration ) },
     { "WGITH", mul( injection_history< Opm::Phase::GAS >, duration ) },
 
     /* From our point of view, injectors don't have water cuts and div/sum will return 0.0 */
-    { "WWCTH", div( production_history< Opm::Phase::WATER >,
-                    sum( production_history< Opm::Phase::WATER >,
-                         production_history< Opm::Phase::OIL > ) ) },
+    { "WWCTH", div( production_history< Opm::Phase::WATER, false >,
+                    sum( production_history< Opm::Phase::WATER, false >,
+                         production_history< Opm::Phase::OIL, false > ) ) },
 
     /* We do not support mixed injections, and gas/oil is undefined when oil is
      * zero (i.e. pure gas injector), so always output 0 if this is an injector
      */
-    { "WGORH", div( production_history< Opm::Phase::GAS >,
-                    production_history< Opm::Phase::OIL > ) },
-    { "WWGRH", div( production_history< Opm::Phase::WATER >,
-                    production_history< Opm::Phase::GAS > ) },
-    { "WGLRH", div( production_history< Opm::Phase::GAS >,
-                    sum( production_history< Opm::Phase::WATER >,
-                         production_history< Opm::Phase::OIL > ) ) },
+    { "WGORH", div( production_history< Opm::Phase::GAS, false >,
+                    production_history< Opm::Phase::OIL, false > ) },
+    { "WWGRH", div( production_history< Opm::Phase::WATER, false >,
+                    production_history< Opm::Phase::GAS, false > ) },
+    { "WGLRH", div( production_history< Opm::Phase::GAS, false >,
+                    sum( production_history< Opm::Phase::WATER, false >,
+                         production_history< Opm::Phase::OIL, false > ) ) },
 
     { "WTHPH", thp_history },
     { "WBHPH", bhp_history },
@@ -3063,9 +3145,9 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "GGPRH", production_history< Opm::Phase::GAS > },
     { "GLPRH", sum( production_history< Opm::Phase::WATER >,
                     production_history< Opm::Phase::OIL > ) },
-    { "GWIRH", injection_history< Opm::Phase::WATER > },
-    { "GOIRH", injection_history< Opm::Phase::OIL > },
-    { "GGIRH", injection_history< Opm::Phase::GAS > },
+    { "GWIRH", injection_history< Opm::Phase::WATER, true, true > },
+    { "GOIRH", injection_history< Opm::Phase::OIL, true, true > },
+    { "GGIRH", injection_history< Opm::Phase::GAS, true, true > },
     { "GGORH", div( production_history< Opm::Phase::GAS >,
                     production_history< Opm::Phase::OIL > ) },
     { "GWCTH", div( production_history< Opm::Phase::WATER >,
@@ -3089,8 +3171,9 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "GLPTH", mul( sum( production_history< Opm::Phase::WATER >,
                          production_history< Opm::Phase::OIL > ),
                     duration ) },
-    { "GWITH", mul( injection_history< Opm::Phase::WATER >, duration ) },
-    { "GGITH", mul( injection_history< Opm::Phase::GAS >, duration ) },
+    { "GWITH", mul( injection_history< Opm::Phase::WATER, true, true >, duration ) },
+    { "GOITH", mul( injection_history< Opm::Phase::OIL, true, true >, duration ) },
+    { "GGITH", mul( injection_history< Opm::Phase::GAS, true, true >, duration ) },
     { "GMWIN", flowing< injector > },
     { "GMWPR", flowing< producer > },
 
@@ -3417,12 +3500,12 @@ static const auto funs = std::unordered_map<std::string, ofun> {
                          production_history< Opm::Phase::OIL > ),
                     duration ) },
 
-    { "FWIRH", injection_history< Opm::Phase::WATER > },
-    { "FOIRH", injection_history< Opm::Phase::OIL > },
-    { "FGIRH", injection_history< Opm::Phase::GAS > },
-    { "FWITH", mul( injection_history< Opm::Phase::WATER >, duration ) },
-    { "FOITH", mul( injection_history< Opm::Phase::OIL >, duration ) },
-    { "FGITH", mul( injection_history< Opm::Phase::GAS >, duration ) },
+    { "FWIRH", injection_history< Opm::Phase::WATER, true, true > },
+    { "FOIRH", injection_history< Opm::Phase::OIL, true, true > },
+    { "FGIRH", injection_history< Opm::Phase::GAS, true, true > },
+    { "FWITH", mul( injection_history< Opm::Phase::WATER, true, true >, duration ) },
+    { "FOITH", mul( injection_history< Opm::Phase::OIL, true, true >, duration ) },
+    { "FGITH", mul( injection_history< Opm::Phase::GAS, true, true >, duration ) },
 
     { "FWCT", div( rate< rt::wat, producer >,
                    sum( rate< rt::wat, producer >, rate< rt::oil, producer > ) ) },
