@@ -593,7 +593,7 @@ public:
     /// Apply per-connection economic limits (CECON keyword).
     ///
     /// \return Whether any connection matched; warns via
-    /// SCHEDULE_CECON_NO_MATCH otherwise.
+    /// SCHEDULE_NO_CONNECTION_MATCH otherwise.
     bool handleCECON(const DeckRecord&      record,
                      const KeywordLocation& location,
                      const ParseContext&    parseContext,
