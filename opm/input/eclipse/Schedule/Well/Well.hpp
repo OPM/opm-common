@@ -589,6 +589,15 @@ public:
                                   std::vector<int>& requested_shut_complnums);
 
     bool handleCSKIN(const DeckRecord& record, const KeywordLocation& location);
+
+    /// Apply per-connection economic limits (CECON keyword).
+    ///
+    /// \return Whether any connection matched; warns via
+    /// SCHEDULE_NO_CONNECTION_MATCH otherwise.
+    bool handleCECON(const DeckRecord&      record,
+                     const KeywordLocation& location,
+                     const ParseContext&    parseContext,
+                     ErrorGuard&            errors);
     bool handleCOMPLUMP(const DeckRecord& record);
     bool handleWPIMULT(const DeckRecord& record);
     bool handleWINJCLN(const DeckRecord& record, const KeywordLocation& location);

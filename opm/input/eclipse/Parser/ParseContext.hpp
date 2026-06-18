@@ -574,6 +574,10 @@ namespace Opm {
         /// Connection in zero-permeability cell (COMPDAT keyword).
         const static std::string SCHEDULE_COMPDAT_ZERO_PERM;
 
+        /// A connection-targeting keyword (e.g. CECON) did not match any
+        /// connection in the targeted well.
+        const static std::string SCHEDULE_NO_CONNECTION_MATCH;
+
         /// ICD keyword (WSEGAICD, WSEGSICD, WSEGVALV) references a missing
         /// well segment.
         ///

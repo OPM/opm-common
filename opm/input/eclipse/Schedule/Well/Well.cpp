@@ -31,6 +31,7 @@
 #include <opm/input/eclipse/Schedule/MSW/WellSegments.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleGrid.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQActive.hpp>
+#include <opm/input/eclipse/Schedule/Well/ConnectionEconLimits.hpp>
 #include <opm/input/eclipse/Schedule/Well/WDFAC.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellBrineProperties.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
@@ -46,6 +47,9 @@
 
 #include <opm/common/utility/OpmInputError.hpp>
 #include <opm/common/utility/shmatch.hpp>
+
+#include <opm/input/eclipse/Parser/ErrorGuard.hpp>
+#include <opm/input/eclipse/Parser/ParseContext.hpp>
 
 #include <opm/input/eclipse/Parser/ParserKeywords/C.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/S.hpp>
@@ -1622,6 +1626,65 @@ bool Well::handleCSKIN(const DeckRecord&      record,
     }
 
     return this->updateConnections(std::move(new_connections), false);
+}
+
+bool Well::handleCECON(const DeckRecord&      record,
+                       const KeywordLocation& location,
+                       const ParseContext&    parseContext,
+                       ErrorGuard&            errors)
+{
+    using Kw = ParserKeywords::CECON;
+
+    // Defaulted I/J/K1/K2 mean "match the full extent of the well" in that
+    // dimension; match_eq/match_ge/match_le already return true for a
+    // defaulted item, so no explicit handling of the default is needed here.
+    auto need_econ_limits = [&record](const Connection& c)
+    {
+        constexpr auto value_shift = -1;
+
+        return match_eq(c.getI(), record, Kw::I::itemName,  value_shift)
+            && match_eq(c.getJ(), record, Kw::J::itemName,  value_shift)
+            && match_ge(c.getK(), record, Kw::K1::itemName, value_shift)
+            && match_le(c.getK(), record, Kw::K2::itemName, value_shift);
+    };
+
+    const auto connection_econ_limits = ConnectionEconLimits { record };
+
+    auto new_connections = std::make_shared<WellConnections>
+        (this->connections->ordering(), this->headI, this->headJ);
+
+    bool matched_any = false;
+    for (const auto& connection : *this->connections) {
+        if (!need_econ_limits(connection)) {
+            new_connections->add(connection);
+            continue;
+        }
+
+        matched_any = true;
+        auto connection_copy = connection;
+        connection_copy.setEconLimits(connection_econ_limits);
+        new_connections->add(connection_copy);
+    }
+
+    // Diagnose a connection set that did not select anything.
+    if (!matched_any) {
+        parseContext.handleError(
+            ParseContext::SCHEDULE_NO_CONNECTION_MATCH,
+            fmt::format("Problem with keyword {{keyword}}\n"
+                        "In {{file}} line {{line}}\n"
+                        "No matching connections for ({},{},{}-{}) in well {}.",
+                        record.getItem<Kw::I>() .get<int>(0),
+                        record.getItem<Kw::J>() .get<int>(0),
+                        record.getItem<Kw::K1>().get<int>(0),
+                        record.getItem<Kw::K2>().get<int>(0),
+                        this->name()),
+            location, errors);
+
+        return false;
+    }
+
+    this->updateConnections(std::move(new_connections), false);
+    return true;
 }
 
 bool Well::handleCOMPLUMP(const DeckRecord& record)

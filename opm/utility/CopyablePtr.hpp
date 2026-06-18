@@ -127,6 +127,30 @@ public:
 
     OPM_HOST_DEVICE ~CopyablePtr() = default;
 
+    // Deep equality: both unset, or both set with equal pointees.
+    OPM_HOST_DEVICE bool operator==(const CopyablePtr& other) const {
+        const T* lhs = deref_ptr();
+        const T* rhs = other.deref_ptr();
+
+        if ((lhs == nullptr) != (rhs == nullptr)) {
+            return false;
+        }
+
+        return (lhs == nullptr) || (*lhs == *rhs);
+    }
+
+    OPM_HOST_DEVICE bool operator!=(const CopyablePtr& other) const {
+        return !(*this == other);
+    }
+
+    // Serialise the owned object (host configuration only).
+    template <class Serializer>
+    void serializeOp(Serializer& serializer) {
+        if constexpr (!on_gpu) {
+            serializer(ptr_);
+        }
+    }
+
     // member access operator
     OPM_HOST_DEVICE T* operator->() const { return deref_ptr(); }
 
