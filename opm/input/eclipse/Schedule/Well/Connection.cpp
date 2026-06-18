@@ -36,6 +36,7 @@
 #include <cassert>
 #include <cstddef>
 #include <exception>
+#include <memory>
 #include <numbers>
 #include <sstream>
 #include <stdexcept>
@@ -193,7 +194,8 @@ namespace Opm
         result.m_wpimult = 0.123;
         result.m_subject_to_welpi = true;
         result.m_filter_cake = FilterCake::serializationTestObject();
-        result.m_econ_limits = ConnectionEconLimits::serializationTestObject();
+        result.m_econ_limits = std::make_unique<ConnectionEconLimits>(
+            ConnectionEconLimits::serializationTestObject());
 
         return result;
     }
@@ -671,18 +673,18 @@ double Connection::getFilterCakeArea() const
 
 void Connection::setEconLimits(const ConnectionEconLimits& econ_limits)
 {
-    this->m_econ_limits = econ_limits;
+    this->m_econ_limits = std::make_unique<ConnectionEconLimits>(econ_limits);
 }
 
 bool Connection::hasEconLimits() const
 {
-    return this->m_econ_limits.has_value();
+    return static_cast<bool>(this->m_econ_limits);
 }
 
 const ConnectionEconLimits& Connection::econLimits() const
 {
     assert(this->hasEconLimits());
-    return this->m_econ_limits.value();
+    return *this->m_econ_limits.get();
 }
 
 } // end of namespace Opm

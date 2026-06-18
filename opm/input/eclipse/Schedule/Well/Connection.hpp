@@ -20,6 +20,8 @@
 #ifndef COMPLETION_HPP_
 #define COMPLETION_HPP_
 
+#include <opm/utility/CopyablePtr.hpp>
+
 #include <opm/input/eclipse/Schedule/Well/ConnectionEconLimits.hpp>
 #include <opm/input/eclipse/Schedule/Well/FilterCake.hpp>
 #include <opm/input/eclipse/Schedule/Well/WINJMULT.hpp>
@@ -375,7 +377,7 @@ namespace Opm {
 
         std::optional<FilterCake> m_filter_cake{};
 
-        std::optional<ConnectionEconLimits> m_econ_limits{};
+        Utility::CopyablePtr<ConnectionEconLimits> m_econ_limits{};
 
         static std::string CTFKindToString(const CTFKind);
     };
