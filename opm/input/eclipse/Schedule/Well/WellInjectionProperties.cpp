@@ -95,26 +95,27 @@ namespace Opm {
                                                        const std::string& well_name,
                                                        const KeywordLocation& location)
     {
-        this->injectorType = InjectorTypeFromString( record.getItem<ParserKeywords::WCONINJE::TYPE>().getTrimmedString(0) );
+        using Kw = ParserKeywords::WCONINJE;
+        this->injectorType = InjectorTypeFromString( record.getItem<Kw::TYPE>().getTrimmedString(0) );
         this->predictionMode = true;
 
-        if (!record.getItem<ParserKeywords::WCONINJE::RATE>().defaultApplied(0)) {
-            this->surfaceInjectionRate = record.getItem<ParserKeywords::WCONINJE::RATE>().get<UDAValue>(0);
+        if (!record.getItem<Kw::RATE>().defaultApplied(0)) {
+            this->surfaceInjectionRate = record.getItem<Kw::RATE>().get<UDAValue>(0);
             this->addInjectionControl(InjectorCMode::RATE);
         } else
             this->dropInjectionControl(InjectorCMode::RATE);
 
 
-        if (!record.getItem<ParserKeywords::WCONINJE::RESV>().defaultApplied(0)) {
-            this->reservoirInjectionRate = record.getItem<ParserKeywords::WCONINJE::RESV>().get<UDAValue>(0);
+        if (!record.getItem<Kw::RESV>().defaultApplied(0)) {
+            this->reservoirInjectionRate = record.getItem<Kw::RESV>().get<UDAValue>(0);
             this->addInjectionControl(InjectorCMode::RESV);
         } else
             this->dropInjectionControl(InjectorCMode::RESV);
 
-        this->VFPTableNumber = record.getItem<ParserKeywords::WCONINJE::VFP_TABLE>().get< int >(0);
+        this->VFPTableNumber = record.getItem<Kw::VFP_TABLE>().get< int >(0);
 
-        if (!record.getItem<ParserKeywords::WCONINJE::THP>().defaultApplied(0)) {
-            this->THPTarget = record.getItem<ParserKeywords::WCONINJE::THP>().get<UDAValue>(0);
+        if (!record.getItem<Kw::THP>().defaultApplied(0)) {
+            this->THPTarget = record.getItem<Kw::THP>().get<UDAValue>(0);
             this->addInjectionControl(InjectorCMode::THP);
             if (this->VFPTableNumber == 0) {
                 const auto msg = fmt::format("Well {} must have a VFP table to handle"
@@ -132,10 +133,10 @@ namespace Opm {
           current behavoir agrees with the behavior of Eclipse when BHPLimit is not
           specified while employed during group control.
         */
-        if (record.getItem<ParserKeywords::WCONINJE::BHP>().defaultApplied(0)) {
+        if (record.getItem<Kw::BHP>().defaultApplied(0)) {
             this->BHPTarget.update(bhp_def);
         } else {
-            this->BHPTarget = record.getItem<ParserKeywords::WCONINJE::BHP>().get<UDAValue>(0);
+            this->BHPTarget = record.getItem<Kw::BHP>().get<UDAValue>(0);
         }
         this->addInjectionControl(InjectorCMode::BHP);
 
@@ -144,7 +145,7 @@ namespace Opm {
         else
             this->dropInjectionControl(InjectorCMode::GRUP);
         {
-            const std::string& cmodeString = record.getItem<ParserKeywords::WCONINJE::CMODE>().getTrimmedString(0);
+            const std::string& cmodeString = record.getItem<Kw::CMODE>().getTrimmedString(0);
             InjectorCMode controlModeArg = WellInjectorCModeFromString(cmodeString);
             if (this->hasInjectionControl( controlModeArg))
                 this->controlMode = controlModeArg;
@@ -152,11 +153,11 @@ namespace Opm {
                 throw std::invalid_argument("Tried to set invalid control: " + cmodeString + " for well: " + well_name);
             }
         }
-        this->rsRvInj = record.getItem<ParserKeywords::WCONINJE::VAPOIL_C>().getSIDouble(0);
+        this->rsRvInj = record.getItem<Kw::VAPOIL_C>().getSIDouble(0);
         if (this->injectorType == InjectorType::OIL && this->rsRvInj > 0) {
-            double factor = record.getItem<ParserKeywords::WCONINJE::VAPOIL_C>().getSIDouble(0) / record.getItem<ParserKeywords::WCONINJE::VAPOIL_C>().get<double>(0);
+            double factor = record.getItem<Kw::VAPOIL_C>().getSIDouble(0) / record.getItem<Kw::VAPOIL_C>().get<double>(0);
             // for oil injectors the rsRvInj is Rs and the inverse of the si-conversion factor should be used
-            this->rsRvInj =  record.getItem<ParserKeywords::WCONINJE::VAPOIL_C>().get<double>(0) / factor;
+            this->rsRvInj =  record.getItem<Kw::VAPOIL_C>().get<double>(0) / factor;
         }
     }
 
@@ -206,24 +207,25 @@ namespace Opm {
                                                   const std::string& well_name,
                                                   const KeywordLocation& loc)
     {
+        using Kw = ParserKeywords::WCONINJH;
         // convert injection rates to SI
-        const auto& typeItem = record.getItem<ParserKeywords::WCONINJH::TYPE>();
+        const auto& typeItem = record.getItem<Kw::TYPE>();
         if (typeItem.defaultApplied(0)) {
             const std::string msg = "Injection type can not be defaulted for keyword WCONINJH";
             throw std::invalid_argument(msg);
         }
         this->injectorType = InjectorTypeFromString( typeItem.getTrimmedString(0));
 
-        if (!record.getItem<ParserKeywords::WCONINJH::RATE>().defaultApplied(0)) {
-            double injectionRate = record.getItem<ParserKeywords::WCONINJH::RATE>().get<double>(0);
+        if (!record.getItem<Kw::RATE>().defaultApplied(0)) {
+            double injectionRate = record.getItem<Kw::RATE>().get<double>(0);
             this->surfaceInjectionRate.update(injectionRate);
         }
-        if ( record.getItem<ParserKeywords::WCONINJH::BHP>().hasValue(0) )
-            this->BHPH = record.getItem<ParserKeywords::WCONINJH::BHP>().getSIDouble(0);
-        if ( record.getItem<ParserKeywords::WCONINJH::THP>().hasValue(0) )
-            this->THPH = record.getItem<ParserKeywords::WCONINJH::THP>().getSIDouble(0);
+        if ( record.getItem<Kw::BHP>().hasValue(0) )
+            this->BHPH = record.getItem<Kw::BHP>().getSIDouble(0);
+        if ( record.getItem<Kw::THP>().hasValue(0) )
+            this->THPH = record.getItem<Kw::THP>().getSIDouble(0);
 
-        const std::string& cmodeString = record.getItem<ParserKeywords::WCONINJH::CMODE>().getTrimmedString(0);
+        const std::string& cmodeString = record.getItem<Kw::CMODE>().getTrimmedString(0);
         InjectorCMode newControlMode = WellInjectorCModeFromString(cmodeString);
 
         if ( !(newControlMode == InjectorCMode::RATE || newControlMode == InjectorCMode::BHP) ) {
@@ -265,11 +267,11 @@ namespace Opm {
 
         this->VFPTableNumber = vfp_table_nr;
 
-        this->rsRvInj = record.getItem<ParserKeywords::WCONINJH::VAPOIL_C>().getSIDouble(0);
+        this->rsRvInj = record.getItem<Kw::VAPOIL_C>().getSIDouble(0);
         if (this->injectorType == InjectorType::OIL && this->rsRvInj > 0) {
-            double factor = record.getItem<ParserKeywords::WCONINJH::VAPOIL_C>().getSIDouble(0) / record.getItem<ParserKeywords::WCONINJH::VAPOIL_C>().get<double>(0);
+            double factor = record.getItem<Kw::VAPOIL_C>().getSIDouble(0) / record.getItem<Kw::VAPOIL_C>().get<double>(0);
             // for oil injectors the rsRvInj is Rs and the inverse of the si-conversion factor should be used
-            this->rsRvInj =  record.getItem<ParserKeywords::WCONINJH::VAPOIL_C>().get<double>(0) / factor;
+            this->rsRvInj =  record.getItem<Kw::VAPOIL_C>().get<double>(0) / factor;
         }
     }
 

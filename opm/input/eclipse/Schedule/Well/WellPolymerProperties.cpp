@@ -53,8 +53,9 @@ namespace Opm {
 
 
     void WellPolymerProperties::handleWPOLYMER(const DeckRecord& record) {
-        const auto& group_polymer_item = record.getItem<ParserKeywords::WPOLYMER::GROUP_POLYMER_CONCENTRATION>();
-        const auto& group_salt_item = record.getItem<ParserKeywords::WPOLYMER::GROUP_SALT_CONCENTRATION>();
+        using Kw = ParserKeywords::WPOLYMER;
+        const auto& group_polymer_item = record.getItem<Kw::GROUP_POLYMER_CONCENTRATION>();
+        const auto& group_salt_item = record.getItem<Kw::GROUP_SALT_CONCENTRATION>();
 
         if (!group_polymer_item.defaultApplied(0))
             throw std::logic_error("Sorry explicit setting of \'GROUP_POLYMER_CONCENTRATION\' is not supported!");
@@ -62,17 +63,19 @@ namespace Opm {
         if (!group_salt_item.defaultApplied(0))
             throw std::logic_error("Sorry explicit setting of \'GROUP_SALT_CONCENTRATION\' is not supported!");
 
-        this->m_polymerConcentration = record.getItem<ParserKeywords::WPOLYMER::POLYMER_CONCENTRATION>().get<UDAValue>(0).getSI();
-        this->m_saltConcentration = record.getItem<ParserKeywords::WPOLYMER::SALT_CONCENTRATION>().get<UDAValue>(0).getSI();
+        this->m_polymerConcentration = record.getItem<Kw::POLYMER_CONCENTRATION>().get<UDAValue>(0).getSI();
+        this->m_saltConcentration = record.getItem<Kw::SALT_CONCENTRATION>().get<UDAValue>(0).getSI();
     }
 
     void WellPolymerProperties::handleWPMITAB(const DeckRecord& record) {
-        this->m_plymwinjtable = record.getItem<ParserKeywords::WPMITAB::TABLE_NUMBER>().get<int>(0);
+        using Kw = ParserKeywords::WPMITAB;
+        this->m_plymwinjtable = record.getItem<Kw::TABLE_NUMBER>().get<int>(0);
     }
 
     void WellPolymerProperties::handleWSKPTAB(const DeckRecord& record) {
-        this->m_skprwattable = record.getItem<ParserKeywords::WSKPTAB::TABLE_NUMBER_WATER>().get<int>(0);
-        this->m_skprpolytable = record.getItem<ParserKeywords::WSKPTAB::TABLE_NUMBER_POLYMER>().get<int>(0);
+        using Kw = ParserKeywords::WSKPTAB;
+        this->m_skprwattable = record.getItem<Kw::TABLE_NUMBER_WATER>().get<int>(0);
+        this->m_skprpolytable = record.getItem<Kw::TABLE_NUMBER_POLYMER>().get<int>(0);
     }
 
     bool WellPolymerProperties::operator!=(const WellPolymerProperties& other) const {
