@@ -32,6 +32,8 @@ along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/Parser/Parser.hpp>
 
+#include <opm/common/utility/OpmInputError.hpp>
+
 #include <cstddef>
 #include <initializer_list>
 #include <stdexcept>
@@ -91,6 +93,106 @@ AQUCT
 )");
 }
 
+Deck createAquiferCTDeckWithAqantrc()
+{
+    return Parser{}.parseString(R"(RUNSPEC
+WATER
+DIMENS
+3 3 3 /
+
+AQUDIMS
+1* 1* 2 100 1 1000 /
+
+TRACERS
+ 1* 1 /
+
+GRID
+ACTNUM
+ 0 8*1 0 8*1 0 8*1 /
+
+DXV
+1 1 1 /
+
+DYV
+1 1 1 /
+
+DZV
+1 1 1 /
+
+TOPS
+  9*100 /
+
+PORO
+  27*0.15 /
+
+PROPS
+TRACER
+ WAQ WAT sm3 /
+/
+AQUTAB
+ 0.01 0.112
+ 0.05 0.229 /
+
+SOLUTION
+AQUCT
+   1 2000.0 1.5 100 .3 3.0e-5 330 10 360.0 1 2 1* 20/
+/
+AQANTRC
+ 1 WAQ 1.0 /
+/
+)");
+}
+
+Deck createAquiferCTDeckWithUnknownAqantrc()
+{
+    return Parser{}.parseString(R"(RUNSPEC
+WATER
+DIMENS
+3 3 3 /
+
+AQUDIMS
+1* 1* 2 100 1 1000 /
+
+TRACERS
+ 1* 1 /
+
+GRID
+ACTNUM
+ 0 8*1 0 8*1 0 8*1 /
+
+DXV
+1 1 1 /
+
+DYV
+1 1 1 /
+
+DZV
+1 1 1 /
+
+TOPS
+  9*100 /
+
+PORO
+  27*0.15 /
+
+PROPS
+TRACER
+ WAQ WAT sm3 /
+/
+AQUTAB
+ 0.01 0.112
+ 0.05 0.229 /
+
+SOLUTION
+AQUCT
+   1 2000.0 1.5 100 .3 3.0e-5 330 10 360.0 1 2 1* 20/
+/
+AQANTRC
+ 99 WAQ 1.0 /
+/
+)");
+}
+
 Deck createAquiferCTDeckDefaultP0()
 {
     return Parser{}.parseString(R"(DIMENS
@@ -137,6 +239,24 @@ AquiferCT init_aquiferct(const Deck& deck)
 }
 
 } // Anonymous namespace
+
+BOOST_AUTO_TEST_CASE(AQANTRC_In_AquiferConfig)
+{
+    const auto deck = createAquiferCTDeckWithAqantrc();
+    const EclipseState state(deck);
+    const auto& tracers = state.aquifer().aquiferTracers();
+
+    BOOST_REQUIRE_EQUAL(tracers.size(), 1U);
+    BOOST_CHECK_EQUAL(tracers[0].aquifer_id, 1);
+    BOOST_CHECK_EQUAL(tracers[0].tracer_name, "WAQ");
+    BOOST_CHECK_CLOSE(tracers[0].concentration, 1.0, 1.0e-10);
+}
+
+BOOST_AUTO_TEST_CASE(AQANTRC_UnknownAquiferId)
+{
+    const auto deck = createAquiferCTDeckWithUnknownAqantrc();
+    BOOST_CHECK_THROW(EclipseState{deck}, OpmInputError);
+}
 
 BOOST_AUTO_TEST_CASE(AquiferCTTest)
 {
