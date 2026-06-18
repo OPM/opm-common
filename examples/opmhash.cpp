@@ -42,17 +42,20 @@ struct keyword
     keyword(const std::string& name_arg,
             const std::string& filename_arg,
             const std::size_t line_number_arg,
-            const std::size_t content_hash_arg)
+            const std::size_t content_hash_arg,
+            const std::string keyw_info_arg)
         : name(name_arg)
         , filename(filename_arg)
         , line_number(line_number_arg)
         , content_hash(content_hash_arg)
+        , keyw_info(keyw_info_arg)
     {}
 
     std::string name;
     std::string filename;
     std::size_t line_number;
     std::size_t content_hash;
+    std::string keyw_info;
 };
 
 std::vector<keyword> load_deck(const std::string& deck_file) {
@@ -72,8 +75,16 @@ std::vector<keyword> load_deck(const std::string& deck_file) {
         std::stringstream ss;
         const auto& location = kw.location();
         ss << kw;
+        std::string kw_info;
 
-        keywords.emplace_back(kw.name(), location.filename, location.lineno, std::hash<std::string>{}(ss.str()));
+        if (kw.name() == "DATES"){
+            auto day = kw[0].getItem(0).get<int>(0);
+            auto mndStr = kw[0].getItem(1).get<std::string>(0);
+            auto year = kw[0].getItem(2).get<int>(0);
+            kw_info = fmt::format("{:02} {} {}", day, mndStr, year);
+        }
+
+        keywords.emplace_back(kw.name(), location.filename, location.lineno, std::hash<std::string>{}(ss.str()), kw_info);
     }
     return keywords;
 }
@@ -90,8 +101,13 @@ void print_keywords(const std::vector<keyword>& keywords, std::size_t deck_hash,
     for (const auto& kw : keywords) {
         if (location_info)
             fmt::print("{:8s} : {}:{} {} \n", kw.name, kw.filename, kw.line_number, kw.content_hash);
-        else
-            fmt::print("{:8s} : {} \n", kw.name, kw.content_hash);
+        else {
+            if (kw.name == "DATES"){
+                fmt::print("{} [{}] : {} \n", kw.name, kw.keyw_info, kw.content_hash);
+            } else {
+                fmt::print("{:20s}: {} \n", kw.name, kw.content_hash);
+            }
+        }
     }
     fmt::print("\n{:8s} : {}\n", "Total", deck_hash);
 }
