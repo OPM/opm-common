@@ -21,7 +21,6 @@
 
 #include <opm/input/eclipse/Deck/DeckItem.hpp>
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
-#include <opm/input/eclipse/Deck/UDAValue.hpp>
 
 #include <opm/input/eclipse/Parser/ParserKeywords/C.hpp>
 
@@ -32,18 +31,17 @@
 namespace {
 
 double ratioLimit(const Opm::DeckItem& item) {
-    return item.get<Opm::UDAValue>(0).SI_value_or(0.0);
+    return item.getSIDouble(0);
 }
 
 // A defaulted MIN_OIL/MIN_GAS item, or an explicitly entered "no limit"
 // sentinel value of -1e+20 (or below), means no lower rate limit.
 std::optional<double> minRateLimit(const Opm::DeckItem& item) {
-    const auto uda = item.get<Opm::UDAValue>(0);
-    if (uda.raw_value_or(-1.0e+20) <= -1.0e+20) {
+    if (item.get<double>(0) <= -1.0e+20) {
         return std::nullopt;
     }
 
-    return uda.getSI();
+    return item.getSIDouble(0);
 }
 
 } // Anonymous namespace
