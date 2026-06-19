@@ -53,7 +53,7 @@ namespace Opm
 {
 
 
-    template<class>
+template<class>
 inline constexpr bool always_false_v = false;
 
 // Poison iterator is a helper class that will allow for compilation only when it is not used.
@@ -132,10 +132,10 @@ private:
                     IntegerIter rowsize_beg, IntegerIter rowsize_end)
             : data_(data_beg, data_end)
         {
-	    setRowStartsFromSizes(rowsize_beg, rowsize_end);
+            setRowStartsFromSizes(rowsize_beg, rowsize_end);
         }
 
-        SparseTable (Storage<T>&& data, Storage<int>&& row_starts)
+        SparseTable(Storage<T>&& data, Storage<int>&& row_starts)
             : data_(std::move(data))
             , row_start_(std::move(row_starts))
         {
@@ -149,7 +149,7 @@ private:
 
 
         /// Sets the table to contain the given data, organized into
-	/// rows as indicated by the given row sizes.
+        /// rows as indicated by the given row sizes.
         /// \param data_beg The start of the table data.
         /// \param data_end One-beyond-end of the table data.
         /// \param rowsize_beg The start of the row length data.
@@ -158,8 +158,8 @@ private:
         void assign(DataIter data_beg, DataIter data_end,
                     IntegerIter rowsize_beg, IntegerIter rowsize_end)
         {
-	    data_.assign(data_beg, data_end);
-	    setRowStartsFromSizes(rowsize_beg, rowsize_end);
+            data_.assign(data_beg, data_end);
+            setRowStartsFromSizes(rowsize_beg, rowsize_end);
         }
 
 
