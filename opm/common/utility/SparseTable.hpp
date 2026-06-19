@@ -44,6 +44,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <initializer_list>
 #include <numeric>
 #include <ostream>
 #include <type_traits>
@@ -147,6 +148,16 @@ private:
             }
         }
 
+
+        /// Initializer list constructor for easy construction of small SparseTables.
+        SparseTable(std::initializer_list<std::initializer_list<T>> initlist) requires (std::is_same_v<Storage<T>, std::vector<T>>)
+        {
+            row_start_.push_back(0);
+            for (const auto& row : initlist) {
+                data_.insert(data_.end(), row);
+                row_start_.push_back(data_.size());
+            }
+        }
 
         /// Sets the table to contain the given data, organized into
         /// rows as indicated by the given row sizes.
