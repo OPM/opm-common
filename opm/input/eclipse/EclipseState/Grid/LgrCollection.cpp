@@ -77,6 +77,35 @@ namespace Opm {
     }
 
     void LgrCollection::addLgr(const EclipseGrid& grid, const DeckRecord&  lgrRecord) {
+       // A nested CARFIN (PARENT != GLOBAL) addresses cells in its parent LGR's
+       // own refined Cartesian space, so its I/J/K range and divisions must be
+       // validated against the parent LGR's dimensions - not the global grid.
+       // (CARFIN records are processed in deck order, parent before child, so
+       // the parent LGR is already in the collection.)
+       const auto& parentItem = lgrRecord.getItem<ParserKeywords::CARFIN::PARENT>();
+       const std::string parent_name = parentItem.defaultApplied(0)
+           ? std::string{"GLOBAL"} : parentItem.get<std::string>(0);
+
+       if (parent_name != "GLOBAL") {
+           if (m_lgrs.count(parent_name) == 0) {
+               throw std::invalid_argument("Nested CARFIN names parent LGR '" + parent_name
+                   + "', which has not been defined yet. Parent LGRs must precede their "
+                     "children in the deck.");
+           }
+           const Carfin& parent = m_lgrs.get(parent_name);
+           // The parent LGR is a refined Cartesian block: every local cell is
+           // active and the active index is the identity in its local space.
+           const GridDims parentDims(static_cast<std::size_t>(parent.NX()),
+                                     static_cast<std::size_t>(parent.NY()),
+                                     static_cast<std::size_t>(parent.NZ()));
+           Carfin lgr(parentDims,
+                      [](const std::size_t) { return true; },
+                      [](const std::size_t local_index) { return local_index; });
+           lgr.update(lgrRecord);
+           m_lgrs.insert(std::make_pair(lgr.NAME(), lgr));
+           return;
+       }
+
        Carfin lgr(grid,
             [&grid](const std::size_t global_index)
             {
