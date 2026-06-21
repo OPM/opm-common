@@ -144,11 +144,13 @@ namespace Opm {
     // keyword must be DIMENS or SPECGRID
     inline std::array<int, 3> readDims(const DeckKeyword& keyword)
     {
+        // Shared backend for DIMENS and SPECGRID; both define NX/NY/NZ identically.
+        using Kw = ParserKeywords::DIMENS;
         const auto& record = keyword.getRecord(0);
         return {
-            record.getItem("NX").get<int>(0),
-            record.getItem("NY").get<int>(0),
-            record.getItem("NZ").get<int>(0)
+            record.getItem<Kw::NX>().get<int>(0),
+            record.getItem<Kw::NY>().get<int>(0),
+            record.getItem<Kw::NZ>().get<int>(0)
         };
     }
 
@@ -163,7 +165,7 @@ namespace Opm {
     void GridDims::binary_init(const Deck& deck)
     {
         const DeckKeyword& gdfile_kw = deck["GDFILE"].back();
-        const std::string& gdfile_arg = gdfile_kw.getRecord(0).getItem("filename").getTrimmedString(0);
+        const std::string& gdfile_arg = gdfile_kw.getRecord(0).getItem<ParserKeywords::GDFILE::filename>().getTrimmedString(0);
         const EclIO::EGrid egrid( deck.makeDeckPath(gdfile_arg) );
 
         const auto& dimens = egrid.dimension();
