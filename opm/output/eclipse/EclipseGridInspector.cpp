@@ -40,6 +40,8 @@
 #include <opm/output/eclipse/EclipseGridInspector.hpp>
 #include <opm/common/ErrorMacros.hpp>
 #include <opm/input/eclipse/Parser/Parser.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/D.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/S.hpp>
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/Deck/DeckItem.hpp>
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
@@ -70,17 +72,19 @@ void EclipseGridInspector::init_()
     }
 
     if (deck_.hasKeyword("SPECGRID")) {
+        using Kw = ParserKeywords::SPECGRID;
         const auto& specgridRecord =
             deck_["SPECGRID"].back().getRecord(0);
-        logical_gridsize_[0] = specgridRecord.getItem("NX").get< int >(0);
-        logical_gridsize_[1] = specgridRecord.getItem("NY").get< int >(0);
-        logical_gridsize_[2] = specgridRecord.getItem("NZ").get< int >(0);
+        logical_gridsize_[0] = specgridRecord.getItem<Kw::NX>().get< int >(0);
+        logical_gridsize_[1] = specgridRecord.getItem<Kw::NY>().get< int >(0);
+        logical_gridsize_[2] = specgridRecord.getItem<Kw::NZ>().get< int >(0);
     } else if (deck_.hasKeyword("DIMENS")) {
+        using Kw = ParserKeywords::DIMENS;
         const auto& dimensRecord =
             deck_["DIMENS"].back().getRecord(0);
-        logical_gridsize_[0] = dimensRecord.getItem("NX").get< int >(0);
-        logical_gridsize_[1] = dimensRecord.getItem("NY").get< int >(0);
-        logical_gridsize_[2] = dimensRecord.getItem("NZ").get< int >(0);
+        logical_gridsize_[0] = dimensRecord.getItem<Kw::NX>().get< int >(0);
+        logical_gridsize_[1] = dimensRecord.getItem<Kw::NY>().get< int >(0);
+        logical_gridsize_[2] = dimensRecord.getItem<Kw::NZ>().get< int >(0);
     } else {
         OPM_THROW(std::runtime_error, "Found neither SPECGRID nor DIMENS in file. At least one is needed.");
     }
