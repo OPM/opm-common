@@ -115,11 +115,13 @@ void updateOpenShutEvents(HandlerContext& handlerContext, const std::string& wel
 
 void handleWCONHIST(HandlerContext& handlerContext)
 {
+    using Kw = ParserKeywords::WCONHIST;
+
     for (const auto& record : handlerContext.keyword) {
-        const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
+        const std::string& wellNamePattern = record.getItem<Kw::WELL>().getTrimmedString(0);
         const auto well_names = handlerContext.wellNames(wellNamePattern, false);
 
-        const Well::Status status = WellStatusFromString(record.getItem("STATUS").getTrimmedString(0));
+        const Well::Status status = WellStatusFromString(record.getItem<Kw::STATUS>().getTrimmedString(0));
 
         for (const auto& well_name : well_names) {
             handlerContext.updateWellStatus(well_name, status,
@@ -131,8 +133,8 @@ void handleWCONHIST(HandlerContext& handlerContext)
             auto properties = std::make_shared<Well::WellProductionProperties>(well2.getProductionProperties());
             bool update_well = false;
 
-            auto table_nr = record.getItem("VFP_TABLE").get< int >(0);
-            if (record.getItem("VFP_TABLE").defaultApplied(0)) { // Default 1* use the privious set vfp table
+            auto table_nr = record.getItem<Kw::VFP_TABLE>().get< int >(0);
+            if (record.getItem<Kw::VFP_TABLE>().defaultApplied(0)) { // Default 1* use the privious set vfp table
                 table_nr = properties->VFPTableNumber;
             }
 
@@ -203,11 +205,13 @@ void handleWCONHIST(HandlerContext& handlerContext)
 
 void handleWCONINJE(HandlerContext& handlerContext)
 {
+    using Kw = ParserKeywords::WCONINJE;
+
     for (const auto& record : handlerContext.keyword) {
-        const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
+        const std::string& wellNamePattern = record.getItem<Kw::WELL>().getTrimmedString(0);
         const auto well_names = handlerContext.wellNames(wellNamePattern);
 
-        const Well::Status status = WellStatusFromString(record.getItem("STATUS").getTrimmedString(0));
+        const Well::Status status = WellStatusFromString(record.getItem<Kw::STATUS>().getTrimmedString(0));
 
         for (const auto& well_name : well_names) {
             handlerContext.updateWellStatus(well_name, status,
@@ -231,7 +235,7 @@ void handleWCONINJE(HandlerContext& handlerContext)
                                                  default_bhp_limit);
             }
 
-            auto table_nr = record.getItem("VFP_TABLE").get< int >(0);
+            auto table_nr = record.getItem<Kw::VFP_TABLE>().get< int >(0);
 
             if (table_nr != 0) {
                 const auto& vfpinj = handlerContext.state().vfpinj;
@@ -282,10 +286,12 @@ void handleWCONINJE(HandlerContext& handlerContext)
 
 void handleWCONINJH(HandlerContext& handlerContext)
 {
+    using Kw = ParserKeywords::WCONINJH;
+
     for (const auto& record : handlerContext.keyword) {
-        const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
+        const std::string& wellNamePattern = record.getItem<Kw::WELL>().getTrimmedString(0);
         const auto well_names = handlerContext.wellNames(wellNamePattern, false);
-        const Well::Status status = WellStatusFromString( record.getItem("STATUS").getTrimmedString(0));
+        const Well::Status status = WellStatusFromString( record.getItem<Kw::STATUS>().getTrimmedString(0));
 
         for (const auto& well_name : well_names) {
             handlerContext.updateWellStatus(well_name, status,
@@ -303,8 +309,8 @@ void handleWCONINJH(HandlerContext& handlerContext)
                                                                   6891.2);
             }
 
-            auto table_nr = record.getItem("VFP_TABLE").get< int >(0);
-            if (record.getItem("VFP_TABLE").defaultApplied(0)) { // Default 1* use the privious set vfp table
+            auto table_nr = record.getItem<Kw::VFP_TABLE>().get< int >(0);
+            if (record.getItem<Kw::VFP_TABLE>().defaultApplied(0)) { // Default 1* use the privious set vfp table
                 table_nr = injection->VFPTableNumber;
             }
             if (table_nr != 0) {
@@ -375,11 +381,13 @@ bool belongsToAutoChokeGroup(const Well& well, const ScheduleState& state) {
 
 void handleWCONPROD(HandlerContext& handlerContext)
 {
+    using Kw = ParserKeywords::WCONPROD;
+
     for (const auto& record : handlerContext.keyword) {
-        const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
+        const std::string& wellNamePattern = record.getItem<Kw::WELL>().getTrimmedString(0);
         const auto well_names = handlerContext.wellNames(wellNamePattern, false);
 
-        const Well::Status status = WellStatusFromString(record.getItem("STATUS").getTrimmedString(0));
+        const Well::Status status = WellStatusFromString(record.getItem<Kw::STATUS>().getTrimmedString(0));
 
         for (const auto& well_name : well_names) {
             bool update_well = handlerContext.updateWellStatus(well_name, status,
@@ -393,7 +401,7 @@ void handleWCONPROD(HandlerContext& handlerContext)
                 properties->addProductionControl(Well::ProducerCMode::GRUP);
             }
 
-            auto table_nr = record.getItem("VFP_TABLE").get< int >(0);
+            auto table_nr = record.getItem<Kw::VFP_TABLE>().get< int >(0);
             if (table_nr != 0) {
                 const auto& vfpprod = handlerContext.state().vfpprod;
                 if (vfpprod.has(table_nr)) {
@@ -499,11 +507,13 @@ void handleWELOPEN(HandlerContext& handlerContext)
         return std::all_of( rec.begin() + 2, rec.end(), defaulted );
     };
 
+    using Kw = ParserKeywords::WELOPEN;
+
     constexpr auto open = Well::Status::OPEN;
 
     for (const auto& record : keyword) {
-        const auto& wellNamePattern = record.getItem( "WELL" ).getTrimmedString(0);
-        const auto& status_str = record.getItem( "STATUS" ).getTrimmedString( 0 );
+        const auto& wellNamePattern = record.getItem<Kw::WELL>().getTrimmedString(0);
+        const auto& status_str = record.getItem<Kw::STATUS>().getTrimmedString( 0 );
         const auto well_names = handlerContext.wellNames(wellNamePattern);
 
         /* if all records are defaulted or just the status is set, only
@@ -852,8 +862,10 @@ void handleWELTARG(HandlerContext& handlerContext)
 
 void handleWHISTCTL(HandlerContext& handlerContext)
 {
+    using Kw = ParserKeywords::WHISTCTL;
+
     const auto& record = handlerContext.keyword.getRecord(0);
-    const std::string& cmodeString = record.getItem("CMODE").getTrimmedString(0);
+    const std::string& cmodeString = record.getItem<Kw::CMODE>().getTrimmedString(0);
     const auto controlMode = WellProducerCModeFromString(cmodeString);
 
     if (controlMode != Well::ProducerCMode::NONE && !Well::WellProductionProperties::effectiveHistoryProductionControl(controlMode) ) {
@@ -863,7 +875,7 @@ void handleWHISTCTL(HandlerContext& handlerContext)
     }
     handlerContext.state().update_whistctl( controlMode );
 
-    const std::string bhp_terminate = record.getItem("BPH_TERMINATE").getTrimmedString(0);
+    const std::string bhp_terminate = record.getItem<Kw::BPH_TERMINATE>().getTrimmedString(0);
     if (bhp_terminate == "YES") {
         std::string msg_fmt = "Problem with {keyword}\n"
                               "In {file} line {line}\n"
@@ -1368,18 +1380,20 @@ void handleWSEED(HandlerContext& handlerContext)
 
 void handleWTEST(HandlerContext& handlerContext)
 {
+    using Kw = ParserKeywords::WTEST;
+
     auto new_config = handlerContext.state().wtest_config.get();
     for (const auto& record : handlerContext.keyword) {
-        const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
+        const std::string& wellNamePattern = record.getItem<Kw::WELL>().getTrimmedString(0);
         const auto well_names = handlerContext.wellNames(wellNamePattern);
         if (well_names.empty()) {
             handlerContext.invalidNamePattern(wellNamePattern);
         }
 
-        const double test_interval = record.getItem("INTERVAL").getSIDouble(0);
-        const std::string& reasons = record.getItem("REASON").get<std::string>(0);
-        const int num_test = record.getItem("TEST_NUM").get<int>(0);
-        const double startup_time = record.getItem("START_TIME").getSIDouble(0);
+        const double test_interval = record.getItem<Kw::INTERVAL>().getSIDouble(0);
+        const std::string& reasons = record.getItem<Kw::REASON>().get<std::string>(0);
+        const int num_test = record.getItem<Kw::TEST_NUM>().get<int>(0);
+        const double startup_time = record.getItem<Kw::START_TIME>().getSIDouble(0);
 
         for (const auto& well_name : well_names) {
             if (reasons.empty())
