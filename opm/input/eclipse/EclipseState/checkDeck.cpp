@@ -32,6 +32,8 @@
 #include <opm/input/eclipse/Parser/ParseContext.hpp>
 #include <opm/input/eclipse/Parser/ErrorGuard.hpp>
 
+#include <opm/input/eclipse/Parser/ParserKeywords/F.hpp>
+
 #include <cstddef>
 
 namespace Opm {
@@ -60,7 +62,7 @@ bool checkDeck( const Deck& deck, const Parser& parser, const ParseContext& pars
 
     const std::string& deckUnitSystem = uppercase(deck.getActiveUnitSystem().getName());
     for (const auto& keyword : deck.getKeywordList("FILEUNIT")) {
-        const std::string& fileUnitSystem = uppercase(keyword->getRecord(0).getItem("FILE_UNIT_SYSTEM").getTrimmedString(0));
+        const std::string& fileUnitSystem = uppercase(keyword->getRecord(0).getItem<ParserKeywords::FILEUNIT::FILE_UNIT_SYSTEM>().getTrimmedString(0));
         if (fileUnitSystem != deckUnitSystem) {
             const auto& location = keyword->location();
             std::string msg_fmt = "Unit system mismatch\n"
