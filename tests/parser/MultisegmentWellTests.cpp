@@ -27,6 +27,7 @@
 #include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
 
+#include <opm/input/eclipse/Schedule/MSW/SegmentHeatTransfer.hpp>
 #include <opm/input/eclipse/Schedule/MSW/SICD.hpp>
 #include <opm/input/eclipse/Schedule/MSW/Valve.hpp>
 #include <opm/input/eclipse/Schedule/MSW/WellSegments.hpp>
@@ -1370,6 +1371,12 @@ COMPSEGS
   20    20     2     1   2525.0   2550.0  3*   20.0 /
   20    20     3     1   2550.0   2575.0 /
 /
+
+WSEGHEAT
+-- Name      Seg1 Seg2 Type Resist Target Temp Interp ContactLen
+   'PROD01'   2    2   TEMP  0.02   1*    60.0  1*    5.0 /
+   'PROD01'   3    3   SEG   0.04   2     1*    0.7   8.0 /
+/
 )");
 
     const auto es    = ::Opm::EclipseState { deck };
@@ -1402,6 +1409,29 @@ COMPSEGS
     BOOST_CHECK_CLOSE(connections.getFromIJK(19, 19, 0).thermalLength(), 10.0, 1.0e-8);
     BOOST_CHECK_CLOSE(connections.getFromIJK(19, 19, 1).thermalLength(), 20.0, 1.0e-8);
     BOOST_CHECK_EQUAL(connections.getFromIJK(19, 19, 2).thermalLength(), 0.0);
+
+    // WSEGHEAT: segment 2 gets a single fixed-temperature (TEMP) coefficient,
+    // segment 3 a single segment-to-segment (SEG) coefficient.  The specific
+    // thermal resistance has dimension 1/ThermalConductivity, so the SI value
+    // is the input scaled by day/kJ.
+    using HT = ::Opm::SegmentHeatTransfer;
+    const auto& ht2 = segments.getFromSegmentNumber(2).heatTransfer();
+    BOOST_REQUIRE_EQUAL(ht2.size(), 1);
+    BOOST_CHECK(ht2[0].type() == HT::Type::TEMP);
+    BOOST_CHECK_CLOSE(ht2[0].thermalResistance(), 0.02 * day / kJ, 1.0e-8);
+    BOOST_CHECK_CLOSE(ht2[0].temperature(), 60.0 + 273.15, 1.0e-8); // degC -> K
+    BOOST_CHECK_CLOSE(ht2[0].contactLength(), 5.0, 1.0e-8);
+
+    const auto& ht3 = segments.getFromSegmentNumber(3).heatTransfer();
+    BOOST_REQUIRE_EQUAL(ht3.size(), 1);
+    BOOST_CHECK(ht3[0].type() == HT::Type::SEG);
+    BOOST_CHECK_CLOSE(ht3[0].thermalResistance(), 0.04 * day / kJ, 1.0e-8);
+    BOOST_CHECK_EQUAL(ht3[0].targetSegment(), 2);
+    BOOST_CHECK_CLOSE(ht3[0].interpolationConstant(), 0.7, 1.0e-8);
+    BOOST_CHECK_CLOSE(ht3[0].contactLength(), 8.0, 1.0e-8);
+
+    // The top segment was never named in WSEGHEAT and has no coefficients.
+    BOOST_CHECK(segments.getFromSegmentNumber(1).heatTransfer().empty());
 }
 
 BOOST_AUTO_TEST_CASE(Node_XY_ABS_Range)

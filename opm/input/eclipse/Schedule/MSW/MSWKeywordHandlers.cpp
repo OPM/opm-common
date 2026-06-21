@@ -28,6 +28,7 @@
 
 #include <opm/input/eclipse/Schedule/Action/WGNames.hpp>
 #include <opm/input/eclipse/Schedule/MSW/AICD.hpp>
+#include <opm/input/eclipse/Schedule/MSW/SegmentHeatTransfer.hpp>
 #include <opm/input/eclipse/Schedule/MSW/SICD.hpp>
 #include <opm/input/eclipse/Schedule/MSW/WellSegments.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleState.hpp>
@@ -127,6 +128,28 @@ void handleWSEGAICD(HandlerContext& handlerContext)
     }
 }
 
+void handleWSEGHEAT(HandlerContext& handlerContext)
+{
+    const auto heat_transfers =
+        segmentHeatTransferFromWSEGHEAT(handlerContext.keyword);
+
+    for (const auto& [well_name_pattern, records] : heat_transfers) {
+        const auto well_names = handlerContext.wellNames(well_name_pattern);
+
+        for (const auto& well_name : well_names) {
+            auto well = handlerContext.state().wells(well_name);
+
+            const auto did_update = well.updateWSEGHEAT
+                (records, handlerContext.keyword.location(),
+                 handlerContext.parseContext, handlerContext.errors);
+
+            if (did_update) {
+                handlerContext.state().wells.update(std::move(well));
+            }
+        }
+    }
+}
+
 void handleWSEGITER(HandlerContext& handlerContext)
 {
     const auto& record = handlerContext.keyword.getRecord(0);
@@ -195,6 +218,7 @@ getMSWHandlers()
         { "COMPSEGS", &handleCOMPSEGS },
         { "WELSEGS" , &handleWELSEGS  },
         { "WSEGAICD", &handleWSEGAICD },
+        { "WSEGHEAT", &handleWSEGHEAT },
         { "WSEGITER", &handleWSEGITER },
         { "WSEGSICD", &handleWSEGSICD },
         { "WSEGVALV", &handleWSEGVALV },

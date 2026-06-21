@@ -21,6 +21,7 @@
 #define SEGMENT_HPP_HEADER_INCLUDED
 
 #include <opm/input/eclipse/Schedule/MSW/AICD.hpp>
+#include <opm/input/eclipse/Schedule/MSW/SegmentHeatTransfer.hpp>
 #include <opm/input/eclipse/Schedule/MSW/SICD.hpp>
 #include <opm/input/eclipse/Schedule/MSW/Valve.hpp>
 
@@ -122,6 +123,14 @@ namespace Opm {
         bool updateICDScalingFactor(const double outlet_segment_length, const double completion_length);
         void addInletSegment(const int segment_number);
 
+        // Heat transfer coefficients associated with this segment (WSEGHEAT).
+        const std::vector<SegmentHeatTransfer>& heatTransfer() const;
+
+        // Apply one WSEGHEAT record to this segment's set of heat transfer
+        // coefficients.  The operation carried by the record determines whether
+        // the existing set is replaced, extended, reduced or cleared.
+        void updateHeatTransfer(const SegmentHeatTransferRecord& record);
+
         bool isRegular() const
         {
             return std::holds_alternative<RegularSegment>(this->m_icd);
@@ -161,6 +170,7 @@ namespace Opm {
             serializer(m_wall_area);
             serializer(m_wall_volumetric_heat_capacity);
             serializer(m_wall_thermal_conductivity);
+            serializer(m_heat_transfer);
             serializer(m_icd);
         }
 
@@ -257,6 +267,11 @@ namespace Opm {
 
         // Thermal conductivity of the pipe wall.
         double m_wall_thermal_conductivity{0.0};
+
+        // Heat transfer coefficients to completions, other segments or fixed
+        // external temperatures, as defined by the WSEGHEAT keyword.  At most
+        // one COMP, one TEMP and five SEG coefficients may be present.
+        std::vector<SegmentHeatTransfer> m_heat_transfer{};
 
         void updateValve__(Valve& valve, const double segment_length);
     };

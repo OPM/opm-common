@@ -1129,6 +1129,7 @@ set( keywords
      001_Eclipse300/W/WINJGAS
      001_Eclipse300/W/WINJTEMP
      001_Eclipse300/W/WATDENT
+     001_Eclipse300/W/WSEGHEAT
      001_Eclipse300/W/WSF
      001_Eclipse300/X/XMF
      001_Eclipse300/Y/YMF

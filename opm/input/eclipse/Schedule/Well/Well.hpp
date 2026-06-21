@@ -22,6 +22,7 @@
 
 #include <opm/input/eclipse/Deck/UDAValue.hpp>
 #include <opm/input/eclipse/EclipseState/Phase.hpp>
+#include <opm/input/eclipse/Schedule/MSW/SegmentHeatTransfer.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleTypes.hpp>
 #include <opm/input/eclipse/Schedule/VFPProdTable.hpp>
 #include <opm/input/eclipse/Schedule/Well/Connection.hpp>
@@ -565,6 +566,11 @@ public:
                         const KeywordLocation&                    location,
                         const ParseContext&                       parseContext,
                         ErrorGuard&                               errors);
+
+    bool updateWSEGHEAT(const std::vector<SegmentHeatTransferRecord>& records,
+                        const KeywordLocation&                        location,
+                        const ParseContext&                           parseContext,
+                        ErrorGuard&                                   errors);
 
     bool updateICDFlowScalingFactors();
     bool updateWPAVE(const PAvg& pavg);

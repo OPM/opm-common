@@ -130,6 +130,12 @@ namespace Opm {
                             const ParseContext&                       parseContext,
                             ErrorGuard&                               errors);
 
+        bool updateWSEGHEAT(std::string_view                                well_name,
+                            const std::vector<SegmentHeatTransferRecord>&   records,
+                            const KeywordLocation&                          location,
+                            const ParseContext&                             parseContext,
+                            ErrorGuard&                                     errors);
+
         auto begin() const { return this->m_segments.begin(); }
         auto end() const { return this->m_segments.end(); }
 

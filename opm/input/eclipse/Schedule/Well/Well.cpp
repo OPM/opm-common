@@ -2005,6 +2005,21 @@ bool Well::updateWSEGVALV(const std::vector<std::pair<int, Valve>>& valve_pairs,
     return false;
 }
 
+bool Well::updateWSEGHEAT(const std::vector<SegmentHeatTransferRecord>& records,
+                          const KeywordLocation&                        location,
+                          const ParseContext&                           parseContext,
+                          ErrorGuard&                                   errors)
+{
+    auto new_segments = std::make_shared<WellSegments>(*this->segments);
+
+    if (new_segments->updateWSEGHEAT(this->name(), records, location, parseContext, errors)) {
+        this->segments = std::move(new_segments);
+        return true;
+    }
+
+    return false;
+}
+
 bool Well::updateICDFlowScalingFactors()
 {
     auto new_segments = std::make_shared<WellSegments>(*this->segments);

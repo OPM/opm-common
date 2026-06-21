@@ -1,0 +1,60 @@
+{
+  "name": "WSEGHEAT",
+  "sections": [
+    "SCHEDULE"
+  ],
+  "items": [
+    {
+      "item": 1,
+      "name": "WELL",
+      "value_type": "STRING"
+    },
+    {
+      "item": 2,
+      "name": "SEGMENT1",
+      "value_type": "INT"
+    },
+    {
+      "item": 3,
+      "name": "SEGMENT2",
+      "value_type": "INT"
+    },
+    {
+      "item": 4,
+      "name": "TYPE",
+      "value_type": "STRING",
+      "default": "NONE"
+    },
+    {
+      "item": 5,
+      "name": "THERMAL_RESISTANCE",
+      "value_type": "DOUBLE",
+      "dimension": "1/ThermalConductivity",
+      "default": 0
+    },
+    {
+      "item": 6,
+      "name": "TARGET_SEGMENT",
+      "value_type": "INT",
+      "default": 0
+    },
+    {
+      "item": 7,
+      "name": "TEMPERATURE",
+      "value_type": "DOUBLE",
+      "dimension": "Temperature"
+    },
+    {
+      "item": 8,
+      "name": "INTERPOLATION_CONSTANT",
+      "value_type": "DOUBLE",
+      "default": 0.5
+    },
+    {
+      "item": 9,
+      "name": "CONTACT_LENGTH",
+      "value_type": "DOUBLE",
+      "dimension": "Length"
+    }
+  ]
+}

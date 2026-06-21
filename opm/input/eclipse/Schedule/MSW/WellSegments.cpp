@@ -880,6 +880,37 @@ namespace Opm {
         return true;
     }
 
+    bool WellSegments::updateWSEGHEAT(std::string_view                                well_name,
+                                      const std::vector<SegmentHeatTransferRecord>&   records,
+                                      const KeywordLocation&                          location,
+                                      const ParseContext&                             parseContext,
+                                      ErrorGuard&                                     errors)
+    {
+        if (records.empty()) {
+            return false;
+        }
+
+        bool update = false;
+        for (const auto& record : records) {
+            for (int segment_number = record.segment1;
+                 segment_number <= record.segment2; ++segment_number)
+            {
+                const auto seg_idx = this->segmentNumberToIndex(segment_number);
+
+                if (seg_idx < 0) {
+                    handleMissingICDSegment(well_name, segment_number,
+                                            location, parseContext, errors);
+                    continue;
+                }
+
+                this->m_segments[seg_idx].updateHeatTransfer(record);
+                update = true;
+            }
+        }
+
+        return update;
+    }
+
     bool WellSegments::operator!=(const WellSegments& rhs) const
     {
         return ! (*this == rhs);
