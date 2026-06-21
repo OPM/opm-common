@@ -24,6 +24,8 @@
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 
+#include <opm/input/eclipse/Parser/ParserKeywords/W.hpp>
+
 #include "icd_convert.hpp"
 
 #include <cstddef>
@@ -101,44 +103,46 @@ namespace Opm {
     {}
 
     Valve::Valve(const DeckRecord& record, const double udq_default)
-        : m_con_flow_coeff(record.getItem("CV").get<double>(0))
-        , m_con_cross_area(record.getItem("AREA").get<UDAValue>(0))
+        : m_con_flow_coeff(record.getItem<ParserKeywords::WSEGVALV::CV>().get<double>(0))
+        , m_con_cross_area(record.getItem<ParserKeywords::WSEGVALV::AREA>().get<UDAValue>(0))
         , m_con_cross_area_value(m_con_cross_area.is<double>() ? m_con_cross_area.getSI() : -1.0)
         , m_udq_default(udq_default)
     {
+        using Kw = ParserKeywords::WSEGVALV;
+
         // We initialize negative values for the values are defaulted
         const double value_for_default = -1.0e100;
 
         // TODO: we assume that the value input for this keyword is always positive
-        if (record.getItem("EXTRA_LENGTH").defaultApplied(0)) {
+        if (record.getItem<Kw::EXTRA_LENGTH>().defaultApplied(0)) {
             m_pipe_additional_length = value_for_default;
         }
         else {
-            m_pipe_additional_length = record.getItem("EXTRA_LENGTH").getSIDouble(0);
+            m_pipe_additional_length = record.getItem<Kw::EXTRA_LENGTH>().getSIDouble(0);
         }
 
-        if (record.getItem("PIPE_D").defaultApplied(0)) {
+        if (record.getItem<Kw::PIPE_D>().defaultApplied(0)) {
             m_pipe_diameter = value_for_default;
         }
         else {
-            m_pipe_diameter = record.getItem("PIPE_D").getSIDouble(0);
+            m_pipe_diameter = record.getItem<Kw::PIPE_D>().getSIDouble(0);
         }
 
-        if (record.getItem("ROUGHNESS").defaultApplied(0)) {
+        if (record.getItem<Kw::ROUGHNESS>().defaultApplied(0)) {
             m_pipe_roughness = value_for_default;
         }
         else {
-            m_pipe_roughness = record.getItem("ROUGHNESS").getSIDouble(0);
+            m_pipe_roughness = record.getItem<Kw::ROUGHNESS>().getSIDouble(0);
         }
 
-        if (record.getItem("PIPE_A").defaultApplied(0)) {
+        if (record.getItem<Kw::PIPE_A>().defaultApplied(0)) {
             m_pipe_cross_area = value_for_default;
         }
         else {
-            m_pipe_cross_area = record.getItem("PIPE_A").getSIDouble(0);
+            m_pipe_cross_area = record.getItem<Kw::PIPE_A>().getSIDouble(0);
         }
 
-        if (record.getItem("STATUS").getTrimmedString(0) == "OPEN") {
+        if (record.getItem<Kw::STATUS>().getTrimmedString(0) == "OPEN") {
             m_status = ICDStatus::OPEN;
         }
         else {
@@ -146,11 +150,11 @@ namespace Opm {
             // TODO: should we check illegal input here
         }
 
-        if (record.getItem("MAX_A").defaultApplied(0)) {
+        if (record.getItem<Kw::MAX_A>().defaultApplied(0)) {
             m_con_max_cross_area = value_for_default;
         }
         else {
-            m_con_max_cross_area = record.getItem("MAX_A").getSIDouble(0);
+            m_con_max_cross_area = record.getItem<Kw::MAX_A>().getSIDouble(0);
         }
     }
 
@@ -173,12 +177,14 @@ namespace Opm {
     std::map<std::string, std::vector<std::pair<int, Valve>>>
     Valve::fromWSEGVALV(const DeckKeyword& keyword, const double udq_default)
     {
+        using Kw = ParserKeywords::WSEGVALV;
+
         auto res = std::map<std::string, std::vector<std::pair<int, Valve>>>{};
 
         for (const DeckRecord& record : keyword) {
-            const std::string well_name = record.getItem("WELL").getTrimmedString(0);
+            const std::string well_name = record.getItem<Kw::WELL>().getTrimmedString(0);
 
-            const int segment_number = record.getItem("SEGMENT_NUMBER").get<int>(0);
+            const int segment_number = record.getItem<Kw::SEGMENT_NUMBER>().get<int>(0);
 
             res[well_name].emplace_back(std::piecewise_construct,
                                         std::forward_as_tuple(segment_number),
