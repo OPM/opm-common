@@ -22,6 +22,8 @@
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
 #include <opm/input/eclipse/Deck/UDAValue.hpp>
 
+#include <opm/input/eclipse/Parser/ParserKeywords/W.hpp>
+
 Opm::WellFoamProperties Opm::WellFoamProperties::serializationTestObject()
 {
     Opm::WellFoamProperties result;
@@ -32,7 +34,9 @@ Opm::WellFoamProperties Opm::WellFoamProperties::serializationTestObject()
 
 void Opm::WellFoamProperties::handleWFOAM(const DeckRecord& rec)
 {
-    this->m_foamConcentration = rec.getItem("FOAM_CONCENTRATION").get<UDAValue>(0).getSI();
+    using Kw = ParserKeywords::WFOAM;
+
+    this->m_foamConcentration = rec.getItem<Kw::FOAM_CONCENTRATION>().get<UDAValue>(0).getSI();
 }
 
 bool Opm::WellFoamProperties::operator==(const WellFoamProperties& other) const
