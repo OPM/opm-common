@@ -18,16 +18,20 @@
  */
 
 #include "setKeywordBox.hpp"
+
+#include <opm/input/eclipse/Parser/ParserKeywords/B.hpp>
+
 namespace Opm {
 
     void setKeywordBox( const DeckRecord& deckRecord,
                         BoxManager& boxManager) {
-        const auto& I1Item = deckRecord.getItem("I1");
-        const auto& I2Item = deckRecord.getItem("I2");
-        const auto& J1Item = deckRecord.getItem("J1");
-        const auto& J2Item = deckRecord.getItem("J2");
-        const auto& K1Item = deckRecord.getItem("K1");
-        const auto& K2Item = deckRecord.getItem("K2");
+        using Kw = ParserKeywords::BOX;
+        const auto& I1Item = deckRecord.getItem<Kw::I1>();
+        const auto& I2Item = deckRecord.getItem<Kw::I2>();
+        const auto& J1Item = deckRecord.getItem<Kw::J1>();
+        const auto& J2Item = deckRecord.getItem<Kw::J2>();
+        const auto& K1Item = deckRecord.getItem<Kw::K1>();
+        const auto& K2Item = deckRecord.getItem<Kw::K2>();
 
         const auto& active_box = boxManager.getActiveBox();
 
