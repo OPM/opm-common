@@ -199,13 +199,17 @@ namespace Opm {
                                   const double volume,
                                   const bool data_ready,
                                   const double node_x,
-                                  const double node_y)
+                                  const double node_y,
+                                  const double wall_area,
+                                  const double wall_volumetric_heat_capacity,
+                                  const double wall_thermal_conductivity)
     {
         const auto segment = Segment {
             segment_number, branch, outlet_segment,
             depth, length, internal_diameter, roughness,
             cross_area, volume,
-            data_ready, node_x, node_y
+            data_ready, node_x, node_y,
+            wall_area, wall_volumetric_heat_capacity, wall_thermal_conductivity
         };
 
         this->addSegment(segment);
@@ -266,6 +270,14 @@ namespace Opm {
         const auto nodeX_top = record1.getItem("TOP_X").getSIDouble(0);
         const auto nodeY_top = record1.getItem("TOP_Y").getSIDouble(0);
 
+        // Pipe-wall thermal properties for the whole segment set.  Individual
+        // segments may override these in their own records.
+        const auto wall_area_top = record1.getItem("TOP_PIPE_WALL_AREA").getSIDouble(0);
+        const auto wall_volumetric_heat_capacity_top =
+            record1.getItem("TOP_PIPE_WALL_VOLUMETRIC_HEAT_CAPACITY").getSIDouble(0);
+        const auto wall_thermal_conductivity_top =
+            record1.getItem("TOP_PIPE_WALL_THERMAL_CONDUCTIVITY").getSIDouble(0);
+
         // The main branch is 1 instead of 0.  The segment number for top
         // segment is also 1.
         if (length_depth_type == LengthDepth::INC) {
@@ -281,7 +293,9 @@ namespace Opm {
 
             this->addSegment(segmentID, branchID, outletSegment, depth, length,
                              internal_diameter, roughness, cross_area,
-                             volume_top, data_ready, nodeX_top, nodeY_top);
+                             volume_top, data_ready, nodeX_top, nodeY_top,
+                             wall_area_top, wall_volumetric_heat_capacity_top,
+                             wall_thermal_conductivity_top);
         }
         else if (length_depth_type == LengthDepth::ABS) {
             const auto segmentID = 1;
@@ -295,7 +309,9 @@ namespace Opm {
             this->addSegment(segmentID, branchID, outletSegment,
                              depth_top, length_top,
                              internal_diameter, roughness, cross_area,
-                             volume_top, data_ready, nodeX_top, nodeY_top);
+                             volume_top, data_ready, nodeX_top, nodeY_top,
+                             wall_area_top, wall_volumetric_heat_capacity_top,
+                             wall_thermal_conductivity_top);
         }
 
         // Read all the information out from the DECK first then process to
@@ -369,6 +385,20 @@ namespace Opm {
             const auto node_X = record.getItem("LENGTH_X").getSIDouble(0);
             const auto node_Y = record.getItem("LENGTH_Y").getSIDouble(0);
 
+            // Pipe-wall thermal properties default to the values given in
+            // record 1 (items 10-12) when not specified for the segment.
+            const auto wall_area = record.getItem("PIPE_WALL_AREA").hasValue(0)
+                ? record.getItem("PIPE_WALL_AREA").getSIDouble(0)
+                : wall_area_top;
+            const auto wall_volumetric_heat_capacity =
+                record.getItem("PIPE_WALL_VOLUMETRIC_HEAT_CAPACITY").hasValue(0)
+                ? record.getItem("PIPE_WALL_VOLUMETRIC_HEAT_CAPACITY").getSIDouble(0)
+                : wall_volumetric_heat_capacity_top;
+            const auto wall_thermal_conductivity =
+                record.getItem("PIPE_WALL_THERMAL_CONDUCTIVITY").hasValue(0)
+                ? record.getItem("PIPE_WALL_THERMAL_CONDUCTIVITY").getSIDouble(0)
+                : wall_thermal_conductivity_top;
+
             for (int segment_number = segment1; segment_number <= segment2; ++segment_number) {
                 // For the first or the only segment in the range is the one
                 // specified in WELSEGS.  From the second segment in the
@@ -384,7 +414,9 @@ namespace Opm {
                 this->addSegment(segment_number, branch, outlet_segment,
                                  depth, length, diameter,
                                  roughness, area, volume, data_ready,
-                                 node_X, node_Y);
+                                 node_X, node_Y,
+                                 wall_area, wall_volumetric_heat_capacity,
+                                 wall_thermal_conductivity);
             }
         }
 

@@ -1310,6 +1310,88 @@ COMPSEGS
     }
 }
 
+BOOST_AUTO_TEST_CASE(PipeWallThermalProperties)
+{
+    // WELSEGS items 10-12 (record 1) and 13-15 (subsequent records) provide
+    // the pipe-wall properties used by the thermal option.  Segment 2 sets its
+    // own values while the remaining segments fall back to the record 1 values.
+    const auto deck = ::Opm::Parser{}.parseString(R"(RUNSPEC
+DIMENS
+  20 20 20 /
+
+GRID
+
+DXV
+  20*100 /
+
+DYV
+  20*100 /
+
+DZV
+  20*10 /
+
+DEPTHZ
+  441*2000.0 /
+
+PORO
+    8000*0.1 /
+PERMX
+    8000*1 /
+PERMY
+    8000*0.1 /
+PERMZ
+    8000*0.01 /
+
+SCHEDULE
+
+WELSPECS
+ 'PROD01' 'P' 20 20 1* OIL /
+/
+
+COMPDAT
+ 'PROD01' 20 20 1 3 'OPEN' /
+/
+
+WELSEGS
+'PROD01' 2512.5 2512.5 1.0e-5 'ABS' 'HF-' 'HO' 0.0 0.0 1.5 2000 50 /
+2  2  1  1  2537.5 2525.5  0.3  0.00010 2* 0.0 0.0 2.5 3000 80 /
+3  3  1  2  2562.5 2562.5  0.2  0.00010 2* 0.0 0.0 /
+/
+
+COMPSEGS
+-- Name
+  'PROD01' /
+-- I    J     K   Branch
+  20    20     1     1   2512.5   2525.0 /
+  20    20     2     1   2525.0   2550.0 /
+  20    20     3     1   2550.0   2575.0 /
+/
+)");
+
+    const auto es    = ::Opm::EclipseState { deck };
+    const auto sched = ::Opm::Schedule { deck, es, std::make_shared<const ::Opm::Python>() };
+
+    const auto& segments = sched[0].wells("PROD01").getSegments();
+
+    // Metric to SI conversion factors for the thermal quantities.
+    const double kJ  = 1.0e3;     // kJ -> J (Energy)
+    const double day = 86400.0;   // day -> s  (ThermalConductivity uses /day)
+
+    // Top segment and segment 3 use the record 1 (default) values.
+    for (const int segment_number : {1, 3}) {
+        const auto& segment = segments.getFromSegmentNumber(segment_number);
+        BOOST_CHECK_CLOSE(segment.wallArea(), 1.5, 1.0e-8);
+        BOOST_CHECK_CLOSE(segment.wallVolumetricHeatCapacity(), 2000.0 * kJ, 1.0e-8);
+        BOOST_CHECK_CLOSE(segment.wallThermalConductivity(), 50.0 * kJ / day, 1.0e-8);
+    }
+
+    // Segment 2 overrides the defaults with its own record values.
+    const auto& segment2 = segments.getFromSegmentNumber(2);
+    BOOST_CHECK_CLOSE(segment2.wallArea(), 2.5, 1.0e-8);
+    BOOST_CHECK_CLOSE(segment2.wallVolumetricHeatCapacity(), 3000.0 * kJ, 1.0e-8);
+    BOOST_CHECK_CLOSE(segment2.wallThermalConductivity(), 80.0 * kJ / day, 1.0e-8);
+}
+
 BOOST_AUTO_TEST_CASE(Node_XY_ABS_Range)
 {
     const auto deck = ::Opm::Parser{}.parseString(R"(RUNSPEC

@@ -51,6 +51,24 @@
         "value_type": "DOUBLE",
         "dimension": "Length",
         "default": 0
+      },
+      {
+        "name": "TOP_PIPE_WALL_AREA",
+        "value_type": "DOUBLE",
+        "dimension": "Length*Length",
+        "default": 0
+      },
+      {
+        "name": "TOP_PIPE_WALL_VOLUMETRIC_HEAT_CAPACITY",
+        "value_type": "DOUBLE",
+        "dimension": "Energy/Length*Length*Length*AbsoluteTemperature",
+        "default": 0
+      },
+      {
+        "name": "TOP_PIPE_WALL_THERMAL_CONDUCTIVITY",
+        "value_type": "DOUBLE",
+        "dimension": "ThermalConductivity",
+        "default": 0
       }
     ],
     [
@@ -111,6 +129,21 @@
         "value_type": "DOUBLE",
         "dimension": "Length",
         "default": 0
+      },
+      {
+        "name": "PIPE_WALL_AREA",
+        "value_type": "DOUBLE",
+        "dimension": "Length*Length"
+      },
+      {
+        "name": "PIPE_WALL_VOLUMETRIC_HEAT_CAPACITY",
+        "value_type": "DOUBLE",
+        "dimension": "Energy/Length*Length*Length*AbsoluteTemperature"
+      },
+      {
+        "name": "PIPE_WALL_THERMAL_CONDUCTIVITY",
+        "value_type": "DOUBLE",
+        "dimension": "ThermalConductivity"
       }
     ]
   ]

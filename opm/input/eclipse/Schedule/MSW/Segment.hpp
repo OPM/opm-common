@@ -69,7 +69,10 @@ namespace Opm {
                 const double volume_in,
                 const bool data_ready_in,
                 const double x_in,
-                const double y_in);
+                const double y_in,
+                const double wall_area_in = 0.0,
+                const double wall_volumetric_heat_capacity_in = 0.0,
+                const double wall_thermal_conductivity_in = 0.0);
 
         explicit Segment(const RestartIO::RstSegment& rst_segment, const std::string& wname);
 
@@ -87,6 +90,16 @@ namespace Opm {
         double crossArea() const;
         double volume() const;
         bool dataReady() const;
+
+        // Cross-sectional area of the pipe wall used in the thermal
+        // conductivity calculation (WELSEGS item 10/13).
+        double wallArea() const;
+
+        // Volumetric heat capacity of the pipe wall (WELSEGS item 11/14).
+        double wallVolumetricHeatCapacity() const;
+
+        // Thermal conductivity of the pipe wall (WELSEGS item 12/15).
+        double wallThermalConductivity() const;
 
         SegmentType segmentType() const;
         int ecl_type_id() const;
@@ -145,6 +158,9 @@ namespace Opm {
             serializer(m_data_ready);
             serializer(m_x);
             serializer(m_y);
+            serializer(m_wall_area);
+            serializer(m_wall_volumetric_heat_capacity);
+            serializer(m_wall_thermal_conductivity);
             serializer(m_icd);
         }
 
@@ -228,8 +244,19 @@ namespace Opm {
 
         std::variant<RegularSegment, SICD, AutoICD, Valve> m_icd;
 
-        // There are three other properties for the segment pertaining to
-        // thermal conduction.  These are not currently supported.
+        // Three properties for the segment pertaining to thermal conduction
+        // through the pipe wall, used by the thermal option.  They default to
+        // zero when not specified in WELSEGS.
+
+        // Cross-sectional area of the pipe wall used in the thermal
+        // conductivity calculation.
+        double m_wall_area{0.0};
+
+        // Volumetric heat capacity of the pipe wall.
+        double m_wall_volumetric_heat_capacity{0.0};
+
+        // Thermal conductivity of the pipe wall.
+        double m_wall_thermal_conductivity{0.0};
 
         void updateValve__(Valve& valve, const double segment_length);
     };

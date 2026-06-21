@@ -142,7 +142,10 @@ namespace Opm {
                      const double volume_in,
                      const bool   data_ready_in,
                      const double x_in,
-                     const double y_in)
+                     const double y_in,
+                     const double wall_area_in,
+                     const double wall_volumetric_heat_capacity_in,
+                     const double wall_thermal_conductivity_in)
         : m_segment_number   (segment_number_in)
         , m_branch           (branch_in)
         , m_outlet_segment   (outlet_segment_in)
@@ -155,6 +158,9 @@ namespace Opm {
         , m_data_ready       (data_ready_in)
         , m_x                (x_in)
         , m_y                (y_in)
+        , m_wall_area                    (wall_area_in)
+        , m_wall_volumetric_heat_capacity(wall_volumetric_heat_capacity_in)
+        , m_wall_thermal_conductivity    (wall_thermal_conductivity_in)
     {}
 
     Segment::Segment(const Segment& src,
@@ -221,6 +227,9 @@ namespace Opm {
         result.m_data_ready = true;
         result.m_x = 12.0;
         result.m_y = 13.0;
+        result.m_wall_area = 14.0;
+        result.m_wall_volumetric_heat_capacity = 15.0;
+        result.m_wall_thermal_conductivity = 16.0;
         result.m_icd = SICD::serializationTestObject();
         return result;
     }
@@ -278,6 +287,21 @@ namespace Opm {
         return m_data_ready;
     }
 
+    double Segment::wallArea() const
+    {
+        return m_wall_area;
+    }
+
+    double Segment::wallVolumetricHeatCapacity() const
+    {
+        return m_wall_volumetric_heat_capacity;
+    }
+
+    double Segment::wallThermalConductivity() const
+    {
+        return m_wall_thermal_conductivity;
+    }
+
     Segment::SegmentType Segment::segmentType() const
     {
         if (this->isRegular())
@@ -329,6 +353,9 @@ namespace Opm {
             && this->m_data_ready        == rhs.m_data_ready
             && (this->m_x                == rhs.m_x)
             && (this->m_y                == rhs.m_y)
+            && (this->m_wall_area        == rhs.m_wall_area)
+            && (this->m_wall_volumetric_heat_capacity == rhs.m_wall_volumetric_heat_capacity)
+            && (this->m_wall_thermal_conductivity     == rhs.m_wall_thermal_conductivity)
             ;
     }
 

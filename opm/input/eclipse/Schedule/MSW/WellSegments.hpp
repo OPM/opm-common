@@ -162,13 +162,17 @@ namespace Opm {
                         const double volume,
                         const bool data_ready,
                         const double node_x,
-                        const double node_y);
+                        const double node_y,
+                        const double wall_area = 0.0,
+                        const double wall_volumetric_heat_capacity = 0.0,
+                        const double wall_thermal_conductivity = 0.0);
         const Segment& topSegment() const;
 
         // components of the pressure drop to be included
         CompPressureDrop m_comp_pressure_drop{CompPressureDrop::HFA};
-        // There are other three properties for segment related to thermal conduction,
-        // while they are not supported by the keyword at the moment.
+        // The three pipe-wall properties related to thermal conduction
+        // (cross-sectional area, volumetric heat capacity and thermal
+        // conductivity) are stored on the individual segments.
 
         std::vector< Segment > m_segments{};
         // the mapping from the segment number to the
