@@ -59,6 +59,7 @@ namespace {
                double distance_end_in,
                Opm::Connection::Direction dir_in,
                double center_depth_in,
+               double thermal_length_in,
                int segment_number_in,
                std::size_t seqIndex_in);
 
@@ -75,8 +76,12 @@ namespace {
         Opm::Connection::Direction m_dir;
 
         double center_depth;
-        // we do not handle thermal length for the moment
-        // double m_thermal_length;
+
+        // Effective length of the connection in the wellbore segment used in
+        // the thermal conductivity calculation (COMPSEGS item 10).  Zero when
+        // not specified.
+        double m_thermal_length;
+
         int segment_number;
         std::size_t m_seqIndex;
 
@@ -89,6 +94,7 @@ namespace {
                    const double distance_end_in,
                    const Opm::Connection::Direction dir_in,
                    const double center_depth_in,
+                   const double thermal_length_in,
                    const int segment_number_in,
                    const std::size_t seqIndex_in)
         : m_i              { i_in }
@@ -99,6 +105,7 @@ namespace {
         , m_distance_end   { distance_end_in }
         , m_dir            { dir_in }
         , center_depth     { center_depth_in }
+        , m_thermal_length { thermal_length_in }
         , segment_number   { segment_number_in }
         , m_seqIndex       { seqIndex_in }
     {}
@@ -351,6 +358,12 @@ The direction must be specified when END_IJK is specified. Well: {})", well_name
                 ? record.getItem<Kw::CENTER_DEPTH>().getSIDouble(0)
                 : 0.0;
 
+            // Effective length of the connection used in thermal conductivity
+            // calculations (thermal option).  Zero when not specified.
+            const auto thermal_length = record.getItem<Kw::THERMAL_LENGTH>().hasValue(0)
+                ? record.getItem<Kw::THERMAL_LENGTH>().getSIDouble(0)
+                : 0.0;
+
             if (center_depth < 0.0) {
                 // TODO: get the depth from COMPDAT data.
                 const auto msg_fmt = fmt::format(R"(Problems with {{keyword}}
@@ -376,6 +389,7 @@ The use of negative center depth in item 9 is not supported. Well: {})", well_na
                                           distance_start, distance_end,
                                           direction,
                                           center_depth,
+                                          thermal_length,
                                           segment_number,
                                           seqIndex);
                 }
@@ -411,6 +425,7 @@ Well: {}, connection: ({},{},{}))", well_name, I+1, J+1 , K+1);
             // Defaulted values:
             const auto direction = Opm::Connection::Direction::X;
             const auto center_depth = 0.0;
+            const auto thermal_length = 0.0;
             const auto segment_number = 0;
             const auto branch = 1;
 
@@ -423,6 +438,7 @@ Well: {}, connection: ({},{},{}))", well_name, I+1, J+1 , K+1);
                                   trajectory_point.startMD, trajectory_point.endMD,
                                   direction,
                                   center_depth,
+                                  thermal_length,
                                   segment_number, seqIndex);
         }
 
@@ -493,7 +509,8 @@ Well: {}, connection: ({},{},{}))", well_name, I+1, J+1 , K+1);
                                    cdepth,
                                    compseg.m_seqIndex,
                                    std::make_pair(compseg.m_distance_start,
-                                                  compseg.m_distance_end));
+                                                  compseg.m_distance_end),
+                                   compseg.m_thermal_length);
             }
         }
 

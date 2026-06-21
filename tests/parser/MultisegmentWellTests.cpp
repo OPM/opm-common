@@ -1315,6 +1315,10 @@ BOOST_AUTO_TEST_CASE(PipeWallThermalProperties)
     // WELSEGS items 10-12 (record 1) and 13-15 (subsequent records) provide
     // the pipe-wall properties used by the thermal option.  Segment 2 sets its
     // own values while the remaining segments fall back to the record 1 values.
+    //
+    // COMPSEGS item 10 (THERMAL_LENGTH) provides the effective connection
+    // length used by the same thermal option; connections that leave it
+    // defaulted keep a thermal length of zero.
     const auto deck = ::Opm::Parser{}.parseString(R"(RUNSPEC
 DIMENS
   20 20 20 /
@@ -1361,9 +1365,9 @@ WELSEGS
 COMPSEGS
 -- Name
   'PROD01' /
--- I    J     K   Branch
-  20    20     1     1   2512.5   2525.0 /
-  20    20     2     1   2525.0   2550.0 /
+-- I    J     K   Branch  Dstart  Dend   3*    ThermLen
+  20    20     1     1   2512.5   2525.0  3*   10.0 /
+  20    20     2     1   2525.0   2550.0  3*   20.0 /
   20    20     3     1   2550.0   2575.0 /
 /
 )");
@@ -1390,6 +1394,14 @@ COMPSEGS
     BOOST_CHECK_CLOSE(segment2.wallArea(), 2.5, 1.0e-8);
     BOOST_CHECK_CLOSE(segment2.wallVolumetricHeatCapacity(), 3000.0 * kJ, 1.0e-8);
     BOOST_CHECK_CLOSE(segment2.wallThermalConductivity(), 80.0 * kJ / day, 1.0e-8);
+
+    // COMPSEGS thermal length: explicitly specified on the first two
+    // connections (metric length is in metres, so the SI value equals the
+    // input value) and defaulted to zero on the third.
+    const auto& connections = sched[0].wells("PROD01").getConnections();
+    BOOST_CHECK_CLOSE(connections.getFromIJK(19, 19, 0).thermalLength(), 10.0, 1.0e-8);
+    BOOST_CHECK_CLOSE(connections.getFromIJK(19, 19, 1).thermalLength(), 20.0, 1.0e-8);
+    BOOST_CHECK_EQUAL(connections.getFromIJK(19, 19, 2).thermalLength(), 0.0);
 }
 
 BOOST_AUTO_TEST_CASE(Node_XY_ABS_Range)

@@ -191,6 +191,7 @@ namespace Opm
         result.m_sort_value = 14;
         result.m_defaultSatTabId = true;
         result.segment_number = 16;
+        result.m_thermal_length = 17.0;
         result.m_wpimult = 0.123;
         result.m_subject_to_welpi = true;
         result.m_filter_cake = FilterCake::serializationTestObject();
@@ -366,12 +367,14 @@ namespace Opm
     void Connection::updateSegment(const int segment_number_arg,
                                    const double center_depth_arg,
                                    const std::size_t compseg_insert_index,
-                                   const std::optional<std::pair<double, double>>& perf_range)
+                                   const std::optional<std::pair<double, double>>& perf_range,
+                                   const double thermal_length_arg)
     {
         this->segment_number = segment_number_arg;
         this->center_depth = center_depth_arg;
         this->m_sort_value = compseg_insert_index;
         this->m_perf_range = perf_range;
+        this->m_thermal_length = thermal_length_arg;
     }
 
     void Connection::updateSegmentRST(int segment_number_arg,
@@ -384,6 +387,11 @@ namespace Opm
     int Connection::segment() const
     {
         return this->segment_number;
+    }
+
+    double Connection::thermalLength() const
+    {
+        return this->m_thermal_length;
     }
 
     void Connection::scaleWellPi(double wellPi)
@@ -462,6 +470,7 @@ namespace Opm
             && (this->m_sort_value == that.m_sort_value)
             && (this->m_defaultSatTabId == that.m_defaultSatTabId)
             && (this->segment_number == that.segment_number)
+            && (this->m_thermal_length == that.m_thermal_length)
             && (this->m_subject_to_welpi == that.m_subject_to_welpi)
             && (this->ijk == that.ijk)
             && (this->lgr_grid == that.lgr_grid)

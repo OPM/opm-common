@@ -200,6 +200,7 @@ namespace Opm {
         State state() const;
         Direction dir() const;
         double depth() const;
+        double thermalLength() const;
         int satTableId() const;
         int complnum() const;
         int segment() const;
@@ -266,7 +267,8 @@ namespace Opm {
         void updateSegment(int segment_number_arg,
                            double center_depth_arg,
                            std::size_t compseg_insert_index,
-                           const std::optional<std::pair<double,double>>& perf_range);
+                           const std::optional<std::pair<double,double>>& perf_range,
+                           double thermal_length_arg = 0.0);
 
         template<class Serializer>
         void serializeOp(Serializer& serializer)
@@ -286,6 +288,7 @@ namespace Opm {
             serializer(this->m_perf_range);
             serializer(this->m_defaultSatTabId);
             serializer(this->segment_number);
+            serializer(this->m_thermal_length);
             serializer(this->m_wpimult);
             serializer(this->m_subject_to_welpi);
             serializer(this->m_filter_cake);
@@ -369,6 +372,11 @@ namespace Opm {
         //
         // 0 means the connection is not associated to a segment.
         int segment_number { 0 };
+
+        // Effective length of the connection in the wellbore segment used in
+        // the thermal conductivity calculation (COMPSEGS item 10).  Zero when
+        // not specified.
+        double m_thermal_length { 0.0 };
 
         double m_wpimult { 1.0 };
 
