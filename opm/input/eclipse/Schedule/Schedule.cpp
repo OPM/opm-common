@@ -890,9 +890,10 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                                                      ErrorGuard&         errors)
     {
         if (keyword.is<ParserKeywords::COMPDAT>()) {
+            using Kw = ParserKeywords::COMPDAT;
             for (const auto& record : keyword) {
-                const auto& itemI = record.getItem("I");
-                const auto& itemJ = record.getItem("J");
+                const auto& itemI = record.getItem<Kw::I>();
+                const auto& itemJ = record.getItem<Kw::J>();
 
                 const auto defaulted_I = itemI.defaultApplied(0) || (itemI.get<int>(0) == 0);
                 const auto defaulted_J = itemJ.defaultApplied(0) || (itemJ.get<int>(0) == 0);
@@ -910,10 +911,10 @@ Defaulted grid coordinates is not allowed for COMPDAT as part of ACTIONX)"
                 const auto I = itemI.get<int>(0) - 1;
                 const auto J = itemJ.get<int>(0) - 1;
 
-                const auto K1 = record.getItem("K1").get<int>(0) - 1;
-                const auto K2 = record.getItem("K2").get<int>(0) - 1;
+                const auto K1 = record.getItem<Kw::K1>().get<int>(0) - 1;
+                const auto K2 = record.getItem<Kw::K2>().get<int>(0) - 1;
 
-                const auto wellName = record.getItem("WELL").getTrimmedString(0);
+                const auto wellName = record.getItem<Kw::WELL>().getTrimmedString(0);
 
                 // Retrieve or create the set of future connections for the well
                 auto& currentSet = this->possibleFutureConnections[wellName];
@@ -942,6 +943,7 @@ Defaulted grid coordinates is not allowed for COMPDAT as part of ACTIONX)"
         }
 
         if (keyword.is<ParserKeywords::COMPSEGS>()) {
+            using Kw = ParserKeywords::COMPSEGS;
             bool first_record = true;
 
             for (const auto& record : keyword) {
@@ -950,9 +952,9 @@ Defaulted grid coordinates is not allowed for COMPDAT as part of ACTIONX)"
                     continue;
                 }
 
-                const int I = record.getItem("I").get<int>(0) - 1;
-                const int J = record.getItem("J").get<int>(0) - 1;
-                const int K = record.getItem("K").get<int>(0) - 1;
+                const int I = record.getItem<Kw::I>().get<int>(0) - 1;
+                const int J = record.getItem<Kw::J>().get<int>(0) - 1;
+                const int K = record.getItem<Kw::K>().get<int>(0) - 1;
 
                 try {
                     const auto& cell = grid.get_cell(I, J, K);
@@ -1153,11 +1155,11 @@ Defaulted grid coordinates is not allowed for COMPDAT as part of ACTIONX)"
                            Connection::Order wellConnectionOrder)
     {
         // We change from eclipse's 1 - n, to a 0 - n-1 solution
-        int headI = record.getItem("HEAD_I").get< int >(0) - 1;
-        int headJ = record.getItem("HEAD_J").get< int >(0) - 1;
+        int headI = record.getItem<ParserKeywords::WELSPECS::HEAD_I>().get< int >(0) - 1;
+        int headJ = record.getItem<ParserKeywords::WELSPECS::HEAD_J>().get< int >(0) - 1;
         Phase preferredPhase;
         {
-            const std::string phaseStr = record.getItem("PHASE").getTrimmedString(0);
+            const std::string phaseStr = record.getItem<ParserKeywords::WELSPECS::PHASE>().getTrimmedString(0);
             if (phaseStr == "LIQ") {
                 // We need a workaround in case the preferred phase is "LIQ",
                 // which is not proper phase and will cause the get_phase()
@@ -1169,12 +1171,12 @@ Defaulted grid coordinates is not allowed for COMPDAT as part of ACTIONX)"
                 preferredPhase = get_phase(phaseStr);
             }
         }
-        const auto& refDepthItem = record.getItem("REF_DEPTH");
+        const auto& refDepthItem = record.getItem<ParserKeywords::WELSPECS::REF_DEPTH>();
         std::optional<double> ref_depth;
         if (refDepthItem.hasValue( 0 ))
             ref_depth = refDepthItem.getSIDouble( 0 );
 
-        double drainageRadius = record.getItem( "D_RADIUS" ).getSIDouble(0);
+        double drainageRadius = record.getItem<ParserKeywords::WELSPECS::D_RADIUS>().getSIDouble(0);
 
         bool allowCrossFlow = true;
         const std::string& allowCrossFlowStr = record.getItem<ParserKeywords::WELSPECS::CROSSFLOW>().getTrimmedString(0);
