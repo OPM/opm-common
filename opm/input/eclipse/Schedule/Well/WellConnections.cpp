@@ -437,27 +437,32 @@ namespace Opm {
         requested_open_complnums.clear();
         requested_shut_complnums.clear();
 
-        const auto& itemI = record.getItem("I");
+        // Shared backend for COMPDAT/COMPDATL/COMPDATM.  COMPDATX is the
+        // superset keyword (same items plus the LGR item), so resolve all
+        // item names against it regardless of which variant 'record' holds.
+        using Kw = ParserKeywords::COMPDATX;
+
+        const auto& itemI = record.getItem<Kw::I>();
         const auto defaulted_I = itemI.defaultApplied(0) || (itemI.get<int>(0) == 0);
         const auto I = !defaulted_I ? itemI.get<int>(0) - 1 : this->headI;
 
-        const auto& itemJ = record.getItem("J");
+        const auto& itemJ = record.getItem<Kw::J>();
         const auto defaulted_J = itemJ.defaultApplied(0) || (itemJ.get<int>(0) == 0);
         const auto J = !defaulted_J ? itemJ.get<int>(0) - 1 : this->headJ;
 
-        const auto K1 = record.getItem("K1").get<int>(0) - 1;
-        const auto K2 = record.getItem("K2").get<int>(0) - 1;
-        const auto state = Connection::StateFromString(record.getItem("STATE").getTrimmedString(0));
+        const auto K1 = record.getItem<Kw::K1>().get<int>(0) - 1;
+        const auto K2 = record.getItem<Kw::K2>().get<int>(0) - 1;
+        const auto state = Connection::StateFromString(record.getItem<Kw::STATE>().getTrimmedString(0));
 
-        const auto& r0Item = record.getItem("PR");
-        const auto& CFItem = record.getItem("CONNECTION_TRANSMISSIBILITY_FACTOR");
-        const auto& diameterItem = record.getItem("DIAMETER");
-        const auto& KhItem = record.getItem("Kh");
-        const auto& satTableIdItem = record.getItem("SAT_TABLE");
-        const auto direction = Connection::DirectionFromString(record.getItem("DIR").getTrimmedString(0));
+        const auto& r0Item = record.getItem<Kw::PR>();
+        const auto& CFItem = record.getItem<Kw::CONNECTION_TRANSMISSIBILITY_FACTOR>();
+        const auto& diameterItem = record.getItem<Kw::DIAMETER>();
+        const auto& KhItem = record.getItem<Kw::Kh>();
+        const auto& satTableIdItem = record.getItem<Kw::SAT_TABLE>();
+        const auto direction = Connection::DirectionFromString(record.getItem<Kw::DIR>().getTrimmedString(0));
 
-        const auto skin_factor = record.getItem("SKIN").getSIDouble(0);
-        const auto d_factor = record.getItem("D_FACTOR").getSIDouble(0);
+        const auto skin_factor = record.getItem<Kw::SKIN>().getSIDouble(0);
+        const auto d_factor = record.getItem<Kw::D_FACTOR>().getSIDouble(0);
         const int lgr_grid_number = grid.get_lgr_grid_number(lgr_label);
 
         int satTableId = -1;
@@ -716,16 +721,18 @@ The cell ({},{},{}) in well {} is not active and the connection will be ignored)
     {
         if (this->coord[0].size() == 0) return;  // No path.
 
-        const auto& perf_top = record.getItem("PERF_TOP");
-        const auto& perf_bot = record.getItem("PERF_BOT");
+        using Kw = ParserKeywords::COMPTRAJ;
 
-        const auto& CFItem = record.getItem("CONNECTION_TRANSMISSIBILITY_FACTOR");
-        const auto& diameterItem = record.getItem("DIAMETER");
-        const auto& KhItem = record.getItem("Kh");
-        const auto skin_factor = record.getItem("SKIN").getSIDouble(0);
-        const auto d_factor = record.getItem("D_FACTOR").getSIDouble(0);
-        const auto& satTableIdItem = record.getItem("SAT_TABLE");
-        const auto state = Connection::StateFromString(record.getItem("STATE").getTrimmedString(0));
+        const auto& perf_top = record.getItem<Kw::PERF_TOP>();
+        const auto& perf_bot = record.getItem<Kw::PERF_BOT>();
+
+        const auto& CFItem = record.getItem<Kw::CONNECTION_TRANSMISSIBILITY_FACTOR>();
+        const auto& diameterItem = record.getItem<Kw::DIAMETER>();
+        const auto& KhItem = record.getItem<Kw::Kh>();
+        const auto skin_factor = record.getItem<Kw::SKIN>().getSIDouble(0);
+        const auto d_factor = record.getItem<Kw::D_FACTOR>().getSIDouble(0);
+        const auto& satTableIdItem = record.getItem<Kw::SAT_TABLE>();
+        const auto state = Connection::StateFromString(record.getItem<Kw::STATE>().getTrimmedString(0));
 
         int satTableId = -1;
         bool defaultSatTable = true;
@@ -932,8 +939,10 @@ CF and Kh items for well {} must both be specified or both defaulted/negative)",
                                       [[maybe_unused]] const ScheduleGrid&    grid,
                                       [[maybe_unused]] const KeywordLocation& location)
     {
-        double x = record.getItem("X").getSIDouble(0);
-        double y = record.getItem("Y").getSIDouble(0);
+        using Kw = ParserKeywords::WELTRAJ;
+
+        double x = record.getItem<Kw::X>().getSIDouble(0);
+        double y = record.getItem<Kw::Y>().getSIDouble(0);
 
         if (const auto& mapaxes = grid.get_grid()->getMapAxes();
             mapaxes.has_value())
@@ -943,9 +952,9 @@ CF and Kh items for well {} must both be specified or both defaulted/negative)",
 
         this->coord[0].push_back(x);
         this->coord[1].push_back(y);
-        this->coord[2].push_back(record.getItem("TVD").getSIDouble(0));
+        this->coord[2].push_back(record.getItem<Kw::TVD>().getSIDouble(0));
 
-        this->md.push_back(record.getItem("MD").getSIDouble(0));
+        this->md.push_back(record.getItem<Kw::MD>().getSIDouble(0));
     }
 
     void WellConnections::applyDFactorCorrelation(const ScheduleGrid& grid,
