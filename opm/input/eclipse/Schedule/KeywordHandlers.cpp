@@ -43,6 +43,7 @@
 #include <opm/input/eclipse/Parser/ParserKeywords/F.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/N.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/P.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/T.hpp>
 
 #include "GasLiftOptKeywordHandlers.hpp"
 #include "Group/GroupKeywordHandlers.hpp"
@@ -164,9 +165,9 @@ void handleNEXTSTEP(HandlerContext& handlerContext)
 
 void handleNUPCOL(HandlerContext& handlerContext)
 {
-    const int nupcol = handlerContext.keyword.getRecord(0).getItem("NUM_ITER").get<int>(0);
+    const int nupcol = handlerContext.keyword.getRecord(0).getItem<ParserKeywords::NUPCOL::NUM_ITER>().get<int>(0);
 
-    if (handlerContext.keyword.getRecord(0).getItem("NUM_ITER").defaultApplied(0)) {
+    if (handlerContext.keyword.getRecord(0).getItem<ParserKeywords::NUPCOL::NUM_ITER>().defaultApplied(0)) {
         std::string msg = "OPM Flow uses 12 as default NUPCOL value";
         OpmLog::note(msg);
     }
@@ -207,6 +208,8 @@ void handleSUMTHIN(HandlerContext& handlerContext)
 
 void handleTUNING(HandlerContext& handlerContext)
 {
+    using Kw = ParserKeywords::TUNING;
+
     const auto numrecords = handlerContext.keyword.size();
     auto tuning = handlerContext.state().tuning();
 
@@ -234,8 +237,8 @@ void handleTUNING(HandlerContext& handlerContext)
         const auto& record1 = handlerContext.keyword.getRecord(0);
 
         // \Note A value indicates TSINIT was set in this record
-        if (const auto& deck_item = record1.getItem("TSINIT"); !deck_item.defaultApplied(0))
-            tuning.TSINIT = std::optional<double>{ record1.getItem("TSINIT").getSIDouble(0) };
+        if (const auto& deck_item = record1.getItem<Kw::TSINIT>(); !deck_item.defaultApplied(0))
+            tuning.TSINIT = std::optional<double>{ record1.getItem<Kw::TSINIT>().getSIDouble(0) };
 
         tuning.TSMAXZ = nondefault_or_previous_sidouble(record1, "TSMAXZ", tuning.TSMAXZ);
         tuning.TSMINZ = nondefault_or_previous_sidouble(record1, "TSMINZ", tuning.TSMINZ);
@@ -246,7 +249,7 @@ void handleTUNING(HandlerContext& handlerContext)
         tuning.TFDIFF = nondefault_or_previous_double(record1, "TFDIFF", tuning.TFDIFF);
         tuning.THRUPT = nondefault_or_previous_double(record1, "THRUPT", tuning.THRUPT);
 
-        const auto& TMAXWCdeckItem = record1.getItem("TMAXWC");
+        const auto& TMAXWCdeckItem = record1.getItem<Kw::TMAXWC>();
         if (TMAXWCdeckItem.hasValue(0)) {
             tuning.TMAXWC_has_value = true;
             tuning.TMAXWC = nondefault_or_previous_sidouble(record1, "TMAXWC", tuning.TMAXWC);
@@ -267,7 +270,7 @@ void handleTUNING(HandlerContext& handlerContext)
         tuning.XXXWFL = nondefault_or_previous_double(record2, "XXXWFL", tuning.XXXWFL);
         tuning.TRGFIP = nondefault_or_previous_double(record2, "TRGFIP", tuning.TRGFIP);
 
-        const auto& TRGSFTdeckItem = record2.getItem("TRGSFT");
+        const auto& TRGSFTdeckItem = record2.getItem<Kw::TRGSFT>();
         if (TRGSFTdeckItem.hasValue(0)) {
             tuning.TRGSFT_has_value = true;
             tuning.TRGSFT = nondefault_or_previous_double(record2, "TRGSFT", tuning.TRGSFT);
@@ -284,14 +287,14 @@ void handleTUNING(HandlerContext& handlerContext)
         // record.getItem("").hasValue(0) does not differentiate between deck and default values.
         // An alternative is to remove the default values for the not supported items in TUNING
         // and use record.getItem("").hasValue(0).
-        tuning.TRGTTE_has_value = !record2.getItem("TRGTTE").defaultApplied(0);
-        tuning.TRGLCV_has_value = !record2.getItem("TRGLCV").defaultApplied(0);
-        tuning.XXXTTE_has_value = !record2.getItem("XXXTTE").defaultApplied(0);
-        tuning.XXXLCV_has_value = !record2.getItem("XXXLCV").defaultApplied(0);
-        tuning.XXXWFL_has_value = !record2.getItem("XXXWFL").defaultApplied(0);
-        tuning.TRGFIP_has_value = !record2.getItem("TRGFIP").defaultApplied(0);
-        tuning.THIONX_has_value = !record2.getItem("THIONX").defaultApplied(0);
-        tuning.TRWGHT_has_value = !record2.getItem("TRWGHT").defaultApplied(0);
+        tuning.TRGTTE_has_value = !record2.getItem<Kw::TRGTTE>().defaultApplied(0);
+        tuning.TRGLCV_has_value = !record2.getItem<Kw::TRGLCV>().defaultApplied(0);
+        tuning.XXXTTE_has_value = !record2.getItem<Kw::XXXTTE>().defaultApplied(0);
+        tuning.XXXLCV_has_value = !record2.getItem<Kw::XXXLCV>().defaultApplied(0);
+        tuning.XXXWFL_has_value = !record2.getItem<Kw::XXXWFL>().defaultApplied(0);
+        tuning.TRGFIP_has_value = !record2.getItem<Kw::TRGFIP>().defaultApplied(0);
+        tuning.THIONX_has_value = !record2.getItem<Kw::THIONX>().defaultApplied(0);
+        tuning.TRWGHT_has_value = !record2.getItem<Kw::TRWGHT>().defaultApplied(0);
     }
 
     if (numrecords > 2) {
@@ -307,7 +310,7 @@ void handleTUNING(HandlerContext& handlerContext)
         tuning.DDSLIM = nondefault_or_previous_double(record3, "DDSLIM", tuning.DDSLIM);
         tuning.TRGDPR = nondefault_or_previous_sidouble(record3, "TRGDPR", tuning.TRGDPR);
 
-        const auto& XXXDPRdeckItem = record3.getItem("XXXDPR");
+        const auto& XXXDPRdeckItem = record3.getItem<Kw::XXXDPR>();
         if (XXXDPRdeckItem.hasValue(0)) {
             tuning.XXXDPR_has_value = true;
             tuning.XXXDPR = nondefault_or_previous_sidouble(record3, "XXXDPR", tuning.XXXDPR);
@@ -319,14 +322,14 @@ void handleTUNING(HandlerContext& handlerContext)
         tuning.MNWRFP = nondefault_or_previous_int(record3, "MNWRFP", tuning.MNWRFP);
 
         // Check for no supported records from the deck to write as a warning.
-        tuning.LITMAX_has_value = !record3.getItem("LITMAX").defaultApplied(0);
-        tuning.LITMIN_has_value = !record3.getItem("LITMIN").defaultApplied(0);
-        tuning.MXWSIT_has_value = !record3.getItem("MXWSIT").defaultApplied(0);
-        tuning.MXWPIT_has_value = !record3.getItem("MXWPIT").defaultApplied(0);
-        tuning.DDPLIM_has_value = !record3.getItem("DDPLIM").defaultApplied(0);
-        tuning.DDSLIM_has_value = !record3.getItem("DDSLIM").defaultApplied(0);
-        tuning.TRGDPR_has_value = !record3.getItem("TRGDPR").defaultApplied(0);
-        tuning.MNWRFP_has_value = !record3.getItem("MNWRFP").defaultApplied(0);
+        tuning.LITMAX_has_value = !record3.getItem<Kw::LITMAX>().defaultApplied(0);
+        tuning.LITMIN_has_value = !record3.getItem<Kw::LITMIN>().defaultApplied(0);
+        tuning.MXWSIT_has_value = !record3.getItem<Kw::MXWSIT>().defaultApplied(0);
+        tuning.MXWPIT_has_value = !record3.getItem<Kw::MXWPIT>().defaultApplied(0);
+        tuning.DDPLIM_has_value = !record3.getItem<Kw::DDPLIM>().defaultApplied(0);
+        tuning.DDSLIM_has_value = !record3.getItem<Kw::DDSLIM>().defaultApplied(0);
+        tuning.TRGDPR_has_value = !record3.getItem<Kw::TRGDPR>().defaultApplied(0);
+        tuning.MNWRFP_has_value = !record3.getItem<Kw::MNWRFP>().defaultApplied(0);
     }
 
     handlerContext.state().update_tuning( std::move( tuning ));
@@ -365,8 +368,8 @@ void handleTUNINGDP(HandlerContext& handlerContext)
     tuning_dp.TRGDDRV = nondefault_or_previous_sidouble(record, "TRGDDRV", tuning_dp.TRGDDRV);
 
     // See handleTUNING for TRGLCV_has_value and XXXLCV_has_value
-    tuning_dp.TRGLCV_has_value = !record.getItem("TRGLCV").defaultApplied(0);
-    tuning_dp.XXXLCV_has_value = !record.getItem("XXXLCV").defaultApplied(0);
+    tuning_dp.TRGLCV_has_value = !record.getItem<ParserKeywords::TUNINGDP::TRGLCV>().defaultApplied(0);
+    tuning_dp.XXXLCV_has_value = !record.getItem<ParserKeywords::TUNINGDP::XXXLCV>().defaultApplied(0);
 
     // Update state and events
     handlerContext.state().update_tuning_dp( std::move(tuning_dp) );
