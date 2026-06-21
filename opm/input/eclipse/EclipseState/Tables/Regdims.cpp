@@ -38,12 +38,13 @@ Regdims::Regdims(const Deck& deck) :
     Regdims()
 {
     if (deck.hasKeyword("REGDIMS")) {
+        using Kw = ParserKeywords::REGDIMS;
         const auto& record = deck["REGDIMS"][0].getRecord( 0 );
-        m_NTFIP   = record.getItem("NTFIP").get<int>(0);
-        m_NMFIPR  = record.getItem("NMFIPR").get<int>(0);
-        m_NRFREG  = record.getItem("NRFREG").get<int>(0);
-        m_NTFREG  = record.getItem("NTFREG").get<int>(0);
-        m_NPLMIX  = record.getItem("NPLMIX").get<int>(0);
+        m_NTFIP   = record.getItem<Kw::NTFIP>().get<int>(0);
+        m_NMFIPR  = record.getItem<Kw::NMFIPR>().get<int>(0);
+        m_NRFREG  = record.getItem<Kw::NRFREG>().get<int>(0);
+        m_NTFREG  = record.getItem<Kw::NTFREG>().get<int>(0);
+        m_NPLMIX  = record.getItem<Kw::NPLMIX>().get<int>(0);
     }
 }
 
