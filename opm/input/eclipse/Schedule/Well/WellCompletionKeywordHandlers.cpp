@@ -48,11 +48,13 @@ template <typename CompdatKwHandler>
 void handleCOMPDATX(HandlerContext&    handlerContext,
                     CompdatKwHandler&& compdatKwHandler)
 {
+    using Kw = ParserKeywords::COMPDATX;
+
     auto pending_connections =
         std::unordered_map<std::string, std::shared_ptr<WellConnections>> {};
 
     for (const auto& record : handlerContext.keyword) {
-        const auto wellNamePattern = record.getItem("WELL").getTrimmedString(0);
+        const auto wellNamePattern = record.getItem<Kw::WELL>().getTrimmedString(0);
         const auto wellnames = handlerContext.wellNames(wellNamePattern);
 
         for (const auto& wname : wellnames) {
@@ -155,8 +157,10 @@ void handleCOMPDATL(HandlerContext& handlerContext)
 
 void handleCOMPLUMP(HandlerContext& handlerContext)
 {
+    using Kw = ParserKeywords::COMPLUMP;
+
     for (const auto& record : handlerContext.keyword) {
-        const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
+        const std::string& wellNamePattern = record.getItem<Kw::WELL>().getTrimmedString(0);
         const auto well_names = handlerContext.wellNames(wellNamePattern);
 
         for (const auto& wname : well_names) {
