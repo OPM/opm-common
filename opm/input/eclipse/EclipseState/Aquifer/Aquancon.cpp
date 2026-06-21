@@ -142,6 +142,7 @@ namespace Opm {
 
     Aquancon::Aquancon(const EclipseGrid& grid, const Deck& deck)
     {
+        using Kw = ParserKeywords::AQUANCON;
         std::map<std::size_t, Aquancon::AquancCell> work;
         const std::vector<int>& actnum = grid.getACTNUM();
         for (std::size_t iaq = 0; iaq < deck.count("AQUANCON"); iaq++) {
@@ -149,19 +150,19 @@ namespace Opm {
             OpmLog::info(OpmInputError::format("Initializing aquifer connections from {keyword} in {file} line {line}", aquanconKeyword.location()));
             int num_connections_to_inactive_cells = 0;
             for (const auto& aquanconRecord : aquanconKeyword) {
-                const int aquiferID = aquanconRecord.getItem("AQUIFER_ID").get<int>(0);
-                const int i1 = aquanconRecord.getItem("I1").get<int>(0) - 1;
-                const int i2 = aquanconRecord.getItem("I2").get<int>(0) - 1;
-                const int j1 = aquanconRecord.getItem("J1").get<int>(0) - 1;
-                const int j2 = aquanconRecord.getItem("J2").get<int>(0) - 1;
-                const int k1 = aquanconRecord.getItem("K1").get<int>(0) - 1;
-                const int k2 = aquanconRecord.getItem("K2").get<int>(0) - 1;
-                const double influx_mult = aquanconRecord.getItem("INFLUX_MULT").getSIDouble(0);
+                const int aquiferID = aquanconRecord.getItem<Kw::AQUIFER_ID>().get<int>(0);
+                const int i1 = aquanconRecord.getItem<Kw::I1>().get<int>(0) - 1;
+                const int i2 = aquanconRecord.getItem<Kw::I2>().get<int>(0) - 1;
+                const int j1 = aquanconRecord.getItem<Kw::J1>().get<int>(0) - 1;
+                const int j2 = aquanconRecord.getItem<Kw::J2>().get<int>(0) - 1;
+                const int k1 = aquanconRecord.getItem<Kw::K1>().get<int>(0) - 1;
+                const int k2 = aquanconRecord.getItem<Kw::K2>().get<int>(0) - 1;
+                const double influx_mult = aquanconRecord.getItem<Kw::INFLUX_MULT>().getSIDouble(0);
                 const FaceDir::DirEnum faceDir
-                    = FaceDir::FromString(aquanconRecord.getItem("FACE").getTrimmedString(0));
+                    = FaceDir::FromString(aquanconRecord.getItem<Kw::FACE>().getTrimmedString(0));
 
                 const std::string& str_inside_reservoir
-                    = aquanconRecord.getItem("CONNECT_ADJOINING_ACTIVE_CELL").getTrimmedString(0);
+                    = aquanconRecord.getItem<Kw::CONNECT_ADJOINING_ACTIVE_CELL>().getTrimmedString(0);
                 const bool allow_aquifer_inside_reservoir = DeckItem::to_bool(str_inside_reservoir);
 
                 // Loop over the cartesian indices to convert to the global grid index
@@ -172,8 +173,8 @@ namespace Opm {
                                 if (allow_aquifer_inside_reservoir
                                     || !AquiferHelpers::neighborCellInsideReservoirAndActive(grid, i, j, k, faceDir, actnum)) {
                                     std::optional<double> influx_coeff;
-                                    if (aquanconRecord.getItem("INFLUX_COEFF").hasValue(0))
-                                        influx_coeff = aquanconRecord.getItem("INFLUX_COEFF").getSIDouble(0);
+                                    if (aquanconRecord.getItem<Kw::INFLUX_COEFF>().hasValue(0))
+                                        influx_coeff = aquanconRecord.getItem<Kw::INFLUX_COEFF>().getSIDouble(0);
 
                                     auto global_index = grid.getGlobalIndex(i,j,k);
                                     add_cell(aquanconKeyword.location(), work, grid, aquiferID, global_index, influx_coeff, influx_mult, faceDir);
