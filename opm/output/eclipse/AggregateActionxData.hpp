@@ -109,27 +109,51 @@ public:
     }
 
 private:
-    /// Aggregate 'IACT' array (Integer) for all ACTIONX data  (9 integers pr UDQ)
+    /// Integer descriptors for ACTIONX.
+    ///
+    /// Nine (9) integers per ACTIONX keyword.
     WindowedArray<int> iACT_;
 
-    /// Aggregate 'SACT' array (Integer) for all ACTIONX data  (5 integers pr ACTIONX - currently all zero - meaning unknown)
+    /// Floating-point descriptors for ACTIONX.
+    ///
+    /// Five (5) floats per ACTIONX keyword.
     WindowedArray<float> sACT_;
 
-    /// Aggregate 'ZACT' array (Character) for all ACTIONX data. (4 * 8 chars pr ACIONX keyword - name of Action)
+    /// Character descriptors for ACTIONX.
+    ///
+    /// One (1) string of 8 characters, the action name, per ACTIONX keyword.
     WindowedArray<EclIO::PaddedOutputString<8>> zACT_;
 
-    /// Aggregate 'ZLACT' array (Character) for all Actionx data.  (max 16 * 8 characters pr line (default 80 chars pr line)
+    /// Linearised action block keywords for all ACTIONX keywords.
+    ///
+    /// At most 16 eight-character strings per ACTIONX keyword line, with
+    /// a (common) runtime-configured number of lines per ACTIONX keyword.
     WindowedArray<EclIO::PaddedOutputString<8>> zLACT_;
 
-    /// Aggregate 'ZACN' array (Character) for all Actionx data  (length equal to max no of conditions pr Actionx * the number of Actiox kwords)
-    WindowedArray<EclIO::PaddedOutputString<8>> zACN_;
+    /// Integer descriptors for all ACTIONX conditions.
+    ///
+    /// 26 integers per ACTIONX condition, with a (common) runtime-configured
+    /// number of conditions per ACTIONX keyword.  Not all integer descriptors
+    /// are used for all conditions, but the restart file format is fixed.
+    WindowedMatrix<int> iACN_;
 
-    /// Aggregate 'IACN' array (Integer) for all Actionx data  (length 26* the max number of conditoins pr Actionx * the number of Actionx kwords)
-    WindowedArray<int> iACN_;
-
-    /// Aggregate 'SACN' array (double precision floating-point) for all Actionx data  (16 * max number of Actionx conditions)
+    /// Floating-point descriptors for all ACTIONX conditions.
+    ///
+    /// 16 items per ACTIONX condition, with a (common) runtime-configured
+    /// number of conditions per ACTIONX keyword.  Not all floating-point
+    /// descriptors are used for all conditions, but the restart file format
+    /// is fixed.
+    ///
+    /// Note: Type 'double' despite the S* name.
     WindowedMatrix<double> sACN_;
 
+    /// String descriptors for all ACTIONX conditions.
+    ///
+    /// 13 eight-character strings per ACTIONX condition, with a (common)
+    /// runtime-configured number of conditions per ACTIONX keyword.  Not all
+    /// string descriptors are used for all conditions, but the restart file
+    /// format is fixed.
+    WindowedMatrix<EclIO::PaddedOutputString<8>> zACN_;
 };
 
 AggregateActionxData
