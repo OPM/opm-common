@@ -33,7 +33,7 @@
 #include <type_traits>
 #include <utility>
 
-#include <fmt/core.h>
+#include <fmt/format.h>
 
 double Opm::GuideRate::RateVector::eval(const Well::GuideRateTarget target) const
 {
