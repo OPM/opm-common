@@ -33,16 +33,21 @@
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 
 #include <opm/common/utility/String.hpp>
+#include <opm/common/utility/TimeService.hpp>
 
 #include <algorithm>
+#include <charconv>
 #include <cstddef>
 #include <cstring>
 #include <ctime>
 #include <functional>
 #include <map>
+#include <optional>
+#include <span>
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <system_error>
 #include <vector>
 
 #include <fmt/format.h>
@@ -69,7 +74,9 @@ namespace {
         }
 
         template <class IACTArray>
-        void staticContrib(const Opm::Action::ActionX& actx, IACTArray& iAct, const Opm::Action::State& action_state)
+        void staticContrib(const Opm::Action::ActionX& actx,
+                           const Opm::Action::State&   action_state,
+                           IACTArray&                  iAct)
         {
             //item [0]: is unknown, (=0)
             iAct[0] = 0;
@@ -156,22 +163,27 @@ namespace {
 
     namespace zLACT {
 
-         Opm::RestartIO::Helpers::WindowedArray<
+        Opm::RestartIO::Helpers::WindowedArray<
             Opm::EclIO::PaddedOutputString<8>
         >
-         allocate(std::size_t num_actions, std::size_t max_input_lines, const Opm::Actdims& actdims)
+        allocate(const std::size_t   num_actions,
+                 const std::size_t   max_input_lines,
+                 const Opm::Actdims& actdims)
         {
             using WV = Opm::RestartIO::Helpers::WindowedArray<
                 Opm::EclIO::PaddedOutputString<8>
             >;
+
             return WV {
                 WV::NumWindows{ num_actions },
                 WV::WindowSize{ actdims.line_size() * max_input_lines }
             };
         }
 
-    template <class ZLACTArray>
-    void staticContrib(const Opm::Action::ActionX& actx, const Opm::Actdims& actdims, ZLACTArray& zLact)
+        template <class ZLACTArray>
+        void staticContrib(const Opm::Action::ActionX& actx,
+                           const Opm::Actdims&         actdims,
+                           ZLACTArray&                 zLact)
         {
             std::size_t offset = 0;
             int l_sstr = 8;
@@ -194,219 +206,564 @@ namespace {
         }
     } // zLact
 
-    namespace zACN {
+    namespace ConditionHelpers {
 
-         Opm::RestartIO::Helpers::WindowedArray<
-            Opm::EclIO::PaddedOutputString<8>
-        >
-        allocate(std::size_t num_actions, const Opm::Actdims& actdims)
-        {
-            using WV = Opm::RestartIO::Helpers::WindowedArray<
-                Opm::EclIO::PaddedOutputString<8>
-            >;
-
-            return WV {
-                WV::NumWindows{ num_actions },
-                WV::WindowSize{ actdims.max_conditions() * Opm::RestartIO::Helpers::VectorItems::ZACN::ConditionSize }
-            };
-        }
-
-    template <class ZACNArray>
-    void staticContrib(const Opm::Action::ActionX& actx, ZACNArray& zAcn)
-        {
-            using Ix = Opm::RestartIO::Helpers::VectorItems::ZACN::index;
-            std::size_t offset = 0;
-            // write out the schedule Actionx conditions
-            const auto& actx_cond = actx.conditions();
-            for (const auto& z_data : actx_cond) {
-                // left hand quantity
-                if (!z_data.lhs.date())
-                    zAcn[offset + Ix::LHSQuantity] = z_data.lhs.quantity;
-
-                // right hand quantity
-                if ((z_data.rhs.quantity.substr(0,1) == "W") ||
-                    (z_data.rhs.quantity.substr(0,1) == "G") ||
-                    (z_data.rhs.quantity.substr(0,1) == "F"))
-                    zAcn[offset + Ix::RHSQuantity] = z_data.rhs.quantity;
-                // operator (comparator)
-                zAcn[offset + Ix::Comparator] = z_data.cmp_string;
-                // well-name if left hand quantity is a well quantity
-                if (z_data.lhs.quantity.substr(0,1) == "W") {
-                    zAcn[offset + Ix::LHSWell] = z_data.lhs.args[0];
-                }
-                // well-name if right hand quantity is a well quantity
-                if (z_data.rhs.quantity.substr(0,1) == "W") {
-                    zAcn[offset + Ix::RHSWell] = z_data.rhs.args[0];
-                }
-
-                // group-name if left hand quantity is a group quantity
-                if (z_data.lhs.quantity.substr(0,1) == "G") {
-                    zAcn[offset + Ix::LHSGroup] = z_data.lhs.args[0];
-                }
-                // group-name if right hand quantity is a group quantity
-                if (z_data.rhs.quantity.substr(0,1) == "G") {
-                    zAcn[offset + Ix::RHSGroup] = z_data.rhs.args[0];
-                }
-
-                //increment offsetex according to no of items pr condition
-                offset += Opm::RestartIO::Helpers::VectorItems::ZACN::ConditionSize;
-            }
-        }
-    } // zAcn
-
-    namespace iACN {
-
-        Opm::RestartIO::Helpers::WindowedArray<int>
-        allocate(std::size_t num_actions, const Opm::Actdims& actdims)
-        {
-            using WV = Opm::RestartIO::Helpers::WindowedArray<int>;
-            return WV {
-                WV::NumWindows{ num_actions },
-                WV::WindowSize{ actdims.max_conditions() * Opm::RestartIO::Helpers::VectorItems::IACN::ConditionSize }
-            };
-        }
-
-
-
-        template <class IACNArray>
-        void staticContrib(const Opm::Action::ActionX& actx, IACNArray& iAcn)
-        {
-            using Ix = Opm::RestartIO::Helpers::VectorItems::IACN::index;
-            std::size_t offset = 0;
-            const auto& actx_cond = actx.conditions();
-            int first_greater = 0;
-            if( !actx_cond.empty() &&
-                actx_cond[0].cmp == Opm::Action::Comparator::LESS)
-            {
-                first_greater = 1;
-            }
-
-            for (const auto& cond : actx_cond) {
-                iAcn[offset + Ix::LHSQuantityType] = cond.lhs.int_type();
-                iAcn[offset + Ix::RHSQuantityType] = cond.rhs.int_type();
-                iAcn[offset + Ix::FirstGreater] = first_greater;
-                iAcn[offset + Ix::TerminalLogic] = cond.logic_as_int();
-                iAcn[offset + Ix::Paren] = cond.paren_as_int();
-                iAcn[offset + Ix::Comparator] = cond.comparator_as_int();
-
-                offset += Opm::RestartIO::Helpers::VectorItems::IACN::ConditionSize;
-            }
-
-            /*item [17] - is an item that is non-zero for actions with several conditions combined using logical operators (AND / OR)
-                * First condition => [17] =  0
-                * Second+ conditions
-                *Case - no parentheses
-                    *If all conditions before current condition has AND => [17] = 1
-                    *If one condition before current condition has OR   => [17] = 0
-                *Case - parenthesis before first condition
-                    *If inside first parenthesis
-                        *If all conditions before current condition has AND [17] => 1
-                        *If one condition before current condition has OR  [17] => 0
-                    *If after first parenthesis end and outside parenthesis
-                        *If all conditions outside parentheses and before current condition has AND => [17] = 1
-                        *If one condition outside parentheses and before current condition has OR [17] => 0
-                    *If after first parenthesis end and inside a susequent parenthesis
-                        * [17] = 0
-                *Case - parenthesis after first condition
-                    *If inside parentesis => [17] = 0
-                    *If outside parenthesis:
-                        *If all conditions outside parentheses and before current condition has AND => [17] = 1
-                        *If one condition outside parentheses and before current condition has OR [17] => 0
-            */
-
-            offset = 0;
-            bool insideParen = false;
-            bool parenFirstCond = false;
-            bool allPrevLogicOp_AND = false;
-            for (auto cond_it = actx_cond.begin(); cond_it < actx_cond.end(); cond_it++) {
-                if (cond_it == actx_cond.begin()) {
-                    if (cond_it->open_paren()) {
-                        parenFirstCond = true;
-                        insideParen = true;
-                    }
-                    if (cond_it->logic == Opm::Action::Logical::AND) {
-                        allPrevLogicOp_AND = true;
-                    }
-                } else {
-                    // update inside parenthesis or not plus whether in first parenthesis or not
-                    if (cond_it->open_paren()) {
-                        insideParen = true;
-                        parenFirstCond = false;
-                    } else if (cond_it->close_paren()) {
-                        insideParen = false;
-                        parenFirstCond = false;
-                    }
-
-                    // Assign [17] based on logic (see above)
-                    if (parenFirstCond && allPrevLogicOp_AND) {
-                        iAcn[offset + Ix::BoolLink] = 1;
-                    }
-                    else if (!parenFirstCond && !insideParen && allPrevLogicOp_AND) {
-                        iAcn[offset + Ix::BoolLink] = 1;
-                    } else {
-                        iAcn[offset + Ix::BoolLink] = 0;
-                    }
-
-                    // update the previous logic-sequence
-                    if (parenFirstCond && cond_it->logic == Opm::Action::Logical::OR) {
-                        allPrevLogicOp_AND = false;
-                    } else if (!insideParen && cond_it->logic == Opm::Action::Logical::OR) {
-                        allPrevLogicOp_AND = false;
-                    }
-                }
-                //increment index according to no of items pr condition
-                offset += Opm::RestartIO::Helpers::VectorItems::IACN::ConditionSize;
-            }
-        }
-    } // iAcn
-
-    namespace sACN {
-
+        template <typename T>
         class Array
         {
         public:
-            using Matrix = Opm::RestartIO::Helpers::WindowedMatrix<double>;
+            using Matrix = Opm::RestartIO::Helpers::WindowedMatrix<T>;
 
-            explicit Array(Matrix&           sacn,
-                           const Matrix::Idx actionID)
-                : sacn_   { std::ref(sacn) }
+            explicit Array(Matrix& cond, const Matrix::Idx actionID)
+                : cond_   { std::ref(cond) }
                 , action_ { actionID }
             {}
 
             decltype(auto) operator[](const Matrix::Idx condition)
             {
-                return this->sacn_.get()(this->action_, condition);
+                return this->cond_.get()(this->action_, condition);
             }
 
         private:
-            std::reference_wrapper<Matrix> sacn_;
+            std::reference_wrapper<Matrix> cond_;
             Matrix::Idx action_;
         };
 
-        int rhsQuantityIndex(const char quantity)
-        {
-            const auto index = std::map<std::string, int> {
-                {"F", 1},
-                {"W", 2},
-                {"G", 3},
-            };
+    } // namespace ConditionHelpers
 
-            auto pos = index.find(std::string{quantity});
-            return (pos == index.end())
-                ? -1
-                : pos->second;
+    namespace iACN {
+
+        std::optional<int> asInteger(std::string_view s)
+        {
+            auto i = -1;
+            auto [ptr, ec] = std::from_chars(s.data(), s.data() + s.size(), i);
+
+            if (ec == std::errc{}) {
+                return { i };
+            }
+            else {
+                return {};
+            }
         }
 
-        Opm::RestartIO::Helpers::WindowedMatrix<double>
-        allocate(std::size_t num_actions, const Opm::Actdims& actdims)
+        // -------------------------------------------------------------
+
+        template <typename IACNArray>
+        void captureIJKLocation(const std::array<Opm::RestartIO::Helpers::VectorItems::IACN::index, 3>& ijk,
+                                const std::size_t                                                       offset,
+                                const Opm::Action::Quantity&                                            quant,
+                                IACNArray&                                                              iacn)
         {
-            using WV = Opm::RestartIO::Helpers::WindowedMatrix<double>;
+            const auto& args = quant.args();
+
+            for (auto ix = 0*ijk.size(); ix != ijk.size(); ++ix) {
+                if (const auto ijkValue = asInteger(args[offset + ix]);
+                    ijkValue.has_value())
+                {
+                    iacn[ijk[ix]] = *ijkValue;
+                }
+            }
+        }
+
+        template <typename IACNArray>
+        void captureRegionQuantity(const Opm::RestartIO::Helpers::VectorItems::IACN::index regID,
+                                   const Opm::Action::Quantity&                            quant,
+                                   IACNArray&                                              iacn)
+        {
+            // Condition references vector of the form
+            //
+            //    ROPT_ABC 42
+            //
+            // This function assumes that quant.args holds the string "42"
+            // and parses it as an integer in that case.
+
+            if (quant.args().size() != 1) {
+                return;
+            }
+
+            if (const auto regIDValue = asInteger(quant.args().front());
+                regIDValue.has_value())
+            {
+                iacn[regID] = *regIDValue;
+            }
+        }
+
+        template <typename IACNArray>
+        void captureSegmentQuantity(const Opm::RestartIO::Helpers::VectorItems::IACN::index segmentID,
+                                    const Opm::Action::Quantity&                            quant,
+                                    IACNArray&                                              iacn)
+        {
+            // Condition references vector of the form
+            //
+            //    SOFR 'P-52' 11
+            //
+            // This function assumes that quant.args holds both of the
+            // strings "P-52" and "11" and parses the segment number (i.e.,
+            // "11") as an integer in that case.
+
+            if (quant.args().size() != 2) {
+                return;
+            }
+
+            if (const auto segmentIDValue = asInteger(quant.args()[1]);
+                segmentIDValue.has_value())
+            {
+                iacn[segmentID] = *segmentIDValue;
+            }
+        }
+
+        template <typename IACNArray>
+        void captureConnectionQuantity(const std::array<Opm::RestartIO::Helpers::VectorItems::IACN::index, 3>& ijk,
+                                       const Opm::Action::Quantity&                                            quant,
+                                       IACNArray&                                                              iacn)
+        {
+            // Condition references vector of the form
+            //
+            //    COPR 'P-52' 11 22 33
+            //
+            // This function assumes that quant.args holds all of the
+            // strings "P-52", "11", "22", and "33" and parses the IJK
+            // indices (i.e., "11", "22", "33") as an integers in that case.
+
+            if (quant.args().size() != 4) {
+                return;
+            }
+
+            captureIJKLocation(ijk, /* args.quant.begin() + */ 1, quant, iacn);
+        }
+
+        template <typename IACNArray>
+        void captureBlockQuantity(const std::array<Opm::RestartIO::Helpers::VectorItems::IACN::index, 3>& ijk,
+                                  const Opm::Action::Quantity&                                            quant,
+                                  IACNArray&                                                              iacn)
+        {
+            // Condition references vector of the form
+            //
+            //    BPR 11 22 33
+            //
+            // This function assumes that quant.args holds all of the
+            // strings "11", "22", and "33" and parses the IJK indices as an
+            // integers in that case.
+
+            if (quant.args().size() != 3) {
+                return;
+            }
+
+            captureIJKLocation(ijk, /* args.quant.begin() + */ 0, quant, iacn);
+        }
+
+        // -------------------------------------------------------------
+
+        template <typename IACNArray>
+        void captureLHSQuantity(const Opm::Action::Quantity& quant,
+                                IACNArray&                   iacn)
+        {
+            using Ix = Opm::RestartIO::Helpers::VectorItems::IACN::index;
+            using QType = Opm::RestartIO::Helpers::VectorItems::IACN::Value::QuantityType;
+
+            switch ((iacn[Ix::LHSQuantityType] = quant.int_type())) {
+            case QType::Region:
+                captureRegionQuantity(Ix::LHSRegionID, quant, iacn);
+                break;
+
+            case QType::Segment:
+                captureSegmentQuantity(Ix::LHSSegmentID, quant, iacn);
+                break;
+
+            case QType::Connection:
+                captureConnectionQuantity({
+                        Ix::LHSConnLocation_I,
+                        Ix::LHSConnLocation_J,
+                        Ix::LHSConnLocation_K,
+                    }, quant, iacn);
+                break;
+
+            case QType::Block:
+                captureBlockQuantity({
+                        Ix::LHSBlockLocation_I,
+                        Ix::LHSBlockLocation_J,
+                        Ix::LHSBlockLocation_K,
+                    }, quant, iacn);
+
+            case QType::Field: case QType::Well : case QType::Group:
+            case QType::Day  : case QType::Month: case QType::Year:
+                // No special integer handling needed.
+                break;
+            }
+        }
+
+        template <typename IACNArray>
+        void captureRHSQuantity(const Opm::Action::Quantity& quant,
+                                IACNArray&                   iacn)
+        {
+            using Ix = Opm::RestartIO::Helpers::VectorItems::IACN::index;
+            using QType = Opm::RestartIO::Helpers::VectorItems::IACN::Value::QuantityType;
+
+            switch ((iacn[Ix::RHSQuantityType] = quant.int_type())) {
+            case QType::Region:
+                captureRegionQuantity(Ix::RHSRegionID, quant, iacn);
+                break;
+
+            case QType::Segment:
+                captureSegmentQuantity(Ix::RHSSegmentID, quant, iacn);
+                break;
+
+            case QType::Connection:
+                captureConnectionQuantity({
+                        Ix::RHSConnLocation_I,
+                        Ix::RHSConnLocation_J,
+                        Ix::RHSConnLocation_K,
+                    }, quant, iacn);
+                break;
+
+            case QType::Block:
+                captureBlockQuantity({
+                        Ix::RHSBlockLocation_I,
+                        Ix::RHSBlockLocation_J,
+                        Ix::RHSBlockLocation_K,
+                    }, quant, iacn);
+
+            case QType::Field: case QType::Well : case QType::Group:
+            case QType::Day  : case QType::Month: case QType::Year:
+                // No special integer handling needed.
+                break;
+            }
+        }
+
+        // item [17] - is an item that is non-zero for actions with
+        // several conditions combined using logical operators (AND/OR)
+        //
+        //   * First condition => [17] =  0
+        //   * Second+ conditions
+        //
+        //   *Case - no parentheses
+        //       *If all conditions before current condition has AND => [17] = 1
+        //       *If one condition before current condition has OR   => [17] = 0
+        //
+        //   *Case - parenthesis before first condition
+        //       *If inside first parenthesis
+        //           *If all conditions before current condition has AND [17] => 1
+        //           *If one condition before current condition has OR  [17] => 0
+        //       *If after first parenthesis end and outside parenthesis
+        //           *If all conditions outside parentheses and before current condition has AND => [17] = 1
+        //           *If one condition outside parentheses and before current condition has OR [17] => 0
+        //       *If after first parenthesis end and inside a susequent parenthesis
+        //           * [17] = 0
+        //
+        //   *Case - parenthesis after first condition
+        //       *If inside parentesis => [17] = 0
+        //       *If outside parenthesis:
+        //           *If all conditions outside parentheses and before current condition has AND => [17] = 1
+        //           *If one condition outside parentheses and before current condition has OR [17] => 0
+
+        void inferConditionLink(const Opm::Action::ActionX&   actx,
+                                ConditionHelpers::Array<int>& iAcn)
+        {
+            using Ix = Opm::RestartIO::Helpers::VectorItems::IACN::index;
+
+            bool insideParen = false;
+            bool parenFirstCond = false;
+            bool allPrevLogicOp_AND = false;
+
+            auto condIdx = ConditionHelpers::Array<int>::Matrix::Idx{};
+
+            for (const auto& condition : actx.conditions()) {
+                if (condIdx == 0) {
+                    if (condition.open_paren()) {
+                        parenFirstCond = true;
+                        insideParen = true;
+                    }
+
+                    if (condition.logic == Opm::Action::Logical::AND) {
+                        allPrevLogicOp_AND = true;
+                    }
+                }
+                else {
+                    // update inside parenthesis or not plus whether in
+                    // first parenthesis or not
+                    if (condition.open_paren()) {
+                        insideParen = true;
+                        parenFirstCond = false;
+                    }
+                    else if (condition.close_paren()) {
+                        insideParen = false;
+                        parenFirstCond = false;
+                    }
+
+                    // Assign [17] based on logic (see above)
+                    if (allPrevLogicOp_AND &&
+                        (parenFirstCond || (!parenFirstCond && !insideParen)))
+                    {
+                        iAcn[condIdx][Ix::BoolLink] = 1;
+                    }
+                    else {
+                        iAcn[condIdx][Ix::BoolLink] = 0;
+                    }
+
+                    // update the previous logic-sequence
+                    if (parenFirstCond && condition.logic == Opm::Action::Logical::OR) {
+                        allPrevLogicOp_AND = false;
+                    }
+                    else if (!insideParen && condition.logic == Opm::Action::Logical::OR) {
+                        allPrevLogicOp_AND = false;
+                    }
+                }
+
+                ++condIdx;
+            }
+        }
+
+        // -------------------------------------------------------------
+
+        Opm::RestartIO::Helpers::WindowedMatrix<int>
+        allocate(const std::size_t num_actions, const Opm::Actdims& actdims)
+        {
+            using WV = Opm::RestartIO::Helpers::WindowedMatrix<int>;
 
             return WV {
                 WV::NumRows    { num_actions },
                 WV::NumCols    { actdims.max_conditions() },
-                WV::WindowSize { Opm::RestartIO::Helpers::VectorItems::SACN::ConditionSize }
+                WV::WindowSize { Opm::RestartIO::Helpers::VectorItems::IACN::ConditionSize }
             };
+        }
+
+        void staticContrib(const Opm::Action::ActionX&   actx,
+                           ConditionHelpers::Array<int>& iAcn)
+        {
+            using Ix = Opm::RestartIO::Helpers::VectorItems::IACN::index;
+
+            if (actx.conditions().empty()) {
+                // Unconditional action.  Triggers at every time step.  Unusual.
+                return;
+            }
+
+            const auto first_greater = static_cast<int>
+                (actx.conditions().front().cmp == Opm::Action::Comparator::LESS);
+
+            for (auto condIdx = ConditionHelpers::Array<int>::Matrix::Idx{};
+                 const auto& condition : actx.conditions())
+            {
+                auto iacn = iAcn[condIdx++];
+
+                iacn[Ix::FirstGreater]  = first_greater;
+                iacn[Ix::TerminalLogic] = condition.logic_as_int();
+                iacn[Ix::Paren]         = condition.paren_as_int();
+                iacn[Ix::Comparator]    = condition.comparator_as_int();
+
+                captureLHSQuantity(condition.lhs, iacn);
+                captureRHSQuantity(condition.rhs, iacn);
+            }
+
+            inferConditionLink(actx, iAcn);
+        }
+
+    } // namespace iAcn
+
+    namespace sACN {
+
+        using Ix = Opm::RestartIO::Helpers::VectorItems::SACN::index;
+        using QType = Opm::RestartIO::Helpers::VectorItems::IACN::Value::QuantityType;
+
+        // -------------------------------------------------------------
+
+        template <typename SACNArray>
+        void captureLHSDateQuantity(const double undef, SACNArray& sacn)
+        {
+            // Note: This function *also* overwrites 'RHS'!
+            sacn[Ix::LHSValue1] = sacn[Ix::RHSValue1] = undef;
+            sacn[Ix::LHSValue2] = sacn[Ix::RHSValue2] = undef;
+            sacn[Ix::LHSValue3] = sacn[Ix::RHSValue3] = undef;
+        }
+
+        template <typename SACNArray>
+        void captureLHSFieldQuantity(const Opm::Action::Quantity& quant,
+                                     const Opm::SummaryState&     st,
+                                     SACNArray&                   sacn)
+        {
+            const auto& lhsQuant = quant.quantity();
+
+            if (st.has(lhsQuant)) {
+                sacn[Ix::LHSValue1] = sacn[Ix::LHSValue2] = sacn[Ix::LHSValue3]
+                    = st.get(lhsQuant);
+            }
+        }
+
+        template <typename SACNArray>
+        void captureLHSWellQuantity(const Opm::Action::Quantity& quant,
+                                    std::span<const std::string> wells,
+                                    const Opm::Action::Result&   ar,
+                                    const Opm::SummaryState&     st,
+                                    SACNArray&                   sacn)
+        {
+            if (! ar.conditionSatisfied()) {
+                return;
+            }
+
+            // Find the well that violates action if relevant
+            auto well_iter = std::ranges::find_if
+                (wells,
+                 [&matchSet = ar.matches()](const std::string& well)
+                 { return matchSet.hasWell(well); });
+
+            if (well_iter == wells.end()) {
+                return;
+            }
+
+            const auto& lhsQuant = quant.quantity();
+            const auto& wname    = *well_iter;
+
+            if (st.has_well_var(wname, lhsQuant)) {
+                sacn[Ix::LHSValue1] = sacn[Ix::LHSValue2] = sacn[Ix::LHSValue3]
+                    = st.get_well_var(wname, lhsQuant);
+            }
+        }
+
+        template <typename SACNArray>
+        void captureLHSGroupQuantity(const Opm::Action::Quantity& quant,
+                                     const Opm::SummaryState&     st,
+                                     SACNArray&                   sacn)
+        {
+            const auto& lhsQuant = quant.quantity();
+            const auto& gnames   = quant.args();
+
+            if (! gnames.empty() && st.has_group_var(gnames.front(), lhsQuant)) {
+                sacn[Ix::LHSValue1] = sacn[Ix::LHSValue2] = sacn[Ix::LHSValue3]
+                    = st.get_group_var(gnames.front(), lhsQuant);
+            }
+        }
+
+        // -------------------------------------------------------------
+
+        template <typename SACNArray>
+        void captureRHSConstantQuantity(const Opm::Action::Quantity& quant,
+                                        SACNArray&                   sacn)
+        {
+            const auto& monthIx   = Opm::TimeService::eclipseMonthIndices();
+            const auto& rhsQuant  = quant.quantity();
+            const auto monthIxPos = monthIx.find(rhsQuant);
+
+            const auto t_val = (monthIxPos == monthIx.end())
+                ? std::stod(rhsQuant) // Numeric day, month (!), or year.
+                : static_cast<double>(monthIxPos->second); // Named month.
+
+            sacn[Ix::RHSValue0]
+                = sacn[Ix::RHSValue1]
+                = sacn[Ix::RHSValue2]
+                = sacn[Ix::RHSValue3]
+                = t_val;
+        }
+
+        template <typename SACNArray>
+        void captureRHSFieldQuantity(const Opm::Action::Quantity& quant,
+                                     const Opm::SummaryState&     st,
+                                     SACNArray&                   sacn)
+        {
+            const auto& rhsQuant = quant.quantity();
+
+            if (st.has(rhsQuant)) {
+                sacn[Ix::RHSValue1] = sacn[Ix::RHSValue2] = sacn[Ix::RHSValue3]
+                    = st.get(rhsQuant);
+            }
+        }
+
+        template <typename SACNArray>
+        void captureRHSWellQuantity(const Opm::Action::Quantity& quant,
+                                    const Opm::SummaryState&     st,
+                                    SACNArray&                   sacn)
+        {
+            const auto& rhsQuant = quant.quantity();
+            const auto& wnames   = quant.args();
+
+            if (! wnames.empty() && st.has_well_var(wnames.front(), rhsQuant)) {
+                sacn[Ix::RHSValue1] = sacn[Ix::RHSValue2] = sacn[Ix::RHSValue3]
+                    = st.get_well_var(wnames.front(), rhsQuant);
+            }
+        }
+
+        template <typename SACNArray>
+        void captureRHSGroupQuantity(const Opm::Action::Quantity& quant,
+                                     const Opm::SummaryState&     st,
+                                     SACNArray&                   sacn)
+        {
+            const auto& rhsQuant = quant.quantity();
+            const auto& gnames   = quant.args();
+
+            if (! gnames.empty() && st.has_group_var(gnames.front(), rhsQuant)) {
+                sacn[Ix::RHSValue1] = sacn[Ix::RHSValue2] = sacn[Ix::RHSValue3]
+                    = st.get_group_var(gnames.front(), rhsQuant);
+            }
+        }
+
+        // -------------------------------------------------------------
+
+        template <typename SACNArray>
+        void captureLHSQuantity(const Opm::Action::Quantity& quant,
+                                std::span<const std::string> wells,
+                                const Opm::Action::Result&   ar,
+                                const Opm::SummaryState&     st,
+                                const double                 undef,
+                                SACNArray&                   sacn)
+        {
+            switch (quant.int_type()) {
+            case QType::Field:
+                captureLHSFieldQuantity(quant, st, sacn);
+                break;
+
+            case QType::Well:
+                captureLHSWellQuantity(quant, wells, ar, st, sacn);
+                break;
+
+            case QType::Group:
+                captureLHSGroupQuantity(quant, st, sacn);
+                break;
+
+            case QType::Day:
+            case QType::Month:
+            case QType::Year:
+                captureLHSDateQuantity(undef, sacn);
+                break;
+
+            case QType::Region:
+            case QType::Segment:
+            case QType::Connection:
+            case QType::Const:
+            case QType::Block:
+                // Unhandled.
+                break;
+            }
+        }
+
+        template <typename SACNArray>
+        void captureRHSQuantity(const Opm::Action::Quantity& quant,
+                                const Opm::SummaryState&     st,
+                                SACNArray&                   sacn)
+        {
+            switch (quant.int_type()) {
+            case QType::Field:
+                captureRHSFieldQuantity(quant, st, sacn);
+                break;
+
+            case QType::Well:
+                captureRHSWellQuantity(quant, st, sacn);
+                break;
+
+            case QType::Group:
+                captureRHSGroupQuantity(quant, st, sacn);
+                break;
+
+            case QType::Const:
+            case QType::Day:
+            case QType::Month:
+            case QType::Year:
+                captureRHSConstantQuantity(quant, sacn);
+
+            case QType::Region:
+            case QType::Segment:
+            case QType::Connection:
+            case QType::Block:
+                // Unhandled.
+                break;
+            }
         }
 
         Opm::Action::Result
@@ -429,15 +786,25 @@ namespace {
             return action.eval(context);
         }
 
-        void staticContrib(const Opm::Action::ActionX& action,
-                           const Opm::Action::State&   action_state,
-                           const Opm::SummaryState&    st,
-                           const Opm::Schedule&        sched,
-                           const std::size_t           simStep,
-                           Array&                      sAcn)
+        Opm::RestartIO::Helpers::WindowedMatrix<double>
+        allocate(std::size_t num_actions, const Opm::Actdims& actdims)
         {
-            using Ix = Opm::RestartIO::Helpers::VectorItems::SACN::index;
+            using WV = Opm::RestartIO::Helpers::WindowedMatrix<double>;
 
+            return WV {
+                WV::NumRows    { num_actions },
+                WV::NumCols    { actdims.max_conditions() },
+                WV::WindowSize { Opm::RestartIO::Helpers::VectorItems::SACN::ConditionSize }
+            };
+        }
+
+        void staticContrib(const Opm::Action::ActionX&      action,
+                           const Opm::Action::State&        action_state,
+                           const Opm::SummaryState&         st,
+                           const Opm::Schedule&             sched,
+                           const std::size_t                simStep,
+                           ConditionHelpers::Array<double>& sAcn)
+        {
             const auto undef_high_val = 1.0E+20;
             const auto wells = sched.wellNames(simStep);
             const auto ar = act_res(sched, action_state, st, simStep, action);
@@ -447,122 +814,200 @@ namespace {
             for (const auto& condition : action.conditions()) {
                 auto sacn = sAcn[condIx++];
 
-                const auto lhsQtype = condition.lhs.quantity.front();
-                const auto rhsQtype = condition.rhs.quantity.front();
+                // Note ordering peculiarity here: We *must* capture the RHS
+                // quantity *before* the LHS quantity.  Certain RHS entries
+                // in SACN will be overwritten/cleared if the LHS is a date
+                // quantity (i.e., DAY, MNTH/MONTH, or YEAR).
+                captureRHSQuantity(condition.rhs, st, sacn);
 
-                // Note: date() && Qtype == 'M' is a special case for the
-                // month string "FEB" which would otherwise mistakenly be
-                // identified as a 'F'ield-level condition.
-                const auto is_constant_rhs_condition = (rhsQuantityIndex(rhsQtype) < 0)
-                    || (condition.lhs.date() && (lhsQtype == 'M'));
-
-                if (is_constant_rhs_condition)  {
-                    // Come here if constant value condition
-                    const auto t_val = (lhsQtype != 'M')
-                        ? std::stod(condition.rhs.quantity)
-                        : Opm::TimeService::eclipseMonth(condition.rhs.quantity);
-
-                    sacn[Ix::RHSValue0]
-                        = sacn[Ix::RHSValue1]
-                        = sacn[Ix::RHSValue2]
-                        = sacn[Ix::RHSValue3]
-                        = t_val;
-                }
-
-                // Treat well, group and field right hand side conditions
-                if (! is_constant_rhs_condition) {
-                    // Well variable
-                    if ((rhsQtype == 'W') && st.has_well_var(condition.rhs.args[0], condition.rhs.quantity)) {
-                        sacn[Ix::RHSValue1] = sacn[Ix::RHSValue2] = sacn[Ix::RHSValue3]
-                            = st.get_well_var(condition.rhs.args[0], condition.rhs.quantity);
-                    }
-
-                    // group variable
-                    if ((rhsQtype == 'G') && st.has_group_var(condition.rhs.args[0], condition.rhs.quantity)) {
-                        sacn[Ix::RHSValue1] = sacn[Ix::RHSValue2] = sacn[Ix::RHSValue3] =
-                            st.get_group_var(condition.rhs.args[0], condition.rhs.quantity);
-                    }
-
-                    // Field variable
-                    if ((rhsQtype == 'F') && st.has(condition.rhs.quantity)) {
-                        sacn[Ix::RHSValue1] = sacn[Ix::RHSValue2] = sacn[Ix::RHSValue3] =
-                            st.get(condition.rhs.quantity);
-                    }
-                }
-
-                if (condition.lhs.date()) {
-                    sacn[Ix::LHSValue1] = sacn[Ix::RHSValue1] = undef_high_val;
-                    sacn[Ix::LHSValue2] = sacn[Ix::RHSValue2] = undef_high_val;
-                    sacn[Ix::LHSValue3] = sacn[Ix::RHSValue3] = undef_high_val;
-                }
-                else {
-                    // Treat well, group and field left hand side conditions
-                    //
-                    // Well variable
-                    if ((lhsQtype == 'W') && ar.conditionSatisfied()) {
-                        // Find the well that violates action if relevant
-                        auto well_iter =
-                            std::ranges::find_if(wells,
-                                                 [&matchSet = ar.matches()](const std::string& well)
-                                                 { return matchSet.hasWell(well); });
-
-                        if (well_iter != wells.end()) {
-                            const auto& wn = *well_iter;
-
-                            if (st.has_well_var(wn, condition.lhs.quantity)) {
-                                sacn[Ix::LHSValue1] = sacn[Ix::LHSValue2] = sacn[Ix::LHSValue3] =
-                                    st.get_well_var(wn, condition.lhs.quantity);
-                            }
-                        }
-                    }
-
-                    // Group variable
-                    if ((lhsQtype == 'G') && st.has_group_var(condition.lhs.args[0], condition.lhs.quantity)) {
-                        sacn[Ix::LHSValue1] = sacn[Ix::LHSValue2] = sacn[Ix::LHSValue3] =
-                            st.get_group_var(condition.lhs.args[0], condition.lhs.quantity);
-                    }
-
-                    // Field variable
-                    if ((lhsQtype == 'F') && st.has(condition.lhs.quantity)) {
-                        sacn[Ix::LHSValue1] = sacn[Ix::LHSValue2] = sacn[Ix::LHSValue3] =
-                            st.get(condition.lhs.quantity);
-                    }
-                }
+                captureLHSQuantity(condition.lhs,
+                                   wells, ar, st,
+                                   undef_high_val,
+                                   sacn);
             }
         }
 
-    } // sAcn
+    } // namespace sAcn
+
+    namespace zACN {
+
+        template <typename ZACNArray>
+        void captureUnnamedQuantity(const Opm::RestartIO::Helpers::VectorItems::ZACN::index quantityIx,
+                                    const Opm::Action::Quantity&                            quant,
+                                    ZACNArray&                                              zacn)
+        {
+            zacn[quantityIx] = quant.quantity();
+        }
+
+        template <typename ZACNArray>
+        void captureNamedQuantity(const Opm::RestartIO::Helpers::VectorItems::ZACN::index quantityIx,
+                                  const Opm::RestartIO::Helpers::VectorItems::ZACN::index nameIx,
+                                  const Opm::Action::Quantity&                            quant,
+                                  ZACNArray&                                              zacn)
+        {
+            captureUnnamedQuantity(quantityIx, quant, zacn);
+
+            if (! quant.args().empty()) {
+                zacn[nameIx] = quant.args().front();
+            }
+        }
+
+        template <typename ZACNArray>
+        void captureRegionQuantity(const Opm::RestartIO::Helpers::VectorItems::ZACN::index quantityIx,
+                                   const Opm::RestartIO::Helpers::VectorItems::ZACN::index regsetIx,
+                                   const Opm::Action::Quantity&                            quant,
+                                   ZACNArray&                                              zacn)
+        {
+            // This code *depends* on quant.quantity() having the canonical form
+            //
+            //    ROPR_SET
+            //
+            // even when 'SET' is the built-in FIPNUM region set--i.e., ROPR_NUM.
+            zacn[quantityIx] = quant.quantity();
+            zacn[regsetIx]   = quant.quantity().substr(5);
+        }
+
+        template <typename ZACNArray>
+        void captureLHSQuantity(const Opm::Action::Quantity& quant,
+                                ZACNArray&                   zacn)
+        {
+            using Ix = Opm::RestartIO::Helpers::VectorItems::ZACN::index;
+            using QType = Opm::RestartIO::Helpers::VectorItems::IACN::Value::QuantityType;
+
+            switch (quant.int_type()) {
+            case QType::Field:
+            case QType::Block:
+                captureUnnamedQuantity(Ix::LHSQuantity, quant, zacn);
+                break;
+
+            case QType::Well:
+            case QType::Segment:
+            case QType::Connection:
+                captureNamedQuantity(Ix::LHSQuantity, Ix::LHSWell, quant, zacn);
+                break;
+
+            case QType::Group:
+                captureNamedQuantity(Ix::LHSQuantity, Ix::LHSGroup, quant, zacn);
+                break;
+
+            case QType::Region:
+                captureRegionQuantity(Ix::LHSQuantity, Ix::LHSRegionSet, quant, zacn);
+                break;
+
+            case QType::Day: case QType::Month: case QType::Year:
+                // No special string/name handling needed.
+                break;
+            }
+        }
+
+        template <typename ZACNArray>
+        void captureRHSQuantity(const Opm::Action::Quantity& quant,
+                                ZACNArray&                   zacn)
+        {
+            using Ix = Opm::RestartIO::Helpers::VectorItems::ZACN::index;
+            using QType = Opm::RestartIO::Helpers::VectorItems::IACN::Value::QuantityType;
+
+            switch (quant.int_type()) {
+            case QType::Field:
+            case QType::Block:
+                captureUnnamedQuantity(Ix::RHSQuantity, quant, zacn);
+                break;
+
+            case QType::Well:
+            case QType::Segment:
+            case QType::Connection:
+                captureNamedQuantity(Ix::RHSQuantity, Ix::RHSWell, quant, zacn);
+                break;
+
+            case QType::Group:
+                captureNamedQuantity(Ix::RHSQuantity, Ix::RHSGroup, quant, zacn);
+                break;
+
+            case QType::Region:
+                captureRegionQuantity(Ix::RHSQuantity, Ix::RHSRegionSet, quant, zacn);
+                break;
+
+            case QType::Day: case QType::Month: case QType::Year:
+                // No special string/name handling needed.
+                break;
+            }
+        }
+
+        Opm::RestartIO::Helpers::WindowedMatrix<
+            Opm::EclIO::PaddedOutputString<8>
+        >
+        allocate(const std::size_t num_actions, const Opm::Actdims& actdims)
+        {
+            using WV = Opm::RestartIO::Helpers::WindowedMatrix<
+                Opm::EclIO::PaddedOutputString<8>
+            >;
+
+            return WV {
+                WV::NumRows    { num_actions },
+                WV::NumCols    { actdims.max_conditions() },
+                WV::WindowSize { Opm::RestartIO::Helpers::VectorItems::ZACN::ConditionSize }
+            };
+        }
+
+        void staticContrib(const Opm::Action::ActionX&                                 actx,
+                           ConditionHelpers::Array<Opm::EclIO::PaddedOutputString<8>>& zAcn)
+        {
+            using Ix = Opm::RestartIO::Helpers::VectorItems::ZACN::index;
+
+            if (actx.conditions().empty()) {
+                // Unconditional action.  Triggers at every time step.  Unusual.
+                return;
+            }
+
+            for (auto condIdx = ConditionHelpers::Array<int>::Matrix::Idx{};
+                 const auto& condition : actx.conditions())
+            {
+                auto zacn = zAcn[condIdx++];
+
+                // Comparison operator.
+                zacn[Ix::Comparator] = condition.cmp_string;
+
+                captureLHSQuantity(condition.lhs, zacn);
+                captureRHSQuantity(condition.rhs, zacn);
+            }
+        }
+    } // namespace zAcn
 
 } // Anonymous namespace
 
 // =====================================================================
 
 Opm::RestartIO::Helpers::AggregateActionxData::
-AggregateActionxData( const std::vector<int>&   rst_dims,
-                      std::size_t               num_actions,
-                      const Opm::Actdims&       actdims,
-                      const Opm::Schedule&      sched,
-                      const Opm::Action::State& action_state,
-                      const Opm::SummaryState&  st,
-                      const std::size_t         simStep)
-    : iACT_ (iACT::allocate(rst_dims))
-    , sACT_ (sACT::allocate(rst_dims))
-    , zACT_ (zACT::allocate(rst_dims))
-    , zLACT_(zLACT::allocate(num_actions, sched[simStep].actions().max_input_lines(), actdims))
-    , zACN_ (zACN::allocate(num_actions, actdims))
-    , iACN_ (iACN::allocate(num_actions, actdims))
-    , sACN_ (sACN::allocate(num_actions, actdims))
+AggregateActionxData(const std::vector<int>&   rst_dims,
+                     const std::size_t         num_actions,
+                     const Opm::Actdims&       actdims,
+                     const Opm::Schedule&      sched,
+                     const Opm::Action::State& action_state,
+                     const Opm::SummaryState&  st,
+                     const std::size_t         simStep)
+    : iACT_ { iACT::allocate(rst_dims) }
+    , sACT_ { sACT::allocate(rst_dims) }
+    , zACT_ { zACT::allocate(rst_dims) }
+    , zLACT_{ zLACT::allocate(num_actions,
+                              sched[simStep].actions().max_input_lines(),
+                              actdims) }
+    , iACN_ { iACN::allocate(num_actions, actdims) }
+    , sACN_ { sACN::allocate(num_actions, actdims) }
+    , zACN_ { zACN::allocate(num_actions, actdims) }
 {
     std::size_t act_ind = 0;
     for (const auto& action : sched[simStep].actions()) {
         {
             auto i_act = this->iACT_[act_ind];
-            iACT::staticContrib(action, i_act, action_state);
+            iACT::staticContrib(action, action_state, i_act);
         }
 
         {
             auto s_act = this->sACT_[act_ind];
-            sACT::staticContrib(action, action_state, sched.getStartTime(), sched.getUnits(), s_act);
+            sACT::staticContrib(action, action_state,
+                                sched.getStartTime(),
+                                sched.getUnits(),
+                                s_act);
         }
 
         {
@@ -576,21 +1021,24 @@ AggregateActionxData( const std::vector<int>&   rst_dims,
         }
 
         {
-            auto z_acn = this->zACN_[act_ind];
-            zACN::staticContrib(action, z_acn);
-        }
-
-        {
-            auto i_acn = this->iACN_[act_ind];
+            auto i_acn = ConditionHelpers::Array<int> { this->iACN_, act_ind };
             iACN::staticContrib(action, i_acn);
         }
 
         {
-            auto s_acn = sACN::Array { this->sACN_, act_ind };
+            auto s_acn = ConditionHelpers::Array<double> { this->sACN_, act_ind };
             sACN::staticContrib(action, action_state, st, sched, simStep, s_acn);
         }
 
-        act_ind +=1;
+        {
+            auto z_acn = ConditionHelpers::Array<EclIO::PaddedOutputString<8>> {
+                this->zACN_, act_ind
+            };
+
+            zACN::staticContrib(action, z_acn);
+        }
+
+        ++act_ind;
     }
 }
 
@@ -599,8 +1047,8 @@ AggregateActionxData(const Opm::Schedule&      sched,
                      const Opm::Action::State& action_state,
                      const Opm::SummaryState&  st,
                      const std::size_t         simStep)
-    : AggregateActionxData(createActionRSTDims(sched, simStep),
-                           sched[simStep].actions().ecl_size(),
-                           sched.runspec().actdims(),
-                           sched, action_state, st, simStep)
+    : AggregateActionxData { createActionRSTDims(sched, simStep),
+                             sched[simStep].actions().ecl_size(),
+                             sched.runspec().actdims(),
+                             sched, action_state, st, simStep }
 {}

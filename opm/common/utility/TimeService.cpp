@@ -148,8 +148,9 @@ const std::unordered_map<int, std::string>& eclipseMonthNames() {
     return month_names;
 }
 
-bool valid_month(const std::string& month_name) {
-    return (month_indices.count(month_name) != 0);
+bool valid_month(const std::string& month_name)
+{
+    return month_indices.contains(month_name);
 }
 
 std::time_t mkdatetime(int in_year, int in_month, int in_day, int hour, int minute, int second) {
