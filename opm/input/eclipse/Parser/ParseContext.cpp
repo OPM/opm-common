@@ -134,6 +134,7 @@ namespace Opm {
 
         addKey(SCHEDULE_INVALID_NAME, InputErrorAction::THROW_EXCEPTION);
         this->addKey(SCHEDULE_INVALID_INJPHASE, InputErrorAction::WARN);
+        this->addKey(SCHEDULE_GCONSALE_INVALID_INJECTION, InputErrorAction::WARN);
         this->addKey(SCHEDULE_INVALID_VFPTABLE, InputErrorAction::THROW_EXCEPTION);
     }
 
@@ -388,6 +389,7 @@ namespace Opm {
 
     const std::string ParseContext::SCHEDULE_INVALID_NAME = "SCHEDULE_INVALID_NAME";
     const std::string ParseContext::SCHEDULE_INVALID_INJPHASE = "SCHEDULE_INVALID_INJPHASE";
+    const std::string ParseContext::SCHEDULE_GCONSALE_INVALID_INJECTION = "SCHEDULE_GCONSALE_INVALID_INJECTION";
     const std::string ParseContext::SCHEDULE_INVALID_VFPTABLE = "SCHEDULE_INVALID_VFPTABLE";
     const std::string ParseContext::ACTIONX_ILLEGAL_KEYWORD = "ACTIONX_ILLEGAL_KEYWORD";
     const std::string ParseContext::PYACTION_ILLEGAL_KEYWORD = "PYACTION_ILLEGAL_KEYWORD";

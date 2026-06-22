@@ -485,10 +485,36 @@ void handleGCONSALE(HandlerContext& handlerContext)
         // combination where GCONINJE provides the reinjection control/cap and GCONSALE
         // the sales target. Preserve an existing GAS injection control; only create a
         // default one when none exists.
+        const bool had_gas_injection = new_group.hasInjectionControl(Phase::GAS);
         Group::GroupInjectionProperties injection =
-            new_group.hasInjectionControl(Phase::GAS)
+            had_gas_injection
                 ? new_group.injectionProperties(Phase::GAS)
                 : Group::GroupInjectionProperties{groupName};
+
+        // Safeguard: when sales-gas control is active on this group, the only valid
+        // GCONINJE GAS control on the same group is REIN (sales control reinjects the
+        // surplus gas; a RATE/RESV/VREP/FLD/NONE gas injection control on the group is
+        // incompatible). This applies only to the group carrying the sales target -- a
+        // non-REIN GAS control on a subordinate group (used to distribute the reinjected
+        // gas) is fine. A negative sales target switches sales control off, so skip then.
+        const bool sales_active =
+            !(sales_target.is<double>() && sales_target.get<double>() < 0.0);
+        if (had_gas_injection && sales_active &&
+            injection.cmode != Group::InjectionCMode::REIN)
+        {
+            const auto msg_fmt = fmt::format(
+                "Problem with {{keyword}}\n"
+                "In {{file}} line {{line}}\n"
+                "GCONSALE on group {0} requires its GCONINJE GAS control to use REIN, "
+                "but it is {1}. Sales-gas control reinjects the surplus gas, which is "
+                "incompatible with a {1} gas injection control on the same group.",
+                groupName, Group::InjectionCMode2String(injection.cmode));
+            handlerContext.parseContext
+                .handleError(ParseContext::SCHEDULE_GCONSALE_INVALID_INJECTION,
+                             msg_fmt, handlerContext.keyword.location(),
+                             handlerContext.errors);
+        }
+
         injection.phase = Phase::GAS;
         if (new_group.updateInjection(injection))
             handlerContext.state().groups.update(new_group);
