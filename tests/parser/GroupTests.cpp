@@ -1075,9 +1075,10 @@ GCONSALE
 }
 
 BOOST_AUTO_TEST_CASE(GCONSALE_REQUIRES_REIN_GAS_INJECTION_CONTROL) {
-    // Safeguard: when sales-gas control is active on a group, the only valid GCONINJE GAS
-    // control on the same group is REIN. SCHEDULE_GCONSALE_INVALID_INJECTION is an error by
-    // default; a ParseContext that sets it to WARN mimics low parsing strictness.
+    // Safeguard: when sales-gas control is active on a group, its GCONINJE GAS control must
+    // be REIN or NONE (NONE imposes no competing control; RATE/RESV/VREP/FLD do).
+    // SCHEDULE_GCONSALE_INVALID_INJECTION is an error by default; a ParseContext that sets it
+    // to WARN mimics low parsing strictness.
     ParseContext lenient;
     lenient.update(ParseContext::SCHEDULE_GCONSALE_INVALID_INJECTION,
                    InputErrorAction::WARN);
@@ -1097,6 +1098,42 @@ GCONSALE
   'G1'   1.0E6   1.05E6   0.99E6   RATE /
 /)";
     BOOST_CHECK_NO_THROW(create_schedule(valid));
+
+    // NONE + GCONSALE on the same group: valid (NONE is not a competing control, and
+    // GCONSALE itself leaves the group with a default NONE control).
+    const std::string none_ok = R"(
+START
+31 AUG 1993 /
+SCHEDULE
+GRUPTREE
+  'G1'  'FIELD' /
+/
+GCONINJE
+  'G1'   'GAS'   'NONE'   4.0E6 /
+/
+GCONSALE
+  'G1'   1.0E6   1.05E6   0.99E6   RATE /
+/)";
+    BOOST_CHECK_NO_THROW(create_schedule(none_ok));
+
+    // GCONSALE applied at two report steps: the first leaves the group with a default NONE
+    // GAS control, and the second must not then flag it.
+    const std::string repeated = R"(
+START
+31 AUG 1993 /
+SCHEDULE
+GRUPTREE
+  'G1'  'FIELD' /
+/
+GCONSALE
+  'G1'   1.0E6   1.05E6   0.99E6   RATE /
+/
+TSTEP
+  10 /
+GCONSALE
+  'G1'   1.1E6   1.15E6   0.95E6   RATE /
+/)";
+    BOOST_CHECK_NO_THROW(create_schedule(repeated));
 
     // RATE (non-REIN) GAS control + GCONSALE on the same group: invalid.
     const std::string invalid = R"(

@@ -492,20 +492,23 @@ void handleGCONSALE(HandlerContext& handlerContext)
                 : Group::GroupInjectionProperties{groupName};
 
         // Safeguard: when sales-gas control is active on this group, the only valid
-        // GCONINJE GAS control on the same group is REIN (sales control reinjects the
-        // surplus gas; a RATE/RESV/VREP/FLD/NONE gas injection control on the group is
-        // incompatible). This applies only to the group carrying the sales target -- a
-        // non-REIN GAS control on a subordinate group (used to distribute the reinjected
-        // gas) is fine. A negative sales target switches sales control off, so skip then.
+        // GCONINJE GAS control on the same group is REIN or NONE. Sales control
+        // reinjects the surplus gas, so a RATE/RESV/VREP/FLD gas injection control on the
+        // group is incompatible; NONE is allowed (it imposes no competing control, and
+        // GCONSALE itself leaves the group with a default NONE control). This applies only
+        // to the group carrying the sales target -- a non-REIN GAS control on a subordinate
+        // group (used to distribute the reinjected gas) is fine. A negative sales target
+        // switches sales control off, so skip then.
         const bool sales_active =
             !(sales_target.is<double>() && sales_target.get<double>() < 0.0);
         if (had_gas_injection && sales_active &&
-            injection.cmode != Group::InjectionCMode::REIN)
+            injection.cmode != Group::InjectionCMode::REIN &&
+            injection.cmode != Group::InjectionCMode::NONE)
         {
             const auto msg_fmt = fmt::format(
                 "Problem with {{keyword}}\n"
                 "In {{file}} line {{line}}\n"
-                "GCONSALE on group {0} requires its GCONINJE GAS control to use REIN, "
+                "GCONSALE on group {0} requires its GCONINJE GAS control to be REIN or NONE, "
                 "but it is {1}. Sales-gas control reinjects the surplus gas, which is "
                 "incompatible with a {1} gas injection control on the same group.",
                 groupName, Group::InjectionCMode2String(injection.cmode));
