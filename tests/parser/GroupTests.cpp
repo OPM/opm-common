@@ -1076,13 +1076,13 @@ GCONSALE
 
 BOOST_AUTO_TEST_CASE(GCONSALE_REQUIRES_REIN_GAS_INJECTION_CONTROL) {
     // Safeguard: when sales-gas control is active on a group, the only valid GCONINJE GAS
-    // control on the same group is REIN. SCHEDULE_GCONSALE_INVALID_INJECTION is WARN by
-    // default (so decks keep parsing) and escalates to an error at high parsing strictness.
-    ParseContext strict;
-    strict.update(ParseContext::SCHEDULE_GCONSALE_INVALID_INJECTION,
-                  InputErrorAction::THROW_EXCEPTION);
+    // control on the same group is REIN. SCHEDULE_GCONSALE_INVALID_INJECTION is an error by
+    // default; a ParseContext that sets it to WARN mimics low parsing strictness.
+    ParseContext lenient;
+    lenient.update(ParseContext::SCHEDULE_GCONSALE_INVALID_INJECTION,
+                   InputErrorAction::WARN);
 
-    // REIN + GCONSALE on the same group: valid, no error even when strict.
+    // REIN + GCONSALE on the same group: valid, no error.
     const std::string valid = R"(
 START
 31 AUG 1993 /
@@ -1096,7 +1096,7 @@ GCONINJE
 GCONSALE
   'G1'   1.0E6   1.05E6   0.99E6   RATE /
 /)";
-    BOOST_CHECK_NO_THROW(create_schedule(valid, strict));
+    BOOST_CHECK_NO_THROW(create_schedule(valid));
 
     // RATE (non-REIN) GAS control + GCONSALE on the same group: invalid.
     const std::string invalid = R"(
@@ -1112,10 +1112,10 @@ GCONINJE
 GCONSALE
   'G1'   1.0E6   1.05E6   0.99E6   RATE /
 /)";
-    // WARN by default: deck still parses.
-    BOOST_CHECK_NO_THROW(create_schedule(invalid));
-    // Escalated to an error at high strictness.
-    BOOST_CHECK_THROW(create_schedule(invalid, strict), std::exception);
+    // Hard error by default.
+    BOOST_CHECK_THROW(create_schedule(invalid), std::exception);
+    // Downgraded to a warning at low strictness: the deck still parses.
+    BOOST_CHECK_NO_THROW(create_schedule(invalid, lenient));
 
     // A non-REIN GAS control on a *subordinate* group (no GCONSALE on it) is fine:
     // GCONSALE is on the FIELD, and the subordinate group only distributes injection.
@@ -1133,7 +1133,7 @@ GCONINJE
   'FIELD'  'GAS'  'REIN'  4.0E6  1*  1.0 /
   'G1'     'GAS'  'NONE'  2*     1.0 /
 /)";
-    BOOST_CHECK_NO_THROW(create_schedule(subordinate, strict));
+    BOOST_CHECK_NO_THROW(create_schedule(subordinate));
 
     // A negative sales target switches sales control off: no safeguard even with a
     // non-REIN GAS control on the group.
@@ -1150,7 +1150,7 @@ GCONINJE
 GCONSALE
   'G1'   -1.0   1.05E6   0.99E6   RATE /
 /)";
-    BOOST_CHECK_NO_THROW(create_schedule(sales_off, strict));
+    BOOST_CHECK_NO_THROW(create_schedule(sales_off));
 }
 
 BOOST_AUTO_TEST_CASE(GCONINJE_MULTIPLE_TOPUP_PHASES_RETURNS_NULLOPT) {

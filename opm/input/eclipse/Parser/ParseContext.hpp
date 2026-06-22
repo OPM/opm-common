@@ -491,7 +491,8 @@ namespace Opm {
 
         /// A group has GCONSALE together with a GCONINJE GAS control that is
         /// not REIN. Sales-gas control reinjects the surplus gas, so the only
-        /// valid GCONINJE GAS control on the same group is REIN.
+        /// valid GCONINJE GAS control on the same group is REIN. An error by
+        /// default; downgraded to a warning at low parsing strictness.
         const static std::string SCHEDULE_GCONSALE_INVALID_INJECTION;
 
         /// A network branch references an invalid flow line.

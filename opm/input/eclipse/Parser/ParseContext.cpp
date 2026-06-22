@@ -134,7 +134,7 @@ namespace Opm {
 
         addKey(SCHEDULE_INVALID_NAME, InputErrorAction::THROW_EXCEPTION);
         this->addKey(SCHEDULE_INVALID_INJPHASE, InputErrorAction::WARN);
-        this->addKey(SCHEDULE_GCONSALE_INVALID_INJECTION, InputErrorAction::WARN);
+        this->addKey(SCHEDULE_GCONSALE_INVALID_INJECTION, InputErrorAction::THROW_EXCEPTION);
         this->addKey(SCHEDULE_INVALID_VFPTABLE, InputErrorAction::THROW_EXCEPTION);
     }
 
