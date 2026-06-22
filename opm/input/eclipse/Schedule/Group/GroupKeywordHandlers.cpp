@@ -478,7 +478,46 @@ void handleGCONSALE(HandlerContext& handlerContext)
                          udq_undefined, handlerContext.static_schedule().m_unit_system);
 
         auto new_group = handlerContext.state().groups.get( groupName );
-        Group::GroupInjectionProperties injection{groupName};
+        // GCONSALE needs the group to carry a GAS injection control so the sales /
+        // reinjection machinery engages, but it must not clobber a deck-specified
+        // GCONINJE GAS control (e.g. REIN with its surface-rate cap and reinjection
+        // fraction): GCONINJE GAS REIN + GCONSALE on the same group is a valid
+        // combination where GCONINJE provides the reinjection control/cap and GCONSALE
+        // the sales target. Preserve an existing GAS injection control; only create a
+        // default one when none exists.
+        const bool had_gas_injection = new_group.hasInjectionControl(Phase::GAS);
+        Group::GroupInjectionProperties injection =
+            had_gas_injection
+                ? new_group.injectionProperties(Phase::GAS)
+                : Group::GroupInjectionProperties{groupName};
+
+        // Safeguard: when sales-gas control is active on this group, the only valid
+        // GCONINJE GAS control on the same group is REIN or NONE. Sales control
+        // reinjects the surplus gas, so a RATE/RESV/VREP/FLD gas injection control on the
+        // group is incompatible; NONE is allowed (it imposes no competing control, and
+        // GCONSALE itself leaves the group with a default NONE control). This applies only
+        // to the group carrying the sales target -- a non-REIN GAS control on a subordinate
+        // group (used to distribute the reinjected gas) is fine. A negative sales target
+        // switches sales control off, so skip then.
+        const bool sales_active =
+            !(sales_target.is<double>() && sales_target.get<double>() < 0.0);
+        if (had_gas_injection && sales_active &&
+            injection.cmode != Group::InjectionCMode::REIN &&
+            injection.cmode != Group::InjectionCMode::NONE)
+        {
+            const auto msg_fmt = fmt::format(
+                "Problem with {{keyword}}\n"
+                "In {{file}} line {{line}}\n"
+                "GCONSALE on group {0} requires its GCONINJE GAS control to be REIN or NONE, "
+                "but it is {1}. Sales-gas control reinjects the surplus gas, which is "
+                "incompatible with a {1} gas injection control on the same group.",
+                groupName, Group::InjectionCMode2String(injection.cmode));
+            handlerContext.parseContext
+                .handleError(ParseContext::SCHEDULE_GCONSALE_INVALID_INJECTION,
+                             msg_fmt, handlerContext.keyword.location(),
+                             handlerContext.errors);
+        }
+
         injection.phase = Phase::GAS;
         if (new_group.updateInjection(injection))
             handlerContext.state().groups.update(new_group);
