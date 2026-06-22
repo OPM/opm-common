@@ -108,6 +108,10 @@ BOOST_AUTO_TEST_CASE(construction_and_queries)
     }
     BOOST_CHECK(st2 == st2_allocate);
 
+    // Test initializer_list constructor.
+    const SparseTable<int> st2_initlist = { {0}, {}, {1, 2}, {3, 4, 5, 6}, {7, 8, 9} };
+    BOOST_CHECK(st2 == st2_initlist);
+
     // One element too few.
     BOOST_CHECK_THROW(const SparseTable<int> st3(elem, elem + num_elem - 1, rowsizes, rowsizes + num_rows), std::exception);
 
