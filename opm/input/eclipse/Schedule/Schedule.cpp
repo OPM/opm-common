@@ -1938,7 +1938,7 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
             auto& conns = this->snapshots[reportStep]
                 .wells.get(well).getConnections();
 
-            auto allConnsExist = true;
+            auto new_frac_wconns = std::vector<std::size_t>{};
             for (const auto& newConn : newConns) {
                 auto* existingConn = conns
                     .maybeGetFromGlobalIndex(newConn.global_index());
@@ -1953,7 +1953,7 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
                 else {
                     // 'newConn' does not already exist in 'conns'.  Add to
                     // collection.
-                    allConnsExist = false;
+                    new_frac_wconns.push_back(newConn.global_index());
 
                     const auto seqIndex = conns.size();
                     conns.addConnection(newConn.getI(),
@@ -1971,11 +1971,13 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
                 }
             }
 
-            if (allConnsExist) {
+            if (new_frac_wconns.empty()) {
                 sim_update.welpi_wells.insert(well);
             }
             else {
                 sim_update.well_structure_changed = true;
+                sim_update.new_frac_wconns
+                    .emplace_back(well, std::move(new_frac_wconns));
             }
         }
 

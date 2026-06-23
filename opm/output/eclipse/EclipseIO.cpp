@@ -21,8 +21,7 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.h"
-#include "opm/input/eclipse/EclipseState/Grid/NNC.hpp"
+#include <config.h>
 
 #include <opm/output/eclipse/EclipseIO.hpp>
 
@@ -32,6 +31,7 @@
 
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/NNC.hpp>
 #include <opm/input/eclipse/EclipseState/IOConfig/IOConfig.hpp>
 #include <opm/input/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
 
@@ -70,7 +70,6 @@
 #include <optional>
 #include <sstream>
 #include <stdexcept>
-#include <unordered_map>
 #include <utility>    // move
 #include <vector>
 
@@ -343,6 +342,32 @@ public:
                       std::map<std::string, std::vector<int>> int_data,
                       const NNCCollection&                    nnc_col) const;
 
+    /// Activate pre-allocated summary vector slots for newly established
+    /// well connections arising from dynamic fracturing.
+    ///
+    /// During initialisation, a geomechanics run pre-allocates a fixed
+    /// number of placeholder output parameter slots for each well that
+    /// is configured to produce fracturing-related connection vectors.
+    /// When the simulator informs the output layer that new connections
+    /// have actually been created during the run, this function claims
+    /// those slots and assigns them to the concrete connection cell
+    /// indices supplied by the caller.
+    ///
+    /// For each (well name, connection IDs) pair in \p newConns the
+    /// function looks up the set of connection summary vectors that were
+    /// pre-allocated for that well.  For every such vector and every new
+    /// connection index it requests a new parameter slot from internal
+    /// storage so that the vector is evaluated and written from the next
+    /// time step onwards.
+    ///
+    /// \param[in] newConns Each element is a pair of
+    ///   - a well name, and
+    ///   - a list of zero-based connection cell global indices that have
+    ///     become active since the last report step as a result of
+    ///     fracturing.
+    ///   Wells that have no pre-allocated fracturing vectors are silently
+    ///   ignored.
+    void recordNewDynamicWellConns(const out::Summary::DynamicConns& newConns);
 
     /// Create summary file output.
     ///
@@ -836,6 +861,11 @@ void Opm::EclipseIO::Impl::writeInitial(std::vector<data::Solution>             
     }
 }
 
+void Opm::EclipseIO::Impl::
+recordNewDynamicWellConns(const out::Summary::DynamicConns& newConns)
+{
+    this->summary_.recordNewDynamicWellConns(newConns);
+}
 
 void Opm::EclipseIO::Impl::writeSummaryFile(const SummaryState&      st,
                                             const int                report_step,
@@ -1201,7 +1231,6 @@ void Opm::EclipseIO::writeTimeStep(const Action::State& action_state,
     this->impl->countTimeStep();
 }
 
-
 void Opm::EclipseIO::writeTimeStep(const Action::State&      action_state,
                                    const WellTestState&      wtest_state,
                                    const SummaryState&       st,
@@ -1244,6 +1273,11 @@ void Opm::EclipseIO::writeTimeStep(const Action::State&      action_state,
     this->impl->countTimeStep();
 }
 
+void Opm::EclipseIO::
+recordNewDynamicWellConns(const out::Summary::DynamicConns& newConns)
+{
+    this->impl->recordNewDynamicWellConns(newConns);
+}
 
 Opm::RestartValue
 Opm::EclipseIO::loadRestart(Action::State&                 action_state,

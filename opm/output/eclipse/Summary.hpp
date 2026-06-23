@@ -175,6 +175,15 @@ public:
         const LgrBlockValues* lgr_block_values {nullptr};
     };
 
+    /// Set of well connections that have been created during the simulation run.
+    ///
+    /// This is only relevant for geomechanics runs with dynamic fracturing.
+    /// A set of connections is identified by a well name and a vector of
+    /// connection IDs.  The output layer needs to know about these
+    /// connections because it needs to activate the corresponding summary
+    /// vector slots for newly established connections.
+    using DynamicConns = std::vector<std::pair<std::string, std::vector<std::size_t>>>;
+
     /// Constructor
     ///
     /// \param[in,out] sumcfg On input, the full collection of summary
@@ -235,6 +244,33 @@ public:
                       const int           report_step,
                       const int           ministep_id,
                       const bool          isSubstep);
+
+    /// Activate pre-allocated summary vector slots for newly established
+    /// well connections arising from dynamic fracturing.
+    ///
+    /// During initialisation, a geomechanics run pre-allocates a fixed
+    /// number of placeholder output parameter slots for each well that
+    /// is configured to produce fracturing-related connection vectors.
+    /// When the simulator informs the output layer that new connections
+    /// have actually been created during the run, this function claims
+    /// those slots and assigns them to the concrete connection cell
+    /// indices supplied by the caller.
+    ///
+    /// For each (well name, connection IDs) pair in \p newConns the
+    /// function looks up the set of connection summary vectors that were
+    /// pre-allocated for that well.  For every such vector and every new
+    /// connection index it requests a new parameter slot from internal
+    /// storage so that the vector is evaluated and written from the next
+    /// time step onwards.
+    ///
+    /// \param[in] newConns Each element is a pair of
+    ///   - a well name, and
+    ///   - a list of zero-based connection cell global indices that have
+    ///     become active since the last report step as a result of
+    ///     fracturing.
+    ///   Wells that have no pre-allocated fracturing vectors are silently
+    ///   ignored.
+    void recordNewDynamicWellConns(const DynamicConns& newConns);
 
     /// Calculate summary vector values.
     ///

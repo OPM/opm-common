@@ -20,8 +20,11 @@
 #ifndef SIMULATOR_UPDATE_HPP
 #define SIMULATOR_UPDATE_HPP
 
+#include <cstddef>
 #include <string>
 #include <unordered_set>
+#include <utility>
+#include <vector>
 
 namespace Opm {
 
@@ -33,11 +36,19 @@ struct SimulatorUpdate
 {
     static SimulatorUpdate serializationTestObject()
     {
+        using namespace std::string_literals;
+
         SimulatorUpdate simulatorUpdate;
+
         simulatorUpdate.tran_update = true;
         simulatorUpdate.well_structure_changed = true;
         simulatorUpdate.affected_wells = {"test"};
         simulatorUpdate.welpi_wells.insert("I-45");
+        simulatorUpdate.new_frac_wconns.assign({
+                std::pair { "I-45"s, std::vector { std::size_t{11}, std::size_t{22}, std::size_t{33} } },
+                std::pair { "RA-MAN"s, std::vector { std::size_t{1}, std::size_t{7}, std::size_t{29} } },
+            });
+
         return simulatorUpdate;
     }
 
@@ -46,6 +57,7 @@ struct SimulatorUpdate
     {
         serializer(affected_wells);
         serializer(welpi_wells);
+        serializer(new_frac_wconns);
         serializer(tran_update);
         serializer(well_structure_changed);
     }
@@ -57,6 +69,15 @@ struct SimulatorUpdate
     /// Wells affected only by WELPI for which the simulator needs to update
     /// its internal notion of the connection transmissibility factors.
     std::unordered_set<std::string> welpi_wells{};
+
+    /// New well connections created as a result of a geomechanical
+    /// fracturing process.
+    ///
+    /// Collection of zero-based Cartesian cell IDs for each of a set of
+    /// named wells.  Passing these to the output layer enables the summary
+    /// vector engine to dynamically create new connection level summary
+    /// vectors if requested in the model input.
+    std::vector<std::pair<std::string, std::vector<std::size_t>>> new_frac_wconns{};
 
     /// Whether or not a transmissibility multiplier keyword was invoked in
     /// an ACTIONX block.
@@ -94,6 +115,10 @@ struct SimulatorUpdate
 
         this->welpi_wells.insert(otherSimUpdate.welpi_wells.begin(),
                                  otherSimUpdate.welpi_wells.end());
+
+        this->new_frac_wconns.insert(this->new_frac_wconns.end(),
+                                     otherSimUpdate.new_frac_wconns.begin(),
+                                     otherSimUpdate.new_frac_wconns.end());
     }
 
     void reset()
@@ -103,6 +128,7 @@ struct SimulatorUpdate
         this->well_structure_changed = false;
         this->affected_wells.clear();
         this->welpi_wells.clear();
+        this->new_frac_wconns.clear();
     }
 
     bool operator==(const SimulatorUpdate& that) const
@@ -111,6 +137,7 @@ struct SimulatorUpdate
             && (this->well_structure_changed == that.well_structure_changed)
             && (this->affected_wells == that.affected_wells)
             && (this->welpi_wells == that.welpi_wells)
+            && (this->new_frac_wconns == that.new_frac_wconns)
             ;
     }
 };

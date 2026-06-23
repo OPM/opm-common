@@ -561,6 +561,7 @@ list(APPEND TEST_SOURCE_FILES
   tests/test_Summary.cpp
   tests/test_SummaryNode.cpp
   tests/test_SummaryConfigNode.cpp
+  tests/test_SummaryDynamicConnectionVectors.cpp
   tests/test_Summary_Group.cpp
   tests/test_Summary_GSatProd.cpp
   tests/test_Tables.cpp

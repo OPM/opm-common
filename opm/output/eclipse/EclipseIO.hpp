@@ -25,8 +25,11 @@
 #include <opm/input/eclipse/EclipseState/Grid/NNC.hpp>
 
 #include <opm/output/data/Solution.hpp>
-#include <opm/output/eclipse/RestartValue.hpp>
 
+#include <opm/output/eclipse/RestartValue.hpp>
+#include <opm/output/eclipse/Summary.hpp>
+
+#include <cstddef>
 #include <map>
 #include <memory>
 #include <optional>
@@ -49,10 +52,6 @@ class WellTestState;
 namespace Opm::Action {
     class State;
 } // namespace Opm::Action
-
-namespace Opm::out {
-    class Summary;
-} // namespace Opm::out
 
 namespace Opm {
 
@@ -331,6 +330,32 @@ public:
                        std::optional<int>        time_step = std::nullopt,
                        const bool                isFinalWriteOut = false);
 
+    /// Activate pre-allocated summary vector slots for newly established
+    /// well connections arising from dynamic fracturing.
+    ///
+    /// During initialisation, a geomechanics run pre-allocates a fixed
+    /// number of placeholder output parameter slots for each well that
+    /// is configured to produce fracturing-related connection vectors.
+    /// When the simulator informs the output layer that new connections
+    /// have actually been created during the run, this function claims
+    /// those slots and assigns them to the concrete connection cell
+    /// indices supplied by the caller.
+    ///
+    /// For each (well name, connection IDs) pair in \p newConns the
+    /// function looks up the set of connection summary vectors that were
+    /// pre-allocated for that well.  For every such vector and every new
+    /// connection index it requests a new parameter slot from internal
+    /// storage so that the vector is evaluated and written from the next
+    /// time step onwards.
+    ///
+    /// \param[in] newConns Each element is a pair of
+    ///   - a well name, and
+    ///   - a list of zero-based connection cell global indices that have
+    ///     become active since the last report step as a result of
+    ///     fracturing.
+    ///   Wells that have no pre-allocated fracturing vectors are silently
+    ///   ignored.
+    void recordNewDynamicWellConns(const out::Summary::DynamicConns& newConns);
 
     /// Load per-cell solution data and wellstate from restart file.
     ///
