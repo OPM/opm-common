@@ -67,7 +67,24 @@ void Opm::out::RegionCache::buildCache(const std::set<std::string>& fip_regions,
             auto first = true;
 
             for (const auto& conn : conns) {
-                if (! grid.cellActive(conn.global_index())) {
+                // LGR-completed connections (incl. recomputed WELTRAJ-in-LGR
+                // connections) carry a cell index in their LGR's numbering,
+                // which is not a valid index in this global grid.  The region
+                // cache is built over the global grid, so they cannot be
+                // placed in it and are skipped.
+                //
+                // Testing the index range alone is not enough: an LGR-local
+                // index that happens to fall inside the global grid is a
+                // perfectly valid index for an unrelated cell, so the
+                // connection would be silently filed under the wrong FIP
+                // region.  Key on the refinement level, and keep the range
+                // check for the out-of-range case.
+                if (conn.get_lgr_level() != 0) {
+                    continue;
+                }
+
+                if ((conn.global_index() >= grid.getCartesianSize()) ||
+                    ! grid.cellActive(conn.global_index())) {
                     continue;
                 }
 
