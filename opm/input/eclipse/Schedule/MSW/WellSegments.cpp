@@ -66,7 +66,7 @@ namespace {
 In {{file}} line {{line}}
 Segment {} is not defined in WELSEGS for well {}.)", segment_number, well_name);
 
-        parseContext.handleError(Opm::ParseContext::SCHEDULE_ICD_MISSING_SEGMENT,
+        parseContext.handleError(Opm::ParseContext::SCHEDULE_MISSING_SEGMENT,
                                  msg_fmt, location, errors);
     }
 

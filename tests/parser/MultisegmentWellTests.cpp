@@ -1665,7 +1665,7 @@ COMPSEGS
                                       " 'PROD01' 3 3 SEG  0.04 2 /\n/\n"));
 
     // A reference to a non-existent segment is governed by the
-    // SCHEDULE_ICD_MISSING_SEGMENT error handler.
+    // SCHEDULE_MISSING_SEGMENT error handler.
     {
         const auto deck = ::Opm::Parser{}.parseString
             (base + "WSEGHEAT\n 'PROD01' 9 9 TEMP 0.02 1* 60 /\n/\n");
@@ -1677,7 +1677,7 @@ COMPSEGS
 
         // Promoted to a hard error -> construction throws.
         ::Opm::ParseContext parseContext;
-        parseContext.update(::Opm::ParseContext::SCHEDULE_ICD_MISSING_SEGMENT,
+        parseContext.update(::Opm::ParseContext::SCHEDULE_MISSING_SEGMENT,
                             ::Opm::InputErrorAction::THROW_EXCEPTION);
         ::Opm::ErrorGuard errors;
         BOOST_CHECK_THROW(::Opm::Schedule(deck, es, parseContext, errors, python),
