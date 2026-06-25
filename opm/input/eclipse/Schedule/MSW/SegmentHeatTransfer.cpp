@@ -19,6 +19,8 @@
 
 #include <opm/input/eclipse/Schedule/MSW/SegmentHeatTransfer.hpp>
 
+#include <opm/common/utility/OpmInputError.hpp>
+
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
 
@@ -49,8 +51,8 @@ namespace Opm {
         this->m_interpolation_constant =
             record.getItem<Kw::INTERPOLATION_CONSTANT>().get<double>(0);
 
-        // A negative contact length flags that item 9 was defaulted; the
-        // mean length of the adjacent segments should be used instead.
+        // Contact length (item 9) is left unset when defaulted, in which case
+        // the mean length of the adjacent segments should be used instead.
         if (record.getItem<Kw::CONTACT_LENGTH>().hasValue(0)) {
             this->m_contact_length = record.getItem<Kw::CONTACT_LENGTH>().getSIDouble(0);
         }
@@ -132,22 +134,38 @@ namespace Opm {
             // record carries a coefficient to set/add/remove.
             if (operation != SegmentHeatTransfer::Operation::CLEAR) {
                 rec.coefficient = SegmentHeatTransfer{type, record};
+
+                // The destination-specific items are mandatory for the
+                // corresponding coefficient type.
+                if ((type == SegmentHeatTransfer::Type::TEMP) &&
+                    !rec.coefficient.temperature().has_value())
+                {
+                    throw OpmInputError {
+                        fmt::format("A TEMP heat transfer coefficient for well {} "
+                                    "segments {} to {} requires an external "
+                                    "temperature in item 7.",
+                                    well_name, rec.segment1, rec.segment2),
+                        keyword.location()
+                    };
+                }
+
+                if ((type == SegmentHeatTransfer::Type::SEG) &&
+                    (rec.coefficient.targetSegment() < 1))
+                {
+                    throw OpmInputError {
+                        fmt::format("A SEG heat transfer coefficient for well {} "
+                                    "segments {} to {} requires a target segment "
+                                    "in item 6.",
+                                    well_name, rec.segment1, rec.segment2),
+                        keyword.location()
+                    };
+                }
             }
 
             res[well_name].push_back(rec);
         }
 
         return res;
-    }
-
-    bool SegmentHeatTransfer::operator==(const SegmentHeatTransfer& rhs) const
-    {
-        return (this->m_type == rhs.m_type)
-            && (this->m_thermal_resistance == rhs.m_thermal_resistance)
-            && (this->m_target_segment == rhs.m_target_segment)
-            && (this->m_temperature == rhs.m_temperature)
-            && (this->m_interpolation_constant == rhs.m_interpolation_constant)
-            && (this->m_contact_length == rhs.m_contact_length);
     }
 
 } // namespace Opm

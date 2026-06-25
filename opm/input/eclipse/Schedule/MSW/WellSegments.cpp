@@ -20,6 +20,7 @@
 #include <opm/input/eclipse/Schedule/MSW/WellSegments.hpp>
 
 #include <opm/common/OpmLog/OpmLog.hpp>
+#include <opm/common/utility/OpmInputError.hpp>
 
 #include <opm/input/eclipse/Schedule/MSW/AICD.hpp>
 #include <opm/input/eclipse/Schedule/MSW/SICD.hpp>
@@ -55,7 +56,7 @@
 #include <fmt/format.h>
 
 namespace {
-    void handleMissingICDSegment(std::string_view            well_name,
+    void handleMissingMSWSegment(std::string_view            well_name,
                                  const int                   segment_number,
                                  const Opm::KeywordLocation& location,
                                  const Opm::ParseContext&    parseContext,
@@ -802,7 +803,7 @@ namespace Opm {
             const auto seg_idx = this->segmentNumberToIndex(segment_number);
 
             if (seg_idx < 0) {
-                handleMissingICDSegment(well_name, segment_number,
+                handleMissingMSWSegment(well_name, segment_number,
                                         location, parseContext, errors);
                 continue;
             }
@@ -834,7 +835,7 @@ namespace Opm {
             const auto seg_idx = this->segmentNumberToIndex(segment_number);
 
             if (seg_idx < 0) {
-                handleMissingICDSegment(well_name, segment_number,
+                handleMissingMSWSegment(well_name, segment_number,
                                         location, parseContext, errors);
                 continue;
             }
@@ -866,7 +867,7 @@ namespace Opm {
             const auto seg_idx = this->segmentNumberToIndex(segment_number);
 
             if (seg_idx < 0) {
-                handleMissingICDSegment(well_name, segment_number,
+                handleMissingMSWSegment(well_name, segment_number,
                                         location, parseContext, errors);
                 continue;
             }
@@ -898,9 +899,21 @@ namespace Opm {
                 const auto seg_idx = this->segmentNumberToIndex(segment_number);
 
                 if (seg_idx < 0) {
-                    handleMissingICDSegment(well_name, segment_number,
+                    handleMissingMSWSegment(well_name, segment_number,
                                             location, parseContext, errors);
                     continue;
+                }
+
+                const auto& coeff = record.coefficient;
+                if ((coeff.type() == SegmentHeatTransfer::Type::SEG) &&
+                    (coeff.targetSegment() == segment_number))
+                {
+                    throw OpmInputError {
+                        fmt::format("A SEG heat transfer coefficient for well {} "
+                                    "segment {} targets the segment itself.",
+                                    well_name, segment_number),
+                        location
+                    };
                 }
 
                 this->m_segments[seg_idx].updateHeatTransfer(record);

@@ -21,6 +21,7 @@
 #define SEGMENT_HEAT_TRANSFER_HPP_HEADER_INCLUDED
 
 #include <map>
+#include <optional>
 #include <string>
 #include <utility>
 #include <vector>
@@ -71,16 +72,18 @@ namespace Opm {
         Type type() const { return m_type; }
         double thermalResistance() const { return m_thermal_resistance; }
         int targetSegment() const { return m_target_segment; }
-        double temperature() const { return m_temperature; }
         double interpolationConstant() const { return m_interpolation_constant; }
-        double contactLength() const { return m_contact_length; }
 
-        // True when the contact length (item 9) was defaulted, in which case
-        // the value should be taken as the mean length of the adjacent
-        // segments.
-        bool defaultedContactLength() const { return m_contact_length < 0.0; }
+        // External fixed temperature (item 7).  Only set for Type::TEMP;
+        // nullopt otherwise.
+        const std::optional<double>& temperature() const { return m_temperature; }
 
-        bool operator==(const SegmentHeatTransfer&) const;
+        // Contact length (item 9).  Nullopt when the item was defaulted, in
+        // which case the value should be taken as the mean length of the
+        // adjacent segments.
+        const std::optional<double>& contactLength() const { return m_contact_length; }
+
+        bool operator==(const SegmentHeatTransfer&) const = default;
 
         template <class Serializer>
         void serializeOp(Serializer& serializer)
@@ -103,14 +106,14 @@ namespace Opm {
         int m_target_segment{0};
 
         // External fixed temperature (item 7), only meaningful for Type::TEMP.
-        double m_temperature{0.0};
+        // Nullopt when not specified.
+        std::optional<double> m_temperature{};
 
         // Interpolation constant (item 8), only meaningful for Type::SEG.
         double m_interpolation_constant{0.5};
 
-        // Contact length (item 9).  A negative value indicates the item was
-        // defaulted.
-        double m_contact_length{-1.0};
+        // Contact length (item 9).  Nullopt when the item was defaulted.
+        std::optional<double> m_contact_length{};
     };
 
     // One parsed WSEGHEAT record: the segment range it applies to, the
