@@ -192,6 +192,7 @@ list(APPEND MAIN_SOURCE_FILES
   opm/input/eclipse/Schedule/Events.cpp
   opm/input/eclipse/Schedule/GasLiftOpt.cpp
   opm/input/eclipse/Schedule/GasLiftOptKeywordHandlers.cpp
+  opm/input/eclipse/Schedule/GasPlantTable.cpp
   opm/input/eclipse/Schedule/HandlerContext.cpp
   opm/input/eclipse/Schedule/KeywordHandlers.cpp
   opm/input/eclipse/Schedule/MessageLimits.cpp
@@ -1124,6 +1125,7 @@ list(APPEND PUBLIC_HEADER_FILES
   opm/input/eclipse/Schedule/CompletedCells.hpp
   opm/input/eclipse/Schedule/Events.hpp
   opm/input/eclipse/Schedule/GasLiftOpt.hpp
+  opm/input/eclipse/Schedule/GasPlantTable.hpp
   opm/input/eclipse/Schedule/Group/GConSale.hpp
   opm/input/eclipse/Schedule/Group/GConSump.hpp
   opm/input/eclipse/Schedule/Group/GPMaint.hpp
