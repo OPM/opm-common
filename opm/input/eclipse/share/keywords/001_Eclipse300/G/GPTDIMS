@@ -1,0 +1,24 @@
+{
+  "name": "GPTDIMS",
+  "sections": [
+    "RUNSPEC"
+  ],
+  "size": 1,
+  "items": [
+    {
+      "name": "MAX_GAS_PLANT_TABLES",
+      "value_type": "INT",
+      "default": 1
+    },
+    {
+      "name": "MAX_GP_ROWS",
+      "value_type": "INT",
+      "default": 1
+    },
+    {
+      "name": "MAX_RECOVERY_ROWS",
+      "value_type": "INT",
+      "default": 2
+    }
+  ]
+}
