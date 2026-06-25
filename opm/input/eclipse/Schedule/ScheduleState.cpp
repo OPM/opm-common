@@ -23,6 +23,7 @@
 
 #include <opm/input/eclipse/Schedule/Action/Actions.hpp>
 #include <opm/input/eclipse/Schedule/GasLiftOpt.hpp>
+#include <opm/input/eclipse/Schedule/GasPlantTable.hpp>
 #include <opm/input/eclipse/Schedule/Group/GConSale.hpp>
 #include <opm/input/eclipse/Schedule/Group/GConSump.hpp>
 #include <opm/input/eclipse/Schedule/Group/GroupEconProductionLimits.hpp>
@@ -401,6 +402,7 @@ bool ScheduleState::operator==(const ScheduleState& other) const {
         && this->groups == other.groups
         && this->vfpprod == other.vfpprod
         && this->vfpinj == other.vfpinj
+        && this->gptable == other.gptable
         && this->m_sumthin == other.m_sumthin
         && this->next_tstep == other.next_tstep
         && this->m_rptonly == other.m_rptonly
@@ -418,6 +420,7 @@ ScheduleState ScheduleState::serializationTestObject() {
     ts.m_year_num = 66;
     ts.vfpprod = map_member<int, VFPProdTable>::serializationTestObject();
     ts.vfpinj = map_member<int, VFPInjTable>::serializationTestObject();
+    ts.gptable = map_member<int, GasPlantTable>::serializationTestObject();
     ts.groups = map_member<std::string, Group>::serializationTestObject();
     ts.m_events = Events::serializationTestObject();
     ts.m_nupcol = Nupcol::serializationTestObject();

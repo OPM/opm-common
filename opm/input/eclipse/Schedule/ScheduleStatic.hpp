@@ -21,6 +21,7 @@
 
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
 
+#include <opm/input/eclipse/Schedule/GasPlantTable.hpp>
 #include <opm/input/eclipse/Schedule/MessageLimits.hpp>
 #include <opm/input/eclipse/Schedule/RPTConfig.hpp>
 #include <opm/input/eclipse/Schedule/RSTConfig.hpp>
@@ -33,6 +34,7 @@
 #include <optional>
 #include <string>
 #include <utility>
+#include <vector>
 
 namespace Opm {
 
@@ -93,6 +95,12 @@ struct ScheduleStatic
 
     /// Oil vaporisation propensities (i.e., VAPPARS in SOLUTION section).
     std::optional<std::array<double,2>> oilVap{};
+
+    /// Gas plant recovery tables specified in the SOLUTION section (GPTABLE).
+    ///
+    /// Seeded into report step 0; empty when there is no SOLUTION-section
+    /// GPTABLE keyword.
+    std::vector<GasPlantTable> gptable_solution{};
 
     /// Whether or not this run is externally controlled by another
     /// simulation run (reservoir coupling facility).
@@ -169,6 +177,7 @@ struct ScheduleStatic
         serializer(this->rptonly);
         serializer(this->gaslift_opt_active);
         serializer(this->oilVap);
+        serializer(this->gptable_solution);
         serializer(this->slave_mode);
         serializer(this->rpt_config);
     }

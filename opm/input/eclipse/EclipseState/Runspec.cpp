@@ -902,6 +902,14 @@ Runspec::Runspec(const Deck& deck)
             this->m_comps = num_comps;
         }
 
+        if (runspecSection.hasKeyword<ParserKeywords::GPTDIMS>()) {
+            const auto& max_item = runspecSection.get<ParserKeywords::GPTDIMS>().back().getRecord(0).getItem<ParserKeywords::GPTDIMS::MAX_GAS_PLANT_TABLES>();
+            const auto max_tables = max_item.get<int>(0);
+            if (max_tables >= 1) {
+                this->m_max_gas_plant_tables = static_cast<std::size_t>(max_tables);
+            }
+        }
+
         if (runspecSection.hasKeyword<ParserKeywords::H2SOL>()) {
             m_h2sol = true;
 
@@ -992,6 +1000,7 @@ Runspec Runspec::serializationTestObject()
     result.m_nupcol = Nupcol::serializationTestObject();
     result.m_tracers = Tracers::serializationTestObject();
     result.m_comps = 3;
+    result.m_max_gas_plant_tables = 2;
     result.m_co2storage = true;
     result.m_co2sol = true;
     result.m_h2sol = true;
@@ -1068,6 +1077,11 @@ bool Runspec::compositionalMode() const
 std::size_t Runspec::numComps() const
 {
     return this->m_comps;
+}
+
+std::size_t Runspec::maxGasPlantTables() const
+{
+    return this->m_max_gas_plant_tables;
 }
 
 bool Runspec::co2Storage() const noexcept
@@ -1193,6 +1207,7 @@ bool Runspec::operator==(const Runspec& data) const
         && (this->m_nupcol == data.m_nupcol)
         && (this->m_tracers == data.m_tracers)
         && (this->m_comps == data.m_comps)
+        && (this->m_max_gas_plant_tables == data.m_max_gas_plant_tables)
         && (this->m_co2storage == data.m_co2storage)
         && (this->m_co2sol == data.m_co2sol)
         && (this->m_h2sol == data.m_h2sol)

@@ -634,6 +634,7 @@ public:
     const Geochem& geochem() const;
     bool compositionalMode() const;
     std::size_t numComps() const;
+    std::size_t maxGasPlantTables() const;
     bool co2Storage() const noexcept;
     bool co2Sol() const noexcept;
     bool h2Sol() const noexcept;
@@ -667,6 +668,7 @@ public:
         serializer(m_nupcol);
         serializer(m_tracers);
         serializer(m_comps);
+        serializer(m_max_gas_plant_tables);
         serializer(m_co2storage);
         serializer(m_co2sol);
         serializer(m_h2sol);
@@ -699,6 +701,7 @@ private:
     Tracers m_tracers{};
     Geochem m_geochem{};
     std::size_t m_comps = 0;
+    std::size_t m_max_gas_plant_tables = 0;
     bool m_co2storage{false};
     bool m_co2sol{false};
     bool m_h2sol{false};

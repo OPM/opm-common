@@ -29,6 +29,7 @@
 
 #include <opm/input/eclipse/Schedule/BCProp.hpp>
 #include <opm/input/eclipse/Schedule/Events.hpp>
+#include <opm/input/eclipse/Schedule/GasPlantTable.hpp>
 #include <opm/input/eclipse/Schedule/Group/Group.hpp>
 #include <opm/input/eclipse/Schedule/MessageLimits.hpp>
 #include <opm/input/eclipse/Schedule/OilVaporizationProperties.hpp>
@@ -619,6 +620,7 @@ namespace Opm {
 
         map_member<int, VFPProdTable> vfpprod;
         map_member<int, VFPInjTable> vfpinj;
+        map_member<int, GasPlantTable> gptable;
         map_member<std::string, Group> groups;
         map_member<std::string, Well> wells;
 
@@ -681,6 +683,7 @@ namespace Opm {
             serializer(this->wlist_tracker);
             serializer(vfpprod);
             serializer(vfpinj);
+            serializer(gptable);
             serializer(groups);
             serializer(wells);
             serializer(this->satelliteInjection);
