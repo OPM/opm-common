@@ -99,6 +99,7 @@
 #include <opm/input/eclipse/Schedule/Action/State.hpp>
 #include <opm/input/eclipse/Schedule/Events.hpp>
 #include <opm/input/eclipse/Schedule/GasLiftOpt.hpp>
+#include <opm/input/eclipse/Schedule/GasPlantTable.hpp>
 #include <opm/input/eclipse/Schedule/Group/GConSale.hpp>
 #include <opm/input/eclipse/Schedule/Group/GConSump.hpp>
 #include <opm/input/eclipse/Schedule/Group/GSatProd.hpp>
@@ -274,6 +275,7 @@ TEST_FOR_TYPE(FoamData)
 TEST_FOR_TYPE(GenericSpeciesConfig)
 TEST_FOR_TYPE(GConSale)
 TEST_FOR_TYPE(GConSump)
+TEST_FOR_TYPE(GasPlantTable)
 TEST_FOR_TYPE(GSatProd)
 TEST_FOR_TYPE(GroupEconProductionLimits)
 TEST_FOR_TYPE_NAMED(GroupSatelliteInjection::Rate, GroupSatelliteInjectionRate)
