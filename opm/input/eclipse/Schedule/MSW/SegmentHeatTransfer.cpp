@@ -38,11 +38,18 @@ namespace Opm {
     {
         using Kw = ParserKeywords::WSEGHEAT;
 
-        this->m_thermal_resistance =
-            record.getItem<Kw::THERMAL_RESISTANCE>().getSIDouble(0);
+        // Items 5 and 6 have no default and are left at their member defaults
+        // when not specified (e.g. for removal records).  Whether either item
+        // is required is enforced in segmentHeatTransferFromWSEGHEAT().
+        if (record.getItem<Kw::THERMAL_RESISTANCE>().hasValue(0)) {
+            this->m_thermal_resistance =
+                record.getItem<Kw::THERMAL_RESISTANCE>().getSIDouble(0);
+        }
 
-        this->m_target_segment =
-            record.getItem<Kw::TARGET_SEGMENT>().get<int>(0);
+        if (record.getItem<Kw::TARGET_SEGMENT>().hasValue(0)) {
+            this->m_target_segment =
+                record.getItem<Kw::TARGET_SEGMENT>().get<int>(0);
+        }
 
         if (record.getItem<Kw::TEMPERATURE>().hasValue(0)) {
             this->m_temperature = record.getItem<Kw::TEMPERATURE>().getSIDouble(0);
@@ -135,9 +142,30 @@ namespace Opm {
             if (operation != SegmentHeatTransfer::Operation::CLEAR) {
                 rec.coefficient = SegmentHeatTransfer{type, record};
 
-                // The destination-specific items are mandatory for the
-                // corresponding coefficient type.
-                if ((type == SegmentHeatTransfer::Type::TEMP) &&
+                // Whether this record sets or adds a coefficient (a bare type
+                // or one suffixed with '+').  A removal record ('-') only needs
+                // to identify an existing coefficient and therefore need not
+                // repeat the values that define it.
+                const bool is_set =
+                    (operation == SegmentHeatTransfer::Operation::REPLACE_ALL) ||
+                    (operation == SegmentHeatTransfer::Operation::ADD);
+
+                // The specific thermal resistance (item 5) is mandatory whenever
+                // a coefficient is set or added.
+                if (is_set && !record.getItem<Kw::THERMAL_RESISTANCE>().hasValue(0)) {
+                    throw OpmInputError {
+                        fmt::format("A {} heat transfer coefficient for well {} "
+                                    "segments {} to {} requires a specific thermal "
+                                    "resistance in item 5.",
+                                    SegmentHeatTransfer::typeToString(type),
+                                    well_name, rec.segment1, rec.segment2),
+                        keyword.location()
+                    };
+                }
+
+                // A fixed external temperature (item 7) is mandatory when a TEMP
+                // coefficient is set or added.
+                if (is_set && (type == SegmentHeatTransfer::Type::TEMP) &&
                     !rec.coefficient.temperature().has_value())
                 {
                     throw OpmInputError {
@@ -149,6 +177,8 @@ namespace Opm {
                     };
                 }
 
+                // The target segment (item 6) identifies a SEG coefficient and
+                // is therefore required for every SEG record, removal included.
                 if ((type == SegmentHeatTransfer::Type::SEG) &&
                     (rec.coefficient.targetSegment() < 1))
                 {

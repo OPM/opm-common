@@ -266,9 +266,9 @@ namespace Opm {
                               double center_depth_arg);
         void updateSegment(int segment_number_arg,
                            double center_depth_arg,
+                           double thermal_length_arg,
                            std::size_t compseg_insert_index,
-                           const std::optional<std::pair<double,double>>& perf_range,
-                           double thermal_length_arg = 0.0);
+                           const std::optional<std::pair<double,double>>& perf_range);
 
         template<class Serializer>
         void serializeOp(Serializer& serializer)
@@ -375,7 +375,9 @@ namespace Opm {
 
         // Effective length of the connection in the wellbore segment used in
         // the thermal conductivity calculation (COMPSEGS item 10).  Zero when
-        // not specified.
+        // defaulted, signalling that the consumer should apply the ECLIPSE
+        // default: the thickness of the grid block in the direction of
+        // penetration.
         double m_thermal_length { 0.0 };
 
         double m_wpimult { 1.0 };

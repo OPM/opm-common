@@ -1659,10 +1659,29 @@ COMPSEGS
     BOOST_CHECK_THROW(makeSchedule("WSEGHEAT\n 'PROD01' 3 3 SEG 0.04 3 /\n/\n"),
                       ::Opm::OpmInputError);
 
+    // Setting or adding a coefficient requires a specific thermal resistance
+    // (item 5).
+    BOOST_CHECK_THROW(makeSchedule("WSEGHEAT\n 'PROD01' 2 2 COMP /\n/\n"),
+                      ::Opm::OpmInputError);
+    BOOST_CHECK_THROW(makeSchedule("WSEGHEAT\n 'PROD01' 2 2 COMP+ /\n/\n"),
+                      ::Opm::OpmInputError);
+
     // Fully specified records are accepted.
     BOOST_CHECK_NO_THROW(makeSchedule("WSEGHEAT\n"
                                       " 'PROD01' 2 2 TEMP 0.02 1* 60 /\n"
                                       " 'PROD01' 3 3 SEG  0.04 2 /\n/\n"));
+
+    // A removal ('-') only identifies an existing coefficient, so neither the
+    // thermal resistance (item 5) nor, for TEMP, the external temperature
+    // (item 7) need be specified.
+    BOOST_CHECK_NO_THROW(makeSchedule("WSEGHEAT\n 'PROD01' 2 2 COMP- /\n/\n"));
+    BOOST_CHECK_NO_THROW(makeSchedule("WSEGHEAT\n 'PROD01' 2 2 TEMP- /\n/\n"));
+    BOOST_CHECK_NO_THROW(makeSchedule("WSEGHEAT\n 'PROD01' 3 3 SEG- 1* 2 /\n/\n"));
+
+    // The target segment (item 6) is still required to identify which SEG
+    // coefficient a removal applies to.
+    BOOST_CHECK_THROW(makeSchedule("WSEGHEAT\n 'PROD01' 3 3 SEG- /\n/\n"),
+                      ::Opm::OpmInputError);
 
     // A reference to a non-existent segment is governed by the
     // SCHEDULE_MISSING_SEGMENT error handler.

@@ -29,14 +29,12 @@
       "item": 5,
       "name": "THERMAL_RESISTANCE",
       "value_type": "DOUBLE",
-      "dimension": "1/ThermalConductivity",
-      "default": 0
+      "dimension": "1/ThermalConductivity"
     },
     {
       "item": 6,
       "name": "TARGET_SEGMENT",
-      "value_type": "INT",
-      "default": 0
+      "value_type": "INT"
     },
     {
       "item": 7,

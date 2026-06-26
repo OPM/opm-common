@@ -358,8 +358,11 @@ The direction must be specified when END_IJK is specified. Well: {})", well_name
                 ? record.getItem<Kw::CENTER_DEPTH>().getSIDouble(0)
                 : 0.0;
 
-            // Effective length of the connection used in thermal conductivity
-            // calculations (thermal option).  Zero when not specified.
+            // Effective length of the connection in the wellbore segment, used
+            // in the thermal conductivity calculation (thermal option).  Left
+            // at zero when defaulted, signalling that the consumer should apply
+            // the ECLIPSE default: the thickness of the grid block in the
+            // direction of penetration.
             const auto thermal_length = record.getItem<Kw::THERMAL_LENGTH>().hasValue(0)
                 ? record.getItem<Kw::THERMAL_LENGTH>().getSIDouble(0)
                 : 0.0;
@@ -507,10 +510,10 @@ Well: {}, connection: ({},{},{}))", well_name, I+1, J+1 , K+1);
                 new_connection_set.getFromIJK(i, j, k)
                     .updateSegment(compseg.segment_number,
                                    cdepth,
+                                   compseg.m_thermal_length,
                                    compseg.m_seqIndex,
                                    std::make_pair(compseg.m_distance_start,
-                                                  compseg.m_distance_end),
-                                   compseg.m_thermal_length);
+                                                  compseg.m_distance_end));
             }
         }
 

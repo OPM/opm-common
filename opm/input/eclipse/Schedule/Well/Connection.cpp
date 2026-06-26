@@ -366,15 +366,15 @@ namespace Opm
 
     void Connection::updateSegment(const int segment_number_arg,
                                    const double center_depth_arg,
+                                   const double thermal_length_arg,
                                    const std::size_t compseg_insert_index,
-                                   const std::optional<std::pair<double, double>>& perf_range,
-                                   const double thermal_length_arg)
+                                   const std::optional<std::pair<double, double>>& perf_range)
     {
         this->segment_number = segment_number_arg;
         this->center_depth = center_depth_arg;
+        this->m_thermal_length = thermal_length_arg;
         this->m_sort_value = compseg_insert_index;
         this->m_perf_range = perf_range;
-        this->m_thermal_length = thermal_length_arg;
     }
 
     void Connection::updateSegmentRST(int segment_number_arg,

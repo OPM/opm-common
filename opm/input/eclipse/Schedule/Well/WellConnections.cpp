@@ -637,6 +637,7 @@ The cell ({},{},{}) in well {} is not active and the connection will be ignored)
                 const auto css_ind = prev->sort_value();
                 const auto conSegNo = prev->segment();
                 const auto perf_range = prev->perf_range();
+                const auto thermal_length = prev->thermalLength();
 
                 if (state == Connection::State::OPEN) {
                     // Report existing connections this record opens, so the
@@ -662,7 +663,8 @@ The cell ({},{},{}) in well {} is not active and the connection will be ignored)
                     css_ind, defaultSatTable, lgr_grid_number
                 };
 
-                prev->updateSegment(conSegNo, cell.depth, css_ind, perf_range);
+                prev->updateSegment(conSegNo, cell.depth, thermal_length,
+                                    css_ind, perf_range);
             }
         }
     }
@@ -912,6 +914,7 @@ CF and Kh items for well {} must both be specified or both defaulted/negative)",
                 const auto css_ind = prev->sort_value();
                 const auto conSegNo = prev->segment();
                 const auto perf_range = prev->perf_range();
+                const auto thermal_length = prev->thermalLength();
 
                 *prev = Connection {
                     ijk[0], ijk[1], ijk[2],
@@ -921,7 +924,8 @@ CF and Kh items for well {} must both be specified or both defaulted/negative)",
                     css_ind, defaultSatTable
                 };
 
-                prev->updateSegment(conSegNo, cell.depth, css_ind, *perf_range);
+                prev->updateSegment(conSegNo, cell.depth, thermal_length,
+                                    css_ind, *perf_range);
             }
         }
     }
