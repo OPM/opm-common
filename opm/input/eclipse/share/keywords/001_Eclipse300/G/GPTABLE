@@ -1,0 +1,34 @@
+{
+  "name": "GPTABLE",
+  "sections": [
+    "SOLUTION",
+    "SCHEDULE"
+  ],
+  "requires": ["COMPS"],
+  "items": [
+    {
+      "item": 1,
+      "name": "GAS_PLANT_TABLE_NUM",
+      "value_type": "INT"
+    },
+    {
+      "item": 2,
+      "name": "LOWER_COMPONENT",
+      "value_type": "INT"
+    },
+    {
+      "item": 3,
+      "name": "UPPER_COMPONENT",
+      "value_type": "INT"
+    },
+    {
+      "item": 4,
+      "name": "DATA",
+      "value_type": "DOUBLE",
+      "size_type": "ALL",
+      "dimension": [
+        "1"
+      ]
+    }
+  ]
+}

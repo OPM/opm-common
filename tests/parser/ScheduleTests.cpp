@@ -5256,6 +5256,374 @@ BOOST_AUTO_TEST_CASE(VFPPROD_SCALING) {
     }
 }
 
+namespace {
+    // A complete, minimal compositional deck (RUNSPEC + GRID, COMPS 3); the given
+    // schedule_body is appended verbatim after the SCHEDULE keyword.
+    std::string gptable_deck(const std::string& schedule_body) {
+        return std::string{ R"(
+RUNSPEC
+DIMENS
+ 10 10 10 /
+OIL
+GAS
+WATER
+COMPS
+ 3 /
+START
+ 1 'JAN' 2020 /
+GRID
+DXV
+ 10*100 /
+DYV
+ 10*100 /
+DZV
+ 10*10 /
+TOPS
+ 100*2000 /
+SCHEDULE
+)" } + schedule_body;
+    }
+}
+
+BOOST_AUTO_TEST_CASE(GPTABLE_solution_seed_and_schedule_respec) {
+    const auto sched = make_schedule(R"(
+RUNSPEC
+DIMENS
+ 10 10 10 /
+OIL
+GAS
+WATER
+COMPS
+ 3 /
+GPTDIMS
+ 2 /
+START
+ 1 'JAN' 2020 /
+GRID
+DXV
+ 10*100 /
+DYV
+ 10*100 /
+DZV
+ 10*10 /
+TOPS
+ 100*2000 /
+SOLUTION
+GPTABLE
+ 1 3 3
+   0.0  0.10 0.20 0.70
+   0.2  0.15 0.25 0.60 /
+/
+SCHEDULE
+TSTEP
+ 10 /
+GPTABLE
+ 1 3 3
+   0.0  0.0  0.0  1.0 /
+/
+)");
+
+    // SOLUTION occurrence is seeded at report step 0.
+    const auto& g0 = sched[0].gptable(1);
+    BOOST_CHECK_EQUAL  (g0.name(),             1);
+    BOOST_REQUIRE_EQUAL(g0.numRows(),          std::size_t{2});
+    BOOST_CHECK_EQUAL  (g0.lowerComponent(),   3);
+    BOOST_CHECK_EQUAL  (g0.upperComponent(),   3);
+    BOOST_CHECK_CLOSE  (g0.heavyMoleFraction(1), 0.2,  1e-9);
+    BOOST_CHECK_CLOSE  (g0.recovery(0, 2),       0.70, 1e-9);
+    BOOST_CHECK_CLOSE  (g0.recovery(1, 1),       0.25, 1e-9);
+
+    // Re-specified at the next report step; step 0 is unchanged (copy-on-write).
+    const auto& g1 = sched[1].gptable(1);
+    BOOST_REQUIRE_EQUAL(g1.numRows(),          std::size_t{1});
+    BOOST_CHECK_CLOSE  (g1.recovery(0, 2),       1.0,  1e-9);
+    BOOST_CHECK_CLOSE  (sched[0].gptable(1).recovery(0, 2), 0.70, 1e-9);
+}
+
+BOOST_AUTO_TEST_CASE(GPTABLE_default_indices_resolve_to_ncomps) {
+    const auto sched = make_schedule(gptable_deck(R"(GPTABLE
+ 1 1* 1*  0.0  0.10 0.20 0.70 /
+/
+)"));
+
+    const auto& g = sched[0].gptable(1);
+    BOOST_CHECK_EQUAL(g.lowerComponent(), 3);   // defaulted -> number of components
+    BOOST_CHECK_EQUAL(g.upperComponent(), 3);
+}
+
+BOOST_AUTO_TEST_CASE(GPTABLE_bad_row_width_throws) {
+    // A row holds 3 values, but number of components + 1 = 4 are required.
+    BOOST_CHECK_THROW(
+        make_schedule(gptable_deck(R"(GPTABLE
+ 1 3 3
+   0.0 0.10 0.20 /
+/
+)")),
+        Opm::OpmInputError);
+}
+
+BOOST_AUTO_TEST_CASE(GPTABLE_table_number_required_throws) {
+    // Item 1 (gas plant table number) cannot be defaulted.
+    BOOST_CHECK_THROW(
+        make_schedule(gptable_deck(R"(GPTABLE
+ 1* 3 3  0.0 0.10 0.20 0.70 /
+/
+)")),
+        Opm::OpmInputError);
+}
+
+BOOST_AUTO_TEST_CASE(GPTABLE_table_number_must_be_positive_throws) {
+    BOOST_CHECK_THROW(
+        make_schedule(gptable_deck(R"(GPTABLE
+ 0 3 3  0.0 0.10 0.20 0.70 /
+/
+)")),
+        Opm::OpmInputError);
+}
+
+BOOST_AUTO_TEST_CASE(GPTABLE_component_index_out_of_range_throws) {
+    // Upper component index 4 exceeds the 3 components in the run.
+    BOOST_CHECK_THROW(
+        make_schedule(gptable_deck(R"(GPTABLE
+ 1 1 4  0.0 0.10 0.20 0.70 /
+/
+)")),
+        Opm::OpmInputError);
+}
+
+BOOST_AUTO_TEST_CASE(GPTABLE_inverted_component_range_throws) {
+    // The heavy-component indices form a bracket [lower, upper]; an inverted range
+    // (lower > upper, here 3 > 2) is rejected at parse. Equal indices (a single
+    // component) remain valid and are exercised by the other GPTABLE tests.
+    BOOST_CHECK_THROW(
+        make_schedule(gptable_deck(R"(GPTABLE
+ 1 3 2  0.0 0.10 0.20 0.70 /
+/
+)")),
+        Opm::OpmInputError);
+}
+
+BOOST_AUTO_TEST_CASE(GPTABLE_duplicate_table_number_in_one_keyword_warns_last_wins) {
+    // Two records with the same gas plant table number within a single GPTABLE
+    // keyword is an authoring error, but the table store (map_member) resolves it
+    // last-wins, so it is diagnosed with a warning rather than rejected: the deck
+    // parses and the surviving table is the LAST record.
+    const auto sched = make_schedule(gptable_deck(R"(GPTABLE
+ 1 3 3  0.0 0.10 0.20 0.70 /
+ 1 3 3  0.0 0.05 0.15 0.80 /
+/
+)"));
+
+    const auto& g = sched[0].gptable(1);
+    BOOST_CHECK_EQUAL(g.name(), 1);
+    BOOST_CHECK_CLOSE(g.recovery(0, 0), 0.05, 1.0e-6);
+}
+
+BOOST_AUTO_TEST_CASE(GPTABLE_negative_value_throws) {
+    // Every table entry is a dimensionless fraction; a negative value is rejected.
+    BOOST_CHECK_THROW(
+        make_schedule(gptable_deck(R"(GPTABLE
+ 1 3 3  0.0 -0.10 0.20 0.70 /
+/
+)")),
+        Opm::OpmInputError);
+}
+
+BOOST_AUTO_TEST_CASE(GPTABLE_value_above_one_throws) {
+    // Every entry is a dimensionless fraction in [0, 1]; a value above 1.0
+    // (here a recovery factor of 1.70) is rejected.
+    BOOST_CHECK_THROW(
+        make_schedule(gptable_deck(R"(GPTABLE
+ 1 3 3  0.0 0.10 0.20 1.70 /
+/
+)")),
+        Opm::OpmInputError);
+}
+
+BOOST_AUTO_TEST_CASE(GPTABLE_non_monotonic_key_column_throws) {
+    // The heavy mole fraction (column 1) is the interpolation key and must be
+    // strictly increasing across rows; two rows sharing the key 0.2 are rejected.
+    BOOST_CHECK_THROW(
+        make_schedule(gptable_deck(R"(GPTABLE
+ 1 3 3  0.2 0.10 0.20 0.70
+ 0.2 0.15 0.25 0.60 /
+/
+)")),
+        Opm::OpmInputError);
+}
+
+BOOST_AUTO_TEST_CASE(GPTABLE_table_number_above_GPTDIMS_max_warns_but_is_accepted) {
+    // GPTDIMS is a RUNSPEC dimension keyword declaring MAX_GAS_PLANT_TABLES. Per
+    // bska's review, the declared maximum drives a non-fatal diagnostic (a warning),
+    // NOT a hard limit: the gas plant tables live in a dynamically sized container,
+    // so a table number above the declared maximum is still accepted -- only warned
+    // about. GPTDIMS declares MAX_GAS_PLANT_TABLES = 1, yet a table numbered 5 is
+    // still accepted (a warning is logged).
+    const auto sched = make_schedule(R"(
+RUNSPEC
+DIMENS
+ 10 10 10 /
+OIL
+GAS
+WATER
+COMPS
+ 3 /
+GPTDIMS
+ 1 /
+START
+ 1 'JAN' 2020 /
+GRID
+DXV
+ 10*100 /
+DYV
+ 10*100 /
+DZV
+ 10*10 /
+TOPS
+ 100*2000 /
+SCHEDULE
+GPTABLE
+ 5 3 3  0.0 0.10 0.20 0.70 /
+/
+)");
+
+    const auto& g = sched[0].gptable(5);
+    BOOST_CHECK_EQUAL(g.name(), 5);
+}
+
+BOOST_AUTO_TEST_CASE(GPTABLE_without_COMPS_rejected_at_parse) {
+    // GPTABLE declares `requires: [COMPS]`, so a non-compositional deck (no COMPS in
+    // RUNSPEC) that uses GPTABLE is rejected at parse time by the keyword-consistency
+    // check (PARSE_INVALID_KEYWORD_COMBINATION, default THROW). This replaces the
+    // former in-handler compositionalMode() throw.
+    BOOST_CHECK_THROW(
+        make_schedule(R"(
+RUNSPEC
+DIMENS
+ 10 10 10 /
+OIL
+GAS
+WATER
+START
+ 1 'JAN' 2020 /
+GRID
+DXV
+ 10*100 /
+DYV
+ 10*100 /
+DZV
+ 10*10 /
+TOPS
+ 100*2000 /
+SCHEDULE
+GPTABLE
+ 1 3 3  0.0 0.10 0.20 0.70 /
+/
+)"),
+        Opm::OpmInputError);
+}
+
+BOOST_AUTO_TEST_CASE(GPTABLE_solution_duplicate_table_number_warns_last_wins) {
+    // The SOLUTION-section seeding applies the same in-keyword duplicate handling as
+    // the SCHEDULE handler: a repeated table number within one keyword is diagnosed
+    // with a warning (not rejected) and resolves last-wins when seeded at report
+    // step 0.
+    const auto sched = make_schedule(R"(
+RUNSPEC
+DIMENS
+ 10 10 10 /
+OIL
+GAS
+WATER
+COMPS
+ 3 /
+START
+ 1 'JAN' 2020 /
+GRID
+DXV
+ 10*100 /
+DYV
+ 10*100 /
+DZV
+ 10*10 /
+TOPS
+ 100*2000 /
+SOLUTION
+GPTABLE
+ 1 3 3  0.0 0.10 0.20 0.70 /
+ 1 3 3  0.0 0.05 0.15 0.80 /
+/
+SCHEDULE
+TSTEP
+ 10 /
+)");
+
+    const auto& g = sched[0].gptable(1);
+    BOOST_CHECK_EQUAL(g.name(), 1);
+    BOOST_CHECK_CLOSE(g.recovery(0, 0), 0.05, 1.0e-6);
+}
+
+BOOST_AUTO_TEST_CASE(FIELDSEP_references_GPTABLE_combined) {
+    // Combined use of both keywords from one deck: FIELDSEP item 7 (gas plant
+    // table number) cross-references a GPTABLE. Separator stage 1 routes to gas
+    // plant table 1, which GPTABLE defines; FIELDSEP is read via InitConfig
+    // (PR-001) and GPTABLE via the Schedule (PR-002).
+    const auto deck = Parser{}.parseString(R"(
+RUNSPEC
+DIMENS
+ 10 10 10 /
+OIL
+GAS
+WATER
+COMPS
+ 3 /
+START
+ 1 'JAN' 2020 /
+GRID
+DXV
+ 10*100 /
+DYV
+ 10*100 /
+DZV
+ 10*10 /
+TOPS
+ 100*2000 /
+SOLUTION
+GPTABLE
+ 1 3 3
+   0.0  0.10 0.20 0.70
+   0.2  0.15 0.25 0.60 /
+/
+FIELDSEP
+ 1 60.0 15.0   0 0 0 1 /
+ 2 15.0  1.013 0 0 0 0 /
+/
+)");
+
+    const Runspec runspec(deck);
+
+    // FIELDSEP (SOLUTION) -> InitConfig: stage 1 selects gas plant table 1.
+    const InitConfig init_config(deck, runspec.phases(), runspec.compositionalMode());
+    BOOST_REQUIRE(init_config.hasFieldSep());
+    const auto& fieldsep = init_config.getFieldSep();
+    BOOST_REQUIRE_EQUAL(fieldsep.size(), std::size_t{2});
+    const int gp_table = fieldsep.getRecord(0).gasPlantTableNumber();
+    BOOST_CHECK_EQUAL(gp_table, 1);
+    BOOST_CHECK_EQUAL(fieldsep.getRecord(1).gasPlantTableNumber(), 0);   // stage 2 uses the EoS
+
+    // GPTABLE (SOLUTION) -> Schedule: the table FIELDSEP points at is seeded at step 0.
+    EclipseGrid grid(10, 10, 10);
+    const TableManager table(deck);
+    const FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
+    const Schedule sched(deck, grid, fp, NumericalAquifers{}, runspec, std::make_shared<Python>());
+
+    BOOST_REQUIRE(sched[0].gptable.has(gp_table));
+    const auto& g = sched[0].gptable(gp_table);
+    BOOST_CHECK_EQUAL  (g.name(), 1);
+    BOOST_REQUIRE_EQUAL(g.numRows(), std::size_t{2});
+    BOOST_CHECK_CLOSE  (g.recovery(0, 2), 0.70, 1e-9);
+}
+
 
 BOOST_AUTO_TEST_CASE(WPAVE) {
     const std::string deck_string = R"(

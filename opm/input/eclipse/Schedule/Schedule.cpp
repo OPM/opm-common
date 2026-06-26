@@ -3037,6 +3037,11 @@ void Schedule::create_first(const time_point& start_time, const std::optional<ti
         sched_state.oilvap.update(std::move(oilvap));
     }
 
+    // Seed any SOLUTION-section GPTABLE gas plant tables into report step 0.
+    for (const auto& table : this->m_static.gptable_solution) {
+        sched_state.gptable.update(table);
+    }
+
     sched_state.network_balance.update(Network::Balance{run_spec.networkDimensions().active()});
     sched_state.update_sumthin(this->m_static.sumthin);
     sched_state.rptonly(this->m_static.rptonly);

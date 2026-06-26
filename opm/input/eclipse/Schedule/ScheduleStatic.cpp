@@ -28,6 +28,7 @@
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
 #include <opm/input/eclipse/Deck/DeckSection.hpp>
 
+#include <opm/input/eclipse/Parser/ParserKeywords/G.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/L.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/R.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/S.hpp>
@@ -36,7 +37,9 @@
 #include <array>
 #include <memory>
 #include <optional>
+#include <unordered_set>
 #include <utility>
+#include <vector>
 
 namespace {
 
@@ -88,6 +91,42 @@ namespace {
         return { std::array { vap1, vap2 } };
     }
 
+    std::vector<Opm::GasPlantTable>
+    gptable_solution_section(const Opm::SOLUTIONSection& section, const Opm::Runspec& runspec)
+    {
+        using Kw = Opm::ParserKeywords::GPTABLE;
+
+        std::vector<Opm::GasPlantTable> tables;
+
+        const auto keywords = section.getKeywordList<Kw>();
+
+        // Early exit when the SOLUTION section carries no GPTABLE.
+        if (keywords.empty()) {
+            return tables;
+        }
+
+        // The compositional-run requirement (COMPS) is enforced declaratively by the
+        // GPTABLE keyword's "requires" clause.
+        const auto numComponents = runspec.numComps();
+        const auto max_tables = runspec.maxGasPlantTables();
+
+        // Seed every SOLUTION-section GPTABLE occurrence (each may carry several
+        // records), matching how the SCHEDULE handler processes all records. A table
+        // number repeated within a single keyword is an authoring error; map_member
+        // resolves it last-wins downstream, so warn rather than reject.
+        for (const auto* keyword : keywords) {
+            std::unordered_set<int> seen_table_nums;
+            for (const auto& record : *keyword) {
+                tables.emplace_back(record, numComponents, keyword->location());
+                const auto table_num = tables.back().name();
+                Opm::GasPlantTable::warnOnTableNumber(seen_table_nums, table_num,
+                                                      max_tables, keyword->location());
+            }
+        }
+
+        return tables;
+    }
+
     std::optional<Opm::RPTConfig>
     rptConfigSolutionSection(const Opm::SOLUTIONSection& section)
     {
@@ -122,6 +161,7 @@ Opm::ScheduleStatic::ScheduleStatic(std::shared_ptr<const Python> python_handle,
     , rptonly         { rptonly_summary_section(SUMMARYSection{ deck }) }
     , gaslift_opt_active { deck.hasKeyword<ParserKeywords::LIFTOPT>() }
     , oilVap          { vappars_solution_section(SOLUTIONSection { deck }) }
+    , gptable_solution { gptable_solution_section(SOLUTIONSection { deck }, runspec) }
     , slave_mode      { slave_mode_ }
     , rpt_config      { rptConfigSolutionSection(SOLUTIONSection { deck }) }
 {}
@@ -141,6 +181,7 @@ Opm::ScheduleStatic Opm::ScheduleStatic::serializationTestObject()
     st.rptonly = true;
     st.gaslift_opt_active = true;
     st.oilVap.emplace(std::array {1.23, 0.456});
+    st.gptable_solution = { GasPlantTable::serializationTestObject() };
     st.slave_mode = true;
     st.rpt_config.emplace(RPTConfig::serializationTestObject());
 
@@ -160,6 +201,7 @@ bool Opm::ScheduleStatic::operator==(const ScheduleStatic& other) const
         && (this->rptonly == other.rptonly)
         && (this->gaslift_opt_active == other.gaslift_opt_active)
         && (this->oilVap == other.oilVap)
+        && (this->gptable_solution == other.gptable_solution)
         && (this->slave_mode == other.slave_mode)
         && (this->rpt_config == other.rpt_config)
         ;
