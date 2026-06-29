@@ -1581,6 +1581,7 @@ BOOST_AUTO_TEST_CASE(group_keywords)
 
     /* Production rates */
     BOOST_CHECK_CLOSE( 10.0 + 20.0, ecl_sum_get_group_var( resp, 1, "G_1", "GWPR" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 10.18 + 20.18, ecl_sum_get_group_var( resp, 1, "G_1", "GTPRSEA" ), 1e-5 );
     BOOST_CHECK_CLOSE( 10.1 + 20.1, ecl_sum_get_group_var( resp, 1, "G_1", "GOPR" ), 1e-5 );
     BOOST_CHECK_CLOSE( 10.2 + 20.2, ecl_sum_get_group_var( resp, 1, "G_1", "GGPR" ), 1e-5 );
     BOOST_CHECK_CLOSE( 10.3 + 20.3, ecl_sum_get_group_var( resp, 1, "G_1", "GNPR" ), 1e-5 );
@@ -1612,6 +1613,7 @@ BOOST_AUTO_TEST_CASE(group_keywords)
 
     /* Production totals */
     BOOST_CHECK_CLOSE( 10.0 + 20.0, ecl_sum_get_group_var( resp, 1, "G_1", "GWPT" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 10.18 + 20.18, ecl_sum_get_group_var( resp, 1, "G_1", "GTPTSEA" ), 1e-5 );
     BOOST_CHECK_CLOSE( 10.1 + 20.1, ecl_sum_get_group_var( resp, 1, "G_1", "GOPT" ), 1e-5 );
     BOOST_CHECK_CLOSE( 10.2 + 20.2, ecl_sum_get_group_var( resp, 1, "G_1", "GGPT" ), 1e-5 );
     BOOST_CHECK_CLOSE( 10.3 + 20.3, ecl_sum_get_group_var( resp, 1, "G_1", "GNPT" ), 1e-5 );
@@ -1656,6 +1658,7 @@ BOOST_AUTO_TEST_CASE(group_keywords)
 
     /* Injection rates */
     BOOST_CHECK_CLOSE( 30.0 + 60.0, ecl_sum_get_group_var( resp, 1, "G_2", "GWIR" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 30.18 + 60.18, ecl_sum_get_group_var( resp, 1, "G_2", "GTIRSEA" ), 1e-5 );
     BOOST_CHECK_CLOSE( 30.2 + 60.2, ecl_sum_get_group_var( resp, 1, "G_2", "GGIR" ), 1e-5 );
     BOOST_CHECK_CLOSE( 30.3 + 60.3, ecl_sum_get_group_var( resp, 1, "G_2", "GNIR" ), 1e-5 );
     BOOST_CHECK_CLOSE( 30.16 + 60.16, ecl_sum_get_group_var( resp, 1, "G_2", "GCIR" ), 1e-5 );
@@ -1665,6 +1668,7 @@ BOOST_AUTO_TEST_CASE(group_keywords)
 
     /* Injection totals */
     BOOST_CHECK_CLOSE( 30.0 + 60.0, ecl_sum_get_group_var( resp, 1, "G_2", "GWIT" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 30.18 + 60.18, ecl_sum_get_group_var( resp, 1, "G_2", "GTITSEA" ), 1e-5 );
     BOOST_CHECK_CLOSE( 30.2 + 60.2, ecl_sum_get_group_var( resp, 1, "G_2", "GGIT" ), 1e-5 );
     BOOST_CHECK_CLOSE( 30.3 + 60.3, ecl_sum_get_group_var( resp, 1, "G_2", "GNIT" ), 1e-5 );
     BOOST_CHECK_CLOSE( 30.16 + 60.16, ecl_sum_get_group_var( resp, 1, "G_2", "GCIT" ), 1e-5 );
@@ -1692,6 +1696,12 @@ BOOST_AUTO_TEST_CASE(group_keywords)
 
     BOOST_CHECK_CLOSE( gwcut1, ecl_sum_get_group_var( resp, 1, "G_1", "GWCTH" ), 1e-5 );
     BOOST_CHECK_CLOSE( gwcut2, ecl_sum_get_group_var( resp, 1, "G_2", "GWCTH" ), 1e-5 );
+
+    /* Tracer concentration */
+    const double gtpcg1 = (10.18 + 20.18) / ( 10.0 + 20.0 );
+    const double gticg2 = (30.18 + 60.18) / ( 30.0 + 60.0 );
+    BOOST_CHECK_CLOSE( gtpcg1, ecl_sum_get_group_var( resp, 1, "G_1", "GTPCSEA" ), 1e-5 );
+    BOOST_CHECK_CLOSE( gticg2, ecl_sum_get_group_var( resp, 1, "G_2", "GTICSEA" ), 1e-5 );
 
     /* ggor - gas-oil ratio */
     const double ggor1 = (10.2 + 20.2) / (10.1 + 20.1);

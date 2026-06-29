@@ -3004,6 +3004,26 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "GNIR", rate< rt::solvent, injector > },
     { "GCIR", rate< rt::polymer, injector > },
     { "GSIR", rate< rt::brine, injector > },
+    // Allow phase specific interpretation of tracer related summary keywords
+    { "GTIR#W", ratetracer< rt::tracer, rt::wat, injector > }, // #W: Water tracers
+    { "GTIR#O", ratetracer< rt::tracer, rt::oil, injector > }, // #O: Oil tracers
+    { "GTIR#G", ratetracer< rt::tracer, rt::gas, injector > }, // #G: Gas tracers
+    { "GTIRF#W", ratetracer< rt::tracer, rt::wat, injector > }, // #W: Water tracers
+    { "GTIRF#O", ratetracer< rt::tracer, rt::oil, injector > }, // #O: Oil tracers
+    { "GTIRF#G", ratetracer< rt::tracer, rt::gas, injector > }, // #G: Gas tracers
+    { "GTIRS#W", ratetracer< rt::tracer, rt::wat, injector > }, // #W: Water tracers
+    { "GTIRS#O", ratetracer< rt::tracer, rt::oil, injector > }, // #O: Oil tracers
+    { "GTIRS#G", ratetracer< rt::tracer, rt::gas, injector > }, // #G: Gas tracers
+    { "GTIC#W", div( ratetracer< rt::tracer, rt::wat, injector >, rate< rt::wat, injector >) },
+    { "GTIC#O", div( ratetracer< rt::tracer, rt::oil, injector >, rate< rt::oil, injector >) },
+    { "GTIC#G", div( ratetracer< rt::tracer, rt::gas, injector >, rate< rt::gas, injector >) },
+    { "GTICF#W", div( ratetracer< rt::tracer, rt::wat, injector >, rate< rt::wat, injector >) },
+    { "GTICF#O", div( ratetracer< rt::tracer, rt::oil, injector >, rate< rt::oil, injector >) },
+    { "GTICF#G", div( ratetracer< rt::tracer, rt::gas, injector >, rate< rt::gas, injector >) },
+    { "GTICS#W", div( ratetracer< rt::tracer, rt::wat, injector >, rate< rt::wat, injector >) },
+    { "GTICS#O", div( ratetracer< rt::tracer, rt::oil, injector >, rate< rt::oil, injector >) },
+    { "GTICS#G", div( ratetracer< rt::tracer, rt::gas, injector >, rate< rt::gas, injector >) },
+
     { "GVIR", sum( sum( rate< rt::reservoir_water, injector >, rate< rt::reservoir_oil, injector > ),
                         rate< rt::reservoir_gas, injector > ) },
 
@@ -3019,6 +3039,16 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "GNIT", mul( rate< rt::solvent, injector >, duration ) },
     { "GCIT", mul( rate< rt::polymer, injector >, duration ) },
     { "GSIT", mul( rate< rt::brine, injector >, duration ) },
+    { "GTIT#W", mul( ratetracer< rt::tracer, rt::wat, injector >, duration ) },
+    { "GTIT#O", mul( ratetracer< rt::tracer, rt::oil, injector >, duration ) },
+    { "GTIT#G", mul( ratetracer< rt::tracer, rt::gas, injector >, duration ) },
+    { "GTITF#W", mul( ratetracer< rt::tracer, rt::wat, injector >, duration ) },
+    { "GTITF#O", mul( ratetracer< rt::tracer, rt::oil, injector >, duration ) },
+    { "GTITF#G", mul( ratetracer< rt::tracer, rt::gas, injector >, duration ) },
+    { "GTITS#W", mul( ratetracer< rt::tracer, rt::wat, injector >, duration ) },
+    { "GTITS#O", mul( ratetracer< rt::tracer, rt::oil, injector >, duration ) },
+    { "GTITS#G", mul( ratetracer< rt::tracer, rt::gas, injector >, duration ) },
+
     { "GVIT", mul( sum( sum( rate< rt::reservoir_water, injector >, rate< rt::reservoir_oil, injector > ),
                         rate< rt::reservoir_gas, injector > ), duration ) },
 
@@ -3032,6 +3062,34 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "GNPR", rate< rt::solvent, producer > },
     { "GCPR", rate< rt::polymer, producer > },
     { "GSPR", rate< rt::brine, producer > },
+    { "GTPR#W", ratetracer< rt::tracer, rt::wat, producer > },
+    { "GTPR#O", ratetracer< rt::tracer, rt::oil, producer > },
+    { "GTPR#G", ratetracer< rt::tracer, rt::gas, producer > },
+    { "GTPRF#W", ratetracer< rt::tracer, rt::wat, producer> },
+    { "GTPRF#O", ratetracer< rt::tracer, rt::oil, producer> },
+    { "GTPRF#G", ratetracer< rt::tracer, rt::gas, producer> },
+    { "GTPRS#W", ratetracer< rt::tracer, rt::wat, producer> },
+    { "GTPRS#O", ratetracer< rt::tracer, rt::oil, producer> },
+    { "GTPRS#G", ratetracer< rt::tracer, rt::gas, producer> },
+    { "GTPC#W", div( ratetracer< rt::tracer, rt::wat, producer >, rate< rt::wat, producer >) },
+    { "GTPC#O", div( ratetracer< rt::tracer, rt::oil, producer >, rate< rt::oil, producer >) },
+    { "GTPC#G", div( ratetracer< rt::tracer, rt::gas, producer >, rate< rt::gas, producer >) },
+    { "GTPCF#W", div( ratetracer< rt::tracer, rt::wat, producer >, rate< rt::wat, producer >) },
+    { "GTPCF#O", div( ratetracer< rt::tracer, rt::oil, producer >, rate< rt::oil, producer >) },
+    { "GTPCF#G", div( ratetracer< rt::tracer, rt::gas, producer >, rate< rt::gas, producer >) },
+    { "GTPCS#W", div( ratetracer< rt::tracer, rt::wat, producer >, rate< rt::wat, producer >) },
+    { "GTPCS#O", div( ratetracer< rt::tracer, rt::oil, producer >, rate< rt::oil, producer >) },
+    { "GTPCS#G", div( ratetracer< rt::tracer, rt::gas, producer >, rate< rt::gas, producer >) },
+    { "GTPT#W", mul( ratetracer< rt::tracer, rt::wat, producer >, duration ) },
+    { "GTPT#O", mul( ratetracer< rt::tracer, rt::oil, producer >, duration ) },
+    { "GTPT#G", mul( ratetracer< rt::tracer, rt::gas, producer >, duration ) },
+    { "GTPTF#W", mul( ratetracer< rt::tracer, rt::wat, producer >, duration ) },
+    { "GTPTF#O", mul( ratetracer< rt::tracer, rt::oil, producer >, duration ) },
+    { "GTPTF#G", mul( ratetracer< rt::tracer, rt::gas, producer >, duration ) },
+    { "GTPTS#W", mul( ratetracer< rt::tracer, rt::wat, producer >, duration ) },
+    { "GTPTS#O", mul( ratetracer< rt::tracer, rt::oil, producer >, duration ) },
+    { "GTPTS#G", mul( ratetracer< rt::tracer, rt::gas, producer >, duration ) },
+
     { "GCPC", div( rate< rt::polymer, producer >, rate< rt::wat, producer >) },
     { "GSPC", div( rate< rt::brine, producer >, rate< rt::wat, producer >) },
     { "GOPRS", rate< rt::vaporized_oil, producer > },
