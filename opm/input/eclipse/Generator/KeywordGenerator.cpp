@@ -43,22 +43,27 @@ namespace {
         std::ofstream { filename } << newContent;
     }
 
-    void write_file(const std::string& content,
-                    const std::string& file,
-                    const bool         verbose,
-                    const std::string& desc)
+    // Take std::filesystem::path (not std::string) for the file argument: a
+    // path implicitly converts to std::string only on POSIX (value_type=char);
+    // on Windows it converts to std::wstring, so callers passing a path failed
+    // to match a std::string parameter. std::string -> path is implicit, so the
+    // string call sites keep working.
+    void write_file(const std::string&           content,
+                    const std::filesystem::path& file,
+                    const bool                   verbose,
+                    const std::string&           desc)
     {
-        updateFile(content, file);
+        updateFile(content, file.string());
 
         if (verbose) {
-            fmt::print("Updated {} file written to {}\n", desc, file);
+            fmt::print("Updated {} file written to {}\n", desc, file.string());
         }
     }
 
-    void write_file(const std::stringstream& stream,
-                    const std::string&       file,
-                    const bool               verbose,
-                    const std::string&       desc)
+    void write_file(const std::stringstream&     stream,
+                    const std::filesystem::path& file,
+                    const bool                   verbose,
+                    const std::string&           desc)
     {
         write_file(stream.str(), file, verbose, desc);
     }

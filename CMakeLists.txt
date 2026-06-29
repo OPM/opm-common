@@ -98,12 +98,14 @@ macro(opm-common_sources_hook)
     set_source_files_properties(opm/input/eclipse/Schedule/Action/PyAction.cpp PROPERTIES COMPILE_FLAGS -Wno-shadow)
   endif()
 
-  set_source_files_properties(
-    opm/input/eclipse/Python/Python.cpp
-    PROPERTIES
-    COMPILE_FLAGS
-      -Wno-shadow
-  )
+  if (NOT MSVC)
+    set_source_files_properties(
+      opm/input/eclipse/Python/Python.cpp
+      PROPERTIES
+      COMPILE_FLAGS
+        -Wno-shadow
+    )
+  endif()
   if (OPM_ENABLE_PYTHON)
     # Set the path to the input docstrings.json file and the output .hpp file
     set(PYTHON_DOCSTRINGS_FILE "${PROJECT_SOURCE_DIR}/python/docstrings_common.json")
@@ -268,11 +270,15 @@ macro(opm-common_targets_hook)
     target_include_directories(opmcommon PRIVATE ${CMAKE_BINARY_DIR}/_deps)
   endif()
 
-  target_sources(compareECL
-    PRIVATE
-      test_util/EclFilesComparator.cpp
-      test_util/EclRegressionTest.cpp
-  )
+  # compareECL is an optional utility binary (additionals satellite); only add
+  # its sources when the target exists (i.e. when BUILD_EXAMPLES is ON).
+  if(TARGET compareECL)
+    target_sources(compareECL
+      PRIVATE
+        test_util/EclFilesComparator.cpp
+        test_util/EclRegressionTest.cpp
+    )
+  endif()
 
   if(ENABLE_MOCKSIM)
     opm_add_library(
@@ -296,7 +302,12 @@ macro(opm-common_targets_hook)
     )
   endif()
 
-  list(APPEND opm-common_EXTRA_TARGETS compareECL rst_deck)
+  # These come from the programs satellite, which is only built when
+  # BUILD_EXAMPLES is ON; guard so the library install rule does not reference
+  # non-existent targets when examples are disabled.
+  if(TARGET compareECL AND TARGET rst_deck)
+    list(APPEND opm-common_EXTRA_TARGETS compareECL rst_deck)
+  endif()
 
   if(TARGET Boost::unit_test_framework)
     foreach(test ACTIONX EmbeddedPython msim_ACTIONX PYACTION)

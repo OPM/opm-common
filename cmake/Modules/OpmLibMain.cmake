@@ -174,13 +174,17 @@ if(BUILD_EXAMPLES)
   )
 endif()
 
-opm_compile_satellites(
-  PREFIX
-    ${project}
-  TYPE
-    additionals
-  INSTALL
-)
+# additionals are optional utility binaries (e.g. test_util/*); gate them on
+# BUILD_EXAMPLES so the library can be built/installed without them.
+if(BUILD_EXAMPLES)
+  opm_compile_satellites(
+    PREFIX
+      ${project}
+    TYPE
+      additionals
+    INSTALL
+  )
+endif()
 
 # attic are programs which are not quite abandoned yet; however, they
 # are not actively maintained, so they should not be a part of the
@@ -221,8 +225,10 @@ opm_compile_satellites(
   ${excl_all}
 )
 
-# special processing for tests
-if(COMMAND ${project}_tests_hook)
+# special processing for tests (only when testing is enabled: the hook may
+# register tests that depend on example/test targets which are not created
+# when BUILD_TESTING is OFF)
+if(BUILD_TESTING AND COMMAND ${project}_tests_hook)
   cmake_language(CALL ${project}_tests_hook)
 endif()
 

@@ -28,6 +28,7 @@
 
 #include <algorithm>
 #include <array>
+#include <iterator>
 #include <cassert>
 #include <cmath>
 #include <cstddef>

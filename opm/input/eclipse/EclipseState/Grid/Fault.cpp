@@ -19,6 +19,8 @@
 
 #include <opm/input/eclipse/EclipseState/Grid/Fault.hpp>
 
+#include <algorithm>
+
 namespace Opm {
 
     Fault::Fault(const std::string& faultName) :

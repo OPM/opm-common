@@ -134,7 +134,7 @@ int main(int argc, char** argv)
     try {
         for (const auto& filename : files) {
             const auto sched = loadSchedule(filename);
-            const auto casename = std::filesystem::path(filename).stem();
+            const auto casename = std::filesystem::path(filename).stem().string();
             createDot(sched, casename, separateWellGroups);
         }
     } catch (const std::exception& e) {
