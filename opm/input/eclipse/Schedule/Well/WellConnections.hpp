@@ -147,18 +147,23 @@ namespace Opm {
         auto begin() { return this->m_connections.begin(); }
         auto end() { return this->m_connections.end(); }
         bool allConnectionsShut() const;
-        /// Order connections irrespective of input order.
-        /// The algorithm used is the following:
-        ///     1. The connection nearest to the given (well_i, well_j)
-        ///        coordinates in terms of the connection's (i, j) is chosen
-        ///        to be the first connection. If non-unique, choose one with
-        ///        lowest z-depth (shallowest).
-        ///     2. Choose next connection to be nearest to current in (i, j) sense.
-        ///        If non-unique choose closest in z-depth (not logical cartesian k).
+
+        /// Order connections along well bore.
         ///
-        /// \param[in] well_i  logical cartesian i-coordinate of well head
-        /// \param[in] well_j  logical cartesian j-coordinate of well head
-        /// \param[in] grid    EclipseGrid object, used for cell depths
+        /// There are three distinct cases.
+        ///
+        ///  -# Multi-segmented wells order connections according to branch
+        ///     ID and measured depths along the branch.
+        ///
+        ///  -# TRACK ordering (COMPORD keyword, default) orders connections
+        ///     starting from the well heel using a path travelling salesman
+        ///     algorithm with 2-opt ordering and directional penalties.
+        ///
+        ///  -# DEPTH ordering (COMPORD keyword) orders the connections
+        ///     according to the block centre point depths.
+        ///
+        /// This is a somewhat expensive operation that should typically be
+        /// invoked only at the end of applying all pertinent connection updates.
         void order();
 
         bool operator==( const WellConnections& ) const;
@@ -220,7 +225,6 @@ namespace Opm {
                            int lgr_grid_number,
                            const bool defaultSatTabId);
 
-        std::size_t findClosestConnection(int oi, int oj, double oz, std::size_t start_pos);
         void orderTRACK();
         void orderMSW();
         void orderDEPTH();
