@@ -26,6 +26,7 @@
 #include <opm/input/eclipse/Schedule/MSW/Segment.hpp>
 #include <opm/input/eclipse/Schedule/MSW/Valve.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
+#include <opm/input/eclipse/Schedule/Well/GridIndependentWellKeywordHandlers.hpp>
 
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 
@@ -211,43 +212,10 @@ namespace Opm {
         this->addSegment(segment);
     }
 
-
-    void WellSegments::addWellSegmentsFromLengthsAndDepths(const std::string &wname,
-                                                           const std::vector<std::pair<double, double>>& lengths_and_depths,
-                                                           double diameter, const UnitSystem& unit_system)
-    {
-        const int branchID = 1;  // Only main branch for now.
-
-        const double roughness = 0.0;  // Defaulted: ROUGHNESS in WELSEGS.
-        const double area = std::numbers::pi * diameter * diameter / 4.0;
-        const double volume = Segment::invalidValue();
-
-        // Add segments:
-        int segmentID = 2;
-        for (auto [length, depth]: lengths_and_depths) {
-            this->addSegment(
-                segmentID, branchID, segmentID - 1, depth, length, diameter,
-                roughness, area, volume, true, 0.0, 0.0
-            );
-            segmentID += 1;
-        }
-
-        // Fix inlets:
-        for (const auto& segment : this->m_segments) {
-            const int outlet_segment = segment.outletSegment();
-            if (outlet_segment <= 0) { // no outlet segment
-                continue;
-            }
-
-            const int outlet_segment_index = segment_number_to_index[outlet_segment];
-            m_segments[outlet_segment_index].addInletSegment(segment.segmentNumber());
-        }
-
-        this->process(wname, unit_system, WellSegments::LengthDepth::ABS, this->depthTopSegment(), this->lengthTopSegment());
-    }
-
-
-    void WellSegments::loadWELSEGS(const DeckKeyword& welsegsKeyword, const UnitSystem& unit_system)
+    void WellSegments::loadWELSEGS(const DeckKeyword& welsegsKeyword,
+                                   const std::map<int, std::array<std::vector<double>, 3>>& coords,
+                                   const std::map<int, std::vector<double>>& mds,
+                                   const UnitSystem& unit_system)
     {
         // For the first record, which provides the information for the top
         // segment and information for the whole segment set.
@@ -265,6 +233,14 @@ namespace Opm {
 
         const auto nodeX_top = record1.getItem("TOP_X").getSIDouble(0);
         const auto nodeY_top = record1.getItem("TOP_Y").getSIDouble(0);
+
+        if (!mds.empty() && length_top < mds.at(1)[0]) {
+            throw std::logic_error {fmt::format(
+                "TOP_LENGTH {} in WELSEGS for well {} is less than the trajectory starting MD {}.",
+                length_top,
+                wname,
+                mds.at(1)[0])};
+        }
 
         // The main branch is 1 instead of 0.  The segment number for top
         // segment is also 1.
@@ -343,6 +319,24 @@ namespace Opm {
             // If the length_depth_type is INC, then the depth is the depth change of the segment from the outlet segment.
             // If the length_depth_type is ABS, then the depth is the absolute depth of last the segment node in the range.
             const double depth = record.getItem("DEPTH").getSIDouble(0);
+            if (mds.empty()) {
+                if (record.getItem("DEPTH").defaultApplied(0)) {
+                    throw std::logic_error {
+                        fmt::format("DEPTH is defaulted for well {}. DEPTH values may only be "
+                                    "defaulted in WELSEGS for grid-independent wells. Please "
+                                    "provide an explicit DEPTH value.",
+                                    wname)};
+                }
+
+            } else {
+                if (depth != 0.0) {
+                    OpmLog::warning(fmt::format(
+                        "DEPTH value {:.3e} in WELSEGS for grid-independent well {} is not "
+                        "defaulted. The value will be ignored.",
+                        depth,
+                        wname));
+                }
+            }
 
             double volume = invalid_value;
             {
@@ -398,7 +392,7 @@ namespace Opm {
             m_segments[outlet_segment_index].addInletSegment(segment.segmentNumber());
         }
 
-        this->process(wname, unit_system, length_depth_type, depth_top, length_top);
+        this->process(wname, coords, mds, unit_system, length_depth_type, depth_top, length_top);
     }
 
     const Segment& WellSegments::getFromSegmentNumber(const int segment_number) const {
@@ -413,16 +407,18 @@ namespace Opm {
     }
 
     void WellSegments::process(const std::string& well_name,
+                               const std::map<int, std::array<std::vector<double>, 3>>& coords,
+                               const std::map<int, std::vector<double>>& mds,
                                const UnitSystem& unit_system,
                                const LengthDepth length_depth,
                                const double      depth_top,
                                const double      length_top)
     {
         if (length_depth == LengthDepth::ABS) {
-            this->processABS();
+            this->processABS(coords, mds);
         }
         else if (length_depth == LengthDepth::INC) {
-            this->processINC(depth_top, length_top);
+            this->processINC(coords, mds, depth_top, length_top);
         }
         else {
             throw std::logic_error {
@@ -434,16 +430,38 @@ namespace Opm {
         this->checkSegmentDepthConsistency(well_name, unit_system);
     }
 
-    void WellSegments::processABS()
+    void
+    WellSegments::processABS(const std::map<int, std::array<std::vector<double>, 3>>& coords,
+                             const std::map<int, std::vector<double>>& mds)
     {
         // Meaningless value to indicate unspecified/uncompleted values
         const double invalid_value = Segment::invalidValue();
 
         orderSegments();
 
+        external::cvf::ref<external::RigWellPath> wellPathGeometry;
+        int current_branch = 0;
+        if (!coords.empty()) {
+            wellPathGeometry = new external::RigWellPath;
+        }
+
         std::size_t current_index = 1;
         while (current_index < size()) {
-            if (m_segments[current_index].dataReady()) {
+            const auto& current_segment = this->m_segments[current_index];
+
+            if (!coords.empty() && current_branch != current_segment.branchNumber()) {
+                current_branch = current_segment.branchNumber();
+                initWellPathGeometry(
+                    wellPathGeometry, coords.at(current_branch), mds.at(current_branch));
+            }
+
+            if (current_segment.dataReady()) {
+                if (!coords.empty()) {
+                    const auto length = current_segment.totalLength();
+                    const auto coord = wellPathGeometry->interpolatedPointAlongWellPath(length);
+                    Segment new_segment(current_segment, coord[2], length, coord[0], coord[1]);
+                    this->addSegment(new_segment);
+                }
                 current_index++;
                 continue;
             }
@@ -509,6 +527,13 @@ namespace Opm {
                     ? volume_segment
                     : old_segment.volume();
 
+                if (!coords.empty()) {
+                    const auto coord = wellPathGeometry->interpolatedPointAlongWellPath(new_length);
+                    new_x = coord[0];
+                    new_y = coord[1];
+                    new_depth = coord[2];
+                }
+
                 this->addSegment(Segment {
                     old_segment, new_depth, new_length,
                     new_volume, new_x, new_y
@@ -536,7 +561,11 @@ namespace Opm {
         }
     }
 
-    void WellSegments::processINC(double depth_top, double length_top)
+    void
+    WellSegments::processINC(const std::map<int, std::array<std::vector<double>, 3>>& coords,
+                             const std::map<int, std::vector<double>>& mds,
+                             double depth_top,
+                             double length_top)
     {
         // Update the information inside the WellSegments to be in ABS way
         Segment new_top_segment(this->m_segments[0], depth_top, length_top);
@@ -544,14 +573,38 @@ namespace Opm {
 
         orderSegments();
 
-        // Begin with the second segment
-        for (std::size_t i_index = 1; i_index < size(); ++i_index) {
-            if (m_segments[i_index].dataReady()) {
+        external::cvf::ref<external::RigWellPath> wellPathGeometry;
+        int current_branch = 0;
+        if (!coords.empty()) {
+            wellPathGeometry = new external::RigWellPath;
+        }
+
+        for (std::size_t i_index = 0; i_index < size(); ++i_index) {
+            const auto& current_segment = this->m_segments[i_index];
+
+            if (!coords.empty() && current_branch != current_segment.branchNumber()) {
+                current_branch = current_segment.branchNumber();
+                initWellPathGeometry(
+                    wellPathGeometry, coords.at(current_branch), mds.at(current_branch));
+            }
+
+            if (current_segment.dataReady()) {
+                if (!coords.empty()) {
+                    const auto length = current_segment.totalLength();
+                    const auto coord = wellPathGeometry->interpolatedPointAlongWellPath(length);
+                    Segment new_segment(current_segment, coord[2], length, coord[0], coord[1]);
+                    this->addSegment(new_segment);
+                }
+                continue;
+            }
+
+            // Begin with the second segment to fix the lenghts and depths.
+            if (i_index == 0) {
                 continue;
             }
 
             // Find its outlet segment
-            const int outlet_segment = m_segments[i_index].outletSegment();
+            const int outlet_segment = current_segment.outletSegment();
             const int outlet_index = segmentNumberToIndex(outlet_segment);
 
             // assert some information of the outlet_segment
@@ -560,14 +613,22 @@ namespace Opm {
 
             const double outlet_depth = m_segments[outlet_index].depth();
             const double outlet_length = m_segments[outlet_index].totalLength();
-            const double temp_depth = outlet_depth + m_segments[i_index].depth();
-            const double temp_length = outlet_length + m_segments[i_index].totalLength();
-            const auto new_x = m_segments[outlet_index].node_X() + m_segments[i_index].node_X();
-            const auto new_y = m_segments[outlet_index].node_Y() + m_segments[i_index].node_Y();
+            double temp_depth = outlet_depth + current_segment.depth();
+            const double temp_length = outlet_length + current_segment.totalLength();
+            double new_x = m_segments[outlet_index].node_X() + current_segment.node_X();
+            double new_y = m_segments[outlet_index].node_Y() + current_segment.node_Y();
+
+            if (!coords.empty()) {
+                // Update the depth from the trajectory.
+                const auto tmp_coord = wellPathGeometry->interpolatedPointAlongWellPath(temp_length);
+                new_x = tmp_coord[0];
+                new_y = tmp_coord[1];
+                temp_depth = tmp_coord[2];
+            }
 
             // Applying the calculated length and depth to the current segment
-            this->addSegment(Segment {
-                this->m_segments[i_index],
+            this->addSegment(Segment { 
+                current_segment,
                 temp_depth, temp_length, new_x, new_y
             });
         }

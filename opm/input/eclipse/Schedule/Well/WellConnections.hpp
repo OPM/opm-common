@@ -21,12 +21,15 @@
 #define CONNECTIONSET_HPP_
 
 #include <opm/input/eclipse/Schedule/Well/Connection.hpp>
+#include <external/resinsight/ReservoirDataModel/RigWellPath.h>
+
 
 #include <array>
 #include <cstddef>
 #include <optional>
 #include <string>
 #include <vector>
+#include <map>
 
 namespace Opm {
     class ActiveGridCells;
@@ -128,7 +131,8 @@ namespace Opm {
 
         int getHeadI() const;
         int getHeadJ() const;
-        const std::vector<double>& getMD() const;
+        const std::map<int, std::vector<double>>& getMD() const;
+        const std::map<int, std::array<std::vector<double>, 3>>& getCoord() const;
         std::size_t size() const;
         bool empty() const;
         std::size_t num_open() const;
@@ -204,8 +208,8 @@ namespace Opm {
         int headJ{0};
         std::vector<Connection> m_connections{};
 
-        std::array<std::vector<double>, 3> coord{};
-        std::vector<double> md{};
+        std::map<int, std::array<std::vector<double>, 3>> coord{};
+        std::map<int, std::vector<double>> md{};
 
         void addConnection(const int i, const int j, const int k,
                            const std::size_t global_index,

@@ -1919,35 +1919,31 @@ void Well::updateSegments(std::shared_ptr<WellSegments> segments_arg)
 
 bool Well::handleWELSEGS(const DeckKeyword& keyword)
 {
+    const auto& cons = this->getConnections();
+    const auto& coords = cons.getCoord();
+    const auto& md = cons.getMD();
+
+    if (!cons.empty() and !coords.empty()) {
+        throw OpmInputError {fmt::format("The WELSEGS keyword for well {} must be defined before "
+                                         "the corresponding COMPTRAJ keyword.",
+                                         this->name()),
+                             keyword.location()};
+    }
+
     if (this->segments != nullptr) {
         auto new_segments = std::make_shared<WellSegments>(*this->segments);
-        new_segments->loadWELSEGS(keyword, *unit_system);
+        new_segments->loadWELSEGS(keyword, coords, md, *unit_system);
 
         this->updateSegments(std::move(new_segments));
     }
     else {
         auto well_segments = std::make_shared<WellSegments>();
-        well_segments->loadWELSEGS(keyword, *unit_system);
+        well_segments->loadWELSEGS(keyword, coords, md, *unit_system);
 
         this->updateSegments(std::move(well_segments));
     }
 
     return true;
-}
-
-void Well::addWellSegmentsFromLengthsAndDepths(const std::vector<std::pair<double, double>>& lengths_and_depths, double diameter, const KeywordLocation& location)
-{
-    if (this->segments == nullptr || this->segments->empty()) {
-        throw OpmInputError{
-            fmt::format("The WELSEGS keyword must be specified for well {} "
-                        "before creating segments through the COMPTRAJ keyword.", this->name()),
-            location
-        };
-    }
-    auto new_segments = std::make_shared<WellSegments>(*this->segments);
-    new_segments->addWellSegmentsFromLengthsAndDepths(this->name(), lengths_and_depths, diameter, *unit_system);
-
-    this->updateSegments(std::move(new_segments));
 }
 
 bool Well::updatePVTTable(std::optional<int> pvt_table_)
