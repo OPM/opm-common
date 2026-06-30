@@ -250,7 +250,7 @@ static const std::unordered_map<std::string, keyword_info<int>> int_keywords = {
                                                                                 {"EOSNUM",   keyword_info<int>{}.init(1)},
                                                                                 {"EQLNUM",   keyword_info<int>{}.init(1)},
                                                                                 {"FIPNUM",   keyword_info<int>{}.init(1)},
-                                                                                {"IMBNUM",   keyword_info<int>{}.init(1)},
+                                                                                {"IMBNUM",   keyword_info<int>{}},
                                                                                 {"OPERNUM",  keyword_info<int>{}},
                                                                                 {"STRESSEQUILNUM", keyword_info<int>{}.init(1)},
                                                                                 {"MISCNUM",  keyword_info<int>{}},
