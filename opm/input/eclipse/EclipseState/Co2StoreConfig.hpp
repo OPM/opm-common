@@ -57,6 +57,8 @@ class Deck;
     const std::vector<EzrokhiTable>& getViscaqaTables() const;
 
     double salinity() const;
+    double salinity(std::size_t regionIdx) const;
+    std::size_t numSalinityRegions() const;
     int actco2s() const;
 
     template<class Serializer>
@@ -86,7 +88,7 @@ class Deck;
     std::map<std::string, int> cnames;
     std::vector<EzrokhiTable> denaqa_tables;
     std::vector<EzrokhiTable> viscaqa_tables;
-    double salt {0.0};
+    std::vector<double> salt;
     static constexpr double MmNaCl = 58.44e-3;
     static constexpr double MmH2O = 18e-3;
     int activityModel {3};
