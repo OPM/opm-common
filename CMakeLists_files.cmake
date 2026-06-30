@@ -1367,6 +1367,7 @@ list(APPEND PUBLIC_HEADER_FILES
   opm/material/fluidmatrixinteractions/EclMaterialLawHystParams.hpp
   opm/material/fluidmatrixinteractions/EclMaterialLawInitParams.hpp
   opm/material/fluidmatrixinteractions/EclMaterialLawManager.hpp
+  opm/material/fluidmatrixinteractions/GpuEclMaterialLawManager.hpp
   opm/material/fluidmatrixinteractions/EclMaterialLawReadEffectiveParams.hpp
   opm/material/fluidmatrixinteractions/EclMaterialLawTwoPhaseTypes.hpp
   opm/material/fluidmatrixinteractions/EclMultiplexerMaterial.hpp
@@ -1482,6 +1483,7 @@ list(APPEND PUBLIC_HEADER_FILES
   opm/material/thermal/EclThermalConductionLawMultiplexer.hpp
   opm/material/thermal/EclThermalConductionLawMultiplexerParams.hpp
   opm/material/thermal/EclThermalLawManager.hpp
+  opm/material/thermal/GpuEclThermalLawManager.hpp
   opm/material/thermal/EnergyModuleType.hpp
   opm/material/thermal/FluidThermalConductionLaw.hpp
   opm/material/thermal/FluidThermalConductionLawParams.hpp

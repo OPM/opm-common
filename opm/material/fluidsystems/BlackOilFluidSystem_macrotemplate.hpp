@@ -179,6 +179,8 @@ public:
     {
     }
 
+
+    // TODO: changed this code to copy more instead of using && and move semantics while debugging, revert to an efficient and safe version!
     FLUIDSYSTEM_CLASSNAME(Scalar _surfacePressure_,
                           Scalar _surfaceTemperature_,
                           Scalar _reservoirTemperature_,
@@ -191,9 +193,9 @@ public:
                           bool _enableVaporizedWater_,
                           bool _enableConstantRs_,
                           bool _enableDiffusion_,
-                          Storage<std::array<Scalar, 3>>&& _referenceDensity_,
-                          Storage<std::array<Scalar, 3>>&& _molarMass_,
-                          Storage<std::array<Scalar, 3 * 3>>&& _diffusionCoefficients_,
+                          const Storage<std::array<Scalar, 3>>& _referenceDensity_,
+                          const Storage<std::array<Scalar, 3>>& _molarMass_,
+                          const Storage<std::array<Scalar, 3 * 3>>& _diffusionCoefficients_,
                           const PhaseUsageInfo<IndexTraits>& _phaseUsageInfo_,
                           bool _isInitialized_,
                           bool _useSaturatedTables_,
@@ -210,9 +212,9 @@ public:
         , enableVaporizedWater_(_enableVaporizedWater_)
         , enableConstantRs_(_enableConstantRs_)
         , enableDiffusion_(_enableDiffusion_)
-        , referenceDensity_(std::move(_referenceDensity_))
-        , molarMass_(std::move(_molarMass_))
-        , diffusionCoefficients_(std::move(_diffusionCoefficients_))
+        , referenceDensity_(Storage<std::array<Scalar, 3>>(_referenceDensity_))
+        , molarMass_(Storage<std::array<Scalar, 3>>(_molarMass_))
+        , diffusionCoefficients_(Storage<std::array<Scalar, 3 * 3>>(_diffusionCoefficients_))
         , phaseUsageInfo_(_phaseUsageInfo_)
         , isInitialized_(_isInitialized_)
         , useSaturatedTables_(_useSaturatedTables_)

@@ -29,6 +29,7 @@
 
 #include "EclThconrLawParams.hpp"
 
+#include <opm/common/utility/gpuDecorators.hpp>
 #include <opm/material/densead/Math.hpp>
 
 namespace Opm
@@ -52,19 +53,30 @@ public:
      *        medium.
      */
     template <class FluidState, class Evaluation = typename FluidState::ValueType>
-    static Evaluation thermalConductivity(const Params& params,
-                                          const FluidState& fluidState)
+    OPM_HOST_DEVICE static Evaluation thermalConductivity(const Params& params,
+                                                          const FluidState& fluidState)
     {
         // THCONR + THCONSF approach.
-        Scalar lambdaRef = params.referenceTotalThermalConductivity();
-        static constexpr int gasPhaseIdx = FluidSystem::gasPhaseIdx;
-        if (FluidSystem::phaseIsActive(gasPhaseIdx)) {
-            Scalar alpha = params.dTotalThermalConductivity_dSg();
-            const Evaluation& Sg = decay<Evaluation>(fluidState.saturation(gasPhaseIdx));
-            return lambdaRef*(1.0 - alpha*Sg);
+        const Scalar lambdaRef = params.referenceTotalThermalConductivity();
+        constexpr int gasPhaseIdx = FluidSystem::gasPhaseIdx;
+
+        // Some fluid systems (e.g. BlackOilFluidSystemNonStatic used on the
+        // GPU) only expose phaseIsActive as a non-static member. Fall back
+        // to a fluid-state-provided fluidSystem() instance accessor in that
+        // case.
+        bool gasActive = false;
+        if constexpr (requires { FluidSystem::phaseIsActive(gasPhaseIdx); }) {
+            gasActive = FluidSystem::phaseIsActive(gasPhaseIdx);
         } else {
-            return lambdaRef;
+            gasActive = fluidState.fluidSystem().phaseIsActive(gasPhaseIdx);
         }
+
+        if (gasActive) {
+            const Scalar alpha = params.dTotalThermalConductivity_dSg();
+            const Evaluation& Sg = decay<Evaluation>(fluidState.saturation(gasPhaseIdx));
+            return lambdaRef * (Scalar(1) - alpha * Sg);
+        }
+        return Evaluation(lambdaRef);
     }
 };
 
