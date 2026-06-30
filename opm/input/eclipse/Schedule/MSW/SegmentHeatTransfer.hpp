@@ -20,7 +20,6 @@
 #ifndef SEGMENT_HEAT_TRANSFER_HPP_HEADER_INCLUDED
 #define SEGMENT_HEAT_TRANSFER_HPP_HEADER_INCLUDED
 
-#include <map>
 #include <optional>
 #include <string>
 #include <utility>
@@ -138,8 +137,15 @@ namespace Opm {
         }
     };
 
-    // Parse a WSEGHEAT keyword into per-well lists of records.
-    std::map<std::string, std::vector<SegmentHeatTransferRecord>>
+    // Parse a WSEGHEAT keyword into a deck-ordered list of (well-name pattern,
+    // record) pairs.  The order of the records is preserved deliberately:
+    // WSEGHEAT supports incremental operations (replace, '+' add, '-' remove,
+    // NONE clear), so the records of any given well must be applied in the
+    // order they appear in the deck.  Grouping by well name up front would lose
+    // that order whenever two overlapping well-name patterns refer to the same
+    // well, so the regrouping is left to the consumer, which can expand the
+    // patterns to concrete well names first.
+    std::vector<std::pair<std::string, SegmentHeatTransferRecord>>
     segmentHeatTransferFromWSEGHEAT(const DeckKeyword& keyword);
 
 } // namespace Opm

@@ -40,6 +40,11 @@
 
 #include <fmt/format.h>
 
+#include <map>
+#include <string>
+#include <utility>
+#include <vector>
+
 namespace Opm {
 
 namespace {
@@ -133,19 +138,29 @@ void handleWSEGHEAT(HandlerContext& handlerContext)
     const auto heat_transfers =
         segmentHeatTransferFromWSEGHEAT(handlerContext.keyword);
 
-    for (const auto& [well_name_pattern, records] : heat_transfers) {
-        const auto well_names = handlerContext.wellNames(well_name_pattern);
+    // Expand the well-name patterns and regroup the records by concrete well,
+    // preserving their order of appearance in the deck.  Different wells are
+    // independent, but the records of a single well are order-dependent
+    // (WSEGHEAT replace/'+'/'-'/NONE operations), so deck order must be honoured
+    // even when several overlapping patterns name the same well.
+    auto records_by_well =
+        std::map<std::string, std::vector<SegmentHeatTransferRecord>>{};
 
-        for (const auto& well_name : well_names) {
-            auto well = handlerContext.state().wells(well_name);
+    for (const auto& [well_name_pattern, record] : heat_transfers) {
+        for (const auto& well_name : handlerContext.wellNames(well_name_pattern)) {
+            records_by_well[well_name].push_back(record);
+        }
+    }
 
-            const auto did_update = well.updateWSEGHEAT
-                (records, handlerContext.keyword.location(),
-                 handlerContext.parseContext, handlerContext.errors);
+    for (const auto& [well_name, records] : records_by_well) {
+        auto well = handlerContext.state().wells(well_name);
 
-            if (did_update) {
-                handlerContext.state().wells.update(std::move(well));
-            }
+        const auto did_update = well.updateWSEGHEAT
+            (records, handlerContext.keyword.location(),
+             handlerContext.parseContext, handlerContext.errors);
+
+        if (did_update) {
+            handlerContext.state().wells.update(std::move(well));
         }
     }
 }

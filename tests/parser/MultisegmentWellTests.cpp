@@ -1311,7 +1311,7 @@ COMPSEGS
     }
 }
 
-BOOST_AUTO_TEST_CASE(PipeWallThermalProperties)
+BOOST_AUTO_TEST_CASE(ThermalMSW_ScheduleIntegration)
 {
     // WELSEGS items 10-12 (record 1) and 13-15 (subsequent records) provide
     // the pipe-wall properties used by the thermal option.  Segment 2 sets its
@@ -1436,41 +1436,117 @@ WSEGHEAT
 
     // The top segment was never named in WSEGHEAT and has no coefficients.
     BOOST_CHECK(segments.getFromSegmentNumber(1).heatTransfer().empty());
+
+    // Overlapping well-name patterns are applied in deck order.  Here 'PROD01'
+    // replaces all coefficients on segment 2 with a COMP of resistance 0.01,
+    // then the wildcard 'PROD*' updates that COMP to 0.02.  Applied in deck
+    // order the final resistance is 0.02; if the records were instead grouped
+    // and applied by sorted pattern ('PROD*' sorts before 'PROD01') the
+    // replace-all would run last and leave 0.01.
+    {
+        const auto order_deck = ::Opm::Parser{}.parseString(R"(RUNSPEC
+DIMENS
+  20 20 20 /
+GRID
+DXV
+  20*100 /
+DYV
+  20*100 /
+DZV
+  20*10 /
+DEPTHZ
+  441*2000.0 /
+PORO
+    8000*0.1 /
+PERMX
+    8000*1 /
+PERMY
+    8000*0.1 /
+PERMZ
+    8000*0.01 /
+SCHEDULE
+WELSPECS
+ 'PROD01' 'P' 20 20 1* OIL /
+/
+COMPDAT
+ 'PROD01' 20 20 1 3 'OPEN' /
+/
+WELSEGS
+'PROD01' 2512.5 2512.5 1.0e-5 'ABS' /
+2  2  1  1  2537.5 2525.5  0.3  0.00010 /
+3  3  1  2  2562.5 2562.5  0.2  0.00010 /
+/
+COMPSEGS
+  'PROD01' /
+  20    20     1     1   2512.5   2525.0 /
+  20    20     2     1   2525.0   2550.0 /
+  20    20     3     1   2550.0   2575.0 /
+/
+WSEGHEAT
+   'PROD01' 2 2 COMP  0.01 /
+   'PROD*'  2 2 COMP+ 0.02 /
+/
+)");
+
+        const auto order_es    = ::Opm::EclipseState { order_deck };
+        const auto order_sched = ::Opm::Schedule {
+            order_deck, order_es, std::make_shared<const ::Opm::Python>()
+        };
+
+        const auto& order_ht = order_sched[0].wells("PROD01").getSegments()
+            .getFromSegmentNumber(2).heatTransfer();
+
+        BOOST_REQUIRE_EQUAL(order_ht.size(), 1);
+        BOOST_CHECK(order_ht[0].type() == HT::Type::COMP);
+        BOOST_CHECK_CLOSE(order_ht[0].thermalResistance(), 0.02 * day / kJ, 1.0e-8);
+    }
 }
 
-BOOST_AUTO_TEST_CASE(WSEGHEAT_TypeFromString)
+namespace {
+    // Extract, in deck order, the WSEGHEAT records that apply to a single well
+    // name from the (pattern, record) list returned by
+    // segmentHeatTransferFromWSEGHEAT().
+    std::vector<::Opm::SegmentHeatTransferRecord>
+    recordsForWell(const std::vector<std::pair<std::string,
+                                               ::Opm::SegmentHeatTransferRecord>>& parsed,
+                   const std::string& well_name)
+    {
+        std::vector<::Opm::SegmentHeatTransferRecord> records;
+        for (const auto& [pattern, record] : parsed) {
+            if (pattern == well_name) {
+                records.push_back(record);
+            }
+        }
+        return records;
+    }
+} // Anonymous namespace
+
+BOOST_AUTO_TEST_CASE(WSEGHEAT_CoefficientOperations)
 {
     using HT   = ::Opm::SegmentHeatTransfer;
     using Type = HT::Type;
     using Op   = HT::Operation;
 
-    // Bare types replace the existing set.
+    // --- Type/operation parsing (WSEGHEAT item 4) --------------------------
+    // A bare type replaces the existing coefficient set, a '+' suffix adds to
+    // it, a '-' suffix removes from it, and NONE clears it.
     BOOST_CHECK(HT::typeFromString("COMP") == std::make_pair(Type::COMP, Op::REPLACE_ALL));
     BOOST_CHECK(HT::typeFromString("SEG")  == std::make_pair(Type::SEG,  Op::REPLACE_ALL));
     BOOST_CHECK(HT::typeFromString("TEMP") == std::make_pair(Type::TEMP, Op::REPLACE_ALL));
-
-    // A '+' suffix adds to the set, a '-' suffix removes from it.
     BOOST_CHECK(HT::typeFromString("COMP+") == std::make_pair(Type::COMP, Op::ADD));
     BOOST_CHECK(HT::typeFromString("SEG+")  == std::make_pair(Type::SEG,  Op::ADD));
     BOOST_CHECK(HT::typeFromString("TEMP+") == std::make_pair(Type::TEMP, Op::ADD));
     BOOST_CHECK(HT::typeFromString("COMP-") == std::make_pair(Type::COMP, Op::REMOVE));
     BOOST_CHECK(HT::typeFromString("SEG-")  == std::make_pair(Type::SEG,  Op::REMOVE));
     BOOST_CHECK(HT::typeFromString("TEMP-") == std::make_pair(Type::TEMP, Op::REMOVE));
-
-    // NONE clears the set.
-    BOOST_CHECK(HT::typeFromString("NONE") == std::make_pair(Type::NONE, Op::CLEAR));
+    BOOST_CHECK(HT::typeFromString("NONE")  == std::make_pair(Type::NONE, Op::CLEAR));
 
     // Anything else is an error.
     BOOST_CHECK_THROW(HT::typeFromString("FOO"),   std::invalid_argument);
     BOOST_CHECK_THROW(HT::typeFromString("NONE+"), std::invalid_argument);
     BOOST_CHECK_THROW(HT::typeFromString(""),      std::invalid_argument);
-}
 
-BOOST_AUTO_TEST_CASE(WSEGHEAT_UpdateHeatTransfer)
-{
-    using HT   = ::Opm::SegmentHeatTransfer;
-    using Type = HT::Type;
-
+    // --- Applying a sequence of records to a segment -----------------------
     // A sequence of records exercising replace / add / update / remove / clear.
     const auto deck = ::Opm::Parser{}.parseString(R"(SCHEDULE
 WSEGHEAT
@@ -1486,8 +1562,8 @@ WSEGHEAT
 /
 )");
 
-    const auto records =
-        ::Opm::segmentHeatTransferFromWSEGHEAT(deck["WSEGHEAT"].back()).at("W");
+    const auto records = recordsForWell
+        (::Opm::segmentHeatTransferFromWSEGHEAT(deck["WSEGHEAT"].back()), "W");
     BOOST_REQUIRE_EQUAL(records.size(), 9);
 
     const double kJ  = 1.0e3;
@@ -1553,16 +1629,13 @@ WSEGHEAT
     // NONE clears everything.
     seg.updateHeatTransfer(records[8]);
     BOOST_CHECK(ht.empty());
-}
 
-BOOST_AUTO_TEST_CASE(WSEGHEAT_SegmentCoefficientCap)
-{
-    using HT   = ::Opm::SegmentHeatTransfer;
-    using Type = HT::Type;
-
-    // Six SEG coefficients to distinct targets, but a segment may carry at
-    // most five; the sixth (target 7) must be silently ignored.
-    const auto deck = ::Opm::Parser{}.parseString(R"(SCHEDULE
+    // A segment may carry at most five SEG coefficients.  Feeding six SEG+
+    // records to distinct targets keeps the first five and silently ignores
+    // the sixth (target 7).  This reuses the same updateHeatTransfer machinery
+    // on a fresh segment.
+    {
+        const auto cap_deck = ::Opm::Parser{}.parseString(R"(SCHEDULE
 WSEGHEAT
    'W' 2 2 SEG+ 0.01 1 /
    'W' 2 2 SEG+ 0.02 3 /
@@ -1573,26 +1646,27 @@ WSEGHEAT
 /
 )");
 
-    const auto records =
-        ::Opm::segmentHeatTransferFromWSEGHEAT(deck["WSEGHEAT"].back()).at("W");
-    BOOST_REQUIRE_EQUAL(records.size(), 6);
+        const auto cap_records = recordsForWell
+            (::Opm::segmentHeatTransferFromWSEGHEAT(cap_deck["WSEGHEAT"].back()), "W");
+        BOOST_REQUIRE_EQUAL(cap_records.size(), 6);
 
-    ::Opm::Segment seg{};
-    for (const auto& record : records) {
-        seg.updateHeatTransfer(record);
+        ::Opm::Segment cap_seg{};
+        for (const auto& record : cap_records) {
+            cap_seg.updateHeatTransfer(record);
+        }
+
+        const auto& cap_ht = cap_seg.heatTransfer();
+        BOOST_CHECK_EQUAL(cap_ht.size(), 5);
+
+        int n_target1 = 0, n_target7 = 0;
+        for (const auto& c : cap_ht) {
+            BOOST_CHECK(c.type() == Type::SEG);
+            if (c.targetSegment() == 1) { ++n_target1; }
+            if (c.targetSegment() == 7) { ++n_target7; }
+        }
+        BOOST_CHECK_EQUAL(n_target1, 1); // first one kept
+        BOOST_CHECK_EQUAL(n_target7, 0); // sixth one dropped
     }
-
-    const auto& ht = seg.heatTransfer();
-    BOOST_CHECK_EQUAL(ht.size(), 5);
-
-    int n_target1 = 0, n_target7 = 0;
-    for (const auto& c : ht) {
-        BOOST_CHECK(c.type() == Type::SEG);
-        if (c.targetSegment() == 1) { ++n_target1; }
-        if (c.targetSegment() == 7) { ++n_target7; }
-    }
-    BOOST_CHECK_EQUAL(n_target1, 1); // first one kept
-    BOOST_CHECK_EQUAL(n_target7, 0); // sixth one dropped
 }
 
 BOOST_AUTO_TEST_CASE(WSEGHEAT_Validation)

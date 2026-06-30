@@ -119,12 +119,12 @@ namespace Opm {
         throw std::invalid_argument("Unhandled SegmentHeatTransfer::Type value");
     }
 
-    std::map<std::string, std::vector<SegmentHeatTransferRecord>>
+    std::vector<std::pair<std::string, SegmentHeatTransferRecord>>
     segmentHeatTransferFromWSEGHEAT(const DeckKeyword& keyword)
     {
         using Kw = ParserKeywords::WSEGHEAT;
 
-        auto res = std::map<std::string, std::vector<SegmentHeatTransferRecord>>{};
+        auto res = std::vector<std::pair<std::string, SegmentHeatTransferRecord>>{};
 
         for (const auto& record : keyword) {
             const auto well_name = record.getItem<Kw::WELL>().getTrimmedString(0);
@@ -192,7 +192,7 @@ namespace Opm {
                 }
             }
 
-            res[well_name].push_back(rec);
+            res.emplace_back(well_name, rec);
         }
 
         return res;
