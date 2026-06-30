@@ -54,7 +54,10 @@ public:
     /*!
      * \brief The Boltzmann constant [J/K]
      */
-    static constexpr Scalar kb = R/Na;
+    // Compute the value in double and cast: for a Scalar whose arithmetic is not
+    // constexpr (e.g. autodiff Evaluation types used by the compositional code),
+    // "R/Na" is not a constant expression under MSVC.
+    static constexpr Scalar kb = static_cast<Scalar>(8.314472 / 6.02214179e23);
 
     /*!
      * \brief Speed of light in vacuum [m/s]
@@ -74,7 +77,9 @@ public:
     /*!
      * \brief Reduced Planck constant [J s]
      */
-    static constexpr Scalar hRed = h / (2 * std::numbers::pi_v<Scalar>);
+    // Compute in double (std::numbers::pi_v<Scalar> is ill-formed for non
+    // floating-point Scalar, and Scalar arithmetic may not be constexpr).
+    static constexpr Scalar hRed = static_cast<Scalar>(6.62606896e-34 / (2.0 * std::numbers::pi_v<double>));
 };
 
 } // namespace Opm
