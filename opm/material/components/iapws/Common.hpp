@@ -59,7 +59,9 @@ public:
     static constexpr Scalar molarMass = Scalar(18.01518e-3);
 
     //! Specific gas constant of water \f$\mathrm{[J/(kg*K)]}\f$
-    static constexpr Scalar Rs = Constants<Scalar>::R / molarMass;
+    // Compute in double and cast: Scalar arithmetic is not constexpr for the
+    // autodiff Scalar types used by the material tests on MSVC.
+    static constexpr Scalar Rs = static_cast<Scalar>(8.314472 / 18.01518e-3);
 
     //! Critical temperature of water \f$\mathrm{[K]}\f$
     static constexpr Scalar criticalTemperature = Scalar(647.096);
@@ -74,7 +76,7 @@ public:
     static constexpr Scalar criticalVolume = Scalar(5.595e-2);
 
     //! Critical molar volume of water \f$\mathrm{[m^3/mol]}\f$
-    static constexpr Scalar criticalMolarVolume = molarMass / criticalDensity;
+    static constexpr Scalar criticalMolarVolume = static_cast<Scalar>(18.01518e-3 / 322.0);
 
     //! The acentric factor of water \f$\mathrm{[-]}\f$
     static constexpr Scalar acentricFactor = Scalar(0.344);
