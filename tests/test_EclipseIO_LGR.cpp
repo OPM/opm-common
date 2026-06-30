@@ -741,7 +741,7 @@ BOOST_AUTO_TEST_CASE(EclipseIOLGR_INIT)
 {
     const std::string& deckString = deckStringLGR;
 
-    auto write_and_check = []( ) {
+    auto write_and_check = [&]( ) {
         // preparing tested objects
         const auto deck = Parser().parseString( deckString);
         auto es = EclipseState( deck );
