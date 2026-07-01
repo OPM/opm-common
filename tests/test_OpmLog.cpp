@@ -261,7 +261,7 @@ BOOST_AUTO_TEST_CASE(TestHelperFunctions)
     BOOST_CHECK(!isPower2(0));
     BOOST_CHECK(isPower2(1));
     BOOST_CHECK(isPower2(1 << 3));
-    BOOST_CHECK(isPower2(1ul << 62));
+    BOOST_CHECK(isPower2(1ull << 62));
 
     // fileMessage
     BOOST_CHECK_EQUAL(fileMessage(KeywordLocation("Keyword", "foo/bar", 1), "message"), "message\nIn file foo/bar, line 1\n");
