@@ -56,15 +56,13 @@ namespace {
     namespace iACT {
 
         Opm::RestartIO::Helpers::WindowedArray<int>
-        allocate(const std::vector<int>& actDims)
+        allocate(const std::size_t num_actions)
         {
             using WV = Opm::RestartIO::Helpers::WindowedArray<int>;
 
-            int nwin = std::max(actDims[0], 1);
-            int nitPrWin = std::max(actDims[1], 1);
             return WV {
-                WV::NumWindows{ static_cast<std::size_t>(nwin) },
-                WV::WindowSize{ static_cast<std::size_t>(nitPrWin) }
+                WV::NumWindows{ std::max(num_actions, std::size_t{1}) },
+                WV::WindowSize{ Opm::RestartIO::Helpers::entriesPerIACT() }
             };
         }
 
@@ -96,15 +94,13 @@ namespace {
         namespace sACT {
 
         Opm::RestartIO::Helpers::WindowedArray<float>
-        allocate(const std::vector<int>& actDims)
+        allocate(const std::size_t num_actions)
         {
             using WV = Opm::RestartIO::Helpers::WindowedArray<float>;
 
-            int nwin = std::max(actDims[0], 1);
-            int nitPrWin = std::max(actDims[2], 1);
             return WV {
-                WV::NumWindows{ static_cast<std::size_t>(nwin) },
-                WV::WindowSize{ static_cast<std::size_t>(nitPrWin) }
+                WV::NumWindows{ std::max(num_actions, std::size_t{1}) },
+                WV::WindowSize{ Opm::RestartIO::Helpers::entriesPerSACT() }
             };
         }
 
@@ -132,17 +128,15 @@ namespace {
         Opm::RestartIO::Helpers::WindowedArray<
             Opm::EclIO::PaddedOutputString<8>
         >
-        allocate(const std::vector<int>& actDims)
+        allocate(const std::size_t num_actions)
         {
             using WV = Opm::RestartIO::Helpers::WindowedArray<
                 Opm::EclIO::PaddedOutputString<8>
             >;
 
-            int nwin = std::max(actDims[0], 1);
-            int nitPrWin = std::max(actDims[3], 1);
             return WV {
-                WV::NumWindows{ static_cast<std::size_t>(nwin) },
-                WV::WindowSize{ static_cast<std::size_t>(nitPrWin) }
+                WV::NumWindows{ std::max(num_actions, std::size_t{1}) },
+                WV::WindowSize{ Opm::RestartIO::Helpers::entriesPerZACT() }
             };
         }
 
@@ -538,16 +532,15 @@ namespace {
 // =====================================================================
 
 Opm::RestartIO::Helpers::AggregateActionxData::
-AggregateActionxData( const std::vector<int>&   rst_dims,
-                      std::size_t               num_actions,
+AggregateActionxData( const std::size_t         num_actions,
                       const Opm::Actdims&       actdims,
                       const Opm::Schedule&      sched,
                       const Opm::Action::State& action_state,
                       const Opm::SummaryState&  st,
                       const std::size_t         simStep)
-    : iACT_ (iACT::allocate(rst_dims))
-    , sACT_ (sACT::allocate(rst_dims))
-    , zACT_ (zACT::allocate(rst_dims))
+    : iACT_ (iACT::allocate(num_actions))
+    , sACT_ (sACT::allocate(num_actions))
+    , zACT_ (zACT::allocate(num_actions))
     , zLACT_(zLACT::allocate(num_actions, sched[simStep].actions().max_input_lines(), actdims))
     , zACN_ (zACN::allocate(num_actions, actdims))
     , iACN_ (iACN::allocate(num_actions, actdims))
@@ -599,8 +592,7 @@ AggregateActionxData(const Opm::Schedule&      sched,
                      const Opm::Action::State& action_state,
                      const Opm::SummaryState&  st,
                      const std::size_t         simStep)
-    : AggregateActionxData(createActionRSTDims(sched, simStep),
-                           sched[simStep].actions().ecl_size(),
+    : AggregateActionxData(sched[simStep].actions().ecl_size(),
                            sched.runspec().actdims(),
                            sched, action_state, st, simStep)
 {}
