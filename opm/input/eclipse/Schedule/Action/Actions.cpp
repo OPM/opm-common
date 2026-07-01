@@ -25,6 +25,7 @@
 #include <cstddef>
 #include <ctime>
 #include <iterator>
+#include <numeric>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -98,13 +99,15 @@ std::size_t Actions::py_size() const
 
 int Actions::max_input_lines() const
 {
-    std::size_t max_il = 0;
-
-    for (const auto& act : this->actions_) {
-        if (act.keyword_strings().size() > max_il) {
-            max_il = act.keyword_strings().size();
-        }
+    if (this->actions_.empty()) {
+        return 0;
     }
+
+    const auto max_il = std::accumulate(this->actions_.begin(),
+                                        this->actions_.end(),
+                                        std::size_t{0},
+        [](const auto& max_so_far, const auto& action)
+        { return std::max(max_so_far, action.keyword_strings().size()); });
 
     return static_cast<int>(max_il);
 }

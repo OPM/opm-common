@@ -32,7 +32,6 @@
 #include <opm/input/eclipse/Utility/Typetools.hpp>
 
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
-#include <opm/input/eclipse/Deck/DeckOutput.hpp>
 
 #include <opm/input/eclipse/Parser/ParseContext.hpp>
 
@@ -44,6 +43,7 @@
 #include <ctime>
 #include <iterator>
 #include <optional>
+#include <ranges>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -283,33 +283,43 @@ void ActionX::update_id(const std::size_t id)
 
 std::vector<std::string> ActionX::keyword_strings() const
 {
-    std::vector<std::string> keyword_strings;
-    std::string keyword_string;
-    {
-        std::stringstream ss;
-        DeckOutput::format fmt;
-        for (const auto& kw : this->keywords) {
-            ss << kw;
-            ss << fmt.keyword_sep;
+    auto kw_strings = std::vector<std::string>{};
+
+    std::stringstream ss;
+
+    for (auto line = std::string{}; const auto& kw : this->keywords) {
+        ss.str({});
+        ss.clear();
+        ss << kw;
+
+        auto kw_lines = std::ranges::subrange
+            (std::istreambuf_iterator<char>(ss), std::default_sentinel);
+
+        // Note: We need lazy_split() in C++20 instead of split() because the
+        // underlying stream buffer iterator is just an input iterator, not a
+        // forward iterator.  C++23 relaxes that requirement and allows split()
+        // to work with input iterators.
+        for (auto&& line_range : kw_lines | std::views::lazy_split('\n')) {
+            line.clear();
+
+            // C++20 limitation: Std::string cannot be constructed
+            // directly from lazy_view's subrange.  We need to copy
+            // the subrange into a string before putting it into the
+            // vector.  C++23 relaxes that requirement and allows
+            // constructing a string directly in the vector from a
+            // lazy_view's subrange.  See
+            // https://en.cppreference.com/w/cpp/ranges/lazy_split
+            std::ranges::copy(line_range, std::back_inserter(line));
+
+            if (! line.empty()) {
+                kw_strings.push_back(std::move(line));
+            }
         }
-
-        keyword_string = ss.str();
     }
 
-    std::size_t offset = 0;
-    while (true) {
-        auto eol_pos = keyword_string.find('\n', offset);
-        if (eol_pos == std::string::npos)
-            break;
+    kw_strings.emplace_back("ENDACTIO");
 
-        if (eol_pos > offset)
-            keyword_strings.push_back(keyword_string.substr(offset, eol_pos - offset));
-
-        offset = eol_pos + 1;
-    }
-    keyword_strings.push_back("ENDACTIO");
-
-    return keyword_strings;
+    return kw_strings;
 }
 
 bool ActionX::operator==(const ActionX& data) const
