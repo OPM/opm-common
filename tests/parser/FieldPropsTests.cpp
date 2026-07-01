@@ -157,7 +157,7 @@ PERMX
 
 BOOST_AUTO_TEST_CASE(SigmaVFieldProps) {
     // SIGMAV is a per-cell array (JSON schema: "data", no "size") -- fits FieldProps'
-    // GRID::double_keywords registry exactly like PORO/PERMX. Registered in this PR.
+    // GRID::double_keywords registry exactly like PORO/PERMX.
     std::string deck_string_sigmav = R"(
 GRID
 
