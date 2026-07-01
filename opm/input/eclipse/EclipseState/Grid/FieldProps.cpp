@@ -42,6 +42,7 @@
 #include <opm/input/eclipse/Parser/ParserKeywords/B.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/C.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/E.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/G.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/M.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/O.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/P.hpp>
@@ -272,7 +273,7 @@ std::string default_region_keyword(const Deck& deck)
     if (deck.hasKeyword("GRIDOPTS")) {
         const auto& gridOpts = deck["GRIDOPTS"].back();
         const auto& record = gridOpts.getRecord(0);
-        const auto& nrmult_item = record.getItem("NRMULT");
+        const auto& nrmult_item = record.getItem<ParserKeywords::GRIDOPTS::NRMULT>();
 
         if (nrmult_item.get<int>(0) > 0) {
             return "MULTNUM"; // GRIDOPTS and positive NRMULT
@@ -1397,7 +1398,10 @@ void FieldProps::operate(const DeckRecord&                   record,
                          const std::vector<Box::cell_index>& index_list,
                          const bool                          global)
 {
-    const auto target_array = record.getItem("TARGET_ARRAY").getTrimmedString(0);
+    // Shared backend for OPERATE and OPERATER; both define
+    // TARGET_ARRAY/OPERATION/PARAM1/PARAM2 identically.
+    using Kw = ParserKeywords::OPERATE;
+    const auto target_array = record.getItem<Kw::TARGET_ARRAY>().getTrimmedString(0);
     if (this->tran.find(target_array) != this->tran.end()) {
         throw std::logic_error {
             "The OPERATE keyword cannot be used for "
@@ -1415,11 +1419,11 @@ void FieldProps::operate(const DeckRecord&                   record,
     const auto srcDim = parseDim(src_data);
     const auto dstDim = parseDim(target_data);
 
-    const auto func_name    = record.getItem("OPERATION").getTrimmedString(0);
+    const auto func_name    = record.getItem<Kw::OPERATION>().getTrimmedString(0);
     const auto check_target = (func_name == "MULTIPLY") || (func_name == "POLY");
 
-    const auto alpha = record.getItem("PARAM1").get<double>(0);
-    const auto beta  = record.getItem("PARAM2").get<double>(0);
+    const auto alpha = record.getItem<Kw::PARAM1>().get<double>(0);
+    const auto beta  = record.getItem<Kw::PARAM2>().get<double>(0);
     const auto func  = Operate::get(func_name, alpha, beta);
 
     auto& to_data = global? *target_data.global_data : target_data.data;
@@ -1462,10 +1466,13 @@ void FieldProps::operate_int_target(const DeckRecord&                   record,
                                     const std::vector<Box::cell_index>&   index_list,
                                     const bool                            global)
 {
-    const auto func_name    = record.getItem("OPERATION").getTrimmedString(0);
+    // Shared backend for OPERATE and OPERATER; both define
+    // OPERATION/PARAM1/PARAM2 identically.
+    using Kw = ParserKeywords::OPERATE;
+    const auto func_name    = record.getItem<Kw::OPERATION>().getTrimmedString(0);
     const auto check_target = (func_name == "MULTIPLY") || (func_name == "POLY");
-    const auto alpha        = record.getItem("PARAM1").get<double>(0);
-    const auto beta         = record.getItem("PARAM2").get<double>(0);
+    const auto alpha        = record.getItem<Kw::PARAM1>().get<double>(0);
+    const auto beta         = record.getItem<Kw::PARAM2>().get<double>(0);
     const auto func         = Operate::get(func_name, alpha, beta);
 
     auto& to_data   = global ? *target_data.global_data : target_data.data;
@@ -1549,6 +1556,7 @@ void FieldProps::handle_operateR(const Section section,
     // values overwrite the corresponding elements of the result/target
     // array (ResArray).
 
+    using Kw = ParserKeywords::OPERATER;
     for (const auto& record : keyword) {
         const auto target_kw = Fieldprops::keywords::
             get_keyword_from_alias(record.getItem(0).getTrimmedString(0));
@@ -1560,12 +1568,12 @@ void FieldProps::handle_operateR(const Section section,
             };
         }
 
-        const int region_value = record.getItem("REGION_NUMBER").get<int>(0);
+        const int region_value = record.getItem<Kw::REGION_NUMBER>().get<int>(0);
 
         // For the OPERATER keyword we fetch the region name from the deck
         // record with no extra hoops.
-        const auto reg_name = record.getItem("REGION_NAME").getTrimmedString(0);
-        const auto src_kw = record.getItem("ARRAY_PARAMETER").getTrimmedString(0);
+        const auto reg_name = record.getItem<Kw::REGION_NAME>().getTrimmedString(0);
+        const auto src_kw = record.getItem<Kw::ARRAY_PARAMETER>().getTrimmedString(0);
 
         const auto& [index_list, all_active] = this->region_index(reg_name, region_value);
         if (index_list.empty()) {
@@ -1752,6 +1760,7 @@ void FieldProps::handle_OPERATE(const Section section,
     // values overwrite the corresponding elements of the result/target
     // array (ResArray).
 
+    using Kw = ParserKeywords::OPERATE;
     for (const auto& record : keyword) {
         box.update(record);
 
@@ -1765,7 +1774,7 @@ void FieldProps::handle_OPERATE(const Section section,
             };
         }
 
-        const auto src_kw = record.getItem("ARRAY_PARAMETER").getTrimmedString(0);
+        const auto src_kw = record.getItem<Kw::ARRAY_PARAMETER>().getTrimmedString(0);
 
         if (FieldProps::supported<double>(target_kw) ||
             Fieldprops::keywords::is_work(target_kw))

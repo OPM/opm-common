@@ -50,6 +50,7 @@
 #include <opm/input/eclipse/Parser/Parser.hpp>
 
 #include <opm/input/eclipse/Parser/ParserKeywords/F.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/W.hpp>
 
 #include <cstddef>
 #include <memory>
@@ -605,7 +606,7 @@ namespace {
             Opm::UnitSystem unit_system(Opm::UnitSystem::UnitType::UNIT_TYPE_METRIC);
             auto deck = parser.parseString(input);
             const auto& record = deck["WCONHIST"].back().getRecord(0);
-            auto table_nr = record.getItem("VFP_TABLE").get< int >(0);
+            auto table_nr = record.getItem<Opm::ParserKeywords::WCONHIST::VFP_TABLE>().get< int >(0);
             Opm::Well::WellProductionProperties hist(unit_system, "W");
             hist.handleWCONHIST(alq_type, table_nr,
                                 Opm::ParserKeywords::FBHPDEF::TARGET_BHP::defaultValue * unit::barsa,
@@ -662,7 +663,7 @@ namespace {
             const auto& kwd     = deck["WCONPROD"].back();
             const auto&  record = kwd.getRecord(0);
             const Phases phases { true, true, true };
-            auto table_nr = record.getItem("VFP_TABLE").get< int >(0);
+            auto table_nr = record.getItem<Opm::ParserKeywords::WCONPROD::VFP_TABLE>().get< int >(0);
             Opm::Well::WellProductionProperties pred(unit_system, "W");
             pred.handleWCONPROD(alq_type, table_nr,
                                 Opm::ParserKeywords::FBHPDEF::TARGET_BHP::defaultValue * unit::barsa,

@@ -35,6 +35,7 @@
 
 #include <opm/input/eclipse/Parser/ErrorGuard.hpp>
 #include <opm/input/eclipse/Parser/ParseContext.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/W.hpp>
 
 #include <algorithm>
 #include <cassert>
@@ -249,6 +250,8 @@ namespace Opm {
 
     void WellSegments::loadWELSEGS(const DeckKeyword& welsegsKeyword, const UnitSystem& unit_system)
     {
+        using Kw = ParserKeywords::WELSEGS;
+
         // For the first record, which provides the information for the top
         // segment and information for the whole segment set.
         const auto& record1 = welsegsKeyword.getRecord(0);
@@ -256,15 +259,15 @@ namespace Opm {
         // Meaningless value to indicate unspecified values.
         const double invalid_value = Segment::invalidValue();
 
-        const auto& wname = record1.getItem("WELL").getTrimmedString(0);
-        const double depth_top = record1.getItem("TOP_DEPTH").getSIDouble(0);
-        const double length_top = record1.getItem("TOP_LENGTH").getSIDouble(0);
-        const double volume_top = record1.getItem("WELLBORE_VOLUME").getSIDouble(0);
-        const LengthDepth length_depth_type = LengthDepthFromString(record1.getItem("INFO_TYPE").getTrimmedString(0));
-        m_comp_pressure_drop = CompPressureDropFromString(record1.getItem("PRESSURE_COMPONENTS").getTrimmedString(0));
+        const auto& wname = record1.getItem<Kw::WELL>().getTrimmedString(0);
+        const double depth_top = record1.getItem<Kw::TOP_DEPTH>().getSIDouble(0);
+        const double length_top = record1.getItem<Kw::TOP_LENGTH>().getSIDouble(0);
+        const double volume_top = record1.getItem<Kw::WELLBORE_VOLUME>().getSIDouble(0);
+        const LengthDepth length_depth_type = LengthDepthFromString(record1.getItem<Kw::INFO_TYPE>().getTrimmedString(0));
+        m_comp_pressure_drop = CompPressureDropFromString(record1.getItem<Kw::PRESSURE_COMPONENTS>().getTrimmedString(0));
 
-        const auto nodeX_top = record1.getItem("TOP_X").getSIDouble(0);
-        const auto nodeY_top = record1.getItem("TOP_Y").getSIDouble(0);
+        const auto nodeX_top = record1.getItem<Kw::TOP_X>().getSIDouble(0);
+        const auto nodeY_top = record1.getItem<Kw::TOP_Y>().getSIDouble(0);
 
         // The main branch is 1 instead of 0.  The segment number for top
         // segment is also 1.
@@ -302,8 +305,8 @@ namespace Opm {
         // get all the requisite information.
         for (std::size_t recordIndex = 1; recordIndex < welsegsKeyword.size(); ++recordIndex) {
             const auto& record = welsegsKeyword.getRecord(recordIndex);
-            const int segment1 = record.getItem("SEGMENT1").get<int>(0);
-            const int segment2 = record.getItem("SEGMENT2").get<int>(0);
+            const int segment1 = record.getItem<Kw::SEGMENT1>().get<int>(0);
+            const int segment2 = record.getItem<Kw::SEGMENT2>().get<int>(0);
             if (segment1 < 2) {
                 throw std::logic_error {
                     fmt::format("Illegal segment 1 number in WELSEGS\n"
@@ -319,7 +322,7 @@ namespace Opm {
                 };
             }
 
-            const int branch = record.getItem("BRANCH").get<int>(0);
+            const int branch = record.getItem<Kw::BRANCH>().get<int>(0);
             if (branch < 1) {
                 throw std::logic_error {
                     fmt::format("Illegal branch number input "
@@ -327,10 +330,10 @@ namespace Opm {
                 };
             }
 
-            const double diameter = record.getItem("DIAMETER").getSIDouble(0);
+            const double diameter = record.getItem<Kw::DIAMETER>().getSIDouble(0);
             double area = std::numbers::pi * diameter * diameter / 4.0;
             {
-                const auto& itemArea = record.getItem("AREA");
+                const auto& itemArea = record.getItem<Kw::AREA>();
                 if (itemArea.hasValue(0)) {
                     area = itemArea.getSIDouble(0);
                 }
@@ -338,15 +341,15 @@ namespace Opm {
 
             // If the length_depth_type is INC, then the length is the length of the segment,
             // If the length_depth_type is ABS, then the length is the length of the last segment node in the range.
-            const double length = record.getItem("LENGTH").getSIDouble(0);
+            const double length = record.getItem<Kw::LENGTH>().getSIDouble(0);
 
             // If the length_depth_type is INC, then the depth is the depth change of the segment from the outlet segment.
             // If the length_depth_type is ABS, then the depth is the absolute depth of last the segment node in the range.
-            const double depth = record.getItem("DEPTH").getSIDouble(0);
+            const double depth = record.getItem<Kw::DEPTH>().getSIDouble(0);
 
             double volume = invalid_value;
             {
-                const auto& itemVolume = record.getItem("VOLUME");
+                const auto& itemVolume = record.getItem<Kw::VOLUME>();
                 if (itemVolume.hasValue(0)) {
                     volume = itemVolume.getSIDouble(0);
                 }
@@ -355,7 +358,7 @@ namespace Opm {
                 }
             }
 
-            const double input_roughness = record.getItem("ROUGHNESS").getSIDouble(0);
+            const double input_roughness = record.getItem<Kw::ROUGHNESS>().getSIDouble(0);
             const double safe_roughness = Segment::MAX_REL_ROUGHNESS * diameter;
             const bool too_high_roughness = input_roughness > safe_roughness;
             const double roughness = too_high_roughness ? safe_roughness : input_roughness;
@@ -366,8 +369,8 @@ namespace Opm {
                                             wname, segment1, segment2, input_roughness, location.lineno, location.filename, roughness));
             }
 
-            const auto node_X = record.getItem("LENGTH_X").getSIDouble(0);
-            const auto node_Y = record.getItem("LENGTH_Y").getSIDouble(0);
+            const auto node_X = record.getItem<Kw::LENGTH_X>().getSIDouble(0);
+            const auto node_Y = record.getItem<Kw::LENGTH_Y>().getSIDouble(0);
 
             for (int segment_number = segment1; segment_number <= segment2; ++segment_number) {
                 // For the first or the only segment in the range is the one
@@ -375,7 +378,7 @@ namespace Opm {
                 // range, the outlet segment is the previous segment in the
                 // range.
                 const int outlet_segment = (segment_number == segment1)
-                    ? record.getItem("JOIN_SEGMENT").get<int>(0)
+                    ? record.getItem<Kw::JOIN_SEGMENT>().get<int>(0)
                     : segment_number - 1;
 
                 const auto data_ready = (length_depth_type != LengthDepth::INC)

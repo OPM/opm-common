@@ -52,6 +52,13 @@
 #include <opm/input/eclipse/Parser/InputErrorAction.hpp>
 #include <opm/input/eclipse/Parser/ParseContext.hpp>
 #include <opm/input/eclipse/Parser/Parser.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/C.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/D.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/E.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/P.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/R.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/V.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/W.hpp>
 
 #include <cstddef>
 #include <memory>
@@ -122,9 +129,9 @@ BOOST_AUTO_TEST_CASE( DENSITY ) {
     BOOST_CHECK_EQUAL( 2U , densityKw.size());
     const auto& rec1 = densityKw.getRecord(0);
 
-    const auto& oilDensity = rec1.getItem("OIL");
-    const auto& waterDensity = rec1.getItem("WATER");
-    const auto& gasDensity = rec1.getItem("GAS");
+    const auto& oilDensity = rec1.getItem<ParserKeywords::DENSITY::OIL>();
+    const auto& waterDensity = rec1.getItem<ParserKeywords::DENSITY::WATER>();
+    const auto& gasDensity = rec1.getItem<ParserKeywords::DENSITY::GAS>();
 
     const auto density = Field::Density;
     BOOST_CHECK_CLOSE(  500 * density, oilDensity.getSIDouble(0),   0.001 );
@@ -166,7 +173,7 @@ BOOST_AUTO_TEST_CASE( EQUIL_MISSING_DIMS ) {
     BOOST_CHECK_EQUAL( 1U , kw1.size() );
 
     const auto& rec1 = kw1.getRecord(0);
-    const auto& item1       = rec1.getItem("OWC");
+    const auto& item1       = rec1.getItem<ParserKeywords::EQUIL::OWC>();
     const auto& item1_index = rec1.getItem(2);
 
     BOOST_CHECK_EQUAL( &item1  , &item1_index );
@@ -184,13 +191,13 @@ BOOST_AUTO_TEST_CASE( EQUIL ) {
     const auto& rec1 = kw1.getRecord(0);
     const auto& rec3 = kw1.getRecord(2);
 
-    const auto& item1       = rec1.getItem("OWC");
+    const auto& item1       = rec1.getItem<ParserKeywords::EQUIL::OWC>();
     const auto& item1_index = rec1.getItem(2);
 
     BOOST_CHECK_EQUAL( &item1  , &item1_index );
     BOOST_CHECK( fabs(item1.getSIDouble(0) - 1705) < 0.001 );
 
-    const auto& item3       = rec3.getItem("OWC");
+    const auto& item3       = rec3.getItem<ParserKeywords::EQUIL::OWC>();
     const auto& item3_index = rec3.getItem(2);
 
     BOOST_CHECK_EQUAL( &item3  , &item3_index );
@@ -493,13 +500,13 @@ BOOST_AUTO_TEST_CASE( MULTISEGMENT_ABS ) {
     {
         const auto& rec1 = kw.getRecord(0); // top segment
 
-        const std::string well_name = rec1.getItem("WELL").getTrimmedString(0);
-        const double depth_top = rec1.getItem("TOP_DEPTH").get< double >(0);
-        const double length_top = rec1.getItem("TOP_LENGTH").get< double >(0);
-        const double volume_top = rec1.getItem("WELLBORE_VOLUME").get< double >(0);
-        const WellSegments::LengthDepth length_depth_type = WellSegments::LengthDepthFromString(rec1.getItem("INFO_TYPE").getTrimmedString(0));
-        const WellSegments::CompPressureDrop comp_pressure_drop = WellSegments::CompPressureDropFromString(rec1.getItem("PRESSURE_COMPONENTS").getTrimmedString(0));
-        const WellSegments::MultiPhaseModel multiphase_model = WellSegments::MultiPhaseModelFromString(rec1.getItem("FLOW_MODEL").getTrimmedString(0));
+        const std::string well_name = rec1.getItem<ParserKeywords::WELSEGS::WELL>().getTrimmedString(0);
+        const double depth_top = rec1.getItem<ParserKeywords::WELSEGS::TOP_DEPTH>().get< double >(0);
+        const double length_top = rec1.getItem<ParserKeywords::WELSEGS::TOP_LENGTH>().get< double >(0);
+        const double volume_top = rec1.getItem<ParserKeywords::WELSEGS::WELLBORE_VOLUME>().get< double >(0);
+        const WellSegments::LengthDepth length_depth_type = WellSegments::LengthDepthFromString(rec1.getItem<ParserKeywords::WELSEGS::INFO_TYPE>().getTrimmedString(0));
+        const WellSegments::CompPressureDrop comp_pressure_drop = WellSegments::CompPressureDropFromString(rec1.getItem<ParserKeywords::WELSEGS::PRESSURE_COMPONENTS>().getTrimmedString(0));
+        const WellSegments::MultiPhaseModel multiphase_model = WellSegments::MultiPhaseModelFromString(rec1.getItem<ParserKeywords::WELSEGS::FLOW_MODEL>().getTrimmedString(0));
 
         BOOST_CHECK_EQUAL( "PROD01", well_name );
         BOOST_CHECK_EQUAL( 2512.5, depth_top );
@@ -517,16 +524,16 @@ BOOST_AUTO_TEST_CASE( MULTISEGMENT_ABS ) {
     // Here, we check the information for the segment 2 and 6 as samples.
     {
         const auto& rec2 = kw.getRecord(1);
-        const int segment1 = rec2.getItem("SEGMENT2").get< int >(0);
-        const int segment2 = rec2.getItem("SEGMENT2").get< int >(0);
+        const int segment1 = rec2.getItem<ParserKeywords::WELSEGS::SEGMENT2>().get< int >(0);
+        const int segment2 = rec2.getItem<ParserKeywords::WELSEGS::SEGMENT2>().get< int >(0);
         BOOST_CHECK_EQUAL( 2, segment1 );
         BOOST_CHECK_EQUAL( 2, segment2 );
-        const int branch = rec2.getItem("BRANCH").get< int >(0);
-        const int outlet_segment = rec2.getItem("JOIN_SEGMENT").get< int >(0);
-        const double segment_length = rec2.getItem("LENGTH").get< double >(0);
-        const double depth_change = rec2.getItem("DEPTH").get< double >(0);
-        const double diameter = rec2.getItem("DIAMETER").get< double >(0);
-        const double roughness = rec2.getItem("ROUGHNESS").get< double >(0);
+        const int branch = rec2.getItem<ParserKeywords::WELSEGS::BRANCH>().get< int >(0);
+        const int outlet_segment = rec2.getItem<ParserKeywords::WELSEGS::JOIN_SEGMENT>().get< int >(0);
+        const double segment_length = rec2.getItem<ParserKeywords::WELSEGS::LENGTH>().get< double >(0);
+        const double depth_change = rec2.getItem<ParserKeywords::WELSEGS::DEPTH>().get< double >(0);
+        const double diameter = rec2.getItem<ParserKeywords::WELSEGS::DIAMETER>().get< double >(0);
+        const double roughness = rec2.getItem<ParserKeywords::WELSEGS::ROUGHNESS>().get< double >(0);
         BOOST_CHECK_EQUAL( 1, branch );
         BOOST_CHECK_EQUAL( 1, outlet_segment );
         BOOST_CHECK_EQUAL( 2537.5, segment_length );
@@ -537,16 +544,16 @@ BOOST_AUTO_TEST_CASE( MULTISEGMENT_ABS ) {
 
     {
         const auto& rec6 = kw.getRecord(4);
-        const int segment1 = rec6.getItem("SEGMENT2").get< int >(0);
-        const int segment2 = rec6.getItem("SEGMENT2").get< int >(0);
+        const int segment1 = rec6.getItem<ParserKeywords::WELSEGS::SEGMENT2>().get< int >(0);
+        const int segment2 = rec6.getItem<ParserKeywords::WELSEGS::SEGMENT2>().get< int >(0);
         BOOST_CHECK_EQUAL( 6, segment1 );
         BOOST_CHECK_EQUAL( 6, segment2 );
-        const int branch = rec6.getItem("BRANCH").get< int >(0);
-        const int outlet_segment = rec6.getItem("JOIN_SEGMENT").get< int >(0);
-        const double segment_length = rec6.getItem("LENGTH").get< double >(0);
-        const double depth_change = rec6.getItem("DEPTH").get< double >(0);
-        const double diameter = rec6.getItem("DIAMETER").get< double >(0);
-        const double roughness = rec6.getItem("ROUGHNESS").get< double >(0);
+        const int branch = rec6.getItem<ParserKeywords::WELSEGS::BRANCH>().get< int >(0);
+        const int outlet_segment = rec6.getItem<ParserKeywords::WELSEGS::JOIN_SEGMENT>().get< int >(0);
+        const double segment_length = rec6.getItem<ParserKeywords::WELSEGS::LENGTH>().get< double >(0);
+        const double depth_change = rec6.getItem<ParserKeywords::WELSEGS::DEPTH>().get< double >(0);
+        const double diameter = rec6.getItem<ParserKeywords::WELSEGS::DIAMETER>().get< double >(0);
+        const double roughness = rec6.getItem<ParserKeywords::WELSEGS::ROUGHNESS>().get< double >(0);
         BOOST_CHECK_EQUAL( 2, branch );
         BOOST_CHECK_EQUAL( 4, outlet_segment );
         BOOST_CHECK_EQUAL( 3037.5, segment_length );
@@ -557,16 +564,16 @@ BOOST_AUTO_TEST_CASE( MULTISEGMENT_ABS ) {
 
     {
         const auto& rec7 = kw.getRecord(6);
-        const int segment1 = rec7.getItem("SEGMENT2").get< int >(0);
-        const int segment2 = rec7.getItem("SEGMENT2").get< int >(0);
+        const int segment1 = rec7.getItem<ParserKeywords::WELSEGS::SEGMENT2>().get< int >(0);
+        const int segment2 = rec7.getItem<ParserKeywords::WELSEGS::SEGMENT2>().get< int >(0);
         BOOST_CHECK_EQUAL( 8, segment1 );
         BOOST_CHECK_EQUAL( 8, segment2 );
-        const int branch = rec7.getItem("BRANCH").get< int >(0);
-        const int outlet_segment = rec7.getItem("JOIN_SEGMENT").get< int >(0);
-        const double segment_length = rec7.getItem("LENGTH").get< double >(0);
-        const double depth_change = rec7.getItem("DEPTH").get< double >(0);
-        const double diameter = rec7.getItem("DIAMETER").get< double >(0);
-        const double roughness = rec7.getItem("ROUGHNESS").get< double >(0);
+        const int branch = rec7.getItem<ParserKeywords::WELSEGS::BRANCH>().get< int >(0);
+        const int outlet_segment = rec7.getItem<ParserKeywords::WELSEGS::JOIN_SEGMENT>().get< int >(0);
+        const double segment_length = rec7.getItem<ParserKeywords::WELSEGS::LENGTH>().get< double >(0);
+        const double depth_change = rec7.getItem<ParserKeywords::WELSEGS::DEPTH>().get< double >(0);
+        const double diameter = rec7.getItem<ParserKeywords::WELSEGS::DIAMETER>().get< double >(0);
+        const double roughness = rec7.getItem<ParserKeywords::WELSEGS::ROUGHNESS>().get< double >(0);
         BOOST_CHECK_EQUAL( 3, branch );
         BOOST_CHECK_EQUAL( 7, outlet_segment );
         BOOST_CHECK_EQUAL( 3337.6, segment_length );
@@ -582,19 +589,19 @@ BOOST_AUTO_TEST_CASE( MULTISEGMENT_ABS ) {
     // first record only contains the well name
     {
         const auto& rec1 = kw1.getRecord(0);
-        const std::string well_name = rec1.getItem("WELL").getTrimmedString(0);
+        const std::string well_name = rec1.getItem<ParserKeywords::COMPSEGS::WELL>().getTrimmedString(0);
         BOOST_CHECK_EQUAL( "PROD01", well_name );
     }
 
     // check the third record and the seventh record
     {
         const auto& rec3 = kw1.getRecord(2);
-        const int i = rec3.getItem("I").get< int >(0);
-        const int j = rec3.getItem("J").get< int >(0);
-        const int k = rec3.getItem("K").get< int >(0);
-        const int branch = rec3.getItem("BRANCH").get< int >(0);
-        const double distance_start = rec3.getItem("DISTANCE_START").get< double >(0);
-        const double distance_end = rec3.getItem("DISTANCE_END").get< double >(0);
+        const int i = rec3.getItem<ParserKeywords::COMPSEGS::I>().get< int >(0);
+        const int j = rec3.getItem<ParserKeywords::COMPSEGS::J>().get< int >(0);
+        const int k = rec3.getItem<ParserKeywords::COMPSEGS::K>().get< int >(0);
+        const int branch = rec3.getItem<ParserKeywords::COMPSEGS::BRANCH>().get< int >(0);
+        const double distance_start = rec3.getItem<ParserKeywords::COMPSEGS::DISTANCE_START>().get< double >(0);
+        const double distance_end = rec3.getItem<ParserKeywords::COMPSEGS::DISTANCE_END>().get< double >(0);
 
         BOOST_CHECK_EQUAL( 20, i );
         BOOST_CHECK_EQUAL(  1, j );
@@ -606,12 +613,12 @@ BOOST_AUTO_TEST_CASE( MULTISEGMENT_ABS ) {
 
     {
         const auto& rec7 = kw1.getRecord(6);
-        const int i = rec7.getItem("I").get< int >(0);
-        const int j = rec7.getItem("J").get< int >(0);
-        const int k = rec7.getItem("K").get< int >(0);
-        const int branch = rec7.getItem("BRANCH").get< int >(0);
-        const double distance_start = rec7.getItem("DISTANCE_START").get< double >(0);
-        const double distance_end = rec7.getItem("DISTANCE_END").get< double >(0);
+        const int i = rec7.getItem<ParserKeywords::COMPSEGS::I>().get< int >(0);
+        const int j = rec7.getItem<ParserKeywords::COMPSEGS::J>().get< int >(0);
+        const int k = rec7.getItem<ParserKeywords::COMPSEGS::K>().get< int >(0);
+        const int branch = rec7.getItem<ParserKeywords::COMPSEGS::BRANCH>().get< int >(0);
+        const double distance_start = rec7.getItem<ParserKeywords::COMPSEGS::DISTANCE_START>().get< double >(0);
+        const double distance_end = rec7.getItem<ParserKeywords::COMPSEGS::DISTANCE_END>().get< double >(0);
 
         BOOST_CHECK_EQUAL( 17, i );
         BOOST_CHECK_EQUAL(  1, j );
@@ -699,9 +706,9 @@ BOOST_AUTO_TEST_CASE( PLYSHLOG ) {
     const auto& kw = deck["PLYSHLOG"].back();
     const auto& rec1 = kw.getRecord(0); // reference conditions
 
-    const auto& itemRefPolyConc = rec1.getItem("REF_POLYMER_CONCENTRATION");
-    const auto& itemRefSali = rec1.getItem("REF_SALINITY");
-    const auto& itemRefTemp = rec1.getItem("REF_TEMPERATURE");
+    const auto& itemRefPolyConc = rec1.getItem<ParserKeywords::PLYSHLOG::REF_POLYMER_CONCENTRATION>();
+    const auto& itemRefSali = rec1.getItem<ParserKeywords::PLYSHLOG::REF_SALINITY>();
+    const auto& itemRefTemp = rec1.getItem<ParserKeywords::PLYSHLOG::REF_TEMPERATURE>();
 
     BOOST_CHECK_EQUAL( true, itemRefPolyConc.hasValue(0) );
     BOOST_CHECK_EQUAL( true, itemRefSali.hasValue(0) );
@@ -734,7 +741,7 @@ BOOST_AUTO_TEST_CASE( PLYSHLOG_MULTI_REGION ) {
 
     // Region 1
     const auto& rec1 = kw.getRecord(0);
-    BOOST_CHECK_EQUAL( 0.5, rec1.getItem("REF_POLYMER_CONCENTRATION").get<double>(0) );
+    BOOST_CHECK_EQUAL( 0.5, rec1.getItem<ParserKeywords::PLYSHLOG::REF_POLYMER_CONCENTRATION>().get<double>(0) );
     const auto& data1 = kw.getRecord(1).getItem(0);
     BOOST_CHECK_EQUAL( 1.0e-7, data1.get<double>(0) );
     BOOST_CHECK_EQUAL( 1.0,    data1.get<double>(1) );
@@ -743,7 +750,7 @@ BOOST_AUTO_TEST_CASE( PLYSHLOG_MULTI_REGION ) {
 
     // Region 2
     const auto& rec2 = kw.getRecord(2);
-    BOOST_CHECK_EQUAL( 0.6, rec2.getItem("REF_POLYMER_CONCENTRATION").get<double>(0) );
+    BOOST_CHECK_EQUAL( 0.6, rec2.getItem<ParserKeywords::PLYSHLOG::REF_POLYMER_CONCENTRATION>().get<double>(0) );
     const auto& data2 = kw.getRecord(3).getItem(0);
     BOOST_CHECK_EQUAL( 1.0e-7, data2.get<double>(0) );
     BOOST_CHECK_EQUAL( 1.0,    data2.get<double>(1) );
@@ -824,10 +831,10 @@ BOOST_AUTO_TEST_CASE( RSVD ) {
     const auto& rec1 = kw1.getRecord(0);
     const auto& rec3 = kw1.getRecord(2);
 
-    const auto& item1       = rec1.getItem("DATA");
+    const auto& item1       = rec1.getItem<ParserKeywords::RSVD::DATA>();
     BOOST_CHECK( fabs(item1.getSIDouble(0) - 2382) < 0.001);
 
-    const auto& item3       = rec3.getItem("DATA");
+    const auto& item3       = rec3.getItem<ParserKeywords::RSVD::DATA>();
     BOOST_CHECK( fabs(item3.getSIDouble(7) - 106.77) < 0.001);
 }
 
@@ -866,24 +873,24 @@ PVTG
     const auto& record3 = kw1.getRecord(3);
     const auto& record4 = kw1.getRecord(4);
 
-    const auto& item0_0 = record0.getItem("GAS_PRESSURE");
-    const auto& item0_1 = record0.getItem("DATA");
+    const auto& item0_0 = record0.getItem<ParserKeywords::PVTG::GAS_PRESSURE>();
+    const auto& item0_1 = record0.getItem<ParserKeywords::PVTG::DATA>();
     BOOST_CHECK(item0_0.hasValue(0));
     BOOST_CHECK_EQUAL(9U , item0_1.data_size());
 
-    const auto& item1_0 = record1.getItem("GAS_PRESSURE");
-    const auto& item1_1 = record1.getItem("DATA");
+    const auto& item1_0 = record1.getItem<ParserKeywords::PVTG::GAS_PRESSURE>();
+    const auto& item1_1 = record1.getItem<ParserKeywords::PVTG::DATA>();
     BOOST_CHECK(item1_0.hasValue(0));
     BOOST_CHECK_EQUAL(9U , item1_1.data_size());
 
-    const auto& item2_0 = record2.getItem("GAS_PRESSURE");
-    const auto& item2_1 = record2.getItem("DATA");
+    const auto& item2_0 = record2.getItem<ParserKeywords::PVTG::GAS_PRESSURE>();
+    const auto& item2_1 = record2.getItem<ParserKeywords::PVTG::DATA>();
     BOOST_CHECK( item2_0.defaultApplied(0));
     BOOST_CHECK_EQUAL(0U , item2_1.data_size());
 
 
-    const auto& item3_0 = record3.getItem("GAS_PRESSURE");
-    const auto& item3_1 = record3.getItem("DATA");
+    const auto& item3_0 = record3.getItem<ParserKeywords::PVTG::GAS_PRESSURE>();
+    const auto& item3_1 = record3.getItem<ParserKeywords::PVTG::DATA>();
     BOOST_CHECK( !item3_1.defaultApplied(0));
     BOOST_CHECK( item3_1.defaultApplied(1));
     BOOST_CHECK( !item3_1.defaultApplied(2));
@@ -894,8 +901,8 @@ PVTG
     BOOST_CHECK_EQUAL(9U , item3_1.data_size());
 
 
-    const auto& item4_0 = record4.getItem("GAS_PRESSURE");
-    const auto& item4_1 = record4.getItem("DATA");
+    const auto& item4_0 = record4.getItem<ParserKeywords::PVTG::GAS_PRESSURE>();
+    const auto& item4_1 = record4.getItem<ParserKeywords::PVTG::DATA>();
     BOOST_CHECK(item4_0.hasValue(0));
     BOOST_CHECK_EQUAL(9U , item4_1.data_size());
 
@@ -958,32 +965,32 @@ PVTO
     const auto& record3 = kw1.getRecord(3);
     const auto& record4 = kw1.getRecord(4);
 
-    const auto& item0_0 = record0.getItem("RS");
-    const auto& item0_1 = record0.getItem("DATA");
+    const auto& item0_0 = record0.getItem<ParserKeywords::PVTO::RS>();
+    const auto& item0_1 = record0.getItem<ParserKeywords::PVTO::DATA>();
     BOOST_CHECK(item0_0.hasValue(0));
     BOOST_CHECK_EQUAL(9U , item0_1.data_size());
     BOOST_CHECK_EQUAL(2U , record0.size());
 
-    const auto& item1_0 = record1.getItem("RS");
-    const auto& item1_1 = record1.getItem("DATA");
+    const auto& item1_0 = record1.getItem<ParserKeywords::PVTO::RS>();
+    const auto& item1_1 = record1.getItem<ParserKeywords::PVTO::DATA>();
     BOOST_CHECK(item1_0.hasValue(0));
     BOOST_CHECK_EQUAL(9U , item1_1.data_size());
     BOOST_CHECK_EQUAL(2U , record1.size());
 
-    const auto& item2_0 = record2.getItem("RS");
-    const auto& item2_1 = record2.getItem("DATA");
+    const auto& item2_0 = record2.getItem<ParserKeywords::PVTO::RS>();
+    const auto& item2_1 = record2.getItem<ParserKeywords::PVTO::DATA>();
     BOOST_CHECK(item2_0.defaultApplied(0));
     BOOST_CHECK_EQUAL(0U , item2_1.data_size());
     BOOST_CHECK_EQUAL(2U , record2.size());
 
-    const auto& item3_0 = record3.getItem("RS");
-    const auto& item3_1 = record3.getItem("DATA");
+    const auto& item3_0 = record3.getItem<ParserKeywords::PVTO::RS>();
+    const auto& item3_1 = record3.getItem<ParserKeywords::PVTO::DATA>();
     BOOST_CHECK(item3_0.hasValue(0));
     BOOST_CHECK_EQUAL(9U , item3_1.data_size());
     BOOST_CHECK_EQUAL(2U , record3.size());
 
-    const auto& item4_0 = record4.getItem("RS");
-    const auto& item4_1 = record4.getItem("DATA");
+    const auto& item4_0 = record4.getItem<ParserKeywords::PVTO::RS>();
+    const auto& item4_1 = record4.getItem<ParserKeywords::PVTO::DATA>();
     BOOST_CHECK(item4_0.hasValue(0));
     BOOST_CHECK_EQUAL(9U , item4_1.data_size());
     BOOST_CHECK_EQUAL(2U , record4.size());
@@ -1250,16 +1257,16 @@ BOOST_AUTO_TEST_CASE( VFPPROD ) {
     {
         const auto& record = VFPPROD1.getRecord(0);
 
-        BOOST_CHECK_EQUAL( record.getItem("TABLE").get< int >(0) , 32 );
-        BOOST_CHECK_EQUAL( record.getItem("DATUM_DEPTH").getSIDouble(0) , 394);
-        BOOST_CHECK_EQUAL( record.getItem("RATE_TYPE").get< std::string >(0) , "LIQ");
-        BOOST_CHECK_EQUAL( record.getItem("WFR").get< std::string >(0) , "WCT");
-        BOOST_CHECK_EQUAL( record.getItem("GFR").get< std::string >(0) , "GOR");
+        BOOST_CHECK_EQUAL( record.getItem<ParserKeywords::VFPPROD::TABLE>().get< int >(0) , 32 );
+        BOOST_CHECK_EQUAL( record.getItem<ParserKeywords::VFPPROD::DATUM_DEPTH>().getSIDouble(0) , 394);
+        BOOST_CHECK_EQUAL( record.getItem<ParserKeywords::VFPPROD::RATE_TYPE>().get< std::string >(0) , "LIQ");
+        BOOST_CHECK_EQUAL( record.getItem<ParserKeywords::VFPPROD::WFR>().get< std::string >(0) , "WCT");
+        BOOST_CHECK_EQUAL( record.getItem<ParserKeywords::VFPPROD::GFR>().get< std::string >(0) , "GOR");
     }
 
     {
         const auto& record = VFPPROD1.getRecord(1);
-        const auto& item = record.getItem("FLOW_VALUES");
+        const auto& item = record.getItem<ParserKeywords::VFPPROD::FLOW_VALUES>();
 
         BOOST_CHECK_EQUAL( item.data_size() , 12 );
         BOOST_CHECK_EQUAL( item.get< double >(0)  ,   100 );
@@ -1268,7 +1275,7 @@ BOOST_AUTO_TEST_CASE( VFPPROD ) {
 
     {
         const auto& record = VFPPROD1.getRecord(2);
-        const auto& item = record.getItem("THP_VALUES");
+        const auto& item = record.getItem<ParserKeywords::VFPPROD::THP_VALUES>();
 
         BOOST_CHECK_EQUAL( item.data_size() , 7 );
         BOOST_CHECK_CLOSE( item.get< double >(0)  , 16.01 , 0.0001 );
@@ -1277,7 +1284,7 @@ BOOST_AUTO_TEST_CASE( VFPPROD ) {
 
     {
         const auto& record = VFPPROD1.getRecord(3);
-        const auto& item = record.getItem("WFR_VALUES");
+        const auto& item = record.getItem<ParserKeywords::VFPPROD::WFR_VALUES>();
 
         BOOST_CHECK_EQUAL( item.data_size() , 9 );
         BOOST_CHECK_CLOSE( item.get< double >(1)  , 0.1 , 0.0001 );
@@ -1286,7 +1293,7 @@ BOOST_AUTO_TEST_CASE( VFPPROD ) {
 
     {
         const auto& record = VFPPROD1.getRecord(4);
-        const auto& item = record.getItem("GFR_VALUES");
+        const auto& item = record.getItem<ParserKeywords::VFPPROD::GFR_VALUES>();
 
         BOOST_CHECK_EQUAL( item.data_size() , 9 );
         BOOST_CHECK_EQUAL( item.get< double >(0)  ,   90 );
@@ -1295,7 +1302,7 @@ BOOST_AUTO_TEST_CASE( VFPPROD ) {
 
     {
         const auto& record = VFPPROD1.getRecord(5);
-        const auto& item = record.getItem("ALQ_VALUES");
+        const auto& item = record.getItem<ParserKeywords::VFPPROD::ALQ_VALUES>();
 
         BOOST_CHECK_EQUAL( item.data_size() , 1 );
         BOOST_CHECK_EQUAL( item.get< double >(0)  ,   0 );
@@ -1305,28 +1312,28 @@ BOOST_AUTO_TEST_CASE( VFPPROD ) {
         const auto& record = VFPPROD1.getRecord(6);
 
         {
-            const auto& item = record.getItem("THP_INDEX");
+            const auto& item = record.getItem<ParserKeywords::VFPPROD::THP_INDEX>();
             BOOST_CHECK( item.hasValue(0));
             BOOST_CHECK_EQUAL( item.get< int >(0) , 1 );
         }
 
         {
-            const auto& item = record.getItem("WFR_INDEX");
+            const auto& item = record.getItem<ParserKeywords::VFPPROD::WFR_INDEX>();
             BOOST_CHECK( item.hasValue(0));
             BOOST_CHECK_EQUAL( item.get< int >(0) , 1 );
         }
         {
-            const auto& item = record.getItem("GFR_INDEX");
+            const auto& item = record.getItem<ParserKeywords::VFPPROD::GFR_INDEX>();
             BOOST_CHECK( item.hasValue(0));
             BOOST_CHECK_EQUAL( item.get< int >(0) , 1 );
         }
         {
-            const auto& item = record.getItem("ALQ_INDEX");
+            const auto& item = record.getItem<ParserKeywords::VFPPROD::ALQ_INDEX>();
             BOOST_CHECK( item.hasValue(0));
             BOOST_CHECK_EQUAL( item.get< int >(0) , 1 );
         }
         {
-            const auto& item = record.getItem("VALUES");
+            const auto& item = record.getItem<ParserKeywords::VFPPROD::VALUES>();
             BOOST_CHECK_EQUAL( item.data_size() , 12 );
             BOOST_CHECK_EQUAL( item.get< double >(0) , 44.85 );
             BOOST_CHECK_EQUAL( item.get< double >(11) , 115.14 );
@@ -1336,27 +1343,27 @@ BOOST_AUTO_TEST_CASE( VFPPROD ) {
     {
         const auto& record = VFPPROD1.getRecord(572);
         {
-            const auto& item = record.getItem("THP_INDEX");
+            const auto& item = record.getItem<ParserKeywords::VFPPROD::THP_INDEX>();
             BOOST_CHECK( item.hasValue(0));
             BOOST_CHECK_EQUAL( item.get< int >(0) , 7 );
         }
         {
-            const auto& item = record.getItem("WFR_INDEX");
+            const auto& item = record.getItem<ParserKeywords::VFPPROD::WFR_INDEX>();
             BOOST_CHECK( item.hasValue(0));
             BOOST_CHECK_EQUAL( item.get< int >(0) , 9 );
         }
         {
-            const auto& item = record.getItem("GFR_INDEX");
+            const auto& item = record.getItem<ParserKeywords::VFPPROD::GFR_INDEX>();
             BOOST_CHECK( item.hasValue(0));
             BOOST_CHECK_EQUAL( item.get< int >(0) , 9 );
         }
         {
-            const auto& item = record.getItem("ALQ_INDEX");
+            const auto& item = record.getItem<ParserKeywords::VFPPROD::ALQ_INDEX>();
             BOOST_CHECK( item.hasValue(0));
             BOOST_CHECK_EQUAL( item.get< int >(0) , 1 );
         }
         {
-            const auto& item = record.getItem("VALUES");
+            const auto& item = record.getItem<ParserKeywords::VFPPROD::VALUES>();
             BOOST_CHECK_EQUAL( item.data_size() , 12 );
             BOOST_CHECK_EQUAL( item.get< double >(0) , 100.80 );
             BOOST_CHECK_EQUAL( item.get< double >(11) , 147.79 );
@@ -1377,16 +1384,16 @@ BOOST_AUTO_TEST_CASE( WCHONHIST ) {
     const auto& rec3 = kw1.getRecord(2);
     BOOST_CHECK_EQUAL( 12U , rec3.size() );
 
-    const auto& item1       = rec1.getItem("WELL");
+    const auto& item1       = rec1.getItem<ParserKeywords::WCONHIST::WELL>();
     const auto& item1_index = rec1.getItem(0);
 
     BOOST_CHECK_EQUAL( &item1  , &item1_index );
     BOOST_CHECK_EQUAL( "OP_1" , item1.get< std::string >(0));
 
     const auto& kw2 = deck["WCONHIST"][1];
-    BOOST_CHECK_EQUAL( "OP_3" , rec3.getItem("WELL").get< std::string >(0));
+    BOOST_CHECK_EQUAL( "OP_3" , rec3.getItem<ParserKeywords::WCONHIST::WELL>().get< std::string >(0));
     BOOST_CHECK_EQUAL( 2U , deck.count("WCONHIST"));
-    BOOST_CHECK_EQUAL( "OP_3_B" , kw2.getRecord( 2 ).getItem("WELL").get< std::string >(0));
+    BOOST_CHECK_EQUAL( "OP_3_B" , kw2.getRecord( 2 ).getItem<ParserKeywords::WCONHIST::WELL>().get< std::string >(0));
     BOOST_CHECK( !deck.hasKeyword( "DIMENS" ) );
 }
 

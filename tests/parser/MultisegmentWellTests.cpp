@@ -43,6 +43,8 @@
 #include <opm/input/eclipse/Parser/InputErrorAction.hpp>
 #include <opm/input/eclipse/Parser/ParseContext.hpp>
 
+#include <opm/input/eclipse/Parser/ParserKeywords/W.hpp>
+
 #include <opm/input/eclipse/Python/Python.hpp>
 
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
@@ -330,8 +332,8 @@ WSEGSICD
     const Opm::DeckKeyword wsegsicd = deck["WSEGSICD"].back();
     BOOST_CHECK_EQUAL(1U, wsegsicd.size());
     const Opm::DeckRecord& record = wsegsicd.getRecord(0);
-    const int start_segment = record.getItem("SEGMENT1").get< int >(0);
-    const int end_segment = record.getItem("SEGMENT2").get< int >(0);
+    const int start_segment = record.getItem<Opm::ParserKeywords::WSEGSICD::SEGMENT1>().get< int >(0);
+    const int end_segment = record.getItem<Opm::ParserKeywords::WSEGSICD::SEGMENT2>().get< int >(0);
     BOOST_CHECK_EQUAL(8, start_segment);
     BOOST_CHECK_EQUAL(8, end_segment);
 
@@ -1092,11 +1094,11 @@ BOOST_AUTO_TEST_CASE(testwsegvalv)
     BOOST_CHECK_EQUAL(2U, wsegvalv.size());
 
     const Opm::DeckRecord& record1 = wsegvalv.getRecord(0);
-    const int seg1 = record1.getItem("SEGMENT_NUMBER").get< int >(0);
+    const int seg1 = record1.getItem<Opm::ParserKeywords::WSEGVALV::SEGMENT_NUMBER>().get< int >(0);
     BOOST_CHECK_EQUAL(8, seg1);
 
     const Opm::DeckRecord& record2 = wsegvalv.getRecord(1);
-    const int seg2 = record2.getItem("SEGMENT_NUMBER").get< int >(0);
+    const int seg2 = record2.getItem<Opm::ParserKeywords::WSEGVALV::SEGMENT_NUMBER>().get< int >(0);
     BOOST_CHECK_EQUAL(9, seg2);
 
     const auto segvalv_map = Opm::Valve::fromWSEGVALV(wsegvalv);

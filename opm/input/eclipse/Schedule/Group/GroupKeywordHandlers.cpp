@@ -187,9 +187,9 @@ void handleGCONINJE(HandlerContext& handlerContext)
 
         std::optional<std::string> guide_rate_str;
         {
-            const auto& item = record.getItem("GUIDE_RATE_DEF");
+            const auto& item = record.getItem<GI::GUIDE_RATE_DEF>();
             if (item.hasValue(0)) {
-                const auto& string_value = record.getItem("GUIDE_RATE_DEF").getTrimmedString(0);
+                const auto& string_value = record.getItem<GI::GUIDE_RATE_DEF>().getTrimmedString(0);
                 if (string_value.size() > 0)
                     guide_rate_str = string_value;
             }
@@ -204,7 +204,7 @@ void handleGCONINJE(HandlerContext& handlerContext)
             if (!is_field) {
                 if (guide_rate_str) {
                     guide_rate_def = Group::GuideRateInjTargetFromString(guide_rate_str.value());
-                    guide_rate = record.getItem("GUIDE_RATE").get<double>(0);
+                    guide_rate = record.getItem<GI::GUIDE_RATE>().get<double>(0);
                 }
             }
 
@@ -224,23 +224,23 @@ void handleGCONINJE(HandlerContext& handlerContext)
                 injection.guide_rate_def = guide_rate_def;
                 injection.available_group_control = availableForGroupControl;
 
-                if (!record.getItem("SURFACE_TARGET").defaultApplied(0))
+                if (!record.getItem<GI::SURFACE_TARGET>().defaultApplied(0))
                     injection.injection_controls += static_cast<int>(Group::InjectionCMode::RATE);
 
-                if (!record.getItem("RESV_TARGET").defaultApplied(0))
+                if (!record.getItem<GI::RESV_TARGET>().defaultApplied(0))
                     injection.injection_controls += static_cast<int>(Group::InjectionCMode::RESV);
 
-                if (!record.getItem("REINJ_TARGET").defaultApplied(0))
+                if (!record.getItem<GI::REINJ_TARGET>().defaultApplied(0))
                     injection.injection_controls += static_cast<int>(Group::InjectionCMode::REIN);
 
-                if (!record.getItem("VOIDAGE_TARGET").defaultApplied(0))
+                if (!record.getItem<GI::VOIDAGE_TARGET>().defaultApplied(0))
                     injection.injection_controls += static_cast<int>(Group::InjectionCMode::VREP);
 
-                if (record.getItem("REINJECT_GROUP").hasValue(0))
-                    injection.reinj_group = record.getItem("REINJECT_GROUP").getTrimmedString(0);
+                if (record.getItem<GI::REINJECT_GROUP>().hasValue(0))
+                    injection.reinj_group = record.getItem<GI::REINJECT_GROUP>().getTrimmedString(0);
 
-                if (record.getItem("VOIDAGE_GROUP").hasValue(0))
-                    injection.voidage_group = record.getItem("VOIDAGE_GROUP").getTrimmedString(0);
+                if (record.getItem<GI::VOIDAGE_GROUP>().hasValue(0))
+                    injection.voidage_group = record.getItem<GI::VOIDAGE_GROUP>().getTrimmedString(0);
 
                 if (new_group.updateInjection(injection)) {
                     auto new_config = handlerContext.state().guide_rate();
@@ -262,53 +262,54 @@ void handleGCONINJE(HandlerContext& handlerContext)
 
 void handleGCONPROD(HandlerContext& handlerContext)
 {
+    using Kw = ParserKeywords::GCONPROD;
     const auto& keyword = handlerContext.keyword;
     for (const auto& record : keyword) {
-        const std::string& groupNamePattern = record.getItem("GROUP").getTrimmedString(0);
+        const std::string& groupNamePattern = record.getItem<Kw::GROUP>().getTrimmedString(0);
         const auto group_names = handlerContext.groupNames(groupNamePattern);
         if (group_names.empty()) {
             handlerContext.invalidNamePattern(groupNamePattern);
         }
 
-        const Group::ProductionCMode controlMode = Group::ProductionCModeFromString(record.getItem("CONTROL_MODE").getTrimmedString(0));
+        const Group::ProductionCMode controlMode = Group::ProductionCModeFromString(record.getItem<Kw::CONTROL_MODE>().getTrimmedString(0));
 
         // Set the group limit actions. Item 7 (EXCEED_PROC) gives the general action, items 11-13 (WATER_EXCEED_PROCEDURE etc.)
         // can override this for water, gas or liquid rate limits.
         Group::GroupLimitAction groupLimitAction;
-        groupLimitAction.allRates = Group::ExceedActionFromString(record.getItem("EXCEED_PROC").getTrimmedString(0));
+        groupLimitAction.allRates = Group::ExceedActionFromString(record.getItem<Kw::EXCEED_PROC>().getTrimmedString(0));
         // \Note: we do not use the allRates anymore. Instead, we have explicit definition of actions for all the possible rate limits
         // \Note: the allRates is here for backward compatibility for the RESTART file output
         const auto& allRates = groupLimitAction.allRates;
         groupLimitAction.oil = allRates;
-        groupLimitAction.water = record.getItem("WATER_EXCEED_PROCEDURE").defaultApplied(0)
+        groupLimitAction.water = record.getItem<Kw::WATER_EXCEED_PROCEDURE>().defaultApplied(0)
             ? allRates
-            : Group::ExceedActionFromString(record.getItem("WATER_EXCEED_PROCEDURE").getTrimmedString(0));
-        groupLimitAction.gas = record.getItem("GAS_EXCEED_PROCEDURE").defaultApplied(0)
+            : Group::ExceedActionFromString(record.getItem<Kw::WATER_EXCEED_PROCEDURE>().getTrimmedString(0));
+        groupLimitAction.gas = record.getItem<Kw::GAS_EXCEED_PROCEDURE>().defaultApplied(0)
             ? allRates
-            : Group::ExceedActionFromString(record.getItem("GAS_EXCEED_PROCEDURE").getTrimmedString(0));
-        groupLimitAction.liquid = record.getItem("LIQUID_EXCEED_PROCEDURE").defaultApplied(0)
+            : Group::ExceedActionFromString(record.getItem<Kw::GAS_EXCEED_PROCEDURE>().getTrimmedString(0));
+        groupLimitAction.liquid = record.getItem<Kw::LIQUID_EXCEED_PROCEDURE>().defaultApplied(0)
             ? allRates
-            : Group::ExceedActionFromString(record.getItem("LIQUID_EXCEED_PROCEDURE").getTrimmedString(0));
+            : Group::ExceedActionFromString(record.getItem<Kw::LIQUID_EXCEED_PROCEDURE>().getTrimmedString(0));
 
-        const bool respond_to_parent = DeckItem::to_bool(record.getItem("RESPOND_TO_PARENT").getTrimmedString(0));
+        const bool respond_to_parent = DeckItem::to_bool(record.getItem<Kw::RESPOND_TO_PARENT>().getTrimmedString(0));
 
-        const auto oil_target = record.getItem("OIL_TARGET").get<UDAValue>(0);
-        const auto gas_target = record.getItem("GAS_TARGET").get<UDAValue>(0);
-        const auto water_target = record.getItem("WATER_TARGET").get<UDAValue>(0);
-        const auto liquid_target = record.getItem("LIQUID_TARGET").get<UDAValue>(0);
-        const auto resv_target = record.getItem("RESERVOIR_FLUID_TARGET").get<UDAValue>(0);
+        const auto oil_target = record.getItem<Kw::OIL_TARGET>().get<UDAValue>(0);
+        const auto gas_target = record.getItem<Kw::GAS_TARGET>().get<UDAValue>(0);
+        const auto water_target = record.getItem<Kw::WATER_TARGET>().get<UDAValue>(0);
+        const auto liquid_target = record.getItem<Kw::LIQUID_TARGET>().get<UDAValue>(0);
+        const auto resv_target = record.getItem<Kw::RESERVOIR_FLUID_TARGET>().get<UDAValue>(0);
 
-        const bool apply_default_oil_target = record.getItem("OIL_TARGET").defaultApplied(0);
-        const bool apply_default_gas_target = record.getItem("GAS_TARGET").defaultApplied(0);
-        const bool apply_default_water_target = record.getItem("WATER_TARGET").defaultApplied(0);
-        const bool apply_default_liquid_target = record.getItem("LIQUID_TARGET").defaultApplied(0);
-        const bool apply_default_resv_target = record.getItem("RESERVOIR_FLUID_TARGET").defaultApplied(0);
+        const bool apply_default_oil_target = record.getItem<Kw::OIL_TARGET>().defaultApplied(0);
+        const bool apply_default_gas_target = record.getItem<Kw::GAS_TARGET>().defaultApplied(0);
+        const bool apply_default_water_target = record.getItem<Kw::WATER_TARGET>().defaultApplied(0);
+        const bool apply_default_liquid_target = record.getItem<Kw::LIQUID_TARGET>().defaultApplied(0);
+        const bool apply_default_resv_target = record.getItem<Kw::RESERVOIR_FLUID_TARGET>().defaultApplied(0);
 
         std::optional<std::string> guide_rate_str;
         {
-            const auto& item = record.getItem("GUIDE_RATE_DEF");
+            const auto& item = record.getItem<Kw::GUIDE_RATE_DEF>();
             if (item.hasValue(0)) {
-                const auto& string_value = record.getItem("GUIDE_RATE_DEF").getTrimmedString(0);
+                const auto& string_value = record.getItem<Kw::GUIDE_RATE_DEF>().getTrimmedString(0);
                 if (string_value.size() > 0)
                     guide_rate_str = string_value;
             }
@@ -335,7 +336,7 @@ void handleGCONPROD(HandlerContext& handlerContext)
                         auto& errors = handlerContext.errors;
                         parseContext.handleError(ParseContext::SCHEDULE_IGNORED_GUIDE_RATE, msg_fmt, keyword.location(), errors);
                     } else {
-                        guide_rate = record.getItem("GUIDE_RATE").get<double>(0);
+                        guide_rate = record.getItem<Kw::GUIDE_RATE>().get<double>(0);
                         if (guide_rate == 0)
                             guide_rate_def = Group::GuideRateProdTarget::POTN;
                     }
@@ -465,13 +466,14 @@ void handleGCONPROD(HandlerContext& handlerContext)
 
 void handleGCONSALE(HandlerContext& handlerContext)
 {
+    using Kw = ParserKeywords::GCONSALE;
     auto new_gconsale = handlerContext.state().gconsale.get();
     for (const auto& record : handlerContext.keyword) {
-        const std::string& groupName = record.getItem("GROUP").getTrimmedString(0);
-        auto sales_target = record.getItem("SALES_TARGET").get<UDAValue>(0);
-        auto max_rate = record.getItem("MAX_SALES_RATE").get<UDAValue>(0);
-        auto min_rate = record.getItem("MIN_SALES_RATE").get<UDAValue>(0);
-        std::string procedure = record.getItem("MAX_PROC").getTrimmedString(0);
+        const std::string& groupName = record.getItem<Kw::GROUP>().getTrimmedString(0);
+        auto sales_target = record.getItem<Kw::SALES_TARGET>().get<UDAValue>(0);
+        auto max_rate = record.getItem<Kw::MAX_SALES_RATE>().get<UDAValue>(0);
+        auto min_rate = record.getItem<Kw::MIN_SALES_RATE>().get<UDAValue>(0);
+        std::string procedure = record.getItem<Kw::MAX_PROC>().getTrimmedString(0);
         auto udq_undefined = handlerContext.state().udq.get().params().undefinedValue();
 
         new_gconsale.add(groupName, sales_target, max_rate, min_rate, procedure,
@@ -527,14 +529,15 @@ void handleGCONSALE(HandlerContext& handlerContext)
 
 void handleGCONSUMP(HandlerContext& handlerContext)
 {
+    using Kw = ParserKeywords::GCONSUMP;
     auto new_gconsump = handlerContext.state().gconsump.get();
     for (const auto& record : handlerContext.keyword) {
-        const std::string& groupName = record.getItem("GROUP").getTrimmedString(0);
-        auto consumption_rate = record.getItem("GAS_CONSUMP_RATE").get<UDAValue>(0);
-        auto import_rate = record.getItem("GAS_IMPORT_RATE").get<UDAValue>(0);
+        const std::string& groupName = record.getItem<Kw::GROUP>().getTrimmedString(0);
+        auto consumption_rate = record.getItem<Kw::GAS_CONSUMP_RATE>().get<UDAValue>(0);
+        auto import_rate = record.getItem<Kw::GAS_IMPORT_RATE>().get<UDAValue>(0);
 
         std::string network_node_name;
-        auto network_node = record.getItem("NETWORK_NODE");
+        auto network_node = record.getItem<Kw::NETWORK_NODE>();
         if (!network_node.defaultApplied(0))
             network_node_name = network_node.getTrimmedString(0);
 
@@ -567,15 +570,16 @@ void handleGECON(HandlerContext& handlerContext)
 
 void handleGEFAC(HandlerContext& handlerContext)
 {
+    using Kw = ParserKeywords::GEFAC;
     for (const auto& record : handlerContext.keyword) {
-        const std::string& groupNamePattern = record.getItem("GROUP").getTrimmedString(0);
+        const std::string& groupNamePattern = record.getItem<Kw::GROUP>().getTrimmedString(0);
         const auto group_names = handlerContext.groupNames(groupNamePattern);
         if (group_names.empty()) {
             handlerContext.invalidNamePattern(groupNamePattern);
         }
 
-        const bool use_efficiency_in_network = DeckItem::to_bool(record.getItem("USE_GEFAC_IN_NETWORK").getTrimmedString(0));
-        const auto gefac = record.getItem("EFFICIENCY_FACTOR").get<double>(0);
+        const bool use_efficiency_in_network = DeckItem::to_bool(record.getItem<Kw::USE_GEFAC_IN_NETWORK>().getTrimmedString(0));
+        const auto gefac = record.getItem<Kw::EFFICIENCY_FACTOR>().get<double>(0);
 
         for (const auto& group_name : group_names) {
             auto new_group = handlerContext.state().groups.get(group_name);
@@ -601,14 +605,15 @@ void handleGEFAC(HandlerContext& handlerContext)
 
 void handleGPMAINT(HandlerContext& handlerContext)
 {
+    using Kw = ParserKeywords::GPMAINT;
     for (const auto& record : handlerContext.keyword) {
-        const std::string& groupNamePattern = record.getItem("GROUP").getTrimmedString(0);
+        const std::string& groupNamePattern = record.getItem<Kw::GROUP>().getTrimmedString(0);
         const auto group_names = handlerContext.groupNames(groupNamePattern);
         if (group_names.empty()) {
             handlerContext.invalidNamePattern(groupNamePattern);
         }
 
-        const auto& target_string = record.getItem<ParserKeywords::GPMAINT::FLOW_TARGET>().get<std::string>(0);
+        const auto& target_string = record.getItem<Kw::FLOW_TARGET>().get<std::string>(0);
 
         for (const auto& group_name : group_names) {
             auto new_group = handlerContext.state().groups.get(group_name);
@@ -625,13 +630,14 @@ void handleGPMAINT(HandlerContext& handlerContext)
 
 void handleGRUPTREE(HandlerContext& handlerContext)
 {
+    using Kw = ParserKeywords::GRUPTREE;
     for (const auto& record : handlerContext.keyword) {
         const std::string& childName = trim_wgname(handlerContext.keyword,
-                                                   record.getItem("CHILD_GROUP").get<std::string>(0),
+                                                   record.getItem<Kw::CHILD_GROUP>().get<std::string>(0),
                                                    handlerContext.parseContext,
                                                    handlerContext.errors);
         const std::string& parentName = trim_wgname(handlerContext.keyword,
-                                                    record.getItem("PARENT_GROUP").get<std::string>(0),
+                                                    record.getItem<Kw::PARENT_GROUP>().get<std::string>(0),
                                                     handlerContext.parseContext,
                                                     handlerContext.errors);
 

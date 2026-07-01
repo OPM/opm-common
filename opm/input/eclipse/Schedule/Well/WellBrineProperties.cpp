@@ -21,6 +21,7 @@
 
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
 #include <opm/input/eclipse/Deck/UDAValue.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/W.hpp>
 
 Opm::WellBrineProperties Opm::WellBrineProperties::serializationTestObject()
 {
@@ -32,7 +33,8 @@ Opm::WellBrineProperties Opm::WellBrineProperties::serializationTestObject()
 
 void Opm::WellBrineProperties::handleWSALT(const DeckRecord& rec)
 {
-    this->m_saltConcentration = rec.getItem("CONCENTRATION").get<UDAValue>(0).getSI();
+    using Kw = ParserKeywords::WSALT;
+    this->m_saltConcentration = rec.getItem<Kw::CONCENTRATION>().get<UDAValue>(0).getSI();
 }
 
 bool Opm::WellBrineProperties::operator!=(const WellBrineProperties& other) const

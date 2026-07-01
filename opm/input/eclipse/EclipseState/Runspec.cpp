@@ -31,6 +31,7 @@
 #include <opm/input/eclipse/Parser/ParserKeywords/A.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/B.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/C.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/E.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/F.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/G.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/H.hpp>
@@ -410,13 +411,14 @@ EclHysterConfig::EclHysterConfig(const Opm::Deck& deck)
        * 1: use the Carlson model for relative permeability hysteresis of the non-wetting
        *    phase and the imbibition curve for the relperm of the wetting phase
        */
+        using Kw = ParserKeywords::EHYSTR;
         const auto& ehystrKeyword = deck["EHYSTR"].back();
-        std::string whereFlag = ehystrKeyword.getRecord(0).getItem("limiting_hyst_flag").getTrimmedString(0);
+        std::string whereFlag = ehystrKeyword.getRecord(0).getItem<Kw::limiting_hyst_flag>().getTrimmedString(0);
 
         if (deck.hasKeyword("NOHYKR") || whereFlag == "PC")
             krHystMod = -1;
         else {
-            krHystMod = ehystrKeyword.getRecord(0).getItem("relative_perm_hyst").get<int>(0);
+            krHystMod = ehystrKeyword.getRecord(0).getItem<Kw::relative_perm_hyst>().get<int>(0);
         }
 
         // this is slightly screwed: it is possible to specify contradicting hysteresis
@@ -434,7 +436,7 @@ EclHysterConfig::EclHysterConfig(const Opm::Deck& deck)
             // if capillary pressure hysteresis is enabled, Eclipse always uses the
             // Killough model
             pcHystMod = 0;
-            curvatureCapPrsValue = ehystrKeyword.getRecord(0).getItem("curvature_capillary_pressure_hyst").get<double>(0);
+            curvatureCapPrsValue = ehystrKeyword.getRecord(0).getItem<Kw::curvature_capillary_pressure_hyst>().get<double>(0);
             if (curvatureCapPrsValue <= 0.0)
                 throw std::runtime_error(
                     "Only positive values allowed for the 'capillary pressure curvature parameter' "
@@ -443,10 +445,10 @@ EclHysterConfig::EclHysterConfig(const Opm::Deck& deck)
 
         // Killough model: Regularisation for trapped critical saturation calculations
         if (pcHystMod == 0 || krHystMod == 2 || krHystMod == 3)
-            modParamTrappedValue = ehystrKeyword.getRecord(0).getItem("mod_param_trapped").get<double>(0);
+            modParamTrappedValue = ehystrKeyword.getRecord(0).getItem<Kw::mod_param_trapped>().get<double>(0);
 
         if (krHystMod >= 0) {
-            const int fix_wetting_phase_killough = ehystrKeyword.getRecord(0).getItem("fix_wetting_phase_killough").get<int>(0);
+            const int fix_wetting_phase_killough = ehystrKeyword.getRecord(0).getItem<Kw::fix_wetting_phase_killough>().get<int>(0);
             if (fix_wetting_phase_killough != 0 && fix_wetting_phase_killough != 1) {
                 throw std::runtime_error(
                     "Only 0 and 1 allowed for the 'fix wetting phase killough flag' "
@@ -456,7 +458,7 @@ EclHysterConfig::EclHysterConfig(const Opm::Deck& deck)
         }
 
         if (pcHystMod >= 0) {
-            const int pc_scaling_value = ehystrKeyword.getRecord(0).getItem("enable_pc_scaling").get<int>(0);
+            const int pc_scaling_value = ehystrKeyword.getRecord(0).getItem<Kw::enable_pc_scaling>().get<int>(0);
             if (pc_scaling_value != 0 && pc_scaling_value != 1) {
                 throw std::runtime_error(
                     "Only 0 and 1 allowed for the 'capillary pressure scaling parameter' "

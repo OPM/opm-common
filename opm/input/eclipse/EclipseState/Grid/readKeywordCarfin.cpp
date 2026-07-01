@@ -14,19 +14,23 @@
  */
 
 #include "readKeywordCarfin.hpp"
+
+#include <opm/input/eclipse/Parser/ParserKeywords/C.hpp>
+
 namespace Opm {
 
     void readKeywordCarfin( const DeckRecord& deckRecord, CarfinManager& carfinManager) {
-        const auto& NAMEItem = deckRecord.getItem("NAME");
-        const auto& I1Item = deckRecord.getItem("I1");
-        const auto& I2Item = deckRecord.getItem("I2");
-        const auto& J1Item = deckRecord.getItem("J1");
-        const auto& J2Item = deckRecord.getItem("J2");
-        const auto& K1Item = deckRecord.getItem("K1");
-        const auto& K2Item = deckRecord.getItem("K2");
-        const auto& NXItem = deckRecord.getItem("NX");
-        const auto& NYItem = deckRecord.getItem("NY");
-        const auto& NZItem = deckRecord.getItem("NZ");
+        using Kw = ParserKeywords::CARFIN;
+        const auto& NAMEItem = deckRecord.getItem<Kw::NAME>();
+        const auto& I1Item = deckRecord.getItem<Kw::I1>();
+        const auto& I2Item = deckRecord.getItem<Kw::I2>();
+        const auto& J1Item = deckRecord.getItem<Kw::J1>();
+        const auto& J2Item = deckRecord.getItem<Kw::J2>();
+        const auto& K1Item = deckRecord.getItem<Kw::K1>();
+        const auto& K2Item = deckRecord.getItem<Kw::K2>();
+        const auto& NXItem = deckRecord.getItem<Kw::NX>();
+        const auto& NYItem = deckRecord.getItem<Kw::NY>();
+        const auto& NZItem = deckRecord.getItem<Kw::NZ>();
  //       const auto& NWMAXItem = deckRecord.getItem("NWMAX");
  //       const auto& PARENTItem = deckRecord.getItem("PARENT");
 

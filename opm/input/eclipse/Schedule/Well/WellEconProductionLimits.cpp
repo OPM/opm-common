@@ -25,6 +25,8 @@
 #include <opm/input/eclipse/Deck/DeckItem.hpp>
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
 
+#include <opm/input/eclipse/Parser/ParserKeywords/W.hpp>
+
 #include <cassert>
 #include <cmath>
 #include <stdexcept>
@@ -120,39 +122,41 @@ namespace Opm {
     }
 
     WellEconProductionLimits::WellEconProductionLimits(const DeckRecord& record)
-        : m_min_oil_rate(record.getItem("MIN_OIL_PRODUCTION").get<UDAValue>(0).SI_value_or(0.0))
-        , m_min_gas_rate(record.getItem("MIN_GAS_PRODUCTION").get<UDAValue>(0).SI_value_or(0.0))
-        , m_max_water_cut(record.getItem("MAX_WATER_CUT").get<UDAValue>(0).SI_value_or(0.0))
-        , m_max_gas_oil_ratio(record.getItem("MAX_GAS_OIL_RATIO").get<UDAValue>(0).SI_value_or(0.0))
-        , m_max_water_gas_ratio(record.getItem("MAX_WATER_GAS_RATIO").get<UDAValue>(0).SI_value_or(0.0))
-        , m_workover(EconWorkoverFromString(record.getItem("WORKOVER_RATIO_LIMIT").getTrimmedString(0)))
+        : m_min_oil_rate(record.getItem<ParserKeywords::WECON::MIN_OIL_PRODUCTION>().get<UDAValue>(0).SI_value_or(0.0))
+        , m_min_gas_rate(record.getItem<ParserKeywords::WECON::MIN_GAS_PRODUCTION>().get<UDAValue>(0).SI_value_or(0.0))
+        , m_max_water_cut(record.getItem<ParserKeywords::WECON::MAX_WATER_CUT>().get<UDAValue>(0).SI_value_or(0.0))
+        , m_max_gas_oil_ratio(record.getItem<ParserKeywords::WECON::MAX_GAS_OIL_RATIO>().get<UDAValue>(0).SI_value_or(0.0))
+        , m_max_water_gas_ratio(record.getItem<ParserKeywords::WECON::MAX_WATER_GAS_RATIO>().get<UDAValue>(0).SI_value_or(0.0))
+        , m_workover(EconWorkoverFromString(record.getItem<ParserKeywords::WECON::WORKOVER_RATIO_LIMIT>().getTrimmedString(0)))
         , m_end_run(false)
-        , m_followon_well(record.getItem("FOLLOW_ON_WELL").getTrimmedString(0))
-        , m_quantity_limit(QuantityLimitFromString(record.getItem("LIMITED_QUANTITY").getTrimmedString(0)))
-        , m_secondary_max_water_cut(record.getItem("SECOND_MAX_WATER_CUT").get<double>(0))
-        , m_max_gas_liquid_ratio(record.getItem("MAX_GAS_LIQUID_RATIO").get<double>(0))
-        , m_min_liquid_rate(record.getItem("MIN_LIQUID_PRODCUTION_RATE").getSIDouble(0))
-        , m_min_reservoir_fluid_rate(record.getItem("MIN_RES_FLUID_RATE").getSIDouble(0))
+        , m_followon_well(record.getItem<ParserKeywords::WECON::FOLLOW_ON_WELL>().getTrimmedString(0))
+        , m_quantity_limit(QuantityLimitFromString(record.getItem<ParserKeywords::WECON::LIMITED_QUANTITY>().getTrimmedString(0)))
+        , m_secondary_max_water_cut(record.getItem<ParserKeywords::WECON::SECOND_MAX_WATER_CUT>().get<double>(0))
+        , m_max_gas_liquid_ratio(record.getItem<ParserKeywords::WECON::MAX_GAS_LIQUID_RATIO>().get<double>(0))
+        , m_min_liquid_rate(record.getItem<ParserKeywords::WECON::MIN_LIQUID_PRODCUTION_RATE>().getSIDouble(0))
+        , m_min_reservoir_fluid_rate(record.getItem<ParserKeywords::WECON::MIN_RES_FLUID_RATE>().getSIDouble(0))
     {
         assert(m_workover != EconWorkover::LAST);
         assert(m_workover != EconWorkover::RED);
 
-        if (record.getItem("MAX_TEMP").hasValue(0)) {
-            m_max_temperature = record.getItem("MAX_TEMP").getSIDouble(0);
+        using Kw = ParserKeywords::WECON;
+
+        if (record.getItem<Kw::MAX_TEMP>().hasValue(0)) {
+            m_max_temperature = record.getItem<Kw::MAX_TEMP>().getSIDouble(0);
         } else {
             // defaulted with one really non-physical value.
             m_max_temperature = -1e8;
         }
 
-        if (record.getItem("WORKOVER_SECOND_WATER_CUT_LIMIT").hasValue(0)) {
-            const std::string string_workover = record.getItem("WORKOVER_SECOND_WATER_CUT_LIMIT").getTrimmedString(0);
+        if (record.getItem<Kw::WORKOVER_SECOND_WATER_CUT_LIMIT>().hasValue(0)) {
+            const std::string string_workover = record.getItem<Kw::WORKOVER_SECOND_WATER_CUT_LIMIT>().getTrimmedString(0);
             m_workover_secondary = EconWorkoverFromString(string_workover);
         } else {
             m_workover_secondary = m_workover;
         }
 
-        if (record.getItem("END_RUN_FLAG").hasValue(0)) {
-            std::string string_endrun = record.getItem("END_RUN_FLAG").getTrimmedString(0);
+        if (record.getItem<Kw::END_RUN_FLAG>().hasValue(0)) {
+            std::string string_endrun = record.getItem<Kw::END_RUN_FLAG>().getTrimmedString(0);
             if (string_endrun == "YES") {
                 m_end_run = true;
             } else if (string_endrun != "NO") {

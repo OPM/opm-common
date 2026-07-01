@@ -49,6 +49,8 @@
 
 #include <opm/input/eclipse/Parser/Parser.hpp>
 
+#include <opm/input/eclipse/Parser/ParserKeywords/W.hpp>
+
 using namespace Opm;
 
 namespace {
@@ -198,7 +200,7 @@ BOOST_AUTO_TEST_CASE(TestDynamicWSPECIES)
     BOOST_CHECK_EQUAL(keyword.size(),1U);
 
     const auto& record = keyword.getRecord(0);
-    const std::string& well_name = record.getItem("WELL").getTrimmedString(0);
+    const std::string& well_name = record.getItem<ParserKeywords::WSPECIES::WELL>().getTrimmedString(0);
     const std::string ca_name{"CA"};
     const std::string k_name{"K"};
     const auto well = WellTracerProperties::Well{well_name};

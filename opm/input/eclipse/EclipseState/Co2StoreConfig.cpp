@@ -63,7 +63,8 @@ namespace {
                     throw Opm::OpmInputError(msg, keyword.location());
                 }
                 // Check if table has entries for queried cname
-                if (3 * static_cast<std::size_t>(index) + 3 > record.getItem("DATA").data_size()) {
+                // Shared backend for DENAQA and VISCAQA; both define DATA identically.
+                if (3 * static_cast<std::size_t>(index) + 3 > record.getItem<Opm::ParserKeywords::DENAQA::DATA>().data_size()) {
                     auto msg = keyword_name + " does not have C0, C1 and C2 entries for CNAMES = " + cname;
                     throw Opm::OpmInputError(msg, keyword.location());
                 }
@@ -134,17 +135,17 @@ namespace Opm {
 
         // SALINITY or SALTMF convert to mass fraction.
         if (props_section.hasKeyword<ParserKeywords::SALINITY>()) {
-            const auto& molality = deck["SALINITY"].back().getRecord(0).getItem("MOLALITY").get<double>(0);
+            const auto& molality = deck["SALINITY"].back().getRecord(0).getItem<ParserKeywords::SALINITY::MOLALITY>().get<double>(0);
             salt = 1.0 / (1.0 + 1.0 / (molality * MmNaCl));
         }
         else if (props_section.hasKeyword<ParserKeywords::SALTMF>()) {
-            const auto& mole_frac = deck["SALTMF"].back().getRecord(0).getItem("MOLE_FRACTION").get<double>(0);
+            const auto& mole_frac = deck["SALTMF"].back().getRecord(0).getItem<ParserKeywords::SALTMF::MOLE_FRACTION>().get<double>(0);
             salt = mole_frac * MmNaCl / (mole_frac * (MmNaCl - MmH2O) + MmH2O);
         }
 
         // ACTCO2S
         if (props_section.hasKeyword<ParserKeywords::ACTCO2S>()) {
-            activityModel = deck["ACTCO2S"].back().getRecord(0).getItem("ACTIVITY_MODEL").get<int>(0);
+            activityModel = deck["ACTCO2S"].back().getRecord(0).getItem<ParserKeywords::ACTCO2S::ACTIVITY_MODEL>().get<int>(0);
         }
         else {
             activityModel = ParserKeywords::ACTCO2S::ACTIVITY_MODEL::defaultValue;
