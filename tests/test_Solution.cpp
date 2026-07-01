@@ -45,7 +45,7 @@ BOOST_AUTO_TEST_CASE(Create)
 
         BOOST_CHECK_EQUAL( c.find("NAME")->first, "NAME");
 
-        BOOST_CHECK_THROW( c.at("NotLikeThis") , std::out_of_range );
+        BOOST_CHECK_THROW( static_cast<void>(c.at("NotLikeThis")) , std::out_of_range );
 
 
         c.insert( "NAME2" , UnitSystem::measure::identity, data , data::TargetType::RESTART_SOLUTION );

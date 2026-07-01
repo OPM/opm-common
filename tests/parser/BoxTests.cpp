@@ -61,9 +61,9 @@ BOOST_AUTO_TEST_CASE(CreateSubBox) {
     const Opm::GridDims gridDims(10,10,10);
     const Opm::Box globalBox(gridDims, allActive(), identityMapping());
 
-    BOOST_CHECK_THROW(std::make_unique<Opm::Box>( gridDims, allActive(), identityMapping(), -1 ,  9 , 1 , 8 , 1, 8), std::invalid_argument);   //  Negative throw
-    BOOST_CHECK_THROW(std::make_unique<Opm::Box>( gridDims, allActive(), identityMapping(),  1 , 19 , 1 , 8 , 1, 8), std::invalid_argument);   //  Bigger than global: throw
-    BOOST_CHECK_THROW(std::make_unique<Opm::Box>( gridDims, allActive(), identityMapping(),  9 ,  1 , 1 , 8 , 1, 8), std::invalid_argument);   //  Inverted order: throw
+    BOOST_CHECK_THROW(static_cast<void>(std::make_unique<Opm::Box>( gridDims, allActive(), identityMapping(), -1 ,  9 , 1 , 8 , 1, 8)), std::invalid_argument);   //  Negative throw
+    BOOST_CHECK_THROW(static_cast<void>(std::make_unique<Opm::Box>( gridDims, allActive(), identityMapping(),  1 , 19 , 1 , 8 , 1, 8)), std::invalid_argument);   //  Bigger than global: throw
+    BOOST_CHECK_THROW(static_cast<void>(std::make_unique<Opm::Box>( gridDims, allActive(), identityMapping(),  9 ,  1 , 1 , 8 , 1, 8)), std::invalid_argument);   //  Inverted order: throw
 
     Opm::Box subBox1(gridDims, allActive(), identityMapping(), 0,9,0,9,0,9);
     BOOST_CHECK( subBox1.isGlobal());

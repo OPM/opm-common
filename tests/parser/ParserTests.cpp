@@ -1493,7 +1493,7 @@ BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_withSizeOther) {
 
 BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_missingName_throws) {
     Json::JsonObject jsonObject("{\"nameXX\": \"BPR\", \"sections\":[\"SUMMARY\"], \"size\" : 100}");
-    BOOST_CHECK_THROW(std::make_shared<const ParserKeyword>(jsonObject) , std::invalid_argument);
+    BOOST_CHECK_THROW(static_cast<void>(std::make_shared<const ParserKeyword>(jsonObject)) , std::invalid_argument);
 }
 
 /*
@@ -1501,25 +1501,25 @@ BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_missingName_throws) {
 */
 BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_invalidItems_throws) {
     Json::JsonObject jsonObject("{\"name\": \"BPR\", \"sections\":[\"SUMMARY\"], \"size\" : 100 , \"items\" : 100}");
-    BOOST_CHECK_THROW(std::make_shared<const ParserKeyword>(jsonObject) , std::invalid_argument);
+    BOOST_CHECK_THROW(static_cast<void>(std::make_shared<const ParserKeyword>(jsonObject)) , std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_ItemMissingName_throws) {
     Json::JsonObject jsonObject("{\"name\": \"BPR\", \"sections\":[\"SUMMARY\"], \"size\" : 100 , \"items\" : [{\"nameX\" : \"I\"  , \"value_type\" : \"INT\"}]}");
-    BOOST_CHECK_THROW(std::make_shared<const ParserKeyword>(jsonObject) , std::invalid_argument);
+    BOOST_CHECK_THROW(static_cast<void>(std::make_shared<const ParserKeyword>(jsonObject)) , std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_ItemMissingValueType_throws) {
     Json::JsonObject jsonObject("{\"name\": \"BPR\", \"sections\":[\"SUMMARY\"], \"size\" : 100 , \"items\" : [{\"name\" : \"I\" , \"size_type\" : \"SINGLE\" , \"Xvalue_type\" : \"INT\"}]}");
-    BOOST_CHECK_THROW(std::make_shared<const ParserKeyword>(jsonObject) , std::invalid_argument);
+    BOOST_CHECK_THROW(static_cast<void>(std::make_shared<const ParserKeyword>(jsonObject)) , std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_ItemInvalidEnum_throws) {
     Json::JsonObject jsonObject1("{\"name\": \"BPR\", \"sections\":[\"SUMMARY\"], \"size\" : 100 , \"items\" : [{\"name\" : \"I\" , \"size_type\" : \"XSINGLE\" , \"value_type\" : \"INT\"}]}");
     Json::JsonObject jsonObject2("{\"name\": \"BPR\", \"sections\":[\"SUMMARY\"], \"size\" : 100 , \"items\" : [{\"name\" : \"I\" , \"size_type\" : \"SINGLE\" , \"value_type\" : \"INTX\"}]}");
 
-    BOOST_CHECK_THROW(std::make_shared<const ParserKeyword>(jsonObject1) , std::invalid_argument);
-    BOOST_CHECK_THROW(std::make_shared<const ParserKeyword>(jsonObject2) , std::invalid_argument);
+    BOOST_CHECK_THROW(static_cast<void>(std::make_shared<const ParserKeyword>(jsonObject1)) , std::invalid_argument);
+    BOOST_CHECK_THROW(static_cast<void>(std::make_shared<const ParserKeyword>(jsonObject2)) , std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(ConstructFromJsonObjectItemsOK) {
@@ -1534,7 +1534,7 @@ BOOST_AUTO_TEST_CASE(ConstructFromJsonObjectItemsOK) {
 
 BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_sizeFromOther) {
     Json::JsonObject jsonConfig("{\"name\": \"EQUILX\", \"sections\":[\"PROPS\"], \"size\" : {\"keyword\":\"EQLDIMS\" , \"item\" : \"NTEQUL\"},  \"items\" :[{\"name\":\"ItemX\" ,\"value_type\" : \"DOUBLE\"}]}");
-    BOOST_CHECK_NO_THROW( std::make_shared<const ParserKeyword>(jsonConfig) );
+    BOOST_CHECK_NO_THROW( static_cast<void>(std::make_shared<const ParserKeyword>(jsonConfig)) );
 }
 
 BOOST_AUTO_TEST_CASE(Default_NotData) {
