@@ -6,12 +6,16 @@
 
 #include <opm/input/eclipse/Parser/Parser.hpp>
 
-#include <stdlib.h>
+#include <cstdlib>
 
+#if defined(_WIN32)
+#include <cstring>
+#include <process.h>
+#else
 #include <sys/types.h>
 #include <sys/wait.h>
-
 #include <unistd.h>
+#endif
 
 namespace {
 
@@ -36,6 +40,7 @@ void exit1(Opm::InputErrorAction action)
 // which will unconditionally fail the complete test in the face of an exit(1) -
 // this test is implemented without the BOOST testing framework.
 
+#if !defined(_WIN32)
 void test_exit(Opm::InputErrorAction action)
 {
     pid_t pid = fork();
@@ -58,11 +63,37 @@ void test_exit(Opm::InputErrorAction action)
         std::exit(EXIT_FAILURE);
     }
 }
+#endif
 
 } // Anonymous namespace
 
+#if defined(_WIN32)
+// Windows has no fork(); re-run this executable as a child process (one per
+// action) so the parent can verify the child exits with a non-zero status,
+// mirroring the POSIX fork()/waitpid() logic above.
+int main(int argc, char** argv)
+{
+    const Opm::InputErrorAction actions[] = {
+        Opm::InputErrorAction::EXIT1,
+        Opm::InputErrorAction::DELAYED_EXIT1,
+    };
+    if (argc > 2 && std::strcmp(argv[1], "--child") == 0) {
+        exit1(actions[std::atoi(argv[2])]);
+        return 0;  // exit1() is expected to exit(1) before reaching here
+    }
+    for (int i = 0; i < 2; ++i) {
+        const char idx[2] = { static_cast<char>('0' + i), '\0' };
+        const intptr_t rc = _spawnl(_P_WAIT, argv[0], argv[0], "--child", idx,
+                                    static_cast<const char*>(nullptr));
+        if (rc == 0) {
+            std::exit(EXIT_FAILURE);  // child did NOT exit(1) as required
+        }
+    }
+}
+#else
 int main()
 {
     test_exit(Opm::InputErrorAction::EXIT1);
     test_exit(Opm::InputErrorAction::DELAYED_EXIT1);
 }
+#endif

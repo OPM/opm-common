@@ -134,7 +134,7 @@ int main(int argc, char **argv)
     std::vector<int> element_size;
 
     if (specificReportStepNumber && (ext == ".UNRST")) {
-        Opm::EclIO::ERst rstfile(filename);
+        Opm::EclIO::ERst rstfile(filename.string());
 
         if (!rstfile.hasReportStepNumber(reportStepNumber)) {
             std::cout << "report step number " << reportStepNumber
@@ -147,7 +147,7 @@ int main(int argc, char **argv)
         array_list = rstfile.listOfRstArrays(reportStepNumber);
     }
     else {
-        Opm::EclIO::EclFile eclfile(filename);
+        Opm::EclIO::EclFile eclfile(filename.string());
         array_list = eclfile.getList();
 
         element_size = eclfile.getElementSizeList();
