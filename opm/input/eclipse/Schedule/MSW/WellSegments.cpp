@@ -893,33 +893,50 @@ namespace Opm {
 
         bool update = false;
         for (const auto& record : records) {
-            for (int segment_number = record.segment1;
-                 segment_number <= record.segment2; ++segment_number)
-            {
-                const auto seg_idx = this->segmentNumberToIndex(segment_number);
+            const auto& coeff = record.coefficient;
 
-                if (seg_idx < 0) {
-                    handleMissingMSWSegment(well_name, segment_number,
-                                            location, parseContext, errors);
+            // A SEG coefficient's target segment must itself be defined in the
+            // well -- a genuine missing-segment condition.
+            if ((coeff.type() == SegmentHeatTransfer::Type::SEG) &&
+                (this->segmentNumberToIndex(coeff.targetSegment()) < 0))
+            {
+                handleMissingMSWSegment(well_name, coeff.targetSegment(),
+                                        location, parseContext, errors);
+                continue;
+            }
+
+            // Apply to every defined segment in the inclusive range [segment1,
+            // segment2].  Iterate the defined segments (numbering may be
+            // non-contiguous) rather than every integer, so gaps aren't flagged
+            // as missing.
+            bool matched = false;
+            for (auto& segment : this->m_segments) {
+                const int segment_number = segment.segmentNumber();
+                if ((segment_number < record.segment1) ||
+                    (segment_number > record.segment2))
+                {
                     continue;
                 }
 
-                const auto& coeff = record.coefficient;
+                matched = true;
+
+                // A segment cannot exchange heat with itself; skip the target
+                // when a SEG range includes it (normal usage, not an error).
                 if ((coeff.type() == SegmentHeatTransfer::Type::SEG) &&
                     (coeff.targetSegment() == segment_number))
                 {
-                    const auto msg_fmt = fmt::format(R"(Problem with keyword {{keyword}}
-In {{file}} line {{line}}
-A SEG heat transfer coefficient for well {} segment {} targets the segment itself; the segment is skipped.)",
-                                                     well_name, segment_number);
-
-                    parseContext.handleError(Opm::ParseContext::SCHEDULE_MISSING_SEGMENT,
-                                             msg_fmt, location, errors);
                     continue;
                 }
 
-                this->m_segments[seg_idx].updateHeatTransfer(record);
+                segment.updateHeatTransfer(record);
                 update = true;
+            }
+
+            // The range names no defined segment at all -- most likely a typo
+            // in item 2/3 -- so surface it as a missing-segment condition.
+            if (! matched) {
+                handleMissingMSWSegment(well_name, record.segment1,
+                                        location, parseContext, errors);
             }
         }
 

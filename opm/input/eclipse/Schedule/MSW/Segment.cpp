@@ -129,6 +129,11 @@ namespace Opm {
         // If none of the above type-specific conditions trigger, then this
         // is a RegularSegment and 'm_icd' is fully formed by the variant's
         // default constructor.
+
+        // The thermal members (wall properties and m_heat_transfer) keep their
+        // in-class defaults: RstSegment does not carry WSEGHEAT/pipe-wall data,
+        // so a thermal MSW run restarted here begins with zero wall properties
+        // and no heat transfer coefficients.  TODO: persist and restore these.
     }
 
     Segment::Segment(const int    segment_number_in,
@@ -345,7 +350,7 @@ namespace Opm {
         using Operation = SegmentHeatTransfer::Operation;
 
         // Maximum number of segment-to-segment heat transfer coefficients that
-        // may be associated with a single segment (ECLIPSE limit).
+        // may be associated with a single segment.
         constexpr std::size_t max_seg_coefficients = 5;
 
         const auto& coeff = record.coefficient;
@@ -383,7 +388,7 @@ namespace Opm {
             }
             else {
                 // SEG coefficients are capped; ignore additions beyond the
-                // limit, matching the documented ECLIPSE behaviour.
+                // limit, matching the documented behaviour.
                 const auto seg_count = std::ranges::count_if
                     (this->m_heat_transfer, [](const SegmentHeatTransfer& e)
                      { return e.type() == Type::SEG; });

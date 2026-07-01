@@ -126,9 +126,8 @@ namespace Opm {
         // Heat transfer coefficients associated with this segment (WSEGHEAT).
         const std::vector<SegmentHeatTransfer>& heatTransfer() const;
 
-        // Apply one WSEGHEAT record to this segment's set of heat transfer
-        // coefficients.  The operation carried by the record determines whether
-        // the existing set is replaced, extended, reduced or cleared.
+        // Apply one WSEGHEAT record to this segment's coefficients; the record's
+        // operation replaces, extends, reduces or clears the existing set.
         void updateHeatTransfer(const SegmentHeatTransferRecord& record);
 
         bool isRegular() const
@@ -254,23 +253,14 @@ namespace Opm {
 
         std::variant<RegularSegment, SICD, AutoICD, Valve> m_icd;
 
-        // Three properties for the segment pertaining to thermal conduction
-        // through the pipe wall, used by the thermal option.  They default to
-        // zero when not specified in WELSEGS.
-
-        // Cross-sectional area of the pipe wall used in the thermal
-        // conductivity calculation.
+        // Pipe-wall thermal conduction properties (thermal option), default
+        // zero when WELSEGS omits them.  See the accessors above.
         double m_wall_area{0.0};
-
-        // Volumetric heat capacity of the pipe wall.
         double m_wall_volumetric_heat_capacity{0.0};
-
-        // Thermal conductivity of the pipe wall.
         double m_wall_thermal_conductivity{0.0};
 
-        // Heat transfer coefficients to completions, other segments or fixed
-        // external temperatures, as defined by the WSEGHEAT keyword.  At most
-        // one COMP, one TEMP and five SEG coefficients may be present.
+        // Heat transfer coefficients (WSEGHEAT): at most one COMP, one TEMP and
+        // five SEG per segment.
         std::vector<SegmentHeatTransfer> m_heat_transfer{};
 
         void updateValve__(Valve& valve, const double segment_length);

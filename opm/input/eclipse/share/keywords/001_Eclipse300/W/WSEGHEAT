@@ -46,6 +46,7 @@
       "item": 8,
       "name": "INTERPOLATION_CONSTANT",
       "value_type": "DOUBLE",
+      "dimension": "1",
       "default": 0.5
     },
     {

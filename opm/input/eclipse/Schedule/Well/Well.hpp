@@ -22,7 +22,6 @@
 
 #include <opm/input/eclipse/Deck/UDAValue.hpp>
 #include <opm/input/eclipse/EclipseState/Phase.hpp>
-#include <opm/input/eclipse/Schedule/MSW/SegmentHeatTransfer.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleTypes.hpp>
 #include <opm/input/eclipse/Schedule/VFPProdTable.hpp>
 #include <opm/input/eclipse/Schedule/Well/Connection.hpp>
@@ -54,6 +53,7 @@ class KeywordLocation;
 class ParseContext;
 class Phases;
 class ScheduleGrid;
+struct SegmentHeatTransferRecord;
 class SICD;
 class SummaryState;
 class UDQActive;

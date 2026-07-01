@@ -1166,6 +1166,32 @@ namespace {
         Opm::EclipseState st(deck);
         return Opm::Schedule(deck, st);
     }
+
+    // Shared RUNSPEC/GRID preamble (a 20x20x20 box grid, DX = DY = 100 m,
+    // DZ = 10 m) used by the thermal MSW tests below.  Each test appends its
+    // own SCHEDULE section to this string.
+    const std::string thermalMSWGridPreamble = R"(RUNSPEC
+DIMENS
+  20 20 20 /
+GRID
+DXV
+  20*100 /
+DYV
+  20*100 /
+DZV
+  20*10 /
+DEPTHZ
+  441*2000.0 /
+PORO
+    8000*0.1 /
+PERMX
+    8000*1 /
+PERMY
+    8000*0.1 /
+PERMZ
+    8000*0.01 /
+SCHEDULE
+)";
 } // Anonymous namespace
 
 BOOST_AUTO_TEST_CASE(MSW_SEGMENT_LENGTH) {
@@ -1319,37 +1345,9 @@ BOOST_AUTO_TEST_CASE(ThermalMSW_ScheduleIntegration)
     //
     // COMPSEGS item 10 (THERMAL_LENGTH) provides the effective connection
     // length used by the same thermal option; connections that leave it
-    // defaulted have an unset (nullopt) thermal length.  A downstream thermal
-    // consumer is expected to use the grid-block thickness.
-    const auto deck = ::Opm::Parser{}.parseString(R"(RUNSPEC
-DIMENS
-  20 20 20 /
-
-GRID
-
-DXV
-  20*100 /
-
-DYV
-  20*100 /
-
-DZV
-  20*10 /
-
-DEPTHZ
-  441*2000.0 /
-
-PORO
-    8000*0.1 /
-PERMX
-    8000*1 /
-PERMY
-    8000*0.1 /
-PERMZ
-    8000*0.01 /
-
-SCHEDULE
-
+    // defaulted are populated with the grid-block thickness in the penetration
+    // direction.
+    const auto deck = ::Opm::Parser{}.parseString(thermalMSWGridPreamble + R"(
 WELSPECS
  'PROD01' 'P' 20 20 1* OIL /
 /
@@ -1405,13 +1403,14 @@ WSEGHEAT
 
     // COMPSEGS thermal length: explicitly specified on the first two
     // connections (metric length is in metres, so the SI value equals the
-    // input value) and defaulted (empty) on the third.
+    // input value).  The third connection defaults item 10, so the grid-block
+    // thickness in the connection's penetration direction (COMPDAT item 13) is
+    // substituted.  Here the COMPDAT direction defaults to Z, giving the
+    // vertical thickness DZ = 10 m.
     const auto& connections = sched[0].wells("PROD01").getConnections();
-    BOOST_REQUIRE(connections.getFromIJK(19, 19, 0).thermalLength().has_value());
-    BOOST_CHECK_CLOSE(*connections.getFromIJK(19, 19, 0).thermalLength(), 10.0, 1.0e-8);
-    BOOST_REQUIRE(connections.getFromIJK(19, 19, 1).thermalLength().has_value());
-    BOOST_CHECK_CLOSE(*connections.getFromIJK(19, 19, 1).thermalLength(), 20.0, 1.0e-8);
-    BOOST_CHECK(! connections.getFromIJK(19, 19, 2).thermalLength().has_value());
+    BOOST_CHECK_CLOSE(connections.getFromIJK(19, 19, 0).thermalLength(), 10.0, 1.0e-8);
+    BOOST_CHECK_CLOSE(connections.getFromIJK(19, 19, 1).thermalLength(), 20.0, 1.0e-8);
+    BOOST_CHECK_CLOSE(connections.getFromIJK(19, 19, 2).thermalLength(), 10.0, 1.0e-8);
 
     // WSEGHEAT: segment 2 gets a single fixed-temperature (TEMP) coefficient,
     // segment 3 a single segment-to-segment (SEG) coefficient.  The specific
@@ -1447,27 +1446,7 @@ WSEGHEAT
     // and applied by sorted pattern ('PROD*' sorts before 'PROD01') the
     // replace-all would run last and leave 0.01.
     {
-        const auto order_deck = ::Opm::Parser{}.parseString(R"(RUNSPEC
-DIMENS
-  20 20 20 /
-GRID
-DXV
-  20*100 /
-DYV
-  20*100 /
-DZV
-  20*10 /
-DEPTHZ
-  441*2000.0 /
-PORO
-    8000*0.1 /
-PERMX
-    8000*1 /
-PERMY
-    8000*0.1 /
-PERMZ
-    8000*0.01 /
-SCHEDULE
+        const auto order_deck = ::Opm::Parser{}.parseString(thermalMSWGridPreamble + R"(
 WELSPECS
  'PROD01' 'P' 20 20 1* OIL /
 /
@@ -1677,27 +1656,7 @@ BOOST_AUTO_TEST_CASE(WSEGHEAT_Validation)
     // A three-segment well 'PROD01' to attach WSEGHEAT records to, plus a
     // regular (non-multisegment) well 'PROD02' used to check that WSEGHEAT
     // applied to a well without a segment structure is handled gracefully.
-    const std::string base = R"(RUNSPEC
-DIMENS
-  20 20 20 /
-GRID
-DXV
-  20*100 /
-DYV
-  20*100 /
-DZV
-  20*10 /
-DEPTHZ
-  441*2000.0 /
-PORO
-    8000*0.1 /
-PERMX
-    8000*1 /
-PERMY
-    8000*0.1 /
-PERMZ
-    8000*0.01 /
-SCHEDULE
+    const std::string base = thermalMSWGridPreamble + R"(
 WELSPECS
  'PROD01' 'P' 20 20 1* OIL /
  'PROD02' 'P' 10 10 1* OIL /
@@ -1736,16 +1695,92 @@ COMPSEGS
     BOOST_CHECK_THROW(makeSchedule("WSEGHEAT\n 'PROD01' 3 3 SEG 0.04 /\n/\n"),
                       ::Opm::OpmInputError);
 
-    // A SEG coefficient that targets its own segment is skipped with a warning
-    // (routed through ParseContext::SCHEDULE_MISSING_SEGMENT) rather than
-    // aborting the parse, so an otherwise-usable deck still loads.
+    // A SEG coefficient whose range includes its own target segment simply
+    // skips that one segment (a segment cannot exchange heat with itself); this
+    // is normal usage, not a missing-segment condition, so it must never abort
+    // the parse -- not even when SCHEDULE_MISSING_SEGMENT is promoted to a hard
+    // error.
     BOOST_CHECK_NO_THROW(makeSchedule("WSEGHEAT\n 'PROD01' 3 3 SEG 0.04 3 /\n/\n"));
+    {
+        const auto deck = ::Opm::Parser{}.parseString
+            (base + "WSEGHEAT\n 'PROD01' 3 3 SEG 0.04 3 /\n/\n");
+        const auto es     = ::Opm::EclipseState { deck };
+        const auto python = std::make_shared<const ::Opm::Python>();
+
+        ::Opm::ParseContext parseContext;
+        parseContext.update(::Opm::ParseContext::SCHEDULE_MISSING_SEGMENT,
+                            ::Opm::InputErrorAction::THROW_EXCEPTION);
+        ::Opm::ErrorGuard errors;
+        BOOST_CHECK_NO_THROW(::Opm::Schedule(deck, es, parseContext, errors, python));
+    }
+
+    // A SEG coefficient whose target segment (item 6) does not exist in the
+    // well is a genuine missing-segment condition and is governed by the
+    // SCHEDULE_MISSING_SEGMENT error handler (default WARN, so the deck still
+    // loads).
+    BOOST_CHECK_NO_THROW(makeSchedule("WSEGHEAT\n 'PROD01' 2 2 SEG 0.04 99 /\n/\n"));
+    {
+        const auto deck = ::Opm::Parser{}.parseString
+            (base + "WSEGHEAT\n 'PROD01' 2 2 SEG 0.04 99 /\n/\n");
+        const auto es     = ::Opm::EclipseState { deck };
+        const auto python = std::make_shared<const ::Opm::Python>();
+
+        ::Opm::ParseContext parseContext;
+        parseContext.update(::Opm::ParseContext::SCHEDULE_MISSING_SEGMENT,
+                            ::Opm::InputErrorAction::THROW_EXCEPTION);
+        ::Opm::ErrorGuard errors;
+        BOOST_CHECK_THROW(::Opm::Schedule(deck, es, parseContext, errors, python),
+                          ::Opm::OpmInputError);
+    }
 
     // WSEGHEAT applied to a regular (non-multisegment) well must not crash: it
     // is routed through ParseContext (default WARN) and skipped.  This covers
     // both a literal well name and a wildcard that also matches the MSW well.
     BOOST_CHECK_NO_THROW(makeSchedule("WSEGHEAT\n 'PROD02' 2 2 COMP 0.02 /\n/\n"));
     BOOST_CHECK_NO_THROW(makeSchedule("WSEGHEAT\n 'PROD*' 2 2 COMP 0.02 /\n/\n"));
+
+    // A range (items 2-3) that extends past the highest defined segment applies
+    // to the segments that do exist and does not abort, even under strict mode:
+    // segment numbering may legitimately be non-contiguous, so numbers absent
+    // from the range are not treated as missing segments.  PROD01 has segments
+    // 1-3, so the range 1-5 applies a COMP coefficient to all three.
+    {
+        const auto sched = makeSchedule("WSEGHEAT\n 'PROD01' 1 5 COMP 0.05 /\n/\n");
+        const auto& segs = sched[0].wells("PROD01").getSegments();
+        for (const int segment_number : {1, 2, 3}) {
+            BOOST_CHECK_EQUAL(segs.getFromSegmentNumber(segment_number)
+                              .heatTransfer().size(), 1);
+        }
+
+        const auto deck = ::Opm::Parser{}.parseString
+            (base + "WSEGHEAT\n 'PROD01' 1 5 COMP 0.05 /\n/\n");
+        const auto es     = ::Opm::EclipseState { deck };
+        const auto python = std::make_shared<const ::Opm::Python>();
+
+        ::Opm::ParseContext parseContext;
+        parseContext.update(::Opm::ParseContext::SCHEDULE_MISSING_SEGMENT,
+                            ::Opm::InputErrorAction::THROW_EXCEPTION);
+        ::Opm::ErrorGuard errors;
+        BOOST_CHECK_NO_THROW(::Opm::Schedule(deck, es, parseContext, errors, python));
+    }
+
+    // A range that matches no defined segment at all is a genuine
+    // missing-segment condition governed by SCHEDULE_MISSING_SEGMENT: it loads
+    // with the default WARN but aborts once the key is promoted to a hard error.
+    BOOST_CHECK_NO_THROW(makeSchedule("WSEGHEAT\n 'PROD01' 8 9 COMP 0.05 /\n/\n"));
+    {
+        const auto deck = ::Opm::Parser{}.parseString
+            (base + "WSEGHEAT\n 'PROD01' 8 9 COMP 0.05 /\n/\n");
+        const auto es     = ::Opm::EclipseState { deck };
+        const auto python = std::make_shared<const ::Opm::Python>();
+
+        ::Opm::ParseContext parseContext;
+        parseContext.update(::Opm::ParseContext::SCHEDULE_MISSING_SEGMENT,
+                            ::Opm::InputErrorAction::THROW_EXCEPTION);
+        ::Opm::ErrorGuard errors;
+        BOOST_CHECK_THROW(::Opm::Schedule(deck, es, parseContext, errors, python),
+                          ::Opm::OpmInputError);
+    }
 
     // Setting or adding a coefficient requires a specific thermal resistance
     // (item 5).

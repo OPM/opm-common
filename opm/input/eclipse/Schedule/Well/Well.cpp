@@ -28,6 +28,7 @@
 #include <opm/input/eclipse/EclipseState/Phase.hpp>
 #include <opm/input/eclipse/EclipseState/TracerConfig.hpp>
 
+#include <opm/input/eclipse/Schedule/MSW/SegmentHeatTransfer.hpp>
 #include <opm/input/eclipse/Schedule/MSW/WellSegments.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleGrid.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQActive.hpp>

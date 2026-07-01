@@ -104,14 +104,13 @@ namespace Opm {
         // Target segment number (item 6), only meaningful for Type::SEG.
         int m_target_segment{0};
 
-        // External fixed temperature (item 7), only meaningful for Type::TEMP.
-        // Nullopt when not specified.
+        // External fixed temperature (item 7); see temperature().
         std::optional<double> m_temperature{};
 
         // Interpolation constant (item 8), only meaningful for Type::SEG.
         double m_interpolation_constant{0.5};
 
-        // Contact length (item 9).  Nullopt when the item was defaulted.
+        // Contact length (item 9); see contactLength().
         std::optional<double> m_contact_length{};
     };
 
@@ -138,12 +137,10 @@ namespace Opm {
     };
 
     // Parse a WSEGHEAT keyword into a deck-ordered list of (well-name pattern,
-    // record) pairs.  The order of the records is preserved deliberately:
-    // WSEGHEAT supports incremental operations (replace, '+' add, '-' remove,
-    // NONE clear), so the records of any given well must be applied in the
-    // order they appear in the deck.  Grouping by well name up front would lose
-    // that order whenever two overlapping well-name patterns refer to the same
-    // well, so the regrouping is left to the consumer, which can expand the
+    // record) pairs.  Deck order is preserved deliberately: WSEGHEAT records are
+    // incremental (replace, '+' add, '-' remove, NONE clear) and must be applied
+    // in deck order per well.  Grouping by well name here would lose that order
+    // when patterns overlap, so it is left to the consumer, which can expand the
     // patterns to concrete well names first.
     std::vector<std::pair<std::string, SegmentHeatTransferRecord>>
     segmentHeatTransferFromWSEGHEAT(const DeckKeyword& keyword);

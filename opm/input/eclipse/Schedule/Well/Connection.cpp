@@ -166,6 +166,10 @@ namespace Opm
                                                 rst_connection.segdist_end);
         }
 
+        // m_thermal_length (COMPSEGS item 10) keeps its default: RstConnection
+        // does not carry it, so a thermal MSW run restarted here begins with a
+        // zero thermal length.  TODO: persist and restore it.
+
         // TODO: recompute re from the grid
     }
 
@@ -366,7 +370,7 @@ namespace Opm
 
     void Connection::updateSegment(const int segment_number_arg,
                                    const double center_depth_arg,
-                                   const std::optional<double> thermal_length_arg,
+                                   const double thermal_length_arg,
                                    const std::size_t compseg_insert_index,
                                    const std::optional<std::pair<double, double>>& perf_range)
     {
@@ -389,7 +393,7 @@ namespace Opm
         return this->segment_number;
     }
 
-    std::optional<double> Connection::thermalLength() const
+    double Connection::thermalLength() const
     {
         return this->m_thermal_length;
     }

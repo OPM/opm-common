@@ -51,12 +51,16 @@ namespace Opm {
                 record.getItem<Kw::TARGET_SEGMENT>().get<int>(0);
         }
 
-        if (record.getItem<Kw::TEMPERATURE>().hasValue(0)) {
+        // Item 7 is only meaningful for TEMP; leaving it unset otherwise keeps
+        // the temperature()-is-nullopt-unless-TEMP invariant and equality clean.
+        if ((type == Type::TEMP) &&
+            record.getItem<Kw::TEMPERATURE>().hasValue(0))
+        {
             this->m_temperature = record.getItem<Kw::TEMPERATURE>().getSIDouble(0);
         }
 
         this->m_interpolation_constant =
-            record.getItem<Kw::INTERPOLATION_CONSTANT>().get<double>(0);
+            record.getItem<Kw::INTERPOLATION_CONSTANT>().getSIDouble(0);
 
         // Contact length (item 9) is left unset when defaulted, in which case
         // the mean length of the adjacent segments should be used instead.
@@ -137,10 +141,8 @@ namespace Opm {
             rec.segment2 = record.getItem<Kw::SEGMENT2>().get<int>(0);
             rec.operation = operation;
 
-            // The record applies to the inclusive segment range [segment1,
-            // segment2].  A non-positive first segment or an inverted range is
-            // self-inconsistent and can never match any well, so reject it here
-            // rather than let it be silently ignored downstream.
+            // Reject a self-inconsistent range [segment1, segment2] (non-positive
+            // start or inverted) up front; it can never match any well.
             if ((rec.segment1 < 1) || (rec.segment2 < rec.segment1)) {
                 throw OpmInputError {
                     fmt::format("An invalid WSEGHEAT segment range {} to {} was "
@@ -156,10 +158,8 @@ namespace Opm {
             if (operation != SegmentHeatTransfer::Operation::CLEAR) {
                 rec.coefficient = SegmentHeatTransfer{type, record};
 
-                // Whether this record sets or adds a coefficient (a bare type
-                // or one suffixed with '+').  A removal record ('-') only needs
-                // to identify an existing coefficient and therefore need not
-                // repeat the values that define it.
+                // Set/add records (bare type or '+') must carry the defining
+                // values; a removal ('-') need only identify the coefficient.
                 const bool is_set =
                     (operation == SegmentHeatTransfer::Operation::REPLACE_ALL) ||
                     (operation == SegmentHeatTransfer::Operation::ADD);
