@@ -31,6 +31,7 @@
 #include <opm/input/eclipse/Parser/ParserKeywords/A.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/B.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/C.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/D.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/F.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/G.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/H.hpp>
@@ -831,6 +832,8 @@ Runspec::Runspec(const Deck& deck)
     , m_mech       (false)
     , m_temp       (false)
     , m_biof       (false)
+    , m_dualporo   (false)
+    , m_nodppm     (false)
 {
     if (DeckSection::hasRUNSPEC(deck)) {
         const RUNSPECSection runspecSection{deck};
@@ -891,6 +894,14 @@ Runspec::Runspec(const Deck& deck)
             else {
                 throw std::runtime_error("\nThe CO2SOL option is given. Activate SOLVENT.");
             }
+        }
+
+        if (runspecSection.hasKeyword<ParserKeywords::DUALPORO>()) {
+            m_dualporo = true;
+        }
+
+        if (runspecSection.hasKeyword<ParserKeywords::NODPPM>()) {
+            m_nodppm = true;
         }
 
         if (runspecSection.hasKeyword<ParserKeywords::COMPS>()) {
@@ -1009,6 +1020,8 @@ Runspec Runspec::serializationTestObject()
     result.m_mech = true;
     result.m_temp = true;
     result.m_biof = true;
+    result.m_dualporo = true;
+    result.m_nodppm = true;
     result.m_geochem = Geochem::serializationTestObject();
 
     return result;
@@ -1135,6 +1148,16 @@ bool Runspec::biof() const noexcept
     return this->m_biof;
 }
 
+bool Runspec::dualPorosity() const noexcept
+{
+    return this->m_dualporo;
+}
+
+bool Runspec::fracturePermeabilityScalingDisabled() const noexcept
+{
+    return this->m_nodppm;
+}
+
 std::time_t Runspec::start_time() const noexcept
 {
     return this->m_start_time;
@@ -1186,6 +1209,8 @@ bool Runspec::rst_cmp(const Runspec& full_spec, const Runspec& rst_spec)
         full_spec.m_temp == rst_spec.m_temp &&
         full_spec.m_biof == rst_spec.m_biof &&
         full_spec.m_geochem == rst_spec.m_geochem &&
+        full_spec.m_dualporo == rst_spec.m_dualporo &&
+        full_spec.m_nodppm == rst_spec.m_nodppm &&
         Welldims::rst_cmp(full_spec.wellDimensions(), rst_spec.wellDimensions());
 }
 
@@ -1218,6 +1243,8 @@ bool Runspec::operator==(const Runspec& data) const
         && (this->m_temp == data.m_temp)
         && (this->m_biof == data.m_biof)
         && (this->m_geochem == data.m_geochem)
+        && (this->m_dualporo == data.m_dualporo)
+        && (this->m_nodppm == data.m_nodppm)
         ;
 }
 

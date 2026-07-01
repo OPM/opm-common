@@ -1067,6 +1067,40 @@ BOOST_AUTO_TEST_CASE(Co2Storage_oilwater) {
     BOOST_CHECK_THROW( Runspec{deck}, std::runtime_error );
 }
 
+BOOST_AUTO_TEST_CASE(DualPorosity) {
+    const std::string input = R"(
+    RUNSPEC
+    OIL
+    WATER
+    DUALPORO
+    NODPPM
+    )";
+
+    Parser parser;
+
+    auto deck = parser.parseString(input);
+
+    Runspec runspec( deck );
+    BOOST_CHECK( runspec.dualPorosity() );
+    BOOST_CHECK( runspec.fracturePermeabilityScalingDisabled() );
+}
+
+BOOST_AUTO_TEST_CASE(DualPorosity_absent) {
+    const std::string input = R"(
+    RUNSPEC
+    OIL
+    WATER
+    )";
+
+    Parser parser;
+
+    auto deck = parser.parseString(input);
+
+    Runspec runspec( deck );
+    BOOST_CHECK( !runspec.dualPorosity() );
+    BOOST_CHECK( !runspec.fracturePermeabilityScalingDisabled() );
+}
+
 BOOST_AUTO_TEST_CASE(H2Storage) {
     const std::string input = R"(
     RUNSPEC
