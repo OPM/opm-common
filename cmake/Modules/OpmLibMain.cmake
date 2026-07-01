@@ -230,10 +230,11 @@ opm_compile_satellites(
   ${excl_all}
 )
 
-# special processing for tests (only when testing is enabled: the hook may
-# register tests that depend on example/test targets which are not created
-# when BUILD_TESTING is OFF)
-if(BUILD_TESTING AND COMMAND ${project}_tests_hook)
+# special processing for tests. On Windows the hook may register tests that
+# depend on example/test targets which are not created when BUILD_TESTING is
+# OFF, so guard the call there; other platforms keep the historical behaviour
+# of always invoking the hook.
+if(COMMAND ${project}_tests_hook AND (BUILD_TESTING OR NOT WIN32))
   cmake_language(CALL ${project}_tests_hook)
 endif()
 
