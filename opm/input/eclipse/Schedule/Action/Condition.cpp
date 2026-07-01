@@ -17,214 +17,398 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <fmt/format.h>
-#include <string>
-
-
-#include <opm/output/eclipse/VectorItems/action.hpp>
-#include <opm/common/utility/String.hpp>
-#include <opm/input/eclipse/Deck/DeckKeyword.hpp>
-#include <opm/input/eclipse/Schedule/Action/ActionValue.hpp>
 #include <opm/input/eclipse/Schedule/Action/Condition.hpp>
-#include <opm/input/eclipse/Schedule/Action/Enums.hpp>
+
+#include <opm/common/utility/String.hpp>
+#include <opm/common/utility/TimeService.hpp>
+
 #include <opm/io/eclipse/rst/action.hpp>
 
-#include "ActionParser.hpp"
+#include <opm/output/eclipse/VectorItems/action.hpp>
 
+#include <opm/input/eclipse/Schedule/Action/ActionParser.hpp>
+#include <opm/input/eclipse/Schedule/Action/ActionValue.hpp>
+#include <opm/input/eclipse/Schedule/Action/Enums.hpp>
 
-namespace Opm {
-namespace Action {
+#include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 
+#include <fmt/format.h>
+
+#include <algorithm>
+#include <array>
+#include <charconv>
+#include <cstddef>
+#include <stdexcept>
+#include <string>
+#include <string_view>
+#include <system_error>
+#include <variant>
+#include <vector>
 
 namespace {
 
-Comparator comparator(TokenType tt) {
-    if (tt == TokenType::op_eq)
-        return Comparator::EQUAL;
+    Opm::Action::Comparator comparator(Opm::Action::TokenType tt)
+    {
+        switch (tt) {
+        case Opm::Action::TokenType::op_eq:
+            return Opm::Action::Comparator::EQUAL;
 
-    if (tt == TokenType::op_ne)
-        return Comparator::NOT_EQUAL;
+        case Opm::Action::TokenType::op_ne:
+            return Opm::Action::Comparator::NOT_EQUAL;
 
-    if (tt == TokenType::op_gt)
-        return Comparator::GREATER;
+        case Opm::Action::TokenType::op_gt:
+            return Opm::Action::Comparator::GREATER;
 
-    if (tt == TokenType::op_lt)
-        return Comparator::LESS;
+        case Opm::Action::TokenType::op_lt:
+            return Opm::Action::Comparator::LESS;
 
-    if (tt == TokenType::op_le)
-        return Comparator::LESS_EQUAL;
+        case Opm::Action::TokenType::op_le:
+            return Opm::Action::Comparator::LESS_EQUAL;
 
-    if (tt == TokenType::op_ge)
-        return Comparator::GREATER_EQUAL;
+        case Opm::Action::TokenType::op_ge:
+            return Opm::Action::Comparator::GREATER_EQUAL;
 
-    return Comparator::INVALID;
-}
+        default:
+            return Opm::Action::Comparator::INVALID;
+        }
+    }
 
+    std::string strip_quotes(const std::string& s)
+    {
+        if (s.front() == '\'') {
+            return s.substr(1, s.size() - 2);
+        }
 
-
-std::string strip_quotes(const std::string& s) {
-    if (s[0] == '\'')
-        return s.substr(1, s.size() - 2);
-    else
         return s;
-}
+    }
 
-}
+    std::pair<std::string, std::string>
+    decomposeRegionVectorName(const std::string& regQuant)
+    {
+        auto components = std::pair {
+            regQuant.substr(0, 5),
+            std::string { "NUM" }
+        };
 
-Quantity::Quantity(const std::string& arg) :
-    quantity(strip_quotes(arg))
+        if (regQuant.size() <= std::string::size_type{5}) {
+            return components;
+        }
+
+        components.first.erase(components.first.find_last_not_of('_') + 1);
+        components.second = regQuant.substr(5);
+
+        return components;
+    }
+
+} // Anonymous namespace
+
+namespace Opm::Action {
+
+// ===========================================================================
+// Class Action::Quantity
+// ===========================================================================
+
+Quantity::Quantity(const std::string& arg)
+    : quantity_ { trim_copy(strip_quotes(trim_copy(arg))) }
 {}
 
-
 Quantity::Quantity(const RestartIO::RstAction::Quantity& rst_quantity)
+    : quantity_ { rst_quantity.quantity() }
+    , args_     { rst_quantity.args() }
+{}
+
+Quantity Quantity::serializationTestObject()
 {
-    if (std::holds_alternative<std::string>(rst_quantity.quantity))
-        this->quantity = std::get<std::string>(rst_quantity.quantity);
-    else
-        this->quantity = format_double(std::get<double>(rst_quantity.quantity));
+    auto q = Quantity { "ROPR" };
 
-    if (rst_quantity.wgname.has_value())
-        this->add_arg(rst_quantity.wgname.value());
+    q.add_arg("42");
+    q.add_arg("ABC");
+    q.finalise();
+
+    return q;
 }
 
+int Quantity::int_type() const
+{
+    if (this->type_.has_value()) {
+        return *this->type_;
+    }
 
-void Quantity::add_arg(const std::string& arg) {
-    this->args.push_back(strip_quotes(arg));
+    return this->type();
 }
 
-bool Quantity::date() const {
-    if (this->quantity == "DAY")
-        return true;
+// ---------------------------------------------------------------------------
+// Private member functions for Action::Quantity below
+// ---------------------------------------------------------------------------
 
-    if (this->quantity == "MNTH")
-        return true;
+int Quantity::type() const
+{
+    using QType = Opm::RestartIO::Helpers::
+        VectorItems::IACN::Value::QuantityType;
 
-    if (this->quantity == "MONTH")
-        return true;
+    // Note: We check for (numeric) constants and dates first lest "FEB" be
+    // erroneously classified as a 'F'ield level summary vector or "SEP" be
+    // similarly erroneously classified as a 'S'egment level summary vector.
+    if (this->isNumeric() || this->isMonthName()) {
+        return QType::Const;
+    }
 
-    if (this->quantity == "YEAR")
-        return true;
+    if (this->isDay())   { return QType::Day;   }
+    if (this->isMonth()) { return QType::Month; }
+    if (this->isYear())  { return QType::Year;  }
 
-    return false;
+    switch (this->quantity_.front()) {
+    case 'F': return QType::Field;
+    case 'W': return QType::Well;
+    case 'G': return QType::Group;
+    case 'R': return QType::Region;
+    case 'S': return QType::Segment;
+    case 'C': return QType::Connection;
+    case 'B': return QType::Block;
+    default:  return QType::Const;
+    }
 }
 
-int Quantity::int_type() const {
-    namespace QuantityType = Opm::RestartIO::Helpers::VectorItems::IACN::Value;
-    const auto& first_char = this->quantity[0];
-    if (first_char == 'W')
-        return QuantityType::Well;
+bool Quantity::isNumeric() const
+{
+    if (this->quantity_.empty()) {
+        return false;
+    }
 
-    if (first_char == 'F')
-        return QuantityType::Field;
+    auto qstr = std::string_view { this->quantity_ };
+    if (qstr.front() == '+') {
+        // From_chars() does not recognise leading positive signs so trim
+        // that.
+        qstr.remove_prefix(1);
 
-    if (first_char == 'G')
-        return QuantityType::Group;
+        if (qstr.empty()) {
+            // Quantity_ == '+'.  Not a number.
+            return false;
+        }
+    }
 
-    if (first_char == 'D')
-        return QuantityType::Day;
+    // Quantity_ is a number if floating-point (i.e., double) overload of
+    // from_chars() can parse the full remaining quantity_ string.
+    auto x = 0.0;
+    auto [ptr, ec] = std::from_chars(qstr.data(), qstr.data() + qstr.size(), x);
 
-    if (first_char == 'M')
-        return QuantityType::Month;
-
-    if (first_char == 'Y')
-        return QuantityType::Year;
-
-    return QuantityType::Const;
+    return (ec == std::errc{}) && (ptr == qstr.data() + qstr.size());
 }
 
+bool Quantity::isDay() const
+{
+    return this->quantity_ == "DAY";
+}
+
+bool Quantity::isMonth() const
+{
+    return (this->quantity_ == "MNTH")
+        || (this->quantity_ == "MONTH");
+}
+
+bool Quantity::isMonthName() const
+{
+    return TimeService::valid_month(this->quantity_);
+}
+
+bool Quantity::isYear() const
+{
+    return this->quantity_ == "YEAR";
+}
+
+void Quantity::add_arg(const std::string& arg)
+{
+    this->args_.push_back(trim_copy(strip_quotes(trim_copy(arg))));
+    this->type_.reset();
+}
+
+void Quantity::finalise()
+{
+    using QType = Opm::RestartIO::Helpers::
+        VectorItems::IACN::Value::QuantityType;
+
+    this->type_.emplace(this->type());
+
+    switch (*this->type_) {
+    case QType::Region:
+        this->finaliseRegion();
+        break;
+
+    case QType::Field:
+    case QType::Well:
+    case QType::Group:
+    case QType::Segment:
+    case QType::Connection:
+    case QType::Const:
+    case QType::Day:
+    case QType::Month:
+    case QType::Year:
+    case QType::Block:
+        // Nothing to do.
+        break;
+    }
+}
+
+void Quantity::finaliseRegion()
+{
+    // Request of the form
+    //
+    //   ROPR         -- All regions of built-in FIPNUM region set
+    //   ROPR 42      -- Region 42 of built-in FIPNUM region set
+    //   ROPR 42 ABC  -- Region 42 of user-defined FIPABC region set
+    //   ROPR_ABC     -- All regions of user-defined FIPABC region set
+    //   ROPR_ABC 42  -- Region 42 of user-defined FIPABC region set
+    //
+    // Create canonicalised lookup key (quantity_)
+    //
+    //    ROPR_set
+    //
+    // and ensure that args_ contains only the integer (42).  For the
+    // default/built-in FIPNUM region set, this will become
+    //
+    //    ROPR_NUM
+    //
+    // and that is intentional.  We write this canonical form to the ZACN
+    // restart file array.
+
+    auto [base, regset] = decomposeRegionVectorName(this->quantity_);
+
+    if (this->args_.size() == 2) {
+        regset = this->args_.back();
+        this->args_.erase(this->args_.begin() + 1, this->args_.end());
+    }
+
+    this->quantity_ = fmt::format("{:_<5}{}", base, regset);
+}
+
+// ===========================================================================
+// Class Action::Condition
+// ===========================================================================
 
 Condition::Condition(const RestartIO::RstAction::Condition& rst_condition)
-    : lhs(rst_condition.lhs)
-    , rhs(rst_condition.rhs)
-    , logic(rst_condition.logic)
-    , cmp(rst_condition.cmp_op)
-    , left_paren(rst_condition.left_paren)
-    , right_paren(rst_condition.right_paren)
+    : lhs         { rst_condition.lhs }
+    , rhs         { rst_condition.rhs }
+    , logic       { rst_condition.logic }
+    , cmp         { rst_condition.cmp_op }
+    , left_paren  { rst_condition.left_paren }
+    , right_paren { rst_condition.right_paren }
+    , cmp_string  { comparator_as_string(cmp) }
 {
+    this->lhs.finalise();
+    this->rhs.finalise();
 }
 
-
-Condition::Condition(const std::vector<std::string>& tokens, const KeywordLocation& location) {
+Condition::Condition(const std::vector<std::string>& tokens,
+                     const KeywordLocation&          location)
+{
     std::size_t token_index = 0;
-    if (tokens[0] == "(") {
+
+    if (tokens.front() == "(") {
         this->left_paren = true;
-        token_index += 1;
+        ++token_index;
     }
-    this->lhs = Quantity(tokens[token_index]);
-    token_index += 1;
+
+    this->lhs = Quantity { tokens[token_index] };
+    ++token_index;
 
     while (true) {
-        if (token_index >= tokens.size())
+        if (token_index >= tokens.size()) {
             break;
+        }
 
         const auto comp = comparator(Parser::tokenType(tokens[token_index]));
         if (comp == Comparator::INVALID) {
             this->lhs.add_arg(tokens[token_index]);
-            token_index += 1;
-        } else {
+            ++token_index;
+        }
+        else {
             this->cmp = comp;
             this->cmp_string = comparator_as_string(this->cmp);
-            token_index += 1;
+            ++token_index;
             break;
         }
     }
 
-    if (token_index >= tokens.size())
-        throw std::invalid_argument("Could not determine right hand side / comparator for ACTIONX keyword at " + location.filename + ":" + std::to_string(location.lineno));
+    if (token_index >= tokens.size()) {
+        throw std::invalid_argument {
+            fmt::format("Could not determine right hand side/comparator "
+                        "for ACTIONX keyword at {}:{}",
+                        location.filename, location.lineno)
+        };
+    }
 
-    this->rhs = Quantity(tokens[token_index]);
-    token_index++;
+    this->rhs = Quantity { tokens[token_index] };
+    ++token_index;
 
     while (true) {
-        if (token_index >= tokens.size())
+        if (token_index >= tokens.size()) {
+            break;
+        }
+
+        switch (Parser::tokenType(tokens[token_index])) {
+        case TokenType::op_and:
+            this->logic = Logical::AND;
             break;
 
-        const auto token_type = Parser::tokenType(tokens[token_index]);
-        if (token_type == TokenType::op_and)
-            this->logic = Logical::AND;
-        else if (token_type == TokenType::op_or)
+        case TokenType::op_or:
             this->logic = Logical::OR;
-        else if (token_type == TokenType::close_paren)
+            break;
+
+        case TokenType::close_paren:
             this->right_paren = true;
-        else
+            break;
+
+        default:
             this->rhs.add_arg(tokens[token_index]);
+            break;
+        }
 
-        token_index++;
+        ++token_index;
     }
+
+    this->lhs.finalise();
+    this->rhs.finalise();
 }
 
-
-bool Condition::operator==(const Condition& data) const {
-    return lhs == data.lhs &&
-           left_paren == data.left_paren &&
-           right_paren == data.right_paren &&
-           rhs == data.rhs &&
-           logic == data.logic &&
-           cmp == data.cmp &&
-           cmp_string == data.cmp_string;
+bool Condition::operator==(const Condition& data) const
+{
+    return (this->lhs == data.lhs)
+        && (this->rhs == data.rhs)
+        && (this->logic == data.logic)
+        && (this->cmp == data.cmp)
+        && (this->left_paren == data.left_paren)
+        && (this->right_paren == data.right_paren)
+        && (this->cmp_string == data.cmp_string)
+        ;
 }
 
-bool Condition::open_paren() const {
+bool Condition::open_paren() const
+{
     return this->left_paren && !this->right_paren;
 }
 
-bool Condition::close_paren() const {
+bool Condition::close_paren() const
+{
     return !this->left_paren && this->right_paren;
 }
 
-int Condition::paren_as_int() const {
-    namespace ParenType = Opm::RestartIO::Helpers::VectorItems::IACN::Value;
+int Condition::paren_as_int() const
+{
+    using ParenType = Opm::RestartIO::Helpers
+        ::VectorItems::IACN::Value::ParenType;
 
-    if (this->open_paren())
+    if (this->open_paren()) {
         return ParenType::Open;
-    else if (this->close_paren())
+    }
+    else if (this->close_paren()) {
         return ParenType::Close;
+    }
 
     return ParenType::None;
 }
 
-
-int Condition::logic_as_int() const {
+int Condition::logic_as_int() const
+{
     switch (this->logic) {
     case Logical::END:
         return 0;
@@ -237,8 +421,8 @@ int Condition::logic_as_int() const {
     }
 }
 
-
-int Condition::comparator_as_int() const {
+int Condition::comparator_as_int() const
+{
     switch (this->cmp) {
     case Comparator::GREATER:
         return 1;
@@ -257,5 +441,4 @@ int Condition::comparator_as_int() const {
     }
 }
 
-}
-}
+} // namespace Opm::Action

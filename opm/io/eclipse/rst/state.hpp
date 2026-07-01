@@ -37,6 +37,7 @@
 #include <ctime>
 #include <memory>
 #include <optional>
+#include <span>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -81,6 +82,14 @@ struct RstState
     std::unordered_map<std::string, std::vector<std::string>> wlists;
 
 private:
+    template <typename FloatType>
+    struct ActionData
+    {
+        std::span<const int> i;
+        std::span<const FloatType> s;
+        std::span<const std::string> z;
+    };
+
     void load_oil_vaporization(const std::vector<int>&    intehead,
                                const std::vector<bool>&   logihead,
                                const std::vector<double>& doubhead);
@@ -113,19 +122,30 @@ private:
 
     void add_udqs(std::shared_ptr<EclIO::RestartFileView> rstView);
 
-    void add_actions(const Parser& parser,
-                     const Runspec& runspec,
-                     std::time_t sim_time,
-                     const std::vector<std::string>& zact,
-                     const std::vector<int>& iact,
-                     const std::vector<float>& sact,
-                     const std::vector<std::string>& zacn,
-                     const std::vector<int>& iacn,
-                     const std::vector<double>& sacn,
-                     const std::vector<std::string>& zlact);
+    void add_actions(const Parser&                parser,
+                     const Runspec&               runspec,
+                     std::time_t                  sim_time,
+                     ActionData<float>            actions,
+                     ActionData<double>           conditions,
+                     std::span<const std::string> zlact);
 
     void add_wlist(const std::vector<std::string>& zwls,
                    const std::vector<int>& iwls);
+
+    std::vector<RstAction::Condition>
+    restore_conditions(const Actdims&     actdims,
+                       ActionData<double> conditions,
+                       std::size_t        index) const;
+
+    void create_action(const Runspec&                      runspec,
+                       const std::time_t                   sim_time,
+                       ActionData<float>                   actionArrays,
+                       std::size_t                         index,
+                       std::vector<RstAction::Condition>&& conditions);
+
+    void restore_action_keywords(const Parser&                parser,
+                                 const Actdims&               actdims,
+                                 std::span<const std::string> zlact);
 
 };
 

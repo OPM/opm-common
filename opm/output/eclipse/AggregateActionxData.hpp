@@ -34,11 +34,11 @@ namespace Opm {
     class UDQInput;
 } // namespace Opm
 
-namespace Opm { namespace Action {
+namespace Opm::Action {
     class State;
-}} // Opm::Action
+} // Opm::Action
 
-namespace Opm { namespace RestartIO { namespace Helpers {
+namespace Opm::RestartIO::Helpers {
 
 class AggregateActionxData
 {
@@ -93,29 +93,38 @@ private:
                          const Opm::SummaryState&  st,
                          const std::size_t         simStep);
 
-    /// Aggregate 'IACT' array (Integer) for all ACTIONX data  (9 integers pr UDQ)
+    /// Aggregate 'IACT' array (Integer) for all ACTIONX data (9 integers pr
+    /// UDQ)
     WindowedArray<int> iACT_;
 
-    /// Aggregate 'SACT' array (Integer) for all ACTIONX data  (5 integers pr ACTIONX - currently all zero - meaning unknown)
+    /// Aggregate 'SACT' array (Integer) for all ACTIONX data (5 integers pr
+    /// ACTIONX - currently all zero - meaning unknown)
     WindowedArray<float> sACT_;
 
-    /// Aggregate 'ZACT' array (Character) for all ACTIONX data. (4 * 8 chars pr ACIONX keyword - name of Action)
+    /// Aggregate 'ZACT' array (Character) for all ACTIONX data. (4 * 8
+    /// chars pr ACIONX keyword - name of Action)
     WindowedArray<EclIO::PaddedOutputString<8>> zACT_;
 
-    /// Aggregate 'ZLACT' array (Character) for all Actionx data.  (max 16 * 8 characters pr line (default 80 chars pr line)
+    /// Aggregate 'ZLACT' array (Character) for all Actionx data.  (max 16 *
+    /// 8 characters pr line (default 80 chars pr line)
     WindowedArray<EclIO::PaddedOutputString<8>> zLACT_;
 
-    /// Aggregate 'ZACN' array (Character) for all Actionx data  (length equal to max no of conditions pr Actionx * the number of Actiox kwords)
-    WindowedArray<EclIO::PaddedOutputString<8>> zACN_;
+    /// Aggregate 'IACN' array (Integer) for all Actionx data (length 26*
+    /// the max number of conditoins pr Actionx * the number of Actionx
+    /// kwords)
+    WindowedMatrix<int> iACN_;
 
-    /// Aggregate 'IACN' array (Integer) for all Actionx data  (length 26* the max number of conditoins pr Actionx * the number of Actionx kwords)
-    WindowedArray<int> iACN_;
-
-    /// Aggregate 'SACN' array (double precision floating-point) for all Actionx data  (16 * max number of Actionx conditions)
+    /// Aggregate 'SACN' array (double precision floating-point) for all
+    /// Actionx data (16 * max number of Actionx conditions)
     WindowedMatrix<double> sACN_;
+
+    /// Aggregate 'ZACN' array (Character) for all Actionx data (length
+    /// equal to max no of conditions pr Actionx * the number of Actiox
+    /// kwords)
+    WindowedMatrix<EclIO::PaddedOutputString<8>> zACN_;
 
 };
 
-}}} // Opm::RestartIO::Helpers
+} // Opm::RestartIO::Helpers
 
 #endif //OPM_AGGREGATE_WELL_DATA_HPP

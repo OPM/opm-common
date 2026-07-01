@@ -501,6 +501,25 @@ BOOST_AUTO_TEST_CASE(Declared_Actionx_data)
 
                 const auto& iAcn = actionxData.getIACN();
 
+                // First ACTIONX keyword
+                //
+                //   ACTIONX
+                //   ACT01 10  0.543 /
+                //   FMWPR > 45 AND /
+                //   WUPR3 'OP*' > 46 OR /
+                //   MNTH < MAY  /
+                //   /
+                //   WELOPEN
+                //   '?' SHUT 0 0 0 2* /
+                //   /
+                //   WELOPEN
+                //    'OPU02' 'OPEN' 5* /
+                //   /
+                //   WELOPEN
+                //    'OPL02' 'OPEN' 5* /
+                //   /
+                //   ENDACTIO
+
                 auto start_a = 0 * actDims[6];
                 auto start = start_a + 0 * 26;
                 BOOST_CHECK_EQUAL(iAcn[start + 0], 0);
@@ -602,6 +621,24 @@ BOOST_AUTO_TEST_CASE(Declared_Actionx_data)
                 BOOST_CHECK_EQUAL(iAcn[start + 15], 0);
                 BOOST_CHECK_EQUAL(iAcn[start + 16], 1);
                 BOOST_CHECK_EQUAL(iAcn[start + 17], 1);
+
+                // ===========================================================
+
+                // Second ACTIONX keyword
+                //
+                //    ACTIONX
+                //    ACT02 11 0.567 /
+                //    FMWPR > 25 AND /
+                //    WGPR 'OPL02' > GGPR 'LOWER' AND /
+                //    MNTH > NOV /
+                //    /
+                //    WELOPEN
+                //    '?' 'SHUT' 0 0 0 2* /
+                //    /
+                //    WELOPEN
+                //     'OPL01' 'OPEN' 5* /
+                //    /
+                //    ENDACTIO
 
                 start_a = 3 * actDims[6];
                 start = start_a + 0 * 26;

@@ -22,86 +22,178 @@
 
 #include <vector>
 
-namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems {
+namespace Opm::RestartIO::Helpers::VectorItems {
 
     namespace IACN {
         enum index : std::vector<int>::size_type {
+            /// Region ID of LHS region quantity.
+            LHSRegionID = 0,
+
+            /// Region ID of RHS region quantity.
+            RHSRegionID = 1,
+
+            /// Segment ID of LHS segment quantity.
+            LHSSegmentID = 2,
+
+            /// Segment ID of RHS segment quantity.
+            RHSSegmentID = 3,
+
+            /// I location of LHS connection quantity
+            LHSConnLocation_I = 4,
+
+            /// J location of LHS connection quantity
+            LHSConnLocation_J = 5,
+
+            /// K location of LHS connection quantity
+            LHSConnLocation_K = 6,
+
+            /// I location of RHS connection quantity
+            RHSConnLocation_I = 7,
+
+            /// J location of RHS connection quantity
+            RHSConnLocation_J = 8,
+
+            /// K location of RHS connection quantity
+            RHSConnLocation_K = 9,
+
+            /// Quantity type (level) of LHS quantity.
             LHSQuantityType = 10,
+
+            /// Quantity type (level) of RHS quantity.
             RHSQuantityType = 11,
+
             FirstGreater    = 12,
             TerminalLogic   = 13,
             Paren           = 15,
             Comparator      = 16,
-            BoolLink        = 17
+            BoolLink        = 17,
+
+            /// I location of LHS block/cell quantity
+            LHSBlockLocation_I = 20,
+
+            /// J location of LHS block/cell quantity
+            LHSBlockLocation_J = 21,
+
+            /// K location of LHS block/cell quantity
+            LHSBlockLocation_K = 22,
+
+            /// I location of RHS block/cell quantity
+            RHSBlockLocation_I = 23,
+
+            /// J location of RHS block/cell quantity
+            RHSBlockLocation_J = 24,
+
+            /// K location of RHS block/cell quantity
+            RHSBlockLocation_K = 25,
         };
 
-        // The same enum is used for both lefthand side and righthand side quantities;
-        // although not all values can be used on both sides.
+        // The same enum is used for both left-hand side and right-hand side
+        // quantities.  Note that not all values are eligible for both
+        // sides.
         namespace Value {
-        enum QuantityType {
-            Field     = 1,
-            Well      = 2,
-            Group     = 3,
-            Const     = 8,
-            Day       = 10,
-            Month     = 11,
-            Year      = 12
-        };
+            enum QuantityType {
+                /// Quantity is defined at the field level (F* vector).
+                Field = 1,
 
-        enum ParenType {
-            None = 0,
-            Open = 1,
-            Close = 2
-        };
+                /// Quantity is defined at the well level (W* vector).
+                Well = 2,
 
-        }
+                /// Quantity is defined at the group level (G* vector).
+                Group = 3,
+
+                /// Quantity is defined at the region level (R* vector).
+                Region = 4,
+
+                /// Quantity is defined at the segment level (S* vector).
+                Segment = 5,
+
+                /// Quantity is defined at the connection level (C* vector).
+                Connection = 6,
+
+                /// Quantity is a constant--i.e., a number.
+                Const = 8,
+
+                /// Quantity is a day (in a month).
+                Day = 10,
+
+                /// Quantity is a month.
+                Month = 11,
+
+                /// Quantity is a year.
+                Year = 12,
+
+                /// Quantity is defined a the block/cell level (B* vector).
+                Block = 15,
+            };
+
+            enum ParenType {
+                None = 0,
+                Open = 1,
+                Close = 2,
+            };
+        } // namespace Value
 
         constexpr std::size_t ConditionSize = 26;
-    }
-
+    } // namespace IACN
 
     namespace SACN {
+        enum index : std::vector<int>::size_type {
+            LHSValue0 = 0,
+            RHSValue0 = 2,
+            LHSValue1 = 4,
+            RHSValue1 = 5,
+            LHSValue2 = 6,
+            RHSValue2 = 7,
+            LHSValue3 = 8,
+            RHSValue3 = 9,
+        };
 
-    enum index : std::vector<int>::size_type {
-        LHSValue0 = 0,
-        RHSValue0 = 2,
-        LHSValue1 = 4,
-        RHSValue1 = 5,
-        LHSValue2 = 6,
-        RHSValue2 = 7,
-        LHSValue3 = 8,
-        RHSValue3 = 9
-    };
-
-    constexpr std::size_t ConditionSize = 16;
-    }
-
+        constexpr std::size_t ConditionSize = 16;
+    } // namespace SACN
 
     namespace ZACN {
-    enum index : std::vector<int>::size_type {
-        Quantity = 0,
-        LHSQuantity = 0,
-        RHSQuantity = 1,
-        Comparator = 2,
-        Well = 3,
-        LHSWell = 3,
-        RHSWell = 4,
-        Group = 5,
-        LHSGroup = 5,
-        RHSGroup = 6
-    };
+        enum index : std::vector<int>::size_type {
+            Quantity = 0,
 
-    constexpr std::size_t RHSOffset = 1;
-    constexpr std::size_t ConditionSize = 13;
-    }
+            /// Summary vector keyword of LHS quantity.
+            LHSQuantity = 0,
+
+            /// Summary vector keyword of RHS quantity.
+            RHSQuantity = 1,
+
+            Comparator = 2,
+
+            Well = 3,
+
+            /// Well name of LHS quantity (Well, Connection, Segment).
+            LHSWell = 3,
+
+            /// Well name of RHS quantity (Well, Connection, Segment).
+            RHSWell = 4,
+
+            Group = 5,
+
+            /// Group name of LHS quantity (Group).
+            LHSGroup = 5,
+
+            /// Group name of RHS quantity (Group).
+            RHSGroup = 6,
+
+            /// Region set name for LHS region quantity.  "NUM" for default FIPNUM set.
+            LHSRegionSet = 7,
+
+            /// Region set name for RHS region quantity.  "NUM" for default FIPNUM set.
+            RHSRegionSet = 8,
+        };
+
+        constexpr std::size_t RHSOffset = 1;
+        constexpr std::size_t ConditionSize = 13;
+    } // namespace ZACN
 
     namespace ZLACT {
+        constexpr std::size_t max_line_length = 128;
+    } // namespace ZLACT
 
-    constexpr std::size_t max_line_length = 128;
-    }
-
-
-
-}}}} // Opm::RestartIO::Helpers::VectorItems
+} // namespace Opm::RestartIO::Helpers::VectorItems
 
 #endif

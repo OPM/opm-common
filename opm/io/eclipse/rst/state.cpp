@@ -36,6 +36,7 @@
 
 #include <opm/output/eclipse/UDQDims.hpp>
 
+#include <opm/output/eclipse/VectorItems/action.hpp>
 #include <opm/output/eclipse/VectorItems/connection.hpp>
 #include <opm/output/eclipse/VectorItems/doubhead.hpp>
 #include <opm/output/eclipse/VectorItems/intehead.hpp>
@@ -64,6 +65,7 @@
 #include <optional>
 #include <stdexcept>
 #include <string>
+#include <span>
 #include <utility>
 #include <vector>
 
@@ -362,7 +364,7 @@ namespace {
                           doubhead[VI::doubhead::OilVapPropensity],
                           doubhead[VI::doubhead::OilVapDensPropensity]);
     }
-}
+} // Anonymous namespace
 
 namespace Opm::RestartIO {
 
@@ -382,6 +384,111 @@ RstState::RstState(std::shared_ptr<EclIO::RestartFileView> rstView,
                                 rstView->logihead(),
                                 rstView->doubhead());
 }
+
+const RstWell&
+RstState::get_well(const std::string& wname) const
+{
+    const auto well_iter = std::ranges::find_if(this->wells,
+                                                [&wname] (const auto& well)
+                                                { return well.name == wname; });
+
+    if (well_iter == this->wells.end()) {
+        throw std::out_of_range("No such well: " + wname);
+    }
+
+    return *well_iter;
+}
+
+RstState RstState::load(std::shared_ptr<EclIO::RestartFileView> rstView,
+                        const Runspec&                          runspec,
+                        const Parser&                           parser,
+                        const ::Opm::EclipseGrid*               grid)
+{
+    if (rstView->isGraphicsOnly()) {
+        throw std::runtime_error {
+            fmt::format("Cannot restart from restart file "
+                        "report step {}): the file appears to be graphics-only "
+                        "or is missing well arrays required for simulation restart. "
+                        "Please use a standard restart file instead.",
+                        rstView->reportStep())
+        };
+    }
+
+    RstState state(rstView, runspec, grid);
+
+    // At minimum we need any applicable constraint data for FIELD.  Load
+    // groups unconditionally.
+    {
+        const auto& zgrp = rstView->getKeyword<std::string>("ZGRP");
+        const auto& igrp = rstView->getKeyword<int>("IGRP");
+        const auto& sgrp = rstView->getKeyword<float>("SGRP");
+        const auto& xgrp = rstView->getKeyword<double>("XGRP");
+
+        state.add_groups(zgrp, igrp, sgrp, xgrp);
+    }
+
+    if (state.header.num_wells > 0) {
+        const auto& zwel = rstView->getKeyword<std::string>("ZWEL");
+        const auto& iwel = rstView->getKeyword<int>("IWEL");
+        const auto& swel = rstView->getKeyword<float>("SWEL");
+        const auto& xwel = rstView->getKeyword<double>("XWEL");
+
+        const auto& icon = rstView->getKeyword<int>("ICON");
+        const auto& scon = rstView->getKeyword<float>("SCON");
+        const auto& xcon = rstView->getKeyword<double>("XCON");
+
+        if (rstView->hasKeyword<int>("ISEG")) {
+            // Multi-segmented wells in restart file.
+            const auto& iseg = rstView->getKeyword<int>("ISEG");
+            const auto& rseg = rstView->getKeyword<double>("RSEG");
+
+            state.add_msw(zwel, iwel, swel, xwel,
+                          icon, scon, xcon,
+                          iseg, rseg);
+        }
+        else {
+            // Standard wells only.
+            state.add_wells(zwel, iwel, swel, xwel,
+                            icon, scon, xcon);
+        }
+
+        if (rstView->hasKeyword<int>("IWLS")) {
+            const auto& iwls = rstView->getKeyword<int>("IWLS");
+            const auto& zwls = rstView->getKeyword<std::string>("ZWLS");
+
+            state.add_wlist(zwls, iwls);
+        }
+    }
+
+    if (state.header.num_udq() > 0) {
+        state.add_udqs(rstView);
+    }
+
+    if (state.header.num_action > 0) {
+        const auto actionArrays = ActionData<float> {
+            .i = rstView->getKeyword<int>("IACT"),
+            .s = rstView->getKeyword<float>("SACT"),
+            .z = rstView->getKeyword<std::string>("ZACT")
+        };
+
+        const auto conditions = ActionData<double> {
+            .i = rstView->getKeyword<int>("IACN"),
+            .s = rstView->getKeyword<double>("SACN"),
+            .z = rstView->getKeyword<std::string>("ZACN")
+        };
+
+        state.add_actions(parser, runspec,
+                          state.header.sim_time(),
+                          actionArrays, conditions,
+                          rstView->getKeyword<std::string>("ZLACT"));
+    }
+
+    return state;
+}
+
+// -----------------------------------------------------------------------------
+// Private member functions
+// -----------------------------------------------------------------------------
 
 void RstState::load_oil_vaporization(const std::vector<int>&    intehead,
                                      const std::vector<bool>&   logihead,
@@ -491,7 +598,9 @@ void RstState::add_wells(const std::vector<std::string>& zwel,
                          const std::vector<float>& scon,
                          const std::vector<double>& xcon)
 {
-    for (int iw = 0; iw < this->header.num_wells; ++iw) {
+    const auto num_wells = static_cast<std::size_t>(this->header.num_wells);
+
+    for (std::size_t iw = 0; iw < num_wells; ++iw) {
         const std::size_t zwel_offset = iw * this->header.nzwelz;
         const std::size_t iwel_offset = iw * this->header.niwelz;
         const std::size_t swel_offset = iw * this->header.nswelz;
@@ -541,7 +650,9 @@ void RstState::add_msw(const std::vector<std::string>& zwel,
                        const std::vector<int>& iseg,
                        const std::vector<double>& rseg)
 {
-    for (int iw = 0; iw < this->header.num_wells; ++iw) {
+    const auto num_wells = static_cast<std::size_t>(this->header.num_wells);
+
+    for (std::size_t iw = 0; iw < num_wells; ++iw) {
         const std::size_t zwel_offset = iw * this->header.nzwelz;
         const std::size_t iwel_offset = iw * this->header.niwelz;
         const std::size_t swel_offset = iw * this->header.nswelz;
@@ -590,9 +701,9 @@ void RstState::add_udqs(std::shared_ptr<EclIO::RestartFileView> rstView)
 
     auto udqValues = UDQVectors { std::move(rstView) };
 
-    for (auto udq_index = 0*this->header.num_udq();
-         udq_index < this->header.num_udq(); ++udq_index)
-    {
+    const auto num_udq = static_cast<std::size_t>(this->header.num_udq());
+
+    for (auto udq_index = 0*num_udq; udq_index < num_udq; ++udq_index) {
         const auto& name = zudn[udq_index*UDQDims::entriesPerZUDN() + 0];
         const auto& unit = zudn[udq_index*UDQDims::entriesPerZUDN() + 1];
 
@@ -606,89 +717,39 @@ void RstState::add_udqs(std::shared_ptr<EclIO::RestartFileView> rstView)
     }
 }
 
-void RstState::add_actions(const Parser& parser,
-                           const Runspec& runspec,
-                           std::time_t sim_time,
-                           const std::vector<std::string>& zact,
-                           const std::vector<int>& iact,
-                           const std::vector<float>& sact,
-                           const std::vector<std::string>& zacn,
-                           const std::vector<int>& iacn,
-                           const std::vector<double>& sacn,
-                           const std::vector<std::string>& zlact)
+void RstState::add_actions(const Parser&                parser,
+                           const Runspec&               runspec,
+                           const std::time_t            sim_time,
+                           ActionData<float>            actionArrays,
+                           ActionData<double>           conditions,
+                           std::span<const std::string> zlact)
 {
+    const auto num_actions = static_cast<std::size_t>(this->header.num_action);
+
     const auto& actdims = runspec.actdims();
-    auto zact_action_size  = RestartIO::Helpers::entriesPerZACT();
-    auto iact_action_size  = RestartIO::Helpers::entriesPerIACT();
-    auto sact_action_size  = RestartIO::Helpers::entriesPerSACT();
-    auto zacn_action_size  = RestartIO::Helpers::entriesPerZACN(actdims);
-    auto iacn_action_size  = RestartIO::Helpers::entriesPerIACN(actdims);
-    auto sacn_action_size  = RestartIO::Helpers::entriesPerSACN(actdims);
-    auto zlact_action_size = zlact.size() / this->header.num_action;
+    const auto zlact_action_size = zlact.size() / num_actions;
 
-    auto zacn_cond_size = 13;
-    auto iacn_cond_size = 26;
-    auto sacn_cond_size = 16;
+    for (std::size_t index = 0; index < num_actions; ++index) {
+        auto actionConditions = this->restore_conditions(actdims, conditions, index);
+        this->create_action(runspec, sim_time, actionArrays, index, std::move(actionConditions));
 
-    for (std::size_t index=0; index < static_cast<std::size_t>(this->header.num_action); index++) {
-        std::vector<RstAction::Condition> conditions;
-        for (std::size_t icond = 0; icond < actdims.max_conditions(); icond++) {
-            const auto zacn_offset = index * zacn_action_size + icond * zacn_cond_size;
-            const auto iacn_offset = index * iacn_action_size + icond * iacn_cond_size;
-
-            if (RstAction::Condition::valid(&zacn[zacn_offset], &iacn[iacn_offset])) {
-                const auto sacn_offset = index * sacn_action_size + icond * sacn_cond_size;
-                conditions.emplace_back(&zacn[zacn_offset], &iacn[iacn_offset], &sacn[sacn_offset]);
-            }
-        }
-
-        const auto& name = zact[index * zact_action_size + 0];
-        const auto& max_run = iact[index * iact_action_size + 5];
-        const auto& run_count = iact[index * iact_action_size + 2] - 1;
-        const auto& min_wait = this->unit_system.to_si(UnitSystem::measure::time, sact[index * sact_action_size + 3]);
-        const auto& last_run_elapsed = this->unit_system.to_si(UnitSystem::measure::time, sact[index * sact_action_size + 4]);
-
-        auto last_run_time = TimeService::advance( runspec.start_time(), last_run_elapsed );
-        this->actions.emplace_back(name, max_run, run_count, min_wait, sim_time, last_run_time, conditions );
-
-
-        std::string action_deck;
-        auto zlact_offset = index * zlact_action_size;
-        while (true) {
-            std::string line;
-            for (std::size_t item_index = 0; item_index < actdims.line_size(); item_index++) {
-                const auto padded = EclIO::PaddedOutputString<8> { zlact[zlact_offset + item_index] };
-                line += padded.c_str();
-            }
-
-            line = trim_copy(line);
-            if (line.empty())
-                continue;
-
-            if (line == "ENDACTIO")
-                break;
-
-            action_deck += line + "\n";
-            zlact_offset += actdims.line_size();
-        }
-        // Ignore invalid keyword combinaions in actions, since these decks are typically incomplete
-        ParseContext parseContext;
-        parseContext.update(ParseContext::PARSE_INVALID_KEYWORD_COMBINATION, InputErrorAction::IGNORE);
-        const auto& deck = parser.parseString( action_deck, parseContext );
-        for (auto keyword : deck)
-            this->actions.back().keywords.push_back(std::move(keyword));
+        this->restore_action_keywords(parser, actdims,
+                                      zlact.subspan(index * zlact_action_size, zlact_action_size));
     }
 }
 
 void RstState::add_wlist(const std::vector<std::string>& zwls,
                          const std::vector<int>& iwls)
 {
-    for (auto well_index = 0*this->header.num_wells; well_index < this->header.num_wells; well_index++) {
-        const auto zwls_offset = this->header.max_wlist * well_index;
-        const auto iwls_offset = this->header.max_wlist * well_index;
+    const auto num_wells = static_cast<std::size_t>(this->header.num_wells);
+    const auto max_wlist = static_cast<std::size_t>(this->header.max_wlist);
+
+    for (auto well_index = 0; well_index < num_wells; well_index++) {
+        const auto zwls_offset = max_wlist * well_index;
+        const auto iwls_offset = max_wlist * well_index;
         const auto& well_name = this->wells[well_index].name;
 
-        for (auto wlist_index = 0*this->header.max_wlist; wlist_index < this->header.max_wlist; wlist_index++) {
+        for (auto wlist_index = 0; wlist_index < max_wlist; wlist_index++) {
             const auto well_order = iwls[iwls_offset + wlist_index];
             if (well_order < 1) {
                 continue;
@@ -704,94 +765,105 @@ void RstState::add_wlist(const std::vector<std::string>& zwls,
     }
 }
 
-const RstWell& RstState::get_well(const std::string& wname) const
+std::vector<RstAction::Condition>
+RstState::restore_conditions(const Actdims&     actdims,
+                             ActionData<double> conditions,
+                             const std::size_t  index) const
 {
-    const auto well_iter = std::ranges::find_if(this->wells,
-                                                [&wname] (const auto& well)
-                                                { return well.name == wname; });
-    if (well_iter == this->wells.end())
-        throw std::out_of_range("No such well: " + wname);
+    auto actConditions = std::vector<RstAction::Condition> {};
 
-    return *well_iter;
+    const auto zacn_action_size = RestartIO::Helpers::entriesPerZACN(actdims);
+    const auto iacn_action_size = RestartIO::Helpers::entriesPerIACN(actdims);
+    const auto sacn_action_size = RestartIO::Helpers::entriesPerSACN(actdims);
+
+    constexpr auto iacn_cond_size = RestartIO::Helpers::VectorItems::IACN::ConditionSize;
+    constexpr auto sacn_cond_size = RestartIO::Helpers::VectorItems::SACN::ConditionSize;
+    constexpr auto zacn_cond_size = RestartIO::Helpers::VectorItems::ZACN::ConditionSize;
+
+    const auto act_iacn = conditions.i.subspan(index * iacn_action_size, iacn_action_size);
+    const auto act_sacn = conditions.s.subspan(index * sacn_action_size, sacn_action_size);
+    const auto act_zacn = conditions.z.subspan(index * zacn_action_size, zacn_action_size);
+
+    for (std::size_t icond = 0; icond < actdims.max_conditions(); ++icond) {
+        const auto iacn = act_iacn.subspan(icond * iacn_cond_size, iacn_cond_size);
+        const auto sacn = act_sacn.subspan(icond * sacn_cond_size, sacn_cond_size);
+        const auto zacn = act_zacn.subspan(icond * zacn_cond_size, zacn_cond_size);
+
+        if (RstAction::Condition::valid(iacn, zacn)) {
+            actConditions.emplace_back(iacn, sacn, zacn);
+        }
+    }
+
+    return actConditions;
 }
 
-RstState RstState::load(std::shared_ptr<EclIO::RestartFileView> rstView,
-                        const Runspec&                          runspec,
-                        const Parser&                           parser,
-                        const ::Opm::EclipseGrid*               grid)
+void
+RstState::create_action(const Runspec&                      runspec,
+                        const std::time_t                   sim_time,
+                        ActionData<float>                   actionArrays,
+                        const std::size_t                   index,
+                        std::vector<RstAction::Condition>&& conditions)
 {
-    if (rstView->isGraphicsOnly()) {
-        throw std::runtime_error {
-            fmt::format("Cannot restart from restart file "
-                        "report step {}): the file appears to be graphics-only "
-                        "or is missing well arrays required for simulation restart. "
-                        "Please use a standard restart file instead.",
-                        rstView->reportStep())
-        };
-    }
+    const auto zact_action_size = RestartIO::Helpers::entriesPerZACT();
+    const auto iact_action_size = RestartIO::Helpers::entriesPerIACT();
+    const auto sact_action_size = RestartIO::Helpers::entriesPerSACT();
 
-    RstState state(rstView, runspec, grid);
+    const auto iact = actionArrays.i.subspan(index * iact_action_size, iact_action_size);
+    const auto sact = actionArrays.s.subspan(index * sact_action_size, sact_action_size);
+    const auto zact = actionArrays.z.subspan(index * zact_action_size, zact_action_size);
 
-    // At minimum we need any applicable constraint data for FIELD.  Load
-    // groups unconditionally.
-    {
-        const auto& zgrp = rstView->getKeyword<std::string>("ZGRP");
-        const auto& igrp = rstView->getKeyword<int>("IGRP");
-        const auto& sgrp = rstView->getKeyword<float>("SGRP");
-        const auto& xgrp = rstView->getKeyword<double>("XGRP");
+    const auto& name = zact[0];
+    const auto max_run = iact[5];
+    const auto run_count = iact[2] - 1;
 
-        state.add_groups(zgrp, igrp, sgrp, xgrp);
-    }
+    const auto min_wait = this->unit_system.to_si(UnitSystem::measure::time, sact[3]);
+    const auto last_run_elapsed = this->unit_system.to_si(UnitSystem::measure::time, sact[4]);
 
-    if (state.header.num_wells > 0) {
-        const auto& zwel = rstView->getKeyword<std::string>("ZWEL");
-        const auto& iwel = rstView->getKeyword<int>("IWEL");
-        const auto& swel = rstView->getKeyword<float>("SWEL");
-        const auto& xwel = rstView->getKeyword<double>("XWEL");
+    const auto last_run_time = TimeService::advance(runspec.start_time(), last_run_elapsed);
 
-        const auto& icon = rstView->getKeyword<int>("ICON");
-        const auto& scon = rstView->getKeyword<float>("SCON");
-        const auto& xcon = rstView->getKeyword<double>("XCON");
+    this->actions.emplace_back(name, max_run, run_count,
+                               min_wait, sim_time, last_run_time,
+                               std::move(conditions));
+}
 
-        if (rstView->hasKeyword<int>("ISEG")) {
-            // Multi-segmented wells in restart file.
-            const auto& iseg = rstView->getKeyword<int>("ISEG");
-            const auto& rseg = rstView->getKeyword<double>("RSEG");
+void
+RstState::restore_action_keywords(const Parser& parser,
+                                  const Actdims& actdims,
+                                  std::span<const std::string> zlact)
+{
+    auto action_deck = std::string{};
 
-            state.add_msw(zwel, iwel, swel, xwel,
-                          icon, scon, xcon,
-                          iseg, rseg);
-        }
-        else {
-            // Standard wells only.
-            state.add_wells(zwel, iwel, swel, xwel,
-                            icon, scon, xcon);
+    auto lineIdx = 0 * actdims.line_size();
+    while (true) {
+        auto zlact_line = zlact.subspan(lineIdx++ * actdims.line_size(), actdims.line_size());
+
+        auto line = std::string{};
+        for (const auto& line_item : zlact_line) {
+            const auto padded = EclIO::PaddedOutputString<8> {line_item};
+            line += padded.c_str();
         }
 
-        if (rstView->hasKeyword<int>("IWLS")) {
-            const auto& iwls = rstView->getKeyword<int>("IWLS");
-            const auto& zwls = rstView->getKeyword<std::string>("ZWLS");
-
-            state.add_wlist(zwls, iwls);
+        line = trim_copy(line);
+        if (line.empty()) {
+            continue;
         }
+
+        if (line == "ENDACTIO") {
+            break;
+        }
+
+        action_deck += line + "\n";
     }
 
-    if (state.header.num_udq() > 0) {
-        state.add_udqs(rstView);
-    }
+    // Ignore invalid keyword combinaions in actions,
+    // since these decks are typically incomplete.
+    auto parseContext = ParseContext {};
+    parseContext.update(ParseContext::PARSE_INVALID_KEYWORD_COMBINATION,
+                        InputErrorAction::IGNORE);
 
-    if (state.header.num_action > 0) {
-        const auto& zact = rstView->getKeyword<std::string>("ZACT");
-        const auto& iact = rstView->getKeyword<int>("IACT");
-        const auto& sact = rstView->getKeyword<float>("SACT");
-        const auto& zacn = rstView->getKeyword<std::string>("ZACN");
-        const auto& iacn = rstView->getKeyword<int>("IACN");
-        const auto& sacn = rstView->getKeyword<double>("SACN");
-        const auto& zlact= rstView->getKeyword<std::string>("ZLACT");
-        state.add_actions(parser, runspec, state.header.sim_time(), zact, iact, sact, zacn, iacn, sacn, zlact);
+    for (auto&& keyword : parser.parseString(action_deck, parseContext)) {
+        this->actions.back().keywords.push_back(std::move(keyword));
     }
-
-    return state;
 }
 
 } // namespace Opm::RestartIO
