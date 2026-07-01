@@ -54,14 +54,21 @@ namespace IAPWS {
 template <class Scalar>
 class Common
 {
+    // Source values in double precision, used to derive Rs and criticalMolarVolume
+    // below in double and cast to Scalar. The double intermediate is needed
+    // because Scalar arithmetic is not constexpr for the autodiff Scalar types
+    // used by the material tests on MSVC; keeping the literals in one place
+    // avoids molarMass/criticalDensity drifting out of sync with the derived
+    // constants.
+    static constexpr double molarMass_si       = 18.01518e-3; // [kg/mol]
+    static constexpr double criticalDensity_si = 322.0;       // [kg/m^3]
+
 public:
     //! The molar mass of water \f$\mathrm{[kg/mol]}\f$
-    static constexpr Scalar molarMass = Scalar(18.01518e-3);
+    static constexpr Scalar molarMass = static_cast<Scalar>(molarMass_si);
 
     //! Specific gas constant of water \f$\mathrm{[J/(kg*K)]}\f$
-    // Compute in double and cast: Scalar arithmetic is not constexpr for the
-    // autodiff Scalar types used by the material tests on MSVC.
-    static constexpr Scalar Rs = static_cast<Scalar>(8.314472 / 18.01518e-3);
+    static constexpr Scalar Rs = static_cast<Scalar>(Constants<double>::R / molarMass_si);
 
     //! Critical temperature of water \f$\mathrm{[K]}\f$
     static constexpr Scalar criticalTemperature = Scalar(647.096);
@@ -70,13 +77,13 @@ public:
     static constexpr Scalar criticalPressure = Scalar(22.064e6);
 
     //! Density of water at the critical point \f$\mathrm{[kg/m^3]}\f$
-    static constexpr Scalar criticalDensity = Scalar(322.0);
+    static constexpr Scalar criticalDensity = static_cast<Scalar>(criticalDensity_si);
 
     //! Critical volume of water \f$\mathrm{[m^3/kmol]}\f$
     static constexpr Scalar criticalVolume = Scalar(5.595e-2);
 
     //! Critical molar volume of water \f$\mathrm{[m^3/mol]}\f$
-    static constexpr Scalar criticalMolarVolume = static_cast<Scalar>(18.01518e-3 / 322.0);
+    static constexpr Scalar criticalMolarVolume = static_cast<Scalar>(molarMass_si / criticalDensity_si);
 
     //! The acentric factor of water \f$\mathrm{[-]}\f$
     static constexpr Scalar acentricFactor = Scalar(0.344);

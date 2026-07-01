@@ -284,8 +284,9 @@ macro(opm-common_targets_hook)
     target_include_directories(opmcommon PRIVATE ${CMAKE_BINARY_DIR}/_deps)
   endif()
 
-  # compareECL is an optional utility binary (additionals satellite); only add
-  # its sources when the target exists (i.e. when BUILD_EXAMPLES is ON).
+  # compareECL comes from the additionals satellite (always built except on
+  # Windows, where <getopt.h> is unavailable); only add its sources when the
+  # target actually exists.
   if(TARGET compareECL)
     target_sources(compareECL
       PRIVATE
@@ -316,11 +317,16 @@ macro(opm-common_targets_hook)
     )
   endif()
 
-  # These come from the programs satellite, which is only built when
-  # BUILD_EXAMPLES is ON; guard so the library install rule does not reference
-  # non-existent targets when examples are disabled.
-  if(TARGET compareECL AND TARGET rst_deck)
-    list(APPEND opm-common_EXTRA_TARGETS compareECL rst_deck)
+  # compareECL (additionals satellite) is installed whenever it is built, i.e.
+  # on every non-Windows host regardless of BUILD_EXAMPLES; rst_deck comes from
+  # the programs satellite and only exists when BUILD_EXAMPLES is ON. Guard each
+  # independently so the install rule never references a non-existent target and
+  # compareECL is not dropped from the install set when examples are disabled.
+  if(TARGET compareECL)
+    list(APPEND opm-common_EXTRA_TARGETS compareECL)
+  endif()
+  if(TARGET rst_deck)
+    list(APPEND opm-common_EXTRA_TARGETS rst_deck)
   endif()
 
   if(TARGET Boost::unit_test_framework)
