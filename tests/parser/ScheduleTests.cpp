@@ -6401,7 +6401,7 @@ END
     BOOST_REQUIRE_MESSAGE(!sched[5].sumthin().has_value(),
                           R"("SUMTHIN" must NOT be configured on report step 6)");
 
-    BOOST_CHECK_THROW(sched[5].sumthin().value(), std::bad_optional_access);
+    BOOST_CHECK_THROW(static_cast<void>(sched[5].sumthin().value()), std::bad_optional_access);
 
     BOOST_REQUIRE_MESSAGE(!sched[6].sumthin().has_value(),
                           R"("SUMTHIN" must NOT be configured on report step 7)");

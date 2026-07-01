@@ -3494,7 +3494,7 @@ BOOST_AUTO_TEST_CASE(READ_WRITE_WELLDATA)
 
             // No data for segment 10 of well W_2 (or no such segment).
             const auto& W2 = wellRatesCopy.at("W_2");
-            BOOST_CHECK_THROW(W2.segments.at(10), std::out_of_range);
+            BOOST_CHECK_THROW(static_cast<void>(W2.segments.at(10)), std::out_of_range);
 
             const auto& W6 = wellRatesCopy.at("W_6");
             const auto& curr = W6.current_control;
