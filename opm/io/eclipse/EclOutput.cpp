@@ -65,7 +65,11 @@ EclOutput::EclOutput(const std::string&            filename,
     const auto binmode = mode | std::ios_base::binary;
     ix_standard = false;
 
-    this->ofileH.open(filename, this->isFormatted ? mode : binmode);
+    // Always open in binary mode, including for formatted (text) output: on
+    // Windows a text-mode stream translates '\n' to "\r\n", which corrupts the
+    // fixed-width records of formatted ECL files (they use '\n' by spec). On
+    // Unix binary and text modes are identical, so this is a no-op there.
+    this->ofileH.open(filename, binmode);
 }
 
 
