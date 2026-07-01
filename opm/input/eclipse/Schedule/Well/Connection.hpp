@@ -200,7 +200,7 @@ namespace Opm {
         State state() const;
         Direction dir() const;
         double depth() const;
-        double thermalLength() const;
+        std::optional<double> thermalLength() const;
         int satTableId() const;
         int complnum() const;
         int segment() const;
@@ -266,7 +266,7 @@ namespace Opm {
                               double center_depth_arg);
         void updateSegment(int segment_number_arg,
                            double center_depth_arg,
-                           double thermal_length_arg,
+                           std::optional<double> thermal_length_arg,
                            std::size_t compseg_insert_index,
                            const std::optional<std::pair<double,double>>& perf_range);
 
@@ -374,11 +374,10 @@ namespace Opm {
         int segment_number { 0 };
 
         // Effective length of the connection in the wellbore segment used in
-        // the thermal conductivity calculation (COMPSEGS item 10).  Zero when
-        // defaulted, signalling that the consumer should apply the ECLIPSE
-        // default: the thickness of the grid block in the direction of
-        // penetration.
-        double m_thermal_length { 0.0 };
+        // the thermal conductivity calculation (COMPSEGS item 10).  Empty when
+        // defaulted: a downstream thermal consumer is expected to use the
+        // grid-block thickness in the direction of penetration.
+        std::optional<double> m_thermal_length {};
 
         double m_wpimult { 1.0 };
 

@@ -40,6 +40,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -59,7 +60,7 @@ namespace {
                double distance_end_in,
                Opm::Connection::Direction dir_in,
                double center_depth_in,
-               double thermal_length_in,
+               std::optional<double> thermal_length_in,
                int segment_number_in,
                std::size_t seqIndex_in);
 
@@ -78,9 +79,9 @@ namespace {
         double center_depth;
 
         // Effective length of the connection in the wellbore segment used in
-        // the thermal conductivity calculation (COMPSEGS item 10).  Zero when
+        // the thermal conductivity calculation (COMPSEGS item 10).  Empty when
         // not specified.
-        double m_thermal_length;
+        std::optional<double> m_thermal_length;
 
         int segment_number;
         std::size_t m_seqIndex;
@@ -94,7 +95,7 @@ namespace {
                    const double distance_end_in,
                    const Opm::Connection::Direction dir_in,
                    const double center_depth_in,
-                   const double thermal_length_in,
+                   const std::optional<double> thermal_length_in,
                    const int segment_number_in,
                    const std::size_t seqIndex_in)
         : m_i              { i_in }
@@ -360,12 +361,11 @@ The direction must be specified when END_IJK is specified. Well: {})", well_name
 
             // Effective length of the connection in the wellbore segment, used
             // in the thermal conductivity calculation (thermal option).  Left
-            // at zero when defaulted, signalling that the consumer should apply
-            // the ECLIPSE default: the thickness of the grid block in the
-            // direction of penetration.
+            // empty when defaulted: a downstream thermal consumer is expected
+            // to use the grid-block thickness in the direction of penetration.
             const auto thermal_length = record.getItem<Kw::THERMAL_LENGTH>().hasValue(0)
-                ? record.getItem<Kw::THERMAL_LENGTH>().getSIDouble(0)
-                : 0.0;
+                ? std::optional<double>{ record.getItem<Kw::THERMAL_LENGTH>().getSIDouble(0) }
+                : std::nullopt;
 
             if (center_depth < 0.0) {
                 // TODO: get the depth from COMPDAT data.
@@ -428,7 +428,7 @@ Well: {}, connection: ({},{},{}))", well_name, I+1, J+1 , K+1);
             // Defaulted values:
             const auto direction = Opm::Connection::Direction::X;
             const auto center_depth = 0.0;
-            const auto thermal_length = 0.0;
+            const std::optional<double> thermal_length = std::nullopt;
             const auto segment_number = 0;
             const auto branch = 1;
 

@@ -908,12 +908,14 @@ namespace Opm {
                 if ((coeff.type() == SegmentHeatTransfer::Type::SEG) &&
                     (coeff.targetSegment() == segment_number))
                 {
-                    throw OpmInputError {
-                        fmt::format("A SEG heat transfer coefficient for well {} "
-                                    "segment {} targets the segment itself.",
-                                    well_name, segment_number),
-                        location
-                    };
+                    const auto msg_fmt = fmt::format(R"(Problem with keyword {{keyword}}
+In {{file}} line {{line}}
+A SEG heat transfer coefficient for well {} segment {} targets the segment itself; the segment is skipped.)",
+                                                     well_name, segment_number);
+
+                    parseContext.handleError(Opm::ParseContext::SCHEDULE_MISSING_SEGMENT,
+                                             msg_fmt, location, errors);
+                    continue;
                 }
 
                 this->m_segments[seg_idx].updateHeatTransfer(record);

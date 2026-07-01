@@ -366,7 +366,7 @@ namespace Opm
 
     void Connection::updateSegment(const int segment_number_arg,
                                    const double center_depth_arg,
-                                   const double thermal_length_arg,
+                                   const std::optional<double> thermal_length_arg,
                                    const std::size_t compseg_insert_index,
                                    const std::optional<std::pair<double, double>>& perf_range)
     {
@@ -389,7 +389,7 @@ namespace Opm
         return this->segment_number;
     }
 
-    double Connection::thermalLength() const
+    std::optional<double> Connection::thermalLength() const
     {
         return this->m_thermal_length;
     }

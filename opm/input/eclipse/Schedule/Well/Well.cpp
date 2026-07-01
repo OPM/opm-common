@@ -2010,6 +2010,16 @@ bool Well::updateWSEGHEAT(const std::vector<SegmentHeatTransferRecord>& records,
                           const ParseContext&                           parseContext,
                           ErrorGuard&                                   errors)
 {
+    if (! this->isMultiSegment()) {
+        const auto msg_fmt = fmt::format(R"(Problem with keyword {{keyword}}
+In {{file}} line {{line}}
+WSEGHEAT applied to well {} which is not a multisegment well.)", this->name());
+
+        parseContext.handleError(ParseContext::SCHEDULE_MISSING_SEGMENT,
+                                 msg_fmt, location, errors);
+        return false;
+    }
+
     auto new_segments = std::make_shared<WellSegments>(*this->segments);
 
     if (new_segments->updateWSEGHEAT(this->name(), records, location, parseContext, errors)) {

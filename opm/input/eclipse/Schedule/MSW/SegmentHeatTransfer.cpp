@@ -137,6 +137,20 @@ namespace Opm {
             rec.segment2 = record.getItem<Kw::SEGMENT2>().get<int>(0);
             rec.operation = operation;
 
+            // The record applies to the inclusive segment range [segment1,
+            // segment2].  A non-positive first segment or an inverted range is
+            // self-inconsistent and can never match any well, so reject it here
+            // rather than let it be silently ignored downstream.
+            if ((rec.segment1 < 1) || (rec.segment2 < rec.segment1)) {
+                throw OpmInputError {
+                    fmt::format("An invalid WSEGHEAT segment range {} to {} was "
+                                "specified for well {}; a valid range satisfies "
+                                "1 <= item 2 (SEGMENT1) <= item 3 (SEGMENT2).",
+                                rec.segment1, rec.segment2, well_name),
+                    keyword.location()
+                };
+            }
+
             // For CLEAR (type NONE) only the operation matters; otherwise the
             // record carries a coefficient to set/add/remove.
             if (operation != SegmentHeatTransfer::Operation::CLEAR) {

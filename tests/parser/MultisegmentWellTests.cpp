@@ -1319,7 +1319,8 @@ BOOST_AUTO_TEST_CASE(ThermalMSW_ScheduleIntegration)
     //
     // COMPSEGS item 10 (THERMAL_LENGTH) provides the effective connection
     // length used by the same thermal option; connections that leave it
-    // defaulted keep a thermal length of zero.
+    // defaulted have an unset (nullopt) thermal length.  A downstream thermal
+    // consumer is expected to use the grid-block thickness.
     const auto deck = ::Opm::Parser{}.parseString(R"(RUNSPEC
 DIMENS
   20 20 20 /
@@ -1404,11 +1405,13 @@ WSEGHEAT
 
     // COMPSEGS thermal length: explicitly specified on the first two
     // connections (metric length is in metres, so the SI value equals the
-    // input value) and defaulted to zero on the third.
+    // input value) and defaulted (empty) on the third.
     const auto& connections = sched[0].wells("PROD01").getConnections();
-    BOOST_CHECK_CLOSE(connections.getFromIJK(19, 19, 0).thermalLength(), 10.0, 1.0e-8);
-    BOOST_CHECK_CLOSE(connections.getFromIJK(19, 19, 1).thermalLength(), 20.0, 1.0e-8);
-    BOOST_CHECK_EQUAL(connections.getFromIJK(19, 19, 2).thermalLength(), 0.0);
+    BOOST_REQUIRE(connections.getFromIJK(19, 19, 0).thermalLength().has_value());
+    BOOST_CHECK_CLOSE(*connections.getFromIJK(19, 19, 0).thermalLength(), 10.0, 1.0e-8);
+    BOOST_REQUIRE(connections.getFromIJK(19, 19, 1).thermalLength().has_value());
+    BOOST_CHECK_CLOSE(*connections.getFromIJK(19, 19, 1).thermalLength(), 20.0, 1.0e-8);
+    BOOST_CHECK(! connections.getFromIJK(19, 19, 2).thermalLength().has_value());
 
     // WSEGHEAT: segment 2 gets a single fixed-temperature (TEMP) coefficient,
     // segment 3 a single segment-to-segment (SEG) coefficient.  The specific
@@ -1671,7 +1674,9 @@ WSEGHEAT
 
 BOOST_AUTO_TEST_CASE(WSEGHEAT_Validation)
 {
-    // A three-segment well to attach WSEGHEAT records to.
+    // A three-segment well 'PROD01' to attach WSEGHEAT records to, plus a
+    // regular (non-multisegment) well 'PROD02' used to check that WSEGHEAT
+    // applied to a well without a segment structure is handled gracefully.
     const std::string base = R"(RUNSPEC
 DIMENS
   20 20 20 /
@@ -1695,9 +1700,11 @@ PERMZ
 SCHEDULE
 WELSPECS
  'PROD01' 'P' 20 20 1* OIL /
+ 'PROD02' 'P' 10 10 1* OIL /
 /
 COMPDAT
  'PROD01' 20 20 1 3 'OPEN' /
+ 'PROD02' 10 10 1 3 'OPEN' /
 /
 WELSEGS
 'PROD01' 2512.5 2512.5 1.0e-5 'ABS' /
@@ -1729,9 +1736,16 @@ COMPSEGS
     BOOST_CHECK_THROW(makeSchedule("WSEGHEAT\n 'PROD01' 3 3 SEG 0.04 /\n/\n"),
                       ::Opm::OpmInputError);
 
-    // A SEG coefficient may not target its own segment.
-    BOOST_CHECK_THROW(makeSchedule("WSEGHEAT\n 'PROD01' 3 3 SEG 0.04 3 /\n/\n"),
-                      ::Opm::OpmInputError);
+    // A SEG coefficient that targets its own segment is skipped with a warning
+    // (routed through ParseContext::SCHEDULE_MISSING_SEGMENT) rather than
+    // aborting the parse, so an otherwise-usable deck still loads.
+    BOOST_CHECK_NO_THROW(makeSchedule("WSEGHEAT\n 'PROD01' 3 3 SEG 0.04 3 /\n/\n"));
+
+    // WSEGHEAT applied to a regular (non-multisegment) well must not crash: it
+    // is routed through ParseContext (default WARN) and skipped.  This covers
+    // both a literal well name and a wildcard that also matches the MSW well.
+    BOOST_CHECK_NO_THROW(makeSchedule("WSEGHEAT\n 'PROD02' 2 2 COMP 0.02 /\n/\n"));
+    BOOST_CHECK_NO_THROW(makeSchedule("WSEGHEAT\n 'PROD*' 2 2 COMP 0.02 /\n/\n"));
 
     // Setting or adding a coefficient requires a specific thermal resistance
     // (item 5).
@@ -1776,6 +1790,16 @@ COMPSEGS
         BOOST_CHECK_THROW(::Opm::Schedule(deck, es, parseContext, errors, python),
                           ::Opm::OpmInputError);
     }
+
+    // An inverted segment range (item 3 < item 2) is self-inconsistent and can
+    // never match a well, so it is rejected at parse time.
+    BOOST_CHECK_THROW(makeSchedule("WSEGHEAT\n 'PROD01' 3 2 TEMP 0.02 1* 60 /\n/\n"),
+                      ::Opm::OpmInputError);
+
+    // A non-positive first segment (item 2) is likewise rejected; segment
+    // numbers are 1-based.
+    BOOST_CHECK_THROW(makeSchedule("WSEGHEAT\n 'PROD01' 0 2 TEMP 0.02 1* 60 /\n/\n"),
+                      ::Opm::OpmInputError);
 }
 
 BOOST_AUTO_TEST_CASE(Node_XY_ABS_Range)
