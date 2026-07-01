@@ -85,8 +85,13 @@ int main(int argc, char** argv)
         const char idx[2] = { static_cast<char>('0' + i), '\0' };
         const intptr_t rc = _spawnl(_P_WAIT, argv[0], argv[0], "--child", idx,
                                     static_cast<const char*>(nullptr));
-        if (rc == 0) {
-            std::exit(EXIT_FAILURE);  // child did NOT exit(1) as required
+        // With _P_WAIT, rc is the child's exit code (expected non-zero: exit1()
+        // must exit(1)), or -1 if the child could not be spawned at all. Treat
+        // BOTH a spawn failure (-1) and a child that returned normally without
+        // exiting (0) as a test failure -- otherwise a broken exit1() or a
+        // failed spawn would silently pass.
+        if (rc <= 0) {
+            std::exit(EXIT_FAILURE);
         }
     }
 }

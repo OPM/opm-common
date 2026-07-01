@@ -40,24 +40,32 @@ namespace Opm
 template<class Scalar>
 class Constants
 {
+    // Source values in double precision. The derived constants below (kb, hRed)
+    // are computed from these in double and cast to Scalar: for a Scalar whose
+    // arithmetic is not constexpr (e.g. the autodiff Evaluation types used by
+    // the compositional code) "R/Na" is not a constant expression under MSVC,
+    // and std::numbers::pi_v<Scalar> is ill-formed for non floating-point Scalar.
+    // Keeping the literals in one place avoids R/Na/h drifting out of sync with
+    // the constants derived from them.
+    static constexpr double R_si  = 8.314472;      // ideal gas constant [J/(mol K)]
+    static constexpr double Na_si = 6.02214179e23; // Avogadro constant [1/mol]
+    static constexpr double h_si  = 6.62606896e-34;// Planck constant [J s]
+
 public:
     /*!
      * \brief The ideal gas constant [J/(mol K)]
      */
-    static constexpr Scalar R = static_cast<Scalar>(8.314472);
+    static constexpr Scalar R = static_cast<Scalar>(R_si);
 
     /*!
      * \brief The Avogadro constant [1/mol]
      */
-    static constexpr Scalar Na = static_cast<Scalar>(6.02214179e23);
+    static constexpr Scalar Na = static_cast<Scalar>(Na_si);
 
     /*!
      * \brief The Boltzmann constant [J/K]
      */
-    // Compute the value in double and cast: for a Scalar whose arithmetic is not
-    // constexpr (e.g. autodiff Evaluation types used by the compositional code),
-    // "R/Na" is not a constant expression under MSVC.
-    static constexpr Scalar kb = static_cast<Scalar>(8.314472 / 6.02214179e23);
+    static constexpr Scalar kb = static_cast<Scalar>(R_si / Na_si);
 
     /*!
      * \brief Speed of light in vacuum [m/s]
@@ -72,14 +80,12 @@ public:
     /*!
      * \brief Planck constant [J s]
      */
-    static constexpr Scalar h = static_cast<Scalar>(6.62606896e-34);
+    static constexpr Scalar h = static_cast<Scalar>(h_si);
 
     /*!
      * \brief Reduced Planck constant [J s]
      */
-    // Compute in double (std::numbers::pi_v<Scalar> is ill-formed for non
-    // floating-point Scalar, and Scalar arithmetic may not be constexpr).
-    static constexpr Scalar hRed = static_cast<Scalar>(6.62606896e-34 / (2.0 * std::numbers::pi_v<double>));
+    static constexpr Scalar hRed = static_cast<Scalar>(h_si / (2.0 * std::numbers::pi_v<double>));
 };
 
 } // namespace Opm

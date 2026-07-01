@@ -174,9 +174,14 @@ if(BUILD_EXAMPLES)
   )
 endif()
 
-# additionals are optional utility binaries (e.g. test_util/*); gate them on
-# BUILD_EXAMPLES so the library can be built/installed without them.
-if(BUILD_EXAMPLES)
+# additionals (test_util utilities: compareECL, convertECL, summary, arraylist,
+# rewriteEclFile) are documented to always be built and installed, even when
+# BUILD_EXAMPLES is OFF (see CMakeLists_files.cmake). Restore that invariant on
+# every platform except Windows: all of these depend on POSIX <getopt.h>, which
+# MSVC does not provide, so they cannot be built there until a getopt shim is
+# added. Gate on WIN32 (not BUILD_EXAMPLES) so the documented Unix behaviour is
+# untouched and packagers configuring with BUILD_EXAMPLES=OFF still get the tools.
+if(NOT WIN32)
   opm_compile_satellites(
     PREFIX
       ${project}
