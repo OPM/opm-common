@@ -155,6 +155,52 @@ PERMX
 
 
 
+BOOST_AUTO_TEST_CASE(SigmaVFieldProps) {
+    // SIGMAV is a per-cell array (JSON schema: "data", no "size") -- fits FieldProps'
+    // GRID::double_keywords registry exactly like PORO/PERMX. Registered in this PR.
+    std::string deck_string_sigmav = R"(
+GRID
+
+PORO
+   8*0.10 /
+
+SIGMAV
+  8*0.12 /
+)";
+    EclipseGrid grid(EclipseGrid(2,2,2));
+    Deck deck_sigmav = Parser{}.parseString(deck_string_sigmav);
+    FieldPropsManager fpm_sigmav(deck_sigmav, Phases{true, true, false}, grid, TableManager());
+
+    BOOST_CHECK(fpm_sigmav.has_double("SIGMAV"));
+    const auto& sigmav = fpm_sigmav.get_double("SIGMAV");
+    BOOST_CHECK_EQUAL(sigmav.size(), grid.getNumActive());
+    for (const auto& value : sigmav) {
+        BOOST_CHECK_CLOSE(value, 0.12, 1e-10);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(SigmaDeckScalar) {
+    // SIGMA is a single global scalar (JSON schema: "size": 1), not a per-cell array like
+    // SIGMAV (schema: "data", no "size"). FieldProps::GRID::double_keywords is strictly a
+    // per-cell array registry: verify_deck_data() in FieldProps.cpp requires
+    // deck_data.size() == box.size() * num_value unconditionally, with no broadcast path for
+    // a single supplied value. SIGMA is intentionally not registered there; its value is read
+    // directly from the deck record by whichever code consumes it (computing
+    // TR = darcy*K*V*sigma), the same way any other single-record scalar keyword would be.
+    // This test proves the raw parse of a size-1 keyword works standalone.
+    std::string deck_string_sigma = R"(
+GRID
+
+SIGMA
+  0.12 /
+)";
+    auto deck_sigma = Parser{}.parseString(deck_string_sigma);
+    BOOST_CHECK(deck_sigma.hasKeyword("SIGMA"));
+    const auto sigma_value = deck_sigma["SIGMA"].back().getRecord(0).getItem(0).get<double>(0);
+    BOOST_CHECK_CLOSE(sigma_value, 0.12, 1e-10);
+}
+
+
 BOOST_AUTO_TEST_CASE(CreateFieldPropsForActnum) {
     std::string deck_string = R"(
 GRID
