@@ -85,8 +85,7 @@ public:
     }
 
 private:
-    AggregateActionxData(const std::vector<int>&   rst_dims,
-                         std::size_t               num_actions,
+    AggregateActionxData(std::size_t               num_actions,
                          const Opm::Actdims&       actdims,
                          const Opm::Schedule&      sched,
                          const Opm::Action::State& action_state,

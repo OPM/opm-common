@@ -37,7 +37,11 @@ namespace Opm {
     class UDQActive;
     class Actdims;
 
-} // Opm
+} // namespace Opm
+
+namespace Opm::Action {
+    class Actions;
+} // namespace Opm::Action
 
 namespace Opm::RestartIO::Helpers {
 
@@ -86,28 +90,58 @@ namespace Opm::RestartIO::Helpers {
     std::vector<bool>
     createLogiHead(const EclipseState& es, const ScheduleState& sched);
 
-    std::size_t
-    entriesPerSACT();
+    /// Number of elements per action in IACT.
+    constexpr std::size_t entriesPerIACT() noexcept { return std::size_t{9}; }
 
-    std::size_t
-    entriesPerIACT();
+    /// Number of elements per action in SACT.
+    constexpr std::size_t entriesPerSACT() noexcept { return std::size_t{5}; }
 
-    std::size_t
-    entriesPerZACT();
+    /// Number of elements per action in ZACT.
+    constexpr std::size_t entriesPerZACT() noexcept { return std::size_t{4}; }
 
-    std::size_t
-    entriesPerZACN(const Opm::Actdims& actdims);
+    /// Compute number of elements per line in ZLACT.
+    ///
+    /// \param[in] actdims Action dimensioning information.
+    ///
+    /// \return Number of elements per line in ZLACT.
+    std::size_t entriesPerLine(const Actdims& actdims);
 
-    std::size_t
-    entriesPerIACN(const Opm::Actdims& actdims);
+    /// Compute number of elements per action in ZLACT.
+    ///
+    /// \param[in] actdims Action dimensioning information.
+    ///
+    /// \param[in] acts Actions information.
+    ///
+    /// \return Number of elements per action in ZLACT.
+    std::size_t entriesPerZLACT(const Actdims& actdims,
+                                const Action::Actions& acts);
 
-    std::size_t
-    entriesPerSACN(const Opm::Actdims& actdims);
+    /// Compute number of elements per action in IACN.
+    ///
+    /// \param[in] actdims Action dimensioning information.
+    ///
+    /// \return Number of elements per action in IACN.
+    std::size_t entriesPerIACN(const Actdims& actdims);
 
+    /// Compute number of elements per action in SACN.
+    ///
+    /// \param[in] actdims Action dimensioning information.
+    ///
+    /// \return Number of elements per action in SACN.
+    std::size_t entriesPerSACN(const Actdims& actdims);
+
+    /// Compute number of elements per action in ZACN.
+    ///
+    /// \param[in] actdims Action dimensioning information.
+    ///
+    /// \return Number of elements per action in ZACN.
+    std::size_t entriesPerZACN(const Actdims& actdims);
+
+    [[deprecated("Restart file action dimensions represented as a linear array are deprecated. Use entriesPer*() instead.")]]
     std::vector<int>
     createActionRSTDims(const Schedule&     sched,
                         const std::size_t   simStep);
 
-} // Opm::RestartIO::Helpers
+} // namespace Opm::RestartIO::Helpers
 
-#endif  // OPM_WRITE_RESTART_HELPERS_HPP
+#endif // OPM_WRITE_RESTART_HELPERS_HPP
