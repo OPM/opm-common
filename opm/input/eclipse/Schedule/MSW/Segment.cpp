@@ -235,7 +235,7 @@ namespace Opm {
         result.m_wall_area = 14.0;
         result.m_wall_volumetric_heat_capacity = 15.0;
         result.m_wall_thermal_conductivity = 16.0;
-        result.m_heat_transfer = {SegmentHeatTransfer::serializationTestObject()};
+        result.m_heat_transfer = {SegmentHeatTransferCoeff::serializationTestObject()};
         result.m_icd = SICD::serializationTestObject();
         return result;
     }
@@ -339,15 +339,15 @@ namespace Opm {
         }
     }
 
-    const std::vector<SegmentHeatTransfer>& Segment::heatTransfer() const
+    const std::vector<SegmentHeatTransferCoeff>& Segment::heatTransfer() const
     {
         return this->m_heat_transfer;
     }
 
     void Segment::updateHeatTransfer(const SegmentHeatTransferRecord& record)
     {
-        using Type = SegmentHeatTransfer::Type;
-        using Operation = SegmentHeatTransfer::Operation;
+        using Type = SegmentHeatTransferCoeff::Type;
+        using Operation = SegmentHeatTransferCoeff::Operation;
 
         // Maximum number of segment-to-segment heat transfer coefficients that
         // may be associated with a single segment.
@@ -358,7 +358,7 @@ namespace Opm {
         // Whether an existing coefficient describes the same heat transfer
         // destination as the incoming one.  COMP and TEMP are unique per
         // segment; SEG coefficients are distinguished by their target segment.
-        const auto sameDestination = [&coeff](const SegmentHeatTransfer& existing)
+        const auto sameDestination = [&coeff](const SegmentHeatTransferCoeff& existing)
         {
             if (existing.type() != coeff.type()) {
                 return false;
@@ -390,7 +390,7 @@ namespace Opm {
                 // SEG coefficients are capped; ignore additions beyond the
                 // limit, matching the documented behaviour.
                 const auto seg_count = std::ranges::count_if
-                    (this->m_heat_transfer, [](const SegmentHeatTransfer& e)
+                    (this->m_heat_transfer, [](const SegmentHeatTransferCoeff& e)
                      { return e.type() == Type::SEG; });
 
                 if (static_cast<std::size_t>(seg_count) < max_seg_coefficients) {

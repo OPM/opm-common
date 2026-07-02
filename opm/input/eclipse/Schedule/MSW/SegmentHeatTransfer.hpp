@@ -36,7 +36,7 @@ namespace Opm {
 
     // A single heat transfer coefficient associated with a segment of a
     // multisegment well, as specified by the WSEGHEAT keyword.
-    class SegmentHeatTransfer
+    class SegmentHeatTransferCoeff
     {
     public:
         // The destination of the heat transfer.  NONE is not a coefficient in
@@ -57,10 +57,10 @@ namespace Opm {
             CLEAR,       // remove all coefficients (type NONE)
         };
 
-        SegmentHeatTransfer() = default;
-        SegmentHeatTransfer(Type type, const DeckRecord& record);
+        SegmentHeatTransferCoeff() = default;
+        SegmentHeatTransferCoeff(Type type, const DeckRecord& record);
 
-        static SegmentHeatTransfer serializationTestObject();
+        static SegmentHeatTransferCoeff serializationTestObject();
 
         // Decode the WSEGHEAT type string (item 4), e.g. "SEG", "COMP+" or
         // "TEMP-", into a base type and the operation it implies.
@@ -82,7 +82,7 @@ namespace Opm {
         // adjacent segments.
         const std::optional<double>& contactLength() const { return m_contact_length; }
 
-        bool operator==(const SegmentHeatTransfer&) const = default;
+        bool operator==(const SegmentHeatTransferCoeff&) const = default;
 
         template <class Serializer>
         void serializeOp(Serializer& serializer)
@@ -121,8 +121,8 @@ namespace Opm {
     {
         int segment1{};
         int segment2{};
-        SegmentHeatTransfer::Operation operation{SegmentHeatTransfer::Operation::CLEAR};
-        SegmentHeatTransfer coefficient{};
+        SegmentHeatTransferCoeff::Operation operation{SegmentHeatTransferCoeff::Operation::CLEAR};
+        SegmentHeatTransferCoeff coefficient{};
 
         bool operator==(const SegmentHeatTransferRecord&) const = default;
 

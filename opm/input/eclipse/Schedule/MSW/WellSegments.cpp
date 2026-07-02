@@ -20,7 +20,6 @@
 #include <opm/input/eclipse/Schedule/MSW/WellSegments.hpp>
 
 #include <opm/common/OpmLog/OpmLog.hpp>
-#include <opm/common/utility/OpmInputError.hpp>
 
 #include <opm/input/eclipse/Schedule/MSW/AICD.hpp>
 #include <opm/input/eclipse/Schedule/MSW/SICD.hpp>
@@ -913,7 +912,7 @@ namespace Opm {
 
             // A SEG coefficient's target segment must itself be defined in the
             // well -- a genuine missing-segment condition.
-            if ((coeff.type() == SegmentHeatTransfer::Type::SEG) &&
+            if ((coeff.type() == SegmentHeatTransferCoeff::Type::SEG) &&
                 (this->segmentNumberToIndex(coeff.targetSegment()) < 0))
             {
                 handleMissingMSWSegment(well_name, coeff.targetSegment(),
@@ -938,7 +937,7 @@ namespace Opm {
 
                 // A segment cannot exchange heat with itself; skip the target
                 // when a SEG range includes it (normal usage, not an error).
-                if ((coeff.type() == SegmentHeatTransfer::Type::SEG) &&
+                if ((coeff.type() == SegmentHeatTransferCoeff::Type::SEG) &&
                     (coeff.targetSegment() == segment_number))
                 {
                     continue;

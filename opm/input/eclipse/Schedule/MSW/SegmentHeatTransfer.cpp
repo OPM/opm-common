@@ -33,7 +33,7 @@
 
 namespace Opm {
 
-    SegmentHeatTransfer::SegmentHeatTransfer(const Type type, const DeckRecord& record)
+    SegmentHeatTransferCoeff::SegmentHeatTransferCoeff(const Type type, const DeckRecord& record)
         : m_type(type)
     {
         using Kw = ParserKeywords::WSEGHEAT;
@@ -69,9 +69,9 @@ namespace Opm {
         }
     }
 
-    SegmentHeatTransfer SegmentHeatTransfer::serializationTestObject()
+    SegmentHeatTransferCoeff SegmentHeatTransferCoeff::serializationTestObject()
     {
-        SegmentHeatTransfer result;
+        SegmentHeatTransferCoeff result;
         result.m_type = Type::SEG;
         result.m_thermal_resistance = 0.02;
         result.m_target_segment = 24;
@@ -81,8 +81,8 @@ namespace Opm {
         return result;
     }
 
-    std::pair<SegmentHeatTransfer::Type, SegmentHeatTransfer::Operation>
-    SegmentHeatTransfer::typeFromString(const std::string& s)
+    std::pair<SegmentHeatTransferCoeff::Type, SegmentHeatTransferCoeff::Operation>
+    SegmentHeatTransferCoeff::typeFromString(const std::string& s)
     {
         if (s == "NONE") {
             return { Type::NONE, Operation::CLEAR };
@@ -111,7 +111,7 @@ namespace Opm {
         };
     }
 
-    std::string SegmentHeatTransfer::typeToString(const Type type)
+    std::string SegmentHeatTransferCoeff::typeToString(const Type type)
     {
         switch (type) {
         case Type::COMP: return "COMP";
@@ -120,7 +120,7 @@ namespace Opm {
         case Type::NONE: return "NONE";
         }
 
-        throw std::invalid_argument("Unhandled SegmentHeatTransfer::Type value");
+        throw std::invalid_argument("Unhandled SegmentHeatTransferCoeff::Type value");
     }
 
     std::vector<std::pair<std::string, SegmentHeatTransferRecord>>
@@ -133,7 +133,7 @@ namespace Opm {
         for (const auto& record : keyword) {
             const auto well_name = record.getItem<Kw::WELL>().getTrimmedString(0);
 
-            const auto [type, operation] = SegmentHeatTransfer::typeFromString
+            const auto [type, operation] = SegmentHeatTransferCoeff::typeFromString
                 (record.getItem<Kw::TYPE>().getTrimmedString(0));
 
             auto rec = SegmentHeatTransferRecord{};
@@ -155,14 +155,14 @@ namespace Opm {
 
             // For CLEAR (type NONE) only the operation matters; otherwise the
             // record carries a coefficient to set/add/remove.
-            if (operation != SegmentHeatTransfer::Operation::CLEAR) {
-                rec.coefficient = SegmentHeatTransfer{type, record};
+            if (operation != SegmentHeatTransferCoeff::Operation::CLEAR) {
+                rec.coefficient = SegmentHeatTransferCoeff{type, record};
 
                 // Set/add records (bare type or '+') must carry the defining
                 // values; a removal ('-') need only identify the coefficient.
                 const bool is_set =
-                    (operation == SegmentHeatTransfer::Operation::REPLACE_ALL) ||
-                    (operation == SegmentHeatTransfer::Operation::ADD);
+                    (operation == SegmentHeatTransferCoeff::Operation::REPLACE_ALL) ||
+                    (operation == SegmentHeatTransferCoeff::Operation::ADD);
 
                 // The specific thermal resistance (item 5) is mandatory whenever
                 // a coefficient is set or added.
@@ -171,7 +171,7 @@ namespace Opm {
                         fmt::format("A {} heat transfer coefficient for well {} "
                                     "segments {} to {} requires a specific thermal "
                                     "resistance in item 5.",
-                                    SegmentHeatTransfer::typeToString(type),
+                                    SegmentHeatTransferCoeff::typeToString(type),
                                     well_name, rec.segment1, rec.segment2),
                         keyword.location()
                     };
@@ -179,7 +179,7 @@ namespace Opm {
 
                 // A fixed external temperature (item 7) is mandatory when a TEMP
                 // coefficient is set or added.
-                if (is_set && (type == SegmentHeatTransfer::Type::TEMP) &&
+                if (is_set && (type == SegmentHeatTransferCoeff::Type::TEMP) &&
                     !rec.coefficient.temperature().has_value())
                 {
                     throw OpmInputError {
@@ -193,7 +193,7 @@ namespace Opm {
 
                 // The target segment (item 6) identifies a SEG coefficient and
                 // is therefore required for every SEG record, removal included.
-                if ((type == SegmentHeatTransfer::Type::SEG) &&
+                if ((type == SegmentHeatTransferCoeff::Type::SEG) &&
                     (rec.coefficient.targetSegment() < 1))
                 {
                     throw OpmInputError {

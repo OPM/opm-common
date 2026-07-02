@@ -124,7 +124,7 @@ namespace Opm {
         void addInletSegment(const int segment_number);
 
         // Heat transfer coefficients associated with this segment (WSEGHEAT).
-        const std::vector<SegmentHeatTransfer>& heatTransfer() const;
+        const std::vector<SegmentHeatTransferCoeff>& heatTransfer() const;
 
         // Apply one WSEGHEAT record to this segment's coefficients; the record's
         // operation replaces, extends, reduces or clears the existing set.
@@ -261,7 +261,7 @@ namespace Opm {
 
         // Heat transfer coefficients (WSEGHEAT): at most one COMP, one TEMP and
         // five SEG per segment.
-        std::vector<SegmentHeatTransfer> m_heat_transfer{};
+        std::vector<SegmentHeatTransferCoeff> m_heat_transfer{};
 
         void updateValve__(Valve& valve, const double segment_length);
     };

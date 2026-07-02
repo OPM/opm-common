@@ -1416,7 +1416,7 @@ WSEGHEAT
     // segment 3 a single segment-to-segment (SEG) coefficient.  The specific
     // thermal resistance has dimension 1/ThermalConductivity, so the SI value
     // is the input scaled by day/kJ.
-    using HT = ::Opm::SegmentHeatTransfer;
+    using HT = ::Opm::SegmentHeatTransferCoeff;
     const auto& ht2 = segments.getFromSegmentNumber(2).heatTransfer();
     BOOST_REQUIRE_EQUAL(ht2.size(), 1);
     BOOST_CHECK(ht2[0].type() == HT::Type::TEMP);
@@ -1505,7 +1505,7 @@ namespace {
 
 BOOST_AUTO_TEST_CASE(WSEGHEAT_CoefficientOperations)
 {
-    using HT   = ::Opm::SegmentHeatTransfer;
+    using HT   = ::Opm::SegmentHeatTransferCoeff;
     using Type = HT::Type;
     using Op   = HT::Operation;
 
