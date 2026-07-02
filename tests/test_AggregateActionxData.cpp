@@ -15,6 +15,7 @@
 #include <opm/output/eclipse/AggregateWellData.hpp>
 #include <opm/output/eclipse/DoubHEAD.hpp>
 #include <opm/output/eclipse/InteHEAD.hpp>
+#include <opm/output/eclipse/VectorItems/action.hpp>
 #include <opm/output/eclipse/VectorItems/intehead.hpp>
 #include <opm/output/eclipse/WriteRestartHelpers.hpp>
 
@@ -131,6 +132,51 @@ namespace {
 
 BOOST_AUTO_TEST_SUITE(Aggregate_Actionx)
 
+BOOST_AUTO_TEST_CASE(Standalone_Constructor_With_Span)
+{
+    const auto units = Opm::UnitSystem::newMETRIC();
+    const auto startTime = std::time_t{1234567890};
+    const auto simTime = startTime + 100;
+
+    auto actions = std::vector<Opm::Action::ActionX>{};
+    actions.emplace_back("A1", 3, 0.0, startTime);
+    const auto span = std::span<const Opm::Action::ActionX>{ actions.data(), actions.size() };
+
+    const auto actdims = Opm::Actdims{};
+    const auto actionState = Opm::Action::State{};
+    const auto summaryState = Opm::SummaryState{ Opm::TimeService::now(), 0.0 };
+    const auto wells = std::vector<std::string>{};
+    const auto wlistManager = Opm::WListManager{};
+
+    const auto runtime = Opm::RestartIO::Helpers::AggregateActionxRuntimeContext {
+        startTime,
+        simTime,
+        units,
+        wells,
+        wlistManager
+    };
+
+    const auto data = Opm::RestartIO::Helpers::AggregateActionxData {
+        span,
+        actdims,
+        actionState,
+        summaryState,
+        runtime
+    };
+
+    const auto iActStride = Opm::RestartIO::Helpers::entriesPerIACT();
+    const auto zActStride = Opm::RestartIO::Helpers::entriesPerZACT();
+
+    const auto& iAct = data.getIACT();
+    BOOST_REQUIRE_GE(iAct.size(), iActStride);
+    BOOST_CHECK_EQUAL(iAct[1], 1); // keyword_strings() includes ENDACTIO.
+    BOOST_CHECK_EQUAL(iAct[5], 3);
+
+    const auto& zAct = data.getZACT();
+    BOOST_REQUIRE_GE(zAct.size(), zActStride);
+    BOOST_CHECK_EQUAL(zAct[0].c_str(), "A1      ");
+}
+
 // test constructed UDQ-Actionx restart data
 BOOST_AUTO_TEST_CASE(Declared_Actionx_data)
 {
@@ -211,8 +257,19 @@ BOOST_AUTO_TEST_CASE(Declared_Actionx_data)
                 rstFile.write("XCON", conn_aggregator.getXConn());
             }
 
-            const auto actDims = Opm::RestartIO::Helpers::createActionRSTDims(sched, rptStep-1);
-            Opm::RestartIO::Helpers::AggregateActionxData actionxData {sched, action_state, st, rptStep-1};
+            const auto& actions = sched[rptStep - 1].actions();
+            const auto& actdims = sched.runspec().actdims();
+            const auto iActStride = Opm::RestartIO::Helpers::entriesPerIACT();
+            const auto sActStride = Opm::RestartIO::Helpers::entriesPerSACT();
+            const auto zActStride = Opm::RestartIO::Helpers::entriesPerZACT();
+            const auto zLActActionStride = Opm::RestartIO::Helpers::entriesPerZLACT(actdims, actions);
+            const auto zLActLineStride = Opm::RestartIO::Helpers::entriesPerLine(actdims);
+            const auto iAcnStride = Opm::RestartIO::Helpers::entriesPerIACN(actdims);
+            const auto sAcnStride = Opm::RestartIO::Helpers::entriesPerSACN(actdims);
+            const auto zAcnStride = Opm::RestartIO::Helpers::entriesPerZACN(actdims);
+            const auto actionxData = Opm::RestartIO::Helpers::createAggregateActionxData(
+                sched, action_state, st, rptStep - 1
+            );
 
             rstFile.write("IACT", actionxData.getIACT());
             rstFile.write("SACT", actionxData.getSACT());
@@ -260,7 +317,7 @@ BOOST_AUTO_TEST_CASE(Declared_Actionx_data)
             {
                 /*
                   SACT
-                  --length is equal to 9*the number of ACTIONX keywords
+                  --length is equal to 5*the number of ACTIONX keywords
                   //item [0]: is unknown, (=0)
                   //item [1]: is unknown, (=0)
                   //item [2]: is unknown, (=0)
@@ -271,12 +328,12 @@ BOOST_AUTO_TEST_CASE(Declared_Actionx_data)
 
                 const auto& sAct = actionxData.getSACT();
 
-                auto start = 0 * actDims[2];
+                auto start = 0 * sActStride;
                 BOOST_CHECK_CLOSE(sAct[start + 3], 0.543, 1.0e-5f);
-                start = 1 * actDims[2];
+                start = 1 * sActStride;
                 BOOST_CHECK_CLOSE(sAct[start + 3], 0.567, 1.0e-5f);
                 // actx_14
-                start = 13 * actDims[2];
+                start = 13 * sActStride;
                 BOOST_CHECK_CLOSE(sAct[start + 4], 1.E09 / 86400., 1.0e-5f);
             }
 
@@ -298,7 +355,7 @@ BOOST_AUTO_TEST_CASE(Declared_Actionx_data)
 
                 const auto& iAct = actionxData.getIACT();
 
-                auto start = 0 * actDims[1];
+                auto start = 0 * iActStride;
                 BOOST_CHECK_EQUAL(iAct[start + 0], 0);
                 BOOST_CHECK_EQUAL(iAct[start + 1], 10);
                 BOOST_CHECK_EQUAL(iAct[start + 2], 1);
@@ -310,7 +367,7 @@ BOOST_AUTO_TEST_CASE(Declared_Actionx_data)
                 BOOST_CHECK_EQUAL(iAct[start + 8], 3);
 
 
-                start = 1 * actDims[1];
+                start = 1 * iActStride;
                 BOOST_CHECK_EQUAL(iAct[start + 0], 0);
                 BOOST_CHECK_EQUAL(iAct[start + 1], 7);
                 BOOST_CHECK_EQUAL(iAct[start + 2], 1);
@@ -321,7 +378,7 @@ BOOST_AUTO_TEST_CASE(Declared_Actionx_data)
                 BOOST_CHECK_EQUAL(iAct[start + 7], 0);
                 BOOST_CHECK_EQUAL(iAct[start + 8], 3);
 
-                start = 2 * actDims[1];
+                start = 2 * iActStride;
                 BOOST_CHECK_EQUAL(iAct[start + 0], 0);
                 BOOST_CHECK_EQUAL(iAct[start + 1], 4);
                 BOOST_CHECK_EQUAL(iAct[start + 2], 1);
@@ -332,14 +389,14 @@ BOOST_AUTO_TEST_CASE(Declared_Actionx_data)
                 BOOST_CHECK_EQUAL(iAct[start + 7], 0);
                 BOOST_CHECK_EQUAL(iAct[start + 8], 3);
 
-                start = 13 * actDims[1];
+                start = 13 * iActStride;
                 BOOST_CHECK_EQUAL(iAct[start + 2], 2);
             }
 
             {
                 /*
                   SACT
-                  --length is equal to 9*the number of ACTIONX keywords
+                  --length is equal to 5*the number of ACTIONX keywords
                   //item [0]: is unknown, (=0)
                   //item [1]: is unknown, (=0)
                   //item [2]: is unknown, (=0)
@@ -350,9 +407,9 @@ BOOST_AUTO_TEST_CASE(Declared_Actionx_data)
 
                 const auto& sAct = actionxData.getSACT();
 
-                auto start = 0 * actDims[2];
+                auto start = 0 * sActStride;
                 BOOST_CHECK_CLOSE(sAct[start + 3], 0.543, 1.0e-5f);
-                start = 1 * actDims[2];
+                start = 1 * sActStride;
                 BOOST_CHECK_CLOSE(sAct[start + 3], 0.567, 1.0e-5f);
             }
 
@@ -367,13 +424,13 @@ BOOST_AUTO_TEST_CASE(Declared_Actionx_data)
 
                 const auto& zAct = actionxData.getZACT();
 
-                auto start = 0 * actDims[3];
+                auto start = 0 * zActStride;
                 BOOST_CHECK_EQUAL(zAct[start + 0].c_str(), "ACT01   ");
 
-                start = 1 * actDims[3];
+                start = 1 * zActStride;
                 BOOST_CHECK_EQUAL(zAct[start + 0].c_str(), "ACT02   ");
 
-                start = 2 * actDims[3];
+                start = 2 * zActStride;
                 BOOST_CHECK_EQUAL(zAct[start + 0].c_str(), "ACT03   ");
             }
 
@@ -387,47 +444,47 @@ BOOST_AUTO_TEST_CASE(Declared_Actionx_data)
                 const auto& zLact = actionxData.getZLACT();
 
                 // First action
-                auto start_a = 0 * actDims[4];
-                auto start = start_a + 0 * actDims[8];
+                auto start_a = 0 * zLActActionStride;
+                auto start = start_a + 0 * zLActLineStride;
                 BOOST_CHECK_EQUAL(zLact[start + 0].c_str(), "WELOPEN ");
 
-                start = start_a + 1 * actDims[8];
+                start = start_a + 1 * zLActLineStride;
                 BOOST_CHECK_EQUAL(zLact[start + 0].c_str(), "'?' 'SHU");
                 BOOST_CHECK_EQUAL(zLact[start + 1].c_str(), "T' 0 0 0");
                 BOOST_CHECK_EQUAL(zLact[start + 2].c_str(), " /      ");
 
-                start = start_a + 2 * actDims[8];
+                start = start_a + 2 * zLActLineStride;
                 BOOST_CHECK_EQUAL(zLact[start + 0].c_str(), "/       ");
 
-                start = start_a + 3 * actDims[8];
+                start = start_a + 3 * zLActLineStride;
                 BOOST_CHECK_EQUAL(zLact[start + 0].c_str(), "WELOPEN ");
 
                 // Second action
-                start_a = 1 * actDims[4];
-                start = start_a + 0 * actDims[8];
+                start_a = 1 * zLActActionStride;
+                start = start_a + 0 * zLActLineStride;
                 BOOST_CHECK_EQUAL(zLact[start + 0].c_str(), "WELOPEN ");
 
-                start = start_a + 1 * actDims[8];
+                start = start_a + 1 * zLActLineStride;
                 BOOST_CHECK_EQUAL(zLact[start + 0].c_str(), "'?' 'SHU");
                 BOOST_CHECK_EQUAL(zLact[start + 1].c_str(), "T' 0 0 0");
                 BOOST_CHECK_EQUAL(zLact[start + 2].c_str(), " /      ");
 
-                start = start_a + 2 * actDims[8];
+                start = start_a + 2 * zLActLineStride;
                 BOOST_CHECK_EQUAL(zLact[start + 0].c_str(), "/       ");
 
-                start = start_a + 3 * actDims[8];
+                start = start_a + 3 * zLActLineStride;
                 BOOST_CHECK_EQUAL(zLact[start + 0].c_str(), "WELOPEN ");
 
-                start = start_a + 4 * actDims[8];
+                start = start_a + 4 * zLActLineStride;
                 BOOST_CHECK_EQUAL(zLact[start + 0].c_str(), "'OPL01' ");
                 BOOST_CHECK_EQUAL(zLact[start + 1].c_str(), "'OPEN' /");
                 BOOST_CHECK_EQUAL(zLact[start + 2].c_str(), "        ");
 
-                start = start_a + 5 * actDims[8];
+                start = start_a + 5 * zLActLineStride;
                 BOOST_CHECK_EQUAL(zLact[start + 0].c_str(), "/       ");
 
 
-                start = start_a + 6 * actDims[8];
+                start = start_a + 6 * zLActLineStride;
                 BOOST_CHECK_EQUAL(zLact[start + 0].c_str(), "ENDACTIO");
             }
 
@@ -439,17 +496,19 @@ BOOST_AUTO_TEST_CASE(Declared_Actionx_data)
 
                 */
 
+                constexpr auto condSize = Opm::RestartIO::Helpers::VectorItems::ZACN::ConditionSize;
+
                 const auto& zAcn = actionxData.getZACN();
 
                 // First action
-                auto start_a = 0 * actDims[5];
-                auto start = start_a + 0 * 13;
+                auto start_a = 0 * zAcnStride;
+                auto start = start_a + 0 * condSize;
                 BOOST_CHECK_EQUAL(zAcn[start + 0].c_str(), "FMWPR   ");
                 BOOST_CHECK_EQUAL(zAcn[start + 1].c_str(), "        ");
                 BOOST_CHECK_EQUAL(zAcn[start + 2].c_str(), ">       ");
                 BOOST_CHECK_EQUAL(zAcn[start + 3].c_str(), "        ");
 
-                start = start_a + 1 * 13;
+                start = start_a + 1 * condSize;
                 BOOST_CHECK_EQUAL(zAcn[start + 0].c_str(), "WUPR3   ");
                 BOOST_CHECK_EQUAL(zAcn[start + 1].c_str(), "        ");
                 BOOST_CHECK_EQUAL(zAcn[start + 2].c_str(), ">       ");
@@ -457,7 +516,7 @@ BOOST_AUTO_TEST_CASE(Declared_Actionx_data)
                 BOOST_CHECK_EQUAL(zAcn[start + 4].c_str(), "        ");
                 BOOST_CHECK_EQUAL(zAcn[start + 5].c_str(), "        ");
 
-                start = start_a + 2 * 13;
+                start = start_a + 2 * condSize;
                 BOOST_CHECK_EQUAL(zAcn[start + 0].c_str(), "        ");
                 BOOST_CHECK_EQUAL(zAcn[start + 1].c_str(), "        ");
                 BOOST_CHECK_EQUAL(zAcn[start + 2].c_str(), "<       ");
@@ -467,14 +526,14 @@ BOOST_AUTO_TEST_CASE(Declared_Actionx_data)
 
 
                 // Second action
-                start_a = 1 * actDims[5];
-                start = start_a + 0 * 13;
+                start_a = 1 * zAcnStride;
+                start = start_a + 0 * condSize;
                 BOOST_CHECK_EQUAL(zAcn[start + 0].c_str(), "FMWPR   ");
                 BOOST_CHECK_EQUAL(zAcn[start + 1].c_str(), "        ");
                 BOOST_CHECK_EQUAL(zAcn[start + 2].c_str(), ">       ");
                 BOOST_CHECK_EQUAL(zAcn[start + 3].c_str(), "        ");
 
-                start = start_a + 1 * 13;
+                start = start_a + 1 * condSize;
                 BOOST_CHECK_EQUAL(zAcn[start + 0].c_str(), "WGPR    ");
                 BOOST_CHECK_EQUAL(zAcn[start + 1].c_str(), "GGPR    ");
                 BOOST_CHECK_EQUAL(zAcn[start + 2].c_str(), ">       ");
@@ -483,7 +542,7 @@ BOOST_AUTO_TEST_CASE(Declared_Actionx_data)
                 BOOST_CHECK_EQUAL(zAcn[start + 5].c_str(), "        ");
                 BOOST_CHECK_EQUAL(zAcn[start + 6].c_str(), "LOWER   ");
 
-                start = start_a + 2 * 13;
+                start = start_a + 2 * condSize;
                 BOOST_CHECK_EQUAL(zAcn[start + 0].c_str(), "        ");
                 BOOST_CHECK_EQUAL(zAcn[start + 1].c_str(), "        ");
                 BOOST_CHECK_EQUAL(zAcn[start + 2].c_str(), ">       ");
@@ -498,11 +557,12 @@ BOOST_AUTO_TEST_CASE(Declared_Actionx_data)
 
                 */
 
+                constexpr auto condSize = Opm::RestartIO::Helpers::VectorItems::IACN::ConditionSize;
 
                 const auto& iAcn = actionxData.getIACN();
 
-                auto start_a = 0 * actDims[6];
-                auto start = start_a + 0 * 26;
+                auto start_a = 0 * iAcnStride;
+                auto start = start_a + 0 * condSize;
                 BOOST_CHECK_EQUAL(iAcn[start + 0], 0);
                 BOOST_CHECK_EQUAL(iAcn[start + 1], 0);
                 BOOST_CHECK_EQUAL(iAcn[start + 2], 0);
@@ -522,7 +582,7 @@ BOOST_AUTO_TEST_CASE(Declared_Actionx_data)
                 BOOST_CHECK_EQUAL(iAcn[start + 16], 1);
                 BOOST_CHECK_EQUAL(iAcn[start + 17], 0);
 
-                start = start_a + 1 * 26;
+                start = start_a + 1 * condSize;
                 BOOST_CHECK_EQUAL(iAcn[start + 0], 0);
                 BOOST_CHECK_EQUAL(iAcn[start + 1], 0);
                 BOOST_CHECK_EQUAL(iAcn[start + 2], 0);
@@ -542,8 +602,8 @@ BOOST_AUTO_TEST_CASE(Declared_Actionx_data)
                 BOOST_CHECK_EQUAL(iAcn[start + 16], 1);
                 BOOST_CHECK_EQUAL(iAcn[start + 17], 1);
 
-                start_a = 1 * actDims[6];
-                start = start_a + 0 * 26;
+                start_a = 1 * iAcnStride;
+                start = start_a + 0 * condSize;
                 BOOST_CHECK_EQUAL(iAcn[start + 0], 0);
                 BOOST_CHECK_EQUAL(iAcn[start + 1], 0);
                 BOOST_CHECK_EQUAL(iAcn[start + 2], 0);
@@ -563,7 +623,7 @@ BOOST_AUTO_TEST_CASE(Declared_Actionx_data)
                 BOOST_CHECK_EQUAL(iAcn[start + 16], 1);
                 BOOST_CHECK_EQUAL(iAcn[start + 17], 0);
 
-                start = start_a + 1 * 26;
+                start = start_a + 1 * condSize;
                 BOOST_CHECK_EQUAL(iAcn[start + 0], 0);
                 BOOST_CHECK_EQUAL(iAcn[start + 1], 0);
                 BOOST_CHECK_EQUAL(iAcn[start + 2], 0);
@@ -583,7 +643,7 @@ BOOST_AUTO_TEST_CASE(Declared_Actionx_data)
                 BOOST_CHECK_EQUAL(iAcn[start + 16], 1);
                 BOOST_CHECK_EQUAL(iAcn[start + 17], 1);
 
-                start = start_a + 2 * 26;
+                start = start_a + 2 * condSize;
                 BOOST_CHECK_EQUAL(iAcn[start + 0], 0);
                 BOOST_CHECK_EQUAL(iAcn[start + 1], 0);
                 BOOST_CHECK_EQUAL(iAcn[start + 2], 0);
@@ -603,326 +663,326 @@ BOOST_AUTO_TEST_CASE(Declared_Actionx_data)
                 BOOST_CHECK_EQUAL(iAcn[start + 16], 1);
                 BOOST_CHECK_EQUAL(iAcn[start + 17], 1);
 
-                start_a = 3 * actDims[6];
-                start = start_a + 0 * 26;
+                start_a = 3 * iAcnStride;
+                start = start_a + 0 * condSize;
                 BOOST_CHECK_EQUAL(iAcn[start + 13], 1);
                 BOOST_CHECK_EQUAL(iAcn[start + 15], 0);
                 BOOST_CHECK_EQUAL(iAcn[start + 17], 0);
 
-                start = start_a + 1 * 26;
+                start = start_a + 1 * condSize;
                 BOOST_CHECK_EQUAL(iAcn[start + 13], 2);
                 BOOST_CHECK_EQUAL(iAcn[start + 15], 1);
                 BOOST_CHECK_EQUAL(iAcn[start + 17], 0);
 
-                start = start_a + 2 * 26;
+                start = start_a + 2 * condSize;
                 BOOST_CHECK_EQUAL(iAcn[start + 13], 1);
                 BOOST_CHECK_EQUAL(iAcn[start + 15], 2);
                 BOOST_CHECK_EQUAL(iAcn[start + 17], 1);
 
-                start = start_a + 3 * 26;
+                start = start_a + 3 * condSize;
                 BOOST_CHECK_EQUAL(iAcn[start + 13], 1);
                 BOOST_CHECK_EQUAL(iAcn[start + 15], 0);
                 BOOST_CHECK_EQUAL(iAcn[start + 17], 1);
 
-                start = start_a + 4 * 26;
+                start = start_a + 4 * condSize;
                 BOOST_CHECK_EQUAL(iAcn[start + 13], 0);
                 BOOST_CHECK_EQUAL(iAcn[start + 15], 0);
                 BOOST_CHECK_EQUAL(iAcn[start + 17], 1);
 
-                start_a = 4 * actDims[6];
-                start = start_a + 0 * 26;
+                start_a = 4 * iAcnStride;
+                start = start_a + 0 * condSize;
                 BOOST_CHECK_EQUAL(iAcn[start + 13], 1);
                 BOOST_CHECK_EQUAL(iAcn[start + 15], 0);
                 BOOST_CHECK_EQUAL(iAcn[start + 17], 0);
 
-                start = start_a + 1 * 26;
+                start = start_a + 1 * condSize;
                 BOOST_CHECK_EQUAL(iAcn[start + 13], 1);
                 BOOST_CHECK_EQUAL(iAcn[start + 15], 1);
                 BOOST_CHECK_EQUAL(iAcn[start + 17], 0);
 
-                start = start_a + 2 * 26;
+                start = start_a + 2 * condSize;
                 BOOST_CHECK_EQUAL(iAcn[start + 13], 1);
                 BOOST_CHECK_EQUAL(iAcn[start + 15], 2);
                 BOOST_CHECK_EQUAL(iAcn[start + 17], 1);
 
-                start = start_a + 3 * 26;
+                start = start_a + 3 * condSize;
                 BOOST_CHECK_EQUAL(iAcn[start + 13], 1);
                 BOOST_CHECK_EQUAL(iAcn[start + 15], 0);
                 BOOST_CHECK_EQUAL(iAcn[start + 17], 1);
 
-                start = start_a + 4 * 26;
+                start = start_a + 4 * condSize;
                 BOOST_CHECK_EQUAL(iAcn[start + 13], 0);
                 BOOST_CHECK_EQUAL(iAcn[start + 15], 0);
                 BOOST_CHECK_EQUAL(iAcn[start + 17], 1);
 
-                start_a = 5 * actDims[6];
-                start = start_a + 0 * 26;
+                start_a = 5 * iAcnStride;
+                start = start_a + 0 * condSize;
                 BOOST_CHECK_EQUAL(iAcn[start + 13], 2);
                 BOOST_CHECK_EQUAL(iAcn[start + 15], 0);
                 BOOST_CHECK_EQUAL(iAcn[start + 17], 0);
 
-                start = start_a + 1 * 26;
+                start = start_a + 1 * condSize;
                 BOOST_CHECK_EQUAL(iAcn[start + 13], 1);
                 BOOST_CHECK_EQUAL(iAcn[start + 15], 1);
                 BOOST_CHECK_EQUAL(iAcn[start + 17], 0);
 
-                start = start_a + 2 * 26;
+                start = start_a + 2 * condSize;
                 BOOST_CHECK_EQUAL(iAcn[start + 13], 1);
                 BOOST_CHECK_EQUAL(iAcn[start + 15], 2);
                 BOOST_CHECK_EQUAL(iAcn[start + 17], 0);
 
-                start = start_a + 3 * 26;
+                start = start_a + 3 * condSize;
                 BOOST_CHECK_EQUAL(iAcn[start + 13], 1);
                 BOOST_CHECK_EQUAL(iAcn[start + 15], 0);
                 BOOST_CHECK_EQUAL(iAcn[start + 17], 0);
 
-                start = start_a + 4 * 26;
+                start = start_a + 4 * condSize;
                 BOOST_CHECK_EQUAL(iAcn[start + 13], 0);
                 BOOST_CHECK_EQUAL(iAcn[start + 15], 0);
                 BOOST_CHECK_EQUAL(iAcn[start + 17], 0);
 
-                start_a = 6 * actDims[6];
-                start = start_a + 0 * 26;
+                start_a = 6 * iAcnStride;
+                start = start_a + 0 * condSize;
                 BOOST_CHECK_EQUAL(iAcn[start + 13], 1);
                 BOOST_CHECK_EQUAL(iAcn[start + 15], 0);
                 BOOST_CHECK_EQUAL(iAcn[start + 17], 0);
 
-                start = start_a + 1 * 26;
+                start = start_a + 1 * condSize;
                 BOOST_CHECK_EQUAL(iAcn[start + 13], 1);
                 BOOST_CHECK_EQUAL(iAcn[start + 15], 1);
                 BOOST_CHECK_EQUAL(iAcn[start + 17], 0);
 
-                start = start_a + 2 * 26;
+                start = start_a + 2 * condSize;
                 BOOST_CHECK_EQUAL(iAcn[start + 13], 2);
                 BOOST_CHECK_EQUAL(iAcn[start + 15], 2);
                 BOOST_CHECK_EQUAL(iAcn[start + 17], 1);
 
-                start = start_a + 3 * 26;
+                start = start_a + 3 * condSize;
                 BOOST_CHECK_EQUAL(iAcn[start + 13], 1);
                 BOOST_CHECK_EQUAL(iAcn[start + 15], 0);
                 BOOST_CHECK_EQUAL(iAcn[start + 17], 0);
 
-                start = start_a + 4 * 26;
+                start = start_a + 4 * condSize;
                 BOOST_CHECK_EQUAL(iAcn[start + 13], 0);
                 BOOST_CHECK_EQUAL(iAcn[start + 15], 0);
                 BOOST_CHECK_EQUAL(iAcn[start + 17], 0);
 
-                start_a = 7 * actDims[6];
-                start = start_a + 0 * 26;
+                start_a = 7 * iAcnStride;
+                start = start_a + 0 * condSize;
                 BOOST_CHECK_EQUAL(iAcn[start + 13], 1);
                 BOOST_CHECK_EQUAL(iAcn[start + 15], 1);
                 BOOST_CHECK_EQUAL(iAcn[start + 17], 0);
 
-                start = start_a + 1 * 26;
+                start = start_a + 1 * condSize;
                 BOOST_CHECK_EQUAL(iAcn[start + 13], 1);
                 BOOST_CHECK_EQUAL(iAcn[start + 15], 2);
                 BOOST_CHECK_EQUAL(iAcn[start + 17], 1);
 
-                start = start_a + 2 * 26;
+                start = start_a + 2 * condSize;
                 BOOST_CHECK_EQUAL(iAcn[start + 13], 1);
                 BOOST_CHECK_EQUAL(iAcn[start + 15], 0);
                 BOOST_CHECK_EQUAL(iAcn[start + 17], 1);
 
-                start = start_a + 3 * 26;
+                start = start_a + 3 * condSize;
                 BOOST_CHECK_EQUAL(iAcn[start + 13], 1);
                 BOOST_CHECK_EQUAL(iAcn[start + 15], 1);
                 BOOST_CHECK_EQUAL(iAcn[start + 17], 0);
 
-                start = start_a + 4 * 26;
+                start = start_a + 4 * condSize;
                 BOOST_CHECK_EQUAL(iAcn[start + 13], 1);
                 BOOST_CHECK_EQUAL(iAcn[start + 15], 2);
                 BOOST_CHECK_EQUAL(iAcn[start + 17], 1);
 
-                start = start_a + 5 * 26;
+                start = start_a + 5 * condSize;
                 BOOST_CHECK_EQUAL(iAcn[start + 13], 1);
                 BOOST_CHECK_EQUAL(iAcn[start + 15], 0);
                 BOOST_CHECK_EQUAL(iAcn[start + 17], 1);
 
-                start = start_a + 6 * 26;
+                start = start_a + 6 * condSize;
                 BOOST_CHECK_EQUAL(iAcn[start + 13], 0);
                 BOOST_CHECK_EQUAL(iAcn[start + 15], 0);
                 BOOST_CHECK_EQUAL(iAcn[start + 17], 1);
 
-                start_a = 8 * actDims[6];
-                start = start_a + 0 * 26;
+                start_a = 8 * iAcnStride;
+                start = start_a + 0 * condSize;
                 BOOST_CHECK_EQUAL(iAcn[start + 13], 2);
                 BOOST_CHECK_EQUAL(iAcn[start + 15], 1);
                 BOOST_CHECK_EQUAL(iAcn[start + 17], 0);
 
-                start = start_a + 1 * 26;
+                start = start_a + 1 * condSize;
                 BOOST_CHECK_EQUAL(iAcn[start + 13], 1);
                 BOOST_CHECK_EQUAL(iAcn[start + 15], 2);
                 BOOST_CHECK_EQUAL(iAcn[start + 17], 0);
 
-                start = start_a + 2 * 26;
+                start = start_a + 2 * condSize;
                 BOOST_CHECK_EQUAL(iAcn[start + 13], 1);
                 BOOST_CHECK_EQUAL(iAcn[start + 15], 0);
                 BOOST_CHECK_EQUAL(iAcn[start + 17], 0);
 
-                start = start_a + 3 * 26;
+                start = start_a + 3 * condSize;
                 BOOST_CHECK_EQUAL(iAcn[start + 13], 1);
                 BOOST_CHECK_EQUAL(iAcn[start + 15], 1);
                 BOOST_CHECK_EQUAL(iAcn[start + 17], 0);
 
-                start = start_a + 4 * 26;
+                start = start_a + 4 * condSize;
                 BOOST_CHECK_EQUAL(iAcn[start + 13], 1);
                 BOOST_CHECK_EQUAL(iAcn[start + 15], 2);
                 BOOST_CHECK_EQUAL(iAcn[start + 17], 0);
 
-                start = start_a + 5 * 26;
+                start = start_a + 5 * condSize;
                 BOOST_CHECK_EQUAL(iAcn[start + 13], 1);
                 BOOST_CHECK_EQUAL(iAcn[start + 15], 0);
                 BOOST_CHECK_EQUAL(iAcn[start + 17], 0);
 
-                start = start_a + 6 * 26;
+                start = start_a + 6 * condSize;
                 BOOST_CHECK_EQUAL(iAcn[start + 13], 0);
                 BOOST_CHECK_EQUAL(iAcn[start + 15], 0);
                 BOOST_CHECK_EQUAL(iAcn[start + 17], 0);
 
 
-                start_a = 9 * actDims[6];
-                start = start_a + 0 * 26;
+                start_a = 9 * iAcnStride;
+                start = start_a + 0 * condSize;
                 BOOST_CHECK_EQUAL(iAcn[start + 13], 1);
                 BOOST_CHECK_EQUAL(iAcn[start + 15], 1);
                 BOOST_CHECK_EQUAL(iAcn[start + 17], 0);
 
-                start = start_a + 1 * 26;
+                start = start_a + 1 * condSize;
                 BOOST_CHECK_EQUAL(iAcn[start + 13], 2);
                 BOOST_CHECK_EQUAL(iAcn[start + 15], 2);
                 BOOST_CHECK_EQUAL(iAcn[start + 17], 1);
 
-                start = start_a + 2 * 26;
+                start = start_a + 2 * condSize;
                 BOOST_CHECK_EQUAL(iAcn[start + 13], 1);
                 BOOST_CHECK_EQUAL(iAcn[start + 15], 0);
                 BOOST_CHECK_EQUAL(iAcn[start + 17], 0);
 
-                start = start_a + 3 * 26;
+                start = start_a + 3 * condSize;
                 BOOST_CHECK_EQUAL(iAcn[start + 13], 1);
                 BOOST_CHECK_EQUAL(iAcn[start + 15], 1);
                 BOOST_CHECK_EQUAL(iAcn[start + 17], 0);
 
-                start = start_a + 4 * 26;
+                start = start_a + 4 * condSize;
                 BOOST_CHECK_EQUAL(iAcn[start + 13], 1);
                 BOOST_CHECK_EQUAL(iAcn[start + 15], 2);
                 BOOST_CHECK_EQUAL(iAcn[start + 17], 0);
 
-                start = start_a + 5 * 26;
+                start = start_a + 5 * condSize;
                 BOOST_CHECK_EQUAL(iAcn[start + 13], 1);
                 BOOST_CHECK_EQUAL(iAcn[start + 15], 0);
                 BOOST_CHECK_EQUAL(iAcn[start + 17], 0);
 
-                start = start_a + 6 * 26;
+                start = start_a + 6 * condSize;
                 BOOST_CHECK_EQUAL(iAcn[start + 13], 0);
                 BOOST_CHECK_EQUAL(iAcn[start + 15], 0);
                 BOOST_CHECK_EQUAL(iAcn[start + 17], 0);
 
 
-                start_a = 10 * actDims[6];
-                start = start_a + 0 * 26;
+                start_a = 10 * iAcnStride;
+                start = start_a + 0 * condSize;
                 BOOST_CHECK_EQUAL(iAcn[start + 13], 1);
                 BOOST_CHECK_EQUAL(iAcn[start + 15], 1);
                 BOOST_CHECK_EQUAL(iAcn[start + 17], 0);
 
-                start = start_a + 1 * 26;
+                start = start_a + 1 * condSize;
                 BOOST_CHECK_EQUAL(iAcn[start + 13], 1);
                 BOOST_CHECK_EQUAL(iAcn[start + 15], 2);
                 BOOST_CHECK_EQUAL(iAcn[start + 17], 1);
 
-                start = start_a + 2 * 26;
+                start = start_a + 2 * condSize;
                 BOOST_CHECK_EQUAL(iAcn[start + 13], 2);
                 BOOST_CHECK_EQUAL(iAcn[start + 15], 0);
                 BOOST_CHECK_EQUAL(iAcn[start + 17], 1);
 
-                start = start_a + 3 * 26;
+                start = start_a + 3 * condSize;
                 BOOST_CHECK_EQUAL(iAcn[start + 13], 1);
                 BOOST_CHECK_EQUAL(iAcn[start + 15], 1);
                 BOOST_CHECK_EQUAL(iAcn[start + 17], 0);
 
-                start = start_a + 4 * 26;
+                start = start_a + 4 * condSize;
                 BOOST_CHECK_EQUAL(iAcn[start + 13], 1);
                 BOOST_CHECK_EQUAL(iAcn[start + 15], 2);
                 BOOST_CHECK_EQUAL(iAcn[start + 17], 0);
 
-                start = start_a + 5 * 26;
+                start = start_a + 5 * condSize;
                 BOOST_CHECK_EQUAL(iAcn[start + 13], 1);
                 BOOST_CHECK_EQUAL(iAcn[start + 15], 0);
                 BOOST_CHECK_EQUAL(iAcn[start + 17], 0);
 
-                start = start_a + 6 * 26;
+                start = start_a + 6 * condSize;
                 BOOST_CHECK_EQUAL(iAcn[start + 13], 0);
                 BOOST_CHECK_EQUAL(iAcn[start + 15], 0);
                 BOOST_CHECK_EQUAL(iAcn[start + 17], 0);
 
 
-                start_a = 11 * actDims[6];
-                start = start_a + 0 * 26;
+                start_a = 11 * iAcnStride;
+                start = start_a + 0 * condSize;
                 BOOST_CHECK_EQUAL(iAcn[start + 13], 1);
                 BOOST_CHECK_EQUAL(iAcn[start + 15], 1);
                 BOOST_CHECK_EQUAL(iAcn[start + 17], 0);
 
-                start = start_a + 1 * 26;
+                start = start_a + 1 * condSize;
                 BOOST_CHECK_EQUAL(iAcn[start + 13], 1);
                 BOOST_CHECK_EQUAL(iAcn[start + 15], 2);
                 BOOST_CHECK_EQUAL(iAcn[start + 17], 1);
 
-                start = start_a + 2 * 26;
+                start = start_a + 2 * condSize;
                 BOOST_CHECK_EQUAL(iAcn[start + 13], 1);
                 BOOST_CHECK_EQUAL(iAcn[start + 15], 0);
                 BOOST_CHECK_EQUAL(iAcn[start + 17], 1);
 
-                start = start_a + 3 * 26;
+                start = start_a + 3 * condSize;
                 BOOST_CHECK_EQUAL(iAcn[start + 13], 2);
                 BOOST_CHECK_EQUAL(iAcn[start + 15], 1);
                 BOOST_CHECK_EQUAL(iAcn[start + 17], 0);
 
-                start = start_a + 4 * 26;
+                start = start_a + 4 * condSize;
                 BOOST_CHECK_EQUAL(iAcn[start + 13], 1);
                 BOOST_CHECK_EQUAL(iAcn[start + 15], 2);
                 BOOST_CHECK_EQUAL(iAcn[start + 17], 1);
 
-                start = start_a + 5 * 26;
+                start = start_a + 5 * condSize;
                 BOOST_CHECK_EQUAL(iAcn[start + 13], 1);
                 BOOST_CHECK_EQUAL(iAcn[start + 15], 0);
                 BOOST_CHECK_EQUAL(iAcn[start + 17], 1);
 
-                start = start_a + 6 * 26;
+                start = start_a + 6 * condSize;
                 BOOST_CHECK_EQUAL(iAcn[start + 13], 0);
                 BOOST_CHECK_EQUAL(iAcn[start + 15], 0);
                 BOOST_CHECK_EQUAL(iAcn[start + 17], 1);
 
 
-                start_a = 12 * actDims[6];
-                start = start_a + 0 * 26;
+                start_a = 12 * iAcnStride;
+                start = start_a + 0 * condSize;
                 BOOST_CHECK_EQUAL(iAcn[start + 13], 1);
                 BOOST_CHECK_EQUAL(iAcn[start + 15], 1);
                 BOOST_CHECK_EQUAL(iAcn[start + 17], 0);
 
-                start = start_a + 1 * 26;
+                start = start_a + 1 * condSize;
                 BOOST_CHECK_EQUAL(iAcn[start + 13], 1);
                 BOOST_CHECK_EQUAL(iAcn[start + 15], 2);
                 BOOST_CHECK_EQUAL(iAcn[start + 17], 1);
 
-                start = start_a + 2 * 26;
+                start = start_a + 2 * condSize;
                 BOOST_CHECK_EQUAL(iAcn[start + 13], 1);
                 BOOST_CHECK_EQUAL(iAcn[start + 15], 0);
                 BOOST_CHECK_EQUAL(iAcn[start + 17], 1);
 
-                start = start_a + 3 * 26;
+                start = start_a + 3 * condSize;
                 BOOST_CHECK_EQUAL(iAcn[start + 13], 1);
                 BOOST_CHECK_EQUAL(iAcn[start + 15], 1);
                 BOOST_CHECK_EQUAL(iAcn[start + 17], 0);
 
-                start = start_a + 4 * 26;
+                start = start_a + 4 * condSize;
                 BOOST_CHECK_EQUAL(iAcn[start + 13], 2);
                 BOOST_CHECK_EQUAL(iAcn[start + 15], 2);
                 BOOST_CHECK_EQUAL(iAcn[start + 17], 1);
 
-                start = start_a + 5 * 26;
+                start = start_a + 5 * condSize;
                 BOOST_CHECK_EQUAL(iAcn[start + 13], 1);
                 BOOST_CHECK_EQUAL(iAcn[start + 15], 0);
                 BOOST_CHECK_EQUAL(iAcn[start + 17], 0);
 
-                start = start_a + 6 * 26;
+                start = start_a + 6 * condSize;
                 BOOST_CHECK_EQUAL(iAcn[start + 13], 0);
                 BOOST_CHECK_EQUAL(iAcn[start + 15], 0);
                 BOOST_CHECK_EQUAL(iAcn[start + 17], 0);
@@ -933,15 +993,16 @@ BOOST_AUTO_TEST_CASE(Declared_Actionx_data)
             {
                 /*
                   SACN
-                  26*Max number of conditions pr ACTIONX
+                  16*Max number of conditions pr ACTIONX
 
                 */
 
 
+                constexpr auto condSize = Opm::RestartIO::Helpers::VectorItems::SACN::ConditionSize;
                 const auto& sAcn = actionxData.getSACN();
 
-                auto start_a = 0 * actDims[6];
-                auto start = start_a + 0 * 16;
+                auto start_a = 0 * sAcnStride;
+                auto start = start_a + 0 * condSize;
                 BOOST_CHECK_EQUAL(sAcn[start + 0], 0);
                 BOOST_CHECK_EQUAL(sAcn[start + 1], 0);
                 BOOST_CHECK_EQUAL(sAcn[start + 2], 45);
@@ -959,7 +1020,7 @@ BOOST_AUTO_TEST_CASE(Declared_Actionx_data)
                 BOOST_CHECK_EQUAL(sAcn[start + 14], 0);
                 BOOST_CHECK_EQUAL(sAcn[start + 15], 0);
 
-                start = start_a + 1 * 16;
+                start = start_a + 1 * condSize;
                 BOOST_CHECK_EQUAL(sAcn[start + 0], 0);
                 BOOST_CHECK_EQUAL(sAcn[start + 1], 0);
                 BOOST_CHECK_EQUAL(sAcn[start + 2], 46);
@@ -977,7 +1038,7 @@ BOOST_AUTO_TEST_CASE(Declared_Actionx_data)
                 BOOST_CHECK_EQUAL(sAcn[start + 14], 0);
                 BOOST_CHECK_EQUAL(sAcn[start + 15], 0);
 
-                start = start_a + 2 * 16;
+                start = start_a + 2 * condSize;
                 BOOST_CHECK_EQUAL(sAcn[start + 0], 0);
                 BOOST_CHECK_EQUAL(sAcn[start + 1], 0);
                 BOOST_CHECK_EQUAL(sAcn[start + 2], 5);
@@ -1200,9 +1261,9 @@ END
     smstate.update("MNTH", 5);
     smstate.update("YEAR", 2024);
 
-    const auto actionData = Opm::RestartIO::Helpers::AggregateActionxData {
+    const auto actionData = Opm::RestartIO::Helpers::createAggregateActionxData(
         cse.sched, action_state, smstate, simStep
-    };
+    );
 
     const auto& sacn = actionData.getSACN();
     BOOST_CHECK_EQUAL(sacn.size(), 3 * std::size_t{16});
