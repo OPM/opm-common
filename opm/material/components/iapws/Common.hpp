@@ -32,6 +32,7 @@
 #include <opm/common/utility/gpuDecorators.hpp>
 
 #include <cmath>
+#include <type_traits>
 
 namespace Opm {
 namespace IAPWS {
@@ -54,21 +55,32 @@ namespace IAPWS {
 template <class Scalar>
 class Common
 {
-    // Source values in double precision, used to derive Rs and criticalMolarVolume
-    // below in double and cast to Scalar. The double intermediate is needed
-    // because Scalar arithmetic is not constexpr for the autodiff Scalar types
-    // used by the material tests on MSVC; keeping the literals in one place
-    // avoids molarMass/criticalDensity drifting out of sync with the derived
-    // constants.
+    // Source values in double precision; keeping the literals in one place
+    // avoids molarMass/criticalDensity drifting out of sync with the constants
+    // derived from them (Rs, criticalMolarVolume).
     static constexpr double molarMass_si       = 18.01518e-3; // [kg/mol]
     static constexpr double criticalDensity_si = 322.0;       // [kg/m^3]
+
+    // Derived constants must be computed in Scalar precision for floating-point
+    // Scalar so that e.g. single-precision builds get bit-identical values to
+    // the quotients written directly in Scalar. For other Scalar types (the
+    // autodiff types used by the material tests) Scalar arithmetic is not a
+    // constant expression under MSVC, so compute in double and cast.
+    static constexpr bool computeInScalar_ =
+        std::is_floating_point_v<Scalar>
+#if HAVE_QUAD
+        || std::is_same_v<Scalar, quad>
+#endif
+        ;
+    using ComputeT = std::conditional_t<computeInScalar_, Scalar, double>;
 
 public:
     //! The molar mass of water \f$\mathrm{[kg/mol]}\f$
     static constexpr Scalar molarMass = static_cast<Scalar>(molarMass_si);
 
     //! Specific gas constant of water \f$\mathrm{[J/(kg*K)]}\f$
-    static constexpr Scalar Rs = static_cast<Scalar>(Constants<double>::R / molarMass_si);
+    static constexpr Scalar Rs =
+        static_cast<Scalar>(Constants<ComputeT>::R / static_cast<ComputeT>(molarMass_si));
 
     //! Critical temperature of water \f$\mathrm{[K]}\f$
     static constexpr Scalar criticalTemperature = Scalar(647.096);
@@ -83,7 +95,9 @@ public:
     static constexpr Scalar criticalVolume = Scalar(5.595e-2);
 
     //! Critical molar volume of water \f$\mathrm{[m^3/mol]}\f$
-    static constexpr Scalar criticalMolarVolume = static_cast<Scalar>(molarMass_si / criticalDensity_si);
+    static constexpr Scalar criticalMolarVolume =
+        static_cast<Scalar>(static_cast<ComputeT>(molarMass_si)
+                            / static_cast<ComputeT>(criticalDensity_si));
 
     //! The acentric factor of water \f$\mathrm{[-]}\f$
     static constexpr Scalar acentricFactor = Scalar(0.344);
