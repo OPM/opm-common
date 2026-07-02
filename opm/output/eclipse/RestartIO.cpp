@@ -365,9 +365,9 @@ namespace {
 
         const auto simStep = static_cast<std::size_t>(sim_step);
 
-        const auto actionxData = RestartIO::Helpers::AggregateActionxData {
+        const auto actionxData = RestartIO::Helpers::createAggregateActionxData(
             schedule, action_state, sum_state, simStep
-        };
+        );
 
         rstFile.write("IACT", actionxData.getIACT());
         rstFile.write("SACT", actionxData.getSACT());

@@ -25,28 +25,52 @@
 #include <opm/io/eclipse/PaddedOutputString.hpp>
 
 #include <cstddef>
+#include <ctime>
+#include <span>
+#include <string>
 #include <vector>
 
 namespace Opm {
     class Actdims;
     class Schedule;
     class SummaryState;
+    class UnitSystem;
     class UDQInput;
+    class WListManager;
 } // namespace Opm
 
-namespace Opm { namespace Action {
+namespace Opm::Action {
+    class ActionX;
     class State;
-}} // Opm::Action
+} // namespace Opm::Action
 
-namespace Opm { namespace RestartIO { namespace Helpers {
+namespace Opm::RestartIO::Helpers {
+
+struct AggregateActionxRuntimeContext
+{
+    std::time_t startTime;
+    std::time_t simTime;
+    const UnitSystem& units;
+    std::span<const std::string> wellNames;
+    const WListManager& wlistManager;
+};
 
 class AggregateActionxData
 {
 public:
-    AggregateActionxData(const Opm::Schedule&      sched,
-                         const Opm::Action::State& action_state,
-                         const Opm::SummaryState&  st,
-                         const std::size_t         simStep);
+    AggregateActionxData(std::span<const Action::ActionX>      actions,
+                         const Actdims&                        actdims,
+                         const Action::State&                  action_state,
+                         const SummaryState&                   st,
+                         const AggregateActionxRuntimeContext& runtime);
+
+    // Compatibility constructor. Prefer createAggregateActionxData() or the
+    // constructor accepting explicit actions and runtime context.
+    [[deprecated("Use createAggregateActionxData() or the span-based constructor")]]
+    AggregateActionxData(const Schedule&      sched,
+                         const Action::State& action_state,
+                         const SummaryState&  st,
+                         const std::size_t    simStep);
 
     const std::vector<int>& getIACT() const
     {
@@ -85,13 +109,6 @@ public:
     }
 
 private:
-    AggregateActionxData(std::size_t               num_actions,
-                         const Opm::Actdims&       actdims,
-                         const Opm::Schedule&      sched,
-                         const Opm::Action::State& action_state,
-                         const Opm::SummaryState&  st,
-                         const std::size_t         simStep);
-
     /// Aggregate 'IACT' array (Integer) for all ACTIONX data  (9 integers pr UDQ)
     WindowedArray<int> iACT_;
 
@@ -115,6 +132,19 @@ private:
 
 };
 
-}}} // Opm::RestartIO::Helpers
+AggregateActionxData
+createAggregateActionxData(std::span<const Action::ActionX>      actions,
+                           const Actdims&                        actdims,
+                           const Action::State&                  action_state,
+                           const SummaryState&                   st,
+                           const AggregateActionxRuntimeContext& runtime);
+
+AggregateActionxData
+createAggregateActionxData(const Schedule&      sched,
+                           const Action::State& action_state,
+                           const SummaryState&  st,
+                           std::size_t          simStep);
+
+} // namespace Opm::RestartIO::Helpers
 
 #endif //OPM_AGGREGATE_WELL_DATA_HPP

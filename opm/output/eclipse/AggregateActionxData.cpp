@@ -404,20 +404,18 @@ namespace {
         }
 
         Opm::Action::Result
-        act_res(const Opm::Schedule&        sched,
+        act_res(const Opm::Action::ActionX& action,
                 const Opm::Action::State&   action_state,
                 const Opm::SummaryState&    smry,
-                const std::size_t           sim_step,
-                const Opm::Action::ActionX& action)
+                const std::time_t           sim_time,
+                const Opm::WListManager&    wlist_manager)
         {
-            const auto sim_time = sched.simTime(sim_step);
-
             if (! action.ready(action_state, sim_time)) {
                 return Opm::Action::Result { false };
             }
 
             const auto context = Opm::Action::Context {
-                smry, sched[sim_step].wlist_manager.get()
+                smry, wlist_manager
             };
 
             return action.eval(context);
@@ -426,15 +424,18 @@ namespace {
         void staticContrib(const Opm::Action::ActionX& action,
                            const Opm::Action::State&   action_state,
                            const Opm::SummaryState&    st,
-                           const Opm::Schedule&        sched,
-                           const std::size_t           simStep,
+                           const Opm::RestartIO::Helpers::AggregateActionxRuntimeContext& runtime,
                            Array&                      sAcn)
         {
             using Ix = Opm::RestartIO::Helpers::VectorItems::SACN::index;
 
             const auto undef_high_val = 1.0E+20;
-            const auto wells = sched.wellNames(simStep);
-            const auto ar = act_res(sched, action_state, st, simStep, action);
+            const auto& wells = runtime.wellNames;
+            const auto ar = act_res(action,
+                                    action_state,
+                                    st,
+                                    runtime.simTime,
+                                    runtime.wlistManager);
 
             // Write out the schedule ACTIONX conditions
             auto condIx = std::size_t{0};
@@ -527,27 +528,48 @@ namespace {
 
     } // sAcn
 
+    std::span<const Opm::Action::ActionX>
+    actionSpan(const Opm::Action::Actions& actions)
+    {
+        const auto num_actions = actions.ecl_size();
+
+        return {
+            (num_actions > 0) ? &actions[0] : nullptr,
+            num_actions
+        };
+    }
+
+    std::size_t maxInputLines(std::span<const Opm::Action::ActionX> actions)
+    {
+        auto max_il = std::size_t{0};
+
+        for (const auto& action : actions) {
+            max_il = std::max(max_il, action.keyword_strings().size());
+        }
+
+        return max_il;
+    }
+
 } // Anonymous namespace
 
 // =====================================================================
 
 Opm::RestartIO::Helpers::AggregateActionxData::
-AggregateActionxData( const std::size_t         num_actions,
-                      const Opm::Actdims&       actdims,
-                      const Opm::Schedule&      sched,
-                      const Opm::Action::State& action_state,
-                      const Opm::SummaryState&  st,
-                      const std::size_t         simStep)
-    : iACT_ (iACT::allocate(num_actions))
-    , sACT_ (sACT::allocate(num_actions))
-    , zACT_ (zACT::allocate(num_actions))
-    , zLACT_(zLACT::allocate(num_actions, sched[simStep].actions().max_input_lines(), actdims))
-    , zACN_ (zACN::allocate(num_actions, actdims))
-    , iACN_ (iACN::allocate(num_actions, actdims))
-    , sACN_ (sACN::allocate(num_actions, actdims))
+AggregateActionxData(std::span<const Action::ActionX>      actions,
+                     const Actdims&                        actdims,
+                     const Action::State&                  action_state,
+                     const SummaryState&                   st,
+                     const AggregateActionxRuntimeContext& runtime)
+    : iACT_ (iACT::allocate(actions.size()))
+    , sACT_ (sACT::allocate(actions.size()))
+    , zACT_ (zACT::allocate(actions.size()))
+    , zLACT_(zLACT::allocate(actions.size(), maxInputLines(actions), actdims))
+    , zACN_ (zACN::allocate(actions.size(), actdims))
+    , iACN_ (iACN::allocate(actions.size(), actdims))
+    , sACN_ (sACN::allocate(actions.size(), actdims))
 {
     std::size_t act_ind = 0;
-    for (const auto& action : sched[simStep].actions()) {
+    for (const auto& action : actions) {
         {
             auto i_act = this->iACT_[act_ind];
             iACT::staticContrib(action, i_act, action_state);
@@ -555,7 +577,7 @@ AggregateActionxData( const std::size_t         num_actions,
 
         {
             auto s_act = this->sACT_[act_ind];
-            sACT::staticContrib(action, action_state, sched.getStartTime(), sched.getUnits(), s_act);
+            sACT::staticContrib(action, action_state, runtime.startTime, runtime.units, s_act);
         }
 
         {
@@ -580,7 +602,7 @@ AggregateActionxData( const std::size_t         num_actions,
 
         {
             auto s_acn = sACN::Array { this->sACN_, act_ind };
-            sACN::staticContrib(action, action_state, st, sched, simStep, s_acn);
+            sACN::staticContrib(action, action_state, st, runtime, s_acn);
         }
 
         act_ind +=1;
@@ -588,11 +610,47 @@ AggregateActionxData( const std::size_t         num_actions,
 }
 
 Opm::RestartIO::Helpers::AggregateActionxData::
-AggregateActionxData(const Opm::Schedule&      sched,
-                     const Opm::Action::State& action_state,
-                     const Opm::SummaryState&  st,
-                     const std::size_t         simStep)
-    : AggregateActionxData(sched[simStep].actions().ecl_size(),
-                           sched.runspec().actdims(),
-                           sched, action_state, st, simStep)
+AggregateActionxData(const Schedule&      sched,
+                     const Action::State& action_state,
+                     const SummaryState&  st,
+                     const std::size_t    simStep)
+    : AggregateActionxData { createAggregateActionxData(sched, action_state, st, simStep) }
 {}
+
+Opm::RestartIO::Helpers::AggregateActionxData
+Opm::RestartIO::Helpers::createAggregateActionxData(std::span<const Action::ActionX>      actions,
+                                                    const Actdims&                        actdims,
+                                                    const Action::State&                  action_state,
+                                                    const SummaryState&                   st,
+                                                    const AggregateActionxRuntimeContext& runtime)
+{
+    return AggregateActionxData {
+        actions,
+        actdims,
+        action_state,
+        st,
+        runtime
+    };
+}
+
+Opm::RestartIO::Helpers::AggregateActionxData
+Opm::RestartIO::Helpers::createAggregateActionxData(const Schedule&      sched,
+                                                    const Action::State& action_state,
+                                                    const SummaryState&  st,
+                                                    std::size_t          simStep)
+{
+    const auto& actions = sched[simStep].actions();
+    const auto wells = sched.wellNames(simStep);
+
+    const auto runtime = AggregateActionxRuntimeContext {
+        .startTime = sched.getStartTime(),
+        .simTime = sched.simTime(simStep),
+        .units = sched.getUnits(),
+        .wellNames = wells,
+        .wlistManager = sched[simStep].wlist_manager.get()
+    };
+
+    return createAggregateActionxData
+        (actionSpan(actions), sched.runspec().actdims(),
+         action_state, st, runtime);
+}

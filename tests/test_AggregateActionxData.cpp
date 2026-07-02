@@ -132,6 +132,51 @@ namespace {
 
 BOOST_AUTO_TEST_SUITE(Aggregate_Actionx)
 
+BOOST_AUTO_TEST_CASE(Standalone_Constructor_With_Span)
+{
+    const auto units = Opm::UnitSystem::newMETRIC();
+    const auto startTime = std::time_t{1234567890};
+    const auto simTime = startTime + 100;
+
+    auto actions = std::vector<Opm::Action::ActionX>{};
+    actions.emplace_back("A1", 3, 0.0, startTime);
+    const auto span = std::span<const Opm::Action::ActionX>{ actions.data(), actions.size() };
+
+    const auto actdims = Opm::Actdims{};
+    const auto actionState = Opm::Action::State{};
+    const auto summaryState = Opm::SummaryState{ Opm::TimeService::now(), 0.0 };
+    const auto wells = std::vector<std::string>{};
+    const auto wlistManager = Opm::WListManager{};
+
+    const auto runtime = Opm::RestartIO::Helpers::AggregateActionxRuntimeContext {
+        startTime,
+        simTime,
+        units,
+        wells,
+        wlistManager
+    };
+
+    const auto data = Opm::RestartIO::Helpers::AggregateActionxData {
+        span,
+        actdims,
+        actionState,
+        summaryState,
+        runtime
+    };
+
+    const auto iActStride = Opm::RestartIO::Helpers::entriesPerIACT();
+    const auto zActStride = Opm::RestartIO::Helpers::entriesPerZACT();
+
+    const auto& iAct = data.getIACT();
+    BOOST_REQUIRE_GE(iAct.size(), iActStride);
+    BOOST_CHECK_EQUAL(iAct[1], 1); // keyword_strings() includes ENDACTIO.
+    BOOST_CHECK_EQUAL(iAct[5], 3);
+
+    const auto& zAct = data.getZACT();
+    BOOST_REQUIRE_GE(zAct.size(), zActStride);
+    BOOST_CHECK_EQUAL(zAct[0].c_str(), "A1      ");
+}
+
 // test constructed UDQ-Actionx restart data
 BOOST_AUTO_TEST_CASE(Declared_Actionx_data)
 {
@@ -222,7 +267,9 @@ BOOST_AUTO_TEST_CASE(Declared_Actionx_data)
             const auto iAcnStride = Opm::RestartIO::Helpers::entriesPerIACN(actdims);
             const auto sAcnStride = Opm::RestartIO::Helpers::entriesPerSACN(actdims);
             const auto zAcnStride = Opm::RestartIO::Helpers::entriesPerZACN(actdims);
-            Opm::RestartIO::Helpers::AggregateActionxData actionxData {sched, action_state, st, rptStep-1};
+            const auto actionxData = Opm::RestartIO::Helpers::createAggregateActionxData(
+                sched, action_state, st, rptStep - 1
+            );
 
             rstFile.write("IACT", actionxData.getIACT());
             rstFile.write("SACT", actionxData.getSACT());
@@ -1214,9 +1261,9 @@ END
     smstate.update("MNTH", 5);
     smstate.update("YEAR", 2024);
 
-    const auto actionData = Opm::RestartIO::Helpers::AggregateActionxData {
+    const auto actionData = Opm::RestartIO::Helpers::createAggregateActionxData(
         cse.sched, action_state, smstate, simStep
-    };
+    );
 
     const auto& sacn = actionData.getSACN();
     BOOST_CHECK_EQUAL(sacn.size(), 3 * std::size_t{16});
