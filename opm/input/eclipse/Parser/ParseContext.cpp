@@ -130,7 +130,8 @@ namespace Opm {
         this->addKey(SCHEDULE_COMPDAT_ZERO_PERM, InputErrorAction::WARN);
         this->addKey(SCHEDULE_NO_CONNECTION_MATCH, InputErrorAction::WARN);
 
-        this->addKey(SCHEDULE_ICD_MISSING_SEGMENT, InputErrorAction::WARN);
+        this->addKey(SCHEDULE_MISSING_SEGMENT, InputErrorAction::WARN);
+        this->addKey(SCHEDULE_MSW_KEYWORD_ON_NON_MSW_WELL, InputErrorAction::THROW_EXCEPTION);
         this->addKey(SCHEDULE_ICD_INCOMPATIBLE_PDROP_MODEL, InputErrorAction::THROW_EXCEPTION);
 
         addKey(SCHEDULE_INVALID_NAME, InputErrorAction::THROW_EXCEPTION);
@@ -417,7 +418,8 @@ namespace Opm {
     const std::string ParseContext::SCHEDULE_COMPDAT_ZERO_PERM = "SCHEDULE_COMPDAT_ZERO_PERM";
     const std::string ParseContext::SCHEDULE_NO_CONNECTION_MATCH = "SCHEDULE_NO_CONNECTION_MATCH";
 
-    const std::string ParseContext::SCHEDULE_ICD_MISSING_SEGMENT = "SCHEDULE_ICD_MISSING_SEGMENT";
+    const std::string ParseContext::SCHEDULE_MISSING_SEGMENT = "SCHEDULE_MISSING_SEGMENT";
+    const std::string ParseContext::SCHEDULE_MSW_KEYWORD_ON_NON_MSW_WELL = "SCHEDULE_MSW_KEYWORD_ON_NON_MSW_WELL";
     const std::string ParseContext::SCHEDULE_ICD_INCOMPATIBLE_PDROP_MODEL = "SCHEDULE_ICD_INCOMPATIBLE_PDROP_MODEL";
 
 }

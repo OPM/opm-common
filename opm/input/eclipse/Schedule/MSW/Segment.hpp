@@ -21,6 +21,7 @@
 #define SEGMENT_HPP_HEADER_INCLUDED
 
 #include <opm/input/eclipse/Schedule/MSW/AICD.hpp>
+#include <opm/input/eclipse/Schedule/MSW/SegmentHeatTransfer.hpp>
 #include <opm/input/eclipse/Schedule/MSW/SICD.hpp>
 #include <opm/input/eclipse/Schedule/MSW/Valve.hpp>
 
@@ -69,7 +70,10 @@ namespace Opm {
                 const double volume_in,
                 const bool data_ready_in,
                 const double x_in,
-                const double y_in);
+                const double y_in,
+                const double wall_area_in = 0.0,
+                const double wall_volumetric_heat_capacity_in = 0.0,
+                const double wall_thermal_conductivity_in = 0.0);
 
         explicit Segment(const RestartIO::RstSegment& rst_segment, const std::string& wname);
 
@@ -87,6 +91,16 @@ namespace Opm {
         double crossArea() const;
         double volume() const;
         bool dataReady() const;
+
+        // Cross-sectional area of the pipe wall used in the thermal
+        // conductivity calculation (WELSEGS item 10/13).
+        double wallArea() const;
+
+        // Volumetric heat capacity of the pipe wall (WELSEGS item 11/14).
+        double wallVolumetricHeatCapacity() const;
+
+        // Thermal conductivity of the pipe wall (WELSEGS item 12/15).
+        double wallThermalConductivity() const;
 
         SegmentType segmentType() const;
         int ecl_type_id() const;
@@ -108,6 +122,13 @@ namespace Opm {
         void updateValve(const Valve& valve);
         bool updateICDScalingFactor(const double outlet_segment_length, const double completion_length);
         void addInletSegment(const int segment_number);
+
+        // Heat transfer coefficients associated with this segment (WSEGHEAT).
+        const std::vector<SegmentHeatTransferCoeff>& heatTransfer() const;
+
+        // Apply one WSEGHEAT record to this segment's coefficients; the record's
+        // operation replaces, extends, reduces or clears the existing set.
+        void updateHeatTransfer(const SegmentHeatTransferRecord& record);
 
         bool isRegular() const
         {
@@ -145,6 +166,10 @@ namespace Opm {
             serializer(m_data_ready);
             serializer(m_x);
             serializer(m_y);
+            serializer(m_wall_area);
+            serializer(m_wall_volumetric_heat_capacity);
+            serializer(m_wall_thermal_conductivity);
+            serializer(m_heat_transfer);
             serializer(m_icd);
         }
 
@@ -228,8 +253,15 @@ namespace Opm {
 
         std::variant<RegularSegment, SICD, AutoICD, Valve> m_icd;
 
-        // There are three other properties for the segment pertaining to
-        // thermal conduction.  These are not currently supported.
+        // Pipe-wall thermal conduction properties (thermal option), default
+        // zero when WELSEGS omits them.  See the accessors above.
+        double m_wall_area{0.0};
+        double m_wall_volumetric_heat_capacity{0.0};
+        double m_wall_thermal_conductivity{0.0};
+
+        // Heat transfer coefficients (WSEGHEAT): at most one COMP, one TEMP and
+        // five SEG per segment.
+        std::vector<SegmentHeatTransferCoeff> m_heat_transfer{};
 
         void updateValve__(Valve& valve, const double segment_length);
     };

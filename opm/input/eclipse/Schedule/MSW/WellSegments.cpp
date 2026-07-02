@@ -55,18 +55,34 @@
 #include <fmt/format.h>
 
 namespace {
-    void handleMissingICDSegment(std::string_view            well_name,
+    void handleMissingMSWSegment(std::string_view            well_name,
+                                 const int                   first_segment,
+                                 const int                   last_segment,
+                                 const Opm::KeywordLocation& location,
+                                 const Opm::ParseContext&    parseContext,
+                                 Opm::ErrorGuard&            errors)
+    {
+        const auto detail = (first_segment == last_segment)
+            ? fmt::format("Segment {} is not defined", first_segment)
+            : fmt::format("Segment range {} to {} matches no segment defined",
+                          first_segment, last_segment);
+
+        const auto msg_fmt = fmt::format(R"(Problem with keyword {{keyword}}
+In {{file}} line {{line}}
+{} in WELSEGS for well {}.)", detail, well_name);
+
+        parseContext.handleError(Opm::ParseContext::SCHEDULE_MISSING_SEGMENT,
+                                 msg_fmt, location, errors);
+    }
+
+    void handleMissingMSWSegment(std::string_view            well_name,
                                  const int                   segment_number,
                                  const Opm::KeywordLocation& location,
                                  const Opm::ParseContext&    parseContext,
                                  Opm::ErrorGuard&            errors)
     {
-        const auto msg_fmt = fmt::format(R"(Problem with keyword {{keyword}}
-In {{file}} line {{line}}
-Segment {} is not defined in WELSEGS for well {}.)", segment_number, well_name);
-
-        parseContext.handleError(Opm::ParseContext::SCHEDULE_ICD_MISSING_SEGMENT,
-                                 msg_fmt, location, errors);
+        handleMissingMSWSegment(well_name, segment_number, segment_number,
+                                location, parseContext, errors);
     }
 
     void handleIncompatiblePDropModel(std::string_view                       well_name,
@@ -199,13 +215,17 @@ namespace Opm {
                                   const double volume,
                                   const bool data_ready,
                                   const double node_x,
-                                  const double node_y)
+                                  const double node_y,
+                                  const double wall_area,
+                                  const double wall_volumetric_heat_capacity,
+                                  const double wall_thermal_conductivity)
     {
         const auto segment = Segment {
             segment_number, branch, outlet_segment,
             depth, length, internal_diameter, roughness,
             cross_area, volume,
-            data_ready, node_x, node_y
+            data_ready, node_x, node_y,
+            wall_area, wall_volumetric_heat_capacity, wall_thermal_conductivity
         };
 
         this->addSegment(segment);
@@ -266,6 +286,14 @@ namespace Opm {
         const auto nodeX_top = record1.getItem("TOP_X").getSIDouble(0);
         const auto nodeY_top = record1.getItem("TOP_Y").getSIDouble(0);
 
+        // Pipe-wall thermal properties for the whole segment set.  Individual
+        // segments may override these in their own records.
+        const auto wall_area_top = record1.getItem("TOP_PIPE_WALL_AREA").getSIDouble(0);
+        const auto wall_volumetric_heat_capacity_top =
+            record1.getItem("TOP_PIPE_WALL_VOLUMETRIC_HEAT_CAPACITY").getSIDouble(0);
+        const auto wall_thermal_conductivity_top =
+            record1.getItem("TOP_PIPE_WALL_THERMAL_CONDUCTIVITY").getSIDouble(0);
+
         // The main branch is 1 instead of 0.  The segment number for top
         // segment is also 1.
         if (length_depth_type == LengthDepth::INC) {
@@ -281,7 +309,9 @@ namespace Opm {
 
             this->addSegment(segmentID, branchID, outletSegment, depth, length,
                              internal_diameter, roughness, cross_area,
-                             volume_top, data_ready, nodeX_top, nodeY_top);
+                             volume_top, data_ready, nodeX_top, nodeY_top,
+                             wall_area_top, wall_volumetric_heat_capacity_top,
+                             wall_thermal_conductivity_top);
         }
         else if (length_depth_type == LengthDepth::ABS) {
             const auto segmentID = 1;
@@ -295,7 +325,9 @@ namespace Opm {
             this->addSegment(segmentID, branchID, outletSegment,
                              depth_top, length_top,
                              internal_diameter, roughness, cross_area,
-                             volume_top, data_ready, nodeX_top, nodeY_top);
+                             volume_top, data_ready, nodeX_top, nodeY_top,
+                             wall_area_top, wall_volumetric_heat_capacity_top,
+                             wall_thermal_conductivity_top);
         }
 
         // Read all the information out from the DECK first then process to
@@ -369,6 +401,20 @@ namespace Opm {
             const auto node_X = record.getItem("LENGTH_X").getSIDouble(0);
             const auto node_Y = record.getItem("LENGTH_Y").getSIDouble(0);
 
+            // Pipe-wall thermal properties default to the values given in
+            // record 1 (items 10-12) when not specified for the segment.
+            const auto wall_area = record.getItem("PIPE_WALL_AREA").hasValue(0)
+                ? record.getItem("PIPE_WALL_AREA").getSIDouble(0)
+                : wall_area_top;
+            const auto wall_volumetric_heat_capacity =
+                record.getItem("PIPE_WALL_VOLUMETRIC_HEAT_CAPACITY").hasValue(0)
+                ? record.getItem("PIPE_WALL_VOLUMETRIC_HEAT_CAPACITY").getSIDouble(0)
+                : wall_volumetric_heat_capacity_top;
+            const auto wall_thermal_conductivity =
+                record.getItem("PIPE_WALL_THERMAL_CONDUCTIVITY").hasValue(0)
+                ? record.getItem("PIPE_WALL_THERMAL_CONDUCTIVITY").getSIDouble(0)
+                : wall_thermal_conductivity_top;
+
             for (int segment_number = segment1; segment_number <= segment2; ++segment_number) {
                 // For the first or the only segment in the range is the one
                 // specified in WELSEGS.  From the second segment in the
@@ -384,7 +430,9 @@ namespace Opm {
                 this->addSegment(segment_number, branch, outlet_segment,
                                  depth, length, diameter,
                                  roughness, area, volume, data_ready,
-                                 node_X, node_Y);
+                                 node_X, node_Y,
+                                 wall_area, wall_volumetric_heat_capacity,
+                                 wall_thermal_conductivity);
             }
         }
 
@@ -770,7 +818,7 @@ namespace Opm {
             const auto seg_idx = this->segmentNumberToIndex(segment_number);
 
             if (seg_idx < 0) {
-                handleMissingICDSegment(well_name, segment_number,
+                handleMissingMSWSegment(well_name, segment_number,
                                         location, parseContext, errors);
                 continue;
             }
@@ -802,7 +850,7 @@ namespace Opm {
             const auto seg_idx = this->segmentNumberToIndex(segment_number);
 
             if (seg_idx < 0) {
-                handleMissingICDSegment(well_name, segment_number,
+                handleMissingMSWSegment(well_name, segment_number,
                                         location, parseContext, errors);
                 continue;
             }
@@ -834,7 +882,7 @@ namespace Opm {
             const auto seg_idx = this->segmentNumberToIndex(segment_number);
 
             if (seg_idx < 0) {
-                handleMissingICDSegment(well_name, segment_number,
+                handleMissingMSWSegment(well_name, segment_number,
                                         location, parseContext, errors);
                 continue;
             }
@@ -846,6 +894,68 @@ namespace Opm {
         }
 
         return true;
+    }
+
+    bool WellSegments::updateWSEGHEAT(std::string_view                                well_name,
+                                      const std::vector<SegmentHeatTransferRecord>&   records,
+                                      const KeywordLocation&                          location,
+                                      const ParseContext&                             parseContext,
+                                      ErrorGuard&                                     errors)
+    {
+        if (records.empty()) {
+            return false;
+        }
+
+        bool update = false;
+        for (const auto& record : records) {
+            const auto& coeff = record.coefficient;
+
+            // A SEG coefficient's target segment must itself be defined in the
+            // well -- a genuine missing-segment condition.
+            if ((coeff.type() == SegmentHeatTransferCoeff::Type::SEG) &&
+                (this->segmentNumberToIndex(coeff.targetSegment()) < 0))
+            {
+                handleMissingMSWSegment(well_name, coeff.targetSegment(),
+                                        location, parseContext, errors);
+                continue;
+            }
+
+            // Apply to every defined segment in the inclusive range [segment1,
+            // segment2].  Iterate the defined segments (numbering may be
+            // non-contiguous) rather than every integer, so gaps aren't flagged
+            // as missing.
+            bool matched = false;
+            for (auto& segment : this->m_segments) {
+                const int segment_number = segment.segmentNumber();
+                if ((segment_number < record.segment1) ||
+                    (segment_number > record.segment2))
+                {
+                    continue;
+                }
+
+                matched = true;
+
+                // A segment cannot exchange heat with itself; skip the target
+                // when a SEG range includes it (normal usage, not an error).
+                if ((coeff.type() == SegmentHeatTransferCoeff::Type::SEG) &&
+                    (coeff.targetSegment() == segment_number))
+                {
+                    continue;
+                }
+
+                segment.updateHeatTransfer(record);
+                update = true;
+            }
+
+            // The range names no defined segment at all -- most likely a typo
+            // in item 2/3 -- so surface it as a missing-segment condition.
+            if (! matched) {
+                handleMissingMSWSegment(well_name, record.segment1, record.segment2,
+                                        location, parseContext, errors);
+            }
+        }
+
+        return update;
     }
 
     bool WellSegments::operator!=(const WellSegments& rhs) const

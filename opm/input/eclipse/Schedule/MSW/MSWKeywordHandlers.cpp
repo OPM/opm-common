@@ -28,6 +28,7 @@
 
 #include <opm/input/eclipse/Schedule/Action/WGNames.hpp>
 #include <opm/input/eclipse/Schedule/MSW/AICD.hpp>
+#include <opm/input/eclipse/Schedule/MSW/SegmentHeatTransfer.hpp>
 #include <opm/input/eclipse/Schedule/MSW/SICD.hpp>
 #include <opm/input/eclipse/Schedule/MSW/WellSegments.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleState.hpp>
@@ -38,6 +39,11 @@
 #include "../HandlerContext.hpp"
 
 #include <fmt/format.h>
+
+#include <map>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace Opm {
 
@@ -127,6 +133,38 @@ void handleWSEGAICD(HandlerContext& handlerContext)
     }
 }
 
+void handleWSEGHEAT(HandlerContext& handlerContext)
+{
+    const auto heat_transfers =
+        segmentHeatTransferFromWSEGHEAT(handlerContext.keyword);
+
+    // Expand the well-name patterns and regroup the records by concrete well,
+    // preserving their order of appearance in the deck.  Different wells are
+    // independent, but the records of a single well are order-dependent
+    // (WSEGHEAT replace/'+'/'-'/NONE operations), so deck order must be honoured
+    // even when several overlapping patterns name the same well.
+    auto records_by_well =
+        std::map<std::string, std::vector<SegmentHeatTransferRecord>>{};
+
+    for (const auto& [well_name_pattern, record] : heat_transfers) {
+        for (const auto& well_name : handlerContext.wellNames(well_name_pattern)) {
+            records_by_well[well_name].push_back(record);
+        }
+    }
+
+    for (const auto& [well_name, records] : records_by_well) {
+        auto well = handlerContext.state().wells(well_name);
+
+        const auto did_update = well.updateWSEGHEAT
+            (records, handlerContext.keyword.location(),
+             handlerContext.parseContext, handlerContext.errors);
+
+        if (did_update) {
+            handlerContext.state().wells.update(std::move(well));
+        }
+    }
+}
+
 void handleWSEGITER(HandlerContext& handlerContext)
 {
     const auto& record = handlerContext.keyword.getRecord(0);
@@ -195,6 +233,7 @@ getMSWHandlers()
         { "COMPSEGS", &handleCOMPSEGS },
         { "WELSEGS" , &handleWELSEGS  },
         { "WSEGAICD", &handleWSEGAICD },
+        { "WSEGHEAT", &handleWSEGHEAT },
         { "WSEGITER", &handleWSEGITER },
         { "WSEGSICD", &handleWSEGSICD },
         { "WSEGVALV", &handleWSEGVALV },

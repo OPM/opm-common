@@ -38,8 +38,10 @@
 #include <opm/input/eclipse/Parser/ParserKeywords/C.hpp>
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstddef>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -59,6 +61,7 @@ namespace {
                double distance_end_in,
                Opm::Connection::Direction dir_in,
                double center_depth_in,
+               std::optional<double> thermal_length_in,
                int segment_number_in,
                std::size_t seqIndex_in);
 
@@ -75,8 +78,13 @@ namespace {
         Opm::Connection::Direction m_dir;
 
         double center_depth;
-        // we do not handle thermal length for the moment
-        // double m_thermal_length;
+
+        // Effective connection length used in the thermal conductivity
+        // calculation (COMPSEGS item 10).  Nullopt when defaulted, in which case
+        // the grid-block thickness in the connection's penetration direction is
+        // substituted once the direction is known.
+        std::optional<double> m_thermal_length;
+
         int segment_number;
         std::size_t m_seqIndex;
 
@@ -89,6 +97,7 @@ namespace {
                    const double distance_end_in,
                    const Opm::Connection::Direction dir_in,
                    const double center_depth_in,
+                   std::optional<double> thermal_length_in,
                    const int segment_number_in,
                    const std::size_t seqIndex_in)
         : m_i              { i_in }
@@ -99,6 +108,7 @@ namespace {
         , m_distance_end   { distance_end_in }
         , m_dir            { dir_in }
         , center_depth     { center_depth_in }
+        , m_thermal_length { thermal_length_in }
         , segment_number   { segment_number_in }
         , m_seqIndex       { seqIndex_in }
     {}
@@ -230,6 +240,20 @@ namespace {
     }
 
     // ---------------------------------------------------------------------------
+
+    // Default thermal length used when COMPSEGS item 10 is defaulted: grid-block
+    // thickness in the connection's penetration direction (COMPDAT item 13).
+    double penetrationThickness(const std::array<double, 3>&     cellDims,
+                                const Opm::Connection::Direction direction)
+    {
+        switch (direction) {
+        case Opm::Connection::Direction::X: return cellDims[0];
+        case Opm::Connection::Direction::Y: return cellDims[1];
+        case Opm::Connection::Direction::Z: return cellDims[2];
+        }
+
+        return cellDims[2];
+    }
 
     std::vector<Record>
     compsegsFromCOMPSEGSKeyword(std::string_view         well_name,
@@ -369,13 +393,21 @@ The use of negative center depth in item 9 is not supported. Well: {})", well_na
                 : Opm::Connection::Direction::X;
 
             if (! record.getItem<Kw::END_IJK>().hasValue(0)) { // only one compsegs
-                if (grid.get_cell(I, J, K).is_active()) {
+                const auto& cell = grid.get_cell(I, J, K);
+                if (cell.is_active()) {
+                    // Thermal length (COMPSEGS item 10); left unset when
+                    // defaulted, then filled in process_compsegs_records().
+                    const auto thermal_length = record.getItem<Kw::THERMAL_LENGTH>().hasValue(0)
+                        ? std::optional<double>{ record.getItem<Kw::THERMAL_LENGTH>().getSIDouble(0) }
+                        : std::nullopt;
+
                     const std::size_t seqIndex = compsegs.size();
                     compsegs.emplace_back(I, J, K,
                                           branch,
                                           distance_start, distance_end,
                                           direction,
                                           center_depth,
+                                          thermal_length,
                                           segment_number,
                                           seqIndex);
                 }
@@ -411,6 +443,9 @@ Well: {}, connection: ({},{},{}))", well_name, I+1, J+1 , K+1);
             // Defaulted values:
             const auto direction = Opm::Connection::Direction::X;
             const auto center_depth = 0.0;
+            // Thermal length (COMPSEGS item 10); left unset here, then filled
+            // in process_compsegs_records().
+            const auto thermal_length = std::optional<double>{};
             const auto segment_number = 0;
             const auto branch = 1;
 
@@ -423,6 +458,7 @@ Well: {}, connection: ({},{},{}))", well_name, I+1, J+1 , K+1);
                                   trajectory_point.startMD, trajectory_point.endMD,
                                   direction,
                                   center_depth,
+                                  thermal_length,
                                   segment_number, seqIndex);
         }
 
@@ -488,12 +524,19 @@ Well: {}, connection: ({},{},{}))", well_name, I+1, J+1 , K+1);
                     ? compseg.center_depth
                     : cell.depth;
 
-                new_connection_set.getFromIJK(i, j, k)
-                    .updateSegment(compseg.segment_number,
-                                   cdepth,
-                                   compseg.m_seqIndex,
-                                   std::make_pair(compseg.m_distance_start,
-                                                  compseg.m_distance_end));
+                auto& connection = new_connection_set.getFromIJK(i, j, k);
+
+                // Fall back to the grid-block thickness when COMPSEGS item 10
+                // was defaulted (see penetrationThickness).
+                const double thermal_length = compseg.m_thermal_length
+                    .value_or(penetrationThickness(cell.dimensions, connection.dir()));
+
+                connection.updateSegment(compseg.segment_number,
+                                         cdepth,
+                                         thermal_length,
+                                         compseg.m_seqIndex,
+                                         std::make_pair(compseg.m_distance_start,
+                                                        compseg.m_distance_end));
             }
         }
 

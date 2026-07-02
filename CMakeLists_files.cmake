@@ -251,6 +251,7 @@ list(APPEND MAIN_SOURCE_FILES
   opm/input/eclipse/Schedule/MSW/icd.cpp
   opm/input/eclipse/Schedule/MSW/MSWKeywordHandlers.cpp
   opm/input/eclipse/Schedule/MSW/Segment.cpp
+  opm/input/eclipse/Schedule/MSW/SegmentHeatTransfer.cpp
   opm/input/eclipse/Schedule/MSW/SegmentMatcher.cpp
   opm/input/eclipse/Schedule/MSW/SICD.cpp
   opm/input/eclipse/Schedule/MSW/Valve.cpp
@@ -1144,6 +1145,7 @@ list(APPEND PUBLIC_HEADER_FILES
   opm/input/eclipse/Schedule/MSW/AICD.hpp
   opm/input/eclipse/Schedule/MSW/SICD.hpp
   opm/input/eclipse/Schedule/MSW/Segment.hpp
+  opm/input/eclipse/Schedule/MSW/SegmentHeatTransfer.hpp
   opm/input/eclipse/Schedule/MSW/SegmentMatcher.hpp
   opm/input/eclipse/Schedule/MSW/Valve.hpp
   opm/input/eclipse/Schedule/MSW/WellSegments.hpp

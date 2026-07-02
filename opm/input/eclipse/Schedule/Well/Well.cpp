@@ -28,6 +28,7 @@
 #include <opm/input/eclipse/EclipseState/Phase.hpp>
 #include <opm/input/eclipse/EclipseState/TracerConfig.hpp>
 
+#include <opm/input/eclipse/Schedule/MSW/SegmentHeatTransfer.hpp>
 #include <opm/input/eclipse/Schedule/MSW/WellSegments.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleGrid.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQActive.hpp>
@@ -1998,6 +1999,31 @@ bool Well::updateWSEGVALV(const std::vector<std::pair<int, Valve>>& valve_pairs,
     auto new_segments = std::make_shared<WellSegments>(*this->segments);
 
     if (new_segments->updateWSEGVALV(this->name(), valve_pairs, location, parseContext, errors)) {
+        this->segments = std::move(new_segments);
+        return true;
+    }
+
+    return false;
+}
+
+bool Well::updateWSEGHEAT(const std::vector<SegmentHeatTransferRecord>& records,
+                          const KeywordLocation&                        location,
+                          const ParseContext&                           parseContext,
+                          ErrorGuard&                                   errors)
+{
+    if (! this->isMultiSegment()) {
+        const auto msg_fmt = fmt::format(R"(Problem with keyword {{keyword}}
+In {{file}} line {{line}}
+WSEGHEAT applied to well {} which is not a multisegment well.)", this->name());
+
+        parseContext.handleError(ParseContext::SCHEDULE_MSW_KEYWORD_ON_NON_MSW_WELL,
+                                 msg_fmt, location, errors);
+        return false;
+    }
+
+    auto new_segments = std::make_shared<WellSegments>(*this->segments);
+
+    if (new_segments->updateWSEGHEAT(this->name(), records, location, parseContext, errors)) {
         this->segments = std::move(new_segments);
         return true;
     }

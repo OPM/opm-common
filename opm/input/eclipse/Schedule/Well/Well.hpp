@@ -53,6 +53,7 @@ class KeywordLocation;
 class ParseContext;
 class Phases;
 class ScheduleGrid;
+struct SegmentHeatTransferRecord;
 class SICD;
 class SummaryState;
 class UDQActive;
@@ -565,6 +566,11 @@ public:
                         const KeywordLocation&                    location,
                         const ParseContext&                       parseContext,
                         ErrorGuard&                               errors);
+
+    bool updateWSEGHEAT(const std::vector<SegmentHeatTransferRecord>& records,
+                        const KeywordLocation&                        location,
+                        const ParseContext&                           parseContext,
+                        ErrorGuard&                                   errors);
 
     bool updateICDFlowScalingFactors();
     bool updateWPAVE(const PAvg& pavg);

@@ -129,6 +129,11 @@ namespace Opm {
         // If none of the above type-specific conditions trigger, then this
         // is a RegularSegment and 'm_icd' is fully formed by the variant's
         // default constructor.
+
+        // The thermal members (wall properties and m_heat_transfer) keep their
+        // in-class defaults: RstSegment does not carry WSEGHEAT/pipe-wall data,
+        // so a thermal MSW run restarted here begins with zero wall properties
+        // and no heat transfer coefficients.  TODO: persist and restore these.
     }
 
     Segment::Segment(const int    segment_number_in,
@@ -142,7 +147,10 @@ namespace Opm {
                      const double volume_in,
                      const bool   data_ready_in,
                      const double x_in,
-                     const double y_in)
+                     const double y_in,
+                     const double wall_area_in,
+                     const double wall_volumetric_heat_capacity_in,
+                     const double wall_thermal_conductivity_in)
         : m_segment_number   (segment_number_in)
         , m_branch           (branch_in)
         , m_outlet_segment   (outlet_segment_in)
@@ -155,6 +163,9 @@ namespace Opm {
         , m_data_ready       (data_ready_in)
         , m_x                (x_in)
         , m_y                (y_in)
+        , m_wall_area                    (wall_area_in)
+        , m_wall_volumetric_heat_capacity(wall_volumetric_heat_capacity_in)
+        , m_wall_thermal_conductivity    (wall_thermal_conductivity_in)
     {}
 
     Segment::Segment(const Segment& src,
@@ -221,6 +232,10 @@ namespace Opm {
         result.m_data_ready = true;
         result.m_x = 12.0;
         result.m_y = 13.0;
+        result.m_wall_area = 14.0;
+        result.m_wall_volumetric_heat_capacity = 15.0;
+        result.m_wall_thermal_conductivity = 16.0;
+        result.m_heat_transfer = {SegmentHeatTransferCoeff::serializationTestObject()};
         result.m_icd = SICD::serializationTestObject();
         return result;
     }
@@ -278,6 +293,21 @@ namespace Opm {
         return m_data_ready;
     }
 
+    double Segment::wallArea() const
+    {
+        return m_wall_area;
+    }
+
+    double Segment::wallVolumetricHeatCapacity() const
+    {
+        return m_wall_volumetric_heat_capacity;
+    }
+
+    double Segment::wallThermalConductivity() const
+    {
+        return m_wall_thermal_conductivity;
+    }
+
     Segment::SegmentType Segment::segmentType() const
     {
         if (this->isRegular())
@@ -309,6 +339,73 @@ namespace Opm {
         }
     }
 
+    const std::vector<SegmentHeatTransferCoeff>& Segment::heatTransfer() const
+    {
+        return this->m_heat_transfer;
+    }
+
+    void Segment::updateHeatTransfer(const SegmentHeatTransferRecord& record)
+    {
+        using Type = SegmentHeatTransferCoeff::Type;
+        using Operation = SegmentHeatTransferCoeff::Operation;
+
+        // Maximum number of segment-to-segment heat transfer coefficients that
+        // may be associated with a single segment.
+        constexpr std::size_t max_seg_coefficients = 5;
+
+        const auto& coeff = record.coefficient;
+
+        // Whether an existing coefficient describes the same heat transfer
+        // destination as the incoming one.  COMP and TEMP are unique per
+        // segment; SEG coefficients are distinguished by their target segment.
+        const auto sameDestination = [&coeff](const SegmentHeatTransferCoeff& existing)
+        {
+            if (existing.type() != coeff.type()) {
+                return false;
+            }
+
+            return (coeff.type() != Type::SEG)
+                || (existing.targetSegment() == coeff.targetSegment());
+        };
+
+        switch (record.operation) {
+        case Operation::CLEAR:
+            this->m_heat_transfer.clear();
+            break;
+
+        case Operation::REPLACE_ALL:
+            this->m_heat_transfer.clear();
+            this->m_heat_transfer.push_back(coeff);
+            break;
+
+        case Operation::ADD: {
+            auto pos = std::ranges::find_if(this->m_heat_transfer, sameDestination);
+            if (pos != this->m_heat_transfer.end()) {
+                *pos = coeff;
+            }
+            else if (coeff.type() != Type::SEG) {
+                this->m_heat_transfer.push_back(coeff);
+            }
+            else {
+                // SEG coefficients are capped; ignore additions beyond the
+                // limit, matching the documented behaviour.
+                const auto seg_count = std::ranges::count_if
+                    (this->m_heat_transfer, [](const SegmentHeatTransferCoeff& e)
+                     { return e.type() == Type::SEG; });
+
+                if (static_cast<std::size_t>(seg_count) < max_seg_coefficients) {
+                    this->m_heat_transfer.push_back(coeff);
+                }
+            }
+            break;
+        }
+
+        case Operation::REMOVE:
+            std::erase_if(this->m_heat_transfer, sameDestination);
+            break;
+        }
+    }
+
     double Segment::invalidValue()
     {
         return invalid_value;
@@ -329,6 +426,10 @@ namespace Opm {
             && this->m_data_ready        == rhs.m_data_ready
             && (this->m_x                == rhs.m_x)
             && (this->m_y                == rhs.m_y)
+            && (this->m_wall_area        == rhs.m_wall_area)
+            && (this->m_wall_volumetric_heat_capacity == rhs.m_wall_volumetric_heat_capacity)
+            && (this->m_wall_thermal_conductivity     == rhs.m_wall_thermal_conductivity)
+            && (this->m_heat_transfer    == rhs.m_heat_transfer)
             ;
     }
 
