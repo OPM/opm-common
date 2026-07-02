@@ -57,17 +57,33 @@
 
 namespace {
     void handleMissingMSWSegment(std::string_view            well_name,
+                                 const int                   first_segment,
+                                 const int                   last_segment,
+                                 const Opm::KeywordLocation& location,
+                                 const Opm::ParseContext&    parseContext,
+                                 Opm::ErrorGuard&            errors)
+    {
+        const auto detail = (first_segment == last_segment)
+            ? fmt::format("Segment {} is not defined", first_segment)
+            : fmt::format("Segment range {} to {} matches no segment defined",
+                          first_segment, last_segment);
+
+        const auto msg_fmt = fmt::format(R"(Problem with keyword {{keyword}}
+In {{file}} line {{line}}
+{} in WELSEGS for well {}.)", detail, well_name);
+
+        parseContext.handleError(Opm::ParseContext::SCHEDULE_MISSING_SEGMENT,
+                                 msg_fmt, location, errors);
+    }
+
+    void handleMissingMSWSegment(std::string_view            well_name,
                                  const int                   segment_number,
                                  const Opm::KeywordLocation& location,
                                  const Opm::ParseContext&    parseContext,
                                  Opm::ErrorGuard&            errors)
     {
-        const auto msg_fmt = fmt::format(R"(Problem with keyword {{keyword}}
-In {{file}} line {{line}}
-Segment {} is not defined in WELSEGS for well {}.)", segment_number, well_name);
-
-        parseContext.handleError(Opm::ParseContext::SCHEDULE_MISSING_SEGMENT,
-                                 msg_fmt, location, errors);
+        handleMissingMSWSegment(well_name, segment_number, segment_number,
+                                location, parseContext, errors);
     }
 
     void handleIncompatiblePDropModel(std::string_view                       well_name,
@@ -935,7 +951,7 @@ namespace Opm {
             // The range names no defined segment at all -- most likely a typo
             // in item 2/3 -- so surface it as a missing-segment condition.
             if (! matched) {
-                handleMissingMSWSegment(well_name, record.segment1,
+                handleMissingMSWSegment(well_name, record.segment1, record.segment2,
                                         location, parseContext, errors);
             }
         }
