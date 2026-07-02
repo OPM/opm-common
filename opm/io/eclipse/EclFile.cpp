@@ -37,7 +37,9 @@ void EclFile::load(bool preload) {
     std::fstream fileH;
 
     if (formatted) {
-        fileH.open(this->inputFilename, std::ios::in);
+        // Binary mode even for formatted files: avoids Windows '\n'->"\r\n"
+        // translation that would shift the fixed-width ECL records (no-op on Unix).
+        fileH.open(this->inputFilename, std::ios::in | std::ios::binary);
     } else {
         fileH.open(this->inputFilename, std::ios::in |  std::ios::binary);
     }
@@ -215,7 +217,7 @@ void EclFile::loadData(const std::string& name)
 
     if (formatted) {
 
-        std::ifstream inFile(inputFilename);
+        std::ifstream inFile(inputFilename, std::ios::in | std::ios::binary);
 
         for (unsigned int arrIndex = 0; arrIndex < array_name.size(); arrIndex++) {
 
@@ -260,7 +262,7 @@ void EclFile::loadData(const std::vector<int>& arrIndex)
 
     if (formatted) {
 
-        std::ifstream inFile(inputFilename);
+        std::ifstream inFile(inputFilename, std::ios::in | std::ios::binary);
 
         for (int ind : arrIndex) {
 
@@ -298,7 +300,7 @@ void EclFile::loadData(int arrIndex)
 {
     if (formatted) {
 
-        std::ifstream inFile(inputFilename);
+        std::ifstream inFile(inputFilename, std::ios::in | std::ios::binary);
 
             inFile.seekg(ifStreamPos[arrIndex]);
 
@@ -402,7 +404,7 @@ std::vector<std::string> EclFile::get_fmt_real_raw_str_values(int arrIndex) cons
     if (array_type[arrIndex] != Opm::EclIO::REAL)
         OPM_THROW(std::runtime_error, "Error, selected array is not of type REAL");
 
-    std::ifstream inFile(inputFilename);
+    std::ifstream inFile(inputFilename, std::ios::in | std::ios::binary);
 
     if (!inFile) {
         OPM_THROW(std::runtime_error, "Could not open file: '" + inputFilename +"'");

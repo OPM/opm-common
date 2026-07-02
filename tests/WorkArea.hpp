@@ -65,7 +65,7 @@ namespace {
         }
 
         std::string org_path(const std::string& fname) {
-            return std::filesystem::canonical( this->orig_ / fname );
+            return std::filesystem::canonical( this->orig_ / fname ).string();
         }
 
 

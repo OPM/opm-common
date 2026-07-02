@@ -174,13 +174,22 @@ if(BUILD_EXAMPLES)
   )
 endif()
 
-opm_compile_satellites(
-  PREFIX
-    ${project}
-  TYPE
-    additionals
-  INSTALL
-)
+# additionals (test_util utilities: compareECL, convertECL, summary, arraylist,
+# rewriteEclFile) are documented to always be built and installed, even when
+# BUILD_EXAMPLES is OFF (see CMakeLists_files.cmake). Restore that invariant on
+# every platform except Windows: all of these depend on POSIX <getopt.h>, which
+# MSVC does not provide, so they cannot be built there until a getopt shim is
+# added. Gate on WIN32 (not BUILD_EXAMPLES) so the documented Unix behaviour is
+# untouched and packagers configuring with BUILD_EXAMPLES=OFF still get the tools.
+if(NOT WIN32)
+  opm_compile_satellites(
+    PREFIX
+      ${project}
+    TYPE
+      additionals
+    INSTALL
+  )
+endif()
 
 # attic are programs which are not quite abandoned yet; however, they
 # are not actively maintained, so they should not be a part of the
@@ -221,8 +230,11 @@ opm_compile_satellites(
   ${excl_all}
 )
 
-# special processing for tests
-if(COMMAND ${project}_tests_hook)
+# special processing for tests. On Windows the hook may register tests that
+# depend on example/test targets which are not created when BUILD_TESTING is
+# OFF, so guard the call there; other platforms keep the historical behaviour
+# of always invoking the hook.
+if(COMMAND ${project}_tests_hook AND (BUILD_TESTING OR NOT WIN32))
   cmake_language(CALL ${project}_tests_hook)
 endif()
 

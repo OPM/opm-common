@@ -98,12 +98,14 @@ macro(opm-common_sources_hook)
     set_source_files_properties(opm/input/eclipse/Schedule/Action/PyAction.cpp PROPERTIES COMPILE_FLAGS -Wno-shadow)
   endif()
 
-  set_source_files_properties(
-    opm/input/eclipse/Python/Python.cpp
-    PROPERTIES
-    COMPILE_FLAGS
-      -Wno-shadow
-  )
+  if (NOT MSVC)
+    set_source_files_properties(
+      opm/input/eclipse/Python/Python.cpp
+      PROPERTIES
+      COMPILE_FLAGS
+        -Wno-shadow
+    )
+  endif()
   if (OPM_ENABLE_PYTHON)
     # Set the path to the input docstrings.json file and the output .hpp file
     set(PYTHON_DOCSTRINGS_FILE "${PROJECT_SOURCE_DIR}/python/docstrings_common.json")
@@ -268,11 +270,16 @@ macro(opm-common_targets_hook)
     target_include_directories(opmcommon PRIVATE ${CMAKE_BINARY_DIR}/_deps)
   endif()
 
-  target_sources(compareECL
-    PRIVATE
-      test_util/EclFilesComparator.cpp
-      test_util/EclRegressionTest.cpp
-  )
+  # compareECL comes from the additionals satellite (always built except on
+  # Windows, where <getopt.h> is unavailable); only add its sources when the
+  # target actually exists.
+  if(TARGET compareECL)
+    target_sources(compareECL
+      PRIVATE
+        test_util/EclFilesComparator.cpp
+        test_util/EclRegressionTest.cpp
+    )
+  endif()
 
   if(ENABLE_MOCKSIM)
     opm_add_library(
@@ -296,7 +303,17 @@ macro(opm-common_targets_hook)
     )
   endif()
 
-  list(APPEND opm-common_EXTRA_TARGETS compareECL rst_deck)
+  # compareECL (additionals satellite) is installed whenever it is built, i.e.
+  # on every non-Windows host regardless of BUILD_EXAMPLES; rst_deck comes from
+  # the programs satellite and only exists when BUILD_EXAMPLES is ON. Guard each
+  # independently so the install rule never references a non-existent target and
+  # compareECL is not dropped from the install set when examples are disabled.
+  if(TARGET compareECL)
+    list(APPEND opm-common_EXTRA_TARGETS compareECL)
+  endif()
+  if(TARGET rst_deck)
+    list(APPEND opm-common_EXTRA_TARGETS rst_deck)
+  endif()
 
   if(TARGET Boost::unit_test_framework)
     foreach(test ACTIONX EmbeddedPython msim_ACTIONX PYACTION)

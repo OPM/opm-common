@@ -138,10 +138,10 @@ int main(int argc, char **argv) {
         (ext == ".SMSPEC") || (ext == ".FSMSPEC"))
     {
         filetype = SMSPEC;
-        esmry = std::make_unique<Opm::EclIO::ESmry>(inputFileName);
+        esmry = std::make_unique<Opm::EclIO::ESmry>(inputFileName.string());
     } else if (ext == ".ESMRY") {
         filetype = ESMRY;
-        ext_esmry = std::make_unique<Opm::EclIO::ExtESmry>(inputFileName);
+        ext_esmry = std::make_unique<Opm::EclIO::ExtESmry>(inputFileName.string());
     } else {
         throw std::runtime_error("invalid input file for summary");
     }
