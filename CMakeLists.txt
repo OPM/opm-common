@@ -67,26 +67,6 @@ macro(opm-common_prereqs_hook)
     find_package(dune-common REQUIRED)
     target_link_libraries(opmcommon PUBLIC dunecommon)
   endif()
-
-  # Windows-only: DUNE does not export MPI on its installed target (MPI flags
-  # live in DUNE's build-time ALL_PKG_FLAGS only), and this build consumes the
-  # modules from an install prefix rather than via dunecontrol. So link MPI here
-  # directly: this makes opmcommon carry MPI::MPI_C (PUBLIC, so it propagates to
-  # opm-grid/opm-simulators) and lets mpi_checks() define HAVE_MPI=1.
-  # On Linux/Unix the standard dunecontrol flow already provides MPI, so this is
-  # gated on WIN32 to leave the upstream behaviour untouched there.
-  if(USE_MPI AND WIN32)
-    find_package(MPI COMPONENTS C)
-    if(MPI_C_FOUND)
-      target_link_libraries(opmcommon PUBLIC MPI::MPI_C)
-    else()
-      # Not fatal: USE_MPI defaults to ON, so a hard failure would break
-      # default-configured builds without MPI installed. Warn instead, since
-      # the build silently proceeds without MPI support otherwise.
-      message(WARNING "USE_MPI=ON but MPI was not found; building without MPI support. "
-                      "Set -DUSE_MPI=OFF to silence this warning.")
-    endif()
-  endif()
 endmacro()
 
 macro(opm-common_config_hook)
