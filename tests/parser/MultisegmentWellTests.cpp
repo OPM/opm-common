@@ -1733,11 +1733,30 @@ COMPSEGS
                           ::Opm::OpmInputError);
     }
 
-    // WSEGHEAT applied to a regular (non-multisegment) well must not crash: it
-    // is routed through ParseContext (default WARN) and skipped.  This covers
-    // both a literal well name and a wildcard that also matches the MSW well.
-    BOOST_CHECK_NO_THROW(makeSchedule("WSEGHEAT\n 'PROD02' 2 2 COMP 0.02 /\n/\n"));
-    BOOST_CHECK_NO_THROW(makeSchedule("WSEGHEAT\n 'PROD*' 2 2 COMP 0.02 /\n/\n"));
+    // WSEGHEAT applied to a regular (non-multisegment) well is an unambiguous
+    // input error: SCHEDULE_MSW_KEYWORD_ON_NON_MSW_WELL defaults to THROW, so it
+    // aborts the run.  This covers both a literal well name and a wildcard that
+    // also matches the MSW well.
+    BOOST_CHECK_THROW(makeSchedule("WSEGHEAT\n 'PROD02' 2 2 COMP 0.02 /\n/\n"),
+                      ::Opm::OpmInputError);
+    BOOST_CHECK_THROW(makeSchedule("WSEGHEAT\n 'PROD*' 2 2 COMP 0.02 /\n/\n"),
+                      ::Opm::OpmInputError);
+
+    // The non-MSW case is governed by SCHEDULE_MSW_KEYWORD_ON_NON_MSW_WELL, not
+    // by SCHEDULE_MISSING_SEGMENT: relaxing the former to WARN lets the deck load
+    // (the keyword is dropped), independently of SCHEDULE_MISSING_SEGMENT.
+    {
+        const auto deck = ::Opm::Parser{}.parseString
+            (base + "WSEGHEAT\n 'PROD02' 2 2 COMP 0.02 /\n/\n");
+        const auto es     = ::Opm::EclipseState { deck };
+        const auto python = std::make_shared<const ::Opm::Python>();
+
+        ::Opm::ParseContext parseContext;
+        parseContext.update(::Opm::ParseContext::SCHEDULE_MSW_KEYWORD_ON_NON_MSW_WELL,
+                            ::Opm::InputErrorAction::WARN);
+        ::Opm::ErrorGuard errors;
+        BOOST_CHECK_NO_THROW(::Opm::Schedule(deck, es, parseContext, errors, python));
+    }
 
     // A range (items 2-3) that extends past the highest defined segment applies
     // to the segments that do exist and does not abort, even under strict mode:

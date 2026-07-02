@@ -2016,7 +2016,7 @@ bool Well::updateWSEGHEAT(const std::vector<SegmentHeatTransferRecord>& records,
 In {{file}} line {{line}}
 WSEGHEAT applied to well {} which is not a multisegment well.)", this->name());
 
-        parseContext.handleError(ParseContext::SCHEDULE_MISSING_SEGMENT,
+        parseContext.handleError(ParseContext::SCHEDULE_MSW_KEYWORD_ON_NON_MSW_WELL,
                                  msg_fmt, location, errors);
         return false;
     }
