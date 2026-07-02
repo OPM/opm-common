@@ -85,12 +85,12 @@ int main(int argc, char** argv)
         const char idx[2] = { static_cast<char>('0' + i), '\0' };
         const intptr_t rc = _spawnl(_P_WAIT, argv[0], argv[0], "--child", idx,
                                     static_cast<const char*>(nullptr));
-        // With _P_WAIT, rc is the child's exit code (expected non-zero: exit1()
-        // must exit(1)), or -1 if the child could not be spawned at all. Treat
-        // BOTH a spawn failure (-1) and a child that returned normally without
-        // exiting (0) as a test failure -- otherwise a broken exit1() or a
-        // failed spawn would silently pass.
-        if (rc <= 0) {
+        // With _P_WAIT, rc is the child's exit code, or -1 if the child could
+        // not be spawned at all. Require exactly the exit(1) that exit1() must
+        // produce: a spawn failure (-1), a child that returned normally without
+        // exiting (0), or a crashed child (e.g. 0xC0000005) must all fail the
+        // test, mirroring the WIFEXITED/WEXITSTATUS checks of the POSIX branch.
+        if (rc != 1) {
             std::exit(EXIT_FAILURE);
         }
     }

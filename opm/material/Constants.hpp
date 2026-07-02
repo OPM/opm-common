@@ -33,6 +33,7 @@
 
 #include <cmath>
 #include <numbers>
+#include <type_traits>
 
 namespace Opm
 {
@@ -40,16 +41,25 @@ namespace Opm
 template<class Scalar>
 class Constants
 {
-    // Source values in double precision. The derived constants below (kb, hRed)
-    // are computed from these in double and cast to Scalar: for a Scalar whose
-    // arithmetic is not constexpr (e.g. the autodiff Evaluation types used by
-    // the compositional code) "R/Na" is not a constant expression under MSVC,
-    // and std::numbers::pi_v<Scalar> is ill-formed for non floating-point Scalar.
-    // Keeping the literals in one place avoids R/Na/h drifting out of sync with
-    // the constants derived from them.
+    // Source values in double precision. Keeping the literals in one place
+    // avoids R/Na/h drifting out of sync with the constants derived from them.
     static constexpr double R_si  = 8.314472;      // ideal gas constant [J/(mol K)]
     static constexpr double Na_si = 6.02214179e23; // Avogadro constant [1/mol]
     static constexpr double h_si  = 6.62606896e-34;// Planck constant [J s]
+
+    // The derived constants (kb, hRed) must be computed in Scalar precision for
+    // floating-point Scalar so that e.g. single-precision builds get bit-identical
+    // values to "R/Na" written directly in Scalar. For other Scalar types (e.g.
+    // the autodiff Evaluation types used by the compositional code) Scalar
+    // arithmetic is not a constant expression under MSVC and
+    // std::numbers::pi_v<Scalar> is ill-formed, so compute in double and cast.
+    static constexpr bool computeInScalar_ =
+        std::is_floating_point_v<Scalar>
+#if HAVE_QUAD
+        || std::is_same_v<Scalar, quad>
+#endif
+        ;
+    using ComputeT = std::conditional_t<computeInScalar_, Scalar, double>;
 
 public:
     /*!
@@ -65,7 +75,8 @@ public:
     /*!
      * \brief The Boltzmann constant [J/K]
      */
-    static constexpr Scalar kb = static_cast<Scalar>(R_si / Na_si);
+    static constexpr Scalar kb =
+        static_cast<Scalar>(static_cast<ComputeT>(R_si) / static_cast<ComputeT>(Na_si));
 
     /*!
      * \brief Speed of light in vacuum [m/s]
@@ -85,7 +96,9 @@ public:
     /*!
      * \brief Reduced Planck constant [J s]
      */
-    static constexpr Scalar hRed = static_cast<Scalar>(h_si / (2.0 * std::numbers::pi_v<double>));
+    static constexpr Scalar hRed =
+        static_cast<Scalar>(static_cast<ComputeT>(h_si)
+                            / (static_cast<ComputeT>(2) * std::numbers::pi_v<ComputeT>));
 };
 
 } // namespace Opm
