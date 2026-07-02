@@ -22,8 +22,6 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/test/test_tools.hpp>
 
-#include <numeric>
-
 #include <opm/io/eclipse/EGrid.hpp>
 
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
@@ -38,6 +36,7 @@
 
 #include <array>
 #include <cstddef>
+#include <numeric>
 #include <string>
 #include <tuple>
 #include <utility>
