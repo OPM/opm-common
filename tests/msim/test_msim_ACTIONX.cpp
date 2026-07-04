@@ -207,13 +207,20 @@ namespace {
 
     struct test_data
     {
+        // Named ErrorGuard member (rather than a temporary ErrorGuard{}) so that
+        // overload resolution selects the non-template Schedule ctor taking
+        // ErrorGuard& -- a plain member present in opmcommon.lib. A temporary
+        // binds the forwarding-reference (T&&) ctor template, whose explicit
+        // instantiation MSVC fails to emit, producing an LNK2019 at link time.
+        ErrorGuard errors;
         EclipseState state;
         Schedule schedule;
         SummaryConfig summary_config;
 
         explicit test_data(const Deck& deck)
-            : state    { deck }
-            , schedule { deck, state, ignoreUDQCantEval(), ErrorGuard{}, msim::python }
+            : errors   {}
+            , state    { deck }
+            , schedule { deck, state, ignoreUDQCantEval(), errors, msim::python }
             , summary_config { deck, schedule, state.fieldProps(), state.aquifer() }
         {
             this->state.getIOConfig().setBaseName("MSIM");
@@ -519,8 +526,6 @@ BOOST_AUTO_TEST_CASE(UDA) {
     msim sim(td.state, td.schedule);
     auto eps_lim = sim.uda_val().epsilonLimit();
 
-    EclipseIO io(td.state, td.state.getInputGrid(), td.schedule, td.summary_config);
-
     sim.well_rate("P1", data::Rates::opt::wat, prod_wpr_P1);
     sim.well_rate("P2", data::Rates::opt::wat, prod_wpr_P2);
     sim.well_rate("P3", data::Rates::opt::wat, prod_wpr_P3);
@@ -528,6 +533,13 @@ BOOST_AUTO_TEST_CASE(UDA) {
     sim.well_rate("INJ", data::Rates::opt::wat, inj_wir_INJ);
     {
         WorkArea work_area("uda_sim");
+
+        // Construct EclipseIO inside the work area scope (as the other test
+        // cases do) so its open output streams are closed before ~WorkArea
+        // removes the directory. On Windows, remove_all() fails on open files,
+        // and the resulting exception in the noexcept destructor terminates
+        // the process.
+        EclipseIO io(td.state, td.state.getInputGrid(), td.schedule, td.summary_config);
 
         sim.run(io, true);
 
@@ -557,7 +569,6 @@ BOOST_AUTO_TEST_CASE(COMPDAT) {
 
     test_data td(compdat_deck);
     msim sim(td.state, td.schedule);
-    EclipseIO io(td.state, td.state.getInputGrid(), td.schedule, td.summary_config);
 
     sim.well_rate("P1", data::Rates::opt::wat, prod_wpr_P1);
     sim.well_rate("P2", data::Rates::opt::wat, prod_wpr_P2);
@@ -566,6 +577,10 @@ BOOST_AUTO_TEST_CASE(COMPDAT) {
     sim.well_rate("INJ", data::Rates::opt::wat, inj_wir_INJ);
     {
         WorkArea work_area("compdat_sim");
+
+        // See UDA above: EclipseIO must be destroyed (streams closed) before
+        // ~WorkArea removes the directory, or remove_all() fails on Windows.
+        EclipseIO io(td.state, td.state.getInputGrid(), td.schedule, td.summary_config);
 
         BOOST_CHECK_NO_THROW(sim.run(io, true));
     }
