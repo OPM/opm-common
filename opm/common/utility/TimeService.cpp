@@ -238,13 +238,51 @@ namespace {
         return timePoint;
     }
 
+    /*
+      std::gmtime() returns nullptr for time points it cannot represent --
+      notably on Windows, where the CRT rejects dates after year 3000 (glibc
+      handles these fine). Dereferencing that nullptr crashes, and simulation
+      schedules can legitimately extend that far. Fall back to an explicit
+      civil-from-days conversion (Howard Hinnant's algorithm, exact over the
+      full 64 bit time_t range).
+    */
+    std::tm gmtime_or_civil(const std::time_t t)
+    {
+        {
+            auto tcopy = t;
+            if (const auto* tm_ptr = std::gmtime(&tcopy)) {
+                return *tm_ptr;
+            }
+        }
+
+        const auto days = (t >= 0 ? t : t - 86399) / 86400;   // floor division
+        auto secs = t - days * 86400;
+
+        const auto z   = days + 719468;
+        const auto era = (z >= 0 ? z : z - 146096) / 146097;
+        const auto doe = static_cast<unsigned long long>(z - era * 146097);
+        const auto yoe = (doe - doe/1460 + doe/36524 - doe/146096) / 365;
+        const auto y   = static_cast<long long>(yoe) + era * 400;
+        const auto doy = doe - (365*yoe + yoe/4 - yoe/100);
+        const auto mp  = (5*doy + 2) / 153;
+        const auto d   = doy - (153*mp + 2)/5 + 1;
+        const auto m   = mp < 10 ? mp + 3 : mp - 9;
+
+        std::tm tm{};
+        tm.tm_year = static_cast<int>(y + (m <= 2)) - 1900;
+        tm.tm_mon  = static_cast<int>(m) - 1;
+        tm.tm_mday = static_cast<int>(d);
+        tm.tm_hour = static_cast<int>(secs / 3600); secs %= 3600;
+        tm.tm_min  = static_cast<int>(secs / 60);
+        tm.tm_sec  = static_cast<int>(secs % 60);
+        return tm;
+    }
 
 }
 
 Opm::TimeStampUTC::TimeStampUTC(const std::time_t tp)
 {
-    auto t = tp;
-    const auto tm = *std::gmtime(&t);
+    const auto tm = gmtime_or_civil(tp);
 
     this->ymd_ = YMD { tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday };
 
@@ -262,8 +300,7 @@ Opm::TimeStampUTC::TimeStampUTC(const Opm::TimeStampUTC::YMD& ymd,
 
 Opm::TimeStampUTC& Opm::TimeStampUTC::operator=(const std::time_t tp)
 {
-    auto t = tp;
-    const auto tm = *std::gmtime(&t);
+    const auto tm = gmtime_or_civil(tp);
 
     this->ymd_ = YMD { tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday };
 
