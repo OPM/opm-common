@@ -78,7 +78,10 @@ namespace Opm {
         if (compositional) {
             comp_init_type = record.getItem<ParserKeywords::EQUIL::COMP_INIT_TYPE>().get<int>(0);
             if (comp_init_type == 2 || comp_init_type == 3) {
-                set_to_saturation_pressure = record.getItem<ParserKeywords::EQUIL::COMP_NOT_SET_SAT_PRESSURE>().get<int>(0) != 1;
+                // Item 11 has no default value; when left unset the pressure at
+                // the contact is set to the saturation pressure.
+                const auto& item = record.getItem<ParserKeywords::EQUIL::COMP_NOT_SET_SAT_PRESSURE>();
+                set_to_saturation_pressure = !item.hasValue(0) || (item.get<int>(0) != 1);
             }
         }
     }
