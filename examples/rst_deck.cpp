@@ -276,9 +276,12 @@ void update_restart_path(Options& opt,
 
         rst_step = verify_extension(extension, unif, fmt);
 
+        // Use generic_string() (forward slashes) for all three branches below:
+        // 'base' is written into the RESTART keyword of the generated deck, so
+        // it must stay portable rather than use native '\' separators on Windows.
         if (path.is_absolute()) {
             path.replace_extension();
-            base = path.string();
+            base = path.generic_string();
         }
         else {
             auto target_path = fs::current_path();
@@ -287,10 +290,10 @@ void update_restart_path(Options& opt,
             }
 
             if (same_mount(path, target_path)) {
-                base = fs::relative(path, target_path).replace_extension().string();
+                base = fs::relative(path, target_path).replace_extension().generic_string();
             }
             else {
-                base = fs::canonical(fs::absolute(path)).replace_extension().string();
+                base = fs::canonical(fs::absolute(path)).replace_extension().generic_string();
             }
         }
     }
