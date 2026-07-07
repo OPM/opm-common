@@ -30,7 +30,9 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <iterator>
 #include <limits>
+#include <string>
 #include <tuple>
 #include <cmath>
 #include <cstddef>
@@ -242,6 +244,43 @@ BOOST_AUTO_TEST_CASE(TestEclFile_FORMATTED)
     BOOST_CHECK_EQUAL(vect5a.size(), vect5b.size());
     BOOST_CHECK(vect5a == vect5b);
 
+}
+
+BOOST_AUTO_TEST_CASE(TestEclFile_FORMATTED_CRLF)
+{
+    // Formatted ECL files use '\n' record separators by specification, and
+    // EclFile reads them in binary mode with fixed record sizes (see
+    // sizeOnDiskFormatted), so no newline translation happens on any
+    // platform. A file whose line endings were rewritten to "\r\n" -- the
+    // typical result of checking out test data with core.autocrlf=true on
+    // Windows, which .gitattributes now prevents -- has larger records than
+    // the reader assumes and must be rejected with a clear error instead of
+    // being silently misparsed.
+    std::string content;
+    {
+        std::ifstream src("ECLFILE.FINIT", std::ios::binary);
+        BOOST_REQUIRE(src);
+        content.assign(std::istreambuf_iterator<char>(src),
+                       std::istreambuf_iterator<char>());
+    }
+
+    std::string crlfContent;
+    crlfContent.reserve(content.size() + content.size() / 40);
+    for (const char c : content) {
+        if (c == '\n') {
+            crlfContent += '\r';
+        }
+        crlfContent += c;
+    }
+
+    WorkArea work;
+    const std::string crlfFile = "ECLFILE_CRLF.FINIT";
+    {
+        std::ofstream out(crlfFile, std::ios::binary);
+        out << crlfContent;
+    }
+
+    BOOST_CHECK_THROW(EclFile(crlfFile, /*preload=*/true), std::exception);
 }
 
 BOOST_AUTO_TEST_CASE(TestEclFile_IX)
