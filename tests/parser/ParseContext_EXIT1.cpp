@@ -11,6 +11,7 @@
 #if defined(_WIN32)
 #include <cstring>
 #include <process.h>
+#include <string>
 #else
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -81,9 +82,15 @@ int main(int argc, char** argv)
         exit1(actions[std::atoi(argv[2])]);
         return 0;  // exit1() is expected to exit(1) before reaching here
     }
+    // _spawnl concatenates its arguments into a single command line that the
+    // child's CRT re-parses, so an argv[0] containing spaces (e.g. a build
+    // tree under "C:\Users\First Last\...") must be quoted or it gets split
+    // into several arguments. The preceding path parameter is used directly
+    // to locate the executable and must remain unquoted.
+    const std::string quoted_self = '"' + std::string(argv[0]) + '"';
     for (int i = 0; i < 2; ++i) {
         const char idx[2] = { static_cast<char>('0' + i), '\0' };
-        const intptr_t rc = _spawnl(_P_WAIT, argv[0], argv[0], "--child", idx,
+        const intptr_t rc = _spawnl(_P_WAIT, argv[0], quoted_self.c_str(), "--child", idx,
                                     static_cast<const char*>(nullptr));
         // With _P_WAIT, rc is the child's exit code, or -1 if the child could
         // not be spawned at all. Require exactly the exit(1) that exit1() must
