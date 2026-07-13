@@ -399,6 +399,7 @@ list(APPEND MAIN_SOURCE_FILES
   opm/output/data/InterRegFlowMap.cpp
   opm/output/data/RegionsetVariableDescriptor.cpp
   opm/output/data/RegionVariableMapping.cpp
+  opm/output/data/RegionVariableValues.cpp
   opm/output/data/Solution.cpp
   opm/output/eclipse/ActiveIndexByColumns.cpp
   opm/output/eclipse/AggregateActionxData.cpp
@@ -517,6 +518,7 @@ list(APPEND TEST_SOURCE_FILES
   tests/test_data_InterRegFlowMap.cpp
   tests/test_data_regionsetvariabledescriptor.cpp
   tests/test_data_regionvariablemapping.cpp
+  tests/test_data_regionvariablevalues.cpp
   tests/test_data_regionvariableview.cpp
   tests/test_DatumDepth.cpp
   tests/test_DoubHEAD.cpp
@@ -1508,6 +1510,7 @@ list(APPEND PUBLIC_HEADER_FILES
   opm/output/data/InterRegFlow.hpp
   opm/output/data/InterRegFlowMap.hpp
   opm/output/data/RegionVariableMapping.hpp
+  opm/output/data/RegionVariableValues.hpp
   opm/output/data/RegionVariableView.hpp
   opm/output/data/RegionsetVariableDescriptor.hpp
   opm/output/data/Solution.hpp
