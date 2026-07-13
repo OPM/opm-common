@@ -65,9 +65,15 @@
 #include <opm/output/data/Aquifer.hpp>
 #include <opm/output/data/Groups.hpp>
 #include <opm/output/data/GuideRateValue.hpp>
+#include <opm/output/data/RegionsetVariableDescriptor.hpp>
+#include <opm/output/data/RegionVariableMapping.hpp>
+#include <opm/output/data/RegionVariableValues.hpp>
+#include <opm/output/data/RegionVariableView.hpp>
 #include <opm/output/data/Wells.hpp>
+
 #include <opm/output/eclipse/Inplace.hpp>
 #include <opm/output/eclipse/RegionCache.hpp>
+#include <opm/output/eclipse/RegionVariableCollection.hpp>
 #include <opm/output/eclipse/WStat.hpp>
 
 #include <algorithm>
@@ -698,6 +704,9 @@ struct fn_args
     // every non-connection keyword -- existing dispatch is unchanged.
     const std::optional<int>          lgr_grid_filter{};
     const std::optional<std::size_t>  lgr_cell_filter{};
+
+    const Opm::data::RegionVariableMapping* reg_var_map{nullptr};
+    const Opm::RegionVariableCollection* reg_var_coll{nullptr};
 };
 
 /* Since there are several enums in opm scattered about more-or-less
@@ -1758,12 +1767,52 @@ inline quantity bhp( const fn_args& args ) {
     return { p->second.bhp, measure::pressure };
 }
 
-/*
-  This function is slightly ugly - the evaluation of ROEW uses the already
-  calculated COPT results. We do not really have any formalism for such
-  dependencies between the summary vectors. For this particualar case there is a
-  hack in SummaryConfig which should ensure that this is safe.
-*/
+quantity oew_value(const fn_args&     args,
+                   const std::string& region_name,
+                   const int          regionId,
+                   const double       oiip)
+{
+    const auto zero = quantity { 0.0, measure::identity };
+
+    if (oiip < 1.0*Opm::prefix::micro*Opm::unit::liter) {
+        // One micro liter (1e-9 SM3) of initial oil in place
+        // is a very small region of the reservoir.  We will
+        // not report ROEW for this case.
+        return zero;
+    }
+
+    const auto varIx = args.reg_var_coll
+        ->variableIndex(*args.reg_var_map, "ConnOPT");
+    if (! varIx.has_value()) {
+        return zero;
+    }
+
+    const auto regsetIx = args.reg_var_coll
+        ->regionSetIndex(*args.reg_var_map, region_name);
+    if (! regsetIx.has_value()) {
+        return zero;
+    }
+
+    const auto roptValues = args.reg_var_coll
+        ->regionVariableValues().values(*varIx);
+    if (! roptValues.has_value()) {
+        return zero;
+    }
+
+    const auto copt = roptValues->element(*regsetIx, regionId);
+
+    // No unit conversion needed here since both "copt" and
+    // "oiip" are in the same units (i.e., SM3).
+    return { copt / oiip, measure::identity };
+}
+
+quantity roew_value(const fn_args& args, const std::string& region_name)
+{
+    const auto roiip = args.initial_inplace->
+        get(region_name, Opm::Inplace::Phase::OIL, args.num);
+
+    return oew_value(args, region_name, args.num, roiip);
+}
 
 quantity roew(const fn_args& args)
 {
@@ -1782,21 +1831,13 @@ quantity roew(const fn_args& args)
         return zero;
     }
 
-    double oil_prod = 0;
-    for (const auto& [well, global_index] : args.regionCache.connections(region_name, args.num)) {
-        const auto copt_key = fmt::format("COPT:{}:{}", well, global_index + 1);
-
-        if (args.st.has(copt_key)) {
-            oil_prod += args.st.get(copt_key);
-        }
+    if ((args.reg_var_coll != nullptr) && (args.reg_var_map != nullptr)) {
+        return roew_value(args, region_name);
     }
 
-    oil_prod = args.unit_system.to_si(Opm::UnitSystem::measure::volume, oil_prod);
-
-    return {
-        oil_prod / args.initial_inplace->get(region_name, Opm::Inplace::Phase::OIL, args.num),
-        measure::identity
-    };
+    // If we don't have dedicated region variable collection or mapping,
+    // we cannot calculate ROEW.
+    return zero;
 }
 
 quantity roe(const fn_args& args)
@@ -4379,6 +4420,9 @@ namespace Evaluator {
         const Opm::data::Aquifers& aquifers;
         const std::unordered_map<std::string, Opm::data::InterRegFlowMap>& ireg;
         const Opm::data::ReservoirCouplingGroupRates* rc_rates;
+
+        const Opm::data::RegionVariableMapping* reg_var_map{nullptr};
+        const Opm::RegionVariableCollection* reg_var_coll{nullptr};
     };
 
     class Base
@@ -4436,16 +4480,29 @@ namespace Evaluator {
             eFac.setFactors(this->node_, input.sched, wells, sim_step, simRes.wellSol);
 
             const fn_args args {
-                wells, this->group_name(), this->node_.keyword,
-                stepSize, static_cast<int>(sim_step),
-                this->number(), this->node_.fip_region,
-                st,
-                simRes.wellSol, simRes.wbp, simRes.grpNwrkSol,
-                input.reg, input.grid, input.sched,
-                std::move(eFac.factors),
-                input.initial_inplace, simRes.inplace,
-                input.sched.getUnits(),
-                simRes.rc_rates
+                .schedule_wells = wells,
+                .group_name = this->group_name(),
+                .keyword_name = this->node_.keyword,
+                .duration = stepSize,
+                .sim_step = static_cast<int>(sim_step),
+                .num = this->number(),
+                .extra_data = this->node_.fip_region,
+                .st = st,
+                .wells = simRes.wellSol,
+                .wbp = simRes.wbp,
+                .grp_nwrk = simRes.grpNwrkSol,
+                .regionCache = input.reg,
+                .grid = input.grid,
+                .schedule = input.sched,
+                .eff_factors = std::move(eFac.factors),
+                .initial_inplace = input.initial_inplace,
+                .inplace = simRes.inplace,
+                .unit_system = input.sched.getUnits(),
+                .rc_rates = simRes.rc_rates,
+                .lgr_grid_filter = std::nullopt,
+                .lgr_cell_filter = std::nullopt,
+                .reg_var_map = simRes.reg_var_map,
+                .reg_var_coll = simRes.reg_var_coll
             };
 
             const auto& usys = input.es.getUnits();
@@ -4581,18 +4638,27 @@ namespace Evaluator {
                             simRes.wellSol);
 
             const fn_args args {
-                wells, "", this->node_.keyword,
-                stepSize, static_cast<int>(sim_step),
-                /*num=*/0, /*extra_data=*/std::nullopt,
-                st,
-                simRes.wellSol, simRes.wbp, simRes.grpNwrkSol,
-                input.reg, input.grid, input.sched,
-                std::move(eFac.factors),
-                input.initial_inplace, simRes.inplace,
-                input.sched.getUnits(),
-                simRes.rc_rates,
-                /*lgr_grid_filter=*/lgr_id,
-                /*lgr_cell_filter=*/gridLocalCellIndex,
+                .schedule_wells = wells,
+                .group_name = "",
+                .keyword_name = this->node_.keyword,
+                .duration = stepSize,
+                .sim_step = static_cast<int>(sim_step),
+                .num = 0,
+                .extra_data = std::nullopt,
+                .st = st,
+                .wells = simRes.wellSol,
+                .wbp = simRes.wbp,
+                .grp_nwrk = simRes.grpNwrkSol,
+                .regionCache = input.reg,
+                .grid = input.grid,
+                .schedule = input.sched,
+                .eff_factors = std::move(eFac.factors),
+                .initial_inplace = input.initial_inplace,
+                .inplace = simRes.inplace,
+                .unit_system = input.sched.getUnits(),
+                .rc_rates = simRes.rc_rates,
+                .lgr_grid_filter = lgr_id,
+                .lgr_cell_filter = gridLocalCellIndex,
             };
 
             const auto& usys = input.es.getUnits();
@@ -6307,17 +6373,19 @@ eval(const int                    sim_step,
         ? *values.interreg_flows : DynamicSimulatorState::InterRegFlowValues{};
 
     const Evaluator::SimulatorResults simRes {
-        well_solution,
-        wbp,
-        group_and_nwrk_solution,
-        single_values,
-        inplace,
-        region_values,
-        block_values,
-        lgr_block_values,
-        aquifer_values,
-        interreg_flows,
-        values.rc_group_rates
+        .wellSol = well_solution,
+        .wbp = wbp,
+        .grpNwrkSol = group_and_nwrk_solution,
+        .single = single_values,
+        .inplace = inplace,
+        .region = region_values,
+        .block = block_values,
+        .lgr_block = lgr_block_values,
+        .aquifers = aquifer_values,
+        .ireg = interreg_flows,
+        .rc_rates = values.rc_group_rates,
+        .reg_var_map = values.reg_var_map,
+        .reg_var_coll = values.reg_var_coll
     };
 
     for (auto& evalPtr : this->outputParameters_.getEvaluators()) {
@@ -6826,6 +6894,8 @@ void Summary::eval(const int                    report_step,
     this->pImpl_->eval(sim_step, secs_elapsed, values, st);
 }
 
+Summary::~Summary() = default;
+
 void Summary::add_timestep(const SummaryState& st,
                            const int           report_step,
                            const int           ministep_id,
@@ -6838,7 +6908,5 @@ void Summary::write(const bool is_final_summary) const
 {
     this->pImpl_->write(is_final_summary);
 }
-
-Summary::~Summary() {}
 
 } // namespace Opm::out

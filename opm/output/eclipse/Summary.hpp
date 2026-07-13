@@ -37,6 +37,7 @@ namespace Opm {
     class EclipseGrid;
     class EclipseState;
     class Inplace;
+    class RegionVariableCollection;
     class Schedule;
     class SummaryConfig;
     class SummaryState;
@@ -45,6 +46,7 @@ namespace Opm {
 namespace Opm::data {
     class GroupAndNetworkValues;
     class InterRegFlowMap;
+    class RegionVariableMapping;
     struct WellBlockAveragePressures;
     class Wells;
 } // namespace Opm::data
@@ -136,6 +138,16 @@ public:
         ///
         /// Nullptr if unavailable.
         const RegionParameters* region_values {nullptr};
+
+        /// Name-to-index mapping for region variables.
+        ///
+        /// Nullptr if unavailable.
+        const data::RegionVariableMapping* reg_var_map {nullptr};
+
+        /// Collection of region variables.
+        ///
+        /// Nullptr if unavailable.
+        const RegionVariableCollection* reg_var_coll {nullptr};
 
         /// Block (cell) level dynamic state values.
         ///
