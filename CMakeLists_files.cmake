@@ -146,6 +146,7 @@ list(APPEND MAIN_SOURCE_FILES
   opm/input/eclipse/EclipseState/SimulationConfig/RockConfig.cpp
   opm/input/eclipse/EclipseState/SimulationConfig/SimulationConfig.cpp
   opm/input/eclipse/EclipseState/SimulationConfig/ThresholdPressure.cpp
+  opm/input/eclipse/EclipseState/SummaryConfig/RegionVariableSupport.cpp
   opm/input/eclipse/EclipseState/SummaryConfig/SummaryConfig.cpp
   opm/input/eclipse/EclipseState/Tables/Aqudims.cpp
   opm/input/eclipse/EclipseState/Tables/ColumnSchema.cpp
@@ -1011,6 +1012,7 @@ list(APPEND PUBLIC_HEADER_FILES
   opm/input/eclipse/EclipseState/SimulationConfig/RockConfig.hpp
   opm/input/eclipse/EclipseState/SimulationConfig/SimulationConfig.hpp
   opm/input/eclipse/EclipseState/SimulationConfig/ThresholdPressure.hpp
+  opm/input/eclipse/EclipseState/SummaryConfig/RegionVariableSupport.hpp
   opm/input/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp
   opm/input/eclipse/EclipseState/Tables/Aqudims.hpp
   opm/input/eclipse/EclipseState/Tables/AqutabTable.hpp
