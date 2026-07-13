@@ -1445,7 +1445,6 @@ void keywordR2R(const DeckKeyword&           keyword,
 void keywordR(SummaryConfig::keyword_list& list,
               SummaryConfigContext&        context,
               const DeckKeyword&           deck_keyword,
-              const Schedule&              schedule,
               const FieldPropsManager&     field_props,
               const ParseContext&          parseContext,
               ErrorGuard&                  errors)
@@ -1500,21 +1499,6 @@ void keywordR(SummaryConfig::keyword_list& list,
     }
     else {
         regions = context.activeRegions(*region_name);
-    }
-
-    // See comment on function roew() in Summary.cpp for this weirdness.
-    if (keyword.rfind("ROEW", 0) == 0) {
-        auto copt_node = SummaryConfigNode("COPT", SummaryConfigNode::Category::Connection, {});
-        copt_node.parameterType(SummaryConfigNode::Type::Total);
-        for (const auto& wname : schedule.wellNames()) {
-            copt_node.namedEntity(wname);
-
-            const auto& well = schedule.getWellatEnd(wname);
-            for (const auto& connection : well.getConnections()) {
-                copt_node.number(connection.global_index() + 1);
-                list.push_back(copt_node);
-            }
-        }
     }
 
     auto param = SummaryConfigNode {
@@ -2040,7 +2024,7 @@ void handleKW(const std::vector<std::string>& node_names,
         break;
 
     case Cat::Region:
-        keywordR(list, context, keyword, schedule, field_props, parseContext, errors);
+        keywordR(list, context, keyword, field_props, parseContext, errors);
         break;
 
     case Cat::Connection:
