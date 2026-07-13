@@ -146,6 +146,7 @@ list(APPEND MAIN_SOURCE_FILES
   opm/input/eclipse/EclipseState/SimulationConfig/RockConfig.cpp
   opm/input/eclipse/EclipseState/SimulationConfig/SimulationConfig.cpp
   opm/input/eclipse/EclipseState/SimulationConfig/ThresholdPressure.cpp
+  opm/input/eclipse/EclipseState/SummaryConfig/RegionVariableSupport.cpp
   opm/input/eclipse/EclipseState/SummaryConfig/SummaryConfig.cpp
   opm/input/eclipse/EclipseState/Tables/Aqudims.cpp
   opm/input/eclipse/EclipseState/Tables/ColumnSchema.cpp
@@ -519,6 +520,7 @@ list(APPEND TEST_SOURCE_FILES
   tests/test_data_InterRegFlowMap.cpp
   tests/test_data_regionsetvariabledescriptor.cpp
   tests/test_data_regionvariablemapping.cpp
+  tests/test_data_regionvariablesupport.cpp
   tests/test_data_regionvariablevalues.cpp
   tests/test_data_regionvariableview.cpp
   tests/test_DatumDepth.cpp
@@ -1011,6 +1013,7 @@ list(APPEND PUBLIC_HEADER_FILES
   opm/input/eclipse/EclipseState/SimulationConfig/RockConfig.hpp
   opm/input/eclipse/EclipseState/SimulationConfig/SimulationConfig.hpp
   opm/input/eclipse/EclipseState/SimulationConfig/ThresholdPressure.hpp
+  opm/input/eclipse/EclipseState/SummaryConfig/RegionVariableSupport.hpp
   opm/input/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp
   opm/input/eclipse/EclipseState/Tables/Aqudims.hpp
   opm/input/eclipse/EclipseState/Tables/AqutabTable.hpp
