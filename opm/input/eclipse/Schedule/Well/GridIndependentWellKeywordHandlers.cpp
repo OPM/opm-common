@@ -29,6 +29,7 @@
 #include <opm/input/eclipse/Schedule/MSW/WellSegments.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleGrid.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleState.hpp>
+#include <opm/input/eclipse/Schedule/ScheduleStatic.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
 
@@ -57,6 +58,19 @@ namespace Opm
 
 namespace
 {
+
+    std::string appendRestartHint(std::string msg, const HandlerContext& handlerContext)
+    {
+        const auto restart_step = handlerContext.static_schedule().rst_info.report_step;
+        if (restart_step != 0) {
+            msg += fmt::format(
+                " This may be caused by continuing this well after a restart "
+                "(resumed at report step {}) - restarting is not supported "
+                "for trajectory-based (COMPTRAJ/WELTRAJ) wells.", restart_step);
+        }
+
+        return msg;
+    }
 
     void
     process_segments(HandlerContext&                                            handlerContext,
@@ -112,8 +126,12 @@ namespace
             for (const auto& name : wellnames) {
                 auto well = handlerContext.state().wells.get(name);
 
-                if (!well.getConnections().empty()) {
-                    const auto msg = fmt::format(R"(   {} is already connected)", name);
+                const auto& existing_connections = well.getConnections();
+                if (!existing_connections.empty() && !existing_connections[0].fromTrajectory()) {
+                    const auto msg = appendRestartHint(fmt::format(
+                        "Well {} already has COMPDAT-defined connections and cannot "
+                        "also be defined using COMPTRAJ. A well must use either COMPDAT "
+                        "or COMPTRAJ, never both.", name), handlerContext);
                     throw OpmInputError(msg, handlerContext.keyword.location());
                 }
 
@@ -172,6 +190,15 @@ Well {} has no connections to the grid. The well will remain SHUT)", name);
 
             for (const auto& name : wellnames) {
                 auto well = handlerContext.state().wells.get(name);
+
+                const auto& existing_connections = well.getConnections();
+                if (!existing_connections.empty() && !existing_connections[0].fromTrajectory()) {
+                    const auto msg = appendRestartHint(fmt::format(
+                        "Well {} already has COMPDAT-defined connections and cannot "
+                        "also be defined using WELTRAJ/COMPTRAJ. A well must use either "
+                        "COMPDAT or COMPTRAJ, never both.", name), handlerContext);
+                    throw OpmInputError(msg, handlerContext.keyword.location());
+                }
 
                 if (well.isMultiSegment()) {
                     const auto msg = fmt::format(

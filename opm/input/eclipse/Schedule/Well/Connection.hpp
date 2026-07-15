@@ -257,6 +257,8 @@ namespace Opm {
         void setCF(double CF);
         void setDefaultSatTabId(bool id);
         void setStaticDFacCorrCoeff(const double c);
+        void resetComptrajBranch(int branch);
+        bool fromTrajectory() const;
 
         void scaleWellPi(double wellPi);
         bool prepareWellPIScaling();
@@ -293,6 +295,8 @@ namespace Opm {
             serializer(this->m_subject_to_welpi);
             serializer(this->m_filter_cake);
             serializer(this->m_econ_limits);
+            serializer(this->m_branches);
+            serializer(this->m_branch_ctf);
         }
 
     private:
@@ -387,6 +391,12 @@ namespace Opm {
         std::optional<FilterCake> m_filter_cake{};
 
         Utility::CopyablePtr<ConnectionEconLimits> m_econ_limits{};
+
+        // Branch numbers that have contributed a COMPTRAJ perforation.
+        std::vector<int> m_branches{};
+
+        // Each contributing branch's CTFProperties from COMPTRAJ perforations.
+        std::vector<CTFProperties> m_branch_ctf{};
 
         static std::string CTFKindToString(const CTFKind);
     };
