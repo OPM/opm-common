@@ -25,25 +25,25 @@
 /*!
  * \file
  *
- * \brief The isothermal flash's iteration can diverge on deeply
- *        supercritical feeds (an equimolar N2/methane mixture at 100 bar
- *        and 400 K, with the standard N2/C1 interaction coefficient, is the
- *        recorded case): the composition iterates leave [0, 1] far enough
- *        that the cubic-EoS mixing parameters become non-finite. Before the
- *        finite guard this hit an assert() — process ABORT in debug builds
- *        and SILENT propagation of non-finite values in release builds. The
- *        guard turns both into a catchable NumericalProblem, which is the
- *        failure mode every caller of the flash already handles.
+ * \brief In the "ssi+newton" flash method, Newton is a polish step on top of
+ *        successive substitution — but its composition update can fail to
+ *        converge on perfectly ordinary two-phase states that successive
+ *        substitution handles without difficulty (an equimolar
+ *        methane/n-decane mixture at 50 bar and 295 K, with the standard
+ *        binary interaction coefficient, is the recorded case). Previously
+ *        that failure threw away the whole solve, including the
+ *        near-converged successive-substitution result it started from.
+ *        With the switch-back, the solve falls back to plain successive
+ *        substitution and finishes — and must produce the same answer the
+ *        "ssi" method produces.
  */
 #include "config.h"
 
-#define BOOST_TEST_MODULE CubicEosFiniteGuard
+#define BOOST_TEST_MODULE PtFlashSsiNewtonFallback
 #include <boost/test/unit_test.hpp>
 
-#include <opm/common/Exceptions.hpp>
-
 #include <opm/material/components/C1.hpp>
-#include <opm/material/components/N2.hpp>
+#include <opm/material/components/C10.hpp>
 #include <opm/material/constraintsolvers/PTFlash.hpp>
 #include <opm/material/densead/Evaluation.hpp>
 #include <opm/material/eos/CubicEOS.hpp>
@@ -54,18 +54,18 @@
 
 #include <opm/input/eclipse/EclipseState/Compositional/CompositionalConfig.hpp>
 
+#include <cmath>
 #include <stdexcept>
 #include <string_view>
 
 namespace Opm {
 
-//! Two-phase, two-component (N2/C1) test fluid system — the
-//! ThreeComponentFluidSystem pattern reduced to the pair that exhibits the
-//! recorded divergence, with the standard N2/methane Peng-Robinson binary
-//! interaction coefficient.
+//! Two-phase, two-component (C1/nC10) test fluid system with the standard
+//! methane/n-decane Peng-Robinson binary interaction coefficient — the
+//! configuration that exhibits the recorded Newton stall.
 template<class Scalar>
-class N2C1TestFluidSystem
-        : public Opm::BaseFluidSystem<Scalar, N2C1TestFluidSystem<Scalar> > {
+class C1C10TestFluidSystem
+        : public Opm::BaseFluidSystem<Scalar, C1C10TestFluidSystem<Scalar> > {
 public:
     static constexpr int numPhases = 2;
     static constexpr int numComponents = 2;
@@ -79,13 +79,13 @@ public:
     static constexpr int Comp0Idx = 0;
     static constexpr int Comp1Idx = 1;
 
-    using Comp0 = N2<Scalar>;
-    using Comp1 = C1<Scalar>;
+    using Comp0 = C1<Scalar>;
+    using Comp1 = C10<Scalar>;
 
     template <class ValueType>
-    using ParameterCache = PTFlashParameterCache<ValueType, N2C1TestFluidSystem<Scalar>>;
-    using ViscosityModel = ViscosityModels<Scalar, N2C1TestFluidSystem<Scalar>>;
-    using CubicEOS = ::Opm::CubicEOS<Scalar, N2C1TestFluidSystem<Scalar>>;
+    using ParameterCache = PTFlashParameterCache<ValueType, C1C10TestFluidSystem<Scalar>>;
+    using ViscosityModel = ViscosityModels<Scalar, C1C10TestFluidSystem<Scalar>>;
+    using CubicEOS = ::Opm::CubicEOS<Scalar, C1C10TestFluidSystem<Scalar>>;
 
     static bool phaseIsActive(unsigned phaseIdx)
     { return phaseIdx == oilPhaseIdx || phaseIdx == gasPhaseIdx; }
@@ -135,9 +135,9 @@ public:
         }
     }
 
-    //! standard PR literature value for the N2/methane pair
+    //! standard PR literature value for the methane/n-decane pair
     static Scalar interactionCoefficient(unsigned comp1Idx, unsigned comp2Idx)
-    { return (comp1Idx != comp2Idx) ? 0.0291 : 0.0; }
+    { return (comp1Idx != comp2Idx) ? 0.0411 : 0.0; }
 
     static std::string_view phaseName(unsigned phaseIdx)
     {
@@ -192,7 +192,7 @@ public:
 } // namespace Opm
 
 using Scalar = double;
-using FluidSystem = Opm::N2C1TestFluidSystem<Scalar>;
+using FluidSystem = Opm::C1C10TestFluidSystem<Scalar>;
 using Evaluation = Opm::DenseAd::Evaluation<Scalar, 3>;
 using FluidState = Opm::CompositionalFluidState<Evaluation, FluidSystem>;
 using PtFlash = Opm::PTFlash<Scalar, FluidSystem, true>;
@@ -216,35 +216,39 @@ FluidState makeState(const Scalar p, const Scalar t)
 
 } // anonymous namespace
 
-// the recorded divergence case must report as a catchable exception —
-// never as an abort (debug) or a silent non-finite state (release).
-// Probed via the pure "newton" method: in "ssi+newton" the switch-back
-// catches this exception internally and finishes with successive
-// substitution (see test_ptflash_ssi_newton_fallback.cpp).
-BOOST_AUTO_TEST_CASE(NewtonDivergenceThrowsCatchable)
+// the recorded stall state must now SOLVE under ssi+newton (previously the
+// Newton polish threw away the whole solve, successive-substitution progress
+// included)
+BOOST_AUTO_TEST_CASE(FallbackConvergesWhereNewtonStalled)
 {
-    auto fs = makeState(100e5, 400.0);
-    BOOST_CHECK_THROW(
-        PtFlash::solve(fs, "newton", 1e-8, EOSType::PR),
-        Opm::NumericalProblem);
+    auto fs = makeState(50e5, 295.0);
+    BOOST_CHECK_NO_THROW(PtFlash::solve(fs, "ssi+newton", 1e-8, EOSType::PR));
 }
 
-// the default method's honest failure mode on the same state is unchanged
-// (successive substitution reports its own non-convergence as a throw)
-BOOST_AUTO_TEST_CASE(SsiStillFailsLoudlyNotFatally)
+// and the fallback answer is THE answer: it must match the plain "ssi"
+// method's result on the same state — same split, same compositions
+BOOST_AUTO_TEST_CASE(FallbackMatchesSsi)
 {
-    auto fs = makeState(100e5, 400.0);
-    BOOST_CHECK_THROW(
-        PtFlash::solve(fs, "ssi", 1e-8, EOSType::PR),
-        std::runtime_error);
+    auto fsSsi = makeState(50e5, 295.0);
+    PtFlash::solve(fsSsi, "ssi", 1e-8, EOSType::PR);
+
+    auto fsFallback = makeState(50e5, 295.0);
+    PtFlash::solve(fsFallback, "ssi+newton", 1e-8, EOSType::PR);
+
+    BOOST_CHECK_SMALL(std::abs(Opm::getValue(fsFallback.L()) - Opm::getValue(fsSsi.L())), 1e-8);
+    for (unsigned phaseIdx = 0; phaseIdx < FluidSystem::numPhases; ++phaseIdx) {
+        for (int compIdx = 0; compIdx < 2; ++compIdx) {
+            BOOST_CHECK_SMALL(std::abs(
+                Opm::getValue(fsFallback.moleFraction(phaseIdx, compIdx)) -
+                Opm::getValue(fsSsi.moleFraction(phaseIdx, compIdx))), 1e-8);
+        }
+    }
 }
 
-// an ordinary state keeps flashing under both methods — the guard costs
-// nothing where nothing goes wrong
+// benign states keep converging under ssi+newton, ideally via Newton itself —
+// the switch-back must not change where nothing goes wrong
 BOOST_AUTO_TEST_CASE(BenignStateUnaffected)
 {
-    for (const char* method : {"ssi", "ssi+newton"}) {
-        auto fs = makeState(100e5, 300.0);
-        BOOST_CHECK_NO_THROW(PtFlash::solve(fs, method, 1e-8, EOSType::PR));
-    }
+    auto fs = makeState(50e5, 300.0);
+    BOOST_CHECK_NO_THROW(PtFlash::solve(fs, "ssi+newton", 1e-8, EOSType::PR));
 }
