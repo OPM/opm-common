@@ -466,7 +466,8 @@ class MechSolver
 public:
     enum class Solver
     {
-        TPSA
+        TPSA,
+        None
     };
 
     enum class CouplingScheme
@@ -518,7 +519,9 @@ public:
     }
 
 private:
-    Solver m_solver{};
+    // No mechanics solver is selected unless the deck contains MECHSOLV;
+    // MECH alone may be handled by an external mechanics module.
+    Solver m_solver{Solver::None};
     CouplingScheme m_coupling = CouplingScheme::Lagged;
     int m_fixed_stress_min_iter{};
     int m_fixed_stress_max_iter{};
