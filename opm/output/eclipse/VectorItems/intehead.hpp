@@ -111,6 +111,7 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
 
         IPROG = 94, //  IPROG = simulation program identifier:  100 - ECLIPSE 100, 300 - ECLIPSE 300, 500 - ECLIPSE 300
                     //  (thermal option), negative - Other simulator,
+        NLGR = 95, //  Number of local grid refinements (LGRs) in the model
         NMFIPR = 99, // REGDIMS item2
 
         ROCKOPTS_TABTYP = 103, // ROCKOPTS item3 (PVTNUM=1 - default)

@@ -666,6 +666,9 @@ createInteHead(const EclipseState& es,
     const auto ih = InteHEAD{}
         .dimensions         (grid.getNXYZ())
         .numActive          (static_cast<int>(grid.getNumActive()))
+        // Model-total LGR count (from the global input grid), written to
+        // the global and every LGR INTEHEAD alike.
+        .numLocalGrids      (static_cast<int>(es.getInputGrid().get_all_lgr_labels().size()))
         .unitConventions    (es.getDeckUnitSystem())
         .wellTableDimensions(getWellTableDims(nwgmax, ngmax, rspec, sched,
                                               report_step, lookup_step, grid.get_lgr_tag()))
