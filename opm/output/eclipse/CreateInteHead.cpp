@@ -314,7 +314,13 @@ namespace {
         // This seems to be some sort of default value for LGR grid and should be enabled when AggregateGroupData.cpp is fixed.
         const auto maxGroupInField = 1;
 
-        const auto nWMaxz = wd.maxWellsInField();
+        // NWMAXZ is a per-grid quantity: the number of wells this grid is
+        // dimensioned for, with a minimum of one for array allocation.  The
+        // field-wide WELLDIMS item 1 value belongs in the global grid's
+        // header only; restart readers validate the local grid's slot
+        // against the local grid's own well count and reject the file when
+        // the field-wide value appears here.
+        const auto nWMaxz = std::max(numWells, 1);
 
         return {
             (report_step > 0) ? numWells : 0,
