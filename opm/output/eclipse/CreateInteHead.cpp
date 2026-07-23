@@ -61,6 +61,7 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <unordered_set>
 #include <vector>
 
 namespace {
@@ -177,21 +178,6 @@ namespace {
 
         // Number of non-FIELD groups.
         return ngmax - 1;
-    }
-
-    int numGroupsInField(const Opm::Schedule& sched,
-                         const std::size_t    lookup_step,
-                         [[maybe_unused]] const std::string&   lgr_tag)
-    {
-        return numGroupsInField(sched, lookup_step);
-        // Following code should be enabled when AggregateGroupData.cpp is fixed
-        // if (lgr_tag == "GLOBAL" or  lgr_tag.empty()){
-        //     return numGroupsInField(sched, lookup_step);
-        // }
-        // else {
-        //     // This is the default value and correspond to a single well group for LGR grids.
-        //     return 1;
-        // }
     }
 
     int GroupControl(const Opm::Schedule& sched,
@@ -345,6 +331,25 @@ namespace {
         };
     }
 
+
+    // Number of distinct well groups among the wells inside the named
+    // local grid, with a minimum of one.  Local-grid restart headers
+    // carry group counts of this per-grid form, and restart readers
+    // validate them against the input description.
+    int numLgrWellGroups(const ::Opm::Schedule& sched,
+                         const std::size_t      lookup_step,
+                         const std::string&     lgr_tag)
+    {
+        auto groups = std::unordered_set<std::string> {};
+        for (const auto& wname : sched.wellNames(lookup_step)) {
+            const auto& well = sched[lookup_step].wells(wname);
+            if (well.get_lgr_well_tag().value_or("") == lgr_tag) {
+                groups.insert(well.groupName());
+            }
+        }
+        return std::max(static_cast<int>(groups.size()), 1);
+    }
+
     Opm::RestartIO::InteHEAD::WellTableDim
     getWellTableDims(const int              nwgmax,
                      const int              ngmax,
@@ -372,11 +377,27 @@ namespace {
             std::max(wd.maxConnPerWell(),
                      maxConnPerWell(sched, report_step, lookup_step));
 
-        const auto maxWellInGroup =
-             std::max(wd.maxWellsPerGroup(), nwgmax); // WellsPerGroup computed in terms of the Global Grid
+        // Group CAPACITY is a field-wide property, repeated in every
+        // local grid's header.  Group COUNT quantities are per grid: a
+        // local grid's header is dimensioned for the groups of the wells
+        // inside that grid, with a minimum of one.  A restarting run
+        // cross-checks the count against the input description and
+        // rejects the file when the field-wide value appears here (only
+        // models with more than one group distinguish the two
+        // conventions).
+        const auto globalDims =
+            getWellTableDims(nwgmax, ngmax, rspec, sched, report_step, lookup_step);
 
-        // This seems to be some sort of default value for LGR grid and should be enabled when AggregateGroupData.cpp is fixed.
-        const auto maxGroupInField = 1;
+        // The NWGMAX header item is written as the maximum of the two
+        // quantities below and holds the field-wide capacity in every
+        // grid's header, so fold the global grid's value into the
+        // capacity channel while maxGroupInField carries the per-grid
+        // group count.
+        const auto maxWellInGroup =
+            std::max(globalDims.maxWellInGroup, globalDims.maxGroupInField);
+
+        const auto maxGroupInField =
+            numLgrWellGroups(sched, lookup_step, lgr_tag);
 
         // NWMAXZ is a per-grid quantity: the number of wells this grid is
         // dimensioned for, with a minimum of one for array allocation.  The
@@ -755,7 +776,7 @@ createInteHead(const EclipseState& es,
                                        grid.get_lgr_tag());
 
     const auto ngmax  = (report_step == 0)
-        ? 0 : numGroupsInField(sched, lookup_step, grid.get_lgr_tag());
+        ? 0 : numGroupsInField(sched, lookup_step);
 
     const auto& rspec = es.runspec();
     const auto& tdim  = es.getTableManager();
@@ -767,6 +788,15 @@ createInteHead(const EclipseState& es,
     const auto connArrayDims = getConnArrayDims(tz);
 
     const int norst_value = sched[lookup_step].rst_config().norst.value_or(0);
+
+    // NGRP is a per-grid actual-group count: the global header carries
+    // the model's group count, a local grid's header the count of groups
+    // of the wells inside that grid (minimum one).
+    const auto& hdrLgrTag = grid.get_lgr_tag();
+    const bool  localGridHeader = ! (hdrLgrTag.empty() || (hdrLgrTag == "GLOBAL"));
+    const int   headerNumGroups = localGridHeader
+        ? numLgrWellGroups(sched, lookup_step, hdrLgrTag)
+        : ngmax;
 
     const auto ih = InteHEAD{}
         .dimensions         (grid.getNXYZ())
@@ -796,7 +826,7 @@ createInteHead(const EclipseState& es,
         .liftOptParam       (getLiftOptPar(sched, report_step, lookup_step))
         .wellSegDimensions  (getWellSegDims(rspec, sched, tz, report_step, lookup_step))
         .regionDimensions   (getRegDims(tdim, rdim))
-        .ngroups            ({ ngmax })
+        .ngroups            ({ headerNumGroups })
         .params_NGCTRL      (GroupControl(sched, report_step, lookup_step))
         .variousParam       (202204, 100)
         .udqParam_1         (getUdqParam(rspec, sched, report_step, lookup_step))
