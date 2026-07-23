@@ -521,6 +521,49 @@ Opm::RestartIO::InteHEAD::numLocalGrids(const int nlgr)
 }
 
 Opm::RestartIO::InteHEAD&
+Opm::RestartIO::InteHEAD::lgrRestartHeaderItems(const bool modelHasLgr,
+                                                  const int  solutionTermCount)
+{
+    if (! modelHasLgr) {
+        return *this;
+    }
+
+    // Restart readers depend on a small number of additional header
+    // items when accepting and restoring a model with local grid
+    // refinements.  Each item below is individually necessary for the
+    // file to be read back and restored; individual item semantics are
+    // not published, and the values do not depend on the model.  (Same
+    // convention as the fixed ih_049/ih_050 assignments in
+    // variousParam().)
+
+    // Without this item the restart file is rejected while being read
+    // back (restart record framing breaks).
+    this->data_[ih_244] = 30;
+
+    // Without either of these two items the file is read back, but the
+    // restored local-grid solution is under-described and the restarted
+    // run fails to converge in the refined region.
+    this->data_[ih_166] = 12;
+    this->data_[ih_168] = 25;
+
+    // Allocation-dimension item that must never be left at zero: an
+    // absent subsystem is dimensioned for at least one element.
+    // Restart readers allocate restore workspaces from such items -- the
+    // same minimum-allocation principle as the per-grid NWMAXZ well
+    // count.  Left at zero it degrades the restored local-grid solution
+    // in the same way as the two items above.
+    this->data_[ih_169] = std::max(this->data_[ih_169], 1);
+
+    // Solution-term count.  Restarting runs recompute this quantity
+    // from the runspec and warn when the file disagrees; the restart
+    // itself succeeds either way, so the item is written only to satisfy
+    // that cross-check.
+    this->data_[ih_088] = solutionTermCount;
+
+    return *this;
+}
+
+Opm::RestartIO::InteHEAD&
 Opm::RestartIO::InteHEAD::unitConventions(const UnitSystem& usys)
 {
     this->data_[UNIT] = usys.ecl_id();

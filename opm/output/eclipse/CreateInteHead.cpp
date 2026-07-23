@@ -681,7 +681,24 @@ createInteHead(const EclipseState& es,
     // TEMP is a tracer, oil&gas tracers have both free and solution parts.
     const auto num_tracers = tracers.water_tracers() + tracers.oil_tracers() + tracers.gas_tracers() + (es.runspec().temp() ? 1 : 0);
     const auto num_tracer_comps = num_tracers + tracers.oil_tracers() + tracers.gas_tracers();
+    const auto& simConfig = es.getSimulationConfig();
     int nxwelz_tracer_shift = num_tracer_comps*5 + 2 * (num_tracers > 0);
+
+    // The additional local-grid restart header items are applied as the final step of the
+    // chain.
+    const auto& lgrLabels = es.getInputGrid().get_all_lgr_labels();
+    const bool  modelHasLgr = ! lgrLabels.empty();
+
+    // Solution-term count as recomputed by restarting runs: active
+    // phases plus two, plus one when a dissolution or vaporisation
+    // transfer is active.
+    const auto& phasePred = rspec.phases();
+    const int   numActivePhases =
+        static_cast<int>(phasePred.active(Phase::OIL))
+        + static_cast<int>(phasePred.active(Phase::WATER))
+        + static_cast<int>(phasePred.active(Phase::GAS));
+    const int solutionTermCount = numActivePhases + 2
+        + ((simConfig.hasDISGAS() || simConfig.hasVAPOIL()) ? 1 : 0);
 
     // NGRP is a per-grid actual-group count: the global header carries
     // the model's group count, a local grid's header the count of groups
@@ -734,6 +751,7 @@ createInteHead(const EclipseState& es,
         .networkDimensions  (getNetworkDims(sched, lookup_step, rspec))
         .netBalanceData     (getNetworkBalanceParameters(sched, report_step))
         .rockOpts           (getRockOpts(rckcfg, rdim))
+        .lgrRestartHeaderItems(modelHasLgr, solutionTermCount)
         ;
 
     return ih.data();
