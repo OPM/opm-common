@@ -80,6 +80,13 @@
 namespace Opm { namespace RestartIO {
 
 namespace {
+    Opm::RestartIO::Helpers::ActiveTracerSolutionPhases
+    activeTracerSolutionPhases(const Opm::EclipseState& es)
+    {
+        return { es.getSimulationConfig().hasDISGAS(),
+                 es.getSimulationConfig().hasVAPOIL() };
+    }
+
     bool isFluidInPlace(const std::string& vector)
     {
         const auto fipRegex = std::regex { R"([RS]?FIP(OIL|GAS|WAT))" };
@@ -399,6 +406,7 @@ namespace {
                    const EclipseGrid&            grid,
                    const Schedule&               schedule,
                    const TracerConfig&           tracers,
+                   const Helpers::ActiveTracerSolutionPhases& tracerSolution,
                    const data::Wells&            wells,
                    const Opm::Action::State&     action_state,
                    const Opm::WellTestState&     wtest_state,
@@ -408,8 +416,8 @@ namespace {
                    EclIO::OutputStream::Restart& rstFile)
     {
         auto wellData = Helpers::AggregateWellData(ih);
-        wellData.captureDeclaredWellData(schedule, grid, tracers, sim_step, action_state, wtest_state, sumState, ih);
-        wellData.captureDynamicWellData(schedule, tracers, sim_step, wells, sumState);
+        wellData.captureDeclaredWellData(schedule, grid, tracers, sim_step, action_state, wtest_state, sumState, ih, tracerSolution);
+        wellData.captureDynamicWellData(schedule, tracers, sim_step, wells, sumState, tracerSolution);
 
         // NORST logic:
         //  - NORST=0: Full well and connection data
@@ -459,6 +467,7 @@ namespace {
                       const EclipseGrid&            grid,
                       const Schedule&               schedule,
                       const TracerConfig&           tracers,
+                   const Helpers::ActiveTracerSolutionPhases& tracerSolution,
                       const data::Wells&            wells,
                       const Opm::Action::State&     action_state,
                       const Opm::WellTestState&     wtest_state,
@@ -469,8 +478,8 @@ namespace {
                       const std::string&            lgr_tag)
     {
         auto wellData = Helpers::AggregateWellData(ih);
-        wellData.captureDeclaredWellDataLGR(schedule, grid, tracers, sim_step, action_state, wtest_state, sumState, ih, lgr_tag);
-        wellData.captureDynamicWellDataLGR(schedule, tracers, sim_step, wells, sumState, lgr_tag);
+        wellData.captureDeclaredWellDataLGR(schedule, grid, tracers, sim_step, action_state, wtest_state, sumState, ih, lgr_tag, tracerSolution);
+        wellData.captureDynamicWellDataLGR(schedule, tracers, sim_step, wells, sumState, lgr_tag, tracerSolution);
 
         rstFile.write("IWEL", wellData.getIWell());
 
@@ -612,7 +621,7 @@ namespace {
                              sumState, wellSol, inteHD, rstFile);
             }
 
-            writeWell(sim_step, grid, schedule, es.tracer(), wellSol,
+            writeWell(sim_step, grid, schedule, es.tracer(), activeTracerSolutionPhases(es), wellSol,
                       action_state, wtest_state, sumState, inteHD, norst_value, rstFile);
         }
 
@@ -679,7 +688,7 @@ namespace {
                 throw std::logic_error("MSW not supported for LGR");
             }
 
-            writeWellLGR(sim_step, grid, schedule, es.tracer(), wellSol,
+            writeWellLGR(sim_step, grid, schedule, es.tracer(), activeTracerSolutionPhases(es), wellSol,
                          action_state, wtest_state, sumState, inteHD, norst_value, rstFile, lgr_tag);
         }
 

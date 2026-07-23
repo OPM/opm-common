@@ -46,6 +46,16 @@ namespace Opm { namespace data {
 
 namespace Opm { namespace RestartIO { namespace Helpers {
 
+    // Whether a hydrocarbon tracer carries a dissolved/vaporised solution
+    // component in addition to its free component: a gas tracer only when
+    // DISGAS is active, an oil tracer only when VAPOIL is active.  Tracer
+    // entries in the well arrays are enumerated with this counting, which
+    // matches the tracer-dependent restart array dimensions.
+    struct ActiveTracerSolutionPhases {
+        bool disgas{false};
+        bool vapoil{false};
+    };
+
     class AggregateWellData
     {
     public:
@@ -57,7 +67,8 @@ namespace Opm { namespace RestartIO { namespace Helpers {
                                      const Opm::Action::State&    action_state,
                                      const Opm::WellTestState&    wtest_state,
                                      const Opm::SummaryState&     smry,
-                                     const std::vector<int>&      inteHead);
+                                     const std::vector<int>&      inteHead,
+                                     const ActiveTracerSolutionPhases& tracerSolution = {});
 
         void captureDeclaredWellData(const Schedule&   	          sched,
                                      const EclipseGrid&           grid,
@@ -66,7 +77,8 @@ namespace Opm { namespace RestartIO { namespace Helpers {
                                      const Opm::Action::State&    action_state,
                                      const Opm::WellTestState&    wtest_state,
                                      const Opm::SummaryState&     smry,
-                                     const std::vector<int>&      inteHead);
+                                     const std::vector<int>&      inteHead,
+                                     const ActiveTracerSolutionPhases& tracerSolution = {});
 
         void captureDeclaredWellDataLGR(const Schedule&   	      sched,
                                         const EclipseGrid&        grid,
@@ -76,20 +88,23 @@ namespace Opm { namespace RestartIO { namespace Helpers {
                                         const Opm::WellTestState& wtest_state,
                                         const Opm::SummaryState&  smry,
                                         const std::vector<int>&   inteHead,
-                                        const std::string&        lgr_tag);
+                                        const std::string&        lgr_tag,
+                                        const ActiveTracerSolutionPhases& tracerSolution = {});
 
         void captureDynamicWellData(const Opm::Schedule&          sched,
                                     const TracerConfig&           tracer,
                                     const std::size_t             sim_step,
                                     const Opm::data::Wells&       xw,
-                                    const Opm::SummaryState&      smry);
+                                    const Opm::SummaryState&      smry,
+                                    const ActiveTracerSolutionPhases& tracerSolution = {});
 
         void captureDynamicWellDataLGR(const Opm::Schedule&          sched,
                                        const TracerConfig&           tracer,
                                        const std::size_t             sim_step,
                                        const Opm::data::Wells&       xw,
                                        const Opm::SummaryState&      smry,
-                                       const std::string&            lgr_tag);
+                                       const std::string&            lgr_tag,
+                                       const ActiveTracerSolutionPhases& tracerSolution = {});
 
 
         /// Retrieve Integer Well Data Array.

@@ -678,10 +678,19 @@ createInteHead(const EclipseState& es,
     const auto& rdim  = tdim.getRegdims();
     const auto& rckcfg = es.getSimulationConfig().rock_config();
     const auto& tracers = es.runspec().tracers();
-    // TEMP is a tracer, oil&gas tracers have both free and solution parts.
+    // TEMP is a tracer.
     const auto num_tracers = tracers.water_tracers() + tracers.oil_tracers() + tracers.gas_tracers() + (es.runspec().temp() ? 1 : 0);
-    const auto num_tracer_comps = num_tracers + tracers.oil_tracers() + tracers.gas_tracers();
+    // A tracer occupies one component per phase state it can exist in: a
+    // free component always, plus a solution component only when the
+    // corresponding phase transfer is active -- a gas tracer dissolves
+    // only with DISGAS, an oil tracer vaporises only with VAPOIL.
+    // Restarting runs recompute the tracer-dependent array dimensions
+    // with this per-transfer counting and reject restart files whose
+    // dimensions exceed the recomputed values.
     const auto& simConfig = es.getSimulationConfig();
+    const auto num_tracer_comps = num_tracers
+        + (simConfig.hasDISGAS() ? tracers.gas_tracers() : 0)
+        + (simConfig.hasVAPOIL() ? tracers.oil_tracers() : 0);
     int nxwelz_tracer_shift = num_tracer_comps*5 + 2 * (num_tracers > 0);
 
     // The additional local-grid restart header items are applied as the final step of the
