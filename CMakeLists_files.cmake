@@ -955,6 +955,7 @@ list(APPEND PUBLIC_HEADER_FILES
   opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquiferConnection.hpp
   opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquifers.hpp
   opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/SingleNumericalAquifer.hpp
+  opm/input/eclipse/EclipseState/Aquifer/NumericalAquiferMode.hpp
   opm/input/eclipse/EclipseState/Co2StoreConfig.hpp
   opm/input/eclipse/EclipseState/Compositional/CompositionalConfig.hpp
   opm/input/eclipse/EclipseState/EclipseConfig.hpp
