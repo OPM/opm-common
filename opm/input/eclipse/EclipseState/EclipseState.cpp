@@ -129,13 +129,14 @@ namespace Opm {
 // process is done twice, first after the initial field_props processing and
 // subsequently after the processing of numerical aquifers.
 
-    EclipseState::EclipseState(const Deck& deck)
+    EclipseState::EclipseState(const Deck& deck, NumericalAquiferMode aquiferMode)
     try
-        : m_tables(            deck )
+        : numerical_aquifer_mode( aquiferMode )
+        , m_tables(            deck )
         , m_runspec(           deck )
         , m_eclipseConfig(     deck, m_runspec )
         , m_deckUnitSystem(    deck.getActiveUnitSystem() )
-        , m_inputGrid(         deck, nullptr )
+        , m_inputGrid(         deck, nullptr, aquiferMode )
         , m_inputNnc(          m_inputGrid, deck)
         , m_gridDims(          deck )
         , field_props(         deck, m_runspec.phases(), m_inputGrid, m_tables, m_runspec.numComps())
@@ -441,6 +442,15 @@ namespace Opm {
     void EclipseState::conveyNumericalAquiferEffects()
     {
         if (! this->aquifer_config.hasNumericalAquifer()) {
+            return;
+        }
+
+        // Everything below reshapes the grid and the field properties so that a grid
+        // cell can stand in for an aquifer cell.  In AuxiliaryCells mode nothing stands
+        // in for it -- the simulator represents the aquifer as degrees of freedom of its
+        // own -- so the grid, the field properties and the non-neighbour connections are
+        // left exactly as the deck describes them.
+        if (this->numerical_aquifer_mode == NumericalAquiferMode::AuxiliaryCells) {
             return;
         }
 
