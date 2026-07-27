@@ -90,10 +90,11 @@ namespace Opm {
         /// Construct from a deck.
         ///
         /// \param[in] aquiferMode How numerical aquifers are represented.  In the
-        ///    default \c GridCells mode an AQUNUM cell takes over the grid cell it names
-        ///    -- the cell is forced active and reports the authored depth.  In
-        ///    \c AuxiliaryCells mode the grid is left exactly as the deck describes it
-        ///    and the AQUNUM records have no effect on it at all.
+        ///    default \c GridCells mode an AQUNUM cell takes over the grid cell it names:
+        ///    the cell is forced active and reports the authored depth.  In
+        ///    \c AuxiliaryCells mode that cell is deactivated instead, so that nothing
+        ///    occupies the space the deck reserved for the aquifer, and the aquifer
+        ///    itself is represented outside the grid.
         explicit EclipseGrid(const Deck& deck,
                              const int * actnum = nullptr,
                              NumericalAquiferMode aquiferMode = NumericalAquiferMode::GridCells);
@@ -391,6 +392,7 @@ namespace Opm {
         std::vector<int> m_active_to_global;
         std::vector<int> m_global_to_active;
         // Numerical aquifer cells, needs to be active
+        NumericalAquiferMode m_numerical_aquifer_mode{NumericalAquiferMode::GridCells};
         std::unordered_set<std::size_t> m_aquifer_cells;
         // Keep track of aquifer cell depths and (pvtnum,satnum)
         std::map<std::size_t, double> m_aquifer_cell_depths;
