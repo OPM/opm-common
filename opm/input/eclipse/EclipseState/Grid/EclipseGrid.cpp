@@ -276,7 +276,7 @@ EclipseGrid::EclipseGrid(const EclipseGrid& src, const std::vector<int>& actnum)
 
 
 
-EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
+EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum, NumericalAquiferMode aquiferMode)
     : GridDims(deck),
       m_minpvMode(MinpvMode::Inactive),
       m_pinchoutMode(PinchMode::TOPBOT),
@@ -296,7 +296,12 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
 
     }
 
-    updateNumericalAquiferCells(deck);
+    // In AuxiliaryCells mode the aquifers are represented outside the grid, so the
+    // AQUNUM records must not take over the cells they name: the cells keep the deck's
+    // own ACTNUM and their geometric depth.
+    if (aquiferMode == NumericalAquiferMode::GridCells) {
+        updateNumericalAquiferCells(deck);
+    }
 
     initGrid(deck, actnum);
 
