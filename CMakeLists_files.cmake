@@ -559,6 +559,7 @@ list(APPEND TEST_SOURCE_FILES
   tests/test_rst_netbalan.cpp
   tests/test_ScheduleGrid.cpp
   tests/test_SegmentMatcher.cpp
+  tests/test_SimpleMultiSegment.cpp
   tests/test_Serialization.cpp
   tests/test_Solution.cpp
   tests/test_sparsevector.cpp

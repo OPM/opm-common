@@ -36,7 +36,7 @@
 
 namespace Opm {
 
-void makeSimpleMultiSegmentWell(Well& well,
+void makeMultiSegmentWellPerConnection(Well& well,
                                 const UnitSystem& unit_system,
                                 const double tubing_diameter)
 {
@@ -107,7 +107,7 @@ void makeSimpleMultiSegmentWell(Well& well,
                            // (set from COMPDAT); upstream added this argument to
                            // updateSegment. Only used by thermal runs.
                            /*thermal_length*/ cc.thermalLength(),
-                           /*compseg_insert_index*/ c,
+                           /*compseg_insert_index*/ cc.sort_value(),
                            /*perf_range*/ std::make_pair(perf_start, perf_end));
         perf_start = perf_end;
     }

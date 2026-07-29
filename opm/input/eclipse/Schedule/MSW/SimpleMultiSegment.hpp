@@ -44,11 +44,22 @@ class UnitSystem;
 ///
 /// No-op if the well is already multisegment or has no connections.
 ///
+/// \note One segment *per connection* is deliberate, and is what distinguishes
+///   this from a single-segment conversion. A single segment carrying every
+///   connection has only one pressure unknown, so the head *between*
+///   perforations is not solved for — which is precisely the quantity this
+///   conversion exists to make implicit. A single-segment well could still be
+///   made implicit, but only with one density derived from well-average
+///   properties, and that is in any case not equivalent to a StandardWell
+///   either. The two conversions are therefore different tools rather than two
+///   spellings of the same one; a single-segment factory is worth adding
+///   separately if a cheaper, closer-to-standard conversion is wanted.
+///
 /// \param well            the well to convert (modified in place)
 /// \param unit_system     the deck's unit system (for segment processing)
 /// \param tubing_diameter nominal tubing inner diameter [m]; only affects the
 ///                        (unused, hydrostatic-only) friction term, default 6".
-void makeSimpleMultiSegmentWell(Well& well,
+void makeMultiSegmentWellPerConnection(Well& well,
                                 const UnitSystem& unit_system,
                                 double tubing_diameter = 0.1524);
 
