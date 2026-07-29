@@ -294,7 +294,6 @@ void RigWellLogExtractor::populateReturnArrays( std::map<RigMDCellIdxEnterLeaveK
                         // errorMessages +=
                         //     QString( "Well Log Extraction : " ) + QString::fromStdString( m_wellCaseErrorMsgName ) +
                         //     ( " Discards a point at MD:  " ) + QString::number( (double)( it1->first.measuredDepth ) );
-                        std::cout << "error message \n"<< std::endl;
                         // Found that 8 to 10 is not connected, after finding 7 to 9
                         it1 = it21; // Discard 8 by Jumping to 10
                         continue;
@@ -305,7 +304,6 @@ void RigWellLogExtractor::populateReturnArrays( std::map<RigMDCellIdxEnterLeaveK
                     // errorMessages += QString( "Well Log Extraction : " ) +
                     //                  QString::fromStdString( m_wellCaseErrorMsgName ) + ( " Discards a point at MD:  " ) +
                     //                  QString::number( (double)( it1->first.measuredDepth ) );
-                    std::cout << "error message\n"<< std::endl;
                     // Found that 10 to 11 is not connected, and not 10 to 12 either
                     ++it1; // Discard 10 and jump to 11 and hope that recovers us
                     continue;
@@ -341,7 +339,6 @@ void RigWellLogExtractor::appendIntersectionToArrays( double                    
             // errorMessage +=
             //     QString( "Well Log Extraction : %1 does not have a monotonically increasing measured depth." )
             //         .arg( QString::fromStdString( m_wellCaseErrorMsgName ) );
-            std::cout << "error message\n"<< std::endl;
         }
 
         // Allow alterations of up to 0.1 percent as long as we keep the measured depth monotonically increasing.
@@ -351,7 +348,6 @@ void RigWellLogExtractor::appendIntersectionToArrays( double                    
             if ( diff > warningLimit )
             {
                 // errorMessage += "The well path has been slightly adjusted";
-                std::cout << "error message\n"<< std::endl;
             }
             measuredDepth = m_intersectionMeasuredDepths.back();
         }
