@@ -102,6 +102,24 @@ namespace Opm
         this->init(name,i1,i2,j1,j2,k1,k2,nx,ny,nz);
     }
 
+    Carfin Carfin::serializationTestObject()
+    {
+        auto allActive = [](const std::size_t) { return true; };
+        auto identity  = [](const std::size_t globalIdx) { return globalIdx; };
+
+        auto lgr = Carfin {
+            GridDims { 10, 10, 10 }, allActive, identity,
+            "LGRCHILD", 1, 4, 1, 4, 1, 4, 4, 4, 4
+        };
+
+        // Not reachable through the public constructors, which always leave the
+        // parent as GLOBAL; set it directly so the round trip covers a nested
+        // CARFIN.
+        lgr.parent_name_grid = "LGRPARENT";
+
+        return lgr;
+    }
+
     void Carfin::update(const DeckRecord& deckRecord)
     {
 
@@ -245,7 +263,9 @@ namespace Opm
     {
         return (this->m_dims == other.m_dims)
             && (this->m_offset == other.m_offset)
-            && (this->m_end_offset == other.m_end_offset);
+            && (this->m_end_offset == other.m_end_offset)
+            && (this->name_grid == other.name_grid)
+            && (this->parent_name_grid == other.parent_name_grid);
     }
 
     bool Carfin::equal(const Carfin& other) const

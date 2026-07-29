@@ -71,6 +71,8 @@ namespace Opm
                int nx, int ny,
                int nz);
 
+        static Carfin serializationTestObject();
+
         void update(const DeckRecord& deckRecord);
         void reset();
 
