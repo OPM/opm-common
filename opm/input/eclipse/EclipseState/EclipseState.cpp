@@ -445,6 +445,14 @@ namespace Opm {
             return;
         }
 
+        auto& numerical_aquifer = this->aquifer_config.mutableNumericalAquifers();
+
+        // Tell the MULTREGT scanner which cells belong to an aquifer.  This shapes
+        // nothing; it is what lets a MULTREGT record distinguish an aquifer connection
+        // from any other non-neighbour connection (the NOAQUNNC behaviour), and that
+        // distinction has to be drawn the same way however the aquifer is represented.
+        this->m_transMult.applyNumericalAquifer(numerical_aquifer.allAquiferCellIds());
+
         // Everything below reshapes the grid and the field properties so that a grid
         // cell can stand in for an aquifer cell.  In AuxiliaryCells mode nothing stands
         // in for it -- the simulator represents the aquifer as degrees of freedom of its
@@ -453,8 +461,6 @@ namespace Opm {
         if (this->numerical_aquifer_mode == NumericalAquiferMode::AuxiliaryCells) {
             return;
         }
-
-        auto& numerical_aquifer = this->aquifer_config.mutableNumericalAquifers();
 
         numerical_aquifer.applyMinPV(this->m_inputGrid);
 
@@ -465,8 +471,6 @@ namespace Opm {
         // Add NNCs between aquifer cells and first aquifer cell and aquifer
         // connections.
         this->appendInputNNC(numerical_aquifer.aquiferCellNNCs());
-
-        this->m_transMult.applyNumericalAquifer(numerical_aquifer.allAquiferCellIds());
     }
 
     void EclipseState::applyMULTXYZ()
