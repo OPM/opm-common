@@ -254,7 +254,7 @@ list(APPEND MAIN_SOURCE_FILES
   opm/input/eclipse/Schedule/MSW/SegmentHeatTransfer.cpp
   opm/input/eclipse/Schedule/MSW/SegmentMatcher.cpp
   opm/input/eclipse/Schedule/MSW/SICD.cpp
-  opm/input/eclipse/Schedule/MSW/SimpleMultiSegment.cpp
+  opm/input/eclipse/Schedule/MSW/makeMSWellFromStandardWell.cpp
   opm/input/eclipse/Schedule/MSW/Valve.cpp
   opm/input/eclipse/Schedule/MSW/WellSegments.cpp
   opm/input/eclipse/Schedule/MSW/WelSegsSet.cpp
@@ -559,7 +559,7 @@ list(APPEND TEST_SOURCE_FILES
   tests/test_rst_netbalan.cpp
   tests/test_ScheduleGrid.cpp
   tests/test_SegmentMatcher.cpp
-  tests/test_SimpleMultiSegment.cpp
+  tests/test_makeMSWellFromStandardWell.cpp
   tests/test_Serialization.cpp
   tests/test_Solution.cpp
   tests/test_sparsevector.cpp
@@ -1149,7 +1149,7 @@ list(APPEND PUBLIC_HEADER_FILES
   opm/input/eclipse/Schedule/MSW/Segment.hpp
   opm/input/eclipse/Schedule/MSW/SegmentHeatTransfer.hpp
   opm/input/eclipse/Schedule/MSW/SegmentMatcher.hpp
-  opm/input/eclipse/Schedule/MSW/SimpleMultiSegment.hpp
+  opm/input/eclipse/Schedule/MSW/makeMSWellFromStandardWell.hpp
   opm/input/eclipse/Schedule/MSW/Valve.hpp
   opm/input/eclipse/Schedule/MSW/WellSegments.hpp
   opm/input/eclipse/Schedule/MSW/icd.hpp

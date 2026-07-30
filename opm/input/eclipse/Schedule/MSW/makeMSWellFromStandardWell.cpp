@@ -17,7 +17,7 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <opm/input/eclipse/Schedule/MSW/SimpleMultiSegment.hpp>
+#include <opm/input/eclipse/Schedule/MSW/makeMSWellFromStandardWell.hpp>
 
 #include <opm/input/eclipse/Schedule/MSW/Segment.hpp>
 #include <opm/input/eclipse/Schedule/MSW/WellSegments.hpp>
@@ -36,16 +36,18 @@
 
 namespace Opm {
 
-void makeMultiSegmentWellPerConnection(Well& well,
-                                const UnitSystem& unit_system,
-                                const double tubing_diameter)
+Well makeMultiSegmentWellPerConnection(const Well& input_well,
+                                       const UnitSystem& unit_system,
+                                       const double tubing_diameter)
 {
+    Well well = input_well;
+
     if (well.isMultiSegment()) {
-        return;
+        return well;
     }
     const auto& conns = well.getConnections();
     if (conns.size() == 0) {
-        return;
+        return well;
     }
 
     const double invalid = Segment::invalidValue();
@@ -113,6 +115,8 @@ void makeMultiSegmentWellPerConnection(Well& well,
     }
     well.updateConnections(std::make_shared<WellConnections>(std::move(new_conns)),
                            /*force*/ true);
+
+    return well;
 }
 
 } // namespace Opm

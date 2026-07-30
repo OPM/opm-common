@@ -21,7 +21,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <opm/input/eclipse/Schedule/MSW/SimpleMultiSegment.hpp>
+#include <opm/input/eclipse/Schedule/MSW/makeMSWellFromStandardWell.hpp>
 
 #include <opm/input/eclipse/Schedule/MSW/Segment.hpp>
 #include <opm/input/eclipse/Schedule/MSW/WellSegments.hpp>
@@ -38,6 +38,9 @@
 #include <vector>
 
 namespace {
+
+    // nominal 6" tubing; only feeds the (unused) friction term
+    constexpr double TUBING_D = 0.1524;
 
     // A connection at (0, 0, k), sitting at the given depth, whose sort_value
     // records the position it had in the input deck.
@@ -101,7 +104,7 @@ BOOST_AUTO_TEST_CASE(Segment_Per_Connection_In_Container_Order)
     auto w = makeStandardWell(Opm::Connection::Order::INPUT, conns);
     BOOST_REQUIRE(! w.isMultiSegment());
 
-    Opm::makeMultiSegmentWellPerConnection(w, Opm::UnitSystem::newMETRIC());
+    w = Opm::makeMultiSegmentWellPerConnection(w, Opm::UnitSystem::newMETRIC(), TUBING_D);
 
     BOOST_CHECK(w.isMultiSegment());
 
@@ -131,7 +134,7 @@ BOOST_AUTO_TEST_CASE(Order_Survives_A_Reorder_When_Container_Is_Not_Input_Order)
     };
 
     auto w = makeStandardWell(Opm::Connection::Order::DEPTH, conns);
-    Opm::makeMultiSegmentWellPerConnection(w, Opm::UnitSystem::newMETRIC());
+    w = Opm::makeMultiSegmentWellPerConnection(w, Opm::UnitSystem::newMETRIC(), TUBING_D);
 
     // Well::updateConnections() calls WellConnections::order(), which -- now
     // that every connection is attached to a segment -- takes the orderMSW()
@@ -166,12 +169,36 @@ BOOST_AUTO_TEST_CASE(No_Op_When_Already_MultiSegment)
     const auto conns = std::vector { makeConnection(0, 1000.0, 0) };
     auto w = makeStandardWell(Opm::Connection::Order::INPUT, conns);
 
-    Opm::makeMultiSegmentWellPerConnection(w, Opm::UnitSystem::newMETRIC());
+    w = Opm::makeMultiSegmentWellPerConnection(w, Opm::UnitSystem::newMETRIC(), TUBING_D);
     const auto nseg = w.getSegments().size();
 
     // Converting again must not add segments.
-    Opm::makeMultiSegmentWellPerConnection(w, Opm::UnitSystem::newMETRIC());
+    w = Opm::makeMultiSegmentWellPerConnection(w, Opm::UnitSystem::newMETRIC(), TUBING_D);
     BOOST_CHECK_EQUAL(w.getSegments().size(), nseg);
+}
+
+BOOST_AUTO_TEST_CASE(Input_Well_Is_Left_Untouched)
+{
+    const auto conns = std::vector {
+        makeConnection(0, 1000.0, 0),
+        makeConnection(1, 1010.0, 1),
+    };
+
+    const auto original = makeStandardWell(Opm::Connection::Order::INPUT, conns);
+
+    const auto converted =
+        Opm::makeMultiSegmentWellPerConnection(original, Opm::UnitSystem::newMETRIC(), TUBING_D);
+
+    // The conversion returns a new well; the caller's own well must not change.
+    BOOST_CHECK(! original.isMultiSegment());
+    BOOST_CHECK(converted.isMultiSegment());
+
+    for (const auto& c : original.getConnections()) {
+        BOOST_CHECK(! c.attachedToSegment());
+    }
+    for (const auto& c : converted.getConnections()) {
+        BOOST_CHECK(c.attachedToSegment());
+    }
 }
 
 BOOST_AUTO_TEST_CASE(Segment_Depths_Follow_Connection_Depths)
@@ -185,7 +212,7 @@ BOOST_AUTO_TEST_CASE(Segment_Depths_Follow_Connection_Depths)
     };
 
     auto w = makeStandardWell(Opm::Connection::Order::INPUT, conns);
-    Opm::makeMultiSegmentWellPerConnection(w, Opm::UnitSystem::newMETRIC());
+    w = Opm::makeMultiSegmentWellPerConnection(w, Opm::UnitSystem::newMETRIC(), TUBING_D);
 
     const auto& segs = w.getSegments();
     for (auto c = 0*conns.size(); c < conns.size(); ++c) {

@@ -17,8 +17,8 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef OPM_SIMPLE_MULTISEGMENT_HPP
-#define OPM_SIMPLE_MULTISEGMENT_HPP
+#ifndef OPM_MAKE_MSWELL_FROM_STANDARD_WELL_HPP
+#define OPM_MAKE_MSWELL_FROM_STANDARD_WELL_HPP
 
 namespace Opm {
 
@@ -42,7 +42,8 @@ class UnitSystem;
 /// particular, for the adjoint, where the frozen StandardWell head is the source
 /// of a well-objective gradient bias on thick multi-perforation wells.
 ///
-/// No-op if the well is already multisegment or has no connections.
+/// Returns the input well unchanged if it is already multisegment or has no
+/// connections.
 ///
 /// \note One segment *per connection* is deliberate, and is what distinguishes
 ///   this from a single-segment conversion. A single segment carrying every
@@ -55,14 +56,17 @@ class UnitSystem;
 ///   spellings of the same one; a single-segment factory is worth adding
 ///   separately if a cheaper, closer-to-standard conversion is wanted.
 ///
-/// \param well            the well to convert (modified in place)
+/// \param well            the well to convert; left untouched
 /// \param unit_system     the deck's unit system (for segment processing)
 /// \param tubing_diameter nominal tubing inner diameter [m]; only affects the
-///                        (unused, hydrostatic-only) friction term, default 6".
-void makeMultiSegmentWellPerConnection(Well& well,
-                                const UnitSystem& unit_system,
-                                double tubing_diameter = 0.1524);
+///                        (unused, hydrostatic-only) friction term. 0.1524 m
+///                        (6") is a reasonable choice.
+///
+/// \return the converted well
+Well makeMultiSegmentWellPerConnection(const Well& well,
+                                       const UnitSystem& unit_system,
+                                       const double tubing_diameter);
 
 } // namespace Opm
 
-#endif // OPM_SIMPLE_MULTISEGMENT_HPP
+#endif // OPM_MAKE_MSWELL_FROM_STANDARD_WELL_HPP
