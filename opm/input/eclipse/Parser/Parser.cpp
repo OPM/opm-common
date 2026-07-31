@@ -1210,14 +1210,42 @@ std::unique_ptr<RawKeyword> tryParseKeyword( ParserState& parserState, const Par
 
 std::string_view advance_parser_state( ParserState& parserState, const std::string& to_keyw )
 {
+    // Skipping a section means reading ahead to the keyword that starts the
+    // next one.  Two things to get right:
+    //
+    //   - a section header may carry trailing decoration, as in
+    //     "EDIT    ==========", so match the leading word, not the whole line;
+    //
+    //   - if the keyword never comes, getline() keeps handing out empty lines
+    //     past the end of the input, so the search has to stop at the end
+    //     itself.  Otherwise the parser spins forever, before it has produced
+    //     any output at all.
+    while (! parserState.done()) {
+        // A view into the parser's input buffer, not an owning string, so the
+        // sub-view returned below outlives this function just as the whole
+        // line did before.
+        const std::string_view line = parserState.getline();
 
-    auto line = parserState.getline();
+        const auto begin = line.find_first_not_of(" \t");
+        if (begin == std::string_view::npos) {
+            continue;
+        }
 
-    while (line != to_keyw) {
-        line = parserState.getline();
+        const auto end = line.find_first_of(" \t", begin);
+        const auto word = line.substr(begin, end - begin);
+
+        if (word == to_keyw) {
+            return word;
+        }
     }
 
-    return line;
+    throw OpmInputError(fmt::format("Reached the end of the input while looking "
+                                    "for the {} section.  A section requested to "
+                                    "be skipped is not followed by one.", to_keyw),
+                        KeywordLocation {
+                            to_keyw, parserState.current_path().string(),
+                            parserState.line()
+                        });
 }
 
 
