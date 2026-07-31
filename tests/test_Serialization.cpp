@@ -38,6 +38,7 @@
 #include <opm/input/eclipse/EclipseState/Aquifer/AquiferConfig.hpp>
 #include <opm/input/eclipse/EclipseState/Aquifer/Aquifetp.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseConfig.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/Carfin.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FaceDir.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/Fault.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FaultCollection.hpp>
@@ -215,6 +216,7 @@ TEST_FOR_TYPE_NAMED(Action::ASTNode, ActionASTNode)
 TEST_FOR_TYPE_NAMED(Action::State, ActionState)
 TEST_FOR_TYPE(BCConfig)
 TEST_FOR_TYPE(BrineDensityTable)
+TEST_FOR_TYPE(Carfin)
 TEST_FOR_TYPE(ColumnSchema)
 TEST_FOR_TYPE_NAMED(Connection::CTFProperties, CTFProperties)
 TEST_FOR_TYPE(Connection)
