@@ -24,6 +24,8 @@
 
 #include <boost/version.hpp>
 
+#include <opm/common/utility/OpmInputError.hpp>
+
 #include <opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquifers.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
@@ -234,6 +236,23 @@ BOOST_AUTO_TEST_CASE(WCONPROD_MissingCmode) {
     const FieldPropsManager fp(deck, runspec.phases(), grid, table);
     auto python = std::make_shared<Python>();
     BOOST_CHECK_NO_THROW( Schedule(deck, grid, fp, NumericalAquifers{}, runspec, python) );
+}
+
+
+BOOST_AUTO_TEST_CASE(WCONPROD_MissingCmode_Open) {
+    Parser parser;
+    std::string scheduleFile(pathprefix() + "SCHEDULE/SCHEDULE_MISSING_CMODE_OPEN");
+    auto deck =  parser.parseFile(scheduleFile);
+    EclipseGrid grid(10,10,3);
+    TableManager table ( deck );
+    const Runspec runspec (deck);
+    const FieldPropsManager fp(deck, runspec.phases(), grid, table);
+    auto python = std::make_shared<Python>();
+
+    // Defaulting the control mode is only meaningful when the well already
+    // has one, or when it is not being opened.
+    BOOST_CHECK_THROW( Schedule(deck, grid, fp, NumericalAquifers{}, runspec, python),
+                       OpmInputError );
 }
 
 
