@@ -105,6 +105,7 @@ function build_module {
   CMAKE_PARAMS="$1"
   DO_TEST_FLAG="$2"
   MOD_SRC_DIR="$3"
+  mkdir -p $PWD/doc/doxygen
   cmake "$MOD_SRC_DIR" \
         -DCMAKE_BUILD_TYPE=${configurations_build_type[$configuration]} \
         -DBUILD_TESTING=$DO_TEST_FLAG \
