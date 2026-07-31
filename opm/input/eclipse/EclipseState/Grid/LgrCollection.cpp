@@ -16,12 +16,15 @@
 #include <opm/input/eclipse/EclipseState/Grid/LgrCollection.hpp>
 
 #include <opm/common/utility/OpmInputError.hpp>
+#include <opm/common/OpmLog/KeywordLocation.hpp>
 #include <opm/common/OpmLog/OpmLog.hpp>
 
 #include <opm/input/eclipse/EclipseState/Grid/Carfin.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/CarfinManager.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/GridDims.hpp>
+
+#include <fmt/format.h>
 
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
 #include <opm/input/eclipse/Deck/DeckSection.hpp>
@@ -47,7 +50,7 @@ namespace Opm {
             OpmLog::info(OpmInputError::format("\nLoading lgrs from {keyword} in {file} line {line}", lgrsKeyword->location()));
 
             for (const auto& lgrRecord : *lgrsKeyword) {
-                addLgr(grid, lgrRecord);
+                addLgr(grid, lgrRecord, lgrsKeyword->location());
             }
         }
     }
@@ -76,7 +79,9 @@ namespace Opm {
         return m_lgrs.iget( lgrIndex );
     }
 
-    void LgrCollection::addLgr(const EclipseGrid& grid, const DeckRecord&  lgrRecord) {
+    void LgrCollection::addLgr(const EclipseGrid& grid,
+                               const DeckRecord& lgrRecord,
+                               const KeywordLocation& location) {
        // A nested CARFIN (PARENT != GLOBAL) addresses cells in its parent LGR's
        // own refined Cartesian space, so its I/J/K range and divisions must be
        // validated against the parent LGR's dimensions - not the global grid.
@@ -88,9 +93,12 @@ namespace Opm {
 
        if (parent_name != "GLOBAL") {
            if (m_lgrs.count(parent_name) == 0) {
-               throw std::invalid_argument("Nested CARFIN names parent LGR '" + parent_name
-                   + "', which has not been defined yet. Parent LGRs must precede their "
-                     "children in the deck.");
+               throw OpmInputError {
+                   fmt::format("Nested CARFIN names parent LGR '{}', which has not been "
+                               "defined yet. Parent LGRs must precede their children "
+                               "in the deck.", parent_name),
+                   location
+               };
            }
            const Carfin& parent = m_lgrs.get(parent_name);
            // The parent LGR is a refined Cartesian block: every local cell is
