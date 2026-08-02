@@ -1208,16 +1208,40 @@ std::unique_ptr<RawKeyword> tryParseKeyword( ParserState& parserState, const Par
     return rawKeyword;
 }
 
-std::string_view advance_parser_state( ParserState& parserState, const std::string& to_keyw )
+/*
+  Skip ahead to the section keyword 'to_keyw'.
+
+  The caller compares the return value against the bare section names, so we
+  hand back 'to_keyw' itself rather than the line it was found on.  Every call
+  site passes a string literal, which keeps the view valid after we return.
+*/
+std::string_view advance_parser_state( ParserState& parserState, const std::string_view to_keyw )
 {
+    // Record where the search began.  Once the input is exhausted the stack is
+    // empty and there is no current file or line number left to report.
+    const KeywordLocation location {
+        std::string { to_keyw },
+        parserState.current_path().string(),
+        parserState.line()
+    };
 
-    auto line = parserState.getline();
-
-    while (line != to_keyw) {
-        line = parserState.getline();
+    while (!parserState.done()) {
+        // Section keywords are routinely decorated, as in
+        //
+        //   PROPS    ==========================================
+        //
+        // so compare the keyword name alone, the way tryParseKeyword() does,
+        // instead of the verbatim line.
+        if (str::make_deck_name(parserState.getline()) == to_keyw) {
+            return to_keyw;
+        }
     }
 
-    return line;
+    throw OpmInputError {
+        fmt::format("Reached the end of the input while looking for "
+                    "the {} section.", to_keyw),
+        location
+    };
 }
 
 
