@@ -21,6 +21,8 @@
 #define BOOST_TEST_MODULE WellTestLGR
 #include <boost/test/unit_test.hpp>
 
+#include <opm/common/utility/OpmInputError.hpp>
+
 #include <opm/input/eclipse/Units/Units.hpp>
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 #include <opm/input/eclipse/Deck/Deck.hpp>
@@ -286,5 +288,88 @@ COMPDATL
     for (std::size_t i = 0; i < dim_cell1.size(); ++i) {
         BOOST_TEST_MESSAGE("Cell dimension " << i);
         BOOST_CHECK_CLOSE(dim_cell1[i], dim_cell2[i], tol);
+    }
+}
+
+namespace {
+    // 3x3x1 grid with one LGR and enough SCHEDULE to advance two report
+    // steps; the LGRON/LGROFF lines are injected between the steps.
+    std::string lgrOnOffDeck(const std::string& stepOne,
+                             const std::string& stepTwo)
+    {
+        return R"(RUNSPEC
+DIMENS
+3 3 1 /
+GRID
+CARFIN
+'LGR1'  1  1  1  1  1  1  3  3  1 /
+ENDFIN
+INIT
+DX
+   	9*1000 /
+DY
+	9*1000 /
+DZ
+	9*50 /
+TOPS
+	9*8325 /
+PORO
+   	9*0.3 /
+PERMX
+	9*500 /
+PERMY
+	9*200 /
+PERMZ
+	9*200 /
+SCHEDULE
+)" + stepOne + R"(
+TSTEP
+10 /
+)" + stepTwo + R"(
+TSTEP
+10 /
+)";
+    }
+} // anonymous namespace
+
+BOOST_AUTO_TEST_CASE(LgrOnOffSchedule)
+{
+    // Default: a refinement never mentioned is active.
+    {
+        const auto deck = Parser{}.parseString(lgrOnOffDeck("", ""));
+        const auto es = EclipseState { deck };
+        const auto sched = Schedule { deck, es };
+        BOOST_CHECK(sched[0].lgr_active("LGR1"));
+        BOOST_CHECK(sched[1].lgr_active("LGR1"));
+        BOOST_CHECK(sched[0].lgr_activation().empty());
+    }
+
+    // Off at the start, on again at the second report step; the setting
+    // persists across steps in between.
+    {
+        const auto deck = Parser{}.parseString(
+            lgrOnOffDeck("LGROFF\n'LGR1' /\n", "LGRON\n'LGR1' /\n"));
+        const auto es = EclipseState { deck };
+        const auto sched = Schedule { deck, es };
+        BOOST_CHECK(! sched[0].lgr_active("LGR1"));
+        BOOST_CHECK(sched[1].lgr_active("LGR1"));
+    }
+
+    // Off stays off when never switched back on.
+    {
+        const auto deck = Parser{}.parseString(
+            lgrOnOffDeck("LGROFF\n'LGR1' /\n", ""));
+        const auto es = EclipseState { deck };
+        const auto sched = Schedule { deck, es };
+        BOOST_CHECK(! sched[0].lgr_active("LGR1"));
+        BOOST_CHECK(! sched[1].lgr_active("LGR1"));
+    }
+
+    // A name the grid does not know is a deck error.
+    {
+        const auto deck = Parser{}.parseString(
+            lgrOnOffDeck("LGRON\n'NOSUCH' /\n", ""));
+        const auto es = EclipseState { deck };
+        BOOST_CHECK_THROW((Schedule { deck, es }), OpmInputError);
     }
 }

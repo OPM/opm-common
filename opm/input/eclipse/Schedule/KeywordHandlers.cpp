@@ -47,6 +47,8 @@
 #include "GasLiftOptKeywordHandlers.hpp"
 #include "Group/GroupKeywordHandlers.hpp"
 #include "Group/GuideRateKeywordHandlers.hpp"
+#include <opm/input/eclipse/Schedule/ScheduleGrid.hpp>
+
 #include "HandlerContext.hpp"
 #include "MixingRateControlKeywordHandlers.hpp"
 #include "MSW/MSWKeywordHandlers.hpp"
@@ -161,6 +163,52 @@ void handleNEXTSTEP(HandlerContext& handlerContext)
 
     handlerContext.state().next_tstep = NextStep{next_tstep, apply_to_all};
     handlerContext.state().events().addEvent(ScheduleEvents::TUNING_CHANGE);
+}
+
+void handleLGROnOff(HandlerContext& handlerContext, const bool active)
+{
+    const auto& record = handlerContext.keyword.getRecord(0);
+
+    const auto& nameItem = record.getItem("LOCAL_GRID_REFINMENT");
+    if (! nameItem.hasValue(0)) {
+        throw OpmInputError(fmt::format("{} requires the name of a local grid refinement",
+                                        handlerContext.keyword.name()),
+                            handlerContext.keyword.location());
+    }
+    const auto lgr_name = nameItem.getTrimmedString(0);
+
+    // Validate the name whenever the grid is available; an empty label table
+    // then means the run has no LGRs at all.
+    if ((handlerContext.grid.get_grid() != nullptr) &&
+        ! handlerContext.grid.has_lgr(lgr_name))
+    {
+        throw OpmInputError(fmt::format("{}: unknown local grid refinement '{}'",
+                                        handlerContext.keyword.name(), lgr_name),
+                            handlerContext.keyword.location());
+    }
+
+    const auto& wellsItem = record.getItem("ACTIVE_WELLS");
+    if (wellsItem.hasValue(0) && ! wellsItem.defaultApplied(0) &&
+        (wellsItem.get<int>(0) != 0))
+    {
+        OpmLog::warning(OpmInputError::format(
+            fmt::format("{{keyword}}: the well-activation item of {} is not supported "
+                        "and is ignored in {{file}} line {{line}}",
+                        handlerContext.keyword.name()),
+            handlerContext.keyword.location()));
+    }
+
+    handlerContext.state().update_lgr_active(lgr_name, active);
+}
+
+void handleLGRON(HandlerContext& handlerContext)
+{
+    handleLGROnOff(handlerContext, true);
+}
+
+void handleLGROFF(HandlerContext& handlerContext)
+{
+    handleLGROnOff(handlerContext, false);
 }
 
 void handleNUPCOL(HandlerContext& handlerContext)
@@ -434,6 +482,8 @@ KeywordHandlers::KeywordHandlers()
         { "EXIT",     &handleEXIT       },
         { "FBHPDEF",  &handleFBHPDEF    },
         { "GPTABLE",  &handleGPTABLE    },
+        { "LGROFF"  , &handleLGROFF     },
+        { "LGRON"   , &handleLGRON      },
         { "MESSAGES", &handleMESSAGES   },
         { "MULTFLT" , &handleGEOKeyword },
         { "MULTPV"  , &handleMXUNSUPP   },
