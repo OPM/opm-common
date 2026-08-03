@@ -462,8 +462,11 @@ namespace Opm {
 CompositionalConfig::CompositionalConfig(const Deck& deck, const Runspec& runspec) {
     if (!DeckSection::hasPROPS(deck)) return;
 
-    // Return if CO2STORE is active with compositional keywords
-    if (deck.hasKeyword("CO2STORE"))
+    // CO2STORE and H2STORE are black-oil options.  They never carry a
+    // compositional description, not even when COMPS is present, so leave the
+    // configuration empty rather than reading the compositional keywords.
+    // Runspec::compositional() excludes both for the same reason.
+    if (runspec.co2Storage() || runspec.h2Storage())
         return;
 
     const PROPSSection props_section {deck};
