@@ -169,7 +169,7 @@ void handleLGROnOff(HandlerContext& handlerContext, const bool active)
 {
     const auto& record = handlerContext.keyword.getRecord(0);
 
-    const auto& nameItem = record.getItem("LOCAL_GRID_REFINMENT");
+    const auto& nameItem = record.getItem("LOCAL_GRID_REFINEMENT");
     if (! nameItem.hasValue(0)) {
         throw OpmInputError(fmt::format("{} requires the name of a local grid refinement",
                                         handlerContext.keyword.name()),
