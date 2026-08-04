@@ -18,19 +18,24 @@ along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <boost/test/unit_test.hpp>
 
+#include <opm/common/OpmLog/LogUtil.hpp>
+#include <opm/common/OpmLog/OpmLog.hpp>
+#include <opm/common/OpmLog/StreamLog.hpp>
+#include <opm/common/utility/OpmInputError.hpp>
 #include <opm/input/eclipse/Deck/Deck.hpp>
-
 #include <opm/input/eclipse/EclipseState/Compositional/CompositionalConfig.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/Tabdims.hpp>
 #include <opm/input/eclipse/Parser/Parser.hpp>
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
-#include <opm/common/utility/OpmInputError.hpp>
 
 #include <cstddef>
 #include <initializer_list>
+#include <memory>
+#include <sstream>
 #include <stdexcept>
+#include <string>
 
 using namespace Opm;
 
@@ -305,6 +310,9 @@ WATER
 ------------------------------------------------------------------------
 PROPS
 ------------------------------------------------------------------------
+NCOMPS
+ 2 /
+
 CNAMES
  'H2' 'H2O' /
 
@@ -434,7 +442,12 @@ BOOST_AUTO_TEST_CASE(StorageRunsLeaveCompositionalConfigEmpty)
         {
             const Deck deck = createStorageDeck(storage);
             const Runspec runspec {deck};
+
+            std::ostringstream warnings;
+            OpmLog::addBackend("STREAM",
+                               std::make_shared<StreamLog>(warnings, Log::MessageType::Warning));
             const CompositionalConfig comp_config {deck, runspec};
+            OpmLog::removeBackend("STREAM");
 
             // COMPS is read, so the run looks compositional by that measure
             // alone ...
@@ -445,6 +458,18 @@ BOOST_AUTO_TEST_CASE(StorageRunsLeaveCompositionalConfigEmpty)
             BOOST_CHECK(!runspec.compositional());
             BOOST_CHECK_EQUAL(0U, comp_config.numComps());
             BOOST_CHECK(comp_config.compName().empty());
+
+            // The ignored keywords are reported.  CNAMES is only among them for
+            // H2STORE: Co2StoreConfig reads it for the Ezrokhi tables of a
+            // CO2STORE run, but nothing reads it for H2STORE.
+            const auto reported = warnings.str();
+            BOOST_CHECK(reported.find("NCOMPS") != std::string::npos);
+
+            if (std::string {storage} == "CO2STORE") {
+                BOOST_CHECK(reported.find("CNAMES") == std::string::npos);
+            } else {
+                BOOST_CHECK(reported.find("CNAMES") != std::string::npos);
+            }
         }
     }
 }
