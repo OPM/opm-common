@@ -147,16 +147,15 @@ namespace Opm {
             // const std::size_t num_eos_region = comp_config.
 
             // CompositionalConfig is left empty for input the compositional path
-            // cannot handle - a CO2STORE run returns before any of it is read -
-            // so reading the EOS properties below would index an empty container.
-            // (H2STORE joins that set once opm-common #5265 lands; update the
-            // message below when it does.)
+            // cannot handle - CO2STORE and H2STORE runs return before any of it
+            // is read - so reading the EOS properties below would index an empty
+            // container.
             if (num_comps == 0) {
                 throw std::runtime_error {
                     fmt::format("The deck has no equation-of-state description, but "
                                 "this run needs a compositional fluid system with {} "
-                                "components.  A CO2STORE run does not carry one; use "
-                                "flow for that deck.", NumComp)
+                                "components.  CO2STORE and H2STORE runs do not carry "
+                                "one; use flow for those decks.", NumComp)
                 };
             }
 
