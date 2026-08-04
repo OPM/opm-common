@@ -405,7 +405,12 @@ namespace {
         }
     }
 
-    void warningForExistingCompKeywords(const Opm::PROPSSection& section)
+    // Co2StoreConfig reads CNAMES for the Ezrokhi tables of a CO2STORE run, so
+    // that run must not be told the keyword is ignored.
+    void
+    warningForExistingCompKeywords(const Opm::PROPSSection& section,
+                                   const std::string_view reason,
+                                   const bool cnames_is_read = false)
     {
         using namespace std::string_view_literals;
 
@@ -442,10 +447,12 @@ namespace {
         };
 
         bool any_comp_prop_kw = false;
-        std::string msg {" COMPS is not specified, the following keywords related to compositional simulation in PROPS section will be ignored:\n"};
+        std::string msg = fmt::format(" {}, the following keywords related to compositional "
+                                      "simulation in PROPS section will be ignored:\n",
+                                      reason);
 
         for (const auto& [kwname, hasKw] : keywordCheckers) {
-            if (hasKw) {
+            if (hasKw && !(cnames_is_read && (kwname == "CNAMES"sv))) {
                 any_comp_prop_kw = true;
                 fmt::format_to(std::back_inserter(msg), " {}", kwname);
             }
@@ -462,14 +469,23 @@ namespace Opm {
 CompositionalConfig::CompositionalConfig(const Deck& deck, const Runspec& runspec) {
     if (!DeckSection::hasPROPS(deck)) return;
 
-    // Return if CO2STORE is active with compositional keywords
-    if (deck.hasKeyword("CO2STORE"))
-        return;
-
     const PROPSSection props_section {deck};
+
+    // CO2STORE and H2STORE are black-oil options.  They never carry a
+    // compositional description, not even when COMPS is present, so leave the
+    // configuration empty rather than reading the compositional keywords.
+    // Runspec::compositional() excludes both for the same reason.
+    if (runspec.co2Storage() || runspec.h2Storage()) {
+        warningForExistingCompKeywords(props_section,
+                                       runspec.co2Storage() ? "CO2STORE is active"
+                                                            : "H2STORE is active",
+                                       /* cnames_is_read = */ runspec.co2Storage());
+        return;
+    }
+
     const bool comp_mode_runspec = runspec.compositionalMode(); // TODO: the way to use comp_mode_runspec should be refactored
     if (!comp_mode_runspec) {
-        warningForExistingCompKeywords(props_section);
+        warningForExistingCompKeywords(props_section, "COMPS is not specified");
         return; // not processing compositional props keywords
     }
 

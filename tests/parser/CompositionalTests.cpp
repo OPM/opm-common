@@ -18,19 +18,24 @@ along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <boost/test/unit_test.hpp>
 
+#include <opm/common/OpmLog/LogUtil.hpp>
+#include <opm/common/OpmLog/OpmLog.hpp>
+#include <opm/common/OpmLog/StreamLog.hpp>
+#include <opm/common/utility/OpmInputError.hpp>
 #include <opm/input/eclipse/Deck/Deck.hpp>
-
 #include <opm/input/eclipse/EclipseState/Compositional/CompositionalConfig.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/Tabdims.hpp>
 #include <opm/input/eclipse/Parser/Parser.hpp>
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
-#include <opm/common/utility/OpmInputError.hpp>
 
 #include <cstddef>
 #include <initializer_list>
+#include <memory>
+#include <sstream>
 #include <stdexcept>
+#include <string>
 
 using namespace Opm;
 
@@ -280,6 +285,43 @@ END
 )");
 }
 
+// A black-oil storage run with H2STORE or CO2STORE, which nevertheless carries COMPS and CNAMES
+Deck
+createStorageDeck(const std::string& storage_keyword)
+{
+    const std::string deck_string = std::string {R"(
+------------------------------------------------------------------------
+RUNSPEC
+------------------------------------------------------------------------
+METRIC
+
+)"} + storage_keyword
+        + R"(
+
+COMPS
+2 /
+
+DIMENS
+ 4 1 1 /
+
+GAS
+WATER
+
+------------------------------------------------------------------------
+PROPS
+------------------------------------------------------------------------
+NCOMPS
+ 2 /
+
+CNAMES
+ 'H2' 'H2O' /
+
+END
+)";
+
+    return Parser {}.parseString(deck_string);
+}
+
 Deck createCompositionalDeckWithoutDefaultedKeywords()
 {
     return Parser{}.parseString(R"(
@@ -388,6 +430,48 @@ BOOST_AUTO_TEST_CASE(DefaultedCompositionalKeywordsArePopulatedWhenAbsent) {
     const auto& lbc = comp_config.lbcCoefficients();
     check_vectors_close(std::vector<double>{0.1023, 0.023364, 0.058533, -0.040758, 0.0093324},
                         std::vector<double>(lbc.begin(), lbc.end()), tolerance);
+}
+
+BOOST_AUTO_TEST_CASE(StorageRunsLeaveCompositionalConfigEmpty)
+{
+    // CO2STORE and H2STORE are black-oil options.  Both must leave the
+    // compositional configuration empty even though the deck sets COMPS,
+    // otherwise consumers see a component count with no EOS data behind it.
+    for (const auto* storage : {"CO2STORE", "H2STORE"}) {
+        BOOST_TEST_CONTEXT(storage)
+        {
+            const Deck deck = createStorageDeck(storage);
+            const Runspec runspec {deck};
+
+            std::ostringstream warnings;
+            OpmLog::addBackend("STREAM",
+                               std::make_shared<StreamLog>(warnings, Log::MessageType::Warning));
+            const CompositionalConfig comp_config {deck, runspec};
+            OpmLog::removeBackend("STREAM");
+
+            // COMPS is read, so the run looks compositional by that measure
+            // alone ...
+            BOOST_CHECK_EQUAL(2U, runspec.numComps());
+            BOOST_CHECK(runspec.compositionalMode());
+
+            // ... but it is a black-oil run, and carries no EOS description.
+            BOOST_CHECK(!runspec.compositional());
+            BOOST_CHECK_EQUAL(0U, comp_config.numComps());
+            BOOST_CHECK(comp_config.compName().empty());
+
+            // The ignored keywords are reported.  CNAMES is only among them for
+            // H2STORE: Co2StoreConfig reads it for the Ezrokhi tables of a
+            // CO2STORE run, but nothing reads it for H2STORE.
+            const auto reported = warnings.str();
+            BOOST_CHECK(reported.find("NCOMPS") != std::string::npos);
+
+            if (std::string {storage} == "CO2STORE") {
+                BOOST_CHECK(reported.find("CNAMES") == std::string::npos);
+            } else {
+                BOOST_CHECK(reported.find("CNAMES") != std::string::npos);
+            }
+        }
+    }
 }
 
 BOOST_AUTO_TEST_CASE(CompositionalParsingTest) {
