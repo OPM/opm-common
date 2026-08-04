@@ -768,11 +768,11 @@
     },
     "EclFile_get_data_name": {
         "signature": "opm.io.ecl.EclFile.__get_data(name: str) -> tuple(numpy.ndarray, Opm::EclIO::eclArrType)",
-        "doc": "Retrieves the first occurence of the array with the given name from the EclFile.\n\n:param name: The name.\n:type name: str\n:return: A tupe of the array and its type.\n:tuple(numpy.ndarray, Opm::EclIO::eclArrType)"
+        "doc": "Retrieves the first occurrence of the array with the given name from the EclFile.\n\n:param name: The name.\n:type name: str\n:return: A tupe of the array and its type.\n:tuple(numpy.ndarray, Opm::EclIO::eclArrType)"
     },
     "EclFile_get_data_occurrence": {
         "signature": "opm.io.ecl.EclFile.__get_data(name: str, occurrence: int) -> tuple(numpy.ndarray, Opm::EclIO::eclArrType)",
-        "doc": "Retrieves the given occurence of the array with the given name from the EclFile.\n\n:param name: The name.\n:type name: str\n:param occurrence: The occurrence.\n:type occurrence: int\n:return: A tupe of the array and its type.\n:tuple(numpy.ndarray, Opm::EclIO::eclArrType)"
+        "doc": "Retrieves the given occurrence of the array with the given name from the EclFile.\n\n:param name: The name.\n:type name: str\n:param occurrence: The occurrence.\n:type occurrence: int\n:return: A tupe of the array and its type.\n:tuple(numpy.ndarray, Opm::EclIO::eclArrType)"
     },
     "ERst": {
         "type": "class",
@@ -915,7 +915,7 @@
     },
     "EGrid_xyz_from_ijk_mapaxes": {
         "signature": "opm.io.ecl.EGrid.xyz_from_ijk(i: int, j: int, k: int, apply_mapaxes: bool) -> tuple[tuple[double, 8], tuple[double, 8], tuple[double, 8]]",
-        "doc": "Computes the XYZ coordinates of the 8 cell corners given its ijk indices.\n\n:param i: The i index of the cell.\n:type i: int\n:param j: The j index of the cell.\n:type j: int\n:param k: The k index of the cell.\n:type k: int\n:param apply_mapaxes: Boolean to indicate if a mapaxes tranformation (if available) should be carried out before.\n:type apply_mapaxes: bool\n:return: The XYZ coordinates, as three tuples.\n:type: tuple[tuple[double, 8], tuple[double, 8], tuple[double, 8]]"
+        "doc": "Computes the XYZ coordinates of the 8 cell corners given its ijk indices.\n\n:param i: The i index of the cell.\n:type i: int\n:param j: The j index of the cell.\n:type j: int\n:param k: The k index of the cell.\n:type k: int\n:param apply_mapaxes: Boolean to indicate if a mapaxes transformation (if available) should be carried out before.\n:type apply_mapaxes: bool\n:return: The XYZ coordinates, as three tuples.\n:type: tuple[tuple[double, 8], tuple[double, 8], tuple[double, 8]]"
     },
     "EGrid_xyz_from_active_index": {
         "signature": "opm.io.ecl.EGrid.xyz_from_active_index(active_index: int) -> tuple[tuple[double, 8], tuple[double, 8], tuple[double, 8]]",
@@ -923,7 +923,7 @@
     },
     "EGrid_xyz_from_active_index_mapaxes": {
         "signature": "opm.io.ecl.EGrid.xyz_from_active_index(active_index: int, apply_mapaxes: bool) -> tuple[tuple[double, 8], tuple[double, 8], tuple[double, 8]]",
-        "doc": "Computes the XYZ coordinates of a cell given its active index.\n\n:param active_index: The active cell index.\n:type active_index: int\n:param apply_mapaxes: Boolean to indicate if a mapaxes tranformation (if available) should be carried out before.\n:type apply_mapaxes: bool\n:return: XYZ coordinates.\n:type: tuple[float, float, float]"
+        "doc": "Computes the XYZ coordinates of a cell given its active index.\n\n:param active_index: The active cell index.\n:type active_index: int\n:param apply_mapaxes: Boolean to indicate if a mapaxes transformation (if available) should be carried out before.\n:type apply_mapaxes: bool\n:return: XYZ coordinates.\n:type: tuple[float, float, float]"
     },
     "EGrid_cellvolumes": {
         "signature": "opm.io.ecl.EGrid.cellvolumes() -> numpy.ndarray",
