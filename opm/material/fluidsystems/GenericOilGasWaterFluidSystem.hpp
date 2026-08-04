@@ -41,6 +41,7 @@
 #include <array>
 #include <cassert>
 #include <cstddef>
+#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <type_traits>
@@ -144,7 +145,28 @@ namespace Opm {
             using FluidSystem = GenericOilGasWaterFluidSystem<Scalar, NumComp, enableWater>;
             const std::size_t num_comps = comp_config.numComps();
             // const std::size_t num_eos_region = comp_config.
-            assert(num_comps == NumComp);
+
+            // CompositionalConfig is left empty for input the compositional path
+            // cannot handle - a CO2STORE run returns before any of it is read -
+            // so reading the EOS properties below would index an empty container.
+            // (H2STORE joins that set once opm-common #5265 lands; update the
+            // message below when it does.)
+            if (num_comps == 0) {
+                throw std::runtime_error {
+                    fmt::format("The deck has no equation-of-state description, but "
+                                "this run needs a compositional fluid system with {} "
+                                "components.  A CO2STORE run does not carry one; use "
+                                "flow for that deck.", NumComp)
+                };
+            }
+
+            if (num_comps != NumComp) {
+                throw std::runtime_error {
+                    fmt::format("The deck describes {} components, but this fluid "
+                                "system was built for {}.", num_comps, NumComp)
+                };
+            }
+
             const auto& names = comp_config.compName();
             const auto& eos_props = comp_config.eosProps(0);
             FluidSystem::init();
