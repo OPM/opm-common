@@ -101,7 +101,7 @@ int main(int argc, char **argv) {
         std::filesystem::path esmryFileName = inputFileName.parent_path() / inputFileName.stem();
         esmryFileName = esmryFileName += ".ESMRY";
 
-        if (Opm::EclIO::fileExists(esmryFileName) && (force))
+        if (Opm::EclIO::fileExists(esmryFileName.string()) && (force))
             remove (esmryFileName);
 
         try {
