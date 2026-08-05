@@ -268,11 +268,16 @@ macro(opm-common_targets_hook)
     target_include_directories(opmcommon PRIVATE ${CMAKE_BINARY_DIR}/_deps)
   endif()
 
-  target_sources(compareECL
-    PRIVATE
-      test_util/EclFilesComparator.cpp
-      test_util/EclRegressionTest.cpp
-  )
+  # compareECL comes from the additionals satellite; only add its sources when
+  # that target actually exists, so a configuration that does not build the
+  # satellite does not fail here.
+  if(TARGET compareECL)
+    target_sources(compareECL
+      PRIVATE
+        test_util/EclFilesComparator.cpp
+        test_util/EclRegressionTest.cpp
+    )
+  endif()
 
   if(ENABLE_MOCKSIM)
     opm_add_library(
@@ -296,7 +301,17 @@ macro(opm-common_targets_hook)
     )
   endif()
 
-  list(APPEND opm-common_EXTRA_TARGETS compareECL rst_deck)
+  # rst_deck lives in examples/ and is built by the programs satellite, so it
+  # does not exist under -DBUILD_EXAMPLES=OFF - on any platform. Appending it
+  # unconditionally makes the install rule reference a target that was never
+  # created. Guard each target independently so compareECL is still installed
+  # when examples are disabled.
+  if(TARGET compareECL)
+    list(APPEND opm-common_EXTRA_TARGETS compareECL)
+  endif()
+  if(TARGET rst_deck)
+    list(APPEND opm-common_EXTRA_TARGETS rst_deck)
+  endif()
 
   if(TARGET Boost::unit_test_framework)
     foreach(test ACTIONX EmbeddedPython msim_ACTIONX PYACTION)

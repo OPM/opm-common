@@ -36,11 +36,11 @@ namespace Opm { namespace EclIO {
 void EclFile::load(bool preload) {
     std::fstream fileH;
 
-    if (formatted) {
-        fileH.open(this->inputFilename, std::ios::in);
-    } else {
-        fileH.open(this->inputFilename, std::ios::in |  std::ios::binary);
-    }
+    // Binary mode for formatted files too: they are fixed-width records
+    // separated by '\n' by specification, so the newline translation that text
+    // mode performs on some platforms would shift every column. Where the two
+    // modes coincide this is a no-op.
+    fileH.open(this->inputFilename, std::ios::in | std::ios::binary);
 
     if (!fileH)
         throw std::runtime_error(fmt::format("Can not open EclFile: {}", this->inputFilename));
@@ -215,7 +215,7 @@ void EclFile::loadData(const std::string& name)
 
     if (formatted) {
 
-        std::ifstream inFile(inputFilename);
+        std::ifstream inFile(inputFilename, std::ios::in | std::ios::binary);
 
         for (unsigned int arrIndex = 0; arrIndex < array_name.size(); arrIndex++) {
 
@@ -260,7 +260,7 @@ void EclFile::loadData(const std::vector<int>& arrIndex)
 
     if (formatted) {
 
-        std::ifstream inFile(inputFilename);
+        std::ifstream inFile(inputFilename, std::ios::in | std::ios::binary);
 
         for (int ind : arrIndex) {
 
@@ -298,7 +298,7 @@ void EclFile::loadData(int arrIndex)
 {
     if (formatted) {
 
-        std::ifstream inFile(inputFilename);
+        std::ifstream inFile(inputFilename, std::ios::in | std::ios::binary);
 
             inFile.seekg(ifStreamPos[arrIndex]);
 
@@ -402,7 +402,7 @@ std::vector<std::string> EclFile::get_fmt_real_raw_str_values(int arrIndex) cons
     if (array_type[arrIndex] != Opm::EclIO::REAL)
         OPM_THROW(std::runtime_error, "Error, selected array is not of type REAL");
 
-    std::ifstream inFile(inputFilename);
+    std::ifstream inFile(inputFilename, std::ios::in | std::ios::binary);
 
     if (!inFile) {
         OPM_THROW(std::runtime_error, "Could not open file: '" + inputFilename +"'");

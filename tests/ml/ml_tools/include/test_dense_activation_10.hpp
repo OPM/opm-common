@@ -48,7 +48,7 @@ bool test_dense_activation_10(Evaluation* load_time, Evaluation* apply_time)
     load_timer.start();
 
     Opm::ML::NNModel<Evaluation> model;
-    OPM_ERROR_IF(!model.loadModel(std::filesystem::current_path() / "ml/ml_tools/models/test_dense_activation_10.model"), "Failed to load model");
+    OPM_ERROR_IF(!model.loadModel((std::filesystem::current_path() / "ml/ml_tools/models/test_dense_activation_10.model").string()), "Failed to load model");
 
     *load_time = load_timer.stop();
 

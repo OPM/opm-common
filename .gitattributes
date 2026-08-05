@@ -1,0 +1,57 @@
+# Eclipse input decks and formatted (ASCII) Eclipse I/O files use '\n' line
+# endings by specification, and OPM reads/writes them in binary mode (no
+# newline translation, also on Windows; see EclFile.cpp / EclOutput.cpp).
+# Force LF at checkout so that a clone with core.autocrlf=true on Windows
+# does not corrupt them, and mark unformatted Eclipse files as binary so git
+# never attempts any conversion on them.
+
+# Input decks and include files
+*.DATA    text eol=lf
+*.data    text eol=lf
+*.inc     text eol=lf
+*.include text eol=lf
+*.grdecl  text eol=lf
+*.GRDECL  text eol=lf
+
+# NB: *.sch / *.SCH are deliberately not pinned. Several are committed with
+# CRLF or mixed endings, so pinning them would either contradict the stored
+# blobs or drag a large renormalisation into an unrelated change. The parser
+# opens decks in binary and trims trailing CR, so they are safe as they are;
+# normalising them belongs in its own commit.
+
+# Formatted (ASCII) Eclipse I/O files
+*.FINIT   text eol=lf
+*.FEGRID  text eol=lf
+*.FGRID   text eol=lf
+*.FUNRST  text eol=lf
+*.FUNSMRY text eol=lf
+*.FSMSPEC text eol=lf
+*.FRSSPEC text eol=lf
+*.F[0-9][0-9][0-9][0-9] text eol=lf
+*.A[0-9][0-9][0-9][0-9] text eol=lf
+
+# Unformatted (binary) Eclipse I/O files
+*.EGRID  binary
+*.GRID   binary
+*.INIT   binary
+*.UNRST  binary
+*.UNSMRY binary
+*.SMSPEC binary
+*.RSSPEC binary
+*.RFT    binary
+*.ESMRY  binary
+*.X[0-9][0-9][0-9][0-9] binary
+*.S[0-9][0-9][0-9][0-9] binary
+
+# Kerasify ML model files
+*.model binary
+
+# Four Norne example decks are committed with CRLF or mixed endings. Without
+# these exemptions the rules above contradict the stored blobs, which leaves
+# them permanently modified in every working tree; normalising them instead
+# would be a 28k-line diff in an unrelated change. Exempt them here and
+# normalise separately if that is wanted.
+python/examples/data/norne/INCLUDE/PETRO/EXTRA_REG.inc  -text
+python/examples/data/norne/INCLUDE/PETRO/SWINITIAL.INC  -text
+python/examples/data/norne/INCLUDE/SUMMARY/extra.inc    -text
+python/examples/data/norne/INCLUDE/SUMMARY/gas.inc      -text

@@ -30,6 +30,7 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <iterator>
 #include <limits>
 #include <tuple>
 #include <cmath>
@@ -242,6 +243,103 @@ BOOST_AUTO_TEST_CASE(TestEclFile_FORMATTED)
     BOOST_CHECK_EQUAL(vect5a.size(), vect5b.size());
     BOOST_CHECK(vect5a == vect5b);
 
+}
+
+BOOST_AUTO_TEST_CASE(TestEclOutput_FORMATTED_RoundTrip)
+{
+    // Round trip through the formatted writer: EclOutput -> EclFile -> compare.
+    // This is what pins EclOutput's stream mode. Formatted ECL files are
+    // fixed-width records separated by LF by specification, so if the writer
+    // ever opens its stream in text mode again, every record on a platform that
+    // translates newlines grows and the arrays below come back wrong (or the
+    // read throws) - on that platform. Nothing else in the suite exercises the
+    // written-then-read path for formatted output.
+    WorkArea work;
+
+    const std::vector<int>         inte { -4, -3, -2, -1, 0, 1, 2, 3, 4, 5 };
+    const std::vector<float>       real { -1.5f, 0.0f, 1.25f, 3.5e6f };
+    // Formatted output is "%19.13E", i.e. 14 significant decimal digits, so
+    // these are chosen to survive that. A value needing all 17 digits of a
+    // double (1.0/3.0, say) is not expected to come back bit-identical.
+    const std::vector<double>      doub { -1.5, 0.0, 2.5e-7, 1234.5678 };
+    const std::vector<bool>        logi { true, false, true, true, false };
+    const std::vector<std::string> char_vec { "FIRST", "SECOND", "THIRD" };
+
+    const std::string fileName = "ROUNDTRIP.FUNRST";
+    {
+        EclOutput out(fileName, /*formatted=*/true);
+        out.write("INTEARR", inte);
+        out.write("REALARR", real);
+        out.write("DOUBARR", doub);
+        out.write("LOGIARR", logi);
+        out.write("CHARARR", char_vec);
+    }
+
+    EclFile back(fileName);
+    back.loadData();
+
+    BOOST_CHECK(back.get<int>("INTEARR")         == inte);
+    BOOST_CHECK(back.get<float>("REALARR")       == real);
+    BOOST_CHECK(back.get<double>("DOUBARR")      == doub);
+    BOOST_CHECK(back.get<bool>("LOGIARR")        == logi);
+    BOOST_CHECK(back.get<std::string>("CHARARR") == char_vec);
+}
+
+BOOST_AUTO_TEST_CASE(TestEclFile_FORMATTED_CRLF)
+{
+    // Formatted ECL files use '\n' record separators by specification, and
+    // EclFile reads them in binary mode with fixed record sizes (see
+    // sizeOnDiskFormatted), so no newline translation happens on any
+    // platform. A file whose line endings were rewritten to "\r\n" -- the
+    // typical result of checking out test data with core.autocrlf=true on
+    // Windows, which the .gitattributes added here prevents -- has larger
+    // records than
+    // the reader assumes and must be rejected with a clear error instead of
+    // being silently misparsed.
+    std::string content;
+    {
+        std::ifstream src("ECLFILE.FINIT", std::ios::binary);
+        BOOST_REQUIRE(src);
+        content.assign(std::istreambuf_iterator<char>(src),
+                       std::istreambuf_iterator<char>());
+    }
+
+    std::string crlfContent;
+    crlfContent.reserve(content.size() + content.size() / 40);
+    for (const char c : content) {
+        if (c == '\n') {
+            crlfContent += '\r';
+        }
+        crlfContent += c;
+    }
+
+    // The rewrite must actually have changed the file, or nothing below is a
+    // test of anything.
+    BOOST_REQUIRE_GT(crlfContent.size(), content.size());
+
+    const auto writeFile = [](const std::string& name, const std::string& bytes)
+    {
+        std::ofstream out(name, std::ios::binary);
+        out << bytes;
+        out.close();
+        // Checked after closing, so failing to open, to write or to flush all
+        // surface here rather than as a bogus pass below.
+        BOOST_REQUIRE_MESSAGE(out, "Failed to write " << name);
+    };
+
+    WorkArea work;
+
+    // Positive control: the same bytes with their original '\n' separators must
+    // load. Without it a broken write would make the negative check below pass
+    // for the wrong reason -- EclFile would throw "Could not open file", which
+    // is also a std::runtime_error, having never looked at a record.
+    const std::string lfFile = "ECLFILE_LF.FINIT";
+    writeFile(lfFile, content);
+    BOOST_CHECK_NO_THROW(EclFile(lfFile, /*preload=*/true));
+
+    const std::string crlfFile = "ECLFILE_CRLF.FINIT";
+    writeFile(crlfFile, crlfContent);
+    BOOST_CHECK_THROW(EclFile(crlfFile, /*preload=*/true), std::runtime_error);
 }
 
 BOOST_AUTO_TEST_CASE(TestEclFile_IX)
