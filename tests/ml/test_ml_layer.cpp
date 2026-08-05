@@ -25,6 +25,7 @@
 
 #include <opm/ml/ml_model.hpp>
 
+#include <cmath>
 #include <cstddef>
 
 using namespace Opm::ML;

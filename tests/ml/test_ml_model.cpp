@@ -25,6 +25,7 @@
 */
 
 #include <opm/common/ErrorMacros.hpp>
+#include <opm/material/densead/Evaluation.hpp>
 #include <opm/ml/ml_model.hpp>
 
 #include <tests/ml/ml_tools/include/test_dense_10x1.hpp>
