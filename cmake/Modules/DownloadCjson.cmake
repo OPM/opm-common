@@ -10,8 +10,17 @@ target_sources(cjson PRIVATE ${cjson_SOURCE_DIR}/cJSON.c)
 if(OPM_ENABLE_PYTHON)
   set_target_properties(cjson PROPERTIES POSITION_INDEPENDENT_CODE ON)
 endif()
-execute_process(
-  COMMAND
-    ${CMAKE_COMMAND} -E create_symlink ${cjson_SOURCE_DIR} ${CMAKE_BINARY_DIR}/_deps/cjson
-)
+# Creating a symlink requires elevated privileges / Developer Mode on Windows.
+# Copy the directory instead so <cjson/cJSON.h> resolves on every platform.
+if(WIN32)
+  execute_process(
+    COMMAND
+      ${CMAKE_COMMAND} -E copy_directory ${cjson_SOURCE_DIR} ${CMAKE_BINARY_DIR}/_deps/cjson
+  )
+else()
+  execute_process(
+    COMMAND
+      ${CMAKE_COMMAND} -E create_symlink ${cjson_SOURCE_DIR} ${CMAKE_BINARY_DIR}/_deps/cjson
+  )
+endif()
 target_include_directories(cjson INTERFACE ${CMAKE_BINARY_DIR}/_deps)

@@ -98,12 +98,14 @@ macro(opm-common_sources_hook)
     set_source_files_properties(opm/input/eclipse/Schedule/Action/PyAction.cpp PROPERTIES COMPILE_FLAGS -Wno-shadow)
   endif()
 
-  set_source_files_properties(
-    opm/input/eclipse/Python/Python.cpp
-    PROPERTIES
-    COMPILE_FLAGS
-      -Wno-shadow
-  )
+  if (NOT MSVC)
+    set_source_files_properties(
+      opm/input/eclipse/Python/Python.cpp
+      PROPERTIES
+      COMPILE_FLAGS
+        -Wno-shadow
+    )
+  endif()
   if (OPM_ENABLE_PYTHON)
     # Set the path to the input docstrings.json file and the output .hpp file
     set(PYTHON_DOCSTRINGS_FILE "${PROJECT_SOURCE_DIR}/python/docstrings_common.json")

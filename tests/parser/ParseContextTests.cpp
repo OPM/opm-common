@@ -52,6 +52,12 @@
 #include <cstdlib>
 #include <memory>
 #include <stdexcept>
+
+#ifdef _MSC_VER
+// MSVC has no POSIX setenv; map to _putenv_s (always overwrites).
+static int setenv(const char* name, const char* value, int /*overwrite*/)
+{ return _putenv_s(name, value); }
+#endif
 #include <tuple>
 
 using namespace Opm;
