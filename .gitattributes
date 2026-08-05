@@ -7,11 +7,15 @@
 # does not corrupt them, and mark unformatted Eclipse files as binary so git
 # never attempts any conversion on them.
 
-# Input decks and include files
+# Input decks and include files. NB: these patterns are matched
+# case-sensitively, so every case variant occurring in the tree needs its own
+# line - '*.inc' does not cover 'SCAL_NORNE.INC'.
 *.DATA    text eol=lf
 *.data    text eol=lf
 *.inc     text eol=lf
+*.INC     text eol=lf
 *.include text eol=lf
+*.INCLUDE text eol=lf
 *.grdecl  text eol=lf
 *.GRDECL  text eol=lf
 
