@@ -39,9 +39,17 @@
 #include <type_traits>
 #include <vector>
 
-// forward declaration of the class so the function in the next namespace can be declared
-template <class TraitsT, class VectorT = std::vector<typename TraitsT::Scalar>>
+// forward declaration of the class so the function in the next namespace can be declared.
+// NB: the declaration has to sit in namespace Opm, where the class is actually defined.
+// At global scope it declares a distinct type, so the qualified friend declaration below
+// names something else and never grants friendship. Compilers doing full two-phase lookup
+// diagnose that; the more permissive ones happen to let it through.
+namespace Opm {
+// NB: default argument for VectorT is specified on the definition below, not here
+// (a default template argument may be given only once across declarations).
+template <class TraitsT, class VectorT>
 class PiecewiseLinearTwoPhaseMaterialParams;
+}
 
 // declaration of make_view in correct namespace so friend function can be declared in the class
 namespace Opm::gpuistl

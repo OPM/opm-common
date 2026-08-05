@@ -1701,7 +1701,10 @@ bool parseState( ParserState& parserState, const Parser& parser, ErrorGuard& err
         */
 
         std::string data_file;
-        if (dataFileName[0] == '/')
+        // Use is_absolute() rather than testing for a leading '/': Windows
+        // absolute paths ("C:/...") do not start with '/' and would otherwise
+        // be relativized by the proximate() branch below.
+        if (std::filesystem::path(dataFileName).is_absolute())
             data_file = std::filesystem::canonical(dataFileName).generic_string();
         else
             data_file = std::filesystem::proximate(std::filesystem::canonical(dataFileName)).generic_string();

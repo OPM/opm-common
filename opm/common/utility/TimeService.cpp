@@ -29,6 +29,7 @@
 #include <utility>
 #include <stdexcept>
 #include <string>
+#include <tuple>
 
 namespace Opm {
 namespace TimeService {
@@ -96,6 +97,34 @@ namespace {
         const unsigned doy = (153*(m > 2 ? m-3 : m+9) + 2)/5 + d-1;  // [0, 365]
         const unsigned doe = yoe * 365 + yoe/4 - yoe/100 + doy;         // [0, 146096]
         return era * 146097 + static_cast<Int>(doe) - 719468;
+    }
+
+    // The documented inverse of days_from_civil(), same source and same public
+    // domain dedication.
+
+    // Returns year/month/day triple in civil calendar
+    // Preconditions:  z is number of days since 1970-01-01 and is in the range:
+    //                   [numeric_limits<Int>::min(),
+    //                    numeric_limits<Int>::max()-719468]
+    template <class Int>
+    constexpr
+    std::tuple<Int, unsigned, unsigned>
+    civil_from_days(Int z) noexcept
+    {
+        static_assert(std::numeric_limits<unsigned>::digits >= 18,
+                      "This algorithm has not been ported to a 16 bit unsigned integer");
+        static_assert(std::numeric_limits<Int>::digits >= 20,
+                      "This algorithm has not been ported to a 16 bit signed integer");
+        z += 719468;
+        const Int era = (z >= 0 ? z : z - 146096) / 146097;
+        const unsigned doe = static_cast<unsigned>(z - era * 146097);          // [0, 146096]
+        const unsigned yoe = (doe - doe/1460 + doe/36524 - doe/146096) / 365;  // [0, 399]
+        const Int y = static_cast<Int>(yoe) + era * 400;
+        const unsigned doy = doe - (365*yoe + yoe/4 - yoe/100);                // [0, 365]
+        const unsigned mp = (5*doy + 2)/153;                                   // [0, 11]
+        const unsigned d = doy - (153*mp+2)/5 + 1;                             // [1, 31]
+        const unsigned m = mp < 10 ? mp+3 : mp-9;                              // [1, 12]
+        return {y + (m <= 2), m, d};
     }
 
 } // anonymous namespace
@@ -189,8 +218,12 @@ std::time_t portable_timegm(const std::tm* t)
         year -= years_diff;
         month += 12 * years_diff;
     }
-    int days_from_1970 = days_from_civil(year, month + 1, t->tm_mday);
-    return 60 * (60 * (24L * days_from_1970 + t->tm_hour) + t->tm_min) + t->tm_sec;
+    // std::time_t, not long: the 24L in the original made this arithmetic
+    // 32-bit wherever long is 32 bits, so 86400 * days overflowed for any date
+    // outside roughly 1902-2038 -- e.g. a schedule reaching year 3000 came back
+    // as 1911. Widening the day count promotes the whole expression.
+    const std::time_t days_from_1970 = days_from_civil(year, month + 1, t->tm_mday);
+    return 60 * (60 * (24 * days_from_1970 + t->tm_hour) + t->tm_min) + t->tm_sec;
 }
 
 std::time_t timeFromEclipse(const DeckRecord &dateRecord) {
@@ -238,13 +271,49 @@ namespace {
         return timePoint;
     }
 
+    /*
+      Break a time_t into UTC civil time without std::gmtime().
+
+      std::gmtime() is unsuitable here on two counts. It returns nullptr for
+      time points it cannot represent -- some C runtimes refuse dates beyond
+      year 3000, which simulation schedules legitimately reach -- and
+      dereferencing that is a crash. It also returns a pointer to a static
+      buffer, so two threads converting timestamps concurrently overwrite each
+      other's result.
+
+      civil_from_days() above has neither problem and is the exact inverse of
+      the days_from_civil() this file already uses in the other direction, so
+      use it unconditionally: every platform then exercises the same code.
+
+      tm_wday and tm_yday are left zero. Only the year/month/day and the time
+      of day are read from the result here; fill them in if that changes.
+    */
+    std::tm utc_civil_time(const std::time_t t)
+    {
+        const auto days = (t >= 0 ? t : t - 86399) / 86400;   // floor division
+        auto secs = t - days * 86400;
+
+        // Qualified: civil_from_days lives in the anonymous namespace inside
+        // Opm::TimeService, beside the days_from_civil it inverts; this helper
+        // is in the file-scope one.
+        const auto [y, m, d] =
+            Opm::TimeService::civil_from_days(static_cast<long long>(days));
+
+        std::tm tm{};
+        tm.tm_year = static_cast<int>(y) - 1900;
+        tm.tm_mon  = static_cast<int>(m) - 1;
+        tm.tm_mday = static_cast<int>(d);
+        tm.tm_hour = static_cast<int>(secs / 3600); secs %= 3600;
+        tm.tm_min  = static_cast<int>(secs / 60);
+        tm.tm_sec  = static_cast<int>(secs % 60);
+        return tm;
+    }
 
 }
 
 Opm::TimeStampUTC::TimeStampUTC(const std::time_t tp)
 {
-    auto t = tp;
-    const auto tm = *std::gmtime(&t);
+    const auto tm = utc_civil_time(tp);
 
     this->ymd_ = YMD { tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday };
 
@@ -262,8 +331,7 @@ Opm::TimeStampUTC::TimeStampUTC(const Opm::TimeStampUTC::YMD& ymd,
 
 Opm::TimeStampUTC& Opm::TimeStampUTC::operator=(const std::time_t tp)
 {
-    auto t = tp;
-    const auto tm = *std::gmtime(&t);
+    const auto tm = utc_civil_time(tp);
 
     this->ymd_ = YMD { tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday };
 

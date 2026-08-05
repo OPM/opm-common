@@ -739,11 +739,9 @@ void checkInitFile(const Deck& deck,[[maybe_unused]] const data::Solution& simPr
 
 BOOST_AUTO_TEST_CASE(EclipseIOLGR_INIT)
 {
-    const std::string& deckString = deckStringLGR;
-
     auto write_and_check = []( ) {
         // preparing tested objects
-        const auto deck = Parser().parseString( deckString);
+        const auto deck = Parser().parseString( deckStringLGR);
         auto es = EclipseState( deck );
         const auto& eclGrid = es.getInputGrid();
         const Schedule schedule(deck, es, std::make_shared<Python>());

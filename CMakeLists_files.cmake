@@ -571,6 +571,7 @@ list(APPEND TEST_SOURCE_FILES
   tests/test_Summary_Group.cpp
   tests/test_Summary_GSatProd.cpp
   tests/test_Tables.cpp
+  tests/test_TimeService.cpp
   tests/test_uniformtablelinear.cpp
   tests/test_Uns2CPG.cpp
   tests/test_Visitor.cpp
