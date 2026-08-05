@@ -6,12 +6,17 @@
 
 #include <opm/input/eclipse/Parser/Parser.hpp>
 
-#include <stdlib.h>
+#include <cstdlib>
 
+#if defined(_WIN32)
+#include <cstring>
+#include <process.h>
+#include <string>
+#else
 #include <sys/types.h>
 #include <sys/wait.h>
-
 #include <unistd.h>
+#endif
 
 namespace {
 
@@ -36,6 +41,7 @@ void exit1(Opm::InputErrorAction action)
 // which will unconditionally fail the complete test in the face of an exit(1) -
 // this test is implemented without the BOOST testing framework.
 
+#if !defined(_WIN32)
 void test_exit(Opm::InputErrorAction action)
 {
     pid_t pid = fork();
@@ -58,11 +64,48 @@ void test_exit(Opm::InputErrorAction action)
         std::exit(EXIT_FAILURE);
     }
 }
+#endif
 
 } // Anonymous namespace
 
+#if defined(_WIN32)
+// Windows has no fork(); re-run this executable as a child process (one per
+// action) so the parent can verify the child exits with a non-zero status,
+// mirroring the POSIX fork()/waitpid() logic above.
+int main(int argc, char** argv)
+{
+    const Opm::InputErrorAction actions[] = {
+        Opm::InputErrorAction::EXIT1,
+        Opm::InputErrorAction::DELAYED_EXIT1,
+    };
+    if (argc > 2 && std::strcmp(argv[1], "--child") == 0) {
+        exit1(actions[std::atoi(argv[2])]);
+        return 0;  // exit1() is expected to exit(1) before reaching here
+    }
+    // _spawnl concatenates its arguments into a single command line that the
+    // child's CRT re-parses, so an argv[0] containing spaces (e.g. a build
+    // tree under "C:\Users\First Last\...") must be quoted or it gets split
+    // into several arguments. The preceding path parameter is used directly
+    // to locate the executable and must remain unquoted.
+    const std::string quoted_self = '"' + std::string(argv[0]) + '"';
+    for (int i = 0; i < 2; ++i) {
+        const char idx[2] = { static_cast<char>('0' + i), '\0' };
+        const intptr_t rc = _spawnl(_P_WAIT, argv[0], quoted_self.c_str(), "--child", idx,
+                                    static_cast<const char*>(nullptr));
+        // With _P_WAIT, rc is the child's exit code, or -1 if the child could
+        // not be spawned at all. Require exactly the exit(1) that exit1() must
+        // produce: a spawn failure (-1), a child that returned normally without
+        // exiting (0), or a crashed child (e.g. 0xC0000005) must all fail the
+        // test, mirroring the WIFEXITED/WEXITSTATUS checks of the POSIX branch.
+        if (rc != 1) {
+            std::exit(EXIT_FAILURE);
+        }
+    }
+}
+#else
 int main()
 {
     test_exit(Opm::InputErrorAction::EXIT1);
     test_exit(Opm::InputErrorAction::DELAYED_EXIT1);
 }
+#endif

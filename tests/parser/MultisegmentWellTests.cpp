@@ -663,7 +663,9 @@ WSEGAICD
               0.3  OPEN         1*         1*         1*         1*         1*         1* /
 -----------------------------------------------------------------------------------------------------------------------------------
 /
-
+)"   // MSVC caps a single string literal at 65535 bytes (C2026); the
+     // two pieces below are concatenated and identical to one literal.
+R"(
 COMPSEGS
  'OP2' /
 --   I     J     K BRNCH       MD_S       MD_E   DIR IJK_E       CDEP  CLEN SEGNO

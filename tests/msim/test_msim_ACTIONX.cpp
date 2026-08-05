@@ -207,13 +207,20 @@ namespace {
 
     struct test_data
     {
+        // Named ErrorGuard member (rather than a temporary ErrorGuard{}) so that
+        // overload resolution selects the non-template Schedule ctor taking
+        // ErrorGuard& -- a plain member present in opmcommon.lib. A temporary
+        // binds the forwarding-reference (T&&) ctor template, whose explicit
+        // instantiation MSVC fails to emit, producing an LNK2019 at link time.
+        ErrorGuard errors;
         EclipseState state;
         Schedule schedule;
         SummaryConfig summary_config;
 
         explicit test_data(const Deck& deck)
-            : state    { deck }
-            , schedule { deck, state, ignoreUDQCantEval(), ErrorGuard{}, msim::python }
+            : errors   {}
+            , state    { deck }
+            , schedule { deck, state, ignoreUDQCantEval(), errors, msim::python }
             , summary_config { deck, schedule, state.fieldProps(), state.aquifer() }
         {
             this->state.getIOConfig().setBaseName("MSIM");
