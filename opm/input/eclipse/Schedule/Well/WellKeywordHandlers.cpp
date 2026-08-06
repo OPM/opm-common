@@ -134,7 +134,7 @@ void handleWCONHIST(HandlerContext& handlerContext)
             bool update_well = false;
 
             auto table_nr = record.getItem<Kw::VFP_TABLE>().get< int >(0);
-            if (record.getItem<Kw::VFP_TABLE>().defaultApplied(0)) { // Default 1* use the privious set vfp table
+            if (record.getItem<Kw::VFP_TABLE>().defaultApplied(0)) { // Default 1* use the previous set vfp table
                 table_nr = properties->VFPTableNumber;
             }
 
@@ -310,7 +310,7 @@ void handleWCONINJH(HandlerContext& handlerContext)
             }
 
             auto table_nr = record.getItem<Kw::VFP_TABLE>().get< int >(0);
-            if (record.getItem<Kw::VFP_TABLE>().defaultApplied(0)) { // Default 1* use the privious set vfp table
+            if (record.getItem<Kw::VFP_TABLE>().defaultApplied(0)) { // Default 1* use the previous set vfp table
                 table_nr = injection->VFPTableNumber;
             }
             if (table_nr != 0) {
