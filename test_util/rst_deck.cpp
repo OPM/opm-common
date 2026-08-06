@@ -276,6 +276,9 @@ void update_restart_path(Options& opt,
 
         rst_step = verify_extension(extension, unif, fmt);
 
+        // Use generic_string() (forward slashes) for all three branches below:
+        // 'base' is written into the RESTART keyword of the generated deck, so
+        // it must stay portable rather than use native '\' separators on Windows.
         if (path.is_absolute()) {
             path.replace_extension();
             base = path.generic_string();
