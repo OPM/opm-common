@@ -42,6 +42,7 @@
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
 #include <opm/input/eclipse/Schedule/VFPProdTable.hpp>
+#include <opm/input/eclipse/Schedule/eval_uda.hpp>
 #include <opm/input/eclipse/Schedule/Well/Connection.hpp>
 #include <opm/input/eclipse/Schedule/Well/WDFAC.hpp>
 #include <opm/input/eclipse/Schedule/Well/WELDRAW.hpp>
@@ -1301,6 +1302,7 @@ namespace {
 
         template <class SWellArray>
         void assignInjMult(const Opm::Well&         well,
+                           const Opm::SummaryState& smry,
                            const Opm::UnitSystem&   units,
                            SWellArray&              sWell)
         {
@@ -1319,8 +1321,12 @@ namespace {
             sWell[Ix::InjMultGradient] = static_cast<float>
                 (injmult.multiplier_gradient / units.from_si(M::pressure, 1.0));
 
-            sWell[Ix::InjMultFracPress] = static_cast<float>
-                (units.from_si(M::pressure, injmult.fracture_pressure));
+            if (injmult.fracture_pressure.is_defined()) {
+                sWell[Ix::InjMultFracPress] = static_cast<float>
+                    (units.from_si(M::pressure,
+                                   Opm::UDA::eval_well_uda_pressure(injmult.fracture_pressure,
+                                                                    well.name(), smry)));
+            }
         }
 
         template <class SWProp, class SWellArray>
@@ -1422,7 +1428,7 @@ namespace {
 
             assignTracerData(tracers, smry, well.name(), sWell, sched.runspec().temp());
             assignBhpVfpAdjustment(well, swprop, sWell);
-            assignInjMult(well, units, sWell);
+            assignInjMult(well, smry, units, sWell);
         }
     } // SWell
 

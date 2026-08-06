@@ -171,7 +171,7 @@ namespace Opm
         {
             // Restart values are in SI units.
             this->m_injmult = InjMult {
-                rst_connection.inj_mult_frac_press,
+                UDAValue { rst_connection.inj_mult_frac_press },
                 rst_connection.inj_mult_gradient
             };
         }
