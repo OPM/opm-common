@@ -57,26 +57,15 @@ public:
                                                           const FluidState& fluidState)
     {
         // THCONR + THCONSF approach.
-        const Scalar lambdaRef = params.referenceTotalThermalConductivity();
-        constexpr int gasPhaseIdx = FluidSystem::gasPhaseIdx;
-
-        // Some fluid systems (e.g. BlackOilFluidSystemNonStatic used on the
-        // GPU) only expose phaseIsActive as a non-static member. Fall back
-        // to a fluid-state-provided fluidSystem() instance accessor in that
-        // case.
-        bool gasActive = false;
-        if constexpr (requires { FluidSystem::phaseIsActive(gasPhaseIdx); }) {
-            gasActive = FluidSystem::phaseIsActive(gasPhaseIdx);
-        } else {
-            gasActive = fluidState.fluidSystem().phaseIsActive(gasPhaseIdx);
-        }
-
-        if (gasActive) {
-            const Scalar alpha = params.dTotalThermalConductivity_dSg();
+        Scalar lambdaRef = params.referenceTotalThermalConductivity();
+        static constexpr int gasPhaseIdx = FluidSystem::gasPhaseIdx;
+        if (fluidState.fluidSystem().phaseIsActive(gasPhaseIdx)) {
+            Scalar alpha = params.dTotalThermalConductivity_dSg();
             const Evaluation& Sg = decay<Evaluation>(fluidState.saturation(gasPhaseIdx));
-            return lambdaRef * (Scalar(1) - alpha * Sg);
+            return lambdaRef*(1.0 - alpha*Sg);
+        } else {
+            return lambdaRef;
         }
-        return Evaluation(lambdaRef);
     }
 };
 
