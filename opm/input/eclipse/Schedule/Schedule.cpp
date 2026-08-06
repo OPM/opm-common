@@ -2617,6 +2617,11 @@ namespace {
                 if (UDQ::well_control(control)) {
                     auto& well = this->snapshots.back().wells.get(wgname);
 
+                    if (control == UDAControl::WINJMULT_FRACTURE_PRESSURE) {
+                        well.updateWINJMULTUDA(udq_config, udq_active, value);
+                        continue;
+                    }
+
                     if (UDQ::is_well_injection_control(control, well.isInjector())) {
                         auto injection_properties = std::make_shared<Well::WellInjectionProperties>(well.getInjectionProperties());
                         injection_properties->update_uda(udq_config, udq_active, control, value);

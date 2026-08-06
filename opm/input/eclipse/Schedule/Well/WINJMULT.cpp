@@ -48,16 +48,20 @@ bool InjMult::operator==(const InjMult& rhs) const
 
 InjMult InjMult::serializationTestObject() {
     InjMult result;
-    result.fracture_pressure = 1.e9;
+    result.fracture_pressure = UDAValue(1.e9);
     result.multiplier_gradient = 2.;
     return result;
 }
 
 
 std::string InjMult::InjMultToString(const InjMult& mult) {
-    std::string ss = fmt::format("fracture_pressure {}, multiplier_gradient {}",
-                                       mult.fracture_pressure, mult.multiplier_gradient);
-    return ss;
+    const auto fracture_pressure =
+        mult.fracture_pressure.is<double>()
+            ? fmt::format("{}", mult.fracture_pressure.get<double>())
+            : fmt::format("'{}'", mult.fracture_pressure.get<std::string>());
+
+    return fmt::format("fracture_pressure {}, multiplier_gradient {}",
+                       fracture_pressure, mult.multiplier_gradient);
 }
 
 } // end of namespace Opm

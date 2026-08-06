@@ -10,7 +10,7 @@
     },
     {
       "name": "FRACTURING_PRESSURE",
-      "value_type": "DOUBLE",
+      "value_type": "UDA",
       "dimension": "Pressure"
     },
     {
