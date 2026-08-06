@@ -33,12 +33,14 @@
 #include <opm/common/utility/gpuistl_if_available.hpp>
 
 #include <opm/material/common/EnsureFinalized.hpp>
+#include <opm/material/common/Tabulated1DFunction.hpp>
 
 #include <cassert>
 #include <cstddef>
 #include <stdexcept>
 #include <type_traits>
 #include <utility>
+#include <vector>
 
 namespace Opm {
 
@@ -68,24 +70,25 @@ namespace Opm {
  *        ECL thermal law based on SPECROCK.
  *
  * Stores the temperature-vs-volumetric-internal-energy table in a
- * templated \c Storage container so the same class can be instantiated
- * as a CPU object (\c VectorWithDefaultAllocator), an owning GPU object
- * (\c GpuBuffer) and a non-owning GPU view (\c GpuView) usable from a
- * kernel.
+ * \c Tabulated1DFunction. The function's storage policy is propagated so
+ * this class can be instantiated as a CPU object, an owning GPU object,
+ * or a non-owning GPU view usable from a kernel.
  */
 template <class ScalarT, template <class> class Storage>
 class EclSpecrockLawParams : public EnsureFinalized
 {
+    using InternalEnergyFunction =
+        Tabulated1DFunction<ScalarT, Storage>;
+
 public:
     using Scalar = ScalarT;
-    using ValueVector = Storage<Scalar>;
+    using ValueVector = typename InternalEnergyFunction::ValueVector;
 
     OPM_HOST_DEVICE EclSpecrockLawParams() = default;
 
-    OPM_HOST_DEVICE EclSpecrockLawParams(ValueVector temperatureSamples,
-                                         ValueVector internalEnergySamples)
-        : temperatureSamples_(std::move(temperatureSamples))
-        , internalEnergySamples_(std::move(internalEnergySamples))
+    OPM_HOST_DEVICE explicit EclSpecrockLawParams(
+        InternalEnergyFunction internalEnergyFunction)
+        : internalEnergyFunction_(std::move(internalEnergyFunction))
     {
         EnsureFinalized::finalize();
     }
@@ -111,34 +114,32 @@ public:
                       "matching sizes");
         }
 
-        const std::size_t n = temperature.size();
-        temperatureSamples_.resize(n);
-        internalEnergySamples_.resize(n);
-
         // Integrate the heat capacity to compute the internal energy.
-        Scalar curU = static_cast<Scalar>(temperature[0]) * static_cast<Scalar>(heatCapacity[0]);
+        const std::size_t n = temperature.size();
+        std::vector<Scalar> temperatures(n);
+        std::vector<Scalar> internalEnergies(n);
+        Scalar curU = temperature[0] * heatCapacity[0];
         for (std::size_t i = 0; i < n; ++i) {
-            temperatureSamples_[i] = static_cast<Scalar>(temperature[i]);
-            internalEnergySamples_[i] = curU;
+            temperatures[i] = temperature[i];
+            internalEnergies[i] = curU;
 
-            if (i + 1 >= n) {
+            if (i >= n - 1) {
                 break;
             }
 
-            // Trapezoidal integration of the heat capacity from the
-            // current sample to the next one.
-            const Scalar c_v0 = static_cast<Scalar>(heatCapacity[i]);
-            const Scalar c_v1 = static_cast<Scalar>(heatCapacity[i + 1]);
-            const Scalar T0 = static_cast<Scalar>(temperature[i]);
-            const Scalar T1 = static_cast<Scalar>(temperature[i + 1]);
-            curU += Scalar(0.5) * (c_v0 + c_v1) * (T1 - T0);
+            // Integrate the heat capacity from the current sampling point
+            // to the next one using the trapezoidal rule.
+            curU += 0.5 * (heatCapacity[i] + heatCapacity[i + 1])
+                * (temperature[i + 1] - temperature[i]);
         }
+        internalEnergyFunction_.setXYContainers(temperatures, internalEnergies);
     }
 
     /*!
-     * \brief Set the sample tables directly. Marks the object as finalized.
-     *
-     * Available only on the CPU instantiation.
+    * \brief Set the sample tables directly. Marks the object as finalized.
+    *
+    * This compatibility helper is kept for callers that construct
+    * SPECROCK parameters directly instead of from heat capacities.
      */
     template <class ContainerT,
               class StorageT = Storage<Scalar>,
@@ -151,84 +152,35 @@ public:
                       "EclSpecrockLawParams: temperature and internal-energy arrays must have "
                       "matching sizes");
         }
-        const std::size_t n = temperature.size();
-        temperatureSamples_.resize(n);
-        internalEnergySamples_.resize(n);
-        for (std::size_t i = 0; i < n; ++i) {
-            temperatureSamples_[i] = static_cast<Scalar>(temperature[i]);
-            internalEnergySamples_[i] = static_cast<Scalar>(internalEnergy[i]);
-        }
+        internalEnergyFunction_.setXYContainers(temperature, internalEnergy);
         EnsureFinalized::finalize();
     }
 
+    OPM_HOST_DEVICE const InternalEnergyFunction& internalEnergyFunction() const
+    { return internalEnergyFunction_; }
+
     OPM_HOST_DEVICE std::size_t numSamples() const
-    {
-        return temperatureSamples_.size();
-    }
+    { return internalEnergyFunction_.numSamples(); }
 
-    /*!
-     * \brief Linearly interpolate the volumetric internal energy at a
-     *        given temperature. The sample table is assumed sorted in
-     *        ascending order; values outside the range are extrapolated
-     *        linearly using the first/last segment (matching the
-     *        previous Tabulated1DFunction::eval(T, true) behaviour.
-     */
-    template <class Evaluation>
-    OPM_HOST_DEVICE Evaluation eval(const Evaluation& x) const
-    {
-        EnsureFinalized::check();
-        const std::size_t n = temperatureSamples_.size();
-        // n >= 2 by construction (SPECROCK tables always have >= 2 rows).
-        std::size_t segIdx = 0;
-        if (x <= temperatureSamples_[1]) {
-            segIdx = 0;
-        } else if (x >= temperatureSamples_[n - 2]) {
-            segIdx = n - 2;
-        } else {
-            std::size_t lo = 1;
-            std::size_t hi = n - 2;
-            while (lo + 1 < hi) {
-                const std::size_t mid = (lo + hi) / 2;
-                if (x < temperatureSamples_[mid]) {
-                    hi = mid;
-                } else {
-                    lo = mid;
-                }
-            }
-            segIdx = lo;
-        }
-        const Scalar x0 = temperatureSamples_[segIdx];
-        const Scalar x1 = temperatureSamples_[segIdx + 1];
-        const Scalar y0 = internalEnergySamples_[segIdx];
-        const Scalar y1 = internalEnergySamples_[segIdx + 1];
-        return y0 + (y1 - y0) * (x - x0) / (x1 - x0);
-    }
+    const ValueVector& temperatureSamples() const
+    { return internalEnergyFunction_.xValues(); }
 
-    OPM_HOST_DEVICE const ValueVector& temperatureSamples() const
-    {
-        EnsureFinalized::check();
-        return temperatureSamples_;
-    }
-
-    OPM_HOST_DEVICE const ValueVector& internalEnergySamples() const
-    {
-        EnsureFinalized::check();
-        return internalEnergySamples_;
-    }
-
-    ValueVector& temperatureSamplesMutable()
-    {
-        return temperatureSamples_;
-    }
-
-    ValueVector& internalEnergySamplesMutable()
-    {
-        return internalEnergySamples_;
-    }
+    const ValueVector& internalEnergySamples() const
+    { return internalEnergyFunction_.yValues(); }
 
 private:
-    ValueVector temperatureSamples_ {};
-    ValueVector internalEnergySamples_ {};
+#if HAVE_CUDA
+    template <class OtherScalarT>
+    friend ::Opm::EclSpecrockLawParams<OtherScalarT, ::Opm::gpuistl::GpuBuffer>
+    Opm::gpuistl::copy_to_gpu(const ::Opm::EclSpecrockLawParams<OtherScalarT>& cpu);
+
+    template <class OtherScalarT, template <class> class ContainerT>
+    friend ::Opm::EclSpecrockLawParams<OtherScalarT, ::Opm::gpuistl::GpuView>
+    Opm::gpuistl::make_view(
+        ::Opm::EclSpecrockLawParams<OtherScalarT, ContainerT>& gpuBuffers);
+#endif
+
+    InternalEnergyFunction internalEnergyFunction_ {};
 };
 
 } // namespace Opm
@@ -241,17 +193,15 @@ template <class ScalarT>
 copy_to_gpu(const ::Opm::EclSpecrockLawParams<ScalarT>& cpu)
 {
     return ::Opm::EclSpecrockLawParams<ScalarT, GpuBuffer>(
-        GpuBuffer<ScalarT>(cpu.temperatureSamples()),
-        GpuBuffer<ScalarT>(cpu.internalEnergySamples()));
+        copy_to_gpu(cpu.internalEnergyFunction_));
 }
 
 template <class ScalarT, template <class> class ContainerT>
 ::Opm::EclSpecrockLawParams<ScalarT, GpuView>
 make_view(::Opm::EclSpecrockLawParams<ScalarT, ContainerT>& gpuBuffers)
 {
-    auto tView = make_view<ScalarT>(gpuBuffers.temperatureSamplesMutable());
-    auto eView = make_view<ScalarT>(gpuBuffers.internalEnergySamplesMutable());
-    return ::Opm::EclSpecrockLawParams<ScalarT, GpuView>(tView, eView);
+    return ::Opm::EclSpecrockLawParams<ScalarT, GpuView>(
+        make_view(gpuBuffers.internalEnergyFunction_));
 }
 
 } // namespace Opm::gpuistl

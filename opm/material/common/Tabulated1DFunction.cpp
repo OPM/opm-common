@@ -28,8 +28,8 @@
 
 namespace Opm {
 
-template<class Scalar>
-void Tabulated1DFunction<Scalar>::
+template<class Scalar, template<class> class Storage>
+void Tabulated1DFunction<Scalar, Storage>::
 printCSV(Scalar xi0, Scalar xi1, unsigned k, std::ostream& os) const
 {
     Scalar x0 = std::min(xi0, xi1);
@@ -63,10 +63,10 @@ printCSV(Scalar xi0, Scalar xi1, unsigned k, std::ostream& os) const
 }
 
 template void
-Tabulated1DFunction<double>::printCSV(double,double,
-                                      unsigned,std::ostream&) const;
+Tabulated1DFunction<double, VectorWithDefaultAllocator>::printCSV(
+    double, double, unsigned, std::ostream&) const;
 template void
-Tabulated1DFunction<float>::printCSV(float,float,
-                                     unsigned,std::ostream&) const;
+Tabulated1DFunction<float, VectorWithDefaultAllocator>::printCSV(
+    float, float, unsigned, std::ostream&) const;
 
 } // namespace Opm

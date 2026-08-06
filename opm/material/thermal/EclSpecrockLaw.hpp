@@ -56,7 +56,8 @@ public:
     OPM_HOST_DEVICE static Evaluation solidInternalEnergy(const Params& params, const FluidState& fluidState)
     {
         const auto& T = fluidState.temperature(/*phaseIdx=*/0);
-        return params.template eval<Evaluation>(T);
+        // return params.template eval<Evaluation>(T);
+        return params.internalEnergyFunction().eval(T, /*extrapolate=*/true);
     }
 };
 

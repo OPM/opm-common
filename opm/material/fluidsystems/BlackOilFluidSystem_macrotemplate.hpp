@@ -180,7 +180,6 @@ public:
     }
 
 
-    // TODO: changed this code to copy more instead of using && and move semantics while debugging, revert to an efficient and safe version!
     FLUIDSYSTEM_CLASSNAME(Scalar _surfacePressure_,
                           Scalar _surfaceTemperature_,
                           Scalar _reservoirTemperature_,

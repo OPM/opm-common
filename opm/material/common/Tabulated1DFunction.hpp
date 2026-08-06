@@ -27,7 +27,11 @@
 #ifndef OPM_TABULATED_1D_FUNCTION_HPP
 #define OPM_TABULATED_1D_FUNCTION_HPP
 
+#include <opm/common/ErrorMacros.hpp>
 #include <opm/common/OpmLog/OpmLog.hpp>
+#include <opm/common/utility/VectorWithDefaultAllocator.hpp>
+#include <opm/common/utility/gpuDecorators.hpp>
+#include <opm/common/utility/gpuistl_if_available.hpp>
 #include <opm/material/densead/Math.hpp>
 
 #include <algorithm>
@@ -35,6 +39,7 @@
 #include <cstddef>
 #include <iosfwd>
 #include <stdexcept>
+#include <utility>
 #include <vector>
 
 namespace Opm {
@@ -43,20 +48,45 @@ struct SegmentIndex {
     std::size_t value;
 };
 
+template <class Scalar,
+          template <class> class Storage = VectorWithDefaultAllocator>
+class Tabulated1DFunction;
+
+#if HAVE_CUDA
+namespace gpuistl {
+
+template <class Scalar>
+Tabulated1DFunction<Scalar, GpuBuffer>
+copy_to_gpu(const Tabulated1DFunction<Scalar>& cpu);
+
+template <class Scalar, template <class> class ContainerT>
+Tabulated1DFunction<Scalar, GpuView>
+make_view(Tabulated1DFunction<Scalar, ContainerT>& gpuBuffers);
+
+} // namespace gpuistl
+#endif // HAVE_CUDA
+
 /*!
  * \brief Implements a linearly interpolated scalar function that depends on one
  *        variable.
  */
-template <class Scalar>
+template <class Scalar, template <class> class Storage>
 class Tabulated1DFunction
 {
 public:
+    using ValueVector = Storage<Scalar>;
+
     /*!
      * \brief Default constructor for a piecewise linear function.
      *
      * To specfiy the acutal curve, use one of the set() methods.
      */
-    Tabulated1DFunction()
+    OPM_HOST_DEVICE Tabulated1DFunction() = default;
+
+    OPM_HOST_DEVICE Tabulated1DFunction(ValueVector xValues,
+                                         ValueVector yValues)
+        : xValues_(std::move(xValues))
+        , yValues_(std::move(yValues))
     {}
 
     /*!
@@ -234,10 +264,10 @@ public:
     Scalar xAt(std::size_t i) const
     { return xValues_[i]; }
 
-    const std::vector<Scalar>& xValues() const
+    const ValueVector& xValues() const
     { return xValues_; }
 
-    const std::vector<Scalar>& yValues() const
+    const ValueVector& yValues() const
     { return yValues_; }
 
     /*!
@@ -263,14 +293,19 @@ public:
      *                    failed assertation.
      */
     template <class Evaluation>
-    Evaluation eval(const Evaluation& x, bool extrapolate = false) const
+    OPM_HOST_DEVICE Evaluation eval(const Evaluation& x, bool extrapolate = false) const
     {
-        SegmentIndex segIdx = findSegmentIndex(x, extrapolate);
-        return eval(x, segIdx);
+        if constexpr (OPM_IS_INSIDE_DEVICE_FUNCTION) {
+            return evalDevice_(x);
+        }
+        else {
+            SegmentIndex segIdx = findSegmentIndex(x, extrapolate);
+            return eval(x, segIdx);
+        }
     }
 
     template <class Evaluation>
-    Evaluation eval(const Evaluation& x, SegmentIndex segIdxIn) const
+    OPM_HOST_DEVICE Evaluation eval(const Evaluation& x, SegmentIndex segIdxIn) const
     {
         std::size_t segIdx = segIdxIn.value;
         Scalar x0 = xValues_[segIdx];
@@ -430,7 +465,7 @@ public:
     */
     void printCSV(Scalar xi0, Scalar xi1, unsigned k, std::ostream& os) const;
 
-    bool operator==(const Tabulated1DFunction<Scalar>& data) const {
+    bool operator==(const Tabulated1DFunction<Scalar, Storage>& data) const {
         return xValues_ == data.xValues_ &&
                yValues_ == data.yValues_;
     }
@@ -506,6 +541,37 @@ public:
 
 private:
     template <class Evaluation>
+    OPM_HOST_DEVICE Evaluation evalDevice_(const Evaluation& x) const
+    {
+        const std::size_t n = xValues_.size();
+        assert(n >= 2);
+
+        std::size_t segIdx = 0;
+        if (x <= xValues_[1]) {
+            segIdx = 0;
+        }
+        else if (x >= xValues_[n - 2]) {
+            segIdx = n - 2;
+        }
+        else {
+            std::size_t lowerIdx = 1;
+            std::size_t upperIdx = n - 2;
+            while (lowerIdx + 1 < upperIdx) {
+                const std::size_t pivotIdx = (lowerIdx + upperIdx) / 2;
+                if (x < xValues_[pivotIdx]) {
+                    upperIdx = pivotIdx;
+                }
+                else {
+                    lowerIdx = pivotIdx;
+                }
+            }
+            segIdx = lowerIdx;
+        }
+
+        return eval(x, SegmentIndex{segIdx});
+    }
+
+    template <class Evaluation>
     Evaluation evalDerivative_(const Evaluation& x, std::size_t segIdx) const
     {
 
@@ -555,14 +621,14 @@ private:
      */
     struct ComparatorX_
     {
-        explicit ComparatorX_(const std::vector<Scalar>& x)
+        explicit ComparatorX_(const ValueVector& x)
             : x_(x)
         {}
 
         bool operator ()(std::size_t idxA, std::size_t idxB) const
         { return x_.at(idxA) < x_.at(idxB); }
 
-        const std::vector<Scalar>& x_;
+        const ValueVector& x_;
     };
 
     /*!
@@ -583,7 +649,7 @@ private:
         std::ranges::sort(idxVector, cmp);
 
         // reorder the sample points
-        std::vector<Scalar> tmpX(n), tmpY(n);
+        ValueVector tmpX(n), tmpY(n);
         for (std::size_t i = 0; i < idxVector.size(); ++ i) {
             tmpX[i] = xValues_[idxVector[i]];
             tmpY[i] = yValues_[idxVector[i]];
@@ -615,10 +681,44 @@ private:
         yValues_.resize(nSamples);
     }
 
-    std::vector<Scalar> xValues_;
-    std::vector<Scalar> yValues_;
+#if HAVE_CUDA
+    template <class ScalarT>
+    friend Tabulated1DFunction<ScalarT, gpuistl::GpuBuffer>
+    gpuistl::copy_to_gpu(const Tabulated1DFunction<ScalarT>& cpu);
+
+    template <class ScalarT, template <class> class ContainerT>
+    friend Tabulated1DFunction<ScalarT, gpuistl::GpuView>
+    gpuistl::make_view(Tabulated1DFunction<ScalarT, ContainerT>& gpuBuffers);
+#endif
+
+    ValueVector xValues_;
+    ValueVector yValues_;
 };
 
 } // namespace Opm
+
+#if HAVE_CUDA
+namespace Opm::gpuistl {
+
+template <class Scalar>
+Tabulated1DFunction<Scalar, GpuBuffer>
+copy_to_gpu(const Tabulated1DFunction<Scalar>& cpu)
+{
+    return Tabulated1DFunction<Scalar, GpuBuffer>(
+        GpuBuffer<Scalar>(cpu.xValues()),
+        GpuBuffer<Scalar>(cpu.yValues()));
+}
+
+template <class Scalar, template <class> class ContainerT>
+Tabulated1DFunction<Scalar, GpuView>
+make_view(Tabulated1DFunction<Scalar, ContainerT>& gpuBuffers)
+{
+    return Tabulated1DFunction<Scalar, GpuView>(
+        make_view(gpuBuffers.xValues_),
+        make_view(gpuBuffers.yValues_));
+}
+
+} // namespace Opm::gpuistl
+#endif // HAVE_CUDA
 
 #endif

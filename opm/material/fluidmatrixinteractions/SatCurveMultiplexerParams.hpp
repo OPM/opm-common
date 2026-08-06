@@ -120,7 +120,6 @@ public:
 
     void setApproach(SatCurveMultiplexerApproach newApproach)
     {
-        // TODO: have some logic here to ensure we are choosing a approach available on GPU if we are on GPU.
         assert(realParams_ == 0);
         approach_ = newApproach;
 

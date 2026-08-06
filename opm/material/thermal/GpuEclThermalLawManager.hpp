@@ -94,7 +94,8 @@ namespace detail {
 #if HAVE_CUDA
     template <class Scalar>
     struct SpecrockSampleHolder<Scalar, true> {
-        std::vector<::Opm::gpuistl::GpuBuffer<Scalar>> sampleBuffers {};
+        std::vector<::Opm::EclSpecrockLawParams<
+            Scalar, ::Opm::gpuistl::GpuBuffer>> sampleBuffers {};
     };
 #endif
 
@@ -152,7 +153,8 @@ public:
      */
 #if HAVE_CUDA
     template <bool Enabled = isOwningGpu, std::enable_if_t<Enabled, int> = 0>
-    GpuManager(std::vector<::Opm::gpuistl::GpuBuffer<Scalar>> sampleBuffers,
+    GpuManager(std::vector<::Opm::EclSpecrockLawParams<
+                   Scalar, ::Opm::gpuistl::GpuBuffer>> sampleBuffers,
                OuterStorage<SolidEnergyLawParams> solidEnergyParams,
                OuterStorage<int> elementToSolidRegionIdx,
                OuterStorage<ThermalConductionLawParams> thermalConductionParams)
@@ -213,7 +215,8 @@ public:
      */
 #if HAVE_CUDA
     template <bool Enabled = isOwningGpu, std::enable_if_t<Enabled, int> = 0>
-    std::vector<::Opm::gpuistl::GpuBuffer<Scalar>>& specrockSampleBuffers()
+    std::vector<::Opm::EclSpecrockLawParams<
+        Scalar, ::Opm::gpuistl::GpuBuffer>>& specrockSampleBuffers()
     {
         return this->sampleBuffers;
     }
@@ -328,21 +331,17 @@ copy_to_gpu(const ::Opm::EclThermalLaw::GpuManager<ScalarT, FluidSystemT>& cpu)
     using SolidEnergyLawParamsView = typename ManagerBuf::SolidEnergyLawParams;
     using ThermalConductionLawParams = typename ManagerBuf::ThermalConductionLawParams;
 
-    // multiplied by two to account for both temperature and internal energy samples
-    std::vector<GpuBuffer<ScalarT>> sampleBuffers;
-    sampleBuffers.reserve(2u * cpu.solidEnergyParamsStorage().size());
+    using SolidEnergyLawParamsBuffer =
+        ::Opm::EclSpecrockLawParams<ScalarT, GpuBuffer>;
+    std::vector<SolidEnergyLawParamsBuffer> sampleBuffers;
+    sampleBuffers.reserve(cpu.solidEnergyParamsStorage().size());
 
     std::vector<SolidEnergyLawParamsView> hostStaging;
     hostStaging.reserve(cpu.solidEnergyParamsStorage().size());
 
     for (const auto& cpuRegion : cpu.solidEnergyParamsStorage()) {
-        sampleBuffers.emplace_back(GpuBuffer<ScalarT>(cpuRegion.temperatureSamples()));
-        auto& tBuf = sampleBuffers.back();
-        sampleBuffers.emplace_back(GpuBuffer<ScalarT>(cpuRegion.internalEnergySamples()));
-        auto& eBuf = sampleBuffers.back();
-        SolidEnergyLawParamsView params(GpuView<ScalarT>(tBuf.data(), tBuf.size()),
-                                        GpuView<ScalarT>(eBuf.data(), eBuf.size()));
-        hostStaging.emplace_back(std::move(params));
+        sampleBuffers.emplace_back(::Opm::gpuistl::copy_to_gpu(cpuRegion));
+        hostStaging.emplace_back(::Opm::gpuistl::make_view(sampleBuffers.back()));
     }
 
     return ManagerBuf(std::move(sampleBuffers),
