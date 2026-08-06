@@ -86,6 +86,8 @@ public:
 
     OPM_HOST_DEVICE EclSpecrockLawParams() = default;
 
+    OPM_HOST_DEVICE EclSpecrockLawParams(const EclSpecrockLawParams<ScalarT, Storage>&) = default;
+
     OPM_HOST_DEVICE explicit EclSpecrockLawParams(
         InternalEnergyFunction internalEnergyFunction)
         : internalEnergyFunction_(std::move(internalEnergyFunction))
@@ -108,31 +110,30 @@ public:
     void setHeatCapacities(const ContainerT& temperature,
                            const ContainerT& heatCapacity)
     {
-        if (temperature.size() != heatCapacity.size()) {
-            OPM_THROW(std::invalid_argument,
-                      "EclSpecrockLawParams: temperature and heat-capacity arrays must have "
-                      "matching sizes");
-        }
+        assert(temperature.size() == heatCapacity.size());
 
-        // Integrate the heat capacity to compute the internal energy.
-        const std::size_t n = temperature.size();
-        std::vector<Scalar> temperatures(n);
-        std::vector<Scalar> internalEnergies(n);
-        Scalar curU = temperature[0] * heatCapacity[0];
-        for (std::size_t i = 0; i < n; ++i) {
-            temperatures[i] = temperature[i];
-            internalEnergies[i] = curU;
+        // integrate the heat capacity to compute the internal energy
+        Scalar curU = temperature[0]*heatCapacity[0];
+        unsigned n = temperature.size();
+        std::vector<Scalar> T(n);
+        std::vector<Scalar> u(n);
+        for (unsigned i = 0; i < temperature.size(); ++ i) {
+            T[i] = temperature[i];
+            u[i] = curU;
 
-            if (i >= n - 1) {
+            if (i >= temperature.size() - 1)
                 break;
-            }
 
-            // Integrate the heat capacity from the current sampling point
-            // to the next one using the trapezoidal rule.
-            curU += 0.5 * (heatCapacity[i] + heatCapacity[i + 1])
-                * (temperature[i + 1] - temperature[i]);
+            // integrate to the heat capacity from the current sampling point to the next
+            // one. this leads to a quadratic polynomial.
+            Scalar c_v0 = heatCapacity[i];
+            Scalar c_v1 = heatCapacity[i + 1];
+            Scalar T0 = temperature[i];
+            Scalar T1 = temperature[i + 1];
+            curU += 0.5*(c_v0 + c_v1)*(T1 - T0);
         }
-        internalEnergyFunction_.setXYContainers(temperatures, internalEnergies);
+
+        internalEnergyFunction_.setXYContainers(T, u);
     }
 
     /*!
@@ -157,16 +158,13 @@ public:
     }
 
     OPM_HOST_DEVICE const InternalEnergyFunction& internalEnergyFunction() const
-    { return internalEnergyFunction_; }
-
-    OPM_HOST_DEVICE std::size_t numSamples() const
-    { return internalEnergyFunction_.numSamples(); }
+    { EnsureFinalized::check(); return internalEnergyFunction_; }
 
     const ValueVector& temperatureSamples() const
-    { return internalEnergyFunction_.xValues(); }
+    { EnsureFinalized::check(); return internalEnergyFunction_.xValues(); }
 
     const ValueVector& internalEnergySamples() const
-    { return internalEnergyFunction_.yValues(); }
+    { EnsureFinalized::check(); return internalEnergyFunction_.yValues(); }
 
 private:
 #if HAVE_CUDA
