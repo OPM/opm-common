@@ -524,7 +524,7 @@ BOOST_AUTO_TEST_CASE( MULTISEGMENT_ABS ) {
     // Here, we check the information for the segment 2 and 6 as samples.
     {
         const auto& rec2 = kw.getRecord(1);
-        const int segment1 = rec2.getItem<ParserKeywords::WELSEGS::SEGMENT2>().get< int >(0);
+        const int segment1 = rec2.getItem<ParserKeywords::WELSEGS::SEGMENT1>().get< int >(0);
         const int segment2 = rec2.getItem<ParserKeywords::WELSEGS::SEGMENT2>().get< int >(0);
         BOOST_CHECK_EQUAL( 2, segment1 );
         BOOST_CHECK_EQUAL( 2, segment2 );
