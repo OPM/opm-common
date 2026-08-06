@@ -55,11 +55,12 @@ InjMult InjMult::serializationTestObject() {
 
 
 std::string InjMult::InjMultToString(const InjMult& mult) {
-    const auto fracture_pressure =
-        mult.fracture_pressure.is<double>()
+    std::string fracture_pressure {"UNDEFINED_UDA"};
+    if (mult.fracture_pressure.is_defined()) {
+        fracture_pressure = mult.fracture_pressure.is<double>()
             ? fmt::format("{}", mult.fracture_pressure.get<double>())
             : fmt::format("'{}'", mult.fracture_pressure.get<std::string>());
-
+    }
     return fmt::format("fracture_pressure {}, multiplier_gradient {}",
                        fracture_pressure, mult.multiplier_gradient);
 }
