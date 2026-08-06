@@ -484,6 +484,7 @@ list(APPEND ADDITIONAL_SOURCE_FILES
   test_util/convertECL.cpp
   test_util/rewriteEclFile.cpp
   test_util/summary.cpp
+  test_util/rst_deck.cpp
 )
 
 list(APPEND TEST_SOURCE_FILES
@@ -864,7 +865,6 @@ list(APPEND PROGRAM_SOURCE_FILES
   examples/opmi.cpp
   examples/opmpack.cpp
   examples/opmhash.cpp
-  examples/rst_deck.cpp
   examples/make_ext_smry.cpp
   examples/co2brinepvt.cpp
   examples/hysteresis.cpp
