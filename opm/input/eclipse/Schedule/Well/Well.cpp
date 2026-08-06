@@ -2459,12 +2459,23 @@ void Opm::Well::updateWINJMULTUDA(const Opm::UDQConfig& udq_config,
 
 bool Opm::Well::updateUDQActive(const Opm::UDQConfig& udq_config, Opm::UDQActive& active) const
 {
-    if (!this->well_inj_mult.has_value()) {
-        return false;
+    if (this->well_inj_mult.has_value()) {
+        return active.update(udq_config,
+                             this->well_inj_mult.value().fracture_pressure,
+                             this->name(),
+                             Opm::UDAControl::WINJMULT_FRACTURE_PRESSURE);
     }
 
-    return active.update(udq_config,
-                         this->well_inj_mult.value().fracture_pressure,
-                         this->name(),
-                         Opm::UDAControl::WINJMULT_FRACTURE_PRESSURE);
+    if ((this->inj_mult_mode == InjMultMode::CREV) || (this->inj_mult_mode == InjMultMode::CIRR)) {
+        for (const auto& connection : *this->connections) {
+            if (connection.activeInjMult()) {
+                return active.update(udq_config,
+                                     connection.injmult().fracture_pressure,
+                                     this->name(),
+                                     Opm::UDAControl::WINJMULT_FRACTURE_PRESSURE);
+            }
+        }
+    }
+
+    return false;
 }

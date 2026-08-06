@@ -2163,8 +2163,8 @@ END
         
         // fracture_pressure is UDAValue - should be numeric
         BOOST_CHECK(inj_mult.fracture_pressure.is<double>());
-        BOOST_CHECK_EQUAL(inj_mult.fracture_pressure.getSI(), 350.0e5); // barsa to SI
-        BOOST_CHECK_EQUAL(inj_mult.multiplier_gradient, 1.0e-8); // 0.001 / barsa to 1 / Pa
+        BOOST_CHECK_CLOSE(inj_mult.fracture_pressure.getSI(), 350.0e5, 1.0e-8); // barsa to SI
+        BOOST_CHECK_CLOSE(inj_mult.multiplier_gradient, 1.0e-8, 1.0e-8); // 0.001 / barsa to 1 / Pa
     }
 }
 
