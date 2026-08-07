@@ -355,11 +355,6 @@ bool ScheduleState::lgr_active(const std::string& lgr_name) const
     return (it == this->m_lgr_active.end()) || it->second;
 }
 
-const std::map<std::string, bool>& ScheduleState::lgr_activation() const
-{
-    return this->m_lgr_active;
-}
-
 bool ScheduleState::rptonly() const
 {
     return this->m_rptonly;

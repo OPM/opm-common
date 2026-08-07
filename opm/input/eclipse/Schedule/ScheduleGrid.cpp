@@ -140,8 +140,7 @@ int Opm::ScheduleGrid::get_lgr_grid_number(const std::optional<std::string>& lgr
 
 bool Opm::ScheduleGrid::has_lgr(const std::string& lgr_label) const
 {
-    const auto& labels = this->label_to_index.get();
-    return labels.find(lgr_label) != labels.end();
+    return this->label_to_index.get().contains(lgr_label);
 }
 
 // ===========================================================================

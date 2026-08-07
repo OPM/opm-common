@@ -515,10 +515,6 @@ namespace Opm {
         /// which is the deck default.
         bool lgr_active(const std::string& lgr_name) const;
 
-        /// Every explicit LGRON/LGROFF setting in effect at this report step,
-        /// keyed by refinement name.  Refinements using the default (active)
-        /// do not appear.
-        const std::map<std::string, bool>& lgr_activation() const;
 
         bool rptonly() const;
         void rptonly(const bool only);

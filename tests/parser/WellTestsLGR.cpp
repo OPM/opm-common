@@ -341,7 +341,6 @@ BOOST_AUTO_TEST_CASE(LgrOnOffSchedule)
         const auto sched = Schedule { deck, es };
         BOOST_CHECK(sched[0].lgr_active("LGR1"));
         BOOST_CHECK(sched[1].lgr_active("LGR1"));
-        BOOST_CHECK(sched[0].lgr_activation().empty());
     }
 
     // Off at the start, on again at the second report step; the setting

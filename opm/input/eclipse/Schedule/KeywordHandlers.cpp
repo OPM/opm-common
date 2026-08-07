@@ -182,8 +182,8 @@ void handleLGROnOff(HandlerContext& handlerContext, const bool active)
     if ((handlerContext.grid.get_grid() != nullptr) &&
         ! handlerContext.grid.has_lgr(lgr_name))
     {
-        throw OpmInputError(fmt::format("{}: unknown local grid refinement '{}'",
-                                        handlerContext.keyword.name(), lgr_name),
+        throw OpmInputError(fmt::format("Unknown local grid refinement '{}'",
+                                        lgr_name),
                             handlerContext.keyword.location());
     }
 
@@ -192,9 +192,9 @@ void handleLGROnOff(HandlerContext& handlerContext, const bool active)
         (wellsItem.get<int>(0) != 0))
     {
         OpmLog::warning(OpmInputError::format(
-            fmt::format("{{keyword}}: the well-activation item of {} is not supported "
-                        "and is ignored in {{file}} line {{line}}",
-                        handlerContext.keyword.name()),
+            "Problem with keyword {keyword}\n"
+            "In {file} line {line}\n"
+            "The well-activation item is not supported and is ignored",
             handlerContext.keyword.location()));
     }
 
