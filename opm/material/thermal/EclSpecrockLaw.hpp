@@ -30,6 +30,7 @@
 #include "EclSpecrockLawParams.hpp"
 
 #include <opm/common/utility/gpuDecorators.hpp>
+#include <cassert>
 
 namespace Opm
 {

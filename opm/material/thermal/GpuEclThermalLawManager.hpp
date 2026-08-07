@@ -170,6 +170,14 @@ public:
     OPM_HOST_DEVICE SolidEnergyLawParams solidEnergyLawParams(unsigned elemIdx) const
     {
         const int regionIdx = elementToSolidRegionIdx_[elemIdx];
+
+        OPM_ERROR_IF(elemIdx >= elementToSolidRegionIdx_.size()
+                     || regionIdx < 0,
+                     "Invalid element index or region index in GpuManager::solidEnergyLawParams");
+        OPM_ERROR_IF(solidEnergyParams_.size() < 0
+                     || static_cast<std::size_t>(regionIdx) >= solidEnergyParams_.size(),
+                     "Invalid region index in GpuManager::solidEnergyLawParams");
+
         return solidEnergyParams_[regionIdx];
     }
 

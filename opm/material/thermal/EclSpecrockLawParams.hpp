@@ -134,6 +134,7 @@ public:
         }
 
         internalEnergyFunction_.setXYContainers(T, u);
+        EnsureFinalized::finalize();
     }
 
     /*!
@@ -190,6 +191,11 @@ template <class ScalarT>
 ::Opm::EclSpecrockLawParams<ScalarT, GpuBuffer>
 copy_to_gpu(const ::Opm::EclSpecrockLawParams<ScalarT>& cpu)
 {
+    const auto& cpuFunction = cpu.internalEnergyFunction();
+    if (cpuFunction.numSamples() < 2) {
+        OPM_THROW(std::logic_error,
+                  "SPECROCK GPU upload requires at least two table samples");
+    }
     return ::Opm::EclSpecrockLawParams<ScalarT, GpuBuffer>(
         copy_to_gpu(cpu.internalEnergyFunction_));
 }

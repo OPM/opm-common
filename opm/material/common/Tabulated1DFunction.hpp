@@ -55,10 +55,6 @@ class Tabulated1DFunction;
 #if HAVE_CUDA
 namespace gpuistl {
 
-template <class Scalar>
-Tabulated1DFunction<Scalar, GpuBuffer>
-copy_to_gpu(const Tabulated1DFunction<Scalar>& cpu);
-
 template <class Scalar, template <class> class ContainerT>
 Tabulated1DFunction<Scalar, GpuView>
 make_view(Tabulated1DFunction<Scalar, ContainerT>& gpuBuffers);
@@ -243,7 +239,7 @@ public:
     /*!
      * \brief Returns the number of sampling points.
      */
-    std::size_t numSamples() const
+    OPM_HOST_DEVICE std::size_t numSamples() const
     { return xValues_.size(); }
 
     /*!
@@ -280,7 +276,7 @@ public:
      * \brief Return true iff the given x is in range [x1, xn].
      */
     template <class Evaluation>
-    bool applies(const Evaluation& x) const
+    OPM_HOST_DEVICE bool applies(const Evaluation& x) const
     { return xValues_[0] <= x && x <= xValues_[numSamples() - 1]; }
 
     /*!
@@ -295,13 +291,8 @@ public:
     template <class Evaluation>
     OPM_HOST_DEVICE Evaluation eval(const Evaluation& x, bool extrapolate = false) const
     {
-        if constexpr (OPM_IS_INSIDE_DEVICE_FUNCTION) {
-            return evalDevice_(x);
-        }
-        else {
-            SegmentIndex segIdx = findSegmentIndex(x, extrapolate);
-            return eval(x, segIdx);
-        }
+        SegmentIndex segIdx = findSegmentIndex(x, extrapolate);
+        return eval(x, segIdx);
     }
 
     template <class Evaluation>
@@ -313,7 +304,6 @@ public:
 
         Scalar y0 = yValues_[segIdx];
         Scalar y1 = yValues_[segIdx + 1];
-
         return y0 + (y1 - y0)*(x - x0)/(x1 - x0);
     }
 
@@ -471,25 +461,18 @@ public:
     }
 
     template <class Evaluation>
-    SegmentIndex findSegmentIndex(const Evaluation& x, bool extrapolate = false) const
+    OPM_HOST_DEVICE SegmentIndex findSegmentIndex(const Evaluation& x, bool extrapolate = false) const
     {
-        if (!isfinite(x)) {
-            throw std::runtime_error("We can not search for extrapolation/interpolation "
-                                     "segment in an 1D table for non-finite value " +
-                                     std::to_string(getValue(x)) + " .");
-        }
 
-        if (!extrapolate && !applies(x))
-            throw std::logic_error("Trying to evaluate a tabulated function outside of its range");
+#if OPM_IS_INSIDE_HOST_FUNCTION
+        // relies on std::isfinite() which is not supported in device code
+        OPM_ERROR_IF(!isfinite(x), "Trying to evaluate a tabulated function at a non-finite value");
+#endif
 
-        // we need at least two sampling points!
-        if (numSamples() < 2) {
-            throw std::logic_error("We need at least two sampling points to "
-                                   "do interpolation/extrapolation, "
-                                   "and the table only contains " +
-                                   std::to_string(numSamples()) +
-                                   " sampling points");
-        }
+        OPM_ERROR_IF(numSamples() < 2, "Trying to evaluate a tabulated function with less than two samples");
+
+        OPM_ERROR_IF(!extrapolate && !applies(x),
+                     "Trying to evaluate a tabulated function outside of its range");
 
         if (x <= xValues_[1])
             return SegmentIndex{0};
@@ -508,6 +491,7 @@ public:
             }
 
             if (xValues_[lowerIdx] > x || x > xValues_[lowerIdx + 1]) {
+#if OPM_IS_INSIDE_HOST_FUNCTION
                 std::string msg = "Problematic interpolation/extrapolation "
                                   "segment is found for the input value " +
                                   std::to_string(Opm::getValue(x)) +
@@ -534,43 +518,15 @@ public:
                 msg += "\n";
                 OpmLog::debug(msg);
                 throw std::runtime_error(msg);
+#else
+                OPM_THROW(std::runtime_error, "Problematic interpolation/extrapolation segment found");
+#endif
             }
             return SegmentIndex{lowerIdx};
         }
     }
 
 private:
-    template <class Evaluation>
-    OPM_HOST_DEVICE Evaluation evalDevice_(const Evaluation& x) const
-    {
-        const std::size_t n = xValues_.size();
-        assert(n >= 2);
-
-        std::size_t segIdx = 0;
-        if (x <= xValues_[1]) {
-            segIdx = 0;
-        }
-        else if (x >= xValues_[n - 2]) {
-            segIdx = n - 2;
-        }
-        else {
-            std::size_t lowerIdx = 1;
-            std::size_t upperIdx = n - 2;
-            while (lowerIdx + 1 < upperIdx) {
-                const std::size_t pivotIdx = (lowerIdx + upperIdx) / 2;
-                if (x < xValues_[pivotIdx]) {
-                    upperIdx = pivotIdx;
-                }
-                else {
-                    lowerIdx = pivotIdx;
-                }
-            }
-            segIdx = lowerIdx;
-        }
-
-        return eval(x, SegmentIndex{segIdx});
-    }
-
     template <class Evaluation>
     Evaluation evalDerivative_(const Evaluation& x, std::size_t segIdx) const
     {
@@ -682,10 +638,6 @@ private:
     }
 
 #if HAVE_CUDA
-    template <class ScalarT>
-    friend Tabulated1DFunction<ScalarT, gpuistl::GpuBuffer>
-    gpuistl::copy_to_gpu(const Tabulated1DFunction<ScalarT>& cpu);
-
     template <class ScalarT, template <class> class ContainerT>
     friend Tabulated1DFunction<ScalarT, gpuistl::GpuView>
     gpuistl::make_view(Tabulated1DFunction<ScalarT, ContainerT>& gpuBuffers);
