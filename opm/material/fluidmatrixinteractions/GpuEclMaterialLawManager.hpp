@@ -59,15 +59,6 @@
 #include <utility>
 #include <vector>
 
-namespace Opm::gpuistl
-{
-template <class T>
-class GpuBuffer;
-
-template <class T>
-class GpuView;
-} // namespace Opm::gpuistl
-
 namespace Opm::EclMaterialLaw
 {
 
@@ -214,29 +205,9 @@ public:
     {
     }
 
-    /*!
-     * \brief Construct from a CPU \c Opm::EclMaterialLaw::Manager directly
-     *        into device-resident \c GpuBuffer storage.
-     *
-    * For each SATNUM region, the piecewise-linear sample arrays are uploaded
-    * to the GPU as individual \c GpuBuffer<Scalar> instances kept
-     * alive by this manager (via its private
-     * \c detail::GpuPiecewiseLinearSampleHolder base). The cell's
-     * \c MaterialLawParams is populated with \c GpuView<const Scalar> views
-     * referencing those device buffers and is then bulk-copied to the
-     * device alongside the satnum array.
-     *
-     * Only enabled when this manager itself uses \c GpuBuffer storage and
-     * the two-phase laws use \c GpuView<const Scalar> sample storage.
-     */
     /*! \brief Material-law parameters of an active cell. */
-    OPM_HOST_DEVICE MaterialLawParams materialLawParams(unsigned elemIdx) const
+    OPM_HOST_DEVICE const MaterialLawParams& materialLawParams(unsigned elemIdx) const
     {
-        // Return by value: GpuView::operator[] const already returns by
-        // value, so binding a reference to materialLawParams_[idx] inside
-        // this function would dangle. Returning by value lets the caller
-        // (which typically does `const auto& mp = ...`) safely extend the
-        // temporary's lifetime.
         return materialLawParamsByRegion_[satnumRegionArray_[elemIdx]];
     }
 
@@ -346,16 +317,15 @@ public:
         GpuData data;
         data.satnumRegionArray = buildHostSatnumRegionArray(cpu, numElements);
 
-        const auto maxRegion = data.satnumRegionArray.empty()
-            ? -1
-            : *std::max_element(data.satnumRegionArray.begin(), data.satnumRegionArray.end());
-        if (maxRegion < 0) {
-            return data;
-        }
-        data.materialLawParamsByRegion.resize(static_cast<std::size_t>(maxRegion) + 1u);
+        auto maxRegion = std::max_element(data.satnumRegionArray.begin(), data.satnumRegionArray.end());
+        OPM_ERROR_IF(maxRegion == data.satnumRegionArray.end(),
+                     "Failed to find maximum SATNUM region index in GPU material manager");
+
+        data.materialLawParamsByRegion.resize(static_cast<std::size_t>(*maxRegion) + 1u);
         std::vector<bool> initialized(data.materialLawParamsByRegion.size(), false);
         std::vector<std::size_t> firstElement(data.materialLawParamsByRegion.size(), 0u);
-        data.sampleBuffers.reserve(data.materialLawParamsByRegion.size() * 12u);
+        // reserve 6 or 12 sample buffers depending 2 or three-phase
+        data.sampleBuffers.reserve(data.materialLawParamsByRegion.size() * (6u + 6u * static_cast<std::size_t>(isTwoPhase)));
 
         auto pushSampleBuffer = [&](const auto& sampleVector) {
             std::vector<Scalar> hostCopy(sampleVector.begin(), sampleVector.end());
