@@ -261,13 +261,52 @@ Well {} specifies {} constraint, but {}. The constraint will be ignored.)",
         this->addProductionControl( ProducerCMode::BHP );
         {
             const auto& cmodeItem = record.getItem("CMODE");
-            if (cmodeItem.hasValue(0)) {
-                auto cmode = WellProducerCModeFromString(cmodeItem.getTrimmedString(0));
+            const auto cmode_string = cmodeItem.hasValue(0)
+                ? cmodeItem.getTrimmedString(0)
+                : std::string {};
 
-                if (this->hasProductionControl( cmode ))
+            // Item 3 may legitimately be omitted ('1*') or blank (''): a well
+            // that is not being opened needs no control mode - closing one
+            // with 'WCONPROD  W SHUT /' is idiomatic - and a later record that
+            // only revises limits keeps the mode the well already has.  What
+            // has no meaning is opening a well that has never been given one.
+            // That used to reach the simulator, where every time step failed
+            // with "Well control must be specified", or reached the enum
+            // conversion and surfaced as an internal error.  Reject it here,
+            // naming the keyword and line the user can act on.
+            if (cmode_string.empty()) {
+                const auto status = WellStatusFromString
+                    (record.getItem("STATUS").getTrimmedString(0));
+
+                if ((status == WellStatus::OPEN) &&
+                    (this->controlMode == ProducerCMode::CMODE_UNDEFINED))
+                {
+                    throw OpmInputError(fmt::format("Control mode (item 3) must be "
+                                                    "specified when well {} is first "
+                                                    "opened", well_name),
+                                        location);
+                }
+            }
+            else {
+                auto cmode = ProducerCMode::CMODE_UNDEFINED;
+                try {
+                    cmode = WellProducerCModeFromString(cmode_string);
+                }
+                catch (const std::invalid_argument&) {
+                    throw OpmInputError(fmt::format("Unknown control mode {} for well {}",
+                                                    cmode_string, well_name),
+                                        location);
+                }
+
+                if (this->hasProductionControl(cmode)) {
                     this->controlMode = cmode;
-                else
-                    throw std::invalid_argument("Trying to set CMODE to: " + cmodeItem.getTrimmedString(0) + " - no value has been specified for this control");
+                }
+                else {
+                    throw OpmInputError(fmt::format("Control mode {} for well {} has no "
+                                                    "target or limit specified",
+                                                    cmode_string, well_name),
+                                        location);
+                }
             }
         }
     }
