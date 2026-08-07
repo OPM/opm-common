@@ -5,7 +5,7 @@
   ],
   "items": [
     {
-      "name": "LOCAL_GRID_REFINMENT",
+      "name": "LOCAL_GRID_REFINEMENT",
       "value_type": "STRING"
     }
   ]

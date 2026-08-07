@@ -180,6 +180,10 @@ public:
     /// \return Numeric grid index.
     int get_lgr_grid_number(const std::optional<std::string>& lgr_label) const;
 
+    /// Whether \p lgr_label names a local grid refinement known to the
+    /// simulation grids.
+    bool has_lgr(const std::string& lgr_label) const;
+
 private:
     /// Underlying grid object.
     const EclipseGrid* grid{nullptr};

@@ -344,6 +344,17 @@ void ScheduleState::update_sumthin(double sumthin) {
         this->m_sumthin = sumthin;
 }
 
+void ScheduleState::update_lgr_active(const std::string& lgr_name, const bool active)
+{
+    this->m_lgr_active.insert_or_assign(lgr_name, active);
+}
+
+bool ScheduleState::lgr_active(const std::string& lgr_name) const
+{
+    const auto it = this->m_lgr_active.find(lgr_name);
+    return (it == this->m_lgr_active.end()) || it->second;
+}
+
 bool ScheduleState::rptonly() const
 {
     return this->m_rptonly;
@@ -404,6 +415,7 @@ bool ScheduleState::operator==(const ScheduleState& other) const {
         && this->vfpinj == other.vfpinj
         && this->gptable == other.gptable
         && this->m_sumthin == other.m_sumthin
+        && this->m_lgr_active == other.m_lgr_active
         && this->next_tstep == other.next_tstep
         && this->m_rptonly == other.m_rptonly
         ;
@@ -424,6 +436,7 @@ ScheduleState ScheduleState::serializationTestObject() {
     ts.groups = map_member<std::string, Group>::serializationTestObject();
     ts.m_events = Events::serializationTestObject();
     ts.m_nupcol = Nupcol::serializationTestObject();
+    ts.m_lgr_active = {{"LGR1", false}, {"LGR2", true}};
     ts.m_message_limits = MessageLimits::serializationTestObject();
     ts.m_whistctl_mode = Well::ProducerCMode::THP;
     ts.target_wellpi = {{"WELL1", 1000}, {"WELL2", 2000}};

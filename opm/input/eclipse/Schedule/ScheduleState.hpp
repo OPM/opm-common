@@ -47,6 +47,7 @@
 #include <array>
 #include <cstddef>
 #include <iterator>
+#include <map>
 #include <memory>
 #include <optional>
 #include <stdexcept>
@@ -506,6 +507,15 @@ namespace Opm {
         const std::optional<double>& sumthin() const;
         void update_sumthin(double sumthin);
 
+        /// Switch a named local grid refinement on or off (LGRON / LGROFF).
+        void update_lgr_active(const std::string& lgr_name, bool active);
+
+        /// Whether the named local grid refinement is active at this report
+        /// step.  A refinement never mentioned by LGRON/LGROFF is active,
+        /// which is the deck default.
+        bool lgr_active(const std::string& lgr_name) const;
+
+
         bool rptonly() const;
         void rptonly(const bool only);
 
@@ -713,6 +723,7 @@ namespace Opm {
             serializer(m_whistctl_mode);
             serializer(m_sumthin);
             serializer(this->m_rptonly);
+            serializer(m_lgr_active);
         }
 
     private:
@@ -737,6 +748,7 @@ namespace Opm {
         WellProducerCMode m_whistctl_mode = WellProducerCMode::CMODE_UNDEFINED;
         std::optional<double> m_sumthin{};
         bool m_rptonly{false};
+        std::map<std::string, bool> m_lgr_active{};
     };
 
 } // namespace Opm
