@@ -878,25 +878,36 @@ namespace {
                                  const ::Opm::Schedule& schedule,
                                  const std::vector<std::reference_wrapper<const ::Opm::data::Solution>> simProps,
                                  const std::vector<double>& porv,
+                                 const std::map<std::string, std::vector<int>>& int_data,
                                  const ::Opm::UnitSystem& units,
                                        ::Opm::EclIO::OutputStream::Init& initFile)
     {
         bool fullProperties = simProps.size() > 1;
         if (grid.is_lgr()) {
-            std::vector<std::string> all_lgr_tag = grid.get_all_lgr_labels();
+            // Iterate the LGR grids in exactly the same order as
+            // EclipseGrid::save_children() writes them to the EGRID, i.e. the
+            // print order applied to the (father-sorted) child-cell storage
+            // (getLGRCell(index)).  Using get_all_lgr_labels()[index] here
+            // instead indexes the *deck-ordered* label list with the
+            // father-sorted print-order permutation, emitting the INIT LGR
+            // sections in a different order than the EGRID grids and breaking
+            // positional grid/section pairing in post-processors (ResInsight).
+            // The simulator-provided per-LGR data (simProps) follows the deck
+            // order, so it is addressed via the label's deck index.
             for (std::size_t index : grid.get_print_order_lgr())
             {
-                auto lgr_label = all_lgr_tag[index];
-                const ::Opm::EclipseGridLGR& lgr_grid = grid.getLGRCell(lgr_label);
+                const ::Opm::EclipseGridLGR& lgr_grid = grid.getLGRCell(index);
+                const auto lgr_label = lgr_grid.get_lgr_tag();
+                const auto deckIdx = grid.get_lgr_cell_index(lgr_label);
                 const std::array<int,3> subdivisions = grid.getCellSubdivisionRatioLGR(lgr_label);
                 std::vector<int> global_fathers = lgr_grid.getLGRCell_global_father(grid);
-                writeInitFileHeaderLGRCell(es, lgr_grid, schedule, initFile, index+1);
+                writeInitFileHeaderLGRCell(es, lgr_grid, schedule, initFile, deckIdx+1);
                 writePoreVolumeLGRCell(porv, global_fathers,
                 subdivisions[0]*subdivisions[1]*subdivisions[2], initFile);
                 writeGridGeometryLGRCell(grid, lgr_grid, units, initFile,
                                 subdivisions[0], subdivisions[1], subdivisions[2]);
                 writeDoubleCellProperties(es, units, initFile, global_fathers);
-                const auto& simProp = fullProperties ? simProps[index + 1] : simProps[0];
+                const auto& simProp = fullProperties ? simProps[deckIdx + 1] : simProps[0];
                 writeSimulatorPropertiesLGRCell(fullProperties ? lgr_grid : grid, simProp, initFile, global_fathers, fullProperties);
                 {
                     const auto writeAll = es.cfg().io().writeAllTransMultipliers();
@@ -911,6 +922,15 @@ namespace {
                     writeSimulatorPropertiesLGRCell(grid, multipliers, initFile, global_fathers);
                 }
                 writeIntegerCellPropertiesLGRCell(es, global_fathers, initFile);
+
+                // Simulator-supplied integer maps (e.g. MPI_RANK) are written
+                // for the main grid via writeIntegerMaps(); mirror them onto
+                // each LGR so the array also exists on the refined cells.  Each
+                // refined cell inherits its father coarse cell's value, which
+                // for rank-interior LGR boxes equals the box's owning rank.
+                for (const auto& [key, value] : int_data) {
+                    initFile.write(key, VectorUtil::filterArray(value, global_fathers));
+                }
             }
             initFile.message("LGRSGONE");
             }
@@ -1095,7 +1115,9 @@ void Opm::InitIO::write(const ::Opm::EclipseState&                  es,
 
     // GLOBAL REGION ARRAYS (SATNUM, PVTNUM, EQLNUM, FIPNUM, ...) - before NNC per reference output
     writeIntegerCellProperties(es, initFile);
-    writeIntegerMaps(std::move(int_data), initFile);
+    // Note: int_data (simulator integer maps, e.g. MPI_RANK) is reused by
+    // writeLGRLocalProperties() below, so it is not moved-from here.
+    writeIntegerMaps(int_data, initFile);
 
     // GLOBAL NNC - after integer region arrays, before LGR sections
     if (!nnc_col.empty()) {
@@ -1109,7 +1131,7 @@ void Opm::InitIO::write(const ::Opm::EclipseState&                  es,
     // LGR PROPERTY SECTION (per reference: after LGR NNC section)
     // For each LGR: LGRHEADI/Q/D, PORV, DEPTH, TRANX/Y/Z, PERMX/Y/Z, MULTX/Y/Z, PORO, SATNUM, ... + LGRSGONE
     // Not yet supported: LGR-specific aquifer and satfunc scaling - planned for upcoming versions
-    writeLGRLocalProperties(es, grid, schedule, simProps, porv, units, initFile);
+    writeLGRLocalProperties(es, grid, schedule, simProps, porv, int_data, units, initFile);
 
     // TABULAR DATA (TABDIMS, TAB, CON) - after all LGR sections per reference output
     writeTableData(es, units, initFile);

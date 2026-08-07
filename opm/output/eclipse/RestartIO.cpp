@@ -1104,26 +1104,31 @@ namespace {
                          int                                          lgrIndex,
                          int                                          index)
     {
-        const auto& all_lgr_names = grid.get_all_lgr_labels();
-        const auto& lgr_grid_name = all_lgr_names[lgrIndex];
+        // lgrIndex comes from grid.get_print_order_lgr(); address the LGR grid
+        // through the (father-sorted) child-cell storage so the restart writes
+        // its LGR sections in the same order as EclipseGrid::save_children()
+        // writes the EGRID grids.  The simulator-provided per-LGR restart
+        // values follow the deck order, so they are addressed via the label's
+        // deck index.
+        const auto& lgr_grid = grid.getLGRCell(static_cast<std::size_t>(lgrIndex));
+        const auto& lgr_grid_name = lgr_grid.get_lgr_tag();
+        const auto deckIdx = static_cast<int>(grid.get_lgr_cell_index(lgr_grid_name));
 
         rstFile.write("LGR", std::vector<std::string>{ lgr_grid_name });
 
-        const auto& lgr_grid = grid.getLGRCell(lgr_grid_name);
-
         // LGR HEADERS
-        writeHeaderLGR(es, rstFile, lgrIndex);
+        writeHeaderLGR(es, rstFile, deckIdx);
 
         // Global HEADERS for LGR GRIDS
         const auto inteHD =
-        writeHeader(report_step, sim_step, nextStepSize(values[lgrIndex+1]),
+        writeHeader(report_step, sim_step, nextStepSize(values[deckIdx+1]),
         seconds_elapsed, schedule, lgr_grid, es, rstFile);
 
         if (report_step > 0) {
-            writeDynamicDataLGR(sim_step, grid, es, schedule, values[lgrIndex+1].wells,
+            writeDynamicDataLGR(sim_step, grid, es, schedule, values[deckIdx+1].wells,
                                 action_state, wtest_state, sumState, inteHD,rstFile, lgr_grid_name);
         }
-        writeSolutionLGR(values[lgrIndex+1], es, schedule, udqState, report_step, sim_step,
+        writeSolutionLGR(values[deckIdx+1], es, schedule, udqState, report_step, sim_step,
         ecl_compatible_rst, write_double, inteHD, rstFile, lgr_grid_name);
 
         rstFile.write("ENDLGR", std::vector<int>{index});
