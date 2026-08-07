@@ -155,8 +155,9 @@ namespace Opm {
             for (std::size_t recordIdx = 0; recordIdx < thpresft.size(); ++ recordIdx) {
                 const DeckRecord& record = thpresft.getRecord(recordIdx);
 
-                const std::string& faultName = record.getItem("FAULT_NAME").getTrimmedString(0);
-                double thpresValue = record.getItem("VALUE").getSIDouble(0);
+                using Kw = ParserKeywords::THPRESFT;
+                const std::string& faultName = record.getItem<Kw::FAULT_NAME>().getTrimmedString(0);
+                double thpresValue = record.getItem<Kw::VALUE>().getSIDouble(0);
 
                 for (std::size_t faultIdx = 0; faultIdx < faults.size(); faultIdx++) {
                     auto& fault = faults.getFault(faultIdx);

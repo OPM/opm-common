@@ -35,9 +35,10 @@ namespace Opm {
 
     JFunc::JFunc(const Deck& deck)
     {
-        const auto& kw = *deck.getKeywordList<ParserKeywords::JFUNC>()[0];
+        using Kw = ParserKeywords::JFUNC;
+        const auto& kw = *deck.getKeywordList<Kw>()[0];
         const auto& rec = kw.getRecord(0);
-        const auto& kw_flag = rec.getItem("FLAG").get<std::string>(0);
+        const auto& kw_flag = rec.getItem<Kw::FLAG>().get<std::string>(0);
         if (kw_flag == "BOTH")
             m_flag = Flag::BOTH;
         else if (kw_flag == "WATER")
@@ -48,15 +49,15 @@ namespace Opm {
             throw std::invalid_argument("Illegal JFUNC FLAG, must be BOTH, WATER, or GAS.  Was \"" + kw_flag + "\".");
 
         if (m_flag != Flag::WATER)
-            m_goSurfaceTension = rec.getItem("GO_SURFACE_TENSION").get<double>(0);
+            m_goSurfaceTension = rec.getItem<Kw::GO_SURFACE_TENSION>().get<double>(0);
 
         if (m_flag != Flag::GAS)
-            m_owSurfaceTension = rec.getItem("OW_SURFACE_TENSION").get<double>(0);
+            m_owSurfaceTension = rec.getItem<Kw::OW_SURFACE_TENSION>().get<double>(0);
 
-        m_alphaFactor = rec.getItem("ALPHA_FACTOR").get<double>(0);
-        m_betaFactor = rec.getItem("BETA_FACTOR").get<double>(0);
+        m_alphaFactor = rec.getItem<Kw::ALPHA_FACTOR>().get<double>(0);
+        m_betaFactor = rec.getItem<Kw::BETA_FACTOR>().get<double>(0);
 
-        const auto kw_dir = rec.getItem("DIRECTION").get<std::string>(0);
+        const auto kw_dir = rec.getItem<Kw::DIRECTION>().get<std::string>(0);
         if (kw_dir == "XY")
             m_direction = Direction::XY;
         else if (kw_dir == "X")

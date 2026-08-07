@@ -40,6 +40,8 @@
 #include <opm/input/eclipse/Parser/Parser.hpp>
 #include <opm/input/eclipse/Parser/ParseContext.hpp>
 
+#include <opm/input/eclipse/Parser/ParserKeywords/W.hpp>
+
 using namespace Opm;
 
 namespace {
@@ -246,7 +248,7 @@ BOOST_AUTO_TEST_CASE(TestDynamicWSOLVENT)
     BOOST_CHECK_EQUAL(keyword.size(),1U);
 
     const auto& record = keyword.getRecord(0);
-    const std::string& well_name = record.getItem("WELL").getTrimmedString(0);
+    const std::string& well_name = record.getItem<ParserKeywords::WSOLVENT::WELL>().getTrimmedString(0);
     BOOST_CHECK_EQUAL(well_name, "W_1");
     BOOST_CHECK_EQUAL(schedule.getWell("W_1", 0).getSolventFraction(),0); //default 0
     BOOST_CHECK_EQUAL(schedule.getWell("W_1", 1).getSolventFraction(),1);

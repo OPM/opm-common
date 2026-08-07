@@ -19,6 +19,8 @@
 
 #include <opm/input/eclipse/Schedule/Group/GroupEconProductionLimits.hpp>
 
+#include <opm/input/eclipse/Parser/ParserKeywords/G.hpp>
+
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQConfig.hpp>
 
@@ -115,18 +117,19 @@ std::size_t GroupEconProductionLimits::size() const {
 /* Methods for inner class GEconGroup */
 
 GroupEconProductionLimits::GEconGroup::GEconGroup(const DeckRecord &record, const int report_step)
-    : m_min_oil_rate{record.getItem("MIN_OIL_RATE").get<UDAValue>(0)}
-    , m_min_gas_rate{record.getItem("MIN_GAS_RATE").get<UDAValue>(0)}
-    , m_max_water_cut{record.getItem("MAX_WCT").get<UDAValue>(0)}
-    , m_max_gas_oil_ratio{record.getItem("MAX_GOR").get<UDAValue>(0)}
-    , m_max_water_gas_ratio{record.getItem("MAX_WATER_GAS_RATIO").get<UDAValue>(0)}
-    , m_workover{econWorkoverFromString(record.getItem("WORKOVER").getTrimmedString(0))}
+    : m_min_oil_rate{record.getItem<ParserKeywords::GECON::MIN_OIL_RATE>().get<UDAValue>(0)}
+    , m_min_gas_rate{record.getItem<ParserKeywords::GECON::MIN_GAS_RATE>().get<UDAValue>(0)}
+    , m_max_water_cut{record.getItem<ParserKeywords::GECON::MAX_WCT>().get<UDAValue>(0)}
+    , m_max_gas_oil_ratio{record.getItem<ParserKeywords::GECON::MAX_GOR>().get<UDAValue>(0)}
+    , m_max_water_gas_ratio{record.getItem<ParserKeywords::GECON::MAX_WATER_GAS_RATIO>().get<UDAValue>(0)}
+    , m_workover{econWorkoverFromString(record.getItem<ParserKeywords::GECON::WORKOVER>().getTrimmedString(0))}
     , m_end_run{false}
-    , m_max_open_wells{record.getItem("MAX_OPEN_WELLS").get<int>(0)}
+    , m_max_open_wells{record.getItem<ParserKeywords::GECON::MAX_OPEN_WELLS>().get<int>(0)}
     , m_report_step{report_step}
 {
-    if (record.getItem("END_RUN").hasValue(0)) {
-        std::string string_endrun = record.getItem("END_RUN").getTrimmedString(0);
+    using Kw = ParserKeywords::GECON;
+    if (record.getItem<Kw::END_RUN>().hasValue(0)) {
+        std::string string_endrun = record.getItem<Kw::END_RUN>().getTrimmedString(0);
         if (string_endrun == "YES") {
             m_end_run = true;
         } else if (string_endrun != "NO") {

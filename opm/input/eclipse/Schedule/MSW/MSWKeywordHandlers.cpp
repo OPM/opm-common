@@ -24,6 +24,7 @@
 
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 
+#include <opm/input/eclipse/Parser/ParserKeywords/C.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/W.hpp>
 
 #include <opm/input/eclipse/Schedule/Action/WGNames.hpp>
@@ -52,7 +53,7 @@ namespace {
 void handleCOMPSEGS(HandlerContext& handlerContext)
 {
     const auto& record1 = handlerContext.keyword.getRecord(0);
-    const std::string& wname = record1.getItem("WELL").getTrimmedString(0);
+    const std::string& wname = record1.getItem<ParserKeywords::COMPSEGS::WELL>().getTrimmedString(0);
 
     if (!handlerContext.state().wells.has(wname)) {
         const auto& location = handlerContext.keyword.location();
@@ -92,7 +93,7 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
 void handleWELSEGS(HandlerContext& handlerContext)
 {
     const auto& record1 = handlerContext.keyword.getRecord(0);
-    const auto& wname = record1.getItem("WELL").getTrimmedString(0);
+    const auto& wname = record1.getItem<ParserKeywords::WELSEGS::WELL>().getTrimmedString(0);
     if (handlerContext.state().wells.has(wname)) {
         auto well = handlerContext.state().wells.get(wname);
         if (well.handleWELSEGS(handlerContext.keyword)) {

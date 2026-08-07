@@ -42,15 +42,16 @@ Aqudims::Aqudims(const Deck& deck) :
     Aqudims()
 {
     if (deck.hasKeyword("AQUDIMS")) {
+        using Kw = ParserKeywords::AQUDIMS;
         const auto& record = deck[ "AQUDIMS" ][0].getRecord( 0 );
-        m_mxnaqn  = record.getItem("MXNAQN").get<int>(0);
-        m_mxnaqc  = record.getItem("MXNAQC").get<int>(0);
-        m_niftbl  = record.getItem("NIFTBL").get<int>(0);
-        m_nriftb  = record.getItem("NRIFTB").get<int>(0);
-        m_nanaqu  = record.getItem("NANAQU").get<int>(0);
-        m_ncamax  = record.getItem("NCAMAX").get<int>(0);
-        m_mxnali  = record.getItem("MXNALI").get<int>(0);
-        m_mxaaql  = record.getItem("MXAAQL").get<int>(0);
+        m_mxnaqn  = record.getItem<Kw::MXNAQN>().get<int>(0);
+        m_mxnaqc  = record.getItem<Kw::MXNAQC>().get<int>(0);
+        m_niftbl  = record.getItem<Kw::NIFTBL>().get<int>(0);
+        m_nriftb  = record.getItem<Kw::NRIFTB>().get<int>(0);
+        m_nanaqu  = record.getItem<Kw::NANAQU>().get<int>(0);
+        m_ncamax  = record.getItem<Kw::NCAMAX>().get<int>(0);
+        m_mxnali  = record.getItem<Kw::MXNALI>().get<int>(0);
+        m_mxaaql  = record.getItem<Kw::MXAAQL>().get<int>(0);
     }
 }
 

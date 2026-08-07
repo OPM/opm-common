@@ -31,6 +31,8 @@
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 #include <opm/input/eclipse/Units/Dimension.hpp>
 
+#include <opm/input/eclipse/Parser/ParserKeywords/W.hpp>
+
 #include "../eval_uda.hpp"
 
 #include <fmt/format.h>
@@ -91,9 +93,13 @@ namespace Opm {
     }
 
     void Well::WellProductionProperties::init_rates( const DeckRecord& record ) {
-        this->OilRate    = record.getItem("ORAT").get<UDAValue>(0);
-        this->WaterRate  = record.getItem("WRAT").get<UDAValue>(0);
-        this->GasRate    = record.getItem("GRAT").get<UDAValue>(0);
+        // Shared helper for WCONPROD and WCONHIST records.  The rate items
+        // ORAT/WRAT/GRAT have identical names in both keywords; WCONPROD is
+        // used here as it carries the full set of production rate targets.
+        using Kw = ParserKeywords::WCONPROD;
+        this->OilRate    = record.getItem<Kw::ORAT>().get<UDAValue>(0);
+        this->WaterRate  = record.getItem<Kw::WRAT>().get<UDAValue>(0);
+        this->GasRate    = record.getItem<Kw::GRAT>().get<UDAValue>(0);
     }
 
 
@@ -102,7 +108,9 @@ namespace Opm {
         // May have ALQ values used in UDQ calculations event without any table - use identity dimension in this case
         if (alq_type || vfp_table_nr==0) {
             Dimension alq_dim = alq_type ? VFPProdTable::ALQDimension(*alq_type, unit_system_arg) : Dimension(1.0);
-            const auto& alq_input = record.getItem("ALQ").get<UDAValue>(0);
+            // Shared helper for WCONPROD/WCONHIST; ALQ has the same name in both.
+            using Kw = ParserKeywords::WCONPROD;
+            const auto& alq_input = record.getItem<Kw::ALQ>().get<UDAValue>(0);
             if (alq_input.is<double>())
                 this->ALQValue = UDAValue(alq_input.get<double>(), alq_dim);
             else {
@@ -125,13 +133,16 @@ namespace Opm {
         // UDAValue is to ensure that the UDAValue has the correct dimension.
         this->LiquidRate = UDAValue(this->WaterRate.raw_value_or(0.0) + this->OilRate.raw_value_or(0.0), this->OilRate.get_dim());
 
-        if ( const auto& item = record.getItem( "BHP" ); item.hasValue(0) && !item.defaultApplied(0) )
-            this->BHPH = record.getItem("BHP").get<UDAValue>(0).getSI();
+        // init_history is only invoked for WCONHIST records.
+        using Kw = ParserKeywords::WCONHIST;
 
-        if ( const auto& item = record.getItem( "THP" ); item.hasValue(0) && !item.defaultApplied(0) )
-            this->THPH = record.getItem("THP").get<UDAValue>(0).getSI();
+        if ( const auto& item = record.getItem<Kw::BHP>(); item.hasValue(0) && !item.defaultApplied(0) )
+            this->BHPH = record.getItem<Kw::BHP>().get<UDAValue>(0).getSI();
 
-        const auto& cmodeItem = record.getItem("CMODE");
+        if ( const auto& item = record.getItem<Kw::THP>(); item.hasValue(0) && !item.defaultApplied(0) )
+            this->THPH = record.getItem<Kw::THP>().get<UDAValue>(0).getSI();
+
+        const auto& cmodeItem = record.getItem<Kw::CMODE>();
         if ( cmodeItem.defaultApplied(0) ) {
             const std::string msg = "control mode can not be defaulted for keyword WCONHIST";
             throw std::invalid_argument(msg);
@@ -181,15 +192,17 @@ namespace Opm {
         this->init_vfp(alq_type, vfp_table_nr, unit_system_arg, record);
         this->init_rates(record);
 
-        if (record.getItem("BHP").defaultApplied(0)) {
+        using Kw = ParserKeywords::WCONPROD;
+
+        if (record.getItem<Kw::BHP>().defaultApplied(0)) {
             this->BHPTarget.update(unit_system_arg.from_si(UnitSystem::measure::pressure,
                                                            bhp_def));
         } else {
-            this->BHPTarget      = record.getItem("BHP").get<UDAValue>(0);
+            this->BHPTarget      = record.getItem<Kw::BHP>().get<UDAValue>(0);
         }
-        this->THPTarget      = record.getItem("THP").get<UDAValue>(0);
-        this->LiquidRate     = record.getItem("LRAT").get<UDAValue>(0);
-        this->ResVRate       = record.getItem("RESV").get<UDAValue>(0);
+        this->THPTarget      = record.getItem<Kw::THP>().get<UDAValue>(0);
+        this->LiquidRate     = record.getItem<Kw::LRAT>().get<UDAValue>(0);
+        this->ResVRate       = record.getItem<Kw::RESV>().get<UDAValue>(0);
 
         using mode = std::pair< const std::string, ProducerCMode >;
         static const mode modes[] = {
@@ -260,7 +273,7 @@ Well {} specifies {} constraint, but {}. The constraint will be ignored.)",
         // There is always a BHP constraint, when not specified, will use the default value
         this->addProductionControl( ProducerCMode::BHP );
         {
-            const auto& cmodeItem = record.getItem("CMODE");
+            const auto& cmodeItem = record.getItem<Kw::CMODE>();
             if (cmodeItem.hasValue(0)) {
                 auto cmode = WellProducerCModeFromString(cmodeItem.getTrimmedString(0));
 

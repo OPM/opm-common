@@ -212,12 +212,12 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
             this->m_swofletTable = SwofletTable( deck["SWOFLET"].back() );
 
         if( deck.hasKeyword( "RTEMP" ) )
-            m_rtemp = deck["RTEMP"].back().getRecord(0).getItem("TEMP").getSIDouble( 0 );
+            m_rtemp = deck["RTEMP"].back().getRecord(0).getItem<ParserKeywords::RTEMP::TEMP>().getSIDouble( 0 );
         else if (deck.hasKeyword( "RTEMPA" ) )
-            m_rtemp = deck["RTEMPA"].back().getRecord(0).getItem("TEMP").getSIDouble( 0 );
+            m_rtemp = deck["RTEMPA"].back().getRecord(0).getItem<ParserKeywords::RTEMPA::TEMP>().getSIDouble( 0 );
 
         if( deck.hasKeyword( "SALINITY" ) )
-            m_salinity = deck["SALINITY"].back().getRecord(0).getItem("MOLALITY").get<double>( 0 ); //unit independent of unit systems
+            m_salinity = deck["SALINITY"].back().getRecord(0).getItem<ParserKeywords::SALINITY::MOLALITY>().get<double>( 0 ); //unit independent of unit systems
 
         if ( deck.hasKeyword( "ROCK2D") )
             initRockTables(deck, "ROCK2D", m_rock2dTables );
@@ -256,9 +256,10 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
             this->watJT = JouleThomson( deck.get<ParserKeywords::WATJT>().back());
 
         if (deck.hasKeyword<ParserKeywords::STCOND>()) {
+            using Kw = ParserKeywords::STCOND;
             auto stcondKeyword = deck["STCOND"].back();
-            this->stcond.temperature = stcondKeyword.getRecord(0).getItem("TEMPERATURE").getSIDouble(0);
-            this->stcond.pressure = stcondKeyword.getRecord(0).getItem("PRESSURE").getSIDouble(0);
+            this->stcond.temperature = stcondKeyword.getRecord(0).getItem<Kw::TEMPERATURE>().getSIDouble(0);
+            this->stcond.pressure = stcondKeyword.getRecord(0).getItem<Kw::PRESSURE>().getSIDouble(0);
         }
 
         if (deck.hasKeyword<ParserKeywords::PLMIXPAR>()) {
@@ -675,7 +676,7 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
 
         for (std::size_t tableIdx = 0; tableIdx < keyword.size(); ++tableIdx) {
             const auto& tableRecord = keyword.getRecord(tableIdx);
-            const auto& dataItem = tableRecord.getItem("DATA");
+            const auto& dataItem = tableRecord.getItem<ParserKeywords::ZMFVD::DATA>();
             if (dataItem.data_size() > 0) {
                 auto table = std::make_shared<ZmfvdTable>(
                     dataItem, static_cast<int>(tableIdx), numComponents, keyword.location());
@@ -719,7 +720,7 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
 
         for (std::size_t tableIdx = 0; tableIdx < keyword.size(); ++tableIdx) {
             const auto& tableRecord = keyword.getRecord(tableIdx);
-            const auto& dataItem = tableRecord.getItem("DATA");
+            const auto& dataItem = tableRecord.getItem<ParserKeywords::COMPVD::DATA>();
             if (dataItem.data_size() > 0) {
                 auto table = std::make_shared<CompvdTable>(
                     dataItem, static_cast<int>(tableIdx), numComponents, usys, keyword.location());
@@ -1648,7 +1649,7 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
 
         const auto& rockcompKeyword = deck["ROCKCOMP"].back();
         const auto& record = rockcompKeyword.getRecord( 0 );
-        std::size_t numTables = record.getItem("NTROCC").get< int >(0);
+        std::size_t numTables = record.getItem<ParserKeywords::ROCKCOMP::NTROCC>().get< int >(0);
         rocktable.resize(numTables);
 
         const auto& keyword = deck[keywordName].back();

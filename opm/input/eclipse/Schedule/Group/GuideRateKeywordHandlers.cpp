@@ -24,6 +24,7 @@
 
 #include <opm/input/eclipse/Parser/ParserKeywords/G.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/L.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/W.hpp>
 
 #include <opm/input/eclipse/Schedule/Group/GuideRateConfig.hpp>
 #include <opm/input/eclipse/Schedule/Group/GuideRateModel.hpp>
@@ -77,18 +78,19 @@ void handleLINCOM(HandlerContext& handlerContext)
 
 void handleWGRUPCON(HandlerContext& handlerContext)
 {
+    using Kw = ParserKeywords::WGRUPCON;
     for (const auto& record : handlerContext.keyword) {
-        const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
+        const std::string& wellNamePattern = record.getItem<Kw::WELL>().getTrimmedString(0);
         const auto well_names = handlerContext.wellNames(wellNamePattern);
 
-        const bool availableForGroupControl = DeckItem::to_bool(record.getItem("GROUP_CONTROLLED").getTrimmedString(0));
-        const double guide_rate = record.getItem("GUIDE_RATE").get<double>(0);
-        const double scaling_factor = record.getItem("SCALING_FACTOR").get<double>(0);
+        const bool availableForGroupControl = DeckItem::to_bool(record.getItem<Kw::GROUP_CONTROLLED>().getTrimmedString(0));
+        const double guide_rate = record.getItem<Kw::GUIDE_RATE>().get<double>(0);
+        const double scaling_factor = record.getItem<Kw::SCALING_FACTOR>().get<double>(0);
 
         for (const auto& well_name : well_names) {
             auto phase = Well::GuideRateTarget::UNDEFINED;
-            if (!record.getItem("PHASE").defaultApplied(0)) {
-                std::string guideRatePhase = record.getItem("PHASE").getTrimmedString(0);
+            if (!record.getItem<Kw::PHASE>().defaultApplied(0)) {
+                std::string guideRatePhase = record.getItem<Kw::PHASE>().getTrimmedString(0);
                 phase = WellGuideRateTargetFromString(guideRatePhase);
             }
 

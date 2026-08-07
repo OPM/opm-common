@@ -87,8 +87,10 @@ void handleWDFAC(HandlerContext& handlerContext)
 
 void handleWDFACCOR(HandlerContext& handlerContext)
 {
+    using Kw = ParserKeywords::WDFACCOR;
+
     for (const auto& record : handlerContext.keyword) {
-        const auto wellNamePattern = record.getItem("WELLNAME").getTrimmedString(0);
+        const auto wellNamePattern = record.getItem<Kw::WELLNAME>().getTrimmedString(0);
         const auto well_names = handlerContext.wellNames(wellNamePattern, true);
         if (well_names.empty()) {
             handlerContext.invalidNamePattern(wellNamePattern);
@@ -125,8 +127,10 @@ void handleWDFACCOR(HandlerContext& handlerContext)
 
 void handleWECON(HandlerContext& handlerContext)
 {
+    using Kw = ParserKeywords::WECON;
+
     for (const auto& record : handlerContext.keyword) {
-        const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
+        const std::string& wellNamePattern = record.getItem<Kw::WELL>().getTrimmedString(0);
         const auto well_names = handlerContext.wellNames(wellNamePattern, false);
 
         for (const auto& well_name : well_names) {
@@ -259,8 +263,10 @@ void handleWELPI(HandlerContext& handlerContext)
 
 void handleWFOAM(HandlerContext& handlerContext)
 {
+    using Kw = ParserKeywords::WFOAM;
+
     for (const auto& record : handlerContext.keyword) {
-        const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
+        const std::string& wellNamePattern = record.getItem<Kw::WELL>().getTrimmedString(0);
         const auto well_names = handlerContext.wellNames(wellNamePattern, false);
 
         for (const auto& well_name : well_names) {
@@ -318,8 +324,10 @@ void handleWINJFCNC(HandlerContext& handlerContext)
 
 void handleWINJMULT(HandlerContext& handlerContext)
 {
+    using Kw = ParserKeywords::WINJMULT;
+
     for (const auto& record : handlerContext.keyword) {
-        const std::string& wellNamePattern = record.getItem("WELL_NAME").getTrimmedString(0);
+        const std::string& wellNamePattern = record.getItem<Kw::WELL_NAME>().getTrimmedString(0);
         const auto well_names = handlerContext.wellNames(wellNamePattern, true);
 
         for (const auto& well_name : well_names) {
@@ -340,11 +348,13 @@ void handleWINJTEMP(HandlerContext& handlerContext)
 {
     // we do not support the "enthalpy" field yet. how to do this is a more difficult
     // question.
+    using Kw = ParserKeywords::WINJTEMP;
+
     for (const auto& record : handlerContext.keyword) {
-        const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
+        const std::string& wellNamePattern = record.getItem<Kw::WELL>().getTrimmedString(0);
         auto well_names = handlerContext.wellNames(wellNamePattern, false);
 
-        const double temp = record.getItem("TEMPERATURE").getSIDouble(0);
+        const double temp = record.getItem<Kw::TEMPERATURE>().getSIDouble(0);
 
         for (const auto& well_name : well_names) {
             const auto& well = handlerContext.state().wells.get(well_name);
@@ -360,8 +370,10 @@ void handleWINJTEMP(HandlerContext& handlerContext)
 
 void handleWMICP(HandlerContext& handlerContext)
 {
+    using Kw = ParserKeywords::WMICP;
+
     for (const auto& record : handlerContext.keyword) {
-        const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
+        const std::string& wellNamePattern = record.getItem<Kw::WELL>().getTrimmedString(0);
         const auto well_names = handlerContext.wellNames(wellNamePattern, false);
 
         for (const auto& well_name : well_names) {
@@ -377,6 +389,8 @@ void handleWMICP(HandlerContext& handlerContext)
 
 void handleWPIMULT(HandlerContext& handlerContext)
 {
+    using Kw = ParserKeywords::WPIMULT;
+
     // from the third item to the seventh item in the WPIMULT record, they are numbers indicate
     // the I, J, K location and completion number range.
     // When defaulted, it assumes it is negative
@@ -391,7 +405,7 @@ void handleWPIMULT(HandlerContext& handlerContext)
     };
 
     for (const auto& record : handlerContext.keyword) {
-        const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
+        const std::string& wellNamePattern = record.getItem<Kw::WELL>().getTrimmedString(0);
         const auto& well_names = handlerContext.wellNames(wellNamePattern);
 
         // for the record has defaulted connection and completion information, we do not apply it immediately
@@ -402,7 +416,7 @@ void handleWPIMULT(HandlerContext& handlerContext)
         const bool default_con_comp = defaultConCompRec(record);
         if (default_con_comp) {
             auto& wpimult_global_factor = handlerContext.wpimult_global_factor;
-            const auto scaling_factor = record.getItem("WELLPI").get<double>(0);
+            const auto scaling_factor = record.getItem<Kw::WELLPI>().get<double>(0);
             for (const auto& wname : well_names) {
                 wpimult_global_factor.insert_or_assign(wname, scaling_factor);
             }
@@ -420,8 +434,10 @@ void handleWPIMULT(HandlerContext& handlerContext)
 
 void handleWPMITAB(HandlerContext& handlerContext)
 {
+    using Kw = ParserKeywords::WPMITAB;
+
     for (const auto& record : handlerContext.keyword) {
-        const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
+        const std::string& wellNamePattern = record.getItem<Kw::WELL>().getTrimmedString(0);
         const auto well_names = handlerContext.wellNames(wellNamePattern, true);
 
         for (const auto& well_name : well_names) {
@@ -436,8 +452,10 @@ void handleWPMITAB(HandlerContext& handlerContext)
 
 void handleWPOLYMER(HandlerContext& handlerContext)
 {
+    using Kw = ParserKeywords::WPOLYMER;
+
     for (const auto& record : handlerContext.keyword) {
-        const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
+        const std::string& wellNamePattern = record.getItem<Kw::WELL>().getTrimmedString(0);
         const auto well_names = handlerContext.wellNames(wellNamePattern, false);
 
         for (const auto& well_name : well_names) {
@@ -452,8 +470,10 @@ void handleWPOLYMER(HandlerContext& handlerContext)
 
 void handleWSALT(HandlerContext& handlerContext)
 {
+    using Kw = ParserKeywords::WSALT;
+
     for (const auto& record : handlerContext.keyword) {
-        const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
+        const std::string& wellNamePattern = record.getItem<Kw::WELL>().getTrimmedString(0);
         const auto well_names = handlerContext.wellNames(wellNamePattern, true);
 
         for (const auto& well_name : well_names) {
@@ -468,8 +488,10 @@ void handleWSALT(HandlerContext& handlerContext)
 
 void handleWSKPTAB(HandlerContext& handlerContext)
 {
+    using Kw = ParserKeywords::WSKPTAB;
+
     for (const auto& record : handlerContext.keyword) {
-        const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
+        const std::string& wellNamePattern = record.getItem<Kw::WELL>().getTrimmedString(0);
         const auto well_names = handlerContext.wellNames(wellNamePattern, false);
 
         for (const auto& well_name : well_names) {
@@ -485,11 +507,13 @@ void handleWSKPTAB(HandlerContext& handlerContext)
 
 void handleWSOLVENT(HandlerContext& handlerContext)
 {
+    using Kw = ParserKeywords::WSOLVENT;
+
     for (const auto& record : handlerContext.keyword) {
-        const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
+        const std::string& wellNamePattern = record.getItem<Kw::WELL>().getTrimmedString(0);
         const auto well_names = handlerContext.wellNames(wellNamePattern, false);
 
-        const double fraction = record.getItem("SOLVENT_FRACTION").get<UDAValue>(0).getSI();
+        const double fraction = record.getItem<Kw::SOLVENT_FRACTION>().get<UDAValue>(0).getSI();
 
         for (const auto& well_name : well_names) {
             const auto& well = handlerContext.state().wells.get(well_name);
@@ -509,10 +533,12 @@ void handleWSOLVENT(HandlerContext& handlerContext)
 
 void handleWTEMP(HandlerContext& handlerContext)
 {
+    using Kw = ParserKeywords::WTEMP;
+
     for (const auto& record : handlerContext.keyword) {
-        const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
+        const std::string& wellNamePattern = record.getItem<Kw::WELL>().getTrimmedString(0);
         const auto well_names = handlerContext.wellNames(wellNamePattern, false);
-        double temp = record.getItem("TEMP").getSIDouble(0);
+        double temp = record.getItem<Kw::TEMP>().getSIDouble(0);
 
         for (const auto& well_name : well_names) {
             const auto& well = handlerContext.state().wells.get(well_name);
@@ -528,17 +554,19 @@ void handleWTEMP(HandlerContext& handlerContext)
 
 void handleWSPECIES(HandlerContext& handlerContext)
 {
+    using Kw = ParserKeywords::WSPECIES;
+
     // NOTE: WSPECIES is equivalent to WTRACERS, and therefore well tracer facilities are used
     for (const auto& record : handlerContext.keyword) {
-        const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
+        const std::string& wellNamePattern = record.getItem<Kw::WELL>().getTrimmedString(0);
         const auto well_names = handlerContext.wellNames(wellNamePattern, false);
 
         if (well_names.empty()) {
             handlerContext.invalidNamePattern(wellNamePattern);
         }
 
-        const auto spConcentration = record.getItem<ParserKeywords::WSPECIES::CONCENTRATION>().get<UDAValue>(0);
-        const std::string& spName = record.getItem("SPECIES").getTrimmedString(0);
+        const auto spConcentration = record.getItem<Kw::CONCENTRATION>().get<UDAValue>(0);
+        const std::string& spName = record.getItem<Kw::SPECIES>().getTrimmedString(0);
 
         for (const auto& well_name : well_names) {
             auto well = handlerContext.state().wells.get( well_name );
@@ -651,16 +679,18 @@ void handleWTMULT(HandlerContext& handlerContext)
 
 void handleWTRACER(HandlerContext& handlerContext)
 {
+    using Kw = ParserKeywords::WTRACER;
+
     for (const auto& record : handlerContext.keyword) {
-        const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
+        const std::string& wellNamePattern = record.getItem<Kw::WELL>().getTrimmedString(0);
         const auto well_names = handlerContext.wellNames(wellNamePattern, false);
 
         if (well_names.empty()) {
             handlerContext.invalidNamePattern(wellNamePattern);
         }
 
-        const auto trConcentration = record.getItem<ParserKeywords::WTRACER::CONCENTRATION>().get<UDAValue>(0);
-        const std::string& trName = record.getItem("TRACER").getTrimmedString(0);
+        const auto trConcentration = record.getItem<Kw::CONCENTRATION>().get<UDAValue>(0);
+        const std::string& trName = record.getItem<Kw::TRACER>().getTrimmedString(0);
 
         for (const auto& well_name : well_names) {
             auto well = handlerContext.state().wells.get( well_name );
@@ -674,8 +704,10 @@ void handleWTRACER(HandlerContext& handlerContext)
 
 void handleWVFPDP(HandlerContext& handlerContext)
 {
+    using Kw = ParserKeywords::WVFPDP;
+
     for (const auto& record : handlerContext.keyword) {
-        const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
+        const std::string& wellNamePattern = record.getItem<Kw::WELL>().getTrimmedString(0);
         const auto well_names = handlerContext.wellNames(wellNamePattern, true);
         if (well_names.empty()) {
             handlerContext.invalidNamePattern(wellNamePattern);
@@ -694,8 +726,10 @@ void handleWVFPDP(HandlerContext& handlerContext)
 
 void handleWVFPEXP(HandlerContext& handlerContext)
 {
+    using Kw = ParserKeywords::WVFPEXP;
+
     for (const auto& record : handlerContext.keyword) {
-        const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
+        const std::string& wellNamePattern = record.getItem<Kw::WELL>().getTrimmedString(0);
         const auto well_names = handlerContext.wellNames(wellNamePattern, true);
         if (well_names.empty()) {
             handlerContext.invalidNamePattern(wellNamePattern);
@@ -713,8 +747,10 @@ void handleWVFPEXP(HandlerContext& handlerContext)
 
 void handleWWPAVE(HandlerContext& handlerContext)
 {
+    using Kw = ParserKeywords::WWPAVE;
+
     for (const auto& record : handlerContext.keyword) {
-        const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
+        const std::string& wellNamePattern = record.getItem<Kw::WELL>().getTrimmedString(0);
         const auto well_names = handlerContext.wellNames(wellNamePattern, true);
 
         if (well_names.empty()) {

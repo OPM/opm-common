@@ -63,6 +63,7 @@
 #include <opm/input/eclipse/Parser/Parser.hpp>
 
 #include <opm/input/eclipse/Parser/ParserKeywords/D.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/U.hpp>
 
 #include <algorithm>
 #include <cmath>
@@ -803,7 +804,7 @@ UDQ
     auto deck = parser.parseString(input);
     const auto& udq = deck["UDQ"].back();
     const auto& record = udq.getRecord(0);
-    const auto& data_item = record.getItem("DATA");
+    const auto& data_item = record.getItem<ParserKeywords::UDQ::DATA>();
     const auto& data = RawString::strings( data_item.getData<RawString>() );
     std::vector<std::string> exp = {"WWPR", "/", "(", "WWPR", "+", "WOPR", ")"};
     BOOST_CHECK_EQUAL_COLLECTIONS(data.begin(), data.end(),

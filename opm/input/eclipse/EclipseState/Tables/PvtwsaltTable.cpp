@@ -23,6 +23,8 @@
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
 
+#include <opm/input/eclipse/Parser/ParserKeywords/P.hpp>
+
 #include <cstddef>
 #include <vector>
 
@@ -46,9 +48,10 @@ namespace Opm {
         void PvtwsaltTable::init(const Opm::DeckRecord& record0, const Opm::DeckRecord& record1)
         {
 
-            m_pRefValues = record0.getItem("P_REF").getSIDoubleData()[0];
-            m_saltConsRefValues = record0.getItem("SALT_CONCENTRATION_REF").getSIDoubleData()[0];
-            m_tableValues = record1.getItem("DATA").getSIDoubleData();
+            using Kw = ParserKeywords::PVTWSALT;
+            m_pRefValues = record0.getItem<Kw::P_REF>().getSIDoubleData()[0];
+            m_saltConsRefValues = record0.getItem<Kw::SALT_CONCENTRATION_REF>().getSIDoubleData()[0];
+            m_tableValues = record1.getItem<Kw::DATA>().getSIDoubleData();
         }
 
         std::size_t PvtwsaltTable::size() const

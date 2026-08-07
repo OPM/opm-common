@@ -22,6 +22,7 @@
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/SolventDensityTable.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/S.hpp>
 
 namespace Opm {
         SolventDensityTable SolventDensityTable::serializationTestObject()
@@ -34,7 +35,8 @@ namespace Opm {
 
         void SolventDensityTable::init(const Opm::DeckRecord& record )
         {
-            m_tableValues = record.getItem("SOLVENT_DENSITY").getSIDoubleData();
+            using Kw = ParserKeywords::SDENSITY;
+            m_tableValues = record.getItem<Kw::SOLVENT_DENSITY>().getSIDoubleData();
         }
 
         const std::vector<double>& SolventDensityTable::getSolventDensityColumn() const

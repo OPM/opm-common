@@ -59,19 +59,21 @@ namespace Opm {
         UDQParams()
     {
         if (deck.hasKeyword("UDQDIMS")) {
+            using Kw = ParserKeywords::UDQDIMS;
             const auto& record = deck["UDQDIMS"].back().getRecord(0);
-            const auto& item = record.getItem("RESTART_NEW_SEED");
+            const auto& item = record.getItem<Kw::RESTART_NEW_SEED>();
             const auto& bool_string = item.get<std::string>(0);
 
             reseed_rng = (std::toupper(bool_string[0]) == 'Y');
         }
 
         if (deck.hasKeyword("UDQPARAM")) {
+            using Kw = ParserKeywords::UDQPARAM;
             const auto& record = deck["UDQPARAM"].back().getRecord(0);
-            random_seed = record.getItem("RANDOM_SEED").get<int>(0);
-            value_range = record.getItem("RANGE").get<double>(0);
-            undefined_value = record.getItem("UNDEFINED_VALUE").get<double>(0);
-            cmp_eps = record.getItem("CMP_EPSILON").get<double>(0);
+            random_seed = record.getItem<Kw::RANDOM_SEED>().get<int>(0);
+            value_range = record.getItem<Kw::RANGE>().get<double>(0);
+            undefined_value = record.getItem<Kw::UNDEFINED_VALUE>().get<double>(0);
+            cmp_eps = record.getItem<Kw::CMP_EPSILON>().get<double>(0);
         }
         this->m_sim_rng.seed( this->random_seed );
     }
