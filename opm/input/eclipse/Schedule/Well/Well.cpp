@@ -34,6 +34,7 @@
 #include <opm/input/eclipse/Schedule/UDQ/UDQActive.hpp>
 #include <opm/input/eclipse/Schedule/Well/ConnectionEconLimits.hpp>
 #include <opm/input/eclipse/Schedule/Well/WDFAC.hpp>
+#include <opm/input/eclipse/Schedule/Well/WELDRAW.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellBrineProperties.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellEconProductionLimits.hpp>
@@ -326,6 +327,7 @@ Well::Well(const RestartIO::RstWell& rst_well,
     wvfpdp(std::make_shared<WVFPDP>()),
     wvfpexp(explicitTHPOptions(rst_well)),
     wdfac(std::make_shared<WDFAC>(rst_well)),
+    weldraw(std::make_shared<WELDRAW>()),
     status(status_from_int(rst_well.well_status)),
     well_inj_temperature(std::nullopt),
     well_inj_mult(std::nullopt)
@@ -558,6 +560,7 @@ Well::Well(const std::string& wname_arg,
     wvfpdp(std::make_shared<WVFPDP>()),
     wvfpexp(std::make_shared<WVFPEXP>()),
     wdfac(std::make_shared<WDFAC>()),
+    weldraw(std::make_shared<WELDRAW>(unit_system->getDimension(UnitSystem::measure::pressure))),
     status(Status::SHUT),
     well_inj_temperature(std::nullopt),
     well_inj_mult(std::nullopt)
@@ -611,6 +614,7 @@ Well Well::serializationTestObject()
     result.wvfpdp = std::make_shared<WVFPDP>(WVFPDP::serializationTestObject());
     result.wvfpexp = std::make_shared<WVFPEXP>(WVFPEXP::serializationTestObject());
     result.wdfac = std::make_shared<WDFAC>(WDFAC::serializationTestObject());
+    result.weldraw = std::make_shared<WELDRAW>(WELDRAW::serializationTestObject());
     result.m_pavg = PAvg();
     result.well_inj_temperature = 10.0;
     result.default_well_inj_temperature = 0.0;
@@ -792,6 +796,16 @@ bool Well::updateWDFAC(std::shared_ptr<WDFAC> wdfac_arg)
 {
     if (*this->wdfac != *wdfac_arg) {
         this->wdfac = std::move(wdfac_arg);
+        return true;
+    }
+
+    return false;
+}
+
+bool Well::updateWELDRAW(std::shared_ptr<WELDRAW> weldraw_arg)
+{
+    if (*this->weldraw != *weldraw_arg) {
+        this->weldraw = std::move(weldraw_arg);
         return true;
     }
 
@@ -1424,6 +1438,16 @@ const WVFPEXP& Well::getWVFPEXP() const
 const WDFAC& Well::getWDFAC() const
 {
     return *this->wdfac;
+}
+
+const WELDRAW& Well::getWELDRAW() const
+{
+    return *this->weldraw;
+}
+
+double Well::weldrawMaxDrawdown(const SummaryState& st) const
+{
+    return this->weldraw->maxDrawdown(this->wname, st, this->udq_undefined);
 }
 
 const WellEconProductionLimits& Well::getEconLimits() const
@@ -2299,6 +2323,7 @@ bool Well::operator==(const Well& data) const
         && (this->getWVFPDP() == data.getWVFPDP())
         && (this->getWVFPEXP() == data.getWVFPEXP())
         && (this->getWDFAC() == data.getWDFAC())
+        && (this->getWELDRAW() == data.getWELDRAW())
         && (this->getStatus() == data.getStatus())
         && (this->m_pavg == data.m_pavg)
         && (this->well_inj_temperature == data.well_inj_temperature)
