@@ -131,7 +131,7 @@ namespace Opm {
         , m_quantity_limit(QuantityLimitFromString(record.getItem("LIMITED_QUANTITY").getTrimmedString(0)))
         , m_secondary_max_water_cut(record.getItem("SECOND_MAX_WATER_CUT").get<double>(0))
         , m_max_gas_liquid_ratio(record.getItem("MAX_GAS_LIQUID_RATIO").get<double>(0))
-        , m_min_liquid_rate(record.getItem("MIN_LIQUID_PRODCUTION_RATE").getSIDouble(0))
+        , m_min_liquid_rate(record.getItem("MIN_LIQUID_PRODUCTION_RATE").getSIDouble(0))
         , m_min_reservoir_fluid_rate(record.getItem("MIN_RES_FLUID_RATE").getSIDouble(0))
     {
         assert(m_workover != EconWorkover::LAST);

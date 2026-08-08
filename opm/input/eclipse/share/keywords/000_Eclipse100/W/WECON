@@ -89,11 +89,10 @@
     },
     {
       "item": 14,
-      "name": "MIN_LIQUID_PRODCUTION_RATE",
+      "name": "MIN_LIQUID_PRODUCTION_RATE",
       "value_type": "DOUBLE",
       "default": 0,
-      "dimension": "LiquidSurfaceVolume/Time",
-      "comment": "Not supported - typo in name"
+      "dimension": "LiquidSurfaceVolume/Time"
     },
     {
       "item": 15,
@@ -107,8 +106,7 @@
       "name": "MIN_RES_FLUID_RATE",
       "value_type": "DOUBLE",
       "dimension": "ReservoirVolume/Time",
-      "default": 0,
-      "comment": "Not supported"
+      "default": 0
     }
   ]
 }
