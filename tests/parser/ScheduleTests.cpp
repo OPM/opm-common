@@ -60,6 +60,7 @@
 #include <opm/input/eclipse/Schedule/Well/NameOrder.hpp>
 #include <opm/input/eclipse/Schedule/Well/PAvg.hpp>
 #include <opm/input/eclipse/Schedule/Well/WDFAC.hpp>
+#include <opm/input/eclipse/Schedule/Well/WELDRAW.hpp>
 #include <opm/input/eclipse/Schedule/Well/WVFPEXP.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
@@ -6695,6 +6696,78 @@ END
     BOOST_CHECK(wvfpexp2.explicit_lookup());
     BOOST_CHECK(wvfpexp2.shut());
     BOOST_CHECK(wvfpexp2.prevent());
+}
+
+BOOST_AUTO_TEST_CASE(Test_weldraw) {
+        std::string input = R"(
+DIMENS
+ 10 10 10 /
+
+START         -- 0
+ 19 JUN 2007 /
+
+GRID
+
+DXV
+ 10*100.0 /
+DYV
+ 10*100.0 /
+DZV
+ 10*10.0 /
+DEPTHZ
+ 121*2000.0 /
+
+SCHEDULE
+
+WELSPECS
+ 'W1' 'G1'  3 3 2873.94 'OIL' 0.00 'STD' 'SHUT' 'NO' 0 'SEG' /
+ 'W2' 'G2'  5 5 1       'GAS' 0.00 'STD' 'SHUT' 'NO' 0 'SEG' /
+ 'W3' 'G2'  7 7 1       'OIL' 0.00 'STD' 'SHUT' 'NO' 0 'SEG' /
+/
+
+DATES        -- 1
+ 10  OKT 2008 /
+/
+
+WELDRAW
+ 'W1' 1500 2* 'AVG' /
+ 'W2' 2000 /
+ 'W3' 100 'GAS' 'YES' 'MAX' /
+/
+
+END
+
+)";
+    Deck deck = Parser{}.parseString(input);
+    const auto es = EclipseState { deck };
+    const auto sched = Schedule { deck, es, std::make_shared<const Python>() };
+    const auto& unit_system = deck.getActiveUnitSystem();
+    SummaryState st(TimeService::now(), 0.0);
+
+    const auto& weldraw0 = sched.getWell("W1", 0).getWELDRAW();
+    BOOST_CHECK(!weldraw0.active());
+
+    const auto& weldraw1 = sched.getWell("W1", 1).getWELDRAW();
+    const auto& weldraw2 = sched.getWell("W2", 1).getWELDRAW();
+    const auto& weldraw3 = sched.getWell("W3", 1).getWELDRAW();
+
+    BOOST_CHECK(weldraw1.active());
+    BOOST_CHECK_CLOSE(weldraw1.maxDrawdown("W1", st, 0.0),
+                      unit_system.to_si(UnitSystem::measure::pressure, 1500), 1.0e-10);
+    // Defaulted phase resolves from the preferred phase: LIQ for oil wells.
+    BOOST_CHECK(weldraw1.targetPhase() == WELDRAW::TargetPhase::LIQ);
+    BOOST_CHECK(weldraw1.mode() == WELDRAW::Mode::AVG);
+    BOOST_CHECK(!weldraw1.useInPotentials());
+
+    // ... and GAS for gas wells.
+    BOOST_CHECK(weldraw2.active());
+    BOOST_CHECK(weldraw2.targetPhase() == WELDRAW::TargetPhase::GAS);
+    BOOST_CHECK(weldraw2.mode() == WELDRAW::Mode::AVG);
+
+    BOOST_CHECK(weldraw3.active());
+    BOOST_CHECK(weldraw3.targetPhase() == WELDRAW::TargetPhase::GAS);
+    BOOST_CHECK(weldraw3.mode() == WELDRAW::Mode::MAX);
+    BOOST_CHECK(weldraw3.useInPotentials());
 }
 
 
