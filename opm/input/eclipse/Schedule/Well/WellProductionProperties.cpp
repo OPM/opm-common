@@ -275,10 +275,10 @@ Well {} specifies {} constraint, but {}. The constraint will be ignored.)",
             // conversion and surfaced as an internal error.  Reject it here,
             // naming the keyword and line the user can act on.
             if (cmode_string.empty()) {
-                const auto status = WellStatusFromString
+                const auto wellStatus = WellStatusFromString
                     (record.getItem("STATUS").getTrimmedString(0));
 
-                if ((status == WellStatus::OPEN) &&
+                if ((wellStatus == WellStatus::OPEN) &&
                     (this->controlMode == ProducerCMode::CMODE_UNDEFINED))
                 {
                     throw OpmInputError(fmt::format("Control mode (item 3) must be "
