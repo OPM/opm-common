@@ -37,6 +37,7 @@
 #include <ctime>
 #include <memory>
 #include <optional>
+#include <span>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -81,6 +82,29 @@ struct RstState
     std::unordered_map<std::string, std::vector<std::string>> wlists;
 
 private:
+    /// Encapsulation of restart file information pertaining to actions or conditions.
+    ///
+    /// \tparam FloatType The floating point type used for the action data.
+    /// Typically \c float or \c double.
+    template <typename FloatType>
+    struct ActionData
+    {
+        /// Integer restart file information pertaining to all actions or conditions.
+        ///
+        /// Typically wraps IACT for actions and IACN for conditions.
+        std::span<const int> i;
+
+        /// Floating point restart file information pertaining to all actions or conditions.
+        ///
+        /// Typically wraps SACT (\c float) for actions and SACN (\c double) for conditions.
+        std::span<const FloatType> s;
+
+        /// String restart file information pertaining to all actions or conditions.
+        ///
+        /// Typically wraps ZACT for actions and ZACN for conditions.
+        std::span<const std::string> z;
+    };
+
     void load_oil_vaporization(const std::vector<int>&    intehead,
                                const std::vector<bool>&   logihead,
                                const std::vector<double>& doubhead);
@@ -113,19 +137,80 @@ private:
 
     void add_udqs(std::shared_ptr<EclIO::RestartFileView> rstView);
 
-    void add_actions(const Parser& parser,
-                     const Runspec& runspec,
-                     std::time_t sim_time,
-                     const std::vector<std::string>& zact,
-                     const std::vector<int>& iact,
-                     const std::vector<float>& sact,
-                     const std::vector<std::string>& zacn,
-                     const std::vector<int>& iacn,
-                     const std::vector<double>& sacn,
-                     const std::vector<std::string>& zlact);
+    /// Restore all applicable dynamic actions from the restart file.
+    ///
+    /// Populates the \c actions vector of this \c RstState object with all applicable actions.
+    ///
+    /// \param[in] parser The parser used to interpret action block keywords.
+    ///
+    /// \param[in] runspec Run's specification including dimensions and active phases.
+    ///
+    /// \param[in] sim_time Simulated time (i.e., time point) at simulation restart.
+    ///
+    /// \param[in] actions The action data (i.e., the [ISZ]ACT arrays).
+    ///
+    /// \param[in] conditions The condition data (i.e., the [ISZ]ACN arrays).
+    ///
+    /// \param[in] zlact The action block keywords.
+    void add_actions(const Parser&                parser,
+                     const Runspec&               runspec,
+                     std::time_t                  sim_time,
+                     ActionData<float>            actions,
+                     ActionData<double>           conditions,
+                     std::span<const std::string> zlact);
 
     void add_wlist(const std::vector<std::string>& zwls,
                    const std::vector<int>& iwls);
+
+    /// Restore conditions for single action from restart file information.
+    ///
+    /// \param[in] actdims The action dimensions, e.g., maximum number of
+    /// conditions and sizes of condition arrays per condition.
+    ///
+    /// \param[in] conditions The condition data (i.e., the [ISZ]ACN arrays).
+    ///
+    /// \param[in] index The action index.
+    ///
+    /// \return The restored conditions for the \p index-th action.
+    std::vector<RstAction::Condition>
+    restore_conditions(const Actdims&     actdims,
+                       ActionData<double> conditions,
+                       std::size_t        index) const;
+
+    /// Restore a single action from restart file information.
+    ///
+    /// Appends an action object to the \c actions vector of this \c RstState object.
+    ///
+    /// \param[in] runspec The run's specification including dimensions and active phases.
+    ///
+    /// \param[in] sim_time Simulated time (i.e., time point) at simulation restart.
+    ///
+    /// \param[in] actionArrays The action data (i.e., the [ISZ]ACT arrays).
+    ///
+    /// \param[in] index The action index.
+    ///
+    /// \param[in] conditions The restored conditions for the \p index-th action.
+    void create_action(const Runspec&                      runspec,
+                       const std::time_t                   sim_time,
+                       ActionData<float>                   actionArrays,
+                       std::size_t                         index,
+                       std::vector<RstAction::Condition>&& conditions);
+
+    /// Restore action keywords from restart file information.
+    ///
+    /// Populates the \c keywords container of \code actions.back() \endcode
+    /// with the pertinent action block keywords.
+    ///
+    /// \param[in] parser The parser used to interpret action block keywords.
+    ///
+    /// \param[in] actdims The action dimensions, e.g., maximum number of
+    /// conditions and sizes of condition arrays per condition.
+    ///
+    /// \param[in] zlact Linearised collection of action block keyword strings.
+    /// Assumed to encompass only those strings that pertain to \code actions.back() \endcode.
+    void restore_action_keywords(const Parser&                parser,
+                                 const Actdims&               actdims,
+                                 std::span<const std::string> zlact);
 
 };
 

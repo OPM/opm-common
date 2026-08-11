@@ -190,12 +190,9 @@ ActionX ActionX::serializationTestObject()
     result.m_start_time = 3;
     result.keywords = {DeckKeyword::serializationTestObject()};
     result.condition = Action::AST::serializationTestObject();
-    Quantity quant;
-    quant.quantity = "test1";
-    quant.args = {"test2"};
     Condition cond;
-    cond.lhs = quant;
-    cond.rhs = quant;
+    cond.lhs = Quantity::serializationTestObject();
+    cond.rhs = Quantity::serializationTestObject();
     cond.logic = Logical::AND;
     cond.cmp = Comparator::GREATER_EQUAL;
     cond.cmp_string = "test3";

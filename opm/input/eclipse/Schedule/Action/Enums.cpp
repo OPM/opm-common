@@ -17,10 +17,11 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <fmt/format.h>
+#include <opm/input/eclipse/Schedule/Action/Enums.hpp>
+
 #include <stdexcept>
 
-#include <opm/input/eclipse/Schedule/Action/Enums.hpp>
+#include <fmt/format.h>
 
 namespace Opm {
 namespace Action {
