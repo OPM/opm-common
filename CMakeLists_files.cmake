@@ -397,6 +397,7 @@ list(APPEND MAIN_SOURCE_FILES
   opm/ml/ml_model.cpp
   opm/output/data/Aquifer.cpp
   opm/output/data/InterRegFlowMap.cpp
+  opm/output/data/RegionsetVariableDescriptor.cpp
   opm/output/data/RegionVariableMapping.cpp
   opm/output/data/Solution.cpp
   opm/output/eclipse/ActiveIndexByColumns.cpp
@@ -514,6 +515,7 @@ list(APPEND TEST_SOURCE_FILES
   tests/test_data_GuideRateValue.cpp
   tests/test_data_InterRegFlow.cpp
   tests/test_data_InterRegFlowMap.cpp
+  tests/test_data_regionsetvariabledescriptor.cpp
   tests/test_data_regionvariablemapping.cpp
   tests/test_DatumDepth.cpp
   tests/test_DoubHEAD.cpp
@@ -1505,6 +1507,7 @@ list(APPEND PUBLIC_HEADER_FILES
   opm/output/data/InterRegFlow.hpp
   opm/output/data/InterRegFlowMap.hpp
   opm/output/data/RegionVariableMapping.hpp
+  opm/output/data/RegionsetVariableDescriptor.hpp
   opm/output/data/Solution.hpp
   opm/output/data/Wells.hpp
   opm/output/eclipse/ActiveIndexByColumns.hpp
