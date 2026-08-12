@@ -33,6 +33,7 @@
 
 #include <cstddef>
 #include <functional>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -99,7 +100,8 @@ private:
     void initThreePhaseParams_(HystParams<Traits>& hystParams,
                                MaterialLawParams& materialParams,
                                unsigned satRegionIdx,
-                               unsigned elemIdx);
+                               unsigned elemIdx,
+                               std::shared_ptr<void> pooledParams);
 
     void readEffectiveParameters_();
 
