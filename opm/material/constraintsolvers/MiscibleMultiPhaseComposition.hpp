@@ -49,8 +49,7 @@ template <class Scalar>
 class MMPCAuxConstraint
 {
 public:
-    MMPCAuxConstraint()
-    {}
+    MMPCAuxConstraint() = default;
 
     MMPCAuxConstraint(unsigned phaseIndex, unsigned compIndex, Scalar val)
         : phaseIdx_(phaseIndex)
@@ -90,9 +89,9 @@ public:
     { return value_; }
 
 private:
-    unsigned phaseIdx_;
-    unsigned compIdx_;
-    Scalar value_;
+    unsigned phaseIdx_{};
+    unsigned compIdx_{};
+    Scalar value_{};
 };
 
 /*!
