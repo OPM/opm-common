@@ -32,7 +32,7 @@ namespace {
         if ((l1 < 0) || (l2 < 0) || (l1 > l2))
             throw std::invalid_argument(name + ": Invalid index values for lgr");
 
-        if (l2 > nglobal)
+        if (l2 >= nglobal)
             throw std::invalid_argument(name + ": Index values for lgr greater than global grid size");
 
         if (nlgr % (l2-l1+1) != 0)
