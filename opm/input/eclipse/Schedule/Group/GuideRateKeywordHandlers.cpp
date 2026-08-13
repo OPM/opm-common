@@ -19,6 +19,8 @@
 
 #include "GuideRateKeywordHandlers.hpp"
 
+#include <opm/common/utility/OpmInputError.hpp>
+
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
 
@@ -31,6 +33,8 @@
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 
 #include "../HandlerContext.hpp"
+
+#include <fmt/format.h>
 
 namespace Opm {
 
@@ -93,6 +97,15 @@ void handleWGRUPCON(HandlerContext& handlerContext)
             }
 
             auto well = handlerContext.state().wells.get(well_name);
+            if ((phase == Well::GuideRateTarget::RAT) && !well.isInjector()) {
+                const auto msg = fmt::format(
+                    "Surface flow guide rate (RAT) is not permissible for non-injection well '{}'.\n"
+                    "This should only be used if the well has been declared an injection well via WCONINJE.",
+                    well_name);
+
+                throw OpmInputError(msg, handlerContext.keyword.location());
+            }
+
             if (well.updateWellGuideRate(availableForGroupControl, guide_rate, phase, scaling_factor)) {
                 auto new_config = handlerContext.state().guide_rate();
                 new_config.update_well(well);

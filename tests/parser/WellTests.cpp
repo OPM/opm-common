@@ -509,14 +509,30 @@ BOOST_AUTO_TEST_CASE(WellHaveInjectionControlLimit) {
 /*********************************************************************/
 
 BOOST_AUTO_TEST_CASE(WellGuideRatePhase_GuideRatePhaseSet) {
-    Opm::Well well("WELL1" , "GROUP", 0, 1, 0, 0, 0.0, Opm::WellType(Opm::Phase::OIL), Opm::Well::ProducerCMode::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0, 1.0, false, false, 0, Opm::Well::GasInflowEquation::STD);
+    {
+        Opm::Well producer("WELL1" , "GROUP", 0, 1, 0, 0, 0.0, Opm::WellType(Opm::Phase::OIL), Opm::Well::ProducerCMode::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0, 1.0, false, false, 0, Opm::Well::GasInflowEquation::STD);
 
-    BOOST_CHECK(Opm::Well::GuideRateTarget::UNDEFINED == well.getGuideRatePhase());
+        BOOST_CHECK(Opm::Well::GuideRateTarget::UNDEFINED == producer.getRawGuideRatePhase());
 
-    BOOST_CHECK(well.updateWellGuideRate(true, 100, Opm::Well::GuideRateTarget::RAT, 66.0));
-    BOOST_CHECK(Opm::Well::GuideRateTarget::RAT == well.getGuideRatePhase());
-    BOOST_CHECK_EQUAL(100, well.getGuideRate());
-    BOOST_CHECK_EQUAL(66.0, well.getGuideRateScalingFactor());
+        BOOST_CHECK(producer.updateWellGuideRate(true, 100, Opm::Well::GuideRateTarget::RAT, 66.0));
+        BOOST_CHECK(Opm::Well::GuideRateTarget::RAT == producer.getRawGuideRatePhase());
+        BOOST_CHECK_THROW(producer.getGuideRatePhase(), std::logic_error);
+        BOOST_CHECK_EQUAL(100, producer.getGuideRate());
+        BOOST_CHECK_EQUAL(66.0, producer.getGuideRateScalingFactor());
+    }
+
+    {
+        Opm::Well injector("WELL2" , "GROUP", 0, 1, 0, 0, 0.0, Opm::WellType(Opm::Phase::WATER), Opm::Well::ProducerCMode::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0, 1.0, false, false, 0, Opm::Well::GasInflowEquation::STD);
+
+        auto injection_props = std::make_shared<Opm::Well::WellInjectionProperties>(injector.getInjectionProperties());
+        injection_props->surfaceInjectionRate.update(1.0);
+        injector.updateInjection(injection_props);
+
+        BOOST_CHECK(injector.updateWellGuideRate(true, 200, Opm::Well::GuideRateTarget::RAT, 77.0));
+        BOOST_CHECK(Opm::Well::GuideRateTarget::WAT == injector.getGuideRatePhase());
+        BOOST_CHECK_EQUAL(200, injector.getGuideRate());
+        BOOST_CHECK_EQUAL(77.0, injector.getGuideRateScalingFactor());
+    }
 }
 
 BOOST_AUTO_TEST_CASE(WellEfficiencyFactorSet) {

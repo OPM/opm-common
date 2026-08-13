@@ -1175,8 +1175,16 @@ Well::GuideRateTarget Well::getGuideRatePhase() const
 {
     const auto target = this->getRawGuideRatePhase();
 
-    if (this->isInjector() && (target == GuideRateTarget::RAT)) {
-        return this->preferredPhaseAsGuideRatePhase();
+    if (target == GuideRateTarget::RAT) {
+        if (this->isInjector()) {
+            return this->preferredPhaseAsGuideRatePhase();
+        }
+
+        throw std::logic_error {
+            fmt::format("Guide rate target RAT is invalid for non-injection well '{}'. "
+                        "This should only be used if the well has been declared an injection well via the WCONINJE keyword in the SCHEDULE section.",
+                        this->name())
+        };
     }
 
     return target;

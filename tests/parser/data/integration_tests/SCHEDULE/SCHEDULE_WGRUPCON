@@ -26,6 +26,10 @@ WELSPECS
 
 /
 
+WCONINJE
+  'W_3' WATER OPEN RATE 100 /
+/
+
 WGRUPCON
    'W_1' 2* OIL /
 -- the spaces around the name are intentional!
