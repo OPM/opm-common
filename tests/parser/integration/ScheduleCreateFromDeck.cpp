@@ -674,7 +674,7 @@ BOOST_AUTO_TEST_CASE(WellTestWGRUPCONWellPropertiesSet) {
     const auto& well3 = sched.getWell("W_3", 0);
     BOOST_CHECK(well3.isAvailableForGroupControl( ));
     BOOST_CHECK_EQUAL(100, well3.getGuideRate( ));
-    BOOST_CHECK(Well::GuideRateTarget::RAT == well3.getGuideRatePhase( ));
+    BOOST_CHECK(Well::GuideRateTarget::WAT == well3.getGuideRatePhase( ));
     BOOST_CHECK_EQUAL(0.5, well3.getGuideRateScalingFactor( ));
 }
 
