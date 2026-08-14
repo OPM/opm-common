@@ -27,7 +27,7 @@
 #include <opm/input/eclipse/EclipseState/Phase.hpp>
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
 
-#include <opm/input/eclipse/Schedule/BCProp.hpp>
+#include <opm/input/eclipse/Schedule/BCState.hpp>
 #include <opm/input/eclipse/Schedule/Events.hpp>
 #include <opm/input/eclipse/Schedule/GasPlantTable.hpp>
 #include <opm/input/eclipse/Schedule/Group/Group.hpp>
@@ -656,7 +656,7 @@ namespace Opm {
 
         // constant flux aquifers
         std::unordered_map<int, SingleAquiferFlux> aqufluxs;
-        BCProp bcprop;
+        BCState bcstate;
         // injection streams for compostional STREAM injection using WINJGAS
         map_member<std::string, std::vector<double>> inj_streams;
 
@@ -700,7 +700,7 @@ namespace Opm {
             serializer(this->injectionNetwork);
             serializer(wseed);
             serializer(aqufluxs);
-            serializer(bcprop);
+            serializer(bcstate);
             serializer(inj_streams);
             serializer(target_wellpi);
             serializer(this->next_tstep);

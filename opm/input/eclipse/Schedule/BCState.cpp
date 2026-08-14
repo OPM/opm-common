@@ -20,7 +20,7 @@
 
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/B.hpp>
-#include <opm/input/eclipse/Schedule/BCProp.hpp>
+#include <opm/input/eclipse/Schedule/BCState.hpp>
 
 #include <algorithm>
 #include <string>
@@ -100,67 +100,61 @@ BCComponent component(const std::string& s) {
 }
 
 using BCKEY = ParserKeywords::BCPROP;
-BCProp::BCFace::BCFace(const DeckRecord& record) :
-    index(record.getItem<BCKEY::INDEX>().get<int>(0)),
-    bctype(fromstring::bctype(record.getItem<BCKEY::TYPE>().get<std::string>(0))),
-    bcmechtype(fromstring::bcmechtype(record.getItem<BCKEY::MECHTYPE>().get<std::string>(0))),
-    component(fromstring::component(record.getItem<BCKEY::COMPONENT>().get<std::string>(0))),
-    rate(record.getItem<BCKEY::RATE>().getSIDouble(0))
+BCState::BCFace BCState::BCFace::fromBCProp(const DeckRecord& record)
 {
+    BCFace bcpropface;
+    bcpropface.index = record.getItem<BCKEY::INDEX>().get<int>(0);
+    bcpropface.bctype = fromstring::bctype(record.getItem<BCKEY::TYPE>().get<std::string>(0));
+    bcpropface.component = fromstring::component(record.getItem<BCKEY::COMPONENT>().get<std::string>(0));
+    bcpropface.rate = record.getItem<BCKEY::RATE>().getSIDouble(0);
     if (const auto& P = record.getItem<BCKEY::PRESSURE>(); ! P.defaultApplied(0)) {
-        pressure = P.getSIDouble(0);
+        bcpropface.pressure = P.getSIDouble(0);
     }
     if (const auto& T = record.getItem<BCKEY::TEMPERATURE>(); ! T.defaultApplied(0)) {
-        temperature = T.getSIDouble(0);
+        bcpropface.temperature = T.getSIDouble(0);
     }
+    return bcpropface;
+}
+
+using BCMECHKEY = ParserKeywords::BCMECH;
+BCState::BCFace BCState::BCFace::fromBCMech(const DeckRecord& record)
+{
+    BCFace bcmechface;
+    bcmechface.index = record.getItem<BCMECHKEY::INDEX>().get<int>(0);
+    bcmechface.bcmechtype =
+        fromstring::bcmechtype(record.getItem<BCMECHKEY::MECHTYPE>().get<std::string>(0));
 
     MechBCValue mechbcvaluetmp;
-    bool allDefault = true;
-    if (const auto& P = record.getItem<BCKEY::STRESSXX>(); ! P.defaultApplied(0)) {
+    if (const auto& P = record.getItem<BCMECHKEY::STRESSXX>(); ! P.defaultApplied(0)) {
         mechbcvaluetmp.stress[0] = P.getSIDouble(0);
-        allDefault = false;
     }
-    if (const auto& P = record.getItem<BCKEY::STRESSYY>(); ! P.defaultApplied(0)) {
+    if (const auto& P = record.getItem<BCMECHKEY::STRESSYY>(); ! P.defaultApplied(0)) {
         mechbcvaluetmp.stress[1] = P.getSIDouble(0);
-        allDefault = false;
     }
-    if (const auto& P = record.getItem<BCKEY::STRESSZZ>(); ! P.defaultApplied(0)) {
+    if (const auto& P = record.getItem<BCMECHKEY::STRESSZZ>(); ! P.defaultApplied(0)) {
         mechbcvaluetmp.stress[2] = P.getSIDouble(0);
-        allDefault = false;
     }
     mechbcvaluetmp.stress[3] = 0;
     mechbcvaluetmp.stress[4] = 0;
     mechbcvaluetmp.stress[5] = 0;
-    if (const auto& P = record.getItem<BCKEY::DISPX>(); ! P.defaultApplied(0)) {
+    if (const auto& P = record.getItem<BCMECHKEY::DISPX>(); ! P.defaultApplied(0)) {
         mechbcvaluetmp.disp[0] = P.getSIDouble(0);
-        allDefault = false;
     }
-    if (const auto& P = record.getItem<BCKEY::DISPY>(); ! P.defaultApplied(0)) {
+    if (const auto& P = record.getItem<BCMECHKEY::DISPY>(); ! P.defaultApplied(0)) {
         mechbcvaluetmp.disp[1] = P.getSIDouble(0);
-        allDefault = false;
     }
-    if (const auto& P = record.getItem<BCKEY::DISPZ>(); ! P.defaultApplied(0)) {
+    if (const auto& P = record.getItem<BCMECHKEY::DISPZ>(); ! P.defaultApplied(0)) {
         mechbcvaluetmp.disp[2] = P.getSIDouble(0);
-        allDefault = false;
     }
-    if (const auto& P = record.getItem<BCKEY::FIXEDX>(); ! P.defaultApplied(0)) {
-        mechbcvaluetmp.fixeddir[0] = P.get<int>(0);
-        allDefault = false;
-    }
-    if (const auto& P = record.getItem<BCKEY::FIXEDY>(); ! P.defaultApplied(0)) {
-        mechbcvaluetmp.fixeddir[1] = P.get<int>(0);
-        allDefault = false;
-    }
-    if (const auto& P = record.getItem<BCKEY::FIXEDZ>(); ! P.defaultApplied(0)) {
-        mechbcvaluetmp.fixeddir[2] = P.get<int>(0);
-        allDefault = false;
-    }
-    if (!allDefault) {
-        mechbcvalue = mechbcvaluetmp;
-    }
+    mechbcvaluetmp.fixeddir[0] = record.getItem<BCMECHKEY::FIXEDX>().get<int>(0);
+    mechbcvaluetmp.fixeddir[1] = record.getItem<BCMECHKEY::FIXEDY>().get<int>(0);
+    mechbcvaluetmp.fixeddir[2] = record.getItem<BCMECHKEY::FIXEDZ>().get<int>(0);
+    bcmechface.mechbcvalue = mechbcvaluetmp;
+
+    return bcmechface;
 }
 
-BCProp::BCFace BCProp::BCFace::serializationTestObject()
+BCState::BCFace BCState::BCFace::serializationTestObject()
 {
     BCFace result;
     result.index = 100;
@@ -175,7 +169,7 @@ BCProp::BCFace BCProp::BCFace::serializationTestObject()
 }
 
 
-bool BCProp::BCFace::operator==(const BCProp::BCFace& other) const {
+bool BCState::BCFace::operator==(const BCState::BCFace& other) const {
     return this->index == other.index &&
            this->bctype == other.bctype &&
            this->bcmechtype == other.bcmechtype &&
@@ -188,46 +182,82 @@ bool BCProp::BCFace::operator==(const BCProp::BCFace& other) const {
 
 
 
-void BCProp::updateBCProp(const DeckRecord& record)
+void BCState::updateBCProp(const DeckRecord& record)
 {
-    const BCProp::BCFace bcnew(record);
+    const BCFace bcnew = BCFace::fromBCProp(record);
     auto it = std::ranges::find_if(m_faces,
                                    [&bcnew](const auto& bc)
                                    {
                                        return bc.index == bcnew.index &&
                                               bc.component == bcnew.component;
                                    });
+    if (it == m_faces.end()) {
+        // If a BCMECH record already created a face for this index that has no flow data of
+        // its own, claim it instead of forking a duplicate face for the same index.
+        static constexpr BCFace defaultFace{};
+        auto isUnclaimedByBCProp = [](const BCFace& bc) {
+            return bc.bctype == defaultFace.bctype &&
+                bc.component == defaultFace.component &&
+                bc.rate == defaultFace.rate &&
+                bc.pressure == defaultFace.pressure &&
+                bc.temperature == defaultFace.temperature;
+        };
+        it = std::ranges::find_if(m_faces,
+                                  [&bcnew, &isUnclaimedByBCProp](const auto& bc) {
+                                      return bc.index == bcnew.index &&
+                                          isUnclaimedByBCProp(bc);
+                                  });
+    }
     if (it != m_faces.end()) {
-        *it = bcnew;
+        it->bctype = bcnew.bctype;
+        it->component = bcnew.component;
+        it->rate = bcnew.rate;
+        it->pressure = bcnew.pressure;
+        it->temperature = bcnew.temperature;
+    } else {
+        this->m_faces.emplace_back(bcnew);
+    }
+}
+
+void BCState::updateBCMech(const DeckRecord& record)
+{
+    const BCFace bcnew = BCFace::fromBCMech(record);
+    auto it = std::ranges::find_if(m_faces,
+                                   [&bcnew](const auto& bc)
+                                   {
+                                       return bc.index == bcnew.index;
+                                   });
+    if (it != m_faces.end()) {
+        it->bcmechtype = bcnew.bcmechtype;
+        it->mechbcvalue = bcnew.mechbcvalue;
     } else {
         this->m_faces.emplace_back(bcnew);
     }
 }
 
 
-
-BCProp BCProp::serializationTestObject()
+BCState BCState::serializationTestObject()
 {
-    BCProp result;
+    BCState result;
     result.m_faces = {BCFace::serializationTestObject()};
 
     return result;
 }
 
 
-std::size_t BCProp::size() const {
+std::size_t BCState::size() const {
     return this->m_faces.size();
 }
 
-std::vector<BCProp::BCFace>::const_iterator BCProp::begin() const {
+std::vector<BCState::BCFace>::const_iterator BCState::begin() const {
     return this->m_faces.begin();
 }
 
-std::vector<BCProp::BCFace>::const_iterator BCProp::end() const {
+std::vector<BCState::BCFace>::const_iterator BCState::end() const {
     return this->m_faces.end();
 }
 
-const BCProp::BCFace& BCProp::operator[](int index) const
+const BCState::BCFace& BCState::operator[](int index) const
 {
     const auto it = std::ranges::find_if(m_faces,
                                          [index](const auto& bc)
@@ -241,7 +271,7 @@ const BCProp::BCFace& BCProp::operator[](int index) const
     return this->m_faces[0];
 }
 
-bool BCProp::operator==(const BCProp& other) const {
+bool BCState::operator==(const BCState& other) const {
     return this->m_faces == other.m_faces;
 }
 
