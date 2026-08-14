@@ -133,12 +133,13 @@ namespace Opm::data {
             assert (regSetID < d.numRegionSets());
 
             const auto begin = d.startIndex(regSetID);
+#ifndef NDEBUG
             const auto end = (regSetID + 1 < d.numRegionSets())
                 ? d.startIndex(regSetID + 1)
                 : d.numVariableSlots();
 
             assert (begin + region < end);
-
+#endif
             return begin + region;
         }
     };
