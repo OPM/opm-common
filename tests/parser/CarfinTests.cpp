@@ -46,6 +46,9 @@ BOOST_AUTO_TEST_CASE(TestKeywordCarfin) {
     // J2 > nyglobal
     BOOST_CHECK_THROW( Opm::Carfin(gridDims, allActive(), identityMapping(), "LGR",1,1,3,8,2,2,2,12,2), std::invalid_argument);
 
+    // J2 == nyglobal
+    BOOST_CHECK_THROW( Opm::Carfin(gridDims, allActive(), identityMapping(), "LGR",1,1,3,7,2,2,2,10,2), std::invalid_argument);
+
     //nlgr % (l2-l1+1) != 0
     BOOST_CHECK_THROW( Opm::Carfin(gridDims, allActive(), identityMapping(), "LGR",1,1,3,4,2,2,2,5,2), std::invalid_argument);
 

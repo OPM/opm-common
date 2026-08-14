@@ -86,6 +86,25 @@ namespace Opm
         this->reset();
     }
 
+    /// @brief Construct a Carfin object with local grid refinement parameters.
+    /// @param gridDims The dimensions of the global grid.
+    /// @param isActive A functor to determine if a cell is active.
+    /// @param activeIdx A functor to get the active index of a cell.
+    /// @param name The name of the local grid refinement.
+    /// @param i1 The starting index in the i-direction.
+    /// @param i2 The ending index in the i-direction.
+    /// @param j1 The starting index in the j-direction.
+    /// @param j2 The ending index in the j-direction.
+    /// @param k1 The starting index in the k-direction.
+    /// @param k2 The ending index in the k-direction.
+    /// @param nx The number of refined cells in the i-direction.
+    /// @param ny The number of refined cells in the j-direction.
+    /// @param nz The number of refined cells in the k-direction.
+    ///
+    /// Note that the indices i1, i2, j1, j2, k1, k2 are 0-based and inclusive.
+    /// For example for a global grid with dimensions (1, 3, 1) the (j1, j2) indices
+    /// need to be in the range [0, 2]. The ending indices give the index of the last
+    /// cell to be refined, and not one-beyond last as typical of C++ iterator ranges.
     Carfin::Carfin(const GridDims& gridDims,
                    IsActive        isActive,
                    ActiveIdx       activeIdx,
