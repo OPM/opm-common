@@ -186,7 +186,7 @@ list(APPEND MAIN_SOURCE_FILES
   opm/input/eclipse/Parser/raw/StarToken.cpp
   opm/input/eclipse/Python/Python.cpp
   opm/input/eclipse/Schedule/ArrayDimChecker.cpp
-  opm/input/eclipse/Schedule/BCProp.cpp
+  opm/input/eclipse/Schedule/BCState.cpp
   opm/input/eclipse/Schedule/CompletedCells.cpp
   opm/input/eclipse/Schedule/eval_uda.cpp
   opm/input/eclipse/Schedule/Events.cpp
@@ -1133,7 +1133,7 @@ list(APPEND PUBLIC_HEADER_FILES
   opm/input/eclipse/Schedule/Action/State.hpp
   opm/input/eclipse/Schedule/Action/WGNames.hpp
   opm/input/eclipse/Schedule/ArrayDimChecker.hpp
-  opm/input/eclipse/Schedule/BCProp.hpp
+  opm/input/eclipse/Schedule/BCState.hpp
   opm/input/eclipse/Schedule/CompletedCells.hpp
   opm/input/eclipse/Schedule/Events.hpp
   opm/input/eclipse/Schedule/GasLiftOpt.hpp

@@ -95,9 +95,17 @@ void handleAQUFLUX(HandlerContext& handlerContext)
 
 void handleBCProp(HandlerContext& handlerContext)
 {
-    auto& bcprop = handlerContext.state().bcprop;
+    auto& bcstate = handlerContext.state().bcstate;
     for (const auto& record : handlerContext.keyword) {
-        bcprop.updateBCProp(record);
+        bcstate.updateBCProp(record);
+    }
+}
+
+void handleBCMech(HandlerContext& handlerContext)
+{
+    auto& bcstate = handlerContext.state().bcstate;
+    for (const auto& record : handlerContext.keyword) {
+        bcstate.updateBCMech(record);
     }
 }
 
@@ -476,6 +484,7 @@ KeywordHandlers::KeywordHandlers()
         { "AQUCT",    &handleAQUCT      },
         { "AQUFETP",  &handleAQUFETP    },
         { "AQUFLUX",  &handleAQUFLUX    },
+        { "BCMECH",   &handleBCMech     },
         { "BCPROP",   &handleBCProp     },
         { "BOX",      &handleGEOKeyword },
         { "ENDBOX"  , &handleGEOKeyword },
