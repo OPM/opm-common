@@ -33,6 +33,23 @@
 #include <stdlib.h> // for abort()
 #endif
 
+#if defined(__CUDACC__)
+namespace Opm::detail {
+
+template <class Exception, class LogCallback>
+[[noreturn]] inline void throwWithLog(const char* file, int line,
+                                      const std::string& message,
+                                      LogCallback&& log)
+{
+    const std::string fullMessage = std::string{"["} + file + ":"
+        + std::to_string(line) + "] " + message;
+    log(fullMessage);
+    throw Exception(fullMessage);
+}
+
+} // namespace Opm::detail
+#endif
+
 // macros for reporting to stderr
 #ifdef OPM_VERBOSE // Verbose mode
 # include <iostream>
@@ -55,6 +72,16 @@
 // std::runtime_error.
 //
 // Usage: OPM_THROW(ExceptionClass, "Error message");
+#if defined(__CUDACC__)
+#define OPM_THROW(Exception, message)                          \
+    if (true) {                                                 \
+        ::Opm::detail::throwWithLog<Exception>(__FILE__, __LINE__, \
+                                               message, [](const std::string& text) { \
+                                                   ::Opm::OpmLog::error(text); \
+                                               }); \
+        __builtin_unreachable();                               \
+    } else { }
+#else
 #define OPM_THROW(Exception, message)                          \
     do {                                                       \
         std::string oss_ = std::string{"["} + __FILE__ + ":" + \
@@ -63,6 +90,7 @@
         ::Opm::OpmLog::error(oss_);                            \
         throw Exception(oss_);                                 \
     } while (false)
+#endif
 
 // Macro to throw an exception that only counts as a problem in PRT file.
 // NOTE: For this macro to work, the
@@ -73,6 +101,16 @@
 // std::runtime_error.
 //
 // Usage: OPM_THROW_PROBLEM(ExceptionClass, "Error message");
+#if defined(__CUDACC__)
+#define OPM_THROW_PROBLEM(Exception, message)                          \
+    if (true) {                                                 \
+        ::Opm::detail::throwWithLog<Exception>(__FILE__, __LINE__, \
+                                               message, [](const std::string& text) { \
+                                                   ::Opm::OpmLog::problem(text); \
+                                               }); \
+        __builtin_unreachable();                               \
+    } else { }
+#else
 #define OPM_THROW_PROBLEM(Exception, message)                          \
     do {                                                       \
         std::string oss_ = std::string{"["} + __FILE__ + ":" + \
@@ -81,10 +119,19 @@
         ::Opm::OpmLog::problem(oss_);                            \
         throw Exception(oss_);                                 \
     } while (false)
+#endif
 
 // Same as OPM_THROW, except for not making an OpmLog::error() call.
 //
 // Usage: OPM_THROW_NOLOG(ExceptionClass, "Error message");
+#if defined(__CUDACC__)
+#define OPM_THROW_NOLOG(Exception, message)                    \
+    if (true) {                                                 \
+        ::Opm::detail::throwWithLog<Exception>(__FILE__, __LINE__, \
+                                              message, [](const std::string&) {}); \
+        __builtin_unreachable();                               \
+    } else { }
+#else
 #define OPM_THROW_NOLOG(Exception, message)                    \
     do {                                                       \
         std::string oss_ = std::string{"["} + __FILE__ + ":" + \
@@ -92,6 +139,7 @@
                            message;                            \
         throw Exception(oss_);                                 \
     } while (false)
+#endif
 
 // throw an exception if a condition is true
 #define OPM_ERROR_IF(condition, message) do {if(condition){ OPM_THROW(std::logic_error, message);}} while(false)
