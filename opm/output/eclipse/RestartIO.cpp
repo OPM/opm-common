@@ -424,12 +424,9 @@ namespace {
         connectionData.captureDeclaredConnData(schedule, grid, schedule.getUnits(),
                                                wells, sumState, sim_step);
 
-        if (norst_value == 0) {
+        if (norst_value <= 1) {
             rstFile.write("ICON", connectionData.getIConn());
             rstFile.write("SCON", connectionData.getSConn());
-        }
-
-        if (norst_value <= 1) {
             rstFile.write("XCON", connectionData.getXConn());
         }
     }
@@ -481,14 +478,11 @@ namespace {
         auto connectionData = Helpers::AggregateConnectionData(ih);
         connectionData.captureDeclaredConnDataLGR(schedule, grid, schedule.getUnits(),
                                                      wells, sumState, sim_step, lgr_tag);
-        if (norst_value == 0)
-        {
-            rstFile.write("ICON", connectionData.getIConn());
-            rstFile.write("SCON", connectionData.getSConn());
-        }
 
         if (norst_value <= 1)
         {
+            rstFile.write("ICON", connectionData.getIConn());
+            rstFile.write("SCON", connectionData.getSConn());
             rstFile.write("XCON", connectionData.getXConn());
         }
     }
