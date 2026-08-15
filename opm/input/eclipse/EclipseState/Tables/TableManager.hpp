@@ -303,6 +303,8 @@ namespace Opm {
 
         void addTables( const std::string& tableName , std::size_t numTables);
         void initSimpleTables(const Deck& deck);
+        void initDefaultPvtw(const Deck& deck);
+        void initDefaultDensity(const Deck& deck);
         void initRTempTables(const Deck& deck);
         void initZmfvdTables(const Deck& deck);
         void initCompvdTables(const Deck& deck);

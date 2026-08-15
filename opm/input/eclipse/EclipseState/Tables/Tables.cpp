@@ -2808,6 +2808,11 @@ DensityTable::DensityTable(std::initializer_list<DENSITYRecord> records)
     : FlatTableWithCopy(records)
 {}
 
+DensityTable::DensityTable(const DENSITYRecord& record, const std::size_t num_tables)
+{
+    this->table_.assign(num_tables, record);
+}
+
 DensityTable::DensityTable(const GravityTable& gravity)
 {
     this->table_.reserve(gravity.size());
@@ -2844,6 +2849,11 @@ PvtwTable::PvtwTable(const DeckKeyword& kw)
 PvtwTable::PvtwTable(std::initializer_list<PVTWRecord> records)
     : FlatTableWithCopy(records)
 {}
+
+PvtwTable::PvtwTable(const PVTWRecord& record, const std::size_t num_tables)
+{
+    this->table_.assign(num_tables, record);
+}
 
 // ------------------------------------------------------------------------
 

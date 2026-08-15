@@ -102,6 +102,7 @@
 #include <opm/input/eclipse/Parser/ParserKeywords/D.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/E.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/G.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/H.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/J.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/M.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/O.hpp>
@@ -179,6 +180,13 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
 
         else if( deck.hasKeyword( "GRAVITY" ) )
             this->m_densityTable = DensityTable( GravityTable ( deck["GRAVITY"].back() ) );
+
+        else
+            this->initDefaultDensity( deck );
+
+        // Initialize DENSITY first so a generated PVTW table can use the same
+        // number of PVT regions.
+        this->initDefaultPvtw( deck );
 
         if( deck.hasKeyword( "DIFFC" ) )
             this->m_diffCoeffTable = DiffCoeffTable( deck["DIFFC"].back() );
@@ -431,6 +439,76 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
 
     const TableContainer& TableManager::operator[](const std::string& tableName) const {
         return getTables(tableName);
+    }
+
+    namespace {
+        // The CO2/H2 storage and solution options take the water properties from
+        // the built-in brine models and ignore PVTW and DENSITY.
+        bool brineWaterProps(const Deck& deck)
+        {
+            return deck.hasKeyword<ParserKeywords::CO2STORE>()
+                || deck.hasKeyword<ParserKeywords::CO2STOR>()
+                || deck.hasKeyword<ParserKeywords::CO2SOL>()
+                || deck.hasKeyword<ParserKeywords::H2STORE>()
+                || deck.hasKeyword<ParserKeywords::H2SOL>();
+        }
+
+        bool defaultCompositionalWaterProps(const Deck& deck)
+        {
+            // GASWAT activates both gas and water; mirror Runspec phase detection.
+            const bool water = deck.hasKeyword<ParserKeywords::WATER>()
+                            || deck.hasKeyword<ParserKeywords::GASWAT>();
+
+            return deck.hasKeyword<ParserKeywords::COMPS>()
+                && water
+                && !brineWaterProps(deck);
+        }
+    } // anonymous namespace
+
+    void TableManager::initDefaultPvtw(const Deck& deck)
+    {
+        if (!this->m_pvtwTable.empty() || !defaultCompositionalWaterProps(deck)) {
+            return;
+        }
+
+        // Default water properties for a compositional run that omits PVTW.
+        constexpr auto pref = unit::atm;
+        constexpr auto bw = 1.0;
+        constexpr auto cw = 4.0e-5 / unit::atm;
+        constexpr auto viscosity = 0.3 * prefix::centi * unit::Poise;
+        constexpr auto viscosibility = 0.0;
+
+        const PVTWRecord rec { pref, bw, cw, viscosity, viscosibility };
+        // Water PVT requires the same number of regions as DENSITY.
+        const auto regions = this->m_densityTable.empty()
+            ? this->m_tabdims.getNumPVTTables()
+            : this->m_densityTable.size();
+        this->m_pvtwTable = PvtwTable(rec, regions);
+
+        OpmLog::info("PVTW is not specified for a compositional run with water. "
+                     "Defaulting to Pref = 1 atm, Bw = 1, Cw = 4.0E-5/atm, "
+                     "water viscosity 0.3 cP.");
+    }
+
+    void TableManager::initDefaultDensity(const Deck& deck)
+    {
+        if (!defaultCompositionalWaterProps(deck)) {
+            return;
+        }
+
+        // Only the water density is used; oil and gas come from the equation of
+        // state and reach no further than the INIT file's table output.
+        const DENSITYRecord rec { ParserKeywords::DENSITY::OIL::defaultValue,
+                                  ParserKeywords::DENSITY::WATER::defaultValue,
+                                  ParserKeywords::DENSITY::GAS::defaultValue };
+        const auto regions = this->m_pvtwTable.empty()
+            ? this->m_tabdims.getNumPVTTables()
+            : this->m_pvtwTable.size();
+        this->m_densityTable = DensityTable(rec, regions);
+
+        OpmLog::info("DENSITY is not specified for a compositional run with water. "
+                     "Defaulting the surface water density to 999.014 kg/m3 "
+                     "(oil and gas surface properties come from the equation of state).");
     }
 
     void TableManager::initSimpleTables(const Deck& deck) {
