@@ -43,6 +43,7 @@
 #include <opm/material/components/C10.hpp>
 #include <opm/material/components/C1.hpp>
 
+#include <opm/material/constraintsolvers/IdealGasCaloricData.hpp>
 #include <opm/material/constraintsolvers/PTFlash.hpp>
 #include <opm/material/constraintsolvers/PTFlashMethod.hpp>
 #include <opm/material/densead/Evaluation.hpp>
@@ -56,6 +57,7 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <type_traits>
 
 namespace Opm {
 namespace FlashTest {
@@ -309,6 +311,31 @@ void registerF2Components()
 inline constexpr double f2Pressure = 10e5;      // [Pa]
 inline constexpr double f2Temperature = 300.;   // [K]
 inline constexpr std::array<double, 3> f2Z = {0.5, 0.3, 0.2};
+
+/*!
+ * \brief The cp table for the F1 fixture, in the fluid system's component
+ *        order (asserted at compile time).
+ */
+inline CpTable<double, 2> f1CpTable()
+{
+    using FS = TwoComponentFluidSystem<double>;
+    static_assert(std::is_same_v<typename FS::Comp0, C1<double>>,
+                  "F1 cp table assumes Comp0 = C1 (methane)");
+    static_assert(std::is_same_v<typename FS::Comp1, C10<double>>,
+                  "F1 cp table assumes Comp1 = nC10 (decane)");
+    return {IdealGasCaloricData<double>::methane(), IdealGasCaloricData<double>::decane()};
+}
+
+/*!
+ * \brief The cp table for the F2 fixture, in the component order that
+ *        registerF2Components() registers: CO2, C1 (methane), nC10 (decane).
+ */
+inline CpTable<double, 3> f2CpTable()
+{
+    return {IdealGasCaloricData<double>::carbonDioxide(),
+            IdealGasCaloricData<double>::methane(),
+            IdealGasCaloricData<double>::decane()};
+}
 
 /*!
  * \brief Build a fluid state ready for PTFlash::solve, applying the full input
