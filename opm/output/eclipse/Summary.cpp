@@ -1926,6 +1926,26 @@ inline quantity converged_node_pressure(const fn_args& args)
     return { nodePos->second.converged_pressure, measure::pressure };
 }
 
+inline quantity gas_inj_node_pressure(const fn_args& args)
+{
+    auto nodePos = args.grp_nwrk.gasInjNodeData.find(args.group_name);
+    if (nodePos == args.grp_nwrk.gasInjNodeData.end()) {
+        return { 0.0, measure::pressure };
+    }
+
+    return { nodePos->second.pressure, measure::pressure };
+}
+
+inline quantity water_inj_node_pressure(const fn_args& args)
+{
+    auto nodePos = args.grp_nwrk.waterInjNodeData.find(args.group_name);
+    if (nodePos == args.grp_nwrk.waterInjNodeData.end()) {
+        return { 0.0, measure::pressure };
+    }
+
+    return { nodePos->second.pressure, measure::pressure };
+}
+
 inline quantity branch_pressure(const fn_args& args)
 {
     auto nodePos = args.grp_nwrk.branchData.find(args.group_name);
@@ -3119,6 +3139,8 @@ static const auto funs = std::unordered_map<std::string, ofun> {
 
 
     { "GPR", node_pressure },
+    { "GPRG", gas_inj_node_pressure },
+    { "GPRW", water_inj_node_pressure },
     { "GPR2", converged_node_pressure },
     { "NPR", converged_node_pressure },
     { "GNETPR", converged_node_pressure },

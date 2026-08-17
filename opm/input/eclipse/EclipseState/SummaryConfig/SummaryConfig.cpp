@@ -32,6 +32,7 @@
 #include <opm/input/eclipse/Schedule/Group/Group.hpp>
 #include <opm/input/eclipse/Schedule/Network/ExtNetwork.hpp>
 #include <opm/input/eclipse/Schedule/MSW/WellSegments.hpp>
+#include <opm/input/eclipse/EclipseState/Phase.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQConfig.hpp>
 #include <opm/input/eclipse/Schedule/Well/Connection.hpp>
@@ -707,31 +708,67 @@ namespace {
         });
     }
 
-    std::vector<std::string> collect_node_names(const Schedule& sched, const bool add_wells = false)
+    /// Node names of the production network (optionally with the wells of its
+    /// groups) and of the gas and water injection networks (GNETINJE), over all
+    /// report steps.
+    struct NetworkNodeNames
     {
-        auto node_names = std::vector<std::string>{};
-        auto names = std::unordered_set<std::string>{};
+        std::vector<std::string> production {};
+        std::vector<std::string> production_with_wells {};
+        std::vector<std::string> gas_injection {};
+        std::vector<std::string> water_injection {};
+    };
+
+    NetworkNodeNames collect_node_names(const Schedule& sched)
+    {
+        auto prod = std::unordered_set<std::string>{};
+        auto prod_wells = std::unordered_set<std::string>{};
+        auto gas = std::unordered_set<std::string>{};
+        auto water = std::unordered_set<std::string>{};
 
         const auto nstep = sched.size() - 1;
         for (auto step = 0*nstep; step < nstep; ++step) {
             const auto& nodes = sched[step].network.get().node_names();
-            names.insert(nodes.begin(), nodes.end());
-            if (!add_wells) continue;
+            prod.insert(nodes.begin(), nodes.end());
+            prod_wells.insert(nodes.begin(), nodes.end());
 
             // Possibly insert wells belonging to groups in the network to be able to report network-computed THPs
             for (const auto& node : nodes) {
                 if (!sched.hasGroup(node, step)) continue;
                 const auto& group = sched.getGroup(node, step);
                 for (const std::string& wellname : group.wells()) {
-                    names.insert(wellname);
+                    prod_wells.insert(wellname);
                 }
+            }
+
+            if (const auto gnet = sched[step].injectionNetwork.get_ptr(Phase::GAS); gnet != nullptr) {
+                const auto& gnodes = gnet->node_names();
+                gas.insert(gnodes.begin(), gnodes.end());
+            }
+            if (const auto wnet = sched[step].injectionNetwork.get_ptr(Phase::WATER); wnet != nullptr) {
+                const auto& wnodes = wnet->node_names();
+                water.insert(wnodes.begin(), wnodes.end());
             }
         }
 
-        node_names.assign(names.begin(), names.end());
-        std::ranges::sort(node_names);
+        auto sorted = [](const std::unordered_set<std::string>& names)
+        {
+            std::vector<std::string> v(names.begin(), names.end());
+            std::ranges::sort(v);
+            return v;
+        };
 
-        return node_names;
+        return { sorted(prod), sorted(prod_wells), sorted(gas), sorted(water) };
+    }
+
+    bool is_gas_injection_node_keyword(const std::string& keyword)
+    {
+        return keyword == "GPRG";
+    }
+
+    bool is_water_injection_node_keyword(const std::string& keyword)
+    {
+        return keyword == "GPRW";
     }
 
     SummaryConfigNode::Category
@@ -1160,7 +1197,8 @@ void keyword_node(SummaryConfig::keyword_list& list,
     if (node_names.empty()) {
         const auto msg = std::string {
             "The network node keyword {keyword} is not "
-            "supported in runs without networks\n"
+            "supported in runs without a network of the corresponding kind "
+            "(production: GPR/GPRB..., gas injection: GPRG, water injection: GPRW)\n"
             "In {file} line {line}"
         };
 
@@ -1984,8 +2022,7 @@ void connectionKeyword(const bool                   isGeomechWithFracturingRun,
         }
     }
 
-void handleKW(const std::vector<std::string>& node_names,
-              const std::vector<std::string>& node_names_with_wells,
+void handleKW(const NetworkNodeNames&         node_names,
               const std::vector<int>&         analyticAquiferIDs,
               const std::vector<int>&         numericAquiferIDs,
               const bool                      isGeomechWithFracturingRun,
@@ -2068,10 +2105,14 @@ void handleKW(const std::vector<std::string>& node_names,
         break;
 
     case Cat::Node:
-        if (is_node_keyword_with_wells(keyword.name())) {
-            keyword_node(list, node_names_with_wells, parseContext, errors, keyword);
+        if (is_gas_injection_node_keyword(keyword.name())) {
+            keyword_node(list, node_names.gas_injection, parseContext, errors, keyword);
+        } else if (is_water_injection_node_keyword(keyword.name())) {
+            keyword_node(list, node_names.water_injection, parseContext, errors, keyword);
+        } else if (is_node_keyword_with_wells(keyword.name())) {
+            keyword_node(list, node_names.production_with_wells, parseContext, errors, keyword);
         } else {
-            keyword_node(list, node_names, parseContext, errors, keyword);
+            keyword_node(list, node_names.production, parseContext, errors, keyword);
         }
         break;
 
@@ -2418,14 +2459,9 @@ SummaryConfig::SummaryConfig(const Deck&              deck,
             declaredMaxRegionID(Runspec { deck })
         };
 
-        const bool node_names_needed = need_node_names(section);
-        const auto node_names = node_names_needed
+        const auto node_names = need_node_names(section)
             ? collect_node_names(schedule)
-            : std::vector<std::string> {};
-
-        const auto node_names_with_wells = node_names_needed
-            ? collect_node_names(schedule, /*with_wells=*/true)
-            : std::vector<std::string> {};
+            : NetworkNodeNames {};
 
         const auto analyticAquifers = analyticAquiferIDs(aquiferConfig);
         const auto numericAquifers = numericAquiferIDs(aquiferConfig);
@@ -2439,7 +2475,7 @@ SummaryConfig::SummaryConfig(const Deck&              deck,
                 handleProcessingInstruction(kw.name());
             }
             else {
-                handleKW(node_names, node_names_with_wells,
+                handleKW(node_names,
                          analyticAquifers, numericAquifers,
                          isGeomechWithFracturingRun,
                          kw, schedule, field_props, gridDims,
@@ -2622,16 +2658,9 @@ SummaryConfig::registerRequisiteUDQorActionSummaryKeys(const std::vector<std::st
     {
         const auto excludeFieldFromGroupKw = false;
 
-        const bool node_names_needed = std::ranges::any_of(extraKeys, &is_node_keyword);
-        const auto node_names =
-            node_names_needed
-                ? collect_node_names(sched)
-                : std::vector<std::string>{};
-
-        const auto node_names_with_wells =
-            node_names_needed
-                ? collect_node_names(sched, /*with_wells=*/true)
-                : std::vector<std::string>{};
+        const auto node_names = std::ranges::any_of(extraKeys, &is_node_keyword)
+            ? collect_node_names(sched)
+            : NetworkNodeNames {};
 
         const auto analyticAquifers = analyticAquiferIDs(es.aquifer());
         const auto numericAquifers = numericAquiferIDs(es.aquifer());
@@ -2651,7 +2680,7 @@ SummaryConfig::registerRequisiteUDQorActionSummaryKeys(const std::vector<std::st
         };
 
         for (const auto& vector_name : extraKeys) {
-            handleKW(node_names, node_names_with_wells,
+            handleKW(node_names,
                      analyticAquifers, numericAquifers,
                      isGeomechWithFracturingRun,
                      DeckKeyword { KeywordLocation{}, vector_name },

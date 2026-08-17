@@ -1278,6 +1278,15 @@ WELSPECS
      'W_5'        'G_3'   6    6  3.92       'OIL'  7* /
 /
 
+-- Gas and water injection networks (GPRG / GPRW): FIELD is the terminal node,
+-- G_2 (which holds the injectors) a leaf.
+GNETINJE
+   'FIELD'  'GAS'  30.0     /
+   'G_2'    'GAS'   1*   4  /
+   'FIELD'  'WAT'  15.0     /
+   'G_2'    'WAT'   1*   4  /
+/
+
 -- Completion data.
 COMPDAT
 -- Passing 0 to I/J means they'll get the well head I/J
