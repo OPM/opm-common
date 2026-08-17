@@ -1337,8 +1337,10 @@ list(APPEND PUBLIC_HEADER_FILES
   opm/material/components/iapws/Region4.hpp
   opm/material/constraintsolvers/CompositionFromFugacities.hpp
   opm/material/constraintsolvers/ComputeFromReferencePhase.hpp
+  opm/material/constraintsolvers/IdealGasCaloricData.hpp
   opm/material/constraintsolvers/ImmiscibleFlash.hpp
   opm/material/constraintsolvers/MiscibleMultiPhaseComposition.hpp
+  opm/material/constraintsolvers/MixtureEnthalpy.hpp
   opm/material/constraintsolvers/NcpFlash.hpp
   opm/material/constraintsolvers/PTFlash.hpp
   opm/material/densead/DynamicEvaluation.hpp
