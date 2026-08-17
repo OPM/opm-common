@@ -34,6 +34,8 @@
 #include <opm/material/eos/RKParams.hpp>
 #include <opm/material/eos/SRKParams.hpp>
 
+#include <cmath>
+
 namespace Opm
 {
 
@@ -106,20 +108,24 @@ public:
 
                 // Calculate A
                 newA +=  xi * xj * aCache_[compIIdx][compJIdx];
-                if (!std::isfinite(scalarValue(newA))) {
-                    OPM_THROW(NumericalProblem,
-                              "CubicEOSParams::updateMix: non-finite mixture A parameter "
-                              "(typically a diverged composition update feeding the EoS)");
-                }
             }
 
             // Calculate B
             newB += max(0.0, xi) * Bi(compIIdx);
-            if (!std::isfinite(scalarValue(newB))) {
-                OPM_THROW(NumericalProblem,
-                          "CubicEOSParams::updateMix: non-finite mixture B parameter "
-                          "(typically a diverged composition update feeding the EoS)");
-            }
+        }
+
+        // A non-finite mixture parameter here typically signals a diverged
+        // composition update feeding the EoS; check once after the double loop
+        // rather than on every accumulation step.
+        if (!std::isfinite(scalarValue(newA))) {
+            OPM_THROW(NumericalProblem,
+                      "CubicEOSParams::updateMix: non-finite mixture A parameter "
+                      "(typically a diverged composition update feeding the EoS)");
+        }
+        if (!std::isfinite(scalarValue(newB))) {
+            OPM_THROW(NumericalProblem,
+                      "CubicEOSParams::updateMix: non-finite mixture B parameter "
+                      "(typically a diverged composition update feeding the EoS)");
         }
 
         // assign A and B
