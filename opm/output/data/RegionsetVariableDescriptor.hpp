@@ -156,7 +156,7 @@ namespace Opm::data {
 
         /// Retrieve value starting index for a particular region set.
         ///
-        /// \param[in] Region set index.  Must be in the range [0
+        /// \param[in] regSet Region set index.  Must be in the range [0
         /// ... numRegionSets()-1].
         ///
         /// \return Starting index for the region set defined by the \code
