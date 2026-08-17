@@ -710,6 +710,7 @@ list(APPEND DUNE_TEST_SOURCE_FILES
   tests/material/test_pengrobinson.cpp
   tests/material/test_tabulation.cpp
   tests/material/test_threecomponents_ptflash.cpp
+  tests/material/test_twocomponents_ptflash.cpp
 )
 
 if(dune-common_FOUND)
