@@ -72,7 +72,7 @@ struct SimulatorUpdate
     /// its internal notion of the connection transmissibility factors.
     std::unordered_set<std::string> welpi_wells{};
 
-    /// Wells whose THP limit and/or VFP table has been (re)specified by
+    /// Wells whose THP limit and/or VFP table have been (re)specified by
     /// WCONPROD, WCONHIST, WCONINJE or WCONINJH for the named wells, by
     /// WELTARG with THP or VFP control, or by WTMULT with THP control.
     /// Producers and injectors alike are included. Unlike affected_wells,
