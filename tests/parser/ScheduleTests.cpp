@@ -7232,3 +7232,91 @@ END
         BOOST_CHECK_CLOSE(s->width(), 1819.202122, 1.0e-8);
     }
 }
+
+BOOST_AUTO_TEST_CASE(WellTHPUpdateEvent) {
+    const auto schedule = make_schedule(R"(
+RUNSPEC
+OIL
+WATER
+GAS
+
+START
+8 MAR 1998 /
+
+SCHEDULE
+
+WELSPECS
+    'P1' 'G1'  1 1 2500 'OIL' /
+/
+WCONPROD
+    'P1' 'OPEN' 'ORAT' 1000 4* 50.0 /
+/
+
+DATES        -- 1
+ 10 JUN 1998 /
+/
+
+WCONPROD     -- identical to the current well controls
+    'P1' 'OPEN' 'ORAT' 1000 4* 50.0 /
+/
+
+DATES        -- 2
+ 10 JUL 1998 /
+/
+
+WELTARG
+    'P1' 'ORAT' 500 /
+/
+
+DATES        -- 3
+ 10 AUG 1998 /
+/
+
+WELTARG
+    'P1' 'THP' 60 /
+/
+
+DATES        -- 4
+ 10 SEP 1998 /
+/
+
+WELTARG      -- unchanged VFP table number
+    'P1' 'VFP' 0 /
+/
+
+DATES        -- 5
+ 10 OKT 1998 /
+/
+
+WTMULT
+    'P1' 'THP' 2.0 /
+/
+
+DATES        -- 6
+ 10 NOV 1998 /
+/
+
+WCONHIST
+    'P1' 'OPEN' 'ORAT' 100 0 0 /
+/
+)");
+
+    // Initial WCONPROD specifies the THP limit and VFP table
+    BOOST_CHECK( schedule[0].wellgroup_events().hasEvent("P1", ScheduleEvents::WELL_THP_UPDATE));
+    // A WCONPROD with unchanged values re-specifies the THP limit and VFP
+    // table without triggering PRODUCTION_UPDATE
+    BOOST_CHECK( schedule[1].wellgroup_events().hasEvent("P1", ScheduleEvents::WELL_THP_UPDATE));
+    BOOST_CHECK(!schedule[1].wellgroup_events().hasEvent("P1", ScheduleEvents::PRODUCTION_UPDATE));
+    // WELTARG ORAT does not touch the THP limit or VFP table
+    BOOST_CHECK(!schedule[2].wellgroup_events().hasEvent("P1", ScheduleEvents::WELL_THP_UPDATE));
+    BOOST_CHECK( schedule[2].wellgroup_events().hasEvent("P1", ScheduleEvents::PRODUCTION_UPDATE));
+    // WELTARG THP re-specifies the THP limit
+    BOOST_CHECK( schedule[3].wellgroup_events().hasEvent("P1", ScheduleEvents::WELL_THP_UPDATE));
+    // WELTARG VFP re-specifies the VFP table, also for an unchanged value
+    BOOST_CHECK( schedule[4].wellgroup_events().hasEvent("P1", ScheduleEvents::WELL_THP_UPDATE));
+    BOOST_CHECK(!schedule[4].wellgroup_events().hasEvent("P1", ScheduleEvents::PRODUCTION_UPDATE));
+    // WTMULT with THP control re-specifies (multiplies) the THP limit
+    BOOST_CHECK( schedule[5].wellgroup_events().hasEvent("P1", ScheduleEvents::WELL_THP_UPDATE));
+    // WCONHIST re-specifies the VFP table
+    BOOST_CHECK( schedule[6].wellgroup_events().hasEvent("P1", ScheduleEvents::WELL_THP_UPDATE));
+}
