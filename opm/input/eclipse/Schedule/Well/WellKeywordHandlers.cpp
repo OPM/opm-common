@@ -132,8 +132,11 @@ void handleWCONHIST(HandlerContext& handlerContext)
             auto properties = std::make_shared<Well::WellProductionProperties>(well2.getProductionProperties());
             bool update_well = false;
 
-            auto table_nr = record.getItem("VFP_TABLE").get< int >(0);
-            if (record.getItem("VFP_TABLE").defaultApplied(0)) { // Default 1* use the privious set vfp table
+            const auto& vfp_table_item = record.getItem("VFP_TABLE");
+            const bool vfp_table_respecified = !vfp_table_item.defaultApplied(0);
+            auto table_nr = vfp_table_item.get<int>(0);
+            if (!vfp_table_respecified) {
+                // A defaulted item retains the previously selected VFP table.
                 table_nr = properties->VFPTableNumber;
             }
 
@@ -316,8 +319,11 @@ void handleWCONINJH(HandlerContext& handlerContext)
                                                                   6891.2);
             }
 
-            auto table_nr = record.getItem("VFP_TABLE").get< int >(0);
-            if (record.getItem("VFP_TABLE").defaultApplied(0)) { // Default 1* use the privious set vfp table
+            const auto& vfp_table_item = record.getItem("VFP_TABLE");
+            const bool vfp_table_respecified = !vfp_table_item.defaultApplied(0);
+            auto table_nr = vfp_table_item.get<int>(0);
+            if (!vfp_table_respecified) {
+                // A defaulted item retains the previously selected VFP table.
                 table_nr = injection->VFPTableNumber;
             }
             if (table_nr != 0) {

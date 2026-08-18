@@ -47,9 +47,9 @@ namespace Opm
             NEW_GROUP = (UINT64_C(1) << 3),
 
             /// The PRODUCTION_UPDATE event is triggered by the WCONPROD,
-            /// WCONHIST, WELTARG, WTMULT keywords.  The event will be
-            /// triggered if *any* of the elements in one of keywords is
-            /// changed. Quite simlar for INJECTION_UPDATE and
+            /// WCONHIST and WELTARG keywords when any element of the keyword
+            /// changes, and by WTMULT whether or not the multiplier changes
+            /// anything. The same applies to INJECTION_UPDATE and
             /// POLYMER_UPDATE.
             PRODUCTION_UPDATE = (UINT64_C(1) << 4),
             INJECTION_UPDATE = (UINT64_C(1) << 5),
@@ -114,7 +114,7 @@ namespace Opm
             /// the recorded schedule state).
             REQUEST_OPEN_COMPLETION = (UINT64_C(1) << 24),
 
-            /// The well THP limit and/or VFP table has been (re)specified
+            /// The well THP limit and/or VFP table have been (re)specified
             /// by WCONPROD, WCONHIST, WCONINJE or WCONINJH for the named
             /// wells, by WELTARG with THP or VFP control, or by WTMULT with
             /// THP control.  The event applies to producers and injectors
