@@ -36,6 +36,8 @@
 
 #include <cmath>
 
+#include <fmt/format.h>
+
 namespace Opm
 {
 
@@ -114,18 +116,13 @@ public:
             newB += max(0.0, xi) * Bi(compIIdx);
         }
 
-        // A non-finite mixture parameter here typically signals a diverged
-        // composition update feeding the EoS; check once after the double loop
-        // rather than on every accumulation step.
-        if (!std::isfinite(scalarValue(newA))) {
+        // check once after the double loop rather than on every accumulation step
+        if (!std::isfinite(scalarValue(newA)) || !std::isfinite(scalarValue(newB))) {
             OPM_THROW(NumericalProblem,
-                      "CubicEOSParams::updateMix: non-finite mixture A parameter "
-                      "(typically a diverged composition update feeding the EoS)");
-        }
-        if (!std::isfinite(scalarValue(newB))) {
-            OPM_THROW(NumericalProblem,
-                      "CubicEOSParams::updateMix: non-finite mixture B parameter "
-                      "(typically a diverged composition update feeding the EoS)");
+                      fmt::format("CubicEOSParams::updateMix: non-finite mixture parameters "
+                                  "for phase {} (A = {}, B = {}); typically a diverged "
+                                  "composition update feeding the EoS",
+                                  phaseIdx, scalarValue(newA), scalarValue(newB)));
         }
 
         // assign A and B
