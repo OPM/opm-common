@@ -2188,3 +2188,96 @@ BOOST_AUTO_TEST_CASE(Eval_RegionVector_In_Condition_Default_RegSet_2)
                             "Condition must be satisfied");
     }
 }
+
+BOOST_AUTO_TEST_CASE(Action_THP_RESPECIFIED)
+{
+    const auto deck_string = std::string{ R"(
+RUNSPEC
+OIL
+WATER
+GAS
+GRID
+PORO
+    1000*0.1 /
+PERMX
+    1000*1 /
+PERMY
+    1000*0.1 /
+PERMZ
+    1000*0.01 /
+SCHEDULE
+
+VFPPROD
+-- table, datum, flo, wfr, gfr, pressure, alq, unit, table_vals
+  1 7.0E+03 LIQ WCT GOR THP ' ' METRIC BHP /
+  1.0 /
+  0.0 1.0 /
+  0.0 /
+  0.0 /
+  0.0 /
+  1 1 1 1 0.0 /
+  2 1 1 1 1.0 /
+
+WELSPECS
+    'PROD1' 'G1'  1 1 10 'OIL' /
+/
+
+COMPDAT
+ 'PROD1'  1  1   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+/
+
+WCONPROD
+    'PROD1' 'OPEN' 'ORAT' 1000 4* 100.0 25.0 1 /
+/
+
+-- Re-specifies the THP limit with the value it already has
+ACTIONX
+'UNCHANGED_THP' /
+FPR < 100 /
+/
+WELTARG
+    'PROD1' THP 25.0 /
+/
+ENDACTIO
+
+-- Sets a target that is not the THP limit or the VFP table
+ACTIONX
+'ORAT_ONLY' /
+FPR < 100 /
+/
+WELTARG
+    'PROD1' ORAT 900 /
+/
+ENDACTIO
+
+TSTEP
+10 /
+END
+)"};
+
+    Schedule sched = make_schedule(deck_string);
+    const Action::Result action_result(true);
+
+    auto apply = [&sched, &action_result](const std::string& action_name)
+    {
+        return sched.applyAction(0, sched[0].actions.get()[action_name],
+                                 action_result.matches(),
+                                 std::unordered_map<std::string,double>{}, true);
+    };
+
+    // Re-specifying the THP limit with the value it already has cancels a
+    // dynamically imposed limit. Nothing changed, so the well is absent from
+    // affected_wells and this set is the only report of it.
+    {
+        const auto sim_update = apply("UNCHANGED_THP");
+        BOOST_CHECK_EQUAL(sim_update.thp_respecified_wells.count("PROD1"), 1);
+        BOOST_CHECK_EQUAL(sim_update.affected_wells.count("PROD1"), 0);
+    }
+
+    // A target that leaves the THP limit and the VFP table alone does not.
+    {
+        const auto sim_update = apply("ORAT_ONLY");
+        BOOST_CHECK_EQUAL(sim_update.thp_respecified_wells.count("PROD1"), 0);
+        BOOST_CHECK_EQUAL(sim_update.affected_wells.count("PROD1"), 1);
+    }
+}

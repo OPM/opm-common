@@ -676,6 +676,7 @@ void handleWTMULT(HandlerContext& handlerContext)
                     handlerContext.state().wellgroup_events()
                         .addEvent(well_name, ScheduleEvents::WELL_THP_UPDATE);
 
+                    handlerContext.thp_respecified_well(well_name);
                 }
 
                 if (update_well) {
