@@ -267,6 +267,12 @@ void handleWCONINJE(HandlerContext& handlerContext)
                 update_well = true;
             }
 
+            // The THP limit and VFP table (items 8 and 9) are re-specified
+            // by every WCONINJE, whether or not any value changed.
+            handlerContext.state().events().addEvent( ScheduleEvents::WELL_THP_UPDATE );
+            handlerContext.state().wellgroup_events().addEvent( well_name, ScheduleEvents::WELL_THP_UPDATE);
+            handlerContext.thp_respec_well(well_name);
+
             if (update_well) {
                 handlerContext.state().events().addEvent(ScheduleEvents::INJECTION_UPDATE);
                 handlerContext.state().wellgroup_events().addEvent( well_name, ScheduleEvents::INJECTION_UPDATE);
@@ -341,6 +347,12 @@ void handleWCONINJH(HandlerContext& handlerContext)
             if (well2.updateHasInjected()) {
                 update_well = true;
             }
+
+            // The VFP table (item 7) is re-specified by every WCONINJH,
+            // whether or not any value changed.
+            handlerContext.state().events().addEvent( ScheduleEvents::WELL_THP_UPDATE );
+            handlerContext.state().wellgroup_events().addEvent( well_name, ScheduleEvents::WELL_THP_UPDATE);
+            handlerContext.thp_respec_well(well_name);
 
             if (update_well) {
                 handlerContext.state().events().addEvent( ScheduleEvents::INJECTION_UPDATE );
@@ -848,9 +860,7 @@ void handleWELTARG(HandlerContext& handlerContext)
 
             // The THP limit or VFP table is re-specified, whether or not
             // the value changed.
-            if (well2.isProducer() &&
-                (cmode == Well::WELTARGCMode::THP || cmode == Well::WELTARGCMode::VFP))
-            {
+            if (cmode == Well::WELTARGCMode::THP || cmode == Well::WELTARGCMode::VFP) {
                 handlerContext.state().events().addEvent( ScheduleEvents::WELL_THP_UPDATE );
                 handlerContext.state().wellgroup_events().addEvent( well_name, ScheduleEvents::WELL_THP_UPDATE);
                 handlerContext.thp_respec_well(well_name);

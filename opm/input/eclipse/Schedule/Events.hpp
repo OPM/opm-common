@@ -115,12 +115,14 @@ namespace Opm
             REQUEST_OPEN_COMPLETION = (UINT64_C(1) << 24),
 
             /// The well THP limit and/or VFP table has been (re)specified
-            /// by WCONPROD or WCONHIST for the named wells, by WELTARG with
-            /// THP or VFP control, or by WTMULT with THP control.  Unlike
-            /// PRODUCTION_UPDATE, the event is also triggered when the
-            /// entered values are unchanged, since re-specifying either
-            /// input cancels a THP limit imposed dynamically by the
-            /// simulator (e.g. by network balancing).
+            /// by WCONPROD, WCONHIST, WCONINJE or WCONINJH for the named
+            /// wells, by WELTARG with THP or VFP control, or by WTMULT with
+            /// THP control.  The event applies to producers and injectors
+            /// alike; consumers must check the well type where it matters.
+            /// Unlike PRODUCTION_UPDATE and INJECTION_UPDATE, the event is
+            /// also triggered when the entered values are unchanged, since
+            /// re-specifying either input cancels a THP limit imposed
+            /// dynamically by the simulator (e.g. by network balancing).
             WELL_THP_UPDATE = (UINT64_C(1) << 25),
         };
     } // namespace ScheduleEvents
