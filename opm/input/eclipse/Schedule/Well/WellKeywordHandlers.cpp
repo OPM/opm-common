@@ -192,6 +192,7 @@ void handleWCONHIST(HandlerContext& handlerContext)
             // whether or not any value changed.
             handlerContext.state().events().addEvent( ScheduleEvents::WELL_THP_UPDATE );
             handlerContext.state().wellgroup_events().addEvent( well2.name(), ScheduleEvents::WELL_THP_UPDATE);
+            handlerContext.thp_respec_well(well2.name());
 
             if (update_well) {
                 handlerContext.state().events().addEvent( ScheduleEvents::PRODUCTION_UPDATE );
@@ -446,6 +447,7 @@ void handleWCONPROD(HandlerContext& handlerContext)
             // by every WCONPROD, whether or not any value changed.
             handlerContext.state().events().addEvent( ScheduleEvents::WELL_THP_UPDATE );
             handlerContext.state().wellgroup_events().addEvent( well2.name(), ScheduleEvents::WELL_THP_UPDATE);
+            handlerContext.thp_respec_well(well2.name());
 
             if (update_well) {
                 handlerContext.state().events().addEvent( ScheduleEvents::PRODUCTION_UPDATE );
@@ -851,6 +853,7 @@ void handleWELTARG(HandlerContext& handlerContext)
             {
                 handlerContext.state().events().addEvent( ScheduleEvents::WELL_THP_UPDATE );
                 handlerContext.state().wellgroup_events().addEvent( well_name, ScheduleEvents::WELL_THP_UPDATE);
+                handlerContext.thp_respec_well(well_name);
             }
 
             if (update) {

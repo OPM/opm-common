@@ -107,6 +107,10 @@ public:
     //! \brief Mark that a well is affected by WELPI.
     void welpi_well(const std::string& well_name);
 
+    //! \brief Mark that the THP limit and/or VFP table of a well has been
+    //! (re)specified, also when the entered values are unchanged.
+    void thp_respec_well(const std::string& well_name);
+
     //! \brief Mark that transmissibilities must be recalculated.
     void record_tran_change();
 
