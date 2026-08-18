@@ -618,7 +618,27 @@ protected:
         } else if (flash_2p_method == "ssi+newton") {
             converged = successiveSubstitutionComposition_(K_scalar, L_scalar, fluid_state_scalar, z_scalar, true, flash_tolerance, eos_type, verbosity);
             if (!converged) {
-                converged = newtonComposition_(K_scalar, L_scalar, fluid_state_scalar, z_scalar, flash_tolerance, eos_type, verbosity);
+                // In this method Newton is an accelerator, not the
+                // guarantee: when its composition update fails to converge —
+                // or a diverged iterate makes the EoS report non-finite
+                // mixing parameters — switch back to plain successive
+                // substitution and finish the solve with the method that is
+                // robust on these states, instead of failing the whole
+                // solve. Newton throws rather than returning a bad result;
+                // it may already have mutated some fluid state (e.g. via
+                // computeLiquidVapor_()) before throwing, but the successive-
+                // substitution fallback re-derives the composition from K and
+                // L and overwrites that state, so restarting it here is safe.
+                try {
+                    converged = newtonComposition_(K_scalar, L_scalar, fluid_state_scalar, z_scalar, flash_tolerance, eos_type, verbosity);
+                }
+                catch (const std::runtime_error& e) {
+                    if (verbosity >= 1) {
+                        OpmLog::debug(fmt::format("Newton did not finish the composition update ({}); "
+                                                  "switching back to successive substitution.", e.what()));
+                    }
+                    converged = successiveSubstitutionComposition_(K_scalar, L_scalar, fluid_state_scalar, z_scalar, false, flash_tolerance, eos_type, verbosity);
+                }
             }
         } else {
             OPM_THROW(std::logic_error,

@@ -23,6 +23,9 @@
 #ifndef CUBIC_EOS_PARAMS_HPP
 #define CUBIC_EOS_PARAMS_HPP
 
+#include <opm/common/ErrorMacros.hpp>
+#include <opm/common/Exceptions.hpp>
+
 #include <opm/material/Constants.hpp>
 
 #include <opm/input/eclipse/EclipseState/Compositional/CompositionalConfig.hpp>
@@ -30,6 +33,10 @@
 #include <opm/material/eos/PRParams.hpp>
 #include <opm/material/eos/RKParams.hpp>
 #include <opm/material/eos/SRKParams.hpp>
+
+#include <cmath>
+
+#include <fmt/format.h>
 
 namespace Opm
 {
@@ -67,8 +74,11 @@ public:
 
             Scalar newA = OmegaA * pr / (Tr * Tr);
             Scalar newB = OmegaB * pr / Tr;
-            assert(std::isfinite(scalarValue(newA)));
-            assert(std::isfinite(scalarValue(newB)));
+            if (!std::isfinite(scalarValue(newA)) || !std::isfinite(scalarValue(newB))) {
+                OPM_THROW(NumericalProblem,
+                          "CubicEOSParams::updatePure: non-finite pure-component EoS "
+                          "parameter (check the temperature/pressure input)");
+            }
 
             setAi(newA, compIdx);
             setBi(newB, compIdx);
@@ -100,12 +110,19 @@ public:
 
                 // Calculate A
                 newA +=  xi * xj * aCache_[compIIdx][compJIdx];
-                assert(std::isfinite(scalarValue(newA)));
             }
 
             // Calculate B
             newB += max(0.0, xi) * Bi(compIIdx);
-            assert(std::isfinite(scalarValue(newB)));
+        }
+
+        // check once after the double loop rather than on every accumulation step
+        if (!std::isfinite(scalarValue(newA)) || !std::isfinite(scalarValue(newB))) {
+            OPM_THROW(NumericalProblem,
+                      fmt::format("CubicEOSParams::updateMix: non-finite mixture parameters "
+                                  "for phase {} (A = {}, B = {}); typically a diverged "
+                                  "composition update feeding the EoS",
+                                  phaseIdx, scalarValue(newA), scalarValue(newB)));
         }
 
         // assign A and B

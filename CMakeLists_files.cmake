@@ -699,6 +699,7 @@ list(APPEND DUNE_TEST_SOURCE_FILES
   tests/material/test_co2brine_ptflash.cpp
   tests/material/test_components.cpp
   tests/material/test_eclblackoilfluidsystem.cpp
+  tests/material/test_cubiceos_finite_guard.cpp
   tests/material/test_eclblackoilfluidsystemnonstatic.cpp
   tests/material/test_eclblackoilpvt.cpp
   tests/material/test_fluidmatrixinteractions.cpp
@@ -708,6 +709,7 @@ list(APPEND DUNE_TEST_SOURCE_FILES
   tests/material/test_materialstates.cpp
   tests/material/test_ncpflash.cpp
   tests/material/test_pengrobinson.cpp
+  tests/material/test_ptflash_ssi_newton_fallback.cpp
   tests/material/test_tabulation.cpp
   tests/material/test_threecomponents_ptflash.cpp
 )
