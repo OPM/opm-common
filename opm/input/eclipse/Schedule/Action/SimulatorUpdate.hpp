@@ -73,12 +73,13 @@ struct SimulatorUpdate
     std::unordered_set<std::string> welpi_wells{};
 
     /// Wells whose THP limit and/or VFP table has been (re)specified by
-    /// WCONPROD or WCONHIST for the named wells, by WELTARG with THP or VFP
-    /// control, or by WTMULT with THP control. Unlike affected_wells, this
-    /// set also includes wells for which the entered values are unchanged,
-    /// since re-specifying either input cancels a THP limit imposed
-    /// dynamically by the simulator (e.g. by network balancing). See also
-    /// the WELL_THP_UPDATE schedule event.
+    /// WCONPROD, WCONHIST, WCONINJE or WCONINJH for the named wells, by
+    /// WELTARG with THP or VFP control, or by WTMULT with THP control.
+    /// Producers and injectors alike are included. Unlike affected_wells,
+    /// this set also includes wells for which the entered values are
+    /// unchanged, since re-specifying either input cancels a THP limit
+    /// imposed dynamically by the simulator (e.g. by network balancing).
+    /// See also the WELL_THP_UPDATE schedule event.
     std::unordered_set<std::string> thp_respecified_wells{};
 
     /// New well connections created as a result of a geomechanical
