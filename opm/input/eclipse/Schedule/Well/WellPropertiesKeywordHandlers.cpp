@@ -667,6 +667,17 @@ void handleWTMULT(HandlerContext& handlerContext)
                 properties->handleWTMULT(cmode, factor.get<double>());
 
                 well.updateProduction(properties);
+
+                // The THP limit is re-specified (multiplied).
+                if (cmode == Well::WELTARGCMode::THP) {
+                    handlerContext.state().events()
+                        .addEvent(ScheduleEvents::WELL_THP_UPDATE);
+
+                    handlerContext.state().wellgroup_events()
+                        .addEvent(well_name, ScheduleEvents::WELL_THP_UPDATE);
+
+                }
+
                 if (update_well) {
                     handlerContext.state().events()
                         .addEvent(ScheduleEvents::PRODUCTION_UPDATE);
