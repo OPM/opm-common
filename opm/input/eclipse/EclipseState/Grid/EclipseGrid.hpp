@@ -326,6 +326,7 @@ namespace Opm {
         EclipseGridLGR& getLGRCell(std::size_t index);
         const EclipseGridLGR& getLGRCell(std::size_t index) const;
         const EclipseGridLGR& getLGRCell(const std::string& lgr_tag) const;
+        EclipseGridLGR& getLGRCell(const std::string& lgr_tag);
         int getLGR_global_father(std::size_t global_index,  const std::string& lgr_tag) const;
         int getLGR_father(std::size_t i, std::size_t j, std::size_t k, const std::string& lgr_tag) const;
         int getLGR_father(std::size_t global_index, const std::string& lgr_tag) const;
@@ -474,6 +475,19 @@ namespace Opm {
         /// father's current activity. Call after construction, and again
         /// whenever the father's ACTNUM changes.
         void inheritActiveCellsFromFather(const EclipseGrid& father);
+
+        /// Apply the block's own MINPV: a refined cell takes its share of the
+        /// father's pore volume by volume, and drops out below the threshold.
+        /// Recorded, so a later ACTNUM change re-applies it rather than
+        /// resurrecting the cells.
+        ///
+        /// @param fatherPorv Cartesian-sized pore volume of the father grid.
+        void applyBlockMinpv(const EclipseGrid& father,
+                             const std::vector<double>& fatherPorv,
+                             double minpv);
+
+        /// Refined cells the block's MINPV removed. Empty when it set none.
+        const std::vector<int>& minpvRemoved() const { return m_minpv_removed; }
         const vec_size_t& getFatherGlobalID() const;
 
         void save(Opm::EclIO::EclOutput&, const Opm::UnitSystem&) const;
@@ -550,6 +564,8 @@ namespace Opm {
         std::array<int, 3> low_fatherIJK {};
         std::array<int, 3> up_fatherIJK {};
         std::array<Carfin::RefinedColumns, 3> m_columns {};
+        /// Per refined Cartesian cell, 1 when the block's MINPV removed it.
+        std::vector<int> m_minpv_removed {};
         std::vector<int> m_hostnum;
 
         std::vector<double> generate_refined_coord(const std::vector<double>& ,

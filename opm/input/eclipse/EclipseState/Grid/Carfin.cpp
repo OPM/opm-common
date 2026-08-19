@@ -204,6 +204,26 @@ namespace Opm
                                    { return !axis.counts.empty() || !axis.widths.empty(); });
     }
 
+    void Carfin::setMinpv(const double minpv)
+    {
+        this->m_minpv = minpv;
+    }
+
+    const std::optional<double>& Carfin::MINPV() const
+    {
+        return this->m_minpv;
+    }
+
+    void Carfin::setMinpvRemoved(std::vector<int> removed)
+    {
+        this->m_minpv_removed = std::move(removed);
+    }
+
+    const std::vector<int>& Carfin::minpvRemoved() const
+    {
+        return this->m_minpv_removed;
+    }
+
     const std::array<Carfin::AxisGrading, 3>& Carfin::grading() const
     {
         return this->m_grading;

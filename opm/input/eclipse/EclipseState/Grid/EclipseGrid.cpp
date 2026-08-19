@@ -70,6 +70,7 @@
 #include <numeric>
 #include <optional>
 #include <stdexcept>
+#include <utility>
 #include <string>
 #include <tuple>
 #include <vector>
@@ -2264,6 +2265,11 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         return lgr_children_cells[index];
     }
 
+    EclipseGridLGR& EclipseGrid::getLGRCell(const std::string& lgr_tag)
+    {
+        return const_cast<EclipseGridLGR&>(std::as_const(*this).getLGRCell(lgr_tag));
+    }
+
      const EclipseGridLGR& EclipseGrid::getLGRCell(const std::string& lgr_tag) const
     {
         std::optional<std::reference_wrapper<const EclipseGridLGR>>lgr_found = std::nullopt;
@@ -2970,6 +2976,37 @@ namespace Opm {
             lgr_global_father[i] = father_grid.getLGR_global_father(i, this->get_lgr_tag());
         }
         return lgr_global_father;
+    }
+
+    void EclipseGridLGR::applyBlockMinpv(const EclipseGrid& father,
+                                        const std::vector<double>& fatherPorv,
+                                        const double minpv)
+    {
+        const auto ncells = this->getCartesianSize();
+        m_minpv_removed.assign(ncells, 0);
+
+        for (std::size_t cell = 0; cell < ncells; ++cell) {
+            const auto ijk = this->getIJK(cell);
+            const auto fatherIx = father.getGlobalIndex(
+                this->low_fatherIJK[0] + m_columns[0].parentOffset[ijk[0]],
+                this->low_fatherIJK[1] + m_columns[1].parentOffset[ijk[1]],
+                this->low_fatherIJK[2] + m_columns[2].parentOffset[ijk[2]]);
+
+            const auto fatherVolume = father.getCellVolume(fatherIx);
+            if (!(fatherVolume > 0.0)) {
+                continue;
+            }
+
+            // The father's pore volume shared out by volume, as the INIT PORV
+            // is: graded children of one father differ in size.
+            const auto porv = fatherPorv[fatherIx]
+                * (this->getCellVolume(cell) / fatherVolume);
+
+            m_minpv_removed[cell] = (porv < minpv) ? 1 : 0;
+        }
+
+        // Fold the removals into ACTNUM (and into any nested child's).
+        this->inheritActiveCellsFromFather(father);
     }
 
     std::vector<int> EclipseGridLGR::getLGRCell_active_father(const EclipseGrid& father_grid) const

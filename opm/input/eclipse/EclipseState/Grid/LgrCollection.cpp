@@ -37,9 +37,11 @@
 
 #include <opm/input/eclipse/Parser/ParserKeywords/C.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/H.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/M.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/N.hpp>
 
 #include <cstddef>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
@@ -83,6 +85,25 @@ namespace Opm {
             }
 
             return &keyword.getDataRecord().getDataItem();
+        }
+
+        /// The block's MINPV (or MINPORV), the last one if it sets several.
+        std::optional<double> blockMinpv(const DeckView& block)
+        {
+            for (const auto* name : { ParserKeywords::MINPV::keywordName.c_str(),
+                                      ParserKeywords::MINPORV::keywordName.c_str() })
+            {
+                if (! block.has_keyword(name)) {
+                    continue;
+                }
+
+                const auto& keyword = block[name].back();
+                if (! keyword.empty()) {
+                    return keyword.getRecord(0).getItem(0).getSIDouble(0);
+                }
+            }
+
+            return std::nullopt;
         }
 
         /// N*FIN counts. A defaulted entry would have to be inferred from the
@@ -139,6 +160,13 @@ namespace Opm {
         void applyGrading(Carfin& lgr, const DeckView& block)
         {
             const auto& name = lgr.NAME();
+
+            // MINPV/MINPORV inside the block is the refined cells' threshold,
+            // in place of the field's.
+            if (const auto minpv = blockMinpv(block); minpv.has_value()) {
+                lgr.setMinpv(minpv.value());
+            }
+
             lgr.setGrading(0,
                            subdivisionCounts<ParserKeywords::NXFIN>(block, name),
                            subdivisionWidths<ParserKeywords::HXFIN>(block));

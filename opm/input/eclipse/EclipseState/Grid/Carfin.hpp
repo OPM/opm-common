@@ -21,6 +21,7 @@
 #include <array>
 #include <cstddef>
 #include <functional>
+#include <optional>
 #include <vector>
 #include <string>
 
@@ -108,6 +109,19 @@ namespace Opm
         /// Whether any direction was given an explicit subdivision.
         bool isGraded() const;
 
+        /// The block's own MINPV, if it set one. A graded block normally does:
+        /// its finest cells are far below the field's threshold, and inheriting
+        /// that threshold would delete the cells the refinement exists to make.
+        void setMinpv(double minpv);
+        const std::optional<double>& MINPV() const;
+
+        /// Refined cells the block's MINPV removes, one entry per refined
+        /// Cartesian cell (1 = removed). Derived by EclipseState once the
+        /// refined geometry exists, and carried here so it reaches the grid
+        /// builder -- on every rank, since the collection is broadcast.
+        void setMinpvRemoved(std::vector<int> removed);
+        const std::vector<int>& minpvRemoved() const;
+
         const std::array<AxisGrading, 3>& grading() const;
 
         /// Reject a box whose refined columns cannot be distributed over its
@@ -172,10 +186,14 @@ namespace Opm
             serializer(name_grid);
             serializer(parent_name_grid);
             serializer(m_grading);
+            serializer(m_minpv);
+            serializer(m_minpv_removed);
         }
 
     private:
         std::array<AxisGrading, 3> m_grading{};
+        std::optional<double> m_minpv{};
+        std::vector<int> m_minpv_removed{};
 
         GridDims m_globalGridDims_{};
         IsActive m_globalIsActive_{};

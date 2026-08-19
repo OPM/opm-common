@@ -348,15 +348,69 @@ namespace Opm {
         m_lgrs = LgrCollection(gridSection, m_inputGrid, deck);
         warnUnappliedLgrBlockKeywords(deck);
         m_inputGrid.init_lgr_cells(m_lgrs);
+        applyLgrBlockMinpv();
+    }
+
+    /*
+      A block's MINPV replaces the field's for its refined cells, and a graded
+      block normally sets one: its finest cells are orders of magnitude below the
+      field threshold, which would otherwise delete exactly the cells the
+      refinement exists to create.
+
+      Decided here, once, rather than in the grid builder, because the refined
+      geometry and the father's pore volume are both to hand -- and because the
+      answer has to be the same on both sides: the simulation grid's refined
+      levels and the LGR grids the EGRID/INIT are written from must agree on
+      which refined cells exist. It is recorded on the LGR grid, so a later
+      ACTNUM change (the output grid is the input grid with the field's MINPV
+      applied) re-applies it instead of resurrecting the cells.
+    */
+    void EclipseState::applyLgrBlockMinpv()
+    {
+        if (this->m_lgrs.size() == 0) {
+            return;
+        }
+
+        std::optional<std::vector<double>> porv{};
+
+        for (std::size_t index = 0; index < this->m_lgrs.size(); ++index) {
+            auto& lgr = this->m_lgrs.getLgr(index);
+            if (! lgr.MINPV().has_value()) {
+                continue;
+            }
+
+            if (lgr.PARENT_NAME() != "GLOBAL") {
+                OpmLog::warning(fmt::format("CARFIN '{}' is nested and sets MINPV, which is "
+                                            "applied only to a block refining the global "
+                                            "grid. Its refined cells keep their father's "
+                                            "activity.", lgr.NAME()));
+                continue;
+            }
+
+            if (! porv.has_value()) {
+                porv = this->field_props.porv(/* global = */ true);
+            }
+
+            auto& lgrGrid = this->m_inputGrid.getLGRCell(lgr.NAME());
+            lgrGrid.applyBlockMinpv(this->m_inputGrid, porv.value(), lgr.MINPV().value());
+            lgr.setMinpvRemoved(lgrGrid.minpvRemoved());
+
+            const auto removed = std::count(lgrGrid.minpvRemoved().begin(),
+                                            lgrGrid.minpvRemoved().end(), 1);
+            if (removed > 0) {
+                OpmLog::info(fmt::format("CARFIN '{}': MINPV removed {} of {} refined cells",
+                                         lgr.NAME(), removed, lgrGrid.getCartesianSize()));
+            }
+        }
     }
 
     /*
       The keywords inside a CARFIN...ENDFIN block describe the refined cells.
       They are kept out of the global grid (Deck::scopeLgrBlockKeywords), which
-      is what they are not. N*FIN/H*FIN are acted on -- they subdivide the box;
-      the rest are not applied to the refined cells either, which take their
-      father's values. Say which keywords that costs, per LGR, rather than
-      dropping them without a word.
+      is what they are not. N*FIN/H*FIN subdivide the box and MINPV thresholds
+      the refined cells' pore volume; the rest are not applied to the refined
+      cells either, which take their father's values. Say which keywords that
+      costs, per LGR, rather than dropping them without a word.
     */
     void EclipseState::warnUnappliedLgrBlockKeywords(const Deck& deck) const
     {
@@ -370,6 +424,7 @@ namespace Opm {
 
             static const auto applied = std::set<std::string> {
                 "NXFIN", "NYFIN", "NZFIN", "HXFIN", "HYFIN", "HZFIN",
+                "MINPV", "MINPORV",
             };
 
             auto names = std::vector<std::string>{};
