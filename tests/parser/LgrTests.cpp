@@ -752,8 +752,7 @@ ENDFIN
     BOOST_CHECK( !lgr1.cellActive(3,0,0) );
     BOOST_CHECK_EQUAL( eclipse_grid.getLGRCell("LGR2").getNumActive() , 9U );
 
-    // The host cell back on: its LGR cells keep their activity, as a host
-    // never makes an LGR cell active.
+    // The host cell back on: its LGR cells follow it.
     eclipse_grid.resetACTNUM();
-    BOOST_CHECK_EQUAL( eclipse_grid.getLGRCell("LGR1").getNumActive() , 9U );
+    BOOST_CHECK_EQUAL( eclipse_grid.getLGRCell("LGR1").getNumActive() , 18U );
 }

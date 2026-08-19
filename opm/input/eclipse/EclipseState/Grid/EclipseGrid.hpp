@@ -174,6 +174,10 @@ namespace Opm {
           in the current class.
         */
         void init_children_host_cells(bool logical = true);
+
+        /// Re-derive every child LGR's ACTNUM (and the tree numbering that
+        /// counts active cells) from this grid's current activity.
+        void updateLgrActiveCells();
         void init_children_host_cells_logical(void);
         void init_children_host_cells_geometrical(void);
         std::array<int,3> getCellSubdivisionRatioLGR(const std::string&  lgr_tag,
@@ -461,12 +465,13 @@ namespace Opm {
                        std::size_t nx,
                        std::size_t ny,
                        std::size_t nz,
-                       const vec_size_t& father_lgr_index,
                        const std::array<int, 3>& low_fatherIJK_,
-                       const std::array<int, 3>& up_fatherIJK_,
-                       /// Refined-cell ACTNUM, inherited from the father cells.
-                       /// Empty leaves every refined cell active.
-                       const std::vector<int>& actnum = {});
+                       const std::array<int, 3>& up_fatherIJK_);
+
+        /// Re-derive this LGR's ACTNUM and its list of father cells from the
+        /// father's current activity. Call after construction, and again
+        /// whenever the father's ACTNUM changes.
+        void inheritActiveCellsFromFather(const EclipseGrid& father);
         const vec_size_t& getFatherGlobalID() const;
 
         void save(Opm::EclIO::EclOutput&, const Opm::UnitSystem&) const;
@@ -527,8 +532,10 @@ namespace Opm {
 
 
     private:
-        void init_father_global();
         void save_core(Opm::EclIO::EclOutput&, const Opm::UnitSystem&) const;
+
+        /// Refined cells per father cell, per direction.
+        std::array<std::size_t, 3> refinementFactors() const;
 
         std::string father_label;
         // references global on the father label

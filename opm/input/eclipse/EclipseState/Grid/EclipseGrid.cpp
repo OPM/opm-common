@@ -2560,67 +2560,21 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
     }
 
     void EclipseGrid::create_lgr_cells_tree(const LgrCollection& lgr_input) {
-          // A CARFIN box over a real field grid routinely covers inactive cells
-          // (Norne's 27-37/54-64/1-22 box has 623 of 2662 inactive), so the
-          // father list spans the active parents only.
-          auto IJK_global = [this](const auto& i_list, const auto& j_list, const auto& k_list){
-            if (!(i_list.size() == j_list.size()) && (j_list.size() == k_list.size()) ){
-                 throw std::invalid_argument("Sizes are not compatible.");
-            }
-            std::vector<std::size_t> global_ind_active;
-            global_ind_active.reserve(i_list.size());
-            for (std::size_t index = 0; index < i_list.size(); index++) {
-                if (this->cellActive(i_list[index], j_list[index], k_list[index])) {
-                    global_ind_active.push_back(this->getActiveIndex(i_list[index],j_list[index],k_list[index]));
-                }
-            }
-            return global_ind_active;
-        };
-          // Refined cells inherit their father's ACTNUM: a child of an inactive
-          // parent is inactive.
-          auto child_actnum = [this](const Carfin& lgr)
-          {
-            const std::array<std::size_t, 3> nref {
-                static_cast<std::size_t>(lgr.NX()),
-                static_cast<std::size_t>(lgr.NY()),
-                static_cast<std::size_t>(lgr.NZ())
-            };
-            const std::array<std::size_t, 3> low {
-                static_cast<std::size_t>(lgr.I1()),
-                static_cast<std::size_t>(lgr.J1()),
-                static_cast<std::size_t>(lgr.K1())
-            };
-            std::array<std::size_t, 3> bin{};
-            for (std::size_t d = 0; d < 3; ++d) {
-                const auto nparent = static_cast<std::size_t>
-                    (d == 0 ? lgr.I2() - lgr.I1() + 1
-                            : (d == 1 ? lgr.J2() - lgr.J1() + 1
-                                      : lgr.K2() - lgr.K1() + 1));
-                bin[d] = nref[d] / nparent;
-            }
-
-            const auto refined = GridDims(nref[0], nref[1], nref[2]);
-            std::vector<int> actnum(refined.getCartesianSize(), 0);
-            for (std::size_t cell = 0; cell < actnum.size(); ++cell) {
-                const auto ijk = refined.getIJK(cell);
-                actnum[cell] = this->cellActive(low[0] + ijk[0] / bin[0],
-                                                low[1] + ijk[1] / bin[1],
-                                                low[2] + ijk[2] / bin[2]) ? 1 : 0;
-            }
-            return actnum;
-          };
          for (std::size_t index = 0; index < lgr_input.size(); index++) {
             const auto& lgr_cell = lgr_input.getLgr(index);
             if (this->lgr_label == lgr_cell.PARENT_NAME()){
                 lgr_grid = true;
-                // auto [i_list, j_list, k_list] = lgr_cell.parent_cellsIJK();
-                auto [i_list, j_list, k_list] = VectorUtil::generate_cartesian_product(lgr_cell.I1(), lgr_cell.I2(),
-                                                                                                                           lgr_cell.J1(), lgr_cell.J2(),
-                                                                                                                           lgr_cell.K1(), lgr_cell.K2());
+                std::array<int,3> lowIJK = {lgr_cell.I1(), lgr_cell.J1(),lgr_cell.K1()};
+                std::array<int,3> upIJK  = {lgr_cell.I2(), lgr_cell.J2(),lgr_cell.K2()};
 
-                auto father_lgr_index = IJK_global(i_list, j_list, k_list);
+                lgr_children_cells.emplace_back(lgr_cell.NAME(), this->lgr_label,
+                                                lgr_cell.NX(), lgr_cell.NY(), lgr_cell.NZ(),
+                                                lowIJK, upIJK);
 
-                if (father_lgr_index.empty()) {
+                auto& child = lgr_children_cells.back();
+                child.inheritActiveCellsFromFather(*this);
+
+                if (child.get_father_global().empty()) {
                     throw std::invalid_argument {
                         fmt::format("CARFIN '{}' refines a region in which no cell is "
                                     "active. Move the box or drop the refinement.",
@@ -2628,14 +2582,7 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
                     };
                 }
 
-                std::array<int,3> lowIJK = {lgr_cell.I1(), lgr_cell.J1(),lgr_cell.K1()};
-                std::array<int,3> upIJK  = {lgr_cell.I2(), lgr_cell.J2(),lgr_cell.K2()};
-
-                lgr_children_cells.emplace_back(lgr_cell.NAME(), this->lgr_label,
-                                                lgr_cell.NX(), lgr_cell.NY(), lgr_cell.NZ(), father_lgr_index,
-                                                lowIJK, upIJK, child_actnum(lgr_cell));
-
-                lgr_children_cells.back().create_lgr_cells_tree(lgr_input);
+                child.create_lgr_cells_tree(lgr_input);
             }
         }
         EclipseGridLGR::vec_size_t father_label_sorting(lgr_children_cells.size(),0);
@@ -2659,6 +2606,11 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
     }
 
     void EclipseGrid::initializeLGRTreeIndices(){
+        // Re-runnable: updateLgrActiveCells() calls this again after an ACTNUM
+        // change, and both containers below are filled by appending.
+        num_lgr_children_cells.clear();
+        lgr_level_active_map.clear();
+
         // initialize the LGR tree indices for each refined cell.
         auto set_map_scalar = [&](const auto& vec, const auto& value){
              num_lgr_children_cells[vec] = value;
@@ -2744,19 +2696,25 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         }
     }
 
-    // An inactive host cell makes its LGR cells inactive.  The other LGR cells
-    // keep their own activity: a host never makes an LGR cell active.
+    // LGR cells follow their host both ways; a cell its own block removed stays off.
     void EclipseGrid::propagateACTNUMToLGRChildren()
     {
-        for (auto& lgr : this->lgr_children_cells) {
-            auto lgr_actnum = lgr.getACTNUM();
-            for (std::size_t cell = 0; cell < lgr_actnum.size(); ++cell) {
-                if (this->m_actnum[lgr.get_hostnum(cell)] == 0) {
-                    lgr_actnum[cell] = 0;
-                }
-            }
-            lgr.resetACTNUM(lgr_actnum);
+        this->updateLgrActiveCells();
+    }
+
+    void EclipseGrid::updateLgrActiveCells()
+    {
+        if (this->lgr_children_cells.empty()) {
+            return;
         }
+
+        for (auto& child : this->lgr_children_cells) {
+            child.inheritActiveCellsFromFather(*this);
+        }
+
+        // The tree numbering counts active cells, so it has to follow.
+        this->initializeLGRTreeIndices();
+        this->parseGlobalReferenceToChildren();
     }
 
 
@@ -2959,17 +2917,63 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
 namespace Opm {
     EclipseGridLGR::EclipseGridLGR(const std::string& self_label, const std::string& father_label_,
                                    std::size_t nx, std::size_t ny, std::size_t nz,
-                                   const vec_size_t& father_lgr_index, const std::array<int,3>& low_fatherIJK_,
-                                   const std::array<int,3>& up_fatherIJK_,
-                                   const std::vector<int>& actnum)
-    : EclipseGrid(nx,ny,nz), father_label(father_label_), father_global(father_lgr_index),
-                             low_fatherIJK(low_fatherIJK_), up_fatherIJK(up_fatherIJK_)
+                                   const std::array<int,3>& low_fatherIJK_,
+                                   const std::array<int,3>& up_fatherIJK_)
+    : EclipseGrid(nx,ny,nz), low_fatherIJK(low_fatherIJK_), up_fatherIJK(up_fatherIJK_)
     {
-        if (!actnum.empty()) {
-            this->resetACTNUM(actnum);
+        // father_global and the refined ACTNUM come from
+        // inheritActiveCellsFromFather(), which the caller invokes once the
+        // grid is in place -- and again whenever the father's own ACTNUM moves.
+        father_label = father_label_;
+        lgr_label = self_label;
+    }
+
+    std::array<std::size_t, 3> EclipseGridLGR::refinementFactors() const
+    {
+        const auto dims = this->getNXYZ();
+        std::array<std::size_t, 3> factor{};
+        for (std::size_t d = 0; d < 3; ++d) {
+            const auto nparent = static_cast<std::size_t>
+                (this->up_fatherIJK[d] - this->low_fatherIJK[d] + 1);
+            factor[d] = static_cast<std::size_t>(dims[d]) / nparent;
         }
-        init_father_global();
-        lgr_label= self_label;
+        return factor;
+    }
+
+    void EclipseGridLGR::inheritActiveCellsFromFather(const EclipseGrid& father)
+    {
+        // A refined cell is active exactly when its father is, so both the
+        // refined ACTNUM and the list of fathers this LGR spans follow from the
+        // father's activity. They must be re-derived, not just derived once:
+        // the output grid is a copy of the input grid with MINPV applied, and a
+        // father that MINPV switched off leaves an active refined cell with no
+        // active father to map onto.
+        const auto factor = this->refinementFactors();
+        const auto ncells = this->getCartesianSize();
+
+        std::vector<int> actnum(ncells, 0);
+        for (std::size_t cell = 0; cell < ncells; ++cell) {
+            const auto ijk = this->getIJK(cell);
+            actnum[cell] = father.cellActive(this->low_fatherIJK[0] + ijk[0] / factor[0],
+                                             this->low_fatherIJK[1] + ijk[1] / factor[1],
+                                             this->low_fatherIJK[2] + ijk[2] / factor[2]) ? 1 : 0;
+        }
+
+        // Cartesian order over the box gives increasing global index, hence
+        // increasing active index: sorted and unique without further work.
+        this->father_global.clear();
+        for (auto k = this->low_fatherIJK[2]; k <= this->up_fatherIJK[2]; ++k) {
+            for (auto j = this->low_fatherIJK[1]; j <= this->up_fatherIJK[1]; ++j) {
+                for (auto i = this->low_fatherIJK[0]; i <= this->up_fatherIJK[0]; ++i) {
+                    if (father.cellActive(i, j, k)) {
+                        this->father_global.push_back(father.activeIndex(i, j, k));
+                    }
+                }
+            }
+        }
+
+        // Propagates into this LGR's own children, via updateLgrActiveCells().
+        this->resetACTNUM(actnum);
     }
 
     std::vector<int> EclipseGridLGR::save_hostnum(void) const
@@ -3105,11 +3109,6 @@ namespace Opm {
     {
         m_coord = coord;
         m_zcorn = zcorn;
-    }
-
-    void EclipseGridLGR::init_father_global()
-    {
-        std::ranges::sort(father_global);
     }
 
     const EclipseGridLGR::vec_size_t& EclipseGridLGR::getFatherGlobalID() const
