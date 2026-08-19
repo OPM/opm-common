@@ -26,8 +26,10 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <set>
 #include <iterator>
 #include <stdexcept>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -57,8 +59,13 @@ std::size_t Deck::count(const std::string& keyword) const {
 const DeckView& Deck::global_view() const {
     if (!this->m_global_view) {
         this->m_global_view = std::make_unique<DeckView>();
-        for (const auto& kw : this->keywordList)
+        for (const auto& kw : this->keywordList) {
+            if (kw.isLgrScoped()) {
+                // Belongs to a CARFIN...ENDFIN block, not to the global grid.
+                continue;
+            }
             this->m_global_view->add_keyword(kw);
+        }
     }
     return *this->m_global_view;
 }
@@ -118,6 +125,64 @@ const DeckView& Deck::global_view() const {
             this->selectActiveUnitSystem( UnitSystem::UnitType::UNIT_TYPE_PVT_M );
 
         this->keywordList.push_back( std::move( keyword ) );
+        this->m_global_view = nullptr;
+    }
+
+    void Deck::scopeLgrBlockKeywords()
+    {
+        // A CARFIN...ENDFIN pair brackets keywords that describe the refined
+        // block, not the field: Norne's block-local MINPV of 0.1 must not
+        // replace the field's MINPV of 500. Deck-level scoping fixes every
+        // consumer at once, whether it walks a DeckSection or asks the deck for
+        // the last MINPV.
+        //
+        // A CARFIN with no ENDFIN before the next CARFIN or the end of the
+        // section merely declares LGRs and brackets nothing, so look for the
+        // closing keyword rather than assuming one.
+        static const std::set<std::string> sectionKeywords {
+            "RUNSPEC", "GRID", "EDIT", "PROPS",
+            "REGIONS", "SOLUTION", "SUMMARY", "SCHEDULE",
+        };
+
+        for (std::size_t open = 0; open < this->keywordList.size(); ++open) {
+            if (this->keywordList[open].name() != "CARFIN") {
+                continue;
+            }
+
+            std::size_t close = open + 1;
+            for (; close < this->keywordList.size(); ++close) {
+                const auto& name = this->keywordList[close].name();
+                if ((name == "ENDFIN") || (name == "CARFIN") ||
+                    (sectionKeywords.count(name) > 0))
+                {
+                    break;
+                }
+            }
+
+            if ((close == this->keywordList.size()) ||
+                (this->keywordList[close].name() != "ENDFIN"))
+            {
+                continue;               // declaration only, nothing bracketed
+            }
+
+            // The block's own name, defaulting as CARFIN itself does. Several
+            // records in one CARFIN cannot each own a block, so name the scope
+            // after the first.
+            std::string lgrName { "LGR" };
+            if (! this->keywordList[open].empty()) {
+                const auto& item = this->keywordList[open].getRecord(0).getItem(0);
+                if (! item.defaultApplied(0)) {
+                    lgrName = item.get<std::string>(0);
+                }
+            }
+
+            for (std::size_t index = open + 1; index < close; ++index) {
+                this->keywordList[index].setLgrScope(lgrName);
+            }
+
+            open = close;               // continue after this block's ENDFIN
+        }
+
         this->m_global_view = nullptr;
     }
 

@@ -585,26 +585,10 @@ Opm::EclipseState lgrBlockState(const std::string& grid,
 
 } // Anonymous namespace
 
-// Values inside a local grid block (CARFIN or REFINE ... ENDFIN) are not
-// supported: the input stops instead of applying them to the main grid.
+// Values inside a REFINE ... ENDFIN block are not supported: the input stops
+// instead of applying them to the main grid.
 BOOST_AUTO_TEST_CASE(TestLGRvaluesInsideBlockStop)
 {
-    BOOST_CHECK_THROW(lgrBlockState(R"(PORO
- 27*0.30 /)"), Opm::OpmInputError);
-
-    BOOST_CHECK_THROW(lgrBlockState(R"(PERMX
- 27*500 /)"), Opm::OpmInputError);
-
-    BOOST_CHECK_THROW(lgrBlockState(R"(EQUALS
- PORO 0.30 1 1 1 1 1 1 /
-/)"), Opm::OpmInputError);
-
-    BOOST_CHECK_THROW(lgrBlockState(R"(MINPV
- 1000 /)"), Opm::OpmInputError);
-
-    BOOST_CHECK_THROW(lgrBlockState(R"(HXFIN
- 0.2 0.3 0.5 /)"), Opm::OpmInputError);
-
     BOOST_CHECK_THROW(lgrBlockState("", R"(REFINE
  'LGR1' /
 MULTPV
@@ -633,6 +617,18 @@ ENDFIN)"), Opm::OpmInputError);
     // main grid.
     const auto state = lgrBlockState("");
     BOOST_CHECK_CLOSE(state.fieldProps().get_double("PORO")[0], 0.25, 1.0e-8);
+}
+
+// A CARFIN block's values belong to its refined cells, never to the main grid.
+BOOST_AUTO_TEST_CASE(TestCARFINvaluesStayOffMainGrid)
+{
+    for (const std::string block : { "PORO\n 9*0.30 /",
+                                     "EQUALS\n PORO 0.30 1 1 1 1 1 1 /\n/",
+                                     "MINPV\n 1000 /" })
+    {
+        const auto state = lgrBlockState(block);
+        BOOST_CHECK_CLOSE(state.fieldProps().get_double("PORO")[4], 0.25, 1.0e-8);
+    }
 }
 
 // A local grid block ends with ENDFIN, before the next block and before the

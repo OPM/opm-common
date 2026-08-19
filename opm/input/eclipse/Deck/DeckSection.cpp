@@ -32,6 +32,7 @@
 #include <cassert>
 #include <exception>
 #include <optional>
+#include <optional>
 #include <set>
 #include <string>
 #include <unordered_map>
@@ -50,14 +51,32 @@ namespace {
         {"SCHEDULE", 7},
     };
 
+    /// Position of a section keyword in the deck's own keyword list.
+    ///
+    /// Deck::index() answers in global-view positions, which skip the keywords
+    /// scoped to a CARFIN...ENDFIN block; the walk below indexes the deck
+    /// directly, so the two numberings must not be mixed.
+    std::optional<std::size_t>
+    deck_index_of(const Opm::Deck& deck, const std::string& keyword)
+    {
+        for (std::size_t index = 0; index < deck.size(); ++index) {
+            if (deck[index].name() == keyword) {
+                return index;
+            }
+        }
+
+        return std::nullopt;
+    }
+
     std::pair<std::size_t, std::size_t>
     index_pair(const Opm::Deck& deck, const std::string& section)
     {
-        if (!deck.hasKeyword(section)) {
+        const auto section_start = deck_index_of(deck, section);
+        if (! section_start.has_value()) {
             return {0,0};
         }
 
-        auto start_index = deck.index(section).front();
+        const auto start_index = section_start.value();
         std::unordered_set<std::string> end_set;
         {
             auto this_section_index = section_index.at(section);
@@ -101,6 +120,10 @@ namespace Opm {
         const auto& [start_index, end_index] = index_pair(deck, section);
 
         for (std::size_t index = start_index; index < end_index; ++index) {
+            if (deck[index].isLgrScoped()) {
+                // Belongs to a CARFIN...ENDFIN block, not to the global grid.
+                continue;
+            }
             this->add_keyword(deck[index]);
         }
     }
