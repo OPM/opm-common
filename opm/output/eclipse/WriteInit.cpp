@@ -389,13 +389,17 @@ namespace {
         initFile.write("PORV", singlePrecision(porv));
     }
 
+    // PORV is the one INIT array that is Cartesian-sized on the main grid, so
+    // here too: one entry per refined Cartesian cell, addressed through the
+    // father's Cartesian index.  Refined cells under an inactive father pick up
+    // that father's zero pore volume.
     void writePoreVolumeLGRCell(const   std::vector<double>&            porv,
-                                const   std::vector<int>&               global_fathers,
+                                const   std::vector<int>&               cartesian_fathers,
                                 const               int                 volume_prop,
                                       ::Opm::EclIO::OutputStream::Init& initFile)
 
     {
-        auto local_porv = VectorUtil::filterArray(porv, global_fathers);
+        auto local_porv = VectorUtil::filterArray(porv, cartesian_fathers);
         VectorUtil::scalarVectorOperation(static_cast<double>(volume_prop), local_porv,  std::divides<double>{});
         initFile.write("PORV", singlePrecision(local_porv));
     }
@@ -901,16 +905,14 @@ namespace {
                 const auto lgr_label = lgr_grid.get_lgr_tag();
                 const auto deckIdx = grid.get_lgr_cell_index(lgr_label);
                 const std::array<int,3> subdivisions = grid.getCellSubdivisionRatioLGR(lgr_label);
-                std::vector<int> global_fathers = lgr_grid.getLGRCell_global_father(grid);
-                // The father of each active LGR cell as an active index of the
-                // main grid, for the arrays that hold one value per active cell.
-                std::vector<int> active_fathers(lgr_grid.getNumActive());
-                for (std::size_t cell = 0; cell < active_fathers.size(); ++cell) {
-                    const auto father = global_fathers[lgr_grid.getGlobalIndex(cell)];
-                    active_fathers[cell] = static_cast<int>(grid.activeIndex(father));
-                }
+                // Two father mappings, and they are not interchangeable:
+                // cartesian_fathers indexes the Cartesian-sized PORV, and
+                // active_fathers the active-sized field props and simulator
+                // properties.  They coincide only when the grid is all-active.
+                std::vector<int> cartesian_fathers = lgr_grid.getLGRCell_global_father(grid);
+                std::vector<int> active_fathers = lgr_grid.getLGRCell_active_father(grid);
                 writeInitFileHeaderLGRCell(es, lgr_grid, schedule, initFile, deckIdx+1);
-                writePoreVolumeLGRCell(porv, global_fathers,
+                writePoreVolumeLGRCell(porv, cartesian_fathers,
                 subdivisions[0]*subdivisions[1]*subdivisions[2], initFile);
                 writeGridGeometryLGRCell(grid, lgr_grid, units, initFile,
                                 subdivisions[0], subdivisions[1], subdivisions[2]);
