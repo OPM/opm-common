@@ -388,20 +388,6 @@ namespace {
         rstFile.write("SACN", actionxData.getSACN());
     }
 
-    // Auxiliary records restart readers expect to find between the well
-    // arrays and the solution section of restart
-    // files written for runs with local grid refinements.  Record contents
-    // carry no information in this context -- zero delay times and blank
-    // HIDDEN entries suffice -- but record presence is required for the
-    // well state to be restored intact.  Written only for runs with local
-    // grid refinements, which keeps restart files of all other runs
-    // byte-identical.
-    void writeDelayTimeAndHidden(EclIO::OutputStream::Restart& rstFile)
-    {
-        rstFile.write("DLYTIM", std::vector<double>(30, 0.0));
-        rstFile.write("HIDDEN", std::vector<EclIO::PaddedOutputString<8>>(58));
-    }
-
     void writeWell(int                           sim_step,
                    const EclipseGrid&            grid,
                    const Schedule&               schedule,
@@ -456,10 +442,6 @@ namespace {
 
         if (norst_value <= 1) {
             rstFile.write("XCON", connectionData.getXConn());
-        }
-
-        if (!grid.get_all_lgr_labels().empty() && (norst_value == 0)) {
-            writeDelayTimeAndHidden(rstFile);
         }
     }
 
@@ -692,11 +674,6 @@ namespace {
                          action_state, wtest_state, sumState, inteHD, norst_value, rstFile, lgr_tag);
         }
 
-        // LGR blocks carry the delay-time and hidden-array records
-        // regardless of whether the LGR contains wells.
-        if (norst_value == 0) {
-            writeDelayTimeAndHidden(rstFile);
-        }
         // Write aquifer data if the aquifer option for LGR.
         // At the moment LGR and Aquifers are not supported.
         // To be done.
