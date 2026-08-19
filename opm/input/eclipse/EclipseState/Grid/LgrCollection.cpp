@@ -25,13 +25,18 @@
 #include <opm/input/eclipse/EclipseState/Grid/GridDims.hpp>
 
 #include <fmt/format.h>
+#include <fmt/ranges.h>
 
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
 #include <opm/input/eclipse/Deck/DeckSection.hpp>
 
 #include <opm/input/eclipse/Parser/ParserKeywords/C.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/H.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/N.hpp>
 
 #include <cstddef>
+#include <string>
+#include <vector>
 
 namespace Opm {
 
@@ -43,8 +48,54 @@ namespace Opm {
     TODO: Collect also lgrs from RADFIN blocks...
      */
 
+    namespace {
+
+        template <typename... Keyword>
+        std::vector<std::string> keywordsPresent(const GRIDSection& gridSection)
+        {
+            auto present = std::vector<std::string>{};
+
+            ((gridSection.hasKeyword<Keyword>()
+              ? present.push_back(Keyword::keywordName)
+              : void()), ...);
+
+            return present;
+        }
+
+        /*
+          NXFIN/HXFIN and friends grade a CARFIN block, so ignoring them changes
+          the refined geometry rather than just some option: the block comes out
+          uniformly subdivided instead. That is easy to miss among the deck's
+          other unsupported-keyword notices, so say it once, in terms of the
+          consequence.
+        */
+        void warnIfGradedRefinement(const GRIDSection& gridSection)
+        {
+            const auto graded = keywordsPresent<
+                ParserKeywords::NXFIN, ParserKeywords::NYFIN, ParserKeywords::NZFIN,
+                ParserKeywords::HXFIN, ParserKeywords::HYFIN, ParserKeywords::HZFIN
+            >(gridSection);
+
+            if (graded.empty()) {
+                return;
+            }
+
+            OpmLog::warning(fmt::format("Graded local refinement is not supported: {} "
+                                        "{} ignored and every CARFIN block is refined "
+                                        "uniformly, so the refined cell sizes differ "
+                                        "from those the deck asks for.",
+                                        fmt::join(graded, ", "),
+                                        (graded.size() == 1) ? "is" : "are"));
+        }
+
+    } // Anonymous namespace
+
     LgrCollection::LgrCollection(const GRIDSection& gridSection, const EclipseGrid& grid) {
         const auto& lgrKeywords = gridSection.getKeywordList<ParserKeywords::CARFIN>();
+
+        if (! lgrKeywords.empty()) {
+            warnIfGradedRefinement(gridSection);
+        }
 
         for (const auto& lgrsKeyword : lgrKeywords) {
             OpmLog::info(OpmInputError::format("\nLoading lgrs from {keyword} in {file} line {line}", lgrsKeyword->location()));
