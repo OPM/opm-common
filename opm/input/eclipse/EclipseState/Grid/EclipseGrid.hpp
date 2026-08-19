@@ -463,7 +463,10 @@ namespace Opm {
                        std::size_t nz,
                        const vec_size_t& father_lgr_index,
                        const std::array<int, 3>& low_fatherIJK_,
-                       const std::array<int, 3>& up_fatherIJK_);
+                       const std::array<int, 3>& up_fatherIJK_,
+                       /// Refined-cell ACTNUM, inherited from the father cells.
+                       /// Empty leaves every refined cell active.
+                       const std::vector<int>& actnum = {});
         const vec_size_t& getFatherGlobalID() const;
 
         void save(Opm::EclIO::EclOutput&, const Opm::UnitSystem&) const;
@@ -482,7 +485,10 @@ namespace Opm {
         int get_hostnum(std::size_t global_index) const {return(m_hostnum[global_index]);};
 
         //parsing the father grid allows the global_father references to be given in terms of father_grid
+        /// Father Cartesian index per refined Cartesian cell (for PORV and geometry).
         std::vector<int> getLGRCell_global_father(const EclipseGrid& father_grid) const;
+        /// Father active index per active refined cell (for active-sized arrays).
+        std::vector<int> getLGRCell_active_father(const EclipseGrid& father_grid) const;
         std::vector<double> getLGRCell_all_depth (const EclipseGrid& father_grid) const;
 
         void get_label_child_to_top_father(std::vector<std::reference_wrapper<const std::string>>& list) const;
