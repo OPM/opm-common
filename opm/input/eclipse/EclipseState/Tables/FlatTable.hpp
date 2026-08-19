@@ -127,6 +127,9 @@ struct DensityTable : public FlatTableWithCopy<DENSITYRecord>
     explicit DensityTable(const GravityTable& gravity);
     explicit DensityTable(std::initializer_list<DENSITYRecord> records);
 
+    /// Construct \p num_tables identical table records.
+    DensityTable(const DENSITYRecord& record, std::size_t num_tables);
+
     static DensityTable serializationTestObject()
     {
         return DensityTable({{1.0, 2.0, 3.0}});
@@ -269,6 +272,9 @@ struct PvtwTable : public FlatTableWithCopy<PVTWRecord>
     PvtwTable() = default;
     explicit PvtwTable(const DeckKeyword& kw);
     explicit PvtwTable(std::initializer_list<PVTWRecord> records);
+
+    /// Construct \p num_tables identical table records.
+    PvtwTable(const PVTWRecord& record, std::size_t num_tables);
 
     static PvtwTable serializationTestObject()
     {

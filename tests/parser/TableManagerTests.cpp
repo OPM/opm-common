@@ -1415,6 +1415,124 @@ END
     }
 }
 
+BOOST_AUTO_TEST_CASE(CompositionalDefaultWaterPvt) {
+    // Compositional runs default omitted water properties.
+    const auto deck = Opm::Parser{}.parseString(R"(RUNSPEC
+OIL
+GAS
+WATER
+COMPS
+3 /
+TABDIMS
+1 1 /
+PROPS
+END
+)");
+
+    const auto tmgr = Opm::TableManager { deck };
+
+    const auto& pvtw = tmgr.getPvtwTable();
+    BOOST_REQUIRE_EQUAL(pvtw.size(), std::size_t{1});
+    BOOST_CHECK_CLOSE(pvtw[0].reference_pressure, 101325.0, 1.0e-10);
+    BOOST_CHECK_CLOSE(pvtw[0].volume_factor, 1.0, 1.0e-10);
+    BOOST_CHECK_CLOSE(pvtw[0].compressibility, 4.0e-5 / 101325.0, 1.0e-10);
+    BOOST_CHECK_CLOSE(pvtw[0].viscosity, 0.3e-3, 1.0e-10);
+    BOOST_CHECK_SMALL(pvtw[0].viscosibility, 1.0e-20);
+
+    const auto& dens = tmgr.getDensityTable();
+    BOOST_REQUIRE_EQUAL(dens.size(), std::size_t{1});
+    BOOST_CHECK_CLOSE(dens[0].oil, 600.0, 1.0e-10);
+    BOOST_CHECK_CLOSE(dens[0].water, 999.014, 1.0e-10);
+    BOOST_CHECK_CLOSE(dens[0].gas, 1.0, 1.0e-10);
+}
+
+BOOST_AUTO_TEST_CASE(NoDefaultWaterPvtOutsideCompositional) {
+    // Black-oil runs must still supply their water properties explicitly.
+    const auto blackoil = Opm::Parser{}.parseString(R"(RUNSPEC
+OIL
+WATER
+TABDIMS
+1 1 /
+PROPS
+END
+)");
+    const auto tm1 = Opm::TableManager { blackoil };
+    BOOST_CHECK(tm1.getPvtwTable().empty());
+    BOOST_CHECK(tm1.getDensityTable().empty());
+
+    // GASWAT activates a water phase and therefore receives defaults.
+    const auto gaswat = Opm::Parser{}.parseString(R"(RUNSPEC
+GASWAT
+COMPS
+3 /
+TABDIMS
+1 1 /
+PROPS
+END
+)");
+    const auto tmGasWat = Opm::TableManager { gaswat };
+    BOOST_REQUIRE_EQUAL(tmGasWat.getPvtwTable().size(), std::size_t{1});
+    BOOST_CHECK_CLOSE(tmGasWat.getPvtwTable()[0].viscosity, 0.3e-3, 1.0e-10);
+    BOOST_REQUIRE_EQUAL(tmGasWat.getDensityTable().size(), std::size_t{1});
+    BOOST_CHECK_CLOSE(tmGasWat.getDensityTable()[0].water, 999.014, 1.0e-10);
+
+    // No water phase means no water-property defaults.
+    const auto nowater = Opm::Parser{}.parseString(R"(RUNSPEC
+OIL
+GAS
+COMPS
+3 /
+TABDIMS
+1 1 /
+PROPS
+END
+)");
+    const auto tm2 = Opm::TableManager { nowater };
+    BOOST_CHECK(tm2.getPvtwTable().empty());
+    BOOST_CHECK(tm2.getDensityTable().empty());
+
+    // The CO2/H2 storage and solution options bring their own water
+    // properties, so a deck using them is left alone as well.
+    for (const std::string option : { "CO2STORE", "CO2STOR", "H2STORE" }) {
+        const auto deck = Opm::Parser{}.parseString("RUNSPEC\n"
+                                                    "GASWAT\n"
+                                                    + option + "\n"
+                                                    "COMPS\n"
+                                                    "3 /\n"
+                                                    "TABDIMS\n"
+                                                    "1 1 /\n"
+                                                    "PROPS\n"
+                                                    "END\n");
+
+        const auto tm = Opm::TableManager { deck };
+        BOOST_TEST_CONTEXT(option) {
+            BOOST_CHECK(tm.getPvtwTable().empty());
+            BOOST_CHECK(tm.getDensityTable().empty());
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(NoDefaultWaterPvtWithCo2Store) {
+    // The CO2 storage option with the water and gas phases spelled out instead
+    // of through GASWAT.  The brine models supply the water properties, so this
+    // deck needs neither PVTW nor DENSITY and must not be given defaults.
+    const auto deck = Opm::Parser{}.parseString(R"(RUNSPEC
+WATER
+GAS
+CO2STORE
+COMPS
+3 /
+TABDIMS
+1 1 /
+PROPS
+END
+)");
+
+    const auto tm = Opm::TableManager { deck };
+    BOOST_CHECK(tm.getPvtwTable().empty());
+    BOOST_CHECK(tm.getDensityTable().empty());
+}
+
 BOOST_AUTO_TEST_CASE(PvtwTable_Tests) {
     // PVT tables from opm-tests/model5/include/pvt_live_oil_dgas.ecl .
     const auto deck = Opm::Parser{}.parseString(R"(RUNSPEC
