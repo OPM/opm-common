@@ -51,6 +51,17 @@ namespace Opm {
         /// grid blocks (MAX).
         enum class Mode : unsigned char { AVG, MAX };
 
+        /// Target phase corresponding to item 3 of a WELDRAW record.
+        ///
+        /// Throws \code std::invalid_argument \endcode for unknown values.
+        static TargetPhase TargetPhaseFromString(const std::string& stringValue);
+
+        /// Drawdown averaging mode corresponding to item 5 of a WELDRAW
+        /// record.
+        ///
+        /// Throws \code std::invalid_argument \endcode for unknown values.
+        static Mode ModeFromString(const std::string& stringValue);
+
         static WELDRAW serializationTestObject();
 
         /// Assign drawdown limit properties from a WELDRAW record.
@@ -81,13 +92,18 @@ namespace Opm {
             return this->m_phase;
         }
 
+        /// Drawdown averaging mode (item 5).  Stored for input
+        /// round-tripping and forward compatibility; OPM Flow only
+        /// supports AVG and rejects MAX at deck load.
         Mode mode() const
         {
             return this->m_mode;
         }
 
         /// Whether the drawdown limit should be included when calculating
-        /// the well's production potential (item 4).
+        /// the well's production potential (item 4).  Stored for input
+        /// round-tripping and forward compatibility; OPM Flow only
+        /// supports NO and rejects YES at deck load.
         bool useInPotentials() const
         {
             return this->m_use_in_potentials;

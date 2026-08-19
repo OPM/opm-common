@@ -27,12 +27,12 @@
 #include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellBrineProperties.hpp>
 #include <opm/input/eclipse/Schedule/Well/WDFAC.hpp>
+#include <opm/input/eclipse/Schedule/Well/WELDRAW.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellEconProductionLimits.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellFoamProperties.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellMICPProperties.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellPolymerProperties.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellTracerProperties.hpp>
-#include <opm/input/eclipse/Schedule/Well/WELDRAW.hpp>
 #include <opm/input/eclipse/Schedule/Well/WVFPDP.hpp>
 #include <opm/input/eclipse/Schedule/Well/WVFPEXP.hpp>
 

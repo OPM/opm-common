@@ -33,6 +33,38 @@
 
 namespace Opm {
 
+    WELDRAW::TargetPhase WELDRAW::TargetPhaseFromString(const std::string& stringValue)
+    {
+        if (stringValue == "LIQ") {
+            return TargetPhase::LIQ;
+        }
+
+        if (stringValue == "GAS") {
+            return TargetPhase::GAS;
+        }
+
+        throw std::invalid_argument {
+            fmt::format("Invalid phase '{}' for WELDRAW. "
+                        "Must be LIQ or GAS.", stringValue)
+        };
+    }
+
+    WELDRAW::Mode WELDRAW::ModeFromString(const std::string& stringValue)
+    {
+        if (stringValue == "AVG") {
+            return Mode::AVG;
+        }
+
+        if (stringValue == "MAX") {
+            return Mode::MAX;
+        }
+
+        throw std::invalid_argument {
+            fmt::format("Invalid drawdown calculation mode '{}' for "
+                        "WELDRAW. Must be AVG or MAX.", stringValue)
+        };
+    }
+
     WELDRAW WELDRAW::serializationTestObject()
     {
         WELDRAW result;
@@ -63,19 +95,7 @@ namespace Opm {
 
         const auto& phase_item = record.getItem<Kw::PHASE>();
         if (phase_item.hasValue(0) && !phase_item.defaultApplied(0)) {
-            const auto& phase_str = phase_item.getTrimmedString(0);
-            if (phase_str == "LIQ") {
-                this->m_phase = TargetPhase::LIQ;
-            }
-            else if (phase_str == "GAS") {
-                this->m_phase = TargetPhase::GAS;
-            }
-            else {
-                throw std::invalid_argument {
-                    fmt::format("Invalid phase '{}' for WELDRAW. "
-                                "Must be LIQ or GAS.", phase_str)
-                };
-            }
+            this->m_phase = TargetPhaseFromString(phase_item.getTrimmedString(0));
         }
         else {
             this->m_phase = (preferred_phase == Phase::GAS)
@@ -85,19 +105,8 @@ namespace Opm {
         this->m_use_in_potentials =
             DeckItem::to_bool(record.getItem<Kw::USE_LIMIT>().getTrimmedString(0));
 
-        const auto& mode_str = record.getItem<Kw::GRID_BLOCKS>().getTrimmedString(0);
-        if (mode_str == "AVG") {
-            this->m_mode = Mode::AVG;
-        }
-        else if (mode_str == "MAX") {
-            this->m_mode = Mode::MAX;
-        }
-        else {
-            throw std::invalid_argument {
-                fmt::format("Invalid drawdown calculation mode '{}' for "
-                            "WELDRAW. Must be AVG or MAX.", mode_str)
-            };
-        }
+        this->m_mode =
+            ModeFromString(record.getItem<Kw::GRID_BLOCKS>().getTrimmedString(0));
     }
 
     double WELDRAW::maxDrawdown(const std::string& well_name,
