@@ -186,6 +186,19 @@ const DeckView& Deck::global_view() const {
         this->m_global_view = nullptr;
     }
 
+    DeckView Deck::lgrBlock(const std::string& lgrName) const
+    {
+        DeckView block;
+
+        for (const auto& kw : this->keywordList) {
+            if (kw.lgrScope() == lgrName) {
+                block.add_keyword(kw);
+            }
+        }
+
+        return block;
+    }
+
     void Deck::addKeyword( const DeckKeyword& keyword ) {
         DeckKeyword kw = keyword;
         this->addKeyword( std::move( kw ) );

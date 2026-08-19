@@ -131,6 +131,11 @@ namespace Opm {
             /// Call once, after parsing.
             void scopeLgrBlockKeywords();
 
+            /// The keywords bracketed by the named LGR's CARFIN...ENDFIN pair,
+            /// in deck order. They describe the refined block and are absent
+            /// from the global view and from every DeckSection.
+            DeckView lgrBlock(const std::string& lgrName) const;
+
         private:
 
             std::vector< DeckKeyword > keywordList;

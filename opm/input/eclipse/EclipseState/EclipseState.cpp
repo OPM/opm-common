@@ -345,7 +345,39 @@ namespace Opm {
         const GRIDSection gridSection ( deck );
 
         m_lgrs = LgrCollection(gridSection, m_inputGrid);
+        warnUnappliedLgrBlockKeywords(deck);
         m_inputGrid.init_lgr_cells(m_lgrs);
+    }
+
+    /*
+      The keywords inside a CARFIN...ENDFIN block describe the refined cells.
+      They are kept out of the global grid (Deck::scopeLgrBlockKeywords), which
+      is what they are not; applying them to the refined cells is a separate
+      capability that does not exist yet, so the refined cells take their
+      father's values. Say which keywords that costs, per LGR, rather than
+      dropping them without a word.
+    */
+    void EclipseState::warnUnappliedLgrBlockKeywords(const Deck& deck) const
+    {
+        for (std::size_t index = 0; index < this->m_lgrs.size(); ++index) {
+            const auto& lgrName = this->m_lgrs.getLgr(index).NAME();
+            const auto block = deck.lgrBlock(lgrName);
+
+            if (block.empty()) {
+                continue;
+            }
+
+            auto names = std::vector<std::string>{};
+            for (const auto& keyword : block) {
+                names.push_back(keyword.name());
+            }
+
+            OpmLog::warning(fmt::format("CARFIN '{}' brackets keywords that are not applied "
+                                        "to the refined cells: {}. Those cells inherit their "
+                                        "father cell's values, and the keywords do not reach "
+                                        "the global grid either.",
+                                        lgrName, fmt::join(names, ", ")));
+        }
     }
 
 
