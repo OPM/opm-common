@@ -1512,6 +1512,27 @@ END
     }
 }
 
+BOOST_AUTO_TEST_CASE(NoDefaultWaterPvtWithCo2Store) {
+    // The CO2 storage option with the water and gas phases spelled out instead
+    // of through GASWAT.  The brine models supply the water properties, so this
+    // deck needs neither PVTW nor DENSITY and must not be given defaults.
+    const auto deck = Opm::Parser{}.parseString(R"(RUNSPEC
+WATER
+GAS
+CO2STORE
+COMPS
+3 /
+TABDIMS
+1 1 /
+PROPS
+END
+)");
+
+    const auto tm = Opm::TableManager { deck };
+    BOOST_CHECK(tm.getPvtwTable().empty());
+    BOOST_CHECK(tm.getDensityTable().empty());
+}
+
 BOOST_AUTO_TEST_CASE(PvtwTable_Tests) {
     // PVT tables from opm-tests/model5/include/pvt_live_oil_dgas.ecl .
     const auto deck = Opm::Parser{}.parseString(R"(RUNSPEC
