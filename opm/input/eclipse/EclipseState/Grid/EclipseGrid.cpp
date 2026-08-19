@@ -2392,37 +2392,22 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
 
 
     void EclipseGrid::init_children_host_cells_logical(){
-        auto  IJK_location = [](const std::size_t&  nx, const std::size_t& ny,const std::size_t& nz,
-                                          const std::size_t& host_nx, const std::size_t& host_ny, const std::size_t& host_nz,
-                                          const std::size_t& base_host_nx, const std::size_t& base_host_ny, const std::size_t& base_host_nz){
-            const auto [i_list, j_list, k_list] = VectorUtil::generate_cartesian_product(0, nx-1, 0, ny-1, 0, nz-1);
-            std::vector<std::size_t> resultI = VectorUtil::scalarVectorOperation(nx/host_nx, i_list,  std::divides<std::size_t>{});
-            resultI = VectorUtil::vectorScalarOperation(resultI, base_host_nx, std::plus<std::size_t>{});
-            std::vector<std::size_t> resultJ = VectorUtil::scalarVectorOperation(ny/host_ny, j_list,  std::divides<std::size_t>{});
-            resultJ = VectorUtil::vectorScalarOperation(resultJ, base_host_ny , std::plus<std::size_t>{});
-            std::vector<std::size_t> resultK = VectorUtil::scalarVectorOperation(nz/host_nz, k_list,  std::divides<std::size_t>{});
-            resultK = VectorUtil::vectorScalarOperation(resultK, base_host_nz, std::plus<std::size_t>{});
-            return std::make_tuple(resultI, resultJ, resultK);
-        };
-        auto getAllGlobalIndex  = [this](const std::vector<std::size_t>& i_list,
-                                                   const std::vector<std::size_t>& j_list,
-                                                   const std::vector<std::size_t>& k_list){
-            std::vector<int> global_index(i_list.size());
-            for (std::size_t idx = 0; idx < i_list.size(); ++idx) {
-                global_index[idx] = getGlobalIndex(i_list[idx], j_list[idx], k_list[idx]);
-            }
-            return global_index;
-        };
         for (EclipseGridLGR& lgr_cell : lgr_children_cells) {
-            const std::array<int,3>& host_low_fatherIJK = lgr_cell.get_low_fatherIJK();
-            const std::array<int,3>& host_up_fatherIJK = lgr_cell.get_up_fatherIJK();
-            const std::array<int,3> host_IJK = {host_up_fatherIJK[0] - host_low_fatherIJK[0] + 1,
-                                                host_up_fatherIJK[1] - host_low_fatherIJK[1] + 1,
-                                                host_up_fatherIJK[2] - host_low_fatherIJK[2] + 1};
-            auto [i_list, j_list, k_list] = IJK_location(lgr_cell.getNX(), lgr_cell.getNY(), lgr_cell.getNZ(),
-                          static_cast<std::size_t>(host_IJK[0]), static_cast<std::size_t>(host_IJK[1]), static_cast<std::size_t>(host_IJK[2]),
-                            host_low_fatherIJK[0], host_low_fatherIJK[1], host_low_fatherIJK[2]);
-            std::vector<int> host_cells_global_ref = getAllGlobalIndex(i_list, j_list, k_list);
+            const auto& low = lgr_cell.get_low_fatherIJK();
+            const auto& columns = lgr_cell.refinedColumns();
+            const auto ncells = lgr_cell.getCartesianSize();
+
+            // A refined cell's host is the father cell its column lies in --
+            // an equal share of the box unless N*FIN says otherwise.
+            std::vector<int> host_cells_global_ref(ncells);
+            for (std::size_t cell = 0; cell < ncells; ++cell) {
+                const auto ijk = lgr_cell.getIJK(cell);
+                host_cells_global_ref[cell] =
+                    getGlobalIndex(low[0] + columns[0].parentOffset[ijk[0]],
+                                   low[1] + columns[1].parentOffset[ijk[1]],
+                                   low[2] + columns[2].parentOffset[ijk[2]]);
+            }
+
             lgr_cell.set_hostnum(host_cells_global_ref);
             lgr_cell.init_children_host_cells();
         }
@@ -2569,7 +2554,10 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
 
                 lgr_children_cells.emplace_back(lgr_cell.NAME(), this->lgr_label,
                                                 lgr_cell.NX(), lgr_cell.NY(), lgr_cell.NZ(),
-                                                lowIJK, upIJK);
+                                                lowIJK, upIJK,
+                                                std::array{ lgr_cell.refinedColumns(0),
+                                                            lgr_cell.refinedColumns(1),
+                                                            lgr_cell.refinedColumns(2) });
 
                 auto& child = lgr_children_cells.back();
                 child.inheritActiveCellsFromFather(*this);
@@ -2918,26 +2906,16 @@ namespace Opm {
     EclipseGridLGR::EclipseGridLGR(const std::string& self_label, const std::string& father_label_,
                                    std::size_t nx, std::size_t ny, std::size_t nz,
                                    const std::array<int,3>& low_fatherIJK_,
-                                   const std::array<int,3>& up_fatherIJK_)
+                                   const std::array<int,3>& up_fatherIJK_,
+                                   const std::array<Carfin::RefinedColumns,3>& columns)
     : EclipseGrid(nx,ny,nz), low_fatherIJK(low_fatherIJK_), up_fatherIJK(up_fatherIJK_)
     {
+        m_columns = columns;
         // father_global and the refined ACTNUM come from
         // inheritActiveCellsFromFather(), which the caller invokes once the
         // grid is in place -- and again whenever the father's own ACTNUM moves.
         father_label = father_label_;
         lgr_label = self_label;
-    }
-
-    std::array<std::size_t, 3> EclipseGridLGR::refinementFactors() const
-    {
-        const auto dims = this->getNXYZ();
-        std::array<std::size_t, 3> factor{};
-        for (std::size_t d = 0; d < 3; ++d) {
-            const auto nparent = static_cast<std::size_t>
-                (this->up_fatherIJK[d] - this->low_fatherIJK[d] + 1);
-            factor[d] = static_cast<std::size_t>(dims[d]) / nparent;
-        }
-        return factor;
     }
 
     void EclipseGridLGR::inheritActiveCellsFromFather(const EclipseGrid& father)
@@ -2948,15 +2926,15 @@ namespace Opm {
         // the output grid is a copy of the input grid with MINPV applied, and a
         // father that MINPV switched off leaves an active refined cell with no
         // active father to map onto.
-        const auto factor = this->refinementFactors();
         const auto ncells = this->getCartesianSize();
 
         std::vector<int> actnum(ncells, 0);
         for (std::size_t cell = 0; cell < ncells; ++cell) {
             const auto ijk = this->getIJK(cell);
-            actnum[cell] = father.cellActive(this->low_fatherIJK[0] + ijk[0] / factor[0],
-                                             this->low_fatherIJK[1] + ijk[1] / factor[1],
-                                             this->low_fatherIJK[2] + ijk[2] / factor[2]) ? 1 : 0;
+            actnum[cell] = father.cellActive(
+                this->low_fatherIJK[0] + m_columns[0].parentOffset[ijk[0]],
+                this->low_fatherIJK[1] + m_columns[1].parentOffset[ijk[1]],
+                this->low_fatherIJK[2] + m_columns[2].parentOffset[ijk[2]]) ? 1 : 0;
         }
 
         // Cartesian order over the box gives increasing global index, hence
@@ -3182,10 +3160,6 @@ namespace Opm {
         const auto zh = ZcornMapper { NX, NY,NZ }; // Host grid dimensions Mapper
         const auto zc = ZcornMapper { nx, ny, nz }; // Child/LGR grid dimensions Mapper
 
-        const auto si = nx / (Imax - Imin + 1);
-        const auto sj = ny / (Jmax - Jmin + 1);
-        const auto sk = nz / (Kmax - Kmin + 1);
-
         std::vector<double> zcorn_c;
         zcorn_c.resize(nx*ny*nz*8);
 
@@ -3199,25 +3173,25 @@ namespace Opm {
                         h_vertices[idx] = zcorn_h[h];
                     }
 
-                    for (std::size_t k = 0; k < sk; ++k) {
-                        const auto tk = static_cast<double>(k) / sk;
-                        const auto tk_next = static_cast<double>(k + 1) / sk;
-                        for (std::size_t j = 0; j < sj; ++j) {
-                            const auto tj = static_cast<double>(j) / sj;
-                            const auto tj_next = static_cast<double>(j + 1) / sj;
-                            for (std::size_t i = 0; i < si; ++i) {
-                                const auto ti = static_cast<double>(i) / si;
-                                const auto ti_next = static_cast<double>(i + 1) / si;
+                    // The refined columns this parent owns, and their extent
+                    // inside it -- equal shares unless N*FIN/H*FIN say otherwise.
+                    const auto& cI = m_columns[0];
+                    const auto& cJ = m_columns[1];
+                    const auto& cK = m_columns[2];
+                    const auto k0 = cK.firstColumn[K - Kmin];
+                    const auto j0 = cJ.firstColumn[J - Jmin];
+                    const auto i0 = cI.firstColumn[I - Imin];
+
+                    for (std::size_t k = 0; k < static_cast<std::size_t>(cK.count[K - Kmin]); ++k) {
+                        for (std::size_t j = 0; j < static_cast<std::size_t>(cJ.count[J - Jmin]); ++j) {
+                            for (std::size_t i = 0; i < static_cast<std::size_t>(cI.count[I - Imin]); ++i) {
                                 for (std::size_t idx = 0; idx < 8; ++idx) {
                                     const auto& offset = corner_offset[idx];
 
-                                    const double ti_c = offset[0] ? ti_next : ti;
-                                    const double tj_c = offset[1] ? tj_next : tj;
-                                    const double tk_c = offset[2] ? tk_next : tk;
-                                    const auto c = zc.index((I - Imin) * si + i,
-                                                                               (J - Jmin) * sj + j,
-                                                                               (K - Kmin) * sk + k,
-                                                                             idx);
+                                    const double ti_c = offset[0] ? cI.fracHi[i0 + i] : cI.fracLo[i0 + i];
+                                    const double tj_c = offset[1] ? cJ.fracHi[j0 + j] : cJ.fracLo[j0 + j];
+                                    const double tk_c = offset[2] ? cK.fracHi[k0 + k] : cK.fracLo[k0 + k];
+                                    const auto c = zc.index(i0 + i, j0 + j, k0 + k, idx);
                                     zcorn_c[c] = trilinear_interpolation(h_vertices,ti_c, tj_c, tk_c);
                                 }
                             }
@@ -3281,8 +3255,10 @@ namespace Opm {
         const auto ch = CoordMapper { NX, NY }; // Host grid dimensions Mapper
         const auto cc = CoordMapper { nx, ny }; // Child/LGR grid dimensions Mapper
 
-        const auto si = nx / (Imax - Imin + 1);
-        const auto sj = ny / (Jmax - Jmin + 1);
+        // Refined pillar lines carry the low edge of each refined column, plus a
+        // closing line: the same tables as the cell corners.
+        const auto& cI = m_columns[0];
+        const auto& cJ = m_columns[1];
 
         std::vector<double> coord_c;
         coord_c.resize(6 * (nx + 1) * (ny + 1));
@@ -3299,11 +3275,13 @@ namespace Opm {
                 // Loop through interal divisons inside the corners of element (I,J)
                 // Looping from 0 to si or sj included means, looping through t=0 to t=1 included, thus covering
                 // the whole area of the element (I,J) and including the corners.
-                for (auto j = 0*sj; j < sj; ++j) {
-                    const auto tj = static_cast<double>(j) / sj;
-                    for (auto i = 0*si; i < si; ++i) {
-                        const auto ti = static_cast<double>(i) / si;
-                        const auto refined_index = &coord_c[cc.index((I - Imin)*si + i, (J - Jmin)*sj + j, 0, 0)];
+                const auto j0 = cJ.firstColumn[J - Jmin];
+                const auto i0 = cI.firstColumn[I - Imin];
+                for (auto j = 0; j < cJ.count[J - Jmin]; ++j) {
+                    const auto tj = cJ.fracLo[j0 + j];
+                    for (auto i = 0; i < cI.count[I - Imin]; ++i) {
+                        const auto ti = cI.fracLo[i0 + i];
+                        const auto refined_index = &coord_c[cc.index(i0 + i, j0 + j, 0, 0)];
                         bilinear_interpolation( pillars, ti, tj, refined_index);
                     }
                 }
@@ -3319,9 +3297,10 @@ namespace Opm {
                 for (const auto& offset : {corner_offset[3], corner_offset[2]}) {
                     pillars[index++] = &coord_h[ch.index(I + offset[0], Jmax + offset[1], 0, 0)];
                 }
-                for (auto i = 0*si; i < si; ++i) {
-                    const auto ti = static_cast<double>(i) / si;
-                    const auto refined_index = &coord_c[cc.index((I - Imin)*si + i, ny , 0, 0)];
+                const auto i0 = cI.firstColumn[I - Imin];
+                for (auto i = 0; i < cI.count[I - Imin]; ++i) {
+                    const auto ti = cI.fracLo[i0 + i];
+                    const auto refined_index = &coord_c[cc.index(i0 + i, ny , 0, 0)];
                     interpolatePillar(pillars[0], pillars[1], ti, refined_index);
                 }
         }
@@ -3335,9 +3314,10 @@ namespace Opm {
             for (const auto& offset : {corner_offset[1], corner_offset[2]}) {
                 pillars[index++] = &coord_h[ch.index(Imax + offset[0], J + offset[1], 0, 0)];
             }
-            for (auto j = 0*sj; j < sj; ++j) {
-                const auto tj = static_cast<double>(j) / sj;
-                const auto refined_index = &coord_c[cc.index(nx, (J - Jmin)*sj + j, 0, 0)];
+            const auto j0 = cJ.firstColumn[J - Jmin];
+            for (auto j = 0; j < cJ.count[J - Jmin]; ++j) {
+                const auto tj = cJ.fracLo[j0 + j];
+                const auto refined_index = &coord_c[cc.index(nx, j0 + j, 0, 0)];
                 interpolatePillar(pillars[0], pillars[1], tj, refined_index);
             }
         }

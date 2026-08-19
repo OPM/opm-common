@@ -20,6 +20,7 @@
 #ifndef OPM_PARSER_ECLIPSE_GRID_HPP
 #define OPM_PARSER_ECLIPSE_GRID_HPP
 
+#include <opm/input/eclipse/EclipseState/Grid/Carfin.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/GridDims.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/MapAxes.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/MinpvMode.hpp>
@@ -466,7 +467,8 @@ namespace Opm {
                        std::size_t ny,
                        std::size_t nz,
                        const std::array<int, 3>& low_fatherIJK_,
-                       const std::array<int, 3>& up_fatherIJK_);
+                       const std::array<int, 3>& up_fatherIJK_,
+                       const std::array<Carfin::RefinedColumns, 3>& columns);
 
         /// Re-derive this LGR's ACTNUM and its list of father cells from the
         /// father's current activity. Call after construction, and again
@@ -513,6 +515,12 @@ namespace Opm {
           return up_fatherIJK;
         }
 
+        /// Where each refined column sits in its father cell, per direction:
+        /// what N*FIN/H*FIN describe, a uniform split when they are absent.
+        const std::array<Carfin::RefinedColumns, 3>& refinedColumns() const {
+          return m_columns;
+        }
+
 
         /**
          * @brief Sets Local Grid Refinement for the EclipseGridLGR.
@@ -534,14 +542,14 @@ namespace Opm {
     private:
         void save_core(Opm::EclIO::EclOutput&, const Opm::UnitSystem&) const;
 
-        /// Refined cells per father cell, per direction.
-        std::array<std::size_t, 3> refinementFactors() const;
+
 
         std::string father_label;
         // references global on the father label
         vec_size_t father_global;
         std::array<int, 3> low_fatherIJK {};
         std::array<int, 3> up_fatherIJK {};
+        std::array<Carfin::RefinedColumns, 3> m_columns {};
         std::vector<int> m_hostnum;
 
         std::vector<double> generate_refined_coord(const std::vector<double>& ,

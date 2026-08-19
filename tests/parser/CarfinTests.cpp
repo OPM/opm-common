@@ -49,8 +49,23 @@ BOOST_AUTO_TEST_CASE(TestKeywordCarfin) {
     // J2 == nyglobal
     BOOST_CHECK_THROW( Opm::Carfin(gridDims, allActive(), identityMapping(), "LGR",1,1,3,7,2,2,2,10,2), std::invalid_argument);
 
-    //nlgr % (l2-l1+1) != 0
-    BOOST_CHECK_THROW( Opm::Carfin(gridDims, allActive(), identityMapping(), "LGR",1,1,3,4,2,2,2,5,2), std::invalid_argument);
+    // nlgr % (l2-l1+1) != 0. Only an error once the box is known not to carry
+    // an N*FIN distributing the refined cells over its parent cells, which the
+    // CARFIN record alone does not say.
+    const Opm::Carfin uneven(gridDims, allActive(), identityMapping(), "LGR",1,1,3,4,2,2,2,5,2);
+    BOOST_CHECK_THROW( uneven.validateSubdivision(), std::invalid_argument);
+
+    Opm::Carfin graded(gridDims, allActive(), identityMapping(), "LGR",1,1,3,4,2,2,2,5,2);
+    graded.setGrading(1, {2, 3}, {});
+    BOOST_CHECK_NO_THROW( graded.validateSubdivision() );
+
+    // N*FIN that does not account for every refined cell is rejected.
+    BOOST_CHECK_THROW( graded.setGrading(1, {2, 2}, {}), std::invalid_argument);
+    // ... as is one entry per refined cell where a parent cell is expected.
+    BOOST_CHECK_THROW( graded.setGrading(1, {1, 1, 3}, {}), std::invalid_argument);
+    // H*FIN takes one width per refined cell, not per parent cell.
+    BOOST_CHECK_THROW( graded.setGrading(1, {2, 3}, {1.0, 2.0}), std::invalid_argument);
+    BOOST_CHECK_NO_THROW( graded.setGrading(1, {2, 3}, {1.0, 2.0, 3.0, 1.0, 1.0}) );
 
 }
 

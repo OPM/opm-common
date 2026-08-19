@@ -27,6 +27,7 @@
 
 namespace Opm {
 
+    class Deck;
     class DeckRecord;
     class GridDims;
     class GRIDSection;
@@ -35,7 +36,7 @@ namespace Opm {
 class LgrCollection {
 public:
     LgrCollection();
-    LgrCollection(const GRIDSection& gridSection, const EclipseGrid& grid);
+    LgrCollection(const GRIDSection& gridSection, const EclipseGrid& grid, const Deck& deck);
 
    static LgrCollection serializationTestObject();
 

@@ -60,6 +60,7 @@
 #include <filesystem>
 #include <map>
 #include <stdexcept>
+#include <set>
 #include <string>
 #include <unordered_set>
 #include <utility>
@@ -344,7 +345,7 @@ namespace Opm {
 
         const GRIDSection gridSection ( deck );
 
-        m_lgrs = LgrCollection(gridSection, m_inputGrid);
+        m_lgrs = LgrCollection(gridSection, m_inputGrid, deck);
         warnUnappliedLgrBlockKeywords(deck);
         m_inputGrid.init_lgr_cells(m_lgrs);
     }
@@ -352,8 +353,8 @@ namespace Opm {
     /*
       The keywords inside a CARFIN...ENDFIN block describe the refined cells.
       They are kept out of the global grid (Deck::scopeLgrBlockKeywords), which
-      is what they are not; applying them to the refined cells is a separate
-      capability that does not exist yet, so the refined cells take their
+      is what they are not. N*FIN/H*FIN are acted on -- they subdivide the box;
+      the rest are not applied to the refined cells either, which take their
       father's values. Say which keywords that costs, per LGR, rather than
       dropping them without a word.
     */
@@ -367,9 +368,19 @@ namespace Opm {
                 continue;
             }
 
+            static const auto applied = std::set<std::string> {
+                "NXFIN", "NYFIN", "NZFIN", "HXFIN", "HYFIN", "HZFIN",
+            };
+
             auto names = std::vector<std::string>{};
             for (const auto& keyword : block) {
-                names.push_back(keyword.name());
+                if (applied.count(keyword.name()) == 0) {
+                    names.push_back(keyword.name());
+                }
+            }
+
+            if (names.empty()) {
+                continue;
             }
 
             OpmLog::warning(fmt::format("CARFIN '{}' brackets keywords that are not applied "

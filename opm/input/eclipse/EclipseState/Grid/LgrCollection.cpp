@@ -27,7 +27,12 @@
 #include <fmt/format.h>
 #include <fmt/ranges.h>
 
+#include <opm/input/eclipse/Deck/Deck.hpp>
+#include <opm/input/eclipse/Deck/DeckItem.hpp>
+#include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
+#include <opm/input/eclipse/Deck/DeckView.hpp>
+#include <opm/input/eclipse/Deck/value_status.hpp>
 #include <opm/input/eclipse/Deck/DeckSection.hpp>
 
 #include <opm/input/eclipse/Parser/ParserKeywords/C.hpp>
@@ -35,7 +40,9 @@
 #include <opm/input/eclipse/Parser/ParserKeywords/N.hpp>
 
 #include <cstddef>
+#include <stdexcept>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 namespace Opm {
@@ -62,46 +69,109 @@ namespace Opm {
             return present;
         }
 
-        /*
-          NXFIN/HXFIN and friends grade a CARFIN block, so ignoring them changes
-          the refined geometry rather than just some option: the block comes out
-          uniformly subdivided instead. That is easy to miss among the deck's
-          other unsupported-keyword notices, so say it once, in terms of the
-          consequence.
-        */
-        void warnIfGradedRefinement(const GRIDSection& gridSection)
+        /// The last N*FIN/H*FIN of a block wins, as repeated keywords do.
+        template <typename Keyword>
+        const DeckItem* gradingItem(const DeckView& block)
         {
-            const auto graded = keywordsPresent<
-                ParserKeywords::NXFIN, ParserKeywords::NYFIN, ParserKeywords::NZFIN,
-                ParserKeywords::HXFIN, ParserKeywords::HYFIN, ParserKeywords::HZFIN
-            >(gridSection);
-
-            if (graded.empty()) {
-                return;
+            if (! block.has_keyword<Keyword>()) {
+                return nullptr;
             }
 
-            OpmLog::warning(fmt::format("Graded local refinement is not supported: {} "
-                                        "{} ignored and every CARFIN block is refined "
-                                        "uniformly, so the refined cell sizes differ "
-                                        "from those the deck asks for.",
-                                        fmt::join(graded, ", "),
-                                        (graded.size() == 1) ? "is" : "are"));
+            const auto& keyword = block.get<Keyword>().back();
+            if (keyword.empty()) {
+                return nullptr;
+            }
+
+            return &keyword.getDataRecord().getDataItem();
+        }
+
+        /// N*FIN counts. A defaulted entry would have to be inferred from the
+        /// others, which changes the geometry, so it is refused instead.
+        template <typename Keyword>
+        std::vector<int> subdivisionCounts(const DeckView& block, const std::string& lgrName)
+        {
+            const auto* item = gradingItem<Keyword>(block);
+            if (item == nullptr) {
+                return {};
+            }
+
+            const auto& status = item->getValueStatus();
+            for (auto entry = 0*status.size(); entry < status.size(); ++entry) {
+                if (! value::has_value(status[entry])) {
+                    throw std::invalid_argument {
+                        fmt::format("CARFIN '{}': {} entry {} is defaulted. Every parent "
+                                    "cell's number of refined cells must be given.",
+                                    lgrName, Keyword::keywordName, entry + 1)
+                    };
+                }
+            }
+
+            return item->template getData<int>();
+        }
+
+        /// H*FIN widths, relative and normalised within each parent cell. A
+        /// defaulted entry is an equal share of its parent cell, which is
+        /// weight one against the explicit widths.
+        template <typename Keyword>
+        std::vector<double> subdivisionWidths(const DeckView& block)
+        {
+            const auto* item = gradingItem<Keyword>(block);
+            if (item == nullptr) {
+                return {};
+            }
+
+            auto widths = item->getSIDoubleData();
+            const auto& status = item->getValueStatus();
+            for (auto entry = 0*widths.size(); entry < widths.size(); ++entry) {
+                if (! value::has_value(status[entry])) {
+                    widths[entry] = 1.0;
+                }
+            }
+
+            return widths;
+        }
+
+        /*
+          N*FIN says how many refined columns each parent cell of the box takes,
+          H*FIN their relative widths. Both live inside the CARFIN...ENDFIN
+          block, so they reach us through the deck rather than the GRID section.
+        */
+        void applyGrading(Carfin& lgr, const DeckView& block)
+        {
+            const auto& name = lgr.NAME();
+            lgr.setGrading(0,
+                           subdivisionCounts<ParserKeywords::NXFIN>(block, name),
+                           subdivisionWidths<ParserKeywords::HXFIN>(block));
+            lgr.setGrading(1,
+                           subdivisionCounts<ParserKeywords::NYFIN>(block, name),
+                           subdivisionWidths<ParserKeywords::HYFIN>(block));
+            lgr.setGrading(2,
+                           subdivisionCounts<ParserKeywords::NZFIN>(block, name),
+                           subdivisionWidths<ParserKeywords::HZFIN>(block));
         }
 
     } // Anonymous namespace
 
-    LgrCollection::LgrCollection(const GRIDSection& gridSection, const EclipseGrid& grid) {
+    LgrCollection::LgrCollection(const GRIDSection& gridSection,
+                                 const EclipseGrid& grid,
+                                 const Deck& deck)
+    {
         const auto& lgrKeywords = gridSection.getKeywordList<ParserKeywords::CARFIN>();
-
-        if (! lgrKeywords.empty()) {
-            warnIfGradedRefinement(gridSection);
-        }
 
         for (const auto& lgrsKeyword : lgrKeywords) {
             OpmLog::info(OpmInputError::format("\nLoading lgrs from {keyword} in {file} line {line}", lgrsKeyword->location()));
 
             for (const auto& lgrRecord : *lgrsKeyword) {
                 addLgr(grid, lgrRecord, lgrsKeyword->location());
+
+                auto& lgr = m_lgrs.iget(m_lgrs.size() - 1);
+                try {
+                    applyGrading(lgr, deck.lgrBlock(lgr.NAME()));
+                    lgr.validateSubdivision();
+                }
+                catch (const std::invalid_argument& e) {
+                    throw OpmInputError { e.what(), lgrsKeyword->location() };
+                }
             }
         }
     }

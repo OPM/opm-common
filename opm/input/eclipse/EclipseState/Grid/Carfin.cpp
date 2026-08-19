@@ -20,7 +20,10 @@
 #include <opm/input/eclipse/Deck/DeckItem.hpp>
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
 
+#include <algorithm>
+#include <numeric>
 #include <stdexcept>
+#include <string_view>
 #include <utility>
 
 #include <fmt/format.h>
@@ -34,9 +37,6 @@ namespace {
 
         if (l2 >= nglobal)
             throw std::invalid_argument(name + ": Index values for lgr greater than global grid size");
-
-        if (nlgr % (l2-l1+1) != 0)
-            throw std::invalid_argument(name + ": Number of divisions in CARFIN is not a multiple of the number of gridblocks to be refined (I2-I1+1).");
     }
 
     bool update_default_index(const Opm::DeckItem& item,
@@ -137,6 +137,145 @@ namespace Opm
         lgr.parent_name_grid = "LGRPARENT";
 
         return lgr;
+    }
+
+    void Carfin::setGrading(const std::size_t dim,
+                           std::vector<int> counts,
+                           std::vector<double> widths)
+    {
+        const auto direction = std::string_view{"XYZ"}.substr(dim, 1);
+        const auto nparent = this->upper(dim) - this->lower(dim) + 1;
+        const auto nrefined = this->m_dims[dim];
+
+        if (!counts.empty()) {
+            if (counts.size() != nparent) {
+                throw std::invalid_argument {
+                    fmt::format("CARFIN '{}': N{}FIN has {} entries but the box spans "
+                                "{} cells in {}. One entry per parent cell is required.",
+                                this->name_grid, direction, counts.size(), nparent, direction)
+                };
+            }
+
+            const auto total = std::accumulate(counts.begin(), counts.end(), std::size_t{0},
+                                               [](const std::size_t acc, const int n)
+                                               { return acc + std::max(n, 0); });
+
+            if (std::ranges::any_of(counts, [](const int n) { return n < 1; })) {
+                throw std::invalid_argument {
+                    fmt::format("CARFIN '{}': N{}FIN gives a parent cell fewer than one "
+                                "refined cell.", this->name_grid, direction)
+                };
+            }
+
+            if (total != nrefined) {
+                throw std::invalid_argument {
+                    fmt::format("CARFIN '{}': N{}FIN adds up to {} but the record asks for "
+                                "{} refined cells in {}. The subdivisions must account for "
+                                "every refined cell.",
+                                this->name_grid, direction, total, nrefined, direction)
+                };
+            }
+        }
+
+        if (!widths.empty()) {
+            if (widths.size() != nrefined) {
+                throw std::invalid_argument {
+                    fmt::format("CARFIN '{}': H{}FIN has {} entries but the box has {} "
+                                "refined cells in {}. One width per refined cell is "
+                                "required.",
+                                this->name_grid, direction, widths.size(), nrefined, direction)
+                };
+            }
+
+            if (std::ranges::any_of(widths, [](const double w) { return !(w > 0.0); })) {
+                throw std::invalid_argument {
+                    fmt::format("CARFIN '{}': H{}FIN gives a refined cell a width that is "
+                                "not positive.", this->name_grid, direction)
+                };
+            }
+        }
+
+        this->m_grading[dim] = AxisGrading{ std::move(counts), std::move(widths) };
+    }
+
+    bool Carfin::isGraded() const
+    {
+        return std::ranges::any_of(this->m_grading, [](const AxisGrading& axis)
+                                   { return !axis.counts.empty() || !axis.widths.empty(); });
+    }
+
+    const std::array<Carfin::AxisGrading, 3>& Carfin::grading() const
+    {
+        return this->m_grading;
+    }
+
+    void Carfin::validateSubdivision() const
+    {
+        for (std::size_t dim = 0; dim < 3; ++dim) {
+            if (!this->m_grading[dim].counts.empty()) {
+                continue;       // N*FIN says how they are distributed
+            }
+
+            const auto nparent = this->upper(dim) - this->lower(dim) + 1;
+            if (this->m_dims[dim] % nparent != 0) {
+                const auto direction = std::string_view{"XYZ"}.substr(dim, 1);
+                throw std::invalid_argument {
+                    fmt::format("CARFIN '{}': {} refined cells in {} do not divide evenly "
+                                "over the {} parent cells. Give N{}FIN to distribute them, "
+                                "or choose a multiple.",
+                                this->name_grid, this->m_dims[dim], direction,
+                                nparent, direction)
+                };
+            }
+        }
+    }
+
+    Carfin::RefinedColumns Carfin::refinedColumns(const std::size_t dim) const
+    {
+        const auto nparent = this->upper(dim) - this->lower(dim) + 1;
+        const auto nrefined = this->m_dims[dim];
+
+        // Without N*FIN every parent cell takes the same share.
+        auto counts = this->m_grading[dim].counts;
+        if (counts.empty()) {
+            counts.assign(nparent, static_cast<int>(nrefined / nparent));
+        }
+
+        RefinedColumns columns;
+        columns.parentOffset.reserve(nrefined);
+        columns.fracLo.reserve(nrefined);
+        columns.fracHi.reserve(nrefined);
+        columns.firstColumn.reserve(counts.size());
+        columns.count.assign(counts.begin(), counts.end());
+
+        const auto& widths = this->m_grading[dim].widths;
+        std::size_t column = 0;
+
+        for (std::size_t parent = 0; parent < counts.size(); ++parent) {
+            const auto n = static_cast<std::size_t>(counts[parent]);
+            columns.firstColumn.push_back(static_cast<int>(column));
+
+            // H*FIN widths are relative and normalised within the parent cell,
+            // so a cell's share is its width over the sum across that cell.
+            double total = static_cast<double>(n);
+            if (!widths.empty()) {
+                total = std::accumulate(widths.begin() + column,
+                                        widths.begin() + column + n, 0.0);
+            }
+
+            double cumulative = 0.0;
+            for (std::size_t sub = 0; sub < n; ++sub, ++column) {
+                const double share = widths.empty() ? 1.0 : widths[column];
+
+                columns.parentOffset.push_back(static_cast<int>(parent));
+                columns.fracLo.push_back(cumulative / total);
+                cumulative += share;
+                // The last share closes the cell exactly, without rounding.
+                columns.fracHi.push_back((sub + 1 == n) ? 1.0 : cumulative / total);
+            }
+        }
+
+        return columns;
     }
 
     void Carfin::update(const DeckRecord& deckRecord)
@@ -257,17 +396,16 @@ namespace Opm
         const auto lgrdims = GridDims(this->m_dims[0], this->m_dims[1], this->m_dims[2]);
         const auto ncells = lgrdims.getCartesianSize();
 
-        auto binSize = std::array<std::size_t, 3>{};
-        for (auto i = 0*binSize.size(); i < binSize.size(); ++i) {
-            binSize[i] = this->m_dims[i] / (this->m_end_offset[i] - this->m_offset[i] + 1);
-        }
+        const auto columns = std::array {
+            this->refinedColumns(0), this->refinedColumns(1), this->refinedColumns(2)
+        };
 
         for (auto data_index = 0*ncells; data_index != ncells; ++data_index) {
             const auto lgrIJK = lgrdims.getIJK(data_index);
             const auto global_index = this->m_globalGridDims_
-                .getGlobalIndex(this->m_offset[0] + (lgrIJK[0] / binSize[0]),
-                        this->m_offset[1] + (lgrIJK[1] / binSize[1]),
-                        this->m_offset[2] + (lgrIJK[2] / binSize[2]));
+                .getGlobalIndex(this->m_offset[0] + columns[0].parentOffset[lgrIJK[0]],
+                        this->m_offset[1] + columns[1].parentOffset[lgrIJK[1]],
+                        this->m_offset[2] + columns[2].parentOffset[lgrIJK[2]]);
 
             if (this->m_globalIsActive_(global_index)) {
                 const auto active_index = this->m_globalActiveIdx_(global_index);

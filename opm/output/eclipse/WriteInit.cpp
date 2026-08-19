@@ -393,14 +393,30 @@ namespace {
     // here too: one entry per refined Cartesian cell, addressed through the
     // father's Cartesian index.  Refined cells under an inactive father pick up
     // that father's zero pore volume.
+    //
+    // A refined cell takes its share of the father's pore volume by volume, not
+    // by count: graded refinement (N*FIN/H*FIN) makes the children of one father
+    // differ in size, and an equal split would put pore volume in the wrong
+    // cells (and not even conserve it against the father).
     void writePoreVolumeLGRCell(const   std::vector<double>&            porv,
                                 const   std::vector<int>&               cartesian_fathers,
-                                const               int                 volume_prop,
+                                const ::Opm::EclipseGrid&               grid,
+                                const ::Opm::EclipseGridLGR&            lgr_grid,
                                       ::Opm::EclIO::OutputStream::Init& initFile)
 
     {
         auto local_porv = VectorUtil::filterArray(porv, cartesian_fathers);
-        VectorUtil::scalarVectorOperation(static_cast<double>(volume_prop), local_porv,  std::divides<double>{});
+
+        for (auto cell = 0*local_porv.size(); cell < local_porv.size(); ++cell) {
+            if (local_porv[cell] == 0.0) {
+                continue;               // inactive father: nothing to share out
+            }
+            const auto fatherVolume = grid.getCellVolume(cartesian_fathers[cell]);
+            local_porv[cell] *= (fatherVolume > 0.0)
+                ? (lgr_grid.getCellVolume(cell) / fatherVolume)
+                : 0.0;
+        }
+
         initFile.write("PORV", singlePrecision(local_porv));
     }
 
@@ -475,10 +491,7 @@ namespace {
     void writeGridGeometryLGRCell(const ::Opm::EclipseGrid&         grid,
                                   const ::Opm::EclipseGridLGR&      lgr_grid,
                                   const ::Opm::UnitSystem&          units,
-                                        ::Opm::EclIO::OutputStream::Init& initFile,
-                                  const                  int        nx,
-                                  const                  int        ny,
-                                  const                  int        nz)
+                                        ::Opm::EclIO::OutputStream::Init& initFile)
     {
         const auto length = ::Opm::UnitSystem::measure::length;
         auto convert_length = [&units](std::vector<float>& depth)
@@ -492,14 +505,15 @@ namespace {
         auto dz    = std::vector<float>{};  dz   .reserve(nAct);
         auto depth = singlePrecision(lgr_grid.getLGRCell_all_depth(grid));
 
+        // Straight from the refined cell, rather than the father's dimensions
+        // over a subdivision count: the children of one father differ in size
+        // once the box is graded.
         for (auto cell = 0*nAct; cell < nAct; ++cell) {
-            const auto local_global_cell = lgr_grid.getGlobalIndex(cell);
-            const auto globCell = grid.getLGR_father(local_global_cell, lgr_grid.get_lgr_tag());
-            const auto& dims     = grid.getCellDims(globCell);
+            const auto& dims = lgr_grid.getCellDims(lgr_grid.getGlobalIndex(cell));
 
-            dx   .push_back(units.from_si(length, dims[0])/nx);
-            dy   .push_back(units.from_si(length, dims[1])/ny);
-            dz   .push_back(units.from_si(length, dims[2])/nz);
+            dx   .push_back(units.from_si(length, dims[0]));
+            dy   .push_back(units.from_si(length, dims[1]));
+            dz   .push_back(units.from_si(length, dims[2]));
         }
 
         convert_length(depth);
@@ -967,7 +981,6 @@ namespace {
                 const ::Opm::EclipseGridLGR& lgr_grid = grid.getLGRCell(index);
                 const auto lgr_label = lgr_grid.get_lgr_tag();
                 const auto deckIdx = grid.get_lgr_cell_index(lgr_label);
-                const std::array<int,3> subdivisions = grid.getCellSubdivisionRatioLGR(lgr_label);
                 // Two father mappings, and they are not interchangeable:
                 // cartesian_fathers indexes the Cartesian-sized PORV, and
                 // active_fathers the active-sized field props and simulator
@@ -975,10 +988,8 @@ namespace {
                 std::vector<int> cartesian_fathers = lgr_grid.getLGRCell_global_father(grid);
                 std::vector<int> active_fathers = lgr_grid.getLGRCell_active_father(grid);
                 writeInitFileHeaderLGRCell(es, lgr_grid, schedule, initFile, deckIdx+1);
-                writePoreVolumeLGRCell(porv, cartesian_fathers,
-                subdivisions[0]*subdivisions[1]*subdivisions[2], initFile);
-                writeGridGeometryLGRCell(grid, lgr_grid, units, initFile,
-                                subdivisions[0], subdivisions[1], subdivisions[2]);
+                writePoreVolumeLGRCell(porv, cartesian_fathers, grid, lgr_grid, initFile);
+                writeGridGeometryLGRCell(grid, lgr_grid, units, initFile);
                 writeDoubleCellProperties(es, units, initFile, active_fathers);
                 const auto& simProp = fullProperties ? simProps[deckIdx + 1] : simProps[0];
                 writeSimulatorPropertiesLGRCell(fullProperties ? lgr_grid : grid, simProp, initFile, active_fathers, fullProperties);
