@@ -29,11 +29,10 @@ namespace Opm {
     class Phases;
     class Schedule;
     class EclipseGrid;
-    class UnitSystem;
     class SummaryState;
 } // Opm
 
-namespace Opm { namespace RestartIO { namespace Helpers {
+namespace Opm::RestartIO::Helpers {
 
     class AggregateMSWData
     {
@@ -42,7 +41,6 @@ namespace Opm { namespace RestartIO { namespace Helpers {
 
         void captureDeclaredMSWData(const Opm::Schedule&     sched,
                                     const std::size_t        rptStep,
-                                    const Opm::UnitSystem&   units,
                                     const std::vector<int>&  inteHead,
                                     const Opm::EclipseGrid&  grid,
                                     const Opm::SummaryState& smry,
@@ -86,6 +84,6 @@ namespace Opm { namespace RestartIO { namespace Helpers {
         WindowedMatrix<int> iLBR_;
     };
 
-}}} // Opm::RestartIO::Helpers
+} // Opm::RestartIO::Helpers
 
-#endif // OPM_AGGREGATE_WELL_DATA_HPP
+#endif // OPM_AGGREGATE_MSW_DATA_HPP

@@ -622,7 +622,7 @@ BOOST_AUTO_TEST_CASE(Declared_Connection_Data)
 
     const auto& [wrc, sum_state] = wr(simCase.sched);
     auto amconn = Opm::RestartIO::Helpers::AggregateConnectionData {ih.value};
-    amconn.captureDeclaredConnData(simCase.sched, simCase.grid, simCase.es.getUnits(), wrc, sum_state, rptStep);
+    amconn.captureDeclaredConnData(simCase.sched, simCase.grid, wrc, sum_state, rptStep);
 
     // ICONN (PROD)
     {
@@ -840,7 +840,6 @@ BOOST_AUTO_TEST_CASE(InactiveCell)
     auto conn0 = Opm::RestartIO::Helpers::AggregateConnectionData{ih.value};
     conn0.captureDeclaredConnData(simCase.sched,
                                   simCase.grid,
-                                  simCase.es.getUnits(),
                                   wrc,
                                   sum_state,
                                   rptStep);
@@ -853,7 +852,6 @@ BOOST_AUTO_TEST_CASE(InactiveCell)
     auto conn1 = Opm::RestartIO::Helpers::AggregateConnectionData{ih.value};
     conn1.captureDeclaredConnData(simCase.sched,
                                   simCase.grid,
-                                  simCase.es.getUnits(),
                                   wrc,
                                   sum_state,
                                   rptStep);
@@ -1122,9 +1120,7 @@ BOOST_AUTO_TEST_CASE(Basic)
     {
         const auto rptStep = std::size_t {0};
 
-        amconn.captureDeclaredConnData(cse.sched,
-                                       cse.grid,
-                                       cse.es.getUnits(),
+        amconn.captureDeclaredConnData(cse.sched, cse.grid,
                                        wrc, sum_state, rptStep);
 
         // W1 (injector)
@@ -1157,9 +1153,7 @@ BOOST_AUTO_TEST_CASE(Basic)
     {
         const auto rptStep = std::size_t {1};
 
-        amconn.captureDeclaredConnData(cse.sched,
-                                       cse.grid,
-                                       cse.es.getUnits(),
+        amconn.captureDeclaredConnData(cse.sched, cse.grid,
                                        wrc, sum_state, rptStep);
 
         // W1 (injector)

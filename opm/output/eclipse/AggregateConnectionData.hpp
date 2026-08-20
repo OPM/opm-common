@@ -28,34 +28,32 @@
 namespace Opm {
     class EclipseGrid;
     class Schedule;
-    class UnitSystem;
     class SummaryState;
 } // Opm
 
-namespace Opm { namespace data {
+namespace Opm::data {
     class Wells;
-}}
+} // Opm::data
 
-namespace Opm { namespace RestartIO { namespace Helpers {
+namespace Opm::RestartIO::Helpers {
 
     class AggregateConnectionData
     {
     public:
         explicit AggregateConnectionData(const std::vector<int>& inteHead);
 
-        void captureDeclaredConnData(const Opm::Schedule&        sched,
-                                     const Opm::EclipseGrid&     grid,
-                                     const Opm::UnitSystem&      units,
-                                     const Opm::data::Wells&     xw,
-                                     const Opm::SummaryState&    summary_state,
-                                     const std::size_t           sim_step);
-        void captureDeclaredConnDataLGR(const Opm::Schedule&        sched,
-                                        const Opm::EclipseGrid&     grid,
-                                        const Opm::UnitSystem&      units,
-                                        const Opm::data::Wells&     xw,
-                                        const Opm::SummaryState&    summary_state,
-                                        const std::size_t           sim_step,
-                                        const std::string&          lgr_tag);
+        void captureDeclaredConnData(const Schedule&     sched,
+                                     const EclipseGrid&  grid,
+                                     const data::Wells&  xw,
+                                     const SummaryState& summary_state,
+                                     const std::size_t   sim_step);
+
+        void captureDeclaredConnDataLGR(const Schedule&     sched,
+                                        const EclipseGrid&  grid,
+                                        const data::Wells&  xw,
+                                        const SummaryState& summary_state,
+                                        const std::size_t   sim_step,
+                                        const std::string&  lgr_tag);
 
         const std::vector<int>& getIConn() const
         {
@@ -78,6 +76,6 @@ namespace Opm { namespace RestartIO { namespace Helpers {
         WindowedMatrix<double> xConn_;
     };
 
-}}} // Opm::RestartIO::Helpers
+} // Opm::RestartIO::Helpers
 
 #endif // OPM_AGGREGATE_CONNECTION_DATA_HPP

@@ -21,10 +21,12 @@
 
 #include <opm/common/OpmLog/OpmLog.hpp>
 
-#include <opm/output/eclipse/WriteRestartHelpers.hpp>
+#include <opm/output/data/Wells.hpp>
+
 #include <opm/output/eclipse/VectorItems/group.hpp>
-#include <opm/output/eclipse/VectorItems/well.hpp>
 #include <opm/output/eclipse/VectorItems/intehead.hpp>
+#include <opm/output/eclipse/VectorItems/well.hpp>
+#include <opm/output/eclipse/WriteRestartHelpers.hpp>
 
 #include <opm/input/eclipse/Schedule/GasLiftOpt.hpp>
 #include <opm/input/eclipse/Schedule/Group/GConSump.hpp>
@@ -36,7 +38,6 @@
 #include <opm/input/eclipse/Schedule/ScheduleState.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
-#include <opm/output/data/Wells.hpp>
 
 #include <algorithm>
 #include <cassert>
@@ -44,7 +45,7 @@
 #include <cstring>
 #include <exception>
 #include <initializer_list>
-#include <map>
+#include <numeric>
 #include <optional>
 #include <stdexcept>
 #include <string>
@@ -81,38 +82,52 @@ int nwgmax(const std::vector<int>& inteHead)
 }
 
 namespace value = ::Opm::RestartIO::Helpers::VectorItems::IGroup::Value;
+
 value::GuideRateMode
-GuideRateModeFromGuideRateProdTarget(Opm::Group::GuideRateProdTarget grpt)
+GuideRateModeFromGuideRateProdTarget(const Opm::Group::GuideRateProdTarget grpt)
 {
     switch (grpt) {
-        case Opm::Group::GuideRateProdTarget::OIL:
-            return value::GuideRateMode::Oil;
-        case Opm::Group::GuideRateProdTarget::WAT:
-            return value::GuideRateMode::Water;
-        case Opm::Group::GuideRateProdTarget::GAS:
-            return value::GuideRateMode::Gas;
-        case Opm::Group::GuideRateProdTarget::LIQ:
-            return value::GuideRateMode::Liquid;
-        case Opm::Group::GuideRateProdTarget::RES:
-            return value::GuideRateMode::Resv;
-        case Opm::Group::GuideRateProdTarget::COMB:
-            return value::GuideRateMode::Comb;
-        case Opm::Group::GuideRateProdTarget::WGA:
-            return value::GuideRateMode::None;
-        case Opm::Group::GuideRateProdTarget::CVAL:
-            return value::GuideRateMode::None;
-        case Opm::Group::GuideRateProdTarget::INJV:
-            return value::GuideRateMode::None;
-        case Opm::Group::GuideRateProdTarget::POTN:
-            return value::GuideRateMode::Potn;
-        case Opm::Group::GuideRateProdTarget::FORM:
-            return value::GuideRateMode::Form;
-        case Opm::Group::GuideRateProdTarget::NO_GUIDE_RATE:
-            return value::GuideRateMode::None;
+    case Opm::Group::GuideRateProdTarget::OIL:
+        return value::GuideRateMode::Oil;
 
-        default:
-            throw std::logic_error(fmt::format("Not recognized value: {} for GuideRateProdTarget",
-                                               static_cast<int>(grpt)));
+    case Opm::Group::GuideRateProdTarget::WAT:
+        return value::GuideRateMode::Water;
+
+    case Opm::Group::GuideRateProdTarget::GAS:
+        return value::GuideRateMode::Gas;
+
+    case Opm::Group::GuideRateProdTarget::LIQ:
+        return value::GuideRateMode::Liquid;
+
+    case Opm::Group::GuideRateProdTarget::RES:
+        return value::GuideRateMode::Resv;
+
+    case Opm::Group::GuideRateProdTarget::COMB:
+        return value::GuideRateMode::Comb;
+
+    case Opm::Group::GuideRateProdTarget::WGA:
+        return value::GuideRateMode::None;
+
+    case Opm::Group::GuideRateProdTarget::CVAL:
+        return value::GuideRateMode::None;
+
+    case Opm::Group::GuideRateProdTarget::INJV:
+        return value::GuideRateMode::None;
+
+    case Opm::Group::GuideRateProdTarget::POTN:
+        return value::GuideRateMode::Potn;
+
+    case Opm::Group::GuideRateProdTarget::FORM:
+        return value::GuideRateMode::Form;
+
+    case Opm::Group::GuideRateProdTarget::NO_GUIDE_RATE:
+        return value::GuideRateMode::None;
+
+    default:
+        throw std::logic_error {
+            fmt::format("Unrecognized value '{}' for GuideRateProdTarget",
+                        static_cast<int>(grpt))
+        };
     }
 }
 
@@ -142,13 +157,13 @@ void groupLoop(const std::vector<const Opm::Group*>& groups,
 
     for (std::size_t i = 0; i < groups.size(); ++i) {
         const auto* group = groups[i];
-    // for (const auto* group : groups) {
-        //groupID must be furthered studied to be sure it is correct
+
         groupID += 1;
         if (group == nullptr) {
             groupID -= 1;
             continue;
         }
+
         if (group->wellgroup() &&
             !sched_state.well_group_contains_lgr(*group, lgr_tag)) {
             groupID -= 1;
@@ -165,6 +180,7 @@ int currentGroupLevel(const Opm::Schedule& sched,
 {
     auto current = group;
     int level = 0;
+
     while (current.name() != "FIELD") {
         level += 1;
         current = sched.getGroup(current.parent(), simStep);
@@ -179,14 +195,19 @@ void groupCurrentlyProductionControllable(const Opm::Schedule& sched,
                                           const std::size_t simStep,
                                           bool& controllable)
 {
-    using wellCtrlMode   = ::Opm::RestartIO::Helpers::VectorItems::IWell::Value::WellCtrlMode;
-    if (controllable)
+    using wellCtrlMode = ::Opm::RestartIO::Helpers::VectorItems::IWell::Value::WellCtrlMode;
+
+    if (controllable) {
         return;
+    }
 
     for (const auto& group_name : group.groups()) {
         const auto& sub_group = sched.getGroup(group_name, simStep);
-        auto cur_prod_ctrl = (sub_group.name() == "FIELD") ? static_cast<int>(sumState.get("FMCTP", -1)) :
-                             static_cast<int>(sumState.get_group_var(sub_group.name(), "GMCTP", -1));
+
+        auto cur_prod_ctrl = (sub_group.name() == "FIELD")
+            ? static_cast<int>(sumState.get("FMCTP", -1))
+            : static_cast<int>(sumState.get_group_var(sub_group.name(), "GMCTP", -1));
+
         if (cur_prod_ctrl <= 0) {
             //come here if group is controlled by higher level
             groupCurrentlyProductionControllable(sched, sumState, sched.getGroup(group_name, simStep), simStep, controllable);
@@ -195,6 +216,7 @@ void groupCurrentlyProductionControllable(const Opm::Schedule& sched,
 
     for (const auto& well_name : group.wells()) {
         const auto& well = sched.getWell(well_name, simStep);
+
         if (well.isProducer()) {
             int cur_prod_ctrl = 0;
             // Find control mode for well
@@ -932,18 +954,18 @@ void staticContrib(const Opm::Schedule&     sched,
     }
 }
 
-
 template <class IGrpArray>
-void staticContrib_pseudo_well_group_LGR(std::vector<std::reference_wrapper<const Opm::Well>>& filtered_wells,
-                                         const int                nwgmax,
-                                         IGrpArray&               iGrp)
+void staticContrib_pseudo_well_group_LGR(std::vector<const Opm::Well*>& filtered_wells,
+                                         const int                      nwgmax,
+                                         IGrpArray&                     iGrp)
 {
     using IGroup = ::Opm::RestartIO::Helpers::VectorItems::IGroup::index;
     namespace Value = ::Opm::RestartIO::Helpers::VectorItems::IGroup::Value;
+
     int igrpCount = 0;
 
-    for (const auto& well : filtered_wells) {
-        iGrp[igrpCount] = well.get().seqIndexLGR() + 1;
+    for (const auto* well : filtered_wells) {
+        iGrp[igrpCount] = well->seqIndexLGR() + 1;
         igrpCount += 1;
     }
 
@@ -953,17 +975,16 @@ void staticContrib_pseudo_well_group_LGR(std::vector<std::reference_wrapper<cons
     iGrp[nwgmax + IGroup::ParentGroup] = 2; // Pseudo well group always has FIELD as parent group
 }
 
-
 template <class IGrpArray>
-void staticContrib_field_group_LGR(const int                nwgmax,
-                                   IGrpArray&               iGrp)
+void staticContrib_field_group_LGR(const int  nwgmax,
+                                   IGrpArray& iGrp)
 {
     using IGroup = ::Opm::RestartIO::Helpers::VectorItems::IGroup::index;
+
     iGrp[0] = 1; // Pseudo well group for LGRs alls belong to FIELD LGR
     iGrp[nwgmax + IGroup::NoOfChildGroupsWells] = 1; // FIELD always has one child group - the pseudo well group for LGRs
     iGrp[nwgmax + IGroup::GroupType] = 1; // NodeGroup is default for lgr field group
 }
-
 
 template <class IGrpArray>
 void staticContrib_empty_field_group_LGR(const int          nwgmax,
@@ -1464,142 +1485,127 @@ void staticContrib_empty_field_group_LGR(SGrpArray& sGrp)
 } // SGrp
 
 namespace XGrp {
-std::size_t entriesPerGroup(const std::vector<int>& inteHead)
-{
-    return inteHead[Opm::RestartIO::Helpers::VectorItems::NXGRPZ];
-}
-
-Opm::RestartIO::Helpers::WindowedArray<double>
-allocate(const std::vector<int>& inteHead)
-{
-    using WV = Opm::RestartIO::Helpers::WindowedArray<double>;
-
-    return WV {
-        WV::NumWindows{ ngmaxz(inteHead) },
-        WV::WindowSize{ entriesPerGroup(inteHead) }
+    static const auto fieldKeyToIndex = std::vector<std::pair<std::string_view, std::size_t>> {
+        {"FOPR", 0},    {"FWPR", 1},    {"FGPR", 2},    {"FVPR", 3},    {"FWIR", 5},   {"FGIR", 6},
+        {"FWCT", 8},    {"FGOR", 9},    {"FOPT", 10},   {"FWPT", 11},   {"FGPT", 12},  {"FVPT", 13},
+        {"FWIT", 15},   {"FGIT", 16},   {"FVIT", 17},   {"FGCR", 19},   {"FGCT", 21},  {"FOPP", 22},
+        {"FWPP", 23},   {"FGIMR", 51},  {"FGIMT", 52},  {"FOPTS", 73},  {"FGPTS", 74}, {"FOPTH", 135},
+        {"FWPTH", 139}, {"FWITH", 140}, {"FGPTH", 143}, {"FGITH", 144},
     };
-}
 
-// here define the dynamic group quantities to be written to the restart file
-template <class XGrpArray>
-void dynamicContrib(const std::vector<std::string>&      restart_group_keys,
-                    const std::vector<std::string>&      restart_field_keys,
-                    const std::map<std::string, std::size_t>& groupKeyToIndex,
-                    const std::map<std::string, std::size_t>& fieldKeyToIndex,
-                    const Opm::Group&                    group,
-                    const Opm::SummaryState&             sumState,
-                    XGrpArray&                           xGrp)
-{
-    using Ix = ::Opm::RestartIO::Helpers::VectorItems::XGroup::index;
+    static const auto groupKeyToIndex = std::vector<std::pair<std::string_view, std::size_t>> {
+        {"GOPR", 0},    {"GWPR", 1},    {"GGPR", 2},    {"GVPR", 3},    {"GWIR", 5},    {"GGIR", 6},
+        {"GWCT", 8},    {"GGOR", 9},    {"GOPT", 10},   {"GWPT", 11},   {"GGPT", 12},   {"GVPT", 13},
+        {"GWIT", 15},   {"GGIT", 16},   {"GVIT", 17},   {"GGCR", 19},   {"GGCT", 21},   {"GOPP", 22},
+        {"GWPP", 23},   {"GGIMR", 51},  {"GGIMT", 52},  {"GOPTS", 73},  {"GGPTS", 74},  {"GOPGR", 85},
+        {"GWPGR", 86},  {"GGPGR", 87},  {"GVPGR", 88},  {"GOIGR", 89},  {"GWIGR", 91},  {"GGIGR", 93},
+        {"GOPTH", 135}, {"GWPTH", 139}, {"GWITH", 140}, {"GGPTH", 143}, {"GGITH", 144},
+    };
 
-    std::string groupName = group.name();
-    const std::vector<std::string>& keys = (groupName == "FIELD")
-                                           ? restart_field_keys : restart_group_keys;
-    const std::map<std::string, std::size_t>& keyToIndex = (groupName == "FIELD")
-            ? fieldKeyToIndex : groupKeyToIndex;
+    static const auto wellKeyToIndex = std::vector<std::pair<std::string_view, std::size_t>> {
+        {"WOPR", 0},    {"WWPR", 1},    {"WGPR", 2},    {"WVPR", 3},    {"WWIR", 5},
+        {"WGIR", 6},    {"WWCT", 8},    {"WGOR", 9},    {"WOPT", 10},   {"WWPT", 11},
+        {"WGPT", 12},   {"WVPT", 13},   {"WWIT", 15},   {"WGIT", 16},   {"WVIT", 17},
+        //{"WGCR", 19},
+        {"WGCT", 21},   {"WOPP", 22},   {"WWPP", 23},   {"WOPTS", 73},  {"WGPTS", 74},
+        {"WOPTH", 135}, {"WWPTH", 139}, {"WWITH", 140}, {"WGPTH", 143}, {"WGITH", 144},
+    };
 
-    for (const auto& key : keys) {
-        std::string compKey = (groupName == "FIELD")
-                              ? key : key + ":" + groupName;
-
-        if (sumState.has(compKey)) {
-            const double keyValue = sumState.get(compKey);
-            const auto itr = keyToIndex.find(key);
-            xGrp[itr->second] = keyValue;
-        }
+    std::size_t entriesPerGroup(const std::vector<int>& inteHead)
+    {
+        return inteHead[Opm::RestartIO::Helpers::VectorItems::NXGRPZ];
     }
 
-    xGrp[Ix::OilPrGuideRate_2]  = xGrp[Ix::OilPrGuideRate];
-    xGrp[Ix::WatPrGuideRate_2]  = xGrp[Ix::WatPrGuideRate];
-    xGrp[Ix::GasPrGuideRate_2]  = xGrp[Ix::GasPrGuideRate];
-    xGrp[Ix::VoidPrGuideRate_2] = xGrp[Ix::VoidPrGuideRate];
+    Opm::RestartIO::Helpers::WindowedArray<double>
+    allocate(const std::vector<int>& inteHead)
+    {
+        using WV = Opm::RestartIO::Helpers::WindowedArray<double>;
 
-    xGrp[Ix::WatInjGuideRate_2] = xGrp[Ix::WatInjGuideRate];
+        return WV {
+            WV::NumWindows { ngmaxz(inteHead) },
+            WV::WindowSize { entriesPerGroup(inteHead) }
+        };
+    }
 
-    std::fill(xGrp.begin() + Ix::TracerOffset, xGrp.end(), 0);
-}
+    // Populate restart file's XGRP array for this group.
+    template <class XGrpArray>
+    void dynamicContrib(const Opm::Group&        group,
+                        const Opm::SummaryState& sumState,
+                        XGrpArray&               xGrp)
+    {
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::XGroup::index;
 
-
-template <class XGrpArray>
-void dynamicContribLGR(const std::vector<std::reference_wrapper<const Opm::Well>>& filtered_wells,
-                       const std::vector<std::string>&                      restart_well_keys,
-                       const std::map<std::string, std::size_t>&                 wellKeyToIndex,
-                       const Opm::SummaryState&                             sumState,
-                       XGrpArray&                                           xGrp)
-{
-
-    auto key_list = [&filtered_wells](const std::string& local_key) {
-                        std::vector<std::string> all_well_keys;
-                        all_well_keys.reserve(filtered_wells.size());
-                        std::ranges::transform(filtered_wells, std::back_inserter(all_well_keys),
-                                               [&local_key](const auto& well)
-                                               { return local_key + ":" + well.get().name(); });
-                        return all_well_keys;
-                    };
-    using Ix = ::Opm::RestartIO::Helpers::VectorItems::XGroup::index;
-
-    for (const auto& key : restart_well_keys) {
-        const auto keyPos = wellKeyToIndex.find(key);
-        if (keyPos == wellKeyToIndex.end()) {
-            // Shouldn't really happen...
-            continue;
-        }
-        auto& xGrpValue = xGrp[keyPos->second];
-        for (const auto& compKey : key_list(key)) {
-            if (!sumState.has(compKey)) {
-                continue;
+        if (const auto& groupName = group.name(); groupName == "FIELD") {
+            for (const auto& [key, idx] : fieldKeyToIndex) {
+                xGrp[idx] = sumState.get(std::string{ key }, 0.0);
             }
-            xGrpValue += sumState.get(compKey);
         }
+        else {
+            for (const auto& [key, idx] : groupKeyToIndex) {
+                xGrp[idx] = sumState.get(fmt::format("{}:{}", key, groupName), 0.0);
+            }
+        }
+
+        xGrp[Ix::OilPrGuideRate_2] = xGrp[Ix::OilPrGuideRate];
+        xGrp[Ix::WatPrGuideRate_2] = xGrp[Ix::WatPrGuideRate];
+        xGrp[Ix::GasPrGuideRate_2] = xGrp[Ix::GasPrGuideRate];
+        xGrp[Ix::VoidPrGuideRate_2] = xGrp[Ix::VoidPrGuideRate];
+        xGrp[Ix::WatInjGuideRate_2] = xGrp[Ix::WatInjGuideRate];
+
+        std::fill(xGrp.begin() + Ix::TracerOffset, xGrp.end(), 0);
     }
 
-    xGrp[Ix::OilPrGuideRate_2]  = xGrp[Ix::OilPrGuideRate];
-    xGrp[Ix::WatPrGuideRate_2]  = xGrp[Ix::WatPrGuideRate];
-    xGrp[Ix::GasPrGuideRate_2]  = xGrp[Ix::GasPrGuideRate];
-    xGrp[Ix::VoidPrGuideRate_2] = xGrp[Ix::VoidPrGuideRate];
+    template <class XGrpArray>
+    void
+    dynamicContribLGR(const std::vector<const Opm::Well*>& filtered_wells,
+                      const Opm::SummaryState&             sumState,
+                      XGrpArray&                           xGrp)
+    {
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::XGroup::index;
 
-    xGrp[Ix::WatInjGuideRate_2] = xGrp[Ix::WatInjGuideRate];
+        for (const auto& [key, idx] : wellKeyToIndex) {
+            xGrp[idx] += std::accumulate(filtered_wells.begin(), filtered_wells.end(), 0.0,
+                [&sumState, &key](double acc, const Opm::Well* well) {
+                    return acc + sumState.get(fmt::format("{}:{}", key, well->name()), 0.0);
+                });
+        }
 
-    std::fill(xGrp.begin() + Ix::TracerOffset, xGrp.end(), 0);
-}
+        xGrp[Ix::OilPrGuideRate_2] = xGrp[Ix::OilPrGuideRate];
+        xGrp[Ix::WatPrGuideRate_2] = xGrp[Ix::WatPrGuideRate];
+        xGrp[Ix::GasPrGuideRate_2] = xGrp[Ix::GasPrGuideRate];
+        xGrp[Ix::VoidPrGuideRate_2] = xGrp[Ix::VoidPrGuideRate];
+        xGrp[Ix::WatInjGuideRate_2] = xGrp[Ix::WatInjGuideRate];
 
-
+        std::fill(xGrp.begin() + Ix::TracerOffset, xGrp.end(), 0);
+    }
 
 } // XGrp
 
 namespace ZGrp {
-std::size_t entriesPerGroup(const std::vector<int>& inteHead)
-{
-    return inteHead[Opm::RestartIO::Helpers::VectorItems::NZGRPZ];
-}
+    std::size_t entriesPerGroup(const std::vector<int>& inteHead)
+    {
+        return inteHead[Opm::RestartIO::Helpers::VectorItems::NZGRPZ];
+    }
 
-Opm::RestartIO::Helpers::WindowedArray<
-    Opm::EclIO::PaddedOutputString<8>
-    >
-allocate(const std::vector<int>& inteHead)
-{
-    using WV = Opm::RestartIO::Helpers::WindowedArray<
-        Opm::EclIO::PaddedOutputString<8>
-        >;
+    Opm::RestartIO::Helpers::WindowedArray<Opm::EclIO::PaddedOutputString<8>>
+    allocate(const std::vector<int>& inteHead)
+    {
+        using WV = Opm::RestartIO::Helpers::WindowedArray<Opm::EclIO::PaddedOutputString<8>>;
 
-    return WV {
-        WV::NumWindows{ ngmaxz(inteHead) },
-        WV::WindowSize{ entriesPerGroup(inteHead) }
-    };
-}
+        return WV {WV::NumWindows {ngmaxz(inteHead)}, WV::WindowSize {entriesPerGroup(inteHead)}};
+    }
 
-template <class ZGroupArray>
-void staticContrib(const Opm::Group& group, ZGroupArray& zGroup)
-{
-    zGroup[0] = group.name();
-}
+    template <class ZGroupArray>
+    void staticContrib(const Opm::Group& group, ZGroupArray& zGroup)
+    {
+        zGroup[0] = group.name();
+    }
 
-template <class ZGroupArray>
-void staticContribLGR(const std::string& group_name, ZGroupArray& zGroup)
-{
-    zGroup[0] = group_name;
-}
-
+    template <class ZGroupArray>
+    void staticContribLGR(const std::string& group_name, ZGroupArray& zGroup)
+    {
+        zGroup[0] = group_name;
+    }
 
 } // ZGrp
 
@@ -1621,16 +1627,15 @@ AggregateGroupData(const std::vector<int>& inteHead)
 
 void
 Opm::RestartIO::Helpers::AggregateGroupData::
-captureDeclaredGroupData(const Opm::Schedule&     sched,
-                         const Opm::UnitSystem&   units,
-                         const std::size_t        simStep,
-                         const Opm::SummaryState& sumState,
-                         const std::vector<int>&  inteHead)
+captureDeclaredGroupData(const Schedule&         sched,
+                         const std::size_t       simStep,
+                         const SummaryState&     sumState,
+                         const std::vector<int>& inteHead)
 {
     const auto& curGroups = sched.restart_groups(simStep);
     const auto& sched_state = sched[simStep];
 
-    groupLoop(curGroups, [&sched, simStep, sumState, this]
+    groupLoop(curGroups, [&sched, simStep, &sumState, this]
               (const Group& group, const std::size_t groupID) -> void
     {
         auto ig = this->iGroup_[groupID];
@@ -1641,7 +1646,7 @@ captureDeclaredGroupData(const Opm::Schedule&     sched,
 
     // Define Static Contributions to SGrp Array.
     groupLoop(curGroups,
-              [&sumState, &units, &sched_state, this]
+              [&units = sched.getUnits(), &sumState, &sched_state, this]
               (const Group& group, const std::size_t groupID) -> void
     {
         auto sg = this->sGroup_[groupID];
@@ -1655,19 +1660,15 @@ captureDeclaredGroupData(const Opm::Schedule&     sched,
     {
         auto xg = this->xGroup_[groupID];
 
-        XGrp::dynamicContrib(this->restart_group_keys, this->restart_field_keys,
-                             this->groupKeyToIndex, this->fieldKeyToIndex, group,
-                             sumState, xg);
+        XGrp::dynamicContrib(group, sumState, xg);
     });
 
     // Define Static Contributions to ZGrp Array.
-    groupLoop(curGroups, [this, &inteHead]
+    groupLoop(curGroups, [this, fieldIx = ngmaxz(inteHead) - 1]
               (const Group& group, const std::size_t /* groupID */) -> void
     {
-        std::size_t group_index = group.insert_index() - 1;
-        if (group.name() == "FIELD") {
-            group_index = ngmaxz(inteHead) - 1;
-        }
+        const auto group_index = (group.name() == "FIELD")
+            ? fieldIx : group.insert_index() - 1;
 
         auto zg = this->zGroup_[ group_index ];
 
@@ -1677,65 +1678,41 @@ captureDeclaredGroupData(const Opm::Schedule&     sched,
 
 void
 Opm::RestartIO::Helpers::AggregateGroupData::
-captureDeclaredGroupDataLGR(const Opm::Schedule&     sched,
-                            [[maybe_unused]] const Opm::UnitSystem&   units,
-                            const std::size_t        simStep,
-                            const Opm::SummaryState& sumState,
-                            const std::string&       lgr_tag)
+captureDeclaredGroupDataLGR(const Schedule&     sched,
+                            const std::size_t   simStep,
+                            const SummaryState& sumState,
+                            const std::string&  lgr_tag)
 {
-    const auto& curGroups = sched.restart_groups(simStep);
     const auto& sched_state = sched[simStep];
 
-    const auto all_wells = sched.getWells(simStep);
-    std::vector<std::reference_wrapper<const Opm::Well>> filtered_wells;
-    std::vector<std::reference_wrapper<const Opm::Group>> filtered_groups;
-
     // Filter wells that belong to the specified LGR tag
-    for (const auto& well : all_wells) {
-        auto well_lgr_tag = well.get_lgr_well_tag().value_or("");
-        if ((!well.is_lgr_well()) || (well_lgr_tag != lgr_tag)){
-            continue; // Skip wells that are not tagged with the specified LGR tag
+    auto filtered_wells = std::vector<const Well*>{};
+    for (const auto& wellPtrPair : sched_state.wells) {
+        if (!wellPtrPair.second->is_lgr_well()) {
+            continue; // Skip wells that are not LGR wells
         }
-        filtered_wells.push_back(std::cref(well));
+
+        if (wellPtrPair.second->get_lgr_well_tag().value_or("") != lgr_tag) {
+            continue; // Skip wells that do not have an LGR tag
+        }
+
+        filtered_wells.push_back(wellPtrPair.second.get());
     }
 
-    std::ranges::sort(filtered_wells,
-                      [](const auto& a, const auto& b)
-                      { return a.get().seqIndex() < b.get().seqIndex(); });
+    if (!filtered_wells.empty()) {
+        std::ranges::sort(filtered_wells,
+                          [](const Well* a, const Well* b)
+                          { return a->seqIndex() < b->seqIndex(); });
 
-    const bool has_lgr_well = !filtered_wells.empty();
-
-    // Filter groups that belong to the specified LGR tag but not FIELD
-    for (std::size_t i = 0; i < curGroups.size() - 1 ; ++i) {
-        const auto* group = curGroups[i];
-        if (group == nullptr)  {
-            continue;
-        }
-        if (sched_state.group_contains_lgr(*group, lgr_tag))
-        {
-            filtered_groups.push_back(std::cref(*group));
-        }
-    }
-
-    // Filling IGRP arrays
-    if (has_lgr_well){
         {
             auto ig = this->iGroup_[0];
-            IGrp::staticContrib_pseudo_well_group_LGR( filtered_wells, this->nWGMax_, ig);
+            IGrp::staticContrib_pseudo_well_group_LGR(filtered_wells, this->nWGMax_, ig);
         }
         {
             auto ig = this->iGroup_[1];
-            IGrp::staticContrib_field_group_LGR( this->nWGMax_, ig);
+            IGrp::staticContrib_field_group_LGR(this->nWGMax_, ig);
         }
-    }
-    else {
-        auto ig = this->iGroup_[1];
-        IGrp::staticContrib_empty_field_group_LGR( this->nWGMax_, ig);
-    }
 
-
-    // Filling SGRP array
-    if (has_lgr_well){
         {
             auto sg = this->sGroup_[0]; // Pseudo-well group
             SGrp::staticContrib_pseudo_well_group_LGR(sg);
@@ -1744,34 +1721,46 @@ captureDeclaredGroupDataLGR(const Opm::Schedule&     sched,
             auto sg = this->sGroup_[1]; // Field Group
             SGrp::staticContrib_field_group_LGR(sg);
         }
+
+        {
+            auto xg = this->xGroup_[0];
+            XGrp::dynamicContribLGR(filtered_wells, sumState, xg);
+        }
+        {
+            auto xg = this->xGroup_[1];
+            XGrp::dynamicContribLGR(filtered_wells, sumState, xg);
+        }
     }
     else {
+        auto ig = this->iGroup_[1];
+        IGrp::staticContrib_empty_field_group_LGR(this->nWGMax_, ig);
+
         auto sg = this->sGroup_[1]; // Empty Field Group
         SGrp::staticContrib_empty_field_group_LGR(sg);
     }
 
-    // Filling XGRP array
-    if (has_lgr_well){
-        {
-            auto xg = this->xGroup_[0];
-            XGrp::dynamicContribLGR(filtered_wells, this->restart_well_keys, this->wellKeyToIndex,
-                                          sumState, xg);
+    // Filter groups that belong to the specified LGR tag but not FIELD
+    const auto curGroups = sched.restart_groups(simStep);
+    auto filtered_groups = std::vector<const Group*>{};
+    for (std::size_t i = 0; i < curGroups.size() - 1 ; ++i) {
+        if (curGroups[i] == nullptr) {
+            continue;
         }
-        {
-            auto xg = this->xGroup_[1];
-            XGrp::dynamicContribLGR(filtered_wells, this->restart_well_keys, this->wellKeyToIndex,
-                                          sumState, xg);
+
+        if (sched_state.group_contains_lgr(*curGroups[i], lgr_tag)) {
+            filtered_groups.push_back(curGroups[i]);
         }
     }
 
-    // Filling ZGRP array
-    const std::string group_name =
-                                 has_lgr_well ? filtered_groups.back().get().name() : "";
-
     {
+        const auto& group_name = !filtered_wells.empty() && !filtered_groups.empty()
+            ? filtered_groups.back()->name()
+            : std::string{};
+
         auto zg = this->zGroup_[0];
         ZGrp::staticContribLGR(group_name, zg);
     }
+
     {
         auto zg = this->zGroup_[1];
         ZGrp::staticContribLGR("FIELD", zg);

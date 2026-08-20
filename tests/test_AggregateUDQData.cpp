@@ -332,8 +332,7 @@ BOOST_AUTO_TEST_CASE (Declared_UDQ_data)
 
             {
                 auto group_aggregator = Opm::RestartIO::Helpers::AggregateGroupData(ih);
-                group_aggregator.captureDeclaredGroupData(sched, es.getUnits(),
-                                                          rptStep - 1, st, ih);
+                group_aggregator.captureDeclaredGroupData(sched, rptStep - 1, st, ih);
 
                 rstFile.write("IGRP", group_aggregator.getIGroup());
                 rstFile.write("SGRP", group_aggregator.getSGroup());
@@ -358,7 +357,7 @@ BOOST_AUTO_TEST_CASE (Declared_UDQ_data)
             {
                 auto conn_aggregator = Opm::RestartIO::Helpers::AggregateConnectionData(ih);
                 auto xw = Opm::data::Wells {};
-                conn_aggregator.captureDeclaredConnData(sched, grid, es.getUnits(), xw, st, rptStep-1);
+                conn_aggregator.captureDeclaredConnData(sched, grid, xw, st, rptStep-1);
 
                 rstFile.write("ICON", conn_aggregator.getIConn());
                 rstFile.write("SCON", conn_aggregator.getSConn());

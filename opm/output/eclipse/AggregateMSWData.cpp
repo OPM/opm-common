@@ -1322,13 +1322,12 @@ void
 Opm::RestartIO::Helpers::AggregateMSWData::
 captureDeclaredMSWData(const Schedule&          sched,
                        const std::size_t        rptStep,
-                       const Opm::UnitSystem&   units,
                        const std::vector<int>&  inteHead,
                        const Opm::EclipseGrid&  grid,
                        const Opm::SummaryState& smry,
                        const Opm::data::Wells&  wr)
 {
-    const auto& wells = sched.getWells(rptStep);
+    const auto wells = sched.getWells(rptStep);
     auto msw = std::vector<const Opm::Well*>{};
 
     for (const auto& well : wells) {
@@ -1338,7 +1337,7 @@ captureDeclaredMSWData(const Schedule&          sched,
     }
 
     // Extract contributions to the ISEG and RSEG arrays.
-    MSWLoop(msw, [&units, &inteHead, &sched, &grid, &smry, &wr, this]
+    MSWLoop(msw, [&inteHead, &sched, &grid, &smry, &wr, this]
         (const Well& well, const std::size_t mswID)
     {
         auto iseg = this->iSeg_[mswID];
@@ -1346,7 +1345,7 @@ captureDeclaredMSWData(const Schedule&          sched,
 
         ISeg::staticContrib(well, inteHead, iseg);
         RSeg::staticContrib(sched.runspec(), well, inteHead,
-                            grid, units, smry, wr, rseg);
+                            grid, sched.getUnits(), smry, wr, rseg);
     });
 
     // Extract contributions to the ILBS and ILBR arrays.

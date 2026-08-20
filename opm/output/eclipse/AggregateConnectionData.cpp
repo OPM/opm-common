@@ -25,6 +25,7 @@
 #include <opm/output/data/Wells.hpp>
 
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
@@ -429,12 +430,11 @@ void
 Opm::RestartIO::Helpers::AggregateConnectionData::
 captureDeclaredConnData(const Schedule&     sched,
                         const EclipseGrid&  grid,
-                        const UnitSystem&   units,
                         const data::Wells&  xw,
                         const SummaryState& summary_state,
                         const std::size_t   sim_step)
 {
-    wellConnectionLoop(sched, sim_step, grid, xw, [&units, &summary_state, &grid, this]
+    wellConnectionLoop(sched, sim_step, grid, xw, [&units = sched.getUnits(), &summary_state, &grid, this]
         (const std::string&      wellName,
          const std::size_t       wellID,
          const bool              is_producer,
@@ -466,13 +466,12 @@ void
 Opm::RestartIO::Helpers::AggregateConnectionData::
 captureDeclaredConnDataLGR(const Schedule&     sched,
                            const EclipseGrid&  grid,
-                           const UnitSystem&   units,
                            const data::Wells&  xw,
                            const SummaryState& summary_state,
                            const std::size_t   sim_step,
                            const std::string&  lgr_tag)
 {
-    wellConnectionLoop(sched, sim_step, grid, xw, lgr_tag, [&units, &summary_state, &grid, this]
+    wellConnectionLoop(sched, sim_step, grid, xw, lgr_tag, [&units = sched.getUnits(), &summary_state, &grid, this]
         (const std::string&      wellName,
          const std::size_t       wellID,
          const bool              is_producer,

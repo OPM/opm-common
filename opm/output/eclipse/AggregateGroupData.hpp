@@ -32,28 +32,24 @@
 namespace Opm {
 class Schedule;
 class SummaryState;
-class UnitSystem;
-} // Opm
+} // namespace Opm
 
-namespace Opm { namespace RestartIO { namespace Helpers {
+namespace Opm::RestartIO::Helpers {
 
 class AggregateGroupData
 {
 public:
     explicit AggregateGroupData(const std::vector<int>& inteHead);
 
-    void captureDeclaredGroupData(const Opm::Schedule&        sched,
-                         const Opm::UnitSystem&               units,
-                         const std::size_t                    simStep,
-                         const Opm::SummaryState&             sumState,
-                         const std::vector<int>&              inteHead);
+    void captureDeclaredGroupData(const Schedule&         sched,
+                                  const std::size_t       simStep,
+                                  const SummaryState&     sumState,
+                                  const std::vector<int>& inteHead);
 
-
-    void captureDeclaredGroupDataLGR(const Opm::Schedule&        sched,
-                                     const Opm::UnitSystem&      units,
-                                     const std::size_t           simStep,
-                                     const Opm::SummaryState&    sumState,
-                                     const std::string&          lgr_tag);
+    void captureDeclaredGroupDataLGR(const Schedule&     sched,
+                                     const std::size_t   simStep,
+                                     const SummaryState& sumState,
+                                     const std::string&  lgr_tag);
 
     const std::vector<int>& getIGroup() const
     {
@@ -75,145 +71,6 @@ public:
         return this->zGroup_.data();
     }
 
-    const std::vector<std::string> restart_group_keys = {"GOPP", "GWPP", "GOPR", "GWPR", "GGPR",
-                                                         "GVPR", "GWIR", "GGIR", "GWCT", "GGOR",
-                                                         "GOPT", "GWPT", "GGPT", "GVPT",
-                                                         "GOPTS", "GGPTS",
-                                                         "GWIT" , "GGIT" , "GVIT",
-                                                         "GOPTH", "GWPTH", "GGPTH",
-                                                         "GWITH", "GGITH",
-                                                         "GOPGR", "GWPGR", "GGPGR", "GVPGR",
-                                                         "GOIGR", "GWIGR", "GGIGR",
-                                                         "GGCR", "GGIMR", "GGCT", "GGIMT",
-                                                        };
-
-    // Note: guide rates don't exist at the FIELD level.
-    const std::vector<std::string> restart_field_keys = {"FOPP", "FWPP", "FOPR", "FWPR", "FGPR",
-                                                         "FVPR", "FWIR", "FGIR", "FWCT", "FGOR",
-                                                         "FOPT", "FWPT", "FGPT", "FVPT",
-                                                         "FOPTS", "FGPTS",
-                                                         "FWIT" , "FGIT" , "FVIT",
-                                                         "FOPTH", "FWPTH", "FGPTH",
-                                                         "FGCR", "FGCT", "FGIMR", "FGIMT",
-
-                                                         "FWITH", "FGITH"};
-
-    const std::vector<std::string> restart_well_keys = {"WOPP",  "WWPP", "WOPR", "WWPR", "WGPR",
-                                                        "WVPR",  "WWIR", "WGIR", "WWCT", "WGOR",
-                                                        "WOPT",  "WWPT", "WGPT", "WVPT",
-                                                        "WOPTS", "WGPTS",
-                                                        "WWIT" , "WGIT", "WVIT",
-                                                        "WOPTH", "WWPTH", "WGPTH",
-                                                        /*"WGCR",*/  /*"WGCT",*/ /*"WGIMR",*/ /*"WGIMT",*/
-                                                        "WWITH", "WGITH"};
-
-    const std::map<std::string, std::size_t> groupKeyToIndex = {
-                                                           {"GOPR",  0},
-                                                           {"GWPR",  1},
-                                                           {"GGPR",  2},
-                                                           {"GVPR",  3},
-                                                           {"GWIR",  5},
-                                                           {"GGIR",  6},
-                                                           {"GWCT",  8},
-                                                           {"GGOR",  9},
-                                                           {"GOPT", 10},
-                                                           {"GWPT", 11},
-                                                           {"GGPT", 12},
-                                                           {"GVPT", 13},
-                                                           {"GWIT", 15},
-                                                           {"GGIT", 16},
-                                                           {"GVIT", 17},
-                                                           {"GGCR", 19},
-                                                           {"GGCT", 21},
-                                                           {"GOPP", 22},
-                                                           {"GWPP", 23},
-                                                           {"GGIMR", 51},
-                                                           {"GGIMT", 52},
-                                                           {"GOPTS", 73},
-                                                           {"GGPTS", 74},
-                                                           {"GOPGR", 85},
-                                                           {"GWPGR", 86},
-                                                           {"GGPGR", 87},
-                                                           {"GVPGR", 88},
-                                                           {"GOIGR", 89},
-                                                           {"GWIGR", 91},
-                                                           {"GGIGR", 93},
-                                                           {"GOPTH", 135},
-                                                           {"GWPTH", 139},
-                                                           {"GWITH", 140},
-                                                           {"GGPTH", 143},
-                                                           {"GGITH", 144},
-    };
-
-    const std::map<std::string, std::size_t> fieldKeyToIndex = {
-                                                           {"FOPR",  0},
-                                                           {"FWPR",  1},
-                                                           {"FGPR",  2},
-                                                           {"FVPR",  3},
-                                                           {"FWIR",  5},
-                                                           {"FGIR",  6},
-                                                           {"FWCT",  8},
-                                                           {"FGOR",  9},
-                                                           {"FOPT", 10},
-                                                           {"FWPT", 11},
-                                                           {"FGPT", 12},
-                                                           {"FVPT", 13},
-                                                           {"FWIT", 15},
-                                                           {"FGIT", 16},
-                                                           {"FVIT", 17},
-                                                           {"FGCR", 19},
-                                                           {"FGCT", 21},
-                                                           {"FOPP", 22},
-                                                           {"FWPP", 23},
-                                                           {"FGIMR", 51},
-                                                           {"FGIMT", 52},
-                                                           {"FOPTS", 73},
-                                                           {"FGPTS", 74},
-                                                           {"FOPTH", 135},
-                                                           {"FWPTH", 139},
-                                                           {"FWITH", 140},
-                                                           {"FGPTH", 143},
-                                                           {"FGITH", 144},
-    };
-
-        const std::map<std::string, std::size_t> wellKeyToIndex = {
-                                                           {"WOPR",  0},
-                                                           {"WWPR",  1},
-                                                           {"WGPR",  2},
-                                                           {"WVPR",  3},
-                                                           {"WWIR",  5},
-                                                           {"WGIR",  6},
-                                                           {"WWCT",  8},
-                                                           {"WGOR",  9},
-                                                           {"WOPT", 10},
-                                                           {"WWPT", 11},
-                                                           {"WGPT", 12},
-                                                           {"WVPT", 13},
-                                                           {"WWIT", 15},
-                                                           {"WGIT", 16},
-                                                           {"WVIT", 17},
-                                                           //{"WGCR", 19},
-                                                           {"WGCT", 21},
-                                                           {"WOPP", 22},
-                                                           {"WWPP", 23},
-                                                           {"WGIMR", 51},
-                                                           {"WGIMT", 52},
-                                                           {"WOPTS", 73},
-                                                           {"WGPTS", 74},
-                                                           {"WOPGR", 85},
-                                                           {"WWPGR", 86},
-                                                           {"WGPGR", 87},
-                                                           {"WVPGR", 88},
-                                                           {"WOIGR", 89},
-                                                           {"WWIGR", 91},
-                                                           {"WGIGR", 93},
-                                                           {"WOPTH", 135},
-                                                           {"WWPTH", 139},
-                                                           {"WWITH", 140},
-                                                           {"WGPTH", 143},
-                                                           {"WGITH", 144},
-    };
-
 private:
     /// Aggregate 'IWEL' array (Integer) for all wells.
     WindowedArray<int> iGroup_;
@@ -234,6 +91,6 @@ private:
     int nGMaxz_;
 };
 
-}}} // Opm::RestartIO::Helpers
+} // Opm::RestartIO::Helpers
 
-#endif // OPM_AGGREGATE_WELL_DATA_HPP
+#endif // OPM_AGGREGATE_GROUP_DATA_HPP

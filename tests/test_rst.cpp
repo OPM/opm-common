@@ -316,8 +316,7 @@ END
 
     Opm::Deck historic_period_whistctl()
     {
-        return Opm::Parser{}.parseString(R"~(
-RUNSPEC
+        return Opm::Parser{}.parseString(R"~(RUNSPEC
 OIL
 GAS
 WATER
@@ -390,8 +389,7 @@ END
                       const std::string&    baseName,
                       const std::size_t     rptStep)
     {
-        const auto& units    = simCase.es.getUnits();
-        const auto  sim_step = rptStep - 1;
+        const auto sim_step = rptStep - 1;
 
         const auto sumState     = Opm::SummaryState { Opm::TimeService::now(), 0.0 };
         const auto action_state = Opm::Action::State{};
@@ -414,11 +412,12 @@ END
                                         sim_step, {}, sumState);
 
         auto connectionData = Opm::RestartIO::Helpers::AggregateConnectionData(ih);
-        connectionData.captureDeclaredConnData(simCase.sched, simCase.grid, units,
+        connectionData.captureDeclaredConnData(simCase.sched, simCase.grid,
                                                {}, sumState, sim_step);
 
         auto groupData = Opm::RestartIO::Helpers::AggregateGroupData(ih);
-        groupData.captureDeclaredGroupData(simCase.sched, units, sim_step, sumState, ih);
+        groupData.captureDeclaredGroupData(simCase.sched,
+                                           sim_step, sumState, ih);
 
         const auto outputDir = std::string { "./" };
 
@@ -483,10 +482,11 @@ END
 BOOST_AUTO_TEST_CASE(group_test)
 {
     const auto simCase = SimulationCase{first_sim()};
-    const auto& units = simCase.es.getUnits();
+
     // Report Step 2: 2011-01-20 --> 2013-06-15
     const auto rptStep = std::size_t{2};
     const auto sim_step = rptStep - 1;
+
     Opm::SummaryState sumState(Opm::TimeService::now(), 0.0);
 
     const auto ih = Opm::RestartIO::Helpers::createInteHead(simCase.es,
@@ -506,18 +506,18 @@ BOOST_AUTO_TEST_CASE(group_test)
                                                             0, 0);
 
     auto groupData = Opm::RestartIO::Helpers::AggregateGroupData(ih);
-    groupData.captureDeclaredGroupData(simCase.sched, units, sim_step, sumState, ih);
+    groupData.captureDeclaredGroupData(simCase.sched,
+                                       sim_step, sumState, ih);
 
     const auto& igrp = groupData.getIGroup();
     const auto& sgrp = groupData.getSGroup();
     const auto& xgrp = groupData.getXGroup();
-    const auto& zgrp8 = groupData.getZGroup();
 
-    Opm::UnitSystem unit_system(Opm::UnitSystem::UnitType::UNIT_TYPE_METRIC);
-    std::vector<std::string> zgrp;
-    std::ranges::transform(zgrp8, std::back_inserter(zgrp),
+    std::vector<std::string> zgrp{};
+    std::ranges::transform(groupData.getZGroup(), std::back_inserter(zgrp),
                            [](const auto& s8) { return s8.c_str(); });
 
+    Opm::UnitSystem unit_system(Opm::UnitSystem::UnitType::UNIT_TYPE_METRIC);
     Opm::RestartIO::RstHeader header(simCase.es.runspec(), unit_system,ih,lh,dh);
     for (int ig=0; ig < header.ngroup; ig++) {
         std::size_t zgrp_offset = ig * header.nzgrpz;

@@ -147,9 +147,8 @@ int next_branch(int node_no, const std::vector<int>& inlets, const std::vector<i
 }
 
 
-std::vector<int> inobrFunc( const Opm::Schedule&    sched,
-                            const std::size_t       lookup_step
-                 )
+std::vector<int> inobrFunc(const Opm::Schedule& sched,
+                           const std::size_t    lookup_step)
 {
     const auto& ntwNdNm = sched[lookup_step].network().node_names();
     const auto& branchPtrs = sched[lookup_step].network().branches();
@@ -185,22 +184,17 @@ std::vector<int> inobrFunc( const Opm::Schedule&    sched,
     return newInobr;
 }
 
-bool fixedPressureNode(const Opm::Schedule&         sched,
-                       const std::string&           nodeName,
-                       const std::size_t                 lookup_step
-                      )
+bool fixedPressureNode(const Opm::Schedule& sched,
+                       const std::string&   nodeName,
+                       const std::size_t    lookup_step)
 {
-    auto& network = sched[lookup_step].network();
-    bool fpn = (network.node(nodeName).terminal_pressure().has_value()) ? true  : false;
-    return fpn;
+    return sched[lookup_step].network().node(nodeName).terminal_pressure().has_value();
 }
 
-double nodePressure(const Opm::Schedule&               sched,
-                    const ::Opm::SummaryState&         smry,
-                    const std::string&                 nodeName,
-                    const Opm::UnitSystem&             units,
-                    const std::size_t                       lookup_step
-                   )
+double nodePressure(const Opm::Schedule&     sched,
+                    const Opm::SummaryState& smry,
+                    const std::string&       nodeName,
+                    const std::size_t        lookup_step)
 {
     using M = ::Opm::UnitSystem::measure;
     double node_pres = 1.;
@@ -215,7 +209,7 @@ double nodePressure(const Opm::Schedule&               sched,
             if (well.isProducer()) {
                 const auto& pc = well.productionControls(smry);
                 if (pc.thp_limit >= node_pres) {
-                    node_pres = units.from_si(M::pressure, pc.thp_limit);
+                    node_pres = sched.getUnits().from_si(M::pressure, pc.thp_limit);
                     node_wgroup = true;
                 }
             }
@@ -226,7 +220,7 @@ double nodePressure(const Opm::Schedule&               sched,
     if (!node_wgroup) {
         if (fixedPressureNode(sched, nodeName, lookup_step)) {
             // node is a fixed pressure node
-            node_pres = units.from_si(M::pressure, network.node(nodeName).terminal_pressure().value());
+            node_pres = sched.getUnits().from_si(M::pressure, network.node(nodeName).terminal_pressure().value());
         }
         else {
             // find fixed pressure higher in the node tree
@@ -238,7 +232,7 @@ double nodePressure(const Opm::Schedule&               sched,
             auto upt_br = network.uptree_branch(node_name).value();
             while (!fp_flag) {
                 if (fixedPressureNode(sched, upt_br.uptree_node(), lookup_step)) {
-                    node_pres = units.from_si(M::pressure, network.node(upt_br.uptree_node()).terminal_pressure().value());
+                    node_pres = sched.getUnits().from_si(M::pressure, network.node(upt_br.uptree_node()).terminal_pressure().value());
                     fp_flag = true;
                 } else {
                     node_name = upt_br.uptree_node();
@@ -268,12 +262,11 @@ struct nodeProps
     double ndGpr;
 };
 
-nodeProps wellGroupRateDensity(const Opm::EclipseState&                  es,
-                               const Opm::Schedule&                      sched,
-                               const ::Opm::SummaryState&                smry,
-                               const std::string&                        groupName,
-                               const std::size_t                              lookup_step
-                              )
+nodeProps wellGroupRateDensity(const Opm::EclipseState& es,
+                               const Opm::Schedule&     sched,
+                               const Opm::SummaryState& smry,
+                               const std::string&       groupName,
+                               const std::size_t        lookup_step)
 {
     const auto& stdDensityTable = es.getTableManager().getDensityTable();
 
@@ -302,6 +295,7 @@ nodeProps wellGroupRateDensity(const Opm::EclipseState&                  es,
             gpr  += t_gpr;
         }
     }
+
     deno = (opr > 0.) ? deno / opr : 0.;
     denw = (wpr > 0.) ? denw / wpr : 0.;
     deng = (gpr > 0.) ? deng / gpr : 0.;
@@ -310,13 +304,11 @@ nodeProps wellGroupRateDensity(const Opm::EclipseState&                  es,
 
 }
 
-nodeProps nodeRateDensity(const Opm::EclipseState&                  es,
-                          const Opm::Schedule&                      sched,
-                          const ::Opm::SummaryState&                smry,
-                          const std::string&                        nodeName,
-                          const Opm::UnitSystem&                    units,
-                          const std::size_t                              lookup_step
-                         )
+nodeProps nodeRateDensity(const Opm::EclipseState& es,
+                          const Opm::Schedule&     sched,
+                          const Opm::SummaryState& smry,
+                          const std::string&       nodeName,
+                          const std::size_t        lookup_step)
 {
     const auto& network = sched[lookup_step].network();
 
@@ -341,7 +333,7 @@ nodeProps nodeRateDensity(const Opm::EclipseState&                  es,
                 nd_prop_vec.push_back(nd_prop);
             } else {
                 // Network node (not group) - calculate the node rate avg. density for the relevant group
-                nd_prop = nodeRateDensity(es, sched, smry, node_nm, units, lookup_step);
+                nd_prop = nodeRateDensity(es, sched, smry, node_nm, lookup_step);
                 nd_prop_vec.push_back(nd_prop);
             }
         }
@@ -571,7 +563,6 @@ void dynamicContrib(const Opm::Schedule&      sched,
                     const Opm::SummaryState&  sumState,
                     const std::string&        nodeName,
                     const std::size_t         lookup_step,
-                    const Opm::UnitSystem&    units,
                     RNodeArray&               rNode)
 {
     using Ix = ::Opm::RestartIO::Helpers::VectorItems::RNode::index;
@@ -582,12 +573,12 @@ void dynamicContrib(const Opm::Schedule&      sched,
     rNode[Ix::FixedPresNode] = (fixedPressureNode(sched, nodeName, lookup_step)) ? 0. : 1.;
 
     // equal to i) highest well p_thp if wellgroup and ii) pressure of uptree node with fixed pressure
-    rNode[Ix::PressureLimit] = nodePressure(sched, sumState, nodeName, units, lookup_step);
+    rNode[Ix::PressureLimit] = nodePressure(sched, sumState, nodeName, lookup_step);
 
     //the meaning of item [15] is not known at the moment, so far a constant value covers all cases studied
     rNode[15] = 1.;
-
 }
+
 } // Rnode
 
 
@@ -609,19 +600,19 @@ allocate(const std::vector<int>& inteHead)
 }
 
 template <class RBranArray>
-void dynamicContrib(const Opm::EclipseState&         es,
-                    const Opm::Schedule&             sched,
-                    const Opm::Network::Branch&      branch,
-                    const std::size_t                lookup_step,
-                    const Opm::SummaryState&         sumState,
-                    const Opm::UnitSystem&           units,
-                    RBranArray&                      rBran
-                   )
+void dynamicContrib(const Opm::EclipseState&    es,
+                    const Opm::Schedule&        sched,
+                    const Opm::Network::Branch& branch,
+                    const std::size_t           lookup_step,
+                    const Opm::SummaryState&    sumState,
+                    RBranArray&                 rBran)
 {
     using Ix = ::Opm::RestartIO::Helpers::VectorItems::RBran::index;
+
     // branch (downtree node) rates
     const auto& dwntr_node = branch.downtree_node();
-    auto nodePrp = nodeRateDensity(es, sched, sumState, dwntr_node, units, lookup_step);
+    auto nodePrp = nodeRateDensity(es, sched, sumState, dwntr_node, lookup_step);
+
     rBran[Ix::OilProdRate] = nodePrp.ndOpr;
     rBran[Ix::WaterProdRate] = nodePrp.ndWpr;
     rBran[Ix::GasProdRate] = nodePrp.ndGpr;
@@ -630,13 +621,7 @@ void dynamicContrib(const Opm::EclipseState&         es,
 }
 } // Rbran
 
-
-
-
-
 } // namespace
-
-
 
 // =====================================================================
 
@@ -652,18 +637,16 @@ AggregateNetworkData(const std::vector<int>& inteHead)
 
 // ---------------------------------------------------------------------
 
-
 void
 Opm::RestartIO::Helpers::AggregateNetworkData::
-captureDeclaredNetworkData(const Opm::EclipseState&             es,
-                           const Opm::Schedule&                 sched,
-                           const Opm::UnitSystem&               units,
-                           const std::size_t                    lookup_step,
-                           const Opm::SummaryState&             sumState,
-                           const std::vector<int>&              inteHead)
+captureDeclaredNetworkData(const EclipseState&     es,
+                           const Schedule&         sched,
+                           const std::size_t       lookup_step,
+                           const SummaryState&     sumState,
+                           const std::vector<int>& inteHead)
 {
-
     auto ntwNdNm = sched[lookup_step].network().node_names();
+
     std::size_t wdmax = ntwNdNm.size();
     std::vector<const std::string*> ndNmPt(wdmax + 1 , nullptr );
     std::size_t ind_nm = 0;
@@ -699,9 +682,13 @@ captureDeclaredNetworkData(const Opm::EclipseState&             es,
 
     // Define Static Contributions to INobr Array
     if (inobr.size() > entriesPerInobr(inteHead)) {
-        auto msg = fmt::format("Actual size of inobr: {} is larger than maximum size: {} ", inobr.size(), entriesPerInobr(inteHead));
+        auto msg = fmt::format("Actual size of inobr: {} "
+                               "is larger than maximum size: {} ",
+                               inobr.size(), entriesPerInobr(inteHead));
+
         throw std::logic_error(msg);
     }
+
     auto i_nobr = this->iNobr_[0];
     INobr::staticContrib(inobr, i_nobr);
 
@@ -715,21 +702,20 @@ captureDeclaredNetworkData(const Opm::EclipseState&             es,
     });
 
     // Define Static/Dynamic Contributions to RNode Array
-    nodeLoop(networkNodePtrs, [&sched, sumState, units, lookup_step, this]
+    nodeLoop(networkNodePtrs, [&sched, sumState, lookup_step, this]
              (const std::string& nodeName, const std::size_t nodeID) -> void
     {
         auto ind = this->rNode_[nodeID];
 
-        RNode::dynamicContrib(sched, sumState, nodeName, lookup_step, units, ind);
+        RNode::dynamicContrib(sched, sumState, nodeName, lookup_step, ind);
     });
 
     // Define Dynamic Contributions to RBran Array.
-    branchLoop(branchPtrs, [&es, &sched, sumState, units, lookup_step, this]
+    branchLoop(branchPtrs, [&es, &sched, sumState, lookup_step, this]
                (const Opm::Network::Branch& branch, const std::size_t branchID) -> void
     {
         auto ib = this->rBran_[branchID];
 
-        RBran::dynamicContrib(es, sched, branch, lookup_step, sumState, units, ib);
+        RBran::dynamicContrib(es, sched, branch, lookup_step, sumState, ib);
     });
-
 }

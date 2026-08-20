@@ -1076,8 +1076,7 @@ BOOST_AUTO_TEST_CASE (Declared_Well_Data)
                 auto conn_aggregator = Opm::RestartIO::Helpers::AggregateConnectionData(IH);
                 auto xw = Opm::data::Wells {};
                 conn_aggregator.captureDeclaredConnData(simCase.sched, simCase.es.getInputGrid(),
-                                                        simCase.es.getUnits(), xw,
-                                                        sim_state(), rptStep);
+                                                        xw, sim_state(), rptStep);
 
                 rstFile.write("ICON", conn_aggregator.getIConn());
                 rstFile.write("SCON", conn_aggregator.getSConn());
@@ -1775,7 +1774,7 @@ BOOST_AUTO_TEST_CASE(WELL_POD)
                                     sim_step, xw, sumState);
 
     auto connectionData = Opm::RestartIO::Helpers::AggregateConnectionData(ih);
-    connectionData.captureDeclaredConnData(simCase.sched, simCase.grid, units,
+    connectionData.captureDeclaredConnData(simCase.sched, simCase.grid,
                                            xw, sumState, sim_step);
 
     const auto& iwel = wellData.getIWell();
