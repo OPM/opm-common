@@ -32,6 +32,7 @@
 namespace Opm {
 class Schedule;
 class SummaryState;
+class TracerConfig;
 } // namespace Opm
 
 namespace Opm::RestartIO::Helpers {
@@ -42,6 +43,7 @@ public:
     explicit AggregateGroupData(const std::vector<int>& inteHead);
 
     void captureDeclaredGroupData(const Schedule&         sched,
+                                  const TracerConfig&     tracer,
                                   const std::size_t       simStep,
                                   const SummaryState&     sumState,
                                   const std::vector<int>& inteHead);
