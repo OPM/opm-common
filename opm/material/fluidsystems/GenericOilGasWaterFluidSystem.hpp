@@ -331,7 +331,7 @@ namespace Opm {
                 const LhsEval& p = decay<LhsEval>(fluidState.pressure(phaseIdx));
                 const LhsEval& T = decay<LhsEval>(fluidState.temperature(phaseIdx));
                 const Scalar& rho_w_ref = waterPvt_->waterReferenceDensity(0);
-                const LhsEval& bw = waterPvt_->inverseFormationVolumeFactor(0, T, p, LhsEval(0.0), LhsEval(0.0));
+                const LhsEval& bw = waterPvt_->inverseFormationVolumeFactor(0, T, p, LhsEval(0.0), LhsEval(0.0), LhsEval(0.0));
                 return rho_w_ref * bw;
             }
 
@@ -354,7 +354,7 @@ namespace Opm {
             else {
                 const LhsEval& p = decay<LhsEval>(fluidState.pressure(phaseIdx));
                 const LhsEval& T = decay<LhsEval>(fluidState.temperature(phaseIdx));
-                return waterPvt_->viscosity(0, T, p, LhsEval(0.0), LhsEval(0.0));
+                return waterPvt_->viscosity(0, T, p, LhsEval(0.0), LhsEval(0.0), LhsEval(0.0));
             }
         }
 

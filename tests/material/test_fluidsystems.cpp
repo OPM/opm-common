@@ -150,17 +150,22 @@ void ensureBlackoilApi()
         std::cout << FluidSystem::convertRsToXoG(Rs, /*regionIdx=*/0);
         std::cout << FluidSystem::convertRvToXgO(Rv, /*regionIdx=*/0);
 
+        typename FluidSystem::template ParameterCache<Evaluation> paramCache;
+        paramCache.setRegionIndex(0);
+        paramCache.setDepth(0.0);
+        paramCache.updateAll(fluidState);
+
         for (unsigned phaseIdx = 0; phaseIdx < FluidSystem::numPhases; ++ phaseIdx) {
-            std::cout << FluidSystem::density(fluidState, phaseIdx, /*regionIdx=*/0);
-            std::cout << FluidSystem::saturatedDensity(fluidState, phaseIdx, /*regionIdx=*/0);
-            std::cout << FluidSystem::inverseFormationVolumeFactor(fluidState, phaseIdx, /*regionIdx=*/0);
-            std::cout << FluidSystem::saturatedInverseFormationVolumeFactor(fluidState, phaseIdx, /*regionIdx=*/0);
-            std::cout << FluidSystem::viscosity(fluidState, phaseIdx, /*regionIdx=*/0);
-            std::cout << FluidSystem::saturatedDissolutionFactor(fluidState, phaseIdx, /*regionIdx=*/0);
-            std::cout << FluidSystem::saturatedDissolutionFactor(fluidState, phaseIdx, /*regionIdx=*/0, /*maxSo=*/1.0);
-            std::cout << FluidSystem::saturationPressure(fluidState, phaseIdx, /*regionIdx=*/0);
+            std::cout << FluidSystem::density(fluidState, paramCache, phaseIdx);
+            std::cout << FluidSystem::saturatedDensity(fluidState, paramCache, phaseIdx);
+            std::cout << FluidSystem::inverseFormationVolumeFactor(fluidState, paramCache, phaseIdx);
+            std::cout << FluidSystem::saturatedInverseFormationVolumeFactor(fluidState, paramCache, phaseIdx);
+            std::cout << FluidSystem::viscosity(fluidState, paramCache, phaseIdx);
+            std::cout << FluidSystem::saturatedDissolutionFactor(fluidState, paramCache, phaseIdx);
+            std::cout << FluidSystem::saturatedDissolutionFactor(fluidState, paramCache, phaseIdx, /*maxSo=*/1.0);
+            std::cout << FluidSystem::saturationPressure(fluidState, paramCache, phaseIdx);
             for (unsigned compIdx = 0; compIdx < FluidSystem::numComponents; ++ compIdx)
-                std::cout << FluidSystem::fugacityCoefficient(fluidState, phaseIdx, compIdx,  /*regionIdx=*/0);
+                std::cout << FluidSystem::fugacityCoefficient(fluidState, paramCache, phaseIdx, compIdx);
         }
 
         // the "not considered safe to use directly" API

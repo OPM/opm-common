@@ -5,6 +5,7 @@
   ],
   "prohibits": [
     "SALTMF",
+    "SALINIVD",
     "BRINE"
   ],
   "size": 1,

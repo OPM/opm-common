@@ -676,3 +676,54 @@ BOOST_AUTO_TEST_CASE(SALTMFTest) {
     const double epsilon = 0.00001;
     BOOST_CHECK_CLOSE(salinity, saltmf, epsilon);
 }
+
+BOOST_AUTO_TEST_CASE(SALINIVDTest) {
+    const auto deck_input = R"(
+        RUNSPEC
+
+        DIMENS
+        2 2 1 /
+
+        GRID
+
+        DX
+        4*1 /
+        DY
+        4*1 /
+        DZ
+        4*1 /
+        TOPS
+        4*0.0 /
+
+        PORO
+        4*0.3 /
+
+        PROPS
+
+        SALINIVD
+        1000 0.7
+        1100 1.4 /
+    )";
+
+    Opm::Parser parser;
+    auto deck = parser.parseString(deck_input);
+    EclipseState state(deck);
+    Co2StoreConfig config = state.getCo2StoreConfig();
+
+    const auto& salinivd = config.getSalinivdTables();
+    BOOST_REQUIRE_EQUAL(1U, salinivd.size());
+    BOOST_REQUIRE_EQUAL(2U, salinivd[0].numRows());
+
+    const double epsilon = 0.00001;
+    const double mmNaCl = 58.44e-3;
+    const double salinity0 = 1.0 / (1.0 + 1.0 / (0.7 * mmNaCl));
+    const double salinity1 = 1.0 / (1.0 + 1.0 / (1.4 * mmNaCl));
+
+    BOOST_CHECK_CLOSE(1000.0, salinivd[0].getColumn("DEPTH")[0], epsilon);
+    BOOST_CHECK_CLOSE(1100.0, salinivd[0].getColumn("DEPTH")[1], epsilon);
+    BOOST_CHECK_CLOSE(salinity0, salinivd[0].getColumn("SALINITY")[0], epsilon);
+    BOOST_CHECK_CLOSE(salinity1, salinivd[0].getColumn("SALINITY")[1], epsilon);
+    BOOST_CHECK_CLOSE(salinity0, config.salinity(1000.0), epsilon);
+    BOOST_CHECK_CLOSE((salinity0 + salinity1) / 2.0, config.salinity(1050.0), epsilon);
+    BOOST_CHECK_CLOSE(salinity1, config.salinity(1100.0), epsilon);
+}

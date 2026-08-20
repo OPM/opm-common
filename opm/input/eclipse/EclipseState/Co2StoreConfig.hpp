@@ -25,6 +25,7 @@
 #include <map>
 
 #include <opm/input/eclipse/EclipseState/Tables/EzrokhiTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/SimpleTable.hpp>
 
 namespace Opm {
 
@@ -55,8 +56,10 @@ class Deck;
 
     const std::vector<EzrokhiTable>& getDenaqaTables() const;
     const std::vector<EzrokhiTable>& getViscaqaTables() const;
+    const std::vector<SimpleTable>& getSalinivdTables() const;
 
     double salinity() const;
+    double salinity(double depth) const;
     int actco2s() const;
 
     template<class Serializer>
@@ -68,6 +71,7 @@ class Deck;
        serializer(cnames);
        serializer(denaqa_tables);
        serializer(viscaqa_tables);
+      serializer(salinivd_tables);
        serializer(salt);
        serializer(activityModel);
     }
@@ -86,6 +90,7 @@ class Deck;
     std::map<std::string, int> cnames;
     std::vector<EzrokhiTable> denaqa_tables;
     std::vector<EzrokhiTable> viscaqa_tables;
+    std::vector<SimpleTable> salinivd_tables;
     double salt {0.0};
     static constexpr double MmNaCl = 58.44e-3;
     static constexpr double MmH2O = 18e-3;

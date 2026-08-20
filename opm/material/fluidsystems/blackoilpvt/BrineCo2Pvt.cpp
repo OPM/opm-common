@@ -112,6 +112,20 @@ initFromState(const EclipseState& eclState, const Schedule&)
     setEzrokhiDenCoeff(eclState.getCo2StoreConfig().getDenaqaTables());
     setEzrokhiViscCoeff(eclState.getCo2StoreConfig().getViscaqaTables());
 
+    const auto& salinivdTables = eclState.getCo2StoreConfig().getSalinivdTables();
+    if (!salinivdTables.empty()) {
+        const auto& table = salinivdTables.front();
+        const auto& depthCol = table.getColumn("DEPTH");
+        const auto& salCol = table.getColumn("SALINITY");
+        std::vector<Scalar> depths(depthCol.size());
+        std::vector<Scalar> salinities(salCol.size());
+        for (std::size_t i = 0; i < depthCol.size(); ++i) {
+            depths[i] = static_cast<Scalar>(depthCol[i]);
+            salinities[i] = static_cast<Scalar>(salCol[i]);
+        }
+        salinivdTable_.setXYContainers(depths, salinities, /*sortInputs=*/false);
+    }
+
     std::size_t regions = eclState.runspec().tabdims().getNumPVTTables();
     setNumRegions(regions);
     for (std::size_t regionIdx = 0; regionIdx < regions; ++regionIdx) {
