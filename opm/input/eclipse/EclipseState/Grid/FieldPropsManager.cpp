@@ -270,15 +270,32 @@ void FieldPropsManager::set_active_indices(const std::vector<int>& indices)
     fp->set_active_indices(indices);
 }
 
+namespace {
+    // std::unordered_map::at() reports only "key not found", which for these
+    // lookups leaves the caller with no idea which keyword or field is missing.
+    template <typename MapType>
+    const auto& lookup(const MapType& map, const std::string& key, std::string_view what)
+    {
+        const auto entry = map.find(key);
+        if (entry == map.end()) {
+            throw std::out_of_range {
+                fmt::format("No {} named '{}'", what, key)
+            };
+        }
+
+        return entry->second;
+    }
+} // Anonymous namespace
+
 template<class MapType>
 void apply_tran(const std::unordered_map<std::string, Fieldprops::TranCalculator>& tran,
                 const MapType& double_data,
                 std::size_t active_size,
                 const std::string& keyword, std::vector<double>& data)
 {
-    const auto& calculator = tran.at(keyword);
+    const auto& calculator = lookup(tran, keyword, "transmissibility calculator");
     for (const auto& action : calculator) {
-        const auto& action_data = double_data.at(action.field);
+        const auto& action_data = lookup(double_data, action.field, "field property");
 
         for (std::size_t index = 0; index < active_size; index++) {
 
@@ -298,9 +315,9 @@ void apply_tran(const std::unordered_map<std::string, Fieldprops::TranCalculator
                 const std::vector<int>& actionIndex,
                 std::vector<double>& data)
 {
-    const auto& calculator = tran.at(keyword);
+    const auto& calculator = lookup(tran, keyword, "transmissibility calculator");
     for (const auto& action : calculator) {
-        const auto& action_data = double_data.at(action.field);
+        const auto& action_data = lookup(double_data, action.field, "field property");
 
         for (std::size_t entry = 0; entry < actionIndex.size(); ++entry) {
             const auto index = actionIndex[entry];
@@ -323,7 +340,7 @@ void apply_tran(const Fieldprops::TranCalculator& calculator,
                 std::vector<double>& data)
 {
     for (const auto& action : calculator) {
-        const auto& action_data = double_data.at(action.field);
+        const auto& action_data = lookup(double_data, action.field, "field property");
 
         for (auto action_index = indices.begin(); action_index != indices.end();
              ++action_index)
