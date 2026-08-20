@@ -3005,6 +3005,48 @@ namespace Opm {
             m_minpv_removed[cell] = (porv < minpv) ? 1 : 0;
         }
 
+        // A coarse cell the field keeps must keep at least one refined cell. If
+        // MINPV takes them all, the refinement leaves nothing to stand in for
+        // it: the cell is in the level-zero grid but absent from the leaf, its
+        // pore volume is gone, and its neighbours are left describing a
+        // connection across a cell that is no longer there.
+        auto emptied = std::vector<std::size_t>{};
+        {
+            auto survivors = std::map<std::size_t, int>{};
+            for (std::size_t cell = 0; cell < ncells; ++cell) {
+                const auto ijk = this->getIJK(cell);
+                const auto fatherIx = father.getGlobalIndex(
+                    this->low_fatherIJK[0] + m_columns[0].parentOffset[ijk[0]],
+                    this->low_fatherIJK[1] + m_columns[1].parentOffset[ijk[1]],
+                    this->low_fatherIJK[2] + m_columns[2].parentOffset[ijk[2]]);
+
+                survivors.try_emplace(fatherIx, 0);
+                if (!m_minpv_removed[cell]) {
+                    ++survivors[fatherIx];
+                }
+            }
+
+            for (const auto& [fatherIx, alive] : survivors) {
+                if ((alive == 0) && father.cellActive(fatherIx)) {
+                    emptied.push_back(fatherIx);
+                }
+            }
+        }
+
+        if (!emptied.empty()) {
+            const auto ijk = father.getIJK(emptied.front());
+            throw std::invalid_argument {
+                fmt::format("CARFIN '{}': MINPV {} removes every refined cell of {} "
+                            "active cell(s), the first being [{},{},{}]. Those cells "
+                            "would keep their pore volume in the coarse grid while "
+                            "having nothing to represent them in the refined one. "
+                            "Raise the block's MINPV, shrink the box, or deactivate "
+                            "those cells in the field.",
+                            this->lgr_label, minpv, emptied.size(),
+                            ijk[0] + 1, ijk[1] + 1, ijk[2] + 1)
+            };
+        }
+
         // Fold the removals into ACTNUM (and into any nested child's).
         this->inheritActiveCellsFromFather(father);
     }
