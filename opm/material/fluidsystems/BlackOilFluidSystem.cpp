@@ -112,12 +112,14 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
     // use molarMass of CO2 and Brine as default
     // when we are using the the CO2STORE option
     if (eclState.runspec().co2Storage()) {
-        const Scalar salinity = eclState.getCo2StoreConfig().salinity();  // mass fraction
+        const auto& salinity = eclState.getCo2StoreConfig().saltComponents();  // mass fraction
         for (unsigned regionIdx = 0; regionIdx < num_regions; ++regionIdx) {
             if (phaseIsActive(oilPhaseIdx)) // The oil component is used for the brine if OIL is active
-                molarMass_[regionIdx][oilCompIdx] = BrineCo2Pvt<Scalar>::Brine::molarMass(salinity);
+                molarMass_[regionIdx][oilCompIdx] =
+                    1.0 / BrineCo2Pvt<Scalar>::Brine::invAvgMolarMassFromMassFrac(salinity);
             if (phaseIsActive(waterPhaseIdx))
-                molarMass_[regionIdx][waterCompIdx] = BrineCo2Pvt<Scalar>::Brine::molarMass(salinity);
+                molarMass_[regionIdx][waterCompIdx] =
+                    1.0 / BrineCo2Pvt<Scalar>::Brine::invAvgMolarMassFromMassFrac(salinity);
             if (!phaseIsActive(gasPhaseIdx)) {
                 OPM_THROW(std::runtime_error,
                           "CO2STORE requires gas phase\n");
