@@ -218,6 +218,23 @@ void FieldPropsManager::apply_tran(const std::string& keyword, std::vector<doubl
     this->fp->apply_tran(keyword, data);
 }
 
+void FieldPropsManager::apply_tran(const std::string& keyword,
+                                   const std::vector<int>& actionIndex,
+                                   std::vector<double>& tran_data) const
+{
+    this->fp->apply_tran(keyword, actionIndex, tran_data);
+}
+
+std::set<Fieldprops::ScalarOperation>
+FieldPropsManager::tran_operations(const std::string& keyword) const
+{
+    if (!this->fp) {
+        return {};
+    }
+
+    return this->fp->tran_operations(keyword);
+}
+
 void FieldPropsManager::apply_tranz_global(const std::vector<std::size_t>& indices,
                                            std::vector<double>& data) const {
     this->fp->apply_tranz_global(indices, data);
@@ -275,6 +292,31 @@ void apply_tran(const std::unordered_map<std::string, Fieldprops::TranCalculator
 
 
 template<class MapType>
+void apply_tran(const std::unordered_map<std::string, Fieldprops::TranCalculator>& tran,
+                const MapType& double_data,
+                const std::string& keyword,
+                const std::vector<int>& actionIndex,
+                std::vector<double>& data)
+{
+    const auto& calculator = tran.at(keyword);
+    for (const auto& action : calculator) {
+        const auto& action_data = double_data.at(action.field);
+
+        for (std::size_t entry = 0; entry < actionIndex.size(); ++entry) {
+            const auto index = actionIndex[entry];
+            if (index < 0) {
+                continue;       // nothing in the deck speaks for this entry
+            }
+
+            if (!value::has_value(action_data.value_status[index]))
+                continue;
+
+            apply_action(action.op, action_data.data, data, index, entry);
+        }
+    }
+}
+
+template<class MapType>
 void apply_tran(const Fieldprops::TranCalculator& calculator,
                 const MapType& double_data,
                 const std::vector<std::size_t>& indices,
@@ -305,6 +347,16 @@ template
 void apply_tran(const std::unordered_map<std::string, Fieldprops::TranCalculator>&,
                 const std::map<std::string, Fieldprops::FieldData<double>>&,
                 std::size_t, const std::string&, std::vector<double>&);
+
+template
+void apply_tran(const std::unordered_map<std::string, Fieldprops::TranCalculator>&,
+                const std::unordered_map<std::string, Fieldprops::FieldData<double>>&,
+                const std::string&, const std::vector<int>&, std::vector<double>&);
+
+template
+void apply_tran(const std::unordered_map<std::string, Fieldprops::TranCalculator>&,
+                const std::map<std::string, Fieldprops::FieldData<double>>&,
+                const std::string&, const std::vector<int>&, std::vector<double>&);
 
 template
 void apply_tran(const Fieldprops::TranCalculator&,

@@ -2600,6 +2600,27 @@ void FieldProps::apply_tranz_global(const std::vector<std::size_t>& indices, std
     ::Opm::apply_tran(this->tran.at("TRANZ"), this->double_data, indices, data);
 }
 
+void FieldProps::apply_tran(const std::string& keyword,
+                            const std::vector<int>& actionIndex,
+                            std::vector<double>& data) const
+{
+    ::Opm::apply_tran(this->tran, this->double_data, keyword, actionIndex, data);
+}
+
+std::set<Fieldprops::ScalarOperation>
+FieldProps::tran_operations(const std::string& keyword) const
+{
+    std::set<Fieldprops::ScalarOperation> ops;
+
+    if (const auto calculator = this->tran.find(keyword); calculator != this->tran.end()) {
+        for (const auto& action : calculator->second) {
+            ops.insert(action.op);
+        }
+    }
+
+    return ops;
+}
+
 bool FieldProps::tran_active(const std::string& keyword) const
 {
     auto calculator = this->tran.find(keyword);

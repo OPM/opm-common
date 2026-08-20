@@ -689,6 +689,10 @@ public:
     std::size_t global_size;
 
     void handle_schedule_keywords(const std::vector<DeckKeyword>& keywords);
+    void apply_tran(const std::string& keyword,
+                    const std::vector<int>& actionIndex,
+                    std::vector<double>& data) const;
+    std::set<Fieldprops::ScalarOperation> tran_operations(const std::string& keyword) const;
     bool tran_active(const std::string& keyword) const;
     void apply_tran(const std::string& keyword, std::vector<double>& data);
     void apply_tranz_global(const std::vector<std::size_t>& indices, std::vector<double>& data) const;

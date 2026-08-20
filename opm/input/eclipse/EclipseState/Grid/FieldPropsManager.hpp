@@ -20,6 +20,7 @@
 #define FIELDPROPS_MANAGER_HPP
 
 #include <memory>
+#include <set>
 #include <string>
 #include <string_view>
 #include <unordered_map>
@@ -32,6 +33,7 @@ class Deck;
 class DeckKeyword;
 namespace Fieldprops {
 class TranCalculator;
+enum class ScalarOperation;
 template<typename T> struct FieldData;
 }
 class FieldProps;
@@ -240,6 +242,23 @@ public:
     */
     virtual void apply_tran(const std::string& keyword, std::vector<double>& tran_data) const;
 
+    /// Apply a TRAN* calculator through an index map.
+    ///
+    /// tran_data is not required to be one entry per active cell here:
+    /// actionIndex[i] names the active cell whose modifier applies to
+    /// tran_data[i], and a negative entry leaves that entry alone. A refined
+    /// grid needs this -- its faces outnumber the cells the deck describes, and
+    /// several of them take one coarse cell's modifier.
+    void apply_tran(const std::string& keyword,
+                    const std::vector<int>& actionIndex,
+                    std::vector<double>& tran_data) const;
+
+    /// The operations a TRAN* calculator will perform. MUL, MIN and MAX carry
+    /// over to a refined face unchanged; EQUAL and ADD state an absolute
+    /// transmissibility, which does not divide among the faces a refinement
+    /// puts in a coarse face's place.
+    std::set<Fieldprops::ScalarOperation> tran_operations(const std::string& keyword) const;
+
     /// \brief Apply TRANZ modifiers using global indices
     ///
     /// Needed for calculation transmissibility of NNCs over pinched out cells.
@@ -301,6 +320,13 @@ void apply_tran(const std::unordered_map<std::string, Fieldprops::TranCalculator
                 const MapType& double_data,
                 std::size_t active_size,
                 const std::string& keyword, std::vector<double>& data);
+
+template<class MapType>
+void apply_tran(const std::unordered_map<std::string, Fieldprops::TranCalculator>& tran,
+                const MapType& double_data,
+                const std::string& keyword,
+                const std::vector<int>& actionIndex,
+                std::vector<double>& data);
 
 template<class MapType>
 void apply_tran(const Fieldprops::TranCalculator& tranCalc,
