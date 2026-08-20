@@ -63,6 +63,8 @@
 #include <opm/common/OpmLog/OpmLog.hpp>
 
 #include <algorithm>
+#include <array>
+#include <cassert>
 #include <cstddef>
 #include <iterator>
 #include <regex>
@@ -78,6 +80,13 @@
 namespace Opm { namespace RestartIO {
 
 namespace {
+    Opm::RestartIO::Helpers::ActiveTracerSolutionPhases
+    activeTracerSolutionPhases(const Opm::EclipseState& es)
+    {
+        return { es.getSimulationConfig().hasDISGAS(),
+                 es.getSimulationConfig().hasVAPOIL() };
+    }
+
     bool isFluidInPlace(const std::string& vector)
     {
         const auto fipRegex = std::regex { R"([RS]?FIP(OIL|GAS|WAT))" };
@@ -154,6 +163,7 @@ namespace {
                 throw std::runtime_error("THPRES vector has invalid size - should have num_region * num_regions.");
         }
     }
+
 
     std::vector<int>
     writeHeader(const int                     report_step,
@@ -382,6 +392,7 @@ namespace {
                    const EclipseGrid&            grid,
                    const Schedule&               schedule,
                    const TracerConfig&           tracers,
+                   const Helpers::ActiveTracerSolutionPhases& tracerSolution,
                    const data::Wells&            wells,
                    const Opm::Action::State&     action_state,
                    const Opm::WellTestState&     wtest_state,
@@ -391,8 +402,8 @@ namespace {
                    EclIO::OutputStream::Restart& rstFile)
     {
         auto wellData = Helpers::AggregateWellData(ih);
-        wellData.captureDeclaredWellData(schedule, grid, tracers, sim_step, action_state, wtest_state, sumState, ih);
-        wellData.captureDynamicWellData(schedule, tracers, sim_step, wells, sumState);
+        wellData.captureDeclaredWellData(schedule, grid, tracers, sim_step, action_state, wtest_state, sumState, ih, tracerSolution);
+        wellData.captureDynamicWellData(schedule, tracers, sim_step, wells, sumState, tracerSolution);
 
         // NORST logic:
         //  - NORST=0: Full well and connection data
@@ -435,6 +446,7 @@ namespace {
                       const EclipseGrid&            grid,
                       const Schedule&               schedule,
                       const TracerConfig&           tracers,
+                   const Helpers::ActiveTracerSolutionPhases& tracerSolution,
                       const data::Wells&            wells,
                       const Opm::Action::State&     action_state,
                       const Opm::WellTestState&     wtest_state,
@@ -445,8 +457,8 @@ namespace {
                       const std::string&            lgr_tag)
     {
         auto wellData = Helpers::AggregateWellData(ih);
-        wellData.captureDeclaredWellDataLGR(schedule, grid, tracers, sim_step, action_state, wtest_state, sumState, ih, lgr_tag);
-        wellData.captureDynamicWellDataLGR(schedule, tracers, sim_step, wells, sumState,lgr_tag);
+        wellData.captureDeclaredWellDataLGR(schedule, grid, tracers, sim_step, action_state, wtest_state, sumState, ih, lgr_tag, tracerSolution);
+        wellData.captureDynamicWellDataLGR(schedule, tracers, sim_step, wells, sumState, lgr_tag, tracerSolution);
 
         rstFile.write("IWEL", wellData.getIWell());
 
@@ -585,7 +597,7 @@ namespace {
                              sumState, wellSol, inteHD, rstFile);
             }
 
-            writeWell(sim_step, grid, schedule, es.tracer(), wellSol,
+            writeWell(sim_step, grid, schedule, es.tracer(), activeTracerSolutionPhases(es), wellSol,
                       action_state, wtest_state, sumState, inteHD, norst_value, rstFile);
         }
 
@@ -652,9 +664,10 @@ namespace {
                 throw std::logic_error("MSW not supported for LGR");
             }
 
-            writeWellLGR(sim_step, grid, schedule, es.tracer(), wellSol,
+            writeWellLGR(sim_step, grid, schedule, es.tracer(), activeTracerSolutionPhases(es), wellSol,
                          action_state, wtest_state, sumState, inteHD, norst_value, rstFile, lgr_tag);
         }
+
         // Write aquifer data if the aquifer option for LGR.
         // At the moment LGR and Aquifers are not supported.
         // To be done.
@@ -742,6 +755,75 @@ namespace {
         writeSolutionVectors(value, solutionVectorNames(value),
                              std::forward<OutputVector>(writeVectorF),
                              std::forward<OutputVectorInt>(writeVectorI));
+    }
+
+    // Solution-section layout for runs with local grid refinements.
+    // Restart readers process this section in a fixed sequence: the
+    // primary solution terms, then the per-cell fluid-in-place arrays of
+    // the global grid, then the saturation-pressure terms.  Emit the
+    // vectors in that sequence and restrict fluid-in-place output to the
+    // plain FIPOIL/FIPWAT/FIPGAS arrays, which are accepted without the
+    // region-report framing records.
+    //
+    // The sequence is load-bearing, not cosmetic: a restart file with the
+    // fluid-in-place arrays leading the section, or placed after the
+    // saturation-pressure terms, is rejected while being read back.
+    template <typename OutputVector, typename OutputVectorInt>
+    void writeLgrOrderedSolutionVectors(const RestartValue& value,
+                                        const bool          localGrid,
+                                        const Phases&       phases,
+                                        OutputVector&&      writeVectorF,
+                                        OutputVectorInt&&   writeVectorI)
+    {
+        const auto rank = [](const std::string& name) -> int
+        {
+            if (name == "PRESSURE") { return 0; }
+            if (name == "SWAT")     { return 1; }
+            if (name == "SGAS")     { return 2; }
+            if (name == "RS")       { return 3; }
+            if (name == "RV")       { return 4; }
+            if (name == "PDEW")     { return 97; }
+            if (name == "PBUB")     { return 98; }
+
+            return 50;
+        };
+
+        auto names = solutionVectorNames(value);
+        std::ranges::stable_sort(names, [&rank](const auto& a, const auto& b)
+        {
+            const auto ra = rank(a);
+            const auto rb = rank(b);
+
+            return (ra != rb) ? (ra < rb) : (a < b);
+        });
+
+        auto primary   = std::vector<std::string>{};
+        auto trailing  = std::vector<std::string>{};
+        for (const auto& name : names) {
+            (rank(name) < 90 ? primary : trailing).push_back(name);
+        }
+
+        writeSolutionVectors(value, primary, writeVectorF, writeVectorI);
+
+        if (! localGrid) {
+            // Only the fluid-in-place arrays of ACTIVE phases: restart
+            // readers reject a fluid-in-place record for an inactive
+            // phase ("illegal section header").
+            const std::pair<std::string, bool> fipVectors[] = {
+                { "FIPOIL", phases.active(Phase::OIL)   },
+                { "FIPWAT", phases.active(Phase::WATER) },
+                { "FIPGAS", phases.active(Phase::GAS)   },
+            };
+            for (const auto& [name, phaseActive] : fipVectors) {
+                if (! phaseActive) { continue; }
+                auto fip = value.solution.find(name);
+                if (fip != value.solution.end()) {
+                    writeVectorF(name, fip->second.template data<double>());
+                }
+            }
+        }
+
+        writeSolutionVectors(value, trailing, writeVectorF, writeVectorI);
     }
 
     void writeFluidInPlace(const RestartValue&           value,
@@ -939,8 +1021,19 @@ namespace {
             rstFile.write(key, data);
         };
 
-        writeRegularSolutionVectors(value, writeDorF, writeInt);
-        writeFluidInPlace(value, es, write_double_arg, rstFile);
+        if (const bool modelHasLgr =
+                ! es.getInputGrid().get_all_lgr_labels().empty();
+            modelHasLgr)
+        {
+            writeLgrOrderedSolutionVectors(value, is_lgr_grid,
+                                           es.runspec().phases(),
+                                           writeDorF, writeInt);
+        }
+        else {
+            writeRegularSolutionVectors(value, writeDorF, writeInt);
+            writeFluidInPlace(value, es, write_double_arg, rstFile);
+        }
+
         writeTracerVectors(schedule.getUnits(), es.tracer(), value,
                            write_double_arg, rstFile);
 

@@ -153,7 +153,7 @@ enum index : std::vector<int>::size_type {
   ih_092       =       92       ,              //       0       0
   ih_093       =       93       ,              //       0       0
   IPROG        =       VI::intehead::IPROG,    //       0       100
-  INITSIZE     =       95       ,              //       0       0
+  NLGR         =       VI::intehead::NLGR,     //       0       0
   ih_096       =       96       ,              //       0       0
   ih_097       =       97       ,              //       0       0
   ih_098       =       98       ,              //       0       0
@@ -505,6 +505,60 @@ Opm::RestartIO::InteHEAD&
 Opm::RestartIO::InteHEAD::numActive(const int nactive)
 {
     this->data_[NACTIV] = nactive;
+
+    return *this;
+}
+
+Opm::RestartIO::InteHEAD&
+Opm::RestartIO::InteHEAD::numLocalGrids(const int nlgr)
+{
+    // Model-total count of local grid refinements, written to every
+    // grid's header.  Restart readers cross-check this count against the
+    // input description and select the local-grid restore path from it.
+    this->data_[NLGR] = nlgr;
+
+    return *this;
+}
+
+Opm::RestartIO::InteHEAD&
+Opm::RestartIO::InteHEAD::lgrRestartHeaderItems(const bool modelHasLgr,
+                                                  const int  solutionTermCount)
+{
+    if (! modelHasLgr) {
+        return *this;
+    }
+
+    // Restart readers depend on a small number of additional header
+    // items when accepting and restoring a model with local grid
+    // refinements.  Each item below is individually necessary for the
+    // file to be read back and restored; individual item semantics are
+    // not published, and the values do not depend on the model.  (Same
+    // convention as the fixed ih_049/ih_050 assignments in
+    // variousParam().)
+
+    // Without this item the restart file is rejected while being read
+    // back (restart record framing breaks).
+    this->data_[ih_244] = 30;
+
+    // Without either of these two items the file is read back, but the
+    // restored local-grid solution is under-described and the restarted
+    // run fails to converge in the refined region.
+    this->data_[ih_166] = 12;
+    this->data_[ih_168] = 25;
+
+    // Allocation-dimension item that must never be left at zero: an
+    // absent subsystem is dimensioned for at least one element.
+    // Restart readers allocate restore workspaces from such items -- the
+    // same minimum-allocation principle as the per-grid NWMAXZ well
+    // count.  Left at zero it degrades the restored local-grid solution
+    // in the same way as the two items above.
+    this->data_[ih_169] = std::max(this->data_[ih_169], 1);
+
+    // Solution-term count.  Restarting runs recompute this quantity
+    // from the runspec and warn when the file disagrees; the restart
+    // itself succeeds either way, so the item is written only to satisfy
+    // that cross-check.
+    this->data_[ih_088] = solutionTermCount;
 
     return *this;
 }

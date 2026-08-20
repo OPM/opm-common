@@ -1292,6 +1292,8 @@ namespace {
                                  const std::size_t  wellID,
                                  const Opm::Tracers& tracer_dims,
                                  const Opm::TracerConfig& tracer_config,
+                                 const bool disgasActive,
+                                 const bool vapoilActive,
                                  const WellVectors& wellData,
                                  const bool isTemp,
                                  Opm::SummaryState& smry)
@@ -1340,7 +1342,13 @@ namespace {
         smry.update_well_var(well, "WGITH", xwel[VI::XWell::index::HistGasInjTotal]);
 
         // Tracer production/injection totals
-        const auto num_tracer_comps = tracer_dims.water_tracers() + 2* (tracer_dims.oil_tracers() + tracer_dims.gas_tracers()) + (isTemp ? 1 : 0);
+        // A hydrocarbon tracer has a solution component only when the
+        // corresponding phase transfer is active (gas tracer with DISGAS,
+        // oil tracer with VAPOIL) -- the same counting the writer uses.
+        const auto num_tracer_comps = tracer_dims.water_tracers()
+            + (vapoilActive ? 2 : 1) * tracer_dims.oil_tracers()
+            + (disgasActive ? 2 : 1) * tracer_dims.gas_tracers()
+            + (isTemp ? 1 : 0);
         auto offset = VI::XWell::index::TracerOffset + num_tracer_comps; // First num_tracer_comps are the rates
         for (const auto* type : { "P", "I", }) { // Production followed by injection
             if (isTemp) {
@@ -1353,6 +1361,14 @@ namespace {
                 }
                 else {
                     const auto free_total = xwel[offset++];
+                    const auto hasSolutionPart =
+                        ((tracer.phase == Opm::Phase::GAS) && disgasActive) ||
+                        ((tracer.phase == Opm::Phase::OIL) && vapoilActive);
+                    if (! hasSolutionPart) {
+                        smry.update_well_var(well, fmt::format("WT{}TF{}", type, tracer.name), free_total);
+                        smry.update_well_var(well, fmt::format("WT{}T{}", type, tracer.name), free_total);
+                        continue;
+                    }
                     const auto solution_total = xwel[offset++];
 
                     smry.update_well_var(well, fmt::format("WT{}TF{}", type, tracer.name), free_total);
@@ -1569,6 +1585,8 @@ namespace {
     void restore_cumulative(::Opm::SummaryState&                         smry,
                             const ::Opm::Schedule&                       schedule,
                             const Opm::TracerConfig&                     tracer_config,
+                            const bool                                   disgasActive,
+                            const bool                                   vapoilActive,
                             std::shared_ptr<Opm::EclIO::RestartFileView> rst_view)
     {
         const auto  sim_step = rst_view->simStep();
@@ -1586,6 +1604,7 @@ namespace {
                  wellID < nWells; ++wellID)
             {
                 assign_well_cumulatives(wells[wellID], wellID, schedule.runspec().tracers(), tracer_config,
+                                        disgasActive, vapoilActive,
                                         wellData, isTemp, smry);
             }
         }
@@ -1673,7 +1692,10 @@ namespace Opm::RestartIO  {
             restoreUDQValues(schedule, rst_view, summary_state);
         }
 
-        restore_cumulative(summary_state, schedule, es.tracer(), std::move(rst_view));
+        restore_cumulative(summary_state, schedule, es.tracer(),
+                           es.getSimulationConfig().hasDISGAS(),
+                           es.getSimulationConfig().hasVAPOIL(),
+                           std::move(rst_view));
 
         return rst_value;
     }
