@@ -22,18 +22,20 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <opm/input/eclipse/Deck/Deck.hpp>
-#include <opm/input/eclipse/Parser/Parser.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/TracerConfig.hpp>
 
+#include <opm/input/eclipse/Deck/Deck.hpp>
+#include <opm/input/eclipse/Parser/Parser.hpp>
 
 using namespace Opm;
 
+namespace {
 
-static Deck createDeck() {
+Deck createDeck()
+{
     // Using a raw string literal with xxx as delimiter.
-    const char *deckData = R"xxx(
+    return Parser{}.parseString(R"xxx(RUNSPEC
 DIMENS
  10 10 10 /
 TABDIMS
@@ -64,18 +66,21 @@ TVDPFSEA
 5000   0.0 /
 TBLKFOCE
 1.0 2.0 3.0 /
-)xxx"; // End of raw string literal with xxx as delimiter.
-    Parser parser;
-    return parser.parseString( deckData );
+)xxx");
+
 }
 
+} // Anonymous namespace
 
-
-BOOST_AUTO_TEST_CASE(TracerConfigTest) {
-    auto deck = createDeck();
-    EclipseState state(deck);
-    const TracerConfig& tc = state.tracer();
+BOOST_AUTO_TEST_CASE(TracerConfigTest)
+{
+    const auto deck = createDeck();
+    const auto state = EclipseState{deck};
+    const auto& tc = state.tracer();
     BOOST_CHECK_EQUAL(tc.size(), 2U);
+
+    BOOST_CHECK_MESSAGE(! tc.supportsSolutionGasTracer(), "Solution gas tracer should not be supported");
+    BOOST_CHECK_MESSAGE(! tc.supportsVaporisedOilTracer(), "Vaporised oil tracer should not be supported");
 
     auto it = tc.begin();
     BOOST_CHECK_EQUAL(it->name, "SEA");
@@ -88,4 +93,102 @@ BOOST_AUTO_TEST_CASE(TracerConfigTest) {
     BOOST_CHECK_EQUAL(it->phase, Phase::GAS);
     BOOST_CHECK_EQUAL(it->free_concentration.value().size(), 3U);
     BOOST_CHECK(!it->free_tvdp.has_value());
+}
+
+BOOST_AUTO_TEST_CASE(SolutionGasSupportTest)
+{
+    const auto deck = Parser{}.parseString(R"xxx(RUNSPEC
+DIMENS
+  5 1 2 /
+OIL
+GAS
+WATER
+DISGAS
+TABDIMS
+/
+EQLDIMS
+  3 1 1 /
+TRACERS
+--  oil  water  gas  env
+  1*  1      1    1*   /
+GRID
+DXV
+  5*100 /
+DYV
+  1*100 /
+DZV
+  5 10 /
+DEPTHZ
+  12*2000.0 /
+EQUALS
+  PORO 0.25 /
+  PERMX 100 /
+  PERMY 100 /
+  PERMZ 10 /
+/
+PROPS
+TRACER
+SEA  WAT  /
+OCE  GAS /
+/
+TVDPFSEA
+1000   0.0
+5000   0.0 /
+TBLKFOCE
+1.0 2.0 3.0 /
+)xxx");
+
+    const auto tc = TracerConfig{deck.getDefaultUnitSystem(), deck};
+
+    BOOST_CHECK_MESSAGE(tc.supportsSolutionGasTracer(), "Solution gas tracer should be supported");
+    BOOST_CHECK_MESSAGE(! tc.supportsVaporisedOilTracer(), "Vaporised oil tracer should not be supported");
+}
+
+BOOST_AUTO_TEST_CASE(VaporisedOilSupportTest)
+{
+    const auto deck = Parser{}.parseString(R"xxx(RUNSPEC
+DIMENS
+  5 1 2 /
+OIL
+GAS
+WATER
+VAPOIL
+TABDIMS
+/
+EQLDIMS
+  3 1 1 /
+TRACERS
+--  oil  water  gas  env
+  1*  1      1    1*   /
+GRID
+DXV
+  5*100 /
+DYV
+  1*100 /
+DZV
+  5 10 /
+DEPTHZ
+  12*2000.0 /
+EQUALS
+  PORO 0.25 /
+  PERMX 100 /
+  PERMY 100 /
+  PERMZ 10 /
+/
+PROPS
+TRACER
+SEA  WAT  /
+OCE  GAS  /
+/
+TVDPFSEA
+1000   0.0
+5000   0.0 /
+TBLKFOCE
+1.0 2.0 3.0 /
+)xxx");
+
+    const auto tc = TracerConfig{deck.getDefaultUnitSystem(), deck};
+
+    BOOST_CHECK_MESSAGE(! tc.supportsSolutionGasTracer(), "Solution gas tracer should not be supported");
+    BOOST_CHECK_MESSAGE(tc.supportsVaporisedOilTracer(), "Vaporised oil tracer should be supported");
 }
