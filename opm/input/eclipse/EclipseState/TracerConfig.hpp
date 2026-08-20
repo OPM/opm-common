@@ -25,13 +25,17 @@
 
 #include <cstddef>
 #include <optional>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace Opm {
 
 class Deck;
 class UnitSystem;
 
-class TracerConfig {
+class TracerConfig
+{
 public:
     struct TracerEntry {
         std::string name;
@@ -126,8 +130,9 @@ public:
     std::size_t size() const;
     bool empty() const;
 
-    const std::vector<TracerEntry>::const_iterator begin() const;
-    const std::vector<TracerEntry>::const_iterator end() const;
+    decltype(auto) begin() const { return this->tracers.begin(); }
+    decltype(auto) end() const { return this->tracers.end(); }
+
     const TracerEntry& operator[](const std::string& name) const;
     const TracerEntry& operator[](std::size_t index) const;
 
@@ -145,6 +150,6 @@ private:
     std::vector<TracerEntry> tracers;
 };
 
-}
+} // namespace Opm
 
-#endif
+#endif // OPM_TRACER_CONFIG_HPP

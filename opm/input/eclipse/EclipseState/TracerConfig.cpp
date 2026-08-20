@@ -21,9 +21,10 @@
 
 #include <opm/input/eclipse/EclipseState/TracerConfig.hpp>
 
-#include <opm/common/utility/OpmInputError.hpp>
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/common/OpmLog/InfoLogger.hpp>
+#include <opm/common/utility/OpmInputError.hpp>
+#include <opm/common/utility/String.hpp>
 
 #include <opm/input/eclipse/EclipseState/Tables/TracerVdTable.hpp>
 
@@ -39,130 +40,153 @@
 
 #include <algorithm>
 #include <cstddef>
-
-namespace Opm {
+#include <stdexcept>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace {
 
-Phase phase_from_string(const std::string& phase_string) {
-    if (phase_string == "WAT")
-        return Phase::WATER;
+Opm::Phase phase_from_string(const std::string& phase_string)
+{
+    if (phase_string == "WAT") {
+        return Opm::Phase::WATER;
+    }
 
-    if (phase_string == "OIL")
-        return Phase::OIL;
+    if (phase_string == "OIL") {
+        return Opm::Phase::OIL;
+    }
 
-    if (phase_string == "GAS")
-        return Phase::GAS;
+    if (phase_string == "GAS") {
+        return Opm::Phase::GAS;
+    }
 
     throw std::invalid_argument("Tracer: invalid fluid name " + phase_string);
 }
 
-}
+} // Anonymous namespace
 
-const TracerConfig::TracerEntry& TracerConfig::operator[](std::size_t index) const {
-    return this->tracers.at(index);
-}
+namespace Opm {
 
-const TracerConfig::TracerEntry& TracerConfig::operator[](const std::string& name) const {
-    const auto iter = std::ranges::find_if(this->tracers,
-                                           [&name](const TracerEntry& tracer)
-                                           { return tracer.name == name; });
-
-    if (iter == this->tracers.end())
-        throw std::logic_error(fmt::format("No such tracer: {}", name));
-
-    return *iter;
-}
-
-
-TracerConfig::TracerConfig(const UnitSystem& unit_system, const Deck& deck)
+TracerConfig::TracerConfig([[maybe_unused]] const UnitSystem& unit_system,
+                           const Deck&                        deck)
 {
     using TR = ParserKeywords::TRACER;
-    if (deck.hasKeyword<TR>()) {
-        const auto& keyword = deck.get<TR>().back();
-        OpmLog::info( keyword.location().format("\nInitializing tracers from {keyword} in {file} line {line}") );
-        InfoLogger logger("Tracer tables", 3);
-        for (const auto& record : keyword) {
-            const auto& name = record.getItem<TR::NAME>().get<std::string>(0);
-            Phase phase = phase_from_string(record.getItem<TR::FLUID>().get<std::string>(0));
-            double inv_volume = 1.0; // Default scaling (vol/vol).
-            std::string unit_string = "";
-            if (!record.getItem<TR::UNIT>().defaultApplied(0)) {
-                unit_string = record.getItem<TR::UNIT>().get<std::string>(0);
-                logger(keyword.location().format("Non-default tracer unit [" + unit_string + "] from {keyword} in {file} line {line}"));
-                // Non-default tracer units can be "anything".  For now we just keep it as a "tag", and make no
-                // attempts to relate it to physical quantities recognized by the simulator.
-                //   We also leave the denominator of the concentration fraction as it is, and do not convert it to
-                // simulator-internal volume. Thus concentrations will be _wrong_ in simulator units but _correct_
-                // in io-units during computations. Since the passive tracers curently considered have no physical impact,
-                // this should be ok. TODO: However, for tracers where correct quantity matters (e.g. chemical reactions)
-                // proper scaling also for non-default tracer units will be needed.
 
-                // Correct unit names for non-default tracer units are generated in the method 'get_unit_string' below,
-                // and is output by "hijacking" the normal unit-name generating procedure.
+    if (! deck.hasKeyword<TR>()) {
+        return;
+    }
 
-                // Towards "proper" scaling:
-                //if (phase == Phase::GAS)
-                //    inv_volume = unit_system.getDimension(UnitSystem::measure::gas_surface_volume).getSIScaling();
-                //else
-                //    inv_volume = unit_system.getDimension(UnitSystem::measure::liquid_surface_volume).getSIScaling();
-                unit_system.getDimension(UnitSystem::measure::liquid_surface_volume); //hush unused-warning ...
 
-                // Convert unit names to upper-case
-                std::ranges::transform(unit_string, unit_string.begin(),
-                                       [](unsigned char c){ return std::toupper(c); });
-            }
+    const auto& keyword = deck.get<TR>().back();
+    OpmLog::info(
+        keyword.location().format("\nInitializing tracers from {keyword} in {file} line {line}"));
 
-            std::string tracer_field = "TBLKF" + name;
-            if (deck.hasKeyword(tracer_field)) {
-                const auto& tracer_keyword = deck[tracer_field].back();
-                auto free_concentration = tracer_keyword.getRecord(0).getItem(0).getData<double>();
-                logger(tracer_keyword.location().format("Loading tracer concentration from {keyword} in {file} line {line}"));
+    InfoLogger logger("Tracer tables", 3);
+    for (const auto& record : keyword) {
+        const auto& name = record.getItem<TR::NAME>().get<std::string>(0);
+        const auto phase = phase_from_string(record.getItem<TR::FLUID>().get<std::string>(0));
 
-                std::ranges::transform(free_concentration, free_concentration.begin(),
+        double inv_volume = 1.0; // Default scaling (vol/vol).
+        auto unit_string = std::string {};
+        if (!record.getItem<TR::UNIT>().defaultApplied(0)) {
+            // Non-default tracer units can be "anything".  For now we just
+            // keep it as a "tag", and make no attempt to relate it to
+            // physical quantities recognized by the simulator.  We also
+            // leave the denominator of the concentration fraction as is,
+            // and do not convert it to simulator-internal volume.  Thus
+            // concentrations will be _wrong_ in simulator units but
+            // _correct_ in io-units during computations.  Since the passive
+            // tracers currently considered have no physical impact, this
+            // should be ok. TODO: However, for tracers where correct
+            // quantity matters (e.g. chemical reactions) proper scaling
+            // also for non-default tracer units will be needed.
+            //
+            // Correct unit names for non-default tracer units are generated
+            // in the method 'get_unit_string' below, and is output by
+            // "hijacking" the normal unit-name generating procedure.
+
+            unit_string = uppercase(record.getItem<TR::UNIT>()
+                                    .getTrimmedString(0));
+
+            logger(keyword.location().format("Non-default tracer unit [" + unit_string
+                                             + "] from {keyword} in {file} line {line}"));
+
+            // Towards "proper" scaling:
+            // if (phase == Phase::GAS)
+            //    inv_volume =
+            //    unit_system.getDimension(UnitSystem::measure::gas_surface_volume).getSIScaling();
+            // else
+            //    inv_volume =
+            //    unit_system.getDimension(UnitSystem::measure::liquid_surface_volume).getSIScaling();
+        }
+
+        if (std::string tracer_field = "TBLKF" + name; deck.hasKeyword(tracer_field)) {
+            const auto& tracer_keyword = deck[tracer_field].back();
+            auto free_concentration = tracer_keyword.getRecord(0).getItem(0).getData<double>();
+            logger(tracer_keyword.location().format(
+                "Loading tracer concentration from {keyword} in {file} line {line}"));
+
+            std::ranges::transform(free_concentration,
+                                   free_concentration.begin(),
+                                   [inv_volume](const auto& c) { return c * inv_volume; });
+
+            if (std::string tracer_field_solution = "TBLKS" + name;
+                deck.hasKeyword(tracer_field_solution))
+            {
+                const auto& tracer_keyword_solution = deck[tracer_field_solution].back();
+                auto solution_concentration
+                    = tracer_keyword_solution.getRecord(0).getItem(0).getData<double>();
+                logger(tracer_keyword_solution.location().format(
+                    "Loading tracer concentration from {keyword} in {file} line {line}"));
+
+                std::ranges::transform(solution_concentration,
+                                       solution_concentration.begin(),
                                        [inv_volume](const auto& c) { return c * inv_volume; });
 
-                std::string tracer_field_solution = "TBLKS" + name;
-                if (deck.hasKeyword(tracer_field_solution)) {
-                    const auto& tracer_keyword_solution = deck[tracer_field_solution].back();
-                    auto solution_concentration = tracer_keyword_solution.getRecord(0).getItem(0).getData<double>();
-                    logger(tracer_keyword_solution.location().format("Loading tracer concentration from {keyword} in {file} line {line}"));
-
-                    std::ranges::transform(solution_concentration,solution_concentration.begin(),
-                                           [inv_volume](const auto& c) { return c * inv_volume; });
-
-                    this->tracers.emplace_back(name, unit_string, phase, std::move(free_concentration), std::move(solution_concentration)) ;
-                    continue;
-                }
-
-                this->tracers.emplace_back(name, unit_string, phase, std::move(free_concentration)) ;
+                this->tracers.emplace_back(name,
+                                           unit_string,
+                                           phase,
+                                           std::move(free_concentration),
+                                           std::move(solution_concentration));
                 continue;
             }
 
-            std::string tracer_table = "TVDPF" + name;
-            if (deck.hasKeyword(tracer_table)) {
-                const auto& tracer_keyword = deck[tracer_table].back();
-                const auto& deck_item = tracer_keyword.getRecord(0).getItem(0);
-                logger(tracer_keyword.location().format("Loading tracer concentration from {keyword} in {file} line {line}"));
-
-                std::string tracer_table_solution = "TVDPS" + name;
-                if (deck.hasKeyword(tracer_table_solution)) {
-                    const auto& tracer_keyword_solution = deck[tracer_table_solution].back();
-                    const auto& deck_item_solution = tracer_keyword_solution.getRecord(0).getItem(0);
-                    logger(tracer_keyword_solution.location().format("Loading tracer concentration from {keyword} in {file} line {line}"));
-
-                    this->tracers.emplace_back(name, unit_string, phase,
-                                               TracerVdTable(deck_item, inv_volume, this->tracers.size()),
-                                               TracerVdTable(deck_item_solution, inv_volume, this->tracers.size())) ;
-                    continue;
-                }
-
-                this->tracers.emplace_back(name, unit_string, phase, TracerVdTable(deck_item, inv_volume, this->tracers.size()));
-                continue;
-            }
-
-            this->tracers.emplace_back(name, unit_string, phase);
+            this->tracers.emplace_back(name, unit_string, phase, std::move(free_concentration));
+            continue;
         }
+
+        if (std::string tracer_table = "TVDPF" + name; deck.hasKeyword(tracer_table)) {
+            const auto& tracer_keyword = deck[tracer_table].back();
+            const auto& deck_item = tracer_keyword.getRecord(0).getItem(0);
+            logger(tracer_keyword.location().format(
+                "Loading tracer concentration from {keyword} in {file} line {line}"));
+
+            if (std::string tracer_table_solution = "TVDPS" + name;
+                deck.hasKeyword(tracer_table_solution))
+            {
+                const auto& tracer_keyword_solution = deck[tracer_table_solution].back();
+                const auto& deck_item_solution = tracer_keyword_solution.getRecord(0).getItem(0);
+                logger(tracer_keyword_solution.location().format(
+                    "Loading tracer concentration from {keyword} in {file} line {line}"));
+
+                this->tracers.emplace_back(
+                    name,
+                    unit_string,
+                    phase,
+                    TracerVdTable(deck_item, inv_volume, this->tracers.size()),
+                    TracerVdTable(deck_item_solution, inv_volume, this->tracers.size()));
+                continue;
+            }
+
+            this->tracers.emplace_back(name,
+                                       unit_string,
+                                       phase,
+                                       TracerVdTable(deck_item, inv_volume, this->tracers.size()));
+            continue;
+        }
+
+        this->tracers.emplace_back(name, unit_string, phase);
     }
 }
 
@@ -174,28 +198,42 @@ TracerConfig TracerConfig::serializationTestObject()
     return result;
 }
 
-std::size_t TracerConfig::size() const {
+std::size_t TracerConfig::size() const
+{
     return this->tracers.size();
 }
 
-bool TracerConfig::empty() const {
+bool TracerConfig::empty() const
+{
     return this->tracers.empty();
 }
 
-
-const std::vector<TracerConfig::TracerEntry>::const_iterator TracerConfig::begin() const {
-    return this->tracers.begin();
+const TracerConfig::TracerEntry& TracerConfig::operator[](std::size_t index) const
+{
+    return this->tracers.at(index);
 }
 
-const std::vector<TracerConfig::TracerEntry>::const_iterator TracerConfig::end() const {
-    return this->tracers.end();
+const TracerConfig::TracerEntry& TracerConfig::operator[](const std::string& name) const
+{
+    const auto iter = std::ranges::find_if(this->tracers,
+                                           [&name](const TracerEntry& tracer)
+                                           { return tracer.name == name; });
+
+    if (iter == this->tracers.end()) {
+        throw std::logic_error(fmt::format("No such tracer: {}", name));
+    }
+
+    return *iter;
 }
 
-bool TracerConfig::operator==(const TracerConfig& other) const {
+bool TracerConfig::operator==(const TracerConfig& other) const
+{
     return this->tracers == other.tracers;
 }
 
-std::string TracerConfig::get_unit_string(const UnitSystem& unit_system, const std::string & tracer_kw) const {
+std::string TracerConfig::get_unit_string(const UnitSystem& unit_system,
+                                         const std::string& tracer_kw) const
+{
     if (tracer_kw.length() > 4 ) {
         // Check two tracer names strings to allow for tracers starting with S or F
         std::string tracer_name = tracer_kw.substr(4);
@@ -230,4 +268,4 @@ std::string TracerConfig::get_unit_string(const UnitSystem& unit_system, const s
     return std::string("");
 }
 
-}
+} // namespace Opm
