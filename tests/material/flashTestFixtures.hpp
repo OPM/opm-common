@@ -87,10 +87,13 @@ public:
     using Comp0 = C1<Scalar>;
     using Comp1 = C10<Scalar>;
 
-    //! C1/nC10 Peng-Robinson binary interaction parameter — the value this
-    //! library's compositional tests use (cf. ThreeComponentFluidSystem). The
-    //! unequal-index shortcut in interactionCoefficient() is valid only
-    //! because the system is binary.
+    //! C1/nC10 Peng-Robinson binary interaction parameter. Pinned fixture
+    //! value within the range of published C1/nC10 PR coefficients (roughly
+    //! 0.04-0.05, source- and temperature-dependent); the two-phase baselines
+    //! built on it were cross-validated against an independent PR
+    //! implementation (CoolProp) using this same value. The unequal-index
+    //! shortcut in interactionCoefficient() is valid only because the system
+    //! is binary.
     static constexpr Scalar bipC1nC10 = 0.0411;
 
     template <class ValueType>
