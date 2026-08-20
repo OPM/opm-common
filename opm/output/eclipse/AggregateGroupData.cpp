@@ -28,6 +28,9 @@
 #include <opm/output/eclipse/VectorItems/well.hpp>
 #include <opm/output/eclipse/WriteRestartHelpers.hpp>
 
+#include <opm/input/eclipse/EclipseState/Runspec.hpp>
+#include <opm/input/eclipse/EclipseState/TracerConfig.hpp>
+
 #include <opm/input/eclipse/Schedule/GasLiftOpt.hpp>
 #include <opm/input/eclipse/Schedule/Group/GConSump.hpp>
 #include <opm/input/eclipse/Schedule/Group/Group.hpp>
@@ -1527,9 +1530,194 @@ namespace XGrp {
         };
     }
 
+    template <typename TempCallback, typename WaterCallback, typename HCCallback>
+    void tracerLoop(std::span<double>        xGroup,
+                    const Opm::TracerConfig& tracers,
+                    TempCallback&&           processTemperature,
+                    WaterCallback&&          processWaterTracer,
+                    HCCallback&&             processHCTracer)
+    {
+        auto ix = std::size_t {0};
+
+        ix += processTemperature(&xGroup[ix]);
+
+        for (const auto& tracer : tracers) {
+            if (tracer.phase == Opm::Phase::WATER) {
+                ix += processWaterTracer(tracer, &xGroup[ix]);
+            }
+            else {
+                ix += processHCTracer(tracer, &xGroup[ix]);
+            }
+        }
+    }
+
+    void assignTracerQuantity(const bool               isTemp,
+                              const std::string&       quantity,
+                              const std::string&       groupName,
+                              const Opm::TracerConfig& tracers,
+                              const Opm::SummaryState& smry,
+                              std::span<double>        xGroup)
+    {
+        auto getValue = [isField = groupName == "FIELD",
+                         &smry, &quantity, &groupName]
+            (const std::string& tracerName)
+        {
+            const auto level  = isField ? 'F' : 'G';
+
+            // FTIRHEA, GTPTFXF2, GTITWT1, ...
+            const auto vector = fmt::format("{}T{}{}", level,
+                                            quantity, tracerName);
+
+            if (isField) {
+                return smry.get(vector, 0.0);
+            }
+
+            return smry.get_group_var(groupName, vector, 0.0);
+        };
+
+        auto processWaterTracer = [&getValue]
+            (const auto& tracer, auto* xgrp)
+        {
+            xgrp[0] = getValue(tracer.name);
+
+            return std::size_t {1};
+        };
+
+        auto processHCTracer = [dgas = tracers.supportsSolutionGasTracer(),
+                                voil = tracers.supportsVaporisedOilTracer(),
+                                &getValue]
+            (const auto& tracer, auto* xgrp)
+        {
+            const auto supportsSolution = (dgas && tracer.phase == Opm::Phase::GAS)
+                || (voil && tracer.phase == Opm::Phase::OIL);
+
+            xgrp[0] = getValue(tracer.wellfname());
+
+            if (!supportsSolution) {
+                return std::size_t {1};
+            }
+
+            xgrp[1] = getValue(tracer.wellsname());
+            return std::size_t {2};
+        };
+
+        if (!isTemp) {
+            return tracerLoop(xGroup, tracers,
+                              [](auto*) { return std::size_t {0}; },
+                              processWaterTracer,
+                              processHCTracer);
+        }
+
+        auto processTemperature = [tempQuant = getValue("HEA")](auto* xgrp)
+        {
+            xgrp[0] = tempQuant;
+
+            return std::size_t {1};
+        };
+
+        tracerLoop(xGroup, tracers, processTemperature, processWaterTracer, processHCTracer);
+    }
+
+    void assignTracerRates(const bool               isInjector,
+                           const bool               isTemp,
+                           const std::string&       groupName,
+                           const Opm::TracerConfig& tracers,
+                           const Opm::SummaryState& smry,
+                           std::span<double>        xGroup)
+    {
+        const auto prefix = isInjector ? std::string {"IR"} : std::string {"PR"};
+
+        assignTracerQuantity(isTemp, prefix, groupName, tracers, smry, xGroup);
+    }
+
+    void assignTracerCumulatives(const bool               isInjection,
+                                 const bool               isTemp,
+                                 const std::string&       groupName,
+                                 const Opm::TracerConfig& tracers,
+                                 const Opm::SummaryState& smry,
+                                 std::span<double>        xGroup)
+    {
+        const auto prefix = isInjection ? std::string {"IT"} : std::string {"PT"};
+
+        assignTracerQuantity(isTemp, prefix, groupName, tracers, smry, xGroup);
+    }
+
+    template <class XGroupArray>
+    void assignTracerData(const Opm::Runspec&      runspec,
+                          const Opm::TracerConfig& tracers,
+                          const Opm::SummaryState& smry,
+                          const Opm::Group&        group,
+                          XGroupArray&             xGroup)
+    {
+        if (tracers.empty() && !runspec.temp()) {
+            return;
+        }
+
+        const auto numTracerElems = [&runspec, &tracers]()
+        {
+            const auto& t = runspec.tracers();
+
+            return t.water_tracers() + (runspec.temp() ? 1 : 0)
+            + (1 + tracers.supportsSolutionGasTracer())  * t.gas_tracers()
+            + (1 + tracers.supportsVaporisedOilTracer()) * t.oil_tracers();
+        }();
+
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::XGroup::index;
+
+        auto tracerElems = std::span<double> {
+            xGroup.begin() + Ix::TracerOffset, xGroup.end()
+        };
+
+        std::ranges::fill(tracerElems, 0.0);
+
+        const auto& gname = group.name();
+
+        auto qtyIndex = std::size_t {0};
+
+        // Order of quantities in restart file is:
+        //   1. Injection rates
+        //   2. Production rates
+        //   3. Cumulative injection volume
+        //   4. Cumulative production volume
+
+        // 1. Injection rates.
+        assignTracerRates(/* injection = */ true,
+                          runspec.temp(),
+                          gname,
+                          tracers,
+                          smry,
+                          tracerElems.subspan(qtyIndex++ * numTracerElems, numTracerElems));
+
+        // 2. Production rates.
+        assignTracerRates(/* injection = */ false,
+                          runspec.temp(),
+                          gname,
+                          tracers,
+                          smry,
+                          tracerElems.subspan(qtyIndex++ * numTracerElems, numTracerElems));
+
+        // 3. Cumulative injection volume.
+        assignTracerCumulatives(/* injection = */ true,
+                                runspec.temp(),
+                                gname,
+                                tracers,
+                                smry,
+                                tracerElems.subspan(qtyIndex++ * numTracerElems, numTracerElems));
+
+        // 4. Cumulative production volume.
+        assignTracerCumulatives(/* injection = */ false,
+                                runspec.temp(),
+                                gname,
+                                tracers,
+                                smry,
+                                tracerElems.subspan(qtyIndex++ * numTracerElems, numTracerElems));
+    }
+
     // Populate restart file's XGRP array for this group.
     template <class XGrpArray>
     void dynamicContrib(const Opm::Group&        group,
+                        const Opm::Runspec&      runspec,
+                        const Opm::TracerConfig& tracers,
                         const Opm::SummaryState& sumState,
                         XGrpArray&               xGrp)
     {
@@ -1552,7 +1740,7 @@ namespace XGrp {
         xGrp[Ix::VoidPrGuideRate_2] = xGrp[Ix::VoidPrGuideRate];
         xGrp[Ix::WatInjGuideRate_2] = xGrp[Ix::WatInjGuideRate];
 
-        std::fill(xGrp.begin() + Ix::TracerOffset, xGrp.end(), 0);
+        assignTracerData(runspec, tracers, sumState, group, xGrp);
     }
 
     template <class XGrpArray>
@@ -1628,6 +1816,7 @@ AggregateGroupData(const std::vector<int>& inteHead)
 void
 Opm::RestartIO::Helpers::AggregateGroupData::
 captureDeclaredGroupData(const Schedule&         sched,
+                         const TracerConfig&     tracer,
                          const std::size_t       simStep,
                          const SummaryState&     sumState,
                          const std::vector<int>& inteHead)
@@ -1655,12 +1844,12 @@ captureDeclaredGroupData(const Schedule&         sched,
     });
 
     // Define Dynamic Contributions to XGrp Array.
-    groupLoop(curGroups, [&sumState, this]
+    groupLoop(curGroups, [&runspec = sched.runspec(), &tracer, &sumState, this]
               (const Group& group, const std::size_t groupID) -> void
     {
         auto xg = this->xGroup_[groupID];
 
-        XGrp::dynamicContrib(group, sumState, xg);
+        XGrp::dynamicContrib(group, runspec, tracer, sumState, xg);
     });
 
     // Define Static Contributions to ZGrp Array.

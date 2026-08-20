@@ -396,9 +396,11 @@ namespace {
             if (grp_name == "FIELD") { continue; }
 
             makeEntities('G', Cat::Group, extra_group_vectors, grp_name);
+            makeTracerEntities('G', Cat::Group, grp_name);
         }
 
         makeEntities('F', Cat::Field, extra_field_vectors, "FIELD");
+        makeTracerEntities('F', Cat::Field, "FIELD");
 
         return entities;
     }
