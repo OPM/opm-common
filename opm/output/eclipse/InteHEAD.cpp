@@ -112,8 +112,8 @@ enum index : std::vector<int>::size_type {
   ih_052       =       52       ,              //       0       0
   ih_053       =       53       ,              //       0       0
   ih_054       =       54       ,              //       0       0
-  ih_055       =       55       ,              //       0       0
-  ih_056       =       56       ,              //       0       0
+  MaxWatTracers =      VI::intehead::MaxWatTracers,   // Run's maximum number of water tracers in the model (per Grid)
+  MaxGasTracers =      VI::intehead::MaxGasTracers,   // Run's maximum number of gas tracers in the model (per Grid)
   ih_057       =       57       ,              //       0       0
   NGRNPHASE    =       VI::intehead::NGRNPH,   //       Parameter to determine the nominated phase for the guiderate
   EACHNC       =       VI::intehead::EACHNCITS, //  Index indicating if lift gas distribution optimized each of the NUPCOL first iterations or not
@@ -680,8 +680,7 @@ Opm::RestartIO::InteHEAD::tuningParam(const TuningPar& tunpar)
 
 Opm::RestartIO::InteHEAD&
 Opm::RestartIO::InteHEAD::variousParam(const int version,
-                                       const int iprog,
-                      [[maybe_unused]] const int num_tracer_comps)
+                                       const int iprog)
 {
     this->data_[VERSION] = version;
     this->data_[IPROG]   = iprog;
@@ -819,14 +818,21 @@ liftOptParam(int in_enc)
 }
 
 Opm::RestartIO::InteHEAD&
+Opm::RestartIO::InteHEAD::tracerCounts(const Tracers& tracers)
+{
+    this->data_[MaxWatTracers] = tracers.water_tracers();
+    this->data_[MaxGasTracers] = tracers.gas_tracers();
+
+    return *this;
+}
+
+Opm::RestartIO::InteHEAD&
 Opm::RestartIO::InteHEAD::activeNetwork(const ActiveNetwork& actntwrk)
 {
     this->data_[ACTIVENETWRK] = actntwrk.actnetwrk;
 
     return *this;
 }
-
-
 
 Opm::RestartIO::InteHEAD&
 Opm::RestartIO::InteHEAD::networkDimensions(const NetworkDims& nwdim)

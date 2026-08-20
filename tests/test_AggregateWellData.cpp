@@ -41,6 +41,8 @@
 #include <opm/io/eclipse/rst/state.hpp>
 
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/input/eclipse/EclipseState/Runspec.hpp>
+#include <opm/input/eclipse/EclipseState/TracerConfig.hpp>
 
 #include <opm/input/eclipse/Python/Python.hpp>
 
@@ -59,7 +61,9 @@
 #include <opm/common/utility/TimeService.hpp>
 
 #include <algorithm>
+#include <span>
 #include <string>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -72,7 +76,7 @@ namespace {
         explicit MockIH(const int numWells,
                         const int iwelPerWell = 155,  // E100
                         const int swelPerWell = 122,  // E100
-                        const int xwelPerWell = 130,  // E100
+                        const int xwelPerWell = 131,  // E100
                         const int zwelPerWell =   3); // E100
 
         std::vector<int> value;
@@ -1989,3 +1993,981 @@ BOOST_AUTO_TEST_CASE(WdFac_Correlation)
 }
 
 BOOST_AUTO_TEST_SUITE_END()     // Extra_Effects
+
+// ===========================================================================
+
+BOOST_AUTO_TEST_SUITE(Tracer_Values)
+
+namespace {
+
+    SimulationCase isothermalTracerCase()
+    {
+        return SimulationCase { Opm::Parser{}.parseString(R"xxx(RUNSPEC
+DIMENS
+  5 5 2 /
+OIL
+GAS
+WATER
+DISGAS
+TABDIMS
+/
+EQLDIMS
+  3 1 1 /
+TRACERS
+--  oil  water  gas  env
+     1*  2      2    1*   /
+GRID
+DXV
+  5*100 /
+DYV
+  5*100 /
+DZV
+  5 10 /
+DEPTHZ
+  36*2000.0 /
+EQUALS
+  PORO 0.25 /
+  PERMX 100 /
+  PERMY 100 /
+  PERMZ 10 /
+/
+PROPS
+DENSITY
+  852.6 1014.3 0.83 /
+TRACER
+SEA  WAT  /
+OCE  GAS /
+/
+TVDPFSEA
+1000   0.0
+5000   0.0 /
+TBLKFOCE
+1.0 2.0 3.0 /
+SCHEDULE
+WELSPECS
+  IW G 1 1 2010.0 'WATER' /
+  IG G 1 5 2010.0 'GAS' /
+  P  G 5 3 2002.5 'LIQ' /
+/
+COMPDAT
+  IW 1 1 2 2 'OPEN' 2* 0.5 /
+  IG 1 5 1 1 'OPEN' 2* 0.5 /
+  P  5 3 1 2 'OPEN' 2* 0.5 /
+/
+WTRACER
+  IW SEA 0.123 /
+  IG OCE 0.456 /
+/
+WCONINJE
+  IW 'WATER' 'OPEN' RATE 12345.6 1* 512.256 /
+  IG 'GAS' 'OPEN' RATE 678910.1112 1* 256.128 /
+/
+WCONPROD
+  P 'OPEN' LRAT 3* 100E3 1* 25.125 /
+/
+TSTEP
+  1 2 3 4 5 10 15 4*20 /
+END
+)xxx")
+        };
+    }
+
+    SimulationCase thermalTracerCase()
+    {
+        return SimulationCase { Opm::Parser{}.parseString(R"xxx(RUNSPEC
+DIMENS
+  5 5 2 /
+OIL
+GAS
+WATER
+DISGAS
+TEMP
+TABDIMS
+/
+EQLDIMS
+  3 1 1 /
+TRACERS
+--  oil  water  gas  env
+     1*  2      2    1*   /
+GRID
+DXV
+  5*100 /
+DYV
+  5*100 /
+DZV
+  5 10 /
+DEPTHZ
+  36*2000.0 /
+EQUALS
+  PORO 0.25 /
+  PERMX 100 /
+  PERMY 100 /
+  PERMZ 10 /
+/
+PROPS
+DENSITY
+  852.6 1014.3 0.83 /
+TRACER
+SEA  WAT  /
+OCE  GAS /
+/
+TVDPFSEA
+1000   0.0
+5000   0.0 /
+TBLKFOCE
+1.0 2.0 3.0 /
+TEMPI
+  50*42.0 /
+SCHEDULE
+WELSPECS
+  IW G 1 1 2010.0 'WATER' /
+  IG G 1 5 2010.0 'GAS' /
+  P  G 5 3 2002.5 'LIQ' /
+/
+COMPDAT
+  IW 1 1 2 2 'OPEN' 2* 0.5 /
+  IG 1 5 1 1 'OPEN' 2* 0.5 /
+  P  5 3 1 2 'OPEN' 2* 0.5 /
+/
+WTRACER
+  IW SEA 0.123 /
+  IG OCE 0.456 /
+/
+WTEMP
+  IW 10.0 /
+  IG 60.0 /
+/
+WCONINJE
+  IW 'WATER' 'OPEN' RATE 12345.6 1* 512.256 /
+  IG 'GAS' 'OPEN' RATE 678910.1112 1* 256.128 /
+/
+WCONPROD
+  P 'OPEN' LRAT 3* 100E3 1* 25.125 /
+/
+TSTEP
+  1 2 3 4 5 10 15 4*20 /
+END
+)xxx")
+        };
+    }
+
+    std::pair<Opm::data::Wells, Opm::SummaryState> dynamicStateIsothermTracers()
+    {
+        auto dyn_state = std::pair<Opm::data::Wells, Opm::SummaryState> {
+            std::piecewise_construct,
+            std::forward_as_tuple(),
+            std::forward_as_tuple(Opm::TimeService::now(), 0.0)
+        };
+
+        using o = ::Opm::data::Rates::opt;
+
+        auto& [xw, sum_state] = dyn_state;
+
+        {
+            const auto wname = std::string { "IW" };
+
+            xw[wname].rates.set(o::wat, 1.0);
+            xw[wname].bhp = 213.0*Opm::unit::barsa;
+        }
+
+        {
+            const auto wname = std::string { "IG" };
+
+            xw[wname].rates.set(o::gas, 3.0);
+            xw[wname].bhp = 213.0*Opm::unit::barsa;
+        }
+
+        {
+            const auto wname = std::string { "P" };
+
+            xw[wname].bhp = 234.0*Opm::unit::barsa;
+            xw[wname].rates
+                .set(o::wat,  5.0*Opm::unit::cubic(Opm::unit::meter)/Opm::unit::day)
+                .set(o::oil,  2.5*Opm::unit::cubic(Opm::unit::meter)/Opm::unit::day)
+                .set(o::gas, 10.0*Opm::unit::cubic(Opm::unit::meter)/Opm::unit::day);
+        }
+
+        sum_state.update_well_var("IW", "WTICSEA", 0.123);
+        sum_state.update_well_var("IW", "WTIRSEA", 1234.5);
+        sum_state.update_well_var("IW", "WTITSEA", 123456.7);
+
+        sum_state.update_well_var("IG", "WTICOCE", 0.456);
+        sum_state.update_well_var("IG", "WTIROCE", 4567.8);
+        sum_state.update_well_var("IG", "WTITOCE", 4567891.011);
+
+        sum_state.update_well_var("IG", "WTICFOCE", 0.456);
+        sum_state.update_well_var("IG", "WTIRFOCE", 4567.8);
+        sum_state.update_well_var("IG", "WTITFOCE", 4567891.011);
+
+        sum_state.update_well_var("P", "WTPCSEA", 0.0123);
+        sum_state.update_well_var("P", "WTPRSEA", 123.45);
+        sum_state.update_well_var("P", "WTPTSEA", 1234.567);
+
+        sum_state.update_well_var("P", "WTPCOCE", 0.00456);
+        sum_state.update_well_var("P", "WTPROCE", 45.678);
+        sum_state.update_well_var("P", "WTPTOCE", 4567.891011);
+
+        sum_state.update_well_var("P", "WTPCFOCE", 0.0045);
+        sum_state.update_well_var("P", "WTPRFOCE", 40.0);
+        sum_state.update_well_var("P", "WTPTFOCE", 4500.0);
+
+        sum_state.update_well_var("P", "WTPCSOCE", 0.00456 - 0.0045);
+        sum_state.update_well_var("P", "WTPRSOCE", 45.678 - 40.0);
+        sum_state.update_well_var("P", "WTPTSOCE", 4567.891011 - 4500.0);
+
+        return dyn_state;
+    }
+
+    std::pair<Opm::data::Wells, Opm::SummaryState> dynamicStateThermalTracers()
+    {
+        auto dynState = dynamicStateIsothermTracers();
+
+        auto& sum_state = dynState.second;
+
+        sum_state.update_well_var("IW", "WTICHEA", 10.0);
+        sum_state.update_well_var("IW", "WTIRHEA", 112233.44);
+        sum_state.update_well_var("IW", "WTITHEA", 100.0e6);
+
+        sum_state.update_well_var("IG", "WTICHEA", 60.0);
+        sum_state.update_well_var("IG", "WTIRHEA", 223344.55);
+        sum_state.update_well_var("IG", "WTITHEA", 2.0e9);
+
+        sum_state.update_well_var("P", "WTPCHEA", 45.67);
+        sum_state.update_well_var("P", "WTPRHEA", 445566.77);
+        sum_state.update_well_var("P", "WTPTHEA", 135.79e6);
+
+        return dynState;
+    }
+
+    namespace VI = Opm::RestartIO::Helpers::VectorItems;
+
+    std::tuple<int, int, double> timePoint(const SimulationCase& cse)
+    {
+        constexpr auto report_step = 7;
+        constexpr auto sim_step = report_step - 1;
+        const auto simTime = cse.sched.seconds(report_step);
+
+        BOOST_CHECK_CLOSE(simTime, (1 + 2 + 3 + 4 + 5 + 10 + 15) * 86'400.0, 1.0e-7);
+
+        return {report_step, sim_step, simTime};
+    }
+
+    std::vector<int> intehead(const SimulationCase& cse)
+    {
+        const auto [report_step, sim_step, simTime] = timePoint(cse);
+
+        return Opm::RestartIO::Helpers::createInteHead
+            (cse.es, cse.grid, cse.sched, simTime,
+             report_step, // Should really be number of timesteps
+             report_step, sim_step);
+    }
+
+    Opm::RestartIO::Helpers::AggregateWellData
+    wellData(const SimulationCase&    cse,
+             const std::vector<int>&  ih,
+             const Opm::data::Wells&  xw,
+             const Opm::SummaryState& smry)
+    {
+        auto wd = Opm::RestartIO::Helpers::AggregateWellData {ih};
+
+        const auto tp = timePoint(cse);
+        const auto sim_step = std::get<1>(tp);
+
+        wd.captureDeclaredWellData(cse.sched, cse.es.tracer(),
+                                   sim_step, {}, {}, smry, ih);
+
+        wd.captureDynamicWellData(cse.sched, cse.es.tracer(),
+                                  sim_step, xw, smry);
+
+        return wd;
+    }
+} // Anonymous namespace
+
+BOOST_AUTO_TEST_SUITE(Isothermal)
+
+namespace {
+    constexpr auto tracerStride = std::size_t{6};
+}
+
+BOOST_AUTO_TEST_CASE(InteHEAD_Allocation_Sizes)
+{
+    const auto cse = isothermalTracerCase();
+    const auto ih  = intehead(cse);
+
+    const auto expectNumTracers = [&trcCount = cse.es.runspec().tracers()]()
+    {
+        return trcCount.water_tracers()
+             + trcCount.oil_tracers()
+             + trcCount.gas_tracers();
+    }();
+
+    BOOST_CHECK_EQUAL(expectNumTracers, 4);
+
+    const auto expectNumTrcElems = [&trcCount = cse.es.runspec().tracers()]()
+    {
+        return trcCount.water_tracers()
+             + 0*trcCount.oil_tracers()
+             + 2*trcCount.gas_tracers();
+    }();
+
+    BOOST_CHECK_EQUAL(expectNumTrcElems, static_cast<int>(tracerStride));
+
+    namespace VI = Opm::RestartIO::Helpers::VectorItems;
+
+    BOOST_CHECK_EQUAL(ih[VI::intehead::NIWELZ], static_cast<int>(VI::IWell::TracerOffset) + expectNumTracers);
+    BOOST_CHECK_EQUAL(ih[VI::intehead::NSWELZ], static_cast<int>(VI::SWell::TracerOffset) + 2*expectNumTrcElems);
+    BOOST_CHECK_EQUAL(ih[VI::intehead::NXWELZ], static_cast<int>(VI::XWell::TracerOffset) + 5*expectNumTrcElems + 2);
+}
+
+BOOST_AUTO_TEST_SUITE(SWEL)
+
+BOOST_AUTO_TEST_CASE(IW)
+{
+    const auto cse = isothermalTracerCase();
+    const auto& [xw, smry] = dynamicStateIsothermTracers();
+    const auto ih = intehead(cse);
+    const auto wd = wellData(cse, ih, xw, smry);
+
+    const auto swsz = ih[VI::intehead::NSWELZ];
+
+    BOOST_REQUIRE_MESSAGE(static_cast<std::size_t>(swsz) > VI::SWell::TracerOffset,
+                          "SWEL must allocate space for tracer concentrations");
+
+    const auto sweltrc = std::span {wd.getSWell()}
+        .subspan(0*swsz, swsz)
+        .subspan(VI::SWell::TracerOffset);
+
+    const auto wtic = sweltrc.subspan(0*tracerStride, tracerStride);
+
+    BOOST_CHECK_CLOSE(wtic[0], 0.123f, 1e-6f);
+    BOOST_CHECK_CLOSE(wtic[1], 0.0f, 1e-6f);
+    BOOST_CHECK_CLOSE(wtic[2], 0.0f, 1e-6f);
+    BOOST_CHECK_CLOSE(wtic[3], 0.0f, 1e-6f);
+    BOOST_CHECK_CLOSE(wtic[4], 0.0f, 1e-6f);
+    BOOST_CHECK_CLOSE(wtic[5], 0.0f, 1e-6f);
+
+    const auto wtic2 = sweltrc.subspan(1*tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(wtic2[0], 0.0f, 1e-6f);
+    BOOST_CHECK_CLOSE(wtic2[1], 0.0f, 1e-6f);
+    BOOST_CHECK_CLOSE(wtic2[2], 0.0f, 1e-6f);
+    BOOST_CHECK_CLOSE(wtic2[3], 0.0f, 1e-6f);
+    BOOST_CHECK_CLOSE(wtic2[4], 0.0f, 1e-6f);
+    BOOST_CHECK_CLOSE(wtic2[5], 0.0f, 1e-6f);
+}
+
+BOOST_AUTO_TEST_CASE(IG)
+{
+    const auto cse = isothermalTracerCase();
+    const auto& [xw, smry] = dynamicStateIsothermTracers();
+    const auto ih = intehead(cse);
+    const auto wd = wellData(cse, ih, xw, smry);
+
+    const auto swsz = ih[VI::intehead::NSWELZ];
+
+    const auto sweltrc = std::span {wd.getSWell()}
+        .subspan(1*swsz, swsz)
+        .subspan(VI::SWell::TracerOffset);
+
+    const auto wtic = sweltrc.subspan(0*tracerStride, tracerStride);
+
+    BOOST_CHECK_CLOSE(wtic[0], 0.0f, 1e-6f);
+    BOOST_CHECK_CLOSE(wtic[1], 0.456f, 1e-6f);
+    BOOST_CHECK_CLOSE(wtic[2], 0.0f, 1e-6f);
+    BOOST_CHECK_CLOSE(wtic[3], 0.0f, 1e-6f);
+    BOOST_CHECK_CLOSE(wtic[4], 0.0f, 1e-6f);
+    BOOST_CHECK_CLOSE(wtic[5], 0.0f, 1e-6f);
+
+    const auto wtic2 = sweltrc.subspan(1*tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(wtic2[0], 0.0f, 1e-6f);
+    BOOST_CHECK_CLOSE(wtic2[1], 0.0f, 1e-6f);
+    BOOST_CHECK_CLOSE(wtic2[2], 0.0f, 1e-6f);
+    BOOST_CHECK_CLOSE(wtic2[3], 0.0f, 1e-6f);
+    BOOST_CHECK_CLOSE(wtic2[4], 0.0f, 1e-6f);
+    BOOST_CHECK_CLOSE(wtic2[5], 0.0f, 1e-6f);
+}
+
+BOOST_AUTO_TEST_CASE(P)
+{
+    const auto cse = isothermalTracerCase();
+    const auto& [xw, smry] = dynamicStateIsothermTracers();
+    const auto ih = intehead(cse);
+    const auto wd = wellData(cse, ih, xw, smry);
+
+    const auto swsz = ih[VI::intehead::NSWELZ];
+
+    const auto sweltrc = std::span {wd.getSWell()}
+        .subspan(2*swsz, swsz)
+        .subspan(VI::SWell::TracerOffset);
+
+    const auto wtic = sweltrc.subspan(0*tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(wtic[0], 0.0f, 1e-6f);
+    BOOST_CHECK_CLOSE(wtic[1], 0.0f, 1e-6f);
+    BOOST_CHECK_CLOSE(wtic[2], 0.0f, 1e-6f);
+    BOOST_CHECK_CLOSE(wtic[3], 0.0f, 1e-6f);
+    BOOST_CHECK_CLOSE(wtic[4], 0.0f, 1e-6f);
+    BOOST_CHECK_CLOSE(wtic[5], 0.0f, 1e-6f);
+
+    const auto wtic2 = sweltrc.subspan(1*tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(wtic2[0], 0.0f, 1e-6f);
+    BOOST_CHECK_CLOSE(wtic2[1], 0.0f, 1e-6f);
+    BOOST_CHECK_CLOSE(wtic2[2], 0.0f, 1e-6f);
+    BOOST_CHECK_CLOSE(wtic2[3], 0.0f, 1e-6f);
+    BOOST_CHECK_CLOSE(wtic2[4], 0.0f, 1e-6f);
+    BOOST_CHECK_CLOSE(wtic2[5], 0.0f, 1e-6f);
+}
+
+BOOST_AUTO_TEST_SUITE_END()     // SWEL
+
+// --------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_SUITE(XWEL)
+
+BOOST_AUTO_TEST_CASE(IW)
+{
+    const auto cse = isothermalTracerCase();
+    const auto& [xw, smry] = dynamicStateIsothermTracers();
+    const auto ih = intehead(cse);
+    const auto wd = wellData(cse, ih, xw, smry);
+
+    const auto xwsz = ih[VI::intehead::NXWELZ];
+
+    BOOST_REQUIRE_MESSAGE(static_cast<std::size_t>(xwsz) > VI::XWell::TracerOffset,
+                          "XWEL must allocate space for tracer concentrations");
+
+    const auto xweltrc = std::span {wd.getXWell()}
+        .subspan(0 * xwsz, xwsz)
+        .subspan(VI::XWell::TracerOffset);
+
+    const auto wt_rate = xweltrc.subspan(0*tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(wt_rate[0], -1234.5, 1e-6);
+    BOOST_CHECK_CLOSE(wt_rate[1], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wt_rate[2], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wt_rate[3], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wt_rate[4], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wt_rate[5], 0.0, 1e-6);
+
+    const auto wtpt = xweltrc.subspan(1*tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(wtpt[0], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtpt[1], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtpt[2], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtpt[3], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtpt[4], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtpt[5], 0.0, 1e-6);
+
+    const auto wtit = xweltrc.subspan(2*tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(wtit[0], 123456.7, 1e-6);
+    BOOST_CHECK_CLOSE(wtit[1], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtit[2], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtit[3], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtit[4], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtit[5], 0.0, 1e-6);
+
+    const auto wtic = xweltrc.subspan(3*tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(wtic[0], 0.123, 1e-6);
+    BOOST_CHECK_CLOSE(wtic[1], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtic[2], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtic[3], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtic[4], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtic[5], 0.0, 1e-6);
+
+    const auto wtic2 = xweltrc.subspan(4*tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(wtic2[0], 0.123, 1e-6);
+    BOOST_CHECK_CLOSE(wtic2[1], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtic2[2], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtic2[3], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtic2[4], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtic2[5], 0.0, 1e-6);
+
+    const auto extra = xweltrc.subspan(5*tracerStride);
+    BOOST_CHECK_EQUAL(extra.size(), std::size_t{2});
+    BOOST_CHECK_CLOSE(extra[0], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(extra[1], 0.0, 1e-6);
+}
+
+BOOST_AUTO_TEST_CASE(IG)
+{
+    const auto cse = isothermalTracerCase();
+    const auto& [xw, smry] = dynamicStateIsothermTracers();
+    const auto ih = intehead(cse);
+    const auto wd = wellData(cse, ih, xw, smry);
+
+    const auto xwsz = ih[VI::intehead::NXWELZ];
+
+    BOOST_REQUIRE_MESSAGE(static_cast<std::size_t>(xwsz) > VI::XWell::TracerOffset,
+                          "XWEL must allocate space for tracer concentrations");
+
+    const auto xweltrc = std::span {wd.getXWell()}
+        .subspan(1 * xwsz, xwsz)
+        .subspan(VI::XWell::TracerOffset);
+
+    const auto wt_rate = xweltrc.subspan(0*tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(wt_rate[0], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wt_rate[1], -4567.8, 1e-6);
+    BOOST_CHECK_CLOSE(wt_rate[2], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wt_rate[3], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wt_rate[4], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wt_rate[5], 0.0, 1e-6);
+
+    const auto wtpt = xweltrc.subspan(1*tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(wtpt[0], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtpt[1], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtpt[2], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtpt[3], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtpt[4], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtpt[5], 0.0, 1e-6);
+
+    const auto wtit = xweltrc.subspan(2*tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(wtit[0], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtit[1], 4567891.011, 1e-6);
+    BOOST_CHECK_CLOSE(wtit[2], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtit[3], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtit[4], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtit[5], 0.0, 1e-6);
+
+    const auto wtic = xweltrc.subspan(3*tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(wtic[0], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtic[1], 0.456, 1e-6);
+    BOOST_CHECK_CLOSE(wtic[2], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtic[3], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtic[4], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtic[5], 0.0, 1e-6);
+
+    const auto wtic2 = xweltrc.subspan(4*tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(wtic2[0], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtic2[1], 0.456, 1e-6);
+    BOOST_CHECK_CLOSE(wtic2[2], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtic2[3], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtic2[4], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtic2[5], 0.0, 1e-6);
+
+    const auto extra = xweltrc.subspan(5*tracerStride);
+    BOOST_CHECK_EQUAL(extra.size(), std::size_t{2});
+    BOOST_CHECK_CLOSE(extra[0], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(extra[1], 0.0, 1e-6);
+}
+
+BOOST_AUTO_TEST_CASE(P)
+{
+    const auto cse = isothermalTracerCase();
+    const auto& [xw, smry] = dynamicStateIsothermTracers();
+    const auto ih = intehead(cse);
+    const auto wd = wellData(cse, ih, xw, smry);
+
+    const auto xwsz = ih[VI::intehead::NXWELZ];
+
+    BOOST_REQUIRE_MESSAGE(static_cast<std::size_t>(xwsz) > VI::XWell::TracerOffset,
+                          "XWEL must allocate space for tracer concentrations");
+
+    const auto xweltrc = std::span {wd.getXWell()}
+        .subspan(2 * xwsz, xwsz)
+        .subspan(VI::XWell::TracerOffset);
+
+    const auto wt_rate = xweltrc.subspan(0*tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(wt_rate[0], 123.45, 1e-6);
+    BOOST_CHECK_CLOSE(wt_rate[1], 40.0, 1e-6);
+    BOOST_CHECK_CLOSE(wt_rate[2], 5.678, 1e-6);
+    BOOST_CHECK_CLOSE(wt_rate[3], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wt_rate[4], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wt_rate[5], 0.0, 1e-6);
+
+    const auto wtpt = xweltrc.subspan(1*tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(wtpt[0], 1234.567, 1e-6);
+    BOOST_CHECK_CLOSE(wtpt[1], 4500.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtpt[2], 67.891011, 1e-6);
+    BOOST_CHECK_CLOSE(wtpt[3], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtpt[4], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtpt[5], 0.0, 1e-6);
+
+    const auto wtit = xweltrc.subspan(2*tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(wtit[0], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtit[1], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtit[2], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtit[3], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtit[4], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtit[5], 0.0, 1e-6);
+
+    const auto wtpc = xweltrc.subspan(3*tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(wtpc[0], 0.0123, 1e-6);
+    BOOST_CHECK_CLOSE(wtpc[1], 0.0045, 1e-6);
+    BOOST_CHECK_CLOSE(wtpc[2], 0.00456 - 0.0045, 1e-6);
+    BOOST_CHECK_CLOSE(wtpc[3], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtpc[4], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtpc[5], 0.0, 1e-6);
+
+    const auto wtpc2 = xweltrc.subspan(4*tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(wtpc2[0], 0.0123, 1e-6);
+    BOOST_CHECK_CLOSE(wtpc2[1], 0.0045, 1e-6);
+    BOOST_CHECK_CLOSE(wtpc2[2], 0.00456 - 0.0045, 1e-6);
+    BOOST_CHECK_CLOSE(wtpc2[3], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtpc2[4], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtpc2[5], 0.0, 1e-6);
+
+    const auto extra = xweltrc.subspan(5*tracerStride);
+    BOOST_CHECK_EQUAL(extra.size(), std::size_t{2});
+    BOOST_CHECK_CLOSE(extra[0], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(extra[1], 0.0, 1e-6);
+}
+
+BOOST_AUTO_TEST_SUITE_END()     // XWEL
+
+BOOST_AUTO_TEST_SUITE_END()     // Isothermal
+
+// ==========================================================================
+
+BOOST_AUTO_TEST_SUITE(Thermal)
+
+namespace {
+    constexpr auto tracerStride = std::size_t{7};
+}
+
+BOOST_AUTO_TEST_CASE(InteHEAD_Allocation_Sizes)
+{
+    const auto cse = thermalTracerCase();
+    const auto ih  = intehead(cse);
+
+    const auto expectNumTracers = [&trcCount = cse.es.runspec().tracers()]()
+    {
+        return trcCount.water_tracers()
+             + trcCount.oil_tracers()
+             + trcCount.gas_tracers()
+             + 1; // Temperature tracer
+    }();
+
+    BOOST_CHECK_EQUAL(expectNumTracers, 5);
+
+    const auto expectNumTrcElems = [&trcCount = cse.es.runspec().tracers()]()
+    {
+        return trcCount.water_tracers()
+             + 0*trcCount.oil_tracers()
+             + 2*trcCount.gas_tracers()
+             + 1; // Temperature tracer
+    }();
+
+    BOOST_CHECK_EQUAL(expectNumTrcElems, static_cast<int>(tracerStride));
+
+    namespace VI = Opm::RestartIO::Helpers::VectorItems;
+
+    BOOST_CHECK_EQUAL(ih[VI::intehead::NIWELZ], static_cast<int>(VI::IWell::TracerOffset) + expectNumTracers);
+    BOOST_CHECK_EQUAL(ih[VI::intehead::NSWELZ], static_cast<int>(VI::SWell::TracerOffset) + 2*expectNumTrcElems);
+    BOOST_CHECK_EQUAL(ih[VI::intehead::NXWELZ], static_cast<int>(VI::XWell::TracerOffset) + 5*expectNumTrcElems + 2);
+}
+
+BOOST_AUTO_TEST_SUITE(SWEL)
+
+BOOST_AUTO_TEST_CASE(IW)
+{
+    const auto cse = thermalTracerCase();
+    const auto& [xw, smry] = dynamicStateThermalTracers();
+    const auto ih = intehead(cse);
+    const auto wd = wellData(cse, ih, xw, smry);
+
+    const auto swsz = ih[VI::intehead::NSWELZ];
+
+    BOOST_REQUIRE_MESSAGE(static_cast<std::size_t>(swsz) > VI::SWell::TracerOffset,
+                          "SWEL must allocate space for tracer concentrations");
+
+    const auto sweltrc = std::span {wd.getSWell()}
+        .subspan(0*swsz, swsz)
+        .subspan(VI::SWell::TracerOffset);
+
+    const auto wtic = sweltrc.subspan(0*tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(wtic[0], 10.0f, 1e-6f);
+    BOOST_CHECK_CLOSE(wtic[1], 0.123f, 1e-6f);
+    BOOST_CHECK_CLOSE(wtic[2], 0.0f, 1e-6f);
+    BOOST_CHECK_CLOSE(wtic[3], 0.0f, 1e-6f);
+    BOOST_CHECK_CLOSE(wtic[4], 0.0f, 1e-6f);
+    BOOST_CHECK_CLOSE(wtic[5], 0.0f, 1e-6f);
+    BOOST_CHECK_CLOSE(wtic[6], 0.0f, 1e-6f);
+
+    const auto wtic2 = sweltrc.subspan(1*tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(wtic2[0], 0.0f, 1e-6f);
+    BOOST_CHECK_CLOSE(wtic2[1], 0.0f, 1e-6f);
+    BOOST_CHECK_CLOSE(wtic2[2], 0.0f, 1e-6f);
+    BOOST_CHECK_CLOSE(wtic2[3], 0.0f, 1e-6f);
+    BOOST_CHECK_CLOSE(wtic2[4], 0.0f, 1e-6f);
+    BOOST_CHECK_CLOSE(wtic2[5], 0.0f, 1e-6f);
+    BOOST_CHECK_CLOSE(wtic2[6], 0.0f, 1e-6f);
+}
+
+BOOST_AUTO_TEST_CASE(IG)
+{
+    const auto cse = thermalTracerCase();
+    const auto& [xw, smry] = dynamicStateThermalTracers();
+    const auto ih = intehead(cse);
+    const auto wd = wellData(cse, ih, xw, smry);
+
+    const auto swsz = ih[VI::intehead::NSWELZ];
+
+    BOOST_REQUIRE_MESSAGE(static_cast<std::size_t>(swsz) > VI::SWell::TracerOffset,
+                          "SWEL must allocate space for tracer concentrations");
+
+    const auto sweltrc = std::span {wd.getSWell()}
+        .subspan(1*swsz, swsz)
+        .subspan(VI::SWell::TracerOffset);
+
+    const auto wtic = sweltrc.subspan(0*tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(wtic[0], 60.0f, 1e-6f);
+    BOOST_CHECK_CLOSE(wtic[1], 0.0f, 1e-6f);
+    BOOST_CHECK_CLOSE(wtic[2], 0.456f, 1e-6f);
+    BOOST_CHECK_CLOSE(wtic[3], 0.0f, 1e-6f);
+    BOOST_CHECK_CLOSE(wtic[4], 0.0f, 1e-6f);
+    BOOST_CHECK_CLOSE(wtic[5], 0.0f, 1e-6f);
+    BOOST_CHECK_CLOSE(wtic[6], 0.0f, 1e-6f);
+
+    const auto wtic2 = sweltrc.subspan(1*tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(wtic2[0], 0.0f, 1e-6f);
+    BOOST_CHECK_CLOSE(wtic2[1], 0.0f, 1e-6f);
+    BOOST_CHECK_CLOSE(wtic2[2], 0.0f, 1e-6f);
+    BOOST_CHECK_CLOSE(wtic2[3], 0.0f, 1e-6f);
+    BOOST_CHECK_CLOSE(wtic2[4], 0.0f, 1e-6f);
+    BOOST_CHECK_CLOSE(wtic2[5], 0.0f, 1e-6f);
+    BOOST_CHECK_CLOSE(wtic2[6], 0.0f, 1e-6f);
+}
+
+BOOST_AUTO_TEST_CASE(P)
+{
+    const auto cse = thermalTracerCase();
+    const auto& [xw, smry] = dynamicStateThermalTracers();
+    const auto ih = intehead(cse);
+    const auto wd = wellData(cse, ih, xw, smry);
+
+    const auto swsz = ih[VI::intehead::NSWELZ];
+
+    BOOST_REQUIRE_MESSAGE(static_cast<std::size_t>(swsz) > VI::SWell::TracerOffset,
+                          "SWEL must allocate space for tracer concentrations");
+
+    const auto sweltrc = std::span {wd.getSWell()}
+        .subspan(2*swsz, swsz)
+        .subspan(VI::SWell::TracerOffset);
+
+    const auto wtic = sweltrc.subspan(0*tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(wtic[0], 0.0f, 1e-6f);
+    BOOST_CHECK_CLOSE(wtic[1], 0.0f, 1e-6f);
+    BOOST_CHECK_CLOSE(wtic[2], 0.0f, 1e-6f);
+    BOOST_CHECK_CLOSE(wtic[3], 0.0f, 1e-6f);
+    BOOST_CHECK_CLOSE(wtic[4], 0.0f, 1e-6f);
+    BOOST_CHECK_CLOSE(wtic[5], 0.0f, 1e-6f);
+    BOOST_CHECK_CLOSE(wtic[6], 0.0f, 1e-6f);
+
+    const auto wtic2 = sweltrc.subspan(1*tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(wtic2[0], 0.0f, 1e-6f);
+    BOOST_CHECK_CLOSE(wtic2[1], 0.0f, 1e-6f);
+    BOOST_CHECK_CLOSE(wtic2[2], 0.0f, 1e-6f);
+    BOOST_CHECK_CLOSE(wtic2[3], 0.0f, 1e-6f);
+    BOOST_CHECK_CLOSE(wtic2[4], 0.0f, 1e-6f);
+    BOOST_CHECK_CLOSE(wtic2[5], 0.0f, 1e-6f);
+    BOOST_CHECK_CLOSE(wtic2[6], 0.0f, 1e-6f);
+}
+
+BOOST_AUTO_TEST_SUITE_END()     // SWEL
+
+// --------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_SUITE(XWEL)
+
+BOOST_AUTO_TEST_CASE(IW)
+{
+    const auto cse = thermalTracerCase();
+    const auto& [xw, smry] = dynamicStateThermalTracers();
+    const auto ih = intehead(cse);
+    const auto wd = wellData(cse, ih, xw, smry);
+
+    const auto xwsz = ih[VI::intehead::NXWELZ];
+
+    BOOST_REQUIRE_MESSAGE(static_cast<std::size_t>(xwsz) > VI::XWell::TracerOffset,
+                          "XWEL must allocate space for tracer concentrations");
+
+    const auto xweltrc = std::span {wd.getXWell()}
+        .subspan(0 * xwsz, xwsz)
+        .subspan(VI::XWell::TracerOffset);
+
+    const auto wt_rate = xweltrc.subspan(0*tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(wt_rate[0], -112233.44, 1e-6);
+    BOOST_CHECK_CLOSE(wt_rate[1], -1234.5, 1e-6);
+    BOOST_CHECK_CLOSE(wt_rate[2], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wt_rate[3], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wt_rate[4], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wt_rate[5], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wt_rate[6], 0.0, 1e-6);
+
+    const auto wtpt = xweltrc.subspan(1*tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(wtpt[0], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtpt[1], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtpt[2], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtpt[3], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtpt[4], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtpt[5], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtpt[6], 0.0, 1e-6);
+
+    const auto wtit = xweltrc.subspan(2*tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(wtit[0], 100.0e6, 1e-6);
+    BOOST_CHECK_CLOSE(wtit[1], 123456.7, 1e-6);
+    BOOST_CHECK_CLOSE(wtit[2], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtit[3], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtit[4], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtit[5], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtit[6], 0.0, 1e-6);
+
+    const auto wtic = xweltrc.subspan(3*tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(wtic[0], 10.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtic[1], 0.123, 1e-6);
+    BOOST_CHECK_CLOSE(wtic[2], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtic[3], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtic[4], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtic[5], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtic[6], 0.0, 1e-6);
+
+    const auto wtic2 = xweltrc.subspan(4*tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(wtic2[0], 10.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtic2[1], 0.123, 1e-6);
+    BOOST_CHECK_CLOSE(wtic2[2], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtic2[3], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtic2[4], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtic2[5], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtic2[6], 0.0, 1e-6);
+
+    const auto extra = xweltrc.subspan(5*tracerStride);
+    BOOST_CHECK_EQUAL(extra.size(), std::size_t{2});
+    BOOST_CHECK_CLOSE(extra[0], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(extra[1], 0.0, 1e-6);
+}
+
+BOOST_AUTO_TEST_CASE(IG)
+{
+    const auto cse = thermalTracerCase();
+    const auto& [xw, smry] = dynamicStateThermalTracers();
+    const auto ih = intehead(cse);
+    const auto wd = wellData(cse, ih, xw, smry);
+
+    const auto xwsz = ih[VI::intehead::NXWELZ];
+
+    BOOST_REQUIRE_MESSAGE(static_cast<std::size_t>(xwsz) > VI::XWell::TracerOffset,
+                          "XWEL must allocate space for tracer concentrations");
+
+    const auto xweltrc = std::span {wd.getXWell()}
+        .subspan(1 * xwsz, xwsz)
+        .subspan(VI::XWell::TracerOffset);
+
+    const auto wt_rate = xweltrc.subspan(0*tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(wt_rate[0], -223344.55, 1e-6);
+    BOOST_CHECK_CLOSE(wt_rate[1], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wt_rate[2], -4567.8, 1e-6);
+    BOOST_CHECK_CLOSE(wt_rate[3], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wt_rate[4], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wt_rate[5], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wt_rate[6], 0.0, 1e-6);
+
+    const auto wtpt = xweltrc.subspan(1*tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(wtpt[0], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtpt[1], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtpt[2], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtpt[3], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtpt[4], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtpt[5], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtpt[6], 0.0, 1e-6);
+
+    const auto wtit = xweltrc.subspan(2*tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(wtit[0], 2.0e9, 1e-6);
+    BOOST_CHECK_CLOSE(wtit[1], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtit[2], 4567891.011, 1e-6);
+    BOOST_CHECK_CLOSE(wtit[3], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtit[4], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtit[5], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtit[6], 0.0, 1e-6);
+
+    const auto wtic = xweltrc.subspan(3*tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(wtic[0], 60.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtic[1], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtic[2], 0.456, 1e-6);
+    BOOST_CHECK_CLOSE(wtic[3], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtic[4], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtic[5], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtic[6], 0.0, 1e-6);
+
+    const auto wtic2 = xweltrc.subspan(4*tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(wtic2[0], 60.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtic2[1], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtic2[2], 0.456, 1e-6);
+    BOOST_CHECK_CLOSE(wtic2[3], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtic2[4], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtic2[5], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtic2[6], 0.0, 1e-6);
+
+    const auto extra = xweltrc.subspan(5*tracerStride);
+    BOOST_CHECK_EQUAL(extra.size(), std::size_t{2});
+    BOOST_CHECK_CLOSE(extra[0], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(extra[1], 0.0, 1e-6);
+}
+
+BOOST_AUTO_TEST_CASE(P)
+{
+    const auto cse = thermalTracerCase();
+    const auto& [xw, smry] = dynamicStateThermalTracers();
+    const auto ih = intehead(cse);
+    const auto wd = wellData(cse, ih, xw, smry);
+
+    const auto xwsz = ih[VI::intehead::NXWELZ];
+
+    BOOST_REQUIRE_MESSAGE(static_cast<std::size_t>(xwsz) > VI::XWell::TracerOffset,
+                          "XWEL must allocate space for tracer concentrations");
+
+    const auto xweltrc = std::span {wd.getXWell()}
+        .subspan(2 * xwsz, xwsz)
+        .subspan(VI::XWell::TracerOffset);
+
+    const auto wt_rate = xweltrc.subspan(0*tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(wt_rate[0], 445566.77, 1e-6);
+    BOOST_CHECK_CLOSE(wt_rate[1], 123.45, 1e-6);
+    BOOST_CHECK_CLOSE(wt_rate[2], 40.0, 1e-6);
+    BOOST_CHECK_CLOSE(wt_rate[3], 5.678, 1e-6);
+    BOOST_CHECK_CLOSE(wt_rate[4], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wt_rate[5], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wt_rate[6], 0.0, 1e-6);
+
+    const auto wtpt = xweltrc.subspan(1*tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(wtpt[0], 135.79e6, 1e-6);
+    BOOST_CHECK_CLOSE(wtpt[1], 1234.567, 1e-6);
+    BOOST_CHECK_CLOSE(wtpt[2], 4500.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtpt[3], 67.891011, 1e-6);
+    BOOST_CHECK_CLOSE(wtpt[4], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtpt[5], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtpt[6], 0.0, 1e-6);
+
+    const auto wtit = xweltrc.subspan(2*tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(wtit[0], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtit[1], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtit[2], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtit[3], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtit[4], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtit[5], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtit[6], 0.0, 1e-6);
+
+    const auto wtpc = xweltrc.subspan(3*tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(wtpc[0], 45.67, 1e-6);
+    BOOST_CHECK_CLOSE(wtpc[1], 0.0123, 1e-6);
+    BOOST_CHECK_CLOSE(wtpc[2], 0.0045, 1e-6);
+    BOOST_CHECK_CLOSE(wtpc[3], 0.00456 - 0.0045, 1e-6);
+    BOOST_CHECK_CLOSE(wtpc[4], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtpc[5], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtpc[6], 0.0, 1e-6);
+
+    const auto wtpc2 = xweltrc.subspan(4*tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(wtpc2[0], 45.67, 1e-6);
+    BOOST_CHECK_CLOSE(wtpc2[1], 0.0123, 1e-6);
+    BOOST_CHECK_CLOSE(wtpc2[2], 0.0045, 1e-6);
+    BOOST_CHECK_CLOSE(wtpc2[3], 0.00456 - 0.0045, 1e-6);
+    BOOST_CHECK_CLOSE(wtpc2[4], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtpc2[5], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(wtpc2[6], 0.0, 1e-6);
+
+    const auto extra = xweltrc.subspan(5*tracerStride);
+    BOOST_CHECK_EQUAL(extra.size(), std::size_t{2});
+    BOOST_CHECK_CLOSE(extra[0], 0.0, 1e-6);
+    BOOST_CHECK_CLOSE(extra[1], 0.0, 1e-6);
+}
+
+BOOST_AUTO_TEST_SUITE_END()     // XWEL
+
+BOOST_AUTO_TEST_SUITE_END()     // Thermal
+
+BOOST_AUTO_TEST_SUITE_END()     // Tracer_Values

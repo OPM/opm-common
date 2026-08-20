@@ -82,6 +82,9 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
 
         NGCTRL = 51, //  Index indicating if group control is used or not (1 - if group control, 0 if not)
 
+        MaxWatTracers = 55, //  Maximum number of water tracers in the model (per Grid)
+        MaxGasTracers = 56, //  Maximum number of gas tracers in the model (per Grid)
+
         NGRNPH = 58, //  Index indicating if group control is used or not (1 - if group control, 0 if not)
         EACHNCITS = 59, //  Index indicating if lift gas distribution optimized each of the NUPCOL first iterations or not
                        // 1 - optimized only first newton iteration, 2 - optimized each of NUPCOL newton iterations
