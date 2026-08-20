@@ -215,6 +215,7 @@ namespace {
     }
 
     void writeGroup(int                           sim_step,
+                    const TracerConfig&           tracer,
                     const Schedule&               schedule,
                     const Opm::SummaryState&      sumState,
                     const std::vector<int>&       ih,
@@ -225,7 +226,7 @@ namespace {
 
         auto  groupData = Helpers::AggregateGroupData(ih);
 
-        groupData.captureDeclaredGroupData(schedule, simStep, sumState, ih);
+        groupData.captureDeclaredGroupData(schedule, tracer, simStep, sumState, ih);
 
         rstFile.write("IGRP", groupData.getIGroup());
         rstFile.write("SGRP", groupData.getSGroup());
@@ -550,7 +551,7 @@ namespace {
         const int norst_value = schedule[sim_step].rst_config().norst.value_or(0);
 
         if (norst_value == 0) {
-            writeGroup(sim_step, schedule, sumState, inteHD, rstFile);
+            writeGroup(sim_step, es.tracer(), schedule, sumState, inteHD, rstFile);
         }
 
         // Write network data if the network option is used and network defined

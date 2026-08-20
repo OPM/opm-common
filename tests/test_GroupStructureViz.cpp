@@ -512,7 +512,9 @@ namespace {
                                                {}, sumState, sim_step);
 
         auto groupData = Opm::RestartIO::Helpers::AggregateGroupData(ih);
-        groupData.captureDeclaredGroupData(simCase.sched, sim_step, sumState, ih);
+        groupData.captureDeclaredGroupData(simCase.sched,
+                                           simCase.es.tracer(),
+                                           sim_step, sumState, ih);
 
         Opm::EclIO::OutputStream::Restart rstFile {
             Opm::EclIO::OutputStream::ResultSet { "./", baseName },

@@ -1699,6 +1699,7 @@ BOOST_AUTO_TEST_CASE (Declared_Well_Data2LGRWells)
     ih.add_igr_data(99, 112, 181, 5, 2, 2);
     auto group_aggregator = Opm::RestartIO::Helpers::AggregateGroupData(ih.value);
     group_aggregator.captureDeclaredGroupData(simCase.sched,
+                                              simCase.es.tracer(),
                                               rptStep, smry, ih.value);
 
     // -------------------------- GROUP DATA FOR LGR GRID LGR1--------------------------
@@ -2055,6 +2056,7 @@ BOOST_AUTO_TEST_CASE (Declared_Well_Data3Wells1G2LGR)
 
     auto group_aggregator = Opm::RestartIO::Helpers::AggregateGroupData(ih.value);
     group_aggregator.captureDeclaredGroupData(simCase.sched,
+                                              simCase.es.tracer(),
                                               rptStep, smry, ih.value);
 
     // -------------------------- GROUP DATA FOR LGR GRID LGR1--------------------------
@@ -2823,7 +2825,7 @@ BOOST_AUTO_TEST_CASE (Declared_Well_Data3MixedGroupsWells)
     // -------------------------- GROUP DATA FOR GLOBAL GRID --------------------------
     ih.add_igr_data(100, 112, 181, 5, 3, 3);
     auto group_aggregator = Opm::RestartIO::Helpers::AggregateGroupData(ih.value);
-    group_aggregator.captureDeclaredGroupData(simCase.sched,
+    group_aggregator.captureDeclaredGroupData(simCase.sched, simCase.es.tracer(),
                                               rptStep, smry, ih.value);
 
     // -------------------------- GROUP DATA FOR LGR GRID LGR1--------------------------
@@ -3306,7 +3308,7 @@ BOOST_AUTO_TEST_CASE (Declared_GroupDataLGR)
 
     // -------------------------- GROUP DATA FOR GLOBAL GRID --------------------------
     auto group_aggregator = Opm::RestartIO::Helpers::AggregateGroupData(ih);
-    group_aggregator.captureDeclaredGroupData(simCase.sched, rptStep, smry, ih);
+    group_aggregator.captureDeclaredGroupData(simCase.sched, simCase.es.tracer(), rptStep, smry, ih);
 
     // -------------------------- GROUP DATA FOR LGR GRID LGR1--------------------------
     auto group_aggregator_lgr1 = Opm::RestartIO::Helpers::AggregateGroupData(ih_lgr1);

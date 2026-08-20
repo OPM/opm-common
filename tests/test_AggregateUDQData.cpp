@@ -332,7 +332,7 @@ BOOST_AUTO_TEST_CASE (Declared_UDQ_data)
 
             {
                 auto group_aggregator = Opm::RestartIO::Helpers::AggregateGroupData(ih);
-                group_aggregator.captureDeclaredGroupData(sched, rptStep - 1, st, ih);
+                group_aggregator.captureDeclaredGroupData(sched, es.tracer(), rptStep - 1, st, ih);
 
                 rstFile.write("IGRP", group_aggregator.getIGroup());
                 rstFile.write("SGRP", group_aggregator.getSGroup());
