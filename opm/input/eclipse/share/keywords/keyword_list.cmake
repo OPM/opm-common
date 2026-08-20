@@ -1145,6 +1145,7 @@ set( keywords
 
      900_OPM/B/BC
      900_OPM/B/BCCON
+     900_OPM/B/BCMECH
      900_OPM/B/BCPROP
      900_OPM/B/BIOFILM
      900_OPM/B/BIOFPARA
