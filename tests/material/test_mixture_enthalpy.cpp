@@ -247,6 +247,47 @@ BOOST_AUTO_TEST_CASE(DelegationMatchesCards)
               Opm::SimpleCO2<double>::idealGasHeatCapacityPolynomial());
 }
 
+// byName() is the safety seam of the preset surface: deck-style aliases must
+// resolve case-insensitively to the intended card, and an unknown component
+// must fail loudly rather than receive somebody else's heat capacity. Pin
+// every documented alias coefficient-wise, plus the throw.
+BOOST_AUTO_TEST_CASE(ByNameAliasesAndUnknownName)
+{
+    using Caloric = Opm::IdealGasCaloricData<double>;
+
+    const struct {
+        const char* alias;
+        Opm::ComponentCp<double> expected;
+    } lookups[] = {
+        {"C1", Caloric::methane()},
+        {"c1", Caloric::methane()},
+        {"CH4", Caloric::methane()},
+        {"Methane", Caloric::methane()},
+        {"C10", Caloric::decane()},
+        {"nC10", Caloric::decane()},
+        {"Decane", Caloric::decane()},
+        {"n-decane", Caloric::decane()},
+        {"CO2", Caloric::carbonDioxide()},
+        {"co2", Caloric::carbonDioxide()},
+        {"CarbonDioxide", Caloric::carbonDioxide()},
+        {"Carbon-Dioxide", Caloric::carbonDioxide()},
+        {"carbon dioxide", Caloric::carbonDioxide()},
+    };
+    for (const auto& lookup : lookups) {
+        BOOST_TEST_CONTEXT(lookup.alias) {
+            const auto card = Caloric::byName(lookup.alias);
+            BOOST_CHECK_EQUAL(card.c0, lookup.expected.c0);
+            BOOST_CHECK_EQUAL(card.c1, lookup.expected.c1);
+            BOOST_CHECK_EQUAL(card.c2, lookup.expected.c2);
+            BOOST_CHECK_EQUAL(card.c3, lookup.expected.c3);
+        }
+    }
+
+    // no silent fallback: unknown names throw, naming the component
+    BOOST_CHECK_THROW(Caloric::byName("unobtainium"), std::runtime_error);
+    BOOST_CHECK_THROW(Caloric::byName(""), std::runtime_error);
+}
+
 BOOST_AUTO_TEST_SUITE_END() // CaloricModel
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -265,7 +306,9 @@ using EOSType = Opm::CompositionalConfig::EOSType;
 
 // The AD temperature-derivative of ln(phi) matches a central finite
 // difference of ln(phi(T)) evaluated at fixed pressure and frozen phase
-// composition — per phase, per component.
+// composition — per phase, per component, per supported cubic EoS (the
+// alpha-function branches in CubicEOSParams differ exactly in this
+// temperature dependence).
 BOOST_AUTO_TEST_CASE(AdDerivativeMatchesFiniteDifference)
 {
     FlashCase<numComponentsF1> testCase{"AD probe", f1Pressure,
@@ -274,31 +317,38 @@ BOOST_AUTO_TEST_CASE(AdDerivativeMatchesFiniteDifference)
     BOOST_REQUIRE(!outcome.summary.single_phase);
 
     constexpr double h = 1e-3; // FD step [K]
-    for (unsigned phaseIdx : {static_cast<unsigned>(FluidSystemF1::oilPhaseIdx),
-                              static_cast<unsigned>(FluidSystemF1::gasPhaseIdx)}) {
-        // freeze this phase's composition from the flashed state
-        std::array<double, numComponentsF1> w;
-        for (int compIdx = 0; compIdx < numComponentsF1; ++compIdx)
-            w[compIdx] = Opm::getValue(outcome.state.moleFraction(phaseIdx, compIdx));
+    // the flashed state is only a probe point: the AD == FD identity holds
+    // at any (P, T, w), so the one flashed composition serves every EoS
+    for (const auto eosType : {EOSType::PR, EOSType::PRCORR,
+                               EOSType::SRK, EOSType::RK}) {
+        BOOST_TEST_CONTEXT("EoS " << Opm::CompositionalConfig::eosTypeToString(eosType)) {
+            for (unsigned phaseIdx : {static_cast<unsigned>(FluidSystemF1::oilPhaseIdx),
+                                      static_cast<unsigned>(FluidSystemF1::gasPhaseIdx)}) {
+                // freeze this phase's composition from the flashed state
+                std::array<double, numComponentsF1> w;
+                for (int compIdx = 0; compIdx < numComponentsF1; ++compIdx)
+                    w[compIdx] = Opm::getValue(outcome.state.moleFraction(phaseIdx, compIdx));
 
-        // independent, scalar evaluation path for ln(phi(T)) at fixed (P, w)
-        auto lnPhi = [&](const double T, const int compIdx) {
-            Opm::CompositionalFluidState<double, FluidSystemF1> fs;
-            fs.setTemperature(T);
-            fs.setPressure(FluidSystemF1::oilPhaseIdx, f1Pressure);
-            fs.setPressure(FluidSystemF1::gasPhaseIdx, f1Pressure);
-            for (int i = 0; i < numComponentsF1; ++i)
-                fs.setMoleFraction(phaseIdx, i, w[i]);
-            FluidSystemF1::ParameterCache<double> paramCache(EOSType::PR);
-            paramCache.updatePhase(fs, phaseIdx);
-            return std::log(FluidSystemF1::fugacityCoefficient(fs, paramCache, phaseIdx, compIdx));
-        };
+                // independent, scalar evaluation path for ln(phi(T)) at fixed (P, w)
+                auto lnPhi = [&](const double T, const int compIdx) {
+                    Opm::CompositionalFluidState<double, FluidSystemF1> fs;
+                    fs.setTemperature(T);
+                    fs.setPressure(FluidSystemF1::oilPhaseIdx, f1Pressure);
+                    fs.setPressure(FluidSystemF1::gasPhaseIdx, f1Pressure);
+                    for (int i = 0; i < numComponentsF1; ++i)
+                        fs.setMoleFraction(phaseIdx, i, w[i]);
+                    FluidSystemF1::ParameterCache<double> paramCache(eosType);
+                    paramCache.updatePhase(fs, phaseIdx);
+                    return std::log(FluidSystemF1::fugacityCoefficient(fs, paramCache, phaseIdx, compIdx));
+                };
 
-        const double T = Opm::FlashTest::f1Temperature;
-        for (int compIdx = 0; compIdx < numComponentsF1; ++compIdx) {
-            const double ad = EnthalpyF1::phaseDLnPhiDT(outcome.state, phaseIdx, compIdx, EOSType::PR);
-            const double fd = (lnPhi(T + h, compIdx) - lnPhi(T - h, compIdx)) / (2.*h);
-            BOOST_CHECK_CLOSE(ad, fd, 1e-3); // [%]
+                const double T = Opm::FlashTest::f1Temperature;
+                for (int compIdx = 0; compIdx < numComponentsF1; ++compIdx) {
+                    const double ad = EnthalpyF1::phaseDLnPhiDT(outcome.state, phaseIdx, compIdx, eosType);
+                    const double fd = (lnPhi(T + h, compIdx) - lnPhi(T - h, compIdx)) / (2.*h);
+                    BOOST_CHECK_CLOSE(ad, fd, 1e-3); // [%]
+                }
+            }
         }
     }
 }
