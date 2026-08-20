@@ -264,6 +264,7 @@ list(APPEND MAIN_SOURCE_FILES
   opm/input/eclipse/Schedule/Network/Branch.cpp
   opm/input/eclipse/Schedule/Network/ExtNetwork.cpp
   opm/input/eclipse/Schedule/Network/NetworkKeywordHandlers.cpp
+  opm/input/eclipse/Schedule/Network/NetworkValidation.cpp
   opm/input/eclipse/Schedule/Network/Node.cpp
   opm/input/eclipse/Schedule/ResCoup/ReservoirCouplingInfo.cpp
   opm/input/eclipse/Schedule/ResCoup/ReservoirCouplingKeywordHandlers.cpp
