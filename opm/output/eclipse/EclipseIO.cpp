@@ -312,6 +312,10 @@ public:
     /// restart file information.
     ///
     /// \return Collection of per-cell results at \p report_step.
+    std::vector<data::Solution>
+    loadRestartSolutionLevels(const std::vector<RestartKey>& solution_keys,
+                              int report_step) const;
+
     data::Solution loadRestartSolution(const std::vector<RestartKey>& solution_keys,
                                        const int                      report_step) const;
 
@@ -835,6 +839,18 @@ Opm::EclipseIO::Impl::loadRestartSolution(const std::vector<RestartKey>& solutio
                                          this->es_, this->grid_);
 }
 
+std::vector<Opm::data::Solution>
+Opm::EclipseIO::Impl::loadRestartSolutionLevels(const std::vector<RestartKey>& solution_keys,
+                                               const int                      report_step) const
+{
+    const auto& initConfig  = this->es_.get().getInitConfig();
+    const auto  filename    = this->es_.get().getIOConfig()
+        .getRestartFileName(initConfig.getRestartRootName(), report_step, false);
+
+    return RestartIO::load_solution_only_levels(filename, report_step, solution_keys,
+                                                this->es_, this->grid_);
+}
+
 void Opm::EclipseIO::Impl::writeInitial(data::Solution                          simProps,
                                         std::map<std::string, std::vector<int>> int_data,
                                         const std::vector<NNCdata>&             nnc) const
@@ -1326,6 +1342,13 @@ Opm::EclipseIO::loadRestartSolution(const std::vector<RestartKey>& solution_keys
                                     const int                      report_step) const
 {
     return this->impl->loadRestartSolution(solution_keys, report_step);
+}
+
+std::vector<Opm::data::Solution>
+Opm::EclipseIO::loadRestartSolutionLevels(const std::vector<RestartKey>& solution_keys,
+                                         const int                      report_step) const
+{
+    return this->impl->loadRestartSolutionLevels(solution_keys, report_step);
 }
 
 const Opm::out::Summary& Opm::EclipseIO::summary() const
