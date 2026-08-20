@@ -205,19 +205,20 @@ namespace {
     }
 
     std::vector<Opm::EclIO::SummaryNode>
-    requiredRestartVectors(const ::Opm::Schedule& sched, const ::Opm::TracerConfig& trConfig)
+    requiredRestartVectors(const ::Opm::Schedule&     sched,
+                           const ::Opm::TracerConfig& trConfig)
     {
         auto entities = std::vector<Opm::EclIO::SummaryNode> {};
 
         const auto vectors = requiredRestartVectors();
 
         const auto required_tracer_vectors = std::vector<ParamCTorArgs> {
-            { "TPR", Opm::EclIO::SummaryNode::Type::Rate     },
-            { "TIR", Opm::EclIO::SummaryNode::Type::Rate     },
-            { "TPT", Opm::EclIO::SummaryNode::Type::Total    },
-            { "TIT", Opm::EclIO::SummaryNode::Type::Total    },
-            { "TPC", Opm::EclIO::SummaryNode::Type::Ratio    },
-            { "TIC", Opm::EclIO::SummaryNode::Type::Ratio    },
+            { "TPR", Opm::EclIO::SummaryNode::Type::Rate  },
+            { "TIR", Opm::EclIO::SummaryNode::Type::Rate  },
+            { "TPT", Opm::EclIO::SummaryNode::Type::Total },
+            { "TIT", Opm::EclIO::SummaryNode::Type::Total },
+            { "TPC", Opm::EclIO::SummaryNode::Type::Ratio },
+            { "TIC", Opm::EclIO::SummaryNode::Type::Ratio },
         };
 
         const auto extra_well_vectors = std::vector<ParamCTorArgs> {
@@ -268,10 +269,8 @@ namespace {
 
             { "WWITH", Opm::EclIO::SummaryNode::Type::Total    },
             { "WGITH", Opm::EclIO::SummaryNode::Type::Total    },
-
-
-
         };
+
         const auto extra_group_vectors = std::vector<ParamCTorArgs> {
             { "GOPGR", Opm::EclIO::SummaryNode::Type::Rate },
             { "GGPGR", Opm::EclIO::SummaryNode::Type::Rate },
@@ -343,38 +342,39 @@ namespace {
             std::ranges::transform(extra_vectors, std::back_inserter(entities), toNode);
         };
 
-        auto makeTracerEntities = [&entities, &trConfig]
-            (   const char kwpref,
-                const Cat cat,
-                const std::vector<ParamCTorArgs>& tracer_vectors,
-                const std::string& name,
-                const bool isTemp
-            )
+        auto makeTracerEntities = [isTemp = sched.runspec().temp(),
+                                   &required_tracer_vectors,
+                                   &entities, &trConfig]
+            (const char kwpref, const Cat cat, const std::string& name)
         {
             const auto dflt_num = Opm::EclIO::SummaryNode::default_number;
-            std::string kwp(1, kwpref);
-            for (const auto& tvec : tracer_vectors) {
+
+            for (const auto& tvec : required_tracer_vectors) {
+                auto vectorName = [kwpref, &tvec](const std::string& tracerName)
+                { return fmt::format("{}{}{}", kwpref, tvec.kw, tracerName); };
+
                 if (isTemp) {
-                    entities.push_back(Opm::EclIO::SummaryNode({kwp + tvec.kw + "HEA", cat,
-                                                                tvec.type, name, dflt_num, {}, {}}));
+                    entities.emplace_back(vectorName("HEA"), cat, tvec.type, name, dflt_num);
                 }
+
                 for (const auto& tracer : trConfig) {
-                    entities.push_back(Opm::EclIO::SummaryNode({kwp + tvec.kw + tracer.name, cat,
-                                                                tvec.type, name, dflt_num, {}, {}}));
+                    entities.emplace_back(vectorName(tracer.name), cat,
+                                          tvec.type, name, dflt_num);
+
                     if (tracer.phase == ::Opm::Phase::OIL || tracer.phase == ::Opm::Phase::GAS) {
-                        entities.push_back(Opm::EclIO::SummaryNode({kwp + tvec.kw + "F" + tracer.name, cat,
-                                                                    tvec.type, name, dflt_num, {}, {}}));
-                        entities.push_back(Opm::EclIO::SummaryNode({kwp + tvec.kw + "S" + tracer.name, cat,
-                                                                    tvec.type, name, dflt_num, {}, {}}));
+                        entities.emplace_back(vectorName(tracer.wellfname()), cat,
+                                              tvec.type, name, dflt_num);
+
+                        entities.emplace_back(vectorName(tracer.wellsname()), cat,
+                                              tvec.type, name, dflt_num);
                     }
                 }
             }
         };
 
-        const bool isTemp = sched.runspec().temp();
         for (const auto& well_name : sched.wellNames()) {
             makeEntities('W', Cat::Well, extra_well_vectors, well_name);
-            makeTracerEntities('W', Cat::Well, required_tracer_vectors, well_name, isTemp);
+            makeTracerEntities('W', Cat::Well, well_name);
 
             const auto& well = sched.getWellatEnd(well_name);
             for (const auto& conn : well.getConnections()) {
