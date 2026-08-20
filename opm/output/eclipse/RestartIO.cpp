@@ -165,7 +165,6 @@ namespace {
                 const EclipseState&           es,
                 EclIO::OutputStream::Restart& rstFile)
     {
-        const int norst_value = schedule[sim_step].rst_config().norst.value_or(0);
         // write INTEHEAD to restart file
         auto ih = Helpers::
             createInteHead(es, grid, schedule, simTime,
@@ -174,19 +173,20 @@ namespace {
 
         rstFile.write("INTEHEAD", ih);
 
-        // LOGIHEAD and DOUBHEAD are only written for full restarts (NORST=0).
-        if (norst_value == 0) {
-            // write LOGIHEAD to restart file
-            if (report_step == 0) {
-                rstFile.write("LOGIHEAD", Helpers::createLogiHead(es));
-            }
-            else {
-                rstFile.write("LOGIHEAD", Helpers::createLogiHead(es, schedule[report_step - 1]));
-            }
+        // LOGIHEAD and DOUBHEAD go in whatever NORST asks for.  They are a few
+        // hundred values against a file of millions, and leaving them out costs
+        // the reader the simulated time (DOUBHEAD) and the dual-porosity flag
+        // (LOGIHEAD): libecl leaves both uninitialised rather than failing, and
+        // our own LoadRestart refuses the file outright.  ECLIPSE writes them
+        // for a graphics-only restart too.
+        if (report_step == 0) {
+            rstFile.write("LOGIHEAD", Helpers::createLogiHead(es));
+        }
+        else {
+            rstFile.write("LOGIHEAD", Helpers::createLogiHead(es, schedule[report_step - 1]));
         }
 
-        if (norst_value == 0) {
-            // write DOUBHEAD to restart file
+        {
             const auto dh = Helpers::createDoubHead(es, schedule,
                                                     sim_step, report_step,
                                                     simTime, next_step_size);
