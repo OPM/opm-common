@@ -588,6 +588,7 @@ list(APPEND TEST_SOURCE_FILES
   tests/test_Wells.cpp
   tests/test_WindowedArray.cpp
   tests/material/test_2dtables.cpp
+  tests/material/test_bakedsatfunctables.cpp
   tests/material/test_eclmateriallawmanager.cpp
   tests/material/test_hysteresis.cpp
   tests/material/test_spline.cpp
@@ -1382,6 +1383,7 @@ list(APPEND PUBLIC_HEADER_FILES
   opm/material/fluidmatrixinteractions/EclHysteresisTwoPhaseLawParams.hpp
   opm/material/fluidmatrixinteractions/EclMaterialLawHystParams.hpp
   opm/material/fluidmatrixinteractions/EclMaterialLawInitParams.hpp
+  opm/material/fluidmatrixinteractions/BakedSatfuncTables.hpp
   opm/material/fluidmatrixinteractions/EclMaterialLawManager.hpp
   opm/material/fluidmatrixinteractions/EclMaterialLawReadEffectiveParams.hpp
   opm/material/fluidmatrixinteractions/EclMaterialLawTwoPhaseTypes.hpp
