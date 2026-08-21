@@ -163,6 +163,8 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
             CompOrd = 98, // Well's completion ordering scheme.
 
             LiftOptAllocExtra = 144,
+
+            TracerOffset = 155, // Tracer data start at this index
         };
 
         namespace Value {
@@ -416,7 +418,7 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
             WatVoidPrRate = 122, // Well's voidage production rate
             GasVoidPrRate = 123, // Well's voidage production rate
 
-            TracerOffset  = 131, // Tracer data start at this index (+1 since late 2022)
+            TracerOffset  = 131, // Tracer data start at this index
         };
     } // XWell
 

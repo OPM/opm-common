@@ -628,7 +628,7 @@ BOOST_AUTO_TEST_CASE (Declared_Group_Data)
     const auto smry = sim_state();
 
     auto agrpd = Opm::RestartIO::Helpers::AggregateGroupData {ih.value};
-    agrpd.captureDeclaredGroupData(simCase.sched, rptStep, smry, ih.value);
+    agrpd.captureDeclaredGroupData(simCase.sched, simCase.es.tracer(), rptStep, smry, ih.value);
 
     // IGRP (PROD)
     {
@@ -776,7 +776,7 @@ BOOST_AUTO_TEST_CASE (Declared_Group_Data_2)
                                                             rptStep, rptStep + 1, rptStep);
 
     auto agrpd = Opm::RestartIO::Helpers::AggregateGroupData(ih);
-    agrpd.captureDeclaredGroupData(sched, rptStep, st, ih);
+    agrpd.captureDeclaredGroupData(sched, es.tracer(), rptStep, st, ih);
 
     // IGRP (PROD)
     {
@@ -1052,7 +1052,7 @@ END
                                                             rptStep, rptStep + 1, rptStep);
 
     auto agrpd = Opm::RestartIO::Helpers::AggregateGroupData(ih);
-    agrpd.captureDeclaredGroupData(sched, rptStep, st, ih);
+    agrpd.captureDeclaredGroupData(sched, es.tracer(), rptStep, st, ih);
 
     const auto& sgrp = agrpd.getSGroup();
     const auto& zgrp = agrpd.getZGroup();
