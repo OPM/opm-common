@@ -2121,3 +2121,131 @@ END
         }
     }
 }
+
+BOOST_AUTO_TEST_CASE(WINJMULT_UDA_Numeric) {
+    const auto deck_str = R"(
+RUNSPEC
+DIMENS
+ 3 3 3 /
+WELLDIMS
+ 1 1 1 1 /
+START
+ 21 'MAY' 2007 /
+GRID
+DX
+ 27*100 /
+DY
+ 27*100 /
+DZ
+ 27*20 /
+TOPS
+ 9*2000 9*2020 9*2040 /
+PORO
+    27*0.2 /
+PERMX
+    27*100 /
+PERMY
+    27*100 /
+PERMZ
+    27*10 /
+INIT
+REGIONS
+SOLUTION
+SCHEDULE
+WELSPECS
+ 'INJ01' 'FIELD' 1 1 2 'WATER' 0 'STD' 'SHUT' 'YES' 0 'SEG' /
+/
+COMPDAT
+ 'INJ01' 1 1 2 2 'OPEN' 0 1* 0.241 1* 2.5 0 'Z' /
+/
+WCONINJE
+ 'INJ01' 'WATER' 'SHUT' 'GRUP' 10000 1* 400 /
+/
+WINJMULT
+ 'INJ01' 350.0 0.001 'WREV' /
+/
+END
+)";
+    
+    Parser parser;
+    auto deck = parser.parseString(deck_str);
+    const EclipseState eclipse_state(deck);
+    Schedule schedule(deck, eclipse_state, std::nullopt, nullptr);
+
+    {
+        const auto& well = schedule.getWell("INJ01", 0);
+        BOOST_REQUIRE(well.aciveWellInjMult());
+        const auto& inj_mult = well.getWellInjMult();
+        
+        // fracture_pressure is UDAValue - should be numeric
+        BOOST_CHECK(inj_mult.fracture_pressure.is<double>());
+        BOOST_CHECK_CLOSE(inj_mult.fracture_pressure.getSI(), 350.0e5, 1.0e-8); // barsa to SI
+        BOOST_CHECK_CLOSE(inj_mult.multiplier_gradient, 1.0e-8, 1.0e-8); // 0.001 / barsa to 1 / Pa
+    }
+}
+
+BOOST_AUTO_TEST_CASE(WINJMULT_UDA_Symbolic) {
+    const auto deck_str = R"(
+RUNSPEC
+DIMENS
+ 3 3 3 /
+WELLDIMS
+ 1 1 1 1 /
+START
+ 21 'MAY' 2007 /
+GRID
+DX
+ 27*100 /
+DY
+ 27*100 /
+DZ
+ 27*20 /
+TOPS
+ 9*2000 9*2020 9*2040 /
+PORO
+    27*0.2 /
+PERMX
+    27*100 /
+PERMY
+    27*100 /
+PERMZ
+    27*10 /
+INIT
+REGIONS
+SOLUTION
+SCHEDULE
+WELSPECS
+ 'INJ01' 'FIELD' 1 1 2 'WATER' 0 'STD' 'SHUT' 'YES' 0 'SEG' /
+/
+COMPDAT
+ 'INJ01' 1 1 2 2 'OPEN' 0 1* 0.241 1* 2.5 0 'Z' /
+/
+WCONINJE
+ 'INJ01' 'WATER' 'SHUT' 'GRUP' 10000 1* 400 /
+/
+UDQ
+ DEFINE 'WUFRAC1' 350.0 /
+ UNITS 'WUFRAC1' BARSA /
+/
+WINJMULT
+ 'INJ01' 'WUFRAC1' 0.001 'WREV' /
+/
+END
+)";
+    
+    Parser parser;
+    auto deck = parser.parseString(deck_str);
+    const EclipseState eclipse_state(deck);
+    Schedule schedule(deck, eclipse_state, std::nullopt, nullptr);
+
+    {
+        const auto& well = schedule.getWell("INJ01", 0);
+        BOOST_REQUIRE(well.aciveWellInjMult());
+        const auto& inj_mult = well.getWellInjMult();
+        
+        // fracture_pressure is UDAValue - should be string (UDQ reference)
+        BOOST_CHECK(inj_mult.fracture_pressure.is<std::string>());
+        BOOST_CHECK_EQUAL(inj_mult.fracture_pressure.get<std::string>(), "WUFRAC1");
+        BOOST_CHECK_EQUAL(inj_mult.multiplier_gradient, 1.0e-8); // 0.001 / barsa to 1 / Pa
+    }
+}

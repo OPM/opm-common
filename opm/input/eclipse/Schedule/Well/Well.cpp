@@ -1866,7 +1866,7 @@ bool Well::handleWINJMULT(const Opm::DeckRecord& record, const KeywordLocation& 
     }
 
     const InjMult inj_mult {
-        record.getItem<Kw::FRACTURING_PRESSURE>().getSIDouble(0),
+        record.getItem<Kw::FRACTURING_PRESSURE>().get<UDAValue>(0),
         record.getItem<Kw::MULTIPLIER_GRADIENT>().getSIDouble(0)
     };
 
@@ -2417,4 +2417,73 @@ double Opm::Well::evalFilterConc(const SummaryState& summary_sate) const
 {
     return UDA::eval_well_uda(this->m_filter_concentration,
                               this->name(), summary_sate, 0.0);
+}
+
+void Opm::Well::updateWINJMULTUDA(const Opm::UDQConfig& udq_config,
+                                  Opm::UDQActive&       udq_active,
+                                  const Opm::UDAValue&  value)
+{
+    bool updated = false;
+
+    if (this->inj_mult_mode == InjMultMode::WREV) {
+        if (!this->well_inj_mult.has_value()) {
+            throw std::logic_error {
+                "WINJMULT UDA update requires active well-level WINJMULT data"
+            };
+        }
+
+        this->well_inj_mult.value().fracture_pressure = value;
+        updated = true;
+    }
+    else if ((this->inj_mult_mode == InjMultMode::CREV) ||
+             (this->inj_mult_mode == InjMultMode::CIRR))
+    {
+        auto new_connections = std::make_shared<WellConnections>
+            (this->connections->ordering(), this->headI, this->headJ);
+
+        for (const auto& connection : *this->connections) {
+            auto connection_copy = connection;
+
+            if (connection.activeInjMult()) {
+                auto inj_mult = connection.injmult();
+                inj_mult.fracture_pressure = value;
+                connection_copy.setInjMult(inj_mult);
+                updated = true;
+            }
+
+            new_connections->add(connection_copy);
+        }
+
+        if (updated) {
+            this->updateConnections(std::move(new_connections), false);
+        }
+    }
+
+    udq_active.update(udq_config,
+                      value,
+                      this->name(),
+                      Opm::UDAControl::WINJMULT_FRACTURE_PRESSURE);
+}
+
+bool Opm::Well::updateUDQActive(const Opm::UDQConfig& udq_config, Opm::UDQActive& active) const
+{
+    if (this->well_inj_mult.has_value()) {
+        return active.update(udq_config,
+                             this->well_inj_mult.value().fracture_pressure,
+                             this->name(),
+                             Opm::UDAControl::WINJMULT_FRACTURE_PRESSURE);
+    }
+
+    if ((this->inj_mult_mode == InjMultMode::CREV) || (this->inj_mult_mode == InjMultMode::CIRR)) {
+        for (const auto& connection : *this->connections) {
+            if (connection.activeInjMult()) {
+                return active.update(udq_config,
+                                     connection.injmult().fracture_pressure,
+                                     this->name(),
+                                     Opm::UDAControl::WINJMULT_FRACTURE_PRESSURE);
+            }
+        }
+    }
+
+    return false;
 }
