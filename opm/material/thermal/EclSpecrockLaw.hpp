@@ -29,6 +29,9 @@
 
 #include "EclSpecrockLawParams.hpp"
 
+#include <opm/common/utility/gpuDecorators.hpp>
+#include <cassert>
+
 namespace Opm
 {
 
@@ -51,7 +54,7 @@ public:
      * \brief Given a fluid state, compute the volumetric internal energy of the rock [W/m^3].
      */
     template <class FluidState, class Evaluation = typename FluidState::ValueType>
-    static Evaluation solidInternalEnergy(const Params& params, const FluidState& fluidState)
+    OPM_HOST_DEVICE static Evaluation solidInternalEnergy(const Params& params, const FluidState& fluidState)
     {
         const auto& T = fluidState.temperature(/*phaseIdx=*/0);
         return params.internalEnergyFunction().eval(T, /*extrapolate=*/true);
