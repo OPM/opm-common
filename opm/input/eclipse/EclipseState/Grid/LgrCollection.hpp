@@ -30,6 +30,7 @@ namespace Opm {
     class DeckRecord;
     class GridDims;
     class GRIDSection;
+    class KeywordLocation;
 
 class LgrCollection {
 public:
@@ -47,7 +48,9 @@ public:
     Carfin& getLgr(std::size_t lgrIndex);
     const Carfin& getLgr(std::size_t lgrIndex) const;
 
-    void addLgr(const EclipseGrid& grid, const DeckRecord& lgrRecord);
+    void addLgr(const EclipseGrid& grid,
+                const DeckRecord& lgrRecord,
+                const KeywordLocation& location);
 
     bool operator==(const LgrCollection& data) const;
 
