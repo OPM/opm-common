@@ -2084,21 +2084,17 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
          for (std::size_t index : m_print_order_lgr_cells) {
             const std::size_t grid_num = get_lgr_cell_index(lgr_children_cells[index].get_lgr_tag()) + 1;
             //SAME GRID PLOTS HEADER THAT CONTAINS THE GRID NUMBER
-            std::size_t num_nnc;
             if (nnc_col.hasSameGridNNC(grid_num))
             {
-                const auto& nnc = nnc_col.getNNC(grid_num).input();
-                num_nnc = nnc.size();
-                save_nnc_same_grid(egridfile, nnc, grid_num);
+                save_nnc_same_grid(egridfile, nnc_col.getNNC(grid_num).input(), grid_num);
             }
             else {
                 save_nnc_same_grid(egridfile, {}, grid_num);
-                num_nnc = 0;
             }
 
-            if (nnc_col.hasCrossGridNNC(0, grid_num)){
-                const auto& nnc_gl = nnc_col.getNNC(0, grid_num);
-                save_nnc_local_global(egridfile, nnc_gl.input(), grid_num, num_nnc);
+            if (nnc_col.hasCrossGridNNC(0,grid_num)){
+                const auto& nnc_gl = nnc_col.getNNC(0,grid_num);
+                save_nnc_local_global(egridfile, nnc_gl.input(), grid_num);
             }
          }
 
@@ -2113,7 +2109,7 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         }
     }
 
-    void EclipseGrid::save_nnc_local_global(Opm::EclIO::EclOutput& egridfile, const std::vector<Opm::NNCdata>& nnc, std::size_t grid_num, std::size_t num_nnc) const {
+    void EclipseGrid::save_nnc_local_global(Opm::EclIO::EclOutput& egridfile, const std::vector<Opm::NNCdata>& nnc, std::size_t grid_num) const {
         std::vector<int> nnchead(10, 0);
         std::vector<int> nncl;
         std::vector<int> nncg;
@@ -2121,7 +2117,11 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
             nncg.push_back(n.cell1 + 1);
             nncl.push_back(n.cell2 + 1);
         }
-        nnchead[0] = num_nnc;
+        // Count the connections this header actually heads.  It used to be
+        // handed the LGR's *internal* NNC count, which is a different set: an
+        // LGR whose interior has no NNC at all then announced zero here while
+        // writing hundreds of connections to its coarse neighbours.
+        nnchead[0] = nncl.size();
         nnchead[1] = grid_num;
         egridfile.write("NNCHEAD", nnchead);
         egridfile.write("NNCL", nncl);
