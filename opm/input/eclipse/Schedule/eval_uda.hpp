@@ -36,6 +36,17 @@ namespace UDA {
                          const std::string& name,
                          const SummaryState& st,
                          double udq_undefined);
+    /// Evaluate a well level UDA holding a pressure.
+    ///
+    /// Unlike eval_well_uda(), a result which is zero or negative is passed
+    /// on unchanged rather than clamped to a small positive value: that
+    /// clamp exists because a zero rate limit means "no limit", which is not
+    /// a meaning a pressure carries.
+    double eval_well_uda_pressure(const UDAValue& value,
+                                  const std::string& name,
+                                  const SummaryState& st,
+                                  double udq_undefined);
+
     double eval_well_uda_rate(const UDAValue& value,
                               const std::string& name,
                               const SummaryState& st,

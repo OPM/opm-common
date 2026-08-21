@@ -117,7 +117,7 @@ namespace Opm {
                                 const SummaryState& st,
                                 const double udq_undefined) const
     {
-        return UDA::eval_well_uda(this->m_max_drawdown, well_name, st, udq_undefined);
+        return UDA::eval_well_uda_pressure(this->m_max_drawdown, well_name, st, udq_undefined);
     }
 
     bool WELDRAW::operator==(const WELDRAW& other) const
