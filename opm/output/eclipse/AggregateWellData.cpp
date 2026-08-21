@@ -26,6 +26,10 @@
 #include <opm/output/data/Wells.hpp>
 
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/input/eclipse/EclipseState/Phase.hpp>
+#include <opm/input/eclipse/EclipseState/Runspec.hpp>
+#include <opm/input/eclipse/EclipseState/TracerConfig.hpp>
+
 #include <opm/input/eclipse/Schedule/Action/ActionAST.hpp>
 #include <opm/input/eclipse/Schedule/Action/ActionContext.hpp>
 #include <opm/input/eclipse/Schedule/Action/ActionResult.hpp>
@@ -38,8 +42,8 @@
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
 #include <opm/input/eclipse/Schedule/VFPProdTable.hpp>
-#include <opm/input/eclipse/Schedule/Well/WDFAC.hpp>
 #include <opm/input/eclipse/Schedule/Well/Connection.hpp>
+#include <opm/input/eclipse/Schedule/Well/WDFAC.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellEconProductionLimits.hpp>
@@ -47,7 +51,6 @@
 #include <opm/input/eclipse/Schedule/Well/WellTestState.hpp>
 #include <opm/input/eclipse/Schedule/Well/WVFPDP.hpp>
 #include <opm/input/eclipse/Schedule/Well/WVFPEXP.hpp>
-#include <opm/input/eclipse/EclipseState/TracerConfig.hpp>
 
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 #include <opm/input/eclipse/Units/Units.hpp>
@@ -66,6 +69,7 @@
 #include <iostream>
 #include <iterator>
 #include <optional>
+#include <span>
 #include <stdexcept>
 #include <string>
 #include <tuple>
@@ -1190,18 +1194,34 @@ namespace {
                               const bool               isTemp = false)
         {
             auto output_index = static_cast<std::size_t>(VI::SWell::index::TracerOffset);
+
+            const auto conc = [&smry, &wname](const std::string& tname)
+            {
+                return smry.get_well_var(wname, fmt::format("WTIC{}", tname), 0.0);
+            };
+
             // Temperature tracer is first, if present
-            if (isTemp) sWell[output_index++] = smry.get_well_var(wname, "WTICHEA", 0.0);
+            if (isTemp) {
+                sWell[output_index++] = conc("HEA");
+            }
+
+            const auto dgas = tracers.supportsSolutionGasTracer();
+            const auto voil = tracers.supportsVaporisedOilTracer();
 
             for (const auto& tracer : tracers) {
                 if (tracer.phase == Opm::Phase::WATER) {
-                    sWell[output_index++] =
-                        smry.get_well_var(wname, fmt::format("WTIC{}", tracer.name), 0.0);
-                } else {
-                    sWell[output_index++] =
-                        smry.get_well_var(wname, fmt::format("WTICF{}", tracer.name), 0.0);
-                    sWell[output_index++] =
-                        smry.get_well_var(wname, fmt::format("WTICS{}", tracer.name), 0.0);
+                    sWell[output_index++] = conc(tracer.name);
+                }
+                else {
+                    sWell[output_index++] = conc(tracer.wellfname());
+
+                    const auto supportsSolution =
+                        (dgas && tracer.phase == Opm::Phase::GAS)
+                        || (voil && tracer.phase == Opm::Phase::OIL);
+
+                    if (supportsSolution) {
+                        sWell[output_index++] = conc(tracer.wellsname());
+                    }
                 }
             }
         }
@@ -1448,15 +1468,12 @@ namespace {
             xWell[Ix::PrimGuideRate] = xWell[Ix::PrimGuideRate_2] = -get("WOIGR");
         }
 
-        template <typename XWellArray,
-                typename TempCallback,
-                typename WaterCallback,
-                typename HCCallback>
-        std::size_t tracerLoop(XWellArray& xWell,
-                            const Opm::TracerConfig& tracers,
-                            TempCallback&& processTemperature,
-                            WaterCallback&& processWaterTracer,
-                            HCCallback&& processHCTracer)
+        template <typename TempCallback, typename WaterCallback, typename HCCallback>
+        void tracerLoop(std::span<double>        xWell,
+                        const Opm::TracerConfig& tracers,
+                        TempCallback&&           processTemperature,
+                        WaterCallback&&          processWaterTracer,
+                        HCCallback&&             processHCTracer)
         {
             auto ix = std::size_t {0};
 
@@ -1470,134 +1487,164 @@ namespace {
                     ix += processHCTracer(tracer, &xWell[ix]);
                 }
             }
-
-            return ix;
         }
 
-        template <typename XWellArray>
-        std::size_t assignTracerQuantity(const bool isTemp,
-                                        const double sign,
-                                        const std::string& quantityPrefix,
-                                        const std::string& wellName,
-                                        const Opm::TracerConfig& tracers,
-                                        const Opm::SummaryState& smry,
-                                        XWellArray& xWell)
+        void assignTracerQuantity(const bool               isTemp,
+                                  const double             sign,
+                                  const std::string&       quantity,
+                                  const std::string&       wellName,
+                                  const Opm::TracerConfig& tracers,
+                                  const Opm::SummaryState& smry,
+                                  std::span<double>        xWell)
         {
-            auto processWaterTracer = [&smry, sign, &quantityPrefix, &wellName](const auto& tracer, auto* xwel)
+            auto getValue = [&smry, sign, &quantity, &wellName]
+                (const std::string& tracerName)
             {
-                xwel[0] = sign * smry.get_well_var(wellName, quantityPrefix + tracer.name, 0.0);
+                // WTIRHEA, WTPTFXF2, WTITWT1, ...
+                const auto vector = fmt::format("WT{}{}", quantity, tracerName);
+
+                return sign * smry.get_well_var(wellName, vector, 0.0);
+            };
+
+            auto processWaterTracer = [&getValue](const auto& tracer, auto* xwel)
+            {
+                xwel[0] = getValue(tracer.name);
+
                 return std::size_t{1};
             };
 
-            auto processHCTracer = [&smry, sign, quantityPrefix, &wellName](const auto& tracer, auto* xwel)
+            auto processHCTracer = [dgas = tracers.supportsSolutionGasTracer(),
+                                    voil = tracers.supportsVaporisedOilTracer(),
+                                    &getValue](const auto& tracer, auto* xwel)
             {
-                xwel[0] = sign * smry.get_well_var(wellName, quantityPrefix + 'F' + tracer.name, 0.0);
-                xwel[1] = sign * smry.get_well_var(wellName, quantityPrefix + 'S' + tracer.name, 0.0);
+                const auto supportsSolution = (dgas && tracer.phase == Opm::Phase::GAS)
+                    || (voil && tracer.phase == Opm::Phase::OIL);
+
+                xwel[0] = getValue(tracer.wellfname());
+
+                if (!supportsSolution) {
+                    return std::size_t{1};
+                }
+
+                xwel[1] = getValue(tracer.wellsname());
                 return std::size_t{2};
             };
 
             if (! isTemp) {
                 return tracerLoop(xWell, tracers,
-                                [](auto*) { return std::size_t{0}; },
-                                processWaterTracer, processHCTracer);
+                                  [](auto*) { return std::size_t{0}; },
+                                  processWaterTracer, processHCTracer);
             }
 
-            const auto tempQuant = sign * smry.get_well_var(wellName, quantityPrefix + "HEA", 0.0);
-            auto processTemperature = [tempQuant](auto* xwell)
+            auto processTemperature = [tempQuant = getValue("HEA")](auto* xwell)
             {
                 xwell[0] = tempQuant;
-                return std::size_t {1};
+
+                return std::size_t{1};
             };
 
-            return tracerLoop(xWell, tracers, processTemperature, processWaterTracer, processHCTracer);
+            tracerLoop(xWell, tracers, processTemperature, processWaterTracer, processHCTracer);
         }
 
-        template <typename XWellArray>
-        std::size_t assignTracerRates(const bool isInjector,
-                                    const bool isTemp,
-                                    const std::string& wellName,
-                                    const Opm::TracerConfig& tracers,
-                                    const Opm::SummaryState& smry,
-                                    XWellArray xWell)
+        void assignTracerRates(const bool               isInjector,
+                               const bool               isTemp,
+                               const std::string&       wellName,
+                               const Opm::TracerConfig& tracers,
+                               const Opm::SummaryState& smry,
+                               std::span<double>        xWell)
         {
             const auto sign = isInjector ? -1.0 : 1.0;
-            const auto prefix = isInjector ? std::string { "WTIR" } : std::string { "WTPR" };
+            const auto prefix = isInjector ? std::string { "IR" } : std::string { "PR" };
 
-            return assignTracerQuantity(isTemp, sign, prefix, wellName, tracers, smry, xWell);
+            assignTracerQuantity(isTemp, sign, prefix, wellName, tracers, smry, xWell);
         }
 
-        template <typename XWellArray>
-        std::size_t assignTracerCumulatives(const bool isInjection,
-                                            const bool isTemp,
-                                            const std::string& wellName,
-                                            const Opm::TracerConfig& tracers,
-                                            const Opm::SummaryState& smry,
-                                            XWellArray xWell)
+        void assignTracerCumulatives(const bool               isInjection,
+                                     const bool               isTemp,
+                                     const std::string&       wellName,
+                                     const Opm::TracerConfig& tracers,
+                                     const Opm::SummaryState& smry,
+                                     std::span<double>        xWell)
         {
             const auto sign = 1.0; // Cumulatives are always positive;
-            const auto prefix = isInjection ? std::string { "WTIT" } : std::string { "WTPT" };
+            const auto prefix = isInjection ? std::string { "IT" } : std::string { "PT" };
 
-            return assignTracerQuantity(isTemp, sign, prefix, wellName, tracers, smry, xWell);
+            assignTracerQuantity(isTemp, sign, prefix, wellName, tracers, smry, xWell);
         }
 
-        template <typename XWellArray>
-        std::size_t assignTracerConcentration(const bool isInjection,
-                                            const bool isTemp,
-                                            const std::string& wellName,
-                                            const Opm::TracerConfig& tracers,
-                                            const Opm::SummaryState& smry,
-                                            XWellArray xWell)
+        void assignTracerConcentration(const bool               isInjection,
+                                       const bool               isTemp,
+                                       const std::string&       wellName,
+                                       const Opm::TracerConfig& tracers,
+                                       const Opm::SummaryState& smry,
+                                       std::span<double>        xWell)
         {
             const auto sign = 1.0; // Concentrations are always positive;
-            const auto prefix = isInjection ? std::string { "WTIC" } : std::string { "WTPC" };
+            const auto prefix = isInjection ? std::string { "IC" } : std::string { "PC" };
 
-            return assignTracerQuantity(isTemp, sign, prefix, wellName, tracers, smry, xWell);
+            assignTracerQuantity(isTemp, sign, prefix, wellName, tracers, smry, xWell);
         }
 
-
         template <class XWellArray>
-        void assignTracerData(const Opm::TracerConfig& tracers,
+        void assignTracerData(const Opm::Runspec&      runspec,
+                              const Opm::TracerConfig& tracers,
                               const Opm::SummaryState& smry,
-                              const Opm::Well& well,
-                              XWellArray& xWell,
-                              const bool isTemp)
+                              const Opm::Well&         well,
+                              XWellArray&              xWell)
         {
-            if (tracers.empty() && !isTemp)
-                return;
-
             using Ix = ::Opm::RestartIO::Helpers::VectorItems::XWell::index;
-            std::fill(xWell.begin() + Ix::TracerOffset, xWell.end(), 0);
+
+            if (tracers.empty() && !runspec.temp()) {
+                return;
+            }
+
+            const auto numTracerElems = [&runspec, &tracers]()
+            {
+                const auto& t = runspec.tracers();
+
+                return t.water_tracers() + (runspec.temp() ? 1 : 0)
+                     + (1 + tracers.supportsSolutionGasTracer()) * t.gas_tracers()
+                     + (1 + tracers.supportsVaporisedOilTracer()) * t.oil_tracers();
+            }();
+
+            auto tracerElems = std::span<double> {
+                xWell.begin() + Ix::TracerOffset, xWell.end()
+            };
+
+            std::ranges::fill(tracerElems, 0.0);
 
             // For each vector in rate, prod_total, inj_total, inj_conc, prod_conc:
-            //    TEMP (if present), then each tracer in definition order (TRACER) [free then solution conc for HC tracers]
+            //    TEMP (if present), then each tracer in definition order (TRACER)
+            //    [free then solution conc for HC tracers]
 
             const auto& wname = well.name();
-            auto output_index = static_cast<std::size_t>(Ix::TracerOffset);
+
+            auto qtyIndex = std::size_t{0};
 
             // Flow rates.
-            output_index += assignTracerRates(well.isInjector(), isTemp, wname, tracers, smry, &xWell[output_index]);
+            assignTracerRates(well.isInjector(), runspec.temp(), wname, tracers, smry,
+                              tracerElems.subspan(qtyIndex++ * numTracerElems, numTracerElems));
 
             // Cumulative production volume.
-            output_index += assignTracerCumulatives(/* injection = */ false, isTemp, wname, tracers, smry, &xWell[output_index]);
+            assignTracerCumulatives(/* injection = */ false, runspec.temp(), wname, tracers, smry,
+                                    tracerElems.subspan(qtyIndex++ * numTracerElems, numTracerElems));
 
             // Cumulative injection volume.
-            output_index += assignTracerCumulatives(/* injection = */ true, isTemp, wname, tracers, smry, &xWell[output_index]);
+            assignTracerCumulatives(/* injection = */ true, runspec.temp(), wname, tracers, smry,
+                                    tracerElems.subspan(qtyIndex++ * numTracerElems, numTracerElems));
 
             // Tracer concentrations (twice)
             for (auto i = 0; i < 2; ++i) {
-                output_index += assignTracerConcentration(well.isInjector(), isTemp, wname, tracers, smry, &xWell[output_index]);
+                assignTracerConcentration(well.isInjector(), runspec.temp(), wname, tracers, smry,
+                                          tracerElems.subspan(qtyIndex++ * numTracerElems, numTracerElems));
             }
-
-
-            xWell[output_index++] = 0;
-            xWell[output_index++] = 0;
         }
 
         template <class XWellArray>
-        void dynamicContrib(const ::Opm::Well&         well,
+        void dynamicContrib(const Opm::Runspec&        rspec,
+                            const ::Opm::Well&         well,
                             const Opm::TracerConfig&   tracers,
                             const ::Opm::SummaryState& smry,
-                            const bool                 isTemp,
                             XWellArray&                xWell)
         {
             if (well.isProducer()) {
@@ -1605,9 +1652,8 @@ namespace {
             }
             else if (well.isInjector()) {
                 using IType = ::Opm::InjectorType;
-                const auto itype = well.injectionControls(smry).injector_type;
 
-                switch (itype) {
+                switch (well.injectionControls(smry).injector_type) {
                 case IType::OIL:
                     assignOilInjector(well.name(), smry, xWell);
                     break;
@@ -1626,8 +1672,9 @@ namespace {
                     break;
                 }
             }
+
             assignCumulatives(well.name(), smry, xWell);
-            assignTracerData(tracers, smry, well, xWell, isTemp);
+            assignTracerData(rspec, tracers, smry, well, xWell);
         }
     } // XWell
 
@@ -1965,10 +2012,9 @@ captureDynamicWellData(const Opm::Schedule&       sched,
     {
         auto xwell = this->xWell_[wellID];
 
-        XWell::dynamicContrib(well, tracers, smry, sched.runspec().temp(), xwell);
+        XWell::dynamicContrib(sched.runspec(), well, tracers, smry, xwell);
     });
 }
-
 
 void
 Opm::RestartIO::Helpers::AggregateWellData::
@@ -2005,6 +2051,6 @@ captureDynamicWellDataLGR(const Opm::Schedule&       sched,
     {
         auto xwell = this->xWell_[wellID];
 
-        XWell::dynamicContrib(well, tracers, smry, sched.runspec().temp(), xwell);
+        XWell::dynamicContrib(sched.runspec(), well, tracers, smry, xwell);
     });
 }

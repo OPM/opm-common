@@ -226,7 +226,7 @@ namespace Opm::RestartIO::Helpers::VectorItems {
             HistGasInjTotal = 144, // Group's total cumulative gas injection
                                    // (observed/historical rates)
 
-            TracerOffset = 180,    // Tracer data starts here
+            TracerOffset = 181,    // Tracer data starts here
         };
     } // XGroup
 

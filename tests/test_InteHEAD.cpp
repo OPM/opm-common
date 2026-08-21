@@ -96,16 +96,13 @@ struct SimulationCase
     explicit SimulationCase(const Opm::Deck& deck)
         : es   { deck }
         , grid { deck }
-        , python{ std::make_shared<Opm::Python>() }
-        , sched{ deck, es, python }
+        , sched{ deck, es, std::make_shared<Opm::Python>() }
     {}
 
     // Order requirement: 'es' must be declared/initialised before 'sched'.
     Opm::EclipseState es;
     Opm::EclipseGrid  grid;
-    std::shared_ptr<Opm::Python> python;
     Opm::Schedule     sched;
-
 };
 
 BOOST_AUTO_TEST_SUITE(Member_Functions)
@@ -427,7 +424,7 @@ BOOST_AUTO_TEST_CASE(Tuning_param)
 BOOST_AUTO_TEST_CASE(Various_Parameters)
 {
     const auto ih = Opm::RestartIO::InteHEAD{}
-        .variousParam(2015, 100, 0);
+        .variousParam(2015, 100);
 
     const auto& v = ih.data();
 
@@ -599,7 +596,7 @@ BOOST_AUTO_TEST_CASE(TestHeader)
     const auto nactive = 1345;
     const auto numWells        = 17;
     const auto maxPerf         = 29;
-    const auto maxWellsInGroup  =  3;
+    const auto maxWellsInGroup =  3;
     const auto maxGroupInField = 14;
     const auto maxWellsInField = 25;
     const auto year = 2010;
@@ -642,7 +639,6 @@ BOOST_AUTO_TEST_CASE(TestHeader)
     const auto mxwpit	= 6;
     const auto version = 2015;
     const auto iprog = 100;
-    const auto ntracers = 0;
     const auto nsegwl = 3;
     const auto nswlmx = 4;
     const auto nsegmx = 5;
@@ -676,14 +672,17 @@ BOOST_AUTO_TEST_CASE(TestHeader)
          .aquiferDimensions(aqudims)
          .stepParam(tstep, report_step)
          .tuningParam({newtmx, newtmn, litmax, litmin, mxwsit, mxwpit, 0})
-         .variousParam(version, iprog, ntracers)
+         .variousParam(version, iprog)
          .wellSegDimensions({nsegwl, nswlmx, nsegmx, nlbrmx, nisegz, nrsegz, nilbrz})
          .regionDimensions({ntfip, nmfipr, 0,0,0})
          .ngroups({ngroup});
 
-    Opm::Runspec runspec;
+    Opm::Runspec runspec{};
+
     Opm::RestartIO::RstHeader header {
-        runspec, unit_system, ih.data(), std::vector<bool>(100), std::vector<double>(1000)
+        runspec, unit_system, ih.data(),
+        std::vector<bool>(100),
+        std::vector<double>(1000)
     };
 
     BOOST_CHECK_EQUAL(header.nx, nx);

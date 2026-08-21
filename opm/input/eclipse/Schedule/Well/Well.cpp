@@ -472,35 +472,51 @@ Well::Well(const RestartIO::RstWell& rst_well,
 
         this->updateInjection(std::move(i));
 
-        const auto isTemp = (rst_well.inj_temperature < RestartIO::RstWell::UNDEFINED_VALUE);
-        std::size_t tracer_conc_index = 0;
-        if (isTemp) {
-            this->well_inj_temperature = rst_well.inj_temperature;
-            ++tracer_conc_index;
+        if (rst_well.inj_temperature < RestartIO::RstWell::UNDEFINED_VALUE) {
+            this->well_inj_temperature.emplace(rst_well.inj_temperature);
         }
 
         if (!rst_well.tracer_concentration_injection.empty()) {
-            auto tracer = std::make_shared<WellTracerProperties>(this->getTracerProperties());
-            for (std::size_t tracer_index = 0; tracer_index < tracer_config.size(); ++tracer_index) {
-                const auto& trName = tracer_config[tracer_index].name;
-                const auto phase = tracer_config[tracer_index].phase;
-                if (phase == Phase::WATER) {
-                    const auto concentration = rst_well.tracer_concentration_injection[tracer_conc_index];
-                    tracer->setConcentration(WellTracerProperties::Tracer { trName },
-                                                UDAValue { concentration } );
-                } else {
-                    const auto free_conc = rst_well.tracer_concentration_injection[tracer_conc_index];
-                    const auto sol_conc = rst_well.tracer_concentration_injection[++tracer_conc_index];
-                    if (WellType::gas_injector(this->wtype.ecl_wtype()) || WellType::oil_injector(this->wtype.ecl_wtype())) {
-                        tracer->setConcentration( WellTracerProperties::Tracer { trName },
-                                                    UDAValue { free_conc } );
+            auto nextConcentrationValue = [idx = std::size_t{0}, &rst_well]() mutable {
+                return rst_well.tracer_concentration_injection[idx++];
+            };
+
+            const auto dgas = tracer_config.supportsSolutionGasTracer();
+            const auto voil = tracer_config.supportsVaporisedOilTracer();
+
+            auto tracerProps = std::make_shared<WellTracerProperties>(this->getTracerProperties());
+
+            for (const auto& tracer : tracer_config) {
+                if (tracer.phase == Phase::WATER) {
+                    const auto concentration = nextConcentrationValue();
+
+                    tracerProps->setConcentration(WellTracerProperties::Tracer { tracer.name },
+                                                  UDAValue { concentration });
+                }
+                else {
+                    const auto supportsSolution = (dgas && tracer.phase == Phase::GAS)
+                        || (voil && tracer.phase == Phase::OIL);
+
+                    const auto free_conc = nextConcentrationValue();
+                    const auto sol_conc = supportsSolution ? nextConcentrationValue() : 0.0;
+
+                    if (WellType::gas_injector(this->wtype.ecl_wtype()) ||
+                        WellType::oil_injector(this->wtype.ecl_wtype()))
+                    {
+                        tracerProps->setConcentration(WellTracerProperties::Tracer { tracer.name },
+                                                      UDAValue { free_conc });
+
                         if (sol_conc > 0.0) {
-                            OpmLog::warning(fmt::format("Well {}: Restoring a non-zero solution concentration of tracer {} is not yet supported.", rst_well.name, trName));
+                            OpmLog::warning(
+                                fmt::format("Well {}: Restoring a non-zero solution "
+                                            "concentration of tracer {} is not yet "
+                                            "supported.", rst_well.name, tracer.name));
                         }
                     }
                 }
             }
-            this->updateTracer(tracer);
+
+            this->updateTracer(std::move(tracerProps));
         }
     }
 }
