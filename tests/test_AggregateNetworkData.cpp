@@ -54,7 +54,7 @@
 
 namespace {
 
-    Opm::Deck first_sim(std::string fname) {
+    Opm::Deck first_sim(const std::string& fname) {
         return Opm::Parser{}.parseFile(fname);
     }
 
@@ -95,9 +95,9 @@ namespace {
 struct SimulationCase
 {
     explicit SimulationCase(const Opm::Deck& deck)
-        : es   ( deck )
-        , grid { deck }
-        , sched(deck, es, std::make_shared<Opm::Python>())
+        : es    { deck }
+        , grid  { deck }
+        , sched { deck, es, std::make_shared<Opm::Python>() }
     {}
 
     // Order requirement: 'es' must be declared/initialised before 'sched'.
@@ -116,14 +116,10 @@ BOOST_AUTO_TEST_CASE (Constructor)
     namespace VI = ::Opm::RestartIO::Helpers::VectorItems;
     const auto simCase = SimulationCase{first_sim("TEST_NETWORK_ALL.DATA")};
 
-    Opm::EclipseState es = simCase.es;
-    Opm::Runspec rspec   = es.runspec();
-    Opm::SummaryState st = sum_state();
-    Opm::Schedule     sched = simCase.sched;
-    Opm::EclipseGrid  grid = simCase.grid;
-    //const auto& ioConfig = es.getIOConfig();
-    const auto& units    = es.getUnits();
-
+    const auto& es    = simCase.es;
+    const auto& sched = simCase.sched;
+    const auto& grid  = simCase.grid;
+    const auto  st    = sum_state();
 
     // Report Step 1: 2008-10-10 --> 2011-01-20
     const auto rptStep = std::size_t{1};
@@ -134,7 +130,7 @@ BOOST_AUTO_TEST_CASE (Constructor)
                        rptStep, rptStep+1, rptStep);
 
     auto networkData = Opm::RestartIO::Helpers::AggregateNetworkData(ih);
-    networkData.captureDeclaredNetworkData(es, sched, units, rptStep, st, ih);
+    networkData.captureDeclaredNetworkData(es, sched, rptStep, st, ih);
 
     BOOST_CHECK_EQUAL(static_cast<int>(networkData.getINode().size()), ih[VI::NINODE] * ih[VI::NODMAX]);
     BOOST_CHECK_EQUAL(static_cast<int>(networkData.getIBran().size()), ih[VI::NIBRAN] * ih[VI::NBRMAX]);

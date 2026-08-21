@@ -35,62 +35,62 @@ namespace Opm {
     class UnitSystem;
     class WellTestState;
     class TracerConfig;
-    namespace Action {
-        class State;
-    }
 } // Opm
 
-namespace Opm { namespace data {
-    class Wells;
-}} // Opm::data
+namespace Opm::Action {
+    class State;
+}
 
-namespace Opm { namespace RestartIO { namespace Helpers {
+namespace Opm::data {
+    class Wells;
+} // Opm::data
+
+namespace Opm::RestartIO::Helpers {
 
     class AggregateWellData
     {
     public:
         explicit AggregateWellData(const std::vector<int>& inteHead);
 
-        void captureDeclaredWellData(const Schedule&   	          sched,
-                                     const TracerConfig&          tracer,
-                                     const std::size_t 		      sim_step,
-                                     const Opm::Action::State&    action_state,
-                                     const Opm::WellTestState&    wtest_state,
-                                     const Opm::SummaryState&     smry,
-                                     const std::vector<int>&      inteHead);
+        void captureDeclaredWellData(const Schedule&         sched,
+                                     const TracerConfig&     tracer,
+                                     const std::size_t       sim_step,
+                                     const Action::State&    action_state,
+                                     const WellTestState&    wtest_state,
+                                     const SummaryState&     smry,
+                                     const std::vector<int>& inteHead);
 
-        void captureDeclaredWellData(const Schedule&   	          sched,
-                                     const EclipseGrid&           grid,
-                                     const TracerConfig&          tracer,
-                                     const std::size_t 		      sim_step,
-                                     const Opm::Action::State&    action_state,
-                                     const Opm::WellTestState&    wtest_state,
-                                     const Opm::SummaryState&     smry,
-                                     const std::vector<int>&      inteHead);
+        void captureDeclaredWellData(const Schedule&         sched,
+                                     const EclipseGrid&      grid,
+                                     const TracerConfig&     tracer,
+                                     const std::size_t       sim_step,
+                                     const Action::State&    action_state,
+                                     const WellTestState&    wtest_state,
+                                     const SummaryState&     smry,
+                                     const std::vector<int>& inteHead);
 
-        void captureDeclaredWellDataLGR(const Schedule&   	      sched,
-                                        const EclipseGrid&        grid,
-                                        const TracerConfig&       tracer,
-                                        const std::size_t 		  sim_step,
-                                        const Opm::Action::State& action_state,
-                                        const Opm::WellTestState& wtest_state,
-                                        const Opm::SummaryState&  smry,
-                                        const std::vector<int>&   inteHead,
-                                        const std::string&        lgr_tag);
+        void captureDeclaredWellDataLGR(const Schedule&         sched,
+                                        const EclipseGrid&      grid,
+                                        const TracerConfig&     tracer,
+                                        const std::size_t       sim_step,
+                                        const Action::State&    action_state,
+                                        const WellTestState&    wtest_state,
+                                        const SummaryState&     smry,
+                                        const std::vector<int>& inteHead,
+                                        const std::string&      lgr_tag);
 
-        void captureDynamicWellData(const Opm::Schedule&          sched,
-                                    const TracerConfig&           tracer,
-                                    const std::size_t             sim_step,
-                                    const Opm::data::Wells&       xw,
-                                    const Opm::SummaryState&      smry);
+        void captureDynamicWellData(const Schedule&     sched,
+                                    const TracerConfig& tracer,
+                                    const std::size_t   sim_step,
+                                    const data::Wells&  xw,
+                                    const SummaryState& smry);
 
-        void captureDynamicWellDataLGR(const Opm::Schedule&          sched,
-                                       const TracerConfig&           tracer,
-                                       const std::size_t             sim_step,
-                                       const Opm::data::Wells&       xw,
-                                       const Opm::SummaryState&      smry,
-                                       const std::string&            lgr_tag);
-
+        void captureDynamicWellDataLGR(const Schedule&     sched,
+                                       const TracerConfig& tracer,
+                                       const std::size_t   sim_step,
+                                       const data::Wells&  xw,
+                                       const SummaryState& smry,
+                                       const std::string&  lgr_tag);
 
         /// Retrieve Integer Well Data Array.
         const std::vector<int>& getIWell() const
@@ -122,8 +122,6 @@ namespace Opm { namespace RestartIO { namespace Helpers {
             return this->lgWell_.data();
         }
 
-
-
     private:
         /// Aggregate 'IWEL' array (Integer) for all wells.
         WindowedArray<int> iWell_;
@@ -144,6 +142,6 @@ namespace Opm { namespace RestartIO { namespace Helpers {
         int nWGMax_;
     };
 
-}}} // Opm::RestartIO::Helpers
+} // Opm::RestartIO::Helpers
 
 #endif // OPM_AGGREGATE_WELL_DATA_HPP

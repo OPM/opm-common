@@ -410,7 +410,6 @@ BOOST_AUTO_TEST_CASE (Declared_MSW_Data)
     const auto& es    = simCase.es;
     const auto& grid  = simCase.grid;
     const auto& sched = simCase.sched;
-    const auto& units = es.getUnits();
     const auto  smry  = sim_state(es.runspec().udqParams().undefinedValue());
 
     // Report Step 1: 2008-10-10 --> 2011-01-20
@@ -424,8 +423,7 @@ BOOST_AUTO_TEST_CASE (Declared_MSW_Data)
     const Opm::data::Wells wrc = wr();
 
     auto amswd = Opm::RestartIO::Helpers::AggregateMSWData {ih};
-    amswd.captureDeclaredMSWData(sched, rptStep, units,
-                                 ih, grid, smry, wrc);
+    amswd.captureDeclaredMSWData(sched, rptStep, ih, grid, smry, wrc);
 
     // ISEG (PROD)
     {
@@ -492,7 +490,7 @@ BOOST_AUTO_TEST_CASE (Declared_MSW_Data)
         std::string stringSegNo = std::to_string(segNo);
 
         const auto  i0 = (segNo-1)*ih[VI::intehead::NRSEGZ];
-        const auto gfactor = (units.getType() == Opm::UnitSystem::UnitType::UNIT_TYPE_FIELD)
+        const auto gfactor = (es.getUnits().getType() == Opm::UnitSystem::UnitType::UNIT_TYPE_FIELD)
                              ? 0.1781076 : 0.001;
         const auto& rseg = amswd.getRSeg();
 
@@ -525,7 +523,7 @@ BOOST_AUTO_TEST_CASE (Declared_MSW_Data)
 
         const auto  i0 = ih[VI::intehead::NRSEGZ]*ih[VI::intehead::NSEGMX] + (segNo-1)*ih[VI::intehead::NRSEGZ];
         using M = ::Opm::UnitSystem::measure;
-        const auto gfactor = (units.getType() == Opm::UnitSystem::UnitType::UNIT_TYPE_FIELD)
+        const auto gfactor = (es.getUnits().getType() == Opm::UnitSystem::UnitType::UNIT_TYPE_FIELD)
                              ? 0.1781076 : 0.001;
         const auto& rseg = amswd.getRSeg();
 
@@ -536,7 +534,7 @@ BOOST_AUTO_TEST_CASE (Declared_MSW_Data)
         BOOST_CHECK_CLOSE(rseg[i0 +  7], 7010.  , 1.0e-10);
 
         const double temp_o = 0.;
-        const double temp_w = -units.from_si(M::liquid_surface_rate,105.)*0.1;
+        const double temp_w = -es.getUnits().from_si(M::liquid_surface_rate,105.)*0.1;
         const double temp_g = 0.0*gfactor;
 
         auto t0 = temp_o + temp_w + temp_g;
@@ -547,7 +545,6 @@ BOOST_AUTO_TEST_CASE (Declared_MSW_Data)
         BOOST_CHECK_CLOSE(rseg[i0 +  9],  t1, 1.0e-10);
         BOOST_CHECK_CLOSE(rseg[i0 + 10],  t2, 1.0e-10);
         BOOST_CHECK_CLOSE(rseg[i0 + 11], 234., 1.0e-10);
-
     }
 
     // ILBR
@@ -585,8 +582,6 @@ BOOST_AUTO_TEST_CASE (Declared_MSW_Data)
         BOOST_CHECK_EQUAL(iLBr[start + 2] , 14); // WINJ-branch   2, first segment
         BOOST_CHECK_EQUAL(iLBr[start + 3] , 18); // WINJ-branch   2, last segment
         BOOST_CHECK_EQUAL(iLBr[start + 4] ,  1); // WINJ-branch   2, branch no - 1
-
-
     }
 
     // ILBS
@@ -600,7 +595,6 @@ BOOST_AUTO_TEST_CASE (Declared_MSW_Data)
         start = ih[VI::intehead::NLBRMX] + 0*ih[VI::intehead::NLBRMX];
         //WINJ
         BOOST_CHECK_EQUAL(iLBs[start + 0] ,  14); // WINJ-branch   2, first segment in branch
-
     }
 }
 
@@ -621,7 +615,6 @@ BOOST_AUTO_TEST_CASE(Multilateral_Branches)
     const auto& es    = cse.es;
     const auto& grid  = cse.grid;
     const auto& sched = cse.sched;
-    const auto& units = es.getUnits();
     const auto  smry  = Opm::SummaryState {
         Opm::TimeService::now(),
         es.runspec().udqParams().undefinedValue()
@@ -638,8 +631,7 @@ BOOST_AUTO_TEST_CASE(Multilateral_Branches)
     const auto xw = Opm::data::Wells {};
 
     auto amswd = Opm::RestartIO::Helpers::AggregateMSWData {ih};
-    amswd.captureDeclaredMSWData(sched, rptStep, units,
-                                 ih, grid, smry, xw);
+    amswd.captureDeclaredMSWData(sched, rptStep, ih, grid, smry, xw);
 
     // ILBS--First segment on each branch other than branch 1.  Ordered by
     // discovery.
@@ -748,7 +740,6 @@ BOOST_AUTO_TEST_CASE(Multilateral_Segments_ISEG_0)
     const auto& es    = cse.es;
     const auto& grid  = cse.grid;
     const auto& sched = cse.sched;
-    const auto& units = es.getUnits();
     const auto  smry  = Opm::SummaryState {
         Opm::TimeService::now(),
         es.runspec().udqParams().undefinedValue()
@@ -765,8 +756,7 @@ BOOST_AUTO_TEST_CASE(Multilateral_Segments_ISEG_0)
     const auto xw = Opm::data::Wells {};
 
     auto amswd = Opm::RestartIO::Helpers::AggregateMSWData {ih};
-    amswd.captureDeclaredMSWData(sched, rptStep, units,
-                                 ih, grid, smry, xw);
+    amswd.captureDeclaredMSWData(sched, rptStep, ih, grid, smry, xw);
 
     auto isegOffset = [&ih](const int ix)
     {
@@ -832,8 +822,7 @@ BOOST_AUTO_TEST_CASE(Multilateral_Branches_ICD_Valve)
     const auto xw   = Opm::data::Wells {};
 
     auto amswd = Opm::RestartIO::Helpers::AggregateMSWData {ih};
-    amswd.captureDeclaredMSWData(sched, rptStep, es.getUnits(),
-                                 ih, grid, smry, xw);
+    amswd.captureDeclaredMSWData(sched, rptStep, ih, grid, smry, xw);
 
     // ILBS--First segment on each branch other than branch 1.  Ordered by
     // discovery.
@@ -1008,8 +997,7 @@ BOOST_AUTO_TEST_CASE(Multilateral_ICD_Valve_ISEG_0)
     const auto xw   = Opm::data::Wells {};
 
     auto amswd = Opm::RestartIO::Helpers::AggregateMSWData {ih};
-    amswd.captureDeclaredMSWData(sched, rptStep, es.getUnits(),
-                                 ih, grid, smry, xw);
+    amswd.captureDeclaredMSWData(sched, rptStep, ih, grid, smry, xw);
 
     auto isegOffset = [&ih](const int ix)
     {
@@ -1047,7 +1035,6 @@ BOOST_AUTO_TEST_CASE(MSW_AICD)
     const auto& es    = simCase.es;
     const auto& grid  = simCase.grid;
     const auto& sched = simCase.sched;
-    const auto& units = es.getUnits();
     const auto  smry  = sim_state(es.runspec().udqParams().undefinedValue());
 
     // Report Step 1: 2008-10-10 --> 2011-01-20
@@ -1061,8 +1048,7 @@ BOOST_AUTO_TEST_CASE(MSW_AICD)
     const Opm::data::Wells wrc = wr();
 
     auto amswd = Opm::RestartIO::Helpers::AggregateMSWData {ih};
-    amswd.captureDeclaredMSWData(sched, rptStep, units,
-                                 ih, grid, smry, wrc);
+    amswd.captureDeclaredMSWData(sched, rptStep, ih, grid, smry, wrc);
 
     // ISEG (PROD)
     {
@@ -1139,7 +1125,6 @@ BOOST_AUTO_TEST_CASE(MSW_RST)
     const auto& es    = simCase.es;
     const auto& grid  = simCase.grid;
     const auto& sched = simCase.sched;
-    const auto& units = es.getUnits();
     const auto  smry  = sim_state(es.runspec().udqParams().undefinedValue());
 
     // Report Step 1: 2008-10-10 --> 2011-01-20
@@ -1153,8 +1138,7 @@ BOOST_AUTO_TEST_CASE(MSW_RST)
     const Opm::data::Wells wrc = wr();
 
     auto amswd = Opm::RestartIO::Helpers::AggregateMSWData {ih};
-    amswd.captureDeclaredMSWData(sched, rptStep, units,
-                                 ih, grid, smry, wrc);
+    amswd.captureDeclaredMSWData(sched, rptStep, ih, grid, smry, wrc);
 
     const auto& iseg = amswd.getISeg();
     const auto& rseg = amswd.getRSeg();

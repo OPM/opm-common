@@ -31,7 +31,6 @@ namespace Opm {
     class EclipseState;
     class Schedule;
     class SummaryState;
-    class UnitSystem;
 } // Opm
 
 namespace Opm { namespace RestartIO { namespace Helpers {
@@ -41,12 +40,11 @@ class AggregateNetworkData
 public:
     explicit AggregateNetworkData(const std::vector<int>& inteHead);
 
-    void captureDeclaredNetworkData(const Opm::EclipseState&             es,
-                                    const Opm::Schedule&                 sched,
-                                    const Opm::UnitSystem&               units,
-                                    const std::size_t                    lookup_step,
-                                    const Opm::SummaryState&             sumState,
-                                    const std::vector<int>&              inteHead);
+    void captureDeclaredNetworkData(const EclipseState&     es,
+                                    const Schedule&         sched,
+                                    const std::size_t       lookup_step,
+                                    const SummaryState&     sumState,
+                                    const std::vector<int>& inteHead);
 
     const std::vector<int>& getINode() const
     {
