@@ -186,6 +186,9 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
 
                 CombRate =   9,  // Well controlled by linearly
                                  // combined rate target
+
+                Drawdown =  12,  // Well controlled by its maximum
+                                 // allowable drawdown (WELDRAW)
             };
 
             enum CompOrder : int {
