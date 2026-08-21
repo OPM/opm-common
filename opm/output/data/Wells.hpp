@@ -921,10 +921,17 @@ namespace Opm { namespace data {
             ::Opm::WellInjectorCMode::CMODE_UNDEFINED
         };
 
+        /// Whether the producer's active rate control is the one imposed by
+        /// its maximum allowable drawdown (WELDRAW).  Such a well reports
+        /// drawdown control rather than the rate control that carries the
+        /// converted limit.
+        bool drawdownLimited{false};
+
         bool operator==(const CurrentControl& rhs) const
         {
             return (this->isProducer == rhs.isProducer)
-                && ((this->isProducer && (this->prod == rhs.prod)) ||
+                && ((this->isProducer && (this->prod == rhs.prod) &&
+                     (this->drawdownLimited == rhs.drawdownLimited)) ||
                     (!this->isProducer && (this->inj == rhs.inj)));
         }
 
@@ -940,13 +947,15 @@ namespace Opm { namespace data {
             serializer(isProducer);
             serializer(prod);
             serializer(inj);
+            serializer(drawdownLimited);
         }
 
         static CurrentControl serializationTestObject()
         {
           return CurrentControl{false,
                                 ::Opm::WellProducerCMode::BHP,
-                                ::Opm::WellInjectorCMode::GRUP
+                                ::Opm::WellInjectorCMode::GRUP,
+                                true
                  };
         }
     };
@@ -1559,6 +1568,7 @@ namespace Opm { namespace data {
         buffer.write(this->isProducer);
         if (this->isProducer) {
             buffer.write(this->prod);
+            buffer.write(this->drawdownLimited);
         }
         else {
             buffer.write(this->inj);
@@ -1728,6 +1738,7 @@ namespace Opm { namespace data {
         buffer.read(this->isProducer);
         if (this->isProducer) {
             buffer.read(this->prod);
+            buffer.read(this->drawdownLimited);
         }
         else {
             buffer.read(this->inj);
