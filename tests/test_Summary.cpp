@@ -1939,6 +1939,9 @@ BOOST_AUTO_TEST_CASE(connection_kewords)
     BOOST_CHECK_CLOSE( 100.2 / 100.1, ecl_sum_get_well_connection_var( resp, 1, "W_1", "CGOR", 1, 1, 1 ), 1e-5 );
     BOOST_CHECK_CLOSE(   0.0,         ecl_sum_get_well_connection_var( resp, 1, "W_6", "CGOR", 8, 8, 1 ), 1e-5 );
 
+    BOOST_CHECK_CLOSE( 100.0 / 100.2, ecl_sum_get_well_connection_var( resp, 1, "W_1", "CWGR", 1, 1, 1 ), 1e-5 );
+    BOOST_CHECK_CLOSE(   0.0,         ecl_sum_get_well_connection_var( resp, 1, "W_6", "CWGR", 8, 8, 1 ), 1e-5 );
+
     /* Production totals */
     BOOST_CHECK_CLOSE( 100.0,     ecl_sum_get_well_connection_var( resp, 1, "W_1", "CWPT", 1, 1, 1 ), 1e-5 );
     BOOST_CHECK_CLOSE( 100.1,     ecl_sum_get_well_connection_var( resp, 1, "W_1", "COPT", 1, 1, 1 ), 1e-5 );
