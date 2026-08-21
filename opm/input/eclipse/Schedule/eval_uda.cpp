@@ -51,6 +51,27 @@ namespace UDA {
 }
 
 
+double eval_well_uda_pressure(const UDAValue& value, const std::string& well, const SummaryState& st, double udq_default) {
+    if (value.is<double>())
+        return value.getSI();
+
+    if (!value.is<std::string>())
+        return udq_default;
+
+    const std::string& string_var = value.get<std::string>();
+    double output_value = udq_default;
+
+    if (st.has_well_var(well, string_var))
+        output_value = st.get_well_var(well, string_var);
+    else if (st.has(string_var))
+        output_value = st.get(string_var);
+
+    // Deliberately no clamp here: the clamp in eval_well_uda() guards against
+    // negative rates, and a non-positive pressure is meaningful to the caller.
+    return value.get_dim().convertRawToSi(output_value);
+}
+
+
 double eval_well_uda_rate(const UDAValue& value, const std::string& well, const SummaryState& st, double udq_default, InjectorType wellType, const UnitSystem& unitSystem) {
     const auto raw_rate = value.is<double>() ? value.get<double>() : eval_well_uda(value, well, st, udq_default);
     return injection::rateToSI(raw_rate, wellType, unitSystem);

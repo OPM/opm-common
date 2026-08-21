@@ -68,6 +68,7 @@
 #include <opm/output/data/Wells.hpp>
 #include <opm/output/eclipse/Inplace.hpp>
 #include <opm/output/eclipse/RegionCache.hpp>
+#include <opm/output/eclipse/VectorItems/well.hpp>
 #include <opm/output/eclipse/WStat.hpp>
 
 #include <algorithm>
@@ -2598,10 +2599,16 @@ inline quantity well_control_mode( const fn_args& args )
 
     // Well has simulator-provided active control mode.  Pick the
     // appropriate value depending on well type (producer/injector).
+    //
+    // A producer held back by its maximum allowable drawdown reports
+    // drawdown control, not the rate control which carries the converted
+    // drawdown limit.
     const auto& curr = xwPos->second.current_control;
-    const auto wmctl = curr.isProducer
-        ? Opm::Well::eclipseControlMode(curr.prod)
-        : Opm::Well::eclipseControlMode(curr.inj, well->injectorType());
+    const auto wmctl = ! curr.isProducer
+        ? Opm::Well::eclipseControlMode(curr.inj, well->injectorType())
+        : (curr.drawdownLimited
+           ? Opm::RestartIO::Helpers::VectorItems::IWell::Value::WellCtrlMode::Drawdown
+           : Opm::Well::eclipseControlMode(curr.prod));
 
     return { static_cast<double>(wmctl), unit };
 }

@@ -145,6 +145,7 @@
 #include <opm/input/eclipse/Schedule/Well/PAvg.hpp>
 #include <opm/input/eclipse/Schedule/Well/WCYCLE.hpp>
 #include <opm/input/eclipse/Schedule/Well/WDFAC.hpp>
+#include <opm/input/eclipse/Schedule/Well/WELDRAW.hpp>
 #include <opm/input/eclipse/Schedule/Well/WList.hpp>
 #include <opm/input/eclipse/Schedule/Well/WListManager.hpp>
 #include <opm/input/eclipse/Schedule/Well/WVFPDP.hpp>
@@ -363,6 +364,7 @@ TEST_FOR_TYPE(ViscrefTable)
 TEST_FOR_TYPE(WatdentTable)
 TEST_FOR_TYPE_NAMED(WDFAC::Correlation, Correlation)
 TEST_FOR_TYPE(WDFAC)
+TEST_FOR_TYPE(WELDRAW)
 TEST_FOR_TYPE(Well)
 TEST_FOR_TYPE(Welldims)
 TEST_FOR_TYPE(WellBrineProperties)

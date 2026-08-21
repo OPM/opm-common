@@ -107,6 +107,8 @@ ScheduleDeck::ScheduleDeck(const time_point&          start_time,
         this->skiprest, this->m_blocks.back().start_time()
     };
 
+    auto weldraw_skipped = false;
+
     for (const auto& keyword : SCHEDULESection { deck }) {
         if (keyword.name() == "SCHEDULE") {
             this->m_location = keyword.location();
@@ -127,10 +129,28 @@ ScheduleDeck::ScheduleDeck(const time_point&          start_time,
             if (skiprest_include.find(keyword.name()) != skiprest_include.end()) {
                 this->m_blocks.front().push_back(keyword);
             }
+            else if (keyword.name() == "WELDRAW") {
+                // The drawdown limit is not stored in the restart file, so a
+                // limit set before the restart is lost.  The well then runs
+                // unconstrained, at a higher rate than in an uninterrupted
+                // run, until the next WELDRAW keyword reinstates the limit.
+                weldraw_skipped = true;
+            }
         }
         else {
             this->m_blocks.back().push_back(keyword);
         }
+    }
+
+    if (weldraw_skipped) {
+        OpmLog::warning("WELDRAW_NOT_RESTORED_ON_RESTART",
+                        "The WELDRAW keyword is used before the restart date, but the "
+                        "maximum allowable drawdown is not stored in the restart file "
+                        "and is therefore not reinstated.  Wells limited by their "
+                        "drawdown before the restart will produce at a higher rate "
+                        "than in an uninterrupted run until the next WELDRAW keyword. "
+                        "Run with --sched-restart=true to apply the drawdown limits "
+                        "from the SCHEDULE section instead.");
     }
 }
 
