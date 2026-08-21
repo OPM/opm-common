@@ -188,6 +188,12 @@ void handleWCONHIST(HandlerContext& handlerContext)
                 update_well = true;
             }
 
+            // The VFP table (item 7) is re-specified by every WCONHIST,
+            // whether or not any value changed.
+            handlerContext.state().events().addEvent( ScheduleEvents::WELL_THP_UPDATE );
+            handlerContext.state().wellgroup_events().addEvent( well2.name(), ScheduleEvents::WELL_THP_UPDATE);
+            handlerContext.thp_respec_well(well2.name());
+
             if (update_well) {
                 handlerContext.state().events().addEvent( ScheduleEvents::PRODUCTION_UPDATE );
                 handlerContext.state().wellgroup_events().addEvent( well2.name(), ScheduleEvents::PRODUCTION_UPDATE);
@@ -260,6 +266,12 @@ void handleWCONINJE(HandlerContext& handlerContext)
             if (well2.updateHasInjected()) {
                 update_well = true;
             }
+
+            // The THP limit and VFP table (items 8 and 9) are re-specified
+            // by every WCONINJE, whether or not any value changed.
+            handlerContext.state().events().addEvent( ScheduleEvents::WELL_THP_UPDATE );
+            handlerContext.state().wellgroup_events().addEvent( well_name, ScheduleEvents::WELL_THP_UPDATE);
+            handlerContext.thp_respec_well(well_name);
 
             if (update_well) {
                 handlerContext.state().events().addEvent(ScheduleEvents::INJECTION_UPDATE);
@@ -335,6 +347,12 @@ void handleWCONINJH(HandlerContext& handlerContext)
             if (well2.updateHasInjected()) {
                 update_well = true;
             }
+
+            // The VFP table (item 7) is re-specified by every WCONINJH,
+            // whether or not any value changed.
+            handlerContext.state().events().addEvent( ScheduleEvents::WELL_THP_UPDATE );
+            handlerContext.state().wellgroup_events().addEvent( well_name, ScheduleEvents::WELL_THP_UPDATE);
+            handlerContext.thp_respec_well(well_name);
 
             if (update_well) {
                 handlerContext.state().events().addEvent( ScheduleEvents::INJECTION_UPDATE );
@@ -436,6 +454,12 @@ void handleWCONPROD(HandlerContext& handlerContext)
             if (well2.updateHasProduced()) {
                 update_well = true;
             }
+
+            // The THP limit and VFP table (items 10 and 11) are re-specified
+            // by every WCONPROD, whether or not any value changed.
+            handlerContext.state().events().addEvent( ScheduleEvents::WELL_THP_UPDATE );
+            handlerContext.state().wellgroup_events().addEvent( well2.name(), ScheduleEvents::WELL_THP_UPDATE);
+            handlerContext.thp_respec_well(well2.name());
 
             if (update_well) {
                 handlerContext.state().events().addEvent( ScheduleEvents::PRODUCTION_UPDATE );
@@ -832,6 +856,14 @@ void handleWELTARG(HandlerContext& handlerContext)
                 if (inj->updateUDQActive(handlerContext.state().udq.get(), cmode, udq_active)) {
                     handlerContext.state().udq_active.update(std::move(udq_active));
                 }
+            }
+
+            // The THP limit or VFP table is re-specified, whether or not
+            // the value changed.
+            if (cmode == Well::WELTARGCMode::THP || cmode == Well::WELTARGCMode::VFP) {
+                handlerContext.state().events().addEvent( ScheduleEvents::WELL_THP_UPDATE );
+                handlerContext.state().wellgroup_events().addEvent( well_name, ScheduleEvents::WELL_THP_UPDATE);
+                handlerContext.thp_respec_well(well_name);
             }
 
             if (update) {
