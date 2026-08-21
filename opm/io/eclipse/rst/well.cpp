@@ -129,6 +129,8 @@ Opm::RestartIO::RstWell::RstWell(const UnitSystem&  unit_system,
     bhp_target_float(                                                swel[VI::SWell::BHPTarget]),
     vfp_bhp_adjustment(  unit_system.to_si(M::pressure,              swel[VI::SWell::VfpBhpAdjustment])),
     vfp_bhp_scaling_factor(                                          swel[VI::SWell::VfpBhpScalingFact]),
+    // Also used in a UDA value, so internalized raw like the targets above.
+    max_drawdown(                                                    swel[VI::SWell::MaxDrawdown]),
     hist_lrat_target(    unit_system.to_si(M::liquid_surface_rate,   swel[VI::SWell::HistLiqRateTarget])),
     hist_grat_target(    unit_system.to_si(M::gas_surface_rate,      swel[VI::SWell::HistGasRateTarget])),
     hist_bhp_target(     unit_system.to_si(M::pressure,              swel[VI::SWell::HistBHPTarget])),

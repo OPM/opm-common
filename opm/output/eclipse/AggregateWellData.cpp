@@ -40,6 +40,7 @@
 #include <opm/input/eclipse/Schedule/VFPProdTable.hpp>
 #include <opm/input/eclipse/Schedule/Well/WDFAC.hpp>
 #include <opm/input/eclipse/Schedule/Well/Connection.hpp>
+#include <opm/input/eclipse/Schedule/Well/WELDRAW.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellEconProductionLimits.hpp>
@@ -852,6 +853,25 @@ namespace {
         }
 
         template <class SWProp, class SWellArray>
+        void assignMaxDrawdown(const Opm::Well&         well,
+                               const Opm::SummaryState& st,
+                               SWProp&&                 swprop,
+                               SWellArray&              sWell)
+        {
+            using Ix = ::Opm::RestartIO::Helpers::VectorItems::SWell::index;
+            using M = ::Opm::UnitSystem::measure;
+
+            // Zero means that no drawdown limit applies, which is also how a
+            // limit removed by defaulting item 2 of WELDRAW is recorded.
+            const auto& weldraw = well.getWELDRAW();
+            const auto max_draw = weldraw.active()
+                ? well.weldrawMaxDrawdown(st)
+                : 0.0;
+
+            sWell[Ix::MaxDrawdown] = swprop(M::pressure, max_draw);
+        }
+
+        template <class SWProp, class SWellArray>
         void assignLiqRateTargetsProd(const Opm::Well::ProductionControls& pc,
                                       const Opm::SummaryState&             st,
                                       const bool                           predMode,
@@ -1242,6 +1262,7 @@ namespace {
 
             sWell[Ix::DrainageRadius] = swprop(M::length, well.getDrainageRadius());
 
+            assignMaxDrawdown(well, smry, swprop, sWell);
             assignWGrupCon(well, sWell);
             assignEfficiencyFactors(well, sWell);
             assignDFactorCorrelation(well, units, sWell);

@@ -37,6 +37,14 @@ namespace Opm {
         : m_max_drawdown { 0.0, pressure_dim }
     {}
 
+    WELDRAW::WELDRAW(const double     max_drawdown,
+                     const Phase      preferred_phase,
+                     const Dimension& pressure_dim)
+        : m_max_drawdown { max_drawdown, pressure_dim }
+        , m_phase        { (preferred_phase == Phase::GAS) ? TargetPhase::GAS : TargetPhase::LIQ }
+        , m_active       { max_drawdown > 0.0 }
+    {}
+
     WELDRAW::TargetPhase WELDRAW::TargetPhaseFromString(const std::string& stringValue)
     {
         if (stringValue == "LIQ") {

@@ -62,6 +62,22 @@ namespace Opm {
         /// system.
         explicit WELDRAW(const Dimension& pressure_dim);
 
+        /// Restore a drawdown limit from a restart file.
+        ///
+        /// The restart file records the limit but not the target phase, so
+        /// that is resolved from the well's preferred phase, exactly as a
+        /// defaulted item 3 is.  A non-positive value means no limit.
+        ///
+        /// \param[in] max_drawdown Maximum allowable drawdown, in the unit
+        /// system of the restart file.
+        /// \param[in] preferred_phase The well's preferred phase.
+        /// \param[in] pressure_dim Pressure dimension of that unit system.
+        /// The limit is held as a UDA and, as for a limit read from a deck,
+        /// the UDA converts it to SI when evaluated.
+        WELDRAW(double max_drawdown,
+                Phase preferred_phase,
+                const Dimension& pressure_dim);
+
         WELDRAW() = default;
 
         static WELDRAW serializationTestObject();

@@ -325,6 +325,10 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
             HistLiqRateTarget = 33, // Well's historical/observed liquid
                                     // rate target/limit
 
+            MaxDrawdown       = 34, // Well's maximum allowable drawdown
+                                    // (WELDRAW(2)).  Zero when no limit
+                                    // applies.
+
             WTestStartupTime  = 39, // Well's WTEST startup time (WTEST(5))
 
             HistGasRateTarget = 54, // Well's historical/observed gas rate

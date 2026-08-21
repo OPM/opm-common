@@ -6775,6 +6775,14 @@ END
     BOOST_CHECK(weldraw3.targetPhase() == WELDRAW::TargetPhase::GAS);
     BOOST_CHECK(weldraw3.mode() == WELDRAW::Mode::MAX);
     BOOST_CHECK(weldraw3.useInPotentials());
+
+    // A limit restored from a restart file must carry the same representation
+    // as one read from a deck, dimension included, so that the two compare
+    // equal and the UDA performs the unit conversion exactly once.
+    const auto restored = WELDRAW { 1500, Phase::OIL, pressure_dim };
+    BOOST_CHECK(restored == weldraw1);
+    BOOST_CHECK_CLOSE(restored.maxDrawdown("W1", st, 0.0),
+                      weldraw1.maxDrawdown("W1", st, 0.0), 1.0e-10);
 }
 
 
