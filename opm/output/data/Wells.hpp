@@ -952,7 +952,10 @@ namespace Opm { namespace data {
 
         static CurrentControl serializationTestObject()
         {
-          return CurrentControl{false,
+          // A producer, so that the round trip of the producer-only members,
+          // the production control mode and the drawdown limited flag, is
+          // actually covered by the serialization test.
+          return CurrentControl{true,
                                 ::Opm::WellProducerCMode::BHP,
                                 ::Opm::WellInjectorCMode::GRUP,
                                 true

@@ -1509,6 +1509,57 @@ BOOST_AUTO_TEST_CASE(well_keywords_dynamic_close)
     }
 }
 
+BOOST_AUTO_TEST_CASE(well_control_mode_drawdown)
+{
+    setup cfg("test_summary_wmctl_drawdown");
+
+    // W_1 is held back by its maximum allowable drawdown.  The limit is
+    // imposed as a liquid rate constraint, so its active control is LRAT,
+    // but the mode it reports is drawdown control.
+    {
+        auto& ctrl = cfg.wells["W_1"].current_control;
+        ctrl.isProducer      = true;
+        ctrl.prod            = ::Opm::Well::ProducerCMode::LRAT;
+        ctrl.drawdownLimited = true;
+    }
+
+    // W_2 is on the same rate control, but for its own reasons, and must
+    // keep reporting that control.
+    {
+        auto& ctrl = cfg.wells["W_2"].current_control;
+        ctrl.isProducer      = true;
+        ctrl.prod            = ::Opm::Well::ProducerCMode::LRAT;
+        ctrl.drawdownLimited = false;
+    }
+
+    auto st = SummaryState {
+        TimeService::now(), cfg.es.runspec().udqParams().undefinedValue()
+    };
+
+    auto writer = out::Summary {
+        cfg.config, cfg.es, cfg.grid, cfg.schedule, cfg.name
+    };
+
+    auto values = out::Summary::DynamicSimulatorState{};
+
+    values.well_solution = &cfg.wells;
+    values.wbp = &cfg.wbp;
+    values.group_and_nwrk_solution = &cfg.grp_nwrk;
+
+    for (auto rptStep = 0; rptStep < 3; ++rptStep) {
+        writer.eval(rptStep, rptStep*day, values, st);
+        writer.add_timestep(st, rptStep, rptStep, false);
+    }
+
+    writer.write();
+
+    const auto res = readsum(cfg.name);
+
+    // 12 == drawdown control, 4 == liquid rate control.
+    BOOST_CHECK_CLOSE(ecl_sum_get_well_var(res.get(), 1, "W_1", "WMCTL"), 12.0, 1.0e-5);
+    BOOST_CHECK_CLOSE(ecl_sum_get_well_var(res.get(), 1, "W_2", "WMCTL"),  4.0, 1.0e-5);
+}
+
 BOOST_AUTO_TEST_CASE(udq_keywords)
 {
     setup cfg("test_summary_udq");
