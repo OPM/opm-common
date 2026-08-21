@@ -316,6 +316,7 @@ namespace {
             {"CPR",  Opm::EclIO::SummaryNode::Type::Pressure},
             {"CGOR", Opm::EclIO::SummaryNode::Type::Ratio},
             {"CWCT", Opm::EclIO::SummaryNode::Type::Ratio},
+            {"CWGR", Opm::EclIO::SummaryNode::Type::Ratio},
         };
 
         using Cat = Opm::EclIO::SummaryNode::Category;
@@ -3264,6 +3265,7 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "CGORL", div( cratel< rt::gas, producer >, cratel< rt::oil, producer > ) },
     { "CWCTL", div( cratel< rt::wat, producer >,
                     sum( cratel< rt::wat, producer >, cratel< rt::oil, producer > ) ) },
+    { "CWGRL", div( cratel< rt::wat, producer >, cratel< rt::gas, producer > ) },
     { "CWIR", crate< rt::wat, injector > },
     { "CWIRFRAC", crate<rt::wat_frac, injector> },
     { "CGIR", crate< rt::gas, injector > },
@@ -3387,6 +3389,7 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "CWCT", div( crate< rt::wat, producer >,
                    sum( crate< rt::wat, producer >, crate< rt::oil, producer > ) ) },
     { "CGOR", div( crate< rt::gas, producer >, crate< rt::oil, producer > ) },
+    { "CWGR", div( crate< rt::wat, producer >, crate< rt::gas, producer > ) },
     // Minus for injection rates and pluss for production rate
     { "CNFR", sub( crate< rt::solvent, producer >, crate<rt::solvent, injector >) },
     { "CWPT", mul( crate< rt::wat, producer >, duration ) },
