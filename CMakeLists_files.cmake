@@ -710,6 +710,7 @@ list(APPEND DUNE_TEST_SOURCE_FILES
   tests/material/test_ncpflash.cpp
   tests/material/test_pengrobinson.cpp
   tests/material/test_ptflash_ssi_newton_fallback.cpp
+  tests/material/test_saturation_pressure.cpp
   tests/material/test_tabulation.cpp
   tests/material/test_threecomponents_ptflash.cpp
 )
@@ -1340,6 +1341,7 @@ list(APPEND PUBLIC_HEADER_FILES
   opm/material/constraintsolvers/MiscibleMultiPhaseComposition.hpp
   opm/material/constraintsolvers/NcpFlash.hpp
   opm/material/constraintsolvers/PTFlash.hpp
+  opm/material/constraintsolvers/SaturationPressure.hpp
   opm/material/densead/DynamicEvaluation.hpp
   opm/material/densead/Evaluation.hpp
   opm/material/densead/Evaluation1.hpp
