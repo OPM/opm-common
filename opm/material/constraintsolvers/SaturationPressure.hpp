@@ -84,7 +84,7 @@ public:
                                const EOSType eosType,
                                Scalar& press,
                                CompVec& vapor)
-    { return solve_(liquid, temp, eosType, Mode::Bubble, press, vapor); }
+    { return solve_(liquid, temp, eosType, Mode::Bubble, press, vapor) == Outcome::converged; }
 
     /// Computes the dew-point pressure of a vapour with composition \p vapor at
     /// temperature \p temp, along with the equilibrium \p liquid composition.
@@ -97,11 +97,28 @@ public:
                             Scalar& press,
                             CompVec& liquid)
     {
-        return solve_(vapor, temp, eosType, Mode::DewUpper, press, liquid)
-            || solve_(vapor, temp, eosType, Mode::DewLower, press, liquid);
+        // The lower branch is only a fallback for a mixture that has no upper
+        // (retrograde) dew point.  After a plain convergence failure it stays
+        // untried: reporting the lower branch then could return the wrong dew
+        // point of a mixture that does have both.
+        switch (solve_(vapor, temp, eosType, Mode::DewUpper, press, liquid)) {
+        case Outcome::converged:
+            return true;
+        case Outcome::noRoot:
+            return solve_(vapor, temp, eosType, Mode::DewLower, press, liquid)
+                == Outcome::converged;
+        case Outcome::gaveUp:
+            return false;
+        }
+        return false;
     }
 
 private:
+    // What a branch search established: a converged saturation point, positive
+    // evidence that the branch has no genuine root, or an exhausted iteration
+    // from which nothing can be concluded.
+    enum class Outcome { converged, noRoot, gaveUp };
+
     // The saturation-pressure branch being searched.  The bubble point and the
     // upper (retrograde) dew point are approached from the high-pressure side,
     // the lower dew point from the low-pressure side.
@@ -119,12 +136,12 @@ private:
         return Kp;
     }
 
-    static bool solve_(const CompVec& z,
-                       const Scalar temp,
-                       const EOSType eosType,
-                       const Mode mode,
-                       Scalar& press,
-                       CompVec& incipient)
+    static Outcome solve_(const CompVec& z,
+                          const Scalar temp,
+                          const EOSType eosType,
+                          const Mode mode,
+                          Scalar& press,
+                          CompVec& incipient)
     {
         const CompVec wilsonKp = wilsonKp_(temp);
         const bool bubble = (mode == Mode::Bubble);
@@ -263,7 +280,7 @@ private:
                 // reason; returning nothing beats returning a false pressure.
                 if (distance > 1.0e-3) {
                     press = p;
-                    return true;
+                    return Outcome::converged;
                 }
                 pSingle = p;
                 haveSingle = true;
@@ -287,7 +304,22 @@ private:
             p = pNext;
         }
 
-        return false;
+        // The scan covered nine decades of pressure without meeting a
+        // two-phase state: the branch has no dew or bubble point to find.
+        if (!haveTwo) {
+            return Outcome::noRoot;
+        }
+        // A bracket that collapsed without an accepted solution pinned the
+        // phase boundary down to a point where only the trivial solution
+        // lives; that too is positive evidence the branch has no genuine
+        // saturation point.  A bracket still open is merely an unfinished
+        // search.
+        if (haveSingle &&
+            (std::abs(pSingle - pTwo) <= 1.0e-6 * std::max(pSingle, pTwo)))
+        {
+            return Outcome::noRoot;
+        }
+        return Outcome::gaveUp;
     }
 };
 
