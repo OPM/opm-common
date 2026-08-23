@@ -40,6 +40,8 @@ namespace Opm::RestartIO::Helpers::VectorItems {
         DirEPS     = 17,    // Directional end-point scaling
         RevEPS     = 18,    // Reversible end-point scaling
         AltEPS     = 19,    // Alternative (3-pt) end-point scaling
+        HasTemp    = 32,    // Model has temperature
+        HasTemp2   = 39,    // Model has temperature
         HasNetwork = 37,    // Indicates Network option used
         ConstCo    = 38,    // Constant oil compressibility (PVCDO)
 
