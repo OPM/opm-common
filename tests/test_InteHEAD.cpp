@@ -681,9 +681,8 @@ BOOST_AUTO_TEST_CASE(TestHeader)
          .regionDimensions({ntfip, nmfipr, 0,0,0})
          .ngroups({ngroup});
 
-    Opm::Runspec runspec;
     Opm::RestartIO::RstHeader header {
-        runspec, unit_system, ih.data(), std::vector<bool>(100), std::vector<double>(1000)
+        unit_system, ih.data(), std::vector<bool>(100), std::vector<double>(1000)
     };
 
     BOOST_CHECK_EQUAL(header.nx, nx);

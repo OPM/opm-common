@@ -129,6 +129,9 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
         NOOFACTIONS = 156, //  The number of actions in the dataset
         MAXNOLINES = 157, //  Maximum number of lines of schedule data for ACTION keyword - including ENDACTIO
         MAXNOSTRPRLINE = 158, //  Maximum number of 8-chars strings pr input line of Action data (rounded up from input)
+        ACTION_ZACT_SIZE = 159, // Number of entries per action in ZACT
+        ACTION_SACT_SIZE = 160, // Number of entries per action in SACT
+        ACTION_IACT_SIZE = 161, // Number of entries per action in IACT
 
         MAX_ACT_ANLYTIC_AQUCONN = 162, // Maximum number of *active* connections across all analytic aquifers
         NWMAXZ = 163, //  Maximum number of wells in the model (per Grid)
@@ -153,6 +156,10 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
         NIRAQN = 224, // Number of data elements in RAQN array pr AQUNUM record
 
         NUM_AQUNUM_RECORDS = 226, // Number of AQUNUM records (lines of AQUNUM data)
+
+        ACTION_IACN_SIZE = 246, // Number of entries per condition in IACN (ConditionSize)
+        ACTION_SACN_SIZE = 247, // Number of entries per condition in SACN (ConditionSize)
+        ACTION_ZACN_SIZE = 248, // Number of entries per condition in ZACN (ConditionSize)
 
         MAX_ACT_COND = 245, //  Maximum number of conditions pr action
         MAX_AN_AQUIFER_ID = 252, // Maximum aquifer ID of all analytic aquifers (<= AQUDIMS(5))

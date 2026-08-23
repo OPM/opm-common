@@ -57,8 +57,13 @@ namespace Opm { namespace RestartIO {
 struct RstState
 {
     RstState(std::shared_ptr<EclIO::RestartFileView> rstView,
-             const Runspec&                          runspec,
-             const ::Opm::EclipseGrid*               grid);
+             const ::Opm::EclipseGrid*               grid,
+             std::optional<int>                      numPVTTables = std::nullopt);
+
+    static RstState load(std::shared_ptr<EclIO::RestartFileView> rstView,
+                         const Parser&                           parser,
+                         std::optional<int>                      numPVTTables = std::nullopt,
+                         const ::Opm::EclipseGrid*               grid = nullptr);
 
     static RstState load(std::shared_ptr<EclIO::RestartFileView> rstView,
                          const Runspec&                          runspec,
@@ -153,8 +158,6 @@ private:
     ///
     /// \param[in] zlact The action block keywords.
     void add_actions(const Parser&                parser,
-                     const Runspec&               runspec,
-                     std::time_t                  sim_time,
                      ActionData<float>            actions,
                      ActionData<double>           conditions,
                      std::span<const std::string> zlact);
@@ -164,17 +167,13 @@ private:
 
     /// Restore conditions for single action from restart file information.
     ///
-    /// \param[in] actdims The action dimensions, e.g., maximum number of
-    /// conditions and sizes of condition arrays per condition.
-    ///
     /// \param[in] conditions The condition data (i.e., the [ISZ]ACN arrays).
     ///
     /// \param[in] index The action index.
     ///
     /// \return The restored conditions for the \p index-th action.
     std::vector<RstAction::Condition>
-    restore_conditions(const Actdims&     actdims,
-                       ActionData<double> conditions,
+    restore_conditions(ActionData<double> conditions,
                        std::size_t        index) const;
 
     /// Restore a single action from restart file information.
@@ -190,9 +189,7 @@ private:
     /// \param[in] index The action index.
     ///
     /// \param[in] conditions The restored conditions for the \p index-th action.
-    void create_action(const Runspec&                      runspec,
-                       const std::time_t                   sim_time,
-                       ActionData<float>                   actionArrays,
+    void create_action(ActionData<float>                   actionArrays,
                        std::size_t                         index,
                        std::vector<RstAction::Condition>&& conditions);
 
@@ -203,13 +200,9 @@ private:
     ///
     /// \param[in] parser The parser used to interpret action block keywords.
     ///
-    /// \param[in] actdims The action dimensions, e.g., maximum number of
-    /// conditions and sizes of condition arrays per condition.
-    ///
     /// \param[in] zlact Linearised collection of action block keyword strings.
     /// Assumed to encompass only those strings that pertain to \code actions.back() \endcode.
     void restore_action_keywords(const Parser&                parser,
-                                 const Actdims&               actdims,
                                  std::span<const std::string> zlact);
 
 };

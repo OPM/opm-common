@@ -1786,7 +1786,7 @@ BOOST_AUTO_TEST_CASE(WELL_POD)
     const auto& xcon = connectionData.getXConn();
 
     const auto header = Opm::RestartIO::RstHeader {
-        simCase.es.runspec(), units, ih, std::vector<bool>(100), std::vector<double>(1000)
+        units, ih, std::vector<bool>(100), std::vector<double>(1000)
     };
 
     std::vector<Opm::RestartIO::RstWell> wells;

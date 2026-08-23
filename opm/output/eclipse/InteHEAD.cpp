@@ -779,24 +779,14 @@ actionParam(const ActionParam& act_par)
     this -> data_[NO_ACT]     = act_par.no_actions;
     this -> data_[MAX_LINES]  = act_par.max_no_sched_lines_per_action;
     this -> data_[MXACTC]     = act_par.max_no_conditions_per_action;
-    this -> data_[MAXSPRLINE] = ((act_par.max_no_characters_per_line % 8) == 0) ? act_par.max_no_characters_per_line / 8 :
-                                (act_par.max_no_characters_per_line / 8) + 1;
+    this -> data_[MAXSPRLINE] = (act_par.max_no_characters_per_line + 7) / 8;
 
-    return *this;
-}
-
-// InteHEAD parameters which meaning are currently not known, but which are
-// needed for Eclipse restart runs with UDQ and ACTIONX data
-Opm::RestartIO::InteHEAD&
-Opm::RestartIO::InteHEAD::
-variousUDQ_ACTIONXParam()
-{
-    this -> data_[159]  =  4; // entriesPerZACT??
-    this -> data_[160]  =  5; // entriesPerSACT??
-    this -> data_[161]  =  9; // entriesPerIACT??
-    this -> data_[246]  = 26; // entriesPerIACN (multiply max_conditions)
-    this -> data_[247]  = 16; // entriesPerSACN (multiply max_conditions)
-    this -> data_[248]  = 13; // entriesPerZACN (multiply max_conditions)
+    this -> data_[VI::intehead::ACTION_ZACT_SIZE] =  4;  // entriesPerZACT
+    this -> data_[VI::intehead::ACTION_SACT_SIZE] =  5;  // entriesPerSACT
+    this -> data_[VI::intehead::ACTION_IACT_SIZE] =  9;  // entriesPerIACT
+    this -> data_[VI::intehead::ACTION_IACN_SIZE] = 26;  // entriesPerIACN (multiply max_conditions)
+    this -> data_[VI::intehead::ACTION_SACN_SIZE] = 16;  // entriesPerSACN (multiply max_conditions)
+    this -> data_[VI::intehead::ACTION_ZACN_SIZE] = 13;  // entriesPerZACN (multiply max_conditions)
 
     return *this;
 }

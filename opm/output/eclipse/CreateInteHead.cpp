@@ -689,7 +689,6 @@ createInteHead(const EclipseState& es,
         .variousParam       (202204, 100, num_tracer_comps)  // Output should be compatible with Eclipse 100, 2022.04 version.
         .udqParam_1         (getUdqParam(rspec, sched, report_step, lookup_step))
         .actionParam        (getActionParam(rspec, acts, report_step))
-        .variousUDQ_ACTIONXParam()
         .nominatedPhaseGuideRate(setGuideRateNominatedPhase(sched, report_step, lookup_step))
         .whistControlMode   (getWhistctlMode(sched, report_step, lookup_step))
         .activeNetwork      (getActiveNetwork(sched, lookup_step))

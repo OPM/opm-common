@@ -23,7 +23,6 @@
 #include <opm/io/eclipse/PaddedOutputString.hpp>
 
 #include <opm/io/eclipse/rst/aquifer.hpp>
-#include <opm/io/eclipse/rst/action.hpp>
 #include <opm/io/eclipse/rst/connection.hpp>
 #include <opm/io/eclipse/rst/group.hpp>
 #include <opm/io/eclipse/rst/header.hpp>
@@ -45,7 +44,9 @@
 
 #include <opm/output/eclipse/WriteRestartHelpers.hpp>
 
-#include <opm/input/eclipse/Schedule/Action/Actdims.hpp>
+#include <opm/input/eclipse/EclipseState/Runspec.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/Tabdims.hpp>
+
 #include <opm/input/eclipse/Schedule/Action/Condition.hpp>
 #include <opm/input/eclipse/Schedule/OilVaporizationProperties.hpp>
 
@@ -369,14 +370,20 @@ namespace {
 namespace Opm::RestartIO {
 
 RstState::RstState(std::shared_ptr<EclIO::RestartFileView> rstView,
-                   const Runspec&                          runspec,
-                   const ::Opm::EclipseGrid*               grid)
-    : unit_system(rstView->intehead()[VI::intehead::UNIT])
-    , header(runspec, unit_system, rstView->intehead(), rstView->logihead(), rstView->doubhead())
-    , aquifers(rstView, grid, unit_system)
-    , netbalan(rstView->intehead(), rstView->doubhead(), unit_system)
-    , network(rstView, unit_system)
-    , oilvap(runspec.tabdims().getNumPVTTables())
+                   const ::Opm::EclipseGrid*               grid,
+                   std::optional<int>                      numPVTTables)
+    : unit_system { rstView->intehead()[VI::intehead::UNIT] }
+    , header      { unit_system, rstView->intehead(), rstView->logihead(), rstView->doubhead() }
+    , aquifers    { rstView, grid, unit_system }
+    , netbalan    { rstView->intehead(), rstView->doubhead(), unit_system }
+    , network     { rstView, unit_system }
+    , oilvap      { static_cast<std::size_t>([](const std::optional<int>& n) {
+                        const auto v = n.value_or(1);
+                        if (v < 1) {
+                            throw std::invalid_argument{"numPVTTables must be >= 1"};
+                        }
+                        return v;
+                    }(numPVTTables)) }
 {
     this->load_tuning(rstView->intehead(), rstView->doubhead());
 
@@ -404,6 +411,14 @@ RstState RstState::load(std::shared_ptr<EclIO::RestartFileView> rstView,
                         const Parser&                           parser,
                         const ::Opm::EclipseGrid*               grid)
 {
+    return load(std::move(rstView), parser, runspec.tabdims().getNumPVTTables(), grid);
+}
+
+RstState RstState::load(std::shared_ptr<EclIO::RestartFileView> rstView,
+                        const Parser&                           parser,
+                        std::optional<int>                      numPVTTables,
+                        const ::Opm::EclipseGrid*               grid)
+{
     if (rstView->isGraphicsOnly()) {
         throw std::runtime_error {
             fmt::format("Cannot restart from restart file "
@@ -414,7 +429,7 @@ RstState RstState::load(std::shared_ptr<EclIO::RestartFileView> rstView,
         };
     }
 
-    RstState state(rstView, runspec, grid);
+    auto state = RstState { rstView, grid, numPVTTables };
 
     // At minimum we need any applicable constraint data for FIELD.  Load
     // groups unconditionally.
@@ -477,9 +492,7 @@ RstState RstState::load(std::shared_ptr<EclIO::RestartFileView> rstView,
             .z = rstView->getKeyword<std::string>("ZACN")
         };
 
-        state.add_actions(parser, runspec,
-                          state.header.sim_time(),
-                          actionArrays, conditions,
+        state.add_actions(parser, actionArrays, conditions,
                           rstView->getKeyword<std::string>("ZLACT"));
     }
 
@@ -718,22 +731,18 @@ void RstState::add_udqs(std::shared_ptr<EclIO::RestartFileView> rstView)
 }
 
 void RstState::add_actions(const Parser&                parser,
-                           const Runspec&               runspec,
-                           const std::time_t            sim_time,
                            ActionData<float>            actionArrays,
                            ActionData<double>           conditions,
                            std::span<const std::string> zlact)
 {
     const auto num_actions = static_cast<std::size_t>(this->header.num_action);
-
-    const auto& actdims = runspec.actdims();
     const auto zlact_action_size = zlact.size() / num_actions;
 
     for (std::size_t index = 0; index < num_actions; ++index) {
-        auto actionConditions = this->restore_conditions(actdims, conditions, index);
-        this->create_action(runspec, sim_time, actionArrays, index, std::move(actionConditions));
+        auto actionConditions = this->restore_conditions(conditions, index);
+        this->create_action(actionArrays, index, std::move(actionConditions));
 
-        this->restore_action_keywords(parser, actdims,
+        this->restore_action_keywords(parser,
                                       zlact.subspan(index * zlact_action_size, zlact_action_size));
     }
 }
@@ -766,28 +775,28 @@ void RstState::add_wlist(const std::vector<std::string>& zwls,
 }
 
 std::vector<RstAction::Condition>
-RstState::restore_conditions(const Actdims&     actdims,
-                             ActionData<double> conditions,
+RstState::restore_conditions(ActionData<double> conditions,
                              const std::size_t  index) const
 {
     auto actConditions = std::vector<RstAction::Condition> {};
 
-    const auto iacn_action_size = RestartIO::Helpers::entriesPerIACN(actdims);
-    const auto sacn_action_size = RestartIO::Helpers::entriesPerSACN(actdims);
-    const auto zacn_action_size = RestartIO::Helpers::entriesPerZACN(actdims);
+    const auto iacn_cond_size = static_cast<std::size_t>(this->header.action_iacn_size);
+    const auto sacn_cond_size = static_cast<std::size_t>(this->header.action_sacn_size);
+    const auto zacn_cond_size = static_cast<std::size_t>(this->header.action_zacn_size);
 
-    constexpr auto iacn_cond_size = RestartIO::Helpers::VectorItems::IACN::ConditionSize;
-    constexpr auto sacn_cond_size = RestartIO::Helpers::VectorItems::SACN::ConditionSize;
-    constexpr auto zacn_cond_size = RestartIO::Helpers::VectorItems::ZACN::ConditionSize;
+    const auto iacn_action_size = this->header.max_action_conditions * iacn_cond_size;
+    const auto sacn_action_size = this->header.max_action_conditions * sacn_cond_size;
+    const auto zacn_action_size = this->header.max_action_conditions * zacn_cond_size;
 
     const auto act_iacn = conditions.i.subspan(index * iacn_action_size, iacn_action_size);
     const auto act_sacn = conditions.s.subspan(index * sacn_action_size, sacn_action_size);
     const auto act_zacn = conditions.z.subspan(index * zacn_action_size, zacn_action_size);
 
-    for (std::size_t icond = 0; icond < actdims.max_conditions(); ++icond) {
-        const auto iacn = act_iacn.subspan(icond * iacn_cond_size, iacn_cond_size);
-        const auto sacn = act_sacn.subspan(icond * sacn_cond_size, sacn_cond_size);
-        const auto zacn = act_zacn.subspan(icond * zacn_cond_size, zacn_cond_size);
+    for (auto icond = 0; icond < this->header.max_action_conditions; ++icond) {
+        const auto cond = static_cast<std::size_t>(icond);
+        const auto iacn = act_iacn.subspan(cond * iacn_cond_size, iacn_cond_size);
+        const auto sacn = act_sacn.subspan(cond * sacn_cond_size, sacn_cond_size);
+        const auto zacn = act_zacn.subspan(cond * zacn_cond_size, zacn_cond_size);
 
         if (RstAction::Condition::valid(iacn, zacn)) {
             actConditions.emplace_back(iacn, sacn, zacn);
@@ -798,15 +807,13 @@ RstState::restore_conditions(const Actdims&     actdims,
 }
 
 void
-RstState::create_action(const Runspec&                      runspec,
-                        const std::time_t                   sim_time,
-                        ActionData<float>                   actionArrays,
+RstState::create_action(ActionData<float>                   actionArrays,
                         const std::size_t                   index,
                         std::vector<RstAction::Condition>&& conditions)
 {
-    constexpr auto iact_action_size = RestartIO::Helpers::entriesPerIACT();
-    constexpr auto sact_action_size = RestartIO::Helpers::entriesPerSACT();
-    constexpr auto zact_action_size = RestartIO::Helpers::entriesPerZACT();
+    const auto iact_action_size = static_cast<std::size_t>(this->header.action_iact_size);
+    const auto sact_action_size = static_cast<std::size_t>(this->header.action_sact_size);
+    const auto zact_action_size = static_cast<std::size_t>(this->header.action_zact_size);
 
     const auto iact = actionArrays.i.subspan(index * iact_action_size, iact_action_size);
     const auto sact = actionArrays.s.subspan(index * sact_action_size, sact_action_size);
@@ -819,30 +826,41 @@ RstState::create_action(const Runspec&                      runspec,
     const auto min_wait = this->unit_system.to_si(UnitSystem::measure::time, sact[3]);
     const auto last_run_elapsed = this->unit_system.to_si(UnitSystem::measure::time, sact[4]);
 
-    const auto last_run_time = TimeService::advance(runspec.start_time(), last_run_elapsed);
+    if (!this->header.inferred_start_from_elapsed_simtime.has_value()) {
+        throw std::runtime_error {
+            "Could not infer ACTION timing: missing inferred "
+            "start time from elapsed simulation time"
+        };
+    }
 
-    this->actions.emplace_back(name, max_run, run_count,
-                               min_wait, sim_time, last_run_time,
+    const auto start_time = *this->header.inferred_start_from_elapsed_simtime;
+
+    const auto last_run_time = TimeService::advance(asTimeT(start_time), last_run_elapsed);
+
+    this->actions.emplace_back(name, max_run, run_count, min_wait,
+                               this->header.sim_time(),
+                               last_run_time,
                                std::move(conditions));
 }
 
 void
 RstState::restore_action_keywords(const Parser& parser,
-                                  const Actdims& actdims,
                                   std::span<const std::string> zlact)
 {
     auto action_deck = std::string{};
 
-    auto lineIdx = 0 * actdims.line_size();
+    const auto line_size = static_cast<std::size_t>(this->header.max_action_line_size);
+
+    auto lineIdx = 0 * line_size;
     while (true) {
-        const auto offset = lineIdx++ * actdims.line_size();
-        if (offset + actdims.line_size() > zlact.size()) {
+        const auto offset = lineIdx++ * line_size;
+        if (offset + line_size > zlact.size()) {
             throw std::runtime_error {
                 "Malformed ZLACT: missing ENDACTIO terminator"
             };
         }
 
-        auto zlact_line = zlact.subspan(offset, actdims.line_size());
+        auto zlact_line = zlact.subspan(offset, line_size);
 
         auto line = std::string{};
         for (const auto& line_item : zlact_line) {

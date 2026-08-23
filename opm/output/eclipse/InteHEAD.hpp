@@ -237,7 +237,6 @@ namespace Opm { namespace RestartIO {
         InteHEAD& ngroups(const Group& gr);
         InteHEAD& udqParam_1(const UdqParam& udqpar);
         InteHEAD& actionParam(const ActionParam& act_par);
-        InteHEAD& variousUDQ_ACTIONXParam();
         InteHEAD& nominatedPhaseGuideRate(GuideRateNominatedPhase nphase);
         InteHEAD& whistControlMode(int mode);
         InteHEAD& liftOptParam(int in_enc);

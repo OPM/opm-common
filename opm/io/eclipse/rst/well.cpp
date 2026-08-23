@@ -19,6 +19,8 @@
 
 #include <opm/io/eclipse/rst/well.hpp>
 
+#include <opm/common/utility/String.hpp>
+
 #include <opm/io/eclipse/rst/header.hpp>
 #include <opm/io/eclipse/rst/connection.hpp>
 
@@ -28,18 +30,19 @@
 
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 
-#include <opm/common/utility/String.hpp>
-
 #include <opm/input/eclipse/Parser/ParserItem.hpp>
 #include <opm/input/eclipse/Parser/ParserKeyword.hpp>
 #include <opm/input/eclipse/Parser/ParserRecord.hpp>
+
 #include <opm/input/eclipse/Parser/ParserKeywords/W.hpp>
 
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
+#include <span>
 #include <stdexcept>
 #include <string>
+#include <type_traits>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -184,18 +187,39 @@ Opm::RestartIO::RstWell::RstWell(const UnitSystem&  unit_system,
         active_control = VI::IWell::Value::WellCtrlMode::Group;
     }
 
-    // If the TEMP option is active, this is the first tracer
-    std::size_t tracer_index = 0;
-    const bool isTemp = header.runspec.temp();
-    if (isTemp) {
-        this->inj_temperature = unit_system.to_si(M::temperature, swel[VI::SWell::TracerOffset + tracer_index++]);
+    if (header.nswelz <= 0) {
+        throw std::invalid_argument {
+            "Number of SWEL elements per well must be strictly positive"
+        };
     }
-    const auto& tracers = header.runspec.tracers();
-    for (const auto num_tracer_injconcs = tracers.water_tracers() + 2*(tracers.gas_tracers() + tracers.oil_tracers()) + tracer_index;
-         tracer_index < static_cast<std::size_t>(num_tracer_injconcs);
-         ++tracer_index)
+
+    if (const auto nswelz = static_cast<std::underlying_type_t<VI::SWell::index>>(header.nswelz);
+        nswelz > VI::SWell::TracerOffset)
     {
-        this->tracer_concentration_injection.push_back(swel[VI::SWell::TracerOffset + tracer_index]);
+        const auto numTrcElems = nswelz - VI::SWell::TracerOffset;
+
+        if (numTrcElems % 2 != 0) {
+            throw std::invalid_argument {
+                "Number of tracer elements in SWEL is odd"
+            };
+        }
+
+        const auto tracerData = std::span<const float> {
+            swel + VI::SWell::TracerOffset, numTrcElems / 2
+        };
+
+        auto tracer_index = std::size_t{0};
+
+        if (header.has_temperature) {
+            // If the TEMP option is active, the temperature is
+            // the first tracer "concentration".
+            this->inj_temperature = unit_system
+                .to_si(M::temperature, tracerData[tracer_index++]);
+        }
+
+        // Pull any applicable tracer concentrations into per-well data member.
+        this->tracer_concentration_injection
+            .assign(tracerData.begin() + tracer_index, tracerData.end());
     }
 
     for (int ic = 0; ic < iwel[VI::IWell::NConn]; ++ic) {
