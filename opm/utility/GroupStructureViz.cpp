@@ -23,6 +23,8 @@
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 
+#include <opm/io/eclipse/rst/state.hpp>
+
 #include <cstddef>
 #include <fstream>
 #include <iostream>
@@ -125,6 +127,50 @@ GroupHierarchy buildGroupHierarchy(const Opm::Schedule& schedule)
         for (const auto& child_well : g.wells()) {
             children.wells.push_back(wellIndex.at(child_well));
         }
+    }
+
+    return h;
+}
+
+GroupHierarchy buildGroupHierarchy(const Opm::RestartIO::RstState& rst_state)
+{
+    GroupHierarchy h{};
+
+    h.groups.reserve(rst_state.groups.size());
+    h.wells.reserve(rst_state.wells.size());
+    h.group_children.resize(rst_state.groups.size());
+
+    auto groupIndex = std::unordered_map<std::string, std::size_t> {};
+    for (const auto& g : rst_state.groups) {
+        groupIndex.insert_or_assign(g.name, h.groups.size());
+        h.groups.push_back(g.name);
+    }
+
+    for (const auto& w : rst_state.wells) {
+        const auto wtype = getWellType(w.wtype.producer(), w.wtype.injector());
+
+        h.wells.emplace_back(w.name, wtype);
+    }
+
+    // Infer parent->child relations from each group's child->parent back-reference.
+    // parent_group is 1-indexed; 0 or max_groups_in_field means root/FIELD.
+    for (auto gidx = std::size_t{0}; gidx < rst_state.groups.size(); ++gidx) {
+        const auto& g = rst_state.groups[gidx];
+        const auto& parent = ((g.parent_group == 0) ||
+                              (g.parent_group == rst_state.header.max_groups_in_field))
+            ? rst_state.groups.back().name
+            : rst_state.groups[g.parent_group - 1].name;
+
+        if (parent == g.name) {
+            continue; // Skip self-references (root group).
+        }
+
+        h.group_children[groupIndex.at(parent)].groups.push_back(gidx);
+    }
+
+    for (auto widx = std::size_t{0}; widx < rst_state.wells.size(); ++widx) {
+        const auto& w = rst_state.wells[widx];
+        h.group_children[groupIndex.at(w.group)].wells.push_back(widx);
     }
 
     return h;
@@ -313,5 +359,13 @@ void Opm::writeWellGroupGraph(const Schedule&    schedule,
                               const bool         separateWellGroups)
 {
     writeWellGroupGraphImpl(buildGroupHierarchy(schedule),
+                            casename, separateWellGroups);
+}
+
+void Opm::writeWellGroupGraph(const RestartIO::RstState& rst_state,
+                              const std::string&         casename,
+                              const bool                 separateWellGroups)
+{
+    writeWellGroupGraphImpl(buildGroupHierarchy(rst_state),
                             casename, separateWellGroups);
 }
