@@ -90,6 +90,7 @@ list(APPEND MAIN_SOURCE_FILES
   opm/input/eclipse/EclipseState/EclipseState.cpp
   opm/input/eclipse/EclipseState/EndpointScaling.cpp
   opm/input/eclipse/EclipseState/Phase.cpp
+  opm/input/eclipse/EclipseState/PorosityModel.cpp
   opm/input/eclipse/EclipseState/Runspec.cpp
   opm/input/eclipse/EclipseState/TracerConfig.cpp
   opm/input/eclipse/EclipseState/WagHysteresisConfig.cpp
@@ -1005,6 +1006,7 @@ list(APPEND PUBLIC_HEADER_FILES
   opm/input/eclipse/EclipseState/InitConfig/FoamConfig.hpp
   opm/input/eclipse/EclipseState/InitConfig/InitConfig.hpp
   opm/input/eclipse/EclipseState/Phase.hpp
+  opm/input/eclipse/EclipseState/PorosityModel.hpp
   opm/input/eclipse/EclipseState/Runspec.hpp
   opm/input/eclipse/EclipseState/SimulationConfig/BCConfig.hpp
   opm/input/eclipse/EclipseState/SimulationConfig/DatumDepth.hpp
