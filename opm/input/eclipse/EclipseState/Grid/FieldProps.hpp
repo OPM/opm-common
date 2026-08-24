@@ -715,6 +715,8 @@ public:
 private:
     void processMULTREGP(const Deck& deck);
     void scanGRIDSection(const GRIDSection& grid_section);
+    void applyDPGRID(const GRIDSection& grid_section);
+    void applyDualPorosityScalars(const GRIDSection& grid_section);
     void scanGRIDSectionOnlyACTNUM(const GRIDSection& grid_section);
     void initialize_depth_from_grid();
     void scanEDITSection(const EDITSection& edit_section);
