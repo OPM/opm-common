@@ -26,6 +26,9 @@
 #include <opm/input/eclipse/EclipseState/SimulationConfig/RockConfig.hpp>
 #include <opm/input/eclipse/EclipseState/SimulationConfig/ThresholdPressure.hpp>
 
+#include <opm/common/OpmLog/OpmLog.hpp>
+#include <opm/common/utility/OpmInputError.hpp>
+
 #include <opm/input/eclipse/Deck/DeckSection.hpp>
 
 #include <opm/input/eclipse/Parser/ParserKeywords/C.hpp>
@@ -83,6 +86,22 @@ namespace Opm {
                 }
 
                 m_useNONNC = true;
+
+                // The matrix-fracture coupling of a dual-continuum run is expressed as
+                // non-neighbour connections, so NONNC would remove it silently: the run
+                // completes, the matrix pore volume is stranded, and the material balance
+                // still closes.  Two keywords that contradict each other must not resolve
+                // in silence.
+                if (runspec.hasKeyword<ParserKeywords::DUALPORO>() ||
+                    runspec.hasKeyword<ParserKeywords::DUALPERM>())
+                {
+                    throw OpmInputError {
+                        "NONNC cannot be combined with a dual-continuum run mode: the "
+                        "matrix-fracture coupling is built as non-neighbour connections "
+                        "and would be removed, leaving the matrix continuum isolated.",
+                        nonnc.location()
+                    };
+                }
             }
 
             if (runspec.hasKeyword<ParserKeywords::DISGAS>()) {
