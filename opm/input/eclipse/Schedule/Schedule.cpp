@@ -170,7 +170,8 @@ namespace Opm {
             ecl_grid, fp,
             this->completed_cells,
             this->completed_cells_lgr,
-            this->completed_cells_lgr_map
+            this->completed_cells_lgr_map,
+            runspec
         };
 
         if (numAquifers.size() > 0) {
