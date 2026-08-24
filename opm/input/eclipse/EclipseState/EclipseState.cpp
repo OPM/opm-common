@@ -166,6 +166,7 @@ namespace Opm {
         }
         this->initLgrs(deck);
         this->aquifer_config.load_connections(deck, m_inputGrid);
+        this->checkNumericalAquifersOutsideLgrs();
 
         this->applyMULTXYZ();
         this->initFaults(deck);
@@ -337,6 +338,50 @@ namespace Opm {
 
     bool EclipseState::hasInputLGR() const {
         return m_lgrs.size() != 0;
+    }
+
+    /*
+      A numerical aquifer takes over a grid cell.  A refinement box covering
+      that cell replaces it with refined cells, and nothing carries the aquifer
+      across: the cell is gone from the leaf grid, its AQUCON connection has no
+      face to sit on, and the INIT writer assumes an aquifer cell is never
+      refined (it asserts level == 0, which a release build compiles out and
+      then writes the wrong thing).  Refuse the combination instead.
+    */
+    void EclipseState::checkNumericalAquifersOutsideLgrs() const
+    {
+        if ((this->m_lgrs.size() == 0) ||
+            !this->aquifer_config.hasNumericalAquifer())
+        {
+            return;
+        }
+
+        const auto dims = this->m_inputGrid.getNXYZ();
+        for (const auto& cellId : this->aquifer_config.numericalAquifers().allAquiferCellIds()) {
+            const auto i = static_cast<int>(cellId % dims[0]);
+            const auto j = static_cast<int>((cellId / dims[0]) % dims[1]);
+            const auto k = static_cast<int>(cellId / (static_cast<std::size_t>(dims[0]) * dims[1]));
+
+            for (std::size_t n = 0; n < this->m_lgrs.size(); ++n) {
+                const auto& lgr = this->m_lgrs.getLgr(n);
+                if ((i >= lgr.I1()) && (i <= lgr.I2()) &&
+                    (j >= lgr.J1()) && (j <= lgr.J2()) &&
+                    (k >= lgr.K1()) && (k <= lgr.K2()))
+                {
+                    throw OpmInputError(fmt::format(
+                        "Numerical aquifer cell ({}, {}, {}) lies inside the refinement box "
+                        "'{}' ({}-{}, {}-{}, {}-{}). A refined cell cannot also be an aquifer "
+                        "cell: the coarse cell is not on the leaf grid, so the aquifer has "
+                        "nothing to occupy and its AQUCON connections have no face to sit on. "
+                        "Move the AQUNUM cell outside the box, or shrink the box so it does "
+                        "not cover it.",
+                        i + 1, j + 1, k + 1, lgr.NAME(),
+                        lgr.I1() + 1, lgr.I2() + 1, lgr.J1() + 1,
+                        lgr.J2() + 1, lgr.K1() + 1, lgr.K2() + 1),
+                        KeywordLocation{});
+                }
+            }
+        }
     }
 
     void EclipseState::initLgrs(const Deck& deck) {

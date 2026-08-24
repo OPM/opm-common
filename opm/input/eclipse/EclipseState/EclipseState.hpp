@@ -187,6 +187,7 @@ namespace Opm {
         void assignRunTitle(const Deck& deck);
         void reportNumberOfActivePhases() const;
         void initLgrs(const Deck& deck);
+        void checkNumericalAquifersOutsideLgrs() const;
         void warnUnappliedLgrBlockKeywords(const Deck& deck) const;
         void applyLgrBlockMinpv();
         void conveyNumericalAquiferEffects();
