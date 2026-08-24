@@ -244,6 +244,37 @@ BOOST_AUTO_TEST_CASE(DewPressureLowerBranch)
     BOOST_CHECK_GT(liquid[2], vapor[2]);
 }
 
+BOOST_AUTO_TEST_CASE(PureComponentSaturationPressure)
+{
+    // Pure decane is well below its critical temperature here, so it has a
+    // genuine vapour pressure even though both phases necessarily share its
+    // composition.  What tells this state from the trivial solution is that
+    // the phases occupy distinct EOS roots, not that their compositions
+    // differ; a solver that requires a composition difference refuses it.
+    const CompVec liquid{0.0, 0.0, 1.0};
+    Scalar pBubble = 0.0;
+    CompVec vapor{};
+
+    BOOST_REQUIRE(SatP::bubblePressure(liquid, temperature, eosType, pBubble, vapor));
+    BOOST_CHECK_GT(pBubble, 1.0e2);
+    BOOST_CHECK_LT(pBubble, 1.0e5);
+    for (int c = 0; c < numComponents; ++c) {
+        BOOST_CHECK_SMALL(std::abs(vapor[c] - liquid[c]), 1.0e-6);
+    }
+
+    // The equilibrium condition holds even though the compositions coincide.
+    const auto res = equilibriumResidual(liquid, FluidSystem::oilPhaseIdx,
+                                         vapor, FluidSystem::gasPhaseIdx, pBubble);
+    BOOST_CHECK_SMALL(res.fugacity, 1.0e-6);
+    BOOST_CHECK_SMALL(res.distance, 1.0e-6);
+
+    // For a pure component the dew and bubble pressures are one and the same.
+    Scalar pDew = 0.0;
+    CompVec incipient{};
+    BOOST_REQUIRE(SatP::dewPressure(liquid, temperature, eosType, pDew, incipient));
+    BOOST_CHECK_CLOSE(pDew, pBubble, 1.0e-3);
+}
+
 BOOST_AUTO_TEST_CASE(TrivialSolutionIsNotReportedAsADewPoint)
 {
     // Almost pure methane far above its critical temperature has no dew point
