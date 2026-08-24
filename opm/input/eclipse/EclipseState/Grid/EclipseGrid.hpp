@@ -486,6 +486,10 @@ namespace Opm {
                              const std::vector<double>& fatherPorv,
                              double minpv);
 
+        /// Pore volume the block's MINPV removed, and the block's total.
+        double minpvRemovedPorv() const { return m_minpv_removed_porv; }
+        double minpvTotalPorv() const { return m_minpv_total_porv; }
+
         /// Refined cells the block's MINPV removed. Empty when it set none.
         const std::vector<int>& minpvRemoved() const { return m_minpv_removed; }
         const vec_size_t& getFatherGlobalID() const;
@@ -564,6 +568,9 @@ namespace Opm {
         std::array<int, 3> low_fatherIJK {};
         std::array<int, 3> up_fatherIJK {};
         std::array<Carfin::RefinedColumns, 3> m_columns {};
+        double m_minpv_removed_porv{0.0};
+        double m_minpv_total_porv{0.0};
+
         /// Per refined Cartesian cell, 1 when the block's MINPV removed it.
         std::vector<int> m_minpv_removed {};
         std::vector<int> m_hostnum;

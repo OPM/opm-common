@@ -2984,6 +2984,8 @@ namespace Opm {
     {
         const auto ncells = this->getCartesianSize();
         m_minpv_removed.assign(ncells, 0);
+        m_minpv_removed_porv = 0.0;
+        m_minpv_total_porv = 0.0;
 
         for (std::size_t cell = 0; cell < ncells; ++cell) {
             const auto ijk = this->getIJK(cell);
@@ -3003,6 +3005,13 @@ namespace Opm {
                 * (this->getCellVolume(cell) / fatherVolume);
 
             m_minpv_removed[cell] = (porv < minpv) ? 1 : 0;
+
+            // Cells alone say little: a third of them can be a thousandth of
+            // the volume, or most of it.
+            m_minpv_total_porv += porv;
+            if (m_minpv_removed[cell] == 1) {
+                m_minpv_removed_porv += porv;
+            }
         }
 
         // A coarse cell the field keeps must keep at least one refined cell. If

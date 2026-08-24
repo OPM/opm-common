@@ -398,8 +398,30 @@ namespace Opm {
             const auto removed = std::count(lgrGrid.minpvRemoved().begin(),
                                             lgrGrid.minpvRemoved().end(), 1);
             if (removed > 0) {
-                OpmLog::info(fmt::format("CARFIN '{}': MINPV removed {} of {} refined cells",
-                                         lgr.NAME(), removed, lgrGrid.getCartesianSize()));
+                // A refined cell holds its father's pore volume divided by the
+                // refinement, so a threshold meant for coarse cells deletes the
+                // fine ones wholesale. The cell count alone does not say whether
+                // that matters -- a third of the cells can be a thousandth of
+                // the volume, or most of it -- so report both.
+                const auto pvTotal = lgrGrid.minpvTotalPorv();
+                const auto pvGone  = lgrGrid.minpvRemovedPorv();
+                const auto pvFrac  = (pvTotal > 0.0) ? (100.0 * pvGone / pvTotal) : 0.0;
+
+                const auto msg = fmt::format(
+                    "CARFIN '{}': MINPV {} removed {} of {} refined cells, {:.3g}% of the "
+                    "block's pore volume.", lgr.NAME(), lgr.MINPV().value(),
+                    removed, lgrGrid.getCartesianSize(), pvFrac);
+
+                if (pvFrac > 1.0) {
+                    OpmLog::warning(msg + fmt::format(
+                        " A refined cell holds its father's pore volume divided by the "
+                        "refinement, so a threshold meant for coarse cells deletes fine "
+                        "cells the refinement exists to create. Lower the block's MINPV "
+                        "if that was not intended."));
+                }
+                else {
+                    OpmLog::info(msg);
+                }
             }
         }
     }
