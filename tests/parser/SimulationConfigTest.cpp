@@ -575,3 +575,52 @@ END
     BOOST_CHECK_CLOSE(dd("FIPNUM", 0), 2005.0, 1.0e-8);
     BOOST_CHECK_CLOSE(dd("FIPABC", 42), 2005.0, 1.0e-8);
 }
+
+BOOST_AUTO_TEST_CASE(DualContinuumWithNONNCIsRejected)
+{
+    // The matrix-fracture coupling is expressed as non-neighbour connections, so NONNC would
+    // remove it while the run still completes -- the matrix continuum ends up isolated and the
+    // material balance still closes.  The combination must be rejected, not silently resolved.
+    const auto deck = createDeck(R"(RUNSPEC
+DIMENS
+ 3 3 2 /
+DUALPORO
+NONNC
+GRID
+DXV
+ 3*100.0 /
+DYV
+ 3*100.0 /
+DZV
+ 2*10.0 /
+DEPTHZ
+ 16*2000.0 /
+SIGMA
+ 2.0E-4 /
+)");
+
+    BOOST_CHECK_THROW(SimulationConfig(false, deck, FieldPropsManager{}), OpmInputError);
+}
+
+BOOST_AUTO_TEST_CASE(DualContinuumWithoutNONNCIsAccepted)
+{
+    // The negative control for the case above: the same deck without NONNC must still build.
+    const auto deck = createDeck(R"(RUNSPEC
+DIMENS
+ 3 3 2 /
+DUALPORO
+GRID
+DXV
+ 3*100.0 /
+DYV
+ 3*100.0 /
+DZV
+ 2*10.0 /
+DEPTHZ
+ 16*2000.0 /
+SIGMA
+ 2.0E-4 /
+)");
+
+    BOOST_CHECK_NO_THROW(SimulationConfig(false, deck, FieldPropsManager{}));
+}

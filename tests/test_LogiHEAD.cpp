@@ -252,3 +252,19 @@ BOOST_AUTO_TEST_CASE(SaturationFunction)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_CASE(DualPorosityFlag)
+{
+    namespace VI = ::Opm::RestartIO::Helpers::VectorItems;
+
+    {
+        const auto lh = ::Opm::RestartIO::LogiHEAD{}.dualPorosity(true);
+        const auto& v = lh.data();
+        BOOST_CHECK_EQUAL(v[VI::logihead::DualPoro], true);
+    }
+    {
+        const auto lh = ::Opm::RestartIO::LogiHEAD{}.dualPorosity(false);
+        const auto& v = lh.data();
+        BOOST_CHECK_EQUAL(v[VI::logihead::DualPoro], false);
+    }
+}
