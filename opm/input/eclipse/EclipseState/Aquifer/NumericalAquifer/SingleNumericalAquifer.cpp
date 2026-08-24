@@ -30,7 +30,9 @@
 #include "../AquiferHelpers.hpp"
 
 #include <cstddef>
+#include <string>
 #include <unordered_set>
+#include <vector>
 
 #include <fmt/format.h>
 
@@ -194,6 +196,8 @@ namespace Opm {
         }
 
         std::vector<NumericalAquiferConnection> conns;
+        std::size_t numOutOfBounds = 0, numInactive = 0, numAdjoining = 0;
+        const auto numRequested = this->connections_.size();
         for (const auto& con : this->connections_) {
             const std::size_t i = con.I;
             const std::size_t j = con.J;
@@ -204,9 +208,15 @@ namespace Opm {
                     fmt::format(
                         "Connection in numerical aquifer {} has out-of-bounds IJK ({}, {}, {}), allowed range is (1-{}, 1-{}, 1-{}). Connection skipped.",
                                             this->id_, i+1, j+1, k+1, grid.getNX(), grid.getNY(), grid.getNZ()));
+                ++numOutOfBounds;
                 continue;
             }
-            if (!actnum[grid.getGlobalIndex(i, j, k)]) continue;
+            if (!actnum[grid.getGlobalIndex(i, j, k)]) {
+                // Silently dropped until now, and indistinguishable in the
+                // result from a connection that was never asked for.
+                ++numInactive;
+                continue;
+            }
             if (con.connect_active_cell
                || !AquiferHelpers::neighborCellInsideReservoirAndActive(grid, i, j, k, con.face_dir, actnum, cell_global_indices)) {
                 conns.push_back(con);
@@ -217,8 +227,44 @@ namespace Opm {
                         "skipped!", this->id_, i+1, j+1, k+1
                     )
                 );
+                ++numAdjoining;
             }
         }
+
+        // The per-connection warnings above are message-limited, so on a field
+        // deck they say neither how many connections went nor how many are
+        // left.  An aquifer that keeps none of them is simply absent from the
+        // run: it holds its pore volume and never exchanges with the reservoir,
+        // which looks like a model that will not maintain pressure rather than
+        // like a deck problem.
+        if (conns.size() < numRequested) {
+            auto why = std::vector<std::string>{};
+            if (numAdjoining > 0) {
+                why.push_back(fmt::format("{} adjoin an active cell (AQUCON item 11, "
+                                          "ALLOW_INTERNAL_CELLS, permits those)", numAdjoining));
+            }
+            if (numInactive > 0) {
+                why.push_back(fmt::format("{} name an inactive cell", numInactive));
+            }
+            if (numOutOfBounds > 0) {
+                why.push_back(fmt::format("{} are outside the grid", numOutOfBounds));
+            }
+
+            auto reasons = std::string{};
+            for (std::size_t n = 0; n < why.size(); ++n) {
+                reasons += (n == 0) ? "" : (n + 1 == why.size() ? " and " : ", ");
+                reasons += why[n];
+            }
+
+            OpmLog::warning(fmt::format(
+                "Numerical aquifer {}: {} of {} AQUCON connection(s) retained -- {}.{}",
+                this->id_, conns.size(), numRequested, reasons,
+                conns.empty()
+                ? " The aquifer has no connection to the reservoir left and will not"
+                  " exchange fluid with it."
+                : ""));
+        }
+
         this->connections_ = std::move(conns);
     }
 }
