@@ -207,6 +207,7 @@ private:
 
             // Fugacity equality at fixed pressure: K_c = phi_liquid / phi_vapour.
             bool trivial = false;
+            bool rootsDistinct = false;
             bool substitutionConverged = false;
             for (int inner = 0; inner < maxInner; ++inner) {
                 Scalar sum = 0.0;
@@ -221,6 +222,15 @@ private:
                 typename FluidSystem::template ParameterCache<Scalar> paramCache(eosType);
                 paramCache.updatePhase(fs, oilPhaseIdx);
                 paramCache.updatePhase(fs, gasPhaseIdx);
+
+                // A pure component or an azeotrope has K = 1 at a genuine
+                // saturation point, where the two phases share a composition
+                // but occupy different EOS roots.  The molar volumes tell that
+                // state apart from the trivial solution, whose phases are one
+                // and the same.
+                const Scalar vmL = paramCache.molarVolume(oilPhaseIdx);
+                const Scalar vmV = paramCache.molarVolume(gasPhaseIdx);
+                rootsDistinct = std::abs(vmL - vmV) > 1.0e-9 * std::max(vmL, vmV);
 
                 Scalar change = 0.0;
                 trivial = true;
@@ -243,8 +253,8 @@ private:
                 }
             }
 
-            if (trivial) {
-                // The compositions collapsed: the pressure lies on the
+            if (trivial && !rootsDistinct) {
+                // The phases collapsed into one: the pressure lies on the
                 // single-phase side of the saturation pressure.  Bisect
                 // towards a pressure already known to be two-phase, or scan
                 // on if the bracket is not closed yet.
@@ -272,13 +282,14 @@ private:
                     incipient[c] = (bubble ? K[c] * z[c] : z[c] / K[c]) / sum;
                     distance += std::abs(incipient[c] - z[c]);
                 }
-                // A converged K that leaves the incipient phase with the
-                // composition of the known one is the trivial solution wearing
-                // a disguise: it satisfies the saturation condition at an
-                // arbitrary pressure.  Keep searching rather than report it.
-                // Genuinely near-critical mixtures are refused for the same
-                // reason; returning nothing beats returning a false pressure.
-                if (distance > 1.0e-3) {
+                // A converged K that leaves the incipient phase with both the
+                // composition and the EOS root of the known one is the trivial
+                // solution wearing a disguise: it satisfies the saturation
+                // condition at an arbitrary pressure.  Keep searching rather
+                // than report it.  Mixtures where the roots have genuinely
+                // merged are refused for the same reason; returning nothing
+                // beats returning a false pressure.
+                if (distance > 1.0e-3 || rootsDistinct) {
                     press = p;
                     return Outcome::converged;
                 }
