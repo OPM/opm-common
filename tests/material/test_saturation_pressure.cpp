@@ -298,5 +298,10 @@ BOOST_AUTO_TEST_CASE(TrivialSolutionIsNotReportedAsADewPoint)
                                 "trivial solution reported as a dew point for z_C1 = "
                                 << zMethane << " at " << press / 1.0e5 << " bar");
         }
+        else {
+            // The expected outcome is an outright refusal, which must leave
+            // the pressure untouched rather than half-written.
+            BOOST_CHECK_LT(press, 0.0);
+        }
     }
 }
