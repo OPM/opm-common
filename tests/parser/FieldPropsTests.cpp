@@ -179,6 +179,10 @@ SIGMAV
     }
 }
 
+
+
+
+
 BOOST_AUTO_TEST_CASE(SigmaDeckScalar) {
     // SIGMA is a single global scalar (JSON schema: "size": 1), not a per-cell array like
     // SIGMAV (schema: "data", no "size"). FieldProps::GRID::double_keywords is strictly a
@@ -3632,4 +3636,147 @@ MULTZ
         BOOST_CHECK_EQUAL(multz2[ij]      , 20.0);
         BOOST_CHECK_EQUAL(multz2[ij + 100], 40.0);
     }
+}
+
+namespace {
+
+Opm::Deck dualPorosityRegionsDeck(const std::string& runspecExtra,
+                                  const std::string& dimens,
+                                  const std::string& gridProps,
+                                  const std::string& tail)
+{
+    const std::string deckData =
+        "RUNSPEC\n"
+        "OIL\n"
+        "WATER\n" +
+        runspecExtra +
+        "DIMENS\n"
+        " " + dimens + " /\n"
+        "DUALPORO\n"
+        "GRID\n" +
+        gridProps +
+        tail +
+        "\n";
+    return Opm::Parser{}.parseString(deckData);
+}
+
+const std::string dpRegionGrid1x1x2 =
+    "DX\n 2*100 /\n"
+    "DY\n 2*100 /\n"
+    "DZ\n 2*10 /\n"
+    "TOPS\n 2*2000 /\n"
+    "PORO\n 0.20 0.01 /\n"
+    "PERMX\n 1.0 1000.0 /\n";
+
+} // anonymous namespace
+
+BOOST_AUTO_TEST_CASE(DualPorosityRegionArraysPerContinuum) {
+    // Matrix cell reads table 1, fracture cell table 2 — through the plain
+    // region machinery, no dual-porosity special case anywhere.
+    auto deck = dualPorosityRegionsDeck(
+        "TABDIMS\n 2 2 /\n"
+        "EQLDIMS\n 2 /\n",
+        "1 1 2", dpRegionGrid1x1x2,
+        "REGIONS\n"
+        "SATNUM\n 1 2 /\n"
+        "PVTNUM\n 1 2 /\n"
+        "EQLNUM\n 1 2 /\n");
+    Opm::EclipseState es(deck);
+    const auto& fpm = es.fieldProps();
+
+    for (const auto* kw : {"SATNUM", "PVTNUM", "EQLNUM"}) {
+        const auto& reg = fpm.get_int(kw);
+        BOOST_REQUIRE_EQUAL(reg.size(), 2U);
+        BOOST_CHECK_EQUAL(reg[0], 1);
+        BOOST_CHECK_EQUAL(reg[1], 2);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(DualPorosityRegionDefaultsSharedTable) {
+    // No REGIONS section: both continua fall back to table 1 everywhere.
+    auto deck = dualPorosityRegionsDeck("", "1 1 2", dpRegionGrid1x1x2, "");
+    Opm::EclipseState es(deck);
+    const auto& fpm = es.fieldProps();
+
+    for (const auto* kw : {"SATNUM", "PVTNUM", "EQLNUM"}) {
+        const auto& reg = fpm.get_int(kw);
+        BOOST_REQUIRE_EQUAL(reg.size(), 2U);
+        BOOST_CHECK_EQUAL(reg[0], 1);
+        BOOST_CHECK_EQUAL(reg[1], 1);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(DualPorosityRegionsAlignWithTwinHalves) {
+    // 2x1x4: regions assigned half-by-half must agree with the grid's own
+    // matrix/fracture classification for every cell.
+    const std::string props =
+        "DX\n 8*100 /\n"
+        "DY\n 8*100 /\n"
+        "DZ\n 8*10 /\n"
+        "TOPS\n 2*2000 2*2010 2*2000 2*2010 /\n"
+        "PORO\n 4*0.20 4*0.01 /\n"
+        "PERMX\n 4*1.0 4*1000.0 /\n";
+    auto deck = dualPorosityRegionsDeck(
+        "TABDIMS\n 2 2 /\n",
+        "2 1 4", props,
+        "REGIONS\n"
+        "SATNUM\n 4*1 4*2 /\n");
+    Opm::EclipseState es(deck);
+    const auto& grid = es.getInputGrid();
+    const auto& satnum = es.fieldProps().get_int("SATNUM");
+
+    BOOST_REQUIRE_EQUAL(satnum.size(), grid.getCartesianSize());
+    for (std::size_t g = 0; g < satnum.size(); ++g) {
+        BOOST_CHECK_EQUAL(satnum[g] == 2, grid.isFractureCell(g));
+    }
+}
+
+BOOST_AUTO_TEST_CASE(DualPorosityTwoSaturationTablesLoad) {
+    // The documented convention: matrix keeps a curved table, the fracture
+    // gets its own straight-line zero-capillary table. Both must load.
+    auto deck = dualPorosityRegionsDeck(
+        "TABDIMS\n 2 2 /\n",
+        "1 1 2", dpRegionGrid1x1x2,
+        "REGIONS\n"
+        "SATNUM\n 1 2 /\n"
+        "PROPS\n"
+        "SWOF\n"
+        "  0.20 0.000 1.000 0.9\n"
+        "  0.80 0.600 0.000 0.1 /\n"
+        "  0.00 0.000 1.000 0.0\n"
+        "  1.00 1.000 0.000 0.0 /\n");
+    Opm::EclipseState es(deck);
+    BOOST_CHECK_EQUAL(es.getTableManager().getSwofTables().size(), 2U);
+}
+
+BOOST_AUTO_TEST_CASE(DPGRIDCopiesDefaultedProperties) {
+    // Properties given for the matrix half only follow onto the fracture
+    // twins; explicitly-supplied fracture values are kept.
+    const std::string deckData =
+        "RUNSPEC\n"
+        "OIL\nWATER\n"
+        "DIMENS\n 2 1 2 /\n"
+        "DUALPORO\n"
+        "GRID\n"
+        "DPGRID\n"
+        "DX\n 4*100 /\n"
+        "DY\n 4*100 /\n"
+        "DZ\n 4*10 /\n"
+        "TOPS\n 4*2000 /\n"
+        "PERMX\n 5.0 7.0 2* /\n"          // fracture half defaulted -> copied
+        "PORO\n 0.20 0.20 0.01 0.01 /\n"  // fracture given -> kept
+        "\n";
+    auto deck = Opm::Parser{}.parseString(deckData);
+    Opm::EclipseState es(deck);
+    const auto& fpm = es.fieldProps();
+
+    const auto& permx_si = fpm.get_double("PERMX");
+    // PERMX is stored in SI internally; compare fracture vs matrix twins.
+    BOOST_CHECK_CLOSE(permx_si[2], permx_si[0], 1e-10);
+    BOOST_CHECK_CLOSE(permx_si[3], permx_si[1], 1e-10);
+    BOOST_CHECK_GT(permx_si[1], permx_si[0]);   // 7 > 5 preserved
+
+    const auto& poro = fpm.get_double("PORO");
+    BOOST_CHECK_CLOSE(poro[2], 0.01, 1e-10);    // explicit fracture value kept
+    BOOST_CHECK_CLOSE(poro[0], 0.20, 1e-10);
 }
