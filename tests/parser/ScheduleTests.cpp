@@ -6786,6 +6786,59 @@ END
 }
 
 
+BOOST_AUTO_TEST_CASE(Test_weldraw_defaulted_drawdown) {
+    const auto input = std::string { R"(
+RUNSPEC
+DIMENS
+ 10 10 10 /
+START
+ 8 OCT 2008 /
+GRID
+DXV
+ 10*100.0 /
+DYV
+ 10*100.0 /
+DZV
+ 10*10.0 /
+DEPTHZ
+ 121*2000.0 /
+
+SCHEDULE
+
+WELSPECS
+ 'W1' 'G1'  3 3 2873.94 'OIL' 0.00 'STD' 'SHUT' 'NO' 0 'SEG' /
+ 'W2' 'G1'  5 5 2873.94 'OIL' 0.00 'STD' 'SHUT' 'NO' 0 'SEG' /
+/
+
+DATES        -- 1
+ 10 OKT 2008 /
+/
+
+WELDRAW
+ 'W1' 40 2* 'AVG' /
+ 'W2' 30 2* 'AVG' /
+/
+
+DATES        -- 2
+ 20 OKT 2008 /
+/
+
+-- Item 2 has no default, so leaving it out is an error rather than a way of
+-- lifting the limit.
+WELDRAW
+ 'W1' 1* 2* 'AVG' /
+/
+
+END
+)" };
+
+    const auto deck = Parser{}.parseString(input);
+    const auto es = EclipseState { deck };
+
+    BOOST_CHECK_THROW(Schedule( deck, es, std::make_shared<const Python>() ),
+                      OpmInputError);
+}
+
 BOOST_AUTO_TEST_CASE(Test_wdfac) {
     const auto deck = Parser{}.parseString(R"(
 DIMENS

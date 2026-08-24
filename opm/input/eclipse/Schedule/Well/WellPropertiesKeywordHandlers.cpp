@@ -185,10 +185,21 @@ void handleWELDRAW(HandlerContext& handlerContext)
             handlerContext.invalidNamePattern(wellNamePattern);
         }
 
+        const auto& draw_item = record.getItem<Kw::MAX_DRAW>();
+        if (!draw_item.hasValue(0) || draw_item.defaultApplied(0)) {
+            throw OpmInputError {
+                fmt::format("Item 2 of WELDRAW is defaulted for {}.  The item "
+                            "has no default and the maximum allowable drawdown "
+                            "must be given explicitly.", wellNamePattern),
+                handlerContext.keyword.location()
+            };
+        }
+
         for (const auto& well_name : well_names) {
             auto well = handlerContext.state().wells.get(well_name);
             auto weldraw = std::make_shared<WELDRAW>(well.getWELDRAW());
             weldraw->update(record, well.getPreferredPhase());
+
             if (well.updateWELDRAW(std::move(weldraw))) {
                 handlerContext.state().wells.update(std::move(well));
             }

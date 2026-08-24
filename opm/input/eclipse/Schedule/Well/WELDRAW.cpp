@@ -93,17 +93,24 @@ namespace Opm {
     {
         using Kw = ParserKeywords::WELDRAW;
 
+        // Item 2 has no default, so a record which leaves it out carries no
+        // limit to apply.  The keyword handler rejects that with the location
+        // of the offending record; this guards the class against a caller
+        // which does not, since the UDAValue overload of DeckItem::get() does
+        // not itself check that the item holds a value.
         const auto& draw_item = record.getItem<Kw::MAX_DRAW>();
         if (!draw_item.hasValue(0) || draw_item.defaultApplied(0)) {
-            // A defaulted maximum drawdown removes the limit.
-            this->m_active = false;
+            throw std::invalid_argument {
+                "Item 2 of WELDRAW is defaulted.  The maximum allowable "
+                "drawdown has no default and must be given explicitly."
+            };
         }
-        else {
-            this->m_max_drawdown = draw_item.get<UDAValue>(0);
-            // A non-positive drawdown limit is treated as no limit.
-            this->m_active = !(this->m_max_drawdown.is<double>() &&
-                               (this->m_max_drawdown.get<double>() <= 0.0));
-        }
+
+        this->m_max_drawdown = draw_item.get<UDAValue>(0);
+
+        // A non-positive drawdown limit is treated as no limit.
+        this->m_active = !(this->m_max_drawdown.is<double>() &&
+                           (this->m_max_drawdown.get<double>() <= 0.0));
 
         const auto& phase_item = record.getItem<Kw::PHASE>();
         if (phase_item.hasValue(0) && !phase_item.defaultApplied(0)) {
