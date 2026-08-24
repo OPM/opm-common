@@ -1,0 +1,47 @@
+/*
+  Copyright 2026 Equinor ASA.
+
+  This file is part of the Open Porous Media project (OPM).
+
+  OPM is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  OPM is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with OPM.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+#ifndef OPM_REGION_VARIABLE_SUPPORT_HPP
+#define OPM_REGION_VARIABLE_SUPPORT_HPP
+
+namespace Opm {
+    class SummaryConfig;
+} // namespace Opm
+
+namespace Opm::data {
+    class RegionVariableMapping;
+} // namespace Opm::data
+
+namespace Opm {
+    /// Register internal region variables and region sets needed by the
+    /// configured SUMMARY vectors in \p sumcfg.
+    ///
+    /// \note This function only registers names in \p regVarMap. Callers are
+    /// responsible for managing the RegionVariableMapping lifecycle (i.e.
+    /// calling prepareRegistration() before registration and commitStructure()
+    /// after all registrations are complete).
+    ///
+    /// \param[in] sumcfg Summary configuration.
+    ///
+    /// \param[in,out] regVarMap Region variable mapping to populate.
+    void populateRegVarMapping(const SummaryConfig&         sumcfg,
+                               data::RegionVariableMapping& regVarMap);
+}
+
+#endif // OPM_REGION_VARIABLE_SUPPORT_HPP
