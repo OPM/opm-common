@@ -49,6 +49,7 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <utility>
 
 namespace {
 
@@ -160,7 +161,8 @@ BOOST_AUTO_TEST_CASE(BubblePressureOilZone)
         const bool converged =
             SatP::bubblePressure(liquid, temperature, eosType, press, vapor);
 
-        BOOST_REQUIRE_MESSAGE(converged, "bubble-point iteration must converge for z_C1 = " << zMethane);
+        BOOST_REQUIRE_MESSAGE(converged,
+                              "bubble-point iteration must converge for z_C1 = " << zMethane);
         // The restart file stores PSAT in single precision; 1e-3 percent
         // (1e-5 relative) is well above that quantization.
         BOOST_CHECK_CLOSE(press / 1.0e5, expectedBar, 1.0e-3);
@@ -231,7 +233,10 @@ BOOST_AUTO_TEST_CASE(DewPressureLowerBranch)
     CompVec liquid{};
 
     BOOST_REQUIRE(SatP::dewPressure(vapor, temperature, eosType, press, liquid));
+    // A genuinely lower-branch pressure: the retrograde region of comparable
+    // mixtures sits above 100 bar, the lower dew point of this one near 1 bar.
     BOOST_CHECK_GT(press, 0.0);
+    BOOST_CHECK_LT(press, 50.0e5);
 
     const auto res = equilibriumResidual(vapor, FluidSystem::gasPhaseIdx,
                                          liquid, FluidSystem::oilPhaseIdx, press);
@@ -242,6 +247,19 @@ BOOST_AUTO_TEST_CASE(DewPressureLowerBranch)
     // lower branch it is the heavy one: richer in decane than the vapour.
     BOOST_CHECK_GT(res.distance, 1.0e-3);
     BOOST_CHECK_GT(liquid[2], vapor[2]);
+}
+
+BOOST_AUTO_TEST_CASE(SupercriticalLiquidHasNoBubblePoint)
+{
+    // Pure methane is far above its critical temperature here, so no bubble
+    // point exists at any pressure.  The solver must refuse and leave the
+    // pressure output untouched.
+    const CompVec liquid{0.0, 1.0, 0.0};
+    Scalar press = -1.0;
+    CompVec vapor{};
+
+    BOOST_CHECK(!SatP::bubblePressure(liquid, temperature, eosType, press, vapor));
+    BOOST_CHECK_LT(press, 0.0);
 }
 
 BOOST_AUTO_TEST_CASE(PureComponentSaturationPressure)

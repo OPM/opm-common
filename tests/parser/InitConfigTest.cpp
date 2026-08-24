@@ -1,5 +1,6 @@
 /*
   Copyright 2015 Statoil ASA.
+  Copyright 2026 SINTEF Digital
 
   This file is part of the Open Porous Media project (OPM).
 
