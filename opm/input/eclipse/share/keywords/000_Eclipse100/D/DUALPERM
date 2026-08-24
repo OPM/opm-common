@@ -2,5 +2,8 @@
   "name": "DUALPERM",
   "sections": [
     "RUNSPEC"
+  ],
+  "prohibits": [
+    "DUALPORO"
   ]
 }
