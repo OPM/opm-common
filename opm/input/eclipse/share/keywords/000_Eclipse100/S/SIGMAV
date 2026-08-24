@@ -4,6 +4,7 @@
     "GRID"
   ],
   "data": {
-    "value_type": "DOUBLE"
+    "value_type": "DOUBLE",
+    "dimension": "1/Length*Length"
   }
 }
