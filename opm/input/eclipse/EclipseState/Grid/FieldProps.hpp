@@ -733,6 +733,8 @@ private:
     void processMULTREGP(const Deck& deck);
     void scanGRIDSection(const GRIDSection& grid_section);
     void scanGridKeywords(const DeckView& keywords);
+    void applyDPGRID(const GRIDSection& grid_section);
+    void applyDualPorosityScalars(const GRIDSection& grid_section);
 
     /// An LGR's properties seeded from its father's, for lgrBlockValues().
     FieldProps(const FieldProps& father, const EclipseGridLGR& lgr);
