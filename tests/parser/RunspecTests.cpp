@@ -1067,6 +1067,126 @@ BOOST_AUTO_TEST_CASE(Co2Storage_oilwater) {
     BOOST_CHECK_THROW( Runspec{deck}, std::runtime_error );
 }
 
+BOOST_AUTO_TEST_CASE(PorosityModel_SinglePorosityByDefault) {
+    const auto deck = Parser{}.parseString(R"(
+    RUNSPEC
+    OIL
+    WATER
+    )");
+
+    const Runspec runspec( deck );
+    const auto& model = runspec.porosityModel();
+
+    BOOST_CHECK( model.type() == PorosityModel::Type::SinglePorosity );
+    BOOST_CHECK( !model.dualContinuum() );
+    BOOST_CHECK( !model.dualPermeability() );
+    BOOST_CHECK( !model.fracturePermeabilityScalingActive() );
+    BOOST_CHECK( model == PorosityModel{} );
+}
+
+BOOST_AUTO_TEST_CASE(PorosityModel_DualPorosity) {
+    const auto deck = Parser{}.parseString(R"(
+    RUNSPEC
+    OIL
+    WATER
+    DUALPORO
+    )");
+
+    const Runspec runspec( deck );
+    const auto& model = runspec.porosityModel();
+
+    BOOST_CHECK( model.type() == PorosityModel::Type::DualPorosity );
+    BOOST_CHECK( model.dualContinuum() );
+    BOOST_CHECK( !model.dualPermeability() );
+    BOOST_CHECK( model.fracturePermeabilityScalingActive() );
+}
+
+BOOST_AUTO_TEST_CASE(PorosityModel_DualPermeability) {
+    const auto deck = Parser{}.parseString(R"(
+    RUNSPEC
+    OIL
+    WATER
+    DUALPERM
+    )");
+
+    const Runspec runspec( deck );
+    const auto& model = runspec.porosityModel();
+
+    BOOST_CHECK( model.type() == PorosityModel::Type::DualPermeability );
+    BOOST_CHECK( model.dualContinuum() );      // dual permeability is a dual-continuum model
+    BOOST_CHECK( model.dualPermeability() );
+    BOOST_CHECK( model.fracturePermeabilityScalingActive() );
+}
+
+BOOST_AUTO_TEST_CASE(PorosityModel_DualPermeabilityTakesPrecedence) {
+    const auto deck = Parser{}.parseString(R"(
+    RUNSPEC
+    OIL
+    WATER
+    DUALPORO
+    DUALPERM
+    )");
+
+    const Runspec runspec( deck );
+    BOOST_CHECK( runspec.porosityModel().type() == PorosityModel::Type::DualPermeability );
+}
+
+BOOST_AUTO_TEST_CASE(PorosityModel_FracturePermeabilityScaling) {
+    // Dual continuum, scaling switched off by NODPPM.
+    {
+        const auto deck = Parser{}.parseString(R"(
+    RUNSPEC
+    OIL
+    WATER
+    DUALPORO
+    NODPPM
+    )");
+
+        const Runspec runspec( deck );
+        const auto& model = runspec.porosityModel();
+
+        BOOST_CHECK( model.type() == PorosityModel::Type::DualPorosity );
+        BOOST_CHECK( !model.fracturePermeabilityScalingActive() );
+    }
+
+    // Single porosity: never active, whatever NODPPM says.
+    {
+        const auto deck = Parser{}.parseString(R"(
+    RUNSPEC
+    OIL
+    WATER
+    NODPPM
+    )");
+
+        const Runspec runspec( deck );
+        const auto& model = runspec.porosityModel();
+
+        BOOST_CHECK( model.type() == PorosityModel::Type::SinglePorosity );
+        BOOST_CHECK( !model.fracturePermeabilityScalingActive() );
+    }
+}
+
+BOOST_AUTO_TEST_CASE(PorosityModel_Equality) {
+    const auto dualporo = Parser{}.parseString(R"(
+    RUNSPEC
+    OIL
+    WATER
+    DUALPORO
+    )");
+
+    const auto dualporo_nodppm = Parser{}.parseString(R"(
+    RUNSPEC
+    OIL
+    WATER
+    DUALPORO
+    NODPPM
+    )");
+
+    BOOST_CHECK( PorosityModel{ dualporo } == PorosityModel{ dualporo } );
+    BOOST_CHECK( !(PorosityModel{ dualporo } == PorosityModel{ dualporo_nodppm }) );
+    BOOST_CHECK( !(PorosityModel{ dualporo } == PorosityModel{}) );
+}
+
 BOOST_AUTO_TEST_CASE(H2Storage) {
     const std::string input = R"(
     RUNSPEC
