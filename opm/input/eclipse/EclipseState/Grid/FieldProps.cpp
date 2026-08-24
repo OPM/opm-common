@@ -1274,10 +1274,25 @@ void FieldProps::distribute_toplayer(Fieldprops::FieldData<double>& field_data,
                 std::size_t g = i + j*this->nx + k*this->nx*this->ny;
                 if (this->m_actnum[g]) {
                     if (field_data.value_status[active_index] == value::status::uninitialized) {
-                        std::size_t layer_index = i + j*this->nx;
-                        if (toplayer.value_status[layer_index] == value::status::deck_value) {
-                            field_data.data[active_index] = toplayer.data[layer_index];
-                            field_data.value_status[active_index] = value::status::valid_default;
+                        if (this->dpgrid_ && this->grid_ptr->isFractureCell(g)) {
+                            // DPGRID: a fracture cell takes the value of its matrix
+                            // cell, not that of the top layer. The matrix cells come
+                            // first, so that value is final here.
+                            const std::size_t matrix = this->grid_ptr->matrixTwin(g);
+                            if (this->grid_ptr->cellActive(matrix)) {
+                                const std::size_t matrix_index = this->grid_ptr->activeIndex(matrix);
+                                if (value::has_value(field_data.value_status[matrix_index])) {
+                                    field_data.data[active_index] = field_data.data[matrix_index];
+                                    field_data.value_status[active_index] = value::status::valid_default;
+                                }
+                            }
+                        }
+                        else {
+                            std::size_t layer_index = i + j*this->nx;
+                            if (toplayer.value_status[layer_index] == value::status::deck_value) {
+                                field_data.data[active_index] = toplayer.data[layer_index];
+                                field_data.value_status[active_index] = value::status::valid_default;
+                            }
                         }
                     }
                     active_index += 1;
@@ -2468,7 +2483,11 @@ void FieldProps::processMULTREGP(const Deck& deck)
 
 void FieldProps::scanGRIDSection(const GRIDSection& grid_section)
 {
+    this->dpgrid_ = grid_section.hasKeyword("DPGRID") && this->grid_ptr->dualPorosity();
     this->scanGridKeywords(grid_section);
+
+    this->applyDPGRID(grid_section);
+    this->applyDualPorosityScalars(grid_section);
 }
 
 void FieldProps::scanGridKeywords(const DeckView& keywords)
@@ -2498,6 +2517,117 @@ void FieldProps::scanGridKeywords(const DeckView& keywords)
         this->handle_keyword(Section::GRID, keyword, box);
     }
     block.ensureClosed();
+}
+
+// The whole-grid scalar SIGMA fills the per-cell array SIGMAV, so every
+// consumer reads one carrier.  Where the deck sets SIGMAV for some cells (by
+// BOX, EQUALS, OPERATE or a plain array), those cells keep their value and
+// SIGMA fills the others.
+void FieldProps::applyDualPorosityScalars(const GRIDSection& grid_section)
+{
+    if (!this->grid_ptr->dualPorosity()) {
+        return;
+    }
+
+    if (grid_section.hasKeyword("SIGMA")) {
+        const auto& keyword = grid_section["SIGMA"].back();
+        const double value = keyword.getRecord(0).getItem("COUPLING").getSIDouble(0);
+        if (value < 0.0) {
+            throw OpmInputError("The SIGMA value cannot be negative.", keyword.location());
+        }
+
+        if (this->double_data.find("SIGMAV") == this->double_data.end()) {
+            this->init_get<double>("SIGMAV").default_assign(value);
+        }
+        else {
+            auto& sigmav = this->init_get<double>("SIGMAV");
+            sigmav.default_update(std::vector<double>(sigmav.dataSize(), value));
+        }
+    }
+
+    // SIGMAV is checked here, whatever route set it; the scalar SIGMA is
+    // checked above as it arrives.
+    const auto it = this->double_data.find("SIGMAV");
+    if (it == this->double_data.end()) {
+        return;
+    }
+
+    const auto& values = it->second.data;
+    const auto  bad    = std::find_if(values.begin(), values.end(),
+                                      [](const double v) { return v < 0.0; });
+    if (bad != values.end()) {
+        const auto active_index = static_cast<std::size_t>(std::distance(values.begin(), bad));
+        const auto ijk = this->grid_ptr->getIJK(this->grid_ptr->getGlobalIndex(active_index));
+        throw OpmInputError(fmt::format("The SIGMAV value cannot be negative "
+                                        "(cell ({}, {}, {}) has {}).",
+                                        ijk[0] + 1, ijk[1] + 1, ijk[2] + 1, *bad),
+                            grid_section.hasKeyword("SIGMAV")
+                                ? grid_section["SIGMAV"].back().location()
+                                : KeywordLocation{});
+    }
+}
+
+void FieldProps::applyDPGRID(const GRIDSection& grid_section)
+{
+    // DPGRID: grid-section cell properties supplied for the matrix half only
+    // are copied onto the fracture twins. Properties under the top-layer rule
+    // were copied as they were read (distribute_toplayer); this copies the rest.
+    // Values the deck DID supply for the fracture half are kept — decks
+    // routinely combine DPGRID with explicit per-half property boxes.
+    if (!this->dpgrid_)
+        return;
+
+    const auto& grid = *this->grid_ptr;
+
+    // (global cartesian, matrix active, fracture active) index triples for
+    // every twin pair with both continua active — invariant across fields.
+    struct TwinIndices { std::size_t g; std::size_t twin; std::size_t ai_m; std::size_t ai_f; };
+    std::vector<TwinIndices> twins;
+    for (std::size_t g = 0; g < grid.getCartesianSize(); ++g) {
+        if (grid.isFractureCell(g))
+            break;  // matrix cells occupy the first half of the index range
+        const std::size_t twin = grid.fractureTwin(g);
+        if (grid.cellActive(g) && grid.cellActive(twin))
+            twins.push_back({g, twin, grid.activeIndex(g), grid.activeIndex(twin)});
+    }
+
+    for (auto& entry : this->double_data) {
+        auto& field = entry.second;
+        for (const auto& t : twins) {
+            if (value::has_value(field.value_status[t.ai_m]) &&
+                !value::has_value(field.value_status[t.ai_f]))
+            {
+                field.data[t.ai_f] = field.data[t.ai_m];
+                field.value_status[t.ai_f] = field.value_status[t.ai_m];
+            }
+            if (field.global_data.has_value() &&
+                value::has_value((*field.global_value_status)[t.g]) &&
+                !value::has_value((*field.global_value_status)[t.twin]))
+            {
+                (*field.global_data)[t.twin] = (*field.global_data)[t.g];
+                (*field.global_value_status)[t.twin] = (*field.global_value_status)[t.g];
+            }
+        }
+    }
+
+    // A fracture rarely has the porosity of the matrix around it, so say when
+    // DPGRID gave it that: fracture cells the deck left unset that hold the
+    // porosity of their matrix cell.
+    const auto poro = this->double_data.find("PORO");
+    if (poro == this->double_data.end())
+        return;
+    const auto& field = poro->second;
+    const auto poro_copies = std::ranges::count_if(twins, [&field](const TwinIndices& t)
+    {
+        return (field.value_status[t.ai_f] != value::status::deck_value) &&
+               (field.data[t.ai_f] == field.data[t.ai_m]);
+    });
+    if (poro_copies > 0) {
+        const auto message = fmt::format("DPGRID: {} fracture cells take the porosity of their "
+                                         "matrix cells; give PORO for the fracture cells "
+                                         "if that is not intended.", poro_copies);
+        OpmLog::warning(Log::fileMessage(grid_section["DPGRID"].back().location(), message));
+    }
 }
 
 void FieldProps::scanGRIDSectionOnlyACTNUM(const GRIDSection& grid_section)

@@ -192,6 +192,7 @@ namespace Opm {
         void applyLgrBlockMinpv(const Deck& deck);
         void applyLgrBlockValues(const Deck& deck);
         void conveyNumericalAquiferEffects();
+        void applyDualPorosityNNC();
         void applyMULTXYZ();
         void initFaults(const Deck& deck);
         void initPara(const Deck& deck);

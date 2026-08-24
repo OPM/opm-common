@@ -50,7 +50,9 @@
 #include <opm/input/eclipse/Deck/DeckSection.hpp>
 #include <opm/input/eclipse/Deck/Deck.hpp>
 
+#include <opm/input/eclipse/Parser/ParserKeywords/D.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/M.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/N.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/R.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/T.hpp>
 
@@ -123,6 +125,33 @@ namespace {
 
         return block.empty() ? Opm::KeywordLocation{} : block.begin()->location();
     }
+
+    // DUALPORO and DUALPERM choose the run mode and belong in RUNSPEC. The
+    // porosity model reads them from the whole deck, so one placed in a later
+    // section would still switch the run mode: reject it at that keyword.
+    void checkDualContinuumInRunspec(const Opm::Deck& deck)
+    {
+        const auto later_sections = std::unordered_set<std::string> {
+            "GRID", "EDIT", "PROPS", "REGIONS", "SOLUTION", "SUMMARY", "SCHEDULE",
+        };
+
+        bool in_runspec = true;
+        for (std::size_t index = 0; index < deck.size(); ++index) {
+            const auto& keyword = deck[index];
+            if (later_sections.count(keyword.name()) > 0) {
+                in_runspec = false;
+            }
+            else if (!in_runspec &&
+                     ((keyword.name() == Opm::ParserKeywords::DUALPORO::keywordName) ||
+                      (keyword.name() == Opm::ParserKeywords::DUALPERM::keywordName)))
+            {
+                throw Opm::OpmInputError {
+                    fmt::format("{} must be specified in the RUNSPEC section.", keyword.name()),
+                    keyword.location()
+                };
+            }
+        }
+    }
 }
 
 namespace Opm {
@@ -189,7 +218,21 @@ namespace Opm {
         if (field_props.depth_edited()) {
             this->m_inputGrid.setDEPTH(field_props.get_double("DEPTH"));
         }
+        checkDualContinuumInRunspec(deck);
+
+        // The matrix-fracture coupling of a dual-continuum run is built as
+        // non-neighbour connections, so NONNC would remove it in silence: the
+        // run completes with the matrix continuum isolated.
+        if (this->m_runspec.porosityModel().dualContinuum() &&
+            this->m_simulationConfig.useNONNC())
+        {
+            throw OpmInputError("NONNC cannot be combined with a dual-continuum run mode: the "
+                                "matrix-fracture coupling is built as non-neighbour connections "
+                                "and would be removed, leaving the matrix continuum isolated.",
+                                deck.get<ParserKeywords::NONNC>().back().location());
+        }
         this->conveyNumericalAquiferEffects();
+        this->applyDualPorosityNNC();
         if (field_props.has_double("MINPVV")) {
             field_props.deleteMINPVV();
         }
@@ -421,6 +464,22 @@ namespace Opm {
 
         m_lgrs = LgrCollection(gridSection, m_inputGrid, deck);
         refuseUnappliedLgrBlockKeywords(deck);
+
+        // A refined region inside a dual-continuum grid is not supported. The well
+        // connection factors of refined cells are populated from their father cell
+        // without the fracture-permeability scaling the main-grid path applies, so
+        // allowing the combination would produce inconsistent factors silently.
+        // Refuse instead; the scaling rule and the refinement can be reconciled later.
+        if (this->m_runspec.porosityModel().dualContinuum() && (m_lgrs.size() > 0)) {
+            const auto& location = deck.hasKeyword<ParserKeywords::DUALPORO>()
+                ? deck.get<ParserKeywords::DUALPORO>().back().location()
+                : deck.get<ParserKeywords::DUALPERM>().back().location();
+
+            throw OpmInputError("Local grid refinement is not supported in a dual-continuum run: "
+                                "connection factors in refined cells would not carry the "
+                                "fracture-permeability scaling applied on the main grid.",
+                                location);
+        }
         m_inputGrid.init_lgr_cells(m_lgrs);
         applyLgrBlockMinpv(deck);
         applyLgrBlockValues(deck);
@@ -721,6 +780,92 @@ namespace Opm {
         this->appendInputNNC(numerical_aquifer.aquiferCellNNCs());
 
         this->m_transMult.applyNumericalAquifer(numerical_aquifer.allAquiferCellIds());
+    }
+
+    // Dual porosity: couple every active matrix cell to its active fracture
+    // twin with one NNC carrying TR = PERMX_matrix * PORV_matrix / PORO_matrix
+    // * sigma (all SI). sigma comes cell-by-cell from the SIGMAV property; a scalar
+    // SIGMA arrives through the same carrier (FieldProps broadcasts it, with
+    // the per-cell form taking precedence). The fracture-half entries carry
+    // no meaning. A zero sigma means "no coupling" and produces no connection.
+    void EclipseState::applyDualPorosityNNC()
+    {
+        if (! this->m_runspec.porosityModel().dualContinuum()) {
+            return;
+        }
+
+        const auto& grid = this->m_inputGrid;
+
+        if (!this->field_props.has_double("SIGMAV")) {
+            OpmLog::warning("DUALPORO: neither SIGMA nor SIGMAV is present — "
+                            "no matrix-fracture coupling will be created.");
+            return;
+        }
+        const std::vector<double> sigmav = this->field_props.get_global_double("SIGMAV");
+
+        if (!this->field_props.has_double("PERMX")) {
+            OpmLog::warning("DUALPORO: PERMX is not present — "
+                            "no matrix-fracture coupling will be created.");
+            return;
+        }
+        const auto& permx = this->field_props.get_global_double("PERMX");
+        const auto& poro = this->field_props.get_global_double("PORO");
+        const auto porv = this->field_props.porv(/* global = */ true);
+
+        std::vector<NNCdata> dp_nnc;
+        for (std::size_t g = 0; g < grid.getCartesianSize(); ++g) {
+            if (grid.isFractureCell(g)) {
+                break;  // matrix cells occupy the first half of the index range
+            }
+            const std::size_t twin = grid.fractureTwin(g);
+            if (!grid.cellActive(g) || !grid.cellActive(twin)) {
+                continue;
+            }
+
+            // SIGMA and SIGMAV are checked for negative values as the GRID
+            // section is read.
+            const double sigma = sigmav[g];
+            // The coupling takes the matrix permeability in x, as the dual-porosity
+            // formulation of Warren and Root (1963) and Kazemi et al. (1976) does:
+            // the shape factor SIGMA (or SIGMAV) carries the size and shape of the
+            // matrix blocks, so PERMY and PERMZ do not enter it.
+            //
+            // The volume is the matrix bulk volume that the pore volume stands
+            // for, PORV / PORO: the cell volume times NTG, scaled by every edit
+            // of the pore volume (MULTPV, MULTREGP, PORV), so the exchange with
+            // the fracture scales with the matrix fluid it drains. The porosity
+            // itself does not enter. Without porosity that volume is undefined,
+            // and the cell is not coupled.
+            if (!(poro[g] > 0.0)) {
+                continue;
+            }
+            const double trans = permx[g] * (porv[g] / poro[g]) * sigma;
+            if (trans > 0.0) {
+                dp_nnc.emplace_back(g, twin, trans);
+            }
+        }
+
+        this->appendInputNNC(dp_nnc);
+
+        // A deck edit that names a matrix-fracture pair would rescale the coupling the
+        // run computes from SIGMA and the matrix permeability. The two mechanisms
+        // disagree about who owns that transmissibility, and the edit wins silently
+        // because it is applied later. Refuse rather than let a deck quietly redefine
+        // the coupling: change SIGMA/SIGMAV, which is what the value is built from.
+        for (const auto* edits : { &this->m_inputNnc.edit(), &this->m_inputNnc.editr() }) {
+            for (const auto& e : *edits) {
+                if (! grid.isTwinPair(e.cell1, e.cell2)) {
+                    continue;
+                }
+
+                throw OpmInputError(fmt::format("Cells {} and {} are a matrix-fracture pair; "
+                                                "their coupling transmissibility is computed "
+                                                "from the shape factor and cannot be edited "
+                                                "directly. Adjust SIGMA or SIGMAV instead.",
+                                                e.cell1 + 1, e.cell2 + 1),
+                                    this->m_inputNnc.edit_location(e));
+            }
+        }
     }
 
     void EclipseState::applyMULTXYZ()

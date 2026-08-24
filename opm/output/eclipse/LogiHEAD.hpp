@@ -115,6 +115,11 @@ namespace Opm::RestartIO {
         /// Logical switch to indicate that the network option is used.
         LogiHEAD& network(const int maxNoNodes);
 
+        /// Set the dual-porosity model flag.
+        /// \param[in] dual_poro Whether the run models dual porosity.
+        /// \return \code *this \endcode.
+        LogiHEAD& dualPorosity(const bool dual_poro);
+
         /// Linearised result array.
         ///
         /// This is the final output of LogiHEAD assembly.
