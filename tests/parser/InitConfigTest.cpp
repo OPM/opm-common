@@ -274,6 +274,29 @@ SCHEDULE
 )" };
     }
 
+    std::string deckWithCompositionalEquilItem11One()
+    {
+        return { R"(RUNSPEC
+METRIC
+DIMENS
+ 10 10 10 /
+EQLDIMS
+1  100  20  1  1  /
+OIL
+WATER
+GAS
+COMPS
+3 /
+SOLUTION
+EQUIL
+  2050     150   2300     0     2050     0       3*    3   1 /
+GRID
+START             -- 0
+19 JUN 2007 /
+SCHEDULE
+)" };
+    }
+
     std::string deckWithStrEquil()
     {
         return { R"(RUNSPEC
@@ -505,6 +528,21 @@ BOOST_AUTO_TEST_CASE(CompositionalEquilDefaultedItem11)
 
     BOOST_CHECK_EQUAL(3, record.compositionalInitType());
     BOOST_CHECK(record.setToSaturationPressure());
+}
+
+BOOST_AUTO_TEST_CASE(CompositionalEquilItem11One)
+{
+    // EQUIL record:
+    //   2050   150   2300   0   2050   0   3*   3   1 /
+    // Item 11: COMP_NOT_SET_SAT_PRESSURE = 1 => datum pressure is kept
+    const auto deck = createDeck(deckWithCompositionalEquilItem11One());
+    const Runspec runspec(deck);
+    const InitConfig config(deck, runspec.phases(), runspec.compositionalMode());
+
+    const auto& record = config.getEquil().getRecord(0);
+
+    BOOST_CHECK_EQUAL(3, record.compositionalInitType());
+    BOOST_CHECK(!record.setToSaturationPressure());
 }
 
 BOOST_AUTO_TEST_CASE(StrEquilOperations)
