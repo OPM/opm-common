@@ -84,12 +84,15 @@ public:
                                const EOSType eosType,
                                Scalar& press,
                                CompVec& vapor)
-    { return solve_(liquid, temp, eosType, Mode::Bubble, press, vapor) == Outcome::converged; }
+    { return solve_(liquid, temp, eosType, Mode::Bubble, press, vapor) == Outcome::Converged; }
 
     /// Computes the dew-point pressure of a vapour with composition \p vapor at
     /// temperature \p temp, along with the equilibrium \p liquid composition.
-    /// The upper (retrograde) dew point is returned when it exists, otherwise
-    /// the lower one.
+    /// The upper (retrograde) dew point is preferred; the lower one is only
+    /// searched when the upper branch provably has no root, so a plain
+    /// convergence failure reports false rather than the wrong branch.
+    /// On failure \p press is left untouched while \p liquid holds iteration
+    /// scratch and must not be read.
     /// \return whether the calculation converged
     static bool dewPressure(const CompVec& vapor,
                             const Scalar temp,
@@ -102,12 +105,12 @@ public:
         // untried: reporting the lower branch then could return the wrong dew
         // point of a mixture that does have both.
         switch (solve_(vapor, temp, eosType, Mode::DewUpper, press, liquid)) {
-        case Outcome::converged:
+        case Outcome::Converged:
             return true;
-        case Outcome::noRoot:
+        case Outcome::NoRoot:
             return solve_(vapor, temp, eosType, Mode::DewLower, press, liquid)
-                == Outcome::converged;
-        case Outcome::gaveUp:
+                == Outcome::Converged;
+        case Outcome::GaveUp:
             return false;
         }
         return false;
@@ -117,7 +120,7 @@ private:
     // What a branch search established: a converged saturation point, positive
     // evidence that the branch has no genuine root, or an exhausted iteration
     // from which nothing can be concluded.
-    enum class Outcome { converged, noRoot, gaveUp };
+    enum class Outcome { Converged, NoRoot, GaveUp };
 
     // The saturation-pressure branch being searched.  The bubble point and the
     // upper (retrograde) dew point are approached from the high-pressure side,
@@ -230,7 +233,13 @@ private:
                 // and the same.
                 const Scalar vmL = paramCache.molarVolume(oilPhaseIdx);
                 const Scalar vmV = paramCache.molarVolume(gasPhaseIdx);
-                rootsDistinct = std::abs(vmL - vmV) > 1.0e-9 * std::max(vmL, vmV);
+                // The cubic EOS clamps an unphysical root to 1e-7 m^3/mol; a
+                // volume at the clamp is no real root, and treating it as a
+                // distinct phase would invent a saturation point for a
+                // supercritical mixture.
+                constexpr Scalar clampedVm = 1.0e-7;
+                rootsDistinct = (std::min(vmL, vmV) > 2.0 * clampedVm) &&
+                                (std::abs(vmL - vmV) > 1.0e-9 * std::max(vmL, vmV));
 
                 Scalar change = 0.0;
                 trivial = true;
@@ -266,9 +275,6 @@ private:
                 continue;
             }
 
-            pTwo = p;
-            haveTwo = true;
-
             Scalar sum = 0.0;
             for (int c = 0; c < numComponents; ++c) {
                 sum += bubble ? K[c] * z[c] : z[c] / K[c];
@@ -285,13 +291,13 @@ private:
                 // A converged K that leaves the incipient phase with both the
                 // composition and the EOS root of the known one is the trivial
                 // solution wearing a disguise: it satisfies the saturation
-                // condition at an arbitrary pressure.  Keep searching rather
-                // than report it.  Mixtures where the roots have genuinely
-                // merged are refused for the same reason; returning nothing
-                // beats returning a false pressure.
+                // condition at an arbitrary pressure.  Treat it as the
+                // single-phase point it is and keep searching.  Mixtures where
+                // the roots have genuinely merged are refused for the same
+                // reason; returning nothing beats returning a false pressure.
                 if (distance > 1.0e-3 || rootsDistinct) {
                     press = p;
-                    return Outcome::converged;
+                    return Outcome::Converged;
                 }
                 pSingle = p;
                 haveSingle = true;
@@ -299,6 +305,14 @@ private:
                             : p * (fromAbove ? scanStep : Scalar{1} / scanStep);
                 K = wilsonK(p);
                 continue;
+            }
+
+            // Only a converged substitution certifies the pressure as lying
+            // inside the two-phase region; an exhausted one proves nothing
+            // and must not pollute the bracket.
+            if (substitutionConverged) {
+                pTwo = p;
+                haveTwo = true;
             }
             // Inside the two-phase region the incipient amount exceeds one and
             // the pressure moves towards the saturation pressure: up on the
@@ -318,7 +332,7 @@ private:
         // The scan covered nine decades of pressure without meeting a
         // two-phase state: the branch has no dew or bubble point to find.
         if (!haveTwo) {
-            return Outcome::noRoot;
+            return Outcome::NoRoot;
         }
         // A bracket that collapsed without an accepted solution pinned the
         // phase boundary down to a point where only the trivial solution
@@ -328,9 +342,9 @@ private:
         if (haveSingle &&
             (std::abs(pSingle - pTwo) <= 1.0e-6 * std::max(pSingle, pTwo)))
         {
-            return Outcome::noRoot;
+            return Outcome::NoRoot;
         }
-        return Outcome::gaveUp;
+        return Outcome::GaveUp;
     }
 };
 
