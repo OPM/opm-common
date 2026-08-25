@@ -286,6 +286,32 @@ public:
         return Vm_[phaseIdx];
     }
 
+    /*!
+     * \brief The volume shift of a phase, sum_c x_c s_c b_c [m^3/mol]
+     *
+     * Subtract it from the molar volume to get the density.  It is not folded
+     * into molarVolume() because the fugacity coefficients are computed from
+     * the unshifted volume.
+     *
+     * \param phaseIdx The fluid phase of interest
+     */
+    template <class FluidState>
+    Scalar volumeShift(const FluidState& fluidState, unsigned phaseIdx) const
+    {
+        // b_c from the dimensionless B_c = b_c p / (R T).
+        const Scalar T = decay<Scalar>(fluidState.temperature(phaseIdx));
+        const Scalar p = decay<Scalar>(fluidState.pressure(phaseIdx));
+        const Scalar RT_p = Constants<Scalar>::R * T / p;
+
+        Scalar shift = 0;
+        for (unsigned compIdx = 0; compIdx < FluidSystem::numComponents; ++compIdx) {
+            const Scalar b = decay<Scalar>(Bi(phaseIdx, compIdx)) * RT_p;
+            shift += decay<Scalar>(fluidState.moleFraction(phaseIdx, compIdx))
+                   * FluidSystem::volumeShift(compIdx) * b;
+        }
+        return shift;
+    }
+
 
     /*!
      * \brief Returns the Peng-Robinson mixture parameters for the oil
