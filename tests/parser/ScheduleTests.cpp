@@ -5286,6 +5286,47 @@ SCHEDULE
     }
 }
 
+BOOST_AUTO_TEST_CASE(WELLSTRE_rounded_composition_is_normalized) {
+    // An injection stream written with a few digits sums to 0.999968 rather
+    // than one.  It is accepted, scaled, and reaches the well through WINJGAS
+    // with its ratios intact.
+    const auto sched = make_schedule(gptable_deck(R"(
+WELSPECS
+ 'INJ' 'G1' 1 1 2000 'GAS' /
+/
+WELLSTRE
+ 'STR1' 0.749520 0.240448 0.010000 /
+/
+WINJGAS
+ 'INJ' 'STREAM' 'STR1' /
+/
+WCONINJE
+ 'INJ' 'GAS' 'OPEN' 'RATE' 100 /
+/
+TSTEP
+ 1 /
+)"));
+
+    const auto& composition = sched.getWell("INJ", 0).getInjectionProperties().gasInjComposition();
+    BOOST_REQUIRE_EQUAL(composition.size(), std::size_t{3});
+
+    const double sum = std::accumulate(composition.begin(), composition.end(), 0.0);
+    BOOST_CHECK_CLOSE(sum, 1.0, 1.0e-12);
+
+    // Scaling preserves the ratios of the stream.
+    BOOST_CHECK_CLOSE(composition[0] / composition[1], 0.749520 / 0.240448, 1.0e-10);
+    BOOST_CHECK_CLOSE(composition[0], 0.749520 / 0.999968, 1.0e-10);
+}
+
+BOOST_AUTO_TEST_CASE(WELLSTRE_composition_far_from_one_is_rejected) {
+    // A sum too far from one to be the rounding of the values is still an error.
+    BOOST_CHECK_THROW(make_schedule(gptable_deck(R"(
+WELLSTRE
+ 'STR1' 0.70 0.20 0.05 /
+/
+)")), Opm::OpmInputError);
+}
+
 BOOST_AUTO_TEST_CASE(GPTABLE_solution_seed_and_schedule_respec) {
     const auto sched = make_schedule(R"(
 RUNSPEC
