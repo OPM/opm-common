@@ -1081,6 +1081,41 @@ bool Well::updateConnections(std::shared_ptr<WellConnections> connections_arg, b
 {
     connections_arg->order();
 
+    // A well carries a single LGR tag, and the simulator resolves every one of
+    // its connections against that tag.  A connection in a second refinement is
+    // therefore placed in the well's own box at the other box's local indices:
+    // valid indices, the wrong cells, and no message -- unless the two boxes
+    // differ in size, when it surfaces as an out-of-range internal error.
+    // Refuse it until the resolution is done per connection.  Connections in
+    // the global grid alongside an LGR are fine: those resolve against the
+    // global grid and land correctly.
+    {
+        auto refined = std::set<int>{};
+        for (const auto& conn : *connections_arg) {
+            if (conn.get_lgr_level() > 0) {
+                refined.insert(conn.get_lgr_level());
+            }
+        }
+
+        if (refined.size() > 1) {
+            auto ids = std::string{};
+            for (const auto level : refined) {
+                ids += (ids.empty() ? "" : ", ") + std::to_string(level);
+            }
+
+            throw std::logic_error {
+                fmt::format("Well {} has connections in {} different local grid "
+                            "refinements (grid numbers {}). A well can only be "
+                            "completed in one LGR: its connections are all resolved "
+                            "against the single grid the well is tagged with, so the "
+                            "others would be placed in that grid at their own local "
+                            "indices -- the wrong cells. Split the well, or cover the "
+                            "interval with one box.",
+                            this->name(), refined.size(), ids)
+            };
+        }
+    }
+
     if (force || (*this->connections != *connections_arg)) {
         this->connections = std::move(connections_arg);
         return true;
