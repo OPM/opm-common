@@ -32,7 +32,8 @@ namespace Opm
      * The DRSDTCON implements a dissolution rate based on convective mixing.
      * Ask for type first and the ask for the correct values for this type, asking for values not valid for the current type will throw a logic exception.
      */
-    class OilVaporizationProperties {
+    class OilVaporizationProperties
+    {
     public:
         enum class OilVaporization {
             UNDEF = 0,
@@ -40,7 +41,6 @@ namespace Opm
             DRDT = 2, // DRSDT or DRVDT
             DRSDTCON = 3 // DRSDTCON
         };
-
 
         OilVaporizationProperties();
         explicit OilVaporizationProperties(const std::size_t numPvtReginIdx);
@@ -95,13 +95,13 @@ namespace Opm
 
     private:
         OilVaporization m_type = OilVaporization::UNDEF;
-        double m_vap1;
-        double m_vap2;
-        std::vector<double> m_maxDRSDT;
-        std::vector<bool> m_maxDRSDT_allCells;
-        std::vector<double> m_maxDRVDT;
-        std::vector<double> m_psi;
-        std::vector<double> m_omega;
+        double m_vap1{};
+        double m_vap2{};
+        std::vector<double> m_maxDRSDT{};
+        std::vector<bool> m_maxDRSDT_allCells{};
+        std::vector<double> m_maxDRVDT{};
+        std::vector<double> m_psi{};
+        std::vector<double> m_omega{};
     };
 }
 #endif // DRSDT_H

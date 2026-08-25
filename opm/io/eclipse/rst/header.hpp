@@ -20,10 +20,11 @@
 #ifndef RST_HEADER
 #define RST_HEADER
 
-#include <opm/input/eclipse/EclipseState/Runspec.hpp>
+#include <opm/common/utility/TimeService.hpp>
 
 #include <cstddef>
 #include <ctime>
+#include <optional>
 #include <utility>
 #include <vector>
 
@@ -37,13 +38,11 @@ namespace Opm::RestartIO {
 
 struct RstHeader
 {
-    RstHeader(const Runspec& runspec,
-              const UnitSystem& unit_system,
+    RstHeader(const UnitSystem& unit_system,
               const std::vector<int>& intehead,
               const std::vector<bool>& logihead,
               const std::vector<double>& doubhead);
 
-    Runspec runspec;
     int nx;
     int ny;
     int nz;
@@ -105,6 +104,15 @@ struct RstHeader
     int nsegment_udq;
     int nwell_udq;
     int num_action;
+    int max_action_lines;
+    int max_action_line_size;
+    int max_action_conditions;
+    int action_zact_size;
+    int action_sact_size;
+    int action_iact_size;
+    int action_iacn_size;
+    int action_sacn_size;
+    int action_zacn_size;
     int guide_rate_nominated_phase;
     int max_wlist;
 
@@ -123,6 +131,7 @@ struct RstHeader
     bool alt_eps;
     bool group_control_active;
     bool glift_all_nupcol;
+    bool has_temperature;
 
     double next_timestep1;
     double next_timestep2;
@@ -141,6 +150,16 @@ struct RstHeader
     double glift_min_wait;
     double glift_rate_delta;
     double glift_min_eco_grad;
+
+    // Start date inferred from DOUBHEAD[START] (date number encoding).
+    std::optional<TimeStampUTC> inferred_start_from_doubhead_start;
+
+    // Start timestamp inferred from sim_time - DOUBHEAD[0] (elapsed days).
+    std::optional<TimeStampUTC> inferred_start_from_elapsed_simtime;
+
+    // Absolute drift in seconds between the two inferred start timestamps.
+    // Returns std::nullopt if either source is unavailable.
+    std::optional<double> inferred_start_time_drift_seconds() const;
 
     std::time_t sim_time() const;
     std::pair<std::time_t, std::size_t> restart_info() const;

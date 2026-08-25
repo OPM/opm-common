@@ -518,8 +518,9 @@ BOOST_AUTO_TEST_CASE(group_test)
                            [](const auto& s8) { return s8.c_str(); });
 
     Opm::UnitSystem unit_system(Opm::UnitSystem::UnitType::UNIT_TYPE_METRIC);
-    Opm::RestartIO::RstHeader header(simCase.es.runspec(), unit_system,ih,lh,dh);
-    for (int ig=0; ig < header.ngroup; ig++) {
+    const auto header = Opm::RestartIO::RstHeader {unit_system, ih, lh, dh};
+
+    for (int ig = 0; ig < header.ngroup; ++ig) {
         std::size_t zgrp_offset = ig * header.nzgrpz;
         std::size_t igrp_offset = ig * header.nigrpz;
         std::size_t sgrp_offset = ig * header.nsgrpz;

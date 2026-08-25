@@ -47,7 +47,7 @@ namespace VI = Opm::RestartIO::Helpers::VectorItems;
 
 enum Index : std::vector<double>::size_type {
     // 0..9
-    SimTime =   0,
+    SimTime =   VI::doubhead::SimTime,
     TsInit  =   VI::doubhead::TsInit,
     TsMaxz  =   VI::doubhead::TsMaxz,
     TsMinz  =   VI::doubhead::TsMinz,
@@ -239,7 +239,7 @@ enum Index : std::vector<double>::size_type {
     dh_159  = 159,
 
     // 160..169
-    Start   = 160,
+    Start   = VI::doubhead::Start,
     Time    = 161,
     dh_162  = 162,
     dh_163  = 163,

@@ -25,26 +25,101 @@
 
 #include <opm/common/utility/TimeService.hpp>
 
-#include <opm/input/eclipse/EclipseState/Runspec.hpp>
-
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 
+#include <array>
+#include <cmath>
 #include <cstddef>
 #include <ctime>
+#include <optional>
 #include <utility>
 #include <vector>
 
 namespace VI = ::Opm::RestartIO::Helpers::VectorItems;
 using M = ::Opm::UnitSystem::measure;
 
+namespace {
+
+std::optional<Opm::TimeStampUTC>
+inferStartFromDateNum(const std::vector<double>& doubhead)
+{
+    if (doubhead.size() <= VI::doubhead::Start) {
+        return std::nullopt;
+    }
+
+    const auto encoded = doubhead[VI::doubhead::Start];
+    if (!std::isfinite(encoded)) {
+        return std::nullopt;
+    }
+
+    const auto dateNum = static_cast<long long>(std::llround(encoded));
+    if (dateNum <= 0) {
+        return std::nullopt;
+    }
+
+    constexpr auto daysPerYear = 365.25;
+
+    auto year = static_cast<int>(std::floor((static_cast<double>(dateNum) - 1.0) / daysPerYear));
+
+    auto dayOfYear = static_cast<int>(dateNum - static_cast<long long>(std::floor(daysPerYear * year)));
+    while (dayOfYear < 1) {
+        --year;
+        dayOfYear = static_cast<int>(dateNum - static_cast<long long>(std::floor(daysPerYear * year)));
+    }
+    while (dayOfYear > 365) {
+        ++year;
+        dayOfYear = static_cast<int>(dateNum - static_cast<long long>(std::floor(daysPerYear * year)));
+    }
+
+    constexpr std::array<int, 12> monthLengths {
+        31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31,
+    };
+
+    auto month = 1;
+    auto day = dayOfYear;
+    for (const auto& monthLen : monthLengths) {
+        if (day <= monthLen) {
+            break;
+        }
+
+        day -= monthLen;
+        ++month;
+    }
+
+    if (month > 12) {
+        return std::nullopt;
+    }
+
+    return Opm::TimeStampUTC(year, month, day);
+}
+
+std::optional<Opm::TimeStampUTC>
+inferStartFromElapsedSimDays(const std::time_t simTime,
+                             const std::vector<double>& doubhead)
+{
+    if (doubhead.size() <= VI::doubhead::SimTime) {
+        return std::nullopt;
+    }
+
+    const auto elapsedDays = doubhead[VI::doubhead::SimTime];
+    if (!std::isfinite(elapsedDays)) {
+        return std::nullopt;
+    }
+
+    constexpr auto secPerDay = 86400.0;
+    const auto elapsedSeconds = elapsedDays * secPerDay;
+
+    return Opm::TimeStampUTC { Opm::TimeService::advance(simTime, -elapsedSeconds) };
+}
+
+} // Anonymous namespace
+
 namespace Opm::RestartIO {
 
-RstHeader::RstHeader(const Runspec&             runspec_,
-                     const Opm::UnitSystem&     unit_system,
+RstHeader::RstHeader(const Opm::UnitSystem&     unit_system,
                      const std::vector<int>&    intehead,
                      const std::vector<bool>&   logihead,
                      const std::vector<double>& doubhead) :
-    runspec(runspec_),
     nx(intehead[VI::intehead::NX]),
     ny(intehead[VI::intehead::NY]),
     nz(intehead[VI::intehead::NZ]),
@@ -105,8 +180,19 @@ RstHeader::RstHeader(const Runspec&             runspec_,
     nsegment_udq(intehead[VI::intehead::NO_SEG_UDQS]),
     nwell_udq(intehead[VI::intehead::NO_WELL_UDQS]),
     num_action(intehead[VI::intehead::NOOFACTIONS]),
+    max_action_lines(intehead[VI::intehead::MAXNOLINES]),
+    max_action_line_size(intehead[VI::intehead::MAXNOSTRPRLINE]),
+    max_action_conditions(intehead[VI::intehead::MAX_ACT_COND]),
+    action_zact_size(intehead[VI::intehead::ACTION_ZACT_SIZE]),
+    action_sact_size(intehead[VI::intehead::ACTION_SACT_SIZE]),
+    action_iact_size(intehead[VI::intehead::ACTION_IACT_SIZE]),
+    action_iacn_size(intehead[VI::intehead::ACTION_IACN_SIZE]),
+    action_sacn_size(intehead[VI::intehead::ACTION_SACN_SIZE]),
+    action_zacn_size(intehead[VI::intehead::ACTION_ZACN_SIZE]),
     guide_rate_nominated_phase(intehead[VI::intehead::NGRNPH]),
     max_wlist(intehead[VI::intehead::MXWLSTPRWELL]),
+    //
+    // ----------------------------------------------------------------------
     //
     e300_radial(logihead[VI::logihead::E300Radial]),
     e100_radial(logihead[VI::logihead::E100Radial]),
@@ -123,6 +209,9 @@ RstHeader::RstHeader(const Runspec&             runspec_,
     alt_eps(logihead[VI::logihead::AltEPS]),
     group_control_active(intehead[VI::intehead::NGRNPH] == 1),
     glift_all_nupcol(intehead[VI::intehead::EACHNCITS] == VI::InteheadValues::LiftOpt::EachNupCol),
+    has_temperature(logihead[VI::logihead::HasTemp] || logihead[VI::logihead::HasTemp2]),
+    //
+    // ----------------------------------------------------------------------
     //
     next_timestep1(unit_system.to_si(M::time, doubhead[VI::doubhead::TsInit])),
     next_timestep2(0),
@@ -144,6 +233,10 @@ RstHeader::RstHeader(const Runspec&             runspec_,
 {
     this->microsecond = (intehead.size() > VI::intehead::ISECND)
         ? intehead[VI::intehead::ISECND] : 0;
+
+    this->inferred_start_from_doubhead_start = inferStartFromDateNum(doubhead);
+    this->inferred_start_from_elapsed_simtime =
+        inferStartFromElapsedSimDays(this->sim_time(), doubhead);
 }
 
 std::time_t RstHeader::sim_time() const
@@ -160,6 +253,20 @@ RstHeader::restart_info() const
 {
     return std::make_pair(asTimeT(TimeStampUTC(this->year, this->month, this->mday)),
                           std::size_t(this->report_step));
+}
+
+std::optional<double>
+RstHeader::inferred_start_time_drift_seconds() const
+{
+    if (!this->inferred_start_from_doubhead_start.has_value() ||
+        !this->inferred_start_from_elapsed_simtime.has_value()) {
+        return std::nullopt;
+    }
+
+    const auto t0 = asTimeT(this->inferred_start_from_doubhead_start.value());
+    const auto t1 = asTimeT(this->inferred_start_from_elapsed_simtime.value());
+
+    return std::abs(std::difftime(t0, t1));
 }
 
 int RstHeader::num_udq() const
