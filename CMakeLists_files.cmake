@@ -718,6 +718,7 @@ list(APPEND DUNE_TEST_SOURCE_FILES
   tests/material/test_saturation_pressure.cpp
   tests/material/test_tabulation.cpp
   tests/material/test_threecomponents_ptflash.cpp
+  tests/material/test_volume_shift.cpp
 )
 
 if(dune-common_FOUND)
