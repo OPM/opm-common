@@ -2023,10 +2023,8 @@ RHPV_REG
 
     const auto summary_config = createSummary(deck_string);
 
-    // The +5 corresponds to five additional COPT summary config keywords
-    // which have been automatically added for the ROEW calculation.
     const auto numRegKw = 8;
-    BOOST_CHECK_EQUAL(summary_config.size(), numRegKw*3 + 5);
+    BOOST_CHECK_EQUAL(summary_config.size(), numRegKw*3);
 
     BOOST_CHECK( summary_config.hasKeyword("RPR__REG"));
     BOOST_CHECK( summary_config.hasKeyword("RPRP_REG"));
@@ -2064,8 +2062,8 @@ RHPV_REG
         BOOST_CHECK_EQUAL(rpr.size(), 9U);
     }
 
-    // See comment on the roew() function in Summary.cpp for this ugliness.
-    BOOST_CHECK(summary_config.hasKeyword("COPT"));
+    BOOST_CHECK_MESSAGE(! summary_config.hasKeyword("COPT"),
+                        R"(SummaryConfig must NOT have "COPT" vectors)");
 }
 
 BOOST_AUTO_TEST_CASE(InterReg_Flows) {
