@@ -95,6 +95,8 @@
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 #include <opm/input/eclipse/Units/Units.hpp>
 
+#include <opm/common/OpmLog/OpmLog.hpp>
+#include <opm/input/eclipse/EclipseState/Compositional/NormalizeMoleFractions.hpp>
 #include <opm/common/utility/OpmInputError.hpp>
 
 #include <opm/input/eclipse/Deck/Deck.hpp>
@@ -114,6 +116,7 @@
 #include <cstddef>
 #include <functional>
 #include <initializer_list>
+#include <limits>
 #include <numeric>
 #include <stdexcept>
 #include <string>
@@ -2906,27 +2909,25 @@ ZmfvdTable::ZmfvdTable(const DeckItem& item, const int tableID, const int numCom
     const auto nrows = item.data_size() / ncol;
 
     const std::string tableName {"ZMFVD"};
+    std::vector<double> moles(numComponents, 0.);
     for (std::size_t row = 0; row < nrows; ++row) {
         // Depth column
         const std::size_t depthIdx = row * ncol;
         const double siDepth = item.getSIDouble(depthIdx);
         getColumn(0).addValue(siDepth, tableName);
 
-        std::vector<double> moles(numComponents, 0.);
         // Component mole-fraction columns (dimensionless)
         for (int c = 0; c < numComponents; ++c) {
             const std::size_t compIdx = row * ncol + 1 + c;
-            const auto mole_fraction = item.get<double>(compIdx);
-            moles[c] = mole_fraction;
-            getColumn(1 + c).addValue(mole_fraction, tableName);
+            moles[c] = item.get<double>(compIdx);
         }
-        // checking to make sure the sum of the mole fractions are 1.
-        constexpr double epsilon = 1.e-5;
-        const double sum_fractions = std::accumulate(moles.begin(), moles.end(), 0.);
-        if (std::abs(sum_fractions - 1.) > epsilon) {
-            const std::string reason = fmt::format("ZMFVD table {}: sum of mole fractions in row {} is not 1 (sum is {})",
-                            tableID + 1, row + 1, sum_fractions);
-            throw OpmInputError(reason, location);
+
+        // Normalize, so the rounding never reaches the equilibration.
+        normalizeMoleFractions(moles,
+                               fmt::format("row {} of ZMFVD table {}", row + 1, tableID + 1),
+                               location);
+        for (int c = 0; c < numComponents; ++c) {
+            getColumn(1 + c).addValue(moles[c], tableName);
         }
     }
 }
@@ -2986,6 +2987,7 @@ CompvdTable::CompvdTable(const DeckItem& item,
     const auto& data = item.getData<double>();
 
     const std::string tableName{"COMPVD"};
+    std::vector<double> moles(numComponents, 0.0);
     for (std::size_t row = 0; row < nrows; ++row) {
         const std::size_t rowStart = row * ncol;
 
@@ -2994,21 +2996,16 @@ CompvdTable::CompvdTable(const DeckItem& item,
         getColumn(0).addValue(siDepth, tableName);
 
         // Component mole-fraction columns (dimensionless).
-        std::vector<double> moles(numComponents, 0.0);
         for (int c = 0; c < numComponents; ++c) {
-            const auto z = data.at(rowStart + 1 + c);
-            moles[c] = z;
-            getColumn(1 + c).addValue(z, tableName);
+            moles[c] = data.at(rowStart + 1 + c);
         }
 
-        // Sum-to-one check, same epsilon is used in ZMFVD
-        constexpr double epsilon = 1.e-5;
-        const double sum_fractions = std::accumulate(moles.begin(), moles.end(), 0.);
-        if (std::abs(sum_fractions - 1.) > epsilon) {
-            const std::string reason = fmt::format(
-                "COMPVD table {}: sum of mole fractions in row {} is not 1 (sum is {})",
-                tableID + 1, row + 1, sum_fractions);
-            throw OpmInputError(reason, location);
+        // Normalize, so the rounding never reaches the equilibration.
+        normalizeMoleFractions(moles,
+                               fmt::format("row {} of COMPVD table {}", row + 1, tableID + 1),
+                               location);
+        for (int c = 0; c < numComponents; ++c) {
+            getColumn(1 + c).addValue(moles[c], tableName);
         }
 
         // Phase flag: stored as a strong enum, validated to be exactly 0 or 1.

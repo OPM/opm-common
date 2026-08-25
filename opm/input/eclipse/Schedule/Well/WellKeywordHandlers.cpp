@@ -36,6 +36,7 @@
 #include <opm/input/eclipse/Schedule/Well/WListManager.hpp>
 #include <opm/input/eclipse/Schedule/Well/WVFPDP.hpp>
 #include <opm/input/eclipse/Schedule/Well/WVFPEXP.hpp>
+#include <opm/input/eclipse/EclipseState/Compositional/NormalizeMoleFractions.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellEconProductionLimits.hpp>
@@ -469,18 +470,19 @@ void handleWELLSTRE(HandlerContext& handlerContext)
     auto& inj_streams = handlerContext.state().inj_streams;
     for (const auto& record : handlerContext.keyword) {
         const auto stream_name = record.getItem<ParserKeywords::WELLSTRE::STREAM>().getTrimmedString(0);
-        const auto& composition = record.getItem<ParserKeywords::WELLSTRE::COMPOSITIONS>().getSIDoubleData();
+        auto composition = record.getItem<ParserKeywords::WELLSTRE::COMPOSITIONS>().getSIDoubleData();
         const std::size_t num_comps = handlerContext.static_schedule().m_runspec.numComps();
         if (composition.size() != num_comps) {
             const std::string msg = fmt::format("The number of the composition values for stream '{}' is not the same as the number of components.", stream_name);
             throw OpmInputError(msg, handlerContext.keyword.location());
         }
 
-        const double sum = std::accumulate(composition.begin(), composition.end(), 0.0);
-        if (std::abs(sum - 1.0) > std::numeric_limits<double>::epsilon()) {
-            const std::string msg = fmt::format("The sum of the composition values for stream '{}' is not 1.0, but {}.", stream_name, sum);
-            throw OpmInputError(msg, handlerContext.keyword.location());
-        }
+        // A composition written with a few digits does not sum to one
+        // exactly; scale it rather than reject the deck over the rounding.
+        normalizeMoleFractions(composition,
+                               fmt::format("stream '{}'", stream_name),
+                               handlerContext.keyword.location());
+
         auto composition_ptr = std::make_shared<std::vector<double>>(composition);
         inj_streams.update(stream_name, std::move(composition_ptr));
     }
