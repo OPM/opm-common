@@ -266,6 +266,46 @@ TSTEP
     BOOST_CHECK_THROW( make_schedule(WITH_GRID, parseContext), OpmInputError );
 }
 
+BOOST_AUTO_TEST_CASE(ECHO_NOECHO_ALLOWED_IN_ACTIONX)
+{
+    const auto deck_string = std::string{ R"(
+SCHEDULE
+
+WELSPECS
+  'P1'  'OP'  1 1 3.33  'OIL' 7*/
+/
+
+ACTIONX
+   'ACTION' /
+   WWCT P1 > 0.75 /
+/
+
+ECHO
+
+NOECHO
+
+WELOPEN
+  'P1' 'SHUT' 5* /
+/
+
+ENDACTIO
+
+TSTEP
+   10 /
+)"};
+
+    ParseContext parseContext( {{ParseContext::ACTIONX_ILLEGAL_KEYWORD, InputErrorAction::THROW_EXCEPTION}} );
+    Schedule sched = make_schedule(deck_string, parseContext);
+
+    const auto& action = sched[0].actions.get()["ACTION"];
+    const auto& keyword_strings = action.keyword_strings();
+
+    BOOST_CHECK(std::ranges::find(keyword_strings, "ECHO") != keyword_strings.end());
+    BOOST_CHECK(std::ranges::find(keyword_strings, "NOECHO") != keyword_strings.end());
+    BOOST_CHECK(std::ranges::find(keyword_strings, "WELOPEN") != keyword_strings.end());
+    BOOST_CHECK_EQUAL(keyword_strings.back(), "ENDACTIO");
+}
+
 BOOST_AUTO_TEST_CASE(COMPDAT)
 {
 

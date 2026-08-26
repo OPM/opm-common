@@ -100,6 +100,7 @@ bool ActionX::valid_keyword(const std::string& keyword)
 
         "COMPLUMP", "COMPDAT", "COMPSEGS",
 
+        "ECHO",
         "ENDBOX", "EXIT",
 
         //INCLUDE is allowed as well, but is handled differently by the Parser and thus does not need to be in this list
@@ -111,6 +112,7 @@ bool ActionX::valid_keyword(const std::string& keyword)
 
         "MULTX", "MULTX-", "MULTY", "MULTY-", "MULTZ", "MULTZ-",
         "NEXT", "NEXTSTEP",
+        "NOECHO",
 
         "UDQ",
 
