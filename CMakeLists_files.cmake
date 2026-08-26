@@ -538,6 +538,7 @@ list(APPEND TEST_SOURCE_FILES
   tests/test_FastSmallVector.cpp
   tests/test_FIPRegionStatistics.cpp
   tests/test_GroupSatelliteInjection.cpp
+  tests/test_GroupStructureViz.cpp
   tests/test_GuideRate.cpp
   tests/test_HeadersLGR.cpp
   tests/test_Inplace.cpp
