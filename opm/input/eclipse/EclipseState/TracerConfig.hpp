@@ -133,6 +133,9 @@ public:
     decltype(auto) begin() const { return this->tracers.begin(); }
     decltype(auto) end() const { return this->tracers.end(); }
 
+    bool supportsSolutionGasTracer() const { return this->supportsSolutionGasTracer_; }
+    bool supportsVaporisedOilTracer() const { return this->supportsVaporisedOilTracer_; }
+
     const TracerEntry& operator[](const std::string& name) const;
     const TracerEntry& operator[](std::size_t index) const;
 
@@ -140,6 +143,8 @@ public:
     void serializeOp(Serializer& serializer)
     {
         serializer(tracers);
+        serializer(supportsSolutionGasTracer_);
+        serializer(supportsVaporisedOilTracer_);
     }
 
     bool operator==(const TracerConfig& data) const;
@@ -148,6 +153,9 @@ public:
 
 private:
     std::vector<TracerEntry> tracers;
+
+    bool supportsSolutionGasTracer_{false};
+    bool supportsVaporisedOilTracer_{false};
 };
 
 } // namespace Opm

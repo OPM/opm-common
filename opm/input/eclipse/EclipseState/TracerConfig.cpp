@@ -33,8 +33,12 @@
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 
 #include <opm/input/eclipse/Deck/Deck.hpp>
+#include <opm/input/eclipse/Deck/DeckItem.hpp>
+#include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 
+#include <opm/input/eclipse/Parser/ParserKeywords/D.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/T.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/V.hpp>
 
 #include <fmt/format.h>
 
@@ -73,10 +77,12 @@ TracerConfig::TracerConfig([[maybe_unused]] const UnitSystem& unit_system,
 {
     using TR = ParserKeywords::TRACER;
 
+    this->supportsSolutionGasTracer_ = deck.hasKeyword<ParserKeywords::DISGAS>();
+    this->supportsVaporisedOilTracer_ = deck.hasKeyword<ParserKeywords::VAPOIL>();
+
     if (! deck.hasKeyword<TR>()) {
         return;
     }
-
 
     const auto& keyword = deck.get<TR>().back();
     OpmLog::info(
@@ -193,7 +199,10 @@ TracerConfig::TracerConfig([[maybe_unused]] const UnitSystem& unit_system,
 TracerConfig TracerConfig::serializationTestObject()
 {
     TracerConfig result;
+
     result.tracers = {{"test", "", Phase::OIL, {1.0}}};
+    result.supportsSolutionGasTracer_ = true;
+    result.supportsVaporisedOilTracer_ = true;
 
     return result;
 }
@@ -228,7 +237,10 @@ const TracerConfig::TracerEntry& TracerConfig::operator[](const std::string& nam
 
 bool TracerConfig::operator==(const TracerConfig& other) const
 {
-    return this->tracers == other.tracers;
+    return (this->tracers == other.tracers)
+        && (this->supportsSolutionGasTracer_ == other.supportsSolutionGasTracer_)
+        && (this->supportsVaporisedOilTracer_ == other.supportsVaporisedOilTracer_)
+        ;
 }
 
 std::string TracerConfig::get_unit_string(const UnitSystem& unit_system,
