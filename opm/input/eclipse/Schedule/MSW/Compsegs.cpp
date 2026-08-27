@@ -430,23 +430,22 @@ Well: {}, connection: ({},{},{}))", well_name, I+1, J+1 , K+1);
     }
 
     std::vector<Record>
-    compsegsFromTrajectory(std::string_view                                     well_name,
-                           const std::vector<Opm::Compsegs::TrajectorySegment>& trajectory_segments,
-                           const Opm::WellSegments&                             segments)
+    compsegsFromTrajectory(std::string_view                                        well_name,
+                           const int                                               branch,
+                           const std::vector<Opm::Compsegs::TrajectoryConnection>& trajectory_connections,
+                           const Opm::WellSegments&                                segments)
     {
         auto compsegs = std::vector<Record> {};
 
-        compsegs.reserve(trajectory_segments.size());
+        compsegs.reserve(trajectory_connections.size());
 
-        for (const auto& trajectory_point : trajectory_segments) {
+        for (const auto& trajectory_point : trajectory_connections) {
             // Defaulted values:
             const auto direction = Opm::Connection::Direction::X;
-            const auto center_depth = 0.0;
             // Thermal length (COMPSEGS item 10); left unset here, then filled
             // in process_compsegs_records().
             const auto thermal_length = std::optional<double>{};
             const auto segment_number = 0;
-            const auto branch = 1;
 
             const auto seqIndex = compsegs.size();
 
@@ -456,7 +455,7 @@ Well: {}, connection: ({},{},{}))", well_name, I+1, J+1 , K+1);
                                   branch,
                                   trajectory_point.startMD, trajectory_point.endMD,
                                   direction,
-                                  center_depth,
+                                  trajectory_point.centerTVD,
                                   thermal_length,
                                   segment_number, seqIndex);
         }
@@ -607,17 +606,18 @@ namespace Opm::Compsegs {
     }
 
     WellConnections
-    getConnectionsAndSegmentsFromTrajectory(std::string_view                      well_name,
-                                            const std::vector<TrajectorySegment>& trajectory_segments,
-                                            const WellSegments&                   segments,
-                                            const WellConnections&                input_connections,
-                                            const ScheduleGrid&                   grid,
-                                            const KeywordLocation&                location,
-                                            const ParseContext&                   parseContext,
-                                            ErrorGuard&                           errors)
+    getConnectionsToSegmentsFromTrajectory(std::string_view                         well_name,
+                                           const int                                branch,
+                                           const std::vector<TrajectoryConnection>& trajectory_connections,
+                                           const WellSegments&                      segments,
+                                           const WellConnections&                   input_connections,
+                                           const ScheduleGrid&                      grid,
+                                           const KeywordLocation&                   location,
+                                           const ParseContext&                      parseContext,
+                                           ErrorGuard&                              errors)
     {
         const auto compsegs_vector =
-            compsegsFromTrajectory(well_name, trajectory_segments, segments);
+            compsegsFromTrajectory(well_name, branch, trajectory_connections, segments);
 
         return process_compsegs_records(well_name, compsegs_vector, input_connections,
                                         grid, location, parseContext, errors);

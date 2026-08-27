@@ -58,64 +58,38 @@ namespace Opm
 namespace
 {
 
-    std::pair<std::vector<Compsegs::TrajectorySegment>, std::vector<std::pair<double, double>>>
-    get_segment_geometries(HandlerContext&                                            handlerContext,
-                           const std::vector<external::WellPathCellIntersectionInfo>& intersections,
-                           const external::cvf::ref<external::RigWellPath>&           wellPathGeometry)
-    {
-        std::vector<Compsegs::TrajectorySegment> trajectory_segments{};
-        std::vector<std::pair<double, double>> cell_md_and_tvd{};
-
-        trajectory_segments.reserve(intersections.size());
-        cell_md_and_tvd.reserve(intersections.size());
-
-        const auto& ecl_grid = handlerContext.grid.get_grid();
-
-        for (const auto& intersection : intersections) {
-            trajectory_segments.push_back({
-                    intersection.startMD,
-                    intersection.endMD,
-                    ecl_grid->getIJK(intersection.globCellIndex)
-                });
-
-            const double cell_md = 0.5 * (intersection.startMD + intersection.endMD);
-            const double cell_tvd = wellPathGeometry->interpolatedPointAlongWellPath(cell_md)[2];
-
-            cell_md_and_tvd.emplace_back(cell_md, cell_tvd);
-        }
-
-        return { std::move(trajectory_segments), std::move(cell_md_and_tvd) };
-    }
-
-
     void
     process_segments(HandlerContext&                                            handlerContext,
                      Well&                                                      well,
+                     const int                                                  branch,
                      const std::vector<external::WellPathCellIntersectionInfo>& intersections,
-                     const external::cvf::ref<external::RigWellPath>&           wellPathGeometry,
-                     const double                                               diameter)
+                     const external::cvf::ref<external::RigWellPath>&           wellPathGeometry)
     {
         if (! well.isMultiSegment()) {
             return;
         }
 
-        // For now, no segments may be defined via WELSEGS, except for the top:
-        if (well.getSegments().size() > 1) {
-            const auto msg = fmt::format("   {} already defines segments "
-                                         "with the WELSEGS keyword", well.name());
+        std::vector<Compsegs::TrajectoryConnection> trajectory_connections{};
+        trajectory_connections.reserve(intersections.size());
 
-            throw OpmInputError(msg, handlerContext.keyword.location());
+        const auto& ecl_grid = handlerContext.grid.get_grid();
+
+        for (const auto& intersection : intersections) {
+            const double center_md = 0.5 * (intersection.startMD + intersection.endMD);
+            const double center_tvd = wellPathGeometry->interpolatedPointAlongWellPath(center_md)[2];
+
+            trajectory_connections.push_back({
+                    intersection.startMD,
+                    intersection.endMD,
+                    center_tvd,
+                    ecl_grid->getIJK(intersection.globCellIndex)
+                });
         }
 
-        const auto& [trajectory_segments, cell_md_and_tvd] =
-            get_segment_geometries(handlerContext, intersections, wellPathGeometry);
-
-        well.addWellSegmentsFromLengthsAndDepths
-            (cell_md_and_tvd, diameter, handlerContext.keyword.location());
-
-        auto new_connections = Compsegs::getConnectionsAndSegmentsFromTrajectory
+        auto new_connections = Compsegs::getConnectionsToSegmentsFromTrajectory
             (well.name(),
-             trajectory_segments,
+             branch,
+             trajectory_connections,
              well.getSegments(),
              well.getConnections(),
              handlerContext.grid,
@@ -175,9 +149,9 @@ Well {} has no connections to the grid. The well will remain SHUT)", name);
                 }
 
                 process_segments(handlerContext, well,
+                                 record.getItem<Kw::BRANCH_NUMBER>().get<int>(0),
                                  wellTraj.intersections,
-                                 wellTraj.wellPathGeometry,
-                                 record.getItem<Kw::DIAMETER>().getSIDouble(0));
+                                 wellTraj.wellPathGeometry);
 
                 handlerContext.state().wells.update(std::move(well));
 
@@ -203,6 +177,15 @@ Well {} has no connections to the grid. The well will remain SHUT)", name);
 
             for (const auto& name : wellnames) {
                 auto well = handlerContext.state().wells.get(name);
+
+                if (well.isMultiSegment()) {
+                    const auto msg = fmt::format(
+                        "Well {} is a segmented grid-independent well, but its WELSEGS keyword "
+                        "must be defined after the corresponding WELTRAJ keyword. Please check "
+                        "the order of the keywords in the input file.", name);
+
+                    throw OpmInputError(msg, handlerContext.keyword.location());
+                }
 
                 auto connections = std::make_shared<WellConnections>(well.getConnections());
                 connections->loadWELTRAJ(record, name, handlerContext.grid,
