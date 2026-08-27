@@ -410,23 +410,21 @@ std::ofstream&
 FileDeck::DumpContext::open_file(const std::string& deck_name,
                                  const fs::path& output_file)
 {
-    const auto& [filePos, fileInserted] = this->file_map_
-        .try_emplace(deck_name, output_file.generic_string());
+    const auto output_name = output_file.generic_string();
+    this->file_map_.insert_or_assign(deck_name, output_name);
 
-    if (fileInserted) {
-        if (! fs::is_directory(output_file.parent_path())) {
-            fs::create_directories(output_file.parent_path());
-        }
-
-        const auto& [streamPos, streamInserted] = this->stream_map_
-            .try_emplace(output_file.generic_string(), output_file);
-
-        if (! streamInserted) {
-            streamPos->second.open(output_file);
-        }
+    if (! fs::is_directory(output_file.parent_path())) {
+        fs::create_directories(output_file.parent_path());
     }
 
-    return this->stream_map_.at(output_file.generic_string());
+    const auto& [streamPos, streamInserted] = this->stream_map_
+        .try_emplace(output_name, output_file);
+
+    if (! streamInserted && ! streamPos->second.is_open()) {
+        streamPos->second.open(output_file);
+    }
+
+    return streamPos->second;
 }
 
 // ---------------------------------------------------------------------------
@@ -490,20 +488,44 @@ void FileDeck::include_block(const std::string& input_file,
                              const std::string& output_dir,
                              FileDeck::DumpContext& context) const
 {
+    const auto input_root = fs::canonical(this->input_directory);
+    const auto output_root = fs::canonical(output_dir);
+
     auto current_file = input_file;
+    auto current_output = fs::path(output_file);
 
     while (true) {
         const auto& parent = this->deck_tree.parent(current_file);
 
         auto* stream = context.get_stream(parent);
         if (stream != nullptr) {
-            // Should ideally use fs::relative()
-            INCLUDE(*stream, fs::proximate(output_file, output_dir).generic_string());
+            // INCLUDE paths are resolved relative to the root deck directory.
+            INCLUDE(*stream, fs::proximate(current_output, output_root).generic_string());
 
             break;
         }
 
+        // The parent file contains only INCLUDE statements and therefore has
+        // no keyword block of its own. Create it in the output directory to
+        // preserve the include hierarchy, write the include statement into
+        // it, and continue up the tree to include the parent itself.
+        const auto rel_path = fs::path(parent).lexically_relative(input_root);
+        if (rel_path.empty() || rel_path.is_absolute()
+            || (std::find(rel_path.begin(), rel_path.end(), fs::path{".."}) != rel_path.end()))
+        {
+            // Preserve the previous flattening behavior for include-only files
+            // outside the root deck directory rather than writing outside the
+            // requested output directory.
+            current_file = parent;
+            continue;
+        }
+
+        const auto parent_output = output_root / rel_path;
+        auto& parent_stream = context.open_file(parent, parent_output);
+        INCLUDE(parent_stream, fs::proximate(current_output, output_root).generic_string());
+
         current_file = parent;
+        current_output = parent_output;
     }
 }
 
@@ -532,10 +554,45 @@ void FileDeck::dump(const std::string& output_dir,
 
         for (std::size_t block_index = 1; block_index < this->blocks.size(); ++block_index) {
             const auto& block = this->blocks[block_index];
-            // For now, originally binary files will be written as GRDECL
-            const auto& include_file = this->dump_block(block, output_dir, {}, context);
 
-            if (block.fname != this->deck_tree.root()) {
+            auto continues_after_nested_include = false;
+            auto previous_file = this->blocks[block_index - 1].fname;
+            while (previous_file != this->deck_tree.root()) {
+                previous_file = this->deck_tree.parent(previous_file);
+                if (previous_file == block.fname) {
+                    continues_after_nested_include = true;
+                    break;
+                }
+            }
+
+            std::string include_file;
+            if ((block.fname != this->deck_tree.root())
+                && context.has_file(block.fname)
+                && !continues_after_nested_include)
+            {
+                // This is a repeated INCLUDE, not a continuation after a nested
+                // include. Write it to a separate file so another INCLUDE can
+                // be emitted at the original position without replaying the
+                // earlier occurrence's keywords.
+                auto rel_path = fs::proximate(block.fname, this->input_directory);
+                rel_path += fmt::format(".{}", block_index);
+                auto output_file = fs::path(output_dir) / rel_path;
+                touch_file(output_file);
+                output_file = fs::canonical(output_file);
+
+                auto& stream = context.open_file(block.fname, output_file);
+                DeckOutput out(stream, 10);
+                block.dump(out);
+                include_file = output_file.generic_string();
+            }
+            else {
+                // For now, originally binary files will be written as GRDECL.
+                // An empty include_file identifies a block which continues in
+                // an output file already open for its source file.
+                include_file = this->dump_block(block, output_dir, {}, context);
+            }
+
+            if (!include_file.empty() && (block.fname != this->deck_tree.root())) {
                 this->include_block(block.fname, include_file, output_dir, context);
             }
         }

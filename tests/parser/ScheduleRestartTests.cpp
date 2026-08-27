@@ -68,11 +68,51 @@
 #include <utility>
 #include <vector>
 
+#include <fmt/format.h>
+
 namespace fs = std::filesystem;
 
 using namespace Opm;
 
 namespace {
+
+void write_file(const fs::path& file, const std::string& contents)
+{
+    if (const auto& dir = file.parent_path(); !dir.empty()) {
+        fs::create_directories(dir);
+    }
+
+    std::ofstream stream {file};
+    BOOST_REQUIRE_MESSAGE(stream.is_open(), "Unable to open " << file.generic_string());
+
+    stream << contents;
+    stream.close();
+    BOOST_REQUIRE_MESSAGE(stream, "Unable to write " << file.generic_string());
+}
+
+std::string read_file(const fs::path& file)
+{
+    BOOST_REQUIRE_MESSAGE(fs::exists(file), "Missing file " << file.generic_string());
+
+    std::ifstream stream {file};
+    BOOST_REQUIRE_MESSAGE(stream.is_open(), "Unable to open " << file.generic_string());
+
+    return { std::istreambuf_iterator<char> {stream},
+             std::istreambuf_iterator<char> {} };
+}
+
+std::string vfpprod(const int table)
+{
+    return fmt::format(R"(VFPPROD
+ {} 2000.0 'LIQ' 'WCT' 'GOR' 'THP' ' ' 'METRIC' 'BHP' /
+ 100.0 /
+ 10.0 /
+ 0.0 /
+ 0.0 /
+ 0.0 /
+ 1 1 1 1 200.0 /
+)", table);
+}
 
 void compare_connections(const RestartIO::RstConnection& rst_conn,
                          const Connection& sched_conn)
@@ -385,6 +425,163 @@ BOOST_AUTO_TEST_CASE(FileDeckIterationSkipsEmptyIncludeBlock)
     BOOST_CHECK_EQUAL(num_kw, 0);
 }
 
+BOOST_AUTO_TEST_CASE(FileDeckCopyIncludeOnlyFiles)
+{
+    WorkArea work_area {"file_deck_copy"};
+
+    // The deck includes a file which holds INCLUDE statements only, e.g. a
+    // wrapper collecting the lift curve files of a model.  That wrapper
+    // includes one file with keywords, and a second wrapper which in turn
+    // includes another file with keywords.
+    write_file("CASE.DATA", R"(RUNSPEC
+DIMENS
+  2 2 2 /
+OIL
+WATER
+GAS
+METRIC
+START
+  1 'JAN' 2000 /
+GRID
+DX
+  8*100.0 /
+DY
+  8*100.0 /
+DZ
+  8*10.0 /
+TOPS
+  4*2000.0 /
+PORO
+  8*0.2 /
+PERMX
+  8*100.0 /
+SCHEDULE
+INCLUDE
+  'include/lift_curves.inc' /
+END
+)");
+
+    write_file("include/lift_curves.inc", R"(INCLUDE
+  'include/vfp_curve_1.ecl' /
+INCLUDE
+  'include/more_curves.inc' /
+)");
+
+    write_file("include/more_curves.inc", R"(INCLUDE
+  'include/vfp_curve_2.ecl' /
+)");
+
+    write_file("include/vfp_curve_1.ecl", vfpprod(1));
+    write_file("include/vfp_curve_2.ecl", vfpprod(2));
+
+    const auto deck = Parser{}.parseFile("CASE.DATA");
+    FileDeck fd(deck);
+
+    fd.dump("out", "CASE.DATA", FileDeck::OutputMode::COPY);
+
+    // The main deck must include the wrapper, not the files below it.
+    const auto main_deck = read_file("out/CASE.DATA");
+    BOOST_CHECK(main_deck.find("include/lift_curves.inc") != std::string::npos);
+    BOOST_CHECK(main_deck.find("vfp_curve") == std::string::npos);
+    BOOST_CHECK(main_deck.find("more_curves") == std::string::npos);
+
+    // The wrappers must be recreated with their own include statements.
+    const auto wrapper = read_file("out/include/lift_curves.inc");
+    BOOST_CHECK(wrapper.find("include/vfp_curve_1.ecl") != std::string::npos);
+    BOOST_CHECK(wrapper.find("include/more_curves.inc") != std::string::npos);
+
+    const auto nested_wrapper = read_file("out/include/more_curves.inc");
+    BOOST_CHECK(nested_wrapper.find("include/vfp_curve_2.ecl") != std::string::npos);
+
+    // Reloading the dumped deck must give the same keywords back.
+    const auto out_deck = Parser{}.parseFile("out/CASE.DATA");
+    BOOST_CHECK_EQUAL(out_deck.count("VFPPROD"), 2);
+    BOOST_CHECK_EQUAL(out_deck.size(), deck.size());
+}
+
+BOOST_AUTO_TEST_CASE(FileDeckCopyFlattensExternalIncludeOnlyFile)
+{
+    WorkArea work_area {"file_deck_copy_external_wrapper"};
+
+    write_file("case/CASE.DATA", R"(RUNSPEC
+DIMENS
+  1 1 1 /
+OIL
+WATER
+GAS
+METRIC
+START
+  1 'JAN' 2000 /
+SCHEDULE
+INCLUDE
+  '../wrapper.inc' /
+END
+)");
+    write_file("wrapper.inc", R"(INCLUDE
+  'leaf.inc' /
+)");
+    write_file("case/leaf.inc", vfpprod(1));
+
+    const auto deck = Parser{}.parseFile("case/CASE.DATA");
+    FileDeck fd(deck);
+
+    fd.dump("case/out", "CASE.DATA", FileDeck::OutputMode::COPY);
+
+    // Preserve the old flattening behavior for an include-only wrapper outside
+    // the root deck directory, but do not recreate it outside the output root.
+    const auto main_deck = read_file("case/out/CASE.DATA");
+    BOOST_CHECK(main_deck.find("leaf.inc") != std::string::npos);
+    BOOST_CHECK(main_deck.find("wrapper.inc") == std::string::npos);
+    BOOST_CHECK(!fs::exists("case/wrapper.inc"));
+
+    const auto out_deck = Parser{}.parseFile("case/out/CASE.DATA");
+    BOOST_CHECK_EQUAL(out_deck.count("VFPPROD"), 1);
+    BOOST_CHECK_EQUAL(out_deck.size(), deck.size());
+}
+
+BOOST_AUTO_TEST_CASE(FileDeckCopyPreservesRepeatedIncludeOrder)
+{
+    WorkArea work_area {"file_deck_copy_repeated_include"};
+
+    write_file("CASE.DATA", R"(RUNSPEC
+DIMENS
+  1 1 1 /
+OIL
+WATER
+GAS
+METRIC
+START
+  1 'JAN' 2000 /
+SCHEDULE
+INCLUDE
+  'vfp.inc' /
+TUNING
+/
+/
+/
+INCLUDE
+  'vfp.inc' /
+END
+)");
+    write_file("vfp.inc", vfpprod(1));
+
+    const auto deck = Parser{}.parseFile("CASE.DATA");
+    FileDeck fd(deck);
+
+    fd.dump("out", "CASE.DATA", FileDeck::OutputMode::COPY);
+
+    const auto main_deck = read_file("out/CASE.DATA");
+    const auto first_include = main_deck.find("\nINCLUDE");
+    BOOST_REQUIRE(first_include != std::string::npos);
+    BOOST_CHECK(main_deck.find("\nINCLUDE", first_include + 1) != std::string::npos);
+
+    const auto out_deck = Parser{}.parseFile("out/CASE.DATA");
+    BOOST_REQUIRE_EQUAL(out_deck.size(), deck.size());
+    for (std::size_t index = 0; index < deck.size(); ++index) {
+        BOOST_CHECK_EQUAL(out_deck[index].name(), deck[index].name());
+    }
+}
+
 BOOST_AUTO_TEST_CASE(RestartTest2)
 {
     const auto deck = Parser{}.parseFile("UDQ_WCONPROD.DATA");
@@ -490,15 +687,6 @@ BOOST_AUTO_TEST_CASE(RestartTest)
 // these decks exercise the block boundaries of the index arithmetic.
 
 namespace {
-
-void write_file(const fs::path& fname, const std::string& contents)
-{
-    if (fname.has_parent_path()) {
-        fs::create_directories(fname.parent_path());
-    }
-
-    std::ofstream { fname } << contents;
-}
 
 std::string case_deck(const std::string& solution_body,
                       const std::string& schedule_body)
