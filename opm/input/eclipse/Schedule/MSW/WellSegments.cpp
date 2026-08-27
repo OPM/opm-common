@@ -102,6 +102,73 @@ In {{file}} line {{line}}
         parseContext.handleError(Opm::ParseContext::SCHEDULE_ICD_INCOMPATIBLE_PDROP_MODEL,
                                  msg, location, errors);
     }
+
+    /// The measured depth range covered by a branch's trajectory.
+    struct BranchMDRange
+    {
+        double begin{};
+        double end{};
+    };
+
+    /// Point \p geometry at the trajectory of \p branch.
+    ///
+    /// Reports a missing branch instead of letting the lookup escape as a
+    /// std::out_of_range.  WELSEGS may name a branch that WELTRAJ never
+    /// defined, either directly or through a segment whose branch number was
+    /// mistyped.
+    BranchMDRange
+    selectBranch(external::cvf::ref<external::RigWellPath>&                    geometry,
+                 const std::map<int, std::array<std::vector<double>, 3>>&      coords,
+                 const std::map<int, std::vector<double>>&                     mds,
+                 std::string_view                                              well_name,
+                 const int                                                     branch)
+    {
+        const auto coordPos = coords.find(branch);
+        const auto mdPos = mds.find(branch);
+
+        if ((coordPos == coords.end()) || (mdPos == mds.end()) || mdPos->second.empty()) {
+            throw std::logic_error {
+                fmt::format("Well {} has segments on branch {}, but no WELTRAJ "
+                            "trajectory for that branch. Every branch used in "
+                            "WELSEGS must first be defined by WELTRAJ.",
+                            well_name, branch)
+            };
+        }
+
+        Opm::initWellPathGeometry(geometry, coordPos->second, mdPos->second);
+
+        return { mdPos->second.front(), mdPos->second.back() };
+    }
+
+    /// Interpolate the trajectory at measured depth \p md.
+    ///
+    /// A segment node outside the branch's trajectory would otherwise be
+    /// placed by extrapolating past its end, silently giving the well a
+    /// geometry the deck never described.
+    external::cvf::Vec3d
+    trajectoryPoint(const external::cvf::ref<external::RigWellPath>& geometry,
+                    const BranchMDRange&                             md_range,
+                    std::string_view                                 well_name,
+                    const int                                        branch,
+                    const double                                     md)
+    {
+        // The trajectory MDs and the segment lengths both come from the deck
+        // in the same unit, so a relative tolerance on the branch length is
+        // enough to absorb the round-off of reading them back.
+        const auto tol = 1.0e-10 * std::max(1.0, md_range.end - md_range.begin);
+
+        if ((md < md_range.begin - tol) || (md > md_range.end + tol)) {
+            throw std::logic_error {
+                fmt::format("Segment node at measured depth {} on branch {} of "
+                            "well {} lies outside the branch's trajectory, "
+                            "which covers measured depths {} to {}.",
+                            md, branch, well_name, md_range.begin, md_range.end)
+            };
+        }
+
+        return geometry->interpolatedPointAlongWellPath
+            (std::clamp(md, md_range.begin, md_range.end));
+    }
 }
 
 namespace Opm {
@@ -288,15 +355,51 @@ namespace Opm {
         const LengthDepth length_depth_type = LengthDepthFromString(record1.getItem("INFO_TYPE").getTrimmedString(0));
         m_comp_pressure_drop = CompPressureDropFromString(record1.getItem("PRESSURE_COMPONENTS").getTrimmedString(0));
 
-        const auto nodeX_top = record1.getItem("TOP_X").getSIDouble(0);
-        const auto nodeY_top = record1.getItem("TOP_Y").getSIDouble(0);
+        const auto nodeX_top_in = record1.getItem("TOP_X").getSIDouble(0);
+        const auto nodeY_top_in = record1.getItem("TOP_Y").getSIDouble(0);
 
-        if (!mds.empty() && length_top < mds.at(1).front()) {
-            throw std::logic_error {
-                fmt::format("TOP_LENGTH {} in WELSEGS for well {} is less than "
-                            "the trajectory starting MD {}.",
-                            length_top, wname, mds.at(1).front())
-            };
+        auto nodeX_top = nodeX_top_in;
+        auto nodeY_top = nodeY_top_in;
+
+        if (! mds.empty()) {
+            const auto mainStem = mds.find(1);
+            if ((mainStem == mds.end()) || mainStem->second.empty()) {
+                throw std::logic_error {
+                    fmt::format("Well {} has WELTRAJ trajectory data, but none "
+                                "for the main stem. Branch 1 must be defined "
+                                "before WELSEGS can position its segments.", wname)
+                };
+            }
+
+            if (length_top < mainStem->second.front()) {
+                throw std::logic_error {
+                    fmt::format("TOP_LENGTH {} in WELSEGS for well {} is less than "
+                                "the trajectory starting MD {}.",
+                                length_top, wname, mainStem->second.front())
+                };
+            }
+
+            // The top segment's node sits on the trajectory, just like every
+            // other node, so any position given in the deck is redundant.
+            if (! (record1.getItem("TOP_X").defaultApplied(0) &&
+                   record1.getItem("TOP_Y").defaultApplied(0)))
+            {
+                OpmLog::warning(fmt::format(
+                    "TOP_X/TOP_Y values ({:.3e}, {:.3e}) in WELSEGS for grid-independent "
+                    "well {} are not defaulted. The values will be ignored and the top "
+                    "segment node position taken from the well trajectory instead.",
+                    nodeX_top_in, nodeY_top_in, wname));
+            }
+
+            auto wellPathGeometry = external::cvf::ref<external::RigWellPath>
+                { new external::RigWellPath };
+
+            const auto md_range = selectBranch(wellPathGeometry, coords, mds, wname, 1);
+            const auto coord = trajectoryPoint(wellPathGeometry, md_range,
+                                               wname, 1, length_top);
+
+            nodeX_top = coord[0];
+            nodeY_top = coord[1];
         }
 
         // Pipe-wall thermal properties for the whole segment set.  Individual
@@ -497,10 +600,10 @@ namespace Opm {
                                const double      length_top)
     {
         if (length_depth == LengthDepth::ABS) {
-            this->processABS(coords, mds);
+            this->processABS(well_name, coords, mds);
         }
         else if (length_depth == LengthDepth::INC) {
-            this->processINC(coords, mds, depth_top, length_top);
+            this->processINC(well_name, coords, mds, depth_top, length_top);
         }
         else {
             throw std::logic_error {
@@ -513,7 +616,8 @@ namespace Opm {
     }
 
     void
-    WellSegments::processABS(const std::map<int, std::array<std::vector<double>, 3>>& coords,
+    WellSegments::processABS(const std::string& well_name,
+                             const std::map<int, std::array<std::vector<double>, 3>>& coords,
                              const std::map<int, std::vector<double>>& mds)
     {
         // Meaningless value to indicate unspecified/uncompleted values
@@ -522,6 +626,7 @@ namespace Opm {
         orderSegments();
 
         external::cvf::ref<external::RigWellPath> wellPathGeometry;
+        BranchMDRange md_range{};
         int current_branch = 0;
         if (!coords.empty()) {
             wellPathGeometry = new external::RigWellPath;
@@ -533,8 +638,8 @@ namespace Opm {
 
             if (!coords.empty() && (current_branch != current_segment.branchNumber())) {
                 current_branch = current_segment.branchNumber();
-                initWellPathGeometry(wellPathGeometry,
-                                     coords.at(current_branch), mds.at(current_branch));
+                md_range = selectBranch(wellPathGeometry, coords, mds,
+                                        well_name, current_branch);
             }
 
             if (current_segment.dataReady()) {
@@ -542,7 +647,8 @@ namespace Opm {
                     // Take the segment node's depth and X/Y position from the
                     // trajectory rather than from the WELSEGS record.
                     const auto length = current_segment.totalLength();
-                    const auto coord = wellPathGeometry->interpolatedPointAlongWellPath(length);
+                    const auto coord = trajectoryPoint(wellPathGeometry, md_range,
+                                                       well_name, current_branch, length);
 
                     this->addSegment(Segment {
                         current_segment, coord[2], length, coord[0], coord[1]
@@ -617,7 +723,8 @@ namespace Opm {
                 if (!coords.empty()) {
                     // Interpolated segment nodes take their depth and X/Y
                     // position from the trajectory too.
-                    const auto coord = wellPathGeometry->interpolatedPointAlongWellPath(new_length);
+                    const auto coord = trajectoryPoint(wellPathGeometry, md_range,
+                                                       well_name, current_branch, new_length);
                     new_x     = coord[0];
                     new_y     = coord[1];
                     new_depth = coord[2];
@@ -651,7 +758,8 @@ namespace Opm {
     }
 
     void
-    WellSegments::processINC(const std::map<int, std::array<std::vector<double>, 3>>& coords,
+    WellSegments::processINC(const std::string& well_name,
+                             const std::map<int, std::array<std::vector<double>, 3>>& coords,
                              const std::map<int, std::vector<double>>& mds,
                              double depth_top,
                              double length_top)
@@ -663,6 +771,7 @@ namespace Opm {
         orderSegments();
 
         external::cvf::ref<external::RigWellPath> wellPathGeometry;
+        BranchMDRange md_range{};
         int current_branch = 0;
         if (!coords.empty()) {
             wellPathGeometry = new external::RigWellPath;
@@ -673,8 +782,8 @@ namespace Opm {
 
             if (!coords.empty() && (current_branch != current_segment.branchNumber())) {
                 current_branch = current_segment.branchNumber();
-                initWellPathGeometry(wellPathGeometry,
-                                     coords.at(current_branch), mds.at(current_branch));
+                md_range = selectBranch(wellPathGeometry, coords, mds,
+                                        well_name, current_branch);
             }
 
             if (current_segment.dataReady()) {
@@ -682,7 +791,8 @@ namespace Opm {
                     // Take the segment node's depth and X/Y position from the
                     // trajectory rather than from the WELSEGS record.
                     const auto length = current_segment.totalLength();
-                    const auto coord = wellPathGeometry->interpolatedPointAlongWellPath(length);
+                    const auto coord = trajectoryPoint(wellPathGeometry, md_range,
+                                                       well_name, current_branch, length);
 
                     this->addSegment(Segment {
                         current_segment, coord[2], length, coord[0], coord[1]
@@ -716,7 +826,8 @@ namespace Opm {
             if (!coords.empty()) {
                 // Take the segment node's depth and X/Y position from the
                 // trajectory rather than accumulating the WELSEGS increments.
-                const auto coord = wellPathGeometry->interpolatedPointAlongWellPath(temp_length);
+                const auto coord = trajectoryPoint(wellPathGeometry, md_range,
+                                                   well_name, current_branch, temp_length);
                 new_x      = coord[0];
                 new_y      = coord[1];
                 temp_depth = coord[2];

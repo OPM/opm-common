@@ -46,6 +46,7 @@
 #include <algorithm>
 #include <functional>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <unordered_set>
 #include <utility>
@@ -278,6 +279,17 @@ void initWellPathGeometry(external::cvf::ref<external::RigWellPath>& wellPathGeo
 {
     const double top = top_opt.value_or(mds.front());
     const double bot = bot_opt.value_or(mds.back());
+
+    if ((top < mds.front()) || (bot > mds.back()) || (bot < top)) {
+        // linearInterpolation() clamps to the end points, so an interval
+        // reaching past the trajectory would be silently truncated and one
+        // that runs backwards would collapse to a point.
+        throw std::logic_error {
+            fmt::format("Perforation interval {} to {} is not contained in the "
+                        "branch's trajectory, which covers measured depths "
+                        "{} to {}.", top, bot, mds.front(), mds.back())
+        };
+    }
 
     std::vector<external::cvf::Vec3d> points;
     std::vector<double> measured_depths;

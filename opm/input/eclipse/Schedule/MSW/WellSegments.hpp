@@ -166,9 +166,11 @@ namespace Opm {
         }
 
     private:
-        void processABS(const std::map<int, std::array<std::vector<double>, 3>>& coords,
+        void processABS(const std::string& well_name,
+                        const std::map<int, std::array<std::vector<double>, 3>>& coords,
                         const std::map<int, std::vector<double>>& mds);
-        void processINC(const std::map<int, std::array<std::vector<double>, 3>>& coords,
+        void processINC(const std::string& well_name,
+                        const std::map<int, std::array<std::vector<double>, 3>>& coords,
                         const std::map<int, std::vector<double>>& mds,
                         double depth_top,
                         double length_top);

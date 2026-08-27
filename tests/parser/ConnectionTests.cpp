@@ -1713,3 +1713,36 @@ BOOST_AUTO_TEST_CASE(Comptraj_Shutting_A_Shared_Cell_Shuts_It_For_All_Branches)
     // Cells that only branch 1 reaches stay open.
     BOOST_CHECK(connectionAt(connections, 2, 2, 0).state() == Opm::Connection::State::OPEN);
 }
+
+BOOST_AUTO_TEST_CASE(Comptraj_Perforation_Interval_Must_Lie_On_The_Branch)
+{
+    // Past the end of the branch's trajectory.
+    {
+        const auto deck = comptrajDeck(weltraj_two_branches + R"(COMPTRAJ
+  'W1'    1    2000   2100   2*     1*    1*   10.0  0.25  100  0 /
+/
+)");
+
+        BOOST_CHECK_THROW(comptrajSchedule(deck), Opm::OpmInputError);
+    }
+
+    // Before its start.
+    {
+        const auto deck = comptrajDeck(weltraj_two_branches + R"(COMPTRAJ
+  'W1'    2    2000   2100   2*     1*    1*   10.0  0.25  100  0 /
+/
+)");
+
+        BOOST_CHECK_THROW(comptrajSchedule(deck), Opm::OpmInputError);
+    }
+
+    // Reversed.
+    {
+        const auto deck = comptrajDeck(weltraj_two_branches + R"(COMPTRAJ
+  'W1'    1    2020   2010   2*     1*    1*   10.0  0.25  100  0 /
+/
+)");
+
+        BOOST_CHECK_THROW(comptrajSchedule(deck), Opm::OpmInputError);
+    }
+}

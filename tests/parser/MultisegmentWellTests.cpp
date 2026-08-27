@@ -2371,3 +2371,111 @@ BOOST_AUTO_TEST_CASE(Comptraj_MSW_Every_Connection_Is_Attached_To_A_Segment)
         }
     }
 }
+
+BOOST_AUTO_TEST_CASE(Welsegs_Branch_Without_Trajectory_Is_Rejected)
+{
+    // Segment 5 is put on branch 3, for which WELTRAJ has no trajectory.
+    const auto schedule = R"(WELSPECS
+  'W1' 'G' 3 3 2000.0 OIL /
+/
+WELTRAJ
+  'W1'    1     250    250    2000    2000 /
+  'W1'    1     250    250    2030    2030 /
+  'W1'    2     250    250    2015    2015 /
+  'W1'    2     450    250    2015    2215 /
+/
+WELSEGS
+  'W1'    2000      2000      1*   ABS  'HF-' /
+    2    2     1      1     2005   2005  0.15 1.0e-5 /
+    3    3     1      2     2015   2015  0.15 1.0e-5 /
+    4    4     1      3     2025   2025  0.15 1.0e-5 /
+    5    5     3      2     2040   2015  0.10 1.0e-5 /
+/
+)";
+
+    BOOST_CHECK_THROW(mswTrajectorySchedule(schedule), Opm::OpmInputError);
+}
+
+BOOST_AUTO_TEST_CASE(Welsegs_Segment_Node_Beyond_Trajectory_Is_Rejected)
+{
+    // Segment 7 sits at MD 2300, past the end of branch 2's trajectory
+    // (MD 2215).  Extrapolating there would invent well geometry.
+    const auto schedule = R"(WELSPECS
+  'W1' 'G' 3 3 2000.0 OIL /
+/
+WELTRAJ
+  'W1'    1     250    250    2000    2000 /
+  'W1'    1     250    250    2030    2030 /
+  'W1'    2     250    250    2015    2015 /
+  'W1'    2     450    250    2015    2215 /
+/
+WELSEGS
+  'W1'    2000      2000      1*   ABS  'HF-' /
+    2    2     1      1     2005   2005  0.15 1.0e-5 /
+    3    3     1      2     2015   2015  0.15 1.0e-5 /
+    4    4     1      3     2025   2025  0.15 1.0e-5 /
+    5    5     2      2     2040   2015  0.10 1.0e-5 /
+    6    6     2      5     2115   2015  0.10 1.0e-5 /
+    7    7     2      6     2300   2015  0.10 1.0e-5 /
+/
+)";
+
+    BOOST_CHECK_THROW(mswTrajectorySchedule(schedule), Opm::OpmInputError);
+}
+
+BOOST_AUTO_TEST_CASE(Welsegs_Top_Node_Is_Taken_From_The_Trajectory)
+{
+    // TOP_X/TOP_Y are given, but the trajectory decides where the top node
+    // is; the deck values are only reported and then discarded.
+    const auto schedule = R"(WELSPECS
+  'W1' 'G' 3 3 2000.0 OIL /
+/
+WELTRAJ
+  'W1'    1     250    250    2000    2000 /
+  'W1'    1     250    250    2030    2030 /
+  'W1'    2     250    250    2015    2015 /
+  'W1'    2     450    250    2015    2215 /
+/
+WELSEGS
+-- WELL TOP_DEPTH TOP_LENGTH VOL TYPE PRESSURE TOP_X TOP_Y
+  'W1'    2000      2000     1*  ABS  'HF-'    777   888 /
+    2    2     1      1     2005   2005  0.15 1.0e-5 /
+    3    3     1      2     2015   2015  0.15 1.0e-5 /
+    4    4     1      3     2025   2025  0.15 1.0e-5 /
+    5    5     2      2     2040   2015  0.10 1.0e-5 /
+    6    6     2      5     2115   2015  0.10 1.0e-5 /
+    7    7     2      6     2190   2015  0.10 1.0e-5 /
+/
+)" + comptraj_main_stem + comptraj_lateral;
+
+    const auto sched = mswTrajectorySchedule(schedule);
+    const auto& segments = sched.getWell("W1", 0).getSegments();
+
+    BOOST_CHECK_CLOSE(segments[0].node_X(), 250.0, 1.0e-8);
+    BOOST_CHECK_CLOSE(segments[0].node_Y(), 250.0, 1.0e-8);
+
+    // The lateral runs in the X direction at constant Y, so its nodes track
+    // the trajectory rather than the main stem's position.
+    const auto& seg6 = segments[sched.getWell("W1", 0).getSegments().segmentNumberToIndex(6)];
+    BOOST_CHECK_CLOSE(seg6.node_X(), 350.0, 1.0e-8);
+    BOOST_CHECK_CLOSE(seg6.node_Y(), 250.0, 1.0e-8);
+    BOOST_CHECK_CLOSE(seg6.depth(), 2015.0, 1.0e-8);
+}
+
+BOOST_AUTO_TEST_CASE(Welsegs_Top_Length_Before_Trajectory_Start_Is_Rejected)
+{
+    const auto schedule = R"(WELSPECS
+  'W1' 'G' 3 3 2000.0 OIL /
+/
+WELTRAJ
+  'W1'    1     250    250    2000    2000 /
+  'W1'    1     250    250    2030    2030 /
+/
+WELSEGS
+  'W1'    2000      1990      1*   ABS  'HF-' /
+    2    2     1      1     2005   2005  0.15 1.0e-5 /
+/
+)";
+
+    BOOST_CHECK_THROW(mswTrajectorySchedule(schedule), Opm::OpmInputError);
+}
