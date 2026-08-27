@@ -15,7 +15,7 @@
       "name": "BRANCH_NUMBER",
       "value_type": "INT",
       "default": 1,
-      "comment": "Not used"
+      "comment": "Trajectory branch the perforation interval belongs to. Branch 1 is the main stem"
     },
     {
       "item": 3,
@@ -85,8 +85,7 @@
       "item": 13,
       "name": "D_FACTOR",
       "value_type": "DOUBLE",
-      "dimension": "1",
-      "comment": "Not used"
+      "dimension": "1"
     }
   ]
 }

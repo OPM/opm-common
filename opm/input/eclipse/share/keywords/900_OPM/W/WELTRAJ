@@ -14,7 +14,7 @@
       "name": "BRANCH_NUMBER",
       "value_type": "INT",
       "default": 1,
-      "comment": "Not used"
+      "comment": "Branch this trajectory point belongs to. Branch 1 is the main stem"
     },
     {
       "item": 3,
