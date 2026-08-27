@@ -207,13 +207,18 @@ Well {} has no connections to the grid. The well will remain SHUT)", name);
                 connections->loadWELTRAJ(record, name, handlerContext.grid,
                                          handlerContext.keyword.location());
 
-                if (const auto& md = connections->getMD(); md.size() > 1) {
+                for (const auto& [branch, md] : connections->getMD()) {
+                    if (md.size() < 2) {
+                        continue;
+                    }
+
                     const bool strictly_increasing = std::adjacent_find
                         (md.begin(), md.end(), std::greater_equal<>{}) == md.end();
 
                     if (!strictly_increasing) {
                         const auto msg = fmt::format("Well {} measured depth column "
-                                                     "is not strictly increasing", name);
+                                                     "for branch {} is not strictly increasing",
+                                                     name, branch);
 
                         throw OpmInputError(msg, handlerContext.keyword.location());
                     }
