@@ -25,6 +25,7 @@
 #include <opm/io/eclipse/ERst.hpp>
 #include <opm/io/eclipse/RestartFileView.hpp>
 
+#include <opm/common/utility/OpmInputError.hpp>
 #include <opm/common/utility/TimeService.hpp>
 
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
@@ -57,10 +58,12 @@
 #include <algorithm>
 #include <cstddef>
 #include <filesystem>
+#include <fstream>
 #include <iterator>
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <tuple>
 #include <utility>
 #include <vector>
@@ -435,4 +438,80 @@ BOOST_AUTO_TEST_CASE(RestartTest)
     //         return date == tp;
     //     }
     // };
+}
+
+namespace {
+
+    /// The restart deck with \p extra_schedule inserted at the top of its
+    /// SCHEDULE section.
+    Deck restartDeckWithSchedule(const Parser& parser, const std::string& extra_schedule)
+    {
+        auto input = std::string {};
+        {
+            auto is = std::ifstream { "SPE1CASE2_RESTART.DATA" };
+            input.assign(std::istreambuf_iterator<char> { is },
+                         std::istreambuf_iterator<char> {});
+        }
+
+        const auto schedule_pos = input.find("\nSCHEDULE\n");
+        BOOST_REQUIRE(schedule_pos != std::string::npos);
+
+        input.insert(schedule_pos + std::string { "\nSCHEDULE\n" }.size(),
+                     extra_schedule);
+
+        return parser.parseString(input);
+    }
+
+    Schedule restartedSchedule(const std::string& extra_schedule)
+    {
+        Parser parser;
+
+        auto base_deck = parser.parseFile("SPE1CASE2.DATA");
+        const auto base_state = EclipseState { base_deck };
+
+        auto rst_file = std::make_shared<EclIO::ERst>("SPE1CASE2.X0060");
+        auto rst_view = std::make_shared<EclIO::RestartFileView>(std::move(rst_file), 60);
+        auto rst_state = RestartIO::RstState::load(std::move(rst_view),
+                                                   base_state.runspec(), parser);
+
+        const auto deck = restartDeckWithSchedule(parser, extra_schedule);
+        const auto ecl_state = EclipseState { deck };
+
+        return Schedule {
+            deck, ecl_state, std::make_shared<Python>(),
+            false, /*slave_mode=*/false, true, {}, &rst_state
+        };
+    }
+
+} // Anonymous namespace
+
+BOOST_AUTO_TEST_CASE(Restarted_Well_Cannot_Continue_With_A_Trajectory)
+{
+    // Connections restored from a restart file are COMPDAT-like: the restart
+    // file has no trajectory section, so the branch structure of a
+    // COMPTRAJ well cannot be recovered.  Continuing such a well with
+    // WELTRAJ/COMPTRAJ has to be refused rather than silently mixing the two
+    // completion styles.
+    // The diagnostic points at the restart, which is the actual cause here.
+    const auto mentions_restart = [](const OpmInputError& e)
+    {
+        return std::string_view { e.what() }.find("restart") != std::string_view::npos;
+    };
+
+    BOOST_CHECK_EXCEPTION(restartedSchedule(R"(WELTRAJ
+  'PROD'  1  2500  2500  8325  8325 /
+  'PROD'  1  2500  2500  8350  8350 /
+/
+)"), OpmInputError, mentions_restart);
+
+    BOOST_CHECK_EXCEPTION(restartedSchedule(R"(COMPTRAJ
+  'PROD'  1  8325  8350  2*  1*  1*  10.0  0.25  100  0 /
+/
+)"), OpmInputError, mentions_restart);
+
+    // Continuing with COMPDAT, on the other hand, is what restarts are for.
+    BOOST_CHECK_NO_THROW(restartedSchedule(R"(COMPDAT
+  'PROD'  10  10  3  3  OPEN  1*  1*  0.5 /
+/
+)"));
 }

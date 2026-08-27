@@ -1746,3 +1746,48 @@ BOOST_AUTO_TEST_CASE(Comptraj_Perforation_Interval_Must_Lie_On_The_Branch)
         BOOST_CHECK_THROW(comptrajSchedule(deck), Opm::OpmInputError);
     }
 }
+
+BOOST_AUTO_TEST_CASE(Comptraj_Three_Branches_Sharing_A_Cell)
+{
+    // A main stem with two laterals kicking off inside the same cell, so
+    // that cell (3,3,2) has three contributors.
+    const auto deck = comptrajDeck(R"(WELSPECS
+  'W1' 'G' 3 3 2000.0 OIL /
+/
+WELTRAJ
+  'W1'    1     250    250    2000    2000 /
+  'W1'    1     250    250    2030    2030 /
+  'W1'    2     250    250    2015    2015 /
+  'W1'    2     450    250    2015    2215 /
+  'W1'    3     250    250    2015    2015 /
+  'W1'    3     250    450    2015    2215 /
+/
+COMPTRAJ
+-- WELL BRANCH  TOP    BOT   REF NO STATE SAT   CF   DIAM   KH  SKIN
+  'W1'    1    2010   2020   2*     1*    1*   10.0  0.20  100  1.0 /
+  'W1'    2    2015   2115   2*     1*    1*   30.0  0.40  300  5.0 /
+  'W1'    3    2015   2115   2*     1*    1*   60.0  0.60  600  9.0 /
+/
+)");
+
+    const auto sched = comptrajSchedule(deck);
+    const auto& connections = sched.getWell("W1", 0).getConnections();
+
+    const auto& shared = connectionAt(connections, 2, 2, 1);
+
+    BOOST_REQUIRE_EQUAL(shared.comptrajBranches().size(), std::size_t{3});
+    BOOST_CHECK_EQUAL(shared.comptrajBranches()[0], 1);
+    BOOST_CHECK_EQUAL(shared.comptrajBranches()[1], 2);
+    BOOST_CHECK_EQUAL(shared.comptrajBranches()[2], 3);
+
+    BOOST_CHECK_CLOSE(shared.CF(), siCF(deck, 10.0 + 30.0 + 60.0), 1.0e-8);
+    BOOST_CHECK_CLOSE(shared.Kh(), siKh(deck, 100.0 + 300.0 + 600.0), 1.0e-8);
+
+    BOOST_CHECK_CLOSE(shared.rw(),
+                      (10.0*0.10 + 30.0*0.20 + 60.0*0.30) / 100.0, 1.0e-8);
+    BOOST_CHECK_CLOSE(shared.skinFactor(),
+                      (10.0*1.0 + 30.0*5.0 + 60.0*9.0) / 100.0, 1.0e-8);
+
+    // The main stem still owns the cell.
+    BOOST_CHECK_EQUAL(shared.segmentOwnerBranch().value(), 1);
+}
