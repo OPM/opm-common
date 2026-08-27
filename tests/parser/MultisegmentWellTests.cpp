@@ -2482,6 +2482,27 @@ WELSEGS
     BOOST_CHECK_THROW(mswTrajectorySchedule(schedule), Opm::OpmInputError);
 }
 
+BOOST_AUTO_TEST_CASE(Comptraj_MSW_Connection_Sort_Values_Are_Unique)
+{
+    // The connections of an MSW well are sorted on their sort value, so two
+    // connections sharing one leaves their relative order up to the sorting
+    // algorithm.  Each COMPTRAJ record used to number its own connections
+    // from zero.
+    for (const auto& schedule : {msw_two_branch_prelude + comptraj_main_stem + comptraj_lateral,
+                                 msw_two_branch_prelude + comptraj_lateral + comptraj_main_stem})
+    {
+        const auto sched = mswTrajectorySchedule(schedule);
+        const auto& connections = sched.getWell("W1", 0).getConnections();
+
+        auto sort_values = std::set<std::size_t>{};
+        for (const auto& conn : connections) {
+            sort_values.insert(conn.sort_value());
+        }
+
+        BOOST_CHECK_EQUAL(sort_values.size(), connections.size());
+    }
+}
+
 BOOST_AUTO_TEST_CASE(Comptraj_MSW_Skipped_Cells_Do_Not_Break_Segment_Assignment)
 {
     // A cell with no lateral permeability has no representable connection
