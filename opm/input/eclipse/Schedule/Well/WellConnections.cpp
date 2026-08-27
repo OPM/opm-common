@@ -885,6 +885,8 @@ CF and Kh items for well {} must both be specified or both defaulted/negative)",
                                     direction, ctf_kind,
                                     noConn, 0,
                                     defaultSatTable);
+
+                this->m_connections.back().resetComptrajBranch(branch);
             }
             else {
                 const auto compl_num = prev->complnum();
@@ -903,6 +905,7 @@ CF and Kh items for well {} must both be specified or both defaulted/negative)",
 
                 prev->updateSegment(conSegNo, cell.depth, thermal_length,
                                     css_ind, *perf_range);
+                prev->resetComptrajBranch(branch);
             }
         }
     }
