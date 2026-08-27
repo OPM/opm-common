@@ -789,6 +789,12 @@ The cell ({},{},{}) in well {} is not active and the connection will be ignored)
         // exit cell face point and connection length.
         wellTraj.intersections = e->cellIntersectionInfosAlongWellPath();
 
+        // Intersections that do not become a connection.  The caller derives
+        // this record's COMPSEGS records from the intersections, and every one
+        // of those has to find its connection, so the two lists are kept in
+        // step.
+        auto skipped = std::vector<std::size_t>{};
+
         for (std::size_t is = 0; is < wellTraj.intersections.size(); ++is) {
             const auto ijk = ecl_grid->getIJK(wellTraj.intersections[is].globCellIndex);
 
@@ -816,6 +822,7 @@ The cell ({},{},{}) in well {} is not active and the connection will be ignored)
                                              ijk[2] + 1, wname);
                 OpmLog::warning(msg);
 
+                skipped.push_back(is);
                 continue;
             }
 
@@ -894,6 +901,7 @@ Branch {} of well {} yields a non-representable connection transmissibility fact
                                             ctf_props.CF, ctf_props.Kh,
                                             ijk[0] + 1, ijk[1] + 1, ijk[2] + 1));
 
+                skipped.push_back(is);
                 continue;
             }
 
@@ -968,6 +976,10 @@ Branch {} of well {} shuts cell ({},{},{}), which is also perforated by other br
                 prev->setComptrajBranches(std::move(branches), std::move(branch_ctf));
                 prev->addComptrajBranch(branch, ctf_props);
             }
+        }
+
+        for (const auto is : std::views::reverse(skipped)) {
+            wellTraj.intersections.erase(wellTraj.intersections.begin() + is);
         }
     }
 

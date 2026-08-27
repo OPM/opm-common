@@ -2246,7 +2246,8 @@ WELSEGS
 /
 )";
 
-    Opm::Schedule mswTrajectorySchedule(const std::string& schedule)
+    Opm::Schedule mswTrajectorySchedule(const std::string& schedule,
+                                        const std::string& extra_grid = {})
     {
         const auto deck = Opm::Parser{}.parseString(R"(RUNSPEC
 START
@@ -2278,6 +2279,7 @@ EQUALS
   PERMZ  10 /
   PORO    0.3 /
 /
+)" + extra_grid + R"(
 PROPS
 DENSITY
   800 1000 1 /
@@ -2478,4 +2480,42 @@ WELSEGS
 )";
 
     BOOST_CHECK_THROW(mswTrajectorySchedule(schedule), Opm::OpmInputError);
+}
+
+BOOST_AUTO_TEST_CASE(Comptraj_MSW_Skipped_Cells_Do_Not_Break_Segment_Assignment)
+{
+    // A cell with no lateral permeability has no representable connection
+    // factor and is left out of the well, exactly as COMPDAT leaves it out.
+    // The COMPSEGS records derived from the trajectory must not keep looking
+    // for the connection that was never made.
+    const auto schedule = R"(WELSPECS
+  'W1' 'G' 3 3 2000.0 OIL /
+/
+WELTRAJ
+  'W1'    1     250    250    2000    2000 /
+  'W1'    1     250    250    2030    2030 /
+/
+WELSEGS
+  'W1'    2000      2000      1*   ABS  'HF-' /
+    2    2     1      1     2005   2005  0.15 1.0e-5 /
+    3    3     1      2     2015   2015  0.15 1.0e-5 /
+    4    4     1      3     2025   2025  0.15 1.0e-5 /
+/
+COMPTRAJ
+-- CF and Kh defaulted, so they are calculated from the cell properties.
+  'W1'    1    2000   2030   2*     1*    1*   1*    0.15  1*   0 /
+/
+)";
+
+    const auto sched = mswTrajectorySchedule(schedule, R"(EQUALS
+  PERMX 0 3 3 3 3 2 2 /
+  PERMY 0 3 3 3 3 2 2 /
+/
+)");
+
+    const auto& connections = sched.getWell("W1", 0).getConnections();
+
+    BOOST_REQUIRE_EQUAL(connections.size(), std::size_t{2});
+    BOOST_CHECK_EQUAL(segmentOfCell(connections, 2, 2, 0), 2);
+    BOOST_CHECK_EQUAL(segmentOfCell(connections, 2, 2, 2), 4);
 }
