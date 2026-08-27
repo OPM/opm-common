@@ -65,6 +65,7 @@
 #include <cassert>
 #include <cmath>
 #include <cstddef>
+#include <set>
 #include <cstring>
 #include <exception>
 #include <iostream>
