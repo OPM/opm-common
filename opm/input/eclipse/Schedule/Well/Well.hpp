@@ -68,6 +68,7 @@ struct WellMICPProperties;
 struct WellPolymerProperties;
 class WellSegments;
 class WellTracerProperties;
+class WELDRAW;
 class WVFPEXP;
 class WVFPDP;
 class WDFAC;
@@ -489,6 +490,7 @@ public:
     const WVFPDP& getWVFPDP() const;
     const WVFPEXP& getWVFPEXP() const;
     const WDFAC& getWDFAC() const;
+    const WELDRAW& getWELDRAW() const;
 
     /* The rate of a given phase under the following assumptions:
      * * Returns zero if production is requested for an injector (and vice
@@ -580,6 +582,7 @@ public:
     bool updateWVFPDP(std::shared_ptr<WVFPDP> wvfpdp);
     bool updateWVFPEXP(std::shared_ptr<WVFPEXP> wvfpexp);
     bool updateWDFAC(std::shared_ptr<WDFAC> wdfac);
+    bool updateWELDRAW(std::shared_ptr<WELDRAW> weldraw);
 
     bool handleWELSEGS(const DeckKeyword& keyword);
     bool handleCOMPSEGS(const DeckKeyword& keyword, const ScheduleGrid& grid, const ParseContext& parseContext, ErrorGuard& errors);
@@ -616,6 +619,10 @@ public:
 
     ProductionControls productionControls(const SummaryState& st) const;
     InjectionControls injectionControls(const SummaryState& st) const;
+
+    /// Evaluated WELDRAW maximum allowable drawdown in SI units (Pascal).
+    /// Only meaningful when getWELDRAW().active() is true.
+    double weldrawMaxDrawdown(const SummaryState& st) const;
     int vfp_table_number() const;
     int pvt_table_number() const;
     int fip_region_number() const;
@@ -686,6 +693,7 @@ public:
         serializer(wvfpdp);
         serializer(wdfac);
         serializer(wvfpexp);
+        serializer(weldraw);
         serializer(m_pavg);
         serializer(well_inj_temperature);
         serializer(default_well_inj_temperature);
@@ -759,6 +767,7 @@ private:
     std::shared_ptr<WVFPDP> wvfpdp{};
     std::shared_ptr<WVFPEXP> wvfpexp{};
     std::shared_ptr<WDFAC> wdfac{};
+    std::shared_ptr<WELDRAW> weldraw{};
 
     Status status{Status::AUTO};
     PAvg m_pavg{};

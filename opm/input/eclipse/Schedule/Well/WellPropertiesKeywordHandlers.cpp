@@ -27,6 +27,7 @@
 #include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellBrineProperties.hpp>
 #include <opm/input/eclipse/Schedule/Well/WDFAC.hpp>
+#include <opm/input/eclipse/Schedule/Well/WELDRAW.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellEconProductionLimits.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellFoamProperties.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellMICPProperties.hpp>
@@ -168,6 +169,39 @@ void handleWEFAC(HandlerContext& handlerContext)
 
                 handlerContext.state().wellgroup_events()
                     .addEvent(well_name, ScheduleEvents::WELLGROUP_EFFICIENCY_UPDATE);
+            }
+        }
+    }
+}
+
+void handleWELDRAW(HandlerContext& handlerContext)
+{
+    using Kw = ParserKeywords::WELDRAW;
+
+    for (const auto& record : handlerContext.keyword) {
+        const auto wellNamePattern = record.getItem<Kw::WELL>().getTrimmedString(0);
+        const auto well_names = handlerContext.wellNames(wellNamePattern, true);
+        if (well_names.empty()) {
+            handlerContext.invalidNamePattern(wellNamePattern);
+        }
+
+        const auto& draw_item = record.getItem<Kw::MAX_DRAW>();
+        if (!draw_item.hasValue(0) || draw_item.defaultApplied(0)) {
+            throw OpmInputError {
+                fmt::format("Item 2 of WELDRAW is defaulted for {}.  The item "
+                            "has no default and the maximum allowable drawdown "
+                            "must be given explicitly.", wellNamePattern),
+                handlerContext.keyword.location()
+            };
+        }
+
+        for (const auto& well_name : well_names) {
+            auto well = handlerContext.state().wells.get(well_name);
+            auto weldraw = std::make_shared<WELDRAW>(well.getWELDRAW());
+            weldraw->update(record, well.getPreferredPhase());
+
+            if (well.updateWELDRAW(std::move(weldraw))) {
+                handlerContext.state().wells.update(std::move(well));
             }
         }
     }
@@ -769,6 +803,7 @@ getWellPropertiesHandlers()
         { "WDFACCOR", &handleWDFACCOR },
         { "WECON"   , &handleWECON    },
         { "WEFAC"   , &handleWEFAC    },
+        { "WELDRAW" , &handleWELDRAW  },
         { "WELPI"   , &handleWELPI    },
         { "WFOAM"   , &handleWFOAM    },
         { "WINJCLN",  &handleWINJCLN  },

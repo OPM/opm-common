@@ -186,6 +186,9 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
 
                 CombRate =   9,  // Well controlled by linearly
                                  // combined rate target
+
+                Drawdown =  12,  // Well controlled by its maximum
+                                 // allowable drawdown (WELDRAW)
             };
 
             enum CompOrder : int {
@@ -321,6 +324,10 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
             WTestInterval     = 32, // Well's WTEST interval (WTEST(2))
             HistLiqRateTarget = 33, // Well's historical/observed liquid
                                     // rate target/limit
+
+            MaxDrawdown       = 34, // Well's maximum allowable drawdown
+                                    // (WELDRAW(2)).  Zero when no limit
+                                    // applies.
 
             WTestStartupTime  = 39, // Well's WTEST startup time (WTEST(5))
 

@@ -103,6 +103,8 @@ struct RstWell
     float bhp_target_float;
     float vfp_bhp_adjustment;
     float vfp_bhp_scaling_factor;
+    /// Maximum allowable drawdown (WELDRAW).  Zero when no limit applies.
+    float max_drawdown;
     float hist_lrat_target;
     float hist_grat_target;
     float hist_bhp_target;

@@ -323,6 +323,7 @@ list(APPEND MAIN_SOURCE_FILES
   opm/input/eclipse/Schedule/Well/WList.cpp
   opm/input/eclipse/Schedule/Well/WListManager.cpp
   opm/input/eclipse/Schedule/Well/WDFAC.cpp
+  opm/input/eclipse/Schedule/Well/WELDRAW.cpp
   opm/input/eclipse/Schedule/Well/WVFPDP.cpp
   opm/input/eclipse/Schedule/Well/WVFPEXP.cpp
   opm/input/eclipse/Schedule/WellTraj/RigEclipseWellLogExtractor.cpp
@@ -1228,6 +1229,7 @@ list(APPEND PUBLIC_HEADER_FILES
   opm/input/eclipse/Schedule/Well/TrackOrderingTSP.hpp
   opm/input/eclipse/Schedule/Well/WCYCLE.hpp
   opm/input/eclipse/Schedule/Well/WDFAC.hpp
+  opm/input/eclipse/Schedule/Well/WELDRAW.hpp
   opm/input/eclipse/Schedule/Well/WINJMULT.hpp
   opm/input/eclipse/Schedule/Well/WList.hpp
   opm/input/eclipse/Schedule/Well/WListManager.hpp
