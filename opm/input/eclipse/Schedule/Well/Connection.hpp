@@ -258,9 +258,48 @@ namespace Opm {
         void setDefaultSatTabId(bool id);
         void setStaticDFacCorrCoeff(const double c);
 
-        /// Record \p branch as this connection's only COMPTRAJ contributor,
-        /// discarding any per-branch CTF values accumulated so far.
-        void resetComptrajBranch(int branch);
+        /// Branch numbers that have contributed a COMPTRAJ perforation to
+        /// this connection, in ascending order.
+        const std::vector<int>& comptrajBranches() const
+        {
+            return this->m_branches;
+        }
+
+        /// Per-branch CTF properties, parallel to comptrajBranches().  Empty
+        /// while fewer than two branches contribute, in which case
+        /// ctfProperties() already holds the single contributor's values.
+        const std::vector<CTFProperties>& comptrajBranchCTFs() const
+        {
+            return this->m_branch_ctf;
+        }
+
+        /// Restore branch bookkeeping onto a connection that was rebuilt in
+        /// place.
+        void setComptrajBranches(std::vector<int>           branches,
+                                 std::vector<CTFProperties> branch_ctf);
+
+        /// Combine a COMPTRAJ perforation from \p branch into this
+        /// connection.
+        ///
+        /// A cell may be intersected by several branches of a multi-lateral
+        /// well, each contributing its own transmissibility.  Re-specifying a
+        /// branch that already contributes replaces that branch's
+        /// contribution; other branches' contributions are retained.
+        ///
+        /// Updates ctfProperties() to the combination of all contributing
+        /// branches.
+        ///
+        /// \param[in] branch Contributing branch number.
+        ///
+        /// \param[in] ctf CTF properties of this branch's perforation.
+        void addComptrajBranch(int branch, const CTFProperties& ctf);
+
+        /// Well segment owner among the contributing branches.
+        ///
+        /// A cell shared by several branches is allocated to the segment of
+        /// the lowest-numbered contributing branch.  Nullopt for connections
+        /// that do not originate from COMPTRAJ.
+        std::optional<int> segmentOwnerBranch() const;
 
         /// Whether this connection originates from COMPTRAJ rather than from
         /// COMPDAT.

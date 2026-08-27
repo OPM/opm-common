@@ -886,7 +886,7 @@ CF and Kh items for well {} must both be specified or both defaulted/negative)",
                                     noConn, 0,
                                     defaultSatTable);
 
-                this->m_connections.back().resetComptrajBranch(branch);
+                this->m_connections.back().addComptrajBranch(branch, ctf_props);
             }
             else {
                 const auto compl_num = prev->complnum();
@@ -895,17 +895,27 @@ CF and Kh items for well {} must both be specified or both defaulted/negative)",
                 const auto perf_range = prev->perf_range();
                 const auto thermal_length = prev->thermalLength();
 
+                // The connection is rebuilt so that this record's state and
+                // saturation table win; its branch bookkeeping has to survive
+                // that, since the branches perforating this cell are
+                // cumulative.
+                auto branches = prev->comptrajBranches();
+                auto branch_ctf = prev->comptrajBranchCTFs();
+                const auto prev_ctf = prev->ctfProperties();
+
                 *prev = Connection {
                     ijk[0], ijk[1], ijk[2],
                     cell.global_index, compl_num,
                     state, direction, ctf_kind, satTableId,
-                    cell.depth, ctf_props,
+                    cell.depth, prev_ctf,
                     css_ind, defaultSatTable
                 };
 
                 prev->updateSegment(conSegNo, cell.depth, thermal_length,
                                     css_ind, perf_range);
-                prev->resetComptrajBranch(branch);
+
+                prev->setComptrajBranches(std::move(branches), std::move(branch_ctf));
+                prev->addComptrajBranch(branch, ctf_props);
             }
         }
     }

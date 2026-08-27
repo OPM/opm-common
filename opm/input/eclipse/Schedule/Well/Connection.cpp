@@ -434,10 +434,121 @@ namespace Opm
         this->ctf_properties_.static_dfac_corr_coeff = c;
     }
 
-    void Connection::resetComptrajBranch(const int branch)
+    namespace {
+
+        /// Combine the CTF properties of all branches perforating one cell.
+        ///
+        /// Mirrors the export-side combination rules ResInsight applies when
+        /// it writes COMPDAT for a multi-lateral well (OPM/ResInsight#7049).
+        Connection::CTFProperties
+        combineBranchCTFs(const std::vector<Connection::CTFProperties>& branch_ctf)
+        {
+            auto combined = Connection::CTFProperties{};
+
+            // Transmissibility, Kh and perforated length are additive.
+            auto cf_total = 0.0;
+            for (const auto& ctf : branch_ctf) {
+                combined.CF += ctf.CF;
+                combined.Kh += ctf.Kh;
+                combined.connection_length += ctf.connection_length;
+
+                cf_total += ctf.CF;
+            }
+
+            // Wellbore radius, skin and D-factor are CF-weighted averages.
+            // Fall back to an unweighted average if the CFs cannot serve as
+            // weights.
+            const auto weighted = cf_total > 0.0;
+            for (const auto& ctf : branch_ctf) {
+                const auto weight = weighted ? ctf.CF : 1.0;
+
+                combined.rw += weight * ctf.rw;
+                combined.skin_factor += weight * ctf.skin_factor;
+                combined.d_factor += weight * ctf.d_factor;
+            }
+
+            const auto num_branches = static_cast<double>(branch_ctf.size());
+            const auto norm = weighted ? cf_total : num_branches;
+
+            combined.rw /= norm;
+            combined.skin_factor /= norm;
+
+            // The D-factor is additionally divided by the number of
+            // contributing branches.
+            combined.d_factor /= norm * num_branches;
+
+            // Effective permeability and the equivalent radii are properties
+            // of the cell, not of the individual perforations, so they are
+            // taken as they are rather than combined.  Every branch
+            // perforating this cell computed them from the same cell
+            // properties and the same (Z) direction.
+            combined.Ke = branch_ctf.front().Ke;
+            combined.r0 = branch_ctf.front().r0;
+            combined.re = branch_ctf.front().re;
+
+            // peaceman_denom and static_dfac_corr_coeff are not set for
+            // trajectory-based connections and are left at zero.
+
+            return combined;
+        }
+
+    } // Anonymous namespace
+
+    void Connection::setComptrajBranches(std::vector<int>           branches,
+                                         std::vector<CTFProperties> branch_ctf)
     {
-        this->m_branches.assign(1, branch);
-        this->m_branch_ctf.clear();
+        this->m_branches = std::move(branches);
+        this->m_branch_ctf = std::move(branch_ctf);
+    }
+
+    void Connection::addComptrajBranch(const int branch, const CTFProperties& ctf)
+    {
+        if (this->m_branches.empty()) {
+            // First contributor to this cell.
+            this->m_branches.assign(1, branch);
+            this->m_branch_ctf.clear();
+            this->ctf_properties_ = ctf;
+            return;
+        }
+
+        if ((this->m_branches.size() == 1) && (this->m_branches.front() == branch)) {
+            // The only contributor re-specifies itself; the later record
+            // wins outright and there is nothing to combine.
+            this->m_branch_ctf.clear();
+            this->ctf_properties_ = ctf;
+            return;
+        }
+
+        if (this->m_branch_ctf.empty()) {
+            // Promoting a single contributor to several.  That contributor's
+            // values are still those of the connection itself.
+            this->m_branch_ctf.assign(1, this->ctf_properties_);
+        }
+
+        const auto pos = std::lower_bound(this->m_branches.begin(),
+                                          this->m_branches.end(), branch);
+        const auto idx = std::distance(this->m_branches.begin(), pos);
+
+        if ((pos == this->m_branches.end()) || (*pos != branch)) {
+            this->m_branches.insert(pos, branch);
+            this->m_branch_ctf.insert(this->m_branch_ctf.begin() + idx, ctf);
+        }
+        else {
+            // Re-specifying one branch replaces only that branch's share.
+            this->m_branch_ctf[idx] = ctf;
+        }
+
+        this->ctf_properties_ = combineBranchCTFs(this->m_branch_ctf);
+    }
+
+    std::optional<int> Connection::segmentOwnerBranch() const
+    {
+        if (this->m_branches.empty()) {
+            return std::nullopt;
+        }
+
+        // m_branches is kept in ascending order.
+        return this->m_branches.front();
     }
 
     bool Connection::fromTrajectory() const
