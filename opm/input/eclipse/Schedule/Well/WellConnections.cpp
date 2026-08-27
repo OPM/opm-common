@@ -23,6 +23,7 @@
 
 #include <opm/common/OpmLog/KeywordLocation.hpp>
 #include <opm/common/OpmLog/OpmLog.hpp>
+#include <opm/common/utility/OpmInputError.hpp>
 
 #include <opm/common/utility/ActiveGridCells.hpp>
 
@@ -61,6 +62,7 @@
 #include <cstddef>
 #include <numbers>
 #include <optional>
+#include <ranges>
 #include <span>
 #include <stdexcept>
 #include <string>
@@ -718,6 +720,24 @@ The cell ({},{},{}) in well {} is not active and the connection will be ignored)
         using Kw = ParserKeywords::COMPTRAJ;
 
         const auto branch = record.getItem<Kw::BRANCH_NUMBER>().get<int>(0);
+
+        if (branch <= 0) {
+            throw OpmInputError {
+                fmt::format("Branch number {} for well {} must be a positive "
+                            "integer. Branch 1 is the main stem.", branch, wname),
+                location
+            };
+        }
+
+        if (! this->coord.contains(branch)) {
+            throw OpmInputError {
+                fmt::format("Well {} has no WELTRAJ trajectory for branch {}. "
+                            "Every branch referenced by COMPTRAJ must first be "
+                            "defined by WELTRAJ.", wname, branch),
+                location
+            };
+        }
+
         const auto& perf_top = record.getItem<Kw::PERF_TOP>();
         const auto& perf_bot = record.getItem<Kw::PERF_BOT>();
 
@@ -860,6 +880,23 @@ CF and Kh items for well {} must both be specified or both defaulted/negative)",
                 throw std::logic_error(msg);
             }
 
+            if (! (std::isfinite(ctf_props.CF) && std::isfinite(ctf_props.Kh) &&
+                   (ctf_props.CF >= 0.0) && (ctf_props.Kh >= 0.0)))
+            {
+                // Degenerate cell geometry, e.g. a zero thickness cell.  A
+                // single such contribution would poison the combined CTF of
+                // every branch reaching this cell, so leave it out entirely.
+                OpmLog::warning(fmt::format(R"(Problem with COMPTRAJ keyword
+In {} line {}
+Branch {} of well {} yields a non-representable connection transmissibility factor ({}) or Kh ({}) in cell ({},{},{}). The connection will be ignored)",
+                                            location.filename, location.lineno,
+                                            branch, wname,
+                                            ctf_props.CF, ctf_props.Kh,
+                                            ijk[0] + 1, ijk[1] + 1, ijk[2] + 1));
+
+                continue;
+            }
+
             // Todo: check what needs to be done for polymerMW module, see
             // loadCOMPDAT used by the PolymerMW module
 
@@ -903,6 +940,20 @@ CF and Kh items for well {} must both be specified or both defaulted/negative)",
                 auto branch_ctf = prev->comptrajBranchCTFs();
                 const auto prev_ctf = prev->ctfProperties();
 
+                if ((state == Connection::State::SHUT) &&
+                    std::ranges::any_of(branches, [branch](const int b)
+                                        { return b != branch; }))
+                {
+                    // There is only one state per connection, so shutting a
+                    // cell through one branch also shuts off the others.
+                    OpmLog::warning(fmt::format(R"(Problem with COMPTRAJ keyword
+In {} line {}
+Branch {} of well {} shuts cell ({},{},{}), which is also perforated by other branches of the same well. The cell will be shut for all of them)",
+                                                location.filename, location.lineno,
+                                                branch, wname,
+                                                ijk[0] + 1, ijk[1] + 1, ijk[2] + 1));
+                }
+
                 *prev = Connection {
                     ijk[0], ijk[1], ijk[2],
                     cell.global_index, compl_num,
@@ -926,6 +977,15 @@ CF and Kh items for well {} must both be specified or both defaulted/negative)",
                                       [[maybe_unused]] const KeywordLocation& location)
     {
         int branch = record.getItem("BRANCH_NUMBER").get<int>(0);
+
+        if (branch <= 0) {
+            throw OpmInputError {
+                fmt::format("Branch number {} for well {} must be a positive "
+                            "integer. Branch 1 is the main stem.", branch, wname),
+                location
+            };
+        }
+
         double x = record.getItem("X").getSIDouble(0);
         double y = record.getItem("Y").getSIDouble(0);
 

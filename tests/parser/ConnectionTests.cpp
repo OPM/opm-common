@@ -1653,3 +1653,63 @@ COMPTRAJ
 
     BOOST_CHECK_NO_THROW(comptrajSchedule(deck));
 }
+
+BOOST_AUTO_TEST_CASE(Comptraj_Branch_Number_Must_Be_Positive)
+{
+    // WELTRAJ.
+    {
+        const auto deck = comptrajDeck(R"(WELSPECS
+  'W1' 'G' 3 3 2000.0 OIL /
+/
+WELTRAJ
+  'W1'    0     250    250    2000    2000 /
+  'W1'    0     250    250    2030    2030 /
+/
+)");
+
+        BOOST_CHECK_THROW(comptrajSchedule(deck), Opm::OpmInputError);
+    }
+
+    // COMPTRAJ.
+    {
+        const auto deck = comptrajDeck(weltraj_two_branches + R"(COMPTRAJ
+  'W1'   -1    2000   2010   2*     1*    1*   10.0  0.25  100  0 /
+/
+)");
+
+        BOOST_CHECK_THROW(comptrajSchedule(deck), Opm::OpmInputError);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(Comptraj_Unknown_Branch_Is_An_Input_Error)
+{
+    // Branch 3 is never given a trajectory.  This used to escape as a raw
+    // std::out_of_range from the trajectory lookup.
+    const auto deck = comptrajDeck(weltraj_two_branches + R"(COMPTRAJ
+  'W1'    3    2000   2010   2*     1*    1*   10.0  0.25  100  0 /
+/
+)");
+
+    BOOST_CHECK_THROW(comptrajSchedule(deck), Opm::OpmInputError);
+}
+
+BOOST_AUTO_TEST_CASE(Comptraj_Shutting_A_Shared_Cell_Shuts_It_For_All_Branches)
+{
+    const auto deck = comptrajDeck(weltraj_two_branches + R"(COMPTRAJ
+  'W1'    1    2000   2020   2*     OPEN  1*   10.0  0.20  100  1.0 /
+  'W1'    2    2015   2115   2*     SHUT  1*   30.0  0.40  300  5.0 /
+/
+)");
+
+    const auto sched = comptrajSchedule(deck);
+    const auto& connections = sched.getWell("W1", 0).getConnections();
+
+    const auto& shared = connectionAt(connections, 2, 2, 1);
+
+    // The state of the last record to touch the cell wins, for every branch.
+    BOOST_CHECK_EQUAL(shared.comptrajBranches().size(), std::size_t{2});
+    BOOST_CHECK(shared.state() == Opm::Connection::State::SHUT);
+
+    // Cells that only branch 1 reaches stay open.
+    BOOST_CHECK(connectionAt(connections, 2, 2, 0).state() == Opm::Connection::State::OPEN);
+}
