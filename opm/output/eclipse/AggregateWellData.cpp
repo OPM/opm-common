@@ -705,6 +705,18 @@ namespace {
         }
     } // IWell
 
+    // A hydrocarbon tracer carries a dissolved/vaporised solution
+    // component only when the run supports the corresponding solution
+    // tracer; the free component always exists.  Water and temperature
+    // tracers have a single component.
+    template <typename TracerEntry>
+    bool tracerHasSolutionPart(const TracerEntry& tracer,
+                               const Opm::TracerConfig& tracers)
+    {
+        return ((tracer.phase == Opm::Phase::GAS) && tracers.supportsSolutionGasTracer())
+            || ((tracer.phase == Opm::Phase::OIL) && tracers.supportsVaporisedOilTracer());
+    }
+
     namespace SWell {
         std::size_t entriesPerWell(const std::vector<int>& inteHead)
         {
@@ -1200,8 +1212,10 @@ namespace {
                 } else {
                     sWell[output_index++] =
                         smry.get_well_var(wname, fmt::format("WTICF{}", tracer.name), 0.0);
-                    sWell[output_index++] =
-                        smry.get_well_var(wname, fmt::format("WTICS{}", tracer.name), 0.0);
+                    if (tracerHasSolutionPart(tracer, tracers)) {
+                        sWell[output_index++] =
+                            smry.get_well_var(wname, fmt::format("WTICS{}", tracer.name), 0.0);
+                    }
                 }
             }
         }
@@ -1467,7 +1481,9 @@ namespace {
                     ix += processWaterTracer(tracer, &xWell[ix]);
                 }
                 else {
-                    ix += processHCTracer(tracer, &xWell[ix]);
+                    ix += processHCTracer(tracer,
+                                          tracerHasSolutionPart(tracer, tracers),
+                                          &xWell[ix]);
                 }
             }
 
@@ -1489,9 +1505,13 @@ namespace {
                 return std::size_t{1};
             };
 
-            auto processHCTracer = [&smry, sign, quantityPrefix, &wellName](const auto& tracer, auto* xwel)
+            auto processHCTracer = [&smry, sign, quantityPrefix, &wellName]
+                (const auto& tracer, const bool hasSolutionPart, auto* xwel)
             {
                 xwel[0] = sign * smry.get_well_var(wellName, quantityPrefix + 'F' + tracer.name, 0.0);
+                if (! hasSolutionPart) {
+                    return std::size_t{1};
+                }
                 xwel[1] = sign * smry.get_well_var(wellName, quantityPrefix + 'S' + tracer.name, 0.0);
                 return std::size_t{2};
             };

@@ -1340,7 +1340,13 @@ namespace {
         smry.update_well_var(well, "WGITH", xwel[VI::XWell::index::HistGasInjTotal]);
 
         // Tracer production/injection totals
-        const auto num_tracer_comps = tracer_dims.water_tracers() + 2* (tracer_dims.oil_tracers() + tracer_dims.gas_tracers()) + (isTemp ? 1 : 0);
+        // A hydrocarbon tracer has a solution component only when the run
+        // supports the corresponding solution tracer -- the same counting
+        // the writer uses.
+        const auto num_tracer_comps = tracer_dims.water_tracers()
+            + (tracer_config.supportsVaporisedOilTracer() ? 2 : 1) * tracer_dims.oil_tracers()
+            + (tracer_config.supportsSolutionGasTracer()  ? 2 : 1) * tracer_dims.gas_tracers()
+            + (isTemp ? 1 : 0);
         auto offset = VI::XWell::index::TracerOffset + num_tracer_comps; // First num_tracer_comps are the rates
         for (const auto* type : { "P", "I", }) { // Production followed by injection
             if (isTemp) {
@@ -1353,6 +1359,14 @@ namespace {
                 }
                 else {
                     const auto free_total = xwel[offset++];
+                    const auto hasSolutionPart =
+                        ((tracer.phase == Opm::Phase::GAS) && tracer_config.supportsSolutionGasTracer()) ||
+                        ((tracer.phase == Opm::Phase::OIL) && tracer_config.supportsVaporisedOilTracer());
+                    if (! hasSolutionPart) {
+                        smry.update_well_var(well, fmt::format("WT{}TF{}", type, tracer.name), free_total);
+                        smry.update_well_var(well, fmt::format("WT{}T{}", type, tracer.name), free_total);
+                        continue;
+                    }
                     const auto solution_total = xwel[offset++];
 
                     smry.update_well_var(well, fmt::format("WT{}TF{}", type, tracer.name), free_total);

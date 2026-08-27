@@ -29,6 +29,7 @@
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/Regdims.hpp>
+#include <opm/input/eclipse/EclipseState/TracerConfig.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
 
 #include <opm/input/eclipse/Schedule/Action/ActionX.hpp>
@@ -678,9 +679,16 @@ createInteHead(const EclipseState& es,
     const auto& rdim  = tdim.getRegdims();
     const auto& rckcfg = es.getSimulationConfig().rock_config();
     const auto& tracers = es.runspec().tracers();
-    // TEMP is a tracer, oil&gas tracers have both free and solution parts.
+    // TEMP is a tracer.
     const auto num_tracers = tracers.water_tracers() + tracers.oil_tracers() + tracers.gas_tracers() + (es.runspec().temp() ? 1 : 0);
-    const auto num_tracer_comps = num_tracers + tracers.oil_tracers() + tracers.gas_tracers();
+    // A tracer occupies one component per phase state it can exist in: a
+    // free component always, plus a solution component only when the run
+    // supports the corresponding solution tracer.  The tracer-dependent
+    // restart array dimensions follow this per-support counting.
+    const auto& tracerCfg = es.tracer();
+    const auto num_tracer_comps = num_tracers
+        + (tracerCfg.supportsSolutionGasTracer()  ? tracers.gas_tracers() : 0)
+        + (tracerCfg.supportsVaporisedOilTracer() ? tracers.oil_tracers() : 0);
     int nxwelz_tracer_shift = num_tracer_comps*5 + 2 * (num_tracers > 0);
 
     // NGRP is a per-grid actual-group count: the global header carries
