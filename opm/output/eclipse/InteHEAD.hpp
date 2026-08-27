@@ -209,6 +209,7 @@ namespace Opm { namespace RestartIO {
         InteHEAD& dimensions(const int nx, const int ny, const int nz);
         InteHEAD& dimensions(const std::array<int,3>& cartDims);
         InteHEAD& numActive(const int nactive);
+        InteHEAD& numLocalGrids(const int nlgr);
 
         InteHEAD& unitConventions(const UnitSystem& usys);
         InteHEAD& wellTableDimensions(const WellTableDim& wtdim);
