@@ -58,6 +58,9 @@
 #include <set>
 #include <stdexcept>
 #include <string>
+#include <vector>
+
+#include <fmt/format.h>
 
 BOOST_AUTO_TEST_CASE(AICDWellTest)
 {
@@ -2186,4 +2189,185 @@ BOOST_AUTO_TEST_CASE(loadCOMPTRAJTESTSPE1_MSW) {
     BOOST_CHECK_EQUAL(segments[i].outletSegment(), i);
     BOOST_CHECK_CLOSE(segments[i].depth(), units.to_si(Opm::UnitSystem::measure::length, depths[i]), 2e-2);
   }
+}
+
+// ---------------------------------------------------------------------------
+// Segment ownership of cells reached by several COMPTRAJ branches
+// ---------------------------------------------------------------------------
+
+namespace {
+
+    // A vertical main stem through column (3,3) and a lateral running in the
+    // X direction through the middle layer.  Cell (3,3,2) is perforated by
+    // both branches, cells (4,3,2) and (5,3,2) by the lateral only.
+    //
+    // The trajectories are chosen so that MD == TVD along the main stem and
+    // the lateral is horizontal, which makes the cell/segment measured depths
+    // easy to follow:
+    //
+    //   branch 1 : MD 2000 -> 2030, cells (3,3,1), (3,3,2), (3,3,3)
+    //   branch 2 : MD 2015 -> 2215, cells (3,3,2), (4,3,2), (5,3,2)
+    //
+    // Segment nodes sit at the cell centres, so segments 2, 3 and 4 cover the
+    // main stem cells and segments 5, 6 and 7 the lateral ones.  The shared
+    // cell is therefore claimed by segment 3 when branch 1 owns it and by
+    // segment 5 when branch 2 does.
+    const std::string msw_two_branch_prelude = R"(WELSPECS
+  'W1' 'G' 3 3 2000.0 OIL /
+/
+WELTRAJ
+-- WELL BRANCH   X      Y      TVD     MD
+  'W1'    1     250    250    2000    2000 /
+  'W1'    1     250    250    2030    2030 /
+  'W1'    2     250    250    2015    2015 /
+  'W1'    2     450    250    2015    2215 /
+/
+WELSEGS
+-- WELL  TOP_DEPTH TOP_LENGTH VOL  TYPE PRESSURE
+  'W1'    2000      2000      1*   ABS  'HF-' /
+-- SEG1 SEG2 BRANCH OUTLET LENGTH DEPTH DIAM  ROUGH
+    2    2     1      1     2005   2005  0.15 1.0e-5 /
+    3    3     1      2     2015   2015  0.15 1.0e-5 /
+    4    4     1      3     2025   2025  0.15 1.0e-5 /
+    5    5     2      2     2040   2015  0.10 1.0e-5 /
+    6    6     2      5     2115   2015  0.10 1.0e-5 /
+    7    7     2      6     2190   2015  0.10 1.0e-5 /
+/
+)";
+
+    const std::string comptraj_main_stem = R"(COMPTRAJ
+-- WELL BRANCH  TOP    BOT   REF NO STATE SAT   CF   DIAM   KH  SKIN
+  'W1'    1    2000   2030   2*     1*    1*   10.0  0.15  100  0 /
+/
+)";
+
+    const std::string comptraj_lateral = R"(COMPTRAJ
+  'W1'    2    2015   2215   2*     1*    1*   30.0  0.10  300  0 /
+/
+)";
+
+    Opm::Schedule mswTrajectorySchedule(const std::string& schedule)
+    {
+        const auto deck = Opm::Parser{}.parseString(R"(RUNSPEC
+START
+  18 MAR 2026 /
+OIL
+WATER
+DIMENS
+  5 5 3 /
+TABDIMS
+/
+EQLDIMS
+/
+WELLDIMS
+  2 20 1 2 /
+WSEGDIMS
+  2 20 3 /
+GRID
+DXV
+  5*100 /
+DYV
+  5*100 /
+DZV
+  3*10 /
+DEPTHZ
+  36*2000 /
+EQUALS
+  PERMX 100 /
+  PERMY 100 /
+  PERMZ  10 /
+  PORO    0.3 /
+/
+PROPS
+DENSITY
+  800 1000 1 /
+SOLUTION
+EQUIL
+  2010 200 2010 1.23 1995 0.0 1* 1* -5 /
+SCHEDULE
+)" + schedule + R"(
+TSTEP
+  5*10 /
+END
+)");
+
+        const auto es = Opm::EclipseState { deck };
+
+        return Opm::Schedule {
+            deck, es, Opm::ParseContext{}, *std::make_unique<Opm::ErrorGuard>(),
+            std::make_shared<Opm::Python>()
+        };
+    }
+
+    int segmentOfCell(const Opm::WellConnections& connections,
+                      const int i, const int j, const int k)
+    {
+        for (const auto& conn : connections) {
+            if (conn.sameCoordinate(i, j, k)) {
+                return conn.segment();
+            }
+        }
+
+        BOOST_FAIL(fmt::format("No connection at ({},{},{})", i, j, k));
+        return -1;
+    }
+
+} // Anonymous namespace
+
+BOOST_AUTO_TEST_CASE(Comptraj_MSW_Shared_Cell_Belongs_To_Owner_Branch)
+{
+    const auto sched =
+        mswTrajectorySchedule(msw_two_branch_prelude +
+                              comptraj_main_stem + comptraj_lateral);
+
+    const auto& well = sched.getWell("W1", 0);
+    BOOST_REQUIRE(well.isMultiSegment());
+
+    const auto& connections = well.getConnections();
+    BOOST_REQUIRE_EQUAL(connections.size(), std::size_t{5});
+
+    // The shared cell is claimed by branch 1, the lowest numbered
+    // contributor, and hence attached to a main stem segment.
+    BOOST_CHECK_EQUAL(segmentOfCell(connections, 2, 2, 1), 3);
+
+    // Main stem cells above and below the lateral.
+    BOOST_CHECK_EQUAL(segmentOfCell(connections, 2, 2, 0), 2);
+    BOOST_CHECK_EQUAL(segmentOfCell(connections, 2, 2, 2), 4);
+
+    // Cells only the lateral reaches keep their lateral segments.
+    BOOST_CHECK_EQUAL(segmentOfCell(connections, 3, 2, 1), 6);
+    BOOST_CHECK_EQUAL(segmentOfCell(connections, 4, 2, 1), 7);
+}
+
+BOOST_AUTO_TEST_CASE(Comptraj_MSW_Segment_Ownership_Is_Order_Independent)
+{
+    // The lateral is completed before the main stem here, so branch 2
+    // temporarily owns the shared cell.  Once branch 1 arrives it takes over,
+    // giving the same result as the opposite order.
+    const auto sched =
+        mswTrajectorySchedule(msw_two_branch_prelude +
+                              comptraj_lateral + comptraj_main_stem);
+
+    const auto& connections = sched.getWell("W1", 0).getConnections();
+    BOOST_REQUIRE_EQUAL(connections.size(), std::size_t{5});
+
+    BOOST_CHECK_EQUAL(segmentOfCell(connections, 2, 2, 1), 3);
+    BOOST_CHECK_EQUAL(segmentOfCell(connections, 2, 2, 0), 2);
+    BOOST_CHECK_EQUAL(segmentOfCell(connections, 2, 2, 2), 4);
+    BOOST_CHECK_EQUAL(segmentOfCell(connections, 3, 2, 1), 6);
+    BOOST_CHECK_EQUAL(segmentOfCell(connections, 4, 2, 1), 7);
+}
+
+BOOST_AUTO_TEST_CASE(Comptraj_MSW_Every_Connection_Is_Attached_To_A_Segment)
+{
+    for (const auto& schedule : {msw_two_branch_prelude + comptraj_main_stem + comptraj_lateral,
+                                 msw_two_branch_prelude + comptraj_lateral + comptraj_main_stem})
+    {
+        const auto sched = mswTrajectorySchedule(schedule);
+        const auto& connections = sched.getWell("W1", 0).getConnections();
+
+        for (const auto& conn : connections) {
+            BOOST_CHECK_GT(conn.segment(), 0);
+        }
+    }
 }

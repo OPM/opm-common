@@ -517,12 +517,22 @@ Well: {}, connection: ({},{},{}))", well_name, I+1, J+1 , K+1);
             const int k = compseg.m_k;
 
             if (const auto& cell = grid.get_cell(i, j, k); cell.is_active()) {
+                auto& connection = new_connection_set.getFromIJK(i, j, k);
+
+                // A cell reached by several COMPTRAJ branches still holds a
+                // single connection, which can only be attached to one
+                // segment.  Let the owner branch -- the lowest numbered
+                // contributor, i.e. the one closest to the main stem -- claim
+                // it and ignore the records of the other branches.
+                const auto owner = connection.segmentOwnerBranch();
+                if (owner.has_value() && (*owner != compseg.m_branch_number)) {
+                    continue;
+                }
+
                 // Negative values to indicate cell depths should be used
                 const double cdepth = (compseg.center_depth >= 0.0)
                     ? compseg.center_depth
                     : cell.depth;
-
-                auto& connection = new_connection_set.getFromIJK(i, j, k);
 
                 // Fall back to the grid-block thickness when COMPSEGS item 10
                 // was defaulted (see penetrationThickness).
