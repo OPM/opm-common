@@ -2482,6 +2482,30 @@ WELSEGS
     BOOST_CHECK_THROW(mswTrajectorySchedule(schedule), Opm::OpmInputError);
 }
 
+BOOST_AUTO_TEST_CASE(Welsegs_Top_Segment_Only_Is_Rejected_For_A_Trajectory_Well)
+{
+    // The segment structure of a grid-independent well comes from WELSEGS.
+    // A WELSEGS with only its header record leaves nothing for the
+    // connections to attach to except the top segment, which would put the
+    // whole well on segment 1 without saying so.
+    const auto schedule = R"(WELSPECS
+  'W1' 'G' 3 3 2000.0 OIL /
+/
+WELTRAJ
+  'W1'    1     250    250    2000    2000 /
+  'W1'    1     250    250    2030    2030 /
+/
+WELSEGS
+  'W1'    2000      2000      1*   ABS  'HF-' /
+/
+COMPTRAJ
+  'W1'    1    2000   2030   2*     1*    1*   10.0  0.15  100  0 /
+/
+)";
+
+    BOOST_CHECK_THROW(mswTrajectorySchedule(schedule), Opm::OpmInputError);
+}
+
 BOOST_AUTO_TEST_CASE(Comptraj_MSW_Connection_Sort_Values_Are_Unique)
 {
     // The connections of an MSW well are sorted on their sort value, so two

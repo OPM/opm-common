@@ -91,6 +91,20 @@ namespace
             return;
         }
 
+        if (well.getSegments().size() <= 1) {
+            // Grid-independent segmented wells used to have their segments
+            // generated from the trajectory, one per perforated cell, and
+            // WELSEGS was only allowed to give the top segment.  The segment
+            // structure now comes from WELSEGS, so such a deck would quietly
+            // put the whole well on the top segment.
+            const auto msg = fmt::format(
+                "Well {} is a segmented grid-independent well, but its WELSEGS keyword "
+                "only defines the top segment. The segment structure of a COMPTRAJ well "
+                "is taken from WELSEGS and must be given explicitly.", well.name());
+
+            throw OpmInputError(msg, handlerContext.keyword.location());
+        }
+
         std::vector<Compsegs::TrajectoryConnection> trajectory_connections{};
         trajectory_connections.reserve(intersections.size());
 
