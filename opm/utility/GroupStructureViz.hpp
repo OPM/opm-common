@@ -24,8 +24,19 @@
 
 namespace Opm {
 class Schedule;
+} // namespace Opm
+
+namespace Opm::RestartIO {
+struct RstState;
+} // namespace Opm::RestartIO
+
+namespace Opm {
 
 void writeWellGroupGraph(const Schedule& schedule,
+                         const std::string& casename,
+                         const bool separateWellGroups = false);
+
+void writeWellGroupGraph(const RestartIO::RstState& rst_state,
                          const std::string& casename,
                          const bool separateWellGroups = false);
 
