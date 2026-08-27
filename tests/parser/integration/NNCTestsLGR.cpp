@@ -1011,11 +1011,13 @@ BOOST_AUTO_TEST_CASE(nnc_collection_opm_lgr_diff)
     // addNNC(1, 0, lgr1_nnc) with input (0,1),(2,1),(1,3),(3,3)
     // cell1=[0,2,1,3] → LGR1 cells → NNCL (1-indexed: [1,3,2,4])
     // cell2=[1,1,3,3] → global cells → NNCG (1-indexed: [2,2,4,4])
-    // NNCHEAD[0]=num_same_grid_nnc=3, NNCHEAD[1]=1 (LGR1 grid number)
+    // This NNCHEAD heads the NNCL/NNCG block, so it counts those connections
+    // (4), not the LGR's internal ones -- see 9cc2e3dbf.
+    // NNCHEAD[0]=nncl.size()=4, NNCHEAD[1]=1 (LGR1 grid number)
     // -----------------------------------------------------------------------
     {
         const auto& nnchead = egrid_file.get<int>(nnchead_idx[2]);  // 3rd NNCHEAD block
-        BOOST_CHECK_EQUAL(nnchead[0], 3);
+        BOOST_CHECK_EQUAL(nnchead[0], 4);
         BOOST_CHECK_EQUAL(nnchead[1], 1);
 
         const auto& nncl = egrid_file.get<int>(nncl_idx[0]);
@@ -1036,7 +1038,7 @@ BOOST_AUTO_TEST_CASE(nnc_collection_opm_lgr_diff)
     // -----------------------------------------------------------------------
     {
         const auto& nnchead = egrid_file.get<int>(nnchead_idx[4]);  // 5th NNCHEAD block
-        BOOST_CHECK_EQUAL(nnchead[0], 3);
+        BOOST_CHECK_EQUAL(nnchead[0], 4);   // heads NNCL/NNCG: 4 connections
         BOOST_CHECK_EQUAL(nnchead[1], 2);
 
         const auto& nncl = egrid_file.get<int>(nncl_idx[1]);
@@ -1057,7 +1059,7 @@ BOOST_AUTO_TEST_CASE(nnc_collection_opm_lgr_diff)
     // -----------------------------------------------------------------------
     {
         const auto& nnchead = egrid_file.get<int>(nnchead_idx[6]);  // 7th NNCHEAD block
-        BOOST_CHECK_EQUAL(nnchead[0], 3);
+        BOOST_CHECK_EQUAL(nnchead[0], 2);   // heads NNCL/NNCG: 2 connections
         BOOST_CHECK_EQUAL(nnchead[1], 3);
 
         const auto& nncl = egrid_file.get<int>(nncl_idx[2]);

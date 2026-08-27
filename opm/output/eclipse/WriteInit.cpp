@@ -806,6 +806,69 @@ namespace {
         }
     }
 
+    // The endpoint-scaling arrays for each LGR.  A refined cell inherits its
+    // father coarse cell's endpoints, which is the same active_fathers mapping
+    // writeLGRLocalProperties already uses for SATNUM and the rest, so this is
+    // the global block filtered onto the refined cells.  Written as its own
+    // LGR ... LGRSGONE section after the global block, matching the reference
+    // layout; without it a refined grid's INIT has no saturation endpoints at
+    // all and a post-processor silently falls back to the unscaled table.
+    void writeSatFuncScalingLGR(const ::Opm::EclipseState&        es,
+                                const ::Opm::EclipseGrid&         grid,
+                                const ::Opm::Schedule&            schedule,
+                                const ::Opm::UnitSystem&          units,
+                                ::Opm::EclIO::OutputStream::Init& initFile)
+    {
+        if (! grid.is_lgr()) {
+            return;
+        }
+
+        const auto epsVectors = ScalingVectors{}
+            .withHysteresis(es.runspec().hysterPar().active())
+            .collect       (es.runspec().phases());
+
+        const auto& propList = epsVectors.getVectors();
+        const auto  filleps  = es.cfg().init().filleps();
+
+        // Like the main grid: without FILLEPS, only endpoint arrays the deck defines.
+        if (!filleps && std::ranges::none_of(propList, [&es](const auto& prop)
+                { return es.globalFieldProps().has_double(prop.name); }))
+        {
+            return;
+        }
+
+        // With FILLEPS every endpoint array is written whether the deck defined
+        // it or not, so materialise the auto-created ones on a copy first --
+        // downstream users of FieldPropsManager must not see arrays created for
+        // output only.  Without it, only what the deck defined is written, with
+        // the sentinel for defaulted elements.
+        auto fp_copy = es.globalFieldProps();
+        if (filleps) {
+            for (const auto& prop : propList) {
+                if (prop.supports_auto_create) {
+                    fp_copy.get_double(prop.name);
+                }
+            }
+        }
+
+        bool any = false;
+        for (std::size_t index : grid.get_print_order_lgr()) {
+            const ::Opm::EclipseGridLGR& lgr_grid = grid.getLGRCell(index);
+            const auto active_fathers = lgr_grid.getLGRCell_active_father(grid);
+
+            any = true;
+            writeInitFileHeaderLGRCell(es, lgr_grid, schedule, initFile,
+                                       static_cast<int>(index) + 1, false);
+            writeDoubleCellPropertiesLGRCell(propList, fp_copy, units,
+                                             /* needDflt = */ !filleps,
+                                             initFile, active_fathers);
+        }
+
+        if (any) {
+            initFile.message("LGRSGONE");
+        }
+    }
+
     void writeNonNeighbourConnections(const std::vector<::Opm::NNCdata>& nnc,
                                       const ::Opm::UnitSystem&           units,
                                       ::Opm::EclIO::OutputStream::Init&  initFile)
@@ -1148,6 +1211,8 @@ void Opm::InitIO::write(const ::Opm::EclipseState&                  es,
     writeTableData(es, units, initFile);
 
     writeSatFuncScaling(es, units, initFile);
+
+    writeSatFuncScalingLGR(es, grid, schedule, units, initFile);
 
     // Aquifers
     // TODO: LGR-specific aquifer support planned for upcoming versions
