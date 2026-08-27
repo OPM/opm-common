@@ -202,6 +202,12 @@ namespace Opm
         result.m_econ_limits = std::make_unique<ConnectionEconLimits>(
             ConnectionEconLimits::serializationTestObject());
 
+        result.m_branches = {1, 2};
+        result.m_branch_ctf = {
+            CTFProperties::serializationTestObject(),
+            CTFProperties::serializationTestObject()
+        };
+
         return result;
     }
 
@@ -428,6 +434,17 @@ namespace Opm
         this->ctf_properties_.static_dfac_corr_coeff = c;
     }
 
+    void Connection::resetComptrajBranch(const int branch)
+    {
+        this->m_branches.assign(1, branch);
+        this->m_branch_ctf.clear();
+    }
+
+    bool Connection::fromTrajectory() const
+    {
+        return !this->m_branches.empty();
+    }
+
     std::string Connection::str() const
     {
         std::stringstream ss;
@@ -484,6 +501,8 @@ namespace Opm
             && (this->ctf_properties_ == that.ctf_properties_)
             && (this->m_filter_cake == that.m_filter_cake)
             && (this->m_econ_limits == that.m_econ_limits)
+            && (this->m_branches == that.m_branches)
+            && (this->m_branch_ctf == that.m_branch_ctf)
             ;
     }
 

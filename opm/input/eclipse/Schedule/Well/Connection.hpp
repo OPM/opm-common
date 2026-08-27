@@ -258,6 +258,14 @@ namespace Opm {
         void setDefaultSatTabId(bool id);
         void setStaticDFacCorrCoeff(const double c);
 
+        /// Record \p branch as this connection's only COMPTRAJ contributor,
+        /// discarding any per-branch CTF values accumulated so far.
+        void resetComptrajBranch(int branch);
+
+        /// Whether this connection originates from COMPTRAJ rather than from
+        /// COMPDAT.
+        bool fromTrajectory() const;
+
         void scaleWellPi(double wellPi);
         bool prepareWellPIScaling();
         bool applyWellPIScaling(const double scaleFactor);
@@ -293,6 +301,8 @@ namespace Opm {
             serializer(this->m_subject_to_welpi);
             serializer(this->m_filter_cake);
             serializer(this->m_econ_limits);
+            serializer(this->m_branches);
+            serializer(this->m_branch_ctf);
         }
 
     private:
@@ -387,6 +397,17 @@ namespace Opm {
         std::optional<FilterCake> m_filter_cake{};
 
         Utility::CopyablePtr<ConnectionEconLimits> m_econ_limits{};
+
+        /// Branch numbers that have contributed a COMPTRAJ perforation to
+        /// this connection, in ascending order.  Empty for connections that
+        /// do not originate from COMPTRAJ.
+        std::vector<int> m_branches{};
+
+        /// Each contributing branch's CTF properties, parallel to
+        /// m_branches.  Only populated once more than one branch
+        /// contributes; with a single contributor ctf_properties_ already
+        /// holds that branch's values.
+        std::vector<CTFProperties> m_branch_ctf{};
 
         static std::string CTFKindToString(const CTFKind);
     };
