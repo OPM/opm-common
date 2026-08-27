@@ -25,7 +25,6 @@
 #include <opm/common/OpmLog/OpmLog.hpp>
 
 #include <opm/common/utility/ActiveGridCells.hpp>
-#include <opm/common/utility/numeric/linearInterpolation.hpp>
 
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
@@ -46,11 +45,12 @@
 #include <opm/input/eclipse/Parser/ParserKeywords/C.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/W.hpp>
 
+#include <opm/input/eclipse/Schedule/Well/GridIndependentWellKeywordHandlers.hpp>
+
 #include <external/resinsight/LibCore/cvfVector3.h>
 #include <external/resinsight/ReservoirDataModel/RigHexIntersectionTools.h>
 #include <external/resinsight/ReservoirDataModel/RigWellLogExtractionTools.h>
 #include <external/resinsight/ReservoirDataModel/RigWellLogExtractor.h>
-#include <external/resinsight/ReservoirDataModel/RigWellPath.h>
 
 #include "../WellTraj/RigEclipseWellLogExtractor.hpp"
 #include "WellTrajInfo.hpp"
@@ -750,39 +750,10 @@ The cell ({},{},{}) in well {} is not active and the connection will be ignored)
         // Get the grid
         const auto& ecl_grid = grid.get_grid();
 
-        std::vector<external::cvf::Vec3d> points;
-        std::vector<double> measured_depths;
-
-        const auto& branch_coord = this->coord.at(branch);
-        const auto& branch_md = this->md.at(branch);
-
         // Calulate the x,y,z coordinates of the begin and end of a perforation
-        const auto m_top = perf_top.getSIDouble(0);
-        const auto m_bot = perf_bot.getSIDouble(0);
-        external::cvf::Vec3d p_top, p_bot;
-        for (std::size_t i = 0; i < 3 ; ++i) {
-            p_top[i] = linearInterpolation(branch_md, branch_coord[i], m_top);
-            p_bot[i] = linearInterpolation(branch_md, branch_coord[i], m_bot);
-        }
-        points.push_back(p_top);
-        measured_depths.push_back(m_top);
-
-        points.reserve(branch_coord[0].size());
-        measured_depths.reserve(branch_coord[0].size());
-        for (std::size_t i = 0; i < branch_coord[0].size(); ++i) {
-            if (branch_md[i] > m_top and branch_md[i] < m_bot) {
-                points.push_back(external::cvf::Vec3d(branch_coord[0][i],
-                                                      branch_coord[1][i],
-                                                      branch_coord[2][i]));
-                measured_depths.push_back(branch_md[i]);
-            }
-        }
-
-        points.push_back(p_bot);
-        measured_depths.push_back(m_bot);
-
-        wellTraj.wellPathGeometry->setWellPathPoints(points);
-        wellTraj.wellPathGeometry->setMeasuredDepths(measured_depths);
+        initWellPathGeometry(wellTraj.wellPathGeometry,
+                             this->coord.at(branch), this->md.at(branch),
+                             perf_top.getSIDouble(0), perf_bot.getSIDouble(0));
 
         external::cvf::ref<external::RigEclipseWellLogExtractor> e {
             new external::RigEclipseWellLogExtractor {
