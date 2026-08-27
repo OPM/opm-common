@@ -464,6 +464,7 @@ void FileDeck::include_block(const std::string& input_file,
                              FileDeck::DumpContext& context) const
 {
     auto current_file = input_file;
+    auto current_output = output_file;
 
     while (true) {
         const auto& parent = this->deck_tree.parent(current_file);
@@ -471,12 +472,26 @@ void FileDeck::include_block(const std::string& input_file,
         auto* stream = context.get_stream(parent);
         if (stream != nullptr) {
             // Should ideally use fs::relative()
-            INCLUDE(*stream, fs::proximate(output_file, output_dir).generic_string());
+            INCLUDE(*stream, fs::proximate(current_output, output_dir).generic_string());
 
             break;
         }
 
+        // The parent file contains only INCLUDE statements and therefore has
+        // no keyword block of its own. Create it in the output directory to
+        // preserve the include hierarchy, write the include statement into
+        // it, and continue up the tree to include the parent itself.
+        // Should ideally use fs::relative()
+        auto rel_path = fs::proximate(parent, this->input_directory);
+        auto parent_output = fs::path(output_dir) / rel_path;
+        touch_file(parent_output);
+        parent_output = fs::canonical(parent_output);
+
+        auto& parent_stream = context.open_file(parent, parent_output);
+        INCLUDE(parent_stream, fs::proximate(current_output, output_dir).generic_string());
+
         current_file = parent;
+        current_output = parent_output.generic_string();
     }
 }
 
@@ -503,9 +518,11 @@ void FileDeck::dump(const std::string& output_dir,
         for (std::size_t block_index = 1; block_index < this->blocks.size(); ++block_index) {
             const auto& block = this->blocks[block_index];
             // For now, originally binary files will be written as GRDECL
+            // An empty include_file means the output file was already open and
+            // has been included from its parent file once before.
             const auto& include_file = this->dump_block(block, output_dir, {}, context);
 
-            if (block.fname != this->deck_tree.root()) {
+            if (!include_file.empty() && (block.fname != this->deck_tree.root())) {
                 this->include_block(block.fname, include_file, output_dir, context);
             }
         }
