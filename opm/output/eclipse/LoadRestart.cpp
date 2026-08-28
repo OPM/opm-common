@@ -67,8 +67,10 @@
 #include <initializer_list>
 #include <map>
 #include <memory>
+#include <span>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <tuple>
 #include <type_traits>
 #include <unordered_map>
@@ -78,13 +80,11 @@
 
 #include <fmt/format.h>
 
-#include <boost/range.hpp>
-
 namespace VI = ::Opm::RestartIO::Helpers::VectorItems;
 
 namespace {
     template <typename T>
-    boost::iterator_range<typename std::vector<T>::const_iterator>
+    std::span<const T>
     getDataWindow(const std::vector<T>& arr,
                   const std::size_t     windowSize,
                   const std::size_t     entity,
@@ -177,9 +177,7 @@ class WellVectors
 {
 public:
     template <typename T>
-    using Window = boost::iterator_range<
-        typename std::vector<T>::const_iterator
-    >;
+    using Window = std::span<const T>;
 
     explicit WellVectors(const std::vector<int>&                      intehead,
                          std::shared_ptr<Opm::EclIO::RestartFileView> rst_view);
@@ -288,9 +286,7 @@ class GroupVectors
 {
 public:
     template <typename T>
-    using Window = boost::iterator_range<
-        typename std::vector<T>::const_iterator
-    >;
+    using Window = std::span<const T>;
 
     explicit GroupVectors(const std::vector<int>&                      intehead,
                           std::shared_ptr<Opm::EclIO::RestartFileView> rst_view);
@@ -361,9 +357,7 @@ class SegmentVectors
 {
 public:
     template <typename T>
-    using Window = boost::iterator_range<
-        typename std::vector<T>::const_iterator
-    >;
+    using Window = std::span<const T>;
 
     explicit SegmentVectors(const std::vector<int>&                      intehead,
                             std::shared_ptr<Opm::EclIO::RestartFileView> rst_view);
@@ -432,9 +426,7 @@ class AquiferVectors
 {
 public:
     template <typename T>
-    using Window = boost::iterator_range<
-        typename std::vector<T>::const_iterator
-    >;
+    using Window = std::span<const T>;
 
     explicit AquiferVectors(const std::vector<int>&                      intehead,
                             std::shared_ptr<Opm::EclIO::RestartFileView> rst_view);
@@ -1288,13 +1280,88 @@ namespace {
         return aquifers;
     }
 
-    void assign_well_cumulatives(const std::string& well,
-                                 const std::size_t  wellID,
-                                 const Opm::Tracers& tracer_dims,
+    template <typename UpdateCumulative>
+    void assign_tracer_cumulatives(const std::size_t        cumulativeOffset,
+                                   std::string_view         cumulativeType,
+                                   const bool               isTemp,
+                                   const Opm::Tracers&      tracer_dims,
+                                   const Opm::TracerConfig& tracer_config,
+                                   std::span<const double>  trcCumulatives,
+                                   UpdateCumulative&&       updateCumulative)
+    {
+        assert (isTemp || !tracer_config.empty());
+
+        const auto dgas = tracer_config.supportsSolutionGasTracer();
+        const auto voil = tracer_config.supportsVaporisedOilTracer();
+
+        // Tracer production/injection totals
+        const auto num_cumulative_elems = (isTemp ? 1 : 0)
+            +              tracer_dims.water_tracers()
+            + (1 + dgas) * tracer_dims.gas_tracers()
+            + (1 + voil) * tracer_dims.oil_tracers();
+
+        for (auto qtyIdx = cumulativeOffset; const auto type : cumulativeType) {
+            auto nextCumulative = [idx = std::size_t{0},
+                                   values = trcCumulatives.subspan(qtyIdx++ * num_cumulative_elems,
+                                                                   num_cumulative_elems)]() mutable
+            {
+                 return values[idx++];
+            };
+
+            if (isTemp) {
+                updateCumulative(type, "HEA", nextCumulative());
+            }
+
+            for (const auto& tracer : tracer_config) {
+                if (tracer.phase == Opm::Phase::WATER) {
+                    updateCumulative(type, tracer.name, nextCumulative());
+                }
+                else {
+                    const auto supportsSolution =
+                        (dgas && tracer.phase == Opm::Phase::GAS) ||
+                        (voil && tracer.phase == Opm::Phase::OIL);
+
+                    const auto free_total = nextCumulative();
+                    const auto solution_total = supportsSolution ? nextCumulative() : 0.0;
+
+                    updateCumulative(type, tracer.wellfname(), free_total);
+                    updateCumulative(type, tracer.wellsname(), solution_total);
+                    updateCumulative(type, tracer.name, free_total + solution_total);
+                }
+            }
+        }
+    }
+
+    void assign_well_tracer_cumulatives(const std::string&       well,
+                                        const std::size_t        wellID,
+                                        const bool               isTemp,
+                                        const Opm::Tracers&      tracer_dims,
+                                        const Opm::TracerConfig& tracer_config,
+                                        const WellVectors&       wellData,
+                                        Opm::SummaryState&       smry)
+    {
+        const auto tracerCumulatives = wellData.xwel(wellID)
+            .subspan(VI::XWell::index::TracerOffset);
+
+        // Well tracer cumulatives start at offset 1 (rates are at offset zero)
+        // and are in the order of production/injection totals, i.e., "P" then "I".
+        assign_tracer_cumulatives(1, "PI", isTemp, tracer_dims, tracer_config,
+                                  tracerCumulatives,
+                                  [&smry, &well](const char       type,
+                                                 std::string_view tracerName,
+                                                 const double     value)
+        {
+            smry.update_well_var(well, fmt::format("WT{}T{}", type, tracerName), value);
+        });
+    }
+
+    void assign_well_cumulatives(const std::string&       well,
+                                 const std::size_t        wellID,
+                                 const bool               isTemp,
+                                 const Opm::Tracers&      tracer_dims,
                                  const Opm::TracerConfig& tracer_config,
-                                 const WellVectors& wellData,
-                                 const bool isTemp,
-                                 Opm::SummaryState& smry)
+                                 const WellVectors&       wellData,
+                                 Opm::SummaryState&       smry)
     {
         if (! wellData.hasDefinedWellValues()) {
             // Result set does not provide well information.
@@ -1339,27 +1406,12 @@ namespace {
         smry.update_well_var(well, "WWITH", xwel[VI::XWell::index::HistWatInjTotal]);
         smry.update_well_var(well, "WGITH", xwel[VI::XWell::index::HistGasInjTotal]);
 
-        // Tracer production/injection totals
-        const auto num_tracer_comps = tracer_dims.water_tracers() + 2* (tracer_dims.oil_tracers() + tracer_dims.gas_tracers()) + (isTemp ? 1 : 0);
-        auto offset = VI::XWell::index::TracerOffset + num_tracer_comps; // First num_tracer_comps are the rates
-        for (const auto* type : { "P", "I", }) { // Production followed by injection
-            if (isTemp) {
-                smry.update_well_var(well, fmt::format("WT{}THEA", type), xwel[offset++]);
-            }
-
-            for (const auto& tracer : tracer_config) {
-                if (tracer.phase == Opm::Phase::WATER) {
-                    smry.update_well_var(well, fmt::format("WT{}T{}", type, tracer.name), xwel[offset++]);
-                }
-                else {
-                    const auto free_total = xwel[offset++];
-                    const auto solution_total = xwel[offset++];
-
-                    smry.update_well_var(well, fmt::format("WT{}TF{}", type, tracer.name), free_total);
-                    smry.update_well_var(well, fmt::format("WT{}TS{}", type, tracer.name), solution_total);
-                    smry.update_well_var(well, fmt::format("WT{}T{}", type, tracer.name), free_total + solution_total);
-                }
-            }
+        if (isTemp || !tracer_config.empty()) {
+            assign_well_tracer_cumulatives(well, wellID,
+                                           isTemp,
+                                           tracer_dims,
+                                           tracer_config,
+                                           wellData, smry);
         }
     }
 
@@ -1585,8 +1637,9 @@ namespace {
             for (auto nWells = wells.size(), wellID = 0*nWells;
                  wellID < nWells; ++wellID)
             {
-                assign_well_cumulatives(wells[wellID], wellID, schedule.runspec().tracers(), tracer_config,
-                                        wellData, isTemp, smry);
+                assign_well_cumulatives(wells[wellID], wellID, isTemp,
+                                        schedule.runspec().tracers(), tracer_config,
+                                        wellData, smry);
             }
         }
 
@@ -1598,6 +1651,7 @@ namespace {
 
             for (const auto& gname : schedule.groupNames(sim_step)) {
                 const auto& group = schedule.getGroup(gname, sim_step);
+
                 // Note: Order of group values in {I,X}GRP arrays mostly
                 // matches group's order of occurrence in .DATA file.
                 // Values pertaining to FIELD are stored at zero-based order
@@ -1621,15 +1675,15 @@ namespace {
 namespace Opm::RestartIO  {
 
     RestartValue
-    load(const std::string&             filename,
-         int                            report_step,
-         Action::State&                 /*  action_state  */,
-         SummaryState&                  summary_state,
-         const std::vector<RestartKey>& solution_keys,
-         const EclipseState&            es,
-         const EclipseGrid&             grid,
-         const Schedule&                schedule,
-         const std::vector<RestartKey>& extra_keys)
+    load(const std::string&              filename,
+         int                             report_step,
+         [[maybe_unused]] Action::State& action_state,
+         SummaryState&                   summary_state,
+         const std::vector<RestartKey>&  solution_keys,
+         const EclipseState&             es,
+         const EclipseGrid&              grid,
+         const Schedule&                 schedule,
+         const std::vector<RestartKey>&  extra_keys)
     {
         auto rst_view = std::make_shared<Opm::EclIO::RestartFileView>
             (std::make_shared<Opm::EclIO::ERst>(filename), report_step);

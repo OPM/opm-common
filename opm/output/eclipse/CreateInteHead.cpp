@@ -21,6 +21,8 @@
 #include <opm/output/eclipse/WriteRestartHelpers.hpp>
 
 #include <opm/output/eclipse/InteHEAD.hpp>
+#include <opm/output/eclipse/VectorItems/connection.hpp>
+#include <opm/output/eclipse/VectorItems/group.hpp>
 #include <opm/output/eclipse/VectorItems/intehead.hpp>
 #include <opm/output/eclipse/VectorItems/well.hpp>
 
@@ -28,6 +30,7 @@
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
+#include <opm/input/eclipse/EclipseState/SimulationConfig/SimulationConfig.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/Regdims.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
 
@@ -59,6 +62,71 @@
 #include <vector>
 
 namespace {
+
+    struct WellArrayDims
+    {
+        /// Number of entries per well in the IWEL array.
+        int iwell{};
+
+        /// Number of entries per well in the SWEL array.
+        int swell{};
+
+        /// Number of entries per well in the XWEL array.
+        int xwell{};
+
+        /// Number of entries per well in the ZWEL array.
+        int zwell{3};
+    };
+
+    struct ConnArrayDims
+    {
+        /// Number of entries per connection in the ICON array.
+        int iconn{};
+
+        /// Number of entries per connection in the SCON array.
+        int sconn{};
+
+        /// Number of entries per connection in the XCON array.
+        int xconn{};
+    };
+
+    // Declared number of tracers in the run.  Temperature, if present,
+    // is treated as a tracer for the purpose of determining the number
+    // of well array elements.  Oil and gas tracers have both free and
+    // solution parts, so they count double for the number of elements.
+    struct TracerSizes
+    {
+        explicit TracerSizes(const Opm::Runspec&          rspec,
+                             const Opm::SimulationConfig& simConfig)
+            : numTracers(rspec.tracers().water_tracers()
+                         + rspec.tracers().oil_tracers()
+                         + rspec.tracers().gas_tracers()
+                         + (rspec.temp() ? 1 : 0))
+            , numTracerElems(numTracers)
+        {
+            if (simConfig.hasDISGAS()) {
+                // Gas tracers have both free and solution parts when
+                // gas dissolves in the oil phase.  Include solution
+                // part in the count of array elements.
+                numTracerElems += rspec.tracers().gas_tracers();
+            }
+
+            if (simConfig.hasVAPOIL()) {
+                // Oil tracers have both free and solution parts when
+                // oil vaporizes into the gas phase.  Include solution
+                // part in the count of array elements.
+                numTracerElems += rspec.tracers().oil_tracers();
+            }
+        }
+
+        // Maximum number of tracer-like objects in the run,
+        // including temperature if present.
+        int numTracers{};
+
+        // Declared number of array elements per tracer quantity
+        // in the run.
+        int numTracerElems{};
+    };
 
     using nph_enum = Opm::GuideRateModel::Target;
     const std::map<nph_enum, int> nph_enumToECL = {
@@ -280,7 +348,6 @@ namespace {
         };
     }
 
-
     Opm::RestartIO::InteHEAD::WellTableDim
     getWellTableDims(const int              nwgmax,
                      const int              ngmax,
@@ -327,12 +394,54 @@ namespace {
         };
     }
 
-    std::array<int, 4>
-    getNGRPZ(const int             grpsz,
-             const int             ngrp,
-             const int             num_tracers,
-             const ::Opm::Runspec& rspec)
+    WellArrayDims getWellArrayDims(const TracerSizes& tz)
     {
+        namespace VectorItems = Opm::RestartIO::Helpers::VectorItems;
+
+        // Five quantities (flow rate, cumulative production, cumulative injection, 2*concentration)
+        // per tracer component, plus two additional elements if any tracers are present.
+        constexpr auto tracer_quantity_count = 5;
+        const auto nxwelz_tracer_elems =
+            tracer_quantity_count*tz.numTracerElems
+            + ((tz.numTracers > 0) ? 2 : 0);
+
+        constexpr auto iwTo = static_cast<int>(VectorItems::IWell::index::TracerOffset);
+        constexpr auto swTo = static_cast<int>(VectorItems::SWell::index::TracerOffset);
+        constexpr auto xwTo = static_cast<int>(VectorItems::XWell::index::TracerOffset);
+
+        return {
+            .iwell = iwTo + tz.numTracers,         // #IWEL elems per well
+            .swell = swTo + 2 * tz.numTracerElems, // #SWEL elems per well
+            .xwell = xwTo + nxwelz_tracer_elems,   // #XWEL elems per well
+            .zwell = 3                             // #ZWEL elems per well
+        };
+    }
+
+    ConnArrayDims getConnArrayDims(const TracerSizes& tz)
+    {
+        namespace VectorItems = Opm::RestartIO::Helpers::VectorItems;
+
+        // Allocate XCON space for five quantities per tracer component.
+        constexpr auto tracer_quantity_count = 5;
+        const auto nxcon_tracer_elems = tracer_quantity_count * tz.numTracerElems;
+
+        constexpr auto xcTo = static_cast<int>(VectorItems::XConn::index::TracerOffset);
+
+        return {
+            .iconn = 26,                          // #ICON elems per conn
+            .sconn = 42,                          // #SCON elems per conn
+            .xconn = xcTo + nxcon_tracer_elems    // #XCON elems per conn
+        };
+    }
+
+    std::array<int, 4>
+    getNGRPZ(const ::Opm::Runspec& rspec,
+             const TracerSizes&    tz,
+             const int             grpsz,
+             const int             ngrp)
+    {
+        namespace VectorItems = Opm::RestartIO::Helpers::VectorItems;
+
         const auto& wd = rspec.wellDimensions();
 
         const auto nwgmax = std::max(grpsz, wd.maxWellsPerGroup());
@@ -340,17 +449,16 @@ namespace {
 
         const int nigrpz = 97 + std::max(nwgmax, ngmax);
         const int nsgrpz = 112;
-        const int nxgrpz = 181 + 4*num_tracers;
+        const int nxgrpz = static_cast<int>(VectorItems::XGroup::index::TracerOffset) + 4*tz.numTracerElems;
         const int nzgrpz = 5;
 
-        return {{
+        return {
             nigrpz,
             nsgrpz,
             nxgrpz,
             nzgrpz,
-        }};
+        };
     }
-
 
     Opm::RestartIO::InteHEAD::Phases
     getActivePhases(const ::Opm::Runspec& rspec)
@@ -411,7 +519,7 @@ namespace {
             return { 0, 0, 0, 0 };
         }
 
-        const auto& no_act = acts.ecl_size();
+        const auto no_act = acts.ecl_size();
         const auto max_lines_pr_action = acts.max_input_lines();
         const auto max_cond_per_action = rspec.actdims().max_conditions();
         const auto max_characters_per_line = rspec.actdims().max_characters();
@@ -424,11 +532,10 @@ namespace {
         };
     }
 
-
     Opm::RestartIO::InteHEAD::WellSegDims
-    getWellSegDims(const int              num_tracers,
-                   const ::Opm::Runspec&  rspec,
+    getWellSegDims(const ::Opm::Runspec&  rspec,
                    const ::Opm::Schedule& sched,
+                   const TracerSizes&     tz,
                    const std::size_t      report_step,
                    const std::size_t      lookup_step)
     {
@@ -439,14 +546,14 @@ namespace {
         const auto maxNumBr = maxNumLateralBranches(sched, report_step, lookup_step);
 
         return {
-            numMSW,
-            std::max(numMSW, wsd.maxSegmentedWells()),
-            std::max(maxNumSeg, wsd.maxSegmentsPerWell()),
-            std::max(maxNumBr, wsd.maxLateralBranchesPerWell()),
-            22,           // #ISEG elems per segment
-            Opm::RestartIO::InteHEAD::numRsegElem(rspec.phases())
-               + 8*num_tracers, // #RSEG elems per segment
-            10            // #ILBR elems per branch
+            .nsegwl = numMSW,
+            .nswlmx = std::max(numMSW, wsd.maxSegmentedWells()),
+            .nsegmx = std::max(maxNumSeg, wsd.maxSegmentsPerWell()),
+            .nlbrmx = std::max(maxNumBr, wsd.maxLateralBranchesPerWell()),
+            .nisegz = 22,                       // #ISEG elems per segment
+            .nrsegz = Opm::RestartIO::InteHEAD::numRsegElem(rspec.phases())
+               + 8*tz.numTracerElems,           // #RSEG elems per segment
+            .nilbrz = 10                        // #ILBR elems per branch
         };
     }
 
@@ -640,61 +747,59 @@ createInteHead(const EclipseState& es,
                const int           report_step,
                const int           lookup_step)
 {
+    const auto nwgmax = ::maxGroupSize(sched, report_step,
+                                       lookup_step,
+                                       grid.get_lgr_tag());
 
-    const auto nwgmax = ::maxGroupSize(sched, report_step, lookup_step,
-                                      grid.get_lgr_tag());
     const auto ngmax  = (report_step == 0)
         ? 0 : numGroupsInField(sched, lookup_step, grid.get_lgr_tag());
 
-    const auto& acts  = sched[lookup_step].actions.get();
     const auto& rspec = es.runspec();
     const auto& tdim  = es.getTableManager();
     const auto& rdim  = tdim.getRegdims();
-    const auto& rckcfg = es.getSimulationConfig().rock_config();
-    const auto& tracers = es.runspec().tracers();
-    // TEMP is a tracer, oil&gas tracers have both free and solution parts.
-    const auto num_tracers = tracers.water_tracers() + tracers.oil_tracers() + tracers.gas_tracers() + (es.runspec().temp() ? 1 : 0);
-    const auto num_tracer_comps = num_tracers + tracers.oil_tracers() + tracers.gas_tracers();
-    int nxwelz_tracer_shift = num_tracer_comps*5 + 2 * (num_tracers > 0);
+
+    const auto tz = TracerSizes{rspec, es.getSimulationConfig()};
+
+    const auto wellArrayDims = getWellArrayDims(tz);
+    const auto connArrayDims = getConnArrayDims(tz);
 
     const auto ih = InteHEAD{}
         .dimensions         (grid.getNXYZ())
         .numActive          (static_cast<int>(grid.getNumActive()))
         .unitConventions    (es.getDeckUnitSystem())
         .wellTableDimensions(getWellTableDims(nwgmax, ngmax, rspec, sched,
-                                              report_step, lookup_step, grid.get_lgr_tag()))
+                                              report_step, lookup_step,
+                                              grid.get_lgr_tag()))
         .calendarDate       (getSimulationTimePoint(sched.posixStartTime(), simTime))
         .activePhases       (getActivePhases(rspec))
-             // The numbers below have been determined experimentally to work
-             // across a range of reference cases, but are not guaranteed to be
-             // universally valid.
-        .drsdt(sched, lookup_step)
+        .drsdt              (sched, lookup_step)
              // -----------------------------------------------------------------------------------
-             //              NIWELZ                | NSWELZ                     | NXWELZ                                                      | NZWELZ
-             //              #IWEL elems per well  | #SWEL elems per well       | #XWEL elems per well                                        | #ZWEL elems per well
-        .params_NWELZ       (155 + num_tracers,      122 + 2 * num_tracer_comps, VectorItems::XWell::index::TracerOffset + nxwelz_tracer_shift, 3)
+             //              NIWELZ               | NSWELZ               | NXWELZ               | NZWELZ
+             //              #IWEL elems per well | #SWEL elems per well | #XWEL elems per well | #ZWEL elems per well
+        .params_NWELZ       (wellArrayDims.iwell  , wellArrayDims.swell  , wellArrayDims.xwell  , wellArrayDims.zwell)
              // -----------------------------------------------------------------------------------
              //              NICONZ               | NSCONZ               | NXCONZ
              //              #ICON elems per conn | #SCON elems per conn | #XCON elems per conn
-        .params_NCON        (26,                    42,                    58 + 5*num_tracer_comps)
-        .params_GRPZ        (getNGRPZ(nwgmax, ngmax, num_tracer_comps, rspec))
+        .params_NCON        (connArrayDims.iconn  , connArrayDims.sconn  , connArrayDims.xconn)
+        .params_GRPZ        (getNGRPZ(rspec, tz, nwgmax, ngmax))
         .aquiferDimensions  (inferAquiferDimensions(es, sched[lookup_step]))
         .stepParam          (num_solver_steps, report_step)
         .tuningParam        (getTuningPars(sched[lookup_step].tuning()))
         .liftOptParam       (getLiftOptPar(sched, report_step, lookup_step))
-        .wellSegDimensions  (getWellSegDims(num_tracer_comps, rspec, sched, report_step, lookup_step))
+        .wellSegDimensions  (getWellSegDims(rspec, sched, tz, report_step, lookup_step))
         .regionDimensions   (getRegDims(tdim, rdim))
         .ngroups            ({ ngmax })
         .params_NGCTRL      (GroupControl(sched, report_step, lookup_step))
-        .variousParam       (202204, 100, num_tracer_comps)  // Output should be compatible with Eclipse 100, 2022.04 version.
+        .variousParam       (202204, 100)
         .udqParam_1         (getUdqParam(rspec, sched, report_step, lookup_step))
-        .actionParam        (getActionParam(rspec, acts, report_step))
+        .actionParam        (getActionParam(rspec, sched[lookup_step].actions(), report_step))
         .nominatedPhaseGuideRate(setGuideRateNominatedPhase(sched, report_step, lookup_step))
         .whistControlMode   (getWhistctlMode(sched, report_step, lookup_step))
         .activeNetwork      (getActiveNetwork(sched, lookup_step))
         .networkDimensions  (getNetworkDims(sched, lookup_step, rspec))
         .netBalanceData     (getNetworkBalanceParameters(sched, report_step))
-        .rockOpts           (getRockOpts(rckcfg, rdim))
+        .rockOpts           (getRockOpts(es.getSimulationConfig().rock_config(), rdim))
+        .tracerCounts       (rspec.tracers())
         ;
 
     return ih.data();

@@ -36,6 +36,7 @@ class EclipseState;
 class Phases;
 class Schedule;
 class ScheduleState;
+class Tracers;
 class UDQInput;
 class UnitSystem;
 
@@ -227,7 +228,7 @@ namespace Opm { namespace RestartIO {
 
         InteHEAD& stepParam(const int tstep, const int report_step);
         InteHEAD& tuningParam(const TuningPar& tunpar);
-        InteHEAD& variousParam(const int version, const int iprog, const int num_tracers = 0);
+        InteHEAD& variousParam(const int version, const int iprog);
         InteHEAD& wellSegDimensions(const WellSegDims& wsdim);
         InteHEAD& activeNetwork(const ActiveNetwork& actntwrk);
         InteHEAD& networkDimensions(const NetworkDims& nwdim);
@@ -240,6 +241,7 @@ namespace Opm { namespace RestartIO {
         InteHEAD& nominatedPhaseGuideRate(GuideRateNominatedPhase nphase);
         InteHEAD& whistControlMode(int mode);
         InteHEAD& liftOptParam(int in_enc);
+        InteHEAD& tracerCounts(const Tracers& tracers);
 
         static int numRsegElem(const Opm::Phases& phase);
 
