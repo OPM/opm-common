@@ -85,20 +85,21 @@ namespace Opm::Compsegs {
                     const ParseContext&    parseContext,
                     ErrorGuard&            errors);
 
-    /// Single well connection to a segment of a grid-independent well (WELTRAJ/COMPTRAJ
-    /// keywords).
+    /// Single connection of a grid-independent well (WELTRAJ/COMPTRAJ
+    /// keywords) to the cell it perforates.
     struct TrajectoryConnection
     {
-        /// Measured depth along well bore at the start of the connection to the segment.
+        /// Measured depth at which the trajectory enters the cell.
         double startMD{};
 
-        /// Measured depth along well bore at the end of the connection to the segment.
+        /// Measured depth at which the trajectory leaves the cell.
         double endMD{};
 
-        /// True vertical depth along well bore at the measured center depth of the connection to the segment.
+        /// True vertical depth of the trajectory at the measured depth
+        /// midway between startMD and endMD.
         double centerTVD{};
 
-        /// Cartesian IJK tuple of the cell intersected by this connection.
+        /// Cartesian IJK tuple of the cell perforated by this connection.
         std::array<int, 3> ijk{};
     };
 
@@ -117,7 +118,7 @@ namespace Opm::Compsegs {
     /// from the WELSEGS keyword.
     ///
     /// \param[in] input_connections Preliminary well connection objects
-    /// from COMPDAT.
+    /// from COMPTRAJ.
     ///
     /// \param[in] grid Run's active cells.
     ///
