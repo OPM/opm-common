@@ -355,6 +355,7 @@ protected:
             std::size_t size = 0;
             (*this)(size);
             auto& data_mut = const_cast<Map&>(data);
+            data_mut.clear();
             for (std::size_t i = 0; i < size; ++i) {
                 typename Map::value_type entry;
                 (*this)(entry);
@@ -376,6 +377,7 @@ protected:
             std::size_t size = 0;
             (*this)(size);
             auto& data_mut = const_cast<Set&>(data);
+            data_mut.clear();
             for (std::size_t i = 0; i < size; ++i) {
                 typename Set::value_type entry{};
                 (*this)(entry);
