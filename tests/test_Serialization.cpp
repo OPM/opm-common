@@ -166,9 +166,15 @@
 #include <opm/common/utility/Serializer.hpp>
 #include <opm/common/utility/MemPacker.hpp>
 
+#include <boost/mpl/list.hpp>
+
 #include <cstddef>
+#include <map>
 #include <memory>
+#include <set>
 #include <tuple>
+#include <unordered_map>
+#include <unordered_set>
 #include <utility>
 
 namespace {
@@ -185,6 +191,11 @@ namespace {
 
         return std::make_tuple(out, pos1, pos2);
     }
+
+    using MapTypes = boost::mpl::list<std::map<std::string, int>,
+                                      std::unordered_map<std::string, int>>;
+    using SetTypes = boost::mpl::list<std::set<std::string>,
+                                      std::unordered_set<std::string>>;
 }
 
 #define TEST_FOR_TYPE_NAMED_OBJ(TYPE, NAME, OBJ) \
@@ -201,6 +212,36 @@ BOOST_AUTO_TEST_CASE(NAME) \
 
 #define TEST_FOR_TYPE(TYPE) \
     TEST_FOR_TYPE_NAMED(TYPE, TYPE)
+
+BOOST_AUTO_TEST_CASE_TEMPLATE(UnpackMapReplacesExistingEntries, Map, MapTypes)
+{
+    Map source{{"W21", 2}, {"W53", 3}};
+    Map result{{"W21", 1}, {"W56", 4}};
+    Opm::Serialization::MemPacker packer;
+    Opm::Serializer serializer(packer);
+    serializer.pack(source);
+    serializer.unpack(result);
+
+    BOOST_CHECK_EQUAL(result.size(), source.size());
+    BOOST_CHECK_EQUAL(result.at("W21"), 2);
+    BOOST_CHECK_EQUAL(result.at("W53"), 3);
+    BOOST_CHECK_EQUAL(result.count("W56"), 0);
+}
+
+BOOST_AUTO_TEST_CASE_TEMPLATE(UnpackSetReplacesExistingEntries, Set, SetTypes)
+{
+    Set source{"W21", "W53"};
+    Set result{"W21", "W56"};
+    Opm::Serialization::MemPacker packer;
+    Opm::Serializer serializer(packer);
+    serializer.pack(source);
+    serializer.unpack(result);
+
+    BOOST_CHECK_EQUAL(result.size(), source.size());
+    BOOST_CHECK(result.contains("W21"));
+    BOOST_CHECK(result.contains("W53"));
+    BOOST_CHECK(!result.contains("W56"));
+}
 
 TEST_FOR_TYPE(Actdims)
 TEST_FOR_TYPE(Aqudims)
