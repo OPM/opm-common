@@ -169,6 +169,56 @@ In {{file}} line {{line}}
         return geometry->interpolatedPointAlongWellPath
             (std::clamp(md, md_range.begin, md_range.end));
     }
+
+    /// The well trajectory, holding one branch at a time.
+    ///
+    /// orderSegments() stores the segments of a branch consecutively, so
+    /// walking the segments in order visits each branch once and the geometry
+    /// is rebuilt once per branch rather than once per segment.
+    class BranchTrajectory
+    {
+    public:
+        BranchTrajectory(const std::map<int, std::array<std::vector<double>, 3>>& coords,
+                         const std::map<int, std::vector<double>>&                mds,
+                         std::string_view                                         well_name)
+            : m_coords   (coords)
+            , m_mds      (mds)
+            , m_well_name(well_name)
+        {
+            if (this->active()) {
+                this->m_geometry = new external::RigWellPath;
+            }
+        }
+
+        /// Whether the well is grid independent.  A grid dependent well has no
+        /// trajectory and keeps the segment node positions given in WELSEGS.
+        bool active() const
+        {
+            return !this->m_coords.empty();
+        }
+
+        /// The point on \p branch's trajectory at measured depth \p md.
+        external::cvf::Vec3d at(const int branch, const double md)
+        {
+            if (branch != this->m_branch) {
+                this->m_md_range = selectBranch(this->m_geometry, this->m_coords,
+                                                this->m_mds, this->m_well_name, branch);
+                this->m_branch = branch;
+            }
+
+            return trajectoryPoint(this->m_geometry, this->m_md_range,
+                                   this->m_well_name, branch, md);
+        }
+
+    private:
+        const std::map<int, std::array<std::vector<double>, 3>>& m_coords;
+        const std::map<int, std::vector<double>>&                m_mds;
+        std::string_view                                         m_well_name;
+
+        external::cvf::ref<external::RigWellPath> m_geometry{};
+        BranchMDRange                             m_md_range{};
+        int                                       m_branch{0};
+    };
 }
 
 namespace Opm {
@@ -391,12 +441,8 @@ namespace Opm {
                     nodeX_top_in, nodeY_top_in, wname));
             }
 
-            auto wellPathGeometry = external::cvf::ref<external::RigWellPath>
-                { new external::RigWellPath };
-
-            const auto md_range = selectBranch(wellPathGeometry, coords, mds, wname, 1);
-            const auto coord = trajectoryPoint(wellPathGeometry, md_range,
-                                               wname, 1, length_top);
+            auto trajectory = BranchTrajectory { coords, mds, wname };
+            const auto coord = trajectory.at(1, length_top);
 
             nodeX_top = coord[0];
             nodeY_top = coord[1];
@@ -625,30 +671,19 @@ namespace Opm {
 
         orderSegments();
 
-        external::cvf::ref<external::RigWellPath> wellPathGeometry;
-        BranchMDRange md_range{};
-        int current_branch = 0;
-        if (!coords.empty()) {
-            wellPathGeometry = new external::RigWellPath;
-        }
+        auto trajectory = BranchTrajectory { coords, mds, well_name };
 
         std::size_t current_index = 1;
         while (current_index < size()) {
             const auto& current_segment = this->m_segments[current_index];
-
-            if (!coords.empty() && (current_branch != current_segment.branchNumber())) {
-                current_branch = current_segment.branchNumber();
-                md_range = selectBranch(wellPathGeometry, coords, mds,
-                                        well_name, current_branch);
-            }
+            const auto  branch          = current_segment.branchNumber();
 
             if (current_segment.dataReady()) {
-                if (!coords.empty()) {
+                if (trajectory.active()) {
                     // Take the segment node's depth and X/Y position from the
                     // trajectory rather than from the WELSEGS record.
                     const auto length = current_segment.totalLength();
-                    const auto coord = trajectoryPoint(wellPathGeometry, md_range,
-                                                       well_name, current_branch, length);
+                    const auto coord = trajectory.at(branch, length);
 
                     this->addSegment(Segment {
                         current_segment, coord[2], length, coord[0], coord[1]
@@ -720,11 +755,10 @@ namespace Opm {
                     ? volume_segment
                     : old_segment.volume();
 
-                if (!coords.empty()) {
+                if (trajectory.active()) {
                     // Interpolated segment nodes take their depth and X/Y
                     // position from the trajectory too.
-                    const auto coord = trajectoryPoint(wellPathGeometry, md_range,
-                                                       well_name, current_branch, new_length);
+                    const auto coord = trajectory.at(branch, new_length);
                     new_x     = coord[0];
                     new_y     = coord[1];
                     new_depth = coord[2];
@@ -770,29 +804,18 @@ namespace Opm {
 
         orderSegments();
 
-        external::cvf::ref<external::RigWellPath> wellPathGeometry;
-        BranchMDRange md_range{};
-        int current_branch = 0;
-        if (!coords.empty()) {
-            wellPathGeometry = new external::RigWellPath;
-        }
+        auto trajectory = BranchTrajectory { coords, mds, well_name };
 
         for (std::size_t i_index = 0; i_index < size(); ++i_index) {
             const auto& current_segment = this->m_segments[i_index];
-
-            if (!coords.empty() && (current_branch != current_segment.branchNumber())) {
-                current_branch = current_segment.branchNumber();
-                md_range = selectBranch(wellPathGeometry, coords, mds,
-                                        well_name, current_branch);
-            }
+            const auto  branch          = current_segment.branchNumber();
 
             if (current_segment.dataReady()) {
-                if (!coords.empty()) {
+                if (trajectory.active()) {
                     // Take the segment node's depth and X/Y position from the
                     // trajectory rather than from the WELSEGS record.
                     const auto length = current_segment.totalLength();
-                    const auto coord = trajectoryPoint(wellPathGeometry, md_range,
-                                                       well_name, current_branch, length);
+                    const auto coord = trajectory.at(branch, length);
 
                     this->addSegment(Segment {
                         current_segment, coord[2], length, coord[0], coord[1]
@@ -823,11 +846,10 @@ namespace Opm {
             double new_x = m_segments[outlet_index].node_X() + current_segment.node_X();
             double new_y = m_segments[outlet_index].node_Y() + current_segment.node_Y();
 
-            if (!coords.empty()) {
+            if (trajectory.active()) {
                 // Take the segment node's depth and X/Y position from the
                 // trajectory rather than accumulating the WELSEGS increments.
-                const auto coord = trajectoryPoint(wellPathGeometry, md_range,
-                                                   well_name, current_branch, temp_length);
+                const auto coord = trajectory.at(branch, temp_length);
                 new_x      = coord[0];
                 new_y      = coord[1];
                 temp_depth = coord[2];
