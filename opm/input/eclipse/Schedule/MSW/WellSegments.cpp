@@ -300,9 +300,9 @@ namespace Opm {
     }
 
 
-    void WellSegments::addWellSegmentsFromLengthsAndDepths(const std::string &wname,
-                                                           const std::vector<std::pair<double, double>>& lengths_and_depths,
-                                                           double diameter, const UnitSystem& unit_system)
+    void WellSegments::loadFromLengthsAndDepths(const std::string &wname,
+                                                const std::vector<std::pair<double, double>>& lengths_and_depths,
+                                                double diameter, const UnitSystem& unit_system)
     {
         const int branchID = 1;  // Only main branch for now.
 
