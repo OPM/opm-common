@@ -40,6 +40,12 @@
 #include <opm/material/fluidsystems/GenericOilGasWaterFluidSystem.hpp>
 
 #include <opm/input/eclipse/EclipseState/Compositional/CompositionalConfig.hpp>
+#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/input/eclipse/Deck/Deck.hpp>
+#include <opm/input/eclipse/Parser/Parser.hpp>
+#include <opm/input/eclipse/Schedule/Schedule.hpp>
+
+#include <opm/common/Exceptions.hpp>
 
 #include <array>
 #include <cmath>
@@ -50,6 +56,10 @@ using Scalar = double;
 constexpr int numComponents = 7;
 
 using FluidSystem = Opm::GenericOilGasWaterFluidSystem<Scalar, numComponents, false>;
+// A distinct instantiation, so it carries its own static component parameters:
+// the same fluid with every shift set to zero.  Comparing against it is what
+// makes the fugacity test below independent rather than self-referential.
+using UnshiftedSystem = Opm::GenericOilGasWaterFluidSystem<Scalar, numComponents, true>;
 using CompVec = std::array<Scalar, numComponents>;
 
 constexpr auto eosType = Opm::CompositionalConfig::EOSType::PR;
@@ -99,6 +109,15 @@ struct Fixture
             FluidSystem::addComponent(CompParam{p.name, p.molarMass, p.criticalT,
                                                 p.criticalP, p.criticalV, p.acentric,
                                                 shift[c]});
+        }
+
+        using UnshiftedParam = typename UnshiftedSystem::ComponentParam;
+        UnshiftedSystem::init();
+        for (int c = 0; c < numComponents; ++c) {
+            const auto& p = components[c];
+            UnshiftedSystem::addComponent(UnshiftedParam{p.name, p.molarMass, p.criticalT,
+                                                         p.criticalP, p.criticalV,
+                                                         p.acentric, 0.0});
         }
     }
 };
@@ -151,35 +170,170 @@ BOOST_AUTO_TEST_CASE(ShiftMovesTheDensityOntoTheReference)
 
 BOOST_AUTO_TEST_CASE(ShiftLeavesTheFugacityCoefficientsAlone)
 {
-    // The shift is a translation along the volume axis, so it cancels from
-    // the equilibrium ratios: the fugacity coefficients must be those of the
-    // unshifted equation of state, which is why the shift is applied to the
-    // density rather than to the cached molar volume.
-    const auto gas = gasState();
+    // Compared against a separate fluid system holding the same components
+    // with zero shifts, so the two coefficients come from genuinely different
+    // component data rather than from the same static configuration.
+    Opm::CompositionalFluidState<Scalar, FluidSystem> fs;
+    Opm::CompositionalFluidState<Scalar, UnshiftedSystem> fsRef;
+    for (auto* st : {&fs}) {
+        st->setTemperature(temperature);
+        st->setPressure(FluidSystem::oilPhaseIdx, pressure);
+        st->setPressure(FluidSystem::gasPhaseIdx, pressure);
+    }
+    fsRef.setTemperature(temperature);
+    fsRef.setPressure(UnshiftedSystem::oilPhaseIdx, pressure);
+    fsRef.setPressure(UnshiftedSystem::gasPhaseIdx, pressure);
+    for (int c = 0; c < numComponents; ++c) {
+        fs.setMoleFraction(FluidSystem::gasPhaseIdx, c, z[c]);
+        fs.setMoleFraction(FluidSystem::oilPhaseIdx, c, z[c]);
+        fsRef.setMoleFraction(UnshiftedSystem::gasPhaseIdx, c, z[c]);
+        fsRef.setMoleFraction(UnshiftedSystem::oilPhaseIdx, c, z[c]);
+    }
 
+    typename FluidSystem::template ParameterCache<Scalar> pc(eosType);
+    typename UnshiftedSystem::template ParameterCache<Scalar> pcRef(eosType);
+    pc.updatePhase(fs, FluidSystem::gasPhaseIdx);
+    pcRef.updatePhase(fsRef, UnshiftedSystem::gasPhaseIdx);
+
+    // The shift is real, and the unshifted system has none of it.
+    BOOST_CHECK_GT(std::abs(pc.volumeShift(fs, FluidSystem::gasPhaseIdx)), 0.0);
+    BOOST_CHECK_SMALL(pcRef.volumeShift(fsRef, UnshiftedSystem::gasPhaseIdx), 1.0e-30);
+
+    // Yet the fugacity coefficients are those of the unshifted equation of
+    // state: the shift cancels from the equilibrium ratios.
+    for (int c = 0; c < numComponents; ++c) {
+        const Scalar phi =
+            FluidSystem::fugacityCoefficient(fs, pc, FluidSystem::gasPhaseIdx, c);
+        const Scalar phiRef =
+            UnshiftedSystem::fugacityCoefficient(fsRef, pcRef, UnshiftedSystem::gasPhaseIdx, c);
+        BOOST_CHECK_CLOSE(phi, phiRef, 1.0e-10);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(ShiftMovesTheLiquidDensityToo)
+{
+    // The liquid phase is where the two-parameter equation of state is worst
+    // and the shift matters most, so it gets its own check.  The expected
+    // shift is rebuilt here from the deck's SSHIFT and b_c = Omega_b R Tc/pc
+    // rather than read back from the parameter cache, so the whole chain
+    // (SSHIFT -> b_c -> corrected volume -> density) is verified independently.
     Opm::CompositionalFluidState<Scalar, FluidSystem> fs;
     fs.setTemperature(temperature);
     fs.setPressure(FluidSystem::oilPhaseIdx, pressure);
     fs.setPressure(FluidSystem::gasPhaseIdx, pressure);
     for (int c = 0; c < numComponents; ++c) {
-        fs.setMoleFraction(FluidSystem::gasPhaseIdx, c, z[c]);
         fs.setMoleFraction(FluidSystem::oilPhaseIdx, c, z[c]);
+        fs.setMoleFraction(FluidSystem::gasPhaseIdx, c, z[c]);
     }
-    typename FluidSystem::template ParameterCache<Scalar> paramCache(eosType);
-    paramCache.updatePhase(fs, FluidSystem::gasPhaseIdx);
+    typename FluidSystem::template ParameterCache<Scalar> pc(eosType);
+    pc.updatePhase(fs, FluidSystem::oilPhaseIdx);
 
-    // The cached molar volume is the unshifted one; the shift only appears
-    // when the density is asked for.
-    const Scalar Vm = paramCache.molarVolume(FluidSystem::gasPhaseIdx);
-    const Scalar shiftVm = paramCache.volumeShift(fs, FluidSystem::gasPhaseIdx);
-    BOOST_CHECK_GT(std::abs(shiftVm), 0.0);
-    BOOST_CHECK_CLOSE(fs.averageMolarMass(FluidSystem::gasPhaseIdx) / (Vm - shiftVm),
-                      gas.density, 1.0e-10);
-
-    // Fugacity coefficients computed from the unshifted volume.
+    constexpr Scalar OmegaB = 0.0777960739;   // Peng-Robinson
+    constexpr Scalar R = 8.31446261815324;
+    Scalar expectedShift = 0.0;
     for (int c = 0; c < numComponents; ++c) {
-        const Scalar phi =
-            FluidSystem::fugacityCoefficient(fs, paramCache, FluidSystem::gasPhaseIdx, c);
-        BOOST_CHECK_CLOSE(gas.fugacityCoefficient[c], phi, 1.0e-10);
+        const auto& p = components[c];
+        const Scalar b = OmegaB * R * p.criticalT / p.criticalP;
+        expectedShift += z[c] * shift[c] * b;
     }
+    // The constants here are written out independently of the library's, so
+    // the agreement is limited by their last digits rather than by round-off;
+    // the effect under test is a ten percent change in density.
+    BOOST_CHECK_CLOSE(pc.volumeShift(fs, FluidSystem::oilPhaseIdx), expectedShift, 1.0e-3);
+
+    const Scalar Vm = pc.molarVolume(FluidSystem::oilPhaseIdx);
+    const Scalar rho = FluidSystem::density(fs, pc, FluidSystem::oilPhaseIdx);
+    BOOST_CHECK_CLOSE(rho,
+                      fs.averageMolarMass(FluidSystem::oilPhaseIdx) / (Vm - expectedShift),
+                      1.0e-4);
+    // The shifts are mostly negative, so the correction enlarges the volume
+    // and the shifted liquid is the lighter of the two.
+    BOOST_CHECK_LT(rho, fs.averageMolarMass(FluidSystem::oilPhaseIdx) / Vm);
+}
+
+// A three-component system of its own, so parsing a deck into it cannot
+// disturb the seven-component one the tests above share.
+using DeckSystem = Opm::GenericOilGasWaterFluidSystem<Scalar, 3, false>;
+
+BOOST_AUTO_TEST_CASE(ParsedShiftReachesTheFluidSystem)
+{
+    // The tests above hand the shifts to addComponent() directly, which leaves
+    // the parsing path unproven.  This one goes through the deck: SSHIFT is
+    // read into the compositional configuration and initFromState() must carry
+    // it onto the component parameters.
+    const auto deck = Opm::Parser{}.parseString(R"(
+RUNSPEC
+METRIC
+DIMENS
+ 1 1 1 /
+COMPS
+3 /
+TABDIMS
+ 1 /
+OIL
+GAS
+WATER
+GRID
+DXV
+ 1 /
+DYV
+ 1 /
+DZV
+ 1 /
+DEPTHZ
+ 4*2000 /
+PROPS
+CNAMES
+ C1 C10 CO2 /
+TCRIT
+ 190.6 617.7 304.2 /
+PCRIT
+ 46.0 21.1 73.8 /
+VCRIT
+ 0.0990 0.6240 0.0940 /
+MW
+ 16.043 142.285 44.010 /
+ACF
+ 0.008 0.4885 0.225 /
+SSHIFT
+ -0.1595 0.10784 -0.0817 /
+SOLUTION
+SCHEDULE
+END
+)");
+
+    const auto eclState = Opm::EclipseState{ deck };
+    const auto schedule = Opm::Schedule{ deck, eclState };
+
+    BOOST_REQUIRE_NO_THROW(DeckSystem::initFromState(eclState, schedule));
+
+    const std::array<Scalar, 3> expected{-0.1595, 0.10784, -0.0817};
+    for (unsigned c = 0; c < 3; ++c) {
+        BOOST_CHECK_CLOSE(DeckSystem::volumeShift(c), expected[c], 1.0e-10);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(AnOverlargeShiftIsRejectedRatherThanReturned)
+{
+    // SSHIFT is unconstrained input.  A shift bigger than the molar volume
+    // makes the corrected volume non-positive, where the density would come
+    // back negative or infinite instead of failing.
+    using BigShift = Opm::GenericOilGasWaterFluidSystem<Scalar, 1, false>;
+    using CompParam = typename BigShift::ComponentParam;
+    BigShift::init();
+    BigShift::addComponent(CompParam{"C1", 0.016043, 190.60, 45.40e5, 0.099, 0.008,
+                                     /*volume_shift=*/1.0e3});
+
+    Opm::CompositionalFluidState<Scalar, BigShift> fs;
+    fs.setTemperature(Scalar{400});
+    fs.setPressure(BigShift::oilPhaseIdx, Scalar{100e5});
+    fs.setPressure(BigShift::gasPhaseIdx, Scalar{100e5});
+    fs.setMoleFraction(BigShift::gasPhaseIdx, 0, Scalar{1});
+    fs.setMoleFraction(BigShift::oilPhaseIdx, 0, Scalar{1});
+
+    typename BigShift::template ParameterCache<Scalar> pc(eosType);
+    pc.updatePhase(fs, BigShift::gasPhaseIdx);
+
+    BOOST_CHECK_THROW(BigShift::density(fs, pc, BigShift::gasPhaseIdx),
+                      Opm::NumericalProblem);
 }

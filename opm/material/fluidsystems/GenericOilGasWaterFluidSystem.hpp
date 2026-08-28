@@ -26,6 +26,7 @@
 #ifndef OPM_GENERIC_OIL_GAS_WATER_FLUIDSYSTEM_HPP
 #define OPM_GENERIC_OIL_GAS_WATER_FLUIDSYSTEM_HPP
 
+#include <opm/common/Exceptions.hpp>
 #include <opm/common/OpmLog/OpmLog.hpp>
 
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
@@ -351,6 +352,17 @@ namespace Opm {
                 // since it does not enter the fugacity coefficients.
                 const auto Vm = paramCache.molarVolume(phaseIdx)
                               - paramCache.volumeShift(fluidState, phaseIdx);
+                // SSHIFT is unconstrained deck input.  A shift larger than the
+                // molar volume drives the corrected volume to zero or below,
+                // where the density is not merely inaccurate but meaningless,
+                // so stop rather than return an infinite or negative one.
+                if (!(scalarValue(Vm) > 0)) {
+                    throw NumericalProblem(
+                        fmt::format("The SSHIFT volume shift of the {} phase leaves a "
+                                    "corrected molar volume of {}, which is not positive.",
+                                    phaseIdx == oilPhaseIdx ? "oil" : "gas",
+                                    scalarValue(Vm)));
+                }
                 return decay<LhsEval>(fluidState.averageMolarMass(phaseIdx) / Vm);
             }
             else {
