@@ -497,6 +497,13 @@ namespace Opm
     void Connection::setComptrajBranches(std::vector<int>           branches,
                                          std::vector<CTFProperties> branch_ctf)
     {
+        assert(std::ranges::is_sorted(branches));
+        assert(std::ranges::adjacent_find(branches) == branches.end());
+
+        // Per-branch CTFs are stored only once a cell has more than one
+        // contributor.
+        assert(branch_ctf.empty() || (branch_ctf.size() == branches.size()));
+
         this->m_branches = std::move(branches);
         this->m_branch_ctf = std::move(branch_ctf);
     }
