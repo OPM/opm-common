@@ -1970,11 +1970,11 @@ void Well::updateSegments(std::shared_ptr<WellSegments> segments_arg)
 
 bool Well::handleWELSEGS(const DeckKeyword& keyword)
 {
-    const auto& connections = this->getConnections();
-    const auto& coords = connections.getCoord();
-    const auto& mds = connections.getMD();
+    const auto& well_connections = this->getConnections();
+    const auto& coords = well_connections.getCoord();
+    const auto& mds = well_connections.getMD();
 
-    if (!connections.empty() && !coords.empty()) {
+    if (!well_connections.empty() && !coords.empty()) {
         throw OpmInputError {
             fmt::format("The WELSEGS keyword for well {} must be defined before "
                         "the corresponding COMPTRAJ keyword.", this->name()),
