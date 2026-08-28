@@ -501,6 +501,23 @@ namespace Opm
         this->m_branch_ctf = std::move(branch_ctf);
     }
 
+    void Connection::setBranchCTF(const int branch, const CTFProperties& ctf)
+    {
+        // An empty range means the branch is absent, and its begin() is then
+        // the position at which to insert it.
+        const auto found = std::ranges::equal_range(this->m_branches, branch);
+        const auto offset = found.begin() - this->m_branches.begin();
+
+        if (found.empty()) {
+            this->m_branches.insert(this->m_branches.begin() + offset, branch);
+            this->m_branch_ctf.insert(this->m_branch_ctf.begin() + offset, ctf);
+        }
+        else {
+            // Re-specifying one branch replaces only that branch's share.
+            this->m_branch_ctf[offset] = ctf;
+        }
+    }
+
     void Connection::addComptrajBranch(const int branch, const CTFProperties& ctf)
     {
         if (this->m_branches.empty()) {
@@ -525,18 +542,7 @@ namespace Opm
             this->m_branch_ctf.assign(1, this->ctf_properties_);
         }
 
-        const auto pos = std::lower_bound(this->m_branches.begin(),
-                                          this->m_branches.end(), branch);
-        const auto idx = std::distance(this->m_branches.begin(), pos);
-
-        if ((pos == this->m_branches.end()) || (*pos != branch)) {
-            this->m_branches.insert(pos, branch);
-            this->m_branch_ctf.insert(this->m_branch_ctf.begin() + idx, ctf);
-        }
-        else {
-            // Re-specifying one branch replaces only that branch's share.
-            this->m_branch_ctf[idx] = ctf;
-        }
+        this->setBranchCTF(branch, ctf);
 
         this->ctf_properties_ = combineBranchCTFs(this->m_branch_ctf);
     }

@@ -448,6 +448,10 @@ namespace Opm {
         /// holds that branch's values.
         std::vector<CTFProperties> m_branch_ctf{};
 
+        /// Record \p ctf as the contribution of \p branch, keeping
+        /// m_branches sorted and m_branch_ctf aligned with it.
+        void setBranchCTF(int branch, const CTFProperties& ctf);
+
         static std::string CTFKindToString(const CTFKind);
     };
 
