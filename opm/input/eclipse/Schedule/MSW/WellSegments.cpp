@@ -103,73 +103,6 @@ In {{file}} line {{line}}
                                  msg, location, errors);
     }
 
-    /// The measured depth range covered by a branch's trajectory.
-    struct BranchMDRange
-    {
-        double begin{};
-        double end{};
-    };
-
-    /// Point \p geometry at the trajectory of \p branch.
-    ///
-    /// Reports a missing branch instead of letting the lookup escape as a
-    /// std::out_of_range.  WELSEGS may name a branch that WELTRAJ never
-    /// defined, either directly or through a segment whose branch number was
-    /// mistyped.
-    BranchMDRange
-    selectBranch(external::cvf::ref<external::RigWellPath>&                    geometry,
-                 const std::map<int, std::array<std::vector<double>, 3>>&      coords,
-                 const std::map<int, std::vector<double>>&                     mds,
-                 std::string_view                                              well_name,
-                 const int                                                     branch)
-    {
-        const auto coordPos = coords.find(branch);
-        const auto mdPos = mds.find(branch);
-
-        if ((coordPos == coords.end()) || (mdPos == mds.end()) || mdPos->second.empty()) {
-            throw std::logic_error {
-                fmt::format("Well {} has segments on branch {}, but no WELTRAJ "
-                            "trajectory for that branch. Every branch used in "
-                            "WELSEGS must first be defined by WELTRAJ.",
-                            well_name, branch)
-            };
-        }
-
-        Opm::initWellPathGeometry(geometry, coordPos->second, mdPos->second);
-
-        return { mdPos->second.front(), mdPos->second.back() };
-    }
-
-    /// Interpolate the trajectory at measured depth \p md.
-    ///
-    /// A segment node outside the branch's trajectory would otherwise be
-    /// placed by extrapolating past its end, silently giving the well a
-    /// geometry the deck never described.
-    external::cvf::Vec3d
-    trajectoryPoint(const external::cvf::ref<external::RigWellPath>& geometry,
-                    const BranchMDRange&                             md_range,
-                    std::string_view                                 well_name,
-                    const int                                        branch,
-                    const double                                     md)
-    {
-        // The trajectory MDs and the segment lengths both come from the deck
-        // in the same unit, so a relative tolerance on the branch length is
-        // enough to absorb the round-off of reading them back.
-        const auto tol = 1.0e-10 * std::max(1.0, md_range.end - md_range.begin);
-
-        if ((md < md_range.begin - tol) || (md > md_range.end + tol)) {
-            throw std::logic_error {
-                fmt::format("Segment node at measured depth {} on branch {} of "
-                            "well {} lies outside the branch's trajectory, "
-                            "which covers measured depths {} to {}.",
-                            md, branch, well_name, md_range.begin, md_range.end)
-            };
-        }
-
-        return geometry->interpolatedPointAlongWellPath
-            (std::clamp(md, md_range.begin, md_range.end));
-    }
-
     /// The well trajectory, holding one branch at a time.
     ///
     /// orderSegments() stores the segments of a branch consecutively, so
@@ -201,22 +134,79 @@ In {{file}} line {{line}}
         external::cvf::Vec3d at(const int branch, const double md)
         {
             if (branch != this->m_branch) {
-                this->m_md_range = selectBranch(this->m_geometry, this->m_coords,
-                                                this->m_mds, this->m_well_name, branch);
-                this->m_branch = branch;
+                this->selectBranch(branch);
             }
 
-            return trajectoryPoint(this->m_geometry, this->m_md_range,
-                                   this->m_well_name, branch, md);
+            return this->interpolate(md);
         }
 
     private:
+        /// Point the geometry at \p branch's trajectory.
+        ///
+        /// Reports a missing branch instead of letting the lookup escape as a
+        /// std::out_of_range.  WELSEGS may name a branch that WELTRAJ never
+        /// defined, either directly or through a segment whose branch number
+        /// was mistyped.
+        void selectBranch(const int branch)
+        {
+            const auto coordPos = this->m_coords.find(branch);
+            const auto mdPos = this->m_mds.find(branch);
+
+            if ((coordPos == this->m_coords.end()) ||
+                (mdPos == this->m_mds.end()) || mdPos->second.empty())
+            {
+                throw std::logic_error {
+                    fmt::format("Well {} has segments on branch {}, but no WELTRAJ "
+                                "trajectory for that branch. Every branch used in "
+                                "WELSEGS must first be defined by WELTRAJ.",
+                                this->m_well_name, branch)
+                };
+            }
+
+            Opm::initWellPathGeometry(this->m_geometry, coordPos->second, mdPos->second);
+
+            this->m_branch_mds = &mdPos->second;
+            this->m_branch = branch;
+        }
+
+        /// Interpolate the selected branch's trajectory at measured depth \p md.
+        ///
+        /// A segment node outside the branch's trajectory would otherwise be
+        /// placed by extrapolating past its end, silently giving the well a
+        /// geometry the deck never described.
+        external::cvf::Vec3d interpolate(const double md) const
+        {
+            // Branch numbers start at 1, so at() always selects a branch first.
+            assert(this->m_branch_mds != nullptr);
+
+            const auto begin = this->m_branch_mds->front();
+            const auto end = this->m_branch_mds->back();
+
+            // The trajectory MDs and the segment lengths both come from the
+            // deck in the same unit, so a relative tolerance on the branch
+            // length is enough to absorb the round-off of reading them back.
+            const auto tol = 1.0e-10 * std::max(1.0, end - begin);
+
+            if ((md < begin - tol) || (md > end + tol)) {
+                throw std::logic_error {
+                    fmt::format("Segment node at measured depth {} on branch {} of "
+                                "well {} lies outside the branch's trajectory, "
+                                "which covers measured depths {} to {}.",
+                                md, this->m_branch, this->m_well_name, begin, end)
+                };
+            }
+
+            // Clamping keeps a node accepted by the tolerance from extrapolating.
+            return this->m_geometry->interpolatedPointAlongWellPath
+                (std::clamp(md, begin, end));
+        }
+
         const std::map<int, std::array<std::vector<double>, 3>>& m_coords;
         const std::map<int, std::vector<double>>&                m_mds;
         std::string_view                                         m_well_name;
 
         external::cvf::ref<external::RigWellPath> m_geometry{};
-        BranchMDRange                             m_md_range{};
+        const std::vector<double>*                m_branch_mds{nullptr};
         int                                       m_branch{0};
     };
 }
