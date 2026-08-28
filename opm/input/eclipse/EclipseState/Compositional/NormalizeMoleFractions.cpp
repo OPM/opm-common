@@ -45,6 +45,16 @@ void normalizeMoleFractions(std::vector<double>& fractions,
                             const KeywordLocation& location)
 {
     const double sum = std::accumulate(fractions.begin(), fractions.end(), 0.0);
+
+    // A non-finite fraction makes the sum non-finite, and every comparison
+    // against a NaN is false: the checks below would all pass and the
+    // fractions would then be "normalized" by dividing through the NaN.
+    if (!std::isfinite(sum)) {
+        throw OpmInputError(fmt::format("The mole fractions of {} sum to {}, "
+                                        "which is not a finite number.", what, sum),
+                            location);
+    }
+
     const double deviation = std::abs(sum - 1.0);
 
     if (deviation > moleFractionTolerance()) {
