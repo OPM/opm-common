@@ -168,46 +168,77 @@ BOOST_AUTO_TEST_CASE(ShiftMovesTheDensityOntoTheReference)
     BOOST_CHECK_CLOSE(gas.density, 165.87, 1.0);
 }
 
-BOOST_AUTO_TEST_CASE(ShiftLeavesTheFugacityCoefficientsAlone)
+BOOST_AUTO_TEST_CASE(ShiftLeavesTheEquilibriumRatiosAlone)
 {
-    // Compared against a separate fluid system holding the same components
-    // with zero shifts, so the two coefficients come from genuinely different
-    // component data rather than from the same static configuration.
+    // The invariant of a volume translation is the equilibrium ratio, not the
+    // fugacity coefficient itself.  Peneloux scales the fugacity of component
+    // c by exp(-c_c p / (R T)), a factor set by the component and the state
+    // but not by the phase, so it cancels from K_c = phi_c^liquid /
+    // phi_c^vapour and leaves the phase split untouched.  That ratio is what
+    // this checks, against a separate fluid system holding the same
+    // components with zero shifts.
     Opm::CompositionalFluidState<Scalar, FluidSystem> fs;
     Opm::CompositionalFluidState<Scalar, UnshiftedSystem> fsRef;
-    for (auto* st : {&fs}) {
-        st->setTemperature(temperature);
-        st->setPressure(FluidSystem::oilPhaseIdx, pressure);
-        st->setPressure(FluidSystem::gasPhaseIdx, pressure);
-    }
+    fs.setTemperature(temperature);
     fsRef.setTemperature(temperature);
-    fsRef.setPressure(UnshiftedSystem::oilPhaseIdx, pressure);
-    fsRef.setPressure(UnshiftedSystem::gasPhaseIdx, pressure);
+    for (int ph : {FluidSystem::oilPhaseIdx, FluidSystem::gasPhaseIdx}) {
+        fs.setPressure(ph, pressure);
+        fsRef.setPressure(ph, pressure);
+    }
     for (int c = 0; c < numComponents; ++c) {
-        fs.setMoleFraction(FluidSystem::gasPhaseIdx, c, z[c]);
-        fs.setMoleFraction(FluidSystem::oilPhaseIdx, c, z[c]);
-        fsRef.setMoleFraction(UnshiftedSystem::gasPhaseIdx, c, z[c]);
-        fsRef.setMoleFraction(UnshiftedSystem::oilPhaseIdx, c, z[c]);
+        for (int ph : {FluidSystem::oilPhaseIdx, FluidSystem::gasPhaseIdx}) {
+            fs.setMoleFraction(ph, c, z[c]);
+            fsRef.setMoleFraction(ph, c, z[c]);
+        }
     }
 
     typename FluidSystem::template ParameterCache<Scalar> pc(eosType);
     typename UnshiftedSystem::template ParameterCache<Scalar> pcRef(eosType);
-    pc.updatePhase(fs, FluidSystem::gasPhaseIdx);
-    pcRef.updatePhase(fsRef, UnshiftedSystem::gasPhaseIdx);
+    for (int ph : {FluidSystem::oilPhaseIdx, FluidSystem::gasPhaseIdx}) {
+        pc.updatePhase(fs, ph);
+        pcRef.updatePhase(fsRef, ph);
+    }
 
-    // The shift is real, and the unshifted system has none of it.
+    // The shift is real, and the reference system carries none of it.
     BOOST_CHECK_GT(std::abs(pc.volumeShift(fs, FluidSystem::gasPhaseIdx)), 0.0);
     BOOST_CHECK_SMALL(pcRef.volumeShift(fsRef, UnshiftedSystem::gasPhaseIdx), 1.0e-30);
 
-    // Yet the fugacity coefficients are those of the unshifted equation of
-    // state: the shift cancels from the equilibrium ratios.
     for (int c = 0; c < numComponents; ++c) {
-        const Scalar phi =
+        const Scalar K =
+            FluidSystem::fugacityCoefficient(fs, pc, FluidSystem::oilPhaseIdx, c) /
             FluidSystem::fugacityCoefficient(fs, pc, FluidSystem::gasPhaseIdx, c);
-        const Scalar phiRef =
+        const Scalar KRef =
+            UnshiftedSystem::fugacityCoefficient(fsRef, pcRef, UnshiftedSystem::oilPhaseIdx, c) /
             UnshiftedSystem::fugacityCoefficient(fsRef, pcRef, UnshiftedSystem::gasPhaseIdx, c);
-        BOOST_CHECK_CLOSE(phi, phiRef, 1.0e-10);
+        BOOST_CHECK_CLOSE(K, KRef, 1.0e-10);
     }
+}
+
+BOOST_AUTO_TEST_CASE(ShiftDoesNotReachTheCachedVolume)
+{
+    // The equilibrium ratios above survive because the coefficients are built
+    // from the unshifted root.  Pinning that here keeps a future change from
+    // folding the shift into the cache, where it would corrupt the
+    // two-parameter expression the coefficients use rather than translate it.
+    Opm::CompositionalFluidState<Scalar, FluidSystem> fs;
+    fs.setTemperature(temperature);
+    fs.setPressure(FluidSystem::oilPhaseIdx, pressure);
+    fs.setPressure(FluidSystem::gasPhaseIdx, pressure);
+    for (int c = 0; c < numComponents; ++c) {
+        fs.setMoleFraction(FluidSystem::gasPhaseIdx, c, z[c]);
+        fs.setMoleFraction(FluidSystem::oilPhaseIdx, c, z[c]);
+    }
+    typename FluidSystem::template ParameterCache<Scalar> pc(eosType);
+    pc.updatePhase(fs, FluidSystem::gasPhaseIdx);
+
+    const Scalar Vm = pc.molarVolume(FluidSystem::gasPhaseIdx);
+    const Scalar shift = pc.volumeShift(fs, FluidSystem::gasPhaseIdx);
+    BOOST_CHECK_CLOSE(pc.correctedMolarVolume(fs, FluidSystem::gasPhaseIdx),
+                      Vm - shift, 1.0e-10);
+    // The density follows the corrected volume, not the cached one.
+    BOOST_CHECK_CLOSE(FluidSystem::density(fs, pc, FluidSystem::gasPhaseIdx),
+                      fs.averageMolarMass(FluidSystem::gasPhaseIdx) / (Vm - shift),
+                      1.0e-10);
 }
 
 BOOST_AUTO_TEST_CASE(ShiftMovesTheLiquidDensityToo)
