@@ -195,10 +195,6 @@ private:
         Scalar pSingle{}, pTwo{};
         bool haveSingle = false;
         bool haveTwo = false;
-        // Set whenever a scan point ends with the substitution exhausted.  Such
-        // a point classifies nothing, so a scan that met one cannot conclude
-        // the branch has no root.
-        bool anyInconclusive = false;
 
         // Step used to scan for the two-phase region before the bracket is
         // closed.  It is deliberately fine: a coarse step can cross a narrow
@@ -264,10 +260,6 @@ private:
                     substitutionConverged = true;
                     break;
                 }
-            }
-
-            if (!substitutionConverged) {
-                anyInconclusive = true;
             }
 
             // The trivial test needs a converged K just as the pressure
@@ -343,11 +335,13 @@ private:
         }
 
         // The scan covered nine decades of pressure without meeting a
-        // two-phase state: the branch has no dew or bubble point to find.
-        // That conclusion only holds if every point along the way was
-        // classified; an exhausted substitution leaves the branch unproven.
+        // two-phase state.  That is a statement about the branch only if the
+        // scan classified something: haveSingle records a converged
+        // single-phase point.  A scan that classified nothing anywhere -- every
+        // substitution exhausted -- has not looked, and saying no root there
+        // would hand an upper-dew search to the lower branch on no evidence.
         if (!haveTwo) {
-            return anyInconclusive ? Outcome::GaveUp : Outcome::NoRoot;
+            return haveSingle ? Outcome::NoRoot : Outcome::GaveUp;
         }
         // A bracket that collapsed without an accepted solution pinned the
         // phase boundary down to a point where only the trivial solution
