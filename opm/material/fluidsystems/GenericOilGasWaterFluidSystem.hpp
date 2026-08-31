@@ -348,21 +348,9 @@ namespace Opm {
             assert(phaseIdx < numPhases);
 
             if (phaseIdx == oilPhaseIdx || phaseIdx == gasPhaseIdx) {
-                // SSHIFT corrects the volume here rather than in the cache,
-                // since it does not enter the fugacity coefficients.
-                const auto Vm = paramCache.molarVolume(phaseIdx)
-                              - paramCache.volumeShift(fluidState, phaseIdx);
-                // SSHIFT is unconstrained deck input.  A shift larger than the
-                // molar volume drives the corrected volume to zero or below,
-                // where the density is not merely inaccurate but meaningless,
-                // so stop rather than return an infinite or negative one.
-                if (!(scalarValue(Vm) > 0)) {
-                    throw NumericalProblem(
-                        fmt::format("The SSHIFT volume shift of the {} phase leaves a "
-                                    "corrected molar volume of {}, which is not positive.",
-                                    phaseIdx == oilPhaseIdx ? "oil" : "gas",
-                                    scalarValue(Vm)));
-                }
+                // The shift belongs here rather than in the cached volume: the
+                // fugacity coefficients are computed from the unshifted one.
+                const auto Vm = paramCache.correctedMolarVolume(fluidState, phaseIdx);
                 return decay<LhsEval>(fluidState.averageMolarMass(phaseIdx) / Vm);
             }
             else {
