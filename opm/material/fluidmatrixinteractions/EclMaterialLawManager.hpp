@@ -270,6 +270,79 @@ public:
     const std::vector<Scalar>& stoneEtas() const
     { return stoneEtas_; }
 
+    struct CellHysteresisState
+    {
+        EclMultiplexerApproach approach{EclMultiplexerApproach::Default};
+        using TwoPhaseState = EclHysteresisDynamicState<Scalar>;
+        TwoPhaseState gasOilState{};
+        TwoPhaseState oilWaterState{};
+        TwoPhaseState gasWaterState{};
+    };
+
+    struct HysteresisStateSnapshot
+    {
+        std::vector<CellHysteresisState> cellStates{};
+        std::vector<CellHysteresisState> dirStatesX{};
+        std::vector<CellHysteresisState> dirStatesY{};
+        std::vector<CellHysteresisState> dirStatesZ{};
+    };
+
+    void captureBeginTimeStepState()
+    {
+        if (!enableHysteresis())
+            return;
+
+        const std::size_t numElems = params_.materialLawParams.size();
+        prevHysteresisState_.cellStates.resize(numElems);
+        for (std::size_t i = 0; i < numElems; ++i) {
+            MaterialLaw::captureHysteresisState(params_.materialLawParams[i], prevHysteresisState_.cellStates[i]);
+        }
+
+        if (params_.dirMaterialLawParams) {
+            const auto& xArr = params_.dirMaterialLawParams->materialLawParamsX_;
+            const auto& yArr = params_.dirMaterialLawParams->materialLawParamsY_;
+            const auto& zArr = params_.dirMaterialLawParams->materialLawParamsZ_;
+            prevHysteresisState_.dirStatesX.resize(xArr.size());
+            prevHysteresisState_.dirStatesY.resize(yArr.size());
+            prevHysteresisState_.dirStatesZ.resize(zArr.size());
+            for (std::size_t i = 0; i < xArr.size(); ++i) {
+                MaterialLaw::captureHysteresisState(xArr[i], prevHysteresisState_.dirStatesX[i]);
+            }
+            for (std::size_t i = 0; i < yArr.size(); ++i) {
+                MaterialLaw::captureHysteresisState(yArr[i], prevHysteresisState_.dirStatesY[i]);
+            }
+            for (std::size_t i = 0; i < zArr.size(); ++i) {
+                MaterialLaw::captureHysteresisState(zArr[i], prevHysteresisState_.dirStatesZ[i]);
+            }
+        }
+    }
+
+    void restoreBeginTimeStepState()
+    {
+        if (!enableHysteresis() || prevHysteresisState_.cellStates.empty())
+            return;
+
+        const std::size_t numElems = params_.materialLawParams.size();
+        for (std::size_t i = 0; i < numElems; ++i) {
+            MaterialLaw::restoreHysteresisState(params_.materialLawParams[i], prevHysteresisState_.cellStates[i]);
+        }
+
+        if (params_.dirMaterialLawParams && !prevHysteresisState_.dirStatesX.empty()) {
+            auto& xArr = params_.dirMaterialLawParams->materialLawParamsX_;
+            auto& yArr = params_.dirMaterialLawParams->materialLawParamsY_;
+            auto& zArr = params_.dirMaterialLawParams->materialLawParamsZ_;
+            for (std::size_t i = 0; i < xArr.size(); ++i) {
+                MaterialLaw::restoreHysteresisState(xArr[i], prevHysteresisState_.dirStatesX[i]);
+            }
+            for (std::size_t i = 0; i < yArr.size(); ++i) {
+                MaterialLaw::restoreHysteresisState(yArr[i], prevHysteresisState_.dirStatesY[i]);
+            }
+            for (std::size_t i = 0; i < zArr.size(); ++i) {
+                MaterialLaw::restoreHysteresisState(zArr[i], prevHysteresisState_.dirStatesZ[i]);
+            }
+        }
+    }
+
     template <class FluidState>
     bool updateHysteresis(const FluidState& fluidState, unsigned elemIdx)
     {
@@ -366,6 +439,8 @@ private:
     EclEpsConfig gasOilConfig_;
     EclEpsConfig oilWaterConfig_;
     EclEpsConfig gasWaterConfig_;
+
+    HysteresisStateSnapshot prevHysteresisState_{};
 };
 
 } // namespace Opm::EclMaterialLaw

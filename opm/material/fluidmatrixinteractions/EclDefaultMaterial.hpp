@@ -483,6 +483,24 @@ public:
         }
     }
 
+    template <class StateT>
+    static void captureHysteresisState(const Params& params, StateT& state)
+    {
+        if constexpr (Traits::enableHysteresis) {
+            state.gasOilState = params.gasOilParams().captureState();
+            state.oilWaterState = params.oilWaterParams().captureState();
+        }
+    }
+
+    template <class StateT>
+    static void restoreHysteresisState(Params& params, const StateT& state)
+    {
+        if constexpr (Traits::enableHysteresis) {
+            params.gasOilParams().restoreState(state.gasOilState);
+            params.oilWaterParams().restoreState(state.oilWaterState);
+        }
+    }
+
     template <class FluidState>
     static Scalar clampSaturation(const FluidState& fluidState, const int phaseIndex)
     {

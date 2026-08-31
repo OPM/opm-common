@@ -581,6 +581,21 @@ public:
                                           return false);
         return false;
     }
+
+    template <class StateT>
+    static void captureHysteresisState(const Params& params, StateT& state)
+    {
+        state.approach = params.approach();
+        OPM_ECL_MULTIPLEXER_MATERIAL_CALL(ActualLaw::captureHysteresisState(realParams, state),
+                                          doNothing());
+    }
+
+    template <class StateT>
+    static void restoreHysteresisState(Params& params, const StateT& state)
+    {
+        OPM_ECL_MULTIPLEXER_MATERIAL_CALL(ActualLaw::restoreHysteresisState(realParams, state),
+                                          doNothing());
+    }
 };
 
 } // namespace Opm
