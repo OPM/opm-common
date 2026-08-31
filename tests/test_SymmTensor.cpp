@@ -26,18 +26,15 @@
 #endif
 
 #define BOOST_TEST_MODULE SymmTensorTest
-#include <boost/mpl/list.hpp>
 #include <boost/test/unit_test.hpp>
 
 namespace {
-    #if FLOW_INSTANTIATE_FLOAT
-    using Types = boost::mpl::list<float,double>;
-    #else
-    using Types = boost::mpl::list<double>;
-    #endif
-}
 
-BOOST_AUTO_TEST_CASE_TEMPLATE(Basics, Scalar, Types)
+// Instantiated explicitly rather than through BOOST_AUTO_TEST_CASE_TEMPLATE:
+// the generator's test-name handling trips a -Wstringop-overread false positive
+// in GCC 14 at -O3 with LTO.
+template<class Scalar>
+void testBasics()
 {
     Opm::SymmTensor<Scalar> tensor;
     constexpr auto& indices = Opm::SymmTensor<Scalar>::unique_indices;
@@ -89,3 +86,17 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(Basics, Scalar, Types)
     BOOST_CHECK_EQUAL(tensor.traction({0.0, 1.0, 1.0}), 3.0 + 4.0 + 2 * 7.0);
 #endif
 }
+
+}
+
+BOOST_AUTO_TEST_CASE(BasicsDouble)
+{
+    testBasics<double>();
+}
+
+#if FLOW_INSTANTIATE_FLOAT
+BOOST_AUTO_TEST_CASE(BasicsFloat)
+{
+    testBasics<float>();
+}
+#endif
