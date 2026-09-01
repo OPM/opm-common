@@ -3571,6 +3571,30 @@ END
     BOOST_CHECK_THROW(Opm::TableManager{ deck }, Opm::OpmInputError);
 }
 
+BOOST_AUTO_TEST_CASE(ZmfvdTable_NegativeMoleFractionIsRejected) {
+    const auto make_table_manager = [](const std::string& composition) {
+        const auto deck = Opm::Parser{}.parseString(std::string{R"(
+RUNSPEC
+METRIC
+COMPS
+2 /
+EQLDIMS
+1 /
+PROPS
+ZMFVD
+  100.0 )"} + composition + R"( /
+END
+)");
+        return Opm::TableManager{ deck };
+    };
+
+    // Relaxing the sum tolerance must not admit an invalid component.
+    BOOST_CHECK_THROW(make_table_manager("-0.00005 1.0"), Opm::OpmInputError);
+
+    // Individual values must also be checked when their sum is exactly one.
+    BOOST_CHECK_THROW(make_table_manager("-0.1 1.1"), Opm::OpmInputError);
+}
+
 BOOST_AUTO_TEST_CASE(CompvdTable_MoleFractionsMustSumToOne) {
     const auto deck = Opm::Parser{}.parseString(R"(
 RUNSPEC

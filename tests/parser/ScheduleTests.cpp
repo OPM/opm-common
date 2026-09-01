@@ -5327,6 +5327,23 @@ WELLSTRE
 )")), Opm::OpmInputError);
 }
 
+BOOST_AUTO_TEST_CASE(WELLSTRE_negative_composition_is_rejected) {
+    // Relaxing the sum tolerance must not admit a negative component: the sum
+    // is 0.99995, well inside the tolerance.
+    BOOST_CHECK_THROW(make_schedule(gptable_deck(R"(
+WELLSTRE
+ 'STR1' 0.75 0.25 -0.00005 /
+/
+)")), Opm::OpmInputError);
+
+    // Individual values must also be checked when their sum is exactly one.
+    BOOST_CHECK_THROW(make_schedule(gptable_deck(R"(
+WELLSTRE
+ 'STR1' 0.75 0.35 -0.10 /
+/
+)")), Opm::OpmInputError);
+}
+
 BOOST_AUTO_TEST_CASE(GPTABLE_solution_seed_and_schedule_respec) {
     const auto sched = make_schedule(R"(
 RUNSPEC

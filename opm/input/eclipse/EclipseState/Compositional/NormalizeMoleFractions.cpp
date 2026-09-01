@@ -46,9 +46,9 @@ void normalizeMoleFractions(std::vector<double>& fractions,
 {
     for (std::size_t component = 0; component < fractions.size(); ++component) {
         const double fraction = fractions[component];
-        if (!std::isfinite(fraction)) {
+        if (!std::isfinite(fraction) || fraction < 0.0) {
             throw OpmInputError(fmt::format("Mole fraction {} of {} is {}, "
-                                            "but mole fractions must be finite.",
+                                            "but mole fractions must be finite and non-negative.",
                                             component + 1, what, fraction),
                                 location);
         }
@@ -57,8 +57,7 @@ void normalizeMoleFractions(std::vector<double>& fractions,
     const double sum = std::accumulate(fractions.begin(), fractions.end(), 0.0);
 
     // The individually finite values above can still overflow while they are
-    // summed.  Every comparison against a NaN is false, so check the result
-    // before applying either tolerance below.
+    // summed.  Check the result before applying either tolerance below.
     if (!std::isfinite(sum)) {
         throw OpmInputError(fmt::format("The mole fractions of {} sum to {}, "
                                         "which is not a finite number.", what, sum),
