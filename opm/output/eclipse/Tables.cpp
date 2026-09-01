@@ -23,7 +23,7 @@
 
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Phase.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/FlatTable.hpp> // PVTW, PVCDO, SWOFLET, SGOFLET
+#include <opm/input/eclipse/EclipseState/Tables/FlatTable.hpp> // ROCK, PVTW, PVCDO, SWOFLET, SGOFLET
 #include <opm/input/eclipse/EclipseState/Tables/GsfTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/PvdgTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/PvdoTable.hpp>
@@ -3698,6 +3698,28 @@ namespace Opm {
         this->addData(Ix::DensityTableStart, densityData);
 
         this->tabdims_[Ix::DensityNumTables] = nreg;
+    }
+
+    void Tables::addRock(const RockTable& rock)
+    {
+        const auto nreg = rock.size();
+
+        if (nreg == 0) { return; }
+
+        // ROCK(NTROCK, 2), column major: Pref in column 0, Cr in column 1.
+        auto rockData = std::vector<double>(nreg * 2);
+
+        using M = ::Opm::UnitSystem::measure;
+
+        // Compressibility unit hack here (*to_si()*)
+        for (auto i = 0*nreg; i < nreg; ++i) {
+            rockData[0*nreg + i] = this->units_.from_si(M::pressure, rock[i].reference_pressure);
+            rockData[1*nreg + i] = this->units_.to_si  (M::pressure, rock[i].compressibility);
+        }
+
+        this->addData(Ix::RockTableStart, rockData);
+
+        this->tabdims_[Ix::NumRockTables] = nreg;
     }
 
     void Tables::addPVTTables(const EclipseState& es)

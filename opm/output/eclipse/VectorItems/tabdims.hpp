@@ -29,8 +29,7 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
             // Number of elements in 'TAB' array
             TabSize           = 0,
 
-            // Rock table (ROCK).  Not written by this writer; named so the
-            // constructor can keep the table count at zero.
+            // Rock compressibility table (ROCK)
             RockTableStart    =  1,
             NumRockTables     =  2,
 
