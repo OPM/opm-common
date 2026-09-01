@@ -3550,6 +3550,27 @@ END
     BOOST_CHECK_CLOSE(sum, 1.0, 1.0e-12);
 }
 
+BOOST_AUTO_TEST_CASE(ZmfvdTable_NonFiniteMoleFractionIsRejected) {
+    // NaN is an acceptable floating-point token to the parser.  It must not
+    // reach the normalization: a NaN sum makes every tolerance comparison
+    // false, so an unguarded helper would divide the row through by it and
+    // store a composition of NaNs.
+    const auto deck = Opm::Parser{}.parseString(R"(
+RUNSPEC
+METRIC
+COMPS
+2 /
+EQLDIMS
+1 /
+PROPS
+ZMFVD
+  100.0  NaN  0.5 /
+END
+)");
+
+    BOOST_CHECK_THROW(Opm::TableManager{ deck }, Opm::OpmInputError);
+}
+
 BOOST_AUTO_TEST_CASE(CompvdTable_MoleFractionsMustSumToOne) {
     const auto deck = Opm::Parser{}.parseString(R"(
 RUNSPEC

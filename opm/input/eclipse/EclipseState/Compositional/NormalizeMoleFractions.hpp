@@ -42,8 +42,8 @@ double exactSumSlack(std::size_t numValues);
 /// \param what  Names the input in the warning, e.g. "row 2 of COMPVD table 1"
 ///              or "stream 'ISTR'".
 ///
-/// \throw OpmInputError when the sum is too far from one to be the rounding of
-///        the values.
+/// \throw OpmInputError when a fraction is non-finite, or when the sum is too
+///        far from one to be the rounding of the values.
 void normalizeMoleFractions(std::vector<double>& fractions,
                             const std::string& what,
                             const KeywordLocation& location);

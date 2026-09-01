@@ -44,7 +44,27 @@ void normalizeMoleFractions(std::vector<double>& fractions,
                             const std::string& what,
                             const KeywordLocation& location)
 {
+    for (std::size_t component = 0; component < fractions.size(); ++component) {
+        const double fraction = fractions[component];
+        if (!std::isfinite(fraction)) {
+            throw OpmInputError(fmt::format("Mole fraction {} of {} is {}, "
+                                            "but mole fractions must be finite.",
+                                            component + 1, what, fraction),
+                                location);
+        }
+    }
+
     const double sum = std::accumulate(fractions.begin(), fractions.end(), 0.0);
+
+    // The individually finite values above can still overflow while they are
+    // summed.  Every comparison against a NaN is false, so check the result
+    // before applying either tolerance below.
+    if (!std::isfinite(sum)) {
+        throw OpmInputError(fmt::format("The mole fractions of {} sum to {}, "
+                                        "which is not a finite number.", what, sum),
+                            location);
+    }
+
     const double deviation = std::abs(sum - 1.0);
 
     if (deviation > moleFractionTolerance()) {
