@@ -36,6 +36,7 @@
 #define BOOST_TEST_MODULE VolumeShift
 #include <boost/test/unit_test.hpp>
 
+#include <opm/material/Constants.hpp>
 #include <opm/material/fluidstates/CompositionalFluidState.hpp>
 #include <opm/material/fluidsystems/GenericOilGasWaterFluidSystem.hpp>
 
@@ -126,6 +127,7 @@ struct Fixture
 struct PhaseState
 {
     Scalar density{};
+    Scalar viscosity{};
     CompVec fugacityCoefficient{};
 };
 
@@ -145,6 +147,10 @@ PhaseState gasState()
 
     PhaseState state;
     state.density = FluidSystem::density(fs, paramCache, FluidSystem::gasPhaseIdx);
+    const Scalar Z = paramCache.molarVolume(FluidSystem::gasPhaseIdx) * pressure
+                   / (Opm::Constants<Scalar>::R * temperature);
+    fs.setCompressFactor(FluidSystem::gasPhaseIdx, Z);
+    state.viscosity = FluidSystem::viscosity(fs, paramCache, FluidSystem::gasPhaseIdx);
     for (int c = 0; c < numComponents; ++c) {
         state.fugacityCoefficient[c] =
             FluidSystem::fugacityCoefficient(fs, paramCache, FluidSystem::gasPhaseIdx, c);
@@ -280,6 +286,14 @@ BOOST_AUTO_TEST_CASE(ShiftMovesTheLiquidDensityToo)
     // The shifts are mostly negative, so the correction enlarges the volume
     // and the shifted liquid is the lighter of the two.
     BOOST_CHECK_LT(rho, fs.averageMolarMass(FluidSystem::oilPhaseIdx) / Vm);
+}
+
+BOOST_AUTO_TEST_CASE(ShiftMovesTheViscosityOntoTheReference)
+{
+    // The reference restart reports the gas viscosity at this state.  As for
+    // the density above, the COMPVD rather than equilibrated composition
+    // accounts for the small remaining difference.
+    BOOST_CHECK_CLOSE(gasState().viscosity, 2.23926e-5, 1.0);
 }
 
 // A three-component system of its own, so parsing a deck into it cannot

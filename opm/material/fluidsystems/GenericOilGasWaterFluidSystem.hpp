@@ -26,7 +26,6 @@
 #ifndef OPM_GENERIC_OIL_GAS_WATER_FLUIDSYSTEM_HPP
 #define OPM_GENERIC_OIL_GAS_WATER_FLUIDSYSTEM_HPP
 
-#include <opm/common/Exceptions.hpp>
 #include <opm/common/OpmLog/OpmLog.hpp>
 
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
@@ -374,8 +373,12 @@ namespace Opm {
             assert(phaseIdx < numPhases);
 
             if (phaseIdx == oilPhaseIdx || phaseIdx == gasPhaseIdx) {
-                // Use LBC method to calculate viscosity
-                return decay<LhsEval>(ViscosityModel::LBC(fluidState, paramCache, phaseIdx));
+                // LBC is a reduced-density correlation, so use the physical
+                // molar density after applying SSHIFT.
+                const auto rho = density(fluidState, paramCache, phaseIdx);
+                const auto molarDensity = rho / fluidState.averageMolarMass(phaseIdx);
+                return decay<LhsEval>(
+                    ViscosityModel::LBCWithMolarDensity(fluidState, molarDensity, phaseIdx));
             }
             else {
                 const LhsEval& p = decay<LhsEval>(fluidState.pressure(phaseIdx));
