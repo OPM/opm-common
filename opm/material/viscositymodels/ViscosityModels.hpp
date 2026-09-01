@@ -68,7 +68,7 @@ public:
         const auto& Z = Opm::decay<LhsEval>(fluidState.compressFactor(phaseIdx));
         const LhsEval molarDensity = P / (R * T * Z);
 
-        return LBCWithMolarDensity(fluidState, molarDensity, phaseIdx);
+        return LBCWithMolarDensity<FluidState, LhsEval, LhsEval>(fluidState, molarDensity, phaseIdx);
     }
 
     // Standard LBC model with an explicitly supplied physical molar density.

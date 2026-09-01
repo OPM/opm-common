@@ -25,11 +25,12 @@
 /*!
  * \file
  *
- * \brief Tests that the SSHIFT volume shift reaches the density.
+ * \brief Tests that the SSHIFT volume shift reaches the density and the viscosity.
  *
- * The fluid is the seven-component one of a deck whose reference run reports
- * a gas density of 165.87 kg/m3 at 272.599 bar and 393.15 K.  Without the
- * shift the equation of state gives 172.84.
+ * The fluid is the seven-component one of COMP_EQUIL_1D_VERTICAL_EQLNUM7,
+ * whose reference run reports a gas density of 165.87 kg/m3 at 272.599 bar
+ * and 393.15 K.  Without the shift the equation of state gives 172.84.  The
+ * viscosity reference is the VGAS array of that run's restart file.
  */
 #include "config.h"
 
@@ -145,11 +146,14 @@ PhaseState gasState()
     typename FluidSystem::template ParameterCache<Scalar> paramCache(eosType);
     paramCache.updatePhase(fs, FluidSystem::gasPhaseIdx);
 
-    PhaseState state;
-    state.density = FluidSystem::density(fs, paramCache, FluidSystem::gasPhaseIdx);
+    // Keep the fluid state complete even though the SSHIFT-aware viscosity
+    // path uses the corrected molar volume rather than this unshifted EOS Z.
     const Scalar Z = paramCache.molarVolume(FluidSystem::gasPhaseIdx) * pressure
                    / (Opm::Constants<Scalar>::R * temperature);
     fs.setCompressFactor(FluidSystem::gasPhaseIdx, Z);
+
+    PhaseState state;
+    state.density = FluidSystem::density(fs, paramCache, FluidSystem::gasPhaseIdx);
     state.viscosity = FluidSystem::viscosity(fs, paramCache, FluidSystem::gasPhaseIdx);
     for (int c = 0; c < numComponents; ++c) {
         state.fugacityCoefficient[c] =
@@ -290,9 +294,11 @@ BOOST_AUTO_TEST_CASE(ShiftMovesTheLiquidDensityToo)
 
 BOOST_AUTO_TEST_CASE(ShiftMovesTheViscosityOntoTheReference)
 {
-    // The reference restart reports the gas viscosity at this state.  As for
-    // the density above, the COMPVD rather than equilibrated composition
-    // accounts for the small remaining difference.
+    // VGAS of cell 1 at report step 1: 0.0223926 cP.  The initial step carries
+    // no viscosity, so the reference is 272.64 rather than 272.599 bar - that,
+    // and the COMPVD rather than equilibrated composition, account for the
+    // small remaining difference.  The unshifted density would put the
+    // correlation 2.3% high, well outside the tolerance below.
     BOOST_CHECK_CLOSE(gasState().viscosity, 2.23926e-5, 1.0);
 }
 
