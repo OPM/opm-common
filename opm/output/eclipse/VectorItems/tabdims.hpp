@@ -29,6 +29,16 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
             // Number of elements in 'TAB' array
             TabSize           = 0,
 
+            // Rock table (ROCK).  Not written by this writer; named so the
+            // constructor can keep the table count at zero.
+            RockTableStart    =  1,
+            NumRockTables     =  2,
+
+            // Rock compaction tables (ROCKTAB).  Not written by this
+            // writer; slots 3..5 unverified.
+            NumRockCompNodes  =  4,
+            NumRockCompTables =  5,
+
             // Oil PVT table
             PvtoMainStart     =  6,
             PvtoCompStart     =  7,

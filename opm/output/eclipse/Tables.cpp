@@ -3662,6 +3662,14 @@ namespace Opm {
         // Initialize subset of base pointers and dimensions to 1 to honour
         // requirements of TABDIMS protocol.
         std::fill_n(std::begin(this->tabdims_), 59, 1);
+
+        // The fill above is needed for the base pointers, but it also leaves
+        // the ROCK and ROCKTAB table *counts* at 1.  Counts for the tables we
+        // do emit are assigned in the matching add*(), so zeroing them here
+        // is safe.
+        this->tabdims_[Ix::NumRockTables]     = 0;
+        this->tabdims_[Ix::NumRockCompNodes]  = 0;
+        this->tabdims_[Ix::NumRockCompTables] = 0;
     }
 
     void Tables::addDensity(const DensityTable& density)

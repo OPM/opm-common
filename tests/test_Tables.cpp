@@ -3413,6 +3413,49 @@ BOOST_AUTO_TEST_SUITE_END ()
 
 // =====================================================================
 
+BOOST_AUTO_TEST_SUITE (Rock)
+
+BOOST_AUTO_TEST_CASE (No_Rock_Keyword_Advertises_No_Table)
+{
+    // TABDIMS must not claim a rock table when the deck declares none.  The
+    // base pointers are pre-filled with 1 to satisfy the one-based TABDIMS
+    // protocol, so a non-zero count here would send a reader to the start of
+    // TAB and hand it whichever table happens to be there.
+    const auto rspec = std::string { R"(RUNSPEC
+DIMENS
+  10 10 10 /
+
+TITLE
+  Test ROCK Output
+
+WATER
+
+METRIC
+
+TABDIMS
+/
+)"  };
+
+    const auto props = std::string { R"(
+PVTW
+-- Pref  Bw(Pref)  Cw        Vw(Pref)  Cv
+   200   1.23      0.321e-4  0.25      0.654e-3 /
+)"  };
+
+    const auto es = parse(rspec, props);
+
+    auto tables = ::Opm::Tables(es.getUnits());
+    tables.addPVTTables(es);
+
+    const auto& tabdims = tables.tabdims();
+
+    BOOST_CHECK_EQUAL(tabdims[ Ix::NumRockTables ], 0);
+    BOOST_CHECK_EQUAL(tabdims[ Ix::NumRockCompNodes ], 0);
+    BOOST_CHECK_EQUAL(tabdims[ Ix::NumRockCompTables ], 0);
+}
+
+BOOST_AUTO_TEST_SUITE_END ()    // Rock
+
 BOOST_AUTO_TEST_SUITE_END ()
 
 // =====================================================================
