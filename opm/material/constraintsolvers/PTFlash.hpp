@@ -29,6 +29,7 @@
 #ifndef OPM_CHI_FLASH_HPP
 #define OPM_CHI_FLASH_HPP
 
+#include <opm/material/constraintsolvers/RachfordRice.hpp>
 #include <opm/material/fluidmatrixinteractions/NullMaterial.hpp>
 #include <opm/material/fluidmatrixinteractions/MaterialTraits.hpp>
 #include <opm/material/fluidstates/CompositionalFluidState.hpp>
@@ -143,93 +144,6 @@ public:
         solve<MaterialLaw>(fluid_state, matParams, globalMolarities, tolerance);
     }
 
-    template <class Vector>
-    static typename Vector::field_type solveRachfordRice_g_(const Vector& K, const Vector& z, int verbosity)
-    {
-        // Find min and max K. Have to do a laborious for loop to avoid water component (where K=0)
-        // TODO: Replace loop with Dune::min_value() and Dune::max_value() when water component is properly handled
-        using field_type = typename Vector::field_type;
-        constexpr field_type tol = 1e-12;
-        constexpr int itmax = 10000;
-        field_type Kmin = K[0];
-        field_type Kmax = K[0];
-        for (int compIdx = 1; compIdx < numComponents; ++compIdx){
-            if (K[compIdx] < Kmin)
-                Kmin = K[compIdx];
-            else if (K[compIdx] >= Kmax)
-                Kmax = K[compIdx];
-        }
-        // Lower and upper bound for solution
-        auto Vmin = 1 / (1 - Kmax);
-        auto Vmax = 1 / (1 - Kmin);
-        // Initial guess
-        auto V = (Vmin + Vmax)/2;
-        // Print initial guess and header
-        if (verbosity == 3 || verbosity == 4) {
-            OpmLog::debug(fmt::format("Initial guess {}c : V = {} and [Vmin, Vmax] = [{}, {}]",
-                                     numComponents, V, Vmin, Vmax));
-            OpmLog::debug(fmt::format("{:>10}{:>16}{:>16}", "Iteration", "abs(step)", "V"));
-        }
-        // Newton-Raphson loop
-        for (int iteration = 1; iteration < itmax; ++iteration) {
-            // Calculate function and derivative values
-            field_type denum = 0.0;
-            field_type r = 0.0;
-            for (int compIdx = 0; compIdx < numComponents; ++compIdx){
-                auto dK = K[compIdx] - 1.0;
-                auto a = z[compIdx] * dK;
-                auto b = (1 + V * dK);
-                r += a/b;
-                denum += z[compIdx] * (dK*dK) / (b*b);
-            }
-            auto delta = r / denum;
-            V += delta;
-
-            // Check if V is within the bounds, and if not, we apply bisection method
-            if (V < Vmin || V > Vmax)
-                {
-                    // Print info
-                    if (verbosity == 3 || verbosity == 4) {
-                        OpmLog::debug(fmt::format("V = {} is not within the range [Vmin, Vmax], solve using Bisection method!", V));
-                    }
-
-                    // Run bisection
-                    // TODO: This is required for some cases. Not clear why
-                    // since the objective function should be monotone with a
-                    // single zero between the Lmin/Lmax interval defined by
-                    // K-values.
-                    decltype(Vmax) Lmin = 1.0;
-                    decltype(Vmin) Lmax = 0.0;
-                    auto L = bisection_g_(K, Lmin, Lmax, z, verbosity);
-
-                    // Print final result
-                    if (verbosity >= 1) {
-                        OpmLog::debug(fmt::format("Rachford-Rice (Bisection) converged to final solution L = {}", L));
-                    }
-                    return L;
-                }
-
-            // Print iteration info
-            if (verbosity == 3 || verbosity == 4) {
-                OpmLog::debug(fmt::format("{:>10}{:>16}{:>16}", iteration, Opm::abs(delta), V));
-            }
-            // Check for convergence
-            if ( Opm::abs(r) < tol ) {
-                auto L = 1 - V;
-                // Should we make sure the range of L is within (0, 1)?
-
-                // Print final result
-                if (verbosity >= 1) {
-                    OpmLog::debug(fmt::format("Rachford-Rice converged to final solution L = {}", L));
-                }
-                return L;
-            }
-        }
-
-        // Throw error if Rachford-Rice fails
-        OPM_THROW(std::runtime_error, " Rachford-Rice did not converge within maximum number of iterations");
-    }
-
     // performing the flash calculation, which is done with Scalar without touching derivatives
     template <typename FluidState>
     static bool flash_solve_scalar_(FluidState& fluid_state,
@@ -266,7 +180,7 @@ public:
         // Update the composition if cell is two-phase
         if ( !is_single_phase ) {
             // Rachford Rice equation to get initial L for composition solver
-            L_scalar = solveRachfordRice_g_(K_scalar, z_scalar, verbosity);
+            L_scalar = RachfordRice::solve(K_scalar, z_scalar, verbosity);
             flash_2ph(z_scalar, twoPhaseMethod, K_scalar, L_scalar, fluid_state, flash_tolerance, eos_type, verbosity);
         } else {
             // Cell is one-phase. Use Li's phase labeling method to see if it's liquid or vapor
@@ -274,56 +188,6 @@ public:
         }
         fluid_state.setLvalue(L_scalar);
         return is_single_phase;
-    }
-
-    template <class Vector>
-    static typename Vector::field_type bisection_g_(const Vector& K, typename Vector::field_type Lmin,
-                                                    typename Vector::field_type Lmax, const Vector& z, int verbosity)
-    {
-        // Calculate for g(Lmin) for first comparison with gMid = g(L)
-        typename Vector::field_type gLmin = rachfordRice_g_(K, Lmin, z);
-
-        // Print new header
-        if (verbosity >= 3) {
-            OpmLog::debug(fmt::format("{:>10}{:>16}{:>16}", "Iteration", "g(Lmid)", "L"));
-        }
-
-        constexpr int max_it = 10000;
-
-        auto closeLmaxLmin = [](double max_v, double min_v) {
-            return Opm::abs(max_v - min_v) / 2. < 1e-10;
-            // what if max_v < min_v?
-        };
-
-        // Bisection loop
-        if (closeLmaxLmin(Lmax, Lmin) ){
-            OPM_THROW(std::runtime_error, fmt::format("Strange bisection with Lmax {} and Lmin {}?", Lmax, Lmin));
-        }
-        for (int iteration = 0; iteration < max_it; ++iteration){
-            // New midpoint
-            auto L = (Lmin + Lmax) / 2;
-            auto gMid = rachfordRice_g_(K, L, z);
-            if (verbosity == 3 || verbosity == 4) {
-                OpmLog::debug(fmt::format("{:>10}{:>16}{:>16}", iteration, gMid, L));
-            }
-
-            // Check if midpoint fulfills g=0 or L - Lmin is sufficiently small
-            if (Opm::abs(gMid) < 1e-16 || closeLmaxLmin(Lmax, Lmin)){
-                return L;
-            }
-            // Else we repeat with midpoint being either Lmin og Lmax (depending on the signs).
-            else if (Dune::sign(gMid) != Dune::sign(gLmin)) {
-                // gMid has different sign as gLmin, so we set L as the new Lmax
-                Lmax = L;
-            }
-            else {
-                // gMid and gLmin have same sign so we set L as the new Lmin
-                Lmin = L;
-                gLmin = gMid;
-            }
-        }
-        OPM_THROW(std::runtime_error,
-                  fmt::format(" Rachford-Rice bisection failed with {} iterations!", max_it));
     }
 
     template <class Vector, class FlashFluidState>
@@ -434,26 +298,6 @@ protected:
 
         const auto& tmp = Opm::exp(5.3727 * (1+acf) * (1-T_crit/T)) * (p_crit/p);
         return tmp;
-    }
-
-    template <class Vector>
-    static typename Vector::field_type rachfordRice_g_(const Vector& K, typename Vector::field_type L, const Vector& z)
-    {
-        typename Vector::field_type g=0;
-        for (int compIdx=0; compIdx<numComponents; ++compIdx){
-            g += (z[compIdx]*(K[compIdx]-1))/(K[compIdx]-L*(K[compIdx]-1));
-        }
-        return g;
-    }
-
-    template <class Vector>
-    static typename Vector::field_type rachfordRice_dg_dL_(const Vector& K, const typename Vector::field_type L, const Vector& z)
-    {
-        typename Vector::field_type dg=0;
-        for (int compIdx=0; compIdx<numComponents; ++compIdx){
-            dg += (z[compIdx]*(K[compIdx]-1)*(K[compIdx]-1))/((K[compIdx]-L*(K[compIdx]-1))*(K[compIdx]-L*(K[compIdx]-1)));
-        }
-        return dg;
     }
 
     template <class FlashFluidState, class ComponentVector>
@@ -1213,7 +1057,7 @@ protected:
                 }
 
                 // Solve Rachford-Rice to get L from updated K
-                L = solveRachfordRice_g_(K, z, 0);
+                L = RachfordRice::solve(K, z, 0);
             }
         }
         // did not get converged. check whether we will do more newton later afterward
