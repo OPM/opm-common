@@ -101,6 +101,16 @@ FileDeck::Index& FileDeck::Index::operator--()
         }
 
         --this->file_index;
+
+        // Skip file blocks from which all keywords have been erased.
+        while (this->deck->blocks[this->file_index].empty()) {
+            if (this->file_index == 0) {
+                throw std::logic_error("Going beyond start of container");
+            }
+
+            --this->file_index;
+        }
+
         this->keyword_index = this->deck->blocks[this->file_index].size() - 1;
     }
 
@@ -129,6 +139,12 @@ FileDeck::Index& FileDeck::Index::operator++()
     else {
         ++this->file_index;
         this->keyword_index = 0;
+
+        // Skip file blocks from which all keywords have been erased.
+        while ((this->file_index < this->deck->blocks.size())
+               && this->deck->blocks[this->file_index].empty()) {
+            ++this->file_index;
+        }
     }
 
     return *this;

@@ -338,6 +338,50 @@ BOOST_AUTO_TEST_CASE(TestFileDeck)
     fd.erase(index6.value(), index7.value());
 }
 
+BOOST_AUTO_TEST_CASE(FileDeckEmptyBlock)
+{
+    const auto deck = Parser{}.parseFile("UDQ_WCONPROD.DATA");
+    FileDeck fd(deck);
+
+    // The keywords of the include file form a block of their own.  Erase all
+    // of them to get a deck with an empty block in the middle.
+    const auto include_block = fd.find("COORD").value().file_index;
+
+    auto num_include_kw = std::size_t{0};
+    for (auto index = fd.start(); index != fd.stop(); ++index) {
+        if (index.file_index == include_block) {
+            ++num_include_kw;
+        }
+    }
+
+    BOOST_REQUIRE_GT(num_include_kw, 0);
+
+    fd.erase(FileDeck::Index {include_block, 0, &fd},
+             FileDeck::Index {include_block + 1, 0, &fd});
+
+    // Forward iteration must visit every remaining keyword, and no keyword of
+    // the empty block.
+    auto num_kw = std::size_t{0};
+    for (auto index = fd.start(); index != fd.stop(); ++index) {
+        BOOST_CHECK_NE(index.file_index, include_block);
+        BOOST_CHECK_NO_THROW(fd[index]);
+        ++num_kw;
+    }
+
+    BOOST_CHECK_EQUAL(num_kw, deck.size() - num_include_kw);
+
+    // Reverse iteration must visit the same keywords in the opposite order.
+    auto index = fd.stop();
+    while (index != fd.start()) {
+        --index;
+        BOOST_CHECK_NE(index.file_index, include_block);
+        BOOST_CHECK_NO_THROW(fd[index]);
+        --num_kw;
+    }
+
+    BOOST_CHECK_EQUAL(num_kw, 0);
+}
+
 BOOST_AUTO_TEST_CASE(RestartTest2)
 {
     const auto deck = Parser{}.parseFile("UDQ_WCONPROD.DATA");
