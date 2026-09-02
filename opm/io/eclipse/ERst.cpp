@@ -22,6 +22,7 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <cstdint>
 #include <cstring>
 #include <exception>
 #include <iterator>
@@ -170,6 +171,29 @@ int ERst::occurrence_count(const std::string& name, int reportStepNumber) const
     }
 
     return count;
+}
+
+std::int64_t ERst::dataSize(const std::string& name, int reportStepNumber) const
+{
+    if (!hasReportStepNumber(reportStepNumber)) {
+        OPM_THROW(std::invalid_argument,
+                  fmt::format("Trying to get size of vectors of name {}"
+                              " from non existing sequence {}", name, reportStepNumber));
+    }
+
+    std::int64_t size = 0;
+
+    auto range_it = arrIndexRange.find(reportStepNumber);
+
+    std::pair<int,int> indexRange = range_it->second;
+
+    for (int i=std::get<0>(indexRange); i<std::get<1>(indexRange);i++){
+        if (array_name[i] == name){
+            size += array_size[i];
+        }
+    }
+
+    return size;
 }
 
 void ERst::initUnified()

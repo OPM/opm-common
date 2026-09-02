@@ -22,6 +22,7 @@
 #include <opm/io/eclipse/EclFile.hpp>
 
 #include <cstddef>
+#include <cstdint>
 #include <ios>
 #include <map>
 #include <string>
@@ -71,6 +72,7 @@ public:
     const std::vector<T>& getRestartData(int index, int reportStepNumber, const std::string& lgr_name);
 
     int occurrence_count(const std::string& name, int reportStepNumber) const;
+    std::int64_t dataSize(const std::string& name, int reportStepNumber) const;
     std::size_t numberOfReportSteps() const { return seqnum.size(); };
 
     const std::vector<int>& listOfReportStepNumbers() const { return seqnum; }

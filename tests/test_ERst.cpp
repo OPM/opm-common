@@ -525,6 +525,47 @@ BOOST_AUTO_TEST_CASE(TestERst_5b) {
     }
 }
 
+BOOST_AUTO_TEST_CASE(TestERst_dataSize) {
+
+    std::string testRstFile = "LGR_TESTMOD.UNRST";
+
+    ERst rst1(testRstFile);
+
+    const int rstep = 0;
+
+    // PRESSURE is stored once for the global grid and once for each of the
+    // two LGRs, with 30, 128 and 192 elements.
+    BOOST_CHECK_EQUAL(rst1.occurrence_count("PRESSURE", rstep), 3);
+    BOOST_CHECK_EQUAL(rst1.dataSize("PRESSURE", rstep), 30 + 128 + 192);
+
+    // SEQNUM exists in the global grid only.
+    BOOST_CHECK_EQUAL(rst1.dataSize("SEQNUM", rstep), 1);
+
+    // Sum of all occurrences of a name must match the arrays reported for the
+    // global grid and the LGRs.
+    for (const auto& name : { std::string {"PRESSURE"}, std::string {"ICON"},
+                              std::string {"INTEHEAD"}, std::string {"ZWEL"} })
+    {
+        std::int64_t size = 0;
+        for (const auto& grid : { std::string {"global"}, std::string {"LGR1"},
+                                  std::string {"LGR2"} })
+        {
+            for (const auto& array : rst1.listOfRstArrays(rstep, grid)) {
+                if (std::get<0>(array) == name) {
+                    size += std::get<2>(array);
+                }
+            }
+        }
+
+        BOOST_CHECK_EQUAL(rst1.dataSize(name, rstep), size);
+    }
+
+    BOOST_CHECK_EQUAL(rst1.dataSize("XXXX", rstep), 0);
+
+    // Non existing report step number, as in occurrence_count()
+    BOOST_CHECK_THROW(rst1.dataSize("PRESSURE", 99), std::invalid_argument);
+}
+
 // ====================================================================
 
 class RSet
