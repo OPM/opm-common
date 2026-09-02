@@ -59,10 +59,9 @@
 
 namespace Opm {
 
-//! Two-phase, two-component (N2/C1) test fluid system — the
-//! ThreeComponentFluidSystem pattern reduced to the pair that exhibits the
-//! recorded divergence, with the standard N2/methane Peng-Robinson binary
-//! interaction coefficient.
+//! Two-phase, two-component (N2/C1) test fluid system: the smallest fixed
+//! mixture that still exhibits the recorded divergence, with the standard
+//! N2/methane Peng-Robinson binary interaction coefficient.
 template<class Scalar>
 class N2C1TestFluidSystem
         : public Opm::BaseFluidSystem<Scalar, N2C1TestFluidSystem<Scalar> > {

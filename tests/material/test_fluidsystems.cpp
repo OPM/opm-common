@@ -54,7 +54,6 @@
 #include <opm/material/fluidsystems/H2OAirFluidSystem.hpp>
 #include <opm/material/fluidsystems/H2OAirMesityleneFluidSystem.hpp>
 #include <opm/material/fluidsystems/H2OAirXyleneFluidSystem.hpp>
-#include <opm/material/fluidsystems/ThreeComponentFluidSystem.hh>
 
 #include <opm/material/thermal/FluidThermalConductionLaw.hpp>
 
@@ -377,14 +376,16 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(SinglePhaseFluidSystemG, Scalar, ScalarTypes)
     checkFluidSystem<Scalar, FluidSystem, Evaluation, Evaluation>();
 }
 
-BOOST_AUTO_TEST_CASE_TEMPLATE(ThreeComponentFluidSystem, Scalar, ScalarTypes)
+template <class FluidSystem, class Component>
+void registerComponent()
 {
-    using Evaluation = Opm::DenseAd::Evaluation<Scalar,3>;
-    using FluidSystem = Opm::ThreeComponentFluidSystem<Scalar>;
-
-    checkFluidSystem<Scalar, FluidSystem, Scalar, Scalar>();
-    checkFluidSystem<Scalar, FluidSystem, Evaluation, Scalar>();
-    checkFluidSystem<Scalar, FluidSystem, Evaluation, Evaluation>();
+    using CompParam = typename FluidSystem::ComponentParam;
+    FluidSystem::addComponent(CompParam{Component::name(),
+                                        Component::molarMass(),
+                                        Component::criticalTemperature(),
+                                        Component::criticalPressure(),
+                                        Component::criticalVolume(),
+                                        Component::acentricFactor()});
 }
 
 BOOST_AUTO_TEST_CASE_TEMPLATE(GenericFluidSystem, Scalar, ScalarTypes)
@@ -392,24 +393,29 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(GenericFluidSystem, Scalar, ScalarTypes)
     using Evaluation = Opm::DenseAd::Evaluation<Scalar, 4>;
     using FluidSystem = Opm::GenericOilGasWaterFluidSystem<Scalar, 4, true>;
 
-    using CompParm = typename FluidSystem::ComponentParam;
-    using CO2 = Opm::SimpleCO2<Scalar>;
-    using C1 = Opm::C1<Scalar>;
-    using N2 = Opm::N2<Scalar>;
-    using C10 = Opm::C10<Scalar>;
-    FluidSystem::addComponent(CompParm {CO2::name(), CO2::molarMass(), CO2::criticalTemperature(),
-                                        CO2::criticalPressure(), CO2::criticalVolume(), CO2::acentricFactor()});
-    FluidSystem::addComponent(CompParm {C1::name(), C1::molarMass(), C1::criticalTemperature(),
-                                        C1::criticalPressure(), C1::criticalVolume(), C1::acentricFactor()});
-    FluidSystem::addComponent(CompParm{C10::name(), C10::molarMass(), C10::criticalTemperature(),
-                                       C10::criticalPressure(), C10::criticalVolume(), C10::acentricFactor()});
-    FluidSystem::addComponent(CompParm{N2::name(), N2::molarMass(), N2::criticalTemperature(),
-                                       N2::criticalPressure(), N2::criticalVolume(), N2::acentricFactor()});
+    registerComponent<FluidSystem, Opm::SimpleCO2<Scalar>>();
+    registerComponent<FluidSystem, Opm::C1<Scalar>>();
+    registerComponent<FluidSystem, Opm::C10<Scalar>>();
+    registerComponent<FluidSystem, Opm::N2<Scalar>>();
 
     // initialize water pvt
     using WaterPvt = typename FluidSystem::WaterPvt;
     std::shared_ptr<WaterPvt> waterPvt;
     FluidSystem::setWaterPvt(waterPvt);
+
+    checkFluidSystem<Scalar, FluidSystem, Scalar, Scalar>();
+    checkFluidSystem<Scalar, FluidSystem, Evaluation, Scalar>();
+    checkFluidSystem<Scalar, FluidSystem, Evaluation, Evaluation>();
+}
+
+BOOST_AUTO_TEST_CASE_TEMPLATE(GenericFluidSystemNoWater, Scalar, ScalarTypes)
+{
+    using Evaluation = Opm::DenseAd::Evaluation<Scalar, 3>;
+    using FluidSystem = Opm::GenericOilGasWaterFluidSystem<Scalar, 3, false>;
+
+    registerComponent<FluidSystem, Opm::SimpleCO2<Scalar>>();
+    registerComponent<FluidSystem, Opm::C1<Scalar>>();
+    registerComponent<FluidSystem, Opm::C10<Scalar>>();
 
     checkFluidSystem<Scalar, FluidSystem, Scalar, Scalar>();
     checkFluidSystem<Scalar, FluidSystem, Evaluation, Scalar>();

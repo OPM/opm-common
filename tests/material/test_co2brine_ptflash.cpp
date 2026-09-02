@@ -44,7 +44,7 @@
 
 #include <opm/material/constraintsolvers/PTFlash.hpp>
 #include <opm/material/fluidsystems/Co2BrineFluidSystem.hh>
-#include <opm/material/fluidsystems/ThreeComponentFluidSystem.hh>
+#include <opm/material/fluidsystems/GenericOilGasWaterFluidSystem.hpp>
 
 #include <opm/material/densead/Evaluation.hpp>
 #include <opm/material/constraintsolvers/ComputeFromReferencePhase.hpp>
@@ -61,7 +61,6 @@
 using Scalar = double;
 using EOSType = Opm::CompositionalConfig::EOSType;
 using FluidSystem = Opm::Co2BrineFluidSystem<Scalar>;
-using ThreeComponentSystem = Opm::ThreeComponentFluidSystem<Scalar>;
 
 constexpr auto numComponents = FluidSystem::numComponents;
 using Evaluation = Opm::DenseAd::Evaluation<double, numComponents>;
@@ -235,8 +234,6 @@ for (const auto& sample : test_methods) {
 
 BOOST_AUTO_TEST_CASE(RachfordRice) {
     using NumVector = Dune::FieldVector<double, 3>;
-    // TODO: Should not really need flash for this part.
-    using Flash = Opm::PTFlash<double, ThreeComponentSystem>;
 
     // Scalar temp = 273.15;
     // Scalar p = 150000.0;
@@ -326,6 +323,10 @@ BOOST_AUTO_TEST_CASE(RachfordRice) {
     K_values.push_back({1.787578933245329, 2.282308523254643, 0.19884032011593508});
     z_values.push_back({0.2, 0.5, 0.3});
     vapor_reference.push_back(0.6062547183490403);
+
+    using ThreeComponentSystem = Opm::GenericOilGasWaterFluidSystem<Scalar, 3, false>;
+    // TODO: Should not really need flash for this part.
+    using Flash = Opm::PTFlash<double, ThreeComponentSystem>;
 
     for(unsigned int i = 0; i < K_values.size(); i++){
         auto z_i = z_values[i];
