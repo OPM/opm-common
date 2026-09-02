@@ -31,6 +31,7 @@
 #include <iosfwd>
 #include <string>
 #include <vector>
+#include <memory>
 
 namespace Opm::ML
 {
