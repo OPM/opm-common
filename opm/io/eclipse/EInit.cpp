@@ -114,6 +114,19 @@ bool EInit::hasLGR(const std::string& name) const
     return std::ranges::find(lgr_names, name) != lgr_names.end();
 }
 
+bool EInit::hasArray(const std::string& name, const std::string& grid_name) const
+{
+    if (grid_name == "global") {
+        return global_array_index.contains(name);
+    }
+
+    if (!hasLGR(grid_name)) {
+        return false;
+    }
+
+    return lgr_array_index[get_lgr_index(grid_name)].contains(name);
+}
+
 int EInit::get_lgr_index(const std::string& grid_name) const
 {
     const auto it = std::ranges::find(lgr_names, grid_name);

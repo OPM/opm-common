@@ -185,6 +185,25 @@ BOOST_AUTO_TEST_CASE(TestEInit_2) {
 
     BOOST_CHECK_EQUAL(init1.hasLGR("LGR1"), true);
     BOOST_CHECK_EQUAL(init1.hasLGR("LGR2"), true);
+
+    // TRANNNC is present in the global grid and in both LGRs, TRANGL only in
+    // the LGRs and MULTX only in the global grid.
+    BOOST_CHECK_EQUAL(init1.hasArray("PORO"), true);
+    BOOST_CHECK_EQUAL(init1.hasArray("PORO", "global"), true);
+    BOOST_CHECK_EQUAL(init1.hasArray("PORO", "LGR1"), true);
+
+    BOOST_CHECK_EQUAL(init1.hasArray("XXXX"), false);
+    BOOST_CHECK_EQUAL(init1.hasArray("XXXX", "LGR1"), false);
+
+    BOOST_CHECK_EQUAL(init1.hasArray("MULTX", "global"), true);
+    BOOST_CHECK_EQUAL(init1.hasArray("MULTX", "LGR2"), false);
+
+    BOOST_CHECK_EQUAL(init1.hasArray("TRANGL", "global"), false);
+    BOOST_CHECK_EQUAL(init1.hasArray("TRANGL", "LGR1"), true);
+
+    // An unknown grid name is not an array, as a non existing report step is
+    // not an array in ERst::hasArray().
+    BOOST_CHECK_EQUAL(init1.hasArray("PORO", "XXXX"), false);
 }
 
 BOOST_AUTO_TEST_CASE(TestEInit_3) {
