@@ -38,8 +38,11 @@
 #include <boost/test/unit_test.hpp>
 
 #include <opm/material/Constants.hpp>
+#include <opm/material/densead/Evaluation.hpp>
+#include <opm/material/densead/Math.hpp>
 #include <opm/material/fluidstates/CompositionalFluidState.hpp>
 #include <opm/material/fluidsystems/GenericOilGasWaterFluidSystem.hpp>
+#include <opm/material/viscositymodels/ViscosityModels.hpp>
 
 #include <opm/input/eclipse/EclipseState/Compositional/CompositionalConfig.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
@@ -51,6 +54,7 @@
 
 #include <array>
 #include <cmath>
+#include <utility>
 
 namespace {
 
@@ -160,6 +164,27 @@ PhaseState gasState()
             FluidSystem::fugacityCoefficient(fs, paramCache, FluidSystem::gasPhaseIdx, c);
     }
     return state;
+}
+
+// The shifted gas density and viscosity as functions of the state, so the one
+// expression can be evaluated with derivatives and without them.
+template <class Eval>
+std::pair<Eval, Eval> shiftedGasProperties(const Eval& p, const Eval& xCH4)
+{
+    Opm::CompositionalFluidState<Eval, FluidSystem> fs;
+    fs.setTemperature(Eval{temperature});
+    fs.setPressure(FluidSystem::oilPhaseIdx, p);
+    fs.setPressure(FluidSystem::gasPhaseIdx, p);
+    fs.setMoleFraction(FluidSystem::gasPhaseIdx, 0, xCH4);
+    for (int c = 1; c < numComponents; ++c) {
+        fs.setMoleFraction(FluidSystem::gasPhaseIdx, c, Eval{z[c]});
+    }
+
+    typename FluidSystem::template ParameterCache<Eval> paramCache(eosType);
+    paramCache.updatePhase(fs, FluidSystem::gasPhaseIdx);
+
+    return {FluidSystem::density(fs, paramCache, FluidSystem::gasPhaseIdx),
+            FluidSystem::viscosity(fs, paramCache, FluidSystem::gasPhaseIdx)};
 }
 
 } // Anonymous namespace
@@ -300,6 +325,71 @@ BOOST_AUTO_TEST_CASE(ShiftMovesTheViscosityOntoTheReference)
     // small remaining difference.  The unshifted density would put the
     // correlation 2.3% high, well outside the tolerance below.
     BOOST_CHECK_CLOSE(gasState().viscosity, 2.23926e-5, 1.0);
+}
+
+BOOST_AUTO_TEST_CASE(WithoutAShiftTheTwoViscosityPathsAgree)
+{
+    // The fluid system now reaches the correlation through the molar density
+    // it derives from the corrected volume; Co2BrineFluidSystem still reaches
+    // it through the compressibility factor.  Agreeing when there is nothing
+    // to correct is what makes carrying both entry points safe.
+    Opm::CompositionalFluidState<Scalar, UnshiftedSystem> fs;
+    fs.setTemperature(temperature);
+    fs.setPressure(UnshiftedSystem::gasPhaseIdx, pressure);
+    for (int c = 0; c < numComponents; ++c) {
+        fs.setMoleFraction(UnshiftedSystem::gasPhaseIdx, c, z[c]);
+    }
+
+    typename UnshiftedSystem::template ParameterCache<Scalar> paramCache(eosType);
+    paramCache.updatePhase(fs, UnshiftedSystem::gasPhaseIdx);
+    const Scalar Z = paramCache.molarVolume(UnshiftedSystem::gasPhaseIdx) * pressure
+                   / (Opm::Constants<Scalar>::R * temperature);
+    fs.setCompressFactor(UnshiftedSystem::gasPhaseIdx, Z);
+
+    const Scalar viaMolarDensity =
+        UnshiftedSystem::viscosity(fs, paramCache, UnshiftedSystem::gasPhaseIdx);
+    const Scalar viaCompressFactor =
+        Opm::ViscosityModels<Scalar, UnshiftedSystem>::LBC(fs, paramCache,
+                                                           UnshiftedSystem::gasPhaseIdx);
+
+    BOOST_CHECK_CLOSE(viaMolarDensity, viaCompressFactor, 1.0e-8);
+}
+
+BOOST_AUTO_TEST_CASE(TheShiftedPathCarriesItsDerivatives)
+{
+    // The simulator evaluates this path with Evaluation only, so a dropped
+    // derivative changes how a run converges rather than failing it.  The
+    // shift is a function of the composition as well as of the state, hence
+    // the mole fraction alongside the pressure: decaying the fluid state to
+    // the cache's scalar type would leave the value right and the second
+    // derivative zero.
+    using Evaluation = Opm::DenseAd::Evaluation<Scalar, 2>;
+    constexpr unsigned pIdx = 0;
+    constexpr unsigned xIdx = 1;
+
+    const auto ad = shiftedGasProperties<Evaluation>(
+        Evaluation::createVariable(pressure, pIdx),
+        Evaluation::createVariable(z[0], xIdx));
+
+    const auto plain = shiftedGasProperties<Scalar>(pressure, z[0]);
+    BOOST_CHECK_CLOSE(ad.first.value(), plain.first, 1.0e-8);
+    BOOST_CHECK_CLOSE(ad.second.value(), plain.second, 1.0e-8);
+
+    const Scalar dp = 1.0e-6 * pressure;
+    const auto pUp = shiftedGasProperties<Scalar>(pressure + dp, z[0]);
+    const auto pDown = shiftedGasProperties<Scalar>(pressure - dp, z[0]);
+    BOOST_CHECK_CLOSE(ad.first.derivative(pIdx),
+                      (pUp.first - pDown.first) / (2 * dp), 1.0e-4);
+    BOOST_CHECK_CLOSE(ad.second.derivative(pIdx),
+                      (pUp.second - pDown.second) / (2 * dp), 1.0e-4);
+
+    const Scalar dx = 1.0e-6;
+    const auto xUp = shiftedGasProperties<Scalar>(pressure, z[0] + dx);
+    const auto xDown = shiftedGasProperties<Scalar>(pressure, z[0] - dx);
+    BOOST_CHECK_CLOSE(ad.first.derivative(xIdx),
+                      (xUp.first - xDown.first) / (2 * dx), 1.0e-4);
+    BOOST_CHECK_CLOSE(ad.second.derivative(xIdx),
+                      (xUp.second - xDown.second) / (2 * dx), 1.0e-4);
 }
 
 // A three-component system of its own, so parsing a deck into it cannot
