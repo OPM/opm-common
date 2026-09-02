@@ -89,8 +89,8 @@ Well makeMultiSegmentWellPerConnection(const Well& input_well,
         lengths_and_depths.emplace_back(md, depth);
         prev_depth = depth;
     }
-    segments.addWellSegmentsFromLengthsAndDepths(well.name(), lengths_and_depths,
-                                                 tubing_diameter, unit_system);
+    segments.loadFromLengthsAndDepths(well.name(), lengths_and_depths,
+                                      tubing_diameter, unit_system);
     well.updateSegments(std::make_shared<WellSegments>(std::move(segments)));
 
     // Attach each connection to its own segment (connection c -> segment c+2,

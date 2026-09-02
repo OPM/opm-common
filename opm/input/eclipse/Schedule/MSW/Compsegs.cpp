@@ -63,7 +63,7 @@ namespace {
                double center_depth_in,
                std::optional<double> thermal_length_in,
                int segment_number_in,
-               std::size_t seqIndex_in);
+               std::optional<std::size_t> sort_value_in);
 
         int m_i;
         int m_j;
@@ -86,7 +86,14 @@ namespace {
         std::optional<double> m_thermal_length;
 
         int segment_number;
-        std::size_t m_seqIndex;
+
+        // The Connection::sort_value() this record assigns.  Set from the
+        // COMPSEGS keyword, which lists the connections and thereby orders
+        // them.  Empty for a record derived from a trajectory: those
+        // connections are numbered as COMPTRAJ creates them, across all of the
+        // well's records, and counting records instead would leave two
+        // connections sharing a number whenever two branches share a cell.
+        std::optional<std::size_t> m_sort_value;
 
         void calculateCenterDepthWithSegments(const Opm::WellSegments& segment_set);
     };
@@ -99,7 +106,7 @@ namespace {
                    const double center_depth_in,
                    std::optional<double> thermal_length_in,
                    const int segment_number_in,
-                   const std::size_t seqIndex_in)
+                   const std::optional<std::size_t> sort_value_in)
         : m_i              { i_in }
         , m_j              { j_in }
         , m_k              { k_in }
@@ -110,7 +117,7 @@ namespace {
         , center_depth     { center_depth_in }
         , m_thermal_length { thermal_length_in }
         , segment_number   { segment_number_in }
-        , m_seqIndex       { seqIndex_in }
+        , m_sort_value     { sort_value_in }
     {}
 
     void Record::calculateCenterDepthWithSegments(const Opm::WellSegments& segment_set)
@@ -400,7 +407,7 @@ The use of negative center depth in item 9 is not supported. Well: {})", well_na
                         ? std::optional<double>{ record.getItem<Kw::THERMAL_LENGTH>().getSIDouble(0) }
                         : std::nullopt;
 
-                    const std::size_t seqIndex = compsegs.size();
+                    const std::size_t sort_value = compsegs.size();
                     compsegs.emplace_back(I, J, K,
                                           branch,
                                           distance_start, distance_end,
@@ -408,7 +415,7 @@ The use of negative center depth in item 9 is not supported. Well: {})", well_na
                                           center_depth,
                                           thermal_length,
                                           segment_number,
-                                          seqIndex);
+                                          sort_value);
                 }
             }
             else {
@@ -430,25 +437,26 @@ Well: {}, connection: ({},{},{}))", well_name, I+1, J+1 , K+1);
     }
 
     std::vector<Record>
-    compsegsFromTrajectory(std::string_view                                     well_name,
-                           const std::vector<Opm::Compsegs::TrajectorySegment>& trajectory_segments,
-                           const Opm::WellSegments&                             segments)
+    compsegsFromTrajectory(std::string_view                                        well_name,
+                           const int                                               branch,
+                           const std::vector<Opm::Compsegs::TrajectoryConnection>& trajectory_connections,
+                           const Opm::WellSegments&                                segments)
     {
         auto compsegs = std::vector<Record> {};
 
-        compsegs.reserve(trajectory_segments.size());
+        compsegs.reserve(trajectory_connections.size());
 
-        for (const auto& trajectory_point : trajectory_segments) {
+        for (const auto& trajectory_point : trajectory_connections) {
             // Defaulted values:
             const auto direction = Opm::Connection::Direction::X;
-            const auto center_depth = 0.0;
             // Thermal length (COMPSEGS item 10); left unset here, then filled
             // in process_compsegs_records().
             const auto thermal_length = std::optional<double>{};
             const auto segment_number = 0;
-            const auto branch = 1;
 
-            const auto seqIndex = compsegs.size();
+            // COMPTRAJ numbers the connections as it creates them, so this
+            // record has no order of its own to impose.
+            const auto sort_value = std::optional<std::size_t>{};
 
             compsegs.emplace_back(trajectory_point.ijk[0],
                                   trajectory_point.ijk[1],
@@ -456,9 +464,9 @@ Well: {}, connection: ({},{},{}))", well_name, I+1, J+1 , K+1);
                                   branch,
                                   trajectory_point.startMD, trajectory_point.endMD,
                                   direction,
-                                  center_depth,
+                                  trajectory_point.centerTVD,
                                   thermal_length,
-                                  segment_number, seqIndex);
+                                  segment_number, sort_value);
         }
 
         processCOMPSEGS__(well_name, segments, compsegs);
@@ -518,22 +526,35 @@ Well: {}, connection: ({},{},{}))", well_name, I+1, J+1 , K+1);
             const int k = compseg.m_k;
 
             if (const auto& cell = grid.get_cell(i, j, k); cell.is_active()) {
+                auto& connection = new_connection_set.getFromIJK(i, j, k);
+
+                // A cell reached by several COMPTRAJ branches still holds a
+                // single connection, which can only be attached to one
+                // segment.  Let the owner branch -- the lowest numbered
+                // contributor, i.e. the one closest to the main stem -- claim
+                // it and ignore the records of the other branches.
+                const auto owner = connection.segmentOwnerBranch();
+                if (owner.has_value() && (*owner != compseg.m_branch_number)) {
+                    continue;
+                }
+
                 // Negative values to indicate cell depths should be used
                 const double cdepth = (compseg.center_depth >= 0.0)
                     ? compseg.center_depth
                     : cell.depth;
-
-                auto& connection = new_connection_set.getFromIJK(i, j, k);
 
                 // Fall back to the grid-block thickness when COMPSEGS item 10
                 // was defaulted (see penetrationThickness).
                 const double thermal_length = compseg.m_thermal_length
                     .value_or(penetrationThickness(cell.dimensions, connection.dir()));
 
+                // Only COMPSEGS gives a connection order; a trajectory record
+                // leaves the connection the number COMPTRAJ gave it.
                 connection.updateSegment(compseg.segment_number,
                                          cdepth,
                                          thermal_length,
-                                         compseg.m_seqIndex,
+                                         compseg.m_sort_value
+                                             .value_or(connection.sort_value()),
                                          std::make_pair(compseg.m_distance_start,
                                                         compseg.m_distance_end));
             }
@@ -607,17 +628,18 @@ namespace Opm::Compsegs {
     }
 
     WellConnections
-    getConnectionsAndSegmentsFromTrajectory(std::string_view                      well_name,
-                                            const std::vector<TrajectorySegment>& trajectory_segments,
-                                            const WellSegments&                   segments,
-                                            const WellConnections&                input_connections,
-                                            const ScheduleGrid&                   grid,
-                                            const KeywordLocation&                location,
-                                            const ParseContext&                   parseContext,
-                                            ErrorGuard&                           errors)
+    getConnectionsToSegmentsFromTrajectory(std::string_view                         well_name,
+                                           const int                                branch,
+                                           const std::vector<TrajectoryConnection>& trajectory_connections,
+                                           const WellSegments&                      segments,
+                                           const WellConnections&                   input_connections,
+                                           const ScheduleGrid&                      grid,
+                                           const KeywordLocation&                   location,
+                                           const ParseContext&                      parseContext,
+                                           ErrorGuard&                              errors)
     {
         const auto compsegs_vector =
-            compsegsFromTrajectory(well_name, trajectory_segments, segments);
+            compsegsFromTrajectory(well_name, branch, trajectory_connections, segments);
 
         return process_compsegs_records(well_name, compsegs_vector, input_connections,
                                         grid, location, parseContext, errors);

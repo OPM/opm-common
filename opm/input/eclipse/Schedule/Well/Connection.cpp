@@ -202,6 +202,12 @@ namespace Opm
         result.m_econ_limits = std::make_unique<ConnectionEconLimits>(
             ConnectionEconLimits::serializationTestObject());
 
+        result.m_branches = {1, 2};
+        result.m_branch_ctf = {
+            CTFProperties::serializationTestObject(),
+            CTFProperties::serializationTestObject()
+        };
+
         return result;
     }
 
@@ -428,6 +434,141 @@ namespace Opm
         this->ctf_properties_.static_dfac_corr_coeff = c;
     }
 
+    namespace {
+
+        /// Combine the CTF properties of all branches perforating one cell.
+        ///
+        /// Mirrors the export-side combination rules ResInsight applies when
+        /// it writes COMPDAT for a multi-lateral well (OPM/ResInsight#7049).
+        Connection::CTFProperties
+        combineBranchCTFs(const std::vector<Connection::CTFProperties>& branch_ctf)
+        {
+            auto combined = Connection::CTFProperties{};
+
+            // Transmissibility, Kh and perforated length are additive.
+            auto cf_total = 0.0;
+            for (const auto& ctf : branch_ctf) {
+                combined.CF += ctf.CF;
+                combined.Kh += ctf.Kh;
+                combined.connection_length += ctf.connection_length;
+
+                cf_total += ctf.CF;
+            }
+
+            // Wellbore radius, skin and D-factor are CF-weighted averages.
+            // Fall back to an unweighted average if the CFs cannot serve as
+            // weights.
+            const auto weighted = cf_total > 0.0;
+            for (const auto& ctf : branch_ctf) {
+                const auto weight = weighted ? ctf.CF : 1.0;
+
+                combined.rw += weight * ctf.rw;
+                combined.skin_factor += weight * ctf.skin_factor;
+                combined.d_factor += weight * ctf.d_factor;
+            }
+
+            const auto num_branches = static_cast<double>(branch_ctf.size());
+            const auto norm = weighted ? cf_total : num_branches;
+
+            combined.rw /= norm;
+            combined.skin_factor /= norm;
+
+            // The D-factor is additionally divided by the number of
+            // contributing branches.
+            combined.d_factor /= norm * num_branches;
+
+            // Effective permeability and the equivalent radii are properties
+            // of the cell, not of the individual perforations, so they are
+            // taken as they are rather than combined.  Every branch
+            // perforating this cell computed them from the same cell
+            // properties and the same (Z) direction.
+            combined.Ke = branch_ctf.front().Ke;
+            combined.r0 = branch_ctf.front().r0;
+            combined.re = branch_ctf.front().re;
+
+            // peaceman_denom and static_dfac_corr_coeff are not set for
+            // trajectory-based connections and are left at zero.
+
+            return combined;
+        }
+
+    } // Anonymous namespace
+
+    void Connection::setComptrajBranches(std::vector<int>           branches,
+                                         std::vector<CTFProperties> branch_ctf)
+    {
+        assert(std::ranges::is_sorted(branches));
+        assert(std::ranges::adjacent_find(branches) == branches.end());
+
+        // Per-branch CTFs are stored only once a cell has more than one
+        // contributor.
+        assert(branch_ctf.empty() || (branch_ctf.size() == branches.size()));
+
+        this->m_branches = std::move(branches);
+        this->m_branch_ctf = std::move(branch_ctf);
+    }
+
+    void Connection::setBranchCTF(const int branch, const CTFProperties& ctf)
+    {
+        // An empty range means the branch is absent, and its begin() is then
+        // the position at which to insert it.
+        const auto found = std::ranges::equal_range(this->m_branches, branch);
+        const auto offset = found.begin() - this->m_branches.begin();
+
+        if (found.empty()) {
+            this->m_branches.insert(this->m_branches.begin() + offset, branch);
+            this->m_branch_ctf.insert(this->m_branch_ctf.begin() + offset, ctf);
+        }
+        else {
+            // Re-specifying one branch replaces only that branch's share.
+            this->m_branch_ctf[offset] = ctf;
+        }
+    }
+
+    void Connection::addComptrajBranch(const int branch, const CTFProperties& ctf)
+    {
+        if (this->m_branches.empty()) {
+            // First contributor to this cell.
+            this->m_branches.assign(1, branch);
+            this->m_branch_ctf.clear();
+            this->ctf_properties_ = ctf;
+            return;
+        }
+
+        if ((this->m_branches.size() == 1) && (this->m_branches.front() == branch)) {
+            // The only contributor re-specifies itself; the later record
+            // wins outright and there is nothing to combine.
+            this->m_branch_ctf.clear();
+            this->ctf_properties_ = ctf;
+            return;
+        }
+
+        if (this->m_branch_ctf.empty()) {
+            // Promoting a single contributor to several.  That contributor's
+            // values are still those of the connection itself.
+            this->m_branch_ctf.assign(1, this->ctf_properties_);
+        }
+
+        this->setBranchCTF(branch, ctf);
+
+        this->ctf_properties_ = combineBranchCTFs(this->m_branch_ctf);
+    }
+
+    std::optional<int> Connection::segmentOwnerBranch() const
+    {
+        if (this->m_branches.empty()) {
+            return std::nullopt;
+        }
+
+        // m_branches is kept in ascending order.
+        return this->m_branches.front();
+    }
+
+    bool Connection::fromTrajectory() const
+    {
+        return !this->m_branches.empty();
+    }
+
     std::string Connection::str() const
     {
         std::stringstream ss;
@@ -484,6 +625,8 @@ namespace Opm
             && (this->ctf_properties_ == that.ctf_properties_)
             && (this->m_filter_cake == that.m_filter_cake)
             && (this->m_econ_limits == that.m_econ_limits)
+            && (this->m_branches == that.m_branches)
+            && (this->m_branch_ctf == that.m_branch_ctf)
             ;
     }
 

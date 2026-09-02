@@ -21,6 +21,7 @@
 
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/common/utility/OpmInputError.hpp>
+#include <opm/common/utility/numeric/linearInterpolation.hpp>
 
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 
@@ -28,6 +29,7 @@
 #include <opm/input/eclipse/Schedule/MSW/WellSegments.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleGrid.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleState.hpp>
+#include <opm/input/eclipse/Schedule/ScheduleStatic.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
 
@@ -44,6 +46,7 @@
 #include <algorithm>
 #include <functional>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <unordered_set>
 #include <utility>
@@ -57,64 +60,72 @@ namespace Opm
 namespace
 {
 
-    std::pair<std::vector<Compsegs::TrajectorySegment>, std::vector<std::pair<double, double>>>
-    get_segment_geometries(HandlerContext&                                            handlerContext,
-                           const std::vector<external::WellPathCellIntersectionInfo>& intersections,
-                           const external::cvf::ref<external::RigWellPath>&           wellPathGeometry)
+    /// Amend \p msg with a hint about restart support when the run was
+    /// resumed from a restart file.
+    ///
+    /// A restart-restored connection carries no branch information, so it is
+    /// indistinguishable from a COMPDAT connection and continuing the well
+    /// with COMPTRAJ/WELTRAJ trips the mixing guard. Say so, rather than
+    /// leaving the user with a rule they appear not to have broken.
+    std::string appendRestartHint(std::string msg, const HandlerContext& handlerContext)
     {
-        std::vector<Compsegs::TrajectorySegment> trajectory_segments{};
-        std::vector<std::pair<double, double>> cell_md_and_tvd{};
+        const auto restart_step = handlerContext.static_schedule().rst_info.report_step;
 
-        trajectory_segments.reserve(intersections.size());
-        cell_md_and_tvd.reserve(intersections.size());
-
-        const auto& ecl_grid = handlerContext.grid.get_grid();
-
-        for (const auto& intersection : intersections) {
-            trajectory_segments.push_back({
-                    intersection.startMD,
-                    intersection.endMD,
-                    ecl_grid->getIJK(intersection.globCellIndex)
-                });
-
-            const double cell_md = 0.5 * (intersection.startMD + intersection.endMD);
-            const double cell_tvd = wellPathGeometry->interpolatedPointAlongWellPath(cell_md)[2];
-
-            cell_md_and_tvd.emplace_back(cell_md, cell_tvd);
+        if (restart_step != 0) {
+            msg += fmt::format(" This may be caused by continuing this well after a restart "
+                               "(resumed at report step {}) - restarting is not supported "
+                               "for trajectory-based (COMPTRAJ/WELTRAJ) wells.", restart_step);
         }
 
-        return { std::move(trajectory_segments), std::move(cell_md_and_tvd) };
+        return msg;
     }
-
 
     void
     process_segments(HandlerContext&                                            handlerContext,
                      Well&                                                      well,
+                     const int                                                  branch,
                      const std::vector<external::WellPathCellIntersectionInfo>& intersections,
-                     const external::cvf::ref<external::RigWellPath>&           wellPathGeometry,
-                     const double                                               diameter)
+                     const external::cvf::ref<external::RigWellPath>&           wellPathGeometry)
     {
         if (! well.isMultiSegment()) {
             return;
         }
 
-        // For now, no segments may be defined via WELSEGS, except for the top:
-        if (well.getSegments().size() > 1) {
-            const auto msg = fmt::format("   {} already defines segments "
-                                         "with the WELSEGS keyword", well.name());
+        if (well.getSegments().size() <= 1) {
+            // Grid-independent segmented wells used to have their segments
+            // generated from the trajectory, one per perforated cell, and
+            // WELSEGS was only allowed to give the top segment.  The segment
+            // structure now comes from WELSEGS, so such a deck would quietly
+            // put the whole well on the top segment.
+            const auto msg = fmt::format(
+                "Well {} is a segmented grid-independent well, but its WELSEGS keyword "
+                "only defines the top segment. The segment structure of a COMPTRAJ well "
+                "is taken from WELSEGS and must be given explicitly.", well.name());
 
             throw OpmInputError(msg, handlerContext.keyword.location());
         }
 
-        const auto& [trajectory_segments, cell_md_and_tvd] =
-            get_segment_geometries(handlerContext, intersections, wellPathGeometry);
+        std::vector<Compsegs::TrajectoryConnection> trajectory_connections{};
+        trajectory_connections.reserve(intersections.size());
 
-        well.addWellSegmentsFromLengthsAndDepths
-            (cell_md_and_tvd, diameter, handlerContext.keyword.location());
+        const auto& ecl_grid = handlerContext.grid.get_grid();
 
-        auto new_connections = Compsegs::getConnectionsAndSegmentsFromTrajectory
+        for (const auto& intersection : intersections) {
+            const double center_md = 0.5 * (intersection.startMD + intersection.endMD);
+            const double center_tvd = wellPathGeometry->interpolatedPointAlongWellPath(center_md)[2];
+
+            trajectory_connections.push_back({
+                    intersection.startMD,
+                    intersection.endMD,
+                    center_tvd,
+                    ecl_grid->getIJK(intersection.globCellIndex)
+                });
+        }
+
+        auto new_connections = Compsegs::getConnectionsToSegmentsFromTrajectory
             (well.name(),
-             trajectory_segments,
+             branch,
+             trajectory_connections,
              well.getSegments(),
              well.getConnections(),
              handlerContext.grid,
@@ -142,8 +153,14 @@ namespace
             for (const auto& name : wellnames) {
                 auto well = handlerContext.state().wells.get(name);
 
-                if (!well.getConnections().empty()) {
-                    const auto msg = fmt::format(R"(   {} is already connected)", name);
+                const auto& existing_connections = well.getConnections();
+                if (!existing_connections.empty() && !existing_connections[0].fromTrajectory()) {
+                    const auto msg = appendRestartHint(
+                        fmt::format("Well {} already has COMPDAT-defined connections and cannot "
+                                    "also be defined using COMPTRAJ. A well must use either "
+                                    "COMPDAT or COMPTRAJ, never both.", name),
+                        handlerContext);
+
                     throw OpmInputError(msg, handlerContext.keyword.location());
                 }
 
@@ -174,9 +191,9 @@ Well {} has no connections to the grid. The well will remain SHUT)", name);
                 }
 
                 process_segments(handlerContext, well,
+                                 record.getItem<Kw::BRANCH_NUMBER>().get<int>(0),
                                  wellTraj.intersections,
-                                 wellTraj.wellPathGeometry,
-                                 record.getItem<Kw::DIAMETER>().getSIDouble(0));
+                                 wellTraj.wellPathGeometry);
 
                 handlerContext.state().wells.update(std::move(well));
 
@@ -203,17 +220,42 @@ Well {} has no connections to the grid. The well will remain SHUT)", name);
             for (const auto& name : wellnames) {
                 auto well = handlerContext.state().wells.get(name);
 
+                const auto& existing_connections = well.getConnections();
+                if (!existing_connections.empty() && !existing_connections[0].fromTrajectory()) {
+                    const auto msg = appendRestartHint(
+                        fmt::format("Well {} already has COMPDAT-defined connections and cannot "
+                                    "also be defined using WELTRAJ/COMPTRAJ. A well must use "
+                                    "either COMPDAT or COMPTRAJ, never both.", name),
+                        handlerContext);
+
+                    throw OpmInputError(msg, handlerContext.keyword.location());
+                }
+
+                if (well.isMultiSegment()) {
+                    const auto msg = fmt::format(
+                        "Well {} is a segmented grid-independent well, but its WELSEGS keyword "
+                        "must be defined after the corresponding WELTRAJ keyword. Please check "
+                        "the order of the keywords in the input file.", name);
+
+                    throw OpmInputError(msg, handlerContext.keyword.location());
+                }
+
                 auto connections = std::make_shared<WellConnections>(well.getConnections());
                 connections->loadWELTRAJ(record, name, handlerContext.grid,
                                          handlerContext.keyword.location());
 
-                if (const auto& md = connections->getMD(); md.size() > 1) {
+                for (const auto& [branch, md] : connections->getMD()) {
+                    if (md.size() < 2) {
+                        continue;
+                    }
+
                     const bool strictly_increasing = std::adjacent_find
                         (md.begin(), md.end(), std::greater_equal<>{}) == md.end();
 
                     if (!strictly_increasing) {
                         const auto msg = fmt::format("Well {} measured depth column "
-                                                     "is not strictly increasing", name);
+                                                     "for branch {} is not strictly increasing",
+                                                     name, branch);
 
                         throw OpmInputError(msg, handlerContext.keyword.location());
                     }
@@ -241,6 +283,56 @@ getGridIndependentWellKeywordHandlers()
         {"COMPTRAJ", &handleCOMPTRAJ},
         {"WELTRAJ", &handleWELTRAJ},
     };
+}
+
+void initWellPathGeometry(external::cvf::ref<external::RigWellPath>& wellPathGeometry,
+                          const std::array<std::vector<double>, 3>&  coords,
+                          const std::vector<double>&                 mds,
+                          std::optional<double>                      top_opt,
+                          std::optional<double>                      bot_opt)
+{
+    const double top = top_opt.value_or(mds.front());
+    const double bot = bot_opt.value_or(mds.back());
+
+    if ((top < mds.front()) || (bot > mds.back()) || (bot < top)) {
+        // linearInterpolation() clamps to the end points, so an interval
+        // reaching past the trajectory would be silently truncated and one
+        // that runs backwards would collapse to a point.
+        throw std::logic_error {
+            fmt::format("Perforation interval {} to {} is not contained in the "
+                        "branch's trajectory, which covers measured depths "
+                        "{} to {}.", top, bot, mds.front(), mds.back())
+        };
+    }
+
+    std::vector<external::cvf::Vec3d> points;
+    std::vector<double> measured_depths;
+
+    points.reserve(coords[0].size() + 2);
+    measured_depths.reserve(coords[0].size() + 2);
+
+    // Calulate the x,y,z coordinates of the begin and end of the interval
+    external::cvf::Vec3d p_top, p_bot;
+    for (std::size_t i = 0; i < 3; ++i) {
+        p_top[i] = linearInterpolation(mds, coords[i], top);
+        p_bot[i] = linearInterpolation(mds, coords[i], bot);
+    }
+
+    points.push_back(p_top);
+    measured_depths.push_back(top);
+
+    for (std::size_t i = 0; i < coords[0].size(); ++i) {
+        if ((mds[i] > top) && (mds[i] < bot)) {
+            points.push_back(external::cvf::Vec3d(coords[0][i], coords[1][i], coords[2][i]));
+            measured_depths.push_back(mds[i]);
+        }
+    }
+
+    points.push_back(p_bot);
+    measured_depths.push_back(bot);
+
+    wellPathGeometry->setWellPathPoints(points);
+    wellPathGeometry->setMeasuredDepths(measured_depths);
 }
 
 } // namespace Opm

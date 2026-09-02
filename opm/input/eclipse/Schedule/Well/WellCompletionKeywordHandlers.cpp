@@ -20,8 +20,10 @@
 #include "WellCompletionKeywordHandlers.hpp"
 
 #include <opm/common/OpmLog/OpmLog.hpp>
+#include <opm/common/utility/OpmInputError.hpp>
 
 #include <opm/input/eclipse/Schedule/ScheduleState.hpp>
+#include <opm/input/eclipse/Schedule/ScheduleStatic.hpp>
 #include <opm/input/eclipse/Schedule/Well/WDFAC.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
@@ -44,6 +46,27 @@ namespace {
 
 using namespace Opm;
 
+/// Amend \p msg with a hint about restart support when the run was resumed
+/// from a restart file.
+///
+/// A restart-restored connection carries no branch information, so a well
+/// that originally used COMPTRAJ looks like a COMPDAT well after a restart.
+/// The reverse mixing guard therefore cannot fire in that case; when it does
+/// fire the deck really does mix the two, but say so anyway for symmetry with
+/// the COMPTRAJ/WELTRAJ side.
+std::string appendRestartHint(std::string msg, const HandlerContext& handlerContext)
+{
+    const auto restart_step = handlerContext.static_schedule().rst_info.report_step;
+
+    if (restart_step != 0) {
+        msg += fmt::format(" This may be caused by continuing this well after a restart "
+                           "(resumed at report step {}) - restarting is not supported "
+                           "for trajectory-based (COMPTRAJ/WELTRAJ) wells.", restart_step);
+    }
+
+    return msg;
+}
+
 template <typename CompdatKwHandler>
 void handleCOMPDATX(HandlerContext&    handlerContext,
                     CompdatKwHandler&& compdatKwHandler)
@@ -64,6 +87,16 @@ void handleCOMPDATX(HandlerContext&    handlerContext,
             if (newConnsInserted) {
                 connPos->second = std::make_shared<WellConnections>
                     (well.getConnections());
+
+                if (!connPos->second->empty() && (*connPos->second)[0].fromTrajectory()) {
+                    const auto msg = appendRestartHint(
+                        fmt::format("Well {} already has COMPTRAJ-defined connections and "
+                                    "cannot also be defined using COMPDAT. A well must use "
+                                    "either COMPDAT or COMPTRAJ, never both.", wname),
+                        handlerContext);
+
+                    throw OpmInputError(msg, handlerContext.keyword.location());
+                }
             }
 
             // Connections opened/shut by this record; used to raise/clear
