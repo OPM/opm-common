@@ -1367,6 +1367,7 @@ list(APPEND PUBLIC_HEADER_FILES
   opm/material/constraintsolvers/NcpFlash.hpp
   opm/material/constraintsolvers/PTFlash.hpp
   opm/material/constraintsolvers/PTFlashMethod.hpp
+  opm/material/constraintsolvers/RachfordRice.hpp
   opm/material/constraintsolvers/SaturationPressure.hpp
   opm/material/densead/DynamicEvaluation.hpp
   opm/material/densead/Evaluation.hpp

@@ -30,6 +30,7 @@
 #define OPM_CHI_FLASH_HPP
 
 #include <opm/material/constraintsolvers/PTFlashMethod.hpp>
+#include <opm/material/constraintsolvers/RachfordRice.hpp>
 #include <opm/material/fluidmatrixinteractions/NullMaterial.hpp>
 #include <opm/material/fluidmatrixinteractions/MaterialTraits.hpp>
 #include <opm/material/fluidstates/CompositionalFluidState.hpp>
@@ -160,115 +161,6 @@ public:
     }
 
     /*!
-     * \brief The liquid fraction from the Rachford-Rice equation.
-     *
-     * Newton's method on the vapour fraction \f$V\f$ solves
-     *
-     * \f[ g(V) = \sum_i \frac{z_i (K_i - 1)}{1 + V (K_i - 1)} = 0, \f]
-     *
-     * started at the middle of the bracket
-     * \f$(1/(1 - K_{\max}),\, 1/(1 - K_{\min}))\f$ that the poles of \f$g\f$
-     * define. \f$g\f$ is monotone inside the bracket, but a Newton update is
-     * not constrained to remain there, so an iterate that leaves it is
-     * abandoned for a bisection in \f$L\f$ over \f$[0, 1]\f$.
-     *
-     * \return The liquid fraction \f$L = 1 - V\f$.
-     */
-    template <class Vector>
-    static typename Vector::field_type solveRachfordRice_g_(const Vector& K, const Vector& z, int verbosity)
-    {
-        // Find min and max K. Have to do a laborious for loop to avoid water component (where K=0)
-        // TODO: Replace loop with Dune::min_value() and Dune::max_value() when water component is properly handled
-        using field_type = typename Vector::field_type;
-        constexpr field_type residual_tolerance = 1e-12;
-        constexpr int max_iterations = 10000;
-        field_type min_k = K[0];
-        field_type max_k = K[0];
-        for (int compIdx = 1; compIdx < numComponents; ++compIdx){
-            if (K[compIdx] < min_k) {
-                min_k = K[compIdx];
-            } else if (K[compIdx] >= max_k) {
-                max_k = K[compIdx];
-            }
-        }
-        // Lower and upper bound for solution
-        const auto min_vapour_fraction = 1 / (1 - max_k);
-        const auto max_vapour_fraction = 1 / (1 - min_k);
-        // Initial guess
-        auto V = (min_vapour_fraction + max_vapour_fraction) / 2;
-        // Print initial guess and header
-        if (verbosity == 3 || verbosity == 4) {
-            OpmLog::debug(fmt::format("Initial guess {}c : V = {} and [Vmin, Vmax] = [{}, {}]",
-                                      numComponents,
-                                      V,
-                                      min_vapour_fraction,
-                                      max_vapour_fraction));
-            OpmLog::debug(fmt::format("{:>10}{:>16}{:>16}", "Iteration", "abs(step)", "V"));
-        }
-        // Newton-Raphson loop
-        for (int iteration = 1; iteration < max_iterations; ++iteration) {
-            // Calculate function and derivative values
-            field_type negative_derivative = 0.0;
-            field_type residual = 0.0;
-            for (int compIdx = 0; compIdx < numComponents; ++compIdx){
-                const auto k_minus_one = K[compIdx] - 1.0;
-                const auto denominator = 1 + V * k_minus_one;
-                residual += z[compIdx] * k_minus_one / denominator;
-                negative_derivative
-                    += z[compIdx] * (k_minus_one * k_minus_one) / (denominator * denominator);
-            }
-            const auto newton_step = residual / negative_derivative;
-            V += newton_step;
-
-            // Check if V is within the bounds, and if not, we apply bisection method
-            if (V < min_vapour_fraction || V > max_vapour_fraction) {
-                // Print info
-                if (verbosity == 3 || verbosity == 4) {
-                    OpmLog::debug(fmt::format("V = {} is not within the range [Vmin, Vmax], solve "
-                                              "using Bisection method!",
-                                              V));
-                }
-
-                // Run bisection
-                // g is monotone inside the bracket, but a Newton update is
-                // not constrained to remain there. Bisection preserves the
-                // physical interval.
-                const field_type liquid_endpoint = 1.0;
-                const field_type vapour_endpoint = 0.0;
-                auto L = bisection_g_(K, liquid_endpoint, vapour_endpoint, z, verbosity);
-
-                // Print final result
-                if (verbosity >= 1) {
-                    OpmLog::debug(fmt::format(
-                        "Rachford-Rice (Bisection) converged to final solution L = {}", L));
-                }
-                return L;
-            }
-
-            // Print iteration info
-            if (verbosity == 3 || verbosity == 4) {
-                OpmLog::debug(
-                    fmt::format("{:>10}{:>16}{:>16}", iteration, Opm::abs(newton_step), V));
-            }
-            // Check for convergence
-            if (Opm::abs(residual) < residual_tolerance) {
-                auto L = 1 - V;
-                // Should we make sure the range of L is within (0, 1)?
-
-                // Print final result
-                if (verbosity >= 1) {
-                    OpmLog::debug(fmt::format("Rachford-Rice converged to final solution L = {}", L));
-                }
-                return L;
-            }
-        }
-
-        // Throw error if Rachford-Rice fails
-        OPM_THROW_NOLOG(NumericalProblem,
-                        " Rachford-Rice did not converge within maximum number of iterations");
-    }
-
-    /*!
      * \brief The isothermal flash on a scalar fluid state, without derivatives.
      *
      * The stages are:
@@ -323,7 +215,7 @@ public:
         if (!is_single_phase) {
             const auto try_solve_split = [&](const auto& on_failure) {
                 try {
-                    L_scalar = solveRachfordRice_g_(K_scalar, z_scalar, verbosity);
+                    L_scalar = RachfordRice::solve(K_scalar, z_scalar, verbosity);
                     flash_2ph(z_scalar, twoPhaseMethod, K_scalar, L_scalar, fluid_state,
                               flash_tolerance, eos_type, verbosity);
                     return true;
@@ -416,67 +308,6 @@ public:
         }
         fluid_state.setLvalue(L_scalar);
         return is_single_phase;
-    }
-
-    /*!
-     * \brief Bisection for the root of the Rachford-Rice equation in \f$L\f$.
-     *
-     * Halves the interval between its liquid and vapour endpoints on the sign
-     * of \f$g(L)\f$ until either the residual or the interval width is below
-     * tolerance.
-     */
-    template <class Vector>
-    static typename Vector::field_type bisection_g_(const Vector& K,
-                                                    typename Vector::field_type liquid_endpoint,
-                                                    typename Vector::field_type vapour_endpoint,
-                                                    const Vector& z,
-                                                    int verbosity)
-    {
-        auto residual_at_liquid_endpoint = rachfordRice_g_(K, liquid_endpoint, z);
-
-        // Print new header
-        if (verbosity >= 3) {
-            OpmLog::debug(fmt::format("{:>10}{:>16}{:>16}", "Iteration", "g(Lmid)", "L"));
-        }
-
-        constexpr int max_iterations = 10000;
-
-        auto interval_is_small = [](double first_endpoint, double second_endpoint) {
-            return Opm::abs(first_endpoint - second_endpoint) / 2. < bisectionWidthTolerance;
-        };
-
-        // Bisection loop
-        if (interval_is_small(liquid_endpoint, vapour_endpoint)) {
-            OPM_THROW_NOLOG(NumericalProblem,
-                            fmt::format("Strange bisection with liquid endpoint {} "
-                                        "and vapour endpoint {}",
-                                        liquid_endpoint,
-                                        vapour_endpoint));
-        }
-        for (int iteration = 0; iteration < max_iterations; ++iteration) {
-            // New midpoint
-            const auto L = (liquid_endpoint + vapour_endpoint) / 2;
-            const auto midpoint_residual = rachfordRice_g_(K, L, z);
-            if (verbosity == 3 || verbosity == 4) {
-                OpmLog::debug(fmt::format("{:>10}{:>16}{:>16}", iteration, midpoint_residual, L));
-            }
-
-            // Stop when either the residual or the bracket is sufficiently small.
-            if (Opm::abs(midpoint_residual) < bisectionResidualTolerance
-                || interval_is_small(liquid_endpoint, vapour_endpoint)) {
-                return L;
-            }
-            // Preserve the half whose endpoints have opposite residual signs.
-            else if (Dune::sign(midpoint_residual) != Dune::sign(residual_at_liquid_endpoint)) {
-                vapour_endpoint = L;
-            } else {
-                liquid_endpoint = L;
-                residual_at_liquid_endpoint = midpoint_residual;
-            }
-        }
-        OPM_THROW_NOLOG(
-            NumericalProblem,
-            fmt::format(" Rachford-Rice bisection failed with {} iterations!", max_iterations));
     }
 
     template <class Vector, class FlashFluidState>
@@ -627,22 +458,6 @@ protected:
         }
         return measure;
     }
-
-    /*!
-     * \brief The Rachford-Rice function in the liquid fraction,
-     *
-     * \f[ g(L) = \sum_i \frac{z_i (K_i - 1)}{K_i - L (K_i - 1)}. \f]
-     */
-    template <class Vector>
-    static typename Vector::field_type rachfordRice_g_(const Vector& K, typename Vector::field_type L, const Vector& z)
-    {
-        typename Vector::field_type g=0;
-        for (int compIdx=0; compIdx<numComponents; ++compIdx){
-            g += (z[compIdx]*(K[compIdx]-1))/(K[compIdx]-L*(K[compIdx]-1));
-        }
-        return g;
-    }
-
 
     /*!
      * \brief One trial phase of Michelsen's stability analysis.
@@ -1679,7 +1494,7 @@ protected:
                 }
 
                 // Solve Rachford-Rice to get L from updated K
-                L = solveRachfordRice_g_(K, z, 0);
+                L = RachfordRice::solve(K, z, 0);
             }
         }
         // did not get converged. check whether we will do more newton later afterward
