@@ -169,7 +169,7 @@ function build_module {
 function clone_module {
   # Already cloned by an earlier configuration
   test -d $WORKSPACE/deps/$1 && return 0
-  local repo_root=${OPM_REPO_ROOT:-https://github.com/OPM}
+  local repo_root=${OPM_REPO_ROOT:-git@github.com:OPM}
   mkdir -p $WORKSPACE/deps/$1
   pushd $WORKSPACE/deps/$1
   git init .
