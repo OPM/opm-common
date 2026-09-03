@@ -104,6 +104,7 @@ list(APPEND MAIN_SOURCE_FILES
   opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/SingleNumericalAquifer.cpp
   opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquifers.cpp
   opm/input/eclipse/EclipseState/Compositional/CompositionalConfig.cpp
+  opm/input/eclipse/EclipseState/Compositional/NormalizeMoleFractions.cpp
   opm/input/eclipse/EclipseState/Geochemistry/SpeciesConfig.cpp
   opm/input/eclipse/EclipseState/Geochemistry/MineralConfig.cpp
   opm/input/eclipse/EclipseState/Geochemistry/IonExchangeConfig.cpp
@@ -714,8 +715,10 @@ list(APPEND DUNE_TEST_SOURCE_FILES
   tests/material/test_ncpflash.cpp
   tests/material/test_pengrobinson.cpp
   tests/material/test_ptflash_ssi_newton_fallback.cpp
+  tests/material/test_saturation_pressure.cpp
   tests/material/test_tabulation.cpp
   tests/material/test_threecomponents_ptflash.cpp
+  tests/material/test_volume_shift.cpp
 )
 
 if(dune-common_FOUND)
@@ -970,6 +973,7 @@ list(APPEND PUBLIC_HEADER_FILES
   opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/SingleNumericalAquifer.hpp
   opm/input/eclipse/EclipseState/Co2StoreConfig.hpp
   opm/input/eclipse/EclipseState/Compositional/CompositionalConfig.hpp
+  opm/input/eclipse/EclipseState/Compositional/NormalizeMoleFractions.hpp
   opm/input/eclipse/EclipseState/EclipseConfig.hpp
   opm/input/eclipse/EclipseState/EclipseState.hpp
   opm/input/eclipse/EclipseState/EndpointScaling.hpp
@@ -1346,6 +1350,7 @@ list(APPEND PUBLIC_HEADER_FILES
   opm/material/constraintsolvers/MiscibleMultiPhaseComposition.hpp
   opm/material/constraintsolvers/NcpFlash.hpp
   opm/material/constraintsolvers/PTFlash.hpp
+  opm/material/constraintsolvers/SaturationPressure.hpp
   opm/material/densead/DynamicEvaluation.hpp
   opm/material/densead/Evaluation.hpp
   opm/material/densead/Evaluation1.hpp

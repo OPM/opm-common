@@ -26,6 +26,7 @@
 #ifndef OPM_GENERIC_OIL_GAS_WATER_FLUIDSYSTEM_HPP
 #define OPM_GENERIC_OIL_GAS_WATER_FLUIDSYSTEM_HPP
 
+#include <opm/common/Exceptions.hpp>
 #include <opm/common/OpmLog/OpmLog.hpp>
 
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
@@ -93,15 +94,18 @@ namespace Opm {
             Scalar critic_pres; // unit: parscal
             Scalar critic_vol; // unit: m^3/kmol
             Scalar acentric_factor; // unit: dimension less
+            Scalar volume_shift; // unit: dimension less (SSHIFT)
 
             ComponentParam(const std::string_view name_, const Scalar molar_mass_, const Scalar critic_temp_,
-                           const Scalar critic_pres_, const Scalar critic_vol_, const Scalar acentric_factor_)
+                           const Scalar critic_pres_, const Scalar critic_vol_, const Scalar acentric_factor_,
+                           const Scalar volume_shift_ = 0.0)
                     : name(name_),
                       molar_mass(molar_mass_),
                       critic_temp(critic_temp_),
                       critic_pres(critic_pres_),
                       critic_vol(critic_vol_),
-                      acentric_factor(acentric_factor_)
+                      acentric_factor(acentric_factor_),
+                      volume_shift(volume_shift_)
             {}
         };
 
@@ -177,7 +181,10 @@ namespace Opm {
                                                    static_cast<Scalar>(eos_props.critical_temperature[c]),
                                                    static_cast<Scalar>(eos_props.critical_pressure[c]),
                                                    static_cast<Scalar>(eos_props.critical_volume[c] * 1.e3),
-                                                   static_cast<Scalar>(eos_props.acentric_factors[c])});
+                                                   static_cast<Scalar>(eos_props.acentric_factors[c]),
+                                                   c < eos_props.volume_shifts.size()
+                                                       ? static_cast<Scalar>(eos_props.volume_shifts[c])
+                                                       : Scalar{0}});
             }
 
             const auto& bic = eos_props.binary_interaction_coefficient;
@@ -219,6 +226,22 @@ namespace Opm {
             assert(compIdx < numComponents);
 
             return component_param_[compIdx].acentric_factor;
+        }
+
+        /*!
+         * \brief The volume shift of a component (SSHIFT) [].
+         *
+         * It corrects the molar volume of the equation of state, particularly
+         * for the liquid phase, and leaves the phase equilibrium untouched.
+         *
+         * \copydetails Doxygen::compIdxParam
+         */
+        static Scalar volumeShift(unsigned compIdx)
+        {
+            assert(isConsistent());
+            assert(compIdx < numComponents);
+
+            return component_param_[compIdx].volume_shift;
         }
         /*!
          * \brief Critical temperature of a component [K].
@@ -325,7 +348,10 @@ namespace Opm {
             assert(phaseIdx < numPhases);
 
             if (phaseIdx == oilPhaseIdx || phaseIdx == gasPhaseIdx) {
-                return decay<LhsEval>(fluidState.averageMolarMass(phaseIdx) / paramCache.molarVolume(phaseIdx));
+                // The shift belongs here rather than in the cached volume: the
+                // fugacity coefficients are computed from the unshifted one.
+                const auto Vm = paramCache.correctedMolarVolume(fluidState, phaseIdx);
+                return decay<LhsEval>(fluidState.averageMolarMass(phaseIdx) / Vm);
             }
             else {
                 const LhsEval& p = decay<LhsEval>(fluidState.pressure(phaseIdx));

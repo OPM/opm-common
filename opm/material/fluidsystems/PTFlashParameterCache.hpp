@@ -30,12 +30,16 @@
 #ifndef OPM_PTFlash_PARAMETER_CACHE_HPP
 #define OPM_PTFlash_PARAMETER_CACHE_HPP
 
+#include <opm/common/Exceptions.hpp>
+
 #include <opm/material/common/Valgrind.hpp>
 #include <opm/material/fluidsystems/ParameterCacheBase.hpp>
 #include <opm/material/eos/CubicEOS.hpp>
 #include <opm/material/eos/CubicEOSParams.hpp>
 
 #include <opm/input/eclipse/EclipseState/Compositional/CompositionalConfig.hpp>
+
+#include <fmt/format.h>
 
 #include <cassert>
 
@@ -284,6 +288,60 @@ public:
     {
         assert(VmUpToDate_[phaseIdx]);
         return Vm_[phaseIdx];
+    }
+
+    /*!
+     * \brief The volume shift of a phase, sum_c x_c s_c b_c [m^3/mol]
+     *
+     * It is not folded into molarVolume() because the fugacity coefficients
+     * are computed from the unshifted volume.  Use correctedMolarVolume() to
+     * get the volume the fluid actually occupies.
+     *
+     * \param phaseIdx The fluid phase of interest
+     */
+    template <class FluidState>
+    Scalar volumeShift(const FluidState& fluidState, unsigned phaseIdx) const
+    {
+        // b_c from the dimensionless B_c = b_c p / (R T).
+        const Scalar T = decay<Scalar>(fluidState.temperature(phaseIdx));
+        const Scalar p = decay<Scalar>(fluidState.pressure(phaseIdx));
+        const Scalar RT_p = Constants<Scalar>::R * T / p;
+
+        Scalar shift = 0;
+        for (unsigned compIdx = 0; compIdx < FluidSystem::numComponents; ++compIdx) {
+            const Scalar b = decay<Scalar>(Bi(phaseIdx, compIdx)) * RT_p;
+            shift += decay<Scalar>(fluidState.moleFraction(phaseIdx, compIdx))
+                   * FluidSystem::volumeShift(compIdx) * b;
+        }
+        return shift;
+    }
+
+    /*!
+     * \brief The molar volume the fluid occupies, shift included [m^3/mol]
+     *
+     * This is the physical volume of the phase: the density, the phase
+     * saturations and the transport properties all follow from it.  Only the
+     * fugacity coefficients keep the unshifted molarVolume(), because the
+     * shift cancels from the equilibrium ratios and the two-parameter
+     * expression they use is derived for the unshifted root.
+     *
+     * \param phaseIdx The fluid phase of interest
+     */
+    template <class FluidState>
+    Scalar correctedMolarVolume(const FluidState& fluidState, unsigned phaseIdx) const
+    {
+        const Scalar Vm = molarVolume(phaseIdx) - volumeShift(fluidState, phaseIdx);
+
+        // SSHIFT is unconstrained deck input.  A shift larger than the molar
+        // volume leaves nothing behind, and every quantity derived from it
+        // would be meaningless rather than merely inaccurate.
+        if (!(scalarValue(Vm) > 0)) {
+            throw NumericalProblem(
+                fmt::format("The SSHIFT volume shift of phase {} leaves a corrected "
+                            "molar volume of {}, which is not positive.",
+                            phaseIdx, scalarValue(Vm)));
+        }
+        return Vm;
     }
 
 
