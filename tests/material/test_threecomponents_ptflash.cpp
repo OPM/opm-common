@@ -41,8 +41,11 @@
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/common/OpmLog/StreamLog.hpp>
 
+#include <opm/material/components/C1.hpp>
+#include <opm/material/components/C10.hpp>
+#include <opm/material/components/SimpleCO2.hpp>
 #include <opm/material/constraintsolvers/PTFlash.hpp>
-#include <opm/material/fluidsystems/ThreeComponentFluidSystem.hh>
+#include <opm/material/fluidsystems/GenericOilGasWaterFluidSystem.hpp>
 
 #include <opm/material/densead/Evaluation.hpp>
 #include <opm/material/constraintsolvers/ComputeFromReferencePhase.hpp>
@@ -61,7 +64,33 @@
 // It is a three component system
 using Scalar = double;
 using EOSType = Opm::CompositionalConfig::EOSType;
-using FluidSystem = Opm::ThreeComponentFluidSystem<Scalar>;
+using FluidSystem = Opm::GenericOilGasWaterFluidSystem<Scalar, 3, false>;
+
+template <class Component>
+void registerComponent()
+{
+    using CompParam = typename FluidSystem::ComponentParam;
+    FluidSystem::addComponent(CompParam{Component::name(),
+                                        Component::molarMass(),
+                                        Component::criticalTemperature(),
+                                        Component::criticalPressure(),
+                                        Component::criticalVolume(),
+                                        Component::acentricFactor()});
+}
+
+// The component parameters are static, so they are registered once per process.
+struct Fixture
+{
+    Fixture()
+    {
+        FluidSystem::init();
+        registerComponent<Opm::SimpleCO2<Scalar>>();
+        registerComponent<Opm::C1<Scalar>>();
+        registerComponent<Opm::C10<Scalar>>();
+    }
+};
+
+BOOST_GLOBAL_FIXTURE(Fixture);
 
 constexpr int numComponents = FluidSystem::numComponents;
 constexpr int numPrimaryVariables = numComponents + 1; // pressure + temperature + molar fractions of the first n-1 component
@@ -112,9 +141,9 @@ for (const auto& sample : test_methods) {
         fluid_state.setPressure(FluidSystem::oilPhaseIdx, p_init);
         fluid_state.setPressure(FluidSystem::gasPhaseIdx, p_init);
 
-        fluid_state.setMoleFraction(FluidSystem::Comp0Idx, comp[0]);
-        fluid_state.setMoleFraction(FluidSystem::Comp1Idx, comp[1]);
-        fluid_state.setMoleFraction(FluidSystem::Comp2Idx, comp[2]);
+        for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+            fluid_state.setMoleFraction(compIdx, comp[compIdx]);
+        }
 
         fluid_state.setTemperature(T_init);
 
