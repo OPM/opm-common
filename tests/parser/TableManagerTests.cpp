@@ -23,6 +23,9 @@
 
 #include <opm/common/utility/OpmInputError.hpp>
 
+#include <opm/common/OpmLog/OpmLog.hpp>
+#include <opm/common/OpmLog/StreamLog.hpp>
+
 #include <opm/input/eclipse/Parser/Parser.hpp>
 #include <opm/input/eclipse/Deck/Deck.hpp>
 
@@ -64,6 +67,8 @@
 
 #include <cstddef>
 #include <iostream>
+#include <memory>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <tuple>
@@ -3419,6 +3424,226 @@ END
     BOOST_CHECK_THROW(Opm::TableManager{ deck }, Opm::OpmInputError);
 }
 
+
+namespace {
+
+    std::string warningsFromTables(const std::string& deckString)
+    {
+        const auto deck = Opm::Parser{}.parseString(deckString);
+
+        std::ostringstream warnings;
+        Opm::OpmLog::addBackend("STREAM",
+                                std::make_shared<Opm::StreamLog>(warnings, Opm::Log::MessageType::Warning));
+
+        try {
+            const auto tmgr = Opm::TableManager{ deck };
+        }
+        catch (...) {
+            // Avoid leaving a backend that references 'warnings'.
+            Opm::OpmLog::removeBackend("STREAM");
+            throw;
+        }
+
+        Opm::OpmLog::removeBackend("STREAM");
+
+        return warnings.str();
+    }
+
+} // Anonymous namespace
+
+BOOST_AUTO_TEST_CASE(CompvdTable_RoundedCompositionIsNormalizedAndReported) {
+    const std::string deckString = R"(
+RUNSPEC
+METRIC
+COMPS
+7 /
+EQLDIMS
+1 /
+PROPS
+COMPVD
+  2573.5  0.73779563 0.04261 0.122439 0.04501 0.04351 0.007502 0.0011211  0  277.56 /
+END
+)";
+
+    const auto deck = Opm::Parser{}.parseString(deckString);
+    const auto tmgr = Opm::TableManager{ deck };
+    const auto& compvd = tmgr.getCompvdTables();
+    BOOST_REQUIRE_EQUAL(compvd.size(), std::size_t{1});
+
+    const auto& table = compvd.getTable<Opm::CompvdTable>(0);
+    double sum = 0.0;
+    for (int c = 0; c < 7; ++c) {
+        sum += table.getMoleFractionColumn(c)[0];
+    }
+    BOOST_CHECK_CLOSE(sum, 1.0, 1.0e-12);
+
+    BOOST_CHECK_CLOSE(table.getMoleFractionColumn(0)[0] / table.getMoleFractionColumn(1)[0],
+                      0.73779563 / 0.04261, 1.0e-10);
+
+    const std::string text = warningsFromTables(deckString);
+    BOOST_CHECK(text.find("row 1 of COMPVD table 1") != std::string::npos);
+    BOOST_CHECK(text.find("0.99998") != std::string::npos);
+    BOOST_CHECK(text.find("normalized") != std::string::npos);
+    BOOST_CHECK(text.find("COMPVD") != std::string::npos);
+    BOOST_CHECK(text.find("line") != std::string::npos);
+}
+
+BOOST_AUTO_TEST_CASE(ZmfvdTable_ManyRoundedRowsAreReportedOnce) {
+    const std::string text = warningsFromTables(R"(
+RUNSPEC
+METRIC
+COMPS
+3 /
+EQLDIMS
+1 /
+PROPS
+ZMFVD
+  2000.0  0.30001 0.29999 0.39998
+  2100.0  0.31001 0.28999 0.39998
+  2200.0  0.32001 0.27999 0.39998
+  2300.0  0.33001 0.26999 0.39998 /
+END
+)");
+
+    const auto occurrences =
+        [&text](const std::string& needle)
+        {
+            std::size_t n = 0;
+            for (auto at = text.find(needle); at != std::string::npos; at = text.find(needle, at + 1)) {
+                ++n;
+            }
+            return n;
+        };
+
+    BOOST_CHECK_EQUAL(occurrences("normalized"), std::size_t{1});
+    BOOST_CHECK(text.find("row 1 of ZMFVD table 1") != std::string::npos);
+    BOOST_CHECK(text.find("3 further compositions") != std::string::npos);
+}
+
+BOOST_AUTO_TEST_CASE(MoleFractionToleranceBoundary) {
+    // Deviations of 9e-5 and 2e-4, either side of the tolerance.
+    const auto zmfvd =
+        [](const std::string& composition)
+        {
+            return std::string{R"(
+RUNSPEC
+METRIC
+COMPS
+2 /
+EQLDIMS
+1 /
+PROPS
+ZMFVD
+  2000.0 )"} + composition + R"( /
+END
+)";
+        };
+
+    BOOST_CHECK_NO_THROW(Opm::TableManager{ Opm::Parser{}.parseString(zmfvd("0.49995 0.49996")) });
+    BOOST_CHECK(warningsFromTables(zmfvd("0.49995 0.49996")).find("normalized") != std::string::npos);
+
+    BOOST_CHECK_THROW(Opm::TableManager{ Opm::Parser{}.parseString(zmfvd("0.4999 0.4999")) },
+                      Opm::OpmInputError);
+}
+
+BOOST_AUTO_TEST_CASE(ZmfvdTable_ExactRowIsNotReported) {
+    BOOST_CHECK(warningsFromTables(R"(
+RUNSPEC
+METRIC
+COMPS
+3 /
+EQLDIMS
+1 /
+PROPS
+ZMFVD
+  2000.0  0.3 0.3 0.4 /
+END
+)").find("normalized") == std::string::npos);
+}
+
+BOOST_AUTO_TEST_CASE(ZmfvdTable_TooFarFromOneIsRejected) {
+    const auto deck = Opm::Parser{}.parseString(R"(
+RUNSPEC
+METRIC
+COMPS
+3 /
+EQLDIMS
+1 /
+PROPS
+ZMFVD
+  2000.0  0.30 0.30 0.35 /
+END
+)");
+
+    BOOST_CHECK_THROW(Opm::TableManager{ deck }, Opm::OpmInputError);
+}
+
+BOOST_AUTO_TEST_CASE(ZmfvdTable_RoundedCompositionIsNormalized) {
+    const auto deck = Opm::Parser{}.parseString(R"(
+RUNSPEC
+METRIC
+COMPS
+3 /
+EQLDIMS
+1 /
+PROPS
+ZMFVD
+  2000.0  0.30001 0.29999 0.39998 /
+END
+)");
+
+    const auto tmgr = Opm::TableManager{ deck };
+    const auto& zmfvd = tmgr.getZmfvdTables();
+    const auto& table = zmfvd.getTable<Opm::ZmfvdTable>(0);
+
+    double sum = 0.0;
+    for (int c = 0; c < 3; ++c) {
+        sum += table.getMoleFractionColumn(c)[0];
+    }
+    BOOST_CHECK_CLOSE(sum, 1.0, 1.0e-12);
+}
+
+BOOST_AUTO_TEST_CASE(ZmfvdTable_NonFiniteMoleFractionIsRejected) {
+    // The parser accepts NaN as a floating-point token.
+    const auto deck = Opm::Parser{}.parseString(R"(
+RUNSPEC
+METRIC
+COMPS
+2 /
+EQLDIMS
+1 /
+PROPS
+ZMFVD
+  100.0  NaN  0.5 /
+END
+)");
+
+    BOOST_CHECK_THROW(Opm::TableManager{ deck }, Opm::OpmInputError);
+}
+
+BOOST_AUTO_TEST_CASE(ZmfvdTable_NegativeMoleFractionIsRejected) {
+    const auto make_table_manager = [](const std::string& composition) {
+        const auto deck = Opm::Parser{}.parseString(std::string{R"(
+RUNSPEC
+METRIC
+COMPS
+2 /
+EQLDIMS
+1 /
+PROPS
+ZMFVD
+  100.0 )"} + composition + R"( /
+END
+)");
+        return Opm::TableManager{ deck };
+    };
+
+    // Negative fraction with an otherwise acceptable sum.
+    BOOST_CHECK_THROW(make_table_manager("-0.00005 1.0"), Opm::OpmInputError);
+
+    // Negative fraction whose total is exactly one.
+    BOOST_CHECK_THROW(make_table_manager("-0.1 1.1"), Opm::OpmInputError);
+}
 
 BOOST_AUTO_TEST_CASE(CompvdTable_MoleFractionsMustSumToOne) {
     const auto deck = Opm::Parser{}.parseString(R"(

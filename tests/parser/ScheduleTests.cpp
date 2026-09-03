@@ -30,6 +30,8 @@
 
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 
+#include <opm/common/OpmLog/OpmLog.hpp>
+#include <opm/common/OpmLog/StreamLog.hpp>
 #include <opm/common/utility/ActiveGridCells.hpp>
 #include <opm/common/utility/TimeService.hpp>
 #include <opm/common/utility/OpmInputError.hpp>
@@ -90,6 +92,8 @@
 #include <cstddef>
 #include <fstream>
 #include <memory>
+#include <numeric>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -5284,6 +5288,90 @@ TOPS
 SCHEDULE
 )" } + schedule_body;
     }
+}
+
+BOOST_AUTO_TEST_CASE(WELLSTRE_rounded_composition_is_normalized) {
+    const auto sched = make_schedule(gptable_deck(R"(
+WELSPECS
+ 'INJ' 'G1' 1 1 2000 'GAS' /
+/
+WELLSTRE
+ 'STR1' 0.749520 0.240448 0.010000 /
+/
+WINJGAS
+ 'INJ' 'STREAM' 'STR1' /
+/
+WCONINJE
+ 'INJ' 'GAS' 'OPEN' 'RATE' 100 /
+/
+TSTEP
+ 1 /
+)"));
+
+    const auto& composition = sched.getWell("INJ", 0).getInjectionProperties().gasInjComposition();
+    BOOST_REQUIRE_EQUAL(composition.size(), std::size_t{3});
+
+    const double sum = std::accumulate(composition.begin(), composition.end(), 0.0);
+    BOOST_CHECK_CLOSE(sum, 1.0, 1.0e-12);
+
+    BOOST_CHECK_CLOSE(composition[0] / composition[1], 0.749520 / 0.240448, 1.0e-10);
+    BOOST_CHECK_CLOSE(composition[0], 0.749520 / 0.999968, 1.0e-10);
+}
+
+BOOST_AUTO_TEST_CASE(WELLSTRE_normalization_is_reported) {
+    const auto deckString = gptable_deck(R"(
+WELLSTRE
+ 'STR1' 0.749520 0.240448 0.010000 /
+/
+TSTEP
+ 1 /
+)");
+
+    std::ostringstream warnings;
+    Opm::OpmLog::addBackend("STREAM",
+                            std::make_shared<Opm::StreamLog>(warnings, Opm::Log::MessageType::Warning));
+
+    try {
+        const auto sched = make_schedule(deckString);
+    }
+    catch (...) {
+        // Avoid leaving a backend that references 'warnings'.
+        Opm::OpmLog::removeBackend("STREAM");
+        throw;
+    }
+
+    Opm::OpmLog::removeBackend("STREAM");
+
+    const std::string text = warnings.str();
+    BOOST_CHECK(text.find("stream 'STR1'") != std::string::npos);
+    BOOST_CHECK(text.find("0.999968") != std::string::npos);
+    BOOST_CHECK(text.find("normalized") != std::string::npos);
+    BOOST_CHECK(text.find("WELLSTRE") != std::string::npos);
+    BOOST_CHECK(text.find("line") != std::string::npos);
+}
+
+BOOST_AUTO_TEST_CASE(WELLSTRE_composition_far_from_one_is_rejected) {
+    BOOST_CHECK_THROW(make_schedule(gptable_deck(R"(
+WELLSTRE
+ 'STR1' 0.70 0.20 0.05 /
+/
+)")), Opm::OpmInputError);
+}
+
+BOOST_AUTO_TEST_CASE(WELLSTRE_negative_composition_is_rejected) {
+    // Negative fraction with an otherwise acceptable sum.
+    BOOST_CHECK_THROW(make_schedule(gptable_deck(R"(
+WELLSTRE
+ 'STR1' 0.75 0.25 -0.00005 /
+/
+)")), Opm::OpmInputError);
+
+    // Negative fraction whose total is exactly one.
+    BOOST_CHECK_THROW(make_schedule(gptable_deck(R"(
+WELLSTRE
+ 'STR1' 0.75 0.35 -0.10 /
+/
+)")), Opm::OpmInputError);
 }
 
 BOOST_AUTO_TEST_CASE(GPTABLE_solution_seed_and_schedule_respec) {
