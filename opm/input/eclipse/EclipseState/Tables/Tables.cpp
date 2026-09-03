@@ -2920,7 +2920,11 @@ struct NormalizedRows
 
 } // Anonymous namespace
 
-ZmfvdTable::ZmfvdTable(const DeckItem& item, const int tableID, const int numComponents, const KeywordLocation& location)
+ZmfvdTable::ZmfvdTable(const DeckItem& item,
+                       const int tableID,
+                       const int numComponents,
+                       const UnitSystem& unitSystem,
+                       const KeywordLocation& location)
 {
     m_schema.addColumn(ColumnSchema("DEPTH", Table::STRICTLY_INCREASING, Table::DEFAULT_NONE));
     for (int c = 0; c < numComponents; ++c) {
@@ -2944,9 +2948,11 @@ ZmfvdTable::ZmfvdTable(const DeckItem& item, const int tableID, const int numCom
     std::vector<double> moles(numComponents, 0.);
     NormalizedRows normalized{};
     for (std::size_t row = 0; row < nrows; ++row) {
-        // Depth column
+        // Depth column.  Every column of the keyword is declared dimensionless,
+        // because the record width depends on COMPS, so convert the depth here.
         const std::size_t depthIdx = row * ncol;
-        const double siDepth = item.getSIDouble(depthIdx);
+        const double siDepth = unitSystem.to_si(UnitSystem::measure::length,
+                                                item.get<double>(depthIdx));
         getColumn(0).addValue(siDepth, tableName);
 
         // Component mole-fraction columns (dimensionless)
