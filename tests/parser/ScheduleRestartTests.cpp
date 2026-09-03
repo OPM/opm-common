@@ -54,9 +54,12 @@
 
 #include <opm/input/eclipse/Parser/Parser.hpp>
 
+#include "tests/WorkArea.hpp"
+
 #include <algorithm>
 #include <cstddef>
 #include <filesystem>
+#include <fstream>
 #include <iterator>
 #include <memory>
 #include <stdexcept>
@@ -435,4 +438,284 @@ BOOST_AUTO_TEST_CASE(RestartTest)
     //         return date == tp;
     //     }
     // };
+}
+
+// ---------------------------------------------------------------------------
+// Decks in which a section is split across several files.  FileDeck represents
+// each contiguous run of keywords from the same file as a separate block, so
+// these decks exercise the block boundaries of the index arithmetic.
+
+namespace {
+
+void write_file(const fs::path& fname, const std::string& contents)
+{
+    if (fname.has_parent_path()) {
+        fs::create_directories(fname.parent_path());
+    }
+
+    std::ofstream { fname } << contents;
+}
+
+std::string case_deck(const std::string& solution_body,
+                      const std::string& schedule_body)
+{
+    return R"(RUNSPEC
+
+DIMENS
+  5 5 2 /
+
+EQLDIMS
+  1 /
+
+OIL
+WATER
+GAS
+
+METRIC
+
+START
+  1 'JAN' 2020 /
+
+GRID
+
+DXV
+  5*100 /
+
+DYV
+  5*100 /
+
+DZV
+  2*10 /
+
+DEPTHZ
+  36*2000 /
+
+PROPS
+
+SOLUTION
+
+)" + solution_body + R"(
+SUMMARY
+
+WOPR
+  'OP1' /
+
+SCHEDULE
+
+)" + schedule_body;
+}
+
+const std::string equil = R"(EQUIL
+  2000 200 2050 0 1950 0 /
+)";
+
+const std::string simple_schedule = R"(WELSPECS
+  'OP1' 'G1' 1 1 1* 'OIL' /
+/
+
+DATES
+  1 'FEB' 2020 /
+/
+
+DATES
+  1 'MAR' 2020 /
+/
+)";
+
+// Norne's layout: RPTRST and RPTSOL in the deck file, the equilibration data in
+// an include file, and THPRES back in the deck file.
+FileDeck norne_style_deck()
+{
+    write_file("include/solution.inc", equil);
+    write_file("CASE.DATA", case_deck(R"(RPTRST
+  'BASIC=2' /
+
+RPTSOL
+  'RESTART=2' /
+
+INCLUDE
+  'include/solution.inc' /
+
+THPRES
+/
+
+)", simple_schedule));
+
+    return FileDeck { Parser{}.parseFile("CASE.DATA") };
+}
+
+// The include file holds the entire SOLUTION body, i.e. SOLUTION is the last
+// keyword of its block and the include block is emptied outright.
+FileDeck included_solution_body_deck()
+{
+    write_file("include/solution.inc", R"(RPTSOL
+  'RESTART=2' /
+
+)" + equil);
+
+    write_file("CASE.DATA", case_deck(R"(INCLUDE
+  'include/solution.inc' /
+
+)", simple_schedule));
+
+    return FileDeck { Parser{}.parseFile("CASE.DATA") };
+}
+
+void check_restart_solution(const FileDeck& fd)
+{
+    const auto solution = fd.find("SOLUTION");
+    const auto restart = fd.find("RESTART");
+    const auto summary = fd.find("SUMMARY");
+
+    BOOST_REQUIRE(restart.has_value());
+    BOOST_CHECK(solution.value() < restart.value());
+    BOOST_CHECK(restart.value() < summary.value());
+
+    // RESTART must be inserted into the same block as SOLUTION, not into the
+    // included file.
+    BOOST_CHECK_EQUAL(restart.value().file_index, solution.value().file_index);
+    BOOST_CHECK_EQUAL(restart.value().keyword_index,
+                      solution.value().keyword_index + 1);
+
+    // The solution state comes from the restart file.
+    BOOST_CHECK(! fd.find("EQUIL").has_value());
+    BOOST_CHECK(! fd.find("RPTSOL").has_value());
+    BOOST_CHECK(! fd.find("THPRES").has_value());
+
+    // Everything from SUMMARY on is untouched.
+    BOOST_CHECK(fd.find("WOPR").has_value());
+    BOOST_CHECK(fd.find("SCHEDULE").has_value());
+    BOOST_CHECK(fd.find("WELSPECS").has_value());
+    BOOST_CHECK_EQUAL(fd.count("DATES"), 2);
+
+    // Full traversal of a deck containing empty blocks.
+    BOOST_CHECK_NO_THROW({
+        for (auto index = fd.start(); index != fd.stop(); ++index) {
+            fd[index];
+        }
+    });
+}
+
+} // Anonymous namespace
+
+BOOST_AUTO_TEST_CASE(RestartSolutionSpanningIncludeFile)
+{
+    WorkArea work {};
+
+    auto fd = norne_style_deck();
+
+    // The keywords of the SOLUTION section must really be spread across files,
+    // otherwise this test degenerates into the single file case.
+    BOOST_REQUIRE(fd.find("SOLUTION").value().file_index <
+                  fd.find("EQUIL").value().file_index);
+    BOOST_REQUIRE(fd.find("EQUIL").value().file_index <
+                  fd.find("SUMMARY").value().file_index);
+
+    BOOST_CHECK_NO_THROW(fd.rst_solution("CASE", 5));
+
+    check_restart_solution(fd);
+
+    // RPTRST is kept, and it is still the first keyword after RESTART.
+    const auto rptrst = fd.find("RPTRST");
+    BOOST_REQUIRE(rptrst.has_value());
+    BOOST_CHECK_EQUAL(rptrst.value().keyword_index,
+                      fd.find("RESTART").value().keyword_index + 1);
+}
+
+BOOST_AUTO_TEST_CASE(RestartSolutionBodyEntirelyInIncludeFile)
+{
+    WorkArea work {};
+
+    auto fd = included_solution_body_deck();
+
+    BOOST_REQUIRE(fd.find("SOLUTION").value().file_index <
+                  fd.find("EQUIL").value().file_index);
+
+    BOOST_CHECK_NO_THROW(fd.rst_solution("CASE", 5));
+
+    check_restart_solution(fd);
+    BOOST_CHECK(! fd.find("RPTRST").has_value());
+}
+
+BOOST_AUTO_TEST_CASE(RestartSolutionSpanningIncludeFileDump)
+{
+    WorkArea work {};
+
+    auto fd = norne_style_deck();
+    fd.rst_solution("CASE", 5);
+
+    // An emptied include file is written as an empty file which the deck still
+    // includes (COPY), or simply contributes nothing (SHARE and INLINE).  The
+    // result must parse in all three cases.
+    const auto modes = std::vector {
+        std::pair { FileDeck::OutputMode::COPY,   std::string {"copy"} },
+        std::pair { FileDeck::OutputMode::SHARE,  std::string {"share"} },
+        std::pair { FileDeck::OutputMode::INLINE, std::string {"inline"} },
+    };
+
+    for (const auto& [mode, dir] : modes) {
+        BOOST_TEST_CONTEXT("Output mode " << dir) {
+            fd.dump(dir, "RST.DATA", mode);
+
+            const auto rst_deck = Parser{}.parseFile(dir + "/RST.DATA");
+            BOOST_CHECK(rst_deck.hasKeyword("RESTART"));
+            BOOST_CHECK(rst_deck.hasKeyword("RPTRST"));
+            BOOST_CHECK(rst_deck.hasKeyword("WELSPECS"));
+            BOOST_CHECK(! rst_deck.hasKeyword("EQUIL"));
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(SkipScheduleSpanningIncludeFile)
+{
+    WorkArea work {};
+
+    write_file("include/solution.inc", equil);
+    write_file("include/schedule.inc", R"(WCONPROD
+  'OP1' 'OPEN' 'ORAT' 1000 /
+/
+)");
+
+    write_file("CASE.DATA", case_deck(R"(INCLUDE
+  'include/solution.inc' /
+
+)", R"(TUNING
+/
+/
+/
+
+WELSPECS
+  'OP1' 'G1' 1 1 1* 'OIL' /
+/
+
+INCLUDE
+  'include/schedule.inc' /
+
+DATES
+  1 'FEB' 2020 /
+/
+
+DATES
+  1 'MAR' 2020 /
+/
+)"));
+
+    auto fd = FileDeck { Parser{}.parseFile("CASE.DATA") };
+
+    // The last keyword before the first report step is in the include file
+    // while the DATES keyword which ends the skipped range is not.
+    BOOST_REQUIRE(fd.find("WCONPROD").value().file_index <
+                  fd.find("DATES").value().file_index);
+
+    BOOST_CHECK_NO_THROW(fd.skip(1));
+
+    BOOST_CHECK(! fd.find("WELSPECS").has_value());
+    BOOST_CHECK(! fd.find("WCONPROD").has_value());
+    BOOST_CHECK(fd.find("SCHEDULE").has_value());
+    BOOST_CHECK(fd.find("TUNING").has_value());
+
+    BOOST_REQUIRE_EQUAL(fd.count("DATES"), 1);
+    const auto& dates = fd[fd.find("DATES").value()];
+    BOOST_CHECK_EQUAL(dates[0].getItem<ParserKeywords::DATES::MONTH>()
+                      .get<std::string>(0), "MAR");
 }
