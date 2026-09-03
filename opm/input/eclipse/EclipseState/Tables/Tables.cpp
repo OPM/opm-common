@@ -2958,7 +2958,7 @@ ZmfvdTable::ZmfvdTable(const DeckItem& item,
         // Component mole-fraction columns (dimensionless)
         for (int c = 0; c < numComponents; ++c) {
             const std::size_t compIdx = row * ncol + 1 + c;
-            moles[c] = item.get<double>(compIdx);
+            moles[c] = item.getSIDouble(compIdx);
         }
 
         if (const auto sum = normalizeMoleFractions(moles,
@@ -3028,7 +3028,7 @@ CompvdTable::CompvdTable(const DeckItem& item,
 
     const auto nrows = item.data_size() / ncol;
     phaseFlags_.reserve(nrows);
-    const auto& data = item.getData<double>();
+    const auto& data = item.getSIDoubleData();
 
     const std::string tableName{"COMPVD"};
     std::vector<double> moles(numComponents, 0.0);
