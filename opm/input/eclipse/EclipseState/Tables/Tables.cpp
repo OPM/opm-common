@@ -23,6 +23,8 @@
 #include <opm/input/eclipse/EclipseState/Tables/TableColumn.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableSchema.hpp>
 
+#include <opm/input/eclipse/EclipseState/Compositional/NormalizeMoleFractions.hpp>
+
 #include <opm/input/eclipse/EclipseState/Tables/AqutabTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/BiofilmTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/CompvdTable.hpp>
@@ -95,8 +97,6 @@
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 #include <opm/input/eclipse/Units/Units.hpp>
 
-#include <opm/common/OpmLog/OpmLog.hpp>
-#include <opm/input/eclipse/EclipseState/Compositional/NormalizeMoleFractions.hpp>
 #include <opm/common/utility/OpmInputError.hpp>
 
 #include <opm/input/eclipse/Deck/Deck.hpp>
@@ -116,8 +116,7 @@
 #include <cstddef>
 #include <functional>
 #include <initializer_list>
-#include <limits>
-#include <numeric>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -2888,6 +2887,39 @@ template FlatTable<TlmixparRecord>::FlatTable(const DeckKeyword&);
 template FlatTable<VISCREFRecord>::FlatTable(const DeckKeyword&);
 template FlatTable<WATDENTRecord>::FlatTable(const DeckKeyword&);
 
+namespace {
+
+/// Collects normalized rows so each table emits one warning.
+struct NormalizedRows
+{
+    void add(const std::size_t row, const double sum)
+    {
+        if (count++ == 0) {
+            firstRow = row;
+            firstSum = sum;
+        }
+    }
+
+    void report(const std::string& tableName,
+                const int tableID,
+                const KeywordLocation& location) const
+    {
+        if (count == 0) {
+            return;
+        }
+
+        warnNormalizedMoleFractions(fmt::format("row {} of {} table {}",
+                                                firstRow, tableName, tableID + 1),
+                                    firstSum, count - 1, location);
+    }
+
+    std::size_t count{0};
+    std::size_t firstRow{0};
+    double firstSum{0.0};
+};
+
+} // Anonymous namespace
+
 ZmfvdTable::ZmfvdTable(const DeckItem& item, const int tableID, const int numComponents, const KeywordLocation& location)
 {
     m_schema.addColumn(ColumnSchema("DEPTH", Table::STRICTLY_INCREASING, Table::DEFAULT_NONE));
@@ -2910,6 +2942,7 @@ ZmfvdTable::ZmfvdTable(const DeckItem& item, const int tableID, const int numCom
 
     const std::string tableName {"ZMFVD"};
     std::vector<double> moles(numComponents, 0.);
+    NormalizedRows normalized{};
     for (std::size_t row = 0; row < nrows; ++row) {
         // Depth column
         const std::size_t depthIdx = row * ncol;
@@ -2922,14 +2955,19 @@ ZmfvdTable::ZmfvdTable(const DeckItem& item, const int tableID, const int numCom
             moles[c] = item.get<double>(compIdx);
         }
 
-        // Normalize, so the rounding never reaches the equilibration.
-        normalizeMoleFractions(moles,
-                               fmt::format("row {} of ZMFVD table {}", row + 1, tableID + 1),
-                               location);
+        if (const auto sum = normalizeMoleFractions(moles,
+                                                    fmt::format("row {} of {} table {}",
+                                                                row + 1, tableName, tableID + 1),
+                                                    location)) {
+            normalized.add(row + 1, *sum);
+        }
+
         for (int c = 0; c < numComponents; ++c) {
             getColumn(1 + c).addValue(moles[c], tableName);
         }
     }
+
+    normalized.report(tableName, tableID, location);
 }
 
 const TableColumn&
@@ -2988,6 +3026,7 @@ CompvdTable::CompvdTable(const DeckItem& item,
 
     const std::string tableName{"COMPVD"};
     std::vector<double> moles(numComponents, 0.0);
+    NormalizedRows normalized{};
     for (std::size_t row = 0; row < nrows; ++row) {
         const std::size_t rowStart = row * ncol;
 
@@ -3000,10 +3039,13 @@ CompvdTable::CompvdTable(const DeckItem& item,
             moles[c] = data.at(rowStart + 1 + c);
         }
 
-        // Normalize, so the rounding never reaches the equilibration.
-        normalizeMoleFractions(moles,
-                               fmt::format("row {} of COMPVD table {}", row + 1, tableID + 1),
-                               location);
+        if (const auto sum = normalizeMoleFractions(moles,
+                                                    fmt::format("row {} of {} table {}",
+                                                                row + 1, tableName, tableID + 1),
+                                                    location)) {
+            normalized.add(row + 1, *sum);
+        }
+
         for (int c = 0; c < numComponents; ++c) {
             getColumn(1 + c).addValue(moles[c], tableName);
         }
@@ -3022,6 +3064,8 @@ CompvdTable::CompvdTable(const DeckItem& item,
         const double siPsat = unitSystem.to_si(UnitSystem::measure::pressure, data.at(rowStart + 2 + numComponents));
         getColumn(1 + numComponents).addValue(siPsat, tableName);
     }
+
+    normalized.report(tableName, tableID, location);
 }
 
 const TableColumn&

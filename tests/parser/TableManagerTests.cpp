@@ -25,7 +25,7 @@
 
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/common/OpmLog/StreamLog.hpp>
-#include <sstream>
+
 #include <opm/input/eclipse/Parser/Parser.hpp>
 #include <opm/input/eclipse/Deck/Deck.hpp>
 
@@ -67,6 +67,8 @@
 
 #include <cstddef>
 #include <iostream>
+#include <memory>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <tuple>
@@ -3423,9 +3425,34 @@ END
 }
 
 
-BOOST_AUTO_TEST_CASE(CompvdTable_NormalizationIsReported) {
-    // The row that was scaled must be named, with the sum it had before.
-    const auto deck = Opm::Parser{}.parseString(R"(
+namespace {
+
+    std::string warningsFromTables(const std::string& deckString)
+    {
+        const auto deck = Opm::Parser{}.parseString(deckString);
+
+        std::ostringstream warnings;
+        Opm::OpmLog::addBackend("STREAM",
+                                std::make_shared<Opm::StreamLog>(warnings, Opm::Log::MessageType::Warning));
+
+        try {
+            const auto tmgr = Opm::TableManager{ deck };
+        }
+        catch (...) {
+            // Avoid leaving a backend that references 'warnings'.
+            Opm::OpmLog::removeBackend("STREAM");
+            throw;
+        }
+
+        Opm::OpmLog::removeBackend("STREAM");
+
+        return warnings.str();
+    }
+
+} // Anonymous namespace
+
+BOOST_AUTO_TEST_CASE(CompvdTable_RoundedCompositionIsNormalizedAndReported) {
+    const std::string deckString = R"(
 RUNSPEC
 METRIC
 COMPS
@@ -3436,23 +3463,91 @@ PROPS
 COMPVD
   2573.5  0.73779563 0.04261 0.122439 0.04501 0.04351 0.007502 0.0011211  0  277.56 /
 END
-)");
+)";
 
-    std::ostringstream warnings;
-    Opm::OpmLog::addBackend("STREAM",
-                            std::make_shared<Opm::StreamLog>(warnings, Opm::Log::MessageType::Warning));
+    const auto deck = Opm::Parser{}.parseString(deckString);
     const auto tmgr = Opm::TableManager{ deck };
-    Opm::OpmLog::removeBackend("STREAM");
+    const auto& compvd = tmgr.getCompvdTables();
+    BOOST_REQUIRE_EQUAL(compvd.size(), std::size_t{1});
 
-    const std::string text = warnings.str();
+    const auto& table = compvd.getTable<Opm::CompvdTable>(0);
+    double sum = 0.0;
+    for (int c = 0; c < 7; ++c) {
+        sum += table.getMoleFractionColumn(c)[0];
+    }
+    BOOST_CHECK_CLOSE(sum, 1.0, 1.0e-12);
+
+    BOOST_CHECK_CLOSE(table.getMoleFractionColumn(0)[0] / table.getMoleFractionColumn(1)[0],
+                      0.73779563 / 0.04261, 1.0e-10);
+
+    const std::string text = warningsFromTables(deckString);
     BOOST_CHECK(text.find("row 1 of COMPVD table 1") != std::string::npos);
     BOOST_CHECK(text.find("0.99998") != std::string::npos);
     BOOST_CHECK(text.find("normalized") != std::string::npos);
+    BOOST_CHECK(text.find("COMPVD") != std::string::npos);
+    BOOST_CHECK(text.find("line") != std::string::npos);
+}
+
+BOOST_AUTO_TEST_CASE(ZmfvdTable_ManyRoundedRowsAreReportedOnce) {
+    const std::string text = warningsFromTables(R"(
+RUNSPEC
+METRIC
+COMPS
+3 /
+EQLDIMS
+1 /
+PROPS
+ZMFVD
+  2000.0  0.30001 0.29999 0.39998
+  2100.0  0.31001 0.28999 0.39998
+  2200.0  0.32001 0.27999 0.39998
+  2300.0  0.33001 0.26999 0.39998 /
+END
+)");
+
+    const auto occurrences =
+        [&text](const std::string& needle)
+        {
+            std::size_t n = 0;
+            for (auto at = text.find(needle); at != std::string::npos; at = text.find(needle, at + 1)) {
+                ++n;
+            }
+            return n;
+        };
+
+    BOOST_CHECK_EQUAL(occurrences("normalized"), std::size_t{1});
+    BOOST_CHECK(text.find("row 1 of ZMFVD table 1") != std::string::npos);
+    BOOST_CHECK(text.find("3 further compositions") != std::string::npos);
+}
+
+BOOST_AUTO_TEST_CASE(MoleFractionToleranceBoundary) {
+    // Deviations of 9e-5 and 2e-4, either side of the tolerance.
+    const auto zmfvd =
+        [](const std::string& composition)
+        {
+            return std::string{R"(
+RUNSPEC
+METRIC
+COMPS
+2 /
+EQLDIMS
+1 /
+PROPS
+ZMFVD
+  2000.0 )"} + composition + R"( /
+END
+)";
+        };
+
+    BOOST_CHECK_NO_THROW(Opm::TableManager{ Opm::Parser{}.parseString(zmfvd("0.49995 0.49996")) });
+    BOOST_CHECK(warningsFromTables(zmfvd("0.49995 0.49996")).find("normalized") != std::string::npos);
+
+    BOOST_CHECK_THROW(Opm::TableManager{ Opm::Parser{}.parseString(zmfvd("0.4999 0.4999")) },
+                      Opm::OpmInputError);
 }
 
 BOOST_AUTO_TEST_CASE(ZmfvdTable_ExactRowIsNotReported) {
-    // A row that already sums to one is scaled by one, and says nothing.
-    const auto deck = Opm::Parser{}.parseString(R"(
+    BOOST_CHECK(warningsFromTables(R"(
 RUNSPEC
 METRIC
 COMPS
@@ -3463,19 +3558,10 @@ PROPS
 ZMFVD
   2000.0  0.3 0.3 0.4 /
 END
-)");
-
-    std::ostringstream warnings;
-    Opm::OpmLog::addBackend("STREAM",
-                            std::make_shared<Opm::StreamLog>(warnings, Opm::Log::MessageType::Warning));
-    const auto tmgr = Opm::TableManager{ deck };
-    Opm::OpmLog::removeBackend("STREAM");
-
-    BOOST_CHECK(warnings.str().find("normalized") == std::string::npos);
+)").find("normalized") == std::string::npos);
 }
 
 BOOST_AUTO_TEST_CASE(ZmfvdTable_TooFarFromOneIsRejected) {
-    // A row that misses one by more than rounding is still an error.
     const auto deck = Opm::Parser{}.parseString(R"(
 RUNSPEC
 METRIC
@@ -3490,39 +3576,6 @@ END
 )");
 
     BOOST_CHECK_THROW(Opm::TableManager{ deck }, Opm::OpmInputError);
-}
-
-BOOST_AUTO_TEST_CASE(CompvdTable_RoundedCompositionIsNormalized) {
-    // A lumped characterization quoted to a handful of digits sums to one only
-    // to within its rounding; the row is accepted and stored normalized.  This
-    // row is taken from a customer deck and sums to 0.99998773.
-    const auto deck = Opm::Parser{}.parseString(R"(
-RUNSPEC
-METRIC
-COMPS
-7 /
-EQLDIMS
-1 /
-PROPS
-COMPVD
-  2573.5  0.73779563 0.04261 0.122439 0.04501 0.04351 0.007502 0.0011211  0  277.56 /
-END
-)");
-
-    const auto tmgr = Opm::TableManager{ deck };
-    const auto& compvd = tmgr.getCompvdTables();
-    BOOST_REQUIRE_EQUAL(compvd.size(), std::size_t{1});
-
-    const auto& table = compvd.getTable<Opm::CompvdTable>(0);
-    double sum = 0.0;
-    for (int c = 0; c < 7; ++c) {
-        sum += table.getMoleFractionColumn(c)[0];
-    }
-    BOOST_CHECK_CLOSE(sum, 1.0, 1.0e-12);
-
-    // The normalization is a rescaling, so the component ratios are untouched.
-    BOOST_CHECK_CLOSE(table.getMoleFractionColumn(0)[0] / table.getMoleFractionColumn(1)[0],
-                      0.73779563 / 0.04261, 1.0e-10);
 }
 
 BOOST_AUTO_TEST_CASE(ZmfvdTable_RoundedCompositionIsNormalized) {
@@ -3551,10 +3604,7 @@ END
 }
 
 BOOST_AUTO_TEST_CASE(ZmfvdTable_NonFiniteMoleFractionIsRejected) {
-    // NaN is an acceptable floating-point token to the parser.  It must not
-    // reach the normalization: a NaN sum makes every tolerance comparison
-    // false, so an unguarded helper would divide the row through by it and
-    // store a composition of NaNs.
+    // The parser accepts NaN as a floating-point token.
     const auto deck = Opm::Parser{}.parseString(R"(
 RUNSPEC
 METRIC
@@ -3588,10 +3638,10 @@ END
         return Opm::TableManager{ deck };
     };
 
-    // Relaxing the sum tolerance must not admit an invalid component.
+    // Negative fraction with an otherwise acceptable sum.
     BOOST_CHECK_THROW(make_table_manager("-0.00005 1.0"), Opm::OpmInputError);
 
-    // Individual values must also be checked when their sum is exactly one.
+    // Negative fraction whose total is exactly one.
     BOOST_CHECK_THROW(make_table_manager("-0.1 1.1"), Opm::OpmInputError);
 }
 

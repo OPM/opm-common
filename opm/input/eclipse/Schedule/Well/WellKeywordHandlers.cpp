@@ -23,6 +23,7 @@
 #include <opm/common/utility/OpmInputError.hpp>
 #include <opm/common/utility/String.hpp>
 
+#include <opm/input/eclipse/EclipseState/Compositional/NormalizeMoleFractions.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 
 #include <opm/input/eclipse/Schedule/Network/ExtNetwork.hpp>
@@ -36,7 +37,6 @@
 #include <opm/input/eclipse/Schedule/Well/WListManager.hpp>
 #include <opm/input/eclipse/Schedule/Well/WVFPDP.hpp>
 #include <opm/input/eclipse/Schedule/Well/WVFPEXP.hpp>
-#include <opm/input/eclipse/EclipseState/Compositional/NormalizeMoleFractions.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellEconProductionLimits.hpp>
@@ -63,7 +63,7 @@
 #include <cstddef>
 #include <functional>
 #include <memory>
-#include <numeric>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <unordered_map>
@@ -477,13 +477,13 @@ void handleWELLSTRE(HandlerContext& handlerContext)
             throw OpmInputError(msg, handlerContext.keyword.location());
         }
 
-        // A composition written with a few digits does not sum to one
-        // exactly; scale it rather than reject the deck over the rounding.
-        normalizeMoleFractions(composition,
-                               fmt::format("stream '{}'", stream_name),
-                               handlerContext.keyword.location());
+        const auto what = fmt::format("stream '{}'", stream_name);
+        if (const auto sum = normalizeMoleFractions(composition, what,
+                                                    handlerContext.keyword.location())) {
+            warnNormalizedMoleFractions(what, *sum, 0, handlerContext.keyword.location());
+        }
 
-        auto composition_ptr = std::make_shared<std::vector<double>>(composition);
+        auto composition_ptr = std::make_shared<std::vector<double>>(std::move(composition));
         inj_streams.update(stream_name, std::move(composition_ptr));
     }
 

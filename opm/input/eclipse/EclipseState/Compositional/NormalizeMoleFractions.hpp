@@ -21,6 +21,7 @@
 #define OPM_NORMALIZE_MOLE_FRACTIONS_HPP
 
 #include <cstddef>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -28,25 +29,27 @@ namespace Opm {
 
 class KeywordLocation;
 
-/// How far a set of mole fractions may sum away from one before it is
-/// rejected.  Writing a composition with a few digits costs this much.
-double moleFractionTolerance();
-
-/// Slack below which a sum counts as exactly one: summing n values of order
-/// one costs about n roundings, and representing them costs as many again.
-double exactSumSlack(std::size_t numValues);
-
-/// Scales \p fractions so that they sum to one, and says so when the scaling
-/// was more than the arithmetic of the sum.
+/// Scales finite, non-negative \p fractions to sum to one.
 ///
-/// \param what  Names the input in the warning, e.g. "row 2 of COMPVD table 1"
-///              or "stream 'ISTR'".
+/// Accepts sums near one and rejects larger deviations.
 ///
-/// \throw OpmInputError when a fraction is negative or non-finite, or when the
-///        sum is too far from one to be the rounding of the values.
-void normalizeMoleFractions(std::vector<double>& fractions,
-                            const std::string& what,
-                            const KeywordLocation& location);
+/// \param what Names the composition in diagnostics.
+///
+/// \return The original sum when normalization should be reported; otherwise
+///         std::nullopt.  Does not log, so callers can report once per table
+///         via warnNormalizedMoleFractions().
+///
+/// \throw OpmInputError for invalid fractions or an out-of-tolerance sum.
+std::optional<double> normalizeMoleFractions(std::vector<double>& fractions,
+                                             const std::string& what,
+                                             const KeywordLocation& location);
+
+/// Warns that one or more compositions were normalized.
+/// \param others Number of additional normalized compositions.
+void warnNormalizedMoleFractions(const std::string& what,
+                                 double sum,
+                                 std::size_t others,
+                                 const KeywordLocation& location);
 
 } // namespace Opm
 

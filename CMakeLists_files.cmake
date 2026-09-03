@@ -971,7 +971,6 @@ list(APPEND PUBLIC_HEADER_FILES
   opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/SingleNumericalAquifer.hpp
   opm/input/eclipse/EclipseState/Co2StoreConfig.hpp
   opm/input/eclipse/EclipseState/Compositional/CompositionalConfig.hpp
-  opm/input/eclipse/EclipseState/Compositional/NormalizeMoleFractions.hpp
   opm/input/eclipse/EclipseState/EclipseConfig.hpp
   opm/input/eclipse/EclipseState/EclipseState.hpp
   opm/input/eclipse/EclipseState/EndpointScaling.hpp
