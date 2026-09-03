@@ -94,17 +94,23 @@ FileDeck::Index& FileDeck::Index::operator--()
 {
     if (this->keyword_index > 0) {
         --this->keyword_index;
+        return *this;
     }
-    else {
-        if (this->file_index == 0) {
-            throw std::logic_error("Going beyond start of container");
-        }
 
+    // At the start of a block.  Move to the last keyword of the closest
+    // preceding block which still holds keywords; a block is left empty when
+    // all of its keywords have been erased.
+    while (this->file_index > 0) {
         --this->file_index;
-        this->keyword_index = this->deck->blocks[this->file_index].size() - 1;
+
+        const auto block_size = this->deck->blocks[this->file_index].size();
+        if (block_size > 0) {
+            this->keyword_index = block_size - 1;
+            return *this;
+        }
     }
 
-    return *this;
+    throw std::logic_error("Going beyond start of container");
 }
 
 FileDeck::Index FileDeck::Index::operator--(int)
@@ -122,14 +128,12 @@ FileDeck::Index& FileDeck::Index::operator++()
         throw std::logic_error("Trying to iterate empty container");
     }
 
-    const auto& block = this->deck->blocks[this->file_index];
-    if (this->keyword_index < block.size() - 1) {
-        ++this->keyword_index;
+    if (this->file_index >= this->deck->blocks.size()) {
+        throw std::logic_error("Going beyond end of container");
     }
-    else {
-        ++this->file_index;
-        this->keyword_index = 0;
-    }
+
+    *this = this->deck->next_valid_index(this->file_index,
+                                         this->keyword_index + 1);
 
     return *this;
 }
@@ -248,11 +252,16 @@ FileDeck::Block::find(const std::string& keyword,
     return std::distance(this->keywords.begin(), iter);
 }
 
-void FileDeck::erase(const FileDeck::Index& index)
+FileDeck::Index FileDeck::erase(const FileDeck::Index& index)
 {
     auto& block = this->blocks.at(index.file_index);
     this->modified_files.insert(block.fname);
     block.erase(index);
+
+    // The keyword which followed the erased one has moved into its position.
+    // If the erased keyword was the last one in its block the successor is the
+    // first keyword of the next non-empty block, possibly stop().
+    return this->next_valid_index(index.file_index, index.keyword_index);
 }
 
 void FileDeck::erase(const Index& begin, const Index& end)
@@ -347,9 +356,27 @@ void FileDeck::insert(const Index& index, const DeckKeyword& keyword)
     this->modified_files.insert(block.fname);
 }
 
+FileDeck::Index
+FileDeck::next_valid_index(std::size_t file_index,
+                           std::size_t keyword_index) const
+{
+    while ((file_index < this->blocks.size()) &&
+           (keyword_index >= this->blocks[file_index].size()))
+    {
+        ++file_index;
+        keyword_index = 0;
+    }
+
+    if (file_index >= this->blocks.size()) {
+        return this->stop();
+    }
+
+    return FileDeck::Index { file_index, keyword_index, this };
+}
+
 FileDeck::Index FileDeck::start() const
 {
-    return FileDeck::Index {0, 0, this};
+    return this->next_valid_index(0, 0);
 }
 
 FileDeck::Index FileDeck::stop() const
@@ -497,6 +524,9 @@ void FileDeck::dump(const std::string& output_dir,
     }
 
     if (mode == OutputMode::COPY) {
+        // An included file whose keywords have all been erased is emitted as an
+        // empty file in COPY mode, and its parent still includes it.  In SHARE
+        // and INLINE modes it contributes nothing to the output.
         DumpContext context;
         this->dump_block(this->blocks[0], output_dir, fname, context);
 
@@ -557,22 +587,23 @@ void FileDeck::dump_stdout(const std::string& output_dir,
 void FileDeck::rst_solution(const std::string& rst_base,
                             const int report_step)
 {
-    auto index = this->find("SOLUTION").value();
-    auto summary_index = this->find("SUMMARY").value();
+    if (! this->find("SUMMARY").has_value()) {
+        throw std::logic_error("Deck does not have a SUMMARY section");
+    }
 
+    // Discard solution keywords superseded by the restart file.  Erasing a
+    // keyword shifts later positions within its block and may empty the block,
+    // so terminate on the SUMMARY keyword rather than maintaining its index.
+    auto index = this->find("SOLUTION").value();
     ++index;
 
-    while (true) {
+    const auto stop_index = this->stop();
+    while ((index != stop_index) && ((*this)[index].name() != "SUMMARY")) {
         if (::rst_keep_in_solution.count((*this)[index].name()) == 0) {
-            this->erase(index);
-            --summary_index;
+            index = this->erase(index);
         }
         else {
             ++index;
-        }
-
-        if (index == summary_index) {
-            break;
         }
     }
 
@@ -586,8 +617,12 @@ void FileDeck::rst_solution(const std::string& rst_base,
             units
         };
 
-        auto solution = this->find("SOLUTION").value();
-        this->insert(++solution, restart);
+        // Insert RESTART immediately after SOLUTION.  Note that ++solution is
+        // not used here: when SOLUTION is the last keyword of its file, that
+        // would place RESTART at the start of the next file instead.
+        const auto solution = this->find("SOLUTION").value();
+        this->insert(Index { solution.file_index,
+                             solution.keyword_index + 1, this }, restart);
     }
 }
 
@@ -595,10 +630,12 @@ void FileDeck::insert_skiprest()
 {
     DeckKeyword skiprest( ParserKeywords::SKIPREST{} );
 
-    const auto schedule = this->find("SCHEDULE");
-    auto index = schedule.value();
+    // Immediately after SCHEDULE, in the same file--see the note on the
+    // RESTART keyword in rst_solution().
+    const auto schedule = this->find("SCHEDULE").value();
 
-    this->insert(++index, skiprest);
+    this->insert(Index { schedule.file_index,
+                         schedule.keyword_index + 1, this }, skiprest);
 }
 
 void FileDeck::skip(const int report_step)
@@ -638,16 +675,14 @@ void FileDeck::skip(const int report_step)
         const auto& keyword = (*this)[index];
 
         if (rst_keep_in_schedule.count(keyword.name()) == 0) {
-            auto next_index = index + 1;
-            this->erase(index);
+            // Erasing a keyword which precedes end_pos in the same block
+            // moves end_pos one position down.  Keywords in earlier blocks do
+            // not affect it.
+            const auto same_block = index.file_index == end_pos.file_index;
 
-            if (next_index.file_index != index.file_index) {
-                // Erased the last element on this block, move to the next.
-                index = next_index;
-            }
+            index = this->erase(index);
 
-            if (index.file_index == end_pos.file_index) {
-                // On the last block.
+            if (same_block) {
                 --end_pos;
             }
         }
