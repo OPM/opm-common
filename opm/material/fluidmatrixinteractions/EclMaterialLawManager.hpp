@@ -307,28 +307,27 @@ public:
             prevHysteresisState_.gasOilStates.resize(numElems);
             prevHysteresisState_.oilWaterStates.resize(numElems);
             prevHysteresisState_.gasWaterStates.clear();
-        } else if (threePhaseApproach_ == EclMultiplexerApproach::TwoPhase) {
-            if (twoPhaseApproach_ == EclTwoPhaseApproach::GasOil) {
-                prevHysteresisState_.gasOilStates.resize(numElems);
-                prevHysteresisState_.oilWaterStates.clear();
-                prevHysteresisState_.gasWaterStates.clear();
-            } else if (twoPhaseApproach_ == EclTwoPhaseApproach::OilWater) {
-                prevHysteresisState_.gasOilStates.clear();
-                prevHysteresisState_.oilWaterStates.resize(numElems);
-                prevHysteresisState_.gasWaterStates.clear();
-            } else if (twoPhaseApproach_ == EclTwoPhaseApproach::GasWater) {
-                prevHysteresisState_.gasOilStates.clear();
-                prevHysteresisState_.oilWaterStates.clear();
-                prevHysteresisState_.gasWaterStates.resize(numElems);
-            }
-        }
 
-        for (std::size_t i = 0; i < numElems; ++i) {
-            MaterialLaw::captureHysteresisState(
-                params_.materialLawParams[i],
-                !prevHysteresisState_.gasOilStates.empty() ? &prevHysteresisState_.gasOilStates[i] : nullptr,
-                !prevHysteresisState_.oilWaterStates.empty() ? &prevHysteresisState_.oilWaterStates[i] : nullptr,
-                !prevHysteresisState_.gasWaterStates.empty() ? &prevHysteresisState_.gasWaterStates[i] : nullptr);
+            for (std::size_t i = 0; i < numElems; ++i) {
+                MaterialLaw::captureHysteresisStateThreePhase(
+                    params_.materialLawParams[i],
+                    prevHysteresisState_.gasOilStates[i],
+                    prevHysteresisState_.oilWaterStates[i]);
+            }
+        } else if (threePhaseApproach_ == EclMultiplexerApproach::TwoPhase) {
+            auto& targetVec = (twoPhaseApproach_ == EclTwoPhaseApproach::GasOil)   ? prevHysteresisState_.gasOilStates :
+                              (twoPhaseApproach_ == EclTwoPhaseApproach::OilWater) ? prevHysteresisState_.oilWaterStates :
+                                                                                     prevHysteresisState_.gasWaterStates;
+            prevHysteresisState_.gasOilStates.clear();
+            prevHysteresisState_.oilWaterStates.clear();
+            prevHysteresisState_.gasWaterStates.clear();
+            targetVec.resize(numElems);
+
+            for (std::size_t i = 0; i < numElems; ++i) {
+                MaterialLaw::captureHysteresisStateTwoPhase(
+                    params_.materialLawParams[i],
+                    targetVec[i]);
+            }
         }
 
         if (params_.dirMaterialLawParams) {
@@ -359,12 +358,25 @@ public:
             return;
 
         const std::size_t numElems = params_.materialLawParams.size();
-        for (std::size_t i = 0; i < numElems; ++i) {
-            MaterialLaw::restoreHysteresisState(
-                params_.materialLawParams[i],
-                !prevHysteresisState_.gasOilStates.empty() ? &prevHysteresisState_.gasOilStates[i] : nullptr,
-                !prevHysteresisState_.oilWaterStates.empty() ? &prevHysteresisState_.oilWaterStates[i] : nullptr,
-                !prevHysteresisState_.gasWaterStates.empty() ? &prevHysteresisState_.gasWaterStates[i] : nullptr);
+        const bool is3p = (threePhaseApproach_ != EclMultiplexerApproach::TwoPhase &&
+                           threePhaseApproach_ != EclMultiplexerApproach::OnePhase);
+
+        if (is3p) {
+            for (std::size_t i = 0; i < numElems; ++i) {
+                MaterialLaw::restoreHysteresisStateThreePhase(
+                    params_.materialLawParams[i],
+                    prevHysteresisState_.gasOilStates[i],
+                    prevHysteresisState_.oilWaterStates[i]);
+            }
+        } else if (threePhaseApproach_ == EclMultiplexerApproach::TwoPhase) {
+            const auto& sourceVec = (twoPhaseApproach_ == EclTwoPhaseApproach::GasOil)   ? prevHysteresisState_.gasOilStates :
+                                    (twoPhaseApproach_ == EclTwoPhaseApproach::OilWater) ? prevHysteresisState_.oilWaterStates :
+                                                                                           prevHysteresisState_.gasWaterStates;
+            for (std::size_t i = 0; i < numElems; ++i) {
+                MaterialLaw::restoreHysteresisStateTwoPhase(
+                    params_.materialLawParams[i],
+                    sourceVec[i]);
+            }
         }
 
         if (params_.dirMaterialLawParams) {
@@ -372,17 +384,20 @@ public:
                 params_.dirMaterialLawParams->materialLawParamsX_,
                 prevHysteresisState_.dirGasOilStatesX,
                 prevHysteresisState_.dirOilWaterStatesX,
-                prevHysteresisState_.dirGasWaterStatesX);
+                prevHysteresisState_.dirGasWaterStatesX,
+                is3p);
             restoreDirectionalHysteresisState_(
                 params_.dirMaterialLawParams->materialLawParamsY_,
                 prevHysteresisState_.dirGasOilStatesY,
                 prevHysteresisState_.dirOilWaterStatesY,
-                prevHysteresisState_.dirGasWaterStatesY);
+                prevHysteresisState_.dirGasWaterStatesY,
+                is3p);
             restoreDirectionalHysteresisState_(
                 params_.dirMaterialLawParams->materialLawParamsZ_,
                 prevHysteresisState_.dirGasOilStatesZ,
                 prevHysteresisState_.dirOilWaterStatesZ,
-                prevHysteresisState_.dirGasWaterStatesZ);
+                prevHysteresisState_.dirGasWaterStatesZ,
+                is3p);
         }
     }
 
@@ -469,27 +484,27 @@ private:
             goVec.resize(n);
             owVec.resize(n);
             gwVec.clear();
-        } else if (threePhaseApproach_ == EclMultiplexerApproach::TwoPhase) {
-            if (twoPhaseApproach_ == EclTwoPhaseApproach::GasOil) {
-                goVec.resize(n);
-                owVec.clear();
-                gwVec.clear();
-            } else if (twoPhaseApproach_ == EclTwoPhaseApproach::OilWater) {
-                goVec.clear();
-                owVec.resize(n);
-                gwVec.clear();
-            } else if (twoPhaseApproach_ == EclTwoPhaseApproach::GasWater) {
-                goVec.clear();
-                owVec.clear();
-                gwVec.resize(n);
+
+            for (std::size_t i = 0; i < n; ++i) {
+                MaterialLaw::captureHysteresisStateThreePhase(
+                    paramsVec[i],
+                    goVec[i],
+                    owVec[i]);
             }
-        }
-        for (std::size_t i = 0; i < n; ++i) {
-            MaterialLaw::captureHysteresisState(
-                paramsVec[i],
-                !goVec.empty() ? &goVec[i] : nullptr,
-                !owVec.empty() ? &owVec[i] : nullptr,
-                !gwVec.empty() ? &gwVec[i] : nullptr);
+        } else if (threePhaseApproach_ == EclMultiplexerApproach::TwoPhase) {
+            auto& targetVec = (twoPhaseApproach_ == EclTwoPhaseApproach::GasOil)   ? goVec :
+                              (twoPhaseApproach_ == EclTwoPhaseApproach::OilWater) ? owVec :
+                                                                                     gwVec;
+            goVec.clear();
+            owVec.clear();
+            gwVec.clear();
+            targetVec.resize(n);
+
+            for (std::size_t i = 0; i < n; ++i) {
+                MaterialLaw::captureHysteresisStateTwoPhase(
+                    paramsVec[i],
+                    targetVec[i]);
+            }
         }
     }
 
@@ -497,15 +512,26 @@ private:
         std::vector<MaterialLawParams>& paramsVec,
         const std::vector<EclHysteresisDynamicState<Scalar>>& goVec,
         const std::vector<EclHysteresisDynamicState<Scalar>>& owVec,
-        const std::vector<EclHysteresisDynamicState<Scalar>>& gwVec)
+        const std::vector<EclHysteresisDynamicState<Scalar>>& gwVec,
+        bool is3p)
     {
         const std::size_t n = paramsVec.size();
-        for (std::size_t i = 0; i < n; ++i) {
-            MaterialLaw::restoreHysteresisState(
-                paramsVec[i],
-                !goVec.empty() ? &goVec[i] : nullptr,
-                !owVec.empty() ? &owVec[i] : nullptr,
-                !gwVec.empty() ? &gwVec[i] : nullptr);
+        if (is3p) {
+            for (std::size_t i = 0; i < n; ++i) {
+                MaterialLaw::restoreHysteresisStateThreePhase(
+                    paramsVec[i],
+                    goVec[i],
+                    owVec[i]);
+            }
+        } else if (threePhaseApproach_ == EclMultiplexerApproach::TwoPhase) {
+            const auto& sourceVec = (twoPhaseApproach_ == EclTwoPhaseApproach::GasOil)   ? goVec :
+                                    (twoPhaseApproach_ == EclTwoPhaseApproach::OilWater) ? owVec :
+                                                                                           gwVec;
+            for (std::size_t i = 0; i < n; ++i) {
+                MaterialLaw::restoreHysteresisStateTwoPhase(
+                    paramsVec[i],
+                    sourceVec[i]);
+            }
         }
     }
 

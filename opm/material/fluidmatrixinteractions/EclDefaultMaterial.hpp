@@ -483,21 +483,21 @@ public:
         }
     }
 
-    template <class StateT>
-    static void captureHysteresisState(const Params& params, StateT* gasOilState, StateT* oilWaterState)
+    template <class GasOilStateT, class OilWaterStateT>
+    static void captureHysteresisState(const Params& params, GasOilStateT& gasOilState, OilWaterStateT& oilWaterState)
     {
         if constexpr (Traits::enableHysteresis) {
-            if (gasOilState) *gasOilState = params.gasOilParams().captureState();
-            if (oilWaterState) *oilWaterState = params.oilWaterParams().captureState();
+            gasOilState = params.gasOilParams().captureState();
+            oilWaterState = params.oilWaterParams().captureState();
         }
     }
 
-    template <class StateT>
-    static void restoreHysteresisState(Params& params, const StateT* gasOilState, const StateT* oilWaterState)
+    template <class GasOilStateT, class OilWaterStateT>
+    static void restoreHysteresisState(Params& params, const GasOilStateT& gasOilState, const OilWaterStateT& oilWaterState)
     {
         if constexpr (Traits::enableHysteresis) {
-            if (gasOilState) params.gasOilParams().restoreState(*gasOilState);
-            if (oilWaterState) params.oilWaterParams().restoreState(*oilWaterState);
+            params.gasOilParams().restoreState(gasOilState);
+            params.oilWaterParams().restoreState(oilWaterState);
         }
     }
 

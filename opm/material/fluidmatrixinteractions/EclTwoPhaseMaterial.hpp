@@ -483,42 +483,36 @@ public:
     }
 
     template <class StateT>
-    static void captureHysteresisState(const Params& params,
-                                       StateT* gasOilState,
-                                       StateT* oilWaterState,
-                                       StateT* gasWaterState)
+    static void captureHysteresisState(const Params& params, StateT& twoPhaseState)
     {
         if constexpr (Traits::enableHysteresis) {
             switch (params.approach()) {
             case EclTwoPhaseApproach::GasOil:
-                if (gasOilState) *gasOilState = params.gasOilParams().captureState();
+                twoPhaseState = params.gasOilParams().captureState();
                 break;
             case EclTwoPhaseApproach::OilWater:
-                if (oilWaterState) *oilWaterState = params.oilWaterParams().captureState();
+                twoPhaseState = params.oilWaterParams().captureState();
                 break;
             case EclTwoPhaseApproach::GasWater:
-                if (gasWaterState) *gasWaterState = params.gasWaterParams().captureState();
+                twoPhaseState = params.gasWaterParams().captureState();
                 break;
             }
         }
     }
 
     template <class StateT>
-    static void restoreHysteresisState(Params& params,
-                                       const StateT* gasOilState,
-                                       const StateT* oilWaterState,
-                                       const StateT* gasWaterState)
+    static void restoreHysteresisState(Params& params, const StateT& twoPhaseState)
     {
         if constexpr (Traits::enableHysteresis) {
             switch (params.approach()) {
             case EclTwoPhaseApproach::GasOil:
-                if (gasOilState) params.gasOilParams().restoreState(*gasOilState);
+                params.gasOilParams().restoreState(twoPhaseState);
                 break;
             case EclTwoPhaseApproach::OilWater:
-                if (oilWaterState) params.oilWaterParams().restoreState(*oilWaterState);
+                params.oilWaterParams().restoreState(twoPhaseState);
                 break;
             case EclTwoPhaseApproach::GasWater:
-                if (gasWaterState) params.gasWaterParams().restoreState(*gasWaterState);
+                params.gasWaterParams().restoreState(twoPhaseState);
                 break;
             }
         }
