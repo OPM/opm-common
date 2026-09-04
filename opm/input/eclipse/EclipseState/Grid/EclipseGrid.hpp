@@ -20,6 +20,7 @@
 #ifndef OPM_PARSER_ECLIPSE_GRID_HPP
 #define OPM_PARSER_ECLIPSE_GRID_HPP
 
+#include <opm/input/eclipse/EclipseState/Aquifer/NumericalAquiferMode.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/GridDims.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/MapAxes.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/MinpvMode.hpp>
@@ -86,7 +87,17 @@ namespace Opm {
 
         /// EclipseGrid ignores ACTNUM in Deck, and therefore needs ACTNUM
         /// explicitly.  If a null pointer is passed, every cell is active.
-        explicit EclipseGrid(const Deck& deck, const int * actnum = nullptr);
+        /// Construct from a deck.
+        ///
+        /// \param[in] aquiferMode How numerical aquifers are represented.  In the
+        ///    default \c GridCells mode an AQUNUM cell takes over the grid cell it names:
+        ///    the cell is forced active and reports the authored depth.  In
+        ///    \c AuxiliaryCells mode that cell is deactivated instead, so that nothing
+        ///    occupies the space the deck reserved for the aquifer, and the aquifer
+        ///    itself is represented outside the grid.
+        explicit EclipseGrid(const Deck& deck,
+                             const int * actnum = nullptr,
+                             NumericalAquiferMode aquiferMode = NumericalAquiferMode::GridCells);
 
         static bool hasGDFILE(const Deck& deck);
         static bool hasRadialKeywords(const Deck& deck);
@@ -381,6 +392,7 @@ namespace Opm {
         std::vector<int> m_active_to_global;
         std::vector<int> m_global_to_active;
         // Numerical aquifer cells, needs to be active
+        NumericalAquiferMode m_numerical_aquifer_mode{NumericalAquiferMode::GridCells};
         std::unordered_set<std::size_t> m_aquifer_cells;
         // Keep track of aquifer cell depths and (pvtnum,satnum)
         std::map<std::size_t, double> m_aquifer_cell_depths;

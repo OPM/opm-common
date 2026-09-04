@@ -822,9 +822,18 @@ namespace {
                                 ::Opm::EclIO::OutputStream::Init&  initFile)
     {
         std::vector<int> aquifern(grid.getNumActive(), 0);
-        // aquifer cells
+
+        // Aquifer cells.  AQUIFERN is an active-cell array, so it can only name an
+        // aquifer cell that is one -- which it is when the aquifer takes a grid cell
+        // over, and deliberately is not when the aquifer is represented outside the
+        // grid.  In the latter case only the connections below are recorded; the
+        // aquifer cells themselves have no place in a per-grid-cell array.
         const auto& aquifer_cells = num_aquifers.allAquiferCells();
         for ([[maybe_unused]] const auto& [cell_idx, cell] : aquifer_cells) {
+            if (!grid.cellActive(cell->global_index)) {
+                continue;
+            }
+
             const std::size_t active_index = grid.activeIndex(cell->global_index);
             aquifern[active_index] = -(1 << (cell->aquifer_id - 1));
         }
