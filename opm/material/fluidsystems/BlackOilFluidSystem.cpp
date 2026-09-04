@@ -40,6 +40,20 @@ template <class Scalar, class IndexTraits, template<typename> typename Storage>
 void BlackOilFluidSystem<Scalar,IndexTraits, Storage>::
 initFromState(const EclipseState& eclState, const Schedule& schedule)
 {
+    // COMPS selects compositional mode, which this fluid system cannot
+    // represent. CO2STORE and H2STORE keep COMPS but stay black-oil, and
+    // compositional() already excludes them. Fail here rather than further
+    // down on the missing black-oil PVT tables, where the cause is no
+    // longer obvious.
+    if (eclState.runspec().compositional()) {
+        OPM_THROW(std::runtime_error,
+                  fmt::format("The deck specifies COMPS with {} components, selecting "
+                              "compositional mode, which the black-oil fluid system "
+                              "cannot represent. Run this deck with a compositional "
+                              "simulator.",
+                              eclState.runspec().numComps()));
+    }
+
     if (eclState.getSimulationConfig().useEnthalpy()) {
         enthalpy_eq_energy_ = false;
     } else {

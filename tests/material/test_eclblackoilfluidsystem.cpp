@@ -40,14 +40,16 @@
 
 #include <opm/material/common/Valgrind.hpp>
 
-#include <opm/input/eclipse/Parser/Parser.hpp>
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/input/eclipse/Parser/Parser.hpp>
 #include <opm/input/eclipse/Python/Python.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 
-#include <type_traits>
 #include <cmath>
+#include <stdexcept>
+#include <string>
+#include <type_traits>
 
 // values of strings based on the SPE1 and NORNE cases of opm-data.
 static constexpr const char* deckString1 =
@@ -622,6 +624,84 @@ void checkSmall(const Opm::DenseAd::Evaluation<double, N>& x, const double tol)
     BOOST_CHECK_SMALL(x.value(), tol);
     for (int ii = 0; ii < N; ++ii) {
         BOOST_CHECK_SMALL(x.derivative(ii), tol);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(RejectCompositionalDeck)
+{
+    const auto deck = Opm::Parser {}.parseString(R"(
+RUNSPEC
+DIMENS
+  1 1 1 /
+OIL
+GAS
+COMPS
+  3 /
+GRID
+DXV
+  1 /
+DYV
+  1 /
+DZV
+  1 /
+TOPS
+  1 /
+END
+)");
+
+    const auto python = std::make_shared<Opm::Python>();
+    const Opm::EclipseState eclState {deck};
+    const Opm::Schedule schedule {deck, eclState, python};
+    using FluidSystem = Opm::BlackOilFluidSystem<double>;
+
+    BOOST_CHECK_EXCEPTION(FluidSystem::initFromState(eclState, schedule),
+                          std::runtime_error,
+                          [](const std::runtime_error& error) {
+                              const std::string message {error.what()};
+                              return message.find("COMPS with 3 components") != std::string::npos
+                                  && message.find("compositional simulator")
+                                  != std::string::npos;
+                          });
+}
+
+BOOST_AUTO_TEST_CASE(AcceptCo2StoreDeckWithComps)
+{
+    // CO2STORE keeps COMPS but runs in a black-oil setting, so the guard above
+    // must not reject it.
+    const auto deck = Opm::Parser {}.parseString(R"(
+RUNSPEC
+DIMENS
+  1 1 1 /
+OIL
+GAS
+CO2STORE
+COMPS
+  3 /
+GRID
+DXV
+  1 /
+DYV
+  1 /
+DZV
+  1 /
+TOPS
+  1 /
+END
+)");
+
+    const auto python = std::make_shared<Opm::Python>();
+    const Opm::EclipseState eclState {deck};
+    const Opm::Schedule schedule {deck, eclState, python};
+    using FluidSystem = Opm::BlackOilFluidSystem<double>;
+
+    BOOST_CHECK(eclState.runspec().compositionalMode());
+
+    // The deck is too small to initialise, so only require that whatever goes
+    // wrong is not the compositional guard.
+    try {
+        FluidSystem::initFromState(eclState, schedule);
+    } catch (const std::exception& error) {
+        BOOST_CHECK(std::string {error.what()}.find("compositional simulator") == std::string::npos);
     }
 }
 
