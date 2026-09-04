@@ -68,11 +68,47 @@
 #include <utility>
 #include <vector>
 
+#include "tests/WorkArea.hpp"
+
+#include <fmt/format.h>
+
 namespace fs = std::filesystem;
 
 using namespace Opm;
 
 namespace {
+
+void write_file(const fs::path& file, const std::string& contents)
+{
+    if (const auto& dir = file.parent_path(); !dir.empty()) {
+        fs::create_directories(dir);
+    }
+
+    std::ofstream {file} << contents;
+}
+
+std::string read_file(const fs::path& file)
+{
+    BOOST_REQUIRE_MESSAGE(fs::exists(file), "Missing file " << file.generic_string());
+
+    std::ifstream stream {file};
+
+    return { std::istreambuf_iterator<char> {stream},
+             std::istreambuf_iterator<char> {} };
+}
+
+std::string vfpprod(const int table)
+{
+    return fmt::format(R"(VFPPROD
+ {} 2000.0 'LIQ' 'WCT' 'GOR' 'THP' ' ' 'METRIC' 'BHP' /
+ 100.0 /
+ 10.0 /
+ 0.0 /
+ 0.0 /
+ 0.0 /
+ 1 1 1 1 200.0 /
+)", table);
+}
 
 void compare_connections(const RestartIO::RstConnection& rst_conn,
                          const Connection& sched_conn)
@@ -339,6 +375,80 @@ BOOST_AUTO_TEST_CASE(TestFileDeck)
     const auto& index7 = fd.find("SOLUTION");
 
     fd.erase(index6.value(), index7.value());
+}
+
+BOOST_AUTO_TEST_CASE(FileDeckCopyIncludeOnlyFiles)
+{
+    WorkArea work_area {"file_deck_copy"};
+
+    // The deck includes a file which holds INCLUDE statements only, e.g. a
+    // wrapper collecting the lift curve files of a model.  That wrapper
+    // includes one file with keywords, and a second wrapper which in turn
+    // includes another file with keywords.
+    write_file("CASE.DATA", R"(RUNSPEC
+DIMENS
+  2 2 2 /
+OIL
+WATER
+GAS
+METRIC
+START
+  1 'JAN' 2000 /
+GRID
+DX
+  8*100.0 /
+DY
+  8*100.0 /
+DZ
+  8*10.0 /
+TOPS
+  4*2000.0 /
+PORO
+  8*0.2 /
+PERMX
+  8*100.0 /
+SCHEDULE
+INCLUDE
+  'include/lift_curves.inc' /
+END
+)");
+
+    write_file("include/lift_curves.inc", R"(INCLUDE
+  'include/vfp_curve_1.ecl' /
+INCLUDE
+  'include/more_curves.inc' /
+)");
+
+    write_file("include/more_curves.inc", R"(INCLUDE
+  'include/vfp_curve_2.ecl' /
+)");
+
+    write_file("include/vfp_curve_1.ecl", vfpprod(1));
+    write_file("include/vfp_curve_2.ecl", vfpprod(2));
+
+    const auto deck = Parser{}.parseFile("CASE.DATA");
+    FileDeck fd(deck);
+
+    fd.dump("out", "CASE.DATA", FileDeck::OutputMode::COPY);
+
+    // The main deck must include the wrapper, not the files below it.
+    const auto main_deck = read_file("out/CASE.DATA");
+    BOOST_CHECK(main_deck.find("include/lift_curves.inc") != std::string::npos);
+    BOOST_CHECK(main_deck.find("vfp_curve") == std::string::npos);
+    BOOST_CHECK(main_deck.find("more_curves") == std::string::npos);
+
+    // The wrappers must be recreated with their own include statements.
+    const auto wrapper = read_file("out/include/lift_curves.inc");
+    BOOST_CHECK(wrapper.find("include/vfp_curve_1.ecl") != std::string::npos);
+    BOOST_CHECK(wrapper.find("include/more_curves.inc") != std::string::npos);
+
+    const auto nested_wrapper = read_file("out/include/more_curves.inc");
+    BOOST_CHECK(nested_wrapper.find("include/vfp_curve_2.ecl") != std::string::npos);
+
+    // Reloading the dumped deck must give the same keywords back.
+    const auto out_deck = Parser{}.parseFile("out/CASE.DATA");
+    BOOST_CHECK_EQUAL(out_deck.count("VFPPROD"), 2);
+    BOOST_CHECK_EQUAL(out_deck.size(), deck.size());
 }
 
 BOOST_AUTO_TEST_CASE(RestartTest2)
