@@ -264,6 +264,7 @@ list(APPEND MAIN_SOURCE_FILES
   opm/input/eclipse/Schedule/Network/Branch.cpp
   opm/input/eclipse/Schedule/Network/ExtNetwork.cpp
   opm/input/eclipse/Schedule/Network/NetworkKeywordHandlers.cpp
+  opm/input/eclipse/Schedule/Network/NetworkValidation.cpp
   opm/input/eclipse/Schedule/Network/Node.cpp
   opm/input/eclipse/Schedule/ResCoup/ReservoirCouplingInfo.cpp
   opm/input/eclipse/Schedule/ResCoup/ReservoirCouplingKeywordHandlers.cpp
@@ -1644,6 +1645,7 @@ list(APPEND PRIVATE_HEADER_FILES
   external/resinsight/cafPdmCore/cafAssert.h
   external/resinsight/cafPdmCore/cafSignal.h
   opm/input/eclipse/Schedule/HandlerContext.hpp
+  opm/input/eclipse/Schedule/Network/NetworkValidation.hpp
   opm/input/eclipse/Schedule/Well/WellTrajInfo.hpp
   opm/input/eclipse/Schedule/WellTraj/RigEclipseWellLogExtractor.hpp
 )
