@@ -612,6 +612,8 @@ public:
     bool handleWINJCLN(const DeckRecord& record, const KeywordLocation& location);
     bool handleWINJDAM(const DeckRecord& record, const KeywordLocation& location);
     bool handleWINJMULT(const DeckRecord& record, const KeywordLocation& location);
+    void updateWINJMULTUDA(const UDQConfig& udq_config, UDQActive& udq_active, const UDAValue& value);
+    bool updateUDQActive(const UDQConfig& udq_config, UDQActive& active) const;
     void setFilterConc(const UDAValue& conc);
     double evalFilterConc(const SummaryState& summary_sate) const;
     bool applyGlobalWPIMULT(double scale_factor);

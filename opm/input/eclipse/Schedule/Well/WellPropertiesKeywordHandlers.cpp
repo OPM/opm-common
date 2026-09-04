@@ -22,6 +22,7 @@
 #include <opm/common/utility/OpmInputError.hpp>
 
 #include <opm/input/eclipse/Schedule/ScheduleState.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQActive.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQConfig.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
@@ -367,6 +368,24 @@ void handleWINJMULT(HandlerContext& handlerContext)
                 handlerContext.state().wells.update(std::move(well));
             }
         }
+    }
+
+    // Update UDQActive for WINJMULT fracture pressure
+    auto udq_active = handlerContext.state().udq_active.get();
+    bool udq_updated = false;
+    for (const auto& record : handlerContext.keyword) {
+        const std::string& wellNamePattern = record.getItem("WELL_NAME").getTrimmedString(0);
+        const auto well_names = handlerContext.wellNames(wellNamePattern, true);
+
+        for (const auto& well_name : well_names) {
+            const auto& well = handlerContext.state().wells.get(well_name);
+            if (well.updateUDQActive(handlerContext.state().udq.get(), udq_active)) {
+                udq_updated = true;
+            }
+        }
+    }
+    if (udq_updated) {
+        handlerContext.state().udq_active.update(std::move(udq_active));
     }
 }
 
