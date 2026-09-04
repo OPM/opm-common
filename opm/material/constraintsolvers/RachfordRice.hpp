@@ -38,9 +38,13 @@
 
 #include <fmt/format.h>
 
+#include <algorithm>
+#include <cstddef>
+#include <limits>
 #include <stdexcept>
 
-namespace Opm {
+namespace Opm
+{
 
 /*!
  * \brief The Rachford-Rice equation and the solvers for it.
@@ -49,17 +53,61 @@ namespace Opm {
  * composition alone, so nothing here needs a fluid system: the number of
  * components is the length of the vectors handed in.
  */
-struct RachfordRice
+class RachfordRice
 {
+private:
+    template <class Vector>
+    static void validateInputs(const Vector& K, const Vector& z)
+    {
+        if (K.size() == 0) {
+            OPM_THROW(std::invalid_argument, "Rachford-Rice requires at least one component");
+        }
+
+        if (K.size() != z.size()) {
+            OPM_THROW(std::invalid_argument,
+                      fmt::format("Rachford-Rice received {} equilibrium ratios and {} "
+                                  "overall mole fractions",
+                                  K.size(),
+                                  z.size()));
+        }
+
+        typename Vector::field_type compositionTotal = 0;
+        for (std::size_t compIdx = 0; compIdx < K.size(); ++compIdx) {
+            if (!isfinite(z[compIdx]) || z[compIdx] < 0) {
+                OPM_THROW(std::invalid_argument,
+                          fmt::format("Rachford-Rice received an invalid mole fraction at "
+                                      "component {}",
+                                      compIdx));
+            }
+            compositionTotal += z[compIdx];
+            if (z[compIdx] == 0) {
+                continue;
+            }
+            if (!isfinite(K[compIdx]) || K[compIdx] < 0) {
+                OPM_THROW(std::invalid_argument,
+                          fmt::format("Rachford-Rice received an invalid equilibrium ratio at "
+                                      "component {}",
+                                      compIdx));
+            }
+        }
+
+        if (!isfinite(compositionTotal) || compositionTotal <= 0) {
+            OPM_THROW(std::invalid_argument,
+                      "Rachford-Rice requires a finite, positive composition total");
+        }
+    }
+
     //! \brief The Rachford-Rice residual at a given liquid fraction.
     template <class Vector>
-    static typename Vector::field_type g(const Vector& K,
-                                         typename Vector::field_type L,
-                                         const Vector& z)
+    static typename Vector::field_type
+    g(const Vector& K, typename Vector::field_type L, const Vector& z)
     {
         typename Vector::field_type value = 0;
         for (std::size_t compIdx = 0; compIdx < K.size(); ++compIdx) {
-            value += (z[compIdx]*(K[compIdx]-1))/(K[compIdx]-L*(K[compIdx]-1));
+            if (z[compIdx] == 0) {
+                continue;
+            }
+            value += (z[compIdx] * (K[compIdx] - 1)) / (K[compIdx] - L * (K[compIdx] - 1));
         }
         return value;
     }
@@ -80,35 +128,40 @@ struct RachfordRice
             OpmLog::debug(fmt::format("{:>10}{:>16}{:>16}", "Iteration", "g(Lmid)", "L"));
         }
 
+        using field_type = typename Vector::field_type;
         constexpr int max_it = 10000;
-
-        auto closeLmaxLmin = [](double max_v, double min_v) {
-            return Opm::abs(max_v - min_v) / 2. < 1e-10;
-            // what if max_v < min_v?
+        const field_type precision = 10 * std::numeric_limits<field_type>::epsilon();
+        const field_type intervalTolerance = std::max(static_cast<field_type>(1e-10), precision);
+        const field_type residualTolerance = std::max(static_cast<field_type>(1e-16), precision);
+        const auto closeLmaxLmin = [intervalTolerance](field_type max_v, field_type min_v) {
+            return abs(max_v - min_v) / 2 <= intervalTolerance;
         };
 
         // Bisection loop
-        if (closeLmaxLmin(Lmax, Lmin) ){
-            OPM_THROW(std::runtime_error, fmt::format("Strange bisection with Lmax {} and Lmin {}?", Lmax, Lmin));
+        if (closeLmaxLmin(Lmax, Lmin)) {
+            OPM_THROW(std::runtime_error,
+                      fmt::format("Strange bisection with Lmax {} and Lmin {}?", Lmax, Lmin));
         }
-        for (int iteration = 0; iteration < max_it; ++iteration){
+        for (int iteration = 0; iteration < max_it; ++iteration) {
             // New midpoint
             auto L = (Lmin + Lmax) / 2;
+            if (L == Lmin || L == Lmax) {
+                return L;
+            }
             auto gMid = g(K, L, z);
             if (verbosity == 3 || verbosity == 4) {
                 OpmLog::debug(fmt::format("{:>10}{:>16}{:>16}", iteration, gMid, L));
             }
 
             // Check if midpoint fulfills g=0 or L - Lmin is sufficiently small
-            if (Opm::abs(gMid) < 1e-16 || closeLmaxLmin(Lmax, Lmin)){
+            if (abs(gMid) <= residualTolerance || closeLmaxLmin(Lmax, Lmin)) {
                 return L;
             }
-            // Else we repeat with midpoint being either Lmin og Lmax (depending on the signs).
+            // Else we repeat with midpoint being either Lmin or Lmax (depending on the signs).
             else if (Dune::sign(gMid) != Dune::sign(gLmin)) {
                 // gMid has different sign as gLmin, so we set L as the new Lmax
                 Lmax = L;
-            }
-            else {
+            } else {
                 // gMid and gLmin have same sign so we set L as the new Lmin
                 Lmin = L;
                 gLmin = gMid;
@@ -118,37 +171,64 @@ struct RachfordRice
                   fmt::format(" Rachford-Rice bisection failed with {} iterations!", max_it));
     }
 
+public:
     /*!
      * \brief The liquid fraction the equilibrium ratios and composition imply.
      *
-     * Newton-Raphson, falling back to bisection when a step leaves the bracket
-     * the extreme equilibrium ratios define.
+     * Single-phase states return an endpoint. Two-phase states use Newton,
+     * with bisection fallback when Newton leaves the bracket.
+     *
+     * \throws std::invalid_argument for invalid input or an indeterminate split.
+     * \throws std::runtime_error on non-convergence.
      */
     template <class Vector>
-    static typename Vector::field_type solve(const Vector& K, const Vector& z, int verbosity)
+    static typename Vector::field_type solve(const Vector& K, const Vector& z, int verbosity = 0)
     {
-        // Find min and max K. Have to do a laborious for loop to avoid water component (where K=0)
-        // TODO: Replace loop with Dune::min_value() and Dune::max_value() when water component is properly handled
+        validateInputs(K, z);
+
+        // Find the extreme K-values among active components.
         using field_type = typename Vector::field_type;
-        constexpr field_type tol = 1e-12;
         constexpr int itmax = 10000;
-        field_type Kmin = K[0];
-        field_type Kmax = K[0];
-        for (std::size_t compIdx = 1; compIdx < K.size(); ++compIdx) {
-            if (K[compIdx] < Kmin)
+        const field_type tol = std::max(static_cast<field_type>(1e-12),
+                                        10 * std::numeric_limits<field_type>::epsilon());
+        field_type Kmin = std::numeric_limits<field_type>::max();
+        field_type Kmax = std::numeric_limits<field_type>::lowest();
+        for (std::size_t compIdx = 0; compIdx < K.size(); ++compIdx) {
+            if (z[compIdx] == 0) {
+                continue;
+            }
+            if (K[compIdx] < Kmin) {
                 Kmin = K[compIdx];
-            else if (K[compIdx] >= Kmax)
+            }
+            if (K[compIdx] > Kmax) {
                 Kmax = K[compIdx];
+            }
         }
+
+        if (Kmin == 1 && Kmax == 1) {
+            OPM_THROW(std::invalid_argument,
+                      "Rachford-Rice cannot determine the phase split when all equilibrium "
+                      "ratios are one");
+        }
+
+        // A two-phase root exists only when g(0) < 0 < g(1).
+        // Otherwise the physical solution is a single-phase endpoint.
+        if (g(K, field_type {1}, z) <= 0) {
+            return field_type {1};
+        }
+        if (g(K, field_type {0}, z) >= 0) {
+            return field_type {0};
+        }
+
         // Lower and upper bound for solution
         auto Vmin = 1 / (1 - Kmax);
         auto Vmax = 1 / (1 - Kmin);
         // Initial guess
-        auto V = (Vmin + Vmax)/2;
+        auto V = (Vmin + Vmax) / 2;
         // Print initial guess and header
         if (verbosity == 3 || verbosity == 4) {
-            OpmLog::debug(fmt::format("Initial guess {}c : V = {} and [Vmin, Vmax] = [{}, {}]",
-                                     K.size(), V, Vmin, Vmax));
+            OpmLog::debug(fmt::format(
+                "Initial guess {}c : V = {} and [Vmin, Vmax] = [{}, {}]", K.size(), V, Vmin, Vmax));
             OpmLog::debug(fmt::format("{:>10}{:>16}{:>16}", "Iteration", "abs(step)", "V"));
         }
         // Newton-Raphson loop
@@ -157,59 +237,60 @@ struct RachfordRice
             field_type denum = 0.0;
             field_type r = 0.0;
             for (std::size_t compIdx = 0; compIdx < K.size(); ++compIdx) {
+                if (z[compIdx] == 0) {
+                    continue;
+                }
                 auto dK = K[compIdx] - 1.0;
                 auto a = z[compIdx] * dK;
                 auto b = (1 + V * dK);
-                r += a/b;
-                denum += z[compIdx] * (dK*dK) / (b*b);
+                r += a / b;
+                denum += z[compIdx] * (dK * dK) / (b * b);
             }
             auto delta = r / denum;
             V += delta;
 
             // Check if V is within the bounds, and if not, we apply bisection method
-            if (V < Vmin || V > Vmax)
-                {
-                    // Print info
-                    if (verbosity == 3 || verbosity == 4) {
-                        OpmLog::debug(fmt::format("V = {} is not within the range [Vmin, Vmax], solve using Bisection method!", V));
-                    }
-
-                    // Run bisection
-                    // TODO: This is required for some cases. Not clear why
-                    // since the objective function should be monotone with a
-                    // single zero between the Lmin/Lmax interval defined by
-                    // K-values.
-                    decltype(Vmax) Lmin = 1.0;
-                    decltype(Vmin) Lmax = 0.0;
-                    auto L = bisection(K, Lmin, Lmax, z, verbosity);
-
-                    // Print final result
-                    if (verbosity >= 1) {
-                        OpmLog::debug(fmt::format("Rachford-Rice (Bisection) converged to final solution L = {}", L));
-                    }
-                    return L;
+            if (V < Vmin || V > Vmax) {
+                // Print info
+                if (verbosity == 3 || verbosity == 4) {
+                    OpmLog::debug(fmt::format("V = {} is not within the range [Vmin, Vmax], solve "
+                                              "using Bisection method!",
+                                              V));
                 }
 
-            // Print iteration info
-            if (verbosity == 3 || verbosity == 4) {
-                OpmLog::debug(fmt::format("{:>10}{:>16}{:>16}", iteration, Opm::abs(delta), V));
-            }
-
-            // Check for convergence
-            if ( Opm::abs(r) < tol ) {
-                auto L = 1 - V;
-                // Should we make sure the range of L is within (0, 1)?
+                field_type Lmin = 0;
+                field_type Lmax = 1;
+                auto L = bisection(K, Lmin, Lmax, z, verbosity);
 
                 // Print final result
                 if (verbosity >= 1) {
-                    OpmLog::debug(fmt::format("Rachford-Rice converged to final solution L = {}", L));
+                    OpmLog::debug(fmt::format(
+                        "Rachford-Rice (Bisection) converged to final solution L = {}", L));
+                }
+                return L;
+            }
+
+            // Print iteration info
+            if (verbosity == 3 || verbosity == 4) {
+                OpmLog::debug(fmt::format("{:>10}{:>16}{:>16}", iteration, abs(delta), V));
+            }
+
+            // Check for convergence
+            if (abs(r) < tol) {
+                auto L = 1 - V;
+
+                // Print final result
+                if (verbosity >= 1) {
+                    OpmLog::debug(
+                        fmt::format("Rachford-Rice converged to final solution L = {}", L));
                 }
                 return L;
             }
         }
 
         // Throw error if Rachford-Rice fails
-        OPM_THROW(std::runtime_error, " Rachford-Rice did not converge within maximum number of iterations");
+        OPM_THROW(std::runtime_error,
+                  " Rachford-Rice did not converge within maximum number of iterations");
     }
 };
 

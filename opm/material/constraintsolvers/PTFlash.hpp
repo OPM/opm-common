@@ -26,36 +26,34 @@
  * \file
  * \copydoc Opm::PTFlash
  */
-#ifndef OPM_CHI_FLASH_HPP
-#define OPM_CHI_FLASH_HPP
-
-#include <opm/material/constraintsolvers/RachfordRice.hpp>
-#include <opm/material/fluidmatrixinteractions/NullMaterial.hpp>
-#include <opm/material/fluidmatrixinteractions/MaterialTraits.hpp>
-#include <opm/material/fluidstates/CompositionalFluidState.hpp>
-#include <opm/material/densead/Evaluation.hpp>
-#include <opm/material/densead/Math.hpp>
-#include <opm/material/common/MathToolbox.hpp>
-#include <opm/material/common/Valgrind.hpp>
-#include <opm/material/Constants.hpp>
-#include <opm/material/eos/CubicEOS.hpp>
-
-#include <opm/input/eclipse/EclipseState/Compositional/CompositionalConfig.hpp>
+#ifndef OPM_PT_FLASH_HPP
+#define OPM_PT_FLASH_HPP
 
 #include <opm/common/ErrorMacros.hpp>
 #include <opm/common/OpmLog/OpmLog.hpp>
+#include <opm/input/eclipse/EclipseState/Compositional/CompositionalConfig.hpp>
+#include <opm/material/Constants.hpp>
+#include <opm/material/common/MathToolbox.hpp>
+#include <opm/material/common/Valgrind.hpp>
+#include <opm/material/constraintsolvers/RachfordRice.hpp>
+#include <opm/material/densead/Evaluation.hpp>
+#include <opm/material/densead/Math.hpp>
+#include <opm/material/eos/CubicEOS.hpp>
+#include <opm/material/fluidmatrixinteractions/MaterialTraits.hpp>
+#include <opm/material/fluidmatrixinteractions/NullMaterial.hpp>
+#include <opm/material/fluidstates/CompositionalFluidState.hpp>
 
-#include <dune/common/fvector.hh>
-#include <dune/common/fmatrix.hh>
 #include <dune/common/classname.hh>
+#include <dune/common/fmatrix.hh>
+#include <dune/common/fvector.hh>
+
+#include <fmt/format.h>
+#include <fmt/ranges.h>
 
 #include <cstddef>
 #include <limits>
 #include <stdexcept>
 #include <type_traits>
-
-#include <fmt/format.h>
-#include <fmt/ranges.h>
 
 namespace Opm {
 
@@ -1057,7 +1055,15 @@ protected:
                 }
 
                 // Solve Rachford-Rice to get L from updated K
-                L = RachfordRice::solve(K, z, 0);
+                try {
+                    L = RachfordRice::solve(K, z, 0);
+                } catch (const std::invalid_argument& error) {
+                    if (verbosity >= 1) {
+                        OpmLog::debug(
+                            fmt::format("Rachford-Rice rejected an SSI iterate: {}", error.what()));
+                    }
+                    break;
+                }
             }
         }
         // did not get converged. check whether we will do more newton later afterward
@@ -1077,4 +1083,4 @@ protected:
 
 } // namespace Opm
 
-#endif
+#endif // OPM_PT_FLASH_HPP
