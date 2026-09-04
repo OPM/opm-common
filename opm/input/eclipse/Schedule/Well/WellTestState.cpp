@@ -120,6 +120,15 @@ namespace Opm {
     }
 
 
+    WellTestConfig::Reason WellTestState::well_close_reason(const std::string& well_name) const {
+        auto iter = this->wells.find(well_name);
+        if (iter == this->wells.end() || !iter->second.closed)
+            return WellTestConfig::Reason::NONE;
+
+        return iter->second.reason;
+    }
+
+
     void WellTestState::filter_wells(const std::vector<std::string>& existing_wells) {
         std::unordered_set<std::string> well_set{ existing_wells.begin(), existing_wells.end() };
         for (auto& [wname, test_well] : this->wells) {
