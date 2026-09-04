@@ -83,7 +83,7 @@ public:
     std::optional<Index> find(const std::string& keyword, const Index& offset) const;
     std::optional<Index> find(const std::string& keyword) const;
     std::size_t count(const std::string& keyword) const;
-    void erase(const Index& index);
+    Index erase(const Index& index);
     void erase(const Index& begin, const Index& end);
     void insert(const Index& index, const DeckKeyword& keyword);
 
@@ -140,6 +140,12 @@ private:
     std::unordered_set<std::string> modified_files;
 
     DeckTree deck_tree;
+
+    // Position of the first keyword at or after (file_index, keyword_index).
+    // Skips blocks which have been emptied by erase() and returns stop() if
+    // there is no such keyword.
+    Index next_valid_index(std::size_t file_index,
+                           std::size_t keyword_index) const;
 
     void dump(std::ostream& os) const;
     void dump_shared(std::ostream& stream, const std::string& output_dir) const;
