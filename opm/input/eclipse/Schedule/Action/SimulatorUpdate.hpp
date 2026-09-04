@@ -44,6 +44,7 @@ struct SimulatorUpdate
         simulatorUpdate.well_structure_changed = true;
         simulatorUpdate.affected_wells = {"test"};
         simulatorUpdate.welpi_wells.insert("I-45");
+        simulatorUpdate.thp_respecified_wells.insert("P-3");
         simulatorUpdate.new_frac_wconns.assign({
                 std::pair { "I-45"s, std::vector { std::size_t{11}, std::size_t{22}, std::size_t{33} } },
                 std::pair { "RA-MAN"s, std::vector { std::size_t{1}, std::size_t{7}, std::size_t{29} } },
@@ -57,6 +58,7 @@ struct SimulatorUpdate
     {
         serializer(affected_wells);
         serializer(welpi_wells);
+        serializer(thp_respecified_wells);
         serializer(new_frac_wconns);
         serializer(tran_update);
         serializer(well_structure_changed);
@@ -69,6 +71,16 @@ struct SimulatorUpdate
     /// Wells affected only by WELPI for which the simulator needs to update
     /// its internal notion of the connection transmissibility factors.
     std::unordered_set<std::string> welpi_wells{};
+
+    /// Wells whose THP limit and/or VFP table have been (re)specified by
+    /// WCONPROD, WCONHIST, WCONINJE or WCONINJH for the named wells, by
+    /// WELTARG with THP or VFP control, or by WTMULT with THP control.
+    /// Producers and injectors alike are included. Unlike affected_wells,
+    /// this set also includes wells for which the entered values are
+    /// unchanged, since re-specifying either input cancels a THP limit
+    /// imposed dynamically by the simulator (e.g. by network balancing).
+    /// See also the WELL_THP_UPDATE schedule event.
+    std::unordered_set<std::string> thp_respecified_wells{};
 
     /// New well connections created as a result of a geomechanical
     /// fracturing process.
@@ -116,6 +128,9 @@ struct SimulatorUpdate
         this->welpi_wells.insert(otherSimUpdate.welpi_wells.begin(),
                                  otherSimUpdate.welpi_wells.end());
 
+        this->thp_respecified_wells.insert(otherSimUpdate.thp_respecified_wells.begin(),
+                                           otherSimUpdate.thp_respecified_wells.end());
+
         this->new_frac_wconns.insert(this->new_frac_wconns.end(),
                                      otherSimUpdate.new_frac_wconns.begin(),
                                      otherSimUpdate.new_frac_wconns.end());
@@ -128,6 +143,7 @@ struct SimulatorUpdate
         this->well_structure_changed = false;
         this->affected_wells.clear();
         this->welpi_wells.clear();
+        this->thp_respecified_wells.clear();
         this->new_frac_wconns.clear();
     }
 
@@ -137,6 +153,7 @@ struct SimulatorUpdate
             && (this->well_structure_changed == that.well_structure_changed)
             && (this->affected_wells == that.affected_wells)
             && (this->welpi_wells == that.welpi_wells)
+            && (this->thp_respecified_wells == that.thp_respecified_wells)
             && (this->new_frac_wconns == that.new_frac_wconns)
             ;
     }

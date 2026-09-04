@@ -132,8 +132,11 @@ void handleWCONHIST(HandlerContext& handlerContext)
             auto properties = std::make_shared<Well::WellProductionProperties>(well2.getProductionProperties());
             bool update_well = false;
 
-            auto table_nr = record.getItem("VFP_TABLE").get< int >(0);
-            if (record.getItem("VFP_TABLE").defaultApplied(0)) { // Default 1* use the privious set vfp table
+            const auto& vfp_table_item = record.getItem("VFP_TABLE");
+            const bool vfp_table_respecified = !vfp_table_item.defaultApplied(0);
+            auto table_nr = vfp_table_item.get<int>(0);
+            if (!vfp_table_respecified) {
+                // A defaulted item retains the previously selected VFP table.
                 table_nr = properties->VFPTableNumber;
             }
 
@@ -188,6 +191,12 @@ void handleWCONHIST(HandlerContext& handlerContext)
             if (well2.updateHasProduced()) {
                 update_well = true;
             }
+
+            // The VFP table (item 7) is re-specified by every WCONHIST,
+            // whether or not any value changed.
+            handlerContext.state().events().addEvent( ScheduleEvents::WELL_THP_UPDATE );
+            handlerContext.state().wellgroup_events().addEvent( well2.name(), ScheduleEvents::WELL_THP_UPDATE);
+            handlerContext.thp_respecified_well(well2.name());
 
             if (update_well) {
                 handlerContext.state().events().addEvent( ScheduleEvents::PRODUCTION_UPDATE );
@@ -262,6 +271,12 @@ void handleWCONINJE(HandlerContext& handlerContext)
                 update_well = true;
             }
 
+            // The THP limit and VFP table (items 8 and 9) are re-specified
+            // by every WCONINJE, whether or not any value changed.
+            handlerContext.state().events().addEvent( ScheduleEvents::WELL_THP_UPDATE );
+            handlerContext.state().wellgroup_events().addEvent( well_name, ScheduleEvents::WELL_THP_UPDATE);
+            handlerContext.thp_respecified_well(well_name);
+
             if (update_well) {
                 handlerContext.state().events().addEvent(ScheduleEvents::INJECTION_UPDATE);
                 handlerContext.state().wellgroup_events().addEvent( well_name, ScheduleEvents::INJECTION_UPDATE);
@@ -304,8 +319,11 @@ void handleWCONINJH(HandlerContext& handlerContext)
                                                                   6891.2);
             }
 
-            auto table_nr = record.getItem("VFP_TABLE").get< int >(0);
-            if (record.getItem("VFP_TABLE").defaultApplied(0)) { // Default 1* use the privious set vfp table
+            const auto& vfp_table_item = record.getItem("VFP_TABLE");
+            const bool vfp_table_respecified = !vfp_table_item.defaultApplied(0);
+            auto table_nr = vfp_table_item.get<int>(0);
+            if (!vfp_table_respecified) {
+                // A defaulted item retains the previously selected VFP table.
                 table_nr = injection->VFPTableNumber;
             }
             if (table_nr != 0) {
@@ -336,6 +354,12 @@ void handleWCONINJH(HandlerContext& handlerContext)
             if (well2.updateHasInjected()) {
                 update_well = true;
             }
+
+            // The VFP table (item 7) is re-specified by every WCONINJH,
+            // whether or not any value changed.
+            handlerContext.state().events().addEvent( ScheduleEvents::WELL_THP_UPDATE );
+            handlerContext.state().wellgroup_events().addEvent( well_name, ScheduleEvents::WELL_THP_UPDATE);
+            handlerContext.thp_respecified_well(well_name);
 
             if (update_well) {
                 handlerContext.state().events().addEvent( ScheduleEvents::INJECTION_UPDATE );
@@ -437,6 +461,12 @@ void handleWCONPROD(HandlerContext& handlerContext)
             if (well2.updateHasProduced()) {
                 update_well = true;
             }
+
+            // The THP limit and VFP table (items 10 and 11) are re-specified
+            // by every WCONPROD, whether or not any value changed.
+            handlerContext.state().events().addEvent( ScheduleEvents::WELL_THP_UPDATE );
+            handlerContext.state().wellgroup_events().addEvent( well2.name(), ScheduleEvents::WELL_THP_UPDATE);
+            handlerContext.thp_respecified_well(well2.name());
 
             if (update_well) {
                 handlerContext.state().events().addEvent( ScheduleEvents::PRODUCTION_UPDATE );
@@ -834,6 +864,14 @@ void handleWELTARG(HandlerContext& handlerContext)
                 if (inj->updateUDQActive(handlerContext.state().udq.get(), cmode, udq_active)) {
                     handlerContext.state().udq_active.update(std::move(udq_active));
                 }
+            }
+
+            // The THP limit or VFP table is re-specified, whether or not
+            // the value changed.
+            if (cmode == Well::WELTARGCMode::THP || cmode == Well::WELTARGCMode::VFP) {
+                handlerContext.state().events().addEvent( ScheduleEvents::WELL_THP_UPDATE );
+                handlerContext.state().wellgroup_events().addEvent( well_name, ScheduleEvents::WELL_THP_UPDATE);
+                handlerContext.thp_respecified_well(well_name);
             }
 
             if (update) {

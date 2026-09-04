@@ -643,6 +643,17 @@ void handleWTMULT(HandlerContext& handlerContext)
         for (const auto& well_name : well_names) {
             auto well = handlerContext.state().wells.get(well_name);
 
+            // The THP limit is re-specified (multiplied).
+            if (cmode == Well::WELTARGCMode::THP) {
+                handlerContext.state().events()
+                    .addEvent(ScheduleEvents::WELL_THP_UPDATE);
+
+                handlerContext.state().wellgroup_events()
+                    .addEvent(well_name, ScheduleEvents::WELL_THP_UPDATE);
+
+                handlerContext.thp_respecified_well(well_name);
+            }
+
             if (well.isInjector()) {
                 const bool update_well = true;
 
@@ -667,6 +678,7 @@ void handleWTMULT(HandlerContext& handlerContext)
                 properties->handleWTMULT(cmode, factor.get<double>());
 
                 well.updateProduction(properties);
+
                 if (update_well) {
                     handlerContext.state().events()
                         .addEvent(ScheduleEvents::PRODUCTION_UPDATE);
