@@ -1,0 +1,22 @@
+{
+  "name": "SALINIVD",
+  "sections": [
+    "PROPS"
+  ],
+  "prohibits": [
+    "SALINITY",
+    "SALTMF"
+  ],
+  "size": 1,
+  "items": [
+    {
+      "name": "DATA",
+      "value_type": "DOUBLE",
+      "size_type": "ALL",
+      "dimension": [
+        "Length",
+        "Concentration"
+      ]
+    }
+  ]
+}

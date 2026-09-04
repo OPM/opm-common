@@ -130,6 +130,7 @@ void ensurePvtApiBrine(const BrinePvt& brinePvt)
         Evaluation pressure = 1e5;
         Evaluation saltconcentration = 0.0;
         Evaluation rs = 0.0;
+        Evaluation depth = 0.0;
 
         ////
         // Water PVT API
@@ -138,17 +139,20 @@ void ensurePvtApiBrine(const BrinePvt& brinePvt)
                                  temperature,
                                  pressure,
                                  rs,
-                                 saltconcentration);
+                                 saltconcentration,
+                                 depth);
         std::cout << brinePvt.inverseFormationVolumeFactor(/*regionIdx=*/0,
                                                     temperature,
                                                     pressure,
                                                     rs,
-                                                    saltconcentration);
+                                                    saltconcentration,
+                                                    depth);
         std::cout << brinePvt.internalEnergy(/*regionIdx=*/0,
                                       temperature,
                                       pressure,
                                       rs,
-                                      saltconcentration);
+                                      saltconcentration,
+                                      depth);
     }
 }
 

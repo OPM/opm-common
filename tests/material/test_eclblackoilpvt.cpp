@@ -191,6 +191,7 @@ void ensurePvtApi(const OilPvt& oilPvt, const GasPvt& gasPvt, const WaterPvt& wa
         Evaluation Rvw = 0.0;
         Evaluation So = 0.5;
         Evaluation maxSo = 1.0;
+        Evaluation depth = 0.0;
 
         /////
         // water PVT API
@@ -198,11 +199,13 @@ void ensurePvtApi(const OilPvt& oilPvt, const GasPvt& gasPvt, const WaterPvt& wa
         std::ignore = waterPvt.viscosity(/*regionIdx=*/0,
                                          temperature,
                                          pressure,
+                                         depth,
                                          Rsw,
                                          saltconcentration);
         std::ignore = waterPvt.inverseFormationVolumeFactor(/*regionIdx=*/0,
                                                             temperature,
                                                             pressure,
+                                                            depth,
                                                             Rsw,
                                                             saltconcentration);
 
@@ -314,6 +317,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(ConstantCompressibilityWater, Scalar, Types)
     tmp = constCompWaterPvt.viscosity(/*regionIdx=*/0,
                                       /*temperature=*/273.15 + 20.0,
                                       /*pressure=*/1e5,
+                                      /*depth=*/0.0,
                                       /*disgas_in_water*/0.0,
                                       /*saltconcentration=*/0.0);
     BOOST_CHECK_MESSAGE(std::abs(tmp - refTmp) <= tolerance,
@@ -324,6 +328,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(ConstantCompressibilityWater, Scalar, Types)
     tmp = constCompWaterPvt.viscosity(/*regionIdx=*/1,
                                       /*temperature=*/273.15 + 20.0,
                                       /*pressure=*/2e5,
+                                      /*depth=*/0.0,
                                       /*disgas_in_water*/0.0,
                                       /*saltconcentration=*/0.0);
     BOOST_CHECK_MESSAGE(std::abs(tmp - refTmp) <= tolerance,
