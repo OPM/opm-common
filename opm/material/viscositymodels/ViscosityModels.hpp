@@ -62,11 +62,24 @@ public:
                       const Params& /*paramCache*/,
                       unsigned phaseIdx)
     {
-        const Scalar MPa_atm = 0.101325;
         const Scalar R = Opm::Constants<Scalar>::R;
         const auto& T = Opm::decay<LhsEval>(fluidState.temperature(phaseIdx));
         const auto& P = Opm::decay<LhsEval>(fluidState.pressure(phaseIdx));
         const auto& Z = Opm::decay<LhsEval>(fluidState.compressFactor(phaseIdx));
+        const LhsEval molarDensity = P / (R * T * Z);
+
+        return LBCWithMolarDensity<FluidState, LhsEval, LhsEval>(fluidState, molarDensity, phaseIdx);
+    }
+
+    // Standard LBC model with an explicitly supplied physical molar density.
+    template <class FluidState, class MolarDensity,
+              class LhsEval = typename FluidState::ValueType>
+    static LhsEval LBCWithMolarDensity(const FluidState& fluidState,
+                                       const MolarDensity& molarDensity,
+                                       unsigned phaseIdx)
+    {
+        const Scalar MPa_atm = 0.101325;
+        const auto& T = Opm::decay<LhsEval>(fluidState.temperature(phaseIdx));
 
         LhsEval sumVolume = 0.0;
         for (unsigned compIdx = 0; compIdx < FluidSystem::numComponents; ++compIdx) {
@@ -76,9 +89,7 @@ public:
         }
 
         LhsEval rho_pc = 1.0 / sumVolume;
-        LhsEval V = (R * T * Z)/P;
-        LhsEval rho = 1.0 / V;
-        LhsEval rho_r = rho / rho_pc;
+        const LhsEval rho_r = Opm::decay<LhsEval>(molarDensity) / rho_pc;
 
         LhsEval xsum_T_c = 0.0; // mixture pseudocritical temperature
         LhsEval xsum_Mm = 0.0; // mixture molar mass
