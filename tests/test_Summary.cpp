@@ -523,6 +523,13 @@ data::GroupAndNetworkValues result_group_nwrk()
     grp_nwrk.nodeData["G_2"].converged_pressure = 23.46*Opm::unit::barsa;
     grp_nwrk.nodeData["PLAT-A"].converged_pressure = 21.0*Opm::unit::barsa;
 
+    // Injection networks (GNETINJE in the deck): the same group is a node of the
+    // production and both injection networks, with different pressures.
+    grp_nwrk.gasInjNodeData["FIELD"].pressure = 30.0*Opm::unit::barsa;
+    grp_nwrk.gasInjNodeData["G_2"].pressure = 44.0*Opm::unit::barsa;
+    grp_nwrk.waterInjNodeData["FIELD"].pressure = 15.0*Opm::unit::barsa;
+    grp_nwrk.waterInjNodeData["G_2"].pressure = 55.0*Opm::unit::barsa;
+
     grp_nwrk.branchData["G_1"].pressure_drop = 12.44*Opm::unit::barsa;
     grp_nwrk.branchData["G_1"].oil_rate = 123.456*sm3_pr_day();
     grp_nwrk.branchData["G_1"].water_rate = 23.456*sm3_pr_day();
@@ -3327,6 +3334,16 @@ BOOST_AUTO_TEST_CASE(NODE_VARIABLES)
     BOOST_CHECK_CLOSE( 21.0 , ecl_sum_get_group_var( resp, 1, "PLAT-A", "GPR2" ), 1e-5 );
     BOOST_CHECK_CLOSE( 33.45, ecl_sum_get_group_var( resp, 1, "G_1", "GPR2" ), 1e-5 );
     BOOST_CHECK_CLOSE( 23.46, ecl_sum_get_group_var( resp, 1, "G_2", "GPR2" ), 1e-5 );
+
+    // Injection network node pressures, kept apart from the production network's.
+    BOOST_CHECK( ecl_sum_has_key( resp, "GPRG:G_2" ) );
+    BOOST_CHECK( ecl_sum_has_key( resp, "GPRG:FIELD" ) );
+    BOOST_CHECK( !ecl_sum_has_key( resp, "GPRG:G_1" ) );  // not a gas injection node
+    BOOST_CHECK_CLOSE( 44.0, ecl_sum_get_group_var( resp, 1, "G_2", "GPRG" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 30.0, ecl_sum_get_group_var( resp, 1, "FIELD", "GPRG" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 55.0, ecl_sum_get_group_var( resp, 1, "G_2", "GPRW" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 15.0, ecl_sum_get_group_var( resp, 1, "FIELD", "GPRW" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 23.45, ecl_sum_get_group_var( resp, 1, "G_2", "GPR" ), 1e-5 );
 
     BOOST_CHECK_CLOSE( 12.44 , ecl_sum_get_group_var( resp, 1, "G_1", "GPRB" ), 1e-5 );
     BOOST_CHECK_CLOSE( 12.45, ecl_sum_get_group_var( resp, 1, "G_1", "GPRB2" ), 1e-5 );
