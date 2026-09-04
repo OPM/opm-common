@@ -22,6 +22,7 @@
 
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/common/utility/String.hpp>
+#include <opm/common/utility/TimeService.hpp>
 
 #include <opm/io/eclipse/EclOutput.hpp>
 #include <opm/io/eclipse/ERst.hpp>
@@ -667,7 +668,7 @@ namespace {
     std::tm startTimeToGmtime(const SummarySpecification::StartTime start)
     {
         const auto timepoint = std::chrono::system_clock::to_time_t(start);
-        return *std::gmtime(&timepoint);
+        return TimeService::portable_gmtime(timepoint);
     }
 
     std::vector<int>
