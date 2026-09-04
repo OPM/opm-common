@@ -23,22 +23,20 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <opm/output/eclipse/AggregateWellData.hpp>
 #include <opm/output/eclipse/WriteRestartHelpers.hpp>
 
 #include <opm/output/eclipse/VectorItems/intehead.hpp>
 #include <opm/output/eclipse/VectorItems/group.hpp>
 #include <opm/output/eclipse/VectorItems/well.hpp>
 
-#include <opm/output/data/Wells.hpp>
-
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/input/eclipse/EclipseState/Runspec.hpp>
+#include <opm/input/eclipse/EclipseState/TracerConfig.hpp>
 
 #include <opm/input/eclipse/Python/Python.hpp>
 
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
-#include <opm/input/eclipse/Schedule/Well/Well.hpp>
 
 #include <opm/common/utility/TimeService.hpp>
 
@@ -47,9 +45,38 @@
 
 #include <cstddef>
 #include <exception>
+#include <memory>
+#include <span>
 #include <stdexcept>
+#include <string_view>
+#include <string>
+#include <tuple>
 #include <utility>
 #include <vector>
+
+namespace {
+
+    struct SimulationCase
+    {
+        explicit SimulationCase(std::string_view deck)
+            : SimulationCase { Opm::Parser{}.parseString(std::string {deck}) }
+        {}
+
+        explicit SimulationCase(const Opm::Deck& deck)
+            : es    {deck}
+            , grid  {deck}
+            , sched {deck, es, std::make_shared<Opm::Python>()}
+        {}
+
+        // Order requirement: 'es' must be declared/initialised before 'sched'.
+        Opm::EclipseState es;
+        Opm::EclipseGrid grid;
+        Opm::Schedule sched;
+    };
+
+} // Anonymous namespace
+
+BOOST_AUTO_TEST_SUITE(Aggregate_Group)
 
 namespace {
 
@@ -95,8 +122,9 @@ MockIH::MockIH(const int numWells,
     this->nzgrpz = this->value[Ix::NZGRPZ] = zgrpPerGrp;
 }
 
-Opm::Deck second_sim(std::string fname) {
-    return Opm::Parser {} .parseFile(fname);
+Opm::Deck second_sim(std::string_view fname)
+{
+    return Opm::Parser {}.parseFile(std::string{fname});
 }
 
 Opm::Deck first_sim()
@@ -575,29 +603,8 @@ Opm::SummaryState sim_state_3()
 
     return state;
 }
-}
 
-struct SimulationCase
-{
-    explicit SimulationCase(const char* deck)
-        : SimulationCase { Opm::Parser{}.parseString(deck) }
-    {}
-
-    explicit SimulationCase(const Opm::Deck& deck)
-        : es    { deck }
-        , grid  { deck }
-        , sched { deck, es, std::make_shared<Opm::Python>() }
-    {}
-
-    // Order requirement: 'es' must be declared/initialised before 'sched'.
-    Opm::EclipseState es;
-    Opm::EclipseGrid  grid;
-    Opm::Schedule     sched;
-};
-
-// =====================================================================
-
-BOOST_AUTO_TEST_SUITE(Aggregate_Group)
+} // Anonymous namespace
 
 // test dimensions of multisegment data
 BOOST_AUTO_TEST_CASE (Constructor)
@@ -628,7 +635,7 @@ BOOST_AUTO_TEST_CASE (Declared_Group_Data)
     const auto smry = sim_state();
 
     auto agrpd = Opm::RestartIO::Helpers::AggregateGroupData {ih.value};
-    agrpd.captureDeclaredGroupData(simCase.sched, rptStep, smry, ih.value);
+    agrpd.captureDeclaredGroupData(simCase.sched, simCase.es.tracer(), rptStep, smry, ih.value);
 
     // IGRP (PROD)
     {
@@ -776,7 +783,7 @@ BOOST_AUTO_TEST_CASE (Declared_Group_Data_2)
                                                             rptStep, rptStep + 1, rptStep);
 
     auto agrpd = Opm::RestartIO::Helpers::AggregateGroupData(ih);
-    agrpd.captureDeclaredGroupData(sched, rptStep, st, ih);
+    agrpd.captureDeclaredGroupData(sched, es.tracer(), rptStep, st, ih);
 
     // IGRP (PROD)
     {
@@ -1052,7 +1059,7 @@ END
                                                             rptStep, rptStep + 1, rptStep);
 
     auto agrpd = Opm::RestartIO::Helpers::AggregateGroupData(ih);
-    agrpd.captureDeclaredGroupData(sched, rptStep, st, ih);
+    agrpd.captureDeclaredGroupData(sched, es.tracer(), rptStep, st, ih);
 
     const auto& sgrp = agrpd.getSGroup();
     const auto& zgrp = agrpd.getZGroup();
@@ -1128,3 +1135,1432 @@ END
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+// =====================================================================
+
+BOOST_AUTO_TEST_SUITE(Tracer_Values)
+
+namespace {
+    // Note: We intentionally omit concentrations ([FG]T[IR]C*) here.
+    // While very useful for engineers, those values don't appear in
+    // the restart file to which this set of unit tests apply.
+    //
+    // This function sets up a dynamic state for group (and field) level
+    // tracer related summary vectors.  We have the following tracers
+    //
+    //    TRACER
+    //    SEA  WAT  /
+    //    OCE  GAS  /
+    //    OCF  GAS  /
+    //    SEB  WAT  /
+    //    /
+    //
+    // with or without temperature ("HEA") and the following group tree
+    //
+    //    'PLAT_A' FIELD
+    //    INJE     'PLAT_A'
+    //    PROD     'PLAT_A'
+    //    'INJE-G' INJE
+    //    'INJE-W' INJE
+    //
+    // Note as well that the synthetic values here don't make physical
+    // sense and have no internal consistency; they are purely for
+    // testing purposes and to be distinct at each level and quantity.
+    Opm::SummaryState dynamicState()
+    {
+        auto ret = Opm::SummaryState { Opm::TimeService::now(), 0.0 };
+
+        // Field level values
+        {
+            ret.update("FTIRSEA", 112233.44);
+            ret.update("FTITSEA", 11223344.55);
+            ret.update("FTPRSEA", 2233.44);
+            ret.update("FTPTSEA", 223344.55);
+
+            ret.update("FTIRSEB", 111222.333);
+            ret.update("FTITSEB", 111222333.444555);
+            ret.update("FTPRSEB", 222333.444);
+            ret.update("FTPTSEB", 222333444.555);
+
+            ret.update("FTIROCF", 111.222);
+            ret.update("FTIRFOCF", 111.0);
+            ret.update("FTIRSOCF", 11.202);
+            ret.update("FTPROCF", 22.33);
+            ret.update("FTPRFOCF", 22.0);
+            ret.update("FTPRSOCF", 0.33);
+            ret.update("FTPTOCF", 223.34455);
+            ret.update("FTPTFOCF", 3.34455);
+            ret.update("FTPTSOCF", 22.0);
+
+            ret.update("FTIROCE", 11.1222);
+            ret.update("FTIRFOCE", 11.11);
+            ret.update("FTIRSOCE", 11.1212);
+            ret.update("FTITOCE", 1.122);
+            ret.update("FTITFOCE", 1.1);
+            ret.update("FTITSOCE", 0.022);
+            ret.update("FTPROCE", 2.233);
+            ret.update("FTPRFOCE", 2.2);
+            ret.update("FTPRSOCE", 2.033);
+            ret.update("FTPTOCE", 2233.4455);
+            ret.update("FTPTFOCE", 2200.44);
+            ret.update("FTPTSOCE", 33.0055);
+
+            ret.update("FTIRHEA", 11122.2);
+            ret.update("FTITHEA", 0.1122);
+            ret.update("FTPRHEA", 0.2233);
+            ret.update("FTPTHEA", 22.334455);
+        }
+
+        // PLAT_A group level values
+        {
+            ret.update_group_var("PLAT_A", "GTIRSEA", 2000.0);
+            ret.update_group_var("PLAT_A", "GTITSEA", 2200.0);
+            ret.update_group_var("PLAT_A", "GTPRSEA", 2220.0);
+            ret.update_group_var("PLAT_A", "GTPTSEA", 2222.0);
+
+            ret.update_group_var("PLAT_A", "GTIRSEB", 2.0);
+            ret.update_group_var("PLAT_A", "GTITSEB", 2.2);
+            ret.update_group_var("PLAT_A", "GTPRSEB", 2.22);
+            ret.update_group_var("PLAT_A", "GTPTSEB", 2.222);
+
+            ret.update_group_var("PLAT_A", "GTIROCF", 22.0);
+            ret.update_group_var("PLAT_A", "GTIRFOCF", 22.0);
+            ret.update_group_var("PLAT_A", "GTITOCF", 22.2);
+            ret.update_group_var("PLAT_A", "GTITFOCF", 20.02);
+            ret.update_group_var("PLAT_A", "GTITSOCF", 2.24);
+            ret.update_group_var("PLAT_A", "GTPROCF", 22.22);
+            ret.update_group_var("PLAT_A", "GTPRFOCF", 22.02);
+            ret.update_group_var("PLAT_A", "GTPRSOCF", 0.2);
+            ret.update_group_var("PLAT_A", "GTPTOCF", 22.222);
+            ret.update_group_var("PLAT_A", "GTPTFOCF", 22.202);
+            ret.update_group_var("PLAT_A", "GTPTSOCF", 24.02);
+
+            ret.update_group_var("PLAT_A", "GTIROCE", 222.0);
+            ret.update_group_var("PLAT_A", "GTIRSOCE", 202.02);
+            ret.update_group_var("PLAT_A", "GTITOCE", 222.2);
+            ret.update_group_var("PLAT_A", "GTITFOCE", 200.002);
+            ret.update_group_var("PLAT_A", "GTITSOCE", 2.202);
+            ret.update_group_var("PLAT_A", "GTPROCE", 222.22);
+            ret.update_group_var("PLAT_A", "GTPRFOCE", 202.0);
+            ret.update_group_var("PLAT_A", "GTPRSOCE", 20.22);
+            ret.update_group_var("PLAT_A", "GTPTOCE", 222.222);
+            ret.update_group_var("PLAT_A", "GTPTFOCE", 222.202);
+            ret.update_group_var("PLAT_A", "GTPTSOCE", 242.242);
+
+            ret.update_group_var("PLAT_A", "GTIRHEA", 22222.0);
+            ret.update_group_var("PLAT_A", "GTITHEA", 22222.2);
+            ret.update_group_var("PLAT_A", "GTPRHEA", 22222.22);
+            ret.update_group_var("PLAT_A", "GTPTHEA", 22222.222);
+        }
+
+        // INJE group level values
+        {
+            ret.update_group_var("INJE", "GTIRSEA", 3000.0);
+            ret.update_group_var("INJE", "GTITSEA", 3300.0);
+            ret.update_group_var("INJE", "GTPRSEA", 3330.0);
+            ret.update_group_var("INJE", "GTPTSEA", 3333.0);
+
+            ret.update_group_var("INJE", "GTIRSEB", 3.0);
+            ret.update_group_var("INJE", "GTITSEB", 3.3);
+            ret.update_group_var("INJE", "GTPRSEB", 3.33);
+            ret.update_group_var("INJE", "GTPTSEB", 3.333);
+
+            ret.update_group_var("INJE", "GTIROCF", 33.0);
+            ret.update_group_var("INJE", "GTIRFOCF", 3.3);
+            ret.update_group_var("INJE", "GTIRSOCF", 30.7);
+            ret.update_group_var("INJE", "GTITOCF", 33.3);
+            ret.update_group_var("INJE", "GTITFOCF", 33.303);
+            ret.update_group_var("INJE", "GTPROCF", 33.33);
+            ret.update_group_var("INJE", "GTPRFOCF", 30.03);
+            ret.update_group_var("INJE", "GTPRSOCF", 43.34);
+            ret.update_group_var("INJE", "GTPTOCF", 33.333);
+            ret.update_group_var("INJE", "GTPTFOCF", 33.003);
+            ret.update_group_var("INJE", "GTPTSOCF", 0.33);
+
+            ret.update_group_var("INJE", "GTIROCE", 333.0);
+            ret.update_group_var("INJE", "GTIRFOCE", 303.0);
+            ret.update_group_var("INJE", "GTIRSOCE", 30.3);
+            ret.update_group_var("INJE", "GTITOCE", 333.3);
+            ret.update_group_var("INJE", "GTITFOCE", 343.43);
+            ret.update_group_var("INJE", "GTITSOCE", 334.3);
+            ret.update_group_var("INJE", "GTPROCE", 333.33);
+            ret.update_group_var("INJE", "GTPRSOCE", 303.03);
+            ret.update_group_var("INJE", "GTPTOCE", 333.333);
+            ret.update_group_var("INJE", "GTPTFOCE", 334.334);
+            ret.update_group_var("INJE", "GTPTSOCE", 343.5);
+
+            ret.update_group_var("INJE", "GTIRHEA", 33333.0);
+            ret.update_group_var("INJE", "GTITHEA", 33333.3);
+            ret.update_group_var("INJE", "GTPRHEA", 33333.33);
+            ret.update_group_var("INJE", "GTPTHEA", 33333.333);
+        }
+
+        // PROD group level values
+        {
+            ret.update_group_var("PROD", "GTIRSEA", 4000.0);
+            ret.update_group_var("PROD", "GTITSEA", 4400.0);
+            ret.update_group_var("PROD", "GTPRSEA", 4440.0);
+            ret.update_group_var("PROD", "GTPTSEA", 4444.0);
+
+            ret.update_group_var("PROD", "GTIRSEB", 4.0);
+            ret.update_group_var("PROD", "GTITSEB", 4.4);
+            ret.update_group_var("PROD", "GTPRSEB", 4.44);
+            ret.update_group_var("PROD", "GTPTSEB", 4.444);
+
+            ret.update_group_var("PROD", "GTIROCF", 44.0);
+            ret.update_group_var("PROD", "GTIRFOCF", 40.0);
+            ret.update_group_var("PROD", "GTIRSOCF", 44.4);
+            ret.update_group_var("PROD", "GTITOCF", 44.4);
+            ret.update_group_var("PROD", "GTITFOCF", 44.44);
+            ret.update_group_var("PROD", "GTITSOCF", 45.54);
+            ret.update_group_var("PROD", "GTPROCF", 44.44);
+            ret.update_group_var("PROD", "GTPRFOCF", 40.04);
+            ret.update_group_var("PROD", "GTPRSOCF", 44.56);
+            ret.update_group_var("PROD", "GTPTOCF", 44.444);
+            ret.update_group_var("PROD", "GTPTFOCF", 44.434);
+            ret.update_group_var("PROD", "GTPTSOCF", 44.454);
+
+            ret.update_group_var("PROD", "GTIROCE", 444.0);
+            ret.update_group_var("PROD", "GTIRFOCE", 404.0);
+            ret.update_group_var("PROD", "GTIRSOCE", 440.4);
+            ret.update_group_var("PROD", "GTITOCE", 444.4);
+            ret.update_group_var("PROD", "GTITFOCE", 404.505);
+            ret.update_group_var("PROD", "GTITSOCE", 444.4567);
+            ret.update_group_var("PROD", "GTPROCE", 444.44);
+            ret.update_group_var("PROD", "GTPRFOCE", 444.54);
+            ret.update_group_var("PROD", "GTPRSOCE", 404.04);
+            ret.update_group_var("PROD", "GTPTOCE", 444.444);
+            ret.update_group_var("PROD", "GTPTFOCE", 454.454);
+            ret.update_group_var("PROD", "GTPTSOCE", 434.434);
+
+            ret.update_group_var("PROD", "GTIRHEA", 44444.0);
+            ret.update_group_var("PROD", "GTITHEA", 44444.4);
+            ret.update_group_var("PROD", "GTPRHEA", 44444.44);
+            ret.update_group_var("PROD", "GTPTHEA", 44444.444);
+        }
+
+        // INJE-G group level values
+        {
+            ret.update_group_var("INJE-G", "GTIRSEA", 5000.0);
+            ret.update_group_var("INJE-G", "GTITSEA", 5500.0);
+            ret.update_group_var("INJE-G", "GTPRSEA", 5550.0);
+            ret.update_group_var("INJE-G", "GTPTSEA", 5555.0);
+
+            ret.update_group_var("INJE-G", "GTIRSEB", 5.0);
+            ret.update_group_var("INJE-G", "GTITSEB", 5.5);
+            ret.update_group_var("INJE-G", "GTPRSEB", 5.55);
+            ret.update_group_var("INJE-G", "GTPTSEB", 5.555);
+
+            ret.update_group_var("INJE-G", "GTIROCF", 55.0);
+            ret.update_group_var("INJE-G", "GTIRFOCF", 55.055);
+            ret.update_group_var("INJE-G", "GTIRSOCF", 55.55055);
+            ret.update_group_var("INJE-G", "GTITOCF", 55.5);
+            ret.update_group_var("INJE-G", "GTITFOCF", 55.55);
+            ret.update_group_var("INJE-G", "GTITSOCF", 55.678);
+            ret.update_group_var("INJE-G", "GTPROCF", 55.55);
+            ret.update_group_var("INJE-G", "GTPRFOCF", 50.05);
+            ret.update_group_var("INJE-G", "GTPRSOCF", 56.65);
+            ret.update_group_var("INJE-G", "GTPTOCF", 55.555);
+            ret.update_group_var("INJE-G", "GTPTFOCF", 55.585);
+            ret.update_group_var("INJE-G", "GTPTSOCF", 55.575);
+
+            ret.update_group_var("INJE-G", "GTIROCE", 555.0);
+            ret.update_group_var("INJE-G", "GTIRFOCE", 505.05);
+            ret.update_group_var("INJE-G", "GTITOCE", 555.5);
+            ret.update_group_var("INJE-G", "GTITFOCE", 555.555);
+            ret.update_group_var("INJE-G", "GTITSOCE", 565.565);
+            ret.update_group_var("INJE-G", "GTPROCE", 555.55);
+            ret.update_group_var("INJE-G", "GTPRFOCE", 555.505);
+            ret.update_group_var("INJE-G", "GTPRSOCE", 505.565);
+            ret.update_group_var("INJE-G", "GTPTOCE", 555.555);
+            ret.update_group_var("INJE-G", "GTPTFOCE", 565.5656);
+            ret.update_group_var("INJE-G", "GTPTSOCE", 545.5454);
+
+            ret.update_group_var("INJE-G", "GTIRHEA", 55555.0);
+            ret.update_group_var("INJE-G", "GTITHEA", 55555.5);
+            ret.update_group_var("INJE-G", "GTPRHEA", 55555.55);
+            ret.update_group_var("INJE-G", "GTPTHEA", 55555.555);
+        }
+
+        // INJE-W group level values
+        {
+            ret.update_group_var("INJE-W", "GTIRSEA", 6000.0);
+            ret.update_group_var("INJE-W", "GTITSEA", 6600.0);
+            ret.update_group_var("INJE-W", "GTPRSEA", 6660.0);
+            ret.update_group_var("INJE-W", "GTPTSEA", 6666.0);
+
+            ret.update_group_var("INJE-W", "GTIRSEB", 6.0);
+            ret.update_group_var("INJE-W", "GTITSEB", 6.6);
+            ret.update_group_var("INJE-W", "GTPRSEB", 6.66);
+            ret.update_group_var("INJE-W", "GTPTSEB", 6.666);
+
+            ret.update_group_var("INJE-W", "GTIROCF", 66.0);
+            ret.update_group_var("INJE-W", "GTIRSOCF", 66.33);
+            ret.update_group_var("INJE-W", "GTITOCF", 66.6);
+            ret.update_group_var("INJE-W", "GTITFOCF", 66.678);
+            ret.update_group_var("INJE-W", "GTITSOCF", 66.9876);
+            ret.update_group_var("INJE-W", "GTPROCF", 66.66);
+            ret.update_group_var("INJE-W", "GTPTOCF", 66.666);
+            ret.update_group_var("INJE-W", "GTPTFOCF", 66.006);
+            ret.update_group_var("INJE-W", "GTPTSOCF", 66.007);
+
+            ret.update_group_var("INJE-W", "GTIROCE", 666.0);
+            ret.update_group_var("INJE-W", "GTIRFOCE", 606.06);
+            ret.update_group_var("INJE-W", "GTIRSOCE", 660.066);
+            ret.update_group_var("INJE-W", "GTITOCE", 666.6);
+            ret.update_group_var("INJE-W", "GTITFOCE", 666.5678);
+            ret.update_group_var("INJE-W", "GTITSOCE", 666.9876);
+            ret.update_group_var("INJE-W", "GTPROCE", 666.66);
+            ret.update_group_var("INJE-W", "GTPRFOCE", 666.666);
+            ret.update_group_var("INJE-W", "GTPRSOCE", 666.066);
+            ret.update_group_var("INJE-W", "GTPTOCE", 666.666);
+            ret.update_group_var("INJE-W", "GTPTFOCE", 666.006);
+            ret.update_group_var("INJE-W", "GTPTSOCE", 666.007);
+
+            ret.update_group_var("INJE-W", "GTIRHEA", 66666.0);
+            ret.update_group_var("INJE-W", "GTITHEA", 66666.6);
+            ret.update_group_var("INJE-W", "GTPRHEA", 66666.66);
+            ret.update_group_var("INJE-W", "GTPTHEA", 66666.666);
+        }
+
+        return ret;
+    }
+
+    namespace VI = Opm::RestartIO::Helpers::VectorItems;
+
+    std::tuple<int, int, double> timePoint(const SimulationCase& cse)
+    {
+        constexpr auto report_step = 7;
+        constexpr auto sim_step = report_step - 1;
+        const auto simTime = cse.sched.seconds(report_step);
+
+        BOOST_CHECK_CLOSE(simTime, (1 + 2 + 3 + 4 + 5 + 10 + 15) * 86'400.0, 1.0e-7);
+
+        return {report_step, sim_step, simTime};
+    }
+
+    std::vector<int> intehead(const SimulationCase& cse)
+    {
+        const auto [report_step, sim_step, simTime] = timePoint(cse);
+
+        return Opm::RestartIO::Helpers::createInteHead
+            (cse.es, cse.grid, cse.sched, simTime,
+             report_step, // Should really be number of timesteps
+             report_step, sim_step);
+    }
+
+    Opm::RestartIO::Helpers::AggregateGroupData
+    groupData(const SimulationCase&    cse,
+              const std::vector<int>&  ih,
+              const Opm::SummaryState& smry)
+    {
+        auto gd = Opm::RestartIO::Helpers::AggregateGroupData{ih};
+
+        const auto tp = timePoint(cse);
+        const auto sim_step = std::get<1>(tp);
+
+        gd.captureDeclaredGroupData(cse.sched, cse.es.tracer(),
+                                    sim_step, smry, ih);
+
+        return gd;
+    }
+}
+
+BOOST_AUTO_TEST_SUITE(Isothermal)
+
+namespace {
+    SimulationCase defineCase()
+    {
+        return SimulationCase { R"(RUNSPEC
+DIMENS
+  5 5 2 /
+OIL
+GAS
+WATER
+DISGAS
+TABDIMS
+/
+WELLDIMS
+  3 2 5 3 / -- Item 3 (NGMAX) must be at least 5 for this test.
+EQLDIMS
+  3 1 1 /
+TRACERS
+--  oil  water  gas  env
+     1*  3      2    1*   /
+GRID
+DXV
+  5*100 /
+DYV
+  5*100 /
+DZV
+  5 10 /
+DEPTHZ
+  36*2000.0 /
+EQUALS
+  PORO 0.25 /
+  PERMX 100 /
+  PERMY 100 /
+  PERMZ 10 /
+/
+PROPS
+DENSITY
+  852.6 1014.3 0.83 /
+TRACER
+SEA  WAT  /
+OCE  GAS  /
+OCF  GAS  /
+SEB  WAT  /
+/
+TVDPFSEA
+1000   0.0
+5000   0.0 /
+TVDPFSEB
+1000   0.0
+5000   0.0 /
+TBLKFOCE
+1.0 2.0 3.0 /
+TBLKFOCF
+1.0 2.0 3.0 /
+SCHEDULE
+GRUPTREE
+  'PLAT_A' FIELD /
+  INJE     'PLAT_A' /
+  PROD     'PLAT_A' /
+  'INJE-G' INJE /
+  'INJE-W' INJE /
+/
+WELSPECS
+  IW 'INJE-W' 1 1 2010.0 'WATER' /
+  IG 'INJE-G' 1 5 2010.0 'GAS' /
+  P  'PROD'   5 3 2002.5 'LIQ' /
+/
+COMPDAT
+  IW 1 1 2 2 'OPEN' 2* 0.5 /
+  IG 1 5 1 1 'OPEN' 2* 0.5 /
+  P  5 3 1 2 'OPEN' 2* 0.5 /
+/
+WTRACER
+  IW SEA 0.123 /
+  IG OCE 0.456 /
+/
+WCONINJE
+  IW 'WATER' 'OPEN' RATE 12345.6 1* 512.256 /
+  IG 'GAS' 'OPEN' RATE 678910.1112 1* 256.128 /
+/
+WCONPROD
+  P 'OPEN' LRAT 3* 100E3 1* 25.125 /
+/
+TSTEP
+  1 2 3 4 5 10 15 4*20 /
+END
+)"
+        };
+    }
+
+    // 3 Water + 2 Gas*(free + solution)
+    constexpr auto tracerStride = std::size_t{7};
+} // Anonymous namespace
+
+BOOST_AUTO_TEST_CASE(InteHEAD_Allocation_Sizes)
+{
+    const auto cse = defineCase();
+    const auto ih  = intehead(cse);
+
+    const auto expectNumTracers = [&trcCount = cse.es.runspec().tracers()]()
+    {
+        return trcCount.water_tracers()
+             + trcCount.oil_tracers()
+             + trcCount.gas_tracers();
+    }();
+
+    BOOST_CHECK_EQUAL(expectNumTracers, 5);
+
+    const auto expectNumTrcElems = [&trcCount = cse.es.runspec().tracers()]()
+    {
+        return trcCount.water_tracers()
+             + 0*trcCount.oil_tracers()
+             + 2*trcCount.gas_tracers();
+    }();
+
+    BOOST_CHECK_EQUAL(expectNumTrcElems, static_cast<int>(tracerStride));
+
+    BOOST_CHECK_EQUAL(ih[VI::intehead::NGRP], 5);
+    BOOST_CHECK_EQUAL(ih[VI::intehead::NWGMAX], 5);
+    BOOST_CHECK_EQUAL(ih[VI::intehead::NGMAXZ], 6);
+    BOOST_CHECK_EQUAL(ih[VI::intehead::NXGRPZ], static_cast<int>(VI::XGroup::TracerOffset) + 4*expectNumTrcElems);
+}
+
+BOOST_AUTO_TEST_CASE(Field)
+{
+    const auto cse  = defineCase();
+    const auto ih   = intehead(cse);
+    const auto smry = dynamicState();
+
+    const auto gd = groupData(cse, ih, smry);
+    const auto xgsz = ih[VI::intehead::NXGRPZ];
+
+    BOOST_REQUIRE_MESSAGE(static_cast<std::size_t>(xgsz) > VI::XGroup::TracerOffset,
+                          "XGRP must allocate space for tracer concentrations");
+
+    // FIELD group is *last* in XGRP.
+    const auto grpID = ih[VI::intehead::NGMAXZ] - 1;
+
+    const auto xgrptrc = std::span {gd.getXGroup()}
+        .subspan(grpID * xgsz, xgsz)
+        .subspan(VI::XGroup::TracerOffset);
+
+    BOOST_REQUIRE_EQUAL(xgrptrc.size(), 4 * tracerStride);
+
+    // Injection rates
+    const auto fti_rate = xgrptrc.subspan(0*tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(fti_rate[0], 112233.44, 1.0e-6);  // SEA
+    BOOST_CHECK_CLOSE(fti_rate[1], 11.11, 1.0e-6);      // FOCE
+    BOOST_CHECK_CLOSE(fti_rate[2], 11.1212, 1.0e-6);    // SOCE
+    BOOST_CHECK_CLOSE(fti_rate[3], 111.0, 1.0e-6);      // FOCF
+    BOOST_CHECK_CLOSE(fti_rate[4], 11.202, 1.0e-6);     // SOCF
+    BOOST_CHECK_CLOSE(fti_rate[5], 111222.333, 1.0e-6); // SEB
+    BOOST_CHECK_CLOSE(fti_rate[6], 0.0, 1.0e-6);        // Unused
+
+    // Production rates
+    const auto ftp_rate = xgrptrc.subspan(1*tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(ftp_rate[0], 2233.44, 1.0e-6);    // SEA
+    BOOST_CHECK_CLOSE(ftp_rate[1], 2.2, 1.0e-6);        // FOCE
+    BOOST_CHECK_CLOSE(ftp_rate[2], 2.033, 1.0e-6);      // SOCE
+    BOOST_CHECK_CLOSE(ftp_rate[3], 22.0, 1.0e-6);       // FOCF
+    BOOST_CHECK_CLOSE(ftp_rate[4], 0.33, 1.0e-6);       // SOCF
+    BOOST_CHECK_CLOSE(ftp_rate[5], 222333.444, 1.0e-6); // SEB
+    BOOST_CHECK_CLOSE(ftp_rate[6], 0.0, 1.0e-6);        // Unused
+
+    // Total injected volume
+    const auto fti_vol = xgrptrc.subspan(2*tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(fti_vol[0], 11223344.55, 1.0e-6);      // SEA
+    BOOST_CHECK_CLOSE(fti_vol[1], 1.1, 1.0e-6);              // FOCE
+    BOOST_CHECK_CLOSE(fti_vol[2], 0.022, 1.0e-6);            // SOCE
+    BOOST_CHECK_CLOSE(fti_vol[3], 0.0, 1.0e-6);              // FOCF
+    BOOST_CHECK_CLOSE(fti_vol[4], 0.0, 1.0e-6);              // SOCF
+    BOOST_CHECK_CLOSE(fti_vol[5], 111222333.444555, 1.0e-6); // SEB
+    BOOST_CHECK_CLOSE(fti_vol[6], 0.0, 1.0e-6);              // Unused
+
+    // Total produced volume
+    const auto ftp_vol = xgrptrc.subspan(3*tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(ftp_vol[0], 223344.55, 1.0e-6);     // SEA
+    BOOST_CHECK_CLOSE(ftp_vol[1], 2200.44, 1.0e-6);       // FOCE
+    BOOST_CHECK_CLOSE(ftp_vol[2], 33.0055, 1.0e-6);       // SOCE
+    BOOST_CHECK_CLOSE(ftp_vol[3], 3.34455, 1.0e-6);       // FOCF
+    BOOST_CHECK_CLOSE(ftp_vol[4], 22.0, 1.0e-6);          // SOCF
+    BOOST_CHECK_CLOSE(ftp_vol[5], 222333444.555, 1.0e-6); // SEB
+    BOOST_CHECK_CLOSE(ftp_vol[6], 0.0, 1.0e-6);           // Unused
+}
+
+BOOST_AUTO_TEST_CASE(Plat_A)
+{
+    const auto cse  = defineCase();
+    const auto ih   = intehead(cse);
+    const auto smry = dynamicState();
+
+    const auto gd = groupData(cse, ih, smry);
+    const auto xgsz = ih[VI::intehead::NXGRPZ];
+
+    BOOST_REQUIRE_MESSAGE(static_cast<std::size_t>(xgsz) > VI::XGroup::TracerOffset,
+                          "XGRP must allocate space for tracer concentrations");
+
+    const auto grpID = 0;
+
+    {
+        const auto zgrp = std::span{gd.getZGroup()}
+            .subspan(grpID * ih[VI::intehead::NZGRPZ],
+                     ih[VI::intehead::NZGRPZ]);
+
+        BOOST_CHECK_EQUAL(zgrp[0].c_str(), "PLAT_A  ");
+    }
+
+    const auto xgrptrc = std::span {gd.getXGroup()}
+        .subspan(grpID * xgsz, xgsz)
+        .subspan(VI::XGroup::TracerOffset);
+
+    BOOST_REQUIRE_EQUAL(xgrptrc.size(), 4 * tracerStride);
+
+    // Injection rates
+    const auto gti_rates = xgrptrc.subspan(0 * tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(gti_rates[0], 2000.0, 1.0e-6); // SEA
+    BOOST_CHECK_CLOSE(gti_rates[1], 0.0, 1.0e-6);    // FOCE
+    BOOST_CHECK_CLOSE(gti_rates[2], 202.02, 1.0e-6); // SOCE
+    BOOST_CHECK_CLOSE(gti_rates[3], 22.0, 1.0e-6);   // FOCF
+    BOOST_CHECK_CLOSE(gti_rates[4], 0.0, 1.0e-6);    // SOCF
+    BOOST_CHECK_CLOSE(gti_rates[5], 2.0, 1.0e-6);    // SEB
+    BOOST_CHECK_CLOSE(gti_rates[6], 0.0, 1.0e-6);    // Unused
+
+    // Production rates
+    const auto gtp_rates = xgrptrc.subspan(1 * tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(gtp_rates[0], 2220.0, 1.0e-6); // SEA
+    BOOST_CHECK_CLOSE(gtp_rates[1], 202.0, 1.0e-6);  // FOCE
+    BOOST_CHECK_CLOSE(gtp_rates[2], 20.22, 1.0e-6);  // SOCE
+    BOOST_CHECK_CLOSE(gtp_rates[3], 22.02, 1.0e-6);  // FOCF
+    BOOST_CHECK_CLOSE(gtp_rates[4], 0.2, 1.0e-6);    // SOCF
+    BOOST_CHECK_CLOSE(gtp_rates[5], 2.22, 1.0e-6);   // SEB
+    BOOST_CHECK_CLOSE(gtp_rates[6], 0.0, 1.0e-6);    // Unused
+
+    // Total injected volumes
+    const auto gti_vol = xgrptrc.subspan(2 * tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(gti_vol[0], 2200.0, 1.0e-6);  // SEA
+    BOOST_CHECK_CLOSE(gti_vol[1], 200.002, 1.0e-6); // FOCE
+    BOOST_CHECK_CLOSE(gti_vol[2], 2.202, 1.0e-6);   // SOCE
+    BOOST_CHECK_CLOSE(gti_vol[3], 20.02, 1.0e-6);   // FOCF
+    BOOST_CHECK_CLOSE(gti_vol[4], 2.24, 1.0e-6);    // SOCF
+    BOOST_CHECK_CLOSE(gti_vol[5], 2.2, 1.0e-6);     // SEB
+    BOOST_CHECK_CLOSE(gti_vol[6], 0.0, 1.0e-6);     // Unused
+
+    // Total produced volumes
+    const auto gtp_vol = xgrptrc.subspan(3 * tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(gtp_vol[0], 2222.0, 1.0e-6);  // SEA
+    BOOST_CHECK_CLOSE(gtp_vol[1], 222.202, 1.0e-6); // FOCE
+    BOOST_CHECK_CLOSE(gtp_vol[2], 242.242, 1.0e-6); // SOCE
+    BOOST_CHECK_CLOSE(gtp_vol[3], 22.202, 1.0e-6);  // FOCF
+    BOOST_CHECK_CLOSE(gtp_vol[4], 24.02, 1.0e-6);   // SOCF
+    BOOST_CHECK_CLOSE(gtp_vol[5], 2.222, 1.0e-6);   // SEB
+    BOOST_CHECK_CLOSE(gtp_vol[6], 0.0, 1.0e-6);     // Unused
+}
+
+BOOST_AUTO_TEST_CASE(Inje)
+{
+    const auto cse  = defineCase();
+    const auto ih   = intehead(cse);
+    const auto smry = dynamicState();
+
+    const auto gd = groupData(cse, ih, smry);
+    const auto xgsz = ih[VI::intehead::NXGRPZ];
+
+    BOOST_REQUIRE_MESSAGE(static_cast<std::size_t>(xgsz) > VI::XGroup::TracerOffset,
+                          "XGRP must allocate space for tracer concentrations");
+
+    const auto grpID = 1;
+
+    {
+        const auto zgrp = std::span{gd.getZGroup()}
+            .subspan(grpID * ih[VI::intehead::NZGRPZ],
+                     ih[VI::intehead::NZGRPZ]);
+
+        BOOST_CHECK_EQUAL(zgrp[0].c_str(), "INJE    ");
+    }
+
+    const auto xgrptrc = std::span {gd.getXGroup()}
+        .subspan(grpID * xgsz, xgsz)
+        .subspan(VI::XGroup::TracerOffset);
+
+    BOOST_REQUIRE_EQUAL(xgrptrc.size(), 4 * tracerStride);
+
+    // Injection rates
+    const auto gti_rates = xgrptrc.subspan(0 * tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(gti_rates[0], 3000.0, 1.0e-6); // SEA
+    BOOST_CHECK_CLOSE(gti_rates[1], 303, 1.0e-6);    // FOCE
+    BOOST_CHECK_CLOSE(gti_rates[2], 30.3, 1.0e-6);   // SOCE
+    BOOST_CHECK_CLOSE(gti_rates[3], 3.3, 1.0e-6);    // FOCF
+    BOOST_CHECK_CLOSE(gti_rates[4], 30.7, 1.0e-6);   // SOCF
+    BOOST_CHECK_CLOSE(gti_rates[5], 3.0, 1.0e-6);    // SEB
+    BOOST_CHECK_CLOSE(gti_rates[6], 0.0, 1.0e-6);    // Unused
+
+    // Production rates
+    const auto gtp_rates = xgrptrc.subspan(1 * tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(gtp_rates[0], 3330.0, 1.0e-6); // SEA
+    BOOST_CHECK_CLOSE(gtp_rates[1], 0.0, 1.0e-6);    // FOCE
+    BOOST_CHECK_CLOSE(gtp_rates[2], 303.03, 1.0e-6); // SOCE
+    BOOST_CHECK_CLOSE(gtp_rates[3], 30.03, 1.0e-6);  // FOCF
+    BOOST_CHECK_CLOSE(gtp_rates[4], 43.34, 1.0e-6);  // SOCF
+    BOOST_CHECK_CLOSE(gtp_rates[5], 3.33, 1.0e-6);   // SEB
+    BOOST_CHECK_CLOSE(gtp_rates[6], 0.0, 1.0e-6);    // Unused
+
+    // Total injected volumes
+    const auto gti_vol = xgrptrc.subspan(2 * tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(gti_vol[0], 3300.0, 1.0e-6); // SEA
+    BOOST_CHECK_CLOSE(gti_vol[1], 343.43, 1.0e-6); // FOCE
+    BOOST_CHECK_CLOSE(gti_vol[2], 334.3, 1.0e-6);  // SOCE
+    BOOST_CHECK_CLOSE(gti_vol[3], 33.303, 1.0e-6); // FOCF
+    BOOST_CHECK_CLOSE(gti_vol[4], 0.0, 1.0e-6);    // SOCF
+    BOOST_CHECK_CLOSE(gti_vol[5], 3.3, 1.0e-6);    // SEB
+    BOOST_CHECK_CLOSE(gti_vol[6], 0.0, 1.0e-6);    // Unused
+
+    // Total produced volumes
+    const auto gtp_vol = xgrptrc.subspan(3 * tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(gtp_vol[0], 3333.0, 1.0e-6);  // SEA
+    BOOST_CHECK_CLOSE(gtp_vol[1], 334.334, 1.0e-6); // FOCE
+    BOOST_CHECK_CLOSE(gtp_vol[2], 343.5, 1.0e-6);   // SOCE
+    BOOST_CHECK_CLOSE(gtp_vol[3], 33.003, 1.0e-6);  // FOCF
+    BOOST_CHECK_CLOSE(gtp_vol[4], 0.33, 1.0e-6);    // SOCF
+    BOOST_CHECK_CLOSE(gtp_vol[5], 3.333, 1.0e-6);   // SEB
+    BOOST_CHECK_CLOSE(gtp_vol[6], 0.0, 1.0e-6);     // Unused
+}
+
+BOOST_AUTO_TEST_CASE(Prod)
+{
+    const auto cse  = defineCase();
+    const auto ih   = intehead(cse);
+    const auto smry = dynamicState();
+
+    const auto gd = groupData(cse, ih, smry);
+    const auto xgsz = ih[VI::intehead::NXGRPZ];
+
+    BOOST_REQUIRE_MESSAGE(static_cast<std::size_t>(xgsz) > VI::XGroup::TracerOffset,
+                          "XGRP must allocate space for tracer concentrations");
+
+    const auto grpID = 2;
+
+    {
+        const auto zgrp = std::span{gd.getZGroup()}
+            .subspan(grpID * ih[VI::intehead::NZGRPZ],
+                     ih[VI::intehead::NZGRPZ]);
+
+        BOOST_CHECK_EQUAL(zgrp[0].c_str(), "PROD    ");
+    }
+
+    const auto xgrptrc = std::span {gd.getXGroup()}
+        .subspan(grpID * xgsz, xgsz)
+        .subspan(VI::XGroup::TracerOffset);
+
+    BOOST_REQUIRE_EQUAL(xgrptrc.size(), 4 * tracerStride);
+
+    // Injection rates
+    const auto gti_rates = xgrptrc.subspan(0 * tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(gti_rates[0], 4000.0, 1.0e-6); // SEA
+    BOOST_CHECK_CLOSE(gti_rates[1], 404.0, 1.0e-6);  // FOCE
+    BOOST_CHECK_CLOSE(gti_rates[2], 440.4, 1.0e-6);  // SOCE
+    BOOST_CHECK_CLOSE(gti_rates[3], 40.0, 1.0e-6);   // FOCF
+    BOOST_CHECK_CLOSE(gti_rates[4], 44.4, 1.0e-6);   // SOCF
+    BOOST_CHECK_CLOSE(gti_rates[5], 4.0, 1.0e-6);    // SEB
+    BOOST_CHECK_CLOSE(gti_rates[6], 0.0, 1.0e-6);    // Unused
+
+    // Production rates
+    const auto gtp_rates = xgrptrc.subspan(1 * tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(gtp_rates[0], 4440.0, 1.0e-6); // SEA
+    BOOST_CHECK_CLOSE(gtp_rates[1], 444.54, 1.0e-6); // FOCE
+    BOOST_CHECK_CLOSE(gtp_rates[2], 404.04, 1.0e-6); // SOCE
+    BOOST_CHECK_CLOSE(gtp_rates[3], 40.04, 1.0e-6);  // FOCF
+    BOOST_CHECK_CLOSE(gtp_rates[4], 44.56, 1.0e-6);  // SOCF
+    BOOST_CHECK_CLOSE(gtp_rates[5], 4.44, 1.0e-6);   // SEB
+    BOOST_CHECK_CLOSE(gtp_rates[6], 0.0, 1.0e-6);    // Unused
+
+    // Total injected volumes
+    const auto gti_vol = xgrptrc.subspan(2 * tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(gti_vol[0], 4400.0, 1.0e-6);   // SEA
+    BOOST_CHECK_CLOSE(gti_vol[1], 404.505, 1.0e-6);  // FOCE
+    BOOST_CHECK_CLOSE(gti_vol[2], 444.4567, 1.0e-6); // SOCE
+    BOOST_CHECK_CLOSE(gti_vol[3], 44.44, 1.0e-6);    // FOCF
+    BOOST_CHECK_CLOSE(gti_vol[4], 45.54, 1.0e-6);    // SOCF
+    BOOST_CHECK_CLOSE(gti_vol[5], 4.4, 1.0e-6);      // SEB
+    BOOST_CHECK_CLOSE(gti_vol[6], 0.0, 1.0e-6);      // Unused
+
+    // Total produced volumes
+    const auto gtp_vol = xgrptrc.subspan(3 * tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(gtp_vol[0], 4444.0, 1.0e-6);  // SEA
+    BOOST_CHECK_CLOSE(gtp_vol[1], 454.454, 1.0e-6); // FOCE
+    BOOST_CHECK_CLOSE(gtp_vol[2], 434.434, 1.0e-6); // SOCE
+    BOOST_CHECK_CLOSE(gtp_vol[3], 44.434, 1.0e-6);  // FOCF
+    BOOST_CHECK_CLOSE(gtp_vol[4], 44.454, 1.0e-6);  // SOCF
+    BOOST_CHECK_CLOSE(gtp_vol[5], 4.444, 1.0e-6);   // SEB
+    BOOST_CHECK_CLOSE(gtp_vol[6], 0.0, 1.0e-6);     // Unused
+}
+
+BOOST_AUTO_TEST_CASE(Inje_G)
+{
+    const auto cse  = defineCase();
+    const auto ih   = intehead(cse);
+    const auto smry = dynamicState();
+
+    const auto gd = groupData(cse, ih, smry);
+    const auto xgsz = ih[VI::intehead::NXGRPZ];
+
+    BOOST_REQUIRE_MESSAGE(static_cast<std::size_t>(xgsz) > VI::XGroup::TracerOffset,
+                          "XGRP must allocate space for tracer concentrations");
+
+    const auto grpID = 3;
+
+    {
+        const auto zgrp = std::span{gd.getZGroup()}
+            .subspan(grpID * ih[VI::intehead::NZGRPZ],
+                     ih[VI::intehead::NZGRPZ]);
+
+        BOOST_CHECK_EQUAL(zgrp[0].c_str(), "INJE-G  ");
+    }
+
+    const auto xgrptrc = std::span {gd.getXGroup()}
+        .subspan(grpID * xgsz, xgsz)
+        .subspan(VI::XGroup::TracerOffset);
+
+    BOOST_REQUIRE_EQUAL(xgrptrc.size(), 4 * tracerStride);
+
+    // Injection rates
+    const auto gti_rates = xgrptrc.subspan(0 * tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(gti_rates[0], 5000.0, 1.0e-6);   // SEA
+    BOOST_CHECK_CLOSE(gti_rates[1], 505.05, 1.0e-6);   // FOCE
+    BOOST_CHECK_CLOSE(gti_rates[2], 0.0, 1.0e-6);      // SOCE
+    BOOST_CHECK_CLOSE(gti_rates[3], 55.055, 1.0e-6);   // FOCF
+    BOOST_CHECK_CLOSE(gti_rates[4], 55.55055, 1.0e-6); // SOCF
+    BOOST_CHECK_CLOSE(gti_rates[5], 5.0, 1.0e-6);      // SEB
+    BOOST_CHECK_CLOSE(gti_rates[6], 0.0, 1.0e-6);      // Unused
+
+    // Production rates
+    const auto gtp_rates = xgrptrc.subspan(1 * tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(gtp_rates[0], 5550.0, 1.0e-6);  // SEA
+    BOOST_CHECK_CLOSE(gtp_rates[1], 555.505, 1.0e-6); // FOCE
+    BOOST_CHECK_CLOSE(gtp_rates[2], 505.565, 1.0e-6); // SOCE
+    BOOST_CHECK_CLOSE(gtp_rates[3], 50.05, 1.0e-6);   // FOCF
+    BOOST_CHECK_CLOSE(gtp_rates[4], 56.65, 1.0e-6);   // SOCF
+    BOOST_CHECK_CLOSE(gtp_rates[5], 5.55, 1.0e-6);    // SEB
+    BOOST_CHECK_CLOSE(gtp_rates[6], 0.0, 1.0e-6);     // Unused
+
+    // Total injected volumes
+    const auto gti_vol = xgrptrc.subspan(2 * tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(gti_vol[0], 5500.0, 1.0e-6);  // SEA
+    BOOST_CHECK_CLOSE(gti_vol[1], 555.555, 1.0e-6); // FOCE
+    BOOST_CHECK_CLOSE(gti_vol[2], 565.565, 1.0e-6); // SOCE
+    BOOST_CHECK_CLOSE(gti_vol[3], 55.55, 1.0e-6);   // FOCF
+    BOOST_CHECK_CLOSE(gti_vol[4], 55.678, 1.0e-6);  // SOCF
+    BOOST_CHECK_CLOSE(gti_vol[5], 5.5, 1.0e-6);     // SEB
+    BOOST_CHECK_CLOSE(gti_vol[6], 0.0, 1.0e-6);     // Unused
+
+    // Total produced volumes
+    const auto gtp_vol = xgrptrc.subspan(3 * tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(gtp_vol[0], 5555.0, 1.0e-6);   // SEA
+    BOOST_CHECK_CLOSE(gtp_vol[1], 565.5656, 1.0e-6); // FOCE
+    BOOST_CHECK_CLOSE(gtp_vol[2], 545.5454, 1.0e-6); // SOCE
+    BOOST_CHECK_CLOSE(gtp_vol[3], 55.585, 1.0e-6);   // FOCF
+    BOOST_CHECK_CLOSE(gtp_vol[4], 55.575, 1.0e-6);   // SOCF
+    BOOST_CHECK_CLOSE(gtp_vol[5], 5.555, 1.0e-6);    // SEB
+    BOOST_CHECK_CLOSE(gtp_vol[6], 0.0, 1.0e-6);      // Unused
+}
+
+BOOST_AUTO_TEST_CASE(Inje_W)
+{
+    const auto cse  = defineCase();
+    const auto ih   = intehead(cse);
+    const auto smry = dynamicState();
+
+    const auto gd = groupData(cse, ih, smry);
+    const auto xgsz = ih[VI::intehead::NXGRPZ];
+
+    BOOST_REQUIRE_MESSAGE(static_cast<std::size_t>(xgsz) > VI::XGroup::TracerOffset,
+                          "XGRP must allocate space for tracer concentrations");
+
+    const auto grpID = 4;
+
+    {
+        const auto zgrp = std::span{gd.getZGroup()}
+            .subspan(grpID * ih[VI::intehead::NZGRPZ],
+                     ih[VI::intehead::NZGRPZ]);
+
+        BOOST_CHECK_EQUAL(zgrp[0].c_str(), "INJE-W  ");
+    }
+
+    const auto xgrptrc = std::span {gd.getXGroup()}
+        .subspan(grpID * xgsz, xgsz)
+        .subspan(VI::XGroup::TracerOffset);
+
+    BOOST_REQUIRE_EQUAL(xgrptrc.size(), 4 * tracerStride);
+
+    // Injection rates.
+    const auto gti_rates = xgrptrc.subspan(0 * tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(gti_rates[0], 6000.0, 1.0e-6);  // SEA
+    BOOST_CHECK_CLOSE(gti_rates[1], 606.06, 1.0e-6);  // FOCE
+    BOOST_CHECK_CLOSE(gti_rates[2], 660.066, 1.0e-6); // SOCE
+    BOOST_CHECK_CLOSE(gti_rates[3], 0.0, 1.0e-6);     // FOCF
+    BOOST_CHECK_CLOSE(gti_rates[4], 66.33, 1.0e-6);   // SOCF
+    BOOST_CHECK_CLOSE(gti_rates[5], 6.0, 1.0e-6);     // SEB
+    BOOST_CHECK_CLOSE(gti_rates[6], 0.0, 1.0e-6);     // Unused
+
+    // Production rates.
+    const auto gtp_rates = xgrptrc.subspan(1 * tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(gtp_rates[0], 6660.0, 1.0e-6);  // SEA
+    BOOST_CHECK_CLOSE(gtp_rates[1], 666.666, 1.0e-6); // FOCE
+    BOOST_CHECK_CLOSE(gtp_rates[2], 666.066, 1.0e-6); // SOCE
+    BOOST_CHECK_CLOSE(gtp_rates[3], 0.0, 1.0e-6);     // FOCF
+    BOOST_CHECK_CLOSE(gtp_rates[4], 0.0, 1.0e-6);     // SOCF
+    BOOST_CHECK_CLOSE(gtp_rates[5], 6.66, 1.0e-6);    // SEB
+    BOOST_CHECK_CLOSE(gtp_rates[6], 0.0, 1.0e-6);     // Unused
+
+    // Total injected volumes.
+    const auto gti_vol = xgrptrc.subspan(2 * tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(gti_vol[0], 6600.0, 1.0e-6);   // SEA
+    BOOST_CHECK_CLOSE(gti_vol[1], 666.5678, 1.0e-6); // FOCE
+    BOOST_CHECK_CLOSE(gti_vol[2], 666.9876, 1.0e-6); // SOCE
+    BOOST_CHECK_CLOSE(gti_vol[3], 66.678, 1.0e-6);   // FOCF
+    BOOST_CHECK_CLOSE(gti_vol[4], 66.9876, 1.0e-6);  // SOCF
+    BOOST_CHECK_CLOSE(gti_vol[5], 6.6, 1.0e-6);      // SEB
+    BOOST_CHECK_CLOSE(gti_vol[6], 0.0, 1.0e-6);      // Unused
+
+    // Total produced volumes.
+    const auto gtp_vol = xgrptrc.subspan(3 * tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(gtp_vol[0], 6666.0, 1.0e-6);  // SEA
+    BOOST_CHECK_CLOSE(gtp_vol[1], 666.006, 1.0e-6); // FOCE
+    BOOST_CHECK_CLOSE(gtp_vol[2], 666.007, 1.0e-6); // SOCE
+    BOOST_CHECK_CLOSE(gtp_vol[3], 66.006, 1.0e-6);  // FOCF
+    BOOST_CHECK_CLOSE(gtp_vol[4], 66.007, 1.0e-6);  // SOCF
+    BOOST_CHECK_CLOSE(gtp_vol[5], 6.666, 1.0e-6);   // SEB
+    BOOST_CHECK_CLOSE(gtp_vol[6], 0.0, 1.0e-6);     // Unused
+}
+
+BOOST_AUTO_TEST_SUITE_END() // Isothermal
+
+// ---------------------------------------------------------------------
+
+BOOST_AUTO_TEST_SUITE(Thermal)
+
+namespace {
+    SimulationCase defineCase()
+    {
+        return SimulationCase { R"(RUNSPEC
+DIMENS
+  5 5 2 /
+OIL
+GAS
+WATER
+DISGAS
+TEMP
+TABDIMS
+/
+WELLDIMS
+  3 2 5 3 / -- Item 3 (NGMAX) must be at least 5 for this test.
+EQLDIMS
+  3 1 1 /
+TRACERS
+--  oil  water  gas  env
+     1*  3      2    1*   /
+GRID
+DXV
+  5*100 /
+DYV
+  5*100 /
+DZV
+  5 10 /
+DEPTHZ
+  36*2000.0 /
+EQUALS
+  PORO 0.25 /
+  PERMX 100 /
+  PERMY 100 /
+  PERMZ 10 /
+/
+PROPS
+DENSITY
+  852.6 1014.3 0.83 /
+TRACER
+SEA  WAT  /
+OCE  GAS  /
+OCF  GAS  /
+SEB  WAT  /
+/
+TVDPFSEA
+1000   0.0
+5000   0.0 /
+TVDPFSEB
+1000   0.0
+5000   0.0 /
+TBLKFOCE
+1.0 2.0 3.0 /
+TBLKFOCF
+1.0 2.0 3.0 /
+TEMPI
+  50*42.0 /
+SCHEDULE
+GRUPTREE
+  'PLAT_A' FIELD /
+  INJE     'PLAT_A' /
+  PROD     'PLAT_A' /
+  'INJE-G' INJE /
+  'INJE-W' INJE /
+/
+WELSPECS
+  IW 'INJE-W' 1 1 2010.0 'WATER' /
+  IG 'INJE-G' 1 5 2010.0 'GAS' /
+  P  'PROD'   5 3 2002.5 'LIQ' /
+/
+COMPDAT
+  IW 1 1 2 2 'OPEN' 2* 0.5 /
+  IG 1 5 1 1 'OPEN' 2* 0.5 /
+  P  5 3 1 2 'OPEN' 2* 0.5 /
+/
+WTRACER
+  IW SEA 0.123 /
+  IG OCE 0.456 /
+/
+WCONINJE
+  IW 'WATER' 'OPEN' RATE 12345.6 1* 512.256 /
+  IG 'GAS' 'OPEN' RATE 678910.1112 1* 256.128 /
+/
+WCONPROD
+  P 'OPEN' LRAT 3* 100E3 1* 25.125 /
+/
+TSTEP
+  1 2 3 4 5 10 15 4*20 /
+END
+)"
+        };
+    }
+
+    // 3 Water + 2 Gas*(free + solution) + Temperature.
+    constexpr auto tracerStride = std::size_t{8};
+} // Anonymous namespace
+
+BOOST_AUTO_TEST_CASE(InteHEAD_Allocation_Sizes)
+{
+    const auto cse = defineCase();
+    const auto ih  = intehead(cse);
+
+    const auto expectNumTracers = [&trcCount = cse.es.runspec().tracers()]()
+    {
+        return trcCount.water_tracers()
+             + trcCount.oil_tracers()
+             + trcCount.gas_tracers()
+             + 1; // Temperature
+    }();
+
+    BOOST_CHECK_EQUAL(expectNumTracers, 6);
+
+    const auto expectNumTrcElems = [&trcCount = cse.es.runspec().tracers()]()
+    {
+        return trcCount.water_tracers()
+             + 0*trcCount.oil_tracers()
+             + 2*trcCount.gas_tracers()
+             + 1; // Temperature
+    }();
+
+    BOOST_CHECK_EQUAL(expectNumTrcElems, static_cast<int>(tracerStride));
+
+    BOOST_CHECK_EQUAL(ih[VI::intehead::NGRP], 5);
+    BOOST_CHECK_EQUAL(ih[VI::intehead::NWGMAX], 5);
+    BOOST_CHECK_EQUAL(ih[VI::intehead::NGMAXZ], 6);
+    BOOST_CHECK_EQUAL(ih[VI::intehead::NXGRPZ], static_cast<int>(VI::XGroup::TracerOffset) + 4*expectNumTrcElems);
+}
+
+BOOST_AUTO_TEST_CASE(Field)
+{
+    const auto cse  = defineCase();
+    const auto ih   = intehead(cse);
+    const auto smry = dynamicState();
+
+    const auto gd = groupData(cse, ih, smry);
+    const auto xgsz = ih[VI::intehead::NXGRPZ];
+
+    BOOST_REQUIRE_MESSAGE(static_cast<std::size_t>(xgsz) > VI::XGroup::TracerOffset,
+                          "XGRP must allocate space for tracer concentrations");
+
+    // FIELD group is *last* in XGRP.
+    const auto grpID = ih[VI::intehead::NGMAXZ] - 1;
+
+    const auto xgrptrc = std::span {gd.getXGroup()}
+        .subspan(grpID * xgsz, xgsz)
+        .subspan(VI::XGroup::TracerOffset);
+
+    BOOST_REQUIRE_EQUAL(xgrptrc.size(), 4 * tracerStride);
+
+    // Injection rates
+    const auto fti_rate = xgrptrc.subspan(0*tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(fti_rate[0], 11122.2, 1.0e-6);    // HEA
+    BOOST_CHECK_CLOSE(fti_rate[1], 112233.44, 1.0e-6);  // SEA
+    BOOST_CHECK_CLOSE(fti_rate[2], 11.11, 1.0e-6);      // FOCE
+    BOOST_CHECK_CLOSE(fti_rate[3], 11.1212, 1.0e-6);    // SOCE
+    BOOST_CHECK_CLOSE(fti_rate[4], 111.0, 1.0e-6);      // FOCF
+    BOOST_CHECK_CLOSE(fti_rate[5], 11.202, 1.0e-6);     // SOCF
+    BOOST_CHECK_CLOSE(fti_rate[6], 111222.333, 1.0e-6); // SEB
+    BOOST_CHECK_CLOSE(fti_rate[7], 0.0, 1.0e-6);        // Unused
+
+    // Production rates
+    const auto ftp_rate = xgrptrc.subspan(1*tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(ftp_rate[0], 0.2233, 1.0e-6);     // HEA
+    BOOST_CHECK_CLOSE(ftp_rate[1], 2233.44, 1.0e-6);    // SEA
+    BOOST_CHECK_CLOSE(ftp_rate[2], 2.2, 1.0e-6);        // FOCE
+    BOOST_CHECK_CLOSE(ftp_rate[3], 2.033, 1.0e-6);      // SOCE
+    BOOST_CHECK_CLOSE(ftp_rate[4], 22.0, 1.0e-6);       // FOCF
+    BOOST_CHECK_CLOSE(ftp_rate[5], 0.33, 1.0e-6);       // SOCF
+    BOOST_CHECK_CLOSE(ftp_rate[6], 222333.444, 1.0e-6); // SEB
+    BOOST_CHECK_CLOSE(ftp_rate[7], 0.0, 1.0e-6);        // Unused
+
+    // Total injected volume
+    const auto fti_vol = xgrptrc.subspan(2*tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(fti_vol[0], 0.1122, 1.0e-6);           // HEA
+    BOOST_CHECK_CLOSE(fti_vol[1], 11223344.55, 1.0e-6);      // SEA
+    BOOST_CHECK_CLOSE(fti_vol[2], 1.1, 1.0e-6);              // FOCE
+    BOOST_CHECK_CLOSE(fti_vol[3], 0.022, 1.0e-6);            // SOCE
+    BOOST_CHECK_CLOSE(fti_vol[4], 0.0, 1.0e-6);              // FOCF
+    BOOST_CHECK_CLOSE(fti_vol[5], 0.0, 1.0e-6);              // SOCF
+    BOOST_CHECK_CLOSE(fti_vol[6], 111222333.444555, 1.0e-6); // SEB
+    BOOST_CHECK_CLOSE(fti_vol[7], 0.0, 1.0e-6);              // Unused
+
+    // Total produced volume
+    const auto ftp_vol = xgrptrc.subspan(3*tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(ftp_vol[0], 22.334455, 1.0e-6);     // HEA
+    BOOST_CHECK_CLOSE(ftp_vol[1], 223344.55, 1.0e-6);     // SEA
+    BOOST_CHECK_CLOSE(ftp_vol[2], 2200.44, 1.0e-6);       // FOCE
+    BOOST_CHECK_CLOSE(ftp_vol[3], 33.0055, 1.0e-6);       // SOCE
+    BOOST_CHECK_CLOSE(ftp_vol[4], 3.34455, 1.0e-6);       // FOCF
+    BOOST_CHECK_CLOSE(ftp_vol[5], 22.0, 1.0e-6);          // SOCF
+    BOOST_CHECK_CLOSE(ftp_vol[6], 222333444.555, 1.0e-6); // SEB
+    BOOST_CHECK_CLOSE(ftp_vol[7], 0.0, 1.0e-6);           // Unused
+}
+
+BOOST_AUTO_TEST_CASE(Plat_A)
+{
+    const auto cse  = defineCase();
+    const auto ih   = intehead(cse);
+    const auto smry = dynamicState();
+
+    const auto gd = groupData(cse, ih, smry);
+    const auto xgsz = ih[VI::intehead::NXGRPZ];
+
+    BOOST_REQUIRE_MESSAGE(static_cast<std::size_t>(xgsz) > VI::XGroup::TracerOffset,
+                          "XGRP must allocate space for tracer concentrations");
+
+    const auto grpID = 0;
+
+    {
+        const auto zgrp = std::span{gd.getZGroup()}
+            .subspan(grpID * ih[VI::intehead::NZGRPZ],
+                     ih[VI::intehead::NZGRPZ]);
+
+        BOOST_CHECK_EQUAL(zgrp[0].c_str(), "PLAT_A  ");
+    }
+
+    const auto xgrptrc = std::span {gd.getXGroup()}
+        .subspan(grpID * xgsz, xgsz)
+        .subspan(VI::XGroup::TracerOffset);
+
+    BOOST_REQUIRE_EQUAL(xgrptrc.size(), 4 * tracerStride);
+
+    // Injection rates
+    const auto gti_rates = xgrptrc.subspan(0 * tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(gti_rates[0], 22222.0, 1.0e-6); // HEA
+    BOOST_CHECK_CLOSE(gti_rates[1], 2000.0, 1.0e-6); // SEA
+    BOOST_CHECK_CLOSE(gti_rates[2], 0.0, 1.0e-6);    // FOCE
+    BOOST_CHECK_CLOSE(gti_rates[3], 202.02, 1.0e-6); // SOCE
+    BOOST_CHECK_CLOSE(gti_rates[4], 22.0, 1.0e-6);   // FOCF
+    BOOST_CHECK_CLOSE(gti_rates[5], 0.0, 1.0e-6);    // SOCF
+    BOOST_CHECK_CLOSE(gti_rates[6], 2.0, 1.0e-6);    // SEB
+    BOOST_CHECK_CLOSE(gti_rates[7], 0.0, 1.0e-6);    // Unused
+
+    // Production rates
+    const auto gtp_rates = xgrptrc.subspan(1 * tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(gtp_rates[0], 22222.22, 1.0e-6); // HEA
+    BOOST_CHECK_CLOSE(gtp_rates[1], 2220.0, 1.0e-6);   // SEA
+    BOOST_CHECK_CLOSE(gtp_rates[2], 202.0, 1.0e-6);    // FOCE
+    BOOST_CHECK_CLOSE(gtp_rates[3], 20.22, 1.0e-6);    // SOCE
+    BOOST_CHECK_CLOSE(gtp_rates[4], 22.02, 1.0e-6);    // FOCF
+    BOOST_CHECK_CLOSE(gtp_rates[5], 0.2, 1.0e-6);      // SOCF
+    BOOST_CHECK_CLOSE(gtp_rates[6], 2.22, 1.0e-6);     // SEB
+    BOOST_CHECK_CLOSE(gtp_rates[7], 0.0, 1.0e-6);      // Unused
+
+    // Total injected volumes
+    const auto gti_vol = xgrptrc.subspan(2 * tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(gti_vol[0], 22222.2, 1.0e-6); // HEA
+    BOOST_CHECK_CLOSE(gti_vol[1], 2200.0, 1.0e-6);  // SEA
+    BOOST_CHECK_CLOSE(gti_vol[2], 200.002, 1.0e-6); // FOCE
+    BOOST_CHECK_CLOSE(gti_vol[3], 2.202, 1.0e-6);   // SOCE
+    BOOST_CHECK_CLOSE(gti_vol[4], 20.02, 1.0e-6);   // FOCF
+    BOOST_CHECK_CLOSE(gti_vol[5], 2.24, 1.0e-6);    // SOCF
+    BOOST_CHECK_CLOSE(gti_vol[6], 2.2, 1.0e-6);     // SEB
+    BOOST_CHECK_CLOSE(gti_vol[7], 0.0, 1.0e-6);     // Unused
+
+    // Total produced volumes
+    const auto gtp_vol = xgrptrc.subspan(3 * tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(gtp_vol[0], 22222.222, 1.0e-6); // HEA
+    BOOST_CHECK_CLOSE(gtp_vol[1], 2222.0, 1.0e-6);    // SEA
+    BOOST_CHECK_CLOSE(gtp_vol[2], 222.202, 1.0e-6);   // FOCE
+    BOOST_CHECK_CLOSE(gtp_vol[3], 242.242, 1.0e-6);   // SOCE
+    BOOST_CHECK_CLOSE(gtp_vol[4], 22.202, 1.0e-6);    // FOCF
+    BOOST_CHECK_CLOSE(gtp_vol[5], 24.02, 1.0e-6);     // SOCF
+    BOOST_CHECK_CLOSE(gtp_vol[6], 2.222, 1.0e-6);     // SEB
+    BOOST_CHECK_CLOSE(gtp_vol[7], 0.0, 1.0e-6);       // Unused
+}
+
+BOOST_AUTO_TEST_CASE(Inje)
+{
+    const auto cse  = defineCase();
+    const auto ih   = intehead(cse);
+    const auto smry = dynamicState();
+
+    const auto gd = groupData(cse, ih, smry);
+    const auto xgsz = ih[VI::intehead::NXGRPZ];
+
+    BOOST_REQUIRE_MESSAGE(static_cast<std::size_t>(xgsz) > VI::XGroup::TracerOffset,
+                          "XGRP must allocate space for tracer concentrations");
+
+    const auto grpID = 1;
+
+    {
+        const auto zgrp = std::span{gd.getZGroup()}
+            .subspan(grpID * ih[VI::intehead::NZGRPZ],
+                     ih[VI::intehead::NZGRPZ]);
+
+        BOOST_CHECK_EQUAL(zgrp[0].c_str(), "INJE    ");
+    }
+
+    const auto xgrptrc = std::span {gd.getXGroup()}
+        .subspan(grpID * xgsz, xgsz)
+        .subspan(VI::XGroup::TracerOffset);
+
+    BOOST_REQUIRE_EQUAL(xgrptrc.size(), 4 * tracerStride);
+
+    // Injection rates
+    const auto gti_rates = xgrptrc.subspan(0 * tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(gti_rates[0], 33333.0, 1.0e-6); // HEA
+    BOOST_CHECK_CLOSE(gti_rates[1], 3000.0, 1.0e-6);  // SEA
+    BOOST_CHECK_CLOSE(gti_rates[2], 303, 1.0e-6);     // FOCE
+    BOOST_CHECK_CLOSE(gti_rates[3], 30.3, 1.0e-6);    // SOCE
+    BOOST_CHECK_CLOSE(gti_rates[4], 3.3, 1.0e-6);     // FOCF
+    BOOST_CHECK_CLOSE(gti_rates[5], 30.7, 1.0e-6);    // SOCF
+    BOOST_CHECK_CLOSE(gti_rates[6], 3.0, 1.0e-6);     // SEB
+    BOOST_CHECK_CLOSE(gti_rates[7], 0.0, 1.0e-6);     // Unused
+
+    // Production rates
+    const auto gtp_rates = xgrptrc.subspan(1 * tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(gtp_rates[0], 33333.33, 1.0e-6); // HEA
+    BOOST_CHECK_CLOSE(gtp_rates[1], 3330.0, 1.0e-6);   // SEA
+    BOOST_CHECK_CLOSE(gtp_rates[2], 0.0, 1.0e-6);      // FOCE
+    BOOST_CHECK_CLOSE(gtp_rates[3], 303.03, 1.0e-6);   // SOCE
+    BOOST_CHECK_CLOSE(gtp_rates[4], 30.03, 1.0e-6);    // FOCF
+    BOOST_CHECK_CLOSE(gtp_rates[5], 43.34, 1.0e-6);    // SOCF
+    BOOST_CHECK_CLOSE(gtp_rates[6], 3.33, 1.0e-6);     // SEB
+    BOOST_CHECK_CLOSE(gtp_rates[7], 0.0, 1.0e-6);      // Unused
+
+    // Total injected volumes
+    const auto gti_vol = xgrptrc.subspan(2 * tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(gti_vol[0], 33333.3, 1.0e-6); // HEA
+    BOOST_CHECK_CLOSE(gti_vol[1], 3300.0, 1.0e-6);  // SEA
+    BOOST_CHECK_CLOSE(gti_vol[2], 343.43, 1.0e-6);  // FOCE
+    BOOST_CHECK_CLOSE(gti_vol[3], 334.3, 1.0e-6);   // SOCE
+    BOOST_CHECK_CLOSE(gti_vol[4], 33.303, 1.0e-6);  // FOCF
+    BOOST_CHECK_CLOSE(gti_vol[5], 0.0, 1.0e-6);     // SOCF
+    BOOST_CHECK_CLOSE(gti_vol[6], 3.3, 1.0e-6);     // SEB
+    BOOST_CHECK_CLOSE(gti_vol[7], 0.0, 1.0e-6);     // Unused
+
+    // Total produced volumes
+    const auto gtp_vol = xgrptrc.subspan(3 * tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(gtp_vol[0], 33333.333, 1.0e-6); // HEA
+    BOOST_CHECK_CLOSE(gtp_vol[1], 3333.0, 1.0e-6);    // SEA
+    BOOST_CHECK_CLOSE(gtp_vol[2], 334.334, 1.0e-6);   // FOCE
+    BOOST_CHECK_CLOSE(gtp_vol[3], 343.5, 1.0e-6);     // SOCE
+    BOOST_CHECK_CLOSE(gtp_vol[4], 33.003, 1.0e-6);    // FOCF
+    BOOST_CHECK_CLOSE(gtp_vol[5], 0.33, 1.0e-6);      // SOCF
+    BOOST_CHECK_CLOSE(gtp_vol[6], 3.333, 1.0e-6);     // SEB
+    BOOST_CHECK_CLOSE(gtp_vol[7], 0.0, 1.0e-6);       // Unused
+}
+
+BOOST_AUTO_TEST_CASE(Prod)
+{
+    const auto cse  = defineCase();
+    const auto ih   = intehead(cse);
+    const auto smry = dynamicState();
+
+    const auto gd = groupData(cse, ih, smry);
+    const auto xgsz = ih[VI::intehead::NXGRPZ];
+
+    BOOST_REQUIRE_MESSAGE(static_cast<std::size_t>(xgsz) > VI::XGroup::TracerOffset,
+                          "XGRP must allocate space for tracer concentrations");
+
+    const auto grpID = 2;
+
+    {
+        const auto zgrp = std::span{gd.getZGroup()}
+            .subspan(grpID * ih[VI::intehead::NZGRPZ],
+                     ih[VI::intehead::NZGRPZ]);
+
+        BOOST_CHECK_EQUAL(zgrp[0].c_str(), "PROD    ");
+    }
+
+    const auto xgrptrc = std::span {gd.getXGroup()}
+        .subspan(grpID * xgsz, xgsz)
+        .subspan(VI::XGroup::TracerOffset);
+
+    BOOST_REQUIRE_EQUAL(xgrptrc.size(), 4 * tracerStride);
+
+    // Injection rates
+    const auto gti_rates = xgrptrc.subspan(0 * tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(gti_rates[0], 44444.0, 1.0e-6); // HEA
+    BOOST_CHECK_CLOSE(gti_rates[1], 4000.0, 1.0e-6);  // SEA
+    BOOST_CHECK_CLOSE(gti_rates[2], 404.0, 1.0e-6);   // FOCE
+    BOOST_CHECK_CLOSE(gti_rates[3], 440.4, 1.0e-6);   // SOCE
+    BOOST_CHECK_CLOSE(gti_rates[4], 40.0, 1.0e-6);    // FOCF
+    BOOST_CHECK_CLOSE(gti_rates[5], 44.4, 1.0e-6);    // SOCF
+    BOOST_CHECK_CLOSE(gti_rates[6], 4.0, 1.0e-6);     // SEB
+    BOOST_CHECK_CLOSE(gti_rates[7], 0.0, 1.0e-6);     // Unused
+
+    // Production rates
+    const auto gtp_rates = xgrptrc.subspan(1 * tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(gtp_rates[0], 44444.44, 1.0e-6); // HEA
+    BOOST_CHECK_CLOSE(gtp_rates[1], 4440.0, 1.0e-6);   // SEA
+    BOOST_CHECK_CLOSE(gtp_rates[2], 444.54, 1.0e-6);   // FOCE
+    BOOST_CHECK_CLOSE(gtp_rates[3], 404.04, 1.0e-6);   // SOCE
+    BOOST_CHECK_CLOSE(gtp_rates[4], 40.04, 1.0e-6);    // FOCF
+    BOOST_CHECK_CLOSE(gtp_rates[5], 44.56, 1.0e-6);    // SOCF
+    BOOST_CHECK_CLOSE(gtp_rates[6], 4.44, 1.0e-6);     // SEB
+    BOOST_CHECK_CLOSE(gtp_rates[7], 0.0, 1.0e-6);      // Unused
+
+    // Total injected volumes
+    const auto gti_vol = xgrptrc.subspan(2 * tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(gti_vol[0], 44444.4, 1.0e-6);  // HEA
+    BOOST_CHECK_CLOSE(gti_vol[1], 4400.0, 1.0e-6);   // SEA
+    BOOST_CHECK_CLOSE(gti_vol[2], 404.505, 1.0e-6);  // FOCE
+    BOOST_CHECK_CLOSE(gti_vol[3], 444.4567, 1.0e-6); // SOCE
+    BOOST_CHECK_CLOSE(gti_vol[4], 44.44, 1.0e-6);    // FOCF
+    BOOST_CHECK_CLOSE(gti_vol[5], 45.54, 1.0e-6);    // SOCF
+    BOOST_CHECK_CLOSE(gti_vol[6], 4.4, 1.0e-6);      // SEB
+    BOOST_CHECK_CLOSE(gti_vol[7], 0.0, 1.0e-6);      // Unused
+
+    // Total produced volumes
+    const auto gtp_vol = xgrptrc.subspan(3 * tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(gtp_vol[0], 44444.444, 1.0e-6); // HEA
+    BOOST_CHECK_CLOSE(gtp_vol[1], 4444.0, 1.0e-6);    // SEA
+    BOOST_CHECK_CLOSE(gtp_vol[2], 454.454, 1.0e-6);   // FOCE
+    BOOST_CHECK_CLOSE(gtp_vol[3], 434.434, 1.0e-6);   // SOCE
+    BOOST_CHECK_CLOSE(gtp_vol[4], 44.434, 1.0e-6);    // FOCF
+    BOOST_CHECK_CLOSE(gtp_vol[5], 44.454, 1.0e-6);    // SOCF
+    BOOST_CHECK_CLOSE(gtp_vol[6], 4.444, 1.0e-6);     // SEB
+    BOOST_CHECK_CLOSE(gtp_vol[7], 0.0, 1.0e-6);       // Unused
+}
+
+BOOST_AUTO_TEST_CASE(Inje_G)
+{
+    const auto cse  = defineCase();
+    const auto ih   = intehead(cse);
+    const auto smry = dynamicState();
+
+    const auto gd = groupData(cse, ih, smry);
+    const auto xgsz = ih[VI::intehead::NXGRPZ];
+
+    BOOST_REQUIRE_MESSAGE(static_cast<std::size_t>(xgsz) > VI::XGroup::TracerOffset,
+                          "XGRP must allocate space for tracer concentrations");
+
+    const auto grpID = 3;
+
+    {
+        const auto zgrp = std::span{gd.getZGroup()}
+            .subspan(grpID * ih[VI::intehead::NZGRPZ],
+                     ih[VI::intehead::NZGRPZ]);
+
+        BOOST_CHECK_EQUAL(zgrp[0].c_str(), "INJE-G  ");
+    }
+
+    const auto xgrptrc = std::span {gd.getXGroup()}
+        .subspan(grpID * xgsz, xgsz)
+        .subspan(VI::XGroup::TracerOffset);
+
+    BOOST_REQUIRE_EQUAL(xgrptrc.size(), 4 * tracerStride);
+
+    // Injection rates
+    const auto gti_rates = xgrptrc.subspan(0 * tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(gti_rates[0], 55555.0, 1.0e-6);  // HEA
+    BOOST_CHECK_CLOSE(gti_rates[1], 5000.0, 1.0e-6);   // SEA
+    BOOST_CHECK_CLOSE(gti_rates[2], 505.05, 1.0e-6);   // FOCE
+    BOOST_CHECK_CLOSE(gti_rates[3], 0.0, 1.0e-6);      // SOCE
+    BOOST_CHECK_CLOSE(gti_rates[4], 55.055, 1.0e-6);   // FOCF
+    BOOST_CHECK_CLOSE(gti_rates[5], 55.55055, 1.0e-6); // SOCF
+    BOOST_CHECK_CLOSE(gti_rates[6], 5.0, 1.0e-6);      // SEB
+    BOOST_CHECK_CLOSE(gti_rates[7], 0.0, 1.0e-6);      // Unused
+
+    // Production rates
+    const auto gtp_rates = xgrptrc.subspan(1 * tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(gtp_rates[0], 55555.55, 1.0e-6); // HEA
+    BOOST_CHECK_CLOSE(gtp_rates[1], 5550.0, 1.0e-6);   // SEA
+    BOOST_CHECK_CLOSE(gtp_rates[2], 555.505, 1.0e-6);  // FOCE
+    BOOST_CHECK_CLOSE(gtp_rates[3], 505.565, 1.0e-6);  // SOCE
+    BOOST_CHECK_CLOSE(gtp_rates[4], 50.05, 1.0e-6);    // FOCF
+    BOOST_CHECK_CLOSE(gtp_rates[5], 56.65, 1.0e-6);    // SOCF
+    BOOST_CHECK_CLOSE(gtp_rates[6], 5.55, 1.0e-6);     // SEB
+    BOOST_CHECK_CLOSE(gtp_rates[7], 0.0, 1.0e-6);      // Unused
+
+    // Total injected volumes
+    const auto gti_vol = xgrptrc.subspan(2 * tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(gti_vol[0], 55555.5, 1.0e-6); // HEA
+    BOOST_CHECK_CLOSE(gti_vol[1], 5500.0, 1.0e-6);  // SEA
+    BOOST_CHECK_CLOSE(gti_vol[2], 555.555, 1.0e-6); // FOCE
+    BOOST_CHECK_CLOSE(gti_vol[3], 565.565, 1.0e-6); // SOCE
+    BOOST_CHECK_CLOSE(gti_vol[4], 55.55, 1.0e-6);   // FOCF
+    BOOST_CHECK_CLOSE(gti_vol[5], 55.678, 1.0e-6);  // SOCF
+    BOOST_CHECK_CLOSE(gti_vol[6], 5.5, 1.0e-6);     // SEB
+    BOOST_CHECK_CLOSE(gti_vol[7], 0.0, 1.0e-6);     // Unused
+
+    // Total produced volumes
+    const auto gtp_vol = xgrptrc.subspan(3 * tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(gtp_vol[0], 55555.555, 1.0e-6); // HEA
+    BOOST_CHECK_CLOSE(gtp_vol[1], 5555.0, 1.0e-6);    // SEA
+    BOOST_CHECK_CLOSE(gtp_vol[2], 565.5656, 1.0e-6);  // FOCE
+    BOOST_CHECK_CLOSE(gtp_vol[3], 545.5454, 1.0e-6);  // SOCE
+    BOOST_CHECK_CLOSE(gtp_vol[4], 55.585, 1.0e-6);    // FOCF
+    BOOST_CHECK_CLOSE(gtp_vol[5], 55.575, 1.0e-6);    // SOCF
+    BOOST_CHECK_CLOSE(gtp_vol[6], 5.555, 1.0e-6);     // SEB
+    BOOST_CHECK_CLOSE(gtp_vol[7], 0.0, 1.0e-6);       // Unused
+}
+
+BOOST_AUTO_TEST_CASE(Inje_W)
+{
+    const auto cse  = defineCase();
+    const auto ih   = intehead(cse);
+    const auto smry = dynamicState();
+
+    const auto gd = groupData(cse, ih, smry);
+    const auto xgsz = ih[VI::intehead::NXGRPZ];
+
+    BOOST_REQUIRE_MESSAGE(static_cast<std::size_t>(xgsz) > VI::XGroup::TracerOffset,
+                          "XGRP must allocate space for tracer concentrations");
+
+    const auto grpID = 4;
+
+    {
+        const auto zgrp = std::span{gd.getZGroup()}
+            .subspan(grpID * ih[VI::intehead::NZGRPZ],
+                     ih[VI::intehead::NZGRPZ]);
+
+        BOOST_CHECK_EQUAL(zgrp[0].c_str(), "INJE-W  ");
+    }
+
+    const auto xgrptrc = std::span {gd.getXGroup()}
+        .subspan(grpID * xgsz, xgsz)
+        .subspan(VI::XGroup::TracerOffset);
+
+    BOOST_REQUIRE_EQUAL(xgrptrc.size(), 4 * tracerStride);
+
+    // Injection rates.
+    const auto gti_rates = xgrptrc.subspan(0 * tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(gti_rates[0], 66666.0, 1.0e-6); // HEA
+    BOOST_CHECK_CLOSE(gti_rates[1], 6000.0, 1.0e-6);  // SEA
+    BOOST_CHECK_CLOSE(gti_rates[2], 606.06, 1.0e-6);  // FOCE
+    BOOST_CHECK_CLOSE(gti_rates[3], 660.066, 1.0e-6); // SOCE
+    BOOST_CHECK_CLOSE(gti_rates[4], 0.0, 1.0e-6);     // FOCF
+    BOOST_CHECK_CLOSE(gti_rates[5], 66.33, 1.0e-6);   // SOCF
+    BOOST_CHECK_CLOSE(gti_rates[6], 6.0, 1.0e-6);     // SEB
+    BOOST_CHECK_CLOSE(gti_rates[7], 0.0, 1.0e-6);     // Unused
+
+    // Production rates.
+    const auto gtp_rates = xgrptrc.subspan(1 * tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(gtp_rates[0], 66666.66, 1.0e-6); // HEA
+    BOOST_CHECK_CLOSE(gtp_rates[1], 6660.0, 1.0e-6);   // SEA
+    BOOST_CHECK_CLOSE(gtp_rates[2], 666.666, 1.0e-6);  // FOCE
+    BOOST_CHECK_CLOSE(gtp_rates[3], 666.066, 1.0e-6);  // SOCE
+    BOOST_CHECK_CLOSE(gtp_rates[4], 0.0, 1.0e-6);      // FOCF
+    BOOST_CHECK_CLOSE(gtp_rates[5], 0.0, 1.0e-6);      // SOCF
+    BOOST_CHECK_CLOSE(gtp_rates[6], 6.66, 1.0e-6);     // SEB
+    BOOST_CHECK_CLOSE(gtp_rates[7], 0.0, 1.0e-6);      // Unused
+
+    // Total injected volumes.
+    const auto gti_vol = xgrptrc.subspan(2 * tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(gti_vol[0], 66666.6, 1.0e-6);  // HEA
+    BOOST_CHECK_CLOSE(gti_vol[1], 6600.0, 1.0e-6);   // SEA
+    BOOST_CHECK_CLOSE(gti_vol[2], 666.5678, 1.0e-6); // FOCE
+    BOOST_CHECK_CLOSE(gti_vol[3], 666.9876, 1.0e-6); // SOCE
+    BOOST_CHECK_CLOSE(gti_vol[4], 66.678, 1.0e-6);   // FOCF
+    BOOST_CHECK_CLOSE(gti_vol[5], 66.9876, 1.0e-6);  // SOCF
+    BOOST_CHECK_CLOSE(gti_vol[6], 6.6, 1.0e-6);      // SEB
+    BOOST_CHECK_CLOSE(gti_vol[7], 0.0, 1.0e-6);      // Unused
+
+    // Total produced volumes.
+    const auto gtp_vol = xgrptrc.subspan(3 * tracerStride, tracerStride);
+    BOOST_CHECK_CLOSE(gtp_vol[0], 66666.666, 1.0e-6); // HEA
+    BOOST_CHECK_CLOSE(gtp_vol[1], 6666.0, 1.0e-6);    // SEA
+    BOOST_CHECK_CLOSE(gtp_vol[2], 666.006, 1.0e-6);   // FOCE
+    BOOST_CHECK_CLOSE(gtp_vol[3], 666.007, 1.0e-6);   // SOCE
+    BOOST_CHECK_CLOSE(gtp_vol[4], 66.006, 1.0e-6);    // FOCF
+    BOOST_CHECK_CLOSE(gtp_vol[5], 66.007, 1.0e-6);    // SOCF
+    BOOST_CHECK_CLOSE(gtp_vol[6], 6.666, 1.0e-6);     // SEB
+    BOOST_CHECK_CLOSE(gtp_vol[7], 0.0, 1.0e-6);       // Unused
+}
+
+BOOST_AUTO_TEST_SUITE_END() // Thermal
+
+BOOST_AUTO_TEST_SUITE_END() // Tracer_Values

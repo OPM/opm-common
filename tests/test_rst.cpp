@@ -417,6 +417,7 @@ END
 
         auto groupData = Opm::RestartIO::Helpers::AggregateGroupData(ih);
         groupData.captureDeclaredGroupData(simCase.sched,
+                                           simCase.es.tracer(),
                                            sim_step, sumState, ih);
 
         const auto outputDir = std::string { "./" };
@@ -507,6 +508,7 @@ BOOST_AUTO_TEST_CASE(group_test)
 
     auto groupData = Opm::RestartIO::Helpers::AggregateGroupData(ih);
     groupData.captureDeclaredGroupData(simCase.sched,
+                                       simCase.es.tracer(),
                                        sim_step, sumState, ih);
 
     const auto& igrp = groupData.getIGroup();

@@ -1355,6 +1355,35 @@ namespace {
         });
     }
 
+    void assign_group_tracer_cumulatives(const std::string&       group,
+                                         const std::size_t        groupID,
+                                         const bool               isTemp,
+                                         const Opm::Tracers&      tracer_dims,
+                                         const Opm::TracerConfig& tracer_config,
+                                         const GroupVectors&      groupData,
+                                         Opm::SummaryState&       smry)
+    {
+        const auto tracerCumulatives = groupData.xgrp(groupID)
+            .subspan(VI::XGroup::index::TracerOffset);
+
+        // Group tracer cumulatives start at offset 2 (rates are at offsets zero and one)
+        // and appear in the order of injection/production totals, i.e., "I" then "P".
+        assign_tracer_cumulatives(2, "IP", isTemp, tracer_dims, tracer_config,
+                                  tracerCumulatives,
+                                  [&smry, &group](const char       type,
+                                                  std::string_view tracerName,
+                                                  const double     value)
+        {
+            // Note: This will update/assign GT*:FIELD as well.  That's intentional
+            // since vectors of that form might be needed for ACTIONX conditions.
+            smry.update_group_var(group, fmt::format("GT{}T{}", type, tracerName), value);
+
+            if (group == "FIELD") {
+                smry.update(fmt::format("FT{}T{}", type, tracerName), value);
+            }
+        });
+    }
+
     void assign_well_cumulatives(const std::string&       well,
                                  const std::size_t        wellID,
                                  const bool               isTemp,
@@ -1415,10 +1444,13 @@ namespace {
         }
     }
 
-    void assign_group_cumulatives(const std::string&  group,
-                                  const std::size_t   groupID,
-                                  const GroupVectors& groupData,
-                                  Opm::SummaryState&  smry)
+    void assign_group_cumulatives(const std::string&       group,
+                                  const std::size_t        groupID,
+                                  const bool               isTemp,
+                                  const Opm::Tracers&      tracer_dims,
+                                  const Opm::TracerConfig& tracer_config,
+                                  const GroupVectors&      groupData,
+                                  Opm::SummaryState&       smry)
     {
         if (! groupData.hasDefinedValues()) {
             // Result set does not provide group information.
@@ -1477,6 +1509,14 @@ namespace {
 
         update("GCT",  xgrp[VI::XGroup::index::GasConsumptionTotal]);
         update("GIMT", xgrp[VI::XGroup::index::GasImportTotal]);
+
+        if (isTemp || !tracer_config.empty()) {
+            assign_group_tracer_cumulatives(group, groupID,
+                                            isTemp,
+                                            tracer_dims,
+                                            tracer_config,
+                                            groupData, smry);
+        }
     }
 
     bool isDefaultedUDQ(const double x)
@@ -1623,22 +1663,23 @@ namespace {
                             const Opm::TracerConfig&                     tracer_config,
                             std::shared_ptr<Opm::EclIO::RestartFileView> rst_view)
     {
-        const auto  sim_step = rst_view->simStep();
-        const auto& intehead = rst_view->intehead();
+        const auto  sim_step    = rst_view->simStep();
+        const auto& intehead    = rst_view->intehead();
+        const auto  isTemp      = schedule.runspec().temp();
+        const auto& tracer_dims = schedule.runspec().tracers();
 
         smry.update_elapsed(schedule.seconds(rst_view->reportStep()));
 
         // Well cumulatives
         {
-            const auto isTemp = schedule.runspec().temp();
-            const auto  wellData = WellVectors { intehead, rst_view };
-            const auto& wells    = schedule.wellNames(sim_step);
+            const auto wellData = WellVectors { intehead, rst_view };
+            const auto wells    = schedule.wellNames(sim_step);
 
             for (auto nWells = wells.size(), wellID = 0*nWells;
                  wellID < nWells; ++wellID)
             {
                 assign_well_cumulatives(wells[wellID], wellID, isTemp,
-                                        schedule.runspec().tracers(), tracer_config,
+                                        tracer_dims, tracer_config,
                                         wellData, smry);
             }
         }
@@ -1666,7 +1707,9 @@ namespace {
                     ? groupData.maxGroups() // NGMAXZ -- Item 3 of WELLDIMS
                     : std::max(group.insert_index(), std::size_t{1}) - 1;
 
-                assign_group_cumulatives(gname, groupOrderIx, groupData, smry);
+                assign_group_cumulatives(gname, groupOrderIx, isTemp,
+                                         tracer_dims, tracer_config,
+                                         groupData, smry);
             }
         }
     }
