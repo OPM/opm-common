@@ -1,7 +1,6 @@
 {
   "name": "NODPPM",
   "sections": [
-    "RUNSPEC",
-    "GRID"
+    "RUNSPEC"
   ]
 }
