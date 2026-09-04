@@ -581,6 +581,86 @@ public:
                                           return false);
         return false;
     }
+
+    template <class GasOilStateT, class OilWaterStateT>
+    static void captureHysteresisStateThreePhase(const Params& params,
+                                                GasOilStateT& gasOilState,
+                                                OilWaterStateT& oilWaterState)
+    {
+        switch (params.approach()) {
+        case EclMultiplexerApproach::Stone1: {
+            Stone1Material::captureHysteresisState(
+                params.template getRealParams<EclMultiplexerApproach::Stone1>(),
+                gasOilState, oilWaterState);
+            break;
+        }
+        case EclMultiplexerApproach::Stone2: {
+            Stone2Material::captureHysteresisState(
+                params.template getRealParams<EclMultiplexerApproach::Stone2>(),
+                gasOilState, oilWaterState);
+            break;
+        }
+        case EclMultiplexerApproach::Default: {
+            DefaultMaterial::captureHysteresisState(
+                params.template getRealParams<EclMultiplexerApproach::Default>(),
+                gasOilState, oilWaterState);
+            break;
+        }
+        case EclMultiplexerApproach::TwoPhase:
+        case EclMultiplexerApproach::OnePhase:
+            break;
+        }
+    }
+
+    template <class GasOilStateT, class OilWaterStateT>
+    static void restoreHysteresisStateThreePhase(Params& params,
+                                                const GasOilStateT& gasOilState,
+                                                const OilWaterStateT& oilWaterState)
+    {
+        switch (params.approach()) {
+        case EclMultiplexerApproach::Stone1: {
+            Stone1Material::restoreHysteresisState(
+                params.template getRealParams<EclMultiplexerApproach::Stone1>(),
+                gasOilState, oilWaterState);
+            break;
+        }
+        case EclMultiplexerApproach::Stone2: {
+            Stone2Material::restoreHysteresisState(
+                params.template getRealParams<EclMultiplexerApproach::Stone2>(),
+                gasOilState, oilWaterState);
+            break;
+        }
+        case EclMultiplexerApproach::Default: {
+            DefaultMaterial::restoreHysteresisState(
+                params.template getRealParams<EclMultiplexerApproach::Default>(),
+                gasOilState, oilWaterState);
+            break;
+        }
+        case EclMultiplexerApproach::TwoPhase:
+        case EclMultiplexerApproach::OnePhase:
+            break;
+        }
+    }
+
+    template <class StateT>
+    static void captureHysteresisStateTwoPhase(const Params& params, StateT& twoPhaseState)
+    {
+        if (params.approach() == EclMultiplexerApproach::TwoPhase) {
+            TwoPhaseMaterial::captureHysteresisState(
+                params.template getRealParams<EclMultiplexerApproach::TwoPhase>(),
+                twoPhaseState);
+        }
+    }
+
+    template <class StateT>
+    static void restoreHysteresisStateTwoPhase(Params& params, const StateT& twoPhaseState)
+    {
+        if (params.approach() == EclMultiplexerApproach::TwoPhase) {
+            TwoPhaseMaterial::restoreHysteresisState(
+                params.template getRealParams<EclMultiplexerApproach::TwoPhase>(),
+                twoPhaseState);
+        }
+    }
 };
 
 } // namespace Opm
