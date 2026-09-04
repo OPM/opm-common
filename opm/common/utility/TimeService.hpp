@@ -46,7 +46,33 @@ namespace Opm {
 
     std::time_t mkdatetime(int in_year, int in_month, int in_day, int hour, int minute, int second);
     std::time_t mkdate(int in_year, int in_month, int in_day);
+    /// Seconds since the epoch for a std::tm read as UTC civil time: POSIX
+    /// timegm(), written with the C++20 <chrono> calendar types so it is the
+    /// same everywhere (Windows' _mkgmtime() stops at year 3000).
+    ///
+    /// The month is normalised into the year; a day beyond the month and the
+    /// time of day are added as they stand, so 33 January is 2 February.
+    ///
+    /// Throws std::out_of_range for an instant outside what std::chrono::year
+    /// can represent, -32767-01-01T00:00:00Z to 32767-12-31T23:59:59Z. That
+    /// is a year past either end, and also an in-range year whose day of the
+    /// month or time of day carries the instant past it -- 32767-12-32, or
+    /// 24:00 on the last day. What this returns, portable_gmtime() always
+    /// takes back.
     std::time_t portable_timegm(const std::tm* t);
+
+    /// Break a time_t into UTC civil time.
+    ///
+    /// The inverse of portable_timegm(), and a replacement for std::gmtime():
+    /// that returns nullptr for time points its C runtime cannot represent --
+    /// MSVC's refuses everything before 1970 and after year 3000, both of
+    /// which simulation schedules legitimately reach -- and hands back a
+    /// pointer to a static buffer that concurrent callers overwrite.
+    ///
+    /// Throws std::out_of_range for an instant whose calendar year lies
+    /// outside std::chrono::year, -32767 to 32767; within it, every field
+    /// std::gmtime() fills is filled, tm_yday and tm_wday included.
+    std::tm portable_gmtime(std::time_t t);
     std::time_t timeFromEclipse(const DeckRecord &dateRecord);
     }
 
