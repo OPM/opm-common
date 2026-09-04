@@ -7461,3 +7461,85 @@ END
         BOOST_CHECK_CLOSE(s->width(), 1819.202122, 1.0e-8);
     }
 }
+
+namespace {
+    Schedule make_dual_porosity_schedule(const bool fracture_perm_scaling_disabled)
+    {
+        const auto deck_string = std::string { R"(
+RUNSPEC
+DIMENS
+ 1 1 2 /
+OIL
+WATER
+DUALPORO
+)" } + (fracture_perm_scaling_disabled ? std::string{ "NODPPM\n" } : std::string{}) + R"(
+WELLDIMS
+ 2 2 2 2 /
+GRID
+DX
+ 2*100 /
+DY
+ 2*100 /
+DZ
+ 2*10 /
+TOPS
+ 2000 /
+PORO
+ 0.25 0.05 /
+PERMX
+ 5 20000 /
+PERMY
+ 5 20000 /
+PERMZ
+ 0.5 2000 /
+SCHEDULE
+WELSPECS
+ 'PF' 'G' 1 1 2005 'OIL' 7* /
+ 'PM' 'G' 1 1 2005 'OIL' 7* /
+/
+COMPDAT
+ 'PF' 1 1 2 2 'OPEN' 1* 1* 0.2 /
+ 'PM' 1 1 1 1 'OPEN' 1* 1* 0.2 /
+/
+)";
+
+        const auto deck = Parser{}.parseString(deck_string);
+
+        EclipseGrid grid(deck);
+        const TableManager table (deck);
+        const FieldPropsManager fp(deck, Phases{true, true, false}, grid, table);
+        const Runspec runspec (deck);
+
+        return { deck, grid, fp, NumericalAquifers{}, runspec, std::make_shared<Python>() };
+    }
+}
+
+BOOST_AUTO_TEST_CASE(DualPorosityFractureConnectionFactorScaled) {
+    const auto scaled   = make_dual_porosity_schedule(false);
+    const auto unscaled = make_dual_porosity_schedule(true);
+
+    const auto& conn_scaled   = scaled  .getWell("PF", 0).getConnections()[0];
+    const auto& conn_unscaled = unscaled.getWell("PF", 0).getConnections()[0];
+
+    // Fracture-cell porosity is 0.05: the defaulted connection factor and
+    // Kh computed from the scaled permeability are exactly the fracture
+    // porosity times their unscaled counterparts (isotropic scaling leaves
+    // the Peaceman denominator unchanged).
+    BOOST_CHECK_CLOSE(conn_scaled.CF(), 0.05 * conn_unscaled.CF(), 1.0e-8);
+    BOOST_CHECK_CLOSE(conn_scaled.Kh(), 0.05 * conn_unscaled.Kh(), 1.0e-8);
+
+    BOOST_CHECK(conn_scaled.CF() > 0.0);
+    BOOST_CHECK(conn_scaled.Kh() > 0.0);
+}
+
+BOOST_AUTO_TEST_CASE(DualPorosityMatrixConnectionFactorUnaffected) {
+    const auto scaled   = make_dual_porosity_schedule(false);
+    const auto unscaled = make_dual_porosity_schedule(true);
+
+    const auto& conn_scaled   = scaled  .getWell("PM", 0).getConnections()[0];
+    const auto& conn_unscaled = unscaled.getWell("PM", 0).getConnections()[0];
+
+    // Matrix cells keep their deck permeability either way.
+    BOOST_CHECK_CLOSE(conn_scaled.CF(), conn_unscaled.CF(), 1.0e-10);
+    BOOST_CHECK_CLOSE(conn_scaled.Kh(), conn_unscaled.Kh(), 1.0e-10);
+}

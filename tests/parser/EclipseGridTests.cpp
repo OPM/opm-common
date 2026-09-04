@@ -3969,3 +3969,460 @@ END
     BOOST_CHECK_CLOSE(grid.getCellDepth(1), 5.0, 1e-12);
 }
 
+
+namespace {
+
+Opm::Deck createDualPorosityDeck(const std::string& dimens, const std::string& gridProps, bool dualporo = true)
+{
+    const std::string deckData =
+        "RUNSPEC\n"
+        "\n"
+        "DIMENS\n"
+        " " + dimens + " /\n" +
+        (dualporo ? "DUALPORO\n" : "") +
+        "GRID\n" +
+        gridProps +
+        "EDIT\n"
+        "\n";
+    Opm::Parser parser;
+    return parser.parseString(deckData);
+}
+
+} // anonymous namespace
+
+BOOST_AUTO_TEST_CASE(DualPorosityRequiresEvenNZ) {
+    // DUALPORO with odd NZ must be rejected as an input error.
+    const std::string props3 =
+        "DX\n 3*100 /\n"
+        "DY\n 3*100 /\n"
+        "DZ\n 3*10 /\n"
+        "TOPS\n 3*2000 /\n";
+    auto odd_dp = createDualPorosityDeck("1 1 3", props3, true);
+    BOOST_CHECK_THROW(Opm::EclipseGrid{ odd_dp }, Opm::OpmInputError);
+
+    // The same grid without DUALPORO is fine — no new constraint on
+    // single-porosity decks.
+    auto odd_sp = createDualPorosityDeck("1 1 3", props3, false);
+    BOOST_CHECK_NO_THROW(Opm::EclipseGrid{ odd_sp });
+
+    // Even NZ with DUALPORO constructs.
+    const std::string props2 =
+        "DX\n 2*100 /\n"
+        "DY\n 2*100 /\n"
+        "DZ\n 2*10 /\n"
+        "TOPS\n 2*2000 /\n";
+    auto even_dp = createDualPorosityDeck("1 1 2", props2, true);
+    BOOST_CHECK_NO_THROW(Opm::EclipseGrid{ even_dp });
+}
+
+BOOST_AUTO_TEST_CASE(DualPorosityIsTwinPair) {
+    // One published predicate, so consumers stop composing it by hand. It answers in
+    // either argument order, rejects a non-twin pair, and is false for a single-porosity
+    // grid rather than throwing.
+    const std::string props =
+        "DX\n 24*100 /\n"
+        "DY\n 24*100 /\n"
+        "DZ\n 24*10 /\n"
+        "TOPS\n 6*2000 6*2010 6*2000 6*2010 /\n";
+    auto deck = createDualPorosityDeck("3 2 4", props, true);
+    Opm::EclipseGrid grid( deck );
+
+    const std::size_t half = grid.getCartesianSize() / 2;
+
+    BOOST_CHECK(grid.isTwinPair(0, half));          // matrix, fracture
+    BOOST_CHECK(grid.isTwinPair(half, 0));          // and the other way round
+    BOOST_CHECK(!grid.isTwinPair(0, half + 1));     // a fracture cell, but not this one's twin
+    BOOST_CHECK(!grid.isTwinPair(0, 1));            // two matrix cells
+    BOOST_CHECK(!grid.isTwinPair(half, half + 1));  // two fracture cells
+
+    // The static form is the same arithmetic, for consumers with no grid object.
+    BOOST_CHECK_EQUAL(Opm::EclipseGrid::matrixCellCount({3, 2, 4}), half);
+}
+
+BOOST_AUTO_TEST_CASE(DualPorosityTwinApiIsTotal) {
+    // The twin accessors take a global index, so they must behave the same way in a
+    // release build as in a debug one. They used to be noexcept and assert-only, which
+    // meant that under NDEBUG -- how the simulator ships -- matrixTwin() on a matrix cell
+    // returned an underflowed index instead of complaining.
+    const std::string props =
+        "DX\n 24*100 /\n"
+        "DY\n 24*100 /\n"
+        "DZ\n 24*10 /\n"
+        "TOPS\n 6*2000 6*2010 6*2000 6*2010 /\n";
+    auto deck = createDualPorosityDeck("3 2 4", props, true);
+    Opm::EclipseGrid grid( deck );
+
+    const std::size_t half = grid.getCartesianSize() / 2;
+
+    // Out of range is rejected, not silently classified.
+    BOOST_CHECK_THROW(grid.isFractureCell(grid.getCartesianSize()), std::invalid_argument);
+
+    // Each twin accessor rejects the half it does not serve.
+    BOOST_CHECK_THROW(grid.matrixTwin(half - 1), std::invalid_argument);   // a matrix cell
+    BOOST_CHECK_THROW(grid.fractureTwin(half), std::invalid_argument);     // a fracture cell
+
+    // The supported directions are unchanged.
+    BOOST_CHECK_NO_THROW(grid.fractureTwin(half - 1));
+    BOOST_CHECK_NO_THROW(grid.matrixTwin(half));
+    BOOST_CHECK_EQUAL(grid.matrixTwin(grid.fractureTwin(0)), 0U);
+}
+
+BOOST_AUTO_TEST_CASE(DualPorosityTwinMapping) {
+    // 3x2x4: matrix = layers k=0,1; fracture = layers k=2,3. Co-located:
+    // fracture layer depths repeat the matrix layer depths.
+    const std::string props =
+        "DX\n 24*100 /\n"
+        "DY\n 24*100 /\n"
+        "DZ\n 24*10 /\n"
+        "TOPS\n 6*2000 6*2010 6*2000 6*2010 /\n";
+    auto deck = createDualPorosityDeck("3 2 4", props, true);
+    Opm::EclipseGrid grid( deck );
+
+    BOOST_CHECK(grid.dualPorosity());
+    BOOST_CHECK_EQUAL(grid.matrixLayerCount(), 2U);
+
+    const std::size_t half = grid.getCartesianSize() / 2;
+    BOOST_CHECK_EQUAL(half, 12U);
+    BOOST_CHECK(!grid.isFractureCell(half - 1));
+    BOOST_CHECK(grid.isFractureCell(half));
+
+    for (std::size_t g = 0; g < half; ++g) {
+        const std::size_t twin = grid.fractureTwin(g);
+        BOOST_CHECK_EQUAL(twin, g + half);
+        BOOST_CHECK(grid.isFractureCell(twin));
+        BOOST_CHECK_EQUAL(grid.matrixTwin(twin), g);
+    }
+
+    // The twin of (i,j,k) is (i,j,k + NZ/2).
+    const std::size_t g_m = grid.getGlobalIndex(2, 1, 1);
+    BOOST_CHECK_EQUAL(grid.fractureTwin(g_m), grid.getGlobalIndex(2, 1, 3));
+}
+
+BOOST_AUTO_TEST_CASE(DualPorosityColocatedGeometry) {
+    // 1x1x2, both halves 100x100x10 at 2000 m — the smallest dual-porosity case.
+    // Both continua carry the FULL block bulk volume; the fracture twin is
+    // co-located (same depth, same thickness).
+    const std::string props =
+        "DX\n 2*100 /\n"
+        "DY\n 2*100 /\n"
+        "DZ\n 2*10 /\n"
+        "TOPS\n 2*2000 /\n";
+    auto deck = createDualPorosityDeck("1 1 2", props, true);
+    Opm::EclipseGrid grid( deck );
+
+    BOOST_CHECK_CLOSE(grid.getCellThickness(0), 10.0, 1e-10);
+    BOOST_CHECK_CLOSE(grid.getCellThickness(1), 10.0, 1e-10);
+    BOOST_CHECK_CLOSE(grid.getCellVolume(std::size_t{0}), 1.0e5, 1e-10);
+    BOOST_CHECK_CLOSE(grid.getCellVolume(std::size_t{1}), 1.0e5, 1e-10);
+    BOOST_CHECK_CLOSE(grid.getCellDepth(0), 2005.0, 1e-10);
+    BOOST_CHECK_CLOSE(grid.getCellDepth(1), 2005.0, 1e-10);
+}
+
+BOOST_AUTO_TEST_CASE(DualPorosityDeckOffsetOverridden) {
+    // The fracture system has no geometry of its own: whatever the deck says
+    // for the fracture half, the physical co-location wins through the
+    // twin-depth contract.
+    const std::string props =
+        "DX\n 2*100 /\n"
+        "DY\n 2*100 /\n"
+        "DZ\n 2*10 /\n"
+        "TOPS\n 2000 2050 /\n";
+    auto deck = createDualPorosityDeck("1 1 2", props, true);
+    Opm::EclipseGrid grid( deck );
+
+    BOOST_CHECK(grid.dualPorosity());
+    BOOST_CHECK_CLOSE(grid.getCellDepth(0), 2005.0, 1e-10);
+    BOOST_CHECK_CLOSE(grid.getCellDepth(1), 2005.0, 1e-10);
+    BOOST_CHECK_CLOSE(grid.getCellThickness(1), 10.0, 1e-10);
+}
+
+BOOST_AUTO_TEST_CASE(DualPorositySinglePorosityUnchanged) {
+    // Without DUALPORO the new API reports single-porosity semantics and the
+    // classification predicates never fire.
+    const std::string props =
+        "DX\n 4*100 /\n"
+        "DY\n 4*100 /\n"
+        "DZ\n 4*10 /\n"
+        "TOPS\n 2000 2010 2020 2030 /\n";
+    auto deck = createDualPorosityDeck("1 1 4", props, false);
+    Opm::EclipseGrid grid( deck );
+
+    BOOST_CHECK(!grid.dualPorosity());
+    BOOST_CHECK_EQUAL(grid.matrixLayerCount(), 4U);
+    for (std::size_t g = 0; g < grid.getCartesianSize(); ++g)
+        BOOST_CHECK(!grid.isFractureCell(g));
+}
+
+BOOST_AUTO_TEST_CASE(DualPorosityEgridFileShape) {
+    // The written file carries geometry for the matrix half only: halved
+    // layer count, matrix-half ZCORN, extended one-per-geometric-cell ACTNUM,
+    // porosity-model flag set, and the coupling connection written
+    // fracture-cell first — the reference-simulator file layout.
+    const char* deckData =
+        "RUNSPEC\n"
+        "OIL\nWATER\n"
+        "DIMENS\n 1 1 2 /\n"
+        "DUALPORO\n"
+        "GRID\n"
+        "DX\n 2*100 /\n"
+        "DY\n 2*100 /\n"
+        "DZ\n 2*10 /\n"
+        "TOPS\n 2*2000 /\n"
+        "PORO\n 0.20 0.01 /\n"
+        "PERMX\n 1.0 1000.0 /\n"
+        "SIGMA\n 0.12 /\n"
+        "\n";
+    auto deck = Opm::Parser{}.parseString(deckData);
+    Opm::EclipseState es(deck);
+    const auto& grid = es.getInputGrid();
+    const auto units = Opm::UnitSystem::newMETRIC();
+
+    WorkArea work;
+    const std::string fileName = "DPSHAPE.EGRID";
+    grid.save(fileName, false, es.getInputNNC().input(), units);
+
+    Opm::EclIO::EclFile file(fileName);
+
+    const auto filehead = file.get<int>("FILEHEAD");
+    BOOST_CHECK_EQUAL(filehead[5], 1);      // porosity model: dual porosity
+
+    const auto gridhead = file.get<int>("GRIDHEAD");
+    BOOST_CHECK_EQUAL(gridhead[1], 1);
+    BOOST_CHECK_EQUAL(gridhead[2], 1);
+    BOOST_CHECK_EQUAL(gridhead[3], 1);      // halved NZ
+
+    const auto zcorn = file.get<float>("ZCORN");
+    BOOST_CHECK_EQUAL(zcorn.size(), 8U);    // one geometric cell only
+
+    const auto actnum = file.get<int>("ACTNUM");
+    BOOST_REQUIRE_EQUAL(actnum.size(), 1U);
+    BOOST_CHECK_EQUAL(actnum[0], 3);        // matrix AND fracture active
+
+    const auto nnc1 = file.get<int>("NNC1");
+    const auto nnc2 = file.get<int>("NNC2");
+    BOOST_REQUIRE_EQUAL(nnc1.size(), 1U);
+    BOOST_CHECK_EQUAL(nnc1[0], 2);          // fracture cell first
+    BOOST_CHECK_EQUAL(nnc2[0], 1);          // matrix cell second
+}
+
+BOOST_AUTO_TEST_CASE(DualPermeabilityGridBehavesAsDualPorosity) {
+    // DUALPERM implies the dual-porosity grid conventions without DUALPORO in
+    // the deck: odd NZ is rejected, and the twin bookkeeping is live.
+    const char* oddDeck =
+        "RUNSPEC\n"
+        "OIL\nWATER\n"
+        "DIMENS\n 1 1 3 /\n"
+        "DUALPERM\n"
+        "GRID\n"
+        "DX\n 3*100 /\n"
+        "DY\n 3*100 /\n"
+        "DZ\n 3*10 /\n"
+        "TOPS\n 3*2000 /\n"
+        "\n";
+    auto odd = Opm::Parser{}.parseString(oddDeck);
+    BOOST_CHECK_THROW(Opm::EclipseGrid{ odd }, Opm::OpmInputError);
+
+    const char* evenDeck =
+        "RUNSPEC\n"
+        "OIL\nWATER\n"
+        "DIMENS\n 1 1 2 /\n"
+        "DUALPERM\n"
+        "GRID\n"
+        "DX\n 2*100 /\n"
+        "DY\n 2*100 /\n"
+        "DZ\n 2*10 /\n"
+        "TOPS\n 2*2000 /\n"
+        "\n";
+    auto even = Opm::Parser{}.parseString(evenDeck);
+    const Opm::EclipseGrid grid{ even };
+    BOOST_CHECK(grid.dualPorosity());
+    BOOST_CHECK(grid.dualPermeability());
+    BOOST_CHECK(grid.isFractureCell(1));
+    BOOST_CHECK_EQUAL(grid.matrixTwin(1), 0U);
+    BOOST_CHECK_EQUAL(grid.fractureTwin(0), 1U);
+}
+
+BOOST_AUTO_TEST_CASE(DualPermeabilityEgridPorosityModelCode) {
+    // Same halved file layout as dual porosity, but the porosity-model code
+    // distinguishes the two: 2 for dual permeability.
+    const char* deckData =
+        "RUNSPEC\n"
+        "OIL\nWATER\n"
+        "DIMENS\n 1 1 2 /\n"
+        "DUALPERM\n"
+        "GRID\n"
+        "DX\n 2*100 /\n"
+        "DY\n 2*100 /\n"
+        "DZ\n 2*10 /\n"
+        "TOPS\n 2*2000 /\n"
+        "PORO\n 0.20 0.01 /\n"
+        "PERMX\n 1.0 1000.0 /\n"
+        "SIGMA\n 0.12 /\n"
+        "\n";
+    auto deck = Opm::Parser{}.parseString(deckData);
+    Opm::EclipseState es(deck);
+    const auto& grid = es.getInputGrid();
+    const auto units = Opm::UnitSystem::newMETRIC();
+
+    WorkArea work;
+    const std::string fileName = "DKSHAPE.EGRID";
+    grid.save(fileName, false, es.getInputNNC().input(), units);
+
+    Opm::EclIO::EclFile file(fileName);
+
+    const auto filehead = file.get<int>("FILEHEAD");
+    BOOST_CHECK_EQUAL(filehead[5], 2);      // porosity model: dual permeability
+
+    const auto gridhead = file.get<int>("GRIDHEAD");
+    BOOST_CHECK_EQUAL(gridhead[3], 1);      // layer count still halved
+
+    const auto nnc1 = file.get<int>("NNC1");
+    BOOST_REQUIRE_EQUAL(nnc1.size(), 1U);   // coupling still rides the NNC path
+}
+
+BOOST_AUTO_TEST_CASE(DualPorosityEgridSinglePorosityShapeUnchanged) {
+    // A single-porosity grid keeps the full shape — no halving, plain ACTNUM.
+    const std::string props =
+        "DX\n 2*100 /\n"
+        "DY\n 2*100 /\n"
+        "DZ\n 2*10 /\n"
+        "TOPS\n 2000 2010 /\n";
+    auto deck = createDualPorosityDeck("1 1 2", props, false);
+    Opm::EclipseGrid grid( deck );
+    const auto units = Opm::UnitSystem::newMETRIC();
+
+    WorkArea work;
+    const std::string fileName = "SPSHAPE.EGRID";
+    grid.save(fileName, false, std::vector<Opm::NNCdata>{}, units);
+
+    Opm::EclIO::EclFile file(fileName);
+    const auto filehead = file.get<int>("FILEHEAD");
+    BOOST_CHECK_EQUAL(filehead[5], 0);
+    const auto gridhead = file.get<int>("GRIDHEAD");
+    BOOST_CHECK_EQUAL(gridhead[3], 2);
+    BOOST_CHECK_EQUAL(file.get<float>("ZCORN").size(), 16U);
+    BOOST_CHECK_EQUAL(file.get<int>("ACTNUM").size(), 2U);
+}
+
+BOOST_AUTO_TEST_CASE(DualPorosityDepthSurvivesAllActiveReset) {
+    // The no-argument resetACTNUM() -- the all-active form, reached when a grid file
+    // carries no ACTNUM -- must maintain the twin-depth override too. It did not: only
+    // the ACTNUM-taking overload rebuilt it, so on that path every fracture cell reported
+    // its stacked geometric depth rather than its matrix twin's.
+    const std::string props =
+        "DX\n 8*100 /\n"
+        "DY\n 8*100 /\n"
+        "DZ\n 8*10 /\n"
+        "TOPS\n 4*2000 4*2010 /\n";
+    auto deck = createDualPorosityDeck("2 2 2", props, true);
+    Opm::EclipseGrid grid( deck );
+
+    const std::size_t half = grid.getCartesianSize() / 2;
+    std::vector<double> before;
+    for (std::size_t g = half; g < grid.getCartesianSize(); ++g)
+        before.push_back(grid.getCellDepth(g));
+
+    grid.resetACTNUM();
+
+    for (std::size_t g = half; g < grid.getCartesianSize(); ++g) {
+        // co-located: the fracture cell keeps its matrix twin's depth
+        BOOST_CHECK_CLOSE(grid.getCellDepth(g), grid.getCellDepth(grid.matrixTwin(g)), 1e-10);
+        BOOST_CHECK_CLOSE(grid.getCellDepth(g), before[g - half], 1e-10);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(DualPorosityDepthSurvivesActivityChange) {
+    // Field-property processing re-runs resetACTNUM after construction (e.g.
+    // zero-pore-volume cells get deactivated). The ACTIVE-indexed twin-depth
+    // override must be rebuilt with the new mapping — a stale vector reports
+    // the wrong depth for every fracture cell behind the deactivated one.
+    const char* deckData =
+        "RUNSPEC\n"
+        "OIL\nWATER\n"
+        "DIMENS\n 2 1 2 /\n"
+        "DUALPORO\n"
+        "GRID\n"
+        "DX\n 4*100 /\n"
+        "DY\n 4*100 /\n"
+        "DZ\n 4*10 /\n"
+        "TOPS\n 4*2000 /\n"
+        "PORO\n 0.20 0.0 0.01 0.01 /\n"
+        "PERMX\n 1.0 1.0 1000.0 1000.0 /\n"
+        "\n";
+    auto deck = Opm::Parser{}.parseString(deckData);
+    Opm::EclipseState es(deck);
+    const auto& grid = es.getInputGrid();
+
+    // matrix cell 1 died (zero pore volume) — 3 active cells remain
+    BOOST_CHECK_EQUAL(grid.getNumActive(), 3U);
+
+    // every ACTIVE fracture cell still reports its matrix twin's depth
+    BOOST_CHECK_CLOSE(grid.getCellDepth(2), 2005.0, 1e-10);
+    BOOST_CHECK_CLOSE(grid.getCellDepth(3), 2005.0, 1e-10);
+    BOOST_CHECK_CLOSE(grid.getCellDepth(0), 2005.0, 1e-10);
+}
+
+BOOST_AUTO_TEST_CASE(DPGRIDCopiesMatrixGeometry) {
+    // DPGRID: the fracture half's cell sizes come from the matrix twins no
+    // matter what the deck supplied there.
+    const char* deckData =
+        "RUNSPEC\n"
+        "OIL\nWATER\n"
+        "DIMENS\n 2 1 2 /\n"
+        "DUALPORO\n"
+        "GRID\n"
+        "DPGRID\n"
+        "DX\n 2*100 2*7 /\n"
+        "DY\n 2*100 2*7 /\n"
+        "DZ\n 2*10 2*99 /\n"
+        "TOPS\n 4*2000 /\n"
+        "PORO\n 0.20 0.20 0.01 0.01 /\n"
+        "PERMX\n 4*1.0 /\n"
+        "\n";
+    auto deck = Opm::Parser{}.parseString(deckData);
+    Opm::EclipseGrid grid( deck );
+
+    BOOST_CHECK_CLOSE(grid.getCellThickness(2), 10.0, 1e-10);   // not 99
+    BOOST_CHECK_CLOSE(grid.getCellThickness(3), 10.0, 1e-10);
+    BOOST_CHECK_CLOSE(grid.getCellVolume(std::size_t{2}), 1.0e5, 1e-10);  // not 7*7*99
+    BOOST_CHECK_CLOSE(grid.getCellDepth(2), 2005.0, 1e-10);     // twin depth contract
+}
+
+BOOST_AUTO_TEST_CASE(DualPorosityGdfileRejected) {
+    // A grid read back from file cannot carry the dual-continuum layout: the reader takes
+    // NZ from the file header and treats any non-zero ACTNUM entry as active, so the
+    // doubled grid would come back as a half-height single-porosity one. Refuse instead.
+    const char* deckData =
+        "RUNSPEC\n"
+        "OIL\nWATER\n"
+        "DIMENS\n 1 1 2 /\n"
+        "DUALPORO\n"
+        "GRID\n"
+        "GDFILE\n 'SOMEGRID.EGRID' /\n"
+        "PORO\n 2*0.2 /\n"
+        "PERMX\n 2*1.0 /\n"
+        "\n";
+
+    Opm::Parser parser;
+    const auto deck = parser.parseString( deckData );
+    BOOST_CHECK_THROW( Opm::EclipseGrid{ deck }, Opm::OpmInputError );
+}
+
+BOOST_AUTO_TEST_CASE(DPGRIDCornerPointRejected) {
+    // Corner-point input with DPGRID is not supported — both halves must be
+    // written out explicitly.
+    const char* deckData =
+        "RUNSPEC\n"
+        "OIL\nWATER\n"
+        "DIMENS\n 1 1 2 /\n"
+        "DUALPORO\n"
+        "GRID\n"
+        "DPGRID\n"
+        "COORD\n 24*1 /\n"
+        "ZCORN\n 16*1 /\n"
+        "PORO\n 2*0.2 /\n"
+        "PERMX\n 2*1.0 /\n"
+        "\n";
+    auto deck = Opm::Parser{}.parseString(deckData);
+    BOOST_CHECK_THROW(Opm::EclipseGrid{ deck }, Opm::OpmInputError);
+}

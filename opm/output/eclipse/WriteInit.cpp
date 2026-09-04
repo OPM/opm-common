@@ -292,6 +292,7 @@ namespace {
             .variousParam(false, false, wsd.maxSegmentedWells(), hystPar.active(), rspec.temp())
             .pvtModel(pvtFlags(rspec, es.getTableManager()))
             .saturationFunction(satfuncFlags(rspec))
+            .dualPorosity(rspec.dualPorosity())
             ;
 
         return lh.data();
