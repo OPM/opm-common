@@ -270,21 +270,28 @@ public:
     const std::vector<Scalar>& stoneEtas() const
     { return stoneEtas_; }
 
-    struct CellHysteresisState
-    {
-        EclMultiplexerApproach approach{EclMultiplexerApproach::Default};
-        using TwoPhaseState = EclHysteresisDynamicState<Scalar>;
-        TwoPhaseState gasOilState{};
-        TwoPhaseState oilWaterState{};
-        TwoPhaseState gasWaterState{};
-    };
-
     struct HysteresisStateSnapshot
     {
-        std::vector<CellHysteresisState> cellStates{};
-        std::vector<CellHysteresisState> dirStatesX{};
-        std::vector<CellHysteresisState> dirStatesY{};
-        std::vector<CellHysteresisState> dirStatesZ{};
+        std::vector<EclHysteresisDynamicState<Scalar>> gasOilStates{};
+        std::vector<EclHysteresisDynamicState<Scalar>> oilWaterStates{};
+        std::vector<EclHysteresisDynamicState<Scalar>> gasWaterStates{};
+
+        std::vector<EclHysteresisDynamicState<Scalar>> dirGasOilStatesX{};
+        std::vector<EclHysteresisDynamicState<Scalar>> dirOilWaterStatesX{};
+        std::vector<EclHysteresisDynamicState<Scalar>> dirGasWaterStatesX{};
+
+        std::vector<EclHysteresisDynamicState<Scalar>> dirGasOilStatesY{};
+        std::vector<EclHysteresisDynamicState<Scalar>> dirOilWaterStatesY{};
+        std::vector<EclHysteresisDynamicState<Scalar>> dirGasWaterStatesY{};
+
+        std::vector<EclHysteresisDynamicState<Scalar>> dirGasOilStatesZ{};
+        std::vector<EclHysteresisDynamicState<Scalar>> dirOilWaterStatesZ{};
+        std::vector<EclHysteresisDynamicState<Scalar>> dirGasWaterStatesZ{};
+
+        bool empty() const
+        {
+            return gasOilStates.empty() && oilWaterStates.empty() && gasWaterStates.empty();
+        }
     };
 
     void captureBeginTimeStepState()
@@ -293,53 +300,89 @@ public:
             return;
 
         const std::size_t numElems = params_.materialLawParams.size();
-        prevHysteresisState_.cellStates.resize(numElems);
+        const bool is3p = (threePhaseApproach_ != EclMultiplexerApproach::TwoPhase &&
+                           threePhaseApproach_ != EclMultiplexerApproach::OnePhase);
+
+        if (is3p) {
+            prevHysteresisState_.gasOilStates.resize(numElems);
+            prevHysteresisState_.oilWaterStates.resize(numElems);
+            prevHysteresisState_.gasWaterStates.clear();
+        } else if (threePhaseApproach_ == EclMultiplexerApproach::TwoPhase) {
+            if (twoPhaseApproach_ == EclTwoPhaseApproach::GasOil) {
+                prevHysteresisState_.gasOilStates.resize(numElems);
+                prevHysteresisState_.oilWaterStates.clear();
+                prevHysteresisState_.gasWaterStates.clear();
+            } else if (twoPhaseApproach_ == EclTwoPhaseApproach::OilWater) {
+                prevHysteresisState_.gasOilStates.clear();
+                prevHysteresisState_.oilWaterStates.resize(numElems);
+                prevHysteresisState_.gasWaterStates.clear();
+            } else if (twoPhaseApproach_ == EclTwoPhaseApproach::GasWater) {
+                prevHysteresisState_.gasOilStates.clear();
+                prevHysteresisState_.oilWaterStates.clear();
+                prevHysteresisState_.gasWaterStates.resize(numElems);
+            }
+        }
+
         for (std::size_t i = 0; i < numElems; ++i) {
-            MaterialLaw::captureHysteresisState(params_.materialLawParams[i], prevHysteresisState_.cellStates[i]);
+            MaterialLaw::captureHysteresisState(
+                params_.materialLawParams[i],
+                !prevHysteresisState_.gasOilStates.empty() ? &prevHysteresisState_.gasOilStates[i] : nullptr,
+                !prevHysteresisState_.oilWaterStates.empty() ? &prevHysteresisState_.oilWaterStates[i] : nullptr,
+                !prevHysteresisState_.gasWaterStates.empty() ? &prevHysteresisState_.gasWaterStates[i] : nullptr);
         }
 
         if (params_.dirMaterialLawParams) {
-            const auto& xArr = params_.dirMaterialLawParams->materialLawParamsX_;
-            const auto& yArr = params_.dirMaterialLawParams->materialLawParamsY_;
-            const auto& zArr = params_.dirMaterialLawParams->materialLawParamsZ_;
-            prevHysteresisState_.dirStatesX.resize(xArr.size());
-            prevHysteresisState_.dirStatesY.resize(yArr.size());
-            prevHysteresisState_.dirStatesZ.resize(zArr.size());
-            for (std::size_t i = 0; i < xArr.size(); ++i) {
-                MaterialLaw::captureHysteresisState(xArr[i], prevHysteresisState_.dirStatesX[i]);
-            }
-            for (std::size_t i = 0; i < yArr.size(); ++i) {
-                MaterialLaw::captureHysteresisState(yArr[i], prevHysteresisState_.dirStatesY[i]);
-            }
-            for (std::size_t i = 0; i < zArr.size(); ++i) {
-                MaterialLaw::captureHysteresisState(zArr[i], prevHysteresisState_.dirStatesZ[i]);
-            }
+            captureDirectionalHysteresisState_(
+                params_.dirMaterialLawParams->materialLawParamsX_,
+                prevHysteresisState_.dirGasOilStatesX,
+                prevHysteresisState_.dirOilWaterStatesX,
+                prevHysteresisState_.dirGasWaterStatesX,
+                is3p);
+            captureDirectionalHysteresisState_(
+                params_.dirMaterialLawParams->materialLawParamsY_,
+                prevHysteresisState_.dirGasOilStatesY,
+                prevHysteresisState_.dirOilWaterStatesY,
+                prevHysteresisState_.dirGasWaterStatesY,
+                is3p);
+            captureDirectionalHysteresisState_(
+                params_.dirMaterialLawParams->materialLawParamsZ_,
+                prevHysteresisState_.dirGasOilStatesZ,
+                prevHysteresisState_.dirOilWaterStatesZ,
+                prevHysteresisState_.dirGasWaterStatesZ,
+                is3p);
         }
     }
 
     void restoreBeginTimeStepState()
     {
-        if (!enableHysteresis() || prevHysteresisState_.cellStates.empty())
+        if (!enableHysteresis() || prevHysteresisState_.empty())
             return;
 
         const std::size_t numElems = params_.materialLawParams.size();
         for (std::size_t i = 0; i < numElems; ++i) {
-            MaterialLaw::restoreHysteresisState(params_.materialLawParams[i], prevHysteresisState_.cellStates[i]);
+            MaterialLaw::restoreHysteresisState(
+                params_.materialLawParams[i],
+                !prevHysteresisState_.gasOilStates.empty() ? &prevHysteresisState_.gasOilStates[i] : nullptr,
+                !prevHysteresisState_.oilWaterStates.empty() ? &prevHysteresisState_.oilWaterStates[i] : nullptr,
+                !prevHysteresisState_.gasWaterStates.empty() ? &prevHysteresisState_.gasWaterStates[i] : nullptr);
         }
 
-        if (params_.dirMaterialLawParams && !prevHysteresisState_.dirStatesX.empty()) {
-            auto& xArr = params_.dirMaterialLawParams->materialLawParamsX_;
-            auto& yArr = params_.dirMaterialLawParams->materialLawParamsY_;
-            auto& zArr = params_.dirMaterialLawParams->materialLawParamsZ_;
-            for (std::size_t i = 0; i < xArr.size(); ++i) {
-                MaterialLaw::restoreHysteresisState(xArr[i], prevHysteresisState_.dirStatesX[i]);
-            }
-            for (std::size_t i = 0; i < yArr.size(); ++i) {
-                MaterialLaw::restoreHysteresisState(yArr[i], prevHysteresisState_.dirStatesY[i]);
-            }
-            for (std::size_t i = 0; i < zArr.size(); ++i) {
-                MaterialLaw::restoreHysteresisState(zArr[i], prevHysteresisState_.dirStatesZ[i]);
-            }
+        if (params_.dirMaterialLawParams) {
+            restoreDirectionalHysteresisState_(
+                params_.dirMaterialLawParams->materialLawParamsX_,
+                prevHysteresisState_.dirGasOilStatesX,
+                prevHysteresisState_.dirOilWaterStatesX,
+                prevHysteresisState_.dirGasWaterStatesX);
+            restoreDirectionalHysteresisState_(
+                params_.dirMaterialLawParams->materialLawParamsY_,
+                prevHysteresisState_.dirGasOilStatesY,
+                prevHysteresisState_.dirOilWaterStatesY,
+                prevHysteresisState_.dirGasWaterStatesY);
+            restoreDirectionalHysteresisState_(
+                params_.dirMaterialLawParams->materialLawParamsZ_,
+                prevHysteresisState_.dirGasOilStatesZ,
+                prevHysteresisState_.dirOilWaterStatesZ,
+                prevHysteresisState_.dirGasWaterStatesZ);
         }
     }
 
@@ -413,6 +456,58 @@ private:
     void readGlobalHysteresisOptions_(const EclipseState& state);
 
     void readGlobalThreePhaseOptions_(const Runspec& runspec);
+
+    void captureDirectionalHysteresisState_(
+        const std::vector<MaterialLawParams>& paramsVec,
+        std::vector<EclHysteresisDynamicState<Scalar>>& goVec,
+        std::vector<EclHysteresisDynamicState<Scalar>>& owVec,
+        std::vector<EclHysteresisDynamicState<Scalar>>& gwVec,
+        bool is3p)
+    {
+        const std::size_t n = paramsVec.size();
+        if (is3p) {
+            goVec.resize(n);
+            owVec.resize(n);
+            gwVec.clear();
+        } else if (threePhaseApproach_ == EclMultiplexerApproach::TwoPhase) {
+            if (twoPhaseApproach_ == EclTwoPhaseApproach::GasOil) {
+                goVec.resize(n);
+                owVec.clear();
+                gwVec.clear();
+            } else if (twoPhaseApproach_ == EclTwoPhaseApproach::OilWater) {
+                goVec.clear();
+                owVec.resize(n);
+                gwVec.clear();
+            } else if (twoPhaseApproach_ == EclTwoPhaseApproach::GasWater) {
+                goVec.clear();
+                owVec.clear();
+                gwVec.resize(n);
+            }
+        }
+        for (std::size_t i = 0; i < n; ++i) {
+            MaterialLaw::captureHysteresisState(
+                paramsVec[i],
+                !goVec.empty() ? &goVec[i] : nullptr,
+                !owVec.empty() ? &owVec[i] : nullptr,
+                !gwVec.empty() ? &gwVec[i] : nullptr);
+        }
+    }
+
+    void restoreDirectionalHysteresisState_(
+        std::vector<MaterialLawParams>& paramsVec,
+        const std::vector<EclHysteresisDynamicState<Scalar>>& goVec,
+        const std::vector<EclHysteresisDynamicState<Scalar>>& owVec,
+        const std::vector<EclHysteresisDynamicState<Scalar>>& gwVec)
+    {
+        const std::size_t n = paramsVec.size();
+        for (std::size_t i = 0; i < n; ++i) {
+            MaterialLaw::restoreHysteresisState(
+                paramsVec[i],
+                !goVec.empty() ? &goVec[i] : nullptr,
+                !owVec.empty() ? &owVec[i] : nullptr,
+                !gwVec.empty() ? &gwVec[i] : nullptr);
+        }
+    }
 
     bool enableEndPointScaling_{false};
     EclHysteresisConfig hysteresisConfig_;

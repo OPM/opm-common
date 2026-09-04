@@ -2703,3 +2703,180 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisKilloughGasWaterFix, Scalar, Types)
         BOOST_CHECK_SMALL(Krg-kr[Fixture<Scalar>::gasPhaseIdx], tol);
     }
 }
+
+BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisRollbackRoundtrip3pStone1, Scalar, Types)
+{
+    using MaterialLaw = typename Fixture<Scalar>::MaterialLaw;
+    using MaterialLawManager = typename Fixture<Scalar>::MaterialLawManager;
+    constexpr int numPhases = Fixture<Scalar>::numPhases;
+
+    Opm::Parser parser;
+    const auto deck = parser.parseString(hysterDeckStringKillough3pStone1Wetting);
+    const Opm::EclipseState eclState(deck);
+
+    const auto& eclGrid = eclState.getInputGrid();
+    std::size_t n = eclGrid.getCartesianSize();
+
+    MaterialLawManager hysteresis;
+    hysteresis.initFromState(eclState);
+    hysteresis.initParamsForElements(eclState, n, doOldLookup, doNothing);
+    auto& param = hysteresis.materialLawParams(0);
+
+    // 1. Establish initial drainage history up to Sg = 0.35, then reverse to Sg = 0.20
+    Scalar Sw = 0.12;
+    for (int i = 0; i <= 35; ++i) {
+        Scalar Sg = Scalar(i) / 100.0;
+        Scalar So = 1.0 - Sg - Sw;
+        typename Fixture<Scalar>::FluidState fs;
+        fs.setSaturation(Fixture<Scalar>::waterPhaseIdx, Sw);
+        fs.setSaturation(Fixture<Scalar>::oilPhaseIdx, So);
+        fs.setSaturation(Fixture<Scalar>::gasPhaseIdx, Sg);
+        MaterialLaw::updateHysteresis(param, fs);
+    }
+    for (int i = 35; i >= 20; --i) {
+        Scalar Sg = Scalar(i) / 100.0;
+        Scalar So = 1.0 - Sg - Sw;
+        typename Fixture<Scalar>::FluidState fs;
+        fs.setSaturation(Fixture<Scalar>::waterPhaseIdx, Sw);
+        fs.setSaturation(Fixture<Scalar>::oilPhaseIdx, So);
+        fs.setSaturation(Fixture<Scalar>::gasPhaseIdx, Sg);
+        MaterialLaw::updateHysteresis(param, fs);
+    }
+
+    // 2. Capture baseline state at timestep start
+    hysteresis.captureBeginTimeStepState();
+
+    typename Fixture<Scalar>::FluidState fsTest;
+    fsTest.setSaturation(Fixture<Scalar>::waterPhaseIdx, Sw);
+    fsTest.setSaturation(Fixture<Scalar>::oilPhaseIdx, 1.0 - Scalar(0.20) - Sw);
+    fsTest.setSaturation(Fixture<Scalar>::gasPhaseIdx, Scalar(0.20));
+
+    std::array<Scalar, numPhases> krBefore = {0.0, 0.0, 0.0};
+    MaterialLaw::relativePermeabilities(krBefore, param, fsTest);
+
+    // 3. Mutate hysteresis state by driving further drainage to Sg = 0.75, then reversing
+    for (int i = 20; i <= 75; ++i) {
+        Scalar Sg = Scalar(i) / 100.0;
+        Scalar So = 1.0 - Sg - Sw;
+        typename Fixture<Scalar>::FluidState fs;
+        fs.setSaturation(Fixture<Scalar>::waterPhaseIdx, Sw);
+        fs.setSaturation(Fixture<Scalar>::oilPhaseIdx, So);
+        fs.setSaturation(Fixture<Scalar>::gasPhaseIdx, Sg);
+        MaterialLaw::updateHysteresis(param, fs);
+    }
+    for (int i = 75; i >= 20; --i) {
+        Scalar Sg = Scalar(i) / 100.0;
+        Scalar So = 1.0 - Sg - Sw;
+        typename Fixture<Scalar>::FluidState fs;
+        fs.setSaturation(Fixture<Scalar>::waterPhaseIdx, Sw);
+        fs.setSaturation(Fixture<Scalar>::oilPhaseIdx, So);
+        fs.setSaturation(Fixture<Scalar>::gasPhaseIdx, Sg);
+        MaterialLaw::updateHysteresis(param, fs);
+    }
+
+    std::array<Scalar, numPhases> krMutated = {0.0, 0.0, 0.0};
+    MaterialLaw::relativePermeabilities(krMutated, param, fsTest);
+
+    // Verify relperm actually mutated due to modified historical maximum and scanning curve
+    BOOST_CHECK_NE(krBefore[Fixture<Scalar>::gasPhaseIdx], krMutated[Fixture<Scalar>::gasPhaseIdx]);
+
+    // 4. Restore snapshot
+    hysteresis.restoreBeginTimeStepState();
+
+    // 5. Assert relperms return to pre-mutation values
+    std::array<Scalar, numPhases> krRestored = {0.0, 0.0, 0.0};
+    MaterialLaw::relativePermeabilities(krRestored, param, fsTest);
+
+    Scalar tol = 1e-5;
+    BOOST_CHECK_CLOSE(krBefore[Fixture<Scalar>::waterPhaseIdx], krRestored[Fixture<Scalar>::waterPhaseIdx], tol);
+    BOOST_CHECK_CLOSE(krBefore[Fixture<Scalar>::oilPhaseIdx], krRestored[Fixture<Scalar>::oilPhaseIdx], tol);
+    BOOST_CHECK_CLOSE(krBefore[Fixture<Scalar>::gasPhaseIdx], krRestored[Fixture<Scalar>::gasPhaseIdx], tol);
+}
+
+BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisRollbackRoundtrip2pGasOil, Scalar, Types)
+{
+    using MaterialLaw = typename Fixture<Scalar>::MaterialLaw;
+    using MaterialLawManager = typename Fixture<Scalar>::MaterialLawManager;
+    constexpr int numPhases = Fixture<Scalar>::numPhases;
+
+    Opm::Parser parser;
+    const auto deck = parser.parseString(hysterDeckStringKilloughGasOil);
+    const Opm::EclipseState eclState(deck);
+
+    const auto& eclGrid = eclState.getInputGrid();
+    std::size_t n = eclGrid.getCartesianSize();
+
+    MaterialLawManager hysteresis;
+    hysteresis.initFromState(eclState);
+    hysteresis.initParamsForElements(eclState, n, doOldLookup, doNothing);
+    auto& param = hysteresis.materialLawParams(0);
+
+    // 1. Establish initial drainage history up to Sg = 0.35, then reverse to Sg = 0.20
+    Scalar Sw = 0.0;
+    for (int i = 0; i <= 35; ++i) {
+        Scalar Sg = Scalar(i) / 100.0;
+        Scalar So = 1.0 - Sg;
+        typename Fixture<Scalar>::FluidState fs;
+        fs.setSaturation(Fixture<Scalar>::waterPhaseIdx, Sw);
+        fs.setSaturation(Fixture<Scalar>::oilPhaseIdx, So);
+        fs.setSaturation(Fixture<Scalar>::gasPhaseIdx, Sg);
+        MaterialLaw::updateHysteresis(param, fs);
+    }
+    for (int i = 35; i >= 20; --i) {
+        Scalar Sg = Scalar(i) / 100.0;
+        Scalar So = 1.0 - Sg;
+        typename Fixture<Scalar>::FluidState fs;
+        fs.setSaturation(Fixture<Scalar>::waterPhaseIdx, Sw);
+        fs.setSaturation(Fixture<Scalar>::oilPhaseIdx, So);
+        fs.setSaturation(Fixture<Scalar>::gasPhaseIdx, Sg);
+        MaterialLaw::updateHysteresis(param, fs);
+    }
+
+    // 2. Capture baseline state
+    hysteresis.captureBeginTimeStepState();
+
+    typename Fixture<Scalar>::FluidState fsTest;
+    fsTest.setSaturation(Fixture<Scalar>::waterPhaseIdx, Sw);
+    fsTest.setSaturation(Fixture<Scalar>::oilPhaseIdx, Scalar(0.80));
+    fsTest.setSaturation(Fixture<Scalar>::gasPhaseIdx, Scalar(0.20));
+
+    std::array<Scalar, numPhases> krBefore = {0.0, 0.0, 0.0};
+    MaterialLaw::relativePermeabilities(krBefore, param, fsTest);
+
+    // 3. Mutate by driving drainage to Sg = 0.75, then reversing to Sg = 0.20
+    for (int i = 20; i <= 75; ++i) {
+        Scalar Sg = Scalar(i) / 100.0;
+        Scalar So = 1.0 - Sg;
+        typename Fixture<Scalar>::FluidState fs;
+        fs.setSaturation(Fixture<Scalar>::waterPhaseIdx, Sw);
+        fs.setSaturation(Fixture<Scalar>::oilPhaseIdx, So);
+        fs.setSaturation(Fixture<Scalar>::gasPhaseIdx, Sg);
+        MaterialLaw::updateHysteresis(param, fs);
+    }
+    for (int i = 75; i >= 20; --i) {
+        Scalar Sg = Scalar(i) / 100.0;
+        Scalar So = 1.0 - Sg;
+        typename Fixture<Scalar>::FluidState fs;
+        fs.setSaturation(Fixture<Scalar>::waterPhaseIdx, Sw);
+        fs.setSaturation(Fixture<Scalar>::oilPhaseIdx, So);
+        fs.setSaturation(Fixture<Scalar>::gasPhaseIdx, Sg);
+        MaterialLaw::updateHysteresis(param, fs);
+    }
+
+    std::array<Scalar, numPhases> krMutated = {0.0, 0.0, 0.0};
+    MaterialLaw::relativePermeabilities(krMutated, param, fsTest);
+
+    // Verify relperm actually mutated
+    BOOST_CHECK_NE(krBefore[Fixture<Scalar>::gasPhaseIdx], krMutated[Fixture<Scalar>::gasPhaseIdx]);
+
+    // 4. Restore snapshot
+    hysteresis.restoreBeginTimeStepState();
+
+    // 5. Assert relperms return to pre-mutation values
+    std::array<Scalar, numPhases> krRestored = {0.0, 0.0, 0.0};
+    MaterialLaw::relativePermeabilities(krRestored, param, fsTest);
+
+    Scalar tol = 1e-5;
+    BOOST_CHECK_CLOSE(krBefore[Fixture<Scalar>::oilPhaseIdx], krRestored[Fixture<Scalar>::oilPhaseIdx], tol);
+    BOOST_CHECK_CLOSE(krBefore[Fixture<Scalar>::gasPhaseIdx], krRestored[Fixture<Scalar>::gasPhaseIdx], tol);
+}

@@ -45,7 +45,6 @@ struct EclHysteresisDynamicState
     Scalar deltaSwImbKrn{};
     Scalar Sncrt{};
     Scalar Swcrt{};
-    bool initialImb{false};
     Scalar pcSwMdc{2.0};
     Scalar pcSwMic{1.0};
     Scalar krnSwMdc{2.0};
@@ -65,10 +64,11 @@ struct EclHysteresisDynamicState
     Scalar krnImbStartNxt{};
     Scalar krnDrainStart{};
     Scalar krnDrainStartNxt{};
-    bool isDrain{true};
-    bool wasDrain{false};
     Scalar krnSwImbStart{};
     int nState{};
+    bool initialImb{false};
+    bool isDrain{true};
+    bool wasDrain{false};
 };
 
 /*!
@@ -708,7 +708,6 @@ public:
             .deltaSwImbKrn = deltaSwImbKrn_,
             .Sncrt = Sncrt_,
             .Swcrt = Swcrt_,
-            .initialImb = initialImb_,
             .pcSwMdc = pcSwMdc_,
             .pcSwMic = pcSwMic_,
             .krnSwMdc = krnSwMdc_,
@@ -728,10 +727,11 @@ public:
             .krnImbStartNxt = krnImbStartNxt_,
             .krnDrainStart = krnDrainStart_,
             .krnDrainStartNxt = krnDrainStartNxt_,
-            .isDrain = isDrain_,
-            .wasDrain = wasDrain_,
             .krnSwImbStart = krnSwImbStart_,
-            .nState = nState_
+            .nState = nState_,
+            .initialImb = initialImb_,
+            .isDrain = isDrain_,
+            .wasDrain = wasDrain_
         };
     }
 
@@ -740,7 +740,6 @@ public:
         deltaSwImbKrn_ = state.deltaSwImbKrn;
         Sncrt_ = state.Sncrt;
         Swcrt_ = state.Swcrt;
-        initialImb_ = state.initialImb;
         pcSwMdc_ = state.pcSwMdc;
         pcSwMic_ = state.pcSwMic;
         krnSwMdc_ = state.krnSwMdc;
@@ -760,10 +759,11 @@ public:
         krnImbStartNxt_ = state.krnImbStartNxt;
         krnDrainStart_ = state.krnDrainStart;
         krnDrainStartNxt_ = state.krnDrainStartNxt;
-        isDrain_ = state.isDrain;
-        wasDrain_ = state.wasDrain;
         krnSwImbStart_ = state.krnSwImbStart;
         nState_ = state.nState;
+        initialImb_ = state.initialImb;
+        isDrain_ = state.isDrain;
+        wasDrain_ = state.wasDrain;
     }
 
     template<class Serializer>
