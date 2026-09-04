@@ -42,6 +42,8 @@
 
 #include "../../opm/input/eclipse/Parser/raw/RawRecord.hpp"
 
+#include <fmt/format.h>
+
 #include <algorithm>
 #include <cstddef>
 #include <iterator>
@@ -584,6 +586,116 @@ ABC";
     out.write_string( out.fmt.keyword_sep );
 
     BOOST_CHECK_EQUAL( expected, s.str());
+}
+
+BOOST_AUTO_TEST_CASE(DeckOutputMaxLineWidth) {
+    std::stringstream s;
+    DeckOutput out(s);
+
+    // Only the line width should break the record, not the column count.
+    out.fmt.columns = 1000;
+    out.fmt.max_line_width = 40;
+
+    out.start_keyword("KEYWORD", true);
+    out.start_record();
+    for (int i = 0; i < 20; ++i)
+        out.write<std::string>("MNEMONIC");
+    out.end_record();
+    out.end_keyword(true);
+
+    std::string line;
+    std::size_t num_lines = 0;
+    std::size_t num_values = 0;
+    while (std::getline(s, line)) {
+        BOOST_CHECK_LE(line.size(), out.fmt.max_line_width);
+
+        // A quoted value must not be broken across lines.
+        BOOST_CHECK_EQUAL(std::count(line.begin(), line.end(), '\'') % 2, 0);
+
+        num_values += std::count(line.begin(), line.end(), '\'') / 2;
+        ++num_lines;
+    }
+
+    BOOST_CHECK_EQUAL(num_values, 20);
+    BOOST_CHECK_GT(num_lines, 3);
+}
+
+BOOST_AUTO_TEST_CASE(DeckOutputUnlimitedLineWidth) {
+    std::stringstream s;
+    DeckOutput out(s);
+
+    out.fmt.columns = 1000;
+    out.fmt.max_line_width = 0;
+
+    out.start_keyword("KEYWORD", true);
+    out.start_record();
+    for (int i = 0; i < 20; ++i)
+        out.write<std::string>("MNEMONIC");
+    out.end_record();
+    out.end_keyword(true);
+
+    std::string line;
+    std::getline(s, line);            // KEYWORD
+    std::getline(s, line);
+
+    BOOST_CHECK_EQUAL(std::count(line.begin(), line.end(), '\'') / 2, 20);
+}
+
+BOOST_AUTO_TEST_CASE(DeckWriteLineWidth) {
+    // A table with more numbers than fit on one line, and a record of quoted
+    // mnemonics which must not be split inside the quotes.
+    std::string input = R"(RUNSPEC
+
+DIMENS
+  2 2 2 /
+
+OIL
+WATER
+GAS
+
+TABDIMS
+/
+
+PROPS
+
+SWOF
+)";
+
+    for (int i = 0; i < 40; ++i) {
+        const double sw = 0.2 + (0.8 * i) / 40;
+        input += fmt::format("  {} {} {} 0.0\n", sw, sw * sw * 0.987654321,
+                             (1.0 - sw) * 0.876543219);
+    }
+
+    input += R"(/
+
+SOLUTION
+
+RPTRST
+  'BASIC=4' 'FREQ=6' 'FLOWS' 'KRO' 'KRW' 'KRG' 'SGTRAP' 'RK' 'CONV' 'PORV'
+  'RPORV' 'BG' 'BO' 'BW' 'SFIP' 'PBPD' 'PCOW' /
+)";
+
+    const auto deck = Parser{}.parseString(input);
+
+    std::stringstream s;
+    DeckOutput out(s);
+    deck.write(out);
+
+    std::string line;
+    while (std::getline(s, line)) {
+        BOOST_CHECK_LE(line.size(), 132);
+        BOOST_CHECK_EQUAL(std::count(line.begin(), line.end(), '\'') % 2, 0);
+    }
+
+    // The wrapped deck must parse back to the same values.
+    const auto deck2 = Parser{}.parseString(s.str());
+
+    BOOST_REQUIRE_EQUAL(deck2.size(), deck.size());
+    BOOST_CHECK_EQUAL(deck2["SWOF"].back().getDataRecord().getDataItem().data_size(),
+                      deck["SWOF"].back().getDataRecord().getDataItem().data_size());
+    BOOST_CHECK_EQUAL(deck2["RPTRST"].back().getRecord(0).getItem(0).get<std::string>(6),
+                      "SGTRAP");
 }
 
 BOOST_AUTO_TEST_CASE(DeckItemWriteDefault) {

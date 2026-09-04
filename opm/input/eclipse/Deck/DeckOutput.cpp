@@ -22,6 +22,7 @@
 #include <opm/input/eclipse/Utility/Typetools.hpp>
 
 #include <ostream>
+#include <sstream>
 
 namespace Opm {
 
@@ -29,6 +30,7 @@ namespace Opm {
         os( s ),
         default_count( 0 ),
         row_count( 0 ),
+        current_width( 0 ),
         record_on( false ),
         org_precision( os.precision(precision) ),
         split_line( false )
@@ -47,56 +49,62 @@ namespace Opm {
 
     void DeckOutput::endl() {
         this->os << std::endl;
+        this->current_width = 0;
     }
 
     void DeckOutput::write_string(const std::string& s) {
         this->os << s;
+        this->current_width += s.size();
     }
 
 
     template <typename T>
     void DeckOutput::write( const T& value ) {
         if (default_count > 0) {
-            write_sep( );
-
-            os << default_count << "*";
+            this->write_token(std::to_string(default_count) + "*");
             default_count = 0;
-            row_count++;
         }
 
-        write_sep( );
-        write_value( value );
-        row_count++;
+        this->write_token(this->format_value(value));
     }
 
     template <>
-    void DeckOutput::write_value( const std::string& value ) {
-        this->os << "'" << value << "'";
+    std::string DeckOutput::format_value( const std::string& value ) {
+        return "'" + value + "'";
     }
 
     template <>
-    void DeckOutput::write_value( const RawString& value ) {
-        this->os << value;
+    std::string DeckOutput::format_value( const RawString& value ) {
+        return { value };
     }
 
     template <>
-    void DeckOutput::write_value( const int& value ) {
-        this->os << value;
+    std::string DeckOutput::format_value( const int& value ) {
+        return std::to_string( value );
     }
 
     template <>
-    void DeckOutput::write_value( const double& value ) {
-        this->os << value;
+    std::string DeckOutput::format_value( const double& value ) {
+        std::ostringstream ss;
+        ss.flags( this->os.flags() );
+        ss.precision( this->os.precision() );
+        ss << value;
+        return ss.str();
     }
 
     template <>
-    void DeckOutput::write_value( const UDAValue& value ) {
-        if (value.is<double>()) {
-            double deck_value = value.get<double>();
-            this->write_value(deck_value);
-        }
+    std::string DeckOutput::format_value( const UDAValue& value ) {
+        if (value.is<double>())
+            return this->format_value( value.get<double>() );
         else
-            this->write_value(value.get<std::string>());
+            return this->format_value( value.get<std::string>() );
+    }
+
+    void DeckOutput::write_token( const std::string& token ) {
+        this->write_sep( token.size() );
+        this->os << token;
+        this->current_width += token.size();
+        this->row_count++;
     }
 
     void DeckOutput::stash_default( ) {
@@ -106,26 +114,43 @@ namespace Opm {
 
     void DeckOutput::start_keyword(const std::string& kw, bool split_line_arg) {
         this->os << kw << std::endl;
+        this->current_width = 0;
         this->split_line = split_line_arg;
     }
 
 
     void DeckOutput::end_keyword(bool add_slash) {
-        if (add_slash)
+        if (add_slash) {
             this->os << "/" << std::endl;
+            this->current_width = 0;
+        }
     }
 
 
-    void DeckOutput::write_sep( ) {
-        if (record_on && this->split_line) {
-            if ((row_count > 0) && ((row_count % this->fmt.columns) == 0))
+    void DeckOutput::write_sep( std::size_t next_token_width ) {
+        if (record_on && (row_count > 0)) {
+            bool split = this->split_line && ((row_count % this->fmt.columns) == 0);
+
+            // Break the line before it grows past the maximum width.  Two characters
+            // are reserved for the " /" which terminates the record.
+            if (this->fmt.max_line_width > 0) {
+                const auto width = this->current_width + this->fmt.item_sep.size()
+                    + next_token_width + 2;
+
+                split = split || (width > this->fmt.max_line_width);
+            }
+
+            if (split)
                 split_record();
         }
 
-        if (row_count > 0)
+        if (row_count > 0) {
             os << this->fmt.item_sep;
-        else if (record_on)
+            this->current_width += this->fmt.item_sep.size();
+        } else if (record_on) {
             os << this->fmt.record_indent;
+            this->current_width += this->fmt.record_indent.size();
+        }
     }
 
     void DeckOutput::start_record( ) {
@@ -138,11 +163,13 @@ namespace Opm {
     void DeckOutput::split_record() {
         this->os << std::endl;
         this->row_count = 0;
+        this->current_width = 0;
     }
 
 
     void DeckOutput::end_record( ) {
         this->os << " /" << std::endl;
+        this->current_width = 0;
         this->record_on = false;
     }
 
