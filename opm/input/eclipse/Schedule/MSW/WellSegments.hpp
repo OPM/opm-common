@@ -100,7 +100,7 @@ namespace Opm {
         const Segment& getFromSegmentNumber(const int segment_number) const;
 
         const Segment& operator[](std::size_t idx) const;
-        void orderSegments();
+        void orderSegments(const std::string& well_name = {});
 
         bool operator==( const WellSegments& ) const;
         bool operator!=( const WellSegments& ) const;
@@ -152,8 +152,8 @@ namespace Opm {
         }
 
     private:
-        void processABS();
-        void processINC(double depth_top, double length_top);
+        void processABS(const std::string& well_name);
+        void processINC(const std::string& well_name, double depth_top, double length_top);
         void process(const std::string& well_name, const UnitSystem& unit_system,
                      LengthDepth length_depth, double depth_top, double length_top);
         void addSegment(const Segment& new_segment);
