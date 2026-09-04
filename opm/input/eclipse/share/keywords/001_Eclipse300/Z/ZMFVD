@@ -1,6 +1,6 @@
 {
   "name": "ZMFVD",
-  "comment": "Hardcoded two components.",
+  "comment": "Each record contains depth followed by NCOMPS mole fractions. The record width depends on COMPS, so a per-column dimension list cannot line up; every column is declared dimensionless and the depth is converted during parsing.",
   "sections": [
     "PROPS"
   ],
@@ -14,8 +14,6 @@
       "value_type": "DOUBLE",
       "size_type": "ALL",
       "dimension": [
-        "Length",
-        "1",
         "1"
       ]
     }

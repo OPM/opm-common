@@ -25,10 +25,15 @@ namespace Opm {
 
     class DeckItem;
     class KeywordLocation;
+    class UnitSystem;
 
     class ZmfvdTable : public SimpleTable {
     public:
-        ZmfvdTable(const DeckItem& item, const int tableID, const int numComponents, const KeywordLocation& location);
+        ZmfvdTable(const DeckItem& item,
+                   const int tableID,
+                   const int numComponents,
+                   const UnitSystem& unitSystem,
+                   const KeywordLocation& location);
 
         const TableColumn& getDepthColumn() const;
         const TableColumn& getMoleFractionColumn(int componentIdx) const;

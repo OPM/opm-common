@@ -3546,6 +3546,50 @@ END
                       Opm::OpmInputError);
 }
 
+BOOST_AUTO_TEST_CASE(ZmfvdTable_FieldUnitsWithThreeComponents) {
+    // The DATA item holds every value of every record in one flat vector, and
+    // the keyword used to declare three dimensions ("Length", "1", "1") that
+    // DeckItem applies by position, as dim[index % 3].  A record is 1 + COMPS
+    // wide, so the two only line up for COMPS 2.  At COMPS 3 they slip a slot
+    // per row:
+    //
+    //   idx:  0     1    2    3      4     5    6    7
+    //   val:  2000  0.3  0.3  0.4    2100  0.2  0.3  0.5
+    //   dim:  Len   1    1    Len    1     1    Len  1
+    //                         ^^^    ^^^
+    //         a mole fraction scaled by 0.3048, and a depth left in feet.
+    //
+    // Reading the depth converts the whole item in place, so the fractions were
+    // already mangled by the time they were read back.
+    const auto deck = Opm::Parser{}.parseString(R"(
+RUNSPEC
+FIELD
+COMPS
+3 /
+EQLDIMS
+1 /
+PROPS
+ZMFVD
+  2000.0  0.3 0.3 0.4
+  2100.0  0.2 0.3 0.5 /
+END
+)");
+
+    const auto tmgr = Opm::TableManager{ deck };
+    const auto& table = tmgr.getZmfvdTables().getTable<Opm::ZmfvdTable>(0);
+
+    // 2000 ft and 2100 ft in metres.
+    BOOST_CHECK_CLOSE(table.getDepthColumn()[0], 609.6,  1.0e-10);
+    BOOST_CHECK_CLOSE(table.getDepthColumn()[1], 640.08, 1.0e-10);
+
+    const double expected[2][3] = {{0.3, 0.3, 0.4}, {0.2, 0.3, 0.5}};
+    for (std::size_t row = 0; row < 2; ++row) {
+        for (int c = 0; c < 3; ++c) {
+            BOOST_CHECK_CLOSE(table.getMoleFractionColumn(c)[row], expected[row][c], 1.0e-10);
+        }
+    }
+}
+
 BOOST_AUTO_TEST_CASE(ZmfvdTable_ExactRowIsNotReported) {
     BOOST_CHECK(warningsFromTables(R"(
 RUNSPEC
