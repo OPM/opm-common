@@ -56,6 +56,7 @@ namespace {
             .variousParam(false, false, wsd.maxSegmentedWells(), hystPar.active(), rspec.temp())
             .pvtModel(pvt)
             .network(rspec.networkDimensions().maxNONodes())
+            .dualPorosity(rspec.dualPorosity())
             ;
     }
 

@@ -208,6 +208,13 @@ variousParam(const bool e300_radial,
 }
 
 Opm::RestartIO::LogiHEAD&
+Opm::RestartIO::LogiHEAD::dualPorosity(const bool dual_poro)
+{
+    this->data_[DualPoro] = dual_poro;
+    return *this;
+}
+
+Opm::RestartIO::LogiHEAD&
 Opm::RestartIO::LogiHEAD::pvtModel(const PVTModel& pvt)
 {
     this->data_[IsLiveOil] = pvt.isLiveOil;

@@ -278,6 +278,36 @@ namespace Opm {
         double getCellDepth(std::size_t globalIndex) const;
         ZcornMapper zcornMapper() const;
 
+        /// Dual-porosity twin bookkeeping (DUALPORO): the deck supplies an
+        /// even NZ where the first NZ/2 layers hold the matrix cells and the
+        /// last NZ/2 layers the co-located fracture cells. The authoritative
+        /// runspec flag is Runspec::dualPorosity(); this grid-side flag is
+        /// captured at construction for geometry-level queries only.
+        bool dualPorosity() const noexcept;
+        bool dualPermeability() const noexcept;
+        std::size_t matrixLayerCount() const noexcept;
+
+        /// Twin accessors. These take a global index and are therefore total:
+        /// an out-of-range index, or a cell on the wrong half of a dual-continuum
+        /// grid, throws std::invalid_argument the same way cellActive() does.
+        /// They are deliberately not noexcept — the previous assert-only form
+        /// compiled out under NDEBUG and returned an underflowed index.
+        bool isFractureCell(std::size_t globalIndex) const;
+        std::size_t fractureTwin(std::size_t matrixGlobalIndex) const;
+        std::size_t matrixTwin(std::size_t fractureGlobalIndex) const;
+
+        /// True when the two global indices are a matrix-fracture twin pair, in
+        /// either order. Published so that consumers stop re-deriving the test:
+        /// it was previously composed by hand in the EGRID writer here and again,
+        /// differently, in the simulator's writer and transmissibility paths.
+        bool isTwinPair(std::size_t a, std::size_t b) const;
+
+        /// The number of matrix cells implied by a set of Cartesian dimensions.
+        /// Static because a consumer may need the twin arithmetic where no grid
+        /// object is available -- on a distributed run the input grid exists on
+        /// the I/O process only, while the dimensions are known everywhere.
+        static std::size_t matrixCellCount(const std::array<int, 3>& cartDims);
+
         const std::vector<double>& getCOORD() const;
         const std::vector<double>& getZCORN() const;
         const std::vector<int>& getACTNUM( ) const;
@@ -367,6 +397,9 @@ namespace Opm {
         // Option 2 of PINCH (GAP/NOGAP)
         PinchMode m_pinchGapMode;
         double    m_pinchMaxEmptyGap;
+        bool m_dualPorosity = false;
+        bool m_dualPermeability = false;
+        void updateDualPorosityDepth();
         bool lgr_grid = false;
         mutable std::optional<std::vector<double>> active_volume;
 
