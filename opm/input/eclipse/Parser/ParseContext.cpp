@@ -160,7 +160,7 @@ namespace Opm {
         this->addKey(SCHEDULE_MSW_KEYWORD_ON_NON_MSW_WELL, InputErrorAction::THROW_EXCEPTION);
         this->addKey(SCHEDULE_ICD_INCOMPATIBLE_PDROP_MODEL, InputErrorAction::THROW_EXCEPTION);
 
-        this->addKey(SCHEDULE_NETWORK_INVALID, InputErrorAction::THROW_EXCEPTION);
+        this->addKey(SCHEDULE_NETWORK_INVALID, InputErrorAction::DELAYED_EXIT1);
 
         addKey(SCHEDULE_INVALID_NAME, InputErrorAction::THROW_EXCEPTION);
         this->addKey(SCHEDULE_INVALID_INJPHASE, InputErrorAction::WARN);

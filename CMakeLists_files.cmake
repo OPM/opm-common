@@ -1657,6 +1657,7 @@ list(APPEND PRIVATE_HEADER_FILES
   external/resinsight/cafPdmCore/cafAssert.h
   external/resinsight/cafPdmCore/cafSignal.h
   opm/input/eclipse/Schedule/HandlerContext.hpp
+  opm/input/eclipse/Schedule/Network/NetworkValidation.hpp
   opm/input/eclipse/Schedule/Well/WellTrajInfo.hpp
   opm/input/eclipse/Schedule/WellTraj/RigEclipseWellLogExtractor.hpp
 )

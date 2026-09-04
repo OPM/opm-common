@@ -614,8 +614,8 @@ namespace Opm {
         ///
         /// For instance a node without inlets which is not also a group, or
         /// a flow path which does not end in a fixed pressure node.  Such a
-        /// network cannot be balanced, so this category throws and
-        /// terminates the run by default.
+        /// network cannot be balanced, so this category reports an error and
+        /// schedules termination at the end of schedule loading by default.
         const static std::string SCHEDULE_NETWORK_INVALID;
 
         // The SIMULATOR_KEYWORD_ categories are intended to define the
