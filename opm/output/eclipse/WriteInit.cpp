@@ -866,13 +866,15 @@ namespace {
         }
 
         bool any = false;
-        for (std::size_t index : grid.get_print_order_lgr()) {
-            const ::Opm::EclipseGridLGR& lgr_grid = grid.getLGRCell(index);
+        for (const ::Opm::EclipseGridLGR& lgr_grid : grid.lgrsInPrintOrder()) {
             const auto active_fathers = lgr_grid.getLGRCell_active_father(grid);
+            // The header numbers the LGR by its deck position, nested ones
+            // included, not by its position among the top-level blocks.
+            const auto deckIdx = grid.get_lgr_cell_index(lgr_grid.get_lgr_tag());
 
             any = true;
             writeInitFileHeaderLGRCell(es, lgr_grid, schedule, initFile,
-                                       static_cast<int>(index) + 1, false);
+                                       static_cast<int>(deckIdx) + 1, false);
             writeDoubleCellPropertiesLGRCell(propList, fp_copy, units,
                                              /* needDflt = */ !filleps,
                                              initFile, active_fathers);
@@ -976,9 +978,8 @@ namespace {
             // positional grid/section pairing in post-processors (ResInsight).
             // The simulator-provided per-LGR data (simProps) follows the deck
             // order, so it is addressed via the label's deck index.
-            for (std::size_t index : grid.get_print_order_lgr())
+            for (const ::Opm::EclipseGridLGR& lgr_grid : grid.lgrsInPrintOrder())
             {
-                const ::Opm::EclipseGridLGR& lgr_grid = grid.getLGRCell(index);
                 const auto lgr_label = lgr_grid.get_lgr_tag();
                 const auto deckIdx = grid.get_lgr_cell_index(lgr_label);
                 // Two father mappings, and they are not interchangeable:
@@ -1097,11 +1098,11 @@ namespace {
         // LGRs with no NNC involvement at all are skipped entirely.
         // LGRSGONE is only written if at least one LGR block was written.
         bool anyLGRNNCWritten = false;
-        for (std::size_t index : grid.get_print_order_lgr()) {
-            // The LGR grids in their EGRID order, as in writeLGRLocalProperties();
-            // the NNC collection numbers them by their deck index.
-            const Opm::EclipseGridLGR& lgr_grid = grid.getLGRCell(index);
-            const std::size_t lgr_grid_index = grid.get_lgr_cell_index(lgr_grid.get_lgr_tag()) + 1;  // 0 == global in NNCCollection
+        for (const Opm::EclipseGridLGR& lgr_grid : grid.lgrsInPrintOrder()) {
+            const auto lgr_label = lgr_grid.get_lgr_tag();
+            // 0 == global in NNCCollection; an LGR is keyed by its deck number,
+            // nested ones included, not by its position among the top-level blocks.
+            const std::size_t lgr_grid_index = grid.get_lgr_cell_index(lgr_label) + 1;
 
             if (!nnc_col.hasNNCForGrid(lgr_grid_index))
                 continue;

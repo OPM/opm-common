@@ -29,6 +29,7 @@
 
 #include <algorithm>
 #include <array>
+#include <functional>
 #include <cstddef>
 #include <map>
 #include <memory>
@@ -114,6 +115,11 @@ namespace Opm {
         const std::vector<std::size_t>& get_print_order_lgr () const {
           return m_print_order_lgr_cells;
         }
+        /// Every LGR below this grid, nested ones included, in the order
+        /// save_children() writes them to the EGRID: each child followed by
+        /// its own children. The INIT and restart writers follow the same
+        /// order so their sections pair with the EGRID grids.
+        std::vector<std::reference_wrapper<const EclipseGridLGR>> lgrsInPrintOrder() const;
 
         std::size_t get_lgr_cell_index(const std::string& lgr_tag) const
         {

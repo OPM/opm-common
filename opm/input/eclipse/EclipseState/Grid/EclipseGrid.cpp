@@ -2054,6 +2054,18 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         return m_zcorn;
     }
 
+    std::vector<std::reference_wrapper<const EclipseGridLGR>> EclipseGrid::lgrsInPrintOrder() const
+    {
+        std::vector<std::reference_wrapper<const EclipseGridLGR>> out;
+        for (std::size_t index : m_print_order_lgr_cells) {
+            const auto& child = lgr_children_cells[index];
+            out.emplace_back(child);
+            const auto nested = child.lgrsInPrintOrder();
+            out.insert(out.end(), nested.begin(), nested.end());
+        }
+        return out;
+    }
+
     void EclipseGrid::save_children(Opm::EclIO::EclOutput& egridfile, const Opm::UnitSystem& units) const {
         for (std::size_t index : m_print_order_lgr_cells) {
             lgr_children_cells[index].save(egridfile, units);
@@ -2080,10 +2092,10 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         // Global Grid NNC (grid = 0 always exists, but may be empty)
         save_nnc_same_grid(egridfile, nnc_col.getGlobalNNC().input(), 0);
 
-        // LGR NNC, in the order of the LGR grids (save_children()).  The NNC
-        // collection numbers the LGRs by their deck index.
-         for (std::size_t index : m_print_order_lgr_cells) {
-            const std::size_t grid_num = get_lgr_cell_index(lgr_children_cells[index].get_lgr_tag()) + 1;
+        // LGR NNC, in EGRID grid order (nested LGRs included); the collection
+        // is keyed by the LGR's deck number, which is the grid's level.
+        for (const EclipseGridLGR& lgr : this->lgrsInPrintOrder()) {
+            const std::size_t grid_num = this->get_lgr_cell_index(lgr.get_lgr_tag()) + 1;
             //SAME GRID PLOTS HEADER THAT CONTAINS THE GRID NUMBER
             if (nnc_col.hasSameGridNNC(grid_num))
             {
@@ -2097,7 +2109,7 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
                 const auto& nnc_gl = nnc_col.getNNC(0,grid_num);
                 save_nnc_local_global(egridfile, nnc_gl.input(), grid_num);
             }
-         }
+        }
 
         // Cross grid NNC - skips diff connection with global grids, i.e. (grid = 0)
         for (const auto& [key, value] : nnc_col.diff_grid_nnc()) {

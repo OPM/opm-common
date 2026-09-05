@@ -1104,16 +1104,13 @@ namespace {
                          bool                                         write_double,
                          EclIO::OutputStream::Restart&                rstFile,
                          const std::vector<RestartValue>&             values,
-                         int                                          lgrIndex,
+                         const EclipseGridLGR&                        lgr_grid,
                          int                                          index)
     {
-        // lgrIndex comes from grid.get_print_order_lgr(); address the LGR grid
-        // through the (father-sorted) child-cell storage so the restart writes
-        // its LGR sections in the same order as EclipseGrid::save_children()
-        // writes the EGRID grids.  The simulator-provided per-LGR restart
-        // values follow the deck order, so they are addressed via the label's
-        // deck index.
-        const auto& lgr_grid = grid.getLGRCell(static_cast<std::size_t>(lgrIndex));
+        // The caller walks grid.lgrsInPrintOrder(), the order in which
+        // EclipseGrid::save_children() writes the EGRID grids, nested ones
+        // included.  The simulator-provided per-LGR restart values follow the
+        // deck order, so they are addressed via the label's deck index.
         const auto& lgr_grid_name = lgr_grid.get_lgr_tag();
         const auto deckIdx = static_cast<int>(grid.get_lgr_cell_index(lgr_grid_name));
 
@@ -1243,17 +1240,14 @@ void save(EclIO::OutputStream::Restart&                 rstFile,
                                                         ecl_compatible_rst, write_double, rstFile, values, aquiferData);
 
 
-    // retrieving LGR printin order
-    auto lgr_order = grid.get_print_order_lgr();
-
-    // Write LGR restart
+    // Write LGR restart, in EGRID order with nested LGRs included.
     int index = 1;
-    for (std::size_t i : lgr_order) {
+    for (const EclipseGridLGR& lgr_grid : grid.lgrsInPrintOrder()) {
         writeLGRRestart(report_step, sim_step, seconds_elapsed,
                         schedule, grid, es,
                         action_state, wtest_state, sumState,
                         udqState, ecl_compatible_rst, write_double,
-                        rstFile, values,  i, index++);
+                        rstFile, values, lgr_grid, index++);
     }
 
     // log information about writing everything
