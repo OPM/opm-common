@@ -831,6 +831,7 @@ Runspec::Runspec(const Deck& deck)
     , m_mech       (false)
     , m_temp       (false)
     , m_biof       (false)
+    , m_saltmc     (false)
 {
     if (DeckSection::hasRUNSPEC(deck)) {
         const RUNSPECSection runspecSection{deck};
@@ -876,6 +877,9 @@ Runspec::Runspec(const Deck& deck)
                     "\nThe CO2 storage option is given. Activate GAS, plus WATER or OIL."
                 };
             }
+
+            // Check if multicomponent salt is activated
+            m_saltmc = runspecSection.hasKeyword<ParserKeywords::SALTMC>();
         }
 
         if (runspecSection.hasKeyword<ParserKeywords::CO2SOL>()) {
@@ -1010,6 +1014,7 @@ Runspec Runspec::serializationTestObject()
     result.m_temp = true;
     result.m_biof = true;
     result.m_geochem = Geochem::serializationTestObject();
+    result.m_saltmc = true;
 
     return result;
 }
@@ -1082,6 +1087,12 @@ std::size_t Runspec::numComps() const
 std::size_t Runspec::maxGasPlantTables() const
 {
     return this->m_max_gas_plant_tables;
+}
+
+bool
+Runspec::multiCompSalt() const noexcept
+{
+    return this->m_saltmc;
 }
 
 bool Runspec::co2Storage() const noexcept
@@ -1186,6 +1197,7 @@ bool Runspec::rst_cmp(const Runspec& full_spec, const Runspec& rst_spec)
         full_spec.m_temp == rst_spec.m_temp &&
         full_spec.m_biof == rst_spec.m_biof &&
         full_spec.m_geochem == rst_spec.m_geochem &&
+        full_spec.m_saltmc == rst_spec.m_saltmc &&
         Welldims::rst_cmp(full_spec.wellDimensions(), rst_spec.wellDimensions());
 }
 
@@ -1218,6 +1230,7 @@ bool Runspec::operator==(const Runspec& data) const
         && (this->m_temp == data.m_temp)
         && (this->m_biof == data.m_biof)
         && (this->m_geochem == data.m_geochem)
+        && (this->m_saltmc == data.m_saltmc)
         ;
 }
 
