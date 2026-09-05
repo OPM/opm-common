@@ -18,6 +18,8 @@
 */
 
 #include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/Carfin.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/LgrCollection.hpp>
 
 #include <opm/io/eclipse/rst/connection.hpp>
 
@@ -1195,4 +1197,163 @@ CF and Kh items for well {} must both be specified or both defaulted/negative)",
 
         return { connPos->complnum() };
     }
+
+namespace {
+
+    // One refined column of a box in one direction: its local index and the
+    // fraction of the parent cell it covers.
+    struct RefinedCol { int local; double fracLo; double fracHi; };
+
+    std::vector<RefinedCol> columnsOfParent(const Carfin& box, const std::size_t dim,
+                                            const int parentOffset)
+    {
+        const auto cols = box.refinedColumns(dim);
+        std::vector<RefinedCol> out;
+        if (! cols.count.empty()) {
+            const int first = cols.firstColumn[parentOffset];
+            for (int c = 0; c < cols.count[parentOffset]; ++c) {
+                out.push_back({ first + c, cols.fracLo[first + c], cols.fracHi[first + c] });
+            }
+            return out;
+        }
+        const int lo = (dim == 0) ? box.I1() : (dim == 1) ? box.J1() : box.K1();
+        const int hi = (dim == 0) ? box.I2() : (dim == 1) ? box.J2() : box.K2();
+        const int n  = (dim == 0) ? box.NX() : (dim == 1) ? box.NY() : box.NZ();
+        const int f  = n / (hi - lo + 1);
+        for (int c = 0; c < f; ++c) {
+            out.push_back({ parentOffset * f + c, double(c) / f, double(c + 1) / f });
+        }
+        return out;
+    }
+
+    struct Placed {
+        std::string lgr;
+        std::array<int,3> ijk{};
+        double fracAlong{1.0};      // share of the parent's length along the connection
+        double fracLateral{1.0};    // product of the lateral shares
+        std::array<int,3> dims{};   // the LGR's dimensions, for a local Cartesian index
+    };
+
+    // Place a cell given in `box`'s parent coordinates into `box` and, where a
+    // nested box covers the result, into that one: the centre column laterally,
+    // every column along `axis`.
+    void placeInBox(const LgrCollection& lgrs, const Carfin& box,
+                    const std::array<int,3>& parentCell, const int axis,
+                    double fracAlong, double fracLateral, std::vector<Placed>& out)
+    {
+        const std::array<int,3> lo{ box.I1(), box.J1(), box.K1() };
+        const std::array<int,3> dims{ box.NX(), box.NY(), box.NZ() };
+        std::array<std::vector<RefinedCol>,3> cols;
+        for (std::size_t d = 0; d < 3; ++d) {
+            cols[d] = columnsOfParent(box, d, parentCell[d] - lo[d]);
+        }
+        // Lateral directions: the centre column (the upper-middle one for an
+        // even count, which is the child on the +side of the well's face).
+        std::array<int,3> fixedIdx{};
+        double lateral = fracLateral;
+        for (int d = 0; d < 3; ++d) {
+            if (d == axis) continue;
+            const auto& c = cols[d][cols[d].size() / 2];
+            fixedIdx[d] = c.local;
+            lateral *= (c.fracHi - c.fracLo);
+        }
+        for (const auto& c : cols[axis]) {
+            std::array<int,3> ijk = fixedIdx;
+            ijk[axis] = c.local;
+            const double along = fracAlong * (c.fracHi - c.fracLo);
+            bool nested = false;
+            for (std::size_t i = 0; i < lgrs.size(); ++i) {
+                const auto& child = lgrs.getLgr(i);
+                if (child.PARENT_NAME() != box.NAME()) continue;
+                if (ijk[0] >= child.I1() && ijk[0] <= child.I2() &&
+                    ijk[1] >= child.J1() && ijk[1] <= child.J2() &&
+                    ijk[2] >= child.K1() && ijk[2] <= child.K2()) {
+                    placeInBox(lgrs, child, ijk, axis, along, lateral, out);
+                    nested = true;
+                    break;
+                }
+            }
+            if (! nested) {
+                out.push_back({ box.NAME(), ijk, along, lateral, dims });
+            }
+        }
+    }
+
+} // anonymous namespace
+
+    bool WellConnections::refineIntoLgrs(const LgrCollection& lgrs,
+                                         const std::function<int(const std::string&)>& gridNumberOf,
+                                         std::set<std::string>& lgrNames)
+    {
+        if (lgrs.size() == 0 || this->m_connections.empty()) {
+            return false;
+        }
+        std::vector<Connection> refined;
+        bool changed = false;
+        for (const auto& conn : this->m_connections) {
+            const Carfin* top = nullptr;
+            if (conn.get_lgr_level() == 0) {
+                for (std::size_t i = 0; i < lgrs.size(); ++i) {
+                    const auto& box = lgrs.getLgr(i);
+                    if (box.PARENT_NAME() != "GLOBAL") continue;
+                    if (conn.getI() >= box.I1() && conn.getI() <= box.I2() &&
+                        conn.getJ() >= box.J1() && conn.getJ() <= box.J2() &&
+                        conn.getK() >= box.K1() && conn.getK() <= box.K2()) {
+                        top = &box;
+                        break;
+                    }
+                }
+            }
+            if (top == nullptr) {
+                refined.push_back(conn);
+                continue;
+            }
+            const int axis = (conn.dir() == Connection::Direction::X) ? 0
+                : (conn.dir() == Connection::Direction::Y) ? 1 : 2;
+            std::vector<Placed> placed;
+            placeInBox(lgrs, *top, { conn.getI(), conn.getJ(), conn.getK() }, axis, 1.0, 1.0, placed);
+            for (const auto& pl : placed) {
+                auto props = conn.ctfProperties();
+                const double r0Old = props.r0;
+                props.Kh *= pl.fracAlong;
+                props.connection_length *= pl.fracAlong;
+                props.r0 *= std::sqrt(pl.fracLateral);
+                props.re *= std::sqrt(pl.fracLateral);
+                if (conn.kind() == Connection::CTFKind::DeckValue) {
+                    // The deck's number is honoured in total: split by length.
+                    props.CF *= pl.fracAlong;
+                }
+                else {
+                    // Peaceman: CF ~ Kh / (ln(r0/rw) + S), with r0 following
+                    // the child's lateral size.
+                    const double denomOld = (props.peaceman_denom > 0.0)
+                        ? props.peaceman_denom
+                        : ((r0Old > props.rw && props.rw > 0.0) ? std::log(r0Old / props.rw) + props.skin_factor : 0.0);
+                    const double denomNew = (props.r0 > props.rw && props.rw > 0.0)
+                        ? std::log(props.r0 / props.rw) + props.skin_factor : 0.0;
+                    props.CF *= pl.fracAlong;
+                    if (denomOld > 0.0 && denomNew > 0.0) {
+                        props.CF *= denomOld / denomNew;
+                        props.peaceman_denom = denomNew;
+                    }
+                }
+                const std::size_t localCart = static_cast<std::size_t>(pl.ijk[0])
+                    + static_cast<std::size_t>(pl.ijk[1]) * pl.dims[0]
+                    + static_cast<std::size_t>(pl.ijk[2]) * pl.dims[0] * pl.dims[1];
+                refined.emplace_back(pl.ijk[0], pl.ijk[1], pl.ijk[2], localCart,
+                                     static_cast<int>(refined.size()) + 1,
+                                     conn.state(), conn.dir(), conn.kind(),
+                                     conn.satTableId(), conn.depth(), props,
+                                     conn.sort_value(), conn.getDefaultSatTabId(),
+                                     gridNumberOf(pl.lgr));
+                lgrNames.insert(pl.lgr);
+                changed = true;
+            }
+        }
+        if (changed) {
+            this->m_connections = std::move(refined);
+        }
+        return changed;
+    }
+
 }

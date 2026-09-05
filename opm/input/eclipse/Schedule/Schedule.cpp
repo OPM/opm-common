@@ -18,6 +18,7 @@
 */
 
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/LgrCollection.hpp>
 
 #include <opm/io/eclipse/rst/state.hpp>
 
@@ -1348,6 +1349,43 @@ Defaulted grid coordinates is not allowed for COMPDAT as part of ACTIONX)"
 
     std::vector<Well> Schedule::getWellsatEnd() const {
         return this->getWells(this->snapshots.size() - 1);
+    }
+
+    void Schedule::refineConnectionsIntoLgrs(const LgrCollection& lgrs)
+    {
+        if (lgrs.size() == 0) {
+            return;
+        }
+        auto gridNumberOf = [&lgrs](const std::string& name) {
+            for (std::size_t i = 0; i < lgrs.size(); ++i) {
+                if (lgrs.getLgr(i).NAME() == name) {
+                    return static_cast<int>(i) + 1;
+                }
+            }
+            throw std::logic_error("Unknown LGR " + name);
+        };
+        for (auto& snapshot : this->snapshots) {
+            for (const auto& wname : snapshot.wells.keys()) {
+                auto well = snapshot.wells.get(wname);
+                auto conns = std::make_shared<WellConnections>(well.getConnections());
+                std::set<std::string> lgrNames;
+                if (! conns->refineIntoLgrs(lgrs, gridNumberOf, lgrNames)) {
+                    continue;
+                }
+                // The well is tagged with the LGR of its first refined connection;
+                // every connection carries its own grid number regardless.
+                for (const auto& c : *conns) {
+                    if (c.get_lgr_level() > 0) {
+                        well.flag_lgr_well();
+                        well.set_lgr_well_tag(lgrs.getLgr(c.get_lgr_level() - 1).NAME());
+                        well.updateHead(c.getI(), c.getJ());
+                        break;
+                    }
+                }
+                well.updateConnections(std::move(conns), /*force=*/ true);
+                snapshot.wells.update(std::move(well));
+            }
+        }
     }
 
     std::vector<Well> Schedule::getActiveWellsAtEnd() const {
