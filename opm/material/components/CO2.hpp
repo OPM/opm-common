@@ -31,6 +31,7 @@
 #include <opm/common/TimingMacros.hpp>
 #include <opm/common/ErrorMacros.hpp>
 #include <opm/common/utility/gpuDecorators.hpp>
+#include <opm/common/utility/SaltArray.hpp>
 #include <opm/material/Constants.hpp>
 #include <opm/material/IdealGas.hpp>
 #include <opm/material/components/Component.hpp>
@@ -150,7 +151,6 @@ public:
 
         return exp(exponent)*criticalPressure();
     }
-
 
     /*!
      * \brief Returns true iff the gas phase is assumed to be compressible
