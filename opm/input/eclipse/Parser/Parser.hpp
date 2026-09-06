@@ -65,20 +65,20 @@ namespace Opm {
         static std::string stripComments(const std::string& inputString);
 
         /// The starting point of the parsing process. The supplied file is parsed, and the resulting Deck is returned.
-        Deck parseFile(const std::string &dataFile,
+        Deck parseFile(const std::filesystem::path& dataFile,
                        const ParseContext&,
                        ErrorGuard& errors,
                        const std::vector<Opm::Ecl::SectionType>& sections = {}) const;
 
-        Deck parseFile(const std::string&,
+        Deck parseFile(const std::filesystem::path&,
                        const ParseContext&) const;
 
-        Deck parseFile(const std::string&,
+        Deck parseFile(const std::filesystem::path&,
                        const ParseContext&,
                        const std::vector<Opm::Ecl::SectionType>& sections
                       ) const;
 
-        Deck parseFile(const std::string& datafile) const;
+        Deck parseFile(const std::filesystem::path& datafile) const;
 
         Deck parseString(const std::string &data,
                          const ParseContext&,

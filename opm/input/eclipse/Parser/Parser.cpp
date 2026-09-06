@@ -1691,7 +1691,7 @@ bool parseState( ParserState& parserState, const Parser& parser, ErrorGuard& err
         return parse(deck, context).getInputGrid();
     }
 
-    Deck Parser::parseFile(const std::string&  dataFileName,
+    Deck Parser::parseFile(const std::filesystem::path& dataFileName,
                            const ParseContext& parseContext,
                            ErrorGuard& errors,
                            const std::vector<Ecl::SectionType>& sections) const
@@ -1728,8 +1728,10 @@ bool parseState( ParserState& parserState, const Parser& parser, ErrorGuard& err
            2. The relative/abolute status of the path is retained.
         */
 
+        // has_root_directory() is the portable spelling of the former leading-'/' test;
+        // is_absolute() implies it but would not keep a rooted path without a root name.
         std::string data_file;
-        if (dataFileName[0] == '/')
+        if (dataFileName.has_root_directory())
             data_file = std::filesystem::canonical(dataFileName).generic_string();
         else
             data_file = std::filesystem::proximate(std::filesystem::canonical(dataFileName)).generic_string();
@@ -1753,20 +1755,20 @@ bool parseState( ParserState& parserState, const Parser& parser, ErrorGuard& err
         return std::move( parserState.deck );
     }
 
-    Deck Parser::parseFile(const std::string& dataFileName,
+    Deck Parser::parseFile(const std::filesystem::path& dataFileName,
                            const ParseContext& parseContext) const {
         ErrorGuard errors;
         return this->parseFile(dataFileName, parseContext, errors, {});
     }
 
-    Deck Parser::parseFile(const std::string& dataFileName,
+    Deck Parser::parseFile(const std::filesystem::path& dataFileName,
                            const ParseContext& parseContext,
                            const std::vector<Opm::Ecl::SectionType>& sections) const {
         ErrorGuard errors;
         return this->parseFile(dataFileName, parseContext, errors, sections);
     }
 
-    Deck Parser::parseFile(const std::string& dataFileName) const {
+    Deck Parser::parseFile(const std::filesystem::path& dataFileName) const {
         ErrorGuard errors;
         return this->parseFile(dataFileName, ParseContext(), errors);
     }
