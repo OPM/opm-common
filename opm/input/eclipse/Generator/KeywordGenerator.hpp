@@ -21,6 +21,7 @@
 #ifndef KEYWORD_GENERATOR_HPP
 #define KEYWORD_GENERATOR_HPP
 
+#include <filesystem>
 #include <string>
 
 namespace Opm {
@@ -33,12 +34,12 @@ namespace Opm {
     public:
         explicit KeywordGenerator(bool verbose);
 
-        static void ensurePath(const std::string& file_name);
+        static void ensurePath(const std::filesystem::path& file);
         static std::string endTest();
         static std::string startTest(const std::string& test_name);
         static std::string headerHeader(const std::string&);
         static void updateFile(const std::stringstream& newContent,
-                               const std::string& filename);
+                               const std::filesystem::path& filename);
 
         void updateBuiltInHeader(const KeywordLoader& loader,
                                  const std::string& headerBuildPath,
