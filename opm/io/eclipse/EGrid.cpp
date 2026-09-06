@@ -36,12 +36,13 @@
 #include <string>
 
 #include <fmt/format.h>
+#include <fmt/std.h>
 
 namespace Opm::EclIO {
 
 using NNCentry = std::tuple<int, int, int, int, int, int, float>;
 
-EGrid::EGrid(const std::string& filename, const std::string& grid_name)
+EGrid::EGrid(const std::filesystem::path& filename, const std::string& grid_name)
     : EclFile(filename), inputFileName { filename }, m_grid_name {grid_name}
 {
     initFileName = inputFileName.parent_path() / inputFileName.stem();
@@ -259,7 +260,7 @@ void EGrid::load_nnc_data()
         nnc2_array = getImpl(nnc2_array_index, Opm::EclIO::INTE, inte_array, "inte");
 
         if ((std::filesystem::exists(initFileName)) && (nnc1_array.size() > 0)){
-            Opm::EclIO::EInit init(initFileName.generic_string());
+            Opm::EclIO::EInit init(initFileName);
 
             auto init_dims = init.grid_dimension(m_grid_name);
             int init_nactive = init.activeCells(m_grid_name);
@@ -540,7 +541,7 @@ std::vector<float> EGrid::  get_zcorn_from_disk(int layer, bool bottom)
     fileH.open(inputFileName, std::ios::in |  std::ios::binary);
 
     if (!fileH)
-        throw std::runtime_error("Can not open EGrid file" + this->inputFilename);
+        throw std::runtime_error(fmt::format("Can not open EGrid file {}", this->inputFilename));
 
     std::string arrName(8,' ');
     eclArrType arrType;

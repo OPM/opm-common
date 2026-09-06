@@ -30,6 +30,7 @@
 #include <cmath>
 
 #include <fmt/format.h>
+#include <fmt/std.h>
 
 namespace Opm { namespace EclIO {
 
@@ -97,7 +98,7 @@ void EclFile::load(bool preload) {
 }
 
 
-EclFile::EclFile(const std::string& filename, EclFile::Formatted fmt, bool preload) :
+EclFile::EclFile(const std::filesystem::path& filename, EclFile::Formatted fmt, bool preload) :
     formatted(fmt.value),
     inputFilename(filename)
 {
@@ -105,7 +106,7 @@ EclFile::EclFile(const std::string& filename, EclFile::Formatted fmt, bool prelo
 }
 
 
-EclFile::EclFile(const std::string& filename, bool preload) :
+EclFile::EclFile(const std::filesystem::path& filename, bool preload) :
     inputFilename(filename)
 {
     if (!fileExists(filename))
@@ -198,7 +199,7 @@ void EclFile::loadData()
         fileH.open(inputFilename, std::ios::in |  std::ios::binary);
 
         if (!fileH) {
-            OPM_THROW(std::runtime_error, "Could not open file: '" + inputFilename +"'");
+            OPM_THROW(std::runtime_error, fmt::format("Could not open file: {}", inputFilename));
         }
 
         for (std::size_t i = 0; i < array_name.size(); i++) {
@@ -241,7 +242,7 @@ void EclFile::loadData(const std::string& name)
         fileH.open(inputFilename, std::ios::in |  std::ios::binary);
 
         if (!fileH) {
-            OPM_THROW(std::runtime_error, "Could not open file: '" + inputFilename +"'");
+            OPM_THROW(std::runtime_error, fmt::format("Could not open file: {}", inputFilename));
         }
 
         for (std::size_t i = 0; i < array_name.size(); i++) {
@@ -282,7 +283,7 @@ void EclFile::loadData(const std::vector<int>& arrIndex)
         fileH.open(inputFilename, std::ios::in |  std::ios::binary);
 
         if (!fileH) {
-            OPM_THROW(std::runtime_error, "Could not open file: '" + inputFilename +"'");
+            OPM_THROW(std::runtime_error, fmt::format("Could not open file: {}", inputFilename));
         }
 
         for (int ind : arrIndex) {
@@ -318,7 +319,7 @@ void EclFile::loadData(int arrIndex)
         fileH.open(inputFilename, std::ios::in |  std::ios::binary);
 
         if (!fileH) {
-            OPM_THROW(std::runtime_error, "Could not open file: '" + inputFilename +"'");
+            OPM_THROW(std::runtime_error, fmt::format("Could not open file: {}", inputFilename));
         }
 
         loadBinaryArray(fileH, arrIndex);
@@ -387,7 +388,7 @@ std::vector<unsigned int> EclFile::get_bin_logi_raw_values(int arrIndex) const
     fileH.open(inputFilename, std::ios::in |  std::ios::binary);
 
     if (!fileH) {
-        OPM_THROW(std::runtime_error, "Could not open file: '" + inputFilename +"'");
+        OPM_THROW(std::runtime_error, fmt::format("Could not open file: {}", inputFilename));
     }
 
     fileH.seekg (ifStreamPos[arrIndex], fileH.beg);
@@ -405,7 +406,7 @@ std::vector<std::string> EclFile::get_fmt_real_raw_str_values(int arrIndex) cons
     std::ifstream inFile(inputFilename);
 
     if (!inFile) {
-        OPM_THROW(std::runtime_error, "Could not open file: '" + inputFilename +"'");
+        OPM_THROW(std::runtime_error, fmt::format("Could not open file: {}", inputFilename));
     }
 
     inFile.seekg(ifStreamPos[arrIndex]);

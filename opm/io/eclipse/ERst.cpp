@@ -53,7 +53,7 @@ namespace {
 
 namespace Opm::EclIO {
 
-ERst::ERst(const std::string& filename)
+ERst::ERst(const std::filesystem::path& filename)
     : EclFile(filename)
 {
     if (this->hasKey("SEQNUM")) {
