@@ -2633,6 +2633,29 @@ namespace {
     }
 }
 
+/// Well performance evaluation indicator (WPWE0 .. WPWE7).
+///
+/// Reports the event counter \p Event that the simulator accumulated for
+/// this well during the report step.  The counters are dimensionless.
+template <int Opm::data::WellEvents::* Event>
+inline quantity well_performance_event(const fn_args& args)
+{
+    const auto unit = Opm::UnitSystem::measure::identity;
+
+    if (args.schedule_wells.empty()) {
+        // No wells.  Possibly determining pertinent unit of measure
+        // during SMSPEC configuration.
+        return { 0.0, unit };
+    }
+
+    const auto xwPos = args.wells.find(args.schedule_wells.front()->name());
+    if (xwPos == args.wells.end()) {
+        return { 0.0, unit };
+    }
+
+    return { static_cast<double>(xwPos->second.events.*Event), unit };
+}
+
 inline quantity well_control_mode( const fn_args& args )
 {
     const auto unit = Opm::UnitSystem::measure::identity;
@@ -3062,6 +3085,16 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "WLPRT", well_control_limit<producer, Opm::data::WellControlLimits::Item::LiquidRate> },
 
     { "WMCTL", well_control_mode },
+
+    // Well performance evaluation indicators
+    { "WPWE0", well_performance_event<&Opm::data::WellEvents::drilled> },
+    { "WPWE1", well_performance_event<&Opm::data::WellEvents::connsOpened> },
+    { "WPWE2", well_performance_event<&Opm::data::WellEvents::connsClosed> },
+    { "WPWE3", well_performance_event<&Opm::data::WellEvents::closedToBottom> },
+    { "WPWE4", well_performance_event<&Opm::data::WellEvents::stopped> },
+    { "WPWE5", well_performance_event<&Opm::data::WellEvents::injectorToProducer> },
+    { "WPWE6", well_performance_event<&Opm::data::WellEvents::producerToInjector> },
+    { "WPWE7", well_performance_event<&Opm::data::WellEvents::shut> },
 
     { "GWIR", rate< rt::wat, injector > },
     { "WGVIR", rate< rt::reservoir_gas, injector >},

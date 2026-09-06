@@ -959,6 +959,24 @@ COPRL
 WSTAT
 /
 
+-- Well performance evaluation indicators
+WPWE0
+/
+WPWE1
+/
+WPWE2
+/
+WPWE3
+/
+WPWE4
+/
+WPWE5
+/
+WPWE6
+/
+WPWE7
+/
+
 
 -- Water injection per connection
 CWIR
