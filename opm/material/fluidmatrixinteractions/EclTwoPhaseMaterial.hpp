@@ -481,6 +481,42 @@ public:
             return false;
         }
     }
+
+    template <class StateT>
+    static void captureHysteresisState(const Params& params, StateT& twoPhaseState)
+    {
+        if constexpr (Traits::enableHysteresis) {
+            switch (params.approach()) {
+            case EclTwoPhaseApproach::GasOil:
+                twoPhaseState = params.gasOilParams().captureState();
+                break;
+            case EclTwoPhaseApproach::OilWater:
+                twoPhaseState = params.oilWaterParams().captureState();
+                break;
+            case EclTwoPhaseApproach::GasWater:
+                twoPhaseState = params.gasWaterParams().captureState();
+                break;
+            }
+        }
+    }
+
+    template <class StateT>
+    static void restoreHysteresisState(Params& params, const StateT& twoPhaseState)
+    {
+        if constexpr (Traits::enableHysteresis) {
+            switch (params.approach()) {
+            case EclTwoPhaseApproach::GasOil:
+                params.gasOilParams().restoreState(twoPhaseState);
+                break;
+            case EclTwoPhaseApproach::OilWater:
+                params.oilWaterParams().restoreState(twoPhaseState);
+                break;
+            case EclTwoPhaseApproach::GasWater:
+                params.gasWaterParams().restoreState(twoPhaseState);
+                break;
+            }
+        }
+    }
 };
 
 } // namespace Opm

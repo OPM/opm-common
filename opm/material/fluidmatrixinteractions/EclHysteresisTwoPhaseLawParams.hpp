@@ -39,6 +39,38 @@
 #include <cmath>
 #include <memory>
 namespace Opm {
+template <class Scalar>
+struct EclHysteresisDynamicState
+{
+    Scalar deltaSwImbKrn{};
+    Scalar Sncrt{};
+    Scalar Swcrt{};
+    Scalar pcSwMdc{2.0};
+    Scalar pcSwMic{1.0};
+    Scalar krnSwMdc{2.0};
+    Scalar krwSwMdc{-2.0};
+    Scalar KrndHy{};
+    Scalar KrwdHy{};
+    Scalar Krwd_sncrt{};
+    Scalar SncrtWAG{};
+    Scalar cTransf{};
+    Scalar swatImbStart{};
+    Scalar swatImbStartNxt{};
+    Scalar krnSwWAG{2.0};
+    Scalar krnSwDrainRevert{2.0};
+    Scalar krnSwDrainStart{-2.0};
+    Scalar krnSwDrainStartNxt{};
+    Scalar krnImbStart{};
+    Scalar krnImbStartNxt{};
+    Scalar krnDrainStart{};
+    Scalar krnDrainStartNxt{};
+    Scalar krnSwImbStart{};
+    int nState{};
+    bool initialImb{false};
+    bool isDrain{true};
+    bool wasDrain{false};
+};
+
 /*!
  * \ingroup FluidMatrixInteractions
  *
@@ -53,6 +85,7 @@ class EclHysteresisTwoPhaseLawParams : public EnsureFinalized
 
 public:
     using Traits = typename EffLawParams::Traits;
+    using HysteresisDynamicState = EclHysteresisDynamicState<Scalar>;
 
     static EclHysteresisTwoPhaseLawParams serializationTestObject()
     {
@@ -667,6 +700,70 @@ public:
             updateDynamicParams_();
 
         return updateParams;
+    }
+
+    HysteresisDynamicState captureState() const
+    {
+        return {
+            .deltaSwImbKrn = deltaSwImbKrn_,
+            .Sncrt = Sncrt_,
+            .Swcrt = Swcrt_,
+            .pcSwMdc = pcSwMdc_,
+            .pcSwMic = pcSwMic_,
+            .krnSwMdc = krnSwMdc_,
+            .krwSwMdc = krwSwMdc_,
+            .KrndHy = KrndHy_,
+            .KrwdHy = KrwdHy_,
+            .Krwd_sncrt = Krwd_sncrt_,
+            .SncrtWAG = SncrtWAG_,
+            .cTransf = cTransf_,
+            .swatImbStart = swatImbStart_,
+            .swatImbStartNxt = swatImbStartNxt_,
+            .krnSwWAG = krnSwWAG_,
+            .krnSwDrainRevert = krnSwDrainRevert_,
+            .krnSwDrainStart = krnSwDrainStart_,
+            .krnSwDrainStartNxt = krnSwDrainStartNxt_,
+            .krnImbStart = krnImbStart_,
+            .krnImbStartNxt = krnImbStartNxt_,
+            .krnDrainStart = krnDrainStart_,
+            .krnDrainStartNxt = krnDrainStartNxt_,
+            .krnSwImbStart = krnSwImbStart_,
+            .nState = nState_,
+            .initialImb = initialImb_,
+            .isDrain = isDrain_,
+            .wasDrain = wasDrain_
+        };
+    }
+
+    void restoreState(const HysteresisDynamicState& state)
+    {
+        deltaSwImbKrn_ = state.deltaSwImbKrn;
+        Sncrt_ = state.Sncrt;
+        Swcrt_ = state.Swcrt;
+        pcSwMdc_ = state.pcSwMdc;
+        pcSwMic_ = state.pcSwMic;
+        krnSwMdc_ = state.krnSwMdc;
+        krwSwMdc_ = state.krwSwMdc;
+        KrndHy_ = state.KrndHy;
+        KrwdHy_ = state.KrwdHy;
+        Krwd_sncrt_ = state.Krwd_sncrt;
+        SncrtWAG_ = state.SncrtWAG;
+        cTransf_ = state.cTransf;
+        swatImbStart_ = state.swatImbStart;
+        swatImbStartNxt_ = state.swatImbStartNxt;
+        krnSwWAG_ = state.krnSwWAG;
+        krnSwDrainRevert_ = state.krnSwDrainRevert;
+        krnSwDrainStart_ = state.krnSwDrainStart;
+        krnSwDrainStartNxt_ = state.krnSwDrainStartNxt;
+        krnImbStart_ = state.krnImbStart;
+        krnImbStartNxt_ = state.krnImbStartNxt;
+        krnDrainStart_ = state.krnDrainStart;
+        krnDrainStartNxt_ = state.krnDrainStartNxt;
+        krnSwImbStart_ = state.krnSwImbStart;
+        nState_ = state.nState;
+        initialImb_ = state.initialImb;
+        isDrain_ = state.isDrain;
+        wasDrain_ = state.wasDrain;
     }
 
     template<class Serializer>
