@@ -40,6 +40,7 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <cstdint>
 #include <ctime>
 #include <initializer_list>
 #include <numeric>
@@ -894,11 +895,14 @@ Opm::RestartIO::InteHEAD::TimePoint
 Opm::RestartIO::getSimulationTimePoint(const std::time_t start,
                                        const double      elapsed)
 {
-    const auto now = TimeService::advance(start, elapsed);
-    const auto tp  = *std::gmtime(&now);
+    // Round to whole microseconds first so that FP noise near a
+    // second/day boundary doesn't get truncated into the previous day.
+    const auto elapsed_usec  = static_cast<std::int64_t>(std::llround(elapsed * 1.0e6));
+    const auto whole_seconds = elapsed_usec / 1000000;
+    const auto usec          = static_cast<int>(elapsed_usec % 1000000);
 
-    auto sec  = 0.0;            // Not really used here.
-    auto usec = std::floor(1.0e6 * std::modf(elapsed, &sec));
+    const auto now = TimeService::advance(start, static_cast<double>(whole_seconds));
+    const auto tp  = *std::gmtime(&now);
 
     return {
         // Y-m-d
@@ -912,7 +916,7 @@ Opm::RestartIO::getSimulationTimePoint(const std::time_t start,
         std::min(tp.tm_sec, 59), // Ignore leap seconds
 
         // Fractional seconds in microsecond resolution.
-        static_cast<int>(usec),
+        usec,
     };
 }
 
