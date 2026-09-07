@@ -1284,6 +1284,17 @@ std::string ESmry::makeKeyString(const std::string& keywordArg, const std::strin
         return fmt::format("{}", keywordArg);
     }
 
+    if (first == 'N') {
+        // Network node keywords, e.g. NPR, are named by the node.  Other
+        // keywords starting with N, NEWTON for instance, are miscellaneous
+        // and carry no name.
+        if (wgname.empty() || (wgname == no_wgname)) {
+            return keywordArg;
+        }
+
+        return fmt::format("{}:{}", keywordArg, wgname);
+    }
+
     if (first == 'R') {
         if (num <= 0) {
             return "";

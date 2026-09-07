@@ -415,6 +415,59 @@ BOOST_AUTO_TEST_CASE(TestUnits) {
     BOOST_CHECK_EQUAL( smry.get_unit("WOPR:PROD"), "STB/DAY");
 }
 
+BOOST_AUTO_TEST_CASE(TestNetworkNodeKeys) {
+
+    // NPR is a network node keyword and is named by the node it belongs to.
+    // NEWTON starts with the same letter, but is a miscellaneous keyword
+    // without a name.
+    const std::vector<std::string> keywords = {"TIME    ", "NPR     ", "NPR     ",
+                                               "GNETPR  ", "NEWTON  "};
+
+    const std::vector<std::string> wgnames = {":+:+:+:+", "NODE1   ", "NODE2   ",
+                                              "NODE1   ", ":+:+:+:+"};
+
+    const std::vector<std::string> units = {"DAYS    ", "BARSA   ", "BARSA   ",
+                                            "BARSA   ", "        "};
+
+    const std::vector<int> nums(keywords.size(), 0);
+
+    WorkArea work;
+
+    {
+        Opm::EclIO::EclOutput smspec("NETWORK.SMSPEC", false);
+        smspec.write<int>("INTEHEAD", {1, 100});
+        smspec.write("RESTART", std::vector<std::string>(9, ""));
+        smspec.write<int>("DIMENS", {static_cast<int>(keywords.size()), 13, 22, 11, 0, 0});
+        smspec.write("KEYWORDS", keywords);
+        smspec.write("WGNAMES", wgnames);
+        smspec.write("NUMS", nums);
+        smspec.write("UNITS", units);
+        smspec.write<int>("STARTDAT", {1, 11, 2018, 0, 0, 0});
+    }
+
+    {
+        Opm::EclIO::EclOutput unsmry("NETWORK.UNSMRY", false);
+        unsmry.write<int>("SEQHDR", {1});
+        unsmry.write<int>("MINISTEP", {0});
+        unsmry.write<float>("PARAMS", {1.0f, 100.0f, 200.0f, 100.0f, 3.0f});
+    }
+
+    ESmry smry("NETWORK.SMSPEC");
+
+    BOOST_CHECK(smry.hasKey("NPR:NODE1"));
+    BOOST_CHECK(smry.hasKey("NPR:NODE2"));
+    BOOST_CHECK(smry.hasKey("GNETPR:NODE1"));
+    BOOST_CHECK(smry.hasKey("NEWTON"));
+
+    // The node name must not be lost, i.e. the two nodes must not collapse
+    // into one vector.
+    BOOST_CHECK_EQUAL(smry.get("NPR:NODE1").front(), 100.0f);
+    BOOST_CHECK_EQUAL(smry.get("NPR:NODE2").front(), 200.0f);
+    BOOST_CHECK_EQUAL(smry.get("NEWTON").front(), 3.0f);
+
+    BOOST_CHECK_EQUAL(smry.get_unit("NPR:NODE1"), "BARSA");
+}
+
 BOOST_AUTO_TEST_CASE(Test_all_available) {
 
     std::vector<std::string> keywords = {"TIME ", "YEARS", "FGOR", "FOPR",
