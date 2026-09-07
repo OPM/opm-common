@@ -414,9 +414,19 @@ namespace {
             if (grp_name == "FIELD") { continue; }
 
             makeEntities('G', Cat::Group, extra_group_vectors, grp_name);
+
+            // Tracer rates and cumulatives.  Concentrations are
+            // intentionally omitted here since those are not needed at the
+            // group level for simulation restart.
+            makeTracerEntities('G', Cat::Group, required_tracer_vectors, grp_name);
         }
 
         makeEntities('F', Cat::Field, extra_field_vectors, "FIELD");
+
+        // Tracer rates and cumulatives.  Concentrations are intentionally
+        // omitted here since those are not needed at the field level for
+        // simulation restart.
+        makeTracerEntities('F', Cat::Field, required_tracer_vectors, "FIELD");
 
         return entities;
     }
