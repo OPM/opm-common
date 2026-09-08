@@ -464,16 +464,19 @@ protected:
     template <class FluidState>
     Scalar computeVolumeShift_(const FluidState& fluidState, unsigned phaseIdx) const
     {
-        // b_c from the dimensionless B_c = b_c p / (R T).
-        const Scalar T = decay<Scalar>(fluidState.temperature(phaseIdx));
-        const Scalar p = decay<Scalar>(fluidState.pressure(phaseIdx));
-        const Scalar RT_p = Constants<Scalar>::R * T / p;
-
         Scalar shift = 0;
-        for (unsigned compIdx = 0; compIdx < FluidSystem::numComponents; ++compIdx) {
-            const Scalar b = decay<Scalar>(Bi(phaseIdx, compIdx)) * RT_p;
-            shift += decay<Scalar>(fluidState.moleFraction(phaseIdx, compIdx))
-                   * FluidSystem::volumeShift(compIdx) * b;
+        // Fluid systems without SSHIFT support use a zero translation.
+        if constexpr (requires { FluidSystem::volumeShift(0u); }) {
+            // b_c from the dimensionless B_c = b_c p / (R T).
+            const Scalar T = decay<Scalar>(fluidState.temperature(phaseIdx));
+            const Scalar p = decay<Scalar>(fluidState.pressure(phaseIdx));
+            const Scalar RT_p = Constants<Scalar>::R * T / p;
+
+            for (unsigned compIdx = 0; compIdx < FluidSystem::numComponents; ++compIdx) {
+                const Scalar b = decay<Scalar>(Bi(phaseIdx, compIdx)) * RT_p;
+                shift += decay<Scalar>(fluidState.moleFraction(phaseIdx, compIdx))
+                       * FluidSystem::volumeShift(compIdx) * b;
+            }
         }
         return shift;
     }

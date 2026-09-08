@@ -393,19 +393,17 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(GenericFluidSystem, Scalar, ScalarTypes)
     using Evaluation = Opm::DenseAd::Evaluation<Scalar, 4>;
     using FluidSystem = Opm::GenericOilGasWaterFluidSystem<Scalar, 4, true>;
 
-    registerComponent<FluidSystem, Opm::SimpleCO2<Scalar>>();
-    registerComponent<FluidSystem, Opm::C1<Scalar>>();
-    registerComponent<FluidSystem, Opm::C10<Scalar>>();
-    registerComponent<FluidSystem, Opm::N2<Scalar>>();
+    const auto initializeFluidSystem = [] {
+        FluidSystem::init();
+        registerComponent<FluidSystem, Opm::SimpleCO2<Scalar>>();
+        registerComponent<FluidSystem, Opm::C1<Scalar>>();
+        registerComponent<FluidSystem, Opm::C10<Scalar>>();
+        registerComponent<FluidSystem, Opm::N2<Scalar>>();
+    };
 
-    // initialize water pvt
-    using WaterPvt = typename FluidSystem::WaterPvt;
-    std::shared_ptr<WaterPvt> waterPvt;
-    FluidSystem::setWaterPvt(waterPvt);
-
-    checkFluidSystem<Scalar, FluidSystem, Scalar, Scalar>();
-    checkFluidSystem<Scalar, FluidSystem, Evaluation, Scalar>();
-    checkFluidSystem<Scalar, FluidSystem, Evaluation, Evaluation>();
+    checkFluidSystem<Scalar, FluidSystem, Scalar, Scalar>(initializeFluidSystem);
+    checkFluidSystem<Scalar, FluidSystem, Evaluation, Scalar>(initializeFluidSystem);
+    checkFluidSystem<Scalar, FluidSystem, Evaluation, Evaluation>(initializeFluidSystem);
 }
 
 BOOST_AUTO_TEST_CASE_TEMPLATE(GenericFluidSystemNoWater, Scalar, ScalarTypes)
@@ -413,11 +411,14 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(GenericFluidSystemNoWater, Scalar, ScalarTypes)
     using Evaluation = Opm::DenseAd::Evaluation<Scalar, 3>;
     using FluidSystem = Opm::GenericOilGasWaterFluidSystem<Scalar, 3, false>;
 
-    registerComponent<FluidSystem, Opm::SimpleCO2<Scalar>>();
-    registerComponent<FluidSystem, Opm::C1<Scalar>>();
-    registerComponent<FluidSystem, Opm::C10<Scalar>>();
+    const auto initializeFluidSystem = [] {
+        FluidSystem::init();
+        registerComponent<FluidSystem, Opm::SimpleCO2<Scalar>>();
+        registerComponent<FluidSystem, Opm::C1<Scalar>>();
+        registerComponent<FluidSystem, Opm::C10<Scalar>>();
+    };
 
-    checkFluidSystem<Scalar, FluidSystem, Scalar, Scalar>();
-    checkFluidSystem<Scalar, FluidSystem, Evaluation, Scalar>();
-    checkFluidSystem<Scalar, FluidSystem, Evaluation, Evaluation>();
+    checkFluidSystem<Scalar, FluidSystem, Scalar, Scalar>(initializeFluidSystem);
+    checkFluidSystem<Scalar, FluidSystem, Evaluation, Scalar>(initializeFluidSystem);
+    checkFluidSystem<Scalar, FluidSystem, Evaluation, Evaluation>(initializeFluidSystem);
 }
