@@ -392,31 +392,26 @@ namespace {
         wellData.captureDynamicWellData(schedule, tracers, sim_step, wells, sumState);
 
         // NORST logic:
-        //  - NORST=0: Full well and connection data
-        //  - NORST=1: Geometry only (IWEL/XWEL/ZWEL, XCON)
-        //  - NORST=2: No well-data but (IWEL/ZWEL) still available for plotting wells, and solution vectors only
+        //  - NORST=0: All data required for restarting, including hysteresis arrays
+        //  - NORST=1: Solution vectors and vectors required for well/group/network visualization.
+        //  - NORST=2: Solution vectors only (plus headers and IWEL/ZWEL for basic well plotting, no connections).
 
         rstFile.write("IWEL", wellData.getIWell());
 
-        if (norst_value == 0) {
-            rstFile.write("SWEL", wellData.getSWell());
-        }
-
         if (norst_value <= 1) {
+            rstFile.write("SWEL", wellData.getSWell());
             rstFile.write("XWEL", wellData.getXWell());
         }
 
         rstFile.write("ZWEL", wellData.getZWell());
 
-        if (norst_value == 0) {
+        if (norst_value <= 1) {
             auto wListData = Helpers::AggregateWListData(ih);
             wListData.captureDeclaredWListData(schedule, sim_step, ih);
 
             rstFile.write("ZWLS", wListData.getZWls());
             rstFile.write("IWLS", wListData.getIWls());
-        }
 
-        if (norst_value <= 1) {
             auto connectionData = Helpers::AggregateConnectionData(ih);
             connectionData.captureDeclaredConnData(schedule, grid, wells, sumState, sim_step);
 
@@ -445,17 +440,14 @@ namespace {
 
         rstFile.write("IWEL", wellData.getIWell());
 
-        if (norst_value == 0) {
+        if (norst_value == 1) {
             rstFile.write("SWEL", wellData.getSWell());
-        }
-
-        if (norst_value <= 1) {
             rstFile.write("XWEL", wellData.getXWell());
         }
 
         rstFile.write("ZWEL", wellData.getZWell());
 
-        if (norst_value == 0) {
+        if (norst_value == 1) {
             // write LGWEL
             rstFile.write("LGWEL", wellData.getLGWell());
         }
@@ -550,13 +542,13 @@ namespace {
     {
         const int norst_value = schedule[sim_step].rst_config().norst.value_or(0);
 
-        if (norst_value == 0) {
+        if (norst_value <= 1) {
             writeGroup(sim_step, es.tracer(), schedule, sumState, inteHD, rstFile);
         }
 
         // Write network data if the network option is used and network defined
         if (const auto& network = schedule[sim_step].network();
-            network.active() && (norst_value == 0))
+            network.active() && (norst_value <= 1))
         {
             writeNetwork(es, sim_step, schedule, sumState, inteHD, rstFile);
         }
@@ -570,7 +562,7 @@ namespace {
 
             // MSW data is well-structure specific and not written for
             // reduced (NORST=1) or graphics-only (NORST=2) restarts.
-            if (haveMSW && (norst_value == 0)) {
+            if (haveMSW && (norst_value <= 1)) {
                 writeMSWData(sim_step, schedule, grid,
                              sumState, wellSol, inteHD, rstFile);
             }
@@ -608,13 +600,13 @@ namespace {
     {
         const int norst_value = schedule[sim_step].rst_config().norst.value_or(0);
 
-        if (norst_value == 0) {
+        if (norst_value <= 1) {
             writeGroupLGR(sim_step, schedule, sumState, inteHD, rstFile, lgr_tag);
         }
 
         // Write network data if the network option is used and network defined
         if (const auto& network = schedule[sim_step].network();
-            network.active() && (norst_value == 0))
+            network.active() && (norst_value <= 1))
         {
             writeNetwork(es, sim_step, schedule, sumState, inteHD, rstFile);
         }
