@@ -244,6 +244,45 @@ BOOST_AUTO_TEST_CASE(ShiftLeavesTheEquilibriumRatiosAlone)
     }
 }
 
+BOOST_AUTO_TEST_CASE(ShiftTranslatesTheFugacityCoefficient)
+{
+    // The ratio test below only sees the factor cancel. This pins the factor
+    // itself: the coefficient of the translated EOS is the unshifted one times
+    // exp(-s_c B_c), so a component with a nonzero shift must carry it.
+    Opm::CompositionalFluidState<Scalar, FluidSystem> fs;
+    Opm::CompositionalFluidState<Scalar, UnshiftedSystem> fsRef;
+    fs.setTemperature(temperature);
+    fsRef.setTemperature(temperature);
+    fs.setPressure(FluidSystem::gasPhaseIdx, pressure);
+    fsRef.setPressure(UnshiftedSystem::gasPhaseIdx, pressure);
+    for (int c = 0; c < numComponents; ++c) {
+        fs.setMoleFraction(FluidSystem::gasPhaseIdx, c, z[c]);
+        fsRef.setMoleFraction(UnshiftedSystem::gasPhaseIdx, c, z[c]);
+    }
+
+    typename FluidSystem::template ParameterCache<Scalar> pc(eosType);
+    typename UnshiftedSystem::template ParameterCache<Scalar> pcRef(eosType);
+    pc.updatePhase(fs, FluidSystem::gasPhaseIdx);
+    pcRef.updatePhase(fsRef, UnshiftedSystem::gasPhaseIdx);
+
+    bool sawAShift = false;
+    for (int c = 0; c < numComponents; ++c) {
+        const Scalar shifted =
+            FluidSystem::fugacityCoefficient(fs, pc, FluidSystem::gasPhaseIdx, c);
+        const Scalar unshifted =
+            UnshiftedSystem::fugacityCoefficient(fsRef, pcRef, UnshiftedSystem::gasPhaseIdx, c);
+        const Scalar factor =
+            std::exp(-FluidSystem::volumeShift(c) * pc.Bi(FluidSystem::gasPhaseIdx, c));
+
+        BOOST_CHECK_CLOSE(shifted, unshifted * factor, 1.0e-8);
+        if (std::abs(factor - 1.0) > 1.0e-6) {
+            sawAShift = true;
+        }
+    }
+    // Otherwise every factor is one and the check above proves nothing.
+    BOOST_CHECK(sawAShift);
+}
+
 BOOST_AUTO_TEST_CASE(ShiftDoesNotReachTheCachedVolume)
 {
     // Check that the corrected volume subtracts the cached translation and

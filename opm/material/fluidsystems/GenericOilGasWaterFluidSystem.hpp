@@ -396,11 +396,12 @@ namespace Opm {
         /*!
          * \copydoc BaseFluidSystem::fugacityCoefficient
          *
-         * Returns the coefficient of the unshifted cubic EOS. The PT flash
-         * uses these coefficients at equal phase pressure and temperature,
-         * where the SSHIFT translation factors cancel from their ratios.
-         * An absolute coefficient of the translated EOS additionally requires
-         * the factor exp(-p s_c b_c / (R T)), which is not included here.
+         * The cubic EOS is evaluated on the unshifted root, and the SSHIFT
+         * translation enters as the per-component factor exp(-p s_c b_c /
+         * (R T)), written here as exp(-s_c B_c) since B_c = b_c p / (R T).
+         * The factor is the same in both phases at equal phase pressure and
+         * temperature, so it cancels from the equilibrium ratios and leaves
+         * the phase split untouched.
          */
         template <class FluidState, class LhsEval = typename FluidState::ValueType, class ParamCacheEval = LhsEval>
         static LhsEval fugacityCoefficient(const FluidState& fluidState,
@@ -415,7 +416,12 @@ namespace Opm {
             assert(phaseIdx < numPhases);
             assert(compIdx < numComponents);
 
-            return decay<LhsEval>(CubicEOS::computeFugacityCoefficient(fluidState, paramCache, phaseIdx, compIdx));
+            const auto fugCoeff =
+                CubicEOS::computeFugacityCoefficient(fluidState, paramCache, phaseIdx, compIdx);
+            const auto translation =
+                exp(-volumeShift(compIdx) * paramCache.Bi(phaseIdx, compIdx));
+
+            return decay<LhsEval>(fugCoeff * translation);
         }
 
         // TODO: the following interfaces are needed by function checkFluidSystem()
