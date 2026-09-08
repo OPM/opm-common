@@ -516,6 +516,20 @@ public:
     /// Record full processing of a complete time step.
     void countTimeStep() { ++this->miniStepId_; }
 
+    /// Exact, calendar-based elapsed time at the end of a report step.
+    ///
+    /// Bypasses any floating-point drift accumulated by the simulator's
+    /// running "seconds elapsed" counter over the course of a long run, by
+    /// deriving the elapsed time directly from the schedule's own (exact)
+    /// report step start times.  Only meaningful for non-substep restart
+    /// writes, i.e., when \p report_step denotes a completed report step.
+    ///
+    /// \param[in] report_step One-based report step index.
+    ///
+    /// \return Elapsed simulated time, in seconds, since the start of the
+    /// simulation, at the end of \p report_step.
+    double reportStepElapsed(const int report_step) const;
+
 private:
     /// Run's static properties.
     std::reference_wrapper<const EclipseState> es_;
@@ -1127,6 +1141,13 @@ bool Opm::EclipseIO::Impl::elapsedTimeAccepted(const int    report_step,
         && (float_elapsed < float_nextrpt);
 }
 
+double Opm::EclipseIO::Impl::reportStepElapsed(const int report_step) const
+{
+    return std::chrono::duration<double> {
+        this->rptStepStart_[report_step] - this->rptStepStart_.front()
+    }.count();
+}
+
 // ===========================================================================
 
 Opm::EclipseIO::EclipseIO(const EclipseState&  es,
@@ -1215,9 +1236,15 @@ void Opm::EclipseIO::writeTimeStep(const Action::State& action_state,
     }
 
     if (this->impl->wantRestartOutput(report_step, isSubstep, time_step)) {
-        // Restart file output (RPTRST &c).
+        // Restart file output (RPTRST &c).  At a full report step, use the
+        // schedule's exact calendar time rather than the simulator's
+        // running elapsed-time counter, which can drift over long runs.
+        const auto restart_secs_elapsed = isSubstep
+            ? secs_elapsed
+            : this->impl->reportStepElapsed(report_step);
+
         this->impl->writeRestartFile(action_state, wtest_state, st, udq_state,
-                                     report_step, time_step, secs_elapsed,
+                                     report_step, time_step, restart_secs_elapsed,
                                      write_double, std::move(value));
     }
 
@@ -1257,9 +1284,15 @@ void Opm::EclipseIO::writeTimeStep(const Action::State&      action_state,
     }
 
     if (this->impl->wantRestartOutput(report_step, isSubstep, time_step)) {
-        // Restart file output (RPTRST &c).
+        // Restart file output (RPTRST &c).  At a full report step, use the
+        // schedule's exact calendar time rather than the simulator's
+        // running elapsed-time counter, which can drift over long runs.
+        const auto restart_secs_elapsed = isSubstep
+            ? secs_elapsed
+            : this->impl->reportStepElapsed(report_step);
+
         this->impl->writeRestartFile(action_state, wtest_state, st, udq_state,
-                                     report_step, time_step, secs_elapsed,
+                                     report_step, time_step, restart_secs_elapsed,
                                      write_double, std::move(value));
     }
 

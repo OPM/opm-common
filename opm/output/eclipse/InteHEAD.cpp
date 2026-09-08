@@ -897,9 +897,10 @@ Opm::RestartIO::getSimulationTimePoint(const std::time_t start,
 {
     // Round to whole microseconds first so that FP noise near a
     // second/day boundary doesn't get truncated into the previous day.
+    constexpr std::int64_t usec_per_sec = 1'000'000;
     const auto elapsed_usec  = static_cast<std::int64_t>(std::llround(elapsed * 1.0e6));
-    const auto whole_seconds = elapsed_usec / 1000000;
-    const auto usec          = static_cast<int>(elapsed_usec % 1000000);
+    const auto whole_seconds = elapsed_usec / usec_per_sec;
+    const auto usec          = static_cast<int>(elapsed_usec % usec_per_sec);
 
     const auto now = TimeService::advance(start, static_cast<double>(whole_seconds));
     const auto tp  = *std::gmtime(&now);
