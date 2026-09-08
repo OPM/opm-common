@@ -154,6 +154,21 @@ BOOST_AUTO_TEST_CASE(isGraphicsOnly_OPM_NORST0_Returns_False)
         "NORST=0 restart must not be detected as graphics-only");
 }
 
+// OPM-written NORST=1 restart should not be flagged as graphics-only
+BOOST_AUTO_TEST_CASE(isGraphicsOnly_OPM_NORST1_Returns_True)
+{
+    WorkArea work_area("test_NORST1");
+    work_area.copyIn("NORST1_SIM.DATA");
+
+    const Setup setup { "NORST1_SIM.DATA" };
+    writeRestartFile(setup, work_area.currentWorkingDirectory(), "NORST1_SIM");
+
+    const auto rst = openRestart("NORST1_SIM.UNRST", 1);
+    BOOST_CHECK_MESSAGE(rst->isGraphicsOnly(),
+        "NORST=1 restart must be detected as graphics-only");
+}
+
+
 // OPM-written NORST=2 restart must be flagged as graphics-only.
 BOOST_AUTO_TEST_CASE(isGraphicsOnly_OPM_NORST2_Returns_True)
 {

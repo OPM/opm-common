@@ -560,8 +560,7 @@ namespace {
                                     [&schedule, sim_step](const std::string& well)
                                     { return schedule.getWell(well, sim_step).isMultiSegment(); });
 
-            // MSW data is well-structure specific and not written for
-            // reduced (NORST=1) or graphics-only (NORST=2) restarts.
+            // MSW data is well-structure specific and not written for graphics-only (NORST=2) restarts.
             if (haveMSW && (norst_value <= 1)) {
                 writeMSWData(sim_step, schedule, grid,
                              sumState, wellSol, inteHD, rstFile);
