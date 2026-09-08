@@ -18,8 +18,8 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef OPM_BC_PROP_HPP
-#define OPM_BC_PROP_HPP
+#ifndef OPM_BC_STATE_HPP
+#define OPM_BC_STATE_HPP
 
 #include <vector>
 #include <cstddef>
@@ -88,7 +88,7 @@ struct MechBCValue {
     }
 };
 
-class BCProp
+class BCState
 {
 public:
     struct BCFace
@@ -101,12 +101,13 @@ public:
         std::optional<double> pressure{};
         std::optional<double> temperature{};
 
-        std::optional<MechBCValue> mechbcvalue{};
+        MechBCValue mechbcvalue{};
 
         BCFace() = default;
-        explicit BCFace(const DeckRecord& record);
 
         static BCFace serializationTestObject();
+        static BCFace fromBCProp(const DeckRecord& record);
+        static BCFace fromBCMech(const DeckRecord& record);
 
         bool operator==(const BCFace& other) const;
 
@@ -124,17 +125,18 @@ public:
         }
     };
 
-    BCProp() = default;
+    BCState() = default;
 
-    static BCProp serializationTestObject();
+    static BCState serializationTestObject();
 
     std::size_t size() const;
     std::vector<BCFace>::const_iterator begin() const;
     std::vector<BCFace>::const_iterator end() const;
-    bool operator==(const BCProp& other) const;
+    bool operator==(const BCState& other) const;
     const BCFace& operator[](int index) const;
 
     void updateBCProp(const DeckRecord& record);
+    void updateBCMech(const DeckRecord& record);
 
     template<class Serializer>
     void serializeOp(Serializer& serializer)

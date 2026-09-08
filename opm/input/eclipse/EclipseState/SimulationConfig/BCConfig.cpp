@@ -92,7 +92,7 @@ BCConfig::BCConfig(const Deck& deck) {
         for (const auto* keyword : deck.getKeywordList<ParserKeywords::BC>()) {
             const std::string reason = "ERROR: The BC keyword is obsolete. \n "
                             "Instead use BCCON in the GRID section to specify the connections. \n "
-                            "And BCPROP in the SCHEDULE section to specify the type and values. \n"
+                            "And BCPROP/BCMECH in the SCHEDULE section to specify the type and values. \n"
                             "Check the OPM manual for details.";
             throw OpmInputError { reason, keyword->location()};
         }
