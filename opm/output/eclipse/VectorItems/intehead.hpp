@@ -116,6 +116,7 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
                     //  (thermal option), negative - Other simulator,
         NMFIPR = 99, // REGDIMS item2
 
+        RPTRST_NORST = 102, // RPTRST NORST value (> 0 indicates graphics-only restart)
         ROCKOPTS_TABTYP = 103, // ROCKOPTS item3 (PVTNUM=1 - default)
 
         NOACTNOD     =      129       ,              //  NOACTNOD = Number of active/defined nodes in the network

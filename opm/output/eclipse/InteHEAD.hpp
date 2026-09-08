@@ -242,6 +242,7 @@ namespace Opm { namespace RestartIO {
         InteHEAD& whistControlMode(int mode);
         InteHEAD& liftOptParam(int in_enc);
         InteHEAD& tracerCounts(const Tracers& tracers);
+        InteHEAD& rptrstOpts(const int norst_value);
 
         static int numRsegElem(const Opm::Phases& phase);
 

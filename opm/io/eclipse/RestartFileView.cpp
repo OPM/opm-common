@@ -18,7 +18,7 @@
 */
 
 #include <opm/io/eclipse/RestartFileView.hpp>
-
+#include <opm/output/eclipse/VectorItems/intehead.hpp>
 #include <opm/io/eclipse/ERst.hpp>
 #include <opm/io/eclipse/EclIOdata.hpp>
 
@@ -30,6 +30,8 @@
 #include <unordered_set>
 #include <utility>
 #include <vector>
+
+namespace VI = ::Opm::RestartIO::Helpers::VectorItems;
 
 namespace {
     template <typename T>
@@ -113,13 +115,13 @@ public:
 
     template <typename ElmType>
     const std::vector<ElmType>&
-    getKeyword(const std::string& vector, const int occurrence)
+    getKeyword(const std::string& vector, const int occurrence) const
     {
         return this->rst_file_->
             getRestartData<ElmType>(vector, this->report_step_, occurrence);
     }
 
-    const std::vector<int>& intehead()
+    const std::vector<int>& intehead() const
     {
         const auto ihkw = std::string { "INTEHEAD" };
 
@@ -132,7 +134,7 @@ public:
         return this->getKeyword<int>(ihkw, 0);
     }
 
-    const std::vector<bool>& logihead()
+    const std::vector<bool>& logihead() const
     {
         const auto lhkw = std::string { "LOGIHEAD" };
 
@@ -145,7 +147,7 @@ public:
         return this->getKeyword<bool>(lhkw, 0);
     }
 
-    const std::vector<double>& doubhead()
+    const std::vector<double>& doubhead() const
     {
         const auto dhkw = std::string { "DOUBHEAD" };
 
@@ -169,16 +171,10 @@ public:
             && this->hasKeyword<double>("DOUBHEAD");
     }
 
-    // Detect graphics-only restart (NORST >= 2).
-    // ZGRP is always written in full restarts (even for FIELD group).
-    // In case SWEL is omitted while IWEL is present, that is also a graphics-only indicator.
-    // Only valid if all header arrays are present.
+    // Detect graphics-only restart (NORST > 0). Value at INTEHEAD[RPTRST_NORST]
     bool isGraphicsOnly() const
     {
-        // ZGRP absent in a valid file: graphics-only indicator.
-        if (!this->hasKeyword<std::string>("ZGRP")) { return true; }
-        // In case ZGRP is present but SWEL is omitted: graphics-only indicator.
-        return this->hasKeyword<int>("IWEL") && !this->hasKeyword<float>("SWEL");
+        return this->hasHeaderArrays() && this->intehead()[VI::intehead::RPTRST_NORST] > 0;
     }
 
 private:

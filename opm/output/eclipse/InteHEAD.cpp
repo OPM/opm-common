@@ -160,7 +160,7 @@ enum index : std::vector<int>::size_type {
   NMFIPR       =       VI::intehead::NMFIPR,   //       0       0
   ih_100       =      100       ,              //       0       0
   ih_101       =      101       ,              //       0       0       1
-  ih_102       =      102       ,              //       0       0
+  RPTRST_NORST =       VI::intehead::RPTRST_NORST, //   0       0
   ROCKOPTS_TTYP =      VI::intehead::ROCKOPTS_TABTYP, // 0       0
   ih_104       =      104       ,              //       0       0
   ih_105       =      105       ,              //       0       0
@@ -880,6 +880,14 @@ int Opm::RestartIO::InteHEAD::numRsegElem(const ::Opm::Phases& phase)
     };
 }
 
+Opm::RestartIO::InteHEAD&
+Opm::RestartIO::InteHEAD::
+rptrstOpts(const int norst_value)
+{
+    this->data_[RPTRST_NORST] = norst_value;
+
+    return *this;
+}
 // =====================================================================
 
 Opm::RestartIO::InteHEAD::TimePoint
