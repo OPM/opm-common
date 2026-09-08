@@ -188,6 +188,8 @@ enum class UDAControl
     WELTARG_BHP,
     WELTARG_THP,
     WELTARG_LIFT,
+    //
+    WINJMULT_FRACTURE_PRESSURE,
 };
 
 enum class UDAKeyword
@@ -197,6 +199,7 @@ enum class UDAKeyword
     WELTARG,
     GCONINJE,
     GCONPROD,
+    WINJMULT,
 };
 
 namespace UDQ {
