@@ -105,6 +105,7 @@ public:
 
     explicit BrineCo2Pvt(const SaltContainerT& salinity,
                          bool enableMultiCompSalt = false,
+                         bool useH2ODensity = true,
                          int activityModel = 3,
                          int thermalMixingModelSalt = 1,
                          int thermalMixingModelLiquid = 2,
@@ -115,6 +116,7 @@ public:
                 const ContainerT& co2ReferenceDensity,
                 const SaltContainerT& salinity,
                 bool enableMultiCompSalt,
+                bool useH2ODensity,
                 int activityModel,
                 Co2StoreConfig::SaltMixingType thermalMixingModelSalt,
                 Co2StoreConfig::LiquidMixingType thermalMixingModelLiquid,
@@ -123,6 +125,7 @@ public:
                 , co2ReferenceDensity_(co2ReferenceDensity)
                 , salinity_(salinity)
                 , enableMultiCompSalt_(enableMultiCompSalt)
+                , useH2ODensity_(useH2ODensity)
                 , activityModel_(activityModel)
                 , liquidMixType_(thermalMixingModelLiquid)
                 , saltMixType_(thermalMixingModelSalt)
@@ -196,7 +199,8 @@ public:
     void setEzrokhiViscCoeff(const std::vector<EzrokhiTable>& viscaqa);
 
     void setSaltComponents(const SaltArray<double, SaltMassFraction>& saltcomp,
-                           bool enableMultiCompSalt);
+                           bool enableMultiCompSalt,
+                           bool useH2ODensity);
 
     /*!
      * \brief Return the number of PVT regions which are considered by this PVT-object.
@@ -559,6 +563,11 @@ public:
         return enableMultiCompSalt_;
     }
 
+    OPM_HOST_DEVICE bool getUseH2ODensity() const
+    {
+        return useH2ODensity_;
+    }
+
     OPM_HOST_DEVICE const Params& getParams() const
     { return co2Tables_; }
 
@@ -715,9 +724,9 @@ private:
 
         LhsEval rho_brine;
         if (enableMultiCompSalt_) {
-            rho_brine = Brine::liquidDensityMulticompSalt(T, pl, salinity, true, extrapolate);
+            rho_brine = Brine::liquidDensityMulticompSalt(T, pl, salinity, useH2ODensity_, extrapolate);
             SaltArray<LhsEval, SaltMassFraction> zeroSalinity;
-            rho_pure = Brine::liquidDensityMulticompSalt(T, pl, zeroSalinity, true, extrapolate);
+            rho_pure = Brine::liquidDensityMulticompSalt(T, pl, zeroSalinity, useH2ODensity_, extrapolate);
         } else {
             rho_pure = H2O::liquidDensity(T, pl, extrapolate);
             rho_brine = Brine::liquidDensity(T, pl, salinity.sum(), rho_pure);
@@ -937,7 +946,7 @@ private:
         // Improved estimate using brine density
         LhsEval rho_brine;
         if (enableMultiCompSalt_) {
-            rho_brine = Brine::liquidDensityMulticompSalt(T, P, S, true, extrapolate);
+            rho_brine = Brine::liquidDensityMulticompSalt(T, P, S, useH2ODensity_, extrapolate);
         } else {
             rho_brine = Brine::liquidDensity(T, P, S.sum(), extrapolate);
         }
@@ -966,6 +975,7 @@ private:
     bool enableEzrokhiViscosity_ = false;
     bool enableDissolution_ = true;
     bool enableSaltConcentration_ = false;
+    bool useH2ODensity_{true};
     int activityModel_{};
     Co2StoreConfig::LiquidMixingType liquidMixType_{};
     Co2StoreConfig::SaltMixingType saltMixType_{};
@@ -987,6 +997,7 @@ namespace Opm::gpuistl
             GpuBuffer<ScalarT>(cpuBrineCo2.getCo2ReferenceDensity()),
             GpuBuffer<::Opm::SaltArray<ScalarT, ::Opm::SaltMassFraction>>(cpuBrineCo2.getSalinity()),
             cpuBrineCo2.getEnableMultiCompSalt(),
+            cpuBrineCo2.getUseH2ODensity(),
             cpuBrineCo2.getActivityModel(),
             cpuBrineCo2.getThermalMixingModelSalt(),
             cpuBrineCo2.getThermalMixingModelLiquid(),
@@ -1011,6 +1022,7 @@ namespace Opm::gpuistl
             newGasReferenceDensity,
             newSalinity,
             brineCo2Pvt.getEnableMultiCompSalt(),
+            brineCo2Pvt.getUseH2ODensity(),
             brineCo2Pvt.getActivityModel(),
             brineCo2Pvt.getThermalMixingModelSalt(),
             brineCo2Pvt.getThermalMixingModelLiquid(),

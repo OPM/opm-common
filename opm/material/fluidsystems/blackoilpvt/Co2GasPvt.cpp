@@ -38,12 +38,14 @@ template<class Scalar, template<class> class Storage>
 Co2GasPvt<Scalar, Storage>::
 Co2GasPvt(const SaltContainerT& salinity,
           bool enableMultiCompSalt,
+          bool useH2ODensity,
           int activityModel,
           int thermalMixingModel,
           Scalar T_ref,
           Scalar P_ref)
         : salinity_(salinity)
         , enableMultiCompSalt_(enableMultiCompSalt)
+        , useH2ODensity_(useH2ODensity)
 {
     // Throw an error if reference state is not (T, p) = (15.56 C, 1 atm) = (288.71 K, 1.01325e5 Pa)
     if (T_ref != Scalar(288.71) || P_ref != Scalar(1.01325e5)) {
@@ -63,7 +65,7 @@ Co2GasPvt(const SaltContainerT& salinity,
     for (int i = 0; i < num_regions; ++i) {
         gasReferenceDensity_[i] = CO2::gasDensity(co2Tables, T_ref, P_ref, extrapolate);
         if (enableMultiCompSalt_) {
-            brineReferenceDensity_[i] = Brine::liquidDensityMulticompSalt(T_ref, P_ref, salinity_[i], true, extrapolate);
+            brineReferenceDensity_[i] = Brine::liquidDensityMulticompSalt(T_ref, P_ref, salinity_[i], useH2ODensity_, extrapolate);
         } else {
             brineReferenceDensity_[i] =
                 Brine::liquidDensity(T_ref, P_ref, salinity_[i].sum(), extrapolate);
@@ -99,7 +101,8 @@ initFromState(const EclipseState& eclState, const Schedule&)
     std::size_t regions = eclState.runspec().tabdims().getNumPVTTables();
     setNumRegions(regions);
     setSaltComponents(eclState.getCo2StoreConfig().saltComponents(),
-                      eclState.runspec().multiCompSalt());
+                      eclState.runspec().multiCompSalt().enabled(),
+                      !eclState.runspec().multiCompSalt().LaliberteCooperDensity());
     for (std::size_t regionIdx = 0; regionIdx < regions; ++regionIdx) {
         // Currently we only support constant salinity converted to mass fraction
         // For consistency we compute the reference density the same way as in BrineCo2Pvt.cpp
@@ -112,7 +115,11 @@ initFromState(const EclipseState& eclState, const Schedule&)
         }
         else if (enableMultiCompSalt_) {
             brineReferenceDensity_[regionIdx] =
-                Brine::liquidDensityMulticompSalt(T_ref, P_ref, salinity_[regionIdx], true, extrapolate);
+                Brine::liquidDensityMulticompSalt(T_ref,
+                                                  P_ref,
+                                                  salinity_[regionIdx],
+                                                  useH2ODensity_,
+                                                  extrapolate);
         } else {
             brineReferenceDensity_[regionIdx] =
                 Brine::liquidDensity(T_ref,
@@ -198,7 +205,9 @@ setEzrokhiDenCoeff(const std::vector<EzrokhiTable>& denaqa)
 template <class Scalar, template<class> class Storage>
 OPM_HOST_DEVICE void
 Co2GasPvt<Scalar, Storage>::
-setSaltComponents(const SaltArray<double, SaltMassFraction>& saltcomp, bool enableMultiCompSalt)
+setSaltComponents(const SaltArray<double, SaltMassFraction>& saltcomp,
+                  bool enableMultiCompSalt,
+                  bool useH2ODensity)
 {
     if (salinity_.empty()) {
         throw std::runtime_error("The salt components are empty");
@@ -207,6 +216,7 @@ setSaltComponents(const SaltArray<double, SaltMassFraction>& saltcomp, bool enab
         saltElem = saltcomp;
     }
     enableMultiCompSalt_ = enableMultiCompSalt;
+    useH2ODensity_ = useH2ODensity;
 }
 
 template class Co2GasPvt<double>;

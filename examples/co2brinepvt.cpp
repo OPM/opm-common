@@ -144,7 +144,7 @@ int main(int argc, char **argv)
 
     if (argc < 5 || help) {
         std::cout << "USAGE:" << std::endl;
-        std::cout << "co2brinepvt <prop> <phase> <p> <T> <salinity> <rs> <rv> <multicompsalt> <saltmodel> <thermalmixingmodelgas> <thermalmixingmodelliquid> <thermalmixingmodelsalt>"<< std::endl;
+        std::cout << "co2brinepvt <prop> <phase> <p> <T> <salinity> <rs> <rv> <multicompsalt> <useh2odensity> <saltmodel> <thermalmixingmodelgas> <thermalmixingmodelliquid> <thermalmixingmodelsalt>"<< std::endl;
         std::cout << "prop = {density, invB, B, viscosity, rsSat, internalEnergy, enthalpy, diffusionCoefficient}" << std::endl;
         std::cout << "phase = {CO2, brine}" << std::endl;
         std::cout << "p: pressure in bar" << std::endl;
@@ -154,6 +154,7 @@ int main(int argc, char **argv)
         std::cout << "rs(optional): amount of dissolved CO2 in Brine in SM3/SM3" << std::endl;
         std::cout << "rv(optional): amount of vaporized water in Gas in SM3/SM3" << std::endl;
         std::cout << "multicompsalt(optional): 0 = lumped to one salt [default]; 1 = multicomponent salt models" << std::endl;
+        std::cout << "useh2odensity(optional): 0 = Laliberte-Cooper pure water density; 1 = H2O::liquidDensity [default]" << std::endl;
         std::cout << "saltmodel(optional): 0 = no salt activity; 1 = Rumpf et al (1996) [default];"
                      " 2 = Duan-Sun in Spycher & Pruess (2009); 3 = Duan-Sun in Sycher & Pruess (2005)" << std::endl;
         std::cout << "thermalmixingmodelgas(optional): 0 = pure component [default]; 1 = ideal mixing;" << std::endl;
@@ -182,6 +183,7 @@ int main(int argc, char **argv)
     int thermalmixliquid = 2;
     int thermalmixsalt = 1;
     bool enableMultiCompSalt = false;
+    bool useH2ODensity = true;
     if (argc > 5) {
         if (argc < 11) {
             throw std::runtime_error("Need at least 6 salt molalities!");
@@ -201,13 +203,15 @@ int main(int argc, char **argv)
     if (argc > 13)
         enableMultiCompSalt = static_cast<bool>(atoi(argv[13]));
     if (argc > 14)
-        activityModel = atoi(argv[14]);
+        useH2ODensity = static_cast<bool>(atoi(argv[14]));
     if (argc > 15)
-        thermalmixgas = atoi(argv[15]);
+        activityModel = atoi(argv[15]);
     if (argc > 16)
-        thermalmixliquid = atoi(argv[16]);
+        thermalmixgas = atoi(argv[16]);
     if (argc > 17)
-        thermalmixsalt = atoi(argv[17]);
+        thermalmixliquid = atoi(argv[17]);
+    if (argc > 18)
+        thermalmixsalt = atoi(argv[18]);
 
     // convert to mass fraction
     std::vector<Opm::SaltArray<double, Opm::SaltMassFraction> > salinity(1);
@@ -218,11 +222,12 @@ int main(int argc, char **argv)
     // Instantiate PVT classes
     Opm::BrineCo2Pvt<double> brineCo2Pvt(salinity,
                                          enableMultiCompSalt,
+                                         useH2ODensity,
                                          activityModel,
                                          thermalmixsalt,
                                          thermalmixliquid);
 
-    Opm::Co2GasPvt<double> co2Pvt(salinity, enableMultiCompSalt, activityModel, thermalmixgas);
+    Opm::Co2GasPvt<double> co2Pvt(salinity, enableMultiCompSalt, useH2ODensity, activityModel, thermalmixgas);
 
     double value;
     if (prop == "density") {

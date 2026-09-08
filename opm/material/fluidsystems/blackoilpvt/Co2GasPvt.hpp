@@ -90,6 +90,7 @@ public:
 
     explicit Co2GasPvt(const SaltContainerT& salinity,
                        bool enableMultiCompSalt = true,
+                       bool useH2ODensity = true,
                        int activityModel = 3,
                        int thermalMixingModel = 1,
                        Scalar T_ref = 288.71, //(273.15 + 15.56)
@@ -100,6 +101,7 @@ public:
               const ContainerT& gasReferenceDensity,
               const SaltContainerT& salinity,
               bool enableMultiCompSalt,
+              bool useH2ODensity,
               bool enableEzrokhiDensity,
               bool enableVaporization,
               int activityModel,
@@ -108,6 +110,7 @@ public:
         , gasReferenceDensity_(gasReferenceDensity)
         , salinity_(salinity)
         , enableMultiCompSalt_(enableMultiCompSalt)
+        , useH2ODensity_(useH2ODensity)
         , enableEzrokhiDensity_(enableEzrokhiDensity)
         , enableVaporization_(enableVaporization)
         , activityModel_(activityModel)
@@ -154,7 +157,8 @@ public:
     OPM_HOST_DEVICE void setActivityModelSalt(int activityModel);
 
     OPM_HOST_DEVICE void setSaltComponents(const SaltArray<double, SaltMassFraction>& saltcomp,
-                                           bool enableMultiCompSalt);
+                                           bool enableMultiCompSalt,
+                                           bool useH2ODensity);
 
     /*!
      * \brief Set thermal mixing model for co2 in brine
@@ -401,6 +405,11 @@ public:
         return enableMultiCompSalt_;
     }
 
+    OPM_HOST_DEVICE bool getUseH2ODensity() const
+    {
+        return useH2ODensity_;
+    }
+
     OPM_HOST_DEVICE bool getEnableEzrokhiDensity() const
     { return enableEzrokhiDensity_; }
 
@@ -530,6 +539,7 @@ private:
     SaltContainerT salinity_{};
     ContainerT ezrokhiDenNaClCoeff_{};
     bool enableMultiCompSalt_{false};
+    bool useH2ODensity_{true};
     bool enableEzrokhiDensity_ = false;
     bool enableVaporization_ = true;
     int activityModel_{};
@@ -551,6 +561,7 @@ namespace Opm::gpuistl {
             GpuBuffer<ScalarT>(cpuCo2.getGasReferenceDensity()),
             GpuBuffer<::Opm::SaltArray<ScalarT, ::Opm::SaltMassFraction>>(cpuCo2.getSalinity()),
             cpuCo2.getEnableMultiCompSalt(),
+            cpuCo2.getUseH2ODensity(),
             cpuCo2.getEnableEzrokhiDensity(),
             cpuCo2.getEnableVaporization(),
             cpuCo2.getActivityModel(),
@@ -574,6 +585,7 @@ namespace Opm::gpuistl {
             newGasReferenceDensity,
             newSalinity,
             co2GasPvt.getEnableMultiCompSalt(),
+            co2GasPvt.getUseH2ODensity(),
             co2GasPvt.getEnableEzrokhiDensity(),
             co2GasPvt.getEnableVaporization(),
             co2GasPvt.getActivityModel(),

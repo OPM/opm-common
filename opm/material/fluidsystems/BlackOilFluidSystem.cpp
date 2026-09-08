@@ -127,7 +127,7 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
     // when we are using the the CO2STORE option
     if (eclState.runspec().co2Storage()) {
         const auto& salinity = eclState.getCo2StoreConfig().saltComponents();  // mass fraction
-        const auto& molarMassSalt = eclState.runspec().multiCompSalt()
+        const auto& molarMassSalt = eclState.runspec().multiCompSalt().enabled()
             ? 1.0 / BrineCo2Pvt<Scalar>::Brine::invAvgMolarMassFromMassFrac(salinity)
             : BrineCo2Pvt<Scalar>::Brine::molarMass(salinity.sum());
         for (unsigned regionIdx = 0; regionIdx < num_regions; ++regionIdx) {

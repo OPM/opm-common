@@ -805,6 +805,43 @@ const Tracers& Runspec::tracers() const {
     return this->m_tracers;
 }
 
+Saltmc::Saltmc(const Deck& deck)
+{
+    using SALTMC = ParserKeywords::SALTMC;
+    if (deck.hasKeyword<SALTMC>()) {
+        // Get record
+        const auto& keyword = deck.get<SALTMC>().back();
+        const auto& record = keyword[0];
+
+        // Use Laliberte-Cooper pure water density or not
+        const auto& laliberte_cooper =
+            record.getItem<SALTMC::LALIBERTE_COOPER_DENSITY>().get<std::string>(0);
+        m_laliberte_cooper_density = laliberte_cooper == "YES";
+
+        m_activated = true;
+    }
+}
+
+bool Saltmc::operator==(const Saltmc& other) const
+{
+    return this->m_activated == other.m_activated
+        && this->m_laliberte_cooper_density == other.m_laliberte_cooper_density;
+}
+
+Saltmc Saltmc::serializationTestObject()
+{
+    Saltmc saltmc;
+    saltmc.m_activated = true;
+    saltmc.m_laliberte_cooper_density = true;
+
+    return saltmc;
+}
+
+const Saltmc& Runspec::multiCompSalt() const
+{
+    return this->m_saltmc;
+}
+
 Runspec::Runspec(const Deck& deck)
     : m_start_time (create_start_time(deck))
     , active_phases(inferActivePhases(deck))
@@ -823,6 +860,7 @@ Runspec::Runspec(const Deck& deck)
     , m_mechsolver (deck)
     , m_tracers    (deck)
     , m_geochem    (deck)
+    , m_saltmc     (deck)
     , m_co2storage (false)
     , m_co2sol     (false)
     , m_h2sol      (false)
@@ -831,7 +869,6 @@ Runspec::Runspec(const Deck& deck)
     , m_mech       (false)
     , m_temp       (false)
     , m_biof       (false)
-    , m_saltmc     (false)
 {
     if (DeckSection::hasRUNSPEC(deck)) {
         const RUNSPECSection runspecSection{deck};
@@ -877,9 +914,6 @@ Runspec::Runspec(const Deck& deck)
                     "\nThe CO2 storage option is given. Activate GAS, plus WATER or OIL."
                 };
             }
-
-            // Check if multicomponent salt is activated
-            m_saltmc = runspecSection.hasKeyword<ParserKeywords::SALTMC>();
         }
 
         if (runspecSection.hasKeyword<ParserKeywords::CO2SOL>()) {
@@ -1014,7 +1048,7 @@ Runspec Runspec::serializationTestObject()
     result.m_temp = true;
     result.m_biof = true;
     result.m_geochem = Geochem::serializationTestObject();
-    result.m_saltmc = true;
+    result.m_saltmc = Saltmc::serializationTestObject();
 
     return result;
 }
@@ -1087,12 +1121,6 @@ std::size_t Runspec::numComps() const
 std::size_t Runspec::maxGasPlantTables() const
 {
     return this->m_max_gas_plant_tables;
-}
-
-bool
-Runspec::multiCompSalt() const noexcept
-{
-    return this->m_saltmc;
 }
 
 bool Runspec::co2Storage() const noexcept

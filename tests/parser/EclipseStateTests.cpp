@@ -684,7 +684,9 @@ BOOST_AUTO_TEST_CASE(SALINITCtest)
         GAS
         WATER
         CO2STORE
+
         SALTMC
+        /
 
         DIMENS
         2 2 1 /
