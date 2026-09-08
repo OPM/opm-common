@@ -440,14 +440,14 @@ namespace {
 
         rstFile.write("IWEL", wellData.getIWell());
 
-        if (norst_value == 1) {
+        if (norst_value <= 1) {
             rstFile.write("SWEL", wellData.getSWell());
             rstFile.write("XWEL", wellData.getXWell());
         }
 
         rstFile.write("ZWEL", wellData.getZWell());
 
-        if (norst_value == 1) {
+        if (norst_value <= 1) {
             // write LGWEL
             rstFile.write("LGWEL", wellData.getLGWell());
         }
