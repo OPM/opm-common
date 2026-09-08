@@ -205,6 +205,9 @@ namespace Opm {
         static void init()
         {
             waterPvt_ = std::make_shared<WaterPvt>();
+            // Discard the previous configuration so subsequent component
+            // registrations replace it.
+            component_param_.clear();
             component_param_.reserve(numComponents);
         }
 
