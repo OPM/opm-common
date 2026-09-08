@@ -375,11 +375,11 @@ BOOST_AUTO_TEST_CASE(TheShiftedPathCarriesItsDerivatives)
 // Separate static component data for the deck-initialization test.
 using DeckSystem = Opm::GenericOilGasWaterFluidSystem<Scalar, 3, false>;
 
-BOOST_AUTO_TEST_CASE(ParsedShiftReachesTheFluidSystem)
+namespace {
+
+Opm::Deck deckWithVolumeShift()
 {
-    // Verify the handoff from parsed SSHIFT values to the component parameters
-    // through initFromState(). The other tests register components directly.
-    const auto deck = Opm::Parser{}.parseString(R"(
+    return Opm::Parser{}.parseString(R"(
 RUNSPEC
 METRIC
 DIMENS
@@ -413,13 +413,25 @@ MW
  16.043 142.285 44.010 /
 ACF
  0.008 0.4885 0.225 /
+BIC
+ 0.12 0.23 0.34 /
+LBCCOEF
+ 0.2 0.03 0.06 -0.04 0.009 /
 SSHIFT
  -0.1595 0.10784 -0.0817 /
 SOLUTION
 SCHEDULE
 END
 )");
+}
 
+} // Anonymous namespace
+
+BOOST_AUTO_TEST_CASE(ParsedShiftReachesTheFluidSystem)
+{
+    // Verify the handoff from parsed SSHIFT values to the component parameters
+    // through initFromState(). The other tests register components directly.
+    const auto deck = deckWithVolumeShift();
     const auto eclState = Opm::EclipseState{ deck };
     const auto schedule = Opm::Schedule{ deck, eclState };
 
@@ -429,6 +441,45 @@ END
     for (unsigned c = 0; c < 3; ++c) {
         BOOST_CHECK_CLOSE(DeckSystem::volumeShift(c), expected[c], 1.0e-10);
     }
+}
+
+BOOST_AUTO_TEST_CASE(ReinitializationRestoresDefaultCoefficients)
+{
+    const auto deck = deckWithVolumeShift();
+    const auto eclState = Opm::EclipseState{ deck };
+    const auto schedule = Opm::Schedule{ deck, eclState };
+    DeckSystem::initFromState(eclState, schedule);
+
+    const std::array<Scalar, 5> deckLbc{0.2, 0.03, 0.06, -0.04, 0.009};
+    const auto& loadedLbc = DeckSystem::lbcCoefficients();
+    BOOST_REQUIRE_EQUAL_COLLECTIONS(loadedLbc.begin(), loadedLbc.end(),
+                                    deckLbc.begin(), deckLbc.end());
+    BOOST_REQUIRE_EQUAL(DeckSystem::interactionCoefficient(0, 1), 0.12);
+    BOOST_REQUIRE_EQUAL(DeckSystem::interactionCoefficient(0, 2), 0.23);
+    BOOST_REQUIRE_EQUAL(DeckSystem::interactionCoefficient(1, 2), 0.34);
+
+    // Manual registration after init() must use defaults for properties that
+    // are not supplied by ComponentParam, regardless of the previous deck.
+    DeckSystem::init();
+    const auto& config = eclState.compositionalConfig();
+    const auto& props = config.eosProps(0);
+    for (unsigned c = 0; c < DeckSystem::numComponents; ++c) {
+        DeckSystem::addComponent(DeckSystem::ComponentParam{
+            config.compName()[c], props.molecular_weights[c],
+            props.critical_temperature[c], props.critical_pressure[c],
+            props.critical_volume[c] * 1.e3, props.acentric_factors[c]});
+    }
+
+    for (unsigned c = 0; c < DeckSystem::numComponents; ++c) {
+        BOOST_CHECK_EQUAL(DeckSystem::volumeShift(c), 0.0);
+        for (unsigned d = 0; d < DeckSystem::numComponents; ++d) {
+            BOOST_CHECK_EQUAL(DeckSystem::interactionCoefficient(c, d), 0.0);
+        }
+    }
+    const auto defaultLbc = DeckSystem::ViscosityModel::defaultLBCCoefficients();
+    const auto& resetLbc = DeckSystem::lbcCoefficients();
+    BOOST_CHECK_EQUAL_COLLECTIONS(resetLbc.begin(), resetLbc.end(),
+                                  defaultLbc.begin(), defaultLbc.end());
 }
 
 BOOST_AUTO_TEST_CASE(AnOverlargeShiftIsRejectedRatherThanReturned)

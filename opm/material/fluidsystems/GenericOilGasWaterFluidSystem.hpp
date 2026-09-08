@@ -209,6 +209,8 @@ namespace Opm {
             // registrations replace it.
             component_param_.clear();
             component_param_.reserve(numComponents);
+            interaction_coefficients_.clear();
+            lbc_coefficients_ = ViscosityModel::defaultLBCCoefficients();
         }
 
         /*!
@@ -391,7 +393,15 @@ namespace Opm {
             }
         }
 
-        //! \copydoc BaseFluidSystem::fugacityCoefficient
+        /*!
+         * \copydoc BaseFluidSystem::fugacityCoefficient
+         *
+         * Returns the coefficient of the unshifted cubic EOS. The PT flash
+         * uses these coefficients at equal phase pressure and temperature,
+         * where the SSHIFT translation factors cancel from their ratios.
+         * An absolute coefficient of the translated EOS additionally requires
+         * the factor exp(-p s_c b_c / (R T)), which is not included here.
+         */
         template <class FluidState, class LhsEval = typename FluidState::ValueType, class ParamCacheEval = LhsEval>
         static LhsEval fugacityCoefficient(const FluidState& fluidState,
                                            const ParameterCache<ParamCacheEval>& paramCache,
