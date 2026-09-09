@@ -106,7 +106,7 @@ public:
             xsum_p_ca += x * p_ca;
 
             const LhsEval xrM = x * std::sqrt(Mm);
-            const LhsEval mys = stielThodosComponentViscosity_(T, T_c, Mm, p_ca);
+            const LhsEval mys = stielThodosLowPressureComponentViscosity_(T, T_c, Mm, p_ca);
             my0 += xrM * mys;
             sumxrM += xrM;
         }
@@ -116,7 +116,7 @@ public:
         const LhsEval rho_r = Opm::decay<LhsEval>(molarDensity) / rho_pc;
         const LhsEval zeta_tot
             = Opm::pow(xsum_T_c / (Opm::pow(xsum_Mm, 3.0) * Opm::pow(xsum_p_ca, 4.0)), 1.0 / 6.0);
-        const LhsEval sumLBC = evaluateLbcPolynomial_(rho_r);
+        const LhsEval sumLBC = evaluateLbcDensityPolynomial_(rho_r);
 
         // The correlation returns mPa s; viscosity is represented in Pa s.
         const LhsEval mu = (my0 + (Opm::pow(sumLBC, 4.0) - 1e-4) / zeta_tot) * prefix::milli;
@@ -154,7 +154,7 @@ public:
             sumVolume += x * v_c;
 
             const LhsEval xrM = x * std::sqrt(Mm);
-            const LhsEval mys = stielThodosComponentViscosity_(T, T_c, Mm, p_ca);
+            const LhsEval mys = stielThodosLowPressureComponentViscosity_(T, T_c, Mm, p_ca);
             my0 += xrM * mys;
             sumxrM += xrM;
         }
@@ -190,7 +190,7 @@ public:
         const LhsEval p_pca = T_pc / xxT_p; // mixture pseudocritical pressure [atm]
         const LhsEval zeta_tot
             = Opm::pow(T_pc / (Opm::pow(sumMm, 3.0) * Opm::pow(p_pca, 4.0)), 1.0 / 6.0);
-        const LhsEval sumLBC = evaluateLbcPolynomial_(rho_r);
+        const LhsEval sumLBC = evaluateLbcDensityPolynomial_(rho_r);
 
         // The correlation returns mPa s; viscosity is represented in Pa s.
         return (my0 + (Opm::pow(sumLBC, 4.0) - 1e-4) / zeta_tot
@@ -199,9 +199,14 @@ public:
     }
 
 private:
+    // Stiel-Thodos low-pressure gas viscosity for a pure component. LBC uses
+    // this reference term for both gas- and liquid-phase calculations.
     template <class LhsEval>
     static LhsEval
-    stielThodosComponentViscosity_(const LhsEval& T, Scalar T_c, Scalar Mm, Scalar p_ca)
+    stielThodosLowPressureComponentViscosity_(const LhsEval& T,
+                                              Scalar T_c,
+                                              Scalar Mm,
+                                              Scalar p_ca)
     {
         const Scalar zeta = std::pow(T_c / (std::pow(Mm, 3.0) * std::pow(p_ca, 4.0)), 1.0 / 6.0);
         const LhsEval T_r = T / T_c;
@@ -222,7 +227,7 @@ private:
     }
 
     template <class LhsEval>
-    static LhsEval evaluateLbcPolynomial_(const LhsEval& rho_r)
+    static LhsEval evaluateLbcDensityPolynomial_(const LhsEval& rho_r)
     {
         const auto& LBC = lbcCoefficients_();
         LhsEval sumLBC = 0.0;
