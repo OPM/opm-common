@@ -115,8 +115,10 @@ initFromState(const EclipseState& eclState, const Schedule&)
     std::size_t regions = eclState.runspec().tabdims().getNumPVTTables();
     setNumRegions(regions);
     for (std::size_t regionIdx = 0; regionIdx < regions; ++regionIdx) {
-        // Currently we only support constant salinity converted to mass fraction
-        salinity_[regionIdx] = eclState.getCo2StoreConfig().salinity();
+        // SALINITP supplies one value per PVT region; SALINITY/SALTMF
+        // supply a scalar that is broadcast to all regions (handled by
+        // Co2StoreConfig::salinity(regionIdx)).
+        salinity_[regionIdx] = eclState.getCo2StoreConfig().salinity(regionIdx);
         if (enableEzrokhiDensity_) {
             const Scalar& rho_pure = H2O::liquidDensity(T_ref, P_ref, extrapolate);
             const Scalar& nacl_exponent = ezrokhiExponent_(T_ref, ezrokhiDenNaClCoeff_);
