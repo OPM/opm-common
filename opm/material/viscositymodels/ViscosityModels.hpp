@@ -31,6 +31,7 @@
 #define OPM_VISCOSITY_MODELS_HPP
 
 #include <opm/common/Exceptions.hpp>
+#include <opm/input/eclipse/Units/Units.hpp>
 
 #include <array>
 #include <cmath>
@@ -44,11 +45,6 @@ class ViscosityModels
 
 public:
 
-    // The correlations below are written in MPa, kg/kmol and mPa s.
-    static constexpr Scalar mpaPerAtm = 0.101325;
-    static constexpr Scalar paPerMpa = 1.0e6;
-    static constexpr Scalar molPerKmol = 1.0e3;
-    static constexpr Scalar mpaSPerPaS = 1.0e3;
     // Stiel and Thodos (1961) give the dilute-gas viscosity in two branches
     // that meet at this reduced temperature.
     static constexpr Scalar stielThodosSplit = 1.5;
@@ -90,68 +86,40 @@ public:
         const auto& T = Opm::decay<LhsEval>(fluidState.temperature(phaseIdx));
 
         LhsEval sumVolume = 0.0;
-        for (unsigned compIdx = 0; compIdx < FluidSystem::numComponents; ++compIdx) {
-            const auto& x = Opm::decay<LhsEval>(fluidState.moleFraction(phaseIdx, compIdx));
-            const Scalar v_c = FluidSystem::criticalVolume(compIdx) / 1000;  // converting to m3/mol from m3/kmol
-            sumVolume += x*v_c;
-        }
-
-        LhsEval rho_pc = 1.0 / sumVolume;
-        const LhsEval rho_r = Opm::decay<LhsEval>(molarDensity) / rho_pc;
-
         LhsEval xsum_T_c = 0.0; // mixture pseudocritical temperature
         LhsEval xsum_Mm = 0.0; // mixture molar mass
-        LhsEval xsum_p_ca = 0.0;  // mixture pseudocritical pressure
-        for (unsigned compIdx = 0; compIdx < FluidSystem::numComponents; ++compIdx) {
-            const Scalar& p_c = FluidSystem::criticalPressure(compIdx) / paPerMpa;
-            const Scalar& T_c = FluidSystem::criticalTemperature(compIdx);
-            const Scalar Mm = FluidSystem::molarMass(compIdx) * molPerKmol;
-            const auto& x = Opm::decay<LhsEval>(fluidState.moleFraction(phaseIdx, compIdx));
-            Scalar p_ca = p_c / mpaPerAtm;
-            xsum_T_c += x * T_c;
-            xsum_Mm += x * Mm;
-            xsum_p_ca += x * p_ca;
-        }
-        LhsEval zeta_tot = Opm::pow(xsum_T_c / (Opm::pow(xsum_Mm,3.0) * Opm::pow(xsum_p_ca,4.0)),1./6);
-
+        LhsEval xsum_p_ca = 0.0; // mixture pseudocritical pressure [atm]
         LhsEval my0 = 0.0;
         LhsEval sumxrM = 0.0;
         for (unsigned compIdx = 0; compIdx < FluidSystem::numComponents; ++compIdx) {
-            const Scalar& p_c = FluidSystem::criticalPressure(compIdx) / paPerMpa;
-            const Scalar& T_c = FluidSystem::criticalTemperature(compIdx);
-            const Scalar Mm = FluidSystem::molarMass(compIdx) * molPerKmol;
             const auto& x = Opm::decay<LhsEval>(fluidState.moleFraction(phaseIdx, compIdx));
-            Scalar p_ca = p_c / mpaPerAtm;
-            Scalar zeta = std::pow(T_c / (std::pow(Mm,3.0) * std::pow(p_ca,4.0)),1./6);
-            LhsEval T_r = T/T_c;
-            LhsEval xrM = x * std::pow(Mm,0.5);
-            LhsEval mys = 0.0;
-            if (T_r <= stielThodosSplit) {
-                mys = 34.0e-5*Opm::pow(T_r,0.94)/zeta;
-            } else {
-                mys = 17.78e-5*Opm::pow(4.58*T_r - 1.67, 0.625)/zeta;
-            }
-            my0 += xrM*mys;
+            const Scalar& T_c = FluidSystem::criticalTemperature(compIdx);
+            // Convert kg/mol to kg/kmol (numerically equal to g/mol for the correlations).
+            const Scalar Mm = FluidSystem::molarMass(compIdx) * prefix::kilo;
+            const Scalar p_ca = FluidSystem::criticalPressure(compIdx) / unit::atm; // Pa -> atm
+            // FluidSystem provides m3/kmol; convert to m3/mol to match molarDensity.
+            const Scalar v_c = FluidSystem::criticalVolume(compIdx) / prefix::kilo;
+
+            sumVolume += x * v_c;
+            xsum_T_c += x * T_c;
+            xsum_Mm += x * Mm;
+            xsum_p_ca += x * p_ca;
+
+            const LhsEval xrM = x * std::sqrt(Mm);
+            const LhsEval mys = stielThodosComponentViscosity_(T, T_c, Mm, p_ca);
+            my0 += xrM * mys;
             sumxrM += xrM;
         }
         my0 /= sumxrM;
 
-        // using reference to avoid copying the coefficients for every evaluation.
-        const auto& LBC = []() -> decltype(auto) {
-            if constexpr (requires { FluidSystem::lbcCoefficients(); }) {
-                return FluidSystem::lbcCoefficients();
-            } else {
-                static constexpr std::array<Scalar, 5> default_lbc = defaultLBCCoefficients();
-                return (default_lbc);
-            }
-        }();
+        const LhsEval rho_pc = 1.0 / sumVolume;
+        const LhsEval rho_r = Opm::decay<LhsEval>(molarDensity) / rho_pc;
+        const LhsEval zeta_tot
+            = Opm::pow(xsum_T_c / (Opm::pow(xsum_Mm, 3.0) * Opm::pow(xsum_p_ca, 4.0)), 1.0 / 6.0);
+        const LhsEval sumLBC = evaluateLbcPolynomial_(rho_r);
 
-        LhsEval sumLBC = 0.0;
-        for (int i = 0; i < 5; ++i) {
-            sumLBC += Opm::pow(rho_r,i)*LBC[i];
-        }
-
-        const LhsEval mu = (my0 + (Opm::pow(sumLBC,4.0) - 1e-4)/zeta_tot)/ mpaSPerPaS;
+        // The correlation returns mPa s; viscosity is represented in Pa s.
+        const LhsEval mu = (my0 + (Opm::pow(sumLBC, 4.0) - 1e-4) / zeta_tot) * prefix::milli;
 
         if (mu <= 0.) {
             throw NumericalProblem("LBC correlation produced a non-positive viscosity; "
@@ -172,82 +140,97 @@ public:
 
         LhsEval sumMm = 0.0;
         LhsEval sumVolume = 0.0;
-        for (unsigned compIdx = 0; compIdx < FluidSystem::numComponents; ++compIdx) {
-            const Scalar Mm = FluidSystem::molarMass(compIdx) * molPerKmol;
-            const auto& x = Opm::decay<LhsEval>(fluidState.moleFraction(phaseIdx, compIdx));
-            const Scalar v_c = FluidSystem::criticalVolume(compIdx);  // in m3/kmol
-            sumMm += x*Mm;
-            sumVolume += x*v_c;
-        }
-
-        LhsEval rho_pc = sumMm/sumVolume; // mixture pseudocritical density
-        LhsEval rho_r = rho/rho_pc;
-
-        LhsEval xxT_p = 0.0;  // x*x*T_c/p_c
-        LhsEval xxT2_p = 0.0; // x*x*T^2_c/p_c
-        for (unsigned i_compIdx = 0; i_compIdx < FluidSystem::numComponents; ++i_compIdx) {
-            const Scalar& T_c_i = FluidSystem::criticalTemperature(i_compIdx);
-            const Scalar& p_c_i = FluidSystem::criticalPressure(i_compIdx) / paPerMpa;
-            const auto& x_i = Opm::decay<LhsEval>(fluidState.moleFraction(phaseIdx, i_compIdx));
-            for (unsigned j_compIdx = 0; j_compIdx < FluidSystem::numComponents; ++j_compIdx) {
-                const Scalar& T_c_j = FluidSystem::criticalTemperature(j_compIdx);
-                const Scalar& p_c_j = FluidSystem::criticalPressure(j_compIdx) / paPerMpa;
-                const auto& x_j = Opm::decay<LhsEval>(fluidState.moleFraction(phaseIdx, j_compIdx));
-
-                const Scalar T_c_ij = std::sqrt(T_c_i*T_c_j);
-                const Scalar p_c_ij = 8.0*T_c_ij / Opm::pow(Opm::pow(T_c_i/p_c_i,1.0/3)+Opm::pow(T_c_j/p_c_j,1.0/3),3);
-
-                xxT_p += x_i*x_j*T_c_ij/p_c_ij;
-                xxT2_p += x_i*x_j*T_c_ij*T_c_ij/p_c_ij;
-            }
-        }
-
-        const LhsEval T_pc = xxT2_p/xxT_p; // mixture pseudocritical temperature
-        const LhsEval p_pc = T_pc/xxT_p;   // mixture pseudocritical pressure
-
-        LhsEval p_pca = p_pc / mpaPerAtm;
-        LhsEval zeta_tot = Opm::pow(T_pc / (Opm::pow(sumMm,3.0) * Opm::pow(p_pca,4.0)),1./6);
-
         LhsEval my0 = 0.0;
         LhsEval sumxrM = 0.0;
         for (unsigned compIdx = 0; compIdx < FluidSystem::numComponents; ++compIdx) {
-            const Scalar& p_c = FluidSystem::criticalPressure(compIdx) / paPerMpa;
-            const Scalar& T_c = FluidSystem::criticalTemperature(compIdx);
-            const Scalar Mm = FluidSystem::molarMass(compIdx) * molPerKmol;
+            // Convert kg/mol to kg/kmol (numerically equal to g/mol for the correlations).
+            const Scalar Mm = FluidSystem::molarMass(compIdx) * prefix::kilo;
             const auto& x = Opm::decay<LhsEval>(fluidState.moleFraction(phaseIdx, compIdx));
-            Scalar p_ca = p_c / mpaPerAtm;
-            Scalar zeta = std::pow(T_c / (std::pow(Mm,3.0) * std::pow(p_ca,4.0)),1./6);
-            LhsEval T_r = T/T_c;
-            LhsEval xrM = x * std::pow(Mm,0.5);
-            LhsEval mys = 0.0;
-            if (T_r <= stielThodosSplit) {
-                mys = 34.0e-5*Opm::pow(T_r,0.94)/zeta;
-            } else {
-                mys = 17.78e-5*Opm::pow(4.58*T_r - 1.67, 0.625)/zeta;
-            }
-            my0 += xrM*mys;
+            const Scalar v_c = FluidSystem::criticalVolume(compIdx); // m3/kmol
+            const Scalar& T_c = FluidSystem::criticalTemperature(compIdx);
+            const Scalar p_ca = FluidSystem::criticalPressure(compIdx) / unit::atm; // Pa -> atm
+
+            sumMm += x * Mm;
+            sumVolume += x * v_c;
+
+            const LhsEval xrM = x * std::sqrt(Mm);
+            const LhsEval mys = stielThodosComponentViscosity_(T, T_c, Mm, p_ca);
+            my0 += xrM * mys;
             sumxrM += xrM;
         }
         my0 /= sumxrM;
 
-        // using reference to avoid copying the coefficients for every evaluation.
-        const auto& LBC = []() -> decltype(auto) {
-            if constexpr (requires { FluidSystem::lbcCoefficients(); }) {
-                return FluidSystem::lbcCoefficients();
-            } else {
-                static constexpr std::array<Scalar, 5> default_lbc = defaultLBCCoefficients();
-                return (default_lbc);
-            }
-        }();
+        const LhsEval rho_pc = sumMm / sumVolume; // mixture pseudocritical density [kg/m3]
+        const LhsEval rho_r = rho / rho_pc;
 
-        LhsEval sumLBC = 0.0;
-        for (int i = 0; i < 5; ++i) {
-            sumLBC += Opm::pow(rho_r,i)*LBC[i];
+        LhsEval xxT_p = 0.0; // x*x*T_c/p_c
+        LhsEval xxT2_p = 0.0; // x*x*T_c^2/p_c
+        // Use atm throughout the mixing rule, as required by the viscosity correlation.
+        for (unsigned i_compIdx = 0; i_compIdx < FluidSystem::numComponents; ++i_compIdx) {
+            const Scalar& T_c_i = FluidSystem::criticalTemperature(i_compIdx);
+            const Scalar p_c_i = FluidSystem::criticalPressure(i_compIdx) / unit::atm; // Pa -> atm
+            const auto& x_i = Opm::decay<LhsEval>(fluidState.moleFraction(phaseIdx, i_compIdx));
+            for (unsigned j_compIdx = 0; j_compIdx < FluidSystem::numComponents; ++j_compIdx) {
+                const Scalar& T_c_j = FluidSystem::criticalTemperature(j_compIdx);
+                const Scalar p_c_j
+                    = FluidSystem::criticalPressure(j_compIdx) / unit::atm; // Pa -> atm
+                const auto& x_j = Opm::decay<LhsEval>(fluidState.moleFraction(phaseIdx, j_compIdx));
+
+                const Scalar T_c_ij = std::sqrt(T_c_i * T_c_j);
+                const Scalar p_c_ij = 8.0 * T_c_ij
+                    / Opm::pow(Opm::pow(T_c_i / p_c_i, 1.0 / 3.0)
+                                   + Opm::pow(T_c_j / p_c_j, 1.0 / 3.0),
+                               3.0);
+                xxT_p += x_i * x_j * T_c_ij / p_c_ij;
+                xxT2_p += x_i * x_j * T_c_ij * T_c_ij / p_c_ij;
+            }
         }
 
-        return (my0 + (Opm::pow(sumLBC,4.0) - 1e-4)/zeta_tot - 1.8366e-8*Opm::pow(rho_r,13.992))/ mpaSPerPaS;
+        const LhsEval T_pc = xxT2_p / xxT_p; // mixture pseudocritical temperature
+        const LhsEval p_pca = T_pc / xxT_p; // mixture pseudocritical pressure [atm]
+        const LhsEval zeta_tot
+            = Opm::pow(T_pc / (Opm::pow(sumMm, 3.0) * Opm::pow(p_pca, 4.0)), 1.0 / 6.0);
+        const LhsEval sumLBC = evaluateLbcPolynomial_(rho_r);
+
+        // The correlation returns mPa s; viscosity is represented in Pa s.
+        return (my0 + (Opm::pow(sumLBC, 4.0) - 1e-4) / zeta_tot
+                - 1.8366e-8 * Opm::pow(rho_r, 13.992))
+            * prefix::milli;
     }
 
+private:
+    template <class LhsEval>
+    static LhsEval
+    stielThodosComponentViscosity_(const LhsEval& T, Scalar T_c, Scalar Mm, Scalar p_ca)
+    {
+        const Scalar zeta = std::pow(T_c / (std::pow(Mm, 3.0) * std::pow(p_ca, 4.0)), 1.0 / 6.0);
+        const LhsEval T_r = T / T_c;
+        if (T_r <= stielThodosSplit) {
+            return 34.0e-5 * Opm::pow(T_r, 0.94) / zeta;
+        }
+        return 17.78e-5 * Opm::pow(4.58 * T_r - 1.67, 0.625) / zeta;
+    }
+
+    static const std::array<Scalar, 5>& lbcCoefficients_()
+    {
+        if constexpr (requires { FluidSystem::lbcCoefficients(); }) {
+            return FluidSystem::lbcCoefficients();
+        } else {
+            static constexpr auto default_lbc = defaultLBCCoefficients();
+            return default_lbc;
+        }
+    }
+
+    template <class LhsEval>
+    static LhsEval evaluateLbcPolynomial_(const LhsEval& rho_r)
+    {
+        const auto& LBC = lbcCoefficients_();
+        LhsEval sumLBC = 0.0;
+        for (int i = 0; i < static_cast<int>(LBC.size()); ++i) {
+            sumLBC += Opm::pow(rho_r, i) * LBC[i];
+        }
+        return sumLBC;
+    }
 };
 
 } // namespace Opm
