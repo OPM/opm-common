@@ -93,15 +93,18 @@ namespace Opm {
             Scalar critic_pres; // unit: parscal
             Scalar critic_vol; // unit: m^3/kmol
             Scalar acentric_factor; // unit: dimension less
+            Scalar volume_shift; // dimensionless SSHIFT coefficient
 
             ComponentParam(const std::string_view name_, const Scalar molar_mass_, const Scalar critic_temp_,
-                           const Scalar critic_pres_, const Scalar critic_vol_, const Scalar acentric_factor_)
+                           const Scalar critic_pres_, const Scalar critic_vol_, const Scalar acentric_factor_,
+                           const Scalar volume_shift_ = 0.0)
                     : name(name_),
                       molar_mass(molar_mass_),
                       critic_temp(critic_temp_),
                       critic_pres(critic_pres_),
                       critic_vol(critic_vol_),
-                      acentric_factor(acentric_factor_)
+                      acentric_factor(acentric_factor_),
+                      volume_shift(volume_shift_)
             {}
         };
 
@@ -177,7 +180,10 @@ namespace Opm {
                                                    static_cast<Scalar>(eos_props.critical_temperature[c]),
                                                    static_cast<Scalar>(eos_props.critical_pressure[c]),
                                                    static_cast<Scalar>(eos_props.critical_volume[c] * 1.e3),
-                                                   static_cast<Scalar>(eos_props.acentric_factors[c])});
+                                                   static_cast<Scalar>(eos_props.acentric_factors[c]),
+                                                   c < eos_props.volume_shifts.size()
+                                                       ? static_cast<Scalar>(eos_props.volume_shifts[c])
+                                                       : Scalar{0}});
             }
 
             const auto& bic = eos_props.binary_interaction_coefficient;
@@ -199,7 +205,12 @@ namespace Opm {
         static void init()
         {
             waterPvt_ = std::make_shared<WaterPvt>();
+            // Discard the previous configuration so subsequent component
+            // registrations replace it.
+            component_param_.clear();
             component_param_.reserve(numComponents);
+            interaction_coefficients_.clear();
+            lbc_coefficients_ = ViscosityModel::defaultLBCCoefficients();
         }
 
         /*!
@@ -220,6 +231,23 @@ namespace Opm {
 
             return component_param_[compIdx].acentric_factor;
         }
+
+        /*!
+         * \brief Dimensionless volume-translation coefficient (SSHIFT).
+         *
+         * The component volume correction is s_c b_c, where b_c is the
+         * equation-of-state covolume.
+         *
+         * \copydetails Doxygen::compIdxParam
+         */
+        static Scalar volumeShift(unsigned compIdx)
+        {
+            assert(isConsistent());
+            assert(compIdx < numComponents);
+
+            return component_param_[compIdx].volume_shift;
+        }
+
         /*!
          * \brief Critical temperature of a component [K].
          *
@@ -325,7 +353,10 @@ namespace Opm {
             assert(phaseIdx < numPhases);
 
             if (phaseIdx == oilPhaseIdx || phaseIdx == gasPhaseIdx) {
-                return decay<LhsEval>(fluidState.averageMolarMass(phaseIdx) / paramCache.molarVolume(phaseIdx));
+                // Density uses the translated volume; fugacity coefficients
+                // use the unshifted equation-of-state root.
+                const auto Vm = paramCache.correctedMolarVolume(phaseIdx);
+                return decay<LhsEval>(fluidState.averageMolarMass(phaseIdx) / Vm);
             }
             else {
                 const LhsEval& p = decay<LhsEval>(fluidState.pressure(phaseIdx));
@@ -348,8 +379,12 @@ namespace Opm {
             assert(phaseIdx < numPhases);
 
             if (phaseIdx == oilPhaseIdx || phaseIdx == gasPhaseIdx) {
-                // Use LBC method to calculate viscosity
-                return decay<LhsEval>(ViscosityModel::LBC(fluidState, paramCache, phaseIdx));
+                // LBC is a reduced-density correlation, so use the physical
+                // molar density after applying SSHIFT.
+                const auto rho = density(fluidState, paramCache, phaseIdx);
+                const auto molarDensity = rho / fluidState.averageMolarMass(phaseIdx);
+                return decay<LhsEval>(
+                    ViscosityModel::LBCWithMolarDensity(fluidState, molarDensity, phaseIdx));
             }
             else {
                 const LhsEval& p = decay<LhsEval>(fluidState.pressure(phaseIdx));
@@ -358,7 +393,16 @@ namespace Opm {
             }
         }
 
-        //! \copydoc BaseFluidSystem::fugacityCoefficient
+        /*!
+         * \copydoc BaseFluidSystem::fugacityCoefficient
+         *
+         * The cubic EOS is evaluated on the unshifted root, and the SSHIFT
+         * translation enters as the per-component factor exp(-p s_c b_c /
+         * (R T)), written here as exp(-s_c B_c) since B_c = b_c p / (R T).
+         * The factor is the same in both phases at equal phase pressure and
+         * temperature, so it cancels from the equilibrium ratios and leaves
+         * the phase split untouched.
+         */
         template <class FluidState, class LhsEval = typename FluidState::ValueType, class ParamCacheEval = LhsEval>
         static LhsEval fugacityCoefficient(const FluidState& fluidState,
                                            const ParameterCache<ParamCacheEval>& paramCache,
@@ -372,7 +416,12 @@ namespace Opm {
             assert(phaseIdx < numPhases);
             assert(compIdx < numComponents);
 
-            return decay<LhsEval>(CubicEOS::computeFugacityCoefficient(fluidState, paramCache, phaseIdx, compIdx));
+            const auto fugCoeff =
+                CubicEOS::computeFugacityCoefficient(fluidState, paramCache, phaseIdx, compIdx);
+            const auto translation =
+                exp(-volumeShift(compIdx) * paramCache.Bi(phaseIdx, compIdx));
+
+            return decay<LhsEval>(fugCoeff * translation);
         }
 
         // TODO: the following interfaces are needed by function checkFluidSystem()

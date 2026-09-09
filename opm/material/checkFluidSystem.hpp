@@ -291,13 +291,17 @@ ParameterCache initParamCache()
 /*!
  * \brief Checks whether a fluid system adheres to the specification.
  */
-template <class Scalar, class FluidSystem, class RhsEval, class LhsEval>
-void checkFluidSystem()
+template <class Scalar, class FluidSystem, class RhsEval, class LhsEval, class Initializer>
+void checkFluidSystem(Initializer initializeFluidSystem)
 {
     std::cout << "Testing fluid system '"
               << Opm::getDemangledType<FluidSystem>()
               << ", RhsEval = " << Opm::getDemangledType<RhsEval>()
               << ", LhsEval = " << Opm::getDemangledType<LhsEval>() << "'\n";
+
+    // Initialize before creating the fluid state or its cache. Configurable
+    // systems need to register their components after init() clears them.
+    initializeFluidSystem();
 
     // make sure the fluid system provides the number of phases and
     // the number of components
@@ -354,7 +358,6 @@ void checkFluidSystem()
     val = 2*val; // get rid of GCC warning (only occurs with paranoid warning flags)
 
     // actually check the fluid system API
-    try { FluidSystem::init(); } catch (...) {};
     for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx) {
         fs.restrictToPhase(static_cast<int>(phaseIdx));
         fs.allowPressure(FluidSystem::isCompressible(phaseIdx));
@@ -403,6 +406,14 @@ void checkFluidSystem()
         std::ignore = FluidSystem::molarMass(compIdx);
         std::string{FluidSystem::componentName(compIdx)};
     }
+}
+
+template <class Scalar, class FluidSystem, class RhsEval, class LhsEval>
+void checkFluidSystem()
+{
+    checkFluidSystem<Scalar, FluidSystem, RhsEval, LhsEval>([] {
+        try { FluidSystem::init(); } catch (...) {};
+    });
 }
 
 #endif

@@ -30,12 +30,16 @@
 #ifndef OPM_PTFlash_PARAMETER_CACHE_HPP
 #define OPM_PTFlash_PARAMETER_CACHE_HPP
 
+#include <opm/common/Exceptions.hpp>
+
 #include <opm/material/common/Valgrind.hpp>
 #include <opm/material/fluidsystems/ParameterCacheBase.hpp>
 #include <opm/material/eos/CubicEOS.hpp>
 #include <opm/material/eos/CubicEOSParams.hpp>
 
 #include <opm/input/eclipse/EclipseState/Compositional/CompositionalConfig.hpp>
+
+#include <fmt/format.h>
 
 #include <cassert>
 
@@ -80,8 +84,10 @@ public:
     {
         VmUpToDate_[oilPhaseIdx] = false;
         Valgrind::SetUndefined(Vm_[oilPhaseIdx]);
+        Valgrind::SetUndefined(volumeShift_[oilPhaseIdx]);
         VmUpToDate_[gasPhaseIdx] = false;
         Valgrind::SetUndefined(Vm_[gasPhaseIdx]);
+        Valgrind::SetUndefined(volumeShift_[gasPhaseIdx]);
 
         oilPhaseParams_.setEOSType(eos_type);
         gasPhaseParams_.setEOSType(eos_type);
@@ -286,6 +292,44 @@ public:
         return Vm_[phaseIdx];
     }
 
+    /*!
+     * \brief Phase volume translation, sum_c x_c s_c b_c [m^3/mol].
+     *
+     * Call updatePhase() before reading this cached value. The translation
+     * is stored separately from the equation-of-state root in molarVolume().
+     * correctedMolarVolume() subtracts it to obtain the physical molar volume.
+     *
+     * \param phaseIdx The fluid phase of interest
+     */
+    Scalar phaseVolumeShift(unsigned phaseIdx) const
+    {
+        return volumeShift_[phaseIdx];
+    }
+
+    /*!
+     * \brief Molar volume after applying SSHIFT [m^3/mol].
+     *
+     * Density, viscosity and phase saturations use this physical volume.
+     * Fugacity coefficients and equation-of-state compressibility factors
+     * use the unshifted molarVolume(). At equal phase pressure and temperature,
+     * the volume-translation factors cancel from the equilibrium ratios.
+     *
+     * \param phaseIdx The fluid phase of interest
+     */
+    Scalar correctedMolarVolume(unsigned phaseIdx) const
+    {
+        const Scalar Vm = molarVolume(phaseIdx) - phaseVolumeShift(phaseIdx);
+
+        // Reject non-positive or NaN volumes before computing fluid properties.
+        if (!(scalarValue(Vm) > 0)) {
+            throw NumericalProblem(
+                fmt::format("The SSHIFT volume shift of phase {} leaves a corrected "
+                            "molar volume of {}, which is not positive.",
+                            phaseIdx, scalarValue(Vm)));
+        }
+        return Vm;
+    }
+
 
     /*!
      * \brief Returns the Peng-Robinson mixture parameters for the oil
@@ -381,6 +425,7 @@ protected:
                             unsigned phaseIdx)
     {
         VmUpToDate_[phaseIdx] = true;
+        volumeShift_[phaseIdx] = computeVolumeShift_(fluidState, phaseIdx);
 
         // calculate molar volume of the phase (we will need this for the
         // fugacity coefficients and the density anyway)
@@ -415,8 +460,30 @@ protected:
         };
     }
 
+    //! \brief Compute the phase volume translation, sum_c x_c s_c b_c [m^3/mol].
+    template <class FluidState>
+    Scalar computeVolumeShift_(const FluidState& fluidState, unsigned phaseIdx) const
+    {
+        Scalar shift = 0;
+        // Fluid systems without SSHIFT support use a zero translation.
+        if constexpr (requires { FluidSystem::volumeShift(0u); }) {
+            // b_c from the dimensionless B_c = b_c p / (R T).
+            const Scalar T = decay<Scalar>(fluidState.temperature(phaseIdx));
+            const Scalar p = decay<Scalar>(fluidState.pressure(phaseIdx));
+            const Scalar RT_p = Constants<Scalar>::R * T / p;
+
+            for (unsigned compIdx = 0; compIdx < FluidSystem::numComponents; ++compIdx) {
+                const Scalar b = decay<Scalar>(Bi(phaseIdx, compIdx)) * RT_p;
+                shift += decay<Scalar>(fluidState.moleFraction(phaseIdx, compIdx))
+                       * FluidSystem::volumeShift(compIdx) * b;
+            }
+        }
+        return shift;
+    }
+
     bool VmUpToDate_[numPhases];
     Scalar Vm_[numPhases];
+    Scalar volumeShift_[numPhases];
 
     OilPhaseParams oilPhaseParams_;
     GasPhaseParams gasPhaseParams_;
