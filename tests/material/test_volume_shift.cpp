@@ -53,6 +53,7 @@
 #include <opm/common/Exceptions.hpp>
 
 #include <array>
+#include <string_view>
 #include <cmath>
 #include <utility>
 
@@ -82,7 +83,7 @@ const CompVec shift{-0.1595, -0.0817, -0.1134, -0.0863, -0.0243568,
 
 struct Component
 {
-    const char* name;
+    std::string_view name;
     Scalar molarMass;   // kg/mol
     Scalar criticalT;   // K
     Scalar criticalP;   // Pa

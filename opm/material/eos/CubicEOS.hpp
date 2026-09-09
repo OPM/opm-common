@@ -36,6 +36,13 @@ class CubicEOS
 
     static constexpr Scalar R = Constants<Scalar>::R;
 
+    // The fugacity coefficient is clamped so a vanishing mole fraction still
+    // yields a usable fugacity; the molar volume is floored against a root
+    // that has collapsed.
+    static constexpr Scalar maxFugacityCoefficient = 1e10;
+    static constexpr Scalar minFugacityCoefficient = 1e-10;
+    static constexpr Scalar minMolarVolume = 1e-7;
+
 public:
     template <class FluidState, class Params, class LhsEval = typename FluidState::ValueType>
     static LhsEval computeFugacityCoefficient(const FluidState& fs,
@@ -90,12 +97,12 @@ public:
         // on one side, we want the mole fraction to be at
         // least 10^-3 if the fugacity is at the current pressure
         //
-        fugCoeff = min(1e10, fugCoeff);
+        fugCoeff = min(maxFugacityCoefficient, fugCoeff);
         //
         // on the other hand, if the mole fraction of the component is 100%, we want the
         // fugacity to be at least 10^-3 Pa
         //
-        fugCoeff = max(1e-10, fugCoeff);
+        fugCoeff = max(minFugacityCoefficient, fugCoeff);
         ///////////
 
         return fugCoeff;
@@ -143,15 +150,15 @@ public:
             // i.e. the molar volume of gas is the largest one and the
             // molar volume of liquid is the smallest one
             if (isGasPhase)
-                Vm = max(1e-7, Z[2] * RT_p);
+                Vm = max(minMolarVolume, Z[2] * RT_p);
             else
-                Vm = max(1e-7, Z[0] * RT_p);
+                Vm = max(minMolarVolume, Z[0] * RT_p);
         }
         else if (numSol == 1) {
             // the EOS only has one intersection with the pressure,
             // for the other phase, we take the extremum of the EOS
             // with the largest distance from the intersection.
-            Vm = max(1e-7, Z[0] * RT_p);
+            Vm = max(minMolarVolume, Z[0] * RT_p);
         }
 
         Valgrind::CheckDefined(Vm);
