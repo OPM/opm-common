@@ -230,9 +230,11 @@ private:
     static LhsEval evaluateLbcDensityPolynomial_(const LhsEval& rho_r)
     {
         const auto& LBC = lbcCoefficients_();
-        LhsEval sumLBC = 0.0;
-        for (int i = 0; i < static_cast<int>(LBC.size()); ++i) {
-            sumLBC += Opm::pow(rho_r, i) * LBC[i];
+        // Horner's method evaluates this fourth-degree polynomial with four
+        // multiply-add steps and no general power evaluations.
+        LhsEval sumLBC = LBC.back();
+        for (std::size_t i = LBC.size() - 1; i > 0; --i) {
+            sumLBC = sumLBC * rho_r + LBC[i - 1];
         }
         return sumLBC;
     }
