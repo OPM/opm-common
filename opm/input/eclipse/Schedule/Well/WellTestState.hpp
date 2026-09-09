@@ -217,6 +217,7 @@ public:
     */
     void close_well(const std::string& well_name, WTest::Reason reason, double sim_time);
     bool well_is_closed(const std::string& well_name) const;
+    bool well_is_closed_due_to_convergence_issues(const std::string& well_name) const;
     void open_well(const std::string& well_name);
     std::size_t num_closed_wells() const;
     double lastTestTime(const std::string& well_name) const;
