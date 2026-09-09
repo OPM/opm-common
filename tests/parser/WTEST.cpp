@@ -177,12 +177,36 @@ BOOST_AUTO_TEST_CASE(WTEST_STATE_COMPLETIONS) {
 
 
 
+BOOST_AUTO_TEST_CASE(WTEST_COMPLETION_CLOSURE_CAUSE) {
+    WellTestState state;
+    BOOST_CHECK(!state.completion_closed_by_con_plus("W1", 1));
+    state.close_completion("W1", 1, 100);
+    state.close_completion("W1", 2, 100, true);
+    BOOST_CHECK(!state.completion_closed_by_con_plus("W1", 1));
+    BOOST_CHECK(state.completion_closed_by_con_plus("W1", 2));
+    BOOST_CHECK(!state.completion_closed_by_con_plus("W1", 3));
+
+    // Trial workovers and timestep rollback copy this state.  A subsequent
+    // closure must not inherit the cause of an earlier, reopened closure.
+    const auto accepted = state;
+    state.open_completion("W1", 2);
+    BOOST_CHECK(!state.completion_closed_by_con_plus("W1", 2));
+    state.close_completion("W1", 2, 200);
+    BOOST_CHECK(!state.completion_closed_by_con_plus("W1", 2));
+    state = accepted;
+    BOOST_CHECK(state.completion_closed_by_con_plus("W1", 2));
+    state.open_completions("W1");
+    BOOST_CHECK(!state.completion_closed_by_con_plus("W1", 2));
+}
+
 BOOST_AUTO_TEST_CASE(WTEST_PACK_UNPACK) {
     WellTestState st, st2;
     st.close_completion("WELL_NAME", 2, 100);
     st.close_completion("WELL_NAME", 2, 100);
     st.close_completion("WELL_NAME", 3, 100);
     st.close_completion("WELLX", 3, 100);
+
+    st.close_completion("WELLX", 4, 100, true);
 
     st.close_well("WELL_NAME", WellTestConfig::Reason::ECONOMIC, 100);
     st.close_well("WELL_NAME", WellTestConfig::Reason::PHYSICAL, 100);
@@ -195,6 +219,8 @@ BOOST_AUTO_TEST_CASE(WTEST_PACK_UNPACK) {
 
     st2.unpack(buffer);
     BOOST_CHECK(st == st2);
+    BOOST_CHECK(st2.completion_closed_by_con_plus("WELLX", 4));
+    BOOST_CHECK(!st2.completion_closed_by_con_plus("WELLX", 3));
 }
 
 

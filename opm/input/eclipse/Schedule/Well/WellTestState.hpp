@@ -157,12 +157,14 @@ public:
         int complnum{};
         double last_test{};
         int num_attempt{};
+        bool closed_by_con_plus{false};
 
         bool operator==(const ClosedCompletion& other) const {
             return this->wellName == other.wellName &&
                    this->complnum == other.complnum &&
                    this->last_test == other.last_test &&
-                   this->num_attempt == other.num_attempt;
+                   this->num_attempt == other.num_attempt &&
+                   this->closed_by_con_plus == other.closed_by_con_plus;
         }
 
         static ClosedCompletion serializationTestObject();
@@ -174,6 +176,7 @@ public:
             serializer(this->complnum);
             serializer(this->last_test);
             serializer(this->num_attempt);
+            serializer(this->closed_by_con_plus);
         }
 
         template<class BufferType>
@@ -182,6 +185,7 @@ public:
             buffer.write(this->complnum);
             buffer.write(this->last_test);
             buffer.write(this->num_attempt);
+            buffer.write(this->closed_by_con_plus);
         }
 
         template<class BufferType>
@@ -190,6 +194,7 @@ public:
             buffer.read(this->complnum);
             buffer.read(this->last_test);
             buffer.read(this->num_attempt);
+            buffer.read(this->closed_by_con_plus);
         }
     };
 
@@ -221,10 +226,15 @@ public:
     std::size_t num_closed_wells() const;
     double lastTestTime(const std::string& well_name) const;
 
-    void close_completion(const std::string& well_name, int complnum, double sim_time);
+    /// Record a completion closure and whether the executed workover was +CON.
+    /// The cause belongs to this closure, not to the currently configured limits.
+    void close_completion(const std::string& well_name, int complnum, double sim_time,
+                          bool closed_by_con_plus = false);
     void open_completion(const std::string& well_name, int complnum);
     void open_completions(const std::string& well_name);
     bool completion_is_closed(const std::string& well_name, const int complnum) const;
+    /// True only for a currently closed completion whose closure was due to +CON.
+    bool completion_closed_by_con_plus(const std::string& well_name, int complnum) const;
     std::size_t num_closed_completions() const;
 
     // Simulation time at which 'well_name's completion 'complnum' was last
