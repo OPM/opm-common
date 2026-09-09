@@ -3413,6 +3413,111 @@ BOOST_AUTO_TEST_SUITE_END ()
 
 // =====================================================================
 
+BOOST_AUTO_TEST_SUITE (Rock)
+
+BOOST_AUTO_TEST_CASE (No_Rock_Keyword_Advertises_No_Table)
+{
+    // TABDIMS must not claim a rock table when the deck declares none.  The
+    // base pointers are pre-filled with 1 to satisfy the one-based TABDIMS
+    // protocol, so a non-zero count here would send a reader that trusts
+    // NTROCK to the start of TAB, and hand it whichever table is there.
+    const auto rspec = std::string { R"(RUNSPEC
+DIMENS
+  10 10 10 /
+
+TITLE
+  Test ROCK Output
+
+WATER
+
+METRIC
+
+TABDIMS
+/
+)"  };
+
+    const auto props = std::string { R"(
+PVTW
+-- Pref  Bw(Pref)  Cw        Vw(Pref)  Cv
+   200   1.23      0.321e-4  0.25      0.654e-3 /
+)"  };
+
+    const auto es = parse(rspec, props);
+
+    auto tables = ::Opm::Tables(es.getUnits());
+    tables.addRock(es.getTableManager().getRockTable());
+
+    const auto& tabdims = tables.tabdims();
+
+    BOOST_CHECK_EQUAL(tabdims[ Ix::NumRockTables ], 0);
+    BOOST_CHECK_EQUAL(tabdims[ Ix::NumRockCompNodes ], 0);
+    BOOST_CHECK_EQUAL(tabdims[ Ix::NumRockCompTables ], 0);
+
+    BOOST_CHECK(tables.tab().empty());
+}
+
+BOOST_AUTO_TEST_CASE (Rock_Keyword_Is_Written_To_TAB)
+{
+    const auto rspec = std::string { R"(RUNSPEC
+DIMENS
+  10 10 10 /
+
+TITLE
+  Test ROCK Output
+
+WATER
+
+METRIC
+
+TABDIMS
+-- NTSFUN  NTPVT
+   1*      2
+/
+)"  };
+
+    // Two rock regions.  One region would not discriminate the column major
+    // layout, since row zero and column zero coincide there.
+    const auto props = std::string { R"(
+ROCK
+-- Pref  Cr
+   277   4.84E-5 /
+   300   6.00E-5 /
+
+PVTW
+-- Pref  Bw(Pref)  Cw        Vw(Pref)  Cv
+   200   1.23      0.321e-4  0.25      0.654e-3 /
+   210   1.24      0.322e-4  0.26      0.655e-3 /
+)"  };
+
+    const auto es = parse(rspec, props);
+
+    auto tables = ::Opm::Tables(es.getUnits());
+    tables.addRock(es.getTableManager().getRockTable());
+
+    const auto& tabdims = tables.tabdims();
+
+    BOOST_CHECK_EQUAL(tabdims[ Ix::NumRockTables ], 2);
+
+    // Base pointers are one-based offsets into TAB.
+    const auto start = static_cast<std::size_t>(tabdims[ Ix::RockTableStart ]) - 1;
+
+    const auto& tab = tables.tab();
+
+    BOOST_REQUIRE_GE(tab.size(), start + 4);
+
+    // METRIC: reference pressures in bar, compressibilities in 1/bar.
+    // Column major: both pressures, then both compressibilities.
+    const auto expect = std::vector<double> {
+        277.0, 300.0, 4.84e-5, 6.0e-5,
+    };
+
+    check_is_close(std::vector<double> {
+        tab[start + 0], tab[start + 1], tab[start + 2], tab[start + 3],
+    }, expect);
+}
+
+BOOST_AUTO_TEST_SUITE_END ()    // Rock
+
 BOOST_AUTO_TEST_SUITE_END ()
 
 // =====================================================================

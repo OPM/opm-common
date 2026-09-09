@@ -29,6 +29,7 @@ namespace Opm {
 
     struct DensityTable;
     class EclipseState;
+    struct RockTable;
     class UnitSystem;
 
 } // namespace Opm
@@ -54,6 +55,15 @@ namespace Opm {
         /// \param[in] density Run's phase densities at surface conditions,
         ///    typically from the DENSITY keyword.
         void addDensity(const DensityTable& density);
+
+        /// Incorporate the rock compressibility table into the INIT
+        /// file's TAB vector.
+        ///
+        /// Does nothing if the run does not specify the ROCK keyword.
+        ///
+        /// \param[in] rock Run's rock compressibility table, from the
+        ///    ROCK keyword.
+        void addRock(const RockTable& rock);
 
         /// Add normalised PVT function tables to INIT file's TAB vector.
         ///

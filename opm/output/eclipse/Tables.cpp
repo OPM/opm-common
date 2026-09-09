@@ -23,7 +23,7 @@
 
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Phase.hpp>
-#include <opm/input/eclipse/EclipseState/Tables/FlatTable.hpp> // PVTW, PVCDO, SWOFLET, SGOFLET
+#include <opm/input/eclipse/EclipseState/Tables/FlatTable.hpp> // ROCK, PVTW, PVCDO, SWOFLET, SGOFLET
 #include <opm/input/eclipse/EclipseState/Tables/GsfTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/PvdgTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/PvdoTable.hpp>
@@ -3662,6 +3662,14 @@ namespace Opm {
         // Initialize subset of base pointers and dimensions to 1 to honour
         // requirements of TABDIMS protocol.
         std::fill_n(std::begin(this->tabdims_), 59, 1);
+
+        // The fill above is needed for the base pointers, but it also leaves
+        // the ROCK and ROCKTAB table *counts* at 1.  Counts for the tables we
+        // do emit are assigned in the matching add*(), so zeroing them here
+        // is safe.
+        this->tabdims_[Ix::NumRockTables]     = 0;
+        this->tabdims_[Ix::NumRockCompNodes]  = 0;
+        this->tabdims_[Ix::NumRockCompTables] = 0;
     }
 
     void Tables::addDensity(const DensityTable& density)
@@ -3690,6 +3698,28 @@ namespace Opm {
         this->addData(Ix::DensityTableStart, densityData);
 
         this->tabdims_[Ix::DensityNumTables] = nreg;
+    }
+
+    void Tables::addRock(const RockTable& rock)
+    {
+        const auto nreg = rock.size();
+
+        if (nreg == 0) { return; }
+
+        // ROCK(NTROCK, 2), column major: Pref in column 0, Cr in column 1.
+        auto rockData = std::vector<double>(nreg * 2);
+
+        using M = ::Opm::UnitSystem::measure;
+
+        // Compressibility unit hack here (*to_si()*)
+        for (auto i = 0*nreg; i < nreg; ++i) {
+            rockData[0*nreg + i] = this->units_.from_si(M::pressure, rock[i].reference_pressure);
+            rockData[1*nreg + i] = this->units_.to_si  (M::pressure, rock[i].compressibility);
+        }
+
+        this->addData(Ix::RockTableStart, rockData);
+
+        this->tabdims_[Ix::NumRockTables] = nreg;
     }
 
     void Tables::addPVTTables(const EclipseState& es)

@@ -729,6 +729,7 @@ namespace {
     {
         ::Opm::Tables tables(units);
 
+        tables.addRock(es.getTableManager().getRockTable());
         tables.addPVTTables(es);
         tables.addDensity(es.getTableManager().getDensityTable());
         tables.addSatFunc(es);
