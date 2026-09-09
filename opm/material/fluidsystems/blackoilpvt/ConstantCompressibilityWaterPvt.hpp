@@ -120,6 +120,7 @@ public:
                         const Evaluation&,
                         const Evaluation&,
                         const Evaluation&,
+                        const Evaluation&,
                         const Evaluation&) const
     {
         throw std::runtime_error("Requested the enthalpy of water but the thermal "
@@ -139,10 +140,11 @@ public:
     Evaluation saturatedViscosity(unsigned regionIdx,
                                   const Evaluation& temperature,
                                   const Evaluation& pressure,
-                                  const Evaluation& saltconcentration) const
+                                  const Evaluation& saltconcentration,
+                                  const Evaluation& depth) const
     {
         Scalar BwMuwRef = waterViscosity_[regionIdx]*waterReferenceFormationVolumeFactor_[regionIdx];
-        const Evaluation& bw = saturatedInverseFormationVolumeFactor(regionIdx, temperature, pressure, saltconcentration);
+        const Evaluation& bw = saturatedInverseFormationVolumeFactor(regionIdx, temperature, pressure, saltconcentration, depth);
 
         Scalar pRef = waterReferencePressure_[regionIdx];
         const Evaluation& Y =
@@ -159,10 +161,11 @@ public:
                          const Evaluation& temperature,
                          const Evaluation& pressure,
                          const Evaluation& Rsw,
-                         const Evaluation& saltconcentration) const
+                         const Evaluation& saltconcentration,
+                         const Evaluation& depth) const
     {
         Scalar BwMuwRef = waterViscosity_[regionIdx]*waterReferenceFormationVolumeFactor_[regionIdx];
-        const Evaluation& bw = inverseFormationVolumeFactor(regionIdx, temperature, pressure, Rsw, saltconcentration);
+        const Evaluation& bw = inverseFormationVolumeFactor(regionIdx, temperature, pressure, Rsw, saltconcentration, depth);
 
         Scalar pRef = waterReferencePressure_[regionIdx];
         const Evaluation& Y =
@@ -178,11 +181,12 @@ public:
     Evaluation saturatedInverseFormationVolumeFactor(unsigned regionIdx,
                                                      const Evaluation& temperature,
                                                      const Evaluation& pressure,
-                                                     const Evaluation& saltconcentration) const
+                                                     const Evaluation& saltconcentration,
+                                                     const Evaluation& depth) const
     {
       Evaluation Rsw = 0.0;
       return inverseFormationVolumeFactor(regionIdx, temperature, pressure,
-                                          Rsw, saltconcentration);
+                                          Rsw, saltconcentration, depth);
     }
 
     /*!
@@ -193,7 +197,8 @@ public:
                                             const Evaluation& /*temperature*/,
                                             const Evaluation& pressure,
                                             const Evaluation& /*Rsw*/,
-                                            const Evaluation& /*saltconcentration*/) const
+                                            const Evaluation& /*saltconcentration*/,
+                                            const Evaluation& /*depth*/) const
     {
         Scalar pRef = waterReferencePressure_[regionIdx];
         const Evaluation& X = waterCompressibility_[regionIdx]*(pressure - pRef);
@@ -209,7 +214,7 @@ public:
      */
     template <class FluidState, class LhsEval = typename FluidState::ValueType>
     std::pair<LhsEval, LhsEval>
-    inverseFormationVolumeFactorAndViscosity(const FluidState& fluidState, unsigned regionIdx)
+    inverseFormationVolumeFactorAndViscosity(const FluidState& fluidState, unsigned regionIdx, const LhsEval& /*depth*/)
     {
         const auto& pressure = decay<LhsEval>(fluidState.pressure(FluidState::waterPhaseIdx));
         Scalar pRef = waterReferencePressure_[regionIdx];
@@ -266,7 +271,8 @@ public:
     Evaluation saturationPressure(unsigned /*regionIdx*/,
                                   const Evaluation& /*temperature*/,
                                   const Evaluation& /*Rs*/,
-                                  const Evaluation& /*saltconcentration*/) const
+                                  const Evaluation& /*saltconcentration*/,
+                                  const Evaluation& /*depth*/) const
     { return 0.0; /* this is dead water, so there isn't any meaningful saturation pressure! */ }
 
     template <class Evaluation>
@@ -286,7 +292,8 @@ public:
     Evaluation saturatedGasDissolutionFactor(unsigned /*regionIdx*/,
                                              const Evaluation& /*temperature*/,
                                              const Evaluation& /*pressure*/,
-                                             const Evaluation& /*saltconcentration*/) const
+                                             const Evaluation& /*saltconcentration*/,
+                                             const Evaluation& /*depth*/) const
     { return 0.0; /* this is dead water! */ }
 
     Scalar waterReferenceDensity(unsigned regionIdx) const

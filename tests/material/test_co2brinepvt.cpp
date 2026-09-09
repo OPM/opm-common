@@ -50,6 +50,7 @@
 #include <opm/input/eclipse/Python/Python.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 
+#include <cmath>
 #include <iostream>
 
 // values of strings based on the first SPE1 test case of opm-data.  note that in the
@@ -124,6 +125,44 @@ constexpr const char* deckString2 =
     "PROPS\n"
     "\n";
 
+constexpr const char* deckStringSalinivd =
+    "RUNSPEC\n"
+    "\n"
+    "DIMENS\n"
+    "   10 10 3 /\n"
+    "\n"
+    "TABDIMS\n"
+    " * 1 /\n"
+    "\n"
+    "WATER\n"
+    "GAS\n"
+    "CO2STORE\n"
+    "\n"
+    "DISGASW\n"
+    "\n"
+    "METRIC\n"
+    "\n"
+    "GRID\n"
+    "\n"
+    "DX\n"
+    "   300*1000 /\n"
+    "DY\n"
+    "   300*1000 /\n"
+    "DZ\n"
+    "   100*20 100*30 100*50 /\n"
+    "\n"
+    "TOPS\n"
+    "   100*1234 /\n"
+    "\n"
+    "PORO\n"
+    "  300*0.15 /\n"
+    "PROPS\n"
+    "\n"
+    "SALINIVD\n"
+    "  1000 0.0\n"
+    "  2000 3.0 /\n"
+    "\n";
+
 template <class Evaluation, class BrinePvt>
 void ensurePvtApiBrine(const BrinePvt& brinePvt)
 {
@@ -133,6 +172,7 @@ void ensurePvtApiBrine(const BrinePvt& brinePvt)
         Evaluation pressure = 1e5;
         Evaluation saltconcentration = 0.0;
         Evaluation rs = 0.0;
+        Evaluation depth = 0.0;
 
         ////
         // Water PVT API
@@ -141,12 +181,14 @@ void ensurePvtApiBrine(const BrinePvt& brinePvt)
                                         temperature,
                                         pressure,
                                         rs,
-                                        saltconcentration);
+                                        saltconcentration,
+                                        depth);
         std::cout << brinePvt.inverseFormationVolumeFactor(/*regionIdx=*/0,
                                                            temperature,
                                                            pressure,
                                                            rs,
-                                                           saltconcentration);
+                                                           saltconcentration,
+                                                           depth);
     }
 }
 
@@ -277,4 +319,47 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(Water, Scalar, Types)
     using Eval = Opm::DenseAd::Evaluation<Scalar,1>;
     ensurePvtApiGas<Scalar>(co2Pvt);
     ensurePvtApiBrine<Eval>(brinePvt);
+}
+
+BOOST_AUTO_TEST_CASE_TEMPLATE(WaterSalinivdDepthEffect, Scalar, Types)
+{
+    Opm::Parser parser;
+    auto python = std::make_shared<Opm::Python>();
+
+    auto deck = parser.parseString(deckStringSalinivd);
+    Opm::EclipseState eclState(deck);
+    Opm::Schedule schedule(deck, eclState, python);
+
+    Opm::WaterPvtMultiplexer<Scalar> brinePvt;
+    BOOST_CHECK_NO_THROW(brinePvt.initFromState(eclState, schedule));
+
+    const Scalar temperature = Scalar(288.71);
+    const Scalar pressure = Scalar(1.5e7);
+    const Scalar saltConcentration = Scalar(0.0);
+
+    const Scalar muShallow = brinePvt.saturatedViscosity(/*regionIdx=*/0,
+                                                         temperature,
+                                                         pressure,
+                                                         saltConcentration,
+                                                         Scalar(1000.0));
+    const Scalar muDeep = brinePvt.saturatedViscosity(/*regionIdx=*/0,
+                                                      temperature,
+                                                      pressure,
+                                                      saltConcentration,
+                                                      Scalar(2000.0));
+
+    BOOST_CHECK_GT(std::abs(muDeep - muShallow), Scalar(1e-12));
+
+    const Scalar bShallow = brinePvt.saturatedInverseFormationVolumeFactor(/*regionIdx=*/0,
+                                                                            temperature,
+                                                                            pressure,
+                                                                            saltConcentration,
+                                                                            Scalar(1000.0));
+    const Scalar bDeep = brinePvt.saturatedInverseFormationVolumeFactor(/*regionIdx=*/0,
+                                                                         temperature,
+                                                                         pressure,
+                                                                         saltConcentration,
+                                                                         Scalar(2000.0));
+
+    BOOST_CHECK_GT(std::abs(bDeep - bShallow), Scalar(1e-12));
 }
