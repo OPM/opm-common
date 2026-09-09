@@ -25,7 +25,6 @@
 
 #include <chrono>
 #include <ctime>
-#include <limits>
 #include <utility>
 #include <stdexcept>
 #include <string>
@@ -68,35 +67,35 @@ namespace {
 
 
 
-    // The days_from_civil() function is from Howard Hinnant, http://howardhinnant.github.io/date_algorithms.html
-    // The website states: "Consider these donated to the public domain."
-
-    // Returns number of days since civil 1970-01-01.  Negative values indicate
-    //    days prior to 1970-01-01.
-    // Preconditions:  y-m-d represents a date in the civil (Gregorian) calendar
-    //                 m is in [1, 12]
-    //                 d is in [1, last_day_of_month(y, m)]
-    //                 y is "approximately" in
-    //                   [numeric_limits<Int>::min()/366, numeric_limits<Int>::max()/366]
-    //                 Exact range of validity is:
-    //                 [civil_from_days(numeric_limits<Int>::min()),
-    //                  civil_from_days(numeric_limits<Int>::max()-719468)]
-    template <class Int>
-    constexpr
-    Int
-    days_from_civil(Int y, unsigned m, unsigned d) noexcept
-    {
-        static_assert(std::numeric_limits<unsigned>::digits >= 18,
-                      "This algorithm has not been ported to a 16 bit unsigned integer");
-        static_assert(std::numeric_limits<Int>::digits >= 20,
-                      "This algorithm has not been ported to a 16 bit signed integer");
-        y -= m <= 2;
-        const Int era = (y >= 0 ? y : y-399) / 400;
-        const unsigned yoe = static_cast<unsigned>(y - era * 400);      // [0, 399]
-        const unsigned doy = (153*(m > 2 ? m-3 : m+9) + 2)/5 + d-1;  // [0, 365]
-        const unsigned doe = yoe * 365 + yoe/4 - yoe/100 + doy;         // [0, 146096]
-        return era * 146097 + static_cast<Int>(doe) - 719468;
+    // The days std::chrono::year spans, -32767-01-01 to 32767-12-31, taken
+    // from the types themselves rather than restated, and the seconds those
+    // days hold. Both conversions accept exactly this and refuse the rest.
+    //
+    // long long, not std::time_t: the second counts are near 1e12, and a
+    // 32-bit time_t would not merely hold the wrong value - a constant
+    // expression that overflows is ill-formed, so the file would not compile.
+    // Leaving the arithmetic at the width of long is what the old conversion
+    // got wrong; a fixed 64 bits here is what keeps that from recurring.
+    // Comparing a time_t against these widens it, which loses nothing.
+    namespace calendar_bounds {
+        constexpr long long first_day =
+            std::chrono::sys_days{std::chrono::year::min() / std::chrono::January / 1}
+            .time_since_epoch().count();
+        constexpr long long last_day =
+            std::chrono::sys_days{std::chrono::year::max() / std::chrono::December / 31}
+            .time_since_epoch().count();
+        constexpr long long first_second = first_day * 86400;
+        constexpr long long last_second  = last_day * 86400 + 86399;
     }
+
+    // The arithmetic above is a fixed 64 bits, but a std::time_t is what
+    // both conversions take and return, and a narrow one would silently
+    // truncate every date the calendar bounds admit. A schedule runs past
+    // 2038 as a matter of course, so require the width rather than lose the
+    // dates quietly. Nothing OPM Flow builds on has a narrower time_t.
+    static_assert(sizeof(std::time_t) >= 8,
+                  "OPM Flow schedules run past 2038; std::time_t must be 64-bit");
+
 
 } // anonymous namespace
 
@@ -175,23 +174,132 @@ std::time_t mkdate(int in_year, int in_month, int in_day) {
     return mkdatetime(in_year , in_month , in_day, 0,0,0);
 }
 
-// The portable_timegm() function is based on
-// https://stackoverflow.com/questions/16647819/timegm-cross-platform
-// answer by Sergey D.
+// timegm() is POSIX, not C++, and the Windows spelling _mkgmtime() stops at
+// year 3000. This is the conversion written with the C++20 <chrono> calendar
+// types instead, valid wherever they are: a std::tm's year, month, day and
+// time of day to seconds since the epoch, in UTC.
+//
+// Only the month is normalised into the year, as the earlier version of this
+// function did. A day outside the month counts on from its first (33 January
+// is 2 February) and the time of day is added as it stands, which is the
+// wrap-around mkdatetime() relies on to reject such input.
 std::time_t portable_timegm(const std::tm* t)
 {
-    int year = t->tm_year + 1900;
-    int month = t->tm_mon;          // 0-11
+    namespace ch = std::chrono;
+
+    // Everything in long long before any arithmetic: a std::tm's fields are
+    // ints, and a caller's absurd value must end in the refusal below, not in
+    // an overflow on the way there.
+    long long yr    = static_cast<long long>(t->tm_year) + 1900;
+    long long month = t->tm_mon;    // 0-11
     if (month > 11) {
-        year += month / 12;
+        yr += month / 12;
         month %= 12;
     } else if (month < 0) {
-        int years_diff = (11 - month) / 12;
-        year -= years_diff;
+        const long long years_diff = (11 - month) / 12;
+        yr -= years_diff;
         month += 12 * years_diff;
     }
-    int days_from_1970 = days_from_civil(year, month + 1, t->tm_mday);
-    return 60 * (60 * (24L * days_from_1970 + t->tm_hour) + t->tm_min) + t->tm_sec;
+
+    // std::chrono::year runs from -32767 to 32767. No schedule is anywhere
+    // near either end; refuse the rest rather than hand back a wrong instant.
+    if (yr < static_cast<int>(ch::year::min()) || yr > static_cast<int>(ch::year::max())) {
+        throw std::out_of_range {
+            "Calendar year " + std::to_string(yr) +
+            " is outside the range std::chrono::year can represent"
+        };
+    }
+
+    const ch::sys_days first_of_month =
+        ch::year{static_cast<int>(yr)} / ch::month{static_cast<unsigned>(month + 1)} / 1;
+    // long long, not int: 86400 * days overflows a 32-bit type for any date
+    // outside roughly 1902-2038, and widening the day count promotes the
+    // whole expression. Not std::time_t either, for the reason the bounds
+    // above are not.
+    const long long days_from_1970 =
+        static_cast<long long>(first_of_month.time_since_epoch().count()) +
+        (static_cast<long long>(t->tm_mday) - 1);
+    const long long result =
+        60 * (60 * (24 * days_from_1970 + t->tm_hour) + t->tm_min) + t->tm_sec;
+
+    // The day of the month and the time of day may have carried the instant
+    // past the calendar's end even though the year was inside it -
+    // 32767-12-32, or 24:00 on the last day - and portable_gmtime() would
+    // refuse what came back. Refuse it here instead, against the same bounds.
+    if (result < calendar_bounds::first_second || result > calendar_bounds::last_second) {
+        throw std::out_of_range {
+            "Date " + std::to_string(yr) + "-" + std::to_string(month + 1) + "-" +
+            std::to_string(t->tm_mday) + " with the time of day added lies outside " +
+            "the range std::chrono::year can represent"
+        };
+    }
+    return static_cast<std::time_t>(result);
+}
+
+/*
+  Break a time_t into UTC civil time without std::gmtime(), the inverse of
+  portable_timegm() above.
+
+  std::gmtime() is unsuitable here on two counts. It returns nullptr for
+  time points it cannot represent -- some C runtimes refuse dates beyond
+  year 3000, which simulation schedules legitimately reach -- and
+  dereferencing that is a crash. It also returns a pointer to a static
+  buffer, so two threads converting timestamps concurrently overwrite each
+  other's result.
+
+  The C++20 <chrono> calendar types have neither problem and are the exact
+  inverse of what portable_timegm() does in the other direction, so use
+  them unconditionally: every platform then exercises the same code.
+
+  Every field std::gmtime() sets is set here too, so this is a drop-in
+  replacement: DoubHEAD's day-of-year calculation reads tm_yday.
+  tm_isdst is 0, as it is for UTC.
+*/
+std::tm portable_gmtime(const std::time_t t)
+{
+    namespace ch = std::chrono;
+
+    // Floor division, without the overflow that t - 86399 has at the
+    // bottom of the range: take the quotient and remainder first, then
+    // carry a negative remainder into the day. Neither operation can
+    // overflow for any representable time_t.
+    auto days = t / 86400;
+    auto secs = t % 86400;
+    if (secs < 0) {
+        secs += 86400;
+        --days;
+    }
+
+    // A 64-bit time_t exceeds the days std::chrono::year spans by a wide
+    // margin in either direction; no schedule holds such an instant, and
+    // a day count outside them does not fit the calendar arithmetic, so
+    // refuse it - as std::gmtime() refuses, with nullptr, what its
+    // runtime cannot represent - rather than hand back a wrong date.
+    if ((days < calendar_bounds::first_day) || (days > calendar_bounds::last_day)) {
+        throw std::out_of_range {
+            "Time point " + std::to_string(static_cast<long long>(t)) +
+            " is outside the range of years std::chrono::year can represent"
+        };
+    }
+
+    const ch::sys_days day{ch::days{static_cast<int>(days)}};
+    const ch::year_month_day ymd{day};
+
+    std::tm tm{};
+    tm.tm_year = static_cast<int>(ymd.year()) - 1900;
+    tm.tm_mon  = static_cast<int>(static_cast<unsigned>(ymd.month())) - 1;
+    tm.tm_mday = static_cast<int>(static_cast<unsigned>(ymd.day()));
+    tm.tm_hour = static_cast<int>(secs / 3600); secs %= 3600;
+    tm.tm_min  = static_cast<int>(secs / 60);
+    tm.tm_sec  = static_cast<int>(secs % 60);
+
+    // Day of year, counted from 0 as std::tm wants it, and the weekday
+    // with Sunday as 0, as std::tm and <chrono>'s c_encoding() agree.
+    tm.tm_yday = static_cast<int>((day - ch::sys_days{ymd.year() / ch::January / 1}).count());
+    tm.tm_wday = static_cast<int>(ch::weekday{day}.c_encoding());
+
+    tm.tm_isdst = 0;   // UTC never has one
+    return tm;
 }
 
 std::time_t timeFromEclipse(const DeckRecord &dateRecord) {
@@ -239,13 +347,11 @@ namespace {
         return timePoint;
     }
 
-
 }
 
 Opm::TimeStampUTC::TimeStampUTC(const std::time_t tp)
 {
-    auto t = tp;
-    const auto tm = *std::gmtime(&t);
+    const auto tm = TimeService::portable_gmtime(tp);
 
     this->ymd_ = YMD { tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday };
 
@@ -263,8 +369,7 @@ Opm::TimeStampUTC::TimeStampUTC(const Opm::TimeStampUTC::YMD& ymd,
 
 Opm::TimeStampUTC& Opm::TimeStampUTC::operator=(const std::time_t tp)
 {
-    auto t = tp;
-    const auto tm = *std::gmtime(&t);
+    const auto tm = TimeService::portable_gmtime(tp);
 
     this->ymd_ = YMD { tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday };
 

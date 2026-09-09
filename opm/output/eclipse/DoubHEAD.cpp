@@ -22,6 +22,8 @@
 #include <opm/output/eclipse/InteHEAD.hpp> // Opm::RestartIO::makeUTCTime()
 #include <opm/output/eclipse/VectorItems/doubhead.hpp>
 
+#include <opm/common/utility/TimeService.hpp>
+
 #include <opm/input/eclipse/Schedule/OilVaporizationProperties.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Schedule/Tuning.hpp>
@@ -350,7 +352,7 @@ namespace {
     double toDateNum(const std::chrono::time_point<std::chrono::system_clock> tp)
     {
         const auto t0  =  std::chrono::system_clock::to_time_t(tp);
-        const auto tm0 = *std::gmtime(&t0);
+        const auto tm0 = Opm::TimeService::portable_gmtime(t0);
 
         // Set clock to 01:00:00+0000 on 2001-<month>-<day> to get
         // "accurate" day-of-year calculation (no leap year, no DST offset,
@@ -368,7 +370,7 @@ namespace {
         const auto t1 = Opm::TimeService::makeUTCTime(tm1);
 
         if (t1 != static_cast<std::time_t>(-1)) {
-            tm1 = *std::gmtime(&t1); // Get new tm_yday.
+            tm1 = Opm::TimeService::portable_gmtime(t1); // Get new tm_yday.
             return toDateNum(tm0.tm_year, tm1.tm_yday);
         }
 
