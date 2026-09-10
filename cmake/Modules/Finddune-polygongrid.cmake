@@ -20,7 +20,7 @@ else()
 endif()
 
 if(dune-polygongrid_FOUND)
-  target_compile_definitions(dunepolygongrid INTERFACE HAVE_DUNE_POLYGONGRID=1)
+  target_compile_definitions(Dune::PolygonGrid INTERFACE HAVE_DUNE_POLYGONGRID=1)
   # make version number available in config.h
   include (UseDuneVer)
   find_dune_version ("dune" "polygongrid")
