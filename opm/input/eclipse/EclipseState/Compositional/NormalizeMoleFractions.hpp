@@ -33,7 +33,9 @@ class KeywordLocation;
 ///
 /// Accepts sums near one and rejects larger deviations.
 ///
+/// \param fractions Fractions to normalize.
 /// \param what Names the composition in diagnostics.
+/// \param location Location of the keyword for diagnostics.
 ///
 /// \return The original sum when normalization should be reported; otherwise
 ///         std::nullopt.  Does not log, so callers can report once per table
@@ -45,7 +47,10 @@ std::optional<double> normalizeMoleFractions(std::vector<double>& fractions,
                                              const KeywordLocation& location);
 
 /// Warns that one or more compositions were normalized.
+/// \param what Warning prefix.
+/// \param sum Sum of fractions.
 /// \param others Number of additional normalized compositions.
+/// \param location Location of the keyword for diagnostics.
 void warnNormalizedMoleFractions(const std::string& what,
                                  double sum,
                                  std::size_t others,
