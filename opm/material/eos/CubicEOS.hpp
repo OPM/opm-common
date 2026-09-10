@@ -196,9 +196,7 @@ public:
                 Vm = max(minMolarVolume, Z[0] * RT_p);
         }
         else if (numSol == 1) {
-            // the EOS only has one intersection with the pressure,
-            // for the other phase, we take the extremum of the EOS
-            // with the largest distance from the intersection.
+            // Only one EOS root exists, so both phase labels use it.
             Vm = max(minMolarVolume, Z[0] * RT_p);
         }
 
