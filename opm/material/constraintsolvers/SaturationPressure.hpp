@@ -92,6 +92,9 @@ namespace Opm {
  * Therefore \f$S_Y>1\f$ proves instability; otherwise this trial does not
  * reject the candidate. The trial solver works in \f$u_i=\ln Y_i\f$ and
  * combines substitution with damped Newton steps near critical conditions.
+ * Both boundaries of one envelope satisfy fugacity equality and \f$S=1\f$,
+ * so an accepted candidate is also classified by its enrichment along the
+ * Wilson volatility direction and must belong to the branch searched.
  *
  * A mixture may have lower and upper dew points at a given temperature.  The
  * upper (retrograde) one is the boundary crossed as pressure declines from
@@ -1017,7 +1020,10 @@ private:
      * \f]
      * with bisection safeguards. Pressure changes are capped at a factor of
      * two. A converged \f$S=1\f$ state is returned only after rejecting the
-     * trivial \f$K=1\f$ solution and certifying known-phase stability.
+     * trivial \f$K=1\f$ solution, confirming from
+     * \f$D=\sum_i(w_i-z_i)\ln K_i^W\f$ that the incipient phase belongs to
+     * the branch being searched rather than to the opposite boundary of the
+     * same envelope, and certifying known-phase stability.
      *
      * A finite scan can miss a narrow phase interval, so exhausting the search
      * returns Outcome::GaveUp and never claims that the branch has no root.
@@ -1285,17 +1291,29 @@ private:
             if (substitutionConverged
                 && std::abs(sum - 1.0) < boundaryResidualTolerance_) {
                 Scalar distance = 0.0;
+                Scalar direction = 0.0;
+                const CompVec candidateWilsonK = wilsonK(p);
                 for (int c = 0; c < numComponents; ++c) {
                     incipient[c] = (bubble ? K[c] * z[c] : z[c] / K[c]) / sum;
                     distance += std::abs(incipient[c] - z[c]);
+                    direction += (incipient[c] - z[c]) * std::log(candidateWilsonK[c]);
                 }
                 // Require a distinct phase, then check known-phase stability:
                 // fugacity equality also admits stationary points inside the
                 // two-phase region, including nearly identical compositions
                 // occupying different EOS roots.
-                if (distance > 1.0e-3 || rootsDistinct) {
+                // A direct dew iteration can also converge to the bubble
+                // boundary of z (and vice versa).  Classify the incipient
+                // phase by enrichment along the Wilson volatility direction,
+                // as envelope continuation does.  A zero direction is valid
+                // only for a pure-fluid or azeotropic boundary with distinct
+                // roots.
+                const bool directionMatches = std::abs(direction) < directionTolerance_
+                    ? rootsDistinct : (bubble == (direction > 0.0));
+                if ((distance > 1.0e-3 || rootsDistinct) && directionMatches) {
                     const auto stability =
-                        knownPhaseStability_(fs, z, knownPhaseIdx, wilsonK(p), bubble, eosType);
+                        knownPhaseStability_(fs, z, knownPhaseIdx,
+                                             candidateWilsonK, bubble, eosType);
                     if (stability == Stability::Indeterminate) {
                         return Outcome::GaveUp;
                     }

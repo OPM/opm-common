@@ -384,6 +384,35 @@ BOOST_AUTO_TEST_CASE(DewPressureLowerBranch)
     }
 }
 
+BOOST_AUTO_TEST_CASE(DewSearchRejectsBubbleBoundary)
+{
+    // At 200 K this CO2/methane composition has a bubble boundary at about
+    // 44.37 bar and a dew boundary at about 12.72 bar.  Both satisfy fugacity
+    // equality, so a dew search must also verify that its incipient phase is
+    // liquid-like before accepting the candidate.
+    constexpr Scalar temp = 200.0;
+    const CompVec vapor{0.20, 0.80, 0.0};
+
+    Scalar pBubble = 0.0;
+    CompVec bubbleVapor{};
+    BOOST_REQUIRE(SatP::bubblePressure(vapor, temp, eosType, pBubble, bubbleVapor));
+
+    Scalar pDew = 0.0;
+    CompVec liquid{};
+    BOOST_REQUIRE(SatP::dewPressure(vapor, temp, eosType, pDew, liquid));
+    BOOST_CHECK_CLOSE(pBubble / 1.0e5, 44.36584124, 1.0e-4);
+    BOOST_CHECK_CLOSE(pDew / 1.0e5, 12.72152110, 1.0e-4);
+    BOOST_CHECK_LT(pDew, pBubble);
+    BOOST_CHECK_GT(liquid[0], vapor[0]);
+
+    const auto res = equilibriumResidualFor<FluidSystem>(
+        vapor, FluidSystem::gasPhaseIdx, liquid,
+        FluidSystem::oilPhaseIdx, pDew, temp);
+    BOOST_CHECK_SMALL(res.closure, 1.0e-10);
+    BOOST_CHECK_SMALL(res.fugacity, 1.0e-8);
+    BOOST_CHECK_GT(res.distance, 1.0);
+}
+
 BOOST_AUTO_TEST_CASE(SupercriticalLiquidHasNoBubblePoint)
 {
     // Pure methane is far above its critical temperature here, so no bubble
