@@ -44,7 +44,7 @@ class ESmry
 public:
 
     // input is smspec (or fsmspec file)
-    explicit ESmry(const std::string& filename, bool loadBaseRunData=false);
+    explicit ESmry(const std::filesystem::path& filename, bool loadBaseRunData=false);
 
     int numberOfVectors() const { return nVect; }
 
