@@ -178,25 +178,31 @@ BOOST_AUTO_TEST_CASE(WTEST_STATE_COMPLETIONS) {
 
 
 BOOST_AUTO_TEST_CASE(WTEST_COMPLETION_CLOSURE_CAUSE) {
+    using EconWorkover = WellTestState::EconWorkover;
+
     WellTestState state;
-    BOOST_CHECK(!state.completion_closed_by_con_plus("W1", 1));
-    state.close_completion("W1", 1, 100);
-    state.close_completion("W1", 2, 100, true);
-    BOOST_CHECK(!state.completion_closed_by_con_plus("W1", 1));
-    BOOST_CHECK(state.completion_closed_by_con_plus("W1", 2));
-    BOOST_CHECK(!state.completion_closed_by_con_plus("W1", 3));
+    BOOST_CHECK(state.completion_workover("W1", 1) == EconWorkover::NONE);
+    state.close_completion("W1", 1, 100, EconWorkover::CON);
+    state.close_completion("W1", 2, 100, EconWorkover::CONP);
+    // A closure that is not a workover at all, e.g. from the deck.
+    state.close_completion("W1", 3, 100);
+
+    BOOST_CHECK(state.completion_workover("W1", 1) == EconWorkover::CON);
+    BOOST_CHECK(state.completion_workover("W1", 2) == EconWorkover::CONP);
+    BOOST_CHECK(state.completion_workover("W1", 3) == EconWorkover::NONE);
+    BOOST_CHECK(state.completion_workover("W1", 4) == EconWorkover::NONE);
 
     // Trial workovers and timestep rollback copy this state.  A subsequent
     // closure must not inherit the cause of an earlier, reopened closure.
     const auto accepted = state;
     state.open_completion("W1", 2);
-    BOOST_CHECK(!state.completion_closed_by_con_plus("W1", 2));
-    state.close_completion("W1", 2, 200);
-    BOOST_CHECK(!state.completion_closed_by_con_plus("W1", 2));
+    BOOST_CHECK(state.completion_workover("W1", 2) == EconWorkover::NONE);
+    state.close_completion("W1", 2, 200, EconWorkover::CON);
+    BOOST_CHECK(state.completion_workover("W1", 2) == EconWorkover::CON);
     state = accepted;
-    BOOST_CHECK(state.completion_closed_by_con_plus("W1", 2));
+    BOOST_CHECK(state.completion_workover("W1", 2) == EconWorkover::CONP);
     state.open_completions("W1");
-    BOOST_CHECK(!state.completion_closed_by_con_plus("W1", 2));
+    BOOST_CHECK(state.completion_workover("W1", 2) == EconWorkover::NONE);
 }
 
 BOOST_AUTO_TEST_CASE(WTEST_PACK_UNPACK) {
@@ -206,7 +212,7 @@ BOOST_AUTO_TEST_CASE(WTEST_PACK_UNPACK) {
     st.close_completion("WELL_NAME", 3, 100);
     st.close_completion("WELLX", 3, 100);
 
-    st.close_completion("WELLX", 4, 100, true);
+    st.close_completion("WELLX", 4, 100, WellTestState::EconWorkover::CONP);
 
     st.close_well("WELL_NAME", WellTestConfig::Reason::ECONOMIC, 100);
     st.close_well("WELL_NAME", WellTestConfig::Reason::PHYSICAL, 100);
@@ -219,8 +225,8 @@ BOOST_AUTO_TEST_CASE(WTEST_PACK_UNPACK) {
 
     st2.unpack(buffer);
     BOOST_CHECK(st == st2);
-    BOOST_CHECK(st2.completion_closed_by_con_plus("WELLX", 4));
-    BOOST_CHECK(!st2.completion_closed_by_con_plus("WELLX", 3));
+    BOOST_CHECK(st2.completion_workover("WELLX", 4) == WellTestState::EconWorkover::CONP);
+    BOOST_CHECK(st2.completion_workover("WELLX", 3) == WellTestState::EconWorkover::NONE);
 }
 
 
