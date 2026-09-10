@@ -50,6 +50,7 @@
 
 #include <cstddef>
 #include <limits>
+#include <numeric>
 #include <stdexcept>
 #include <type_traits>
 
@@ -155,6 +156,21 @@ public:
         solve<MaterialLaw>(fluid_state, matParams, globalMolarities, tolerance);
     }
 
+    /*!
+     * \brief The liquid fraction from the Rachford-Rice equation.
+     *
+     * Newton's method on the vapour fraction \f$V\f$ solves
+     *
+     * \f[ g(V) = \sum_i \frac{z_i (K_i - 1)}{1 + V (K_i - 1)} = 0, \f]
+     *
+     * started at the middle of the bracket
+     * \f$(1/(1 - K_{\max}),\, 1/(1 - K_{\min}))\f$ that the poles of \f$g\f$
+     * define. \f$g\f$ is monotone inside the bracket, but a Newton update is
+     * not constrained to remain there, so an iterate that leaves it is
+     * abandoned for a bisection in \f$L\f$ over \f$[0, 1]\f$.
+     *
+     * \return The liquid fraction \f$L = 1 - V\f$.
+     */
     template <class Vector>
     static typename Vector::field_type solveRachfordRice_g_(const Vector& K, const Vector& z, int verbosity)
     {
@@ -206,10 +222,9 @@ public:
                     }
 
                     // Run bisection
-                    // TODO: This is required for some cases. Not clear why
-                    // since the objective function should be monotone with a
-                    // single zero between the Lmin/Lmax interval defined by
-                    // K-values.
+                    // g is monotone inside the bracket, but a Newton update is
+                    // not constrained to remain there. Bisection preserves the
+                    // physical interval.
                     decltype(Vmax) Lmin = 1.0;
                     decltype(Vmin) Lmax = 0.0;
                     auto L = bisection_g_(K, Lmin, Lmax, z, verbosity);
@@ -242,7 +257,20 @@ public:
         OPM_THROW(std::runtime_error, " Rachford-Rice did not converge within maximum number of iterations");
     }
 
-    // performing the flash calculation, which is done with Scalar without touching derivatives
+    /*!
+     * \brief The isothermal flash on a scalar fluid state, without derivatives.
+     *
+     * The stages are:
+     * -# a stability test when the state does not already carry a two-phase
+     *    split (\f$L \le 0\f$ or \f$L = 1\f$), which either declares the
+     *    mixture single-phase or returns starting equilibrium ratios;
+     * -# for a two-phase mixture, the Rachford-Rice equation for the
+     *    starting liquid fraction, then the phase compositions from
+     *    equality of fugacities by successive substitution and/or Newton;
+     * -# for a single-phase mixture, the phase label.
+     *
+     * \return Whether the mixture is single-phase.
+     */
     template <typename FluidState>
     static bool flash_solve_scalar_(FluidState& fluid_state,
                                     const std::string& twoPhaseMethod,
@@ -288,6 +316,12 @@ public:
         return is_single_phase;
     }
 
+    /*!
+     * \brief Bisection for the root of the Rachford-Rice equation in \f$L\f$.
+     *
+     * Halves \f$[L_\min, L_\max]\f$ on the sign of \f$g(L)\f$ until either
+     * the residual or the interval width is below tolerance.
+     */
     template <class Vector>
     static typename Vector::field_type bisection_g_(const Vector& K, typename Vector::field_type Lmin,
                                                     typename Vector::field_type Lmax, const Vector& z, int verbosity)
@@ -391,6 +425,22 @@ public:
         return L;
     }
 
+    /*!
+     * \brief Michelsen's stability analysis of the mixture.
+     *
+     * A vapour-like and a liquid-like trial phase are each grown from the
+     * mixture with checkStability_(). The mixture is stable, and so single
+     * phase, when neither trial ends with a mole number sum above one. When
+     * it is not, the trial compositions give the starting equilibrium ratios
+     * \f$K_i = y_i / x_i\f$ for the two-phase flash.
+     *
+     * \param[out] isStable Whether the mixture stays in one phase.
+     * \param[in,out] K Starting ratios in, refined ratios out for a two-phase mixture.
+     * \param[in,out] fluid_state The mixture; a stable one gets \f$z\f$ as both phase compositions.
+     * \param z The mixture composition.
+     * \param eos_type The equation of state.
+     * \param verbosity Level of debug logging.
+     */
     template <class FlashFluidState, class ComponentVector>
     static void phaseStabilityTest_(bool& isStable, ComponentVector& K, FlashFluidState& fluid_state, const ComponentVector& z, const EOSType& eos_type, int verbosity)
     {
@@ -406,17 +456,17 @@ public:
             OpmLog::debug("Stability test for vapor phase:");
         }
         checkStability_(fluid_state, isTrivialV, K0, y, S_v, z, /*isGas=*/true, eos_type, verbosity);
-        bool V_unstable = (S_v < (1.0 + stabilityTolerance)) || isTrivialV;
+        const bool vapourTrialFailed = (S_v < (1.0 + stabilityTolerance)) || isTrivialV;
 
         // Check for liquids stable phase
         if (verbosity == 3 || verbosity == 4) {
             OpmLog::debug("Stability test for liquid phase:");
         }
         checkStability_(fluid_state, isTrivialL, K1, x, S_l, z, /*isGas=*/false, eos_type, verbosity);
-        bool L_stable = (S_l < (1.0 + stabilityTolerance)) || isTrivialL;
+        const bool liquidTrialFailed = (S_l < (1.0 + stabilityTolerance)) || isTrivialL;
 
-        // L-stable means success in making liquid, V-unstable means no success in making vapour
-        isStable = L_stable && V_unstable;
+        // Neither trial phase found a negative tangent-plane distance.
+        isStable = liquidTrialFailed && vapourTrialFailed;
         if (isStable) {
             // Single phase, i.e. phase composition is equivalent to the global composition
             // Update fluid_state with mole fraction
@@ -435,6 +485,12 @@ public:
 
 protected:
 
+    /*!
+     * \brief Wilson's correlation for a starting equilibrium ratio,
+     *
+     * \f[ K_i = \frac{p_{c,i}}{p}
+     *   \exp\left[ 5.3727 (1 + \omega_i) \left( 1 - \frac{T_{c,i}}{T} \right) \right]. \f]
+     */
     template <class FlashFluidState>
     static typename FlashFluidState::ValueType wilsonK_(const FlashFluidState& fluid_state, int compIdx)
     {
@@ -448,6 +504,11 @@ protected:
         return tmp;
     }
 
+    /*!
+     * \brief The Rachford-Rice function in the liquid fraction,
+     *
+     * \f[ g(L) = \sum_i \frac{z_i (K_i - 1)}{K_i - L (K_i - 1)}. \f]
+     */
     template <class Vector>
     static typename Vector::field_type rachfordRice_g_(const Vector& K, typename Vector::field_type L, const Vector& z)
     {
@@ -458,84 +519,95 @@ protected:
         return g;
     }
 
+
+    /*!
+     * \brief One trial phase of Michelsen's stability analysis.
+     *
+     * A trial phase with mole numbers \f$W_i = K_i z_i\f$ (vapour-like) or
+     * \f$W_i = z_i / K_i\f$ (liquid-like) is driven to a stationary point of
+     * the tangent-plane-distance function by successive substitution,
+     *
+     * \f[ K_i \leftarrow K_i R_i, \qquad
+     *     R_i = \frac{f_i(\mathbf z)}{S f_i(\mathbf W / S)} \text{ (vapour)}, \quad
+     *     R_i = \frac{S f_i(\mathbf W / S)}{f_i(\mathbf z)} \text{ (liquid)}, \f]
+     *
+     * with \f$S = \sum_i W_i\f$. The iteration has converged when
+     * \f$\sum_i (R_i - 1)^2\f$ is small. It has collapsed onto the mixture
+     * itself, the trivial solution, when \f$\sum_i \ln^2 K_i\f$ is small. At a
+     * stationary point the tangent-plane distance of the normalised trial
+     * composition is \f$-\ln S\f$, so a trial that ends with \f$S > 1\f$
+     * establishes that the mixture is unstable.
+     *
+     * \param fluid_state The mixture at the pressure and temperature of the flash.
+     * \param[out] isTrivial Whether the trial collapsed onto the mixture.
+     * \param[in,out] K Starting ratios in, the trial's converged ratios out.
+     * \param[out] trial_composition The normalised trial composition.
+     * \param[out] trial_sum The mole number sum \f$S\f$ of the trial phase.
+     * \param z The mixture composition.
+     * \param isGas Whether to grow a vapour-like or a liquid-like trial phase.
+     * \param eos_type The equation of state.
+     * \param verbosity Level of debug logging.
+     */
     template <class FlashFluidState, class ComponentVector>
-    static void checkStability_(const FlashFluidState& fluid_state, bool& isTrivial, ComponentVector& K, ComponentVector& xy_loc,
-                                typename FlashFluidState::ValueType& S_loc, const ComponentVector& z, bool isGas, const EOSType& eos_type,
+    static void checkStability_(const FlashFluidState& fluid_state, bool& isTrivial, ComponentVector& K, ComponentVector& trial_composition,
+                                typename FlashFluidState::ValueType& trial_sum, const ComponentVector& z, bool isGas, const EOSType& eos_type,
                                 int verbosity)
     {
         using FlashEval = typename FlashFluidState::ValueType;
         using CubicEOS = typename Opm::CubicEOS<Scalar, FluidSystem>;
+        using ParamCache = typename FluidSystem::template ParameterCache<FlashEval>;
 
-        // Declarations
-        FlashFluidState fluid_state_fake = fluid_state;
-        FlashFluidState fluid_state_global = fluid_state;
+        FlashFluidState trial_state = fluid_state;
+        FlashFluidState mixture_state = fluid_state;
+        const int phaseIdx = (isGas ? static_cast<int>(gasPhaseIdx) : static_cast<int>(oilPhaseIdx));
+        const int phaseIdx2 = (isGas ? static_cast<int>(oilPhaseIdx) : static_cast<int>(gasPhaseIdx));
 
         // Setup output
         if (verbosity >= 3) {
             OpmLog::debug(fmt::format("{:>10}{:>16}{:>16}", "Iteration", "K-Norm", "R-Norm"));
         }
 
-        // Michelsens stability test.
-        // Make two fake phases "inside" one phase and check for positive volume
-        for (int i = 0; i < 20000; ++i) {
-            S_loc = 0.0;
-            if (isGas) {
-                for (int compIdx=0; compIdx<numComponents; ++compIdx){
-                    xy_loc[compIdx] = K[compIdx] * z[compIdx];
-                    S_loc += xy_loc[compIdx];
-                }
-                for (int compIdx=0; compIdx<numComponents; ++compIdx){
-                    xy_loc[compIdx] /= S_loc;
-                    fluid_state_fake.setMoleFraction(gasPhaseIdx, compIdx, xy_loc[compIdx]);
-                }
+        // Grow the trial phase out of the mixture and find a stationary point
+        // of the tangent-plane-distance function.
+        constexpr int maxIterations = 20000;
+        for (int i = 0; i < maxIterations; ++i) {
+            // Mole numbers of the trial phase, then its normalised composition.
+            for (int compIdx=0; compIdx<numComponents; ++compIdx){
+                trial_composition[compIdx] = isGas ? K[compIdx] * z[compIdx] : z[compIdx] / K[compIdx];
             }
-            else {
-                for (int compIdx=0; compIdx<numComponents; ++compIdx){
-                    xy_loc[compIdx] = z[compIdx]/K[compIdx];
-                    S_loc += xy_loc[compIdx];
-                }
-                for (int compIdx=0; compIdx<numComponents; ++compIdx){
-                    xy_loc[compIdx] /= S_loc;
-                    fluid_state_fake.setMoleFraction(oilPhaseIdx, compIdx, xy_loc[compIdx]);
-                }
+            trial_sum = std::accumulate(trial_composition.begin(), trial_composition.end(), FlashEval(0.0));
+            for (int compIdx=0; compIdx<numComponents; ++compIdx){
+                trial_composition[compIdx] /= trial_sum;
+                trial_state.setMoleFraction(phaseIdx, compIdx, trial_composition[compIdx]);
             }
 
-            int phaseIdx = (isGas ? static_cast<int>(gasPhaseIdx) : static_cast<int>(oilPhaseIdx));
-            int phaseIdx2 = (isGas ? static_cast<int>(oilPhaseIdx) : static_cast<int>(gasPhaseIdx));
             // TODO: not sure the following makes sense
             for (int compIdx=0; compIdx<numComponents; ++compIdx){
-                fluid_state_global.setMoleFraction(phaseIdx2, compIdx, z[compIdx]);
+                mixture_state.setMoleFraction(phaseIdx2, compIdx, z[compIdx]);
             }
 
-            typename FluidSystem::template ParameterCache<FlashEval> paramCache_fake(eos_type);
-            paramCache_fake.updatePhase(fluid_state_fake, phaseIdx);
+            ParamCache trial_cache(eos_type);
+            trial_cache.updatePhase(trial_state, phaseIdx);
 
-            typename FluidSystem::template ParameterCache<FlashEval> paramCache_global(eos_type);
-            paramCache_global.updatePhase(fluid_state_global, phaseIdx2);
+            ParamCache mixture_cache(eos_type);
+            mixture_cache.updatePhase(mixture_state, phaseIdx2);
 
-            //fugacity for fake phases each component
+            // Fugacity coefficients of the trial phase and of the mixture.
             for (int compIdx=0; compIdx<numComponents; ++compIdx){
-                auto phiFake = CubicEOS::computeFugacityCoefficient(fluid_state_fake, paramCache_fake, phaseIdx, compIdx);
-                auto phiGlobal = CubicEOS::computeFugacityCoefficient(fluid_state_global, paramCache_global, phaseIdx2, compIdx);
+                const auto phi_trial = CubicEOS::computeFugacityCoefficient(trial_state, trial_cache, phaseIdx, compIdx);
+                const auto phi_mixture = CubicEOS::computeFugacityCoefficient(mixture_state, mixture_cache, phaseIdx2, compIdx);
 
-                fluid_state_fake.setFugacityCoefficient(phaseIdx, compIdx, phiFake);
-                fluid_state_global.setFugacityCoefficient(phaseIdx2, compIdx, phiGlobal);
+                trial_state.setFugacityCoefficient(phaseIdx, compIdx, phi_trial);
+                mixture_state.setFugacityCoefficient(phaseIdx2, compIdx, phi_mixture);
             }
 
+            // The substitution factors R_i of the brief.
             ComponentVector R;
             for (int compIdx=0; compIdx<numComponents; ++compIdx){
-                if (isGas){
-                    auto fug_fake = fluid_state_fake.fugacity(phaseIdx, compIdx);
-                    auto fug_global = fluid_state_global.fugacity(phaseIdx2, compIdx);
-                    auto fug_ratio = fug_global / fug_fake;
-                    R[compIdx] = fug_ratio / S_loc;
-                }
-                else{
-                    auto fug_fake = fluid_state_fake.fugacity(phaseIdx, compIdx);
-                    auto fug_global = fluid_state_global.fugacity(phaseIdx2, compIdx);
-                    auto fug_ratio = fug_fake / fug_global;
-                    R[compIdx] = fug_ratio * S_loc;
-                }
+                const auto fugacity_trial = trial_state.fugacity(phaseIdx, compIdx);
+                const auto fugacity_mixture = mixture_state.fugacity(phaseIdx2, compIdx);
+                R[compIdx] = isGas ? fugacity_mixture / fugacity_trial / trial_sum
+                                   : fugacity_trial / fugacity_mixture * trial_sum;
             }
 
             for (int compIdx=0; compIdx<numComponents; ++compIdx){
@@ -566,6 +638,14 @@ protected:
     }//end checkStability
 
     // TODO: basically FlashFluidState and ComponentVector are both depending on the one Scalar type
+    /*!
+     * \brief The phase compositions from the equilibrium ratios and the
+     *        liquid fraction,
+     *
+     * \f[ x_i = \frac{z_i}{L + (1 - L) K_i}, \qquad y_i = K_i x_i, \f]
+     *
+     * each renormalised to sum to one.
+     */
     template <class FlashFluidState, class ComponentVector>
     static void computeLiquidVapor_(FlashFluidState& fluid_state, typename FlashFluidState::ValueType& L, ComponentVector& K, const ComponentVector& z)
     {
@@ -589,6 +669,13 @@ protected:
         }
     }
 
+    /*!
+     * \brief The two-phase compositions by the requested method.
+     *
+     * "ssi" is successive substitution, "newton" is Newton's method, and
+     * "ssi+newton" uses a few substitution steps to condition the Newton
+     * start and falls back to substitution should Newton fail.
+     */
     template <class FluidState, class ComponentVector>
     static void flash_2ph(const ComponentVector& z_scalar,
                           const std::string& flash_2p_method,
@@ -653,6 +740,20 @@ protected:
         }
     }
 
+    /*!
+     * \brief Newton's method for the two-phase compositions.
+     *
+     * The unknowns are \f$(\mathbf x, \mathbf y, L)\f$ and the residuals,
+     * assembled by assembleNewton_(), are the component balances, equal
+     * fugacities and the closure
+     *
+     * \f[ z_i - L x_i - (1 - L) y_i = 0, \qquad
+     *     f_i^{L} - f_i^{V} = 0, \qquad
+     *     \sum_i x_i - \sum_i y_i = 0. \f]
+     *
+     * The Jacobian comes from automatic differentiation of the residuals in
+     * the unknowns.
+     */
     template <class FlashFluidState, class ComponentVector>
     static bool newtonComposition_(ComponentVector& K,
                                    typename FlashFluidState::ValueType& L,
@@ -812,6 +913,10 @@ protected:
     }
 
     // TODO: the interface will need to refactor for later usage
+    /*!
+     * \brief The residual and Jacobian of newtonComposition_() at the current
+     *        state, whose values carry derivatives in the unknowns.
+     */
     template<typename FlashFluidState, typename ComponentVector, std::size_t num_primary, std::size_t num_equation >
     static void assembleNewton_(const FlashFluidState& fluid_state,
                                 const ComponentVector& global_composition,
@@ -862,6 +967,13 @@ protected:
         }
     }
 
+    /*!
+     * \brief Gives the converged flash result the derivatives of the caller.
+     *
+     * The flash is solved on scalars; the compositions it returns are then
+     * functions of the caller's variables through the equations they
+     * satisfy. Single-phase results need no work, as \f$x = y = z\f$.
+     */
     template <typename FlashFluidStateScalar, typename FluidState>
     static void updateDerivatives_(const FlashFluidStateScalar& fluid_state_scalar,
                                    FluidState& fluid_state,
@@ -875,6 +987,20 @@ protected:
 
     }
 
+    /*!
+     * \brief Derivatives of a two-phase result by the implicit function theorem.
+     *
+     * With the flash residuals \f$F(\mathbf u, \mathbf s) = 0\f$ in the
+     * unknowns \f$\mathbf u = (\mathbf x, \mathbf y, L)\f$ and the secondary
+     * variables \f$\mathbf s = (p, [T,] \mathbf z)\f$,
+     *
+     * \f[ \frac{\partial \mathbf u}{\partial \mathbf s}
+     *   = - \left( \frac{\partial F}{\partial \mathbf u} \right)^{-1}
+     *       \frac{\partial F}{\partial \mathbf s}, \f]
+     *
+     * and the chain rule through the caller's derivatives of \f$\mathbf s\f$
+     * gives those of \f$\mathbf u\f$.
+     */
     template <typename FlashFluidStateScalar, typename FluidState>
     static void updateDerivativesTwoPhase_(const FlashFluidStateScalar& fluid_state_scalar,
                                            FluidState& fluid_state,
@@ -1107,6 +1233,10 @@ protected:
         fluid_state.setLvalue(L_eval);
     } //end updateDerivativesTwoPhase
 
+    /*!
+     * \brief A single-phase result: both phases take the mixture composition,
+     *        and the liquid fraction carries no derivatives.
+     */
     template <typename FlashFluidStateScalar, typename FluidState>
     static void updateDerivativesSinglePhase_(const FlashFluidStateScalar& fluid_state_scalar,
                                               FluidState& fluid_state)
@@ -1125,6 +1255,18 @@ protected:
     } //end updateDerivativesSinglePhase
 
     // TODO: or use typename FlashFluidState::ValueType
+    /*!
+     * \brief Successive substitution for the two-phase compositions.
+     *
+     * Each step recomputes the compositions from the current ratios, then
+     * updates the ratios by the fugacity ratio,
+     *
+     * \f[ K_i \leftarrow K_i \frac{f_i^{L}}{f_i^{V}}, \f]
+     *
+     * until \f$\| f^{L} / f^{V} - 1 \|\f$ is below tolerance. As a
+     * conditioner for Newton it takes a few steps; on its own it may take
+     * many.
+     */
     template <class FlashFluidState, class ComponentVector>
     static bool successiveSubstitutionComposition_(ComponentVector& K,
                                                    typename ComponentVector::field_type& L,
