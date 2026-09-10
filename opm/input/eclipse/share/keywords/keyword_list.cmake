@@ -1074,6 +1074,7 @@ set( keywords
      001_Eclipse300/E/EOS
      001_Eclipse300/E/EOSS
      001_Eclipse300/E/EOSNUM
+     001_Eclipse300/F/FACTLI
      001_Eclipse300/F/FIELDSEP
      001_Eclipse300/G/GASVISCT
      001_Eclipse300/G/GASWAT

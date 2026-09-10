@@ -1,0 +1,17 @@
+{
+  "name": "FACTLI",
+  "description": "Multiplier on the Li correlation for the critical temperature of a fluid mixture. One value per equilibration region; used to tune whether a single phase cell is labelled oil or gas.",
+  "sections": [
+    "PROPS"
+  ],
+  "size": 1,
+  "items": [
+    {
+      "name": "DATA",
+      "value_type": "DOUBLE",
+      "size_type": "ALL",
+      "dimension": "1",
+      "default": 1.0
+    }
+  ]
+}

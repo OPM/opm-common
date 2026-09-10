@@ -1670,4 +1670,101 @@ END
     BOOST_CHECK_THROW(construct(), OpmInputError);
 }
 
+// A minimal compositional deck.  The EQLDIMS and FACTLI bodies are supplied by
+// the caller so that the region count and the multipliers can be varied.
+Deck createFactliDeck(const std::string& eqldims, const std::string& factli)
+{
+    return Parser{}.parseString(R"(
+RUNSPEC
+
+METRIC
+
+DIMENS
+ 4 1 1 /
+
+OIL
+GAS
+
+COMPS
+2 /
+
+)" + eqldims + R"(
+PROPS
+
+CNAMES
+ 'C1' 'C10' /
+
+)" + factli + R"(
+END
+)");
+}
+
+BOOST_AUTO_TEST_CASE(FactliTest)
+{
+    constexpr double tolerance = 1.e-10;
+
+    // Without FACTLI, and without EQLDIMS, the single equilibration region
+    // keeps the neutral multiplier.
+    {
+        const Deck deck = createFactliDeck("", "");
+        const Runspec runspec{deck};
+        const CompositionalConfig comp_config{deck, runspec};
+
+        check_vectors_close(comp_config.liCorrelationFactors(), {1.0}, tolerance);
+    }
+
+    // The repeat count form used by decks that only spell out the default.
+    {
+        const Deck deck = createFactliDeck("", "FACTLI\n 1*1.0 /\n");
+        const Runspec runspec{deck};
+        const CompositionalConfig comp_config{deck, runspec};
+
+        check_vectors_close(comp_config.liCorrelationFactors(), {1.0}, tolerance);
+        BOOST_CHECK_CLOSE(comp_config.liCorrelationFactor(0), 1.0, tolerance);
+    }
+
+    // One value per equilibration region.
+    {
+        const Deck deck = createFactliDeck("EQLDIMS\n 3 /\n",
+                                           "FACTLI\n 0.98 0.87 1.3 /\n");
+        const Runspec runspec{deck};
+        const CompositionalConfig comp_config{deck, runspec};
+
+        check_vectors_close(comp_config.liCorrelationFactors(),
+                            {0.98, 0.87, 1.3}, tolerance);
+        BOOST_CHECK_CLOSE(comp_config.liCorrelationFactor(2), 1.3, tolerance);
+    }
+
+    // Trailing regions the keyword does not reach, and defaulted items, both
+    // fall back to one.
+    {
+        const Deck deck = createFactliDeck("EQLDIMS\n 3 /\n",
+                                           "FACTLI\n 1* 0.87 /\n");
+        const Runspec runspec{deck};
+        const CompositionalConfig comp_config{deck, runspec};
+
+        check_vectors_close(comp_config.liCorrelationFactors(),
+                            {1.0, 0.87, 1.0}, tolerance);
+    }
+
+    // More values than there are equilibration regions is an input error.
+    {
+        const Deck deck = createFactliDeck("EQLDIMS\n 2 /\n",
+                                           "FACTLI\n 0.98 0.87 1.3 /\n");
+        const Runspec runspec{deck};
+
+        const auto construct = [&]() { CompositionalConfig config{deck, runspec}; };
+        BOOST_CHECK_THROW(construct(), OpmInputError);
+    }
+
+    // A repeated FACTLI specification is an input error.
+    {
+        const Deck deck = createFactliDeck("", "FACTLI\n 0.9 /\nFACTLI\n 0.8 /\n");
+        const Runspec runspec{deck};
+
+        const auto construct = [&]() { CompositionalConfig config{deck, runspec}; };
+        BOOST_CHECK_THROW(construct(), OpmInputError);
+    }
+}
+
 }
