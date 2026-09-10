@@ -29,6 +29,17 @@
 
 namespace Opm
 {
+/*!
+ * \brief A two-parameter cubic equation of state in the common form
+ *
+ * \f[ p = \frac{RT}{V - b} - \frac{a}{(V + m_1 b)(V + m_2 b)}, \f]
+ *
+ * with the mixing rules and the constants \f$m_1, m_2\f$ of the chosen
+ * equation (Peng-Robinson, Soave-Redlich-Kwong, ...) supplied by the
+ * parameter cache. The cache carries the dimensionless
+ * \f$A = a p / (RT)^2\f$ and \f$B = b p / (RT)\f$, in which the cubic is
+ * solved for the compressibility factor \f$Z = pV/(RT)\f$.
+ */
 template<class Scalar, class FluidSystem>
 class CubicEOS
 {
@@ -44,6 +55,19 @@ class CubicEOS
     static constexpr Scalar minMolarVolume = 1e-7;
 
 public:
+    /*!
+     * \brief The fugacity coefficient of a component in a phase.
+     *
+     * For the general two-parameter cubic,
+     *
+     * \f[ \ln \phi_i = \frac{B_i}{B}(Z - 1) - \ln(Z - B)
+     *   + \frac{A}{(m_1 - m_2) B} \ln\frac{Z + m_2 B}{Z + m_1 B}
+     *     \left( \frac{2 \sum_j x_j A_{ij}}{A} - \frac{B_i}{B} \right), \f]
+     *
+     * evaluated at the compressibility factor of the phase's cached molar
+     * volume. The result is clamped to a wide range so that an unphysical
+     * intermediate state during a flash still yields a finite, usable value.
+     */
     template <class FluidState, class Params, class LhsEval = typename FluidState::ValueType>
     static LhsEval computeFugacityCoefficient(const FluidState& fs,
                                               const Params& params,
@@ -108,6 +132,23 @@ public:
         return fugCoeff;
     }
 
+    /*!
+     * \brief The molar volume of a phase from the cubic in \f$Z\f$.
+     *
+     * \f[ Z^3 + \big((m_1 + m_2 - 1) B - 1\big) Z^2
+     *   + \big(A + m_1 m_2 B^2 - (m_1 + m_2) B (B + 1)\big) Z
+     *   - \big(A B + m_1 m_2 B^2 (B + 1)\big) = 0. \f]
+     *
+     * With three real roots the largest belongs to the vapour and the
+     * smallest to the liquid; with one root both phases share it. The
+     * volume \f$V = Z R T / p\f$ is floored so a collapsed root cannot
+     * propagate.
+     *
+     * \param fs The fluid state holding the phase's pressure and temperature.
+     * \param params The parameter cache holding \f$A\f$, \f$B\f$, \f$m_1\f$ and \f$m_2\f$.
+     * \param phaseIdx The phase.
+     * \param isGasPhase Whether to take the vapour root when there are three.
+     */
     template <class FluidState, class Params>
     static typename FluidState::ValueType computeMolarVolume(const FluidState& fs,
                                                           Params& params,
@@ -149,15 +190,14 @@ public:
             // the EOS has three intersections with the pressure,
             // i.e. the molar volume of gas is the largest one and the
             // molar volume of liquid is the smallest one
-            if (isGasPhase)
+            if (isGasPhase) {
                 Vm = max(minMolarVolume, Z[2] * RT_p);
-            else
+            } else {
                 Vm = max(minMolarVolume, Z[0] * RT_p);
+            }
         }
         else if (numSol == 1) {
-            // the EOS only has one intersection with the pressure,
-            // for the other phase, we take the extremum of the EOS
-            // with the largest distance from the intersection.
+            // Only one EOS root exists, so both phase labels use it.
             Vm = max(minMolarVolume, Z[0] * RT_p);
         }
 
