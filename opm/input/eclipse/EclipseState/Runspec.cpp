@@ -19,6 +19,7 @@
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
 
 #include <opm/input/eclipse/EclipseState/Tables/Regdims.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/Eqldims.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/Tabdims.hpp>
 
 #include <opm/common/utility/TimeService.hpp>
@@ -811,6 +812,7 @@ Runspec::Runspec(const Deck& deck)
     , active_phases(inferActivePhases(deck))
     , m_tabdims    (deck)
     , m_regdims    (deck)
+    , m_eqldims    (deck)
     , endscale     (deck)
     , welldims     (deck)
     , wsegdims     (deck)
@@ -993,6 +995,7 @@ Runspec Runspec::serializationTestObject()
     result.m_start_time = 1234;
     result.active_phases = Phases::serializationTestObject();
     result.m_tabdims = Tabdims::serializationTestObject();
+    result.m_eqldims = Eqldims::serializationTestObject();
     result.m_regdims = Regdims::serializationTestObject();
     result.endscale = EndpointScaling::serializationTestObject();
     result.welldims = Welldims::serializationTestObject();
@@ -1031,6 +1034,10 @@ const Tabdims& Runspec::tabdims() const noexcept {
 
 const Regdims& Runspec::regdims() const noexcept {
     return this->m_regdims;
+}
+
+const Eqldims& Runspec::eqldims() const noexcept {
+    return this->m_eqldims;
 }
 
 const Actdims& Runspec::actdims() const noexcept {
@@ -1207,6 +1214,7 @@ bool Runspec::operator==(const Runspec& data) const
         && (this->phases() == data.phases())
         && (this->tabdims() == data.tabdims())
         && (this->regdims() == data.regdims())
+        && (this->eqldims() == data.eqldims())
         && (this->endpointScaling() == data.endpointScaling())
         && (this->wellDimensions() == data.wellDimensions())
         && (this->wellSegmentDimensions() == data.wellSegmentDimensions())

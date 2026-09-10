@@ -24,6 +24,7 @@
 #include <opm/input/eclipse/EclipseState/EndpointScaling.hpp>
 #include <opm/input/eclipse/EclipseState/Phase.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/Regdims.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/Eqldims.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/Tabdims.hpp>
 
 #include <opm/input/eclipse/Schedule/Action/Actdims.hpp>
@@ -620,6 +621,7 @@ public:
     const Phases& phases() const noexcept;
     const Tabdims&  tabdims() const noexcept;
     const Regdims&  regdims() const noexcept;
+    const Eqldims&  eqldims() const noexcept;
     const EndpointScaling& endpointScaling() const noexcept;
     const Welldims& wellDimensions() const noexcept;
     const WellSegmentDims& wellSegmentDimensions() const noexcept;
@@ -660,6 +662,7 @@ public:
         serializer(active_phases);
         serializer(m_tabdims);
         serializer(m_regdims);
+        serializer(m_eqldims);
         serializer(endscale);
         serializer(welldims);
         serializer(wsegdims);
@@ -692,6 +695,7 @@ private:
     Phases active_phases{};
     Tabdims m_tabdims{};
     Regdims m_regdims{};
+    Eqldims m_eqldims{};
     EndpointScaling endscale{};
     Welldims welldims{};
     WellSegmentDims wsegdims{};
