@@ -65,6 +65,7 @@ public:
         std::vector<double> binary_interaction_coefficient;
         std::vector<double> omega_a;
         std::vector<double> omega_b;
+        std::vector<double> parachors;
 
         bool operator==(const EOSProps& other) const;
 
@@ -83,6 +84,7 @@ public:
             serializer(binary_interaction_coefficient);
             serializer(omega_a);
             serializer(omega_b);
+            serializer(parachors);
         }
     };
 
@@ -115,6 +117,11 @@ public:
     const std::vector<double>& criticalZFactor(std::size_t eos_region) const;
     const std::vector<double>& omegaA(std::size_t eos_region) const;
     const std::vector<double>& omegaB(std::size_t eos_region) const;
+
+    // Component parachors (PARACHOR) of one reservoir EOS region.  Empty when
+    // the keyword is absent.
+    const std::vector<double>& parachors(std::size_t eos_region) const;
+
     const std::array<double, 5>& lbcCoefficients() const;
 
     // FACTLI multipliers on the Li correlation for the critical temperature

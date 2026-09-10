@@ -1097,6 +1097,7 @@ set( keywords
      001_Eclipse300/O/OMEGAB
      001_Eclipse300/O/OMEGABS
      001_Eclipse300/O/OPTIONS3
+     001_Eclipse300/P/PARACHOR
      001_Eclipse300/P/PCRIT
      001_Eclipse300/P/PCRITS
      001_Eclipse300/P/PRCORR

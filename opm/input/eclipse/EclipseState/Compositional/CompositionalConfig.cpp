@@ -465,6 +465,7 @@ namespace {
             std::pair {"OMEGABS"sv, section.hasKeyword<Opm::ParserKeywords::OMEGABS>() },
             std::pair {"LBCCOEF"sv, section.hasKeyword<Opm::ParserKeywords::LBCCOEF>() },
             std::pair {"FACTLI"sv,  section.hasKeyword<Opm::ParserKeywords::FACTLI>() },
+            std::pair {"PARACHOR"sv, section.hasKeyword<Opm::ParserKeywords::PARACHOR>() },
         };
 
         bool any_comp_prop_kw = false;
@@ -663,6 +664,8 @@ CompositionalConfig::CompositionalConfig(const Deck& deck, const Runspec& runspe
                                            &EOSProps::volume_shifts, this->num_comps, 0.);
     processKeyword<ParserKeywords::ZCRIT>(props_section, this->reservoir_props,
                                           &EOSProps::critical_z_factor, this->num_comps);
+    processKeyword<ParserKeywords::PARACHOR>(props_section, this->reservoir_props,
+                                             &EOSProps::parachors, this->num_comps);
 
     const std::size_t bic_size = this->num_comps * (this->num_comps - 1) / 2;
     processKeyword<ParserKeywords::BIC>(props_section, this->reservoir_props,
@@ -773,7 +776,8 @@ bool CompositionalConfig::EOSProps::operator==(const EOSProps& other) const {
            this->critical_z_factor == other.critical_z_factor &&
            this->binary_interaction_coefficient == other.binary_interaction_coefficient &&
            this->omega_a == other.omega_a &&
-           this->omega_b == other.omega_b;
+           this->omega_b == other.omega_b &&
+           this->parachors == other.parachors;
 }
 
 bool CompositionalConfig::operator==(const CompositionalConfig& other) const {
@@ -813,6 +817,7 @@ CompositionalConfig CompositionalConfig::serializationTestObject() {
     res_props.binary_interaction_coefficient = std::vector<double>(bic_size, 6.);
     res_props.omega_a = std::vector<double>(result.num_comps, 0.457235529);
     res_props.omega_b = std::vector<double>(result.num_comps, 0.077796074);
+    res_props.parachors = std::vector<double>(result.num_comps, 77.);
     result.reservoir_props.assign(2, res_props);
 
     EOSProps surf_props;
@@ -929,6 +934,10 @@ const std::vector<double>& CompositionalConfig::omegaA(std::size_t eos_region) c
 
 const std::vector<double>& CompositionalConfig::omegaB(std::size_t eos_region) const {
     return this->reservoir_props[eos_region].omega_b;
+}
+
+const std::vector<double>& CompositionalConfig::parachors(std::size_t eos_region) const {
+    return this->reservoir_props[eos_region].parachors;
 }
 
 const std::array<double, 5>& CompositionalConfig::lbcCoefficients() const {

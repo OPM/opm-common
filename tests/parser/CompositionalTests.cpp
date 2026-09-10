@@ -159,6 +159,10 @@ ZCRIT
 0.28 0.25 0.26 /
 0.29 0.26 0.27 /
 
+PARACHOR
+77. 78. 108. /
+79. 80. 110. /
+
 
 OMEGAA
 0.5 1* 0.45 /
@@ -426,6 +430,11 @@ BOOST_AUTO_TEST_CASE(DefaultedCompositionalKeywordsArePopulatedWhenAbsent) {
         check_vectors_close(std::vector<double>(num_comps, 0.0), volume_shift, tolerance);
     }
 
+    // Without PARACHOR there are no parachors; nothing is defaulted in.
+    for (std::size_t eos_region = 0; eos_region < num_eos_res; ++eos_region) {
+        BOOST_CHECK(comp_config.parachors(eos_region).empty());
+    }
+
     // Without LBCCOEF, the standard LBC coefficients apply.
     const auto& lbc = comp_config.lbcCoefficients();
     check_vectors_close(std::vector<double>{0.1023, 0.023364, 0.058533, -0.040758, 0.0093324},
@@ -630,6 +639,16 @@ BOOST_AUTO_TEST_CASE(CompositionalParsingTest) {
         const auto& ob1 = comp_config.omegaB(1);
         BOOST_CHECK_EQUAL(num_comps, ob1.size());
         check_vectors_close(std::vector<double>{0.09, srk_omega_b, 0.10}, ob1, tolerance);
+    }
+
+    {
+        // PARACHOR: one value per component in each reservoir EOS region.
+        const auto& par0 = comp_config.parachors(0);
+        BOOST_CHECK_EQUAL(num_comps, par0.size());
+        check_vectors_close(std::vector<double>{77., 78., 108.}, par0, tolerance);
+        const auto& par1 = comp_config.parachors(1);
+        BOOST_CHECK_EQUAL(num_comps, par1.size());
+        check_vectors_close(std::vector<double>{79., 80., 110.}, par1, tolerance);
     }
 
     {
@@ -1697,6 +1716,75 @@ CNAMES
 )" + factli + R"(
 END
 )");
+}
+
+// A minimal compositional deck for the PARACHOR example in the manual.  The
+// unit system and the keyword body are supplied by the caller.
+Deck createParachorDeck(const std::string& unit_system, const std::string& parachor)
+{
+    return Parser{}.parseString(R"(
+RUNSPEC
+
+)" + unit_system + R"(
+
+DIMENS
+ 4 1 1 /
+
+TABDIMS
+/
+
+OIL
+GAS
+
+COMPS
+3 /
+
+PROPS
+
+CNAMES
+ 'C1' 'C3' 'C10' /
+
+)" + parachor + R"(
+END
+)");
+}
+
+BOOST_AUTO_TEST_CASE(ParachorTest)
+{
+    constexpr double tolerance = 1.e-10;
+    const std::string example = "PARACHOR\n 74.92 192.74 390.4 /\n";
+
+    // Parachors are quoted in (dynes/cm)^(1/4) cc/gm-M in every unit system,
+    // so the same numbers must come back unconverted.
+    for (const auto* units : {"METRIC", "FIELD", "LAB", "PVT-M"}) {
+        BOOST_TEST_CONTEXT(units)
+        {
+            const Deck deck = createParachorDeck(units, example);
+            const Runspec runspec{deck};
+            const CompositionalConfig comp_config{deck, runspec};
+
+            check_vectors_close(comp_config.parachors(0),
+                                {74.92, 192.74, 390.4}, tolerance);
+        }
+    }
+
+    // The keyword must carry one value per component.
+    {
+        const Deck deck = createParachorDeck("METRIC", "PARACHOR\n 74.92 192.74 /\n");
+        const Runspec runspec{deck};
+
+        const auto construct = [&]() { CompositionalConfig config{deck, runspec}; };
+        BOOST_CHECK_THROW(construct(), OpmInputError);
+    }
+
+    // Absent keyword: no parachors, and nothing defaulted in.
+    {
+        const Deck deck = createParachorDeck("METRIC", "");
+        const Runspec runspec{deck};
+        const CompositionalConfig comp_config{deck, runspec};
+
+        BOOST_CHECK(comp_config.parachors(0).empty());
+    }
 }
 
 BOOST_AUTO_TEST_CASE(FactliTest)
