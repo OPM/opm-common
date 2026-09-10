@@ -77,6 +77,18 @@ class PTFlash
 
     using EOSType = CompositionalConfig::EOSType;
 
+    // Tangent-plane distance below which a trial phase does not split off.
+    static constexpr Scalar stabilityTolerance = 1e-5;
+    // Successive substitution has converged, or has collapsed onto the
+    // trivial solution with all equilibrium ratios at one.
+    static constexpr Scalar substitutionTolerance = 1e-10;
+    static constexpr Scalar trivialSolutionTolerance = 1e-5;
+    // Rachford-Rice bisection stops on the residual or the interval width.
+    static constexpr Scalar bisectionResidualTolerance = 1e-16;
+    static constexpr Scalar bisectionWidthTolerance = 1e-10;
+    // Slope of the Wilson correlation for the initial equilibrium ratios.
+    static constexpr Scalar wilsonSlope = 5.3727;
+
 public:
     /*!
      * \brief Calculates the fluid state from the global mole fractions of the components and the phase pressures
@@ -291,7 +303,7 @@ public:
         constexpr int max_it = 10000;
 
         auto closeLmaxLmin = [](double max_v, double min_v) {
-            return Opm::abs(max_v - min_v) / 2. < 1e-10;
+            return Opm::abs(max_v - min_v) / 2. < bisectionWidthTolerance;
             // what if max_v < min_v?
         };
 
@@ -308,7 +320,7 @@ public:
             }
 
             // Check if midpoint fulfills g=0 or L - Lmin is sufficiently small
-            if (Opm::abs(gMid) < 1e-16 || closeLmaxLmin(Lmax, Lmin)){
+            if (Opm::abs(gMid) < bisectionResidualTolerance || closeLmaxLmin(Lmax, Lmin)){
                 return L;
             }
             // Else we repeat with midpoint being either Lmin og Lmax (depending on the signs).
@@ -394,14 +406,14 @@ public:
             OpmLog::debug("Stability test for vapor phase:");
         }
         checkStability_(fluid_state, isTrivialV, K0, y, S_v, z, /*isGas=*/true, eos_type, verbosity);
-        bool V_unstable = (S_v < (1.0 + 1e-5)) || isTrivialV;
+        bool V_unstable = (S_v < (1.0 + stabilityTolerance)) || isTrivialV;
 
         // Check for liquids stable phase
         if (verbosity == 3 || verbosity == 4) {
             OpmLog::debug("Stability test for liquid phase:");
         }
         checkStability_(fluid_state, isTrivialL, K1, x, S_l, z, /*isGas=*/false, eos_type, verbosity);
-        bool L_stable = (S_l < (1.0 + 1e-5)) || isTrivialL;
+        bool L_stable = (S_l < (1.0 + stabilityTolerance)) || isTrivialL;
 
         // L-stable means success in making liquid, V-unstable means no success in making vapour
         isStable = L_stable && V_unstable;
@@ -432,7 +444,7 @@ protected:
         const auto& p_crit = FluidSystem::criticalPressure(compIdx);
         const auto& p = fluid_state.pressure(0); //for now assume no capillary pressure
 
-        const auto& tmp = Opm::exp(5.3727 * (1+acf) * (1-T_crit/T)) * (p_crit/p);
+        const auto& tmp = Opm::exp(wilsonSlope * (1+acf) * (1-T_crit/T)) * (p_crit/p);
         return tmp;
     }
 
@@ -554,8 +566,8 @@ protected:
             }
 
             // Check convergence
-            isTrivial = (K_norm < 1e-5);
-            if (isTrivial || R_norm < 1e-10)
+            isTrivial = (K_norm < trivialSolutionTolerance);
+            if (isTrivial || R_norm < substitutionTolerance)
                 return;
             //todo: make sure that no mole fraction is smaller than 1e-8 ?
             //todo: take care of water!

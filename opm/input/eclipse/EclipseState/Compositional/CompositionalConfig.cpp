@@ -234,14 +234,19 @@ namespace {
     omegaDefaultsForEosType(Opm::CompositionalConfig::EOSType eos)
     {
         using EOSType = Opm::CompositionalConfig::EOSType;
+        // Omega_a and Omega_b of the two-parameter cubic equations of state.
+        constexpr double pengRobinsonOmegaA = 0.457235529;
+        constexpr double pengRobinsonOmegaB = 0.077796074;
+        constexpr double redlichKwongOmegaA = 0.4274802;
+        constexpr double redlichKwongOmegaB = 0.08664035;
         switch (eos) {
             case EOSType::PR:
             case EOSType::PRCORR:
-                return {0.457235529, 0.077796074};
+                return {pengRobinsonOmegaA, pengRobinsonOmegaB};
             case EOSType::RK:
             case EOSType::SRK:
             case EOSType::ZJ:
-                return {0.4274802, 0.08664035};
+                return {redlichKwongOmegaA, redlichKwongOmegaB};
         }
         throw std::invalid_argument("Unknown EOSType for OMEGAA/OMEGAB defaults");
     }
