@@ -1058,7 +1058,8 @@ namespace Opm { namespace data {
         /// WPWE0: one if the well was drilled this time step.
         int drilled{0};
 
-        /// WPWE1: number of connections opened this time step.
+        /// WPWE1: number of connections opened this time step.  Counted
+        /// only while the well is neither shut nor stopped.
         int connsOpened{0};
 
         /// WPWE2: number of connections closed this time step, excluding
@@ -1066,8 +1067,8 @@ namespace Opm { namespace data {
         int connsClosed{0};
 
         /// WPWE3: one if the connections were closed to the bottom of the
-        /// wellbore, i.e., by a '+CON' workover or because a 'CON' workover
-        /// closed the last open connections.
+        /// wellbore, i.e., by a '+CON' workover, or because 'CON' workovers
+        /// closed every connection the well had.
         int closedToBottom{0};
 
         /// WPWE4: one if the well was stopped this time step.
