@@ -1074,6 +1074,7 @@ set( keywords
      001_Eclipse300/E/EOS
      001_Eclipse300/E/EOSS
      001_Eclipse300/E/EOSNUM
+     001_Eclipse300/F/FACTLI
      001_Eclipse300/F/FIELDSEP
      001_Eclipse300/G/GASVISCT
      001_Eclipse300/G/GASWAT
@@ -1096,6 +1097,7 @@ set( keywords
      001_Eclipse300/O/OMEGAB
      001_Eclipse300/O/OMEGABS
      001_Eclipse300/O/OPTIONS3
+     001_Eclipse300/P/PARACHOR
      001_Eclipse300/P/PCRIT
      001_Eclipse300/P/PCRITS
      001_Eclipse300/P/PRCORR

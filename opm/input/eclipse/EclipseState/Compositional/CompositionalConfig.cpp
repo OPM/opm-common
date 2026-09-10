@@ -34,6 +34,7 @@
 #include <opm/input/eclipse/Parser/ParserKeywords/B.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/C.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/E.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/F.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/L.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/M.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/N.hpp>
@@ -76,6 +77,20 @@ namespace {
         }
 
         return &keywords.back();
+    }
+
+    std::size_t numEquilRegions(const Opm::Deck& deck)
+    {
+        using EQLDIMS = Opm::ParserKeywords::EQLDIMS;
+
+        if (!deck.hasKeyword<EQLDIMS>()) {
+            return static_cast<std::size_t>(EQLDIMS::NTEQUL::defaultValue);
+        }
+
+        const auto& kw = deck.get<EQLDIMS>().back();
+        const auto ntequl = kw.getRecord(0).getItem<EQLDIMS::NTEQUL>().get<int>(0);
+
+        return static_cast<std::size_t>(ntequl);
     }
 
     void validateKeywordRegionCount(const Opm::DeckKeyword& kw,
@@ -449,6 +464,8 @@ namespace {
             std::pair {"OMEGAB"sv,  section.hasKeyword<Opm::ParserKeywords::OMEGAB>() },
             std::pair {"OMEGABS"sv, section.hasKeyword<Opm::ParserKeywords::OMEGABS>() },
             std::pair {"LBCCOEF"sv, section.hasKeyword<Opm::ParserKeywords::LBCCOEF>() },
+            std::pair {"FACTLI"sv,  section.hasKeyword<Opm::ParserKeywords::FACTLI>() },
+            std::pair {"PARACHOR"sv, section.hasKeyword<Opm::ParserKeywords::PARACHOR>() },
         };
 
         bool any_comp_prop_kw = false;
@@ -647,6 +664,8 @@ CompositionalConfig::CompositionalConfig(const Deck& deck, const Runspec& runspe
                                            &EOSProps::volume_shifts, this->num_comps, 0.);
     processKeyword<ParserKeywords::ZCRIT>(props_section, this->reservoir_props,
                                           &EOSProps::critical_z_factor, this->num_comps);
+    processKeyword<ParserKeywords::PARACHOR>(props_section, this->reservoir_props,
+                                             &EOSProps::parachors, this->num_comps);
 
     const std::size_t bic_size = this->num_comps * (this->num_comps - 1) / 2;
     processKeyword<ParserKeywords::BIC>(props_section, this->reservoir_props,
@@ -718,6 +737,31 @@ CompositionalConfig::CompositionalConfig(const Deck& deck, const Runspec& runspe
             record.getItem<KW::COEF5>().getSIDouble(0),
         };
     }
+
+    // FACTLI scales the Li correlation for the critical temperature of a
+    // mixture, one value per equilibration region.  Regions the keyword does
+    // not reach keep the neutral multiplier of one.
+    {
+        using KW = ParserKeywords::FACTLI;
+
+        const auto num_equil_regions = numEquilRegions(deck);
+        this->li_correlation_factors.assign(num_equil_regions, KW::DATA::defaultValue);
+
+        if (const auto* kw = getSinglePropsKeyword<KW>(props_section); kw != nullptr) {
+            const auto& data = kw->getRecord(0).getItem<KW::DATA>().getSIDoubleData();
+
+            if (data.size() > num_equil_regions) {
+                throw OpmInputError {
+                    fmt::format("in keyword FACTLI, {} values are specified, "
+                                "but at most {} values are expected",
+                                data.size(), num_equil_regions),
+                    kw->location()
+                };
+            }
+
+            std::ranges::copy(data, this->li_correlation_factors.begin());
+        }
+    }
 }
 
 bool CompositionalConfig::EOSProps::operator==(const EOSProps& other) const {
@@ -732,7 +776,8 @@ bool CompositionalConfig::EOSProps::operator==(const EOSProps& other) const {
            this->critical_z_factor == other.critical_z_factor &&
            this->binary_interaction_coefficient == other.binary_interaction_coefficient &&
            this->omega_a == other.omega_a &&
-           this->omega_b == other.omega_b;
+           this->omega_b == other.omega_b &&
+           this->parachors == other.parachors;
 }
 
 bool CompositionalConfig::operator==(const CompositionalConfig& other) const {
@@ -742,7 +787,8 @@ bool CompositionalConfig::operator==(const CompositionalConfig& other) const {
            this->comp_names == other.comp_names &&
            this->reservoir_props == other.reservoir_props &&
            this->surface_props == other.surface_props &&
-           this->lbc_coefficients == other.lbc_coefficients;
+           this->lbc_coefficients == other.lbc_coefficients &&
+           this->li_correlation_factors == other.li_correlation_factors;
 }
 
 
@@ -754,6 +800,7 @@ CompositionalConfig CompositionalConfig::serializationTestObject() {
     result.standard_pressure = 1e5;
     result.comp_names = {"C1", "C10"};
     result.lbc_coefficients = {1.234, -17.29, 3.1415, -2.718, 16.18};
+    result.li_correlation_factors = {0.8, 1.0, 1.3};
 
     const std::size_t bic_size = result.num_comps * (result.num_comps - 1) / 2;
 
@@ -770,6 +817,7 @@ CompositionalConfig CompositionalConfig::serializationTestObject() {
     res_props.binary_interaction_coefficient = std::vector<double>(bic_size, 6.);
     res_props.omega_a = std::vector<double>(result.num_comps, 0.457235529);
     res_props.omega_b = std::vector<double>(result.num_comps, 0.077796074);
+    res_props.parachors = std::vector<double>(result.num_comps, 77.);
     result.reservoir_props.assign(2, res_props);
 
     EOSProps surf_props;
@@ -888,8 +936,20 @@ const std::vector<double>& CompositionalConfig::omegaB(std::size_t eos_region) c
     return this->reservoir_props[eos_region].omega_b;
 }
 
+const std::vector<double>& CompositionalConfig::parachors(std::size_t eos_region) const {
+    return this->reservoir_props[eos_region].parachors;
+}
+
 const std::array<double, 5>& CompositionalConfig::lbcCoefficients() const {
     return this->lbc_coefficients;
+}
+
+const std::vector<double>& CompositionalConfig::liCorrelationFactors() const {
+    return this->li_correlation_factors;
+}
+
+double CompositionalConfig::liCorrelationFactor(std::size_t equil_region) const {
+    return this->li_correlation_factors[equil_region];
 }
 
 CompositionalConfig::EOSType CompositionalConfig::eosTypeSurf(std::size_t eos_region) const {

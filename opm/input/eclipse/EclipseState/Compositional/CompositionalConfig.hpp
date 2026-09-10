@@ -65,6 +65,7 @@ public:
         std::vector<double> binary_interaction_coefficient;
         std::vector<double> omega_a;
         std::vector<double> omega_b;
+        std::vector<double> parachors;
 
         bool operator==(const EOSProps& other) const;
 
@@ -83,6 +84,7 @@ public:
             serializer(binary_interaction_coefficient);
             serializer(omega_a);
             serializer(omega_b);
+            serializer(parachors);
         }
     };
 
@@ -115,7 +117,17 @@ public:
     const std::vector<double>& criticalZFactor(std::size_t eos_region) const;
     const std::vector<double>& omegaA(std::size_t eos_region) const;
     const std::vector<double>& omegaB(std::size_t eos_region) const;
+
+    // Component parachors (PARACHOR) of one reservoir EOS region.  Empty when
+    // the keyword is absent.
+    const std::vector<double>& parachors(std::size_t eos_region) const;
+
     const std::array<double, 5>& lbcCoefficients() const;
+
+    // FACTLI multipliers on the Li correlation for the critical temperature
+    // of a mixture, indexed by equilibration region.
+    const std::vector<double>& liCorrelationFactors() const;
+    double liCorrelationFactor(std::size_t equil_region) const;
 
     // Accessors for surface EOS regions.
     EOSType eosTypeSurf(std::size_t eos_region) const;
@@ -143,6 +155,7 @@ public:
         serializer(reservoir_props);
         serializer(surface_props);
         serializer(lbc_coefficients);
+        serializer(li_correlation_factors);
     }
 
 private:
@@ -156,6 +169,11 @@ private:
     // Coefficients for the Lorentz-Bray-Clark viscosity correlation (LBCCOEF).
     // A single set is used for all EOS regions.
     std::array<double, 5> lbc_coefficients = defaultLBCCoefficients();
+
+    // Multiplier on the Li correlation for the critical temperature of a
+    // mixture (FACTLI), one value per equilibration region.  A value below one
+    // makes single phase cells more likely to be labelled gas, above one oil.
+    std::vector<double> li_correlation_factors;
 
     // One set of properties for each reservoir condition EOS region
     std::vector<EOSProps> reservoir_props;
