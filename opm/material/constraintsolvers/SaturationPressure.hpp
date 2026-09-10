@@ -102,16 +102,13 @@ namespace Opm {
  * one pressure to the next, and brackets the sign change of \f$\ln S_Y\f$.
  * A failed scan does not establish that no root exists: near a critical point,
  * the two-phase interval can be narrower than the pressure sampling step.
- * Continuation narrows that gap without closing it. Sweeping a ternary across
- * temperature and composition leaves the bubble search with no unresolved
- * point between two resolved neighbours, but the dew search keeps isolated
- * bands, a few parts in ten thousand of mole fraction wide, at the crossover
- * between its lower and upper branches. Both branches are well separated and
- * stable on either side of such a band, so a boundary does exist inside it.
- * They survive because the lower-branch result is only accepted once a bubble
- * point confirms an ordinary envelope, and a mixture gas-rich enough to sit at
- * that crossover has no bubble point to find. Resolving them needs a bracketing
- * scheme that cannot skip an unsampled interval, not a smaller fixed step.
+ * A damped Newton stationary solve completes fixed-pressure substitutions that
+ * stall near criticality. During continuation, a failed trial point does not
+ * discard an existing bracket: alternate interior points are tried, and a
+ * bounded forward search can cross an interval of numerical nonconvergence.
+ * If a nontrivial stationary branch terminates at a critical endpoint before
+ * producing a negative residual, its last point is subjected to the same EOS,
+ * fugacity and stability certification as a sign-bracketed boundary.
  * Input compositions must contain finite, non-negative mole fractions with a
  * positive total. They are rescaled to sum to one, so they need not do so on
  * entry.
@@ -661,7 +658,16 @@ private:
      * the method walks in \f$q\f$, carries \f$Y\f$ between pressures, and grows
      * the step until \f$F\leq0\f$ brackets the other boundary. A safeguarded
      * secant method then solves \f$F=0\f$; trial amounts are interpolated in
-     * logarithmic space to preserve positivity and branch continuity.
+     * logarithmic space to preserve positivity and branch continuity. Failed
+     * trial evaluations are retried at dyadic interior points. If local
+     * continuation stalls, bounded forward probes look for the next evaluable
+     * point while retaining the last certified inside point.
+     *
+     * A nontrivial branch need not change sign before it ends. Where the
+     * interval closes at a critical point the incipient phase merges with the
+     * known one and the trial ceases to exist, so no step ever lands outside.
+     * The walk then contracts onto the boundary instead of bracketing it, and
+     * a residual already within tolerance is certified where it stands.
      *
      * The converged boundary is classified from enrichment relative to Wilson
      * volatility,
@@ -670,8 +676,10 @@ private:
      * \f]
      * \f$D>0\f$ denotes a vapour-like incipient phase (bubble point), while
      * \f$D<0\f$ denotes a liquid-like incipient phase (dew point). Fugacity
-     * equality, distinct physical EOS roots, and known-phase stability are
-     * checked before returning the boundary.
+     * equality, physical EOS roots, and known-phase stability are checked
+     * before returning the boundary. The roots are not required to be
+     * distinct: they coincide at a critical endpoint, which is one of the
+     * boundaries this continuation exists to reach.
      *
      * From a lower dew seed the method walks upward: an upper dew point is
      * returned, whereas a bubble boundary confirms that the seed was the only
@@ -741,7 +749,8 @@ private:
                         }
                     }
                     Scalar sum{};
-                    if (!stationaryTrial_(fs, z, knownPhase, trialPhase, eosType, candidate, sum)) {
+                    if (!stationaryTrial_(fs, z, knownPhase, trialPhase,
+                                          eosType, candidate, sum)) {
                         continue;
                     }
                     converged = true;
@@ -765,6 +774,70 @@ private:
             return true;
         };
 
+        const auto certifyBoundary = [&](const Scalar lnp, CompVec Y, const Scalar f) {
+            const Scalar p = std::exp(lnp);
+            CompVec K = Kp;
+            Scalar direction = 0.0;
+            for (int c = 0; c < numComponents; ++c) {
+                K[c] /= p;
+                Y[c] /= std::exp(f);
+                direction += (Y[c] - z[c]) * std::log(K[c]);
+            }
+            // Identify the continued trial by its enrichment in the
+            // Wilson volatility direction, then verify fugacity equality
+            // with the corresponding liquid/vapour EOS roots.
+            if (std::abs(direction) < directionTolerance_) {
+                return false;
+            }
+            const bool bubble = direction > 0.0;
+            const unsigned knownPhase = bubble ? oilPhaseIdx : gasPhaseIdx;
+            const unsigned trialPhase = bubble ? gasPhaseIdx : oilPhaseIdx;
+            fs.setPressure(oilPhaseIdx, p);
+            fs.setPressure(gasPhaseIdx, p);
+            for (int c = 0; c < numComponents; ++c) {
+                fs.setMoleFraction(knownPhase, c, z[c]);
+                fs.setMoleFraction(trialPhase, c, Y[c]);
+            }
+            ParameterCache cache(eosType);
+            cache.updatePhase(fs, oilPhaseIdx);
+            cache.updatePhase(fs, gasPhaseIdx);
+            const Scalar vmL = cache.molarVolume(oilPhaseIdx);
+            const Scalar vmV = cache.molarVolume(gasPhaseIdx);
+            if (!positiveFinite_(vmL) || !positiveFinite_(vmV)
+                || std::min(vmL, vmV) <= 2.0e-7) {
+                return false;
+            }
+            for (int c = 0; c < numComponents; ++c) {
+                if (z[c] > 0.0) {
+                    const Scalar a = z[c] * FluidSystem::fugacityCoefficient(
+                        fs, cache, knownPhase, c);
+                    const Scalar b = Y[c] * FluidSystem::fugacityCoefficient(
+                        fs, cache, trialPhase, c);
+                    if (!positiveFinite_(a) || !positiveFinite_(b)
+                        || std::abs(std::log(a / b)) > stabilityTolerance_) {
+                        return false;
+                    }
+                }
+            }
+            if (knownPhaseStability_(fs, z, knownPhase, K, bubble, eosType)
+                != Stability::Stable) {
+                return false;
+            }
+            if (fromBubble) {
+                // Down from a bubble point the envelope can only close
+                // at a dew point; anything else is not this envelope.
+                if (bubble) {
+                    return false;
+                }
+                press = p;
+                liquid = Y;
+                return true;
+            }
+            press = bubble ? pSeed : p;
+            liquid = bubble ? seedTrial : Y;
+            return true;
+        };
+
         const Scalar seed = std::log(pSeed);
         Scalar lo{}, fLo{};
         CompVec yLo{};
@@ -772,7 +845,9 @@ private:
         bool inside = false;
         // Halve the seed offset until a trial lands inside the envelope.
         constexpr int maxSeedRefinements = 20;
-        constexpr int maxWalkSteps = 200;
+        // With the 0.1 maximum step below, 400 iterations can span 40 units
+        // in ln(p), including a high-pressure seed and a sub-bar dew point.
+        constexpr int maxWalkSteps = 400;
         constexpr int maxBoundarySteps = 80;
         for (int refine = 0; refine < maxSeedRefinements; ++refine) {
             lo = seed + dir * step;
@@ -796,6 +871,41 @@ private:
             if (!evaluate(hi, yHi, fHi)) {
                 step *= 0.5;
                 if (step < boundaryPressureTolerance_) {
+                    if (std::abs(fLo) < boundaryResidualTolerance_
+                        && certifyBoundary(lo, yLo, fLo)) {
+                        return true;
+                    }
+                    bool recovered = false;
+                    // A fixed-pressure trial can fail over a finite interval
+                    // even though the stationary branch converges on both
+                    // sides. Use only a converged residual to update or close
+                    // the bracket.
+                    // Twenty 0.1-spaced probes bound the skipped interval to
+                    // two units in ln(p), or a pressure ratio of exp(2).
+                    constexpr int maxGapProbes = 20;
+                    for (int probe = 1; probe <= maxGapProbes; ++probe) {
+                        hi = lo + dir * Scalar{0.1} * probe;
+                        yHi = yLo;
+                        if (!evaluate(hi, yHi, fHi)) {
+                            continue;
+                        }
+                        recovered = true;
+                        if (fHi <= 0.0) {
+                            bracketed = true;
+                            break;
+                        }
+                        lo = hi;
+                        fLo = fHi;
+                        yLo = yHi;
+                        step = 0.01;
+                        break;
+                    }
+                    if (bracketed) {
+                        break;
+                    }
+                    if (recovered) {
+                        continue;
+                    }
                     return false;
                 }
                 continue;
@@ -813,83 +923,48 @@ private:
             return false;
         }
 
+        // A gap-recovered bracket can span pressures where no continuation
+        // composition was found. The interpolated Y below is only an initial
+        // guess; each result must converge and pass final certification.
         for (int iter = 0; iter < maxBoundarySteps; ++iter) {
             // Safeguard the secant so that even a flat residual contracts
             // the bracket; interpolate the trial amounts in log space.
-            const Scalar fraction = std::clamp(fLo / (fLo - fHi), Scalar{0.1}, Scalar{0.9});
-            const Scalar mid = lo + fraction * (hi - lo);
+            Scalar fraction = std::clamp(fLo / (fLo - fHi), Scalar{0.1}, Scalar{0.9});
+            Scalar mid{};
             CompVec Y{};
-            for (int c = 0; c < numComponents; ++c) {
-                if (z[c] > 0.0) {
-                    Y[c] = std::exp((1.0 - fraction) * std::log(yLo[c])
-                                   + fraction * std::log(yHi[c]));
+            Scalar f{};
+            const auto attempt = [&](const Scalar candidateFraction) {
+                fraction = candidateFraction;
+                mid = lo + fraction * (hi - lo);
+                for (int c = 0; c < numComponents; ++c) {
+                    if (z[c] > 0.0) {
+                        Y[c] = std::exp((1.0 - fraction) * std::log(yLo[c])
+                                       + fraction * std::log(yHi[c]));
+                    }
+                }
+                return evaluate(mid, Y, f);
+            };
+            bool evaluated = attempt(fraction);
+            // One failed fixed-pressure solve does not invalidate the two
+            // converged bracket ends. Try progressively finer dyadic points.
+            // Four levels try 15 interior points, down to 1/16 of the bracket,
+            // while keeping the retry work bounded.
+            constexpr int maxAlternateLevels = 4;
+            for (int level = 1; !evaluated && level <= maxAlternateLevels; ++level) {
+                const int denominator = 1 << level;
+                for (int numerator = 1; numerator < denominator; numerator += 2) {
+                    if (attempt(Scalar(numerator) / Scalar(denominator))) {
+                        evaluated = true;
+                        break;
+                    }
                 }
             }
-            Scalar f{};
-            if (!evaluate(mid, Y, f)) {
+            if (!evaluated) {
                 return false;
             }
             if (std::abs(hi - lo) < boundaryPressureTolerance_
                 && std::abs(f) < boundaryResidualTolerance_) {
-                const Scalar p = std::exp(mid);
-                CompVec K = Kp;
-                Scalar direction = 0.0;
-                for (int c = 0; c < numComponents; ++c) {
-                    K[c] /= p;
-                    Y[c] /= std::exp(f);
-                    direction += (Y[c] - z[c]) * std::log(K[c]);
-                }
-                // Identify the continued trial by its enrichment in the
-                // Wilson volatility direction, then verify fugacity equality
-                // with the corresponding liquid/vapour EOS roots.
-                if (std::abs(direction) < directionTolerance_) {
-                    return false;
-                }
-                const bool bubble = direction > 0.0;
-                const unsigned knownPhase = bubble ? oilPhaseIdx : gasPhaseIdx;
-                const unsigned trialPhase = bubble ? gasPhaseIdx : oilPhaseIdx;
-                for (int c = 0; c < numComponents; ++c) {
-                    fs.setMoleFraction(knownPhase, c, z[c]);
-                    fs.setMoleFraction(trialPhase, c, Y[c]);
-                }
-                ParameterCache cache(eosType);
-                cache.updatePhase(fs, oilPhaseIdx);
-                cache.updatePhase(fs, gasPhaseIdx);
-                const Scalar vmL = cache.molarVolume(oilPhaseIdx);
-                const Scalar vmV = cache.molarVolume(gasPhaseIdx);
-                if (!positiveFinite_(vmL) || !positiveFinite_(vmV)
-                    || std::min(vmL, vmV) <= 2.0e-7) {
-                    return false;
-                }
-                for (int c = 0; c < numComponents; ++c) {
-                    if (z[c] > 0.0) {
-                        const Scalar a = z[c] * FluidSystem::fugacityCoefficient(
-                            fs, cache, knownPhase, c);
-                        const Scalar b = Y[c] * FluidSystem::fugacityCoefficient(
-                            fs, cache, trialPhase, c);
-                        if (!positiveFinite_(a) || !positiveFinite_(b)
-                            || std::abs(std::log(a / b)) > stabilityTolerance_) {
-                            return false;
-                        }
-                    }
-                }
-                if (knownPhaseStability_(fs, z, knownPhase, K, bubble, eosType)
-                    != Stability::Stable) {
-                    return false;
-                }
-                if (fromBubble) {
-                    // Down from a bubble point the envelope can only close
-                    // at a dew point; anything else is not this envelope.
-                    if (bubble) {
-                        return false;
-                    }
-                    press = p;
-                    liquid = Y;
-                    return true;
-                }
-                press = bubble ? pSeed : p;
-                liquid = bubble ? seedTrial : Y;
-                return true;
+                return certifyBoundary(mid, Y, f);
             }
             if (f > 0.0) {
                 lo = mid;
@@ -927,7 +1002,9 @@ private:
      *         \quad\hbox{(dew)},
      * \f]
      * with \f$y_i^n=K_i^nz_i/S_b\f$ or
-     * \f$x_i^n=z_i/(K_i^nS_d)\f$. Once the fixed-pressure iteration converges,
+     * \f$x_i^n=z_i/(K_i^nS_d)\f$. A slowly contracting substitution is
+     * completed by the damped Newton stationary solver at the same pressure.
+     * Once the fixed-pressure iteration converges,
      * \f$F=\ln S\f$ classifies and drives the pressure search: \f$F>0\f$ is
      * inside the two-phase region and \f$F<0\f$ is outside. Before bracketing,
      * the method uses a direction-checked secant step or the fixed-point step
@@ -1022,9 +1099,7 @@ private:
         bool havePrev = false;
         int lastSide = 0;
         // This scan step can skip a narrow envelope; dewPressure() tries
-        // continuation from another boundary if the scan fails. A smaller step
-        // lowers the odds without removing them -- see the class documentation
-        // for what a fixed step leaves unresolved.
+        // continuation from another boundary if the scan fails.
         constexpr Scalar scanStep = 0.9;
         constexpr int maxPressureIterations = 200;
         constexpr int maxSubstitutionIterations = 500;
@@ -1131,6 +1206,45 @@ private:
                     accelerate_(K, d, dPrev);
                 }
                 dPrev = d;
+            }
+
+            // Finish slowly contracting near-critical substitutions with the
+            // damped Newton stationary solver used by envelope continuation.
+            if (!substitutionConverged) {
+                CompVec candidate{};
+                for (int c = 0; c < numComponents; ++c) {
+                    if (z[c] > 0.0) {
+                        candidate[c] = bubble ? K[c] * z[c] : z[c] / K[c];
+                    }
+                }
+                Scalar candidateSum{};
+                if (stationaryTrial_(fs, z, knownPhaseIdx, incipientPhaseIdx,
+                                     eosType, candidate, candidateSum)) {
+                    for (int c = 0; c < numComponents; ++c) {
+                        fs.setMoleFraction(incipientPhaseIdx, c,
+                                           candidate[c] / candidateSum);
+                    }
+                    paramCache.updatePhase(fs, incipientPhaseIdx);
+                    const Scalar vmL = paramCache.molarVolume(oilPhaseIdx);
+                    const Scalar vmV = paramCache.molarVolume(gasPhaseIdx);
+                    constexpr Scalar clampedVm = 1.0e-7;
+                    rootsDistinct = (std::min(vmL, vmV) > 2.0 * clampedVm) &&
+                                    (std::abs(vmL - vmV)
+                                     > rootVolumeTolerance_ * std::max(vmL, vmV));
+                    trivial = true;
+                    for (int c = 0; c < numComponents; ++c) {
+                        const Scalar phiIncipient = FluidSystem::fugacityCoefficient(
+                            fs, paramCache, incipientPhaseIdx, c);
+                        const Scalar newK = bubble ? phiKnown[c] / phiIncipient
+                                                  : phiIncipient / phiKnown[c];
+                        if (!positiveFinite_(newK)) {
+                            return Outcome::GaveUp;
+                        }
+                        trivial = trivial && (std::abs(newK - 1.0) < 1.0e-5);
+                        K[c] = newK;
+                    }
+                    substitutionConverged = true;
+                }
             }
 
             const auto markOutside = [&](const bool withValue, const Scalar value) {

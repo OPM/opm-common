@@ -744,6 +744,49 @@ BOOST_AUTO_TEST_CASE(AcceleratedDewSearchKeepsFiniteIterates)
     }
 }
 
+BOOST_AUTO_TEST_CASE(NearCriticalDewSearchFinishesTheStationaryTrial)
+{
+    // Successive substitution gives up across a neighbourhood of this state.
+    // The stationary Newton solve finishes and certifies the same system.
+    const CompVec vapor{0.0, 0.91239, 0.08761};
+    constexpr Scalar temp = 320.0;
+    Scalar press = -123.0;
+    CompVec liquid{};
+
+    BOOST_REQUIRE(SatP::dewPressure(vapor, temp, eosType, press, liquid));
+    // The retrograde branch near 332 bar, not the sub-bar lower dew point
+    // returned when the stationary trial cannot be completed. A bound rather
+    // than a value: the boundary is near critical, so the pressure itself
+    // moves with rounding while the branch it belongs to does not.
+    BOOST_CHECK_GT(press / 1.0e5, 300.0);
+
+    const auto res = equilibriumResidualFor<FluidSystem>(
+        vapor, FluidSystem::gasPhaseIdx, liquid, FluidSystem::oilPhaseIdx, press, temp);
+    BOOST_CHECK_SMALL(res.fugacity, 1.0e-8);
+    BOOST_CHECK_SMALL(res.closure, 1.0e-10);
+    BOOST_CHECK_GT(res.distance, 1.0e-3);
+}
+
+BOOST_AUTO_TEST_CASE(DewTraceCrossesAFixedPressureFailureGap)
+{
+    // The direct dew searches give up for this low-pressure state. Tracing
+    // down from its bubble boundary encounters a short interval where the
+    // stationary trial fails, then resumes and brackets the dew point.
+    const CompVec vapor{0.0, 0.6100917431192661, 0.3899082568807339};
+    constexpr Scalar temp = 280.0;
+    Scalar press = -123.0;
+    CompVec liquid{};
+
+    BOOST_REQUIRE(SatP::dewPressure(vapor, temp, eosType, press, liquid));
+    BOOST_CHECK_CLOSE(press / 1.0e5, 0.00143343, 1.0e-2);
+
+    const auto res = equilibriumResidualFor<FluidSystem>(
+        vapor, FluidSystem::gasPhaseIdx, liquid, FluidSystem::oilPhaseIdx, press, temp);
+    BOOST_CHECK_SMALL(res.fugacity, 1.0e-8);
+    BOOST_CHECK_SMALL(res.closure, 1.0e-10);
+    BOOST_CHECK_GT(res.distance, 0.1);
+}
+
 BOOST_AUTO_TEST_CASE(DewPointReachedFromTheBubbleBoundary)
 {
     // Both dew scans miss these narrow CO2/decane envelopes near criticality.
