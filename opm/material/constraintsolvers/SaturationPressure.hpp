@@ -112,6 +112,11 @@ namespace Opm {
  * If a nontrivial stationary branch terminates at a critical endpoint before
  * producing a negative residual, its last point is subjected to the same EOS,
  * fugacity and stability certification as a sign-bracketed boundary.
+ * Branch resolution depends on the precision of \c Scalar. The
+ * double-precision validation sweep found no isolated unresolved states. In
+ * single precision, the convergence thresholds share the same epsilon floor,
+ * and a near-critical dew search can resolve the opposite boundary of the same
+ * envelope.
  * Input compositions must contain finite, non-negative mole fractions with a
  * positive total. They are rescaled to sum to one, so they need not do so on
  * entry.
@@ -244,7 +249,9 @@ private:
     enum class Stability { Stable, Unstable, Indeterminate };
 
     // Keep the established double-precision thresholds while making each
-    // convergence test meaningful at Scalar's precision.
+    // convergence test meaningful at Scalar's precision. Every threshold below
+    // reaches this floor in single precision, so criteria that are orders apart
+    // in double collapse onto one value there and limit float branch resolution.
     static constexpr Scalar precisionTolerance_(const Scalar minimum)
     {
         return std::max(minimum,
@@ -279,6 +286,45 @@ private:
     static bool positiveFinite_(const Scalar value)
     {
         return std::isfinite(value) && value > 0.0;
+    }
+
+    /*!
+     * \brief Decide whether the cubic equation of state has two distinct
+     *        physical roots at one composition.
+     *
+     * Pure fluids and azeotropes have equal phase compositions at saturation,
+     * so distinct liquid and vapour roots are their only nontriviality
+     * certificate. Both roots are taken at the same composition: comparing
+     * the roots at the known and incipient compositions instead lets a small
+     * composition difference pass as a second root at float precision.
+     *
+     * \param[in] fs Fluid state supplying the temperature and pressure.
+     * \param[in] composition Composition at which both roots are evaluated.
+     * \param[in] eosType Cubic EOS type.
+     * \return whether both roots are physical and their molar volumes differ
+     *         by more than \c rootVolumeTolerance_.
+     */
+    static bool rootsDistinctAtComposition_(
+        const CompositionalFluidState<Scalar, FluidSystem>& fs,
+        const CompVec& composition,
+        const EOSType eosType)
+    {
+        auto rootState = fs;
+        for (int c = 0; c < numComponents; ++c) {
+            rootState.setMoleFraction(oilPhaseIdx, c, composition[c]);
+            rootState.setMoleFraction(gasPhaseIdx, c, composition[c]);
+        }
+
+        ParameterCache rootCache(eosType);
+        rootCache.updatePhase(rootState, oilPhaseIdx);
+        rootCache.updatePhase(rootState, gasPhaseIdx);
+        const Scalar vmL = rootCache.molarVolume(oilPhaseIdx);
+        const Scalar vmV = rootCache.molarVolume(gasPhaseIdx);
+        constexpr Scalar clampedVm = 1.0e-7;
+        return positiveFinite_(vmL) && positiveFinite_(vmV)
+            && std::min(vmL, vmV) > 2.0 * clampedVm
+            && std::abs(vmL - vmV)
+                > rootVolumeTolerance_ * std::max(vmL, vmV);
     }
 
     /*!
@@ -1138,7 +1184,6 @@ private:
 
             // Fugacity equality at fixed pressure: K_c = phi_liquid / phi_vapour.
             bool trivial = false;
-            bool rootsDistinct = false;
             bool substitutionConverged = false;
             // The previous change of ln K, for the dominant-eigenvalue
             // extrapolation below.
@@ -1170,17 +1215,6 @@ private:
                 const int unchanged = inner == 0
                     ? ParameterCache::None : ParameterCache::Temperature | ParameterCache::Pressure;
                 paramCache.updatePhase(fs, incipientPhaseIdx, unchanged);
-
-                // Pure fluids and azeotropes can have K == 1 at saturation.
-                // Distinct molar volumes distinguish them from a trivial trial.
-                const Scalar vmL = paramCache.molarVolume(oilPhaseIdx);
-                const Scalar vmV = paramCache.molarVolume(gasPhaseIdx);
-                // A molar volume near the cubic EOS floor does not establish a
-                // physical second root.
-                constexpr Scalar clampedVm = 1.0e-7;
-                rootsDistinct = (std::min(vmL, vmV) > 2.0 * clampedVm) &&
-                                (std::abs(vmL - vmV)
-                                 > rootVolumeTolerance_ * std::max(vmL, vmV));
 
                 Scalar change = 0.0;
                 trivial = true;
@@ -1231,12 +1265,6 @@ private:
                                            candidate[c] / candidateSum);
                     }
                     paramCache.updatePhase(fs, incipientPhaseIdx);
-                    const Scalar vmL = paramCache.molarVolume(oilPhaseIdx);
-                    const Scalar vmV = paramCache.molarVolume(gasPhaseIdx);
-                    constexpr Scalar clampedVm = 1.0e-7;
-                    rootsDistinct = (std::min(vmL, vmV) > 2.0 * clampedVm) &&
-                                    (std::abs(vmL - vmV)
-                                     > rootVolumeTolerance_ * std::max(vmL, vmV));
                     trivial = true;
                     for (int c = 0; c < numComponents; ++c) {
                         const Scalar phiIncipient = FluidSystem::fugacityCoefficient(
@@ -1252,6 +1280,9 @@ private:
                     substitutionConverged = true;
                 }
             }
+
+            const bool rootsDistinct = substitutionConverged
+                && rootsDistinctAtComposition_(fs, z, eosType);
 
             const auto markOutside = [&](const bool withValue, const Scalar value) {
                 pOut = p;

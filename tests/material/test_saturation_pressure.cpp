@@ -54,9 +54,9 @@
 #include <cmath>
 #include <cstddef>
 #include <random>
-#include <vector>
 #include <tuple>
 #include <utility>
+#include <vector>
 
 namespace {
 
@@ -357,6 +357,42 @@ BOOST_AUTO_TEST_CASE(SinglePrecisionBubbleDewRoundTrip)
         recovered, FloatFluidSystem::oilPhaseIdx, pDew, 373.15f);
     BOOST_CHECK_SMALL(res.closure, 2.0e-5);
     BOOST_CHECK_SMALL(res.fugacity, 1.0e-3);
+}
+
+BOOST_AUTO_TEST_CASE(SinglePrecisionRejectsTrivialBubbleRoot)
+{
+    // Near the critical composition, float roundoff makes the known and trial
+    // compositions slightly different even after an iteration collapses onto
+    // one EOS root.  That composition-induced volume difference must not be
+    // accepted as distinct liquid and vapour roots.
+    // The neighbouring probe makes the regression insensitive to small
+    // compiler-dependent changes in the pressure scan path.
+    for (const float zMethane : {0.86150f, 0.86200f}) {
+        const FloatSatP::CompVec liquid{0.0f, zMethane, 1.0f - zMethane};
+        float pBubble = -1.0f;
+        FloatSatP::CompVec vapor{};
+        BOOST_REQUIRE(FloatSatP::bubblePressure(liquid, 373.15f, eosType,
+                                                pBubble, vapor));
+
+        Scalar pBubbleDouble = -1.0;
+        CompVec vaporDouble{};
+        BOOST_REQUIRE(SatP::bubblePressure(
+            {0.0, static_cast<Scalar>(zMethane), 1.0 - static_cast<Scalar>(zMethane)},
+            temperature, eosType, pBubbleDouble, vaporDouble));
+        // The points are near critical, so float rounding moves the pressure
+        // more than in the round-trip case above while preserving the branch.
+        // Bounded loosely on purpose: the distance check below is what rejects
+        // a trivial root, and this pressure is sensitive enough to code layout
+        // that a tight bound would fail on an unrelated recompilation.
+        BOOST_CHECK_CLOSE(static_cast<Scalar>(pBubble), pBubbleDouble, 5.0e-1);
+
+        const auto res = equilibriumResidualFor<FloatFluidSystem>(
+            liquid, FloatFluidSystem::oilPhaseIdx,
+            vapor, FloatFluidSystem::gasPhaseIdx, pBubble, 373.15f);
+        BOOST_CHECK_SMALL(res.closure, 2.0e-5);
+        BOOST_CHECK_SMALL(res.fugacity, 1.0e-3);
+        BOOST_CHECK_GT(res.distance, 1.0e-2);
+    }
 }
 
 BOOST_AUTO_TEST_CASE(DewPressureLowerBranch)
@@ -857,11 +893,11 @@ BOOST_AUTO_TEST_CASE(DewPointReachedFromTheBubbleBoundary)
 
 BOOST_AUTO_TEST_CASE(PropertyProbeOverEosVariantsAndStates)
 {
-    // A deterministic sweep of the whole input domain.  It asserts the three
-    // properties that hold for every input rather than any particular
-    // pressure: the call does not throw, a successful result is a usable
-    // saturation pressure with a normalised incipient composition, and a
-    // failed one leaves both outputs exactly as the caller left them.
+    // A deterministic sweep of representative valid inputs. It asserts three
+    // general properties rather than any particular pressure: the call does
+    // not throw, a successful result is a usable saturation pressure with a
+    // normalised incipient composition, and a failed one leaves both outputs
+    // exactly as the caller left them.
     constexpr std::array eosVariants{
         Opm::CompositionalConfig::EOSType::PR,
         Opm::CompositionalConfig::EOSType::PRCORR,
