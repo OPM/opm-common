@@ -190,10 +190,11 @@ public:
             // the EOS has three intersections with the pressure,
             // i.e. the molar volume of gas is the largest one and the
             // molar volume of liquid is the smallest one
-            if (isGasPhase)
+            if (isGasPhase) {
                 Vm = max(minMolarVolume, Z[2] * RT_p);
-            else
+            } else {
                 Vm = max(minMolarVolume, Z[0] * RT_p);
+            }
         }
         else if (numSol == 1) {
             // Only one EOS root exists, so both phase labels use it.

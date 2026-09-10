@@ -182,10 +182,11 @@ public:
         field_type min_k = K[0];
         field_type max_k = K[0];
         for (int compIdx = 1; compIdx < numComponents; ++compIdx){
-            if (K[compIdx] < min_k)
+            if (K[compIdx] < min_k) {
                 min_k = K[compIdx];
-            else if (K[compIdx] >= max_k)
+            } else if (K[compIdx] >= max_k) {
                 max_k = K[compIdx];
+            }
         }
         // Lower and upper bound for solution
         const auto min_vapour_fraction = 1 / (1 - max_k);
@@ -675,8 +676,9 @@ protected:
 
             // Check convergence
             isTrivial = (trivial_residual < trivialSolutionTolerance);
-            if (isTrivial || substitution_residual < substitutionTolerance)
+            if (isTrivial || substitution_residual < substitutionTolerance) {
                 return;
+            }
             //todo: make sure that no mole fraction is smaller than 1e-8 ?
             //todo: take care of water!
         }
@@ -1044,10 +1046,11 @@ protected:
                                    const EOSType& eos_type,
                                    bool is_single_phase)
     {
-        if (!is_single_phase)
+        if (!is_single_phase) {
             updateDerivativesTwoPhase_(fluid_state_scalar, fluid_state, eos_type);
-        else
+        } else {
             updateDerivativesSinglePhase_(fluid_state_scalar, fluid_state);
+        }
     }
 
     /*!
