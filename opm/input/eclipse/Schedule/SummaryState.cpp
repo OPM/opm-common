@@ -907,6 +907,10 @@ namespace Opm
         for (const auto& [var, vals] : buffer.segment_values) {
             this->segment_values.insert_or_assign(var, vals);
         }
+
+        for (const auto& [var, vals] : buffer.region_values) {
+            this->region_values.insert_or_assign(var, vals);
+        }
     }
 
     SummaryState::const_iterator SummaryState::begin() const
