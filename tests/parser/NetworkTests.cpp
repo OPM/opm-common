@@ -42,6 +42,9 @@
 
 #include <opm/input/eclipse/Deck/Deck.hpp>
 
+#include <opm/input/eclipse/Parser/ErrorGuard.hpp>
+#include <opm/input/eclipse/Parser/InputErrorAction.hpp>
+#include <opm/input/eclipse/Parser/ParseContext.hpp>
 #include <opm/input/eclipse/Parser/Parser.hpp>
 
 #include <algorithm>
@@ -70,6 +73,42 @@ Schedule make_schedule(const std::string& schedule_string)
     return {
         deck, grid, fp, NumericalAquifers{},
         runspec, std::make_shared<Python>()
+    };
+}
+
+Schedule make_schedule(const std::string& schedule_string, ErrorGuard& errors)
+{
+    const auto deck = Parser{}.parseString(schedule_string);
+    EclipseGrid grid(10,10,10);
+    const TableManager table ( deck );
+    const FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
+    const Runspec runspec (deck);
+
+    return {
+        deck, grid, fp, NumericalAquifers{},
+        runspec, ParseContext{}, errors, std::make_shared<Python>()
+    };
+}
+
+// Build a schedule while treating an inconsistent network topology as a
+// warning rather than as a fatal input error.  Enables inspecting the
+// network which the parser builds from an invalid description.
+Schedule make_schedule_lenient_network(const std::string& schedule_string)
+{
+    const auto deck = Parser{}.parseString(schedule_string);
+    EclipseGrid grid(10,10,10);
+    const TableManager table ( deck );
+    const FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
+    const Runspec runspec (deck);
+
+    ParseContext parseContext;
+    parseContext.update(ParseContext::SCHEDULE_NETWORK_INVALID, InputErrorAction::IGNORE);
+
+    ErrorGuard errors;
+
+    return {
+        deck, grid, fp, NumericalAquifers{},
+        runspec, parseContext, errors, std::make_shared<Python>()
     };
 }
 }
@@ -137,7 +176,14 @@ NODEPROP
 /
 )";
 
-    const auto& schedule = make_schedule(deck_string);
+    // B1X is a source node--it has no inlets--but it is not a group, so it
+    // cannot supply any flow to the network.
+    auto errors = ErrorGuard{};
+    make_schedule(deck_string, errors);
+    BOOST_CHECK(errors);
+    errors.clear();
+
+    const auto& schedule = make_schedule_lenient_network(deck_string);
     const auto& network = schedule[0].network.get();
     BOOST_CHECK(network.has_node("B1X"));
 }
@@ -177,7 +223,15 @@ NODEPROP
 /
 )";
 
-    const auto& schedule = make_schedule(deck_string);
+    // The flow paths from B1 and C1 both end at PLAT-AX.  The fixed
+    // pressure is assigned to PLAT-A, which is not part of the network, so
+    // neither path ends in a node of known pressure.
+    auto errors = ErrorGuard{};
+    make_schedule(deck_string, errors);
+    BOOST_CHECK(errors);
+    errors.clear();
+
+    const auto& schedule = make_schedule_lenient_network(deck_string);
     const auto& network = schedule[0].network.get();
     BOOST_CHECK(network.has_node("PLAT-AX"));
 }
@@ -595,6 +649,213 @@ NODEPROP
 BOOST_AUTO_TEST_SUITE_END()     // Extended_Network
 
 BOOST_AUTO_TEST_SUITE_END()     // Keyword_Consistency
+
+// ===========================================================================
+
+BOOST_AUTO_TEST_SUITE(Topology_Consistency)
+
+namespace {
+    // Extended network deck with the group tree of model5.  The network
+    // itself--the BRANPROP and NODEPROP keywords, and any subsequent
+    // updates--is supplied by the caller.
+    std::string network_deck(const std::string& network)
+    {
+        return R"(
+RUNSPEC
+NETWORK
+ 5 4 /
+
+SCHEDULE
+
+GRUPTREE
+ 'PROD'    'FIELD' /
+
+ 'M5S'    'PLAT-A'  /
+ 'M5N'    'PLAT-A'  /
+
+ 'C1'     'M5N'  /
+ 'F1'     'M5N'  /
+ 'B1'     'M5S'  /
+ 'G1'     'M5S'  /
+ 'BX'     'M5S'  /
+/
+)" + network;
+    }
+
+    // The network of model5/5_NETWORK_MODEL5_STDW.DATA, which is consistent.
+    std::string valid_network()
+    {
+        return R"(
+BRANPROP
+--  Downtree  Uptree   #VFP    ALQ
+    B1        PLAT-A   5       1* /
+    C1        PLAT-A   4       1* /
+/
+
+NODEPROP
+--  Node_name  Press  autoChoke?  addGasLift?  Group_name
+    PLAT-A     21.0   NO          NO           1* /
+    B1         1*     NO          NO           1* /
+    C1         1*     NO          NO           1* /
+/
+)";
+    }
+} // Anonymous namespace
+
+BOOST_AUTO_TEST_CASE(Accept_Consistent_Network)
+{
+    BOOST_CHECK_NO_THROW(make_schedule(network_deck(valid_network())));
+}
+
+BOOST_AUTO_TEST_CASE(Reject_Source_Node_Without_Group)
+{
+    // Branch N1 -> N2 added to an otherwise consistent network.  N1 has no
+    // inlets and is not a group, so it cannot act as a source.
+    const auto deck_string = network_deck(valid_network() + R"(
+BRANPROP
+--  Downtree  Uptree   #VFP    ALQ
+    N1        N2       4       1* /
+/
+)");
+
+    auto errors = ErrorGuard{};
+    make_schedule(deck_string, errors);
+    BOOST_CHECK(errors);
+    errors.clear();
+}
+
+BOOST_AUTO_TEST_CASE(Reject_Flow_Path_Without_Fixed_Pressure)
+{
+    // Branch BX -> N2 added to an otherwise consistent network.  BX is a
+    // group, so it may act as a source, but the flow path from BX ends at
+    // N2, which has no pressure of its own and no uptree branch.
+    const auto deck_string = network_deck(valid_network() + R"(
+BRANPROP
+--  Downtree  Uptree   #VFP    ALQ
+    BX        N2       4       1* /
+/
+)");
+
+    auto errors = ErrorGuard{};
+    make_schedule(deck_string, errors);
+    BOOST_CHECK(errors);
+    errors.clear();
+
+    // The offending nodes are still added to the network when the
+    // inconsistency is not treated as an error.
+    const auto schedule = make_schedule_lenient_network(deck_string);
+    const auto& network = schedule[0].network.get();
+    BOOST_CHECK(network.has_node("BX"));
+    BOOST_CHECK(network.has_node("N2"));
+}
+
+BOOST_AUTO_TEST_CASE(Reject_Cyclic_Network)
+{
+    // No node of the B1 -> N1 -> N2 -> B1 loop has any inlet outside the
+    // loop, and none of them has a fixed pressure.
+    const auto deck_string = network_deck(R"(
+BRANPROP
+--  Downtree  Uptree   #VFP    ALQ
+    B1        N1       5       1* /
+    N1        N2       4       1* /
+    N2        B1       4       1* /
+/
+
+NODEPROP
+--  Node_name  Press  autoChoke?  addGasLift?  Group_name
+    B1         1*     NO          NO           1* /
+/
+)");
+
+    auto errors = ErrorGuard{};
+    make_schedule(deck_string, errors);
+    BOOST_CHECK(errors);
+    errors.clear();
+}
+
+BOOST_AUTO_TEST_CASE(Accept_Detached_Node)
+{
+    // Dropping the only branch of node C1 leaves C1 outside the network.
+    // The remaining network, B1 -> PLAT-A, is consistent.
+    const auto deck_string = network_deck(valid_network() + R"(
+TSTEP
+ 10 /
+
+BRANPROP
+--  Downtree  Uptree   #VFP    ALQ
+    C1        PLAT-A   0       1* /
+/
+)");
+
+    BOOST_CHECK_NO_THROW(make_schedule(deck_string));
+}
+
+BOOST_AUTO_TEST_CASE(Reject_Inconsistent_Network_Update)
+{
+    // The network is consistent at the first report step and is made
+    // inconsistent at the second.
+    const auto deck_string = network_deck(valid_network() + R"(
+TSTEP
+ 10 /
+
+BRANPROP
+--  Downtree  Uptree   #VFP    ALQ
+    N1        N2       4       1* /
+/
+)");
+
+    auto errors = ErrorGuard{};
+    make_schedule(deck_string, errors);
+    BOOST_CHECK(errors);
+    errors.clear();
+}
+
+BOOST_AUTO_TEST_CASE(Report_Multiple_Topology_Errors)
+{
+    // Two disconnected branches N1 -> N2 and N3 -> N4 added.
+    // Both N1 and N3 are source nodes without groups.
+    // All topology errors should be reported in a single pass.
+    const auto deck_string = network_deck(valid_network() + R"(
+BRANPROP
+--  Downtree  Uptree   #VFP    ALQ
+    N1        N2       4       1* /
+    N3        N4       4       1* /
+/
+)");
+
+    auto errors = ErrorGuard{};
+    make_schedule(deck_string, errors);
+
+    const auto diagnostic = errors.formattedErrors();
+    errors.clear();
+
+    BOOST_CHECK(diagnostic.find("N1") != std::string::npos);
+    BOOST_CHECK(diagnostic.find("N3") != std::string::npos);
+}
+
+BOOST_AUTO_TEST_CASE(Throw_On_Inconsistent_Network_When_Configured)
+{
+    const auto deck_string = network_deck(valid_network() + R"(
+BRANPROP
+--  Downtree  Uptree   #VFP    ALQ
+    N1        N2       4       1* /
+/
+)");
+
+    const auto deck = Parser{}.parseString(deck_string);
+    EclipseGrid grid(10, 10, 10);
+    const TableManager table(deck);
+    const FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
+    const Runspec runspec(deck);
+
+    ParseContext parseContext;
+    parseContext.update(ParseContext::SCHEDULE_NETWORK_INVALID, InputErrorAction::THROW_EXCEPTION);
+    ErrorGuard errors;
+
+    BOOST_CHECK_THROW((Schedule{deck, grid, fp, NumericalAquifers{}, runspec, parseContext, errors, std::make_shared<Python>()}), OpmInputError);
+}
+
+BOOST_AUTO_TEST_SUITE_END()     // Topology_Consistency
 
 // ===========================================================================
 
