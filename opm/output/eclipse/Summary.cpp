@@ -861,27 +861,25 @@ double satellite_prod(const Opm::SummaryState&  st,
                       const Opm::ScheduleState& sched,
                       const std::string&        group)
 {
-    using Rate = Opm::GSatProd::GSatProdGroupProp::Rate;
+    using Rate = Opm::GSatProd::Rate;
 
-    const auto& gsatprod = sched.gsatprod();
-
-    if (! gsatprod.has(group)) {
+    if (! sched.satelliteProduction.has(group)) {
         return 0.0;
     }
 
-    const auto gs = gsatprod.get(group, st);
+    const auto& gsatprod = sched.satelliteProduction(group);
 
     if constexpr (phase == rt::oil) {
-        return gs.rate[Rate::Oil];
+        return gsatprod.getRate(Rate::Oil, st);
     }
     else if constexpr (phase == rt::gas) {
-        return gs.rate[Rate::Gas];
+        return gsatprod.getRate(Rate::Gas, st);
     }
     else if constexpr (phase == rt::wat) {
-        return gs.rate[Rate::Water];
+        return gsatprod.getRate(Rate::Water, st);
     }
     else if constexpr (phase == rt::alq) {
-        return gs.rate[Rate::GLift];
+        return gsatprod.getRate(Rate::GLift, st);
     }
 
     return 0.0;
@@ -1032,7 +1030,7 @@ double satellite_rate(const fn_args& args)
         return accum_groups(sched, gname, efac, group_sat_rate);
     };
 
-    if (!injection && !sched.gsatprod().empty()) {
+    if (!injection && (sched.satelliteProduction().size() > 0)) {
         // Down-tree satellite production rates.
 
         return satRate([&st = args.st, &sched](const std::string& gname)

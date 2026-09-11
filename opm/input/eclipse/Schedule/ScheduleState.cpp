@@ -392,7 +392,6 @@ bool ScheduleState::operator==(const ScheduleState& other) const {
         && this->group_order.get() == other.group_order.get()
         && this->gconsale.get() == other.gconsale.get()
         && this->gconsump.get() == other.gconsump.get()
-        && this->gsatprod.get() == other.gsatprod.get()
         && this->wlist_manager.get() == other.wlist_manager.get()
         && this->rpt_config.get() == other.rpt_config.get()
         && this->actions.get() == other.actions.get()
@@ -407,6 +406,7 @@ bool ScheduleState::operator==(const ScheduleState& other) const {
         && this->wcycle() == other.wcycle()
         && this->wlist_tracker() == other.wlist_tracker()
         && this->wells == other.wells
+        && this->satelliteProduction == other.satelliteProduction
         && this->satelliteInjection == other.satelliteInjection
         && this->injectionNetwork == other.injectionNetwork
         && this->inj_streams == other.inj_streams
@@ -449,7 +449,6 @@ ScheduleState ScheduleState::serializationTestObject() {
     ts.wtest_config.update( WellTestConfig::serializationTestObject() );
     ts.gconsump.update( GConSump::serializationTestObject() );
     ts.gconsale.update( GConSale::serializationTestObject() );
-    ts.gsatprod.update( GSatProd::serializationTestObject() );
     ts.gecon.update( GroupEconProductionLimits::serializationTestObject() );
     ts.rescoup.update( ReservoirCoupling::CouplingInfo::serializationTestObject() );
     ts.wlist_manager.update( WListManager::serializationTestObject() );
@@ -469,6 +468,9 @@ ScheduleState ScheduleState::serializationTestObject() {
     ts.source.update( Source::serializationTestObject() );
     ts.wcycle.update(WCYCLE::serializationTestObject());
     ts.wlist_tracker.update(WellListChangeTracker::serializationTestObject());
+
+    ts.satelliteProduction.update(GSatProd::serializationTestObject());
+    ts.satelliteInjection.update(GroupSatelliteInjection::serializationTestObject());
 
     return ts;
 }

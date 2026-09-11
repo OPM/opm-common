@@ -530,7 +530,6 @@ namespace Opm {
 
         ptr_member<GConSale> gconsale;
         ptr_member<GConSump> gconsump;
-        ptr_member<GSatProd> gsatprod;
         ptr_member<GroupEconProductionLimits> gecon;
         ptr_member<GuideRateConfig> guide_rate;
 
@@ -579,8 +578,6 @@ namespace Opm {
                                   return this->gconsale;
             else if constexpr ( std::is_same_v<T, GConSump> )
                                   return this->gconsump;
-            else if constexpr ( std::is_same_v<T, GSatProd> )
-                                  return this->gsatprod;
             else if constexpr ( std::is_same_v<T, GroupEconProductionLimits> )
                                   return this->gecon;
             else if constexpr ( std::is_same_v<T, WListManager> )
@@ -634,6 +631,9 @@ namespace Opm {
         map_member<std::string, Group> groups;
         map_member<std::string, Well> wells;
 
+        /// Group level satellite production rates.
+        map_member<std::string, GSatProd> satelliteProduction;
+
         /// Group level satellite injection rates.
         map_member<std::string, GroupSatelliteInjection> satelliteInjection;
 
@@ -668,7 +668,6 @@ namespace Opm {
         {
             serializer(gconsale);
             serializer(gconsump);
-            serializer(gsatprod);
             serializer(gecon);
             serializer(guide_rate);
             serializer(wlist_manager);
@@ -696,6 +695,7 @@ namespace Opm {
             serializer(gptable);
             serializer(groups);
             serializer(wells);
+            serializer(this->satelliteProduction);
             serializer(this->satelliteInjection);
             serializer(this->injectionNetwork);
             serializer(wseed);

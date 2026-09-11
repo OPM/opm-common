@@ -53,6 +53,7 @@
 
 #include <opm/input/eclipse/Parser/Parser.hpp>
 
+#include <cstddef>
 #include <memory>
 #include <optional>
 #include <string>
@@ -432,17 +433,20 @@ GSATPROD
 TSTEP
   1 /)";
 
-    auto schedule = create_schedule(input);
-    double metric_to_si = 1.0 / (24.0 * 3600.0);  //cubic meters / day
-    const auto& gsatprod = schedule[0].gsatprod.get();
-    SummaryState st(TimeService::now(), 0.0);
-    BOOST_CHECK_EQUAL(gsatprod.size(), 1U);
-    BOOST_CHECK(!gsatprod.has("G1"));
-    BOOST_CHECK(gsatprod.has("G2"));
-    const GSatProd::GSatProdGroupProp& group = gsatprod.get("G2", st);
-    using Rate = GSatProd::GSatProdGroupProp::Rate;
-    BOOST_CHECK_EQUAL(group.rate[Rate::Oil], 1000*metric_to_si);
-    BOOST_CHECK_EQUAL(group.rate[Rate::Water], 0.0);
+    constexpr auto sm3d = unit::cubic(unit::meter) / unit::day;
+
+    const auto schedule = create_schedule(input);
+    const auto st = SummaryState { TimeService::now(), 0.0 };
+
+    const auto& gsatprod = schedule[0].satelliteProduction;
+
+    BOOST_CHECK_EQUAL(gsatprod.size(), std::size_t{1});
+    BOOST_CHECK_MESSAGE(!gsatprod.has("G1"), R"(GSATPROD must NOT have values for group "G1" at time zero)");
+    BOOST_CHECK_MESSAGE(gsatprod.has("G2"), R"(GSATPROD must have values for group "G2" at time zero)");
+
+    const auto group_rates = gsatprod("G2").getRates(st);
+    BOOST_CHECK_CLOSE(group_rates[GSatProd::Rate::Oil], 1000*sm3d, 1.0e-8);
+    BOOST_CHECK_CLOSE(group_rates[GSatProd::Rate::Water], 0.0, 1.0e-8);
 }
 
 BOOST_AUTO_TEST_CASE(GSatProd_NewGroup)
@@ -470,21 +474,20 @@ END
 
     BOOST_CHECK_MESSAGE(sched[0].groups.has("G2"), R"(Group "G2" must exist)");
 
-    const auto& gsatprod = sched[0].gsatprod();
-    SummaryState st(TimeService::now(), 0.0);
+    const auto& gsatprod = sched[0].satelliteProduction;
+    const auto st = SummaryState { TimeService::now(), 0.0 };
 
-    BOOST_CHECK_EQUAL(gsatprod.size(), 1U);
+    BOOST_CHECK_EQUAL(gsatprod.size(), std::size_t{1});
     BOOST_CHECK_MESSAGE(!gsatprod.has("G1"), R"(Group "G1" must NOT have satellite production)");
     BOOST_CHECK_MESSAGE(gsatprod.has("G2"), R"(Group "G2" must have satellite production)");
 
-    const auto& gsrate = gsatprod.get("G2", st).rate;
-    using Rate = GSatProd::GSatProdGroupProp::Rate;
+    const auto gsrate = gsatprod("G2").getRates(st);
 
     constexpr auto sm3d = unit::cubic(unit::meter)/unit::day;
 
-    BOOST_CHECK_CLOSE(gsrate[Rate::Oil], 1000*sm3d, 1.0e-8);
-    BOOST_CHECK_CLOSE(gsrate[Rate::Water], 500*sm3d, 1.0e-8);
-    BOOST_CHECK_CLOSE(gsrate[Rate::Gas], 10.0e3*sm3d, 1.0e-8);
+    BOOST_CHECK_CLOSE(gsrate[GSatProd::Rate::Oil], 1000*sm3d, 1.0e-8);
+    BOOST_CHECK_CLOSE(gsrate[GSatProd::Rate::Water], 500*sm3d, 1.0e-8);
+    BOOST_CHECK_CLOSE(gsrate[GSatProd::Rate::Gas], 10.0e3*sm3d, 1.0e-8);
 }
 
 BOOST_AUTO_TEST_CASE(GSatProd_Status)
