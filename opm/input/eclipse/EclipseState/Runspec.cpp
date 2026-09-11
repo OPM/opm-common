@@ -805,6 +805,43 @@ const Tracers& Runspec::tracers() const {
     return this->m_tracers;
 }
 
+Saltmc::Saltmc(const Deck& deck)
+{
+    using SALTMC = ParserKeywords::SALTMC;
+    if (deck.hasKeyword<SALTMC>()) {
+        // Get record
+        const auto& keyword = deck.get<SALTMC>().back();
+        const auto& record = keyword[0];
+
+        // Use Laliberte-Cooper pure water density or not
+        const auto& laliberte_cooper =
+            record.getItem<SALTMC::LALIBERTE_COOPER_DENSITY>().get<std::string>(0);
+        m_laliberte_cooper_density = laliberte_cooper == "YES";
+
+        m_activated = true;
+    }
+}
+
+bool Saltmc::operator==(const Saltmc& other) const
+{
+    return this->m_activated == other.m_activated
+        && this->m_laliberte_cooper_density == other.m_laliberte_cooper_density;
+}
+
+Saltmc Saltmc::serializationTestObject()
+{
+    Saltmc saltmc;
+    saltmc.m_activated = true;
+    saltmc.m_laliberte_cooper_density = true;
+
+    return saltmc;
+}
+
+const Saltmc& Runspec::multiCompSalt() const
+{
+    return this->m_saltmc;
+}
+
 Runspec::Runspec(const Deck& deck)
     : m_start_time (create_start_time(deck))
     , active_phases(inferActivePhases(deck))
@@ -823,6 +860,7 @@ Runspec::Runspec(const Deck& deck)
     , m_mechsolver (deck)
     , m_tracers    (deck)
     , m_geochem    (deck)
+    , m_saltmc     (deck)
     , m_co2storage (false)
     , m_co2sol     (false)
     , m_h2sol      (false)
@@ -1010,6 +1048,7 @@ Runspec Runspec::serializationTestObject()
     result.m_temp = true;
     result.m_biof = true;
     result.m_geochem = Geochem::serializationTestObject();
+    result.m_saltmc = Saltmc::serializationTestObject();
 
     return result;
 }
@@ -1186,6 +1225,7 @@ bool Runspec::rst_cmp(const Runspec& full_spec, const Runspec& rst_spec)
         full_spec.m_temp == rst_spec.m_temp &&
         full_spec.m_biof == rst_spec.m_biof &&
         full_spec.m_geochem == rst_spec.m_geochem &&
+        full_spec.m_saltmc == rst_spec.m_saltmc &&
         Welldims::rst_cmp(full_spec.wellDimensions(), rst_spec.wellDimensions());
 }
 
@@ -1218,6 +1258,7 @@ bool Runspec::operator==(const Runspec& data) const
         && (this->m_temp == data.m_temp)
         && (this->m_biof == data.m_biof)
         && (this->m_geochem == data.m_geochem)
+        && (this->m_saltmc == data.m_saltmc)
         ;
 }
 

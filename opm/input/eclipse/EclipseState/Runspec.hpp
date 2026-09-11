@@ -607,6 +607,38 @@ private:
     int m_splay_tree{0};
 };
 
+class Saltmc
+{
+public:
+    Saltmc() = default;
+    explicit Saltmc(const Deck&);
+
+    bool operator==(const Saltmc&) const;
+
+    bool enabled() const
+    {
+        return this->m_activated;
+    }
+
+    bool LaliberteCooperDensity() const
+    {
+        return m_laliberte_cooper_density;
+    }
+
+    static Saltmc serializationTestObject();
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(m_activated);
+        serializer(m_laliberte_cooper_density);
+    }
+
+private:
+    bool m_activated{false};
+    bool m_laliberte_cooper_density{false};
+};
+
 
 class Runspec {
 public:
@@ -635,6 +667,7 @@ public:
 
     const Tracers& tracers() const;
     const Geochem& geochem() const;
+    const Saltmc& multiCompSalt() const;
     bool compositionalMode() const;
     std::size_t numComps() const;
     std::size_t maxGasPlantTables() const;
@@ -683,6 +716,7 @@ public:
         serializer(m_mechsolver);
         serializer(m_biof);
         serializer(m_geochem);
+        serializer(m_saltmc);
     }
 
 private:
@@ -703,6 +737,7 @@ private:
     MechSolver m_mechsolver{};
     Tracers m_tracers{};
     Geochem m_geochem{};
+    Saltmc m_saltmc{};
     std::size_t m_comps = 0;
     std::size_t m_max_gas_plant_tables = 0;
     bool m_co2storage{false};

@@ -1176,6 +1176,24 @@ BOOST_AUTO_TEST_CASE(MechSolvTpsaFixedStressTest)
     BOOST_CHECK(!mech_solver.laggedScheme());
 }
 
+BOOST_AUTO_TEST_CASE(SaltmcTest)
+{
+    const std::string input = R"(
+        SALTMC
+        YES /
+        )";
+
+    Parser parser;
+
+    // SALTMC with YES input
+    auto deck = parser.parseString(input);
+    Runspec runspec(deck);
+    const auto& saltmc = runspec.multiCompSalt();
+
+    BOOST_CHECK(saltmc.enabled());
+    BOOST_CHECK(saltmc.LaliberteCooperDensity());
+}
+
 BOOST_AUTO_TEST_CASE(NetworkDims_no_network)
 {
     {

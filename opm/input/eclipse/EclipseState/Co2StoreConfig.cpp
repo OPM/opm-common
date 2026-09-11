@@ -132,14 +132,26 @@ namespace Opm {
             initEzrokhiTable(deck, "VISCAQA", num_eos_res, cnames, viscaqa_tables);
         }
 
-        // SALINITY or SALTMF convert to mass fraction.
+        // SALINITY, SALTMF or SALINITC convert to mass fraction.
         if (props_section.hasKeyword<ParserKeywords::SALINITY>()) {
             const auto& molality = deck["SALINITY"].back().getRecord(0).getItem("MOLALITY").get<double>(0);
-            salt = 1.0 / (1.0 + 1.0 / (molality * MmNaCl));
+            SaltArray<double, SaltMolality> salinityArray;
+            salinityArray[SaltIndex::NA] = molality;
+            salinityArray[SaltIndex::CL] = molality;
+            saltArray = salinityArray.convert_to<SaltMassFraction>();
         }
         else if (props_section.hasKeyword<ParserKeywords::SALTMF>()) {
             const auto& mole_frac = deck["SALTMF"].back().getRecord(0).getItem("MOLE_FRACTION").get<double>(0);
-            salt = mole_frac * MmNaCl / (mole_frac * (MmNaCl - MmH2O) + MmH2O);
+            SaltArray<double, SaltMoleFraction> saltmfArray;
+            double mfNaAndCl = mole_frac / (1.0 + mole_frac);
+            saltmfArray[SaltIndex::NA] = mfNaAndCl;
+            saltmfArray[SaltIndex::CL] = mfNaAndCl;
+            saltArray = saltmfArray.convert_to<SaltMassFraction>();
+        } else if (props_section.hasKeyword<ParserKeywords::SALINITC>()) {
+            const auto& salinitc = deck["SALINITC"].back().getRecord(0);
+            SaltArray<double, SaltMolality> salinitcArray;
+            salinitcArray.assignFromDeckRecord(salinitc);
+            saltArray = salinitcArray.convert_to<SaltMassFraction>();
         }
 
         // ACTCO2S
@@ -159,8 +171,10 @@ namespace Opm {
         return viscaqa_tables;
     }
 
-    double Co2StoreConfig::salinity() const {
-        return salt;
+    const SaltArray<double, SaltMassFraction>&
+    Co2StoreConfig::saltComponents() const
+    {
+        return saltArray;
     }
 
     int Co2StoreConfig::actco2s() const {
@@ -173,7 +187,7 @@ namespace Opm {
                 && this->gas_type == other.gas_type
                 && this->denaqa_tables == other.denaqa_tables
                 && this->viscaqa_tables == other.viscaqa_tables
-                && this->salt == other.salt
+                && this->saltArray == other.saltArray
                 && this->activityModel == other.activityModel
                 && this->cnames == other.cnames;
     }
