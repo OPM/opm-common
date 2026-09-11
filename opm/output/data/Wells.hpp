@@ -1055,7 +1055,8 @@ namespace Opm { namespace data {
     /// WPWE7 summary vectors and are reset at the start of every time step.
     struct WellEvents
     {
-        /// WPWE0: one if the well was drilled this time step.
+        /// WPWE0: one if the well was drilled this time step, i.e. entered
+        /// the schedule while the run was under way.
         int drilled{0};
 
         /// WPWE1: number of connections opened this time step.  Counted
