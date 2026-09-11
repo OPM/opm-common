@@ -1252,23 +1252,20 @@ void assignSatelliteGroupProduction(const Opm::Group&        group,
                                     SGProp&&                 sgprop,
                                     SGrpArray&               sGrp)
 {
-    if (! gsatprod.has(group.name())) { return; }
-
     clearSatelliteRatesCommon(sGrp);
     clearSatelliteRatesProduction(sGrp);
 
     using Ix = ::Opm::RestartIO::Helpers::VectorItems::SGroup::prod_index;
     using M  = ::Opm::UnitSystem::measure;
-    using QI = ::Opm::GSatProd::GSatProdGroupProp::Rate;
+    using QI = ::Opm::GSatProd::Rate;
 
     using namespace std::string_view_literals;
 
-    const auto& gsp = gsatprod.get(group.name());
-    const auto rates = gsatprod.get(group.name(), sumState).rate;
+    const auto rates = gsatprod.getRates(sumState);
 
-    auto udaWarning = [&gname = group.name()](std::string_view   item,
-                                              const std::string& udq,
-                                              const float        value)
+    auto udaWarning = [&gname = group.name()](std::string_view item,
+                                              std::string_view udq,
+                                              const float      value)
     {
         Opm::OpmLog::warning(fmt::format("Restart:GSATPROD:{}:IsUDA", item),
                              fmt::format("{} UDA '{}' in GSATPROD for group "
@@ -1287,10 +1284,8 @@ void assignSatelliteGroupProduction(const Opm::Group&        group,
         if (const auto value = rates[itemIx]; value > 0.0) {
             sGrp[outIx] = sgprop(unit, value);
 
-            if (const auto& item = gsp.rate[itemIx]; !item.is_numeric()) {
-                udaWarning(descr,
-                           item.template get<std::string>(),
-                           sGrp[outIx]);
+            if (const auto udq = gsatprod.udq(itemIx); udq.has_value()) {
+                udaWarning(descr, *udq, sGrp[outIx]);
             }
         }
     }
@@ -1300,10 +1295,9 @@ void assignSatelliteGroupProduction(const Opm::Group&        group,
             = sGrp[Ix::ResvRateLimit_2]
             = sgprop(M::rate, qr);
 
-        if (const auto& item = gsp.rate[QI::Resv]; !item.is_numeric()) {
+        if (const auto udq = gsatprod.udq(QI::Resv); udq.has_value()) {
             udaWarning("Reservoir voidage rate",
-                       item.template get<std::string>(),
-                       sGrp[Ix::ResvRateLimit]);
+                       *udq, sGrp[Ix::ResvRateLimit]);
         }
     }
 }
@@ -1428,8 +1422,10 @@ void staticContrib(const Opm::Group&         group,
     }
 
     if (group.hasSatelliteProduction()) {
+        assert (sched.satelliteProduction.has(group.name()));
+
         assignSatelliteGroupProduction(group, sumState,
-                                       sched.gsatprod(),
+                                       sched.satelliteProduction(group.name()),
                                        sgprop, sGrp);
     }
 

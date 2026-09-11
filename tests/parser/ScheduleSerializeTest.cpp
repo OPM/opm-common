@@ -456,8 +456,8 @@ BOOST_AUTO_TEST_CASE(SerializeGCONSUMP)
 BOOST_AUTO_TEST_CASE(SerializeGSatProd) {
     auto sched  = make_schedule(GCONSALE_deck);
     Opm::Schedule sched0;
-    auto gsatprod1 = sched[0].gsatprod.get();
-    auto gsatprod2 = sched[3].gsatprod.get();
+    auto gsatprod1 = sched[0].satelliteProduction;
+    auto gsatprod2 = sched[3].satelliteProduction;
 
     {
         Opm::Serialization::MemPacker packer;
@@ -466,13 +466,13 @@ BOOST_AUTO_TEST_CASE(SerializeGSatProd) {
         ser.unpack(sched0);
     }
 
-    BOOST_CHECK( gsatprod1 == sched0[0].gsatprod());
-    BOOST_CHECK( gsatprod1 == sched0[1].gsatprod());
-    BOOST_CHECK( gsatprod1 == sched0[2].gsatprod());
+    BOOST_CHECK( gsatprod1 == sched0[0].satelliteProduction);
+    BOOST_CHECK( gsatprod1 == sched0[1].satelliteProduction);
+    BOOST_CHECK( gsatprod1 == sched0[2].satelliteProduction);
 
-    BOOST_CHECK( gsatprod2 == sched0[3].gsatprod());
-    BOOST_CHECK( gsatprod2 == sched0[4].gsatprod());
-    BOOST_CHECK( gsatprod2 == sched0[5].gsatprod());
+    BOOST_CHECK( gsatprod2 == sched0[3].satelliteProduction);
+    BOOST_CHECK( gsatprod2 == sched0[4].satelliteProduction);
+    BOOST_CHECK( gsatprod2 == sched0[5].satelliteProduction);
 }
 
 BOOST_AUTO_TEST_CASE(SerializeVFP) {

@@ -24,7 +24,6 @@
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 
 #include <opm/input/eclipse/Parser/ParseContext.hpp>
-#include <opm/input/eclipse/Parser/ParserKeywords/G.hpp>
 
 #include <opm/input/eclipse/Schedule/GasLiftOpt.hpp>
 #include <opm/input/eclipse/Schedule/Group/GConSale.hpp>
@@ -43,6 +42,8 @@
 
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 
+#include <opm/input/eclipse/Deck/UDAValue.hpp>
+
 #include "../HandlerContext.hpp"
 
 #include <opm/input/eclipse/Parser/ParserKeywords/G.hpp>
@@ -55,6 +56,37 @@
 #include <vector>
 
 namespace {
+
+    Opm::GSatProd::Values<Opm::UDAValue>
+    parseGSatProd(const Opm::DeckRecord& record)
+    {
+        auto input = Opm::GSatProd::Values<Opm::UDAValue>{};
+
+        using Kw = Opm::ParserKeywords::GSATPROD;
+        using Rate = Opm::GSatProd::Rate;
+
+        input[Rate::Oil] = record
+            .getItem<Kw::OIL_PRODUCTION_RATE>()
+            .get<Opm::UDAValue>(0);
+
+        input[Rate::Gas] = record
+            .getItem<Kw::GAS_PRODUCTION_RATE>()
+            .get<Opm::UDAValue>(0);
+
+        input[Rate::Water] = record
+            .getItem<Kw::WATER_PRODUCTION_RATE>()
+            .get<Opm::UDAValue>(0);
+
+        input[Rate::Resv] = record
+            .getItem<Kw::RES_FLUID_VOL_PRODUCTION_RATE>()
+            .get<Opm::UDAValue>(0);
+
+        input[Rate::GLift] = record
+            .getItem<Kw::LIFT_GAS_SUPPLY_RATE>()
+            .get<Opm::UDAValue>(0);
+
+        return input;
+    }
 
     Opm::GroupSatelliteInjection::Rate
     parseGSatInje(const Opm::Phase       phase,
@@ -138,18 +170,16 @@ namespace Opm {
 
 namespace {
 
-/*
-  The function trim_wgname() is used to trim the leading and trailing spaces
-  away from the group and well arguments given in the GRUPTREE
-  keyword. If the deck argument contains a leading or trailing space that is
-  treated as an input error, and the action taken is regulated by the setting
-  ParseContext::PARSE_WGNAME_SPACE.
-
-  Observe that the spaces are trimmed *unconditionally* - i.e. if the
-  ParseContext::PARSE_WGNAME_SPACE setting is set to InputError::IGNORE that
-  means that we do not inform the user about "our fix", but it is *not* possible
-  to configure the parser to leave the spaces intact.
-*/
+// The function trim_wgname() is used to trim the leading and trailing
+// spaces away from the group and well arguments given in the GRUPTREE
+// keyword. If the deck argument contains a leading or trailing space that
+// is treated as an input error, and the action taken is regulated by the
+// setting ParseContext::PARSE_WGNAME_SPACE.
+//
+// Observe that the spaces are trimmed *unconditionally* - i.e. if the
+// ParseContext::PARSE_WGNAME_SPACE setting is set to InputError::IGNORE
+// that means that we do not inform the user about "our fix", but it is
+// *not* possible to configure the parser to leave the spaces intact.
 std::string trim_wgname(const DeckKeyword& keyword,
                         const std::string& wgname_arg,
                         const ParseContext& parseContext,
@@ -652,9 +682,8 @@ void handleGSATINJE(HandlerContext& handlerContext)
     using Kw = ParserKeywords::GSATINJE;
 
     for (const auto& record : handlerContext.keyword) {
-        const auto group_names =
-            getGroupNamesAndCreateIfNeeded(record.getItem<Kw::GROUP>()
-                                           .getTrimmedString(0), handlerContext);
+        const auto group_names = getGroupNamesAndCreateIfNeeded
+            (record.getItem<Kw::GROUP>().getTrimmedString(0), handlerContext);
 
         const auto phase = get_phase(record.getItem<Kw::PHASE>().getTrimmedString(0));
         const auto rate =
@@ -682,48 +711,29 @@ void handleGSATPROD(HandlerContext& handlerContext)
 {
     using Kw = ParserKeywords::GSATPROD;
 
-    const auto& keyword = handlerContext.keyword;
+    for (const auto& record : handlerContext.keyword) {
+        const auto group_names = getGroupNamesAndCreateIfNeeded
+            (record
+             .getItem<Kw::SATELLITE_GROUP_NAME_OR_GROUP_NAME_ROOT>()
+             .getTrimmedString(0), handlerContext);
 
-    auto new_gsatprod = handlerContext.state().gsatprod.get();
-
-    auto update = false;
-
-    for (const auto& record : keyword) {
-        const auto group_names =
-            getGroupNamesAndCreateIfNeeded(record
-                                           .getItem<Kw::SATELLITE_GROUP_NAME_OR_GROUP_NAME_ROOT>()
-                                           .getTrimmedString(0), handlerContext);
-
-        const auto oil_rate = record.getItem<Kw::OIL_PRODUCTION_RATE>().get<UDAValue>(0);
-        const auto gas_rate = record.getItem<Kw::GAS_PRODUCTION_RATE>().get<UDAValue>(0);
-        const auto water_rate = record.getItem<Kw::WATER_PRODUCTION_RATE>().get<UDAValue>(0);
-        const auto resv_rate = record.getItem<Kw::RES_FLUID_VOL_PRODUCTION_RATE>().get<UDAValue>(0);
-        const auto glift_rate = record.getItem<Kw::LIFT_GAS_SUPPLY_RATE>().get<UDAValue>(0);
+        const auto input = parseGSatProd(record);
 
         for (const auto& group_name : group_names) {
             rejectGroupIfField(group_name, handlerContext);
 
-            auto udq_undefined = handlerContext.state().udq.get().params().undefinedValue();
+            auto p = handlerContext.state().satelliteProduction.has(group_name)
+                ? handlerContext.state().satelliteProduction(group_name)
+                : GSatProd { group_name };
 
-            new_gsatprod.assign(group_name,
-                                oil_rate,
-                                gas_rate,
-                                water_rate,
-                                resv_rate,
-                                glift_rate,
-                                udq_undefined);
+            p.assign(input);
+            handlerContext.state().satelliteProduction.update(std::move(p));
 
             auto grp = handlerContext.state().groups(group_name);
             grp.recordSatelliteProduction();
 
             handlerContext.state().groups.update(std::move(grp));
-
-            update = true;
         }
-    }
-
-    if (update) {
-        handlerContext.state().gsatprod.update(std::move(new_gsatprod));
     }
 }
 
