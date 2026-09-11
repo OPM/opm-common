@@ -41,6 +41,7 @@
 #include <cmath>
 #include <limits>
 #include <numeric>
+#include <utility>
 
 namespace Opm {
 
@@ -265,6 +266,25 @@ private:
     static constexpr Scalar rootVolumeTolerance_ = precisionTolerance_(Scalar{1.0e-9});
     static constexpr Scalar directionTolerance_ = precisionTolerance_(Scalar{1.0e-6});
 
+    // Minimum L1 distance used to distinguish the incipient composition from
+    // the feed; distinct EOS roots provide an independent check.
+    static constexpr Scalar distinctCompositionDistance_ = 1.0e-3;
+    // Maximum |K_i - 1| for a trivial trial. This is looser than
+    // nonlinearTolerance_ so triviality can be detected before convergence.
+    static constexpr Scalar trivialKDistance_ = 1.0e-5;
+    // Molar-volume floor used by the cubic EOS. Candidate roots must exceed
+    // twice this value to avoid accepting a root pinned to the clamp.
+    static constexpr Scalar clampedMolarVolume_ = 1.0e-7;
+    // Number of substitution iterations between acceleration attempts. A sweep
+    // resolved the most bubble and dew states with intervals from three to five.
+    static constexpr int accelerationInterval_ = 4;
+    // Upper bound for the acceleration eigenvalue ratio. Keeping it below one
+    // bounds r / (1 - r), the extrapolation factor.
+    static constexpr Scalar maxAccelerationRatio_ = 0.98;
+    // Step in ln Y used to finite-difference the Jacobian; this perturbs Y
+    // relatively rather than by a fixed absolute amount.
+    static constexpr Scalar jacobianStep_ = 1.0e-5;
+
     // Rescale a composition to sum to one. The boundary residual is measured
     // against one, so a composition that sums to 1 + d cannot meet that test
     // once |d| exceeds the tolerance. Callers assemble z in floating point,
@@ -320,9 +340,8 @@ private:
         rootCache.updatePhase(rootState, gasPhaseIdx);
         const Scalar vmL = rootCache.molarVolume(oilPhaseIdx);
         const Scalar vmV = rootCache.molarVolume(gasPhaseIdx);
-        constexpr Scalar clampedVm = 1.0e-7;
         return positiveFinite_(vmL) && positiveFinite_(vmV)
-            && std::min(vmL, vmV) > 2.0 * clampedVm
+            && std::min(vmL, vmV) > 2.0 * clampedMolarVolume_
             && std::abs(vmL - vmV)
                 > rootVolumeTolerance_ * std::max(vmL, vmV);
     }
@@ -360,7 +379,7 @@ private:
         if (!positiveFinite_(den) || !positiveFinite_(num)) {
             return;
         }
-        const Scalar ratio = std::min(num / den, Scalar{0.98});
+        const Scalar ratio = std::min(num / den, maxAccelerationRatio_);
         const Scalar remaining = ratio / (1.0 - ratio);
         const Scalar maxStep = std::log(Scalar{2});
         CompVec next = values;
@@ -466,10 +485,9 @@ private:
         int settled = 0;
         constexpr int maxStabilityIterations = 500;
         for (int iter = 0; iter < maxStabilityIterations; ++iter) {
-            Scalar sumY = 0.0;
-            for (const Scalar amount : Y) {
-                sumY += amount;
-            }
+            // Seed with Scalar{0} so std::accumulate stays in Scalar rather
+            // than widening float instantiations to double.
+            const Scalar sumY = std::accumulate(Y.begin(), Y.end(), Scalar{0});
             if (!positiveFinite_(sumY)) {
                 return Stability::Indeterminate;
             }
@@ -524,7 +542,7 @@ private:
                 settled = 0;
             }
             sumPrev = sumNew;
-            if (iter % 4 == 3) {
+            if (iter % accelerationInterval_ == accelerationInterval_ - 1) {
                 accelerate_(Y, d, dPrev);
             }
             dPrev = d;
@@ -590,7 +608,8 @@ private:
         }
         auto trial = fs;
         bool trialCacheInitialized = false;
-        const auto residual = [&](const Vector& v, Vector& r) {
+        const auto residual = [&z, &trial, trialPhase, &trialCacheInitialized, &cache,
+                               &target = std::as_const(target)](const Vector& v, Vector& r) {
             CompVec amounts{};
             Scalar total = 0.0;
             for (int c = 0; c < numComponents; ++c) {
@@ -645,7 +664,7 @@ private:
             if (iter >= substitutionPasses) {
                 Matrix jac(0.0);
                 // A fixed step in ln Y gives a relative perturbation of Y.
-                constexpr Scalar h = 1.0e-5;
+                constexpr Scalar h = jacobianStep_;
                 for (int c = 0; c < numComponents; ++c) {
                     Vector v = u;
                     v[c] += h;
@@ -762,7 +781,8 @@ private:
             fs.setMoleFraction(oilPhaseIdx, c, z[c]);
         }
         const auto Kp = wilsonKp_(temp);
-        const auto evaluate = [&](const Scalar lnp, CompVec& Y, Scalar& f) {
+        const auto evaluate = [&fs, &z, eosType, &Kp](const Scalar lnp,
+                                                      CompVec& Y, Scalar& f) {
             const Scalar p = std::exp(lnp);
             if (!positiveFinite_(p)) {
                 return false;
@@ -808,7 +828,7 @@ private:
                         distance += std::abs(candidate[c] / sum - z[c]);
                     }
                     // The trivial zero is not a sign for root bracketing.
-                    if (distance > 1.0e-3 && std::log(sum) > best) {
+                    if (distance > distinctCompositionDistance_ && std::log(sum) > best) {
                         best = std::log(sum);
                         bestY = candidate;
                     }
@@ -823,7 +843,9 @@ private:
             return true;
         };
 
-        const auto certifyBoundary = [&](const Scalar lnp, CompVec Y, const Scalar f) {
+        const auto certifyBoundary = [&fs, &z, eosType, &Kp, fromBubble, pSeed,
+                                      &seedTrial, &press, &liquid](
+                                         const Scalar lnp, CompVec Y, const Scalar f) {
             const Scalar p = std::exp(lnp);
             CompVec K = Kp;
             Scalar direction = 0.0;
@@ -853,7 +875,7 @@ private:
             const Scalar vmL = cache.molarVolume(oilPhaseIdx);
             const Scalar vmV = cache.molarVolume(gasPhaseIdx);
             if (!positiveFinite_(vmL) || !positiveFinite_(vmV)
-                || std::min(vmL, vmV) <= 2.0e-7) {
+                || std::min(vmL, vmV) <= 2.0 * clampedMolarVolume_) {
                 return false;
             }
             for (int c = 0; c < numComponents; ++c) {
@@ -887,10 +909,24 @@ private:
             return true;
         };
 
+        // All pressure steps below are in ln(p).
+        // A small initial offset helps the first trial remain inside the envelope.
+        constexpr Scalar initialWalkStep = 0.01;
+        // Limiting the walking stride reduces the chance of skipping a narrow
+        // boundary as the step doubles.
+        constexpr Scalar maxWalkStride = 0.1;
+        // Probes at this spacing can recover a bracket beyond an interval where
+        // the fixed-pressure solve does not converge.
+        constexpr Scalar gapProbeSpacing = 0.1;
+        // These bounds keep a secant trial away from both endpoints so every
+        // successful refinement contracts the bracket.
+        constexpr Scalar minSecantFraction = 0.1;
+        constexpr Scalar maxSecantFraction = 0.9;
+
         const Scalar seed = std::log(pSeed);
         Scalar lo{}, fLo{};
         CompVec yLo{};
-        Scalar step = 0.01;
+        Scalar step = initialWalkStep;
         bool inside = false;
         // Halve the seed offset until a trial lands inside the envelope.
         constexpr int maxSeedRefinements = 20;
@@ -933,7 +969,7 @@ private:
                     // two units in ln(p), or a pressure ratio of exp(2).
                     constexpr int maxGapProbes = 20;
                     for (int probe = 1; probe <= maxGapProbes; ++probe) {
-                        hi = lo + dir * Scalar{0.1} * probe;
+                        hi = lo + dir * gapProbeSpacing * probe;
                         yHi = yLo;
                         if (!evaluate(hi, yHi, fHi)) {
                             continue;
@@ -946,7 +982,7 @@ private:
                         lo = hi;
                         fLo = fHi;
                         yLo = yHi;
-                        step = 0.01;
+                        step = initialWalkStep;
                         break;
                     }
                     if (bracketed) {
@@ -966,7 +1002,7 @@ private:
             lo = hi;
             fLo = fHi;
             yLo = yHi;
-            step = std::min(Scalar{0.1}, Scalar{2} * step);
+            step = std::min(maxWalkStride, Scalar{2} * step);
         }
         if (!bracketed) {
             return false;
@@ -978,11 +1014,15 @@ private:
         for (int iter = 0; iter < maxBoundarySteps; ++iter) {
             // Safeguard the secant so that even a flat residual contracts
             // the bracket; interpolate the trial amounts in log space.
-            Scalar fraction = std::clamp(fLo / (fLo - fHi), Scalar{0.1}, Scalar{0.9});
+            Scalar fraction = std::clamp(fLo / (fLo - fHi),
+                                         minSecantFraction, maxSecantFraction);
             Scalar mid{};
             CompVec Y{};
             Scalar f{};
-            const auto attempt = [&](const Scalar candidateFraction) {
+            const auto attempt = [&fraction, &mid, &Y, &f, &z, &evaluate,
+                                  &lo = std::as_const(lo), &hi = std::as_const(hi),
+                                  &yLo = std::as_const(yLo),
+                                  &yHi = std::as_const(yHi)](const Scalar candidateFraction) {
                 fraction = candidateFraction;
                 mid = lo + fraction * (hi - lo);
                 for (int c = 0; c < numComponents; ++c) {
@@ -1156,7 +1196,12 @@ private:
         constexpr int maxPressureIterations = 200;
         constexpr int maxSubstitutionIterations = 500;
 
-        const auto safeguardPressure = [&](Scalar pNext) {
+        // Move an unsafe pressure proposal inside the current bracket without
+        // changing either endpoint.
+        const auto safeguardPressure = [fromAbove, &haveIn = std::as_const(haveIn),
+                                        &haveOut = std::as_const(haveOut),
+                                        &pIn = std::as_const(pIn), &pOut = std::as_const(pOut),
+                                        &p = std::as_const(p)](Scalar pNext) {
             if (haveIn && haveOut) {
                 const Scalar lo = std::min(pIn, pOut);
                 const Scalar hi = std::max(pIn, pOut);
@@ -1231,7 +1276,7 @@ private:
                     // unreachable for the large K of a light component.
                     change = std::max(change, std::abs(newK - K[c]) /
                                               std::max(Scalar{1}, std::abs(newK)));
-                    trivial = trivial && (std::abs(newK - 1.0) < 1.0e-5);
+                    trivial = trivial && (std::abs(newK - 1.0) < trivialKDistance_);
                     d[c] = std::log(newK) - std::log(K[c]);
                     K[c] = newK;
                 }
@@ -1242,7 +1287,7 @@ private:
 
                 // Every fourth pass, extrapolate the remaining geometric
                 // series in ln K using the last two substitution changes.
-                if (inner % 4 == 3) {
+                if (inner % accelerationInterval_ == accelerationInterval_ - 1) {
                     accelerate_(K, d, dPrev);
                 }
                 dPrev = d;
@@ -1274,7 +1319,7 @@ private:
                         if (!positiveFinite_(newK)) {
                             return Outcome::GaveUp;
                         }
-                        trivial = trivial && (std::abs(newK - 1.0) < 1.0e-5);
+                        trivial = trivial && (std::abs(newK - 1.0) < trivialKDistance_);
                         K[c] = newK;
                     }
                     substitutionConverged = true;
@@ -1284,7 +1329,8 @@ private:
             const bool rootsDistinct = substitutionConverged
                 && rootsDistinctAtComposition_(fs, z, eosType);
 
-            const auto markOutside = [&](const bool withValue, const Scalar value) {
+            const auto markOutside = [&pOut, &haveOut, &haveFOut, &fOut, &p = std::as_const(p)](
+                                         const bool withValue, const Scalar value) {
                 pOut = p;
                 haveOut = true;
                 haveFOut = withValue;
@@ -1292,7 +1338,10 @@ private:
             };
             // Step from a trial the substitution could not classify: bisect
             // the bracket if there is one, otherwise continue the scan.
-            const auto stepUnclassified = [&]() {
+            const auto stepUnclassified = [&p, &K, fromAbove, &wilsonK,
+                                           &haveIn = std::as_const(haveIn),
+                                           &pOut = std::as_const(pOut),
+                                           &pIn = std::as_const(pIn)]() {
                 p = haveIn ? std::sqrt(pOut * pIn)
                            : p * (fromAbove ? scanStep : Scalar{1} / scanStep);
                 K = wilsonK(p);
@@ -1341,7 +1390,8 @@ private:
                 // roots.
                 const bool directionMatches = std::abs(direction) < directionTolerance_
                     ? rootsDistinct : (bubble == (direction > 0.0));
-                if ((distance > 1.0e-3 || rootsDistinct) && directionMatches) {
+                if ((distance > distinctCompositionDistance_ || rootsDistinct)
+                    && directionMatches) {
                     const auto stability =
                         knownPhaseStability_(fs, z, knownPhaseIdx,
                                              candidateWilsonK, bubble, eosType);
