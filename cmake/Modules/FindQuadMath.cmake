@@ -84,9 +84,19 @@ if(QuadMath_FOUND AND NOT TARGET QuadMath::QuadMath)
      __float128 b=10;
      __float128 c=std::atan(b);
   }" QuadMath_HAS_MATH_OPS)
+  check_cxx_source_compiles("
+  #include <cmath>
+  int main()
+  {
+     __float128 b=10;
+     __float128 c=std::abs(b);
+  }" QuadMath_HAS_MATH_ABS)
   cmake_pop_check_state()  # Reset CMAKE_REQUIRED_XXX variables
   if(QuadMath_HAS_MATH_OPS)
     target_compile_definitions(QuadMath::QuadMath INTERFACE QUADMATH_HAS_MATH_OPERATORS=1)
+  endif()
+  if(QuadMath_HAS_MATH_ABS)
+    target_compile_definitions(QuadMath::QuadMath INTERFACE QUADMATH_HAS_MATH_ABS=1)
   endif()
   cmake_pop_check_state()  # Reset CMAKE_REQUIRED_XXX variables
 endif()
