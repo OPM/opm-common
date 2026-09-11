@@ -276,7 +276,7 @@ EclipseGrid::EclipseGrid(const EclipseGrid& src, const std::vector<int>& actnum)
 
 
 
-EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
+EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum, NumericalAquiferMode aquiferMode)
     : GridDims(deck),
       m_minpvMode(MinpvMode::Inactive),
       m_pinchoutMode(PinchMode::TOPBOT),
@@ -296,6 +296,7 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
 
     }
 
+    this->m_numerical_aquifer_mode = aquiferMode;
     updateNumericalAquiferCells(deck);
 
     initGrid(deck, actnum);
@@ -2670,9 +2671,17 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
 
             for (std::size_t n = 0; n < global_size; n++) {
                 this->m_actnum[n] = actnum[n];
-                // numerical aquifer cells need to be active
                 if (this->m_aquifer_cells.count(n) > 0) {
-                    this->m_actnum[n] = 1;
+                    // A cell named by an AQUNUM record does not belong to the reservoir
+                    // either way.  When the aquifer takes the cell over it has to be
+                    // active in order to host it; when the aquifer is represented outside
+                    // the grid the cell is deactivated instead, so that nothing occupies
+                    // the space the deck reserved for it.  Its geometric neighbours lose
+                    // a neighbour in both cases -- the take-over kills those
+                    // transmissibilities.
+                    this->m_actnum[n] =
+                        (this->m_numerical_aquifer_mode == NumericalAquiferMode::GridCells)
+                        ? 1 : 0;
                 }
                 if (this->m_actnum[n] > 0) {
                     this->m_global_to_active.push_back(this->m_nactive);
@@ -2731,6 +2740,16 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
                 const std::size_t k = record.getItem<AQUNUM::K>().get<int>(0) - 1;
                 const std::size_t global_index = this->getGlobalIndex(i, j, k);
                 this->m_aquifer_cells.insert(global_index);
+
+                // The two maps below describe a cell that *hosts* an aquifer: an
+                // authored depth to report in place of the geometric one, and region
+                // numbers to fold into the host cell's field properties.  Neither
+                // applies when the aquifer lives outside the grid -- the cell is
+                // deactivated then, and the depth and regions belong to the aquifer
+                // itself.
+                if (this->m_numerical_aquifer_mode != NumericalAquiferMode::GridCells) {
+                    continue;
+                }
 
                 if (! record.getItem<AQUNUM::DEPTH>().defaultApplied(0))
                     this->m_aquifer_cell_depths.insert_or_assign(global_index, record.getItem<AQUNUM::DEPTH>().getSIDouble(0));
