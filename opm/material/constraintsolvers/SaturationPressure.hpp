@@ -40,6 +40,7 @@
 #include <array>
 #include <cmath>
 #include <limits>
+#include <numbers>
 #include <numeric>
 #include <utility>
 
@@ -305,7 +306,13 @@ private:
 
     static bool positiveFinite_(const Scalar value)
     {
-        return std::isfinite(value) && value > 0.0;
+        return std::isnormal(value) && !std::signbit(value);
+    }
+
+    // Limit a logarithmic step to a factor-of-two change.
+    static constexpr Scalar limitLogStep_(const Scalar step)
+    {
+        return std::clamp(step, -std::numbers::ln2_v<Scalar>, std::numbers::ln2_v<Scalar>);
     }
 
     /*!
@@ -381,7 +388,7 @@ private:
         }
         const Scalar ratio = std::min(num / den, maxAccelerationRatio_);
         const Scalar remaining = ratio / (1.0 - ratio);
-        const Scalar maxStep = std::log(Scalar{2});
+        constexpr Scalar maxStep = std::numbers::ln2_v<Scalar>;
         CompVec next = values;
         for (int c = 0; c < numComponents; ++c) {
             if (values[c] == 0.0) { // Absent component in a stability trial.
@@ -703,7 +710,7 @@ private:
             }
             if (!accepted) {
                 for (int c = 0; c < numComponents; ++c) {
-                    u[c] -= std::clamp(r[c], -std::log(Scalar{2}), std::log(Scalar{2}));
+                    u[c] -= limitLogStep_(r[c]);
                 }
             }
         }
@@ -1042,7 +1049,7 @@ private:
             for (int level = 1; !evaluated && level <= maxAlternateLevels; ++level) {
                 const int denominator = 1 << level;
                 for (int numerator = 1; numerator < denominator; numerator += 2) {
-                    if (attempt(Scalar(numerator) / Scalar(denominator))) {
+                    if (attempt(std::ldexp(static_cast<Scalar>(numerator), -level))) {
                         evaluated = true;
                         break;
                     }
@@ -1421,9 +1428,7 @@ private:
                 // fixed-point step K ~ 1/p implies, p * sum towards the root,
                 // and let the carried-over K keep converging within the bracket.
                 const Scalar lnpFixed = lnp + (fromAbove ? f : -f);
-                p = safeguardPressure(std::exp(lnp + std::clamp(lnpFixed - lnp,
-                                                               std::log(Scalar{0.5}),
-                                                               std::log(Scalar{2}))));
+                p = safeguardPressure(std::exp(lnp + limitLogStep_(lnpFixed - lnp)));
                 continue;
             }
 
@@ -1482,7 +1487,7 @@ private:
             // Limit extrapolation to a factor of two and stay inside a known
             // bracket. This step limit alone cannot prevent skipping an
             // unbracketed narrow envelope.
-            lnpNext = lnp + std::clamp(lnpNext - lnp, std::log(Scalar{0.5}), std::log(Scalar{2}));
+            lnpNext = lnp + limitLogStep_(lnpNext - lnp);
             p = safeguardPressure(std::exp(lnpNext));
         }
 
