@@ -23,6 +23,7 @@
 
 #include <opm/input/eclipse/EclipseState/EndpointScaling.hpp>
 #include <opm/input/eclipse/EclipseState/Phase.hpp>
+#include <opm/input/eclipse/EclipseState/PorosityModel.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/Regdims.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/Tabdims.hpp>
 
@@ -635,6 +636,7 @@ public:
 
     const Tracers& tracers() const;
     const Geochem& geochem() const;
+    const PorosityModel& porosityModel() const noexcept;
     bool compositionalMode() const;
     std::size_t numComps() const;
     std::size_t maxGasPlantTables() const;
@@ -683,6 +685,7 @@ public:
         serializer(m_mechsolver);
         serializer(m_biof);
         serializer(m_geochem);
+        serializer(m_porosity_model);
     }
 
 private:
@@ -703,6 +706,7 @@ private:
     MechSolver m_mechsolver{};
     Tracers m_tracers{};
     Geochem m_geochem{};
+    PorosityModel m_porosity_model{};
     std::size_t m_comps = 0;
     std::size_t m_max_gas_plant_tables = 0;
     bool m_co2storage{false};
