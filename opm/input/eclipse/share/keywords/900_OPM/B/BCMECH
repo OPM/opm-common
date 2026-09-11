@@ -63,6 +63,18 @@
       "value_type": "DOUBLE",
       "default": 0,
       "dimension": "Length"
+    },
+    {
+      "name": "DISTANCE",
+      "value_type": "DOUBLE",
+      "default": 0,
+      "dimension": "Length"
+    },
+    {
+      "name": "SHEAR_MODULUS",
+      "value_type": "DOUBLE",
+      "default": 0,
+      "dimension": "Ymodule"
     }
   ]
 }

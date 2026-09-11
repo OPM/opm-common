@@ -216,12 +216,14 @@ BCCON
   1 1* * 1 5 1 10 Y- /
   2 20 20 4* Y /
   3 10 15 1 10 4 7 Z /
+  4 5 5 1 10 1 3 Z- /
 /
 SCHEDULE
 BCMECH
  1 FIXED 1 0 0 1.0 * * 2.0 * * /
  2 FIXED 0 1 0 * 3.0 * /
  3 FREE 0 0 1 * * 4.0 * * 5.0 /
+ 4 SPRING * * * * * * * * * 6.0 7.0 /
 /
 )";
 
@@ -232,9 +234,9 @@ BCMECH
         prop.updateBCMech(record);
     }
 
-    BOOST_CHECK_EQUAL(config.size(), 3U);
+    BOOST_CHECK_EQUAL(config.size(), 4U);
 
-    BOOST_CHECK_EQUAL(prop.size(), 3U);
+    BOOST_CHECK_EQUAL(prop.size(), 4U);
 
     using measure = Opm::UnitSystem::measure;
     constexpr Opm::BCState::BCFace defaultFace{};
@@ -305,6 +307,27 @@ BCMECH
     BOOST_CHECK_SMALL(prop[3].mechbcvalue.disp[1], 1e-12);
     BOOST_CHECK_EQUAL(deck.getActiveUnitSystem().to_si(measure::length, 5.0),
                       prop[3].mechbcvalue.disp[2]);
+
+    BOOST_CHECK(prop[4].bctype == defaultFace.bctype);
+    BOOST_CHECK(prop[4].component == defaultFace.component);
+    BOOST_CHECK_EQUAL(prop[4].rate, defaultFace.rate);
+    BOOST_CHECK(prop[4].pressure == defaultFace.pressure);
+    BOOST_CHECK(prop[4].temperature == defaultFace.temperature);
+
+    BOOST_CHECK(prop[4].bcmechtype == Opm::BCMECHType::SPRING);
+    BOOST_CHECK_EQUAL(prop[4].mechbcvalue.fixeddir[0], 1);
+    BOOST_CHECK_EQUAL(prop[4].mechbcvalue.fixeddir[1], 1);
+    BOOST_CHECK_EQUAL(prop[4].mechbcvalue.fixeddir[2], 1);
+    BOOST_CHECK_SMALL(prop[4].mechbcvalue.stress[0], 1e-12);
+    BOOST_CHECK_SMALL(prop[4].mechbcvalue.stress[1], 1e-12);
+    BOOST_CHECK_SMALL(prop[4].mechbcvalue.stress[2], 1e-12);
+    BOOST_CHECK_SMALL(prop[4].mechbcvalue.disp[0], 1e-12);
+    BOOST_CHECK_SMALL(prop[4].mechbcvalue.disp[1], 1e-12);
+    BOOST_CHECK_SMALL(prop[4].mechbcvalue.disp[2], 1e-12);
+    BOOST_CHECK_EQUAL(deck.getActiveUnitSystem().to_si(measure::length, 6.0),
+                      prop[4].mechbcvalue.distance);
+    BOOST_CHECK_EQUAL(deck.getActiveUnitSystem().to_si("Ymodule", 7.0),
+                      prop[4].mechbcvalue.shearmodulus);
 }
 
 BOOST_AUTO_TEST_CASE(BcPropAndBcMech)
