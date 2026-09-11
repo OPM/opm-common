@@ -19,6 +19,7 @@
 #ifndef WELLTEST_STATE_H
 #define WELLTEST_STATE_H
 
+#include <opm/input/eclipse/Schedule/Well/WellEconProductionLimits.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellTestConfig.hpp>
 
 #include <opm/io/eclipse/rst/state.hpp>
@@ -64,6 +65,9 @@ namespace WTest { enum class Reason; }
 
 class WellTestState {
 public:
+    /// Workover procedure of WECON/CECON: CON, CONP ('+CON'), WELL, PLUG.
+    using EconWorkover = WellEconProductionLimits::EconWorkover;
+
     /*
       This class implements a small mutable state object which keeps track of
       which wells have been automatically closed by the simulator through the
@@ -157,12 +161,14 @@ public:
         int complnum{};
         double last_test{};
         int num_attempt{};
+        EconWorkover workover{EconWorkover::NONE};
 
         bool operator==(const ClosedCompletion& other) const {
             return this->wellName == other.wellName &&
                    this->complnum == other.complnum &&
                    this->last_test == other.last_test &&
-                   this->num_attempt == other.num_attempt;
+                   this->num_attempt == other.num_attempt &&
+                   this->workover == other.workover;
         }
 
         static ClosedCompletion serializationTestObject();
@@ -174,6 +180,7 @@ public:
             serializer(this->complnum);
             serializer(this->last_test);
             serializer(this->num_attempt);
+            serializer(this->workover);
         }
 
         template<class BufferType>
@@ -182,6 +189,7 @@ public:
             buffer.write(this->complnum);
             buffer.write(this->last_test);
             buffer.write(this->num_attempt);
+            buffer.write(this->workover);
         }
 
         template<class BufferType>
@@ -190,6 +198,7 @@ public:
             buffer.read(this->complnum);
             buffer.read(this->last_test);
             buffer.read(this->num_attempt);
+            buffer.read(this->workover);
         }
     };
 
@@ -221,10 +230,16 @@ public:
     std::size_t num_closed_wells() const;
     double lastTestTime(const std::string& well_name) const;
 
-    void close_completion(const std::string& well_name, int complnum, double sim_time);
+    /// Record a completion closure and the workover that performed it.
+    /// The cause belongs to this closure, not to the currently configured limits.
+    void close_completion(const std::string& well_name, int complnum, double sim_time,
+                          EconWorkover workover = EconWorkover::NONE);
     void open_completion(const std::string& well_name, int complnum);
     void open_completions(const std::string& well_name);
     bool completion_is_closed(const std::string& well_name, const int complnum) const;
+    /// Workover that closed 'complnum'.  NONE if the completion is not
+    /// currently closed, or was closed by something other than a workover.
+    EconWorkover completion_workover(const std::string& well_name, int complnum) const;
     std::size_t num_closed_completions() const;
 
     // Simulation time at which 'well_name's completion 'complnum' was last

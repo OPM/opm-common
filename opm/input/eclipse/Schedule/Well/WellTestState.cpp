@@ -173,15 +173,18 @@ namespace Opm {
         c.last_test = 0.781;
         c.complnum = 11;
         c.num_attempt = 10;
+        c.workover = EconWorkover::CONP;
         return c;
     }
 
-    void WellTestState::close_completion(const std::string& well_name, int complnum, double sim_time) {
+    void WellTestState::close_completion(const std::string& well_name, int complnum, double sim_time,
+                                         EconWorkover workover) {
         auto well_iter = this->completions.find(well_name);
         if (well_iter == this->completions.end())
             this->completions.emplace(well_name, std::unordered_map<int, ClosedCompletion>{});
 
-        this->completions[well_name].insert_or_assign(complnum, ClosedCompletion{well_name, complnum, sim_time, 0});
+        this->completions[well_name].insert_or_assign(complnum,
+            ClosedCompletion{well_name, complnum, sim_time, 0, workover});
     }
 
 
@@ -208,6 +211,17 @@ namespace Opm {
             return false;
 
         return true;
+    }
+
+    WellTestState::EconWorkover
+    WellTestState::completion_workover(const std::string& well_name, int complnum) const {
+        const auto well = this->completions.find(well_name);
+        if (well == this->completions.end()) {
+            return EconWorkover::NONE;
+        }
+        const auto completion = well->second.find(complnum);
+        return (completion == well->second.end())
+            ? EconWorkover::NONE : completion->second.workover;
     }
 
     std::size_t WellTestState::num_closed_completions() const {
@@ -263,6 +277,7 @@ namespace Opm {
         WellTestState ws;
         ws.close_well("W1", WellTestConfig::Reason::PHYSICAL, 100);
         ws.close_completion("W1", 3, 200);
+        ws.close_completion("W1", 4, 200, EconWorkover::CONP);
         return ws;
     }
 }

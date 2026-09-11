@@ -1048,6 +1048,79 @@ namespace Opm { namespace data {
         void read(MessageBufferType& buffer);
     };
 
+    /// Well performance evaluation event indicators.
+    ///
+    /// Counters for the well and connection status changes made by the
+    /// simulator during the current time step.  These back the WPWE0 to
+    /// WPWE7 summary vectors and are reset at the start of every time step.
+    struct WellEvents
+    {
+        /// WPWE0: one if the well was drilled this time step, i.e. entered
+        /// the schedule while the run was under way.
+        int drilled{0};
+
+        /// WPWE1: number of connections opened this time step.  Counted
+        /// only while the well is neither shut nor stopped.
+        int connsOpened{0};
+
+        /// WPWE2: number of connections closed this time step, excluding
+        /// those closed by a '+CON' workover.
+        int connsClosed{0};
+
+        /// WPWE3: one if the connections were closed to the bottom of the
+        /// wellbore, i.e., by a '+CON' workover, or because 'CON' workovers
+        /// closed every connection the well had.
+        int closedToBottom{0};
+
+        /// WPWE4: one if the well was stopped this time step.
+        int stopped{0};
+
+        /// WPWE5: one if the well switched from injector to producer.
+        int injectorToProducer{0};
+
+        /// WPWE6: one if the well switched from producer to injector.
+        int producerToInjector{0};
+
+        /// WPWE7: one if the well was shut this time step.
+        int shut{0};
+
+        template <class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(drilled);
+            serializer(connsOpened);
+            serializer(connsClosed);
+            serializer(closedToBottom);
+            serializer(stopped);
+            serializer(injectorToProducer);
+            serializer(producerToInjector);
+            serializer(shut);
+        }
+
+        bool operator==(const WellEvents& events) const
+        {
+            return (this->drilled == events.drilled)
+                && (this->connsOpened == events.connsOpened)
+                && (this->connsClosed == events.connsClosed)
+                && (this->closedToBottom == events.closedToBottom)
+                && (this->stopped == events.stopped)
+                && (this->injectorToProducer == events.injectorToProducer)
+                && (this->producerToInjector == events.producerToInjector)
+                && (this->shut == events.shut);
+        }
+
+        static WellEvents serializationTestObject()
+        {
+            return WellEvents{ 1, 2, 3, 4, 5, 6, 7, 8 };
+        }
+
+        template <class MessageBufferType>
+        void write(MessageBufferType& buffer) const;
+
+        template <class MessageBufferType>
+        void read(MessageBufferType& buffer);
+    };
+
     struct WellControlLimitItems
     {
         enum class Item {
@@ -1108,6 +1181,7 @@ namespace Opm { namespace data {
         CurrentControl current_control{};
         GuideRateValue guide_rates{};
         WellControlLimits limits{};
+        WellEvents events{};
 
         inline bool flowing() const noexcept;
 
@@ -1161,6 +1235,7 @@ namespace Opm { namespace data {
                 && (this->current_control == well2.current_control)
                 && (this->guide_rates == well2.guide_rates)
                 && (this->limits == well2.limits)
+                && (this->events == well2.events)
                 ;
         }
 
@@ -1185,6 +1260,7 @@ namespace Opm { namespace data {
             serializer(current_control);
             serializer(guide_rates);
             serializer(limits);
+            serializer(events);
         }
 
         static Well serializationTestObject()
@@ -1202,7 +1278,8 @@ namespace Opm { namespace data {
                 {{0, Segment::serializationTestObject()}},
                 CurrentControl::serializationTestObject(),
                 GuideRateValue::serializationTestObject(),
-                WellControlLimits::serializationTestObject()
+                WellControlLimits::serializationTestObject(),
+                WellEvents::serializationTestObject()
             };
         }
     };
@@ -1595,6 +1672,19 @@ namespace Opm { namespace data {
     }
 
     template <class MessageBufferType>
+    void WellEvents::write(MessageBufferType& buffer) const
+    {
+        buffer.write(this->drilled);
+        buffer.write(this->connsOpened);
+        buffer.write(this->connsClosed);
+        buffer.write(this->closedToBottom);
+        buffer.write(this->stopped);
+        buffer.write(this->injectorToProducer);
+        buffer.write(this->producerToInjector);
+        buffer.write(this->shut);
+    }
+
+    template <class MessageBufferType>
     void Well::write(MessageBufferType& buffer) const
     {
         this->rates.write(buffer);
@@ -1634,6 +1724,7 @@ namespace Opm { namespace data {
         this->current_control.write(buffer);
         this->guide_rates.write(buffer);
         this->limits.write(buffer);
+        this->events.write(buffer);
     }
 
     template <class MessageBufferType>
@@ -1765,6 +1856,19 @@ namespace Opm { namespace data {
     }
 
     template <class MessageBufferType>
+    void WellEvents::read(MessageBufferType& buffer)
+    {
+        buffer.read(this->drilled);
+        buffer.read(this->connsOpened);
+        buffer.read(this->connsClosed);
+        buffer.read(this->closedToBottom);
+        buffer.read(this->stopped);
+        buffer.read(this->injectorToProducer);
+        buffer.read(this->producerToInjector);
+        buffer.read(this->shut);
+    }
+
+    template <class MessageBufferType>
     void Well::read(MessageBufferType& buffer)
     {
         this->rates.read(buffer);
@@ -1814,6 +1918,7 @@ namespace Opm { namespace data {
         this->current_control.read(buffer);
         this->guide_rates.read(buffer);
         this->limits.read(buffer);
+        this->events.read(buffer);
     }
 
     template <class MessageBufferType>
