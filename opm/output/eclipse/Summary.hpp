@@ -258,6 +258,18 @@ public:
     /// Linearise summary values using an output sequence number distinct
     /// from the schedule report step.
     ///
+    /// \param[in] st Summary values from most recent call to eval().
+    /// Source object from which to retrieve the values that go into the
+    /// output buffer.
+    ///
+    /// \param[in] report_step One-based schedule report step index for
+    /// which to create output.  Report_step=0 represents time zero.
+    ///
+    /// \param[in] ministep_id Zero based count of time steps performed.
+    ///
+    /// \param[in] isSubstep Whether or not we're being called in the middle
+    /// of a report step.
+    ///
     /// \param[in] output_step One-based output sequence number.  This is the
     /// number that gets incorporated into the file extension of "separate"
     /// summary output files (i.e., .S000n).
@@ -296,10 +308,8 @@ public:
 
     /// Calculate summary vector values.
     ///
-    /// \param[in] report_step One-based report step index for which to
-    /// create output.  This is the number that gets incorporated into the
-    /// file extension of "separate" summary output files (i.e., .S000n).
-    /// Report_step=0 represents time zero.
+    /// \param[in] report_step One-based schedule report step index for which
+    /// to calculate summary values.  Report_step=0 represents time zero.
     ///
     /// \param[in] secs_elapsed Elapsed physical time in seconds since start
     /// of simulation.
