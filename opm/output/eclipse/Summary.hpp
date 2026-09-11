@@ -243,10 +243,8 @@ public:
     /// Source object from which to retrieve the values that go into the
     /// output buffer.
     ///
-    /// \param[in] report_step One-based report step index for which to
-    /// create output.  This is the number that gets incorporated into the
-    /// file extension of "separate" summary output files (i.e., .S000n).
-    /// Report_step=0 represents time zero.
+    /// \param[in] report_step One-based schedule report step index for
+    /// which to create output.  Report_step=0 represents time zero.
     ///
     /// \param[in] ministep_id Zero based count of time steps performed.
     ///
@@ -256,6 +254,18 @@ public:
                       const int           report_step,
                       const int           ministep_id,
                       const bool          isSubstep);
+
+    /// Linearise summary values using an output sequence number distinct
+    /// from the schedule report step.
+    ///
+    /// \param[in] output_step One-based output sequence number.  This is the
+    /// number that gets incorporated into the file extension of "separate"
+    /// summary output files (i.e., .S000n).
+    void add_timestep(const SummaryState& st,
+                      const int           report_step,
+                      const int           ministep_id,
+                      const bool          isSubstep,
+                      const int           output_step);
 
     /// Activate pre-allocated summary vector slots for newly established
     /// well connections arising from dynamic fracturing.

@@ -888,9 +888,9 @@ void Opm::EclipseIO::Impl::writeSummaryFile(const SummaryState&      st,
                                             const bool               isSubstep,
                                             const bool               forceFinalWrite)
 {
-    this->summary_.add_timestep(st, this->reportIndex(report_step, time_step),
-                                this->miniStepId_,
-                                !time_step.has_value() || isSubstep);
+    this->summary_.add_timestep(st, report_step, this->miniStepId_,
+                                !time_step.has_value() || isSubstep,
+                                this->reportIndex(report_step, time_step));
 
     const auto is_final_summary =
         this->isFinalWrite(report_step, isSubstep, forceFinalWrite);

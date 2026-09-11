@@ -6136,7 +6136,8 @@ public:
     void internal_store(const SummaryState& st,
                         const int           report_step,
                         const int           ministep_id,
-                        const bool          isSubstep);
+                        const bool          isSubstep,
+                        const int           output_step);
 
     void write(const bool is_final_summary);
 
@@ -6144,7 +6145,8 @@ private:
     struct MiniStep
     {
         int id{0};
-        int seq{-1};
+        int outputStep{-1};
+        int reportStep{-1};
         bool isSubstep{false};
         std::vector<float> params{};
     };
@@ -6163,7 +6165,7 @@ private:
     Opm::EclIO::OutputStream::Unified   unif_;
 
     int prevCreate_{-1};
-    int prevReportStepID_{-1};
+    int prevOutputStepID_{-1};
     std::vector<MiniStep>::size_type numUnwritten_{0};
 
     SummaryOutputParameters                  outputParameters_{};
@@ -6207,14 +6209,15 @@ private:
 
     MiniStep& getNextMiniStep(const int  report_step,
                               const int  ministep_id,
-                              const bool isSubstep);
+                              const bool isSubstep,
+                              const int  output_step);
 
     const MiniStep& lastUnwritten() const;
 
     void write(const MiniStep& ms);
 
     void createSMSpecIfNecessary();
-    void createSmryStreamIfNecessary(const int report_step);
+    void createSmryStreamIfNecessary(const int output_step);
 };
 
 Opm::out::Summary::SummaryImplementation::
@@ -6288,9 +6291,10 @@ void Opm::out::Summary::SummaryImplementation::
 internal_store(const SummaryState& st,
                const int           report_step,
                const int           ministep_id,
-               const bool          isSubstep)
+               const bool          isSubstep,
+               const int           output_step)
 {
-    auto& ms = this->getNextMiniStep(report_step, ministep_id, isSubstep);
+    auto& ms = this->getNextMiniStep(report_step, ministep_id, isSubstep, output_step);
 
     const auto nParam = this->valueKeys_.size();
 
@@ -6442,11 +6446,11 @@ void Opm::out::Summary::SummaryImplementation::write(const bool is_final_summary
     // intermediate timestep.
     // Because of adaptive time stepping there could have been previous writes for the same
     // report step that missed information.
-    if (const auto& last = this->lastUnwritten(); (this->prevReportStepID_ < this->lastUnwritten().seq
+    if (const auto& last = this->lastUnwritten(); (this->prevOutputStepID_ < last.outputStep
                                                    || is_final_summary)) {
         this->smspec_->write(this->outputParameters_.summarySpecification(),
-                             is_final_summary, last.seq,
-                             sched_.get()[last.seq].get<RSTConfig>().get()
+                             is_final_summary, last.outputStep,
+                             sched_.get()[last.reportStep].get<RSTConfig>().get()
                              .basic.value_or(0));
     }
 
@@ -6460,7 +6464,7 @@ void Opm::out::Summary::SummaryImplementation::write(const bool is_final_summary
     if (this->esmry_ != nullptr) {
         for (auto i = 0*this->numUnwritten_; i < this->numUnwritten_; ++i) {
             this->esmry_->write(this->unwritten_[i].params,
-                                this->unwritten_[i].seq,
+                                this->unwritten_[i].outputStep,
                                 is_final_summary);
         }
     }
@@ -6472,13 +6476,13 @@ void Opm::out::Summary::SummaryImplementation::write(const bool is_final_summary
 
 void Opm::out::Summary::SummaryImplementation::write(const MiniStep& ms)
 {
-    this->createSmryStreamIfNecessary(ms.seq);
+    this->createSmryStreamIfNecessary(ms.outputStep);
 
-    if (this->prevReportStepID_ < ms.seq) {
+    if (this->prevOutputStepID_ < ms.outputStep) {
         // XXX: Should probably write SEQHDR = 0 here since
         ///     we do not know the actual encoding needed.
-        this->stream_->write("SEQHDR", std::vector<int>{ ms.seq });
-        this->prevReportStepID_ = ms.seq;
+        this->stream_->write("SEQHDR", std::vector<int>{ ms.outputStep });
+        this->prevOutputStepID_ = ms.outputStep;
     }
 
     this->stream_->write("MINISTEP", std::vector<int>{ ms.id });
@@ -6819,7 +6823,8 @@ Opm::out::Summary::SummaryImplementation::MiniStep&
 Opm::out::Summary::SummaryImplementation::
 getNextMiniStep(const int  report_step,
                 const int  ministep_id,
-                const bool isSubstep)
+                const bool isSubstep,
+                const int  output_step)
 {
     if (this->numUnwritten_ == this->unwritten_.size()) {
         this->unwritten_.emplace_back();
@@ -6830,8 +6835,9 @@ getNextMiniStep(const int  report_step,
 
     auto& ms = this->unwritten_[this->numUnwritten_++];
 
-    ms.id  = ministep_id;
-    ms.seq = report_step;
+    ms.id         = ministep_id;
+    ms.outputStep = output_step;
+    ms.reportStep = report_step;
     ms.isSubstep = isSubstep;
 
     ms.params.resize(this->valueKeys_.size(), 0.0f);
@@ -6864,22 +6870,22 @@ void Opm::out::Summary::SummaryImplementation::createSMSpecIfNecessary()
 
 void
 Opm::out::Summary::SummaryImplementation::
-createSmryStreamIfNecessary(const int report_step)
+createSmryStreamIfNecessary(const int output_step)
 {
     // Create stream if unset or if non-unified (separate) and new step.
 
-    assert ((this->prevCreate_ <= report_step) &&
-            "Inconsistent Report Step Sequence Detected");
+    assert ((this->prevCreate_ <= output_step) &&
+            "Inconsistent Output Step Sequence Detected");
 
     const auto do_create = ! this->stream_
-        || (! this->unif_.set && (this->prevCreate_ < report_step));
+        || (! this->unif_.set && (this->prevCreate_ < output_step));
 
     if (do_create) {
         this->stream_ = Opm::EclIO::OutputStream::
-            createSummaryFile(this->rset_, report_step,
+            createSummaryFile(this->rset_, output_step,
                               this->fmt_, this->unif_);
 
-        this->prevCreate_ = report_step;
+        this->prevCreate_ = output_step;
     }
 }
 
@@ -6929,7 +6935,17 @@ void Summary::add_timestep(const SummaryState& st,
                            const int           ministep_id,
                            const bool          isSubstep)
 {
-    this->pImpl_->internal_store(st, report_step, ministep_id, isSubstep);
+    this->add_timestep(st, report_step, ministep_id, isSubstep, report_step);
+}
+
+void Summary::add_timestep(const SummaryState& st,
+                           const int           report_step,
+                           const int           ministep_id,
+                           const bool          isSubstep,
+                           const int           output_step)
+{
+    this->pImpl_->internal_store(st, report_step, ministep_id,
+                                 isSubstep, output_step);
 }
 
 void Summary::write(const bool is_final_summary) const
