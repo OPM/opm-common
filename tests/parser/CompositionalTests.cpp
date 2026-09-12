@@ -815,6 +815,19 @@ BOOST_AUTO_TEST_CASE(CompositionalParsingTest) {
     }
 }
 
+BOOST_AUTO_TEST_CASE(SolutionMethodKeywordsAreRecognized)
+{
+    const auto defaultedDeck = Parser{}.parseString("RUNSPEC\n");
+    BOOST_CHECK(!Runspec {defaultedDeck}.solutionMethodSpecified());
+
+    for (const auto* method : {"AIM", "FULLIMP", "IMPES"}) {
+        const auto deck = Parser{}.parseString(std::string{"RUNSPEC\n"} + method + "\n");
+
+        BOOST_CHECK(deck.hasKeyword(method));
+        BOOST_CHECK(Runspec {deck}.solutionMethodSpecified());
+    }
+}
+
 Deck createCompositionalDeckZMF()
 {
     return Parser{}.parseString(R"(
