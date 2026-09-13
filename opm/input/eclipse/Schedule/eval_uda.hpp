@@ -34,8 +34,7 @@ namespace UDA {
 
     double eval_well_uda(const UDAValue& value,
                          const std::string& name,
-                         const SummaryState& st,
-                         double udq_undefined);
+                         const SummaryState& st);
     /// Evaluate a well level UDA holding a pressure.
     ///
     /// Unlike eval_well_uda(), a result which is zero or negative is passed
@@ -44,24 +43,20 @@ namespace UDA {
     /// a meaning a pressure carries.
     double eval_well_uda_pressure(const UDAValue& value,
                                   const std::string& name,
-                                  const SummaryState& st,
-                                  double udq_undefined);
+                                  const SummaryState& st);
 
     double eval_well_uda_rate(const UDAValue& value,
                               const std::string& name,
                               const SummaryState& st,
-                              double udq_undefined,
                               InjectorType wellType,
                               const UnitSystem& unitSystem);
 
     double eval_group_uda(const UDAValue& value,
                           const std::string& name,
-                          const SummaryState& st,
-                          double udq_undefined);
+                          const SummaryState& st);
     double eval_group_uda_rate(const UDAValue& value,
                                const std::string& name,
                                const SummaryState& st,
-                               double udq_undefined,
                                Phase phase,
                                const UnitSystem& unitSystem);
 }

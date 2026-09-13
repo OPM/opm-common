@@ -37,15 +37,14 @@ namespace Opm {
             UDAValue consumption_rate;
             UDAValue import_rate;
             std::string network_node;
-            double udq_undefined;
             UnitSystem unit_system;
 
             bool operator==(const GCONSUMPGroup& data) const {
-                return consumption_rate == data.consumption_rate &&
-                       import_rate == data.import_rate &&
-                       network_node == data.network_node &&
-                       udq_undefined == data.udq_undefined &&
-                       unit_system == data.unit_system;
+                return (consumption_rate == data.consumption_rate)
+                    && (import_rate == data.import_rate)
+                    && (network_node == data.network_node)
+                    && (unit_system == data.unit_system)
+                    ;
             }
 
             template<class Serializer>
@@ -54,7 +53,6 @@ namespace Opm {
                 serializer(consumption_rate);
                 serializer(import_rate);
                 serializer(network_node);
-                serializer(udq_undefined);
                 serializer(unit_system);
             }
         };
@@ -72,7 +70,7 @@ namespace Opm {
         const GCONSUMPGroupProp get(const std::string& name, const SummaryState& st) const;
         void add(const std::string& name, const UDAValue& consumption_rate,
                  const UDAValue& import_rate, const std::string& network_node,
-                 double udq_undefined_arg, const UnitSystem& unit_system);
+                 const UnitSystem& unit_system);
         std::size_t size() const;
 
         bool operator==(const GConSump& data) const;
@@ -89,4 +87,4 @@ namespace Opm {
 
 }
 
-#endif
+#endif // GCONSUMP_H

@@ -30,7 +30,6 @@
 namespace Opm {
 
 class DeckRecord;
-class Schedule;
 class SummaryState;
 
 class GroupEconProductionLimits
@@ -125,8 +124,8 @@ public:
     static EconWorkover econWorkoverFromString(const std::string& string_value);
     static std::string econWorkoverToString(EconWorkover workover);
     const GEconGroup& get_group(const std::string& gname) const;
-    GEconGroupProp get_group_prop(
-        const Schedule &schedule, const SummaryState &st, const std::string& gname) const;
+    GEconGroupProp get_group_prop(const SummaryState& st,
+                                  const std::string& gname) const;
     bool has_group(const std::string& gname) const;
     bool operator==(const GroupEconProductionLimits& other) const;
     bool operator!=(const GroupEconProductionLimits& other) const;

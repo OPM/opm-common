@@ -28,9 +28,11 @@
 namespace Opm {
 namespace UDA {
 
-  double eval_well_uda(const UDAValue& value, const std::string& well, const SummaryState& st, double udq_default) {
+  double eval_well_uda(const UDAValue& value, const std::string& well, const SummaryState& st) {
     if (value.is<double>())
         return value.getSI();
+
+    const double udq_default = st.get_udq_undefined();
 
     if (!value.is<std::string>())
         return udq_default;
@@ -51,10 +53,12 @@ namespace UDA {
 }
 
 
-double eval_well_uda_pressure(const UDAValue& value, const std::string& well, const SummaryState& st, double udq_default) {
+double eval_well_uda_pressure(const UDAValue& value, const std::string& well, const SummaryState& st) {
     if (value.is<double>()) {
         return value.getSI();
     }
+
+    const double udq_default = st.get_udq_undefined();
 
     if (!value.is<std::string>()) {
         return udq_default;
@@ -76,15 +80,17 @@ double eval_well_uda_pressure(const UDAValue& value, const std::string& well, co
 }
 
 
-double eval_well_uda_rate(const UDAValue& value, const std::string& well, const SummaryState& st, double udq_default, InjectorType wellType, const UnitSystem& unitSystem) {
-    const auto raw_rate = value.is<double>() ? value.get<double>() : eval_well_uda(value, well, st, udq_default);
+double eval_well_uda_rate(const UDAValue& value, const std::string& well, const SummaryState& st, InjectorType wellType, const UnitSystem& unitSystem) {
+    const auto raw_rate = value.is<double>() ? value.get<double>() : eval_well_uda(value, well, st);
     return injection::rateToSI(raw_rate, wellType, unitSystem);
 }
 
 
-double eval_group_uda(const UDAValue& value, const std::string& group, const SummaryState& st, double udq_undefined) {
+double eval_group_uda(const UDAValue& value, const std::string& group, const SummaryState& st) {
     if (value.is<double>())
         return value.getSI();
+
+    const double udq_undefined = st.get_udq_undefined();
 
     if (!value.is<std::string>())
         return udq_undefined;
@@ -105,8 +111,8 @@ double eval_group_uda(const UDAValue& value, const std::string& group, const Sum
 }
 
 
-double eval_group_uda_rate(const UDAValue& value, const std::string& name, const SummaryState& st, double udq_undefined, Phase phase, const UnitSystem& unitSystem) {
-    const auto raw_rate = value.is<double>() ? value.get<double>() : eval_group_uda(value, name, st, udq_undefined);
+double eval_group_uda_rate(const UDAValue& value, const std::string& name, const SummaryState& st, Phase phase, const UnitSystem& unitSystem) {
+    const auto raw_rate = value.is<double>() ? value.get<double>() : eval_group_uda(value, name, st);
     return injection::rateToSI(raw_rate, phase, unitSystem);
 }
 

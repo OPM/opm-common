@@ -1292,7 +1292,7 @@ I1 THP 4 /
 
     const auto& well_2 = schedule.getWell("OP_1", 2);
     const auto wpp_2 = well_2.getProductionProperties();
-    const auto prod_controls = wpp_2.controls(st, 0);
+    const auto prod_controls = wpp_2.controls(st);
 
     BOOST_CHECK_CLOSE(prod_controls.oil_rate, 1300 * siFactorL, 1e-13);
     BOOST_CHECK_CLOSE(prod_controls.water_rate, 1400 * siFactorL, 1e-13);
@@ -1309,15 +1309,15 @@ I1 THP 4 /
 
     const auto& well_3 = schedule.getWell("OP_1", 3);
     const auto wpp_3 = well_3.getProductionProperties();
-    const auto prod_controls3 = wpp_3.controls(st, 0);
+    const auto prod_controls3 = wpp_3.controls(st);
 
     BOOST_CHECK_CLOSE(prod_controls3.oil_rate, 2 * 1300 * siFactorL, 1e-13);
     BOOST_CHECK_CLOSE(prod_controls3.water_rate, 4 * 1400 * siFactorL, 1e-13);
     BOOST_CHECK_CLOSE(prod_controls3.gas_rate, 3 * 1500.52 * siFactorG, 1e-13);
 
 
-    const auto& inj_controls2 = schedule.getWell("I1", 2).getInjectionProperties().controls(unitSystem, st, 0);
-    const auto& inj_controls3 = schedule.getWell("I1", 3).getInjectionProperties().controls(unitSystem, st, 0);
+    const auto& inj_controls2 = schedule.getWell("I1", 2).getInjectionProperties().controls(unitSystem, st);
+    const auto& inj_controls3 = schedule.getWell("I1", 3).getInjectionProperties().controls(unitSystem, st);
 
     BOOST_CHECK_EQUAL(inj_controls2.surface_rate * 2, inj_controls3.surface_rate);
     BOOST_CHECK_EQUAL(inj_controls2.bhp_limit * 3, inj_controls3.bhp_limit);
@@ -1396,7 +1396,7 @@ WELTARG
     BOOST_CHECK( wpp_2.OilRate.is<std::string>() );
     BOOST_CHECK_EQUAL( wpp_2.OilRate.get<std::string>(), "WUORAT" );
     BOOST_CHECK_EQUAL( wpp_2.WaterRate.get<std::string>(), "WUWRAT" );
-    const auto prod_controls = wpp_2.controls(st, 0);
+    const auto prod_controls = wpp_2.controls(st);
 
     BOOST_CHECK_EQUAL(prod_controls.oil_rate, 10 * siFactorL);
     BOOST_CHECK_EQUAL(prod_controls.water_rate, 20 * siFactorL);
@@ -1561,7 +1561,7 @@ END
 
     const auto controls = schedule.back().wells("P-1")
         .getProductionProperties()
-        .controls(st, udq_default);
+        .controls(st);
 
     BOOST_CHECK_CLOSE(controls.oil_rate, 123.4*sm3_per_day(), 1.0e-8);
 }
@@ -2269,14 +2269,14 @@ WCONINJH
 
     // The BHP limit should not be effected by WCONHIST
     {
-        const auto& c1 = sched.getWell("P",1).getProductionProperties().controls(st, 0);
-        const auto& c2 = sched.getWell("P",2).getProductionProperties().controls(st, 0);
+        const auto& c1 = sched.getWell("P",1).getProductionProperties().controls(st);
+        const auto& c2 = sched.getWell("P",2).getProductionProperties().controls(st);
         BOOST_CHECK_EQUAL(c1.bhp_limit, 50 * 1e5); // 1
         BOOST_CHECK_EQUAL(c2.bhp_limit, 50 * 1e5); // 2
     }
     {
-        const auto& c1 = sched.getWell("I",1).getInjectionProperties().controls(unit_system, st, 0);
-        const auto& c2 = sched.getWell("I",2).getInjectionProperties().controls(unit_system, st, 0);
+        const auto& c1 = sched.getWell("I",1).getInjectionProperties().controls(unit_system, st);
+        const auto& c2 = sched.getWell("I",2).getInjectionProperties().controls(unit_system, st);
         BOOST_CHECK_EQUAL(c1.bhp_limit, 600 * 1e5); // 1
         BOOST_CHECK_EQUAL(c2.bhp_limit, 600 * 1e5); // 2
     }
@@ -2287,8 +2287,8 @@ WCONINJH
     BOOST_CHECK_EQUAL(sched.getWell("I", 3).getProductionProperties().hasProductionControl(Opm::Well::ProducerCMode::BHP), true );
     BOOST_CHECK_EQUAL(sched.getWell("I", 4).getInjectionProperties().hasInjectionControl(Opm::Well::InjectorCMode::BHP), true );
     {
-        const auto& c3 = sched.getWell("I",3).getInjectionProperties().controls(unit_system, st, 0);
-        const auto& c4 = sched.getWell("I",4).getInjectionProperties().controls(unit_system, st, 0);
+        const auto& c3 = sched.getWell("I",3).getInjectionProperties().controls(unit_system, st);
+        const auto& c4 = sched.getWell("I",4).getInjectionProperties().controls(unit_system, st);
         BOOST_CHECK_EQUAL(c3.bhp_limit, 0); // 1
         BOOST_CHECK_EQUAL(c4.bhp_limit, 6891.2 * 1e5); // 2
     }
@@ -6847,7 +6847,7 @@ END
     const auto& weldraw3 = sched.getWell("W3", 1).getWELDRAW();
 
     BOOST_CHECK(weldraw1.active());
-    BOOST_CHECK_CLOSE(weldraw1.maxDrawdown("W1", st, 0.0),
+    BOOST_CHECK_CLOSE(weldraw1.maxDrawdown("W1", st),
                       unit_system.to_si(UnitSystem::measure::pressure, 1500), 1.0e-10);
     // Defaulted phase resolves from the preferred phase: LIQ for oil wells.
     BOOST_CHECK(weldraw1.targetPhase() == WELDRAW::TargetPhase::LIQ);
@@ -6869,8 +6869,8 @@ END
     // equal and the UDA performs the unit conversion exactly once.
     const auto restored = WELDRAW { 1500, Phase::OIL, pressure_dim };
     BOOST_CHECK(restored == weldraw1);
-    BOOST_CHECK_CLOSE(restored.maxDrawdown("W1", st, 0.0),
-                      weldraw1.maxDrawdown("W1", st, 0.0), 1.0e-10);
+    BOOST_CHECK_CLOSE(restored.maxDrawdown("W1", st),
+                      weldraw1.maxDrawdown("W1", st), 1.0e-10);
 }
 
 

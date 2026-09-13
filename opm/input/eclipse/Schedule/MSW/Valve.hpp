@@ -56,14 +56,14 @@ namespace Opm {
                      const std::string& well_name_,
                      const std::size_t segment_number_);
 
-        double value(const UDAValue& value, const double udq_default = 0.0) const;
+        double value(const UDAValue& value) const;
     };
 
     class Valve
     {
     public:
         Valve() = default;
-        explicit Valve(const DeckRecord& record, const double udq_default = 0.0);
+        explicit Valve(const DeckRecord& record);
         explicit Valve(const RestartIO::RstSegment& rstSegment);
 
         Valve(double conFlowCoeff,
@@ -82,7 +82,7 @@ namespace Opm {
         //     "WELL1" : [<seg1, valv1>, <seg2, valv2> ...]
         //     ....
         static std::map<std::string, std::vector<std::pair<int, Valve>>>
-        fromWSEGVALV(const DeckKeyword& keyword, const double udq_default = 0.0);
+        fromWSEGVALV(const DeckKeyword& keyword);
 
         // parameters for constriction pressure loss
         double conFlowCoefficient() const;
@@ -121,7 +121,6 @@ namespace Opm {
             serializer(m_pipe_roughness);
             serializer(m_pipe_cross_area);
             serializer(m_status);
-            serializer(m_udq_default);
         }
 
     private:
@@ -135,8 +134,6 @@ namespace Opm {
         double m_pipe_roughness {0.0};
         double m_pipe_cross_area {0.0};
         ICDStatus m_status {ICDStatus::SHUT};
-
-        double m_udq_default{0.0};
     };
 
 } // namespace Opm

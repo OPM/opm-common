@@ -19,9 +19,6 @@
 
 #include <opm/input/eclipse/Schedule/Group/GroupEconProductionLimits.hpp>
 
-#include <opm/input/eclipse/Schedule/Schedule.hpp>
-#include <opm/input/eclipse/Schedule/UDQ/UDQConfig.hpp>
-
 #include <opm/input/eclipse/Deck/UDAValue.hpp>
 
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
@@ -68,16 +65,15 @@ const GroupEconProductionLimits::GEconGroup& GroupEconProductionLimits::get_grou
         return it->second;
 }
 
-GroupEconProductionLimits::GEconGroupProp GroupEconProductionLimits::get_group_prop(
-        const Schedule &schedule, const SummaryState &st, const std::string& name) const
+GroupEconProductionLimits::GEconGroupProp
+GroupEconProductionLimits::get_group_prop(const SummaryState& st, const std::string& name) const
 {
     const GEconGroup& group0 = this->get_group(name);
-    auto udq_undefined = schedule.getUDQConfig(group0.reportStep()).params().undefinedValue();
-    auto min_oil_rate = UDA::eval_group_uda(group0.minOilRate(), name, st, udq_undefined);
-    auto min_gas_rate = UDA::eval_group_uda(group0.minGasRate(), name, st, udq_undefined);
-    auto max_water_cut = UDA::eval_group_uda(group0.maxWaterCut(), name, st, udq_undefined);
-    auto max_gas_oil_ratio = UDA::eval_group_uda(group0.maxGasOilRatio(), name, st, udq_undefined);
-    auto max_water_gas_ratio = UDA::eval_group_uda(group0.maxWaterGasRatio(), name, st, udq_undefined);
+    auto min_oil_rate = UDA::eval_group_uda(group0.minOilRate(), name, st);
+    auto min_gas_rate = UDA::eval_group_uda(group0.minGasRate(), name, st);
+    auto max_water_cut = UDA::eval_group_uda(group0.maxWaterCut(), name, st);
+    auto max_gas_oil_ratio = UDA::eval_group_uda(group0.maxGasOilRatio(), name, st);
+    auto max_water_gas_ratio = UDA::eval_group_uda(group0.maxWaterGasRatio(), name, st);
 
     return GEconGroupProp {
         min_oil_rate,

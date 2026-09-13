@@ -49,7 +49,7 @@ namespace Opm {
         if (it == m_tracerConcentrations.end()) {
             return 0.0;
         }
-        return UDA::eval_well_uda(it->second, well.name, st, st.get_udq_undefined());
+        return UDA::eval_well_uda(it->second, well.name, st);
     }
 
     bool WellTracerProperties::operator!=(const WellTracerProperties& other) const {
