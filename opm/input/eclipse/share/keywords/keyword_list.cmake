@@ -1051,6 +1051,7 @@ set( keywords
      001_Eclipse300/A/ACF
      001_Eclipse300/A/ACFS
      001_Eclipse300/A/ACTCO2S
+     001_Eclipse300/A/AIM
      001_Eclipse300/B/BIC
      001_Eclipse300/B/BICS
      001_Eclipse300/B/BLOCK_PROBE300

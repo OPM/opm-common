@@ -34,6 +34,7 @@
 #include <opm/input/eclipse/Parser/ParserKeywords/F.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/G.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/H.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/I.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/M.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/N.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/O.hpp>
@@ -835,6 +836,11 @@ Runspec::Runspec(const Deck& deck)
     if (DeckSection::hasRUNSPEC(deck)) {
         const RUNSPECSection runspecSection{deck};
 
+        m_solution_method_specified =
+            runspecSection.hasKeyword<ParserKeywords::AIM>() ||
+            runspecSection.hasKeyword<ParserKeywords::FULLIMP>() ||
+            runspecSection.hasKeyword<ParserKeywords::IMPES>();
+
         if (runspecSection.hasKeyword<ParserKeywords::MINNPCOL>()) {
             const auto& min_item = runspecSection.get<ParserKeywords::MINNPCOL>()
                 .back().getRecord(0).getItem<ParserKeywords::MINNPCOL::VALUE>();
@@ -1001,6 +1007,7 @@ Runspec Runspec::serializationTestObject()
     result.m_tracers = Tracers::serializationTestObject();
     result.m_comps = 3;
     result.m_max_gas_plant_tables = 2;
+    result.m_solution_method_specified = true;
     result.m_co2storage = true;
     result.m_co2sol = true;
     result.m_h2sol = true;
@@ -1130,6 +1137,11 @@ bool Runspec::compositional() const noexcept
     return (this->m_comps > 0) && !this->m_co2storage && !this->m_h2storage;
 }
 
+bool Runspec::solutionMethodSpecified() const noexcept
+{
+    return this->m_solution_method_specified;
+}
+
 bool Runspec::biof() const noexcept
 {
     return this->m_biof;
@@ -1208,6 +1220,7 @@ bool Runspec::operator==(const Runspec& data) const
         && (this->m_tracers == data.m_tracers)
         && (this->m_comps == data.m_comps)
         && (this->m_max_gas_plant_tables == data.m_max_gas_plant_tables)
+        && (this->m_solution_method_specified == data.m_solution_method_specified)
         && (this->m_co2storage == data.m_co2storage)
         && (this->m_co2sol == data.m_co2sol)
         && (this->m_h2sol == data.m_h2sol)

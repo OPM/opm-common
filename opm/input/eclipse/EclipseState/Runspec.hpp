@@ -647,6 +647,7 @@ public:
     bool frac() const noexcept;
     bool temp() const noexcept;
     bool compositional() const noexcept;
+    bool solutionMethodSpecified() const noexcept;
     bool biof() const noexcept;
 
     bool operator==(const Runspec& data) const;
@@ -672,6 +673,7 @@ public:
         serializer(m_tracers);
         serializer(m_comps);
         serializer(m_max_gas_plant_tables);
+        serializer(m_solution_method_specified);
         serializer(m_co2storage);
         serializer(m_co2sol);
         serializer(m_h2sol);
@@ -705,6 +707,7 @@ private:
     Geochem m_geochem{};
     std::size_t m_comps = 0;
     std::size_t m_max_gas_plant_tables = 0;
+    bool m_solution_method_specified{false};
     bool m_co2storage{false};
     bool m_co2sol{false};
     bool m_h2sol{false};
