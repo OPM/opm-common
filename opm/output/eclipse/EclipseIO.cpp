@@ -377,13 +377,12 @@ public:
     /// Source object from which to retrieve the values that go into the
     /// output buffer.
     ///
-    /// \param[in] report_step One-based report step index for which to
-    /// create output.  This is the number that gets incorporated into the
-    /// file extension of "separate" summary output files (i.e., .S000n).
-    /// Report_step=0 represents time zero.
+    /// \param[in] report_step One-based schedule report step index for which
+    /// to create output.  Report_step=0 represents time zero.
     ///
-    /// \param[in] time_step Zero-based time step ID.  Nullopt if the
-    /// sequence number should be the same as the report step.
+    /// \param[in] time_step Zero-based physical time step ID.  When present,
+    /// time_step+1 is used as the output sequence number; otherwise the
+    /// output sequence number is the report step.
     ///
     /// \param[in] secs_elapsed Elapsed physical (i.e., simulated) time in
     /// seconds since start of simulation.
@@ -633,7 +632,7 @@ private:
     /// seconds since start of simulation.
     void recordSummaryOutput(const double secs_elapsed);
 
-    /// Compute report sequence number.
+    /// Compute output sequence number.
     ///
     /// Typically equal to the report step index.
     ///
@@ -888,9 +887,9 @@ void Opm::EclipseIO::Impl::writeSummaryFile(const SummaryState&      st,
                                             const bool               isSubstep,
                                             const bool               forceFinalWrite)
 {
-    this->summary_.add_timestep(st, this->reportIndex(report_step, time_step),
-                                this->miniStepId_,
-                                !time_step.has_value() || isSubstep);
+    this->summary_.add_timestep(st, report_step, this->miniStepId_,
+                                !time_step.has_value() || isSubstep,
+                                this->reportIndex(report_step, time_step));
 
     const auto is_final_summary =
         this->isFinalWrite(report_step, isSubstep, forceFinalWrite);

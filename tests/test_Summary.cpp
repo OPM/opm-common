@@ -45,6 +45,7 @@
 
 #include <opm/io/eclipse/ERsm.hpp>
 #include <opm/io/eclipse/ESmry.hpp>
+#include <opm/io/eclipse/EclFile.hpp>
 
 #include <opm/common/utility/TimeService.hpp>
 
@@ -657,6 +658,39 @@ BOOST_AUTO_TEST_SUITE(Summary)
 
 // Tests read the deck, write (synthetic) summary output, read the summary
 // output, and compare those values with the input.
+
+BOOST_AUTO_TEST_CASE(PhysicalOutputSequenceBeyondScheduleSize)
+{
+    setup cfg {"summary_output_sequence"};
+
+    auto writer = out::Summary {cfg.config, cfg.es, cfg.grid, cfg.schedule, cfg.name};
+
+    const auto st
+        = SummaryState {TimeService::now(), cfg.es.runspec().udqParams().undefinedValue()};
+
+    // Deliberately use the first output step outside the Schedule's valid index range.
+    const auto outputStep = static_cast<int>(cfg.schedule.size());
+    writer.add_timestep(st,
+                        /* report_step = */ 1,
+                        /* ministep_id = */ 0,
+                        /* isSubstep = */ true,
+                        outputStep);
+
+    BOOST_CHECK_NO_THROW(writer.write());
+
+    auto summaryFile = EclIO::EclFile {cfg.name + ".UNSMRY"};
+    auto sequence = std::optional<int> {};
+    const auto& arrayNames = summaryFile.arrayNames();
+    for (auto index = std::size_t {0}; index < arrayNames.size(); ++index) {
+        if (arrayNames[index] == "SEQHDR") {
+            sequence = summaryFile.get<int>(static_cast<int>(index)).front();
+            break;
+        }
+    }
+
+    BOOST_REQUIRE(sequence.has_value());
+    BOOST_CHECK_EQUAL(*sequence, outputStep);
+}
 
 BOOST_AUTO_TEST_CASE(LGR_summaryconfig_grid_ctor_populates_NUMS)
 {
