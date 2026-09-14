@@ -81,7 +81,7 @@ namespace Opm {
 
     template <>
     std::string DeckOutput::format_value( const RawString& value ) {
-        return { value };
+        return std::string{ value };
     }
 
     template <>
