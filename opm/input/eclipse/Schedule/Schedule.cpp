@@ -2993,7 +2993,8 @@ std::vector<ScheduleState>::const_iterator Schedule::end() const {
     return this->snapshots.end();
 }
 
-void Schedule::create_first(const time_point& start_time, const std::optional<time_point>& end_time)
+void Schedule::create_first(const time_point&                start_time,
+                            const std::optional<time_point>& end_time)
 {
     if (end_time.has_value()) {
         this->snapshots.emplace_back( start_time, end_time.value() );
@@ -3053,7 +3054,9 @@ void Schedule::create_first(const time_point& start_time, const std::optional<ti
     this->addGroup("FIELD", 0);
 }
 
-void Schedule::create_next(const time_point& start_time, const std::optional<time_point>& end_time) {
+void Schedule::create_next(const time_point&                start_time,
+                           const std::optional<time_point>& end_time)
+{
     if (this->snapshots.empty())
         this->create_first(start_time, end_time);
     else {
@@ -3065,8 +3068,8 @@ void Schedule::create_next(const time_point& start_time, const std::optional<tim
     }
 }
 
-
-void Schedule::create_next(const ScheduleBlock& block) {
+void Schedule::create_next(const ScheduleBlock& block)
+{
     const auto& start_time = block.start_time();
     const auto& end_time = block.end_time();
     this->create_next(start_time, end_time);

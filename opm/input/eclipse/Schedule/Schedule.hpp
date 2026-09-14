@@ -437,11 +437,9 @@ namespace Opm {
 
         const ScheduleState& back() const;
         const ScheduleState& operator[](std::size_t index) const;
+
         std::vector<ScheduleState>::const_iterator begin() const;
         std::vector<ScheduleState>::const_iterator end() const;
-        void create_next(const time_point& start_time, const std::optional<time_point>& end_time);
-        void create_next(const ScheduleBlock& block);
-        void create_first(const time_point& start_time, const std::optional<time_point>& end_time);
 
         void treat_critical_as_non_critical(bool value) { this->m_treat_critical_as_non_critical = value; }
 
@@ -551,6 +549,10 @@ namespace Opm {
         // It is a shared_ptr, so a Schedule can be constructed using the copy constructor sharing the simUpdateFromPython.
         // The copy constructor is needed for creating a mocked simulator (msim).
         std::shared_ptr<SimulatorUpdate> simUpdateFromPython{};
+
+        void create_next(const time_point& start_time, const std::optional<time_point>& end_time);
+        void create_next(const ScheduleBlock& block);
+        void create_first(const time_point& start_time, const std::optional<time_point>& end_time);
 
         void init_completed_cells_lgr(const EclipseGrid& ecl_grid);
         void init_completed_cells_lgr_map(const EclipseGrid& ecl_grid);
