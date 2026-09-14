@@ -41,6 +41,7 @@
 #include <opm/input/eclipse/Parser/ParserKeyword.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/A.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/Builtin.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/L.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/R.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/S.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/T.hpp>
@@ -2202,6 +2203,68 @@ DENSITY
         BOOST_CHECK_CLOSE( rs.getSIDouble( 0 ), 71.243042671614077, 1.0e-10 );
         BOOST_CHECK_CLOSE( pbub.getSIDouble( 0 ), 6.515545642044100e+06, 1.0e-10 );
     }
+}
+
+BOOST_AUTO_TEST_CASE(ParseLicenses)
+{
+    // The FEATURES item has size_type ALL, so it must consume every value in
+    // its own record and stop there -- not run into the next record or the
+    // next keyword. Note that a bare terminator leaves no records at all.
+
+    const auto deck = Parser{}.parseString(R"(RUNSPEC
+LICENSES
+/
+
+LICENSES
+ 'A' /
+/
+
+LICENSES
+ 'A' /
+ 'B' 'C' /
+ 'D' 'E' 'F' /
+ 'G' /
+/
+
+DIMENS
+ 10 20 30 /
+)");
+
+    const auto& licenses = deck.get<ParserKeywords::LICENSES>();
+    BOOST_REQUIRE_EQUAL(licenses.size(), std::size_t{3});
+
+    BOOST_CHECK_EQUAL(licenses[0].size(), std::size_t{0});
+
+    const auto expect = std::vector<std::vector<std::vector<std::string>>> {
+        {},
+        {{"A"}},
+        {{"A"}, {"B", "C"}, {"D", "E", "F"}, {"G"}},
+    };
+
+    for (std::size_t keyword = 0; keyword < expect.size(); ++keyword) {
+        BOOST_TEST_CONTEXT("LICENSES #" << keyword)
+        {
+            BOOST_REQUIRE_EQUAL(licenses[keyword].size(), expect[keyword].size());
+
+            for (std::size_t record = 0; record < expect[keyword].size(); ++record) {
+                const auto& features = licenses[keyword].getRecord(record)
+                    .getItem<ParserKeywords::LICENSES::FEATURES>();
+
+                BOOST_REQUIRE_EQUAL(features.data_size(), expect[keyword][record].size());
+                for (std::size_t i = 0; i < expect[keyword][record].size(); ++i) {
+                    BOOST_CHECK_EQUAL(features.get<std::string>(i),
+                                      expect[keyword][record][i]);
+                }
+            }
+        }
+    }
+
+    // The variadic item must not have swallowed the keyword that follows.
+    BOOST_REQUIRE(deck.hasKeyword("DIMENS"));
+    const auto& dimens = deck["DIMENS"].back().getRecord(0);
+    BOOST_CHECK_EQUAL(dimens.getItem("NX").get<int>(0), 10);
+    BOOST_CHECK_EQUAL(dimens.getItem("NY").get<int>(0), 20);
+    BOOST_CHECK_EQUAL(dimens.getItem("NZ").get<int>(0), 30);
 }
 
 BOOST_AUTO_TEST_CASE(ParseDoubleRecords) {
