@@ -128,6 +128,34 @@ namespace {
         }
     }
 
+    // One LGR's section: the connections of every well that has any in this
+    // LGR (by grid number), ordered in this LGR's grid, numbered from zero, the
+    // well numbered by its position among the section's wells -- the order the
+    // IWEL loop uses. Dynamic results are matched by (LGR, local index), since
+    // two LGRs can share a local index.
+    template <class ConnOp>
+    void connectionLoopLGR(const Opm::EclipseGrid& lgrid,
+                           const int               lgr_number,
+                           const Opm::Well&        well,
+                           const std::size_t       wellID,
+                           const Opm::data::Well*  wellRes,
+                           ConnOp&&                connOp)
+    {
+        const auto& wellName = well.name();
+        const auto  isProd   = well.isProducer();
+        std::size_t connID = 0;
+        for (const auto* connPtr : well.getConnections().output(lgrid, lgr_number)) {
+            if (connPtr->kind() == Opm::Connection::CTFKind::DynamicFracturing) {
+                continue;
+            }
+            const auto* dynConnRes = (wellRes == nullptr)
+                ? nullptr : wellRes->find_connection(connPtr->global_index(), lgr_number);
+            connOp(wellName, wellID, isProd, *connPtr, connID,
+                   connPtr->global_index(), dynConnRes);
+            ++connID;
+        }
+    }
+
     template <class ConnOp>
     void wellConnectionLoop(const Opm::Schedule&    sched,
                             const std::size_t       sim_step,
@@ -136,19 +164,23 @@ namespace {
                             const std::string&      lgr_tag,
                             ConnOp&&                connOp)
     {
+        const int lgr_number = static_cast<int>(grid.get_lgr_cell_index(lgr_tag)) + 1;
+        const auto& lgrid = grid.getLGRCell(lgr_tag);
+        std::size_t wellID = 0;
         for (const auto& wname : sched.wellNames(sim_step)) {
             const auto& well = sched[sim_step].wells(wname);
 
-            if (well.get_lgr_well_tag().value_or("") != lgr_tag) {
-                // Skip wells not in this LGR.
-                continue;
+            if ((well.get_lgr_well_tag().value_or("") != lgr_tag) &&
+                !well.hasConnectionsInLgr(lgr_number))
+            {
+                continue; // not in this LGR
             }
 
             const auto  well_iter = xw.find(wname);
             const auto* wellRes   = (well_iter == xw.end())
                 ? nullptr : &well_iter->second;
 
-            connectionLoop(grid, well, wellRes, connOp,  false);
+            connectionLoopLGR(lgrid, lgr_number, well, wellID++, wellRes, connOp);
         }
     }
 

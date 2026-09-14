@@ -1077,6 +1077,16 @@ bool Well::updateAutoShutin(const bool auto_shutin)
 }
 
 
+bool Well::hasConnectionsInLgr(const int lgr_grid_number) const
+{
+    if (this->connections == nullptr) {
+        return false;
+    }
+    return std::any_of(this->connections->begin(), this->connections->end(),
+                       [lgr_grid_number](const Connection& c)
+                       { return c.get_lgr_level() == lgr_grid_number; });
+}
+
 bool Well::updateConnections(std::shared_ptr<WellConnections> connections_arg, bool force)
 {
     connections_arg->order();

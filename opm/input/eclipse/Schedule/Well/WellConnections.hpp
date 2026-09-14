@@ -140,6 +140,9 @@ namespace Opm {
         /// computed ones by length and the Peaceman radius); nothing needs a
         /// grid. gridNumberOf maps an LGR name to its connection grid number.
         /// Returns true when a connection moved; lgrNames collects the LGRs used.
+        /// The connections in one LGR (by grid number), ordered as output(grid).
+        std::vector<const Connection*> output(const EclipseGrid& grid, int lgr_grid_number) const;
+
         bool refineIntoLgrs(const LgrCollection& lgrs,
                             const std::function<int(const std::string&)>& gridNumberOf,
                             std::set<std::string>& lgrNames);

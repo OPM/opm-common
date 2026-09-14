@@ -1219,6 +1219,20 @@ namespace Opm { namespace data {
             return &*connection;
         }
 
+        /// A connection by its index within one LGR (0 = the global grid).
+        const Connection*
+        find_connection(const Connection::global_index connection_grid_index,
+                        const int                     lgr_grid) const
+        {
+            const auto connection = std::find_if(this->connections.begin(),
+                                                 this->connections.end(),
+                [connection_grid_index, lgr_grid](const Connection& c)
+            {
+                return (c.index == connection_grid_index) && (c.lgr_grid == lgr_grid);
+            });
+            return (connection == this->connections.end()) ? nullptr : &*connection;
+        }
+
         Connection*
         find_connection(const Connection::global_index connection_grid_index)
         {

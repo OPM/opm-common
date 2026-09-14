@@ -436,7 +436,8 @@ namespace {
     {
         auto wellData = Helpers::AggregateWellData(ih);
         wellData.captureDeclaredWellDataLGR(schedule, grid, tracers, sim_step, action_state, wtest_state, sumState, ih, lgr_tag);
-        wellData.captureDynamicWellDataLGR(schedule, tracers, sim_step, wells, sumState,lgr_tag);
+        wellData.captureDynamicWellDataLGR(schedule, tracers, sim_step, wells, sumState, lgr_tag,
+                                           static_cast<int>(grid.get_lgr_cell_index(lgr_tag)) + 1);
 
         rstFile.write("IWEL", wellData.getIWell());
 
@@ -611,11 +612,13 @@ namespace {
         }
 
         const auto wells = schedule.wellNames(sim_step);
+        const int lgr_number = static_cast<int>(grid.get_lgr_cell_index(lgr_tag)) + 1;
 
         const bool has_lgrwells = std::ranges::any_of
-            (wells, [&schedule, &lgr_tag, sim_step](const std::string& well) {
+            (wells, [&schedule, &lgr_tag, lgr_number, sim_step](const std::string& well) {
                 const auto& lwell = schedule.getWell(well, sim_step);
-                return lwell.get_lgr_well_tag().value_or("") == lgr_tag;
+                return (lwell.get_lgr_well_tag().value_or("") == lgr_tag)
+                    || lwell.hasConnectionsInLgr(lgr_number);
             });
 
         // Write well and MSW data only when applicable (i.e., when present)
