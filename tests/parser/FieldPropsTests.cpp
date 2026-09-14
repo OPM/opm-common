@@ -761,6 +761,33 @@ BOOST_AUTO_TEST_CASE(LATE_GET_SATFUNC) {
 
 }
 
+// When IMBNUM is explicitly supplied in the deck it must be read and
+// preserved cell-by-cell, independent of SATNUM. Guards against any
+// future change to the IMBNUM region descriptor (which has no init()
+// default on purpose, so that hysteresis decks are forced to provide
+// IMBNUM explicitly).
+BOOST_AUTO_TEST_CASE(IMBNUM_EXPLICIT_PRESERVED) {
+    std::string deck_string = R"(
+REGIONS
+
+SATNUM
+1 2 3 1 2 3 1 2 3
+/
+
+IMBNUM
+3 2 1 3 2 1 3 2 1
+/
+)";
+    EclipseGrid grid(3,1,3);
+    Deck deck = Parser{}.parseString(deck_string);
+    FieldPropsManager fpm(deck, Phases{true, true, true}, grid, TableManager());
+
+    const auto& imbnum = fpm.get_int("IMBNUM");
+    const std::vector<int> expected = {3,2,1,3,2,1,3,2,1};
+    BOOST_CHECK_EQUAL_COLLECTIONS(imbnum.begin(), imbnum.end(),
+                                  expected.begin(), expected.end());
+}
+
 BOOST_AUTO_TEST_CASE(GET_TEMP) {
     std::string deck_string = R"(
 GRID
