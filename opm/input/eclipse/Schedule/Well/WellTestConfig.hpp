@@ -46,11 +46,12 @@ constexpr int CONNECTION = 11;
 }
 
 namespace EclCloseReason {
-constexpr int NONE     = 1; // May be written to UNRST during history
-constexpr int PHYSICAL = 3;
-constexpr int ECONOMIC = 5;
-constexpr int GCON     = 6;
-constexpr int THPLimit = 9;
+constexpr int NONE       = 1; // May be written to UNRST during history
+constexpr int PHYSICAL   = 3;
+constexpr int ECONOMIC   = 5;
+constexpr int GCON       = 6;
+constexpr int THPLimit   = 9;
+constexpr int CONNECTION = 10;
 }
 
 enum class Reason {

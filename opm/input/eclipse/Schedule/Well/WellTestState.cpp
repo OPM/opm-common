@@ -52,6 +52,7 @@ namespace Opm {
         case WellTestConfig::Reason::ECONOMIC:   return WTest::EclCloseReason::ECONOMIC;
         case WellTestConfig::Reason::GROUP:      return WTest::EclCloseReason::GCON;
         case WellTestConfig::Reason::THP_DESIGN: return WTest::EclCloseReason::THPLimit;
+        case WellTestConfig::Reason::COMPLETION: return WTest::EclCloseReason::CONNECTION;
         default:
             throw std::logic_error("Not yet handled WTEST config alternative");
         }
@@ -64,6 +65,7 @@ namespace Opm {
         case  WTest::EclCloseReason::ECONOMIC: return WellTestConfig::Reason::ECONOMIC;
         case  WTest::EclCloseReason::GCON:     return WellTestConfig::Reason::GROUP;
         case  WTest::EclCloseReason::THPLimit: return WellTestConfig::Reason::THP_DESIGN;
+        case  WTest::EclCloseReason::CONNECTION: return WellTestConfig::Reason::COMPLETION;
         default:
             throw std::logic_error("Not yet handled WTEST config alternative");
         }

@@ -143,6 +143,37 @@ BOOST_AUTO_TEST_CASE(WTEST_STATE) {
 }
 
 
+BOOST_AUTO_TEST_CASE(WTEST_COMPLETION_CLOSE_REASON) {
+    // A well shut because its completions were closed is re-tested under 'C',
+    // not under 'E'.  An 'E' re-test would reopen completions that a
+    // connection workover had just closed.
+    const double day = 86400;
+
+    WellTestState st;
+    st.close_well("WELL_NAME", WellTestConfig::Reason::COMPLETION, 100 * day);
+
+    {
+        WellTestConfig economic;
+        economic.add_well("WELL_NAME", "E", 10 * day, 5, 0, 0);
+        BOOST_CHECK_EQUAL(st.test_wells(economic, 200 * day).size(), 0U);
+    }
+
+    {
+        WellTestConfig completion;
+        completion.add_well("WELL_NAME", "C", 10 * day, 5, 0, 0);
+        BOOST_CHECK_EQUAL(st.test_wells(completion, 200 * day).size(), 1U);
+    }
+
+    // The reason survives a round trip through the restart file encoding.
+    const auto well = WellTestState::WTestWell {
+        "WELL_NAME", WellTestConfig::Reason::COMPLETION, 100 * day
+    };
+    const auto ecl_reason = well.int_reason();
+    BOOST_CHECK_EQUAL(ecl_reason, WTest::EclCloseReason::CONNECTION);
+    BOOST_CHECK(WellTestState::WTestWell::inverse_ecl_reason(ecl_reason)
+                == WellTestConfig::Reason::COMPLETION);
+}
+
 BOOST_AUTO_TEST_CASE(WTEST_STATE_COMPLETIONS) {
     WellTestConfig wc;
     WellTestState st;
