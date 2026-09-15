@@ -202,7 +202,7 @@ HandlerContext::wellNames(const std::string& pattern) const
 
 void HandlerContext::addGroup(const std::string& groupName)
 {
-    schedule_.addGroup(groupName, currentStep);
+    schedule_.addGroup(groupName);
 }
 
 void HandlerContext::addGroupToGroup(const std::string& parent_group,

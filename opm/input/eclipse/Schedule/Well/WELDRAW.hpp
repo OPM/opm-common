@@ -100,10 +100,8 @@ namespace Opm {
         /// \param[in] well_name Name of the well owning this limit, for
         /// UDA evaluation.
         /// \param[in] st Summary vectors, for UDA evaluation.
-        /// \param[in] udq_undefined Value of undefined UDQs.
         double maxDrawdown(const std::string& well_name,
-                           const SummaryState& st,
-                           double udq_undefined) const;
+                           const SummaryState& st) const;
 
         TargetPhase targetPhase() const
         {

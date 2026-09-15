@@ -79,7 +79,6 @@ namespace {
             Opm::Well::ProducerCMode::ORAT,
             ordering,
             Opm::UnitSystem::newMETRIC(),
-            -3.0e+20,
             0.0, true, true, 0,
             Opm::Well::GasInflowEquation::STD
         };

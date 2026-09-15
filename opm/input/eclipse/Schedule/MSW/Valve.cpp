@@ -44,20 +44,22 @@ namespace Opm {
         , segment_number(segment_number_)
     {}
 
-    double ValveUDAEval::value(const UDAValue& value, const double udq_default) const
+    double ValveUDAEval::value(const UDAValue& value) const
     {
         if (value.is<double>()) {
             return value.getSI();
         }
 
-        const std::string& string_var = value.get<std::string>();
+        auto output_value = this->summary_state.get_udq_undefined();
 
-        double output_value = udq_default;
-        if (summary_state.has_segment_var(well_name, string_var, segment_number)) {
-            output_value = summary_state.get_segment_var(well_name, string_var, segment_number);
+        if (const auto& string_var = value.get<std::string>();
+            this->summary_state.has_segment_var(well_name, string_var, segment_number))
+        {
+            output_value = this->summary_state
+                .get_segment_var(well_name, string_var, segment_number);
         }
-        else if (summary_state.has(string_var)) {
-            output_value = summary_state.get(string_var);
+        else if (this->summary_state.has(string_var)) {
+            output_value = this->summary_state.get(string_var);
         }
 
         return value.get_dim().convertRawToSi(output_value);
@@ -100,11 +102,10 @@ namespace Opm {
         , m_status                (stat)
     {}
 
-    Valve::Valve(const DeckRecord& record, const double udq_default)
+    Valve::Valve(const DeckRecord& record)
         : m_con_flow_coeff(record.getItem("CV").get<double>(0))
         , m_con_cross_area(record.getItem("AREA").get<UDAValue>(0))
         , m_con_cross_area_value(m_con_cross_area.is<double>() ? m_con_cross_area.getSI() : -1.0)
-        , m_udq_default(udq_default)
     {
         // We initialize negative values for the values are defaulted
         const double value_for_default = -1.0e100;
@@ -171,7 +172,7 @@ namespace Opm {
     }
 
     std::map<std::string, std::vector<std::pair<int, Valve>>>
-    Valve::fromWSEGVALV(const DeckKeyword& keyword, const double udq_default)
+    Valve::fromWSEGVALV(const DeckKeyword& keyword)
     {
         auto res = std::map<std::string, std::vector<std::pair<int, Valve>>>{};
 
@@ -180,9 +181,7 @@ namespace Opm {
 
             const int segment_number = record.getItem("SEGMENT_NUMBER").get<int>(0);
 
-            res[well_name].emplace_back(std::piecewise_construct,
-                                        std::forward_as_tuple(segment_number),
-                                        std::forward_as_tuple(record, udq_default));
+            res[well_name].emplace_back(segment_number, record);
         }
 
         return res;
@@ -206,7 +205,7 @@ namespace Opm {
     double Valve::conCrossArea(const std::optional<const ValveUDAEval>& uda_eval_optional) const
     {
         m_con_cross_area_value = uda_eval_optional.has_value()
-            ? uda_eval_optional.value().value(m_con_cross_area, m_udq_default)
+            ? uda_eval_optional->value(m_con_cross_area)
             : m_con_cross_area.getSI();
 
         return m_con_cross_area_value;

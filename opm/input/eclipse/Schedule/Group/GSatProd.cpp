@@ -80,9 +80,7 @@ Opm::GSatProd::udq(const Rate r) const
 double
 Opm::GSatProd::getRate(const Rate r, const SummaryState& st) const
 {
-    return UDA::eval_group_uda(this->rate_[r],
-                               this->group_,
-                               st, st.get_udq_undefined());
+    return UDA::eval_group_uda(this->rate_[r], this->group_, st);
 }
 
 Opm::GSatProd::Values<double>

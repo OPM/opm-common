@@ -129,10 +129,9 @@ namespace Opm {
     }
 
     double WELDRAW::maxDrawdown(const std::string& well_name,
-                                const SummaryState& st,
-                                const double udq_undefined) const
+                                const SummaryState& st) const
     {
-        return UDA::eval_well_uda_pressure(this->m_max_drawdown, well_name, st, udq_undefined);
+        return UDA::eval_well_uda_pressure(this->m_max_drawdown, well_name, st);
     }
 
     bool WELDRAW::operator==(const WELDRAW& other) const

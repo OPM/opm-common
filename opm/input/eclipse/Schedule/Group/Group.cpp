@@ -321,16 +321,14 @@ namespace {
 namespace Opm {
 
 Group::Group()
-    : Group { "", 0, 0.0, UnitSystem() }
+    : Group { "", 0, UnitSystem() }
 {}
 
 Group::Group(const std::string& name,
              const std::size_t  insert_index_arg,
-             const double       udq_undefined_arg,
              const UnitSystem&  unit_system_arg)
     : m_name                   (name)
     , m_insert_index           (insert_index_arg)
-    , udq_undefined            (udq_undefined_arg)
     , unit_system              (unit_system_arg)
     , group_type               (GroupType::NONE)
     , gefac                    (1)
@@ -346,9 +344,8 @@ Group::Group(const std::string& name,
 
 Group::Group(const RestartIO::RstGroup& rst_group,
              const std::size_t          insert_index_arg,
-             const double               udq_undefined_arg,
              const UnitSystem&          unit_system_arg)
-    : Group { rst_group.name, insert_index_arg, udq_undefined_arg, unit_system_arg }
+    : Group { rst_group.name, insert_index_arg, unit_system_arg }
 {
     this->gefac = rst_group.efficiency_factor;
 
@@ -384,7 +381,6 @@ Group Group::serializationTestObject()
 
     result.m_name = "test1";
     result.m_insert_index = 1;
-    result.udq_undefined = 3.0;
     result.unit_system = UnitSystem::serializationTestObject();
     result.group_type = GroupType::PRODUCTION;
     result.gefac = 4.0;
@@ -997,15 +993,15 @@ Group::productionControls(const SummaryState& st) const
     pc.cmode = this->production_properties.cmode;
     pc.group_limit_action = this->production_properties.group_limit_action;
 
-    pc.oil_target = UDA::eval_group_uda(this->production_properties.oil_target, this->m_name, st, this->udq_undefined);
-    pc.water_target = UDA::eval_group_uda(this->production_properties.water_target, this->m_name, st, this->udq_undefined);
-    pc.gas_target = UDA::eval_group_uda(this->production_properties.gas_target, this->m_name, st, this->udq_undefined);
-    pc.liquid_target = UDA::eval_group_uda(this->production_properties.liquid_target, this->m_name, st, this->udq_undefined);
+    pc.oil_target = UDA::eval_group_uda(this->production_properties.oil_target, this->m_name, st);
+    pc.water_target = UDA::eval_group_uda(this->production_properties.water_target, this->m_name, st);
+    pc.gas_target = UDA::eval_group_uda(this->production_properties.gas_target, this->m_name, st);
+    pc.liquid_target = UDA::eval_group_uda(this->production_properties.liquid_target, this->m_name, st);
 
     pc.guide_rate = this->production_properties.guide_rate;
     pc.guide_rate_def = this->production_properties.guide_rate_def;
 
-    pc.resv_target = UDA::eval_group_uda(this->production_properties.resv_target, this->m_name, st, this->udq_undefined);
+    pc.resv_target = UDA::eval_group_uda(this->production_properties.resv_target, this->m_name, st);
 
     return pc;
 }
@@ -1021,10 +1017,10 @@ Group::injectionControls(const Phase phase, const SummaryState& st) const
 
     ic.injection_controls = inj.injection_controls;
 
-    ic.surface_max_rate = UDA::eval_group_uda_rate(inj.surface_max_rate, this->m_name, st, this->udq_undefined, ic.phase, this->unit_system);
-    ic.resv_max_rate = UDA::eval_group_uda(inj.resv_max_rate, this->m_name, st, this->udq_undefined);
-    ic.target_reinj_fraction = UDA::eval_group_uda(inj.target_reinj_fraction, this->m_name, st, this->udq_undefined);
-    ic.target_void_fraction = UDA::eval_group_uda(inj.target_void_fraction, this->m_name, st, this->udq_undefined);
+    ic.surface_max_rate = UDA::eval_group_uda_rate(inj.surface_max_rate, this->m_name, st, ic.phase, this->unit_system);
+    ic.resv_max_rate = UDA::eval_group_uda(inj.resv_max_rate, this->m_name, st);
+    ic.target_reinj_fraction = UDA::eval_group_uda(inj.target_reinj_fraction, this->m_name, st);
+    ic.target_void_fraction = UDA::eval_group_uda(inj.target_void_fraction, this->m_name, st);
 
     ic.reinj_group = inj.reinj_group.value_or(this->m_name);
     ic.voidage_group = inj.voidage_group.value_or(this->m_name);
@@ -1529,7 +1525,6 @@ bool Group::operator==(const Group& data) const
 {
     return (this->name() == data.name())
         && (this->insert_index() == data.insert_index())
-        && (this->udq_undefined == data.udq_undefined)
         && (this->unit_system == data.unit_system)
         && (this->group_type == data.group_type)
         && (this->getGroupEfficiencyFactor() == data.getGroupEfficiencyFactor())

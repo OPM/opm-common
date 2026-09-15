@@ -201,9 +201,7 @@ void handleWSEGSICD(HandlerContext& handlerContext)
 
 void handleWSEGVALV(HandlerContext& handlerContext)
 {
-    const double udq_default = handlerContext.state().udq.get().params().undefinedValue();
-
-    const auto valves = Valve::fromWSEGVALV(handlerContext.keyword, udq_default);
+    const auto valves = Valve::fromWSEGVALV(handlerContext.keyword);
 
     for (const auto& [well_name_pattern, valve_pairs] : valves) {
         const auto well_names = handlerContext.wellNames(well_name_pattern);

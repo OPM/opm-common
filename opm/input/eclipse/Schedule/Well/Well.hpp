@@ -235,7 +235,7 @@ public:
         void resetDefaultHistoricalBHPLimit();
         void resetBHPLimit();
         void setBHPLimit(const double limit);
-        InjectionControls controls(const UnitSystem& unit_system, const SummaryState& st, double udq_default) const;
+        InjectionControls controls(const UnitSystem& unit_system, const SummaryState& st) const;
         bool updateUDQActive(const UDQConfig& udq_config, UDQActive& active) const;
         bool updateUDQActive(const UDQConfig& udq_config, const WELTARGCMode cmode, UDQActive& active) const;
         void update_uda(const UDQConfig& udq_config, UDQActive& udq_active, UDAControl control, const UDAValue& value);
@@ -352,7 +352,7 @@ public:
         void handleWELTARG( WELTARGCMode cmode, const UDAValue& new_arg, double SiFactorP);
         void resetDefaultBHPLimit();
         void clearControls();
-        ProductionControls controls(const SummaryState& st, double udq_default) const;
+        ProductionControls controls(const SummaryState& st) const;
         bool updateUDQActive(const UDQConfig& udq_config, UDQActive& active) const;
         bool updateUDQActive(const UDQConfig& udq_config, const WELTARGCMode cmode, UDQActive& active) const;
         void update_uda(const UDQConfig& udq_config, UDQActive& udq_active, UDAControl control, const UDAValue& value);
@@ -416,7 +416,6 @@ public:
          ProducerCMode whistctl_cmode,
          Connection::Order ordering,
          const UnitSystem& unit_system,
-         double udq_undefined,
          double dr,
          bool allow_xflow,
          bool auto_shutin,
@@ -429,7 +428,6 @@ public:
          int rst_whistctl_cmode,
          const TracerConfig& tracer_config,
          const UnitSystem& unit_system,
-         double udq_undefined,
          const std::optional<VFPProdTable::ALQ_TYPE>& alq_type);
 
     static Well serializationTestObject();
@@ -661,7 +659,6 @@ public:
         serializer(headJ);
         serializer(ref_depth);
         serializer(wpave_ref_depth);
-        serializer(udq_undefined);
         serializer(status);
         serializer(drainage_radius);
         serializer(allow_cross_flow);
@@ -736,7 +733,6 @@ private:
     GasInflowEquation gas_inflow = GasInflowEquation::STD;
 
     const UnitSystem* unit_system{nullptr};
-    double udq_undefined{};
     WellType wtype{};
     WellRefinementType ref_type{WellRefinementType::STANDARD};
     std::string lgr_tag{};

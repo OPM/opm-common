@@ -292,7 +292,6 @@ Well::Well(const RestartIO::RstWell& rst_well,
            const int rst_whistctl_cmode,
            const TracerConfig& tracer_config,
            const UnitSystem& unit_system_arg,
-           const double udq_undefined_arg,
            const std::optional<VFPProdTable::ALQ_TYPE>& alq_type) :
     wname(rst_well.name),
     group_name(rst_well.group),
@@ -305,7 +304,6 @@ Well::Well(const RestartIO::RstWell& rst_well,
     automatic_shutin(def_automatic_shutin),
     pvt_table(rst_well.pvt_table),
     unit_system(&unit_system_arg),
-    udq_undefined(udq_undefined_arg),
     wtype(rst_well.wtype),
     guide_rate(guideRate(rst_well)),
     efficiency_factor(rst_well.efficiency_factor),
@@ -538,7 +536,6 @@ Well::Well(const std::string& wname_arg,
            ProducerCMode whistctl_cmode,
            Connection::Order ordering_arg,
            const UnitSystem& unit_system_arg,
-           double udq_undefined_arg,
            double dr,
            bool allow_xflow,
            bool auto_shutin,
@@ -558,7 +555,6 @@ Well::Well(const std::string& wname_arg,
     pvt_table(pvt_table_),
     gas_inflow(inflow_eq),
     unit_system(&unit_system_arg),
-    udq_undefined(udq_undefined_arg),
     wtype(wtype_arg),
     guide_rate({true, -1, Well::GuideRateTarget::UNDEFINED,ParserKeywords::WGRUPCON::SCALING_FACTOR::defaultValue}),
     efficiency_factor(1.0),
@@ -604,7 +600,6 @@ Well Well::serializationTestObject()
     result.headI = 3;
     result.headJ = 4;
     result.ref_depth = 5;
-    result.udq_undefined = 6.0;
     result.status = Status::AUTO;
     result.drainage_radius = 7.0;
     result.allow_cross_flow = true;
@@ -1465,7 +1460,7 @@ const WELDRAW& Well::getWELDRAW() const
 
 double Well::weldrawMaxDrawdown(const SummaryState& st) const
 {
-    return this->weldraw->maxDrawdown(this->wname, st, this->udq_undefined);
+    return this->weldraw->maxDrawdown(this->wname, st);
 }
 
 const WellEconProductionLimits& Well::getEconLimits() const
@@ -2207,7 +2202,7 @@ bool Well::wellNameInWellNamePattern(const std::string& wellName,
 Well::ProductionControls Well::productionControls(const SummaryState& st) const
 {
     if (this->isProducer()) {
-        return this->production->controls(st, this->udq_undefined);
+        return this->production->controls(st);
     }
 
     throw std::logic_error("Trying to get production data from an injector");
@@ -2216,7 +2211,7 @@ Well::ProductionControls Well::productionControls(const SummaryState& st) const
 Well::InjectionControls Well::injectionControls(const SummaryState& st) const
 {
     if (!this->isProducer()) {
-        return this->injection->controls(*this->unit_system, st, this->udq_undefined);
+        return this->injection->controls(*this->unit_system, st);
     }
 
     throw std::logic_error("Trying to get injection data from a producer");
@@ -2225,7 +2220,7 @@ Well::InjectionControls Well::injectionControls(const SummaryState& st) const
 double Well::alq_value(const SummaryState& st) const
 {
     if (this->wtype.producer()) {
-        auto controls = this->production->controls(st, this->udq_undefined);
+        auto controls = this->production->controls(st);
         return controls.alq_value;
     }
 
@@ -2307,7 +2302,6 @@ bool Well::cmp_structure(const Well& other) const
         && (this->getDrainageRadius() == other.getDrainageRadius())
         && (this->getAllowCrossFlow() == other.getAllowCrossFlow())
         && (this->getAutomaticShutIn() == other.getAutomaticShutIn())
-        && (this->udq_undefined == other.udq_undefined)
         && (this->getPreferredPhase() == other.getPreferredPhase()) // wellType()
         && (this->efficiency_factor == other.efficiency_factor)
         && (this->use_efficiency_in_network == other.use_efficiency_in_network)
@@ -2459,5 +2453,5 @@ void Opm::Well::setFilterConc(const UDAValue& conc)
 double Opm::Well::evalFilterConc(const SummaryState& summary_sate) const
 {
     return UDA::eval_well_uda(this->m_filter_concentration,
-                              this->name(), summary_sate, 0.0);
+                              this->name(), summary_sate);
 }

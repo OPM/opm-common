@@ -592,9 +592,9 @@ namespace Opm {
                                     const bool log_to_debug = false);
         void addACTIONX(const Action::ActionX& action);
         void addGroupToGroup( const std::string& parent_group, const std::string& child_group);
-        void addGroup(const std::string& groupName , std::size_t timeStep);
         void addGroup(Group group);
-        void addGroup(const RestartIO::RstGroup& rst_group, std::size_t timeStep);
+        void addGroup(const std::string& groupName);
+        void addGroup(const RestartIO::RstGroup& rst_group);
         void addWell(const std::string& wellName, const DeckRecord& record,
                     std::size_t timeStep, ConnectionOrder connection_order);
         void checkIfAllConnectionsIsShut(std::size_t reportStep);

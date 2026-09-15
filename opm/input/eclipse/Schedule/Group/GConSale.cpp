@@ -32,7 +32,7 @@ GConSale GConSale::serializationTestObject()
 {
     GConSale result;
     result.groups = {{"test1", {UDAValue(1.0), UDAValue(2.0), UDAValue(3.0),
-                                MaxProcedure::PLUG, 4.0, UnitSystem::serializationTestObject()}}};
+                                MaxProcedure::PLUG, UnitSystem::serializationTestObject()}}};
 
     return result;
 }
@@ -54,9 +54,9 @@ const GConSale::GCONSALEGroupProp GConSale::get(const std::string& name, const S
 
     GCONSALEGroupProp prop;
     const GConSale::GCONSALEGroup& group = this->get(name);
-    prop.sales_target = UDA::eval_group_uda(group.sales_target, name, st, group.udq_undefined);
-    prop.max_sales_rate = UDA::eval_group_uda(group.max_sales_rate, name, st, group.udq_undefined);
-    prop.min_sales_rate = UDA::eval_group_uda(group.min_sales_rate, name, st, group.udq_undefined);
+    prop.sales_target = UDA::eval_group_uda(group.sales_target, name, st);
+    prop.max_sales_rate = UDA::eval_group_uda(group.max_sales_rate, name, st);
+    prop.min_sales_rate = UDA::eval_group_uda(group.min_sales_rate, name, st);
     prop.max_proc = group.max_proc;
     return prop;
 }
@@ -77,13 +77,18 @@ GConSale::MaxProcedure GConSale::stringToProcedure(const std::string& str_proc) 
     return MaxProcedure::NONE;
 }
 
-void GConSale::add(const std::string& name, const UDAValue& sales_target, const UDAValue& max_rate, const UDAValue& min_rate, const std::string& procedure, double udq_undefined_arg, const UnitSystem& unit_system) {
+void GConSale::add(const std::string& name,
+                   const UDAValue& sales_target,
+                   const UDAValue& max_rate,
+                   const UDAValue& min_rate,
+                   const std::string& procedure,
+                   const UnitSystem& unit_system)
+{
     GConSale::GCONSALEGroup& group = groups[name];
     group.sales_target = sales_target;
     group.max_sales_rate = max_rate;
     group.min_sales_rate = min_rate;
     group.max_proc = stringToProcedure(procedure);
-    group.udq_undefined = udq_undefined_arg;
     group.unit_system = unit_system;
 }
 

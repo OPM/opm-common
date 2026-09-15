@@ -502,10 +502,9 @@ void handleGCONSALE(HandlerContext& handlerContext)
         auto max_rate = record.getItem("MAX_SALES_RATE").get<UDAValue>(0);
         auto min_rate = record.getItem("MIN_SALES_RATE").get<UDAValue>(0);
         std::string procedure = record.getItem("MAX_PROC").getTrimmedString(0);
-        auto udq_undefined = handlerContext.state().udq.get().params().undefinedValue();
 
         new_gconsale.add(groupName, sales_target, max_rate, min_rate, procedure,
-                         udq_undefined, handlerContext.static_schedule().m_unit_system);
+                         handlerContext.static_schedule().m_unit_system);
 
         auto new_group = handlerContext.state().groups.get( groupName );
         // GCONSALE needs the group to carry a GAS injection control so the sales /
@@ -568,10 +567,8 @@ void handleGCONSUMP(HandlerContext& handlerContext)
         if (!network_node.defaultApplied(0))
             network_node_name = network_node.getTrimmedString(0);
 
-        auto udq_undefined = handlerContext.state().udq.get().params().undefinedValue();
-
         new_gconsump.add(groupName, consumption_rate, import_rate, network_node_name,
-                         udq_undefined, handlerContext.static_schedule().m_unit_system);
+                         handlerContext.static_schedule().m_unit_system);
     }
     handlerContext.state().gconsump.update( std::move(new_gconsump) );
 }

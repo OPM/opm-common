@@ -46,6 +46,7 @@
 #include <opm/input/eclipse/Schedule/GasLiftOpt.hpp>
 #include <opm/input/eclipse/Schedule/Group/GConSale.hpp>
 #include <opm/input/eclipse/Schedule/Group/GConSump.hpp>
+#include <opm/input/eclipse/Schedule/Group/Group.hpp>
 #include <opm/input/eclipse/Schedule/Group/GroupEconProductionLimits.hpp>
 #include <opm/input/eclipse/Schedule/Group/GSatProd.hpp>
 #include <opm/input/eclipse/Schedule/Group/GTNode.hpp>
@@ -1220,7 +1221,6 @@ Defaulted grid coordinates is not allowed for COMPDAT as part of ACTIONX)"
                   sched_state.whistctl(),
                   wellConnectionOrder,
                   this->m_static.m_unit_system,
-                  this->getUDQConfig(timeStep).params().undefinedValue(),
                   drainageRadius,
                   allowCrossFlow,
                   automaticShutIn,
@@ -1559,19 +1559,15 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
     }
 
 
-    void Schedule::addGroup(const std::string& groupName, std::size_t timeStep) {
-        auto udq_undefined = this->getUDQConfig(timeStep).params().undefinedValue();
-        const auto& sched_state = this->snapshots.back();
-        auto insert_index = sched_state.groups.size();
-        this->addGroup( Group(groupName, insert_index, udq_undefined, this->m_static.m_unit_system) );
+    void Schedule::addGroup(const std::string& groupName) {
+        const auto insert_index = this->snapshots.back().groups.size();
+        this->addGroup(Group { groupName, insert_index, this->m_static.m_unit_system });
     }
 
 
-    void Schedule::addGroup(const RestartIO::RstGroup& rst_group, std::size_t timeStep) {
-        auto udq_undefined = this->getUDQConfig(timeStep).params().undefinedValue();
-
+    void Schedule::addGroup(const RestartIO::RstGroup& rst_group) {
         const auto insert_index = this->snapshots.back().groups.size();
-        auto new_group = Group(rst_group, insert_index, udq_undefined, this->m_static.m_unit_system);
+        auto new_group = Group { rst_group, insert_index, this->m_static.m_unit_system };
         if (rst_group.name != "FIELD") {
             // we also update the GuideRateConfig
             auto guide_rate_config = this->snapshots.back().guide_rate();
@@ -2377,7 +2373,7 @@ namespace {
 
         std::map<int, std::string> rst_group_names;
         for (const auto& rst_group : rst_state.groups) {
-            this->addGroup(rst_group, report_step);
+            this->addGroup(rst_group);
 
             const auto& group = this->snapshots.back().groups.get( rst_group.name );
 
@@ -2400,7 +2396,6 @@ namespace {
 
         //! \todo{ Restart GCONSUMP when consumption/import is defined via UDQs. }
         //! \todo{ Restart GCONSUMP with network node name defined. }
-        auto udq_undefined = this->getUDQConfig(report_step).params().undefinedValue();
         auto new_gconsump = this->snapshots.back().gconsump.get();
         for (const auto& rst_group : rst_state.groups) {
             const auto crate = rst_group.gas_consumption_rate;
@@ -2408,7 +2403,7 @@ namespace {
             if (crate != 0 || irate != 0) {
                 // UDAs stored in output unit by convention
                 const auto dim = this->m_static.m_unit_system.getDimension(UnitSystem::measure::gas_surface_rate);
-                new_gconsump.add(rst_group.name, UDAValue(crate, dim), UDAValue(irate, dim), "", udq_undefined, this->m_static.m_unit_system);
+                new_gconsump.add(rst_group.name, UDAValue(crate, dim), UDAValue(irate, dim), "", this->m_static.m_unit_system);
             }
         }
         this->snapshots.back().gconsump.update( std::move(new_gconsump) );
@@ -2461,7 +2456,6 @@ namespace {
                 rst_state.header.histctl_override,
                 tracer_config,
                 this->m_static.m_unit_system,
-                rst_state.header.udq_undefined,
                 alqTypes.getALQType(rst_well.wtype.producer(), rst_well.vfp_table)
             };
 
@@ -3051,7 +3045,7 @@ void Schedule::create_first(const time_point&                start_time,
     sched_state.wcycle.update( WCYCLE() );
     sched_state.wlist_tracker.update(ScheduleState::WellListChangeTracker{});
 
-    this->addGroup("FIELD", 0);
+    this->addGroup("FIELD");
 }
 
 void Schedule::create_next(const time_point&                start_time,
