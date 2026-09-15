@@ -147,26 +147,32 @@ namespace {
         }
     }
 
-    // The head and K range of a well in the section of an LGR it is not tagged
-    // with: from its connections in that LGR (LGR-local indices).
+    // Describe a well by the connections it has in one LGR: the count and the
+    // K range always, since a well completed across several LGRs must not
+    // advertise the others' connections here, and the head as well when the
+    // well is not tagged with this LGR and so has no declared head in it.
     template <class IWellArray>
     void headFromLgrConnections(const Opm::Well& well,
                                 const int        lgrNumber,
+                                const bool       takeHead,
                                 IWellArray&      iWell)
     {
         using Ix = Opm::RestartIO::Helpers::VectorItems::IWell::index;
         int n = 0, firstK = 0, lastK = 0, I = 0, J = 0;
         for (const auto& conn : well.getConnections()) {
+            if (conn.kind() == Opm::Connection::CTFKind::DynamicFracturing) continue;
             if (conn.get_lgr_level() != lgrNumber) continue;
             if (n == 0) { I = conn.getI(); J = conn.getJ(); firstK = lastK = conn.getK(); }
             firstK = std::min(firstK, conn.getK());
             lastK  = std::max(lastK,  conn.getK());
             ++n;
         }
+        iWell[Ix::NConn] = n;
         if (n == 0) return;
-        iWell[Ix::NConn]  = n;
-        iWell[Ix::IHead]  = I + 1;
-        iWell[Ix::JHead]  = J + 1;
+        if (takeHead) {
+            iWell[Ix::IHead] = I + 1;
+            iWell[Ix::JHead] = J + 1;
+        }
         if (!well.isMultiSegment()) {
             iWell[Ix::FirstK] = firstK + 1;
             iWell[Ix::LastK]  = lastK + 1;
@@ -590,12 +596,10 @@ namespace {
             auto& J = iWell[Ix::JHead]; // One-based index.
 
             auto firstK = iWell[Ix::FirstK]; // One-based index.  Zero for MSW.
-            auto lastK  = iWell[Ix::LastK];  // One-based index.  Zero for MSW.
 
             if (! well.isMultiSegment()) {
                 // Use zero-based lookup indices for non-MS wells.
                 --firstK;
-                --lastK;
             }
 
             // Subtract one for zero-based lookup indices.
@@ -603,11 +607,34 @@ namespace {
                 .getLGR_fatherIJK(I - 1, J - 1, firstK, lgrTag);
 
             if (! well.isMultiSegment()) {
-                const auto botIJK = grid
-                    .getLGR_fatherIJK(I - 1, J - 1, lastK, lgrTag);
+                // The well may be completed in several LGRs, so take the host
+                // layer range from every connection through its own LGR rather
+                // than from the head's.
+                auto hostK = [&grid](const Opm::Connection& conn)
+                {
+                    const auto level = conn.get_lgr_level();
+                    if (level <= 0) {
+                        return conn.getK();
+                    }
 
-                iWell[Ix::FirstK] = topIJK[2] + 1;
-                iWell[Ix::LastK]  = botIJK[2] + 1;
+                    return grid.getLGR_fatherIJK(conn.getI(), conn.getJ(), conn.getK(),
+                                                 grid.get_lgr_labels_by_number(level))[2];
+                };
+
+                auto firstHostK = topIJK[2];
+                auto lastHostK  = topIJK[2];
+                for (const auto& conn : well.getConnections()) {
+                    if (conn.kind() == Opm::Connection::CTFKind::DynamicFracturing) {
+                        continue;
+                    }
+
+                    const auto k = hostK(conn);
+                    firstHostK = std::min(firstHostK, k);
+                    lastHostK  = std::max(lastHostK,  k);
+                }
+
+                iWell[Ix::FirstK] = firstHostK + 1;
+                iWell[Ix::LastK]  = lastHostK + 1;
             }
 
             I = topIJK[0] + 1;
@@ -1989,9 +2016,8 @@ captureDeclaredWellDataLGR(const Schedule&             sched,
 
             IWell::staticContrib(well, step_glo, wtest_config, wtest_state,
                                  smry, msWellID, groupMapNameIndex, iw, grid, false);
-            if (well.get_lgr_well_tag().value_or("") != lgr_tag) {
-                headFromLgrConnections(well, lgr_number, iw);
-            }
+            headFromLgrConnections(well, lgr_number,
+                                   well.get_lgr_well_tag().value_or("") != lgr_tag, iw);
         });
     }
 
