@@ -8271,6 +8271,7 @@ BOOST_AUTO_TEST_CASE(append_summary_state)
     st2.update("FGPT", 100);
     st2.update_well_var("OP_1", "GOPR", 2000);
     st1.update_group_var("G1", "WOPR", 3000);
+    st2.update_region_var("FIPNUM", "ROIP", 3, 4000);
 
     st_both.append(st1);
     BOOST_CHECK_EQUAL(st_both, st1);
@@ -8279,6 +8280,10 @@ BOOST_AUTO_TEST_CASE(append_summary_state)
     BOOST_CHECK_EQUAL(st_both.get("FGPT"), 100);
     BOOST_CHECK_EQUAL(st_both.get_well_var("OP_1", "GOPR"), 2000);
     BOOST_CHECK_EQUAL(st_both.get_group_var("G1", "WOPR"), 3000);
+
+    // Region values must come across too, not only the flat "ROIP:3" entry.
+    BOOST_CHECK(st_both.has_region_var("FIPNUM", "ROIP", 3));
+    BOOST_CHECK_EQUAL(st_both.get_region_var("FIPNUM", "ROIP", 3), 4000);
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Summary_State
