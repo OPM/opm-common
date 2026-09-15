@@ -2329,8 +2329,12 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         return lgr_cell.get_hostnum(global_index);
     }
 
+    // The host cell in the global grid.  A nested LGR's HOSTNUM points into its
+    // parent LGR, so walk the whole chain rather than resolving one level.
     std::array<int,3> EclipseGrid::getLGR_fatherIJK(std::size_t i, std::size_t j, std::size_t k, const std::string& lgr_tag) const {
-        int global_id = getLGR_father(i, j, k, lgr_tag);
+        const EclipseGridLGR& lgr_cell = getLGRCell(lgr_tag);
+        lgr_cell.assertIJK(i, j, k);
+        int global_id = getLGR_global_father(lgr_cell.getGlobalIndex(i, j, k), lgr_tag);
         return this->getIJK(global_id);
     }
 
