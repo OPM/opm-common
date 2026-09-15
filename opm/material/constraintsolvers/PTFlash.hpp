@@ -320,19 +320,20 @@ public:
         }
         // Update the composition if cell is two-phase
         if (!is_single_phase) {
-            bool split_was_rejected = false;
-            const auto reject_split = [&](const auto& error) {
-                split_was_rejected = true;
-                if (verbosity >= 1) {
-                    OpmLog::debug(fmt::format(
-                        "The two-phase flash was rejected ({}); reassessing phase stability.",
-                        error.what()));
+            const auto try_solve_split = [&](const auto& on_failure) {
+                try {
+                    L_scalar = solveRachfordRice_g_(K_scalar, z_scalar, verbosity);
+                    flash_2ph(z_scalar, twoPhaseMethod, K_scalar, L_scalar, fluid_state,
+                              flash_tolerance, eos_type, verbosity);
+                    return true;
                 }
-            };
-            const auto solve_split = [&]() {
-                L_scalar = solveRachfordRice_g_(K_scalar, z_scalar, verbosity);
-                flash_2ph(z_scalar, twoPhaseMethod, K_scalar, L_scalar, fluid_state,
-                          flash_tolerance, eos_type, verbosity);
+                catch (const NumericalProblem& error) {
+                    on_failure(error);
+                }
+                catch (const Dune::FMatrixError& error) {
+                    on_failure(error);
+                }
+                return false;
             };
             const auto classify_negative_flash = [&]() {
                 const Scalar liquid_fraction = Opm::getValue(L_scalar);
@@ -342,34 +343,33 @@ public:
                     L_scalar = liquid_fraction <= 0. ? 0. : 1.;
                 }
             };
-            try {
-                // Rachford Rice equation to get initial L for composition solver
-                solve_split();
-            }
-            catch (const NumericalProblem& error) {
-                reject_split(error);
-            }
-            catch (const Dune::FMatrixError& error) {
-                reject_split(error);
-            }
+
+            // Rachford Rice equation to get initial L for composition solver
+            const bool split_succeeded = try_solve_split([&](const auto& error) {
+                if (verbosity >= 1) {
+                    OpmLog::debug(fmt::format(
+                        "The two-phase flash was rejected ({}); reassessing phase stability.",
+                        error.what()));
+                }
+            });
 
             // A finite negative-flash root outside [0, 1] is the single-phase
             // criterion, not a failed composition solve.
-            if (!split_was_rejected) {
+            if (split_succeeded) {
                 classify_negative_flash();
             }
 
             // A warm start must be reassessed from Wilson estimates because its
             // stored K may be a trivial fixed point. For a cold start, a
             // coincident split contradicts the preceding instability result.
-            const bool phases_coincide = !split_was_rejected && !is_single_phase
+            const bool phases_coincide = split_succeeded && !is_single_phase
                 && phasesCoincide_(fluid_state);
             if (phases_coincide && is_cold_start) {
                 OPM_THROW_NOLOG(NumericalProblem,
                                 "The two-phase flash converged to coincident phases after "
                                 "stability analysis identified an unstable mixture");
             }
-            if (split_was_rejected || (phases_coincide && !is_cold_start)) {
+            if (!split_succeeded || (phases_coincide && !is_cold_start)) {
                 if (phases_coincide && verbosity >= 1) {
                     OpmLog::debug("The two-phase flash converged to coincident phases; "
                                   "reassessing phase stability.");
@@ -387,22 +387,13 @@ public:
                 if (!is_single_phase) {
                     // Stability found a distinct trial phase and returned a
                     // fresh K estimate. Retry the split once from that state.
-                    const auto fail_retry = [](const auto& error) {
+                    try_solve_split([](const auto& error) {
                         OPM_THROW_NOLOG(
                             NumericalProblem,
                             fmt::format("Two-phase flash retry failed after stability "
                                         "analysis: {}",
                                         error.what()));
-                    };
-                    try {
-                        solve_split();
-                    }
-                    catch (const NumericalProblem& error) {
-                        fail_retry(error);
-                    }
-                    catch (const Dune::FMatrixError& error) {
-                        fail_retry(error);
-                    }
+                    });
                     classify_negative_flash();
                     if (!is_single_phase && phasesCoincide_(fluid_state)) {
                         OPM_THROW_NOLOG(NumericalProblem,
