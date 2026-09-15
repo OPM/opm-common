@@ -6566,8 +6566,20 @@ configureSummaryInput(const SummaryConfig& sumcfg,
                       const bool           enableDynamicVectors,
                       Evaluator::Factory&  evaluatorFactory)
 {
+    auto is_time_keyword = [](const std::string& kw)
+    {
+        return (kw == "TIME") || (kw == "DAY")
+            || (kw == "MONTH") || (kw == "MNTH")
+            || (kw == "YEAR") || (kw == "YEARS");
+    };
+
     auto unsuppkw = std::vector<SummaryConfigNode>{};
     for (const auto& node : sumcfg) {
+        if (is_time_keyword(node.keyword())) {
+            // Time vectors are handled by configureTimeVectors().
+            continue;
+        }
+
         auto prmDescr = evaluatorFactory.create(node);
 
         if (! prmDescr.evaluator) {
