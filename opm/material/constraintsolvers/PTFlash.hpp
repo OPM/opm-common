@@ -263,7 +263,8 @@ public:
         }
 
         // Throw error if Rachford-Rice fails
-        OPM_THROW_NOLOG(NumericalProblem, " Rachford-Rice did not converge within maximum number of iterations");
+        OPM_THROW_NOLOG(NumericalProblem,
+                        " Rachford-Rice did not converge within maximum number of iterations");
     }
 
     /*!
@@ -330,7 +331,8 @@ public:
             };
             const auto solve_split = [&]() {
                 L_scalar = solveRachfordRice_g_(K_scalar, z_scalar, verbosity);
-                flash_2ph(z_scalar, twoPhaseMethod, K_scalar, L_scalar, fluid_state, flash_tolerance, eos_type, verbosity);
+                flash_2ph(z_scalar, twoPhaseMethod, K_scalar, L_scalar, fluid_state,
+                          flash_tolerance, eos_type, verbosity);
             };
             const auto classify_negative_flash = [&]() {
                 const Scalar liquid_fraction = Opm::getValue(L_scalar);
@@ -344,7 +346,7 @@ public:
                 // Rachford Rice equation to get initial L for composition solver
                 solve_split();
             }
-            catch (const std::runtime_error& error) {
+            catch (const NumericalProblem& error) {
                 reject_split(error);
             }
             catch (const Dune::FMatrixError& error) {
@@ -395,7 +397,7 @@ public:
                     try {
                         solve_split();
                     }
-                    catch (const std::runtime_error& error) {
+                    catch (const NumericalProblem& error) {
                         fail_retry(error);
                     }
                     catch (const Dune::FMatrixError& error) {
@@ -608,7 +610,8 @@ public:
         else {
             for (int compIdx = 0; compIdx<numComponents; ++compIdx) {
                 if (Opm::getValue(z[compIdx]) > 0.) {
-                    K[compIdx] = vapour_trial_composition[compIdx] / liquid_trial_composition[compIdx];
+                    K[compIdx]
+                        = vapour_trial_composition[compIdx] / liquid_trial_composition[compIdx];
                 } else {
                     K[compIdx] = 1.;
                 }
@@ -883,21 +886,23 @@ protected:
                 // L and overwrites that state, so restarting it here is safe.
                 const auto fall_back_to_ssi = [&](const auto& error) {
                     if (verbosity >= 1) {
-                        OpmLog::debug(fmt::format("Newton did not finish the composition update ({}); "
-                                                  "switching back to successive substitution.", error.what()));
+                        OpmLog::debug(fmt::format(
+                            "Newton did not finish the composition update ({}); "
+                            "switching back to successive substitution.", error.what()));
                     }
                     converged = successiveSubstitutionComposition_(K_scalar, L_scalar, fluid_state_scalar, z_scalar, false, flash_tolerance, eos_type, verbosity);
                 };
                 try {
-                    converged = newtonComposition_(K_scalar, L_scalar, fluid_state_scalar, z_scalar, flash_tolerance, eos_type, verbosity);
+                    converged = newtonComposition_(K_scalar, L_scalar, fluid_state_scalar,
+                                                   z_scalar, flash_tolerance, eos_type, verbosity);
                 }
-                catch (const std::runtime_error& e) {
-                    fall_back_to_ssi(e);
+                catch (const NumericalProblem& error) {
+                    fall_back_to_ssi(error);
                 }
-                catch (const Dune::FMatrixError& e) {
+                catch (const Dune::FMatrixError& error) {
                     // FieldMatrix::solve reports a singular Jacobian with
                     // FMatrixError, which is outside the std::runtime_error hierarchy.
-                    fall_back_to_ssi(e);
+                    fall_back_to_ssi(error);
                 }
             }
         } else {
@@ -1601,7 +1606,7 @@ protected:
         //
         // Successive substitution loop
         //
-        for (int compIdx=0; compIdx<numComponents; ++compIdx){
+        for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
             if (!(Opm::getValue(z[compIdx]) > 0.)) {
                 K[compIdx] = 1.;
             }

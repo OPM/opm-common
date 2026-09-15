@@ -57,8 +57,7 @@
 #include <dune/common/fvector.hh>
 
 #include <cmath>
-#include <stdexcept>
-#include <string>
+#include <string_view>
 
 using Scalar = double;
 using EOSType = Opm::CompositionalConfig::EOSType;
@@ -301,13 +300,13 @@ BOOST_AUTO_TEST_CASE(NewtonRejectsCoincidentInitialPhases)
     }
     Scalar L = 0.5;
 
-    const auto reports_initial_trivial_solution = [](const std::runtime_error& error) {
-        return std::string(error.what()).find("started from the trivial solution")
-            != std::string::npos;
+    const auto reports_initial_trivial_solution = [](const Opm::NumericalProblem& error) {
+        return std::string_view{error.what()}.find("started from the trivial solution")
+            != std::string_view::npos;
     };
     BOOST_CHECK_EXCEPTION(ExposedPtFlash::flash_2ph(
                               z, "newton", K, L, fs, flashTolerance, EOSType::PR),
-                          std::runtime_error,
+                          Opm::NumericalProblem,
                           reports_initial_trivial_solution);
 }
 
