@@ -263,6 +263,22 @@ BOOST_AUTO_TEST_CASE(WarmSsiReassessesOutOfRangeSplits)
     }
 }
 
+// An out-of-range negative-flash result identifies which side of the phase
+// boundary the mixture occupies; Li's approximate label must not reverse it.
+BOOST_AUTO_TEST_CASE(NegativeFlashPreservesVapourDirection)
+{
+    for (const auto* method : {"ssi", "ssi+newton"}) {
+        auto fs = makePhaseTransitionState(1.e5, 0.5);
+        fs.setTemperature(400.0);
+        for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+            fs.setKvalue(compIdx, fs.wilsonK_(compIdx));
+        }
+
+        BOOST_REQUIRE(PtFlash::solve(fs, method, flashTolerance, EOSType::PR));
+        BOOST_CHECK_SMALL(Opm::getValue(fs.L()), flashTolerance);
+    }
+}
+
 // A uniform K vector produces identical normalised phase compositions and must
 // exercise the initial Newton guard directly.
 BOOST_AUTO_TEST_CASE(NewtonRejectsCoincidentInitialPhases)

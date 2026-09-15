@@ -293,6 +293,7 @@ public:
         // States without a physical two-phase fraction require stability
         // analysis. Every completed split is classified below.
         bool is_single_phase = false;
+        bool is_negative_flash = false;
         auto L_scalar = fluid_state.L();
         using ScalarVector = Dune::FieldVector<Scalar, numComponents>;
         ScalarVector K_scalar, z_scalar;
@@ -331,6 +332,14 @@ public:
                 L_scalar = solveRachfordRice_g_(K_scalar, z_scalar, verbosity);
                 flash_2ph(z_scalar, twoPhaseMethod, K_scalar, L_scalar, fluid_state, flash_tolerance, eos_type, verbosity);
             };
+            const auto classify_negative_flash = [&]() {
+                const Scalar liquid_fraction = Opm::getValue(L_scalar);
+                is_negative_flash = liquid_fraction <= 0. || liquid_fraction >= 1.;
+                is_single_phase = is_negative_flash;
+                if (is_negative_flash) {
+                    L_scalar = liquid_fraction <= 0. ? 0. : 1.;
+                }
+            };
             try {
                 // Rachford Rice equation to get initial L for composition solver
                 solve_split();
@@ -345,8 +354,7 @@ public:
             // A finite negative-flash root outside [0, 1] is the single-phase
             // criterion, not a failed composition solve.
             if (!split_was_rejected) {
-                const Scalar liquid_fraction = Opm::getValue(L_scalar);
-                is_single_phase = liquid_fraction <= 0. || liquid_fraction >= 1.;
+                classify_negative_flash();
             }
 
             // A warm start must be reassessed from Wilson estimates because its
@@ -393,8 +401,7 @@ public:
                     catch (const Dune::FMatrixError& error) {
                         fail_retry(error);
                     }
-                    const Scalar liquid_fraction = Opm::getValue(L_scalar);
-                    is_single_phase = liquid_fraction <= 0. || liquid_fraction >= 1.;
+                    classify_negative_flash();
                     if (!is_single_phase && phasesCoincide_(fluid_state)) {
                         OPM_THROW_NOLOG(NumericalProblem,
                                         "The two-phase flash retry converged to coincident phases "
@@ -408,8 +415,10 @@ public:
                 fluid_state.setMoleFraction(gasPhaseIdx, compIdx, z_scalar[compIdx]);
                 fluid_state.setMoleFraction(oilPhaseIdx, compIdx, z_scalar[compIdx]);
             }
-            // Cell is one-phase. Use Li's phase labeling method to see if it's liquid or vapor
-            L_scalar = li_single_phase_label_(fluid_state, z_scalar, verbosity);
+            if (!is_negative_flash) {
+                // Cell is one-phase. Use Li's phase labeling method to see if it's liquid or vapor
+                L_scalar = li_single_phase_label_(fluid_state, z_scalar, verbosity);
+            }
         }
         fluid_state.setLvalue(L_scalar);
         return is_single_phase;
