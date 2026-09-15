@@ -68,6 +68,11 @@ namespace Opm {
     class UDQConfig
     {
     public:
+        /// Predicate selecting which DEFINE statements an evaluation covers.
+        /// An empty selector means every DEFINE whose UPDATE status permits
+        /// evaluation, which is the ordinary end-of-step behaviour.
+        using DefineSelector = std::function<bool(const UDQDefine&)>;
+
         /// Container of entities from a dynamic context.
         ///
         /// Typically a collection of wells and/or groups that match an
@@ -416,13 +421,23 @@ namespace Opm {
         ///
         /// \param[in,out] udq_state Dynamic values for all known UDQs.
         /// Values pertaining to UDQs being assigned here will be updated.
+        ///
+        /// \param[in] select Optional predicate restricting which DEFINE
+        /// statements are evaluated in this call.  A DEFINE is evaluated
+        /// only if its UPDATE status permits it and, when a selector is
+        /// given, the selector accepts it.  Use this for an evaluation at a
+        /// point in the time step where only some UDQs have their inputs
+        /// ready, and take care to exclude any "UPDATE NEXT" DEFINE that
+        /// the ordinary end-of-step evaluation is meant to consume: NEXT is
+        /// a one-shot update, cleared as soon as it has been applied.
         void eval(std::size_t             report_step,
                   const WellMatcher&      wm,
                   const GroupOrder&       go,
                   SegmentMatcherFactory   create_segment_matcher,
                   RegionSetMatcherFactory create_region_matcher,
                   SummaryState&           st,
-                  UDQState&               udq_state) const;
+                  UDQState&               udq_state,
+                  const DefineSelector&   select = {}) const;
 
         /// Retrieve defining expression and evaluation object for a single
         /// UDQ
@@ -661,9 +676,13 @@ namespace Opm {
         ///
         /// \param[in,out] context Pattern matchers and state objects.
         /// Values pertaining to UDQs being evaluated here will be updated.
-        void eval_define(std::size_t     report_step,
-                         const UDQState& udq_state,
-                         UDQContext&     context) const;
+        ///
+        /// \param[in] select Optional predicate restricting which DEFINE
+        /// statements are evaluated.  See eval() for details.
+        void eval_define(std::size_t           report_step,
+                         const UDQState&       udq_state,
+                         UDQContext&           context,
+                         const DefineSelector& select = {}) const;
 
         /// Incorporate an enumerated assignment statement into known UDQ
         /// collection.

@@ -467,7 +467,8 @@ namespace Opm {
                          SegmentMatcherFactory   create_segment_matcher,
                          RegionSetMatcherFactory create_region_matcher,
                          SummaryState&           st,
-                         UDQState&               udq_state) const
+                         UDQState&               udq_state,
+                         const DefineSelector&   select) const
     {
         auto factories = UDQContext::MatcherFactories {};
         factories.segments = std::move(create_segment_matcher);
@@ -479,7 +480,7 @@ namespace Opm {
         };
 
         this->eval_assign(context);
-        this->eval_define(report_step, udq_state, context);
+        this->eval_define(report_step, udq_state, context, select);
     }
 
     const UDQDefine& UDQConfig::define(const std::string& key) const
@@ -755,9 +756,10 @@ namespace Opm {
         }
     }
 
-    void UDQConfig::eval_define(const std::size_t report_step,
-                                const UDQState&   udq_state,
-                                UDQContext&       context) const
+    void UDQConfig::eval_define(const std::size_t     report_step,
+                                const UDQState&       udq_state,
+                                UDQContext&           context,
+                                const DefineSelector& select) const
     {
         auto var_type_bit = [](const UDQVarType var_type)
         {
@@ -785,7 +787,8 @@ namespace Opm {
 
             const auto& def = def_pos->second;
             if (((select_var_type & var_type_bit(def.var_type())) == 0) || // Unwanted Var Type
-                ! udq_state.define(def.status())) // UDQ def not applicable now
+                ! udq_state.define(def.status()) ||  // UDQ def not applicable now
+                (select && ! select(def)))           // Not wanted by caller
             {
                 continue;
             }
