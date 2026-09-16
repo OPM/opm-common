@@ -2294,7 +2294,7 @@ inline quantity group_gas_injection_target( const fn_args& args )
             value = group.injectionControls(Opm::Phase::GAS, args.st).surface_max_rate;
     }
 
-    return { value, measure::rate };
+    return { value, measure::gas_surface_rate };
 }
 
 inline quantity group_water_injection_target( const fn_args& args )
