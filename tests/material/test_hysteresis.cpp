@@ -821,6 +821,69 @@ static const char* hysterDeckStringKilloughGasWaterEndScale = R"(
     IMBNUM
     1*2 / )";
 
+// Test that relative permeability (Y-axis) endpoint scaling via KRG/KRW is
+// applied for a two-phase gas-water run with ENDSCALE. SWL/SWCR/SGU are set
+// to coincide with the tabulated SWFN/SGFN endpoints so that the saturation
+// (X-axis) scaling is a no-op and only the vertical KRG/KRW scaling affects
+// the result.
+static const char* hysterDeckStringGasWaterKrEndScale = R"(
+
+    RUNSPEC
+
+    DIMENS
+       1 1 1 /
+
+    TABDIMS
+     1 /
+
+    WATER
+    GAS
+
+    ENDSCALE
+    /
+
+    GRID
+
+    DX
+       1*1000 /
+    DY
+       1*1000 /
+    DZ
+       1*50 /
+
+    TOPS
+       1*0 /
+
+    PORO
+      1*0.15 /
+
+    PROPS
+
+    SWFN
+    0.2    0.0    0.0
+    1.0    1.0    0.0 /
+
+    SGFN
+    0.0    0.0    0.0
+    0.8    1.0    0.0 /
+
+    SWL
+    1*0.2 /
+    SWCR
+    1*0.2 /
+    SGU
+    1*0.8 /
+
+    KRW
+    1*0.6 /
+    KRG
+    1*0.5 /
+
+    REGIONS
+
+    SATNUM
+    1*1 / )";
+
 //Test Killogh hysteresis Gas Water System bugfix (item 13)
 // Thanks to Edmund Stephens from providing the test and
 // the fix
@@ -2551,6 +2614,49 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisKilloughGasWaterEndScale, Scalar, Types)
         BOOST_CHECK_CLOSE(Krw, kr[Fixture<Scalar>::waterPhaseIdx], tol);
         BOOST_CHECK_CLOSE(So, kr[Fixture<Scalar>::oilPhaseIdx], tol);
         BOOST_CHECK_CLOSE(Khyst, kr[Fixture<Scalar>::gasPhaseIdx], tol);
+    }
+}
+
+BOOST_AUTO_TEST_CASE_TEMPLATE(GasWaterKrEndpointScaling, Scalar, Types)
+{
+    using MaterialLaw = typename Fixture<Scalar>::MaterialLaw;
+    using MaterialLawManager = typename Fixture<Scalar>::MaterialLawManager;
+    constexpr int numPhases = Fixture<Scalar>::numPhases;
+
+    Opm::Parser parser;
+
+    const auto deck = parser.parseString(hysterDeckStringGasWaterKrEndScale);
+    const Opm::EclipseState eclState(deck);
+
+    const auto& eclGrid = eclState.getInputGrid();
+    std::size_t n = eclGrid.getCartesianSize();
+
+    MaterialLawManager manager;
+    manager.initFromState(eclState);
+    manager.initParamsForElements(eclState, n, doOldLookup, doNothing);
+    auto& param = manager.materialLawParams(0);
+    Scalar So = 0.0;
+    Scalar tol = 1e-3;
+    std::array<Scalar,numPhases> kr = {0.0, 0.0, 0.0};
+    for (int i = 0; i <= 80; ++ i) {
+        Scalar Sg = Scalar(i) / 100;
+        Scalar Sw = 1 - Sg;
+        typename Fixture<Scalar>::FluidState fs;
+        fs.setSaturation(Fixture<Scalar>::waterPhaseIdx, Sw);
+        fs.setSaturation(Fixture<Scalar>::oilPhaseIdx, So);
+        fs.setSaturation(Fixture<Scalar>::gasPhaseIdx, Sg);
+
+        MaterialLaw::relativePermeabilities(kr, param, fs);
+
+        // KRW = 0.6 scales the tabulated (unscaled) water relperm, which is
+        // linear from (Swcr=0.2, 0) to (Swu=1.0, 1.0).
+        Scalar Krw = linearScaledRelperm(Sw, Scalar(0.2), Scalar(1.0), Scalar(0.6));
+        // KRG = 0.5 scales the tabulated (unscaled) gas relperm, which is
+        // linear from (Sgcr=0.0, 0) to (Sgu=0.8, 1.0).
+        Scalar Krg = linearScaledRelperm(Sg, Scalar(0.0), Scalar(0.8), Scalar(0.5));
+        BOOST_CHECK_CLOSE(Krw, kr[Fixture<Scalar>::waterPhaseIdx], tol);
+        BOOST_CHECK_CLOSE(So, kr[Fixture<Scalar>::oilPhaseIdx], tol);
+        BOOST_CHECK_CLOSE(Krg, kr[Fixture<Scalar>::gasPhaseIdx], tol);
     }
 }
 
