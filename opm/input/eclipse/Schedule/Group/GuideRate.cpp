@@ -96,13 +96,14 @@ double Opm::GuideRate::get(const std::string&               group,
 
 double Opm::GuideRate::get(const std::string&           name,
                            const GuideRateModel::Target model_target,
-                           const RateVector&            rates) const
+                           const RateVector&            rates,
+                           const bool always_use_potentials) const
 {
     using namespace unit;
     using prefix::micro;
 
     auto iter = this->values.find(name);
-    if (iter == this->values.end()) {
+    if (always_use_potentials || iter == this->values.end()) {
         return this->potentials.at(name).eval(model_target);
     }
 
@@ -131,24 +132,6 @@ double Opm::GuideRate::get(const std::string& name, const Phase& phase) const
         throw std::logic_error {message};
     }
     return iter->second;
-}
-
-double Opm::GuideRate::getPotential(const std::string&           name,
-                                    const GuideRateModel::Target model_target) const
-{
-    if ((model_target == GuideRateModel::Target::NONE) ||
-        (model_target == GuideRateModel::Target::COMB))
-    {
-        // No potential can be associated with these targets.
-        return 0.0;
-    }
-
-    auto pot = this->potentials.find(name);
-    if (pot == this->potentials.end()) {
-        return 0.0;
-    }
-
-    return pot->second.eval(model_target);
 }
 
 double Opm::GuideRate::getSI(const std::string&          well,

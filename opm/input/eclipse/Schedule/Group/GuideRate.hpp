@@ -142,16 +142,8 @@ public:
 
     double get(const std::string& well, const WellGuideRateTarget target, const RateVector& rates) const;
     double get(const std::string& group, const Group::GuideRateProdTarget target, const RateVector& rates) const;
-    double get(const std::string& name, const GuideRateModel::Target model_target, const RateVector& rates) const;
+    double get(const std::string& name, const GuideRateModel::Target model_target, const RateVector& rates, const bool always_use_potentials = false) const;
     double get(const std::string& group, const Phase& phase) const;
-
-    /// \brief Guide rate of a well or group based on its potentials alone.
-    ///
-    /// This is the value that get() returns when no GUIDERAT/WGRUPCON guide
-    /// rate has been computed for 'name'.  Callers that need the "default"
-    /// (potential based) guide rate irrespective of whether GUIDERAT is
-    /// active use this accessor.  Returns 0.0 if no potentials are stored.
-    double getPotential(const std::string& name, const GuideRateModel::Target model_target) const;
 
     double getSI(const std::string& well, const WellGuideRateTarget target, const RateVector& rates) const;
     double getSI(const std::string& group, const Group::GuideRateProdTarget target, const RateVector& rates) const;
