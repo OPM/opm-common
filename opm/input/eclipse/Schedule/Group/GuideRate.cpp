@@ -96,13 +96,14 @@ double Opm::GuideRate::get(const std::string&               group,
 
 double Opm::GuideRate::get(const std::string&           name,
                            const GuideRateModel::Target model_target,
-                           const RateVector&            rates) const
+                           const RateVector&            rates,
+                           const bool always_use_potentials) const
 {
     using namespace unit;
     using prefix::micro;
 
     auto iter = this->values.find(name);
-    if (iter == this->values.end()) {
+    if (always_use_potentials || iter == this->values.end()) {
         return this->potentials.at(name).eval(model_target);
     }
 
@@ -340,9 +341,11 @@ void Opm::GuideRate::well_compute(const std::string& wgname,
 
             const auto& model = config.has_model() ? config.model() : GuideRateModel{};
             this->assign_grvalue(wgname, model, { sim_time, well.guide_rate, model_target });
+            return;
         }
     }
-    else if (config.has_model()) { // GUIDERAT
+    // A well can have WGRUPCON with defaulted guide rate, in which case we must check for GUIDRAT
+    if (config.has_model()) { // GUIDERAT
         if (! this->schedule.hasWell(wgname, report_step)) {
             // 'wgname' might be a group or the well is not yet online.
             return;
