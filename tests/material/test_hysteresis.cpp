@@ -884,6 +884,108 @@ static const char* hysterDeckStringGasWaterKrEndScale = R"(
     SATNUM
     1*1 / )";
 
+// Test that capillary pressure (Y-axis) endpoint scaling via PCG is applied
+// for a two-phase gas-water run with ENDSCALE. The two decks below are
+// identical except for the PCG value; the resulting Pcgw curves must scale
+// proportionally with PCG.
+static const char* hysterDeckStringGasWaterPcEndScaleLowPcg = R"(
+
+    RUNSPEC
+
+    DIMENS
+       1 1 1 /
+
+    TABDIMS
+     1 /
+
+    WATER
+    GAS
+
+    ENDSCALE
+    /
+
+    GRID
+
+    DX
+       1*1000 /
+    DY
+       1*1000 /
+    DZ
+       1*50 /
+
+    TOPS
+       1*0 /
+
+    PORO
+      1*0.15 /
+
+    PROPS
+
+    SWFN
+    0.2    0.0    1.0
+    1.0    1.0    0.0 /
+
+    SGFN
+    0.0    0.0    1.0
+    0.8    1.0    1.0 /
+
+    PCG
+    1*0.4 /
+
+    REGIONS
+
+    SATNUM
+    1*1 / )";
+
+static const char* hysterDeckStringGasWaterPcEndScaleHighPcg = R"(
+
+    RUNSPEC
+
+    DIMENS
+       1 1 1 /
+
+    TABDIMS
+     1 /
+
+    WATER
+    GAS
+
+    ENDSCALE
+    /
+
+    GRID
+
+    DX
+       1*1000 /
+    DY
+       1*1000 /
+    DZ
+       1*50 /
+
+    TOPS
+       1*0 /
+
+    PORO
+      1*0.15 /
+
+    PROPS
+
+    SWFN
+    0.2    0.0    1.0
+    1.0    1.0    0.0 /
+
+    SGFN
+    0.0    0.0    1.0
+    0.8    1.0    1.0 /
+
+    PCG
+    1*0.8 /
+
+    REGIONS
+
+    SATNUM
+    1*1 / )";
+
 //Test Killogh hysteresis Gas Water System bugfix (item 13)
 // Thanks to Edmund Stephens from providing the test and
 // the fix
@@ -2658,6 +2760,64 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(GasWaterKrEndpointScaling, Scalar, Types)
         BOOST_CHECK_CLOSE(So, kr[Fixture<Scalar>::oilPhaseIdx], tol);
         BOOST_CHECK_CLOSE(Krg, kr[Fixture<Scalar>::gasPhaseIdx], tol);
     }
+}
+
+BOOST_AUTO_TEST_CASE_TEMPLATE(GasWaterPcEndpointScaling, Scalar, Types)
+{
+    using MaterialLaw = typename Fixture<Scalar>::MaterialLaw;
+    using MaterialLawManager = typename Fixture<Scalar>::MaterialLawManager;
+    constexpr int numPhases = Fixture<Scalar>::numPhases;
+
+    Opm::Parser parser;
+
+    const auto lowDeck = parser.parseString(hysterDeckStringGasWaterPcEndScaleLowPcg);
+    const Opm::EclipseState lowEclState(lowDeck);
+    const auto& eclGrid = lowEclState.getInputGrid();
+    std::size_t n = eclGrid.getCartesianSize();
+
+    MaterialLawManager lowManager;
+    lowManager.initFromState(lowEclState);
+    lowManager.initParamsForElements(lowEclState, n, doOldLookup, doNothing);
+    auto& lowParam = lowManager.materialLawParams(0);
+
+    const auto highDeck = parser.parseString(hysterDeckStringGasWaterPcEndScaleHighPcg);
+    const Opm::EclipseState highEclState(highDeck);
+
+    MaterialLawManager highManager;
+    highManager.initFromState(highEclState);
+    highManager.initParamsForElements(highEclState, n, doOldLookup, doNothing);
+    auto& highParam = highManager.materialLawParams(0);
+
+    Scalar So = 0.0;
+    Scalar tol = 1e-3;
+    Scalar maxPcLow = 0.0;
+    std::array<Scalar,numPhases> pcLow  = {0.0, 0.0, 0.0};
+    std::array<Scalar,numPhases> pcHigh = {0.0, 0.0, 0.0};
+    for (int i = 0; i <= 79; ++ i) {
+        Scalar Sg = Scalar(i) / 100;
+        Scalar Sw = 1 - Sg;
+        typename Fixture<Scalar>::FluidState fs;
+        fs.setSaturation(Fixture<Scalar>::waterPhaseIdx, Sw);
+        fs.setSaturation(Fixture<Scalar>::oilPhaseIdx, So);
+        fs.setSaturation(Fixture<Scalar>::gasPhaseIdx, Sg);
+
+        MaterialLaw::capillaryPressures(pcLow, lowParam, fs);
+        MaterialLaw::capillaryPressures(pcHigh, highParam, fs);
+
+        BOOST_CHECK_SMALL(pcLow[Fixture<Scalar>::waterPhaseIdx], tol);
+        BOOST_CHECK_SMALL(pcHigh[Fixture<Scalar>::waterPhaseIdx], tol);
+
+        // PCG for the "high" deck is exactly twice that of the "low" deck, so
+        // the resulting (non-zero) Pcgw values must scale by the same factor.
+        BOOST_CHECK_CLOSE(2 * pcLow[Fixture<Scalar>::gasPhaseIdx],
+                          pcHigh[Fixture<Scalar>::gasPhaseIdx], tol);
+
+        maxPcLow = std::max(maxPcLow, pcLow[Fixture<Scalar>::gasPhaseIdx]);
+    }
+
+    // Sanity check that the Pcgw curve is actually non-trivial, i.e., that
+    // this test does not vacuously pass because everything is zero.
+    BOOST_CHECK_GT(maxPcLow, Scalar(0.0));
 }
 
 BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisKilloughGasWaterFix, Scalar, Types)
