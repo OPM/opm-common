@@ -29,6 +29,7 @@
 #ifndef OPM_CHI_FLASH_HPP
 #define OPM_CHI_FLASH_HPP
 
+#include <opm/material/constraintsolvers/PTFlashMethod.hpp>
 #include <opm/material/fluidmatrixinteractions/NullMaterial.hpp>
 #include <opm/material/fluidmatrixinteractions/MaterialTraits.hpp>
 #include <opm/material/fluidstates/CompositionalFluidState.hpp>
@@ -99,7 +100,7 @@ public:
      */
     template <class FluidState>
     static bool solve(FluidState& fluid_state,
-                      const std::string& twoPhaseMethod,
+                      PTFlashMethod twoPhaseMethod,
                       Scalar flash_tolerance,
                       const EOSType& eos_type,
                       int verbosity = 0)
@@ -286,7 +287,7 @@ public:
      */
     template <typename FluidState>
     static bool flash_solve_scalar_(FluidState& fluid_state,
-                                    const std::string& twoPhaseMethod,
+                                    PTFlashMethod twoPhaseMethod,
                                     const Scalar flash_tolerance,
                                     const EOSType& eos_type,
                                     const int verbosity = 0)
@@ -828,14 +829,10 @@ protected:
 
     /*!
      * \brief The two-phase compositions by the requested method.
-     *
-     * "ssi" is successive substitution, "newton" is Newton's method, and
-     * "ssi+newton" uses a few substitution steps to condition the Newton
-     * start and falls back to substitution should Newton fail.
      */
     template <class FluidState, class ComponentVector>
     static void flash_2ph(const ComponentVector& z_scalar,
-                          const std::string& flash_2p_method,
+                          PTFlashMethod flash_2p_method,
                           ComponentVector& K_scalar,
                           typename FluidState::ValueType& L_scalar,
                           FluidState& fluid_state_scalar,
@@ -848,20 +845,23 @@ protected:
         }
 
         // Calculate composition using nonlinear solver
-        // Newton
         bool converged = false;
-        if (flash_2p_method == "newton") {
+        switch (flash_2p_method) {
+        case PTFlashMethod::Newton:
             if (verbosity >= 1) {
                 OpmLog::debug("Calculate composition using Newton.");
             }
             converged = newtonComposition_(K_scalar, L_scalar, fluid_state_scalar, z_scalar, flash_tolerance, eos_type, verbosity);
-        } else if (flash_2p_method == "ssi") {
-            // Successive substitution
+            break;
+
+        case PTFlashMethod::Ssi:
             if (verbosity >= 1) {
                 OpmLog::debug("Calculate composition using Successive Substitution.");
             }
             converged = successiveSubstitutionComposition_(K_scalar, L_scalar, fluid_state_scalar, z_scalar, false, flash_tolerance, eos_type, verbosity);
-        } else if (flash_2p_method == "ssi+newton") {
+            break;
+
+        case PTFlashMethod::SsiNewton:
             converged = successiveSubstitutionComposition_(K_scalar, L_scalar, fluid_state_scalar, z_scalar, true, flash_tolerance, eos_type, verbosity);
             if (!converged) {
                 // In this method Newton is an accelerator, not the
@@ -896,14 +896,13 @@ protected:
                     fall_back_to_ssi(error);
                 }
             }
-        } else {
-            OPM_THROW(std::logic_error,
-                      "unknown two phase flash method " + flash_2p_method + " is specified");
+            break;
         }
 
         if (!converged) {
             OPM_THROW_NOLOG(NumericalProblem,
-                            "flash calculation did not get converged with " + flash_2p_method);
+                            fmt::format("flash calculation did not get converged with {}",
+                                        ptFlashMethodToString(flash_2p_method)));
         }
 
         // A finite L outside [0, 1] is a valid negative-flash result and is
@@ -915,7 +914,7 @@ protected:
                 fmt::format("Two-phase flash converged to a non-physical composition "
                             "with L = {} using {}",
                             Opm::getValue(L_scalar),
-                            flash_2p_method));
+                            ptFlashMethodToString(flash_2p_method)));
         }
     }
 

@@ -45,6 +45,7 @@
 #include <opm/material/components/C1.hpp>
 #include <opm/material/components/C10.hpp>
 #include <opm/material/constraintsolvers/PTFlash.hpp>
+#include <opm/material/constraintsolvers/PTFlashMethod.hpp>
 #include <opm/material/densead/Evaluation.hpp>
 #include <opm/material/eos/CubicEOS.hpp>
 #include <opm/material/fluidstates/CompositionalFluidState.hpp>
@@ -258,6 +259,7 @@ using Evaluation = Opm::DenseAd::Evaluation<Scalar, 3>;
 using FluidState = Opm::CompositionalFluidState<Evaluation, FluidSystem>;
 using PtFlash = Opm::PTFlash<Scalar, FluidSystem, true>;
 using EOSType = Opm::CompositionalConfig::EOSType;
+using PTFlashMethod = Opm::PTFlashMethod;
 
 using SingularFluidSystem = Opm::SingularJacobianTestFluidSystem<Scalar>;
 using SingularFluidState = Opm::CompositionalFluidState<Scalar, SingularFluidSystem>;
@@ -337,7 +339,7 @@ SingularComponentVector makeInitialK()
 BOOST_AUTO_TEST_CASE(FallbackConvergesWhereNewtonStalled)
 {
     auto fs = makeState(50e5, 295.0);
-    BOOST_CHECK_NO_THROW(PtFlash::solve(fs, "ssi+newton", 1e-8, EOSType::PR));
+    BOOST_CHECK_NO_THROW(PtFlash::solve(fs, PTFlashMethod::SsiNewton, 1e-8, EOSType::PR));
 }
 
 // and the fallback answer is THE answer: it must match the plain "ssi"
@@ -345,10 +347,10 @@ BOOST_AUTO_TEST_CASE(FallbackConvergesWhereNewtonStalled)
 BOOST_AUTO_TEST_CASE(FallbackMatchesSsi)
 {
     auto fsSsi = makeState(50e5, 295.0);
-    PtFlash::solve(fsSsi, "ssi", 1e-8, EOSType::PR);
+    PtFlash::solve(fsSsi, PTFlashMethod::Ssi, 1e-8, EOSType::PR);
 
     auto fsFallback = makeState(50e5, 295.0);
-    PtFlash::solve(fsFallback, "ssi+newton", 1e-8, EOSType::PR);
+    PtFlash::solve(fsFallback, PTFlashMethod::SsiNewton, 1e-8, EOSType::PR);
 
     BOOST_CHECK_SMALL(std::abs(Opm::getValue(fsFallback.L()) - Opm::getValue(fsSsi.L())), 1e-8);
     for (unsigned phaseIdx = 0; phaseIdx < FluidSystem::numPhases; ++phaseIdx) {
@@ -365,7 +367,7 @@ BOOST_AUTO_TEST_CASE(FallbackMatchesSsi)
 BOOST_AUTO_TEST_CASE(BenignStateUnaffected)
 {
     auto fs = makeState(50e5, 300.0);
-    BOOST_CHECK_NO_THROW(PtFlash::solve(fs, "ssi+newton", 1e-8, EOSType::PR));
+    BOOST_CHECK_NO_THROW(PtFlash::solve(fs, PTFlashMethod::SsiNewton, 1e-8, EOSType::PR));
 }
 
 // A finite negative-flash root is the single-phase criterion used by well
@@ -376,7 +378,7 @@ BOOST_AUTO_TEST_CASE(SurfaceNegativeFlashIsSingleLiquid)
         auto fs = makeState(1.01325e5, 288.71, 1.e-3);
         fs.setLvalue(initial_liquid_fraction);
 
-        BOOST_REQUIRE(PtFlash::solve(fs, "ssi", 1.e-8, EOSType::PR));
+        BOOST_REQUIRE(PtFlash::solve(fs, PTFlashMethod::Ssi, 1.e-8, EOSType::PR));
         BOOST_CHECK_SMALL(Opm::getValue(fs.L()) - 1.0, 1.e-8);
     }
 }
@@ -390,7 +392,7 @@ BOOST_AUTO_TEST_CASE(NewtonRecoveryRetriesFromStabilityEstimate)
     fs.setKvalue(0, 4.0);
     fs.setKvalue(1, 4.0);
 
-    BOOST_REQUIRE(!PtFlash::solve(fs, "newton", 1.e-8, EOSType::PR));
+    BOOST_REQUIRE(!PtFlash::solve(fs, PTFlashMethod::Newton, 1.e-8, EOSType::PR));
     BOOST_CHECK_GT(Opm::getValue(fs.L()), 0.0);
     BOOST_CHECK_LT(Opm::getValue(fs.L()), 1.0);
 }
@@ -405,7 +407,7 @@ BOOST_AUTO_TEST_CASE(SingularJacobianFallsBackToSsi)
     auto newtonK = makeInitialK();
     Scalar newtonL = 0.5;
     BOOST_CHECK_THROW(SingularPtFlash::flash_2ph(z,
-                                                 "newton",
+                                                 PTFlashMethod::Newton,
                                                  newtonK,
                                                  newtonL,
                                                  newtonState,
@@ -416,14 +418,14 @@ BOOST_AUTO_TEST_CASE(SingularJacobianFallsBackToSsi)
     auto ssiState = makeSingularState();
     auto ssiK = makeInitialK();
     Scalar ssiL = 0.5;
-    SingularPtFlash::flash_2ph(z, "ssi", ssiK, ssiL, ssiState, 1.e-8, EOSType::PR);
+    SingularPtFlash::flash_2ph(z, PTFlashMethod::Ssi, ssiK, ssiL, ssiState, 1.e-8, EOSType::PR);
 
     auto hybridState = makeSingularState();
     auto hybridK = makeInitialK();
     Scalar hybridL = 0.5;
     SingularFluidSystem::adFugacityCalls = 0;
     BOOST_REQUIRE_NO_THROW(SingularPtFlash::flash_2ph(z,
-                                                      "ssi+newton",
+                                                      PTFlashMethod::SsiNewton,
                                                       hybridK,
                                                       hybridL,
                                                       hybridState,
@@ -446,7 +448,7 @@ BOOST_AUTO_TEST_CASE(SingularJacobianFallsBackToSsi)
 // Its caller uses that value to classify the mixture as single-phase.
 BOOST_AUTO_TEST_CASE(NegativeFlashLiquidFractionIsNotACompositionFailure)
 {
-    for (const auto* method : {"ssi", "ssi+newton"}) {
+    for (const auto method : {PTFlashMethod::Ssi, PTFlashMethod::SsiNewton}) {
         CoincidentFluidState fs;
         for (unsigned phaseIdx = 0;
              phaseIdx < CoincidentFluidSystem::numPhases;

@@ -43,6 +43,7 @@
 #include <opm/common/OpmLog/StreamLog.hpp>
 
 #include <opm/material/constraintsolvers/PTFlash.hpp>
+#include <opm/material/constraintsolvers/PTFlashMethod.hpp>
 #include <opm/material/fluidsystems/Co2BrineFluidSystem.hh>
 #include <opm/material/fluidsystems/GenericOilGasWaterFluidSystem.hpp>
 
@@ -67,7 +68,13 @@ using Evaluation = Opm::DenseAd::Evaluation<double, numComponents>;
 using ComponentVector = Dune::FieldVector<Evaluation, numComponents>;
 using FluidState = Opm::CompositionalFluidState<Evaluation, FluidSystem>;
 
-std::vector<std::string> test_methods {"newton", "ssi", "ssi+newton"};
+using PTFlashMethod = Opm::PTFlashMethod;
+std::vector<PTFlashMethod> test_methods
+{
+    PTFlashMethod::Newton,
+    PTFlashMethod::Ssi,
+    PTFlashMethod::SsiNewton
+};
 
 #if BOOST_VERSION / 100000 == 1 && BOOST_VERSION / 100 % 1000 > 66
 BOOST_DATA_TEST_CASE(PtFlash, test_methods)
