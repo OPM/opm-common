@@ -21,6 +21,8 @@
 #include <config.h>
 #include <opm/material/fluidmatrixinteractions/EclMaterialLawReadEffectiveParams.hpp>
 
+#include <opm/common/OpmLog/OpmLog.hpp>
+
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/GsfTable.hpp>
@@ -42,6 +44,7 @@
 #include <cstddef>
 #include <memory>
 #include <stdexcept>
+#include <string>
 
 namespace Opm::EclMaterialLaw {
 
@@ -309,6 +312,20 @@ readGasWaterParameters_(unsigned satRegionIdx)
             const SgfnTable& sgfnTable = tableManager.getSgfnTables().template getTable<SgfnTable>(satRegionIdx);
             const SwfnTable& swfnTable = tableManager.getSwfnTables().template getTable<SwfnTable>(satRegionIdx);
 
+            //Capillary pressure is read from SWFN.
+            //For gas-water system the capillary pressure column values are set to 0 in SGFN
+            const auto& sgfnPcog = sgfnTable.getPcogColumn();
+            if (sgfnPcog.min() != 0.0 || sgfnPcog.max() != 0.0) {
+                OpmLog::warning(
+                    "The third column of SGFN (capillary pressure) is ignored "
+                    "for two-phase gas-water runs (saturation function region " +
+                    std::to_string(satRegionIdx + 1) + "). The capillary "
+                    "pressure curve, and its associated endpoint-scaling value, "
+                    "are taken from the third column of SWFN instead. Set the "
+                    "SGFN capillary pressure column to zero to avoid this "
+                    "warning.");
+            }
+
             std::vector<double> SwColumn = swfnTable.getColumn("SW").vectorCopy();
 
             realParams.setKrwSamples(SwColumn, normalizeKrValues_(tolcrit, swfnTable.getColumn("KRW")));
@@ -317,8 +334,6 @@ readGasWaterParameters_(unsigned satRegionIdx)
                 SwSamples[sampleIdx] = 1 - sgfnTable.get("SG", sampleIdx);
             }
             realParams.setKrnSamples(SwSamples, normalizeKrValues_(tolcrit, sgfnTable.getColumn("KRG")));
-            //Capillary pressure is read from SWFN.
-            //For gas-water system the capillary pressure column values are set to 0 in SGFN
             realParams.setPcnwSamples(SwColumn, swfnTable.getColumn("PCOW").vectorCopy());
         }
         realParams.finalize();

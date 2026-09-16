@@ -39,6 +39,10 @@
 #include <opm/material/fluidstates/SimpleModularFluidState.hpp>
 #include <opm/material/fluidmatrixinteractions/EclMaterialLawManager.hpp>
 
+#include <opm/common/OpmLog/CounterLog.hpp>
+#include <opm/common/OpmLog/LogUtil.hpp>
+#include <opm/common/OpmLog/OpmLog.hpp>
+
 #include <opm/input/eclipse/Parser/Parser.hpp>
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
@@ -977,6 +981,59 @@ static const char* hysterDeckStringGasWaterPcEndScaleHighPcg = R"(
     SGFN
     0.0    0.0    1.0
     0.8    1.0    1.0 /
+
+    PCG
+    1*0.8 /
+
+    REGIONS
+
+    SATNUM
+    1*1 / )";
+
+// Same as hysterDeckStringGasWaterPcEndScaleHighPcg, except that the third
+// (capillary pressure) column of SGFN follows the documented convention of
+// being all zero for a two-phase gas-water run. Parsing this deck must not
+// trigger the "SGFN capillary pressure ignored" warning.
+static const char* hysterDeckStringGasWaterPcEndScaleCompliantSgfn = R"(
+
+    RUNSPEC
+
+    DIMENS
+       1 1 1 /
+
+    TABDIMS
+     1 /
+
+    WATER
+    GAS
+
+    ENDSCALE
+    /
+
+    GRID
+
+    DX
+       1*1000 /
+    DY
+       1*1000 /
+    DZ
+       1*50 /
+
+    TOPS
+       1*0 /
+
+    PORO
+      1*0.15 /
+
+    PROPS
+
+    SWFN
+    0.2    0.0    1.0
+    1.0    1.0    0.0 /
+
+    SGFN
+    0.0    0.0    0.0
+    0.8    1.0    0.0 /
 
     PCG
     1*0.8 /
@@ -2818,6 +2875,49 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(GasWaterPcEndpointScaling, Scalar, Types)
     // Sanity check that the Pcgw curve is actually non-trivial, i.e., that
     // this test does not vacuously pass because everything is zero.
     BOOST_CHECK_GT(maxPcLow, Scalar(0.0));
+}
+
+BOOST_AUTO_TEST_CASE(GasWaterSgfnPcogIgnoredWarning)
+{
+    using MaterialLawManager = typename Fixture<double>::MaterialLawManager;
+
+    Opm::Parser parser;
+
+    auto counter = std::make_shared<Opm::CounterLog>();
+    Opm::OpmLog::addBackend("COUNTER", counter);
+
+    // A compliant deck, whose SGFN capillary pressure column is all zero,
+    // must not trigger the warning.
+    {
+        const auto deck = parser.parseString(hysterDeckStringGasWaterPcEndScaleCompliantSgfn);
+        const Opm::EclipseState eclState(deck);
+        const std::size_t n = eclState.getInputGrid().getCartesianSize();
+
+        MaterialLawManager manager;
+        manager.initFromState(eclState);
+        manager.initParamsForElements(eclState, n, doOldLookup, doNothing);
+
+        BOOST_CHECK_EQUAL(std::size_t(0), counter->numMessages(Opm::Log::MessageType::Warning));
+    }
+
+    counter->clear();
+
+    // A non-compliant deck, whose SGFN capillary pressure column is
+    // non-zero, must trigger the warning (those values are ignored; the
+    // curve and its endpoint-scaling reference are taken from SWFN).
+    {
+        const auto deck = parser.parseString(hysterDeckStringGasWaterPcEndScaleHighPcg);
+        const Opm::EclipseState eclState(deck);
+        const std::size_t n = eclState.getInputGrid().getCartesianSize();
+
+        MaterialLawManager manager;
+        manager.initFromState(eclState);
+        manager.initParamsForElements(eclState, n, doOldLookup, doNothing);
+
+        BOOST_CHECK_GT(counter->numMessages(Opm::Log::MessageType::Warning), std::size_t(0));
+    }
+
+    Opm::OpmLog::removeBackend("COUNTER");
 }
 
 BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisKilloughGasWaterFix, Scalar, Types)
