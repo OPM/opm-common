@@ -45,6 +45,7 @@
 #include <opm/material/components/C10.hpp>
 #include <opm/material/components/SimpleCO2.hpp>
 #include <opm/material/constraintsolvers/PTFlash.hpp>
+#include <opm/material/constraintsolvers/PTFlashMethod.hpp>
 #include <opm/material/fluidsystems/GenericOilGasWaterFluidSystem.hpp>
 
 #include <opm/material/densead/Evaluation.hpp>
@@ -98,7 +99,13 @@ using Evaluation = Opm::DenseAd::Evaluation<double, numPrimaryVariables>;
 using ComponentVector = Dune::FieldVector<Evaluation, numComponents>;
 using FluidState = Opm::CompositionalFluidState<Evaluation, FluidSystem>;
 
-std::vector<std::string> test_methods {"newton", "ssi", "ssi+newton"};
+using PTFlashMethod = Opm::PTFlashMethod;
+std::vector<PTFlashMethod> test_methods
+{
+    PTFlashMethod::Newton,
+    PTFlashMethod::Ssi,
+    PTFlashMethod::SsiNewton
+};
 std::vector<EOSType> test_eos_types {EOSType::PR, EOSType::PRCORR, EOSType::SRK, EOSType::RK};
 
 #if BOOST_VERSION / 100000 == 1 && BOOST_VERSION / 100 % 1000 > 66

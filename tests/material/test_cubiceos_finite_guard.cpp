@@ -45,6 +45,7 @@
 #include <opm/material/components/C1.hpp>
 #include <opm/material/components/N2.hpp>
 #include <opm/material/constraintsolvers/PTFlash.hpp>
+#include <opm/material/constraintsolvers/PTFlashMethod.hpp>
 #include <opm/material/densead/Evaluation.hpp>
 #include <opm/material/eos/CubicEOS.hpp>
 #include <opm/material/fluidstates/CompositionalFluidState.hpp>
@@ -196,6 +197,7 @@ using Evaluation = Opm::DenseAd::Evaluation<Scalar, 3>;
 using FluidState = Opm::CompositionalFluidState<Evaluation, FluidSystem>;
 using PtFlash = Opm::PTFlash<Scalar, FluidSystem, true>;
 using EOSType = Opm::CompositionalConfig::EOSType;
+using PTFlashMethod = Opm::PTFlashMethod;
 
 namespace {
 
@@ -224,7 +226,7 @@ BOOST_AUTO_TEST_CASE(NewtonDivergenceThrowsCatchable)
 {
     auto fs = makeState(100e5, 400.0);
     BOOST_CHECK_THROW(
-        PtFlash::solve(fs, "newton", 1e-8, EOSType::PR),
+        PtFlash::solve(fs, PTFlashMethod::Newton, 1e-8, EOSType::PR),
         Opm::NumericalProblem);
 }
 
@@ -234,7 +236,7 @@ BOOST_AUTO_TEST_CASE(SsiStillFailsLoudlyNotFatally)
 {
     auto fs = makeState(100e5, 400.0);
     BOOST_CHECK_THROW(
-        PtFlash::solve(fs, "ssi", 1e-8, EOSType::PR),
+        PtFlash::solve(fs, PTFlashMethod::Ssi, 1e-8, EOSType::PR),
         std::runtime_error);
 }
 
@@ -242,7 +244,7 @@ BOOST_AUTO_TEST_CASE(SsiStillFailsLoudlyNotFatally)
 // nothing where nothing goes wrong
 BOOST_AUTO_TEST_CASE(BenignStateUnaffected)
 {
-    for (const char* method : {"ssi", "ssi+newton"}) {
+    for (const auto method : {PTFlashMethod::Ssi, PTFlashMethod::SsiNewton}) {
         auto fs = makeState(100e5, 300.0);
         BOOST_CHECK_NO_THROW(PtFlash::solve(fs, method, 1e-8, EOSType::PR));
     }
