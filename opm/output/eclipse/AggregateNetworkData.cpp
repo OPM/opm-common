@@ -17,32 +17,32 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <opm/output/eclipse/AggregateGroupData.hpp>
 #include <opm/output/eclipse/AggregateNetworkData.hpp>
-#include <opm/output/eclipse/WriteRestartHelpers.hpp>
-#include <opm/output/eclipse/VectorItems/group.hpp>
-#include <opm/output/eclipse/VectorItems/network.hpp>
+
+#include <opm/common/OpmLog/OpmLog.hpp>
+
 #include <opm/output/eclipse/VectorItems/intehead.hpp>
+#include <opm/output/eclipse/VectorItems/network.hpp>
 
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
-#include <opm/input/eclipse/Schedule/SummaryState.hpp>
-#include <opm/input/eclipse/Schedule/Schedule.hpp>
-#include <opm/input/eclipse/Schedule/Group/GTNode.hpp>
+
 #include <opm/input/eclipse/Schedule/Group/Group.hpp>
-#include <opm/input/eclipse/Schedule/Network/ExtNetwork.hpp>
-#include <opm/input/eclipse/Schedule/Well/Well.hpp>
 #include <opm/input/eclipse/Schedule/Network/Branch.hpp>
+#include <opm/input/eclipse/Schedule/Network/ExtNetwork.hpp>
 #include <opm/input/eclipse/Schedule/Network/Node.hpp>
+#include <opm/input/eclipse/Schedule/Schedule.hpp>
+#include <opm/input/eclipse/Schedule/ScheduleState.hpp>
+#include <opm/input/eclipse/Schedule/SummaryState.hpp>
+#include <opm/input/eclipse/Schedule/Well/Well.hpp>
 
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 #include <opm/input/eclipse/Units/Units.hpp>
-
-#include <opm/common/OpmLog/OpmLog.hpp>
 
 #include <algorithm>
 #include <cstddef>
 #include <cstring>
 #include <exception>
+#include <memory>
 #include <optional>
 #include <stdexcept>
 #include <string>
@@ -66,18 +66,18 @@ namespace {
 // maximum number of network nodes
 std::size_t nodmax(const std::vector<int>& inteHead)
 {
-    return inteHead[Opm::RestartIO::Helpers::VectorItems::NODMAX];
+    return inteHead[VI::intehead::NODMAX];
 }
 
 // maximum number of network branches
 std::size_t nbrmax(const std::vector<int>& inteHead)
 {
-    return inteHead[Opm::RestartIO::Helpers::VectorItems::NBRMAX];
+    return inteHead[VI::intehead::NBRMAX];
 }
 
 std::size_t entriesPerInobr(const std::vector<int>& inteHead)
 {
-    return inteHead[Opm::RestartIO::Helpers::VectorItems::NINOBR];
+    return inteHead[VI::intehead::NINOBR];
 }
 
 template <typename NodeOp>
@@ -184,11 +184,61 @@ std::vector<int> inobrFunc(const Opm::Schedule& sched,
     return newInobr;
 }
 
-bool fixedPressureNode(const Opm::Schedule& sched,
-                       const std::string&   nodeName,
-                       const std::size_t    lookup_step)
+std::optional<double>
+nodePressureSIFromWells(const Opm::ScheduleState& sched,
+                        const Opm::SummaryState&  smry,
+                        const std::string&        nodeName)
 {
-    return sched[lookup_step].network().node(nodeName).terminal_pressure().has_value();
+    auto node_press = std::optional<double>{};
+
+    for (const auto& wellPtrPair : sched.wells) {
+        const auto& well = *wellPtrPair.second;
+
+        if (!well.isProducer() || (well.groupName() != nodeName)) {
+            continue;
+        }
+
+        const auto thp_limit = well.productionControls(smry).thp_limit;
+        if (! smry.is_undefined_value(thp_limit) &&
+            (thp_limit > node_press.value_or(0.0)))
+        {
+            node_press.emplace(thp_limit);
+        }
+    }
+
+    return node_press;
+}
+
+std::optional<double>
+nodePressureSIFromNetwork(const Opm::ScheduleState& sched,
+                          const std::string&        nodeName)
+{
+    auto node_press = std::optional<double>{};
+
+    const auto& network = sched.network();
+    if (const auto& terminal_pressure = network.node(nodeName).terminal_pressure();
+        terminal_pressure.has_value())
+    {
+        node_press.emplace(terminal_pressure.value());
+    }
+    else {
+        auto up_branch = network.uptree_branch(nodeName);
+
+        while (!node_press.has_value() && up_branch.has_value()) {
+            const auto& term_pressure = network
+                .node(up_branch->uptree_node())
+                .terminal_pressure();
+
+            if (term_pressure.has_value()) {
+                node_press.emplace(*term_pressure);
+            }
+            else {
+                up_branch = network.uptree_branch(up_branch->uptree_node());
+            }
+        }
+    }
+
+    return node_press;
 }
 
 double nodePressure(const Opm::Schedule&     sched,
@@ -197,59 +247,23 @@ double nodePressure(const Opm::Schedule&     sched,
                     const std::size_t        lookup_step)
 {
     using M = ::Opm::UnitSystem::measure;
-    double node_pres = 1.;
-    bool node_wgroup = false;
-    const auto& wells = sched.getWells(lookup_step);
-    auto& network = sched[lookup_step].network();
 
-    // If a node is a well group, set the node pressure to the well's thp-limit if this is larger than the default value (1.)
-    for (const auto& well : wells) {
-        const auto& wgroup_name = well.groupName();
-        if (wgroup_name == nodeName) {
-            if (well.isProducer()) {
-                const auto& pc = well.productionControls(smry);
-                if (pc.thp_limit >= node_pres) {
-                    node_pres = sched.getUnits().from_si(M::pressure, pc.thp_limit);
-                    node_wgroup = true;
-                }
-            }
-        }
+    auto node_press = nodePressureSIFromWells(sched[lookup_step], smry, nodeName);
+    if (node_press.has_value()) {
+        return sched.getUnits().from_si(M::pressure, *node_press);
     }
 
-    // for nodes that are not well groups, set the node pressure to the fixed pressure potentially higher in the node tree
-    if (!node_wgroup) {
-        if (fixedPressureNode(sched, nodeName, lookup_step)) {
-            // node is a fixed pressure node
-            node_pres = sched.getUnits().from_si(M::pressure, network.node(nodeName).terminal_pressure().value());
-        }
-        else {
-            // find fixed pressure higher in the node tree
-            bool fp_flag = false;
-            auto node_name = nodeName;
-            auto upt_br_opt = network.uptree_branch(node_name);
-            if (!upt_br_opt.has_value()) return 0.0; // Node not belonging to the network right now
-
-            auto upt_br = network.uptree_branch(node_name).value();
-            while (!fp_flag) {
-                if (fixedPressureNode(sched, upt_br.uptree_node(), lookup_step)) {
-                    node_pres = sched.getUnits().from_si(M::pressure, network.node(upt_br.uptree_node()).terminal_pressure().value());
-                    fp_flag = true;
-                } else {
-                    node_name = upt_br.uptree_node();
-                    if (network.uptree_branch(node_name).has_value()) {
-                        upt_br = network.uptree_branch(node_name).value();
-                    } else {
-                        auto msg = fmt::format("Node: {} does not belong to the network at report step: {} - node pressure set to zero.",
-                                               node_name,
-                                               lookup_step+1);
-                        Opm::OpmLog::warning(msg);
-                        return 0.0;  // Subtree not belonging to the network right now
-                    }
-                }
-            }
-        }
+    node_press = nodePressureSIFromNetwork(sched[lookup_step], nodeName);
+    if (node_press.has_value()) {
+        return sched.getUnits().from_si(M::pressure, *node_press);
     }
-    return node_pres;
+
+    Opm::OpmLog::warning
+        (fmt::format("Node: {} does not belong to the network at "
+                     "report step: {} - node pressure set to zero.",
+                     nodeName, lookup_step + 1));
+
+    return 0.0;
 }
 
 struct nodeProps
@@ -434,18 +448,23 @@ void staticContrib(const Opm::Schedule&     sched,
                    const std::size_t        ngroups,
                    INodeArray&              iNode)
 {
-    //
     using Ix = VI::INode::index;
+
     iNode[Ix::NoBranchesConnToNode] = numberOfBranchesConnToNode(sched, nodeName, lookup_step);
     iNode[Ix::CumNoBranchesConnToNode] = cumNumberOfBranchesConnToNode(sched, nodeName, lookup_step);
-    if (sched.hasGroup(nodeName, lookup_step)) {
-        iNode[Ix::Group] = sched.getGroup(nodeName, lookup_step).insert_index();
-    }
+
     if (nodeName == "FIELD") {
         iNode[Ix::Group] = ngroups;
     }
-    iNode[Ix::FixedPresNode] = (fixedPressureNode(sched, nodeName, lookup_step)) ? 1 : 0;
-    // the meaning of the value of item [4] is currently not known, the constant value used cover all cases so far
+    else if (sched[lookup_step].groups.has(nodeName)) {
+        iNode[Ix::Group] = sched[lookup_step].groups(nodeName).insert_index();
+    }
+
+    iNode[Ix::FixedPresNode] = sched[lookup_step].network()
+        .node(nodeName).terminal_pressure().has_value() ? 1 : 0;
+
+    // the meaning of the value of item [4] is currently not known, the constant value used cover
+    // all cases so far
     iNode[4] = 1;
 }
 
@@ -566,17 +585,20 @@ void dynamicContrib(const Opm::Schedule&      sched,
                     RNodeArray&               rNode)
 {
     using Ix = ::Opm::RestartIO::Helpers::VectorItems::RNode::index;
+
     // node dynamic pressure
-    rNode[Ix::NodePres] = sumState.get_group_var(nodeName, "GPR", 0.);
+    rNode[Ix::NodePres] = sumState.get_group_var(nodeName, "GPR", 0.0);
 
     // equal to 0. for fixed pressure nodes, 1. otherwise
-    rNode[Ix::FixedPresNode] = (fixedPressureNode(sched, nodeName, lookup_step)) ? 0. : 1.;
+    rNode[Ix::FixedPresNode] = sched[lookup_step].network()
+        .node(nodeName).terminal_pressure().has_value()
+        ? 0.0 : 1.0;
 
     // equal to i) highest well p_thp if wellgroup and ii) pressure of uptree node with fixed pressure
     rNode[Ix::PressureLimit] = nodePressure(sched, sumState, nodeName, lookup_step);
 
     //the meaning of item [15] is not known at the moment, so far a constant value covers all cases studied
-    rNode[15] = 1.;
+    rNode[15] = 1.0;
 }
 
 } // Rnode
