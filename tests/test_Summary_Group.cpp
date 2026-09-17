@@ -306,3 +306,153 @@ BOOST_AUTO_TEST_CASE(group_keywords)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+// =====================================================================
+
+namespace {
+
+// Two injection groups, both with a GCONINJE gas and water rate target in
+// the deck.  In the test G_1 plays the reservoir coupling slave group whose
+// target in force is reported by the simulator; G_2 is an ordinary group.
+std::string slaveGroupDeck(const std::string& unit_system)
+{
+    return R"(RUNSPEC
+DIMENS
+ 2 1 1 /
+)" + unit_system + R"(
+OIL
+GAS
+WATER
+TABDIMS
+/
+GRID
+DXV
+ 2*100 /
+DYV
+ 100 /
+DZV
+ 10 /
+TOPS
+ 2*2000 /
+EQUALS
+  PORO 0.30 /
+  PERMX 100 /
+  PERMY 100 /
+  PERMZ 10 /
+/
+PROPS
+DENSITY
+  800 1000 1.05 /
+SUMMARY
+FGIRT
+GGIRT
+/
+GWIRT
+/
+SCHEDULE
+GRUPTREE
+  'G_1' 'FIELD' /
+  'G_2' 'FIELD' /
+/
+GCONINJE
+  'G_1' 'GAS'   'RATE' 500 /
+  'G_1' 'WATER' 'RATE' 600 /
+  'G_2' 'GAS'   'RATE' 200 /
+  'G_2' 'WATER' 'RATE' 300 /
+/
+TSTEP
+ 2*1 /
+END
+)";
+}
+
+struct SlaveGroupSetup
+{
+    Deck deck;
+    EclipseState es;
+    const EclipseGrid& grid;
+    Schedule schedule;
+    SummaryConfig config;
+    data::Wells wells{};
+    data::WellBlockAveragePressures wbp{};
+    data::GroupAndNetworkValues grp_nwrk{};
+    std::string name;
+    WorkArea ta;
+
+    explicit SlaveGroupSetup(std::string case_name, const std::string& unit_system)
+        : deck     { Parser{}.parseString(slaveGroupDeck(unit_system)) }
+        , es       { deck }
+        , grid     { es.getInputGrid() }
+        , schedule { deck, es, std::make_shared<Python>() }
+        , config   { deck, schedule, es.fieldProps(), es.aquifer() }
+        , name     { toupper(std::move(case_name)) }
+        , ta       { "test_summary_slave_group_target" }
+    {}
+};
+
+} // Anonymous namespace
+
+BOOST_AUTO_TEST_SUITE(SlaveGroupInjectionTarget)
+
+// A target the simulator reports for a group through the reservoir coupling
+// data is reported as that group's GGIRT/GWIRT; a group without a reported
+// target gets the schedule's target.  Which groups get a report is the
+// reporting simulator's decision -- a slave run reports its slave groups --
+// so the evaluator itself does not check group membership.
+//
+// Run in both METRIC and FIELD units: the reported target is in SI and must
+// come out in the summary's own unit for the phase (gas: Mscf/day in FIELD,
+// not the reservoir stb/day of measure::rate).
+BOOST_AUTO_TEST_CASE(reported_target_wins_over_schedule)
+{
+    for (const auto* unit_system : { "METRIC", "FIELD" }) {
+        BOOST_TEST_CONTEXT("Unit system " << unit_system) {
+            SlaveGroupSetup cfg{"SLAVE_GROUP_TARGET", unit_system};
+
+            auto writer = out::Summary {
+                cfg.config, cfg.es, cfg.grid, cfg.schedule, cfg.name
+            };
+
+            auto st = SummaryState { TimeService::now(), 0.0 };
+
+            auto values = out::Summary::DynamicSimulatorState{};
+            values.well_solution = &cfg.wells;
+            values.wbp = &cfg.wbp;
+            values.group_and_nwrk_solution = &cfg.grp_nwrk;
+
+            // Targets "in force", as the simulator reports them: SI, from
+            // 1234 and 2345 in the deck's own surface-rate units.
+            using M = UnitSystem::measure;
+            const auto& units = cfg.es.getUnits();
+            auto rc = data::ReservoirCouplingGroupRates{};
+            rc.injection_targets["G_1"][Phase::GAS]   = units.to_si(M::gas_surface_rate,    1234.0);
+            rc.injection_targets["G_1"][Phase::WATER] = units.to_si(M::liquid_surface_rate, 2345.0);
+            values.rc_group_rates = &rc;
+
+            writer.eval(/* report_step = */ 1, /* secs_elapsed = */ 1.0*day, values, st);
+
+            // Reported target: comes out unchanged, in the deck's units.
+            BOOST_CHECK_CLOSE(st.get_group_var("G_1", "GGIRT"), 1234.0, 1.0e-10);
+            BOOST_CHECK_CLOSE(st.get_group_var("G_1", "GWIRT"), 2345.0, 1.0e-10);
+
+            // Ordinary group: the schedule.
+            BOOST_CHECK_CLOSE(st.get_group_var("G_2", "GGIRT"), 200.0, 1.0e-10);
+            BOOST_CHECK_CLOSE(st.get_group_var("G_2", "GWIRT"), 300.0, 1.0e-10);
+
+            // FIELD shares the evaluator (FGIRT) and has no report either:
+            // the schedule, which gives FIELD no gas injection target.
+            BOOST_CHECK_SMALL(st.get("FGIRT"), 1.0e-10);
+
+            // No reported target any more: back to the schedule, whatever
+            // the previous evaluation left in the summary state.
+            values.rc_group_rates = nullptr;
+
+            writer.eval(/* report_step = */ 1, /* secs_elapsed = */ 2.0*day, values, st);
+
+            BOOST_CHECK_CLOSE(st.get_group_var("G_1", "GGIRT"), 500.0, 1.0e-10);
+            BOOST_CHECK_CLOSE(st.get_group_var("G_1", "GWIRT"), 600.0, 1.0e-10);
+        }
+    }
+}
+
+BOOST_AUTO_TEST_SUITE_END()

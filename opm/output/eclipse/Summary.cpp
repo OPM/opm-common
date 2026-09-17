@@ -2284,8 +2284,47 @@ inline quantity group_liquid_production_target( const fn_args& args )
     return { value, measure::rate };
 }
 
+/// Injection rate target in force for a slave group of a reservoir
+/// coupling slave run, if the simulator has reported one.
+///
+/// A slave group's injection target is decided by the master run, combined
+/// with the slave's own GCONINJE limit as the group's GRUPSLAV flag says, so
+/// the schedule alone cannot know it.  The simulator reports the target in
+/// force through the reservoir coupling data handed to Summary::eval(),
+/// per group and phase in SI units, and this function returns it as a
+/// quantity in the given surface-rate measure.  Groups without a reported
+/// target -- every group of a non-coupled run, and a slave group whose own
+/// deck limit applies -- get their target from the schedule as usual.
+inline std::optional<quantity>
+slave_group_injection_target(const fn_args& args,
+                             const Opm::Phase phase,
+                             const measure rate_unit)
+{
+    if (args.rc_rates == nullptr) {
+        return std::nullopt;
+    }
+
+    const auto groupPos = args.rc_rates->injection_targets.find(args.group_name);
+    if (groupPos == args.rc_rates->injection_targets.end()) {
+        return std::nullopt;
+    }
+
+    const auto phasePos = groupPos->second.find(phase);
+    if (phasePos == groupPos->second.end()) {
+        return std::nullopt;
+    }
+
+    return quantity { phasePos->second, rate_unit };
+}
+
 inline quantity group_gas_injection_target( const fn_args& args )
 {
+    if (const auto target = slave_group_injection_target(args, Opm::Phase::GAS, measure::gas_surface_rate);
+        target.has_value())
+    {
+        return *target;
+    }
+
     double value = 0.0;
     const auto& groups = args.schedule[args.sim_step].groups;
     if (groups.has(args.group_name)) {
@@ -2299,6 +2338,12 @@ inline quantity group_gas_injection_target( const fn_args& args )
 
 inline quantity group_water_injection_target( const fn_args& args )
 {
+    if (const auto target = slave_group_injection_target(args, Opm::Phase::WATER, measure::liquid_surface_rate);
+        target.has_value())
+    {
+        return *target;
+    }
+
     double value = 0.0;
     const auto& groups = args.schedule[args.sim_step].groups;
     if (groups.has(args.group_name)) {

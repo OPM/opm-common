@@ -165,12 +165,15 @@ public:
         /// Nullptr if unavailable.
         const InterRegFlowValues* interreg_flows {nullptr};
 
-        /// Reservoir coupling master group rates (production and injection).
+        /// Reservoir coupling group data.
         ///
-        /// Populated by the simulator for reservoir coupling master models.
-        /// Used by Summary::eval() to include slave production/injection
-        /// in rate-based summary vectors (FOPR, GOPR, FGOR, etc.).
-        /// Nullptr if not a reservoir coupling master.
+        /// Populated by the simulator in a coupled run: a master model
+        /// supplies its master groups' production and injection rates, used
+        /// to include slave production/injection in rate-based summary
+        /// vectors (FOPR, GOPR, FGOR, ...); a slave model supplies the
+        /// injection targets in force for its slave groups, used by the
+        /// GGIRT/GWIRT evaluators.  Nullptr if the model takes no part in
+        /// reservoir coupling.
         const data::ReservoirCouplingGroupRates* rc_group_rates {nullptr};
 
         /// Fluid phase volumes in place at the field and region levels.
