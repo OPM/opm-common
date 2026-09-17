@@ -45,6 +45,7 @@
 #include <opm/input/eclipse/EclipseState/Tables/Rock2dTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/Rock2dtrTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/RocktabTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/RocktabhTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/RwgsaltTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/SgcwmisTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/SkprpolyTable.hpp>
@@ -129,6 +130,7 @@ namespace Opm {
         const TableContainer& getZmfvdTables() const;
         const TableContainer& getCompvdTables() const;
         const TableContainer& getRocktabTables() const;
+        const std::vector<RocktabhTable>& getRocktabhTables() const;
         const TableContainer& getPlyadsTables() const;
         const TableContainer& getPlyviscTables() const;
         const TableContainer& getPlydhflfTables() const;
@@ -236,6 +238,7 @@ namespace Opm {
             serializer(m_pvtsolTables);
             serializer(m_rock2dTables);
             serializer(m_rock2dtrTables);
+            serializer(m_rocktabhTables);
             serializer(m_pvtwTable);
             serializer(m_pvcdoTable);
             serializer(m_densityTable);
@@ -320,6 +323,7 @@ namespace Opm {
         void initCompvdTables(const Deck& deck);
         void initDims(const Deck& deck);
         void initRocktabTables(const Deck& deck);
+        void initRocktabhTables(const Deck& deck);
 
         void initPlymaxTables(const Deck& deck);
         void initRsconstTables(const Deck& deck);
@@ -395,6 +399,7 @@ namespace Opm {
         std::vector<PvtsolTable> m_pvtsolTables;
         std::vector<Rock2dTable> m_rock2dTables;
         std::vector<Rock2dtrTable> m_rock2dtrTables;
+        std::vector<RocktabhTable> m_rocktabhTables;
         PvtwTable m_pvtwTable;
         PvcdoTable m_pvcdoTable;
         DensityTable m_densityTable;

@@ -131,7 +131,15 @@ RockConfig::RockConfig(const Deck& deck, const FieldPropsManager& fp)
             this->num_property = "ROCKNUM";
         }
 
-        this->num_tables = record.getItem<rockcomp::NTROCC>().get<int>(0);
+        const auto& ntroccItem = record.getItem<rockcomp::NTROCC>();
+        if ((this->num_property == "ROCKNUM") && ntroccItem.defaultApplied(0)) {
+            // ROCKOPTS item 3 notes: if ROCKNUM is selected (explicitly via
+            // ROCKOPTS, or because a ROCKNUM array is present) but ROCKCOMP's
+            // NTROCC is left defaulted, PVTNUM is used instead.
+            this->num_property = "PVTNUM";
+        }
+
+        this->num_tables = ntroccItem.get<int>(0);
         this->hyst_mode = hysteresis(record.getItem<rockcomp::HYSTERESIS>().getTrimmedString(0));
         this->m_water_compaction = DeckItem::to_bool(record.getItem<rockcomp::WATER_COMPACTION>().getTrimmedString(0));
 

@@ -303,6 +303,7 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
         result.m_pvtoTables = {PvtoTable::serializationTestObject()};
         result.m_rock2dTables = {Rock2dTable::serializationTestObject()};
         result.m_rock2dtrTables = {Rock2dtrTable::serializationTestObject()};
+        result.m_rocktabhTables = {RocktabhTable::serializationTestObject()};
         result.m_pvtwTable = PvtwTable::serializationTestObject();
         result.m_pvcdoTable = PvcdoTable::serializationTestObject();
         result.m_densityTable = DensityTable::serializationTestObject();
@@ -686,6 +687,7 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
         initZmfvdTables(deck);
         initCompvdTables(deck);
         initRocktabTables(deck);
+        initRocktabhTables(deck);
         initPlyshlogTables(deck);
         initPlymwinjTables(deck);
         initSkprpolyTables(deck);
@@ -1063,6 +1065,86 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
         }
     }
 
+    void TableManager::initRocktabhTables(const Deck& deck) {
+        if (!deck.hasKeyword("ROCKTABH"))
+            return; // ROCKTABH is not featured by the deck...
+
+        if (deck.count("ROCKTABH") > 1) {
+            complainAboutAmbiguousKeyword(deck, "ROCKTABH");
+            return;
+        }
+
+        if (!deck.hasKeyword<ParserKeywords::ROCKCOMP>()) {
+            const auto& keyword = deck["ROCKTABH"].back();
+            throw OpmInputError {
+                "ROCKTABH requires ROCKCOMP - with HYSTERESIS set to HYSTER - to be "
+                "present in the RUNSPEC section to define the number of ROCKTABH "
+                "tables (NTROCC)",
+                keyword.location()
+            };
+        }
+
+        const auto& rockcompKeyword = deck.get<ParserKeywords::ROCKCOMP>().back();
+        const auto& record = rockcompKeyword.getRecord( 0 );
+
+        const auto hysteresisMode = record.getItem<ParserKeywords::ROCKCOMP::HYSTERESIS>().getTrimmedString(0);
+        if (hysteresisMode != "HYSTER") {
+            const auto& keyword = deck["ROCKTABH"].back();
+            throw OpmInputError {
+                fmt::format("ROCKTABH requires ROCKCOMP's HYSTERESIS item to be set "
+                            "to HYSTER, but it is set to {}.",
+                            hysteresisMode),
+                keyword.location()
+            };
+        }
+
+        std::size_t numTables = record.getItem<ParserKeywords::ROCKCOMP::NTROCC>().get< int >(0);
+        const auto rocktabhKeyword = deck["ROCKTABH"].back();
+
+        bool isDirectional = deck.hasKeyword<ParserKeywords::RKTRMDIR>();
+        if (isDirectional) {
+            const auto& keyword = deck.get<ParserKeywords::RKTRMDIR>().back();
+            const std::string reason {
+                "RKTRMDIR is in the deck. The directional ROCKTABH columns (TY, TZ) "
+                "are not supported.\n"
+                "Make sure that your ROCKTABH table only has 3 columns)"
+            } ;
+
+            throw OpmInputError(reason, keyword.location());
+        }
+
+        bool useStressOption = false;
+        if (deck.hasKeyword<ParserKeywords::ROCKOPTS>()) {
+            const auto rockoptsKeyword = deck.get<ParserKeywords::ROCKOPTS>().back();
+            const auto& rockoptsRecord = rockoptsKeyword.getRecord(0);
+            const auto& item = rockoptsRecord.getItem<ParserKeywords::ROCKOPTS::METHOD>();
+            useStressOption = (item.getTrimmedString(0) == "STRESS");
+
+            if (useStressOption) {
+                const std::string reason { "STRESS option is set in ROCKOPTS. Flow does not support stress option in rock compaction multipliers" } ;
+
+                throw OpmInputError(reason, rockoptsKeyword.location());
+            }
+        }
+
+        // Each elastic curve is its own "/"-terminated record; an additional,
+        // empty "/" record separates one ROCKTABH table (NTROCC region) from
+        // the next - exactly the PVTO/PVTG "num_tables" convention, so the
+        // existing region-boundary logic can be reused as-is.
+        const auto ranges = PvtxTable::recordRanges(rocktabhKeyword);
+        if (ranges.size() != numTables)
+            throw std::runtime_error("ROCKCOMP HYSTERESIS is set to HYSTER. " + std::to_string(numTables)
+                                     +" ROCKTABH tables is expected, but " + std::to_string(ranges.size()) +" is provided");
+
+        m_rocktabhTables.clear();
+        m_rocktabhTables.reserve(numTables);
+        for (std::size_t tableIdx = 0; tableIdx < ranges.size(); ++tableIdx) {
+            const auto& [firstRecord, lastRecord] = ranges[tableIdx];
+            m_rocktabhTables.emplace_back(rocktabhKeyword, firstRecord, lastRecord,
+                                           useStressOption, tableIdx);
+        }
+    }
+
         std::size_t TableManager::numFIPRegions() const {
         std::size_t ntfip = m_tabdims.getNumFIPRegions();
         if (m_regdims.getNTFIP( ) > ntfip)
@@ -1246,6 +1328,10 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
 
     const TableContainer& TableManager::getRocktabTables() const {
         return getTables("ROCKTAB");
+    }
+
+    const std::vector<RocktabhTable>& TableManager::getRocktabhTables() const {
+        return m_rocktabhTables;
     }
 
     const TableContainer& TableManager::getPlyadsTables() const {
@@ -1505,6 +1591,7 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
                m_pvtoTables == data.m_pvtoTables &&
                m_rock2dTables == data.m_rock2dTables &&
                m_rock2dtrTables == data.m_rock2dtrTables &&
+               m_rocktabhTables == data.m_rocktabhTables &&
                m_pvtwTable == data.m_pvtwTable &&
                m_pvcdoTable == data.m_pvcdoTable &&
                m_densityTable == data.m_densityTable &&

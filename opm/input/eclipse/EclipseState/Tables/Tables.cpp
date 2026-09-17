@@ -63,6 +63,7 @@
 #include <opm/input/eclipse/EclipseState/Tables/PvtoTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/PvtsolTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/RocktabTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/RocktabhTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/RockwnodTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/RsvdTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/RtempvdTable.hpp>
@@ -1740,7 +1741,8 @@ RtempvdTable::getTemperatureColumn() const
     return SimpleTable::getColumn(1);
 }
 
-RocktabTable::RocktabTable(const DeckItem& item, bool isDirectional, bool hasStressOption, const int tableID)
+RocktabTable::RocktabTable(const DeckItem& item, bool isDirectional, bool hasStressOption,
+                            const int tableID)
     : m_isDirectional(isDirectional)
 {
 
@@ -1818,6 +1820,123 @@ bool
 RocktabTable::operator==(const RocktabTable& data) const
 {
     return this->SimpleTable::operator==(data) && m_isDirectional == data.m_isDirectional;
+}
+
+namespace {
+    // Column layout shared by every ROCKTABH elastic curve as well as the
+    // derived deflation/dilation curves: PO (pressure) must be strictly
+    // monotonic - increasing, or decreasing under the STRESS option - while
+    // the two multiplier columns are unconstrained (matches RocktabTable's
+    // own, non-directional schema).
+    TableSchema rocktabhSchema(bool hasStressOption)
+    {
+        TableSchema schema;
+        const auto poOrder = hasStressOption ? Table::STRICTLY_DECREASING : Table::STRICTLY_INCREASING;
+        schema.addColumn(ColumnSchema("PO", poOrder, Table::DEFAULT_NONE));
+        schema.addColumn(ColumnSchema("PV_MULT", Table::RANDOM, Table::DEFAULT_LINEAR));
+        schema.addColumn(ColumnSchema("PV_MULT_TRAN", Table::RANDOM, Table::DEFAULT_LINEAR));
+        return schema;
+    }
+}
+
+RocktabhTable::RocktabhTable(const DeckKeyword& keyword,
+                              const std::size_t  firstRecord,
+                              const std::size_t  lastRecord,
+                              bool               hasStressOption,
+                              const int          tableID)
+    : m_deflationCurve(rocktabhSchema(hasStressOption))
+    , m_dilationCurve(rocktabhSchema(hasStressOption))
+{
+    // Directional ROCKTABH (RKTRMDIR, 5 columns) is rejected by the caller
+    // before this constructor runs, so the layout here is always (PRESS,
+    // PORV MULT, TRAN MULT), matching rocktabhSchema() above.
+    //
+    // Everything below can throw a plain (location-less) exception straight
+    // out of SimpleTable: item.data_size() not a multiple of the column
+    // count, or a PO value breaking the schema's monotonicity - within a
+    // curve when building an elastic curve itself, or across curves when
+    // appending each curve's first/last row to the deflation/dilation
+    // curves, which share that same schema. All of that is caught below and
+    // rethrown as one consistently-worded, location-aware OpmInputError.
+    try {
+        for (std::size_t recordIdx = firstRecord; recordIdx < lastRecord; ++recordIdx) {
+            const auto& item = keyword.getRecord(recordIdx).getItem(0);
+
+            this->m_elasticCurves.emplace_back(rocktabhSchema(hasStressOption), "ROCKTABH", item, tableID);
+            const auto& curve = this->m_elasticCurves.back();
+
+            if (curve.numRows() < 2) {
+                throw std::invalid_argument {
+                    "each elastic curve must contain at least two rows"
+                };
+            }
+
+            // The first/last row of this curve become the next point on the
+            // deflation/dilation curves.
+            const auto ncol = curve.numColumns();
+            std::vector<double> firstRow(ncol);
+            std::vector<double> lastRow(ncol);
+            for (std::size_t col = 0; col < ncol; ++col) {
+                const auto& column = curve.getColumn(col);
+                firstRow[col] = column[0];
+                lastRow[col]  = column[curve.numRows() - 1];
+            }
+            this->m_deflationCurve.addRow(firstRow, "ROCKTABH");
+            this->m_dilationCurve.addRow(lastRow, "ROCKTABH");
+        }
+
+        if (this->m_elasticCurves.size() < 2) {
+            throw std::invalid_argument {
+                "at least two elastic curves (pressure reversals) are required "
+                "for rock compaction hysteresis to be interpolated"
+            };
+        }
+    }
+    catch (const std::exception& e) {
+        throw OpmInputError {
+            fmt::format("For table ROCKTABH with ID {}: {}", tableID + 1, e.what()),
+            keyword.location()
+        };
+    }
+}
+
+RocktabhTable
+RocktabhTable::serializationTestObject()
+{
+    RocktabhTable result;
+    result.m_elasticCurves = {SimpleTable::serializationTestObject(), SimpleTable::serializationTestObject()};
+    result.m_deflationCurve = SimpleTable::serializationTestObject();
+    result.m_dilationCurve = SimpleTable::serializationTestObject();
+
+    return result;
+}
+
+std::size_t RocktabhTable::numElasticCurves() const
+{
+    return m_elasticCurves.size();
+}
+
+const SimpleTable& RocktabhTable::elasticCurve(std::size_t curveIdx) const
+{
+    return m_elasticCurves.at(curveIdx);
+}
+
+const SimpleTable& RocktabhTable::deflationCurve() const
+{
+    return m_deflationCurve;
+}
+
+const SimpleTable& RocktabhTable::dilationCurve() const
+{
+    return m_dilationCurve;
+}
+
+bool
+RocktabhTable::operator==(const RocktabhTable& data) const
+{
+    return this->m_elasticCurves == data.m_elasticCurves
+        && this->m_deflationCurve == data.m_deflationCurve
+        && this->m_dilationCurve == data.m_dilationCurve;
 }
 
 RsvdTable::RsvdTable(const DeckItem& item, const int tableID)
