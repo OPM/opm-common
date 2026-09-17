@@ -48,6 +48,7 @@
 
 #include <opm/input/eclipse/Schedule/Action/State.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
+#include <opm/input/eclipse/Schedule/ScheduleState.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellTestConfig.hpp>
@@ -878,7 +879,7 @@ BOOST_AUTO_TEST_CASE (Declared_Well_Data)
     const auto rptStep = std::size_t{1};
 
     const auto ih = MockIH {
-        static_cast<int>(simCase.sched.getWells(rptStep).size())
+        static_cast<int>(simCase.sched[rptStep].wells.size())
     };
 
     BOOST_CHECK_EQUAL(ih.nwells, MockIH::Sz{2});
@@ -1108,7 +1109,7 @@ BOOST_AUTO_TEST_CASE (Declared_Well_Data)
     const auto rptStep_8 = std::size_t{8};
 
     const auto ih_8 = MockIH {
-        static_cast<int>(simCase.sched.getWells(rptStep_8).size())
+        static_cast<int>(simCase.sched[rptStep_8].wells.size())
     };
 
     BOOST_CHECK_EQUAL(ih_8.nwells, MockIH::Sz{6});
@@ -1153,7 +1154,7 @@ BOOST_AUTO_TEST_CASE (WECON)
     const auto rptStep = std::size_t{2};
 
     const auto ih = MockIH {
-        static_cast<int>(simCase.sched.getWells(rptStep).size())
+        static_cast<int>(simCase.sched[rptStep].wells.size())
     };
 
     BOOST_CHECK_EQUAL(ih.nwells, MockIH::Sz{3});
@@ -1255,7 +1256,7 @@ BOOST_AUTO_TEST_CASE (WGRUPCON)
     const auto rptStep = std::size_t{2};
 
     const auto ih = MockIH {
-        static_cast<int>(simCase.sched.getWells(rptStep).size())
+        static_cast<int>(simCase.sched[rptStep].wells.size())
     };
 
     BOOST_CHECK_EQUAL(ih.nwells, MockIH::Sz{3});
@@ -1358,7 +1359,7 @@ BOOST_AUTO_TEST_CASE (Declared_Well_Data_MSW_well_data)
     const auto rptStep = std::size_t{1};
 
     const auto ih = MockIH {
-        static_cast<int>(simCase.sched.getWells(rptStep).size())
+        static_cast<int>(simCase.sched[rptStep].wells.size())
     };
 
     const auto smry = sim_state();
@@ -1422,7 +1423,7 @@ BOOST_AUTO_TEST_CASE (Dynamic_Well_Data_Step1)
     const auto rptStep = std::size_t{1};
 
     const auto ih = MockIH {
-        static_cast<int>(simCase.sched.getWells(rptStep).size())
+        static_cast<int>(simCase.sched[rptStep].wells.size())
     };
 
     const auto xw   = well_rates_1();
@@ -1566,7 +1567,7 @@ BOOST_AUTO_TEST_CASE (Dynamic_Well_Data_Step2)
     const auto rptStep = std::size_t{2};
 
     const auto ih = MockIH {
-        static_cast<int>(simCase.sched.getWells(rptStep).size())
+        static_cast<int>(simCase.sched[rptStep].wells.size())
     };
 
     const auto xw   = well_rates_2();

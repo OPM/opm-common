@@ -33,6 +33,7 @@
 #include <opm/input/eclipse/Schedule/Network/ExtNetwork.hpp>
 #include <opm/input/eclipse/Schedule/MSW/WellSegments.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
+#include <opm/input/eclipse/Schedule/ScheduleState.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQConfig.hpp>
 #include <opm/input/eclipse/Schedule/Well/Connection.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
@@ -1829,8 +1830,8 @@ void connectionKeyword(const bool                   isGeomechWithFracturingRun,
 
         const auto segID = -1;
 
-        for (const auto& well : schedule.getWellsatEnd()) {
-            makeSegmentNodes(segID, keyword, well, list);
+        for (const auto& wellPtrPair : schedule.back().wells) {
+            makeSegmentNodes(segID, keyword, *wellPtrPair.second, list);
         }
     }
 
@@ -1873,7 +1874,7 @@ void connectionKeyword(const bool                   isGeomechWithFracturingRun,
                 ? -1 : record.getItem(1).get<int>(0);
 
             for (const auto& well_name : well_names) {
-                makeSegmentNodes(segID, keyword, schedule.getWellatEnd(well_name), list);
+                makeSegmentNodes(segID, keyword, schedule.back().wells(well_name), list);
             }
         }
     }

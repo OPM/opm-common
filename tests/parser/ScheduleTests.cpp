@@ -578,30 +578,24 @@ END
 }
 
 BOOST_AUTO_TEST_CASE(WellsIterator_Empty_EmptyVectorReturned) {
-    const auto& schedule = make_schedule( createDeck() );
+    const auto schedule = make_schedule( createDeck() );
 
-    const auto wells_alltimesteps = schedule.getWellsatEnd();
-    BOOST_CHECK_EQUAL(0U, wells_alltimesteps.size());
-
-    const auto wells_t0 = schedule.getWells(0);
-    BOOST_CHECK_EQUAL(0U, wells_t0.size());
+    BOOST_CHECK_EQUAL(0U, schedule.back().wells.size());
+    BOOST_CHECK_EQUAL(0U, schedule[0].wells.size());
 
     // The time argument is beyond the length of the vector
     BOOST_CHECK_THROW(schedule.getWells(1), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(WellsIterator_HasWells_WellsReturned) {
-    const auto& schedule = make_schedule( createDeckWithWells() );
-    std::size_t timeStep = 0;
+    const auto schedule = make_schedule( createDeckWithWells() );
+    const std::size_t timeStep = 0;
 
-    const auto wells_alltimesteps = schedule.getWellsatEnd();
-    BOOST_CHECK_EQUAL(3U, wells_alltimesteps.size());
-    const auto wells_t0 = schedule.getWells(timeStep);
-    BOOST_CHECK_EQUAL(1U, wells_t0.size());
-    const auto wells_t3 = schedule.getWells(3);
-    BOOST_CHECK_EQUAL(3U, wells_t3.size());
+    BOOST_CHECK_EQUAL(3U, schedule.back().wells.size());
+    BOOST_CHECK_EQUAL(1U, schedule[timeStep].wells.size());
+    BOOST_CHECK_EQUAL(3U, schedule[3].wells.size());
 
-    const auto& unique = schedule.unique<NameOrder>();
+    const auto unique = schedule.unique<NameOrder>();
     BOOST_CHECK_EQUAL( unique.size(), 2 );
     BOOST_CHECK_EQUAL( unique[0].first, 0 );
     BOOST_CHECK_EQUAL( unique[1].first, 3 );
@@ -613,7 +607,7 @@ BOOST_AUTO_TEST_CASE(WellsIterator_HasWells_WellsReturned) {
 
 
 BOOST_AUTO_TEST_CASE(ReturnNumWellsTimestep) {
-    const auto& schedule = make_schedule( createDeckWithWells() );
+    const auto schedule = make_schedule( createDeckWithWells() );
 
     BOOST_CHECK_EQUAL(schedule.numWells(0), 1U);
     BOOST_CHECK_EQUAL(schedule.numWells(1), 1U);
@@ -622,7 +616,7 @@ BOOST_AUTO_TEST_CASE(ReturnNumWellsTimestep) {
 }
 
 BOOST_AUTO_TEST_CASE(TestCrossFlowHandling) {
-    const auto& schedule = make_schedule( createDeckForTestingCrossFlow() );
+    const auto schedule = make_schedule( createDeckForTestingCrossFlow() );
 
     BOOST_CHECK_EQUAL(schedule.getWell("BAN", 0).getAllowCrossFlow(), false);
     BOOST_CHECK_EQUAL(schedule.getWell("ALLOW", 0).getAllowCrossFlow(), true);

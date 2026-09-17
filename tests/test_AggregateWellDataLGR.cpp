@@ -50,6 +50,7 @@
 
 #include <opm/input/eclipse/Schedule/Action/State.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
+#include <opm/input/eclipse/Schedule/ScheduleState.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellTestConfig.hpp>
@@ -1159,7 +1160,6 @@ END
         return state;
     }
 
-
     Opm::SummaryState sim_stateLGR_example04()
     {
         auto state = Opm::SummaryState{Opm::TimeService::now(), 0.0};
@@ -1450,7 +1450,7 @@ BOOST_AUTO_TEST_CASE (Declared_Well_Data2LGRWells)
     };
 
     auto ih = MockIH {
-        static_cast<int>(simCase.sched.getWells(rptStep).size())
+        static_cast<int>(simCase.sched[rptStep].wells.size())
     };
 
     ih.add_icon_data(26, 42, 58, 2);
@@ -1821,7 +1821,7 @@ BOOST_AUTO_TEST_CASE (Declared_Well_Data3Wells1G2LGR)
     };
 
     auto ih = MockIH {
-        static_cast<int>(simCase.sched.getWells(rptStep).size())
+        static_cast<int>(simCase.sched[rptStep].wells.size())
     };
 
     ih.add_icon_data(26, 42, 58, 3);
@@ -2169,7 +2169,7 @@ BOOST_AUTO_TEST_CASE (LGR_WellingitSameHostGrid)
     };
 
     auto ih = MockIH {
-        static_cast<int>(simCase.sched.getWells(rptStep).size())
+        static_cast<int>(simCase.sched[rptStep].wells.size())
     };
 
     ih.add_icon_data(26, 42, 58, 3);
@@ -2308,7 +2308,7 @@ BOOST_AUTO_TEST_CASE (LGR_BugFixCrossingLGRWell)
     };
 
     auto ih = MockIH {
-        static_cast<int>(simCase.sched.getWells(rptStep).size())
+        static_cast<int>(simCase.sched[rptStep].wells.size())
     };
 
     ih.add_icon_data(26, 42 ,58 , 3);
@@ -2445,7 +2445,7 @@ BOOST_AUTO_TEST_CASE (LGR_CARFINGR)
     };
 
     auto ih = MockIH {
-        static_cast<int>(simCase.sched.getWells(rptStep).size())
+        static_cast<int>(simCase.sched[rptStep].wells.size())
     };
 
     ih.add_icon_data(26, 42 ,58 , 3);
@@ -2563,7 +2563,7 @@ BOOST_AUTO_TEST_CASE (Declared_Well_Data3MixedGroupsWells)
     };
 
     auto ih = MockIH {
-        static_cast<int>(simCase.sched.getWells(rptStep).size())
+        static_cast<int>(simCase.sched[rptStep].wells.size())
     };
 
     ih.add_icon_data(26, 42 ,58 , 3);
@@ -2969,7 +2969,7 @@ BOOST_AUTO_TEST_CASE (Declared_WellDynamicDataLGR)
 
 
     const auto ih = MockIH {
-        static_cast<int>(simCase.sched.getWells(rptStep).size())
+        static_cast<int>(simCase.sched[rptStep].wells.size())
     };
 
     const auto ih_lgr1 = MockIH {
