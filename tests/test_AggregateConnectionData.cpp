@@ -40,6 +40,7 @@
 #include <opm/input/eclipse/Python/Python.hpp>
 
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
+#include <opm/input/eclipse/Schedule/ScheduleState.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
@@ -616,7 +617,7 @@ BOOST_AUTO_TEST_CASE(Declared_Connection_Data)
     // Report Step 1: 2115-01-01 --> 2015-01-03
     const auto rptStep = std::size_t {1};
 
-    const auto ih = MockIH {static_cast<int>(simCase.sched.getWells(rptStep).size())};
+    const auto ih = MockIH {static_cast<int>(simCase.sched[rptStep].wells.size())};
 
     BOOST_CHECK_EQUAL(ih.nwells, MockIH::Sz {2});
 
@@ -834,7 +835,7 @@ BOOST_AUTO_TEST_CASE(InactiveCell)
 {
     auto simCase = SimulationCase{first_sim()};
     const auto rptStep = std::size_t{1};
-    const auto ih = MockIH {static_cast<int>(simCase.sched.getWells(rptStep).size())};
+    const auto ih = MockIH {static_cast<int>(simCase.sched[rptStep].wells.size())};
 
     const auto& [wrc, sum_state] = wr(simCase.sched);
     auto conn0 = Opm::RestartIO::Helpers::AggregateConnectionData{ih.value};

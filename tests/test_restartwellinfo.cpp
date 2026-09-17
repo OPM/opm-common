@@ -39,6 +39,7 @@
 #include <opm/input/eclipse/Schedule/UDQ/UDQConfig.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQParams.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQState.hpp>
+#include <opm/input/eclipse/Schedule/Well/NameOrder.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellTestState.hpp>
@@ -138,33 +139,30 @@ void verifyWellState(const std::string& rst_filename, const Opm::Schedule& sched
         icon = rstFile.get<int>("ICON");
     }
 
-    const auto& wellList = schedule.getWells(step);
-
     //Verify number of active wells
-    BOOST_CHECK_EQUAL( wellList.size(), static_cast<std::size_t>(intehead[16]));
+    BOOST_CHECK_EQUAL(schedule[step].wells.size(), static_cast<std::size_t>(intehead[16]));
 
-    for (std::size_t i=0; i< wellList.size(); i++) {
-
+    for (auto i = std::size_t{}; const auto& wellName : schedule[step].well_order()) {
         // Verify wellname
         BOOST_CHECK_EQUAL(zwel[i*3], ref_wellList[step][i]);
-        BOOST_CHECK_EQUAL(zwel[i*3], wellList[i].name());
+        BOOST_CHECK_EQUAL(zwel[i*3], wellName);
 
         // Verify well I, J head
 
         BOOST_CHECK_EQUAL(iwel[i*niwelz], std::get<0>(ref_wellHead[step][i]));
         BOOST_CHECK_EQUAL(iwel[i*niwelz + 1], std::get<1>(ref_wellHead[step][i]));
 
-        Opm::Well sched_well2 = schedule.getWell(wellList[i].name(), step);
+        const auto& sched_well2 = schedule[step].wells(wellName);
 
-        BOOST_CHECK_EQUAL(iwel[i*niwelz], sched_well2.getHeadI() +1 );
-        BOOST_CHECK_EQUAL(iwel[i*niwelz + 1], sched_well2.getHeadJ() +1 );
+        BOOST_CHECK_EQUAL(iwel[i * niwelz], sched_well2.getHeadI() + 1);
+        BOOST_CHECK_EQUAL(iwel[i * niwelz + 1], sched_well2.getHeadJ() + 1);
 
         int sched_wtype = -99;
 
         if (sched_well2.isProducer()) {
             sched_wtype = 1;
         } else {
-            switch( sched_well2.getInjectionProperties(  ).injectorType ) {
+            switch (sched_well2.getInjectionProperties().injectorType) {
             case Opm::InjectorType::WATER:
                 sched_wtype = 3;
                 break;
@@ -182,7 +180,7 @@ void verifyWellState(const std::string& rst_filename, const Opm::Schedule& sched
         // Verify well type
         //    1 = producer, 2 = oil injection, 3 = water injector, 4 = gas injector
 
-        BOOST_CHECK_EQUAL(iwel[i*niwelz + 6], sched_wtype );
+        BOOST_CHECK_EQUAL(iwel[i * niwelz + 6], sched_wtype);
 
         const auto& connections_set = sched_well2.getConnections();
 
@@ -191,22 +189,23 @@ void verifyWellState(const std::string& rst_filename, const Opm::Schedule& sched
         BOOST_CHECK_EQUAL(static_cast<std::size_t>(iwel[i*niwelz + 4]), connections_set.size() );
         BOOST_CHECK_EQUAL(ref_wellConn[step][i].size(), connections_set.size() );
 
-
-        for (std::size_t n=0; n< connections_set.size(); n++) {
+        for (std::size_t n = 0; n < connections_set.size(); n++) {
             const auto& completion = connections_set.get(n);
 
             // Verify I, J and K indices for each connection
 
-            BOOST_CHECK_EQUAL(completion.getI()+1 , std::get<0>(ref_wellConn[step][i][n]));
-            BOOST_CHECK_EQUAL(completion.getJ()+1 , std::get<1>(ref_wellConn[step][i][n]));
-            BOOST_CHECK_EQUAL(completion.getK()+1 , std::get<2>(ref_wellConn[step][i][n]));
+            BOOST_CHECK_EQUAL(completion.getI() + 1, std::get<0>(ref_wellConn[step][i][n]));
+            BOOST_CHECK_EQUAL(completion.getJ() + 1, std::get<1>(ref_wellConn[step][i][n]));
+            BOOST_CHECK_EQUAL(completion.getK() + 1, std::get<2>(ref_wellConn[step][i][n]));
 
-            std::size_t ind = i*ncwmax*niconz+n*niconz;
+            std::size_t ind = i * ncwmax * niconz + n * niconz;
 
-            BOOST_CHECK_EQUAL(completion.getI()+1 , icon[ind+1]);
-            BOOST_CHECK_EQUAL(completion.getJ()+1 , icon[ind+2]);
-            BOOST_CHECK_EQUAL(completion.getK()+1 , icon[ind+3]);
+            BOOST_CHECK_EQUAL(completion.getI() + 1, icon[ind + 1]);
+            BOOST_CHECK_EQUAL(completion.getJ() + 1, icon[ind + 2]);
+            BOOST_CHECK_EQUAL(completion.getK() + 1, icon[ind + 3]);
         }
+
+        ++i;
     }
 }
 

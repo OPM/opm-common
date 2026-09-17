@@ -43,6 +43,7 @@
 #include <opm/input/eclipse/Schedule/Network/Balance.hpp>
 #include <opm/input/eclipse/Schedule/Network/ExtNetwork.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
+#include <opm/input/eclipse/Schedule/ScheduleState.hpp>
 #include <opm/input/eclipse/Schedule/Tuning.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQActive.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQConfig.hpp>
@@ -56,6 +57,7 @@
 #include <cstddef>
 #include <iterator>
 #include <numeric>
+#include <ranges>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -153,18 +155,13 @@ namespace {
                        const std::size_t    report_step,
                        const std::size_t    lookup_step)
     {
-        if (report_step == std::size_t{0}) {
+        if ((report_step == std::size_t{0}) || (sched[lookup_step].wells.size() == 0)) {
             return 0;
         }
 
-        auto ncwmax = 0;
-        for (const auto& well : sched.getWells(lookup_step)) {
-            const auto ncw = well.getConnections().size();
-
-            ncwmax = std::max(ncwmax, static_cast<int>(ncw));
-        }
-
-        return ncwmax;
+        return std::ranges::max(sched[lookup_step].wells | std::views::transform([](const auto& wellPair) {
+            return static_cast<int>(wellPair.second->getConnections().size());
+        }));
     }
 
     int numGroupsInField(const Opm::Schedule& sched,
