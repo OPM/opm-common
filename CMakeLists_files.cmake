@@ -716,6 +716,7 @@ list(APPEND DUNE_TEST_SOURCE_FILES
   tests/material/test_ncpflash.cpp
   tests/material/test_pengrobinson.cpp
   tests/material/test_ptflash_ssi_newton_fallback.cpp
+  tests/material/test_ptflash_trivial_root.cpp
   tests/material/test_saturation_pressure.cpp
   tests/material/test_tabulation.cpp
   tests/material/test_threecomponents_ptflash.cpp

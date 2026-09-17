@@ -42,16 +42,20 @@
 #include <opm/input/eclipse/EclipseState/Compositional/CompositionalConfig.hpp>
 
 #include <opm/common/ErrorMacros.hpp>
+#include <opm/common/Exceptions.hpp>
 #include <opm/common/OpmLog/OpmLog.hpp>
 
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
 #include <dune/common/classname.hh>
 
+#include <algorithm>
+#include <cmath>
 #include <cstddef>
 #include <limits>
 #include <numeric>
 #include <stdexcept>
+#include <string>
 #include <type_traits>
 
 #include <fmt/format.h>
@@ -87,8 +91,6 @@ class PTFlash
     // Rachford-Rice bisection stops on the residual or the interval width.
     static constexpr Scalar bisectionResidualTolerance = 1e-16;
     static constexpr Scalar bisectionWidthTolerance = 1e-10;
-    // Slope of the Wilson correlation for the initial equilibrium ratios.
-    static constexpr Scalar wilsonSlope = 5.3727;
 
 public:
     /*!
@@ -261,7 +263,8 @@ public:
         }
 
         // Throw error if Rachford-Rice fails
-        OPM_THROW(std::runtime_error, " Rachford-Rice did not converge within maximum number of iterations");
+        OPM_THROW_NOLOG(NumericalProblem,
+                        " Rachford-Rice did not converge within maximum number of iterations");
     }
 
     /*!
@@ -269,11 +272,14 @@ public:
      *
      * The stages are:
      * -# a stability test when the state does not already carry a two-phase
-     *    split (\f$L \le 0\f$ or \f$L = 1\f$), which either declares the
+     *    split (\f$L \le 0\f$ or \f$L \ge 1\f$), which either declares the
      *    mixture single-phase or returns starting equilibrium ratios;
      * -# for a two-phase mixture, the Rachford-Rice equation for the
      *    starting liquid fraction, then the phase compositions from
      *    equality of fugacities by successive substitution and/or Newton;
+     * -# a finite negative-flash liquid fraction is labelled single-phase;
+     * -# a rejected split, or coincident phases from a warm start, triggers a
+     *    new stability test from Wilson estimates and at most one retry; and
      * -# for a single-phase mixture, the phase label.
      *
      * \return Whether the mixture is single-phase.
@@ -285,8 +291,10 @@ public:
                                     const EOSType& eos_type,
                                     const int verbosity = 0)
     {
-        // A previous two-phase result remains two-phase; otherwise reassess stability.
+        // States without a physical two-phase fraction require stability
+        // analysis. Every completed split is classified below.
         bool is_single_phase = false;
+        bool is_negative_flash = false;
         auto L_scalar = fluid_state.L();
         using ScalarVector = Dune::FieldVector<Scalar, numComponents>;
         ScalarVector K_scalar, z_scalar;
@@ -295,9 +303,12 @@ public:
             z_scalar[compIdx] = fluid_state.moleFraction(compIdx);
         }
 
-        if ( L_scalar <= 0 || L_scalar == 1 ) {
+        // Here, a cold start means there is no usable previous two-phase split
+        // (L is outside (0, 1)); a warm start reuses previous K and L values.
+        const bool is_cold_start = L_scalar <= 0 || L_scalar >= 1;
+        if (is_cold_start) {
             if (verbosity >= 1) {
-                OpmLog::debug("Perform stability test (L <= 0 or L == 1)!");
+                OpmLog::debug("Perform stability test (L <= 0 or L >= 1)!");
             }
             phaseStabilityTest_(
                 is_single_phase, K_scalar, fluid_state, z_scalar, eos_type, verbosity);
@@ -309,12 +320,98 @@ public:
         }
         // Update the composition if cell is two-phase
         if (!is_single_phase) {
+            const auto try_solve_split = [&](const auto& on_failure) {
+                try {
+                    L_scalar = solveRachfordRice_g_(K_scalar, z_scalar, verbosity);
+                    flash_2ph(z_scalar, twoPhaseMethod, K_scalar, L_scalar, fluid_state,
+                              flash_tolerance, eos_type, verbosity);
+                    return true;
+                }
+                catch (const NumericalProblem& error) {
+                    on_failure(error);
+                }
+                catch (const Dune::FMatrixError& error) {
+                    on_failure(error);
+                }
+                return false;
+            };
+            const auto classify_negative_flash = [&]() {
+                const Scalar liquid_fraction = Opm::getValue(L_scalar);
+                is_negative_flash = liquid_fraction <= 0. || liquid_fraction >= 1.;
+                is_single_phase = is_negative_flash;
+                if (is_negative_flash) {
+                    L_scalar = liquid_fraction <= 0. ? 0. : 1.;
+                }
+            };
+
             // Rachford Rice equation to get initial L for composition solver
-            L_scalar = solveRachfordRice_g_(K_scalar, z_scalar, verbosity);
-            flash_2ph(z_scalar, twoPhaseMethod, K_scalar, L_scalar, fluid_state, flash_tolerance, eos_type, verbosity);
-        } else {
-            // Cell is one-phase. Use Li's phase labeling method to see if it's liquid or vapor
-            L_scalar = li_single_phase_label_(fluid_state, z_scalar, verbosity);
+            const bool split_succeeded = try_solve_split([&](const auto& error) {
+                if (verbosity >= 1) {
+                    OpmLog::debug(fmt::format(
+                        "The two-phase flash was rejected ({}); reassessing phase stability.",
+                        error.what()));
+                }
+            });
+
+            // A finite negative-flash root outside [0, 1] is the single-phase
+            // criterion, not a failed composition solve.
+            if (split_succeeded) {
+                classify_negative_flash();
+            }
+
+            // A warm start must be reassessed from Wilson estimates because its
+            // stored K may be a trivial fixed point. For a cold start, a
+            // coincident split contradicts the preceding instability result.
+            const bool phases_coincide = split_succeeded && !is_single_phase
+                && phasesCoincide_(fluid_state);
+            if (phases_coincide && is_cold_start) {
+                OPM_THROW_NOLOG(NumericalProblem,
+                                "The two-phase flash converged to coincident phases after "
+                                "stability analysis identified an unstable mixture");
+            }
+            if (!split_succeeded || (phases_coincide && !is_cold_start)) {
+                if (phases_coincide && verbosity >= 1) {
+                    OpmLog::debug("The two-phase flash converged to coincident phases; "
+                                  "reassessing phase stability.");
+                }
+
+                // A uniform K vector also represents coincident normalised
+                // compositions and can be a trivial fixed point of the
+                // stability trials. Restart from Wilson estimates to obtain an
+                // independent test.
+                for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
+                    K_scalar[compIdx] = fluid_state.wilsonK_(compIdx);
+                }
+                phaseStabilityTest_(
+                    is_single_phase, K_scalar, fluid_state, z_scalar, eos_type, verbosity);
+                if (!is_single_phase) {
+                    // Stability found a distinct trial phase and returned a
+                    // fresh K estimate. Retry the split once from that state.
+                    try_solve_split([](const auto& error) {
+                        OPM_THROW_NOLOG(
+                            NumericalProblem,
+                            fmt::format("Two-phase flash retry failed after stability "
+                                        "analysis: {}",
+                                        error.what()));
+                    });
+                    classify_negative_flash();
+                    if (!is_single_phase && phasesCoincide_(fluid_state)) {
+                        OPM_THROW_NOLOG(NumericalProblem,
+                                        "The two-phase flash retry converged to coincident phases "
+                                        "after stability analysis identified an unstable mixture");
+                    }
+                }
+            }
+        }
+        if (is_single_phase) {
+            for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+                fluid_state.setMoleFraction(gasPhaseIdx, compIdx, z_scalar[compIdx]);
+                fluid_state.setMoleFraction(oilPhaseIdx, compIdx, z_scalar[compIdx]);
+            }
+            if (!is_negative_flash) {
+                // Cell is one-phase. Use Li's phase labeling method to see if it's liquid or vapor
+                L_scalar = li_single_phase_label_(fluid_state, z_scalar, verbosity);
+            }
         }
         fluid_state.setLvalue(L_scalar);
         return is_single_phase;
@@ -349,11 +446,11 @@ public:
 
         // Bisection loop
         if (interval_is_small(liquid_endpoint, vapour_endpoint)) {
-            OPM_THROW(std::runtime_error,
-                      fmt::format("Strange bisection with liquid endpoint {} "
-                                  "and vapour endpoint {}",
-                                  liquid_endpoint,
-                                  vapour_endpoint));
+            OPM_THROW_NOLOG(NumericalProblem,
+                            fmt::format("Strange bisection with liquid endpoint {} "
+                                        "and vapour endpoint {}",
+                                        liquid_endpoint,
+                                        vapour_endpoint));
         }
         for (int iteration = 0; iteration < max_iterations; ++iteration) {
             // New midpoint
@@ -376,8 +473,8 @@ public:
                 residual_at_liquid_endpoint = midpoint_residual;
             }
         }
-        OPM_THROW(
-            std::runtime_error,
+        OPM_THROW_NOLOG(
+            NumericalProblem,
             fmt::format(" Rachford-Rice bisection failed with {} iterations!", max_iterations));
     }
 
@@ -503,31 +600,31 @@ public:
         // The two stationary trial compositions seed the equilibrium ratios.
         else {
             for (int compIdx = 0; compIdx<numComponents; ++compIdx) {
-                K[compIdx] = vapour_trial_composition[compIdx] / liquid_trial_composition[compIdx];
+                if (Opm::getValue(z[compIdx]) > 0.) {
+                    K[compIdx]
+                        = vapour_trial_composition[compIdx] / liquid_trial_composition[compIdx];
+                } else {
+                    K[compIdx] = 1.;
+                }
             }
         }
     }
 
 protected:
 
-    /*!
-     * \brief Wilson's correlation for a starting equilibrium ratio,
-     *
-     * \f[ K_i = \frac{p_{c,i}}{p}
-     *   \exp\left[ 5.3727 (1 + \omega_i) \left( 1 - \frac{T_{c,i}}{T} \right) \right]. \f]
-     */
-    template <class FlashFluidState>
-    static typename FlashFluidState::ValueType wilsonK_(const FlashFluidState& fluid_state, int compIdx)
+    template <class ComponentVector>
+    static Scalar trivialSolutionMeasure_(const ComponentVector& equilibrium_ratios)
     {
-        const auto& acf = FluidSystem::acentricFactor(compIdx);
-        const auto& T_crit = FluidSystem::criticalTemperature(compIdx);
-        const auto& T = fluid_state.temperature(0);
-        const auto& p_crit = FluidSystem::criticalPressure(compIdx);
-        const auto& p = fluid_state.pressure(0); //for now assume no capillary pressure
-
-        const auto equilibrium_ratio
-            = Opm::exp(wilsonSlope * (1 + acf) * (1 - T_crit / T)) * (p_crit / p);
-        return equilibrium_ratio;
+        Scalar measure = 0.;
+        for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
+            const Scalar equilibrium_ratio = Opm::getValue(equilibrium_ratios[compIdx]);
+            if (!(equilibrium_ratio > 0.) || !std::isfinite(equilibrium_ratio)) {
+                return std::numeric_limits<Scalar>::infinity();
+            }
+            const Scalar log_ratio = std::log(equilibrium_ratio);
+            measure += log_ratio * log_ratio;
+        }
+        return measure;
     }
 
     /*!
@@ -601,6 +698,14 @@ protected:
         const int reference_phase_idx
             = is_vapour_trial ? static_cast<int>(oilPhaseIdx) : static_cast<int>(gasPhaseIdx);
 
+        // An absent component has no fugacity ratio. Setting its undefined K
+        // to one excludes it from both convergence measures below.
+        for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+            if (!(Opm::getValue(z[compIdx]) > 0.)) {
+                K[compIdx] = 1.;
+            }
+        }
+
         // Setup output
         if (verbosity >= 3) {
             OpmLog::debug(fmt::format("{:>10}{:>16}{:>16}", "Iteration", "K-Norm", "R-Norm"));
@@ -648,6 +753,10 @@ protected:
             // The substitution factors R_i of the brief.
             ComponentVector substitution_factor;
             for (int compIdx=0; compIdx<numComponents; ++compIdx){
+                if (!(Opm::getValue(z[compIdx]) > 0.)) {
+                    substitution_factor[compIdx] = 1.;
+                    continue;
+                }
                 const auto trial_fugacity = trial_state.fugacity(trial_phase_idx, compIdx);
                 const auto reference_fugacity
                     = reference_state.fugacity(reference_phase_idx, compIdx);
@@ -660,13 +769,14 @@ protected:
                 K[compIdx] *= substitution_factor[compIdx];
             }
             Scalar substitution_residual = 0.0;
-            Scalar trivial_residual = 0.0;
             for (int compIdx=0; compIdx<numComponents; ++compIdx){
+                if (!(Opm::getValue(z[compIdx]) > 0.)) {
+                    continue;
+                }
                 const auto substitution_error = Opm::getValue(substitution_factor[compIdx]) - 1.0;
-                const auto log_k = Opm::log(Opm::getValue(K[compIdx]));
                 substitution_residual += substitution_error * substitution_error;
-                trivial_residual += log_k * log_k;
             }
+            const Scalar trivial_residual = trivialSolutionMeasure_(K);
 
             // Print iteration info
             if (verbosity >= 3) {
@@ -682,7 +792,7 @@ protected:
             //todo: make sure that no mole fraction is smaller than 1e-8 ?
             //todo: take care of water!
         }
-        OPM_THROW(std::runtime_error, " Stability test did not converge");
+        OPM_THROW_NOLOG(NumericalProblem, " Stability test did not converge");
     }//end checkStability
 
     /*!
@@ -765,15 +875,25 @@ protected:
                 // computeLiquidVapor_()) before throwing, but the successive-
                 // substitution fallback re-derives the composition from K and
                 // L and overwrites that state, so restarting it here is safe.
-                try {
-                    converged = newtonComposition_(K_scalar, L_scalar, fluid_state_scalar, z_scalar, flash_tolerance, eos_type, verbosity);
-                }
-                catch (const std::runtime_error& e) {
+                const auto fall_back_to_ssi = [&](const auto& error) {
                     if (verbosity >= 1) {
-                        OpmLog::debug(fmt::format("Newton did not finish the composition update ({}); "
-                                                  "switching back to successive substitution.", e.what()));
+                        OpmLog::debug(fmt::format(
+                            "Newton did not finish the composition update ({}); "
+                            "switching back to successive substitution.", error.what()));
                     }
                     converged = successiveSubstitutionComposition_(K_scalar, L_scalar, fluid_state_scalar, z_scalar, false, flash_tolerance, eos_type, verbosity);
+                };
+                try {
+                    converged = newtonComposition_(K_scalar, L_scalar, fluid_state_scalar,
+                                                   z_scalar, flash_tolerance, eos_type, verbosity);
+                }
+                catch (const NumericalProblem& error) {
+                    fall_back_to_ssi(error);
+                }
+                catch (const Dune::FMatrixError& error) {
+                    // FieldMatrix::solve reports a singular Jacobian with
+                    // FMatrixError, which is outside the std::runtime_error hierarchy.
+                    fall_back_to_ssi(error);
                 }
             }
         } else {
@@ -782,9 +902,83 @@ protected:
         }
 
         if (!converged) {
-            OPM_THROW(std::runtime_error,
-                      "flash calculation did not get converged with " + flash_2p_method);
+            OPM_THROW_NOLOG(NumericalProblem,
+                            "flash calculation did not get converged with " + flash_2p_method);
         }
+
+        // A finite L outside [0, 1] is a valid negative-flash result and is
+        // classified as single-phase by flash_solve_scalar_().
+        if (!std::isfinite(Opm::getValue(L_scalar))
+            || !phaseCompositionsArePhysical_(fluid_state_scalar)) {
+            OPM_THROW_NOLOG(
+                NumericalProblem,
+                fmt::format("Two-phase flash converged to a non-physical composition "
+                            "with L = {} using {}",
+                            Opm::getValue(L_scalar),
+                            flash_2p_method));
+        }
+    }
+
+    template <class FlashFluidState>
+    static bool phaseCompositionsArePhysical_(const FlashFluidState& fluid_state)
+    {
+        // Keep the variable bound independent of the fugacity-residual tolerance.
+        const Scalar bound_slack
+            = std::max(Scalar{1.e-8}, std::numeric_limits<Scalar>::epsilon());
+        const auto is_out_of_range = [bound_slack](const Scalar value) {
+            return !std::isfinite(value) || value < -bound_slack
+                || value > Scalar{1} + bound_slack;
+        };
+
+        for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
+            const auto liquid_mole_fraction
+                = Opm::getValue(fluid_state.moleFraction(oilPhaseIdx, compIdx));
+            const auto vapour_mole_fraction
+                = Opm::getValue(fluid_state.moleFraction(gasPhaseIdx, compIdx));
+            if (is_out_of_range(liquid_mole_fraction)
+                || is_out_of_range(vapour_mole_fraction)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /*!
+     * \brief Whether a candidate two-phase state has coincident phases.
+     *
+     * \f$\mathbf x = \mathbf y\f$ solves the fugacity and closure equations for
+     * any \f$L\f$, so the component balance \f$z_i - L x_i - (1 - L) y_i\f$ loses
+     * its dependence on \f$L\f$ and makes the Newton Jacobian singular in the
+     * liquid-fraction direction. Round-off can then produce a small residual at
+     * an unbounded, non-physical value of \f$L\f$.
+     *
+     * For each active component, the measure
+     * \f$\sum_i (\ln(y_i/x_i))^2\f$ approaches zero as the phases coincide.
+     * Computing the ratio from the phase compositions is important because
+     * SSI may retain a uniformly scaled \f$K\f$ vector after normalising both
+     * phases. A component whose ratio is undefined is omitted from this measure;
+     * final-state bounds validation independently rejects non-physical mole
+     * fractions. At least two defined ratios are required because normalising a
+     * single active component makes its phase compositions equal for every K.
+     */
+    template <class FlashFluidState>
+    static bool phasesCoincide_(const FlashFluidState& fluid_state)
+    {
+        Dune::FieldVector<Scalar, numComponents> equilibrium_ratios(1.);
+        unsigned active_components = 0;
+        for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
+            const Scalar liquid_mole_fraction
+                = Opm::getValue(fluid_state.moleFraction(oilPhaseIdx, compIdx));
+            const Scalar vapour_mole_fraction
+                = Opm::getValue(fluid_state.moleFraction(gasPhaseIdx, compIdx));
+            if (!(liquid_mole_fraction > 0.) || !(vapour_mole_fraction > 0.)) {
+                continue;
+            }
+            ++active_components;
+            equilibrium_ratios[compIdx] = vapour_mole_fraction / liquid_mole_fraction;
+        }
+        return active_components >= 2
+            && trivialSolutionMeasure_(equilibrium_ratios) < trivialSolutionTolerance;
     }
 
     /*!
@@ -881,6 +1075,14 @@ protected:
                                    fluid_state.saturation(FluidSystem::oilPhaseIdx));
         newton_state.setTemperature(fluid_state.temperature(0));
 
+        // Reject the degenerate root before assembling its singular Jacobian.
+        // The hybrid method can recover by returning to successive substitution.
+        if (phasesCoincide_(newton_state)) {
+            OPM_THROW_NOLOG(NumericalProblem,
+                            " Newton was started from the trivial solution, where the "
+                            "composition Jacobian is singular in the liquid fraction");
+        }
+
         using ParamCache = typename FluidSystem::template ParameterCache<NewtonEval>;
         ParamCache paramCache(eos_type);
 
@@ -950,10 +1152,21 @@ protected:
             OpmLog::debug(fmt::to_string(buf));
         }
         if (!converged) {
-            OPM_THROW(std::runtime_error,
-                      fmt::format(" Newton composition update did not converge "
-                                  "within {} iterations",
-                                  max_iterations));
+            OPM_THROW_NOLOG(NumericalProblem,
+                            fmt::format(" Newton composition update did not converge "
+                                        "within {} iterations",
+                                        max_iterations));
+        }
+
+        // A small equation residual does not enforce composition bounds. A
+        // finite L outside [0, 1] remains a valid negative-flash result.
+        if (!std::isfinite(Opm::getValue(liquid_fraction))
+            || !phaseCompositionsArePhysical_(newton_state)) {
+            OPM_THROW_NOLOG(
+                NumericalProblem,
+                fmt::format(" Newton composition update converged to a non-physical "
+                            "composition with L = {}",
+                            Opm::getValue(liquid_fraction)));
         }
 
         // Copy the converged unknowns to the caller and the explicit K/L outputs.
@@ -1384,6 +1597,11 @@ protected:
         //
         // Successive substitution loop
         //
+        for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+            if (!(Opm::getValue(z[compIdx]) > 0.)) {
+                K[compIdx] = 1.;
+            }
+        }
         for (int iteration = 0; iteration < max_iterations; ++iteration) {
             // Compute (normalized) liquid and vapor mole fractions
             computeLiquidVapor_(fluid_state, L, K, z);
@@ -1404,6 +1622,11 @@ protected:
             ComponentVector fugacity_ratio;
             ComponentVector fugacity_residual;
             for (int compIdx=0; compIdx<numComponents; ++compIdx){
+                if (!(Opm::getValue(z[compIdx]) > 0.)) {
+                    fugacity_ratio[compIdx] = 1.;
+                    fugacity_residual[compIdx] = 0.;
+                    continue;
+                }
                 fugacity_ratio[compIdx] = fluid_state.fugacity(oilPhaseIdx, compIdx)
                     / fluid_state.fugacity(gasPhaseIdx, compIdx);
                 fugacity_residual[compIdx] = fugacity_ratio[compIdx] - 1.0;
@@ -1467,7 +1690,7 @@ protected:
                               "converge within {} iterations.",
                               max_iterations);
             if (!run_newton_afterwards) {
-                OPM_THROW(std::runtime_error, message);
+                OPM_THROW_NOLOG(NumericalProblem, message);
             } else if (verbosity > 0) {
                 OpmLog::debug(message);
             }

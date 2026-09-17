@@ -56,7 +56,9 @@
 
 #include <cmath>
 #include <stdexcept>
+#include <string>
 #include <string_view>
+#include <type_traits>
 
 namespace Opm {
 
@@ -189,6 +191,65 @@ public:
     { return (phaseIdx == 0); }
 };
 
+//! Test adapter whose AD fugacity equations have an exactly singular Jacobian,
+//! while scalar successive substitution retains the physical EOS. The test
+//! calls flash_2ph() directly; a full solve() would also use the AD branch when
+//! reconstructing derivatives.
+template<class Scalar>
+class SingularJacobianTestFluidSystem : public C1C10TestFluidSystem<Scalar>
+{
+    using Parent = C1C10TestFluidSystem<Scalar>;
+
+public:
+    template<class ValueType>
+    using ParameterCache = typename Parent::template ParameterCache<ValueType>;
+
+    static inline int adFugacityCalls = 0;
+
+    template<class FluidState,
+             class LhsEval = typename FluidState::ValueType,
+             class ParamCacheEval = LhsEval>
+    static LhsEval fugacityCoefficient(const FluidState& fluidState,
+                                       const ParameterCache<ParamCacheEval>& paramCache,
+                                       unsigned phaseIdx,
+                                       unsigned compIdx)
+    {
+        if constexpr (!std::is_floating_point_v<LhsEval>) {
+            // Constant coefficients make the two fugacity rows linearly
+            // dependent with the composition-closure row.
+            ++adFugacityCalls;
+            return LhsEval(1.0);
+        }
+        else {
+            return Parent::fugacityCoefficient(
+                fluidState, paramCache, phaseIdx, compIdx);
+        }
+    }
+};
+
+//! Test adapter that makes coincident phase compositions satisfy the scalar
+//! fugacity equations exactly, independently of the liquid fraction.
+template<class Scalar>
+class CoincidentPhasesTestFluidSystem : public C1C10TestFluidSystem<Scalar>
+{
+    using Parent = C1C10TestFluidSystem<Scalar>;
+
+public:
+    template<class ValueType>
+    using ParameterCache = typename Parent::template ParameterCache<ValueType>;
+
+    template<class FluidState,
+             class LhsEval = typename FluidState::ValueType,
+             class ParamCacheEval = LhsEval>
+    static LhsEval fugacityCoefficient(const FluidState&,
+                                       const ParameterCache<ParamCacheEval>&,
+                                       unsigned,
+                                       unsigned)
+    {
+        return LhsEval(1.0);
+    }
+};
+
 } // namespace Opm
 
 using Scalar = double;
@@ -198,20 +259,74 @@ using FluidState = Opm::CompositionalFluidState<Evaluation, FluidSystem>;
 using PtFlash = Opm::PTFlash<Scalar, FluidSystem, true>;
 using EOSType = Opm::CompositionalConfig::EOSType;
 
+using SingularFluidSystem = Opm::SingularJacobianTestFluidSystem<Scalar>;
+using SingularFluidState = Opm::CompositionalFluidState<Scalar, SingularFluidSystem>;
+using SingularComponentVector = Dune::FieldVector<Scalar, SingularFluidSystem::numComponents>;
+
+using CoincidentFluidSystem = Opm::CoincidentPhasesTestFluidSystem<Scalar>;
+using CoincidentFluidState = Opm::CompositionalFluidState<Scalar, CoincidentFluidSystem>;
+using CoincidentComponentVector = Dune::FieldVector<Scalar, CoincidentFluidSystem::numComponents>;
+
+class SingularPtFlash : public Opm::PTFlash<Scalar, SingularFluidSystem>
+{
+public:
+    using Opm::PTFlash<Scalar, SingularFluidSystem>::flash_2ph;
+};
+
+class CoincidentPtFlash : public Opm::PTFlash<Scalar, CoincidentFluidSystem>
+{
+public:
+    using Opm::PTFlash<Scalar, CoincidentFluidSystem>::flash_2ph;
+};
+
 namespace {
 
-FluidState makeState(const Scalar p, const Scalar t)
+FluidState makeState(const Scalar p, const Scalar t, const Scalar first_component = 0.5)
 {
     FluidState fs;
     for (unsigned phaseIdx = 0; phaseIdx < FluidSystem::numPhases; ++phaseIdx)
         fs.setPressure(phaseIdx, p);
     fs.setTemperature(t);
-    fs.setMoleFraction(0, 0.5);
-    fs.setMoleFraction(1, 0.5);
+    fs.setMoleFraction(0, first_component);
+    fs.setMoleFraction(1, 1.0 - first_component);
     for (int compIdx = 0; compIdx < 2; ++compIdx)
         fs.setKvalue(compIdx, fs.wilsonK_(compIdx));
     fs.setLvalue(-1.0);
     return fs;
+}
+
+SingularFluidState makeSingularState()
+{
+    SingularFluidState fs;
+    for (unsigned phaseIdx = 0; phaseIdx < SingularFluidSystem::numPhases; ++phaseIdx) {
+        // Preserve the deliberately exact row dependence even when the
+        // compiler contracts floating-point operations.
+        fs.setPressure(phaseIdx, 4194304.0); // 2^22 Pa
+        fs.setSaturation(phaseIdx, 0.5);
+    }
+    fs.setTemperature(295.0);
+    for (int compIdx = 0; compIdx < SingularFluidSystem::numComponents; ++compIdx) {
+        fs.setMoleFraction(compIdx, 0.5);
+    }
+    return fs;
+}
+
+SingularComponentVector makeOverallComposition()
+{
+    SingularComponentVector z;
+    z[0] = 0.5;
+    z[1] = 0.5;
+    return z;
+}
+
+SingularComponentVector makeInitialK()
+{
+    const auto fs = makeSingularState();
+    SingularComponentVector K;
+    for (int compIdx = 0; compIdx < SingularFluidSystem::numComponents; ++compIdx) {
+        K[compIdx] = fs.wilsonK_(compIdx);
+    }
+    return K;
 }
 
 } // anonymous namespace
@@ -251,4 +366,106 @@ BOOST_AUTO_TEST_CASE(BenignStateUnaffected)
 {
     auto fs = makeState(50e5, 300.0);
     BOOST_CHECK_NO_THROW(PtFlash::solve(fs, "ssi+newton", 1e-8, EOSType::PR));
+}
+
+// A finite negative-flash root is the single-phase criterion used by well
+// flashes. It must not be rejected as a failed composition solve.
+BOOST_AUTO_TEST_CASE(SurfaceNegativeFlashIsSingleLiquid)
+{
+    for (const Scalar initial_liquid_fraction : {-1.0, 0.5}) {
+        auto fs = makeState(1.01325e5, 288.71, 1.e-3);
+        fs.setLvalue(initial_liquid_fraction);
+
+        BOOST_REQUIRE(PtFlash::solve(fs, "ssi", 1.e-8, EOSType::PR));
+        BOOST_CHECK_SMALL(Opm::getValue(fs.L()) - 1.0, 1.e-8);
+    }
+}
+
+// A rejected stored split must use the non-trivial K estimate returned by the
+// stability analysis and retry the composition solve once.
+BOOST_AUTO_TEST_CASE(NewtonRecoveryRetriesFromStabilityEstimate)
+{
+    auto fs = makeState(50e5, 295.0);
+    fs.setLvalue(0.5);
+    fs.setKvalue(0, 4.0);
+    fs.setKvalue(1, 4.0);
+
+    BOOST_REQUIRE(!PtFlash::solve(fs, "newton", 1.e-8, EOSType::PR));
+    BOOST_CHECK_GT(Opm::getValue(fs.L()), 0.0);
+    BOOST_CHECK_LT(Opm::getValue(fs.L()), 1.0);
+}
+
+// A singular FieldMatrix solve must trigger the hybrid SSI fallback rather
+// than escape as an uncaught Dune::FMatrixError.
+BOOST_AUTO_TEST_CASE(SingularJacobianFallsBackToSsi)
+{
+    const auto z = makeOverallComposition();
+
+    auto newtonState = makeSingularState();
+    auto newtonK = makeInitialK();
+    Scalar newtonL = 0.5;
+    BOOST_CHECK_THROW(SingularPtFlash::flash_2ph(z,
+                                                 "newton",
+                                                 newtonK,
+                                                 newtonL,
+                                                 newtonState,
+                                                 1.e-8,
+                                                 EOSType::PR),
+                      Dune::FMatrixError);
+
+    auto ssiState = makeSingularState();
+    auto ssiK = makeInitialK();
+    Scalar ssiL = 0.5;
+    SingularPtFlash::flash_2ph(z, "ssi", ssiK, ssiL, ssiState, 1.e-8, EOSType::PR);
+
+    auto hybridState = makeSingularState();
+    auto hybridK = makeInitialK();
+    Scalar hybridL = 0.5;
+    SingularFluidSystem::adFugacityCalls = 0;
+    BOOST_REQUIRE_NO_THROW(SingularPtFlash::flash_2ph(z,
+                                                      "ssi+newton",
+                                                      hybridK,
+                                                      hybridL,
+                                                      hybridState,
+                                                      1.e-8,
+                                                      EOSType::PR));
+    BOOST_CHECK_GT(SingularFluidSystem::adFugacityCalls, 0);
+
+    BOOST_CHECK_SMALL(std::abs(hybridL - ssiL), 1.e-8);
+    for (unsigned phaseIdx = 0; phaseIdx < SingularFluidSystem::numPhases; ++phaseIdx) {
+        for (int compIdx = 0; compIdx < SingularFluidSystem::numComponents; ++compIdx) {
+            BOOST_CHECK_SMALL(
+                std::abs(hybridState.moleFraction(phaseIdx, compIdx)
+                         - ssiState.moleFraction(phaseIdx, compIdx)),
+                1.e-8);
+        }
+    }
+}
+
+// The composition solver may return a finite negative-flash L outside [0, 1].
+// Its caller uses that value to classify the mixture as single-phase.
+BOOST_AUTO_TEST_CASE(NegativeFlashLiquidFractionIsNotACompositionFailure)
+{
+    for (const auto* method : {"ssi", "ssi+newton"}) {
+        CoincidentFluidState fs;
+        for (unsigned phaseIdx = 0;
+             phaseIdx < CoincidentFluidSystem::numPhases;
+             ++phaseIdx) {
+            fs.setPressure(phaseIdx, 4194304.0);
+            fs.setSaturation(phaseIdx, 0.5);
+        }
+        fs.setTemperature(295.0);
+
+        CoincidentComponentVector z;
+        CoincidentComponentVector K;
+        z[0] = 0.5;
+        z[1] = 0.5;
+        K[0] = 4.0;
+        K[1] = 4.0;
+
+        Scalar L = 2.12;
+        BOOST_REQUIRE_NO_THROW(
+            CoincidentPtFlash::flash_2ph(z, method, K, L, fs, 1.e-8, EOSType::PR));
+        BOOST_CHECK_SMALL(L - 2.12, 1.e-12);
+    }
 }
