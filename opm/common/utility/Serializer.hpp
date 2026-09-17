@@ -363,7 +363,9 @@ protected:
             }
         } else {
             (*this)(data.size());
-            std::ranges::for_each(data, std::ref(*this));
+            for (const auto& entry : data) {
+                (*this)(entry);
+            }
         }
     }
 
