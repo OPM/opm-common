@@ -526,6 +526,43 @@ ROCK
     BOOST_CHECK_CLOSE(comp[2].compressibility, 1.61e-5/1.0e5, 1.0e-8);
 }
 
+BOOST_AUTO_TEST_CASE(TESTRockConfig_RocknumDefaultWithDefaultedRockopts)
+{
+    // ROCKOPTS is present, but item 3 (TABLE_TYPE) is left blank - i.e.
+    // defaulted to PVTNUM, exactly as if ROCKOPTS had been left out of the
+    // deck entirely. ROCKCOMP's own region indexing should still default to
+    // ROCKNUM in this case, not fall back to PVTNUM just because the
+    // ROCKOPTS keyword happens to be present in the deck text.
+    const auto deck = Parser{}.parseString(R"(
+RUNSPEC
+
+ROCKCOMP
+/
+
+TABDIMS
+  * 3 /
+
+PROPS
+
+ROCK
+   1  0.1 /
+   2  0.2 /
+   3  0.3 /
+
+ROCKOPTS
+/
+
+)");
+
+    auto grid = EclipseGrid { 10, 10, 10 };
+    const auto fp = FieldPropsManager {
+        deck, Phases{true, true, true}, grid, TableManager()
+    };
+
+    const auto rc = RockConfig { deck, fp };
+    BOOST_CHECK_EQUAL(rc.rocknum_property(), "ROCKNUM");
+}
+
 BOOST_AUTO_TEST_CASE(DatumDepth_Zero)
 {
     const auto es = EclipseState { createDeck(R"(RUNSPEC

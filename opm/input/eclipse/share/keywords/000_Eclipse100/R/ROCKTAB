@@ -3,6 +3,7 @@
   "sections": [
     "PROPS"
   ],
+  "prohibits": ["ROCKTABH"],
   "size": {
     "keyword": "ROCKCOMP",
     "item": "NTROCC"
