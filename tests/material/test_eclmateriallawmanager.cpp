@@ -37,6 +37,8 @@
 
 #include <opm/material/fluidmatrixinteractions/EclEpsGridProperties.hpp>
 #include <opm/material/fluidmatrixinteractions/EclMaterialLawManager.hpp>
+#include <opm/material/fluidmatrixinteractions/MaterialTraits.hpp>
+#include <opm/material/fluidmatrixinteractions/PiecewiseLinearTwoPhaseMaterialParams.hpp>
 #include <opm/material/fluidstates/SimpleModularFluidState.hpp>
 
 #include <opm/input/eclipse/Parser/Parser.hpp>
@@ -45,6 +47,55 @@
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 
 #include <cstddef>
+#include <span>
+#include <vector>
+
+// Must not conflict with a stray forward declaration in the global namespace.
+using Opm::PiecewiseLinearTwoPhaseMaterialParams;
+
+namespace
+{
+
+// Exercise the GPU view template with host storage, without a CUDA/HIP dependency.
+template <class Scalar>
+struct HostBuffer
+{
+    explicit HostBuffer(const std::vector<Scalar>& samples)
+        : values(samples)
+    {
+    }
+
+    std::vector<Scalar> values;
+};
+
+template <class Value, class Scalar>
+std::span<Value>
+make_view(HostBuffer<Scalar>& buffer)
+{
+    return buffer.values;
+}
+
+} // Anonymous namespace
+
+BOOST_AUTO_TEST_CASE(PiecewiseLinearParameterView)
+{
+    using Traits = Opm::TwoPhaseMaterialTraits<double, 0, 1>;
+    using Params = PiecewiseLinearTwoPhaseMaterialParams<Traits>;
+
+    const Params params({0.0, 1.0}, {2.0, 0.0}, {0.0, 1.0}, {0.0, 1.0}, {0.0, 1.0}, {1.0, 0.0});
+    auto buffer = Opm::gpuistl::copy_to_gpu<HostBuffer<double>>(params);
+    const auto view = Opm::gpuistl::make_view<std::span<const double>>(buffer);
+
+    BOOST_CHECK_NO_THROW(view.checkFinalized());
+    BOOST_CHECK_EQUAL(view.SwPcwnSamples().data(), buffer.SwPcwnSamples().values.data());
+    BOOST_CHECK_EQUAL(view.pcwnSamples().data(), buffer.pcwnSamples().values.data());
+    BOOST_CHECK_EQUAL(view.SwKrwSamples().data(), buffer.SwKrwSamples().values.data());
+    BOOST_CHECK_EQUAL(view.krwSamples().data(), buffer.krwSamples().values.data());
+    BOOST_CHECK_EQUAL(view.SwKrnSamples().data(), buffer.SwKrnSamples().values.data());
+    BOOST_CHECK_EQUAL(view.krnSamples().data(), buffer.krnSamples().values.data());
+    BOOST_CHECK_EQUAL(view.pcwnSamples().size(), 2U);
+    BOOST_CHECK_EQUAL(view.pcwnSamples().front(), 2.0);
+}
 
 // values of strings taken from the SPE1 test case1 of opm-data
 static constexpr const char* fam1DeckString =
