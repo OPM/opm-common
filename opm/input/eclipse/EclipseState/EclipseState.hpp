@@ -21,6 +21,7 @@
 #define OPM_ECLIPSE_STATE_HPP
 
 #include <opm/input/eclipse/EclipseState/Aquifer/AquiferConfig.hpp>
+#include <opm/input/eclipse/EclipseState/Aquifer/NumericalAquiferMode.hpp>
 #include <opm/input/eclipse/EclipseState/Compositional/CompositionalConfig.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseConfig.hpp>
 #include <opm/input/eclipse/EclipseState/Geochemistry/SpeciesConfig.hpp>
@@ -73,8 +74,23 @@ namespace Opm {
         };
 
         EclipseState() = default;
-        explicit EclipseState(const Deck& deck);
+
+        /// Construct from a deck.
+        ///
+        /// \param[in] aquiferMode How numerical aquifers are represented.  The default
+        ///    reproduces the historical behaviour, in which an AQUNUM cell takes over
+        ///    the grid cell it names.  See NumericalAquiferMode.
+        explicit EclipseState(const Deck& deck,
+                              NumericalAquiferMode aquiferMode = NumericalAquiferMode::GridCells);
         virtual ~EclipseState() = default;
+
+        /// How numerical aquifers are represented in this state.
+        ///
+        /// Consumers which would otherwise infer it from the presence of AQUNUM should
+        /// ask here instead, so that a restart or an embedded caller cannot end up
+        /// disagreeing with how the state was actually built.
+        NumericalAquiferMode numericalAquiferMode() const
+        { return this->numerical_aquifer_mode; }
 
         const IOConfig& getIOConfig() const;
         IOConfig& getIOConfig();
@@ -157,6 +173,7 @@ namespace Opm {
         {
             // FieldPropsManager is handled through a different mechanism.
             // Do not add the member (i.e., field_props) to this list.
+            serializer(numerical_aquifer_mode);
             serializer(m_tables);
             serializer(m_runspec);
             serializer(m_eclipseConfig);
@@ -198,6 +215,8 @@ namespace Opm {
                                            const std::string& keywordName);
 
      protected:
+        // Declared before the members whose construction depends on it (m_inputGrid).
+        NumericalAquiferMode numerical_aquifer_mode{NumericalAquiferMode::GridCells};
         TableManager m_tables;
         Runspec m_runspec;
         EclipseConfig m_eclipseConfig;
