@@ -1274,6 +1274,95 @@ BOOST_AUTO_TEST_CASE(well_keywords)
     BOOST_CHECK_CLOSE( WStat::numeric::INJ, ecl_sum_get_well_var(resp, 1,"W_3", "WSTAT"), 1e-5 );
 }
 
+BOOST_AUTO_TEST_CASE(well_performance_events)
+{
+    setup cfg { "test_summary_well_performance_events" };
+
+    auto writer = out::Summary {
+        cfg.config, cfg.es, cfg.grid, cfg.schedule, cfg.name
+    };
+
+    auto st = SummaryState {
+        TimeService::now(), cfg.es.runspec().udqParams().undefinedValue()
+    };
+
+    auto values = out::Summary::DynamicSimulatorState{};
+
+    values.well_solution = &cfg.wells;
+    values.wbp = &cfg.wbp;
+    values.group_and_nwrk_solution = &cfg.grp_nwrk;
+
+    // No events on the first step.
+    writer.eval(/* report_step = */ 0, /* secs_elapsed = */ 0.0*day, values, st);
+    writer.add_timestep(st, /* report_step = */ 0, /* ministep_id = */ 0, /* isSubstep = */ false);
+
+    // Distinct values, so that each vector pins the field it reads rather
+    // than merely agreeing with it.  Only connsOpened and connsClosed take a
+    // count in a real run; the rest are zero or one.
+    cfg.wells.at("W_1").performanceEvents = data::WellPerformanceEvents {
+        /* drilled            = */ 1,
+        /* connsOpened        = */ 2,
+        /* connsClosed        = */ 3,
+        /* closedToBottom     = */ 4,
+        /* stopped            = */ 5,
+        /* injectorToProducer = */ 6,
+        /* producerToInjector = */ 7,
+        /* shut               = */ 8,
+    };
+
+    cfg.wells.at("W_2").performanceEvents = data::WellPerformanceEvents {
+        /* drilled            = */ 0,
+        /* connsOpened        = */ 0,
+        /* connsClosed        = */ 2,
+        /* closedToBottom     = */ 1,
+        /* stopped            = */ 1,
+        /* injectorToProducer = */ 1,
+        /* producerToInjector = */ 0,
+        /* shut               = */ 1,
+    };
+
+    writer.eval(/* report_step = */ 1, /* secs_elapsed = */ 1.0*day, values, st);
+    writer.add_timestep(st, /* report_step = */ 1, /* ministep_id = */ 1, /* isSubstep = */ false);
+
+    writer.write();
+
+    const auto res = readsum(cfg.name);
+    const auto* resp = res.get();
+
+    // Step 0: every indicator is zero.
+    for (const auto* well : { "W_1", "W_2", "W_3" }) {
+        for (const auto* vector : { "WPWE0", "WPWE1", "WPWE2", "WPWE3",
+                                    "WPWE4", "WPWE5", "WPWE6", "WPWE7" })
+        {
+            BOOST_CHECK_CLOSE(0.0, ecl_sum_get_well_var(resp, 0, well, vector), 1.0e-5);
+        }
+    }
+
+    BOOST_CHECK_CLOSE(1.0, ecl_sum_get_well_var(resp, 1, "W_1", "WPWE0"), 1.0e-5);
+    BOOST_CHECK_CLOSE(2.0, ecl_sum_get_well_var(resp, 1, "W_1", "WPWE1"), 1.0e-5);
+    BOOST_CHECK_CLOSE(3.0, ecl_sum_get_well_var(resp, 1, "W_1", "WPWE2"), 1.0e-5);
+    BOOST_CHECK_CLOSE(4.0, ecl_sum_get_well_var(resp, 1, "W_1", "WPWE3"), 1.0e-5);
+    BOOST_CHECK_CLOSE(5.0, ecl_sum_get_well_var(resp, 1, "W_1", "WPWE4"), 1.0e-5);
+    BOOST_CHECK_CLOSE(6.0, ecl_sum_get_well_var(resp, 1, "W_1", "WPWE5"), 1.0e-5);
+    BOOST_CHECK_CLOSE(7.0, ecl_sum_get_well_var(resp, 1, "W_1", "WPWE6"), 1.0e-5);
+    BOOST_CHECK_CLOSE(8.0, ecl_sum_get_well_var(resp, 1, "W_1", "WPWE7"), 1.0e-5);
+
+    BOOST_CHECK_CLOSE(0.0, ecl_sum_get_well_var(resp, 1, "W_2", "WPWE0"), 1.0e-5);
+    BOOST_CHECK_CLOSE(2.0, ecl_sum_get_well_var(resp, 1, "W_2", "WPWE2"), 1.0e-5);
+    BOOST_CHECK_CLOSE(1.0, ecl_sum_get_well_var(resp, 1, "W_2", "WPWE3"), 1.0e-5);
+    BOOST_CHECK_CLOSE(1.0, ecl_sum_get_well_var(resp, 1, "W_2", "WPWE4"), 1.0e-5);
+    BOOST_CHECK_CLOSE(1.0, ecl_sum_get_well_var(resp, 1, "W_2", "WPWE5"), 1.0e-5);
+    BOOST_CHECK_CLOSE(0.0, ecl_sum_get_well_var(resp, 1, "W_2", "WPWE6"), 1.0e-5);
+    BOOST_CHECK_CLOSE(1.0, ecl_sum_get_well_var(resp, 1, "W_2", "WPWE7"), 1.0e-5);
+
+    // W_3 has no reported events.
+    for (const auto* vector : { "WPWE0", "WPWE1", "WPWE2", "WPWE3",
+                                "WPWE4", "WPWE5", "WPWE6", "WPWE7" })
+    {
+        BOOST_CHECK_CLOSE(0.0, ecl_sum_get_well_var(resp, 1, "W_3", vector), 1.0e-5);
+    }
+}
+
 BOOST_AUTO_TEST_CASE(well_keywords_dynamic_close)
 {
     setup cfg( "test_summary_well" );

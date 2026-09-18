@@ -173,15 +173,26 @@ namespace Opm {
         c.last_test = 0.781;
         c.complnum = 11;
         c.num_attempt = 10;
+        c.closedBelowOffender = true;
         return c;
     }
 
-    void WellTestState::close_completion(const std::string& well_name, int complnum, double sim_time) {
-        auto well_iter = this->completions.find(well_name);
-        if (well_iter == this->completions.end())
-            this->completions.emplace(well_name, std::unordered_map<int, ClosedCompletion>{});
+    void WellTestState::close_completion(const std::string& well_name, int complnum, double sim_time,
+                                         bool closed_below_offender) {
+        auto& completion_map = this->completions[well_name];
 
-        this->completions[well_name].insert_or_assign(complnum, ClosedCompletion{well_name, complnum, sim_time, 0});
+        const auto previous = completion_map.find(complnum);
+        if ((previous != completion_map.end()) &&
+            !previous->second.closedBelowOffender && closed_below_offender) {
+            // A later '+CON' workover may reach past a completion that already
+            // violated a limit in the same cascade.  Do not replace that
+            // direct cause with the later workover's reach: WPWE2 must still
+            // count the original violation.
+            return;
+        }
+
+        completion_map.insert_or_assign(complnum,
+            ClosedCompletion{well_name, complnum, sim_time, 0, closed_below_offender});
     }
 
 
@@ -208,6 +219,18 @@ namespace Opm {
             return false;
 
         return true;
+    }
+
+    bool WellTestState::completion_closed_below_offender(const std::string& well_name,
+                                                         int complnum) const {
+        const auto well = this->completions.find(well_name);
+        if (well == this->completions.end()) {
+            return false;
+        }
+
+        const auto completion = well->second.find(complnum);
+
+        return (completion != well->second.end()) && completion->second.closedBelowOffender;
     }
 
     std::size_t WellTestState::num_closed_completions() const {
