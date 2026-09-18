@@ -353,17 +353,7 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
     void TableManager::initDims(const Deck& deck) {
         using namespace Opm::ParserKeywords;
 
-        if (deck.hasKeyword<EQLDIMS>()) {
-            const auto& keyword = deck.get<EQLDIMS>().back();
-            const auto& record = keyword.getRecord(0);
-            int ntsequl   = record.getItem<EQLDIMS::NTEQUL>().get< int >(0);
-            int nodes_p   = record.getItem<EQLDIMS::DEPTH_NODES_P>().get< int >(0);
-            int nodes_tab = record.getItem<EQLDIMS::DEPTH_NODES_TAB>().get< int >(0);
-            int nttrvd    = record.getItem<EQLDIMS::NTTRVD>().get< int >(0);
-            int ntsrvd    = record.getItem<EQLDIMS::NSTRVD>().get< int >(0);
-
-            m_eqldims = Eqldims(ntsequl , nodes_p , nodes_tab , nttrvd , ntsrvd );
-        }
+        m_eqldims = Eqldims { deck };
 
         if (deck.hasKeyword<REGDIMS>()) {
             const auto& keyword = deck.get<REGDIMS>().back();

@@ -1,0 +1,19 @@
+{
+  "name": "PARACHOR",
+  "description": "One parachor per component, needed only when surface tensions are calculated (the MISCIBLE option in RUNSPEC). One record per reservoir EOS region. The unit is (dynes/cm)^(1/4) cc/gm-M in every unit system, so the values carry no dimension.",
+  "sections": [
+    "PROPS"
+  ],
+  "size": {
+    "keyword": "TABDIMS",
+    "item": "NUM_EOS_RES"
+  },
+  "items": [
+    {
+      "name": "DATA",
+      "value_type": "DOUBLE",
+      "size_type": "ALL",
+      "dimension": "1"
+    }
+  ]
+}

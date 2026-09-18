@@ -24,6 +24,8 @@
 
 namespace Opm {
 
+class Deck;
+
 /*
   The Eqldims class is a small utility class designed to hold on to
   the values from the EQLDIMS keyword.
@@ -33,6 +35,8 @@ namespace Opm {
     public:
 
         Eqldims();
+
+        explicit Eqldims(const Deck& deck);
 
         Eqldims( std::size_t ntequl , std::size_t depth_nodes_p , std::size_t depth_nodes_tab , std::size_t nttrvd , std::size_t nstrvd) :
             m_ntequl( ntequl ),
