@@ -297,6 +297,39 @@ namespace Opm {
         /// \param[in] tableName Name of table/keyword we're internalising.
         /// Typically \code "PVTO" \endcode or \code "PVTG" \endcode.
         void populateSaturatedTable(const std::string& tableName);
+
+        /// Fill in any missing under-saturated states.
+        ///
+        /// Takes scaled copies of under-saturated curves at higher
+        /// composition/pressure nodes.  Amends m_underSaturatedTables.
+        void populateMissingUndersaturatedStates();
+
+        /// Identify missing under-saturated states in
+        /// m_underSaturatedTables.
+        ///
+        /// \return Pairs of source/destination indices.  The
+        /// under-saturated destination entries in m_underSaturatedTables
+        /// will be scaled copies of the under-saturated source entries in
+        /// m_underSaturatedTables.
+        std::vector<std::pair<std::size_t, std::size_t>>
+        missingUSatTables() const;
+
+        /// Generate scaled copies of under-saturated state curves.
+        ///
+        /// Intended to amend a specific entry in m_underSaturatedTables
+        /// based on source values in another specific entry in
+        /// m_underSaturatedTables.
+        ///
+        /// Virtual function in order to call back into the derived type for
+        /// type-specific copying.
+        ///
+        /// \param[in] src Index of source table with full set of
+        /// under-saturated states.
+        ///
+        /// \param[in] dest Index of destination table with no
+        /// under-saturated states.
+        virtual void makeScaledUSatTableCopy(const std::size_t src,
+                                             const std::size_t dest);
     };
 
 } // namespace Opm
