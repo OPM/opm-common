@@ -30,7 +30,7 @@ namespace Opm { namespace EclIO {
 class EInit : public EclFile
 {
 public:
-    explicit EInit(const std::string& filename);
+    explicit EInit(const std::filesystem::path& filename);
 
     const std::vector<std::string>& list_of_lgrs() const { return lgr_names; }
 

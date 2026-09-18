@@ -33,6 +33,7 @@
 #include <vector>
 
 #include <fmt/format.h>
+#include <fmt/std.h>
 
 #ifdef _MSC_VER
 #include <intrin.h>
@@ -81,9 +82,9 @@ double Opm::EclIO::flipEndianDouble(double num)
     return value;
 }
 
-bool Opm::EclIO::fileExists(const std::string& filename){
+bool Opm::EclIO::fileExists(const std::filesystem::path& filename){
 
-    std::ifstream fileH(filename.c_str());
+    std::ifstream fileH(filename);
     return fileH.good();
 }
 
@@ -96,15 +97,13 @@ bool Opm::EclIO::is_number(const std::string& numstr)
 }
 
 
-bool Opm::EclIO::isFormatted(const std::string& filename)
+bool Opm::EclIO::isFormatted(const std::filesystem::path& filename)
 {
-    const auto pth = std::filesystem::path { filename };
-
-    const auto& ext = pth.extension();
+    const auto& ext = filename.extension();
     if (ext.empty()) {
         OPM_THROW(std::invalid_argument,
-                  "Purported ECLIPSE Filename '" +
-                  filename + "' does not contain extension");
+                  fmt::format("Purported ECLIPSE Filename {} "
+                              "does not contain extension", filename));
     }
 
     return (ext != ".GRID")

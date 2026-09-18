@@ -46,7 +46,7 @@ class ExtESmry
 public:
 
     // input is esmry, only binary supported.
-    explicit ExtESmry(const std::string& filename, bool loadBaseRunData=false);
+    explicit ExtESmry(const std::filesystem::path& filename, bool loadBaseRunData=false);
 
     const std::vector<float>& get(const std::string& name);
     std::vector<float> get_at_rstep(const std::string& name);

@@ -57,7 +57,7 @@ namespace {
 
 namespace Opm { namespace EclIO {
 
-EclOutput::EclOutput(const std::string&            filename,
+EclOutput::EclOutput(const std::filesystem::path&  filename,
                      const bool                    formatted,
                      const std::ios_base::openmode mode)
     : isFormatted{formatted}

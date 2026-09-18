@@ -33,20 +33,21 @@
 #include <string>
 
 #include <fmt/format.h>
+#include <fmt/std.h>
 
 namespace {
 
-    void updateFile(const std::string& newContent, const std::string& filename)
+    void updateFile(const std::string& newContent, const std::filesystem::path& filename)
     {
         Opm::KeywordGenerator::ensurePath(filename);
 
         std::ofstream { filename } << newContent;
     }
 
-    void write_file(const std::string& content,
-                    const std::string& file,
-                    const bool         verbose,
-                    const std::string& desc)
+    void write_file(const std::string&           content,
+                    const std::filesystem::path& file,
+                    const bool                   verbose,
+                    const std::string&           desc)
     {
         updateFile(content, file);
 
@@ -55,10 +56,10 @@ namespace {
         }
     }
 
-    void write_file(const std::stringstream& stream,
-                    const std::string&       file,
-                    const bool               verbose,
-                    const std::string&       desc)
+    void write_file(const std::stringstream&     stream,
+                    const std::filesystem::path& file,
+                    const bool                   verbose,
+                    const std::string&           desc)
     {
         write_file(stream.str(), file, verbose, desc);
     }
@@ -89,17 +90,15 @@ namespace Opm {
                            "namespace Opm::ParserKeywords {{\n\n", suffix);
     }
 
-    void KeywordGenerator::ensurePath(const std::string& file_name)
+    void KeywordGenerator::ensurePath(const std::filesystem::path& file)
     {
-        std::filesystem::path file(file_name);
-
         if (!std::filesystem::is_directory(file.parent_path())) {
             std::filesystem::create_directories(file.parent_path());
         }
     }
 
     void KeywordGenerator::updateFile(const std::stringstream& newContent,
-                                      const std::string& filename)
+                                      const std::filesystem::path& filename)
     {
         ::updateFile(newContent.str(), filename);
     }

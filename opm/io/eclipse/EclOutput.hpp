@@ -25,6 +25,7 @@
 #include <fstream>
 #include <ios>
 #include <stdexcept>
+#include <filesystem>
 #include <string>
 #include <type_traits>
 #include <vector>
@@ -39,7 +40,7 @@ namespace Opm::EclIO {
 class EclOutput
 {
 public:
-    EclOutput(const std::string&            filename,
+    EclOutput(const std::filesystem::path&  filename,
               const bool                    formatted,
               const std::ios_base::openmode mode = std::ios::out);
 

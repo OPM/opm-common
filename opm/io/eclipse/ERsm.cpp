@@ -27,10 +27,12 @@
 #include <algorithm>
 #include <chrono>
 #include <cmath>
+#include <filesystem>
 #include <fstream>
 #include <string>
 
 #include <fmt/format.h>
+#include <fmt/std.h>
 
 namespace Opm {
 namespace EclIO {
@@ -41,11 +43,11 @@ constexpr std::size_t num_columns  = 10;
 constexpr std::size_t column_width = 13;
 
 
-std::deque<std::string> load(const std::string& fname) {
+std::deque<std::string> load(const std::filesystem::path& fname) {
     std::deque<std::string> lines;
-    std::ifstream is(fname.c_str());
+    std::ifstream is(fname);
     if (!is.good())
-        throw std::invalid_argument("Can not open: " + fname + " for reading");
+        throw std::invalid_argument(fmt::format("Can not open: {} for reading", fname));
 
     std::string line;
     while(std::getline(is, line)) {
@@ -277,7 +279,7 @@ bool ERsm::has(const std::string& key) const {
     return this->vectors.count(key) == 1;
 }
 
-ERsm::ERsm(const std::string& fname) {
+ERsm::ERsm(const std::filesystem::path& fname) {
     auto lines = load(fname);
     std::size_t vector_length = 0;
     while (!lines.empty())
