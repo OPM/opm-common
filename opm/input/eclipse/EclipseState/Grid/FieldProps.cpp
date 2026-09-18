@@ -2262,6 +2262,111 @@ void FieldProps::scanGRIDSection(const GRIDSection& grid_section)
 
         this->handle_keyword(Section::GRID, keyword, box);
     }
+
+    this->applyDPGRID(grid_section);
+    this->applyDualPorosityScalars(grid_section);
+}
+
+// The whole-grid scalar forms of the dual-porosity coupling properties
+// broadcast into their per-cell arrays, so every consumer reads one uniform
+// carrier.  A per-cell keyword supplied by the deck takes precedence.
+void FieldProps::applyDualPorosityScalars(const GRIDSection& grid_section)
+{
+    if (!this->grid_ptr->dualPorosity()) {
+        return;
+    }
+
+    const auto broadcast = [this, &grid_section](const std::string& scalar_kw,
+                                                 const std::string& item_name,
+                                                 const std::string& array_kw)
+    {
+        if (!grid_section.hasKeyword(scalar_kw) ||
+            (this->double_data.find(array_kw) != this->double_data.end()))
+        {
+            return;
+        }
+
+        const auto& keyword = grid_section[scalar_kw].back();
+        const double value = keyword.getRecord(0).getItem(item_name).getSIDouble(0);
+        if (value < 0.0) {
+            throw OpmInputError(fmt::format("The {} value cannot be negative.", scalar_kw),
+                                keyword.location());
+        }
+
+        this->init_get<double>(array_kw).default_assign(value);
+    };
+
+    broadcast("SIGMA",   "COUPLING", "SIGMAV");
+
+    // One validation policy for all three carriers. The scalar forms are checked above as
+    // they arrive; a per-cell keyword reaches the same array by a different route (BOX,
+    // EQUALS, OPERATE, or a plain array), so it is checked here rather than wherever the
+    // value happens to be consumed. Previously only SIGMAV was validated, inside the
+    // coupling builder, and the other two per-cell forms were not validated at all.
+    for (const auto& array_kw : {"SIGMAV"}) {
+        const auto it = this->double_data.find(array_kw);
+        if (it == this->double_data.end()) {
+            continue;
+        }
+
+        const auto& values = it->second.data;
+        const auto  bad    = std::find_if(values.begin(), values.end(),
+                                          [](const double v) { return v < 0.0; });
+        if (bad != values.end()) {
+            throw OpmInputError(fmt::format("The {} value cannot be negative "
+                                            "(cell {} has {}).",
+                                            array_kw,
+                                            std::distance(values.begin(), bad) + 1, *bad),
+                                grid_section.hasKeyword(array_kw)
+                                    ? grid_section[array_kw].back().location()
+                                    : KeywordLocation{});
+        }
+    }
+}
+
+void FieldProps::applyDPGRID(const GRIDSection& grid_section)
+{
+    // DPGRID: grid-section cell properties supplied for the matrix half only
+    // are copied onto the fracture twins. Values the deck DID supply for the
+    // fracture half are kept — decks routinely combine DPGRID with explicit
+    // per-half property boxes.
+    if (!grid_section.hasKeyword("DPGRID"))
+        return;
+    if (!this->grid_ptr->dualPorosity())
+        return;
+
+    const auto& grid = *this->grid_ptr;
+
+    // (global cartesian, matrix active, fracture active) index triples for
+    // every twin pair with both continua active — invariant across fields.
+    struct TwinIndices { std::size_t g; std::size_t twin; std::size_t ai_m; std::size_t ai_f; };
+    std::vector<TwinIndices> twins;
+    for (std::size_t g = 0; g < grid.getCartesianSize(); ++g) {
+        if (grid.isFractureCell(g))
+            break;  // matrix cells occupy the first half of the index range
+        const std::size_t twin = grid.fractureTwin(g);
+        if (grid.cellActive(g) && grid.cellActive(twin))
+            twins.push_back({g, twin, grid.activeIndex(g), grid.activeIndex(twin)});
+    }
+
+    for (auto& entry : this->double_data) {
+        auto& field = entry.second;
+        for (const auto& t : twins) {
+            if (value::has_value(field.value_status[t.ai_m]) &&
+                !value::has_value(field.value_status[t.ai_f]))
+            {
+                field.data[t.ai_f] = field.data[t.ai_m];
+                field.value_status[t.ai_f] = field.value_status[t.ai_m];
+            }
+            if (field.global_data.has_value() &&
+                value::has_value((*field.global_value_status)[t.g]) &&
+                !value::has_value((*field.global_value_status)[t.twin]))
+            {
+                (*field.global_data)[t.twin] = (*field.global_data)[t.g];
+                (*field.global_value_status)[t.twin] = (*field.global_value_status)[t.g];
+            }
+        }
+    }
 }
 
 void FieldProps::scanGRIDSectionOnlyACTNUM(const GRIDSection& grid_section)
