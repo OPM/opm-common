@@ -965,3 +965,48 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(Let, Scalar, Types)
         }
     }
 }
+
+// The fused entry point must reproduce the two separate calls exactly: it is
+// the same arithmetic with each two-phase saturation argument formed once.
+BOOST_AUTO_TEST_CASE_TEMPLATE(FusedRelpermAndCapillaryPressureMatch, Scalar, Types)
+{
+    using MaterialLawManager = typename Fixture<Scalar>::MaterialLawManager;
+    using MaterialLaw = typename Fixture<Scalar>::MaterialLaw;
+    using DefaultMaterial = typename MaterialLaw::DefaultMaterial;
+    using FluidState = typename Fixture<Scalar>::FluidState;
+    constexpr int numPhases = Fixture<Scalar>::numPhases;
+
+    Opm::Parser parser;
+    const auto deck = parser.parseString(fam1DeckString);
+    const Opm::EclipseState eclState(deck);
+    const std::size_t n = eclState.getInputGrid().getNumActive();
+
+    MaterialLawManager manager;
+    manager.initFromState(eclState);
+    manager.initParamsForElements(eclState, n, doOldLookup, doNothing);
+
+    const auto& mp = manager.materialLawParams(0);
+    const auto& dp = mp.template getRealParams<Opm::EclMultiplexerApproach::Default>();
+
+    for (int a = 0; a <= 20; ++a) {
+        for (int b = 0; a + b <= 20; ++b) {
+            const Scalar sw = Scalar(a) / 20;
+            const Scalar sg = Scalar(b) / 20;
+
+            FluidState fs;
+            fs.setSaturation(Fixture<Scalar>::waterPhaseIdx, sw);
+            fs.setSaturation(Fixture<Scalar>::gasPhaseIdx, sg);
+            fs.setSaturation(Fixture<Scalar>::oilPhaseIdx, 1.0 - sw - sg);
+
+            std::array<Scalar, numPhases> krSep{}, pcSep{}, krFused{}, pcFused{};
+            DefaultMaterial::relativePermeabilities(krSep, dp, fs);
+            DefaultMaterial::capillaryPressures(pcSep, dp, fs);
+            DefaultMaterial::relativePermeabilitiesAndCapillaryPressures(krFused, pcFused, dp, fs);
+
+            for (int ph = 0; ph < numPhases; ++ph) {
+                BOOST_CHECK_EQUAL(krSep[ph], krFused[ph]);
+                BOOST_CHECK_EQUAL(pcSep[ph], pcFused[ph]);
+            }
+        }
+    }
+}
