@@ -249,31 +249,31 @@ Opm::SummaryState sim_state(const Opm::Schedule& sched)
         sched.back().udq().params().undefinedValue()
     };
 
-    for (const auto& well : sched.getWellsatEnd()) {
-        for (const auto& connection : well.getConnections()) {
-            state.update_conn_var(well.name(), "CPR", connection.global_index() + 1, 111);
-            if (well.isInjector()) {
-                state.update_conn_var(well.name(), "COIR", connection.global_index() + 1, 222);
-                state.update_conn_var(well.name(), "CGIR", connection.global_index() + 1, 333);
-                state.update_conn_var(well.name(), "CWIR", connection.global_index() + 1, 444);
-                state.update_conn_var(well.name(), "CVIR", connection.global_index() + 1, 555);
+    for (const auto& [wellName, wellPtr] : sched.back().wells) {
+        for (const auto& connection : wellPtr->getConnections()) {
+            state.update_conn_var(wellName, "CPR", connection.global_index() + 1, 111);
+            if (wellPtr->isInjector()) {
+                state.update_conn_var(wellName, "COIR", connection.global_index() + 1, 222);
+                state.update_conn_var(wellName, "CGIR", connection.global_index() + 1, 333);
+                state.update_conn_var(wellName, "CWIR", connection.global_index() + 1, 444);
+                state.update_conn_var(wellName, "CVIR", connection.global_index() + 1, 555);
 
-                state.update_conn_var(well.name(), "COIT", connection.global_index() + 1, 222 * 2.0);
-                state.update_conn_var(well.name(), "CGIT", connection.global_index() + 1, 333 * 2.0);
-                state.update_conn_var(well.name(), "CWIT", connection.global_index() + 1, 444 * 2.0);
-                state.update_conn_var(well.name(), "CWIT", connection.global_index() + 1, 555 * 2.0);
+                state.update_conn_var(wellName, "COIT", connection.global_index() + 1, 222 * 2.0);
+                state.update_conn_var(wellName, "CGIT", connection.global_index() + 1, 333 * 2.0);
+                state.update_conn_var(wellName, "CWIT", connection.global_index() + 1, 444 * 2.0);
+                state.update_conn_var(wellName, "CWIT", connection.global_index() + 1, 555 * 2.0);
             } else {
-                state.update_conn_var(well.name(), "COPR", connection.global_index() + 1, 666);
-                state.update_conn_var(well.name(), "CGPR", connection.global_index() + 1, 777);
-                state.update_conn_var(well.name(), "CWPR", connection.global_index() + 1, 888);
-                state.update_conn_var(well.name(), "CVPR", connection.global_index() + 1, 999);
+                state.update_conn_var(wellName, "COPR", connection.global_index() + 1, 666);
+                state.update_conn_var(wellName, "CGPR", connection.global_index() + 1, 777);
+                state.update_conn_var(wellName, "CWPR", connection.global_index() + 1, 888);
+                state.update_conn_var(wellName, "CVPR", connection.global_index() + 1, 999);
 
-                state.update_conn_var(well.name(), "CGOR", connection.global_index() + 1, 777.0 / 666.0);
+                state.update_conn_var(wellName, "CGOR", connection.global_index() + 1, 777.0 / 666.0);
 
-                state.update_conn_var(well.name(), "COPT", connection.global_index() + 1, 555 * 2.0);
-                state.update_conn_var(well.name(), "CGPT", connection.global_index() + 1, 666 * 2.0);
-                state.update_conn_var(well.name(), "CWPT", connection.global_index() + 1, 777 * 2.0);
-                state.update_conn_var(well.name(), "CVPT", connection.global_index() + 1, 999 * 2.0);
+                state.update_conn_var(wellName, "COPT", connection.global_index() + 1, 555 * 2.0);
+                state.update_conn_var(wellName, "CGPT", connection.global_index() + 1, 666 * 2.0);
+                state.update_conn_var(wellName, "CWPT", connection.global_index() + 1, 777 * 2.0);
+                state.update_conn_var(wellName, "CVPT", connection.global_index() + 1, 999 * 2.0);
             }
         }
     }
