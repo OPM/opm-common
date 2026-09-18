@@ -169,12 +169,13 @@ public:
     /*! \brief Solid-energy law parameters for an active cell. */
     OPM_HOST_DEVICE SolidEnergyLawParams solidEnergyLawParams(unsigned elemIdx) const
     {
+
+        OPM_ERROR_IF(elemIdx >= elementToSolidRegionIdx_.size(),
+                     "Invalid element index or region index in GpuManager::solidEnergyLawParams");
+
         const int regionIdx = elementToSolidRegionIdx_[elemIdx];
 
-        OPM_ERROR_IF(elemIdx >= elementToSolidRegionIdx_.size()
-                     || regionIdx < 0,
-                     "Invalid element index or region index in GpuManager::solidEnergyLawParams");
-        OPM_ERROR_IF(solidEnergyParams_.size() < 0
+        OPM_ERROR_IF(regionIdx < 0
                      || static_cast<std::size_t>(regionIdx) >= solidEnergyParams_.size(),
                      "Invalid region index in GpuManager::solidEnergyLawParams");
 

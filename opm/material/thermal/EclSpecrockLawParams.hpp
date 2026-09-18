@@ -88,6 +88,8 @@ public:
 
     OPM_HOST_DEVICE EclSpecrockLawParams(const EclSpecrockLawParams<ScalarT, Storage>&) = default;
 
+    OPM_HOST_DEVICE EclSpecrockLawParams(EclSpecrockLawParams<ScalarT, Storage>&&) = default;
+
     OPM_HOST_DEVICE explicit EclSpecrockLawParams(
         InternalEnergyFunction internalEnergyFunction)
         : internalEnergyFunction_(std::move(internalEnergyFunction))

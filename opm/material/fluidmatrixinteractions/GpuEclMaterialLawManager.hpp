@@ -85,6 +85,9 @@ namespace detail
                                  params.template getRealParams<
                                      ::Opm::SatCurveMultiplexerApproach::PiecewiseLinear>();
                              }) {
+            OPM_ERROR_IF(params.approach()
+                != ::Opm::SatCurveMultiplexerApproach::PiecewiseLinear,
+                "GPU material manager only supports piecewise-linear saturation curves");
             return params
                 .template getRealParams<::Opm::SatCurveMultiplexerApproach::PiecewiseLinear>();
         } else {
