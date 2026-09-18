@@ -98,6 +98,7 @@
 #include <opm/input/eclipse/Parser/ParserKeywords/B.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/C.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/E.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/N.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/V.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/W.hpp>
 
@@ -105,6 +106,7 @@
 #include "KeywordHandlers.hpp"
 #include "MSW/Compsegs.hpp"
 #include "MSW/WelSegsSet.hpp"
+#include "Network/NetworkValidation.hpp"
 #include "Well/injection.hpp"
 
 #include <algorithm>
@@ -723,6 +725,12 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
 
             std::unordered_map<std::string, double> wpimult_global_factor;
 
+            // Location of the first network keyword of this report step, if
+            // any.  The network is checked for consistency only for those
+            // report steps in which it is defined or redefined, and any
+            // problem is reported against that keyword.
+            std::optional<KeywordLocation> network_location;
+
             while (true) {
                 if (keyword_index == block.size())
                     break;
@@ -769,6 +777,13 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                     continue;
                 }
 
+                if (!network_location.has_value() &&
+                    (keyword.is<ParserKeywords::BRANPROP>() ||
+                     keyword.is<ParserKeywords::NODEPROP>()))
+                {
+                    network_location = location;
+                }
+
                 logger(fmt::format("Processing keyword {} at line {}", location.keyword, location.lineno));
                 this->handleKeyword(report_step,
                                     block,
@@ -789,6 +804,16 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
 
             this->updateICDScalingFactors();
             check_compsegs_and_comptraj_consistency(welsegs_wells, compsegs_wells, comptraj_wells, this->getWells(report_step));
+
+            if (network_location.has_value()) {
+                const auto& state = this->snapshots[report_step];
+
+                Network::validateTopology(state.network.get(),
+                                          [&state](const std::string& name)
+                                          { return state.groups.has(name); },
+                                          *network_location, parseContext, errors);
+            }
+
             this->applyGlobalWPIMULT(wpimult_global_factor);
             this->end_report(report_step);
 

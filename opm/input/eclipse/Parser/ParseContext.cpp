@@ -160,6 +160,8 @@ namespace Opm {
         this->addKey(SCHEDULE_MSW_KEYWORD_ON_NON_MSW_WELL, InputErrorAction::THROW_EXCEPTION);
         this->addKey(SCHEDULE_ICD_INCOMPATIBLE_PDROP_MODEL, InputErrorAction::THROW_EXCEPTION);
 
+        this->addKey(SCHEDULE_NETWORK_INVALID, InputErrorAction::DELAYED_EXIT1);
+
         addKey(SCHEDULE_INVALID_NAME, InputErrorAction::THROW_EXCEPTION);
         this->addKey(SCHEDULE_INVALID_INJPHASE, InputErrorAction::WARN);
         this->addKey(SCHEDULE_GCONSALE_INVALID_INJECTION, InputErrorAction::THROW_EXCEPTION);
@@ -461,5 +463,7 @@ namespace Opm {
     const std::string ParseContext::SCHEDULE_MISSING_SEGMENT = "SCHEDULE_MISSING_SEGMENT";
     const std::string ParseContext::SCHEDULE_MSW_KEYWORD_ON_NON_MSW_WELL = "SCHEDULE_MSW_KEYWORD_ON_NON_MSW_WELL";
     const std::string ParseContext::SCHEDULE_ICD_INCOMPATIBLE_PDROP_MODEL = "SCHEDULE_ICD_INCOMPATIBLE_PDROP_MODEL";
+
+    const std::string ParseContext::SCHEDULE_NETWORK_INVALID = "SCHEDULE_NETWORK_INVALID";
 
 }
