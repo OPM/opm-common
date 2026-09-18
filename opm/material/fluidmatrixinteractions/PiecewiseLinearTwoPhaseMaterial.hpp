@@ -29,6 +29,7 @@
 
 #include "PiecewiseLinearTwoPhaseMaterialParams.hpp"
 
+#include <opm/common/ErrorMacros.hpp>
 #include <opm/common/TimingMacros.hpp>
 #include <opm/material/common/MathToolbox.hpp>
 
@@ -113,7 +114,7 @@ public:
      */
     template <class Container, class FluidState>
     OPM_HOST_DEVICE static void saturations(Container& /* values */, const Params& /* params */, const FluidState& /* fs */)
-    { throw std::logic_error("Not implemented: saturations()"); }
+    { OPM_THROW(std::logic_error, "Not implemented: saturations()"); }
 
     /*!
      * \brief The relative permeabilities
@@ -160,11 +161,11 @@ public:
      */
     template <class FluidState, class Evaluation = typename FluidState::ValueType>
     OPM_HOST_DEVICE static Evaluation Sw(const Params& /* params */, const FluidState& /* fs */)
-    { throw std::logic_error("Not implemented: Sw()"); }
+    { OPM_THROW(std::logic_error, "Not implemented: Sw()"); }
 
     template <class Evaluation>
     OPM_HOST_DEVICE static Evaluation twoPhaseSatSw(const Params& /* params */, const Evaluation& /* pC */)
-    { throw std::logic_error("Not implemented: twoPhaseSatSw()"); }
+    { OPM_THROW(std::logic_error, "Not implemented: twoPhaseSatSw()"); }
 
     /*!
      * \brief Calculate the non-wetting phase saturations depending on
