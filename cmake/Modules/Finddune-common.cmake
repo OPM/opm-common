@@ -23,11 +23,5 @@ if(dune-common_FOUND)
   # make version number available in config.h
   include (UseDuneVer)
   find_dune_version ("dune" "common")
-  target_compile_definitions(dunecommon INTERFACE HAVE_DUNE_COMMON=1)
-
-  if(dune-common_VERSION VERSION_LESS 2.11)
-    find_package(Threads)
-    find_package(TBB)
-    target_include_directories(dunecommon INTERFACE ${dune-common_INCLUDE_DIRS})
-  endif()
+  target_compile_definitions(Dune::Common INTERFACE HAVE_DUNE_COMMON=1)
 endif()
