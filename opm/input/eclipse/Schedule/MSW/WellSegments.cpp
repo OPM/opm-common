@@ -467,10 +467,10 @@ namespace Opm {
                                const double      length_top)
     {
         if (length_depth == LengthDepth::ABS) {
-            this->processABS();
+            this->processABS(well_name);
         }
         else if (length_depth == LengthDepth::INC) {
-            this->processINC(depth_top, length_top);
+            this->processINC(well_name, depth_top, length_top);
         }
         else {
             throw std::logic_error {
@@ -482,12 +482,12 @@ namespace Opm {
         this->checkSegmentDepthConsistency(well_name, unit_system);
     }
 
-    void WellSegments::processABS()
+    void WellSegments::processABS(const std::string& well_name)
     {
         // Meaningless value to indicate unspecified/uncompleted values
         const double invalid_value = Segment::invalidValue();
 
-        orderSegments();
+        orderSegments(well_name);
 
         std::size_t current_index = 1;
         while (current_index < size()) {
@@ -584,13 +584,15 @@ namespace Opm {
         }
     }
 
-    void WellSegments::processINC(double depth_top, double length_top)
+    void WellSegments::processINC(const std::string& well_name,
+                                  double depth_top,
+                                  double length_top)
     {
         // Update the information inside the WellSegments to be in ABS way
         Segment new_top_segment(this->m_segments[0], depth_top, length_top);
         this->addSegment(new_top_segment);
 
-        orderSegments();
+        orderSegments(well_name);
 
         // Begin with the second segment
         for (std::size_t i_index = 1; i_index < size(); ++i_index) {
@@ -621,7 +623,7 @@ namespace Opm {
         }
     }
 
-    void WellSegments::orderSegments()
+    void WellSegments::orderSegments(const std::string& well_name)
     {
         // Re-ordering the segments to make later use easier.
         //
@@ -671,7 +673,27 @@ namespace Opm {
             }
 
             if (target_segment_index< 0) {
-                throw std::logic_error("could not find candidate segment to swap in before the re-odering process get done !!\n");
+                // None of the remaining segments has its outlet among the
+                // segments ordered so far, so the well is not a connected tree
+                // - the outlet segments they name are never defined by
+                // WELSEGS.  A deck error, not an internal one.
+                auto orphans = std::string {};
+                for (auto i_index = current_index; i_index < size(); ++i_index) {
+                    if (! orphans.empty()) {
+                        orphans += ", ";
+                    }
+
+                    orphans += fmt::format("{} (outlet {})",
+                                           m_segments[i_index].segmentNumber(),
+                                           m_segments[i_index].outletSegment());
+                }
+
+                throw std::runtime_error {
+                    fmt::format("Well {}: WELSEGS segments {} do not connect to "
+                                "the top segment.  Their outlet segments are "
+                                "not defined by the keyword.",
+                                well_name, orphans)
+                };
             }
 
             assert(target_segment_index >= static_cast<int>(current_index));
