@@ -2545,6 +2545,65 @@ UDQ
     BOOST_CHECK_EQUAL( st.get("FU_UMIN"), 5);    // min(10, 2+3)
 }
 
+BOOST_AUTO_TEST_CASE(UDQ_EVAL_DEFINE_SELECTOR) {
+    // A DefineSelector restricts which DEFINEs an eval() covers.  Three
+    // field-level DEFINEs: one the selector accepts, one it rejects by
+    // name, and one with UPDATE NEXT that it rejects by status.  The NEXT
+    // must stay pending until an unfiltered eval() consumes it.
+    std::string deck_string = R"(
+SCHEDULE
+UDQ
+   DEFINE FU_ACC  FOPR * 2 /
+   DEFINE FU_REJ  FOPR * 5 /
+   DEFINE FU_NEXT FOPR * 3 /
+   UPDATE FU_NEXT NEXT /
+/
+)";
+
+    auto schedule = make_schedule(deck_string);
+    const auto& udq = schedule.getUDQConfig(0);
+    const auto undefined_value = udq.params().undefinedValue();
+    SummaryState st(TimeService::now(), undefined_value);
+    UDQState udq_state(undefined_value);
+    auto segmentMatcherFactory = []() { return std::make_unique<SegmentMatcher>(ScheduleState {}); };
+    auto regionSetMatcherFactory = []() { return std::make_unique<RegionSetMatcher>(FIPRegionStatistics {}); };
+
+    st.update("FOPR", 10.0);
+
+    // 1. Filtered evaluation: accept FU_ACC, reject FU_REJ, and reject
+    //    anything with UPDATE NEXT.
+    const auto select = [](const UDQDefine& def) {
+        return (def.keyword() != "FU_REJ")
+            && (def.status().first != UDQUpdate::NEXT);
+    };
+    udq.eval(0, {}, {}, segmentMatcherFactory, regionSetMatcherFactory, st, udq_state, select);
+
+    BOOST_CHECK_EQUAL(st.get("FU_ACC"), 20);      // accepted: evaluated
+    BOOST_CHECK(! udq_state.has("FU_REJ"));      // rejected: not evaluated
+    BOOST_CHECK(! udq_state.has("FU_NEXT"));     // rejected NEXT: not evaluated ...
+    BOOST_CHECK_MESSAGE(udq.define("FU_NEXT").status().first == UDQUpdate::NEXT,
+                        R"(A NEXT rejected by the selector must remain pending)");
+
+    // 2. Unfiltered evaluation: everything, and the NEXT is consumed.
+    udq.eval(0, {}, {}, segmentMatcherFactory, regionSetMatcherFactory, st, udq_state);
+
+    BOOST_CHECK_EQUAL(st.get("FU_REJ"), 50);
+    BOOST_CHECK_EQUAL(st.get("FU_NEXT"), 30);
+    BOOST_CHECK_MESSAGE(udq.define("FU_NEXT").status().first == UDQUpdate::OFF,
+                        R"(An unfiltered evaluation must consume the NEXT)");
+
+    // 3. Once consumed, the NEXT is not evaluated again, filtered or not,
+    //    while the others follow their input.
+    st.update("FOPR", 100.0);
+    udq.eval(0, {}, {}, segmentMatcherFactory, regionSetMatcherFactory, st, udq_state, select);
+    BOOST_CHECK_EQUAL(st.get("FU_ACC"), 200);
+    BOOST_CHECK_EQUAL(st.get("FU_NEXT"), 30);
+
+    udq.eval(0, {}, {}, segmentMatcherFactory, regionSetMatcherFactory, st, udq_state);
+    BOOST_CHECK_EQUAL(st.get("FU_REJ"), 500);
+    BOOST_CHECK_EQUAL(st.get("FU_NEXT"), 30);
+}
+
 BOOST_AUTO_TEST_CASE(UDQ_DEFINE_ORDER) {
     std::string deck_string = R"(
 SCHEDULE

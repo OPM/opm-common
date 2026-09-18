@@ -350,10 +350,15 @@ namespace Opm { namespace data {
         return *this;
     }
 
-    /// Production and injection rates for reservoir coupling master groups.
+    /// Reservoir coupling data for Summary::eval(), passed through
+    /// DynamicSimulatorState.
     ///
-    /// Passed through DynamicSimulatorState to Summary::eval() so that
-    /// rate-based summary vectors (FOPR, GOPR, etc.) include slave production.
+    /// A master run fills the rates of its master groups (production and
+    /// injection), so that rate-based summary vectors (FOPR, GOPR, ...)
+    /// include what the slaves produce and inject.  A slave run fills the
+    /// injection targets in force for its slave groups, so that GGIRT/GWIRT
+    /// report the target the master imposed.  Each run fills only its own
+    /// part; the other maps stay empty.
     struct ReservoirCouplingGroupRates {
         struct ProductionRates {
             double oil{0}, gas{0}, water{0}, resv{0};
@@ -365,6 +370,12 @@ namespace Opm { namespace data {
         std::map<std::string, ProductionRates> production;
         /// Per master-group, per-phase injection rates (SI units).
         std::map<std::string, std::map<Opm::Phase, InjectionRates>> injection;
+
+        /// Per slave-group, per-phase surface injection rate target in force
+        /// in a slave run (SI units): the target the master imposed, combined
+        /// with the slave's own GCONINJE limit as the group's GRUPSLAV flag
+        /// says.  Filled by a slave run only; reported as GGIRT/GWIRT.
+        std::map<std::string, std::map<Opm::Phase, double>> injection_targets;
     };
 
 }} // Opm::data
