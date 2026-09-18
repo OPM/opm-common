@@ -183,6 +183,8 @@ data::Wells result_wells(const bool w3_injector = true)
     rates1.set( rt::solvent, -10.3 / day );
     rates1.set( rt::dissolved_gas, -10.4 / day );
     rates1.set( rt::vaporized_oil, -10.5 / day );
+    rates1.set( rt::free_gas, -10.19 / day );
+    rates1.set( rt::free_oil, -10.21 / day );
     rates1.set( rt::reservoir_water, -10.6 / day );
     rates1.set( rt::reservoir_oil, -10.7 / day );
     rates1.set( rt::reservoir_gas, -10.8 / day );
@@ -203,6 +205,8 @@ data::Wells result_wells(const bool w3_injector = true)
     rates2.set( rt::solvent, -20.3 / day );
     rates2.set( rt::dissolved_gas, -20.4 / day );
     rates2.set( rt::vaporized_oil, -20.5 / day );
+    rates2.set( rt::free_gas, -20.19 / day );
+    rates2.set( rt::free_oil, -20.21 / day );
     rates2.set( rt::reservoir_water, -20.6 / day );
     rates2.set( rt::reservoir_oil, -20.7 / day );
     rates2.set( rt::reservoir_gas, -20.8 / day );
@@ -223,6 +227,8 @@ data::Wells result_wells(const bool w3_injector = true)
     rates3.set( rt::solvent, 30.3 / day );
     rates3.set( rt::dissolved_gas, 30.4 / day );
     rates3.set( rt::vaporized_oil, 30.5 / day );
+    rates3.set( rt::free_gas, 30.19 / day );
+    rates3.set( rt::free_oil, 30.21 / day );
     rates3.set( rt::reservoir_water, 30.6 / day );
     rates3.set( rt::reservoir_oil, 30.7 / day );
     rates3.set( rt::reservoir_gas, 30.8 / day );
@@ -244,6 +250,8 @@ data::Wells result_wells(const bool w3_injector = true)
     rates6.set( rt::solvent, 60.3 / day );
     rates6.set( rt::dissolved_gas, 60.4 / day );
     rates6.set( rt::vaporized_oil, 60.5 / day );
+    rates6.set( rt::free_gas, 60.19 / day );
+    rates6.set( rt::free_oil, 60.21 / day );
     rates6.set( rt::reservoir_water, 60.6 / day );
     rates6.set( rt::reservoir_oil, 60.7 / day );
     rates6.set( rt::reservoir_gas, 60.8 / day );
@@ -265,6 +273,8 @@ data::Wells result_wells(const bool w3_injector = true)
     crates1.set( rt::solvent, -100.3 / day );
     crates1.set( rt::dissolved_gas, -100.4 / day );
     crates1.set( rt::vaporized_oil, -100.5 / day );
+    crates1.set( rt::free_gas, -100.19 / day );
+    crates1.set( rt::free_oil, -100.21 / day );
     crates1.set( rt::reservoir_water, -100.6 / day );
     crates1.set( rt::reservoir_oil, -100.7 / day );
     crates1.set( rt::reservoir_gas, -100.8 / day );
@@ -276,6 +286,8 @@ data::Wells result_wells(const bool w3_injector = true)
     crates2.set( rt::solvent, -200.3 / day );
     crates2.set( rt::dissolved_gas, -200.4 / day );
     crates2.set( rt::vaporized_oil, -200.5 / day );
+    crates2.set( rt::free_gas, -200.19 / day );
+    crates2.set( rt::free_oil, -200.21 / day );
     crates2.set( rt::reservoir_water, -200.6 / day );
     crates2.set( rt::reservoir_oil, -200.7 / day );
     crates2.set( rt::reservoir_gas, -200.8 / day );
@@ -287,6 +299,8 @@ data::Wells result_wells(const bool w3_injector = true)
     crates3.set( rt::solvent, 300.3 / day );
     crates3.set( rt::dissolved_gas, 300.4 / day );
     crates3.set( rt::vaporized_oil, 300.5 / day );
+    crates3.set( rt::free_gas, 300.19 / day );
+    crates3.set( rt::free_oil, 300.21 / day );
     crates3.set( rt::reservoir_water, 300.6 / day );
     crates3.set( rt::reservoir_oil, 300.7 / day );
     crates3.set( rt::reservoir_gas, 300.8 / day );
@@ -301,6 +315,8 @@ data::Wells result_wells(const bool w3_injector = true)
     crates6.set( rt::solvent, 600.3 / day );
     crates6.set( rt::dissolved_gas, 600.4 / day );
     crates6.set( rt::vaporized_oil, 600.5 / day );
+    crates6.set( rt::free_gas, 600.19 / day );
+    crates6.set( rt::free_oil, 600.21 / day );
     crates6.set( rt::reservoir_water, 600.6 / day );
     crates6.set( rt::reservoir_oil, 600.7 / day );
     crates6.set( rt::reservoir_gas, 600.8 / day );
@@ -440,6 +456,7 @@ data::Wells result_wells(const bool w3_injector = true)
 
         for (const auto& p : { rt::wat, rt::oil, rt::gas, rt::solvent,
                     rt::dissolved_gas, rt::vaporized_oil,
+                    rt::free_gas, rt::free_oil,
                     rt::reservoir_water, rt::reservoir_oil, rt::reservoir_gas,
                     rt::polymer, rt::brine })
         {
@@ -930,8 +947,8 @@ BOOST_AUTO_TEST_CASE(well_keywords)
     BOOST_CHECK_CLOSE( 10.17, ecl_sum_get_well_var( resp, 1, "W_1", "WSPR" ), 1e-5 );
     BOOST_CHECK_CLOSE( 10.4, ecl_sum_get_well_var( resp, 1, "W_1", "WGPRS" ), 1e-5 );
     BOOST_CHECK_CLOSE( 20.4, ecl_sum_get_well_var( resp, 1, "W_2", "WGPRS" ), 1e-5 );
-    BOOST_CHECK_CLOSE( 10.2 - 10.4, ecl_sum_get_well_var( resp, 1, "W_1", "WGPRF" ), 1e-5 );
-    BOOST_CHECK_CLOSE( 20.2 - 20.4, ecl_sum_get_well_var( resp, 1, "W_2", "WGPRF" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 10.19, ecl_sum_get_well_var( resp, 1, "W_1", "WGPRF" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 20.19, ecl_sum_get_well_var( resp, 1, "W_2", "WGPRF" ), 1e-5 );
     BOOST_CHECK_CLOSE( 10.6 + 10.7 + 10.8,
                                     ecl_sum_get_well_var( resp, 1, "W_1", "WVPR" ), 1e-5 );
     BOOST_CHECK_CLOSE( 20.6 + 20.7 + 20.8,
@@ -939,8 +956,8 @@ BOOST_AUTO_TEST_CASE(well_keywords)
 
     BOOST_CHECK_CLOSE( 10.5, ecl_sum_get_well_var( resp, 1, "W_1", "WOPRS" ), 1e-5 );
     BOOST_CHECK_CLOSE( 20.5, ecl_sum_get_well_var( resp, 1, "W_2", "WOPRS" ), 1e-5 );
-    BOOST_CHECK_CLOSE( (10.1 - 10.5), ecl_sum_get_well_var( resp, 1, "W_1", "WOPRF" ), 1e-5 );
-    BOOST_CHECK_CLOSE( (20.1 - 20.5), ecl_sum_get_well_var( resp, 1, "W_2", "WOPRF" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 10.21, ecl_sum_get_well_var( resp, 1, "W_1", "WOPRF" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 20.21, ecl_sum_get_well_var( resp, 1, "W_2", "WOPRF" ), 1e-5 );
 
     BOOST_CHECK_CLOSE( -10.13, ecl_sum_get_well_var( resp, 1, "W_1", "WWPP" ), 1e-5 );
     BOOST_CHECK_CLOSE( -10.14, ecl_sum_get_well_var( resp, 1, "W_1", "WOPP" ), 1e-5 );
@@ -1005,8 +1022,8 @@ BOOST_AUTO_TEST_CASE(well_keywords)
     BOOST_CHECK_CLOSE( (20.0 + 20.1), ecl_sum_get_well_var( resp, 1, "W_2", "WLPT" ), 1e-5 );
     BOOST_CHECK_CLOSE( 10.5, ecl_sum_get_well_var( resp, 1, "W_1", "WOPTS" ), 1e-5 );
     BOOST_CHECK_CLOSE( 20.5, ecl_sum_get_well_var( resp, 1, "W_2", "WOPTS" ), 1e-5 );
-    BOOST_CHECK_CLOSE( (10.1 - 10.5), ecl_sum_get_well_var( resp, 1, "W_1", "WOPTF" ), 1e-5 );
-    BOOST_CHECK_CLOSE( (20.1 - 20.5), ecl_sum_get_well_var( resp, 1, "W_2", "WOPTF" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 10.21, ecl_sum_get_well_var( resp, 1, "W_1", "WOPTF" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 20.21, ecl_sum_get_well_var( resp, 1, "W_2", "WOPTF" ), 1e-5 );
     BOOST_CHECK_CLOSE( 10.6 + 10.7 + 10.8,
                                         ecl_sum_get_well_var( resp, 1, "W_1", "WVPT" ), 1e-5 );
     BOOST_CHECK_CLOSE( 20.6 + 20.7 + 20.8,
@@ -1026,13 +1043,13 @@ BOOST_AUTO_TEST_CASE(well_keywords)
 
     BOOST_CHECK_CLOSE( 2 * 10.4, ecl_sum_get_well_var( resp, 2, "W_1", "WGPTS" ), 1e-5 );
     BOOST_CHECK_CLOSE( 2 * 20.4, ecl_sum_get_well_var( resp, 2, "W_2", "WGPTS" ), 1e-5 );
-    BOOST_CHECK_CLOSE( 2 * ( 10.2 - 10.4 ), ecl_sum_get_well_var( resp, 2, "W_1", "WGPTF" ), 1e-5 );
-    BOOST_CHECK_CLOSE( 2 * ( 20.2 - 20.4 ), ecl_sum_get_well_var( resp, 2, "W_2", "WGPTF" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 2 * 10.19, ecl_sum_get_well_var( resp, 2, "W_1", "WGPTF" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 2 * 20.19, ecl_sum_get_well_var( resp, 2, "W_2", "WGPTF" ), 1e-5 );
 
     BOOST_CHECK_CLOSE( 2 * 10.5, ecl_sum_get_well_var( resp, 2, "W_1", "WOPTS" ), 1e-5 );
     BOOST_CHECK_CLOSE( 2 * 20.5, ecl_sum_get_well_var( resp, 2, "W_2", "WOPTS" ), 1e-5 );
-    BOOST_CHECK_CLOSE( 2 * ( 10.1 - 10.5 ), ecl_sum_get_well_var( resp, 2, "W_1", "WOPTF" ), 1e-5 );
-    BOOST_CHECK_CLOSE( 2 * ( 20.1 - 20.5 ), ecl_sum_get_well_var( resp, 2, "W_2", "WOPTF" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 2 * 10.21, ecl_sum_get_well_var( resp, 2, "W_1", "WOPTF" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 2 * 20.21, ecl_sum_get_well_var( resp, 2, "W_2", "WOPTF" ), 1e-5 );
     BOOST_CHECK_CLOSE( 2 * (10.6 + 10.7 + 10.8),
                                         ecl_sum_get_well_var( resp, 2, "W_1", "WVPT" ), 1e-5 );
     BOOST_CHECK_CLOSE( 2 * (20.6 + 20.7 + 20.8),
@@ -1358,10 +1375,10 @@ BOOST_AUTO_TEST_CASE(well_keywords_dynamic_close)
     BOOST_CHECK_CLOSE( 20.3, ecl_sum_get_well_var( resp, 2, "W_2", "WNPT" ), 1e-5 );
 
     BOOST_CHECK_CLOSE( 20.4, ecl_sum_get_well_var( resp, 2, "W_2", "WGPTS" ), 1e-5 );
-    BOOST_CHECK_CLOSE( 20.2 - 20.4, ecl_sum_get_well_var( resp, 2, "W_2", "WGPTF" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 20.19, ecl_sum_get_well_var( resp, 2, "W_2", "WGPTF" ), 1e-5 );
 
     BOOST_CHECK_CLOSE( 20.5, ecl_sum_get_well_var( resp, 2, "W_2", "WOPTS" ), 1e-5 );
-    BOOST_CHECK_CLOSE( 20.1 - 20.5, ecl_sum_get_well_var( resp, 2, "W_2", "WOPTF" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 20.21, ecl_sum_get_well_var( resp, 2, "W_2", "WOPTF" ), 1e-5 );
     BOOST_CHECK_CLOSE( (20.6 + 20.7 + 20.8),
                        ecl_sum_get_well_var( resp, 2, "W_2", "WVPT" ), 1e-5 );
 
@@ -1671,10 +1688,10 @@ BOOST_AUTO_TEST_CASE(group_keywords)
     BOOST_CHECK_CLOSE( 10.2 + 20.2, ecl_sum_get_group_var( resp, 1, "G_1", "GGPR" ), 1e-5 );
     BOOST_CHECK_CLOSE( 10.3 + 20.3, ecl_sum_get_group_var( resp, 1, "G_1", "GNPR" ), 1e-5 );
     BOOST_CHECK_CLOSE( 10.4 + 20.4, ecl_sum_get_group_var( resp, 1, "G_1", "GGPRS" ), 1e-5 );
-    BOOST_CHECK_CLOSE((10.2 - 10.4) + (20.2 - 20.4),
+    BOOST_CHECK_CLOSE( 10.19 + 20.19,
                                     ecl_sum_get_group_var( resp, 1, "G_1", "GGPRF" ), 1e-5 );
     BOOST_CHECK_CLOSE( 10.5 + 20.5, ecl_sum_get_group_var( resp, 1, "G_1", "GOPRS" ), 1e-5 );
-    BOOST_CHECK_CLOSE((10.1 - 10.5) + (20.1 - 20.5),
+    BOOST_CHECK_CLOSE( 10.21 + 20.21,
                                     ecl_sum_get_group_var( resp, 1, "G_1", "GOPRF" ), 1e-5 );
     BOOST_CHECK_CLOSE( 10.6 + 10.7 + 10.8 + 20.6 + 20.7 + 20.8,
                                     ecl_sum_get_group_var( resp, 1, "G_1", "GVPR" ), 1e-5 );
@@ -1704,8 +1721,8 @@ BOOST_AUTO_TEST_CASE(group_keywords)
     BOOST_CHECK_CLOSE( 10.3 + 20.3, ecl_sum_get_group_var( resp, 1, "G_1", "GNPT" ), 1e-5 );
     BOOST_CHECK_CLOSE( 10.4 + 20.4, ecl_sum_get_group_var( resp, 1, "G_1", "GGPTS" ), 1e-5 );
     BOOST_CHECK_CLOSE( 10.5 + 20.5, ecl_sum_get_group_var( resp, 1, "G_1", "GOPTS" ), 1e-5 );
-    BOOST_CHECK_CLOSE( (10.1 - 10.5) + (20.1 - 20.5), ecl_sum_get_group_var( resp, 1, "G_1", "GOPTF" ), 1e-5 );
-    BOOST_CHECK_CLOSE( (10.2 - 10.4) + (20.2 - 20.4), ecl_sum_get_group_var( resp, 1, "G_1", "GGPTF" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 10.21 + 20.21, ecl_sum_get_group_var( resp, 1, "G_1", "GOPTF" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 10.19 + 20.19, ecl_sum_get_group_var( resp, 1, "G_1", "GGPTF" ), 1e-5 );
     BOOST_CHECK_CLOSE( 10.6 + 10.7 + 10.8 + 20.6 + 20.7 + 20.8,
                                     ecl_sum_get_group_var( resp, 1, "G_1", "GVPT" ), 1e-5 );
     BOOST_CHECK_CLOSE( 10.16 + 20.16, ecl_sum_get_group_var( resp, 1, "G_1", "GCPT" ), 1e-5 );
@@ -1715,8 +1732,8 @@ BOOST_AUTO_TEST_CASE(group_keywords)
     BOOST_CHECK_CLOSE(  2 * (10.3 + 20.3), ecl_sum_get_group_var( resp, 2, "G_1", "GNPT" ), 1e-5 );
     BOOST_CHECK_CLOSE(  2 * (10.4 + 20.4), ecl_sum_get_group_var( resp, 2, "G_1", "GGPTS" ), 1e-5 );
     BOOST_CHECK_CLOSE(  2 * (10.5 + 20.5), ecl_sum_get_group_var( resp, 2, "G_1", "GOPTS" ), 1e-5 );
-    BOOST_CHECK_CLOSE(  2 * ((10.2 - 10.4) + (20.2 - 20.4)), ecl_sum_get_group_var( resp, 2, "G_1", "GGPTF" ), 1e-5 );
-    BOOST_CHECK_CLOSE(  2 * ((10.1 - 10.5) + (20.1 - 20.5)), ecl_sum_get_group_var( resp, 2, "G_1", "GOPTF" ), 1e-5 );
+    BOOST_CHECK_CLOSE(  2 * (10.19 + 20.19), ecl_sum_get_group_var( resp, 2, "G_1", "GGPTF" ), 1e-5 );
+    BOOST_CHECK_CLOSE(  2 * (10.21 + 20.21), ecl_sum_get_group_var( resp, 2, "G_1", "GOPTF" ), 1e-5 );
     BOOST_CHECK_CLOSE(  2 * (10.6 + 10.7 + 10.8 + 20.6 + 20.7 + 20.8),
                                     ecl_sum_get_group_var( resp, 2, "G_1", "GVPT" ), 1e-5 );
     BOOST_CHECK_CLOSE( 2 * (10.16 + 20.16), ecl_sum_get_group_var( resp, 2, "G_1", "GCPT" ), 1e-5 );
@@ -1994,10 +2011,10 @@ BOOST_AUTO_TEST_CASE(connection_kewords)
 
     BOOST_CHECK_CLOSE( 1.9,       ecl_sum_get_well_connection_var( resp, 1, "W_1", "CPR",  1, 1, 1), 1e-5);
 
-    BOOST_CHECK_CLOSE( 100.2-100.4,ecl_sum_get_well_connection_var( resp, 1, "W_1", "CGFRF", 1, 1, 1 ), 1e-5 );
+    BOOST_CHECK_CLOSE( 100.19,ecl_sum_get_well_connection_var( resp, 1, "W_1", "CGFRF", 1, 1, 1 ), 1e-5 );
     BOOST_CHECK_CLOSE( 100.4,      ecl_sum_get_well_connection_var( resp, 1, "W_1", "CGFRS", 1, 1, 1 ), 1e-5 );
 
-    BOOST_CHECK_CLOSE( 100.1-100.5,ecl_sum_get_well_connection_var( resp, 1, "W_1", "COFRF", 1, 1, 1 ), 1e-5 );
+    BOOST_CHECK_CLOSE( 100.21,ecl_sum_get_well_connection_var( resp, 1, "W_1", "COFRF", 1, 1, 1 ), 1e-5 );
     BOOST_CHECK_CLOSE( 100.5,      ecl_sum_get_well_connection_var( resp, 1, "W_1", "COFRS", 1, 1, 1 ), 1e-5 );
 
 
@@ -2401,11 +2418,11 @@ BOOST_AUTO_TEST_CASE(field_keywords)
                                     ecl_sum_get_field_var( resp, 1, "FVPR" ), 1e-5 );
     BOOST_CHECK_CLOSE( 10.4 + 20.4,
                                     ecl_sum_get_field_var( resp, 1, "FGPRS" ), 1e-5 );
-    BOOST_CHECK_CLOSE( 10.2 - 10.4 + 20.2 - 20.4,
+    BOOST_CHECK_CLOSE( 10.19 + 20.19,
                                     ecl_sum_get_field_var( resp, 1, "FGPRF" ), 1e-5 );
     BOOST_CHECK_CLOSE( 10.5 + 20.5,
                                     ecl_sum_get_field_var( resp, 1, "FOPRS" ), 1e-5 );
-    BOOST_CHECK_CLOSE( 10.1 - 10.5 + 20.1 - 20.5,
+    BOOST_CHECK_CLOSE( 10.21 + 20.21,
                                     ecl_sum_get_field_var( resp, 1, "FOPRF" ), 1e-5 );
 
     BOOST_CHECK_CLOSE( -10.13 - 20.13, ecl_sum_get_field_var( resp, 1, "FWPP" ), 1e-5 );
@@ -2428,11 +2445,11 @@ BOOST_AUTO_TEST_CASE(field_keywords)
                                     ecl_sum_get_field_var( resp, 1, "FVPT" ), 1e-5 );
     BOOST_CHECK_CLOSE( 10.4 + 20.4,
                                     ecl_sum_get_field_var( resp, 1, "FGPTS" ), 1e-5 );
-    BOOST_CHECK_CLOSE( 10.2 - 10.4 + 20.2 - 20.4,
+    BOOST_CHECK_CLOSE( 10.19 + 20.19,
                                     ecl_sum_get_field_var( resp, 1, "FGPTF" ), 1e-5 );
     BOOST_CHECK_CLOSE( 10.5 + 20.5,
                                     ecl_sum_get_field_var( resp, 1, "FOPTS" ), 1e-5 );
-    BOOST_CHECK_CLOSE( 10.1 - 10.5 + 20.1 - 20.5,
+    BOOST_CHECK_CLOSE( 10.21 + 20.21,
                                     ecl_sum_get_field_var( resp, 1, "FOPTF" ), 1e-5 );
 
     BOOST_CHECK_CLOSE( 2 * (10.0 + 20.0), ecl_sum_get_field_var( resp, 2, "FWPT" ), 1e-5 );
@@ -2445,11 +2462,11 @@ BOOST_AUTO_TEST_CASE(field_keywords)
                                     ecl_sum_get_field_var( resp, 2, "FVPT" ), 1e-5 );
     BOOST_CHECK_CLOSE( 2 * (10.4 + 20.4),
                                     ecl_sum_get_field_var( resp, 2, "FGPTS" ), 1e-5 );
-    BOOST_CHECK_CLOSE( 2 * (10.2 - 10.4 + 20.2 - 20.4),
+    BOOST_CHECK_CLOSE( 2 * (10.19 + 20.19),
                                     ecl_sum_get_field_var( resp, 2, "FGPTF" ), 1e-5 );
     BOOST_CHECK_CLOSE( 2 * (10.5 + 20.5),
                                     ecl_sum_get_field_var( resp, 2, "FOPTS" ), 1e-5 );
-    BOOST_CHECK_CLOSE( 2 * (10.1 - 10.5 + 20.1 - 20.5),
+    BOOST_CHECK_CLOSE( 2 * (10.21 + 20.21),
                                     ecl_sum_get_field_var( resp, 2, "FOPTF" ), 1e-5 );
 
     BOOST_CHECK_CLOSE(  2 * (10.16 + 20.16), ecl_sum_get_field_var( resp, 2, "FCPT" ), 1e-5 );
