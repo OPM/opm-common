@@ -158,11 +158,20 @@ public:
         double last_test{};
         int num_attempt{};
 
+        /// Whether this completion was closed only because it lies below the
+        /// one whose limit was violated, i.e., by the reach of a '+CON'
+        /// workover rather than by a limit of its own.  This distinction
+        /// matters in the time step that closes the completion.  It is not
+        /// represented in an Eclipse restart file, but the internal serializers
+        /// preserve it.
+        bool closedBelowOffender{false};
+
         bool operator==(const ClosedCompletion& other) const {
             return this->wellName == other.wellName &&
                    this->complnum == other.complnum &&
                    this->last_test == other.last_test &&
-                   this->num_attempt == other.num_attempt;
+                   this->num_attempt == other.num_attempt &&
+                   this->closedBelowOffender == other.closedBelowOffender;
         }
 
         static ClosedCompletion serializationTestObject();
@@ -174,6 +183,7 @@ public:
             serializer(this->complnum);
             serializer(this->last_test);
             serializer(this->num_attempt);
+            serializer(this->closedBelowOffender);
         }
 
         template<class BufferType>
@@ -182,6 +192,7 @@ public:
             buffer.write(this->complnum);
             buffer.write(this->last_test);
             buffer.write(this->num_attempt);
+            buffer.write(this->closedBelowOffender);
         }
 
         template<class BufferType>
@@ -190,6 +201,7 @@ public:
             buffer.read(this->complnum);
             buffer.read(this->last_test);
             buffer.read(this->num_attempt);
+            buffer.read(this->closedBelowOffender);
         }
     };
 
@@ -221,10 +233,25 @@ public:
     std::size_t num_closed_wells() const;
     double lastTestTime(const std::string& well_name) const;
 
-    void close_completion(const std::string& well_name, int complnum, double sim_time);
+    /// Record a completion closure.
+    ///
+    /// \param[in] closed_below_offender Whether the completion is closed only
+    /// because it lies below the one whose limit was violated.  Such a closure
+    /// is the reach of a '+CON' workover rather than a violation of the
+    /// completion's own limit.  Once a completion has been recorded as a
+    /// direct violation, a later reach does not replace that cause while it
+    /// remains closed.
+    void close_completion(const std::string& well_name, int complnum, double sim_time,
+                          bool closed_below_offender = false);
     void open_completion(const std::string& well_name, int complnum);
     void open_completions(const std::string& well_name);
     bool completion_is_closed(const std::string& well_name, const int complnum) const;
+
+    /// Whether \p complnum is currently closed by the reach of a '+CON'
+    /// workover rather than by a limit of its own.  Returns false if the
+    /// completion is not closed.
+    bool completion_closed_below_offender(const std::string& well_name, int complnum) const;
+
     std::size_t num_closed_completions() const;
 
     // Simulation time at which 'well_name's completion 'complnum' was last
