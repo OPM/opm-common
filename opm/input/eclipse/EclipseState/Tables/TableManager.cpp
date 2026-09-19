@@ -1688,7 +1688,7 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
         }
 
         // RocktabTable need special treatment
-        it = simpleTables.find("ROCKMAP");
+        it = simpleTables.find("ROCKTAB");
         if (it != simpleTables.end()) {
             result.rockMax = it->second.max();
             for (const auto& mapIt : it->second.tables()) {

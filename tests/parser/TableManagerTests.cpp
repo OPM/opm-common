@@ -58,6 +58,10 @@
 #include <opm/input/eclipse/EclipseState/Tables/Tabdims.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/ZmfvdTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/CompvdTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/RocktabTable.hpp>
+
+#include <opm/common/utility/MemPacker.hpp>
+#include <opm/common/utility/Serializer.hpp>
 
 #include <opm/input/eclipse/Schedule/VFPProdTable.hpp>
 #include <opm/input/eclipse/Schedule/VFPInjTable.hpp>
@@ -3318,6 +3322,43 @@ END
     }
 }
 
+
+BOOST_AUTO_TEST_CASE(RocktabTable_SurvivesSerialization) {
+    // TableManager lifts ROCKTAB out of its container so the tables are
+    // serialized as RocktabTable rather than as the SimpleTable a container
+    // holds.  The lookup has to use the key the tables are stored under.
+    const auto deck = Opm::Parser{}.parseString(R"(
+RUNSPEC
+ROCKCOMP
+  REVERS  1 /
+PROPS
+ROCKTAB
+  100.0  1.0  1.0
+  200.0  0.9  0.8
+  300.0  0.8  0.6 /
+END
+)");
+
+    const auto source = Opm::TableManager{ deck };
+    Opm::TableManager target{};
+
+    Opm::Serialization::MemPacker packer;
+    Opm::Serializer serializer(packer);
+    serializer.pack(source);
+    serializer.unpack(target);
+
+    // The values below are held in base-table columns, which a plain
+    // SimpleTable answers just as well: getTable<RocktabTable>() casts
+    // without checking, so only the dynamic type tells the two apart.
+    const auto& base = target.getRocktabTables().getTable(0);
+    BOOST_REQUIRE(dynamic_cast<const RocktabTable*>(&base) != nullptr);
+
+    const auto& table = target.getRocktabTables().getTable<RocktabTable>(0);
+    BOOST_REQUIRE_EQUAL(table.numRows(), 3);
+    BOOST_CHECK_CLOSE(table.getPressureColumn()[2], 300.0 * 1.0e5, epsilon());
+    BOOST_CHECK_CLOSE(table.getPoreVolumeMultiplierColumn()[2], 0.8, epsilon());
+    BOOST_CHECK_CLOSE(table.getTransmissibilityMultiplierColumn()[2], 0.6, epsilon());
+}
 
 BOOST_AUTO_TEST_CASE(CompvdTable_ThreeComponents) {
     // COMPVD with 3 components, 2 equilibrium regions.
