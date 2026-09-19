@@ -31,6 +31,7 @@
 #include <opm/input/eclipse/EclipseState/Tables/MiscTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/MsfnTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/PlymwinjTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/CompvdTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/PlyshlogTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/PmiscTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/Ppcwmax.hpp>
@@ -226,6 +227,8 @@ namespace Opm {
             serializer(split.plyshMap);
             serializer(split.rockMax);
             serializer(split.rockMap);
+            serializer(split.compvdMax);
+            serializer(split.compvdMap);
             serializer(m_pvtgTables);
             serializer(m_pvtgwTables);
             serializer(m_pvtgwoTables);
@@ -292,6 +295,13 @@ namespace Opm {
                         container.addTable(it.first, it.second);
                     }
                     m_simpleTables.insert(std::make_pair("ROCKTAB", container));
+                }
+                if (split.compvdMax > 0) {
+                    TableContainer container(split.compvdMax);
+                    for (const auto& it : split.compvdMap) {
+                        container.addTable(it.first, it.second);
+                    }
+                    m_simpleTables.insert(std::make_pair("COMPVD", container));
                 }
             }
         }
@@ -436,8 +446,10 @@ namespace Opm {
         struct SplitSimpleTables {
           std::size_t plyshMax = 0;
           std::size_t rockMax = 0;
+          std::size_t compvdMax = 0;
           std::map<std::size_t, std::shared_ptr<PlyshlogTable>> plyshMap;
           std::map<std::size_t, std::shared_ptr<RocktabTable>> rockMap;
+          std::map<std::size_t, std::shared_ptr<CompvdTable>> compvdMap;
         };
 
         SplitSimpleTables splitSimpleTable(std::map<std::string,TableContainer>& simpleTables);

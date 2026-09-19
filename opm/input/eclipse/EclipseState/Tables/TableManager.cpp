@@ -1676,7 +1676,7 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
     {
         SplitSimpleTables result;
 
-        // PlyshlogTable need special treatment
+        // PlyshlogTable needs special treatment
         auto it = simpleTables.find("PLYSHLOG");
         if (it != simpleTables.end()) {
             result.plyshMax = it->second.max();
@@ -1687,7 +1687,18 @@ std::optional<JFunc> make_jfunc(const Deck& deck) {
             simpleTables.erase(it);
         }
 
-        // RocktabTable need special treatment
+        // CompvdTable needs special treatment
+        it = simpleTables.find("COMPVD");
+        if (it != simpleTables.end()) {
+            result.compvdMax = it->second.max();
+            for (const auto& mapIt : it->second.tables()) {
+                auto ptr = std::static_pointer_cast<CompvdTable>(mapIt.second);
+                result.compvdMap.insert(std::make_pair(mapIt.first, ptr));
+            }
+            simpleTables.erase(it);
+        }
+
+        // RocktabTable needs special treatment
         it = simpleTables.find("ROCKTAB");
         if (it != simpleTables.end()) {
             result.rockMax = it->second.max();

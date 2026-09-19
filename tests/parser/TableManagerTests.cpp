@@ -63,6 +63,9 @@
 #include <opm/common/utility/MemPacker.hpp>
 #include <opm/common/utility/Serializer.hpp>
 
+#include <opm/common/utility/MemPacker.hpp>
+#include <opm/common/utility/Serializer.hpp>
+
 #include <opm/input/eclipse/Schedule/VFPProdTable.hpp>
 #include <opm/input/eclipse/Schedule/VFPInjTable.hpp>
 
@@ -3358,6 +3361,47 @@ END
     BOOST_CHECK_CLOSE(table.getPressureColumn()[2], 300.0 * 1.0e5, epsilon());
     BOOST_CHECK_CLOSE(table.getPoreVolumeMultiplierColumn()[2], 0.8, epsilon());
     BOOST_CHECK_CLOSE(table.getTransmissibilityMultiplierColumn()[2], 0.6, epsilon());
+}
+
+BOOST_AUTO_TEST_CASE(CompvdTable_SurvivesSerialization) {
+    // A table container serializes its tables as SimpleTable, which would drop
+    // the phase flags COMPVD keeps outside the table body.  That is why
+    // TableManager lifts the COMPVD tables out and serializes them as their
+    // own type, and why the flags have to come back from a round trip intact.
+    const auto deck = Opm::Parser{}.parseString(R"(
+RUNSPEC
+METRIC
+COMPS
+3 /
+EQLDIMS
+1 /
+PROPS
+COMPVD
+  100.0  0.2  0.3  0.5  0  150.0
+  200.0  0.1  0.2  0.7  0  160.0
+  300.0  0.4  0.1  0.5  1  170.0 /
+END
+)");
+
+    const auto source = Opm::TableManager{ deck };
+    Opm::TableManager target{};
+
+    Opm::Serialization::MemPacker packer;
+    Opm::Serializer serializer(packer);
+    serializer.pack(source);
+    serializer.unpack(target);
+
+    const auto& table = target.getCompvdTables().getTable<CompvdTable>(0);
+    BOOST_CHECK_EQUAL(table.numRows(), 3);
+    BOOST_CHECK_EQUAL(table.numComponents(), 3);
+    BOOST_CHECK(table.phaseFlag(0) == CompvdTable::Phase::Vapor);
+    BOOST_CHECK(table.phaseFlag(1) == CompvdTable::Phase::Vapor);
+    BOOST_CHECK(table.phaseFlag(2) == CompvdTable::Phase::Liquid);
+    BOOST_CHECK_EQUAL(table.phaseFlags().size(), std::size_t{3});
+
+    // The columns either side of the flag have to keep their meaning too.
+    BOOST_CHECK_CLOSE(table.getDepthColumn()[2], 300.0, epsilon());
+    BOOST_CHECK_CLOSE(table.getSaturationPressureColumn()[2], 170.0 * 1.0e5, epsilon());
 }
 
 BOOST_AUTO_TEST_CASE(CompvdTable_ThreeComponents) {
