@@ -75,6 +75,9 @@
 #include <opm/material/components/SimpleH2O.hpp>
 #include <opm/material/components/N2.hpp>
 
+#include <memory>
+#include <vector>
+
 // this function makes sure that a capillary pressure law adheres to
 // the generic programming interface for such laws. This API _must_ be
 // implemented by all capillary pressure laws. If there are no _very_
@@ -426,4 +429,81 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(ApiConformance, Scalar, Types)
         testTwoPhaseApi<MaterialLaw, TwoPhaseFluidState>();
         testTwoPhaseSatApi<MaterialLaw, TwoPhaseFluidState>();
     }
+}
+
+BOOST_AUTO_TEST_CASE_TEMPLATE(ThreePointScalingCollapsedEndpoints, Scalar, Types)
+{
+    using Traits = Opm::TwoPhaseMaterialTraits<Scalar, 0, 1>;
+    using RawLaw = Opm::PiecewiseLinearTwoPhaseMaterial<Traits>;
+    using Law = Opm::EclEpsTwoPhaseLaw<RawLaw>;
+    using Evaluation = Opm::DenseAd::Evaluation<Scalar, 1>;
+
+    auto raw = std::make_shared<typename RawLaw::Params>();
+    raw->setPcnwSamples(std::vector<Scalar>{0, 1}, std::vector<Scalar>{0, 0});
+    raw->setKrwSamples(std::vector<Scalar>{0, 0.75, 1}, std::vector<Scalar>{0, 0.5, 1});
+    raw->setKrnSamples(std::vector<Scalar>{0, 0.25, 1}, std::vector<Scalar>{1, 0.5, 0});
+    raw->finalize();
+
+    auto unscaled = std::make_shared<Opm::EclEpsScalingPoints<Scalar>>();
+    unscaled->setSaturationKrwPoint(0, 0);
+    unscaled->setSaturationKrwPoint(1, 0.75);
+    unscaled->setSaturationKrwPoint(2, 1);
+    unscaled->setSaturationKrnPoint(0, 0);
+    unscaled->setSaturationKrnPoint(1, 0.25);
+    unscaled->setSaturationKrnPoint(2, 1);
+    unscaled->setKrwr(0.5);
+    unscaled->setMaxKrw(1);
+    unscaled->setKrnr(0.5);
+    unscaled->setMaxKrn(1);
+
+    Opm::EclEpsConfig config;
+    config.setEnableSatScaling(true);
+    config.setEnableThreePointKrSatScaling(true);
+    config.setEnableKrwScaling(true);
+    config.setEnableKrnScaling(true);
+    config.setEnableThreePointKrwScaling(true);
+    config.setEnableThreePointKrnScaling(true);
+
+    typename Law::Params params;
+    params.setConfig(config);
+    params.setUnscaledPoints(unscaled);
+    params.setEffectiveLawParams(raw);
+    auto& scaled = params.scaledPoints();
+    scaled.setSaturationKrwPoint(0, 0.25);
+    scaled.setSaturationKrwPoint(1, 0.75);
+    scaled.setSaturationKrwPoint(2, 0.75);
+    scaled.setSaturationKrnPoint(0, 0.25);
+    scaled.setSaturationKrnPoint(1, 0.25);
+    scaled.setSaturationKrnPoint(2, 0.75);
+    scaled.setKrwr(0.8);
+    scaled.setMaxKrw(0.8);
+    scaled.setKrnr(0.8);
+    scaled.setMaxKrn(0.8);
+    params.finalize();
+
+    // Coincident saturation endpoints must still produce the requested maximum.
+    for (const Scalar sw : {Scalar{0}, Scalar{0.25}}) {
+        BOOST_CHECK_CLOSE(Law::twoPhaseSatKrn(params, sw), Scalar{0.8}, 1e-4);
+        const auto krn = Law::twoPhaseSatKrn(params, Evaluation::createVariable(sw, 0));
+        BOOST_CHECK_CLOSE(krn.value(), Scalar{0.8}, 1e-4);
+        BOOST_CHECK_EQUAL(krn.derivative(0), 0);
+    }
+    for (const Scalar sw : {Scalar{0.75}, Scalar{1}}) {
+        BOOST_CHECK_CLOSE(Law::twoPhaseSatKrw(params, sw), Scalar{0.8}, 1e-4);
+        const auto krw = Law::twoPhaseSatKrw(params, Evaluation::createVariable(sw, 0));
+        BOOST_CHECK_CLOSE(krw.value(), Scalar{0.8}, 1e-4);
+        BOOST_CHECK_EQUAL(krw.derivative(0), 0);
+    }
+    BOOST_CHECK_CLOSE(Law::twoPhaseSatKrw(params, Scalar{0.5}), Scalar{0.4}, 1e-4);
+    BOOST_CHECK_CLOSE(Law::twoPhaseSatKrn(params, Scalar{0.5}), Scalar{0.4}, 1e-4);
+
+    // Retain both interpolation intervals when the scaled endpoints are distinct.
+    scaled.setSaturationKrwPoint(1, 0.5);
+    scaled.setSaturationKrnPoint(1, 0.5);
+    scaled.setKrwr(0.6);
+    scaled.setKrnr(0.6);
+    BOOST_CHECK_CLOSE(Law::twoPhaseSatKrw(params, Scalar{0.375}), Scalar{0.3}, 1e-4);
+    BOOST_CHECK_CLOSE(Law::twoPhaseSatKrw(params, Scalar{0.625}), Scalar{0.7}, 1e-4);
+    BOOST_CHECK_CLOSE(Law::twoPhaseSatKrn(params, Scalar{0.375}), Scalar{0.7}, 1e-4);
+    BOOST_CHECK_CLOSE(Law::twoPhaseSatKrn(params, Scalar{0.625}), Scalar{0.3}, 1e-4);
 }
