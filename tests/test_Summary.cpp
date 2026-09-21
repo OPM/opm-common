@@ -5310,6 +5310,8 @@ namespace {
         rates.set(data::Rates::opt::gas          , sign * (topRate + 400*sm3_pr_day()));
         rates.set(data::Rates::opt::dissolved_gas, sign * (topRate + 350*sm3_pr_day()));
         rates.set(data::Rates::opt::vaporized_oil, sign *             10*sm3_pr_day() );
+        rates.set(data::Rates::opt::free_gas     , sign *             50*sm3_pr_day() );
+        rates.set(data::Rates::opt::free_oil     , sign * (topRate + 190*sm3_pr_day()));
     }
 
     void fill_density(data::Segment& segment)

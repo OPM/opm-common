@@ -3690,7 +3690,7 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "SODEN", segment_density<Opm::data::SegmentPhaseDensity::Item::Oil> },
     { "SOFR" , srate<rt::oil> },
     { "SOFT" , mul(srate<rt::oil>, duration) },
-    { "SOFRF", sub(srate<rt::oil>, srate<rt::vaporized_oil>) }, // Free oil flow
+    { "SOFRF", srate<rt::free_oil> },                           // Free oil flow
     { "SOFRS", srate<rt::vaporized_oil> },                      // Solution oil flow
     { "SOFV" , segment_flow_velocity<Opm::data::SegmentPhaseQuantity::Item::Oil> },
     { "SOHF" , segment_holdup_fraction<Opm::data::SegmentPhaseQuantity::Item::Oil> },
@@ -3698,7 +3698,7 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "SGDEN", segment_density<Opm::data::SegmentPhaseDensity::Item::Gas> },
     { "SGFR" , srate<rt::gas> },
     { "SGFT" , mul(srate<rt::gas>, duration) },
-    { "SGFRF", sub(srate<rt::gas>, srate<rt::dissolved_gas>) }, // Free gas flow
+    { "SGFRF", srate<rt::free_gas> },                           // Free gas flow
     { "SGFRS", srate<rt::dissolved_gas> },                      // Solution gas flow
     { "SGFV" , segment_flow_velocity<Opm::data::SegmentPhaseQuantity::Item::Gas> },
     { "SGHF" , segment_holdup_fraction<Opm::data::SegmentPhaseQuantity::Item::Gas> },
