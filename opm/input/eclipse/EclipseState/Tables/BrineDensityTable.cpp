@@ -23,6 +23,8 @@
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
 
+#include <opm/input/eclipse/Parser/ParserKeywords/B.hpp>
+
 #include <vector>
 
 namespace Opm {
@@ -36,7 +38,8 @@ namespace Opm {
 
         void BrineDensityTable::init(const Opm::DeckRecord& record )
         {
-            m_tableValues = record.getItem("BRINE_DENSITY").getSIDoubleData();
+            using Kw = ParserKeywords::BDENSITY;
+            m_tableValues = record.getItem<Kw::BRINE_DENSITY>().getSIDoubleData();
         }
 
         const std::vector<double>& BrineDensityTable::getBrineDensityColumn() const

@@ -41,10 +41,12 @@
 #include <opm/input/eclipse/Parser/ParserKeyword.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/A.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/Builtin.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/D.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/L.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/R.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/S.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/T.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/U.hpp>
 #include <opm/input/eclipse/Parser/ParserRecord.hpp>
 
 #include "../../opm/input/eclipse/Parser/raw/RawKeyword.hpp"
@@ -1941,8 +1943,8 @@ BOOST_AUTO_TEST_CASE(ParseRAW_STRING) {
     const auto& udq = deck["UDQ"].back();
     const std::vector<std::string> expected0 = {"'P*X*'"};
     const std::vector<std::string> expected1 = {"'P*X*'", "5*(1", "+", "LOG(WBHP))"};
-    const auto& data0 = RawString::strings( udq.getRecord(0).getItem("DATA").getData<RawString>() );
-    const auto& data1 = RawString::strings( udq.getRecord(1).getItem("DATA").getData<RawString>() );
+    const auto& data0 = RawString::strings( udq.getRecord(0).getItem<ParserKeywords::UDQ::DATA>().getData<RawString>() );
+    const auto& data1 = RawString::strings( udq.getRecord(1).getItem<ParserKeywords::UDQ::DATA>().getData<RawString>() );
     BOOST_CHECK_EQUAL_COLLECTIONS( data0.begin(), data0.end(), expected0.begin(), expected0.end());
     BOOST_CHECK_EQUAL_COLLECTIONS( data1.begin(), data1.end(), expected1.begin(), expected1.end());
 
@@ -2262,9 +2264,9 @@ DIMENS
     // The variadic item must not have swallowed the keyword that follows.
     BOOST_REQUIRE(deck.hasKeyword("DIMENS"));
     const auto& dimens = deck["DIMENS"].back().getRecord(0);
-    BOOST_CHECK_EQUAL(dimens.getItem("NX").get<int>(0), 10);
-    BOOST_CHECK_EQUAL(dimens.getItem("NY").get<int>(0), 20);
-    BOOST_CHECK_EQUAL(dimens.getItem("NZ").get<int>(0), 30);
+    BOOST_CHECK_EQUAL(dimens.getItem<ParserKeywords::DIMENS::NX>().get<int>(0), 10);
+    BOOST_CHECK_EQUAL(dimens.getItem<ParserKeywords::DIMENS::NY>().get<int>(0), 20);
+    BOOST_CHECK_EQUAL(dimens.getItem<ParserKeywords::DIMENS::NZ>().get<int>(0), 30);
 }
 
 BOOST_AUTO_TEST_CASE(ParseDoubleRecords) {

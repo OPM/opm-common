@@ -23,6 +23,8 @@
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
 
+#include <opm/input/eclipse/Parser/ParserKeywords/R.hpp>
+
 #include <vector>
 #include <cstddef>
 
@@ -44,8 +46,9 @@ namespace Opm {
 
         void Rock2dtrTable::init(const DeckRecord& record, std::size_t /* tableIdx */)
         {
-            m_pressureValues.push_back(record.getItem("PRESSURE").getSIDoubleData()[0]);
-            m_transMultValues.push_back(record.getItem("TRANSMULT").getSIDoubleData());
+            using Kw = ParserKeywords::ROCK2DTR;
+            m_pressureValues.push_back(record.getItem<Kw::PRESSURE>().getSIDoubleData()[0]);
+            m_transMultValues.push_back(record.getItem<Kw::TRANSMULT>().getSIDoubleData());
         }
 
         std::size_t Rock2dtrTable::size() const

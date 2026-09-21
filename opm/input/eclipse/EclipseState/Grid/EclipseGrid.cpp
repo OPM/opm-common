@@ -627,14 +627,15 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
 
     void EclipseGrid::initBinaryGrid(const Deck& deck)
     {
+        using Kw = ParserKeywords::GDFILE;
         const auto& gdfile = deck["GDFILE"].back().getRecord(0);
 
         const auto formatted = EclIO::EclFile::Formatted {
-            gdfile.getItem("formatted").getTrimmedString(0).front() == 'F'
+            gdfile.getItem<Kw::formatted>().getTrimmedString(0).front() == 'F'
         };
 
         auto filename = deck
-            .makeDeckPath(gdfile.getItem("filename").getTrimmedString(0));
+            .makeDeckPath(gdfile.getItem<Kw::filename>().getTrimmedString(0));
 
         std::unique_ptr<EclIO::EclFile> egridfile{};
 

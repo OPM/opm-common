@@ -1735,6 +1735,8 @@ bool Well::handleCECON(const DeckRecord&      record,
 
 bool Well::handleCOMPLUMP(const DeckRecord& record)
 {
+    using Kw = ParserKeywords::COMPLUMP;
+
     auto match = [&record](const Connection &c) -> bool {
         if (!match_eq(c.getI(), record, "I" , -1)) { return false; }
         if (!match_eq(c.getJ(), record, "J" , -1)) { return false; }
@@ -1747,7 +1749,7 @@ bool Well::handleCOMPLUMP(const DeckRecord& record)
     auto new_connections = std::make_shared<WellConnections>
         (this->connections->ordering(), this->headI, this->headJ);
 
-    const int complnum = record.getItem("N").get<int>(0);
+    const int complnum = record.getItem<Kw::N>().get<int>(0);
     if (complnum <= 0) {
         throw std::invalid_argument {
             fmt::format("Completion number must be >= 1. COMPLNUM={} is invalid", complnum)
@@ -1771,6 +1773,8 @@ bool Well::handleCOMPLUMP(const DeckRecord& record)
 
 bool Well::handleWPIMULT(const DeckRecord& record)
 {
+    using Kw = ParserKeywords::WPIMULT;
+
     auto match = [&record](const Connection &c) -> bool {
         if (!match_ge(c.complnum(), record, "FIRST")) { return false; }
         if (!match_le(c.complnum(), record, "LAST"))  { return false; }
@@ -1784,7 +1788,7 @@ bool Well::handleWPIMULT(const DeckRecord& record)
     auto new_connections = std::make_shared<WellConnections>
         (this->connections->ordering(), this->headI, this->headJ);
 
-    const auto wellPi = record.getItem("WELLPI").get<double>(0);
+    const auto wellPi = record.getItem<Kw::WELLPI>().get<double>(0);
 
     for (const auto& connection : *this->connections) {
         if (! match(connection)) {
