@@ -42,8 +42,13 @@ namespace Opm {
     /// Internally only the depth, mole-fraction, and Psat columns are
     /// stored in the underlying SimpleTable (since SimpleTable is
     /// hard-coded to operate on doubles).  The phase flag is a discrete
-    /// label and is therefore stored separately as a `std::vector<int>`
+    /// label and is therefore stored separately as a `std::vector<Phase>`
     /// exposed via `phaseFlag(row)` / `phaseFlags()`.
+    ///
+    /// That member does not survive the serialization a table container
+    /// performs on its tables as SimpleTable, so TableManager lifts COMPVD
+    /// out of the container and serializes it as this type instead.  The
+    /// default constructor exists for that round trip.
     ///
     /// Mole fractions on each row are checked to sum to 1, and the phase
     /// flag is checked to be either 0 or 1.
@@ -53,6 +58,8 @@ namespace Opm {
             Vapor,
             Liquid,
         };
+
+        CompvdTable() = default;
 
         CompvdTable(const DeckItem& item,
                     const int tableID,
@@ -70,6 +77,13 @@ namespace Opm {
         const std::vector<Phase>& phaseFlags() const { return phaseFlags_; }
 
         int numComponents() const { return static_cast<int>(SimpleTable::numColumns()) - 2; }
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            this->SimpleTable::serializeOp(serializer);
+            serializer(phaseFlags_);
+        }
 
     private:
         std::vector<Phase> phaseFlags_;
