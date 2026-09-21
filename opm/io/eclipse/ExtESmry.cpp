@@ -86,7 +86,7 @@ Opm::time_point make_date(const std::vector<int>& datetime) {
 
 namespace Opm { namespace EclIO {
 
-ExtESmry::ExtESmry(const std::string &filename, bool loadBaseRunData) :
+ExtESmry::ExtESmry(const std::filesystem::path &filename, bool loadBaseRunData) :
     m_inputFileName { filename },
     m_loadBaseRun(loadBaseRunData)
 {
@@ -124,7 +124,7 @@ ExtESmry::ExtESmry(const std::string &filename, bool loadBaseRunData) :
     }
 
     if (n_attempts == 10)
-        OPM_THROW( std::runtime_error, fmt::format("when opening ESMRY file {}", filename) );
+        OPM_THROW( std::runtime_error, fmt::format("when opening ESMRY file {}", filename.string()) );
 
     m_startdat = std::get<0>(ext_esmry_head);
     m_rstep_offset.push_back(rstep_offset);

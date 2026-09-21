@@ -120,7 +120,7 @@ bool is_well_completion(const std::string& keyword)
 
 namespace Opm::EclIO {
 
-ESmry::ESmry(const std::string &filename, bool loadBaseRunData) :
+ESmry::ESmry(const std::filesystem::path &filename, bool loadBaseRunData) :
     inputFileName { filename },
     summaryNodes { }
 {
@@ -163,7 +163,7 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData) :
 
     // Read data from the summary into local data members.
     {
-        smspecList.emplace_back(smspec_file.string());
+        smspecList.emplace_back(smspec_file);
 
         auto arrays = smspecList.back().getList();
         std::vector<int> vectIndices;
@@ -310,7 +310,7 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData) :
             baseRunFmt = true;
         }
 
-        smspecList.emplace_back(EclFile(rstFile.string()));
+        smspecList.emplace_back(EclFile(rstFile));
 
         auto arrays = smspecList.back().getList();
         std::vector<int> vectIndices;
@@ -1091,7 +1091,7 @@ bool ESmry::make_esmry_file()
     std::filesystem::path smryDataFile = path / rootName;
     smryDataFile.replace_extension(".ESMRY");
 
-    if (Opm::EclIO::fileExists(smryDataFile.generic_string()))
+    if (Opm::EclIO::fileExists(smryDataFile))
     {
         return false;
 
@@ -1131,7 +1131,7 @@ bool ESmry::make_esmry_file()
             std::ranges::transform(keyword, std::back_inserter(units),
                                    [this](const auto& key) { return kwunits.at(key); });
 
-            Opm::EclIO::EclOutput outFile(smryDataFile.generic_string(), false, std::ios::out);
+            Opm::EclIO::EclOutput outFile(smryDataFile, false, std::ios::out);
 
             outFile.write<int>("START", start_date_vect);
 

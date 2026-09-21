@@ -24,7 +24,7 @@
 
 namespace Opm::EclIO {
 
-EInit::EInit(const std::string &filename) : EclFile(filename)
+EInit::EInit(const std::filesystem::path &filename) : EclFile(filename)
 {
     std::string lgrname;
 

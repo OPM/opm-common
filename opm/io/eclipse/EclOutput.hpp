@@ -22,6 +22,7 @@
 #include <opm/io/eclipse/PaddedOutputString.hpp>
 
 #include <cstdint>
+#include <filesystem>
 #include <fstream>
 #include <ios>
 #include <stdexcept>
@@ -39,7 +40,7 @@ namespace Opm::EclIO {
 class EclOutput
 {
 public:
-    EclOutput(const std::string&            filename,
+    EclOutput(const std::filesystem::path&  filename,
               const bool                    formatted,
               const std::ios_base::openmode mode = std::ios::out);
 

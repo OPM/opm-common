@@ -43,7 +43,7 @@ void EclFile::load(bool preload) {
     }
 
     if (!fileH)
-        throw std::runtime_error(fmt::format("Can not open EclFile: {}", this->inputFilename));
+        throw std::runtime_error(fmt::format("Can not open EclFile: {}", this->inputFilename.string()));
 
     int n = 0;
     while (!isEOF(&fileH)) {
@@ -60,7 +60,7 @@ void EclFile::load(bool preload) {
             }
         } catch (const std::exception& e){
             OPM_THROW(std::runtime_error,
-                fmt::format("Unable to read array header from {}: {} \nPlease check if the file is corrupt!", this->inputFilename, e.what()));
+                fmt::format("Unable to read array header from {}: {} \nPlease check if the file is corrupt!", this->inputFilename.string(), e.what()));
         }
 
         array_size.push_back(num);
@@ -97,7 +97,7 @@ void EclFile::load(bool preload) {
 }
 
 
-EclFile::EclFile(const std::string& filename, EclFile::Formatted fmt, bool preload) :
+EclFile::EclFile(const std::filesystem::path& filename, EclFile::Formatted fmt, bool preload) :
     formatted(fmt.value),
     inputFilename(filename)
 {
@@ -105,11 +105,11 @@ EclFile::EclFile(const std::string& filename, EclFile::Formatted fmt, bool prelo
 }
 
 
-EclFile::EclFile(const std::string& filename, bool preload) :
+EclFile::EclFile(const std::filesystem::path& filename, bool preload) :
     inputFilename(filename)
 {
     if (!fileExists(filename))
-        throw std::runtime_error(fmt::format("Can not open EclFile: {}", filename));
+        throw std::runtime_error(fmt::format("Can not open EclFile: {}", filename.string()));
 
     formatted = isFormatted(filename);
     this->load(preload);
@@ -198,7 +198,7 @@ void EclFile::loadData()
         fileH.open(inputFilename, std::ios::in |  std::ios::binary);
 
         if (!fileH) {
-            OPM_THROW(std::runtime_error, fmt::format("Could not open file: '{}'", inputFilename));
+            OPM_THROW(std::runtime_error, fmt::format("Could not open file: '{}'", inputFilename.string()));
         }
 
         for (std::size_t i = 0; i < array_name.size(); i++) {
@@ -241,7 +241,7 @@ void EclFile::loadData(const std::string& name)
         fileH.open(inputFilename, std::ios::in |  std::ios::binary);
 
         if (!fileH) {
-            OPM_THROW(std::runtime_error, fmt::format("Could not open file: '{}'", inputFilename));
+            OPM_THROW(std::runtime_error, fmt::format("Could not open file: '{}'", inputFilename.string()));
         }
 
         for (std::size_t i = 0; i < array_name.size(); i++) {
@@ -282,7 +282,7 @@ void EclFile::loadData(const std::vector<int>& arrIndex)
         fileH.open(inputFilename, std::ios::in |  std::ios::binary);
 
         if (!fileH) {
-            OPM_THROW(std::runtime_error, fmt::format("Could not open file: '{}'", inputFilename));
+            OPM_THROW(std::runtime_error, fmt::format("Could not open file: '{}'", inputFilename.string()));
         }
 
         for (int ind : arrIndex) {
@@ -318,7 +318,7 @@ void EclFile::loadData(int arrIndex)
         fileH.open(inputFilename, std::ios::in |  std::ios::binary);
 
         if (!fileH) {
-            OPM_THROW(std::runtime_error, fmt::format("Could not open file: '{}'", inputFilename));
+            OPM_THROW(std::runtime_error, fmt::format("Could not open file: '{}'", inputFilename.string()));
         }
 
         loadBinaryArray(fileH, arrIndex);
@@ -387,7 +387,7 @@ std::vector<unsigned int> EclFile::get_bin_logi_raw_values(int arrIndex) const
     fileH.open(inputFilename, std::ios::in |  std::ios::binary);
 
     if (!fileH) {
-        OPM_THROW(std::runtime_error, fmt::format("Could not open file: '{}'", inputFilename));
+        OPM_THROW(std::runtime_error, fmt::format("Could not open file: '{}'", inputFilename.string()));
     }
 
     fileH.seekg (ifStreamPos[arrIndex], fileH.beg);
@@ -405,7 +405,7 @@ std::vector<std::string> EclFile::get_fmt_real_raw_str_values(int arrIndex) cons
     std::ifstream inFile(inputFilename);
 
     if (!inFile) {
-        OPM_THROW(std::runtime_error, fmt::format("Could not open file: '{}'", inputFilename));
+        OPM_THROW(std::runtime_error, fmt::format("Could not open file: '{}'", inputFilename.string()));
     }
 
     inFile.seekg(ifStreamPos[arrIndex]);

@@ -24,6 +24,7 @@
 #include <cstddef>
 #include <cstring>
 #include <exception>
+#include <filesystem>
 #include <iterator>
 #include <regex>
 #include <stdexcept>
@@ -32,20 +33,24 @@
 #include <fmt/format.h>
 
 namespace {
-    int seqnumFromSeparateFilename(const std::string& filename)
+    int seqnumFromSeparateFilename(const std::filesystem::path& filename)
     {
+        // A separate restart file ends in .F0001/.X0001 &c.  Match on the
+        // extension: it is ASCII whatever the native character type is.
+        const auto ext = filename.extension().string();
+
         const auto re = std::regex {
-            R"~(\.[FX]([0-9]{4})$)~"
+            R"~(\.[FX]([0-9]{4}))~"
         };
 
         auto match = std::smatch{};
-        if (std::regex_search(filename, match, re)) {
+        if (std::regex_match(ext, match, re)) {
             return std::stoi(match[1]);
         }
 
         throw std::invalid_argument {
             fmt::format("Unable to Determine Report Step Sequence Number "
-                        "From Restart Filename \"{}\"", filename)
+                        "From Restart Filename \"{}\"", filename.string())
         };
     }
 }
@@ -53,7 +58,7 @@ namespace {
 
 namespace Opm::EclIO {
 
-ERst::ERst(const std::string& filename)
+ERst::ERst(const std::filesystem::path& filename)
     : EclFile(filename)
 {
     if (this->hasKey("SEQNUM")) {

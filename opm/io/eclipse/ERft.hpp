@@ -22,6 +22,7 @@
 #include <opm/io/eclipse/EclFile.hpp>
 
 #include <ctime>
+#include <filesystem>
 #include <map>
 #include <set>
 #include <string>
@@ -34,7 +35,7 @@ namespace Opm { namespace EclIO {
 class ERft : public EclFile
 {
 public:
-    explicit ERft(const std::string &filename);
+    explicit ERft(const std::filesystem::path& filename);
 
     using RftDate = std::tuple<int,int,int>;
     template <typename T>
