@@ -544,7 +544,7 @@ BOOST_AUTO_TEST_CASE( MULTISEGMENT_ABS ) {
 
     {
         const auto& rec6 = kw.getRecord(4);
-        const int segment1 = rec6.getItem<ParserKeywords::WELSEGS::SEGMENT2>().get< int >(0);
+        const int segment1 = rec6.getItem<ParserKeywords::WELSEGS::SEGMENT1>().get< int >(0);
         const int segment2 = rec6.getItem<ParserKeywords::WELSEGS::SEGMENT2>().get< int >(0);
         BOOST_CHECK_EQUAL( 6, segment1 );
         BOOST_CHECK_EQUAL( 6, segment2 );
@@ -564,7 +564,7 @@ BOOST_AUTO_TEST_CASE( MULTISEGMENT_ABS ) {
 
     {
         const auto& rec7 = kw.getRecord(6);
-        const int segment1 = rec7.getItem<ParserKeywords::WELSEGS::SEGMENT2>().get< int >(0);
+        const int segment1 = rec7.getItem<ParserKeywords::WELSEGS::SEGMENT1>().get< int >(0);
         const int segment2 = rec7.getItem<ParserKeywords::WELSEGS::SEGMENT2>().get< int >(0);
         BOOST_CHECK_EQUAL( 8, segment1 );
         BOOST_CHECK_EQUAL( 8, segment2 );
