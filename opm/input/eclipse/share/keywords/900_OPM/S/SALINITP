@@ -1,0 +1,19 @@
+{
+  "name": "SALINITP",
+  "sections": [
+    "PROPS"
+  ],
+  "prohibits": [
+    "SALINITY",
+    "SALTMF",
+    "BRINE"
+  ],
+  "size": {"keyword": "TABDIMS", "item": "NTPVT"},
+  "items": [
+    {
+      "name": "MOLALITY",
+      "value_type": "DOUBLE",
+      "default": 0.0
+    }
+  ]
+}
