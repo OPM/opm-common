@@ -41,6 +41,7 @@
 #include <opm/input/eclipse/Parser/ParserKeyword.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/A.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/Builtin.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/D.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/L.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/R.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/S.hpp>
@@ -2263,9 +2264,9 @@ DIMENS
     // The variadic item must not have swallowed the keyword that follows.
     BOOST_REQUIRE(deck.hasKeyword("DIMENS"));
     const auto& dimens = deck["DIMENS"].back().getRecord(0);
-    BOOST_CHECK_EQUAL(dimens.getItem("NX").get<int>(0), 10);
-    BOOST_CHECK_EQUAL(dimens.getItem("NY").get<int>(0), 20);
-    BOOST_CHECK_EQUAL(dimens.getItem("NZ").get<int>(0), 30);
+    BOOST_CHECK_EQUAL(dimens.getItem<ParserKeywords::DIMENS::NX>().get<int>(0), 10);
+    BOOST_CHECK_EQUAL(dimens.getItem<ParserKeywords::DIMENS::NY>().get<int>(0), 20);
+    BOOST_CHECK_EQUAL(dimens.getItem<ParserKeywords::DIMENS::NZ>().get<int>(0), 30);
 }
 
 BOOST_AUTO_TEST_CASE(ParseDoubleRecords) {

@@ -289,7 +289,7 @@ Well {} specifies {} constraint, but {}. The constraint will be ignored.)",
             // naming the keyword and line the user can act on.
             if (cmode_string.empty()) {
                 const auto wellStatus = WellStatusFromString
-                    (record.getItem("STATUS").getTrimmedString(0));
+                    (record.getItem<Kw::STATUS>().getTrimmedString(0));
 
                 if ((wellStatus == WellStatus::OPEN) &&
                     (this->controlMode == ProducerCMode::CMODE_UNDEFINED))

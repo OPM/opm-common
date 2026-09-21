@@ -291,11 +291,11 @@ namespace Opm {
 
         // Pipe-wall thermal properties for the whole segment set.  Individual
         // segments may override these in their own records.
-        const auto wall_area_top = record1.getItem("TOP_PIPE_WALL_AREA").getSIDouble(0);
+        const auto wall_area_top = record1.getItem<Kw::TOP_PIPE_WALL_AREA>().getSIDouble(0);
         const auto wall_volumetric_heat_capacity_top =
-            record1.getItem("TOP_PIPE_WALL_VOLUMETRIC_HEAT_CAPACITY").getSIDouble(0);
+            record1.getItem<Kw::TOP_PIPE_WALL_VOLUMETRIC_HEAT_CAPACITY>().getSIDouble(0);
         const auto wall_thermal_conductivity_top =
-            record1.getItem("TOP_PIPE_WALL_THERMAL_CONDUCTIVITY").getSIDouble(0);
+            record1.getItem<Kw::TOP_PIPE_WALL_THERMAL_CONDUCTIVITY>().getSIDouble(0);
 
         // The main branch is 1 instead of 0.  The segment number for top
         // segment is also 1.
@@ -406,16 +406,16 @@ namespace Opm {
 
             // Pipe-wall thermal properties default to the values given in
             // record 1 (items 10-12) when not specified for the segment.
-            const auto wall_area = record.getItem("PIPE_WALL_AREA").hasValue(0)
-                ? record.getItem("PIPE_WALL_AREA").getSIDouble(0)
+            const auto wall_area = record.getItem<Kw::PIPE_WALL_AREA>().hasValue(0)
+                ? record.getItem<Kw::PIPE_WALL_AREA>().getSIDouble(0)
                 : wall_area_top;
             const auto wall_volumetric_heat_capacity =
-                record.getItem("PIPE_WALL_VOLUMETRIC_HEAT_CAPACITY").hasValue(0)
-                ? record.getItem("PIPE_WALL_VOLUMETRIC_HEAT_CAPACITY").getSIDouble(0)
+                record.getItem<Kw::PIPE_WALL_VOLUMETRIC_HEAT_CAPACITY>().hasValue(0)
+                ? record.getItem<Kw::PIPE_WALL_VOLUMETRIC_HEAT_CAPACITY>().getSIDouble(0)
                 : wall_volumetric_heat_capacity_top;
             const auto wall_thermal_conductivity =
-                record.getItem("PIPE_WALL_THERMAL_CONDUCTIVITY").hasValue(0)
-                ? record.getItem("PIPE_WALL_THERMAL_CONDUCTIVITY").getSIDouble(0)
+                record.getItem<Kw::PIPE_WALL_THERMAL_CONDUCTIVITY>().hasValue(0)
+                ? record.getItem<Kw::PIPE_WALL_THERMAL_CONDUCTIVITY>().getSIDouble(0)
                 : wall_thermal_conductivity_top;
 
             for (int segment_number = segment1; segment_number <= segment2; ++segment_number) {
