@@ -45,7 +45,7 @@ std::deque<std::string> load(const std::string& fname) {
     std::deque<std::string> lines;
     std::ifstream is(fname.c_str());
     if (!is.good())
-        throw std::invalid_argument("Can not open: " + fname + " for reading");
+        throw std::invalid_argument(fmt::format("Can not open: {} for reading", fname));
 
     std::string line;
     while(std::getline(is, line)) {

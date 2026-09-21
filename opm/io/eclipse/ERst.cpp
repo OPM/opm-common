@@ -44,8 +44,8 @@ namespace {
         }
 
         throw std::invalid_argument {
-            "Unable to Determine Report Step Sequence Number "
-            "From Restart Filename \"" + filename + '"'
+            fmt::format("Unable to Determine Report Step Sequence Number "
+                        "From Restart Filename \"{}\"", filename)
         };
     }
 }

@@ -540,7 +540,7 @@ std::vector<float> EGrid::  get_zcorn_from_disk(int layer, bool bottom)
     fileH.open(inputFileName, std::ios::in |  std::ios::binary);
 
     if (!fileH)
-        throw std::runtime_error("Can not open EGrid file" + this->inputFilename);
+        throw std::runtime_error(fmt::format("Can not open EGrid file {}", this->inputFilename));
 
     std::string arrName(8,' ');
     eclArrType arrType;

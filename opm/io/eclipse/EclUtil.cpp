@@ -103,8 +103,8 @@ bool Opm::EclIO::isFormatted(const std::string& filename)
     const auto& ext = pth.extension();
     if (ext.empty()) {
         OPM_THROW(std::invalid_argument,
-                  "Purported ECLIPSE Filename '" +
-                  filename + "' does not contain extension");
+                  fmt::format("Purported ECLIPSE Filename '{}' "
+                              "does not contain extension", filename));
     }
 
     return (ext != ".GRID")

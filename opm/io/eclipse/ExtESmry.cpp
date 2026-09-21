@@ -37,6 +37,8 @@
 #include <string>
 #include <thread>
 
+#include <fmt/format.h>
+
 namespace {
 
 Opm::time_point make_date(const std::vector<int>& datetime) {
@@ -122,7 +124,7 @@ ExtESmry::ExtESmry(const std::string &filename, bool loadBaseRunData) :
     }
 
     if (n_attempts == 10)
-        OPM_THROW( std::runtime_error, "when opening ESMRY file " + filename );
+        OPM_THROW( std::runtime_error, fmt::format("when opening ESMRY file {}", filename) );
 
     m_startdat = std::get<0>(ext_esmry_head);
     m_rstep_offset.push_back(rstep_offset);
@@ -170,7 +172,7 @@ ExtESmry::ExtESmry(const std::string &filename, bool loadBaseRunData) :
             m_esmry_files.push_back(rstESmryFile);
 
             if (!open_esmry(rstESmryFile, ext_esmry_head, rstep_offset))
-                OPM_THROW( std::runtime_error, "when opening ESMRY file" + rstESmryFile.string() );
+                OPM_THROW( std::runtime_error, fmt::format("when opening ESMRY file {}", rstESmryFile.string()) );
 
             m_rstep_offset.push_back(rstep_offset);
 
@@ -278,7 +280,7 @@ bool ExtESmry::open_esmry(const std::filesystem::path& inputFileName, ExtSmryHea
     }
 
     if ((arrName != "START   ") or (arrType != Opm::EclIO::INTE))
-        OPM_THROW(std::invalid_argument, "reading start, invalid esmry file " + inputFileName.string() );
+        OPM_THROW(std::invalid_argument, fmt::format("reading start, invalid esmry file {}", inputFileName.string()));
 
 
     try {
@@ -319,7 +321,7 @@ bool ExtESmry::open_esmry(const std::filesystem::path& inputFileName, ExtSmryHea
     }
 
     if (arrName != "KEYCHECK")
-        OPM_THROW(std::invalid_argument, "reading keycheck, invalid esmry file " + inputFileName.string() );
+        OPM_THROW(std::invalid_argument, fmt::format("reading keycheck, invalid esmry file {}", inputFileName.string()));
 
     std::vector<std::string> keywords;
 
@@ -339,7 +341,7 @@ bool ExtESmry::open_esmry(const std::filesystem::path& inputFileName, ExtSmryHea
     }
 
     if (arrName != "UNITS   ")
-        OPM_THROW(std::invalid_argument, "reading UNITS, invalid esmry file " + inputFileName.string() );
+        OPM_THROW(std::invalid_argument, fmt::format("reading UNITS, invalid esmry file {}", inputFileName.string()));
 
     std::vector<std::string> units;
 
@@ -351,7 +353,7 @@ bool ExtESmry::open_esmry(const std::filesystem::path& inputFileName, ExtSmryHea
     }
 
     if (keywords.size() != units.size())
-        OPM_THROW( std::runtime_error, "invalid ESMRY file " + inputFileName.string() + ". Size of UNITS not equal size of KEYCHECK");
+        OPM_THROW( std::runtime_error, fmt::format("invalid ESMRY file {}. Size of UNITS not equal size of KEYCHECK", inputFileName.string()));
 
     rstep_offset = static_cast<std::uint64_t>(fileH.tellg());
 
@@ -363,7 +365,7 @@ bool ExtESmry::open_esmry(const std::filesystem::path& inputFileName, ExtSmryHea
     }
 
     if ((arrName != "RSTEP   ") or (arrType != Opm::EclIO::INTE))
-        OPM_THROW(std::invalid_argument, "Reading RSTEP, invalid esmry file " + inputFileName.string() );
+        OPM_THROW(std::invalid_argument, fmt::format("Reading RSTEP, invalid esmry file {}", inputFileName.string()));
 
     std::vector<int> rstep;
 
@@ -382,7 +384,7 @@ bool ExtESmry::open_esmry(const std::filesystem::path& inputFileName, ExtSmryHea
     }
 
     if ((arrName != "TSTEP   ") or (arrType != Opm::EclIO::INTE))
-        OPM_THROW(std::invalid_argument, "reading TSTEP, invalid esmry file " + inputFileName.string() );
+        OPM_THROW(std::invalid_argument, fmt::format("reading TSTEP, invalid esmry file {}", inputFileName.string()));
 
     std::vector<int> tstep;
 
@@ -543,7 +545,7 @@ void ExtESmry::loadData(const std::vector<std::string>& stringVect)
 
         if (n_attempts == 10){
             OPM_THROW(std::runtime_error,
-                      "when loading data from ESMRY file" + m_esmry_files[ind].string());
+                      fmt::format("when loading data from ESMRY file {}", m_esmry_files[ind].string()));
         }
 
         ind--;

@@ -272,7 +272,7 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData) :
         if ((rstRootN.string() != "") && (loadBaseRunData)) {
 
             if (! std::filesystem::exists(pathRstFile))
-                OPM_THROW(std::runtime_error, "path to restart file not found, '" + pathRstFile.string() + "'");
+                OPM_THROW(std::runtime_error, fmt::format("path to restart file not found, '{}'", pathRstFile.string()));
 
             auto abs_rst_file = std::filesystem::canonical(pathRstFile) / rstRootN;
             std::filesystem::path rel_path;
