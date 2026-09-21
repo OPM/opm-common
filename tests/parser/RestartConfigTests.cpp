@@ -1665,3 +1665,29 @@ END
                             "properties for report step 5");
     }
 }
+
+BOOST_AUTO_TEST_CASE(RPTRST_TRACT) {
+
+    const std::string deckData = R"(
+SOLUTION
+RPTRST
+  TRACT TRACT- /
+SCHEDULE
+DATES             -- 1
+ 10  OCT 2008 /
+/
+)";
+
+    auto sched = make_schedule(deckData);
+
+    BOOST_CHECK(  sched.write_rst_file( 0 ) );
+    BOOST_CHECK( !sched.write_rst_file( 1 ) );
+
+    const auto expected = std::map<std::string, int> {
+        { "TRACT",  1 },
+        { "TRACT-", 1 },
+    };
+
+    BOOST_CHECK( sched.rst_keywords( 0 ) == expected );
+    BOOST_CHECK( sched.rst_keywords( 1 ) == expected );
+}
