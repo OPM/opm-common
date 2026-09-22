@@ -449,7 +449,7 @@ void FileDeck::dump_inline() const
 
 std::string
 FileDeck::dump_block(const FileDeck::Block& block,
-                     const std::string& output_dir,
+                     const std::filesystem::path& output_dir,
                      const std::optional<std::string>& data_file,
                      FileDeck::DumpContext& context) const
 {
@@ -465,7 +465,7 @@ FileDeck::dump_block(const FileDeck::Block& block,
 
     fs::path output_file;
     if (data_file.has_value()) {
-        output_file = fs::path(output_dir) / data_file.value();
+        output_file = output_dir / data_file.value();
     }
     else {
         // Should ideally use fs::relative()
@@ -485,7 +485,7 @@ FileDeck::dump_block(const FileDeck::Block& block,
 
 void FileDeck::include_block(const std::string& input_file,
                              const std::string& output_file,
-                             const std::string& output_dir,
+                             const std::filesystem::path& output_dir,
                              FileDeck::DumpContext& context) const
 {
     const auto input_root = fs::canonical(this->input_directory);
@@ -529,7 +529,7 @@ void FileDeck::include_block(const std::string& input_file,
     }
 }
 
-void FileDeck::dump(const std::string& output_dir,
+void FileDeck::dump(const std::filesystem::path& output_dir,
                     const std::string& fname,
                     const OutputMode mode) const
 {
@@ -537,10 +537,8 @@ void FileDeck::dump(const std::string& output_dir,
         fs::create_directories(output_dir);
     }
 
-    const auto output_cwd = fs::path(output_dir);
-
     if (mode == OutputMode::INLINE) {
-        std::ofstream os(output_cwd / fname);
+        std::ofstream os(output_dir / fname);
         this->dump(os);
         return;
     }
@@ -576,7 +574,7 @@ void FileDeck::dump(const std::string& output_dir,
                 // earlier occurrence's keywords.
                 auto rel_path = fs::proximate(block.fname, this->input_directory);
                 rel_path += fmt::format(".{}", block_index);
-                auto output_file = fs::path(output_dir) / rel_path;
+                auto output_file = output_dir / rel_path;
                 touch_file(output_file);
                 output_file = fs::canonical(output_file);
 
@@ -599,13 +597,13 @@ void FileDeck::dump(const std::string& output_dir,
     }
 
     if (mode == OutputMode::SHARE) {
-       std::ofstream stream{output_cwd / fname};
+       std::ofstream stream{output_dir / fname};
        this->dump_shared(stream, output_dir);
     }
 }
 
 void FileDeck::dump_shared(std::ostream& stream,
-                           const std::string& output_dir) const
+                           const std::filesystem::path& output_dir) const
 {
     for (std::size_t block_index = 0; block_index < this->blocks.size(); ++block_index) {
         const auto& block = this->blocks[block_index];
@@ -626,7 +624,7 @@ void FileDeck::dump_shared(std::ostream& stream,
     }
 }
 
-void FileDeck::dump_stdout(const std::string& output_dir,
+void FileDeck::dump_stdout(const std::filesystem::path& output_dir,
                            const OutputMode mode) const
 {
     if (mode == OutputMode::COPY) {

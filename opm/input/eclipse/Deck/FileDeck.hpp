@@ -87,8 +87,8 @@ public:
     void erase(const Index& begin, const Index& end);
     void insert(const Index& index, const DeckKeyword& keyword);
 
-    void dump_stdout(const std::string& output_dir, OutputMode mode) const;
-    void dump(const std::string& dir, const std::string& fname, OutputMode mode) const;
+    void dump_stdout(const std::filesystem::path& output_dir, OutputMode mode) const;
+    void dump(const std::filesystem::path& dir, const std::string& fname, OutputMode mode) const;
     const DeckKeyword& operator[](const Index& index) const;
     Index start() const;
     Index stop() const;
@@ -148,17 +148,17 @@ private:
                            std::size_t keyword_index) const;
 
     void dump(std::ostream& os) const;
-    void dump_shared(std::ostream& stream, const std::string& output_dir) const;
+    void dump_shared(std::ostream& stream, const std::filesystem::path& output_dir) const;
     void dump_inline() const;
 
     std::string dump_block(const Block& block,
-                           const std::string& dir,
+                           const std::filesystem::path& dir,
                            const std::optional<std::string>& fname,
                            DumpContext& context) const;
 
     void include_block(const std::string& source_file,
                        const std::string& target_file,
-                       const std::string& dir,
+                       const std::filesystem::path& dir,
                        DumpContext& context) const;
 };
 

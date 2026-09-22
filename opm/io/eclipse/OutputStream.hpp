@@ -27,6 +27,7 @@
 
 #include <array>
 #include <chrono>
+#include <filesystem>
 #include <ios>
 #include <memory>
 #include <optional>
@@ -48,7 +49,7 @@ namespace Opm { namespace EclIO { namespace OutputStream {
     struct ResultSet
     {
         /// Output directory.  Commonly "." or location of run's .DATA file.
-        std::string outputDir;
+        std::filesystem::path outputDir;
 
         /// Base name of simulation run.
         std::string baseName;

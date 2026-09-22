@@ -988,6 +988,6 @@ Opm::EclIO::OutputStream::outputFileName(const ResultSet&   rsetDescriptor,
         + "REPLACE"
     }.replace_extension(ext);
 
-    return (fs::path { rsetDescriptor.outputDir } / fname)
+    return (rsetDescriptor.outputDir / fname)
         .generic_string();
 }
