@@ -42,24 +42,24 @@ namespace Opm {
                                const std::filesystem::path& filename);
 
         void updateBuiltInHeader(const KeywordLoader& loader,
-                                 const std::string& headerBuildPath,
-                                 const std::string& headerPath,
-                                 const std::string& sourcePath) const;
+                                 const std::filesystem::path& headerBuildPath,
+                                 const std::filesystem::path& headerPath,
+                                 const std::filesystem::path& sourcePath) const;
 
         void updateInitSource(const KeywordLoader& loader,
-                              const std::string& sourceFile,
-                              const std::string& sourcePath) const;
+                              const std::filesystem::path& sourceFile,
+                              const std::filesystem::path& sourcePath) const;
 
         void updateKeywordSource(const KeywordLoader& loader,
-                                 const std::string& sourceFile) const;
+                                 const std::filesystem::path& sourcePath) const;
 
         void updatePybindSource(const KeywordLoader& loader,
-                                const std::string& sourceFile) const;
+                                const std::filesystem::path& sourceFile) const;
         void updateHeader(const KeywordLoader& loader,
-                          const std::string& headerBuildPath,
-                          const std::string& headerPath) const;
+                          const std::filesystem::path& headerBuildPath,
+                          const std::filesystem::path& headerPath) const;
 
-        void updateTest(const KeywordLoader& loader, const std::string& testFile) const;
+        void updateTest(const KeywordLoader& loader, const std::filesystem::path& testFile) const;
 
     private:
         bool m_verbose;
