@@ -551,6 +551,10 @@ private:
         const auto fr = scaled.krwr();
         const auto fm = scaled.maxKrw();
 
+        if (SwScaled >= sm) {
+            return fm;
+        }
+
         if (! (SwScaled > sr)) {
             // Pure vertical scaling in left interval ([SWL, SR])
             return unscaledKrw * (fr / fdisp);
@@ -628,6 +632,10 @@ private:
         // Note logic here.  Krn is a decreasing function of Sw (dKrn/dSw <=
         // 0) so the roles of left and right intervals are reversed viz
         // unscaledToScaledKrw_().
+
+        if (SwScaled <= sl) {
+            return fm;
+        }
 
         if (! (SwScaled < sr)) {
             // Pure vertical scaling in right-hand interval ([SR, SWU])
