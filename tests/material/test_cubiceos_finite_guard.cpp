@@ -42,6 +42,7 @@
 
 #include <opm/common/Exceptions.hpp>
 
+#include <opm/material/common/PolynomialUtils.hpp>
 #include <opm/material/components/C1.hpp>
 #include <opm/material/components/N2.hpp>
 #include <opm/material/constraintsolvers/PTFlash.hpp>
@@ -55,10 +56,14 @@
 
 #include <opm/input/eclipse/EclipseState/Compositional/CompositionalConfig.hpp>
 
+#include <array>
 #include <cmath>
 #include <limits>
 #include <stdexcept>
 #include <string_view>
+#include <type_traits>
+#include <utility>
+#include <vector>
 
 namespace Opm {
 
@@ -253,6 +258,53 @@ struct ReportedEosParams
     }
 };
 
+// Coefficients of the Peng-Robinson cubic in Z, highest power first.
+template <class Value>
+std::array<Value, 4>
+pengRobinsonCubic(const Value& A, const Value& B)
+{
+    const Scalar m1 = 1 + std::sqrt(2.0);
+    const Scalar m2 = 1 - std::sqrt(2.0);
+    return {Value(1.0),
+            (m1 + m2 - 1) * B - 1,
+            A + m1 * m2 * B * B - (m1 + m2) * B * (B + 1),
+            -A * B - m1 * m2 * B * B * (B + 1)};
+}
+
+// Whether every root cubicRoots() returns is finite, in value and
+// derivatives, and solves the cubic to within rounding.
+template <class Value>
+bool
+cubicRootsAreSound(const Value& A, const Value& B)
+{
+    const auto c = pengRobinsonCubic(A, B);
+    Value Z[3] = {0.0, 0.0, 0.0};
+    const unsigned numRoots = Opm::cubicRoots(Z, c[0], c[1], c[2], c[3]);
+    for (unsigned rootIdx = 0; rootIdx < numRoots; ++rootIdx) {
+        const Scalar z = Opm::getValue(Z[rootIdx]);
+        if (!std::isfinite(z)) {
+            return false;
+        }
+        if constexpr (!std::is_same_v<Value, Scalar>) {
+            for (int varIdx = 0; varIdx < Z[rootIdx].size(); ++varIdx) {
+                if (!std::isfinite(Z[rootIdx].derivative(varIdx))) {
+                    return false;
+                }
+            }
+        }
+        Scalar residual = 0.0;
+        Scalar scale = 0.0;
+        for (const auto& coefficient : c) {
+            residual = residual * z + Opm::getValue(coefficient);
+            scale = scale * std::abs(z) + std::abs(Opm::getValue(coefficient));
+        }
+        if (std::abs(residual) > 1e-8 * scale) {
+            return false;
+        }
+    }
+    return numRoots == 1 || numRoots == 3;
+}
+
 } // anonymous namespace
 
 // A diverged composition update must reach the caller as a catchable
@@ -309,6 +361,46 @@ BOOST_AUTO_TEST_CASE(ReportedHighPressureRoots)
     BOOST_CHECK_GT(Z, params.B(FluidSystem::oilPhaseIdx));
     BOOST_CHECK_CLOSE_FRACTION(Z, 1.66193933, 1e-7);
     BOOST_CHECK_CLOSE_FRACTION(liquidVolume, vapourVolume, 1e-12);
+}
+
+// Where one and three real roots meet, rounding put the acos or acosh
+// argument outside its domain and cubicRoots() returned NaN.
+BOOST_AUTO_TEST_CASE(CubicRootsSoundWhereRootCountChanges)
+{
+    using Eval = Opm::DenseAd::Evaluation<Scalar, 1>;
+    std::vector<std::pair<Scalar, Scalar>> unsound;
+    const auto check = [&unsound](const Scalar A, const Scalar B) {
+        if (!cubicRootsAreSound(A, B) || !cubicRootsAreSound(Eval(A), Eval::createVariable(B, 0))) {
+            unsound.emplace_back(A, B);
+        }
+    };
+
+    check(0.85500000000000009, 0.43664024846283928);
+    const auto numRoots = [](const Scalar A, const Scalar B) {
+        const auto c = pengRobinsonCubic(A, B);
+        Scalar Z[3];
+        return Opm::cubicRoots(Z, c[0], c[1], c[2], c[3]);
+    };
+    for (int i = 0; i < 200; ++i) {
+        const Scalar A = 0.05 + 0.05 * i;
+        Scalar lower = 1e-4;
+        Scalar upper = 3.0;
+        if (numRoots(A, lower) == numRoots(A, upper)) {
+            continue;
+        }
+        for (int iteration = 0; iteration < 100; ++iteration) {
+            const Scalar middle = (lower + upper) / 2;
+            (numRoots(A, middle) == numRoots(A, lower) ? lower : upper) = middle;
+        }
+        for (int step = -50; step <= 50; ++step) {
+            check(A, lower * (1 + step * 1e-15));
+        }
+    }
+
+    const auto first = unsound.empty() ? std::pair<Scalar, Scalar> {} : unsound.front();
+    BOOST_CHECK_MESSAGE(unsound.empty(),
+                        unsound.size() << " cubics with an unsound root, the first at A = "
+                                       << first.first << ", B = " << first.second);
 }
 
 // The supercritical feed is a single vapour under every flash method.
