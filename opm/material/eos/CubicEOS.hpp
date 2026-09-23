@@ -23,9 +23,16 @@
 #ifndef CUBIC_EOS_HPP
 #define CUBIC_EOS_HPP
 
+#include <opm/common/ErrorMacros.hpp>
+#include <opm/common/Exceptions.hpp>
+
 #include <opm/material/Constants.hpp>
 #include <opm/material/common/PolynomialUtils.hpp>
 #include <opm/material/common/Valgrind.hpp>
+
+#include <fmt/format.h>
+
+#include <cmath>
 
 namespace Opm
 {
@@ -186,6 +193,9 @@ public:
 
         // pick correct root
         const Evaluation RT_p = R * T / p;
+        // cubicRoots() returns one or three roots; with one, both phase
+        // labels use it.
+        Evaluation root = Z[0];
         if (numSol == 3) {
             // the EOS has three intersections with the pressure,
             // i.e. the molar volume of gas is the largest one and the
@@ -194,20 +204,26 @@ public:
             // and ln(Z - B) is undefined. The cubic is -(1 + m1)(1 + m2) B^2 < 0
             // at Z = B, so either all three roots exceed B or only Z[2] does;
             // the middle root, which is unstable, is never taken.
-            if (isGasPhase || !(Z[0] > B)) {
-                Vm = max(minMolarVolume, Z[2] * RT_p);
-            } else {
-                Vm = max(minMolarVolume, Z[0] * RT_p);
-            }
+            root = (isGasPhase || !(Z[0] > B)) ? Z[2] : Z[0];
         }
-        else if (numSol == 1) {
-            // Only one EOS root exists, so both phase labels use it.
-            Vm = max(minMolarVolume, Z[0] * RT_p);
-        }
+        Vm = max(minMolarVolume, root * RT_p);
 
         Valgrind::CheckDefined(Vm);
-        assert(std::isfinite(scalarValue(Vm)));
-        assert(Vm > 0);
+        // The floor hides a NaN root behind minMolarVolume for plain scalars.
+        // Throw a catchable NumericalProblem instead of aborting or
+        // continuing with a meaningless volume.
+        if (!std::isfinite(scalarValue(root)) || !std::isfinite(scalarValue(Vm))) {
+            OPM_THROW_NOLOG(
+                NumericalProblem,
+                fmt::format("CubicEOS::computeMolarVolume: non-finite molar volume "
+                            "for phase {} at p = {} and T = {} (Z = {}, A = {}, B = {})",
+                            phaseIdx,
+                            scalarValue(p),
+                            scalarValue(T),
+                            scalarValue(root),
+                            scalarValue(A),
+                            scalarValue(B)));
+        }
         return Vm;
 
     }
