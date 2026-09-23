@@ -2676,6 +2676,29 @@ namespace {
     }
 }
 
+/// Well performance evaluation indicator (WPWE0 .. WPWE7).
+///
+/// Reports the \p Event value that the simulator recorded for this well
+/// during the current time step.  The value is dimensionless.
+template <int Opm::data::WellPerformanceEvents::* Event>
+inline quantity well_performance_event(const fn_args& args)
+{
+    const auto unit = Opm::UnitSystem::measure::identity;
+
+    if (args.schedule_wells.empty()) {
+        // No wells.  Possibly determining pertinent unit of measure
+        // during SMSPEC configuration.
+        return { 0.0, unit };
+    }
+
+    const auto xwPos = args.wells.find(args.schedule_wells.front()->name());
+    if (xwPos == args.wells.end()) {
+        return { 0.0, unit };
+    }
+
+    return { static_cast<double>(xwPos->second.performanceEvents.*Event), unit };
+}
+
 inline quantity well_control_mode( const fn_args& args )
 {
     const auto unit = Opm::UnitSystem::measure::identity;
@@ -3105,6 +3128,16 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "WLPRT", well_control_limit<producer, Opm::data::WellControlLimits::Item::LiquidRate> },
 
     { "WMCTL", well_control_mode },
+
+    // Well performance evaluation indicators
+    { "WPWE0", well_performance_event<&Opm::data::WellPerformanceEvents::drilled> },
+    { "WPWE1", well_performance_event<&Opm::data::WellPerformanceEvents::connsOpened> },
+    { "WPWE2", well_performance_event<&Opm::data::WellPerformanceEvents::connsClosed> },
+    { "WPWE3", well_performance_event<&Opm::data::WellPerformanceEvents::closedToBottom> },
+    { "WPWE4", well_performance_event<&Opm::data::WellPerformanceEvents::stopped> },
+    { "WPWE5", well_performance_event<&Opm::data::WellPerformanceEvents::injectorToProducer> },
+    { "WPWE6", well_performance_event<&Opm::data::WellPerformanceEvents::producerToInjector> },
+    { "WPWE7", well_performance_event<&Opm::data::WellPerformanceEvents::shut> },
 
     { "GWIR", rate< rt::wat, injector > },
     { "WGVIR", rate< rt::reservoir_gas, injector >},

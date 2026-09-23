@@ -175,6 +175,26 @@ BOOST_AUTO_TEST_CASE(WTEST_STATE_COMPLETIONS) {
 }
 
 
+BOOST_AUTO_TEST_CASE(WTEST_STATE_COMPLETION_CAUSE) {
+    WellTestState st;
+
+    st.close_completion("WELL_NAME", 1, 100, false);
+    BOOST_CHECK(!st.completion_closed_below_offender("WELL_NAME", 1));
+
+    // A later +CON reach must not erase the original limit violation.
+    st.close_completion("WELL_NAME", 1, 200, true);
+    BOOST_CHECK(!st.completion_closed_below_offender("WELL_NAME", 1));
+    BOOST_CHECK_EQUAL(st.lastCompletionCloseTime("WELL_NAME", 1), 100);
+
+    // Conversely, a direct closure is more specific than an earlier reach.
+    st.close_completion("WELL_NAME", 2, 100, true);
+    BOOST_CHECK(st.completion_closed_below_offender("WELL_NAME", 2));
+    st.close_completion("WELL_NAME", 2, 200, false);
+    BOOST_CHECK(!st.completion_closed_below_offender("WELL_NAME", 2));
+    BOOST_CHECK_EQUAL(st.lastCompletionCloseTime("WELL_NAME", 2), 200);
+}
+
+
 
 
 BOOST_AUTO_TEST_CASE(WTEST_PACK_UNPACK) {
@@ -183,6 +203,7 @@ BOOST_AUTO_TEST_CASE(WTEST_PACK_UNPACK) {
     st.close_completion("WELL_NAME", 2, 100);
     st.close_completion("WELL_NAME", 3, 100);
     st.close_completion("WELLX", 3, 100);
+    st.close_completion("WELLX", 4, 100, true);
 
     st.close_well("WELL_NAME", WellTestConfig::Reason::ECONOMIC, 100);
     st.close_well("WELL_NAME", WellTestConfig::Reason::PHYSICAL, 100);
