@@ -437,6 +437,10 @@ namespace {
         fp.get_int("FIPNUM");
 
         for (const auto& keyword : fp.keys<int>()) {
+            // OPM extensions such as STRESSEQUILNUM exceed the 8-character array name.
+            if (keyword.size() > 8) {
+                continue;
+            }
             initFile.write(keyword, fp.get_int(keyword));
         }
     }
@@ -455,6 +459,9 @@ namespace {
         const auto& fp = es.globalFieldProps();
 
         for (const auto& keyword : fp.keys<int>()) {
+            if (keyword.size() > 8) {
+                continue;
+            }
             auto data = fp.get_int(keyword);
             initFile.write(keyword, VectorUtil::filterArray(data,active_fathers));
         }
