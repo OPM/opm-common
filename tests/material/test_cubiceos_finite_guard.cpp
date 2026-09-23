@@ -267,6 +267,42 @@ struct NonFiniteRootParams : ReportedEosParams
     }
 };
 
+// The reported state of issue #5385 with the floored liquid volume it once
+// got, Z = 0.0026 below B = 1.05.
+template <class Value>
+struct FlooredVolumeState
+{
+    using ValueType = Value;
+    Value pressure(unsigned) const
+    {
+        return ReportedEosState {}.pressure(0);
+    }
+    Value temperature(unsigned) const
+    {
+        return ReportedEosState {}.temperature(0);
+    }
+    Value moleFraction(unsigned, unsigned compIdx) const
+    {
+        return compIdx == 0 ? 1.0 : 0.0;
+    }
+};
+
+struct FlooredVolumeParams : ReportedEosParams
+{
+    Scalar molarVolume(unsigned) const
+    {
+        return 1e-7;
+    }
+    Scalar Bi(unsigned, unsigned) const
+    {
+        return B(0);
+    }
+    Scalar aCache(unsigned, unsigned, unsigned) const
+    {
+        return A(0);
+    }
+};
+
 // Coefficients of the Peng-Robinson cubic in Z, highest power first.
 template <class Value>
 std::array<Value, 4>
@@ -342,6 +378,19 @@ BOOST_AUTO_TEST_CASE(NonFiniteRootThrowsCatchable)
                               scalarState, params, FluidSystem::oilPhaseIdx, isGasPhase),
                           Opm::NumericalProblem);
     }
+}
+
+// Below the covolume ln(Z - B) is NaN. That must throw rather than become
+// the clamp (plain scalars) or pass on as NaN (AD).
+BOOST_AUTO_TEST_CASE(FugacityBelowCovolumeThrowsCatchable)
+{
+    const FlooredVolumeParams params;
+    BOOST_CHECK_THROW(FluidSystem::CubicEOS::computeFugacityCoefficient(
+                          FlooredVolumeState<Scalar> {}, params, FluidSystem::oilPhaseIdx, 0),
+                      Opm::NumericalProblem);
+    BOOST_CHECK_THROW(FluidSystem::CubicEOS::computeFugacityCoefficient(
+                          FlooredVolumeState<Evaluation> {}, params, FluidSystem::oilPhaseIdx, 0),
+                      Opm::NumericalProblem);
 }
 
 // Both smaller roots lie below the covolume here, so the liquid shares the
