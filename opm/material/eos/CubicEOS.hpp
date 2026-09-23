@@ -48,8 +48,8 @@ class CubicEOS
     static constexpr Scalar R = Constants<Scalar>::R;
 
     // The fugacity coefficient is clamped so a vanishing mole fraction still
-    // yields a usable fugacity; the molar volume is floored against a root
-    // that has collapsed.
+    // yields a usable fugacity; the molar volume is floored so that it stays
+    // positive in an unphysical state.
     static constexpr Scalar maxFugacityCoefficient = 1e10;
     static constexpr Scalar minFugacityCoefficient = 1e-10;
     static constexpr Scalar minMolarVolume = 1e-7;
@@ -140,9 +140,9 @@ public:
      *   - \big(A B + m_1 m_2 B^2 (B + 1)\big) = 0. \f]
      *
      * With three real roots the largest belongs to the vapour and the
-     * smallest to the liquid; with one root both phases share it. The
-     * volume \f$V = Z R T / p\f$ is floored so a collapsed root cannot
-     * propagate.
+     * smallest one above the covolume \f$B\f$ to the liquid; with one root
+     * both phases share it. The volume \f$V = Z R T / p\f$ then exceeds the
+     * covolume; its floor only acts in an unphysical state.
      *
      * \param fs The fluid state holding the phase's pressure and temperature.
      * \param params The parameter cache holding \f$A\f$, \f$B\f$, \f$m_1\f$ and \f$m_2\f$.
@@ -189,8 +189,12 @@ public:
         if (numSol == 3) {
             // the EOS has three intersections with the pressure,
             // i.e. the molar volume of gas is the largest one and the
-            // molar volume of liquid is the smallest one
-            if (isGasPhase) {
+            // molar volume of liquid is the smallest one above the covolume.
+            // A root at or below B is not a phase: its volume is unphysical
+            // and ln(Z - B) is undefined. The cubic is -(1 + m1)(1 + m2) B^2 < 0
+            // at Z = B, so either all three roots exceed B or only Z[2] does;
+            // the middle root, which is unstable, is never taken.
+            if (isGasPhase || !(Z[0] > B)) {
                 Vm = max(minMolarVolume, Z[2] * RT_p);
             } else {
                 Vm = max(minMolarVolume, Z[0] * RT_p);

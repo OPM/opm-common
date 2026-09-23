@@ -57,6 +57,7 @@
 
 #include <dune/common/fvector.hh>
 
+#include <array>
 #include <cmath>
 #include <string_view>
 
@@ -245,6 +246,39 @@ BOOST_AUTO_TEST_CASE(NewtonReassessesNonPhysicalRoot)
     auto fs = makeRecordedState();
     BOOST_REQUIRE(PtFlash::solve(fs, PTFlashMethod::Newton, flashTolerance, EOSType::PR));
     BOOST_CHECK_SMALL(Opm::getValue(fs.L()), flashTolerance);
+}
+
+// At 970 bar this feed's cubic has two negative roots, both below the
+// covolume. A floored liquid root clamped every fugacity coefficient, and
+// the Newton flash failed even after its retry.
+BOOST_AUTO_TEST_CASE(DenseLiquidKeepsLiquidLabel)
+{
+    for (const auto method :
+         {PTFlashMethod::Newton, PTFlashMethod::Ssi, PTFlashMethod::SsiNewton}) {
+        BOOST_TEST_CONTEXT("method " << Opm::ptFlashMethodToString(method))
+        {
+            constexpr auto z = std::array {Scalar(0.1), Scalar(0.6), Scalar(0.3)};
+            FluidState fs;
+            for (unsigned phaseIdx = 0; phaseIdx < FluidSystem::numPhases; ++phaseIdx) {
+                fs.setPressure(phaseIdx, 970.e5);
+            }
+            fs.setTemperature(400.0);
+            for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+                fs.setMoleFraction(compIdx, z[compIdx]);
+                fs.setKvalue(compIdx, fs.wilsonK_(compIdx));
+            }
+            fs.setLvalue(-1.0);
+
+            // Check rather than require, so that every method reports.
+            bool singlePhase = false;
+            BOOST_CHECK_NO_THROW(
+                singlePhase = PtFlash::solve(fs, method, flashTolerance, EOSType::PR));
+            BOOST_CHECK(singlePhase);
+            if (singlePhase) {
+                BOOST_CHECK_SMALL(1.0 - Opm::getValue(fs.L()), flashTolerance);
+            }
+        }
+    }
 }
 
 // Out-of-range negative-flash and coincident SSI results both indicate that a
