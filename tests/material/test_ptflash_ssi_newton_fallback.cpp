@@ -46,6 +46,7 @@
 #include <opm/material/components/C10.hpp>
 #include <opm/material/constraintsolvers/PTFlash.hpp>
 #include <opm/material/constraintsolvers/PTFlashMethod.hpp>
+#include <opm/material/constraintsolvers/RachfordRice.hpp>
 #include <opm/material/densead/Evaluation.hpp>
 #include <opm/material/eos/CubicEOS.hpp>
 #include <opm/material/fluidstates/CompositionalFluidState.hpp>
@@ -251,6 +252,30 @@ public:
     }
 };
 
+//! Test adapter with liquid fugacity coefficients at the EoS clamp and an
+//! ideal vapour, as a floored liquid root once produced. Substitution then
+//! collapses the trial phase at the vapour endpoint.
+template <class Scalar>
+class ClampedLiquidTestFluidSystem : public C1C10TestFluidSystem<Scalar>
+{
+    using Parent = C1C10TestFluidSystem<Scalar>;
+
+public:
+    template <class ValueType>
+    using ParameterCache = typename Parent::template ParameterCache<ValueType>;
+
+    template <class FluidState,
+              class LhsEval = typename FluidState::ValueType,
+              class ParamCacheEval = LhsEval>
+    static LhsEval fugacityCoefficient(const FluidState&,
+                                       const ParameterCache<ParamCacheEval>&,
+                                       unsigned phaseIdx,
+                                       unsigned)
+    {
+        return LhsEval(phaseIdx == Parent::oilPhaseIdx ? 1e10 : 1.0);
+    }
+};
+
 } // namespace Opm
 
 using Scalar = double;
@@ -268,6 +293,12 @@ using SingularComponentVector = Dune::FieldVector<Scalar, SingularFluidSystem::n
 using CoincidentFluidSystem = Opm::CoincidentPhasesTestFluidSystem<Scalar>;
 using CoincidentFluidState = Opm::CompositionalFluidState<Scalar, CoincidentFluidSystem>;
 using CoincidentComponentVector = Dune::FieldVector<Scalar, CoincidentFluidSystem::numComponents>;
+
+class ExposedPtFlash : public PtFlash
+{
+public:
+    using PtFlash::flash_2ph;
+};
 
 class SingularPtFlash : public Opm::PTFlash<Scalar, SingularFluidSystem>
 {
@@ -440,6 +471,91 @@ BOOST_AUTO_TEST_CASE(SingularJacobianFallsBackToSsi)
                 std::abs(hybridState.moleFraction(phaseIdx, compIdx)
                          - ssiState.moleFraction(phaseIdx, compIdx)),
                 1.e-8);
+        }
+    }
+}
+
+// A cold start whose substitution collapses the trial phase at a Rachford-Rice
+// endpoint has found a single phase, although stability analysis reported an
+// instability. Unlike a coincident two-phase split it must not be rejected.
+BOOST_AUTO_TEST_CASE(ColdStartCollapsedEndpointIsSinglePhase)
+{
+    using ClampedFluidSystem = Opm::ClampedLiquidTestFluidSystem<Scalar>;
+    using ClampedFluidState = Opm::CompositionalFluidState<Scalar, ClampedFluidSystem>;
+    using ClampedPtFlash = Opm::PTFlash<Scalar, ClampedFluidSystem>;
+
+    for (const auto method : {PTFlashMethod::Ssi, PTFlashMethod::SsiNewton}) {
+        BOOST_TEST_CONTEXT("method " << static_cast<int>(method))
+        {
+            ClampedFluidState fs;
+            for (unsigned phaseIdx = 0; phaseIdx < ClampedFluidSystem::numPhases; ++phaseIdx) {
+                fs.setPressure(phaseIdx, 1.e5);
+            }
+            fs.setTemperature(300.0);
+            fs.setMoleFraction(0, 0.5);
+            fs.setMoleFraction(1, 0.5);
+            for (int compIdx = 0; compIdx < ClampedFluidSystem::numComponents; ++compIdx) {
+                fs.setKvalue(compIdx, fs.wilsonK_(compIdx));
+            }
+            fs.setLvalue(-1.0);
+
+            BOOST_REQUIRE(ClampedPtFlash::flash_solve_scalar_(fs, method, 1.e-8, EOSType::PR));
+            BOOST_CHECK_EQUAL(fs.L(), 0.0);
+        }
+    }
+}
+
+// A Rachford-Rice rejection inside substitution must keep the last accepted
+// ratios and report the rejection rather than an iteration limit.
+BOOST_AUTO_TEST_CASE(RejectedSubstitutionIterateKeepsRatios)
+{
+    using ScalarFluidState = Opm::CompositionalFluidState<Scalar, FluidSystem>;
+    using ComponentVector = Dune::FieldVector<Scalar, FluidSystem::numComponents>;
+
+    ScalarFluidState fs;
+    for (unsigned phaseIdx = 0; phaseIdx < FluidSystem::numPhases; ++phaseIdx) {
+        fs.setPressure(phaseIdx, 50e5);
+    }
+    fs.setTemperature(295.0);
+    const ComponentVector z {0.5, 0.5};
+    ComponentVector K {4.0, 4.0};
+    Scalar L = Opm::RachfordRice::solve(K, z);
+
+    BOOST_CHECK_EXCEPTION(
+        ExposedPtFlash::flash_2ph(z, PTFlashMethod::Ssi, K, L, fs, 1.e-8, EOSType::PR),
+        Opm::NumericalProblem,
+        [](const Opm::NumericalProblem& error) {
+            return std::string {error.what()}.find("Rachford-Rice rejected") != std::string::npos;
+        });
+    BOOST_CHECK_EQUAL(K[0], 4.0);
+    BOOST_CHECK_EQUAL(K[1], 4.0);
+}
+
+// Newton has no split to refine from an endpoint estimate, and started there
+// it wanders to its iteration limit. The hybrid method keeps substituting
+// instead and must reach the plain SSI result.
+BOOST_AUTO_TEST_CASE(EndpointHybridContinuesSubstitution)
+{
+    const auto z = makeOverallComposition();
+    const SingularComponentVector initialK {0.8, 0.4};
+
+    auto ssiState = makeSingularState();
+    auto ssiK = initialK;
+    Scalar ssiL = 1.0;
+    SingularPtFlash::flash_2ph(z, PTFlashMethod::Ssi, ssiK, ssiL, ssiState, 1.e-8, EOSType::PR);
+
+    auto hybridState = makeSingularState();
+    auto hybridK = initialK;
+    Scalar hybridL = 1.0;
+    SingularFluidSystem::adFugacityCalls = 0;
+    BOOST_REQUIRE_NO_THROW(SingularPtFlash::flash_2ph(
+        z, PTFlashMethod::SsiNewton, hybridK, hybridL, hybridState, 1.e-8, EOSType::PR));
+    BOOST_CHECK_EQUAL(SingularFluidSystem::adFugacityCalls, 0);
+    BOOST_CHECK_SMALL(hybridL - ssiL, 1.e-8);
+    for (unsigned phase = 0; phase < SingularFluidSystem::numPhases; ++phase) {
+        for (int comp = 0; comp < SingularFluidSystem::numComponents; ++comp) {
+            BOOST_CHECK_SMALL(
+                hybridState.moleFraction(phase, comp) - ssiState.moleFraction(phase, comp), 1.e-8);
         }
     }
 }

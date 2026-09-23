@@ -26,8 +26,8 @@
  * \file
  * \copydoc Opm::PTFlash
  */
-#ifndef OPM_CHI_FLASH_HPP
-#define OPM_CHI_FLASH_HPP
+#ifndef OPM_PT_FLASH_HPP
+#define OPM_PT_FLASH_HPP
 
 #include <opm/material/constraintsolvers/PTFlashMethod.hpp>
 #include <opm/material/constraintsolvers/RachfordRice.hpp>
@@ -216,11 +216,9 @@ public:
                     flash_2ph(z_scalar, twoPhaseMethod, K_scalar, L_scalar, fluid_state,
                               flash_tolerance, eos_type, verbosity);
                     return true;
-                }
-                catch (const NumericalProblem& error) {
+                } catch (const NumericalProblem& error) {
                     on_failure(error);
-                }
-                catch (const Dune::FMatrixError& error) {
+                } catch (const Dune::FMatrixError& error) {
                     on_failure(error);
                 }
                 return false;
@@ -243,6 +241,10 @@ public:
                 }
             });
 
+            // Substitution only returns L in [0, 1], so a coincident result
+            // outside it is Newton's trivial root rather than a collapsed trial phase.
+            const bool outside_unit_interval = split_succeeded && (L_scalar < 0 || L_scalar > 1);
+
             // A finite negative-flash root outside [0, 1] is the single-phase
             // criterion, not a failed composition solve.
             if (split_succeeded) {
@@ -251,8 +253,10 @@ public:
 
             // A warm start must be reassessed from Wilson estimates because its
             // stored K may be a trivial fixed point. For a cold start, a
-            // coincident split contradicts the preceding instability result.
-            const bool phases_coincide = split_succeeded && !is_single_phase
+            // coincident split contradicts the preceding instability result,
+            // unless substitution collapsed the trial phase at an endpoint.
+            const bool phases_coincide = split_succeeded
+                && (!is_single_phase || !is_cold_start || outside_unit_interval)
                 && phasesCoincide_(fluid_state);
             if (phases_coincide && is_cold_start) {
                 OPM_THROW_NOLOG(NumericalProblem,
@@ -260,6 +264,8 @@ public:
                                 "stability analysis identified an unstable mixture");
             }
             if (!split_succeeded || (phases_coincide && !is_cold_start)) {
+                // A coincident trial has no phase direction to preserve.
+                is_negative_flash = false;
                 if (phases_coincide && verbosity >= 1) {
                     OpmLog::debug("The two-phase flash converged to coincident phases; "
                                   "reassessing phase stability.");
@@ -284,8 +290,10 @@ public:
                                         "analysis: {}",
                                         error.what()));
                     });
+                    const bool retry_outside_unit_interval = L_scalar < 0 || L_scalar > 1;
                     classify_negative_flash();
-                    if (!is_single_phase && phasesCoincide_(fluid_state)) {
+                    if ((!is_single_phase || retry_outside_unit_interval)
+                        && phasesCoincide_(fluid_state)) {
                         OPM_THROW_NOLOG(NumericalProblem,
                                         "The two-phase flash retry converged to coincident phases "
                                         "after stability analysis identified an unstable mixture");
@@ -302,34 +310,68 @@ public:
                 // Cell is one-phase. Use Li's phase labeling method to see if it's liquid or vapor
                 L_scalar = li_single_phase_label_(fluid_state, z_scalar, verbosity);
             }
+        } else {
+            keepHeavierPhaseInOilSlot_(fluid_state, L_scalar, verbosity);
         }
         fluid_state.setLvalue(L_scalar);
         return is_single_phase;
     }
 
-    template <class Vector, class FlashFluidState>
-    static typename Vector::field_type li_single_phase_label_(const FlashFluidState& fluid_state, const Vector& z, int verbosity)
+    //! \brief Li's pseudo-critical temperature, the critical temperatures
+    //!        weighted by the critical volume each component contributes.
+    template <class Composition>
+    static Scalar liPseudoCriticalTemperature_(const Composition& composition)
     {
-        // Calculate intermediate sum
-        typename Vector::field_type sumVz = 0.0;
-        for (int compIdx=0; compIdx<numComponents; ++compIdx){
-            // Get component information
-            const auto& V_crit = FluidSystem::criticalVolume(compIdx);
-
-            // Sum calculation
-            sumVz += (V_crit * z[compIdx]);
+        Scalar volume = 0;
+        Scalar weightedTemperature = 0;
+        for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+            const Scalar share
+                = FluidSystem::criticalVolume(compIdx) * Opm::getValue(composition(compIdx));
+            volume += share;
+            weightedTemperature += share * FluidSystem::criticalTemperature(compIdx);
         }
+        return weightedTemperature / volume;
+    }
 
-        // Calculate approximate (pseudo) critical temperature using Li's method
-        typename Vector::field_type Tc_est = 0.0;
-        for (int compIdx=0; compIdx<numComponents; ++compIdx){
-            // Get component information
-            const auto& V_crit = FluidSystem::criticalVolume(compIdx);
-            const auto& T_crit = FluidSystem::criticalTemperature(compIdx);
-
-            // Sum calculation
-            Tc_est += (V_crit * T_crit * z[compIdx] / sumVz);
+    /*!
+     * \brief Put the heavier phase of a two-phase split in the oil slot.
+     *
+     * Substitution from ratios near one can converge to the split with its
+     * phases in the opposite slots. The pseudo-critical temperature that
+     * labels single phases also decides which phase is the liquid here.
+     */
+    template <class FlashFluidState>
+    static void keepHeavierPhaseInOilSlot_(FlashFluidState& fluid_state,
+                                           typename FlashFluidState::ValueType& L,
+                                           int verbosity)
+    {
+        const auto phaseTemperature = [&fluid_state](int phaseIdx) {
+            return liPseudoCriticalTemperature_([&fluid_state, phaseIdx](int compIdx) {
+                return fluid_state.moleFraction(phaseIdx, compIdx);
+            });
+        };
+        if (!(phaseTemperature(gasPhaseIdx) > phaseTemperature(oilPhaseIdx))) {
+            return;
         }
+        for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+            const auto liquid_mole_fraction = fluid_state.moleFraction(gasPhaseIdx, compIdx);
+            fluid_state.setMoleFraction(
+                gasPhaseIdx, compIdx, fluid_state.moleFraction(oilPhaseIdx, compIdx));
+            fluid_state.setMoleFraction(oilPhaseIdx, compIdx, liquid_mole_fraction);
+        }
+        L = 1 - L;
+        if (verbosity >= 1) {
+            OpmLog::debug(fmt::format("The split converged with its phases swapped; relabelled "
+                                      "it to L = {}",
+                                      L));
+        }
+    }
+
+    template <class Vector, class FlashFluidState>
+    static typename Vector::field_type
+    li_single_phase_label_(const FlashFluidState& fluid_state, const Vector& z, int verbosity)
+    {
+        const auto Tc_est = liPseudoCriticalTemperature_([&z](int compIdx) { return z[compIdx]; });
 
         // Get temperature
         const auto& T = fluid_state.temperature(0);
@@ -652,13 +694,21 @@ protected:
                           const EOSType& eos_type,
                           int verbosity = 0) {
         if (verbosity >= 1) {
-            OpmLog::debug(fmt::format("Cell is two-phase! Solve Rachford-Rice with initial K = [{}]",
-                                     fmt::join(K_scalar, " ")));
+            OpmLog::debug(fmt::format("Solve the phase compositions from K = [{}] and L = {}",
+                                      fmt::join(K_scalar, " "),
+                                      L_scalar));
         }
 
         // Calculate composition using nonlinear solver
         bool converged = false;
-        switch (flash_2p_method) {
+        // An endpoint only classifies the current K estimate, and Newton has no
+        // split to refine from it. Use substitution to grow or reject the
+        // absent trial phase before accepting the split.
+        const auto at_endpoint = [&L_scalar] { return L_scalar == 0 || L_scalar == 1; };
+        const auto composition_method = (at_endpoint() && flash_2p_method == PTFlashMethod::Newton)
+            ? PTFlashMethod::Ssi
+            : flash_2p_method;
+        switch (composition_method) {
         case PTFlashMethod::Newton:
             if (verbosity >= 1) {
                 OpmLog::debug("Calculate composition using Newton.");
@@ -675,7 +725,20 @@ protected:
 
         case PTFlashMethod::SsiNewton:
             converged = successiveSubstitutionComposition_(K_scalar, L_scalar, fluid_state_scalar, z_scalar, true, flash_tolerance, eos_type, verbosity);
-            if (!converged) {
+            if (!converged && at_endpoint()) {
+                if (verbosity >= 1) {
+                    OpmLog::debug("Successive substitution is still at a Rachford-Rice "
+                                  "endpoint; continuing it instead of starting Newton.");
+                }
+                converged = successiveSubstitutionComposition_(K_scalar,
+                                                               L_scalar,
+                                                               fluid_state_scalar,
+                                                               z_scalar,
+                                                               false,
+                                                               flash_tolerance,
+                                                               eos_type,
+                                                               verbosity);
+            } else if (!converged) {
                 // In this method Newton is an accelerator, not the
                 // guarantee: when its composition update fails to converge —
                 // or a diverged iterate makes the EoS report non-finite
@@ -1379,6 +1442,12 @@ protected:
      * until \f$\| f^{L} / f^{V} - 1 \|\f$ is below tolerance. As a
      * conditioner for Newton it takes a few steps; on its own it may take
      * many.
+     *
+     * At a Rachford-Rice endpoint the absent phase is normalised separately,
+     * so \f$y_i = K_i x_i\f$ no longer holds. There we update
+     * \f$K_i = \phi_i^L p^L / (\phi_i^V p^V)\f$ directly and require the
+     * relative K update to converge. An intermediate endpoint is not a
+     * single-phase result: subsequent updates can recover an interior split.
      */
     template <class FlashFluidState, class ComponentVector>
     static bool successiveSubstitutionComposition_(ComponentVector& K,
@@ -1406,7 +1475,7 @@ protected:
                                       "Iteration",
                                       "fL/fV",
                                       fugacity_width,
-                                      "norm2(fL/fv-1)",
+                                      "norm2(update-1)",
                                       convergence_width));
         }
         //
@@ -1417,6 +1486,7 @@ protected:
                 K[compIdx] = 1.;
             }
         }
+        std::string rejection;
         for (int iteration = 0; iteration < max_iterations; ++iteration) {
             // Compute (normalized) liquid and vapor mole fractions
             computeLiquidVapor_(fluid_state, L, K, z);
@@ -1435,16 +1505,31 @@ protected:
 
             // Calculate fugacity ratio
             ComponentVector fugacity_ratio;
-            ComponentVector fugacity_residual;
+            ComponentVector substitution_residual;
+            ComponentVector next_K;
+            const bool at_endpoint = L == 0 || L == 1;
             for (int compIdx=0; compIdx<numComponents; ++compIdx){
                 if (!(Opm::getValue(z[compIdx]) > 0.)) {
                     fugacity_ratio[compIdx] = 1.;
-                    fugacity_residual[compIdx] = 0.;
+                    substitution_residual[compIdx] = 0.;
+                    next_K[compIdx] = 1.;
                     continue;
                 }
                 fugacity_ratio[compIdx] = fluid_state.fugacity(oilPhaseIdx, compIdx)
                     / fluid_state.fugacity(gasPhaseIdx, compIdx);
-                fugacity_residual[compIdx] = fugacity_ratio[compIdx] - 1.0;
+                if (at_endpoint) {
+                    // Normalising the absent phase breaks y_i = K_i*x_i.
+                    // Update from the coefficients themselves so the trial
+                    // converges without an arbitrary scale factor in K.
+                    next_K[compIdx] = fluid_state.fugacityCoefficient(oilPhaseIdx, compIdx)
+                        * fluid_state.pressure(oilPhaseIdx)
+                        / (fluid_state.fugacityCoefficient(gasPhaseIdx, compIdx)
+                           * fluid_state.pressure(gasPhaseIdx));
+                    substitution_residual[compIdx] = next_K[compIdx] / K[compIdx] - 1.0;
+                } else {
+                    next_K[compIdx] = K[compIdx] * fugacity_ratio[compIdx];
+                    substitution_residual[compIdx] = fugacity_ratio[compIdx] - 1.0;
+                }
             }
 
             // Print iteration info
@@ -1457,13 +1542,13 @@ protected:
                                           fmt::join(fugacity_ratio, " "),
                                           fugacity_width,
                                           precision,
-                                          fugacity_residual.two_norm(),
+                                          substitution_residual.two_norm(),
                                           convergence_width,
                                           precision));
             }
 
             // Check convergence
-            if (fugacity_residual.two_norm() < flash_tolerance) {
+            if (substitution_residual.two_norm() < flash_tolerance) {
                 // Print info
                 if (verbosity >= 1) {
                     std::vector<typename ComponentVector::field_type> liquid_composition(
@@ -1489,19 +1574,25 @@ protected:
             }
             //  If convergence is not met, K is updated in a successive substitution manner
             else {
-                // Update K
-                for (int compIdx=0; compIdx<numComponents; ++compIdx){
-                    K[compIdx] *= fugacity_ratio[compIdx];
+                // Accept the new K only with its phase split, so a rejected
+                // iterate leaves the last consistent K and L for the caller.
+                try {
+                    L = RachfordRice::solve(next_K, z, 0);
+                } catch (const NumericalProblem& error) {
+                    rejection = fmt::format("Rachford-Rice rejected successive substitution "
+                                            "iterate {}: {}",
+                                            iteration,
+                                            error.what());
+                    break;
                 }
-
-                // Solve Rachford-Rice to get L from updated K
-                L = RachfordRice::solve(K, z, 0);
+                K = next_K;
             }
         }
         // did not get converged. check whether we will do more newton later afterward
         {
-            const std::string message
-                = fmt::format("Successive substitution composition update did not "
+            const std::string message = !rejection.empty()
+                ? rejection
+                : fmt::format("Successive substitution composition update did not "
                               "converge within {} iterations.",
                               max_iterations);
             if (!run_newton_afterwards) {
@@ -1518,4 +1609,4 @@ protected:
 
 } // namespace Opm
 
-#endif
+#endif // OPM_PT_FLASH_HPP

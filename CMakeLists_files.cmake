@@ -725,6 +725,7 @@ list(APPEND DUNE_TEST_SOURCE_FILES
   tests/material/test_ptflash_newton_residual_scale.cpp
   tests/material/test_ptflash_ssi_newton_fallback.cpp
   tests/material/test_ptflash_trivial_root.cpp
+  tests/material/test_rachford_rice.cpp
   tests/material/test_saturation_pressure.cpp
   tests/material/test_tabulation.cpp
   tests/material/test_threecomponents_ptflash.cpp
