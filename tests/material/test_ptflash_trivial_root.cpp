@@ -247,6 +247,33 @@ BOOST_AUTO_TEST_CASE(NewtonReassessesNonPhysicalRoot)
     BOOST_CHECK_SMALL(Opm::getValue(fs.L()), flashTolerance);
 }
 
+// At 970 bar this feed's cubic has two roots below the covolume. A floored
+// liquid root clamped every fugacity coefficient, and substitution converged
+// on that clamp as a single vapour.
+BOOST_AUTO_TEST_CASE(DenseLiquidKeepsLiquidLabel)
+{
+    for (const auto method :
+         {PTFlashMethod::Newton, PTFlashMethod::Ssi, PTFlashMethod::SsiNewton}) {
+        BOOST_TEST_CONTEXT("method " << static_cast<int>(method))
+        {
+            constexpr Scalar z[numComponents] = {0.1, 0.6, 0.3};
+            FluidState fs;
+            for (unsigned phaseIdx = 0; phaseIdx < FluidSystem::numPhases; ++phaseIdx) {
+                fs.setPressure(phaseIdx, 970.e5);
+            }
+            fs.setTemperature(400.0);
+            for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+                fs.setMoleFraction(compIdx, z[compIdx]);
+                fs.setKvalue(compIdx, fs.wilsonK_(compIdx));
+            }
+            fs.setLvalue(-1.0);
+
+            BOOST_REQUIRE(PtFlash::solve(fs, method, flashTolerance, EOSType::PR));
+            BOOST_CHECK_EQUAL(Opm::getValue(fs.L()), 1.0);
+        }
+    }
+}
+
 // Out-of-range negative-flash and coincident SSI results both indicate that a
 // warm-started cell has crossed into the single-phase region.
 BOOST_AUTO_TEST_CASE(WarmSsiReassessesOutOfRangeSplits)

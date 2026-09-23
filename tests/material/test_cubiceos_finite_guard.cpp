@@ -25,15 +25,15 @@
 /*!
  * \file
  *
- * \brief The isothermal flash's iteration can diverge on deeply
- *        supercritical feeds (an equimolar N2/methane mixture at 100 bar
- *        and 400 K, with the standard N2/C1 interaction coefficient, is the
- *        recorded case): the composition iterates leave [0, 1] far enough
- *        that the cubic-EoS mixing parameters become non-finite. Before the
- *        finite guard this hit an assert() — process ABORT in debug builds
- *        and SILENT propagation of non-finite values in release builds. The
- *        guard turns both into a catchable NumericalProblem, which is the
- *        failure mode every caller of the flash already handles.
+ * \brief The cubic EoS must not feed floored or non-finite values into the
+ *        flash. For an equimolar N2/methane mixture at 100 bar and 400 K,
+ *        with the standard N2/C1 interaction coefficient, the two smaller
+ *        roots of the cubic lie below the covolume. Taking one as the liquid
+ *        root floored the molar volume and clamped every fugacity
+ *        coefficient, which drove the flash iterates out of [0, 1] until the
+ *        mixing parameters became non-finite. The finite guard turns such a
+ *        composition into a catchable NumericalProblem instead of an assert()
+ *        abort (debug) or silent non-finite values (release).
  */
 #include "config.h"
 
@@ -55,14 +55,16 @@
 
 #include <opm/input/eclipse/EclipseState/Compositional/CompositionalConfig.hpp>
 
+#include <cmath>
+#include <limits>
 #include <stdexcept>
 #include <string_view>
 
 namespace Opm {
 
 //! Two-phase, two-component (N2/C1) test fluid system: the smallest fixed
-//! mixture that still exhibits the recorded divergence, with the standard
-//! N2/methane Peng-Robinson binary interaction coefficient.
+//! mixture that exhibits the recorded roots below the covolume, with the
+//! standard N2/methane Peng-Robinson binary interaction coefficient.
 template<class Scalar>
 class N2C1TestFluidSystem
         : public Opm::BaseFluidSystem<Scalar, N2C1TestFluidSystem<Scalar> > {
@@ -215,29 +217,112 @@ FluidState makeState(const Scalar p, const Scalar t)
     return fs;
 }
 
+// The reduced EoS state reported in issue #5385. Its rounded A and B still
+// give three real PR roots, but both smaller roots lie below B. The full
+// four-component fluid system is immaterial to this cubic-root selection.
+struct ReportedEosState
+{
+    using ValueType = Scalar;
+    Scalar pressure(unsigned) const
+    {
+        return 12000 * 6894.757293168; // 12000 psia
+    }
+    Scalar temperature(unsigned) const
+    {
+        return (237.0 - 32.0) * 5.0 / 9.0 + 273.15;
+    }
+};
+
+struct ReportedEosParams
+{
+    Scalar A(unsigned) const
+    {
+        return 3.3021;
+    }
+    Scalar B(unsigned) const
+    {
+        return 1.0525;
+    }
+    Scalar m1(unsigned) const
+    {
+        return 1 + std::sqrt(2.0);
+    }
+    Scalar m2(unsigned) const
+    {
+        return 1 - std::sqrt(2.0);
+    }
+};
+
 } // anonymous namespace
 
-// the recorded divergence case must report as a catchable exception —
-// never as an abort (debug) or a silent non-finite state (release).
-// Probed via the pure "newton" method: in "ssi+newton" the switch-back
-// catches this exception internally and finishes with successive
-// substitution (see test_ptflash_ssi_newton_fallback.cpp).
-BOOST_AUTO_TEST_CASE(NewtonDivergenceThrowsCatchable)
+// A diverged composition update must reach the caller as a catchable
+// exception, never as an abort (debug) or a non-finite state (release).
+BOOST_AUTO_TEST_CASE(NonFiniteCompositionThrowsCatchable)
 {
     auto fs = makeState(100e5, 400.0);
-    BOOST_CHECK_THROW(
-        PtFlash::solve(fs, PTFlashMethod::Newton, 1e-8, EOSType::PR),
-        Opm::NumericalProblem);
+    fs.setMoleFraction(FluidSystem::oilPhaseIdx, 0, std::numeric_limits<Scalar>::quiet_NaN());
+    fs.setMoleFraction(FluidSystem::oilPhaseIdx, 1, 0.5);
+    FluidSystem::ParameterCache<Evaluation> paramCache(EOSType::PR);
+    BOOST_CHECK_THROW(paramCache.updatePhase(fs, FluidSystem::oilPhaseIdx), Opm::NumericalProblem);
 }
 
-// the default method's honest failure mode on the same state is unchanged
-// (successive substitution reports its own non-convergence as a throw)
-BOOST_AUTO_TEST_CASE(SsiStillFailsLoudlyNotFatally)
+// Both smaller roots lie below the covolume here, so the liquid shares the
+// vapour root rather than a floored volume with clamped fugacities.
+BOOST_AUTO_TEST_CASE(LiquidRootLiesAboveCovolume)
 {
-    auto fs = makeState(100e5, 400.0);
-    BOOST_CHECK_THROW(
-        PtFlash::solve(fs, PTFlashMethod::Ssi, 1e-8, EOSType::PR),
-        std::runtime_error);
+    Opm::CompositionalFluidState<Scalar, FluidSystem> fs;
+    for (unsigned phaseIdx = 0; phaseIdx < FluidSystem::numPhases; ++phaseIdx) {
+        fs.setPressure(phaseIdx, 100e5);
+        for (unsigned compIdx = 0; compIdx < FluidSystem::numComponents; ++compIdx) {
+            fs.setMoleFraction(phaseIdx, compIdx, 0.5);
+        }
+    }
+    fs.setTemperature(400.0);
+
+    FluidSystem::ParameterCache<Scalar> paramCache(EOSType::PR);
+    paramCache.updatePhase(fs, FluidSystem::oilPhaseIdx);
+    paramCache.updatePhase(fs, FluidSystem::gasPhaseIdx);
+    BOOST_CHECK_CLOSE(paramCache.molarVolume(FluidSystem::oilPhaseIdx),
+                      paramCache.molarVolume(FluidSystem::gasPhaseIdx),
+                      1e-10);
+    for (unsigned compIdx = 0; compIdx < FluidSystem::numComponents; ++compIdx) {
+        BOOST_CHECK_CLOSE(
+            FluidSystem::fugacityCoefficient(fs, paramCache, FluidSystem::oilPhaseIdx, compIdx),
+            FluidSystem::fugacityCoefficient(fs, paramCache, FluidSystem::gasPhaseIdx, compIdx),
+            1e-10);
+    }
+}
+
+// Issue #5385: the high-pressure PR cubic has two inadmissible roots. Both
+// phase labels must use the sole root above the covolume.
+BOOST_AUTO_TEST_CASE(ReportedHighPressureRoots)
+{
+    ReportedEosState fs;
+    ReportedEosParams params;
+    const auto liquidVolume
+        = FluidSystem::CubicEOS::computeMolarVolume(fs, params, FluidSystem::oilPhaseIdx, false);
+    const auto vapourVolume
+        = FluidSystem::CubicEOS::computeMolarVolume(fs, params, FluidSystem::gasPhaseIdx, true);
+    const auto Z = fs.pressure(FluidSystem::oilPhaseIdx) * liquidVolume
+        / (Opm::Constants<Scalar>::R * fs.temperature(FluidSystem::oilPhaseIdx));
+
+    BOOST_CHECK_GT(Z, params.B(FluidSystem::oilPhaseIdx));
+    BOOST_CHECK_CLOSE_FRACTION(Z, 1.66193933, 1e-7);
+    BOOST_CHECK_CLOSE_FRACTION(liquidVolume, vapourVolume, 1e-12);
+}
+
+// The supercritical feed is a single vapour under every flash method.
+BOOST_AUTO_TEST_CASE(SupercriticalStateIsSingleVapour)
+{
+    for (const auto method :
+         {PTFlashMethod::Newton, PTFlashMethod::Ssi, PTFlashMethod::SsiNewton}) {
+        BOOST_TEST_CONTEXT("method " << static_cast<int>(method))
+        {
+            auto fs = makeState(100e5, 400.0);
+            BOOST_REQUIRE(PtFlash::solve(fs, method, 1e-8, EOSType::PR));
+            BOOST_CHECK_SMALL(Opm::getValue(fs.L()), 1e-8);
+        }
+    }
 }
 
 // an ordinary state keeps flashing under both methods — the guard costs
