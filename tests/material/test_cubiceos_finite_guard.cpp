@@ -258,6 +258,15 @@ struct ReportedEosParams
     }
 };
 
+// A NaN coefficient gives NaN roots on every platform.
+struct NonFiniteRootParams : ReportedEosParams
+{
+    Scalar A(unsigned) const
+    {
+        return std::numeric_limits<Scalar>::quiet_NaN();
+    }
+};
+
 // Coefficients of the Peng-Robinson cubic in Z, highest power first.
 template <class Value>
 std::array<Value, 4>
@@ -316,6 +325,23 @@ BOOST_AUTO_TEST_CASE(NonFiniteCompositionThrowsCatchable)
     fs.setMoleFraction(FluidSystem::oilPhaseIdx, 1, 0.5);
     FluidSystem::ParameterCache<Evaluation> paramCache(EOSType::PR);
     BOOST_CHECK_THROW(paramCache.updatePhase(fs, FluidSystem::oilPhaseIdx), Opm::NumericalProblem);
+}
+
+// A NaN root must throw rather than abort on an assertion (AD) or hide
+// behind the floored molar volume (plain scalars).
+BOOST_AUTO_TEST_CASE(NonFiniteRootThrowsCatchable)
+{
+    NonFiniteRootParams params;
+    const auto adState = makeState(100e5, 400.0);
+    const ReportedEosState scalarState;
+    for (const bool isGasPhase : {false, true}) {
+        BOOST_CHECK_THROW(FluidSystem::CubicEOS::computeMolarVolume(
+                              adState, params, FluidSystem::oilPhaseIdx, isGasPhase),
+                          Opm::NumericalProblem);
+        BOOST_CHECK_THROW(FluidSystem::CubicEOS::computeMolarVolume(
+                              scalarState, params, FluidSystem::oilPhaseIdx, isGasPhase),
+                          Opm::NumericalProblem);
+    }
 }
 
 // Both smaller roots lie below the covolume here, so the liquid shares the
