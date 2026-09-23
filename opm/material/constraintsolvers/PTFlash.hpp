@@ -90,9 +90,6 @@ class PTFlash
     // trivial solution with all equilibrium ratios at one.
     static constexpr Scalar substitutionTolerance = 1e-10;
     static constexpr Scalar trivialSolutionTolerance = 1e-5;
-    // Rachford-Rice bisection stops on the residual or the interval width.
-    static constexpr Scalar bisectionResidualTolerance = 1e-16;
-    static constexpr Scalar bisectionWidthTolerance = 1e-10;
 
 public:
     /*!

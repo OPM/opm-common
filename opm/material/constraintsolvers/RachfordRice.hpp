@@ -30,6 +30,7 @@
 #define OPM_RACHFORD_RICE_HPP
 
 #include <opm/common/ErrorMacros.hpp>
+#include <opm/common/Exceptions.hpp>
 #include <opm/common/OpmLog/OpmLog.hpp>
 
 #include <dune/common/math.hh>
@@ -39,7 +40,6 @@
 #include <cmath>
 #include <cstddef>
 #include <optional>
-#include <stdexcept>
 #include <string_view>
 #include <utility>
 
@@ -151,8 +151,8 @@ private:
             }
         }
 
-        OPM_THROW(std::runtime_error,
-                  " Rachford-Rice did not converge within maximum number of iterations");
+        OPM_THROW_NOLOG(NumericalProblem,
+                        " Rachford-Rice did not converge within maximum number of iterations");
     }
 
     //! \brief The Rachford-Rice residual at a given liquid fraction.
@@ -189,8 +189,9 @@ private:
         };
 
         if (closeLmaxLmin(Lmax, Lmin)) {
-            OPM_THROW(std::runtime_error,
-                      fmt::format("Strange bisection with Lmax {} and Lmin {}?", Lmax, Lmin));
+            OPM_THROW_NOLOG(NumericalProblem,
+                            fmt::format("Strange bisection with liquid endpoint {} "
+                                    "and vapour endpoint {}", Lmin, Lmax));
         }
         for (int iteration = 0; iteration < max_it; ++iteration) {
             auto L = (Lmin + Lmax) / 2;
@@ -208,8 +209,9 @@ private:
                 gLmin = gMid;
             }
         }
-        OPM_THROW(std::runtime_error,
-                  fmt::format(" Rachford-Rice bisection failed with {} iterations!", max_it));
+        OPM_THROW_NOLOG(
+            NumericalProblem,
+            fmt::format(" Rachford-Rice bisection failed with {} iterations!", max_it));
     }
 
     //! \brief Log the converged liquid fraction and hand it back.

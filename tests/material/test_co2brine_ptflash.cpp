@@ -38,6 +38,7 @@
 #include <boost/test/data/test_case.hpp>
 #endif
 
+#include <opm/common/Exceptions.hpp>
 #include <opm/common/OpmLog/LogUtil.hpp>
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/common/OpmLog/StreamLog.hpp>
@@ -365,4 +366,13 @@ BOOST_AUTO_TEST_CASE(RachfordRice) {
                             "Computed vapor fraction " + std::to_string(V) + "  does not match reference " + std::to_string(V_ref));
     }
     */
+}
+
+// The flash catches NumericalProblem to retry stability analysis when
+// Rachford-Rice cannot determine a split from the current K estimate.
+BOOST_AUTO_TEST_CASE(RachfordRiceNonConvergenceKeepsExceptionType)
+{
+    const Dune::FieldVector<double, 3> K{1.0, 1.0, 1.0};
+    const Dune::FieldVector<double, 3> z{0.2, 0.5, 0.3};
+    BOOST_CHECK_THROW(Opm::RachfordRice::solve(K, z, 0), Opm::NumericalProblem);
 }
