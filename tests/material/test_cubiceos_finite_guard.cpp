@@ -478,6 +478,25 @@ BOOST_AUTO_TEST_CASE(CubicRootsSoundWhereRootCountChanges)
                                        << first.first << ", B = " << first.second);
 }
 
+// Without a linear term the depressed cubic t^3 + q = 0 has the one real root
+// -cbrt(q). cubicRoots() threw std::runtime_error there, which the flash does
+// not recover from.
+BOOST_AUTO_TEST_CASE(CubicRootsWithoutLinearTerm)
+{
+    // x^3 - 3x^2 + 3x + d = (x - 1)^3 + 1 + d has the single real root 0 at
+    // d = 0, where dx/dd = -1/3.
+    Scalar Z[3] = {};
+    BOOST_REQUIRE_EQUAL(Opm::cubicRoots(Z, 1.0, -3.0, 3.0, 0.0), 1u);
+    BOOST_CHECK_SMALL(Z[0], 1e-14);
+
+    using Eval = Opm::DenseAd::Evaluation<Scalar, 1>;
+    Eval ZAd[3];
+    BOOST_REQUIRE_EQUAL(
+        Opm::cubicRoots(ZAd, Eval(1.0), Eval(-3.0), Eval(3.0), Eval::createVariable(0.0, 0)), 1u);
+    BOOST_CHECK_SMALL(ZAd[0].value(), 1e-14);
+    BOOST_CHECK_CLOSE(ZAd[0].derivative(0), -1.0 / 3.0, 1e-10);
+}
+
 // The supercritical feed is a single vapour under every flash method.
 BOOST_AUTO_TEST_CASE(SupercriticalStateIsSingleVapour)
 {
