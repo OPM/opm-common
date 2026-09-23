@@ -23,9 +23,17 @@
 #ifndef CUBIC_EOS_HPP
 #define CUBIC_EOS_HPP
 
+#include <opm/common/ErrorMacros.hpp>
+#include <opm/common/Exceptions.hpp>
+
 #include <opm/material/Constants.hpp>
 #include <opm/material/common/PolynomialUtils.hpp>
 #include <opm/material/common/Valgrind.hpp>
+
+#include <fmt/format.h>
+
+#include <cmath>
+#include <limits>
 
 namespace Opm
 {
@@ -186,33 +194,45 @@ public:
 
         // pick correct root
         const Evaluation RT_p = R * T / p;
+        Evaluation root = std::numeric_limits<Scalar>::quiet_NaN();
         if (numSol == 3) {
             // the EOS has three intersections with the pressure,
             // i.e. the molar volume of gas is the largest one and the
             // molar volume of liquid is the smallest one above the covolume
-            if (isGasPhase) {
-                Vm = max(minMolarVolume, Z[2] * RT_p);
-            } else {
+            root = Z[2];
+            if (!isGasPhase) {
                 // A root at or below B is not a phase: taking it floors the
                 // volume and clamps every fugacity coefficient.
-                Evaluation liquidZ = Z[2];
-                for (const auto& root : Z) {
-                    if (root > B) {
-                        liquidZ = root;
+                for (const auto& candidate : Z) {
+                    if (candidate > B) {
+                        root = candidate;
                         break;
                     }
                 }
-                Vm = max(minMolarVolume, liquidZ * RT_p);
             }
         }
         else if (numSol == 1) {
             // Only one EOS root exists, so both phase labels use it.
-            Vm = max(minMolarVolume, Z[0] * RT_p);
+            root = Z[0];
         }
+        Vm = max(minMolarVolume, root * RT_p);
 
         Valgrind::CheckDefined(Vm);
-        assert(std::isfinite(scalarValue(Vm)));
-        assert(Vm > 0);
+        // The floor hides a NaN root behind minMolarVolume for plain scalars.
+        // Throw a NumericalProblem the flash recovers from instead of aborting
+        // or continuing with a meaningless volume.
+        if (!std::isfinite(scalarValue(root)) || !std::isfinite(scalarValue(Vm))) {
+            OPM_THROW_NOLOG(
+                NumericalProblem,
+                fmt::format("CubicEOS::computeMolarVolume: non-finite molar volume "
+                            "for phase {} at p = {} and T = {} (Z = {}, A = {}, B = {})",
+                            phaseIdx,
+                            scalarValue(p),
+                            scalarValue(T),
+                            scalarValue(root),
+                            scalarValue(A),
+                            scalarValue(B)));
+        }
         return Vm;
 
     }
