@@ -38,14 +38,15 @@
 #include <boost/test/data/test_case.hpp>
 #endif
 
+#include <opm/common/Exceptions.hpp>
 #include <opm/common/OpmLog/LogUtil.hpp>
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/common/OpmLog/StreamLog.hpp>
 
 #include <opm/material/constraintsolvers/PTFlash.hpp>
 #include <opm/material/constraintsolvers/PTFlashMethod.hpp>
+#include <opm/material/constraintsolvers/RachfordRice.hpp>
 #include <opm/material/fluidsystems/Co2BrineFluidSystem.hh>
-#include <opm/material/fluidsystems/GenericOilGasWaterFluidSystem.hpp>
 
 #include <opm/material/densead/Evaluation.hpp>
 #include <opm/material/constraintsolvers/ComputeFromReferencePhase.hpp>
@@ -331,10 +332,6 @@ BOOST_AUTO_TEST_CASE(RachfordRice) {
     z_values.push_back({0.2, 0.5, 0.3});
     vapor_reference.push_back(0.6062547183490403);
 
-    using ThreeComponentSystem = Opm::GenericOilGasWaterFluidSystem<Scalar, 3, false>;
-    // TODO: Should not really need flash for this part.
-    using Flash = Opm::PTFlash<double, ThreeComponentSystem>;
-
     for(unsigned int i = 0; i < K_values.size(); i++){
         auto z_i = z_values[i];
         auto K_i = K_values[i];
@@ -346,7 +343,7 @@ BOOST_AUTO_TEST_CASE(RachfordRice) {
         NumVector K = {K_i[0], K_i[1], K_i[2]};
         NumVector z = {z_i[0], z_i[1], z_i[2]};
 
-        auto L = Flash::solveRachfordRice_g_(K, z, 3);
+        auto L = Opm::RachfordRice::solve(K, z, 3);
         auto L_ref = 1.0 - vapor_reference[i];
 
         BOOST_CHECK_MESSAGE(Opm::MathToolbox<Evaluation>::isSame(L, L_ref, 1e-5),
@@ -360,14 +357,22 @@ BOOST_AUTO_TEST_CASE(RachfordRice) {
     NumVector K(1.7176562249206835, 2.3413966156487644, 0.11537246148979083);
 
     NumVector z = {0.2, 0.5, 0.3};
-    using Flash = Opm::PTFlash<double, FluidSystem>;
     auto V_ref = 0.5269214180997791;
 
    for(unsigned int i = 0; i < K_values.size(); i++){
-        auto L = Flash::solveRachfordRice_g_(K, z, 1);
+        auto L = Opm::RachfordRice::solve(K, z, 1);
         auto V = 1.0 - L;
         BOOST_CHECK_MESSAGE(Opm::MathToolbox<Evaluation>::isSame(V, V_ref, 2e-3),
                             "Computed vapor fraction " + std::to_string(V) + "  does not match reference " + std::to_string(V_ref));
     }
     */
+}
+
+// The flash catches NumericalProblem to retry stability analysis when
+// Rachford-Rice cannot determine a split from the current K estimate.
+BOOST_AUTO_TEST_CASE(RachfordRiceNonConvergenceKeepsExceptionType)
+{
+    const Dune::FieldVector<double, 3> K{1.0, 1.0, 1.0};
+    const Dune::FieldVector<double, 3> z{0.2, 0.5, 0.3};
+    BOOST_CHECK_THROW(Opm::RachfordRice::solve(K, z, 0), Opm::NumericalProblem);
 }
