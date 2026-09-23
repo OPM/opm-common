@@ -140,9 +140,9 @@ public:
      *   - \big(A B + m_1 m_2 B^2 (B + 1)\big) = 0. \f]
      *
      * With three real roots the largest belongs to the vapour and the
-     * smallest to the liquid; with one root both phases share it. The
-     * volume \f$V = Z R T / p\f$ is floored so a collapsed root cannot
-     * propagate.
+     * smallest one above the covolume \f$B\f$ to the liquid; with one root
+     * both phases share it. The volume \f$V = Z R T / p\f$ is floored so a
+     * collapsed root cannot propagate.
      *
      * \param fs The fluid state holding the phase's pressure and temperature.
      * \param params The parameter cache holding \f$A\f$, \f$B\f$, \f$m_1\f$ and \f$m_2\f$.
@@ -189,11 +189,20 @@ public:
         if (numSol == 3) {
             // the EOS has three intersections with the pressure,
             // i.e. the molar volume of gas is the largest one and the
-            // molar volume of liquid is the smallest one
+            // molar volume of liquid is the smallest one above the covolume
             if (isGasPhase) {
                 Vm = max(minMolarVolume, Z[2] * RT_p);
             } else {
-                Vm = max(minMolarVolume, Z[0] * RT_p);
+                // A root at or below B is not a phase: taking it floors the
+                // volume and clamps every fugacity coefficient.
+                Evaluation liquidZ = Z[2];
+                for (const auto& root : Z) {
+                    if (root > B) {
+                        liquidZ = root;
+                        break;
+                    }
+                }
+                Vm = max(minMolarVolume, liquidZ * RT_p);
             }
         }
         else if (numSol == 1) {
