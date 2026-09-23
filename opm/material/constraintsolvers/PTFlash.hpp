@@ -130,6 +130,10 @@ public:
             fluid_state.setMoleFraction(oilPhaseIdx, compIdx, liquid_mole_fraction);
             const auto vapour_mole_fraction = scalar_state.moleFraction(gasPhaseIdx, compIdx);
             fluid_state.setMoleFraction(gasPhaseIdx, compIdx, vapour_mole_fraction);
+            // Callers warm-start the next flash from these, see flash_solve_scalar_().
+            if (!is_single_phase) {
+                fluid_state.setKvalue(compIdx, scalar_state.K(compIdx));
+            }
         }
 
         updateDerivatives_(scalar_state, fluid_state, eos_type, is_single_phase);
@@ -328,6 +332,17 @@ public:
             }
         } else {
             keepHeavierPhaseInOilSlot_(fluid_state, L_scalar, verbosity);
+            // The converged ratios seed the next warm start. A single-phase
+            // result keeps the incoming ones: ratios near one would start the
+            // next stability test at its trivial solution.
+            for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+                const auto liquid_mole_fraction = fluid_state.moleFraction(oilPhaseIdx, compIdx);
+                if (liquid_mole_fraction > 0) {
+                    fluid_state.setKvalue(compIdx,
+                                          fluid_state.moleFraction(gasPhaseIdx, compIdx)
+                                              / liquid_mole_fraction);
+                }
+            }
         }
         fluid_state.setLvalue(L_scalar);
         return is_single_phase;

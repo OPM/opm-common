@@ -57,6 +57,7 @@
 
 #include <dune/common/fvector.hh>
 
+#include <array>
 #include <cmath>
 #include <limits>
 #include <string_view>
@@ -635,5 +636,48 @@ BOOST_AUTO_TEST_CASE(SingleComponentIsSinglePhase)
                 }
             }
         }
+    }
+}
+
+// A two-phase result hands its converged ratios back, so the next warm start
+// begins at the equilibrium. A single-phase result keeps the incoming ones.
+BOOST_AUTO_TEST_CASE(SolveReturnsConvergedRatios)
+{
+    constexpr Scalar z[numComponents] = {0.1, 0.6, 0.3};
+    const auto makeColdState = [&z](const Scalar pressure, const Scalar temperature) {
+        FluidState fs;
+        for (unsigned phaseIdx = 0; phaseIdx < FluidSystem::numPhases; ++phaseIdx) {
+            fs.setPressure(phaseIdx, pressure);
+        }
+        fs.setTemperature(temperature);
+        for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+            fs.setMoleFraction(compIdx, z[compIdx]);
+            fs.setKvalue(compIdx, fs.wilsonK_(compIdx));
+        }
+        fs.setLvalue(-1.0);
+        return fs;
+    };
+
+    auto twoPhase = makeColdState(40.e5, 470.0);
+    BOOST_REQUIRE(!PtFlash::solve(twoPhase, PTFlashMethod::SsiNewton, flashTolerance, EOSType::PR));
+    for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+        BOOST_CHECK_CLOSE(Opm::getValue(twoPhase.K(compIdx)),
+                          Opm::getValue(twoPhase.moleFraction(FluidSystem::gasPhaseIdx, compIdx)
+                                        / twoPhase.moleFraction(FluidSystem::oilPhaseIdx, compIdx)),
+                          1e-10);
+    }
+    auto warm = twoPhase;
+    BOOST_REQUIRE(!PtFlash::solve(warm, PTFlashMethod::SsiNewton, flashTolerance, EOSType::PR));
+    BOOST_CHECK_SMALL(Opm::getValue(warm.L() - twoPhase.L()), 1e-7);
+
+    auto singlePhase = makeColdState(970.e5, 400.0);
+    std::array<Scalar, numComponents> incoming;
+    for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+        incoming[compIdx] = Opm::getValue(singlePhase.K(compIdx));
+    }
+    BOOST_REQUIRE(
+        PtFlash::solve(singlePhase, PTFlashMethod::SsiNewton, flashTolerance, EOSType::PR));
+    for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+        BOOST_CHECK_EQUAL(Opm::getValue(singlePhase.K(compIdx)), incoming[compIdx]);
     }
 }
