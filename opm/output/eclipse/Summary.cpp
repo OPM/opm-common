@@ -1934,6 +1934,10 @@ inline quantity thp( const fn_args& args ) {
 
     const auto* sched_well = args.schedule_wells.front();
 
+    if (sched_well->predictionMode()) {
+        return { 0.0, measure::pressure };
+    }
+
     // Check if well is shut - if so, return 0
     const auto p = args.wells.find(sched_well->name());
     if ((p != args.wells.end()) &&
@@ -1952,6 +1956,10 @@ inline quantity thp( const fn_args& args ) {
     if( args.schedule_wells.empty() ) return { 0.0, measure::pressure };
 
     const auto* sched_well = args.schedule_wells.front();
+
+    if (sched_well->predictionMode()) {
+        return { 0.0, measure::pressure };
+    }
 
     // Check if well is shut - if so, return 0
     const auto p = args.wells.find(sched_well->name());
