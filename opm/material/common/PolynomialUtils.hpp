@@ -399,7 +399,10 @@ unsigned cubicRoots(SolContainer* sol,
             return 1;
         }
         else {
-            throw std::runtime_error(" p = 0 in cubic root solver!");
+            // p = 0 leaves t^3 + q = 0, with q nonzero for a positive discriminant.
+            const Scalar t = -(q / abs(q)) * pow(abs(q), 1.0 / 3.0);
+            sol[0] = t - b / (3.0 * a);
+            return 1;
         }
     }
 
