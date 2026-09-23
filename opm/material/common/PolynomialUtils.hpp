@@ -349,65 +349,72 @@ unsigned cubicRoots(SolContainer* sol,
     // Check if we have three or one real root by looking at the discriminant, and solve accordingly with
     // correct formula
     Scalar discr = 4.0 * p * p * p + 27.0 * q * q;
+    // Near a double root, rounding can put the acos or acosh argument on or
+    // beyond the boundary of its domain although the discriminant is nonzero.
+    // The double-root formulas at the end are the limit there.
     if (discr < 0.0) {
         // Find three real roots of a depressed cubic, using the trigonometric method
         // Help calculation
-        Scalar theta = (1.0 / 3.0) * acos( ((3.0 * q) / (2.0 * p)) * sqrt(-3.0 / p) );
+        const Scalar arg = ((3.0 * q) / (2.0 * p)) * sqrt(-3.0 / p);
+        if (abs(arg) < 1.0) {
+            Scalar theta = (1.0 / 3.0) * acos(arg);
 
-        // Calculate the three roots
-        sol[0] = 2.0 * sqrt(-p / 3.0) * cos( theta ) - b / (3.0 * a);
-        sol[1] = 2.0 * sqrt(-p / 3.0) * cos( theta - ((2.0 * std::numbers::pi) / 3.0) ) - b / (3.0 * a);
-        sol[2] = 2.0 * sqrt(-p / 3.0) * cos( theta - ((4.0 * std::numbers::pi) / 3.0) ) - b / (3.0 * a);
+            // Calculate the three roots
+            sol[0] = 2.0 * sqrt(-p / 3.0) * cos(theta) - b / (3.0 * a);
+            sol[1] = 2.0 * sqrt(-p / 3.0) * cos(theta - ((2.0 * std::numbers::pi) / 3.0))
+                - b / (3.0 * a);
+            sol[2] = 2.0 * sqrt(-p / 3.0) * cos(theta - ((4.0 * std::numbers::pi) / 3.0))
+                - b / (3.0 * a);
 
-        // Sort in ascending order
-        std::sort(sol, sol + 3);
+            // Sort in ascending order
+            std::sort(sol, sol + 3);
 
-        // Return confirmation of three roots
+            // Return confirmation of three roots
 
-        return 3;
+            return 3;
+        }
     }
     else if (discr > 0.0) {
 
-        // Find one real root of a depressed cubic using hyperbolic method. Different solutions depending on
-        // sign of p
-        Scalar t = 0;
+        // Find one real root of a depressed cubic using hyperbolic method. Different solutions
+        // depending on sign of p
         if (p < 0) {
             // Help calculation
-            Scalar theta = (1.0 / 3.0) * acosh( ((-3.0 * abs(q)) / (2.0 * p)) * sqrt(-3.0 / p) );
+            const Scalar arg = ((-3.0 * abs(q)) / (2.0 * p)) * sqrt(-3.0 / p);
+            if (arg > 1.0) {
+                Scalar theta = (1.0 / 3.0) * acosh(arg);
 
-            // Root
-            t = ( (-2.0 * abs(q)) / q ) * sqrt(-p / 3.0) * cosh(theta);
+                // Root, transformed to the output solution
+                const Scalar t = ((-2.0 * abs(q)) / q) * sqrt(-p / 3.0) * cosh(theta);
+                sol[0] = t - b / (3.0 * a);
+                return 1;
+            }
         }
         else if (p > 0) {
             // Help calculation
             Scalar theta = (1.0 / 3.0) * asinh( ((3.0 * q) / (2.0 * p)) * sqrt(3.0 / p) );
-            // Root
-            t = -2.0 * sqrt(p / 3.0) * sinh(theta);
-
+            // Root, transformed to the output solution
+            const Scalar t = -2.0 * sqrt(p / 3.0) * sinh(theta);
+            sol[0] = t - b / (3.0 * a);
+            return 1;
         }
         else {
             throw std::runtime_error(" p = 0 in cubic root solver!");
         }
-
-        // Transform t to output solution
-        sol[0] = t - b / (3.0 * a);
-        return 1;
-
     }
+
+    // The discriminant, 4*p^3 + 27*q^2 = 0, thus we have simple (real) roots
+    // If p = 0 then also q = 0, and t = 0 is a triple root
+    if (p == 0) {
+        sol[0] = sol[1] = sol[2] = 0.0 - b / (3.0 * a);
+    }
+    // If p != 0, the we have a simple root and a double root
     else {
-        // The discriminant, 4*p^3 + 27*q^2 = 0, thus we have simple (real) roots
-        // If p = 0 then also q = 0, and t = 0 is a triple root
-        if (p == 0) {
-            sol[0] = sol[1] = sol[2] = 0.0 - b / (3.0 * a);
-        }
-        // If p != 0, the we have a simple root and a double root
-        else {
-            sol[0] = (3.0 * q / p) - b / (3.0 * a);
-            sol[1] = sol[2] = (-3.0 * q) / (2.0 * p) - b / (3.0 * a);
-            std::sort(sol, sol + 3);
-        }
-        return 3;
+        sol[0] = (3.0 * q / p) - b / (3.0 * a);
+        sol[1] = sol[2] = (-3.0 * q) / (2.0 * p) - b / (3.0 * a);
+        std::sort(sol, sol + 3);
     }
+    return 3;
 }
 } // end Opm
 
