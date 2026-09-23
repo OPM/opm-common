@@ -161,6 +161,8 @@ public:
      * \brief The isothermal flash on a scalar fluid state, without derivatives.
      *
      * The stages are:
+     * -# a feed with a single present component is single-phase and takes
+     *    the label of its EoS root of lower Gibbs energy;
      * -# a stability test when the state does not already carry a two-phase
      *    split (\f$L \le 0\f$ or \f$L \ge 1\f$), which either declares the
      *    mixture single-phase or returns starting equilibrium ratios;
@@ -191,6 +193,20 @@ public:
         for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
             K_scalar[compIdx] = fluid_state.K(compIdx);
             z_scalar[compIdx] = fluid_state.moleFraction(compIdx);
+        }
+
+        // A single component cannot split into phases of different
+        // composition. The stability trials would only compare its two EoS
+        // roots, and one of them always looks unstable.
+        if (std::count_if(z_scalar.begin(), z_scalar.end(), [](const Scalar z) { return z > 0; })
+            == 1) {
+            for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+                fluid_state.setMoleFraction(gasPhaseIdx, compIdx, z_scalar[compIdx]);
+                fluid_state.setMoleFraction(oilPhaseIdx, compIdx, z_scalar[compIdx]);
+            }
+            fluid_state.setLvalue(
+                singleComponentPhaseLabel_(fluid_state, z_scalar, eos_type, verbosity));
+            return true;
         }
 
         // Here, a cold start means there is no usable previous two-phase split
@@ -365,6 +381,44 @@ public:
                                       "it to L = {}",
                                       L));
         }
+    }
+
+    /*!
+     * \brief The phase label of a feed with a single present component.
+     *
+     * The component is in the phase of its EoS root of lower Gibbs energy,
+     * i.e. of the lower fugacity coefficient. Where both labels share the
+     * only root, Li's criterion decides as for a mixture.
+     */
+    template <class FlashFluidState, class Vector>
+    static typename Vector::field_type singleComponentPhaseLabel_(
+        const FlashFluidState& fluid_state, const Vector& z, const EOSType& eos_type, int verbosity)
+    {
+        using ParamCache =
+            typename FluidSystem::template ParameterCache<typename FlashFluidState::ValueType>;
+        ParamCache param_cache(eos_type);
+        param_cache.updatePhase(fluid_state, oilPhaseIdx);
+        param_cache.updatePhase(fluid_state, gasPhaseIdx);
+        if (param_cache.molarVolume(oilPhaseIdx) == param_cache.molarVolume(gasPhaseIdx)) {
+            return li_single_phase_label_(fluid_state, z, verbosity);
+        }
+
+        unsigned compIdx = 0;
+        while (!(z[compIdx] > 0)) {
+            ++compIdx;
+        }
+        const auto liquid_coefficient
+            = FluidSystem::fugacityCoefficient(fluid_state, param_cache, oilPhaseIdx, compIdx);
+        const auto vapour_coefficient
+            = FluidSystem::fugacityCoefficient(fluid_state, param_cache, gasPhaseIdx, compIdx);
+        const typename Vector::field_type L = liquid_coefficient < vapour_coefficient ? 1.0 : 0.0;
+        if (verbosity >= 1) {
+            OpmLog::debug(fmt::format("Component {} alone is single-phase with L = {}, the "
+                                      "phase of its EoS root of lower Gibbs energy",
+                                      compIdx,
+                                      L));
+        }
+        return L;
     }
 
     template <class Vector, class FlashFluidState>
