@@ -72,8 +72,10 @@ public:
      *     \left( \frac{2 \sum_j x_j A_{ij}}{A} - \frac{B_i}{B} \right), \f]
      *
      * evaluated at the compressibility factor of the phase's cached molar
-     * volume. The result is clamped to a wide range so that an unphysical
-     * intermediate state during a flash still yields a finite, usable value.
+     * volume. A finite result is clamped to a wide range so that an extreme
+     * intermediate state during a flash still yields a usable value.
+     *
+     * \throws NumericalProblem when \f$Z \le B\f$ or \f$\ln \phi_i\f$ is not finite.
      */
     template <class FluidState, class Params, class LhsEval = typename FluidState::ValueType>
     static LhsEval computeFugacityCoefficient(const FluidState& fs,
@@ -119,6 +121,25 @@ public:
         beta  = log((Z + m2 * B) / (Z + m1 * B)) * A / ((m1 - m2) * B);
         gamma = (2 / A) * A_s - Bi_B;
         ln_phi = alpha + (beta * gamma);
+
+        // At or below the covolume ln(Z - B) is not finite, and the clamps
+        // below would turn that into the bound for plain scalars but pass
+        // NaN on for AD values. Throw a NumericalProblem instead.
+        if (!(scalarValue(Z) > scalarValue(B)) || !std::isfinite(scalarValue(ln_phi))) {
+            OPM_THROW_NOLOG(
+                NumericalProblem,
+                fmt::format("CubicEOS::computeFugacityCoefficient: no finite fugacity "
+                            "coefficient for component {} in phase {} at p = {} and T = {} "
+                            "(Z = {}, B = {}, A = {}, ln(phi) = {})",
+                            compIdx,
+                            phaseIdx,
+                            scalarValue(p),
+                            scalarValue(T),
+                            scalarValue(Z),
+                            scalarValue(B),
+                            scalarValue(A),
+                            scalarValue(ln_phi)));
+        }
 
         fugCoeff = exp(ln_phi);
 
