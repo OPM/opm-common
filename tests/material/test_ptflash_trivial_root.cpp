@@ -58,6 +58,7 @@
 #include <dune/common/fvector.hh>
 
 #include <cmath>
+#include <limits>
 #include <string_view>
 
 using Scalar = double;
@@ -247,6 +248,19 @@ BOOST_AUTO_TEST_CASE(NewtonReassessesNonPhysicalRoot)
     BOOST_CHECK_SMALL(Opm::getValue(fs.L()), flashTolerance);
 }
 
+// Invalid ratios from a diverged warm start must enter the existing stability
+// recovery instead of escaping the flash.
+BOOST_AUTO_TEST_CASE(NonFiniteRatiosTriggerStabilityRecovery)
+{
+    auto fs = makeRecordedState();
+    for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+        fs.setKvalue(compIdx, std::numeric_limits<Scalar>::infinity());
+    }
+
+    BOOST_REQUIRE(PtFlash::solve(fs, PTFlashMethod::SsiNewton, flashTolerance, EOSType::PR));
+    BOOST_CHECK_SMALL(Opm::getValue(fs.L()), flashTolerance);
+}
+
 // At 970 bar this feed's cubic has two roots below the covolume. A floored
 // liquid root clamped every fugacity coefficient, and substitution converged
 // on that clamp as a single vapour.
@@ -356,6 +370,159 @@ BOOST_AUTO_TEST_CASE(HybridAllowsAbsentComponent)
         BOOST_CHECK_SMALL(Opm::getValue(fs.moleFraction(phaseIdx, 0)), flashTolerance);
         for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
             BOOST_CHECK(isMoleFractionLike(fs.moleFraction(phaseIdx, compIdx)));
+        }
+    }
+}
+
+// An endpoint of the estimated K values is not a thermodynamic phase test.
+// These warm estimates start at an endpoint or reach one during substitution,
+// and collapse onto the trivial solution; the warm-start stability retry must
+// still recover the equilibrium a stability-seeded flash finds.
+BOOST_AUTO_TEST_CASE(EndpointEstimatesRecoverTwoPhaseEquilibrium)
+{
+    for (const auto method :
+         {PTFlashMethod::Newton, PTFlashMethod::Ssi, PTFlashMethod::SsiNewton}) {
+        auto reference = makeRecordedState();
+        reference.setMoleFraction(0, 0.0);
+        reference.setMoleFraction(1, 0.5);
+        reference.setMoleFraction(2, 0.5);
+        BOOST_CHECK(!PtFlash::solve(reference, method, flashTolerance, EOSType::PR));
+
+        for (const Scalar heavy_k : {0.8, 0.4}) {
+            BOOST_TEST_CONTEXT("method " << static_cast<int>(method) << ", heavy K " << heavy_k)
+            {
+                auto warm = makeRecordedState();
+                warm.setMoleFraction(0, 0.0);
+                warm.setMoleFraction(1, 0.5);
+                warm.setMoleFraction(2, 0.5);
+                warm.setKvalue(0, 1.0);
+                warm.setKvalue(1, 2.0);
+                warm.setKvalue(2, heavy_k);
+
+                BOOST_CHECK(!PtFlash::solve(warm, method, flashTolerance, EOSType::PR));
+                BOOST_CHECK_SMALL(Opm::getValue(warm.L() - reference.L()), 1.e-7);
+                for (unsigned phase = 0; phase < FluidSystem::numPhases; ++phase) {
+                    for (int comp = 0; comp < numComponents; ++comp) {
+                        BOOST_CHECK_SMALL(Opm::getValue(warm.moleFraction(phase, comp)
+                                                        - reference.moleFraction(phase, comp)),
+                                          1.e-7);
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Newton has no split to refine from an endpoint estimate, so the Newton method
+// substitutes there first. Stale Wilson estimates from 5 bar give an endpoint
+// at 39 and 41 bar, where Newton started from it hits a singular Jacobian.
+BOOST_AUTO_TEST_CASE(NewtonSubstitutesFromEndpointEstimate)
+{
+    constexpr Scalar temperature = 470.0;
+    constexpr Scalar z[numComponents] = {0.1, 0.6, 0.3};
+    const auto makeWarmState = [&z, temperature](const Scalar pressure) {
+        FluidState stale;
+        FluidState fs;
+        for (unsigned phaseIdx = 0; phaseIdx < FluidSystem::numPhases; ++phaseIdx) {
+            stale.setPressure(phaseIdx, 5.e5);
+            fs.setPressure(phaseIdx, pressure);
+        }
+        stale.setTemperature(temperature);
+        fs.setTemperature(temperature);
+        for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+            fs.setMoleFraction(compIdx, z[compIdx]);
+            fs.setKvalue(compIdx, stale.wilsonK_(compIdx));
+        }
+        fs.setLvalue(0.29);
+        return fs;
+    };
+
+    for (const Scalar pressure : {39.e5, 41.e5}) {
+        BOOST_TEST_CONTEXT("pressure " << pressure)
+        {
+            auto ssi = makeWarmState(pressure);
+            auto newton = makeWarmState(pressure);
+            BOOST_CHECK(!PtFlash::solve(ssi, PTFlashMethod::Ssi, flashTolerance, EOSType::PR));
+            BOOST_CHECK(
+                !PtFlash::solve(newton, PTFlashMethod::Newton, flashTolerance, EOSType::PR));
+            BOOST_CHECK_SMALL(Opm::getValue(newton.L() - ssi.L()), 1.e-7);
+        }
+    }
+}
+
+// Newton can reach the trivial root again after the stability retry. This
+// state is two-phase, so Newton may fail on it but must not report one phase.
+BOOST_AUTO_TEST_CASE(RetryRejectsNewtonTrivialRoot)
+{
+    constexpr Scalar z[numComponents]
+        = {0.64496973076836983, 0.035832069958223252, 0.31919819927340687};
+    constexpr Scalar K[numComponents]
+        = {1.3358649522511163, 1.4550115090329607, 0.57519955699825431};
+    const auto makeWarmState = [&z, &K]() {
+        FluidState fs;
+        for (unsigned phaseIdx = 0; phaseIdx < FluidSystem::numPhases; ++phaseIdx) {
+            fs.setPressure(phaseIdx, 12763009.333978247);
+        }
+        fs.setTemperature(519.46257482288365);
+        for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+            fs.setMoleFraction(compIdx, z[compIdx]);
+            fs.setKvalue(compIdx, K[compIdx]);
+        }
+        fs.setLvalue(0.13865234839438245);
+        return fs;
+    };
+
+    auto hybrid = makeWarmState();
+    BOOST_REQUIRE(!PtFlash::solve(hybrid, PTFlashMethod::SsiNewton, flashTolerance, EOSType::PR));
+
+    auto newton = makeWarmState();
+    try {
+        BOOST_CHECK(!PtFlash::solve(newton, PTFlashMethod::Newton, flashTolerance, EOSType::PR));
+    } catch (const Opm::NumericalProblem&) {
+        // Failing is acceptable here; a single-phase answer is not.
+    }
+}
+
+// Warm ratios near one can make substitution converge to the split with its
+// phases in the opposite slots; the oil slot must still hold the heavier phase.
+BOOST_AUTO_TEST_CASE(NearUnitWarmStartKeepsHeavierPhaseAsOil)
+{
+    constexpr Scalar z[numComponents] = {0.76524, 0.16825, 0.06651};
+    constexpr Scalar nearUnitK[numComponents] = {0.99, 1.01, 1.02};
+    const auto makeState = [&z](const Scalar liquid_fraction) {
+        FluidState fs;
+        for (unsigned phaseIdx = 0; phaseIdx < FluidSystem::numPhases; ++phaseIdx) {
+            fs.setPressure(phaseIdx, 135.42e5);
+        }
+        fs.setTemperature(394.46);
+        for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+            fs.setMoleFraction(compIdx, z[compIdx]);
+            fs.setKvalue(compIdx, fs.wilsonK_(compIdx));
+        }
+        fs.setLvalue(liquid_fraction);
+        return fs;
+    };
+
+    auto reference = makeState(-1.0);
+    BOOST_REQUIRE(!PtFlash::solve(reference, PTFlashMethod::Ssi, flashTolerance, EOSType::PR));
+
+    for (const auto method :
+         {PTFlashMethod::Newton, PTFlashMethod::Ssi, PTFlashMethod::SsiNewton}) {
+        BOOST_TEST_CONTEXT("method " << static_cast<int>(method))
+        {
+            auto warm = makeState(0.5);
+            for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+                warm.setKvalue(compIdx, nearUnitK[compIdx]);
+            }
+            BOOST_CHECK(!PtFlash::solve(warm, method, flashTolerance, EOSType::PR));
+            BOOST_CHECK_SMALL(Opm::getValue(warm.L() - reference.L()), 1.e-7);
+            for (unsigned phase = 0; phase < FluidSystem::numPhases; ++phase) {
+                for (int comp = 0; comp < numComponents; ++comp) {
+                    BOOST_CHECK_SMALL(Opm::getValue(warm.moleFraction(phase, comp)
+                                                    - reference.moleFraction(phase, comp)),
+                                      1.e-7);
+                }
+            }
         }
     }
 }
