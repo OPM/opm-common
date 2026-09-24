@@ -59,10 +59,12 @@ namespace Opm {
  *
  * \tparam Scalar  The floating-point type that specifies the precision of the numerical operations.
  * \tparam NumComp The number of the components in the fluid system.
+ * \tparam surfaceConditions Whether initFromState() takes the surface-condition
+ *                           equation of state; this instance has its own static data.
  */
-    template<class Scalar, int NumComp, bool enableWater>
+    template<class Scalar, int NumComp, bool enableWater, bool surfaceConditions = false>
     class GenericOilGasWaterFluidSystem
-        : public BaseFluidSystem<Scalar, GenericOilGasWaterFluidSystem<Scalar, NumComp, enableWater> > {
+        : public BaseFluidSystem<Scalar, GenericOilGasWaterFluidSystem<Scalar, NumComp, enableWater, surfaceConditions> > {
     public:
         // TODO: I do not think these should be constant in fluidsystem, will try to make it non-constant later
         static constexpr bool waterEnabled = enableWater;
@@ -83,10 +85,14 @@ namespace Opm {
         static constexpr int compositionSwitchIdx = -1; // equil initializer
 
         template <class ValueType>
-        using ParameterCache = Opm::PTFlashParameterCache<ValueType, GenericOilGasWaterFluidSystem<Scalar, NumComp, enableWater>>;
-        using ViscosityModel = Opm::ViscosityModels<Scalar, GenericOilGasWaterFluidSystem<Scalar, NumComp, enableWater>>;
-        using CubicEOS = Opm::CubicEOS<Scalar, GenericOilGasWaterFluidSystem<Scalar, NumComp, enableWater>>;
+        using ParameterCache = Opm::PTFlashParameterCache<ValueType, GenericOilGasWaterFluidSystem<Scalar, NumComp, enableWater, surfaceConditions>>;
+        using ViscosityModel = Opm::ViscosityModels<Scalar, GenericOilGasWaterFluidSystem<Scalar, NumComp, enableWater, surfaceConditions>>;
+        using CubicEOS = Opm::CubicEOS<Scalar, GenericOilGasWaterFluidSystem<Scalar, NumComp, enableWater, surfaceConditions>>;
         using WaterPvt = WaterPvtMultiplexer<Scalar>;
+        //! The same components under the surface-condition equation of state,
+        //! for flashes at stock-tank conditions.
+        using SurfaceFluidSystem
+            = GenericOilGasWaterFluidSystem<Scalar, NumComp, enableWater, true>;
 
         struct ComponentParam {
             std::string name;
@@ -158,7 +164,7 @@ namespace Opm {
             // TODO: we are not considering the EOS region for now
             const auto& comp_config = eclState.compositionalConfig();
             // how should we utilize the numComps from the CompositionalConfig?
-            using FluidSystem = GenericOilGasWaterFluidSystem<Scalar, NumComp, enableWater>;
+            using FluidSystem = GenericOilGasWaterFluidSystem<Scalar, NumComp, enableWater, surfaceConditions>;
             const std::size_t num_comps = comp_config.numComps();
             // const std::size_t num_eos_region = comp_config.
 
@@ -183,10 +189,15 @@ namespace Opm {
             }
 
             const auto& names = comp_config.compName();
-            const auto& eos_props = comp_config.eosProps(0);
-            // Absent OMEGAA and OMEGAB entries hold the constants of the EOS type.
-            const auto& omega_a = comp_config.omegaA(0);
-            const auto& omega_b = comp_config.omegaB(0);
+            // The surface instance takes EOSS and the keywords ending in S, which
+            // inherit whatever the deck leaves out from the reservoir. Absent
+            // OMEGAA and OMEGAB entries hold the constants of the EOS type.
+            const auto& eos_props
+                = surfaceConditions ? comp_config.eosPropsSurf(0) : comp_config.eosProps(0);
+            const auto& omega_a
+                = surfaceConditions ? comp_config.omegaASurf(0) : comp_config.omegaA(0);
+            const auto& omega_b
+                = surfaceConditions ? comp_config.omegaBSurf(0) : comp_config.omegaB(0);
             FluidSystem::init();
             using CompParm = typename FluidSystem::ComponentParam;
             for (std::size_t c = 0; c < num_comps; ++c) {
@@ -615,22 +626,22 @@ namespace Opm {
         }
     };
 
-    template <class Scalar, int NumComp, bool enableWater>
-    std::vector<typename GenericOilGasWaterFluidSystem<Scalar, NumComp, enableWater>::ComponentParam>
-    GenericOilGasWaterFluidSystem<Scalar, NumComp, enableWater>::component_param_;
+    template <class Scalar, int NumComp, bool enableWater, bool surfaceConditions>
+    std::vector<typename GenericOilGasWaterFluidSystem<Scalar, NumComp, enableWater, surfaceConditions>::ComponentParam>
+    GenericOilGasWaterFluidSystem<Scalar, NumComp, enableWater, surfaceConditions>::component_param_;
 
-    template <class Scalar, int NumComp, bool enableWater>
+    template <class Scalar, int NumComp, bool enableWater, bool surfaceConditions>
     std::vector<Scalar>
-    GenericOilGasWaterFluidSystem<Scalar, NumComp, enableWater>::interaction_coefficients_;
+    GenericOilGasWaterFluidSystem<Scalar, NumComp, enableWater, surfaceConditions>::interaction_coefficients_;
 
-    template <class Scalar, int NumComp, bool enableWater>
+    template <class Scalar, int NumComp, bool enableWater, bool surfaceConditions>
     std::array<Scalar, 5>
-    GenericOilGasWaterFluidSystem<Scalar, NumComp, enableWater>::lbc_coefficients_ =
+    GenericOilGasWaterFluidSystem<Scalar, NumComp, enableWater, surfaceConditions>::lbc_coefficients_ =
         ViscosityModel::defaultLBCCoefficients();
 
-    template <class Scalar, int NumComp, bool enableWater>
+    template <class Scalar, int NumComp, bool enableWater, bool surfaceConditions>
     std::shared_ptr<WaterPvtMultiplexer<Scalar> >
-    GenericOilGasWaterFluidSystem<Scalar, NumComp, enableWater>::waterPvt_;
+    GenericOilGasWaterFluidSystem<Scalar, NumComp, enableWater, surfaceConditions>::waterPvt_;
 
 }
 #endif // OPM_GENERIC_OIL_GAS_WATER_FLUIDSYSTEM_HPP
