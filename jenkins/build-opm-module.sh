@@ -12,39 +12,94 @@ declare -A EXTRA_MODULE_FLAGS
 EXTRA_MODULE_FLAGS[opm-simulators]="-DBUILD_FLOW_VARIANTS=ON -DOPM_ENABLE_PYTHON=ON -DBUILD_FLOW_POLY_GRID=ON -DBUILD_FLOW_ALU_GRID=ON"
 EXTRA_MODULE_FLAGS[opm-common]="-DOPM_ENABLE_PYTHON=ON -DOPM_ENABLE_EMBEDDED_PYTHON=ON -DOPM_INSTALL_PYTHON=ON"
 
+# Parse a requested revision from the trigger comment.
+# Leaves parsed_revision empty when the module was not specified.
+function parse_requested_revision {
+  local module=$1
+  local requested
+  local remainder
+  parsed_revision=
+
+  if [[ ${ghprbCommentBody:-} =~ (^|[[:space:]])${module}=([^[:space:]]*) ]]
+  then
+    requested=${BASH_REMATCH[2]}
+    remainder=${ghprbCommentBody#*"${BASH_REMATCH[0]}"}
+    if grep -qiF "$module=" <<< "$remainder"
+    then
+      echo "Multiple $module revisions specified" >&2
+      exit 1
+    fi
+    if [[ -n ${absolute_revisions:-} ]]
+    then
+      if [[ -z $requested ]]
+      then
+        echo "Invalid $module revision: a ref is required after $module=" >&2
+        exit 1
+      fi
+      if [[ $requested == -* ]] || ! git check-ref-format --branch "$requested" >/dev/null 2>&1
+      then
+        echo "Invalid $module revision '$requested': expected a branch, tag, or commit" >&2
+        exit 1
+      fi
+      parsed_revision=$requested
+    else
+      if [[ ! $requested =~ ^[1-9][0-9]*$ ]]
+      then
+        echo "Invalid $module PR number '$requested': expected a positive integer" >&2
+        exit 1
+      fi
+      parsed_revision=pull/$requested/merge
+    fi
+  elif grep -qiF "$module=" <<< "${ghprbCommentBody:-}"
+  then
+    echo "Invalid $module trigger: use $module= as a standalone lowercase token" >&2
+    exit 1
+  fi
+}
+
 # Parse revisions from trigger comment and setup arrays
 # Depends on: 'upstreams', upstreamRev',
 #             'downstreams', 'downstreamRev',
 #             'ghprbCommentBody',
 #             'CONFIGURATIONS', 'TOOLCHAINS'
 function parseRevisions {
+  local module
+  local -A dependencies=()
   for upstream in ${upstreams[*]}
   do
-    if grep -qi "$upstream=" <<< $ghprbCommentBody
+    dependencies[$upstream]=1
+    parse_requested_revision "$upstream"
+    if [[ -n $parsed_revision ]]
     then
-      if test -n "$absolute_revisions"
+      upstreamRev[$upstream]=$parsed_revision
+    fi
+  done
+  for downstream in ${downstreams[*]}
+  do
+    dependencies[$downstream]=1
+    parse_requested_revision "$downstream"
+    if [[ -n $parsed_revision ]]
+    then
+      if ! grep -q "with downstreams" <<< $ghprbCommentBody
       then
-        upstreamRev[$upstream]=`echo $ghprbCommentBody | sed -r "s/.*${upstream,,}=([^ ]+).*/\1/g"`
-      else
-        upstreamRev[$upstream]=pull/`echo $ghprbCommentBody | sed -r "s/.*${upstream,,}=([0-9]+).*/\1/g"`/merge
+        echo "Requested $downstream revision, but this build did not enable downstreams" >&2
+        exit 1
+      fi
+      downstreamRev[$downstream]=$parsed_revision
+    fi
+  done
+  for module in opm-common opm-grid opm-simulators opm-upscaling
+  do
+    if [[ -z ${dependencies[$module]:-} ]]
+    then
+      parse_requested_revision "$module"
+      if [[ -n $parsed_revision ]]
+      then
+        echo "Requested $module revision, but this job does not fetch $module as a dependency" >&2
+        exit 1
       fi
     fi
   done
-  if grep -q "with downstreams" <<< $ghprbCommentBody
-  then
-    for downstream in ${downstreams[*]}
-    do
-      if grep -qi "$downstream=" <<< $ghprbCommentBody
-      then
-        if test -n "$absolute_revisions"
-        then
-          downstreamRev[$downstream]=`echo $ghprbCommentBody | sed -r "s/.*${downstream,,}=([^ ]+).*/\1/g"`
-        else
-          downstreamRev[$downstream]=pull/`echo $ghprbCommentBody | sed -r "s/.*${downstream,,}=([0-9]+).*/\1/g"`/merge
-       fi
-     fi
-    done
-  fi
 
   # Default to a serial build if no types are given
   if test -z "$BTYPES"
@@ -167,17 +222,30 @@ function build_module {
 # $1 = Name of module
 # $2 = git-rev to use for module
 function clone_module {
-  # Already cloned by an earlier configuration
-  test -d $WORKSPACE/deps/$1 && return 0
   local repo_root=${OPM_REPO_ROOT:-git@github.com:OPM}
-  mkdir -p $WORKSPACE/deps/$1
-  pushd $WORKSPACE/deps/$1
-  git init .
-  git remote add origin ${repo_root}/$1
-  git fetch --depth 1 origin $2:branch_to_build
-  git checkout branch_to_build
-  git log HEAD -1 | cat
-  test $? -eq 0 || exit 1
+  mkdir -p "$WORKSPACE/deps/$1" || exit 1
+  pushd "$WORKSPACE/deps/$1" || exit 1
+  if ! test -e .git
+  then
+    git init . || exit 1
+  fi
+  if git remote get-url origin >/dev/null 2>&1
+  then
+    git remote set-url origin "$repo_root/$1" || exit 1
+  else
+    git remote add origin "$repo_root/$1" || exit 1
+  fi
+  if ! git fetch --depth 1 -- origin "$2"
+  then
+    echo "Failed to fetch $1 revision '$2'; check that the PR or ref exists" >&2
+    exit 1
+  fi
+  if ! git checkout -B branch_to_build FETCH_HEAD
+  then
+    echo "Failed to check out $1 revision '$2'" >&2
+    exit 1
+  fi
+  git log HEAD -1 || exit 1
   popd
 }
 
