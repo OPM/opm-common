@@ -46,7 +46,9 @@
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
 
+#include <cmath>
 #include <cstddef>
+#include <limits>
 #include <stdexcept>
 #include <vector>
 
@@ -461,8 +463,12 @@ private:
                                                     activityModel_,
                                                     extrapolate);
 
-        // normalize the phase compositions
-        xgH2O = max(0.0, min(1.0, xgH2O));
+        // normalize the phase compositions. The water vaporization factor Rvw = XgW / (1 - XgW) * ...
+        // diverges for a gas that is pure water vapor, which the solubility model gives for pressures
+        // at or below the vapor pressure of water (e.g. ~2.3 kPa at 20 C). Keep the mole fraction
+        // strictly below one so that Rvw stays finite.
+        const Scalar maxXgH2O = 1.0 - std::sqrt(std::numeric_limits<Scalar>::epsilon());
+        xgH2O = max(0.0, min(maxXgH2O, xgH2O));
 
         return convertXgWToRvw(
             convertxgWToXgW(xgH2O, salinity),
