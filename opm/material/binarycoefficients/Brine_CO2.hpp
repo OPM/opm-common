@@ -50,6 +50,7 @@ class Brine_CO2 {
     typedef ::Opm::IdealGas<Scalar> IdealGas;
     static constexpr int liquidPhaseIdx = 0; // index of the liquid phase
     static constexpr int gasPhaseIdx = 1; // index of the gas phase
+    static constexpr Scalar minPressure = CO2::minPressure; // lower limit of the pressure [Pa]
 
 public:
     /*!
@@ -123,6 +124,10 @@ public:
     {
         OPM_TIMEFUNCTION_LOCAL(Subsystem::PvtProps);
 
+        // Newton iterates may visit zero or negative pressures, for which the correlations below
+        // (log(pg), 1/pg, molar volume) give NaN/Inf. Floor the pressure to keep them finite.
+        const Evaluation pg_clamped = pg < minPressure ? Evaluation(minPressure) : pg;
+
         // Iterate or not?
         bool iterate = false;
         if ((activityModel == 1 && salinity.any_nonzero())
@@ -144,7 +149,7 @@ public:
                 auto [xCO2, yH2O] =
                     mutualSolubilitySpycherPruess2005_(params,
                                                        temperature,
-                                                       pg,
+                                                       pg_clamped,
                                                        molalityNaCl,
                                                        extrapolate);
                 xlCO2 = xCO2;
@@ -155,7 +160,7 @@ public:
                     auto [xCO2, yH2O] =
                         fixPointIterSolubility_(params,
                                                 temperature,
-                                                pg,
+                                                pg_clamped,
                                                 molalityNaCl,
                                                 activityModel,
                                                 extrapolate);
@@ -168,7 +173,7 @@ public:
                     auto [xCO2, yH2O] =
                         nonIterSolubility_(params,
                                            temperature,
-                                           pg,
+                                           pg_clamped,
                                            molalityNaCl,
                                            activityModel,
                                            extrapolate);
@@ -186,7 +191,7 @@ public:
             const Evaluation& A =
                 computeA_(params,
                           temperature,
-                          pg,
+                          pg_clamped,
                           Evaluation(0.0),
                           Evaluation(0.0),
                           false,
@@ -204,7 +209,7 @@ public:
             const Evaluation& A =
                 computeA_(params,
                           temperature,
-                          pg,
+                          pg_clamped,
                           Evaluation(0.0),
                           Evaluation(0.0),
                           false,
@@ -593,7 +598,9 @@ private:
     {
         OPM_TIMEFUNCTION_LOCAL(Subsystem::PvtProps);
         // Start point for fixed-point iterations as recommended below in section 2.2
-        Evaluation yH2O = H2O::vaporPressure(temperature) / pg; // ideal mixing
+        // Ideal mixing. It exceeds one below the vapor pressure of water, which makes the
+        // fugacity coefficients overflow, so yH2O is limited to one here and in the iterations.
+        Evaluation yH2O = min(H2O::vaporPressure(temperature) / pg, Evaluation(1.0));
         Evaluation xCO2 = 0.009; // same as ~0.5 mol/kg
         Evaluation gammaNaCl = 1.0; // default salt activity coeff = 1.0
 
@@ -638,6 +645,7 @@ private:
                                   highTemp,
                                   iterate,
                                   extrapolate);
+            yH2O_new = min(yH2O_new, Evaluation(1.0));
 
             // Check for convergence
             if (abs(xCO2_new - xCO2) < tol && abs(yH2O_new - yH2O) < tol) {

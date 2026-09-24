@@ -62,6 +62,11 @@ public:
 
     static constexpr const Scalar brineSalinity = 1.000000000000000e-01;
 
+    //! Lower limit [Pa] of the pressure used in the density below the table minimum and in the
+    //! solubility model. It keeps log(p), 1/p and the density finite for zero and negative
+    //! pressures, which a Newton iterate may visit.
+    static constexpr Scalar minPressure = 1.0;
+
     /*!
      * \brief A human readable name for the CO2.
      */
@@ -224,6 +229,16 @@ public:
                                  const Evaluation& pressure,
                                  bool extrapolate = false)
     {
+        // Below the table minimum (1 bar) the linear extrapolation gives a negative density.
+        // Use the ideal gas scaling rho = rho(pMin) * p / pMin instead (rho ~ p at fixed T), with p
+        // floored at minPressure so that the density stays positive for non-physical pressures.
+        if (extrapolate) {
+            const Scalar pMin = params.tabulatedDensity.yMin();
+            if (pressure < pMin) {
+                const Evaluation rhoMin = params.tabulatedDensity.eval(temperature, Evaluation(pMin), extrapolate);
+                return rhoMin * ((pressure < minPressure ? Evaluation(minPressure) : pressure) / pMin);
+            }
+        }
         return params.tabulatedDensity.eval(temperature, pressure, extrapolate);
     }
 
