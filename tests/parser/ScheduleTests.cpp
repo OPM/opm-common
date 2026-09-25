@@ -5368,6 +5368,35 @@ WELLSTRE
 )")), Opm::OpmInputError);
 }
 
+BOOST_AUTO_TEST_CASE(WCONINJE_HCGAS_and_HCOIL_are_gas_and_oil_injectors) {
+    const auto sched = make_schedule(gptable_deck(R"(
+WELSPECS
+ 'GINJ' 'G1' 1 1 2000 'GAS' /
+ 'OINJ' 'G1' 2 2 2000 'OIL' /
+/
+WCONINJE
+ 'GINJ' 'HCGAS' 'OPEN' 'RATE' 100 /
+ 'OINJ' 'HCOIL' 'OPEN' 'RATE' 100 /
+/
+TSTEP
+ 1 /
+)"));
+
+    BOOST_CHECK(sched.getWell("GINJ", 0).injectorType() == InjectorType::GAS);
+    BOOST_CHECK(sched.getWell("OINJ", 0).injectorType() == InjectorType::OIL);
+}
+
+BOOST_AUTO_TEST_CASE(WCONINJH_rejects_HCGAS) {
+    BOOST_CHECK_THROW(make_schedule(gptable_deck(R"(
+WELSPECS
+ 'INJ' 'G1' 1 1 2000 'GAS' /
+/
+WCONINJH
+ 'INJ' 'HCGAS' 'OPEN' 100 /
+/
+)")), Opm::OpmInputError);
+}
+
 BOOST_AUTO_TEST_CASE(GPTABLE_solution_seed_and_schedule_respec) {
     const auto sched = make_schedule(R"(
 RUNSPEC
