@@ -1691,3 +1691,24 @@ DATES             -- 1
     BOOST_CHECK( sched.rst_keywords( 0 ) == expected );
     BOOST_CHECK( sched.rst_keywords( 1 ) == expected );
 }
+
+BOOST_AUTO_TEST_CASE(RPTRST_PVTSOL_OUTPUT)
+{
+    const auto sched = make_schedule(R"(
+SOLUTION
+RPTRST
+  BASIC=2 SOLVMFO SOLVMFG /
+SCHEDULE
+DATES
+ 10 OCT 2008 /
+/
+)");
+
+    const auto expected = std::map<std::string, int> {
+        { "SOLVMFG", 1 },
+        { "SOLVMFO", 1 },
+    };
+
+    BOOST_CHECK(sched.rst_keywords(0) == expected);
+    BOOST_CHECK(sched.rst_keywords(1) == expected);
+}
