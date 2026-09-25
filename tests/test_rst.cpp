@@ -571,7 +571,7 @@ BOOST_AUTO_TEST_CASE(Restart_Time_Of_Day)
         Opm::TimeStampUTC::YMD { 2016, 1, 4 }, 16, 47, 59, 0
     };
 
-    BOOST_CHECK_EQUAL(header.sim_time(), Opm::asTimeT(ts));
+    BOOST_CHECK(header.sim_time() == Opm::asTimePoint(ts));
 
     const auto& [time, report_step] = header.restart_info();
     BOOST_CHECK(time == Opm::asTimePoint(ts) + std::chrono::milliseconds { 999 });
@@ -609,7 +609,7 @@ BOOST_AUTO_TEST_CASE(Restart_Time_Millisecond_Rounding)
                 std::vector<bool>(100), std::vector<double>(1000)
             };
 
-            BOOST_CHECK_EQUAL(header.sim_time(), Opm::asTimeT(ts));
+            BOOST_CHECK(header.sim_time() == Opm::asTimePoint(ts));
 
             const auto& [time, report_step] = header.restart_info();
             BOOST_CHECK(time == Opm::asTimePoint(ts) +

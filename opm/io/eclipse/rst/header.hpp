@@ -161,7 +161,7 @@ struct RstHeader
     // Returns std::nullopt if either source is unavailable.
     std::optional<double> inferred_start_time_drift_seconds() const;
 
-    std::time_t sim_time() const;
+    time_point sim_time() const;
     std::pair<time_point, std::size_t> restart_info() const;
     int num_udq() const;
 };

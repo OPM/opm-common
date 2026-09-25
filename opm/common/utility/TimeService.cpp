@@ -91,8 +91,13 @@ time_point now() {
 
 std::time_t advance(const std::time_t tp, const double sec)
 {
-    const auto t = Opm::TimeService::from_time_t(tp) + std::chrono::duration_cast<Opm::time_point::duration>(std::chrono::duration<double>(sec));
-    return Opm::TimeService::to_time_t(t);
+    return to_time_t(advance(from_time_t(tp), sec));
+}
+
+time_point advance(const time_point& tp, const double sec)
+{
+    return tp + std::chrono::duration_cast<time_point::duration>
+        (std::chrono::duration<double>(sec));
 }
 
 const std::unordered_map<std::string , int>& eclipseMonthIndices() {

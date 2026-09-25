@@ -95,7 +95,7 @@ inferStartFromDateNum(const std::vector<double>& doubhead)
 }
 
 std::optional<Opm::TimeStampUTC>
-inferStartFromElapsedSimDays(const std::time_t simTime,
+inferStartFromElapsedSimDays(const Opm::time_point& simTime,
                              const std::vector<double>& doubhead)
 {
     if (doubhead.size() <= VI::doubhead::SimTime) {
@@ -240,7 +240,7 @@ RstHeader::RstHeader(const Opm::UnitSystem&     unit_system,
         inferStartFromElapsedSimDays(this->sim_time(), doubhead);
 }
 
-std::time_t RstHeader::sim_time() const
+time_point RstHeader::sim_time() const
 {
     TimeStampUTC ts(this->year, this->month, this->mday);
 
@@ -249,7 +249,7 @@ std::time_t RstHeader::sim_time() const
         .seconds(this->microsecond / 1'000'000)
         .microseconds(this->microsecond % 1'000'000);
 
-    return asTimeT(ts);
+    return asTimePoint(ts);
 }
 
 std::pair<time_point, std::size_t>
@@ -258,7 +258,7 @@ RstHeader::restart_info() const
     // Round the fraction of a second to the schedule's millisecond resolution.
     const auto fraction = std::chrono::microseconds { this->microsecond % 1'000'000 };
 
-    return std::make_pair(TimeService::from_time_t(this->sim_time()) +
+    return std::make_pair(this->sim_time() +
                           std::chrono::round<time_point::duration>(fraction),
                           std::size_t(this->report_step));
 }
