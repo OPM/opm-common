@@ -39,8 +39,8 @@
 #include <opm/input/eclipse/Parser/ParserKeywords/W.hpp>
 
 #include <algorithm>
+#include <chrono>
 #include <cstddef>
-#include <ctime>
 #include <iterator>
 #include <optional>
 #include <ranges>
@@ -131,21 +131,19 @@ bool ActionX::valid_keyword(const std::string& keyword)
     return actionx_allowed_list.find(keyword) != actionx_allowed_list.end();
 }
 
-ActionX::ActionX()
-    : m_start_time(0)
-{}
+ActionX::ActionX() = default;
 
 ActionX::ActionX(const std::string& name,
                  const std::size_t  max_run,
                  const double       min_wait,
-                 const std::time_t  start_time)
+                 const time_point   start_time)
     : m_name       { name }
     , m_max_run    { max_run }
     , m_min_wait   { min_wait }
     , m_start_time { start_time }
 {}
 
-ActionX::ActionX(const DeckRecord& record, const std::time_t start_time)
+ActionX::ActionX(const DeckRecord& record, const time_point start_time)
     : ActionX(record.getItem<ParserKeywords::ACTIONX::NAME>().getTrimmedString(0),
               record.getItem<ParserKeywords::ACTIONX::NUM>().get<int>(0),
               record.getItem<ParserKeywords::ACTIONX::MIN_WAIT>().getSIDouble(0),
@@ -172,7 +170,7 @@ ActionX::ActionX(const RestartIO::RstAction& rst_action)
 ActionX::ActionX(const std::string&              name,
                  const std::size_t               max_run,
                  const double                    min_wait,
-                 const std::time_t               start_time,
+                 const time_point                start_time,
                  std::vector<Condition>&&        conditions,
                  const std::vector<std::string>& tokens)
     : m_name       { name }
@@ -189,7 +187,7 @@ ActionX ActionX::serializationTestObject()
     result.m_name = "test";
     result.m_max_run = 1;
     result.m_min_wait = 2;
-    result.m_start_time = 3;
+    result.m_start_time = TimeService::from_time_t(3);
     result.keywords = {DeckKeyword::serializationTestObject()};
     result.condition = Action::AST::serializationTestObject();
     Condition cond;
@@ -208,7 +206,7 @@ void ActionX::addKeyword(const DeckKeyword& kw)
     this->keywords.push_back(kw);
 }
 
-bool ActionX::ready(const State& state, const std::time_t sim_time) const
+bool ActionX::ready(const State& state, const time_point sim_time) const
 {
     const auto run_count = state.run_count(*this);
 
@@ -222,7 +220,7 @@ bool ActionX::ready(const State& state, const std::time_t sim_time) const
         return true;
     }
 
-    return std::difftime(sim_time, state.run_time(*this))
+    return std::chrono::duration<double> { sim_time - state.run_time(*this) }.count()
         >= this->min_wait();
 }
 
@@ -337,7 +335,7 @@ bool ActionX::operator==(const ActionX& data) const
 std::pair<ActionX, std::vector<std::pair<std::string, std::string>>>
 parseActionX(const DeckKeyword& kw,
              const Actdims&     actdims,
-             const std::time_t  start_time)
+             const time_point   start_time)
 {
     const auto record = kw.getRecord(0);
     const auto name = record.getItem<ParserKeywords::ACTIONX::NAME>().getTrimmedString(0);

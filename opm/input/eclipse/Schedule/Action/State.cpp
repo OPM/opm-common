@@ -26,7 +26,6 @@
 
 #include <algorithm>
 #include <cstddef>
-#include <ctime>
 #include <map>
 #include <memory>
 #include <optional>
@@ -79,7 +78,7 @@ std::size_t Opm::Action::State::run_count(const ActionX& action) const
         ? std::size_t{0} : count_iter->second.run_count;
 }
 
-std::time_t Opm::Action::State::run_time(const ActionX& action) const
+Opm::time_point Opm::Action::State::run_time(const ActionX& action) const
 {
     auto statePos = this->run_state.find(makeID(action));
     if (statePos == this->run_state.end()) {
@@ -91,9 +90,9 @@ std::time_t Opm::Action::State::run_time(const ActionX& action) const
     return statePos->second.last_run;
 }
 
-void Opm::Action::State::add_run(const ActionX&    action,
-                                 const std::time_t run_time,
-                                 const Result&     result)
+void Opm::Action::State::add_run(const ActionX&   action,
+                                 const time_point run_time,
+                                 const Result&    result)
 {
     {
         const auto& [statePos, inserted] = this->run_state

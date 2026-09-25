@@ -743,7 +743,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                     auto [action, condition_errors] =
                         Action::parseActionX(keyword,
                                               this->m_static.m_runspec.actdims(),
-                                              std::chrono::system_clock::to_time_t(this->snapshots[report_step].start_time()));
+                                              this->snapshots[report_step].start_time());
 
                     for(const auto& [ marker, msg]: condition_errors) {
                         parseContext.handleError(marker, msg, keyword.location(), errors);
@@ -1001,8 +1001,7 @@ Defaulted grid coordinates is not allowed for COMPDAT as part of ACTIONX)"
         } else if (report_step >= this->m_sched_deck.size()) {
             throw std::invalid_argument(fmt::format("Well status change for report step {} requested, this exceeds the total number of report steps, being {}.", report_step, this->m_sched_deck.size() - 1));
         }
-        std::time_t start_time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::from_time_t(0));
-        Opm::Action::ActionX action("openwell", 1, 0.0, start_time);
+        Opm::Action::ActionX action("openwell", 1, 0.0, time_point{});
         DeckItem wellItem("WELL", std::string());
         wellItem.push_back(well_name);
         DeckItem statusItem("STATUS", std::string());
