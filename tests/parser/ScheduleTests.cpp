@@ -5612,6 +5612,51 @@ TSTEP
                       0.8, 1.0e-10);
 }
 
+BOOST_AUTO_TEST_CASE(Injection_stream_change_is_an_injection_update) {
+    const auto sched = make_schedule(gptable_deck(R"(
+WELSPECS
+ 'P' 'G1' 1 1 2000 'OIL' /
+ 'I' 'G1' 2 2 2000 'GAS' /
+/
+WCONPROD
+ 'P' 'OPEN' 'ORAT' 100 /
+/
+WCONINJE
+ 'I' 'GAS' 'OPEN' 'RATE' 100 /
+/
+WELLSTRE
+ 'GAS1' 0.8 0.2 0.0 /
+ 'GAS2' 0.7 0.3 0.0 /
+/
+WINJGAS
+ '*' 'STREAM' 'GAS1' /
+/
+TSTEP
+ 1 /
+WINJGAS
+ '*' 'STREAM' 'GAS2' /
+/
+TSTEP
+ 1 /
+WINJGAS
+ '*' 'STREAM' 'GAS2' /
+/
+TSTEP
+ 1 /
+)"));
+
+    using ScheduleEvents::INJECTION_UPDATE;
+
+    // A new stream updates an injector, but not a producer.
+    BOOST_CHECK(sched[1].events().hasEvent(INJECTION_UPDATE));
+    BOOST_CHECK(sched[1].wellgroup_events().hasEvent("I", INJECTION_UPDATE));
+    BOOST_CHECK(!sched[1].wellgroup_events().hasEvent("P", INJECTION_UPDATE));
+
+    // Repeating the same stream changes nothing.
+    BOOST_CHECK(!sched[2].events().hasEvent(INJECTION_UPDATE));
+    BOOST_CHECK(!sched[2].wellgroup_events().hasEvent("I", INJECTION_UPDATE));
+}
+
 BOOST_AUTO_TEST_CASE(GPTABLE_solution_seed_and_schedule_respec) {
     const auto sched = make_schedule(R"(
 RUNSPEC

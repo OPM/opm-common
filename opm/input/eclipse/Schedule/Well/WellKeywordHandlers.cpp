@@ -648,7 +648,15 @@ void setInjectionStream(HandlerContext& handlerContext,
 
         // The stream only matters once the well injects, so a producer stays a producer.
         if (well.updateInjectionProperties(std::move(injection))) {
+            const bool injector = well.isInjector();
             handlerContext.state().wells.update(std::move(well));
+
+            if (injector) {
+                handlerContext.state().events().addEvent(ScheduleEvents::INJECTION_UPDATE);
+                handlerContext.state().wellgroup_events()
+                    .addEvent(well_name, ScheduleEvents::INJECTION_UPDATE);
+                handlerContext.affected_well(well_name);
+            }
         }
     }
 }
