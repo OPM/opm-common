@@ -554,6 +554,8 @@ public:
     bool updateEconLimits(std::shared_ptr<WellEconProductionLimits> econ_limits);
     bool updateProduction(std::shared_ptr<WellProductionProperties> production);
     bool updateInjection(std::shared_ptr<WellInjectionProperties> injection);
+    // Replace the injection properties without turning a producer into an injector.
+    bool updateInjectionProperties(std::shared_ptr<WellInjectionProperties> injection);
     bool updateWellProductivityIndex();
 
     bool updateWSEGAICD(const std::vector<std::pair<int, AutoICD>>& aicd_pairs,

@@ -864,6 +864,16 @@ bool Well::updateInjection(std::shared_ptr<WellInjectionProperties> injection_ar
     return update;
 }
 
+bool Well::updateInjectionProperties(std::shared_ptr<WellInjectionProperties> injection_arg)
+{
+    if (*this->injection == *injection_arg) {
+        return false;
+    }
+
+    this->injection = std::move(injection_arg);
+    return true;
+}
+
 bool Well::updateWellProductivityIndex()
 {
     return this->connections->prepareWellPIScaling();
