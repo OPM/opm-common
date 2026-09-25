@@ -22,6 +22,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <opm/output/eclipse/EclipseIO.hpp>
+#include <opm/output/eclipse/VectorItems/logihead.hpp>
 #include <opm/output/eclipse/RestartValue.hpp>
 
 #include <opm/output/data/Cells.hpp>
@@ -948,4 +949,114 @@ SCHEDULE
 BOOST_AUTO_TEST_CASE(MULTPVBOXInit)
 {
     checkMULTPV(createMULTPVBOXDECK());
+}
+
+BOOST_AUTO_TEST_CASE(EclipseIODualPorosityStaticFiles) {
+    // Full write pipeline for a dual-porosity case: EclipseIO::writeInitial
+    // must produce the reference-simulator file shape end-to-end — halved
+    // EGRID with extended ACTNUM and the coupling connection pair, INIT with
+    // the dual-porosity flag, doubled matrix-first arrays, co-located depths
+    // and the coupling transmissibility.
+    const std::string deckString { R"(RUNSPEC
+TITLE
+  Minimal dual porosity write test
+OIL
+WATER
+METRIC
+DIMENS
+ 1 1 2 /
+DUALPORO
+NODPPM
+TABDIMS
+ 1 1 20 20 /
+EQLDIMS
+/
+WELLDIMS
+ 2 1 1 2 /
+START
+ 1 'JAN' 2020 /
+GRID
+DX
+ 2*100 /
+DY
+ 2*100 /
+DZ
+ 2*10 /
+TOPS
+ 2*2000 /
+PORO
+ 0.20 0.01 /
+PERMX
+ 1.0 1000.0 /
+COPY
+ PERMX PERMY /
+ PERMX PERMZ /
+/
+SIGMA
+ 0.12 /
+INIT
+PROPS
+PVTW
+ 200 1.0 4.0E-5 0.5 0.0 /
+PVDO
+ 150 1.05 1.0
+ 200 1.02 1.1
+ 250 1.00 1.2 /
+DENSITY
+ 800 1000 1.0 /
+ROCK
+ 200 5.0E-5 /
+SWOF
+ 0.20 0.000 1.000 0.0
+ 0.80 0.600 0.000 0.0 /
+SOLUTION
+EQUIL
+ 2000 200 2100 0.0 /
+SCHEDULE
+WELSPECS
+ 'PROD' 'G1' 1 1 2000 'OIL' /
+/
+COMPDAT
+ 'PROD' 1 1 2 2 'OPEN' 2* 0.2 /
+/
+WCONPROD
+ 'PROD' 'OPEN' 'BHP' 5* 100 /
+/
+TSTEP
+ 10*30 /
+END
+)" };
+
+    WorkArea work_area("test_dp_static");
+    const auto deck = Parser().parseString(deckString);
+    auto es = EclipseState(deck);
+    const auto& eclGrid = es.getInputGrid();
+    const Schedule schedule(deck, es, std::make_shared<Python>());
+    const SummaryConfig summary_config(deck, schedule, es.fieldProps(), es.aquifer());
+    es.getIOConfig().setBaseName("DPIO");
+
+    EclipseIO eclWriter(es, eclGrid, schedule, summary_config);
+    eclWriter.writeInitial(data::Solution{}, {}, es.getInputNNC().input());
+
+    // EGRID shape details are pinned by EclipseGridTests; here only the
+    // porosity-model flag, as written through the full EclipseIO pipeline.
+    EclIO::EclFile egrid("DPIO.EGRID");
+    constexpr int fileheadPorosityModel = 5;   // 0-based index; 1 = dual porosity
+    BOOST_CHECK_EQUAL(egrid.get<int>("FILEHEAD")[fileheadPorosityModel], 1);
+
+    // INIT: flag, doubled matrix-first arrays, co-located depths, coupling.
+    EclIO::EclFile init("DPIO.INIT");
+    namespace VI = ::Opm::RestartIO::Helpers::VectorItems;
+    BOOST_CHECK_EQUAL(init.get<bool>("LOGIHEAD")[VI::logihead::DualPoro], true);
+    const auto porv = init.get<float>("PORV");
+    BOOST_REQUIRE_EQUAL(porv.size(), 2U);
+    BOOST_CHECK_CLOSE(porv[0], 20000.0f, 1e-4);
+    BOOST_CHECK_CLOSE(porv[1], 1000.0f, 1e-4);
+    const auto depth = init.get<float>("DEPTH");
+    BOOST_REQUIRE_EQUAL(depth.size(), 2U);
+    BOOST_CHECK_CLOSE(depth[0], 2005.0f, 1e-4);
+    BOOST_CHECK_CLOSE(depth[1], 2005.0f, 1e-4);
+    const auto trannnc = init.get<float>("TRANNNC");
+    BOOST_REQUIRE_EQUAL(trannnc.size(), 1U);
+    BOOST_CHECK_CLOSE(trannnc[0], 102.324f, 1e-2);
 }

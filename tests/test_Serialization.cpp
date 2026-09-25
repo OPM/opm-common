@@ -53,6 +53,7 @@
 #include <opm/input/eclipse/EclipseState/InitConfig/FieldSep.hpp>
 #include <opm/input/eclipse/EclipseState/InitConfig/FoamConfig.hpp>
 #include <opm/input/eclipse/EclipseState/InitConfig/InitConfig.hpp>
+#include <opm/input/eclipse/EclipseState/PorosityModel.hpp>
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
 #include <opm/input/eclipse/EclipseState/SimulationConfig/BCConfig.hpp>
 #include <opm/input/eclipse/EclipseState/SimulationConfig/DatumDepth.hpp>
@@ -347,6 +348,7 @@ TEST_FOR_TYPE_NAMED(Network::Node, NetworkNode)
 TEST_FOR_TYPE(OilVaporizationProperties)
 TEST_FOR_TYPE(PAvg)
 TEST_FOR_TYPE(Phases)
+TEST_FOR_TYPE(PorosityModel)
 TEST_FOR_TYPE(PlymwinjTable)
 TEST_FOR_TYPE(PlyshlogTable)
 TEST_FOR_TYPE(PvcdoTable)
