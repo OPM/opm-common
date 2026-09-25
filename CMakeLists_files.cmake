@@ -721,7 +721,9 @@ list(APPEND DUNE_TEST_SOURCE_FILES
   tests/material/test_ptflash_trivial_root.cpp
   tests/material/test_saturation_pressure.cpp
   tests/material/test_tabulation.cpp
+  tests/material/test_mixture_enthalpy.cpp
   tests/material/test_threecomponents_ptflash.cpp
+  tests/material/test_twocomponents_ptflash.cpp
   tests/material/test_volume_shift.cpp
 )
 
@@ -1336,6 +1338,7 @@ list(APPEND PUBLIC_HEADER_FILES
   opm/material/components/C10.hpp
   opm/material/components/CaIon.hpp
   opm/material/components/ClIon.hpp
+  opm/material/components/ComponentCp.hpp
   opm/material/components/CO2.hpp
   opm/material/components/CO2Tables.hpp
   opm/material/components/Component.hpp
@@ -1362,8 +1365,10 @@ list(APPEND PUBLIC_HEADER_FILES
   opm/material/components/iapws/Region4.hpp
   opm/material/constraintsolvers/CompositionFromFugacities.hpp
   opm/material/constraintsolvers/ComputeFromReferencePhase.hpp
+  opm/material/constraintsolvers/IdealGasCaloricData.hpp
   opm/material/constraintsolvers/ImmiscibleFlash.hpp
   opm/material/constraintsolvers/MiscibleMultiPhaseComposition.hpp
+  opm/material/constraintsolvers/MixtureEnthalpy.hpp
   opm/material/constraintsolvers/NcpFlash.hpp
   opm/material/constraintsolvers/PTFlash.hpp
   opm/material/constraintsolvers/PTFlashMethod.hpp
