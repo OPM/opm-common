@@ -618,6 +618,12 @@ void handleWELOPEN(HandlerContext& handlerContext)
     }
 }
 
+// Only the first two characters of a fluid nature are significant.
+bool isStreamFluid(std::string_view fluid_nature)
+{
+    return fluid_nature.starts_with("ST");
+}
+
 using SetInjComposition = void (Well::WellInjectionProperties::*)(const std::vector<double>&);
 
 // Apply a WELLSTRE stream to the injection properties of the wells matching the pattern.
@@ -651,10 +657,8 @@ void handleWINJGAS(HandlerContext& handlerContext)
     for (const auto& record : handlerContext.keyword) {
         const std::string fluid_nature = record.getItem<ParserKeywords::WINJGAS::FLUID>().getTrimmedString(0);
 
-        // \Note: technically, only the first two characters are significant
-        // with some testing, we can determine whether we want to enforce this.
-        // at the moment, we only support full string STREAM for fluid nature
-        if (fluid_nature != "STREAM") {
+        // STREAM is the only supported fluid nature.
+        if (!isStreamFluid(fluid_nature)) {
             const std::string msg = fmt::format("The fluid nature '{}' is not supported in WINJGAS keyword.", fluid_nature);
             throw OpmInputError(msg, handlerContext.keyword.location());
         }
@@ -671,9 +675,9 @@ void handleWINJOIL(HandlerContext& handlerContext)
     using Kw = ParserKeywords::WINJOIL;
 
     for (const auto& record : handlerContext.keyword) {
-        // STREAM is the only fluid nature, and only its first two characters are significant.
+        // STREAM is the only fluid nature.
         const std::string fluid_nature = record.getItem<Kw::FLUID>().getTrimmedString(0);
-        if (fluid_nature.compare(0, 2, "ST") != 0) {
+        if (!isStreamFluid(fluid_nature)) {
             const std::string msg = fmt::format(
                 "The fluid nature '{}' is not supported in WINJOIL keyword.", fluid_nature);
             throw OpmInputError(msg, handlerContext.keyword.location());

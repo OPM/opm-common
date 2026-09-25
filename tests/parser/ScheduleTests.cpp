@@ -5457,6 +5457,48 @@ WINJOIL
 )")), Opm::OpmInputError);
 }
 
+BOOST_AUTO_TEST_CASE(WINJGAS_takes_the_two_character_stream_abbreviation) {
+    const auto sched = make_schedule(gptable_deck(R"(
+WELSPECS
+ 'INJ' 'G1' 1 1 2000 'GAS' /
+/
+WELLSTRE
+ 'GAS1' 0.8 0.2 0.0 /
+/
+WINJGAS
+ 'INJ' 'ST' 'GAS1' /
+/
+)"));
+
+    const auto& composition = sched.getWell("INJ", 0).getInjectionProperties().gasInjComposition();
+    BOOST_REQUIRE_EQUAL(composition.size(), std::size_t{3});
+    BOOST_CHECK_CLOSE(composition[0], 0.8, 1.0e-10);
+}
+
+BOOST_AUTO_TEST_CASE(WINJGAS_rejects_other_fluids_and_unknown_streams) {
+    // The default fluid nature GRUP is not supported.
+    BOOST_CHECK_THROW(make_schedule(gptable_deck(R"(
+WELSPECS
+ 'INJ' 'G1' 1 1 2000 'GAS' /
+/
+WELLSTRE
+ 'GAS1' 0.8 0.2 0.0 /
+/
+WINJGAS
+ 'INJ' 1* 'GAS1' /
+/
+)")), Opm::OpmInputError);
+
+    BOOST_CHECK_THROW(make_schedule(gptable_deck(R"(
+WELSPECS
+ 'INJ' 'G1' 1 1 2000 'GAS' /
+/
+WINJGAS
+ 'INJ' 'STREAM' 'GAS1' /
+/
+)")), Opm::OpmInputError);
+}
+
 BOOST_AUTO_TEST_CASE(GPTABLE_solution_seed_and_schedule_respec) {
     const auto sched = make_schedule(R"(
 RUNSPEC
