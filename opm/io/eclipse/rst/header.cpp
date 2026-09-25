@@ -28,9 +28,9 @@
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 
 #include <array>
+#include <chrono>
 #include <cmath>
 #include <cstddef>
-#include <ctime>
 #include <optional>
 #include <utility>
 #include <vector>
@@ -263,10 +263,10 @@ RstHeader::inferred_start_time_drift_seconds() const
         return std::nullopt;
     }
 
-    const auto t0 = asTimeT(this->inferred_start_from_doubhead_start.value());
-    const auto t1 = asTimeT(this->inferred_start_from_elapsed_simtime.value());
+    const auto t0 = asTimePoint(this->inferred_start_from_doubhead_start.value());
+    const auto t1 = asTimePoint(this->inferred_start_from_elapsed_simtime.value());
 
-    return std::abs(std::difftime(t0, t1));
+    return std::abs(std::chrono::duration<double> { t0 - t1 }.count());
 }
 
 int RstHeader::num_udq() const
