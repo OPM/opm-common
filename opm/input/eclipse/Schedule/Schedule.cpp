@@ -1748,8 +1748,8 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
                                 "   * End time   = {:%d-%b-%Y %H:%M:%S}.\n"
                                 " Possibly due to inconsistent RESTART/SKIPREST settings.",
                                 timeStep + 1,
-                                fmt::gmtime(TimeService::to_time_t(start_time)),
-                                fmt::gmtime(TimeService::to_time_t(end_time))) };
+                                asTm(TimeStampUTC { TimeService::to_time_t(start_time) }),
+                                asTm(TimeStampUTC { TimeService::to_time_t(end_time) })) };
         }
         using DurationInSeconds = std::chrono::duration<double>; // Tick is 1 second, stored in double.
         return DurationInSeconds(end_time - start_time).count();
