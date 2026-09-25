@@ -158,9 +158,7 @@ void ScheduleBlock::dump_time(const UnitSystem& usys,
 
 void ScheduleBlock::writeDates(DeckOutput& output) const
 {
-    const auto ts = TimeStampUTC {
-        TimeService::to_time_t(this->start_time())
-    };
+    const auto ts = TimeStampUTC { this->start_time() };
 
     const auto ecl_month = TimeService::eclipseMonthNames().at(ts.month());
     const auto dates_string = fmt::format(R"(
