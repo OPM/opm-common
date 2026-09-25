@@ -6007,7 +6007,7 @@ BOOST_AUTO_TEST_CASE(ScheduleDeckTest) {
         Parser parser;
         auto deck = parser.parseString( createDeckWTEST() );
         Runspec runspec{deck};
-        ScheduleDeck sched_deck( TimeService::from_time_t(runspec.start_time()), deck, {} );
+        ScheduleDeck sched_deck( runspec.start_time(), deck, {} );
         BOOST_CHECK_EQUAL( sched_deck.size(), 6 );
 
         std::vector<std::string> first_kw = {"WELSPECS", "WTEST", "SUMTHIN", "WCONINJH", "WELOPEN", "WCONINJH"};

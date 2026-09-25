@@ -76,7 +76,7 @@ namespace {
     std::chrono::time_point<std::chrono::system_clock> startSimulation()
     {
         // 2015-04-09T00:00:00+0000
-        return Opm::TimeService::from_time_t( Opm::TimeService::mkdate(2015, 4, 9) );
+        return Opm::TimeService::mkdate(2015, 4, 9);
     }
 
     std::chrono::duration<double, std::chrono::seconds::period> tstep_123()
