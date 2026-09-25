@@ -533,8 +533,8 @@ RstAction::RstAction(const std::string& name_arg,
                      const int max_run_arg,
                      const int run_count_arg,
                      const double min_wait_arg,
-                     const std::time_t start_time_arg,
-                     const std::time_t last_run_arg,
+                     const time_point start_time_arg,
+                     const time_point last_run_arg,
                      std::vector<RstAction::Condition>&& conditions_arg)
     : name       { name_arg }
     , max_run    { max_run_arg }

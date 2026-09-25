@@ -114,7 +114,7 @@ ACTIONX
  0.75 /
 /
 )"};
-        Action::ActionX action1("NAME", 10, 100, 0);
+        Action::ActionX action1("NAME", 10, 100, time_point{});
         BOOST_CHECK_EQUAL(action1.name(), "NAME");
 
         const auto deck = Parser{}.parseString( action_kw );
@@ -122,7 +122,7 @@ ACTIONX
 
 
         const auto& [action2, condition_errors2 ] =
-            Action::parseActionX(kw, {}, 0);
+            Action::parseActionX(kw, {}, time_point{});
         BOOST_CHECK_EQUAL(action2.name(), "ACTION");
         BOOST_CHECK_EQUAL(condition_errors2.size(), 0U);
     };
@@ -149,7 +149,7 @@ ACTIONX
 
     const auto deck1 = Parser{}.parseString( action_kw_num_first);
     const auto& [action3, condition_errors3] =
-        Action::parseActionX(deck1["ACTIONX"].back(), {}, 0);
+        Action::parseActionX(deck1["ACTIONX"].back(), {}, time_point{});
     BOOST_CHECK_EQUAL(condition_errors3.size(), 1U);
 }
 
@@ -395,7 +395,7 @@ BOOST_AUTO_TEST_CASE(TestActions)
     BOOST_CHECK_EQUAL(config.ecl_size(), 0U);
     BOOST_CHECK(config.empty());
 
-    Opm::Action::ActionX action1("NAME", 10, 100, 0);
+    Opm::Action::ActionX action1("NAME", 10, 100, time_point{});
     config.add(action1);
     BOOST_CHECK_EQUAL(config.ecl_size(), 1U);
     BOOST_CHECK(!config.empty());
@@ -403,12 +403,12 @@ BOOST_AUTO_TEST_CASE(TestActions)
     {
         constexpr double min_wait = 86400;
         constexpr std::size_t max_eval = 3;
-        Opm::Action::ActionX action("NAME", max_eval, min_wait, asTimeT(TimeStampUTC(TimeStampUTC::YMD{ 2000, 7, 1 })) );
+        Opm::Action::ActionX action("NAME", max_eval, min_wait, asTimePoint(TimeStampUTC(TimeStampUTC::YMD{ 2000, 7, 1 })) );
         config.add(action);
         BOOST_CHECK_EQUAL(config.ecl_size(), 1U);
 
 
-        Opm::Action::ActionX action3("NAME3", 1000000, 0, asTimeT(TimeStampUTC(TimeStampUTC::YMD{ 2000, 7, 1 })) );
+        Opm::Action::ActionX action3("NAME3", 1000000, 0, asTimePoint(TimeStampUTC(TimeStampUTC::YMD{ 2000, 7, 1 })) );
         config.add(action3);
 
         Opm::Action::PyAction py_action1(python, "PYTHON1", Opm::Action::PyAction::RunCount::single, "act1.py");
@@ -421,14 +421,14 @@ BOOST_AUTO_TEST_CASE(TestActions)
     const Opm::Action::ActionX& action2 = config["NAME"];
     Opm::Action::State action_state;
     // The action2 instance has an empty condition, so it will never evaluate to true.
-    BOOST_CHECK(action2.ready(action_state, asTimeT(TimeStampUTC(TimeStampUTC::YMD{ 2000, 7, 1 }))  ));
-    BOOST_CHECK(!action2.ready(action_state, asTimeT(TimeStampUTC(TimeStampUTC::YMD{ 2000, 6, 1 }))   ));
+    BOOST_CHECK(action2.ready(action_state, asTimePoint(TimeStampUTC(TimeStampUTC::YMD{ 2000, 7, 1 }))  ));
+    BOOST_CHECK(!action2.ready(action_state, asTimePoint(TimeStampUTC(TimeStampUTC::YMD{ 2000, 6, 1 }))   ));
     BOOST_CHECK(!action2.eval(context).conditionSatisfied());
 
-    auto pending = config.pending( action_state, asTimeT(TimeStampUTC(TimeStampUTC::YMD{ 2000, 8, 7 }))  );
+    auto pending = config.pending( action_state, asTimePoint(TimeStampUTC(TimeStampUTC::YMD{ 2000, 8, 7 }))  );
     BOOST_CHECK_EQUAL( pending.size(), 2U);
     for (auto& ptr : pending) {
-        BOOST_CHECK(ptr->ready(action_state, asTimeT(TimeStampUTC(TimeStampUTC::YMD{ 2000, 8, 7 }))  ));
+        BOOST_CHECK(ptr->ready(action_state, asTimePoint(TimeStampUTC(TimeStampUTC::YMD{ 2000, 8, 7 }))  ));
         BOOST_CHECK(!ptr->eval(context).conditionSatisfied());
     }
 
@@ -1080,9 +1080,12 @@ BOOST_AUTO_TEST_CASE(ACTIONRESULT_COPY_WELLS)
 
 BOOST_AUTO_TEST_CASE(ActionState)
 {
+    const auto t100  = TimeService::from_time_t(100);
+    const auto t1000 = TimeService::from_time_t(1000);
+
     Action::State st;
-    Action::ActionX action1("NAME", 100, 100, 100); action1.update_id(100);
-    Action::ActionX action2("NAME", 100, 100, 100); action1.update_id(200);
+    Action::ActionX action1("NAME", 100, 100, t100); action1.update_id(100);
+    Action::ActionX action2("NAME", 100, 100, t100); action1.update_id(200);
     const auto res1 = Action::Result{true}.wells({"W1"});
     const auto res2 = Action::Result{true}.wells({"W2"});
     const auto res3 = Action::Result{true}.wells({"W3"});
@@ -1090,16 +1093,16 @@ BOOST_AUTO_TEST_CASE(ActionState)
     BOOST_CHECK_EQUAL(0U, st.run_count(action1));
     BOOST_CHECK_THROW(st.run_time(action1), std::invalid_argument);
 
-    st.add_run(action1, 100, res1);
+    st.add_run(action1, t100, res1);
     BOOST_CHECK_EQUAL(1U, st.run_count(action1));
-    BOOST_CHECK_EQUAL(100, st.run_time(action1));
+    BOOST_CHECK(st.run_time(action1) == t100);
     const auto* r1 = st.result("NAME");
     BOOST_REQUIRE(r1 != nullptr);
     BOOST_CHECK(r1->hasWell("W1"));
 
-    st.add_run(action1, 1000, res2);
+    st.add_run(action1, t1000, res2);
     BOOST_CHECK_EQUAL(2U, st.run_count(action1));
-    BOOST_CHECK_EQUAL(1000, st.run_time(action1));
+    BOOST_CHECK(st.run_time(action1) == t1000);
     const auto* r2 = st.result("NAME");
     BOOST_REQUIRE(r2 != nullptr);
     BOOST_CHECK(r2->hasWell("W2"));
@@ -1107,16 +1110,16 @@ BOOST_AUTO_TEST_CASE(ActionState)
     BOOST_CHECK_EQUAL(0U, st.run_count(action2));
     BOOST_CHECK_THROW(st.run_time(action2), std::invalid_argument);
 
-    st.add_run(action2, 100, res3);
+    st.add_run(action2, t100, res3);
     BOOST_CHECK_EQUAL(1U, st.run_count(action2));
-    BOOST_CHECK_EQUAL(100, st.run_time(action2));
+    BOOST_CHECK(st.run_time(action2) == t100);
     const auto* r3 = st.result("NAME");
     BOOST_REQUIRE(r3 != nullptr);
     BOOST_CHECK(r3->hasWell("W3"));
 
-    st.add_run(action2, 1000, res1);
+    st.add_run(action2, t1000, res1);
     BOOST_CHECK_EQUAL(2U, st.run_count(action2));
-    BOOST_CHECK_EQUAL(1000, st.run_time(action2));
+    BOOST_CHECK(st.run_time(action2) == t1000);
 
     const auto* res = st.result("NAME-HIDDEN");
     BOOST_CHECK(res == nullptr);
@@ -1220,7 +1223,7 @@ ENDACTIO
     BOOST_CHECK(action1.id() != action2.id());
 
     Action::State st;
-    st.add_run(action1, 1000, Action::Result{true});
+    st.add_run(action1, TimeService::from_time_t(1000), Action::Result{true});
     BOOST_CHECK_EQUAL(st.run_count(action1), 1U);
     BOOST_CHECK_EQUAL(st.run_count(action2), 0U);
 }
@@ -1321,7 +1324,7 @@ WELPI
 )";
 
     const auto deck = Parser{}.parseString(deck_string);
-    Action::ActionX action("NAME", 1, 1, 0);
+    Action::ActionX action("NAME", 1, 1, time_point{});
     const NameOrder well_order({"W1", "W2", "P1", "P2", "P3"});
     const WellMatcher well_matcher(&well_order);
 
