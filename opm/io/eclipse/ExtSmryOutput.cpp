@@ -34,7 +34,7 @@
 namespace Opm { namespace EclIO {
 
 ExtSmryOutput::ExtSmryOutput(const std::vector<std::string>& valueKeys, const std::vector<std::string>& valueUnits,
-                 const EclipseState& es, const time_t start_time)
+                 const EclipseState& es, const time_point& start_time)
 {
     m_nVect = valueKeys.size();
     m_nTimeSteps = 0;

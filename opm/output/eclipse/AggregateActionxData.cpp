@@ -1098,8 +1098,8 @@ Opm::RestartIO::Helpers::createAggregateActionxData(const Schedule&      sched,
     const auto wells = sched.wellNames(simStep);
 
     const auto runtime = AggregateActionxRuntimeContext {
-        .startTime = TimeService::from_time_t(sched.getStartTime()),
-        .simTime = TimeService::from_time_t(sched.simTime(simStep)),
+        .startTime = sched.getStartTime(),
+        .simTime = sched.simTime(simStep),
         .units = sched.getUnits(),
         .wellNames = std::span<const std::string>{ wells.data(), wells.size() },
         .wlistManager = sched[simStep].wlist_manager.get()

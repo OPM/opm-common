@@ -892,7 +892,7 @@ rptrstOpts(const int norst_value)
 // =====================================================================
 
 Opm::RestartIO::InteHEAD::TimePoint
-Opm::RestartIO::getSimulationTimePoint(const std::time_t start,
+Opm::RestartIO::getSimulationTimePoint(const time_point& start,
                                        const double      elapsed)
 {
     // Round to whole microseconds first so that FP noise near a

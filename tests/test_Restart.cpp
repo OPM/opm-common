@@ -72,9 +72,9 @@
 #include <opm/input/eclipse/Parser/Parser.hpp>
 
 #include <algorithm>
+#include <chrono>
 #include <cstddef>
 #include <cstdlib>
-#include <ctime>
 #include <map>
 #include <memory>
 #include <numeric>
@@ -459,7 +459,7 @@ first_sim(const Setup&         setup,
                             udq_state,
                             report_step,
                             false,
-                            std::difftime(first_step, start_time),
+                            std::chrono::duration<double> { first_step - start_time }.count(),
                             restart_value,
                             write_double);
 

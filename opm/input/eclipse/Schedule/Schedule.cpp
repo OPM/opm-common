@@ -406,21 +406,17 @@ namespace Opm {
         return result;
     }
 
-    std::time_t Schedule::getStartTime() const {
-        return this->posixStartTime( );
+    time_point Schedule::getStartTime() const {
+        return this->m_sched_deck[0].start_time();
     }
 
-    std::time_t Schedule::posixStartTime() const {
-        return std::chrono::system_clock::to_time_t(this->m_sched_deck[0].start_time());
-    }
-
-    std::time_t Schedule::posixEndTime() const {
+    time_point Schedule::getEndTime() const {
         // This should indeed access the start_time() property of the last
         // snapshot.
         if (this->snapshots.size() > 0)
-            return std::chrono::system_clock::to_time_t(this->snapshots.back().start_time());
+            return this->snapshots.back().start_time();
         else
-            return this->posixStartTime( );
+            return this->getStartTime( );
     }
 
 
@@ -683,7 +679,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
             logger(fmt::format("Initializing report step {}/{} at {} {} {} line {}",
                                load_start,
                                this->m_sched_deck.size() - 1,
-                               Schedule::formatDate(TimeService::from_time_t(this->getStartTime())),
+                               Schedule::formatDate(this->getStartTime()),
                                deck_time(this->m_sched_deck.seconds(load_start)),
                                time_unit,
                                location.lineno));
@@ -1733,8 +1729,8 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
         return DurationInSeconds(elapsed).count();
     }
 
-    std::time_t Schedule::simTime(std::size_t timeStep) const {
-        return std::chrono::system_clock::to_time_t( this->snapshots[timeStep].start_time() );
+    time_point Schedule::simTime(std::size_t timeStep) const {
+        return this->snapshots[timeStep].start_time();
     }
 
     double Schedule::stepLength(std::size_t timeStep) const {

@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE(CreateSchedule) {
         FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
         Runspec runspec (deck);
         Schedule sched(deck, grid, fp, NumericalAquifers{}, runspec, python);
-        BOOST_CHECK_EQUAL(asTimeT(TimeStampUTC(2007 , 5 , 10)), sched.getStartTime());
+        BOOST_CHECK(asTimePoint(TimeStampUTC(2007 , 5 , 10)) == sched.getStartTime());
         BOOST_CHECK_EQUAL(9U, sched.size());
         BOOST_CHECK( deck.hasKeyword("NETBALAN") );
     }
@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE(CreateSchedule_Comments_After_Keywords) {
     Runspec runspec (deck);
     auto python = std::make_shared<Python>();
     Schedule sched(deck, grid, fp, NumericalAquifers{}, runspec, python);
-    BOOST_CHECK_EQUAL(asTimeT(TimeStampUTC(2007, 5 , 10)) , sched.getStartTime());
+    BOOST_CHECK(asTimePoint(TimeStampUTC(2007, 5 , 10)) == sched.getStartTime());
     BOOST_CHECK_EQUAL(9U, sched.size());
 }
 

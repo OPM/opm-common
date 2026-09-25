@@ -55,7 +55,7 @@ void verifyRestartConfig( const Schedule& sched, std::map<int, boost::gregorian:
             BOOST_CHECK( sched.write_rst_file(step) );
 
             const auto report_date = rptConfig.at(step);
-            const std::time_t t = sched.simTime(step);
+            const std::time_t t = TimeService::to_time_t(sched.simTime(step));
             const boost::posix_time::ptime epoch(boost::gregorian::date(1970,1,1));
             const boost::posix_time::ptime report_date_ptime(report_date);
             const boost::posix_time::time_duration::sec_type duration = (report_date_ptime - epoch).total_seconds();
