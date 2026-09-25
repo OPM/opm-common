@@ -618,6 +618,33 @@ void handleWELOPEN(HandlerContext& handlerContext)
     }
 }
 
+using SetInjComposition = void (Well::WellInjectionProperties::*)(const std::vector<double>&);
+
+// Apply a WELLSTRE stream to the injection properties of the wells matching the pattern.
+void setInjectionStream(HandlerContext& handlerContext,
+                        const std::string& wellNamePattern,
+                        const std::string& stream_name,
+                        const SetInjComposition setComposition)
+{
+    const auto& inj_streams = handlerContext.state().inj_streams;
+    if (!inj_streams.has(stream_name)) {
+        const std::string msg
+            = fmt::format("The stream '{}' is not defined in WELLSTRE keyword.", stream_name);
+        throw OpmInputError(msg, handlerContext.keyword.location());
+    }
+
+    for (const auto& well_name : handlerContext.wellNames(wellNamePattern, false)) {
+        auto well = handlerContext.state().wells.get(well_name);
+        auto injection
+            = std::make_shared<Well::WellInjectionProperties>(well.getInjectionProperties());
+        std::invoke(setComposition, *injection, inj_streams.get(stream_name));
+
+        if (well.updateInjection(injection)) {
+            handlerContext.state().wells.update(std::move(well));
+        }
+    }
+}
+
 void handleWINJGAS(HandlerContext& handlerContext)
 {
     // \Note: we do not support the item 4 MAKEUPGAS and item 5 STAGE in WINJGAS keyword yet
@@ -632,27 +659,10 @@ void handleWINJGAS(HandlerContext& handlerContext)
             throw OpmInputError(msg, handlerContext.keyword.location());
         }
 
-        const std::string stream_name = record.getItem<ParserKeywords::WINJGAS::STREAM>().getTrimmedString(0);
-        // we make sure the stream is defined in WELLSTRE keyword
-        const auto& inj_streams = handlerContext.state().inj_streams;
-        if (!inj_streams.has(stream_name)) {
-            const std::string msg = fmt::format("The stream '{}' is not defined in WELLSTRE keyword.", stream_name);
-            throw OpmInputError(msg, handlerContext.keyword.location());
-        }
-
-        const std::string wellNamePattern = record.getItem<ParserKeywords::WINJGAS::WELL>().getTrimmedString(0);
-        const auto well_names = handlerContext.wellNames(wellNamePattern, false);
-        for (const auto& well_name : well_names) {
-            auto well2 = handlerContext.state().wells.get(well_name);
-            auto injection = std::make_shared<Well::WellInjectionProperties>(well2.getInjectionProperties());
-
-            const auto& inj_stream = inj_streams.get(stream_name);
-            injection->setGasInjComposition(inj_stream);
-
-            if (well2.updateInjection(injection)) {
-                handlerContext.state().wells.update(std::move(well2));
-            }
-        }
+        setInjectionStream(handlerContext,
+                           record.getItem<ParserKeywords::WINJGAS::WELL>().getTrimmedString(0),
+                           record.getItem<ParserKeywords::WINJGAS::STREAM>().getTrimmedString(0),
+                           &Well::WellInjectionProperties::setGasInjComposition);
     }
 }
 
@@ -669,27 +679,10 @@ void handleWINJOIL(HandlerContext& handlerContext)
             throw OpmInputError(msg, handlerContext.keyword.location());
         }
 
-        const std::string stream_name = record.getItem<Kw::STREAM>().getTrimmedString(0);
-        const auto& inj_streams = handlerContext.state().inj_streams;
-        if (!inj_streams.has(stream_name)) {
-            const std::string msg
-                = fmt::format("The stream '{}' is not defined in WELLSTRE keyword.", stream_name);
-            throw OpmInputError(msg, handlerContext.keyword.location());
-        }
-
-        const std::string wellNamePattern = record.getItem<Kw::WELL>().getTrimmedString(0);
-        const auto well_names = handlerContext.wellNames(wellNamePattern, false);
-        for (const auto& well_name : well_names) {
-            auto well2 = handlerContext.state().wells.get(well_name);
-            auto injection
-                = std::make_shared<Well::WellInjectionProperties>(well2.getInjectionProperties());
-
-            injection->setOilInjComposition(inj_streams.get(stream_name));
-
-            if (well2.updateInjection(injection)) {
-                handlerContext.state().wells.update(std::move(well2));
-            }
-        }
+        setInjectionStream(handlerContext,
+                           record.getItem<Kw::WELL>().getTrimmedString(0),
+                           record.getItem<Kw::STREAM>().getTrimmedString(0),
+                           &Well::WellInjectionProperties::setOilInjComposition);
     }
 }
 
