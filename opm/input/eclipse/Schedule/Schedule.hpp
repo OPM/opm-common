@@ -623,7 +623,7 @@ namespace Opm {
         std::vector<std::string> wellNames(const std::string& pattern,
                                            const HandlerContext& context,
                                            bool allowEmpty = false);
-        static std::string formatDate(std::time_t t);
+        static std::string formatDate(const time_point& tp);
         void applyGlobalWPIMULT( const std::unordered_map<std::string, double>& wpimult_global_factor);
         void updateICDScalingFactors();
 

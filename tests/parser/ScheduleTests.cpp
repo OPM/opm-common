@@ -6044,7 +6044,7 @@ BOOST_AUTO_TEST_CASE(ScheduleDeck_DATES_RESTART_Too_Early_Missing_SKIPREST)
     const auto start = asTimePoint(TimeStampUTC { TimeStampUTC::YMD { 2025, 12, 24 }, 17, 0, 0, 0 });
 
     auto restart = ScheduleRestartInfo{};
-    restart.time = asTimeT(TimeStampUTC { TimeStampUTC::YMD { 2026, 2, 3 }, 10, 0, 0, 0 });
+    restart.time = asTimePoint(TimeStampUTC { TimeStampUTC::YMD { 2026, 2, 3 }, 10, 0, 0, 0 });
     restart.report_step = 42;
     restart.skiprest = false;
 
@@ -6064,7 +6064,7 @@ BOOST_AUTO_TEST_CASE(ScheduleDeck_DATES_RESTART_Have_SKIPREST)
     const auto start = asTimePoint(TimeStampUTC { TimeStampUTC::YMD { 2025, 12, 24 }, 17, 0, 0, 0 });
 
     auto restart = ScheduleRestartInfo{};
-    restart.time = asTimeT(TimeStampUTC { TimeStampUTC::YMD { 2026, 2, 3 }, 10, 0, 0, 0 });
+    restart.time = asTimePoint(TimeStampUTC { TimeStampUTC::YMD { 2026, 2, 3 }, 10, 0, 0, 0 });
     restart.report_step = 42;
     restart.skiprest = true;
 
@@ -6086,7 +6086,7 @@ BOOST_AUTO_TEST_CASE(ScheduleDeck_DATES_RESTART_Later)
     const auto start = asTimePoint(TimeStampUTC { TimeStampUTC::YMD { 2025, 12, 24 }, 17, 0, 0, 0 });
 
     auto restart = ScheduleRestartInfo{};
-    restart.time = asTimeT(TimeStampUTC { TimeStampUTC::YMD { 2026, 2, 3 }, 10, 0, 0, 0 });
+    restart.time = asTimePoint(TimeStampUTC { TimeStampUTC::YMD { 2026, 2, 3 }, 10, 0, 0, 0 });
     restart.report_step = 42;
     restart.skiprest = false;
 

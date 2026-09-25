@@ -19,12 +19,13 @@
 #ifndef WELLTEST_STATE_H
 #define WELLTEST_STATE_H
 
+#include <opm/common/utility/TimeService.hpp>
+
 #include <opm/input/eclipse/Schedule/Well/WellTestConfig.hpp>
 
 #include <opm/io/eclipse/rst/state.hpp>
 
 #include <cstddef>
-#include <ctime>
 #include <optional>
 #include <string>
 #include <unordered_map>
@@ -206,7 +207,7 @@ public:
     };
 
     WellTestState() = default;
-    WellTestState(std::time_t start_time, const RestartIO::RstState& rst_state);
+    WellTestState(const time_point& start_time, const RestartIO::RstState& rst_state);
 
 
     std::vector<std::string> test_wells(const WellTestConfig& config, double sim_time);
