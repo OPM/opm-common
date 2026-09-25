@@ -254,19 +254,6 @@ namespace {
         };
     }
 
-    std::tm makeTm(const Opm::TimeStampUTC& tp) {
-        auto timePoint = std::tm{};
-
-        timePoint.tm_year = tp.year()  - 1900;
-        timePoint.tm_mon  = tp.month() -    1;
-        timePoint.tm_mday = tp.day();
-        timePoint.tm_hour = tp.hour();
-        timePoint.tm_min  = tp.minutes();
-        timePoint.tm_sec  = tp.seconds();
-
-        return timePoint;
-    }
-
 }
 
 Opm::TimeStampUTC::TimeStampUTC(const std::time_t tp)
@@ -329,6 +316,20 @@ Opm::TimeStampUTC& Opm::TimeStampUTC::microseconds(const int us)
 }
 
 
+std::tm Opm::asTm(const TimeStampUTC& tp)
+{
+    auto timePoint = std::tm{};
+
+    timePoint.tm_year = tp.year()  - 1900;
+    timePoint.tm_mon  = tp.month() -    1;
+    timePoint.tm_mday = tp.day();
+    timePoint.tm_hour = tp.hour();
+    timePoint.tm_min  = tp.minutes();
+    timePoint.tm_sec  = tp.seconds();
+
+    return timePoint;
+}
+
 std::time_t Opm::asTimeT(const TimeStampUTC& tp)
 {
     return toSysSeconds(tp).time_since_epoch().count();
@@ -336,7 +337,7 @@ std::time_t Opm::asTimeT(const TimeStampUTC& tp)
 
 std::time_t Opm::asLocalTimeT(const TimeStampUTC& tp)
 {
-    auto tm = makeTm(tp);
+    auto tm = asTm(tp);
     return std::mktime(&tm);
 }
 
