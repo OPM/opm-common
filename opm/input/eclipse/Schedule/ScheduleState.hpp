@@ -657,7 +657,7 @@ namespace Opm {
         // constant flux aquifers
         std::unordered_map<int, SingleAquiferFlux> aqufluxs;
         BCState bcstate;
-        // injection streams for compostional STREAM injection using WINJGAS
+        // injection streams for compositional STREAM injection using WINJGAS and WINJOIL
         map_member<std::string, std::vector<double>> inj_streams;
 
         std::unordered_map<std::string, double> target_wellpi;

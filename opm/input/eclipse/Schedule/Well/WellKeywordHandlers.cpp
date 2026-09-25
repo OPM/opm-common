@@ -618,41 +618,85 @@ void handleWELOPEN(HandlerContext& handlerContext)
     }
 }
 
+// Only the first two characters of a fluid nature are significant.
+bool isStreamFluid(std::string_view fluid_nature)
+{
+    return fluid_nature.starts_with("ST");
+}
+
+using SetInjComposition = void (Well::WellInjectionProperties::*)(const std::vector<double>&);
+
+// Apply a WELLSTRE stream to the injection properties of the wells matching the pattern.
+void setInjectionStream(HandlerContext& handlerContext,
+                        const std::string& wellNamePattern,
+                        const std::string& stream_name,
+                        const SetInjComposition setComposition)
+{
+    const auto& inj_streams = handlerContext.state().inj_streams;
+    if (!inj_streams.has(stream_name)) {
+        const std::string msg
+            = fmt::format("The stream '{}' is not defined in WELLSTRE keyword.", stream_name);
+        throw OpmInputError(msg, handlerContext.keyword.location());
+    }
+
+    const auto& composition = inj_streams.get(stream_name);
+    for (const auto& well_name : handlerContext.wellNames(wellNamePattern, false)) {
+        auto well = handlerContext.state().wells.get(well_name);
+        auto injection
+            = std::make_shared<Well::WellInjectionProperties>(well.getInjectionProperties());
+        std::invoke(setComposition, *injection, composition);
+
+        // The stream only matters once the well injects, so a producer stays a producer.
+        if (well.updateInjectionProperties(std::move(injection))) {
+            const bool injector = well.isInjector();
+            handlerContext.state().wells.update(std::move(well));
+
+            if (injector) {
+                handlerContext.state().events().addEvent(ScheduleEvents::INJECTION_UPDATE);
+                handlerContext.state().wellgroup_events()
+                    .addEvent(well_name, ScheduleEvents::INJECTION_UPDATE);
+                handlerContext.affected_well(well_name);
+            }
+        }
+    }
+}
+
 void handleWINJGAS(HandlerContext& handlerContext)
 {
     // \Note: we do not support the item 4 MAKEUPGAS and item 5 STAGE in WINJGAS keyword yet
     for (const auto& record : handlerContext.keyword) {
         const std::string fluid_nature = record.getItem<ParserKeywords::WINJGAS::FLUID>().getTrimmedString(0);
 
-        // \Note: technically, only the first two characters are significant
-        // with some testing, we can determine whether we want to enforce this.
-        // at the moment, we only support full string STREAM for fluid nature
-        if (fluid_nature != "STREAM") {
+        // STREAM is the only supported fluid nature.
+        if (!isStreamFluid(fluid_nature)) {
             const std::string msg = fmt::format("The fluid nature '{}' is not supported in WINJGAS keyword.", fluid_nature);
             throw OpmInputError(msg, handlerContext.keyword.location());
         }
 
-        const std::string stream_name = record.getItem<ParserKeywords::WINJGAS::STREAM>().getTrimmedString(0);
-        // we make sure the stream is defined in WELLSTRE keyword
-        const auto& inj_streams = handlerContext.state().inj_streams;
-        if (!inj_streams.has(stream_name)) {
-            const std::string msg = fmt::format("The stream '{}' is not defined in WELLSTRE keyword.", stream_name);
+        setInjectionStream(handlerContext,
+                           record.getItem<ParserKeywords::WINJGAS::WELL>().getTrimmedString(0),
+                           record.getItem<ParserKeywords::WINJGAS::STREAM>().getTrimmedString(0),
+                           &Well::WellInjectionProperties::setGasInjComposition);
+    }
+}
+
+void handleWINJOIL(HandlerContext& handlerContext)
+{
+    using Kw = ParserKeywords::WINJOIL;
+
+    for (const auto& record : handlerContext.keyword) {
+        // STREAM is the only fluid nature.
+        const std::string fluid_nature = record.getItem<Kw::FLUID>().getTrimmedString(0);
+        if (!isStreamFluid(fluid_nature)) {
+            const std::string msg = fmt::format(
+                "The fluid nature '{}' is not supported in WINJOIL keyword.", fluid_nature);
             throw OpmInputError(msg, handlerContext.keyword.location());
         }
 
-        const std::string wellNamePattern = record.getItem<ParserKeywords::WINJGAS::WELL>().getTrimmedString(0);
-        const auto well_names = handlerContext.wellNames(wellNamePattern, false);
-        for (const auto& well_name : well_names) {
-            auto well2 = handlerContext.state().wells.get(well_name);
-            auto injection = std::make_shared<Well::WellInjectionProperties>(well2.getInjectionProperties());
-
-            const auto& inj_stream = inj_streams.get(stream_name);
-            injection->setGasInjComposition(inj_stream);
-
-            if (well2.updateInjection(injection)) {
-                handlerContext.state().wells.update(std::move(well2));
-            }
-        }
+        setInjectionStream(handlerContext,
+                           record.getItem<Kw::WELL>().getTrimmedString(0),
+                           record.getItem<Kw::STREAM>().getTrimmedString(0),
+                           &Well::WellInjectionProperties::setOilInjComposition);
     }
 }
 
@@ -1463,6 +1507,7 @@ getWellHandlers()
         { "WELTARG" , &handleWELTARG  },
         { "WHISTCTL", &handleWHISTCTL },
         { "WINJGAS",  &handleWINJGAS  },
+        { "WINJOIL",  &handleWINJOIL  },
         { "WLIST"   , &handleWLIST    },
         { "WPAVE"   , &handleWPAVE    },
         { "WPAVEDEP", &handleWPAVEDEP },
