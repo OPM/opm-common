@@ -122,6 +122,10 @@ public:
         std::vector<int> imbnumRegionArray{};
         std::vector<MaterialLawParams> materialLawParams{};
         DirectionalMaterialLawParamsPtr dirMaterialLawParams{};
+        // Contiguous backing storage for the nested parameter objects the
+        // entries above point at: one arena per parameter array instead of
+        // one heap allocation per cell.
+        std::vector<std::shared_ptr<void>> materialLawParamArenas{};
         bool onlyPiecewiseLinear = true;
 
         bool hasDirectionalRelperms() const
