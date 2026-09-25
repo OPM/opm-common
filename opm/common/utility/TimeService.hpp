@@ -43,9 +43,9 @@ namespace Opm {
     int eclipseMonth(const std::string& name);
     bool valid_month(const std::string& month_name);
 
-    std::time_t mkdatetime(int in_year, int in_month, int in_day, int hour, int minute, int second);
-    std::time_t mkdate(int in_year, int in_month, int in_day);
-    std::time_t timeFromEclipse(const DeckRecord &dateRecord);
+    time_point mkdatetime(int in_year, int in_month, int in_day, int hour, int minute, int second);
+    time_point mkdate(int in_year, int in_month, int in_day);
+    time_point timeFromEclipse(const DeckRecord &dateRecord);
     }
 
     class TimeStampUTC

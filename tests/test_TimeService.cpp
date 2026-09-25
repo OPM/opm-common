@@ -144,7 +144,8 @@ BOOST_AUTO_TEST_CASE(MkDate_RejectsNonExistentDates)
     BOOST_CHECK_THROW(Opm::TimeService::mkdate(1900,  2, 29), std::invalid_argument);
     BOOST_CHECK_THROW(Opm::TimeService::mkdate(2026,  2, 29), std::invalid_argument);
 
-    BOOST_CHECK_EQUAL(Opm::TimeService::mkdate(2000, 2, 29), std::time_t{951'782'400});
+    BOOST_CHECK(Opm::TimeService::mkdate(2000, 2, 29) ==
+                Opm::TimeService::from_time_t(951'782'400));
 }
 
 BOOST_AUTO_TEST_CASE(EndsOfTheCalendar)

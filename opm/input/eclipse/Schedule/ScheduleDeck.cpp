@@ -300,7 +300,7 @@ void ScheduleDeck::handleDATES(const DeckKeyword&   dates,
                                ScheduleDeckContext& context)
 {
     for (const auto& record : dates) {
-        auto nextTime = std::time_t{};
+        auto nextTime = time_point{};
 
         try {
             nextTime = TimeService::timeFromEclipse(record);
@@ -315,10 +315,7 @@ void ScheduleDeck::handleDATES(const DeckKeyword&   dates,
             std::throw_with_nested(opm_error);
         }
 
-        const auto currentTime = TimeService::to_time_t(context.last_time);
-
-        // Recall: difftime(b,a) is portably equivalent to "b-a".
-        if (! (std::difftime(nextTime, currentTime) > 0.0)) {
+        if (! (nextTime > context.last_time)) {
             const auto* prevstepID = (restart_time > 0)
                 ? "restart time"
                 : "end time of previous report step";
@@ -329,7 +326,7 @@ void ScheduleDeck::handleDATES(const DeckKeyword&   dates,
                                    "{:%d-%b-%Y %H:%M:%S}.",
                                    asTm(TimeStampUTC { nextTime }),
                                    prevstepID,
-                                   asTm(TimeStampUTC { currentTime }));
+                                   asTm(TimeStampUTC { context.last_time }));
 
             if ((restart_time > 0) && !this->skiprest) {
                 // SKIPREST is handled in member function
@@ -342,8 +339,7 @@ Is keyword SKIPREST missing for the restarted simulation run?)"
             throw OpmInputError { msg, dates.location() };
         }
 
-        this->add_block(ScheduleTimeType::DATES,
-                        TimeService::from_time_t(nextTime),
+        this->add_block(ScheduleTimeType::DATES, nextTime,
                         dates.location(), context);
     }
 }
