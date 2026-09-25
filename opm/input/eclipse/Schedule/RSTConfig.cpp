@@ -157,9 +157,10 @@ namespace {
             "PERMREDN", "POIS",     "PORO",     "PORV",     "POT",      "PRES",
             "RESIDUAL", "RFIP",     "RK",       "ROCKC",    "RPORV",    "RSSAT",
             "RSWSAT",   "RVSAT",    "RVWSAT",   "SAVE",     "SDENO",    "SFIP",
-            "SFREQ",    "SGTRAP",   "SIGM_MOD", "STREAM",   "SURFBLK",  "TEMP",
-            "TRACT",    "TRACT-",   "TRAS",     "VELGAS",   "VELOCITY", "VELOIL",
-            "VELWAT",   "VGAS",     "VISC",     "VOIL",     "VWAT",
+            "SFREQ",    "SGTRAP",   "SIGM_MOD", "SOLVMFG",  "SOLVMFO",  "STREAM",
+            "SURFBLK",  "TEMP",     "TRACT",    "TRACT-",   "TRAS",     "VELGAS",
+            "VELOCITY", "VELOIL",   "VELWAT",   "VGAS",     "VISC",     "VOIL",
+            "VWAT",
         };
     }
 
