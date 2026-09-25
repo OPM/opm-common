@@ -92,7 +92,7 @@ Opm::time_point make_date(const std::vector<int>& datetime) {
 
 
     const auto ts = Opm::TimeStampUTC{ Opm::TimeStampUTC::YMD{ year, month, day}}.hour(hour).minutes(minute).seconds(second);
-    return Opm::TimeService::from_time_t( Opm::asTimeT(ts) );
+    return Opm::asTimePoint(ts);
 }
 
 bool is_connection_completion(const std::string& keyword)

@@ -28,7 +28,6 @@
 #include <chrono>
 #include <cmath>
 #include <cstddef>
-#include <ctime>
 #include <filesystem>
 #include <fstream>
 #include <functional>
@@ -69,7 +68,7 @@ namespace {
     }
 
     std::string block_header_line(const std::string& run_name) {
-        std::string date_string = format_date(Opm::TimeService::from_time_t(std::time(nullptr)));
+        std::string date_string = format_date(Opm::TimeService::now());
         return "SUMMARY OF RUN " + run_name + " at: " + date_string;
     }
 
