@@ -104,7 +104,7 @@ RockConfig::RockConfig()
     , num_tables  (ParserKeywords::ROCKCOMP::NTROCC::defaultValue)
 {}
 
-RockConfig::RockConfig(const Deck& deck, const FieldPropsManager& fp)
+RockConfig::RockConfig(const Deck& deck, const FieldPropsManager&)
     : RockConfig {}
 {
     using rock = ParserKeywords::ROCK;
@@ -119,15 +119,24 @@ RockConfig::RockConfig(const Deck& deck, const FieldPropsManager& fp)
         }
     }
 
+    bool tableTypeExplicit = false;
     if (deck.hasKeyword<rockopts>()) {
         const auto& record = deck.get<rockopts>().back().getRecord(0);
-        this->num_property = num_prop( record.getItem<rockopts::TABLE_TYPE>().getTrimmedString(0) );
+        const auto& tableTypeItem = record.getItem<rockopts::TABLE_TYPE>();
+        tableTypeExplicit = !tableTypeItem.defaultApplied(0);
+        this->num_property = num_prop( tableTypeItem.getTrimmedString(0) );
         this->m_store = refpres_prop( record.getItem<rockopts::REF_PRESSURE>().getTrimmedString(0) );
     }
 
     if (deck.hasKeyword<rockcomp>()) {
         const auto& record = deck.get<rockcomp>().back().getRecord(0);
-        if (fp.has_int("ROCKNUM")) {
+        if (!tableTypeExplicit) {
+            // ROCKCOMP activates the tabulated ROCKTAB/ROCKTABH rock
+            // compaction data.  Unless ROCKOPTS(item 3) explicitly selects a
+            // different region property, these tables are always indexed by
+            // ROCKNUM - defaulting to a single region (ROCKNUM = 1
+            // everywhere) when no ROCKNUM array is present in the deck, not
+            // by falling back to PVTNUM.
             this->num_property = "ROCKNUM";
         }
 

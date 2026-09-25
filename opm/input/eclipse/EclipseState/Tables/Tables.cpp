@@ -63,6 +63,7 @@
 #include <opm/input/eclipse/EclipseState/Tables/PvtoTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/PvtsolTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/RocktabTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/RocktabhTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/RockwnodTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/RsvdTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/RtempvdTable.hpp>
@@ -1740,7 +1741,8 @@ RtempvdTable::getTemperatureColumn() const
     return SimpleTable::getColumn(1);
 }
 
-RocktabTable::RocktabTable(const DeckItem& item, bool isDirectional, bool hasStressOption, const int tableID)
+RocktabTable::RocktabTable(const DeckItem& item, bool isDirectional, bool hasStressOption,
+                            const int tableID)
     : m_isDirectional(isDirectional)
 {
 
@@ -1818,6 +1820,155 @@ bool
 RocktabTable::operator==(const RocktabTable& data) const
 {
     return this->SimpleTable::operator==(data) && m_isDirectional == data.m_isDirectional;
+}
+
+RocktabhTable::RocktabhTable(const DeckKeyword& keyword,
+                              const std::size_t  firstRecord,
+                              const std::size_t  lastRecord,
+                              bool               hasStressOption,
+                              const int          tableID)
+{
+    // Directional ROCKTABH (RKTRMDIR, 5 columns) is rejected by the caller before this
+    // constructor runs, so the layout here is always (PRESS, PORV MULT, TRAN MULT).
+    constexpr std::size_t ncol = 3;
+
+    for (std::size_t recordIdx = firstRecord; recordIdx < lastRecord; ++recordIdx) {
+        const auto& item = keyword.getRecord(recordIdx).getItem(0);
+
+        if ((item.data_size() % ncol) != 0) {
+            throw OpmInputError {
+                fmt::format("For table ROCKTABH with ID {}: "
+                            "Number of input table elements ({}) is "
+                            "not a multiple of the table's number of columns ({})",
+                            tableID + 1, item.data_size(), ncol),
+                keyword.location()
+            };
+        }
+
+        const std::size_t rows = item.data_size() / ncol;
+        if (rows < 2) {
+            throw OpmInputError {
+                fmt::format("For table ROCKTABH with ID {}: "
+                            "each elastic curve must contain at least two rows", tableID + 1),
+                keyword.location()
+            };
+        }
+
+        std::vector<double> curPress(rows);
+        std::vector<double> curPorv(rows);
+        std::vector<double> curTrans(rows);
+
+        for (std::size_t row = 0; row < rows; ++row) {
+            curPress[row] = item.getSIDouble(row*ncol + 0);
+            curPorv[row]  = item.getSIDouble(row*ncol + 1);
+            curTrans[row] = item.getSIDouble(row*ncol + 2);
+
+            if (row > 0) {
+                const bool monotonic = hasStressOption
+                    ? (curPress[row] < curPress[row - 1])
+                    : (curPress[row] > curPress[row - 1]);
+                if (!monotonic) {
+                    throw OpmInputError {
+                        fmt::format("For table ROCKTABH with ID {}: "
+                                    "pressure must be strictly {} within each elastic curve",
+                                    tableID + 1, hasStressOption ? "decreasing" : "increasing"),
+                        keyword.location()
+                    };
+                }
+            }
+        }
+
+        if (!this->m_curvePressure.empty()) {
+            // The turning pressures (first row of each elastic curve) must
+            // themselves be monotonic in the same direction as within each
+            // curve - they are exactly the deflation curve, read off in
+            // curve order. This also matters operationally: consumers such
+            // as opm-simulators' rock compaction hysteresis interpolation
+            // assume the curves are supplied in increasing (or, for the
+            // STRESS option, decreasing) turning-pressure order.
+            const double previousTurningPressure = this->m_curvePressure.back().front();
+            const bool monotonic = hasStressOption
+                ? (curPress.front() < previousTurningPressure)
+                : (curPress.front() > previousTurningPressure);
+            if (!monotonic) {
+                throw OpmInputError {
+                    fmt::format("For table ROCKTABH with ID {}: "
+                                "the turning pressure (first row) of each elastic curve "
+                                "must be strictly {} from one curve to the next",
+                                tableID + 1, hasStressOption ? "decreasing" : "increasing"),
+                    keyword.location()
+                };
+            }
+        }
+
+        this->m_curvePressure.push_back(std::move(curPress));
+        this->m_curvePoreVolumeMultiplier.push_back(std::move(curPorv));
+        this->m_curveTransMultiplier.push_back(std::move(curTrans));
+    }
+
+    if (this->m_curvePressure.size() < 2) {
+        throw OpmInputError {
+            fmt::format("For table ROCKTABH with ID {}: "
+                        "at least two elastic curves (pressure reversals) are "
+                        "required for rock compaction hysteresis to be interpolated",
+                        tableID + 1),
+            keyword.location()
+        };
+    }
+}
+
+RocktabhTable
+RocktabhTable::serializationTestObject()
+{
+    RocktabhTable result;
+    result.m_curvePressure = {{1.0, 2.0, 3.0}, {2.0, 3.0}};
+    result.m_curvePoreVolumeMultiplier = {{0.9, 0.95, 1.0}, {0.95, 1.0}};
+    result.m_curveTransMultiplier = {{0.9, 0.95, 1.0}, {0.95, 1.0}};
+
+    return result;
+}
+
+std::size_t RocktabhTable::numElasticCurves() const
+{
+    return m_curvePressure.size();
+}
+
+double RocktabhTable::turningPressure(std::size_t curveIdx) const
+{
+    return m_curvePressure.at(curveIdx).front();
+}
+
+double RocktabhTable::turningPoreVolumeMultiplier(std::size_t curveIdx) const
+{
+    return m_curvePoreVolumeMultiplier.at(curveIdx).front();
+}
+
+double RocktabhTable::turningTransMultiplier(std::size_t curveIdx) const
+{
+    return m_curveTransMultiplier.at(curveIdx).front();
+}
+
+const std::vector<double>& RocktabhTable::elasticPressure(std::size_t curveIdx) const
+{
+    return m_curvePressure.at(curveIdx);
+}
+
+const std::vector<double>& RocktabhTable::elasticPoreVolumeMultiplier(std::size_t curveIdx) const
+{
+    return m_curvePoreVolumeMultiplier.at(curveIdx);
+}
+
+const std::vector<double>& RocktabhTable::elasticTransMultiplier(std::size_t curveIdx) const
+{
+    return m_curveTransMultiplier.at(curveIdx);
+}
+
+bool
+RocktabhTable::operator==(const RocktabhTable& data) const
+{
+    return this->m_curvePressure == data.m_curvePressure
+        && this->m_curvePoreVolumeMultiplier == data.m_curvePoreVolumeMultiplier
+        && this->m_curveTransMultiplier == data.m_curveTransMultiplier;
 }
 
 RsvdTable::RsvdTable(const DeckItem& item, const int tableID)
