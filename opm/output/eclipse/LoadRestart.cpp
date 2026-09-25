@@ -55,6 +55,7 @@
 #include <opm/input/eclipse/Schedule/ScheduleTypes.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQEnums.hpp>
+#include <opm/input/eclipse/Schedule/Well/NameOrder.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
 
@@ -1084,7 +1085,7 @@ namespace {
     {
         auto soln = ::Opm::data::Wells{};
 
-        const auto& intehead = rst_view->intehead();;
+        const auto& intehead = rst_view->intehead();
 
         const auto wellData = WellVectors   { intehead, rst_view };
         const auto segData  = SegmentVectors{ intehead, rst_view };
@@ -1092,15 +1093,15 @@ namespace {
         const auto& units  = es.getUnits();
         const auto& phases = es.runspec().phases();
 
-        const auto& wells = schedule.getWells(rst_view->simStep());
-        for (auto nWells = wells.size(), wellID = 0*nWells;
-                  wellID < nWells; ++wellID)
-        {
-            const auto& well = wells[wellID];
+        const auto& sched = schedule[rst_view->simStep()];
 
-            soln[well.name()] =
-                restore_well(well, wellID, grid, units,
-                             phases, wellData, segData, smry);
+        for (auto wellID = std::size_t{};
+             const auto& wellName : sched.well_order())
+        {
+            auto xw = restore_well(sched.wells(wellName), wellID++, grid,
+                                   units, phases, wellData, segData, smry);
+
+            soln.insert_or_assign(wellName, std::move(xw));
         }
 
         return soln;

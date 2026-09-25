@@ -32,6 +32,7 @@
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
 #include <opm/input/eclipse/Schedule/Well/Connection.hpp>
+#include <opm/input/eclipse/Schedule/Well/NameOrder.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
 
@@ -1327,11 +1328,12 @@ captureDeclaredMSWData(const Schedule&          sched,
                        const Opm::SummaryState& smry,
                        const Opm::data::Wells&  wr)
 {
-    const auto wells = sched.getWells(rptStep);
     auto msw = std::vector<const Opm::Well*>{};
 
-    for (const auto& well : wells) {
-        if (well.isMultiSegment()) {
+    for (const auto& wellName : sched[rptStep].well_order()) {
+        if (const auto& well = sched[rptStep].wells(wellName);
+            well.isMultiSegment())
+        {
             msw.push_back(&well);
         }
     }
