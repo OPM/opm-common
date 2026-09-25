@@ -96,7 +96,15 @@ namespace Opm {
                                                        const KeywordLocation& location)
     {
         using Kw = ParserKeywords::WCONINJE;
-        this->injectorType = InjectorTypeFromString( record.getItem<Kw::TYPE>().getTrimmedString(0) );
+        // Hydrocarbon gas and oil injectors. Only WCONINJE takes these types.
+        const auto type = record.getItem<Kw::TYPE>().getTrimmedString(0);
+        if (type == "HCGAS") {
+            this->injectorType = InjectorType::GAS;
+        } else if (type == "HCOIL") {
+            this->injectorType = InjectorType::OIL;
+        } else {
+            this->injectorType = InjectorTypeFromString(type);
+        }
         this->predictionMode = true;
 
         if (!record.getItem<Kw::RATE>().defaultApplied(0)) {
