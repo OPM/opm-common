@@ -25,8 +25,8 @@
 
 #include <algorithm>
 #include <cassert>
+#include <chrono>
 #include <cstddef>
-#include <ctime>
 #include <optional>
 #include <stdexcept>
 #include <string>
@@ -70,11 +70,14 @@ namespace Opm {
     }
 
 
-    WellTestState::WellTestState(std::time_t start_time, const RestartIO::RstState& rst_state) {
+    WellTestState::WellTestState(const time_point&          start_time,
+                                 const RestartIO::RstState& rst_state) {
         // Dont know whether the closing time of the closed well is stored in
         // the restart file, here we just initialize the well close time to the
         // time of the restart.
-        auto elapsed = std::difftime(start_time, rst_state.header.sim_time());
+        const auto elapsed = std::chrono::duration<double> {
+            start_time - rst_state.header.sim_time()
+        }.count();
         for (const auto& well : rst_state.wells) {
             if (well.wtest_close_reason != 0)
                 this->close_well(well.name,

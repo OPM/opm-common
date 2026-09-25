@@ -76,7 +76,7 @@ ScheduleDeck::ScheduleDeck(const time_point&          start_time,
         "VFPPROD", "VFPINJ", "RPTSCHED", "RPTRST", "TUNING", "MESSAGES",
     };
 
-    this->m_restart_time = TimeService::from_time_t(rst_info.time);
+    this->m_restart_time = rst_info.time;
     this->m_restart_offset = rst_info.report_step;
     this->skiprest = rst_info.skiprest;
 
@@ -296,7 +296,7 @@ void ScheduleDeck::clearKeywords(const std::size_t idx)
 }
 
 void ScheduleDeck::handleDATES(const DeckKeyword&   dates,
-                               const std::time_t    restart_time,
+                               const time_point&    restart_time,
                                ScheduleDeckContext& context)
 {
     for (const auto& record : dates) {
@@ -316,7 +316,7 @@ void ScheduleDeck::handleDATES(const DeckKeyword&   dates,
         }
 
         if (! (nextTime > context.last_time)) {
-            const auto* prevstepID = (restart_time > 0)
+            const auto* prevstepID = (restart_time > time_point{})
                 ? "restart time"
                 : "end time of previous report step";
 
@@ -328,7 +328,7 @@ void ScheduleDeck::handleDATES(const DeckKeyword&   dates,
                                    prevstepID,
                                    asTm(TimeStampUTC { context.last_time }));
 
-            if ((restart_time > 0) && !this->skiprest) {
+            if ((restart_time > time_point{}) && !this->skiprest) {
                 // SKIPREST is handled in member function
                 // add_block().
                 msg += std::string { R"(

@@ -838,7 +838,7 @@ RstState::create_action(ActionData<float>                   actionArrays,
     const auto last_run_time = TimeService::advance(asTimeT(start_time), last_run_elapsed);
 
     this->actions.emplace_back(name, max_run, run_count, min_wait,
-                               this->header.sim_time(),
+                               TimeService::to_time_t(this->header.sim_time()),
                                last_run_time,
                                std::move(conditions));
 }

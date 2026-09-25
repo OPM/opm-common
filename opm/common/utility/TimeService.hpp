@@ -38,6 +38,7 @@ namespace Opm {
     time_point now();
 
     std::time_t advance(const std::time_t tp, const double sec);
+    time_point advance(const time_point& tp, const double sec);
     const std::unordered_map<std::string , int>& eclipseMonthIndices();
     const std::unordered_map<int, std::string>& eclipseMonthNames();
     int eclipseMonth(const std::string& name);
