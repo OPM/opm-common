@@ -359,6 +359,74 @@ public:
     }
 
     /*!
+     * \brief Relative permeabilities and capillary pressures in one pass.
+     *
+     * Produces exactly the same values as relativePermeabilities() followed
+     * by capillaryPressures(), but derives each two-phase saturation
+     * argument once instead of letting krw(), krn(), krg(), pcnw() and
+     * pcgn() each re-read the fluid state and re-derive it. Callers that
+     * need both -- the intensive quantities do -- should prefer this.
+     */
+    template <class ContainerT, class FluidState, class ...Args>
+    OPM_HOST_DEVICE static void relativePermeabilitiesAndCapillaryPressures(ContainerT& kr,
+                                                                            ContainerT& pc,
+                                                                            const Params& params,
+                                                                            const FluidState& fluidState)
+    {
+        OPM_TIMEFUNCTION_LOCAL(Subsystem::SatProps);
+        using Evaluation = typename std::remove_reference<decltype(kr[0])>::type;
+
+        const Scalar Swco = params.Swl();
+        const Evaluation swRaw = decay<Evaluation>(fluidState.saturation(waterPhaseIdx));
+        const Evaluation sg = decay<Evaluation>(fluidState.saturation(gasPhaseIdx));
+
+        // the three distinct two-phase arguments, each formed once
+        const Evaluation sw = max(Evaluation(Swco), swRaw);
+        const Evaluation Sw_ow = sw + sg;
+        const Evaluation So_go = 1.0 - Sw_ow;
+        const Evaluation Sg_arg = 1.0 - Swco - sg;
+
+        const Evaluation krw_ = OilWaterMaterialLaw::template twoPhaseSatKrw<Evaluation, Args...>(
+            params.oilWaterParams(), swRaw);
+        const Evaluation krg_ = GasOilMaterialLaw::template twoPhaseSatKrn<Evaluation, Args...>(
+            params.gasOilParams(), Sg_arg);
+        const Evaluation kro_ow = OilWaterMaterialLaw::template twoPhaseSatKrn<Evaluation, Args...>(
+            params.oilWaterParams(), Sw_ow);
+        const Evaluation kro_go = GasOilMaterialLaw::template twoPhaseSatKrw<Evaluation, Args...>(
+            params.gasOilParams(), So_go);
+        const Evaluation pcnw_ = OilWaterMaterialLaw::template twoPhaseSatPcnw<Evaluation, Args...>(
+            params.oilWaterParams(), swRaw);
+        const Evaluation pcgn_ = GasOilMaterialLaw::template twoPhaseSatPcnw<Evaluation, Args...>(
+            params.gasOilParams(), Sg_arg);
+
+        // same regularization as krn() near Sw_ow == Swco
+        Evaluation kro;
+        constexpr const Scalar epsilon = 1e-5;
+        if (scalarValue(Sw_ow) - Swco < epsilon) {
+            const Evaluation kro2 = (kro_ow + kro_go) / 2;
+            if (scalarValue(Sw_ow) - Swco > epsilon / 2) {
+                const Evaluation kro1 = (sg * kro_go + (sw - Swco) * kro_ow) / (Sw_ow - Swco);
+                const Evaluation alpha = (epsilon - (Sw_ow - Swco)) / (epsilon / 2);
+                kro = kro2 * alpha + kro1 * (1 - alpha);
+            }
+            else {
+                kro = kro2;
+            }
+        }
+        else {
+            kro = (sg * kro_go + (sw - Swco) * kro_ow) / (Sw_ow - Swco);
+        }
+
+        kr[waterPhaseIdx] = krw_;
+        kr[oilPhaseIdx] = kro;
+        kr[gasPhaseIdx] = krg_;
+
+        pc[gasPhaseIdx] = pcgn_;
+        pc[oilPhaseIdx] = 0;
+        pc[waterPhaseIdx] = -pcnw_;
+    }
+
+    /*!
      * \brief The relative permeability of the gas phase.
      */
     template <class FluidState, class Evaluation, class ...Args>
