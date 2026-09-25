@@ -5422,7 +5422,8 @@ TSTEP
 )"));
 
     for (const auto* well : { "INJ1", "INJ2" }) {
-        const auto& composition = sched.getWell(well, 0).getInjectionProperties().oilInjComposition();
+        const auto& composition
+            = sched.getWell(well, 0).getInjectionProperties().oilInjComposition();
         BOOST_REQUIRE_EQUAL(composition.size(), std::size_t{3});
         BOOST_CHECK_CLOSE(composition[0], 0.1, 1.0e-10);
         BOOST_CHECK_CLOSE(composition[1], 0.3, 1.0e-10);
@@ -5430,8 +5431,10 @@ TSTEP
     }
 
     // The gas stream is kept apart from the oil stream.
-    BOOST_CHECK_CLOSE(sched.getWell("INJ1", 0).getInjectionProperties().gasInjComposition()[0], 0.8, 1.0e-10);
-    BOOST_CHECK_THROW(sched.getWell("INJ2", 0).getInjectionProperties().gasInjComposition(), std::invalid_argument);
+    BOOST_CHECK_CLOSE(sched.getWell("INJ1", 0).getInjectionProperties().gasInjComposition()[0],
+                      0.8, 1.0e-10);
+    BOOST_CHECK_THROW(sched.getWell("INJ2", 0).getInjectionProperties().gasInjComposition(),
+                      std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(WINJOIL_rejects_other_fluids_and_unknown_streams) {
