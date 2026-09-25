@@ -60,7 +60,8 @@ void python::common::export_SummaryState(py::module& module) {
         .export_values();
 
     py::class_<SummaryState, std::shared_ptr<SummaryState>>(module, "SummaryState", SummaryStateClass_docstring)
-        .def(py::init<std::time_t>())
+        .def(py::init([](const std::time_t start)
+             { return std::make_shared<SummaryState>(TimeService::from_time_t(start)); }))
         .def("update", &SummaryState::update, py::arg("variable_name"), py::arg("value"), SummaryState_update_docstring)
         .def("update_well_var", &SummaryState::update_well_var, py::arg("well_name"), py::arg("variable_name"), py::arg("new_value"), SummaryState_update_well_var_docstring)
         .def("update_group_var", py::overload_cast<const std::string&, const std::string&, double>(&SummaryState::update_group_var), py::arg("group_name"), py::arg("variable_name"), py::arg("new_value"), SummaryState_update_group_var_docstring)

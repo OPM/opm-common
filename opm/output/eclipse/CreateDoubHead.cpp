@@ -46,7 +46,7 @@ namespace {
                      const double           elapsed)
     {
         return {
-            Opm::TimeService::from_time_t(sched.getStartTime()),
+            sched.getStartTime(),
             std::chrono::duration<
                 double, std::chrono::seconds::period>{ elapsed },
         };

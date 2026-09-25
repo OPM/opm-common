@@ -89,11 +89,6 @@ time_point now() {
     return epoch + std::chrono::duration_cast<Opm::time_point::duration>(default_now.time_since_epoch());
 }
 
-std::time_t advance(const std::time_t tp, const double sec)
-{
-    return to_time_t(advance(from_time_t(tp), sec));
-}
-
 time_point advance(const time_point& tp, const double sec)
 {
     return tp + std::chrono::duration_cast<time_point::duration>
@@ -348,7 +343,7 @@ std::time_t Opm::asLocalTimeT(const TimeStampUTC& tp)
 }
 
 Opm::TimeStampUTC Opm::operator+(const Opm::TimeStampUTC& lhs, std::chrono::duration<double> delta) {
-    return Opm::TimeStampUTC( Opm::TimeService::advance(Opm::asTimeT(lhs) , delta.count()) );
+    return Opm::TimeStampUTC( Opm::TimeService::advance(Opm::asTimePoint(lhs) , delta.count()) );
 }
 
 Opm::time_point Opm::asTimePoint(const TimeStampUTC& ts)
