@@ -141,13 +141,8 @@ namespace {
                           const time_point&      restart_time,
                           const time_point&      t)
     {
-        const auto rst = TimeStampUTC {
-            TimeService::to_time_t(restart_time)
-        };
-
-        const auto current = TimeStampUTC {
-            TimeService::to_time_t(t)
-        };
+        const auto rst = TimeStampUTC { restart_time };
+        const auto current = TimeStampUTC { t };
 
         const auto* keyword = (time_type == ScheduleTimeType::DATES)
             ? "DATES" : "TSTEP";

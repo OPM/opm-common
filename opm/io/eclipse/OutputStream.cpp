@@ -669,7 +669,7 @@ namespace {
     std::vector<int>
     makeStartDate(const SummarySpecification::StartTime start)
     {
-        const auto ts = TimeStampUTC { TimeService::to_time_t(start) };
+        const auto ts = TimeStampUTC { start };
 
         // { Day, Month, Year, Hour, Minute, Seconds }
 
@@ -690,7 +690,7 @@ namespace {
     std::vector<int>
     makeRuntimeiDate(const SummarySpecification::StartTime start)
     {
-        const auto ts = TimeStampUTC { TimeService::to_time_t(start) };
+        const auto ts = TimeStampUTC { start };
 
         // { Year, Month, Day, Hour, Minute, Seconds }
 

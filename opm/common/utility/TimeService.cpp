@@ -224,16 +224,14 @@ namespace {
         };
     }
 
-    Opm::TimeStampUTC toTimeStampUTC(const std::time_t tp)
+    Opm::TimeStampUTC toTimeStampUTC(const std::chrono::sys_seconds t)
     {
         namespace ch = std::chrono;
-
-        const auto t = ch::sys_seconds { ch::seconds { tp } };
 
         // Check before flooring to days, whose count may be 32 bits.
         if ((t < calendarBegin) || (t >= calendarEnd)) {
             throw std::out_of_range {
-                outsideCalendar(fmt::format("Time point {}", tp))
+                outsideCalendar(fmt::format("Time point {}", t.time_since_epoch().count()))
             };
         }
 
@@ -257,7 +255,11 @@ namespace {
 }
 
 Opm::TimeStampUTC::TimeStampUTC(const std::time_t tp)
-    : TimeStampUTC { toTimeStampUTC(tp) }
+    : TimeStampUTC { toTimeStampUTC(std::chrono::sys_seconds { std::chrono::seconds { tp } }) }
+{}
+
+Opm::TimeStampUTC::TimeStampUTC(const time_point& tp)
+    : TimeStampUTC { toTimeStampUTC(std::chrono::floor<std::chrono::seconds>(tp)) }
 {}
 
 Opm::TimeStampUTC::TimeStampUTC(const Opm::TimeStampUTC::YMD& ymd,
@@ -271,7 +273,7 @@ Opm::TimeStampUTC::TimeStampUTC(const Opm::TimeStampUTC::YMD& ymd,
 
 Opm::TimeStampUTC& Opm::TimeStampUTC::operator=(const std::time_t tp)
 {
-    return *this = toTimeStampUTC(tp);
+    return *this = TimeStampUTC { tp };
 }
 
 bool Opm::TimeStampUTC::operator==(const TimeStampUTC& data) const

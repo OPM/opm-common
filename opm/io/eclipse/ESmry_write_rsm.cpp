@@ -62,7 +62,7 @@ namespace {
     const std::vector<std::string> month_names = {"JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"};
 
     std::string format_date(const Opm::time_point& tp) {
-        auto ts = Opm::TimeStampUTC( Opm::TimeService::to_time_t(tp) );
+        auto ts = Opm::TimeStampUTC( tp );
         char buffer[12];
         std::snprintf(buffer, 12, "%2d-%3s-%4d", ts.day(), month_names[ts.month() - 1].c_str(), ts.year());
         return std::string(buffer, 11);
