@@ -53,6 +53,16 @@ namespace {
 
     // Largest string length that fits in exactly three characters.
     constexpr auto c0nnMaxCharPerStr() { return std::string::size_type{999}; }
+
+    std::string paddedArrayName(const std::string& arrName)
+    {
+        if (arrName.size() > 8) {
+            OPM_THROW(std::invalid_argument,
+                      fmt::format("Array name '{}' exceeds 8 characters", arrName));
+        }
+
+        return arrName + std::string(8 - arrName.size(), ' ');
+    }
 }
 
 namespace Opm { namespace EclIO {
@@ -171,7 +181,7 @@ void EclOutput::writeStringVector(const std::string&              name,
 void EclOutput::writeBinaryHeader(const std::string&arrName, std::int64_t size, eclArrType arrType, int element_size)
 {
     int bhead = flipEndianInt(16);
-    std::string name = arrName + std::string(8 - arrName.size(),' ');
+    std::string name = paddedArrayName(arrName);
 
     // write X231 header if size larger that limits for 4 byte integers
     if (size > std::numeric_limits<int>::max()) {
@@ -436,7 +446,7 @@ void EclOutput::writeBinaryCharArray(const std::vector<PaddedOutputString<8>>& d
 
 void EclOutput::writeFormattedHeader(const std::string& arrName, int size, eclArrType arrType, int element_size)
 {
-    std::string name = arrName + std::string(8 - arrName.size(),' ');
+    std::string name = paddedArrayName(arrName);
 
     ofileH << " '" << name << "' " << std::setw(11) << size;
 
