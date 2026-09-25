@@ -699,13 +699,9 @@ namespace {
 
     std::time_t timeStamp(const ::Opm::EclIO::ERft::RftDate& date)
     {
-        auto tp = std::tm{};
-
-        tp.tm_year = std::get<0>(date) - 1900;
-        tp.tm_mon  = std::get<1>(date) -    1; // 0..11
-        tp.tm_mday = std::get<2>(date);        // 1..31
-
-        return Opm::TimeService::makeUTCTime(tp);
+        return Opm::TimeService::mkdate(std::get<0>(date),  // Year
+                                        std::get<1>(date),  // Month, 1..12
+                                        std::get<2>(date)); // Day, 1..31
     }
 } // Anonymous namespace
 
