@@ -639,13 +639,15 @@ void setInjectionStream(HandlerContext& handlerContext,
         throw OpmInputError(msg, handlerContext.keyword.location());
     }
 
+    const auto& composition = inj_streams.get(stream_name);
     for (const auto& well_name : handlerContext.wellNames(wellNamePattern, false)) {
         auto well = handlerContext.state().wells.get(well_name);
         auto injection
             = std::make_shared<Well::WellInjectionProperties>(well.getInjectionProperties());
-        std::invoke(setComposition, *injection, inj_streams.get(stream_name));
+        std::invoke(setComposition, *injection, composition);
 
-        if (well.updateInjection(injection)) {
+        // The stream only matters once the well injects, so a producer stays a producer.
+        if (well.updateInjectionProperties(std::move(injection))) {
             handlerContext.state().wells.update(std::move(well));
         }
     }

@@ -5499,6 +5499,119 @@ WINJGAS
 )")), Opm::OpmInputError);
 }
 
+BOOST_AUTO_TEST_CASE(Injection_streams_leave_producers_alone) {
+    const auto sched = make_schedule(gptable_deck(R"(
+WELSPECS
+ 'P1' 'G1' 1 1 2000 'OIL' /
+ 'P2' 'G1' 2 2 2000 'OIL' /
+ 'I1' 'G1' 3 3 2000 'GAS' /
+/
+WCONPROD
+ 'P1' 'OPEN' 'ORAT' 100 /
+/
+WCONHIST
+ 'P2' 'OPEN' 'ORAT' 100 /
+/
+WCONINJE
+ 'I1' 'GAS' 'OPEN' 'RATE' 100 /
+/
+WELLSTRE
+ 'GAS1' 0.8 0.2 0.0 /
+ 'GAS2' 0.7 0.3 0.0 /
+ 'OIL1' 0.1 0.3 0.6 /
+/
+WINJGAS
+ '*' 'STREAM' 'GAS1' /
+/
+WINJOIL
+ '*' 'STREAM' 'OIL1' /
+/
+TSTEP
+ 1 /
+WINJGAS
+ 'P*' 'STREAM' 'GAS2' /
+/
+WCONPROD
+ 'P1' 'OPEN' 'ORAT' 50 /
+/
+WCONHIST
+ 'P2' 'OPEN' 'ORAT' 50 /
+/
+TSTEP
+ 1 /
+)"));
+
+    // Streams given after the production keywords.
+    BOOST_CHECK(sched.getWell("P1", 0).isProducer());
+    BOOST_CHECK(sched.getWell("P2", 0).isProducer());
+    BOOST_CHECK(sched.getWell("I1", 0).isInjector());
+    for (const auto* well : { "P1", "P2", "I1" }) {
+        const auto& injection = sched.getWell(well, 0).getInjectionProperties();
+        BOOST_CHECK_CLOSE(injection.gasInjComposition()[0], 0.8, 1.0e-10);
+        BOOST_CHECK_CLOSE(injection.oilInjComposition()[0], 0.1, 1.0e-10);
+    }
+
+    // Streams given before the production keywords.
+    for (const auto* well : { "P1", "P2" }) {
+        BOOST_CHECK(sched.getWell(well, 1).isProducer());
+        BOOST_CHECK(!sched[1].wellgroup_events().hasEvent(
+            well, ScheduleEvents::Events::WELL_SWITCHED_INJECTOR_PRODUCER));
+        const auto& injection = sched.getWell(well, 1).getInjectionProperties();
+        BOOST_CHECK_CLOSE(injection.gasInjComposition()[0], 0.7, 1.0e-10);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(Injection_streams_follow_a_well_through_conversions) {
+    const auto sched = make_schedule(gptable_deck(R"(
+WELSPECS
+ 'W' 'G1' 1 1 2000 'OIL' /
+/
+WCONPROD
+ 'W' 'OPEN' 'ORAT' 100 /
+/
+WELLSTRE
+ 'GAS1' 0.8 0.2 0.0 /
+ 'OIL1' 0.1 0.3 0.6 /
+/
+WINJGAS
+ 'W' 'STREAM' 'GAS1' /
+/
+TSTEP
+ 1 /
+WINJOIL
+ 'W' 'STREAM' 'OIL1' /
+/
+WCONINJE
+ 'W' 'HCOIL' 'OPEN' 'RATE' 100 /
+/
+TSTEP
+ 1 /
+WCONPROD
+ 'W' 'OPEN' 'ORAT' 100 /
+/
+TSTEP
+ 1 /
+WCONINJE
+ 'W' 'HCGAS' 'OPEN' 'RATE' 100 /
+/
+TSTEP
+ 1 /
+)"));
+
+    // A stream keyword ahead of WCONINJE leaves the switch for WCONINJE to report.
+    BOOST_CHECK(sched.getWell("W", 1).isInjector());
+    BOOST_CHECK(sched[1].wellgroup_events().hasEvent(
+        "W", ScheduleEvents::Events::WELL_SWITCHED_INJECTOR_PRODUCER));
+    BOOST_CHECK_CLOSE(sched.getWell("W", 1).getInjectionProperties().oilInjComposition()[0],
+                      0.1, 1.0e-10);
+
+    // The gas stream given while the well produced is used once it injects gas.
+    BOOST_CHECK(sched.getWell("W", 2).isProducer());
+    BOOST_CHECK(sched.getWell("W", 3).injectorType() == InjectorType::GAS);
+    BOOST_CHECK_CLOSE(sched.getWell("W", 3).getInjectionProperties().gasInjComposition()[0],
+                      0.8, 1.0e-10);
+}
+
 BOOST_AUTO_TEST_CASE(GPTABLE_solution_seed_and_schedule_respec) {
     const auto sched = make_schedule(R"(
 RUNSPEC
