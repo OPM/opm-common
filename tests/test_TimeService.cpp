@@ -28,6 +28,9 @@
 #include <limits>
 #include <stdexcept>
 
+#include <fmt/chrono.h>
+#include <fmt/format.h>
+
 namespace {
 
     // Last and first instants of the years std::chrono::year represents:
@@ -182,4 +185,15 @@ BOOST_AUTO_TEST_CASE(OutsideTheCalendar)
     BOOST_CHECK_THROW(makeTimeT(2026, 1, intMax), std::out_of_range);
     BOOST_CHECK_THROW(makeTimeT(2026, 1, intMin), std::out_of_range);
     BOOST_CHECK_THROW(makeTimeT(2026, 1, 1, intMax), std::out_of_range);
+}
+
+BOOST_AUTO_TEST_CASE(FormatPastYear3000)
+{
+    // fmt::gmtime() throws for the dates its C runtime refuses.  asTm()
+    // only copies fields, so formatting its result works for any date.
+    const auto ts = Opm::TimeStampUTC { Opm::TimeStampUTC::YMD { 3001, 1, 1 } }
+        .hour(13).minutes(37).seconds(7);
+
+    BOOST_CHECK_EQUAL(fmt::format("{:%d-%b-%Y %H:%M:%S}", Opm::asTm(ts)),
+                      "01-Jan-3001 13:37:07");
 }

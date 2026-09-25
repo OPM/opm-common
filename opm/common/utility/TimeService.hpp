@@ -120,6 +120,12 @@ namespace Opm {
     };
 
     TimeStampUTC operator+(const TimeStampUTC& lhs, std::chrono::duration<double> delta);
+
+    /// Time stamp's fields in a std::tm, for formatting with fmt without
+    /// fmt::gmtime().  tm_wday and tm_yday are not computed because current
+    /// callers do not use them; they can be added if needed later.
+    std::tm asTm(const TimeStampUTC& tp);
+
     std::time_t asTimeT(const TimeStampUTC& tp);
     std::time_t asLocalTimeT(const TimeStampUTC& tp);
     time_point asTimePoint(const TimeStampUTC& tp);

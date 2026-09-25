@@ -1749,8 +1749,8 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
                                 "   * End time   = {:%d-%b-%Y %H:%M:%S}.\n"
                                 " Possibly due to inconsistent RESTART/SKIPREST settings.",
                                 timeStep + 1,
-                                fmt::gmtime(TimeService::to_time_t(start_time)),
-                                fmt::gmtime(TimeService::to_time_t(end_time))) };
+                                asTm(TimeStampUTC { TimeService::to_time_t(start_time) }),
+                                asTm(TimeStampUTC { TimeService::to_time_t(end_time) })) };
         }
         using DurationInSeconds = std::chrono::duration<double>; // Tick is 1 second, stored in double.
         return DurationInSeconds(end_time - start_time).count();
@@ -2298,7 +2298,7 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
         // Format a UTC std::tm: before fmt 10, time_points are formatted in
         // local time and without the sub-second part.
         const auto whole_seconds = std::chrono::floor<std::chrono::seconds>(t);
-        const auto tm = fmt::gmtime(TimeService::to_time_t(time_point { whole_seconds }));
+        const auto tm = asTm(TimeStampUTC { TimeService::to_time_t(time_point { whole_seconds }) });
 
         if (t == std::chrono::floor<std::chrono::days>(t)) {
             return fmt::format("{:%F}", tm);
