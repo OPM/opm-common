@@ -31,6 +31,7 @@
 #include <opm/material/fluidmatrixinteractions/EclMultiplexerMaterialParams.hpp>
 
 #include <cassert>
+#include <cstdint>
 
 namespace {
 
@@ -85,11 +86,12 @@ run(const IntLookupFunction& fieldPropIntOnLeafAssigner,
     std::vector<std::vector<MaterialLawParams>*> mlpArray;
     initArrays_(satnumArray, imbnumArray, mlpArray);
     const auto num_arrays = mlpArray.size();
+    const auto numElems = static_cast<std::int64_t>(this->numCompressedElems_);
     for (unsigned i = 0; i < num_arrays; i++) {
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-        for (unsigned elemIdx = 0; elemIdx < this->numCompressedElems_; ++elemIdx) {
+        for (std::int64_t elemIdx = 0; elemIdx < numElems; ++elemIdx) {
             unsigned satRegionIdx = satRegion_(*satnumArray[i], elemIdx);
             //unsigned satNumCell = this->parent_.satnumRegionArray_[elemIdx];
             HystParams<Traits> hystParams{
