@@ -75,6 +75,10 @@ namespace Opm {
         TimeStampUTC() = default;
 
         explicit TimeStampUTC(const std::time_t tp);
+
+        /// Whole seconds of \p tp; a fraction of a second is dropped.
+        explicit TimeStampUTC(const time_point& tp);
+
         explicit TimeStampUTC(const YMD& ymd);
         TimeStampUTC(int year, int month, int day);
         TimeStampUTC(const YMD& ymd,

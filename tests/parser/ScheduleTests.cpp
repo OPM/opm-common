@@ -5953,7 +5953,7 @@ bool compare_dates(const time_point& t, const std::array<int, 3>& ymd)
 }
 
 std::string dates_msg(const time_point& t, std::array<int,3>& ymd) {
-    auto ts = TimeStampUTC( std::chrono::system_clock::to_time_t(t) );
+    auto ts = TimeStampUTC( t );
     return fmt::format("Different dates: {}-{}-{} != {}-{}-{}", ts.year(), ts.month(), ts.day(), ymd[0], ymd[1], ymd[2]);
 }
 

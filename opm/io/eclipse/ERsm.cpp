@@ -296,7 +296,7 @@ bool cmp(const ESmry& smry, const ERsm& rsm) {
         }
 
         for (std::size_t time_index = 0; time_index < rsm_dates.size(); time_index++) {
-            const auto smry_ts = TimeStampUTC( std::chrono::system_clock::to_time_t(summary_dates[time_index]) );
+            const auto smry_ts = TimeStampUTC( summary_dates[time_index] );
             const auto rsm_ts = rsm_dates[time_index];
 
             if (smry_ts.year() != rsm_ts.year()) {
