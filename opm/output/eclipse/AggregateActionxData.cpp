@@ -37,9 +37,9 @@
 
 #include <algorithm>
 #include <charconv>
+#include <chrono>
 #include <cstddef>
 #include <cstring>
-#include <ctime>
 #include <functional>
 #include <map>
 #include <optional>
@@ -114,7 +114,7 @@ namespace {
         template <class SACTArray>
         void staticContrib(const Opm::Action::ActionX& actx,
                            const Opm::Action::State& state,
-                           std::time_t start_time,
+                           Opm::time_point start_time,
                            const Opm::UnitSystem& units,
                            SACTArray& sAct)
         {
@@ -125,7 +125,10 @@ namespace {
             //item [3]:  Minimum time interval between action triggers.
             sAct[3] = units.from_si(M::time, actx.min_wait());
             //item [4]:  last time that the action was triggered
-            sAct[4] =  (state.run_count(actx) > 0) ? units.from_si(M::time, (state.run_time(actx) - start_time)) : 0.;
+            using Seconds = std::chrono::duration<double>;
+            sAct[4] = (state.run_count(actx) > 0)
+                ? units.from_si(M::time, Seconds { state.run_time(actx) - start_time }.count())
+                : 0.;
         }
 
     } // sAct
@@ -768,7 +771,7 @@ namespace {
         act_res(const Opm::Action::ActionX& action,
                 const Opm::Action::State&   action_state,
                 const Opm::SummaryState&    smry,
-                const std::time_t           sim_time,
+                const Opm::time_point      sim_time,
                 const Opm::WListManager&    wlist_manager)
         {
             if (! action.ready(action_state, sim_time)) {
@@ -1095,8 +1098,8 @@ Opm::RestartIO::Helpers::createAggregateActionxData(const Schedule&      sched,
     const auto wells = sched.wellNames(simStep);
 
     const auto runtime = AggregateActionxRuntimeContext {
-        .startTime = sched.getStartTime(),
-        .simTime = sched.simTime(simStep),
+        .startTime = TimeService::from_time_t(sched.getStartTime()),
+        .simTime = TimeService::from_time_t(sched.simTime(simStep)),
         .units = sched.getUnits(),
         .wellNames = std::span<const std::string>{ wells.data(), wells.size() },
         .wlistManager = sched[simStep].wlist_manager.get()

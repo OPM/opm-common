@@ -142,7 +142,7 @@ bool msim::post_step(data::Solution& /* sol */,
         this->st, this->schedule[report_step].wlist_manager.get()
     };
 
-    for (const auto& action : actions.pending(this->action_state, std::chrono::system_clock::to_time_t(sim_time))) {
+    for (const auto& action : actions.pending(this->action_state, sim_time)) {
         const auto result = action->eval(context);
         if (result.conditionSatisfied()) {
             this->schedule.applyAction(report_step, *action, result.matches(),

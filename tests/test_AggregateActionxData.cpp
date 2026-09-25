@@ -135,8 +135,8 @@ BOOST_AUTO_TEST_SUITE(Aggregate_Actionx)
 BOOST_AUTO_TEST_CASE(Standalone_Constructor_With_Span)
 {
     const auto units = Opm::UnitSystem::newMETRIC();
-    const auto startTime = std::time_t{1234567890};
-    const auto simTime = startTime + 100;
+    const auto startTime = Opm::TimeService::from_time_t(1234567890);
+    const auto simTime = startTime + std::chrono::seconds{100};
 
     auto actions = std::vector<Opm::Action::ActionX>{};
     actions.emplace_back("A1", 3, 0.0, startTime);
@@ -197,9 +197,9 @@ BOOST_AUTO_TEST_CASE(Declared_Actionx_data)
     const auto rptStep = std::size_t {3};
     const std::string outputDir = "./";
     const std::string baseName = "UDQ_ACTIONX_TEST1";
-    Opm::Action::ActionX actx_14 = Opm::Action::ActionX("ACT14", 10, 0.543, start_time);
+    Opm::Action::ActionX actx_14 = Opm::Action::ActionX("ACT14", 10, 0.543, Opm::TimeService::from_time_t(start_time));
     Opm::Action::Result result = Opm::Action::Result(true);
-    action_state.add_run(actx_14, start_time + 1.E09, result);
+    action_state.add_run(actx_14, Opm::TimeService::from_time_t(start_time + 1'000'000'000), result);
 
     double secs_elapsed = start_time + 2.E09;
     // set dummy value for next_step_size
