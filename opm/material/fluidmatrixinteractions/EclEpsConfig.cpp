@@ -98,7 +98,16 @@ void EclEpsConfig::initFromState(const EclipseState& eclState,
     }
     else {
         assert(twoPhaseSystemType == EclTwoPhaseSystemType::GasWater);
-        //TODO enable endpoint scaling for gaswater system
+
+        this->setEnableThreePointKrwScaling(hasKR("WR"));
+        this->setEnableThreePointKrnScaling(hasKR("GR"));
+
+        this->enableKrnScaling_ = hasKR("G") || this->enableThreePointKrnScaling();
+        this->enableKrwScaling_ = hasKR("W") || this->enableThreePointKrwScaling();
+
+        // PCG is reused as the gas-water capillary pressure (Pcgw) for
+        // two-phase gas-water systems (see EclEpsScalingPoints::init()).
+        this->enablePcScaling_  = hasPC("G");
     }
 
     if (enablePcScaling_ && enableLeverettScaling_) {

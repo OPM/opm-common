@@ -1248,8 +1248,21 @@ namespace {
                 else
                     return Opm::fun::map( famI_slgof, Opm::fun::iota( num_tables ) );
             case SatfuncFamily::II:
-                if( !sgfnTables.empty() )
+                if( !sgfnTables.empty() ) {
+                    // For a two-phase gas-water run using SWFN/SGFN, the capillary
+                    // pressure curve (and hence its associated endpoint-scaling
+                    // reference value) is taken from the third column of SWFN, not
+                    // from SGFN (see EclMaterialLawReadEffectiveParams).
+                    if (ph.active(::Opm::Phase::WATER) && !ph.active(::Opm::Phase::OIL)) {
+                        const auto& swfnTables = tm.getSwfnTables();
+                        const auto famII_swfn = [&swfnTables]( int i ) {
+                            return swfnTables.getTable<Opm::SwfnTable>( i ).getPcowColumn().front();
+                        };
+                        return Opm::fun::map( famII_swfn, Opm::fun::iota( num_tables ) );
+                    }
+
                     return Opm::fun::map( famII, Opm::fun::iota( num_tables ) );
+                }
                 else
                     return Opm::fun::map( famII_sgwfn, Opm::fun::iota( num_tables ) );
             case SatfuncFamily::III:

@@ -39,6 +39,10 @@
 #include <opm/material/fluidstates/SimpleModularFluidState.hpp>
 #include <opm/material/fluidmatrixinteractions/EclMaterialLawManager.hpp>
 
+#include <opm/common/OpmLog/CounterLog.hpp>
+#include <opm/common/OpmLog/LogUtil.hpp>
+#include <opm/common/OpmLog/OpmLog.hpp>
+
 #include <opm/input/eclipse/Parser/Parser.hpp>
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
@@ -820,6 +824,360 @@ static const char* hysterDeckStringKilloughGasWaterEndScale = R"(
     1*1 /
     IMBNUM
     1*2 / )";
+
+// Test that relative permeability (Y-axis) endpoint scaling via KRG/KRW is
+// applied for a two-phase gas-water run with ENDSCALE. SWL/SWCR/SGU are set
+// to coincide with the tabulated SWFN/SGFN endpoints so that the saturation
+// (X-axis) scaling is a no-op and only the vertical KRG/KRW scaling affects
+// the result.
+static const char* hysterDeckStringGasWaterKrEndScale = R"(
+
+    RUNSPEC
+
+    DIMENS
+       1 1 1 /
+
+    TABDIMS
+     1 /
+
+    WATER
+    GAS
+
+    ENDSCALE
+    /
+
+    GRID
+
+    DX
+       1*1000 /
+    DY
+       1*1000 /
+    DZ
+       1*50 /
+
+    TOPS
+       1*0 /
+
+    PORO
+      1*0.15 /
+
+    PROPS
+
+    SWFN
+    0.2    0.0    0.0
+    1.0    1.0    0.0 /
+
+    SGFN
+    0.0    0.0    0.0
+    0.8    1.0    0.0 /
+
+    SWL
+    1*0.2 /
+    SWCR
+    1*0.2 /
+    SGU
+    1*0.8 /
+
+    KRW
+    1*0.6 /
+    KRG
+    1*0.5 /
+
+    REGIONS
+
+    SATNUM
+    1*1 / )";
+
+// Test that three-point relative permeability (Y-axis) endpoint scaling via
+// KRWR/KRW and KRGR/KRG is applied for a two-phase gas-water run, exercising
+// both intervals (pure vertical scaling and blended interpolation) of the
+// piecewise-linear formulas in EclEpsTwoPhaseLaw::unscaledToScaledKrw_() and
+// unscaledToScaledKrn_(). No SWL/SWCR/SGCR/SGU keywords are given: the
+// tables' own critical points already sit strictly inside the saturation
+// range, so scaled == unscaled on the saturation (X) axis and only the
+// vertical (Y) scaling is exercised. See the accompanying test case for the
+// hand-derived expected values.
+static const char* hysterDeckStringGasWaterThreePointKrEndScale = R"(
+
+    RUNSPEC
+
+    DIMENS
+       1 1 1 /
+
+    TABDIMS
+     1 /
+
+    WATER
+    GAS
+
+    ENDSCALE
+    /
+
+    GRID
+
+    DX
+       1*1000 /
+    DY
+       1*1000 /
+    DZ
+       1*50 /
+
+    TOPS
+       1*0 /
+
+    PORO
+      1*0.15 /
+
+    PROPS
+
+    SWFN
+    0.2    0.0    0.0
+    0.3    0.0    0.0
+    1.0    1.0    0.0 /
+
+    SGFN
+    0.0    0.0    0.0
+    0.2    0.0    0.0
+    0.8    1.0    0.0 /
+
+    KRWR
+    1*0.2 /
+    KRW
+    1*0.6 /
+
+    KRGR
+    1*0.3 /
+    KRG
+    1*0.5 /
+
+    REGIONS
+
+    SATNUM
+    1*1 / )";
+
+// Same as hysterDeckStringGasWaterThreePointKrEndScale above, but for the
+// OilWater system (WATER+OIL, no GAS), using SWFN/SOF2 (the OilWater
+// analogue of SWFN/SGFN) and KRWR/KRW + KRORW/KRO instead of KRWR/KRW +
+// KRGR/KRG. The tables and keyword values are chosen identically (with "gas"
+// relabelled "oil" throughout) so that the hand-derived expected values in
+// the accompanying test case are the same numbers as for GasWater.
+static const char* hysterDeckStringOilWaterThreePointKrEndScale = R"(
+
+    RUNSPEC
+
+    DIMENS
+       1 1 1 /
+
+    TABDIMS
+     1 /
+
+    WATER
+    OIL
+
+    ENDSCALE
+    /
+
+    GRID
+
+    DX
+       1*1000 /
+    DY
+       1*1000 /
+    DZ
+       1*50 /
+
+    TOPS
+       1*0 /
+
+    PORO
+      1*0.15 /
+
+    PROPS
+
+    SWFN
+    0.2    0.0    0.0
+    0.3    0.0    0.0
+    1.0    1.0    0.0 /
+
+    SOF2
+    0.0    0.0
+    0.2    0.0
+    0.8    1.0 /
+
+    KRWR
+    1*0.2 /
+    KRW
+    1*0.6 /
+
+    KRORW
+    1*0.3 /
+    KRO
+    1*0.5 /
+
+    REGIONS
+
+    SATNUM
+    1*1 / )";
+
+// Test that capillary pressure (Y-axis) endpoint scaling via PCG is applied
+// for a two-phase gas-water run with ENDSCALE. The two decks below are
+// identical except for the PCG value and the (irrelevant, always-ignored)
+// SGFN capillary pressure column, which is deliberately given a different,
+// non-zero value in each deck while SWFN (the actual source of the Pcgw
+// curve and its endpoint-scaling reference, see EclMaterialLawReadEffectiveParams)
+// is kept unchanged. This way, a regression that scales relative to SGFN's
+// column instead of SWFN's would not reproduce the expected 2x ratio between
+// the two decks' Pcgw curves.
+static const char* hysterDeckStringGasWaterPcEndScaleLowPcg = R"(
+
+    RUNSPEC
+
+    DIMENS
+       1 1 1 /
+
+    TABDIMS
+     1 /
+
+    WATER
+    GAS
+
+    ENDSCALE
+    /
+
+    GRID
+
+    DX
+       1*1000 /
+    DY
+       1*1000 /
+    DZ
+       1*50 /
+
+    TOPS
+       1*0 /
+
+    PORO
+      1*0.15 /
+
+    PROPS
+
+    SWFN
+    0.2    0.0    1.0
+    1.0    1.0    0.0 /
+
+    SGFN
+    0.0    0.0    2.0
+    0.8    1.0    2.0 /
+
+    PCG
+    1*0.4 /
+
+    REGIONS
+
+    SATNUM
+    1*1 / )";
+
+static const char* hysterDeckStringGasWaterPcEndScaleHighPcg = R"(
+
+    RUNSPEC
+
+    DIMENS
+       1 1 1 /
+
+    TABDIMS
+     1 /
+
+    WATER
+    GAS
+
+    ENDSCALE
+    /
+
+    GRID
+
+    DX
+       1*1000 /
+    DY
+       1*1000 /
+    DZ
+       1*50 /
+
+    TOPS
+       1*0 /
+
+    PORO
+      1*0.15 /
+
+    PROPS
+
+    SWFN
+    0.2    0.0    1.0
+    1.0    1.0    0.0 /
+
+    SGFN
+    0.0    0.0    5.0
+    0.8    1.0    5.0 /
+
+    PCG
+    1*0.8 /
+
+    REGIONS
+
+    SATNUM
+    1*1 / )";
+
+// Same as hysterDeckStringGasWaterPcEndScaleHighPcg, except that the third
+// (capillary pressure) column of SGFN follows the documented convention of
+// being all zero for a two-phase gas-water run. Parsing this deck must not
+// trigger the "SGFN capillary pressure ignored" warning.
+static const char* hysterDeckStringGasWaterPcEndScaleCompliantSgfn = R"(
+
+    RUNSPEC
+
+    DIMENS
+       1 1 1 /
+
+    TABDIMS
+     1 /
+
+    WATER
+    GAS
+
+    ENDSCALE
+    /
+
+    GRID
+
+    DX
+       1*1000 /
+    DY
+       1*1000 /
+    DZ
+       1*50 /
+
+    TOPS
+       1*0 /
+
+    PORO
+      1*0.15 /
+
+    PROPS
+
+    SWFN
+    0.2    0.0    1.0
+    1.0    1.0    0.0 /
+
+    SGFN
+    0.0    0.0    0.0
+    0.8    1.0    0.0 /
+
+    PCG
+    1*0.8 /
+
+    REGIONS
+
+    SATNUM
+    1*1 / )";
 
 //Test Killogh hysteresis Gas Water System bugfix (item 13)
 // Thanks to Edmund Stephens from providing the test and
@@ -2552,6 +2910,331 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisKilloughGasWaterEndScale, Scalar, Types)
         BOOST_CHECK_CLOSE(So, kr[Fixture<Scalar>::oilPhaseIdx], tol);
         BOOST_CHECK_CLOSE(Khyst, kr[Fixture<Scalar>::gasPhaseIdx], tol);
     }
+}
+
+BOOST_AUTO_TEST_CASE_TEMPLATE(GasWaterKrEndpointScaling, Scalar, Types)
+{
+    using MaterialLaw = typename Fixture<Scalar>::MaterialLaw;
+    using MaterialLawManager = typename Fixture<Scalar>::MaterialLawManager;
+    constexpr int numPhases = Fixture<Scalar>::numPhases;
+
+    Opm::Parser parser;
+
+    const auto deck = parser.parseString(hysterDeckStringGasWaterKrEndScale);
+    const Opm::EclipseState eclState(deck);
+
+    const auto& eclGrid = eclState.getInputGrid();
+    std::size_t n = eclGrid.getCartesianSize();
+
+    MaterialLawManager manager;
+    manager.initFromState(eclState);
+    manager.initParamsForElements(eclState, n, doOldLookup, doNothing);
+    auto& param = manager.materialLawParams(0);
+    Scalar So = 0.0;
+    Scalar tol = 1e-3;
+    std::array<Scalar,numPhases> kr = {0.0, 0.0, 0.0};
+    for (int i = 0; i <= 80; ++ i) {
+        Scalar Sg = Scalar(i) / 100;
+        Scalar Sw = 1 - Sg;
+        typename Fixture<Scalar>::FluidState fs;
+        fs.setSaturation(Fixture<Scalar>::waterPhaseIdx, Sw);
+        fs.setSaturation(Fixture<Scalar>::oilPhaseIdx, So);
+        fs.setSaturation(Fixture<Scalar>::gasPhaseIdx, Sg);
+
+        MaterialLaw::relativePermeabilities(kr, param, fs);
+
+        // KRW = 0.6 scales the tabulated (unscaled) water relperm, which is
+        // linear from (Swcr=0.2, 0) to (Swu=1.0, 1.0).
+        Scalar Krw = linearScaledRelperm(Sw, Scalar(0.2), Scalar(1.0), Scalar(0.6));
+        // KRG = 0.5 scales the tabulated (unscaled) gas relperm, which is
+        // linear from (Sgcr=0.0, 0) to (Sgu=0.8, 1.0).
+        Scalar Krg = linearScaledRelperm(Sg, Scalar(0.0), Scalar(0.8), Scalar(0.5));
+        BOOST_CHECK_CLOSE(Krw, kr[Fixture<Scalar>::waterPhaseIdx], tol);
+        BOOST_CHECK_CLOSE(So, kr[Fixture<Scalar>::oilPhaseIdx], tol);
+        BOOST_CHECK_CLOSE(Krg, kr[Fixture<Scalar>::gasPhaseIdx], tol);
+    }
+}
+
+BOOST_AUTO_TEST_CASE_TEMPLATE(GasWaterThreePointKrEndpointScaling, Scalar, Types)
+{
+    using MaterialLaw = typename Fixture<Scalar>::MaterialLaw;
+    using MaterialLawManager = typename Fixture<Scalar>::MaterialLawManager;
+    constexpr int numPhases = Fixture<Scalar>::numPhases;
+
+    Opm::Parser parser;
+
+    const auto deck = parser.parseString(hysterDeckStringGasWaterThreePointKrEndScale);
+    const Opm::EclipseState eclState(deck);
+
+    const auto& eclGrid = eclState.getInputGrid();
+    std::size_t n = eclGrid.getCartesianSize();
+
+    MaterialLawManager manager;
+    manager.initFromState(eclState);
+    manager.initParamsForElements(eclState, n, doOldLookup, doNothing);
+    auto& param = manager.materialLawParams(0);
+    Scalar So = 0.0;
+    Scalar tol = 1e-3;
+    std::array<Scalar,numPhases> kr = {0.0, 0.0, 0.0};
+
+    // Unscaled (natural) endpoints, derived from the SWFN/SGFN tables above
+    // via the same rules used by findKrwr()/findKrgr() in
+    // SatfuncPropertyInitializers.cpp:
+    //   Krwr (unscaled) = Krw(Sw = 1 - Sgcr = 0.8) = (0.8-0.3)/0.7 = 5/7
+    //   maxKrw (unscaled) = 1.0
+    //   Krgr (unscaled) = Krg(Sg = 1 - Swcr = 0.7) = (0.7-0.2)/0.6 = 5/6
+    //   maxKrg (unscaled) = 1.0
+    const Scalar krwrUnscaled = Scalar(5.0) / Scalar(7.0);
+    const Scalar maxKrwUnscaled = Scalar(1.0);
+    const Scalar krgrUnscaled = Scalar(5.0) / Scalar(6.0);
+    const Scalar maxKrgUnscaled = Scalar(1.0);
+
+    // Scaled (deck) endpoints.
+    const Scalar krwrScaled = Scalar(0.2);
+    const Scalar maxKrwScaled = Scalar(0.6);
+    const Scalar krgrScaled = Scalar(0.3);
+    const Scalar maxKrgScaled = Scalar(0.5);
+
+    // Threshold saturations, in terms of Sw, at which each phase's
+    // piecewise-linear vertical scaling switches interval: krw switches at
+    // Sw = 1 - Sgcr = 0.8, krn switches at Sw = Swcr = 0.3. Sweeping Sw over
+    // [0.2, 1.0] crosses both.
+    const Scalar krwThreshold = Scalar(0.8);
+    const Scalar krnThreshold = Scalar(0.3);
+
+    for (int i = 0; i <= 80; ++ i) {
+        Scalar Sg = Scalar(i) / 100;
+        Scalar Sw = 1 - Sg;
+        typename Fixture<Scalar>::FluidState fs;
+        fs.setSaturation(Fixture<Scalar>::waterPhaseIdx, Sw);
+        fs.setSaturation(Fixture<Scalar>::oilPhaseIdx, So);
+        fs.setSaturation(Fixture<Scalar>::gasPhaseIdx, Sg);
+
+        MaterialLaw::relativePermeabilities(kr, param, fs);
+
+        // Unscaled (natural) relative permeabilities from the tables above.
+        const Scalar krwUnscaled = (Sw <= Scalar(0.3)) ? Scalar(0.0) : (Sw - Scalar(0.3)) / Scalar(0.7);
+        const Scalar krnUnscaled = (Sg <= Scalar(0.2)) ? Scalar(0.0) : (Sg - Scalar(0.2)) / Scalar(0.6);
+
+        Scalar krwExpected;
+        if (Sw <= krwThreshold) {
+            // Pure vertical scaling in the left interval.
+            krwExpected = krwUnscaled * (krwrScaled / krwrUnscaled);
+        } else {
+            // Blended interpolation in the right interval.
+            const Scalar t = (krwUnscaled - krwrUnscaled) / (maxKrwUnscaled - krwrUnscaled);
+            krwExpected = krwrScaled + t * (maxKrwScaled - krwrScaled);
+        }
+
+        Scalar krnExpected;
+        if (Sw < krnThreshold) {
+            // Blended interpolation in the left interval.
+            const Scalar t = (krnUnscaled - krgrUnscaled) / (maxKrgUnscaled - krgrUnscaled);
+            krnExpected = krgrScaled + t * (maxKrgScaled - krgrScaled);
+        } else {
+            // Pure vertical scaling in the right interval.
+            krnExpected = krnUnscaled * (krgrScaled / krgrUnscaled);
+        }
+
+        BOOST_CHECK_CLOSE(krwExpected, kr[Fixture<Scalar>::waterPhaseIdx], tol);
+        BOOST_CHECK_CLOSE(So, kr[Fixture<Scalar>::oilPhaseIdx], tol);
+        BOOST_CHECK_CLOSE(krnExpected, kr[Fixture<Scalar>::gasPhaseIdx], tol);
+    }
+}
+
+// Same as GasWaterThreePointKrEndpointScaling above, but for the OilWater
+// system: KRWR/KRW scales water (the wetting phase, same as for GasWater)
+// and KRORW/KRO scales oil (the non-wetting phase, taking over the role gas
+// played for GasWater). The tables and keyword values in
+// hysterDeckStringOilWaterThreePointKrEndScale are chosen identically (with
+// "gas"/"Sg" relabelled "oil"/"So"), so the same hand-derived expected
+// values apply.
+BOOST_AUTO_TEST_CASE_TEMPLATE(OilWaterThreePointKrEndpointScaling, Scalar, Types)
+{
+    using MaterialLaw = typename Fixture<Scalar>::MaterialLaw;
+    using MaterialLawManager = typename Fixture<Scalar>::MaterialLawManager;
+    constexpr int numPhases = Fixture<Scalar>::numPhases;
+
+    Opm::Parser parser;
+
+    const auto deck = parser.parseString(hysterDeckStringOilWaterThreePointKrEndScale);
+    const Opm::EclipseState eclState(deck);
+
+    const auto& eclGrid = eclState.getInputGrid();
+    std::size_t n = eclGrid.getCartesianSize();
+
+    MaterialLawManager manager;
+    manager.initFromState(eclState);
+    manager.initParamsForElements(eclState, n, doOldLookup, doNothing);
+    auto& param = manager.materialLawParams(0);
+    Scalar Sg = 0.0;
+    Scalar tol = 1e-3;
+    std::array<Scalar,numPhases> kr = {0.0, 0.0, 0.0};
+
+    // Unscaled (natural) endpoints, derived from the SWFN/SOF2 tables above
+    // via the same rules used by findKrwr()/findKrorw() in
+    // SatfuncPropertyInitializers.cpp:
+    //   Krwr (unscaled) = Krw(Sw = 1 - Sowcr = 0.8) = (0.8-0.3)/0.7 = 5/7
+    //   maxKrw (unscaled) = 1.0
+    //   Krorw (unscaled) = Kro(So = 1 - Swcr = 0.7) = (0.7-0.2)/0.6 = 5/6
+    //   maxKro (unscaled) = 1.0
+    const Scalar krwrUnscaled = Scalar(5.0) / Scalar(7.0);
+    const Scalar maxKrwUnscaled = Scalar(1.0);
+    const Scalar krorwUnscaled = Scalar(5.0) / Scalar(6.0);
+    const Scalar maxKroUnscaled = Scalar(1.0);
+
+    // Scaled (deck) endpoints.
+    const Scalar krwrScaled = Scalar(0.2);
+    const Scalar maxKrwScaled = Scalar(0.6);
+    const Scalar krorwScaled = Scalar(0.3);
+    const Scalar maxKroScaled = Scalar(0.5);
+
+    // Threshold saturations, in terms of Sw, at which each phase's
+    // piecewise-linear vertical scaling switches interval: krw switches at
+    // Sw = 1 - Sowcr = 0.8, kro (krn) switches at Sw = Swcr = 0.3. Sweeping
+    // Sw over [0.2, 1.0] crosses both.
+    const Scalar krwThreshold = Scalar(0.8);
+    const Scalar kroThreshold = Scalar(0.3);
+
+    for (int i = 0; i <= 80; ++ i) {
+        Scalar So = Scalar(i) / 100;
+        Scalar Sw = 1 - So;
+        typename Fixture<Scalar>::FluidState fs;
+        fs.setSaturation(Fixture<Scalar>::waterPhaseIdx, Sw);
+        fs.setSaturation(Fixture<Scalar>::oilPhaseIdx, So);
+        fs.setSaturation(Fixture<Scalar>::gasPhaseIdx, Sg);
+
+        MaterialLaw::relativePermeabilities(kr, param, fs);
+
+        // Unscaled (natural) relative permeabilities from the tables above.
+        const Scalar krwUnscaled = (Sw <= Scalar(0.3)) ? Scalar(0.0) : (Sw - Scalar(0.3)) / Scalar(0.7);
+        const Scalar kroUnscaled = (So <= Scalar(0.2)) ? Scalar(0.0) : (So - Scalar(0.2)) / Scalar(0.6);
+
+        Scalar krwExpected;
+        if (Sw <= krwThreshold) {
+            // Pure vertical scaling in the left interval.
+            krwExpected = krwUnscaled * (krwrScaled / krwrUnscaled);
+        } else {
+            // Blended interpolation in the right interval.
+            const Scalar t = (krwUnscaled - krwrUnscaled) / (maxKrwUnscaled - krwrUnscaled);
+            krwExpected = krwrScaled + t * (maxKrwScaled - krwrScaled);
+        }
+
+        Scalar kroExpected;
+        if (Sw < kroThreshold) {
+            // Blended interpolation in the left interval.
+            const Scalar t = (kroUnscaled - krorwUnscaled) / (maxKroUnscaled - krorwUnscaled);
+            kroExpected = krorwScaled + t * (maxKroScaled - krorwScaled);
+        } else {
+            // Pure vertical scaling in the right interval.
+            kroExpected = kroUnscaled * (krorwScaled / krorwUnscaled);
+        }
+
+        BOOST_CHECK_CLOSE(krwExpected, kr[Fixture<Scalar>::waterPhaseIdx], tol);
+        BOOST_CHECK_CLOSE(kroExpected, kr[Fixture<Scalar>::oilPhaseIdx], tol);
+        BOOST_CHECK_CLOSE(Sg, kr[Fixture<Scalar>::gasPhaseIdx], tol);
+    }
+}
+
+BOOST_AUTO_TEST_CASE_TEMPLATE(GasWaterPcEndpointScaling, Scalar, Types)
+{
+    using MaterialLaw = typename Fixture<Scalar>::MaterialLaw;
+    using MaterialLawManager = typename Fixture<Scalar>::MaterialLawManager;
+    constexpr int numPhases = Fixture<Scalar>::numPhases;
+
+    Opm::Parser parser;
+
+    const auto lowDeck = parser.parseString(hysterDeckStringGasWaterPcEndScaleLowPcg);
+    const Opm::EclipseState lowEclState(lowDeck);
+    const auto& eclGrid = lowEclState.getInputGrid();
+    std::size_t n = eclGrid.getCartesianSize();
+
+    MaterialLawManager lowManager;
+    lowManager.initFromState(lowEclState);
+    lowManager.initParamsForElements(lowEclState, n, doOldLookup, doNothing);
+    auto& lowParam = lowManager.materialLawParams(0);
+
+    const auto highDeck = parser.parseString(hysterDeckStringGasWaterPcEndScaleHighPcg);
+    const Opm::EclipseState highEclState(highDeck);
+
+    MaterialLawManager highManager;
+    highManager.initFromState(highEclState);
+    highManager.initParamsForElements(highEclState, n, doOldLookup, doNothing);
+    auto& highParam = highManager.materialLawParams(0);
+
+    Scalar So = 0.0;
+    Scalar tol = 1e-3;
+    Scalar maxPcLow = 0.0;
+    std::array<Scalar,numPhases> pcLow  = {0.0, 0.0, 0.0};
+    std::array<Scalar,numPhases> pcHigh = {0.0, 0.0, 0.0};
+    for (int i = 0; i <= 79; ++ i) {
+        Scalar Sg = Scalar(i) / 100;
+        Scalar Sw = 1 - Sg;
+        typename Fixture<Scalar>::FluidState fs;
+        fs.setSaturation(Fixture<Scalar>::waterPhaseIdx, Sw);
+        fs.setSaturation(Fixture<Scalar>::oilPhaseIdx, So);
+        fs.setSaturation(Fixture<Scalar>::gasPhaseIdx, Sg);
+
+        MaterialLaw::capillaryPressures(pcLow, lowParam, fs);
+        MaterialLaw::capillaryPressures(pcHigh, highParam, fs);
+
+        BOOST_CHECK_SMALL(pcLow[Fixture<Scalar>::waterPhaseIdx], tol);
+        BOOST_CHECK_SMALL(pcHigh[Fixture<Scalar>::waterPhaseIdx], tol);
+
+        // PCG for the "high" deck is exactly twice that of the "low" deck, so
+        // the resulting (non-zero) Pcgw values must scale by the same factor.
+        BOOST_CHECK_CLOSE(2 * pcLow[Fixture<Scalar>::gasPhaseIdx],
+                          pcHigh[Fixture<Scalar>::gasPhaseIdx], tol);
+
+        maxPcLow = std::max(maxPcLow, pcLow[Fixture<Scalar>::gasPhaseIdx]);
+    }
+
+    // Sanity check that the Pcgw curve is actually non-trivial, i.e., that
+    // this test does not vacuously pass because everything is zero.
+    BOOST_CHECK_GT(maxPcLow, Scalar(0.0));
+}
+
+BOOST_AUTO_TEST_CASE(GasWaterSgfnPcogIgnoredWarning)
+{
+    using MaterialLawManager = typename Fixture<double>::MaterialLawManager;
+
+    Opm::Parser parser;
+
+    auto counter = std::make_shared<Opm::CounterLog>();
+    Opm::OpmLog::addBackend("COUNTER", counter);
+
+    // A compliant deck, whose SGFN capillary pressure column is all zero,
+    // must not trigger the warning.
+    {
+        const auto deck = parser.parseString(hysterDeckStringGasWaterPcEndScaleCompliantSgfn);
+        const Opm::EclipseState eclState(deck);
+        const std::size_t n = eclState.getInputGrid().getCartesianSize();
+
+        MaterialLawManager manager;
+        manager.initFromState(eclState);
+        manager.initParamsForElements(eclState, n, doOldLookup, doNothing);
+
+        BOOST_CHECK_EQUAL(std::size_t(0), counter->numMessages(Opm::Log::MessageType::Warning));
+    }
+
+    counter->clear();
+
+    // A non-compliant deck, whose SGFN capillary pressure column is
+    // non-zero, must trigger the warning (those values are ignored; the
+    // curve and its endpoint-scaling reference are taken from SWFN).
+    {
+        const auto deck = parser.parseString(hysterDeckStringGasWaterPcEndScaleHighPcg);
+        const Opm::EclipseState eclState(deck);
+        const std::size_t n = eclState.getInputGrid().getCartesianSize();
+
+        MaterialLawManager manager;
+        manager.initFromState(eclState);
+        manager.initParamsForElements(eclState, n, doOldLookup, doNothing);
+
+        BOOST_CHECK_GT(counter->numMessages(Opm::Log::MessageType::Warning), std::size_t(0));
+    }
+
+    Opm::OpmLog::removeBackend("COUNTER");
 }
 
 BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisKilloughGasWaterFix, Scalar, Types)
