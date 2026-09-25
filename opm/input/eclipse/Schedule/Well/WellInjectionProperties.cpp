@@ -35,8 +35,10 @@
 
 #include <fmt/format.h>
 
+#include <optional>
 #include <ostream>
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace Opm {
@@ -516,26 +518,35 @@ namespace Opm {
         }
     }
 
-    void Well::WellInjectionProperties::setGasInjComposition(const std::vector<double>& composition) {
+    namespace {
+
+    const std::vector<double>&
+    injComposition(const std::optional<std::vector<double>>& composition, std::string_view phase)
+    {
+        if (!composition.has_value()) {
+            throw std::invalid_argument(fmt::format("{} injection composition not set", phase));
+        }
+        return *composition;
+    }
+
+    } // anonymous namespace
+
+    void
+    Well::WellInjectionProperties::setGasInjComposition(const std::vector<double>& composition) {
         gas_inj_composition = composition;
     }
 
     const std::vector<double>& Well::WellInjectionProperties::gasInjComposition() const {
-        if (!gas_inj_composition.has_value()) {
-            throw std::invalid_argument("Gas injection composition not set");
-        }
-        return gas_inj_composition.value();
+        return injComposition(gas_inj_composition, "Gas");
     }
 
-    void Well::WellInjectionProperties::setOilInjComposition(const std::vector<double>& composition) {
+    void
+    Well::WellInjectionProperties::setOilInjComposition(const std::vector<double>& composition) {
         oil_inj_composition = composition;
     }
 
     const std::vector<double>& Well::WellInjectionProperties::oilInjComposition() const {
-        if (!oil_inj_composition.has_value()) {
-            throw std::invalid_argument("Oil injection composition not set");
-        }
-        return oil_inj_composition.value();
+        return injComposition(oil_inj_composition, "Oil");
     }
 
 }
