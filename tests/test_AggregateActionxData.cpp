@@ -197,11 +197,11 @@ BOOST_AUTO_TEST_CASE(Declared_Actionx_data)
     const auto rptStep = std::size_t {3};
     const std::string outputDir = "./";
     const std::string baseName = "UDQ_ACTIONX_TEST1";
-    Opm::Action::ActionX actx_14 = Opm::Action::ActionX("ACT14", 10, 0.543, Opm::TimeService::from_time_t(start_time));
+    Opm::Action::ActionX actx_14 = Opm::Action::ActionX("ACT14", 10, 0.543, start_time);
     Opm::Action::Result result = Opm::Action::Result(true);
-    action_state.add_run(actx_14, Opm::TimeService::from_time_t(start_time + 1'000'000'000), result);
+    action_state.add_run(actx_14, start_time + std::chrono::seconds{1'000'000'000}, result);
 
-    double secs_elapsed = start_time + 2.E09;
+    double secs_elapsed = Opm::TimeService::to_time_t(start_time) + 2.E09;
     // set dummy value for next_step_size
 
     {

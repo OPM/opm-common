@@ -116,18 +116,18 @@ namespace {
     }
 
     system_clock::time_point get_start_time( const Schedule& s ) {
-        return datetime(s.posixStartTime());
+        return datetime(TimeService::to_time_t(s.getStartTime()));
     }
 
     system_clock::time_point get_end_time( const Schedule& s ) {
-        return datetime(s.posixEndTime());
+        return datetime(TimeService::to_time_t(s.getEndTime()));
     }
 
     std::vector<system_clock::time_point> get_reportsteps( const Schedule& s ) {
         std::vector< system_clock::time_point > v;
 
         for( size_t i = 0; i < s.size(); ++i )
-            v.push_back( datetime( std::chrono::system_clock::to_time_t(s[i].start_time() )));
+            v.push_back( datetime( TimeService::to_time_t(s[i].start_time() )));
 
         return v;
     }

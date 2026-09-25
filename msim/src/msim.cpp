@@ -77,7 +77,7 @@ std::shared_ptr<Python> msim::python = std::make_shared<Python>();
 msim::msim(const EclipseState& state_arg, const Schedule& schedule_arg)
     : state   (state_arg)
     , schedule(schedule_arg)
-    , st { TimeService::from_time_t(this->schedule.getStartTime()),
+    , st { this->schedule.getStartTime(),
            state.runspec().udqParams().undefinedValue() }
 {}
 
@@ -107,7 +107,7 @@ bool msim::run(EclipseIO& io, bool report_only)
                      report_step, time_step, io);
         }
 
-        const auto sim_time = TimeService::from_time_t(schedule.simTime(report_step));
+        const auto sim_time = schedule.simTime(report_step);
         auto action_applied = post_step(sol, well_data, group_nwrk_data, report_step, sim_time);
         any_actions_applied = any_actions_applied || action_applied;
 
