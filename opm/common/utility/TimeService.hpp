@@ -38,7 +38,6 @@ namespace Opm {
     time_point now();
 
     std::time_t advance(const std::time_t tp, const double sec);
-    std::time_t makeUTCTime(std::tm timePoint);
     const std::unordered_map<std::string , int>& eclipseMonthIndices();
     const std::unordered_map<int, std::string>& eclipseMonthNames();
     int eclipseMonth(const std::string& name);
@@ -46,7 +45,6 @@ namespace Opm {
 
     std::time_t mkdatetime(int in_year, int in_month, int in_day, int hour, int minute, int second);
     std::time_t mkdate(int in_year, int in_month, int in_day);
-    std::time_t portable_timegm(const std::tm* t);
     std::time_t timeFromEclipse(const DeckRecord &dateRecord);
     }
 

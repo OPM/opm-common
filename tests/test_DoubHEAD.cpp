@@ -37,7 +37,6 @@
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 
 #include <chrono>
-#include <ctime>
 #include <initializer_list>
 #include <numeric>              // partial_sum()
 #include <ratio>
@@ -77,13 +76,7 @@ namespace {
     std::chrono::time_point<std::chrono::system_clock> startSimulation()
     {
         // 2015-04-09T00:00:00+0000
-        auto timePoint = std::tm{};
-
-        timePoint.tm_year = 115;     // 2015
-        timePoint.tm_mon  =   4 - 1; // April
-        timePoint.tm_mday =   9;     // 9th
-
-        return Opm::TimeService::from_time_t( Opm::TimeService::makeUTCTime(timePoint) );
+        return Opm::TimeService::from_time_t( Opm::TimeService::mkdate(2015, 4, 9) );
     }
 
     std::chrono::duration<double, std::chrono::seconds::period> tstep_123()

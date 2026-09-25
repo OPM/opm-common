@@ -25,10 +25,11 @@
 
 #include <chrono>
 #include <ctime>
-#include <limits>
 #include <utility>
 #include <stdexcept>
 #include <string>
+
+#include <fmt/format.h>
 
 namespace Opm {
 namespace TimeService {
@@ -66,38 +67,6 @@ namespace {
         {11, "NOV"},
         {12, "DEC"}};
 
-
-
-    // The days_from_civil() function is from Howard Hinnant, http://howardhinnant.github.io/date_algorithms.html
-    // The website states: "Consider these donated to the public domain."
-
-    // Returns number of days since civil 1970-01-01.  Negative values indicate
-    //    days prior to 1970-01-01.
-    // Preconditions:  y-m-d represents a date in the civil (Gregorian) calendar
-    //                 m is in [1, 12]
-    //                 d is in [1, last_day_of_month(y, m)]
-    //                 y is "approximately" in
-    //                   [numeric_limits<Int>::min()/366, numeric_limits<Int>::max()/366]
-    //                 Exact range of validity is:
-    //                 [civil_from_days(numeric_limits<Int>::min()),
-    //                  civil_from_days(numeric_limits<Int>::max()-719468)]
-    template <class Int>
-    constexpr
-    Int
-    days_from_civil(Int y, unsigned m, unsigned d) noexcept
-    {
-        static_assert(std::numeric_limits<unsigned>::digits >= 18,
-                      "This algorithm has not been ported to a 16 bit unsigned integer");
-        static_assert(std::numeric_limits<Int>::digits >= 20,
-                      "This algorithm has not been ported to a 16 bit signed integer");
-        y -= m <= 2;
-        const Int era = (y >= 0 ? y : y-399) / 400;
-        const unsigned yoe = static_cast<unsigned>(y - era * 400);      // [0, 399]
-        const unsigned doy = (153*(m > 2 ? m-3 : m+9) + 2)/5 + d-1;  // [0, 365]
-        const unsigned doe = yoe * 365 + yoe/4 - yoe/100 + doy;         // [0, 146096]
-        return era * 146097 + static_cast<Int>(doe) - 719468;
-    }
-
 } // anonymous namespace
 
 
@@ -124,11 +93,6 @@ std::time_t advance(const std::time_t tp, const double sec)
 {
     const auto t = Opm::TimeService::from_time_t(tp) + std::chrono::duration_cast<Opm::time_point::duration>(std::chrono::duration<double>(sec));
     return Opm::TimeService::to_time_t(t);
-}
-
-std::time_t makeUTCTime(std::tm timePoint)
-{
-    return portable_timegm(&timePoint);
 }
 
 const std::unordered_map<std::string , int>& eclipseMonthIndices() {
@@ -160,9 +124,9 @@ std::time_t mkdatetime(int in_year, int in_month, int in_day, int hour, int minu
     std::time_t t = asTimeT(tp);
     {
         /*
-          The underlying mktime( ) function will happily wrap
-          around dates like January 33, this function will check
-          that no such wrap-around has taken place.
+          asTimeT() will happily wrap around dates like January
+          33, this function will check that no such wrap-around
+          has taken place.
         */
         const auto check = TimeStampUTC{ t };
         if ((in_day != check.day()) || (in_month != check.month()) || (in_year != check.year()))
@@ -173,25 +137,6 @@ std::time_t mkdatetime(int in_year, int in_month, int in_day, int hour, int minu
 
 std::time_t mkdate(int in_year, int in_month, int in_day) {
     return mkdatetime(in_year , in_month , in_day, 0,0,0);
-}
-
-// The portable_timegm() function is based on
-// https://stackoverflow.com/questions/16647819/timegm-cross-platform
-// answer by Sergey D.
-std::time_t portable_timegm(const std::tm* t)
-{
-    int year = t->tm_year + 1900;
-    int month = t->tm_mon;          // 0-11
-    if (month > 11) {
-        year += month / 12;
-        month %= 12;
-    } else if (month < 0) {
-        int years_diff = (11 - month) / 12;
-        year -= years_diff;
-        month += 12 * years_diff;
-    }
-    int days_from_1970 = days_from_civil(year, month + 1, t->tm_mday);
-    return 60 * (60 * (24L * days_from_1970 + t->tm_hour) + t->tm_min) + t->tm_sec;
 }
 
 std::time_t timeFromEclipse(const DeckRecord &dateRecord) {
@@ -224,7 +169,90 @@ std::time_t timeFromEclipse(const DeckRecord &dateRecord) {
 
 namespace {
 
+    // Conversions are defined for the years std::chrono::year represents,
+    // [calendarBegin, calendarEnd), and throw std::out_of_range elsewhere.
+    constexpr auto calendarBegin = std::chrono::sys_seconds {
+        std::chrono::sys_days { std::chrono::year::min() / std::chrono::January / 1 }
+    };
 
+    constexpr auto calendarEnd = std::chrono::sys_seconds {
+        std::chrono::sys_days { std::chrono::year::max() / std::chrono::December / 31 }
+        + std::chrono::days { 1 }
+    };
+
+    std::string outsideCalendar(const std::string& what)
+    {
+        return fmt::format("{} is outside the representable years {} to {}", what,
+                           static_cast<int>(std::chrono::year::min()),
+                           static_cast<int>(std::chrono::year::max()));
+    }
+
+    // The month carries into the year, and the day and time of day count on
+    // from the first of the month, so January 33 is February 2.
+    std::chrono::sys_seconds toSysSeconds(const Opm::TimeStampUTC& ts)
+    {
+        namespace ch = std::chrono;
+
+        // 64-bit arithmetic so that absurd fields end in the range check
+        // rather than in overflow.
+        const auto month = static_cast<long long>(ts.month()) - 1;
+        const auto carry = (month < 0) ? (month - 11) / 12 : month / 12;
+        const auto year  = ts.year() + carry;
+
+        if ((year >= static_cast<int>(ch::year::min())) &&
+            (year <= static_cast<int>(ch::year::max())))
+        {
+            const auto firstOfMonth = ch::sys_days {
+                ch::year  { static_cast<int>(year) } /
+                ch::month { static_cast<unsigned>(month - 12*carry + 1) } / 1
+            };
+
+            const auto t = ch::sys_seconds { firstOfMonth } + ch::seconds {
+                ((static_cast<long long>(ts.day()) - 1) * 24 + ts.hour()) * 3600
+                + static_cast<long long>(ts.minutes()) * 60 + ts.seconds()
+            };
+
+            if ((t >= calendarBegin) && (t < calendarEnd)) {
+                return t;
+            }
+        }
+
+        throw std::out_of_range {
+            outsideCalendar(fmt::format("Date {}-{:02}-{:02} {:02}:{:02}:{:02}",
+                                        ts.year(), ts.month(), ts.day(),
+                                        ts.hour(), ts.minutes(), ts.seconds()))
+        };
+    }
+
+    Opm::TimeStampUTC toTimeStampUTC(const std::time_t tp)
+    {
+        namespace ch = std::chrono;
+
+        const auto t = ch::sys_seconds { ch::seconds { tp } };
+
+        // Check before flooring to days, whose count may be 32 bits.
+        if ((t < calendarBegin) || (t >= calendarEnd)) {
+            throw std::out_of_range {
+                outsideCalendar(fmt::format("Time point {}", tp))
+            };
+        }
+
+        const auto day = ch::floor<ch::days>(t);
+        const auto ymd = ch::year_month_day { day };
+        const auto hms = ch::hh_mm_ss { t - day };
+
+        return {
+            Opm::TimeStampUTC::YMD {
+                static_cast<int>(ymd.year()),
+                static_cast<int>(static_cast<unsigned>(ymd.month())),
+                static_cast<int>(static_cast<unsigned>(ymd.day()))
+            },
+            static_cast<int>(hms.hours().count()),
+            static_cast<int>(hms.minutes().count()),
+            static_cast<int>(hms.seconds().count()),
+            0
+        };
+    }
 
     std::tm makeTm(const Opm::TimeStampUTC& tp) {
         auto timePoint = std::tm{};
@@ -239,18 +267,11 @@ namespace {
         return timePoint;
     }
 
-
 }
 
 Opm::TimeStampUTC::TimeStampUTC(const std::time_t tp)
-{
-    auto t = tp;
-    const auto tm = *std::gmtime(&t);
-
-    this->ymd_ = YMD { tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday };
-
-    this->hour(tm.tm_hour).minutes(tm.tm_min).seconds(tm.tm_sec);
-}
+    : TimeStampUTC { toTimeStampUTC(tp) }
+{}
 
 Opm::TimeStampUTC::TimeStampUTC(const Opm::TimeStampUTC::YMD& ymd,
                                 int hour, int minutes, int seconds, int usec)
@@ -263,14 +284,7 @@ Opm::TimeStampUTC::TimeStampUTC(const Opm::TimeStampUTC::YMD& ymd,
 
 Opm::TimeStampUTC& Opm::TimeStampUTC::operator=(const std::time_t tp)
 {
-    auto t = tp;
-    const auto tm = *std::gmtime(&t);
-
-    this->ymd_ = YMD { tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday };
-
-    this->hour(tm.tm_hour).minutes(tm.tm_min).seconds(tm.tm_sec);
-
-    return *this;
+    return *this = toTimeStampUTC(tp);
 }
 
 bool Opm::TimeStampUTC::operator==(const TimeStampUTC& data) const
@@ -317,7 +331,7 @@ Opm::TimeStampUTC& Opm::TimeStampUTC::microseconds(const int us)
 
 std::time_t Opm::asTimeT(const TimeStampUTC& tp)
 {
-    return Opm::TimeService::makeUTCTime(makeTm(tp));
+    return toSysSeconds(tp).time_since_epoch().count();
 }
 
 std::time_t Opm::asLocalTimeT(const TimeStampUTC& tp)
