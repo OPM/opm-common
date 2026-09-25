@@ -158,7 +158,7 @@ namespace Opm {
     try :
         m_static(python, ScheduleRestartInfo(rst, deck), deck, runspec,
                  output_interval, parseContext, errors, slave_mode)
-        , m_sched_deck(TimeService::from_time_t(runspec.start_time()), deck, m_static.rst_info)
+        , m_sched_deck(runspec.start_time(), deck, m_static.rst_info)
         , completed_cells(ecl_grid.getNX(), ecl_grid.getNY(), ecl_grid.getNZ())
         , m_lowActionParsingStrictness(lowActionParsingStrictness)
     {

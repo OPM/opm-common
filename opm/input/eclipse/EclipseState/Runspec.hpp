@@ -20,6 +20,7 @@
 #define OPM_RUNSPEC_HPP
 
 #include <opm/common/OpmLog/KeywordLocation.hpp>
+#include <opm/common/utility/TimeService.hpp>
 
 #include <opm/input/eclipse/EclipseState/EndpointScaling.hpp>
 #include <opm/input/eclipse/EclipseState/Phase.hpp>
@@ -32,7 +33,6 @@
 
 #include <bitset>
 #include <cstddef>
-#include <ctime>
 #include <optional>
 
 namespace Opm {
@@ -616,7 +616,7 @@ public:
 
     static Runspec serializationTestObject();
 
-    std::time_t start_time() const noexcept;
+    time_point start_time() const noexcept;
     const UDQParams& udqParams() const noexcept;
     const Phases& phases() const noexcept;
     const Tabdims&  tabdims() const noexcept;
@@ -691,7 +691,7 @@ public:
     }
 
 private:
-    std::time_t m_start_time{};
+    time_point m_start_time{};
     Phases active_phases{};
     Tabdims m_tabdims{};
     Regdims m_regdims{};

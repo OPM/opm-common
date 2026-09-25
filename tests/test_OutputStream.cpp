@@ -1750,8 +1750,7 @@ namespace {
     start(const int year, const int month, const int day,
           const int hour, const int minute, const int second)
     {
-        return Opm::TimeService::from_time_t
-            (Opm::TimeService::mkdatetime(year, month, day, hour, minute, second));
+        return Opm::TimeService::mkdatetime(year, month, day, hour, minute, second);
     }
 
     Opm::EclIO::OutputStream::SummarySpecification::RestartSpecification
