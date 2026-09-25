@@ -217,7 +217,7 @@ Opm::SummaryState sim_stateLGR(const Opm::Schedule& sched)
                 state.update_conn_var(wellName, "COIT", connection.global_index() + 1, 222 * 2.0);
                 state.update_conn_var(wellName, "CGIT", connection.global_index() + 1, 333 * 2.0);
                 state.update_conn_var(wellName, "CWIT", connection.global_index() + 1, 444 * 2.0);
-                state.update_conn_var(wellName, "CWIT", connection.global_index() + 1, 555 * 2.0);
+                state.update_conn_var(wellName, "CVIT", connection.global_index() + 1, 555 * 2.0);
             } else {
                 state.update_conn_var(wellName, "COPR", connection.global_index() + 1, 666);
                 state.update_conn_var(wellName, "CGPR", connection.global_index() + 1, 777);
