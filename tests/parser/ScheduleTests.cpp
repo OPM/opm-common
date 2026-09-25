@@ -5397,6 +5397,66 @@ WCONINJH
 )")), Opm::OpmInputError);
 }
 
+BOOST_AUTO_TEST_CASE(WINJOIL_sets_the_oil_injection_stream) {
+    const auto sched = make_schedule(gptable_deck(R"(
+WELSPECS
+ 'INJ1' 'G1' 1 1 2000 'OIL' /
+ 'INJ2' 'G1' 2 2 2000 'OIL' /
+/
+WELLSTRE
+ 'GAS1' 0.8 0.2 0.0 /
+ 'OIL1' 0.1 0.3 0.6 /
+/
+WINJGAS
+ 'INJ1' 'STREAM' 'GAS1' /
+/
+WINJOIL
+ 'INJ1' 1* 'OIL1' /
+ 'INJ2' 'ST' 'OIL1' /
+/
+WCONINJE
+ 'INJ*' 'HCOIL' 'OPEN' 'RATE' 100 /
+/
+TSTEP
+ 1 /
+)"));
+
+    for (const auto* well : { "INJ1", "INJ2" }) {
+        const auto& composition = sched.getWell(well, 0).getInjectionProperties().oilInjComposition();
+        BOOST_REQUIRE_EQUAL(composition.size(), std::size_t{3});
+        BOOST_CHECK_CLOSE(composition[0], 0.1, 1.0e-10);
+        BOOST_CHECK_CLOSE(composition[1], 0.3, 1.0e-10);
+        BOOST_CHECK_CLOSE(composition[2], 0.6, 1.0e-10);
+    }
+
+    // The gas stream is kept apart from the oil stream.
+    BOOST_CHECK_CLOSE(sched.getWell("INJ1", 0).getInjectionProperties().gasInjComposition()[0], 0.8, 1.0e-10);
+    BOOST_CHECK_THROW(sched.getWell("INJ2", 0).getInjectionProperties().gasInjComposition(), std::invalid_argument);
+}
+
+BOOST_AUTO_TEST_CASE(WINJOIL_rejects_other_fluids_and_unknown_streams) {
+    BOOST_CHECK_THROW(make_schedule(gptable_deck(R"(
+WELSPECS
+ 'INJ' 'G1' 1 1 2000 'OIL' /
+/
+WELLSTRE
+ 'OIL1' 0.1 0.3 0.6 /
+/
+WINJOIL
+ 'INJ' 'GRUP' 'OIL1' /
+/
+)")), Opm::OpmInputError);
+
+    BOOST_CHECK_THROW(make_schedule(gptable_deck(R"(
+WELSPECS
+ 'INJ' 'G1' 1 1 2000 'OIL' /
+/
+WINJOIL
+ 'INJ' 'STREAM' 'OIL1' /
+/
+)")), Opm::OpmInputError);
+}
+
 BOOST_AUTO_TEST_CASE(GPTABLE_solution_seed_and_schedule_respec) {
     const auto sched = make_schedule(R"(
 RUNSPEC

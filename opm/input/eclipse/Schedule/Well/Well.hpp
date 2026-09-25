@@ -174,6 +174,7 @@ public:
 
         // injection stream compostion for compositional simulation
         std::optional<std::vector<double>> gas_inj_composition{};
+        std::optional<std::vector<double>> oil_inj_composition{};
 
         bool operator==(const WellInjectionProperties& other) const;
         bool operator!=(const WellInjectionProperties& other) const;
@@ -243,6 +244,8 @@ public:
 
         void setGasInjComposition(const std::vector<double>& composition);
         const std::vector<double>& gasInjComposition() const;
+        void setOilInjComposition(const std::vector<double>& composition);
+        const std::vector<double>& oilInjComposition() const;
 
         template<class Serializer>
         void serializeOp(Serializer& serializer)
@@ -263,6 +266,7 @@ public:
             serializer(controlMode);
             serializer(rsRvInj);
             serializer(gas_inj_composition);
+            serializer(oil_inj_composition);
         }
     };
 

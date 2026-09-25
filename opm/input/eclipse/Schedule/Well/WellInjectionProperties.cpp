@@ -85,6 +85,7 @@ namespace Opm {
         result.controlMode = InjectorCMode::BHP;
         result.rsRvInj = 11;
         result.gas_inj_composition = std::vector<double>{1.0, 2.0, 3.0};
+        result.oil_inj_composition = std::vector<double>{4.0, 5.0, 6.0};
 
         return result;
     }
@@ -298,7 +299,8 @@ namespace Opm {
             (injectorType == other.injectorType) &&
             (controlMode == other.controlMode) &&
             (rsRvInj == other.rsRvInj) &&
-            (gas_inj_composition == other.gas_inj_composition))
+            (gas_inj_composition == other.gas_inj_composition) &&
+            (oil_inj_composition == other.oil_inj_composition))
             return true;
         else
             return false;
@@ -523,6 +525,17 @@ namespace Opm {
             throw std::invalid_argument("Gas injection composition not set");
         }
         return gas_inj_composition.value();
+    }
+
+    void Well::WellInjectionProperties::setOilInjComposition(const std::vector<double>& composition) {
+        oil_inj_composition = composition;
+    }
+
+    const std::vector<double>& Well::WellInjectionProperties::oilInjComposition() const {
+        if (!oil_inj_composition.has_value()) {
+            throw std::invalid_argument("Oil injection composition not set");
+        }
+        return oil_inj_composition.value();
     }
 
 }

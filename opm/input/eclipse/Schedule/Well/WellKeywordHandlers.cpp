@@ -656,6 +656,43 @@ void handleWINJGAS(HandlerContext& handlerContext)
     }
 }
 
+void handleWINJOIL(HandlerContext& handlerContext)
+{
+    using Kw = ParserKeywords::WINJOIL;
+
+    for (const auto& record : handlerContext.keyword) {
+        // STREAM is the only fluid nature, and only its first two characters are significant.
+        const std::string fluid_nature = record.getItem<Kw::FLUID>().getTrimmedString(0);
+        if (fluid_nature.compare(0, 2, "ST") != 0) {
+            const std::string msg = fmt::format(
+                "The fluid nature '{}' is not supported in WINJOIL keyword.", fluid_nature);
+            throw OpmInputError(msg, handlerContext.keyword.location());
+        }
+
+        const std::string stream_name = record.getItem<Kw::STREAM>().getTrimmedString(0);
+        const auto& inj_streams = handlerContext.state().inj_streams;
+        if (!inj_streams.has(stream_name)) {
+            const std::string msg
+                = fmt::format("The stream '{}' is not defined in WELLSTRE keyword.", stream_name);
+            throw OpmInputError(msg, handlerContext.keyword.location());
+        }
+
+        const std::string wellNamePattern = record.getItem<Kw::WELL>().getTrimmedString(0);
+        const auto well_names = handlerContext.wellNames(wellNamePattern, false);
+        for (const auto& well_name : well_names) {
+            auto well2 = handlerContext.state().wells.get(well_name);
+            auto injection
+                = std::make_shared<Well::WellInjectionProperties>(well2.getInjectionProperties());
+
+            injection->setOilInjComposition(inj_streams.get(stream_name));
+
+            if (well2.updateInjection(injection)) {
+                handlerContext.state().wells.update(std::move(well2));
+            }
+        }
+    }
+}
+
 void handleWELSPECS(HandlerContext& handlerContext)
 {
     using Kw = ParserKeywords::WELSPECS;
@@ -1463,6 +1500,7 @@ getWellHandlers()
         { "WELTARG" , &handleWELTARG  },
         { "WHISTCTL", &handleWHISTCTL },
         { "WINJGAS",  &handleWINJGAS  },
+        { "WINJOIL",  &handleWINJOIL  },
         { "WLIST"   , &handleWLIST    },
         { "WPAVE"   , &handleWPAVE    },
         { "WPAVEDEP", &handleWPAVEDEP },
