@@ -20,7 +20,7 @@ else()
 endif()
 
 if(dune-alugrid_FOUND)
-  target_compile_definitions(dunealugrid INTERFACE HAVE_DUNE_ALUGRID=1)
+  target_compile_definitions(Dune::ALUGrid INTERFACE HAVE_DUNE_ALUGRID=1)
   # make version number available in config.h
   include (UseDuneVer)
   find_dune_version ("dune" "alugrid")
