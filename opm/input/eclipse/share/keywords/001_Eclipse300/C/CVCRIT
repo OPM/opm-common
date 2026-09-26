@@ -1,0 +1,254 @@
+{
+  "name": "CVCRIT",
+  "sections": [
+    "SCHEDULE"
+  ],
+  "size": 1,
+  "items": [
+    {
+      "item": 1,
+      "name": "PRESSURE_CHANGE_TOLERANCE",
+      "value_type": "DOUBLE",
+      "dimension": "Pressure",
+      "default": 0.101325
+    },
+    {
+      "item": 2,
+      "name": "MAX_NONLINEAR_ITERATIONS",
+      "value_type": "INT"
+    },
+    {
+      "item": 3,
+      "name": "LINEAR_RESIDUAL_REDUCTION",
+      "value_type": "DOUBLE",
+      "default": 1e-10
+    },
+    {
+      "item": 4,
+      "name": "MAX_LINEAR_ITERATIONS",
+      "value_type": "INT"
+    },
+    {
+      "item": 5,
+      "name": "FUGACITY_ERROR_TOLERANCE",
+      "value_type": "DOUBLE",
+      "default": 0.001
+    },
+    {
+      "item": 6,
+      "name": "MIN_LINEAR_ITERATIONS",
+      "value_type": "INT"
+    },
+    {
+      "item": 7,
+      "name": "SPECIFIC_VOLUME_CHANGE_TOLERANCE",
+      "value_type": "DOUBLE"
+    },
+    {
+      "item": 8,
+      "name": "TEMPERATURE_CHANGE_TOLERANCE",
+      "value_type": "DOUBLE",
+      "dimension": "AbsoluteTemperature",
+      "default": 10
+    },
+    {
+      "item": 9,
+      "name": "MIN_NONLINEAR_ITERATIONS",
+      "value_type": "INT"
+    },
+    {
+      "item": 10,
+      "name": "LINEAR_RESIDUAL_TOLERANCE",
+      "value_type": "DOUBLE",
+      "default": 1e+20
+    },
+    {
+      "item": 11,
+      "name": "RESIDUAL_MAX_NORM_TOLERANCE",
+      "value_type": "DOUBLE",
+      "default": 0.0001
+    },
+    {
+      "item": 12,
+      "name": "RESIDUAL_SUM_TOLERANCE",
+      "value_type": "DOUBLE",
+      "default": 1e-20
+    },
+    {
+      "item": 13,
+      "name": "MAX_MOLAR_DENSITY_CHANGE",
+      "value_type": "DOUBLE"
+    },
+    {
+      "item": 14,
+      "name": "MAX_TEMPERATURE_CHANGE",
+      "value_type": "DOUBLE",
+      "dimension": "AbsoluteTemperature"
+    },
+    {
+      "item": 15,
+      "name": "MAX_PRESSURE_CHANGE",
+      "value_type": "DOUBLE",
+      "dimension": "Pressure"
+    },
+    {
+      "item": 16,
+      "name": "RESERVED16",
+      "value_type": "DOUBLE"
+    },
+    {
+      "item": 17,
+      "name": "RESERVED17",
+      "value_type": "DOUBLE"
+    },
+    {
+      "item": 18,
+      "name": "RESERVED18",
+      "value_type": "DOUBLE"
+    },
+    {
+      "item": 19,
+      "name": "RESERVED19",
+      "value_type": "DOUBLE"
+    },
+    {
+      "item": 20,
+      "name": "UNUSED20",
+      "value_type": "DOUBLE"
+    },
+    {
+      "item": 21,
+      "name": "UNUSED21",
+      "value_type": "DOUBLE"
+    },
+    {
+      "item": 22,
+      "name": "LINEAR_L2_RESIDUAL_TOLERANCE",
+      "value_type": "DOUBLE",
+      "default": 1e-11
+    },
+    {
+      "item": 23,
+      "name": "MSW_MAX_ITERATIONS",
+      "value_type": "INT",
+      "default": 40
+    },
+    {
+      "item": 24,
+      "name": "MSW_MOLAR_DENSITY_TOLERANCE",
+      "value_type": "DOUBLE",
+      "dimension": "Moles/ReservoirVolume",
+      "default": 0.015
+    },
+    {
+      "item": 25,
+      "name": "MSW_MOLAR_RATE_TOLERANCE",
+      "value_type": "DOUBLE",
+      "dimension": "Moles/Time",
+      "default": 50
+    },
+    {
+      "item": 26,
+      "name": "MSW_ENERGY_DENSITY_TOLERANCE",
+      "value_type": "DOUBLE",
+      "dimension": "Energy/ReservoirVolume",
+      "default": 50
+    },
+    {
+      "item": 27,
+      "name": "MSW_VELOCITY_TOLERANCE",
+      "value_type": "DOUBLE",
+      "dimension": "Length/RunTime",
+      "default": 10
+    },
+    {
+      "item": 28,
+      "name": "UNUSED28",
+      "value_type": "DOUBLE"
+    },
+    {
+      "item": 29,
+      "name": "UNUSED29",
+      "value_type": "DOUBLE"
+    },
+    {
+      "item": 30,
+      "name": "UNUSED30",
+      "value_type": "DOUBLE"
+    },
+    {
+      "item": 31,
+      "name": "MSW_MOLAR_RESIDUAL_TOLERANCE",
+      "value_type": "DOUBLE",
+      "dimension": "Moles/Time",
+      "default": 1000
+    },
+    {
+      "item": 32,
+      "name": "MSW_ENERGY_RESIDUAL_TOLERANCE",
+      "value_type": "DOUBLE",
+      "dimension": "Energy/Time",
+      "default": 1e+20
+    },
+    {
+      "item": 33,
+      "name": "SAMG_CHKTOL",
+      "value_type": "DOUBLE",
+      "default": -1
+    },
+    {
+      "item": 34,
+      "name": "SAMG_IFIRST",
+      "value_type": "INT",
+      "default": 1
+    },
+    {
+      "item": 35,
+      "name": "UNUSED35",
+      "value_type": "DOUBLE"
+    },
+    {
+      "item": 36,
+      "name": "UNUSED36",
+      "value_type": "DOUBLE"
+    },
+    {
+      "item": 37,
+      "name": "MSW_MAX_PRESSURE_CHANGE",
+      "value_type": "DOUBLE",
+      "dimension": "Pressure",
+      "default": 253.3125
+    },
+    {
+      "item": 38,
+      "name": "MSW_MAX_SPECIFIC_VOLUME_CHANGE",
+      "value_type": "DOUBLE",
+      "default": 100
+    },
+    {
+      "item": 39,
+      "name": "MSW_MAX_TEMPERATURE_CHANGE",
+      "value_type": "DOUBLE",
+      "dimension": "AbsoluteTemperature",
+      "default": 200
+    },
+    {
+      "item": 40,
+      "name": "MAX_APPLEYARD_CHOP_FRACTION",
+      "value_type": "DOUBLE",
+      "default": 0.5
+    },
+    {
+      "item": 41,
+      "name": "ADDITIONAL_RESIDUAL_MAX_NORM_TOLERANCE",
+      "value_type": "DOUBLE",
+      "default": 1e+20
+    },
+    {
+      "item": 42,
+      "name": "ADDITIONAL_RESIDUAL_SUM_TOLERANCE",
+      "value_type": "DOUBLE",
+      "default": 1e+20
+    }
+  ]
+}
