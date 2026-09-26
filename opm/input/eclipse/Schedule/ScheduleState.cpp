@@ -410,6 +410,7 @@ bool ScheduleState::operator==(const ScheduleState& other) const {
         && this->satelliteInjection == other.satelliteInjection
         && this->injectionNetwork == other.injectionNetwork
         && this->inj_streams == other.inj_streams
+        && this->group_gas_inj_streams == other.group_gas_inj_streams
         && this->groups == other.groups
         && this->vfpprod == other.vfpprod
         && this->vfpinj == other.vfpinj
@@ -471,6 +472,9 @@ ScheduleState ScheduleState::serializationTestObject() {
 
     ts.satelliteProduction.update(GSatProd::serializationTestObject());
     ts.satelliteInjection.update(GroupSatelliteInjection::serializationTestObject());
+
+    ts.group_gas_inj_streams.update("G1",
+        std::make_shared<std::vector<double>>(std::vector<double>{0.7, 0.2, 0.1}));
 
     return ts;
 }
