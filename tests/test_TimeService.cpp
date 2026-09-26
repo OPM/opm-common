@@ -24,6 +24,7 @@
 
 #include <opm/common/utility/TimeService.hpp>
 
+#include <chrono>
 #include <ctime>
 #include <limits>
 #include <stdexcept>
@@ -89,6 +90,19 @@ BOOST_AUTO_TEST_CASE(FromTimeT_PastYear3000)
 BOOST_AUTO_TEST_CASE(FromTimeT_YearOne)
 {
     checkTimeStamp(Opm::TimeStampUTC { std::time_t{-62'135'596'800} }, 1, 1, 1, 0, 0, 0);
+}
+
+BOOST_AUTO_TEST_CASE(TimePointFromTimeT)
+{
+    // A std::time_t and a time point count from the same epoch.
+    BOOST_CHECK(Opm::TimeService::from_time_t(0) == Opm::time_point{});
+
+    for (const auto t : { firstInstant, std::time_t{-1}, std::time_t{0},
+                          std::time_t{951'782'400}, lastInstant })
+    {
+        BOOST_CHECK_EQUAL(Opm::TimeService::to_time_t(Opm::TimeService::from_time_t(t)), t);
+        BOOST_CHECK(Opm::TimeService::from_time_t(t) == Opm::asTimePoint(Opm::TimeStampUTC { t }));
+    }
 }
 
 BOOST_AUTO_TEST_CASE(AssignFromTimeT)
@@ -197,4 +211,15 @@ BOOST_AUTO_TEST_CASE(FormatPastYear3000)
 
     BOOST_CHECK_EQUAL(fmt::format("{:%d-%b-%Y %H:%M:%S}", Opm::asTm(ts)),
                       "01-Jan-3001 13:37:07");
+}
+
+BOOST_AUTO_TEST_CASE(AdvanceRoundsToTheMillisecond)
+{
+    // 4194.373 + 86400 is 90594.37299999999 in double precision, so
+    // truncating to milliseconds would put the two times 86399.999 s apart.
+    const auto start = Opm::TimeService::from_time_t(0);
+    const auto first = Opm::TimeService::advance(start, 4194.373);
+    const auto second = Opm::TimeService::advance(start, 4194.373 + 86400.0);
+
+    BOOST_CHECK(second - first == std::chrono::hours{24});
 }

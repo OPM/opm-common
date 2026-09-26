@@ -71,15 +71,13 @@ namespace {
 
 
 
-const time_t system_clock_epoch = std::chrono::system_clock::to_time_t({});
-
+// std::chrono::system_clock measures Unix time, so its epoch is that of std::time_t.
 time_point from_time_t(std::time_t t) {
-    auto diff = std::difftime(t, system_clock_epoch);
-    return time_point(std::chrono::seconds(static_cast<std::chrono::seconds::rep>(diff)));
+    return time_point { std::chrono::seconds { t } };
 }
 
 std::time_t to_time_t(const time_point& tp) {
-    return std::chrono::duration_cast<std::chrono::seconds>(tp.time_since_epoch()).count() + system_clock_epoch;
+    return std::chrono::duration_cast<std::chrono::seconds>(tp.time_since_epoch()).count();
 }
 
 
@@ -91,7 +89,9 @@ time_point now() {
 
 time_point advance(const time_point& tp, const double sec)
 {
-    return tp + std::chrono::duration_cast<time_point::duration>
+    // Round rather than truncate: sec is often a sum of floating-point time
+    // steps that falls just short of a whole millisecond.
+    return tp + std::chrono::round<time_point::duration>
         (std::chrono::duration<double>(sec));
 }
 
