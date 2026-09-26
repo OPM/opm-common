@@ -338,7 +338,7 @@ GuideRateModel::Target GuideRateModel::convert_target(WellGuideRateTarget well_t
     if (well_target == WellGuideRateTarget::RES)
         return Target::RES;
 
-    throw std::logic_error("Can not convert this .... ");
+    throw std::logic_error(fmt::format("Can not convert well guide rate target {}. It is not in OIL, GAS, LIQ, WAT, RES.", static_cast<int>( well_target)));
 }
 
 GuideRateModel::Target GuideRateModel::convert_target(Group::GuideRateProdTarget group_target) {
@@ -357,7 +357,7 @@ GuideRateModel::Target GuideRateModel::convert_target(Group::GuideRateProdTarget
     if (group_target == Group::GuideRateProdTarget::RES)
         return Target::RES;
 
-    throw std::logic_error("Can not convert this .... ");
+    throw std::logic_error(fmt::format("Can not convert group production guide rate target {}. It is not in OIL, GAS, LIQ, WAT, RES.", static_cast<int>(group_target)));
 }
 
 GuideRateModel::Target GuideRateModel::convert_target(Phase injection_phase) {
@@ -370,7 +370,7 @@ GuideRateModel::Target GuideRateModel::convert_target(Phase injection_phase) {
     if (injection_phase == Phase::WATER)
         return Target::WAT;
 
-    throw std::logic_error("Can not convert this .... ");
+    throw std::logic_error(fmt::format("Can not convert group injection phase {}. It is not in OIL, GAS, LIQ, WATER.", static_cast<int>(injection_phase)));
 }
 
 }
