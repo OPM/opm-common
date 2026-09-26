@@ -14,7 +14,8 @@
       "name": "COMPOSITIONS",
       "value_type": "DOUBLE",
       "dimension": "1",
-      "size_type": "ALL"
+      "size_type": "ALL",
+      "default": 0
     }
   ]
 }
