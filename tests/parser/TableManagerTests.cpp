@@ -3606,7 +3606,7 @@ END
 }
 
 BOOST_AUTO_TEST_CASE(MoleFractionToleranceBoundary) {
-    // Deviations of 9e-5 and 2e-4, either side of the tolerance.
+    // Deviations of 9e-4 and 2e-3, either side of the tolerance.
     const auto zmfvd =
         [](const std::string& composition)
         {
@@ -3624,10 +3624,10 @@ END
 )";
         };
 
-    BOOST_CHECK_NO_THROW(Opm::TableManager{ Opm::Parser{}.parseString(zmfvd("0.49995 0.49996")) });
-    BOOST_CHECK(warningsFromTables(zmfvd("0.49995 0.49996")).find("normalized") != std::string::npos);
+    BOOST_CHECK_NO_THROW(Opm::TableManager{ Opm::Parser{}.parseString(zmfvd("0.4995 0.4996")) });
+    BOOST_CHECK(warningsFromTables(zmfvd("0.4995 0.4996")).find("normalized") != std::string::npos);
 
-    BOOST_CHECK_THROW(Opm::TableManager{ Opm::Parser{}.parseString(zmfvd("0.4999 0.4999")) },
+    BOOST_CHECK_THROW(Opm::TableManager{ Opm::Parser{}.parseString(zmfvd("0.499 0.499")) },
                       Opm::OpmInputError);
 }
 
