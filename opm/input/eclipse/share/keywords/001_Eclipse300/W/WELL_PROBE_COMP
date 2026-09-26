@@ -14,8 +14,7 @@
 "items": [
   {
     "name": "WELLS",
-    "value_type": "STRING",
-    "size_type": "ALL"
+    "value_type": "STRING"
   },
   {
     "name": "COMP_NUM",
