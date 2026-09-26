@@ -44,7 +44,11 @@ along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 #include <opm/input/eclipse/Deck/DeckItem.hpp>
 #include <opm/input/eclipse/Deck/Deck.hpp>
 
+#include <opm/input/eclipse/EclipseState/Grid/NNC.hpp>
+#include <opm/common/utility/OpmInputError.hpp>
+
 #include <opm/input/eclipse/Parser/Parser.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/E.hpp>
 
 #include <cstddef>
 #include <filesystem>
@@ -676,3 +680,138 @@ BOOST_AUTO_TEST_CASE(SALTMFTest) {
     const double epsilon = 0.00001;
     BOOST_CHECK_CLOSE(salinity, saltmf, epsilon);
 }
+
+namespace {
+
+Deck createDualPorosityStateDeck(const std::string& dimens,
+                                 const std::string& gridProps,
+                                 bool dualporo = true)
+{
+    const std::string deckData =
+        "RUNSPEC\n"
+        "\n"
+        "OIL\n"
+        "WATER\n"
+        "DIMENS\n"
+        " " + dimens + " /\n" +
+        (dualporo ? "DUALPORO\n" : "") +
+        "GRID\n" +
+        gridProps +
+        "\n";
+    Parser parser;
+    return parser.parseString(deckData);
+}
+
+const std::string dpMinProps =
+    "DX\n 2*100 /\n"
+    "DY\n 2*100 /\n"
+    "DZ\n 2*10 /\n"
+    "TOPS\n 2*2000 /\n"
+    "PORO\n 0.20 0.01 /\n"
+    "PERMX\n 1.0 1000.0 /\n";
+
+// 1 mD in SI times bulk volume (1e5 m3) times sigma (0.12 1/m2).
+constexpr double dpMinExpectedTrans = 9.869232667160130e-16 * 1.0e5 * 0.12;
+
+} // anonymous namespace
+
+BOOST_AUTO_TEST_CASE(DualPorositySigmaNNCFromScalarSigma) {
+    // One block, sigma as a single field value.
+    auto deck = createDualPorosityStateDeck("1 1 2", dpMinProps + "SIGMA\n 0.12 /\n");
+    EclipseState es(deck);
+
+    const auto& nnc = es.getInputNNC().input();
+    BOOST_REQUIRE_EQUAL(nnc.size(), 1U);
+    BOOST_CHECK_EQUAL(nnc[0].cell1, 0U);
+    BOOST_CHECK_EQUAL(nnc[0].cell2, 1U);
+    BOOST_CHECK_CLOSE(nnc[0].trans, dpMinExpectedTrans, 1e-4);
+}
+
+BOOST_AUTO_TEST_CASE(DualPorositySigmaNNCFromSigmav) {
+    // Cell-by-cell sigma: the matrix cell's value drives the coupling, the
+    // fracture-half entry carries no meaning.
+    auto deck = createDualPorosityStateDeck("1 1 2", dpMinProps + "SIGMAV\n 0.12 0.0 /\n");
+    EclipseState es(deck);
+
+    const auto& nnc = es.getInputNNC().input();
+    BOOST_REQUIRE_EQUAL(nnc.size(), 1U);
+    BOOST_CHECK_EQUAL(nnc[0].cell1, 0U);
+    BOOST_CHECK_EQUAL(nnc[0].cell2, 1U);
+    BOOST_CHECK_CLOSE(nnc[0].trans, dpMinExpectedTrans, 1e-4);
+}
+
+BOOST_AUTO_TEST_CASE(DualPorosityNoSigmaNoCoupling) {
+    // Without SIGMA/SIGMAV there is no coupling — and no failure.
+    auto deck = createDualPorosityStateDeck("1 1 2", dpMinProps);
+    EclipseState es(deck);
+    BOOST_CHECK(es.getInputNNC().input().empty());
+}
+
+BOOST_AUTO_TEST_CASE(DualPorosityInactiveTwinNoCoupling) {
+    // An inactive fracture twin suppresses the pair's connection.
+    auto deck = createDualPorosityStateDeck(
+        "1 1 2", dpMinProps + "SIGMA\n 0.12 /\n" + "ACTNUM\n 1 0 /\n");
+    EclipseState es(deck);
+    BOOST_CHECK(es.getInputNNC().input().empty());
+}
+
+BOOST_AUTO_TEST_CASE(DualPorositySigmaNNCMultiBlock) {
+    // 2x1x4: four matrix cells, each coupled to its twin four cells later.
+    const std::string props =
+        "DX\n 8*100 /\n"
+        "DY\n 8*100 /\n"
+        "DZ\n 8*10 /\n"
+        "TOPS\n 2*2000 2*2010 2*2000 2*2010 /\n"
+        "PORO\n 4*0.20 4*0.01 /\n"
+        "PERMX\n 4*1.0 4*1000.0 /\n"
+        "SIGMA\n 0.12 /\n";
+    auto deck = createDualPorosityStateDeck("2 1 4", props);
+    EclipseState es(deck);
+
+    const auto& nnc = es.getInputNNC().input();
+    BOOST_REQUIRE_EQUAL(nnc.size(), 4U);
+    for (std::size_t n = 0; n < 4; ++n) {
+        BOOST_CHECK_EQUAL(nnc[n].cell1, n);
+        BOOST_CHECK_EQUAL(nnc[n].cell2, n + 4);
+        BOOST_CHECK_CLOSE(nnc[n].trans, dpMinExpectedTrans, 1e-4);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(DualPorositySinglePorosityNoInjectedNNC) {
+    // Without DUALPORO nothing is injected, SIGMA or not: the keyword still
+    // aborts later in the simulator, but the state must not invent NNCs.
+    auto deck = createDualPorosityStateDeck("1 1 2", dpMinProps, false);
+    EclipseState es(deck);
+    BOOST_CHECK(es.getInputNNC().input().empty());
+}
+
+BOOST_AUTO_TEST_CASE(DualPorosityCouplingCannotBeEdited) {
+    // The coupling transmissibility is computed from the shape factor and the matrix
+    // permeability. An EDITNNC naming the same pair would rescale it silently, because
+    // edits are applied after the coupling is built. Refuse instead.
+    const char* deckData =
+        "RUNSPEC\n"
+        "OIL\nWATER\n"
+        // Two matrix layers, so a twin pair is NOT also a geometric neighbour: at one
+        // matrix layer the twins are adjacent cells and the edit is treated as an
+        // ordinary neighbour multiplier rather than an NNC edit.
+        "DIMENS\n 1 1 4 /\n"
+        "DUALPORO\n"
+        "GRID\n"
+        "DX\n 4*100 /\n"
+        "DY\n 4*100 /\n"
+        "DZ\n 4*10 /\n"
+        "TOPS\n 4*2000 /\n"
+        "PORO\n 2*0.2 2*0.01 /\n"
+        "PERMX\n 2*1.0 2*1000.0 /\n"
+        "SIGMA\n 0.1 /\n"
+        "EDIT\n"
+        "EDITNNC\n"
+        " 1 1 1 1 1 3 0.5 /\n"
+        "/\n"
+        "\n";
+
+    const auto deck = Opm::Parser{}.parseString(deckData);
+    BOOST_CHECK_THROW(Opm::EclipseState{ deck }, Opm::OpmInputError);
+}
+
