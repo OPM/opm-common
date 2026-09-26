@@ -588,6 +588,7 @@ list(APPEND TEST_SOURCE_FILES
   tests/test_Summary_Group.cpp
   tests/test_Summary_GSatProd.cpp
   tests/test_Tables.cpp
+  tests/test_TimeService.cpp
   tests/test_uniformtablelinear.cpp
   tests/test_Uns2CPG.cpp
   tests/test_Visitor.cpp
@@ -745,7 +746,7 @@ list(APPEND TEST_DATA_FILES
   tests/BASE_SIM.DATA
   tests/BASE_SIM_THPRES.DATA
   tests/NORST_SIM.DATA
-  tests/NORST1_SIM.DATA  
+  tests/NORST1_SIM.DATA
   tests/CARFIN-COLUMN.EGRID
   tests/CARFIN-DOUBLE.EGRID
   tests/CARFIN-NESTED.EGRID

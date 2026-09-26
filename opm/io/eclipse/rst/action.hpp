@@ -21,11 +21,12 @@
 
 #include <opm/output/eclipse/VectorItems/action.hpp>
 
+#include <opm/common/utility/TimeService.hpp>
+
 #include <opm/input/eclipse/Schedule/Action/Enums.hpp>
 
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 
-#include <ctime>
 #include <optional>
 #include <span>
 #include <string>
@@ -201,8 +202,8 @@ struct RstAction
               int max_run_arg,
               int run_count_arg,
               double min_wait_arg,
-              std::time_t start_time,
-              std::time_t last_run,
+              time_point start_time,
+              time_point last_run,
               std::vector<Condition>&& conditions_arg);
 
     /// Action name.
@@ -218,12 +219,12 @@ struct RstAction
     double min_wait;
 
     /// Start time of the action.
-    std::time_t start_time;
+    time_point start_time;
 
     /// Last run time of the action.
     ///
     /// Nullopt if the action has not yet run.
-    std::optional<std::time_t> last_run;
+    std::optional<time_point> last_run;
 
     /// Conditions associated with the action.
     std::vector<Condition> conditions;

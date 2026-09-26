@@ -37,17 +37,15 @@ namespace Opm {
     time_point from_time_t(std::time_t t);
     time_point now();
 
-    std::time_t advance(const std::time_t tp, const double sec);
-    std::time_t makeUTCTime(std::tm timePoint);
+    time_point advance(const time_point& tp, const double sec);
     const std::unordered_map<std::string , int>& eclipseMonthIndices();
     const std::unordered_map<int, std::string>& eclipseMonthNames();
     int eclipseMonth(const std::string& name);
     bool valid_month(const std::string& month_name);
 
-    std::time_t mkdatetime(int in_year, int in_month, int in_day, int hour, int minute, int second);
-    std::time_t mkdate(int in_year, int in_month, int in_day);
-    std::time_t portable_timegm(const std::tm* t);
-    std::time_t timeFromEclipse(const DeckRecord &dateRecord);
+    time_point mkdatetime(int in_year, int in_month, int in_day, int hour, int minute, int second);
+    time_point mkdate(int in_year, int in_month, int in_day);
+    time_point timeFromEclipse(const DeckRecord &dateRecord);
     }
 
     class TimeStampUTC
@@ -77,6 +75,10 @@ namespace Opm {
         TimeStampUTC() = default;
 
         explicit TimeStampUTC(const std::time_t tp);
+
+        /// Whole seconds of \p tp; a fraction of a second is dropped.
+        explicit TimeStampUTC(const time_point& tp);
+
         explicit TimeStampUTC(const YMD& ymd);
         TimeStampUTC(int year, int month, int day);
         TimeStampUTC(const YMD& ymd,
@@ -122,6 +124,11 @@ namespace Opm {
     };
 
     TimeStampUTC operator+(const TimeStampUTC& lhs, std::chrono::duration<double> delta);
+
+    /// Time stamp's fields in a std::tm, for formatting with fmt without
+    /// fmt::gmtime().  tm_wday and tm_yday are not set.
+    std::tm asTm(const TimeStampUTC& tp);
+
     std::time_t asTimeT(const TimeStampUTC& tp);
     std::time_t asLocalTimeT(const TimeStampUTC& tp);
     time_point asTimePoint(const TimeStampUTC& tp);

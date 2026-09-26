@@ -19,7 +19,6 @@
 
 #include <opm/output/eclipse/DoubHEAD.hpp>
 
-#include <opm/output/eclipse/InteHEAD.hpp> // Opm::RestartIO::makeUTCTime()
 #include <opm/output/eclipse/VectorItems/doubhead.hpp>
 
 #include <opm/input/eclipse/Schedule/OilVaporizationProperties.hpp>
@@ -34,7 +33,6 @@
 
 #include <chrono>
 #include <cmath>
-#include <ctime>
 #include <iterator>
 #include <map>
 #include <numeric>
@@ -328,16 +326,16 @@ enum Index : std::vector<double>::size_type {
 };
 
 namespace {
-    /// Convert std::tm{} to Date-Number.
+    /// Convert calendar date to Date-Number.
     ///
     /// ECL Restrictions:
     ///   - Calendar start: 1st January 0000
     ///   - Year length: 365.25 days
     ///   - No special leap year handling
     ///
-    /// \param[in] year tm::tm_year of date (years since 1900).
+    /// \param[in] year Years since 1900.
     ///
-    /// \param[in] yday tm::tm_yday of date (days since 1st January).
+    /// \param[in] yday Days since 1st January.
     ///
     /// \return Date-number corresponding to specified day-of-year in
     ///    specified year, subject to restrictions outlined above.
@@ -349,31 +347,18 @@ namespace {
 
     double toDateNum(const std::chrono::time_point<std::chrono::system_clock> tp)
     {
-        const auto t0  =  std::chrono::system_clock::to_time_t(tp);
-        const auto tm0 = *std::gmtime(&t0);
+        namespace ch = std::chrono;
 
-        // Set clock to 01:00:00+0000 on 2001-<month>-<day> to get
-        // "accurate" day-of-year calculation (no leap year, no DST offset,
-        // not previous day reported).
-        auto tm1 = std::tm{};
-        tm1.tm_year = 101;      // 2001
-        tm1.tm_mon  = tm0.tm_mon;
-        tm1.tm_mday = tm0.tm_mday;
+        const auto ymd = ch::year_month_day { ch::floor<ch::days>(tp) };
 
-        tm1.tm_hour  = 1;
-        tm1.tm_min   = 0;
-        tm1.tm_sec   = 0;
-        tm1.tm_isdst = 0;
+        // Day of year counted in 2001, a non-leap year, since date-numbers
+        // have no leap year handling.  29 February counts as 1 March.
+        constexpr auto noLeap = ch::year { 2001 };
+        const auto yday = ch::sys_days { noLeap / ymd.month() / ymd.day() }
+                        - ch::sys_days { noLeap / ch::January / 1 };
 
-        const auto t1 = Opm::TimeService::makeUTCTime(tm1);
-
-        if (t1 != static_cast<std::time_t>(-1)) {
-            tm1 = *std::gmtime(&t1); // Get new tm_yday.
-            return toDateNum(tm0.tm_year, tm1.tm_yday);
-        }
-
-        // Failed to convert tm1 to time_t (unexpected).  Use initial value.
-        return toDateNum(tm0.tm_year, tm0.tm_yday);
+        return toDateNum(static_cast<int>(ymd.year()) - 1900,
+                         static_cast<int>(yday.count()));
     }
 
     double defaultNetBalanInterval()

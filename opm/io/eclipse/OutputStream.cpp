@@ -22,6 +22,7 @@
 
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/common/utility/String.hpp>
+#include <opm/common/utility/TimeService.hpp>
 
 #include <opm/io/eclipse/EclOutput.hpp>
 #include <opm/io/eclipse/ERst.hpp>
@@ -664,51 +665,45 @@ namespace {
         return static_cast<int>(us.count());
     }
 
-    std::tm startTimeToGmtime(const SummarySpecification::StartTime start)
-    {
-        const auto timepoint = std::chrono::system_clock::to_time_t(start);
-        return *std::gmtime(&timepoint);
-    }
-
     std::vector<int>
     makeStartDate(const SummarySpecification::StartTime start)
     {
-        const auto tm = startTimeToGmtime(start);
+        const auto ts = TimeStampUTC { start };
 
         // { Day, Month, Year, Hour, Minute, Seconds }
 
         return {
-            // 1..31    1..12
-            tm.tm_mday, tm.tm_mon + 1,
+            // 1..31   1..12
+            ts.day(),  ts.month(),
 
-            tm.tm_year + 1900,
+            ts.year(),
 
-            // 0..23    0..59
-            tm.tm_hour, tm.tm_min,
+            // 0..23   0..59
+            ts.hour(), ts.minutes(),
 
             // 0..59,999,999
-            microSeconds(std::min(tm.tm_sec, 59))
+            microSeconds(std::min(ts.seconds(), 59))
         };
     }
 
     std::vector<int>
     makeRuntimeiDate(const SummarySpecification::StartTime start)
     {
-        const auto tm = startTimeToGmtime(start);
+        const auto ts = TimeStampUTC { start };
 
         // { Year, Month, Day, Hour, Minute, Seconds }
 
         return {
-            tm.tm_year + 1900,
+            ts.year(),
 
-            // 1..12    1..32
-            tm.tm_mon + 1, tm.tm_mday,
+            // 1..12     1..32
+            ts.month(),  ts.day(),
 
-            // 0..23    0..59
-            tm.tm_hour, tm.tm_min,
+            // 0..23     0..59
+            ts.hour(),   ts.minutes(),
 
             // 0..59
-            std::min(tm.tm_sec, 59)
+            std::min(ts.seconds(), 59)
         };
     }
 

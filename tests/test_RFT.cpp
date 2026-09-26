@@ -58,8 +58,8 @@
 
 #include <algorithm>
 #include <array>
+#include <chrono>
 #include <cstddef>
-#include <ctime>
 #include <functional>
 #include <iomanip>
 #include <iterator>
@@ -697,15 +697,11 @@ namespace {
         return sol;
     }
 
-    std::time_t timeStamp(const ::Opm::EclIO::ERft::RftDate& date)
+    Opm::time_point timeStamp(const ::Opm::EclIO::ERft::RftDate& date)
     {
-        auto tp = std::tm{};
-
-        tp.tm_year = std::get<0>(date) - 1900;
-        tp.tm_mon  = std::get<1>(date) -    1; // 0..11
-        tp.tm_mday = std::get<2>(date);        // 1..31
-
-        return Opm::TimeService::makeUTCTime(tp);
+        return Opm::TimeService::mkdate(std::get<0>(date),  // Year
+                                        std::get<1>(date),  // Month, 1..12
+                                        std::get<2>(date)); // Day, 1..31
     }
 } // Anonymous namespace
 
@@ -738,7 +734,7 @@ BOOST_AUTO_TEST_CASE(test_RFT)
 
         Opm::EclipseIO eclipseWriter( eclipseState, grid, schedule, summary_config );
 
-        const auto start_time = schedule.posixStartTime();
+        const auto start_time = schedule.getStartTime();
         const auto step_time  = timeStamp(::Opm::EclIO::ERft::RftDate{ 2008, 10, 10 });
 
         Opm::SummaryState st(Opm::TimeService::now(), 0.0);
@@ -794,7 +790,7 @@ BOOST_AUTO_TEST_CASE(test_RFT)
                                      udq_state,
                                      2,
                                      false,
-                                     step_time - start_time,
+                                     std::chrono::duration<double> { step_time - start_time }.count(),
                                      std::move(restart_value));
     }
 
@@ -879,7 +875,7 @@ BOOST_AUTO_TEST_CASE(test_RFT2)
         Opm::UDQState udq_state(10);
         Opm::WellTestState wtest_state;
 
-        const auto  start_time = schedule.posixStartTime();
+        const auto  start_time = schedule.getStartTime();
         for (int counter = 0; counter < 2; counter++) {
             Opm::EclipseIO eclipseWriter( eclipseState, grid, schedule, summary_config );
             for (std::size_t step = 0; step < schedule.size(); step++) {
@@ -933,7 +929,7 @@ BOOST_AUTO_TEST_CASE(test_RFT2)
                                              udq_state,
                                              step,
                                              false,
-                                             step_time - start_time,
+                                             std::chrono::duration<double> { step_time - start_time }.count(),
                                              std::move(restart_value));
             }
 

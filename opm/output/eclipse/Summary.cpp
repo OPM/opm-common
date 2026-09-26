@@ -6048,7 +6048,7 @@ public:
 
     explicit SMSpecStreamDeferredCreation(const Opm::InitConfig&          initcfg,
                                           const Opm::EclipseGrid&         grid,
-                                          const std::time_t               start,
+                                          const Opm::time_point&          start,
                                           const Opm::UnitSystem::UnitType utype);
 
     std::unique_ptr<Spec>
@@ -6074,11 +6074,11 @@ private:
 SMSpecStreamDeferredCreation::
 SMSpecStreamDeferredCreation(const Opm::InitConfig&          initcfg,
                              const Opm::EclipseGrid&         grid,
-                             const std::time_t               start,
+                             const Opm::time_point&          start,
                              const Opm::UnitSystem::UnitType utype)
     : utype_   (utype)
     , cartDims_(grid.getNXYZ())
-    , start_   (Opm::TimeService::from_time_t(start))
+    , start_   (start)
     // This is not exactly when the simulation started, but should make the tools happy enough.
     , computeStart_(Opm::TimeService::now())
 {
@@ -6117,7 +6117,7 @@ makeDeferredSMSpecCreation(const Opm::EclipseState& es,
                            const Opm::Schedule&     sched)
 {
     return std::make_unique<SMSpecStreamDeferredCreation>
-        (es.cfg().init(), grid, sched.posixStartTime(),
+        (es.cfg().init(), grid, sched.getStartTime(),
          es.getUnits().getType());
 }
 
@@ -6314,7 +6314,7 @@ SummaryImplementation(SummaryConfig&      sumcfg,
     , unif_          { es.cfg().io().getUNIFOUT() }
 {
     const auto st = SummaryState {
-        TimeService::from_time_t(sched.getStartTime()),
+        sched.getStartTime(),
         es.runspec().udqParams().undefinedValue()
     };
 
@@ -6356,7 +6356,7 @@ SummaryImplementation(SummaryConfig&      sumcfg,
             // an ESMRY file writing object for this run.  Constructor takes
             // a snapshot of the configured nodes.
             this->esmry_ = std::make_unique<Opm::EclIO::ExtSmryOutput>
-                (this->valueKeys_, this->valueUnits_, es, sched.posixStartTime());
+                (this->valueKeys_, this->valueUnits_, es, sched.getStartTime());
         }
         else {
             // We don't support formatted ESMRY files.

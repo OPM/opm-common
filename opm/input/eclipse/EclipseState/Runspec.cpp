@@ -129,7 +129,7 @@ namespace {
         return Opm::SatFuncControls::KeywordFamily::Undefined;
     }
 
-    std::time_t create_start_time(const Opm::Deck& deck)
+    Opm::time_point create_start_time(const Opm::Deck& deck)
     {
         if (deck.hasKeyword("START")) {
             const auto& keyword = deck["START"].back();
@@ -994,7 +994,7 @@ Runspec::Runspec(const Deck& deck)
 Runspec Runspec::serializationTestObject()
 {
     Runspec result;
-    result.m_start_time = 1234;
+    result.m_start_time = TimeService::from_time_t(1234);
     result.active_phases = Phases::serializationTestObject();
     result.m_tabdims = Tabdims::serializationTestObject();
     result.m_eqldims = Eqldims::serializationTestObject();
@@ -1156,7 +1156,7 @@ bool Runspec::biof() const noexcept
     return this->m_biof;
 }
 
-std::time_t Runspec::start_time() const noexcept
+time_point Runspec::start_time() const noexcept
 {
     return this->m_start_time;
 }

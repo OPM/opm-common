@@ -36,7 +36,6 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <ctime>
 #include <functional>
 #include <iosfwd>
 #include <map>
@@ -212,10 +211,9 @@ namespace Opm {
          * If the input deck does not specify a start time, Eclipse's 1. Jan
          * 1983 is defaulted
          */
-        std::time_t getStartTime() const;
-        std::time_t posixStartTime() const;
-        std::time_t posixEndTime() const;
-        std::time_t simTime(std::size_t timeStep) const;
+        time_point getStartTime() const;
+        time_point getEndTime() const;
+        time_point simTime(std::size_t timeStep) const;
         double seconds(std::size_t timeStep) const;
         double stepLength(std::size_t timeStep) const;
         std::optional<int> exitStatus() const;
@@ -623,7 +621,7 @@ namespace Opm {
         std::vector<std::string> wellNames(const std::string& pattern,
                                            const HandlerContext& context,
                                            bool allowEmpty = false);
-        static std::string formatDate(std::time_t t);
+        static std::string formatDate(const time_point& tp);
         void applyGlobalWPIMULT( const std::unordered_map<std::string, double>& wpimult_global_factor);
         void updateICDScalingFactors();
 

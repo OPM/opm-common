@@ -76,7 +76,7 @@ ScheduleDeck::ScheduleDeck(const time_point&          start_time,
         "VFPPROD", "VFPINJ", "RPTSCHED", "RPTRST", "TUNING", "MESSAGES",
     };
 
-    this->m_restart_time = TimeService::from_time_t(rst_info.time);
+    this->m_restart_time = rst_info.time;
     this->m_restart_offset = rst_info.report_step;
     this->skiprest = rst_info.skiprest;
 
@@ -141,31 +141,8 @@ namespace {
                           const time_point&      restart_time,
                           const time_point&      t)
     {
-        const auto rst = TimeStampUTC {
-            TimeService::to_time_t(restart_time)
-        };
-
-        const auto current = TimeStampUTC {
-            TimeService::to_time_t(t)
-        };
-
-        auto rst_tm = std::tm{};
-        rst_tm.tm_year = rst.year()  - 1900;
-        rst_tm.tm_mon  = rst.month() -    1;
-        rst_tm.tm_mday = rst.day();
-
-        rst_tm.tm_hour = rst.hour();
-        rst_tm.tm_min  = rst.minutes();
-        rst_tm.tm_sec  = rst.seconds();
-
-        auto current_tm = std::tm{};
-        current_tm.tm_year = current.year()  - 1900;
-        current_tm.tm_mon  = current.month() -    1;
-        current_tm.tm_mday = current.day();
-
-        current_tm.tm_hour = current.hour();
-        current_tm.tm_min  = current.minutes();
-        current_tm.tm_sec  = current.seconds();
+        const auto rst = TimeStampUTC { restart_time };
+        const auto current = TimeStampUTC { t };
 
         const auto* keyword = (time_type == ScheduleTimeType::DATES)
             ? "DATES" : "TSTEP";
@@ -176,7 +153,7 @@ namespace {
         return fmt::format("In a restarted simulation using SKIPREST, the {0} keyword must have\n"
                            "a {1} corresponding to the RESTART time {2:%d-%b-%Y %H:%M:%S}.\n"
                            "Reached time {3:%d-%b-%Y %H:%M:%S} without an intervening {1}.",
-                           keyword, record, rst_tm, current_tm);
+                           keyword, record, asTm(rst), asTm(current));
     }
 }
 
@@ -291,7 +268,7 @@ ScheduleDeck ScheduleDeck::serializationTestObject()
 {
     ScheduleDeck deck;
 
-    deck.m_restart_time = TimeService::from_time_t( asTimeT( TimeStampUTC( 2013, 12, 12 )));
+    deck.m_restart_time = asTimePoint( TimeStampUTC( 2013, 12, 12 ));
     deck.m_restart_offset = 123;
     deck.m_location = KeywordLocation::serializationTestObject();
     deck.m_blocks = { ScheduleBlock::serializationTestObject(), ScheduleBlock::serializationTestObject() };
@@ -319,11 +296,11 @@ void ScheduleDeck::clearKeywords(const std::size_t idx)
 }
 
 void ScheduleDeck::handleDATES(const DeckKeyword&   dates,
-                               const std::time_t    restart_time,
+                               const time_point&    restart_time,
                                ScheduleDeckContext& context)
 {
     for (const auto& record : dates) {
-        auto nextTime = std::time_t{};
+        auto nextTime = time_point{};
 
         try {
             nextTime = TimeService::timeFromEclipse(record);
@@ -338,11 +315,8 @@ void ScheduleDeck::handleDATES(const DeckKeyword&   dates,
             std::throw_with_nested(opm_error);
         }
 
-        const auto currentTime = TimeService::to_time_t(context.last_time);
-
-        // Recall: difftime(b,a) is portably equivalent to "b-a".
-        if (! (std::difftime(nextTime, currentTime) > 0.0)) {
-            const auto* prevstepID = (restart_time > 0)
+        if (! (nextTime > context.last_time)) {
+            const auto* prevstepID = (restart_time > time_point{})
                 ? "restart time"
                 : "end time of previous report step";
 
@@ -350,11 +324,11 @@ void ScheduleDeck::handleDATES(const DeckKeyword&   dates,
                                    "{:%d-%b-%Y %H:%M:%S} which "
                                    "is not later than the {}, "
                                    "{:%d-%b-%Y %H:%M:%S}.",
-                                   fmt::gmtime(nextTime),
+                                   asTm(TimeStampUTC { nextTime }),
                                    prevstepID,
-                                   fmt::gmtime(currentTime));
+                                   asTm(TimeStampUTC { context.last_time }));
 
-            if ((restart_time > 0) && !this->skiprest) {
+            if ((restart_time > time_point{}) && !this->skiprest) {
                 // SKIPREST is handled in member function
                 // add_block().
                 msg += std::string { R"(
@@ -365,8 +339,7 @@ Is keyword SKIPREST missing for the restarted simulation run?)"
             throw OpmInputError { msg, dates.location() };
         }
 
-        this->add_block(ScheduleTimeType::DATES,
-                        TimeService::from_time_t(nextTime),
+        this->add_block(ScheduleTimeType::DATES, nextTime,
                         dates.location(), context);
     }
 }

@@ -769,7 +769,7 @@ createInteHead(const EclipseState& es,
         .wellTableDimensions(getWellTableDims(nwgmax, ngmax, rspec, sched,
                                               report_step, lookup_step,
                                               grid.get_lgr_tag()))
-        .calendarDate       (getSimulationTimePoint(sched.posixStartTime(), simTime))
+        .calendarDate       (getSimulationTimePoint(sched.getStartTime(), simTime))
         .activePhases       (getActivePhases(rspec))
         .drsdt              (sched, lookup_step)
              // -----------------------------------------------------------------------------------

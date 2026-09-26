@@ -140,7 +140,7 @@ BOOST_AUTO_TEST_CASE(RUN) {
             const auto& year  = smry.get("YEAR");
 
             for (auto nstep = dates.size(), time_index=0*nstep; time_index < nstep; time_index++) {
-                auto ts = TimeStampUTC( std::chrono::system_clock::to_time_t( dates[time_index]) );
+                auto ts = TimeStampUTC( dates[time_index] );
                 BOOST_CHECK_EQUAL( ts.day(), day[time_index]);
                 BOOST_CHECK_EQUAL( ts.month(), month[time_index]);
                 BOOST_CHECK_EQUAL( ts.year(), year[time_index]);
@@ -245,7 +245,7 @@ BOOST_AUTO_TEST_CASE(RUN_SUMTHIN) {
                 std::any_of(dates.begin(), dates.begin() + nstep - 1,
                     [&report_date](const auto date)
                 {
-                    return report_date == TimeStampUTC(std::chrono::system_clock::to_time_t(date));
+                    return report_date == TimeStampUTC(date);
                 });
 
             BOOST_CHECK_MESSAGE(report_found, "Expected report date missing");
@@ -319,7 +319,7 @@ BOOST_AUTO_TEST_CASE(RUN_RPTONLY) {
                 std::any_of(dates.begin(), dates.begin() + nstep - 1,
                     [&report_date](const auto date)
                 {
-                    return report_date == TimeStampUTC(std::chrono::system_clock::to_time_t(date));
+                    return report_date == TimeStampUTC(date);
                 });
 
             BOOST_CHECK_MESSAGE(report_found, "Expected report date missing");

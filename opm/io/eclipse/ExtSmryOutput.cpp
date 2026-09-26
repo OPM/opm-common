@@ -34,7 +34,7 @@
 namespace Opm { namespace EclIO {
 
 ExtSmryOutput::ExtSmryOutput(const std::vector<std::string>& valueKeys, const std::vector<std::string>& valueUnits,
-                 const EclipseState& es, const time_t start_time)
+                 const EclipseState& es, const time_point& start_time)
 {
     m_nVect = valueKeys.size();
     m_nTimeSteps = 0;
@@ -61,9 +61,7 @@ ExtSmryOutput::ExtSmryOutput(const std::vector<std::string>& valueKeys, const st
     m_smry_keys = this->make_modified_keys(valueKeys, dims);
     m_smryUnits = valueUnits;
 
-    Opm::time_point startdat = Opm::TimeService::from_time_t(start_time);
-
-    Opm::TimeStampUTC ts( std::chrono::system_clock::to_time_t( startdat ));
+    const auto ts = Opm::TimeStampUTC { start_time };
 
     m_start_date_vect = {ts.day(), ts.month(), ts.year(),
         ts.hour(), ts.minutes(), ts.seconds(), 0 };

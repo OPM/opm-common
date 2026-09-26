@@ -21,11 +21,12 @@
 #ifndef OPM_INTEHEAD_HEADER_INCLUDED
 #define OPM_INTEHEAD_HEADER_INCLUDED
 
+#include <opm/common/utility/TimeService.hpp>
+
 #include <opm/input/eclipse/Schedule/UDQ/UDQEnums.hpp>
 
 #include <array>
 #include <cstddef>
-#include <ctime>
 #include <memory>
 #include <vector>
 
@@ -256,7 +257,7 @@ namespace Opm { namespace RestartIO {
     };
 
     InteHEAD::TimePoint
-    getSimulationTimePoint(const std::time_t start,
+    getSimulationTimePoint(const time_point& start,
                            const double      elapsed);
 
     InteHEAD::AquiferDims

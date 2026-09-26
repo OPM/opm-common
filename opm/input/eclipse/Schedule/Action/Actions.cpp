@@ -23,7 +23,6 @@
 
 #include <algorithm>
 #include <cstddef>
-#include <ctime>
 #include <iterator>
 #include <numeric>
 #include <stdexcept>
@@ -117,7 +116,7 @@ bool Actions::empty() const
     return this->actions_.empty() && this->pyactions_.empty();
 }
 
-bool Actions::ready(const State& state, const std::time_t sim_time) const
+bool Actions::ready(const State& state, const time_point sim_time) const
 {
     return std::ranges::any_of(this->actions_,
                                [&state, sim_time](const auto& action)
@@ -143,7 +142,7 @@ const ActionX& Actions::operator[](const std::size_t index) const
 }
 
 std::vector<const ActionX*>
-Actions::pending(const State& state, const std::time_t sim_time) const
+Actions::pending(const State& state, const time_point sim_time) const
 {
     auto action_vector = std::vector<const ActionX*> {};
 

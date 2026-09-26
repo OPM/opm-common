@@ -24,7 +24,6 @@
 #include <opm/io/eclipse/SummaryNode.hpp>
 
 #include <cstddef>
-#include <ctime>
 #include <iosfwd>
 #include <optional>
 #include <set>
@@ -76,11 +75,11 @@ public:
 
     explicit SummaryState(time_point sim_start_arg, double udqUndefined);
 
-    // The std::time_t constructor is only for export to Python
-    explicit SummaryState(std::time_t sim_start_arg);
+    // Undefined UDQ values are std::numeric_limits<double>::lowest().
+    explicit SummaryState(time_point sim_start_arg);
 
     // Only used for testing purposes.
-    SummaryState() : SummaryState(std::time_t{0}) {}
+    SummaryState() : SummaryState(time_point{}) {}
     ~SummaryState() = default;
 
     // The canonical way to update the SummaryState is through the

@@ -892,7 +892,7 @@ rptrstOpts(const int norst_value)
 // =====================================================================
 
 Opm::RestartIO::InteHEAD::TimePoint
-Opm::RestartIO::getSimulationTimePoint(const std::time_t start,
+Opm::RestartIO::getSimulationTimePoint(const time_point& start,
                                        const double      elapsed)
 {
     // Round to whole microseconds first so that FP noise near a
@@ -903,18 +903,18 @@ Opm::RestartIO::getSimulationTimePoint(const std::time_t start,
     const auto usec          = static_cast<int>(elapsed_usec % usec_per_sec);
 
     const auto now = TimeService::advance(start, static_cast<double>(whole_seconds));
-    const auto tp  = *std::gmtime(&now);
+    const auto tp  = TimeStampUTC { now };
 
     return {
         // Y-m-d
-        tp.tm_year + 1900,
-        tp.tm_mon  +    1,
-        tp.tm_mday ,
+        tp.year(),
+        tp.month(),
+        tp.day(),
 
         // H:M:S
-        tp.tm_hour ,
-        tp.tm_min  ,
-        std::min(tp.tm_sec, 59), // Ignore leap seconds
+        tp.hour(),
+        tp.minutes(),
+        std::min(tp.seconds(), 59), // Ignore leap seconds
 
         // Fractional seconds in microsecond resolution.
         usec,
