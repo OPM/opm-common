@@ -71,15 +71,13 @@ namespace {
 
 
 
-const time_t system_clock_epoch = std::chrono::system_clock::to_time_t({});
-
+// std::chrono::system_clock measures Unix time, so its epoch is that of std::time_t.
 time_point from_time_t(std::time_t t) {
-    auto diff = std::difftime(t, system_clock_epoch);
-    return time_point(std::chrono::seconds(static_cast<std::chrono::seconds::rep>(diff)));
+    return time_point { std::chrono::seconds { t } };
 }
 
 std::time_t to_time_t(const time_point& tp) {
-    return std::chrono::duration_cast<std::chrono::seconds>(tp.time_since_epoch()).count() + system_clock_epoch;
+    return std::chrono::duration_cast<std::chrono::seconds>(tp.time_since_epoch()).count();
 }
 
 

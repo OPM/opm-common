@@ -91,6 +91,19 @@ BOOST_AUTO_TEST_CASE(FromTimeT_YearOne)
     checkTimeStamp(Opm::TimeStampUTC { std::time_t{-62'135'596'800} }, 1, 1, 1, 0, 0, 0);
 }
 
+BOOST_AUTO_TEST_CASE(TimePointFromTimeT)
+{
+    // A std::time_t and a time point count from the same epoch.
+    BOOST_CHECK(Opm::TimeService::from_time_t(0) == Opm::time_point{});
+
+    for (const auto t : { firstInstant, std::time_t{-1}, std::time_t{0},
+                          std::time_t{951'782'400}, lastInstant })
+    {
+        BOOST_CHECK_EQUAL(Opm::TimeService::to_time_t(Opm::TimeService::from_time_t(t)), t);
+        BOOST_CHECK(Opm::TimeService::from_time_t(t) == Opm::asTimePoint(Opm::TimeStampUTC { t }));
+    }
+}
+
 BOOST_AUTO_TEST_CASE(AssignFromTimeT)
 {
     auto ts = Opm::TimeStampUTC {};
