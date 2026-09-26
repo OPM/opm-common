@@ -171,7 +171,7 @@ namespace {
     {
         auto ret = std::vector<std::pair<Opm::RestartIO::RstState, int>>{};
 
-        auto rst = std::make_shared<Opm::EclIO::ERst>(rst_file.path.generic_string());
+        auto rst = std::make_shared<Opm::EclIO::ERst>(rst_file.path);
 
         auto all_report_steps = rst->listOfReportStepNumbers();
 
@@ -272,7 +272,7 @@ namespace {
 
         parseContext.update(Opm::InputErrorAction::WARN);
 
-        const auto deck = parser.parseFile(deck_file.generic_string(), parseContext, errors);
+        const auto deck = parser.parseFile(deck_file, parseContext, errors);
         std::cout << "complete.\n";
 
         std::cout << "Creating EclipseState .... ";

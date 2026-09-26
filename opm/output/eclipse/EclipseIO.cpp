@@ -959,7 +959,7 @@ void Opm::EclipseIO::Impl::writeRunSummary() const
         this->outputDir_, this->baseName_
     };
 
-    const auto smspec = EclIO::OutputStream::outputFileName(rset, ext);
+    const auto smspec = EclIO::OutputStream::outputFilePath(rset, ext);
 
     EclIO::ESmry { smspec }.write_rsm_file();
 }

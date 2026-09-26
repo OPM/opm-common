@@ -49,7 +49,7 @@ inline std::string pathprefix() {
 BOOST_AUTO_TEST_CASE(CreateCPGrid) {
     Parser parser;
     std::filesystem::path scheduleFile(pathprefix() + "GRID/CORNERPOINT.DATA");
-    auto deck =  parser.parseFile(scheduleFile.string());
+    auto deck =  parser.parseFile(scheduleFile);
     EclipseState es(deck);
     const auto& grid = es.getInputGrid();
 
@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE(CreateCPGrid) {
 BOOST_AUTO_TEST_CASE(CreateCPActnumGrid) {
     Parser parser;
     std::filesystem::path scheduleFile(pathprefix() + "GRID/CORNERPOINT_ACTNUM.DATA");
-    auto deck =  parser.parseFile(scheduleFile.string());
+    auto deck =  parser.parseFile(scheduleFile);
     EclipseState es(deck);
     const auto& grid = es.getInputGrid();
 
@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(CreateCPActnumGrid) {
 BOOST_AUTO_TEST_CASE(ExportFromCPGridAllActive) {
     Parser parser;
     std::filesystem::path scheduleFile(pathprefix() + "GRID/CORNERPOINT.DATA");
-    auto deck =  parser.parseFile(scheduleFile.string());
+    auto deck =  parser.parseFile(scheduleFile);
     EclipseState es(deck);
     const auto& grid = es.getInputGrid();
 
@@ -88,7 +88,7 @@ BOOST_AUTO_TEST_CASE(ExportFromCPGridAllActive) {
 BOOST_AUTO_TEST_CASE(ExportFromCPGridACTNUM) {
     Parser parser;
     std::filesystem::path scheduleFile(pathprefix() + "GRID/CORNERPOINT_ACTNUM.DATA");
-    auto deck =  parser.parseFile(scheduleFile.string());
+    auto deck =  parser.parseFile(scheduleFile);
     EclipseState es(deck);
     auto& grid = es.getInputGrid();
 

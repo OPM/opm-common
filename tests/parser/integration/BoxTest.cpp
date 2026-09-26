@@ -50,7 +50,7 @@ std::string pathprefix() {
 Deck makeDeck(const std::string& fileName) {
     Parser parser;
     std::filesystem::path boxFile(fileName);
-    return parser.parseFile(boxFile.string());
+    return parser.parseFile(boxFile);
 }
 
 EclipseState makeState(const std::string& fileName) {

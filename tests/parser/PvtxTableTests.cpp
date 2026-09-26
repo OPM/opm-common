@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_SUITE(PvtX)
 BOOST_AUTO_TEST_CASE( PvtxNumTables1 ) {
     Parser parser;
     std::filesystem::path deckFile(casePrefix() + "TABLES/PVTX1.DATA");
-    auto deck =  parser.parseFile(deckFile.string());
+    auto deck =  parser.parseFile(deckFile);
     BOOST_CHECK_EQUAL( PvtxTable::numTables( deck.get<ParserKeywords::PVTO>().back()) , 1);
 
     auto ranges = PvtxTable::recordRanges( deck.get<ParserKeywords::PVTO>().back() );
@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE( PvtxNumTables1 ) {
 BOOST_AUTO_TEST_CASE( PvtxNumTables2 ) {
     Parser parser;
     std::filesystem::path deckFile(casePrefix() + "TABLES/PVTO2.DATA");
-    auto deck =  parser.parseFile(deckFile.string());
+    auto deck =  parser.parseFile(deckFile);
     BOOST_CHECK_EQUAL( PvtxTable::numTables( deck.get<ParserKeywords::PVTO>().back()) , 3);
 
     auto ranges = PvtxTable::recordRanges( deck.get<ParserKeywords::PVTO>().back() );
@@ -135,7 +135,7 @@ BOOST_AUTO_TEST_CASE( PvtxNumTables3 ) {
 BOOST_AUTO_TEST_CASE( PVTOSaturatedTable ) {
     Parser parser;
     std::filesystem::path deckFile(casePrefix() + "TABLES/PVTX1.DATA");
-    auto deck =  parser.parseFile(deckFile.string());
+    auto deck =  parser.parseFile(deckFile);
     Opm::TableManager tables(deck);
     const auto& pvtoTables = tables.getPvtoTables( );
     const auto& pvtoTable = pvtoTables[0];
@@ -195,7 +195,7 @@ BOOST_AUTO_TEST_CASE( PVTGSaturatedTable )
     // p=1 bar and p=pLim=2.063 bar.
 
     const std::filesystem::path deckFile(casePrefix() + "TABLES/PVTX1.DATA");
-    const auto deck = Parser{}.parseFile(deckFile.string());
+    const auto deck = Parser{}.parseFile(deckFile);
     const Opm::TableManager tables(deck);
     const auto& pvtgTables = tables.getPvtgTables();
     const auto& pvtgTable = pvtgTables[0];

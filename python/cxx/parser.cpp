@@ -67,10 +67,11 @@ void python::common::export_Parser(py::module& module) {
 
     py::class_<Parser>(module, "Parser", Parser_docstring)
         .def(py::init<bool>(), py::arg("add_default") = true, Parser_init_docstring)
-        .def("parse"       , py::overload_cast<const std::string&>(&Parser::parseFile, py::const_), py::arg("filename"), Parser_parse_file_docstring)
-        .def("parse"       , py::overload_cast<const std::string&, const ParseContext&>(&Parser::parseFile, py::const_),
+        .def("parse"       , [](const Parser& parser, const std::string& filename) { return parser.parseFile(filename); },
+            py::arg("filename"), Parser_parse_file_docstring)
+        .def("parse"       , [](const Parser& parser, const std::string& filename, const ParseContext& context) { return parser.parseFile(filename, context); },
             py::arg("filename"), py::arg("context"), Parser_parse_file_context_docstring)
-        .def("parse"       , py::overload_cast<const std::string&, const ParseContext&, const std::vector<Opm::Ecl::SectionType>&>(&Parser::parseFile, py::const_),
+        .def("parse"       , [](const Parser& parser, const std::string& filename, const ParseContext& context, const std::vector<Opm::Ecl::SectionType>& sections) { return parser.parseFile(filename, context, sections); },
             py::arg("filename"), py::arg("context"), py::arg("sections"), Parser_parse_file_context_sections_docstring)
         .def("parse_string", py::overload_cast<const std::string&>(&Parser::parseString, py::const_), py::arg("data"), Parser_parse_string_docstring)
         .def("parse_string", py::overload_cast<const std::string&, const ParseContext&>(&Parser::parseString, py::const_),

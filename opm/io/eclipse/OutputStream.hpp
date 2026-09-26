@@ -27,6 +27,7 @@
 
 #include <array>
 #include <chrono>
+#include <filesystem>
 #include <ios>
 #include <memory>
 #include <optional>
@@ -48,7 +49,7 @@ namespace Opm { namespace EclIO { namespace OutputStream {
     struct ResultSet
     {
         /// Output directory.  Commonly "." or location of run's .DATA file.
-        std::string outputDir;
+        std::filesystem::path outputDir;
 
         /// Base name of simulation run.
         std::string baseName;
@@ -135,7 +136,7 @@ namespace Opm { namespace EclIO { namespace OutputStream {
         ///
         /// \param[in] formatted Whether or not to create a
         ///    formatted output file.
-        void open(const std::string& fname,
+        void open(const std::filesystem::path& fname,
                   const bool         formatted);
 
         /// Access writable output stream.
@@ -254,7 +255,7 @@ namespace Opm { namespace EclIO { namespace OutputStream {
         ///
         /// \param[in] seqnum Sequence number of new report.  One-based
         ///    report step ID.
-        void openUnified(const std::string& fname,
+        void openUnified(const std::filesystem::path& fname,
                          const bool         formatted,
                          const int          seqnum);
 
@@ -267,7 +268,7 @@ namespace Opm { namespace EclIO { namespace OutputStream {
         ///
         /// \param[in] formatted Whether or not to create a
         ///    formatted output file.
-        void openNew(const std::string& fname,
+        void openNew(const std::filesystem::path& fname,
                      const bool         formatted);
 
         /// Open existing output file and place stream's output indicator
@@ -280,7 +281,7 @@ namespace Opm { namespace EclIO { namespace OutputStream {
         /// \param[in] writePos Position at which to place stream's output
         ///    indicator.  Use \code streampos{ streamoff{-1} } \endcode to
         ///    place output indicator at end of file (i.e, simple append).
-        void openExisting(const std::string&   fname,
+        void openExisting(const std::filesystem::path& fname,
                           const bool           formatted,
                           const std::streampos writePos);
 
@@ -363,7 +364,7 @@ namespace Opm { namespace EclIO { namespace OutputStream {
         ///
         /// \param[in] existing Whether or not to open an
         ///    existing output file (mode ios_base::app).
-        void open(const std::string& fname,
+        void open(const std::filesystem::path& fname,
                   const bool         formatted,
                   const bool         existing);
 
@@ -492,6 +493,16 @@ namespace Opm { namespace EclIO { namespace OutputStream {
     /// relations between base names and file extensions.  Handles details
     /// of base name ending in a period (full stop) or having a name that
     /// might otherwise appear to contain a file extension (e.g., CASE.01).
+    ///
+    /// \param[in] rsetDescriptor Output directory and base name of result set.
+    ///
+    /// \param[in] ext Filename extension.
+    ///
+    /// \return outputDir/baseName.ext
+    std::filesystem::path outputFilePath(const ResultSet&   rsetDescriptor,
+                                         const std::string& ext);
+
+    /// Narrow spelling of outputFilePath() for callers that want a string.
     ///
     /// \param[in] rsetDescriptor Output directory and base name of result set.
     ///

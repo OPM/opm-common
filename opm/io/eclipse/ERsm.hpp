@@ -20,6 +20,7 @@
 #define OPM_IO_ERSM_HPP
 
 #include <deque>
+#include <filesystem>
 #include <string>
 #include <unordered_map>
 #include <variant>
@@ -56,7 +57,7 @@ struct Vector{
 
 
 public:
-    explicit ERsm(const std::string& fname);
+    explicit ERsm(const std::filesystem::path& fname);
 
     const std::vector<TimeStampUTC>& dates() const;
     const std::vector<double>& days() const;
