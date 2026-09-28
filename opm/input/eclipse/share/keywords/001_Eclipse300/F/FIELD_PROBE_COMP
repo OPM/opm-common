@@ -1,0 +1,22 @@
+{
+  "name": "FIELD_PROBE_COMP",
+  "sections": [
+    "SUMMARY"
+  ],
+  "deck_names": [
+    "FXMF",
+    "FYMF",
+    "FZMF",
+    "FCHMR",
+    "FCHMT",
+    "FCMIR",
+    "FCMIT"
+  ],
+  "size": 1,
+  "items": [
+    {
+      "name": "COMP_NUM",
+      "value_type": "INT"
+    }
+  ]
+}

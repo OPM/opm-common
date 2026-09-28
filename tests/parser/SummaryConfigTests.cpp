@@ -2302,3 +2302,55 @@ RPR__REG
         BOOST_CHECK_EQUAL( summary_config.size(), 1);
     }
 }
+
+BOOST_AUTO_TEST_CASE(Compositional_Vectors)
+{
+    const auto input = std::string { R"(
+FOPR
+FODN
+FGDN
+FXMF
+ 1 /
+FYMF
+ 2 /
+FZMF
+ 3 /
+FCHMR
+ 1 /
+FCHMT
+ 2 /
+FCMIR
+ 3 /
+FCMIT
+ 1 /
+GCHMR
+ 'OP' 1 /
+ 'G'  2 /
+/
+GCHMT
+ 'OP' 3 /
+/
+WZMF
+ '*' 1 /
+ 'W_1' 2 /
+/
+)" };
+
+    const auto deck = createDeck(input);
+    BOOST_CHECK_EQUAL(deck["FYMF"].back().getRecord(0).getItem("COMP_NUM").get<int>(0), 2);
+
+    const auto& gchmr = deck["GCHMR"].back();
+    BOOST_REQUIRE_EQUAL(gchmr.size(), std::size_t{2});
+    BOOST_CHECK_EQUAL(gchmr.getRecord(1).getItem("GROUP").getTrimmedString(0), "G");
+    BOOST_CHECK_EQUAL(gchmr.getRecord(1).getItem("COMP_NUM").get<int>(0), 2);
+
+    const auto& wzmf = deck["WZMF"].back();
+    BOOST_REQUIRE_EQUAL(wzmf.size(), std::size_t{2});
+    BOOST_CHECK_EQUAL(wzmf.getRecord(1).getItem("WELLS").getTrimmedString(0), "W_1");
+    BOOST_CHECK_EQUAL(wzmf.getRecord(1).getItem("COMP_NUM").get<int>(0), 2);
+
+    // Accepted in the SUMMARY section, but not evaluated.
+    const auto summary = createSummary(input);
+    BOOST_CHECK_EQUAL(summary.size(), std::size_t{1});
+    BOOST_CHECK(summary.hasKeyword("FOPR"));
+}

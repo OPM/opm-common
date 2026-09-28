@@ -1,0 +1,20 @@
+{
+  "name": "GROUP_PROBE_COMP",
+  "sections": [
+    "SUMMARY"
+  ],
+  "deck_names": [
+    "GCHMR",
+    "GCHMT"
+  ],
+  "items": [
+    {
+      "name": "GROUP",
+      "value_type": "STRING"
+    },
+    {
+      "name": "COMP_NUM",
+      "value_type": "INT"
+    }
+  ]
+}

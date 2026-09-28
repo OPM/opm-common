@@ -1077,10 +1077,13 @@ set( keywords
      001_Eclipse300/E/EOSNUM
      001_Eclipse300/F/FACTLI
      001_Eclipse300/F/FIELDSEP
+     001_Eclipse300/F/FIELD_PROBE_COMP
+     001_Eclipse300/F/FIELD_PROBE_COMP_DENSITY
      001_Eclipse300/G/GASVISCT
      001_Eclipse300/G/GASWAT
      001_Eclipse300/G/GPTABLE
      001_Eclipse300/G/GPTDIMS
+     001_Eclipse300/G/GROUP_PROBE_COMP
      001_Eclipse300/G/GSF
      001_Eclipse300/H/HEATCR
      001_Eclipse300/H/HEATCRT

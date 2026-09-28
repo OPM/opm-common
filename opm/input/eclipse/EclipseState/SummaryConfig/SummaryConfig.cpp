@@ -664,13 +664,16 @@ namespace {
         return std::regex_match(keyword, well_compl_kw);
     }
 
-    bool is_well_comp(const std::string& keyword)
+    bool is_unsupported_compositional(const std::string& keyword)
     {
-        static const auto well_comp_kw = keyword_set {
-             "WAMF", "WXMF", "WYMF", "WZMF", "WCGMR", "WCOMR",
+        static const auto comp_kw = keyword_set {
+            "FODN", "FGDN",
+            "FXMF", "FYMF", "FZMF", "FCHMR", "FCHMT", "FCMIR", "FCMIT",
+            "GCHMR", "GCHMT",
+            "WAMF", "WXMF", "WYMF", "WZMF", "WCGMR", "WCOMR",
         };
 
-        return is_in_set(well_comp_kw, keyword);
+        return is_in_set(comp_kw, keyword);
     }
 
     bool is_node_keyword(const std::string& keyword)
@@ -1989,6 +1992,12 @@ void handleKW(const std::vector<std::string>& node_names,
 
     check_udq(keyword.location(), schedule, parseContext, errors);
 
+    if (is_unsupported_compositional(keyword.name())) {
+        OpmLog::warning(OpmInputError::format("Unhandled summary keyword {keyword}\n"
+                                              "In {file} line {line}", keyword.location()));
+        return;
+    }
+
     const auto cat = parseKeywordCategory(keyword.name());
     switch (cat) {
     case Cat::Well:
@@ -1996,12 +2005,6 @@ void handleKW(const std::vector<std::string>& node_names,
             keywordLW(list, parseContext, errors, keyword, schedule);
         }
         else {
-            if (is_well_comp(keyword.name())) {
-                OpmLog::warning(OpmInputError::format("Unhandled summary keyword {keyword}\n"
-                                                      "In {file} line {line}", keyword.location()));
-                return;
-            }
-
             keywordW(list, parseContext, errors, keyword, schedule);
         }
         break;
