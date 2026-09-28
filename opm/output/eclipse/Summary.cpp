@@ -6344,7 +6344,7 @@ SummaryImplementation(SummaryConfig&      sumcfg,
                                es.globalFieldProps(),
                                grid, sched);
 
-    if (const auto esmryFileName = EclIO::OutputStream::outputFileName(this->rset_, "ESMRY");
+    if (const auto esmryFileName = EclIO::OutputStream::outputFilePath(this->rset_, "ESMRY");
         std::filesystem::exists(esmryFileName))
     {
         std::filesystem::remove(esmryFileName);

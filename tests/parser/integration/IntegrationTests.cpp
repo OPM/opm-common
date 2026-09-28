@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(parse_fileWithWWCTKeyword_deckReturned) {
     auto parser = createWWCTParser();
     BOOST_CHECK( parser.isRecognizedKeyword("WWCT"));
     BOOST_CHECK( parser.isRecognizedKeyword("SUMMARY"));
-    BOOST_CHECK_NO_THROW( parser.parseFile(singleKeywordFile.string()) );
+    BOOST_CHECK_NO_THROW( parser.parseFile(singleKeywordFile) );
 }
 
 BOOST_AUTO_TEST_CASE(parse_stringWithWWCTKeyword_deckReturned) {
@@ -117,7 +117,7 @@ BOOST_AUTO_TEST_CASE(parse_streamWithWWCTKeyword_deckReturned) {
 BOOST_AUTO_TEST_CASE(parse_fileWithWWCTKeyword_deckHasWWCT) {
     std::filesystem::path singleKeywordFile(pathprefix() + "wwct.data");
     auto parser = createWWCTParser();
-    auto deck = parser.parseFile(singleKeywordFile.string());
+    auto deck = parser.parseFile(singleKeywordFile);
     BOOST_CHECK(deck.hasKeyword("SUMMARY"));
     BOOST_CHECK(deck.hasKeyword("WWCT"));
 }
@@ -125,7 +125,7 @@ BOOST_AUTO_TEST_CASE(parse_fileWithWWCTKeyword_deckHasWWCT) {
 BOOST_AUTO_TEST_CASE(parse_fileWithWWCTKeyword_dataIsCorrect) {
     std::filesystem::path singleKeywordFile(pathprefix() + "wwct.data");
     auto parser = createWWCTParser();
-    auto deck = parser.parseFile(singleKeywordFile.string());
+    auto deck = parser.parseFile(singleKeywordFile);
     BOOST_CHECK_EQUAL("WELL-1", deck["WWCT"][0].getRecord(0).getItem(0).get< std::string >(0));
     BOOST_CHECK_EQUAL("WELL-2", deck["WWCT"][0].getRecord(0).getItem(0).get< std::string >(1));
 }
@@ -167,14 +167,14 @@ BOOST_AUTO_TEST_CASE(parse_fileWithBPRKeyword_deckReturned) {
     std::filesystem::path singleKeywordFile(pathprefix() + "bpr.data");
     auto parser = createBPRParser();
 
-    BOOST_CHECK_NO_THROW(parser.parseFile(singleKeywordFile.string()));
+    BOOST_CHECK_NO_THROW(parser.parseFile(singleKeywordFile));
 }
 
 BOOST_AUTO_TEST_CASE(parse_fileWithBPRKeyword_DeckhasBRP) {
     std::filesystem::path singleKeywordFile(pathprefix() + "bpr.data");
 
     auto parser = createBPRParser();
-    auto deck =  parser.parseFile(singleKeywordFile.string());
+    auto deck =  parser.parseFile(singleKeywordFile);
 
     BOOST_CHECK_EQUAL(true, deck.hasKeyword("BPR"));
 }
@@ -183,7 +183,7 @@ BOOST_AUTO_TEST_CASE(parse_fileWithBPRKeyword_dataiscorrect) {
     std::filesystem::path singleKeywordFile(pathprefix() + "bpr.data");
 
     auto parser = createBPRParser();
-    auto deck =  parser.parseFile(singleKeywordFile.string());
+    auto deck =  parser.parseFile(singleKeywordFile);
 
     const auto& keyword = deck["BPR"][0];
     BOOST_CHECK_EQUAL(2U, keyword.size());

@@ -22,6 +22,7 @@
 #include <opm/io/eclipse/EclFile.hpp>
 
 #include <cstddef>
+#include <filesystem>
 #include <ios>
 #include <map>
 #include <string>
@@ -37,7 +38,7 @@ namespace Opm { namespace EclIO {
 class ERst : public EclFile
 {
 public:
-    explicit ERst(const std::string& filename);
+    explicit ERst(const std::filesystem::path& filename);
 
     bool hasReportStepNumber(int number) const;
     bool hasArray(const std::string& name, int number) const;

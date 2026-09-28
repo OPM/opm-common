@@ -52,10 +52,10 @@ BOOST_AUTO_TEST_CASE(ParserKeyword_includeInvalid) {
     Opm::ErrorGuard errors;
 
     parseContext.update(Opm::ParseContext::PARSE_MISSING_INCLUDE , Opm::InputErrorAction::THROW_EXCEPTION );
-    BOOST_CHECK_THROW(parser.parseFile(inputFilePath.string() , parseContext, errors) , Opm::OpmInputError);
+    BOOST_CHECK_THROW(parser.parseFile(inputFilePath , parseContext, errors) , Opm::OpmInputError);
 
     parseContext.update(Opm::ParseContext::PARSE_MISSING_INCLUDE , Opm::InputErrorAction::IGNORE );
-    BOOST_CHECK_NO_THROW(parser.parseFile(inputFilePath.string() , parseContext, errors));
+    BOOST_CHECK_NO_THROW(parser.parseFile(inputFilePath , parseContext, errors));
 }
 
 
@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(DATA_FILE_IS_SYMLINK) {
   std::filesystem::path inputFilePath(prefix() + "includeSymlinkTestdata/symlink4/path/case.data");
   Opm::Parser parser;
   std::cout << "Input file: " << inputFilePath.string() << std::endl;
-  auto deck = parser.parseFile(inputFilePath.string());
+  auto deck = parser.parseFile(inputFilePath);
 
   BOOST_CHECK_EQUAL(true , deck.hasKeyword("OIL"));
   BOOST_CHECK_EQUAL(false , deck.hasKeyword("WATER"));
@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(DATA_FILE_IS_SYMLINK) {
 BOOST_AUTO_TEST_CASE(Verify_find_includes_Data_file_is_a_symlink) {
     std::filesystem::path inputFilePath(prefix() + "includeSymlinkTestdata/symlink1/case_symlink.data");
     Opm::Parser parser;
-    auto deck = parser.parseFile(inputFilePath.string());
+    auto deck = parser.parseFile(inputFilePath);
 
     BOOST_CHECK_EQUAL(true , deck.hasKeyword("OIL"));
     BOOST_CHECK_EQUAL(false , deck.hasKeyword("WATER"));
@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(Verify_find_includes_Data_file_is_a_symlink) {
 BOOST_AUTO_TEST_CASE(Verify_find_includes_Data_file_has_include_that_is_a_symlink) {
     std::filesystem::path inputFilePath(prefix() + "includeSymlinkTestdata/symlink2/caseWithIncludedSymlink.data");
     Opm::Parser parser;
-    auto deck = parser.parseFile(inputFilePath.string());
+    auto deck = parser.parseFile(inputFilePath);
 
     BOOST_CHECK_EQUAL(true , deck.hasKeyword("OIL"));
     BOOST_CHECK_EQUAL(false , deck.hasKeyword("WATER"));
@@ -93,7 +93,7 @@ BOOST_AUTO_TEST_CASE(Verify_find_includes_Data_file_has_include_that_is_a_symlin
 BOOST_AUTO_TEST_CASE(Verify_find_includes_Data_file_has_include_file_that_again_includes_a_symlink) {
     std::filesystem::path inputFilePath(prefix() + "includeSymlinkTestdata/symlink3/case.data");
     Opm::Parser parser;
-    auto deck = parser.parseFile(inputFilePath.string());
+    auto deck = parser.parseFile(inputFilePath);
 
     BOOST_CHECK_EQUAL(true , deck.hasKeyword("OIL"));
     BOOST_CHECK_EQUAL(false , deck.hasKeyword("WATER"));
@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE(ParserKeyword_includeValid) {
     std::filesystem::path inputFilePath(prefix() + "includeValid.data");
 
     Opm::Parser parser;
-    auto deck = parser.parseFile(inputFilePath.string());
+    auto deck = parser.parseFile(inputFilePath);
 
     BOOST_CHECK_EQUAL(true , deck.hasKeyword("OIL"));
     BOOST_CHECK_EQUAL(false , deck.hasKeyword("WATER"));
@@ -131,19 +131,19 @@ BOOST_AUTO_TEST_CASE(ParserKeyword_includeWrongCase) {
     Opm::ErrorGuard errors;
     parseContext.update(Opm::ParseContext::PARSE_MISSING_INCLUDE , Opm::InputErrorAction::THROW_EXCEPTION );
 
-    BOOST_CHECK_THROW(parser.parseFile(inputFile1Path.string(), parseContext, errors), Opm::OpmInputError);
-    BOOST_CHECK_THROW(parser.parseFile(inputFile2Path.string(), parseContext, errors), Opm::OpmInputError);
-    BOOST_CHECK_THROW(parser.parseFile(inputFile3Path.string(), parseContext, errors), Opm::OpmInputError);
+    BOOST_CHECK_THROW(parser.parseFile(inputFile1Path, parseContext, errors), Opm::OpmInputError);
+    BOOST_CHECK_THROW(parser.parseFile(inputFile2Path, parseContext, errors), Opm::OpmInputError);
+    BOOST_CHECK_THROW(parser.parseFile(inputFile3Path, parseContext, errors), Opm::OpmInputError);
 #else
     // for case-insensitive filesystems, the include statement will
     // always work regardless of how the capitalization of the
     // included files is wrong...
-    BOOST_CHECK_EQUAL(true, parser.parseFile(inputFile1Path.string() ).hasKeyword("OIL"));
-    BOOST_CHECK_EQUAL(false, parser.parseFile(inputFile1Path.string()).hasKeyword("WATER"));
-    BOOST_CHECK_EQUAL(true, parser.parseFile(inputFile2Path.string() ).hasKeyword("OIL"));
-    BOOST_CHECK_EQUAL(false, parser.parseFile(inputFile2Path.string()).hasKeyword("WATER"));
-    BOOST_CHECK_EQUAL(true, parser.parseFile(inputFile3Path.string() ).hasKeyword("OIL"));
-    BOOST_CHECK_EQUAL(false, parser.parseFile(inputFile3Path.string()).hasKeyword("WATER"));
+    BOOST_CHECK_EQUAL(true, parser.parseFile(inputFile1Path ).hasKeyword("OIL"));
+    BOOST_CHECK_EQUAL(false, parser.parseFile(inputFile1Path).hasKeyword("WATER"));
+    BOOST_CHECK_EQUAL(true, parser.parseFile(inputFile2Path ).hasKeyword("OIL"));
+    BOOST_CHECK_EQUAL(false, parser.parseFile(inputFile2Path).hasKeyword("WATER"));
+    BOOST_CHECK_EQUAL(true, parser.parseFile(inputFile3Path ).hasKeyword("OIL"));
+    BOOST_CHECK_EQUAL(false, parser.parseFile(inputFile3Path).hasKeyword("WATER"));
 #endif
 }
 BOOST_AUTO_TEST_CASE(ParserKeyword_includeFileWithIncorrectlyTerminatedKW)

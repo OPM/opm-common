@@ -42,6 +42,8 @@
 #include <utility>
 #include <vector>
 
+#include <fmt/format.h>
+
 namespace {
     namespace FileExtension
     {
@@ -105,7 +107,7 @@ namespace {
         namespace Init
         {
             std::unique_ptr<Opm::EclIO::EclOutput>
-            write(const std::string& filename,
+            write(const std::filesystem::path& filename,
                   const bool         isFmt)
             {
                 return std::unique_ptr<Opm::EclIO::EclOutput> {
@@ -119,7 +121,7 @@ namespace {
         namespace Restart
         {
             std::unique_ptr<Opm::EclIO::ERst>
-            read(const std::string& filename)
+            read(const std::filesystem::path& filename)
             {
                 // Bypass some of the internal logic of the ERst constructor.
                 //
@@ -146,7 +148,7 @@ namespace {
             }
 
             std::unique_ptr<Opm::EclIO::EclOutput>
-            writeNew(const std::string& filename,
+            writeNew(const std::filesystem::path& filename,
                      const bool         isFmt)
             {
                 return std::unique_ptr<Opm::EclIO::EclOutput> {
@@ -157,7 +159,7 @@ namespace {
             }
 
             std::unique_ptr<Opm::EclIO::EclOutput>
-            writeExisting(const std::string& filename,
+            writeExisting(const std::filesystem::path& filename,
                           const bool         isFmt)
             {
                 return std::unique_ptr<Opm::EclIO::EclOutput> {
@@ -171,7 +173,7 @@ namespace {
         namespace Rft
         {
             std::unique_ptr<Opm::EclIO::EclOutput>
-            writeNew(const std::string& filename,
+            writeNew(const std::filesystem::path& filename,
                      const bool         isFmt)
             {
                 return std::unique_ptr<Opm::EclIO::EclOutput> {
@@ -182,7 +184,7 @@ namespace {
             }
 
             std::unique_ptr<Opm::EclIO::EclOutput>
-            writeExisting(const std::string& filename,
+            writeExisting(const std::filesystem::path& filename,
                           const bool         isFmt)
             {
                 return std::unique_ptr<Opm::EclIO::EclOutput> {
@@ -196,7 +198,7 @@ namespace {
         namespace Smspec
         {
             std::unique_ptr<Opm::EclIO::EclOutput>
-            write(const std::string& filename,
+            write(const std::filesystem::path& filename,
                   const bool         isFmt)
             {
                 return std::unique_ptr<Opm::EclIO::EclOutput> {
@@ -215,7 +217,7 @@ Opm::EclIO::OutputStream::Init::
 Init(const ResultSet& rset,
      const Formatted& fmt)
 {
-    const auto fname = outputFileName(rset, FileExtension::init(fmt.set));
+    const auto fname = outputFilePath(rset, FileExtension::init(fmt.set));
 
     this->open(fname, fmt.set);
 }
@@ -278,7 +280,7 @@ void Opm::EclIO::OutputStream::Init::message(const std::string& msg)
 
 void
 Opm::EclIO::OutputStream::Init::
-open(const std::string& fname,
+open(const std::filesystem::path& fname,
      const bool         formatted)
 {
     this->stream_ = Open::Init::write(fname, formatted);
@@ -312,7 +314,7 @@ Restart(const ResultSet& rset,
     const auto ext = FileExtension::
         restart(seqnum, fmt.set, unif.set);
 
-    const auto fname = outputFileName(rset, ext);
+    const auto fname = outputFilePath(rset, ext);
 
     if (unif.set) {
         // Run uses unified restart files.
@@ -393,7 +395,7 @@ write(const std::string&                        kw,
 
 void
 Opm::EclIO::OutputStream::Restart::
-openUnified(const std::string& fname,
+openUnified(const std::filesystem::path& fname,
             const bool         formatted,
             const int          seqnum)
 {
@@ -410,9 +412,9 @@ openUnified(const std::string& fname,
         // File with correct filename exists but does not appear
         // to be an actual unified restart file.
         throw std::invalid_argument {
-            "Purported existing unified restart file '"
-            + std::filesystem::path{fname}.filename().string()
-            + "' does not appear to be a unified restart file"
+            fmt::format("Purported existing unified restart file '{}' "
+                        "does not appear to be a unified restart file",
+                        fname.filename().string())
         };
     }
     else {
@@ -426,7 +428,7 @@ openUnified(const std::string& fname,
 
 void
 Opm::EclIO::OutputStream::Restart::
-openNew(const std::string& fname,
+openNew(const std::filesystem::path& fname,
         const bool         formatted)
 {
     this->stream_ = Open::Restart::writeNew(fname, formatted);
@@ -434,7 +436,7 @@ openNew(const std::string& fname,
 
 void
 Opm::EclIO::OutputStream::Restart::
-openExisting(const std::string&   fname,
+openExisting(const std::filesystem::path& fname,
              const bool           formatted,
              const std::streampos writePos)
 {
@@ -463,9 +465,8 @@ openExisting(const std::string&   fname,
 
     if (! this->stream_->ofileH.seekp(0, std::ios_base::end)) {
         throw std::invalid_argument {
-            "Unable to Seek to Write Position " +
-            std::to_string(writePos) + " of File '"
-            + fname + "'"
+            fmt::format("Unable to Seek to Write Position {} of File '{}'",
+                        static_cast<std::streamoff>(writePos), fname.string())
         };
     }
 }
@@ -494,7 +495,7 @@ RFT(const ResultSet&    rset,
     const Formatted&    fmt,
     const OpenExisting& existing)
 {
-    const auto fname = outputFileName(rset, FileExtension::rft(fmt.set));
+    const auto fname = outputFilePath(rset, FileExtension::rft(fmt.set));
 
     this->open(fname, fmt.set, existing.set);
 }
@@ -538,7 +539,7 @@ write(const std::string&                        kw,
 
 void
 Opm::EclIO::OutputStream::RFT::
-open(const std::string& fname,
+open(const std::filesystem::path& fname,
      const bool         formatted,
      const bool         existing)
 {
@@ -823,7 +824,7 @@ SummarySpecification(const ResultSet&            rset,
     , computeStart_ (computeStart)
     , restart_      (restartRoot(restart))
 {
-    const auto fname = outputFileName(rset, FileExtension::smspec(fmt.set));
+    const auto fname = outputFilePath(rset, FileExtension::smspec(fmt.set));
 
     this->stream_ = Open::Smspec::write(fname, fmt.set);
 }
@@ -967,7 +968,7 @@ Opm::EclIO::OutputStream::createSummaryFile(const ResultSet& rset,
 
     return std::unique_ptr<Opm::EclIO::EclOutput> {
         new Opm::EclIO::EclOutput {
-            outputFileName(rset, ext),
+            outputFilePath(rset, ext),
             fmt.set, std::ios_base::out
         }
     };
@@ -975,8 +976,8 @@ Opm::EclIO::OutputStream::createSummaryFile(const ResultSet& rset,
 
 // =====================================================================
 
-std::string
-Opm::EclIO::OutputStream::outputFileName(const ResultSet&   rsetDescriptor,
+std::filesystem::path
+Opm::EclIO::OutputStream::outputFilePath(const ResultSet&   rsetDescriptor,
                                          const std::string& ext)
 {
     namespace fs = std::filesystem;
@@ -988,6 +989,12 @@ Opm::EclIO::OutputStream::outputFileName(const ResultSet&   rsetDescriptor,
         + "REPLACE"
     }.replace_extension(ext);
 
-    return (fs::path { rsetDescriptor.outputDir } / fname)
-        .generic_string();
+    return rsetDescriptor.outputDir / fname;
+}
+
+std::string
+Opm::EclIO::OutputStream::outputFileName(const ResultSet&   rsetDescriptor,
+                                         const std::string& ext)
+{
+    return outputFilePath(rsetDescriptor, ext).generic_string();
 }

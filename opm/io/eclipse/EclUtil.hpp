@@ -23,6 +23,7 @@
 #include <opm/io/eclipse/EclIOdata.hpp>
 
 #include <cstdint>
+#include <filesystem>
 #include <functional>
 #include <string>
 #include <tuple>
@@ -35,8 +36,8 @@ namespace Opm { namespace EclIO {
     float flipEndianFloat(float num);
     double flipEndianDouble(double num);
     bool isEOF(std::fstream* fileH);
-    bool fileExists(const std::string& filename);
-    bool isFormatted(const std::string& filename);
+    bool fileExists(const std::filesystem::path& filename);
+    bool isFormatted(const std::filesystem::path& filename);
     bool is_number(const std::string& numstr);
 
     /// Compute the linearly combined summary vector ID number from two

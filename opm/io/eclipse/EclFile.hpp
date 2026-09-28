@@ -22,6 +22,7 @@
 #include <opm/io/eclipse/EclIOdata.hpp>
 
 #include <algorithm>
+#include <filesystem>
 #include <map>
 #include <string>
 #include <tuple>
@@ -38,8 +39,8 @@ public:
         bool value;
     };
 
-    explicit EclFile(const std::string& filename, bool preload = false);
-    EclFile(const std::string& filename, Formatted fmt, bool preload = false);
+    explicit EclFile(const std::filesystem::path& filename, bool preload = false);
+    EclFile(const std::filesystem::path& filename, Formatted fmt, bool preload = false);
     bool formattedInput() const { return formatted; }
 
     void loadData();                            // load all data
@@ -78,7 +79,7 @@ public:
 
 protected:
     bool formatted;
-    std::string inputFilename;
+    std::filesystem::path inputFilename;
 
     std::unordered_map<int, std::vector<int>> inte_array;
     std::unordered_map<int, std::vector<bool>> logi_array;

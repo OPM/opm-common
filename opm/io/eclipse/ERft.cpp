@@ -30,7 +30,7 @@
 
 namespace Opm::EclIO {
 
-ERft::ERft(const std::string &filename) : EclFile(filename)
+ERft::ERft(const std::filesystem::path& filename) : EclFile(filename)
 {
     loadData();
     std::vector<int> first;
