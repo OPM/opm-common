@@ -510,10 +510,17 @@ void handleWELLSTRE(HandlerContext& handlerContext)
         const auto stream_name = record.getItem<ParserKeywords::WELLSTRE::STREAM>().getTrimmedString(0);
         auto composition = record.getItem<ParserKeywords::WELLSTRE::COMPOSITIONS>().getSIDoubleData();
         const std::size_t num_comps = handlerContext.static_schedule().m_runspec.numComps();
-        if (composition.size() != num_comps) {
-            const std::string msg = fmt::format("The number of the composition values for stream '{}' is not the same as the number of components.", stream_name);
+        if (composition.size() > num_comps) {
+            const std::string msg = fmt::format(
+                "Stream '{}' has {} composition values, but there are only {} components.",
+                stream_name,
+                composition.size(),
+                num_comps);
             throw OpmInputError(msg, handlerContext.keyword.location());
         }
+
+        // Components omitted at the end of the record are zero.
+        composition.resize(num_comps, 0.0);
 
         const auto what = fmt::format("stream '{}'", stream_name);
         if (const auto sum = normalizeMoleFractions(composition, what,

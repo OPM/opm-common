@@ -5352,6 +5352,56 @@ WELLSTRE
 )")), Opm::OpmInputError);
 }
 
+BOOST_AUTO_TEST_CASE(WELLSTRE_omitted_components_are_zero) {
+    const auto sched = make_schedule(gptable_deck(R"(
+WELLSTRE
+ 'STR1' 0.25 0.75 /
+/
+)"));
+
+    const auto& composition = sched[0].inj_streams("STR1");
+    BOOST_REQUIRE_EQUAL(composition.size(), std::size_t{3});
+    BOOST_CHECK_CLOSE(composition[0], 0.25, 1.0e-10);
+    BOOST_CHECK_CLOSE(composition[1], 0.75, 1.0e-10);
+    BOOST_CHECK_EQUAL(composition[2], 0.0);
+
+    // The given fractions must still sum to one.
+    BOOST_CHECK_THROW(make_schedule(gptable_deck(R"(
+WELLSTRE
+ 'STR1' 0.25 /
+/
+)")), Opm::OpmInputError);
+}
+
+BOOST_AUTO_TEST_CASE(WELLSTRE_defaulted_components_are_zero) {
+    const auto sched = make_schedule(gptable_deck(R"(
+WELLSTRE
+ 'STR1' 0.25 1* 0.75 /
+ 'STR2' 1.0 2* /
+/
+)"));
+
+    const auto& str1 = sched[0].inj_streams("STR1");
+    BOOST_REQUIRE_EQUAL(str1.size(), std::size_t{3});
+    BOOST_CHECK_CLOSE(str1[0], 0.25, 1.0e-10);
+    BOOST_CHECK_EQUAL(str1[1], 0.0);
+    BOOST_CHECK_CLOSE(str1[2], 0.75, 1.0e-10);
+
+    const auto& str2 = sched[0].inj_streams("STR2");
+    BOOST_REQUIRE_EQUAL(str2.size(), std::size_t{3});
+    BOOST_CHECK_CLOSE(str2[0], 1.0, 1.0e-10);
+    BOOST_CHECK_EQUAL(str2[1], 0.0);
+    BOOST_CHECK_EQUAL(str2[2], 0.0);
+}
+
+BOOST_AUTO_TEST_CASE(WELLSTRE_too_many_components_is_rejected) {
+    BOOST_CHECK_THROW(make_schedule(gptable_deck(R"(
+WELLSTRE
+ 'STR1' 0.25 0.25 0.25 0.25 /
+/
+)")), Opm::OpmInputError);
+}
+
 BOOST_AUTO_TEST_CASE(WELLSTRE_negative_composition_is_rejected) {
     // Negative fraction with an otherwise acceptable sum.
     BOOST_CHECK_THROW(make_schedule(gptable_deck(R"(
