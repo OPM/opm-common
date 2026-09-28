@@ -93,6 +93,18 @@ public:
         gasPhaseParams_.setEOSType(eos_type);
     }
 
+    /*!
+     * \brief The PVT region whose water properties the fluid system returns.
+     */
+    unsigned regionIndex() const
+    { return regionIdx_; }
+
+    /*!
+     * \brief Select the PVT region of the water properties.
+     */
+    void setRegionIndex(const unsigned regionIdx)
+    { regionIdx_ = regionIdx; }
+
     //! \copydoc ParameterCacheBase::updatePhase
     template <class FluidState>
     void updatePhase(const FluidState& fluidState,
@@ -414,6 +426,8 @@ protected:
 
     OilPhaseParams oilPhaseParams_;
     GasPhaseParams gasPhaseParams_;
+
+    unsigned regionIdx_{0};
 };
 
 } // namespace Opm
