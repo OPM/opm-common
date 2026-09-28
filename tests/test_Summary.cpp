@@ -4310,13 +4310,14 @@ BOOST_AUTO_TEST_CASE(LGR_connection_factory_dispatch)
 {
     // Verify that the Factory routes LC* nodes to LgrConnectionValue
     // (not unknownParameter / not generic FunctionRelation).  We confirm
-    // this indirectly: after eval(), the LC* key must be present in
-    // SummaryState with the rate that we attached to the matching LGR
-    // connection via data::Connection::{lgr_grid,index}.
+    // this indirectly: after eval(), each LC* key must be present in
+    // SummaryState with the value that we attached to the matching LGR
+    // connection via data::Connection::{lgr_grid,index}, for every
+    // per-connection evaluator.
     const std::string lgr_conn_deck = R"(
 RUNSPEC
 TITLE
-   LGR_SUMMARY_PR4C_TEST
+   LGR_CONNECTION_SUMMARY
 DIMENS
    3 1 1 /
 TABDIMS
@@ -4379,21 +4380,50 @@ SUMMARY
 LCOPR
    'LGR2'  'PROD'  3 3 1 /
 /
+LCPR
+   'LGR2'  'PROD'  3 3 1 /
+/
+LCVPR
+   'LGR2'  'PROD'  3 3 1 /
+/
+LCTFAC
+   'LGR2'  'PROD'  3 3 1 /
+/
+LCDFAC
+   'LGR2'  'PROD'  3 3 1 /
+/
+LCPI
+   'LGR2'  'PROD'  3 3 1 /
+/
+LCFRAREA
+   'LGR1'  'INJ'  3 3 1 /
+/
+LCINJFVR
+   'LGR1'  'INJ'  3 3 1 /
+/
+LCFRPMAX
+   'LGR1'  'INJ'  3 3 1 /
+/
 SCHEDULE
 WELSPECL
    'PROD'  'G1'  'LGR2'  3  3  8400  'OIL' /
+   'INJ'   'G1'  'LGR1'  3  3  8400  'WATER' /
 /
 COMPDATL
    'PROD'  'LGR2'  3  3  1  1  'OPEN'  1*  1*  0.5 /
+   'INJ'   'LGR1'  3  3  1  1  'OPEN'  1*  1*  0.5 /
 /
 WCONPROD
    'PROD'  'OPEN'  'ORAT'  20000  4*  1000 /
+/
+WCONINJE
+   'INJ'  'WATER'  'OPEN'  'RATE'  1000 /
 /
 TSTEP
    1 /
 )";
 
-    WorkArea ta { "lgr_summary_pr4c" };
+    WorkArea ta { "lgr_connection_summary" };
 
     const auto deck    = Parser{}.parseString(lgr_conn_deck);
     const auto es      = EclipseState{ deck };
@@ -4426,6 +4456,11 @@ TSTEP
     // LGR2 is 3x3x1 and the connection is at (3,3,1) → (i,j,k) = (2,2,0).
     const std::size_t gridLocalCellIndex = grid.getLGRCell("LGR2").getGlobalIndex(2, 2, 0);
 
+    // INJ's connection is at (3,3,1) of LGR1: the same grid-local index in
+    // another LGR, so only the (lgr_grid, index) pair tells them apart.
+    const int lgr1_id = static_cast<int>(grid.get_lgr_cell_index("LGR1")) + 1;
+    BOOST_REQUIRE_EQUAL(grid.getLGRCell("LGR1").getGlobalIndex(2, 2, 0), gridLocalCellIndex);
+
     // Build connection-level result for PROD's single LGR connection.
     const double conn_oil_rate = 100.0 * unit::stb / unit::day;
 
@@ -4438,20 +4473,47 @@ TSTEP
         prod.bhp = 5000.0 * unit::psia;
         prod.thp = 0.0;
 
+        // Same grid-local index in LGR1, listed first: a match on the
+        // index alone would pick this connection.
+        auto decoy = data::Connection{};
+        decoy.index    = gridLocalCellIndex;
+        decoy.lgr_grid = lgr1_id;
+        decoy.rates.set(rt::oil, 1.0 * unit::stb / unit::day);
+        decoy.pressure = 1000.0 * unit::psia;
+        prod.connections.push_back(std::move(decoy));
+
         auto conn = data::Connection{};
         conn.index    = gridLocalCellIndex;
         conn.lgr_grid = lgr_id;
         conn.rates.set(rt::oil, conn_oil_rate);
         conn.rates.set(rt::gas, 0.0);
         conn.rates.set(rt::wat, 0.0);
-        conn.pressure = 5000.0 * unit::psia;
+        conn.rates.set(rt::productivity_index_oil, 3.5e-10);
+        conn.pressure       = 5000.0 * unit::psia;
+        conn.reservoir_rate = 42.0 * unit::stb / unit::day;
+        conn.trans_factor   = 1.5e-12;
+        conn.d_factor       = 2.5e-5;
         prod.connections.push_back(std::move(conn));
+    }
+    {
+        auto& inj = wells["INJ"];
+        inj.current_control.isProducer = false;
+        inj.bhp = 6000.0 * unit::psia;
+
+        auto conn = data::Connection{};
+        conn.index    = gridLocalCellIndex;
+        conn.lgr_grid = lgr1_id;
+        conn.fracture.area   = 12.5;
+        conn.filtrate.rate   = 2.5e-4;
+        conn.fract.numCells  = 1;
+        conn.fract.press.max = 7000.0 * unit::psia;
+        inj.connections.push_back(std::move(conn));
     }
 
     auto wbp      = data::WellBlockAveragePressures{};
     auto grp_nwrk = data::GroupAndNetworkValues{};
 
-    auto writer = out::Summary { config, es, grid, sched, "LGR_PR4C_CASE" };
+    auto writer = out::Summary { config, es, grid, sched, "LGR_CONNECTION_CASE" };
     auto st     = SummaryState { TimeService::now(),
                                  es.runspec().udqParams().undefinedValue() };
 
@@ -4470,6 +4532,26 @@ TSTEP
     BOOST_CHECK(st.has_conn_var("PROD", "LCOPR", conn_number));
     BOOST_CHECK_CLOSE(st.get_conn_var("PROD", "LCOPR", conn_number),
                       -100.0, 1e-5);
+
+    // The other per-connection evaluators, read back in SI.
+    const auto& usys = es.getUnits();
+    const auto siValue = [&usys, &st, conn_number](const std::string& wellName,
+                                                   const std::string& keyword,
+                                                   const UnitSystem::measure m)
+    {
+        BOOST_REQUIRE(st.has_conn_var(wellName, keyword, conn_number));
+        return usys.to_si(m, st.get_conn_var(wellName, keyword, conn_number));
+    };
+
+    using M = UnitSystem::measure;
+    BOOST_CHECK_CLOSE(siValue("PROD", "LCPR", M::pressure), 5000.0 * unit::psia, 1e-5);
+    BOOST_CHECK_CLOSE(siValue("PROD", "LCVPR", M::rate), -42.0 * unit::stb / unit::day, 1e-5);
+    BOOST_CHECK_CLOSE(siValue("PROD", "LCTFAC", M::transmissibility), 1.5e-12, 1e-5);
+    BOOST_CHECK_CLOSE(siValue("PROD", "LCDFAC", M::dfactor), 2.5e-5, 1e-5);
+    BOOST_CHECK_CLOSE(siValue("PROD", "LCPI", M::liquid_productivity_index), 3.5e-10, 1e-5);
+    BOOST_CHECK_CLOSE(siValue("INJ", "LCFRAREA", M::area), 12.5, 1e-5);
+    BOOST_CHECK_CLOSE(siValue("INJ", "LCINJFVR", M::geometric_volume_rate), 2.5e-4, 1e-5);
+    BOOST_CHECK_CLOSE(siValue("INJ", "LCFRPMAX", M::pressure), 7000.0 * unit::psia, 1e-5);
 }
 
 BOOST_AUTO_TEST_CASE(LGR_block_factory_dispatch)
