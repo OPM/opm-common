@@ -4556,7 +4556,7 @@ TSTEP
 
 BOOST_AUTO_TEST_CASE(LGR_block_factory_dispatch)
 {
-    // Verify three things at once for LB* block-summary vectors:
+    // Verify four things at once for LB* block-summary vectors:
     //   (1) the Factory routes LB* nodes to LgrBlockValue (not unknownParameter,
     //       not falling through to global isBlockValue and being rejected on the
     //       global cellActive check);
@@ -4565,7 +4565,10 @@ BOOST_AUTO_TEST_CASE(LGR_block_factory_dispatch)
     //   (3) two LB* nodes in *different* LGRs that share the same keyword and
     //       the same level-local Cartesian index do NOT collide in SummaryState
     //       (each LGR's value lands in its own unique_key, disambiguated by
-    //       SummaryNode::display_name returning the LGR name for Block nodes).
+    //       SummaryNode::display_name returning the LGR name for Block nodes);
+    //   (4) the SMSPEC names the cell of each LGR block and connection vector
+    //       inside its local grid (NUMLX/NUMLY/NUMLZ), so ESmry gives every
+    //       vector its own key.
     const std::string lgr_block_deck = R"(
 RUNSPEC
 TITLE
@@ -4632,8 +4635,21 @@ SUMMARY
 LBPR
    'LGR1'  3 3 1 /
    'LGR2'  3 3 1 /
+   'LGR1'  2 3 1 /
+/
+LCPR
+   'LGR2'  'PROD'  1 1 1 /
 /
 SCHEDULE
+WELSPECL
+   'PROD'  'G1'  'LGR2'  1  1  8400  'OIL' /
+/
+COMPDATL
+   'PROD'  'LGR2'  1  1  1  1  'OPEN'  1*  1*  0.5 /
+/
+WCONPROD
+   'PROD'  'OPEN'  'ORAT'  20000  4*  1000 /
+/
 TSTEP
    1 /
 )";
@@ -4721,6 +4737,18 @@ TSTEP
     // indirectly by the +/- zero changes to the global block path here:
     // no global B* requested in this deck, no global block_values supplied,
     // and the eval above completes without throwing).
+
+    // (4) SMSPEC cell of each LGR block and connection vector, one-based.
+    // I, J and K of (2,3,1) differ, so a swapped axis changes the key.
+    writer.add_timestep(st, /* report_step = */ 0, /* ministep_id = */ 0, /* isSubstep = */ false);
+    writer.write();
+
+    const auto smry = readsum("LGR_BLOCK_DISPATCH");
+    BOOST_CHECK(smry->hasKey("LBPR:LGR1:3,3,1"));
+    BOOST_CHECK(smry->hasKey("LBPR:LGR2:3,3,1"));
+    BOOST_CHECK(smry->hasKey("LBPR:LGR1:2,3,1"));
+    BOOST_CHECK(smry->hasKey("LCPR:LGR2:PROD:1,1,1"));
+    BOOST_CHECK(! smry->hasKey("LBPR:LGR1:0,0,0"));
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Summary
