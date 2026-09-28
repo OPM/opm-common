@@ -636,8 +636,7 @@ namespace Opm {
             std::vector<ComponentParam> params;
             params.reserve(names.size());
             for (std::size_t c = 0; c < names.size(); ++c) {
-                // we use m^3/kmol for the critic volume in the flash calculation, so we
-                // multiply 1.e3 for the critic volume
+                // we use m^3/kmol for the critic volume in the flash calculation, so we multiply 1.e3 for the critic volume
                 params.emplace_back(names[c],
                                     static_cast<Scalar>(props.molecular_weights[c]),
                                     static_cast<Scalar>(props.critical_temperature[c]),
