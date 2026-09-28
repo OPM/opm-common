@@ -636,9 +636,19 @@ using SetInjComposition = void (Well::WellInjectionProperties::*)(const std::vec
 // Apply a WELLSTRE stream to the injection properties of the wells matching the pattern.
 void setInjectionStream(HandlerContext& handlerContext,
                         const std::string& wellNamePattern,
-                        const std::string& stream_name,
+                        const DeckItem& stream_item,
                         const SetInjComposition setComposition)
 {
+    if (!stream_item.hasValue(0) || stream_item.defaultApplied(0)) {
+        throw OpmInputError {
+            fmt::format("Item 3 of {} is defaulted for {}. The item has no default "
+                        "and must name a WELLSTRE stream.",
+                        handlerContext.keyword.name(), wellNamePattern),
+            handlerContext.keyword.location()
+        };
+    }
+
+    const auto stream_name = stream_item.getTrimmedString(0);
     const auto& inj_streams = handlerContext.state().inj_streams;
     if (!inj_streams.has(stream_name)) {
         const std::string msg
@@ -682,7 +692,7 @@ void handleWINJGAS(HandlerContext& handlerContext)
 
         setInjectionStream(handlerContext,
                            record.getItem<ParserKeywords::WINJGAS::WELL>().getTrimmedString(0),
-                           record.getItem<ParserKeywords::WINJGAS::STREAM>().getTrimmedString(0),
+                           record.getItem<ParserKeywords::WINJGAS::STREAM>(),
                            &Well::WellInjectionProperties::setGasInjComposition);
     }
 }
@@ -696,13 +706,13 @@ void handleWINJOIL(HandlerContext& handlerContext)
         const std::string fluid_nature = record.getItem<Kw::FLUID>().getTrimmedString(0);
         if (!isStreamFluid(fluid_nature)) {
             const std::string msg = fmt::format(
-                "The fluid nature '{}' is not supported in WINJOIL keyword.", fluid_nature);
+                "WINJOIL only accepts the STREAM fluid nature, not '{}'.", fluid_nature);
             throw OpmInputError(msg, handlerContext.keyword.location());
         }
 
         setInjectionStream(handlerContext,
                            record.getItem<Kw::WELL>().getTrimmedString(0),
-                           record.getItem<Kw::STREAM>().getTrimmedString(0),
+                           record.getItem<Kw::STREAM>(),
                            &Well::WellInjectionProperties::setOilInjComposition);
     }
 }

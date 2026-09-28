@@ -96,6 +96,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -5488,7 +5489,8 @@ TSTEP
 }
 
 BOOST_AUTO_TEST_CASE(WINJOIL_rejects_other_fluids_and_unknown_streams) {
-    BOOST_CHECK_THROW(make_schedule(gptable_deck(R"(
+    // STREAM is the only fluid nature WINJOIL defines, so the error says so.
+    BOOST_CHECK_EXCEPTION(make_schedule(gptable_deck(R"(
 WELSPECS
  'INJ' 'G1' 1 1 2000 'OIL' /
 /
@@ -5498,7 +5500,10 @@ WELLSTRE
 WINJOIL
  'INJ' 'GRUP' 'OIL1' /
 /
-)")), Opm::OpmInputError);
+)")), Opm::OpmInputError, [](const Opm::OpmInputError& e) {
+        return std::string_view{e.what()}.find("only accepts the STREAM fluid nature")
+            != std::string_view::npos;
+    });
 
     BOOST_CHECK_THROW(make_schedule(gptable_deck(R"(
 WELSPECS
@@ -5550,6 +5555,32 @@ WINJGAS
  'INJ' 'STREAM' 'GAS1' /
 /
 )")), Opm::OpmInputError);
+}
+
+BOOST_AUTO_TEST_CASE(Injection_stream_keywords_need_a_stream_name) {
+    // Item 3 has no default. Leaving it out, or defaulting it, is reported as
+    // a missing stream name for the well, rather than as an unknown stream.
+    const auto missingStreamName = [](const Opm::OpmInputError& e) {
+        const auto msg = std::string_view{e.what()};
+        return (msg.find("is defaulted for INJ") != std::string_view::npos)
+            && (msg.find("must name a WELLSTRE stream") != std::string_view::npos);
+    };
+
+    for (const auto* keyword : { "WINJGAS", "WINJOIL" }) {
+        for (const auto* record : { "'INJ' 'STREAM' /", "'INJ' 'STREAM' 1* /" }) {
+            BOOST_CHECK_EXCEPTION(make_schedule(gptable_deck(fmt::format(R"(
+WELSPECS
+ 'INJ' 'G1' 1 1 2000 'GAS' /
+/
+WELLSTRE
+ 'S1' 0.8 0.2 0.0 /
+/
+{}
+ {}
+/
+)", keyword, record))), Opm::OpmInputError, missingStreamName);
+        }
+    }
 }
 
 BOOST_AUTO_TEST_CASE(Injection_streams_leave_producers_alone) {
