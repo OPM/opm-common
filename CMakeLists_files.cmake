@@ -723,6 +723,7 @@ list(APPEND DUNE_TEST_SOURCE_FILES
   tests/material/test_tabulation.cpp
   tests/material/test_threecomponents_ptflash.cpp
   tests/material/test_volume_shift.cpp
+  tests/material/test_water_pvt_regions.cpp
 )
 
 if(dune-common_FOUND)
@@ -745,7 +746,7 @@ list(APPEND TEST_DATA_FILES
   tests/BASE_SIM.DATA
   tests/BASE_SIM_THPRES.DATA
   tests/NORST_SIM.DATA
-  tests/NORST1_SIM.DATA  
+  tests/NORST1_SIM.DATA
   tests/CARFIN-COLUMN.EGRID
   tests/CARFIN-DOUBLE.EGRID
   tests/CARFIN-NESTED.EGRID
