@@ -142,6 +142,7 @@
 #include <opm/input/eclipse/Schedule/VFPInjTable.hpp>
 #include <opm/input/eclipse/Schedule/VFPProdTable.hpp>
 #include <opm/input/eclipse/Schedule/Well/Connection.hpp>
+#include <opm/input/eclipse/Schedule/Well/ConnectionOrdering.hpp>
 #include <opm/input/eclipse/Schedule/Well/FilterCake.hpp>
 #include <opm/input/eclipse/Schedule/Well/NameOrder.hpp>
 #include <opm/input/eclipse/Schedule/Well/PAvg.hpp>
@@ -265,6 +266,7 @@ TEST_FOR_TYPE(Carfin)
 TEST_FOR_TYPE(ColumnSchema)
 TEST_FOR_TYPE_NAMED(Connection::CTFProperties, CTFProperties)
 TEST_FOR_TYPE(Connection)
+TEST_FOR_TYPE(ConnectionOrdering)
 TEST_FOR_TYPE_NAMED_OBJ(data::AquiferData, AquiferData_CarterTracy, serializationTestObjectC)
 TEST_FOR_TYPE_NAMED_OBJ(data::AquiferData, AquiferData_Fetkovich, serializationTestObjectF)
 TEST_FOR_TYPE_NAMED_OBJ(data::AquiferData, AquiferData_Numeric, serializationTestObjectN)
