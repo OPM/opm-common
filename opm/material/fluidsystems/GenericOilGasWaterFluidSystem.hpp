@@ -28,6 +28,7 @@
 
 #include <opm/common/OpmLog/OpmLog.hpp>
 
+#include <opm/input/eclipse/EclipseState/Compositional/CompositionalConfig.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 
@@ -44,7 +45,7 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
-#include <type_traits>
+#include <vector>
 
 #include <fmt/format.h>
 
@@ -108,6 +109,42 @@ namespace Opm {
             {}
         };
 
+        /*!
+         * \brief Selects the reservoir EOS region whose component properties
+         *        and interaction coefficients the static accessors return.
+         *
+         * The selection holds for the calling thread, as cells are updated
+         * concurrently, and the previous one is restored on destruction.
+         */
+        class ScopedEosRegion
+        {
+        public:
+            explicit ScopedEosRegion(const std::size_t regionIdx)
+                : previous_(active_region_)
+            {
+                if (regionIdx >= numEosRegions()) {
+                    throw std::out_of_range {
+                        fmt::format("EOS region {} is selected, but the fluid system "
+                                    "has {}.", regionIdx + 1, numEosRegions())
+                    };
+                }
+                active_region_ = regionIdx;
+            }
+
+            ~ScopedEosRegion()
+            { active_region_ = previous_; }
+
+            ScopedEosRegion(const ScopedEosRegion&) = delete;
+            ScopedEosRegion& operator=(const ScopedEosRegion&) = delete;
+
+        private:
+            std::size_t previous_;
+        };
+
+        //! The number of reservoir EOS regions.
+        static std::size_t numEosRegions()
+        { return std::max(region_component_param_.size(), std::size_t{1}); }
+
         static bool phaseIsActive(unsigned phaseIdx)
         {
             if constexpr (enableWater) {
@@ -142,12 +179,10 @@ namespace Opm {
          */
         static void initFromState(const EclipseState& eclState, const Schedule& schedule)
         {
-            // TODO: we are not considering the EOS region for now
             const auto& comp_config = eclState.compositionalConfig();
             // how should we utilize the numComps from the CompositionalConfig?
             using FluidSystem = GenericOilGasWaterFluidSystem<Scalar, NumComp, enableWater>;
             const std::size_t num_comps = comp_config.numComps();
-            // const std::size_t num_eos_region = comp_config.
 
             // CompositionalConfig is left empty for input the compositional path
             // cannot handle - CO2STORE and H2STORE runs return before any of it
@@ -172,26 +207,28 @@ namespace Opm {
             const auto& names = comp_config.compName();
             const auto& eos_props = comp_config.eosProps(0);
             FluidSystem::init();
-            using CompParm = typename FluidSystem::ComponentParam;
-            for (std::size_t c = 0; c < num_comps; ++c) {
-                // we use m^3/kmol for the critic volume in the flash calculation, so we multiply 1.e3 for the critic volume
-                FluidSystem::addComponent(CompParm{names[c],
-                                                   static_cast<Scalar>(eos_props.molecular_weights[c]),
-                                                   static_cast<Scalar>(eos_props.critical_temperature[c]),
-                                                   static_cast<Scalar>(eos_props.critical_pressure[c]),
-                                                   static_cast<Scalar>(eos_props.critical_volume[c] * 1.e3),
-                                                   static_cast<Scalar>(eos_props.acentric_factors[c]),
-                                                   c < eos_props.volume_shifts.size()
-                                                       ? static_cast<Scalar>(eos_props.volume_shifts[c])
-                                                       : Scalar{0}});
+            for (const auto& param : componentsOf_(names, eos_props)) {
+                FluidSystem::addComponent(param);
             }
+            interaction_coefficients_ = interactionCoefficientsOf_(eos_props);
 
-            const auto& bic = eos_props.binary_interaction_coefficient;
-            if constexpr (std::is_same_v<Scalar, double>) {
-                interaction_coefficients_ = bic;
-            } else {
-                interaction_coefficients_.resize(bic.size());
-                std::ranges::copy(bic, interaction_coefficients_.begin());
+            // With several reservoir EOS regions, each keeps its own properties.
+            // The molecular weights must agree: component masses cross region
+            // boundaries unchanged, which would otherwise change their amounts.
+            const auto num_eos_regions = eclState.runspec().tabdims().getNumEosRes();
+            if (num_eos_regions > 1) {
+                for (std::size_t region = 0; region < num_eos_regions; ++region) {
+                    const auto& props = comp_config.eosProps(region);
+                    if (props.molecular_weights != eos_props.molecular_weights) {
+                        throw std::runtime_error {
+                            fmt::format("The molecular weights of EOS region {} differ from "
+                                        "those of EOS region 1. All reservoir EOS regions "
+                                        "must use the same molecular weights.", region + 1)
+                        };
+                    }
+                    region_component_param_.push_back(componentsOf_(names, props));
+                    region_interaction_coefficients_.push_back(interactionCoefficientsOf_(props));
+                }
             }
 
             const auto& lbc = comp_config.lbcCoefficients();
@@ -210,6 +247,8 @@ namespace Opm {
             component_param_.clear();
             component_param_.reserve(numComponents);
             interaction_coefficients_.clear();
+            region_component_param_.clear();
+            region_interaction_coefficients_.clear();
             lbc_coefficients_ = ViscosityModel::defaultLBCCoefficients();
         }
 
@@ -229,7 +268,7 @@ namespace Opm {
             assert(isConsistent());
             assert(compIdx < numComponents);
 
-            return component_param_[compIdx].acentric_factor;
+            return selectedComponents_()[compIdx].acentric_factor;
         }
 
         /*!
@@ -245,7 +284,7 @@ namespace Opm {
             assert(isConsistent());
             assert(compIdx < numComponents);
 
-            return component_param_[compIdx].volume_shift;
+            return selectedComponents_()[compIdx].volume_shift;
         }
 
         /*!
@@ -258,7 +297,7 @@ namespace Opm {
             assert(isConsistent());
             assert(compIdx < numComponents);
 
-            return component_param_[compIdx].critic_temp;
+            return selectedComponents_()[compIdx].critic_temp;
         }
         /*!
          * \brief Critical pressure of a component [Pa].
@@ -270,7 +309,7 @@ namespace Opm {
             assert(isConsistent());
             assert(compIdx < numComponents);
 
-            return component_param_[compIdx].critic_pres;
+            return selectedComponents_()[compIdx].critic_pres;
         }
         /*!
         * \brief Critical volume of a component [m3].
@@ -282,7 +321,7 @@ namespace Opm {
             assert(isConsistent());
             assert(compIdx < numComponents);
 
-            return component_param_[compIdx].critic_vol;
+            return selectedComponents_()[compIdx].critic_vol;
         }
 
         //! \copydoc BaseFluidSystem::molarMass
@@ -291,7 +330,7 @@ namespace Opm {
             assert(isConsistent());
             assert(compIdx < numComponents);
 
-            return component_param_[compIdx].molar_mass;
+            return selectedComponents_()[compIdx].molar_mass;
         }
 
         /*!
@@ -312,13 +351,14 @@ namespace Opm {
             assert(isConsistent());
             assert(comp1Idx < numComponents);
             assert(comp2Idx < numComponents);
-            if (interaction_coefficients_.empty() || comp2Idx == comp1Idx) {
+            const auto& coefficients = selectedInteractionCoefficients_();
+            if (coefficients.empty() || comp2Idx == comp1Idx) {
                 return 0.0;
             }
             // make sure row is the bigger value compared to column number
             const auto [column, row] = std::minmax(comp1Idx, comp2Idx);
             const unsigned index = (row * (row - 1) / 2 + column); // it is the current understanding
-            return interaction_coefficients_[index];
+            return coefficients[index];
         }
 
         //! \copydoc BaseFluidSystem::phaseName
@@ -531,8 +571,55 @@ namespace Opm {
             return component_param_.size() == NumComp;
         }
 
+        static std::vector<ComponentParam>
+        componentsOf_(const std::vector<std::string>& names,
+                      const CompositionalConfig::EOSProps& props)
+        {
+            std::vector<ComponentParam> params;
+            params.reserve(names.size());
+            for (std::size_t c = 0; c < names.size(); ++c) {
+                // we use m^3/kmol for the critic volume in the flash calculation, so we
+                // multiply 1.e3 for the critic volume
+                params.emplace_back(names[c],
+                                    static_cast<Scalar>(props.molecular_weights[c]),
+                                    static_cast<Scalar>(props.critical_temperature[c]),
+                                    static_cast<Scalar>(props.critical_pressure[c]),
+                                    static_cast<Scalar>(props.critical_volume[c] * 1.e3),
+                                    static_cast<Scalar>(props.acentric_factors[c]),
+                                    c < props.volume_shifts.size()
+                                        ? static_cast<Scalar>(props.volume_shifts[c])
+                                        : Scalar{0});
+            }
+            return params;
+        }
+
+        static std::vector<Scalar>
+        interactionCoefficientsOf_(const CompositionalConfig::EOSProps& props)
+        {
+            const auto& bic = props.binary_interaction_coefficient;
+            return {bic.begin(), bic.end()};
+        }
+
+        static const std::vector<ComponentParam>& selectedComponents_()
+        {
+            return region_component_param_.empty() ? component_param_
+                                                   : region_component_param_[active_region_];
+        }
+
+        static const std::vector<Scalar>& selectedInteractionCoefficients_()
+        {
+            return region_interaction_coefficients_.empty()
+                ? interaction_coefficients_
+                : region_interaction_coefficients_[active_region_];
+        }
+
         static std::vector<ComponentParam> component_param_;
         static std::vector<Scalar> interaction_coefficients_;
+        // Every reservoir EOS region when there are several, otherwise empty.
+        static std::vector<std::vector<ComponentParam>> region_component_param_;
+        static std::vector<std::vector<Scalar>> region_interaction_coefficients_;
+        // The region selected by ScopedEosRegion on this thread.
+        static thread_local std::size_t active_region_;
         static std::array<Scalar, 5> lbc_coefficients_;
         static std::shared_ptr<WaterPvt> waterPvt_;
 
@@ -559,6 +646,19 @@ namespace Opm {
     template <class Scalar, int NumComp, bool enableWater>
     std::vector<Scalar>
     GenericOilGasWaterFluidSystem<Scalar, NumComp, enableWater>::interaction_coefficients_;
+
+    template <class Scalar, int NumComp, bool enableWater>
+    std::vector<std::vector<
+        typename GenericOilGasWaterFluidSystem<Scalar, NumComp, enableWater>::ComponentParam>>
+    GenericOilGasWaterFluidSystem<Scalar, NumComp, enableWater>::region_component_param_;
+
+    template <class Scalar, int NumComp, bool enableWater>
+    std::vector<std::vector<Scalar>>
+    GenericOilGasWaterFluidSystem<Scalar, NumComp, enableWater>::region_interaction_coefficients_;
+
+    template <class Scalar, int NumComp, bool enableWater>
+    thread_local std::size_t
+    GenericOilGasWaterFluidSystem<Scalar, NumComp, enableWater>::active_region_ = 0;
 
     template <class Scalar, int NumComp, bool enableWater>
     std::array<Scalar, 5>
