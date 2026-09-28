@@ -67,6 +67,9 @@ void python::common::export_Parser(py::module& module) {
 
     py::class_<Parser>(module, "Parser", Parser_docstring)
         .def(py::init<bool>(), py::arg("add_default") = true, Parser_init_docstring)
+        // Bind parseFile() through lambdas that take the file name as std::string and let C++
+        // convert it to std::filesystem::path. Binding the member function with overload_cast<>
+        // would need pybind11's path caster, <pybind11/stl/filesystem.h>, to accept a Python str.
         .def("parse"       , [](const Parser& parser, const std::string& filename) { return parser.parseFile(filename); },
             py::arg("filename"), Parser_parse_file_docstring)
         .def("parse"       , [](const Parser& parser, const std::string& filename, const ParseContext& context) { return parser.parseFile(filename, context); },
