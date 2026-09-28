@@ -1189,6 +1189,29 @@ inline quantity rate(const fn_args& args)
     return { sum, rate_unit< phase >() };
 }
 
+// The connection addressed by 'args': the (lgr_grid, grid-local linearised
+// Cartesian) pair when the LC* filters are set, otherwise the global Cartesian
+// index num-1 (NUMS values in the SMSPEC file are 1-based).  Returns
+// connections.end() if no connection matches.
+inline std::vector<Opm::data::Connection>::const_iterator
+matchConnection(const std::vector<Opm::data::Connection>& connections, const fn_args& args)
+{
+    // The two LC* filters are engaged together or not at all.
+    assert(args.lgr_grid_filter.has_value() == args.lgr_cell_filter.has_value());
+
+    return args.lgr_grid_filter.has_value()
+        ? std::ranges::find_if(connections,
+                               [lgr_grid_match = *args.lgr_grid_filter,
+                                lgr_cell_match = *args.lgr_cell_filter]
+                               (const Opm::data::Connection& c)
+                               { return (c.lgr_grid == lgr_grid_match)
+                                     && (c.index    == lgr_cell_match); })
+        : std::ranges::find_if(connections,
+                               [global_index = static_cast<std::size_t>(args.num - 1)]
+                               (const Opm::data::Connection& c)
+                               { return c.index == global_index; });
+}
+
 template <bool injection>
 const Opm::data::Connection* findConnectionResults(const fn_args& args)
 {
@@ -1205,7 +1228,10 @@ const Opm::data::Connection* findConnectionResults(const fn_args& args)
         return nullptr;
     }
 
-    return xwPos->second.find_connection(args.num - 1);
+    const auto& connections = xwPos->second.connections;
+    const auto pos = matchConnection(connections, args);
+
+    return (pos == connections.end()) ? nullptr : std::addressof(*pos);
 }
 
 template <double Opm::data::ConnectionFracture::* q, measure unit, bool injection = true>
@@ -1355,11 +1381,6 @@ inline quantity ratel( const fn_args& args ) {
 
 inline quantity cpr( const fn_args& args ) {
     const quantity zero = { 0, measure::pressure };
-    // The args.num value is the literal value which will go to the
-    // NUMS array in the eclipse SMSPEC file; the values in this array
-    // are offset 1 - whereas we need to use this index here to look
-    // up a connection with offset 0.
-    const std::size_t global_index = args.num - 1;
     if (args.schedule_wells.empty())
         return zero;
 
@@ -1370,10 +1391,7 @@ inline quantity cpr( const fn_args& args ) {
         return zero;
 
     const auto& well_data = xwPos->second;
-    const auto& connection =
-        std::ranges::find_if(well_data.connections,
-                             [global_index](const Opm::data::Connection& c)
-                             { return c.index == global_index; });
+    const auto connection = matchConnection(well_data.connections, args);
 
     if (connection == well_data.connections.end())
         return zero;
@@ -1450,13 +1468,8 @@ quantity connFracStatistics(const fn_args& args)
         return zero;
     }
 
-    const auto global_index = static_cast<std::size_t>(args.num - 1);
-
     const auto& well_data = xwPos->second;
-    const auto connPos =
-        std::ranges::find_if(well_data.connections,
-                             [global_index](const Opm::data::Connection& c)
-                             { return c.index == global_index; });
+    const auto connPos = matchConnection(well_data.connections, args);
 
     if ((connPos == well_data.connections.end()) ||
         (connPos->fract.numCells == 0))
@@ -1488,17 +1501,6 @@ inline quantity flowing( const fn_args& args ) {
 template< rt phase, bool injection = true>
 inline quantity crate( const fn_args& args ) {
     const quantity zero = { 0, rate_unit< phase >() };
-    // The args.num value is the literal value which will go to the
-    // NUMS array in the eclipse SMSPEC file; the values in this array
-    // are offset 1 - whereas we need to use this index here to look
-    // up a connection with offset 0.
-    //
-    // When args.lgr_grid_filter is set (LC* dispatch path) we match on
-    // the (lgr_grid, grid-local linearised Cartesian) cell-identity pair
-    // carried on data::Connection (lgr_grid / index) instead of on
-    // args.num.  For plain C* keywords both filters are empty and
-    // behaviour is unchanged.
-    const std::size_t global_index = args.num - 1;
     if (args.schedule_wells.empty())
         return zero;
 
@@ -1512,19 +1514,7 @@ inline quantity crate( const fn_args& args ) {
     }
 
     const auto& well_data = xwPos->second;
-    // The two LC* filters are engaged together or not at all; the lambda
-    // below dereferences lgr_cell_filter whenever lgr_grid_filter is set.
-    assert(args.lgr_grid_filter.has_value() == args.lgr_cell_filter.has_value());
-    const auto completion = args.lgr_grid_filter.has_value()
-        ? std::ranges::find_if(well_data.connections,
-                               [lgr_grid_match = *args.lgr_grid_filter,
-                                lgr_cell_match = *args.lgr_cell_filter]
-                               (const Opm::data::Connection& c)
-                               { return (c.lgr_grid == lgr_grid_match)
-                                     && (c.index    == lgr_cell_match); })
-        : std::ranges::find_if(well_data.connections,
-                               [global_index](const Opm::data::Connection& c)
-                               { return c.index == global_index; });
+    const auto completion = matchConnection(well_data.connections, args);
 
     if (completion == well_data.connections.end())
         return zero;
@@ -1555,17 +1545,8 @@ quantity crate_resv( const fn_args& args ) {
         return zero;
     }
 
-    // The args.num value is the literal value which will go to the
-    // NUMS array in the eclipse SMSPEC file; the values in this array
-    // are offset 1 - whereas we need to use this index here to look
-    // up a connection with offset 0.
-    const auto global_index = static_cast<std::size_t>(args.num - 1);
-
     const auto& well_data = xwPos->second;
-    const auto completion =
-        std::ranges::find_if(well_data.connections,
-                             [global_index](const Opm::data::Connection& c)
-                             { return c.index == global_index; });
+    const auto completion = matchConnection(well_data.connections, args);
 
     if (completion == well_data.connections.end())
         return zero;
@@ -1708,13 +1689,8 @@ inline quantity trans_factors ( const fn_args& args ) {
         // No dynamic results for this well.  Not open?
         return zero;
 
-    // Like connection rate we need to look up a connection with offset 0.
-    const std::size_t global_index = args.num - 1;
     const auto& connections = xwPos->second.connections;
-    const auto connPos =
-            std::ranges::find_if(connections,
-                                 [global_index](const Opm::data::Connection& c)
-                                 { return c.index == global_index; });
+    const auto connPos = matchConnection(connections, args);
 
     if (connPos == connections.end())
         // No dynamic results for this connection.
@@ -1736,14 +1712,8 @@ inline quantity d_factors ( const fn_args& args ) {
         // No dynamic results for this well.  Not open?
         return zero;
 
-    // Like connection rate we need to look up a connection with offset 0.
-    const std::size_t global_index = args.num - 1;
     const auto& connections = xwPos->second.connections;
-    auto connPos = std::find_if(connections.begin(), connections.end(),
-        [global_index](const Opm::data::Connection& c)
-    {
-        return c.index == global_index;
-    });
+    const auto connPos = matchConnection(connections, args);
 
     if (connPos == connections.end())
         // No dynamic results for this connection.
@@ -2586,17 +2556,8 @@ inline quantity connection_productivity_index(const fn_args& args)
         return zero;
     }
 
-    // The args.num value is the literal value which will go to the
-    // NUMS array in the eclipse SMSPEC file; the values in this array
-    // are offset 1 - whereas we need to use this index here to look
-    // up a connection with offset 0.
-    const auto global_index = static_cast<std::size_t>(args.num) - 1;
-
     const auto& xcon = xwPos->second.connections;
-    const auto completion =
-        std::ranges::find_if(xcon,
-                             [global_index](const Opm::data::Connection& c)
-                             { return c.index == global_index; });
+    const auto completion = matchConnection(xcon, args);
 
     if (completion == xcon.end())
         return zero;
