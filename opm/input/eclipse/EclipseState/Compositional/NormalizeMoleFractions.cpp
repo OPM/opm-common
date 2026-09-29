@@ -34,8 +34,8 @@
 
 namespace {
 
-// Accept compositions rounded to five or six decimal places.
-constexpr double moleFractionTolerance = 1.0e-4;
+// Accept compositions rounded to four decimal places.
+constexpr double moleFractionTolerance = 1.0e-3;
 
 double exactSumSlack(const std::size_t numValues)
 {
