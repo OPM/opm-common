@@ -1,0 +1,24 @@
+{
+  "name": "WINJOIL",
+  "sections": [
+    "SCHEDULE"
+  ],
+  "items": [
+    {
+      "item": 1,
+      "name": "WELL",
+      "value_type": "STRING"
+    },
+    {
+      "item": 2,
+      "name": "FLUID",
+      "value_type": "STRING",
+      "default": "STREAM"
+    },
+    {
+      "item": 3,
+      "name": "STREAM",
+      "value_type": "STRING"
+    }
+  ]
+}
