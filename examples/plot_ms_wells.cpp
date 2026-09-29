@@ -42,6 +42,10 @@
 
 #include <fmt/format.h>
 
+#include <stdexcept>
+#include <string>
+#include <vector>
+
 inline void createDot(const Opm::Schedule& schedule)
 {
     // the following is up to adjustment to specify the report step or specific wells
@@ -57,12 +61,13 @@ inline void createDot(const Opm::Schedule& schedule)
     }
 }
 
-inline Opm::Schedule loadSchedule(const std::string& deck_file)
+inline Opm::Schedule loadSchedule(const std::string& deck_file, const std::string& inputSkipMode)
 {
     Opm::ParseContext parseContext({{Opm::ParseContext::PARSE_RANDOM_SLASH, Opm::InputErrorAction::IGNORE},
                                     {Opm::ParseContext::PARSE_MISSING_DIMS_KEYWORD, Opm::InputErrorAction::WARN},
                                     {Opm::ParseContext::SUMMARY_UNKNOWN_WELL, Opm::InputErrorAction::WARN},
                                     {Opm::ParseContext::SUMMARY_UNKNOWN_GROUP, Opm::InputErrorAction::WARN}});
+    parseContext.setInputSkipMode(inputSkipMode);
     Opm::ErrorGuard errors;
     Opm::Parser parser;
     auto python = std::make_shared<Opm::Python>();
@@ -84,7 +89,7 @@ inline Opm::Schedule loadSchedule(const std::string& deck_file)
 
 void print_help_and_exit()
 {
-    const char *help_text = R"(Usage: plot_ms_wells <deck_file> [deck_file ...]
+    const char *help_text = R"(Usage: plot_ms_wells [--input-skip-mode=<mode>] <deck_file> [deck_file ...]
 
 Description:
   Reads reservoir simulation deck(s), parses Multi-Segment Well (MSW) structures,
@@ -93,34 +98,72 @@ Description:
 
 Options:
   -h, --help    Display this help message and exit.
+  --input-skip-mode=<mode>
+                Which of SKIP100/ENDSKIP and SKIP300/ENDSKIP blocks to ignore
+                when parsing.  One of '100' (default), '300' (e.g. for
+                compositional runs), or 'all'.
 
 Example:
   plot_ms_wells MSW.DATA
+  plot_ms_wells --input-skip-mode=300 COMPOSITIONAL_MSW.DATA
 )";
     std::cerr << help_text;
 }
 
 
+std::string validInputSkipMode(const std::string& mode)
+{
+    if (mode != "100" && mode != "300" && mode != "all") {
+        throw std::invalid_argument {
+            fmt::format("Invalid input skip mode '{}', must be '100', '300', or 'all'", mode)
+        };
+    }
+
+    return mode;
+}
+
 int main(int argc, char** argv)
 {
+    std::string inputSkipMode{"100"};
+    std::vector<std::string> deck_files;
 
-    if (argc < 2) {
+    try {
+        for (int iarg = 1; iarg < argc; ++iarg) {
+            const std::string arg = argv[iarg];
+            if (arg == "-h" || arg == "--help") {
+                print_help_and_exit();
+                std::exit(EXIT_SUCCESS);
+            }
+            else if (arg.starts_with("--input-skip-mode=")) {
+                inputSkipMode = validInputSkipMode(arg.substr(arg.find('=') + 1));
+            }
+            else if (arg == "--input-skip-mode") {
+                if (++iarg == argc) {
+                    throw std::invalid_argument { "Missing argument for --input-skip-mode" };
+                }
+                inputSkipMode = validInputSkipMode(argv[iarg]);
+            }
+            else {
+                deck_files.push_back(arg);
+            }
+        }
+    }
+    catch (const std::exception& e) {
+        std::cerr << "Error parsing arguments: " << e.what() << '\n';
+        std::exit(EXIT_FAILURE);
+    }
+
+    if (deck_files.empty()) {
         print_help_and_exit();
         std::exit(EXIT_FAILURE);
     }
 
-    const std::string arg1 = argv[1];
-    if (arg1 == "-h" || arg1 == "--help") {
-        print_help_and_exit();
-        std::exit(EXIT_SUCCESS);
-    }
     std::ostringstream os;
     std::shared_ptr<Opm::StreamLog> string_log = std::make_shared<Opm::StreamLog>(os, Opm::Log::DefaultMessageTypes);
     Opm::OpmLog::addBackend( "STRING" , string_log);
     try {
-        for (int iarg = 1; iarg < argc; iarg++) {
-            const std::string filename = argv[iarg];
-            const auto sched = loadSchedule(filename);
+        for (const auto& filename : deck_files) {
+            const auto sched = loadSchedule(filename, inputSkipMode);
             createDot(sched);
         }
     } catch (const std::exception& e) {

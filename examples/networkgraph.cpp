@@ -226,7 +226,7 @@ public:
     // well and group name
     using well_input_type = std::tuple<std::string, std::string>;
 
-    explicit NetWork(const std::string& filename);
+    NetWork(const std::string& filename, const std::string& inputSkipMode);
 
     void print_report_steps();
     int number_report_steps()
@@ -250,7 +250,8 @@ private:
     void br_input_from_rst(const std::string& rstfile,
                            const std::vector<int>& rstep_vect);
 
-    void parse_data_deck(const std::filesystem::path& inputFileName);
+    void parse_data_deck(const std::filesystem::path& inputFileName,
+                         const std::string& inputSkipMode);
     void parse_unrst(const std::filesystem::path& inputFileName);
 
     std::stringstream m_netw_str;
@@ -271,12 +272,12 @@ private:
     std::vector<std::shared_ptr<Node>> m_top_node_list;
 };
 
-NetWork::NetWork(const std::string& filename)
+NetWork::NetWork(const std::string& filename, const std::string& inputSkipMode)
 {
     std::filesystem::path inputFileName {filename};
 
     if (inputFileName.extension() == ".DATA") {
-        parse_data_deck(inputFileName);
+        parse_data_deck(inputFileName, inputSkipMode);
     }
     else if (inputFileName.extension() == ".UNRST") {
         parse_unrst(inputFileName);
@@ -289,13 +290,15 @@ NetWork::NetWork(const std::string& filename)
 }
 
 void
-NetWork::parse_data_deck(const std::filesystem::path& inputFileName)
+NetWork::parse_data_deck(const std::filesystem::path& inputFileName,
+                         const std::string& inputSkipMode)
 {
     Opm::ParseContext parseContext;
     parseContext.update(Opm::ParseContext::PARSE_UNKNOWN_KEYWORD, Opm::InputErrorAction::IGNORE);
     parseContext.update(Opm::ParseContext::PARSE_RANDOM_TEXT, Opm::InputErrorAction::IGNORE);
     parseContext.update(Opm::ParseContext::PARSE_EXTRA_RECORDS, Opm::InputErrorAction::IGNORE);
     parseContext.update(Opm::ParseContext::PARSE_RANDOM_SLASH, Opm::InputErrorAction::IGNORE);
+    parseContext.setInputSkipMode(inputSkipMode);
 
     std::vector<Opm::Ecl::SectionType> sections = {Opm::Ecl::RUNSPEC, Opm::Ecl::SOLUTION, Opm::Ecl::SCHEDULE};
 
@@ -879,6 +882,9 @@ printHelp()
               << " (which must be given before the arguments):\n\n"
               << " -l lists all available report steps and exit.\n"
               << " -r selects report step to be visualized. Default is the last report step \n"
+              << " --input-skip-mode=<mode> selects which of SKIP100/ENDSKIP and SKIP300/ENDSKIP\n"
+              << "    blocks to ignore when parsing a .DATA file. One of '100' (default),\n"
+              << "    '300' (e.g. for compositional runs), or 'all'.\n"
               << " -h Print help and exit.\n\n";
 }
 
@@ -888,8 +894,14 @@ main(int argc, char** argv)
     int c = 0;
     bool list_report_steps = false;
     int rstep = -1;
+    std::string inputSkipMode {"100"};
 
-    while ((c = getopt(argc, argv, "lr:h")) != -1) {
+    const option long_options[] = {
+        {"input-skip-mode", required_argument, nullptr, 's'},
+        {nullptr, 0, nullptr, 0},
+    };
+
+    while ((c = getopt_long(argc, argv, "lr:h", long_options, nullptr)) != -1) {
         switch (c) {
         case 'l':
             list_report_steps = true;
@@ -900,6 +912,14 @@ main(int argc, char** argv)
         case 'r':
             rstep = atoi(optarg);
             break;
+        case 's':
+            inputSkipMode = optarg;
+            if (inputSkipMode != "100" && inputSkipMode != "300" && inputSkipMode != "all") {
+                std::cout << "\n!Error, invalid input skip mode '" << inputSkipMode
+                          << "', must be '100', '300', or 'all'\n\n";
+                return EXIT_FAILURE;
+            }
+            break;
         default:
             return EXIT_FAILURE;
         }
@@ -907,7 +927,7 @@ main(int argc, char** argv)
 
     int argOffset = optind;
 
-    NetWork netw(argv[argOffset]);
+    NetWork netw(argv[argOffset], inputSkipMode);
 
     if (list_report_steps) {
         netw.print_report_steps();
