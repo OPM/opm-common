@@ -47,6 +47,7 @@
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
 
 #include <cstddef>
+#include <stdexcept>
 #include <vector>
 
 namespace Opm {
@@ -563,6 +564,10 @@ namespace Opm::gpuistl {
     Co2GasPvt<ScalarT, GpuBuffer>
     copy_to_gpu(const Co2GasPvt<ScalarT>& cpuCo2)
     {
+        if (cpuCo2.getEnableMultiCompSalt()) {
+            OPM_THROW(std::runtime_error,
+                      "SALTMC is not supported by the GPU CO2STORE PVT model");
+        }
         return Co2GasPvt<ScalarT, GpuBuffer>(
             copy_to_gpu(cpuCo2.getParams()),
             GpuBuffer<ScalarT>(cpuCo2.getBrineReferenceDensity()),
