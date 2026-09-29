@@ -294,18 +294,6 @@ namespace {
         return sched;
     }
 
-    std::string validInputSkipMode(std::string_view mode)
-    {
-        if (mode != "100" && mode != "300" && mode != "all") {
-            throw std::invalid_argument {
-                fmt::format("Invalid input skip mode '{0}', "
-                            "must be '100', '300', or 'all'", mode)
-            };
-        }
-
-        return std::string { mode };
-    }
-
     Arguments parseArguments(const int argc, char** argv)
     {
         Arguments args{};
@@ -322,11 +310,11 @@ namespace {
                 args.helpoption = true;
             }
             else if (arg.starts_with("--input-skip-mode=")) {
-                args.inputSkipMode = validInputSkipMode(arg.substr(arg.find('=') + 1));
+                args.inputSkipMode = arg.substr(arg.find('=') + 1);
             }
             else if (arg == "--input-skip-mode") {
                 if (iarg < argc - 1) {
-                    args.inputSkipMode = validInputSkipMode(argv[iarg + 1]);
+                    args.inputSkipMode = argv[iarg + 1];
 
                     ++iarg;
                 }

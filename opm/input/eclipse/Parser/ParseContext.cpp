@@ -359,6 +359,13 @@ namespace Opm {
 
     void ParseContext::setInputSkipMode(const std::string& skip_mode)
     {
+        if ((skip_mode != "100") && (skip_mode != "300") && (skip_mode != "all")) {
+            throw std::invalid_argument {
+                "Invalid input skip mode '" + skip_mode +
+                "', must be '100', '300', or 'all'"
+            };
+        }
+
         this->m_input_skip_mode = skip_mode;
     }
 

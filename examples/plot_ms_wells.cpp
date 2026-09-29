@@ -111,17 +111,6 @@ Example:
 }
 
 
-std::string validInputSkipMode(const std::string& mode)
-{
-    if (mode != "100" && mode != "300" && mode != "all") {
-        throw std::invalid_argument {
-            fmt::format("Invalid input skip mode '{}', must be '100', '300', or 'all'", mode)
-        };
-    }
-
-    return mode;
-}
-
 int main(int argc, char** argv)
 {
     std::string inputSkipMode{"100"};
@@ -135,13 +124,13 @@ int main(int argc, char** argv)
                 std::exit(EXIT_SUCCESS);
             }
             else if (arg.starts_with("--input-skip-mode=")) {
-                inputSkipMode = validInputSkipMode(arg.substr(arg.find('=') + 1));
+                inputSkipMode = arg.substr(arg.find('=') + 1);
             }
             else if (arg == "--input-skip-mode") {
                 if (++iarg == argc) {
                     throw std::invalid_argument { "Missing argument for --input-skip-mode" };
                 }
-                inputSkipMode = validInputSkipMode(argv[iarg]);
+                inputSkipMode = argv[iarg];
             }
             else {
                 deck_files.push_back(arg);
@@ -171,5 +160,6 @@ int main(int argc, char** argv)
         std::cerr << "\n\n***** Printing log: "<< std::endl;
         std::cerr << os.str();
         std::cerr << "\n\n***** Exiting due to errors." << std::endl;
+        return EXIT_FAILURE;
     }
 }

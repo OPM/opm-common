@@ -298,7 +298,6 @@ NetWork::parse_data_deck(const std::filesystem::path& inputFileName,
     parseContext.update(Opm::ParseContext::PARSE_RANDOM_TEXT, Opm::InputErrorAction::IGNORE);
     parseContext.update(Opm::ParseContext::PARSE_EXTRA_RECORDS, Opm::InputErrorAction::IGNORE);
     parseContext.update(Opm::ParseContext::PARSE_RANDOM_SLASH, Opm::InputErrorAction::IGNORE);
-    parseContext.setInputSkipMode(inputSkipMode);
 
     std::vector<Opm::Ecl::SectionType> sections = {Opm::Ecl::RUNSPEC, Opm::Ecl::SOLUTION, Opm::Ecl::SCHEDULE};
 
@@ -307,6 +306,7 @@ NetWork::parse_data_deck(const std::filesystem::path& inputFileName,
     Opm::Deck deck_schecule;
 
     try {
+        parseContext.setInputSkipMode(inputSkipMode);
         deck_schecule = parser.parseFile(inputFileName, parseContext, sections);
     }
     catch (const std::exception& e) {
@@ -914,11 +914,6 @@ main(int argc, char** argv)
             break;
         case 's':
             inputSkipMode = optarg;
-            if (inputSkipMode != "100" && inputSkipMode != "300" && inputSkipMode != "all") {
-                std::cout << "\n!Error, invalid input skip mode '" << inputSkipMode
-                          << "', must be '100', '300', or 'all'\n\n";
-                return EXIT_FAILURE;
-            }
             break;
         default:
             return EXIT_FAILURE;
@@ -926,6 +921,11 @@ main(int argc, char** argv)
     }
 
     int argOffset = optind;
+
+    if (argOffset >= argc) {
+        printHelp();
+        return EXIT_FAILURE;
+    }
 
     NetWork netw(argv[argOffset], inputSkipMode);
 
