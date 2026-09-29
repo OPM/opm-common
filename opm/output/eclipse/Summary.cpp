@@ -5796,6 +5796,31 @@ std::string makeWGName(std::string name)
     return use_dflt ? std::string(":+:+:+:+") : std::move(name);
 }
 
+std::array<int, 3>
+lgrCellIJK(const Opm::EclipseGrid& grid, const Opm::SummaryConfigNode& node)
+{
+    // One-based (I,J,K) of the cell of an LGR block or connection vector
+    // inside its local grid, recovered from the grid-local linearised
+    // Cartesian cell index that the node's number carries (number - 1).
+    // Zero for every other LGR vector, e.g., well level vectors and records
+    // without I/J/K.
+    assert(node.lgr_name().has_value());
+
+    using Category = Opm::SummaryConfigNode::Category;
+
+    const auto hasCell = (node.category() == Category::Block)
+        || (node.category() == Category::Connection);
+
+    if (! hasCell || (node.number() == Opm::EclIO::SummaryNode::default_number)) {
+        return {};
+    }
+
+    const auto ijk = grid.getLGRCell(*node.lgr_name())
+        .getIJK(static_cast<std::size_t>(node.number() - 1));
+
+    return { ijk[0] + 1, ijk[1] + 1, ijk[2] + 1 };
+}
+
 /// Owns SMSPEC parameter metadata and evaluator objects for summary output.
 ///
 /// This helper centralises construction of summary vectors and keeps the
@@ -6634,7 +6659,7 @@ configureSummaryInput(const SummaryConfig& sumcfg,
 
         auto lgr = node.lgr_name().has_value()
             ? std::optional<Opm::EclIO::lgr_info>{
-                Opm::EclIO::lgr_info{ *node.lgr_name(), {} }
+                Opm::EclIO::lgr_info{ *node.lgr_name(), lgrCellIJK(this->grid_, node) }
               }
             : std::optional<Opm::EclIO::lgr_info>{};
 
