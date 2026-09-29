@@ -286,6 +286,9 @@ namespace Opm {
         ///
         ///   -  "all" -- Skip/ignore keywords both between SKIP100/ENDSKIP and
         ///               between SKIP300/ENDSKIP.
+        ///
+        /// Throws an exception of type \code std::invalid_argument \endcode
+        /// for any other value.
         void setInputSkipMode(const std::string& skip_mode);
 
         /// Whether or not a particular keyword activates keyword

@@ -402,6 +402,30 @@ BOOST_AUTO_TEST_CASE(TestRenamedKey) {
 }
 
 
+BOOST_AUTO_TEST_CASE(TestInputSkipMode) {
+    ParseContext parseContext;
+
+    BOOST_CHECK( parseContext.isActiveSkipKeyword("SKIP100") );
+    BOOST_CHECK( !parseContext.isActiveSkipKeyword("SKIP300") );
+
+    parseContext.setInputSkipMode("300");
+    BOOST_CHECK( !parseContext.isActiveSkipKeyword("SKIP100") );
+    BOOST_CHECK( parseContext.isActiveSkipKeyword("SKIP300") );
+
+    parseContext.setInputSkipMode("all");
+    BOOST_CHECK( parseContext.isActiveSkipKeyword("SKIP100") );
+    BOOST_CHECK( parseContext.isActiveSkipKeyword("SKIP300") );
+
+    BOOST_CHECK_THROW( parseContext.setInputSkipMode("30"), std::invalid_argument );
+    BOOST_CHECK_THROW( parseContext.setInputSkipMode(""), std::invalid_argument );
+    BOOST_CHECK_THROW( parseContext.setInputSkipMode("ALL"), std::invalid_argument );
+
+    // A rejected value leaves the current mode in place.
+    BOOST_CHECK( parseContext.isActiveSkipKeyword("SKIP100") );
+    BOOST_CHECK( parseContext.isActiveSkipKeyword("SKIP300") );
+}
+
+
 BOOST_AUTO_TEST_CASE( test_constructor_with_values) {
     ParseContext parseContext( {{ParseContext::PARSE_RANDOM_SLASH , InputErrorAction::IGNORE},
                 {"UNSUPPORTED_*" , InputErrorAction::WARN},

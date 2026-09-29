@@ -82,6 +82,7 @@ namespace {
     {
         std::vector<DataFile> data_files{};
         std::vector<RestartFile> restart_files{};
+        std::string inputSkipMode{"100"};
         bool separateWellGroups{false};
         bool helpoption{false};
     };
@@ -261,6 +262,7 @@ namespace {
     }
 
     Opm::Schedule loadSchedule(const std::filesystem::path& deck_file,
+                               const std::string&           inputSkipMode,
                                const Opm::Parser&           parser,
                                std::shared_ptr<Opm::Python> python)
     {
@@ -271,6 +273,7 @@ namespace {
         Opm::ErrorGuard errors{};
 
         parseContext.update(Opm::InputErrorAction::WARN);
+        parseContext.setInputSkipMode(inputSkipMode);
 
         const auto deck = parser.parseFile(deck_file, parseContext, errors);
         std::cout << "complete.\n";
@@ -305,6 +308,21 @@ namespace {
             }
             else if (arg == "-h" || arg == "--help") {
                 args.helpoption = true;
+            }
+            else if (arg.starts_with("--input-skip-mode=")) {
+                args.inputSkipMode = arg.substr(arg.find('=') + 1);
+            }
+            else if (arg == "--input-skip-mode") {
+                if (iarg < argc - 1) {
+                    args.inputSkipMode = argv[iarg + 1];
+
+                    ++iarg;
+                }
+                else {
+                    throw std::invalid_argument {
+                        fmt::format("Missing argument for {0}", arg)
+                    };
+                }
             }
             else if (arg == "-r" || arg == "--restart") {
                 if (iarg < argc - 1) {
@@ -347,7 +365,7 @@ namespace {
 
     void print_help()
     {
-        std::cerr << R"(Usage: wellgraph [--separate-well-groups] [-d|--data] <deck_file> [<deck_file> ...]
+        std::cerr << R"(Usage: wellgraph [--separate-well-groups] [--input-skip-mode=<mode>] [-d|--data] <deck_file> [<deck_file> ...]
        wellgraph [--separate-well-groups] -r <restart_file[:s1[,s2,...]]>
        wellgraph [--separate-well-groups] -r <restart_file> -d <deck_file> ...
 
@@ -369,9 +387,14 @@ Options:
   -r, --restart          Treat next argument as a restart file.
   --separate-well-groups Generate separate graphs for group relationships and
                          group-well relationships for better readability.
+  --input-skip-mode=<mode>
+                         Which of SKIP100/ENDSKIP and SKIP300/ENDSKIP blocks to
+                         ignore when parsing .DATA files.  One of '100' (default),
+                         '300' (e.g. for compositional runs), or 'all'.
 
 Example:
   wellgraph --separate-well-groups GROUPWELL.DATA
+  wellgraph --input-skip-mode=300 COMPOSITIONAL.DATA
   wellgraph --restart NORNE_ATW2013.UNRST:10,132,237
   wellgraph -d DROGON_PRED -r DROGON_HIST.UNRST
 )";
@@ -383,7 +406,7 @@ Example:
     {
         for (const auto& data_file : args.data_files) {
             const auto casename = data_file.path.stem().generic_string();
-            const auto sched = loadSchedule(data_file.path, parser, python);
+            const auto sched = loadSchedule(data_file.path, args.inputSkipMode, parser, python);
 
             Opm::writeWellGroupGraph(sched, casename, args.separateWellGroups);
         }
