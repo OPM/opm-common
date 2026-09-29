@@ -50,6 +50,7 @@
 #include <opm/input/eclipse/EclipseState/Co2StoreConfig.hpp>
 
 #include <cstddef>
+#include <stdexcept>
 #include <vector>
 
 namespace Opm {
@@ -992,6 +993,10 @@ namespace Opm::gpuistl
     BrineCo2Pvt<ScalarT, GpuBuffer>
     copy_to_gpu(const BrineCo2Pvt<ScalarT>& cpuBrineCo2)
     {
+        if (cpuBrineCo2.getEnableMultiCompSalt()) {
+            OPM_THROW(std::runtime_error,
+                      "SALTMC is not supported by the GPU CO2STORE PVT model");
+        }
         return BrineCo2Pvt<ScalarT, GpuBuffer>(
             GpuBuffer<ScalarT>(cpuBrineCo2.getBrineReferenceDensity()),
             GpuBuffer<ScalarT>(cpuBrineCo2.getCo2ReferenceDensity()),
