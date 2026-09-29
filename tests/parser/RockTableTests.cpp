@@ -30,6 +30,11 @@
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 
+#include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
+#include <opm/input/eclipse/EclipseState/Runspec.hpp>
+#include <opm/input/eclipse/EclipseState/SimulationConfig/RockConfig.hpp>
+
 // generic table classes
 #include <opm/input/eclipse/EclipseState/Tables/SimpleTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
@@ -457,4 +462,46 @@ BOOST_AUTO_TEST_CASE( RocktabAndRocktabhAreMutuallyExclusive ) {
             "2500.0  0.9700  0.9850 /\n";
 
     BOOST_CHECK_THROW( Parser().parseString( rocktabhThenRocktab ), OpmInputError );
+}
+
+BOOST_AUTO_TEST_CASE( RockConfigExplicitRocknumArrayOverridesUndeclaredTabdimsNtrocc ) {
+    // An explicit ROCKNUM array must select ROCKNUM indexing even when
+    // TABDIMS' NTROCC (item 13) is left undeclared. That undeclared-NTROCC
+    // fallback to PVTNUM only applies to ROCKNUM selected through ROCKOPTS;
+    // here there is no ROCKOPTS at all, so it must not apply.
+    const auto deck = Parser().parseString(R"(
+RUNSPEC
+
+DIMENS
+ 2 2 2 /
+
+ROCKCOMP
+ 'REVERS' /
+
+TABDIMS
+  * 3 /
+
+GRID
+
+PROPS
+
+ROCK
+   1  0.1 /
+   2  0.2 /
+   3  0.3 /
+
+REGIONS
+
+ROCKNUM
+8*1 /
+
+)");
+
+    auto grid = EclipseGrid { 2, 2, 2 };
+    const auto fp = FieldPropsManager {
+        deck, Phases{true, true, true}, grid, TableManager()
+    };
+
+    const auto rc = RockConfig { deck, fp };
+    BOOST_CHECK_EQUAL(rc.rocknum_property(), "ROCKNUM");
 }

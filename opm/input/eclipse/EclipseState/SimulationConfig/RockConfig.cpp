@@ -26,6 +26,7 @@
 
 #include <opm/input/eclipse/Parser/ParserKeywords/D.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/R.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/T.hpp>
 
 #include <stdexcept>
 #include <string>
@@ -111,6 +112,7 @@ RockConfig::RockConfig(const Deck& deck, const FieldPropsManager& fp)
     using rockopts = ParserKeywords::ROCKOPTS;
     using rockcomp = ParserKeywords::ROCKCOMP;
     using disperc = ParserKeywords::DISPERC;
+    using tabdims = ParserKeywords::TABDIMS;
 
     if (deck.hasKeyword<rock>()) {
         for (const auto& table : RockTable { deck.get<rock>().back() }) {
@@ -127,19 +129,32 @@ RockConfig::RockConfig(const Deck& deck, const FieldPropsManager& fp)
 
     if (deck.hasKeyword<rockcomp>()) {
         const auto& record = deck.get<rockcomp>().back().getRecord(0);
+
+        if (this->num_property == "ROCKNUM") {
+            // ROCKOPTS item 3 notes: if ROCKNUM is selected via ROCKOPTS
+            // (explicitly, or by default) but the number of ROCKNUM regions -
+            // TABDIMS item 13, also confusingly named NTROCC but otherwise
+            // unrelated to ROCKCOMP's own NTROCC (the number of
+            // ROCKTAB/ROCKTABH tables supplied, read below) - is left
+            // undeclared, PVTNUM is used instead. This fallback only applies
+            // to ROCKOPTS' own selection; an explicit ROCKNUM array (handled
+            // below) always wins regardless of TABDIMS(13).
+            bool rocknumRegionsDeclared = false;
+            if (deck.hasKeyword<tabdims>()) {
+                const auto& tabdimsRecord = deck.get<tabdims>().back().getRecord(0);
+                rocknumRegionsDeclared = !tabdimsRecord.getItem<tabdims::NTROCC>().defaultApplied(0);
+            }
+
+            if (!rocknumRegionsDeclared) {
+                this->num_property = "PVTNUM";
+            }
+        }
+
         if (fp.has_int("ROCKNUM")) {
             this->num_property = "ROCKNUM";
         }
 
-        const auto& ntroccItem = record.getItem<rockcomp::NTROCC>();
-        if ((this->num_property == "ROCKNUM") && ntroccItem.defaultApplied(0)) {
-            // ROCKOPTS item 3 notes: if ROCKNUM is selected (explicitly via
-            // ROCKOPTS, or because a ROCKNUM array is present) but ROCKCOMP's
-            // NTROCC is left defaulted, PVTNUM is used instead.
-            this->num_property = "PVTNUM";
-        }
-
-        this->num_tables = ntroccItem.get<int>(0);
+        this->num_tables = record.getItem<rockcomp::NTROCC>().get<int>(0);
         this->hyst_mode = hysteresis(record.getItem<rockcomp::HYSTERESIS>().getTrimmedString(0));
         this->m_water_compaction = DeckItem::to_bool(record.getItem<rockcomp::WATER_COMPACTION>().getTrimmedString(0));
 
