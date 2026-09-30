@@ -1135,6 +1135,72 @@ std::string deckStringLGRWithGridKeywords(const std::string& keywords)
 
 } // Anonymous namespace
 
+// When the deck lists the LGRs in a different order from their host cells, the
+// NNC blocks of the EGRID and of the INIT file follow the order of the LGR
+// grids, as the other LGR sections do.
+BOOST_AUTO_TEST_CASE(EclipseIOLGR_NNCInGridOrder)
+{
+    const auto deck = Parser().parseString(deckStringLGRWithGridKeywords(R"(CARFIN
+    'LGR2'  3  3  3  3  1  1  3  3  1 /
+    ENDFIN
+    CARFIN
+    'LGR1'  1  1  1  1  1  1  3  3  1 /
+    ENDFIN
+    )"));
+
+    WorkArea work_area("test_ecl_writer_lgr_nnc_order");
+    auto es = EclipseState( deck );
+    const Schedule schedule(deck, es, std::make_shared<Python>());
+    const SummaryConfig summary_config( deck, schedule, es.fieldProps(), es.aquifer());
+    es.getIOConfig().setBaseName( "FOO" );
+    EclipseIO eclWriter( es, es.getInputGrid(), schedule, summary_config);
+
+    // The NNC collection numbers the LGRs in deck order: LGR2 = 1, LGR1 = 2.
+    NNCCollection nnc_col;
+    for (const std::size_t lgr : {1, 2}) {
+        NNCDataContainerDiffGrid global_lgr;
+        global_lgr.addNNC(4, 0, 1.0);
+        nnc_col.addNNC(0, lgr, global_lgr);
+    }
+    eclWriter.writeInitial(std::vector<data::Solution>{data::Solution{}}, {}, nnc_col);
+
+    const auto name = [](EclIO::EclFile& file, const int index)
+    {
+        auto s = file.get<std::string>(index).front();
+        return s.substr(0, s.find_last_not_of(' ') + 1);
+    };
+
+    // EGRID: the LGR grids, and the grid of each LGR NNC block, in file order.
+    EclIO::EclFile egrid { "FOO.EGRID" };
+    std::vector<std::string> grids, nnc_grids;
+    std::map<int, std::string> grid_name;
+    const auto egrid_list = egrid.getList();
+    for (auto i = 0*egrid_list.size(); i < egrid_list.size(); ++i) {
+        const auto& array = std::get<0>(egrid_list[i]);
+        const auto index = static_cast<int>(i);
+        if (array == "LGR") {
+            grids.push_back(name(egrid, index));
+        } else if (array == "GRIDHEAD" && !grids.empty()) {
+            grid_name[egrid.get<int>(index)[4]] = grids.back();
+        } else if (array == "NNCHEAD" && egrid.get<int>(index)[1] > 0) {
+            nnc_grids.push_back(grid_name[egrid.get<int>(index)[1]]);
+        }
+    }
+    BOOST_CHECK((grids == std::vector<std::string>{"LGR2", "LGR1"}));
+    BOOST_CHECK((nnc_grids == grids));
+
+    // INIT: the property sections, then the NNC sections, each starting with LGR.
+    EclIO::EclFile init { "FOO.INIT" };
+    std::vector<std::string> sections;
+    const auto init_list = init.getList();
+    for (auto i = 0*init_list.size(); i < init_list.size(); ++i) {
+        if (std::get<0>(init_list[i]) == "LGR") {
+            sections.push_back(name(init, static_cast<int>(i)));
+        }
+    }
+    BOOST_CHECK((sections == std::vector<std::string>{"LGR2", "LGR1", "LGR2", "LGR1"}));
+}
+
 // An LGR over several host cells spreads its cells evenly over them: an LGR
 // cell's DX, DY and DZ are those of its host cell divided by the LGR cells per
 // host cell in that direction, its pore volume that of its host cell divided
