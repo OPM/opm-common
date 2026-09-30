@@ -749,6 +749,48 @@ BRANPROP
     BOOST_CHECK(network.has_node("N2"));
 }
 
+BOOST_AUTO_TEST_CASE(Accept_Unterminated_Node_Above_Fixed_Pressure)
+{
+    // Branch PLAT-A -> FIELD added to an otherwise consistent network.
+    // FIELD has no pressure of its own and no uptree branch, but every flow
+    // path ends at the fixed pressure node PLAT-A before reaching FIELD.
+    const auto deck_string = network_deck(valid_network() + R"(
+BRANPROP
+--  Downtree  Uptree   #VFP    ALQ
+    PLAT-A    FIELD    9999    1* /
+/
+)");
+
+    auto errors = ErrorGuard{};
+    const auto schedule = make_schedule(deck_string, errors);
+    BOOST_CHECK(! errors);
+    errors.clear();
+
+    const auto& network = schedule[0].network.get();
+    BOOST_CHECK(network.has_node("FIELD"));
+}
+
+BOOST_AUTO_TEST_CASE(Reject_Bypass_Of_Fixed_Pressure_Node)
+{
+    // As above, but with an additional branch BX -> FIELD.  Flow from BX
+    // reaches FIELD without passing a fixed pressure node.
+    const auto deck_string = network_deck(valid_network() + R"(
+BRANPROP
+--  Downtree  Uptree   #VFP    ALQ
+    PLAT-A    FIELD    9999    1* /
+    BX        FIELD    4       1* /
+/
+)");
+
+    auto errors = ErrorGuard{};
+    make_schedule(deck_string, errors);
+
+    const auto diagnostic = errors.formattedErrors();
+    errors.clear();
+
+    BOOST_CHECK(diagnostic.find("Flow path from network node BX") != std::string::npos);
+}
+
 BOOST_AUTO_TEST_CASE(Reject_Cyclic_Network)
 {
     // No node of the B1 -> N1 -> N2 -> B1 loop has any inlet outside the
