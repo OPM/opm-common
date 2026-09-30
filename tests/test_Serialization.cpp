@@ -75,6 +75,7 @@
 #include <opm/input/eclipse/EclipseState/Tables/Rock2dTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/Rock2dtrTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/RocktabTable.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/RocktabhTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/SimpleTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/SkprpolyTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/SkprwatTable.hpp>
@@ -362,6 +363,7 @@ TEST_FOR_TYPE(RFTConfig)
 TEST_FOR_TYPE(RockConfig)
 TEST_FOR_TYPE(RockTable)
 TEST_FOR_TYPE(RocktabTable)
+TEST_FOR_TYPE(RocktabhTable)
 TEST_FOR_TYPE(Rock2dtrTable)
 TEST_FOR_TYPE(Rock2dTable)
 TEST_FOR_TYPE(Runspec)

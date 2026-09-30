@@ -3,7 +3,8 @@
   "sections": [
     "PROPS"
   ],
-  "size": {
+  "prohibits": ["ROCKTAB"],
+  "num_tables": {
     "keyword": "ROCKCOMP",
     "item": "NTROCC"
   },
@@ -11,7 +12,12 @@
     {
       "name": "DATA",
       "value_type": "DOUBLE",
-      "size_type": "ALL"
+      "size_type": "ALL",
+      "dimension": [
+        "Pressure",
+        "1",
+        "1"
+      ]
     }
   ]
 }
