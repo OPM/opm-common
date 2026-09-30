@@ -4088,14 +4088,15 @@ BOOST_AUTO_TEST_CASE(WELL_STATIC) {
 
     const auto& connections = ws.getConnections();
     BOOST_CHECK_EQUAL(connections.size(), 0U);
-    auto c2 = std::make_shared<WellConnections>(Connection::Order::TRACK, 1,1);
+
+    auto c2 = std::make_shared<WellConnections>(1, 1);
     c2->addConnection(1, 1, 1,
                       grid1.getGlobalIndex(1, 1, 1),
                       Connection::State::OPEN,
                       100.0, Connection::CTFProperties{}, 10);
 
-    BOOST_CHECK(  ws.updateConnections(c2, false) );
-    BOOST_CHECK( !ws.updateConnections(c2, false) );
+    BOOST_CHECK(  ws.updateConnections(c2, Connection::Order::TRACK, false) );
+    BOOST_CHECK( !ws.updateConnections(c2, Connection::Order::TRACK, false) );
 }
 
 
