@@ -38,6 +38,7 @@
 #include <opm/input/eclipse/Schedule/Tuning.hpp>
 #include <opm/input/eclipse/Schedule/VFPInjTable.hpp>
 #include <opm/input/eclipse/Schedule/VFPProdTable.hpp>
+#include <opm/input/eclipse/Schedule/Well/ConnectionOrdering.hpp>
 #include <opm/input/eclipse/Schedule/Well/PAvg.hpp>
 #include <opm/input/eclipse/Schedule/Well/WCYCLE.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellEnums.hpp>
@@ -552,6 +553,7 @@ namespace Opm {
         ptr_member<UDQConfig> udq;
         ptr_member<UDQActive> udq_active;
 
+        ptr_member<ConnectionOrdering> compord;
         ptr_member<PAvg> pavg;
         ptr_member<WellTestConfig> wtest_config;
         ptr_member<GasLiftOpt> glo;
@@ -605,7 +607,10 @@ namespace Opm {
                                   return this->actions;
             else if constexpr ( std::is_same_v<T, UDQActive> )
                                   return this->udq_active;
-            else if constexpr ( std::is_same_v<T, NameOrder> )
+            else if constexpr (std::is_same_v<T, ConnectionOrdering>) {
+                return this->compord;
+            }
+            else if constexpr (std::is_same_v<T, NameOrder>)
                                   return this->well_order;
             else if constexpr ( std::is_same_v<T, GroupOrder> )
                                   return this->group_order;
@@ -694,6 +699,7 @@ namespace Opm {
             serializer(actions);
             serializer(udq);
             serializer(udq_active);
+            serializer(this->compord);
             serializer(pavg);
             serializer(wtest_config);
             serializer(glo);
