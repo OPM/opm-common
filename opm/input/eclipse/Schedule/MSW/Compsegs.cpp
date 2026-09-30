@@ -682,7 +682,6 @@ namespace Opm::Compsegs {
         }
 
         auto connections = WellConnections {
-            order_from_int(rst_well.completion_ordering),
             rst_well.ij[0], rst_well.ij[1], rst_connections
         };
 

@@ -56,6 +56,9 @@
 #define TOLERANCE_PERCENT 0.01
 using namespace Opm;
 
+
+namespace {
+
 std::unordered_map<std::string, std::size_t> create_label_mapper(const EclipseGrid& ecl_grid)
 {
     std::unordered_map<std::string, std::size_t> label_to_index;
@@ -67,9 +70,6 @@ std::unordered_map<std::string, std::size_t> create_label_mapper(const EclipseGr
     }
     return label_to_index;
 }
-
-
-namespace {
 
 // 3x3x1 grid with LGR1 on cell (1,1) and LGR2 on cell (3,3); the SCHEDULE
 // section is given.
@@ -528,10 +528,12 @@ COMPDAT
             BOOST_CHECK_EQUAL(conn.get_lgr_level(), 1);
         }
     }
+
     BOOST_CHECK_EQUAL(global, std::size_t{1});
     BOOST_CHECK(refined > 0);
-    BOOST_CHECK_EQUAL(well.getConnections().outputAllGrids(es.getInputGrid()).size(),
-                      global + refined);
+    BOOST_CHECK_EQUAL(well.getConnections()
+                      .outputAllGrids(es.getInputGrid(), Connection::Order::TRACK)
+                      .size(), global + refined);
 }
 
 // A connection's grid number counts nested LGRs as well, so its grid must be found by name.
@@ -585,6 +587,8 @@ COMPDAT
 
     const auto& conns = sched.getWell("P", 0).getConnections();
     const auto nested = std::ranges::count_if(conns, [](const auto& c) { return c.get_lgr_level() == 2; });
+
     BOOST_CHECK(nested > 0);
-    BOOST_CHECK_EQUAL(conns.outputAllGrids(es.getInputGrid()).size(), conns.size());
+
+    BOOST_CHECK_EQUAL(conns.outputAllGrids(es.getInputGrid(), Connection::Order::TRACK).size(), conns.size());
 }

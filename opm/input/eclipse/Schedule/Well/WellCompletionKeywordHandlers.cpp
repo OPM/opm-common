@@ -23,6 +23,8 @@
 #include <opm/common/utility/OpmInputError.hpp>
 
 #include <opm/input/eclipse/Schedule/ScheduleState.hpp>
+#include <opm/input/eclipse/Schedule/Well/Connection.hpp>
+#include <opm/input/eclipse/Schedule/Well/ConnectionOrdering.hpp>
 #include <opm/input/eclipse/Schedule/Well/WDFAC.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
@@ -212,19 +214,43 @@ void handleCOMPLUMP(HandlerContext& handlerContext)
 
         for (const auto& wname : well_names) {
             auto well = handlerContext.state().wells.get(wname);
-            if (well.handleCOMPLUMP(record)) {
-                handlerContext.state().wells.update( std::move(well) );
 
+            if (const auto compord = handlerContext.state().compord().getConnectionOrder(wname);
+                well.handleCOMPLUMP(record, compord))
+            {
+                handlerContext.state().wells.update(std::move(well));
                 handlerContext.record_well_structure_change();
             }
         }
     }
 }
 
-// The COMPORD keyword is handled together with the WELSPECS keyword in the
-// handleWELSPECS() function.
-void handleCOMPORD(HandlerContext&)
-{}
+void handleCOMPORD(HandlerContext& handlerContext)
+{
+    using Kw = ParserKeywords::COMPORD;
+
+    auto newCompOrd = handlerContext.state().compord();
+    auto was_updated = false;
+
+    for (const auto& record : handlerContext.keyword) {
+        const auto wellNamePattern = record
+            .getItem<Kw::WELL>()
+            .getTrimmedString(0);
+
+        const auto order = Connection::OrderFromString
+            (record.getItem<Kw::ORDER_TYPE>().getTrimmedString(0));
+
+        for (const auto& wname : handlerContext.wellNames(wellNamePattern)) {
+            const auto update = newCompOrd.update(order, wname);
+
+            was_updated |= update;
+        }
+    }
+
+    if (was_updated) {
+        handlerContext.state().compord.update(std::move(newCompOrd));
+    }
+}
 
 void handleCSKIN(HandlerContext& handlerContext)
 {
@@ -242,7 +268,9 @@ void handleCSKIN(HandlerContext& handlerContext)
             // update well.
             auto well = handlerContext.state().wells.get(wname);
 
-            if (well.handleCSKIN(record, handlerContext.keyword.location())) {
+            if (const auto compord = handlerContext.state().compord().getConnectionOrder(wname);
+                well.handleCSKIN(record, compord, handlerContext.keyword.location()))
+            {
                 handlerContext.state().wells.update(std::move(well));
             }
         }
@@ -260,7 +288,8 @@ void handleCECON(HandlerContext& handlerContext)
         for (const auto& wname : well_names) {
             auto well = handlerContext.state().wells.get(wname);
 
-            if (well.handleCECON(record, handlerContext.keyword.location(),
+            if (const auto compord = handlerContext.state().compord().getConnectionOrder(wname);
+                well.handleCECON(record, compord, handlerContext.keyword.location(),
                                  handlerContext.parseContext, handlerContext.errors))
             {
                 handlerContext.state().wells.update(std::move(well));
