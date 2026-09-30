@@ -114,20 +114,6 @@ namespace {
         return defaulted(rec, s)|| (limit(rec, s, shift) == value);
     }
 
-Opm::Connection::Order order_from_int(const int int_value)
-{
-    switch (int_value) {
-    case 0: return Opm::Connection::Order::TRACK;
-    case 1: return Opm::Connection::Order::DEPTH;
-    case 2: return Opm::Connection::Order::INPUT;
-    default:
-        throw std::invalid_argument {
-            fmt::format("Invalid integer value: {} encountered "
-                        "when determining connection ordering", int_value)
-        };
-    }
-}
-
 Opm::Well::Status status_from_int(const int int_value)
 {
     using Value = Opm::RestartIO::Helpers::VectorItems::IWell::Value::Status;
@@ -319,7 +305,7 @@ Well::Well(const RestartIO::RstWell& rst_well,
     brine_properties(std::make_shared<WellBrineProperties>()),
     species_properties(std::make_shared<WellTracerProperties>()), // NOTE: well tracer facilities used for geochemistry
     tracer_properties(std::make_shared<WellTracerProperties>()),
-    connections(std::make_shared<WellConnections>(order_from_int(rst_well.completion_ordering), headI, headJ)),
+    connections(std::make_shared<WellConnections>(headI, headJ)),
     production(std::make_shared<WellProductionProperties>(unit_system_arg, wname)),
     injection(std::make_shared<WellInjectionProperties>(unit_system_arg, wname)),
     wvfpdp(std::make_shared<WVFPDP>()),
@@ -534,7 +520,6 @@ Well::Well(const std::string& wname_arg,
            const std::optional<double>& ref_depth_arg,
            const WellType& wtype_arg,
            ProducerCMode whistctl_cmode,
-           Connection::Order ordering_arg,
            const UnitSystem& unit_system_arg,
            double dr,
            bool allow_xflow,
@@ -568,7 +553,7 @@ Well::Well(const std::string& wname_arg,
     brine_properties(std::make_shared<WellBrineProperties>()),
     species_properties(std::make_shared<WellTracerProperties>()), // NOTE: well tracer facilities used for geochemistry
     tracer_properties(std::make_shared<WellTracerProperties>()),
-    connections(std::make_shared<WellConnections>(ordering_arg, headI, headJ)),
+    connections(std::make_shared<WellConnections>(headI, headJ)),
     production(std::make_shared<WellProductionProperties>(*unit_system, wname)),
     injection(std::make_shared<WellInjectionProperties>(*unit_system, wname)),
     wvfpdp(std::make_shared<WVFPDP>()),
@@ -1075,10 +1060,11 @@ bool Well::updateAutoShutin(const bool auto_shutin)
     return false;
 }
 
-
-bool Well::updateConnections(std::shared_ptr<WellConnections> connections_arg, bool force)
+bool Well::updateConnections(std::shared_ptr<WellConnections> connections_arg,
+                             const Connection::Order          ordering,
+                             const bool                       force)
 {
-    connections_arg->order();
+    connections_arg->order(ordering);
 
     if (force || (*this->connections != *connections_arg)) {
         this->connections = std::move(connections_arg);
@@ -1088,9 +1074,11 @@ bool Well::updateConnections(std::shared_ptr<WellConnections> connections_arg, b
     return false;
 }
 
-bool Well::updateConnections(std::shared_ptr<WellConnections> connections_arg, const ScheduleGrid& grid)
+bool Well::updateConnections(std::shared_ptr<WellConnections> connections_arg,
+                             const Connection::Order          ordering,
+                             const ScheduleGrid&              grid)
 {
-    bool update = this->updateConnections(std::move(connections_arg), false);
+    bool update = this->updateConnections(std::move(connections_arg), ordering, false);
 
     if (this->pvt_table == 0 && !this->connections->empty()) {
         const auto& lowest = this->connections->lowest();
@@ -1102,8 +1090,6 @@ bool Well::updateConnections(std::shared_ptr<WellConnections> connections_arg, c
     return update;
 }
 
-
-
 bool Well::updateSolventFraction(const double solvent_fraction_arg)
 {
     if (this->solvent_fraction != solvent_fraction_arg) {
@@ -1114,10 +1100,11 @@ bool Well::updateSolventFraction(const double solvent_fraction_arg)
     return false;
 }
 
-bool Well::handleCOMPSEGS(const DeckKeyword&  keyword,
-                          const ScheduleGrid& grid,
-                          const ParseContext& parseContext,
-                          ErrorGuard&         errors)
+bool Well::handleCOMPSEGS(const Connection::Order ordering,
+                          const DeckKeyword&      keyword,
+                          const ScheduleGrid&     grid,
+                          const ParseContext&     parseContext,
+                          ErrorGuard&             errors)
 {
     if (this->segments == nullptr) {
         throw OpmInputError{
@@ -1133,7 +1120,7 @@ bool Well::handleCOMPSEGS(const DeckKeyword&  keyword,
         (keyword, *this->connections, *this->segments,
          grid, parseContext, errors);
 
-    this->updateConnections(std::make_shared<WellConnections>(std::move(new_connections)), false);
+    this->updateConnections(std::make_shared<WellConnections>(std::move(new_connections)), ordering, grid);
 
     // for multi-segment wells, we always use the top segment depth as the reference depth
     this->updateRefDepth(this->segments->depthTopSegment());
@@ -1576,10 +1563,12 @@ int Well::fip_region_number() const
 // check for all connections closed is not performed.  Therefore, we have a
 // runtime flag here which makes sure to close the well in this case.
 
-bool Well::handleWELOPENConnections(const DeckRecord&       record,
-                                    const Connection::State state_arg,
-                                    std::vector<int>&       requested_open_complnums,
-                                    std::vector<int>&       requested_shut_complnums)
+bool
+Well::handleWELOPENConnections(const DeckRecord& record,
+                               const Connection::Order ordering,
+                               const Connection::State state_arg,
+                               std::vector<int>& requested_open_complnums,
+                               std::vector<int>& requested_shut_complnums)
 {
     auto match = [&record](const Connection &c) -> bool
     {
@@ -1593,7 +1582,7 @@ bool Well::handleWELOPENConnections(const DeckRecord&       record,
     };
 
     auto new_connections = std::make_shared<WellConnections>
-        (this->connections->ordering(), this->headI, this->headJ);
+        (this->headI, this->headJ);
 
     for (const auto& connection : *this->connections) {
         if (! match(connection)) {
@@ -1622,11 +1611,12 @@ bool Well::handleWELOPENConnections(const DeckRecord&       record,
         new_connections->add(connection_copy);
     }
 
-    return this->updateConnections(std::move(new_connections), false);
+    return this->updateConnections(std::move(new_connections), ordering, false);
 }
 
-bool Well::handleCSKIN(const DeckRecord&      record,
-                       const KeywordLocation& location)
+bool Well::handleCSKIN(const DeckRecord&       record,
+                       const Connection::Order ordering,
+                       const KeywordLocation&  location)
 {
     using Kw = ParserKeywords::CSKIN;
 
@@ -1642,7 +1632,7 @@ bool Well::handleCSKIN(const DeckRecord&      record,
     // New connection set which will be updated with new connection level
     // skin factors.
     auto new_connections = std::make_shared<WellConnections>
-        (this->connections->ordering(), this->headI, this->headJ);
+        (this->headI, this->headJ);
 
     const auto skin_factor = record.getItem<Kw::CONNECTION_SKIN_FACTOR>().getSIDouble(0);
     for (const auto& connection : *this->connections) {
@@ -1681,13 +1671,14 @@ bool Well::handleCSKIN(const DeckRecord&      record,
         new_connections->add(connection_copy);
     }
 
-    return this->updateConnections(std::move(new_connections), false);
+    return this->updateConnections(std::move(new_connections), ordering, false);
 }
 
-bool Well::handleCECON(const DeckRecord&      record,
-                       const KeywordLocation& location,
-                       const ParseContext&    parseContext,
-                       ErrorGuard&            errors)
+bool Well::handleCECON(const DeckRecord&       record,
+                       const Connection::Order ordering,
+                       const KeywordLocation&  location,
+                       const ParseContext&     parseContext,
+                       ErrorGuard&             errors)
 {
     using Kw = ParserKeywords::CECON;
 
@@ -1707,7 +1698,7 @@ bool Well::handleCECON(const DeckRecord&      record,
     const auto connection_econ_limits = ConnectionEconLimits { record };
 
     auto new_connections = std::make_shared<WellConnections>
-        (this->connections->ordering(), this->headI, this->headJ);
+        (this->headI, this->headJ);
 
     bool matched_any = false;
     for (const auto& connection : *this->connections) {
@@ -1739,11 +1730,12 @@ bool Well::handleCECON(const DeckRecord&      record,
         return false;
     }
 
-    this->updateConnections(std::move(new_connections), false);
+    this->updateConnections(std::move(new_connections), ordering, false);
+
     return true;
 }
 
-bool Well::handleCOMPLUMP(const DeckRecord& record)
+bool Well::handleCOMPLUMP(const DeckRecord& record, const Connection::Order ordering)
 {
     using Kw = ParserKeywords::COMPLUMP;
 
@@ -1757,7 +1749,7 @@ bool Well::handleCOMPLUMP(const DeckRecord& record)
     };
 
     auto new_connections = std::make_shared<WellConnections>
-        (this->connections->ordering(), this->headI, this->headJ);
+        (this->headI, this->headJ);
 
     const int complnum = record.getItem<Kw::N>().get<int>(0);
     if (complnum <= 0) {
@@ -1778,10 +1770,10 @@ bool Well::handleCOMPLUMP(const DeckRecord& record)
         new_connections->add(connection_copy);
     }
 
-    return this->updateConnections(std::move(new_connections), false);
+    return this->updateConnections(std::move(new_connections), ordering, false);
 }
 
-bool Well::handleWPIMULT(const DeckRecord& record)
+bool Well::handleWPIMULT(const DeckRecord& record, const Connection::Order ordering)
 {
     using Kw = ParserKeywords::WPIMULT;
 
@@ -1796,7 +1788,7 @@ bool Well::handleWPIMULT(const DeckRecord& record)
     };
 
     auto new_connections = std::make_shared<WellConnections>
-        (this->connections->ordering(), this->headI, this->headJ);
+        (this->headI, this->headJ);
 
     const auto wellPi = record.getItem<Kw::WELLPI>().get<double>(0);
 
@@ -1812,10 +1804,12 @@ bool Well::handleWPIMULT(const DeckRecord& record)
         new_connections->add(connection_copy);
     }
 
-    return this->updateConnections(std::move(new_connections), false);
+    return this->updateConnections(std::move(new_connections), ordering, false);
 }
 
-bool Well::handleWINJCLN(const DeckRecord& record, const KeywordLocation& location)
+bool Well::handleWINJCLN(const DeckRecord&       record,
+                         const Connection::Order ordering,
+                         const KeywordLocation&  location)
 {
     const double fraction_removal = record
         .getItem<ParserKeywords::WINJCLN::FRAC_REMOVE>()
@@ -1838,7 +1832,7 @@ bool Well::handleWINJCLN(const DeckRecord& record, const KeywordLocation& locati
     };
 
     auto new_connections = std::make_shared<WellConnections>
-        (this->connections->ordering(), this->headI, this->headJ);
+        (this->headI, this->headJ);
 
     for (const auto& connection : *this->connections) {
         if (! match(connection)) {
@@ -1855,10 +1849,10 @@ bool Well::handleWINJCLN(const DeckRecord& record, const KeywordLocation& locati
         new_connections->add(connection_copy);
     }
 
-    return this->updateConnections(std::move(new_connections), false);
+    return this->updateConnections(std::move(new_connections), ordering, false);
 }
 
-bool Well::handleWINJDAM(const DeckRecord& record, const KeywordLocation& location)
+bool Well::handleWINJDAM(const DeckRecord& record, const Connection::Order ordering, const KeywordLocation& location)
 {
     auto match = [&record](const Connection& c) -> bool {
         if (!match_eq(c.getI(), record, "I", -1)) { return false; }
@@ -1871,7 +1865,7 @@ bool Well::handleWINJDAM(const DeckRecord& record, const KeywordLocation& locati
     const FilterCake filter_cake {record, location};
 
     auto new_connections = std::make_shared<WellConnections>
-        (this->connections->ordering(), this->headI, this->headJ);
+        (this->headI, this->headJ);
 
     for (const auto& connection : *this->connections) {
         if (! match(connection)) {
@@ -1885,10 +1879,12 @@ bool Well::handleWINJDAM(const DeckRecord& record, const KeywordLocation& locati
         new_connections->add(connection_copy);
     }
 
-    return this->updateConnections(std::move(new_connections), false);
+    return this->updateConnections(std::move(new_connections), ordering, false);
 }
 
-bool Well::handleWINJMULT(const Opm::DeckRecord& record, const KeywordLocation& location)
+bool Well::handleWINJMULT(const Opm::DeckRecord&  record,
+                          const Connection::Order ordering,
+                          const KeywordLocation&  location)
 {
     // For this keyword, the default for I, J, K will be negative
     //
@@ -1934,7 +1930,7 @@ bool Well::handleWINJMULT(const Opm::DeckRecord& record, const KeywordLocation& 
              (mode == InjMultMode::CIRR))
     {
         auto new_connections = std::make_shared<WellConnections>
-            (this->connections->ordering(), this->headI, this->headJ);
+            (this->headI, this->headJ);
 
         for (const auto& connection : *this->connections) {
             if (! match(connection)) {
@@ -1948,17 +1944,16 @@ bool Well::handleWINJMULT(const Opm::DeckRecord& record, const KeywordLocation& 
             new_connections->add(connection_copy);
         }
 
-        connections_update = this->updateConnections(std::move(new_connections), false);
+        connections_update = this->updateConnections(std::move(new_connections), ordering, false);
     }
 
     return mode_change || connections_update || well_inj_update;
 }
 
-
-bool Opm::Well::applyGlobalWPIMULT(const double scaling_factor)
+bool Opm::Well::applyGlobalWPIMULT(const double scaling_factor, const Connection::Order ordering)
 {
     auto new_connections = std::make_shared<WellConnections>
-        (this->connections->ordering(), this->headI, this->headJ);
+        (this->headI, this->headJ);
 
     for (const auto& connection : *this->connections) {
         auto connection_copy = connection;
@@ -1967,7 +1962,7 @@ bool Opm::Well::applyGlobalWPIMULT(const double scaling_factor)
         new_connections->add(connection_copy);
     }
 
-    return this->updateConnections(std::move(new_connections), false);
+    return this->updateConnections(std::move(new_connections), ordering, false);
 }
 
 void Well::updateSegments(std::shared_ptr<WellSegments> segments_arg)
@@ -2206,12 +2201,6 @@ double Well::injection_rate(const SummaryState& st, Phase phase_arg) const
     return controls.surface_rate;
 }
 
-
-bool Well::wellNameInWellNamePattern(const std::string& wellName,
-                                     const std::string& wellNamePattern)
-{
-    return shmatch(wellNamePattern, wellName);
-}
 
 Well::ProductionControls Well::productionControls(const SummaryState& st) const
 {

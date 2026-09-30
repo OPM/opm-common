@@ -215,25 +215,7 @@ void HandlerContext::welspecsCreateNewWell(const DeckRecord&  record,
                                            const std::string& wellName,
                                            const std::string& groupName)
 {
-    auto wellConnectionOrder = Connection::Order::TRACK;
-
-    if (const auto& compord = block.get("COMPORD"); compord.has_value())
-    {
-        const auto nrec = compord->size();
-
-        for (auto compordRecordNr = 0*nrec; compordRecordNr < nrec; ++compordRecordNr) {
-            const auto& compordRecord = compord->getRecord(compordRecordNr);
-
-            const std::string& wellNamePattern = compordRecord.getItem(0).getTrimmedString(0);
-
-            if (Well::wellNameInWellNamePattern(wellName, wellNamePattern)) {
-                const std::string& compordString = compordRecord.getItem(1).getTrimmedString(0);
-                wellConnectionOrder = Connection::OrderFromString(compordString);
-            }
-        }
-    }
-
-    schedule_.addWell(wellName, record, currentStep, wellConnectionOrder);
+    schedule_.addWell(wellName, record, currentStep);
     schedule_.addWellToGroup(groupName, wellName, currentStep);
 
     this->affected_well(wellName);

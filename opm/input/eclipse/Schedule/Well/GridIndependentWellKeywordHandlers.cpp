@@ -28,6 +28,7 @@
 #include <opm/input/eclipse/Schedule/MSW/WellSegments.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleGrid.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleState.hpp>
+#include <opm/input/eclipse/Schedule/Well/Connection.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
 
@@ -122,8 +123,10 @@ namespace
              handlerContext.parseContext,
              handlerContext.errors);
 
+        const auto compord = handlerContext.state().compord().getConnectionOrder(well.name());
+
         well.updateConnections
-            (std::make_shared<WellConnections>(std::move(new_connections)), false);
+            (std::make_shared<WellConnections>(std::move(new_connections)), compord, false);
 
         handlerContext.record_well_structure_change();
     }
@@ -160,7 +163,10 @@ namespace
                 // In the case that defaults are used in WELSPECS for headI/J
                 // the headI/J are calculated based on the well trajectory data
                 well.updateHead(connections->getHeadI(), connections->getHeadJ());
-                if (well.updateConnections(std::move(connections), handlerContext.grid)) {
+
+                if (const auto compord = handlerContext.state().compord().getConnectionOrder(well.name());
+                    well.updateConnections(std::move(connections), compord, handlerContext.grid))
+                {
                     well.updateRefDepth();
                     handlerContext.record_well_structure_change();
                 }
@@ -219,7 +225,9 @@ Well {} has no connections to the grid. The well will remain SHUT)", name);
                     }
                 }
 
-                if (well.updateConnections(std::move(connections), handlerContext.grid)) {
+                if (const auto compord = handlerContext.state().compord().getConnectionOrder(well.name());
+                    well.updateConnections(std::move(connections), compord, handlerContext.grid))
+                {
                     handlerContext.state().wells.update(std::move(well));
                     handlerContext.record_well_structure_change();
                 }

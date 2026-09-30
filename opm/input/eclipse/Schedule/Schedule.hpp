@@ -573,8 +573,7 @@ namespace Opm {
                      bool automaticShutIn,
                      int pvt_table,
                      WellGasInflowEquation gas_inflow,
-                     std::size_t timeStep,
-                     ConnectionOrder wellConnectionOrder);
+                     std::size_t timeStep);
         bool updateWPAVE(const std::string& wname, std::size_t report_step, const PAvg& pavg);
 
         void updateGuideRateModel(const GuideRateModel& new_model, std::size_t report_step);
@@ -596,7 +595,7 @@ namespace Opm {
         void addGroup(const std::string& groupName);
         void addGroup(const RestartIO::RstGroup& rst_group);
         void addWell(const std::string& wellName, const DeckRecord& record,
-                    std::size_t timeStep, ConnectionOrder connection_order);
+                    std::size_t timeStep);
         void checkIfAllConnectionsIsShut(std::size_t reportStep);
         void end_report(std::size_t report_step);
         /// \param welsegs_wells All wells with a WELSEGS entry for checks.

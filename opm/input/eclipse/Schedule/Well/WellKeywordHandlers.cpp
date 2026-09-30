@@ -551,8 +551,8 @@ void handleWELOPEN(HandlerContext& handlerContext)
     constexpr auto open = Well::Status::OPEN;
 
     for (const auto& record : keyword) {
-        const auto& wellNamePattern = record.getItem<Kw::WELL>().getTrimmedString(0);
-        const auto& status_str = record.getItem<Kw::STATUS>().getTrimmedString( 0 );
+        const auto wellNamePattern = record.getItem<Kw::WELL>().getTrimmedString(0);
+        const auto status_str = record.getItem<Kw::STATUS>().getTrimmedString(0);
         const auto well_names = handlerContext.wellNames(wellNamePattern);
 
         /* if all records are defaulted or just the status is set, only
@@ -595,26 +595,37 @@ void handleWELOPEN(HandlerContext& handlerContext)
           itself. Unless all connections are shut - then the well is also
           shut.
          */
-        for (const auto& wname : well_names) {
-            const auto connection_status = Connection::StateFromString( status_str );
+        for (const auto connection_status = Connection::StateFromString(status_str);
+             const auto& wname : well_names)
+        {
             {
+                const auto compord = handlerContext.state().compord()
+                    .getConnectionOrder(wname);
+
+                auto requested_open_complnums = std::vector<int> {};
+                auto requested_shut_complnums = std::vector<int> {};
+
                 auto well = handlerContext.state().wells.get(wname);
-                auto requested_open_complnums = std::vector<int>{};
-                auto requested_shut_complnums = std::vector<int>{};
-                well.handleWELOPENConnections(record, connection_status,
+
+                well.handleWELOPENConnections(record,
+                                              compord,
+                                              connection_status,
                                               requested_open_complnums,
                                               requested_shut_complnums);
-                for (const int complnum : requested_open_complnums) {
-                    handlerContext.state().wellcompletion_events()
-                        .addEvent(wname, complnum, ScheduleEvents::REQUEST_OPEN_COMPLETION);
+
+                for (const auto& complnum : requested_open_complnums) {
+                    handlerContext.state().wellcompletion_events().addEvent
+                        (wname, complnum, ScheduleEvents::REQUEST_OPEN_COMPLETION);
                 }
+
                 // A connection shut by this record cancels any pending
                 // REQUEST_OPEN_COMPLETION event for the same connection.
-                for (const int complnum : requested_shut_complnums) {
-                    handlerContext.state().wellcompletion_events()
-                        .clearEvent(wname, complnum, ScheduleEvents::REQUEST_OPEN_COMPLETION);
+                for (const auto& complnum : requested_shut_complnums) {
+                    handlerContext.state().wellcompletion_events().clearEvent
+                        (wname, complnum, ScheduleEvents::REQUEST_OPEN_COMPLETION);
                 }
-                handlerContext.state().wells.update( std::move(well) );
+
+                handlerContext.state().wells.update(std::move(well));
             }
 
             handlerContext.affected_well(wname);
@@ -823,7 +834,6 @@ Well{0} entered with 'FIELD' parent group:
         handlerContext.record_well_structure_change();
     }
 }
-
 
 void handleWELSPECL(HandlerContext& handlerContext)
 {
