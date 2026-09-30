@@ -293,6 +293,7 @@ list(APPEND MAIN_SOURCE_FILES
   opm/input/eclipse/Schedule/UDQ/UDT.cpp
   opm/input/eclipse/Schedule/Well/Connection.cpp
   opm/input/eclipse/Schedule/Well/ConnectionEconLimits.cpp
+  opm/input/eclipse/Schedule/Well/ConnectionOrdering.cpp
   opm/input/eclipse/Schedule/Well/FilterCake.cpp
   opm/input/eclipse/Schedule/Well/injection.cpp
   opm/input/eclipse/Schedule/Well/GridIndependentWellKeywordHandlers.cpp
@@ -512,6 +513,7 @@ list(APPEND TEST_SOURCE_FILES
   tests/test_calculateCellVol.cpp
   tests/test_cmp.cpp
   tests/test_CompletedCells.cpp
+  tests/test_ConnectionOrdering.cpp
   tests/test_CopyablePtr.cpp
   tests/test_ConditionalStorage.cpp
   tests/test_critical_error.cpp
@@ -745,7 +747,7 @@ list(APPEND TEST_DATA_FILES
   tests/BASE_SIM.DATA
   tests/BASE_SIM_THPRES.DATA
   tests/NORST_SIM.DATA
-  tests/NORST1_SIM.DATA  
+  tests/NORST1_SIM.DATA
   tests/CARFIN-COLUMN.EGRID
   tests/CARFIN-DOUBLE.EGRID
   tests/CARFIN-NESTED.EGRID
@@ -1235,6 +1237,7 @@ list(APPEND PUBLIC_HEADER_FILES
   opm/input/eclipse/Schedule/VFPProdTable.hpp
   opm/input/eclipse/Schedule/Well/Connection.hpp
   opm/input/eclipse/Schedule/Well/ConnectionEconLimits.hpp
+  opm/input/eclipse/Schedule/Well/ConnectionOrdering.hpp
   opm/input/eclipse/Schedule/Well/FilterCake.hpp
   opm/input/eclipse/Schedule/Well/NameOrder.hpp
   opm/input/eclipse/Schedule/Well/PAvg.hpp
