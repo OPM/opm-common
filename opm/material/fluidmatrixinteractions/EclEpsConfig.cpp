@@ -107,7 +107,8 @@ void EclEpsConfig::initFromState(const EclipseState& eclState,
 
         // PCG is reused as the gas-water capillary pressure (Pcgw) for
         // two-phase gas-water systems (see EclEpsScalingPoints::init()).
-        this->enablePcScaling_  = hasPC("G");
+        // SWATINIT scales this curve too (EclMaterialLawManager::applySwatinit).
+        this->enablePcScaling_  = hasPC("G") || fp.has_double("SWATINIT");
     }
 
     if (enablePcScaling_ && enableLeverettScaling_) {

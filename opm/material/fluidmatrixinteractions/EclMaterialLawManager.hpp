@@ -157,6 +157,10 @@ public:
      * pressure. The reason this method is not folded directly into initFromState() is
      * that the capillary pressure given depends on the particuars of how the simulator
      * calculates its initial condition.
+     *
+     * In runs with an active oil phase the oil/water capillary pressure curve is
+     * scaled and \p pcow is Po - Pw.  In two-phase gas/water runs the gas/water
+     * capillary pressure curve is scaled instead and \p pcow must be Pg - Pw.
      */
     std::pair<Scalar, bool>
     applySwatinit(unsigned elemIdx,
@@ -442,6 +446,7 @@ public:
                                    unsigned elemIdx);
 
     EclEpsScalingPoints<Scalar>& oilWaterScaledEpsPointsDrainage(unsigned elemIdx);
+    EclEpsScalingPoints<Scalar>& gasWaterScaledEpsPointsDrainage(unsigned elemIdx);
 
     const EclEpsScalingPointsInfo<Scalar>& oilWaterScaledEpsInfoDrainage(std::size_t elemIdx) const
     { return params_.oilWaterScaledEpsInfoDrainage[elemIdx]; }

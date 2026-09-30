@@ -148,6 +148,13 @@ applySwatinit(unsigned elemIdx,
     if (Sw <= elemScaledEpsInfo.Swl)
         Sw = elemScaledEpsInfo.Swl;
 
+    // Two-phase gas/water runs have no oil/water curve: scale the gas/water
+    // Pc curve instead.  Its scaling reference is maxPcgo (see
+    // EclEpsScalingPoints::init for the GasWater system type).
+    const bool gasWater = (threePhaseApproach_ == EclMultiplexerApproach::TwoPhase)
+        && (twoPhaseApproach_ == EclTwoPhaseApproach::GasWater);
+    Scalar& maxPc = gasWater ? elemScaledEpsInfo.maxPcgo : elemScaledEpsInfo.maxPcow;
+
     // specify a fluid state which only stores the saturations
     using FluidState = SimpleModularFluidState<Scalar,
                                                 TraitsT::numPhases,
@@ -167,7 +174,9 @@ applySwatinit(unsigned elemIdx,
     fs.setSaturation(TraitsT::nonWettingPhaseIdx, 0);
     std::array<Scalar, numPhases> pc = { 0 };
     MaterialLaw::capillaryPressures(pc, materialLawParams(elemIdx), fs);
-    Scalar pcowAtSw = pc[oilPhaseIdx] - pc[waterPhaseIdx];
+    const Scalar pcowAtSw = gasWater
+        ? pc[gasPhaseIdx] - pc[waterPhaseIdx]
+        : pc[oilPhaseIdx] - pc[waterPhaseIdx];
     constexpr const Scalar pcowAtSwThreshold = 1.0e-6; //Pascal
 
     // avoid division by very small number and avoid negative PCW at connate Sw
@@ -177,7 +186,7 @@ applySwatinit(unsigned elemIdx,
     }
 
     // Sufficiently positive value, continue with max. capillary pressure (PCW) scaling to honor SWATINIT value
-    Scalar newMaxPcow = elemScaledEpsInfo.maxPcow * (pcow/pcowAtSw);
+    const Scalar newMaxPcow = maxPc * (pcow/pcowAtSw);
 
     // Limit max. capillary pressure with PPCWMAX
     bool newSwatInit = false;
@@ -188,7 +197,7 @@ applySwatinit(unsigned elemIdx,
         newSwatInit = true;
         if (modifySwl_[satRegionIdx] == false) {
             // Max. cap. pressure set to PCWO in PPCWMAX
-            elemScaledEpsInfo.maxPcow = maxAllowPc_[satRegionIdx];
+            maxPc = maxAllowPc_[satRegionIdx];
         }
         else {
             // Max. cap. pressure remains unscaled and connate Sw is set to SWATINIT value
@@ -197,12 +206,18 @@ applySwatinit(unsigned elemIdx,
     }
     // Max. cap. pressure adjusted from SWATINIT data
     else
-        elemScaledEpsInfo.maxPcow = newMaxPcow;
+        maxPc = newMaxPcow;
 
-    auto& elemEclEpsScalingPoints = oilWaterScaledEpsPointsDrainage(elemIdx);
-    elemEclEpsScalingPoints.init(elemScaledEpsInfo,
-                                 oilWaterConfig_,
-                                 EclTwoPhaseSystemType::OilWater);
+    if (gasWater) {
+        gasWaterScaledEpsPointsDrainage(elemIdx).init(elemScaledEpsInfo,
+                                                      gasWaterConfig_,
+                                                      EclTwoPhaseSystemType::GasWater);
+    }
+    else {
+        oilWaterScaledEpsPointsDrainage(elemIdx).init(elemScaledEpsInfo,
+                                                      oilWaterConfig_,
+                                                      EclTwoPhaseSystemType::OilWater);
+    }
 
     return {Sw, newSwatInit};
 }
@@ -427,6 +442,17 @@ owsepdHelper(MaterialLawParamsT& mlp)
         return mlp.oilWaterParams().scaledPoints();
     }
 }
+
+template<class TraitsT, class MaterialLawParamsT>
+EclEpsScalingPoints<typename TraitsT::Scalar>&
+gwsepdHelper(MaterialLawParamsT& mlp)
+{
+    if constexpr(TraitsT::enableHysteresis) {
+        return mlp.gasWaterParams().drainageParams().scaledPoints();
+    } else {
+        return mlp.gasWaterParams().scaledPoints();
+    }
+}
 } // anon namespace
 
 template<class TraitsT>
@@ -458,6 +484,21 @@ oilWaterScaledEpsPointsDrainage(unsigned elemIdx)
     default:
         throw std::logic_error("Enum value for material approach unknown!");
     }
+}
+
+template<class TraitsT>
+EclEpsScalingPoints<typename TraitsT::Scalar>&
+Manager<TraitsT>::
+gasWaterScaledEpsPointsDrainage(unsigned elemIdx)
+{
+    // Gas/water parameters exist only in the two-phase multiplexer approach.
+    auto& materialParams = params_.materialLawParams[elemIdx];
+    if (materialParams.approach() != EclMultiplexerApproach::TwoPhase) {
+        throw std::logic_error("Gas/water scaled end points are only available in two-phase gas/water runs");
+    }
+
+    auto& realParams = materialParams.template getRealParams<EclMultiplexerApproach::TwoPhase>();
+    return gwsepdHelper<Traits>(realParams);
 }
 
 template<class TraitsT>
