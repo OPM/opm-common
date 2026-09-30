@@ -529,10 +529,16 @@ BOOST_AUTO_TEST_CASE(LGRHEADERS_3WELLS)
                 // BOOST_CHECK_EQUAL(intehead_lgr1[Ix::NGMAXZ], 2);
                 // BOOST_CHECK_EQUAL(intehead_lgr2[Ix::NGMAXZ], 2);
 
-                BOOST_CHECK_EQUAL(intehead_global[Ix::NWMAXZ],3);     // Maximum number of groups in field
-                // following code should be enabled once we fixed AggregateGroupData LGR
-                // BOOST_CHECK_EQUAL(intehead_lgr1[Ix::NWMAXZ], 2);
-                // BOOST_CHECK_EQUAL(intehead_lgr2[Ix::NWMAXZ], 2);
+                BOOST_CHECK_EQUAL(intehead_global[Ix::NWMAXZ],3);     // Maximum number of wells in field (WELLDIMS)
+                // Each LGR grid is dimensioned for the wells it actually contains
+                // (minimum 1 for array allocation), NOT the field-global WELLDIMS value.
+                BOOST_CHECK_EQUAL(intehead_lgr1[Ix::NWMAXZ], 1);
+                BOOST_CHECK_EQUAL(intehead_lgr2[Ix::NWMAXZ], 1);
+
+                // Model-total LGR count, present in every grid's header
+                BOOST_CHECK_EQUAL(intehead_global[Ix::NLGR], 2);
+                BOOST_CHECK_EQUAL(intehead_lgr1[Ix::NLGR], 2);
+                BOOST_CHECK_EQUAL(intehead_lgr2[Ix::NLGR], 2);
 
             }
 
@@ -613,10 +619,14 @@ BOOST_AUTO_TEST_CASE(LGRHEADERS_DIFFGROUP)
                 // BOOST_CHECK_EQUAL(intehead_lgr1[Ix::NGMAXZ], 2);
                 // BOOST_CHECK_EQUAL(intehead_lgr2[Ix::NGMAXZ], 2);
 
-                BOOST_CHECK_EQUAL(intehead_global[Ix::NWMAXZ],3);     // Maximum number of groups in field
-                // following code should be enabled once we fixed AggregateGroupData LGR
-                // BOOST_CHECK_EQUAL(intehead_lgr1[Ix::NWMAXZ], 2);
-                // BOOST_CHECK_EQUAL(intehead_lgr2[Ix::NWMAXZ], 2);
+                BOOST_CHECK_EQUAL(intehead_global[Ix::NWMAXZ],3);     // Maximum number of wells in field (WELLDIMS)
+                BOOST_CHECK_EQUAL(intehead_lgr1[Ix::NWMAXZ], 2);      // two wells in LGR1
+                BOOST_CHECK_EQUAL(intehead_lgr2[Ix::NWMAXZ], 1);      // no wells in LGR2 -> minimum allocation 1
+
+                // Model-total LGR count, present in every grid's header
+                BOOST_CHECK_EQUAL(intehead_global[Ix::NLGR], 2);
+                BOOST_CHECK_EQUAL(intehead_lgr1[Ix::NLGR], 2);
+                BOOST_CHECK_EQUAL(intehead_lgr2[Ix::NLGR], 2);
 
 
 
@@ -714,10 +724,16 @@ BOOST_AUTO_TEST_CASE(LGRHEADERS_GROUPEX01)
                 // BOOST_CHECK_EQUAL(intehead_lgr3[Ix::NGMAXZ], 2);
 
 
-                BOOST_CHECK_EQUAL(intehead_global[Ix::NWMAXZ],4);     // Maximum number of groups in field
-                BOOST_CHECK_EQUAL(intehead_lgr1[Ix::NWMAXZ], 4);
-                BOOST_CHECK_EQUAL(intehead_lgr2[Ix::NWMAXZ], 4);
-                BOOST_CHECK_EQUAL(intehead_lgr3[Ix::NWMAXZ], 4);
+                BOOST_CHECK_EQUAL(intehead_global[Ix::NWMAXZ],4);     // Maximum number of wells in field (WELLDIMS)
+                BOOST_CHECK_EQUAL(intehead_lgr1[Ix::NWMAXZ], 2);      // two wells in LGR1
+                BOOST_CHECK_EQUAL(intehead_lgr2[Ix::NWMAXZ], 1);      // no wells in LGR2 -> minimum allocation 1
+                BOOST_CHECK_EQUAL(intehead_lgr3[Ix::NWMAXZ], 1);      // no wells in LGR3 -> minimum allocation 1
+
+                // Model-total LGR count, present in every grid's header
+                BOOST_CHECK_EQUAL(intehead_global[Ix::NLGR], 3);
+                BOOST_CHECK_EQUAL(intehead_lgr1[Ix::NLGR], 3);
+                BOOST_CHECK_EQUAL(intehead_lgr2[Ix::NLGR], 3);
+                BOOST_CHECK_EQUAL(intehead_lgr3[Ix::NLGR], 3);
 
 
             }

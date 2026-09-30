@@ -154,7 +154,7 @@ enum index : std::vector<int>::size_type {
   ih_092       =       92       ,              //       0       0
   ih_093       =       93       ,              //       0       0
   IPROG        =       VI::intehead::IPROG,    //       0       100
-  INITSIZE     =       95       ,              //       0       0
+  NLGR         =       VI::intehead::NLGR,     //       0       0
   ih_096       =       96       ,              //       0       0
   ih_097       =       97       ,              //       0       0
   ih_098       =       98       ,              //       0       0
@@ -506,6 +506,17 @@ Opm::RestartIO::InteHEAD&
 Opm::RestartIO::InteHEAD::numActive(const int nactive)
 {
     this->data_[NACTIV] = nactive;
+
+    return *this;
+}
+
+Opm::RestartIO::InteHEAD&
+Opm::RestartIO::InteHEAD::numLocalGrids(const int nlgr)
+{
+    // Model-total count of local grid refinements, written to every
+    // grid's header.  Restart readers cross-check this count against the
+    // input description and select the local-grid restore path from it.
+    this->data_[NLGR] = nlgr;
 
     return *this;
 }
