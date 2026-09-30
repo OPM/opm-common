@@ -59,8 +59,10 @@
 #include <array>
 #include <cmath>
 #include <cstddef>
+#include <iterator>
 #include <numbers>
 #include <optional>
+#include <ranges>
 #include <span>
 #include <stdexcept>
 #include <string>
@@ -326,29 +328,30 @@ namespace Opm {
         return result;
     }
 
-    std::vector<const Connection*>
+    std::vector<std::size_t>
     WellConnections::output(const EclipseGrid& grid) const
     {
-        auto out = std::vector<const Connection*>{};
-        out.reserve(this->m_connections.size());
+        auto out = std::vector<std::size_t>{};
 
         if (this->m_connections.empty()) {
             return out;
         }
 
-        for (const auto& conn : this->m_connections) {
-            if (grid.isCellActive(conn.getI(), conn.getJ(), conn.getK())) {
-                out.push_back(&conn);
-            }
-        }
+        auto activeConns = std::views::iota(std::size_t{0}, this->m_connections.size())
+            | std::views::filter([&grid, this](const std::size_t idx) {
+                const auto& conn = this->m_connections[idx];
+                return grid.isCellActive(conn.getI(), conn.getJ(), conn.getK());
+            });
+
+        out.reserve(this->m_connections.size());
+        std::ranges::copy(activeConns, std::back_inserter(out));
 
         if (! this->m_connections[0].attachedToSegment() &&
             (this->m_ordering != Connection::Order::INPUT))
         {
-            std::ranges::sort(out,
-                              [](const Opm::Connection* conn1,
-                                 const Opm::Connection* conn2)
-                              { return conn1->sort_value() < conn2->sort_value(); });
+            std::ranges::sort(out, [this](const auto c1, const auto c2) {
+                return this->m_connections[c1].sort_value() < this->m_connections[c2].sort_value();
+            });
         }
 
         return out;

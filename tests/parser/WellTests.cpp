@@ -125,10 +125,13 @@ BOOST_AUTO_TEST_CASE(WellCOMPDATtestTRACK) {
     }
 
     // Output / input ordering
-    const auto& output_connections = completions.output(grid);
-    std::vector<int> expected = {0,2,3,4,5,6,7,8,1};
+    const auto output_connections = completions.output(grid);
+    const auto expected = std::vector {0, 2, 3, 4, 5, 6, 7, 8, 1};
+
+    BOOST_REQUIRE_EQUAL(expected.size(), output_connections.size());
+
     for (std::size_t k = 0; k < completions.size(); ++k) {
-        BOOST_CHECK_EQUAL( expected[k], output_connections[k]->getK());
+        BOOST_CHECK_EQUAL(expected[k], completions[output_connections[k]].getK());
     }
 }
 
@@ -186,10 +189,13 @@ DATES             -- 2
     }
 
     // Output / input ordering
-    const auto& output_connections = completions.output(grid);
-    std::vector<int> expected = {0,2,3,4,5,6,7,8,1};
+    const auto expected = std::vector {0, 2, 3, 4, 5, 6, 7, 8, 1};
+    const auto output_connections = completions.output(grid);
+
+    BOOST_REQUIRE_EQUAL(expected.size(), output_connections.size());
+
     for (std::size_t k = 0; k < completions.size(); ++k) {
-        BOOST_CHECK_EQUAL( expected[k], output_connections[k]->getK());
+        BOOST_CHECK_EQUAL(expected[k], completions[output_connections[k]].getK());
     }
 }
 

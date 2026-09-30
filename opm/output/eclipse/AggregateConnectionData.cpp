@@ -75,35 +75,38 @@ namespace {
             ? &grid.getLGRCell(well.get_lgr_well_tag().value())
             : &grid;
 
-        std::size_t connID = 0;
-        bool skip_connection = false;
-        int connection_counter = 0;
-        std::string last_connection_lgr_tag = "";
-        for (const auto* connPtr : well.getConnections().output(*lgrid)) {
-            if (connPtr->kind() == Opm::Connection::CTFKind::DynamicFracturing) {
+        auto skip_connection = false;
+        auto connection_counter = 0;
+        auto last_connection_lgr_tag = std::string {};
+
+        auto connID = std::size_t{};
+
+        for (const auto& connIdx : well.getConnections().output(*lgrid)) {
+            const auto& conn = well.getConnections()[connIdx];
+
+            if (conn.kind() == Opm::Connection::CTFKind::DynamicFracturing) {
                 // Don't emit, or count, connections created by dynamic fracturing.
                 continue;
             }
-            std::string current_lgr_lgr_tag = well.get_lgr_well_tag().value_or("");
 
-            if (well.is_lgr_well()) {
-                if ((current_lgr_lgr_tag == last_connection_lgr_tag) and (connection_counter > 0)) {
-                    // After the first connection of a LGR well, subsequent connections of the same well are skipped.
-                    skip_connection = true;
-                }
-            }
+            const auto current_lgr_lgr_tag = well.get_lgr_well_tag().value_or("");
+
+            skip_connection = well.is_lgr_well()
+                && (current_lgr_lgr_tag == last_connection_lgr_tag)
+                && (connection_counter > 0);
 
             const auto* dynConnRes = (wellRes == nullptr)
-                ? nullptr : wellRes->find_connection(connPtr->global_index());
+                ? nullptr : wellRes->find_connection(conn.global_index());
 
-            if ((!skip_connection) or (!global_grid)) {
-                connOp(wellName, wellID, isProd, *connPtr, connID,
-                       connPtr->global_index(), dynConnRes);
+            if (!skip_connection || !global_grid) {
+                connOp(wellName, wellID, isProd, conn, connID,
+                       conn.global_index(), dynConnRes);
             }
 
             skip_connection = false;
             last_connection_lgr_tag = current_lgr_lgr_tag;
-            connection_counter++;
+
+            ++connection_counter;
             ++connID;
         }
     }
