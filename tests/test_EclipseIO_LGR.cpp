@@ -1122,3 +1122,43 @@ BOOST_AUTO_TEST_CASE(EclipseIOLGR_IntegrationNNCLGR)
         BOOST_CHECK(!hasArray("TRANLL"));
     }
 }
+
+namespace {
+
+// deckStringLGR with its CARFIN keywords replaced by the given GRID keywords.
+std::string deckStringLGRWithGridKeywords(const std::string& keywords)
+{
+    const auto carfin_pos = deckStringLGR.find("CARFIN");
+    const auto init_pos = deckStringLGR.find("INIT");
+    return deckStringLGR.substr(0, carfin_pos) + keywords + deckStringLGR.substr(init_pos);
+}
+
+} // Anonymous namespace
+
+// An LGR over several host cells spreads its cells evenly over them: an LGR
+// cell's DX, DY and DZ are those of its host cell divided by the LGR cells per
+// host cell in that direction, its pore volume that of its host cell divided
+// by the LGR cells per host cell.
+BOOST_AUTO_TEST_CASE(EclipseIOLGR_INIT_SeveralHostCells)
+{
+    const auto deck = Parser().parseString(deckStringLGRWithGridKeywords(R"(CARFIN
+    'LGR1'  1  2  1  1  1  1  6  3  1 /
+    ENDFIN
+    )"));
+
+    WorkArea work_area("test_ecl_writer_lgr_several_hosts");
+    auto es = EclipseState( deck );
+    const Schedule schedule(deck, es, std::make_shared<Python>());
+    const SummaryConfig summary_config( deck, schedule, es.fieldProps(), es.aquifer());
+    es.getIOConfig().setBaseName( "FOO" );
+    EclipseIO eclWriter( es, es.getInputGrid(), schedule, summary_config);
+    eclWriter.writeInitial( );
+
+    EclIO::EInit init { "FOO.INIT" };
+    // Two host cells of 1000 ft x 1000 ft x 50 ft, 3 x 3 x 1 LGR cells each.
+    checkVectorsClose(init.getInitData<float>("DX", "LGR1"), std::vector<float>(18, 1000.0f/3), 1e-4, "DX LGR1");
+    checkVectorsClose(init.getInitData<float>("DY", "LGR1"), std::vector<float>(18, 1000.0f/3), 1e-4, "DY LGR1");
+    checkVectorsClose(init.getInitData<float>("DZ", "LGR1"), std::vector<float>(18, 50.0f), 1e-4, "DZ LGR1");
+    // 1000 ft x 1000 ft x 50 ft x 0.3 / 9 LGR cells per host, in rb.
+    checkVectorsClose(init.getInitData<float>("PORV", "LGR1"), std::vector<float>(18, 296846.0f), 1e-3, "PORV LGR1");
+}
