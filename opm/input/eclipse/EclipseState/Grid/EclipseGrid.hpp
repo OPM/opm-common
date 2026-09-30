@@ -394,6 +394,7 @@ namespace Opm {
         int initializeLGRObjectIndices(int);
         void initializeLGRTreeIndices(void);
         void propagateParentIndicesToLGRChildren(int);
+        void propagateACTNUMToLGRChildren();
         void updateNumericalAquiferCells(const Deck&);
         double computeCellGeometricDepth(std::size_t globalIndex) const;
 
