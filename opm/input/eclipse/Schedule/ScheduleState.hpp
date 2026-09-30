@@ -220,6 +220,10 @@ namespace Opm {
                 this->m_data.insert_or_assign(key, std::move(value));
             }
 
+            void erase(const K& key) {
+                this->m_data.erase(key);
+            }
+
             void update(T object) {
                 auto key = object.name();
                 this->m_data[key] = std::make_shared<T>( std::move(object) );
@@ -657,8 +661,11 @@ namespace Opm {
         // constant flux aquifers
         std::unordered_map<int, SingleAquiferFlux> aqufluxs;
         BCState bcstate;
-        // injection streams for compositional STREAM injection using WINJGAS and WINJOIL
+        // injection streams for compositional STREAM injection using WINJGAS, WINJOIL and GINJGAS
         map_member<std::string, std::vector<double>> inj_streams;
+        // GINJGAS streams keyed by group name.  A group without one injects
+        // the gas of a superior group.
+        map_member<std::string, std::vector<double>> group_gas_inj_streams;
 
         std::unordered_map<std::string, double> target_wellpi;
         std::optional<NextStep> next_tstep;
@@ -702,6 +709,7 @@ namespace Opm {
             serializer(aqufluxs);
             serializer(bcstate);
             serializer(inj_streams);
+            serializer(group_gas_inj_streams);
             serializer(target_wellpi);
             serializer(this->next_tstep);
             serializer(m_start_time);

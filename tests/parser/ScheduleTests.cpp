@@ -6080,6 +6080,69 @@ FIELDSEP
     BOOST_CHECK_CLOSE  (g.recovery(0, 2), 0.70, 1e-9);
 }
 
+BOOST_AUTO_TEST_CASE(GINJGAS_sets_the_group_gas_injection_stream) {
+    const auto sched = make_schedule(gptable_deck(R"(
+GRUPTREE
+ 'INJ' 'FIELD' /
+ 'GI1' 'INJ' /
+ 'GI2' 'INJ' /
+/
+WELLSTRE
+ 'GAS1' 0.8 0.2 0.0 /
+ 'GAS2' 0.7 0.3 0.0 /
+/
+GINJGAS
+ 'GI*' 'STREAM' 'GAS1' /
+ 'FIELD' 'ST' 'GAS2' /
+/
+TSTEP
+ 1 /
+GINJGAS
+ 'GI2' /
+/
+TSTEP
+ 1 /
+)"));
+
+    const auto& streams = sched[0].group_gas_inj_streams;
+    for (const auto* group : { "GI1", "GI2" }) {
+        BOOST_REQUIRE(streams.has(group));
+        BOOST_CHECK_CLOSE(streams.get(group)[0], 0.8, 1.0e-10);
+    }
+    BOOST_CHECK(streams.get_ptr("GI1") != streams.get_ptr("GI2"));
+    BOOST_CHECK(streams.get_ptr("GI1") != sched[0].inj_streams.get_ptr("GAS1"));
+    BOOST_REQUIRE(streams.has("FIELD"));
+    BOOST_CHECK_CLOSE(streams.get("FIELD")[0], 0.7, 1.0e-10);
+
+    // A group without a stream of its own injects the gas of a superior group.
+    BOOST_CHECK(!streams.has("INJ"));
+
+    // The default fluid nature GRUP removes the stream of GI2 only.
+    const auto& next_streams = sched[1].group_gas_inj_streams;
+    BOOST_REQUIRE(next_streams.has("GI1"));
+    BOOST_CHECK_CLOSE(next_streams.get("GI1")[0], 0.8, 1.0e-10);
+    BOOST_CHECK(!next_streams.has("GI2"));
+}
+
+BOOST_AUTO_TEST_CASE(GINJGAS_rejects_other_fluids_and_unknown_streams) {
+    const auto ginjgas_deck = [](const std::string& record) {
+        return gptable_deck(R"(
+GRUPTREE
+ 'GI1' 'FIELD' /
+/
+WELLSTRE
+ 'GAS1' 0.8 0.2 0.0 /
+/
+GINJGAS
+)" + record + "\n/\n");
+    };
+
+    BOOST_CHECK_NO_THROW(make_schedule(ginjgas_deck(" 'GI1' 'STREAM' 'GAS1' /")));
+    BOOST_CHECK_THROW(make_schedule(ginjgas_deck(" 'GI1' 'GV' 'FIELD' /")), Opm::OpmInputError);
+    BOOST_CHECK_THROW(make_schedule(ginjgas_deck(" 'GI1' 'STREAM' 'GAS2' /")), Opm::OpmInputError);
+    BOOST_CHECK_THROW(make_schedule(ginjgas_deck(" 'GI1' 'STREAM' /")), Opm::OpmInputError);
+}
+
 
 BOOST_AUTO_TEST_CASE(WPAVE) {
     const std::string deck_string = R"(

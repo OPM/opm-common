@@ -19,6 +19,7 @@
 
 #include "GroupKeywordHandlers.hpp"
 
+#include <opm/common/utility/OpmInputError.hpp>
 #include <opm/common/utility/String.hpp>
 
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
@@ -50,6 +51,7 @@
 
 #include <fmt/format.h>
 
+#include <memory>
 #include <optional>
 #include <string>
 #include <utility>
@@ -630,6 +632,62 @@ void handleGEFAC(HandlerContext& handlerContext)
     }
 }
 
+void handleGINJGAS(HandlerContext& handlerContext)
+{
+    using Kw = ParserKeywords::GINJGAS;
+    const auto& location = handlerContext.keyword.location();
+
+    // MAKEUPGAS and STAGE only apply to gas taken from production (GV, WV),
+    // which is rejected below.
+    for (const auto& record : handlerContext.keyword) {
+        const std::string& groupNamePattern = record.getItem<Kw::GROUP>().getTrimmedString(0);
+        const auto group_names = handlerContext.groupNames(groupNamePattern);
+        if (group_names.empty()) {
+            handlerContext.invalidNamePattern(groupNamePattern);
+        }
+
+        // Only the first two characters of the fluid nature are significant.
+        // GRUP leaves the group without a stream of its own, so that it
+        // injects the gas of a superior group.
+        const std::string fluid_nature = record.getItem<Kw::FLUID>().getTrimmedString(0);
+        auto stream = std::optional<std::vector<double>>{};
+        if (fluid_nature.starts_with("ST")) {
+            const auto& stream_item = record.getItem<Kw::STREAM>();
+            if (!stream_item.hasValue(0) || stream_item.defaultApplied(0)) {
+                throw OpmInputError(fmt::format("Item 3 of GINJGAS is defaulted for {}. The item "
+                                                "has no default and must name a WELLSTRE stream.",
+                                                groupNamePattern),
+                                    location);
+            }
+
+            const std::string stream_name = stream_item.getTrimmedString(0);
+            const auto& inj_streams = handlerContext.state().inj_streams;
+            if (!inj_streams.has(stream_name)) {
+                throw OpmInputError(fmt::format("The stream '{}' is not defined in "
+                                                "WELLSTRE keyword.", stream_name),
+                                    location);
+            }
+            stream = inj_streams.get(stream_name);
+        }
+        else if (!fluid_nature.starts_with("GR")) {
+            throw OpmInputError(fmt::format("The fluid nature '{}' is not supported "
+                                            "in GINJGAS keyword.", fluid_nature),
+                                location);
+        }
+
+        auto& group_streams = handlerContext.state().group_gas_inj_streams;
+        for (const auto& group_name : group_names) {
+            // A copy per group, so that no two groups share a stream object.
+            if (stream.has_value()) {
+                group_streams.update(group_name, std::make_shared<std::vector<double>>(*stream));
+            }
+            else {
+                group_streams.erase(group_name);
+            }
+        }
+    }
+}
+
 void handleGPMAINT(HandlerContext& handlerContext)
 {
     using Kw = ParserKeywords::GPMAINT;
@@ -752,6 +810,7 @@ getGroupHandlers()
         { "GCONSUMP", &handleGCONSUMP },
         { "GECON"   , &handleGECON    },
         { "GEFAC"   , &handleGEFAC    },
+        { "GINJGAS" , &handleGINJGAS  },
         { "GPMAINT" , &handleGPMAINT  },
         { "GRUPTREE", &handleGRUPTREE },
         { "GSATINJE", &handleGSATINJE },
