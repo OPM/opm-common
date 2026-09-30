@@ -30,9 +30,10 @@
 
 #include <opm/common/Exceptions.hpp>
 #include <opm/common/utility/SparseTable.hpp>
+#include <opm/common/utility/gpuDecorators.hpp>
 
-#include <opm/material/common/Valgrind.hpp>
 #include <opm/material/common/MathToolbox.hpp>
+#include <opm/material/common/Valgrind.hpp>
 
 #include <cassert>
 #include <cmath>
@@ -59,7 +60,7 @@ class UniformXTabulated2DFunctionBuilder;
  * \c UniformXTabulated2DFunctionBuilder, whose \c build() method returns the
  * evaluation-ready object constructed here.
  */
-template <class Scalar>
+template <class Scalar, template <typename, typename...> class Storage = std::vector>
 class UniformXTabulated2DFunction
 {
 public:
@@ -167,17 +168,17 @@ public:
         return xPos_.at(i);
     }
 
-    const SparseTable<SamplePoint>& samples() const
+    const SparseTable<SamplePoint, Storage>& samples() const
     {
         return samples_;
     }
 
-    const std::vector<Scalar>& xPos() const
+    const Storage<Scalar>& xPos() const
     {
         return xPos_;
     }
 
-    const std::vector<Scalar>& yPos() const
+    const Storage<Scalar>& yPos() const
     {
         return yPos_;
     }
@@ -201,7 +202,7 @@ public:
     /*!
      * \brief Return the interval index of a given position on the x-axis.
      */
-    template <class Evaluation>
+    OPM_HOST_DEVICE template <class Evaluation>
     unsigned xSegmentIndex(const Evaluation& x,
                            [[maybe_unused]] bool extrapolate = false) const
     {
@@ -238,7 +239,7 @@ public:
      * The returned value can be larger than 1 or smaller than zero if it is outside of
      * the range of the segment. In particular this happens for the extrapolation case.
      */
-    template <class Evaluation>
+    OPM_HOST_DEVICE template <class Evaluation>
     Evaluation xToAlpha(const Evaluation& x, unsigned segmentIdx) const
     {
         Scalar x1 = xPos_[segmentIdx];
@@ -249,7 +250,7 @@ public:
     /*!
      * \brief Return the interval index of a given position on the y-axis.
      */
-    template <class Evaluation>
+    OPM_HOST_DEVICE template <class Evaluation>
     unsigned ySegmentIndex(const Evaluation& y, unsigned xSampleIdx,
                            [[maybe_unused]] bool extrapolate = false) const
     {
@@ -287,7 +288,7 @@ public:
      * The returned value can be larger than 1 or smaller than zero if it is outside of
      * the range of the segment. In particular this happens for the extrapolation case.
      */
-    template <class Evaluation>
+    OPM_HOST_DEVICE template <class Evaluation>
     Evaluation yToBeta(const Evaluation& y, unsigned xSampleIdx, unsigned ySegmentIdx) const
     {
         assert(xSampleIdx < numX());
@@ -304,7 +305,7 @@ public:
     /*!
      * \brief Returns true iff a coordinate lies in the tabulated range
      */
-    template <class Evaluation>
+    OPM_HOST_DEVICE template <class Evaluation>
     bool applies(const Evaluation& x, const Evaluation& y) const
     {
         if (x < xMin() || xMax() < x)
@@ -332,7 +333,7 @@ public:
      * If this method is called for a value outside of the tabulated
      * range, a \c Opm::NumericalIssue exception is thrown.
      */
-    template <class Evaluation>
+    OPM_HOST_DEVICE template <class Evaluation>
     Evaluation eval(const Evaluation& x, const Evaluation& y, bool extrapolate=false) const
     {
         Evaluation alpha, beta1, beta2;
@@ -341,7 +342,7 @@ public:
         return eval(i, j1, j2, alpha, beta1, beta2);
     }
 
-    template <class Evaluation>
+    OPM_HOST_DEVICE template <class Evaluation>
     void findPoints(unsigned& i,
                     unsigned& j1,
                     unsigned& j2,
@@ -353,6 +354,7 @@ public:
                     bool extrapolate) const
     {
 #ifndef NDEBUG
+#if !OPM_IS_INSIDE_DEVICE_FUNCTION
         if (!extrapolate && !applies(x, y)) {
             if constexpr (std::is_floating_point_v<Evaluation>) {
                 throw NumericalProblem("Attempt to get undefined table value (" +
@@ -365,7 +367,7 @@ public:
             }
         };
 #endif
-
+#endif
         // bi-linear interpolation: first, calculate the x and y indices in the lookup
         // table ...
         i = xSegmentIndex(x, extrapolate);
@@ -409,7 +411,7 @@ public:
         beta2 = yToBeta(yUpper, i + 1, j2);
     }
 
-    template <class Evaluation>
+    OPM_HOST_DEVICE template <class Evaluation>
     Evaluation eval(const unsigned& i, const unsigned& j1, const unsigned& j2, const Evaluation& alpha,const Evaluation& beta1,const Evaluation& beta2) const
     {
         // evaluate the two function values for the same y value ...
@@ -434,7 +436,7 @@ public:
      */
     void print(std::ostream& os) const;
 
-    bool operator==(const UniformXTabulated2DFunction<Scalar>& data) const {
+    bool operator==(const UniformXTabulated2DFunction<Scalar, Storage>& data) const {
         return this->xPos() == data.xPos() &&
                this->yPos() == data.yPos() &&
                this->samples() == data.samples() &&
@@ -444,9 +446,9 @@ public:
 private:
     friend class UniformXTabulated2DFunctionBuilder<Scalar>;
 
-    UniformXTabulated2DFunction(SparseTable<SamplePoint>&& samples,
-                                std::vector<Scalar>&& xPos,
-                                std::vector<Scalar>&& yPos,
+    UniformXTabulated2DFunction(SparseTable<SamplePoint, Storage>&& samples,
+                                Storage<Scalar>&& xPos,
+                                Storage<Scalar>&& yPos,
                                 InterpolationPolicy interpolationGuide)
         : samples_(std::move(samples))
         , xPos_(std::move(xPos))
@@ -457,12 +459,12 @@ private:
     // the table which contains the values of the sample points f(x_i, y_j), stored
     // row-major (one row per x position). Don't use this directly, use
     // getSamplePoint(i,j) instead!
-    SparseTable<SamplePoint> samples_;
+    SparseTable<SamplePoint, Storage> samples_;
 
     // the position of each vertical line on the x-axis
-    std::vector<Scalar> xPos_;
+    Storage<Scalar> xPos_;
     // the position on the y-axis of the guide point
-    std::vector<Scalar> yPos_;
+    Storage<Scalar> yPos_;
     InterpolationPolicy interpolationGuide_;
 };
 } // namespace Opm
