@@ -6109,6 +6109,8 @@ TSTEP
         BOOST_REQUIRE(streams.has(group));
         BOOST_CHECK_CLOSE(streams.get(group)[0], 0.8, 1.0e-10);
     }
+    BOOST_CHECK(streams.get_ptr("GI1") != streams.get_ptr("GI2"));
+    BOOST_CHECK(streams.get_ptr("GI1") != sched[0].inj_streams.get_ptr("GAS1"));
     BOOST_REQUIRE(streams.has("FIELD"));
     BOOST_CHECK_CLOSE(streams.get("FIELD")[0], 0.7, 1.0e-10);
 

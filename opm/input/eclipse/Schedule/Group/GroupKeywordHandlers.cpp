@@ -650,7 +650,7 @@ void handleGINJGAS(HandlerContext& handlerContext)
         // GRUP leaves the group without a stream of its own, so that it
         // injects the gas of a superior group.
         const std::string fluid_nature = record.getItem<Kw::FLUID>().getTrimmedString(0);
-        auto stream = std::shared_ptr<std::vector<double>>{};
+        auto stream = std::optional<std::vector<double>>{};
         if (fluid_nature.starts_with("ST")) {
             const auto& stream_item = record.getItem<Kw::STREAM>();
             if (!stream_item.hasValue(0) || stream_item.defaultApplied(0)) {
@@ -667,9 +667,7 @@ void handleGINJGAS(HandlerContext& handlerContext)
                                                 "WELLSTRE keyword.", stream_name),
                                     location);
             }
-            // WELLSTRE replaces its entries rather than changing them, so the
-            // shared entry keeps the composition given here.
-            stream = inj_streams.get_ptr(stream_name);
+            stream = inj_streams.get(stream_name);
         }
         else if (!fluid_nature.starts_with("GR")) {
             throw OpmInputError(fmt::format("The fluid nature '{}' is not supported "
@@ -679,8 +677,9 @@ void handleGINJGAS(HandlerContext& handlerContext)
 
         auto& group_streams = handlerContext.state().group_gas_inj_streams;
         for (const auto& group_name : group_names) {
-            if (stream) {
-                group_streams.update(group_name, stream);
+            // A copy per group, so that no two groups share a stream object.
+            if (stream.has_value()) {
+                group_streams.update(group_name, std::make_shared<std::vector<double>>(*stream));
             }
             else {
                 group_streams.erase(group_name);
