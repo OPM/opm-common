@@ -75,7 +75,7 @@ namespace {
                                0, depth, ctf_props, k, false);
         }
 
-        return { Opm::Connection::Order::INPUT, i, j, conns };
+        return { i, j, conns };
     }
 
     Opm::WellConnections centreProducer(const int numLayers = 10,
@@ -121,7 +121,7 @@ namespace {
                                0, depth, ctf_props, k - topConn, false);
         }
 
-        return { Opm::Connection::Order::INPUT, i, j, conns };
+        return { i, j, conns };
     }
 
     Opm::WellConnections horizontalProducer_X(const std::array<int,3>& dims,
@@ -153,7 +153,7 @@ namespace {
                                0, depth, ctf_props, i - left, false);
         }
 
-        return { Opm::Connection::Order::INPUT, left, j, conns };
+        return { left, j, conns };
     }
 
     Opm::EclipseGrid shoeBox(const std::array<int,3>& dims)
