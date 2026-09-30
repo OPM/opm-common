@@ -53,7 +53,7 @@ namespace {
 void handleCOMPSEGS(HandlerContext& handlerContext)
 {
     const auto& record1 = handlerContext.keyword.getRecord(0);
-    const std::string& wname = record1.getItem<ParserKeywords::COMPSEGS::WELL>().getTrimmedString(0);
+    const auto wname = record1.getItem<ParserKeywords::COMPSEGS::WELL>().getTrimmedString(0);
 
     if (!handlerContext.state().wells.has(wname)) {
         const auto& location = handlerContext.keyword.location();
@@ -80,7 +80,8 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         return;
     }
 
-    if (well.handleCOMPSEGS(handlerContext.keyword, handlerContext.grid,
+    if (const auto compord = handlerContext.state().compord().getConnectionOrder(wname);
+        well.handleCOMPSEGS(compord, handlerContext.keyword, handlerContext.grid,
                             handlerContext.parseContext, handlerContext.errors))
     {
         handlerContext.state().wells.update(std::move(well));
