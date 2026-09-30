@@ -2319,9 +2319,14 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
     {
         const EclipseGridLGR& lgr_cell = getLGRCell(lgr_tag);
         const std::string& father_label  = lgr_cell.get_father_label();
-        acum = {static_cast<int>(acum[0]*lgr_cell.getNX()),
-                static_cast<int>(acum[1]*lgr_cell.getNY()),
-                static_cast<int>(acum[2]*lgr_cell.getNZ())};
+        // The LGR cells per host cell: an LGR spreads its cells evenly over
+        // its host cells.
+        const auto& low = lgr_cell.get_low_fatherIJK();
+        const auto& up = lgr_cell.get_up_fatherIJK();
+        const auto nxyz = lgr_cell.getNXYZ();
+        for (auto i = 0*nxyz.size(); i < nxyz.size(); ++i) {
+            acum[i] *= nxyz[i] / (up[i] - low[i] + 1);
+        }
         if (father_label == "GLOBAL")
         {
             return acum;
