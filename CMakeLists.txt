@@ -65,7 +65,7 @@ macro(opm-common_prereqs_hook)
 
   if(OPM_ENABLE_DUNE)
     find_package(dune-common REQUIRED)
-    target_link_libraries(opmcommon PUBLIC dunecommon)
+    target_link_libraries(opmcommon PUBLIC Dune::Common)
   endif()
 endmacro()
 
