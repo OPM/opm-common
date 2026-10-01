@@ -170,7 +170,9 @@ namespace Opm {
         bool operator!=( const WellConnections& ) const;
 
         Connection::Order ordering() const { return this->m_ordering; }
-        std::vector<const Connection *> output(const EclipseGrid& grid) const;
+
+        std::vector<std::size_t>
+        output(const EclipseGrid& grid) const;
 
         /// Activate or reactivate WELPI scaling for this connection set.
         ///
