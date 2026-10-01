@@ -469,6 +469,16 @@ BOOST_AUTO_TEST_CASE(TestAction_AST_BASIC)
     //Extra data
     BOOST_REQUIRE_THROW(Action::AST(std::vector<std::string>{"0.75", "<", "1.0", "EXTRA"}), std::invalid_argument);
 
+    // Embedded arithmetic/grouping token must not be accepted as RHS keyword.
+    BOOST_REQUIRE_THROW(Action::AST(std::vector<std::string>{
+        "FUPSKS", "<", "(FUIPSKS-FUDP)", "AND", "FUBOB", "<", "1.0"
+    }), std::invalid_argument);
+
+    // Malformed LHS keyword token must be rejected.
+    BOOST_REQUIRE_THROW(Action::AST(std::vector<std::string>{
+        "FU-PSKS", "<", "1.0"
+    }), std::invalid_argument);
+
     Action::AST ast1({"WWCT", "OPX", ">", "0.75"});
     Action::AST ast2({"WWCT", "OPX", "=", "WWCT", "OPX"});
     Action::AST ast3({"WWCT", "OPY", ">", "0.75"});
