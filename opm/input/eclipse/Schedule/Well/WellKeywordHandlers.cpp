@@ -843,6 +843,14 @@ void handleWELSPECL(HandlerContext& handlerContext)
     for (const auto& record : handlerContext.keyword) {
         const auto wellName = getTrimmedName(record.getItem<Kw::WELL>());
         const auto lgrTag = getTrimmedName(record.getItem<Kw::LGR>());
+        if ((handlerContext.grid.get_grid() != nullptr) &&
+            ! handlerContext.grid.has_lgr(lgrTag))
+        {
+            throw OpmInputError(fmt::format("Unknown local grid refinement '{}' for well {}",
+                                            lgrTag, wellName),
+                                handlerContext.keyword.location());
+        }
+
         const auto& [tagPos, inserted] = lgr_well_seq_map.try_emplace(lgrTag, 0);
         if (! inserted) {
             // lgrTag already exists in the map, increase sequence number.
