@@ -73,6 +73,18 @@ public:
             Scalar Tr = temperature / FluidSystem::criticalTemperature(compIdx);
             Scalar OmegaA = OmegaA_(temperature, compIdx);
             Scalar OmegaB = OmegaB_();
+            // OMEGAA and OMEGAB replace the constants of the equation per component.
+            // Fluid systems without support for them keep the constants.
+            if constexpr (requires { FluidSystem::omegaA(0u); }) {
+                if (const auto omegaA = FluidSystem::omegaA(compIdx)) {
+                    OmegaA *= *omegaA / constantOmegaA_();
+                }
+            }
+            if constexpr (requires { FluidSystem::omegaB(0u); }) {
+                if (const auto omegaB = FluidSystem::omegaB(compIdx)) {
+                    OmegaB = *omegaB;
+                }
+            }
 
             Scalar newA = OmegaA * pr / (Tr * Tr);
             Scalar newB = OmegaB * pr / Tr;
@@ -266,6 +278,22 @@ private:
                 return SRK::calcOmegaB();
             default:
                 throw std::runtime_error("EOS type not implemented!");
+        }
+    }
+
+    //! \brief The \f$\Omega_a\f$ that OmegaA_() includes, before temperature scaling.
+    Scalar constantOmegaA_() const
+    {
+        switch (EosType_) {
+        case EOSType::PRCORR:
+        case EOSType::PR:
+            return PR::omegaA();
+        case EOSType::RK:
+            return RK::omegaA();
+        case EOSType::SRK:
+            return SRK::omegaA();
+        default:
+            throw std::runtime_error("EOS type not implemented!");
         }
     }
 

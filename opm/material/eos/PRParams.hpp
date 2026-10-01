@@ -39,6 +39,12 @@ class PRParams
     static constexpr Scalar R = Constants<Scalar>::R;
 
 public:
+    //! The equation's own \f$\Omega_a\f$, which OMEGAA replaces per component.
+    static constexpr double omegaA()
+    {
+        return 0.457235529;
+    }
+
     static Scalar calcOmegaA(Scalar temperature, unsigned compIdx, bool modified)
     {
         Scalar Tr = temperature / FluidSystem::criticalTemperature(compIdx);
@@ -51,7 +57,7 @@ public:
         Valgrind::CheckDefined(f_omega);
 
         Scalar tmp = 1 + f_omega*(1 - sqrt(Tr));
-        return 0.457235529 * tmp * tmp;
+        return omegaA() * tmp * tmp;
     }
 
     static Scalar calcOmegaB()

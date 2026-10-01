@@ -712,6 +712,7 @@ list(APPEND DUNE_TEST_SOURCE_FILES
   tests/material/test_cubiceos_finite_guard.cpp
   tests/material/test_eclblackoilfluidsystemnonstatic.cpp
   tests/material/test_eclblackoilpvt.cpp
+  tests/material/test_eos_omega.cpp
   tests/material/test_fluidmatrixinteractions.cpp
   tests/material/test_fluidsystems.cpp
   tests/material/test_h2brinepvt.cpp
