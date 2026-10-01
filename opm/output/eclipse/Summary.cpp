@@ -2222,8 +2222,47 @@ inline quantity res_vol_production_target( const fn_args& args )
     return { sum, measure::rate };
 }
 
+/// Production rate limit in force for a slave group of a reservoir
+/// coupling slave run, if the simulator has reported one.
+///
+/// As slave_group_injection_target(), for the production limits: a slave
+/// group's limit for a rate type is decided by the master run, combined with
+/// the slave's own GCONPROD limit as the group's GRUPSLAV flag says.  The
+/// simulator reports it per group and rate type in SI units, and this
+/// function returns it as a quantity in the given measure.  Groups without a
+/// reported limit -- every group of a non-coupled run, and a slave group
+/// whose own deck limit applies -- get their limit from the schedule as
+/// usual.
+inline std::optional<quantity>
+slave_group_production_target(const fn_args& args,
+                              const Opm::Group::ProductionCMode cmode,
+                              const measure rate_unit)
+{
+    if (args.rc_rates == nullptr) {
+        return std::nullopt;
+    }
+
+    const auto groupPos = args.rc_rates->production_targets.find(args.group_name);
+    if (groupPos == args.rc_rates->production_targets.end()) {
+        return std::nullopt;
+    }
+
+    const auto cmodePos = groupPos->second.find(cmode);
+    if (cmodePos == groupPos->second.end()) {
+        return std::nullopt;
+    }
+
+    return quantity { cmodePos->second, rate_unit };
+}
+
 inline quantity group_oil_production_target( const fn_args& args )
 {
+    if (const auto target = slave_group_production_target(args, Opm::Group::ProductionCMode::ORAT, measure::rate);
+        target.has_value())
+    {
+        return *target;
+    }
+
     const auto& groups = args.schedule[args.sim_step].groups;
     const double value = groups.has(args.group_name) ? groups.get(args.group_name).productionControls(args.st).oil_target : 0.0;
 
@@ -2232,6 +2271,12 @@ inline quantity group_oil_production_target( const fn_args& args )
 
 inline quantity group_gas_production_target( const fn_args& args )
 {
+    if (const auto target = slave_group_production_target(args, Opm::Group::ProductionCMode::GRAT, measure::gas_surface_rate);
+        target.has_value())
+    {
+        return *target;
+    }
+
     const auto& groups = args.schedule[args.sim_step].groups;
     const double value = groups.has(args.group_name) ? groups.get(args.group_name).productionControls(args.st).gas_target : 0.0;
 
@@ -2240,6 +2285,12 @@ inline quantity group_gas_production_target( const fn_args& args )
 
 inline quantity group_water_production_target( const fn_args& args )
 {
+    if (const auto target = slave_group_production_target(args, Opm::Group::ProductionCMode::WRAT, measure::rate);
+        target.has_value())
+    {
+        return *target;
+    }
+
     const auto& groups = args.schedule[args.sim_step].groups;
     const double value = groups.has(args.group_name) ? groups.get(args.group_name).productionControls(args.st).water_target : 0.0;
 
@@ -2248,6 +2299,12 @@ inline quantity group_water_production_target( const fn_args& args )
 
 inline quantity group_liquid_production_target( const fn_args& args )
 {
+    if (const auto target = slave_group_production_target(args, Opm::Group::ProductionCMode::LRAT, measure::rate);
+        target.has_value())
+    {
+        return *target;
+    }
+
     const auto& groups = args.schedule[args.sim_step].groups;
     const double value = groups.has(args.group_name) ? groups.get(args.group_name).productionControls(args.st).liquid_target : 0.0;
 
