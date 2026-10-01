@@ -27,6 +27,8 @@
 #include <opm/common/Exceptions.hpp>
 
 #include <opm/material/Constants.hpp>
+#include <opm/material/common/MathToolbox.hpp>
+#include <opm/material/common/Valgrind.hpp>
 
 #include <opm/input/eclipse/EclipseState/Compositional/CompositionalConfig.hpp>
 

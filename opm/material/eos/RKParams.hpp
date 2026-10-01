@@ -26,6 +26,10 @@
 #ifndef RK_PARAMS_HPP
 #define RK_PARAMS_HPP
 
+#include <opm/material/Constants.hpp>
+
+#include <cmath>
+
 namespace Opm {
 
 template <class Scalar, class FluidSystem>

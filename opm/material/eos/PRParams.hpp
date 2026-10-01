@@ -26,6 +26,9 @@
 #ifndef PR_PARAMS_HPP
 #define PR_PARAMS_HPP
 
+#include <opm/material/Constants.hpp>
+#include <opm/material/common/Valgrind.hpp>
+
 #include <cmath>
 
 namespace Opm {

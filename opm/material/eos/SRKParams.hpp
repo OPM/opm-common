@@ -26,6 +26,11 @@
 #ifndef SRK_PARAMS_HPP
 #define SRK_PARAMS_HPP
 
+#include <opm/material/Constants.hpp>
+#include <opm/material/common/Valgrind.hpp>
+
+#include <cmath>
+
 namespace Opm {
 
 template <class Scalar, class FluidSystem>
