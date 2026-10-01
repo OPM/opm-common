@@ -2235,7 +2235,7 @@ inline quantity group_gas_production_target( const fn_args& args )
     const auto& groups = args.schedule[args.sim_step].groups;
     const double value = groups.has(args.group_name) ? groups.get(args.group_name).productionControls(args.st).gas_target : 0.0;
 
-    return { value, measure::rate };
+    return { value, measure::gas_surface_rate };
 }
 
 inline quantity group_water_production_target( const fn_args& args )
