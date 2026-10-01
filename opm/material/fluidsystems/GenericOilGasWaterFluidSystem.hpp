@@ -41,6 +41,7 @@
 #include <array>
 #include <cassert>
 #include <cstddef>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -94,17 +95,28 @@ namespace Opm {
             Scalar critic_vol; // unit: m^3/kmol
             Scalar acentric_factor; // unit: dimension less
             Scalar volume_shift; // dimensionless SSHIFT coefficient
+            // OMEGAA and OMEGAB; unset for the constants of the equation of state
+            std::optional<Scalar> omega_a;
+            std::optional<Scalar> omega_b;
 
-            ComponentParam(const std::string_view name_, const Scalar molar_mass_, const Scalar critic_temp_,
-                           const Scalar critic_pres_, const Scalar critic_vol_, const Scalar acentric_factor_,
-                           const Scalar volume_shift_ = 0.0)
-                    : name(name_),
-                      molar_mass(molar_mass_),
-                      critic_temp(critic_temp_),
-                      critic_pres(critic_pres_),
-                      critic_vol(critic_vol_),
-                      acentric_factor(acentric_factor_),
-                      volume_shift(volume_shift_)
+            ComponentParam(const std::string_view name_,
+                           const Scalar molar_mass_,
+                           const Scalar critic_temp_,
+                           const Scalar critic_pres_,
+                           const Scalar critic_vol_,
+                           const Scalar acentric_factor_,
+                           const Scalar volume_shift_ = 0.0,
+                           const std::optional<Scalar> omega_a_ = std::nullopt,
+                           const std::optional<Scalar> omega_b_ = std::nullopt)
+                : name(name_)
+                , molar_mass(molar_mass_)
+                , critic_temp(critic_temp_)
+                , critic_pres(critic_pres_)
+                , critic_vol(critic_vol_)
+                , acentric_factor(acentric_factor_)
+                , volume_shift(volume_shift_)
+                , omega_a(omega_a_)
+                , omega_b(omega_b_)
             {}
         };
 
@@ -171,19 +183,25 @@ namespace Opm {
 
             const auto& names = comp_config.compName();
             const auto& eos_props = comp_config.eosProps(0);
+            // Absent OMEGAA and OMEGAB entries hold the constants of the EOS type.
+            const auto& omega_a = comp_config.omegaA(0);
+            const auto& omega_b = comp_config.omegaB(0);
             FluidSystem::init();
             using CompParm = typename FluidSystem::ComponentParam;
             for (std::size_t c = 0; c < num_comps; ++c) {
                 // we use m^3/kmol for the critic volume in the flash calculation, so we multiply 1.e3 for the critic volume
-                FluidSystem::addComponent(CompParm{names[c],
-                                                   static_cast<Scalar>(eos_props.molecular_weights[c]),
-                                                   static_cast<Scalar>(eos_props.critical_temperature[c]),
-                                                   static_cast<Scalar>(eos_props.critical_pressure[c]),
-                                                   static_cast<Scalar>(eos_props.critical_volume[c] * 1.e3),
-                                                   static_cast<Scalar>(eos_props.acentric_factors[c]),
-                                                   c < eos_props.volume_shifts.size()
-                                                       ? static_cast<Scalar>(eos_props.volume_shifts[c])
-                                                       : Scalar{0}});
+                FluidSystem::addComponent(
+                    CompParm {names[c],
+                              static_cast<Scalar>(eos_props.molecular_weights[c]),
+                              static_cast<Scalar>(eos_props.critical_temperature[c]),
+                              static_cast<Scalar>(eos_props.critical_pressure[c]),
+                              static_cast<Scalar>(eos_props.critical_volume[c] * 1.e3),
+                              static_cast<Scalar>(eos_props.acentric_factors[c]),
+                              c < eos_props.volume_shifts.size()
+                                  ? static_cast<Scalar>(eos_props.volume_shifts[c])
+                                  : Scalar {0},
+                              static_cast<Scalar>(omega_a[c]),
+                              static_cast<Scalar>(omega_b[c])});
             }
 
             const auto& bic = eos_props.binary_interaction_coefficient;
@@ -246,6 +264,34 @@ namespace Opm {
             assert(compIdx < numComponents);
 
             return component_param_[compIdx].volume_shift;
+        }
+
+        /*!
+         * \brief The \f$\Omega_a\f$ of a component from OMEGAA, or nothing
+         *        when the constant of the equation of state applies.
+         *
+         * \copydetails Doxygen::compIdxParam
+         */
+        static std::optional<Scalar> omegaA(unsigned compIdx)
+        {
+            assert(isConsistent());
+            assert(compIdx < numComponents);
+
+            return component_param_[compIdx].omega_a;
+        }
+
+        /*!
+         * \brief The \f$\Omega_b\f$ of a component from OMEGAB, or nothing
+         *        when the constant of the equation of state applies.
+         *
+         * \copydetails Doxygen::compIdxParam
+         */
+        static std::optional<Scalar> omegaB(unsigned compIdx)
+        {
+            assert(isConsistent());
+            assert(compIdx < numComponents);
+
+            return component_param_[compIdx].omega_b;
         }
 
         /*!
