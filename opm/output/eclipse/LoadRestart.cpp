@@ -1433,6 +1433,11 @@ namespace {
         smry.update_well_var(well, "WWPTH", xwel[VI::XWell::index::HistWatPrTotal]);
         smry.update_well_var(well, "WGPTH", xwel[VI::XWell::index::HistGasPrTotal]);
 
+        // Liquid production history total = WOPTH + WWPTH
+        smry.update_well_var(well, "WLPTH",
+                             xwel[VI::XWell::index::HistOilPrTotal] +
+                             xwel[VI::XWell::index::HistWatPrTotal]);
+
         smry.update_well_var(well, "WWITH", xwel[VI::XWell::index::HistWatInjTotal]);
         smry.update_well_var(well, "WGITH", xwel[VI::XWell::index::HistGasInjTotal]);
 
@@ -1505,6 +1510,12 @@ namespace {
         update("OPTH", xgrp[VI::XGroup::index::HistOilPrTotal]);
         update("WPTH", xgrp[VI::XGroup::index::HistWatPrTotal]);
         update("GPTH", xgrp[VI::XGroup::index::HistGasPrTotal]);
+
+        // Liquid production history total = xOPTH + xWPTH
+        update("LPTH",
+               xgrp[VI::XGroup::index::HistOilPrTotal] +
+               xgrp[VI::XGroup::index::HistWatPrTotal]);
+
         update("WITH", xgrp[VI::XGroup::index::HistWatInjTotal]);
         update("GITH", xgrp[VI::XGroup::index::HistGasInjTotal]);
 
