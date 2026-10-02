@@ -45,6 +45,10 @@ void EclFile::load(bool preload) {
     if (!fileH)
         throw std::runtime_error(fmt::format("Can not open EclFile: {}", this->inputFilename.string()));
 
+    fileH.seekg(0, std::ios_base::end);
+    const auto fileSize = static_cast<std::uint64_t>(fileH.tellg());
+    fileH.seekg(0, std::ios_base::beg);
+
     int n = 0;
     while (!isEOF(&fileH)) {
         std::string arrName(8,' ');
@@ -59,8 +63,29 @@ void EclFile::load(bool preload) {
                 readBinaryHeader(fileH,arrName,num, arrType, sizeOfElement);
             }
         } catch (const std::exception& e){
+            if (this->tolerant) {
+                // The file ends inside an array header. Everything read so far
+                // still stands.
+                this->truncated = true;
+                break;
+            }
+
             OPM_THROW(std::runtime_error,
                 fmt::format("Unable to read array header from {}: {} \nPlease check if the file is corrupt!", this->inputFilename.string(), e.what()));
+        }
+
+        std::uint64_t pos = fileH.tellg();
+
+        const std::uint64_t sizeOfNextArray = (num > 0)
+            ? (formatted ? sizeOnDiskFormatted(num, arrType, sizeOfElement)
+                         : sizeOnDiskBinary(num, arrType, sizeOfElement))
+            : 0;
+
+        if (this->tolerant && ((pos + sizeOfNextArray) > fileSize)) {
+            // The header promises more data than the file holds, so this array
+            // was only partly written. Drop it and keep the rest.
+            this->truncated = true;
+            break;
         }
 
         array_size.push_back(num);
@@ -70,19 +95,12 @@ void EclFile::load(bool preload) {
 
         array_index[array_name[n]] = n;
 
-        std::uint64_t pos = fileH.tellg();
         ifStreamPos.push_back(pos);
 
         arrayLoaded.push_back(false);
 
-        if (num > 0){
-            if (formatted) {
-                std::uint64_t sizeOfNextArray = sizeOnDiskFormatted(num, arrType, sizeOfElement);
-                fileH.seekg(static_cast<std::streamoff>(sizeOfNextArray), std::ios_base::cur);
-            } else {
-                std::uint64_t sizeOfNextArray = sizeOnDiskBinary(num, arrType, sizeOfElement);
-                fileH.seekg(static_cast<std::streamoff>(sizeOfNextArray), std::ios_base::cur);
-            }
+        if (sizeOfNextArray > 0) {
+            fileH.seekg(static_cast<std::streamoff>(sizeOfNextArray), std::ios_base::cur);
         }
 
         n++;
@@ -99,6 +117,18 @@ void EclFile::load(bool preload) {
 
 EclFile::EclFile(const std::filesystem::path& filename, EclFile::Formatted fmt, bool preload) :
     formatted(fmt.value),
+    inputFilename(filename)
+{
+    this->load(preload);
+}
+
+
+EclFile::EclFile(const std::filesystem::path& filename,
+                 EclFile::Formatted fmt,
+                 EclFile::Tolerant tol,
+                 bool preload) :
+    formatted(fmt.value),
+    tolerant(tol.value),
     inputFilename(filename)
 {
     this->load(preload);
