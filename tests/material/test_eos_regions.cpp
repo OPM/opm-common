@@ -81,6 +81,8 @@ struct Region
     std::string_view acf;
     std::string_view bic;
     std::string_view sshift;
+    std::string_view omegaa;
+    std::string_view omegab;
 };
 
 constexpr Region regionOne {"PR",
@@ -90,7 +92,9 @@ constexpr Region regionOne {"PR",
                             "0.0941 0.0986 0.6098",
                             "0.2239 0.0114 0.4884",
                             "0.10 0.0 0.05",
-                            "0.0 0.0 0.0"};
+                            "0.0 0.0 0.0",
+                            "0.4570 0.4575 0.4580",
+                            "0.0777 0.0778 0.0779"};
 
 // Differs from region one in everything but the molecular weights.
 constexpr Region regionTwo {"SRK",
@@ -100,10 +104,12 @@ constexpr Region regionTwo {"SRK",
                             "0.0950 0.0990 0.6200",
                             "0.2300 0.0120 0.4900",
                             "0.20 0.15 0.10",
-                            "-0.05 0.02 0.10"};
+                            "-0.05 0.02 0.10",
+                            "0.4270 0.4275 0.4280",
+                            "0.0865 0.0866 0.0867"};
 
 // The keywords taking one record per EOS region, and the record of each.
-constexpr std::array<std::pair<std::string_view, std::string_view Region::*>, 8> regionKeywords {{
+constexpr std::array<std::pair<std::string_view, std::string_view Region::*>, 10> regionKeywords {{
     {"EOS", &Region::eos},
     {"MW", &Region::mw},
     {"TCRIT", &Region::tcrit},
@@ -112,6 +118,8 @@ constexpr std::array<std::pair<std::string_view, std::string_view Region::*>, 8>
     {"ACF", &Region::acf},
     {"BIC", &Region::bic},
     {"SSHIFT", &Region::sshift},
+    {"OMEGAA", &Region::omegaa},
+    {"OMEGAB", &Region::omegab},
 }};
 
 std::string
@@ -219,6 +227,8 @@ checkRegionTwoProperties()
             BOOST_CHECK_EQUAL(FluidSystem::criticalVolume(c), ReferenceSystem::criticalVolume(c));
             BOOST_CHECK_EQUAL(FluidSystem::acentricFactor(c), ReferenceSystem::acentricFactor(c));
             BOOST_CHECK_EQUAL(FluidSystem::volumeShift(c), ReferenceSystem::volumeShift(c));
+            BOOST_CHECK_EQUAL(FluidSystem::omegaA(c).value(), ReferenceSystem::omegaA(c).value());
+            BOOST_CHECK_EQUAL(FluidSystem::omegaB(c).value(), ReferenceSystem::omegaB(c).value());
             for (unsigned other = 0; other < numComponents; ++other) {
                 BOOST_CHECK_EQUAL(FluidSystem::interactionCoefficient(c, other),
                                   ReferenceSystem::interactionCoefficient(c, other));
@@ -257,6 +267,8 @@ BOOST_FIXTURE_TEST_CASE(FirstRegionIsSelectedByDefault, Fixture)
     }
     BOOST_CHECK_EQUAL(FluidSystem::interactionCoefficient(0, 1), 0.10);
     BOOST_CHECK_EQUAL(FluidSystem::volumeShift(0), 0.0);
+    BOOST_CHECK_EQUAL(FluidSystem::omegaA(0).value(), 0.4570);
+    BOOST_CHECK_EQUAL(FluidSystem::omegaB(0).value(), 0.0777);
 
     const auto densityOne = gasProperties<FluidSystem>(EOSType::SRK).first;
     const FluidSystem::ScopedEosRegion region {1};
