@@ -354,23 +354,47 @@ namespace Opm { namespace data {
     /// DynamicSimulatorState.
     ///
     /// A master run fills the rates of its master groups (production and
-    /// injection), so that rate-based summary vectors (FOPR, GOPR, ...)
-    /// include what the slaves produce and inject.  A slave run fills the
+    /// injection), together with their potentials, lift gas, history rates
+    /// and numbers of flowing wells, so that the summary vectors of the
+    /// master groups and their ancestors (FOPR, GOPR, GOPP, GGLIR, GOPRH,
+    /// GMWPR, ...) include what the slaves report.  A slave run fills the
     /// injection targets and production limits in force for its slave
     /// groups, so that GGIRT/GWIRT and GOPRT/GWPRT/GGPRT/GLPRT report what
     /// the master imposed.  Each run fills only its own part; the other maps
     /// stay empty.
     struct ReservoirCouplingGroupRates {
+        /// Quantities of a slave group, summed over its wells with the
+        /// efficiency factors of the wells and of the groups below it, as for
+        /// a group rate summary vector of the slave run.
         struct ProductionRates {
             double oil{0}, gas{0}, water{0}, resv{0};
+            /// Reservoir rates per phase (resv is their sum), for GVPR/GVPT.
+            double resv_oil{0}, resv_gas{0}, resv_water{0};
+            /// Lift gas rate, as GGLIR of the slave run.
+            double gas_lift{0};
+            /// Production potentials, as GOPP/GWPP/GGPP of the slave run.
+            double potential_oil{0}, potential_gas{0}, potential_water{0};
+            /// Production history rates, as GOPRH/GWPRH/GGPRH of the slave run.
+            double history_oil{0}, history_gas{0}, history_water{0};
         };
         struct InjectionRates {
             double surface{0}, reservoir{0};
+            /// Injection potential, as GWPI/GGPI/GOPI of the slave run.
+            double potential{0};
+            /// Injection history rate, as GWIRH/GGIRH/GOIRH of the slave run.
+            double history{0};
+        };
+        /// Number of flowing wells of a slave group, as GMWPR/GMWIN of the
+        /// slave run.
+        struct FlowingWells {
+            int producers{0}, injectors{0};
         };
         /// Per master-group production rates (positive values, SI units).
         std::map<std::string, ProductionRates> production;
         /// Per master-group, per-phase injection rates (SI units).
         std::map<std::string, std::map<Opm::Phase, InjectionRates>> injection;
+        /// Per master-group number of flowing wells.
+        std::map<std::string, FlowingWells> flowing_wells;
 
         /// Per slave-group, per-phase surface injection rate target in force
         /// in a slave run (SI units): the target the master imposed, combined
