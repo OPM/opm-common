@@ -372,3 +372,12 @@ BOOST_AUTO_TEST_CASE(LgrOnOffSchedule)
         BOOST_CHECK_THROW((Schedule { deck, es }), OpmInputError);
     }
 }
+
+// WELSPECL must name a local grid refinement of the run.
+BOOST_AUTO_TEST_CASE(WellLGRUnknownLocalGrid)
+{
+    const auto deck = Parser{}.parseString(
+        lgrOnOffDeck("WELSPECL\n'PROD' 'G1' 'NOSUCH' 1 1 8400 'OIL' /\n/\n", ""));
+    const auto es = EclipseState { deck };
+    BOOST_CHECK_THROW((Schedule { deck, es }), OpmInputError);
+}
