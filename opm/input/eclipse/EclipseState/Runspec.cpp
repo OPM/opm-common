@@ -308,6 +308,8 @@ NetworkDims::NetworkDims(const Deck& deck)
     }
     else if (deck.hasKeyword<ParserKeywords::GRUPNET>()) {
         this->type_ = Type::Standard;
+    } else if (deck.hasKeyword<ParserKeywords::GNETINJE>()) {
+        this->type_ = Type::Standard;
     }
 }
 
