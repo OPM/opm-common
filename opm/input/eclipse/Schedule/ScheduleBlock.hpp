@@ -57,6 +57,9 @@ public:
                   const time_point& start_time);
     std::size_t size() const;
     void push_back(const DeckKeyword& keyword);
+
+    /// Put \p keywords ahead of the block's own, in the order given.
+    void push_front(const std::vector<DeckKeyword>& keywords);
     std::optional<DeckKeyword> get(const std::string& kw) const;
     const time_point& start_time() const;
     const std::optional<time_point>& end_time() const;

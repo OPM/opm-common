@@ -128,3 +128,21 @@ int Opm::FIPRegionStatistics::maximumRegionID(std::string_view regionSet) const
 
     return this->maxRegionID_[ std::distance(this->regionSets_.begin(), regSetPos) ];
 }
+
+void Opm::FIPRegionStatistics::raiseMaximumRegionID(std::string_view regionSet,
+                                                    const int        regionID)
+{
+    const auto rset = normalisedRegsetName(std::string { regionSet });
+    auto regSetPos = std::lower_bound(this->regionSets_.begin(),
+                                      this->regionSets_.end(),
+                                      rset);
+
+    const auto ix = std::distance(this->regionSets_.begin(), regSetPos);
+    if ((regSetPos == this->regionSets_.end()) || (*regSetPos != rset)) {
+        this->regionSets_.insert(regSetPos, rset);
+        this->maxRegionID_.insert(this->maxRegionID_.begin() + ix, regionID);
+        return;
+    }
+
+    this->maxRegionID_[ix] = std::max(this->maxRegionID_[ix], regionID);
+}

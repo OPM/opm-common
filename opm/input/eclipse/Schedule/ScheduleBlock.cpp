@@ -52,6 +52,11 @@ void ScheduleBlock::push_back(const DeckKeyword& keyword)
     this->m_keywords.push_back(keyword);
 }
 
+void ScheduleBlock::push_front(const std::vector<DeckKeyword>& keywords)
+{
+    this->m_keywords.insert(this->m_keywords.begin(), keywords.begin(), keywords.end());
+}
+
 std::optional<DeckKeyword> ScheduleBlock::get(const std::string& kw) const
 {
     const auto kwPos = std::ranges::find_if(this->m_keywords,

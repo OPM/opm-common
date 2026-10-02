@@ -170,6 +170,58 @@ FIPRE2
     BOOST_CHECK_EQUAL(fipStats.maximumRegionID("FIPRE2"), 2);
 }
 
+// A sector model refers to regions of the model it was cut out of, which
+// may be numbered higher than any of its own, or belong to a region set it
+// does not have at all.
+BOOST_AUTO_TEST_CASE(Raise_Maximum_Region_ID)
+{
+    auto fipStats = Opm::FIPRegionStatistics {
+        3, fieldProps(R"(RUNSPEC
+DIMENS
+5 1 2 /
+GRID
+DXV
+5*100 /
+DYV
+100 /
+DZV
+2*5 /
+DEPTHZ
+12*2000 /
+PORO
+10*0.3 /
+REGIONS
+FIPRE2
+1 1 1 1 1
+2 2 2 2 2 /
+)"), [](std::vector<int>&) {}
+    };
+
+    BOOST_CHECK_EQUAL(fipStats.maximumRegionID("RE2"), 2);
+
+    // Raised, with or without the 'FIP' prefix.
+    fipStats.raiseMaximumRegionID("FIPRE2", 7);
+    BOOST_CHECK_EQUAL(fipStats.maximumRegionID("RE2"), 7);
+
+    // Never lowered.
+    fipStats.raiseMaximumRegionID("RE2", 4);
+    BOOST_CHECK_EQUAL(fipStats.maximumRegionID("FIPRE2"), 7);
+
+    // An unknown region set is added, and the sets stay sorted.
+    fipStats.raiseMaximumRegionID("FIPABC", 3);
+    BOOST_CHECK_EQUAL(fipStats.maximumRegionID("ABC"), 3);
+    BOOST_CHECK_EQUAL(fipStats.maximumRegionID("NUM"), 1);
+
+    {
+        const auto expextRegSets = std::vector {
+            std::string{ "ABC" }, std::string{ "NUM" }, std::string{ "RE2" },
+        };
+        const auto& regSets = fipStats.regionSets();
+        BOOST_CHECK_EQUAL_COLLECTIONS(regSets      .begin(), regSets      .end(),
+                                      expextRegSets.begin(), expextRegSets.end());
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END() // Sequential
 
 // ---------------------------------------------------------------------------

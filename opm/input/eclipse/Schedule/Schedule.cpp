@@ -1983,6 +1983,63 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
         Schedule::applyKeywords(keywords, target_wellpi, action_mode, this->current_report_step);
     }
 
+    void Schedule::insertKeywords(const std::map<std::size_t, std::vector<DeckKeyword>>& keywordsByStep,
+                                  const ParseContext& parseContext,
+                                  ErrorGuard& errors)
+    {
+        if (keywordsByStep.empty()) {
+            return;
+        }
+
+        const auto first = keywordsByStep.begin()->first;
+        const auto last = keywordsByStep.rbegin()->first;
+        if (first < this->current_report_step) {
+            throw std::invalid_argument {
+                fmt::format("Insert keywords for past report step {} "
+                            "requested, current report step is {}.",
+                            first, this->current_report_step)
+            };
+        }
+        if (last >= this->m_sched_deck.size()) {
+            throw std::invalid_argument {
+                fmt::format("Insert keywords for report step {} requested "
+                            "which exceeds the total number of report steps {}.",
+                            last, this->m_sched_deck.size() - 1)
+            };
+        }
+
+        for (auto it = std::next(keywordsByStep.begin()); it != keywordsByStep.end(); ++it) {
+            this->m_sched_deck.mutableKeywordBlock(it->first).push_front(it->second);
+        }
+
+        ScheduleGrid grid(this->completed_cells, this->completed_cells_lgr, this->completed_cells_lgr_map);
+        SimulatorUpdate sim_update;
+        std::unordered_map<std::string, double> target_wellpi;
+        std::unordered_map<std::string, double> wpimult_global_factor;
+        const auto matches = Action::Result{false}.matches();
+
+        this->snapshots.resize(first + 1);
+
+        auto& input_block = this->m_sched_deck.mutableKeywordBlock(first);
+        for (const auto& keyword : keywordsByStep.begin()->second) {
+            input_block.push_back(keyword);
+            this->handleKeyword(first, input_block, keyword, parseContext, errors, grid,
+                                matches, /*action_mode=*/false, &sim_update,
+                                &target_wellpi, wpimult_global_factor);
+        }
+
+        this->applyGlobalWPIMULT(wpimult_global_factor);
+        this->end_report(first);
+
+        if (first < this->m_sched_deck.size() - 1) {
+            this->iterateScheduleSection(first + 1, this->m_sched_deck.size(),
+                                         parseContext, errors, grid, &target_wellpi,
+                                         /*prefix=*/"| ",
+                                         /*keepKeywords=*/true,
+                                         /*log_to_debug=*/true);
+        }
+    }
+
     void Schedule::applyKeywords(std::vector<std::unique_ptr<DeckKeyword>>& keywords, std::unordered_map<std::string, double>& target_wellpi,
                                  bool action_mode, const std::size_t reportStep)
     {

@@ -460,6 +460,24 @@ namespace Opm {
         void applyKeywords(std::vector<std::unique_ptr<DeckKeyword>>& keywords, std::unordered_map<std::string, double>& target_wellpi, bool action_mode, std::size_t report_step);
         void applyKeywords(std::vector<std::unique_ptr<DeckKeyword>>& keywords, std::unordered_map<std::string, double>& target_wellpi, bool action_mode);
 
+        /// Insert keywords at several report steps and rebuild the schedule
+        /// once.
+        ///
+        /// The keywords of every step but the earliest go ahead of that
+        /// step's own keywords; those of the earliest are applied after its
+        /// own, as applyKeywords() applies them. The schedule is then rebuilt
+        /// from the earliest step on, a single time. Calling applyKeywords()
+        /// step by step instead rebuilds the rest of the schedule after every
+        /// call, and each of those rebuilds sees only the keywords inserted so
+        /// far, so a later keyword that refers to something inserted at a
+        /// later step fails in all but the last.
+        ///
+        /// \p parseContext and \p errors are the caller's, so that the
+        /// rebuild is held to the same input checks as the original run.
+        void insertKeywords(const std::map<std::size_t, std::vector<DeckKeyword>>& keywordsByStep,
+                            const ParseContext& parseContext,
+                            ErrorGuard& errors);
+
         template<class Serializer>
         void serializeOp(Serializer& serializer)
         {
