@@ -26,6 +26,9 @@
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 
 #include <filesystem>
+#include <string>
+
+#include <fmt/format.h>
 
 using namespace Opm;
 
@@ -516,4 +519,76 @@ SCHEDULE
     Opm::EclipseState state(deck);
     [[maybe_unused]] Opm::LgrCollection lgrs = state.getLgrs();
     // LGR Inactive Cells Not yet Implemented
+}
+
+namespace {
+
+// A 3 x 3 x NZ grid of 1000 ft x 1000 ft x 20 ft cells whose GRID section
+// starts with the given keywords (CARFIN, ACTNUM).
+Opm::EclipseGrid gridWithLgrs(const int nz, const std::string& grid_keywords)
+{
+    const auto deck = Opm::Parser{}.parseString(fmt::format(R"(
+RUNSPEC
+DIMENS
+  3 3 {0} /
+OIL
+GAS
+START
+16 JUN 1988 /
+GRID
+{1}
+DX
+  {2}*1000 /
+DY
+  {2}*1000 /
+DZ
+  {2}*20 /
+TOPS
+  9*8325 /
+PORO
+  {2}*0.15 /
+PERMX
+  {2}*1 /
+COPY
+  PERMX PERMZ /
+  PERMX PERMY /
+/
+PROPS
+REGIONS
+SOLUTION
+SCHEDULE
+)", nz, grid_keywords, 9 * nz));
+
+    return Opm::EclipseState(deck).getInputGrid();
+}
+
+} // Anonymous namespace
+
+BOOST_AUTO_TEST_CASE(TestLGRresetACTNUM) {
+    auto eclipse_grid = gridWithLgrs(1, R"(
+CARFIN
+'LGR1'  1  2  1  1  1  1  6  3  1 /
+ENDFIN
+CARFIN
+'LGR2'  3  3  3  3  1  1  3  3  1 /
+ENDFIN
+)");
+    BOOST_CHECK_EQUAL( eclipse_grid.getLGRCell("LGR1").getNumActive() , 18U );
+
+    // Host cell (2,1) of LGR1 turned off after input, as the simulator does
+    // for MINPV: its LGR cells become inactive, the others stay active.
+    std::vector<int> actnum(9, 1);
+    actnum[1] = 0;
+    eclipse_grid.resetACTNUM(actnum);
+
+    const auto& lgr1 = eclipse_grid.getLGRCell("LGR1");
+    BOOST_CHECK_EQUAL( lgr1.getNumActive() , 9U );
+    BOOST_CHECK( lgr1.cellActive(2,2,0) );
+    BOOST_CHECK( !lgr1.cellActive(3,0,0) );
+    BOOST_CHECK_EQUAL( eclipse_grid.getLGRCell("LGR2").getNumActive() , 9U );
+
+    // The host cell back on: its LGR cells keep their activity, as a host
+    // never makes an LGR cell active.
+    eclipse_grid.resetACTNUM();
+    BOOST_CHECK_EQUAL( eclipse_grid.getLGRCell("LGR1").getNumActive() , 9U );
 }
