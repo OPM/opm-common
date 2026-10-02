@@ -8567,4 +8567,137 @@ BOOST_AUTO_TEST_CASE(RC_GroupRates_In_Summary)
     BOOST_CHECK_CLOSE(st.get("FOPR"), oil_rate_si / sm3_pr_day(), 1e-5);
 }
 
+// Test that the other master group quantities reported by the slaves
+// (reservoir rates, lift gas, potentials, history rates, flowing wells)
+// appear in the group summary vectors and are accumulated up to FIELD.
+// No coupled run: the quantities a reservoir coupling master would pass to
+// Summary::eval() are set directly for G_1, which stands in for a master group.
+BOOST_AUTO_TEST_CASE(RC_GroupQuantities_In_Summary)
+{
+    setup cfg("test_summary_rc_quantities");
+
+    auto writer = out::Summary {
+        cfg.config, cfg.es, cfg.grid, cfg.schedule, cfg.name
+    };
+
+    auto st = SummaryState {
+        TimeService::now(), cfg.es.runspec().udqParams().undefinedValue()
+    };
+
+    data::ReservoirCouplingGroupRates rc_rates;
+    auto& prod = rc_rates.production["G_1"];
+    prod.oil = 100.0 * sm3_pr_day();
+    prod.resv_oil = 110.0 * rm3_pr_day();
+    prod.resv_gas = 30.0 * rm3_pr_day();
+    prod.resv_water = 20.0 * rm3_pr_day();
+    prod.resv = prod.resv_oil + prod.resv_gas + prod.resv_water;
+    prod.gas_lift = 5000.0 * sm3_pr_day();
+    prod.potential_oil = 300.0 * sm3_pr_day();
+    prod.potential_gas = 40000.0 * sm3_pr_day();
+    prod.potential_water = 60.0 * sm3_pr_day();
+    prod.history_oil = 90.0 * sm3_pr_day();
+    prod.history_gas = 45000.0 * sm3_pr_day();
+    prod.history_water = 25.0 * sm3_pr_day();
+
+    rc_rates.injection["G_1"][Phase::WATER] = {
+        .surface = 200.0 * sm3_pr_day(), .reservoir = 210.0 * rm3_pr_day(),
+        .potential = 700.0 * sm3_pr_day(), .history = 250.0 * sm3_pr_day()
+    };
+
+    rc_rates.flowing_wells["G_1"] = { .producers = 3, .injectors = 2 };
+
+    // No well data: everything comes from the master group quantities.
+    auto values = out::Summary::DynamicSimulatorState{};
+    values.group_and_nwrk_solution = &cfg.grp_nwrk;
+    values.rc_group_rates = &rc_rates;
+
+    writer.eval(/*report_step=*/0, /*secs_elapsed=*/0.0 * day, values, st);
+    writer.eval(/*report_step=*/1, /*secs_elapsed=*/1.0 * day, values, st);
+
+    BOOST_CHECK_CLOSE(st.get_group_var("G_1", "GVPR"), 160.0, 1e-5);
+    BOOST_CHECK_CLOSE(st.get_group_var("G_1", "GVIR"), 210.0, 1e-5);
+    BOOST_CHECK_CLOSE(st.get_group_var("G_1", "GGLIR"), 5000.0, 1e-5);
+    BOOST_CHECK_CLOSE(st.get_group_var("G_1", "GOPP"), 300.0, 1e-5);
+    BOOST_CHECK_CLOSE(st.get_group_var("G_1", "GGPP"), 40000.0, 1e-5);
+    BOOST_CHECK_CLOSE(st.get_group_var("G_1", "GWPP"), 60.0, 1e-5);
+    BOOST_CHECK_CLOSE(st.get_group_var("G_1", "GWPI"), 700.0, 1e-5);
+    BOOST_CHECK_CLOSE(st.get_group_var("G_1", "GOPRH"), 90.0, 1e-5);
+    BOOST_CHECK_CLOSE(st.get_group_var("G_1", "GGPRH"), 45000.0, 1e-5);
+    BOOST_CHECK_CLOSE(st.get_group_var("G_1", "GWIRH"), 250.0, 1e-5);
+    BOOST_CHECK_CLOSE(st.get_group_var("G_1", "GOPTH"), 90.0, 1e-5);
+    BOOST_CHECK_CLOSE(st.get_group_var("G_1", "GWITH"), 250.0, 1e-5);
+    BOOST_CHECK_CLOSE(st.get_group_var("G_1", "GMWPR"), 3.0, 1e-5);
+    BOOST_CHECK_CLOSE(st.get_group_var("G_1", "GMWIN"), 2.0, 1e-5);
+
+    // Accumulated through the group tree to FIELD.
+    BOOST_CHECK_CLOSE(st.get("FOPP"), 300.0, 1e-5);
+    BOOST_CHECK_CLOSE(st.get("FOPRH"), 90.0, 1e-5);
+    BOOST_CHECK_CLOSE(st.get("FMWPR"), 3.0, 1e-5);
+    BOOST_CHECK_CLOSE(st.get("FMWIN"), 2.0, 1e-5);
+}
+
+// Test that the totals built on the master group quantities apply the same
+// group efficiency factors as GOPT: the group's own and its ancestors'.
+// No coupled run: the quantities a reservoir coupling master would pass to
+// Summary::eval() are set directly for G_3, which stands in for a master group.
+// G_3 has GEFAC 0.02 and its parent G_4 GEFAC 0.03/0.04 (SUMMARY_RC_EFF_FAC.DATA).
+// The exact factor depends on the schedule step, so the totals are checked
+// against GOPT, which accumulates the oil rate with the cumulative factor.
+BOOST_AUTO_TEST_CASE(RC_GroupTotals_EfficiencyFactors)
+{
+    setup cfg("test_summary_rc_eff_fac", "SUMMARY_RC_EFF_FAC.DATA", false);
+
+    auto writer = out::Summary {
+        cfg.config, cfg.es, cfg.grid, cfg.schedule, cfg.name
+    };
+
+    auto st = SummaryState {
+        TimeService::now(), cfg.es.runspec().udqParams().undefinedValue()
+    };
+
+    data::ReservoirCouplingGroupRates rc_rates;
+    auto& prod = rc_rates.production["G_3"];
+    prod.oil = 100.0 * sm3_pr_day();
+    prod.resv_oil = 110.0 * rm3_pr_day();
+    prod.resv_gas = 30.0 * rm3_pr_day();
+    prod.resv_water = 20.0 * rm3_pr_day();
+    prod.resv = prod.resv_oil + prod.resv_gas + prod.resv_water;
+    prod.history_oil = 90.0 * sm3_pr_day();
+    rc_rates.injection["G_3"][Phase::WATER] = {
+        .surface = 200.0 * sm3_pr_day(), .reservoir = 210.0 * rm3_pr_day(),
+        .potential = 0.0, .history = 0.0
+    };
+
+    // No well data: everything comes from the master group quantities.
+    auto values = out::Summary::DynamicSimulatorState{};
+    values.group_and_nwrk_solution = &cfg.grp_nwrk;
+    values.rc_group_rates = &rc_rates;
+
+    writer.eval(/*report_step=*/0, /*secs_elapsed=*/0.0 * day, values, st);
+    writer.eval(/*report_step=*/1, /*secs_elapsed=*/1.0 * day, values, st);
+
+    // The rates do not include the group's own efficiency factor.
+    BOOST_CHECK_CLOSE(st.get_group_var("G_3", "GOPR"), 100.0, 1e-5);
+    BOOST_CHECK_CLOSE(st.get_group_var("G_3", "GVPR"), 160.0, 1e-5);
+    BOOST_CHECK_CLOSE(st.get_group_var("G_3", "GVIR"), 210.0, 1e-5);
+    BOOST_CHECK_CLOSE(st.get_group_var("G_3", "GOPRH"), 90.0, 1e-5);
+
+    // The totals include it, and the factor is not 1 here.
+    const double gopt = st.get_group_var("G_3", "GOPT");
+    BOOST_CHECK(gopt > 0.0);
+    BOOST_CHECK(gopt < 0.5 * 100.0);
+    BOOST_CHECK_CLOSE(st.get_group_var("G_3", "GVPT"), gopt * 160.0 / 100.0, 1e-5);
+    BOOST_CHECK_CLOSE(st.get_group_var("G_3", "GVIT"), gopt * 210.0 / 100.0, 1e-5);
+    BOOST_CHECK_CLOSE(st.get_group_var("G_3", "GOPTH"), gopt * 90.0 / 100.0, 1e-5);
+
+    // Likewise at the parent group and at FIELD.
+    const double gopt4 = st.get_group_var("G_4", "GOPT");
+    BOOST_CHECK_CLOSE(st.get_group_var("G_4", "GVPT"), gopt4 * 160.0 / 100.0, 1e-5);
+    BOOST_CHECK_CLOSE(st.get_group_var("G_4", "GVIT"), gopt4 * 210.0 / 100.0, 1e-5);
+    const double fopt = st.get("FOPT");
+    BOOST_CHECK_CLOSE(st.get("FVPT"), fopt * 160.0 / 100.0, 1e-5);
+    BOOST_CHECK_CLOSE(st.get("FVIT"), fopt * 210.0 / 100.0, 1e-5);
+    BOOST_CHECK_CLOSE(st.get("FOPTH"), fopt * 90.0 / 100.0, 1e-5);
+}
+
 BOOST_AUTO_TEST_SUITE_END() // ReservoirCoupling

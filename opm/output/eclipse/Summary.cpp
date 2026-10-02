@@ -924,9 +924,17 @@ double rc_group_prod(const Opm::data::ReservoirCouplingGroupRates& rc_rates,
     if (groupPos == rc_rates.production.end()) {
         return 0.0;
     }
-    if constexpr (phase == rt::oil) { return groupPos->second.oil; }
-    else if constexpr (phase == rt::gas) { return groupPos->second.gas; }
-    else if constexpr (phase == rt::wat) { return groupPos->second.water; }
+    const auto& rates = groupPos->second;
+    if constexpr (phase == rt::oil) { return rates.oil; }
+    else if constexpr (phase == rt::gas) { return rates.gas; }
+    else if constexpr (phase == rt::wat) { return rates.water; }
+    else if constexpr (phase == rt::reservoir_oil) { return rates.resv_oil; }
+    else if constexpr (phase == rt::reservoir_gas) { return rates.resv_gas; }
+    else if constexpr (phase == rt::reservoir_water) { return rates.resv_water; }
+    else if constexpr (phase == rt::alq) { return rates.gas_lift; }
+    else if constexpr (phase == rt::well_potential_oil) { return rates.potential_oil; }
+    else if constexpr (phase == rt::well_potential_gas) { return rates.potential_gas; }
+    else if constexpr (phase == rt::well_potential_water) { return rates.potential_water; }
     return 0.0;
 }
 
@@ -940,15 +948,22 @@ double rc_group_inj(const Opm::data::ReservoirCouplingGroupRates& rc_rates,
         return 0.0;
     }
 
-    auto irate = [&rates = it->second](const Opm::Phase p)
+    using InjectionRates = Opm::data::ReservoirCouplingGroupRates::InjectionRates;
+    auto irate = [&rates = it->second](const Opm::Phase p, double InjectionRates::* kind)
     {
         auto pit = rates.find(p);
-        return (pit != rates.end()) ? pit->second.surface : 0.0;
+        return (pit != rates.end()) ? pit->second.*kind : 0.0;
     };
 
-    if constexpr (phase == rt::oil) { return irate(Opm::Phase::OIL); }
-    else if constexpr (phase == rt::gas) { return irate(Opm::Phase::GAS); }
-    else if constexpr (phase == rt::wat) { return irate(Opm::Phase::WATER); }
+    if constexpr (phase == rt::oil) { return irate(Opm::Phase::OIL, &InjectionRates::surface); }
+    else if constexpr (phase == rt::gas) { return irate(Opm::Phase::GAS, &InjectionRates::surface); }
+    else if constexpr (phase == rt::wat) { return irate(Opm::Phase::WATER, &InjectionRates::surface); }
+    else if constexpr (phase == rt::reservoir_oil) { return irate(Opm::Phase::OIL, &InjectionRates::reservoir); }
+    else if constexpr (phase == rt::reservoir_gas) { return irate(Opm::Phase::GAS, &InjectionRates::reservoir); }
+    else if constexpr (phase == rt::reservoir_water) { return irate(Opm::Phase::WATER, &InjectionRates::reservoir); }
+    else if constexpr (phase == rt::well_potential_oil) { return irate(Opm::Phase::OIL, &InjectionRates::potential); }
+    else if constexpr (phase == rt::well_potential_gas) { return irate(Opm::Phase::GAS, &InjectionRates::potential); }
+    else if constexpr (phase == rt::well_potential_water) { return irate(Opm::Phase::WATER, &InjectionRates::potential); }
     return 0.0;
 }
 
@@ -1057,6 +1072,89 @@ double satellite_rate(const fn_args& args)
 
     // No satellite or reservoir coupling rates.
     return 0.0;
+}
+
+// Reservoir coupling: a master group quantity, summed over the master groups
+// in the group tree below args.group_name.  As for the master group rates in
+// satellite_rate(), only down-tree group efficiency factors are applied for a
+// rate, and also the ones imposed at higher levels for a cumulative.
+template <bool cumulative, typename GroupValue>
+double rc_group_tree_value(const fn_args& args, GroupValue&& group_value)
+{
+    if ((args.rc_rates == nullptr) || args.group_name.empty()) {
+        return 0.0;
+    }
+
+    const auto& sched = args.schedule[args.sim_step];
+    const auto efac = cumulative
+        ? cumulativeSatelliteEffFactor(sched, args.group_name)
+        : 1.0;
+
+    return accum_groups(sched, args.group_name, efac,
+                        [&rc = *args.rc_rates, &group_value](const std::string& gname)
+                        { return group_value(rc, gname); });
+}
+
+// Reservoir coupling: number of flowing producers or injectors of the master
+// groups in the group tree below args.group_name.
+template <bool injection>
+int rc_flowing_wells(const fn_args& args)
+{
+    if ((args.rc_rates == nullptr) || args.group_name.empty()) {
+        return 0;
+    }
+
+    const auto& sched = args.schedule[args.sim_step];
+    const auto& flowing = args.rc_rates->flowing_wells;
+
+    auto count = [&sched, &flowing](const std::string& gname, auto&& self) -> int
+    {
+        if (! sched.groups.has(gname)) {
+            return 0;
+        }
+
+        int num = 0;
+        if (const auto it = flowing.find(gname); it != flowing.end()) {
+            num += injection ? it->second.injectors : it->second.producers;
+        }
+
+        for (const auto& child : sched.groups(gname).groups()) {
+            num += self(child, self);
+        }
+
+        return num;
+    };
+
+    return count(args.group_name, count);
+}
+
+// Reservoir coupling: whether the group tree below args.group_name contains a
+// master group.
+bool rc_has_master_group(const fn_args& args)
+{
+    if ((args.rc_rates == nullptr) || args.group_name.empty()) {
+        return false;
+    }
+
+    const auto& sched = args.schedule[args.sim_step];
+    const auto& rc = *args.rc_rates;
+
+    auto has = [&sched, &rc](const std::string& gname, auto&& self) -> bool
+    {
+        if (rc.production.contains(gname) || rc.injection.contains(gname)) {
+            return true;
+        }
+
+        if (! sched.groups.has(gname)) {
+            return false;
+        }
+
+        const auto& children = sched.groups(gname).groups();
+        return std::ranges::any_of(children, [&self](const auto& child)
+                                   { return self(child, self); });
+    };
+
+    return has(args.group_name, has);
 }
 
 inline quantity artificial_lift_quantity( const fn_args& args ) {
@@ -1493,7 +1591,8 @@ inline quantity flowing( const fn_args& args ) {
     };
 
     return {
-        double( std::ranges::count_if(args.schedule_wells, pred)),
+        double( std::ranges::count_if(args.schedule_wells, pred)
+                + rc_flowing_wells<injection>(args) ),
         measure::identity
     };
 }
@@ -2063,7 +2162,8 @@ quantity well_block_average_pressure(const fn_args& args)
 
 // include_prediction_rate=true  → well-level continues accumulating from simulated rates (TH keywords)
 // include_prediction_rate=false → well-level returns 0 in prediction period (RH keywords at well-level)
-template <Opm::Phase phase, bool include_prediction_rate = true>
+// cumulative=true  → for a total (THs at group and field level), see rc_group_tree_value()
+template <Opm::Phase phase, bool include_prediction_rate = true, bool cumulative = false>
 inline quantity production_history(const fn_args& args)
 {
     double sum = 0.0;
@@ -2114,6 +2214,19 @@ inline quantity production_history(const fn_args& args)
         }
     }
 
+    // Reservoir coupling: history rates of master groups, from their slaves.
+    sum -= rc_group_tree_value<cumulative>(args, [](const auto& rc, const std::string& gname)
+    {
+        const auto it = rc.production.find(gname);
+        if (it == rc.production.end()) {
+            return 0.0;
+        }
+        if constexpr (phase == Opm::Phase::OIL) { return it->second.history_oil; }
+        else if constexpr (phase == Opm::Phase::GAS) { return it->second.history_gas; }
+        else if constexpr (phase == Opm::Phase::WATER) { return it->second.history_water; }
+        return 0.0;
+    });
+
     return { -sum, rate_unit<phase>() };
 }
 
@@ -2121,7 +2234,9 @@ inline quantity production_history(const fn_args& args)
 // include_prediction_rate=false → well-level returns 0 in prediction period (RH keywords at well-level)
 // use_target_in_prediction=true → in prediction period, use scheduled injection
 //  target (WCONINJE) in prediction instead of simulated rate
-template <Opm::Phase phase, bool include_prediction_rate = true, bool use_target_in_prediction = false>
+// cumulative=true  → for a total (THs at group and field level), see rc_group_tree_value()
+template <Opm::Phase phase, bool include_prediction_rate = true, bool use_target_in_prediction = false,
+          bool cumulative = false>
 inline quantity injection_history(const fn_args& args)
 {
     double sum = 0.0;
@@ -2179,6 +2294,17 @@ inline quantity injection_history(const fn_args& args)
 
         sum += rate * eff_fac;
     }
+
+    // Reservoir coupling: history rates of master groups, from their slaves.
+    sum += rc_group_tree_value<cumulative>(args, [](const auto& rc, const std::string& gname)
+    {
+        const auto it = rc.injection.find(gname);
+        if (it == rc.injection.end()) {
+            return 0.0;
+        }
+        const auto pit = it->second.find(phase);
+        return (pit != it->second.end()) ? pit->second.history : 0.0;
+    });
 
     return { sum, rate_unit<phase>() };
 }
@@ -2502,6 +2628,15 @@ inline quantity potential_rate( const fn_args& args )
             const auto v = xwPos->second.rates.get(phase, 0.0);
             sum += v * efac(args.eff_factors, name);
         }
+    }
+
+    if constexpr (outputProducer) {
+        sum += rc_group_tree_value<false>(args, [](const auto& rc, const std::string& gname)
+                                          { return rc_group_prod<phase>(rc, gname); });
+    }
+    if constexpr (outputInjector) {
+        sum += rc_group_tree_value<false>(args, [](const auto& rc, const std::string& gname)
+                                          { return rc_group_inj<phase>(rc, gname); });
     }
 
     return { sum, rate_unit< phase >() };
@@ -2857,7 +2992,9 @@ quantity group_efficiency_factor(const fn_args& args)
 {
     const auto zero = quantity { 0.0, measure::identity };
 
-    if (args.schedule_wells.empty()) {
+    // A reservoir coupling master group has no wells of its own, but carries
+    // the rates of its slave group.
+    if (args.schedule_wells.empty() && ! rc_has_master_group(args)) {
         return zero;
     }
     const auto& sched = args.schedule[args.sim_step];
@@ -3212,8 +3349,9 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "GTITS#O", mul( ratetracer< rt::tracer, rt::oil, injector >, duration ) },
     { "GTITS#G", mul( ratetracer< rt::tracer, rt::gas, injector >, duration ) },
 
-    { "GVIT", mul( sum( sum( rate< rt::reservoir_water, injector >, rate< rt::reservoir_oil, injector > ),
-                        rate< rt::reservoir_gas, injector > ), duration ) },
+    { "GVIT", mul( sum( sum( rate< rt::reservoir_water, injector, /* cumulativeSatellite = */ true >,
+                           rate< rt::reservoir_oil, injector, /* cumulativeSatellite = */ true > ),
+                      rate< rt::reservoir_gas, injector, /* cumulativeSatellite = */ true > ), duration ) },
 
     { "GWPR", rate< rt::wat, producer > },
     { "GOPR", rate< rt::oil, producer > },
@@ -3310,8 +3448,9 @@ static const auto funs = std::unordered_map<std::string, ofun> {
                     duration ) },
     { "GLPT", mul( sum( rate< rt::wat, producer >, rate< rt::oil, producer > ),
                    duration ) },
-    { "GVPT", mul( sum( sum( rate< rt::reservoir_water, producer >, rate< rt::reservoir_oil, producer > ),
-                        rate< rt::reservoir_gas, producer > ), duration ) },
+    { "GVPT", mul( sum( sum( rate< rt::reservoir_water, producer, /* cumulativeSatellite = */ true >,
+                           rate< rt::reservoir_oil, producer, /* cumulativeSatellite = */ true > ),
+                      rate< rt::reservoir_gas, producer, /* cumulativeSatellite = */ true > ), duration ) },
     // Group potential
     { "GWPP", potential_rate< rt::well_potential_water , true, false>},
     { "GOPP", potential_rate< rt::well_potential_oil , true, false>},
@@ -3378,9 +3517,9 @@ static const auto funs = std::unordered_map<std::string, ofun> {
                     sum( production_history< Opm::Phase::WATER >,
                          production_history< Opm::Phase::OIL > ) ) },
 
-    { "GWPTH", mul( production_history< Opm::Phase::WATER >, duration ) },
-    { "GOPTH", mul( production_history< Opm::Phase::OIL >, duration ) },
-    { "GGPTH", mul( production_history< Opm::Phase::GAS >, duration ) },
+    { "GWPTH", mul( production_history< Opm::Phase::WATER, true, true >, duration ) },
+    { "GOPTH", mul( production_history< Opm::Phase::OIL, true, true >, duration ) },
+    { "GGPTH", mul( production_history< Opm::Phase::GAS, true, true >, duration ) },
     { "GGPRF", sub( rate < rt::gas, producer >, rate< rt::dissolved_gas, producer > )},
     { "GGPRS", rate< rt::dissolved_gas, producer> },
     { "GGPTF", mul( sub( rate < rt::gas, producer >, rate< rt::dissolved_gas, producer > ),
@@ -3392,12 +3531,12 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "GGLRH", div( production_history< Opm::Phase::GAS >,
                     sum( production_history< Opm::Phase::WATER >,
                          production_history< Opm::Phase::OIL > ) ) },
-    { "GLPTH", mul( sum( production_history< Opm::Phase::WATER >,
-                         production_history< Opm::Phase::OIL > ),
+    { "GLPTH", mul( sum( production_history< Opm::Phase::WATER, true, true >,
+                         production_history< Opm::Phase::OIL, true, true > ),
                     duration ) },
-    { "GWITH", mul( injection_history< Opm::Phase::WATER, true, true >, duration ) },
-    { "GOITH", mul( injection_history< Opm::Phase::OIL, true, true >, duration ) },
-    { "GGITH", mul( injection_history< Opm::Phase::GAS, true, true >, duration ) },
+    { "GWITH", mul( injection_history< Opm::Phase::WATER, true, true, true >, duration ) },
+    { "GOITH", mul( injection_history< Opm::Phase::OIL, true, true, true >, duration ) },
+    { "GGITH", mul( injection_history< Opm::Phase::GAS, true, true, true >, duration ) },
     { "GMWIN", flowing< injector > },
     { "GMWPR", flowing< producer > },
 
@@ -3629,8 +3768,9 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "FTPTS#G", mul( ratetracer< rt::tracer, rt::gas, producer >, duration ) },
     { "FLPT", mul( sum( rate< rt::wat, producer >, rate< rt::oil, producer > ),
                    duration ) },
-    { "FVPT", mul(sum (sum( rate< rt::reservoir_water, producer>, rate< rt::reservoir_oil, producer >),
-                       rate< rt::reservoir_gas, producer>), duration)},
+    { "FVPT", mul( sum( sum( rate< rt::reservoir_water, producer, /* cumulativeSatellite = */ true >,
+                           rate< rt::reservoir_oil, producer, /* cumulativeSatellite = */ true > ),
+                      rate< rt::reservoir_gas, producer, /* cumulativeSatellite = */ true > ), duration ) },
     { "FGPTS", mul( rate< rt::dissolved_gas, producer > , duration )},
     { "FGPTF", mul( sub( rate< rt::gas, producer >, rate< rt::dissolved_gas, producer > ), duration )},
     { "FOPTS", mul( rate< rt::vaporized_oil, producer >, duration ) },
@@ -3687,8 +3827,9 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "FTITS#G", mul( ratetracer< rt::tracer, rt::gas, injector >, duration ) },
     { "FLIT", mul( sum( rate< rt::wat, injector >, rate< rt::oil, injector > ),
                    duration ) },
-    { "FVIT", mul( sum( sum( rate< rt::reservoir_water, injector>, rate< rt::reservoir_oil, injector >),
-                   rate< rt::reservoir_gas, injector>), duration)},
+    { "FVIT", mul( sum( sum( rate< rt::reservoir_water, injector, /* cumulativeSatellite = */ true >,
+                           rate< rt::reservoir_oil, injector, /* cumulativeSatellite = */ true > ),
+                      rate< rt::reservoir_gas, injector, /* cumulativeSatellite = */ true > ), duration ) },
 
     { "FGCR", gas_consumption_rate },
     { "FGCT", mul( gas_consumption_rate, duration ) },
@@ -3719,19 +3860,19 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "FGPRH", production_history< Opm::Phase::GAS > },
     { "FLPRH", sum( production_history< Opm::Phase::WATER >,
                     production_history< Opm::Phase::OIL > ) },
-    { "FWPTH", mul( production_history< Opm::Phase::WATER >, duration ) },
-    { "FOPTH", mul( production_history< Opm::Phase::OIL >, duration ) },
-    { "FGPTH", mul( production_history< Opm::Phase::GAS >, duration ) },
-    { "FLPTH", mul( sum( production_history< Opm::Phase::WATER >,
-                         production_history< Opm::Phase::OIL > ),
+    { "FWPTH", mul( production_history< Opm::Phase::WATER, true, true >, duration ) },
+    { "FOPTH", mul( production_history< Opm::Phase::OIL, true, true >, duration ) },
+    { "FGPTH", mul( production_history< Opm::Phase::GAS, true, true >, duration ) },
+    { "FLPTH", mul( sum( production_history< Opm::Phase::WATER, true, true >,
+                         production_history< Opm::Phase::OIL, true, true > ),
                     duration ) },
 
     { "FWIRH", injection_history< Opm::Phase::WATER, true, true > },
     { "FOIRH", injection_history< Opm::Phase::OIL, true, true > },
     { "FGIRH", injection_history< Opm::Phase::GAS, true, true > },
-    { "FWITH", mul( injection_history< Opm::Phase::WATER, true, true >, duration ) },
-    { "FOITH", mul( injection_history< Opm::Phase::OIL, true, true >, duration ) },
-    { "FGITH", mul( injection_history< Opm::Phase::GAS, true, true >, duration ) },
+    { "FWITH", mul( injection_history< Opm::Phase::WATER, true, true, true >, duration ) },
+    { "FOITH", mul( injection_history< Opm::Phase::OIL, true, true, true >, duration ) },
+    { "FGITH", mul( injection_history< Opm::Phase::GAS, true, true, true >, duration ) },
 
     { "FWCT", div( rate< rt::wat, producer >,
                    sum( rate< rt::wat, producer >, rate< rt::oil, producer > ) ) },
