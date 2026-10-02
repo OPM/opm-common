@@ -307,7 +307,12 @@ namespace {
         void setCurrentControl(const int   curr,
                                IWellArray& iWell)
         {
-            iWell[VI::IWell::index::ActWCtrl] = curr;
+            using Ctrl = VI::IWell::Value::WellCtrlMode;
+
+            // WMCtlUnk is a WMCTL summary value.  A well which has not been
+            // given a control mode has no control in the restart file.
+            iWell[VI::IWell::index::ActWCtrl] =
+                (curr == Ctrl::WMCtlUnk) ? Ctrl::NoCtrl : curr;
         }
 
         template <typename IWellArray>

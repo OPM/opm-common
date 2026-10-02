@@ -151,6 +151,7 @@ Opm::Well::ProducerCMode producer_cmode_from_int(const int pmode)
         IWell::Value::WellCtrlMode;
 
     switch (pmode) {
+    case CModeVal::NoCtrl:   return Opm::Well::ProducerCMode::CMODE_UNDEFINED;
     case CModeVal::Group:    return Opm::Well::ProducerCMode::GRUP;
     case CModeVal::OilRate:  return Opm::Well::ProducerCMode::ORAT;
     case CModeVal::WatRate:  return Opm::Well::ProducerCMode::WRAT;
@@ -393,8 +394,11 @@ Well::Well(const RestartIO::RstWell& rst_well,
         if (! p->predictionMode)
             p->clearControls();
 
+        // Producers which have not been given a control mode have no active control.
         p->controlMode = producer_cmode_from_int(rst_well.active_control);
-        p->addProductionControl(p->controlMode);
+        if (p->controlMode != Well::ProducerCMode::CMODE_UNDEFINED) {
+            p->addProductionControl(p->controlMode);
+        }
 
         p->addProductionControl(Well::ProducerCMode::BHP);
         if (! p->predictionMode) {

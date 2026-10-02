@@ -385,6 +385,67 @@ END
 
     }
 
+    Opm::Deck producer_without_control()
+    {
+        return Opm::Parser{}.parseString(R"~(RUNSPEC
+OIL
+GAS
+WATER
+DISGAS
+VAPOIL
+UNIFOUT
+UNIFIN
+DIMENS
+ 10 10 10 /
+
+START             -- 0
+1 OKT 2008 /
+
+GRID
+DXV
+10*0.25 /
+DYV
+10*0.25 /
+DZV
+10*0.25 /
+TOPS
+100*2000.0 /
+
+PORO
+1000*0.2 /
+PERMX
+1000*1 /
+PERMY
+1000*0.1 /
+PERMZ
+1000*0.01 /
+
+SOLUTION
+
+SCHEDULE
+RPTRST
+BASIC=2
+/
+DATES             -- 1
+ 10  OKT 2008 /
+/
+WELSPECS
+      'OP_1'  'OP'   9   9 1* 'OIL' 1*      1*  1*   1*  1*   1*  1*  /
+      'OP_2'  'OP'   9   9 1* 'OIL' 1*      1*  1*   1*  1*   1*  1*  /
+/
+COMPDAT
+      'OP_1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+      'OP_2'  9  9   2   2 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+/
+WCONPROD
+      'OP_2' 'SHUT' /
+/
+TSTEP            -- 2
+10 /
+END
+)~");
+    }
+
     void writeRstFile(const SimulationCase& simCase,
                       const std::string&    baseName,
                       const std::size_t     rptStep)
@@ -1083,5 +1144,44 @@ BOOST_AUTO_TEST_CASE(Historic_Period_WHistCtl)
         BOOST_CHECK_MESSAGE(ctrl.cmode == Opm::WellProducerCMode::RESV,
                             "Well loaded from restart file must be controlled by "
                             "observed reservoir voidage rate (RESV) after WCONHIST");
+    }
+}
+
+BOOST_AUTO_TEST_CASE(Producer_Without_Control_Mode)
+{
+    const auto simCase = SimulationCase{ producer_without_control() };
+
+    const auto rptStep  = std::size_t{2};
+    const auto baseName = std::string { "NO_CONTROL_RST" };
+
+    const auto state =
+        makeRestartState(simCase, baseName, rptStep, "no_control_rst");
+
+    // OP_1: WELSPECS/COMPDAT only.  OP_2: shut by WCONPROD without control mode.
+    for (const auto* wname : { "OP_1", "OP_2" }) {
+        const auto& rst_well = state.get_well(wname);
+
+        BOOST_CHECK_EQUAL(rst_well.active_control,
+                          Opm::RestartIO::Helpers::VectorItems::IWell::
+                          Value::WellCtrlMode::NoCtrl);
+
+        const auto well = Opm::Well {
+            rst_well,
+            static_cast<int>(rptStep),
+            state.header.histctl_override,
+            Opm::TracerConfig{},
+            Opm::UnitSystem::newMETRIC(),
+            std::nullopt
+        };
+
+        const auto& prop = well.getProductionProperties();
+
+        BOOST_CHECK_MESSAGE(prop.controlMode == Opm::WellProducerCMode::CMODE_UNDEFINED,
+                            "Well '" << wname << "' must not have an "
+                            "active control mode after restart");
+
+        BOOST_CHECK_MESSAGE(! prop.hasProductionControl(Opm::WellProducerCMode::CMODE_UNDEFINED),
+                            "Well '" << wname << "' must not register the "
+                            "undefined control mode as an available control");
     }
 }
