@@ -46,6 +46,7 @@
 #include <opm/input/eclipse/Parser/ParserKeywords/M.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/O.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/P.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/R.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/T.hpp>
 
 #include "Operate.hpp"
@@ -104,6 +105,67 @@ namespace {
         return (keyword == "PCW")  || (keyword == "PCG")
             || (keyword == "IPCG") || (keyword == "IPCW");
     }
+
+    // A local grid block runs from CARFIN, RADFIN or RADFIN4 (GRID), or REFINE,
+    // to ENDFIN, and holds values for the cells of that local grid.  Local grid
+    // cells have no properties of their own, so a keyword inside a block stops
+    // the input rather than being applied to the main grid.
+    class LocalGridBlock
+    {
+    public:
+        // Whether the keyword opens or closes a block.  Stops on a keyword
+        // inside a block.
+        bool consume(const Opm::DeckKeyword& keyword)
+        {
+            const auto& name = keyword.name();
+            if ((name == Opm::ParserKeywords::CARFIN::keywordName) ||
+                (name == Opm::ParserKeywords::RADFIN::keywordName) ||
+                (name == Opm::ParserKeywords::RADFIN4::keywordName) ||
+                (name == Opm::ParserKeywords::REFINE::keywordName))
+            {
+                this->ensureClosed();
+                this->open_ = &keyword;
+                return true;
+            }
+
+            if (name == Opm::ParserKeywords::ENDFIN::keywordName) {
+                this->open_ = nullptr;
+                return true;
+            }
+
+            if (this->open_ != nullptr) {
+                throw Opm::OpmInputError {
+                    fmt::format("{} is given for the cells of local grid {}: values "
+                                "for local grid cells are not supported.", name, this->lgrName()),
+                    keyword.location()
+                };
+            }
+
+            return false;
+        }
+
+        // A block ends with ENDFIN, before the next block and before the end
+        // of its section.
+        void ensureClosed() const
+        {
+            if (this->open_ != nullptr) {
+                throw Opm::OpmInputError {
+                    fmt::format("{} '{}' has no ENDFIN.", this->open_->name(), this->lgrName()),
+                    this->open_->location()
+                };
+            }
+        }
+
+    private:
+        const Opm::DeckKeyword* open_{nullptr};
+
+        // The first item of CARFIN, RADFIN, RADFIN4 and REFINE names the
+        // local grid.
+        std::string lgrName() const
+        {
+            return this->open_->getRecord(0).getItem(0).get<std::string>(0);
+        }
+    };
 } // Anonymous namespace
 
 namespace Opm {
@@ -2254,7 +2316,12 @@ void FieldProps::scanGRIDSection(const GRIDSection& grid_section)
 {
     auto box = makeGlobalGridBox(this->grid_ptr);
 
+    auto block = LocalGridBlock{};
     for (const auto& keyword : grid_section) {
+        if (block.consume(keyword)) {
+            continue;
+        }
+
         if (auto kwPos = Fieldprops::keywords::GRID::double_keywords.find(keyword.name());
             kwPos != Fieldprops::keywords::GRID::double_keywords.end())
         {
@@ -2271,13 +2338,19 @@ void FieldProps::scanGRIDSection(const GRIDSection& grid_section)
 
         this->handle_keyword(Section::GRID, keyword, box);
     }
+    block.ensureClosed();
 }
 
 void FieldProps::scanGRIDSectionOnlyACTNUM(const GRIDSection& grid_section)
 {
     Box box(*this->grid_ptr, [](const std::size_t) { return true; }, [](const std::size_t i) { return i; });
 
+    auto block = LocalGridBlock{};
     for (const auto& keyword : grid_section) {
+        if (block.consume(keyword)) {
+            continue;
+        }
+
         const std::string& name = keyword.name();
 
         if (name == "ACTNUM") {
@@ -2287,6 +2360,7 @@ void FieldProps::scanGRIDSectionOnlyACTNUM(const GRIDSection& grid_section)
             this->handle_keyword(Section::GRID, keyword, box);
         }
     }
+    block.ensureClosed();
 
     if (auto iter = this->int_data.find("ACTNUM");
         iter == this->int_data.end())
@@ -2315,7 +2389,12 @@ void FieldProps::scanEDITSection(const EDITSection& edit_section)
 {
     auto box = makeGlobalGridBox(this->grid_ptr);
 
+    auto block = LocalGridBlock{};
     for (const auto& keyword : edit_section) {
+        if (block.consume(keyword)) {
+            continue;
+        }
+
         const std::string& name = keyword.name();
 
         if (auto tran_iter = this->tran.find(name);
@@ -2344,6 +2423,7 @@ void FieldProps::scanEDITSection(const EDITSection& edit_section)
 
         this->handle_keyword(Section::EDIT, keyword, box);
     }
+    block.ensureClosed();
     // Multiplier will not have been applied yet to prevent EQUALS MULT* from overwriting values
     // and to only honor the last MULT* occurrence
     // apply recorded multipliers of section to existing ones
@@ -2369,7 +2449,12 @@ void FieldProps::scanPROPSSection(const PROPSSection& props_section)
 {
     auto box = makeGlobalGridBox(this->grid_ptr);
 
+    auto block = LocalGridBlock{};
     for (const auto& keyword : props_section) {
+        if (block.consume(keyword)) {
+            continue;
+        }
+
         const std::string& name = keyword.name();
         if (Fieldprops::keywords::PROPS::satfunc.count(name) == 1) {
             Fieldprops::keywords::keyword_info<double> sat_info{};
@@ -2393,13 +2478,19 @@ void FieldProps::scanPROPSSection(const PROPSSection& props_section)
 
         this->handle_keyword(Section::PROPS, keyword, box);
     }
+    block.ensureClosed();
 }
 
 void FieldProps::scanREGIONSSection(const REGIONSSection& regions_section)
 {
     auto box = makeGlobalGridBox(this->grid_ptr);
 
+    auto block = LocalGridBlock{};
     for (const auto& keyword : regions_section) {
+        if (block.consume(keyword)) {
+            continue;
+        }
+
         const std::string& name = keyword.name();
 
         if (auto kwPos = Fieldprops::keywords::REGIONS::int_keywords.find(name);
@@ -2418,6 +2509,7 @@ void FieldProps::scanREGIONSSection(const REGIONSSection& regions_section)
 
         this->handle_keyword(Section::REGIONS, keyword, box);
     }
+    block.ensureClosed();
 }
 
 void FieldProps::scanSOLUTIONSection(const SOLUTIONSection& solution_section,
@@ -2425,7 +2517,12 @@ void FieldProps::scanSOLUTIONSection(const SOLUTIONSection& solution_section,
 {
     auto box = makeGlobalGridBox(this->grid_ptr);
 
+    auto block = LocalGridBlock{};
     for (const auto& keyword : solution_section) {
+        if (block.consume(keyword)) {
+            continue;
+        }
+
         const std::string& name = keyword.name();
 
         if (auto kwPos = Fieldprops::keywords::SOLUTION::double_keywords.find(name);
@@ -2453,6 +2550,7 @@ void FieldProps::scanSOLUTIONSection(const SOLUTIONSection& solution_section,
 
         this->handle_keyword(Section::SOLUTION, keyword, box);
     }
+    block.ensureClosed();
 }
 
 void FieldProps::handle_schedule_keywords(const std::vector<DeckKeyword>& keywords)
