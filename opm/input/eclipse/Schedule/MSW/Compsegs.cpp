@@ -23,11 +23,14 @@
 
 #include <opm/io/eclipse/rst/well.hpp>
 
+#include <opm/input/eclipse/Schedule/CompletedCells.hpp>
 #include <opm/input/eclipse/Schedule/MSW/Segment.hpp>
 #include <opm/input/eclipse/Schedule/MSW/WellSegments.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleGrid.hpp>
 #include <opm/input/eclipse/Schedule/Well/Connection.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
+
+#include <opm/input/eclipse/Units/Units.hpp>
 
 #include <opm/input/eclipse/Deck/DeckItem.hpp>
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
@@ -501,6 +504,36 @@ Well: {}, connection: ({},{},{}))", well_name, I+1, J+1 , K+1);
                                  msg_fmt, location, errors);
     }
 
+    // COMPDAT ignores connections in cells with zero permeability normal to
+    // the connection direction.  Any zero component may be the cause.
+    bool hasZeroPermComponent(const Opm::CompletedCells::Cell::Props& props)
+    {
+        return ! ((props.permx > 0.0) && (props.permy > 0.0) && (props.permz > 0.0));
+    }
+
+    void diagnoseZeroPermSegmentLinkSkipped(std::string_view                        well_name,
+                                            const int i, const int j, const int k,
+                                            const Opm::CompletedCells::Cell::Props& props,
+                                            const Opm::KeywordLocation&             location,
+                                            const Opm::ParseContext&                parseContext,
+                                            Opm::ErrorGuard&                        errors)
+    {
+        constexpr auto md = Opm::prefix::milli*Opm::unit::darcy;
+
+        const auto msg_fmt = fmt::format(R"(Problem with keyword {{keyword}}
+In {{file}} line {{line}}
+Connection ({},{},{}) for well {} not attached to a segment because the
+connection does not exist, likely having been ignored due to zero permeability
+   PERMX={:.3e} mD, PERMY={:.3e} mD, and PERMZ={:.3e} mD.)",
+                                         i + 1, j + 1, k + 1, well_name,
+                                         Opm::unit::convert::to(props.permx, md),
+                                         Opm::unit::convert::to(props.permy, md),
+                                         Opm::unit::convert::to(props.permz, md));
+
+        parseContext.handleError(Opm::ParseContext::SCHEDULE_COMPDAT_ZERO_PERM,
+                                 msg_fmt, location, errors);
+    }
+
     Opm::WellConnections
     process_compsegs_records(std::string_view            well_name,
                              const std::vector<Record>&  compsegs_vector,
@@ -518,6 +551,17 @@ Well: {}, connection: ({},{},{}))", well_name, I+1, J+1 , K+1);
             const int k = compseg.m_k;
 
             if (const auto& cell = grid.get_cell(i, j, k); cell.is_active()) {
+                const auto connExists =
+                    std::ranges::any_of(new_connection_set,
+                                        [i, j, k](const Opm::Connection& c)
+                                        { return c.sameCoordinate(i, j, k); });
+
+                if (! connExists && hasZeroPermComponent(*cell.props)) {
+                    diagnoseZeroPermSegmentLinkSkipped(well_name, i, j, k, *cell.props,
+                                                       location, parseContext, errors);
+                    continue;
+                }
+
                 // Negative values to indicate cell depths should be used
                 const double cdepth = (compseg.center_depth >= 0.0)
                     ? compseg.center_depth
