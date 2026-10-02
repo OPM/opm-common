@@ -583,6 +583,7 @@ list(APPEND TEST_SOURCE_FILES
   tests/test_Serialization.cpp
   tests/test_Solution.cpp
   tests/test_sparsevector.cpp
+  tests/test_sparsetable.cpp
   tests/test_Summary.cpp
   tests/test_SummaryNode.cpp
   tests/test_SummaryConfigNode.cpp
@@ -923,11 +924,13 @@ list(APPEND PUBLIC_HEADER_FILES
   opm/common/utility/ConstexprAssert.hpp
   opm/common/utility/DemangledType.hpp
   opm/common/utility/FileSystem.hpp
+  opm/common/utility/IteratorRange.hpp
   opm/common/utility/MemPacker.hpp
   opm/common/utility/OpmInputError.hpp
   opm/common/utility/SaltArray.hpp
   opm/common/utility/SaltElectrolytes.hpp
   opm/common/utility/Serializer.hpp
+  opm/common/utility/SparseTable.hpp
   opm/common/utility/String.hpp
   opm/common/utility/SymmTensor.hpp
   opm/common/utility/ThreadSafeMapBuilder.hpp
