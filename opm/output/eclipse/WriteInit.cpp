@@ -422,7 +422,7 @@ namespace {
     }
 
     void writeIntegerCellPropertiesLGRCell(const ::Opm::EclipseState&        es,
-                                                   std::vector<int>&         global_fathers,
+                                                   const std::vector<int>&   active_fathers,
                             ::Opm::EclIO::OutputStream::Init&                initFile)
     {
         // The INIT file should always contain PVT, saturation function,
@@ -436,7 +436,7 @@ namespace {
 
         for (const auto& keyword : fp.keys<int>()) {
             auto data = fp.get_int(keyword);
-            initFile.write(keyword, VectorUtil::filterArray(data,global_fathers));
+            initFile.write(keyword, VectorUtil::filterArray(data,active_fathers));
         }
     }
 
@@ -526,7 +526,7 @@ namespace {
     template <class WriteVector>
     void writeCellDoublePropertiesWithDefaultFlagLGRCell(const Properties&               propList,
                                                          const ::Opm::FieldPropsManager& fp,
-                                                         const std::vector<int>&         global_fathers,
+                                                         const std::vector<int>&         active_fathers,
                                                          WriteVector&&                   write)
     {
         for (const auto& prop : propList) {
@@ -534,8 +534,8 @@ namespace {
                 continue;
             }
 
-            auto data = VectorUtil::filterArray(fp.get_double(prop.name), global_fathers);
-            auto defaulted = VectorUtil::filterArray(fp.defaulted<double>(prop.name), global_fathers);
+            auto data = VectorUtil::filterArray(fp.get_double(prop.name), active_fathers);
+            auto defaulted = VectorUtil::filterArray(fp.defaulted<double>(prop.name), active_fathers);
             write(prop, std::move(defaulted), std::move(data));
         }
     }
@@ -558,7 +558,7 @@ namespace {
     template <class WriteVector>
     void writeCellPropertiesValuesOnlyLGRCell(const Properties&               propList,
                                               const ::Opm::FieldPropsManager& fp,
-                                              const std::vector<int>&         global_fathers,
+                                              const std::vector<int>&         active_fathers,
                                               WriteVector&&                   write)
     {
         for (const auto& prop : propList) {
@@ -567,7 +567,7 @@ namespace {
             }
 
             auto data = VectorUtil::filterArray(fp.get_double(prop.name),
-                                                                   global_fathers);
+                                                                   active_fathers);
             write(prop, std::move(data));
         }
     }
@@ -616,10 +616,10 @@ namespace {
                                           const ::Opm::UnitSystem&             units,
                                           const bool                           needDflt,
                                           ::Opm::EclIO::OutputStream::Init&    initFile,
-                                          const std::vector<int>&              global_fathers)
+                                          const std::vector<int>&              active_fathers)
     {
         if (needDflt) {
-            writeCellDoublePropertiesWithDefaultFlagLGRCell(propList, fp, global_fathers,
+            writeCellDoublePropertiesWithDefaultFlagLGRCell(propList, fp, active_fathers,
                 [&units, &initFile](const CellProperty&   prop,
                                     std::vector<bool>&&   dflt,
                                     std::vector<double>&& value)
@@ -641,7 +641,7 @@ namespace {
             });
         }
         else {
-            writeCellPropertiesValuesOnlyLGRCell(propList, fp, global_fathers,
+            writeCellPropertiesValuesOnlyLGRCell(propList, fp, active_fathers,
                 [&units, &initFile](const CellProperty&   prop,
                                     std::vector<double>&& value)
             {
@@ -654,7 +654,7 @@ namespace {
     void writeDoubleCellProperties(const ::Opm::EclipseState&        es,
                                    const ::Opm::UnitSystem&          units,
                                    ::Opm::EclIO::OutputStream::Init& initFile,
-                                   std::optional<std::reference_wrapper<const std::vector<int>>> global_fathers = std::nullopt)
+                                   std::optional<std::reference_wrapper<const std::vector<int>>> active_fathers = std::nullopt)
     {
         const auto doubleKeywords = Properties {
             // do not reorder the fields below
@@ -683,13 +683,13 @@ namespace {
         const auto& fp = es.globalFieldProps();
         fp.get_double("NTG");
 
-        if (!global_fathers)
+        if (!active_fathers)
         {
             writeDoubleCellProperties(doubleKeywords, fp, units, false, initFile);
         }
         else
         {
-            writeDoubleCellPropertiesLGRCell(doubleKeywords, fp, units, false, initFile, global_fathers.value());
+            writeDoubleCellPropertiesLGRCell(doubleKeywords, fp, units, false, initFile, active_fathers.value());
         }
     }
 
@@ -707,14 +707,14 @@ namespace {
     void writeSimulatorPropertiesLGRCell(const ::Opm::EclipseGrid&         grid,
                                          const ::Opm::data::Solution&      simProps,
                                          ::Opm::EclIO::OutputStream::Init& initFile,
-                                         const std::vector<int>&           global_fathers,
+                                         const std::vector<int>&           active_fathers,
                                          bool fullProperties = false)
     {
         for (const auto& prop : simProps) {
             const auto& value = grid.compressedVector(prop.second.data<double>());
             if (!fullProperties)
             {
-                initFile.write(prop.first, singlePrecision(VectorUtil::filterArray(value, global_fathers)));
+                initFile.write(prop.first, singlePrecision(VectorUtil::filterArray(value, active_fathers)));
             }
             else
             {
@@ -902,14 +902,21 @@ namespace {
                 const auto deckIdx = grid.get_lgr_cell_index(lgr_label);
                 const std::array<int,3> subdivisions = grid.getCellSubdivisionRatioLGR(lgr_label);
                 std::vector<int> global_fathers = lgr_grid.getLGRCell_global_father(grid);
+                // The father of each active LGR cell as an active index of the
+                // main grid, for the arrays that hold one value per active cell.
+                std::vector<int> active_fathers(lgr_grid.getNumActive());
+                for (std::size_t cell = 0; cell < active_fathers.size(); ++cell) {
+                    const auto father = global_fathers[lgr_grid.getGlobalIndex(cell)];
+                    active_fathers[cell] = static_cast<int>(grid.activeIndex(father));
+                }
                 writeInitFileHeaderLGRCell(es, lgr_grid, schedule, initFile, deckIdx+1);
                 writePoreVolumeLGRCell(porv, global_fathers,
                 subdivisions[0]*subdivisions[1]*subdivisions[2], initFile);
                 writeGridGeometryLGRCell(grid, lgr_grid, units, initFile,
                                 subdivisions[0], subdivisions[1], subdivisions[2]);
-                writeDoubleCellProperties(es, units, initFile, global_fathers);
+                writeDoubleCellProperties(es, units, initFile, active_fathers);
                 const auto& simProp = fullProperties ? simProps[deckIdx + 1] : simProps[0];
-                writeSimulatorPropertiesLGRCell(fullProperties ? lgr_grid : grid, simProp, initFile, global_fathers, fullProperties);
+                writeSimulatorPropertiesLGRCell(fullProperties ? lgr_grid : grid, simProp, initFile, active_fathers, fullProperties);
                 {
                     const auto writeAll = es.cfg().io().writeAllTransMultipliers();
                     auto multipliers = es.getTransMult()
@@ -920,9 +927,9 @@ namespace {
                     ::Opm::data::TargetType::INIT);
                 }
                     // needs to be changed to support different multipliers for different LGRs if fullProperties is true
-                    writeSimulatorPropertiesLGRCell(grid, multipliers, initFile, global_fathers);
+                    writeSimulatorPropertiesLGRCell(grid, multipliers, initFile, active_fathers);
                 }
-                writeIntegerCellPropertiesLGRCell(es, global_fathers, initFile);
+                writeIntegerCellPropertiesLGRCell(es, active_fathers, initFile);
 
                 // Simulator-supplied integer maps (e.g. MPI_RANK) are written
                 // for the main grid via writeIntegerMaps(); mirror them onto
@@ -930,7 +937,7 @@ namespace {
                 // refined cell inherits its father coarse cell's value, which
                 // for rank-interior LGR boxes equals the box's owning rank.
                 for (const auto& [key, value] : int_data) {
-                    initFile.write(key, VectorUtil::filterArray(value, global_fathers));
+                    initFile.write(key, VectorUtil::filterArray(value, active_fathers));
                 }
             }
             initFile.message("LGRSGONE");
