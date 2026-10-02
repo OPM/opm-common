@@ -154,29 +154,40 @@ template <class Exception, class LogCallback>
 // Notice however, that once we abort() in a CUDA kernel, the CUDA context
 // is broken for the rest of the process, see
 // https://forums.developer.nvidia.com/t/how-to-clear-cuda-errors/296393/5
+//
+// On CUDA, abort() is only declared __host__. nvcc allows calling it from a
+// __host__ __device__ function (demoted to a warning, suppressed above), but
+// the call is then silently dropped from the device-compiled code path, so it
+// does NOT actually terminate the kernel. We must use the __trap() intrinsic
+// instead to get a real device-side abort on CUDA.
+#if defined(__CUDACC__)
+#define OPM_GPU_ABORT() __trap()
+#else
+#define OPM_GPU_ABORT() abort()
+#endif
 
 /**
  * @brief abort() is only used on the GPU, as throwing exceptions is not supported.
  */
 #define OPM_THROW(Exception, message) \
-    abort(); __builtin_unreachable()
+    OPM_GPU_ABORT(); __builtin_unreachable()
 
 /**
  * @brief abort() is only used on the GPU, as throwing exceptions is not supported.
  */
 #define OPM_THROW_PROBLEM(Exception, message) \
-   abort(); __builtin_unreachable()
+   OPM_GPU_ABORT(); __builtin_unreachable()
 
 /**
  * @brief abort() is only used on the GPU, as throwing exceptions is not supported.
  */
 #define OPM_THROW_NOLOG(Exception, message) \
-   abort(); __builtin_unreachable()
+   OPM_GPU_ABORT(); __builtin_unreachable()
 
 /**
  * @brief abort() is only used on the GPU, as throwing exceptions is not supported.
  */
 #define OPM_ERROR_IF(condition, message)                                    \
-    do {if(condition){abort(); __builtin_unreachable();}} while(false)
+    do {if(condition){OPM_GPU_ABORT(); __builtin_unreachable();}} while(false)
 #endif // GPU
 #endif // OPM_ERRORMACROS_HPP
