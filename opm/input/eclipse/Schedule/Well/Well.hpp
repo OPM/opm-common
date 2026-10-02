@@ -418,7 +418,6 @@ public:
          const std::optional<double>& ref_depth,
          const WellType& wtype_arg,
          ProducerCMode whistctl_cmode,
-         Connection::Order ordering,
          const UnitSystem& unit_system,
          double dr,
          bool allow_xflow,
@@ -504,7 +503,6 @@ public:
      */
     double production_rate( const SummaryState& st, Phase phase) const;
     double injection_rate( const SummaryState& st,  Phase phase) const;
-    static bool wellNameInWellNamePattern(const std::string& wellName, const std::string& wellNamePattern);
 
     /*
       The getCompletions() function will return a map:
@@ -535,8 +533,10 @@ public:
     bool updateRefDepth(std::optional<double> ref_dpeth);
     bool updateDrainageRadius(std::optional<double> drainage_radius);
     void updateSegments(std::shared_ptr<WellSegments> segments_arg);
-    bool updateConnections(std::shared_ptr<WellConnections> connections, bool force);
-    bool updateConnections(std::shared_ptr<WellConnections> connections, const ScheduleGrid& grid);
+
+    bool updateConnections(std::shared_ptr<WellConnections> connections, Connection::Order order, bool force);
+    bool updateConnections(std::shared_ptr<WellConnections> connections, Connection::Order order, const ScheduleGrid& grid);
+
     bool updateStatus(Status status);
     bool updateGroup(const std::string& group);
     bool updateWellGuideRate(bool available, double guide_rate, GuideRateTarget guide_phase, double scale_factor);
@@ -589,7 +589,12 @@ public:
     bool updateWELDRAW(std::shared_ptr<WELDRAW> weldraw);
 
     bool handleWELSEGS(const DeckKeyword& keyword);
-    bool handleCOMPSEGS(const DeckKeyword& keyword, const ScheduleGrid& grid, const ParseContext& parseContext, ErrorGuard& errors);
+    bool handleCOMPSEGS(const Connection::Order ordering,
+                        const DeckKeyword& keyword,
+                        const ScheduleGrid& grid,
+                        const ParseContext& parseContext,
+                        ErrorGuard& errors);
+
     // Apply a WELOPEN connection-level record, assigning 'status' to every
     // connection matching the record's I/J/K/C1-C2 filter.  Existing
     // connections assigned OPEN have their complnum appended to
@@ -597,28 +602,34 @@ public:
     // while connections assigned a non-OPEN status have their complnum appended
     // to 'requested_shut_complnums' (for clearing any pending
     // REQUEST_OPEN_COMPLETION events).
-    bool handleWELOPENConnections(const DeckRecord& record, Connection::State status,
+    bool handleWELOPENConnections(const DeckRecord& record,
+                                  Connection::Order ordering,
+                                  Connection::State status,
                                   std::vector<int>& requested_open_complnums,
                                   std::vector<int>& requested_shut_complnums);
 
-    bool handleCSKIN(const DeckRecord& record, const KeywordLocation& location);
+    bool handleCSKIN(const DeckRecord& record,
+                     Connection::Order ordering,
+                     const KeywordLocation& location);
 
     /// Apply per-connection economic limits (CECON keyword).
     ///
     /// \return Whether any connection matched; warns via
     /// SCHEDULE_NO_CONNECTION_MATCH otherwise.
     bool handleCECON(const DeckRecord&      record,
+                     Connection::Order      ordering,
                      const KeywordLocation& location,
                      const ParseContext&    parseContext,
                      ErrorGuard&            errors);
-    bool handleCOMPLUMP(const DeckRecord& record);
-    bool handleWPIMULT(const DeckRecord& record);
-    bool handleWINJCLN(const DeckRecord& record, const KeywordLocation& location);
-    bool handleWINJDAM(const DeckRecord& record, const KeywordLocation& location);
-    bool handleWINJMULT(const DeckRecord& record, const KeywordLocation& location);
+
+    bool handleCOMPLUMP(const DeckRecord& record, Connection::Order ordering);
+    bool handleWPIMULT(const DeckRecord& record, Connection::Order ordering);
+    bool handleWINJCLN(const DeckRecord& record, Connection::Order ordering, const KeywordLocation& location);
+    bool handleWINJDAM(const DeckRecord& record, Connection::Order ordering, const KeywordLocation& location);
+    bool handleWINJMULT(const DeckRecord& record, Connection::Order ordering, const KeywordLocation& location);
     void setFilterConc(const UDAValue& conc);
     double evalFilterConc(const SummaryState& summary_sate) const;
-    bool applyGlobalWPIMULT(double scale_factor);
+    bool applyGlobalWPIMULT(double scale_factor, Connection::Order ordering);
     void addWellSegmentsFromLengthsAndDepths(const std::vector<std::pair<double, double>>& lengths_and_depths, double diameter, const KeywordLocation& location);
 
     ProductionControls productionControls(const SummaryState& st) const;
