@@ -21,6 +21,7 @@
 #define ASTNODE_HPP
 
 #include <opm/input/eclipse/Schedule/Action/ActionValue.hpp>
+#include <opm/input/eclipse/Schedule/RequisiteSummaryVector.hpp>
 
 #include <cstddef>
 #include <string>
@@ -133,6 +134,21 @@ public:
     /// completion, any additional summary vectors needed to evaluate the
     /// current condition will be included in this set.
     void required_summary(std::unordered_set<std::string>& required_summary) const;
+
+    /// Export the summary vectors this condition names in full.
+    ///
+    /// A condition such as
+    ///
+    ///     BPR 10 10 3 > 250
+    ///
+    /// says exactly which vector it wants, whereas one matching a well
+    /// template does not. Only the former are reported here; the rest are
+    /// covered by required_summary(), which yields bare keywords.
+    ///
+    /// \param[in,out] vectors Summary vectors named in full.  Upon
+    /// completion, any such vector named by this condition, and recursively
+    /// by its children, will be included in this set.
+    void requisiteSummaryVectors(RequisiteSummaryVectors& vectors) const;
 
     /// Equality predicate.
     ///

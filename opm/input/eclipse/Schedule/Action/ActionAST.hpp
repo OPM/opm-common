@@ -21,6 +21,7 @@
 #define ActionAST_HPP
 
 #include <opm/input/eclipse/Schedule/Action/ActionResult.hpp>
+#include <opm/input/eclipse/Schedule/RequisiteSummaryVector.hpp>
 
 #include <memory>
 #include <string>
@@ -128,6 +129,13 @@ public:
     /// full condition block of the current AST object will be included in
     /// this set.
     void required_summary(std::unordered_set<std::string>& required_summary) const;
+
+    /// Export the summary vectors this condition block names in full.
+    ///
+    /// \param[in,out] vectors Summary vectors named in full.  Upon
+    /// completion, any such vector named by the full condition block of the
+    /// current AST object will be included in this set.
+    void requisiteSummaryVectors(RequisiteSummaryVectors& vectors) const;
 
 private:
     /// Internalised condition object in expression tree form.
