@@ -40,8 +40,11 @@
 #include <vector>
 
 // forward declaration of the class so the function in the next namespace can be declared
-template <class TraitsT, class VectorT = std::vector<typename TraitsT::Scalar>>
+namespace Opm
+{
+template <class TraitsT, class VectorT>
 class PiecewiseLinearTwoPhaseMaterialParams;
+} // namespace Opm
 
 // declaration of make_view in correct namespace so friend function can be declared in the class
 namespace Opm::gpuistl
