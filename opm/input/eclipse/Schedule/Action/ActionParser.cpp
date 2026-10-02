@@ -23,6 +23,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <cctype>
 #include <cstdlib>              // std::strtod()
 #include <cstring>              // std::strlen()
 #include <memory>
@@ -89,6 +90,22 @@ std::string makeLowercase(const std::string& arg)
                           { c = std::tolower(static_cast<unsigned char>(c)); });
 
     return lower_arg;
+}
+
+/// Determine whether token is a valid ACTIONX summary keyword expression head.
+///
+/// The ACTIONX condition grammar allows summary keyword names only as
+/// expression heads. Restriction arguments are parsed separately and may have
+/// a wider character set.
+bool isValidExpressionHeadToken(const std::string& token)
+{
+    if (token.empty() || (token.size() > 8)) {
+        return false;
+    }
+
+    return std::ranges::all_of(token, [](const unsigned char c) {
+        return std::isalnum(c) || (c == '_');
+    });
 }
 
 /// Convert sequence of action condition textual tokens into an expression
@@ -369,6 +386,14 @@ Opm::Action::ASTNode ActionParser::parse_left()
         };
     }
 
+    if (!isValidExpressionHeadToken(curr.value)) {
+        throw std::invalid_argument {
+            fmt::format(R"(Invalid ACTIONX condition left hand side quantity.
+Expected a valid summary vector name, but got '{}' (token[{}]).)",
+                        curr.value, this->current_pos_)
+        };
+    }
+
     // Note: Func must be an independent object here--i.e., not a
     // reference--since we update 'curr' in the loop below.
     auto func = curr.value;
@@ -440,6 +465,14 @@ Opm::Action::ASTNode ActionParser::parse_right()
     curr = this->current();
     if (curr.type != Opm::Action::TokenType::ecl_expr) {
         return Opm::Action::ASTNode { Opm::Action::TokenType::error };
+    }
+
+    if (!isValidExpressionHeadToken(curr.value)) {
+        throw std::invalid_argument {
+            fmt::format(R"(Invalid ACTIONX condition right hand side quantity.
+Expected a valid summary vector name, but got '{}' (token[{}]).)",
+                        curr.value, this->current_pos_)
+        };
     }
 
     // Note: Func must be an independent object here--i.e., not a
