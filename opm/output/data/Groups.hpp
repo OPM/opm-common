@@ -356,9 +356,10 @@ namespace Opm { namespace data {
     /// A master run fills the rates of its master groups (production and
     /// injection), so that rate-based summary vectors (FOPR, GOPR, ...)
     /// include what the slaves produce and inject.  A slave run fills the
-    /// injection targets in force for its slave groups, so that GGIRT/GWIRT
-    /// report the target the master imposed.  Each run fills only its own
-    /// part; the other maps stay empty.
+    /// injection targets and production limits in force for its slave
+    /// groups, so that GGIRT/GWIRT and GOPRT/GWPRT/GGPRT/GLPRT report what
+    /// the master imposed.  Each run fills only its own part; the other maps
+    /// stay empty.
     struct ReservoirCouplingGroupRates {
         struct ProductionRates {
             double oil{0}, gas{0}, water{0}, resv{0};
@@ -376,6 +377,15 @@ namespace Opm { namespace data {
         /// with the slave's own GCONINJE limit as the group's GRUPSLAV flag
         /// says.  Filled by a slave run only; reported as GGIRT/GWIRT.
         std::map<std::string, std::map<Opm::Phase, double>> injection_targets;
+
+        /// Per slave-group production rate limit in force in a slave run, by
+        /// rate type (ORAT, WRAT, GRAT, LRAT; SI units): the master's limit for
+        /// that rate type -- the target of its active control mode, or its
+        /// share of a limit further up the master's group tree -- combined
+        /// with the slave's own GCONPROD limit as the group's GRUPSLAV flag
+        /// says.  Filled by a slave run only; reported as GOPRT, GWPRT, GGPRT
+        /// and GLPRT.
+        std::map<std::string, std::map<Opm::Group::ProductionCMode, double>> production_targets;
     };
 
 }} // Opm::data

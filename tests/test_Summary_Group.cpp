@@ -311,10 +311,8 @@ BOOST_AUTO_TEST_SUITE_END()
 
 namespace {
 
-// Two injection groups, both with a GCONINJE gas and water rate target in
-// the deck.  In the test G_1 plays the reservoir coupling slave group whose
-// target in force is reported by the simulator; G_2 is an ordinary group.
-std::string slaveGroupDeck(const std::string& unit_system)
+// RUNSPEC to PROPS of the group target test decks: two cells, three phases.
+std::string targetDeckStart(const std::string& unit_system)
 {
     return R"(RUNSPEC
 DIMENS
@@ -343,7 +341,15 @@ EQUALS
 PROPS
 DENSITY
   800 1000 1.05 /
-SUMMARY
+)";
+}
+
+// Two injection groups, both with a GCONINJE gas and water rate target in
+// the deck.  In the test G_1 plays the reservoir coupling slave group whose
+// target in force is reported by the simulator; G_2 is an ordinary group.
+std::string slaveGroupDeck(const std::string& unit_system)
+{
+    return targetDeckStart(unit_system) + R"(SUMMARY
 FGIRT
 GGIRT
 /
@@ -366,6 +372,37 @@ END
 )";
 }
 
+// Two production groups, both with a GCONPROD oil, water, gas and liquid
+// rate limit in the deck, all of them honored ('RATE').  In the slave group
+// test G_1 plays the reservoir coupling slave group; G_2 is an ordinary
+// group.
+std::string productionGroupDeck(const std::string& unit_system)
+{
+    return targetDeckStart(unit_system) + R"(SUMMARY
+FOPRT
+GOPRT
+/
+GWPRT
+/
+GGPRT
+/
+GLPRT
+/
+SCHEDULE
+GRUPTREE
+  'G_1' 'FIELD' /
+  'G_2' 'FIELD' /
+/
+GCONPROD
+  'G_1' 'ORAT' 100 200 300 400 'RATE' /
+  'G_2' 'ORAT'  10  20  30  40 'RATE' /
+/
+TSTEP
+ 2*1 /
+END
+)";
+}
+
 struct SlaveGroupSetup
 {
     Deck deck;
@@ -379,8 +416,8 @@ struct SlaveGroupSetup
     std::string name;
     WorkArea ta;
 
-    explicit SlaveGroupSetup(std::string case_name, const std::string& unit_system)
-        : deck     { Parser{}.parseString(slaveGroupDeck(unit_system)) }
+    explicit SlaveGroupSetup(std::string case_name, const std::string& deck_string)
+        : deck     { Parser{}.parseString(deck_string) }
         , es       { deck }
         , grid     { es.getInputGrid() }
         , schedule { deck, es, std::make_shared<Python>() }
@@ -407,7 +444,7 @@ BOOST_AUTO_TEST_CASE(reported_target_wins_over_schedule)
 {
     for (const auto* unit_system : { "METRIC", "FIELD" }) {
         BOOST_TEST_CONTEXT("Unit system " << unit_system) {
-            SlaveGroupSetup cfg{"SLAVE_GROUP_TARGET", unit_system};
+            SlaveGroupSetup cfg{"SLAVE_GROUP_TARGET", slaveGroupDeck(unit_system)};
 
             auto writer = out::Summary {
                 cfg.config, cfg.es, cfg.grid, cfg.schedule, cfg.name
@@ -451,6 +488,116 @@ BOOST_AUTO_TEST_CASE(reported_target_wins_over_schedule)
 
             BOOST_CHECK_CLOSE(st.get_group_var("G_1", "GGIRT"), 500.0, 1.0e-10);
             BOOST_CHECK_CLOSE(st.get_group_var("G_1", "GWIRT"), 600.0, 1.0e-10);
+        }
+    }
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+// =====================================================================
+
+BOOST_AUTO_TEST_SUITE(GroupProductionTarget)
+
+// The GCONPROD rate limits come out as GOPRT, GWPRT, GGPRT and GLPRT in the
+// deck's own units.  Run in both METRIC and FIELD units: the gas limit is a
+// gas surface rate and must come out in Mscf/day in FIELD, not in the
+// reservoir rb/day of measure::rate, which differs from it by a factor of
+// about 178.
+BOOST_AUTO_TEST_CASE(schedule_targets_in_deck_units)
+{
+    for (const auto* unit_system : { "METRIC", "FIELD" }) {
+        BOOST_TEST_CONTEXT("Unit system " << unit_system) {
+            SlaveGroupSetup cfg{"GROUP_PRODUCTION_TARGET", productionGroupDeck(unit_system)};
+
+            auto writer = out::Summary {
+                cfg.config, cfg.es, cfg.grid, cfg.schedule, cfg.name
+            };
+
+            auto st = SummaryState { TimeService::now(), 0.0 };
+
+            auto values = out::Summary::DynamicSimulatorState{};
+            values.well_solution = &cfg.wells;
+            values.wbp = &cfg.wbp;
+            values.group_and_nwrk_solution = &cfg.grp_nwrk;
+
+            writer.eval(/* report_step = */ 1, /* secs_elapsed = */ 1.0*day, values, st);
+
+            BOOST_CHECK_CLOSE(st.get_group_var("G_2", "GOPRT"), 10.0, 1.0e-10);
+            BOOST_CHECK_CLOSE(st.get_group_var("G_2", "GWPRT"), 20.0, 1.0e-10);
+            BOOST_CHECK_CLOSE(st.get_group_var("G_2", "GGPRT"), 30.0, 1.0e-10);
+            BOOST_CHECK_CLOSE(st.get_group_var("G_2", "GLPRT"), 40.0, 1.0e-10);
+        }
+    }
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+// =====================================================================
+
+BOOST_AUTO_TEST_SUITE(SlaveGroupProductionTarget)
+
+// A production limit the simulator reports for a group and rate type
+// through the reservoir coupling data is reported as that group's GOPRT,
+// GWPRT, GGPRT or GLPRT; a rate type without a reported limit, and a group
+// without any, gets the schedule's limit.  As for the injection targets,
+// which groups get a report is the reporting simulator's decision.
+//
+// Run in both METRIC and FIELD units: the reported limit is in SI and must
+// come out in the summary's own unit for the rate type.
+BOOST_AUTO_TEST_CASE(reported_target_wins_over_schedule)
+{
+    for (const auto* unit_system : { "METRIC", "FIELD" }) {
+        BOOST_TEST_CONTEXT("Unit system " << unit_system) {
+            SlaveGroupSetup cfg{"SLAVE_GROUP_PRODUCTION_TARGET", productionGroupDeck(unit_system)};
+
+            auto writer = out::Summary {
+                cfg.config, cfg.es, cfg.grid, cfg.schedule, cfg.name
+            };
+
+            auto st = SummaryState { TimeService::now(), 0.0 };
+
+            auto values = out::Summary::DynamicSimulatorState{};
+            values.well_solution = &cfg.wells;
+            values.wbp = &cfg.wbp;
+            values.group_and_nwrk_solution = &cfg.grp_nwrk;
+
+            // Limits "in force" for the oil and gas rate types only, as the
+            // simulator reports them: SI, from 1234 and 3456 in the deck's
+            // own surface-rate units.
+            using M = UnitSystem::measure;
+            using CMode = Group::ProductionCMode;
+            const auto& units = cfg.es.getUnits();
+            auto rc = data::ReservoirCouplingGroupRates{};
+            rc.production_targets["G_1"][CMode::ORAT] = units.to_si(M::liquid_surface_rate, 1234.0);
+            rc.production_targets["G_1"][CMode::GRAT] = units.to_si(M::gas_surface_rate,    3456.0);
+            values.rc_group_rates = &rc;
+
+            writer.eval(/* report_step = */ 1, /* secs_elapsed = */ 1.0*day, values, st);
+
+            // Reported limits: come out unchanged, in the deck's units.
+            BOOST_CHECK_CLOSE(st.get_group_var("G_1", "GOPRT"), 1234.0, 1.0e-10);
+            BOOST_CHECK_CLOSE(st.get_group_var("G_1", "GGPRT"), 3456.0, 1.0e-10);
+
+            // Rate types without a reported limit: the schedule.
+            BOOST_CHECK_CLOSE(st.get_group_var("G_1", "GWPRT"), 200.0, 1.0e-10);
+            BOOST_CHECK_CLOSE(st.get_group_var("G_1", "GLPRT"), 400.0, 1.0e-10);
+
+            // Ordinary group: the schedule.
+            BOOST_CHECK_CLOSE(st.get_group_var("G_2", "GOPRT"), 10.0, 1.0e-10);
+            BOOST_CHECK_CLOSE(st.get_group_var("G_2", "GGPRT"), 30.0, 1.0e-10);
+
+            // FIELD shares the evaluator (FOPRT) and has no report either:
+            // the schedule, which gives FIELD no oil limit.
+            BOOST_CHECK_SMALL(st.get("FOPRT"), 1.0e-10);
+
+            // No reported limit any more: back to the schedule, whatever the
+            // previous evaluation left in the summary state.
+            values.rc_group_rates = nullptr;
+
+            writer.eval(/* report_step = */ 1, /* secs_elapsed = */ 2.0*day, values, st);
+
+            BOOST_CHECK_CLOSE(st.get_group_var("G_1", "GOPRT"), 100.0, 1.0e-10);
+            BOOST_CHECK_CLOSE(st.get_group_var("G_1", "GGPRT"), 300.0, 1.0e-10);
         }
     }
 }
