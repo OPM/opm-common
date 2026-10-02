@@ -158,7 +158,7 @@ namespace Opm {
     try :
         m_static(python, ScheduleRestartInfo(rst, deck), deck, runspec,
                  output_interval, parseContext, errors, slave_mode)
-        , m_sched_deck(TimeService::from_time_t(runspec.start_time()), deck, m_static.rst_info)
+        , m_sched_deck(runspec.start_time(), deck, m_static.rst_info)
         , completed_cells(ecl_grid.getNX(), ecl_grid.getNY(), ecl_grid.getNZ())
         , m_lowActionParsingStrictness(lowActionParsingStrictness)
     {
@@ -406,21 +406,17 @@ namespace Opm {
         return result;
     }
 
-    std::time_t Schedule::getStartTime() const {
-        return this->posixStartTime( );
+    time_point Schedule::getStartTime() const {
+        return this->m_sched_deck[0].start_time();
     }
 
-    std::time_t Schedule::posixStartTime() const {
-        return std::chrono::system_clock::to_time_t(this->m_sched_deck[0].start_time());
-    }
-
-    std::time_t Schedule::posixEndTime() const {
+    time_point Schedule::getEndTime() const {
         // This should indeed access the start_time() property of the last
         // snapshot.
         if (this->snapshots.size() > 0)
-            return std::chrono::system_clock::to_time_t(this->snapshots.back().start_time());
+            return this->snapshots.back().start_time();
         else
-            return this->posixStartTime( );
+            return this->getStartTime( );
     }
 
 
@@ -700,7 +696,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
             const auto& block = this->m_sched_deck[report_step];
             auto time_type = block.time_type();
             if (time_type == ScheduleTimeType::DATES || time_type == ScheduleTimeType::TSTEP) {
-                const auto& start_date = Schedule::formatDate(std::chrono::system_clock::to_time_t(block.start_time()));
+                const auto& start_date = Schedule::formatDate(block.start_time());
                 const auto& days = deck_time(this->stepLength(report_step - 1));
                 const auto& days_total = deck_time(this->seconds(report_step - 1));
                 logger.complete_step(fmt::format("Complete report step {0} ({1} {2}) at {3} ({4} {2})",
@@ -743,7 +739,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                     auto [action, condition_errors] =
                         Action::parseActionX(keyword,
                                               this->m_static.m_runspec.actdims(),
-                                              std::chrono::system_clock::to_time_t(this->snapshots[report_step].start_time()));
+                                              this->snapshots[report_step].start_time());
 
                     for(const auto& [ marker, msg]: condition_errors) {
                         parseContext.handleError(marker, msg, keyword.location(), errors);
@@ -1001,8 +997,7 @@ Defaulted grid coordinates is not allowed for COMPDAT as part of ACTIONX)"
         } else if (report_step >= this->m_sched_deck.size()) {
             throw std::invalid_argument(fmt::format("Well status change for report step {} requested, this exceeds the total number of report steps, being {}.", report_step, this->m_sched_deck.size() - 1));
         }
-        std::time_t start_time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::from_time_t(0));
-        Opm::Action::ActionX action("openwell", 1, 0.0, start_time);
+        Opm::Action::ActionX action("openwell", 1, 0.0, time_point{});
         DeckItem wellItem("WELL", std::string());
         wellItem.push_back(well_name);
         DeckItem statusItem("STATUS", std::string());
@@ -1734,8 +1729,8 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
         return DurationInSeconds(elapsed).count();
     }
 
-    std::time_t Schedule::simTime(std::size_t timeStep) const {
-        return std::chrono::system_clock::to_time_t( this->snapshots[timeStep].start_time() );
+    time_point Schedule::simTime(std::size_t timeStep) const {
+        return this->snapshots[timeStep].start_time();
     }
 
     double Schedule::stepLength(std::size_t timeStep) const {
@@ -1748,8 +1743,8 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
                                 "   * End time   = {:%d-%b-%Y %H:%M:%S}.\n"
                                 " Possibly due to inconsistent RESTART/SKIPREST settings.",
                                 timeStep + 1,
-                                fmt::gmtime(TimeService::to_time_t(start_time)),
-                                fmt::gmtime(TimeService::to_time_t(end_time))) };
+                                asTm(TimeStampUTC { start_time }),
+                                asTm(TimeStampUTC { end_time })) };
         }
         using DurationInSeconds = std::chrono::duration<double>; // Tick is 1 second, stored in double.
         return DurationInSeconds(end_time - start_time).count();
@@ -2293,8 +2288,8 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
      }
 
 
-    std::string Schedule::formatDate(std::time_t t) {
-        const auto ts { TimeStampUTC(t) } ;
+    std::string Schedule::formatDate(const time_point& tp) {
+        const auto ts { TimeStampUTC(tp) } ;
         return fmt::format("{:04d}-{:02d}-{:02d}" , ts.year(), ts.month(), ts.day());
     }
 

@@ -20,8 +20,9 @@
 #ifndef ACTION_STATE_HPP
 #define ACTION_STATE_HPP
 
+#include <opm/common/utility/TimeService.hpp>
+
 #include <cstddef>
-#include <ctime>
 #include <map>
 #include <memory>
 #include <optional>
@@ -100,7 +101,7 @@ public:
     ///
     /// \param[in] result Result of evaluating the action triggers,
     /// including any matching entities such as wells.
-    void add_run(const ActionX& action, std::time_t sim_time, const Result& result);
+    void add_run(const ActionX& action, time_point sim_time, const Result& result);
 
     /// Record PyAction Run
     ///
@@ -124,7 +125,7 @@ public:
     /// \param[in] action Action object.
     ///
     /// \return Time point of \p action's last execution.
-    std::time_t run_time(const ActionX& action) const;
+    time_point run_time(const ActionX& action) const;
 
     /// Retrieve set of matching entities from the last time an action ran.
     ///
@@ -185,7 +186,7 @@ private:
         /// Constructor
         ///
         /// \param[in] sim_time Time at which action object ran.
-        explicit RunState(const std::time_t sim_time)
+        explicit RunState(const time_point sim_time)
             : run_count(1)
             , last_run(sim_time)
         {}
@@ -193,7 +194,7 @@ private:
         /// Record ActionX Run
         ///
         /// \param[in] sim_time Time at which action object ran.
-        void add_run(const std::time_t sim_time)
+        void add_run(const time_point sim_time)
         {
             this->last_run = sim_time;
             this->run_count += 1;
@@ -205,7 +206,7 @@ private:
             RunState rs;
 
             rs.run_count = 100;
-            rs.last_run = 123456;
+            rs.last_run = TimeService::from_time_t(123456);
 
             return rs;
         }
@@ -238,7 +239,7 @@ private:
         std::size_t run_count{};
 
         /// Timestamp of action's last run.
-        std::time_t last_run{};
+        time_point last_run{};
     };
 
     /// Action ID: Pair of action name and a numeric ID.

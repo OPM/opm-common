@@ -24,7 +24,6 @@
 #include <opm/input/eclipse/Schedule/Action/PyAction.hpp>
 
 #include <cstddef>
-#include <ctime>
 #include <string>
 #include <vector>
 
@@ -106,7 +105,7 @@ public:
     ///
     /// \return Whether or not any ActionX objects in the current collection
     /// are ready to run at time \p sim_time.
-    bool ready(const State& state, std::time_t sim_time) const;
+    bool ready(const State& state, time_point sim_time) const;
 
     /// Look up ActionX object by name.
     ///
@@ -140,7 +139,7 @@ public:
     ///
     /// \return Those ActionX objects that are ready to run at this time.
     std::vector<const ActionX*>
-    pending(const State& state, std::time_t sim_time) const;
+    pending(const State& state, time_point sim_time) const;
 
     /// Retrieve PyAction objects that are ready to run.
     ///

@@ -746,7 +746,7 @@ BOOST_AUTO_TEST_CASE(Netbalan)
 
     Opm::Schedule     sched = simCase.sched;
     const auto& start_time = sched.getStartTime();
-    double simTime = start_time + 2.E09;
+    double simTime = Opm::TimeService::to_time_t(start_time) + 2.E09;
 
     const std::size_t report_step = 1;
     const std::size_t lookup_step = report_step - 1;

@@ -262,9 +262,8 @@ namespace Opm
         this->update_elapsed(0);
     }
 
-    SummaryState::SummaryState(const std::time_t sim_start_arg)
-        : SummaryState { TimeService::from_time_t(sim_start_arg),
-                         std::numeric_limits<double>::lowest() }
+    SummaryState::SummaryState(const time_point sim_start_arg)
+        : SummaryState { sim_start_arg, std::numeric_limits<double>::lowest() }
     {}
 
     void SummaryState::set(const std::string& key, double value)
