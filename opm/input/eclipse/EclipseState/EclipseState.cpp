@@ -640,6 +640,8 @@ namespace Opm {
     }
 
     void EclipseState::reset_actnum(const std::vector<int>& new_actnum) {
+        // Keep grid and field-property activity masks aligned.
+        this->m_inputGrid.resetACTNUM(new_actnum);
         this->field_props.reset_actnum(new_actnum);
     }
 

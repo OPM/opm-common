@@ -27,6 +27,7 @@
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
 #include <opm/input/eclipse/Deck/DeckSection.hpp>
 
+#include <opm/input/eclipse/Parser/ParserKeywords/D.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/F.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/G.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/I.hpp>
@@ -94,6 +95,76 @@ namespace {
 
             return egrid_item.get<int>(0) == 1;
         }
+    }
+
+    std::string parseFluxType(const Opm::GRIDSection& grid)
+    {
+        if (!grid.hasKeyword<Opm::ParserKeywords::FLUXTYPE>()) {
+            return "FLUX";
+        }
+
+        auto mode = grid.get<Opm::ParserKeywords::FLUXTYPE>()
+            .back()
+            .getRecord(0)
+            .getItem<Opm::ParserKeywords::FLUXTYPE::BC_TYPE>()
+            .getTrimmedString(0);
+
+        std::ranges::transform(mode,
+                               mode.begin(),
+                               [](const unsigned char c)
+                               {
+                                   return static_cast<char>(std::toupper(c));
+                               });
+
+        if (mode == "FLUX" || mode == "PRESSURE" || mode == "BOTH") {
+            return mode;
+        }
+
+        Opm::OpmLog::warning("Unrecognized FLUXTYPE BC_TYPE value '" + mode
+                             + "', defaulting to FLUX output mode");
+        return "FLUX";
+    }
+
+    bool parseUseFlux(const Opm::GRIDSection& grid)
+    {
+        return grid.hasKeyword<Opm::ParserKeywords::USEFLUX>();
+    }
+
+    // FLUXNUM is an ordinary region array that other keywords, MULTREGT
+    // among them, may use for their own purposes. Only DUMPFLUX asks for
+    // the sector boundary to be written, and a run that both reads one and
+    // writes one is not supported.
+    bool parseDumpFlux(const Opm::GRIDSection& grid)
+    {
+        return grid.hasKeyword<Opm::ParserKeywords::DUMPFLUX>()
+            && !grid.hasKeyword<Opm::ParserKeywords::USEFLUX>();
+    }
+
+    std::string parseUseFluxBaseName(const Opm::GRIDSection& grid)
+    {
+        if (!grid.hasKeyword<Opm::ParserKeywords::USEFLUX>()) {
+            return {};
+        }
+
+        return grid.get<Opm::ParserKeywords::USEFLUX>()
+            .back()
+            .getRecord(0)
+            .getItem<Opm::ParserKeywords::USEFLUX::FLUX_BASENAME>()
+            .getTrimmedString(0);
+    }
+
+    std::vector<int> parseUseFluxRegions(const Opm::GRIDSection& grid)
+    {
+        if (!grid.hasKeyword<Opm::ParserKeywords::FLUXREG>()) {
+            return {};
+        }
+
+        const auto& item = grid.get<Opm::ParserKeywords::FLUXREG>()
+            .back()
+            .getRecord(0)
+            .getItem<Opm::ParserKeywords::FLUXREG::REGIONS>();
+
+        return item.getData<int>();
     }
 
     bool normalize_case(std::string& s)
@@ -169,6 +240,11 @@ namespace Opm {
 
         result.m_UNIFIN = true;
         result.m_UNIFOUT = true;
+        result.m_use_flux = false;
+        result.m_dump_flux = true;
+        result.m_use_flux_base_name = "";
+        result.m_use_flux_regions = {};
+        result.m_flux_type = "FLUX";
 
         result.m_output_enabled = false;
         result.ecl_compatible_rst = false;
@@ -188,6 +264,11 @@ namespace Opm {
         , m_FMTOUT             (runspec.hasKeyword<ParserKeywords::FMTOUT>())
         , m_nosim              (nosim)
         , m_write_all_multminus(write_all_trans_multipliers(runspec))
+        , m_use_flux           (parseUseFlux(grid))
+        , m_dump_flux          (parseDumpFlux(grid))
+        , m_use_flux_base_name (parseUseFluxBaseName(grid))
+        , m_use_flux_regions   (parseUseFluxRegions(grid))
+        , m_flux_type          (parseFluxType(grid))
     {
         this->setBaseName(basename(input_path));
 
@@ -259,6 +340,36 @@ namespace Opm {
     bool IOConfig::getFMTOUT() const
     {
         return m_FMTOUT;
+    }
+
+    bool IOConfig::getUseFlux() const
+    {
+        return this->m_use_flux;
+    }
+
+    bool IOConfig::getDumpFlux() const
+    {
+        return this->m_dump_flux;
+    }
+
+    const std::string& IOConfig::getUseFluxBaseName() const
+    {
+        return this->m_use_flux_base_name;
+    }
+
+    std::string IOConfig::getUseFluxInputBaseName() const
+    {
+        return this->m_use_flux_base_name.empty() ? this->getBaseName() : this->m_use_flux_base_name;
+    }
+
+    const std::vector<int>& IOConfig::getUseFluxRegions() const
+    {
+        return this->m_use_flux_regions;
+    }
+
+    const std::string& IOConfig::getFluxType() const
+    {
+        return this->m_flux_type;
     }
 
     std::string IOConfig::getRestartFileName(const std::string& restart_base,
@@ -367,6 +478,11 @@ namespace Opm {
             && (this->initOnly() == data.initOnly())
             && (this->getBaseName() == data.getBaseName())
             && (this->getEclCompatibleRST() == data.getEclCompatibleRST())
+            && (this->getUseFlux() == data.getUseFlux())
+            && (this->getDumpFlux() == data.getDumpFlux())
+            && (this->getUseFluxBaseName() == data.getUseFluxBaseName())
+            && (this->getUseFluxRegions() == data.getUseFluxRegions())
+            && (this->getFluxType() == data.getFluxType())
             ;
     }
 

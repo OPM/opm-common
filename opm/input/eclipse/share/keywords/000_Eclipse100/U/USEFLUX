@@ -2,5 +2,13 @@
   "name": "USEFLUX",
   "sections": [
     "GRID"
+  ],
+  "size": 1,
+  "items": [
+    {
+      "name": "FLUX_BASENAME",
+      "value_type": "STRING",
+      "default": ""
+    }
   ]
 }

@@ -21,6 +21,7 @@
 #define OPM_IO_CONFIG_HPP
 
 #include <string>
+#include <vector>
 
 namespace Opm {
 
@@ -156,6 +157,16 @@ namespace Opm {
         bool getUNIFIN() const;
         bool getFMTIN() const;
         bool getFMTOUT() const;
+        bool getUseFlux() const;
+
+        /// Whether this run writes sector boundary data for the FLUXNUM
+        /// regions to a FLUX file, i.e. has DUMPFLUX and not USEFLUX.
+        bool getDumpFlux() const;
+
+        const std::string& getUseFluxBaseName() const;
+        std::string getUseFluxInputBaseName() const;
+        const std::vector<int>& getUseFluxRegions() const;
+        const std::string& getFluxType() const;
 
         bool writeAllTransMultipliers() const
         {
@@ -205,6 +216,11 @@ namespace Opm {
             serializer(m_base_name);
             serializer(m_UNIFIN);
             serializer(m_UNIFOUT);
+            serializer(m_use_flux);
+            serializer(m_dump_flux);
+            serializer(m_use_flux_base_name);
+            serializer(m_use_flux_regions);
+            serializer(m_flux_type);
 
             serializer(m_output_enabled);
             serializer(ecl_compatible_rst);
@@ -232,6 +248,11 @@ namespace Opm {
 
         bool m_UNIFIN { false };
         bool m_UNIFOUT { false };
+        bool m_use_flux { false };
+        bool m_dump_flux { false };
+        std::string m_use_flux_base_name {};
+        std::vector<int> m_use_flux_regions {};
+        std::string m_flux_type { "FLUX" };
 
         bool m_output_enabled { true };
         bool ecl_compatible_rst { true };
