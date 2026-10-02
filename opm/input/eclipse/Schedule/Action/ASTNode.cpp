@@ -214,6 +214,25 @@ required_summary(std::unordered_set<std::string>& required_summary) const
     }
 }
 
+void Opm::Action::ASTNode::
+requisiteSummaryVectors(RequisiteSummaryVectors& vectors) const
+{
+    // An empty argument list means the condition applies to every object of
+    // its kind, and a pattern -- a well template or a well list -- means it
+    // applies to whichever of them match when the run gets there. Neither
+    // names a vector, so neither belongs here.
+    if ((this->type == TokenType::ecl_expr) &&
+        ! this->arg_list.empty() &&
+        ! this->argListIsPattern())
+    {
+        vectors.insert({ this->func, this->arg_list });
+    }
+
+    for (const auto& node : this->children) {
+        node.requisiteSummaryVectors(vectors);
+    }
+}
+
 bool Opm::Action::ASTNode::operator==(const ASTNode& that) const
 {
     return (this->type == that.type)

@@ -24,6 +24,7 @@
 #include <opm/input/eclipse/Schedule/UDQ/UDQEnums.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQSet.hpp>
 
+#include <algorithm>
 #include <cstddef>
 #include <stdexcept>
 #include <string>
@@ -209,6 +210,35 @@ const std::string& UDQAssign::keyword() const
 UDQVarType UDQAssign::var_type() const
 {
     return this->m_var_type;
+}
+
+void UDQAssign::requisiteSummaryVectors(RequisiteSummaryVectors& vectors) const
+{
+    for (const auto& record : this->records) {
+        if (! record.input_selector.empty()) {
+            // The selector as the deck wrote it. For a block or connection
+            // level quantity that is the cell, or the well and the cell, and
+            // nothing else in the deck records which one is meant.
+            const auto templated =
+                std::any_of(record.input_selector.begin(),
+                            record.input_selector.end(),
+                            [](const std::string& item)
+                            { return item.find('*') != std::string::npos; });
+
+            if (! templated) {
+                vectors.insert({ this->m_keyword, record.input_selector });
+            }
+        }
+
+        // A segment level quantity arrives already resolved, as a well name
+        // and the segments of it this assignment covers.
+        for (const auto& item : record.numbered_selector) {
+            for (const auto number : item.numbers) {
+                vectors.insert({ this->m_keyword,
+                                 { item.name, std::to_string(number) } });
+            }
+        }
+    }
 }
 
 std::size_t UDQAssign::report_step() const

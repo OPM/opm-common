@@ -20,6 +20,7 @@
 #ifndef UDQASSIGN_HPP_
 #define UDQASSIGN_HPP_
 
+#include <opm/input/eclipse/Schedule/RequisiteSummaryVector.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQEnums.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQSet.hpp>
 
@@ -142,6 +143,17 @@ public:
 
     /// Kind of UDQ to which this assignment applies.
     UDQVarType var_type() const;
+
+    /// Export the summary vectors this assignment names in full.
+    ///
+    /// An assignment reads no summary vector, but it does say which objects
+    /// the quantity exists for, and for a block, connection or segment level
+    /// UDQ that is the only such record in the deck. Anyone arranging to
+    /// report the quantity needs it.
+    ///
+    /// \param[in,out] vectors Summary vectors named in full.  On exit also
+    /// contains this quantity, once per object this assignment covers.
+    void requisiteSummaryVectors(RequisiteSummaryVectors& vectors) const;
 
     /// Add new record to existing UDQ assignment.
     ///

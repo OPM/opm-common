@@ -676,6 +676,24 @@ namespace Opm {
         }
     }
 
+    void UDQConfig::requisiteSummaryVectors(RequisiteSummaryVectors& vectors) const
+    {
+        for (const auto& def_pair : this->m_definitions) {
+            def_pair.second.requisiteSummaryVectors(vectors);
+        }
+
+        for (const auto& assign_pair : this->m_assignments) {
+            assign_pair.second.requisiteSummaryVectors(vectors);
+        }
+    }
+
+    void UDQConfig::requiredUDQs(std::unordered_set<std::string>& udqs) const
+    {
+        for (const auto& def_pair : this->m_definitions) {
+            def_pair.second.requiredUDQs(udqs);
+        }
+    }
+
     // ===========================================================================
     // Private member functions below separator
     // ===========================================================================

@@ -330,6 +330,16 @@ void UDQDefine::required_summary(std::unordered_set<std::string>& summary_keys) 
     this->ast->required_summary(summary_keys);
 }
 
+void UDQDefine::requisiteSummaryVectors(RequisiteSummaryVectors& vectors) const
+{
+    this->ast->requisiteSummaryVectors(vectors);
+}
+
+void UDQDefine::requiredUDQs(std::unordered_set<std::string>& udqs) const
+{
+    this->ast->requiredUDQs(udqs);
+}
+
 UDQSet UDQDefine::eval(const UDQContext& context) const
 {
     auto res = std::optional<UDQSet>{};

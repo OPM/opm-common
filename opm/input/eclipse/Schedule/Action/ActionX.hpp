@@ -223,6 +223,14 @@ public:
     /// this set.
     void required_summary(std::unordered_set<std::string>& required_summary) const;
 
+    /// Export the summary vectors the conditions of the current ActionX
+    /// object name in full.
+    ///
+    /// \param[in,out] vectors Summary vectors named in full.  Upon
+    /// completion, any such vector named by the full condition block of the
+    /// current ActionX object will be included in this set.
+    void requisiteSummaryVectors(RequisiteSummaryVectors& vectors) const;
+
     /// Retrieve name of action object.
     std::string name() const { return this->m_name; }
 
