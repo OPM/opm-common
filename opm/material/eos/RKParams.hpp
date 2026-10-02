@@ -26,6 +26,10 @@
 #ifndef RK_PARAMS_HPP
 #define RK_PARAMS_HPP
 
+#include <opm/material/Constants.hpp>
+
+#include <cmath>
+
 namespace Opm {
 
 template <class Scalar, class FluidSystem>
@@ -34,11 +38,16 @@ class RKParams
     static constexpr Scalar R = Constants<Scalar>::R;
 
 public:
+    //! The equation's own \f$\Omega_a\f$, which OMEGAA replaces per component.
+    static constexpr double omegaA()
+    {
+        return 0.4274802;
+    }
 
     static Scalar calcOmegaA(Scalar temperature, unsigned compIdx)
     {
         Scalar Tr = temperature / FluidSystem::criticalTemperature(compIdx);
-        return 0.4274802 / sqrt(Tr);
+        return omegaA() / sqrt(Tr);
     }
 
     static Scalar calcOmegaB()
