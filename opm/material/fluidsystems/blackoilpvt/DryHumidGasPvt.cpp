@@ -245,6 +245,7 @@ void DryHumidGasPvt<Scalar>::setNumRegions(std::size_t numRegions)
     inverseSaturatedGasBMu_.resize(numRegions);
     gasMu_.resize(numRegions, TabulatedTwoDFunction{TabulatedTwoDFunction::InterpolationPolicy::RightExtreme});
     saturatedWaterVaporizationFactorTable_.resize(numRegions);
+    saturatedWaterVaporizationSaltFactorTable_.resize(numRegions, TabulatedTwoDFunction{TabulatedTwoDFunction::InterpolationPolicy::RightExtreme});
     saturationPressure_.resize(numRegions);
 }
 
