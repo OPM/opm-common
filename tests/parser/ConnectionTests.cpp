@@ -1326,3 +1326,138 @@ In <memory string> line 44
 Connection (2,1,2) (direction 'Y') for well P ignored because
    PERMZ=0.000e+00 mD and PERMX=0.000e+00 mD.)");
 }
+
+namespace {
+
+    Opm::Deck zeroPermMSWDeck()
+    {
+        return Opm::Parser{}.parseString(R"(RUNSPEC
+START
+  18 MAR 2026 /
+OIL
+WATER
+DIMENS
+3 1 3 /
+TABDIMS
+/
+EQLDIMS
+/
+WELLDIMS
+ 1 3 1 1 /
+WSEGDIMS
+ 1 5 1 /
+GRID
+DXV
+ 3*100 /
+DYV
+ 100 /
+DZV
+ 3*10 /
+DEPTHZ
+ 8*2000 /
+EQUALS
+ PERMX 100 /
+ PERMY 100 /
+ PERMZ  10 /
+ PORO    0.3 /
+/
+-- Kx(2,1,2) = Ky(2,1,2) = 0.
+EQUALS
+ PERMX 0  2 2  1 1  2 2 /
+ PERMY 0 /
+/
+PROPS
+DENSITY
+  800 1000 1 /
+SOLUTION
+EQUIL
+2010 200 2010 1.23 1995 0.0 1* 1* -5 /
+SCHEDULE
+WELSPECS
+  'P' 'G' 2 1 2005.0 LIQ /
+/
+COMPDAT
+  'P'  2  1  1  3  OPEN  1  1*  0.3048  /
+/
+WELSEGS
+  'P' 2000.0 0.0 1* 'INC' 'HFA' /
+  2  4  1  1  10.0  10.0  0.1  1.0e-3 /
+/
+COMPSEGS
+  'P' /
+  2  1  1  1   0.0  10.0 /
+  2  1  2  1  10.0  20.0 /
+  2  1  3  1  20.0  30.0 /
+/
+TSTEP
+  5*10 /
+END
+)");
+    }
+
+} // Anonymous namespace
+
+BOOST_AUTO_TEST_CASE(Compsegs_Zero_Perm_Dflt_Action)
+{
+    const auto deck = zeroPermMSWDeck();
+
+    const auto ctx = Opm::ParseContext{};
+    auto errors = Opm::ErrorGuard{};
+
+    const auto es = Opm::EclipseState { deck };
+    const auto sched = Opm::Schedule {
+        deck, es, ctx, errors,
+        std::make_shared<Opm::Python>()
+    };
+
+    const auto& well_p = sched.back().wells("P");
+
+    BOOST_REQUIRE_MESSAGE(well_p.isMultiSegment(),
+                          R"(Well "P" must be a multi-segmented well)");
+
+    const auto& conns = well_p.getConnections();
+    BOOST_REQUIRE_EQUAL(conns.size(), std::size_t{2});
+
+    BOOST_CHECK_EQUAL(conns[0].getK(), 0);
+    BOOST_CHECK_MESSAGE(conns[0].attachedToSegment(),
+                        "Connection (2,1,1) must be attached to a segment");
+
+    BOOST_CHECK_EQUAL(conns[1].getK(), 2);
+    BOOST_CHECK_MESSAGE(conns[1].attachedToSegment(),
+                        "Connection (2,1,3) must be attached to a segment");
+}
+
+BOOST_AUTO_TEST_CASE(Compsegs_Zero_Perm_Diagnostic_Text)
+{
+    const auto deck = zeroPermMSWDeck();
+
+    const auto ctx = Opm::ParseContext {
+        std::vector {
+            std::pair { Opm::ParseContext::SCHEDULE_COMPDAT_ZERO_PERM,
+                        Opm::InputErrorAction::DELAYED_EXIT1 },
+        }
+    };
+
+    auto errors = Opm::ErrorGuard{};
+
+    const auto es = Opm::EclipseState { deck };
+    const auto sched = Opm::Schedule {
+        deck, es, ctx, errors,
+        std::make_shared<Opm::Python>()
+    };
+
+    const auto diagnostic = errors.formattedErrors();
+    errors.clear();
+
+    // Note: Leading newline ("R(\n)) added by ErrorGuard::formattedErrors().
+    BOOST_CHECK_EQUAL(diagnostic, R"(
+Problem with keyword COMPDAT
+In <memory string> line 46
+Connection (2,1,2) (direction 'Z') for well P ignored because
+   PERMX=0.000e+00 mD and PERMY=0.000e+00 mD.
+Problem with keyword COMPSEGS
+In <memory string> line 53
+Connection (2,1,2) for well P not attached to a segment because the
+connection does not exist, likely having been ignored due to zero permeability
+   PERMX=0.000e+00 mD, PERMY=0.000e+00 mD, and PERMZ=1.000e+01 mD.)");
+}
