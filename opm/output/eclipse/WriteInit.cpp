@@ -1015,9 +1015,10 @@ namespace {
         // LGRSGONE is only written if at least one LGR block was written.
         bool anyLGRNNCWritten = false;
         for (std::size_t index : grid.get_print_order_lgr()) {
-            const auto lgr_label = all_lgr_tag[index];
-            const Opm::EclipseGridLGR& lgr_grid = grid.getLGRCell(lgr_label);
-            const std::size_t lgr_grid_index = index + 1;  // 0 == global in NNCCollection
+            // The LGR grids in their EGRID order, as in writeLGRLocalProperties();
+            // the NNC collection numbers them by their deck index.
+            const Opm::EclipseGridLGR& lgr_grid = grid.getLGRCell(index);
+            const std::size_t lgr_grid_index = grid.get_lgr_cell_index(lgr_grid.get_lgr_tag()) + 1;  // 0 == global in NNCCollection
 
             if (!nnc_col.hasNNCForGrid(lgr_grid_index))
                 continue;
