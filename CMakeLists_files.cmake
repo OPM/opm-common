@@ -709,6 +709,7 @@ list(APPEND DUNE_TEST_SOURCE_FILES
   tests/material/test_co2brinepvt.cpp
   tests/material/test_co2brine_ptflash.cpp
   tests/material/test_components.cpp
+  tests/material/test_critical_volume.cpp
   tests/material/test_eclblackoilfluidsystem.cpp
   tests/material/test_cubiceos_finite_guard.cpp
   tests/material/test_eclblackoilfluidsystemnonstatic.cpp
