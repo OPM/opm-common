@@ -20,6 +20,7 @@
 #include "WellCompletionKeywordHandlers.hpp"
 
 #include <opm/common/OpmLog/OpmLog.hpp>
+#include <opm/common/utility/OpmInputError.hpp>
 
 #include <opm/input/eclipse/Schedule/ScheduleState.hpp>
 #include <opm/input/eclipse/Schedule/Well/WDFAC.hpp>
@@ -34,6 +35,7 @@
 
 #include <functional>
 #include <memory>
+#include <optional>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -145,14 +147,55 @@ Well {} is not connected to grid - will remain SHUT)",
     }
 }
 
+// A connection is built in the grid its keyword names (COMPDAT: the global
+// grid, COMPDATL: the local grid in the record), but placed in the well's own
+// grid (WELSPECS: the global grid, WELSPECL: its local grid), so the two must
+// be the same.
+void checkConnectionGrid(HandlerContext&                   handlerContext,
+                         const std::string&                wname,
+                         const std::optional<std::string>& connection_lgr)
+{
+    const auto well_lgr = handlerContext.state().wells(wname).get_lgr_well_tag();
+    if (well_lgr == connection_lgr) {
+        return;
+    }
+
+    const auto grid = [](const std::optional<std::string>& lgr)
+    {
+        return lgr.has_value() ? fmt::format("local grid {}", *lgr) : std::string { "the global grid" };
+    };
+
+    const auto msg = fmt::format("Well {} is in {}, but {} gives its connection in {}",
+                                 wname, grid(well_lgr), handlerContext.keyword.name(),
+                                 grid(connection_lgr));
+    throw OpmInputError(msg, handlerContext.keyword.location());
+}
+
 void handleCOMPDAT(HandlerContext& handlerContext)
 {
-    handleCOMPDATX(handlerContext, &WellConnections::loadCOMPDAT);
+    handleCOMPDATX(handlerContext,
+                   [&handlerContext](WellConnections&   connections,
+                                     const DeckRecord&  record,
+                                     const std::string& wname,
+                                     auto&&...          args)
+    {
+        checkConnectionGrid(handlerContext, wname, std::nullopt);
+        connections.loadCOMPDAT(record, wname, std::forward<decltype(args)>(args)...);
+    });
 }
 
 void handleCOMPDATL(HandlerContext& handlerContext)
 {
-    handleCOMPDATX(handlerContext, &WellConnections::loadCOMPDATL);
+    handleCOMPDATX(handlerContext,
+                   [&handlerContext](WellConnections&   connections,
+                                     const DeckRecord&  record,
+                                     const std::string& wname,
+                                     auto&&...          args)
+    {
+        checkConnectionGrid(handlerContext, wname,
+                            record.getItem<ParserKeywords::COMPDATX::LGR>().getTrimmedString(0));
+        connections.loadCOMPDATL(record, wname, std::forward<decltype(args)>(args)...);
+    });
 }
 
 void handleCOMPLUMP(HandlerContext& handlerContext)
