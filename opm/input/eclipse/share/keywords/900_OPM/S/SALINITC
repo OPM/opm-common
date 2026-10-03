@@ -1,0 +1,46 @@
+{
+  "name": "SALINITC",
+  "sections": [
+    "PROPS"
+  ],
+  "prohibits": [
+    "SALINITY",
+    "SALTMF"
+  ],
+  "requires": [
+    "SALTMC"
+  ],
+  "size": 1,
+  "items": [
+    {
+      "name": "NA",
+      "value_type": "DOUBLE",
+      "default": 0.0
+    },
+    {
+      "name": "K",
+      "value_type": "DOUBLE",
+      "default": 0.0
+    },
+    {
+      "name": "CA",
+      "value_type": "DOUBLE",
+      "default": 0.0
+    },
+    {
+      "name": "MG",
+      "value_type": "DOUBLE",
+      "default": 0.0
+    },
+    {
+      "name": "CL",
+      "value_type": "DOUBLE",
+      "default": 0.0
+    },
+    {
+      "name": "SO4",
+      "value_type": "DOUBLE",
+      "default": 0.0
+    }
+  ]
+}
