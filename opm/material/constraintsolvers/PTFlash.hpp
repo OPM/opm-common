@@ -1020,6 +1020,10 @@ protected:
         const Eval& liquid_fraction = fluid_state.L();
         jacobian = 0.;
         residual = 0.;
+        // Fugacities are of the order of the pressure, so their rows are
+        // scaled by it: an absolute tolerance on raw differences sits at the
+        // round-off floor of the EoS at reservoir pressure.
+        const double pref = Opm::getValue(fluid_state.pressure(oilPhaseIdx));
         for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
             {
                 // z - L*x - (1-L) * y
@@ -1033,9 +1037,9 @@ protected:
             }
 
             {
-                // f_liquid - f_vapor = 0
-                const auto fugacity_difference = fluid_state.fugacity(oilPhaseIdx, compIdx)
-                    - fluid_state.fugacity(gasPhaseIdx, compIdx);
+                // (f_liquid - f_vapor) / p = 0
+                const auto fugacity_difference = (fluid_state.fugacity(oilPhaseIdx, compIdx)
+                    - fluid_state.fugacity(gasPhaseIdx, compIdx)) / pref;
                 residual[compIdx + numComponents] = Opm::getValue(fugacity_difference);
                 for (unsigned unknown_idx = 0; unknown_idx < num_unknowns; ++unknown_idx) {
                     jacobian[compIdx + numComponents][unknown_idx]
