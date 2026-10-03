@@ -65,6 +65,9 @@ struct iterator_range {
     OPM_HOST_DEVICE const typename Iter::value_type& operator[](int idx) const
     { return *(begin_+ idx); }
 
+    OPM_HOST_DEVICE const typename Iter::value_type& front() const { return *begin_; }
+    OPM_HOST_DEVICE const typename Iter::value_type& back() const { return *(end_ - 1); }
+
     OPM_HOST_DEVICE Iter begin() const { return begin_; }
     OPM_HOST_DEVICE Iter end() const { return end_; }
 
@@ -84,6 +87,9 @@ struct mutable_iterator_range {
 
     OPM_HOST_DEVICE typename Iter::value_type& operator[](int idx)
     { return begin_[idx]; }
+
+    OPM_HOST_DEVICE typename Iter::value_type& front() { return *begin_; }
+    OPM_HOST_DEVICE typename Iter::value_type& back() { return *(end_ - 1); }
 
     OPM_HOST_DEVICE Iter begin() const { return begin_; }
     OPM_HOST_DEVICE Iter end() const { return end_; }
