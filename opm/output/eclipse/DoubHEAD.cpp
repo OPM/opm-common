@@ -345,7 +345,7 @@ namespace {
             + (yday + 1); // Day of year [1 .. 365]
     }
 
-    double toDateNum(const std::chrono::time_point<std::chrono::system_clock> tp)
+    double toDateNum(const Opm::time_point& tp)
     {
         namespace ch = std::chrono;
 

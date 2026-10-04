@@ -40,6 +40,7 @@
 #include <initializer_list>
 #include <numeric>              // partial_sum()
 #include <ratio>
+#include <utility>
 #include <vector>
 
 namespace {
@@ -73,7 +74,7 @@ namespace {
         std::ratio_multiply<std::chrono::hours::period, std::ratio<24>>
     >;
 
-    std::chrono::time_point<std::chrono::system_clock> startSimulation()
+    Opm::time_point startSimulation()
     {
         // 2015-04-09T00:00:00+0000
         return Opm::TimeService::mkdate(2015, 4, 9);
@@ -85,7 +86,7 @@ namespace {
     }
 
     Opm::RestartIO::DoubHEAD::TimeStamp
-    makeTStamp(std::chrono::time_point<std::chrono::system_clock>          start,
+    makeTStamp(Opm::time_point                                          start,
                std::chrono::duration<double, std::chrono::seconds::period> elapsed)
     {
         return { start, elapsed };
@@ -137,6 +138,44 @@ BOOST_AUTO_TEST_CASE(Time_Stamp)
 
     // Start + elapsed (days)
     BOOST_CHECK_CLOSE(v[162 - 1], 736200.0, 1.0e-10);
+}
+
+BOOST_AUTO_TEST_CASE(Time_Stamp_Outside_Native_Clock_Range)
+{
+    // A nanosecond system_clock::time_point cannot represent these dates.
+    // The restart date numbers must retain the schedule's wider time range.
+    for (const auto& [date, startDateNum] : {
+             std::pair { Opm::TimeStampUTC::YMD { 1600, 1, 1 }, 584401.0 },
+             std::pair { Opm::TimeStampUTC::YMD { 2263, 1, 1 }, 826561.0 },
+             std::pair { Opm::TimeStampUTC::YMD { 3001, 1, 1 }, 1096116.0 },
+             std::pair { Opm::TimeStampUTC::YMD { 32767, 1, 1 }, 11968147.0 },
+             std::pair { Opm::TimeStampUTC::YMD { 32767, 12, 31 }, 11968511.0 } })
+    {
+        BOOST_TEST_CONTEXT("Start date " << date.year << '-' << date.month << '-' << date.day)
+        {
+            const auto dh = Opm::RestartIO::DoubHEAD{}
+                .timeStamp(makeTStamp(Opm::TimeService::mkdate(date.year, date.month, date.day),
+                                     Day { 0.25 }));
+            const auto& v = dh.data();
+
+            BOOST_CHECK_EQUAL(v[161 - 1], startDateNum);
+            BOOST_CHECK_EQUAL(v[1 - 1], 0.25);
+            BOOST_CHECK_EQUAL(v[162 - 1], startDateNum + 0.25);
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(Time_Stamp_From_Finer_Clock_Duration)
+{
+    // Keep accepting finer chrono durations.  Flooring preserves the day
+    // before the epoch when a sub-millisecond fraction is discarded.
+    const auto start = std::chrono::sys_time<std::chrono::nanoseconds>{
+        std::chrono::nanoseconds { -1 }
+    };
+    const auto dh = Opm::RestartIO::DoubHEAD{}
+        .timeStamp({ start, std::chrono::duration<double> { 0.0 } });
+
+    BOOST_CHECK_EQUAL(dh.data()[161 - 1], 719542.0);
 }
 
 BOOST_AUTO_TEST_CASE(Wsegiter)

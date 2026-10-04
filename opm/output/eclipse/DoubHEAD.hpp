@@ -20,6 +20,8 @@
 #ifndef OPM_DOUBHEAD_HEADER_INCLUDED
 #define OPM_DOUBHEAD_HEADER_INCLUDED
 
+#include <opm/common/utility/TimeService.hpp>
+
 #include <chrono>
 #include <cstddef>
 #include <vector>
@@ -38,7 +40,19 @@ namespace Opm { namespace RestartIO {
     {
     public:
         struct TimeStamp {
-            std::chrono::time_point<std::chrono::system_clock>          start;
+            TimeStamp(time_point startTime = {},
+                      std::chrono::duration<double, std::chrono::seconds::period> elapsedTime = {})
+                : start { startTime }
+                , elapsed { elapsedTime }
+            {}
+
+            template<class Duration>
+            TimeStamp(const std::chrono::time_point<std::chrono::system_clock, Duration>& startTime,
+                      std::chrono::duration<double, std::chrono::seconds::period> elapsedTime = {})
+                : TimeStamp { std::chrono::floor<time_point::duration>(startTime), elapsedTime }
+            {}
+
+            time_point                                                start;
             std::chrono::duration<double, std::chrono::seconds::period> elapsed;
         };
 
