@@ -486,7 +486,7 @@ namespace {
         auto dx    = std::vector<float>{};  dx   .reserve(nAct);
         auto dy    = std::vector<float>{};  dy   .reserve(nAct);
         auto dz    = std::vector<float>{};  dz   .reserve(nAct);
-        auto depth = singlePrecision(lgr_grid.getLGRCell_all_depth(grid));
+        auto depth = singlePrecision(lgr_grid.compressedVector(lgr_grid.getLGRCell_all_depth(grid)));
 
         for (auto cell = 0*nAct; cell < nAct; ++cell) {
             const auto local_global_cell = lgr_grid.getGlobalIndex(cell);
