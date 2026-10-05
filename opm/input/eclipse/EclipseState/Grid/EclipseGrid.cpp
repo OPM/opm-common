@@ -2079,24 +2079,26 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         // Global Grid NNC (grid = 0 always exists, but may be empty)
         save_nnc_same_grid(egridfile, nnc_col.getGlobalNNC().input(), 0);
 
-        // LGR NNC
+        // LGR NNC, in the order of the LGR grids (save_children()).  The NNC
+        // collection numbers the LGRs by their deck index.
          for (std::size_t index : m_print_order_lgr_cells) {
+            const std::size_t grid_num = get_lgr_cell_index(lgr_children_cells[index].get_lgr_tag()) + 1;
             //SAME GRID PLOTS HEADER THAT CONTAINS THE GRID NUMBER
             std::size_t num_nnc;
-            if (nnc_col.hasSameGridNNC(index + 1))
+            if (nnc_col.hasSameGridNNC(grid_num))
             {
-                const auto& nnc = nnc_col.getNNC(index + 1).input();
+                const auto& nnc = nnc_col.getNNC(grid_num).input();
                 num_nnc = nnc.size();
-                save_nnc_same_grid(egridfile, nnc, index + 1);
+                save_nnc_same_grid(egridfile, nnc, grid_num);
             }
             else {
-                save_nnc_same_grid(egridfile, {}, index + 1);
+                save_nnc_same_grid(egridfile, {}, grid_num);
                 num_nnc = 0;
             }
 
-            if (nnc_col.hasCrossGridNNC(0,index + 1)){
-                const auto& nnc_gl = nnc_col.getNNC(0,index + 1);
-                save_nnc_local_global(egridfile, nnc_gl.input(), index + 1, num_nnc);
+            if (nnc_col.hasCrossGridNNC(0, grid_num)){
+                const auto& nnc_gl = nnc_col.getNNC(0, grid_num);
+                save_nnc_local_global(egridfile, nnc_gl.input(), grid_num, num_nnc);
             }
          }
 
