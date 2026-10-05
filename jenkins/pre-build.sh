@@ -1,11 +1,13 @@
 #! /bin/bash
 
 ./bin/genEvalSpecializations.py
+./bin/genPythonStubKeywords.py || exit 1
 
 if test -n "$(git diff)"; then
     echo "The generated source files have been manually edited or the "
     echo "code generator has been modified but not been run before "
     echo "proposing the branch for merging."
+    git diff --stat
     exit 1
 else
     echo "The generated source files have not been manually edited."
