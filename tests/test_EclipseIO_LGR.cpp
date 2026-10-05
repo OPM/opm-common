@@ -1162,3 +1162,33 @@ BOOST_AUTO_TEST_CASE(EclipseIOLGR_INIT_SeveralHostCells)
     // 1000 ft x 1000 ft x 50 ft x 0.3 / 9 LGR cells per host, in rb.
     checkVectorsClose(init.getInitData<float>("PORV", "LGR1"), std::vector<float>(18, 296846.0f), 1e-3, "PORV LGR1");
 }
+
+// The LGR properties come from the host cell also when an inactive cell comes
+// before the host, i.e., when the host's active and Cartesian indices differ.
+BOOST_AUTO_TEST_CASE(EclipseIOLGR_INIT_InactiveCellBeforeHost)
+{
+    const auto deck = Parser().parseString(deckStringLGRWithGridKeywords(R"(CARFIN
+    'LGR1'  1  1  1  1  1  1  3  3  1 /
+    ENDFIN
+    CARFIN
+    'LGR2'  2  2  2  2  1  1  3  3  1 /
+    ENDFIN
+    ACTNUM
+        1 0 1
+        1 1 1
+        1 1 1 /
+    )"));
+
+    WorkArea work_area("test_ecl_writer_lgr_inactive_cell");
+    auto es = EclipseState( deck );
+    const Schedule schedule(deck, es, std::make_shared<Python>());
+    const SummaryConfig summary_config( deck, schedule, es.fieldProps(), es.aquifer());
+    es.getIOConfig().setBaseName( "FOO" );
+    EclipseIO eclWriter( es, es.getInputGrid(), schedule, summary_config);
+    eclWriter.writeInitial( );
+
+    EclIO::EInit init { "FOO.INIT" };
+    // Host (1,1) of LGR1 comes before the inactive cell (2,1), host (2,2) of LGR2 after it.
+    checkVectorsClose(init.getInitData<float>("PERMX", "LGR1"), std::vector<float>(9, 110.0f), 1e-4, "PERMX LGR1");
+    checkVectorsClose(init.getInitData<float>("PERMX", "LGR2"), std::vector<float>(9, 220.0f), 1e-4, "PERMX LGR2");
+}
