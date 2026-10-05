@@ -2664,6 +2664,7 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         std::iota(this->m_global_to_active.begin(), this->m_global_to_active.end(), 0);
         this->m_active_to_global = this->m_global_to_active;
         this->active_volume = std::nullopt;
+        this->propagateACTNUMToLGRChildren();
     }
 
     void EclipseGrid::resetACTNUM(const int* actnum) {
@@ -2692,6 +2693,22 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
                 }
             }
             this->active_volume = std::nullopt;
+            this->propagateACTNUMToLGRChildren();
+        }
+    }
+
+    // An inactive host cell makes its LGR cells inactive.  The other LGR cells
+    // keep their own activity: a host never makes an LGR cell active.
+    void EclipseGrid::propagateACTNUMToLGRChildren()
+    {
+        for (auto& lgr : this->lgr_children_cells) {
+            auto lgr_actnum = lgr.getACTNUM();
+            for (std::size_t cell = 0; cell < lgr_actnum.size(); ++cell) {
+                if (this->m_actnum[lgr.get_hostnum(cell)] == 0) {
+                    lgr_actnum[cell] = 0;
+                }
+            }
+            lgr.resetACTNUM(lgr_actnum);
         }
     }
 
