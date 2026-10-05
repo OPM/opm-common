@@ -17,6 +17,8 @@ root = pathlib.Path(__file__).resolve().parent.parent
 keyword_dir = root / "opm/input/eclipse/share/keywords"
 stub_file = root / "python/opm_embedded/__init__.pyi"
 
+print(f"Generating the keyword properties of Builtin in {stub_file.relative_to(root)}")
+
 keyword_list = (keyword_dir / "keyword_list.cmake").read_text(encoding="utf-8")
 keyword_files = re.search(r"set\(\s*keywords(.*?)\)", keyword_list, re.S).group(1).split()
 
