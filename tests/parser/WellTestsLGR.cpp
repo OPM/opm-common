@@ -66,9 +66,13 @@ std::unordered_map<std::string, std::size_t> create_label_mapper(const EclipseGr
 }
 
 
-BOOST_AUTO_TEST_CASE(WellLGR)
+namespace {
+
+// 3x3x1 grid with LGR1 on cell (1,1) and LGR2 on cell (3,3); the SCHEDULE
+// section is given.
+std::string twoLgrDeck(const std::string& schedule)
 {
-    const auto deck = Parser{}.parseString(R"(RUNSPEC
+    return R"(RUNSPEC
 DIMENS
 3 3 1 /
 GRID
@@ -105,7 +109,14 @@ PERMZ
 	9*200 /
 
 SCHEDULE
-WELSPECL
+)" + schedule;
+}
+
+} // Anonymous namespace
+
+BOOST_AUTO_TEST_CASE(WellLGR)
+{
+    const auto deck = Parser{}.parseString(twoLgrDeck(R"(WELSPECL
 -- Item #: 1	 2	3	4	5	 6 7
 	'PROD'	'G1' 'LGR2'	3	2	8400	'OIL' /
 	'INJ'	'G1' 'LGR1'	1	1	8335	'GAS' /
@@ -115,7 +126,7 @@ COMPDATL
 	'PROD' 'LGR2'	3	1	1	1	'OPEN'	1*	1*	0.5 /
 	'INJ'  'LGR1'   1	1	1	1	'OPEN'	1*	1*	0.5 /
 /
-)");
+)"));
 
     auto es    = EclipseState { deck };
     auto& grid = es.getInputGrid();
@@ -128,6 +139,53 @@ COMPDATL
     BOOST_CHECK_EQUAL(sched.getWell("INJ", 0).is_lgr_well(), true);
     BOOST_CHECK_EQUAL(sched.getWell("PROD", 0).get_lgr_well_tag().value(), "LGR2");
     BOOST_CHECK_EQUAL(sched.getWell("INJ", 0).get_lgr_well_tag().value(), "LGR1");
+}
+
+
+// A COMPDATL record must give its connections in the well's own local grid:
+// the connection is placed in the local grid named in WELSPECL.
+BOOST_AUTO_TEST_CASE(WellLGRConnectionInOtherLGR)
+{
+    const auto deck = Parser{}.parseString(twoLgrDeck(R"(WELSPECL
+	'PROD'	'G1' 'LGR2'	3	2	8400	'OIL' /
+/
+COMPDATL
+	'PROD' 'LGR1'	3	1	1	1	'OPEN'	1*	1*	0.5 /
+/
+)"));
+
+    const auto es = EclipseState { deck };
+    BOOST_CHECK_THROW((Schedule { deck, es }), OpmInputError);
+}
+
+// A well in the global grid (WELSPECS) cannot get a COMPDATL connection.
+BOOST_AUTO_TEST_CASE(GlobalWellConnectionInLGR)
+{
+    const auto deck = Parser{}.parseString(twoLgrDeck(R"(WELSPECS
+	'PROD'	'G1' 2	2	8400	'OIL' /
+/
+COMPDATL
+	'PROD' 'LGR1'	1	1	1	1	'OPEN'	1*	1*	0.5 /
+/
+)"));
+
+    const auto es = EclipseState { deck };
+    BOOST_CHECK_THROW((Schedule { deck, es }), OpmInputError);
+}
+
+// A well in a local grid (WELSPECL) cannot get a COMPDAT connection.
+BOOST_AUTO_TEST_CASE(WellLGRConnectionInGlobalGrid)
+{
+    const auto deck = Parser{}.parseString(twoLgrDeck(R"(WELSPECL
+	'PROD'	'G1' 'LGR2'	3	2	8400	'OIL' /
+/
+COMPDAT
+	'PROD'	2	2	1	1	'OPEN'	1*	1*	0.5 /
+/
+)"));
+
+    const auto es = EclipseState { deck };
+    BOOST_CHECK_THROW((Schedule { deck, es }), OpmInputError);
 }
 
 
