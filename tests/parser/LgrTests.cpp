@@ -18,6 +18,7 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/test/test_tools.hpp>
 
+#include <opm/common/utility/OpmInputError.hpp>
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/Parser/Parser.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
@@ -27,6 +28,8 @@
 
 #include <filesystem>
 #include <string>
+
+#include <fmt/format.h>
 
 #include <fmt/format.h>
 
@@ -514,11 +517,167 @@ SOLUTION
 SCHEDULE
 )";
 
+    // Values inside CARFIN ... ENDFIN are not supported: the input stops
+    // instead of switching off a cell of the main grid.
     Opm::Parser parser;
     Opm::Deck deck = parser.parseString(deck_string);
-    Opm::EclipseState state(deck);
-    [[maybe_unused]] Opm::LgrCollection lgrs = state.getLgrs();
-    // LGR Inactive Cells Not yet Implemented
+    BOOST_CHECK_THROW(Opm::EclipseState{deck}, Opm::OpmInputError);
+}
+
+namespace {
+
+// 3x3x1 grid with LGR1 over cell (2,2), refined 3x3x1, and the given text in
+// each section.
+std::string lgrBlockDeck(const std::string& grid, const std::string& edit,
+                         const std::string& props, const std::string& regions,
+                         const std::string& solution)
+{
+    return fmt::format(R"(RUNSPEC
+DIMENS
+ 3 3 1 /
+OIL
+WATER
+GRID
+CARFIN
+'LGR1' 2 2 2 2 1 1 3 3 1 /
+{}
+ENDFIN
+DXV
+ 3*100.0 /
+DYV
+ 3*100.0 /
+DZ
+ 9*10.0 /
+TOPS
+ 9*2000 /
+PORO
+ 9*0.25 /
+PERMX
+ 9*100 /
+COPY
+ PERMX PERMY /
+ PERMX PERMZ /
+/
+EDIT
+{}
+PROPS
+{}
+REGIONS
+{}
+SOLUTION
+{}
+)", grid, edit, props, regions, solution);
+}
+
+Opm::EclipseState lgrBlockState(const std::string& grid,
+                                const std::string& edit = "",
+                                const std::string& props = "",
+                                const std::string& regions = "",
+                                const std::string& solution = "")
+{
+    return Opm::EclipseState {
+        Opm::Parser{}.parseString(lgrBlockDeck(grid, edit, props, regions, solution))
+    };
+}
+
+} // Anonymous namespace
+
+// Values inside a local grid block (CARFIN or REFINE ... ENDFIN) are not
+// supported: the input stops instead of applying them to the main grid.
+BOOST_AUTO_TEST_CASE(TestLGRvaluesInsideBlockStop)
+{
+    BOOST_CHECK_THROW(lgrBlockState(R"(PORO
+ 27*0.30 /)"), Opm::OpmInputError);
+
+    BOOST_CHECK_THROW(lgrBlockState(R"(PERMX
+ 27*500 /)"), Opm::OpmInputError);
+
+    BOOST_CHECK_THROW(lgrBlockState(R"(EQUALS
+ PORO 0.30 1 1 1 1 1 1 /
+/)"), Opm::OpmInputError);
+
+    BOOST_CHECK_THROW(lgrBlockState(R"(MINPV
+ 1000 /)"), Opm::OpmInputError);
+
+    BOOST_CHECK_THROW(lgrBlockState(R"(HXFIN
+ 0.2 0.3 0.5 /)"), Opm::OpmInputError);
+
+    BOOST_CHECK_THROW(lgrBlockState("", R"(REFINE
+ 'LGR1' /
+MULTPV
+ 27*2.0 /
+ENDFIN)"), Opm::OpmInputError);
+
+    BOOST_CHECK_THROW(lgrBlockState("", "", R"(REFINE
+ 'LGR1' /
+SWATINIT
+ 27*0.5 /
+ENDFIN)"), Opm::OpmInputError);
+
+    BOOST_CHECK_THROW(lgrBlockState("", "", "", R"(REFINE
+ 'LGR1' /
+SATNUM
+ 27*1 /
+ENDFIN)"), Opm::OpmInputError);
+
+    BOOST_CHECK_THROW(lgrBlockState("", "", "", "", R"(REFINE
+ 'LGR1' /
+PRESSURE
+ 27*250.0 /
+ENDFIN)"), Opm::OpmInputError);
+
+    // A block with nothing inside it; the keywords after it belong to the
+    // main grid.
+    const auto state = lgrBlockState("");
+    BOOST_CHECK_CLOSE(state.fieldProps().get_double("PORO")[0], 0.25, 1.0e-8);
+}
+
+// A local grid block ends with ENDFIN, before the next block and before the
+// end of its section.
+BOOST_AUTO_TEST_CASE(TestLGRblockWithoutENDFINStops)
+{
+    const auto state = [](const std::string& blocks)
+    {
+        return Opm::EclipseState { Opm::Parser{}.parseString(fmt::format(R"(RUNSPEC
+DIMENS
+ 3 3 1 /
+GRID
+DXV
+ 3*100.0 /
+DYV
+ 3*100.0 /
+DZ
+ 9*10.0 /
+TOPS
+ 9*2000 /
+PORO
+ 9*0.25 /
+{}
+)", blocks)) };
+    };
+
+    BOOST_CHECK_THROW(state(R"(CARFIN
+'LGR1' 2 2 2 2 1 1 3 3 1 /)"), Opm::OpmInputError);
+
+    BOOST_CHECK_THROW(state(R"(CARFIN
+'LGR1' 1 1 1 1 1 1 3 3 1 /
+CARFIN
+'LGR2' 3 3 3 3 1 1 3 3 1 /
+ENDFIN)"), Opm::OpmInputError);
+
+    BOOST_CHECK_NO_THROW(state(R"(CARFIN
+'LGR1' 1 1 1 1 1 1 3 3 1 /
+ENDFIN
+CARFIN
+'LGR2' 3 3 3 3 1 1 3 3 1 /
+ENDFIN)"));
+
+    // RADFIN and RADFIN4 open a block as well.
+    BOOST_CHECK_THROW(state(R"(RADFIN
+'LGR3' 2 2 1 1 2 4 1 1* 0.1524 50.0 /)"), Opm::OpmInputError);
+
+    BOOST_CHECK_THROW(state(R"(RADFIN4
+'LGR4' 1 2 1 2 1 1 2 4 1 /)"), Opm::OpmInputError);
 }
 
 namespace {
