@@ -39,7 +39,6 @@
 #include <cstddef>
 #include <iosfwd>
 #include <limits>
-#include <tuple>
 #include <type_traits>
 #include <vector>
 
@@ -64,7 +63,25 @@ template <class Scalar>
 class UniformXTabulated2DFunction
 {
 public:
-    typedef std::tuple</*x=*/Scalar, /*y=*/Scalar, /*value=*/Scalar> SamplePoint;
+    /*!
+     * \brief One tabulated sample point: (x, y) position and the function value there.
+     *
+     * \note x duplicates xPos_[i] for this point's column. X-axis segment lookups
+     *       (xSegmentIndex, xToAlpha, etc.) go through xPos_, not through this field -
+     *       it is only read back via operator==.
+     */
+    struct SamplePoint {
+        Scalar x;
+        Scalar y;
+        Scalar value;
+
+        SamplePoint(Scalar x_, Scalar y_, Scalar value_) : x(x_), y(y_), value(value_) {}
+        bool operator==(const SamplePoint& other) const = default;
+    };
+
+    static_assert(std::is_trivially_copyable_v<SamplePoint>,
+        "SamplePoint must stay trivially copyable, because it needs to support being "
+        "transferred to the GPU via memcpy in SparseTable.");
 
     /*!
      * \brief Indicates how interpolation will be performed.
@@ -108,13 +125,13 @@ public:
      * \brief Returns the value of the Y coordinate of a sampling point.
      */
     Scalar yAt(std::size_t i, std::size_t j) const
-    { return std::get<1>(samples_[static_cast<int>(i)][static_cast<int>(j)]); }
+    { return samples_[static_cast<int>(i)][static_cast<int>(j)].y; }
 
     /*!
      * \brief Returns the value of a sampling point.
      */
     Scalar valueAt(std::size_t i, std::size_t j) const
-    { return std::get<2>(samples_[static_cast<int>(i)][static_cast<int>(j)]); }
+    { return samples_[static_cast<int>(i)][static_cast<int>(j)].value; }
 
     /*!
      * \brief Returns the number of sampling points in X direction.
@@ -126,13 +143,13 @@ public:
      * \brief Returns the minimum of the Y coordinate of the sampling points for a given column.
      */
     Scalar yMin(unsigned i) const
-    { return std::get<1>(samples_[static_cast<int>(i)].front()); }
+    { return samples_[static_cast<int>(i)].front().y; }
 
     /*!
      * \brief Returns the maximum of the Y coordinate of the sampling points for a given column.
      */
     Scalar yMax(unsigned i) const
-    { return std::get<1>(samples_[static_cast<int>(i)].back()); }
+    { return samples_[static_cast<int>(i)].back().y; }
 
     /*!
      * \brief Returns the number of sampling points in Y direction a given column.
@@ -178,7 +195,7 @@ public:
         assert(i < numX());
         assert(std::size_t(j) < samples_[static_cast<int>(i)].size());
 
-        return std::get<1>(samples_[static_cast<int>(i)][static_cast<int>(j)]);
+        return samples_[static_cast<int>(i)][static_cast<int>(j)].y;
     }
 
     /*!
@@ -242,9 +259,9 @@ public:
         assert(colSamplePoints.size() >= 2);
         assert(extrapolate || (yMin(xSampleIdx) <= y && y <= yMax(xSampleIdx)));
 
-        if (y <= std::get<1>(colSamplePoints[1]))
+        if (y <= colSamplePoints[1].y)
             return 0;
-        else if (y >= std::get<1>(colSamplePoints[colSamplePoints.size() - 2]))
+        else if (y >= colSamplePoints[colSamplePoints.size() - 2].y)
             return colSamplePoints.size() - 2;
         else {
             assert(colSamplePoints.size() >= 3);
@@ -254,7 +271,7 @@ public:
             unsigned upperIdx = colSamplePoints.size() - 2;
             while (lowerIdx + 1 < upperIdx) {
                 unsigned pivotIdx = (lowerIdx + upperIdx) / 2;
-                if (y < std::get<1>(colSamplePoints[pivotIdx]))
+                if (y < colSamplePoints[pivotIdx].y)
                     upperIdx = pivotIdx;
                 else
                     lowerIdx = pivotIdx;
@@ -278,8 +295,8 @@ public:
 
         const auto colSamplePoints = samples_[static_cast<int>(xSampleIdx)];
 
-        Scalar y1 = std::get<1>(colSamplePoints[ySegmentIdx]);
-        Scalar y2 = std::get<1>(colSamplePoints[ySegmentIdx + 1]);
+        Scalar y1 = colSamplePoints[ySegmentIdx].y;
+        Scalar y2 = colSamplePoints[ySegmentIdx + 1].y;
 
         return (y - y1)/(y2 - y1);
     }
@@ -300,12 +317,12 @@ public:
         const auto col2SamplePoints = samples_[static_cast<int>(i) + 1];
 
         Scalar minY =
-                alpha*std::get<1>(col1SamplePoints.front()) +
-                (1 - alpha)*std::get<1>(col2SamplePoints.front());
+                alpha*col1SamplePoints.front().y +
+                (1 - alpha)*col2SamplePoints.front().y;
 
         Scalar maxY =
-                alpha*std::get<1>(col1SamplePoints.back()) +
-                (1 - alpha)*std::get<1>(col2SamplePoints.back());
+                alpha*col1SamplePoints.back().y +
+                (1 - alpha)*col2SamplePoints.back().y;
 
         return minY <= y && y <= maxY;
     }
