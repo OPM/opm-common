@@ -125,6 +125,7 @@ void handleWCONHIST(HandlerContext& handlerContext)
         const Well::Status status = WellStatusFromString(record.getItem<Kw::STATUS>().getTrimmedString(0));
 
         for (const auto& well_name : well_names) {
+            handlerContext.well_controlled(well_name);
             handlerContext.updateWellStatus(well_name, status,
                                             handlerContext.keyword.location());
 
@@ -224,6 +225,7 @@ void handleWCONINJE(HandlerContext& handlerContext)
         const Well::Status status = WellStatusFromString(record.getItem<Kw::STATUS>().getTrimmedString(0));
 
         for (const auto& well_name : well_names) {
+            handlerContext.well_controlled(well_name);
             handlerContext.updateWellStatus(well_name, status,
                                             handlerContext.keyword.location());
 
@@ -310,6 +312,7 @@ void handleWCONINJH(HandlerContext& handlerContext)
         const Well::Status status = WellStatusFromString( record.getItem<Kw::STATUS>().getTrimmedString(0));
 
         for (const auto& well_name : well_names) {
+            handlerContext.well_controlled(well_name);
             handlerContext.updateWellStatus(well_name, status,
                                             handlerContext.keyword.location());
             bool update_well = false;
@@ -415,6 +418,7 @@ void handleWCONPROD(HandlerContext& handlerContext)
         const Well::Status status = WellStatusFromString(record.getItem<Kw::STATUS>().getTrimmedString(0));
 
         for (const auto& well_name : well_names) {
+            handlerContext.well_controlled(well_name);
             bool update_well = handlerContext.updateWellStatus(well_name, status,
                                                                handlerContext.keyword.location());
             std::optional<VFPProdTable::ALQ_TYPE> alq_type;
