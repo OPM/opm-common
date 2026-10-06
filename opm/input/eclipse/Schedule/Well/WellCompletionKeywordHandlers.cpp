@@ -106,6 +106,10 @@ void handleCOMPDATX(HandlerContext&    handlerContext,
         const auto is_connected = !well.getConnections().empty()
             || !connections->empty();
 
+        if (is_connected) {
+            handlerContext.well_connected(wname);
+        }
+
         // Connection ordering is deferred until all keywords in the
         // current report step have been processed.
         if (well.updateConnectionsUnordered(std::move(connections), handlerContext.grid)) {

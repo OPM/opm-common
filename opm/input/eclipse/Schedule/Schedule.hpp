@@ -83,6 +83,7 @@ namespace Opm {
     enum class WellProducerCMode : std::uint16_t;
     enum class WellStatus : std::uint8_t;
     class WelSegsSet;
+    class WellControlTracker;
     class WellTestConfig;
 } // namespace Opm
 
@@ -608,6 +609,7 @@ namespace Opm {
         void end_report(std::size_t report_step);
         /// \param welsegs_wells All wells with a WELSEGS entry for checks.
         /// \param compegs_wells All wells with a COMPSEGS entry for checks.
+        /// \param well_controls Tracker for wells lacking an assigned control.
         void handleKeyword(std::size_t currentStep,
                            const ScheduleBlock& block,
                            const DeckKeyword& keyword,
@@ -622,7 +624,8 @@ namespace Opm {
                            WelSegsSet* welsegs_wells = nullptr,
                            std::set<std::string>* compsegs_wells = nullptr,
                            std::set<std::string>* comptraj_wells = nullptr,
-                           std::set<std::string>* connection_order_wells = nullptr);
+                           std::set<std::string>* connection_order_wells = nullptr,
+                           WellControlTracker* well_controls = nullptr);
 
         /// Order the connections of a set of wells in the current
         /// (back) schedule state.
@@ -632,6 +635,12 @@ namespace Opm {
         void prefetchPossibleFutureConnections(const ScheduleGrid& grid, const DeckKeyword& keyword,
                                                const ParseContext& parseContext, ErrorGuard& errors);
         void store_wgnames(const DeckKeyword& keyword);
+
+        /// Issue diagnostic for wells with connections that never receive a
+        /// control (WCONHIST/WCONPROD/WCONINJE/WCONINJH).
+        void reportWellsWithoutControl(const WellControlTracker& well_controls,
+                                       const ParseContext&       parseContext,
+                                       ErrorGuard&               errors) const;
         std::vector<std::string> wellNames(const std::string& pattern,
                                            const HandlerContext& context,
                                            bool allowEmpty = false);
