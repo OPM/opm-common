@@ -31,7 +31,7 @@
 #include <opm/common/Exceptions.hpp>
 #include <opm/common/utility/SparseTable.hpp>
 #include <opm/common/utility/gpuDecorators.hpp>
-#include <opm/common/utility/VectorWithDefaultAllocator.hpp>
+#include <opm/common/utility/gpuistl_if_available.hpp>
 
 #include <opm/material/common/MathToolbox.hpp>
 #include <opm/material/common/Valgrind.hpp>
@@ -44,20 +44,22 @@
 #include <type_traits>
 #include <vector>
 
+namespace Opm {
 // forward declaration of the class so the function in the next namespace can be declared
 template <class Scalar, template <typename, typename...> class Storage = std::vector>
 class UniformXTabulated2DFunction;
+}
 
 #if HAVE_CUDA
 // declaration of make_view and copy_to_gpu in correct namespace so friend function can be declared in the class
 namespace Opm::gpuistl
 {
     template <class ScalarT>
-    UniformXTabulated2DFunction<ScalarT, GpuBuffer> 
+    UniformXTabulated2DFunction<ScalarT, GpuBuffer>
     copy_to_gpu(const UniformXTabulated2DFunction<ScalarT>& params);
 
     template <class ScalarT>
-    UniformXTabulated2DFunction<ScalarT, GpuView> 
+    UniformXTabulated2DFunction<ScalarT, GpuView>
     make_view(UniformXTabulated2DFunction<ScalarT, GpuBuffer>& params);
 } // namespace Opm::gpuistl
 #endif // HAVE_CUDA
@@ -130,7 +132,7 @@ enum class UniformXTabulated2DFunctionInterpolationPolicy {
  * \c UniformXTabulated2DFunctionBuilder, whose \c build() method returns the
  * evaluation-ready object constructed here.
  */
-template <class Scalar, template <typename, typename...> class Storage = std::vector>
+template <class Scalar, template <typename, typename...> class Storage>
 class UniformXTabulated2DFunction
 {
 public:
@@ -500,11 +502,11 @@ private:
 
 #if HAVE_CUDA
     template <class ScalarT>
-    friend UniformXTabulated2DFunction<ScalarT, gpuistl::GpuBuffer> 
+    friend UniformXTabulated2DFunction<ScalarT, gpuistl::GpuBuffer>
     gpuistl::copy_to_gpu(const UniformXTabulated2DFunction<ScalarT>& cpu);
 
     template <class ScalarT>
-    friend UniformXTabulated2DFunction<ScalarT, gpuistl::GpuView> 
+    friend UniformXTabulated2DFunction<ScalarT, gpuistl::GpuView>
     gpuistl::make_view(UniformXTabulated2DFunction<ScalarT, gpuistl::GpuBuffer>& gpuBuffers);
 #endif // HAVE_CUDA
 
@@ -524,7 +526,7 @@ private:
 #if HAVE_CUDA
 namespace Opm::gpuistl {
     template <class ScalarT>
-    UniformXTabulated2DFunction<ScalarT, GpuBuffer> 
+    UniformXTabulated2DFunction<ScalarT, GpuBuffer>
     copy_to_gpu(const UniformXTabulated2DFunction<ScalarT>& cpu)
     {
         return UniformXTabulated2DFunction<ScalarT, GpuBuffer>(
@@ -536,7 +538,7 @@ namespace Opm::gpuistl {
     }
 
     template <class ScalarT>
-    UniformXTabulated2DFunction<ScalarT, GpuView> 
+    UniformXTabulated2DFunction<ScalarT, GpuView>
     make_view(UniformXTabulated2DFunction<ScalarT, GpuBuffer>& gpuBuffers)
     {
         return UniformXTabulated2DFunction<ScalarT, GpuView>(
