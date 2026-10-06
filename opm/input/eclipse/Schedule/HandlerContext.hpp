@@ -48,6 +48,7 @@ struct ScheduleStatic;
 struct SimulatorUpdate;
 enum class WellStatus : std::uint8_t;
 class WelSegsSet;
+class WellControlTracker;
 }
 
 namespace Opm {
@@ -72,6 +73,7 @@ public:
     /// \param connection_order_wells_ Wells whose connections must be
     ///    (re-)ordered once all keywords in the current report step have
     ///    been processed.
+    /// \param well_controls_ Tracker for wells lacking an assigned control.
     HandlerContext(Schedule& schedule,
                    const ScheduleBlock& block_,
                    const DeckKeyword& keyword_,
@@ -87,7 +89,8 @@ public:
                    WelSegsSet* welsegs_wells_,
                    std::set<std::string>* compsegs_wells_,
                    std::set<std::string>* comptraj_wells_,
-                   std::set<std::string>* connection_order_wells_)
+                   std::set<std::string>* connection_order_wells_,
+                   WellControlTracker* well_controls_ = nullptr)
         : block(block_)
         , keyword(keyword_)
         , currentStep(currentStep_)
@@ -102,6 +105,7 @@ public:
         , compsegs_wells(compsegs_wells_)
         , comptraj_wells(comptraj_wells_)
         , connection_order_wells(connection_order_wells_)
+        , well_controls(well_controls_)
         , sim_update(sim_update_)
         , schedule_(schedule)
     {}
@@ -144,6 +148,15 @@ public:
     /// expensive operation for every keyword that adds or changes the
     /// connection structure of a well.
     void connection_structure_changed(const std::string& well_name);
+
+    /// \brief Mark that the well was declared in a WELSPECS/WELSPECL keyword.
+    void well_declared(const std::string& well_name);
+
+    /// \brief Mark that the well received connections from COMPDAT/COMPDATL.
+    void well_connected(const std::string& well_name);
+
+    /// \brief Mark that the well received a control from a WCON* keyword.
+    void well_controlled(const std::string& well_name);
 
     //! \brief Set exit code.
     void setExitCode(int code);
@@ -233,6 +246,7 @@ private:
     std::set<std::string>* compsegs_wells{nullptr};
     std::set<std::string>* comptraj_wells{nullptr};
     std::set<std::string>* connection_order_wells{nullptr};
+    WellControlTracker* well_controls{nullptr};
     SimulatorUpdate* sim_update{nullptr};
     Schedule& schedule_;
 };
