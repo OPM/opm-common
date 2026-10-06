@@ -557,7 +557,12 @@ namespace {
             auto firstK = iWell[Ix::FirstK]; // One-based index.  Zero for MSW.
             auto lastK  = iWell[Ix::LastK];  // One-based index.  Zero for MSW.
 
-            if (! well.isMultiSegment()) {
+            // Zero also when the well has no connection, for instance when
+            // every connection lies in an inactive cell.  Such a well has no
+            // layer range, and its head is found from the top layer.
+            const auto hasLayers = ! well.isMultiSegment() && (firstK > 0);
+
+            if (hasLayers) {
                 // Use zero-based lookup indices for non-MS wells.
                 --firstK;
                 --lastK;
@@ -567,7 +572,7 @@ namespace {
             const auto topIJK = grid
                 .getLGR_fatherIJK(I - 1, J - 1, firstK, lgrTag);
 
-            if (! well.isMultiSegment()) {
+            if (hasLayers) {
                 const auto botIJK = grid
                     .getLGR_fatherIJK(I - 1, J - 1, lastK, lgrTag);
 
