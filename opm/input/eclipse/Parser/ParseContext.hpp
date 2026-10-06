@@ -568,6 +568,13 @@ namespace Opm {
         /// Typically generates a warning.
         const static std::string SCHEDULE_WELL_IN_FIELD_GROUP;
 
+        /// Well declared in WELSPECS/WELSPECL and connected in
+        /// COMPDAT/COMPDATL, but never assigned a control through any of
+        /// WCONHIST, WCONPROD, WCONINJE, or WCONINJH.
+        ///
+        /// Typically generates a warning.
+        const static std::string SCHEDULE_WELL_WITHOUT_CONTROL;
+
         /// COMPSEGS data invalid in some way.
         ///
         /// For instance, referencing non-existent segments or not covering

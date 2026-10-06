@@ -125,6 +125,16 @@ void warnNoControlMode(const KeywordLocation& location, const std::string& well_
     OpmLog::warning(OpmInputError::format(msg_format, location));
 }
 
+// Record that the well has been assigned a control mode by one of the WCON*
+// keywords.  Must be called after the keyword's effect on the well has been
+// stored in the current schedule state.
+void recordControlledWell(HandlerContext& handlerContext, const std::string& well_name)
+{
+    if (handlerContext.state().wells(well_name).hasControlMode()) {
+        handlerContext.well_controlled(well_name);
+    }
+}
+
 void handleWCONHIST(HandlerContext& handlerContext)
 {
     using Kw = ParserKeywords::WCONHIST;
@@ -218,6 +228,8 @@ void handleWCONHIST(HandlerContext& handlerContext)
                 handlerContext.affected_well(well_name);
             }
 
+            recordControlledWell(handlerContext, well_name);
+
             // Add Event if well open/shut is requested
             updateOpenShutEvents(handlerContext, well_name);
         }
@@ -301,6 +313,8 @@ void handleWCONINJE(HandlerContext& handlerContext)
                 handlerContext.state().wells.update( std::move(well2) );
                 handlerContext.affected_well(well_name);
             }
+            recordControlledWell(handlerContext, well_name);
+
              // Add Event if well open/shut is requested
             updateOpenShutEvents(handlerContext, well_name);
             auto udq_active = handlerContext.state().udq_active.get();
@@ -388,6 +402,8 @@ void handleWCONINJH(HandlerContext& handlerContext)
                 handlerContext.affected_well(well_name);
             }
 
+            recordControlledWell(handlerContext, well_name);
+
             // Add Event if well open/shut is requested
             updateOpenShutEvents(handlerContext, well_name);
         }
@@ -425,9 +441,11 @@ void handleWCONPROD(HandlerContext& handlerContext)
 
         const Well::Status status = WellStatusFromString(record.getItem<Kw::STATUS>().getTrimmedString(0));
 
-        const auto& cmode_item = record.getItem<Kw::CMODE>();
-        const bool record_has_cmode = cmode_item.hasValue(0)
-            && !cmode_item.getTrimmedString(0).empty();
+        const auto record_has_cmode = [&cmode_item = record.getItem<Kw::CMODE>()]()
+        {
+            return cmode_item.hasValue(0)
+                && !cmode_item.getTrimmedString(0).empty();
+        }();
 
         for (const auto& well_name : well_names) {
             // A well which has not been given a control mode may be stopped,
@@ -436,7 +454,8 @@ void handleWCONPROD(HandlerContext& handlerContext)
             auto well_status = status;
             if ((status == Well::Status::AUTO) &&
                 !record_has_cmode &&
-                (handlerContext.state().wells.get(well_name).getProductionProperties().controlMode
+                (handlerContext.state().wells(well_name)
+                 .getProductionProperties().controlMode
                  == Well::ProducerCMode::CMODE_UNDEFINED))
             {
                 warnNoControlMode(handlerContext.keyword.location(), well_name);
@@ -510,6 +529,8 @@ void handleWCONPROD(HandlerContext& handlerContext)
                 handlerContext.state().wells.update( std::move(well2) );
                 handlerContext.affected_well(well_name);
             }
+
+            recordControlledWell(handlerContext, well_name);
 
             // Add Event if well open/shut is requested
             updateOpenShutEvents(handlerContext, well_name);
