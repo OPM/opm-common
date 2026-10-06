@@ -131,7 +131,7 @@ public:
     /*!
      * \brief Returns the value of a sampling point.
      */
-    Scalar valueAt(std::size_t i, std::size_t j) const
+    OPM_HOST_DEVICE Scalar valueAt(std::size_t i, std::size_t j) const
     { return samples_[static_cast<int>(i)][static_cast<int>(j)].value; }
 
     /*!
