@@ -31,6 +31,7 @@
 #include <opm/common/Exceptions.hpp>
 #include <opm/common/utility/SparseTable.hpp>
 #include <opm/common/utility/gpuDecorators.hpp>
+#include <opm/common/utility/VectorWithDefaultAllocator.hpp>
 
 #include <opm/material/common/MathToolbox.hpp>
 #include <opm/material/common/Valgrind.hpp>
@@ -42,6 +43,24 @@
 #include <limits>
 #include <type_traits>
 #include <vector>
+
+// forward declaration of the class so the function in the next namespace can be declared
+template <class Scalar, template <typename, typename...> class Storage = std::vector>
+class UniformXTabulated2DFunction;
+
+#if HAVE_CUDA
+// declaration of make_view and copy_to_gpu in correct namespace so friend function can be declared in the class
+namespace Opm::gpuistl
+{
+    template <class ScalarT>
+    UniformXTabulated2DFunction<ScalarT, GpuBuffer> 
+    copy_to_gpu(const UniformXTabulated2DFunction<ScalarT>& params);
+
+    template <class ScalarT>
+    UniformXTabulated2DFunction<ScalarT, GpuView> 
+    make_view(UniformXTabulated2DFunction<ScalarT, GpuBuffer>& params);
+} // namespace Opm::gpuistl
+#endif // HAVE_CUDA
 
 namespace Opm {
 
@@ -202,8 +221,8 @@ public:
     /*!
      * \brief Return the interval index of a given position on the x-axis.
      */
-    OPM_HOST_DEVICE template <class Evaluation>
-    unsigned xSegmentIndex(const Evaluation& x,
+    template <class Evaluation>
+    OPM_HOST_DEVICE unsigned xSegmentIndex(const Evaluation& x,
                            [[maybe_unused]] bool extrapolate = false) const
     {
         assert(extrapolate || (xMin() <= x && x <= xMax()));
@@ -239,8 +258,8 @@ public:
      * The returned value can be larger than 1 or smaller than zero if it is outside of
      * the range of the segment. In particular this happens for the extrapolation case.
      */
-    OPM_HOST_DEVICE template <class Evaluation>
-    Evaluation xToAlpha(const Evaluation& x, unsigned segmentIdx) const
+    template <class Evaluation>
+    OPM_HOST_DEVICE Evaluation xToAlpha(const Evaluation& x, unsigned segmentIdx) const
     {
         Scalar x1 = xPos_[segmentIdx];
         Scalar x2 = xPos_[segmentIdx + 1];
@@ -250,8 +269,8 @@ public:
     /*!
      * \brief Return the interval index of a given position on the y-axis.
      */
-    OPM_HOST_DEVICE template <class Evaluation>
-    unsigned ySegmentIndex(const Evaluation& y, unsigned xSampleIdx,
+    template <class Evaluation>
+    OPM_HOST_DEVICE unsigned ySegmentIndex(const Evaluation& y, unsigned xSampleIdx,
                            [[maybe_unused]] bool extrapolate = false) const
     {
         assert(xSampleIdx < numX());
@@ -288,8 +307,8 @@ public:
      * The returned value can be larger than 1 or smaller than zero if it is outside of
      * the range of the segment. In particular this happens for the extrapolation case.
      */
-    OPM_HOST_DEVICE template <class Evaluation>
-    Evaluation yToBeta(const Evaluation& y, unsigned xSampleIdx, unsigned ySegmentIdx) const
+    template <class Evaluation>
+    OPM_HOST_DEVICE Evaluation yToBeta(const Evaluation& y, unsigned xSampleIdx, unsigned ySegmentIdx) const
     {
         assert(xSampleIdx < numX());
         assert(ySegmentIdx < numY(xSampleIdx) - 1);
@@ -305,8 +324,8 @@ public:
     /*!
      * \brief Returns true iff a coordinate lies in the tabulated range
      */
-    OPM_HOST_DEVICE template <class Evaluation>
-    bool applies(const Evaluation& x, const Evaluation& y) const
+    template <class Evaluation>
+    OPM_HOST_DEVICE bool applies(const Evaluation& x, const Evaluation& y) const
     {
         if (x < xMin() || xMax() < x)
             return false;
@@ -333,8 +352,8 @@ public:
      * If this method is called for a value outside of the tabulated
      * range, a \c Opm::NumericalIssue exception is thrown.
      */
-    OPM_HOST_DEVICE template <class Evaluation>
-    Evaluation eval(const Evaluation& x, const Evaluation& y, bool extrapolate=false) const
+    template <class Evaluation>
+    OPM_HOST_DEVICE Evaluation eval(const Evaluation& x, const Evaluation& y, bool extrapolate=false) const
     {
         Evaluation alpha, beta1, beta2;
         unsigned i, j1, j2;
@@ -342,8 +361,8 @@ public:
         return eval(i, j1, j2, alpha, beta1, beta2);
     }
 
-    OPM_HOST_DEVICE template <class Evaluation>
-    void findPoints(unsigned& i,
+    template <class Evaluation>
+    OPM_HOST_DEVICE void findPoints(unsigned& i,
                     unsigned& j1,
                     unsigned& j2,
                     Evaluation& alpha,
@@ -411,8 +430,8 @@ public:
         beta2 = yToBeta(yUpper, i + 1, j2);
     }
 
-    OPM_HOST_DEVICE template <class Evaluation>
-    Evaluation eval(const unsigned& i, const unsigned& j1, const unsigned& j2, const Evaluation& alpha,const Evaluation& beta1,const Evaluation& beta2) const
+    template <class Evaluation>
+    OPM_HOST_DEVICE Evaluation eval(const unsigned& i, const unsigned& j1, const unsigned& j2, const Evaluation& alpha,const Evaluation& beta1,const Evaluation& beta2) const
     {
         // evaluate the two function values for the same y value ...
         const Evaluation& s1 = valueAt(i, j1)*(1.0 - beta1) + valueAt(i, j1 + 1)*beta1;
@@ -456,6 +475,16 @@ private:
         , interpolationGuide_(interpolationGuide)
     { }
 
+#if HAVE_CUDA
+    template <class ScalarT>
+    friend UniformXTabulated2DFunction<ScalarT, gpuistl::GpuBuffer> 
+    gpuistl::copy_to_gpu(const UniformXTabulated2DFunction<ScalarT>& cpu);
+
+    template <class ScalarT>
+    friend UniformXTabulated2DFunction<ScalarT, gpuistl::GpuView> 
+    gpuistl::make_view(UniformXTabulated2DFunction<ScalarT, gpuistl::GpuBuffer>& gpuBuffers);
+#endif // HAVE_CUDA
+
     // the table which contains the values of the sample points f(x_i, y_j), stored
     // row-major (one row per x position). Don't use this directly, use
     // getSamplePoint(i,j) instead!
@@ -468,5 +497,33 @@ private:
     InterpolationPolicy interpolationGuide_;
 };
 } // namespace Opm
+
+#if HAVE_CUDA
+namespace Opm::gpuistl {
+    template <class ScalarT>
+    UniformXTabulated2DFunction<ScalarT, GpuBuffer> 
+    copy_to_gpu(const UniformXTabulated2DFunction<ScalarT>& cpu)
+    {
+        return UniformXTabulated2DFunction<ScalarT, GpuBuffer>(
+            copy_to_gpu(cpu.samples()),
+            GpuBuffer(cpu.xPos()),
+            GpuBuffer(cpu.yPos()),
+            cpu.interpolationGuide()
+        );
+    }
+
+    template <class ScalarT>
+    UniformXTabulated2DFunction<ScalarT, GpuView> 
+    make_view(UniformXTabulated2DFunction<ScalarT, GpuBuffer>& gpuBuffers)
+    {
+        return UniformXTabulated2DFunction<ScalarT, GpuView>(
+            make_view(gpuBuffers.samples_),
+            make_view(gpuBuffers.xPos_),
+            make_view(gpuBuffers.yPos_),
+            gpuBuffers.interpolationGuide_
+        );
+    }
+} // namespace Opm::gpuistl
+#endif // HAVE_CUDA
 
 #endif
