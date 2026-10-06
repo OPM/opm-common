@@ -68,6 +68,57 @@ template <class Scalar>
 class UniformXTabulated2DFunctionBuilder;
 
 /*!
+ * \brief One tabulated sample point: (x, y) position and the function value there.
+ *
+ * \note x duplicates xPos_[i] for this point's column. X-axis segment lookups
+ *       (xSegmentIndex, xToAlpha, etc.) go through xPos_, not through this field -
+ *       it is only read back via operator==.
+ *
+ * \note This is templated on Scalar only (not on the Storage container) and declared
+ *       outside \c UniformXTabulated2DFunction so that it is the *same* type across all
+ *       Storage instantiations of that class. If it were nested inside the
+ *       Storage-templated class instead, UniformXTabulated2DFunction<Scalar, std::vector>
+ *       ::SamplePoint and UniformXTabulated2DFunction<Scalar, GpuBuffer>::SamplePoint
+ *       would be distinct, incompatible types despite having identical layout, which
+ *       breaks copy_to_gpu()/make_view() (they move a SparseTable<SamplePoint, ...> built
+ *       from the CPU's SamplePoint type into a differently-stored instantiation).
+ */
+template <class Scalar>
+struct UniformXTabulated2DFunctionSamplePoint {
+    Scalar x;
+    Scalar y;
+    Scalar value;
+
+    UniformXTabulated2DFunctionSamplePoint(Scalar x_, Scalar y_, Scalar value_) : x(x_), y(y_), value(value_) {}
+    bool operator==(const UniformXTabulated2DFunctionSamplePoint& other) const = default;
+};
+
+static_assert(std::is_trivially_copyable_v<UniformXTabulated2DFunctionSamplePoint<double>>,
+    "SamplePoint must stay trivially copyable, because it needs to support being "
+    "transferred to the GPU via memcpy in SparseTable.");
+
+/*!
+ * \brief Indicates how interpolation will be performed.
+ *
+ * Normal interpolation is done by interpolating vertically between lines of sample
+ * points, whereas LeftExtreme or RightExtreme implies guided interpolation, where
+ * interpolation is done parallel to a guide line. With LeftExtreme the lowest Y
+ * values will be used for the guide, and the guide line slope extends unchanged to
+ * infinity. With RightExtreme, the highest Y values are used, and the slope
+ * decreases linearly down to 0 (normal interpolation) for y <= 0.
+ *
+ * \note Declared outside \c UniformXTabulated2DFunction (rather than as a nested enum)
+ *       for the same reason as \c UniformXTabulated2DFunctionSamplePoint: a nested enum
+ *       would be a distinct type per \c Storage instantiation, which breaks
+ *       copy_to_gpu()/make_view().
+ */
+enum class UniformXTabulated2DFunctionInterpolationPolicy {
+    LeftExtreme,
+    RightExtreme,
+    Vertical
+};
+
+/*!
  * \brief Implements a scalar function that depends on two variables and which is sampled
  *        uniformly in the X direction, but non-uniformly on the Y axis-
  *
@@ -83,43 +134,15 @@ template <class Scalar, template <typename, typename...> class Storage = std::ve
 class UniformXTabulated2DFunction
 {
 public:
-    /*!
-     * \brief One tabulated sample point: (x, y) position and the function value there.
-     *
-     * \note x duplicates xPos_[i] for this point's column. X-axis segment lookups
-     *       (xSegmentIndex, xToAlpha, etc.) go through xPos_, not through this field -
-     *       it is only read back via operator==.
-     */
-    struct SamplePoint {
-        Scalar x;
-        Scalar y;
-        Scalar value;
+    //! One tabulated sample point. Not dependent on \c Storage - see
+    //! \c UniformXTabulated2DFunctionSamplePoint for why.
+    using SamplePoint = UniformXTabulated2DFunctionSamplePoint<Scalar>;
 
-        SamplePoint(Scalar x_, Scalar y_, Scalar value_) : x(x_), y(y_), value(value_) {}
-        bool operator==(const SamplePoint& other) const = default;
-    };
+    //! Indicates how interpolation will be performed. Not dependent on \c Storage -
+    //! see \c UniformXTabulated2DFunctionInterpolationPolicy for why.
+    using InterpolationPolicy = UniformXTabulated2DFunctionInterpolationPolicy;
 
-    static_assert(std::is_trivially_copyable_v<SamplePoint>,
-        "SamplePoint must stay trivially copyable, because it needs to support being "
-        "transferred to the GPU via memcpy in SparseTable.");
-
-    /*!
-     * \brief Indicates how interpolation will be performed.
-     *
-     * Normal interpolation is done by interpolating vertically between lines of sample
-     * points, whereas LeftExtreme or RightExtreme implies guided interpolation, where
-     * interpolation is done parallel to a guide line. With LeftExtreme the lowest Y
-     * values will be used for the guide, and the guide line slope extends unchanged to
-     * infinity. With RightExtreme, the highest Y values are used, and the slope
-     * decreases linearly down to 0 (normal interpolation) for y <= 0.
-     */
-    enum InterpolationPolicy {
-        LeftExtreme,
-        RightExtreme,
-        Vertical
-    };
-
-    explicit UniformXTabulated2DFunction(const InterpolationPolicy interpolationGuide = Vertical)
+    explicit UniformXTabulated2DFunction(const InterpolationPolicy interpolationGuide = InterpolationPolicy::Vertical)
         : interpolationGuide_(interpolationGuide)
     { }
 
