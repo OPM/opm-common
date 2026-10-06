@@ -135,7 +135,17 @@ void handleWCONHIST(HandlerContext& handlerContext)
 
         const Well::Status status = WellStatusFromString(record.getItem<Kw::STATUS>().getTrimmedString(0));
 
+        const auto record_has_cmode = [&cmode_item = record.getItem<Kw::CMODE>()]()
+        {
+            return cmode_item.hasValue(0)
+                && !cmode_item.getTrimmedString(0).empty();
+        }();
+
         for (const auto& well_name : well_names) {
+            if (record_has_cmode) {
+                handlerContext.well_controlled(well_name);
+            }
+
             handlerContext.updateWellStatus(well_name, status,
                                             handlerContext.keyword.location());
 
@@ -234,7 +244,17 @@ void handleWCONINJE(HandlerContext& handlerContext)
 
         const Well::Status status = WellStatusFromString(record.getItem<Kw::STATUS>().getTrimmedString(0));
 
+        const auto record_has_cmode = [&cmode_item = record.getItem<Kw::CMODE>()]()
+        {
+            return cmode_item.hasValue(0)
+                && !cmode_item.getTrimmedString(0).empty();
+        }();
+
         for (const auto& well_name : well_names) {
+            if (record_has_cmode) {
+                handlerContext.well_controlled(well_name);
+            }
+
             handlerContext.updateWellStatus(well_name, status,
                                             handlerContext.keyword.location());
 
@@ -320,7 +340,17 @@ void handleWCONINJH(HandlerContext& handlerContext)
         const auto well_names = handlerContext.wellNames(wellNamePattern, false);
         const Well::Status status = WellStatusFromString( record.getItem<Kw::STATUS>().getTrimmedString(0));
 
+        const auto record_has_cmode = [&cmode_item = record.getItem<Kw::CMODE>()]()
+        {
+            return cmode_item.hasValue(0)
+                && !cmode_item.getTrimmedString(0).empty();
+        }();
+
         for (const auto& well_name : well_names) {
+            if (record_has_cmode) {
+                handlerContext.well_controlled(well_name);
+            }
+
             handlerContext.updateWellStatus(well_name, status,
                                             handlerContext.keyword.location());
             bool update_well = false;
@@ -425,9 +455,11 @@ void handleWCONPROD(HandlerContext& handlerContext)
 
         const Well::Status status = WellStatusFromString(record.getItem<Kw::STATUS>().getTrimmedString(0));
 
-        const auto& cmode_item = record.getItem<Kw::CMODE>();
-        const bool record_has_cmode = cmode_item.hasValue(0)
-            && !cmode_item.getTrimmedString(0).empty();
+        const auto record_has_cmode = [&cmode_item = record.getItem<Kw::CMODE>()]()
+        {
+            return cmode_item.hasValue(0)
+                && !cmode_item.getTrimmedString(0).empty();
+        }();
 
         for (const auto& well_name : well_names) {
             // A well which has not been given a control mode may be stopped,
@@ -436,11 +468,16 @@ void handleWCONPROD(HandlerContext& handlerContext)
             auto well_status = status;
             if ((status == Well::Status::AUTO) &&
                 !record_has_cmode &&
-                (handlerContext.state().wells.get(well_name).getProductionProperties().controlMode
+                (handlerContext.state().wells(well_name)
+                 .getProductionProperties().controlMode
                  == Well::ProducerCMode::CMODE_UNDEFINED))
             {
                 warnNoControlMode(handlerContext.keyword.location(), well_name);
                 well_status = Well::Status::SHUT;
+            }
+
+            if (record_has_cmode) {
+                handlerContext.well_controlled(well_name);
             }
 
             bool update_well = handlerContext.updateWellStatus(well_name, well_status,
