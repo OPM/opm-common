@@ -190,6 +190,7 @@ namespace Opm {
         void checkNumericalAquifersOutsideLgrs() const;
         void warnUnappliedLgrBlockKeywords(const Deck& deck) const;
         void applyLgrBlockMinpv();
+        void applyLgrBlockValues(const Deck& deck);
         void conveyNumericalAquiferEffects();
         void applyMULTXYZ();
         void initFaults(const Deck& deck);

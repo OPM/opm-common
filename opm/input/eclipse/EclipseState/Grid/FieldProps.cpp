@@ -1032,6 +1032,153 @@ FieldProps::FieldProps(const Deck& deck, const EclipseGrid& grid)
     }
 }
 
+namespace {
+
+template <typename T>
+Fieldprops::FieldData<T>
+remapToLgr(const Fieldprops::FieldData<T>& father,
+           const std::vector<int>& fatherActive,   // per child active cell
+           const std::vector<int>& fatherGlobal,   // per child Cartesian cell
+           const std::size_t activeSize)
+{
+    auto child = Fieldprops::FieldData<T>{};
+    child.kw_info = father.kw_info;
+    child.data.assign(activeSize, T{});
+    child.value_status.assign(activeSize, value::status::uninitialized);
+
+    for (std::size_t c = 0; c < activeSize; ++c) {
+        if (const auto f = fatherActive[c]; f >= 0) {
+            child.data[c] = father.data[f];
+            child.value_status[c] = father.value_status[f];
+        }
+    }
+
+    if (father.global_data.has_value()) {
+        auto& data = child.global_data.emplace(fatherGlobal.size(), T{});
+        auto& status = child.global_value_status
+            .emplace(fatherGlobal.size(), value::status::uninitialized);
+        for (std::size_t g = 0; g < fatherGlobal.size(); ++g) {
+            data[g] = (*father.global_data)[fatherGlobal[g]];
+            status[g] = (*father.global_value_status)[fatherGlobal[g]];
+        }
+    }
+
+    return child;
+}
+
+} // Anonymous namespace
+
+FieldProps::FieldProps(const FieldProps& father, const EclipseGridLGR& lgr)
+    : active_size(lgr.getNumActive())
+    , global_size(lgr.getCartesianSize())
+    , unit_system(father.unit_system)
+    , nx(lgr.getNX())
+    , ny(lgr.getNY())
+    , nz(lgr.getNZ())
+    , m_phases(father.m_phases)
+    , m_satfuncctrl(father.m_satfuncctrl)
+    , m_actnum(lgr.getACTNUM())
+    , cell_volume(extract_cell_volume(lgr))
+    , m_default_region(father.m_default_region)
+    , grid_ptr(&lgr)
+    , tables(father.tables)
+    , m_rtep(father.m_rtep)
+    , multregp(father.multregp)
+    , fipreg_shortname_translation(father.fipreg_shortname_translation)
+    , tran(father.tran)
+{
+    const auto fatherGlobal = lgr.getLGRCell_global_father(*father.grid_ptr);
+
+    auto activeOfGlobal = std::vector<int>(father.global_size, -1);
+    for (std::size_t g = 0, a = 0; g < father.global_size; ++g) {
+        if (father.m_actnum[g] != 0) {
+            activeOfGlobal[g] = static_cast<int>(a++);
+        }
+    }
+
+    auto fatherActive = std::vector<int>(this->active_size, -1);
+    for (std::size_t c = 0; c < this->active_size; ++c) {
+        fatherActive[c] = activeOfGlobal[fatherGlobal[lgr.getGlobalIndex(c)]];
+    }
+
+    // PORV is derived from the cell's own volume; the father's is no seed.
+    for (const auto& [name, data] : father.double_data) {
+        if ((data.numValuePerCell() == 1) && (name != "PORV")) {
+            this->double_data.emplace(name,
+                remapToLgr(data, fatherActive, fatherGlobal, this->active_size));
+        }
+    }
+
+    for (const auto& [name, data] : father.int_data) {
+        if (data.numValuePerCell() == 1) {
+            this->int_data.emplace(name,
+                remapToLgr(data, fatherActive, fatherGlobal, this->active_size));
+        }
+    }
+}
+
+bool FieldProps::isGridPropertyKeyword(const std::string& name)
+{
+    using namespace Fieldprops::keywords;
+    return GRID::double_keywords.count(name) || GRID::int_keywords.count(name)
+        || oper_keywords.count(name) || region_oper_keywords.count(name)
+        || box_keywords.count(name) || (name == ParserKeywords::OPERATE::keywordName)
+        || (name == ParserKeywords::COPY::keywordName)
+        || (name == ParserKeywords::COPYREG::keywordName);
+}
+
+Carfin::BlockValues FieldProps::lgrBlockValues(const FieldProps& father,
+                                               const EclipseGridLGR& lgr,
+                                               const DeckView& block)
+{
+    auto lgrProps = FieldProps { father, lgr };
+    const auto seededDouble = lgrProps.double_data;
+    const auto seededInt = lgrProps.int_data;
+
+    lgrProps.scanGridKeywords(block);
+
+    auto values = Carfin::BlockValues{};
+    auto keep = [&lgr, &lgrProps](const std::string& name,
+                                  const auto& data,
+                                  const auto& seeded,
+                                  auto& out)
+    {
+        if (data.numValuePerCell() != 1) {
+            return;
+        }
+
+        if (const auto it = seeded.find(name);
+            (it != seeded.end()) && (it->second.data == data.data))
+        {
+            return;
+        }
+
+        if (!data.valid()) {
+            OpmLog::warning(fmt::format("CARFIN '{}' sets {} on part of its refined "
+                                        "cells only, and their father has no value to "
+                                        "inherit for the rest. {} is not applied to the "
+                                        "refined cells.", lgr.get_lgr_tag(), name, name));
+            return;
+        }
+
+        auto& cartesian = out[name];
+        cartesian.assign(lgrProps.global_size, {});
+        for (std::size_t c = 0; c < lgrProps.active_size; ++c) {
+            cartesian[lgr.getGlobalIndex(c)] = data.data[c];
+        }
+    };
+
+    for (const auto& [name, data] : lgrProps.double_data) {
+        keep(name, data, seededDouble, values.doubles);
+    }
+
+    for (const auto& [name, data] : lgrProps.int_data) {
+        keep(name, data, seededInt, values.ints);
+    }
+
+    return values;
+}
+
 void FieldProps::deleteMINPVV()
 {
     double_data.erase("MINPVV");
@@ -2314,10 +2461,15 @@ void FieldProps::processMULTREGP(const Deck& deck)
 
 void FieldProps::scanGRIDSection(const GRIDSection& grid_section)
 {
+    this->scanGridKeywords(grid_section);
+}
+
+void FieldProps::scanGridKeywords(const DeckView& keywords)
+{
     auto box = makeGlobalGridBox(this->grid_ptr);
 
     auto block = LocalGridBlock{};
-    for (const auto& keyword : grid_section) {
+    for (const auto& keyword : keywords) {
         if (block.consume(keyword)) {
             continue;
         }

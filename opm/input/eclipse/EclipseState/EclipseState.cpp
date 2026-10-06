@@ -34,6 +34,7 @@
 #include <opm/input/eclipse/EclipseState/Grid/Fault.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FaultCollection.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FIPRegionStatistics.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/FieldProps.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/MULTREGTScanner.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/NNC.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/SatfuncPropertyInitializers.hpp>
@@ -394,6 +395,7 @@ namespace Opm {
         warnUnappliedLgrBlockKeywords(deck);
         m_inputGrid.init_lgr_cells(m_lgrs);
         applyLgrBlockMinpv();
+        applyLgrBlockValues(deck);
     }
 
     /*
@@ -472,12 +474,75 @@ namespace Opm {
     }
 
     /*
-      The keywords inside a CARFIN...ENDFIN block describe the refined cells.
-      They are kept out of the global grid (Deck::scopeLgrBlockKeywords), which
-      is what they are not. N*FIN/H*FIN subdivide the box and MINPV thresholds
-      the refined cells' pore volume; the rest are not applied to the refined
-      cells either, which take their father's values. Say which keywords that
-      costs, per LGR, rather than dropping them without a word.
+      Property values for the refined cells: each starts from its father's and
+      the block's own keywords apply in local indices. Only those the simulator
+      reads per refined cell are kept.
+    */
+    void EclipseState::applyLgrBlockValues(const Deck& deck)
+    {
+        static const auto honoured = std::set<std::string> {
+            "PERMX", "PERMY", "PERMZ", "PORO", "NTG", "MULTPV",
+        };
+
+        for (std::size_t index = 0; index < this->m_lgrs.size(); ++index) {
+            auto& lgr = this->m_lgrs.getLgr(index);
+            const auto block = deck.lgrBlock(lgr.NAME());
+            if (block.empty()) {
+                continue;
+            }
+
+            if (lgr.PARENT_NAME() != "GLOBAL") {
+                OpmLog::warning(fmt::format("CARFIN '{}' is nested; the property keywords "
+                                            "of its block are not applied. Its refined "
+                                            "cells take their father's values.", lgr.NAME()));
+                continue;
+            }
+
+            auto& lgrGrid = this->m_inputGrid.getLGRCell(lgr.NAME());
+            auto values = this->field_props.lgrBlockValues(lgrGrid, block);
+
+            auto ignored = std::vector<std::string>{};
+            auto dropIgnored = [&ignored](auto& arrays) {
+                for (auto it = arrays.begin(); it != arrays.end();) {
+                    if (honoured.count(it->first) == 0) {
+                        ignored.push_back(it->first);
+                        it = arrays.erase(it);
+                    }
+                    else {
+                        ++it;
+                    }
+                }
+            };
+            dropIgnored(values.doubles);
+            dropIgnored(values.ints);
+
+            if (!ignored.empty()) {
+                OpmLog::warning(fmt::format("CARFIN '{}' sets {} for its refined cells, which "
+                                            "the simulator does not yet apply to them. They "
+                                            "take their father's values.",
+                                            lgr.NAME(), fmt::join(ignored, ", ")));
+            }
+
+            if (!values.empty()) {
+                auto names = std::vector<std::string>{};
+                for (const auto& [name, data] : values.doubles) {
+                    names.push_back(name);
+                }
+                OpmLog::info(fmt::format("CARFIN '{}' gives its refined cells their own {}.",
+                                         lgr.NAME(), fmt::join(names, ", ")));
+            }
+
+            lgr.setBlockValues(std::move(values));
+        }
+
+        this->field_props.set_lgr_block_values(this->m_lgrs);
+    }
+
+    /*
+      The keywords inside a CARFIN...ENDFIN block describe the refined cells and
+      are kept out of the global grid (Deck::scopeLgrBlockKeywords). N*FIN/H*FIN
+      subdivide the box, MINPV thresholds the refined cells' pore volume, and the
+      property keywords are applied by applyLgrBlockValues(). Name the rest.
     */
     void EclipseState::warnUnappliedLgrBlockKeywords(const Deck& deck) const
     {
@@ -496,7 +561,9 @@ namespace Opm {
 
             auto names = std::vector<std::string>{};
             for (const auto& keyword : block) {
-                if (applied.count(keyword.name()) == 0) {
+                if ((applied.count(keyword.name()) == 0) &&
+                    !FieldProps::isGridPropertyKeyword(keyword.name()))
+                {
                     names.push_back(keyword.name());
                 }
             }

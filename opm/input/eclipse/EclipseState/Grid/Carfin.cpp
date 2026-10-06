@@ -135,6 +135,8 @@ namespace Opm
         // parent as GLOBAL; set it directly so the round trip covers a nested
         // CARFIN.
         lgr.parent_name_grid = "LGRPARENT";
+        lgr.m_block_values.doubles["PERMX"] = { 1.0, 2.0 };
+        lgr.m_block_values.ints["SATNUM"] = { 1, 2 };
 
         return lgr;
     }
@@ -222,6 +224,16 @@ namespace Opm
     const std::vector<int>& Carfin::minpvRemoved() const
     {
         return this->m_minpv_removed;
+    }
+
+    void Carfin::setBlockValues(BlockValues values)
+    {
+        this->m_block_values = std::move(values);
+    }
+
+    const Carfin::BlockValues& Carfin::blockValues() const
+    {
+        return this->m_block_values;
     }
 
     const std::array<Carfin::AxisGrading, 3>& Carfin::grading() const
@@ -442,7 +454,8 @@ namespace Opm
             && (this->m_offset == other.m_offset)
             && (this->m_end_offset == other.m_end_offset)
             && (this->name_grid == other.name_grid)
-            && (this->parent_name_grid == other.parent_name_grid);
+            && (this->parent_name_grid == other.parent_name_grid)
+            && (this->m_block_values == other.m_block_values);
     }
 
     bool Carfin::equal(const Carfin& other) const

@@ -21,6 +21,7 @@
 #include <array>
 #include <cstddef>
 #include <functional>
+#include <map>
 #include <optional>
 #include <vector>
 #include <string>
@@ -115,12 +116,34 @@ namespace Opm
         void setMinpv(double minpv);
         const std::optional<double>& MINPV() const;
 
-        /// Refined cells the block's MINPV removes, one entry per refined
-        /// Cartesian cell (1 = removed). Derived by EclipseState once the
+        /// Refined cells the block's MINPV or ACTNUM removes, one entry per
+        /// refined Cartesian cell (1 = removed). Derived by EclipseState once the
         /// refined geometry exists, and carried here so it reaches the grid
         /// builder -- on every rank, since the collection is broadcast.
         void setMinpvRemoved(std::vector<int> removed);
         const std::vector<int>& minpvRemoved() const;
+
+        /// Property values the block's own keywords give its refined cells,
+        /// one entry per refined Cartesian cell. Only arrays that differ from
+        /// what the cells inherit from their father are kept.
+        struct BlockValues
+        {
+            std::map<std::string, std::vector<double>> doubles{};
+            std::map<std::string, std::vector<int>> ints{};
+
+            bool empty() const { return doubles.empty() && ints.empty(); }
+            bool operator==(const BlockValues&) const = default;
+
+            template<class Serializer>
+            void serializeOp(Serializer& serializer)
+            {
+                serializer(doubles);
+                serializer(ints);
+            }
+        };
+
+        void setBlockValues(BlockValues values);
+        const BlockValues& blockValues() const;
 
         const std::array<AxisGrading, 3>& grading() const;
 
@@ -188,12 +211,14 @@ namespace Opm
             serializer(m_grading);
             serializer(m_minpv);
             serializer(m_minpv_removed);
+            serializer(m_block_values);
         }
 
     private:
         std::array<AxisGrading, 3> m_grading{};
         std::optional<double> m_minpv{};
         std::vector<int> m_minpv_removed{};
+        BlockValues m_block_values{};
 
         GridDims m_globalGridDims_{};
         IsActive m_globalIsActive_{};

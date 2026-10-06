@@ -30,6 +30,7 @@
 #include <cstddef>
 #include <functional>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include <fmt/format.h>
@@ -298,6 +299,18 @@ populate_props_lgr(const std::string& tag, CompletedCells::Cell& cell) const
     props.active_index = lgr_grid.getActiveIndex(cell.i, cell.j, cell.k);
 
     populate(*this->fp, father_active_index, props);
+
+    // The block's own values, where it gives the refined cell any.
+    for (auto [keyword, value] : { std::pair { "PERMX", &props.permx },
+                                   std::pair { "PERMY", &props.permy },
+                                   std::pair { "PERMZ", &props.permz },
+                                   std::pair { "PORO",  &props.poro },
+                                   std::pair { "NTG",   &props.ntg } })
+    {
+        if (const auto* own = this->fp->lgr_double(tag, keyword)) {
+            *value = (*own)[cell.global_index];
+        }
+    }
 }
 
 const Opm::NumericalAquiferCell*

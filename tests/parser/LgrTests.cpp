@@ -26,6 +26,7 @@
 #include <opm/input/eclipse/EclipseState/Grid/Carfin.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 
+#include <algorithm>
 #include <filesystem>
 #include <string>
 
@@ -751,4 +752,84 @@ ENDFIN
     // The host cell back on: its LGR cells follow it.
     eclipse_grid.resetACTNUM();
     BOOST_CHECK_EQUAL( eclipse_grid.getLGRCell("LGR1").getNumActive() , 18U );
+}
+
+namespace {
+
+std::string blockDeck(const std::string& block)
+{
+    return R"(
+RUNSPEC
+DIMENS
+  3 3 1 /
+OIL
+GAS
+START
+16 JUN 1988 /
+GRID
+CARFIN
+'LGR1'  2  2  2  2  1  1  3  3  1 /
+)" + block + R"(
+ENDFIN
+DX
+  9*1000 /
+DY
+  9*1000 /
+DZ
+  9*20 /
+TOPS
+  9*8325 /
+PORO
+  9*0.2 /
+PERMX
+  9*100 /
+COPY
+  PERMX PERMY /
+  PERMX PERMZ /
+/
+PROPS
+REGIONS
+SOLUTION
+SCHEDULE
+)";
+}
+
+}
+
+BOOST_AUTO_TEST_CASE(TestLgrBlockValues) {
+    const auto deck = Opm::Parser{}.parseString(blockDeck(R"(
+EQUALS
+  PERMX 25 1 1 1 3 1 1 /
+/
+MULTIPLY
+  PORO 0.5 /
+/
+)"));
+    const Opm::EclipseState state(deck);
+    const auto& fp = state.fieldProps();
+
+    // Local indices: the block's column i = 1, all of j.
+    const auto* permx = fp.lgr_double("LGR1", "PERMX");
+    BOOST_REQUIRE(permx != nullptr);
+    BOOST_REQUIRE_EQUAL(permx->size(), 9U);
+    const auto host = fp.get_double("PERMX")[4];
+    for (std::size_t j = 0; j < 3; ++j) {
+        BOOST_CHECK_CLOSE((*permx)[3*j + 0], host / 4, 1e-10);
+        BOOST_CHECK_CLOSE((*permx)[3*j + 1], host, 1e-10);
+        BOOST_CHECK_CLOSE((*permx)[3*j + 2], host, 1e-10);
+    }
+
+    // MULTIPLY acts on the inherited value.
+    const auto* poro = fp.lgr_double("LGR1", "PORO");
+    BOOST_REQUIRE(poro != nullptr);
+    for (const auto value : *poro) {
+        BOOST_CHECK_CLOSE(value, 0.1, 1e-10);
+    }
+
+    // Untouched arrays are inherited, not stored.
+    BOOST_CHECK(fp.lgr_double("LGR1", "PERMY") == nullptr);
+    BOOST_CHECK(fp.lgr_double("GLOBAL", "PERMX") == nullptr);
+
+    // The global grid is not affected.
+    BOOST_CHECK_CLOSE(fp.get_double("PORO")[4], 0.2, 1e-10);
 }

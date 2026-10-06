@@ -19,6 +19,9 @@
 #ifndef FIELDPROPS_MANAGER_HPP
 #define FIELDPROPS_MANAGER_HPP
 
+#include <opm/input/eclipse/EclipseState/Grid/Carfin.hpp>
+
+#include <map>
 #include <memory>
 #include <set>
 #include <string>
@@ -29,8 +32,11 @@
 namespace Opm {
 
 class EclipseGrid;
+class EclipseGridLGR;
 class Deck;
 class DeckKeyword;
+class DeckView;
+class LgrCollection;
 namespace Fieldprops {
 class TranCalculator;
 enum class ScalarOperation;
@@ -63,6 +69,17 @@ public:
 
     /// \brief Whether we can call methods on the manager
     bool is_usable() const;
+
+    /// The values a CARFIN block gives its refined cells.
+    Carfin::BlockValues lgrBlockValues(const EclipseGridLGR& lgr, const DeckView& block) const;
+
+    /// Make the LGRs' block values available through lgr_double()/lgr_int().
+    void set_lgr_block_values(const LgrCollection& lgrs);
+
+    /// A refined cell's own value of keyword, indexed by the cell's Cartesian
+    /// index within its LGR, or nullptr when it inherits its father's.
+    const std::vector<double>* lgr_double(const std::string& lgr, const std::string& keyword) const;
+    const std::vector<int>* lgr_int(const std::string& lgr, const std::string& keyword) const;
 
     /*
      The number of cells in the fields managed by this FieldPropsManager.
@@ -313,6 +330,7 @@ private:
     std::vector<T> get_global(const std::string& keyword) const;
 
     std::shared_ptr<FieldProps> fp;
+    std::shared_ptr<const std::map<std::string, Carfin::BlockValues>> lgr_values;
 };
 
 template<class MapType>

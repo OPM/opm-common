@@ -21,14 +21,17 @@
 #include <opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquifers.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FieldProps.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/LgrCollection.hpp>
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
 
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 
 #include <algorithm>
 #include <cstddef>
+#include <map>
 #include <memory>
 #include <stdexcept>
+#include <type_traits>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -109,6 +112,58 @@ void FieldPropsManager::reset_actnum(const std::vector<int>& actnum) {
 bool FieldPropsManager::is_usable() const
 {
     return static_cast<bool>(this->fp);
+}
+
+Carfin::BlockValues FieldPropsManager::lgrBlockValues(const EclipseGridLGR& lgr,
+                                                      const DeckView& block) const
+{
+    return FieldProps::lgrBlockValues(*this->fp, lgr, block);
+}
+
+void FieldPropsManager::set_lgr_block_values(const LgrCollection& lgrs)
+{
+    auto values = std::make_shared<std::map<std::string, Carfin::BlockValues>>();
+    for (std::size_t i = 0; i < lgrs.size(); ++i) {
+        const auto& lgr = lgrs.getLgr(i);
+        if (!lgr.blockValues().empty()) {
+            values->emplace(lgr.NAME(), lgr.blockValues());
+        }
+    }
+    this->lgr_values = values->empty() ? nullptr : std::move(values);
+}
+
+namespace {
+template <typename T>
+const std::vector<T>*
+findLgrArray(const std::map<std::string, Carfin::BlockValues>* values,
+             const std::string& lgr, const std::string& keyword)
+{
+    if (values == nullptr) {
+        return nullptr;
+    }
+    const auto it = values->find(lgr);
+    if (it == values->end()) {
+        return nullptr;
+    }
+    const auto& arrays = [&it]() -> const auto& {
+        if constexpr (std::is_same_v<T, double>) { return it->second.doubles; }
+        else { return it->second.ints; }
+    }();
+    const auto kw = arrays.find(keyword);
+    return (kw == arrays.end()) ? nullptr : &kw->second;
+}
+}
+
+const std::vector<double>*
+FieldPropsManager::lgr_double(const std::string& lgr, const std::string& keyword) const
+{
+    return findLgrArray<double>(this->lgr_values.get(), lgr, keyword);
+}
+
+const std::vector<int>*
+FieldPropsManager::lgr_int(const std::string& lgr, const std::string& keyword) const
+{
+    return findLgrArray<int>(this->lgr_values.get(), lgr, keyword);
 }
 
 void FieldPropsManager::apply_schedule_keywords(const std::vector<DeckKeyword>& keywords) {
