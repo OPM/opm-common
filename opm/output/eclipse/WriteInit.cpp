@@ -424,6 +424,10 @@ namespace {
         };
 
         for (auto cell = 0*local_porv.size(); cell < local_porv.size(); ++cell) {
+            if (!lgr_grid.cellActive(cell)) {
+                local_porv[cell] = 0.0;  // the block's MINPV or ACTNUM removed it
+                continue;
+            }
             if (local_porv[cell] == 0.0) {
                 continue;               // inactive father: nothing to share out
             }

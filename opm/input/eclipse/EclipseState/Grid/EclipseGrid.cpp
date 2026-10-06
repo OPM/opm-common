@@ -2957,6 +2957,9 @@ namespace Opm {
                 this->low_fatherIJK[0] + m_columns[0].parentOffset[ijk[0]],
                 this->low_fatherIJK[1] + m_columns[1].parentOffset[ijk[1]],
                 this->low_fatherIJK[2] + m_columns[2].parentOffset[ijk[2]]) ? 1 : 0;
+            if (!m_minpv_removed.empty() && (m_minpv_removed[cell] != 0)) {
+                actnum[cell] = 0;
+            }
         }
 
         // Cartesian order over the box gives increasing global index, hence
@@ -3030,8 +3033,35 @@ namespace Opm {
             }
         }
 
+        this->throwIfHostEmptied(father, fmt::format("MINPV {}", minpv));
+
+        // Fold the removals into ACTNUM (and into any nested child's).
+        this->inheritActiveCellsFromFather(father);
+    }
+
+    void EclipseGridLGR::removeBlockCells(const EclipseGrid& father,
+                                          const std::vector<int>& actnum)
+    {
+        const auto ncells = this->getCartesianSize();
+        if (m_minpv_removed.empty()) {
+            m_minpv_removed.assign(ncells, 0);
+        }
+        for (std::size_t cell = 0; cell < ncells; ++cell) {
+            if (actnum[cell] == 0) {
+                m_minpv_removed[cell] = 1;
+            }
+        }
+
+        this->throwIfHostEmptied(father, "ACTNUM");
+        this->inheritActiveCellsFromFather(father);
+    }
+
+    void EclipseGridLGR::throwIfHostEmptied(const EclipseGrid& father,
+                                            const std::string& what) const
+    {
+        const auto ncells = this->getCartesianSize();
         // A coarse cell the field keeps must keep at least one refined cell. If
-        // MINPV takes them all, the refinement leaves nothing to stand in for
+        // the block removes them all, the refinement leaves nothing to stand in for
         // it: the cell is in the level-zero grid but absent from the leaf, its
         // pore volume is gone, and its neighbours are left describing a
         // connection across a cell that is no longer there.
@@ -3061,19 +3091,16 @@ namespace Opm {
         if (!emptied.empty()) {
             const auto ijk = father.getIJK(emptied.front());
             throw std::invalid_argument {
-                fmt::format("CARFIN '{}': MINPV {} removes every refined cell of {} "
+                fmt::format("CARFIN '{}': {} removes every refined cell of {} "
                             "active cell(s), the first being [{},{},{}]. Those cells "
                             "would keep their pore volume in the coarse grid while "
                             "having nothing to represent them in the refined one. "
-                            "Raise the block's MINPV, shrink the box, or deactivate "
-                            "those cells in the field.",
-                            this->lgr_label, minpv, emptied.size(),
+                            "Keep at least one refined cell, shrink the box, or "
+                            "deactivate those cells in the field.",
+                            this->lgr_label, what, emptied.size(),
                             ijk[0] + 1, ijk[1] + 1, ijk[2] + 1)
             };
         }
-
-        // Fold the removals into ACTNUM (and into any nested child's).
-        this->inheritActiveCellsFromFather(father);
     }
 
     std::vector<int> EclipseGridLGR::getLGRCell_active_father(const EclipseGrid& father_grid) const

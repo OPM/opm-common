@@ -476,7 +476,7 @@ namespace Opm {
     /*
       Property values for the refined cells: each starts from its father's and
       the block's own keywords apply in local indices. Only those the simulator
-      reads per refined cell are kept.
+      reads per refined cell are kept; a block ACTNUM removes cells, as MINPV.
     */
     void EclipseState::applyLgrBlockValues(const Deck& deck)
     {
@@ -500,6 +500,15 @@ namespace Opm {
 
             auto& lgrGrid = this->m_inputGrid.getLGRCell(lgr.NAME());
             auto values = this->field_props.lgrBlockValues(lgrGrid, block);
+
+            if (auto actnum = values.ints.find("ACTNUM"); actnum != values.ints.end()) {
+                const auto before = lgrGrid.getNumActive();
+                lgrGrid.removeBlockCells(this->m_inputGrid, actnum->second);
+                lgr.setMinpvRemoved(lgrGrid.minpvRemoved());
+                values.ints.erase(actnum);
+                OpmLog::info(fmt::format("CARFIN '{}': ACTNUM removes {} of its refined cells.",
+                                         lgr.NAME(), before - lgrGrid.getNumActive()));
+            }
 
             auto ignored = std::vector<std::string>{};
             auto dropIgnored = [&ignored](auto& arrays) {
