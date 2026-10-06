@@ -549,6 +549,8 @@ namespace Opm {
           return m_columns;
         }
 
+        void setPillarsFromBoxLayer(bool fromBox) { m_pillarsFromBoxLayer = fromBox; }
+
 
         /**
          * @brief Sets Local Grid Refinement for the EclipseGridLGR.
@@ -579,6 +581,7 @@ namespace Opm {
         std::array<int, 3> low_fatherIJK {};
         std::array<int, 3> up_fatherIJK {};
         std::array<Carfin::RefinedColumns, 3> m_columns {};
+        bool m_pillarsFromBoxLayer{false};
         double m_minpv_removed_porv{0.0};
         double m_minpv_total_porv{0.0};
 

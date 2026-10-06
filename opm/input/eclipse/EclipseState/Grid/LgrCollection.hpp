@@ -53,16 +53,23 @@ public:
                 const DeckRecord& lgrRecord,
                 const KeywordLocation& location);
 
+    /// LGRPILLR 'BOX': refined pillars from each box's own first layer, as the
+    /// reference, instead of the column's (stacked boxes on sheared pillars then
+    /// do not conform).
+    bool pillarsFromBoxLayer() const { return m_pillarsFromBoxLayer; }
+
     bool operator==(const LgrCollection& data) const;
 
     template<class Serializer>
     void serializeOp(Serializer& serializer)
     {
         serializer(m_lgrs);
+        serializer(m_pillarsFromBoxLayer);
     }
 
 private:
     OrderedMap<Carfin, 8> m_lgrs;
+    bool m_pillarsFromBoxLayer{false};
 
 };
 }

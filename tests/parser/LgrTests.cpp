@@ -846,3 +846,64 @@ ACTNUM
 )"));
     BOOST_CHECK_THROW(Opm::EclipseState{deck}, std::exception);
 }
+
+namespace {
+
+// One column of two layers on sheared pillars; the lower layer thickens towards
+// i = 1 more than the upper one, so the two layers' host corners give different
+// refined pillar lines.
+std::vector<double> lgrPillarCoord(const int k, const std::string& mode)
+{
+    const auto deck = fmt::format(R"(RUNSPEC
+DIMENS
+ 1 1 2 /
+OIL
+WATER
+LGR
+ 1 /
+GRID
+COORD
+ 0 0 0      5 0 100
+ 100 0 0    100 8 100
+ 0 100 0    -6 100 100
+ 100 100 0  103 104 100 /
+ZCORN
+ 4*10  20 30 20 30
+ 20 30 20 30  40 70 40 70 /
+{}
+CARFIN
+'LGR1' 1 1 1 1 {} {} 2 2 1 /
+ENDFIN
+PORO
+ 2*0.25 /
+PERMX
+ 2*100 /
+COPY
+ PERMX PERMY /
+ PERMX PERMZ /
+/
+PROPS
+REGIONS
+SOLUTION
+SCHEDULE
+)", mode.empty() ? "" : fmt::format("LGRPILLR\n '{}' /", mode), k, k);
+
+    const Opm::EclipseState state(Opm::Parser{}.parseString(deck));
+    BOOST_CHECK_EQUAL(state.getLgrs().pillarsFromBoxLayer(), mode == "BOX");
+    return state.getInputGrid().getLGRCell("LGR1").getCOORD();
+}
+
+} // Anonymous namespace
+
+// LGRPILLR: refined pillars from the column's first layer by default, so boxes
+// stacked in a column share them; 'BOX' takes the box's own, as the reference.
+BOOST_AUTO_TEST_CASE(TestLgrPillarMode)
+{
+    const auto column = lgrPillarCoord(2, "");
+    BOOST_CHECK(column == lgrPillarCoord(2, "COLUMN"));
+    BOOST_CHECK(column == lgrPillarCoord(1, ""));
+    BOOST_CHECK(column != lgrPillarCoord(2, "BOX"));
+    BOOST_CHECK(lgrPillarCoord(1, "BOX") == lgrPillarCoord(1, ""));
+
+    BOOST_CHECK_THROW(lgrPillarCoord(2, "STACKED"), Opm::OpmInputError);
+}

@@ -37,6 +37,7 @@
 
 #include <opm/input/eclipse/Parser/ParserKeywords/C.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/H.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/L.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/M.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/N.hpp>
 
@@ -184,6 +185,18 @@ namespace Opm {
                                  const EclipseGrid& grid,
                                  const Deck& deck)
     {
+        if (gridSection.hasKeyword<ParserKeywords::LGRPILLR>()) {
+            const auto& keyword = gridSection.get<ParserKeywords::LGRPILLR>().back();
+            const auto mode = keyword.getRecord(0).getItem<ParserKeywords::LGRPILLR::MODE>().getTrimmedString(0);
+            if (mode != "COLUMN" && mode != "BOX") {
+                throw OpmInputError {
+                    fmt::format("LGRPILLR mode '{}' is not one of 'COLUMN' and 'BOX'.", mode),
+                    keyword.location()
+                };
+            }
+            m_pillarsFromBoxLayer = (mode == "BOX");
+        }
+
         const auto& lgrKeywords = gridSection.getKeywordList<ParserKeywords::CARFIN>();
 
         for (const auto& lgrsKeyword : lgrKeywords) {
@@ -277,6 +290,7 @@ namespace Opm {
     }
 
     bool LgrCollection::operator==(const LgrCollection& data) const {
-        return this->m_lgrs == data.m_lgrs;
+        return (this->m_lgrs == data.m_lgrs)
+            && (this->m_pillarsFromBoxLayer == data.m_pillarsFromBoxLayer);
     }
 }

@@ -2582,6 +2582,7 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
                                                             lgr_cell.refinedColumns(2) });
 
                 auto& child = lgr_children_cells.back();
+                child.setPillarsFromBoxLayer(lgr_input.pillarsFromBoxLayer());
                 child.inheritActiveCellsFromFather(*this);
 
                 if (child.get_father_global().empty()) {
@@ -3236,6 +3237,71 @@ namespace Opm {
     {
         m_coord = generate_refined_coord(parent_coord,  parent_nxyz);
         m_zcorn = generate_refined_zcorn(parent_zcorn, parent_nxyz);
+
+        // Inside a host column a refined pillar passes through the bilinear interpolation
+        // of the host's corners on the top and bottom of the column's first non-collapsed
+        // layer, so stacked boxes share pillars (LGRPILLR 'BOX': the box's own, as the reference).
+        const auto ch = CoordMapper { static_cast<std::size_t>(parent_nxyz[0]),
+                                      static_cast<std::size_t>(parent_nxyz[1]) };
+        const auto zh = ZcornMapper { static_cast<std::size_t>(parent_nxyz[0]),
+                                      static_cast<std::size_t>(parent_nxyz[1]),
+                                      static_cast<std::size_t>(parent_nxyz[2]) };
+        const auto cc = CoordMapper { getNX(), getNY() };
+        auto line = [this](int dim, std::size_t r) {
+            const auto& col = m_columns[dim];
+            const auto last = col.fracHi.size() - 1;
+            // A line on a host boundary inside the box belongs to the lower column.
+            if ((r > last) || ((r > 0) && (col.fracLo[r] == 0.0))) {
+                return std::pair<std::size_t, double> {
+                    static_cast<std::size_t>(low_fatherIJK[dim] + col.parentOffset[r - 1]),
+                    col.fracHi[r - 1] };
+            }
+            return std::pair<std::size_t, double> {
+                static_cast<std::size_t>(low_fatherIJK[dim] + col.parentOffset[r]), col.fracLo[r] };
+        };
+        auto hostCorner = [&](std::size_t I, std::size_t J, std::size_t K, int di, int dj, int dk) {
+            const double* pil = &parent_coord[ch.index(I + di, J + dj, 0, 0)];
+            const double z = parent_zcorn[zh.index(I, J, K, di + 2*dj + 4*dk)];
+            const double t = (pil[5] != pil[2]) ? (z - pil[2]) / (pil[5] - pil[2]) : 0.0;
+            return std::array<double,3>{ pil[0] + t*(pil[3] - pil[0]), pil[1] + t*(pil[4] - pil[1]), z };
+        };
+        for (std::size_t jr = 0; jr <= getNY(); ++jr) {
+            const auto [J, tj] = line(1, jr);
+            for (std::size_t ir = 0; ir <= getNX(); ++ir) {
+                const auto [I, ti] = line(0, ir);
+                if ((ti == 0.0 || ti == 1.0) && (tj == 0.0 || tj == 1.0)) {
+                    continue;
+                }
+                const int kFirst = m_pillarsFromBoxLayer ? low_fatherIJK[2] : 0;
+                const int kLast = m_pillarsFromBoxLayer ? up_fatherIJK[2] : parent_nxyz[2] - 1;
+                for (auto K = static_cast<std::size_t>(kFirst);
+                     K <= static_cast<std::size_t>(kLast); ++K) {
+                    std::array<std::array<double,3>,2> ends{};
+                    for (int dk = 0; dk < 2; ++dk) {
+                        for (int dj = 0; dj < 2; ++dj) {
+                            for (int di = 0; di < 2; ++di) {
+                                const double w = (di ? ti : 1.0 - ti) * (dj ? tj : 1.0 - tj);
+                                const auto x = hostCorner(I, J, K, di, dj, dk);
+                                for (int c = 0; c < 3; ++c) {
+                                    ends[dk][c] += w*x[c];
+                                }
+                            }
+                        }
+                    }
+                    const double dz = ends[1][2] - ends[0][2];
+                    if (std::abs(dz) > 1.0e-6) {
+                        // Keep the endpoint depths, so only the line changes.
+                        double* pillar = &m_coord[cc.index(ir, jr, 0, 0)];
+                        for (double* end : {pillar, pillar + 3}) {
+                            const double t = (end[2] - ends[0][2]) / dz;
+                            end[0] = ends[0][0] + t*(ends[1][0] - ends[0][0]);
+                            end[1] = ends[0][1] + t*(ends[1][1] - ends[0][1]);
+                        }
+                        break;
+                    }
+                }
+            }
+        }
         EclipseGrid::perform_refinement();
     }
 
