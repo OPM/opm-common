@@ -60,7 +60,7 @@ public:
     using SamplePoint = typename TabulatedFunction::SamplePoint;
     using InterpolationPolicy = typename TabulatedFunction::InterpolationPolicy;
 
-    explicit UniformXTabulated2DFunctionBuilder(const InterpolationPolicy interpolationGuide = TabulatedFunction::Vertical)
+    explicit UniformXTabulated2DFunctionBuilder(const InterpolationPolicy interpolationGuide = TabulatedFunction::InterpolationPolicy::Vertical)
         : interpolationGuide_(interpolationGuide)
     { }
 
