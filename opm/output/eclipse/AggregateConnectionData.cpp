@@ -71,9 +71,9 @@ namespace {
         const auto& wellName = well.name();
         const auto  wellID   = global_grid ? well.seqIndex() : well.seqIndexLGR();
         const auto  isProd   = well.isProducer();
-        const auto* lgrid    = well.is_lgr_well()
-            ? &grid.getLGRCell(well.get_lgr_well_tag().value())
-            : &grid;
+        const auto conns = well.is_lgr_well()
+            ? well.getConnections().outputAllGrids(grid)
+            : well.getConnections().output(grid);
 
         auto skip_connection = false;
         auto connection_counter = 0;
@@ -81,7 +81,7 @@ namespace {
 
         auto connID = std::size_t{};
 
-        for (const auto& connIdx : well.getConnections().output(*lgrid)) {
+        for (const auto& connIdx : conns) {
             const auto& conn = well.getConnections()[connIdx];
 
             if (conn.kind() == Opm::Connection::CTFKind::DynamicFracturing) {
@@ -89,9 +89,12 @@ namespace {
                 continue;
             }
 
-            const auto current_lgr_lgr_tag = well.get_lgr_well_tag().value_or("");
+            // A connection in the global grid is always written, also for an LGR well.
+            const auto current_lgr_lgr_tag = (conn.get_lgr_level() > 0)
+                ? well.get_lgr_well_tag().value_or("") : std::string{};
 
             skip_connection = well.is_lgr_well()
+                && !current_lgr_lgr_tag.empty()
                 && (current_lgr_lgr_tag == last_connection_lgr_tag)
                 && (connection_counter > 0);
 

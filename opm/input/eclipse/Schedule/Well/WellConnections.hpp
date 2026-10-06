@@ -143,6 +143,10 @@ namespace Opm {
         /// The connections in one LGR (by grid number), ordered as output(grid).
         std::vector<const Connection*> output(const EclipseGrid& grid, int lgr_grid_number) const;
 
+        /// Every connection active in its own grid: the global grid, or the
+        /// LGR its grid number names.
+        std::vector<std::size_t> outputAllGrids(const EclipseGrid& grid) const;
+
         bool refineIntoLgrs(const LgrCollection& lgrs,
                             const std::function<int(const std::string&)>& gridNumberOf,
                             std::set<std::string>& lgrNames);

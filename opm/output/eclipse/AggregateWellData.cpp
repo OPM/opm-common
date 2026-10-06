@@ -596,6 +596,15 @@ namespace {
             auto& J = iWell[Ix::JHead]; // One-based index.
 
             auto firstK = iWell[Ix::FirstK]; // One-based index.  Zero for MSW.
+            if (! well.isMultiSegment()) {
+                // The head is in the LGR: a mixed well's first connection may not be.
+                for (const auto& conn : well.getConnections()) {
+                    if (conn.get_lgr_level() > 0) {
+                        firstK = conn.getK() + 1;
+                        break;
+                    }
+                }
+            }
 
             if (! well.isMultiSegment()) {
                 // Use zero-based lookup indices for non-MS wells.

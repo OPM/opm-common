@@ -380,6 +380,29 @@ namespace Opm {
         return out;
     }
 
+    std::vector<std::size_t>
+    WellConnections::outputAllGrids(const EclipseGrid& grid) const
+    {
+        auto out = std::vector<std::size_t>{};
+        for (std::size_t idx = 0; idx < this->m_connections.size(); ++idx) {
+            const auto& conn = this->m_connections[idx];
+            const auto level = conn.get_lgr_level();
+            const auto& own = (level > 0) ? grid.getLGRCell(static_cast<std::size_t>(level) - 1) : grid;
+            if (own.isCellActive(conn.getI(), conn.getJ(), conn.getK())) {
+                out.push_back(idx);
+            }
+        }
+        if (!this->m_connections.empty() &&
+            !this->m_connections[0].attachedToSegment() &&
+            (this->m_ordering != Connection::Order::INPUT))
+        {
+            std::ranges::sort(out, [this](const auto c1, const auto c2) {
+                return this->m_connections[c1].sort_value() < this->m_connections[c2].sort_value();
+            });
+        }
+        return out;
+    }
+
     bool WellConnections::prepareWellPIScaling()
     {
         auto update = false;

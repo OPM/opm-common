@@ -439,3 +439,65 @@ BOOST_AUTO_TEST_CASE(WellLGRUnknownLocalGrid)
     const auto es = EclipseState { deck };
     BOOST_CHECK_THROW((Schedule { deck, es }), OpmInputError);
 }
+
+BOOST_AUTO_TEST_CASE(WellCompletedInsideAndOutsideABox)
+{
+    const auto deck = Opm::Parser{}.parseString(R"(
+RUNSPEC
+DIMENS
+ 3 3 3 /
+OIL
+WATER
+START
+ 1 'JAN' 2020 /
+GRID
+CARFIN
+ 'LGR1' 2 2 2 2 2 2 3 3 3 /
+ENDFIN
+DX
+ 27*100 /
+DY
+ 27*100 /
+DZ
+ 27*10 /
+TOPS
+ 9*1000 /
+PORO
+ 27*0.2 /
+PERMX
+ 27*100 /
+PERMY
+ 27*100 /
+PERMZ
+ 27*10 /
+SCHEDULE
+WELSPECS
+ 'P' 'G' 2 2 1* 'OIL' /
+/
+COMPDAT
+ 'P' 2 2 1 2 'OPEN' /
+/
+)");
+    const auto es = Opm::EclipseState { deck };
+    auto sched = Opm::Schedule { deck, es };
+    sched.refineConnectionsIntoLgrs(es.getLgrs());
+
+    const auto& well = sched.getWell("P", 0);
+    BOOST_CHECK(well.is_lgr_well());
+
+    std::size_t global = 0, refined = 0;
+    for (const auto& conn : well.getConnections()) {
+        if (conn.get_lgr_level() == 0) {
+            ++global;
+            BOOST_CHECK_EQUAL(conn.getK(), 0);
+        }
+        else {
+            ++refined;
+            BOOST_CHECK_EQUAL(conn.get_lgr_level(), 1);
+        }
+    }
+    BOOST_CHECK_EQUAL(global, std::size_t{1});
+    BOOST_CHECK(refined > 0);
+    BOOST_CHECK_EQUAL(well.getConnections().outputAllGrids(es.getInputGrid()).size(),
+                      global + refined);
+}

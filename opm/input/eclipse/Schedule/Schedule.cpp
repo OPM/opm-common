@@ -1372,18 +1372,6 @@ Defaulted grid coordinates is not allowed for COMPDAT as part of ACTIONX)"
                 if (! conns->refineIntoLgrs(lgrs, gridNumberOf, lgrNames)) {
                     continue;
                 }
-                const auto outside = std::find_if(conns->begin(), conns->end(),
-                                                  [](const auto& c) { return c.get_lgr_level() == 0; });
-                if (outside != conns->end()) {
-                    throw std::invalid_argument {
-                        fmt::format("Well {} is completed both inside CARFIN box '{}' and "
-                                    "outside it, in cell [{},{},{}]. A well with connections "
-                                    "in both the refined and the unrefined grid is not "
-                                    "supported yet: extend the box over all its connections, "
-                                    "or keep them all outside it.", wname, *lgrNames.begin(),
-                                    outside->getI() + 1, outside->getJ() + 1, outside->getK() + 1)
-                    };
-                }
                 // The well is tagged with the LGR of its first refined connection;
                 // every connection carries its own grid number regardless.
                 for (const auto& c : *conns) {
