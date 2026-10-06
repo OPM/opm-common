@@ -1108,7 +1108,9 @@ bool Well::updateConnections(std::shared_ptr<WellConnections> connections_arg, c
 
     if (this->pvt_table == 0 && !this->connections->empty()) {
         const auto& lowest = this->connections->lowest();
-        const auto& props = grid.get_cell(lowest.getI(), lowest.getJ(), lowest.getK(), get_lgr_well_tag()).props;
+        // The connection's own grid: an LGR well may also be completed in the global grid.
+        const auto& props = grid.get_cell(lowest.getI(), lowest.getJ(), lowest.getK(),
+                                          grid.get_lgr_label(lowest.get_lgr_level())).props;
         this->pvt_table = props->pvtnum;
         update = true;
     }

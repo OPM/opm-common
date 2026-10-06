@@ -180,6 +180,9 @@ public:
     /// \return Numeric grid index.
     int get_lgr_grid_number(const std::optional<std::string>& lgr_label) const;
 
+    /// The label of an LGR grid number; nullopt for the global grid (0).
+    std::optional<std::string> get_lgr_label(int lgr_grid_number) const;
+
     /// Whether \p lgr_label names a local grid refinement known to the
     /// simulation grids.
     bool has_lgr(const std::string& lgr_label) const;

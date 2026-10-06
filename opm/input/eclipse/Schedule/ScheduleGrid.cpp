@@ -132,6 +132,16 @@ const Opm::EclipseGrid* Opm::ScheduleGrid::get_grid() const
     return this->grid;
 }
 
+std::optional<std::string> Opm::ScheduleGrid::get_lgr_label(const int lgr_grid_number) const
+{
+    for (const auto& [name, idx] : this->label_to_index.get()) {
+        if (static_cast<int>(idx) == lgr_grid_number) {
+            return name;
+        }
+    }
+    return std::nullopt;
+}
+
 int Opm::ScheduleGrid::get_lgr_grid_number(const std::optional<std::string>& lgr_label) const
 {
     return lgr_label.has_value()
