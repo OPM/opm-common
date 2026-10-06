@@ -266,15 +266,15 @@ public:
     /// tran_data[i], and a negative entry leaves that entry alone. A refined
     /// grid needs this -- its faces outnumber the cells the deck describes, and
     /// several of them take one coarse cell's modifier.
-    void apply_tran(const std::string& keyword,
-                    const std::vector<int>& actionIndex,
-                    std::vector<double>& tran_data) const;
+    virtual void apply_tran(const std::string& keyword,
+                            const std::vector<int>& actionIndex,
+                            std::vector<double>& tran_data) const;
 
     /// The operations a TRAN* calculator will perform. MUL, MIN and MAX carry
     /// over to a refined face unchanged; EQUAL and ADD state an absolute
     /// transmissibility, which does not divide among the faces a refinement
     /// puts in a coarse face's place.
-    std::set<Fieldprops::ScalarOperation> tran_operations(const std::string& keyword) const;
+    virtual std::set<Fieldprops::ScalarOperation> tran_operations(const std::string& keyword) const;
 
     /// \brief Apply TRANZ modifiers using global indices
     ///
