@@ -235,6 +235,9 @@ public:
 
     /// Record a completion closure.
     ///
+    /// \param[in] well_name Name of the well
+    /// \param[in] complnum Completion number
+    /// \param[in] sim_time Simulator time
     /// \param[in] closed_below_offender Whether the completion is closed only
     /// because it lies below the one whose limit was violated.  Such a closure
     /// is the reach of a '+CON' workover rather than a violation of the
