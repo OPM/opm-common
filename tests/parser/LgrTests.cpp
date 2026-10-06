@@ -426,6 +426,39 @@ BOOST_AUTO_TEST_CASE(TestLGRcellsBelowMINPV)
  100.0 /)"))));
 }
 
+// An LGR cell's pore volume comes from its host's porosity, net-to-gross and
+// pore volume multiplier.  A host made active by a pore volume set in EDIT,
+// while one of these is zero, would leave its LGR cells with no pore volume:
+// the input stops.
+BOOST_AUTO_TEST_CASE(TestLGRhostWithoutPorosityEditPorv)
+{
+    const auto editPorv = std::string { R"(
+EDIT
+BOX
+ 2 2 2 2 1 1 /
+PORV
+ 1*25000 /
+ENDBOX)" };
+
+    BOOST_CHECK_THROW(EclipseState(Parser{}.parseString(minpvLgrDeck("0.0", editPorv))),
+                      std::invalid_argument);
+    BOOST_CHECK_THROW(EclipseState(Parser{}.parseString(minpvLgrDeck("0.25", R"(BOX
+ 2 2 2 2 1 1 /
+NTG
+ 1*0.0 /
+ENDBOX)" + editPorv))),
+                      std::invalid_argument);
+    BOOST_CHECK_THROW(EclipseState(Parser{}.parseString(minpvLgrDeck("0.25", R"(BOX
+ 2 2 2 2 1 1 /
+MULTPV
+ 1*0.0 /
+ENDBOX)" + editPorv))),
+                      std::invalid_argument);
+
+    // A host with porosity keeps its LGR cells, whatever its pore volume in EDIT.
+    BOOST_CHECK_NO_THROW(EclipseState(Parser{}.parseString(minpvLgrDeck("0.25", editPorv))));
+}
+
 BOOST_AUTO_TEST_CASE(TestGLOBALinactivecells) {
     const std::string deck_string = R"(
 RUNSPEC
