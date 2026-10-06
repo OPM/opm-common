@@ -126,13 +126,13 @@ public:
     /*!
      * \brief Returns the minimum of the X coordinate of the sampling points.
      */
-    Scalar xMin() const
+    OPM_HOST_DEVICE Scalar xMin() const
     { return xPos_.front(); }
 
     /*!
      * \brief Returns the maximum of the X coordinate of the sampling points.
      */
-    Scalar xMax() const
+    OPM_HOST_DEVICE Scalar xMax() const
     { return xPos_.back(); }
 
     /*!
@@ -144,7 +144,7 @@ public:
     /*!
      * \brief Returns the value of the Y coordinate of a sampling point.
      */
-    Scalar yAt(std::size_t i, std::size_t j) const
+    OPM_HOST_DEVICE Scalar yAt(std::size_t i, std::size_t j) const
     { return samples_[static_cast<int>(i)][static_cast<int>(j)].y; }
 
     /*!
@@ -156,25 +156,25 @@ public:
     /*!
      * \brief Returns the number of sampling points in X direction.
      */
-    std::size_t numX() const
+    OPM_HOST_DEVICE std::size_t numX() const
     { return xPos_.size(); }
 
     /*!
      * \brief Returns the minimum of the Y coordinate of the sampling points for a given column.
      */
-    Scalar yMin(unsigned i) const
+    OPM_HOST_DEVICE Scalar yMin(unsigned i) const
     { return samples_[static_cast<int>(i)].front().y; }
 
     /*!
      * \brief Returns the maximum of the Y coordinate of the sampling points for a given column.
      */
-    Scalar yMax(unsigned i) const
+    OPM_HOST_DEVICE Scalar yMax(unsigned i) const
     { return samples_[static_cast<int>(i)].back().y; }
 
     /*!
      * \brief Returns the number of sampling points in Y direction a given column.
      */
-    std::size_t numY(unsigned i) const
+    OPM_HOST_DEVICE std::size_t numY(unsigned i) const
     { return static_cast<std::size_t>(samples_.rowSize(static_cast<int>(i))); }
 
     /*!
@@ -187,7 +187,7 @@ public:
         return xPos_.at(i);
     }
 
-    const SparseTable<SamplePoint, Storage>& samples() const
+    OPM_HOST_DEVICE const SparseTable<SamplePoint, Storage>& samples() const
     {
         return samples_;
     }
