@@ -8028,3 +8028,122 @@ WCONINJH
     // WCONINJH re-specifies the VFP table
     BOOST_CHECK( schedule[10].wellgroup_events().hasEvent("I1", ScheduleEvents::WELL_THP_UPDATE));
 }
+
+namespace {
+
+// Returns true if constructing a Schedule from 'schedule_section' raises
+// the SCHEDULE_WELL_WITHOUT_CONTROL diagnostic.
+bool wellWithoutControlReported(const std::string& schedule_section)
+{
+    const auto input = std::string { R"(
+START
+  6 'OCT' 2026 /
+RUNSPEC
+DIMENS
+  10 10 10 /
+OIL
+WATER
+GRID
+DXV
+10*0.25 /
+DYV
+10*0.25 /
+DZV
+10*0.25 /
+DEPTHZ
+121*0.25 /
+EQUALS
+PERMX 100 /
+PERMY 100 /
+PERMZ 100 /
+PORO 0.3 /
+/
+SCHEDULE
+)" } + schedule_section;
+
+    const auto deck = Opm::Parser{}.parseString(input);
+    const auto python = std::make_shared<Opm::Python>();
+    Opm::EclipseGrid grid(deck);
+    const Opm::TableManager table(deck);
+    const Opm::FieldPropsManager fp(deck, Opm::Phases{true, true, false}, grid, table);
+    const Opm::Runspec runspec(deck);
+
+    auto parseContext = Opm::ParseContext{};
+    parseContext.update(Opm::ParseContext::SCHEDULE_WELL_WITHOUT_CONTROL,
+                        Opm::InputErrorAction::THROW_EXCEPTION);
+
+    auto errors = Opm::ErrorGuard{};
+
+    try {
+        Opm::Schedule(deck, grid, fp, Opm::NumericalAquifers{}, runspec,
+                      parseContext, errors, python);
+    }
+    catch (const Opm::OpmInputError& e) {
+        // string_view::contains() when we have C++23...
+        return std::string_view { e.what() }
+            .find("never assigned a control") != std::string_view::npos;
+    }
+
+    return false;
+}
+
+} // Anonymous namespace
+
+BOOST_AUTO_TEST_CASE(WellWithoutControl_Diagnostic)
+{
+    const auto welspecs = std::string { R"(
+WELSPECS
+  'P1' 'G1' 1 1 2000 'OIL' /
+/
+)" };
+
+    const auto compdat = std::string { R"(
+COMPDAT
+  'P1' 1 1 1 1 'OPEN' 1* 1* 0.2 /
+/
+)" };
+
+    const auto wconprod = std::string { R"(
+WCONPROD
+  'P1' 'OPEN' 'ORAT' 100 4* 1000 /
+/
+)" };
+
+    // Declared and connected, never controlled.
+    BOOST_CHECK_MESSAGE(wellWithoutControlReported(welspecs + compdat + std::string {
+                R"(DATES
+  8 OCT 2026 /
+/
+)"}), "Declared and connected, but not controlled must trigger");
+
+    // Declared but not connected.
+    BOOST_CHECK_MESSAGE(!wellWithoutControlReported(welspecs + std::string {
+                R"(DATES
+  8 OCT 2026 /
+/
+)"}), "Declared but neither connected nor controlled must NOT trigger");
+
+    // Controlled in the same report step.
+    BOOST_CHECK_MESSAGE(!wellWithoutControlReported(welspecs + compdat + wconprod),
+                        "Declared, connected, and controlled must NOT trigger");
+
+    // Controlled in a later report step.
+    BOOST_CHECK_MESSAGE(!wellWithoutControlReported(welspecs + compdat + std::string {
+                R"(DATES
+  8 OCT 2026 /
+/
+)" } + wconprod), "Declared, connected, and controlled later must NOT trigger");
+
+    // Possibly controlled by an ACTIONX at run time.
+    BOOST_CHECK_MESSAGE(!wellWithoutControlReported(welspecs + compdat + std::string {
+                R"(
+ACTIONX
+  'A' 1 /
+  WOPR 'P1' > 1 /
+/
+WCONPROD
+  'P1' 'OPEN' 'ORAT' 100 4* 1000 /
+/
+ENDACTIO
+)"}), "Wells controlled from ACTIONX must NOT trigger");
+}

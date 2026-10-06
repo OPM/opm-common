@@ -308,6 +308,7 @@ list(APPEND MAIN_SOURCE_FILES
   opm/input/eclipse/Schedule/Well/WellBrineProperties.cpp
   opm/input/eclipse/Schedule/Well/WellCompletionKeywordHandlers.cpp
   opm/input/eclipse/Schedule/Well/WellConnections.cpp
+  opm/input/eclipse/Schedule/Well/WellControlTracker.cpp
   opm/input/eclipse/Schedule/Well/WellEconProductionLimits.cpp
   opm/input/eclipse/Schedule/Well/WellEnums.cpp
   opm/input/eclipse/Schedule/Well/WellFoamProperties.cpp
@@ -1265,6 +1266,7 @@ list(APPEND PUBLIC_HEADER_FILES
   opm/input/eclipse/Schedule/Well/WellBrineProperties.hpp
   opm/input/eclipse/Schedule/Well/WellConnections.hpp
   opm/input/eclipse/Schedule/Well/WellEconProductionLimits.hpp
+  opm/input/eclipse/Schedule/Well/WellControlTracker.hpp
   opm/input/eclipse/Schedule/Well/WellEnums.hpp
   opm/input/eclipse/Schedule/Well/WellFoamProperties.hpp
   opm/input/eclipse/Schedule/Well/WellFractureSeeds.hpp
