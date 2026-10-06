@@ -658,6 +658,15 @@ CompositionalConfig::CompositionalConfig(const Deck& deck, const Runspec& runspe
                                         &EOSProps::binary_interaction_coefficient,
                                         bic_size, 0.);
 
+    // The fluid system takes the critical volumes from ZCRIT when it is given.
+    if (props_section.hasKeyword<ParserKeywords::VCRIT>()
+        && props_section.hasKeyword<ParserKeywords::ZCRIT>()) {
+        const auto& location = props_section.get<ParserKeywords::VCRIT>().back().location();
+        OpmLog::info(Log::fileMessage(location,
+                                      "VCRIT is not used, as the critical "
+                                      "volumes follow from ZCRIT."));
+    }
+
     // Surface keywords are sized by NMEOSS and handled independently per keyword.
     processSurfaceKeyword<ParserKeywords::MWS>(props_section, this->surface_props,
                                                this->reservoir_props,

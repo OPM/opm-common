@@ -31,6 +31,7 @@
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 
+#include <opm/material/Constants.hpp>
 #include <opm/material/eos/CubicEOS.hpp>
 #include <opm/material/fluidsystems/blackoilpvt/WaterPvtMultiplexer.hpp>
 #include <opm/material/fluidsystems/BaseFluidSystem.hpp>
@@ -195,7 +196,7 @@ namespace Opm {
                               static_cast<Scalar>(eos_props.molecular_weights[c]),
                               static_cast<Scalar>(eos_props.critical_temperature[c]),
                               static_cast<Scalar>(eos_props.critical_pressure[c]),
-                              static_cast<Scalar>(eos_props.critical_volume[c] * 1.e3),
+                              static_cast<Scalar>(criticalVolume_(eos_props, c) * 1.e3),
                               static_cast<Scalar>(eos_props.acentric_factors[c]),
                               c < eos_props.volume_shifts.size()
                                   ? static_cast<Scalar>(eos_props.volume_shifts[c])
@@ -575,6 +576,22 @@ namespace Opm {
     private:
         static bool isConsistent() {
             return component_param_.size() == NumComp;
+        }
+
+        // Critical volume [m^3/mol] of a component. ZCRIT, when given, takes
+        // precedence over VCRIT: Vc = Zc R Tc / Pc.
+        static double criticalVolume_(const CompositionalConfig::EOSProps& props,
+                                      const std::size_t compIdx)
+        {
+            if (!props.critical_z_factor.empty()) {
+                return props.critical_z_factor[compIdx] * Constants<double>::R
+                    * props.critical_temperature[compIdx] / props.critical_pressure[compIdx];
+            }
+            if (props.critical_volume.empty()) {
+                throw std::runtime_error("The equation of state needs the critical volumes "
+                                         "from VCRIT or the critical Z-factors from ZCRIT.");
+            }
+            return props.critical_volume[compIdx];
         }
 
         static std::vector<ComponentParam> component_param_;
