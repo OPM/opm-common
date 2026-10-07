@@ -1,3 +1,17 @@
+-- This reservoir simulation deck is made available under the Open Database
+-- License: http://opendatacommons.org/licenses/odbl/1.0/. Any rights in
+-- individual contents of the database are licensed under the Database Contents
+-- License: http://opendatacommons.org/licenses/dbcl/1.0/
+
+-- Copyright (C) 2026 Equinor ASA
+
+-- Test deck for RC_GroupTotals_EfficiencyFactors in test_Summary.cpp.  G_3
+-- stands in for a reservoir coupling master group: the test passes its rates
+-- to Summary::eval() directly, without well data.  G_3 has GEFAC 0.02 and its
+-- parent G_4 GEFAC 0.03 (0.04 from the second report step), so the totals of
+-- the master group quantities can be checked against GOPT, which applies the
+-- same cumulative efficiency factors.
+
 START
 10 MAI 2007 /
 RUNSPEC
