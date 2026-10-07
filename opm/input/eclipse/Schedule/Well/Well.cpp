@@ -2419,18 +2419,9 @@ int Opm::Well::eclipseControlMode(const Opm::Well::ProducerCMode pmode)
     return Val::WMCtlUnk;
 }
 
-// This function converts OPM well status values to an integer value
-// suitable for output to the restart file.  OPM tracks the status and the
-// active control of a well separately, but when this is written to a
-// restart file they are combined to a single integer.  Moreover, OPM
-// permits a well to have an active control while still being shut, but when
-// this is converted to an integer value suitable for the restart file, the
-// value 0 will be used to signal a SHUT well and the active control will be
-// lost.
-//
-// In the case of a well which is in state 'STOP' or 'AUTO' an integer
-// corresponding to the currently active control is written to the restart
-// file.
+// Control mode code of the well's input controls.  The well's status is not
+// taken into account, and a well which has not been given a control mode
+// yields WMCtlUnk.
 
 int Opm::Well::eclipseControlMode(const Well&         well,
                                   const SummaryState& st)

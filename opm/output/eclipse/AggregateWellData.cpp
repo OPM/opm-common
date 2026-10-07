@@ -204,6 +204,16 @@ namespace {
                 || (!curr.isProducer && (curr.inj != IMode::CMODE_UNDEFINED));
         }
 
+        bool wellControlDefined(const Opm::Well& well)
+        {
+            using PMode = ::Opm::Well::ProducerCMode;
+            using IMode = ::Opm::Well::InjectorCMode;
+
+            return well.isProducer()
+                ? (well.getProductionProperties().controlMode != PMode::CMODE_UNDEFINED)
+                : (well.getInjectionProperties().controlMode != IMode::CMODE_UNDEFINED);
+        }
+
         int ctrlMode(const Opm::Well& well, const Opm::data::Well& xw)
         {
             const auto& curr = xw.current_control;
@@ -307,12 +317,7 @@ namespace {
         void setCurrentControl(const int   curr,
                                IWellArray& iWell)
         {
-            using Ctrl = VI::IWell::Value::WellCtrlMode;
-
-            // WMCtlUnk is a WMCTL summary value.  A well which has not been
-            // given a control mode has no control in the restart file.
-            iWell[VI::IWell::index::ActWCtrl] =
-                (curr == Ctrl::WMCtlUnk) ? Ctrl::NoCtrl : curr;
+            iWell[VI::IWell::index::ActWCtrl] = curr;
         }
 
         template <typename IWellArray>
@@ -638,7 +643,12 @@ namespace {
             //
             // Observe that setCurrentControl() is called again, for open
             // wells, in the dynamicContrib() function.
-            setCurrentControl(Opm::Well::eclipseControlMode(well, st), iWell);
+            //
+            // A well which has not been given a control mode gets NoCtrl, not
+            // the WMCTL summary value WMCtlUnk.
+            setCurrentControl(wellControlDefined(well)
+                              ? Opm::Well::eclipseControlMode(well, st)
+                              : VI::IWell::Value::WellCtrlMode::NoCtrl, iWell);
             setHistoryControlMode(well, Opm::Well::eclipseControlMode(well, st), iWell);
 
             iWell[Ix::CompOrd] = compOrder(well);
