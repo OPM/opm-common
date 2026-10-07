@@ -78,6 +78,18 @@ set_property(CACHE OPM_INTERPROCEDURAL_OPTIMIZATION_TYPE PROPERTY STRINGS ${OPM_
 
 message(STATUS "OPM interprocedural optimization type: ${OPM_INTERPROCEDURAL_OPTIMIZATION_TYPE}")
 
+# The GNU and Clang types add -flto by hand, so CMake does not switch to the
+# LTO aware archiver like it does for INTERPROCEDURAL_OPTIMIZATION. Plain
+# ar/ranlib only index the symbols of (slim) LTO objects if a matching linker
+# plugin happens to be installed in bfd-plugins. Without it the archive members
+# are never pulled in, which fails executables at link time and silently leaves
+# undefined symbols in shared modules.
+if(OPM_INTERPROCEDURAL_OPTIMIZATION_TYPE MATCHES "^(GNU|Clang)$"
+   AND CMAKE_CXX_COMPILER_AR AND CMAKE_CXX_COMPILER_RANLIB)
+  set(CMAKE_AR ${CMAKE_CXX_COMPILER_AR})
+  set(CMAKE_RANLIB ${CMAKE_CXX_COMPILER_RANLIB})
+endif()
+
 function(opm_interprocedural_optimization)
   cmake_parse_arguments(OPM_IPO "" "TARGET" "CONFIGURATION_TYPES" ${ARGN})
 
