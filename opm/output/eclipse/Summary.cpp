@@ -2992,8 +2992,9 @@ quantity group_efficiency_factor(const fn_args& args)
 {
     const auto zero = quantity { 0.0, measure::identity };
 
-    // A reservoir coupling master group has no wells of its own, but carries
-    // the rates of its slave group.
+    // A group with no wells of its own has no efficiency factor to report,
+    // unless it is, or has below it, a reservoir coupling master group: a
+    // master group has no wells of its own, but carries its slave's rates.
     if (args.schedule_wells.empty() && ! rc_has_master_group(args)) {
         return zero;
     }
