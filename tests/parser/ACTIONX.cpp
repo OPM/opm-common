@@ -1512,6 +1512,63 @@ END
     BOOST_CHECK_EQUAL(connections.size(), 3);
 }
 
+BOOST_AUTO_TEST_CASE(Action_WELOPEN_WellWithoutControlMode)
+{
+    const auto deck_string = std::string{ R"(
+GRID
+PORO
+    1000*0.1 /
+PERMX
+    1000*1 /
+PERMY
+    1000*0.1 /
+PERMZ
+    1000*0.01 /
+SCHEDULE
+
+WELSPECS
+    'PROD1' 'G1'  1 1 10 'OIL' /
+    'PROD2' 'G1'  2 2 10 'OIL' /
+/
+
+COMPDAT
+ 'PROD1'  1  1   1   3 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+ 'PROD2'  2  2   1   3 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+/
+
+WCONPROD
+ 'PROD2' 'SHUT' 'BHP' 5* 100.0 /
+/
+
+ACTIONX
+'A' /
+FPR < 100 /
+/
+
+WELOPEN
+  'PROD1' 'OPEN' 5* /
+  'PROD2' 'OPEN' 5* /
+/
+
+ENDACTIO
+
+TSTEP
+10 /
+END
+)"};
+
+    Schedule sched = make_schedule(deck_string);
+    const auto& action1 = sched[0].actions.get()["A"];
+
+    Action::Result action_result(true);
+    sched.applyAction(0, action1, action_result.matches(),
+                      std::unordered_map<std::string,double>{}, true);
+
+    // PROD1 has not been given a control mode, so the action leaves it shut.
+    BOOST_CHECK(sched.getWell("PROD1", 1).getStatus() == Well::Status::SHUT);
+    BOOST_CHECK(sched.getWell("PROD2", 1).getStatus() == Well::Status::OPEN);
+}
+
 BOOST_AUTO_TEST_CASE(Action_WELPI)
 {
     const auto deck_string = std::string{ R"(

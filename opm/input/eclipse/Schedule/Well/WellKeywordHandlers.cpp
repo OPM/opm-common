@@ -114,11 +114,15 @@ void updateOpenShutEvents(HandlerContext& handlerContext, const std::string& wel
     }
 }
 
-bool hasControlMode(const Well& well)
+void warnNoControlMode(const KeywordLocation& location, const std::string& well_name)
 {
-    return well.isProducer()
-        ? (well.getProductionProperties().controlMode != Well::ProducerCMode::CMODE_UNDEFINED)
-        : (well.getInjectionProperties().controlMode != Well::InjectorCMode::CMODE_UNDEFINED);
+    const auto msg_format =
+        fmt::format("Problem with {{keyword}}\n"
+                    "In {{file}} line {{line}}\n"
+                    "Well {} has not been given a control mode "
+                    "and will remain SHUT", well_name);
+
+    OpmLog::warning(OpmInputError::format(msg_format, location));
 }
 
 void handleWCONHIST(HandlerContext& handlerContext)
@@ -421,8 +425,24 @@ void handleWCONPROD(HandlerContext& handlerContext)
 
         const Well::Status status = WellStatusFromString(record.getItem<Kw::STATUS>().getTrimmedString(0));
 
+        const auto& cmode_item = record.getItem<Kw::CMODE>();
+        const bool record_has_cmode = cmode_item.hasValue(0)
+            && !cmode_item.getTrimmedString(0).empty();
+
         for (const auto& well_name : well_names) {
-            bool update_well = handlerContext.updateWellStatus(well_name, status,
+            // A well which has not been given a control mode stays shut.
+            // Opening it without one is rejected in handleWCONPROD().
+            auto well_status = status;
+            if (((status == Well::Status::STOP) || (status == Well::Status::AUTO)) &&
+                !record_has_cmode &&
+                (handlerContext.state().wells.get(well_name).getProductionProperties().controlMode
+                 == Well::ProducerCMode::CMODE_UNDEFINED))
+            {
+                warnNoControlMode(handlerContext.keyword.location(), well_name);
+                well_status = Well::Status::SHUT;
+            }
+
+            bool update_well = handlerContext.updateWellStatus(well_name, well_status,
                                                                handlerContext.keyword.location());
             std::optional<VFPProdTable::ALQ_TYPE> alq_type;
             auto well2 = handlerContext.state().wells.get( well_name );
@@ -568,18 +588,12 @@ void handleWELOPEN(HandlerContext& handlerContext)
         if (conn_defaulted(record)) {
             const auto new_well_status = WellStatusFromString(status_str);
             for (const auto& wname : well_names) {
-                // A well which has not been given a control mode is a shut
-                // well, and only a WCON* keyword can open it.
-                if ((new_well_status == open) &&
-                    ! hasControlMode(handlerContext.state().wells.get(wname)))
+                // A well which has not been given a control mode stays shut
+                // until a WCON* keyword gives it one.
+                if ((new_well_status != Well::Status::SHUT) &&
+                    ! handlerContext.state().wells.get(wname).hasControlMode())
                 {
-                    const auto msg_format =
-                        fmt::format("Problem with {{keyword}}\n"
-                                    "In {{file}} line {{line}}\n"
-                                    "Well {} has not been given a control mode "
-                                    "and will remain SHUT", wname);
-
-                    OpmLog::warning(OpmInputError::format(msg_format, keyword.location()));
+                    warnNoControlMode(keyword.location(), wname);
                     continue;
                 }
 
