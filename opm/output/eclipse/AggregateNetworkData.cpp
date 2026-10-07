@@ -248,6 +248,12 @@ nodePressureSIFromNetwork(const Opm::ScheduleState& sched,
 /// Such a node receives no flow which is not already accounted for at a
 /// fixed pressure node, so it does not need a pressure of its own.  Input
 /// validation reports this situation once, when the network is defined.
+///
+/// This is a best-effort check which assumes that the network topology has
+/// been validated.  It succeeds as soon as it finds one fixed pressure node
+/// downtree, and does not require every inlet to end in one.  If
+/// SCHEDULE_NETWORK_INVALID is set to ignore errors, a node with both a
+/// protected and an unprotected inlet therefore gets no warning here.
 bool isAboveFixedPressureNode(const Opm::Network::ExtNetwork& network,
                               const std::string&              nodeName)
 {
