@@ -204,16 +204,6 @@ namespace {
                 || (!curr.isProducer && (curr.inj != IMode::CMODE_UNDEFINED));
         }
 
-        bool wellControlDefined(const Opm::Well& well)
-        {
-            using PMode = ::Opm::Well::ProducerCMode;
-            using IMode = ::Opm::Well::InjectorCMode;
-
-            return well.isProducer()
-                ? (well.getProductionProperties().controlMode != PMode::CMODE_UNDEFINED)
-                : (well.getInjectionProperties().controlMode != IMode::CMODE_UNDEFINED);
-        }
-
         int ctrlMode(const Opm::Well& well, const Opm::data::Well& xw)
         {
             const auto& curr = xw.current_control;
@@ -646,7 +636,7 @@ namespace {
             //
             // A well which has not been given a control mode gets NoCtrl, not
             // the WMCTL summary value WMCtlUnk.
-            setCurrentControl(wellControlDefined(well)
+            setCurrentControl(well.hasControlMode()
                               ? Opm::Well::eclipseControlMode(well, st)
                               : VI::IWell::Value::WellCtrlMode::NoCtrl, iWell);
             setHistoryControlMode(well, Opm::Well::eclipseControlMode(well, st), iWell);
