@@ -1023,6 +1023,27 @@ double accum_groups(const Opm::ScheduleState& sched,
                                   });
 }
 
+// Reservoir coupling: a master group quantity, summed over the master groups
+// in the group tree at or below args.group_name.  Only down-tree group
+// efficiency factors are applied for a rate, and also the ones imposed at
+// higher levels for a cumulative.
+template <bool cumulative, typename GroupValue>
+double rc_group_tree_value(const fn_args& args, GroupValue&& group_value)
+{
+    if ((args.rc_rates == nullptr) || args.group_name.empty()) {
+        return 0.0;
+    }
+
+    const auto& sched = args.schedule[args.sim_step];
+    const auto efac = cumulative
+        ? cumulativeSatelliteEffFactor(sched, args.group_name)
+        : 1.0;
+
+    return accum_groups(sched, args.group_name, efac,
+                        [&rc = *args.rc_rates, &group_value](const std::string& gname)
+                        { return group_value(rc, gname); });
+}
+
 template <rt phase, bool injection, bool cumulativeSatellite>
 double satellite_rate(const fn_args& args)
 {
@@ -1045,58 +1066,36 @@ double satellite_rate(const fn_args& args)
         return accum_groups(sched, gname, efac, group_sat_rate);
     };
 
+    double sum = 0.0;
+
     if (!injection && (sched.satelliteProduction().size() > 0)) {
         // Down-tree satellite production rates.
 
-        return satRate([&st = args.st, &sched](const std::string& gname)
+        sum += satRate([&st = args.st, &sched](const std::string& gname)
         { return satellite_prod<phase>(st, sched, gname); });
     }
     else if (injection && (sched.satelliteInjection.size() > 0)) {
         // Down-tree satellite injection rates.
 
-        return satRate([&sched](const std::string& gname)
+        sum += satRate([&sched](const std::string& gname)
         { return satellite_inj<phase>(sched, gname); });
     }
 
-    // Reservoir coupling: master group production/injection rates from slaves.
-    if (args.rc_rates != nullptr) {
-        if (!injection) {
-            return satRate([&rc = *args.rc_rates](const std::string& gname)
-            { return rc_group_prod<phase>(rc, gname); });
-        }
-        else {
-            return satRate([&rc = *args.rc_rates](const std::string& gname)
-            { return rc_group_inj<phase>(rc, gname); });
-        }
-    }
+    // Reservoir coupling: master group production/injection rates from
+    // slaves.  Added to, not an alternative to, the satellite rates since a
+    // model may contain both kinds of group.
+    sum += rc_group_tree_value<cumulativeSatellite>(args,
+        [](const auto& rc, const std::string& gname)
+        {
+            if constexpr (injection) { return rc_group_inj<phase>(rc, gname); }
+            else                     { return rc_group_prod<phase>(rc, gname); }
+        });
 
-    // No satellite or reservoir coupling rates.
-    return 0.0;
-}
-
-// Reservoir coupling: a master group quantity, summed over the master groups
-// in the group tree below args.group_name.  As for the master group rates in
-// satellite_rate(), only down-tree group efficiency factors are applied for a
-// rate, and also the ones imposed at higher levels for a cumulative.
-template <bool cumulative, typename GroupValue>
-double rc_group_tree_value(const fn_args& args, GroupValue&& group_value)
-{
-    if ((args.rc_rates == nullptr) || args.group_name.empty()) {
-        return 0.0;
-    }
-
-    const auto& sched = args.schedule[args.sim_step];
-    const auto efac = cumulative
-        ? cumulativeSatelliteEffFactor(sched, args.group_name)
-        : 1.0;
-
-    return accum_groups(sched, args.group_name, efac,
-                        [&rc = *args.rc_rates, &group_value](const std::string& gname)
-                        { return group_value(rc, gname); });
+    return sum;
 }
 
 // Reservoir coupling: number of flowing producers or injectors of the master
-// groups in the group tree below args.group_name.
+// groups in the group tree at or below args.group_name.
 template <bool injection>
 int rc_flowing_wells(const fn_args& args)
 {
@@ -1128,7 +1127,7 @@ int rc_flowing_wells(const fn_args& args)
     return count(args.group_name, count);
 }
 
-// Reservoir coupling: whether the group tree below args.group_name contains a
+// Reservoir coupling: whether the group tree at or below args.group_name contains a
 // master group.
 bool rc_has_master_group(const fn_args& args)
 {

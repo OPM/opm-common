@@ -8710,4 +8710,37 @@ BOOST_AUTO_TEST_CASE(RC_GroupTotals_EfficiencyFactors)
     BOOST_CHECK_CLOSE(st.get("FOPTH"), fopt * 90.0 / 100.0, 1e-5);
 }
 
+// Master groups and satellite groups in the same model: the satellite
+// production must not hide the master group rates.
+BOOST_AUTO_TEST_CASE(RC_MasterAndSatelliteGroups)
+{
+    setup cfg("test_summary_rc_eff_fac_sat", "SUMMARY_RC_EFF_FAC_SAT.DATA", false);
+
+    auto writer = out::Summary {
+        cfg.config, cfg.es, cfg.grid, cfg.schedule, cfg.name
+    };
+
+    auto st = SummaryState {
+        TimeService::now(), cfg.es.runspec().udqParams().undefinedValue()
+    };
+
+    data::ReservoirCouplingGroupRates rc_rates;
+    auto& prod = rc_rates.production["G_3"];
+    prod.oil = 100.0 * sm3_pr_day();
+    prod.potential_oil = 300.0 * sm3_pr_day();
+
+    auto values = out::Summary::DynamicSimulatorState{};
+    values.group_and_nwrk_solution = &cfg.grp_nwrk;
+    values.rc_group_rates = &rc_rates;
+
+    writer.eval(/*report_step=*/0, /*secs_elapsed=*/0.0 * day, values, st);
+    writer.eval(/*report_step=*/1, /*secs_elapsed=*/1.0 * day, values, st);
+
+    BOOST_CHECK_CLOSE(st.get_group_var("G_3", "GOPR"), 100.0, 1e-5);
+    BOOST_CHECK_CLOSE(st.get_group_var("G_3", "GOPP"), 300.0, 1e-5);
+    BOOST_CHECK_CLOSE(st.get_group_var("SAT", "GOPR"), 50.0, 1e-5);
+    BOOST_CHECK_CLOSE(st.get_group_var("G_4", "GOPR"), 100.0 * 0.02, 1e-5);
+    BOOST_CHECK_CLOSE(st.get("FOPR"), 50.0 + 100.0 * 0.02 * 0.03, 1e-5);
+}
+
 BOOST_AUTO_TEST_SUITE_END() // ReservoirCoupling
