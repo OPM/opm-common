@@ -1244,7 +1244,7 @@ inline quantity glir( const fn_args& args ) {
             alq_rate -= eff_fac * glr * (wpr + opr);
         }
     }
-    alq_rate += satellite_rate<rt::alq, false, true>(args);
+    alq_rate += satellite_rate<rt::alq, false, false>(args);
 
     return { alq_rate, measure::gas_surface_rate };
 }

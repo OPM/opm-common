@@ -8663,6 +8663,8 @@ BOOST_AUTO_TEST_CASE(RC_GroupTotals_EfficiencyFactors)
     prod.resv_water = 20.0 * rm3_pr_day();
     prod.resv = prod.resv_oil + prod.resv_gas + prod.resv_water;
     prod.history_oil = 90.0 * sm3_pr_day();
+    prod.gas_lift = 5000.0 * sm3_pr_day();
+    prod.potential_gas = 40000.0 * sm3_pr_day();
     rc_rates.injection["G_3"][Phase::WATER] = {
         .surface = 200.0 * sm3_pr_day(), .reservoir = 210.0 * rm3_pr_day(),
         .potential = 0.0, .history = 0.0
@@ -8681,6 +8683,14 @@ BOOST_AUTO_TEST_CASE(RC_GroupTotals_EfficiencyFactors)
     BOOST_CHECK_CLOSE(st.get_group_var("G_3", "GVPR"), 160.0, 1e-5);
     BOOST_CHECK_CLOSE(st.get_group_var("G_3", "GVIR"), 210.0, 1e-5);
     BOOST_CHECK_CLOSE(st.get_group_var("G_3", "GOPRH"), 90.0, 1e-5);
+
+    // GGLIR is a rate: no efficiency factor of the group or its ancestors.
+    BOOST_CHECK_CLOSE(st.get_group_var("G_3", "GGLIR"), 5000.0, 1e-5);
+    BOOST_CHECK_CLOSE(st.get_group_var("G_3", "GGPP"), 40000.0, 1e-5);
+    // G_3's own factor scales its contribution to G_4 (GEFAC 0.02), as for GOPR.
+    BOOST_CHECK_CLOSE(st.get_group_var("G_4", "GGLIR"), 5000.0 * 0.02, 1e-5);
+    BOOST_CHECK_CLOSE(st.get_group_var("G_4", "GGPP"), 40000.0 * 0.02, 1e-5);
+    BOOST_CHECK_CLOSE(st.get("FGLIR"), 5000.0 * 0.02 * 0.03, 1e-5);
 
     // The totals include it, and the factor is not 1 here.
     const double gopt = st.get_group_var("G_3", "GOPT");
