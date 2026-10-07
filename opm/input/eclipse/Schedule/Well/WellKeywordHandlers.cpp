@@ -114,6 +114,13 @@ void updateOpenShutEvents(HandlerContext& handlerContext, const std::string& wel
     }
 }
 
+bool hasControlMode(const Well& well)
+{
+    return well.isProducer()
+        ? (well.getProductionProperties().controlMode != Well::ProducerCMode::CMODE_UNDEFINED)
+        : (well.getInjectionProperties().controlMode != Well::InjectorCMode::CMODE_UNDEFINED);
+}
+
 void handleWCONHIST(HandlerContext& handlerContext)
 {
     using Kw = ParserKeywords::WCONHIST;
@@ -561,6 +568,21 @@ void handleWELOPEN(HandlerContext& handlerContext)
         if (conn_defaulted(record)) {
             const auto new_well_status = WellStatusFromString(status_str);
             for (const auto& wname : well_names) {
+                // A well which has not been given a control mode is a shut
+                // well, and only a WCON* keyword can open it.
+                if ((new_well_status == open) &&
+                    ! hasControlMode(handlerContext.state().wells.get(wname)))
+                {
+                    const auto msg_format =
+                        fmt::format("Problem with {{keyword}}\n"
+                                    "In {{file}} line {{line}}\n"
+                                    "Well {} has not been given a control mode "
+                                    "and will remain SHUT", wname);
+
+                    OpmLog::warning(OpmInputError::format(msg_format, keyword.location()));
+                    continue;
+                }
+
                 const auto did_update_well_status =
                     handlerContext.updateWellStatus(wname, new_well_status);
 

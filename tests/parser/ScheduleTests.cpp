@@ -989,6 +989,9 @@ COMPDAT
  'OP_3'  7  7   1   1 'OPEN' 1*   27.412   0.311  2445.337 1*  1*  'Y'  18.521 /
  'OP_3'  7  7   2   2 'OPEN' 1*   55.195   0.311  4923.842 1*  1*  'Y'  18.524 /
 /
+WCONPROD
+ 'OP_1' 'SHUT' 'BHP' 5* 100.0 /
+/
 DATES             -- 2,3
  10  JUL 2007 /
  10  AUG 2007 /
@@ -1092,6 +1095,9 @@ COMPDAT
  'OP_1'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 /
  'OP_1'  9  9   3  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
 /
+WCONPROD
+ 'OP_1' 'SHUT' 'BHP' 5* 100.0 /
+/
 DATES             -- 2
  10  JUL 2008 /
 /
@@ -1144,6 +1150,9 @@ COMPDAT
  'OP_1'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 /
  'OP_1'  9  9   3  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
 /
+WCONPROD
+ 'OP_1' 'SHUT' 'BHP' 5* 100.0 /
+/
 DATES             -- 2
  10  JUL 2008 /
 /
@@ -1189,6 +1198,58 @@ DATES             -- 6
   BOOST_CHECK( schedule[4].wellgroup_events().hasEvent("OP_1", ScheduleEvents::WELL_STATUS_CHANGE));
   // timestep 5. Open new completions. But keep the well shut,
   BOOST_CHECK(Well::Status::SHUT == well_5.getStatus());
+}
+
+BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithWELOPEN_WellWithoutControlModeStaysShut)
+{
+    const auto schedule = make_schedule(R"(
+START             -- 0
+1 NOV 1979 /
+GRID
+PORO
+    1000*0.1 /
+PERMX
+    1000*1 /
+PERMY
+    1000*0.1 /
+PERMZ
+    1000*0.01 /
+SCHEDULE
+DATES             -- 1
+ 1 DES 1979/
+/
+WELSPECS
+    'OP_1'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
+    'OP_2'       'OP'   8   8 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
+/
+COMPDAT
+ 'OP_1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+ 'OP_2'  8  8   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+/
+WCONPROD
+ 'OP_2' 'SHUT' 'BHP' 5* 100.0 /
+/
+DATES             -- 2
+ 10  JUL 2008 /
+/
+WELOPEN
+ 'OP_*' OPEN /
+/
+DATES             -- 3
+ 10  OKT 2008 /
+/
+WCONPROD
+ 'OP_1' 'OPEN' 'BHP' 5* 100.0 /
+/
+)");
+
+    // OP_1 has not been given a control mode, so WELOPEN leaves it shut.
+    BOOST_CHECK(Well::Status::SHUT == schedule.getWell("OP_1", 2).getStatus());
+    BOOST_CHECK(!schedule[2].wellgroup_events().hasEvent("OP_1", ScheduleEvents::WELL_STATUS_CHANGE));
+    BOOST_CHECK(Well::Status::OPEN == schedule.getWell("OP_2", 2).getStatus());
+
+    // WCONPROD gives OP_1 a control mode and opens it.
+    BOOST_CHECK(Well::Status::OPEN == schedule.getWell("OP_1", 3).getStatus());
 }
 
 
