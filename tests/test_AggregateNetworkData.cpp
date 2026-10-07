@@ -39,13 +39,21 @@
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/Parser/Parser.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/input/eclipse/Schedule/Network/ExtNetwork.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
 
 #include <opm/io/eclipse/OutputStream.hpp>
 #include <opm/common/utility/TimeService.hpp>
 
+#include <opm/common/OpmLog/CounterLog.hpp>
+#include <opm/common/OpmLog/LogUtil.hpp>
+#include <opm/common/OpmLog/OpmLog.hpp>
+
+#include <algorithm>
 #include <exception>
+#include <fstream>
+#include <iterator>
 #include <memory>
 #include <stdexcept>
 #include <utility>
@@ -85,6 +93,39 @@ namespace {
         state.update_group_var("M1", "GPR", 72.);
 
         return state;
+    }
+
+    // Replace the one occurrence of 'from' in 'text' with 'to'.
+    void replaceOnce(std::string& text, const std::string& from, const std::string& to)
+    {
+        const auto pos = text.find(from);
+        BOOST_REQUIRE_MESSAGE(pos != std::string::npos, "Pattern not found in test deck: " + from);
+        BOOST_REQUIRE_MESSAGE(text.find(from, pos + from.size()) == std::string::npos,
+                              "Pattern not unique in test deck: " + from);
+        text.replace(pos, from.size(), to);
+    }
+
+    // TEST_NETWORK_ALL.DATA with an additional branch PLAT-A -> FIELD.  FIELD
+    // has no fixed pressure of its own, but sits above the fixed pressure
+    // node PLAT-A.
+    Opm::Deck network_above_fixed_pressure_deck()
+    {
+        auto input = std::ifstream { "TEST_NETWORK_ALL.DATA" };
+        BOOST_REQUIRE(input.is_open());
+
+        auto deck = std::string { std::istreambuf_iterator<char>{input},
+                                  std::istreambuf_iterator<char>{} };
+
+        // One more node and one more branch.
+        replaceOnce(deck, "NETWORK\n 7 5 /", "NETWORK\n 8 6 /");
+        replaceOnce(deck, "    'M1'        'N2'        8        1*  /\n",
+                          "    'M1'        'N2'        8        1*  /\n"
+                          "    'PLAT-A'    'FIELD'     9999     1*  /\n");
+        replaceOnce(deck, "    'B2'        1*       NO\t  NO\t       1*  /\n",
+                          "    'B2'        1*       NO\t  NO\t       1*  /\n"
+                          "    'FIELD'     1*       NO\t  NO\t       1*  /\n");
+
+        return Opm::Parser{}.parseString(deck);
     }
 
     std::string pad8(const std::string& s) {
@@ -313,6 +354,54 @@ BOOST_AUTO_TEST_CASE (Constructor)
     BOOST_CHECK_CLOSE(rBran[start + 2], 772402.9375, 1.0e-10);
     BOOST_CHECK_CLOSE(rBran[start + 8], 842.3, 1.0e-10);
     BOOST_CHECK_CLOSE(rBran[start + 9], 0.92, 1.0e-10);
+}
+
+BOOST_AUTO_TEST_CASE (Node_Above_Fixed_Pressure_Node)
+{
+    namespace VI = ::Opm::RestartIO::Helpers::VectorItems;
+    const auto simCase = SimulationCase{network_above_fixed_pressure_deck()};
+
+    const auto& es    = simCase.es;
+    const auto& sched = simCase.sched;
+    const auto& grid  = simCase.grid;
+    const auto  st    = sum_state();
+
+    const auto rptStep = std::size_t{1};
+
+    const double secs_elapsed = 3.1536E07;
+    const auto ih = Opm::RestartIO::Helpers::
+        createInteHead(es, grid, sched, secs_elapsed,
+                       rptStep, rptStep+1, rptStep);
+
+    // FIELD has no pressure and no uptree branch, so there is no pressure
+    // to report for it.  It is not an error, though: every flow path ends
+    // in the fixed pressure node PLAT-A before reaching FIELD, and input
+    // validation has already said so.  Writing the restart data should
+    // therefore not warn, whereas it does warn about any other node that
+    // is without a pressure.
+    auto counter = std::make_shared<Opm::CounterLog>();
+    Opm::OpmLog::addBackend("AggregateNetworkDataCounter", counter);
+
+    auto networkData = Opm::RestartIO::Helpers::AggregateNetworkData(ih);
+    networkData.captureDeclaredNetworkData(es, sched, rptStep, st, ih);
+
+    const auto numWarnings = counter->numMessages(Opm::Log::MessageType::Warning);
+    Opm::OpmLog::removeBackend("AggregateNetworkDataCounter");
+
+    BOOST_CHECK_EQUAL(numWarnings, std::size_t{0});
+
+    const auto& nodeNames = sched[rptStep].network().node_names();
+    const auto fieldIx = static_cast<std::size_t>
+        (std::distance(nodeNames.begin(), std::ranges::find(nodeNames, "FIELD")));
+    const auto platAIx = static_cast<std::size_t>
+        (std::distance(nodeNames.begin(), std::ranges::find(nodeNames, "PLAT-A")));
+    BOOST_REQUIRE_LT(fieldIx, nodeNames.size());
+    BOOST_REQUIRE_LT(platAIx, nodeNames.size());
+
+    const auto& rNode = networkData.getRNode();
+    const auto nrnode = static_cast<std::size_t>(ih[VI::NRNODE]);
+    BOOST_CHECK_EQUAL(rNode[fieldIx*nrnode + 2], 0.0);
+    BOOST_CHECK_CLOSE(rNode[platAIx*nrnode + 2], 67., 1.0e-10);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
