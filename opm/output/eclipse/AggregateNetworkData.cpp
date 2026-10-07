@@ -44,8 +44,10 @@
 #include <exception>
 #include <memory>
 #include <optional>
+#include <set>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 #include <fmt/format.h>
 
@@ -241,6 +243,44 @@ nodePressureSIFromNetwork(const Opm::ScheduleState& sched,
     return node_press;
 }
 
+/// Whether or not any node downtree of a network node has a fixed pressure.
+///
+/// Such a node receives no flow which is not already accounted for at a
+/// fixed pressure node, so it does not need a pressure of its own.  Input
+/// validation reports this situation once, when the network is defined.
+///
+/// This is a best-effort check which assumes that the network topology has
+/// been validated.  It succeeds as soon as it finds one fixed pressure node
+/// downtree, and does not require every inlet to end in one.  If
+/// SCHEDULE_NETWORK_INVALID is set to ignore errors, a node with both a
+/// protected and an unprotected inlet therefore gets no warning here.
+bool isAboveFixedPressureNode(const Opm::Network::ExtNetwork& network,
+                              const std::string&              nodeName)
+{
+    auto pending = std::vector<std::string> { nodeName };
+    auto visited = std::set<std::string>{};
+
+    while (! pending.empty()) {
+        const auto node = pending.back();
+        pending.pop_back();
+
+        if (! visited.insert(node).second) {
+            continue;
+        }
+
+        for (const auto& branch : network.downtree_branches(node)) {
+            const auto& child = branch.downtree_node();
+            if (network.node(child).terminal_pressure().has_value()) {
+                return true;
+            }
+
+            pending.push_back(child);
+        }
+    }
+
+    return false;
+}
+
 double nodePressure(const Opm::Schedule&     sched,
                     const Opm::SummaryState& smry,
                     const std::string&       nodeName,
@@ -258,10 +298,12 @@ double nodePressure(const Opm::Schedule&     sched,
         return sched.getUnits().from_si(M::pressure, *node_press);
     }
 
-    Opm::OpmLog::warning
-        (fmt::format("Node: {} does not belong to the network at "
-                     "report step: {} - node pressure set to zero.",
-                     nodeName, lookup_step + 1));
+    if (! isAboveFixedPressureNode(sched[lookup_step].network(), nodeName)) {
+        Opm::OpmLog::warning
+            (fmt::format("Node: {} does not belong to the network at "
+                         "report step: {} - node pressure set to zero.",
+                         nodeName, lookup_step + 1));
+    }
 
     return 0.0;
 }

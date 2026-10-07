@@ -20,6 +20,8 @@
 #include "NetworkValidation.hpp"
 
 #include <opm/common/OpmLog/KeywordLocation.hpp>
+#include <opm/common/OpmLog/OpmLog.hpp>
+#include <opm/common/utility/OpmInputError.hpp>
 
 #include <opm/input/eclipse/Schedule/Network/Branch.hpp>
 #include <opm/input/eclipse/Schedule/Network/ExtNetwork.hpp>
@@ -145,14 +147,20 @@ namespace {
 
     /// Check that every flow path ends in a fixed pressure node.
     ///
-    /// Follows the flow path uptree from each node.  The pressure drop along
-    /// the path can be computed only if the path ends in a node of known
-    /// pressure.
+    /// Follows the flow path uptree from each source node.  The pressure
+    /// drop along the path can be computed only if the path ends in a node
+    /// of known pressure.  Nodes above the first fixed pressure node on a
+    /// path carry no flow from that path, so their pressures do not matter.
     ///
     /// Flow paths merge on their way uptree, so a single problem is shared
     /// by every node downtree of it.  To report each problem only once we
     /// stop tracing a path as soon as it reaches a node which some earlier
     /// path already passed through.
+    ///
+    /// Source nodes are traced first.  Any node not reached from a source
+    /// is then either uptree of a fixed pressure node, in which case a
+    /// missing fixed pressure further up is harmless and merits a warning
+    /// only, or part of a loop of branches, which is still an error.
     ///
     /// \param[in] network Extended network.
     ///
@@ -174,10 +182,16 @@ namespace {
         // pressure node or to a problem which has been reported.
         auto traced = std::unordered_set<std::string>{};
 
-        for (const auto& start : nodes) {
+        auto ordered = nodes;
+        std::ranges::stable_partition(ordered, [&network](const std::string& node)
+                                      { return isSource(network, node); });
+
+        for (const auto& start : ordered) {
             if (traced.contains(start)) {
                 continue;
             }
+
+            const auto fromSource = isSource(network, start);
 
             auto path = std::vector<std::string> { start };
             auto onPath = std::unordered_set<std::string> { start };
@@ -187,10 +201,24 @@ namespace {
                 const auto uptree = network.uptree_branch(node);
 
                 if (! uptree.has_value()) {
-                    reportInconsistency(fmt::format("Flow path from network node {} terminates in "
-                                                    "node {}, which has neither an uptree branch "
-                                                    "nor a fixed pressure.", start, node),
-                                        location, parseContext, errors);
+                    if (fromSource) {
+                        reportInconsistency(fmt::format("Flow path from network node {} terminates in "
+                                                        "node {}, which has neither an uptree branch "
+                                                        "nor a fixed pressure.", start, node),
+                                            location, parseContext, errors);
+                    }
+                    else {
+                        // Every flow path through 'start' ends at a fixed
+                        // pressure node further downtree, so 'node' carries
+                        // no flow.
+                        Opm::OpmLog::warning(Opm::OpmInputError::format
+                            (fmt::format("Network node {} has neither an uptree branch nor a "
+                                         "fixed pressure, but all flow paths end in fixed "
+                                         "pressure nodes before reaching it.  Node {} does not "
+                                         "affect the network solution.\n"
+                                         "In {{file}} line {{line}}.", node, node),
+                             location));
+                    }
                     break;
                 }
 
