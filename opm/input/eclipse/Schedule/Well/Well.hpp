@@ -452,6 +452,9 @@ public:
     bool isInjector() const;
     InjectorCMode injection_cmode() const;
     ProducerCMode production_cmode() const;
+    // Whether the well has a control mode as a producer or an injector,
+    // whichever it currently is.
+    bool hasControlMode() const;
     InjectorType injectorType() const;
     std::size_t seqIndex() const;
     bool getAutomaticShutIn() const;

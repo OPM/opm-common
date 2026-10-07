@@ -1200,7 +1200,7 @@ DATES             -- 6
   BOOST_CHECK(Well::Status::SHUT == well_5.getStatus());
 }
 
-BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithWELOPEN_WellWithoutControlModeStaysShut)
+BOOST_AUTO_TEST_CASE(WellWithoutControlModeCannotOpen)
 {
     const auto schedule = make_schedule(R"(
 START             -- 0
@@ -1238,18 +1238,60 @@ WELOPEN
 DATES             -- 3
  10  OKT 2008 /
 /
+WELOPEN
+ 'OP_1' STOP /
+/
+DATES             -- 4
+ 10  NOV 2008 /
+/
+WELOPEN
+ 'OP_1' AUTO /
+/
+DATES             -- 5
+ 10  DES 2008 /
+/
 WCONPROD
- 'OP_1' 'OPEN' 'BHP' 5* 100.0 /
+ 'OP_1' 'AUTO' /
+/
+DATES             -- 6
+ 10  JAN 2009 /
+/
+WCONPROD
+ 'OP_1' 'STOP' /
+/
+DATES             -- 7
+ 10  FEB 2009 /
+/
+WCONPROD
+ 'OP_1' 'STOP' 'BHP' 5* 100.0 /
+/
+DATES             -- 8
+ 10  MAR 2009 /
+/
+WELOPEN
+ 'OP_1' OPEN /
 /
 )");
 
-    // OP_1 has not been given a control mode, so WELOPEN leaves it shut.
+    // OP_1 has not been given a control mode, so WELOPEN may stop it, but
+    // neither open it nor set it to AUTO.
     BOOST_CHECK(Well::Status::SHUT == schedule.getWell("OP_1", 2).getStatus());
-    BOOST_CHECK(!schedule[2].wellgroup_events().hasEvent("OP_1", ScheduleEvents::WELL_STATUS_CHANGE));
+    BOOST_CHECK(!schedule[2].wellgroup_events().hasEvent("OP_1",
+                                                         ScheduleEvents::WELL_STATUS_CHANGE));
     BOOST_CHECK(Well::Status::OPEN == schedule.getWell("OP_2", 2).getStatus());
+    BOOST_CHECK(Well::Status::STOP == schedule.getWell("OP_1", 3).getStatus());
+    BOOST_CHECK(!schedule.getWell("OP_1", 3).hasControlMode());
+    BOOST_CHECK(Well::Status::STOP == schedule.getWell("OP_1", 4).getStatus());
 
-    // WCONPROD gives OP_1 a control mode and opens it.
-    BOOST_CHECK(Well::Status::OPEN == schedule.getWell("OP_1", 3).getStatus());
+    // A WCONPROD record without a control mode may stop it too, but shuts
+    // it instead of setting it to AUTO.
+    BOOST_CHECK(Well::Status::SHUT == schedule.getWell("OP_1", 5).getStatus());
+    BOOST_CHECK(Well::Status::STOP == schedule.getWell("OP_1", 6).getStatus());
+    BOOST_CHECK(!schedule.getWell("OP_1", 6).hasControlMode());
+
+    // Once WCONPROD gives OP_1 a control mode, it can be opened.
+    BOOST_CHECK(Well::Status::STOP == schedule.getWell("OP_1", 7).getStatus());
+    BOOST_CHECK(Well::Status::OPEN == schedule.getWell("OP_1", 8).getStatus());
 }
 
 

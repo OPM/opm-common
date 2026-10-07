@@ -1193,6 +1193,13 @@ Well::ProducerCMode Well::production_cmode() const
     };
 }
 
+bool Well::hasControlMode() const
+{
+    return this->isProducer()
+        ? (this->production_cmode() != ProducerCMode::CMODE_UNDEFINED)
+        : (this->injection_cmode() != InjectorCMode::CMODE_UNDEFINED);
+}
+
 InjectorType Well::injectorType() const
 {
     if (this->wtype.producer()) {
