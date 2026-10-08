@@ -23,6 +23,7 @@
 #include <opm/input/eclipse/Parser/Parser.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/LgrCollection.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/LgrConnectionCheck.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/Carfin.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 
@@ -906,4 +907,58 @@ BOOST_AUTO_TEST_CASE(TestLgrPillarMode)
     BOOST_CHECK(lgrPillarCoord(1, "BOX") == lgrPillarCoord(1, ""));
 
     BOOST_CHECK_THROW(lgrPillarCoord(2, "STACKED"), Opm::OpmInputError);
+}
+
+namespace {
+
+Opm::EclipseState nncNextToBox(const std::string& nnc)
+{
+    return Opm::EclipseState { Opm::Parser{}.parseString(fmt::format(R"(RUNSPEC
+DIMENS
+ 3 3 1 /
+OIL
+WATER
+LGR
+ 1 /
+GRID
+DX
+ 9*100 /
+DY
+ 9*100 /
+DZ
+ 9*10 /
+TOPS
+ 9*2000 /
+PORO
+ 9*0.25 /
+PERMX
+ 9*100 /
+COPY
+ PERMX PERMY /
+ PERMX PERMZ /
+/
+CARFIN
+'LGR1' 2 2 2 2 1 1 3 3 1 /
+ENDFIN
+NNC
+ {} 1.0 /
+/
+PROPS
+REGIONS
+SOLUTION
+SCHEDULE
+)", nnc)) };
+}
+
+} // Anonymous namespace
+
+// An explicit NNC into a refinement box is one the refined grid cannot carry.
+BOOST_AUTO_TEST_CASE(TestNncIntoLgrRefused)
+{
+    const auto refuse = [](const Opm::EclipseState& state) {
+        Opm::refuseDeckConnectionsInsideBoxes(state, state.getInputGrid().getNXYZ(),
+                                              Opm::lgrCellBoxes(state.getLgrs()));
+    };
+    BOOST_CHECK_THROW(refuse(nncNextToBox("2 2 1 3 3 1")), std::invalid_argument);
+    BOOST_CHECK_NO_THROW(refuse(nncNextToBox("1 1 1 3 3 1")));
 }
