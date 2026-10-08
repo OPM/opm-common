@@ -29,6 +29,7 @@
 namespace {
 namespace ecl {
 
+static constexpr int no_type        = 0;
 static constexpr int producer       = 1;
 static constexpr int oil_injector   = 2;
 static constexpr int water_injector = 3;
@@ -106,7 +107,9 @@ namespace Opm {
 
 bool WellType::producer(int ecl_wtype)
 {
-    return ecl_wtype == ecl::producer;
+    // A well which has not been given a control mode has no well type.  It
+    // is a producer, as a well is when WELSPECS defines it.
+    return (ecl_wtype == ecl::producer) || (ecl_wtype == ecl::no_type);
 }
 
 bool WellType::oil_injector(int ecl_wtype)

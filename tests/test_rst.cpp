@@ -1157,6 +1157,30 @@ BOOST_AUTO_TEST_CASE(Producer_Without_Control_Mode)
     const auto state =
         makeRestartState(simCase, baseName, rptStep, "no_control_rst");
 
+    // Neither well has a well type in the restart file.
+    {
+        namespace VI = Opm::RestartIO::Helpers::VectorItems;
+
+        const auto sim_step = rptStep - 1;
+        const auto ih = Opm::RestartIO::Helpers::
+            createInteHead(simCase.es, simCase.grid, simCase.sched,
+                           0, sim_step, sim_step, sim_step);
+
+        auto wellData = Opm::RestartIO::Helpers::AggregateWellData(ih);
+        wellData.captureDeclaredWellData(simCase.sched, simCase.es.tracer(),
+                                         sim_step, Opm::Action::State{},
+                                         Opm::WellTestState{},
+                                         Opm::SummaryState { Opm::TimeService::now(), 0.0 },
+                                         ih);
+
+        const auto& iwell = wellData.getIWell();
+        const auto niwelz = ih[VI::intehead::NIWELZ];
+        for (const auto wellID : { 0, 1 }) {
+            BOOST_CHECK_EQUAL(iwell[wellID*niwelz + VI::IWell::index::WType],
+                              VI::IWell::Value::WellType::NoType);
+        }
+    }
+
     // OP_1: WELSPECS/COMPDAT only.  OP_2: shut by WCONPROD without control mode.
     for (const auto* wname : { "OP_1", "OP_2" }) {
         const auto& rst_well = state.get_well(wname);
@@ -1173,6 +1197,12 @@ BOOST_AUTO_TEST_CASE(Producer_Without_Control_Mode)
             Opm::UnitSystem::newMETRIC(),
             std::nullopt
         };
+
+        BOOST_CHECK_MESSAGE(well.isProducer(),
+                            "Well '" << wname << "' must be a producer after restart");
+
+        BOOST_CHECK_MESSAGE(well.getPreferredPhase() == Opm::Phase::OIL,
+                            "Well '" << wname << "' must keep its preferred phase");
 
         const auto& prop = well.getProductionProperties();
 
