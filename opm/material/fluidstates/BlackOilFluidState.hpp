@@ -289,8 +289,6 @@ friend class BlackOilFluidState;
         unsigned pvtRegionIdx = getPvtRegionIndex_<FluidState>(fs);
         setPvtRegionIndex(pvtRegionIdx);
 
-        setTotalSaturation(fs.totalSaturation());
-
         if constexpr (enableDissolution) {
             setRs(BlackOil::getRs_<FluidSystem, FluidState, ValueType>(fs, pvtRegionIdx));
             setRv(BlackOil::getRv_<FluidSystem, FluidState, ValueType>(fs, pvtRegionIdx));
@@ -344,14 +342,6 @@ friend class BlackOilFluidState;
      */
     OPM_HOST_DEVICE void setSaturation(unsigned phaseIdx, const ValueType& S)
     { saturation_[canonicalToStoragePhaseIndex_(phaseIdx, fluidSystem())] = S; }
-
-    /*!
-     * \brief Set the total saturation used for sequential methods
-     */
-    OPM_HOST_DEVICE void setTotalSaturation(const ValueType& value)
-    {
-        totalSaturation_ = value;
-    }
 
     /*!
      * \brief Set the temperature [K]
@@ -470,14 +460,6 @@ friend class BlackOilFluidState;
      */
     OPM_HOST_DEVICE const ValueType& saturation(unsigned phaseIdx) const
     { return saturation_[canonicalToStoragePhaseIndex_(phaseIdx, fluidSystem())]; }
-
-    /*!
-     * \brief Return the total saturation needed for sequential
-     */
-    OPM_HOST_DEVICE const ValueType& totalSaturation() const
-    {
-        return totalSaturation_;
-    }
 
     /*!
      * \brief Return the temperature [K]
@@ -866,7 +848,6 @@ private:
 
     ConditionalStorage<storeTemperature, ValueType> temperature_{};
     ConditionalStorage<storeEnthalpy, std::array<ValueType, numStoragePhases> > enthalpy_{};
-    ValueType totalSaturation_{};
     std::array<ValueType, numStoragePhases> pressure_{};
     std::array<ValueType, numStoragePhases> saturation_{};
     std::array<ValueType, numStoragePhases> invB_{};
