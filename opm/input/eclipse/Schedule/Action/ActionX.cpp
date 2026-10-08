@@ -388,8 +388,8 @@ parseActionX(const DeckKeyword& kw,
     catch (const std::invalid_argument& e) {
         condition_errors.emplace_back
             (ParseContext::ACTIONX_CONDITION_ERROR,
-             fmt::format("condition of action {} has "
-                         "the following error: {}",
+             fmt::format("Failed to parse triggering condition "
+                         "for action '{}':\n\n{}\n\n",
                          name, e.what()));
 
         return { ActionX(record, start_time), std::move(condition_errors) };
