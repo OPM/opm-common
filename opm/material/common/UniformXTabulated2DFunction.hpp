@@ -30,6 +30,7 @@
 
 #include <opm/common/Exceptions.hpp>
 #include <opm/common/utility/SparseTable.hpp>
+#include <opm/common/utility/VectorWithDefaultAllocator.hpp>
 #include <opm/common/utility/gpuDecorators.hpp>
 #include <opm/common/utility/gpuistl_if_available.hpp>
 
@@ -46,7 +47,7 @@
 
 namespace Opm {
 // forward declaration of the class so the function in the next namespace can be declared
-template <class Scalar, template <typename, typename...> class Storage = std::vector>
+template <class Scalar, template <class> class Storage = VectorWithDefaultAllocator>
 class UniformXTabulated2DFunction;
 }
 
@@ -79,7 +80,7 @@ class UniformXTabulated2DFunctionBuilder;
  * \note This is templated on Scalar only (not on the Storage container) and declared
  *       outside \c UniformXTabulated2DFunction so that it is the *same* type across all
  *       Storage instantiations of that class. If it were nested inside the
- *       Storage-templated class instead, UniformXTabulated2DFunction<Scalar, std::vector>
+ *       Storage-templated class instead, UniformXTabulated2DFunction<Scalar, VectorWithDefaultAllocator>
  *       ::SamplePoint and UniformXTabulated2DFunction<Scalar, GpuBuffer>::SamplePoint
  *       would be distinct, incompatible types despite having identical layout, which
  *       breaks copy_to_gpu()/make_view() (they move a SparseTable<SamplePoint, ...> built
@@ -132,7 +133,7 @@ enum class UniformXTabulated2DFunctionInterpolationPolicy {
  * \c UniformXTabulated2DFunctionBuilder, whose \c build() method returns the
  * evaluation-ready object constructed here.
  */
-template <class Scalar, template <typename, typename...> class Storage>
+template <class Scalar, template <class> class Storage>
 class UniformXTabulated2DFunction
 {
 public:
