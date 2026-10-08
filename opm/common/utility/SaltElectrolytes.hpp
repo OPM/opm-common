@@ -146,8 +146,9 @@ private:
         // Warn if there is any leftover molality after generating electrolytes
         if (molalSalinity.sum() > molalTolerance) {
             OpmLog::debug(
+                "Salt electrolyte conversion residual",
                 fmt::format(
-                    fmt::runtime("Sum molality of salt components (={}) > tolerance (={}) "
+                    fmt::runtime("Sum molality of salt components (={:.6f}) > tolerance (={}) "
                         "after conversion to electrolytes, and will be ignored in the "
                         "brine property calculations!"),
                     static_cast<double>(scalarValue(molalSalinity.sum())),

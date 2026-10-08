@@ -25,6 +25,7 @@
 #ifndef OPM_MGION_HPP
 #define OPM_MGION_HPP
 
+#include <opm/common/utility/gpuDecorators.hpp>
 #include <opm/material/components/Component.hpp>
 
 namespace Opm
@@ -52,7 +53,7 @@ public:
     /*!
      * \copydoc Component::molarMass
      */
-    static Scalar molarMass()
+    OPM_HOST_DEVICE static Scalar molarMass()
     {
         return 24.305e-3;
     }
