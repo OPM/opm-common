@@ -30,7 +30,7 @@
  *
  * Cases are data-driven: a FlashCase struct (flashTestFixtures.hpp) carries the
  * full input state of the fluid + run configuration + expected phase outcome;
- * runFlash() executes it and returns a FlashOutcome — a plain-double
+ * runFlash() executes it and returns a FlashOutcome: a plain-double
  * FlashResult summary plus the final fluid state. Assertions live here, the
  * driver stays Boost-free in the header.
  */
@@ -38,10 +38,6 @@
 
 #define BOOST_TEST_MODULE TwoComponentsPtFlash
 #include <boost/test/unit_test.hpp>
-
-#include <opm/common/OpmLog/LogUtil.hpp>
-#include <opm/common/OpmLog/OpmLog.hpp>
-#include <opm/common/OpmLog/StreamLog.hpp>
 
 #include <opm/material/fluidsystems/GenericOilGasWaterFluidSystem.hpp>
 
@@ -51,8 +47,6 @@
 
 #include <array>
 #include <cmath>
-#include <iostream>
-#include <memory>
 #include <string>
 #include <vector>
 
@@ -123,7 +117,7 @@ void checkExpectedPhase(const FlashCase<numComponents>& testCase,
 
 // two-phase physical invariants: composition normalization, component mass
 // balance against the feed, and equal fugacity across the phases.
-// NOTE: fluid_state.K() is an INPUT seed to PTFlash::solve (the caller-set
+// Note: fluid_state.K() is an input seed to PTFlash::solve (the caller-set
 // Wilson estimate) and is not updated to the converged K on this state, so it
 // must not be checked against y/x here. The true equilibrium condition is
 // equal fugacity, evaluated below through the same ParameterCache +
@@ -139,8 +133,8 @@ void checkTwoPhaseInvariants(const FluidState& fluid_state,
     BOOST_CHECK_MESSAGE(L > 0. && L < 1.,
                         "expected a two-phase split, got L = " << L);
 
-    // The ParameterCache holds ONE phase's EoS state at a time, so the oil
-    // fugacity coefficients must be captured before updatePhase(gas) — do not
+    // The ParameterCache holds one phase's EoS state at a time, so the oil
+    // fugacity coefficients must be captured before updatePhase(gas); do not
     // interleave the phases in a refactor.
     using ParamCache = typename FluidSystem::template ParameterCache<typename FluidState::ValueType>;
     ParamCache paramCache(eos_type);
@@ -177,48 +171,14 @@ void checkTwoPhaseInvariants(const FluidState& fluid_state,
 
 } // anonymous namespace
 
-namespace {
-
-// scope the PTFlash debug-output backend to one test case, exception-safely:
-// a leaked backend would make later cases' output order-dependent
-struct DebugLogGuard {
-    DebugLogGuard()
-    {
-        auto debugLog = std::make_shared<Opm::StreamLog>(std::cout, Opm::Log::MessageType::Debug);
-        Opm::OpmLog::addBackend("DEBUGLOG", debugLog);
-    }
-    ~DebugLogGuard() { Opm::OpmLog::removeBackend("DEBUGLOG"); }
-};
-
-} // anonymous namespace
-
-// LEARN case: run one flash verbosely and print the resulting state — an
-// intentional, human-readable record of how the inner flash is operated and
-// behaves.
-BOOST_AUTO_TEST_CASE(LearnPtFlashF1)
+// Two-phase anchor: the split puts the light component in the vapor.
+BOOST_AUTO_TEST_CASE(TwoPhaseF1)
 {
-    // route PTFlash's OpmLog::debug() output to stdout for this case only
-    const DebugLogGuard debugLogGuard;
-
-    FlashCase<numComponentsF1> testCase{"LEARN two-phase F1", f1Pressure, f1Temperature, f1Z};
-    testCase.verbosity = 3;
+    FlashCase<numComponentsF1> testCase{"two-phase F1", f1Pressure, f1Temperature, f1Z};
     testCase.expected = ExpectedPhase::two_phase;
 
     const auto outcome = runFlash<FluidSystemF1, EvaluationF1>(testCase);
     const auto& r = outcome.summary;
-
-    std::cout << "LEARN: P = " << testCase.pressure << " Pa, T = " << testCase.temperature
-              << " K, z = (" << testCase.z[0] << ", " << testCase.z[1] << ")\n";
-    std::cout << "LEARN: single_phase = " << r.single_phase << ", L = " << r.L << "\n";
-    for (int compIdx = 0; compIdx < numComponentsF1; ++compIdx) {
-        // fluid_state.K() still holds the caller's Wilson seed after solve;
-        // the converged equilibrium ratio is y/x
-        std::cout << "LEARN: comp " << compIdx
-                  << " (" << FluidSystemF1::componentName(compIdx) << ")"
-                  << ": x = " << r.x[compIdx] << ", y = " << r.y[compIdx]
-                  << ", K = y/x = " << r.K[compIdx]
-                  << " (Wilson seed was " << r.K_wilson[compIdx] << ")\n";
-    }
 
     checkExpectedPhase(testCase, r);
     // the light component (C1) concentrates in the vapor; the feed sits in between
@@ -241,7 +201,7 @@ BOOST_AUTO_TEST_CASE(SinglePhaseLiquidF1)
 // Low pressure / high temperature -> single-phase vapor (L = 0).
 // The single-phase L label comes from Li's correlation (PTFlash
 // li_single_phase_label_): liquid iff T < Tc_est = sum(Vc_i*Tc_i*z_i)/sum(Vc_i*z_i),
-// INDEPENDENT of pressure. For the equimolar C1/nC10 feed Tc_est = 558.24 K —
+// independent of pressure. For the equimolar C1/nC10 feed Tc_est = 558.24 K,
 // e.g. this fixture at 1 bar / 500 K is physically gaseous but still returns
 // the liquid label (L = 1). 600 K sits above the Li threshold and is
 // unambiguously vapor at 1 bar.

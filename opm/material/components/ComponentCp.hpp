@@ -25,16 +25,16 @@
 /*!
  * \file
  *
- * \brief The cubic ideal-gas heat-capacity polynomial and its closed-form
- *        enthalpy integral — the caloric EQUATIONS, species-blind.
+ * \brief The cubic ideal-gas heat-capacity polynomial of a component and its
+ *        closed-form enthalpy integral.
  *
- * The coefficients (a species' caloric identity) live on the component
- * classes (e.g. C1::idealGasHeatCapacityPolynomial()); the name-keyed lookup
- * and the enthalpy reference datum live in IdealGasCaloricData. This header
- * holds only the mathematics shared by all of them.
+ * The coefficients of a species live on its component class, for example
+ * C1::idealGasHeatCapacityPolynomial(). This header holds the equations shared
+ * by all of them and the enthalpy datum.
  *
- * Units are SI throughout: temperature [K], molar heat capacity [J/(mol K)],
- * molar enthalpy [J/mol].
+ * Units are SI: temperature [K], molar heat capacity [J/(mol K)], molar
+ * enthalpy [J/mol]. The datum is the ideal gas at the reference temperature
+ * T0: every component's ideal-gas enthalpy is zero there, at any pressure.
  */
 #ifndef OPM_COMPONENT_CP_HPP
 #define OPM_COMPONENT_CP_HPP
@@ -46,10 +46,19 @@ namespace Opm {
 /*!
  * \brief Cubic ideal-gas heat-capacity polynomial of one component:
  *        cp(T) = c0 + c1*T + c2*T^2 + c3*T^3   [J/(mol K)]
+ *
+ * The coefficients are a fit over [minTemperature, maxTemperature]. The
+ * polynomial is not valid outside that range, where it may even turn
+ * negative, so a solver that searches in temperature has to stay inside it.
  */
 template <class Scalar>
 struct ComponentCp {
     Scalar c0, c1, c2, c3;
+    Scalar minTemperature; //!< lower end of the fit range [K]
+    Scalar maxTemperature; //!< upper end of the fit range [K]
+
+    //! The reference temperature T0 of the enthalpy datum [K].
+    static constexpr Scalar referenceTemperature() { return 298.15; }
 
     //! cp(T) [J/(mol K)]. Generic in the evaluation type (double or AD).
     template <class Eval>
@@ -59,12 +68,13 @@ struct ComponentCp {
     }
 
     /*!
-     * \brief Ideal-gas enthalpy h(T) = int_{T0}^{T} cp dT' [J/mol],
-     *        in closed form. h(T0) = 0 by construction.
+     * \brief Ideal-gas enthalpy h(T) = int_{T0}^{T} cp dT' [J/mol] in closed
+     *        form, with T0 = referenceTemperature(), so h(T0) = 0.
      */
     template <class Eval>
-    Eval enthalpyIntegral(const Eval& T, const Scalar T0) const
+    Eval enthalpyIntegral(const Eval& T) const
     {
+        constexpr Scalar T0 = referenceTemperature();
         return c0*(T - T0)
              + c1/2*(T*T - T0*T0)
              + c2/3*(T*T*T - T0*T0*T0)

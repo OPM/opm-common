@@ -45,10 +45,6 @@ namespace Opm {
  * \brief A simplistic class representing the \f$CO_2\f$ fluid properties
  *        (CAS 124-38-9, formula CO\f$_2\f$).
  *
- * Constants cross-checked against the CoolProp reference fluid
- * "CarbonDioxide" (reference EoS: Span & Wagner, J. Phys. Chem. Ref. Data
- * 25 (1996) 1509).
- *
  * \tparam Scalar The type used for scalar values
  */
 template <class Scalar>
@@ -107,19 +103,18 @@ public:
     /*!
      * \brief Cubic ideal-gas heat-capacity polynomial of \f$CO_2\f$ \f$\mathrm{[J/(mol\ K)]}\f$.
      *
-     * Least-squares fit to the ideal-gas part of the reference EoS
-     * (Span & Wagner 1996), window 250–600 K, RMS 0.003 /
-     * max 0.014 J/(mol K); sampled via CoolProp 8.0.0 (extraction tool
-     * only). Outside the window the cubic extrapolates — refit rather than
-     * trust it there.
+     * Least-squares fit to the ideal-gas part of the equation of state of
+     * Span & Wagner, J. Phys. Chem. Ref. Data 25 (1996) 1509, over
+     * 250-600 K (RMS 0.003, max 0.014 J/(mol K)), sampled with CoolProp
+     * 8.0.0. Not valid outside that range.
      *
-     * This is the CALORIC (ideal-gas) identity consumed by the compositional
-     * mixture-enthalpy model; it deliberately does NOT implement the
-     * Component<> gasEnthalpy/gasHeatCapacity slots (those are real-fluid
-     * correlations where implemented).
+     * This is the ideal-gas heat capacity used by the compositional mixture
+     * enthalpy (MixtureEnthalpy). It does not implement the Component<>
+     * gasEnthalpy/gasHeatCapacity functions, which are real-fluid
+     * correlations where they exist.
      */
     static constexpr ComponentCp<Scalar> idealGasHeatCapacityPolynomial()
-    { return {18.2687, 8.36359e-2, -7.75148e-5, 3.14088e-8}; }
+    { return {18.2687, 8.36359e-2, -7.75148e-5, 3.14088e-8, 250.0, 600.0}; }
 
     /*!
      * \copydoc Component::gasIsCompressible

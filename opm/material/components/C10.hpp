@@ -45,9 +45,6 @@ namespace Opm
  * \brief Properties of pure molecular n-Decane \f$C_10\f$
  *        (CAS 124-18-5, formula C\f$_{10}\f$H\f$_{22}\f$).
  *
- * Constants cross-checked against the CoolProp reference fluid "n-Decane"
- * (reference EoS: Lemmon & Span, J. Chem. Eng. Data 51 (2006) 785).
- *
  * \tparam Scalar The type used for scalar values
  */
 template <class Scalar>
@@ -91,33 +88,20 @@ public:
     static Scalar acentricFactor() { return 0.488; }
 
     /*!
-     * \brief Returns the temperature \f$\mathrm{[K]}\f$ at the triple point of n-Decane.
-     */
-    static Scalar tripleTemperature()
-    { return 243.5; /* [K] — Lemmon & Span (2006), via CoolProp 8.0.0 */ }
-
-    /*!
-     * \brief Returns the pressure \f$\mathrm{[Pa]}\f$ at the triple point of n-Decane.
-     */
-    static Scalar triplePressure()
-    { return 1.404; /* [Pa] — Lemmon & Span (2006), via CoolProp 8.0.0 */ }
-
-    /*!
      * \brief Cubic ideal-gas heat-capacity polynomial of n-Decane \f$\mathrm{[J/(mol\ K)]}\f$.
      *
-     * Least-squares fit to the ideal-gas part of the reference EoS
-     * (Lemmon & Span 2006), window 250–600 K, RMS 0.266 /
-     * max 0.792 J/(mol K); sampled via CoolProp 8.0.0 (extraction tool
-     * only). Outside the window the cubic extrapolates — refit rather than
-     * trust it there.
+     * Least-squares fit to the ideal-gas part of the equation of state of
+     * Lemmon & Span, J. Chem. Eng. Data 51 (2006) 785, over 250-600 K
+     * (RMS 0.266, max 0.792 J/(mol K)), sampled with CoolProp 8.0.0. Not
+     * valid outside that range.
      *
-     * This is the CALORIC (ideal-gas) identity consumed by the compositional
-     * mixture-enthalpy model; it deliberately does NOT implement the
-     * Component<> gasEnthalpy/gasHeatCapacity slots (those are real-fluid
-     * correlations where implemented).
+     * This is the ideal-gas heat capacity used by the compositional mixture
+     * enthalpy (MixtureEnthalpy). It does not implement the Component<>
+     * gasEnthalpy/gasHeatCapacity functions, which are real-fluid
+     * correlations where they exist.
      */
     static constexpr ComponentCp<Scalar> idealGasHeatCapacityPolynomial()
-    { return {79.4791, 3.1066e-1, 9.88317e-4, -1.00245e-6}; }
+    { return {79.4791, 3.1066e-1, 9.88317e-4, -1.00245e-6, 250.0, 600.0}; }
 };
 
 } // namespace Opm

@@ -46,9 +46,6 @@ namespace Opm
  * \brief Properties of pure molecular methane \f$C_1\f$
  *        (CAS 74-82-8, formula CH\f$_4\f$).
  *
- * Constants cross-checked against the CoolProp reference fluid "Methane"
- * (reference EoS: Setzmann & Wagner, J. Phys. Chem. Ref. Data 20 (1991) 1061).
- *
  * \tparam Scalar The type used for scalar values
  */
 template <class Scalar>
@@ -92,33 +89,20 @@ public:
     static Scalar acentricFactor() { return 0.011; }
 
     /*!
-     * \brief Returns the temperature \f$\mathrm{[K]}\f$ at the triple point of methane.
-     */
-    static Scalar tripleTemperature()
-    { return 90.6941; /* [K] — Setzmann & Wagner (1991), via CoolProp 8.0.0 */ }
-
-    /*!
-     * \brief Returns the pressure \f$\mathrm{[Pa]}\f$ at the triple point of methane.
-     */
-    static Scalar triplePressure()
-    { return 1.1696e4; /* [Pa] — Setzmann & Wagner (1991), via CoolProp 8.0.0 */ }
-
-    /*!
      * \brief Cubic ideal-gas heat-capacity polynomial of methane \f$\mathrm{[J/(mol\ K)]}\f$.
      *
-     * Least-squares fit to the ideal-gas part of the reference EoS
-     * (Setzmann & Wagner 1991), window 250–600 K, RMS 0.024 /
-     * max 0.063 J/(mol K); sampled via CoolProp 8.0.0 (extraction tool
-     * only). Outside the window the cubic extrapolates — refit rather than
-     * trust it there.
+     * Least-squares fit to the ideal-gas part of the equation of state of
+     * Setzmann & Wagner, J. Phys. Chem. Ref. Data 20 (1991) 1061, over
+     * 250-600 K (RMS 0.024, max 0.063 J/(mol K)), sampled with CoolProp
+     * 8.0.0. Not valid outside that range.
      *
-     * This is the CALORIC (ideal-gas) identity consumed by the compositional
-     * mixture-enthalpy model; it deliberately does NOT implement the
-     * Component<> gasEnthalpy/gasHeatCapacity slots (those are real-fluid
-     * correlations where implemented).
+     * This is the ideal-gas heat capacity used by the compositional mixture
+     * enthalpy (MixtureEnthalpy). It does not implement the Component<>
+     * gasEnthalpy/gasHeatCapacity functions, which are real-fluid
+     * correlations where they exist.
      */
     static constexpr ComponentCp<Scalar> idealGasHeatCapacityPolynomial()
-    { return {40.1503, -8.47372e-2, 2.93012e-4, -1.96125e-7}; }
+    { return {40.1503, -8.47372e-2, 2.93012e-4, -1.96125e-7, 250.0, 600.0}; }
 };
 
 } // namespace Opm

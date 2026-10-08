@@ -26,8 +26,9 @@
  * \file
  *
  * \brief Test-local fixtures for the compositional flash test suite:
- *        a binary C1/nC10 fluid system, the canonical operating points, and
- *        a case-struct driver (FlashCase -> runFlash -> FlashOutcome) that
+ *        a binary C1/nC10 fluid system (F1), the F2 and H1 systems on the
+ *        generic fluid system, the canonical operating points, and a
+ *        case-struct driver (FlashCase -> runFlash -> FlashOutcome) that
  *        applies the full PTFlash input contract.
  *
  * This header is deliberately Boost-free: it holds data and physics only;
@@ -43,7 +44,7 @@
 #include <opm/material/components/C10.hpp>
 #include <opm/material/components/C1.hpp>
 
-#include <opm/material/constraintsolvers/IdealGasCaloricData.hpp>
+#include <opm/material/components/ComponentCp.hpp>
 #include <opm/material/constraintsolvers/PTFlash.hpp>
 #include <opm/material/constraintsolvers/PTFlashMethod.hpp>
 #include <opm/material/densead/Evaluation.hpp>
@@ -54,6 +55,7 @@
 #include <opm/input/eclipse/EclipseState/Compositional/CompositionalConfig.hpp>
 
 #include <array>
+#include <cassert>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -64,7 +66,7 @@ namespace FlashTest {
 
 /*!
  * \brief A two phase two component fluid system with components
- *        methane (C1) and n-decane (nC10) — the "F1" synthetic fixture.
+ *        methane (C1) and n-decane (nC10), the "F1" synthetic fixture.
  *
  * Test-local: lives in the FlashTest namespace on purpose; it is a fixture,
  * not installable API.
@@ -265,12 +267,12 @@ public:
 template <class FluidSystem>
 using FlashEvaluation = Opm::DenseAd::Evaluation<double, FluidSystem::numComponents + 1>;
 
-// ── Canonical operating points ─────────────────────────────────────────────
+// Canonical operating points.
 // Shared anchors so the physical baselines cannot drift between test stages.
 // Tests remain free to define local probe points; these are the documented
 // reference conditions of the fixtures themselves.
 
-//! F1 (C1/nC10) two-phase anchor: 50 bar, 300 K, equimolar feed — well inside
+//! F1 (C1/nC10) two-phase anchor: 50 bar, 300 K, equimolar feed, well inside
 //! the two-phase window at this pressure.
 inline constexpr double f1Pressure = 50e5;      // [Pa]
 inline constexpr double f1Temperature = 300.;   // [K]
@@ -308,7 +310,7 @@ void registerF2Components()
     registerComponent<FS, C10<Scalar>>();
 }
 
-//! F2 ternary anchor — the known two-phase point of the existing
+//! F2 ternary anchor: the known two-phase point of the existing
 //! three-component PTFlash test. Component order of the F2 fluid system:
 //! Comp0 = CO2, Comp1 = C1 (methane), Comp2 = nC10 (decane).
 inline constexpr double f2Pressure = 10e5;      // [Pa]
@@ -326,7 +328,8 @@ inline CpTable<double, 2> f1CpTable()
                   "F1 cp table assumes Comp0 = C1 (methane)");
     static_assert(std::is_same_v<typename FS::Comp1, C10<double>>,
                   "F1 cp table assumes Comp1 = nC10 (decane)");
-    return {IdealGasCaloricData<double>::methane(), IdealGasCaloricData<double>::decane()};
+    return {C1<double>::idealGasHeatCapacityPolynomial(),
+            C10<double>::idealGasHeatCapacityPolynomial()};
 }
 
 /*!
@@ -335,10 +338,66 @@ inline CpTable<double, 2> f1CpTable()
  */
 inline CpTable<double, 3> f2CpTable()
 {
-    return {IdealGasCaloricData<double>::carbonDioxide(),
-            IdealGasCaloricData<double>::methane(),
-            IdealGasCaloricData<double>::decane()};
+    return {SimpleCO2<double>::idealGasHeatCapacityPolynomial(),
+            C1<double>::idealGasHeatCapacityPolynomial(),
+            C10<double>::idealGasHeatCapacityPolynomial()};
 }
+
+/*!
+ * \brief n-Eicosane (nC20), the heavy component of the H1 fixture.
+ *
+ * Its acentric factor is above 0.49, where PRCORR differs from PR. In the
+ * C1-rich liquid of H1 at 250 K its fugacity coefficient is below the range
+ * CubicEOS limits fugacity coefficients to.
+ */
+template <class Scalar>
+struct NC20 {
+    static std::string_view name() { return "C20"; }
+    static Scalar molarMass() { return 0.28255; }          // [kg/mol]
+    static Scalar criticalTemperature() { return 768.0; }  // [K]
+    static Scalar criticalPressure() { return 10.7e5; }    // [Pa]
+    static Scalar criticalVolume() { return 1.19; }        // [m^3/kmol]
+    static Scalar acentricFactor() { return 0.907; }
+};
+
+/*!
+ * \brief The H1 fluid system: C1 and nC20 on the generic two-component
+ *        system, with a volume shift on both components. Its components are
+ *        static: a test that uses H1 calls registerH1Components() once per
+ *        process, before the first flash.
+ */
+template <class Scalar>
+using H1FluidSystem = GenericOilGasWaterFluidSystem<Scalar, 2, false>;
+
+//! Volume shifts (SSHIFT) of the H1 components, in registration order.
+inline constexpr std::array<double, 2> h1VolumeShift = {-0.15, 0.10};
+
+//! Register the H1 components in the order C1, nC20.
+template <class Scalar>
+void registerH1Components()
+{
+    using FS = H1FluidSystem<Scalar>;
+    using CompParam = typename FS::ComponentParam;
+    FS::init();
+    FS::addComponent(CompParam{C1<Scalar>::name(),
+                               C1<Scalar>::molarMass(),
+                               C1<Scalar>::criticalTemperature(),
+                               C1<Scalar>::criticalPressure(),
+                               C1<Scalar>::criticalVolume(),
+                               C1<Scalar>::acentricFactor(),
+                               h1VolumeShift[0]});
+    FS::addComponent(CompParam{NC20<Scalar>::name(),
+                               NC20<Scalar>::molarMass(),
+                               NC20<Scalar>::criticalTemperature(),
+                               NC20<Scalar>::criticalPressure(),
+                               NC20<Scalar>::criticalVolume(),
+                               NC20<Scalar>::acentricFactor(),
+                               h1VolumeShift[1]});
+}
+
+//! H1 anchor: 50 bar, equimolar feed; two phases from 250 K to 300 K.
+inline constexpr double h1Pressure = 50e5;      // [Pa]
+inline constexpr std::array<double, 2> h1Z = {0.5, 0.5};
 
 /*!
  * \brief Build a fluid state ready for PTFlash::solve, applying the full input
@@ -417,7 +476,7 @@ struct FlashCase {
 /*!
  * \brief The state of the fluid after the flash, as plain doubles.
  *
- * x/y/K are meaningful only when !single_phase — in single-phase states both
+ * x/y/K are meaningful only when !single_phase: in single-phase states both
  * phase compositions degenerate to the feed and K carries no information.
  */
 template <int numComponents>
@@ -455,7 +514,7 @@ runFlash(const FlashCase<FluidSystem::numComponents>& testCase)
         testCase.pressure, testCase.temperature, testCase.z);
 
     // record the Wilson seed: fluid_state.K() is an input to solve and still
-    // holds this seed afterwards — the converged ratio is y/x
+    // holds this seed afterwards; the converged ratio is y/x
     for (int compIdx = 0; compIdx < numComponents; ++compIdx)
         outcome.summary.K_wilson[compIdx] = Opm::getValue(outcome.state.K(compIdx));
 

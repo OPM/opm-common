@@ -27,21 +27,20 @@
  *
  * \brief Tests for the compositional caloric data and enthalpy machinery.
  *
- * CaloricData pins the per-component identity cards (the ideal-gas
- * heat-capacity polynomials on the component classes) against external
- * reference values; CaloricModel and DepartureModel test the mixture
- * enthalpy the compositional path evaluates on top of them.
+ * CaloricData pins the ideal-gas heat-capacity polynomials on the component
+ * classes against external reference values; CaloricModel and DepartureModel
+ * test the mixture enthalpy the compositional path evaluates on top of them.
  */
 #include "config.h"
 
 #define BOOST_TEST_MODULE MixtureEnthalpy
 #include <boost/test/unit_test.hpp>
 
+#include <opm/material/Constants.hpp>
 #include <opm/material/components/C1.hpp>
 #include <opm/material/components/C10.hpp>
 #include <opm/material/components/ComponentCp.hpp>
 #include <opm/material/components/SimpleCO2.hpp>
-#include <opm/material/constraintsolvers/IdealGasCaloricData.hpp>
 #include <opm/material/constraintsolvers/MixtureEnthalpy.hpp>
 
 #include <opm/material/fluidstates/CompositionalFluidState.hpp>
@@ -50,10 +49,10 @@
 
 #include "flashTestFixtures.hpp"
 
+#include <algorithm>
 #include <array>
 #include <cmath>
 #include <cstddef>
-#include <stdexcept>
 #include <type_traits>
 
 using Scalar = double;
@@ -61,6 +60,8 @@ using Opm::FlashTest::FlashCase;
 using Opm::FlashTest::runFlash;
 using Opm::FlashTest::f1Pressure;
 using Opm::FlashTest::f1Z;
+using Opm::FlashTest::h1Pressure;
+using Opm::FlashTest::h1Z;
 
 // F1: binary C1/nC10
 using FluidSystemF1 = Opm::FlashTest::TwoComponentFluidSystem<Scalar>;
@@ -68,18 +69,129 @@ constexpr int numComponentsF1 = FluidSystemF1::numComponents;
 using EvaluationF1 = Opm::FlashTest::FlashEvaluation<FluidSystemF1>;
 using EnthalpyF1 = Opm::MixtureEnthalpy<Scalar, FluidSystemF1>;
 
+// H1: binary C1/nC20 with volume shifts, on the generic fluid system
+using FluidSystemH1 = Opm::FlashTest::H1FluidSystem<Scalar>;
+constexpr int numComponentsH1 = FluidSystemH1::numComponents;
+using EvaluationH1 = Opm::FlashTest::FlashEvaluation<FluidSystemH1>;
+using EnthalpyH1 = Opm::MixtureEnthalpy<Scalar, FluidSystemH1>;
+
+// The H1 components are static: register them once per process.
+struct H1Components
+{
+    H1Components() { Opm::FlashTest::registerH1Components<Scalar>(); }
+};
+
+BOOST_GLOBAL_FIXTURE(H1Components);
+
 namespace {
 
-const Scalar T0 = Opm::IdealGasCaloricData<Scalar>::referenceTemperature();
+using EOSType = Opm::CompositionalConfig::EOSType;
+
+const Scalar T0 = Opm::ComponentCp<Scalar>::referenceTemperature();
 
 // unchecked probe helper: flash F1 at (P, T) and return the mixture enthalpy
-// of the flashed state. Deliberately assertion-free — the calling test owns
-// its expectations; do not bolt checks in here.
+// of the flashed state. Deliberately assertion-free: the calling test owns
+// its expectations.
 double mixtureEnthalpyAt(const double pressure, const double temperature)
 {
     FlashCase<numComponentsF1> testCase{"enthalpy probe", pressure, temperature, f1Z};
     const auto outcome = runFlash<FluidSystemF1, EvaluationF1>(testCase);
-    return Opm::getValue(EnthalpyF1::mixtureEnthalpy(outcome.state, Opm::FlashTest::f1CpTable(), T0));
+    return Opm::getValue(EnthalpyF1::mixtureEnthalpy(outcome.state, Opm::FlashTest::f1CpTable()));
+}
+
+// the composition of one phase of a flashed state, as plain doubles
+template <class FluidSystem, class FluidState>
+std::array<double, FluidSystem::numComponents>
+phaseComposition(const FluidState& state, const unsigned phaseIdx)
+{
+    std::array<double, FluidSystem::numComponents> w;
+    for (int compIdx = 0; compIdx < FluidSystem::numComponents; ++compIdx)
+        w[compIdx] = Opm::getValue(state.moleFraction(phaseIdx, compIdx));
+    return w;
+}
+
+// one phase at (T, p, w) as a plain-double state, with its parameter cache
+// updated for the given equation of state
+template <class FluidSystem>
+struct PhaseProbe
+{
+    Opm::CompositionalFluidState<double, FluidSystem> fs;
+    typename FluidSystem::template ParameterCache<double> paramCache;
+
+    PhaseProbe(const double T, const double p,
+               const std::array<double, FluidSystem::numComponents>& w,
+               const unsigned phaseIdx, const EOSType eosType)
+        : paramCache(eosType)
+    {
+        fs.setTemperature(T);
+        fs.setPressure(FluidSystem::oilPhaseIdx, p);
+        fs.setPressure(FluidSystem::gasPhaseIdx, p);
+        for (int compIdx = 0; compIdx < FluidSystem::numComponents; ++compIdx)
+            fs.setMoleFraction(phaseIdx, compIdx, w[compIdx]);
+        paramCache.updatePhase(fs, phaseIdx);
+    }
+};
+
+// -R T^2 sum_i w_i dln(phi_i)/dT at fixed (p, w), with the temperature
+// derivative of lnPhi(T), an array of ln(phi_i), as a central finite difference
+template <int numComponents, class LnPhi>
+double residualByFiniteDifference(const double T,
+                                  const std::array<double, numComponents>& w,
+                                  const LnPhi& lnPhi)
+{
+    constexpr double h = 1e-3; // [K]
+    const auto plus = lnPhi(T + h);
+    const auto minus = lnPhi(T - h);
+    double sum = 0.;
+    for (int compIdx = 0; compIdx < numComponents; ++compIdx)
+        sum += w[compIdx] * (plus[compIdx] - minus[compIdx]) / (2.*h);
+    return -Opm::Constants<double>::R * T * T * sum;
+}
+
+// ln(phi_i) of every component from the fluid system's fugacityCoefficient
+template <class FluidSystem>
+std::array<double, FluidSystem::numComponents>
+fluidSystemLnPhi(const double T, const double p,
+                 const std::array<double, FluidSystem::numComponents>& w,
+                 const unsigned phaseIdx, const EOSType eosType)
+{
+    PhaseProbe<FluidSystem> probe(T, p, w, phaseIdx, eosType);
+    std::array<double, FluidSystem::numComponents> lnPhi;
+    for (int compIdx = 0; compIdx < FluidSystem::numComponents; ++compIdx) {
+        lnPhi[compIdx] = std::log(FluidSystem::fugacityCoefficient(probe.fs, probe.paramCache,
+                                                                   phaseIdx, compIdx));
+    }
+    return lnPhi;
+}
+
+// ln(phi_i) of every component of the cubic, evaluated here from its A, B,
+// B_i, A_ij and Z, without the range CubicEOS limits phi_i to. The volume
+// translation of the fluid system is not included.
+template <class FluidSystem>
+std::array<double, FluidSystem::numComponents>
+cubicLnPhi(const PhaseProbe<FluidSystem>& probe,
+           const std::array<double, FluidSystem::numComponents>& w,
+           const unsigned phaseIdx)
+{
+    const auto& pc = probe.paramCache;
+    const double T = probe.fs.temperature(phaseIdx);
+    const double p = probe.fs.pressure(phaseIdx);
+    const double A = pc.A(phaseIdx);
+    const double B = pc.B(phaseIdx);
+    const double m1 = pc.m1(phaseIdx);
+    const double m2 = pc.m2(phaseIdx);
+    const double Z = p * pc.molarVolume(phaseIdx) / (Opm::Constants<double>::R * T);
+
+    std::array<double, FluidSystem::numComponents> lnPhi;
+    for (int i = 0; i < FluidSystem::numComponents; ++i) {
+        double sumA = 0.;
+        for (int j = 0; j < FluidSystem::numComponents; ++j)
+            sumA += pc.aCache(phaseIdx, i, j) * w[j];
+        const double Bi = pc.Bi(phaseIdx, i);
+        lnPhi[i] = Bi/B * (Z - 1.) - std::log(Z - B)
+                 + A/((m1 - m2)*B) * std::log((Z + m2*B)/(Z + m1*B)) * (2.*sumA/A - Bi/B);
+    }
+    return lnPhi;
 }
 
 } // anonymous namespace
@@ -91,25 +203,24 @@ BOOST_AUTO_TEST_SUITE(CaloricData)
 BOOST_AUTO_TEST_CASE(EnthalpyIntegralMatchesHeatCapacity)
 {
     const Opm::ComponentCp<double> cp = Opm::C1<double>::idealGasHeatCapacityPolynomial();
-    const double T0 = 298.15;
 
     // h(T0) = 0 by construction
-    BOOST_CHECK_EQUAL(cp.enthalpyIntegral(T0, T0), 0.0);
+    BOOST_CHECK_EQUAL(cp.enthalpyIntegral(T0), 0.0);
 
     // dh/dT == cp(T), checked against a central finite difference
     const double T = 400.;
     const double dT = 1e-3;
-    const double dhdT = (cp.enthalpyIntegral(T + dT, T0) - cp.enthalpyIntegral(T - dT, T0)) / (2. * dT);
+    const double dhdT = (cp.enthalpyIntegral(T + dT) - cp.enthalpyIntegral(T - dT)) / (2. * dT);
     BOOST_CHECK_CLOSE(dhdT, cp.heatCapacity(T), 1e-6); // [%]
 }
 
-// The identity cards against EXTERNAL reference values — the one check no
-// amount of internal consistency can substitute: a self-consistent test
-// manufactures its expectation from the same coefficients it verifies, so a
-// corrupt row passes it. The pinned values are the reference-EoS ideal-gas
-// heat capacities (Setzmann & Wagner 1991 methane; Lemmon & Span 2006
-// n-decane; Span & Wagner 1996 CO2), tabulated at four temperatures spanning
-// the fit window.
+// The cp polynomials against external reference values, the one check that
+// internal consistency cannot replace: a self-consistent test derives its
+// expectation from the same coefficients it verifies, so a corrupt row
+// passes it. The pinned values are the ideal-gas heat capacities of the
+// reference equations of state (Setzmann & Wagner 1991 methane; Lemmon &
+// Span 2006 n-decane; Span & Wagner 1996 CO2) at four temperatures spanning
+// the fit range.
 BOOST_AUTO_TEST_CASE(CardsMatchReferenceIdealGasCp)
 {
     constexpr std::array<double, 4> temps{298.15, 350., 450., 600.};
@@ -138,33 +249,59 @@ BOOST_AUTO_TEST_CASE(CardsMatchReferenceIdealGasCp)
     }
 }
 
-// The triple points added on the identity cards, against the reference-EoS
-// fluid values (papers cited on the classes).
-BOOST_AUTO_TEST_CASE(TriplePointsMatchReferenceFluids)
+// Each polynomial carries the temperature range of its fit. Inside it the
+// heat capacity is positive and increasing; outside it the cubics turn over.
+BOOST_AUTO_TEST_CASE(CardsCarryTheirFitRange)
 {
-    BOOST_CHECK_CLOSE(Opm::C1<double>::tripleTemperature(), 90.6941, 1e-6);
-    BOOST_CHECK_CLOSE(Opm::C1<double>::triplePressure(), 11696.06, 0.01);
-    BOOST_CHECK_CLOSE(Opm::C10<double>::tripleTemperature(), 243.5, 1e-6);
-    BOOST_CHECK_CLOSE(Opm::C10<double>::triplePressure(), 1.4042, 0.02);
+    const struct {
+        const char* name;
+        Opm::ComponentCp<double> card;
+    } cards[] = {
+        {"methane", Opm::C1<double>::idealGasHeatCapacityPolynomial()},
+        {"decane", Opm::C10<double>::idealGasHeatCapacityPolynomial()},
+        {"carbonDioxide", Opm::SimpleCO2<double>::idealGasHeatCapacityPolynomial()},
+    };
+
+    for (const auto& c : cards) {
+        BOOST_TEST_CONTEXT(c.name) {
+            BOOST_CHECK_EQUAL(c.card.minTemperature, 250.);
+            BOOST_CHECK_EQUAL(c.card.maxTemperature, 600.);
+
+            double previous = c.card.heatCapacity(c.card.minTemperature);
+            BOOST_CHECK_GT(previous, 0.);
+            for (double T = c.card.minTemperature + 10.; T <= c.card.maxTemperature; T += 10.) {
+                const double current = c.card.heatCapacity(T);
+                BOOST_CHECK_MESSAGE(current > previous,
+                                    "cp not increasing at T = " << T);
+                previous = current;
+            }
+        }
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END() // CaloricData
 
 BOOST_AUTO_TEST_SUITE(CaloricModel)
 
-// Enthalpy is strictly increasing in temperature (Cp > 0). The sweep
-// deliberately crosses phase-regime boundaries: with the caloric model H is
-// monotone irrespective of how the split changes along the way.
+// Enthalpy is strictly increasing in temperature (cp > 0) over the common fit
+// range of the cp polynomials. The sweep crosses phase-regime boundaries:
+// with the caloric model H is monotone however the split changes on the way.
 BOOST_AUTO_TEST_CASE(MonotoneInTemperature)
 {
-    const std::array<double, 4> temperatures = {250., 300., 350., 400.};
+    const auto cpTable = Opm::FlashTest::f1CpTable();
+    double Tmin = cpTable[0].minTemperature;
+    double Tmax = cpTable[0].maxTemperature;
+    for (const auto& card : cpTable) {
+        Tmin = std::max(Tmin, card.minTemperature);
+        Tmax = std::min(Tmax, card.maxTemperature);
+    }
 
-    double previous = mixtureEnthalpyAt(f1Pressure, temperatures[0]);
-    for (std::size_t i = 1; i < temperatures.size(); ++i) {
-        const double current = mixtureEnthalpyAt(f1Pressure, temperatures[i]);
+    double previous = mixtureEnthalpyAt(f1Pressure, Tmin);
+    for (double T = Tmin + 50.; T <= Tmax; T += 50.) {
+        const double current = mixtureEnthalpyAt(f1Pressure, T);
         BOOST_CHECK_MESSAGE(current > previous,
-                            "H not monotone: H(" << temperatures[i] << ") = " << current
-                                                 << " <= H(" << temperatures[i-1] << ") = " << previous);
+                            "H not monotone: H(" << T << ") = " << current
+                                                 << " <= H(" << T - 50. << ") = " << previous);
         previous = current;
     }
 }
@@ -178,11 +315,10 @@ BOOST_AUTO_TEST_CASE(ReferenceDatum)
 }
 
 // Analytic mixtureCp matches a central finite difference of the mixture
-// enthalpy. Note the physics of WHY they may be compared at all: the FD probe
-// re-flashes at T±h (a total derivative, split re-equilibrated) while
-// mixtureCp is a frozen-split partial derivative — they agree only because
-// the caloric H is flash-independent. Do NOT reuse this check unchanged for a
-// departure-mode enthalpy, where the two derivatives legitimately differ.
+// enthalpy. The two may be compared only because the caloric H does not
+// depend on the flash: the finite difference re-flashes at T+-h (a total
+// derivative, split re-equilibrated), while mixtureCp is a partial derivative
+// at a frozen split. Under the departure model the two legitimately differ.
 BOOST_AUTO_TEST_CASE(CpVersusFiniteDifference)
 {
     constexpr double T = 300.;
@@ -201,7 +337,7 @@ BOOST_AUTO_TEST_CASE(CpVersusFiniteDifference)
 
 // Phase-decomposed mixture enthalpy equals the feed-direct sum
 // sum_i z_i*h_i(T). With the caloric model the phase split cancels exactly by
-// material balance — this pins the L/x/y weighting (indexing) of the
+// material balance; this pins the L/x/y weighting (indexing) of the
 // implementation and documents that caloric H is flash-independent.
 BOOST_AUTO_TEST_CASE(PhaseDecompositionMatchesFeedSum)
 {
@@ -214,143 +350,115 @@ BOOST_AUTO_TEST_CASE(PhaseDecompositionMatchesFeedSum)
     BOOST_REQUIRE(outcome.summary.L > 0. && outcome.summary.L < 1.);
 
     const auto cpTable = Opm::FlashTest::f1CpTable();
-    const double viaPhases = Opm::getValue(EnthalpyF1::mixtureEnthalpy(outcome.state, cpTable, T0));
+    const double viaPhases = Opm::getValue(EnthalpyF1::mixtureEnthalpy(outcome.state, cpTable));
 
     double viaFeed = 0.;
     for (int compIdx = 0; compIdx < numComponentsF1; ++compIdx)
-        viaFeed += f1Z[compIdx] * cpTable[compIdx].enthalpyIntegral(T, T0);
+        viaFeed += f1Z[compIdx] * cpTable[compIdx].enthalpyIntegral(T);
 
     BOOST_CHECK_CLOSE(viaPhases, viaFeed, 1e-9); // [%]
 }
 
-// The caloric coefficients live on the component classes (the species'
-// identity card, next to its EoS constants); the IdealGasCaloricData presets
-// are delegating wrappers over them. Pin the delegation coefficient-wise so
-// the two surfaces can never drift apart.
-BOOST_AUTO_TEST_CASE(DelegationMatchesCards)
+BOOST_AUTO_TEST_SUITE_END() // CaloricModel
+
+// EoS-consistent departure (residual) enthalpy:
+// H_res = -R*T^2 * d/dT [sum_i w_i * ln(phi_i)] per phase. This is the model
+// under which the enthalpy depends on the flash result (the caloric
+// cancellation tested above no longer holds).
+BOOST_AUTO_TEST_SUITE(DepartureModel)
+
+// Where no fugacity coefficient is at the range limit of CubicEOS, the
+// residual equals -R T^2 sum_i w_i dln(phi_i)/dT taken from the fluid
+// system's own fugacityCoefficient (finite difference at fixed P and phase
+// composition). F1 is checked for every cubic EoS; the flashed state is only
+// a probe point there. H1 adds the volume shift, which enters ln(phi_i), and a
+// component with an acentric factor above 0.49, where PRCORR differs from PR.
+BOOST_AUTO_TEST_CASE(ResidualMatchesFugacityCoefficients)
 {
-    using Caloric = Opm::IdealGasCaloricData<double>;
+    constexpr double T = Opm::FlashTest::f1Temperature;
 
-    const auto checkSame = [](const char* name,
-                              const Opm::ComponentCp<double>& wrapper,
-                              const Opm::ComponentCp<double>& owner) {
-        BOOST_TEST_CONTEXT(name) {
-            BOOST_CHECK_EQUAL(wrapper.c0, owner.c0);
-            BOOST_CHECK_EQUAL(wrapper.c1, owner.c1);
-            BOOST_CHECK_EQUAL(wrapper.c2, owner.c2);
-            BOOST_CHECK_EQUAL(wrapper.c3, owner.c3);
-        }
-    };
-    checkSame("methane", Caloric::methane(),
-              Opm::C1<double>::idealGasHeatCapacityPolynomial());
-    checkSame("decane", Caloric::decane(),
-              Opm::C10<double>::idealGasHeatCapacityPolynomial());
-    checkSame("carbonDioxide", Caloric::carbonDioxide(),
-              Opm::SimpleCO2<double>::idealGasHeatCapacityPolynomial());
-}
+    FlashCase<numComponentsF1> caseF1{"F1 probe", f1Pressure, T, f1Z};
+    const auto outcomeF1 = runFlash<FluidSystemF1, EvaluationF1>(caseF1);
+    BOOST_REQUIRE(!outcomeF1.summary.single_phase);
 
-// byName() is the safety seam of the preset surface: deck-style aliases must
-// resolve case-insensitively to the intended card, and an unknown component
-// must fail loudly rather than receive somebody else's heat capacity. Pin
-// every documented alias coefficient-wise, plus the throw.
-BOOST_AUTO_TEST_CASE(ByNameAliasesAndUnknownName)
-{
-    using Caloric = Opm::IdealGasCaloricData<double>;
-
-    const struct {
-        const char* alias;
-        Opm::ComponentCp<double> expected;
-    } lookups[] = {
-        {"C1", Caloric::methane()},
-        {"c1", Caloric::methane()},
-        {"CH4", Caloric::methane()},
-        {"Methane", Caloric::methane()},
-        {"C10", Caloric::decane()},
-        {"nC10", Caloric::decane()},
-        {"Decane", Caloric::decane()},
-        {"n-decane", Caloric::decane()},
-        {"CO2", Caloric::carbonDioxide()},
-        {"co2", Caloric::carbonDioxide()},
-        {"CarbonDioxide", Caloric::carbonDioxide()},
-        {"Carbon-Dioxide", Caloric::carbonDioxide()},
-        {"carbon dioxide", Caloric::carbonDioxide()},
-    };
-    for (const auto& lookup : lookups) {
-        BOOST_TEST_CONTEXT(lookup.alias) {
-            const auto card = Caloric::byName(lookup.alias);
-            BOOST_CHECK_EQUAL(card.c0, lookup.expected.c0);
-            BOOST_CHECK_EQUAL(card.c1, lookup.expected.c1);
-            BOOST_CHECK_EQUAL(card.c2, lookup.expected.c2);
-            BOOST_CHECK_EQUAL(card.c3, lookup.expected.c3);
+    for (const auto eosType : {EOSType::PR, EOSType::PRCORR,
+                               EOSType::SRK, EOSType::RK}) {
+        for (unsigned phaseIdx : {static_cast<unsigned>(FluidSystemF1::oilPhaseIdx),
+                                  static_cast<unsigned>(FluidSystemF1::gasPhaseIdx)}) {
+            BOOST_TEST_CONTEXT("F1, EoS " << Opm::CompositionalConfig::eosTypeToString(eosType)
+                               << ", phase " << phaseIdx) {
+                const auto w = phaseComposition<FluidSystemF1>(outcomeF1.state, phaseIdx);
+                const double expected = residualByFiniteDifference<numComponentsF1>(T, w,
+                    [&](const double t) {
+                        return fluidSystemLnPhi<FluidSystemF1>(t, f1Pressure, w, phaseIdx, eosType);
+                    });
+                BOOST_CHECK_CLOSE(EnthalpyF1::phaseResidualEnthalpy(outcomeF1.state, phaseIdx, eosType),
+                                  expected, 1e-4); // [%]
+            }
         }
     }
 
-    // no silent fallback: unknown names throw, naming the component
-    BOOST_CHECK_THROW(Caloric::byName("unobtainium"), std::runtime_error);
-    BOOST_CHECK_THROW(Caloric::byName(""), std::runtime_error);
-}
+    for (const auto eosType : {EOSType::PR, EOSType::PRCORR}) {
+        FlashCase<numComponentsH1> caseH1{"H1 probe", h1Pressure, T, h1Z};
+        caseH1.eos_type = eosType;
+        const auto outcomeH1 = runFlash<FluidSystemH1, EvaluationH1>(caseH1);
+        BOOST_REQUIRE(!outcomeH1.summary.single_phase);
 
-BOOST_AUTO_TEST_SUITE_END() // CaloricModel
-
-// ────────────────────────────────────────────────────────────────────────────
-// EoS-consistent departure (residual) enthalpy:
-// H_res = -R*T^2 * sum_i w_i * dln(phi_i)/dT per phase, with the temperature
-// derivative of the fugacity coefficient supplied by densead AD through the
-// fluid system's own fugacityCoefficient. This is the model under which the
-// enthalpy genuinely depends on the flash result (the caloric cancellation
-// tested above no longer holds).
-// ────────────────────────────────────────────────────────────────────────────
-BOOST_AUTO_TEST_SUITE(DepartureModel)
-
-namespace {
-using EOSType = Opm::CompositionalConfig::EOSType;
-}
-
-// The AD temperature-derivative of ln(phi) matches a central finite
-// difference of ln(phi(T)) evaluated at fixed pressure and frozen phase
-// composition — per phase, per component, per supported cubic EoS (the
-// alpha-function branches in CubicEOSParams differ exactly in this
-// temperature dependence).
-BOOST_AUTO_TEST_CASE(AdDerivativeMatchesFiniteDifference)
-{
-    FlashCase<numComponentsF1> testCase{"AD probe", f1Pressure,
-                                        Opm::FlashTest::f1Temperature, f1Z};
-    const auto outcome = runFlash<FluidSystemF1, EvaluationF1>(testCase);
-    BOOST_REQUIRE(!outcome.summary.single_phase);
-
-    constexpr double h = 1e-3; // FD step [K]
-    // the flashed state is only a probe point: the AD == FD identity holds
-    // at any (P, T, w), so the one flashed composition serves every EoS
-    for (const auto eosType : {EOSType::PR, EOSType::PRCORR,
-                               EOSType::SRK, EOSType::RK}) {
-        BOOST_TEST_CONTEXT("EoS " << Opm::CompositionalConfig::eosTypeToString(eosType)) {
-            for (unsigned phaseIdx : {static_cast<unsigned>(FluidSystemF1::oilPhaseIdx),
-                                      static_cast<unsigned>(FluidSystemF1::gasPhaseIdx)}) {
-                // freeze this phase's composition from the flashed state
-                std::array<double, numComponentsF1> w;
-                for (int compIdx = 0; compIdx < numComponentsF1; ++compIdx)
-                    w[compIdx] = Opm::getValue(outcome.state.moleFraction(phaseIdx, compIdx));
-
-                // independent, scalar evaluation path for ln(phi(T)) at fixed (P, w)
-                auto lnPhi = [&](const double T, const int compIdx) {
-                    Opm::CompositionalFluidState<double, FluidSystemF1> fs;
-                    fs.setTemperature(T);
-                    fs.setPressure(FluidSystemF1::oilPhaseIdx, f1Pressure);
-                    fs.setPressure(FluidSystemF1::gasPhaseIdx, f1Pressure);
-                    for (int i = 0; i < numComponentsF1; ++i)
-                        fs.setMoleFraction(phaseIdx, i, w[i]);
-                    FluidSystemF1::ParameterCache<double> paramCache(eosType);
-                    paramCache.updatePhase(fs, phaseIdx);
-                    return std::log(FluidSystemF1::fugacityCoefficient(fs, paramCache, phaseIdx, compIdx));
-                };
-
-                const double T = Opm::FlashTest::f1Temperature;
-                for (int compIdx = 0; compIdx < numComponentsF1; ++compIdx) {
-                    const double ad = EnthalpyF1::phaseDLnPhiDT(outcome.state, phaseIdx, compIdx, eosType);
-                    const double fd = (lnPhi(T + h, compIdx) - lnPhi(T - h, compIdx)) / (2.*h);
-                    BOOST_CHECK_CLOSE(ad, fd, 1e-3); // [%]
-                }
+        for (unsigned phaseIdx : {static_cast<unsigned>(FluidSystemH1::oilPhaseIdx),
+                                  static_cast<unsigned>(FluidSystemH1::gasPhaseIdx)}) {
+            BOOST_TEST_CONTEXT("H1, EoS " << Opm::CompositionalConfig::eosTypeToString(eosType)
+                               << ", phase " << phaseIdx) {
+                const auto w = phaseComposition<FluidSystemH1>(outcomeH1.state, phaseIdx);
+                const double expected = residualByFiniteDifference<numComponentsH1>(T, w,
+                    [&](const double t) {
+                        return fluidSystemLnPhi<FluidSystemH1>(t, h1Pressure, w, phaseIdx, eosType);
+                    });
+                BOOST_CHECK_CLOSE(EnthalpyH1::phaseResidualEnthalpy(outcomeH1.state, phaseIdx, eosType),
+                                  expected, 1e-4); // [%]
             }
+        }
+    }
+}
+
+// In the H1 liquid at 250 K the fugacity coefficient of nC20 is below the
+// range CubicEOS limits it to, so the limited value has no temperature
+// derivative. The residual must still match ln(phi_i) evaluated without the
+// limit (with the volume translation of the fluid system). Through the
+// limited coefficients it came out at a few kJ/mol instead of about -60 kJ/mol.
+BOOST_AUTO_TEST_CASE(HeavyComponentBelowFugacityLimit)
+{
+    constexpr double T = 250.;
+    constexpr unsigned oilPhaseIdx = FluidSystemH1::oilPhaseIdx;
+    constexpr unsigned heavyIdx = 1;
+
+    for (const auto eosType : {EOSType::PR, EOSType::PRCORR}) {
+        BOOST_TEST_CONTEXT("EoS " << Opm::CompositionalConfig::eosTypeToString(eosType)) {
+            FlashCase<numComponentsH1> testCase{"H1 heavy liquid", h1Pressure, T, h1Z};
+            testCase.eos_type = eosType;
+            const auto outcome = runFlash<FluidSystemH1, EvaluationH1>(testCase);
+            BOOST_REQUIRE(!outcome.summary.single_phase);
+            const auto x = phaseComposition<FluidSystemH1>(outcome.state, oilPhaseIdx);
+
+            // the case is in the limited regime
+            const PhaseProbe<FluidSystemH1> probe(T, h1Pressure, x, oilPhaseIdx, eosType);
+            const double phiLimited = FluidSystemH1::CubicEOS::computeFugacityCoefficient(
+                probe.fs, probe.paramCache, oilPhaseIdx, heavyIdx);
+            const double phiCubic = std::exp(cubicLnPhi(probe, x, oilPhaseIdx)[heavyIdx]);
+            BOOST_REQUIRE_LT(phiCubic, phiLimited);
+
+            const double expected = residualByFiniteDifference<numComponentsH1>(T, x,
+                [&](const double t) {
+                    const PhaseProbe<FluidSystemH1> probeAtT(t, h1Pressure, x, oilPhaseIdx, eosType);
+                    auto lnPhi = cubicLnPhi(probeAtT, x, oilPhaseIdx);
+                    for (int compIdx = 0; compIdx < numComponentsH1; ++compIdx) {
+                        lnPhi[compIdx] -= FluidSystemH1::volumeShift(compIdx)
+                                          * probeAtT.paramCache.Bi(oilPhaseIdx, compIdx);
+                    }
+                    return lnPhi;
+                });
+            const double residual = EnthalpyH1::phaseResidualEnthalpy(outcome.state, oilPhaseIdx, eosType);
+            BOOST_CHECK_CLOSE(residual, expected, 1e-4); // [%]
+            BOOST_CHECK_LT(residual, -40e3);             // [J/mol]: vaporization-enthalpy scale
         }
     }
 }
@@ -369,7 +477,7 @@ BOOST_AUTO_TEST_CASE(IdealGasLimit)
     const double resAnchor = EnthalpyF1::phaseResidualEnthalpy(
         anchorOutcome.state, FluidSystemF1::gasPhaseIdx, EOSType::PR);
 
-    BOOST_CHECK_LT(std::abs(resLow), 10.);   // [J/mol] — near-ideal at 10 mbar
+    BOOST_CHECK_LT(std::abs(resLow), 10.);   // [J/mol], near-ideal at 10 mbar
     BOOST_CHECK_LT(std::abs(resLow), 0.05 * std::abs(resAnchor));
 }
 
@@ -388,13 +496,13 @@ BOOST_AUTO_TEST_CASE(DepartureCouplesToSplit)
 
     // (a) decomposition consistency of the model-switch overload
     const double viaMixture = Opm::getValue(EnthalpyF1::mixtureEnthalpy(
-        outcome.state, cpTable, T0, EOSType::PR, Opm::EnthalpyModel::eos_departure));
+        outcome.state, cpTable, EOSType::PR, Opm::EnthalpyModel::eos_departure));
     const double L = outcome.summary.L;
     const double hOil = Opm::getValue(EnthalpyF1::phaseEnthalpy(
-                            outcome.state, FluidSystemF1::oilPhaseIdx, cpTable, T0))
+                            outcome.state, FluidSystemF1::oilPhaseIdx, cpTable))
         + EnthalpyF1::phaseResidualEnthalpy(outcome.state, FluidSystemF1::oilPhaseIdx, EOSType::PR);
     const double hGas = Opm::getValue(EnthalpyF1::phaseEnthalpy(
-                            outcome.state, FluidSystemF1::gasPhaseIdx, cpTable, T0))
+                            outcome.state, FluidSystemF1::gasPhaseIdx, cpTable))
         + EnthalpyF1::phaseResidualEnthalpy(outcome.state, FluidSystemF1::gasPhaseIdx, EOSType::PR);
     BOOST_CHECK_CLOSE(viaMixture, L*hOil + (1. - L)*hGas, 1e-9); // [%]
 
@@ -403,7 +511,7 @@ BOOST_AUTO_TEST_CASE(DepartureCouplesToSplit)
     double viaFeedIdeal = 0.;
     for (int compIdx = 0; compIdx < numComponentsF1; ++compIdx)
         viaFeedIdeal += f1Z[compIdx] * cpTable[compIdx].enthalpyIntegral(
-            Opm::FlashTest::f1Temperature, T0);
+            Opm::FlashTest::f1Temperature);
     BOOST_CHECK_GT(std::abs(viaMixture - viaFeedIdeal), 100.); // [J/mol]
 
     // (c) the liquid's residual is negative (attractive interactions)
@@ -421,9 +529,9 @@ BOOST_AUTO_TEST_CASE(CaloricSeamUnchanged)
     const auto cpTable = Opm::FlashTest::f1CpTable();
 
     const double viaCaloric = Opm::getValue(
-        EnthalpyF1::mixtureEnthalpy(outcome.state, cpTable, T0));
+        EnthalpyF1::mixtureEnthalpy(outcome.state, cpTable));
     const double viaSwitch = Opm::getValue(EnthalpyF1::mixtureEnthalpy(
-        outcome.state, cpTable, T0, EOSType::PR, Opm::EnthalpyModel::caloric));
+        outcome.state, cpTable, EOSType::PR, Opm::EnthalpyModel::caloric));
     BOOST_CHECK_CLOSE(viaCaloric, viaSwitch, 1e-12); // [%]
 }
 
@@ -438,7 +546,7 @@ BOOST_AUTO_TEST_CASE(DepartureDatumIsIdealGasAtT0)
     const double L = outcome.summary.L;
 
     const double H0 = EnthalpyF1::mixtureEnthalpy(
-        outcome.state, cpTable, T0, EOSType::PR, Opm::EnthalpyModel::eos_departure);
+        outcome.state, cpTable, EOSType::PR, Opm::EnthalpyModel::eos_departure);
     double residual = 0.;
     if (L > 0.)
         residual += L * EnthalpyF1::phaseResidualEnthalpy(
@@ -466,34 +574,24 @@ BOOST_AUTO_TEST_CASE(ModelSwitchReturnsValueOnly)
     static_assert(!std::is_same_v<ValueType, Scalar>,
                   "the probe state must be AD-valued for this check to mean anything");
     static_assert(std::is_same_v<decltype(EnthalpyF1::mixtureEnthalpy(
-                                     outcome.state, cpTable, T0, EOSType::PR,
+                                     outcome.state, cpTable, EOSType::PR,
                                      Opm::EnthalpyModel::eos_departure)),
                                  Scalar>,
                   "the model-switch mixtureEnthalpy must return a plain Scalar");
     static_assert(std::is_same_v<decltype(EnthalpyF1::phaseEnthalpy(
-                                     outcome.state, FluidSystemF1::oilPhaseIdx, cpTable, T0,
+                                     outcome.state, FluidSystemF1::oilPhaseIdx, cpTable,
                                      EOSType::PR, Opm::EnthalpyModel::eos_departure)),
                                  Scalar>,
                   "the model-switch phaseEnthalpy must return a plain Scalar");
-    static_assert(std::is_same_v<decltype(EnthalpyF1::mixtureEnthalpy(outcome.state, cpTable, T0)),
+    static_assert(std::is_same_v<decltype(EnthalpyF1::mixtureEnthalpy(outcome.state, cpTable)),
                                  ValueType>,
                   "the caloric overload keeps the state's value type");
 
     // returning a plain Scalar does not change the value
-    BOOST_CHECK_CLOSE(EnthalpyF1::mixtureEnthalpy(outcome.state, cpTable, T0, EOSType::PR,
+    BOOST_CHECK_CLOSE(EnthalpyF1::mixtureEnthalpy(outcome.state, cpTable, EOSType::PR,
                                                   Opm::EnthalpyModel::caloric),
-                      Opm::getValue(EnthalpyF1::mixtureEnthalpy(outcome.state, cpTable, T0)),
+                      Opm::getValue(EnthalpyF1::mixtureEnthalpy(outcome.state, cpTable)),
                       1e-12); // [%]
-}
-
-// the shared enthalpy-model parser: round-trips and loud failure
-BOOST_AUTO_TEST_CASE(EnthalpyModelStrings)
-{
-    BOOST_CHECK(Opm::enthalpyModelFromString("caloric") == Opm::EnthalpyModel::caloric);
-    BOOST_CHECK(Opm::enthalpyModelFromString("eos_departure") == Opm::EnthalpyModel::eos_departure);
-    BOOST_CHECK_EQUAL(Opm::enthalpyModelToString(Opm::EnthalpyModel::caloric), "caloric");
-    BOOST_CHECK_EQUAL(Opm::enthalpyModelToString(Opm::EnthalpyModel::eos_departure), "eos_departure");
-    BOOST_CHECK_THROW(Opm::enthalpyModelFromString("nonsense"), std::runtime_error);
 }
 
 BOOST_AUTO_TEST_SUITE_END() // DepartureModel
