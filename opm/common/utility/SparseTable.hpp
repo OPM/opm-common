@@ -37,6 +37,7 @@
 
 #include <opm/common/ErrorMacros.hpp>
 #include <opm/common/utility/IteratorRange.hpp>
+#include <opm/common/utility/VectorWithDefaultAllocator.hpp>
 
 #include <opm/common/utility/gpuistl_if_available.hpp>
 
@@ -111,7 +112,7 @@ private:
     /// as efficiently as possible.
     /// It is supposed to behave similarly to a vector of vectors.
     /// Its behaviour is similar to compressed row sparse matrices.
-    template <typename T, template <typename, typename...> class Storage = std::vector>
+    template <typename T, template <class> class Storage = VectorWithDefaultAllocator>
     class SparseTable
     {
     public:
