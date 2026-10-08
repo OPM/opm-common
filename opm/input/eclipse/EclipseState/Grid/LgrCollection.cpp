@@ -289,6 +289,22 @@ namespace Opm {
        m_lgrs.insert(std::make_pair(lgr.NAME(), lgr));
     }
 
+    std::array<int,3> LgrCollection::levelZeroIJK(const std::size_t lgrNumber,
+                                                  std::array<int,3> ijk) const
+    {
+        const Carfin* box = &this->getLgr(lgrNumber - 1);
+        while (true) {
+            const std::array<int,3> start { box->I1(), box->J1(), box->K1() };
+            for (std::size_t d = 0; d < 3; ++d) {
+                ijk[d] = start[d] + box->refinedColumns(d).parentOffset.at(ijk[d]);
+            }
+            if (box->PARENT_NAME() == "GLOBAL" || !this->hasLgr(box->PARENT_NAME())) {
+                return ijk;
+            }
+            box = &this->getLgr(box->PARENT_NAME());
+        }
+    }
+
     bool LgrCollection::operator==(const LgrCollection& data) const {
         return (this->m_lgrs == data.m_lgrs)
             && (this->m_pillarsFromBoxLayer == data.m_pillarsFromBoxLayer);

@@ -962,3 +962,46 @@ BOOST_AUTO_TEST_CASE(TestNncIntoLgrRefused)
     BOOST_CHECK_THROW(refuse(nncNextToBox("2 2 1 3 3 1")), std::invalid_argument);
     BOOST_CHECK_NO_THROW(refuse(nncNextToBox("1 1 1 3 3 1")));
 }
+
+// A refined cell's level-zero host follows N*FIN, not the average ratio.
+BOOST_AUTO_TEST_CASE(TestLgrLevelZeroIJKGraded)
+{
+    const Opm::EclipseState state { Opm::Parser{}.parseString(R"(RUNSPEC
+DIMENS
+ 3 3 1 /
+OIL
+WATER
+LGR
+ 1 /
+GRID
+DX
+ 9*100 /
+DY
+ 9*100 /
+DZ
+ 9*10 /
+TOPS
+ 9*2000 /
+PORO
+ 9*0.25 /
+PERMX
+ 9*100 /
+COPY
+ PERMX PERMY /
+ PERMX PERMZ /
+/
+CARFIN
+'LGR1' 1 2 1 1 1 1 5 1 1 /
+NXFIN
+ 2 3 /
+ENDFIN
+PROPS
+REGIONS
+SOLUTION
+SCHEDULE
+)") };
+    const auto& lgrs = state.getLgrs();
+    BOOST_CHECK((lgrs.levelZeroIJK(1, {1, 0, 0}) == std::array<int,3>{0, 0, 0}));
+    BOOST_CHECK((lgrs.levelZeroIJK(1, {2, 0, 0}) == std::array<int,3>{1, 0, 0}));
+    BOOST_CHECK((lgrs.levelZeroIJK(1, {4, 0, 0}) == std::array<int,3>{1, 0, 0}));
+}

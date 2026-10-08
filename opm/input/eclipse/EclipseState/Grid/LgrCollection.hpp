@@ -22,6 +22,7 @@
 #include <opm/input/eclipse/EclipseState/Grid/CarfinManager.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 
+#include <array>
 #include <cstddef>
 #include <string>
 
@@ -57,6 +58,11 @@ public:
     /// reference, instead of the column's (stacked boxes on sheared pillars then
     /// do not conform).
     bool pillarsFromBoxLayer() const { return m_pillarsFromBoxLayer; }
+
+    /// The level-zero (I,J,K) whose refinement holds cell ijk of LGR number
+    /// lgrNumber (1-based, deck order), up through nested parents; graded boxes
+    /// included.
+    std::array<int,3> levelZeroIJK(std::size_t lgrNumber, std::array<int,3> ijk) const;
 
     bool operator==(const LgrCollection& data) const;
 
