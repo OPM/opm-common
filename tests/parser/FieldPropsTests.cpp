@@ -30,6 +30,9 @@
 
 #include <opm/input/eclipse/EclipseState/Grid/FieldProps.hpp>
 
+#include <opm/common/OpmLog/LogUtil.hpp>
+#include <opm/common/OpmLog/OpmLog.hpp>
+#include <opm/common/OpmLog/StreamLog.hpp>
 #include <opm/common/utility/OpmInputError.hpp>
 
 #include <opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquifers.hpp>
@@ -205,6 +208,60 @@ GRID
     BOOST_CHECK_EQUAL_COLLECTIONS(actnum.begin(), actnum.end(), expected_actnum.begin(), expected_actnum.end());
 }
 
+
+BOOST_AUTO_TEST_CASE(EditPorvOnCellSwitchedOffByActnum)
+{
+    // ACTNUM switches off (2,2,1) and (3,3,1).  EDIT gives the active
+    // (1,1,1) and the inactive (2,2,1) a pore volume, and (3,3,1) zero.
+    const auto deck = Parser{}.parseString(R"(
+GRID
+
+PORO
+   9*0.25 /
+
+EDIT
+
+BOX
+  1 1 1 1 1 1 /
+PORV
+  1000.0 /
+
+BOX
+  2 2 2 2 1 1 /
+PORV
+  25000.0 /
+
+BOX
+  3 3 3 3 1 1 /
+PORV
+  0.0 /
+
+ENDBOX
+)");
+
+    auto actnum = std::vector<int>(9, 1);
+    actnum[4] = 0;
+    actnum[8] = 0;
+    EclipseGrid grid(EclipseGrid(3, 3, 1), actnum);
+
+    std::ostringstream warnings;
+    OpmLog::addBackend("STREAM", std::make_shared<StreamLog>(warnings, Log::MessageType::Warning));
+    const FieldPropsManager fpm(deck, Phases{true, true, true}, grid, TableManager());
+    OpmLog::removeBackend("STREAM");
+
+    // The switched-off cells stay inactive; the active one takes its value.
+    const auto porv = fpm.porv(false);
+    BOOST_REQUIRE_EQUAL(porv.size(), 7U);
+    BOOST_CHECK_CLOSE(porv[0], 1000.0, 1.0e-8);
+
+    // One warning, for (2,2,1) only: not for the active cell, not for zero.
+    const auto text = warnings.str();
+    const auto expected = std::string{"PORV in EDIT gives a pore volume to 1 cell(s) that ACTNUM "
+                                      "switched off, first cell (2,2,1)."};
+    const auto pos = text.find(expected);
+    BOOST_CHECK_MESSAGE(pos != std::string::npos, text);
+    BOOST_CHECK_MESSAGE(text.find("switched off", pos + expected.size()) == std::string::npos, text);
+}
 
 BOOST_AUTO_TEST_CASE(INVALID_COPY) {
     std::string deck_string = R"(

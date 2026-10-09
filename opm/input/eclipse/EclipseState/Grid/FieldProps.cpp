@@ -391,6 +391,44 @@ Please check whether this is on purpose or if you did not properly define this r
     OpmLog::warning(Log::fileMessage(keyword.location(), message));
 }
 
+// A pore volume set in EDIT for a cell that ACTNUM switched off is ignored:
+// the cell stays inactive.  Say so, once per keyword.
+void warn_porv_on_inactive_cells(const DeckKeyword&                keyword,
+                                 const std::vector<double>&        deck_data,
+                                 const std::vector<value::status>& deck_status,
+                                 const Box&                        box,
+                                 const EclipseGrid&                grid)
+{
+    if (box.index_list().size() == box.global_index_list().size()) {
+        return; // every cell in the box is active
+    }
+
+    auto count = std::size_t{0};
+    auto first = std::size_t{0};
+    for (const auto& cell : box.global_index_list()) {
+        if (!grid.cellActive(cell.global_index) &&
+            (deck_status[cell.data_index] == value::status::deck_value) &&
+            (deck_data[cell.data_index] > 0.0))
+        {
+            if (count++ == 0) {
+                first = cell.global_index;
+            }
+        }
+    }
+
+    if (count == 0) {
+        return;
+    }
+
+    const auto ijk = grid.getIJK(first);
+    const auto message =
+        fmt::format("PORV in EDIT gives a pore volume to {} cell(s) that ACTNUM "
+                    "switched off, first cell ({},{},{}).  These cells stay inactive.",
+                    count, ijk[0] + 1, ijk[1] + 1, ijk[2] + 1);
+
+    OpmLog::warning(Log::fileMessage(keyword.location(), message));
+}
+
 template <typename T>
 void assign_deck(const Fieldprops::keywords::keyword_info<T>& kw_info,
                  const DeckKeyword& keyword,
@@ -1426,6 +1464,10 @@ void FieldProps::handle_double_keyword(const Section section,
     else {
         // Apply only latest multiplier (overwrite these previous one)
         assign_deck(kw_info, keyword, field_data, deck_data, deck_status, box);
+    }
+
+    if ((section == Section::EDIT) && (keyword_name == "PORV")) {
+        warn_porv_on_inactive_cells(keyword, deck_data, deck_status, box, *this->grid_ptr);
     }
 
     if ((section == Section::EDIT) &&
