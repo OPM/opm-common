@@ -231,9 +231,14 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
 
             enum Status : int {
                 Shut      = -1000,
+                NoConns   = -987, // Shut, no connection in an active cell
+                ShutAuto  = -100, // Shut during the run, e.g. by an economic
+                                  // limit or when no connection is left open
                 Stop      = 0,
                 Open      = 1,
                 Auto      = 3,
+                Reopened  = 6,    // Open, reopened by a well test
+                OpenOther = 8,    // Open.  Not fully characterised.
             };
 
             namespace WGrupCon {

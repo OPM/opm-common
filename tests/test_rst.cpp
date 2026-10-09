@@ -36,6 +36,7 @@
 #include <opm/output/eclipse/AggregateWellData.hpp>
 #include <opm/output/eclipse/AggregateConnectionData.hpp>
 #include <opm/output/eclipse/AggregateGroupData.hpp>
+#include <opm/output/eclipse/VectorItems/group.hpp>
 #include <opm/output/eclipse/VectorItems/intehead.hpp>
 #include <opm/output/eclipse/VectorItems/well.hpp>
 #include <opm/output/eclipse/WriteRestartHelpers.hpp>
@@ -46,6 +47,7 @@
 #include <opm/input/eclipse/Python/Python.hpp>
 
 #include <opm/input/eclipse/Schedule/Action/State.hpp>
+#include <opm/input/eclipse/Schedule/Group/Group.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
@@ -67,7 +69,9 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <functional>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
@@ -385,9 +389,94 @@ END
 
     }
 
+    Opm::Deck open_producers_in_group()
+    {
+        return Opm::Parser{}.parseString(R"~(RUNSPEC
+OIL
+GAS
+WATER
+DISGAS
+VAPOIL
+UNIFOUT
+UNIFIN
+DIMENS
+ 10 10 10 /
+WELLDIMS
+ 5 1 1 5 /
+
+START             -- 0
+1 OKT 2008 /
+
+GRID
+DXV
+10*0.25 /
+DYV
+10*0.25 /
+DZV
+10*0.25 /
+TOPS
+100*2000.0 /
+
+PORO
+1000*0.2 /
+PERMX
+1000*1 /
+PERMY
+1000*0.1 /
+PERMZ
+1000*0.01 /
+
+SOLUTION
+
+SCHEDULE
+RPTRST
+BASIC=2
+/
+DATES             -- 1
+ 10  OKT 2008 /
+/
+GRUPTREE
+ 'G1' 'FIELD' /
+/
+WELSPECS
+      'OP_1'  'G1'   1   1 1* 'OIL' /
+      'OP_2'  'G1'   3   3 1* 'OIL' /
+      'OP_3'  'G1'   5   5 1* 'OIL' /
+      'OP_4'  'G1'   7   7 1* 'OIL' /
+      'OP_5'  'G1'   9   9 1* 'OIL' /
+/
+COMPDAT
+      'OP_1'  1  1   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+      'OP_2'  3  3   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+      'OP_3'  5  5   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+      'OP_4'  7  7   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+      'OP_5'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+/
+WCONPROD
+      'OP_*' 'OPEN' 'ORAT' 1000.0 4* 100.0 /
+/
+GCONPROD
+      'G1' 'ORAT' 2000.0 1500.0 1* 3000.0 'RATE' /
+/
+TSTEP            -- 2
+10 /
+END
+)~");
+    }
+
+    // Changes IWEL before it is written, given the number of items per well.
+    using EditIWel = std::function<void(std::vector<int>& iwel, std::size_t niwelz)>;
+
+    // Changes IGRP before it is written, given the number of items per group
+    // and NWGMAX, the offset of each group's own items.
+    using EditIGrp = std::function<void(std::vector<int>& igrp,
+                                        std::size_t nigrpz, std::size_t nwgmax)>;
+
     void writeRstFile(const SimulationCase& simCase,
                       const std::string&    baseName,
-                      const std::size_t     rptStep)
+                      const std::size_t     rptStep,
+                      const EditIWel&       editIWel = {},
+                      const EditIGrp&       editIGrp = {})
     {
         const auto sim_step = rptStep - 1;
 
@@ -433,12 +522,23 @@ END
         rstFile.write("DOUBHEAD", dh);
         rstFile.write("LOGIHEAD", lh);
 
-        rstFile.write("IGRP", groupData.getIGroup());
+        auto igrp = groupData.getIGroup();
+        if (editIGrp) {
+            namespace VI = Opm::RestartIO::Helpers::VectorItems;
+            editIGrp(igrp, ih[VI::intehead::NIGRPZ], ih[VI::intehead::NWGMAX]);
+        }
+
+        rstFile.write("IGRP", igrp);
         rstFile.write("SGRP", groupData.getSGroup());
         rstFile.write("XGRP", groupData.getXGroup());
         rstFile.write("ZGRP", groupData.getZGroup());
 
-        rstFile.write("IWEL", wellData.getIWell());
+        auto iwel = wellData.getIWell();
+        if (editIWel) {
+            editIWel(iwel, ih[Opm::RestartIO::Helpers::VectorItems::intehead::NIWELZ]);
+        }
+
+        rstFile.write("IWEL", iwel);
         rstFile.write("SWEL", wellData.getSWell());
         rstFile.write("XWEL", wellData.getXWell());
         rstFile.write("ZWEL", wellData.getZWell());
@@ -465,7 +565,9 @@ END
     makeRestartState(const SimulationCase& simCase,
                      const std::string&    baseName,
                      const std::size_t     rptStep,
-                     const std::string&    workArea)
+                     const std::string&    workArea,
+                     const EditIWel&       editIWel = {},
+                     const EditIGrp&       editIGrp = {})
     {
         // Recall: Constructor changes working directory of current process,
         // destructor restores original working directory.  The non-trivial
@@ -473,7 +575,7 @@ END
         // "unused" in release builds.
         WorkArea work_area{workArea};
 
-        writeRstFile(simCase, baseName, rptStep);
+        writeRstFile(simCase, baseName, rptStep, editIWel, editIGrp);
         return loadRestart(simCase, baseName, rptStep);
     }
 } // Anonymous namespace
@@ -1084,4 +1186,98 @@ BOOST_AUTO_TEST_CASE(Historic_Period_WHistCtl)
                             "Well loaded from restart file must be controlled by "
                             "observed reservoir voidage rate (RESV) after WCONHIST");
     }
+}
+
+BOOST_AUTO_TEST_CASE(Well_Status_Codes)
+{
+    namespace VI = Opm::RestartIO::Helpers::VectorItems;
+    using Code = VI::IWell::Value::Status;
+
+    const auto simCase = SimulationCase{ open_producers_in_group() };
+    const auto rptStep = std::size_t{2};
+
+    // All producers are open in the deck.  OP_5 gets an invalid code.
+    const auto codes = std::vector<int> {
+        Code::NoConns, Code::ShutAuto, Code::Reopened, Code::OpenOther, 2,
+    };
+
+    const auto state =
+        makeRestartState(simCase, "WELL_STATUS_RST", rptStep, "well_status_rst",
+                         [&codes](std::vector<int>& iwel, const std::size_t niwelz)
+                         {
+                             auto offset = std::size_t{0};
+                             for (const auto code : codes) {
+                                 iwel[offset + VI::IWell::index::Status] = code;
+                                 offset += niwelz;
+                             }
+                         });
+
+    auto makeRestartWell = [&state, rptStep](const std::string& well_name)
+    {
+        return Opm::Well {
+            state.get_well(well_name),
+            static_cast<int>(rptStep),
+            state.header.histctl_override,
+            Opm::TracerConfig{},
+            Opm::UnitSystem::newMETRIC(),
+            std::nullopt
+        };
+    };
+
+    BOOST_CHECK_EQUAL(makeRestartWell("OP_1").getStatus(), Opm::Well::Status::SHUT);
+    BOOST_CHECK_EQUAL(makeRestartWell("OP_2").getStatus(), Opm::Well::Status::SHUT);
+    BOOST_CHECK_EQUAL(makeRestartWell("OP_3").getStatus(), Opm::Well::Status::OPEN);
+    BOOST_CHECK_EQUAL(makeRestartWell("OP_4").getStatus(), Opm::Well::Status::OPEN);
+    BOOST_CHECK_THROW(makeRestartWell("OP_5"), std::logic_error);
+}
+
+BOOST_AUTO_TEST_CASE(Group_Limit_Procedure_Codes)
+{
+    namespace VI = Opm::RestartIO::Helpers::VectorItems;
+    using Code = VI::IGroup::Value::ExceedAction;
+    using Action = Opm::Group::ExceedAction;
+
+    const auto simCase = SimulationCase{ open_producers_in_group() };
+    const auto rptStep = std::size_t{2};
+
+    // G1, the first group in IGRP, restarted with the given procedure code.
+    auto makeRestartGroup = [&simCase, rptStep](const int code)
+    {
+        const auto state =
+            makeRestartState(simCase, "GROUP_PROC_RST", rptStep, "group_proc_rst", {},
+                             [code](std::vector<int>& igrp, std::size_t, const std::size_t nwgmax)
+                             {
+                                 igrp[nwgmax + VI::IGroup::index::ExceedAction] = code;
+                             });
+
+        const auto g1 = std::ranges::find_if(state.groups, [](const auto& group)
+                                             { return group.name == "G1"; });
+        BOOST_REQUIRE(g1 != state.groups.end());
+
+        return Opm::Group { *g1, 1, Opm::UnitSystem::newMETRIC() };
+    };
+
+    for (const auto& [code, action] : {
+            std::pair { Code::Con,         Action::CON      },
+            std::pair { Code::ConAndBelow, Action::CON_PLUS },
+            std::pair { Code::Well,        Action::WELL     },
+            std::pair { Code::Rate,        Action::RATE     },
+            std::pair { Code::Plug,        Action::PLUG     },
+        })
+    {
+        const auto g1 = makeRestartGroup(static_cast<int>(code));
+        const auto& limit_action = g1.productionProperties().group_limit_action;
+
+        for (const auto rate_action : { limit_action.allRates, limit_action.oil,
+                                        limit_action.water, limit_action.gas,
+                                        limit_action.liquid })
+        {
+            BOOST_CHECK_MESSAGE(rate_action == action,
+                                "Code " << static_cast<int>(code) << " must give procedure "
+                                << Opm::Group::ExceedAction2String(action) << ", not "
+                                << Opm::Group::ExceedAction2String(rate_action));
+        }
+    }
+
+    BOOST_CHECK_THROW(makeRestartGroup(5), std::invalid_argument);
 }

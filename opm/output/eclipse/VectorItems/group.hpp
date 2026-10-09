@@ -86,6 +86,17 @@ namespace Opm::RestartIO::Helpers::VectorItems {
                 No = 0,
                 Yes = 1,
             };
+
+            // Procedure on exceeding a production limit (GCONPROD(7)).
+            // CON, +CON and PLUG share the well workover codes (WECON(7)).
+            enum class ExceedAction : int {
+                None        = 0, // NONE
+                Con         = 1, // CON
+                ConAndBelow = 2, // +CON
+                Well        = 3, // WELL
+                Rate        = 4, // RATE
+                Plug        = 6, // PLUG
+            };
         } // namespace Value
     } // namespace IGroup
 
