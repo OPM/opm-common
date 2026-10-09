@@ -36,6 +36,7 @@
 #include <opm/output/eclipse/AggregateWellData.hpp>
 #include <opm/output/eclipse/AggregateConnectionData.hpp>
 #include <opm/output/eclipse/AggregateGroupData.hpp>
+#include <opm/output/eclipse/VectorItems/group.hpp>
 #include <opm/output/eclipse/VectorItems/intehead.hpp>
 #include <opm/output/eclipse/VectorItems/well.hpp>
 #include <opm/output/eclipse/WriteRestartHelpers.hpp>
@@ -46,6 +47,7 @@
 #include <opm/input/eclipse/Python/Python.hpp>
 
 #include <opm/input/eclipse/Schedule/Action/State.hpp>
+#include <opm/input/eclipse/Schedule/Group/Group.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
@@ -465,10 +467,16 @@ END
     // Changes IWEL before it is written, given the number of items per well.
     using EditIWel = std::function<void(std::vector<int>& iwel, std::size_t niwelz)>;
 
+    // Changes IGRP before it is written, given the number of items per group
+    // and NWGMAX, the offset of each group's own items.
+    using EditIGrp = std::function<void(std::vector<int>& igrp,
+                                        std::size_t nigrpz, std::size_t nwgmax)>;
+
     void writeRstFile(const SimulationCase& simCase,
                       const std::string&    baseName,
                       const std::size_t     rptStep,
-                      const EditIWel&       editIWel = {})
+                      const EditIWel&       editIWel = {},
+                      const EditIGrp&       editIGrp = {})
     {
         const auto sim_step = rptStep - 1;
 
@@ -514,7 +522,13 @@ END
         rstFile.write("DOUBHEAD", dh);
         rstFile.write("LOGIHEAD", lh);
 
-        rstFile.write("IGRP", groupData.getIGroup());
+        auto igrp = groupData.getIGroup();
+        if (editIGrp) {
+            namespace VI = Opm::RestartIO::Helpers::VectorItems;
+            editIGrp(igrp, ih[VI::intehead::NIGRPZ], ih[VI::intehead::NWGMAX]);
+        }
+
+        rstFile.write("IGRP", igrp);
         rstFile.write("SGRP", groupData.getSGroup());
         rstFile.write("XGRP", groupData.getXGroup());
         rstFile.write("ZGRP", groupData.getZGroup());
@@ -552,7 +566,8 @@ END
                      const std::string&    baseName,
                      const std::size_t     rptStep,
                      const std::string&    workArea,
-                     const EditIWel&       editIWel = {})
+                     const EditIWel&       editIWel = {},
+                     const EditIGrp&       editIGrp = {})
     {
         // Recall: Constructor changes working directory of current process,
         // destructor restores original working directory.  The non-trivial
@@ -560,7 +575,7 @@ END
         // "unused" in release builds.
         WorkArea work_area{workArea};
 
-        writeRstFile(simCase, baseName, rptStep, editIWel);
+        writeRstFile(simCase, baseName, rptStep, editIWel, editIGrp);
         return loadRestart(simCase, baseName, rptStep);
     }
 } // Anonymous namespace
@@ -1214,4 +1229,55 @@ BOOST_AUTO_TEST_CASE(Well_Status_Codes)
     BOOST_CHECK_EQUAL(makeRestartWell("OP_3").getStatus(), Opm::Well::Status::OPEN);
     BOOST_CHECK_EQUAL(makeRestartWell("OP_4").getStatus(), Opm::Well::Status::OPEN);
     BOOST_CHECK_THROW(makeRestartWell("OP_5"), std::logic_error);
+}
+
+BOOST_AUTO_TEST_CASE(Group_Limit_Procedure_Codes)
+{
+    namespace VI = Opm::RestartIO::Helpers::VectorItems;
+    using Code = VI::IGroup::Value::ExceedAction;
+    using Action = Opm::Group::ExceedAction;
+
+    const auto simCase = SimulationCase{ open_producers_in_group() };
+    const auto rptStep = std::size_t{2};
+
+    // G1, the first group in IGRP, restarted with the given procedure code.
+    auto makeRestartGroup = [&simCase, rptStep](const int code)
+    {
+        const auto state =
+            makeRestartState(simCase, "GROUP_PROC_RST", rptStep, "group_proc_rst", {},
+                             [code](std::vector<int>& igrp, std::size_t, const std::size_t nwgmax)
+                             {
+                                 igrp[nwgmax + VI::IGroup::index::ExceedAction] = code;
+                             });
+
+        const auto g1 = std::ranges::find_if(state.groups, [](const auto& group)
+                                             { return group.name == "G1"; });
+        BOOST_REQUIRE(g1 != state.groups.end());
+
+        return Opm::Group { *g1, 1, Opm::UnitSystem::newMETRIC() };
+    };
+
+    for (const auto& [code, action] : {
+            std::pair { Code::Con,         Action::CON      },
+            std::pair { Code::ConAndBelow, Action::CON_PLUS },
+            std::pair { Code::Well,        Action::WELL     },
+            std::pair { Code::Rate,        Action::RATE     },
+            std::pair { Code::Plug,        Action::PLUG     },
+        })
+    {
+        const auto g1 = makeRestartGroup(static_cast<int>(code));
+        const auto& limit_action = g1.productionProperties().group_limit_action;
+
+        for (const auto rate_action : { limit_action.allRates, limit_action.oil,
+                                        limit_action.water, limit_action.gas,
+                                        limit_action.liquid })
+        {
+            BOOST_CHECK_MESSAGE(rate_action == action,
+                                "Code " << static_cast<int>(code) << " must give procedure "
+                                << Opm::Group::ExceedAction2String(action) << ", not "
+                                << Opm::Group::ExceedAction2String(rate_action));
+        }
+    }
+
+    BOOST_CHECK_THROW(makeRestartGroup(5), std::invalid_argument);
 }
