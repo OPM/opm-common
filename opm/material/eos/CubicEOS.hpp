@@ -23,9 +23,17 @@
 #ifndef CUBIC_EOS_HPP
 #define CUBIC_EOS_HPP
 
+#include <opm/common/ErrorMacros.hpp>
+#include <opm/common/Exceptions.hpp>
+
 #include <opm/material/Constants.hpp>
 #include <opm/material/common/PolynomialUtils.hpp>
 #include <opm/material/common/Valgrind.hpp>
+
+#include <fmt/format.h>
+
+#include <cmath>
+#include <limits>
 
 namespace Opm
 {
@@ -67,6 +75,8 @@ public:
      * evaluated at the compressibility factor of the phase's cached molar
      * volume. The result is clamped to a wide range so that an unphysical
      * intermediate state during a flash still yields a finite, usable value.
+     *
+     * \throws NumericalProblem when \f$Z \le B\f$ or \f$\ln \phi_i\f$ is not finite.
      */
     template <class FluidState, class Params, class LhsEval = typename FluidState::ValueType>
     static LhsEval computeFugacityCoefficient(const FluidState& fs,
@@ -113,6 +123,23 @@ public:
         gamma = (2 / A) * A_s - Bi_B;
         ln_phi = alpha + (beta * gamma);
 
+        // At or below the covolume ln(Z - B) is not finite, and the clamps
+        // below would turn that into the bound for plain scalars but pass
+        // NaN on for AD values. Throw a NumericalProblem instead.
+        if (!(scalarValue(Z) > scalarValue(B)) || !std::isfinite(scalarValue(ln_phi))) {
+            OPM_THROW_NOLOG(
+                NumericalProblem,
+                fmt::format("CubicEOS::computeFugacityCoefficient: no finite fugacity "
+                            "coefficient for component {} in phase {} at p = {} and T = {} "
+                            "(Z = {}, B = {})",
+                            compIdx,
+                            phaseIdx,
+                            scalarValue(p),
+                            scalarValue(T),
+                            scalarValue(Z),
+                            scalarValue(B)));
+        }
+
         fugCoeff = exp(ln_phi);
 
         ////////
@@ -140,9 +167,9 @@ public:
      *   - \big(A B + m_1 m_2 B^2 (B + 1)\big) = 0. \f]
      *
      * With three real roots the largest belongs to the vapour and the
-     * smallest to the liquid; with one root both phases share it. The
-     * volume \f$V = Z R T / p\f$ is floored so a collapsed root cannot
-     * propagate.
+     * smallest one above the covolume \f$B\f$ to the liquid; with one root
+     * both phases share it. The volume \f$V = Z R T / p\f$ is floored so a
+     * collapsed root cannot propagate.
      *
      * \param fs The fluid state holding the phase's pressure and temperature.
      * \param params The parameter cache holding \f$A\f$, \f$B\f$, \f$m_1\f$ and \f$m_2\f$.
@@ -186,24 +213,45 @@ public:
 
         // pick correct root
         const Evaluation RT_p = R * T / p;
+        Evaluation root = std::numeric_limits<Scalar>::quiet_NaN();
         if (numSol == 3) {
             // the EOS has three intersections with the pressure,
             // i.e. the molar volume of gas is the largest one and the
-            // molar volume of liquid is the smallest one
-            if (isGasPhase) {
-                Vm = max(minMolarVolume, Z[2] * RT_p);
-            } else {
-                Vm = max(minMolarVolume, Z[0] * RT_p);
+            // molar volume of liquid is the smallest one above the covolume
+            root = Z[2];
+            if (!isGasPhase) {
+                // A root at or below B is not a phase: taking it floors the
+                // volume and clamps every fugacity coefficient.
+                for (const auto& candidate : Z) {
+                    if (candidate > B) {
+                        root = candidate;
+                        break;
+                    }
+                }
             }
         }
         else if (numSol == 1) {
             // Only one EOS root exists, so both phase labels use it.
-            Vm = max(minMolarVolume, Z[0] * RT_p);
+            root = Z[0];
         }
+        Vm = max(minMolarVolume, root * RT_p);
 
         Valgrind::CheckDefined(Vm);
-        assert(std::isfinite(scalarValue(Vm)));
-        assert(Vm > 0);
+        // The floor hides a NaN root behind minMolarVolume for plain scalars.
+        // Throw a NumericalProblem the flash recovers from instead of aborting
+        // or continuing with a meaningless volume.
+        if (!std::isfinite(scalarValue(root)) || !std::isfinite(scalarValue(Vm))) {
+            OPM_THROW_NOLOG(
+                NumericalProblem,
+                fmt::format("CubicEOS::computeMolarVolume: non-finite molar volume "
+                            "for phase {} at p = {} and T = {} (Z = {}, A = {}, B = {})",
+                            phaseIdx,
+                            scalarValue(p),
+                            scalarValue(T),
+                            scalarValue(root),
+                            scalarValue(A),
+                            scalarValue(B)));
+        }
         return Vm;
 
     }
