@@ -95,8 +95,9 @@ public:
 
     /*
       The properties are initialized with the CMODE_UNDEFINED
-      value, but the undefined value is never assigned apart from
-      that; and it is not part of the string conversion routines.
+      value. A producer loaded from a restart file also gets this
+      value if it has not been given a control mode. The undefined
+      value is not part of the string conversion routines.
     */
     using ProducerCMode = WellProducerCMode;
 
@@ -451,6 +452,9 @@ public:
     bool isInjector() const;
     InjectorCMode injection_cmode() const;
     ProducerCMode production_cmode() const;
+    // Whether the well has a control mode as a producer or an injector,
+    // whichever it currently is.
+    bool hasControlMode() const;
     InjectorType injectorType() const;
     std::size_t seqIndex() const;
     bool getAutomaticShutIn() const;

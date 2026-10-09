@@ -274,6 +274,14 @@ namespace {
             }
         }
 
+        int wellType(const Opm::Well& well)
+        {
+            // A well which has not been given a control mode has no well type.
+            return well.hasControlMode()
+                ? well.wellType().ecl_wtype()
+                : VI::IWell::Value::WellType::NoType;
+        }
+
         int preferredPhase(const Opm::Well& well)
         {
             using PhaseVal = VI::IWell::Value::Preferred_Phase;
@@ -613,7 +621,7 @@ namespace {
             iWell[Ix::Group] =
                 groupIndex(trim(well.groupName()), GroupMapNameInd);
 
-            iWell[Ix::WType]  = well.wellType().ecl_wtype();
+            iWell[Ix::WType]  = wellType(well);
             iWell[Ix::VFPTab] = wellVFPTab(well, st);
             iWell[Ix::PVTTab] = well.pvt_table_number();
             iWell[Ix::XFlow]  = well.getAllowCrossFlow() ? 1 : 0;
@@ -633,7 +641,12 @@ namespace {
             //
             // Observe that setCurrentControl() is called again, for open
             // wells, in the dynamicContrib() function.
-            setCurrentControl(Opm::Well::eclipseControlMode(well, st), iWell);
+            //
+            // A well which has not been given a control mode gets NoCtrl, not
+            // the WMCTL summary value WMCtlUnk.
+            setCurrentControl(well.hasControlMode()
+                              ? Opm::Well::eclipseControlMode(well, st)
+                              : VI::IWell::Value::WellCtrlMode::NoCtrl, iWell);
             setHistoryControlMode(well, Opm::Well::eclipseControlMode(well, st), iWell);
 
             iWell[Ix::CompOrd] = compOrder(well);

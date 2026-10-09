@@ -151,6 +151,7 @@ Opm::Well::ProducerCMode producer_cmode_from_int(const int pmode)
         IWell::Value::WellCtrlMode;
 
     switch (pmode) {
+    case CModeVal::NoCtrl:   return Opm::Well::ProducerCMode::CMODE_UNDEFINED;
     case CModeVal::Group:    return Opm::Well::ProducerCMode::GRUP;
     case CModeVal::OilRate:  return Opm::Well::ProducerCMode::ORAT;
     case CModeVal::WatRate:  return Opm::Well::ProducerCMode::WRAT;
@@ -393,8 +394,11 @@ Well::Well(const RestartIO::RstWell& rst_well,
         if (! p->predictionMode)
             p->clearControls();
 
+        // Producers which have not been given a control mode have no active control.
         p->controlMode = producer_cmode_from_int(rst_well.active_control);
-        p->addProductionControl(p->controlMode);
+        if (p->controlMode != Well::ProducerCMode::CMODE_UNDEFINED) {
+            p->addProductionControl(p->controlMode);
+        }
 
         p->addProductionControl(Well::ProducerCMode::BHP);
         if (! p->predictionMode) {
@@ -1187,6 +1191,13 @@ Well::ProducerCMode Well::production_cmode() const
     throw std::logic_error {
         fmt::format("Queried for PRODUCTION cmode for injector : {}", this->name())
     };
+}
+
+bool Well::hasControlMode() const
+{
+    return this->isProducer()
+        ? (this->production_cmode() != ProducerCMode::CMODE_UNDEFINED)
+        : (this->injection_cmode() != InjectorCMode::CMODE_UNDEFINED);
 }
 
 InjectorType Well::injectorType() const
@@ -2415,18 +2426,9 @@ int Opm::Well::eclipseControlMode(const Opm::Well::ProducerCMode pmode)
     return Val::WMCtlUnk;
 }
 
-// This function converts OPM well status values to an integer value
-// suitable for output to the restart file.  OPM tracks the status and the
-// active control of a well separately, but when this is written to a
-// restart file they are combined to a single integer.  Moreover, OPM
-// permits a well to have an active control while still being shut, but when
-// this is converted to an integer value suitable for the restart file, the
-// value 0 will be used to signal a SHUT well and the active control will be
-// lost.
-//
-// In the case of a well which is in state 'STOP' or 'AUTO' an integer
-// corresponding to the currently active control is written to the restart
-// file.
+// Control mode code of the well's input controls.  The well's status is not
+// taken into account, and a well which has not been given a control mode
+// yields WMCtlUnk.
 
 int Opm::Well::eclipseControlMode(const Well&         well,
                                   const SummaryState& st)
