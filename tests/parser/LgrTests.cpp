@@ -371,6 +371,61 @@ SCHEDULE
     BOOST_CHECK_THROW(eclipse_grid.getActiveIndexLGR("LGR1",1,1,0), std::invalid_argument);
     BOOST_CHECK_THROW(eclipse_grid.getActiveIndexLGR("LGR3",1,1,0), std::invalid_argument);
 }
+namespace {
+
+// 4x4x1 grid of 100 m cells, PORO 0.25; host (2,2) refined 3x3x1, with its own
+// porosity and the given minimum pore volume keyword.
+std::string minpvLgrDeck(const std::string& hostPoro, const std::string& minpv)
+{
+    return std::string { R"(RUNSPEC
+DIMENS
+ 4 4 1 /
+GRID
+CARFIN
+'LGR1' 2 2 2 2 1 1 3 3 1 /
+ENDFIN
+DXV
+ 4*100.0 /
+DYV
+ 4*100.0 /
+DZ
+ 16*10.0 /
+TOPS
+ 16*2000 /
+PORO
+ 16*0.25 /
+BOX
+ 2 2 2 2 1 1 /
+PORO
+ 1*)" } + hostPoro + R"( /
+ENDBOX
+)" + minpv;
+}
+
+} // Anonymous namespace
+
+// An LGR cell takes the minimum pore volume of its host.  A host at or above
+// it stays active; when all its LGR cells are below it, the host would be
+// active with no active LGR cell, and the input stops.
+BOOST_AUTO_TEST_CASE(TestLGRcellsBelowMINPV)
+{
+    // Host pore volume 2250, nine LGR cells of 250 each.
+    BOOST_CHECK_THROW(EclipseState(Parser{}.parseString(minpvLgrDeck("0.0225", R"(MINPV
+ 1000.0 /)"))),
+                      std::invalid_argument);
+    BOOST_CHECK_THROW(EclipseState(Parser{}.parseString(minpvLgrDeck("0.0225", R"(MINPVV
+ 16*1000.0 /)"))),
+                      std::invalid_argument);
+
+    // Host below the threshold: removed together with its LGR cells.
+    BOOST_CHECK_NO_THROW(EclipseState(Parser{}.parseString(minpvLgrDeck("0.001", R"(MINPV
+ 1000.0 /)"))));
+
+    // LGR cells above the threshold.
+    BOOST_CHECK_NO_THROW(EclipseState(Parser{}.parseString(minpvLgrDeck("0.0225", R"(MINPV
+ 100.0 /)"))));
+}
+
 BOOST_AUTO_TEST_CASE(TestGLOBALinactivecells) {
     const std::string deck_string = R"(
 RUNSPEC

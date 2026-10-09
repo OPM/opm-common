@@ -346,6 +346,49 @@ namespace Opm {
 
         m_lgrs = LgrCollection(gridSection, m_inputGrid);
         m_inputGrid.init_lgr_cells(m_lgrs);
+        this->checkLgrCellsMinpv();
+    }
+
+    // A cell whose pore volume is below the minimum pore volume (MINPV, MINPVV)
+    // is removed, and an LGR cell takes the threshold of its host cell.  When
+    // all LGR cells of an active host are below it, the host would stay active
+    // with no active LGR cell: stop.
+    void EclipseState::checkLgrCellsMinpv() const
+    {
+        if ((m_lgrs.size() == 0) || (m_inputGrid.getMinpvMode() == MinpvMode::Inactive)) {
+            return;
+        }
+
+        const auto& minpv = m_inputGrid.getMinpvVector();
+        const auto porv = this->field_props.porv(true);
+        for (std::size_t l = 0; l < m_lgrs.size(); ++l) {
+            const auto& lgr = m_lgrs.getLgr(l);
+            if (lgr.PARENT_NAME() != "GLOBAL") {
+                continue;
+            }
+
+            const auto hosts = (lgr.I2() - lgr.I1() + 1) * (lgr.J2() - lgr.J1() + 1) * (lgr.K2() - lgr.K1() + 1);
+            const auto cellsPerHost = static_cast<double>(lgr.NX() * lgr.NY() * lgr.NZ()) / hosts;
+            for (int k = lgr.K1(); k <= lgr.K2(); ++k) {
+                for (int j = lgr.J1(); j <= lgr.J2(); ++j) {
+                    for (int i = lgr.I1(); i <= lgr.I2(); ++i) {
+                        const auto g = m_inputGrid.getGlobalIndex(i, j, k);
+                        if (!m_inputGrid.cellActive(g) || (porv[g] < minpv[g])) {
+                            continue; // inactive or removed host: its LGR cells are inactive too
+                        }
+
+                        if (porv[g] / cellsPerHost < minpv[g]) {
+                            OPM_THROW(std::invalid_argument,
+                                      fmt::format("Host cell ({},{},{}) of LGR {} is active, but each of its {} LGR "
+                                                  "cells has a pore volume of {} rm3, below the minimum pore volume "
+                                                  "{} rm3 (MINPV/MINPVV): the LGR has no active cell in it",
+                                                  i + 1, j + 1, k + 1, lgr.NAME(), cellsPerHost,
+                                                  porv[g] / cellsPerHost, minpv[g]));
+                        }
+                    }
+                }
+            }
+        }
     }
 
 
