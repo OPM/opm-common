@@ -169,6 +169,31 @@ BCState::BCFace BCState::BCFace::fromBCMech(const DeckRecord& record)
     return bcmechface;
 }
 
+using BCTRACERKEY = ParserKeywords::BCTRACER;
+BCState::BCFace BCState::BCFace::fromBCTracer(const DeckRecord& record)
+{
+    BCFace bctracerface;
+    bctracerface.index = record.getItem<BCTRACERKEY::INDEX>().get<int>(0);
+
+    TracerBCValue tracerbcvalue;
+    tracerbcvalue.tracer = record.getItem<BCTRACERKEY::TRACER>().getTrimmedString(0);
+    tracerbcvalue.concentration = record.getItem<BCTRACERKEY::CONCENTRATION>().get<double>(0);
+    bctracerface.tracerbcvalues.push_back(std::move(tracerbcvalue));
+
+    return bctracerface;
+}
+
+std::optional<double> BCState::BCFace::tracerConcentration(const std::string& tracer) const
+{
+    const auto it = std::ranges::find_if(tracerbcvalues,
+                                         [&tracer](const auto& tbc)
+                                         { return tbc.tracer == tracer; });
+    if (it == tracerbcvalues.end()) {
+        return std::nullopt;
+    }
+    return it->concentration;
+}
+
 BCState::BCFace BCState::BCFace::serializationTestObject()
 {
     BCFace result;
@@ -180,6 +205,7 @@ BCState::BCFace BCState::BCFace::serializationTestObject()
     result.pressure = 102.0;
     result.temperature = 103.0;
     result.mechbcvalue = MechBCValue::serializationTestObject();
+    result.tracerbcvalues = {TracerBCValue::serializationTestObject()};
     return result;
 }
 
@@ -192,7 +218,8 @@ bool BCState::BCFace::operator==(const BCState::BCFace& other) const {
            this->rate == other.rate &&
            this->pressure == other.pressure &&
            this->temperature == other.temperature &&
-           this->mechbcvalue == other.mechbcvalue;
+           this->mechbcvalue == other.mechbcvalue &&
+           this->tracerbcvalues == other.tracerbcvalues;
 }
 
 
@@ -250,6 +277,41 @@ void BCState::updateBCMech(const DeckRecord& record)
     }
 }
 
+void BCState::updateBCTracer(const DeckRecord& record)
+{
+    const BCFace bcnew = BCFace::fromBCTracer(record);
+    auto it = std::ranges::find_if(m_faces,
+                                   [&bcnew](const auto& bc)
+                                   {
+                                       return bc.index == bcnew.index;
+                                   });
+    if (it == m_faces.end()) {
+        this->m_faces.emplace_back(bcnew);
+        return;
+    }
+
+    const auto& tracernew = bcnew.tracerbcvalues.front();
+    auto tit = std::ranges::find_if(it->tracerbcvalues,
+                                    [&tracernew](const auto& tbc)
+                                    { return tbc.tracer == tracernew.tracer; });
+    if (tit != it->tracerbcvalues.end()) {
+        tit->concentration = tracernew.concentration;
+    } else {
+        it->tracerbcvalues.push_back(tracernew);
+    }
+}
+
+std::optional<double> BCState::tracerConcentration(const int index,
+                                                   const std::string& tracer) const
+{
+    const auto it = std::ranges::find_if(m_faces,
+                                         [index](const auto& bc)
+                                         { return bc.index == index; });
+    if (it == m_faces.end()) {
+        return std::nullopt;
+    }
+    return it->tracerConcentration(tracer);
+}
 
 BCState BCState::serializationTestObject()
 {

@@ -21,6 +21,7 @@
 #ifndef OPM_BC_STATE_HPP
 #define OPM_BC_STATE_HPP
 
+#include <string>
 #include <vector>
 #include <cstddef>
 #include <optional>
@@ -97,6 +98,31 @@ struct MechBCValue {
     }
 };
 
+//! Tracer concentration of the fluid entering through a boundary face (BCTRACER).
+//! The phase is the BCPROP component of the face.
+struct TracerBCValue {
+    std::string tracer;
+    double concentration = 0.0;
+
+    static TracerBCValue serializationTestObject()
+    {
+        return TracerBCValue{"TRC", 1.5};
+    }
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(tracer);
+        serializer(concentration);
+    }
+
+    bool operator==(const TracerBCValue& other) const
+    {
+        return tracer == other.tracer &&
+               concentration == other.concentration;
+    }
+};
+
 class BCState
 {
 public:
@@ -111,12 +137,18 @@ public:
         std::optional<double> temperature{};
 
         MechBCValue mechbcvalue{};
+        std::vector<TracerBCValue> tracerbcvalues{};
 
         BCFace() = default;
 
         static BCFace serializationTestObject();
         static BCFace fromBCProp(const DeckRecord& record);
         static BCFace fromBCMech(const DeckRecord& record);
+        static BCFace fromBCTracer(const DeckRecord& record);
+
+        //! Concentration of \p tracer entering through this face, nullopt if not given.
+        //! The tracer is carried by the phase given by the BCPROP component of the face.
+        std::optional<double> tracerConcentration(const std::string& tracer) const;
 
         bool operator==(const BCFace& other) const;
 
@@ -131,6 +163,7 @@ public:
             serializer(pressure);
             serializer(temperature);
             serializer(mechbcvalue);
+            serializer(tracerbcvalues);
         }
     };
 
@@ -146,6 +179,11 @@ public:
 
     void updateBCProp(const DeckRecord& record);
     void updateBCMech(const DeckRecord& record);
+    void updateBCTracer(const DeckRecord& record);
+
+    //! Concentration of \p tracer entering through boundary face \p index.
+    //! Returns nullopt if there is no such face or no BCTRACER record matches.
+    std::optional<double> tracerConcentration(int index, const std::string& tracer) const;
 
     template<class Serializer>
     void serializeOp(Serializer& serializer)

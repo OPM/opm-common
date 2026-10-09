@@ -7529,6 +7529,160 @@ BCPROP
     }
 }
 
+BOOST_AUTO_TEST_CASE(createDeckWithBCTracer) {
+    std::string input = R"(
+START             -- 0
+19 JUN 2007 /
+
+SOLUTION
+
+SCHEDULE
+
+BCPROP
+1 RATE WATER -0.1 /
+/
+BCTRACER
+1 IW1 1.0 /
+1 IW2 0.5 /
+/
+
+DATES             -- 1
+ 10  OKT 2008 /
+/
+BCTRACER
+1 IW1 0.25 /
+/
+)";
+
+    const auto& schedule = make_schedule(input);
+    {
+        const auto& bc = schedule[0].bcstate;
+        BOOST_CHECK_EQUAL(bc.tracerConcentration(1, "IW1").value(), 1.0);
+        BOOST_CHECK_EQUAL(bc.tracerConcentration(1, "IW2").value(), 0.5);
+        BOOST_CHECK(!bc.tracerConcentration(2, "IW1").has_value());
+    }
+    {
+        const auto& bc = schedule[1].bcstate;
+        BOOST_CHECK_EQUAL(bc.tracerConcentration(1, "IW1").value(), 0.25);
+        BOOST_CHECK_EQUAL(bc.tracerConcentration(1, "IW2").value(), 0.5);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(createDeckWithBCTracerFreeAndDirichlet) {
+    // BCTRACER together with the BCPROP types that determine the flow from the
+    // simulator (DIRICHLET and FREE), in both orders of BCPROP and BCTRACER
+    std::string input = R"(
+START             -- 0
+19 JUN 2007 /
+
+SOLUTION
+
+SCHEDULE
+
+BCPROP
+1 DIRICHLET WATER 1* 2.0 /
+2 FREE /
+/
+BCTRACER
+1 IW1 1.0 /
+2 IW1 0.5 /
+/
+
+DATES             -- 1
+ 10  OKT 2008 /
+/
+BCTRACER
+3 IW1 0.1 /
+/
+BCPROP
+3 DIRICHLET OIL 1* 5.0 /
+/
+)";
+
+    const auto& schedule = make_schedule(input);
+    {
+        const auto& bc = schedule[0].bcstate;
+        BOOST_CHECK_EQUAL(bc.size(), 2);
+
+        BOOST_CHECK(bc[1].bctype == Opm::BCType::DIRICHLET);
+        BOOST_CHECK(bc[1].component == Opm::BCComponent::WATER);
+        BOOST_REQUIRE(bc[1].pressure.has_value());
+        BOOST_CHECK_CLOSE(*bc[1].pressure, 2.0 * Opm::unit::barsa, 1e-8);
+        BOOST_CHECK_EQUAL(bc.tracerConcentration(1, "IW1").value(), 1.0);
+
+        BOOST_CHECK(bc[2].bctype == Opm::BCType::FREE);
+        BOOST_CHECK(!bc[2].pressure.has_value());
+        BOOST_CHECK_EQUAL(bc.tracerConcentration(2, "IW1").value(), 0.5);
+    }
+    {
+        // BCTRACER before BCPROP: the DIRICHLET face keeps the tracer
+        const auto& bc = schedule[1].bcstate;
+        BOOST_CHECK_EQUAL(bc.size(), 3);
+
+        BOOST_CHECK(bc[3].bctype == Opm::BCType::DIRICHLET);
+        BOOST_CHECK(bc[3].component == Opm::BCComponent::OIL);
+        BOOST_REQUIRE(bc[3].pressure.has_value());
+        BOOST_CHECK_CLOSE(*bc[3].pressure, 5.0 * Opm::unit::barsa, 1e-8);
+        BOOST_CHECK_EQUAL(bc.tracerConcentration(3, "IW1").value(), 0.1);
+
+        // the faces from the first step are unchanged
+        BOOST_CHECK(bc[1].bctype == Opm::BCType::DIRICHLET);
+        BOOST_CHECK_EQUAL(bc.tracerConcentration(1, "IW1").value(), 1.0);
+        BOOST_CHECK(bc[2].bctype == Opm::BCType::FREE);
+        BOOST_CHECK_EQUAL(bc.tracerConcentration(2, "IW1").value(), 0.5);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(createDeckWithBCTracerSharesFaceWithBCProp) {
+    // BCPROP before BCTRACER (step 0) and BCTRACER before BCPROP (step 1, index 2):
+    // both end up in the same face, and neither overwrites the other
+    std::string input = R"(
+START             -- 0
+19 JUN 2007 /
+
+SOLUTION
+
+SCHEDULE
+
+BCPROP
+1 RATE WATER -0.1 /
+/
+BCTRACER
+1 IW1 1.0 /
+/
+
+DATES             -- 1
+ 10  OKT 2008 /
+/
+BCTRACER
+2 IW1 0.5 /
+/
+BCPROP
+2 RATE WATER 0.2 /
+/
+BCPROP
+1 RATE WATER -0.3 /
+/
+)";
+
+    const auto& schedule = make_schedule(input);
+    {
+        const auto& bc = schedule[0].bcstate;
+        BOOST_CHECK_EQUAL(bc.size(), 1);
+        BOOST_CHECK_CLOSE(bc[1].rate * Opm::unit::day, -0.1, 1e-8);
+        BOOST_CHECK_EQUAL(bc[1].tracerConcentration("IW1").value(), 1.0);
+    }
+    {
+        const auto& bc = schedule[1].bcstate;
+        BOOST_CHECK_EQUAL(bc.size(), 2);
+        BOOST_CHECK_CLOSE(bc[2].rate * Opm::unit::day, 0.2, 1e-8);
+        BOOST_CHECK_EQUAL(bc[2].tracerConcentration("IW1").value(), 0.5);
+        // updating BCPROP keeps the tracer
+        BOOST_CHECK_CLOSE(bc[1].rate * Opm::unit::day, -0.3, 1e-8);
+        BOOST_CHECK_EQUAL(bc[1].tracerConcentration("IW1").value(), 1.0);
+    }
+}
+
 BOOST_AUTO_TEST_CASE(createDeckWithSource) {
     std::string input = R"(
 START             -- 0
