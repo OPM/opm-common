@@ -12,6 +12,14 @@
 #
 # This module should be the first to be included in the project,
 # because most of the others (OpmXxx.cmake) use these variables.
+#
+# In addition it will try to set ${module}_DIR for each module
+# that is in Depends or Suggests if sibling builds are enabled.
+# Note that for sibling build to succeed all dependencies need
+# to be listed. Note also that both dune-common and opm-common
+# have to be handled in the modules CMakeLists.txt directly.
+
+include(OpmSiblingSearch)
 
 # helper macro to retrieve a single field of a dune.module file
 macro(OpmGetDuneModuleDirective field variable contents)
@@ -32,6 +40,22 @@ function (OpmInitProjVars)
   OpmGetDuneModuleDirective ("Description" description "${DUNE_MODULE}")
   OpmGetDuneModuleDirective ("Version" version "${DUNE_MODULE}")
   OpmGetDuneModuleDirective ("Label" label "${DUNE_MODULE}")
+  OpmGetDuneModuleDirective ("Depends" depends "${DUNE_MODULE}")
+  OpmGetDuneModuleDirective ("Suggests" suggests "${DUNE_MODULE}")
+
+  # Create a list of modules that we depend on.
+  set(depends "${depends} ${suggests}")
+  set(stripver_regex "([a-zA-Z-]+[ \t]+)\\\([^)]*\\\)")
+  string (REGEX MATCH "${stripver_regex}" _match "${depends}")
+  string (REGEX REPLACE "${stripver_regex}" "\\1" depends "${depends}")
+  string (REGEX REPLACE "[\t ]+" ";" depends "${depends}")
+  string (REGEX REPLACE "^(.*);$" "\\1" depends "${depends}")
+
+  # Set the *_DIR variables needed for sibling builds to work
+  foreach(_dune_module ${depends})
+    create_module_dir_var(${_dune_module})
+    set(${_dune_module}_DIR "${${_dune_module}_DIR}" PARENT_SCOPE)
+  endforeach()
 
   # parse the version number
   set (verno_regex "^([0-9]*)\\.([0-9]*).*\$")
