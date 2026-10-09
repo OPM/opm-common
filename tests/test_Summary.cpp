@@ -1632,6 +1632,179 @@ BOOST_AUTO_TEST_CASE(well_keywords_dynamic_close)
     }
 }
 
+BOOST_AUTO_TEST_CASE(well_keywords_history_to_prediction)
+{
+    // Regression test for the predictionMode() guard in bhp_history()/
+    // thp_history() (Summary.cpp): WBHPH/WTHPH must drop to zero as soon as
+    // a well leaves history mode (WCONHIST/WCONINJH -> WCONPROD/WCONINJE),
+    // and must report the (new) historical values again once the well is
+    // switched back to history mode. Covers both a producer and an injector.
+    const std::string deck_string = R"(
+RUNSPEC
+TITLE
+   SUMMARY_HISTORY_TO_PREDICTION_TEST
+DIMENS
+   1 1 1 /
+TABDIMS
+/
+EQLDIMS
+/
+OIL
+GAS
+WATER
+DISGAS
+FIELD
+START
+   1 'JAN' 2015 /
+WELLDIMS
+   2 1 1 2 /
+UNIFOUT
+GRID
+DX
+   2333 /
+DY
+   3500 /
+DZ
+   50 /
+TOPS
+   8325 /
+PORO
+   0.3 /
+PERMX
+   500 /
+PERMY
+   250 /
+PERMZ
+   200 /
+PROPS
+PVTW
+   4017.55 1.038 3.22E-6 0.318 0.0 /
+ROCK
+   14.7 3E-6 /
+SWOF
+   0.12 0.0   1.0  0.0
+   1.0  1.0   0.0  0.0 /
+PVDO
+   400  1.0627  1.180
+   800  1.0483  1.181 /
+PVDG
+   400  5.9e-3  0.013
+   800  2.95e-3 0.014 /
+DENSITY
+   53.0  64.79  0.0702 /
+SOLUTION
+EQUIL
+   8400.0  4800.0  8450.0  0.0  8335.0  0.0 /
+SUMMARY
+WBHPH
+/
+WTHPH
+/
+SCHEDULE
+WELSPECS
+   'PROD'  'G1'  1  1  8400  'OIL'   /
+   'INJ'   'G1'  1  1  8400  'WATER' /
+/
+COMPDAT
+   'PROD'  1  1  1  1  'OPEN'  1*  1*  0.5 /
+   'INJ'   1  1  1  1  'OPEN'  1*  1*  0.5 /
+/
+-- Report step 0: both wells in history mode.
+WCONHIST
+--  WELL   STATUS CMODE  ORAT  WRAT GRAT VFP ALQ THP  BHP
+    'PROD' OPEN   ORAT   100.0 0.0  0.0  2*      20.0 150.0 /
+/
+WCONINJH
+--  WELL  TYPE  STATUS RATE  BHP   THP
+    'INJ' WATER OPEN   200.0 250.0 25.0 /
+/
+TSTEP
+   1 /
+-- Report step 1: switch both wells to prediction mode.
+WCONPROD
+--  WELL   STATUS CMODE ORAT RLFT RRFT RGFT BHP
+    'PROD' OPEN   ORAT  90.0 3*             140.0 /
+/
+WCONINJE
+--  WELL  TYPE  STATUS CMODE RATE  1* BHP
+    'INJ' WATER OPEN   RATE  180.0 1* 240.0 /
+/
+TSTEP
+   1 /
+-- Report step 2: switch both wells back to history mode, with new values.
+WCONHIST
+    'PROD' OPEN   ORAT   95.0  0.0   0.0  2*      21.0 151.0 /
+/
+WCONINJH
+    'INJ' WATER OPEN   190.0 251.0 26.0 /
+/
+TSTEP
+   1 /
+)";
+
+    WorkArea ta { "summary_history_to_prediction" };
+
+    const auto deck     = Parser{}.parseString(deck_string);
+    const auto es       = EclipseState{ deck };
+    const auto& grid    = es.getInputGrid();
+    const auto schedule = Schedule{ deck, es, std::make_shared<Python>() };
+    auto config = SummaryConfig{ deck, schedule, es.fieldProps(), es.aquifer() };
+
+    const std::string name = "HISTORY_TO_PREDICTION";
+    auto writer = out::Summary { config, es, grid, schedule, name };
+
+    auto st = SummaryState {
+        TimeService::now(), es.runspec().udqParams().undefinedValue()
+    };
+
+    auto wells     = data::Wells{};
+    auto wbp       = data::WellBlockAveragePressures{};
+    auto grp_nwrk  = data::GroupAndNetworkValues{};
+
+    auto values = out::Summary::DynamicSimulatorState{};
+    values.well_solution         = &wells;
+    values.wbp                   = &wbp;
+    values.group_and_nwrk_solution = &grp_nwrk;
+
+    // Summary::eval()'s report_step is one-based and maps internally to
+    // sim_step = report_step - 1 (clamped at 0), which is the index actually
+    // used to look up well/schedule state. Passing 1, 2, 3 here samples
+    // schedule (sim_step) indices 0, 1, 2 -- the history, prediction, and
+    // back-to-history states set up above -- while add_timestep's report_step
+    // controls the (zero-based) output step recorded in the summary file.
+    writer.eval(/* report_step = */ 1, /* secs_elapsed = */ 0.0*day, values, st);
+    writer.add_timestep(st, /* report_step = */ 0, /* ministep_id = */ 0, /* isSubstep = */ false);
+
+    writer.eval(/* report_step = */ 2, /* secs_elapsed = */ 1.0*day, values, st);
+    writer.add_timestep(st, /* report_step = */ 1, /* ministep_id = */ 1, /* isSubstep = */ false);
+
+    writer.eval(/* report_step = */ 3, /* secs_elapsed = */ 2.0*day, values, st);
+    writer.add_timestep(st, /* report_step = */ 2, /* ministep_id = */ 2, /* isSubstep = */ false);
+
+    writer.write();
+
+    const auto res = readsum(name);
+    const auto* resp = res.get();
+
+    // Producer 'PROD': history (150.0/20.0) -> prediction (0.0) -> history (151.0/21.0)
+    BOOST_CHECK_CLOSE( 150.0, ecl_sum_get_well_var( resp, 0, "PROD", "WBHPH" ), 1e-5 );
+    BOOST_CHECK_CLOSE(   0.0, ecl_sum_get_well_var( resp, 1, "PROD", "WBHPH" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 151.0, ecl_sum_get_well_var( resp, 2, "PROD", "WBHPH" ), 1e-5 );
+
+    BOOST_CHECK_CLOSE(  20.0, ecl_sum_get_well_var( resp, 0, "PROD", "WTHPH" ), 1e-5 );
+    BOOST_CHECK_CLOSE(   0.0, ecl_sum_get_well_var( resp, 1, "PROD", "WTHPH" ), 1e-5 );
+    BOOST_CHECK_CLOSE(  21.0, ecl_sum_get_well_var( resp, 2, "PROD", "WTHPH" ), 1e-5 );
+
+    // Injector 'INJ': history (250.0/25.0) -> prediction (0.0) -> history (251.0/26.0)
+    BOOST_CHECK_CLOSE( 250.0, ecl_sum_get_well_var( resp, 0, "INJ", "WBHPH" ), 1e-5 );
+    BOOST_CHECK_CLOSE(   0.0, ecl_sum_get_well_var( resp, 1, "INJ", "WBHPH" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 251.0, ecl_sum_get_well_var( resp, 2, "INJ", "WBHPH" ), 1e-5 );
+
+    BOOST_CHECK_CLOSE(  25.0, ecl_sum_get_well_var( resp, 0, "INJ", "WTHPH" ), 1e-5 );
+    BOOST_CHECK_CLOSE(   0.0, ecl_sum_get_well_var( resp, 1, "INJ", "WTHPH" ), 1e-5 );
+    BOOST_CHECK_CLOSE(  26.0, ecl_sum_get_well_var( resp, 2, "INJ", "WTHPH" ), 1e-5 );
+}
+
 BOOST_AUTO_TEST_CASE(well_control_mode_drawdown)
 {
     setup cfg("test_summary_wmctl_drawdown");
