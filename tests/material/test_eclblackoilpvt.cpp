@@ -55,6 +55,7 @@
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Units/Units.hpp>
 
+#include <array>
 #include <tuple>
 
 // values of strings based on the first SPE1 test case of opm-data.  note that in the
@@ -404,6 +405,125 @@ BOOST_AUTO_TEST_CASE(RSCONST_ThrowsBelowBubblePoint)
     BOOST_CHECK_NO_THROW(
         oilPvt.saturatedGasDissolutionFactor(0, 300.0, pressureAbovePb)
     );
+}
+
+// The saturated-factor-and-segment accessors let a caller hand the already
+// computed saturated value and its table segment to the b/mu evaluation.
+// That overload must reproduce the self-contained one bit for bit.
+
+// Minimal live-oil deck: the fixture deck carries PVTG but no PVTO, so the
+// oil branch of the shared-segment test needs its own.
+static constexpr const char* liveOilDeckString =
+    "RUNSPEC\n"
+    "OIL\n"
+    "GAS\n"
+    "WATER\n"
+    "DISGAS\n"
+    "VAPOIL\n"
+    "METRIC\n"
+    "DIMENS\n"
+    "  1 1 1 /\n"
+    "TABDIMS\n"
+    "/\n"
+    "GRID\n"
+    "DX\n"
+    "  1*100 /\n"
+    "DY\n"
+    "  1*100 /\n"
+    "DZ\n"
+    "  1*10 /\n"
+    "TOPS\n"
+    "  1*2000 /\n"
+    "PORO\n"
+    "  1*0.2 /\n"
+    "PROPS\n"
+    "DENSITY\n"
+    "  859.5  1033.0  0.854 /\n"
+    "PVTW\n"
+    "  277.0  1.038  4.67E-5  0.318  0.0 /\n"
+    "PVTO\n"
+    "  0.165  50.0  1.20  1.02 /\n"
+    "  0.335 100.0  1.26  0.90 /\n"
+    "  0.500 150.0  1.32  0.80 /\n"
+    "  0.665 200.0  1.38  0.72\n"
+    "         300.0  1.35  0.79 /\n"
+    "/\n"
+    "PVTG\n"
+    "   50.0  0.00006  0.0250  0.0130\n"
+    "         0.00000  0.0252  0.0132 /\n"
+    "  100.0  0.00014  0.0130  0.0150\n"
+    "         0.00000  0.0132  0.0152 /\n"
+    "  150.0  0.00030  0.0090  0.0170\n"
+    "         0.00000  0.0091  0.0172 /\n"
+    "  200.0  0.00060  0.0070  0.0190\n"
+    "         0.00000  0.0071  0.0192 /\n"
+    "/\n";
+
+// Minimal state carrying exactly what the PVT classes read.
+template <class Scalar>
+struct PvtProbeState
+{
+    using ValueType = Scalar;
+    static constexpr unsigned oilPhaseIdx = 0;
+    static constexpr unsigned gasPhaseIdx = 1;
+    static constexpr unsigned waterPhaseIdx = 2;
+
+    Scalar p{};
+    std::array<Scalar, 3> sat{};
+    Scalar rs{};
+    Scalar rv{};
+
+    Scalar pressure(unsigned) const { return p; }
+    Scalar saturation(unsigned phaseIdx) const { return sat[phaseIdx]; }
+    Scalar temperature(unsigned) const { return Scalar(300.0); }
+    Scalar Rs() const { return rs; }
+    Scalar Rv() const { return rv; }
+};
+
+// The saturated-factor-and-segment accessors let a caller hand the already
+// computed saturated value and its table segment to the b/mu evaluation.
+// That overload must reproduce the self-contained one bit for bit.
+BOOST_AUTO_TEST_CASE_TEMPLATE(SharedSegmentIndexMatchesSelfContained, Scalar, Types)
+{
+    using FluidState = PvtProbeState<Scalar>;
+
+    const auto liveOilDeck = Opm::Parser().parseString(liveOilDeckString);
+    const Opm::EclipseState liveOilState(liveOilDeck);
+    const Opm::Schedule liveOilSchedule(liveOilDeck, liveOilState, std::make_shared<Opm::Python>());
+
+    Opm::LiveOilPvt<Scalar> oilPvt;
+    Opm::WetGasPvt<Scalar> gasPvt;
+    oilPvt.initFromState(liveOilState, liveOilSchedule);
+    gasPvt.initFromState(liveOilState, liveOilSchedule);
+
+    for (int ip = 0; ip <= 20; ++ip) {
+        const Scalar p = Scalar(6.0e6) + Scalar(ip) * Scalar(1.2e6);
+        const Scalar rsSat = oilPvt.saturatedGasDissolutionFactor(0, Scalar(300.0), p);
+        const Scalar rvSat = gasPvt.saturatedOilVaporizationFactor(0, Scalar(300.0), p);
+
+        // both branches: at the saturated value, and well below it
+        for (int isat = 0; isat < 2; ++isat) {
+            FluidState fs;
+            fs.p = p;
+            fs.sat = { Scalar(0.5), Scalar(0.3), Scalar(0.2) };
+            fs.rs = (isat == 0) ? rsSat : Scalar(0.3) * rsSat;
+            fs.rv = (isat == 0) ? rvSat : Scalar(0.3) * rvSat;
+
+            const auto oilRef = oilPvt.template inverseFormationVolumeFactorAndViscosity<FluidState, Scalar>(fs, 0);
+            const auto oilSatSeg = oilPvt.template saturatedGasDissolutionFactorAndSegment<Scalar>(0, p);
+            const auto oilShared = oilPvt.template inverseFormationVolumeFactorAndViscosity<FluidState, Scalar>(
+                fs, 0, oilSatSeg.first, oilSatSeg.second);
+            BOOST_CHECK_EQUAL(oilRef.first, oilShared.first);
+            BOOST_CHECK_EQUAL(oilRef.second, oilShared.second);
+
+            const auto gasRef = gasPvt.template inverseFormationVolumeFactorAndViscosity<FluidState, Scalar>(fs, 0);
+            const auto gasSatSeg = gasPvt.template saturatedOilVaporizationFactorAndSegment<Scalar>(0, p);
+            const auto gasShared = gasPvt.template inverseFormationVolumeFactorAndViscosity<FluidState, Scalar>(
+                fs, 0, gasSatSeg.first, gasSatSeg.second);
+            BOOST_CHECK_EQUAL(gasRef.first, gasShared.first);
+            BOOST_CHECK_EQUAL(gasRef.second, gasShared.second);
+        }
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
