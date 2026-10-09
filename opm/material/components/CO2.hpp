@@ -224,6 +224,20 @@ public:
                                  const Evaluation& pressure,
                                  bool extrapolate = false)
     {
+        // The table starts at pMin (1 bar). Linear extrapolation below it crosses zero
+        // at a few kPa and gives a negative density (hence negative molar volume and NaN
+        // in the fugacity coefficients) for lower pressures. Below the table use the
+        // low-pressure limit rho = rho(pMin) * p / pMin, i.e. constant compressibility
+        // factor, which is continuous at pMin and tends to zero with p. The pressure is
+        // floored at 1 Pa so that the density stays positive for non-physical (zero or
+        // negative) pressures, e.g. in gasInternalEnergy() that divides by it.
+        if (extrapolate) {
+            const Scalar pMin = params.tabulatedDensity.yMin();
+            if (pressure < pMin) {
+                const Evaluation rhoMin = params.tabulatedDensity.eval(temperature, Evaluation(pMin), extrapolate);
+                return rhoMin * ((pressure < 1.0 ? Evaluation(1.0) : pressure) / pMin);
+            }
+        }
         return params.tabulatedDensity.eval(temperature, pressure, extrapolate);
     }
 

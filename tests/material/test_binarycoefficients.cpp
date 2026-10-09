@@ -45,6 +45,7 @@
 #include <opm/material/components/CO2.hpp>
 #include <opm/material/components/CO2Tables.hpp>
 #include <opm/material/fluidsystems/blackoilpvt/BrineCo2Pvt.hpp>
+#include <opm/material/fluidsystems/blackoilpvt/Co2GasPvt.hpp>
 
 template<class Scalar>
 bool close_at_tolerance(Scalar n1, Scalar n2, Scalar tolerance)
@@ -173,6 +174,118 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(Brine_CO2, Scalar, Types)
         }
     }
 
+}
+
+// The mutual solubility must stay finite (value and derivatives) for the non-physical low and
+// negative pressures that a Newton iterate may transiently visit. The CO2 density table starts at
+// 1 bar, and linear extrapolation below it gives a negative density, hence NaN in the fugacity
+// coefficients, unless CO2::gasDensity and calculateMoleFractions guard against it.
+BOOST_AUTO_TEST_CASE_TEMPLATE(Brine_CO2_LowPressure, Scalar, Types)
+{
+    using Evaluation = Opm::DenseAd::Evaluation<Scalar, 3>;
+
+    using H2O = Opm::SimpleHuDuanH2O<Scalar>;
+    using CO2 = Opm::CO2<Scalar>;
+    using BinaryCoeffBrineCO2 = Opm::BinaryCoeff::Brine_CO2<Scalar, H2O, CO2>;
+
+    const std::vector<int> activityModel = {1, 2, 3};
+    // Includes T > 372.15 K where activity model 2 uses the high-temperature fixed-point iteration
+    const std::vector<Scalar> T = {273.15, 288.15, 303.15, 333.15, 363.15, 373.15, 400.0, 450.0, 500.0};  // K
+    const std::vector<Scalar> molality = {0.0, 1.0};  // NaCl molality [mol/kg]
+    const std::vector<Scalar> p = {-1e5, -1e3, -1.0, 0.0, 1.0, 1e2, 1e3, 2e3, 3e3, 5e3, 1e4, 5e4, 1e5};  // Pa
+
+    Opm::CO2Tables params;
+    for (const int am : activityModel) {
+        for (const Scalar Ti : T) {
+            for (const Scalar si : molality) {
+                Opm::SaltArray<Evaluation, Opm::SaltMolality> saltMolality;
+                saltMolality[Opm::SaltIndex::NA] = si;
+                saltMolality[Opm::SaltIndex::CL] = si;
+                const auto salinity = saltMolality.template convert_to<Opm::SaltMassFraction>();
+                for (const Scalar pi : p) {
+                    // pressure as the primary variable to also check the derivatives
+                    const Evaluation temperature = Evaluation(Ti);
+                    const Evaluation pressure = Evaluation::createVariable(pi, 0);
+                    Evaluation xlCO2;
+                    Evaluation xgH2O;
+                    BinaryCoeffBrineCO2::calculateMoleFractions(params, temperature, pressure, salinity, -1,
+                                                                xlCO2, xgH2O, am, /*extrapolate=*/true);
+
+                    BOOST_CHECK_MESSAGE(std::isfinite(xlCO2.value()) && std::isfinite(xgH2O.value()),
+                                        "non-finite solubility (xlCO2 = " << xlCO2.value() << ", xgH2O = "
+                                        << xgH2O.value() << ") at (T, p, S) = (" << Ti << ", " << pi << ", "
+                                        << si << ") for salt activity model = " << am);
+                    BOOST_CHECK_MESSAGE(std::isfinite(xlCO2.derivative(0)) && std::isfinite(xgH2O.derivative(0)),
+                                        "non-finite derivative wrt pressure at (T, p, S) = (" << Ti << ", " << pi
+                                        << ", " << si << ") for salt activity model = " << am);
+                }
+            }
+        }
+    }
+}
+
+// Below the CO2 density table minimum (1 bar) the density must stay positive, also for zero and
+// negative pressures, since e.g. the internal energy divides by it.
+BOOST_AUTO_TEST_CASE_TEMPLATE(Co2_LowPressureDensity, Scalar, Types)
+{
+    using Evaluation = Opm::DenseAd::Evaluation<Scalar, 3>;
+    using CO2 = Opm::CO2<Scalar>;
+
+    Opm::CO2Tables params;
+    for (const Scalar Ti : {273.15, 293.15, 333.15, 373.15}) {
+        for (const Scalar pi : {-1e5, -1e3, -1.0, 0.0, 1.0, 1e3, 5e4, 1e5}) {
+            const Evaluation temperature = Evaluation(Ti);
+            const Evaluation pressure = Evaluation::createVariable(pi, 0);
+            const Evaluation rho = CO2::gasDensity(params, temperature, pressure, /*extrapolate=*/true);
+            const Evaluation u = CO2::gasInternalEnergy(params, temperature, pressure, /*extrapolate=*/true);
+            BOOST_CHECK_MESSAGE(std::isfinite(rho.value()) && rho.value() > 0.0,
+                                "non-positive density " << rho.value() << " at (T, p) = (" << Ti << ", " << pi << ")");
+            BOOST_CHECK_MESSAGE(std::isfinite(u.value()) && std::isfinite(u.derivative(0)),
+                                "non-finite internal energy " << u.value() << " at (T, p) = (" << Ti << ", " << pi
+                                << ")");
+        }
+    }
+}
+
+// The saturated water vaporization factor Rvw = XgW / (1 - XgW) * rho_gRef / rho_wRef diverges when
+// the gas is pure water vapor, i.e. when the pressure is at or below the vapor pressure of water
+// (~2.3 kPa at 20 C). A Newton iterate may transiently visit such a pressure, and the infinite Rvw
+// then gives non-finite densities in the simulator.
+BOOST_AUTO_TEST_CASE_TEMPLATE(Co2Pvt_LowPressure, Scalar, Types)
+{
+    using Evaluation = Opm::DenseAd::Evaluation<Scalar, 3>;
+
+    const std::vector<int> activityModel = {1, 2, 3};
+    const std::vector<Scalar> T = {273.15, 293.15, 303.15, 333.15, 363.15, 373.15, 400.0, 450.0};  // K
+    const std::vector<Scalar> p = {-1e3, 0.0, 1.0, 1e3, 2e3, 2225.0, 2339.0, 2500.0, 5e3, 1e4, 5e4, 1e5};  // Pa
+    std::vector<Opm::SaltArray<Scalar, Opm::SaltMassFraction> > salinity(1);
+    const Opm::SaltArray<Evaluation, Opm::SaltMassFraction> evalSalinity(salinity[0]);
+
+    for (const int am : activityModel) {
+        Opm::Co2GasPvt<Scalar> co2Pvt(salinity, /*enableMultiCompSalt=*/false, /*useH2ODensity=*/true, am);
+        Opm::BrineCo2Pvt<Scalar> brineCo2Pvt(salinity, /*enableMultiCompSalt=*/false, /*useH2ODensity=*/true, am);
+        for (const Scalar Ti : T) {
+            for (const Scalar pi : p) {
+                const Evaluation temperature = Evaluation(Ti);
+                const Evaluation pressure = Evaluation::createVariable(pi, 0);
+
+                const Evaluation rvw = co2Pvt.saturatedWaterVaporizationFactor(/*regionIdx=*/0, temperature, pressure);
+                const Evaluation invB = co2Pvt.saturatedInverseFormationVolumeFactor(/*regionIdx=*/0, temperature,
+                                                                                     pressure);
+                const Evaluation rs = brineCo2Pvt.rsSat(/*regionIdx=*/0, temperature, pressure, evalSalinity);
+
+                BOOST_CHECK_MESSAGE(std::isfinite(rvw.value()) && std::isfinite(invB.value())
+                                    && std::isfinite(rs.value()),
+                                    "non-finite saturated Rvw = " << rvw.value() << ", invB = " << invB.value()
+                                    << ", Rs = " << rs.value() << " at (T, p) = (" << Ti << ", " << pi
+                                    << ") for salt activity model = " << am);
+                BOOST_CHECK_MESSAGE(std::isfinite(rvw.derivative(0)) && std::isfinite(invB.derivative(0))
+                                    && std::isfinite(rs.derivative(0)),
+                                    "non-finite derivative wrt pressure at (T, p) = (" << Ti << ", " << pi
+                                    << ") for salt activity model = " << am);
+            }
+        }
+    }
 }
 
 BOOST_AUTO_TEST_CASE_TEMPLATE(BrineDensityWithCO2, Scalar, Types)

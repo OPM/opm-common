@@ -123,6 +123,19 @@ public:
     {
         OPM_TIMEFUNCTION_LOCAL(Subsystem::PvtProps);
 
+        // The correlations below contain log(pg), 1/pg and log of the molar volume, which
+        // are not defined for pg <= 0. A Newton iterate can transiently visit such a
+        // (non-physical) pressure, and a NaN/Inf in the solubility cannot be recovered
+        // from by the nonlinear solver the way an ordinary bad-but-finite iterate can.
+        // Floor the pressure at 1 Pa to keep the result finite. Note that this only covers
+        // pg <= 0. For 0 < pg < 1 bar (the CO2 density table minimum) the molar volume is
+        // only well behaved if extrapolate is true, in which case CO2::gasDensity falls
+        // back to a density proportional to pressure. Without extrapolation the table
+        // lookup throws (debug builds) or extrapolates linearly to a negative density.
+        // Below the vapor pressure of water the water mole fraction in the gas is larger than one;
+        // callers that convert it to a vaporization factor must limit it (see Co2GasPvt::rvwSat_).
+        const Evaluation pg_clamped = pg < 1.0 ? Evaluation(1.0) : pg;
+
         // Iterate or not?
         bool iterate = false;
         if ((activityModel == 1 && salinity.any_nonzero())
@@ -144,7 +157,7 @@ public:
                 auto [xCO2, yH2O] =
                     mutualSolubilitySpycherPruess2005_(params,
                                                        temperature,
-                                                       pg,
+                                                       pg_clamped,
                                                        molalityNaCl,
                                                        extrapolate);
                 xlCO2 = xCO2;
@@ -155,7 +168,7 @@ public:
                     auto [xCO2, yH2O] =
                         fixPointIterSolubility_(params,
                                                 temperature,
-                                                pg,
+                                                pg_clamped,
                                                 molalityNaCl,
                                                 activityModel,
                                                 extrapolate);
@@ -168,7 +181,7 @@ public:
                     auto [xCO2, yH2O] =
                         nonIterSolubility_(params,
                                            temperature,
-                                           pg,
+                                           pg_clamped,
                                            molalityNaCl,
                                            activityModel,
                                            extrapolate);
@@ -186,7 +199,7 @@ public:
             const Evaluation& A =
                 computeA_(params,
                           temperature,
-                          pg,
+                          pg_clamped,
                           Evaluation(0.0),
                           Evaluation(0.0),
                           false,
@@ -204,7 +217,7 @@ public:
             const Evaluation& A =
                 computeA_(params,
                           temperature,
-                          pg,
+                          pg_clamped,
                           Evaluation(0.0),
                           Evaluation(0.0),
                           false,
@@ -593,7 +606,13 @@ private:
     {
         OPM_TIMEFUNCTION_LOCAL(Subsystem::PvtProps);
         // Start point for fixed-point iterations as recommended below in section 2.2
-        Evaluation yH2O = H2O::vaporPressure(temperature) / pg; // ideal mixing
+        // Ideal mixing. This is larger than one for pressures below the vapor pressure of water. A mole
+        // fraction above one is not physical, and makes the fugacity coefficients (that are
+        // quadratic in yH2O) overflow, so the iterate is limited to one here and below.
+        Evaluation yH2O = H2O::vaporPressure(temperature) / pg;
+        if (yH2O > 1.0) {
+            yH2O = 1.0;
+        }
         Evaluation xCO2 = 0.009; // same as ~0.5 mol/kg
         Evaluation gammaNaCl = 1.0; // default salt activity coeff = 1.0
 
@@ -638,6 +657,9 @@ private:
                                   highTemp,
                                   iterate,
                                   extrapolate);
+            if (yH2O_new > 1.0) {
+                yH2O_new = 1.0;
+            }
 
             // Check for convergence
             if (abs(xCO2_new - xCO2) < tol && abs(yH2O_new - yH2O) < tol) {
