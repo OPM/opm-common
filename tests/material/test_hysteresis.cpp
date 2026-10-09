@@ -3428,6 +3428,9 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisRollbackRoundtrip3pStone1, Scalar, Types
 
     // 2. Capture baseline state at timestep start
     hysteresis.captureBeginTimeStepState();
+    Opm::EclHysteresisDynamicState<Scalar> goBefore, owBefore;
+    MaterialLaw::captureHysteresisStateThreePhase(param, goBefore, owBefore);
+    BOOST_CHECK(!goBefore.wagActive);
 
     typename Fixture<Scalar>::FluidState fsTest;
     fsTest.setSaturation(Fixture<Scalar>::waterPhaseIdx, Sw);
@@ -3465,6 +3468,12 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisRollbackRoundtrip3pStone1, Scalar, Types
 
     // 4. Restore snapshot
     hysteresis.restoreBeginTimeStepState();
+    Opm::EclHysteresisDynamicState<Scalar> goRestored, owRestored;
+    MaterialLaw::captureHysteresisStateThreePhase(param, goRestored, owRestored);
+    BOOST_CHECK_EQUAL(goBefore.Sncrt, goRestored.Sncrt);
+    BOOST_CHECK_EQUAL(goBefore.KrndHy, goRestored.KrndHy);
+    BOOST_CHECK_EQUAL(owBefore.Swcrt, owRestored.Swcrt);
+    BOOST_CHECK_EQUAL(owBefore.Krwd_sncrt, owRestored.Krwd_sncrt);
 
     // 5. Assert relperms return to pre-mutation values
     std::array<Scalar, numPhases> krRestored = {0.0, 0.0, 0.0};
@@ -3474,6 +3483,84 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisRollbackRoundtrip3pStone1, Scalar, Types
     BOOST_CHECK_CLOSE(krBefore[Fixture<Scalar>::waterPhaseIdx], krRestored[Fixture<Scalar>::waterPhaseIdx], tol);
     BOOST_CHECK_CLOSE(krBefore[Fixture<Scalar>::oilPhaseIdx], krRestored[Fixture<Scalar>::oilPhaseIdx], tol);
     BOOST_CHECK_CLOSE(krBefore[Fixture<Scalar>::gasPhaseIdx], krRestored[Fixture<Scalar>::gasPhaseIdx], tol);
+}
+
+BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisCompactSnapshotAndWagRollback, Scalar, Types)
+{
+    using MaterialLaw = typename Fixture<Scalar>::MaterialLaw;
+    using MaterialLawManager = typename Fixture<Scalar>::MaterialLawManager;
+    using DynamicState = Opm::EclHysteresisDynamicState<Scalar>;
+
+    BOOST_CHECK_LT(sizeof(Opm::EclHysteresisCompactState<Scalar>), sizeof(DynamicState));
+
+    // Keep the ordinary Killough configuration, but enable WAG for both
+    // saturation regions (the second is used as IMBNUM by this deck).
+    std::string deckString = hysterDeckStringKillough3pStone1Wetting;
+    deckString.insert(deckString.find("    REGIONS"),
+                      "    WAGHYSTR\n    3.0 1* YES NO NO /\n"
+                      "    3.0 1* YES NO NO /\n\n");
+    Opm::Parser parser;
+    const Opm::EclipseState eclState(parser.parseString(deckString));
+
+    MaterialLawManager hysteresis;
+    hysteresis.initFromState(eclState);
+    hysteresis.initParamsForElements(eclState, 1, doOldLookup, doNothing);
+    auto& param = hysteresis.materialLawParams(0);
+
+    auto update = [&](Scalar sg, Scalar sw) {
+        typename Fixture<Scalar>::FluidState fs;
+        fs.setSaturation(Fixture<Scalar>::waterPhaseIdx, sw);
+        fs.setSaturation(Fixture<Scalar>::oilPhaseIdx, 1 - sg - sw);
+        fs.setSaturation(Fixture<Scalar>::gasPhaseIdx, sg);
+        MaterialLaw::updateHysteresis(param, fs);
+        return fs;
+    };
+
+    update(0.30, 0.20);
+    update(0.20, 0.25);
+    update(0.35, 0.25);
+    hysteresis.captureBeginTimeStepState();
+
+    DynamicState goBefore, owBefore;
+    MaterialLaw::captureHysteresisStateThreePhase(param, goBefore, owBefore);
+    BOOST_REQUIRE(goBefore.wagActive);
+    BOOST_CHECK(!owBefore.wagActive);
+    BOOST_CHECK_GT(goBefore.nState, 0);
+
+    typename MaterialLawManager::HysteresisStateSnapshot::PhaseStates mixed;
+    mixed.resize(2);
+    mixed.capture(0, owBefore);
+    mixed.capture(1, goBefore);
+    BOOST_CHECK_EQUAL(mixed.common.size(), 2U);
+    BOOST_CHECK_EQUAL(mixed.wag.size(), 1U);
+    BOOST_CHECK_EQUAL(mixed.wag.front().first, 1U);
+
+    typename Fixture<Scalar>::FluidState fsTest;
+    fsTest.setSaturation(Fixture<Scalar>::waterPhaseIdx, 0.25);
+    fsTest.setSaturation(Fixture<Scalar>::oilPhaseIdx, 0.50);
+    fsTest.setSaturation(Fixture<Scalar>::gasPhaseIdx, 0.25);
+
+    std::array<Scalar, 3> krBefore{};
+    MaterialLaw::relativePermeabilities(krBefore, param, fsTest);
+
+    update(0.55, 0.20);
+    update(0.15, 0.30);
+    update(0.40, 0.25);
+    hysteresis.restoreBeginTimeStepState();
+
+    DynamicState goAfter, owAfter;
+    MaterialLaw::captureHysteresisStateThreePhase(param, goAfter, owAfter);
+    BOOST_CHECK_EQUAL(goBefore.nState, goAfter.nState);
+    BOOST_CHECK_EQUAL(goBefore.isDrain, goAfter.isDrain);
+    BOOST_CHECK_EQUAL(goBefore.krnSwWAG, goAfter.krnSwWAG);
+    BOOST_CHECK_EQUAL(goBefore.krnSwDrainRevert, goAfter.krnSwDrainRevert);
+    BOOST_CHECK_EQUAL(goBefore.swatImbStartNxt, goAfter.swatImbStartNxt);
+    BOOST_CHECK_EQUAL(owBefore.Sncrt, owAfter.Sncrt);
+
+    std::array<Scalar, 3> krAfter{};
+    MaterialLaw::relativePermeabilities(krAfter, param, fsTest);
+    for (int phase = 0; phase < 3; ++phase)
+        BOOST_CHECK_EQUAL(krBefore[phase], krAfter[phase]);
 }
 
 BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisRollbackRoundtrip2pGasOil, Scalar, Types)
