@@ -720,14 +720,17 @@ list(APPEND DUNE_TEST_SOURCE_FILES
   tests/material/test_h2brinepvt.cpp
   tests/material/test_immiscibleflash.cpp
   tests/material/test_materialstates.cpp
+  tests/material/test_mixture_enthalpy.cpp
   tests/material/test_ncpflash.cpp
   tests/material/test_pengrobinson.cpp
+  tests/material/test_phflash.cpp
   tests/material/test_ptflash_newton_residual_scale.cpp
   tests/material/test_ptflash_ssi_newton_fallback.cpp
   tests/material/test_ptflash_trivial_root.cpp
   tests/material/test_saturation_pressure.cpp
   tests/material/test_tabulation.cpp
   tests/material/test_threecomponents_ptflash.cpp
+  tests/material/test_twocomponents_ptflash.cpp
   tests/material/test_volume_shift.cpp
 )
 
@@ -1349,6 +1352,7 @@ list(APPEND PUBLIC_HEADER_FILES
   opm/material/components/CO2.hpp
   opm/material/components/CO2Tables.hpp
   opm/material/components/Component.hpp
+  opm/material/components/ComponentCp.hpp
   opm/material/components/Dnapl.hpp
   opm/material/components/H2.hpp
   opm/material/components/H2O.hpp
@@ -1374,7 +1378,9 @@ list(APPEND PUBLIC_HEADER_FILES
   opm/material/constraintsolvers/ComputeFromReferencePhase.hpp
   opm/material/constraintsolvers/ImmiscibleFlash.hpp
   opm/material/constraintsolvers/MiscibleMultiPhaseComposition.hpp
+  opm/material/constraintsolvers/MixtureEnthalpy.hpp
   opm/material/constraintsolvers/NcpFlash.hpp
+  opm/material/constraintsolvers/PHFlash.hpp
   opm/material/constraintsolvers/PTFlash.hpp
   opm/material/constraintsolvers/PTFlashMethod.hpp
   opm/material/constraintsolvers/RachfordRice.hpp
