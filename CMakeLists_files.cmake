@@ -729,6 +729,7 @@ list(APPEND DUNE_TEST_SOURCE_FILES
   tests/material/test_tabulation.cpp
   tests/material/test_threecomponents_ptflash.cpp
   tests/material/test_volume_shift.cpp
+  tests/material/test_water_pvt_regions.cpp
 )
 
 if(dune-common_FOUND)
