@@ -20,7 +20,7 @@ else()
 endif()
 
 if(dune-geometry_FOUND)
-  target_compile_definitions(dunegeometry INTERFACE HAVE_DUNE_GEOMETRY=1)
+  target_compile_definitions(Dune::Geometry INTERFACE HAVE_DUNE_GEOMETRY=1)
   # make version number available in config.h
   include (UseDuneVer)
   find_dune_version ("dune" "geometry")
