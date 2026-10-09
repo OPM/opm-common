@@ -73,6 +73,7 @@
 #include <opm/input/eclipse/Schedule/Well/WListManager.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellBrineProperties.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellControlTracker.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellEnums.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellFoamProperties.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellMatcher.hpp>
@@ -437,12 +438,14 @@ namespace Opm {
                                  std::unordered_map<std::string, double>& wpimult_global_factor,
                                  WelSegsSet* welsegs_wells,
                                  std::set<std::string>* compsegs_wells,
-                                 std::set<std::string>* comptraj_wells)
+                                 std::set<std::string>* comptraj_wells,
+                                 WellControlTracker* well_controls)
     {
         HandlerContext handlerContext { *this, block, keyword, grid, currentStep,
                                         matches, action_mode,
                                         parseContext, errors, sim_update, target_wellpi,
-                                        wpimult_global_factor, welsegs_wells, compsegs_wells, comptraj_wells};
+                                        wpimult_global_factor, welsegs_wells, compsegs_wells, comptraj_wells,
+                                        well_controls};
 
         if (!KeywordHandlers::getInstance().handleKeyword(handlerContext)) {
             OpmLog::warning(fmt::format("No handler registered for keyword {} "
@@ -692,6 +695,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
         std::set<std::string> compsegs_wells;
         std::set<std::string> comptraj_wells;
         WelSegsSet welsegs_wells;
+        WellControlTracker well_controls;
 
         const auto matches = Action::Result { false }.matches();
 
@@ -798,7 +802,8 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                                     wpimult_global_factor,
                                     &welsegs_wells,
                                     &compsegs_wells,
-                                    &comptraj_wells);
+                                    &comptraj_wells,
+                                    &well_controls);
                 keyword_index++;
             }
 
@@ -825,6 +830,42 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                 this->m_sched_deck.clearKeywords(report_step);
             }
         } // for (auto report_step = load_start
+
+        if ((load_start == 0) && (load_end == this->m_sched_deck.size())) {
+            this->reportWellsWithoutControl(well_controls, parseContext, errors);
+        }
+    }
+
+    void Schedule::reportWellsWithoutControl(const WellControlTracker& well_controls,
+                                             const ParseContext&       parseContext,
+                                             ErrorGuard&               errors) const
+    {
+        // Exclude wells that ACTIONX/PYACTION may control at run time.
+        auto wells = well_controls.uncontrolled();
+        std::erase_if(wells, [this](const auto& wellAndLocation)
+        {
+            return name_match_any(this->potential_wellopen_patterns,
+                                  wellAndLocation.first);
+        });
+
+        if (wells.empty()) {
+            return;
+        }
+
+        auto msg = fmt::format("{} declared in WELSPECS/WELSPECL and "
+                               "connected in COMPDAT/COMPDATL,\n"
+                               "but never assigned a control in WCONHIST, "
+                               "WCONPROD, WCONINJE, or WCONINJH will be "
+                               "treated as SHUT:",
+                               (wells.size() == 1) ? "Well" : "Wells");
+
+        for (const auto& [name, location] : wells) {
+            msg += fmt::format("\n * '{}' (declared in {}, {} line {})", name,
+                               location.keyword, location.filename, location.lineno);
+        }
+
+        parseContext.handleError(ParseContext::SCHEDULE_WELL_WITHOUT_CONTROL,
+                                 msg, wells.front().second, errors);
     }
 
     void Schedule::applyGlobalWPIMULT( const std::unordered_map<std::string, double>& wpimult_global_factor) {

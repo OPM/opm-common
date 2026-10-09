@@ -33,6 +33,7 @@
 #include <opm/input/eclipse/Schedule/Well/WellMatcher.hpp>
 
 #include "MSW/WelSegsSet.hpp"
+#include <opm/input/eclipse/Schedule/Well/WellControlTracker.hpp>
 
 #include <fmt/format.h>
 
@@ -94,6 +95,27 @@ void HandlerContext::comptraj_handled(const std::string& well_name)
 {
     if (comptraj_wells) {
         comptraj_wells->insert(well_name);
+    }
+}
+
+void HandlerContext::well_declared(const std::string& well_name)
+{
+    if (well_controls) {
+        well_controls->defined(well_name, keyword.location());
+    }
+}
+
+void HandlerContext::well_connected(const std::string& well_name)
+{
+    if (well_controls) {
+        well_controls->connected(well_name);
+    }
+}
+
+void HandlerContext::well_controlled(const std::string& well_name)
+{
+    if (well_controls) {
+        well_controls->controlled(well_name);
     }
 }
 
@@ -234,6 +256,7 @@ void HandlerContext::welspecsCreateNewWell(const DeckRecord&  record,
     }
 
     schedule_.addWell(wellName, record, currentStep, wellConnectionOrder);
+    this->well_declared(wellName);
     schedule_.addWellToGroup(groupName, wellName, currentStep);
 
     this->affected_well(wellName);

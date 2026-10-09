@@ -150,6 +150,7 @@ namespace Opm {
         this->addKey(SCHEDULE_GROUP_ERROR, InputErrorAction::THROW_EXCEPTION);
         this->addKey(SCHEDULE_IGNORED_GUIDE_RATE, InputErrorAction::WARN);
         this->addKey(SCHEDULE_WELL_IN_FIELD_GROUP, InputErrorAction::WARN);
+        this->addKey(SCHEDULE_WELL_WITHOUT_CONTROL, InputErrorAction::WARN);
         this->addKey(SCHEDULE_COMPSEGS_INVALID, InputErrorAction::THROW_EXCEPTION);
         this->addKey(SCHEDULE_COMPSEGS_NOT_SUPPORTED, InputErrorAction::THROW_EXCEPTION);
         this->addKey(SCHEDULE_COMPDAT_INVALID, InputErrorAction::THROW_EXCEPTION);
@@ -459,6 +460,7 @@ namespace Opm {
     const std::string ParseContext::SCHEDULE_GROUP_ERROR = "SCHEDULE_GROUP_ERROR";
     const std::string ParseContext::SCHEDULE_IGNORED_GUIDE_RATE = "SCHEDULE_IGNORED_GUIDE_RATE";
     const std::string ParseContext::SCHEDULE_WELL_IN_FIELD_GROUP = "SCHEDULE_WELL_IN_FIELD_GROUP";
+    const std::string ParseContext::SCHEDULE_WELL_WITHOUT_CONTROL = "SCHEDULE_WELL_WITHOUT_CONTROL";
 
     const std::string ParseContext::SCHEDULE_COMPSEGS_INVALID = "SCHEDULE_COMPSEG_INVALID";
     const std::string ParseContext::SCHEDULE_COMPSEGS_NOT_SUPPORTED = "SCHEDULE_COMPSEGS_NOT_SUPPORTED";
