@@ -187,6 +187,7 @@ namespace Opm {
         void assignRunTitle(const Deck& deck);
         void reportNumberOfActivePhases() const;
         void initLgrs(const Deck& deck);
+        void checkLgrCellsPoreVolume() const;
         void conveyNumericalAquiferEffects();
         void applyMULTXYZ();
         void initFaults(const Deck& deck);
