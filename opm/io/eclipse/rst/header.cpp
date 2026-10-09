@@ -28,6 +28,7 @@
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 
 #include <array>
+#include <chrono>
 #include <cmath>
 #include <cstddef>
 #include <ctime>
@@ -243,15 +244,22 @@ std::time_t RstHeader::sim_time() const
 {
     TimeStampUTC ts(this->year, this->month, this->mday);
 
-    ts.hour(this->hour).minutes(this->minute).microseconds(this->microsecond);
+    // ISECND holds the seconds and their fraction, in microseconds.
+    ts.hour(this->hour).minutes(this->minute)
+        .seconds(this->microsecond / 1'000'000)
+        .microseconds(this->microsecond % 1'000'000);
 
     return asTimeT(ts);
 }
 
-std::pair<std::time_t, std::size_t>
+std::pair<time_point, std::size_t>
 RstHeader::restart_info() const
 {
-    return std::make_pair(asTimeT(TimeStampUTC(this->year, this->month, this->mday)),
+    // Round the fraction of a second to the schedule's millisecond resolution.
+    const auto fraction = std::chrono::microseconds { this->microsecond % 1'000'000 };
+
+    return std::make_pair(TimeService::from_time_t(this->sim_time()) +
+                          std::chrono::round<time_point::duration>(fraction),
                           std::size_t(this->report_step));
 }
 

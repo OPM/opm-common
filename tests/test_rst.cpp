@@ -36,6 +36,7 @@
 #include <opm/output/eclipse/AggregateWellData.hpp>
 #include <opm/output/eclipse/AggregateConnectionData.hpp>
 #include <opm/output/eclipse/AggregateGroupData.hpp>
+#include <opm/output/eclipse/InteHEAD.hpp>
 #include <opm/output/eclipse/VectorItems/intehead.hpp>
 #include <opm/output/eclipse/VectorItems/well.hpp>
 #include <opm/output/eclipse/WriteRestartHelpers.hpp>
@@ -66,6 +67,7 @@
 #include <tests/WorkArea.hpp>
 
 #include <algorithm>
+#include <chrono>
 #include <cstddef>
 #include <memory>
 #include <string>
@@ -551,6 +553,29 @@ BOOST_AUTO_TEST_CASE(State_test)
 
     const auto& well = state.get_well("OP_3");
     BOOST_CHECK_THROW(well.segment(10), std::invalid_argument);
+}
+
+BOOST_AUTO_TEST_CASE(Restart_Time_Of_Day)
+{
+    // Report step 7 ending 4-Jan-2016 16:47:59.999.
+    const auto ih = Opm::RestartIO::InteHEAD{}
+        .calendarDate({2016, 1, 4, 16, 47, 59, 999'000})
+        .stepParam(7, 7);
+
+    const auto header = Opm::RestartIO::RstHeader {
+        Opm::UnitSystem::newMETRIC(), ih.data(),
+        std::vector<bool>(100), std::vector<double>(1000)
+    };
+
+    const auto ts = Opm::TimeStampUTC {
+        Opm::TimeStampUTC::YMD { 2016, 1, 4 }, 16, 47, 59, 0
+    };
+
+    BOOST_CHECK_EQUAL(header.sim_time(), Opm::asTimeT(ts));
+
+    const auto& [time, report_step] = header.restart_info();
+    BOOST_CHECK(time == Opm::asTimePoint(ts) + std::chrono::milliseconds { 999 });
+    BOOST_CHECK_EQUAL(report_step, std::size_t{7});
 }
 
 BOOST_AUTO_TEST_CASE(Well_Economic_Limits)

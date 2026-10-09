@@ -162,7 +162,7 @@ struct RstHeader
     std::optional<double> inferred_start_time_drift_seconds() const;
 
     std::time_t sim_time() const;
-    std::pair<std::time_t, std::size_t> restart_info() const;
+    std::pair<time_point, std::size_t> restart_info() const;
     int num_udq() const;
 };
 
