@@ -326,6 +326,89 @@ END
         return Opm::Parser{}.parseString(input);
     }
 
+    // LGR well PROD whose only connection lies in the LGR cells of host
+    // (2,2,1), which MINPV removes: PROD has no connection left.
+    Opm::Deck simLGR_wellInRemovedHost()
+    {
+        const auto input = std::string { R"~(RUNSPEC
+DIMENS
+3 3 1 /
+OIL
+WATER
+METRIC
+START
+1 'JAN' 2026 /
+WELLDIMS
+2 3 1 2 /
+EQLDIMS
+/
+TABDIMS
+/
+LGR
+1 9 /
+GRID
+DX
+9*100 /
+DY
+9*100 /
+DZ
+9*10 /
+TOPS
+9*2000 /
+PORO
+4*0.25 1.0E-4 4*0.25 /
+PERMX
+9*200 /
+PERMY
+9*200 /
+PERMZ
+9*20 /
+MINPV
+50 /
+CARFIN
+'LGR1' 2 2 2 2 1 1 3 3 1 1 /
+ENDFIN
+PROPS
+SWOF
+0.2 0.0 1.0 0
+0.8 1.0 0.0 0 /
+PVTW
+200 1.02 4.5E-5 0.5 0 /
+PVDO
+100 1.10 1.2
+300 1.06 1.2 /
+DENSITY
+850 1020 1 /
+SOLUTION
+EQUIL
+2005 200 2100 0 1900 0 /
+SCHEDULE
+WELSPECS
+'INJ' 'G1' 1 1 2000 WATER /
+/
+COMPDAT
+'INJ' 1 1 1 1 OPEN 1* 1* 0.2 /
+/
+WELSPECL
+'PROD' 'G1' 'LGR1' 2 2 2000 OIL /
+/
+COMPDATL
+'PROD' 'LGR1' 2 2 1 1 OPEN 1* 1* 0.2 /
+/
+WCONPROD
+'PROD' OPEN BHP 5* 150 /
+/
+WCONINJE
+'INJ' WATER OPEN RATE 300 1* 300 /
+/
+TSTEP
+1 1 /
+END
+)~" };
+
+        return Opm::Parser{}.parseString(input);
+    }
+
     Opm::Deck simLGR_CARFIN_GR()
     {
         const auto input = std::string { R"~(RUNSPEC
@@ -2424,6 +2507,47 @@ BOOST_AUTO_TEST_CASE (LGR_BugFixCrossingLGRWell)
         BOOST_CHECK_EQUAL(iwell[start + Ix::LastK], 3); // INJ/Head -> K
         BOOST_CHECK_EQUAL(iwell[start + Ix::NConn] , 3); // INJ #Compl
         BOOST_CHECK_EQUAL(iwell[start + Ix::WType] , 4); // INJ -> Producer
+    }
+}
+
+BOOST_AUTO_TEST_CASE (LGR_WellAllConnectionsInactive)
+{
+    const auto simCase = SimulationCase{simLGR_wellInRemovedHost()};
+
+    Opm::Action::State action_state;
+    Opm::WellTestState wtest_state;
+
+    const auto rptStep = std::size_t{1};
+
+    auto ih = MockIH {
+        static_cast<int>(simCase.sched[rptStep].wells.size())
+    };
+    ih.add_icon_data(26, 42 ,58 , 1);
+
+    const auto smry = sim_stateLGR();
+    auto awd = Opm::RestartIO::Helpers::AggregateWellData{ih.value};
+
+    awd.captureDeclaredWellData(simCase.sched,
+                                simCase.grid,
+                                simCase.es.tracer(),
+                                rptStep,
+                                action_state,
+                                wtest_state,
+                                smry,
+                                ih.value);
+
+    // IWEL (PROD): head on its host column, no connection, no layer range.
+    {
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::IWell::index;
+
+        const auto start = 1*ih.niwelz;
+        const auto& iwell = awd.getIWell();
+        BOOST_CHECK_EQUAL(iwell[start + Ix::IHead] , 2); // PROD -> I
+        BOOST_CHECK_EQUAL(iwell[start + Ix::JHead] , 2); // PROD -> J
+        BOOST_CHECK_EQUAL(iwell[start + Ix::FirstK], 0); // PROD -> no layer
+        BOOST_CHECK_EQUAL(iwell[start + Ix::LastK] , 0); // PROD -> no layer
+        BOOST_CHECK_EQUAL(iwell[start + Ix::NConn] , 0); // PROD #Compl
+        BOOST_CHECK_EQUAL(iwell[start + Ix::LGRIndex], 1); // PROD in LGR1
     }
 }
 
