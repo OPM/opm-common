@@ -1,0 +1,164 @@
+-- This reservoir simulation deck is made available under the Open Database
+-- License: http://opendatacommons.org/licenses/odbl/1.0/. Any rights in
+-- individual contents of the database are licensed under the Database Contents
+-- License: http://opendatacommons.org/licenses/dbcl/1.0/
+
+-- Copyright (C) 2026 Equinor ASA
+
+-- Test deck for RC_GroupTotals_EfficiencyFactors in test_Summary.cpp.  G_3
+-- stands in for a reservoir coupling master group: the test passes its rates
+-- to Summary::eval() directly, without well data.  G_3 has GEFAC 0.02 and its
+-- parent G_4 GEFAC 0.03 (0.04 from the second report step), so the totals of
+-- the master group quantities can be checked against GOPT, which applies the
+-- same cumulative efficiency factors.
+
+START
+10 MAI 2007 /
+RUNSPEC
+
+TITLE
+SUMMARYTESTS
+
+-- A simple 10x10x10 cube. Simple to reason about, large enough for all tests
+DIMENS
+ 10 10 10 /
+
+REGDIMS
+  10 /
+
+WELLDIMS
+-- Item 1: NWMAX  (Maximum number of wells in model)
+-- Item 2: NCWMAX (Maximum number of connections per well)
+-- Item 3: NGMAX  (Maximum number of groups in model--excluding FIELD)
+-- Item 4: NWGMAX (Maximum number of wells or child groups per group)
+-- NWMAX  NCWMAX  NGMAX  NWGMAX
+   3      2       5      2
+/
+
+OIL
+GAS
+WATER
+
+UNIFIN
+UNIFOUT
+
+GRID
+
+DX
+1000*1 /
+DY
+1000*1 /
+DZ
+1000*1 /
+TOPS
+100*1 /
+
+PERMX
+  1000*0.25/
+
+COPY
+  PERMX PERMY /
+  PERMX PERMZ /
+/
+
+
+PORO
+1000*0.2 /
+
+REGIONS
+
+FIPNUM
+ 1*2 999*1
+/
+
+FIPABC
+ 1000*1
+/
+
+SUMMARY
+-- Group and field vectors whose master group contribution (reservoir
+-- coupling) must use the same efficiency factors as GOPR/GOPT.
+GOPR
+/
+GOPT
+/
+GGLIR
+/
+GGPP
+/
+GVPR
+/
+GVPT
+/
+GVIR
+/
+GVIT
+/
+GOPRH
+/
+GOPTH
+/
+FOPT
+FVPT
+FVIT
+FOPTH
+FGLIR
+
+SCHEDULE
+
+GRUPTREE
+  'G_1'  'G' /
+  'G_2'  'G' /
+  'G_3'  'G_4' /
+/
+
+
+WELSPECS
+     'W_1'        'G_1'   1    1  3.33       'OIL'  7* /
+     'W_2'        'G_2'   2    1  3.33       'OIL'  7* /
+     'W_3'        'G_3'   2    1  3.33       'OIL'  7* /
+/
+
+WEFAC
+     'W_2' 0.2 /
+     'W_3' 0.3 /
+/
+
+GEFAC
+    G_2 0.01 /
+    G_3 0.02 /
+    G_4 0.03 /
+/
+
+WCONPROD
+    W_1 'OPEN' ORAT 10.1 /
+    W_2 'OPEN' ORAT 10.1 /
+    W_3 'OPEN' ORAT 10.1 /
+/
+
+-- Completion data.
+COMPDAT
+-- 'Well' I J K1 K2
+-- Passing 0 to I/J means they'll get the well head I/J
+   W_1 0 0 1 1 /   -- Active index: 0
+   W_2 0 0 1 1 /   -- Active index: 1
+   W_2 0 0 2 2 /   -- Active index: 101
+   W_3 3 1 1 1 /   -- Active index: 2
+/
+
+TSTEP
+-- register time steps (in days). This allows us to write *two* report steps (1
+-- and 2. Without this, totals/accumulations would fail (segfault) when looking
+-- up historical rates and volumes. These volumes however don't change, i.e.
+-- every time step has the same set of values
+10 /
+
+GEFAC
+ G_4 0.04 /
+/
+
+TSTEP
+10 /
+
+TSTEP
+10 10 /
