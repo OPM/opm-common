@@ -30,8 +30,8 @@
 
 namespace Opm {
 
-template<class Scalar>
-void UniformXTabulated2DFunction<Scalar>::print(std::ostream& os) const
+template<class Scalar, template <class> class Storage>
+void UniformXTabulated2DFunction<Scalar, Storage>::print(std::ostream& os) const
 {
     Scalar x0 = xMin();
     Scalar x1 = xMax();
@@ -58,7 +58,7 @@ void UniformXTabulated2DFunction<Scalar>::print(std::ostream& os) const
     }
 }
 
-template void UniformXTabulated2DFunction<double>::print(std::ostream&) const;
-template void UniformXTabulated2DFunction<float>::print(std::ostream&) const;
+template void UniformXTabulated2DFunction<double, VectorWithDefaultAllocator>::print(std::ostream&) const;
+template void UniformXTabulated2DFunction<float, VectorWithDefaultAllocator>::print(std::ostream&) const;
 
 } // namespace Opm
