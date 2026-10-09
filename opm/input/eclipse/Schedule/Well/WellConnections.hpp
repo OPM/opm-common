@@ -24,6 +24,7 @@
 
 #include <array>
 #include <cstddef>
+#include <functional>
 #include <optional>
 #include <set>
 #include <string>
