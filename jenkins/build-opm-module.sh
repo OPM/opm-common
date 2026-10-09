@@ -364,10 +364,10 @@ function build_module_full {
     fi
   done
 
-  # Optionally generate a failure report.
+  # Generate a failure report when opm-simulators was tested.
   # The report is always generated from the 'default' configuration data
   # since that is the configuration we have reference data for.
-  if grep -q "failure_report" <<< $ghprbCommentBody
+  if test -d $WORKSPACE/default/build-opm-simulators
   then
     $WORKSPACE/deps/opm-simulators/tests/make_failure_report.sh \
     $WORKSPACE/deps/opm-tests \
