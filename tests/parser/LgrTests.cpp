@@ -751,3 +751,63 @@ ENDFIN
     eclipse_grid.resetACTNUM();
     BOOST_CHECK_EQUAL( eclipse_grid.getLGRCell("LGR1").getNumActive() , 9U );
 }
+
+BOOST_AUTO_TEST_CASE(TestLGRinactiveHostCells) {
+    const auto eclipse_grid = gridWithLgrs(2, R"(
+ACTNUM
+0 1 1
+1 1 1
+1 1 1
+9*1
+/
+CARFIN
+'LGR1'  1  1  1  1  1  2  3  3  2 /
+ENDFIN
+CARFIN
+'LGR2'  3  3  3  3  1  1  3  3  1 /
+ENDFIN
+)");
+
+    // The LGR cells of an inactive host cell are inactive.
+    const auto& lgr1 = eclipse_grid.getLGRCell("LGR1");
+    BOOST_CHECK_EQUAL( lgr1.getNumActive() , 9U );
+    BOOST_CHECK( !lgr1.cellActive(0,0,0) );
+    BOOST_CHECK( lgr1.cellActive(0,0,1) );
+    BOOST_CHECK_EQUAL( eclipse_grid.getLGRCell("LGR2").getNumActive() , 9U );
+
+    // The LGRs are ordered by their first host cell, also when it is inactive.
+    BOOST_CHECK_EQUAL( eclipse_grid.getLGRCell(0).get_lgr_tag() , "LGR1" );
+    BOOST_CHECK_EQUAL( eclipse_grid.getLGRCell(1).get_lgr_tag() , "LGR2" );
+
+    // Numbering across levels: the LGR cells replace their active host cell,
+    // (3,3,1) for LGR2 and (1,1,2) for LGR1.
+    BOOST_CHECK_EQUAL( eclipse_grid.getActiveIndexLGR("LGR2",0,0,0) , 7U );
+    BOOST_CHECK_EQUAL( eclipse_grid.getActiveIndexLGR("LGR2",2,2,0) , 15U );
+    BOOST_CHECK_EQUAL( eclipse_grid.getActiveIndexLGR("LGR1",0,0,1) , 16U );
+    BOOST_CHECK_EQUAL( eclipse_grid.getActiveIndexLGR("LGR1",2,2,1) , 24U );
+    BOOST_CHECK_EQUAL( eclipse_grid.getActiveIndexLGR("GLOBAL",2,2,1) , 32U );
+}
+
+BOOST_AUTO_TEST_CASE(TestLGRallHostCellsInactive) {
+    const auto eclipse_grid = gridWithLgrs(1, R"(
+ACTNUM
+1 1 1
+1 0 1
+1 1 1
+/
+CARFIN
+'LGR1'  2  2  2  2  1  1  3  3  1 /
+ENDFIN
+CARFIN
+'LGR2'  3  3  3  3  1  1  3  3  1 /
+ENDFIN
+)");
+
+    BOOST_CHECK_EQUAL( eclipse_grid.getLGRCell("LGR1").getNumActive() , 0U );
+    BOOST_CHECK_EQUAL( eclipse_grid.getLGRCell("LGR2").getNumActive() , 9U );
+    BOOST_CHECK_EQUAL( eclipse_grid.getLGRCell(0).get_lgr_tag() , "LGR1" );
+
+    BOOST_CHECK_EQUAL( eclipse_grid.getActiveIndexLGR("GLOBAL",2,1,0) , 4U );
+    BOOST_CHECK_EQUAL( eclipse_grid.getActiveIndexLGR("LGR2",0,0,0) , 7U );
+    BOOST_CHECK_EQUAL( eclipse_grid.getActiveIndexLGR("LGR2",2,2,0) , 15U );
+}
