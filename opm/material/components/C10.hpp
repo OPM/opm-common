@@ -28,6 +28,7 @@
 #define OPM_C10_HPP
 
 #include "Component.hpp"
+#include "ComponentCp.hpp"
 
 #include <opm/material/IdealGas.hpp>
 #include <opm/material/common/MathToolbox.hpp>
@@ -41,7 +42,8 @@ namespace Opm
 /*!
  * \ingroup Components
  *
- * \brief Properties of pure molecular n-Decane \f$C_10\f$.
+ * \brief Properties of pure molecular n-Decane \f$C_10\f$
+ *        (CAS 124-18-5, formula C\f$_{10}\f$H\f$_{22}\f$).
  *
  * \tparam Scalar The type used for scalar values
  */
@@ -85,7 +87,21 @@ public:
      */
     static Scalar acentricFactor() { return 0.488; }
 
-
+    /*!
+     * \brief Cubic ideal-gas heat-capacity polynomial of n-Decane \f$\mathrm{[J/(mol\ K)]}\f$.
+     *
+     * Least-squares fit to the ideal-gas part of the equation of state of
+     * Lemmon & Span, J. Chem. Eng. Data 51 (2006) 785, over 250-600 K
+     * (RMS 0.266, max 0.792 J/(mol K)), sampled with CoolProp 8.0.0. Not
+     * valid outside that range.
+     *
+     * This is the ideal-gas heat capacity used by the compositional mixture
+     * enthalpy (MixtureEnthalpy). It does not implement the Component<>
+     * gasEnthalpy/gasHeatCapacity functions, which are real-fluid
+     * correlations where they exist.
+     */
+    static constexpr ComponentCp<Scalar> idealGasHeatCapacityPolynomial()
+    { return {79.4791, 3.1066e-1, 9.88317e-4, -1.00245e-6, 250.0, 600.0}; }
 };
 
 } // namespace Opm

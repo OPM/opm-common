@@ -28,6 +28,7 @@
 #define OPM_C1_HPP
 
 #include "Component.hpp"
+#include "ComponentCp.hpp"
 
 #include <opm/material/IdealGas.hpp>
 #include <opm/material/common/MathToolbox.hpp>
@@ -42,7 +43,8 @@ namespace Opm
 /*!
  * \ingroup Components
  *
- * \brief Properties of pure molecular methane \f$C_1\f$.
+ * \brief Properties of pure molecular methane \f$C_1\f$
+ *        (CAS 74-82-8, formula CH\f$_4\f$).
  *
  * \tparam Scalar The type used for scalar values
  */
@@ -53,7 +55,7 @@ class C1 : public Component<Scalar, C1<Scalar> >
 
 public:
     /*!
-     * \brief A human readable name for NDecane.
+     * \brief A human readable name for methane.
      */
     static std::string_view name()
     { return "C1"; }
@@ -86,9 +88,21 @@ public:
      */
     static Scalar acentricFactor() { return 0.011; }
 
-
-
-
+    /*!
+     * \brief Cubic ideal-gas heat-capacity polynomial of methane \f$\mathrm{[J/(mol\ K)]}\f$.
+     *
+     * Least-squares fit to the ideal-gas part of the equation of state of
+     * Setzmann & Wagner, J. Phys. Chem. Ref. Data 20 (1991) 1061, over
+     * 250-600 K (RMS 0.024, max 0.063 J/(mol K)), sampled with CoolProp
+     * 8.0.0. Not valid outside that range.
+     *
+     * This is the ideal-gas heat capacity used by the compositional mixture
+     * enthalpy (MixtureEnthalpy). It does not implement the Component<>
+     * gasEnthalpy/gasHeatCapacity functions, which are real-fluid
+     * correlations where they exist.
+     */
+    static constexpr ComponentCp<Scalar> idealGasHeatCapacityPolynomial()
+    { return {40.1503, -8.47372e-2, 2.93012e-4, -1.96125e-7, 250.0, 600.0}; }
 };
 
 } // namespace Opm
