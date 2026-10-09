@@ -198,6 +198,9 @@ namespace Opm
         }
 
         this->m_grading[dim] = AxisGrading{ std::move(counts), std::move(widths) };
+
+        // The index lists were built from an even split; rebuild them from the grading.
+        this->initIndexList();
     }
 
     bool Carfin::isGraded() const
@@ -431,6 +434,14 @@ namespace Opm
         const auto columns = std::array {
             this->refinedColumns(0), this->refinedColumns(1), this->refinedColumns(2)
         };
+
+        // An even split that does not cover a direction waits for N*FIN (setGrading);
+        // without it, validateSubdivision reports the box.
+        for (std::size_t dim = 0; dim < 3; ++dim) {
+            if (columns[dim].parentOffset.size() != this->m_dims[dim]) {
+                return;
+            }
+        }
 
         for (auto data_index = 0*ncells; data_index != ncells; ++data_index) {
             const auto lgrIJK = lgrdims.getIJK(data_index);

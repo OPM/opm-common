@@ -1005,3 +1005,53 @@ SCHEDULE
     BOOST_CHECK((lgrs.levelZeroIJK(1, {2, 0, 0}) == std::array<int,3>{1, 0, 0}));
     BOOST_CHECK((lgrs.levelZeroIJK(1, {4, 0, 0}) == std::array<int,3>{1, 0, 0}));
 }
+
+BOOST_AUTO_TEST_CASE(TestLgrGradedIndexList)
+{
+    // Five refined columns over two parent cells: an even split does not
+    // cover them, NXFIN 1 4 does. Every refined cell must map to the parent
+    // cell NXFIN gives it.
+    const Opm::EclipseState state { Opm::Parser{}.parseString(R"(RUNSPEC
+DIMENS
+ 3 3 1 /
+OIL
+WATER
+LGR
+ 1 /
+GRID
+DX
+ 9*100 /
+DY
+ 9*100 /
+DZ
+ 9*10 /
+TOPS
+ 9*2000 /
+PORO
+ 9*0.25 /
+PERMX
+ 9*100 /
+COPY
+ PERMX PERMY /
+ PERMX PERMZ /
+/
+CARFIN
+'LGR1' 1 2 1 1 1 1 5 1 1 /
+NXFIN
+ 1 4 /
+ENDFIN
+PROPS
+REGIONS
+SOLUTION
+SCHEDULE
+)") };
+    const auto& lgr = state.getLgrs().getLgr("LGR1");
+    const auto& cells = lgr.global_index_list();
+    BOOST_REQUIRE_EQUAL(cells.size(), 5U);
+
+    const std::array<std::size_t, 5> expectedParent { 0, 1, 1, 1, 1 };
+    for (const auto& cell : cells) {
+        BOOST_CHECK_EQUAL(cell.global_index, expectedParent[cell.data_index]);
+    }
+    BOOST_CHECK_EQUAL(lgr.index_list().size(), 5U);
+}
