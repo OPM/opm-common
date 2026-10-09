@@ -189,6 +189,14 @@ Opm::RestartIO::RstWell::RstWell(const UnitSystem&  unit_system,
         active_control = VI::IWell::Value::WellCtrlMode::Group;
     }
 
+    // A shut well which is waiting for group control may also have control
+    // 0.  Only a well without a well type has no control mode.
+    if ((active_control == VI::IWell::Value::WellCtrlMode::NoCtrl) &&
+        (iwel[VI::IWell::WType] != VI::IWell::Value::WellType::NoType))
+    {
+        active_control = VI::IWell::Value::WellCtrlMode::Group;
+    }
+
     if (header.nswelz <= 0) {
         throw std::invalid_argument {
             "Number of SWEL elements per well must be strictly positive"
