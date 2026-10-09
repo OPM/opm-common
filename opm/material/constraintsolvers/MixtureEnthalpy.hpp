@@ -192,33 +192,8 @@ struct MixtureEnthalpy {
                                         const unsigned phaseIdx,
                                         const EOSType& eosType)
     {
-        using Eval1 = DenseAd::Evaluation<Scalar, 1>;
-        using ParamCache = typename FluidSystem::template ParameterCache<Eval1>;
-
-        const auto seeded = temperatureSeededCopy_(fluidState, phaseIdx);
-        ParamCache paramCache(eosType);
-        paramCache.updatePhase(seeded, phaseIdx);
-
-        const Eval1& T = seeded.temperature(phaseIdx);
-        const Eval1& p = seeded.pressure(phaseIdx);
-        const Eval1 A = paramCache.A(phaseIdx);
-        const Eval1 B = paramCache.B(phaseIdx);
-        const Eval1 m1 = paramCache.m1(phaseIdx);
-        const Eval1 m2 = paramCache.m2(phaseIdx);
-        const Eval1 Z = p * paramCache.molarVolume(phaseIdx) / (Constants<Scalar>::R * T);
-
-        Eval1 sumLnPhi = Z - 1.0 - log(Z - B)
-                       + A / ((m1 - m2) * B) * log((Z + m2 * B) / (Z + m1 * B));
-        if constexpr (requires { FluidSystem::volumeShift(0u); }) {
-            for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
-                sumLnPhi -= seeded.moleFraction(phaseIdx, compIdx)
-                            * FluidSystem::volumeShift(compIdx)
-                            * paramCache.Bi(phaseIdx, compIdx);
-            }
-        }
-
-        const Scalar temperature = T.value();
-        return -Constants<Scalar>::R * temperature * temperature * sumLnPhi.derivative(0);
+        return residualEnthalpy_(fluidState, phaseIdx,
+                                 sumLnPhi_(fluidState, phaseIdx, phaseIdx, eosType));
     }
 
     /*!
@@ -254,6 +229,13 @@ struct MixtureEnthalpy {
      *
      * An absent phase (weight 0) skips the residual evaluation: its
      * composition is degenerate and its contribution vanishes anyway.
+     *
+     * For a single-phase state (L = 1 or L = 0) the residual is taken on the
+     * cubic root with the lower Gibbs energy, the lower sum_i z_i ln(phi_i),
+     * not on the root of the phase label. Where the cubic has three roots the
+     * two differ by about a vaporization enthalpy, and the label (Li's
+     * correlation in PTFlash) does not look at the pressure. The model-switch
+     * phaseEnthalpy keeps the root of the phase it is asked for.
      */
     template <class FluidState>
     static Scalar
@@ -267,23 +249,30 @@ struct MixtureEnthalpy {
         Scalar hOil = Opm::getValue(phaseEnthalpy(fluidState, FluidSystem::oilPhaseIdx, cpTable));
         Scalar hGas = Opm::getValue(phaseEnthalpy(fluidState, FluidSystem::gasPhaseIdx, cpTable));
         if (model == EnthalpyModel::eos_departure) {
-            if (L > 0.0)
+            if (L > 0.0 && L < 1.0) {
                 hOil += phaseResidualEnthalpy(fluidState, FluidSystem::oilPhaseIdx, eosType);
-            if (L < 1.0)
                 hGas += phaseResidualEnthalpy(fluidState, FluidSystem::gasPhaseIdx, eosType);
+            }
+            else if (L > 0.0)
+                hOil += stableRootResidualEnthalpy_(fluidState, FluidSystem::oilPhaseIdx, eosType);
+            else
+                hGas += stableRootResidualEnthalpy_(fluidState, FluidSystem::gasPhaseIdx, eosType);
         }
         return L * hOil + (1.0 - L) * hGas;
     }
 
 private:
     /*!
-     * \brief AD-typed copy of one phase with temperature as the single seeded
-     *        variable (slot 0); pressure and composition enter as constants,
-     *        so derivative(0) is a partial at fixed (P, w).
+     * \brief AD-typed copy of the composition of phase phaseIdx, stored as
+     *        phase rootIdx, with temperature as the single seeded variable
+     *        (slot 0); pressure and composition enter as constants, so
+     *        derivative(0) is a partial at fixed (P, w).
      */
     template <class FluidState>
     static CompositionalFluidState<DenseAd::Evaluation<Scalar, 1>, FluidSystem>
-    temperatureSeededCopy_(const FluidState& fluidState, const unsigned phaseIdx)
+    temperatureSeededCopy_(const FluidState& fluidState,
+                           const unsigned phaseIdx,
+                           const unsigned rootIdx)
     {
         using Eval1 = DenseAd::Evaluation<Scalar, 1>;
 
@@ -294,10 +283,78 @@ private:
         seeded.setPressure(FluidSystem::oilPhaseIdx, p);
         seeded.setPressure(FluidSystem::gasPhaseIdx, p);
         for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
-            seeded.setMoleFraction(phaseIdx, compIdx,
+            seeded.setMoleFraction(rootIdx, compIdx,
                 Eval1::createConstant(Opm::getValue(fluidState.moleFraction(phaseIdx, compIdx))));
         }
         return seeded;
+    }
+
+    /*!
+     * \brief sum_i w_i ln(phi_i) of the composition w of phase phaseIdx on the
+     *        cubic root of phase rootIdx (smallest root for oil, largest for
+     *        gas), in the closed form documented at phaseResidualEnthalpy,
+     *        with its temperature derivative at fixed (P, w).
+     */
+    template <class FluidState>
+    static DenseAd::Evaluation<Scalar, 1>
+    sumLnPhi_(const FluidState& fluidState,
+              const unsigned phaseIdx,
+              const unsigned rootIdx,
+              const EOSType& eosType)
+    {
+        using Eval1 = DenseAd::Evaluation<Scalar, 1>;
+        using ParamCache = typename FluidSystem::template ParameterCache<Eval1>;
+
+        const auto seeded = temperatureSeededCopy_(fluidState, phaseIdx, rootIdx);
+        ParamCache paramCache(eosType);
+        paramCache.updatePhase(seeded, rootIdx);
+
+        const Eval1& T = seeded.temperature(rootIdx);
+        const Eval1& p = seeded.pressure(rootIdx);
+        const Eval1 A = paramCache.A(rootIdx);
+        const Eval1 B = paramCache.B(rootIdx);
+        const Eval1 m1 = paramCache.m1(rootIdx);
+        const Eval1 m2 = paramCache.m2(rootIdx);
+        const Eval1 Z = p * paramCache.molarVolume(rootIdx) / (Constants<Scalar>::R * T);
+
+        Eval1 sumLnPhi = Z - 1.0 - log(Z - B)
+                       + A / ((m1 - m2) * B) * log((Z + m2 * B) / (Z + m1 * B));
+        if constexpr (requires { FluidSystem::volumeShift(0u); }) {
+            for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+                sumLnPhi -= seeded.moleFraction(rootIdx, compIdx)
+                            * FluidSystem::volumeShift(compIdx)
+                            * paramCache.Bi(rootIdx, compIdx);
+            }
+        }
+        return sumLnPhi;
+    }
+
+    //! -R T^2 d/dT [sum_i w_i ln(phi_i)] of phase phaseIdx, from sumLnPhi_.
+    template <class FluidState>
+    static Scalar residualEnthalpy_(const FluidState& fluidState,
+                                    const unsigned phaseIdx,
+                                    const DenseAd::Evaluation<Scalar, 1>& sumLnPhi)
+    {
+        const Scalar temperature = Opm::getValue(fluidState.temperature(phaseIdx));
+        return -Constants<Scalar>::R * temperature * temperature * sumLnPhi.derivative(0);
+    }
+
+    /*!
+     * \brief Residual enthalpy of the single phase phaseIdx on the cubic root
+     *        with the lower Gibbs energy. At equal (T, P, w) the Gibbs energies
+     *        of the two roots differ by RT times the difference of
+     *        sum_i w_i ln(phi_i); the volume translation is the same on both.
+     */
+    template <class FluidState>
+    static Scalar stableRootResidualEnthalpy_(const FluidState& fluidState,
+                                              const unsigned phaseIdx,
+                                              const EOSType& eosType)
+    {
+        const auto onLiquidRoot = sumLnPhi_(fluidState, phaseIdx, FluidSystem::oilPhaseIdx, eosType);
+        const auto onVapourRoot = sumLnPhi_(fluidState, phaseIdx, FluidSystem::gasPhaseIdx, eosType);
+        return residualEnthalpy_(fluidState, phaseIdx,
+                                 onLiquidRoot.value() <= onVapourRoot.value() ? onLiquidRoot
+                                                                              : onVapourRoot);
     }
 };
 
