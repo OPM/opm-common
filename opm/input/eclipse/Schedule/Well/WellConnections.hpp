@@ -49,8 +49,8 @@ namespace Opm {
         using const_iterator = std::vector<Connection>::const_iterator;
 
         WellConnections() = default;
-        WellConnections(const Connection::Order ordering, const int headI, const int headJ);
-        WellConnections(const Connection::Order ordering, const int headI, const int headJ,
+        WellConnections(const int headI, const int headJ);
+        WellConnections(const int headI, const int headJ,
                         const std::vector<Connection>& connections);
 
         static WellConnections serializationTestObject();
@@ -58,9 +58,8 @@ namespace Opm {
         // cppcheck-suppress noExplicitConstructor
         template <class Grid>
         WellConnections(const WellConnections& src, const Grid& grid)
-            : m_ordering(src.ordering())
-            , headI     (src.headI)
-            , headJ     (src.headJ)
+            : headI(src.headI)
+            , headJ(src.headJ)
         {
             for (const auto& c : src) {
                 if (grid.isCellActive(c.getI(), c.getJ(), c.getK())) {
@@ -164,15 +163,32 @@ namespace Opm {
         ///
         /// This is a somewhat expensive operation that should typically be
         /// invoked only at the end of applying all pertinent connection updates.
-        void order();
+        ///
+        /// \param[in] ordering The ordering to use for the connections.
+        void order(Connection::Order ordering);
 
         bool operator==( const WellConnections& ) const;
         bool operator!=( const WellConnections& ) const;
 
-        Connection::Order ordering() const { return this->m_ordering; }
-
+        /// Retrieve restart file output order of individual connections
+        ///
+        /// This is a permutation of the current collection that corresponds
+        /// to the order of appearance of each individual connection.
+        ///
+        /// \param[in] grid Run's active cells.  Any connection that happens
+        /// to be in a deactivated cell will be excluded from the list.
+        ///
+        /// \param[in] ordering Current connection ordering method for this
+        /// collection of connections.  If \p ordering is not \c INPUT, the
+        /// permutation will typically be different from the identity ([0,
+        /// 1, 2, ..., size()-1])
+        ///
+        /// \return Output order for the individual connections.  List of
+        /// indices intended for subsequent lookup in operator[]().
+        /// Connection output()[i] should appear before output()[i+1] in the
+        /// restart file's *CON arrays.
         std::vector<std::size_t>
-        output(const EclipseGrid& grid) const;
+        output(const EclipseGrid& grid, Connection::Order ordering) const;
 
         /// Activate or reactivate WELPI scaling for this connection set.
         ///
@@ -197,7 +213,6 @@ namespace Opm {
         template <class Serializer>
         void serializeOp(Serializer& serializer)
         {
-            serializer(this->m_ordering);
             serializer(this->headI);
             serializer(this->headJ);
             serializer(this->m_connections);
@@ -206,7 +221,6 @@ namespace Opm {
         }
 
     private:
-        Connection::Order m_ordering { Connection::Order::TRACK };
         int headI{0};
         int headJ{0};
         std::vector<Connection> m_connections{};

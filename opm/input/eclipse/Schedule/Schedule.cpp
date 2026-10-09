@@ -22,6 +22,7 @@
 #include <opm/io/eclipse/rst/state.hpp>
 
 #include <opm/output/eclipse/VectorItems/group.hpp>
+#include <opm/output/eclipse/VectorItems/well.hpp>
 
 #include <opm/common/OpmLog/LogUtil.hpp>
 #include <opm/common/OpmLog/OpmLog.hpp>
@@ -69,6 +70,7 @@
 #include <opm/input/eclipse/Schedule/UDQ/UDQActive.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQConfig.hpp>
 #include <opm/input/eclipse/Schedule/VFPProdTable.hpp>
+#include <opm/input/eclipse/Schedule/Well/ConnectionOrdering.hpp>
 #include <opm/input/eclipse/Schedule/Well/WList.hpp>
 #include <opm/input/eclipse/Schedule/Well/WListManager.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellBrineProperties.hpp>
@@ -827,10 +829,14 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
         } // for (auto report_step = load_start
     }
 
-    void Schedule::applyGlobalWPIMULT( const std::unordered_map<std::string, double>& wpimult_global_factor) {
+    void Schedule::applyGlobalWPIMULT(const std::unordered_map<std::string, double>& wpimult_global_factor)
+    {
         for (const auto& [well_name, factor] : wpimult_global_factor) {
+            const auto compord = this->snapshots.back().compord()
+                .getConnectionOrder(well_name);
+
             auto well = this->snapshots.back().wells(well_name);
-            if (well.applyGlobalWPIMULT(factor)) {
+            if (well.applyGlobalWPIMULT(factor, compord)) {
                 this->snapshots.back().wells.update(std::move(well));
             }
         }
@@ -1151,8 +1157,7 @@ Defaulted grid coordinates is not allowed for COMPDAT as part of ACTIONX)"
 
     void Schedule::addWell(const std::string& wellName,
                            const DeckRecord& record,
-                           std::size_t timeStep,
-                           Connection::Order wellConnectionOrder)
+                           std::size_t timeStep)
     {
         // We change from eclipse's 1 - n, to a 0 - n-1 solution
         int headI = record.getItem<ParserKeywords::WELSPECS::HEAD_I>().get< int >(0) - 1;
@@ -1204,8 +1209,7 @@ Defaulted grid coordinates is not allowed for COMPDAT as part of ACTIONX)"
                       automaticShutIn,
                       pvt_table,
                       gas_inflow,
-                      timeStep,
-                      wellConnectionOrder);
+                      timeStep);
     }
 
     void Schedule::addWell(Well well) {
@@ -1234,8 +1238,7 @@ Defaulted grid coordinates is not allowed for COMPDAT as part of ACTIONX)"
                            bool automaticShutIn,
                            int pvt_table,
                            Well::GasInflowEquation gas_inflow,
-                           std::size_t timeStep,
-                           Connection::Order wellConnectionOrder) {
+                           std::size_t timeStep) {
 
         const auto& sched_state = this->operator[](timeStep);
         Well well(wellName,
@@ -1246,7 +1249,6 @@ Defaulted grid coordinates is not allowed for COMPDAT as part of ACTIONX)"
                   ref_depth,
                   WellType(preferredPhase),
                   sched_state.whistctl(),
-                  wellConnectionOrder,
                   this->m_static.m_unit_system,
                   drainageRadius,
                   allowCrossFlow,
@@ -2301,16 +2303,20 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
 namespace {
 
     // Duplicated from Well.cpp
-    Connection::Order order_from_int(int int_value) {
-        switch(int_value) {
-        case 0:
-            return Connection::Order::TRACK;
-        case 1:
-            return Connection::Order::DEPTH;
-        case 2:
-            return Connection::Order::INPUT;
+    Connection::Order order_from_int(const int int_value)
+    {
+        using WCO = ::Opm::Connection::Order;
+        using COVal = ::Opm::RestartIO::Helpers::VectorItems::IWell::Value::CompOrder;
+
+        switch (int_value) {
+        case COVal::Track: return WCO::TRACK;
+        case COVal::Depth: return WCO::DEPTH;
+        case COVal::Input: return WCO::INPUT;
         default:
-            throw std::invalid_argument("Invalid integer value: " + std::to_string(int_value) + " encountered when determining connection ordering");
+            throw std::invalid_argument {
+                fmt::format("Invalid integer value: {} encountered "
+                            "when determining connection ordering", int_value)
+            };
         }
     }
 
@@ -2493,10 +2499,11 @@ namespace {
 
             if (rst_well.segments.empty()) {
                 auto connections = std::make_shared<WellConnections>
-                    (order_from_int(rst_well.completion_ordering),
-                     rst_well.ij[0], rst_well.ij[1], rst_connections);
+                    (rst_well.ij[0], rst_well.ij[1], rst_connections);
 
-                well.updateConnections(std::move(connections), grid);
+                well.updateConnections(std::move(connections),
+                                       order_from_int(rst_well.completion_ordering),
+                                       grid);
             }
             else {
                 auto rst_segments = std::unordered_map<int, Segment>{};
@@ -2507,7 +2514,9 @@ namespace {
                 const auto& [connections, segments] =
                     Compsegs::rstUpdate(rst_well, rst_connections, rst_segments);
 
-                well.updateConnections(std::make_shared<WellConnections>(connections), grid);
+                well.updateConnections(std::make_shared<WellConnections>(connections),
+                                       order_from_int(rst_well.completion_ordering), grid);
+
                 well.updateSegments(std::make_shared<WellSegments>(segments));
             }
 
@@ -2860,15 +2869,21 @@ bool Schedule::cmp(const Schedule& sched1, const Schedule& sched2, std::size_t r
     for (const auto& wname : sched1.wellNames(report_step)) {
         const auto& well1 = sched1.getWell(wname, report_step);
         const auto& well2 = sched2.getWell(wname, report_step);
+
         int well_count = 0;
+
         {
+            well_count += not_equal(sched1[report_step].compord().getConnectionOrder(wname),
+                                    sched2[report_step].compord().getConnectionOrder(wname),
+                                    well_msg(well1.name(), "Connection: ordering"));
+
             const auto& connections2 = well2.getConnections();
             const auto& connections1 = well1.getConnections();
 
-            well_count += not_equal( connections1.ordering(), connections2.ordering(), well_msg(well1.name(), "Connection: ordering"));
             for (std::size_t icon = 0; icon < connections1.size(); icon++) {
                 const auto& conn1 = connections1[icon];
                 const auto& conn2 = connections2[icon];
+
                 well_count += not_equal( conn1.getI(), conn2.getI(), well_connection_msg(well1.name(), conn1, "I"));
                 well_count += not_equal( conn1.getJ() , conn2.getJ() , well_connection_msg(well1.name(), conn1, "J"));
                 well_count += not_equal( conn1.getK() , conn2.getK() , well_connection_msg(well1.name(), conn1, "K"));
@@ -2879,7 +2894,6 @@ bool Schedule::cmp(const Schedule& sched1, const Schedule& sched2, std::size_t r
                 well_count += not_equal( conn1.kind() , conn2.kind(), well_connection_msg(well1.name(), conn1, "CFKind"));
                 well_count += not_equal( conn1.sort_value(), conn2.sort_value(), well_connection_msg(well1.name(), conn1, "sort_value"));
 
-
                 well_count += not_equal( conn1.CF(), conn2.CF(), well_connection_msg(well1.name(), conn1, "CF"));
                 well_count += not_equal( conn1.Kh(), conn2.Kh(), well_connection_msg(well1.name(), conn1, "Kh"));
                 well_count += not_equal( conn1.rw(), conn2.rw(), well_connection_msg(well1.name(), conn1, "rw"));
@@ -2887,22 +2901,24 @@ bool Schedule::cmp(const Schedule& sched1, const Schedule& sched2, std::size_t r
 
                 //well_count += not_equal( conn1.r0(), conn2.r0(), well_connection_msg(well1.name(), conn1, "r0"));
                 well_count += not_equal( conn1.skinFactor(), conn2.skinFactor(), well_connection_msg(well1.name(), conn1, "skinFactor"));
-
             }
         }
 
-        if (not_equal(well1.isMultiSegment(), well2.isMultiSegment(), well_msg(well1.name(), "Is MSW")))
+        if (not_equal(well1.isMultiSegment(), well2.isMultiSegment(), well_msg(well1.name(), "Is MSW"))) {
             return false;
+        }
 
         if (well1.isMultiSegment()) {
             const auto& segments1 = well1.getSegments();
             const auto& segments2 = well2.getSegments();
-            if (not_equal(segments1.size(), segments2.size(), "Segments: size"))
+            if (not_equal(segments1.size(), segments2.size(), "Segments: size")) {
                 return false;
+            }
 
             for (std::size_t iseg=0; iseg < segments1.size(); iseg++) {
                 const auto& segment1 = segments1[iseg];
                 const auto& segment2 = segments2[iseg];
+
                 //const auto& segment2 = segments2.getFromSegmentNumber(segment1.segmentNumber());
                 well_count += not_equal(segment1.segmentNumber(), segment2.segmentNumber(), well_segment_msg(well1.name(), segment1.segmentNumber(), "segmentNumber"));
                 well_count += not_equal(segment1.branchNumber(), segment2.branchNumber(), well_segment_msg(well1.name(), segment1.segmentNumber(), "branchNumber"));
@@ -2917,9 +2933,11 @@ bool Schedule::cmp(const Schedule& sched1, const Schedule& sched2, std::size_t r
         }
 
         well_count += not_equal(well1.getStatus(), well2.getStatus(), well_msg(well1.name(), "status"));
+
         {
             const auto& prod1 = well1.getProductionProperties();
             const auto& prod2 = well2.getProductionProperties();
+
             well_count += not_equal(prod1.name, prod2.name , well_msg(well1.name(), "Prod: name"));
             well_count += not_equal(prod1.OilRate, prod2.OilRate, well_msg(well1.name(), "Prod: OilRate"));
             well_count += not_equal(prod1.GasRate, prod2.GasRate, well_msg(well1.name(), "Prod: GasRate"));
@@ -2931,17 +2949,27 @@ bool Schedule::cmp(const Schedule& sched1, const Schedule& sched2, std::size_t r
             well_count += not_equal(prod1.VFPTableNumber, prod2.VFPTableNumber, well_msg(well1.name(), "Prod: VFPTableNumber"));
             well_count += not_equal(prod1.ALQValue, prod2.ALQValue, well_msg(well1.name(), "Prod: ALQValue"));
             well_count += not_equal(prod1.predictionMode, prod2.predictionMode, well_msg(well1.name(), "Prod: predictionMode"));
+
             if (!prod1.predictionMode) {
                 well_count += not_equal(prod1.bhp_hist_limit, prod2.bhp_hist_limit, well_msg(well1.name(), "Prod: bhp_hist_limit"));
                 well_count += not_equal(prod1.thp_hist_limit, prod2.thp_hist_limit, well_msg(well1.name(), "Prod: thp_hist_limit"));
                 well_count += not_equal(prod1.BHPH, prod2.BHPH, well_msg(well1.name(), "Prod: BHPH"));
                 well_count += not_equal(prod1.THPH, prod2.THPH, well_msg(well1.name(), "Prod: THPH"));
             }
-            well_count += not_equal(prod1.productionControls(), prod2.productionControls(), well_msg(well1.name(), "Prod: productionControls"));
-            if (well1.getStatus() == Well::Status::OPEN)
-                well_count += not_equal(prod1.controlMode, prod2.controlMode, well_msg(well1.name(), "Prod: controlMode"));
+
+            well_count += not_equal(prod1.productionControls(),
+                                    prod2.productionControls(),
+                                    well_msg(well1.name(), "Prod: productionControls"));
+
+            if (well1.getStatus() == Well::Status::OPEN) {
+                well_count += not_equal(prod1.controlMode,
+                                        prod2.controlMode,
+                                        well_msg(well1.name(), "Prod: controlMode"));
+            }
+
             well_count += not_equal(prod1.whistctl_cmode, prod2.whistctl_cmode, well_msg(well1.name(), "Prod: whistctl_cmode"));
         }
+
         {
             const auto& inj1 = well1.getInjectionProperties();
             const auto& inj2 = well2.getInjectionProperties();
@@ -2964,6 +2992,7 @@ bool Schedule::cmp(const Schedule& sched1, const Schedule& sched2, std::size_t r
 
         {
             well_count += well2.firstTimeStep() > report_step;
+
             well_count += not_equal( well1.groupName(), well2.groupName(), well_msg(well1.name(), "Well: groupName"));
             well_count += not_equal( well1.getHeadI(), well2.getHeadI(), well_msg(well1.name(), "Well: getHeadI"));
             well_count += not_equal( well1.getHeadJ(), well2.getHeadJ(), well_msg(well1.name(), "Well: getHeadJ"));
@@ -2976,8 +3005,13 @@ bool Schedule::cmp(const Schedule& sched1, const Schedule& sched2, std::size_t r
             well_count += not_equal( well1.predictionMode(), well2.predictionMode(), well_msg(well1.name(), "Well: predictionMode"));
             well_count += not_equal( well1.isProducer(), well2.isProducer(), well_msg(well1.name(), "Well: isProducer"));
             well_count += not_equal( well1.isInjector(), well2.isInjector(), well_msg(well1.name(), "Well: isInjector"));
-            if (well1.isInjector())
-                well_count += not_equal( well1.injectorType(), well2.injectorType(), well_msg(well1.name(), "Well1: injectorType"));
+
+            if (well1.isInjector()) {
+                well_count += not_equal(well1.injectorType(),
+                                        well2.injectorType(),
+                                        well_msg(well1.name(), "Well1: injectorType"));
+            }
+
             well_count += not_equal( well1.seqIndex(), well2.seqIndex(), well_msg(well1.name(), "Well: seqIndex"));
             well_count += not_equal( well1.getAutomaticShutIn(), well2.getAutomaticShutIn(), well_msg(well1.name(), "Well: getAutomaticShutIn"));
             well_count += not_equal( well1.getAllowCrossFlow(), well2.getAllowCrossFlow(), well_msg(well1.name(), "Well: getAllowCrossFlow"));
@@ -2985,17 +3019,24 @@ bool Schedule::cmp(const Schedule& sched1, const Schedule& sched2, std::size_t r
             well_count += not_equal( well1.getStatus(), well2.getStatus(), well_msg(well1.name(), "Well: getStatus"));
             //well_count += not_equal( well1.getInjectionProperties(), well2.getInjectionProperties(), "Well: getInjectionProperties");
 
+            if (well1.isProducer()) {
+                well_count += not_equal(well1.getPreferredPhase(),
+                                        well2.getPreferredPhase(),
+                                        well_msg(well1.name(), "Well: getPreferredPhase"));
+            }
 
-            if (well1.isProducer())
-                well_count += not_equal( well1.getPreferredPhase(), well2.getPreferredPhase(), well_msg(well1.name(), "Well: getPreferredPhase"));
             well_count += not_equal( well1.getDrainageRadius(), well2.getDrainageRadius(), well_msg(well1.name(), "Well: getDrainageRadius"));
             well_count += not_equal( well1.getEfficiencyFactor(), well2.getEfficiencyFactor(), well_msg(well1.name(), "Well: getEfficiencyFactor"));
         }
+
         count += well_count;
-        if (well_count > 0)
+
+        if (well_count > 0) {
             std::cerr << std::endl;
+        }
     }
-    return (count == 0);
+
+    return count == 0;
 }
 
 const ScheduleState& Schedule::back() const {
@@ -3041,6 +3082,7 @@ void Schedule::create_first(const time_point&                start_time,
     sched_state.rpt_config.update( RPTConfig() );
     sched_state.actions.update( Action::Actions() );
     sched_state.udq_active.update( UDQActive() );
+    sched_state.compord.update(ConnectionOrdering{});
     sched_state.well_order.update( NameOrder() );
     sched_state.group_order.update( GroupOrder(run_spec.wellDimensions().maxGroupsInField()));
     sched_state.udq.update( UDQConfig(run_spec.udqParams()));

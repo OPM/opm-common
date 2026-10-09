@@ -396,6 +396,7 @@ bool ScheduleState::operator==(const ScheduleState& other) const {
         && this->rpt_config.get() == other.rpt_config.get()
         && this->actions.get() == other.actions.get()
         && this->udq_active.get() == other.udq_active.get()
+        && this->compord() == other.compord()
         && this->glo.get() == other.glo.get()
         && this->guide_rate.get() == other.guide_rate.get()
         && this->rft_config.get() == other.rft_config.get()
@@ -422,11 +423,10 @@ bool ScheduleState::operator==(const ScheduleState& other) const {
         ;
 }
 
-
-
 ScheduleState ScheduleState::serializationTestObject() {
     auto t1 = TimeService::now();
     auto t2 = t1 + std::chrono::hours(48);
+
     ScheduleState ts(t1, t2);
     ts.m_sim_step = 123;
     ts.m_month_num = 12;
@@ -456,6 +456,7 @@ ScheduleState ScheduleState::serializationTestObject() {
     ts.rpt_config.update( RPTConfig::serializationTestObject() );
     ts.actions.update( Action::Actions::serializationTestObject() );
     ts.udq_active.update( UDQActive::serializationTestObject() );
+    ts.compord.update( ConnectionOrdering::serializationTestObject() );
     ts.network.update( Network::ExtNetwork::serializationTestObject() );
     ts.network_balance.update( Network::Balance::serializationTestObject() );
     ts.well_order.update( NameOrder::serializationTestObject() );

@@ -28,6 +28,7 @@
 
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
+#include <opm/input/eclipse/Schedule/Well/Connection.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
 
@@ -62,11 +63,12 @@ namespace {
     }
 
     template <class ConnOp>
-    void connectionLoop(const Opm::EclipseGrid& grid,
-                        const Opm::Well&        well,
-                        const Opm::data::Well*  wellRes,
-                        ConnOp&&                connOp,
-                        const bool              global_grid = true)
+    void connectionLoop(const Opm::EclipseGrid&      grid,
+                        const Opm::Well&             well,
+                        const Opm::data::Well*       wellRes,
+                        const Opm::Connection::Order order,
+                        ConnOp&&                     connOp,
+                        const bool                   global_grid = true)
     {
         const auto& wellName = well.name();
         const auto  wellID   = global_grid ? well.seqIndex() : well.seqIndexLGR();
@@ -81,7 +83,7 @@ namespace {
 
         auto connID = std::size_t{};
 
-        for (const auto& connIdx : well.getConnections().output(*lgrid)) {
+        for (const auto& connIdx : well.getConnections().output(*lgrid, order)) {
             const auto& conn = well.getConnections()[connIdx];
 
             if (conn.kind() == Opm::Connection::CTFKind::DynamicFracturing) {
@@ -123,8 +125,11 @@ namespace {
             const auto* wellRes   = (well_iter == xw.end())
                 ? nullptr : &well_iter->second;
 
+            const auto ordering = sched[sim_step].compord()
+                .getConnectionOrder(wname);
+
             connectionLoop(grid, sched[sim_step].wells(wname),
-                           wellRes,  connOp);
+                           wellRes, ordering, connOp);
         }
     }
 
@@ -148,7 +153,11 @@ namespace {
             const auto* wellRes   = (well_iter == xw.end())
                 ? nullptr : &well_iter->second;
 
-            connectionLoop(grid, well, wellRes, connOp,  false);
+            const auto ordering = sched[sim_step].compord()
+                .getConnectionOrder(wname);
+
+            connectionLoop(grid, well, wellRes, ordering,
+                           connOp, /* global_grid = */ false);
         }
     }
 

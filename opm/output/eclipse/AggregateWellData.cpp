@@ -38,8 +38,9 @@
 #include <opm/input/eclipse/Schedule/Action/State.hpp>
 #include <opm/input/eclipse/Schedule/GasLiftOpt.hpp>
 #include <opm/input/eclipse/Schedule/MSW/WellSegments.hpp>
-#include <opm/input/eclipse/Schedule/ScheduleTypes.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
+#include <opm/input/eclipse/Schedule/ScheduleState.hpp>
+#include <opm/input/eclipse/Schedule/ScheduleTypes.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
 #include <opm/input/eclipse/Schedule/VFPProdTable.hpp>
 #include <opm/input/eclipse/Schedule/Well/Connection.hpp>
@@ -216,13 +217,13 @@ namespace {
             }
         }
 
-        int compOrder(const Opm::Well& well)
+        int compOrder(const Opm::Connection::Order ordering)
         {
             using WCO   = ::Opm::Connection::Order;
             using COVal = ::Opm::RestartIO::Helpers::
                 VectorItems::IWell::Value::CompOrder;
 
-            switch (well.getConnections().ordering()) {
+            switch (ordering) {
             case WCO::TRACK: return COVal::Track;
             case WCO::DEPTH: return COVal::Depth;
             case WCO::INPUT: return COVal::Input;
@@ -581,6 +582,7 @@ namespace {
 
         template <class IWellArray>
         void staticContrib(const Opm::Well&                well,
+                           const Opm::Connection::Order    comp_order,
                            const Opm::GasLiftOpt&          glo,
                            const Opm::WellTestConfig&      wtest_config,
                            const Opm::WellTestState&       wtest_state,
@@ -636,7 +638,7 @@ namespace {
             setCurrentControl(Opm::Well::eclipseControlMode(well, st), iWell);
             setHistoryControlMode(well, Opm::Well::eclipseControlMode(well, st), iWell);
 
-            iWell[Ix::CompOrd] = compOrder(well);
+            iWell[Ix::CompOrd] = compOrder(comp_order);
 
             assignGasliftOpt(well.name(), glo, iWell);
             assignMSWInfo(well, msWellID, iWell);
@@ -1812,8 +1814,12 @@ captureDeclaredWellData(const Schedule&             sched,
             msWellID += well.isMultiSegment();  // 1-based index.
             auto iw   = this->iWell_[wellID];
 
-            IWell::staticContrib(well, step_glo, wtest_config, wtest_state,
-                                 smry, msWellID, groupMapNameIndex, iw);
+            const auto comp_order = sched[sim_step].compord()
+                .getConnectionOrder(well.name());
+
+            IWell::staticContrib(well, comp_order, step_glo,
+                                 wtest_config, wtest_state, smry,
+                                 msWellID, groupMapNameIndex, iw);
         });
     }
 
@@ -1881,8 +1887,13 @@ captureDeclaredWellData(const Schedule&             sched,
             msWellID += well.isMultiSegment();  // 1-based index.
             auto iw   = this->iWell_[wellID];
 
-            IWell::staticContrib(well, step_glo, wtest_config, wtest_state,
-                                 smry, msWellID, groupMapNameIndex, iw, grid);
+            const auto comp_order = sched[sim_step].compord()
+                .getConnectionOrder(well.name());
+
+            IWell::staticContrib(well, comp_order, step_glo,
+                                 wtest_config, wtest_state, smry,
+                                 msWellID, groupMapNameIndex, iw,
+                                 grid /*, global_grid = true */);
         });
     }
 
@@ -1951,8 +1962,13 @@ captureDeclaredWellDataLGR(const Schedule&             sched,
             msWellID += well.isMultiSegment();  // 1-based index.
             auto iw   = this->iWell_[wellID];
 
-            IWell::staticContrib(well, step_glo, wtest_config, wtest_state,
-                                 smry, msWellID, groupMapNameIndex, iw, grid, false);
+            const auto comp_order = sched[sim_step].compord()
+                .getConnectionOrder(well.name());
+
+            IWell::staticContrib(well, comp_order, step_glo,
+                                 wtest_config, wtest_state, smry,
+                                 msWellID, groupMapNameIndex, iw,
+                                 grid, /* global_grid = */ false);
         });
     }
 

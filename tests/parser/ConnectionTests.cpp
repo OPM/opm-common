@@ -71,9 +71,7 @@ namespace {
     Opm::WellConnections
     loadCOMPDAT(const std::string& compdat_keyword)
     {
-        Opm::WellConnections connections {
-            Opm::Connection::Order::TRACK, 10, 10
-        };
+        Opm::WellConnections connections { 10, 10 };
 
         const auto deck = Opm::Parser{}.parseString(compdat_keyword);
         const auto wdfac = Opm::WDFAC{};
@@ -91,8 +89,8 @@ namespace {
         Opm::CompletedCells completed_cells(grid);
         const auto sg = Opm::ScheduleGrid { grid, field_props, completed_cells };
 
-        std::vector<int> requested_open_complnums;
-        std::vector<int> requested_shut_complnums;
+        std::vector<int> requested_open_complnums{};
+        std::vector<int> requested_shut_complnums{};
         for (const auto& rec : deck["COMPDAT"][0]) {
             connections.loadCOMPDAT(rec, "WELL", wdfac, sg, loc, ctx, errors,
                                     requested_open_complnums,
@@ -117,18 +115,13 @@ inline std::ostream& operator<<( std::ostream& stream, const WellConnections& cs
 
 }
 
-
-
-
-
-BOOST_AUTO_TEST_CASE(CreateWellConnectionsOK) {
-    Opm::WellConnections completionSet(Opm::Connection::Order::TRACK, 1,1);
+BOOST_AUTO_TEST_CASE(CreateWellConnectionsOK)
+{
+    const Opm::WellConnections completionSet(1, 1);
     BOOST_CHECK_MESSAGE( completionSet.empty(), "Default-constructed completion set must be empty" );
     BOOST_CHECK_EQUAL( 0U , completionSet.size() );
     BOOST_CHECK(!completionSet.allConnectionsShut());
 }
-
-
 
 BOOST_AUTO_TEST_CASE(AddCompletionSizeCorrect)
 {
@@ -145,17 +138,16 @@ BOOST_AUTO_TEST_CASE(AddCompletionSizeCorrect)
     const auto completion1 = Opm::Connection { 10,10,10, 100, 1, Opm::Connection::State::OPEN, dir, kind, 0, depth, ctf_props, 0, true };
     const auto completion2 = Opm::Connection { 10,10,11, 102, 1, Opm::Connection::State::SHUT, dir, kind, 0, depth, ctf_props, 0, true };
 
-    Opm::WellConnections completionSet(Opm::Connection::Order::TRACK, 1,1);
-    completionSet.add( completion1 );
-    BOOST_CHECK_EQUAL( 1U , completionSet.size() );
-    BOOST_CHECK_MESSAGE( !completionSet.empty(), "Non-empty completion set must not be empty" );
+    Opm::WellConnections completionSet(1, 1);
+    completionSet.add(completion1);
+    BOOST_CHECK_EQUAL(1U, completionSet.size());
+    BOOST_CHECK_MESSAGE(!completionSet.empty(), "Non-empty completion set must not be empty");
 
-    completionSet.add( completion2 );
-    BOOST_CHECK_EQUAL( 2U , completionSet.size() );
+    completionSet.add(completion2);
+    BOOST_CHECK_EQUAL(2U, completionSet.size());
 
-    BOOST_CHECK_EQUAL( completion1 , completionSet.get(0) );
+    BOOST_CHECK_EQUAL(completion1, completionSet.get(0));
 }
-
 
 BOOST_AUTO_TEST_CASE(WellConnectionsGetOutOfRangeThrows)
 {
@@ -172,18 +164,18 @@ BOOST_AUTO_TEST_CASE(WellConnectionsGetOutOfRangeThrows)
     const auto completion1 = Opm::Connection { 10,10,10, 100, 1, Opm::Connection::State::OPEN, dir, kind, 0, depth, ctf_props, 0, true };
     const auto completion2 = Opm::Connection { 10,10,11, 102, 1, Opm::Connection::State::SHUT, dir, kind, 0, depth, ctf_props, 0, true };
 
-    Opm::WellConnections completionSet(Opm::Connection::Order::TRACK, 1,1);
-    completionSet.add( completion1 );
-    BOOST_CHECK_EQUAL( 1U , completionSet.size() );
+    Opm::WellConnections completionSet(1, 1);
+    completionSet.add(completion1);
+    BOOST_CHECK_EQUAL(1U, completionSet.size());
 
-    completionSet.add( completion2 );
-    BOOST_CHECK_EQUAL( 2U , completionSet.size() );
+    completionSet.add(completion2);
+    BOOST_CHECK_EQUAL(2U, completionSet.size());
 
-    BOOST_CHECK_THROW( completionSet.get(10) , std::out_of_range );
+    BOOST_CHECK_THROW(completionSet.get(10), std::out_of_range );
 }
 
-
-BOOST_AUTO_TEST_CASE(Compdat_Direction) {
+BOOST_AUTO_TEST_CASE(Compdat_Direction)
+{
     BOOST_CHECK_MESSAGE(Opm::Connection::DirectionFromString("X") == Opm::Connection::Direction::X,
                         R"(Direction "X" must be Direction::X)");
     BOOST_CHECK_MESSAGE(Opm::Connection::DirectionFromString("x") == Opm::Connection::Direction::X,
@@ -203,7 +195,6 @@ BOOST_AUTO_TEST_CASE(Compdat_Direction) {
     BOOST_CHECK_THROW(Opm::Connection::DirectionFromString("HeLlo"), std::invalid_argument);
 }
 
-
 BOOST_AUTO_TEST_CASE(AddCompletionCopy)
 {
     const auto dir = Opm::Connection::Direction::Z;
@@ -220,7 +211,7 @@ BOOST_AUTO_TEST_CASE(AddCompletionCopy)
     const auto completion2 = Opm::Connection { 10,10,11, 101, 1, Opm::Connection::State::SHUT, dir, kind, 0, depth, ctf_props, 0, true };
     const auto completion3 = Opm::Connection { 10,10,12, 102, 1, Opm::Connection::State::SHUT, dir, kind, 0, depth, ctf_props, 0, true };
 
-    Opm::WellConnections completionSet(Opm::Connection::Order::TRACK, 10,10);
+    Opm::WellConnections completionSet(10, 10);
     completionSet.add( completion1 );
     completionSet.add( completion2 );
     completionSet.add( completion3 );
@@ -253,7 +244,7 @@ BOOST_AUTO_TEST_CASE(ActiveCompletions)
     const auto completion2 = Opm::Connection { 0,0,1, grid.getGlobalIndex(0,0,1), 1, Opm::Connection::State::SHUT, dir, kind, 0, depth, ctf_props, 0, true };
     const auto completion3 = Opm::Connection { 0,0,2, grid.getGlobalIndex(0,0,2), 1, Opm::Connection::State::SHUT, dir, kind, 0, depth, ctf_props, 0, true };
 
-    Opm::WellConnections completions(Opm::Connection::Order::TRACK, 10,10);
+    Opm::WellConnections completions(10, 10);
     completions.add( completion1 );
     completions.add( completion2 );
     completions.add( completion3 );
