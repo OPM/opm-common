@@ -723,6 +723,7 @@ list(APPEND DUNE_TEST_SOURCE_FILES
   tests/material/test_mixture_enthalpy.cpp
   tests/material/test_ncpflash.cpp
   tests/material/test_pengrobinson.cpp
+  tests/material/test_phflash.cpp
   tests/material/test_ptflash_newton_residual_scale.cpp
   tests/material/test_ptflash_ssi_newton_fallback.cpp
   tests/material/test_ptflash_trivial_root.cpp
@@ -1379,6 +1380,7 @@ list(APPEND PUBLIC_HEADER_FILES
   opm/material/constraintsolvers/MiscibleMultiPhaseComposition.hpp
   opm/material/constraintsolvers/MixtureEnthalpy.hpp
   opm/material/constraintsolvers/NcpFlash.hpp
+  opm/material/constraintsolvers/PHFlash.hpp
   opm/material/constraintsolvers/PTFlash.hpp
   opm/material/constraintsolvers/PTFlashMethod.hpp
   opm/material/constraintsolvers/RachfordRice.hpp
