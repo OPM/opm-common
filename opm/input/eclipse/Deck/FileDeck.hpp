@@ -136,7 +136,7 @@ private:
     };
 
     std::vector<Block> blocks;
-    std::string input_directory;
+    std::filesystem::path input_directory;
     std::unordered_set<std::string> modified_files;
 
     DeckTree deck_tree;
