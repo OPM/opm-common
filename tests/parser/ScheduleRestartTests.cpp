@@ -1108,4 +1108,12 @@ TSTEP
 
         compare_sched("BASE.DATA", "RESTART.DATA", "BASE.X0004", 4);
     }
+
+    BOOST_TEST_CONTEXT("No SKIPREST, restart at report step 7") {
+        write_file("RESTART.DATA",
+                   time_of_day_deck("RESTART\n  'BASE' 7 /\n",
+                                    "TSTEP\n  0.3 /\n"));
+
+        compare_sched("BASE.DATA", "RESTART.DATA", "BASE.X0007", 7);
+    }
 }
