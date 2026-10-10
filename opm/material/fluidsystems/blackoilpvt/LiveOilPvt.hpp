@@ -30,6 +30,7 @@
 #include <opm/common/Exceptions.hpp>
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/common/utility/VectorWithDefaultAllocator.hpp>
+#include <opm/common/utility/gpuistl_if_available.hpp>
 
 #include <opm/material/common/MathToolbox.hpp>
 #include <opm/material/common/UniformXTabulated2DFunction.hpp>
@@ -45,6 +46,15 @@ namespace Opm {
 class EclipseState;
 class Schedule;
 class SimpleTable;
+
+namespace gpuistl
+{
+template <class T>
+class GpuBuffer;
+
+template <class T>
+class GpuView;
+} // namespace gpuistl
 
 namespace detail {
 
@@ -68,6 +78,48 @@ namespace detail {
         std::vector<UniformXTabulated2DFunctionBuilder<Scalar>> oilMuTableBuilder_{};
     };
 
+    /*!
+     * \brief Holder for the per-region device table buffers when LiveOilPvt
+     *        owns its device memory (i.e. Storage is GpuBuffer).
+     *
+     *        In that case the per-region tables of LiveOilPvt are stored as
+     *        GpuBuffer<Table<Scalar, GpuView>>, i.e. as non-owning views. The
+     *        device arrays these views point into are owned by the
+     *        GpuBuffer-based tables in this holder (one per region), so the
+     *        holder must outlive every use of the views, including kernels
+     *        using a view obtained by make_view().
+     *
+     *        The holder is filled by copy_to_gpu(). For CPU storage and for
+     *        non-owning GPU storage (GpuView) it is empty.
+     *
+     * \note Copying an owning LiveOilPvt copies the buffers in this holder,
+     *       but the views in the copy still point into the buffers of the
+     *       original. Move owning objects instead of copying them.
+     */
+    template <class Scalar, bool IsOwningGpu>
+    struct LiveOilPvtGpuTableHolder {
+    };
+
+#if HAVE_CUDA
+    template <class Scalar>
+    struct LiveOilPvtGpuTableHolder<Scalar, true> {
+        using TwoD = UniformXTabulated2DFunction<Scalar, gpuistl::GpuBuffer>;
+        using OneD = Tabulated1DFunction<Scalar, gpuistl::GpuBuffer>;
+
+        // One entry per PVT region, in the same order as the corresponding
+        // table members of LiveOilPvt (e.g. inverseOilBTableBuffer_[regionIdx]
+        // owns the data viewed by inverseOilBTable_[regionIdx]).
+        std::vector<TwoD> inverseOilBTableBuffer_;
+        std::vector<TwoD> oilMuTableBuffer_;
+        std::vector<TwoD> inverseOilBMuTableBuffer_;
+        std::vector<OneD> saturatedOilMuTableBuffer_;
+        std::vector<OneD> inverseSaturatedOilBTableBuffer_;
+        std::vector<OneD> inverseSaturatedOilBMuTableBuffer_;
+        std::vector<OneD> saturatedGasDissolutionFactorTableBuffer_;
+        std::vector<OneD> saturationPressureBuffer_;
+    };
+#endif
+
 } // namespace detail
 
 /*!
@@ -79,8 +131,11 @@ template <class Scalar,
           template<class> class TableStorage = VectorWithDefaultAllocator>
 class LiveOilPvt
     : private detail::LiveOilPvtBuilderHolder<
-          Scalar,
-          std::is_same_v<Storage<Scalar>, VectorWithDefaultAllocator<Scalar>>>
+        Scalar,
+        std::is_same_v<Storage<Scalar>, VectorWithDefaultAllocator<Scalar>>>,
+      private detail::LiveOilPvtGpuTableHolder<
+        Scalar,
+        std::is_same_v<Storage<Scalar>, gpuistl::GpuBuffer<Scalar>>>
 {
     using SamplingPoints = std::vector<std::pair<Scalar, Scalar>>;
 
