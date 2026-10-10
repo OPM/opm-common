@@ -37,12 +37,38 @@
 #include <opm/material/common/Tabulated1DFunction.hpp>
 
 #include <cstddef>
+#include <type_traits>
+#include <vector>
 
 namespace Opm {
 
 class EclipseState;
 class Schedule;
 class SimpleTable;
+
+namespace detail {
+
+    /*!
+     * \brief Holder for the table builders that LiveOilPvt uses during
+     *        initialization (initFromState(), the setSaturatedOil*()
+     *        methods and initEnd()).
+     *
+     *        The builders are CPU-only and are never used after initEnd(),
+     *        so they only exist when LiveOilPvt uses CPU storage. For GPU
+     *        storage (GpuBuffer or GpuView) the holder is empty, which keeps
+     *        LiveOilPvt free of std::vector members on the GPU.
+     */
+    template <class Scalar, bool IsCpu>
+    struct LiveOilPvtBuilderHolder {
+    };
+
+    template <class Scalar>
+    struct LiveOilPvtBuilderHolder<Scalar, true> {
+        std::vector<UniformXTabulated2DFunctionBuilder<Scalar>> inverseOilBTableBuilder_{};
+        std::vector<UniformXTabulated2DFunctionBuilder<Scalar>> oilMuTableBuilder_{};
+    };
+
+} // namespace detail
 
 /*!
  * \brief This class represents the Pressure-Volume-Temperature relations of the oil phas
@@ -52,6 +78,9 @@ template <class Scalar,
           template<class> class Storage = VectorWithDefaultAllocator,
           template<class> class TableStorage = VectorWithDefaultAllocator>
 class LiveOilPvt
+    : private detail::LiveOilPvtBuilderHolder<
+          Scalar,
+          std::is_same_v<Storage<Scalar>, VectorWithDefaultAllocator<Scalar>>>
 {
     using SamplingPoints = std::vector<std::pair<Scalar, Scalar>>;
 
@@ -406,8 +435,6 @@ private:
 
     Storage<Scalar> gasReferenceDensity_{};
     Storage<Scalar> oilReferenceDensity_{};
-    std::vector<TabulatedTwoDFunctionBuilder> inverseOilBTableBuilder_{};
-    std::vector<TabulatedTwoDFunctionBuilder> oilMuTableBuilder_{};
     Storage<TabulatedTwoDFunction> inverseOilBTable_{};
     Storage<TabulatedTwoDFunction> oilMuTable_{};
     Storage<TabulatedTwoDFunction> inverseOilBMuTable_{};
