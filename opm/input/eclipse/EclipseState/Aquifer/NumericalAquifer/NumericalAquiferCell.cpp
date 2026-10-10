@@ -39,17 +39,20 @@ namespace Opm {
         , length ( record.getItem<AQUNUM::LENGTH>().getSIDouble(0) )
         , permeability( record.getItem<AQUNUM::PERM>().getSIDouble(0) )
     {
-        const auto& poro = field_props.get_double("PORO");
-        const auto& pvtnum = field_props.get_int("PVTNUM");
-        const auto& satnum = field_props.get_int("SATNUM");
+        // Read through the global arrays rather than the active-cell ones.  For an active
+        // cell the two carry the same value, but the cell an AQUNUM record names is not
+        // necessarily active: when the aquifer is represented outside the grid, the cell
+        // it names is deactivated precisely so that nothing else occupies it.
+        const auto& poro = field_props.get_global_double("PORO");
+        const auto& pvtnum = field_props.get_global_int("PVTNUM");
+        const auto& satnum = field_props.get_global_int("SATNUM");
 
         this->global_index = grid.getGlobalIndex(I, J, K);
-        const std::size_t active_index = grid.activeIndex(this->global_index);
 
         if ( !record.getItem<AQUNUM::PORO>().defaultApplied(0) ) {
             this->porosity = record.getItem<AQUNUM::PORO>().getSIDouble(0);
         } else {
-            this->porosity = poro[active_index];
+            this->porosity = poro[this->global_index];
         }
 
         if ( !record.getItem<AQUNUM::DEPTH>().defaultApplied(0) ) {
@@ -65,13 +68,13 @@ namespace Opm {
         if ( !record.getItem<AQUNUM::PVT_TABLE_NUM>().defaultApplied(0) ) {
             this->pvttable = record.getItem<AQUNUM::PVT_TABLE_NUM>().get<int>(0);
         } else {
-            this->pvttable = pvtnum[active_index];
+            this->pvttable = pvtnum[this->global_index];
         }
 
         if ( !record.getItem<AQUNUM::SAT_TABLE_NUM>().defaultApplied(0) ) {
             this->sattable = record.getItem<AQUNUM::SAT_TABLE_NUM>().get<int>(0);
         } else {
-            this->sattable = satnum[active_index];
+            this->sattable = satnum[this->global_index];
         }
 
         this->record_id = record_id_;

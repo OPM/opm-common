@@ -129,13 +129,14 @@ namespace Opm {
 // process is done twice, first after the initial field_props processing and
 // subsequently after the processing of numerical aquifers.
 
-    EclipseState::EclipseState(const Deck& deck)
+    EclipseState::EclipseState(const Deck& deck, NumericalAquiferMode aquiferMode)
     try
-        : m_tables(            deck )
+        : numerical_aquifer_mode( aquiferMode )
+        , m_tables(            deck )
         , m_runspec(           deck )
         , m_eclipseConfig(     deck, m_runspec )
         , m_deckUnitSystem(    deck.getActiveUnitSystem() )
-        , m_inputGrid(         deck, nullptr )
+        , m_inputGrid(         deck, nullptr, aquiferMode )
         , m_inputNnc(          m_inputGrid, deck)
         , m_gridDims(          deck )
         , field_props(         deck, m_runspec.phases(), m_inputGrid, m_tables, m_runspec.numComps())
@@ -446,6 +447,21 @@ namespace Opm {
 
         auto& numerical_aquifer = this->aquifer_config.mutableNumericalAquifers();
 
+        // Tell the MULTREGT scanner which cells belong to an aquifer.  This shapes
+        // nothing; it is what lets a MULTREGT record distinguish an aquifer connection
+        // from any other non-neighbour connection (the NOAQUNNC behaviour), and that
+        // distinction has to be drawn the same way however the aquifer is represented.
+        this->m_transMult.applyNumericalAquifer(numerical_aquifer.allAquiferCellIds());
+
+        // Everything below reshapes the grid and the field properties so that a grid
+        // cell can stand in for an aquifer cell.  In AuxiliaryCells mode nothing stands
+        // in for it -- the simulator represents the aquifer as degrees of freedom of its
+        // own -- so the grid, the field properties and the non-neighbour connections are
+        // left exactly as the deck describes them.
+        if (this->numerical_aquifer_mode == NumericalAquiferMode::AuxiliaryCells) {
+            return;
+        }
+
         numerical_aquifer.applyMinPV(this->m_inputGrid);
 
         // Update field_props for numerical aquifer cells and set the
@@ -455,8 +471,6 @@ namespace Opm {
         // Add NNCs between aquifer cells and first aquifer cell and aquifer
         // connections.
         this->appendInputNNC(numerical_aquifer.aquiferCellNNCs());
-
-        this->m_transMult.applyNumericalAquifer(numerical_aquifer.allAquiferCellIds());
     }
 
     void EclipseState::applyMULTXYZ()
