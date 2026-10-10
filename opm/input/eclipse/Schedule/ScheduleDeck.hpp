@@ -200,7 +200,7 @@ namespace Opm {
         ///
         /// \param[in,out] context Tracking of current simulated time.
         void handleDATES(const DeckKeyword&   keyword,
-                         const std::time_t    restart_time,
+                         const time_point&    restart_time,
                          ScheduleDeckContext& context);
 
         /// Create a ScheduleBlock for a new report step.

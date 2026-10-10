@@ -60,8 +60,8 @@ namespace {
     std::pair<std::size_t, std::size_t>
     date_diff(const Opm::time_point& t2, const Opm::time_point& t1)
     {
-        const auto ts1 = Opm::TimeStampUTC { Opm::TimeService::to_time_t(t1) };
-        const auto ts2 = Opm::TimeStampUTC { Opm::TimeService::to_time_t(t2) };
+        const auto ts1 = Opm::TimeStampUTC { t1 };
+        const auto ts2 = Opm::TimeStampUTC { t2 };
 
         const auto year_diff  = ts2.year() - ts1.year();
         const auto month_diff = year_diff*12 + ts2.month() - ts1.month();
@@ -108,7 +108,7 @@ ScheduleState::ScheduleState(const time_point& t1)
     , m_first_in_month(true)
     , m_first_in_year(true)
 {
-    auto ts1 = TimeStampUTC(TimeService::to_time_t(this->m_start_time));
+    auto ts1 = TimeStampUTC(this->m_start_time);
     this->m_month_num = ts1.month() - 1;
 }
 
@@ -125,7 +125,7 @@ void ScheduleState::update_date(const time_point& prev_time)
     this->m_first_in_month = (month_diff > 0);
     this->m_first_in_year = (year_diff > 0);
 
-    auto ts1 = TimeStampUTC(TimeService::to_time_t(this->m_start_time));
+    auto ts1 = TimeStampUTC(this->m_start_time);
     this->m_month_num = ts1.month() - 1;
 }
 

@@ -226,7 +226,7 @@ BOOST_AUTO_TEST_CASE(EclipseWriteRestartWellInfo)
     Opm::EclipseIO eclipseWriter(es,  grid , schedule, summary_config);
     const int countTimeStep = schedule.size() - 1;
     Opm::SummaryState st {
-        Opm::TimeService::from_time_t(schedule.getStartTime()),
+        schedule.getStartTime(),
         schedule.back().udq().params().undefinedValue()
     };
     Opm::Action::State action_state;

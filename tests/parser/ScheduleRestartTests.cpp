@@ -23,7 +23,13 @@
 
 #include <opm/io/eclipse/rst/state.hpp>
 #include <opm/io/eclipse/ERst.hpp>
+#include <opm/io/eclipse/OutputStream.hpp>
 #include <opm/io/eclipse/RestartFileView.hpp>
+
+#include <opm/output/data/Cells.hpp>
+#include <opm/output/eclipse/AggregateAquiferData.hpp>
+#include <opm/output/eclipse/RestartIO.hpp>
+#include <opm/output/eclipse/RestartValue.hpp>
 
 #include <opm/common/utility/TimeService.hpp>
 
@@ -43,6 +49,7 @@
 #include <opm/input/eclipse/Schedule/Well/WListManager.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellTestState.hpp>
 
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 
@@ -57,6 +64,7 @@
 #include "tests/WorkArea.hpp"
 
 #include <algorithm>
+#include <chrono>
 #include <cstddef>
 #include <filesystem>
 #include <fstream>
@@ -950,4 +958,200 @@ DATES
     const auto& dates = fd[fd.find("DATES").value()];
     BOOST_CHECK_EQUAL(dates[0].getItem<ParserKeywords::DATES::MONTH>()
                       .get<std::string>(0), "MAR");
+}
+
+namespace {
+
+std::string time_of_day_deck(const std::string& solution_body,
+                             const std::string& schedule_body)
+{
+    return R"(RUNSPEC
+
+DIMENS
+  5 5 2 /
+
+OIL
+WATER
+
+METRIC
+
+START
+  1 'JAN' 2020 /
+
+GRID
+
+DXV
+  5*100 /
+
+DYV
+  5*100 /
+
+DZV
+  2*10 /
+
+DEPTHZ
+  36*2000 /
+
+PORO
+  50*0.3 /
+
+PERMX
+  50*100 /
+
+PERMY
+  50*100 /
+
+PERMZ
+  50*10 /
+
+SOLUTION
+
+)" + solution_body + R"(
+SCHEDULE
+
+)" + schedule_body;
+}
+
+// Write the restart file of a report step at the elapsed time of that
+// step, as the simulator does.
+void write_restart_file(const std::string& case_name, const int report_step)
+{
+    namespace OS = EclIO::OutputStream;
+    using measure = UnitSystem::measure;
+
+    const auto deck = Parser{}.parseFile(case_name + ".DATA");
+    const auto es = EclipseState { deck };
+    const auto sched = Schedule { deck, es, std::make_shared<Python>() };
+
+    const auto num_cells = es.getInputGrid().getNumActive();
+    auto solution = data::Solution {
+        { "PRESSURE", data::CellData { measure::pressure, {}, data::TargetType::RESTART_SOLUTION } },
+        { "SWAT",     data::CellData { measure::identity, {}, data::TargetType::RESTART_SOLUTION } },
+    };
+    solution.data<double>("PRESSURE").assign(num_cells, 250.0);
+    solution.data<double>("SWAT").assign(num_cells, 0.3);
+
+    auto aquifer_data = std::optional<RestartIO::Helpers::AggregateAquiferData>{};
+    auto rst_file = OS::Restart {
+        OS::ResultSet { "./", case_name }, report_step,
+        OS::Formatted { false }, OS::Unified { false }
+    };
+
+    RestartIO::save(rst_file, report_step, sched.seconds(report_step),
+                    RestartValue { std::move(solution), {}, {}, {} },
+                    es, es.getInputGrid(), sched,
+                    Action::State{}, WellTestState{},
+                    SummaryState { TimeService::now(), 0.0 }, UDQState{ 1 },
+                    aquifer_data);
+}
+
+} // Anonymous namespace
+
+BOOST_AUTO_TEST_CASE(RestartAtTimeOfDay)
+{
+    WorkArea work {};
+
+    // Report steps end at 1, 2, 3, 3.1, 3.5, 4, 4.7 and 5 days.  Step 4 ends
+    // at 02:24:00.  The 0.7-day TSTEP is truncated to whole milliseconds,
+    // making step 7 end at 16:47:59.999.
+    const auto schedule = std::string { R"(WELSPECS
+  'OP1' 'G1' 1 1 1* 'OIL' /
+  'WI1' 'G1' 5 5 1* 'WATER' /
+/
+
+COMPDAT
+  'OP1' 1 1 1 2 'OPEN' /
+  'WI1' 5 5 1 2 'OPEN' /
+/
+
+WCONPROD
+  'OP1' 'OPEN' 'ORAT' 100 4* 50 /
+/
+
+WCONINJE
+  'WI1' 'WATER' 'OPEN' 'RATE' 100 1* 500 /
+/
+
+TSTEP
+  3*1.0 /
+
+WCONPROD
+  'OP1' 'OPEN' 'ORAT' 50 4* 50 /
+/
+
+WCONINJE
+  'WI1' 'WATER' 'OPEN' 'RATE' 50 1* 500 /
+/
+
+TSTEP
+  0.1 0.4 0.5 0.7 0.3 /
+)" };
+
+    write_file("BASE.DATA", time_of_day_deck("", schedule));
+
+    for (const auto report_step : { 4, 7 }) {
+        BOOST_TEST_CONTEXT("SKIPREST, restart at report step " << report_step) {
+            write_restart_file("BASE", report_step);
+            write_file("RESTART.DATA",
+                       time_of_day_deck(fmt::format("RESTART\n  'BASE' {} /\n", report_step),
+                                        "SKIPREST\n\n" + schedule));
+
+            compare_sched("BASE.DATA", "RESTART.DATA",
+                          fmt::format("BASE.X{:04d}", report_step), report_step);
+        }
+    }
+
+    // Without SKIPREST the report steps continue from the restart time.
+    BOOST_TEST_CONTEXT("No SKIPREST, restart at report step 4") {
+        write_file("RESTART.DATA",
+                   time_of_day_deck("RESTART\n  'BASE' 4 /\n",
+                                    "TSTEP\n  0.4 0.5 0.7 0.3 /\n"));
+
+        compare_sched("BASE.DATA", "RESTART.DATA", "BASE.X0004", 4);
+    }
+
+    BOOST_TEST_CONTEXT("No SKIPREST, restart at report step 7") {
+        write_file("RESTART.DATA",
+                   time_of_day_deck("RESTART\n  'BASE' 7 /\n",
+                                    "TSTEP\n  0.3 /\n"));
+
+        compare_sched("BASE.DATA", "RESTART.DATA", "BASE.X0007", 7);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(RestartAtFractionalSecond)
+{
+    WorkArea work {};
+
+    // The first TSTEP is 1.001376 seconds, truncated to 1.001 seconds at
+    // the schedule's millisecond resolution.
+    const auto schedule = std::string {
+        "TSTEP\n  0.00001159 1.0 /\n"
+    };
+    write_file("BASE.DATA", time_of_day_deck("", schedule));
+
+    const auto deck = Parser{}.parseFile("BASE.DATA");
+    const auto es = EclipseState { deck };
+    const auto sched = Schedule { deck, es, std::make_shared<Python>() };
+    BOOST_REQUIRE(sched.size() > 1);
+    BOOST_CHECK(sched[1].start_time() == sched.getStartTime() +
+                                       std::chrono::milliseconds { 1'001 });
+
+    write_restart_file("BASE", 1);
+
+    BOOST_TEST_CONTEXT("SKIPREST, restart at 1.001 seconds") {
+        write_file("RESTART.DATA",
+                   time_of_day_deck("RESTART\n  'BASE' 1 /\n",
+                                    "SKIPREST\n\n" + schedule));
+
+        compare_sched("BASE.DATA", "RESTART.DATA", "BASE.X0001", 1);
+    }
+
+    BOOST_TEST_CONTEXT("No SKIPREST, restart at 1.001 seconds") {
+        write_file("RESTART.DATA",
+                   time_of_day_deck("RESTART\n  'BASE' 1 /\n",
+                                    "TSTEP\n  1.0 /\n"));
+
+        compare_sched("BASE.DATA", "RESTART.DATA", "BASE.X0001", 1);
+    }
 }

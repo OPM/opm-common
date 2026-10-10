@@ -20,6 +20,8 @@
 #ifndef ActionX_HPP_
 #define ActionX_HPP_
 
+#include <opm/common/utility/TimeService.hpp>
+
 #include <opm/input/eclipse/Schedule/Action/ActionAST.hpp>
 #include <opm/input/eclipse/Schedule/Action/ActionResult.hpp>
 #include <opm/input/eclipse/Schedule/Action/Condition.hpp>
@@ -27,7 +29,6 @@
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 
 #include <cstddef>
-#include <ctime>
 #include <string>
 #include <unordered_set>
 #include <utility>
@@ -107,7 +108,7 @@ public:
     ActionX(const std::string& name,
             std::size_t max_run,
             double min_wait,
-            std::time_t start_time);
+            time_point start_time);
 
     /// Constructor.
     ///
@@ -120,7 +121,7 @@ public:
     /// created.  Typically the simulated time at the start of the report
     /// step at which an ACTIONX keyword is encountered.  The first wait
     /// time is relative to this start time.
-    ActionX(const DeckRecord& record, std::time_t start_time);
+    ActionX(const DeckRecord& record, time_point start_time);
 
     /// Constructor.
     ///
@@ -162,7 +163,7 @@ public:
     ActionX(const std::string& name,
             std::size_t max_run,
             double min_wait,
-            std::time_t start_time,
+            time_point start_time,
             std::vector<Condition>&& conditions,
             const std::vector<std::string>& tokens);
 
@@ -184,7 +185,7 @@ public:
     /// \param[in] sim_time Simulated time since simulation start.
     ///
     /// \return Whether or not this ActionX object is ready to run.
-    bool ready(const State& state, std::time_t sim_time) const;
+    bool ready(const State& state, time_point sim_time) const;
 
     /// Evaluate the action's conditions at current dynamic state
     ///
@@ -246,7 +247,7 @@ public:
     /// Typically the simulated time at the start of the report step at
     /// which an ACTIONX keyword is encountered.  The first wait time is
     /// relative to this start time.
-    std::time_t start_time() const { return this->m_start_time; }
+    time_point start_time() const { return this->m_start_time; }
 
     /// Start of action block SCHEDULE keyword sequence.
     auto begin() const { return this->keywords.begin(); }
@@ -307,7 +308,7 @@ private:
     /// simulated time at the start of the report step at which an ACTIONX
     /// keyword is encountered.  The first wait time is relative to this
     /// start time.
-    std::time_t m_start_time;
+    time_point m_start_time{};
 
     /// Triggering condition for this action object.
     AST condition{};
@@ -348,7 +349,7 @@ private:
 /// get<1>(t) is empty, then the ActionX object can be completed by calling
 /// its addKeyword() member function to form the actual action block.
 std::pair<ActionX, std::vector<std::pair<std::string, std::string>>>
-parseActionX(const DeckKeyword& kw, const Actdims& actimds, std::time_t start_time);
+parseActionX(const DeckKeyword& kw, const Actdims& actimds, time_point start_time);
 
 } // namespace Opm::Action
 

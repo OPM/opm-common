@@ -36,6 +36,8 @@
 #include <opm/output/eclipse/AggregateWellData.hpp>
 #include <opm/output/eclipse/AggregateConnectionData.hpp>
 #include <opm/output/eclipse/AggregateGroupData.hpp>
+#include <opm/output/eclipse/InteHEAD.hpp>
+#include <opm/output/eclipse/VectorItems/doubhead.hpp>
 #include <opm/output/eclipse/VectorItems/intehead.hpp>
 #include <opm/output/eclipse/VectorItems/well.hpp>
 #include <opm/output/eclipse/WriteRestartHelpers.hpp>
@@ -66,6 +68,7 @@
 #include <tests/WorkArea.hpp>
 
 #include <algorithm>
+#include <chrono>
 #include <cstddef>
 #include <memory>
 #include <string>
@@ -551,6 +554,127 @@ BOOST_AUTO_TEST_CASE(State_test)
 
     const auto& well = state.get_well("OP_3");
     BOOST_CHECK_THROW(well.segment(10), std::invalid_argument);
+}
+
+BOOST_AUTO_TEST_CASE(Restart_Time_Of_Day)
+{
+    // Report step 7 ending 4-Jan-2016 16:47:59.999.
+    const auto ih = Opm::RestartIO::InteHEAD{}
+        .calendarDate({2016, 1, 4, 16, 47, 59, 999'000})
+        .stepParam(7, 7);
+
+    const auto header = Opm::RestartIO::RstHeader {
+        Opm::UnitSystem::newMETRIC(), ih.data(),
+        std::vector<bool>(100), std::vector<double>(1000)
+    };
+
+    const auto ts = Opm::TimeStampUTC {
+        Opm::TimeStampUTC::YMD { 2016, 1, 4 }, 16, 47, 59, 0
+    };
+
+    BOOST_CHECK(header.sim_time() == Opm::asTimePoint(ts) +
+                                    std::chrono::milliseconds { 999 });
+
+    const auto& [time, report_step] = header.restart_info();
+    BOOST_CHECK(time == Opm::asTimePoint(ts) + std::chrono::milliseconds { 999 });
+    BOOST_CHECK_EQUAL(report_step, std::size_t{7});
+}
+
+BOOST_AUTO_TEST_CASE(Restart_Time_Millisecond_Rounding)
+{
+    const auto ts = Opm::TimeStampUTC {
+        Opm::TimeStampUTC::YMD { 2016, 1, 4 }, 16, 47, 58, 0
+    };
+
+    // Fractions immediately below, at, and above a half millisecond.
+    // Midpoints round to the nearest even millisecond.
+    const auto rounding_cases = std::vector<std::pair<int, int>> {
+        {      499,    0 },
+        {      500,    0 },
+        {      501,    1 },
+        {    1'499,    1 },
+        {    1'500,    2 },
+        {    1'501,    2 },
+        { 999'499,  999 },
+        { 999'500, 1000 },
+        { 999'501, 1000 },
+    };
+
+    for (const auto& [microseconds, milliseconds] : rounding_cases) {
+        BOOST_TEST_CONTEXT("Fraction in microseconds: " << microseconds) {
+            const auto ih = Opm::RestartIO::InteHEAD{}
+                .calendarDate({2016, 1, 4, 16, 47, 58, microseconds})
+                .stepParam(7, 7);
+
+            const auto header = Opm::RestartIO::RstHeader {
+                Opm::UnitSystem::newMETRIC(), ih.data(),
+                std::vector<bool>(100), std::vector<double>(1000)
+            };
+
+            BOOST_CHECK(header.sim_time() == Opm::asTimePoint(ts) +
+                                            std::chrono::milliseconds { milliseconds });
+
+            const auto& [time, report_step] = header.restart_info();
+            BOOST_CHECK(time == Opm::asTimePoint(ts) +
+                                std::chrono::milliseconds { milliseconds });
+            BOOST_CHECK_EQUAL(report_step, std::size_t{7});
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(Restart_Time_Rounding_Carry)
+{
+    const auto rollover_cases =
+        std::vector<std::pair<Opm::RestartIO::InteHEAD::TimePoint,
+                              Opm::TimeStampUTC>> {
+            { {2016,  1,  4, 16, 47, 58, 999'500}, {{2016, 1, 4}, 16, 47, 59, 0} },
+            { {2016,  1,  4, 16, 47, 59, 999'500}, {{2016, 1, 4}, 16, 48,  0, 0} },
+            { {2016,  1,  4, 23, 59, 59, 999'500}, {{2016, 1, 5},  0,  0,  0, 0} },
+            { {2016, 12, 31, 23, 59, 59, 999'500}, {{2017, 1, 1},  0,  0,  0, 0} },
+        };
+
+    for (const auto& [input, expected] : rollover_cases) {
+        BOOST_TEST_CONTEXT("Restart date: " << input.year << '-'
+                           << input.month << '-' << input.day << ' '
+                           << input.hour << ':' << input.minute << ':'
+                           << input.second) {
+            const auto ih = Opm::RestartIO::InteHEAD{}
+                .calendarDate(input)
+                .stepParam(7, 7);
+
+            const auto header = Opm::RestartIO::RstHeader {
+                Opm::UnitSystem::newMETRIC(), ih.data(),
+                std::vector<bool>(100), std::vector<double>(1000)
+            };
+
+            const auto& [time, report_step] = header.restart_info();
+            BOOST_CHECK(header.sim_time() == Opm::asTimePoint(expected));
+            BOOST_CHECK(time == Opm::asTimePoint(expected));
+            BOOST_CHECK_EQUAL(report_step, std::size_t{7});
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(Restart_Start_Inferred_From_Fractional_Time)
+{
+    const auto ih = Opm::RestartIO::InteHEAD{}
+        .calendarDate({2020, 1, 2, 0, 0, 0, 1'000})
+        .stepParam(1, 1);
+
+    auto dh = std::vector<double>(1000);
+    dh[Opm::RestartIO::Helpers::VectorItems::doubhead::SimTime] =
+        (86'400.0 + 0.001) / 86'400.0;
+
+    const auto header = Opm::RestartIO::RstHeader {
+        Opm::UnitSystem::newMETRIC(), ih.data(),
+        std::vector<bool>(100), dh
+    };
+
+    // Dropping the millisecond from sim_time() moves the inferred start
+    // into the previous day when its timestamp is floored to whole seconds.
+    BOOST_REQUIRE(header.inferred_start_from_elapsed_simtime.has_value());
+    BOOST_CHECK(Opm::asTimePoint(*header.inferred_start_from_elapsed_simtime) ==
+                Opm::TimeService::mkdate(2020, 1, 1));
 }
 
 BOOST_AUTO_TEST_CASE(Well_Economic_Limits)

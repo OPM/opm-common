@@ -22,10 +22,11 @@
 
 #include <opm/output/eclipse/WindowedArray.hpp>
 
+#include <opm/common/utility/TimeService.hpp>
+
 #include <opm/io/eclipse/PaddedOutputString.hpp>
 
 #include <cstddef>
-#include <ctime>
 #include <span>
 #include <string>
 #include <vector>
@@ -48,8 +49,8 @@ namespace Opm::RestartIO::Helpers {
 
 struct AggregateActionxRuntimeContext
 {
-    std::time_t startTime;
-    std::time_t simTime;
+    time_point startTime;
+    time_point simTime;
     const UnitSystem& units;
     std::span<const std::string> wellNames;
     const WListManager& wlistManager;
