@@ -66,6 +66,7 @@
 #include "tests/WorkArea.hpp"
 
 #include <algorithm>
+#include <chrono>
 #include <cstddef>
 #include <filesystem>
 #include <fstream>
@@ -1133,5 +1134,42 @@ TSTEP
                                     "TSTEP\n  0.3 /\n"));
 
         compare_sched("BASE.DATA", "RESTART.DATA", "BASE.X0007", 7);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(RestartAtFractionalSecond)
+{
+    WorkArea work {};
+
+    // The first TSTEP is 1.001376 seconds, truncated to 1.001 seconds at
+    // the schedule's millisecond resolution.
+    const auto schedule = std::string {
+        "TSTEP\n  0.00001159 1.0 /\n"
+    };
+    write_file("BASE.DATA", time_of_day_deck("", schedule));
+
+    const auto deck = Parser{}.parseFile("BASE.DATA");
+    const auto es = EclipseState { deck };
+    const auto sched = Schedule { deck, es, std::make_shared<Python>() };
+    BOOST_REQUIRE(sched.size() > 1);
+    BOOST_CHECK(sched[1].start_time() == sched.getStartTime() +
+                                       std::chrono::milliseconds { 1'001 });
+
+    write_restart_file("BASE", 1);
+
+    BOOST_TEST_CONTEXT("SKIPREST, restart at 1.001 seconds") {
+        write_file("RESTART.DATA",
+                   time_of_day_deck("RESTART\n  'BASE' 1 /\n",
+                                    "SKIPREST\n\n" + schedule));
+
+        compare_sched("BASE.DATA", "RESTART.DATA", "BASE.X0001", 1);
+    }
+
+    BOOST_TEST_CONTEXT("No SKIPREST, restart at 1.001 seconds") {
+        write_file("RESTART.DATA",
+                   time_of_day_deck("RESTART\n  'BASE' 1 /\n",
+                                    "TSTEP\n  1.0 /\n"));
+
+        compare_sched("BASE.DATA", "RESTART.DATA", "BASE.X0001", 1);
     }
 }

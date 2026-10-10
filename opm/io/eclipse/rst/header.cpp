@@ -245,20 +245,17 @@ time_point RstHeader::sim_time() const
 
     // ISECND holds the seconds and their fraction, in microseconds.
     ts.hour(this->hour).minutes(this->minute)
-        .seconds(this->microsecond / 1'000'000)
-        .microseconds(this->microsecond % 1'000'000);
+        .seconds(this->microsecond / 1'000'000);
 
-    return asTimePoint(ts);
+    // Round the fraction of a second to the schedule's millisecond resolution.
+    const auto fraction = std::chrono::microseconds { this->microsecond % 1'000'000 };
+    return asTimePoint(ts) + std::chrono::round<time_point::duration>(fraction);
 }
 
 std::pair<time_point, std::size_t>
 RstHeader::restart_info() const
 {
-    // Round the fraction of a second to the schedule's millisecond resolution.
-    const auto fraction = std::chrono::microseconds { this->microsecond % 1'000'000 };
-
-    return std::make_pair(this->sim_time() +
-                          std::chrono::round<time_point::duration>(fraction),
+    return std::make_pair(this->sim_time(),
                           std::size_t(this->report_step));
 }
 
