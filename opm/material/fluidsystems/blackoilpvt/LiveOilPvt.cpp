@@ -35,8 +35,10 @@
 
 namespace Opm {
 
-template<class Scalar>
-void LiveOilPvt<Scalar>::
+template<class Scalar,
+         template<class> class Storage,
+         template<class> class TableStorage>
+void LiveOilPvt<Scalar, Storage, TableStorage>::
 initFromState(const EclipseState& eclState, const Schedule& schedule)
 {
     const auto& pvtoTables = eclState.getTableManager().getPvtoTables();
@@ -162,8 +164,10 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
     initEnd();
 }
 
-template<class Scalar>
-void LiveOilPvt<Scalar>::
+template<class Scalar,
+         template<class> class Storage,
+         template<class> class TableStorage>
+void LiveOilPvt<Scalar, Storage, TableStorage>::
 extendPvtoTable_(TabulatedTwoDFunctionBuilder& invOilB,
                  TabulatedTwoDFunctionBuilder& oilMu,
                  unsigned xIdx,
@@ -213,8 +217,10 @@ extendPvtoTable_(TabulatedTwoDFunctionBuilder& invOilB,
     }
 }
 
-template<class Scalar>
-void LiveOilPvt<Scalar>::setNumRegions(std::size_t numRegions)
+template<class Scalar,
+         template<class> class Storage,
+         template<class> class TableStorage>
+void LiveOilPvt<Scalar, Storage, TableStorage>::setNumRegions(std::size_t numRegions)
 {
     oilReferenceDensity_.resize(numRegions);
     gasReferenceDensity_.resize(numRegions);
@@ -228,8 +234,10 @@ void LiveOilPvt<Scalar>::setNumRegions(std::size_t numRegions)
     saturationPressure_.resize(numRegions);
 }
 
-template<class Scalar>
-void LiveOilPvt<Scalar>::
+template<class Scalar,
+         template<class> class Storage,
+         template<class> class TableStorage>
+void LiveOilPvt<Scalar, Storage, TableStorage>::
 setReferenceDensities(unsigned regionIdx,
                       Scalar rhoRefOil,
                       Scalar rhoRefGas,
@@ -239,8 +247,10 @@ setReferenceDensities(unsigned regionIdx,
     gasReferenceDensity_[regionIdx] = rhoRefGas;
 }
 
-template<class Scalar>
-void LiveOilPvt<Scalar>::
+template<class Scalar,
+         template<class> class Storage,
+         template<class> class TableStorage>
+void LiveOilPvt<Scalar, Storage, TableStorage>::
 setSaturatedOilFormationVolumeFactor(unsigned regionIdx,
                                      const SamplingPoints& samplePoints)
 {
@@ -268,8 +278,10 @@ setSaturatedOilFormationVolumeFactor(unsigned regionIdx,
     inverseOilBTable_[regionIdx] = std::move(invOilB).build();
 }
 
-template<class Scalar>
-void LiveOilPvt<Scalar>::
+template<class Scalar,
+         template<class> class Storage,
+         template<class> class TableStorage>
+void LiveOilPvt<Scalar, Storage, TableStorage>::
 setSaturatedOilViscosity(unsigned regionIdx,
                          const SamplingPoints& samplePoints)
 {
@@ -299,8 +311,10 @@ setSaturatedOilViscosity(unsigned regionIdx,
     oilMuTable_[regionIdx] = std::move(oilMu).build();
 }
 
-template<class Scalar>
-void LiveOilPvt<Scalar>::initEnd()
+template<class Scalar,
+         template<class> class Storage,
+         template<class> class TableStorage>
+void LiveOilPvt<Scalar, Storage, TableStorage>::initEnd()
 {
     // calculate the final 2D functions which are used for interpolation.
     std::size_t regions = oilMuTable_.size();
@@ -349,8 +363,10 @@ void LiveOilPvt<Scalar>::initEnd()
     }
 }
 
-template<class Scalar>
-void LiveOilPvt<Scalar>::updateSaturationPressure_(unsigned regionIdx)
+template<class Scalar,
+         template<class> class Storage,
+         template<class> class TableStorage>
+void LiveOilPvt<Scalar, Storage, TableStorage>::updateSaturationPressure_(unsigned regionIdx)
 {
     const auto& gasDissolutionFac = saturatedGasDissolutionFactorTable_[regionIdx];
 
