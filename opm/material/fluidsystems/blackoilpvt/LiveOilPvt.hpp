@@ -29,6 +29,7 @@
 
 #include <opm/common/Exceptions.hpp>
 #include <opm/common/OpmLog/OpmLog.hpp>
+#include <opm/common/utility/VectorWithDefaultAllocator.hpp>
 
 #include <opm/material/common/MathToolbox.hpp>
 #include <opm/material/common/UniformXTabulated2DFunction.hpp>
@@ -47,15 +48,17 @@ class SimpleTable;
  * \brief This class represents the Pressure-Volume-Temperature relations of the oil phas
  *        with dissolved gas.
  */
-template <class Scalar>
+template <class Scalar,
+          template<class> class Storage = VectorWithDefaultAllocator,
+          template<class> class TableStorage = VectorWithDefaultAllocator>
 class LiveOilPvt
 {
     using SamplingPoints = std::vector<std::pair<Scalar, Scalar>>;
 
 public:
-    using TabulatedTwoDFunction = UniformXTabulated2DFunction<Scalar>;
+    using TabulatedTwoDFunction = UniformXTabulated2DFunction<Scalar, TableStorage>;
     using TabulatedTwoDFunctionBuilder = UniformXTabulated2DFunctionBuilder<Scalar>;
-    using TabulatedOneDFunction = Tabulated1DFunction<Scalar>;
+    using TabulatedOneDFunction = Tabulated1DFunction<Scalar, TableStorage>;
 
     /*!
      * \brief Initialize the oil parameters via the data specified by the PVTO ECL keyword.
@@ -372,28 +375,28 @@ public:
     Scalar oilReferenceDensity(unsigned regionIdx) const
     { return oilReferenceDensity_[regionIdx]; }
 
-    const std::vector<TabulatedTwoDFunction>& inverseOilBTable() const
+    const Storage<TabulatedTwoDFunction>& inverseOilBTable() const
     { return inverseOilBTable_; }
 
-    const std::vector<TabulatedTwoDFunction>& oilMuTable() const
+    const Storage<TabulatedTwoDFunction>& oilMuTable() const
     { return oilMuTable_; }
 
-    const std::vector<TabulatedTwoDFunction>& inverseOilBMuTable() const
+    const Storage<TabulatedTwoDFunction>& inverseOilBMuTable() const
     { return inverseOilBMuTable_; }
 
-    const std::vector<TabulatedOneDFunction>& saturatedOilMuTable() const
+    const Storage<TabulatedOneDFunction>& saturatedOilMuTable() const
     { return saturatedOilMuTable_; }
 
-    const std::vector<TabulatedOneDFunction>& inverseSaturatedOilBTable() const
+    const Storage<TabulatedOneDFunction>& inverseSaturatedOilBTable() const
     { return inverseSaturatedOilBTable_; }
 
-    const std::vector<TabulatedOneDFunction>& inverseSaturatedOilBMuTable() const
+    const Storage<TabulatedOneDFunction>& inverseSaturatedOilBMuTable() const
     { return inverseSaturatedOilBMuTable_; }
 
-    const std::vector<TabulatedOneDFunction>& saturatedGasDissolutionFactorTable() const
+    const Storage<TabulatedOneDFunction>& saturatedGasDissolutionFactorTable() const
     { return saturatedGasDissolutionFactorTable_; }
 
-    const std::vector<TabulatedOneDFunction>& saturationPressure() const
+    const Storage<TabulatedOneDFunction>& saturationPressure() const
     { return saturationPressure_; }
 
     Scalar vapPar2() const
@@ -402,16 +405,16 @@ public:
 private:
     void updateSaturationPressure_(unsigned regionIdx);
 
-    std::vector<Scalar> gasReferenceDensity_{};
-    std::vector<Scalar> oilReferenceDensity_{};
-    std::vector<TabulatedTwoDFunction> inverseOilBTable_{};
-    std::vector<TabulatedTwoDFunction> oilMuTable_{};
-    std::vector<TabulatedTwoDFunction> inverseOilBMuTable_{};
-    std::vector<TabulatedOneDFunction> saturatedOilMuTable_{};
-    std::vector<TabulatedOneDFunction> inverseSaturatedOilBTable_{};
-    std::vector<TabulatedOneDFunction> inverseSaturatedOilBMuTable_{};
-    std::vector<TabulatedOneDFunction> saturatedGasDissolutionFactorTable_{};
-    std::vector<TabulatedOneDFunction> saturationPressure_{};
+    Storage<Scalar> gasReferenceDensity_{};
+    Storage<Scalar> oilReferenceDensity_{};
+    Storage<TabulatedTwoDFunction> inverseOilBTable_{};
+    Storage<TabulatedTwoDFunction> oilMuTable_{};
+    Storage<TabulatedTwoDFunction> inverseOilBMuTable_{};
+    Storage<TabulatedOneDFunction> saturatedOilMuTable_{};
+    Storage<TabulatedOneDFunction> inverseSaturatedOilBTable_{};
+    Storage<TabulatedOneDFunction> inverseSaturatedOilBMuTable_{};
+    Storage<TabulatedOneDFunction> saturatedGasDissolutionFactorTable_{};
+    Storage<TabulatedOneDFunction> saturationPressure_{};
 
     Scalar vapPar2_ = 0.0;
 };
