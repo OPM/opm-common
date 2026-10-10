@@ -1339,6 +1339,7 @@ list(APPEND PUBLIC_HEADER_FILES
   opm/material/common/TridiagonalMatrix.hpp
   opm/material/common/UniformTabulated2DFunction.hpp
   opm/material/common/UniformXTabulated2DFunction.hpp
+  opm/material/common/UniformXTabulated2DFunctionBuilder.hpp
   opm/material/common/Valgrind.hpp
   opm/material/common/quad.hpp
   opm/material/components/Air.hpp

@@ -29,6 +29,7 @@
 #define OPM_UNIFORM_X_TABULATED_2D_FUNCTION_HPP
 
 #include <opm/common/Exceptions.hpp>
+#include <opm/common/utility/SparseTable.hpp>
 
 #include <opm/material/common/Valgrind.hpp>
 #include <opm/material/common/MathToolbox.hpp>
@@ -38,11 +39,14 @@
 #include <cstddef>
 #include <iosfwd>
 #include <limits>
-#include <tuple>
 #include <type_traits>
 #include <vector>
 
 namespace Opm {
+
+template <class Scalar>
+class UniformXTabulated2DFunctionBuilder;
+
 /*!
  * \brief Implements a scalar function that depends on two variables and which is sampled
  *        uniformly in the X direction, but non-uniformly on the Y axis-
@@ -50,12 +54,34 @@ namespace Opm {
  * "Uniform on the X-axis" means that all Y sampling points must be located along a line
  * for this value. This class can be used when the sampling points are calculated at run
  * time.
+ *
+ * This class is immutable: sample points are appended and finalized via
+ * \c UniformXTabulated2DFunctionBuilder, whose \c build() method returns the
+ * evaluation-ready object constructed here.
  */
 template <class Scalar>
 class UniformXTabulated2DFunction
 {
 public:
-    typedef std::tuple</*x=*/Scalar, /*y=*/Scalar, /*value=*/Scalar> SamplePoint;
+    /*!
+     * \brief One tabulated sample point: (x, y) position and the function value there.
+     *
+     * \note x duplicates xPos_[i] for this point's column. X-axis segment lookups
+     *       (xSegmentIndex, xToAlpha, etc.) go through xPos_, not through this field -
+     *       it is only read back via operator==.
+     */
+    struct SamplePoint {
+        Scalar x;
+        Scalar y;
+        Scalar value;
+
+        SamplePoint(Scalar x_, Scalar y_, Scalar value_) : x(x_), y(y_), value(value_) {}
+        bool operator==(const SamplePoint& other) const = default;
+    };
+
+    static_assert(std::is_trivially_copyable_v<SamplePoint>,
+        "SamplePoint must stay trivially copyable, because it needs to support being "
+        "transferred to the GPU via memcpy in SparseTable.");
 
     /*!
      * \brief Indicates how interpolation will be performed.
@@ -75,16 +101,6 @@ public:
 
     explicit UniformXTabulated2DFunction(const InterpolationPolicy interpolationGuide = Vertical)
         : interpolationGuide_(interpolationGuide)
-    { }
-
-    UniformXTabulated2DFunction(const std::vector<Scalar>& xPos,
-                                const std::vector<Scalar>& yPos,
-                                const std::vector<std::vector<SamplePoint>>& samples,
-                                InterpolationPolicy interpolationGuide)
-        : samples_(samples)
-        , xPos_(xPos)
-        , yPos_(yPos)
-        , interpolationGuide_(interpolationGuide)
     { }
 
     /*!
@@ -109,13 +125,13 @@ public:
      * \brief Returns the value of the Y coordinate of a sampling point.
      */
     Scalar yAt(std::size_t i, std::size_t j) const
-    { return std::get<1>(samples_[i][j]); }
+    { return samples_[static_cast<int>(i)][static_cast<int>(j)].y; }
 
     /*!
      * \brief Returns the value of a sampling point.
      */
     Scalar valueAt(std::size_t i, std::size_t j) const
-    { return std::get<2>(samples_[i][j]); }
+    { return samples_[static_cast<int>(i)][static_cast<int>(j)].value; }
 
     /*!
      * \brief Returns the number of sampling points in X direction.
@@ -127,19 +143,19 @@ public:
      * \brief Returns the minimum of the Y coordinate of the sampling points for a given column.
      */
     Scalar yMin(unsigned i) const
-    { return std::get<1>(samples_.at(i).front()); }
+    { return samples_[static_cast<int>(i)].front().y; }
 
     /*!
      * \brief Returns the maximum of the Y coordinate of the sampling points for a given column.
      */
     Scalar yMax(unsigned i) const
-    { return std::get<1>(samples_.at(i).back()); }
+    { return samples_[static_cast<int>(i)].back().y; }
 
     /*!
      * \brief Returns the number of sampling points in Y direction a given column.
      */
     std::size_t numY(unsigned i) const
-    { return samples_.at(i).size(); }
+    { return static_cast<std::size_t>(samples_.rowSize(static_cast<int>(i))); }
 
     /*!
      * \brief Return the position on the x-axis of the i-th interval.
@@ -151,7 +167,7 @@ public:
         return xPos_.at(i);
     }
 
-    const std::vector<std::vector<SamplePoint>>& samples() const
+    const SparseTable<SamplePoint>& samples() const
     {
         return samples_;
     }
@@ -177,9 +193,9 @@ public:
     Scalar jToY(unsigned i, unsigned j) const
     {
         assert(i < numX());
-        assert(std::size_t(j) < samples_[i].size());
+        assert(std::size_t(j) < samples_[static_cast<int>(i)].size());
 
-        return std::get<1>(samples_.at(i).at(j));
+        return samples_[static_cast<int>(i)][static_cast<int>(j)].y;
     }
 
     /*!
@@ -238,14 +254,14 @@ public:
                            [[maybe_unused]] bool extrapolate = false) const
     {
         assert(xSampleIdx < numX());
-        const auto& colSamplePoints = samples_.at(xSampleIdx);
+        const auto colSamplePoints = samples_[static_cast<int>(xSampleIdx)];
 
         assert(colSamplePoints.size() >= 2);
         assert(extrapolate || (yMin(xSampleIdx) <= y && y <= yMax(xSampleIdx)));
 
-        if (y <= std::get<1>(colSamplePoints[1]))
+        if (y <= colSamplePoints[1].y)
             return 0;
-        else if (y >= std::get<1>(colSamplePoints[colSamplePoints.size() - 2]))
+        else if (y >= colSamplePoints[colSamplePoints.size() - 2].y)
             return colSamplePoints.size() - 2;
         else {
             assert(colSamplePoints.size() >= 3);
@@ -255,7 +271,7 @@ public:
             unsigned upperIdx = colSamplePoints.size() - 2;
             while (lowerIdx + 1 < upperIdx) {
                 unsigned pivotIdx = (lowerIdx + upperIdx) / 2;
-                if (y < std::get<1>(colSamplePoints[pivotIdx]))
+                if (y < colSamplePoints[pivotIdx].y)
                     upperIdx = pivotIdx;
                 else
                     lowerIdx = pivotIdx;
@@ -277,10 +293,10 @@ public:
         assert(xSampleIdx < numX());
         assert(ySegmentIdx < numY(xSampleIdx) - 1);
 
-        const auto& colSamplePoints = samples_.at(xSampleIdx);
+        const auto colSamplePoints = samples_[static_cast<int>(xSampleIdx)];
 
-        Scalar y1 = std::get<1>(colSamplePoints[ySegmentIdx]);
-        Scalar y2 = std::get<1>(colSamplePoints[ySegmentIdx + 1]);
+        Scalar y1 = colSamplePoints[ySegmentIdx].y;
+        Scalar y2 = colSamplePoints[ySegmentIdx + 1].y;
 
         return (y - y1)/(y2 - y1);
     }
@@ -297,16 +313,16 @@ public:
         unsigned i = xSegmentIndex(x, /*extrapolate=*/false);
         Scalar alpha = xToAlpha(decay<Scalar>(x), i);
 
-        const auto& col1SamplePoints = samples_.at(i);
-        const auto& col2SamplePoints = samples_.at(i + 1);
+        const auto col1SamplePoints = samples_[static_cast<int>(i)];
+        const auto col2SamplePoints = samples_[static_cast<int>(i) + 1];
 
         Scalar minY =
-                alpha*std::get<1>(col1SamplePoints.front()) +
-                (1 - alpha)*std::get<1>(col2SamplePoints.front());
+                alpha*col1SamplePoints.front().y +
+                (1 - alpha)*col2SamplePoints.front().y;
 
         Scalar maxY =
-                alpha*std::get<1>(col1SamplePoints.back()) +
-                (1 - alpha)*std::get<1>(col2SamplePoints.back());
+                alpha*col1SamplePoints.back().y +
+                (1 - alpha)*col2SamplePoints.back().y;
 
         return minY <= y && y <= maxY;
     }
@@ -411,64 +427,6 @@ public:
     }
 
     /*!
-     * \brief Set the x-position of a vertical line.
-     *
-     * Returns the i index of that line.
-     */
-    std::size_t appendXPos(Scalar nextX)
-    {
-        if (xPos_.empty() || xPos_.back() < nextX) {
-            xPos_.push_back(nextX);
-            yPos_.push_back(std::numeric_limits<Scalar>::lowest() / 2);
-            samples_.push_back({});
-            return xPos_.size() - 1;
-        }
-        else if (xPos_.front() > nextX) {
-            // this is slow, but so what?
-            xPos_.insert(xPos_.begin(), nextX);
-            yPos_.insert(yPos_.begin(), std::numeric_limits<Scalar>::lowest() / 2);
-            samples_.insert(samples_.begin(), std::vector<SamplePoint>());
-            return 0;
-        }
-        throw std::invalid_argument("Sampling points should be specified either monotonically "
-                                    "ascending or descending.");
-    }
-
-    /*!
-     * \brief Append a sample point.
-     *
-     * Returns the i index of the new point within its line.
-     */
-    std::size_t appendSamplePoint(std::size_t i, Scalar y, Scalar value)
-    {
-        assert(i < numX());
-        Scalar x = iToX(i);
-        if (samples_[i].empty()) {
-            samples_[i].emplace_back(x, y, value);
-            yPos_[i] = y;
-            return 0;
-        }
-        else if (std::get<1>(samples_[i].back()) < y) {
-            samples_[i].emplace_back(x, y, value);
-            if (interpolationGuide_ == InterpolationPolicy::RightExtreme) {
-                yPos_[i] = y;
-            }
-            return samples_[i].size() - 1;
-        }
-        else if (std::get<1>(samples_[i].front()) > y) {
-            // slow, but we still don't care...
-            samples_[i].emplace(samples_[i].begin(), x, y, value);
-            if (interpolationGuide_ == InterpolationPolicy::LeftExtreme) {
-                yPos_[i] = y;
-            }
-            return 0;
-        }
-
-        throw std::invalid_argument("Sampling points must be specified in either monotonically "
-                                    "ascending or descending order.");
-    }
-
-    /*!
      * \brief Print the table for debugging purposes.
      *
      * It will produce the data in CSV format on stdout, so that it can be visualized
@@ -484,10 +442,22 @@ public:
     }
 
 private:
-    // the vector which contains the values of the sample points
-    // f(x_i, y_j). don't use this directly, use getSamplePoint(i,j)
-    // instead!
-    std::vector<std::vector<SamplePoint> > samples_;
+    friend class UniformXTabulated2DFunctionBuilder<Scalar>;
+
+    UniformXTabulated2DFunction(SparseTable<SamplePoint>&& samples,
+                                std::vector<Scalar>&& xPos,
+                                std::vector<Scalar>&& yPos,
+                                InterpolationPolicy interpolationGuide)
+        : samples_(std::move(samples))
+        , xPos_(std::move(xPos))
+        , yPos_(std::move(yPos))
+        , interpolationGuide_(interpolationGuide)
+    { }
+
+    // the table which contains the values of the sample points f(x_i, y_j), stored
+    // row-major (one row per x position). Don't use this directly, use
+    // getSamplePoint(i,j) instead!
+    SparseTable<SamplePoint> samples_;
 
     // the position of each vertical line on the x-axis
     std::vector<Scalar> xPos_;
