@@ -37,6 +37,12 @@
       "value_type": "DOUBLE",
       "dimension": "OilDissolutionFactor",
       "default": 0.0
+    },
+    {
+      "name": "TRGDDT",
+      "value_type": "DOUBLE",
+      "dimension": "Temperature",
+      "default": 0.1
     }
   ]
 }
