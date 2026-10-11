@@ -52,6 +52,7 @@
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellEconProductionLimits.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellTestConfig.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellTestState.hpp>
 #include <opm/input/eclipse/Schedule/Well/WVFPEXP.hpp>
 
@@ -163,6 +164,10 @@ WECON
 -- Adapted from opm-tests/wecon_test/3D_WECON.DATA
 -- Well_name  minOrate  minGrate  maxWCT  maxGOR  maxWGR  WOprocedure  flag  open_well  minEco  2maxWCT WOaction maxGLR minLrate maxT
   'OP_1'      1.0       800       0.1     321.09  1.0e-3  CON          YES    1*         POTN    0.8     WELL     300.0   50      1* /
+/
+
+WTEST
+  'OP_1'  30  'P'  3 /
 /
 
 DATES             -- 2
@@ -547,10 +552,12 @@ END
     // Changes IWEL before it is written, given the number of items per well.
     using EditIWel = std::function<void(std::vector<int>& iwel, std::size_t niwelz)>;
 
-    void writeRstFile(const SimulationCase& simCase,
-                      const std::string&    baseName,
-                      const std::size_t     rptStep,
-                      const EditIWel&       editIWel = {})
+    void writeRstFile(const SimulationCase&     simCase,
+                      const std::string&        baseName,
+                      const std::size_t         rptStep,
+                      const EditIWel&           editIWel,
+                      const Opm::WellTestState& wtest_state,
+                      const double              elapsed)
     {
         const auto sim_step = rptStep - 1;
 
@@ -558,16 +565,15 @@ END
             Opm::TimeService::now(), simCase.es.runspec().udqParams().undefinedValue()
         };
         const auto action_state = Opm::Action::State{};
-        const auto wtest_state  = Opm::WellTestState{};
 
         const auto ih = Opm::RestartIO::Helpers::
             createInteHead(simCase.es, simCase.grid, simCase.sched,
-                           0, sim_step, sim_step, sim_step);
+                           elapsed, sim_step, sim_step, sim_step);
 
         const auto lh = Opm::RestartIO::Helpers::createLogiHead(simCase.es);
         const auto dh = Opm::RestartIO::Helpers::
             createDoubHead(simCase.es, simCase.sched,
-                           sim_step, sim_step + 1, 0, 0);
+                           sim_step, sim_step + 1, elapsed, 0);
 
         auto wellData = Opm::RestartIO::Helpers::AggregateWellData(ih);
         wellData.captureDeclaredWellData(simCase.sched, simCase.es.tracer(),
@@ -632,11 +638,13 @@ END
     }
 
     Opm::RestartIO::RstState
-    makeRestartState(const SimulationCase& simCase,
-                     const std::string&    baseName,
-                     const std::size_t     rptStep,
-                     const std::string&    workArea,
-                     const EditIWel&       editIWel = {})
+    makeRestartState(const SimulationCase&     simCase,
+                     const std::string&        baseName,
+                     const std::size_t         rptStep,
+                     const std::string&        workArea,
+                     const EditIWel&           editIWel = {},
+                     const Opm::WellTestState& wtest_state = Opm::WellTestState{},
+                     const double              elapsed = 0.0)
     {
         // Recall: Constructor changes working directory of current process,
         // destructor restores original working directory.  The non-trivial
@@ -644,7 +652,7 @@ END
         // "unused" in release builds.
         WorkArea work_area{workArea};
 
-        writeRstFile(simCase, baseName, rptStep, editIWel);
+        writeRstFile(simCase, baseName, rptStep, editIWel, wtest_state, elapsed);
         return loadRestart(simCase, baseName, rptStep);
     }
 } // Anonymous namespace
@@ -1060,6 +1068,50 @@ BOOST_AUTO_TEST_CASE(Construct_Well_Economic_Limits_Object)
     BOOST_CHECK_MESSAGE(! limit_op_2.validFollowonWell(),
                         "Well '" << op_2 << "' must NOT have an "
                         "active follow-on well");
+}
+
+BOOST_AUTO_TEST_CASE(WTest_State_From_Restart)
+{
+    const auto simCase = SimulationCase{first_sim()};
+
+    // Restart at end of report step 1: 2008-10-10 --> 2011-01-20
+    const auto rptStep  = std::size_t{2};
+    const auto baseName = std::string { "TEST_RST_WTEST" };
+
+    auto wtest_state = Opm::WellTestState{};
+    wtest_state.close_well("OP_1", Opm::WellTestConfig::Reason::PHYSICAL, 0.0);
+
+    const auto state =
+        makeRestartState(simCase, baseName, rptStep,
+                         "test_rst_wtest", {}, wtest_state,
+                         simCase.sched.seconds(rptStep));
+
+    auto rst_wtest_state = Opm::WellTestState {
+        simCase.es.runspec().start_time(), state
+    };
+
+    BOOST_CHECK_MESSAGE(rst_wtest_state.well_is_closed("OP_1"),
+                        "Well 'OP_1' must be closed at restart");
+    BOOST_CHECK_MESSAGE(! rst_wtest_state.well_is_closed("OP_2"),
+                        "Well 'OP_2' must NOT be closed at restart");
+
+    // Seconds since simulation start, as passed to test_wells().
+    const auto restart_time = simCase.sched.seconds(rptStep);
+    BOOST_CHECK_CLOSE(rst_wtest_state.lastTestTime("OP_1"), restart_time, 1.0e-8);
+
+    const auto wtest_config = Opm::WellTestConfig { state, static_cast<int>(rptStep) };
+    const auto interval = wtest_config.get("OP_1").test_interval;
+    BOOST_CHECK_CLOSE(interval, 30.0 * 86400.0, 1.0e-8);
+
+    const auto early = rst_wtest_state.test_wells(wtest_config, restart_time + interval / 2);
+    BOOST_CHECK_MESSAGE(early.empty(),
+                        "Well 'OP_1' must NOT be tested before one "
+                        "test interval has passed since the restart");
+
+    const auto tested = rst_wtest_state.test_wells(wtest_config, restart_time + interval);
+    BOOST_CHECK_MESSAGE(tested == std::vector<std::string>{ "OP_1" },
+                        "Well 'OP_1' must be tested one test "
+                        "interval after the restart");
 }
 
 BOOST_AUTO_TEST_CASE(Well_Guide_Rates_Group_Control)
