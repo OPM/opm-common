@@ -352,6 +352,41 @@ BOOST_AUTO_TEST_CASE(CubicRootsWithoutLinearTerm)
     BOOST_CHECK_CLOSE(ZAd[0].derivative(0), -1.0 / 3.0, 1e-10);
 }
 
+// The closed forms of the limiting branches miss derivatives: those of p for a
+// cubic without a linear term, and those off the double-root manifold for the
+// simple root beside a double root. Both roots take them from the full cubic.
+BOOST_AUTO_TEST_CASE(CubicRootsLimitingBranchDerivatives)
+{
+    using Eval = Opm::DenseAd::Evaluation<Scalar, 2>;
+
+    // The Peng-Robinson cubic Z^3 + (B - 1) Z^2 + (A - 3B^2 - 2B) Z - AB + B^2 + B^3
+    // at A = 7/8 and B = 1/4 has p = 0 exactly and the single root Z = 3/4, where
+    // dZ/dA = -(Z - B) / f'(Z) = -2/3 and dZ/dB = 3.
+    const Eval A = Eval::createVariable(0.875, 0);
+    const Eval B = Eval::createVariable(0.25, 1);
+    Eval Z[3];
+    BOOST_REQUIRE_EQUAL(
+        Opm::cubicRoots(
+            Z, Eval(1.0), B - 1.0, A - 3.0 * B * B - 2.0 * B, -A * B + B * B + B * B * B),
+        1u);
+    BOOST_CHECK_CLOSE(Z[0].value(), 0.75, 1e-12);
+    BOOST_CHECK_CLOSE(Z[0].derivative(0), -2.0 / 3.0, 1e-10);
+    BOOST_CHECK_CLOSE(Z[0].derivative(1), 3.0, 1e-10);
+
+    // x^3 - 3x + 2 = (x - 1)^2 (x + 2) has an exact double root. Its simple root
+    // -2 has dx/dc = -x / f'(x) = 2/9 and dx/dd = -1/9.
+    Eval x[3];
+    BOOST_REQUIRE_EQUAL(
+        Opm::cubicRoots(
+            x, Eval(1.0), Eval(0.0), Eval::createVariable(-3.0, 0), Eval::createVariable(2.0, 1)),
+        3u);
+    BOOST_CHECK_CLOSE(x[0].value(), -2.0, 1e-12);
+    BOOST_CHECK_CLOSE(x[0].derivative(0), 2.0 / 9.0, 1e-10);
+    BOOST_CHECK_CLOSE(x[0].derivative(1), -1.0 / 9.0, 1e-10);
+    BOOST_CHECK_CLOSE(x[1].value(), 1.0, 1e-12);
+    BOOST_CHECK_CLOSE(x[2].value(), 1.0, 1e-12);
+}
+
 // an ordinary state keeps flashing under both methods — the guard costs
 // nothing where nothing goes wrong
 BOOST_AUTO_TEST_CASE(BenignStateUnaffected)
