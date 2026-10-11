@@ -1143,6 +1143,209 @@ BOOST_AUTO_TEST_CASE (Declared_Well_Data)
 
 // --------------------------------------------------------------------
 
+namespace {
+
+    SimulationCase wtestRemainingCase()
+    {
+        return SimulationCase { Opm::Parser{}.parseString(R"~(
+RUNSPEC
+OIL
+WATER
+
+DIMENS
+ 10 10 10 /
+
+START         -- 0
+ 1 JAN 2020 /
+
+GRID
+
+DXV
+ 10*100.0 /
+DYV
+ 10*100.0 /
+DZV
+ 10*10.0 /
+DEPTHZ
+121*2000.0 /
+
+PORO
+    1000*0.1 /
+PERMX
+    1000*1 /
+PERMY
+    1000*0.1 /
+PERMZ
+    1000*0.01 /
+
+SCHEDULE
+
+WELSPECS
+ 'LIM_USED' 'G1'  1 1 1* 'OIL' /
+ 'LIM_LEFT' 'G1'  3 3 1* 'OIL' /
+ 'NO_LIMIT' 'G1'  5 5 1* 'OIL' /
+/
+
+COMPDAT
+ 'LIM_USED'  1 1   1 1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+ 'LIM_LEFT'  3 3   1 1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+ 'NO_LIMIT'  5 5   1 1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+/
+
+WCONPROD
+ 'LIM_USED' 'OPEN' 'ORAT' 100.0 /
+ 'LIM_LEFT' 'OPEN' 'ORAT' 100.0 /
+ 'NO_LIMIT' 'OPEN' 'ORAT' 100.0 /
+/
+
+WTEST
+ 'LIM_USED' 1.0 'P' 2 /
+ 'LIM_LEFT' 1.0 'P' 4 /
+ 'NO_LIMIT' 1.0 'P' /
+/
+
+TSTEP        -- 1
+ 10 /
+
+END
+)~") };
+    }
+
+    Opm::RestartIO::RstState
+    writeAndLoadRestart(const SimulationCase&                             simCase,
+                        const std::size_t                                 rptStep,
+                        const std::vector<int>&                           ih,
+                        const Opm::RestartIO::Helpers::AggregateWellData& wellData)
+    {
+        const auto sim_step = rptStep - 1;
+        const auto sumState = Opm::SummaryState { Opm::TimeService::now(), 0.0 };
+
+        WorkArea work_area{"wtest_remaining_restart"};
+
+        {
+            Opm::EclIO::OutputStream::Restart rstFile {
+                Opm::EclIO::OutputStream::ResultSet {"./", "WTEST"},
+                static_cast<int>(rptStep),
+                Opm::EclIO::OutputStream::Formatted {false},
+                Opm::EclIO::OutputStream::Unified   {true}
+            };
+
+            rstFile.write("INTEHEAD", ih);
+            rstFile.write("DOUBHEAD", Opm::RestartIO::Helpers::
+                          createDoubHead(simCase.es, simCase.sched, sim_step, rptStep,
+                                         simCase.sched.seconds(rptStep), 0.0));
+            rstFile.write("LOGIHEAD", Opm::RestartIO::Helpers::createLogiHead(simCase.es));
+
+            auto groupData = Opm::RestartIO::Helpers::AggregateGroupData(ih);
+            groupData.captureDeclaredGroupData(simCase.sched, simCase.es.tracer(),
+                                               sim_step, sumState, ih);
+
+            rstFile.write("IGRP", groupData.getIGroup());
+            rstFile.write("SGRP", groupData.getSGroup());
+            rstFile.write("XGRP", groupData.getXGroup());
+            rstFile.write("ZGRP", groupData.getZGroup());
+
+            rstFile.write("IWEL", wellData.getIWell());
+            rstFile.write("SWEL", wellData.getSWell());
+            rstFile.write("XWEL", wellData.getXWell());
+            rstFile.write("ZWEL", wellData.getZWell());
+
+            auto connData = Opm::RestartIO::Helpers::AggregateConnectionData(ih);
+            connData.captureDeclaredConnData(simCase.sched, simCase.grid,
+                                             {}, sumState, sim_step);
+
+            rstFile.write("ICON", connData.getIConn());
+            rstFile.write("SCON", connData.getSConn());
+            rstFile.write("XCON", connData.getXConn());
+        }
+
+        auto rst_file = std::make_shared<Opm::EclIO::ERst>("WTEST.UNRST");
+        auto rst_view = std::make_shared<Opm::EclIO::RestartFileView>(std::move(rst_file), rptStep);
+
+        return Opm::RestartIO::RstState::load(std::move(rst_view), simCase.es.runspec(), Opm::Parser{});
+    }
+
+} // Anonymous namespace
+
+BOOST_AUTO_TEST_CASE (WTest_Remaining_Restart)
+{
+    const auto simCase = wtestRemainingCase();
+
+    // Restart at end of report step 1: 2020-01-01 --> 2020-01-11
+    const auto rptStep = std::size_t{1};
+    const auto sim_step = rptStep - 1;
+    const auto restart_time = simCase.sched.seconds(rptStep);
+    const auto& wtest_config = simCase.sched[sim_step].wtest_config();
+
+    auto wtest_state = Opm::WellTestState{};
+    for (const auto* wname : { "LIM_USED", "LIM_LEFT", "NO_LIMIT" }) {
+        wtest_state.close_well(wname, Opm::WellTestConfig::Reason::PHYSICAL, 0.0);
+    }
+
+    // Test each well twice before the restart.
+    for (const auto time : { 1*Opm::unit::day, 2*Opm::unit::day }) {
+        BOOST_CHECK_EQUAL(wtest_state.test_wells(wtest_config, time).size(), std::size_t{3});
+    }
+
+    const auto ih = Opm::RestartIO::Helpers::
+        createInteHead(simCase.es, simCase.grid, simCase.sched, restart_time,
+                       rptStep, rptStep, sim_step);
+
+    auto awd = Opm::RestartIO::Helpers::AggregateWellData{ih};
+    awd.captureDeclaredWellData(simCase.sched, simCase.es.tracer(), sim_step,
+                                Opm::Action::State{}, wtest_state,
+                                Opm::SummaryState{Opm::TimeService::now(), 0.0}, ih);
+
+    {
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::IWell::index;
+        using IH = ::Opm::RestartIO::Helpers::VectorItems::intehead;
+
+        const auto niwelz = ih[IH::NIWELZ];
+        const auto& iwell = awd.getIWell();
+
+        BOOST_CHECK_EQUAL(iwell[0*niwelz + Ix::WTestRemaining], 1); // LIM_USED: None left
+        BOOST_CHECK_EQUAL(iwell[1*niwelz + Ix::WTestRemaining], 3); // LIM_LEFT: Two left
+        BOOST_CHECK_EQUAL(iwell[2*niwelz + Ix::WTestRemaining], 0); // NO_LIMIT: No limit
+    }
+
+    const auto rst_state = writeAndLoadRestart(simCase, rptStep, ih, awd);
+
+    const auto rst_config = Opm::WellTestConfig { rst_state, static_cast<int>(rptStep) };
+    auto rst_wtest_state = Opm::WellTestState {
+        simCase.es.runspec().start_time(), rst_state
+    };
+
+    // Writing restart data again must reproduce the same values.
+    const auto wtestRemaining = [&rst_wtest_state, &rst_config](const std::string& wname)
+    {
+        return rst_wtest_state.restart_well(rst_config, wname).value().num_test;
+    };
+
+    BOOST_CHECK_EQUAL(wtestRemaining("LIM_USED"), 1);
+    BOOST_CHECK_EQUAL(wtestRemaining("LIM_LEFT"), 3);
+    BOOST_CHECK_EQUAL(wtestRemaining("NO_LIMIT"), 0);
+
+    const auto expect_tested = std::vector<std::vector<std::string>> {
+        { "LIM_LEFT", "NO_LIMIT" },
+        { "LIM_LEFT", "NO_LIMIT" },
+        { "NO_LIMIT" },
+        { "NO_LIMIT" },
+    };
+
+    for (auto i = 0*expect_tested.size(); i < expect_tested.size(); ++i) {
+        const auto time = restart_time + (i + 1)*Opm::unit::day;
+        const auto tested = rst_wtest_state.test_wells(rst_config, time);
+        const auto& expect = expect_tested[i];
+
+        BOOST_TEST_CONTEXT("Day " << i + 1 << " after restart") {
+            BOOST_CHECK_EQUAL_COLLECTIONS(tested.begin(), tested.end(),
+                                          expect.begin(), expect.end());
+        }
+    }
+}
+
+// --------------------------------------------------------------------
+
 BOOST_AUTO_TEST_CASE (WECON)
 {
     const auto simCase = SimulationCase{wecon_etc_sim()};
