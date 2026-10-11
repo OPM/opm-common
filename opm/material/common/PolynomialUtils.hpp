@@ -32,6 +32,7 @@
 #include <algorithm>
 #include <cmath>
 #include <numbers>
+#include <type_traits>
 
 namespace Opm {
 /*!
@@ -124,6 +125,27 @@ void invertCubicPolynomialPostProcess_(SolContainer& sol,
         Scalar fNew = d + x*(c + x*(b + x*a));
         if (std::abs(scalarValue(fNew)) < std::abs(scalarValue(fOld)))
             sol[i] = x;
+    }
+}
+//! \endcond
+
+//! \cond SKIP_THIS
+// A simple root x of a x^3 + b x^2 + c x + d with the derivatives of the
+// implicit function theorem, dx = -(da x^3 + db x^2 + dc x + dd) / f'(x), for
+// closed forms that miss some of them. The value is unchanged.
+template <class Scalar>
+Scalar
+cubicSimpleRootDerivatives_(
+    const Scalar& x, const Scalar& a, const Scalar& b, const Scalar& c, const Scalar& d)
+{
+    using Value = std::remove_cvref_t<decltype(scalarValue(x))>;
+    if constexpr (std::is_same_v<Scalar, Value>) {
+        return x;
+    } else {
+        const Value x0 = scalarValue(x);
+        const Scalar f = d + x0 * (c + x0 * (b + x0 * a));
+        const Value fPrime = scalarValue(c + x0 * (2 * b + x0 * 3 * a));
+        return x0 - (f - scalarValue(f)) / fPrime;
     }
 }
 //! \endcond
@@ -400,8 +422,9 @@ unsigned cubicRoots(SolContainer* sol,
         }
         else {
             // p = 0 leaves t^3 + q = 0, with q nonzero for a positive discriminant.
+            // p is zero in value only, so the root takes its derivatives from the cubic.
             const Scalar t = -(q / abs(q)) * pow(abs(q), 1.0 / 3.0);
-            sol[0] = t - b / (3.0 * a);
+            sol[0] = cubicSimpleRootDerivatives_<Scalar>(t - b / (3.0 * a), a, b, c, d);
             return 1;
         }
     }
@@ -413,7 +436,9 @@ unsigned cubicRoots(SolContainer* sol,
     }
     // If p != 0, the we have a simple root and a double root
     else {
-        sol[0] = (3.0 * q / p) - b / (3.0 * a);
+        // These formulas hold on the double-root manifold only. The simple root
+        // takes its derivatives from the cubic; the double root has none.
+        sol[0] = cubicSimpleRootDerivatives_<Scalar>((3.0 * q / p) - b / (3.0 * a), a, b, c, d);
         sol[1] = sol[2] = (-3.0 * q) / (2.0 * p) - b / (3.0 * a);
         std::sort(sol, sol + 3);
     }
