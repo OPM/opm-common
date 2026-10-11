@@ -262,6 +262,30 @@ BOOST_AUTO_TEST_CASE(SolveReturnsConvergedRatios)
     }
 }
 
+// Newton's y/x is 0/0 for an absent component. Its incoming ratio must
+// survive, or the next warm start fails in Rachford-Rice.
+BOOST_AUTO_TEST_CASE(SolveKeepsRatiosOfAbsentComponents)
+{
+    for (const auto method :
+         {PTFlashMethod::Newton, PTFlashMethod::Ssi, PTFlashMethod::SsiNewton}) {
+        BOOST_TEST_CONTEXT("method " << static_cast<int>(method))
+        {
+            auto fs = makeRecordedState();
+            fs.setMoleFraction(0, 0.0);
+            fs.setMoleFraction(1, 0.5);
+            fs.setMoleFraction(2, 0.5);
+            for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+                fs.setKvalue(compIdx, fs.wilsonK_(compIdx));
+            }
+            fs.setLvalue(-1.0);
+            const Scalar incoming = Opm::getValue(fs.K(0));
+
+            BOOST_REQUIRE(!PtFlash::solve(fs, method, flashTolerance, EOSType::PR));
+            BOOST_CHECK_EQUAL(Opm::getValue(fs.K(0)), incoming);
+        }
+    }
+}
+
 // Both composition methods must reclassify the coincident SSI result.
 BOOST_AUTO_TEST_CASE(WarmSsiAndHybridClassifySinglePhase)
 {
