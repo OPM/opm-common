@@ -350,7 +350,14 @@ protected:
                 L_scalar = li_single_phase_label_(fluid_state, z_scalar, verbosity);
             }
         } else {
-            keepHeavierPhaseInOilSlot_(fluid_state, L_scalar, verbosity);
+            keepHeavierPhaseInOilSlot_(z_scalar,
+                                       twoPhaseMethod,
+                                       K_scalar,
+                                       L_scalar,
+                                       fluid_state,
+                                       flash_tolerance,
+                                       eos_type,
+                                       verbosity);
         }
         fluid_state.setLvalue(L_scalar);
         return {is_single_phase, newton_jacobian};
@@ -378,10 +385,17 @@ protected:
      * Substitution from ratios near one can converge to the split with its
      * phases in the opposite slots. The pseudo-critical temperature that
      * labels single phases also decides which phase is the liquid here.
+     * With unequal phase pressures the swapped phases were in equilibrium at
+     * each other's pressure, so the split is solved again from them.
      */
-    template <class FlashFluidState>
-    static void keepHeavierPhaseInOilSlot_(FlashFluidState& fluid_state,
+    template <class FlashFluidState, class ComponentVector>
+    static void keepHeavierPhaseInOilSlot_(const ComponentVector& z,
+                                           PTFlashMethod method,
+                                           ComponentVector& K,
                                            typename FlashFluidState::ValueType& L,
+                                           FlashFluidState& fluid_state,
+                                           const Scalar flash_tolerance,
+                                           const EOSType& eos_type,
                                            int verbosity)
     {
         const auto phaseTemperature = [&fluid_state](int phaseIdx) {
@@ -403,6 +417,21 @@ protected:
             OpmLog::debug(fmt::format("The split converged with its phases swapped; relabelled "
                                       "it to L = {}",
                                       L));
+        }
+        if (fluid_state.pressure(oilPhaseIdx) == fluid_state.pressure(gasPhaseIdx)) {
+            return;
+        }
+        for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+            const auto liquid_mole_fraction = fluid_state.moleFraction(oilPhaseIdx, compIdx);
+            K[compIdx] = liquid_mole_fraction > 0
+                ? fluid_state.moleFraction(gasPhaseIdx, compIdx) / liquid_mole_fraction
+                : 1.0;
+        }
+        flash_2ph(z, method, K, L, fluid_state, flash_tolerance, eos_type, verbosity);
+        if (!(L > 0 && L < 1) || phasesCoincide_(fluid_state)) {
+            OPM_THROW_NOLOG(NumericalProblem,
+                            "The relabelled split did not stay two-phase when solved again "
+                            "at the phase pressures");
         }
     }
 
