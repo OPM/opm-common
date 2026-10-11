@@ -527,6 +527,47 @@ BOOST_AUTO_TEST_CASE(NearUnitWarmStartKeepsHeavierPhaseAsOil)
     }
 }
 
+// With unequal phase pressures the relabelled phases were in equilibrium at
+// each other's pressure. The split must be solved again at the slot pressures.
+BOOST_AUTO_TEST_CASE(RelabelledSplitKeepsEquilibriumAtPhasePressures)
+{
+    constexpr Scalar z[numComponents] = {0.76524, 0.16825, 0.06651};
+    constexpr Scalar nearUnitK[numComponents] = {0.99, 1.01, 1.02};
+    for (const auto method :
+         {PTFlashMethod::Newton, PTFlashMethod::Ssi, PTFlashMethod::SsiNewton}) {
+        BOOST_TEST_CONTEXT("method " << static_cast<int>(method))
+        {
+            FluidState fs;
+            fs.setPressure(FluidSystem::oilPhaseIdx, 135.42e5);
+            fs.setPressure(FluidSystem::gasPhaseIdx, 136.42e5);
+            fs.setTemperature(394.46);
+            for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+                fs.setMoleFraction(compIdx, z[compIdx]);
+                fs.setKvalue(compIdx, nearUnitK[compIdx]);
+            }
+            fs.setLvalue(0.5);
+            BOOST_REQUIRE(!PtFlash::solve(fs, method, flashTolerance, EOSType::PR));
+
+            // The decane-rich phase stays in the oil slot.
+            BOOST_CHECK_GT(Opm::getValue(fs.moleFraction(FluidSystem::oilPhaseIdx, 2)),
+                           Opm::getValue(fs.moleFraction(FluidSystem::gasPhaseIdx, 2)));
+            FluidSystem::ParameterCache<Evaluation> paramCache(EOSType::PR);
+            paramCache.updatePhase(fs, FluidSystem::oilPhaseIdx);
+            paramCache.updatePhase(fs, FluidSystem::gasPhaseIdx);
+            for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+                const auto fugacity = [&](const unsigned phaseIdx) {
+                    return fs.moleFraction(phaseIdx, compIdx) * fs.pressure(phaseIdx)
+                        * FluidSystem::fugacityCoefficient(fs, paramCache, phaseIdx, compIdx);
+                };
+                BOOST_CHECK_SMALL(Opm::getValue(fugacity(FluidSystem::oilPhaseIdx)
+                                                / fugacity(FluidSystem::gasPhaseIdx))
+                                      - 1.0,
+                                  1.e-6);
+            }
+        }
+    }
+}
+
 // An absent component contributes no ratio, but the remaining equal phase
 // compositions must still be recognised as coincident.
 BOOST_AUTO_TEST_CASE(AbsentComponentDoesNotHideCoincidentPhases)
