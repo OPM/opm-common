@@ -1070,9 +1070,12 @@ protected:
             const auto vapour_mole_fraction
                 = Opm::getValue(newton_state.moleFraction(gasPhaseIdx, idx));
             fluid_state.setMoleFraction(FluidSystem::gasPhaseIdx, idx, vapour_mole_fraction);
-            const auto equilibrium_ratio = Opm::getValue(newton_state.K(idx));
-            fluid_state.setKvalue(idx, equilibrium_ratio);
-            K[idx] = equilibrium_ratio;
+            // An absent component has y/x = 0/0 and keeps its incoming ratio.
+            if (liquid_mole_fraction > 0) {
+                const auto equilibrium_ratio = Opm::getValue(newton_state.K(idx));
+                fluid_state.setKvalue(idx, equilibrium_ratio);
+                K[idx] = equilibrium_ratio;
+            }
         }
         L = Opm::getValue(liquid_fraction);
         fluid_state.setLvalue(L);
