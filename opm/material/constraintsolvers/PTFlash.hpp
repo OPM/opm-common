@@ -436,9 +436,9 @@ protected:
     /*!
      * \brief The phase label of a feed with a single present component.
      *
-     * The component is in the phase of its EoS root of lower Gibbs energy,
-     * i.e. of the lower fugacity coefficient. Where both labels share the
-     * only root, Li's criterion decides as for a mixture.
+     * The component is in the phase of lower Gibbs energy, i.e. of the lower
+     * fugacity, with each label at the pressure of its slot. Where the cubic
+     * has one root at both pressures, Li's criterion decides as for a mixture.
      */
     template <class FlashFluidState, class Vector>
     static typename Vector::field_type singleComponentPhaseLabel_(
@@ -446,25 +446,37 @@ protected:
     {
         using ParamCache =
             typename FluidSystem::template ParameterCache<typename FlashFluidState::ValueType>;
-        ParamCache param_cache(eos_type);
-        param_cache.updatePhase(fluid_state, oilPhaseIdx);
-        param_cache.updatePhase(fluid_state, gasPhaseIdx);
-        if (param_cache.molarVolume(oilPhaseIdx) == param_cache.molarVolume(gasPhaseIdx)) {
+        // Both labels take the only root of the cubic at the pressure of a slot.
+        const auto has_single_root = [&fluid_state, &eos_type](const unsigned phaseIdx) {
+            auto state = fluid_state;
+            state.setPressure(oilPhaseIdx, fluid_state.pressure(phaseIdx));
+            state.setPressure(gasPhaseIdx, fluid_state.pressure(phaseIdx));
+            ParamCache param_cache(eos_type);
+            param_cache.updatePhase(state, oilPhaseIdx);
+            param_cache.updatePhase(state, gasPhaseIdx);
+            return param_cache.molarVolume(oilPhaseIdx) == param_cache.molarVolume(gasPhaseIdx);
+        };
+        if (has_single_root(oilPhaseIdx) && has_single_root(gasPhaseIdx)) {
             return li_single_phase_label_(fluid_state, z, verbosity);
         }
 
+        ParamCache param_cache(eos_type);
+        param_cache.updatePhase(fluid_state, oilPhaseIdx);
+        param_cache.updatePhase(fluid_state, gasPhaseIdx);
         unsigned compIdx = 0;
         while (!(z[compIdx] > 0)) {
             ++compIdx;
         }
-        const auto liquid_coefficient
-            = FluidSystem::fugacityCoefficient(fluid_state, param_cache, oilPhaseIdx, compIdx);
-        const auto vapour_coefficient
-            = FluidSystem::fugacityCoefficient(fluid_state, param_cache, gasPhaseIdx, compIdx);
-        const typename Vector::field_type L = liquid_coefficient < vapour_coefficient ? 1.0 : 0.0;
+        const auto liquid_fugacity
+            = FluidSystem::fugacityCoefficient(fluid_state, param_cache, oilPhaseIdx, compIdx)
+            * fluid_state.pressure(oilPhaseIdx);
+        const auto vapour_fugacity
+            = FluidSystem::fugacityCoefficient(fluid_state, param_cache, gasPhaseIdx, compIdx)
+            * fluid_state.pressure(gasPhaseIdx);
+        const typename Vector::field_type L = liquid_fugacity < vapour_fugacity ? 1.0 : 0.0;
         if (verbosity >= 1) {
             OpmLog::debug(fmt::format("Component {} alone is single-phase with L = {}, the "
-                                      "phase of its EoS root of lower Gibbs energy",
+                                      "phase of lower Gibbs energy",
                                       compIdx,
                                       L));
         }

@@ -443,3 +443,42 @@ BOOST_AUTO_TEST_CASE(SingleComponentIsSinglePhase)
         }
     }
 }
+
+// With unequal phase pressures each label sits at the pressure of its slot,
+// so the fugacities decide, and a component with one EoS root keeps Li's label.
+BOOST_AUTO_TEST_CASE(SingleComponentAtUnequalPhasePressures)
+{
+    struct Case
+    {
+        int component;
+        Scalar oilPressure;
+        Scalar gasPressure;
+        Scalar temperature;
+        Scalar liquidFraction;
+    };
+    // At 288.15 K liquid CO2 at 50 bar has a lower fugacity than vapour at
+    // 51 bar, and vapour at 50 bar a lower one than liquid at 51 bar.
+    const Case cases[] = {{0, 50.e5, 51.e5, 288.15, 1.0},
+                          {0, 51.e5, 50.e5, 288.15, 0.0},
+                          {1, 100.e5, 101.e5, 300.0, 0.0},
+                          {1, 101.e5, 100.e5, 300.0, 0.0}};
+    for (const auto& c : cases) {
+        BOOST_TEST_CONTEXT("component " << c.component << " at " << c.oilPressure
+                                        << " Pa (oil) and " << c.gasPressure << " Pa (gas)")
+        {
+            FluidState fs;
+            fs.setPressure(FluidSystem::oilPhaseIdx, c.oilPressure);
+            fs.setPressure(FluidSystem::gasPhaseIdx, c.gasPressure);
+            fs.setTemperature(c.temperature);
+            for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+                fs.setMoleFraction(compIdx, compIdx == c.component ? 1.0 : 0.0);
+                fs.setKvalue(compIdx, fs.wilsonK_(compIdx));
+            }
+            fs.setLvalue(-1.0);
+
+            BOOST_REQUIRE(
+                PtFlash::solve(fs, PTFlashMethod::SsiNewton, flashTolerance, EOSType::PR));
+            BOOST_CHECK_EQUAL(Opm::getValue(fs.L()), c.liquidFraction);
+        }
+    }
+}
