@@ -19,8 +19,9 @@
 #ifndef SCHEDULE_RESTART_INFO_HPP
 #define SCHEDULE_RESTART_INFO_HPP
 
+#include <opm/common/utility/TimeService.hpp>
+
 #include <cstddef>
-#include <ctime>
 
 namespace Opm {
 
@@ -29,7 +30,7 @@ namespace RestartIO { struct RstState; }
 
 struct ScheduleRestartInfo
 {
-    std::time_t time{0};
+    time_point time{};
     std::size_t report_step{0};
     bool skiprest{false};
 

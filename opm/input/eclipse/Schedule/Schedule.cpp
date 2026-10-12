@@ -674,10 +674,11 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
             const auto& location = this->m_sched_deck.location();
             logger({"", "Processing dynamic information from", fmt::format("{} line {}", location.filename, location.lineno)});
             if (restart_skip && !log_to_debug) {
+                const auto restart_time = TimeService::to_time_t(this->m_static.rst_info.time);
                 logger.info(fmt::format("This is a restarted run - skipping "
                                         "until report step {} at {}",
                                         this->m_static.rst_info.report_step,
-                                        Schedule::formatDate(this->m_static.rst_info.time)));
+                                        Schedule::formatDate(restart_time)));
             }
 
             logger(fmt::format("Initializing report step {}/{} at {} {} {} line {}",

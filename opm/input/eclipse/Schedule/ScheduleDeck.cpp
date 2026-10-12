@@ -76,7 +76,7 @@ ScheduleDeck::ScheduleDeck(const time_point&          start_time,
         "VFPPROD", "VFPINJ", "RPTSCHED", "RPTRST", "TUNING", "MESSAGES",
     };
 
-    this->m_restart_time = TimeService::from_time_t(rst_info.time);
+    this->m_restart_time = rst_info.time;
     this->m_restart_offset = rst_info.report_step;
     this->skiprest = rst_info.skiprest;
 
@@ -114,7 +114,7 @@ ScheduleDeck::ScheduleDeck(const time_point&          start_time,
         }
 
         if (keyword.name() == "DATES") {
-            this->handleDATES(keyword, rst_info.time, context);
+            this->handleDATES(keyword, TimeService::to_time_t(rst_info.time), context);
             continue;
         }
 
