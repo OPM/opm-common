@@ -115,9 +115,11 @@ namespace detail {
      *        The holder is filled by copy_to_gpu(). For CPU storage and for
      *        non-owning GPU storage (GpuView) it is empty.
      *
-     * \note Copying an owning LiveOilPvt copies the buffers in this holder,
-     *       but the views in the copy still point into the buffers of the
-     *       original. Move owning objects instead of copying them.
+     * \note The holder is move-only, which makes an owning LiveOilPvt
+     *       move-only as well. A copy would allocate new buffers, but the
+     *       views in the copy would still point into the buffers of the
+     *       original. Moving keeps the device pointers, and thereby all
+     *       views, valid.
      */
     template <class Scalar, bool IsOwningGpu>
     struct LiveOilPvtGpuTableHolder {
@@ -128,6 +130,13 @@ namespace detail {
     struct LiveOilPvtGpuTableHolder<Scalar, true> {
         using TwoD = UniformXTabulated2DFunction<Scalar, gpuistl::GpuBuffer>;
         using OneD = Tabulated1DFunction<Scalar, gpuistl::GpuBuffer>;
+
+        // Ensure that the holder is move-only:
+        LiveOilPvtGpuTableHolder() = default;
+        LiveOilPvtGpuTableHolder(const LiveOilPvtGpuTableHolder&) = delete;
+        LiveOilPvtGpuTableHolder& operator=(const LiveOilPvtGpuTableHolder&) = delete;
+        LiveOilPvtGpuTableHolder(LiveOilPvtGpuTableHolder&&) noexcept = default;
+        LiveOilPvtGpuTableHolder& operator=(LiveOilPvtGpuTableHolder&&) noexcept = default;
 
         // One entry per PVT region, in the same order as the corresponding
         // table members of LiveOilPvt (e.g. inverseOilBTableBuffer_[regionIdx]
@@ -650,7 +659,7 @@ namespace Opm::gpuistl {
  *
  * \param cpu A fully initialized CPU object (i.e. initEnd() has been called).
  * \return An owning GPU object. Use make_view() to obtain an object that can be
- *         passed to kernels. Move the returned object; do not copy it (see
+ *         passed to kernels. The returned object is move-only (see
  *         detail::LiveOilPvtGpuTableHolder).
  */
 template <class ScalarT>
