@@ -39,6 +39,18 @@
 #include <cmath>
 #include <memory>
 namespace Opm {
+// The independent history needed by ordinary (non-WAG) hysteresis.
+template <class Scalar>
+struct EclHysteresisCompactState
+{
+    Scalar pcSwMdc{2.0};
+    Scalar pcSwMic{1.0};
+    Scalar krnSwMdc{2.0};
+    Scalar krwSwMdc{-2.0};
+    bool initialImb{false};
+    bool isDrain{true};
+};
+
 template <class Scalar>
 struct EclHysteresisDynamicState
 {
@@ -69,6 +81,24 @@ struct EclHysteresisDynamicState
     bool initialImb{false};
     bool isDrain{true};
     bool wasDrain{false};
+    bool wagActive{false};
+
+    EclHysteresisCompactState<Scalar> compactState() const
+    {
+        return {pcSwMdc, pcSwMic, krnSwMdc, krwSwMdc, initialImb, isDrain};
+    }
+
+    static EclHysteresisDynamicState fromCompact(const EclHysteresisCompactState<Scalar>& state)
+    {
+        EclHysteresisDynamicState result;
+        result.pcSwMdc = state.pcSwMdc;
+        result.pcSwMic = state.pcSwMic;
+        result.krnSwMdc = state.krnSwMdc;
+        result.krwSwMdc = state.krwSwMdc;
+        result.initialImb = state.initialImb;
+        result.isDrain = state.isDrain;
+        return result;
+    }
 };
 
 /*!
@@ -731,39 +761,55 @@ public:
             .nState = nState_,
             .initialImb = initialImb_,
             .isDrain = isDrain_,
-            .wasDrain = wasDrain_
+            .wasDrain = wasDrain_,
+            .wagActive = gasOilHysteresisWAG()
         };
     }
 
     void restoreState(const HysteresisDynamicState& state)
     {
-        deltaSwImbKrn_ = state.deltaSwImbKrn;
-        Sncrt_ = state.Sncrt;
-        Swcrt_ = state.Swcrt;
         pcSwMdc_ = state.pcSwMdc;
         pcSwMic_ = state.pcSwMic;
         krnSwMdc_ = state.krnSwMdc;
         krwSwMdc_ = state.krwSwMdc;
-        KrndHy_ = state.KrndHy;
-        KrwdHy_ = state.KrwdHy;
-        Krwd_sncrt_ = state.Krwd_sncrt;
-        SncrtWAG_ = state.SncrtWAG;
-        cTransf_ = state.cTransf;
-        swatImbStart_ = state.swatImbStart;
-        swatImbStartNxt_ = state.swatImbStartNxt;
-        krnSwWAG_ = state.krnSwWAG;
-        krnSwDrainRevert_ = state.krnSwDrainRevert;
-        krnSwDrainStart_ = state.krnSwDrainStart;
-        krnSwDrainStartNxt_ = state.krnSwDrainStartNxt;
-        krnImbStart_ = state.krnImbStart;
-        krnImbStartNxt_ = state.krnImbStartNxt;
-        krnDrainStart_ = state.krnDrainStart;
-        krnDrainStartNxt_ = state.krnDrainStartNxt;
-        krnSwImbStart_ = state.krnSwImbStart;
-        nState_ = state.nState;
         initialImb_ = state.initialImb;
         isDrain_ = state.isDrain;
-        wasDrain_ = state.wasDrain;
+
+        if (gasOilHysteresisWAG()) {
+            // WAG has additional cycle history that cannot be reconstructed
+            // from the conventional extrema.
+            deltaSwImbKrn_ = state.deltaSwImbKrn;
+            Sncrt_ = state.Sncrt;
+            Swcrt_ = state.Swcrt;
+            KrndHy_ = state.KrndHy;
+            KrwdHy_ = state.KrwdHy;
+            Krwd_sncrt_ = state.Krwd_sncrt;
+            SncrtWAG_ = state.SncrtWAG;
+            cTransf_ = state.cTransf;
+            swatImbStart_ = state.swatImbStart;
+            swatImbStartNxt_ = state.swatImbStartNxt;
+            krnSwWAG_ = state.krnSwWAG;
+            krnSwDrainRevert_ = state.krnSwDrainRevert;
+            krnSwDrainStart_ = state.krnSwDrainStart;
+            krnSwDrainStartNxt_ = state.krnSwDrainStartNxt;
+            krnImbStart_ = state.krnImbStart;
+            krnImbStartNxt_ = state.krnImbStartNxt;
+            krnDrainStart_ = state.krnDrainStart;
+            krnDrainStartNxt_ = state.krnDrainStartNxt;
+            krnSwImbStart_ = state.krnSwImbStart;
+            nState_ = state.nState;
+            wasDrain_ = state.wasDrain;
+            return;
+        }
+
+        // The compact snapshot does not store values derived from the
+        // extrema. Rebuild them without entering the stateful WAG update.
+        if (krnSwMdc_ < 2.0) {
+            KrndHy_ = EffLawT::twoPhaseSatKrn(drainageParams(), krnSwMdc_);
+            if (config().krHysteresisModel() == 4)
+                KrwdHy_ = EffLawT::twoPhaseSatKrw(drainageParams(), krnSwMdc_);
+        }
+        updateConventionalDerivedParams_();
     }
 
     template<class Serializer>
@@ -798,6 +844,15 @@ public:
 
 private:
     void updateDynamicParams_()
+    {
+        updateConventionalDerivedParams_();
+
+        if (gasOilHysteresisWAG()) {
+            updateWagDerivedParams_();
+        }
+    }
+
+    void updateConventionalDerivedParams_()
     {
         // calculate the saturation deltas for the relative permeabilities
         //if (false) { // we dont support Carlson for wetting phase hysteresis
@@ -841,46 +896,44 @@ private:
             }
             Krwd_sncrt_ = EffLawT::twoPhaseSatKrw(drainageParams(), 1 - Sncrt());
         }
+    }
 
-
-        if (gasOilHysteresisWAG()) {
-            if (isDrain_ && krnSwMdc_ == krnSwWAG_) {
-                Scalar snhy = 1.0 - krnSwMdc_;
-                SncrtWAG_ = Sncrd_;
-                if (snhy > Sncrd_) {
-                    SncrtWAG_ += (snhy - Sncrd_) /
-                        (1.0 + config().modParamTrapped() * (Snmaxd_ - snhy) +
-                         wagConfig().wagLandsParam() * (snhy - Sncrd_));
-                }
+    void updateWagDerivedParams_()
+    {
+        if (isDrain_ && krnSwMdc_ == krnSwWAG_) {
+            Scalar snhy = 1.0 - krnSwMdc_;
+            SncrtWAG_ = Sncrd_;
+            if (snhy > Sncrd_) {
+                SncrtWAG_ += (snhy - Sncrd_) /
+                    (1.0 + config().modParamTrapped() * (Snmaxd_ - snhy) +
+                     wagConfig().wagLandsParam() * (snhy - Sncrd_));
             }
-
-            if (isDrain_ && (1.0 - krnSwDrainRevert_) > SncrtWAG_) { // Reversal from drain to imb
-                cTransf_ = 1.0 / (SncrtWAG_ - Sncrd_ + 1.0e-12) - 1.0 / (1.0 - krnSwDrainRevert_ - Sncrd_);
-            }
-
-            if (!wasDrain_ && isDrain_) { // Start of new drainage cycle
-                if (threePhaseState() || nState_ > 1) { // Never return to primary (two-phase) state after leaving
-                    nState_ += 1;
-                    krnDrainStart_ = EffLawT::twoPhaseSatKrn(drainageParams(), krnSwDrainStart_);
-                    krnImbStart_ = krnImbStartNxt_;
-                    // Scanning shift for primary drainage
-                    krnSwImbStart_ = EffLawT::twoPhaseSatKrnInv(drainageParams(), krnImbStart_);
-                }
-            }
-
-            if (!wasDrain_ && !isDrain_) { //Moving along current imb curve
-                krnDrainStartNxt_ = EffLawT::twoPhaseSatKrn(drainageParams(), krnSwWAG_);
-                if (threePhaseState()) {
-                    krnImbStartNxt_ = computeKrImbWAG(krnSwWAG_);
-                }
-                else {
-                    Scalar swf = computeSwf(krnSwWAG_);
-                    krnImbStartNxt_ = EffLawT::twoPhaseSatKrn(drainageParams(), swf);
-                }
-            }
-
         }
 
+        if (isDrain_ && (1.0 - krnSwDrainRevert_) > SncrtWAG_) { // Reversal from drain to imb
+            cTransf_ = 1.0 / (SncrtWAG_ - Sncrd_ + 1.0e-12) - 1.0 / (1.0 - krnSwDrainRevert_ - Sncrd_);
+        }
+
+        if (!wasDrain_ && isDrain_) { // Start of new drainage cycle
+            if (threePhaseState() || nState_ > 1) { // Never return to primary (two-phase) state after leaving
+                nState_ += 1;
+                krnDrainStart_ = EffLawT::twoPhaseSatKrn(drainageParams(), krnSwDrainStart_);
+                krnImbStart_ = krnImbStartNxt_;
+                // Scanning shift for primary drainage
+                krnSwImbStart_ = EffLawT::twoPhaseSatKrnInv(drainageParams(), krnImbStart_);
+            }
+        }
+
+        if (!wasDrain_ && !isDrain_) { //Moving along current imb curve
+            krnDrainStartNxt_ = EffLawT::twoPhaseSatKrn(drainageParams(), krnSwWAG_);
+            if (threePhaseState()) {
+                krnImbStartNxt_ = computeKrImbWAG(krnSwWAG_);
+            }
+            else {
+                Scalar swf = computeSwf(krnSwWAG_);
+                krnImbStartNxt_ = EffLawT::twoPhaseSatKrn(drainageParams(), swf);
+            }
+        }
     }
 
     EclHysteresisConfig config_{};
