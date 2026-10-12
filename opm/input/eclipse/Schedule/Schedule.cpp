@@ -110,6 +110,7 @@
 #include "Well/injection.hpp"
 
 #include <algorithm>
+#include <chrono>
 #include <cstddef>
 #include <ctime>
 #include <functional>
@@ -674,17 +675,16 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
             const auto& location = this->m_sched_deck.location();
             logger({"", "Processing dynamic information from", fmt::format("{} line {}", location.filename, location.lineno)});
             if (restart_skip && !log_to_debug) {
-                const auto restart_time = TimeService::to_time_t(this->m_static.rst_info.time);
                 logger.info(fmt::format("This is a restarted run - skipping "
                                         "until report step {} at {}",
                                         this->m_static.rst_info.report_step,
-                                        Schedule::formatDate(restart_time)));
+                                        Schedule::formatDate(this->m_static.rst_info.time)));
             }
 
             logger(fmt::format("Initializing report step {}/{} at {} {} {} line {}",
                                load_start,
                                this->m_sched_deck.size() - 1,
-                               Schedule::formatDate(this->getStartTime()),
+                               Schedule::formatDate(TimeService::from_time_t(this->getStartTime())),
                                deck_time(this->m_sched_deck.seconds(load_start)),
                                time_unit,
                                location.lineno));
@@ -701,7 +701,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
             const auto& block = this->m_sched_deck[report_step];
             auto time_type = block.time_type();
             if (time_type == ScheduleTimeType::DATES || time_type == ScheduleTimeType::TSTEP) {
-                const auto& start_date = Schedule::formatDate(std::chrono::system_clock::to_time_t(block.start_time()));
+                const auto& start_date = Schedule::formatDate(block.start_time());
                 const auto& days = deck_time(this->stepLength(report_step - 1));
                 const auto& days_total = deck_time(this->seconds(report_step - 1));
                 logger.complete_step(fmt::format("Complete report step {0} ({1} {2}) at {3} ({4} {2})",
@@ -2294,9 +2294,22 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
      }
 
 
-    std::string Schedule::formatDate(std::time_t t) {
-        const auto ts { TimeStampUTC(t) } ;
-        return fmt::format("{:04d}-{:02d}-{:02d}" , ts.year(), ts.month(), ts.day());
+    std::string Schedule::formatDate(const time_point& t) {
+        const auto whole_seconds = std::chrono::floor<std::chrono::seconds>(t);
+        const auto milliseconds =
+            std::chrono::duration_cast<std::chrono::milliseconds>(t - whole_seconds).count();
+        const auto ts = TimeStampUTC { TimeService::to_time_t(time_point { whole_seconds }) };
+        auto date = fmt::format("{:04d}-{:02d}-{:02d}", ts.year(), ts.month(), ts.day());
+
+        if (ts.hour() != 0 || ts.minutes() != 0 || ts.seconds() != 0 || milliseconds != 0) {
+            date += fmt::format(" {:02d}:{:02d}:{:02d}",
+                                ts.hour(), ts.minutes(), ts.seconds());
+            if (milliseconds != 0) {
+                date += fmt::format(".{:03d}", milliseconds);
+            }
+        }
+
+        return date;
     }
 
 namespace {

@@ -19,6 +19,8 @@
 #ifndef SCHEDULE_HPP
 #define SCHEDULE_HPP
 
+#include <opm/common/utility/TimeService.hpp>
+
 #include <opm/input/eclipse/Schedule/Action/ActionResult.hpp>
 #include <opm/input/eclipse/Schedule/Action/SimulatorUpdate.hpp>
 #include <opm/input/eclipse/Schedule/Action/WGNames.hpp>
@@ -623,7 +625,7 @@ namespace Opm {
         std::vector<std::string> wellNames(const std::string& pattern,
                                            const HandlerContext& context,
                                            bool allowEmpty = false);
-        static std::string formatDate(std::time_t t);
+        static std::string formatDate(const time_point& t);
         void applyGlobalWPIMULT( const std::unordered_map<std::string, double>& wpimult_global_factor);
         void updateICDScalingFactors();
 
