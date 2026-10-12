@@ -2295,21 +2295,20 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
 
 
     std::string Schedule::formatDate(const time_point& t) {
+        // Format a UTC std::tm: before fmt 10, time_points are formatted in
+        // local time and without the sub-second part.
         const auto whole_seconds = std::chrono::floor<std::chrono::seconds>(t);
-        const auto milliseconds =
-            std::chrono::duration_cast<std::chrono::milliseconds>(t - whole_seconds).count();
-        const auto ts = TimeStampUTC { TimeService::to_time_t(time_point { whole_seconds }) };
-        auto date = fmt::format("{:04d}-{:02d}-{:02d}", ts.year(), ts.month(), ts.day());
+        const auto tm = fmt::gmtime(TimeService::to_time_t(time_point { whole_seconds }));
 
-        if (ts.hour() != 0 || ts.minutes() != 0 || ts.seconds() != 0 || milliseconds != 0) {
-            date += fmt::format(" {:02d}:{:02d}:{:02d}",
-                                ts.hour(), ts.minutes(), ts.seconds());
-            if (milliseconds != 0) {
-                date += fmt::format(".{:03d}", milliseconds);
-            }
+        if (t == std::chrono::floor<std::chrono::days>(t)) {
+            return fmt::format("{:%F}", tm);
         }
 
-        return date;
+        if (t == whole_seconds) {
+            return fmt::format("{:%F %T}", tm);
+        }
+
+        return fmt::format("{:%F %T}.{:03}", tm, (t - whole_seconds).count());
     }
 
 namespace {
