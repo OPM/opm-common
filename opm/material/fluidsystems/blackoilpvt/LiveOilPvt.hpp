@@ -27,6 +27,7 @@
 #ifndef OPM_LIVE_OIL_PVT_HPP
 #define OPM_LIVE_OIL_PVT_HPP
 
+#include <opm/common/ErrorMacros.hpp>
 #include <opm/common/Exceptions.hpp>
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/common/utility/VectorWithDefaultAllocator.hpp>
@@ -151,36 +152,36 @@ public:
     /*!
      * \brief Return the number of PVT regions which are considered by this PVT-object.
      */
-    unsigned numRegions() const
+    OPM_HOST_DEVICE unsigned numRegions() const
     { return inverseOilBMuTable_.size(); }
 
     /*!
      * \brief Returns the specific enthalpy [J/kg] of oil given a set of parameters.
      */
     template <class Evaluation>
-    Evaluation internalEnergy(unsigned,
-                        const Evaluation&,
-                        const Evaluation&,
-                        const Evaluation&) const
+    OPM_HOST_DEVICE Evaluation internalEnergy(unsigned,
+                                              const Evaluation&,
+                                              const Evaluation&,
+                                              const Evaluation&) const
     {
-        throw std::runtime_error("Requested the enthalpy of oil but the thermal "
-                                 "option is not enabled");
+        OPM_THROW(std::runtime_error, "Requested the enthalpy of oil but the thermal "
+                                      "option is not enabled");
     }
 
-    Scalar hVap(unsigned) const
+    OPM_HOST_DEVICE Scalar hVap(unsigned) const
     {
-        throw std::runtime_error("Requested the hvap of oil but the thermal "
-                                 "option is not enabled");
+        OPM_THROW(std::runtime_error, "Requested the hvap of oil but the thermal "
+                                      "option is not enabled");
     }
 
     /*!
      * \brief Returns the dynamic viscosity [Pa s] of the fluid phase given a set of parameters.
      */
     template <class Evaluation>
-    Evaluation viscosity(unsigned regionIdx,
-                         const Evaluation& /*temperature*/,
-                         const Evaluation& pressure,
-                         const Evaluation& Rs) const
+    OPM_HOST_DEVICE Evaluation viscosity(unsigned regionIdx,
+                               const Evaluation& /*temperature*/,
+                               const Evaluation& pressure,
+                               const Evaluation& Rs) const
     {
         // ATTENTION: Rs is the first axis!
         const Evaluation& invBo = inverseOilBTable_[regionIdx].eval(Rs, pressure, /*extrapolate=*/true);
@@ -193,9 +194,9 @@ public:
      * \brief Returns the dynamic viscosity [Pa s] of the fluid phase given a set of parameters.
      */
     template <class Evaluation>
-    Evaluation saturatedViscosity(unsigned regionIdx,
-                                  const Evaluation& /*temperature*/,
-                                  const Evaluation& pressure) const
+    OPM_HOST_DEVICE Evaluation saturatedViscosity(unsigned regionIdx,
+                                                  const Evaluation& /*temperature*/,
+                                                  const Evaluation& pressure) const
     {
         // ATTENTION: Rs is the first axis!
         const Evaluation& invBo = inverseSaturatedOilBTable_[regionIdx].eval(pressure, /*extrapolate=*/true);
@@ -208,10 +209,10 @@ public:
      * \brief Returns the formation volume factor [-] of the fluid phase.
      */
     template <class Evaluation>
-    Evaluation inverseFormationVolumeFactor(unsigned regionIdx,
-                                            const Evaluation& /*temperature*/,
-                                            const Evaluation& pressure,
-                                            const Evaluation& Rs) const
+    OPM_HOST_DEVICE Evaluation inverseFormationVolumeFactor(unsigned regionIdx,
+                                                            const Evaluation& /*temperature*/,
+                                                            const Evaluation& pressure,
+                                                            const Evaluation& Rs) const
     {
         // ATTENTION: Rs is represented by the _first_ axis!
         return inverseOilBTable_[regionIdx].eval(Rs, pressure, /*extrapolate=*/true);
@@ -221,7 +222,7 @@ public:
      * \brief Returns the formation volume factor [-] and viscosity [Pa s] of the fluid phase.
      */
     template <class FluidState, class LhsEval = typename FluidState::ValueType>
-    std::pair<LhsEval, LhsEval>
+    OPM_HOST_DEVICE std::pair<LhsEval, LhsEval>
     inverseFormationVolumeFactorAndViscosity(const FluidState& fluidState, unsigned regionIdx) const
     {
         const LhsEval& p = decay<LhsEval>(fluidState.pressure(FluidState::oilPhaseIdx));
@@ -251,9 +252,9 @@ public:
      * \brief Returns the formation volume factor [-] of the fluid phase.
      */
     template <class Evaluation>
-    Evaluation saturatedInverseFormationVolumeFactor(unsigned regionIdx,
-                                                     const Evaluation& /*temperature*/,
-                                                     const Evaluation& pressure) const
+    OPM_HOST_DEVICE Evaluation saturatedInverseFormationVolumeFactor(unsigned regionIdx,
+                                                                     const Evaluation& /*temperature*/,
+                                                                     const Evaluation& pressure) const
     {
         // ATTENTION: Rs is represented by the _first_ axis!
         return inverseSaturatedOilBTable_[regionIdx].eval(pressure, /*extrapolate=*/true);
@@ -263,9 +264,9 @@ public:
      * \brief Returns the gas dissolution factor \f$R_s\f$ [m^3/m^3] of the oil phase.
      */
     template <class Evaluation>
-    Evaluation saturatedGasDissolutionFactor(unsigned regionIdx,
-                                             const Evaluation& /*temperature*/,
-                                             const Evaluation& pressure) const
+    OPM_HOST_DEVICE Evaluation saturatedGasDissolutionFactor(unsigned regionIdx,
+                                                             const Evaluation& /*temperature*/,
+                                                             const Evaluation& pressure) const
     { return saturatedGasDissolutionFactorTable_[regionIdx].eval(pressure, /*extrapolate=*/true); }
 
     /*!
@@ -276,11 +277,11 @@ public:
      * to how the Eclipse 100 simulator handles this. (cf the VAPPARS keyword.)
      */
     template <class Evaluation>
-    Evaluation saturatedGasDissolutionFactor(unsigned regionIdx,
-                                             const Evaluation& /*temperature*/,
-                                             const Evaluation& pressure,
-                                             const Evaluation& oilSaturation,
-                                             Evaluation maxOilSaturation) const
+    OPM_HOST_DEVICE Evaluation saturatedGasDissolutionFactor(unsigned regionIdx,
+                                                             const Evaluation& /*temperature*/,
+                                                             const Evaluation& pressure,
+                                                             const Evaluation& oilSaturation,
+                                                             Evaluation maxOilSaturation) const
     {
         Evaluation tmp =
             saturatedGasDissolutionFactorTable_[regionIdx].eval(pressure, /*extrapolate=*/true);
@@ -360,18 +361,18 @@ public:
     }
 
     template <class Evaluation>
-    Evaluation diffusionCoefficient(const Evaluation& /*temperature*/,
-                                    const Evaluation& /*pressure*/,
-                                    unsigned /*compIdx*/) const
+    OPM_HOST_DEVICE Evaluation diffusionCoefficient(const Evaluation& /*temperature*/,
+                                                    const Evaluation& /*pressure*/,
+                                                    unsigned /*compIdx*/) const
     {
-        throw std::runtime_error("Not implemented: The PVT model does not provide "
-                                 "a diffusionCoefficient()");
+        OPM_THROW(std::runtime_error, "Not implemented: The PVT model does not provide "
+                                      "a diffusionCoefficient()");
     }
 
-    Scalar gasReferenceDensity(unsigned regionIdx) const
+    OPM_HOST_DEVICE Scalar gasReferenceDensity(unsigned regionIdx) const
     { return gasReferenceDensity_[regionIdx]; }
 
-    Scalar oilReferenceDensity(unsigned regionIdx) const
+    OPM_HOST_DEVICE Scalar oilReferenceDensity(unsigned regionIdx) const
     { return oilReferenceDensity_[regionIdx]; }
 
     const Storage<TabulatedTwoDFunction>& inverseOilBTable() const
@@ -398,7 +399,7 @@ public:
     const Storage<TabulatedOneDFunction>& saturationPressure() const
     { return saturationPressure_; }
 
-    Scalar vapPar2() const
+    OPM_HOST_DEVICE Scalar vapPar2() const
     { return vapPar2_; }
 
 private:
