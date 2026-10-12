@@ -3660,6 +3660,19 @@ BOOST_AUTO_TEST_CASE(READ_WRITE_WELLDATA)
 {
             Opm::data::Wells wellRates = result_wells();
 
+            {
+                auto& curr = wellRates["W_2"].current_control;
+                curr.prod = ::Opm::Well::ProducerCMode::GRUP;
+                curr.groupTargetProd = ::Opm::Well::ProducerCMode::WRAT;
+                curr.controllingGroup = "G_1";
+            }
+
+            {
+                auto& curr = wellRates["W_6"].current_control;
+                curr.groupTargetInj = ::Opm::Well::InjectorCMode::RESV;
+                curr.controllingGroup = "G_2";
+            }
+
             MessageBuffer buffer;
             wellRates.write(buffer);
 
@@ -3688,6 +3701,17 @@ BOOST_AUTO_TEST_CASE(READ_WRITE_WELLDATA)
             BOOST_CHECK_MESSAGE(!curr.isProducer, "W_6 must be an injector");
             BOOST_CHECK_MESSAGE(curr.prod == ::Opm::Well::ProducerCMode::CMODE_UNDEFINED, "W_6 must have an undefined producer control");
             BOOST_CHECK_MESSAGE(curr.inj == ::Opm::Well::InjectorCMode::GRUP, "W_6 must be on GRUP control");
+            BOOST_CHECK_MESSAGE(curr.groupTargetInj == ::Opm::Well::InjectorCMode::RESV,
+                                "W_6 must be on a reservoir rate group target");
+            BOOST_CHECK_EQUAL(curr.controllingGroup, "G_2");
+
+            const auto& curr2 = W2.current_control;
+            BOOST_CHECK_MESSAGE(curr2.prod == ::Opm::Well::ProducerCMode::GRUP, "W_2 must be on GRUP control");
+            BOOST_CHECK_MESSAGE(curr2.groupTargetProd == ::Opm::Well::ProducerCMode::WRAT,
+                                "W_2 must be on a water rate group target");
+            BOOST_CHECK_EQUAL(curr2.controllingGroup, "G_1");
+            BOOST_CHECK_MESSAGE(curr2 == wellRates.at("W_2").current_control,
+                                "W_2 must have the same current control after read/write");
 
             BOOST_CHECK_MESSAGE(W2.dynamicStatus == ::Opm::Well::Status::OPEN,
                                 "W_2 must be dynamically open (dynamicStatus == OPEN)");
