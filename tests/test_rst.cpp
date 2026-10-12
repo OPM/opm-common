@@ -448,13 +448,18 @@ DATES             -- 1
 WELSPECS
       'OP_1'  'OP'   9   9 1* 'OIL' 1*      1*  1*   1*  1*   1*  1*  /
       'OP_2'  'OP'   9   9 1* 'OIL' 1*      1*  1*   1*  1*   1*  1*  /
+      'OP_3'  'OP'   9   9 1* 'OIL' 1*      1*  1*   1*  1*   1*  1*  /
 /
 COMPDAT
       'OP_1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
       'OP_2'  9  9   2   2 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+      'OP_3'  9  9   3   3 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
 /
 WCONPROD
       'OP_2' 'SHUT' /
+/
+WELOPEN
+      'OP_3' 'STOP' /
 /
 TSTEP            -- 2
 10 /
@@ -1372,18 +1377,26 @@ BOOST_AUTO_TEST_CASE(Historic_Period_WHistCtl)
 
 BOOST_AUTO_TEST_CASE(Producer_Without_Control_Mode)
 {
+    namespace VI = Opm::RestartIO::Helpers::VectorItems;
+
     const auto simCase = SimulationCase{ producer_without_control() };
 
     const auto rptStep  = std::size_t{2};
     const auto baseName = std::string { "NO_CONTROL_RST" };
 
+    // The test has no well results.  Write OP_3, the third well, as a
+    // stopped well whose connections flow.
     const auto state =
-        makeRestartState(simCase, baseName, rptStep, "no_control_rst");
+        makeRestartState(simCase, baseName, rptStep, "no_control_rst",
+                         [](std::vector<int>& iwel, const std::size_t niwelz)
+                         {
+                             iwel[2*niwelz + VI::IWell::index::item9] = 0;
+                             iwel[2*niwelz + VI::IWell::index::Status] =
+                                 VI::IWell::Value::Status::Stop;
+                         });
 
-    // Neither well has a well type in the restart file.
+    // No well has a well type in the restart file.
     {
-        namespace VI = Opm::RestartIO::Helpers::VectorItems;
-
         const auto sim_step = rptStep - 1;
         const auto ih = Opm::RestartIO::Helpers::
             createInteHead(simCase.es, simCase.grid, simCase.sched,
@@ -1398,14 +1411,19 @@ BOOST_AUTO_TEST_CASE(Producer_Without_Control_Mode)
 
         const auto& iwell = wellData.getIWell();
         const auto niwelz = ih[VI::intehead::NIWELZ];
-        for (const auto wellID : { 0, 1 }) {
+        for (const auto wellID : { 0, 1, 2 }) {
             BOOST_CHECK_EQUAL(iwell[wellID*niwelz + VI::IWell::index::WType],
                               VI::IWell::Value::WellType::NoType);
         }
     }
 
-    // OP_1: WELSPECS/COMPDAT only.  OP_2: shut by WCONPROD without control mode.
-    for (const auto* wname : { "OP_1", "OP_2" }) {
+    // OP_1: WELSPECS/COMPDAT only.  OP_2: shut by WCONPROD without control
+    // mode.  OP_3: stopped by WELOPEN without control mode.
+    using Status = Opm::Well::Status;
+    for (const auto& [wname, status] : { std::pair { "OP_1", Status::SHUT },
+                                         std::pair { "OP_2", Status::SHUT },
+                                         std::pair { "OP_3", Status::STOP } })
+    {
         const auto& rst_well = state.get_well(wname);
 
         BOOST_CHECK_EQUAL(rst_well.active_control,
@@ -1426,6 +1444,9 @@ BOOST_AUTO_TEST_CASE(Producer_Without_Control_Mode)
 
         BOOST_CHECK_MESSAGE(well.getPreferredPhase() == Opm::Phase::OIL,
                             "Well '" << wname << "' must keep its preferred phase");
+
+        BOOST_CHECK_MESSAGE(well.getStatus() == status,
+                            "Well '" << wname << "' must keep its status after restart");
 
         const auto& prop = well.getProductionProperties();
 
