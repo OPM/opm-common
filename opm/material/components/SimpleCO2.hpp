@@ -32,6 +32,7 @@
 
 #include <opm/material/IdealGas.hpp>
 #include <opm/material/components/Component.hpp>
+#include <opm/material/components/ComponentCp.hpp>
 
 #include <cmath>
 #include <string_view>
@@ -42,6 +43,7 @@ namespace Opm {
  * \ingroup Components
  *
  * \brief A simplistic class representing the \f$CO_2\f$ fluid properties
+ *        (CAS 124-38-9, formula CO\f$_2\f$).
  *
  * \tparam Scalar The type used for scalar values
  */
@@ -97,6 +99,22 @@ public:
      */
     static Scalar triplePressure()
     { return 5.11e5; /* [N/m^2] */ }
+
+    /*!
+     * \brief Cubic ideal-gas heat-capacity polynomial of \f$CO_2\f$ \f$\mathrm{[J/(mol\ K)]}\f$.
+     *
+     * Least-squares fit to the ideal-gas part of the equation of state of
+     * Span & Wagner, J. Phys. Chem. Ref. Data 25 (1996) 1509, over
+     * 250-600 K (RMS 0.003, max 0.014 J/(mol K)), sampled with CoolProp
+     * 8.0.0. Not valid outside that range.
+     *
+     * This is the ideal-gas heat capacity used by the compositional mixture
+     * enthalpy (MixtureEnthalpy). It does not implement the Component<>
+     * gasEnthalpy/gasHeatCapacity functions, which are real-fluid
+     * correlations where they exist.
+     */
+    static constexpr ComponentCp<Scalar> idealGasHeatCapacityPolynomial()
+    { return {18.2687, 8.36359e-2, -7.75148e-5, 3.14088e-8, 250.0, 600.0}; }
 
     /*!
      * \copydoc Component::gasIsCompressible
