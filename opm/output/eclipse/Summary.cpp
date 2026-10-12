@@ -2888,10 +2888,19 @@ inline quantity well_control_mode( const fn_args& args )
     // Well has simulator-provided active control mode.  Pick the
     // appropriate value depending on well type (producer/injector).
     //
-    // A producer held back by its maximum allowable drawdown reports
-    // drawdown control, not the rate control which carries the converted
-    // drawdown limit.
+    // A well under group control reports the rate which the group target
+    // controls, as a negative value.  A producer held back by its maximum
+    // allowable drawdown reports drawdown control, not the rate control
+    // which carries the converted drawdown limit.
     const auto& curr = xwPos->second.current_control;
+    if (curr.underGroupTarget()) {
+        const auto rate = curr.isProducer
+            ? Opm::Well::eclipseControlMode(curr.groupTargetProd)
+            : Opm::Well::eclipseControlMode(curr.groupTargetInj, well->injectorType());
+
+        return { - static_cast<double>(rate), unit };
+    }
+
     const auto wmctl = ! curr.isProducer
         ? Opm::Well::eclipseControlMode(curr.inj, well->injectorType())
         : (curr.drawdownLimited

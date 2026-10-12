@@ -140,6 +140,10 @@ namespace Opm::RestartIO::Helpers {
 
         /// Maximum number of groups in model.
         int nWGMax_;
+
+        /// Number of groups in the group arrays, including FIELD which is
+        /// the last one.
+        int nGMaxz_;
     };
 
 } // Opm::RestartIO::Helpers
