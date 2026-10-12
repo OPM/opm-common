@@ -134,8 +134,12 @@ Opm::Well::Status status_from_int(const int int_value)
 
     switch (int_value) {
     case Value::Shut: return Opm::Well::Status::SHUT;
+    case Value::NoConns: return Opm::Well::Status::SHUT;
+    case Value::ShutAuto: return Opm::Well::Status::SHUT;
     case Value::Stop: return Opm::Well::Status::STOP;
     case Value::Open: return Opm::Well::Status::OPEN;
+    case Value::Reopened: return Opm::Well::Status::OPEN;
+    case Value::OpenOther: return Opm::Well::Status::OPEN;
     case Value::Auto: return Opm::Well::Status::AUTO;
     default:
         throw std::logic_error {

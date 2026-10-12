@@ -1190,7 +1190,16 @@ Group::ExceedAction
 Group::ExceedActionFromInt(const int value)
 {
     if (value <= 0) { return ExceedAction::NONE; }
-    if (value == 4) { return ExceedAction::RATE; }
+
+    using Code = RestartIO::Helpers::VectorItems::IGroup::Value::ExceedAction;
+    switch (static_cast<Code>(value)) {
+    case Code::Con:         return ExceedAction::CON;
+    case Code::ConAndBelow: return ExceedAction::CON_PLUS;
+    case Code::Well:        return ExceedAction::WELL;
+    case Code::Rate:        return ExceedAction::RATE;
+    case Code::Plug:        return ExceedAction::PLUG;
+    default: break;
+    }
 
     throw std::invalid_argument {
         fmt::format("Unknown ExceedAction state integer: {}", value)
