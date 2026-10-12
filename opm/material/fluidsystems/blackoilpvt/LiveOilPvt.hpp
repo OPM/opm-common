@@ -38,9 +38,11 @@
 #include <opm/material/common/UniformXTabulated2DFunctionBuilder.hpp>
 #include <opm/material/common/Tabulated1DFunction.hpp>
 
+#include <algorithm>
 #include <cstddef>
 #include <stdexcept>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 namespace Opm {
@@ -205,6 +207,10 @@ public:
     //! for CPU storage only, so misusing them already fails at link time.
     static constexpr bool isCpuStorage
         = std::is_same_v<Storage<Scalar>, VectorWithDefaultAllocator<Scalar>>;
+
+    static_assert(isCpuStorage || std::is_same_v<TableStorage<Scalar>, gpuistl::GpuView<Scalar>>,
+                  "On the GPU, the per-region tables must be views (TableStorage = GpuView); "
+                  "the device arrays are owned by detail::LiveOilPvtGpuTableHolder.");
 
     LiveOilPvt() = default;
 
@@ -669,7 +675,12 @@ copy_to_gpu(const LiveOilPvt<ScalarT>& cpu)
     using GpuPvt = LiveOilPvt<ScalarT, GpuBuffer, GpuView>;
     typename GpuPvt::GpuTableHolder holder;
 
-    OPM_ERROR_IF(cpu.numRegions() == 0 || cpu.inverseOilBTable().size() != cpu.numRegions(),
+    // inverseOilBMuTable_ is only filled by initEnd(); after setNumRegions() alone its
+    // tables are empty.
+    const bool initialized = cpu.numRegions() > 0
+        && std::ranges::none_of(cpu.inverseOilBMuTable(),
+                                [](const auto& table) { return table.numX() == 0; });
+    OPM_ERROR_IF(!initialized,
                  "copy_to_gpu: LiveOilPvt is not initialized (call initFromState() or initEnd() first).");
 
     // Uploads each per-region table in cpuTables to its own owning table in
