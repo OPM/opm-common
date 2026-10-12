@@ -996,9 +996,14 @@ namespace {
                 ? swprop(M::pressure, pc.thp_limit)
                 : 0.0;
 
+            // A well which has not been given a control mode may have no BHP
+            // limit.  Write it as undefined then, as other undefined targets,
+            // so that a restart does not give the well a limit.
             sWell[Ix::BHPTarget] = ( !smry.is_undefined_value(pc.bhp_limit) )
                 ? swprop(M::pressure, pc.bhp_limit)
-                : swprop(M::pressure, 1.0*::Opm::unit::atm);
+                : (well.hasControlMode()
+                   ? swprop(M::pressure, 1.0*::Opm::unit::atm)
+                   : 1.0e+20f);
 
             sWell[Ix::HistBHPTarget] = sWell[Ix::BHPTarget];
 

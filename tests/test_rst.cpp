@@ -398,7 +398,8 @@ END
 
     }
 
-    Opm::Deck producer_without_control()
+    // Takes optional RUNSPEC keywords, such as UDQPARAM.
+    Opm::Deck producer_without_control(const std::string& runspec = "")
     {
         return Opm::Parser{}.parseString(R"~(RUNSPEC
 OIL
@@ -408,7 +409,7 @@ DISGAS
 VAPOIL
 UNIFOUT
 UNIFIN
-DIMENS
+)~" + runspec + R"~(DIMENS
  10 10 10 /
 
 START             -- 0
@@ -553,7 +554,9 @@ END
     {
         const auto sim_step = rptStep - 1;
 
-        const auto sumState     = Opm::SummaryState { Opm::TimeService::now(), 0.0 };
+        const auto sumState     = Opm::SummaryState {
+            Opm::TimeService::now(), simCase.es.runspec().udqParams().undefinedValue()
+        };
         const auto action_state = Opm::Action::State{};
         const auto wtest_state  = Opm::WellTestState{};
 
@@ -1457,6 +1460,48 @@ BOOST_AUTO_TEST_CASE(Producer_Without_Control_Mode)
         BOOST_CHECK_MESSAGE(! prop.hasProductionControl(Opm::WellProducerCMode::CMODE_UNDEFINED),
                             "Well '" << wname << "' must not register the "
                             "undefined control mode as an available control");
+
+        // Each well keeps its BHP limit: none for OP_1 and OP_3, and the
+        // WCONPROD default for OP_2.  The restart file stores it in single
+        // precision, hence the tolerance (in percent).
+        const auto& original = simCase.sched.getWell(wname, rptStep - 1);
+        BOOST_CHECK_EQUAL(prop.BHPTarget.is<double>(),
+                          original.getProductionProperties().BHPTarget.is<double>());
+
+        const auto st = Opm::SummaryState { Opm::TimeService::now(), 0.0 };
+        BOOST_CHECK_CLOSE(well.productionControls(st).bhp_limit,
+                          original.productionControls(st).bhp_limit, 1.0e-5);
+    }
+}
+
+// A non-zero value for undefined UDQs must not give a well which has no BHP
+// limit one on restart.
+BOOST_AUTO_TEST_CASE(Producer_Without_Control_Mode_UDQ_Undefined)
+{
+    const auto simCase = SimulationCase {
+        producer_without_control("UDQPARAM\n 1* 1* 99999.0 /\n")
+    };
+
+    const auto rptStep = std::size_t{2};
+    const auto state =
+        makeRestartState(simCase, "NO_CONTROL_UDQ_RST", rptStep, "no_control_udq_rst");
+
+    const auto st = Opm::SummaryState { Opm::TimeService::now(), 99999.0 };
+    for (const auto* wname : { "OP_1", "OP_2" }) {
+        const auto well = Opm::Well {
+            state.get_well(wname),
+            static_cast<int>(rptStep),
+            state.header.histctl_override,
+            Opm::TracerConfig{},
+            Opm::UnitSystem::newMETRIC(),
+            std::nullopt
+        };
+
+        const auto& original = simCase.sched.getWell(wname, rptStep - 1);
+        BOOST_CHECK_EQUAL(well.getProductionProperties().BHPTarget.is<double>(),
+                          original.getProductionProperties().BHPTarget.is<double>());
+        BOOST_CHECK_CLOSE(well.productionControls(st).bhp_limit,
+                          original.productionControls(st).bhp_limit, 1.0e-5);
     }
 }
 
