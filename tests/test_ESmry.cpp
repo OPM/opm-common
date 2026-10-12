@@ -30,6 +30,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cmath>
 #include <cstddef>
 #include <fstream>
 #include <iomanip>
@@ -693,4 +694,85 @@ BOOST_AUTO_TEST_CASE(Test_all_available_w_restart) {
     Opm::EclIO::ESmry smry3("RST2.SMSPEC", true);
 
     BOOST_CHECK_EQUAL( smry3.all_steps_available(), false);
+}
+
+BOOST_AUTO_TEST_CASE(Restart_Run_With_Other_Vectors) {
+
+    WorkArea work;
+
+    auto writeSpec = [](const std::string& fileName, const std::string& restartFrom,
+                        const int restartStep, const std::vector<std::string>& keywords,
+                        const std::vector<std::string>& wgnames)
+    {
+        Opm::EclIO::EclOutput smspec(fileName, false);
+        smspec.write<int>("INTEHEAD", {1,100});
+        std::vector<std::string> restart (9,"");
+        restart[0] = restartFrom;
+        smspec.write("RESTART", restart);
+        smspec.write<int>("DIMENS", {static_cast<int>(keywords.size()), 13, 22, 11, 0, restartStep});
+        smspec.write("KEYWORDS", keywords);
+        smspec.write("WGNAMES", wgnames);
+        smspec.write("NUMS", std::vector<int>(keywords.size(), 0));
+        smspec.write("UNITS", std::vector<std::string>(keywords.size(), ""));
+        smspec.write<int>("STARTDAT", {1, 11, 2018, 0, 0, 0});
+    };
+
+    writeSpec("BASE1.SMSPEC", "", 0, {"TIME", "FOPR", "WOPR", "WBHP"},
+              {":+:+:+:+", ":+:+:+:+", "PROD1", "INJ1"});
+
+    // The restarted run orders the vectors differently and adds one.
+    writeSpec("RST2.SMSPEC", "BASE1", 1, {"TIME", "WBHP", "WOPR", "FOPR", "WOPR"},
+              {":+:+:+:+", "INJ1", "PROD1", ":+:+:+:+", "PROD2"});
+
+    {
+        Opm::EclIO::EclOutput unsmry("BASE1.UNSMRY", false);
+
+        unsmry.write<int>("SEQHDR", {1});
+        unsmry.write<int>("MINISTEP", {0});
+        unsmry.write<float>("PARAMS", {1, 10, 20, 30});
+
+        unsmry.write<int>("SEQHDR", {2});
+        unsmry.write<int>("MINISTEP", {1});
+        unsmry.write<float>("PARAMS", {2, 11, 21, 31});
+    }
+
+    {
+        Opm::EclIO::EclOutput unsmry("RST2.UNSMRY", false);
+
+        unsmry.write<int>("SEQHDR", {2});
+        unsmry.write<int>("MINISTEP", {1});
+        unsmry.write<float>("PARAMS", {2, 41, 22, 12, 50});
+
+        unsmry.write<int>("SEQHDR", {3});
+        unsmry.write<int>("MINISTEP", {2});
+        unsmry.write<float>("PARAMS", {3, 42, 23, 13, 51});
+    }
+
+    Opm::EclIO::ESmry smry("RST2.SMSPEC", true);
+
+    using Vect = std::vector<float>;
+    BOOST_CHECK(smry.get("TIME") == Vect({1, 2, 3}));
+    BOOST_CHECK(smry.get("FOPR") == Vect({10, 12, 13}));
+    BOOST_CHECK(smry.get("WOPR:PROD1") == Vect({20, 22, 23}));
+    BOOST_CHECK(smry.get("WBHP:INJ1") == Vect({30, 41, 42}));
+
+    // Not in the base run.
+    const auto wopr2 = smry.get("WOPR:PROD2");
+    BOOST_REQUIRE_EQUAL(wopr2.size(), 3U);
+    BOOST_CHECK(std::isnan(wopr2[0]));
+    BOOST_CHECK_EQUAL(wopr2[1], 50.0f);
+    BOOST_CHECK_EQUAL(wopr2[2], 51.0f);
+
+    // Same when loading all vectors at once.
+    Opm::EclIO::ESmry smryAll("RST2.SMSPEC", true);
+    smryAll.loadData();
+
+    BOOST_CHECK(smryAll.get("FOPR") == Vect({10, 12, 13}));
+    BOOST_CHECK(smryAll.get("WBHP:INJ1") == Vect({30, 41, 42}));
+
+    const auto wopr2All = smryAll.get("WOPR:PROD2");
+    BOOST_REQUIRE_EQUAL(wopr2All.size(), 3U);
+    BOOST_CHECK(std::isnan(wopr2All[0]));
+    BOOST_CHECK_EQUAL(wopr2All[1], 50.0f);
+    BOOST_CHECK_EQUAL(wopr2All[2], 51.0f);
 }
