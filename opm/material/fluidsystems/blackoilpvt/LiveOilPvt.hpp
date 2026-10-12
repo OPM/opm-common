@@ -38,12 +38,22 @@
 #include <opm/material/common/Tabulated1DFunction.hpp>
 
 #include <cstddef>
+#include <type_traits>
 
 namespace Opm {
 
 class EclipseState;
 class Schedule;
 class SimpleTable;
+
+namespace gpuistl
+{
+template <class T>
+class GpuBuffer;
+
+template <class T>
+class GpuView;
+} // namespace gpuistl
 
 /*!
  * \brief This class represents the Pressure-Volume-Temperature relations of the oil phas
@@ -60,6 +70,36 @@ public:
     using TabulatedTwoDFunction = UniformXTabulated2DFunction<Scalar, TableStorage>;
     using TabulatedTwoDFunctionBuilder = UniformXTabulated2DFunctionBuilder<Scalar>;
     using TabulatedOneDFunction = Tabulated1DFunction<Scalar, TableStorage>;
+
+    //! True for the CPU object. Used to restrict the host-only methods that would otherwise
+    //! compile for a GPU instantiation and then read or write device memory from the host
+    //! (setInverseOilFormationVolumeFactor(), setOilViscosity() and saturationPressure()).
+    //! The other host-only methods are defined in the .cpp file for CPU storage only, so
+    //! misusing them already fails at link time.
+    static constexpr bool isCpuStorage
+        = std::is_same_v<Storage<Scalar>, VectorWithDefaultAllocator<Scalar>>
+       && std::is_same_v<TableStorage<Scalar>, VectorWithDefaultAllocator<Scalar>>;
+
+    //! True for the host-side owner of the per-region device tables. Only created by,
+    //! and owned through, gpuistl::copy_to_gpu().
+    static constexpr bool isGpuTableOwner
+        = std::is_same_v<Storage<Scalar>, VectorWithDefaultAllocator<Scalar>>
+       && std::is_same_v<TableStorage<Scalar>, gpuistl::GpuBuffer<Scalar>>;
+
+    //! True if this object owns device memory (created by gpuistl::copy_to_gpu()).
+    static constexpr bool isOwningGpu
+        = std::is_same_v<Storage<Scalar>, gpuistl::GpuBuffer<Scalar>>
+       && std::is_same_v<TableStorage<Scalar>, gpuistl::GpuView<Scalar>>;
+
+    //! True if this object is a non-owning view of device memory (created by gpuistl::make_view()).
+    static constexpr bool isGpuView
+        = std::is_same_v<Storage<Scalar>, gpuistl::GpuView<Scalar>>
+       && std::is_same_v<TableStorage<Scalar>, gpuistl::GpuView<Scalar>>;
+
+    static_assert(isCpuStorage || isGpuTableOwner || isOwningGpu || isGpuView,
+                  "LiveOilPvt: unsupported combination of Storage and TableStorage");
+
+    LiveOilPvt() = default;
 
     /*!
      * \brief Initialize the oil parameters via the data specified by the PVTO ECL keyword.
@@ -124,6 +164,7 @@ public:
      */
     void setInverseOilFormationVolumeFactor(unsigned regionIdx,
                                             const TabulatedTwoDFunction& invBo)
+        requires isCpuStorage
     { inverseOilBTable_[regionIdx] = invBo; }
 
     /*!
@@ -132,6 +173,7 @@ public:
      * This is a function of \f$(R_s, p_o)\f$...
      */
     void setOilViscosity(unsigned regionIdx, const TabulatedTwoDFunction& muo)
+        requires isCpuStorage
     { oilMuTable_[regionIdx] = muo; }
 
     /*!
@@ -309,6 +351,7 @@ public:
     Evaluation saturationPressure(unsigned regionIdx,
                                   const Evaluation&,
                                   const Evaluation& Rs) const
+        requires isCpuStorage
     {
         using Toolbox = MathToolbox<Evaluation>;
 
