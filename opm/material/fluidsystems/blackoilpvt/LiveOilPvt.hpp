@@ -189,6 +189,14 @@ public:
     static constexpr bool isGpuView
         = std::is_same_v<Storage<Scalar>, gpuistl::GpuView<Scalar>>;
 
+    //! True if this object lives on the CPU. Used to restrict the host-only methods that
+    //! would otherwise compile for a GPU instantiation and then read or write device
+    //! memory from the host (setInverseOilFormationVolumeFactor(), setOilViscosity() and
+    //! saturationPressure()). The other host-only methods are defined in the .cpp file
+    //! for CPU storage only, so misusing them already fails at link time.
+    static constexpr bool isCpuStorage
+        = std::is_same_v<Storage<Scalar>, VectorWithDefaultAllocator<Scalar>>;
+
     LiveOilPvt() = default;
 
     /*!
@@ -254,6 +262,7 @@ public:
      */
     void setInverseOilFormationVolumeFactor(unsigned regionIdx,
                                             const TabulatedTwoDFunction& invBo)
+        requires isCpuStorage
     { inverseOilBTable_[regionIdx] = invBo; }
 
     /*!
@@ -262,6 +271,7 @@ public:
      * This is a function of \f$(R_s, p_o)\f$...
      */
     void setOilViscosity(unsigned regionIdx, const TabulatedTwoDFunction& muo)
+        requires isCpuStorage
     { oilMuTable_[regionIdx] = muo; }
 
     /*!
@@ -439,6 +449,7 @@ public:
     Evaluation saturationPressure(unsigned regionIdx,
                                   const Evaluation&,
                                   const Evaluation& Rs) const
+        requires isCpuStorage
     {
         using Toolbox = MathToolbox<Evaluation>;
 
