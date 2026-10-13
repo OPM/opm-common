@@ -867,6 +867,7 @@ Runspec::Runspec(const Deck& deck)
     , m_tracers    (deck)
     , m_geochem    (deck)
     , m_saltmc     (deck)
+    , m_porosity_model(deck)
     , m_co2storage (false)
     , m_co2sol     (false)
     , m_h2sol      (false)
@@ -1062,6 +1063,7 @@ Runspec Runspec::serializationTestObject()
     result.m_biof = true;
     result.m_geochem = Geochem::serializationTestObject();
     result.m_saltmc = Saltmc::serializationTestObject();
+    result.m_porosity_model = PorosityModel::serializationTestObject();
 
     return result;
 }
@@ -1196,6 +1198,11 @@ bool Runspec::biof() const noexcept
     return this->m_biof;
 }
 
+const PorosityModel& Runspec::porosityModel() const noexcept
+{
+    return this->m_porosity_model;
+}
+
 std::time_t Runspec::start_time() const noexcept
 {
     return this->m_start_time;
@@ -1248,6 +1255,7 @@ bool Runspec::rst_cmp(const Runspec& full_spec, const Runspec& rst_spec)
         full_spec.m_biof == rst_spec.m_biof &&
         full_spec.m_geochem == rst_spec.m_geochem &&
         full_spec.m_saltmc == rst_spec.m_saltmc &&
+        full_spec.m_porosity_model == rst_spec.m_porosity_model &&
         Welldims::rst_cmp(full_spec.wellDimensions(), rst_spec.wellDimensions());
 }
 
@@ -1283,6 +1291,7 @@ bool Runspec::operator==(const Runspec& data) const
         && (this->m_biof == data.m_biof)
         && (this->m_geochem == data.m_geochem)
         && (this->m_saltmc == data.m_saltmc)
+        && (this->m_porosity_model == data.m_porosity_model)
         ;
 }
 
