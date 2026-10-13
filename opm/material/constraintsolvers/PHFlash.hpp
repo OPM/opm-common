@@ -1,0 +1,676 @@
+// -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+// vi: set et ts=4 sw=4 sts=4:
+/*
+  Copyright 2026 Equinor ASA.
+
+  This file is part of the Open Porous Media project (OPM).
+
+  OPM is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 2 of the License, or
+  (at your option) any later version.
+
+  OPM is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with OPM.  If not, see <http://www.gnu.org/licenses/>.
+
+  Consult the COPYING file in the top-level source directory of this
+  module for the precise wording of the license and the list of
+  copyright holders.
+*/
+/*!
+ * \file
+ *
+ * \brief Isenthalpic (pressure-enthalpy, "P-H") flash: given the pressure and
+ *        overall composition carried by a fluid state and a specified molar
+ *        enthalpy, find the temperature at which the flashed mixture has that
+ *        enthalpy, and leave the state flashed at the solution.
+ *
+ * The isothermal flash (PTFlash) is reused unmodified. The temperature is
+ * bracketed and refined by a bracketed false-position search on
+ * r(T) = H(T) - hSpec, with the mixture enthalpy H of MixtureEnthalpy
+ * (caloric or eos_departure model) or of a replacement provider.
+ *
+ * Contract notes:
+ * - The specified enthalpy is molar [J/mol] and has to be computed on the
+ *   datum of MixtureEnthalpy (the ideal gas at
+ *   ComponentCp::referenceTemperature()) with the same model. A datum or model
+ *   mismatch shows as a systematically wrong temperature, not as a failure.
+ * - The temperature search stays inside the fit range of every cp polynomial
+ *   in the table (ComponentCp::minTemperature, maxTemperature).
+ * - The fluid state's value type has to be a DenseAd::Evaluation, as
+ *   PTFlash::solve requires; plain-double states do not compile. Values only:
+ *   after solve() the derivatives of the state are those of the final
+ *   isothermal flash at the solution temperature, held fixed. The sensitivity
+ *   of the solution temperature (dT/d{H,p,z}) is not propagated.
+ * - With the caloric model the mixture enthalpy does not depend on the phase
+ *   split (H = sum_i z_i h_i(T)) and increases strictly with T, so the root
+ *   is unique. With the built-in provider this H is evaluated without a flash
+ *   during the search, and the state is flashed once, at the solution.
+ * - With the eos_departure model H(T) has slope kinks at bubble and dew
+ *   crossings, which the search converges across. Taking a single-phase
+ *   residual on the stable cubic root (MixtureEnthalpy) removes the jumps
+ *   that switching the single-phase label alone would cause. A pure fluid at
+ *   saturation keeps a real jump: an enthalpy between the liquid and vapour
+ *   values there has a physical two-phase solution, whose vapour fraction the
+ *   enthalpy fixes. A search over temperature alone cannot represent it, so
+ *   solve() reports failure there. This is a limitation of the method, not a
+ *   case without a solution.
+ * - Where the isothermal flash or the enthalpy cannot be evaluated (see the
+ *   note on solve()), that temperature is skipped and the search goes on past
+ *   it, both while it looks for a bracket and on a bracket. A root inside a
+ *   temperature range that cannot be evaluated is not found, nor is one that
+ *   the search does not reach within its limits on evaluations and iterations.
+ */
+#ifndef OPM_PH_FLASH_HPP
+#define OPM_PH_FLASH_HPP
+
+#include <opm/material/components/ComponentCp.hpp>
+#include <opm/material/constraintsolvers/MixtureEnthalpy.hpp>
+#include <opm/material/constraintsolvers/PTFlash.hpp>
+#include <opm/material/constraintsolvers/PTFlashMethod.hpp>
+
+#include <opm/common/OpmLog/OpmLog.hpp>
+
+#include <opm/input/eclipse/EclipseState/Compositional/CompositionalConfig.hpp>
+
+#include <dune/common/fmatrix.hh>
+
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <cstddef>
+#include <optional>
+#include <stdexcept>
+#include <type_traits>
+#include <vector>
+
+#include <fmt/format.h>
+
+namespace Opm {
+
+/*!
+ * \brief Run configuration of the isenthalpic flash: the enthalpy model and
+ *        the temperature search.
+ *
+ * The search interval is [tempMin, tempMax] intersected with the fit range of
+ * every cp polynomial in cpTable. A specified enthalpy outside the range that
+ * the evaluable part of the interval attains makes solve() return false.
+ *
+ * Defaults: the caloric model is the one whose inversion is well posed for
+ * every feed (H(T) is strictly increasing and needs no phase split). It
+ * omits the latent heat and the pressure dependence of the enthalpy (no
+ * Joule-Thomson effect); use eos_departure where those matter. 270-460 K
+ * (about -3 to 187 C) covers reservoir and near-wellbore conditions and lies
+ * inside the fit range of the cp polynomials of the components shipped with
+ * OPM. Both are starting values; set them for the problem at hand.
+ */
+template <class Scalar, int numComponents>
+struct PHFlashConfig {
+    //! Per-component ideal-gas heat-capacity polynomials, indexed like the
+    //! fluid system's components. Has to be populated by the caller: solve()
+    //! returns false for the default-constructed, all-zero table.
+    CpTable<Scalar, numComponents> cpTable{};
+    //! Search interval [K], further limited to the fit range of cpTable.
+    Scalar tempMin = 270.0;
+    Scalar tempMax = 460.0;
+    //! Temperature tolerance [K]: the search has converged when the bracket
+    //! is at most this wide. Also the resolution to which the boundary of a
+    //! temperature range that cannot be evaluated is located, and the
+    //! distance within which a root at that boundary is accepted.
+    Scalar temperatureTolerance = 1e-6;
+    //! Acceptance tolerance on the enthalpy residual |H(T) - hSpec| [J/mol],
+    //! checked at the converged temperature. Where the enthalpy jumps, the
+    //! bracket converges onto the jump although there is no root; this check
+    //! reports that case as a failure.
+    Scalar enthalpyTolerance = 1.0;
+    //! Limit on the root-search iterations; reaching it makes solve() return
+    //! false.
+    int maxIterations = 100;
+    EnthalpyModel model = EnthalpyModel::caloric;
+};
+
+/*!
+ * \brief The isenthalpic (P-H) flash: solves H(p, T, z) = hSpec for the
+ *        temperature by a bracketed search over the isothermal flash, with
+ *        the mixture-enthalpy model selected in the configuration.
+ *
+ * EnthalpyCalc provides the enthalpy. A replacement needs a static
+ * mixtureEnthalpy(fluidState, cpTable, eosType, model) returning the molar
+ * enthalpy [J/mol] of a flashed state, as MixtureEnthalpy does. A replacement
+ * is always evaluated on a state flashed at the trial temperature.
+ */
+template <class Scalar, class FluidSystem,
+          class EnthalpyCalc = MixtureEnthalpy<Scalar, FluidSystem>>
+struct PHFlash {
+    static constexpr int numComponents = FluidSystem::numComponents;
+
+    using EOSType = CompositionalConfig::EOSType;
+    using Config = PHFlashConfig<Scalar, numComponents>;
+
+    /*!
+     * \brief Solve H(p, T, z) = hSpec for T and flash the state at the
+     *        solution.
+     *
+     * \param[in,out] fluidState in: the pressure and the overall mole
+     *        fractions. Out, on success: the solution temperature, and the
+     *        liquid fraction and phase compositions of the state flashed
+     *        there. On failure the state is left at the last trial and is not
+     *        valid.
+     * \param hSpec specified molar mixture enthalpy [J/mol]
+     * \param cfg the enthalpy model and the temperature search
+     * \param twoPhaseMethod iteration scheme of the isothermal flash
+     * \param ptTolerance convergence tolerance of the isothermal flash
+     * \param eosType cubic equation of state of the isothermal flash and of
+     *        the eos_departure enthalpy
+     * \param verbosity verbosity of the isothermal flash; at 1 or more a
+     *        bracket found next to a temperature that cannot be evaluated is
+     *        logged
+     * \return true when the temperature search (findBracket, illinois)
+     *         converged and the residual |H(T) - hSpec| of the state flashed
+     *         at the solution is within cfg.enthalpyTolerance. false for an
+     *         all-zero cp table, a search interval that is empty after
+     *         limiting it to the cp fit range, a failed search, a failed
+     *         flash at the solution, or a final residual above the tolerance.
+     *
+     * \note A std::runtime_error or a Dune::FMatrixError from the isothermal
+     *       flash or the enthalpy, and a residual that is not finite, are
+     *       treated as "cannot evaluate here"; std::logic_error propagates.
+     */
+    template <class FluidState>
+    static bool solve(FluidState& fluidState,
+                      const Scalar hSpec,
+                      const Config& cfg,
+                      const PTFlashMethod twoPhaseMethod,
+                      const Scalar ptTolerance,
+                      const EOSType& eosType,
+                      const int verbosity = 0)
+    {
+        // An all-zero table makes H(T) identically zero, which would let
+        // hSpec = 0 "succeed" at an arbitrary end of the interval.
+        Scalar cpMagnitude = 0.0;
+        for (const auto& cp : cfg.cpTable) {
+            cpMagnitude += std::abs(cp.c0) + std::abs(cp.c1)
+                         + std::abs(cp.c2) + std::abs(cp.c3);
+        }
+        if (!(cpMagnitude > 0.0)) {
+            return false;
+        }
+
+        // Search only where every cp polynomial is inside its fit range.
+        Scalar tLo = cfg.tempMin;
+        Scalar tHi = cfg.tempMax;
+        for (const auto& cp : cfg.cpTable) {
+            tLo = std::max(tLo, cp.minTemperature);
+            tHi = std::min(tHi, cp.maxTemperature);
+        }
+        if (!(tLo < tHi)) {
+            return false;
+        }
+
+        WarmStart warmStart(std::min(Scalar(0.1) * (tHi - tLo), Scalar(15.0)));
+
+        auto residualAt = [&](const Scalar T) {
+            return flashedResidual(fluidState, T, hSpec, cfg, warmStart,
+                                   twoPhaseMethod, ptTolerance, eosType, verbosity);
+        };
+
+        // With the caloric model of the built-in provider, H = sum_i z_i h_i(T)
+        // does not depend on the phase split, and the search needs no flash.
+        constexpr bool builtInProvider =
+            std::is_same_v<EnthalpyCalc, MixtureEnthalpy<Scalar, FluidSystem>>;
+        const bool searchWithoutFlash = builtInProvider && cfg.model == EnthalpyModel::caloric;
+
+        // r = H(T) - hSpec; empty where it cannot be evaluated at T or is not
+        // finite.
+        auto evaluate = [&](const Scalar T) -> std::optional<Scalar> {
+            if (!searchWithoutFlash) {
+                return residualAt(T);
+            }
+            Scalar h = 0.0;
+            for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+                h += getValue(fluidState.moleFraction(compIdx))
+                     * cfg.cpTable[compIdx].enthalpyIntegral(T);
+            }
+            const Scalar r = h - hSpec;
+            if (!std::isfinite(r)) {
+                return std::nullopt;
+            }
+            return r;
+        };
+
+        const auto bracket = findBracket(evaluate, tLo, tHi, cfg, verbosity);
+        if (!bracket) {
+            return false;
+        }
+        const auto temperature = illinois(evaluate, *bracket, cfg, verbosity);
+        if (!temperature) {
+            return false;
+        }
+
+        // Flash the state at the solution, and accept it only if the
+        // enthalpy matches there.
+        const auto residual = residualAt(*temperature);
+        return residual && std::abs(*residual) <= cfg.enthalpyTolerance;
+    }
+
+private:
+    //! A temperature [K] and its residual r = H(T) - hSpec [J/mol].
+    struct Trial
+    {
+        Scalar temperature;
+        Scalar residual;
+    };
+
+    //! Two evaluated temperatures lo.temperature <= hi.temperature whose
+    //! residuals have opposite signs, or that hold a zero residual.
+    struct Bracket
+    {
+        Trial lo;
+        Trial hi;
+    };
+
+    //! Limit on the evaluations of one bracketToward() call.
+    static constexpr int maxBoundarySteps = 64;
+
+    /*!
+     * \brief Warm start between nearby trials: the equilibrium ratios of a
+     *        converged two-phase trial seed the next isothermal flash better
+     *        than the Wilson estimate.
+     *
+     * Two rules keep this sound:
+     *
+     *   1. Only K is reused; L is always reset to -1. PTFlash runs its
+     *      stability test only when L is outside (0, 1), and the test starts
+     *      from the incoming K. A reused interior L would skip the stability
+     *      test, and near a phase boundary a stale split can converge to the
+     *      trivial root x = y = z without throwing. Every split is therefore
+     *      checked for stability at its own (T, p, z).
+     *
+     *   2. The seed is reused only within maxStep of the temperature that
+     *      produced it. With rule 1 this is a performance choice, not a
+     *      correctness guard. The two ends of the interval are evaluated back
+     *      to back and therefore always start cold.
+     *
+     * Only a two-phase split with strictly positive x and y is cached
+     * (single-phase ratios carry no information, and a zero mole fraction
+     * would cache K = 0). The cached ratios are y/x of the converged state;
+     * fluidState.K() is an input of the flash, not a result.
+     */
+    struct WarmStart
+    {
+        explicit WarmStart(const Scalar window)
+            : maxStep(window)
+        {}
+
+        //! Seed a flash at T from the cached ratios; false if they do not apply.
+        template <class FluidState>
+        bool seed(FluidState& fluidState, const Scalar T) const
+        {
+            using ValueType = typename FluidState::ValueType;
+
+            if (!(valid && std::abs(T - temperature) <= maxStep)) {
+                return false;
+            }
+            for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+                fluidState.setKvalue(compIdx, ValueType(K[compIdx]));
+            }
+            fluidState.setLvalue(ValueType(-1.0)); // rule 1
+            return true;
+        }
+
+        //! Cache the converged split of a state flashed at T, if it qualifies.
+        template <class FluidState>
+        void store(const FluidState& fluidState, const Scalar T)
+        {
+            const Scalar L = getValue(fluidState.L());
+            valid = L > 0.0 && L < 1.0;
+            if (!valid) {
+                return;
+            }
+            temperature = T;
+            for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+                const Scalar x = getValue(
+                    fluidState.moleFraction(FluidSystem::oilPhaseIdx, compIdx));
+                const Scalar y = getValue(
+                    fluidState.moleFraction(FluidSystem::gasPhaseIdx, compIdx));
+                if (!(x > 0.0) || !(y > 0.0)) {
+                    valid = false;
+                    return;
+                }
+                K[compIdx] = y / x;
+            }
+        }
+
+        void drop()
+        {
+            valid = false;
+        }
+
+    private:
+        Scalar maxStep;
+        bool valid = false;
+        std::array<Scalar, numComponents> K{};
+        Scalar temperature = 0.0;
+    };
+
+    /*!
+     * \brief Flash the state at T and return r = H(T) - hSpec of the flashed
+     *        state.
+     *
+     * A warm-started flash that fails drops the seed and retries cold.
+     *
+     * \return r(T), or nothing where the isothermal flash or the enthalpy
+     *         throws std::runtime_error or Dune::FMatrixError, or where r is
+     *         not finite
+     */
+    template <class FluidState>
+    static std::optional<Scalar> flashedResidual(FluidState& fluidState,
+                                                 const Scalar T,
+                                                 const Scalar hSpec,
+                                                 const Config& cfg,
+                                                 WarmStart& warmStart,
+                                                 const PTFlashMethod twoPhaseMethod,
+                                                 const Scalar ptTolerance,
+                                                 const EOSType& eosType,
+                                                 const int verbosity)
+    {
+        using Flash = PTFlash<Scalar, FluidSystem, true>;
+        using ValueType = typename FluidState::ValueType;
+
+        fluidState.setTemperature(ValueType(T));
+
+        bool solved = false;
+        if (warmStart.seed(fluidState, T)) {
+            try {
+                Flash::solve(fluidState, twoPhaseMethod, ptTolerance, eosType, verbosity);
+                solved = true;
+            }
+            catch (const std::runtime_error&) {
+                warmStart.drop();
+            }
+            catch (const Dune::FMatrixError&) {
+                warmStart.drop();
+            }
+        }
+
+        try {
+            if (!solved) {
+                for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+                    fluidState.setKvalue(compIdx, fluidState.wilsonK_(compIdx));
+                }
+                fluidState.setLvalue(ValueType(-1.0));
+                Flash::solve(fluidState, twoPhaseMethod, ptTolerance, eosType, verbosity);
+            }
+            warmStart.store(fluidState, T);
+
+            const Scalar r = getValue(EnthalpyCalc::mixtureEnthalpy(
+                fluidState, cfg.cpTable, eosType, cfg.model)) - hSpec;
+            if (std::isfinite(r)) {
+                return r;
+            }
+        }
+        catch (const std::runtime_error&) {
+        }
+        catch (const Dune::FMatrixError&) {
+        }
+        return std::nullopt;
+    }
+
+    /*!
+     * \brief A bracket of the root of r(T) on [tLo, tHi].
+     *
+     * Both ends are evaluated. With both evaluated, they are the bracket if
+     * their residuals differ in sign or one is zero; otherwise hSpec is not
+     * attained on the interval. Where one end cannot be evaluated, the search
+     * starts from the other (bracketToward). Where neither can, a few interior
+     * temperatures are tried for a start, and the search goes from there
+     * toward the end the residual points to (H increases with T), then toward
+     * the other.
+     *
+     * \param evaluate returns r(T), or nothing where r cannot be evaluated
+     * \return the bracket, or nothing
+     */
+    template <class Evaluate>
+    static std::optional<Bracket> findBracket(const Evaluate& evaluate,
+                                              const Scalar tLo,
+                                              const Scalar tHi,
+                                              const Config& cfg,
+                                              const int verbosity)
+    {
+        const auto rLo = evaluate(tLo);
+        const auto rHi = evaluate(tHi);
+        if (rLo && rHi) {
+            if ((*rLo < 0.0) == (*rHi < 0.0) && *rLo != 0.0 && *rHi != 0.0) {
+                return std::nullopt; // hSpec is not attained on the interval
+            }
+            return Bracket{Trial{tLo, *rLo}, Trial{tHi, *rHi}};
+        }
+        if (rLo) {
+            return bracketToward(evaluate, Trial{tLo, *rLo}, tHi, cfg, verbosity);
+        }
+        if (rHi) {
+            return bracketToward(evaluate, Trial{tHi, *rHi}, tLo, cfg, verbosity);
+        }
+
+        constexpr std::array<Scalar, 7> probes{0.5, 0.25, 0.75, 0.125, 0.375, 0.625, 0.875};
+        for (const Scalar frac : probes) {
+            const Scalar c = tLo + frac * (tHi - tLo);
+            if (const auto rc = evaluate(c)) {
+                const Trial start{c, *rc};
+                const Scalar first = *rc > 0.0 ? tLo : tHi;
+                const Scalar second = *rc > 0.0 ? tHi : tLo;
+                if (auto bracket = bracketToward(evaluate, start, first, cfg, verbosity)) {
+                    return bracket;
+                }
+                return bracketToward(evaluate, start, second, cfg, verbosity);
+            }
+        }
+        return std::nullopt;
+    }
+
+    /*!
+     * \brief A bracket between the evaluated trial s and the temperature far,
+     *        which cannot be evaluated.
+     *
+     * The temperatures met between s and far that cannot be evaluated are
+     * kept; they split the range into gaps. The gap next to s is bisected: an
+     * evaluated midpoint with a zero residual or one of the other sign closes
+     * the bracket, one of the same sign becomes s, and one that cannot be
+     * evaluated is kept. Once that gap is within cfg.temperatureTolerance, s
+     * is accepted as a root on the boundary if the secant through the last
+     * two evaluated temperatures places the root within that tolerance of it.
+     * Otherwise the gaps beyond the temperatures that could not be evaluated
+     * are tried at their midpoints, widest first: a temperature there can
+     * still be evaluated and close a bracket. The search gives up when every
+     * gap is within the tolerance, or after maxBoundarySteps evaluations. A
+     * root inside a range that cannot be evaluated is not found.
+     *
+     * \return the bracket, or nothing
+     */
+    template <class Evaluate>
+    static std::optional<Bracket> bracketToward(const Evaluate& evaluate,
+                                                Trial s,
+                                                const Scalar far,
+                                                const Config& cfg,
+                                                const int verbosity)
+    {
+        if (s.residual == 0.0) {
+            return Bracket{s, s};
+        }
+
+        // Temperatures that cannot be evaluated, ordered from s toward far.
+        const Scalar direction = far > s.temperature ? 1.0 : -1.0;
+        auto beyond = [direction](const Scalar x, const Scalar y) {
+            return direction * (y - x) > 0.0;
+        };
+        std::vector<Scalar> failed{far};
+
+        Trial previous = s;
+        for (int step = 0; step < maxBoundarySteps; ++step) {
+            Scalar m = Scalar(0.5) * (s.temperature + failed.front());
+            const bool nearGapOpen = std::abs(failed.front() - s.temperature) > cfg.temperatureTolerance
+                                     && m != s.temperature && m != failed.front();
+            if (!nearGapOpen) {
+                if (previous.temperature != s.temperature && previous.residual != s.residual
+                    && std::abs(s.residual * (s.temperature - previous.temperature)
+                                / (s.residual - previous.residual)) <= cfg.temperatureTolerance)
+                {
+                    return Bracket{s, s};
+                }
+                // The widest gap beyond the first temperature that cannot be
+                // evaluated.
+                std::size_t widest = failed.size();
+                Scalar width = cfg.temperatureTolerance;
+                for (std::size_t i = 0; i + 1 < failed.size(); ++i) {
+                    const Scalar w = std::abs(failed[i + 1] - failed[i]);
+                    const Scalar mid = Scalar(0.5) * (failed[i] + failed[i + 1]);
+                    if (w > width && mid != failed[i] && mid != failed[i + 1]) {
+                        widest = i;
+                        width = w;
+                    }
+                }
+                if (widest == failed.size()) {
+                    return std::nullopt;
+                }
+                m = Scalar(0.5) * (failed[widest] + failed[widest + 1]);
+            }
+
+            const auto rm = evaluate(m);
+            if (!rm) {
+                failed.insert(std::upper_bound(failed.begin(), failed.end(), m,
+                                               [&beyond](const Scalar x, const Scalar y) {
+                                                   return beyond(x, y);
+                                               }),
+                              m);
+                continue;
+            }
+            const Trial trial{m, *rm};
+            if (trial.residual == 0.0 || (trial.residual < 0.0) != (s.residual < 0.0)) {
+                if (verbosity >= 1) {
+                    OpmLog::debug(fmt::format("PHFlash: bracket [{}, {}] K found next to "
+                                              "{} K, where the enthalpy cannot be evaluated",
+                                              std::min(s.temperature, m),
+                                              std::max(s.temperature, m),
+                                              failed.front()));
+                }
+                return s.temperature < m ? Bracket{s, trial} : Bracket{trial, s};
+            }
+            // Same sign: the root lies beyond m. The temperatures between s
+            // and m that cannot be evaluated are behind the search now.
+            failed.erase(failed.begin(),
+                         std::find_if(failed.begin(), failed.end(),
+                                      [&](const Scalar f) { return beyond(m, f); }));
+            previous = s;
+            s = trial;
+        }
+        return std::nullopt;
+    }
+
+    /*!
+     * \brief Illinois false position on a bracket, to cfg.temperatureTolerance.
+     *
+     * A trial that cannot be evaluated is replaced by up to three other
+     * temperatures in the bracket; the bracket is only ever updated with an
+     * evaluated temperature and its own residual. Where the replacements cannot
+     * be evaluated either, the root can still lie next to them: bracketToward()
+     * searches from the lower end toward the failed trial, then from the upper
+     * end, and the iteration goes on from the bracket it finds. Without one, or
+     * after cfg.maxIterations, the search fails.
+     *
+     * \return the temperature of the root, or nothing
+     */
+    template <class Evaluate>
+    static std::optional<Scalar> illinois(const Evaluate& evaluate,
+                                          Bracket bracket,
+                                          const Config& cfg,
+                                          const int verbosity)
+    {
+        Trial& a = bracket.lo;
+        Trial& b = bracket.hi;
+
+        // The Illinois rule halves the weight of an end kept twice in a row.
+        // The residuals stay as evaluated: bracketToward() reads them.
+        Scalar weightA = 1.0;
+        Scalar weightB = 1.0;
+        int retained = 0; // -1: a was replaced last, +1: b was replaced last
+        for (int iteration = 0; iteration < cfg.maxIterations; ++iteration) {
+            if (a.residual == 0.0) {
+                return a.temperature;
+            }
+            if (b.residual == 0.0) {
+                return b.temperature;
+            }
+            const Scalar mid = Scalar(0.5) * (a.temperature + b.temperature);
+            if (b.temperature - a.temperature <= cfg.temperatureTolerance
+                || mid == a.temperature || mid == b.temperature)
+            {
+                return mid; // or the bracket cannot shrink in Scalar
+            }
+            const Scalar ra = weightA * a.residual;
+            const Scalar rb = weightB * b.residual;
+            Scalar t = (a.temperature * rb - b.temperature * ra) / (rb - ra);
+            if (!(t > a.temperature && t < b.temperature)) {
+                t = mid;
+            }
+
+            auto rt = evaluate(t);
+            if (!rt) {
+                for (const Scalar frac : {Scalar(0.5), Scalar(0.25), Scalar(0.75)}) {
+                    const Scalar alternative = a.temperature + frac * (b.temperature - a.temperature);
+                    if (std::abs(alternative - t) <= cfg.temperatureTolerance) {
+                        continue;
+                    }
+                    rt = evaluate(alternative);
+                    if (rt) {
+                        t = alternative;
+                        break;
+                    }
+                }
+                if (!rt) {
+                    auto narrowed = bracketToward(evaluate, a, t, cfg, verbosity);
+                    if (!narrowed) {
+                        narrowed = bracketToward(evaluate, b, t, cfg, verbosity);
+                    }
+                    if (!narrowed) {
+                        return std::nullopt;
+                    }
+                    bracket = *narrowed;
+                    weightA = 1.0;
+                    weightB = 1.0;
+                    retained = 0;
+                    continue;
+                }
+            }
+
+            if (*rt == 0.0) {
+                return t;
+            }
+            if ((*rt < 0.0) == (a.residual < 0.0)) {
+                a = Trial{t, *rt};
+                weightA = 1.0;
+                if (retained == -1) {
+                    weightB *= Scalar(0.5); // b kept twice in a row
+                }
+                retained = -1;
+            }
+            else {
+                b = Trial{t, *rt};
+                weightB = 1.0;
+                if (retained == +1) {
+                    weightA *= Scalar(0.5); // a kept twice in a row
+                }
+                retained = +1;
+            }
+        }
+        return std::nullopt;
+    }
+};
+
+} // namespace Opm
+
+#endif // OPM_PH_FLASH_HPP
