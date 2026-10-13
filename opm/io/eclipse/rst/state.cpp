@@ -58,6 +58,8 @@
 
 #include <algorithm>
 #include <array>
+#include <chrono>
+#include <cmath>
 #include <cstddef>
 #include <functional>
 #include <iterator>
@@ -364,6 +366,53 @@ namespace {
             updateVAPPARS(oilvap,
                           doubhead[VI::doubhead::OilVapPropensity],
                           doubhead[VI::doubhead::OilVapDensPropensity]);
+    }
+
+    // SACT stores the elapsed time of an action's last run in single
+    // precision, some 10 ms apart a day into the run and 42 s apart after
+    // 20 years.  Of the times stored as the same value, restore a whole day
+    // or hour, as report steps usually end on one, and otherwise the
+    // earliest millisecond.  The nearest time could come after the run and
+    // hold the action back past its minimum wait.
+    std::chrono::milliseconds
+    lastRunElapsed(const float stored, const Opm::UnitSystem& usys)
+    {
+        using std::chrono::milliseconds;
+
+        if (! std::isfinite(stored) || ! (stored > 0.0f)) {
+            return milliseconds { 0 };
+        }
+
+        const auto storedAs = [&usys](const milliseconds t)
+        {
+            return static_cast<float>
+                (usys.from_si(Opm::UnitSystem::measure::time,
+                              std::chrono::duration<double> { t }.count()));
+        };
+
+        // Start from the midpoint to the next lower value, exact in double
+        // as is its conversion to seconds, and step past a tie that rounds
+        // down.
+        const auto lower = 0.5 * (static_cast<double>(std::nextafter(stored, 0.0f)) + stored);
+        auto earliest = std::chrono::ceil<milliseconds>
+            (std::chrono::duration<double> {
+                usys.to_si(Opm::UnitSystem::measure::time, lower)
+            });
+
+        while (storedAs(earliest) < stored) {
+            earliest += milliseconds { 1 };
+        }
+
+        for (const auto unit : { milliseconds { std::chrono::days  { 1 } },
+                                 milliseconds { std::chrono::hours { 1 } } })
+        {
+            const auto t = ((earliest + unit - milliseconds { 1 }) / unit) * unit;
+            if (storedAs(t) == stored) {
+                return t;
+            }
+        }
+
+        return earliest;
     }
 } // Anonymous namespace
 
@@ -824,7 +873,6 @@ RstState::create_action(ActionData<float>                   actionArrays,
     const auto run_count = iact[2] - 1;
 
     const auto min_wait = this->unit_system.to_si(UnitSystem::measure::time, sact[3]);
-    const auto last_run_elapsed = this->unit_system.to_si(UnitSystem::measure::time, sact[4]);
 
     if (!this->header.inferred_start_from_elapsed_simtime.has_value()) {
         throw std::runtime_error {
@@ -835,7 +883,8 @@ RstState::create_action(ActionData<float>                   actionArrays,
 
     const auto start_time = *this->header.inferred_start_from_elapsed_simtime;
 
-    const auto last_run_time = TimeService::advance(asTimePoint(start_time), last_run_elapsed);
+    const auto last_run_time = asTimePoint(start_time)
+        + lastRunElapsed(sact[4], this->unit_system);
 
     this->actions.emplace_back(name, max_run, run_count, min_wait,
                                this->header.sim_time(),

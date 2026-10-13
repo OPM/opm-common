@@ -1017,7 +1017,9 @@ SCHEDULE
 
 // Write the restart file of a report step at the elapsed time of that
 // step, as the simulator does.
-void write_restart_file(const std::string& case_name, const int report_step)
+void write_restart_file(const std::string&   case_name,
+                        const int            report_step,
+                        const Action::State& action_state = Action::State {})
 {
     namespace OS = EclIO::OutputStream;
     using measure = UnitSystem::measure;
@@ -1043,7 +1045,7 @@ void write_restart_file(const std::string& case_name, const int report_step)
     RestartIO::save(rst_file, report_step, sched.seconds(report_step),
                     RestartValue { std::move(solution), {}, {}, {} },
                     es, es.getInputGrid(), sched,
-                    Action::State{}, WellTestState{},
+                    action_state, WellTestState{},
                     SummaryState { TimeService::now(), 0.0 }, UDQState{ 1 },
                     aquifer_data);
 }
@@ -1171,5 +1173,124 @@ BOOST_AUTO_TEST_CASE(RestartAtFractionalSecond)
                                     "TSTEP\n  1.0 /\n"));
 
         compare_sched("BASE.DATA", "RESTART.DATA", "BASE.X0001", 1);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(RestartActionLastRun)
+{
+    WorkArea work {};
+
+    // Report steps end at 1 to 11, 365, 365.5, 366.5 and 16384 to 16386 days.
+    const auto schedule = std::string { R"(WELSPECS
+  'OP1' 'G1' 1 1 1* 'OIL' /
+/
+
+COMPDAT
+  'OP1' 1 1 1 2 'OPEN' /
+/
+
+WCONPROD
+  'OP1' 'OPEN' 'ORAT' 100 4* 50 /
+/
+
+ACTIONX
+  'A' 10 1.0 /
+  YEAR >= 2000 /
+/
+
+WCONPROD
+  'OP1' 'OPEN' 'ORAT' 50 4* 50 /
+/
+
+ENDACTIO
+
+TSTEP
+  11*1.0 354 0.5 1.0 16017.5 2*1.0 /
+)" };
+
+    write_file("BASE.DATA", time_of_day_deck("", schedule));
+
+    const auto deck = Parser{}.parseFile("BASE.DATA");
+    const auto es = EclipseState { deck };
+    const auto sched = Schedule { deck, es, std::make_shared<Python>() };
+    const auto usys = UnitSystem::newMETRIC();
+
+    // Last run of 'A' as restored from a restart file written at the end
+    // of 'restart_step', and the action as restored with it.
+    const auto restore = [&schedule](const Action::ActionX& action,
+                                     const time_point       run_time,
+                                     const int              restart_step)
+    {
+        auto state = Action::State {};
+        state.add_run(action, run_time, Action::Result { true });
+
+        write_restart_file("BASE", restart_step, state);
+        write_file("RESTART.DATA",
+                   time_of_day_deck(fmt::format("RESTART\n  'BASE' {} /\n", restart_step),
+                                    "SKIPREST\n\n" + schedule));
+
+        const auto& [base, restarted, rst_state] =
+            load_schedule_pair("BASE.DATA", "RESTART.DATA",
+                               fmt::format("BASE.X{:04d}", restart_step), restart_step);
+
+        const auto& rst_actions = restarted[restart_step].actions();
+        auto rst_action_state = Action::State {};
+        rst_action_state.load_rst(rst_actions, rst_state);
+
+        return std::pair { rst_actions["A"], rst_action_state };
+    };
+
+    const auto in_days = [&usys, start = sched.getStartTime()](const time_point t)
+    {
+        return static_cast<float>(usys.from_si(UnitSystem::measure::time,
+                                               std::chrono::duration<double> { t - start }.count()));
+    };
+
+    using ms = std::chrono::milliseconds;
+
+    // Elapsed time of the last run, the report step of the restart, and
+    // whether the run is at a whole day or hour, restored exactly.  The
+    // others restore no later than the run.  16384.001953125 days lies
+    // midway between two single precision values.
+    for (const auto& [last_run, restart_step, exact] : {
+             std::tuple { ms {        86'400'400 },  2, false },
+             std::tuple { ms {       867'600'000 }, 11, true  },
+             std::tuple { ms {       872'640'000 }, 11, false },
+             std::tuple { ms {    31'536'000'000 }, 13, true  },
+             std::tuple { ms { 1'415'577'768'750 }, 16, false } })
+    {
+        BOOST_TEST_CONTEXT("Last run " << last_run.count() << " ms after start") {
+            const auto& action = sched[restart_step].actions()["A"];
+            const auto run_time = sched.getStartTime() + last_run;
+
+            auto state = Action::State {};
+            state.add_run(action, run_time, Action::Result { true });
+
+            const auto& [rst_action, rst_state] = restore(action, run_time, restart_step);
+            const auto rst_run_time = rst_state.run_time(rst_action);
+
+            BOOST_CHECK_EQUAL(in_days(rst_run_time), in_days(run_time));
+            if (exact) {
+                BOOST_CHECK(rst_run_time == run_time);
+            }
+            else {
+                BOOST_CHECK(rst_run_time <= run_time);
+            }
+
+            // Ready one minimum wait after the run, with or without the
+            // restart, and not before when the run is restored exactly.
+            const auto due = run_time + std::chrono::days { 1 };
+            BOOST_CHECK(action.ready(state, due));
+            BOOST_CHECK(rst_action.ready(rst_state, due));
+
+            BOOST_CHECK(! action.ready(state, due - ms { 1 }));
+            if (exact) {
+                BOOST_CHECK(! rst_action.ready(rst_state, due - ms { 1 }));
+            }
+
+            // Writing the restored run again restores the same time.
+            const auto& [again, again_state] = restore(action, rst_run_time, restart_step + 1);
+            BOOST_CHECK(again_state.run_time(again) == rst_run_time);
+        }
     }
 }
