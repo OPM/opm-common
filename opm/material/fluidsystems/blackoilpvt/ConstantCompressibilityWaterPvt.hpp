@@ -28,10 +28,10 @@
 #define OPM_CONSTANT_COMPRESSIBILITY_WATER_PVT_HPP
 
 #include <opm/material/common/MathToolbox.hpp>
+#include <opm/common/utility/VectorWithDefaultAllocator.hpp>
 
 #include <cstddef>
 #include <stdexcept>
-#include <vector>
 
 namespace Opm {
 
@@ -42,7 +42,7 @@ class Schedule;
  * \brief This class represents the Pressure-Volume-Temperature relations of the gas phase
  *        without vaporized oil.
  */
-template <class Scalar>
+template <class Scalar, template<class> class Storage = VectorWithDefaultAllocator>
 class ConstantCompressibilityWaterPvt
 {
 public:
@@ -292,28 +292,28 @@ public:
     Scalar waterReferenceDensity(unsigned regionIdx) const
     { return waterReferenceDensity_[regionIdx]; }
 
-    const std::vector<Scalar>& waterReferencePressure() const
+    const Storage<Scalar>& waterReferencePressure() const
     { return waterReferencePressure_; }
 
-    const std::vector<Scalar>& waterReferenceFormationVolumeFactor() const
+    const Storage<Scalar>& waterReferenceFormationVolumeFactor() const
     { return waterReferenceFormationVolumeFactor_; }
 
-    const std::vector<Scalar>& waterCompressibility() const
+    const Storage<Scalar>& waterCompressibility() const
     { return waterCompressibility_; }
 
-    const std::vector<Scalar>& waterViscosity() const
+    const Storage<Scalar>& waterViscosity() const
     { return waterViscosity_; }
 
-    const std::vector<Scalar>& waterViscosibility() const
+    const Storage<Scalar>& waterViscosibility() const
     { return waterViscosibility_; }
 
 private:
-    std::vector<Scalar> waterReferenceDensity_{};
-    std::vector<Scalar> waterReferencePressure_{};
-    std::vector<Scalar> waterReferenceFormationVolumeFactor_{};
-    std::vector<Scalar> waterCompressibility_{};
-    std::vector<Scalar> waterViscosity_{};
-    std::vector<Scalar> waterViscosibility_{};
+    Storage<Scalar> waterReferenceDensity_{};
+    Storage<Scalar> waterReferencePressure_{};
+    Storage<Scalar> waterReferenceFormationVolumeFactor_{};
+    Storage<Scalar> waterCompressibility_{};
+    Storage<Scalar> waterViscosity_{};
+    Storage<Scalar> waterViscosibility_{};
 };
 
 } // namespace Opm

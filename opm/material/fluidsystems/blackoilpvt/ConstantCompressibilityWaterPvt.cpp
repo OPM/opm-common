@@ -32,8 +32,8 @@
 
 namespace Opm {
 
-template<class Scalar>
-void ConstantCompressibilityWaterPvt<Scalar>::
+template<class Scalar, template<class> class Storage>
+void ConstantCompressibilityWaterPvt<Scalar, Storage>::
 initFromState(const EclipseState& eclState, const Schedule&)
 {
     const auto& pvtwTable = eclState.getTableManager().getPvtwTable();
@@ -61,8 +61,8 @@ initFromState(const EclipseState& eclState, const Schedule&)
     initEnd();
 }
 
-template<class Scalar>
-void ConstantCompressibilityWaterPvt<Scalar>::
+template<class Scalar, template<class> class Storage>
+void ConstantCompressibilityWaterPvt<Scalar, Storage>::
 setNumRegions(std::size_t numRegions)
 {
     waterReferenceDensity_.resize(numRegions);
