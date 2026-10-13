@@ -240,8 +240,12 @@ NODEPROP
     BOOST_CHECK(network.has_node("PLAT-AX"));
 }
 
-BOOST_AUTO_TEST_CASE(INVALID_VFP_NODE) {
+BOOST_AUTO_TEST_CASE(MANIFOLD_GROUP_OUTLET_VFP) {
     std::string deck_string = R"(
+RUNSPEC
+NETWORK
+ 3 2 /
+
 SCHEDULE
 
 GRUPTREE
@@ -259,7 +263,7 @@ GRUPTREE
 BRANPROP
 --  Downtree  Uptree   #VFP    ALQ
     B1         PLAT-A    5      1*      /
-    C1         PLAT-A    4      1*      /  --This is a choke branch - must have VFP=9999
+    C1         PLAT-A    4      1*      /
 /
 
 NODEPROP
@@ -270,7 +274,17 @@ NODEPROP
 /
 )";
 
-    BOOST_CHECK_THROW( make_schedule(deck_string), std::exception);
+    // C1 is a well group, so item 3 makes it a sub-sea manifold group. Its choke
+    // acts on the common THP of its wells, so the outlet branch may have a VFP table.
+    const auto sched = make_schedule(deck_string);
+    const auto& network = sched[0].network.get();
+    BOOST_CHECK(network.node("C1").as_choke());
+    BOOST_CHECK(network.node("C1").target_group() == "C1");
+
+    const auto C1_uptree = network.uptree_branch("C1");
+    BOOST_REQUIRE(C1_uptree.has_value());
+    BOOST_REQUIRE(C1_uptree->vfp_table().has_value());
+    BOOST_CHECK_EQUAL(*C1_uptree->vfp_table(), 4);
 }
 BOOST_AUTO_TEST_CASE(INVALID_AUTOCHOKE_NODE) {
     std::string deck_string = R"(
