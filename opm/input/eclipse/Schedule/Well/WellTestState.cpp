@@ -71,10 +71,9 @@ namespace Opm {
 
 
     WellTestState::WellTestState(std::time_t start_time, const RestartIO::RstState& rst_state) {
-        // Dont know whether the closing time of the closed well is stored in
-        // the restart file, here we just initialize the well close time to the
-        // time of the restart.
-        auto elapsed = std::difftime(start_time, rst_state.header.sim_time());
+        // The restart file does not record when a well was closed or last
+        // tested.  Use the restart time, in seconds since simulation start.
+        const auto elapsed = std::difftime(rst_state.header.sim_time(), start_time);
         for (const auto& well : rst_state.wells) {
             if (well.wtest_close_reason != 0)
                 this->close_well(well.name,
