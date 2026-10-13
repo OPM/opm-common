@@ -1021,7 +1021,8 @@ SCHEDULE
 // step, as the simulator does.
 void write_restart_file(const std::string&   case_name,
                         const int            report_step,
-                        const Action::State& action_state = Action::State {})
+                        const Action::State& action_state = Action::State {},
+                        const bool           formatted = false)
 {
     namespace OS = EclIO::OutputStream;
     using measure = UnitSystem::measure;
@@ -1041,7 +1042,7 @@ void write_restart_file(const std::string&   case_name,
     auto aquifer_data = std::optional<RestartIO::Helpers::AggregateAquiferData>{};
     auto rst_file = OS::Restart {
         OS::ResultSet { "./", case_name }, report_step,
-        OS::Formatted { false }, OS::Unified { false }
+        OS::Formatted { formatted }, OS::Unified { false }
     };
 
     RestartIO::save(rst_file, report_step, sched.seconds(report_step),
@@ -1422,6 +1423,81 @@ TSTEP
                 BOOST_CHECK_EQUAL(restarted[1].actions()["A"].min_wait(),
                                   base[1].actions()["A"].min_wait());
             }
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(RestartActionMinWaitOutputFormats)
+{
+    WorkArea work {};
+
+    // The parsed minimum wait can lie just above 6048 seconds.  Rounding
+    // it in a formatted restart must not change readiness at that boundary.
+    const auto schedule = std::string { R"(WELSPECS
+  'OP1' 'G1' 1 1 1* 'OIL' /
+/
+
+COMPDAT
+  'OP1' 1 1 1 2 'OPEN' /
+/
+
+WCONPROD
+  'OP1' 'OPEN' 'ORAT' 100 4* 50 /
+/
+
+ACTIONX
+  'A' 10 0.07 /
+  YEAR >= 2000 /
+/
+
+WCONPROD
+  'OP1' 'OPEN' 'ORAT' 50 4* 50 /
+/
+
+ENDACTIO
+
+TSTEP
+  2*1.0 /
+)" };
+
+    write_file("BASE.DATA", time_of_day_deck("", schedule));
+    write_file("RESTART.DATA",
+               time_of_day_deck("RESTART\n  'BASE' 1 /\n", "SKIPREST\n\n" + schedule));
+
+    const auto deck = Parser{}.parseFile("BASE.DATA");
+    const auto es = EclipseState { deck };
+    const auto sched = Schedule { deck, es, std::make_shared<Python>() };
+    const auto& action = sched[1].actions()["A"];
+    const auto last_run = sched.simTime(1);
+
+    auto state = Action::State {};
+    state.add_run(action, last_run, Action::Result { true });
+
+    for (const auto formatted : { false, true }) {
+        BOOST_TEST_CONTEXT((formatted ? "Formatted restart" : "Binary restart")) {
+            write_restart_file("BASE", 1, state, formatted);
+            const auto* restart_file = formatted ? "BASE.F0001" : "BASE.X0001";
+
+            const auto& [base, restarted, rst_state] =
+                load_schedule_pair("BASE.DATA", "RESTART.DATA", restart_file, 1);
+
+            const auto& rst_actions = restarted[1].actions();
+            const auto& rst_action = rst_actions["A"];
+            auto rst_action_state = Action::State {};
+            rst_action_state.load_rst(rst_actions, rst_state);
+
+            BOOST_CHECK_EQUAL(rst_action.min_wait(), action.min_wait());
+
+            const auto boundary = last_run + std::chrono::seconds { 6048 };
+            const auto before = boundary - std::chrono::milliseconds { 1 };
+            const auto after = boundary + std::chrono::milliseconds { 1 };
+
+            BOOST_CHECK(! action.ready(state, before));
+            BOOST_CHECK(! rst_action.ready(rst_action_state, before));
+            BOOST_CHECK_EQUAL(rst_action.ready(rst_action_state, boundary),
+                              action.ready(state, boundary));
+            BOOST_CHECK(action.ready(state, after));
+            BOOST_CHECK(rst_action.ready(rst_action_state, after));
         }
     }
 }
