@@ -36,8 +36,9 @@
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 
+#include <atomic>
 #include <chrono>
-#include <ctime>
+#include <future>
 #include <initializer_list>
 #include <numeric>              // partial_sum()
 #include <ratio>
@@ -77,13 +78,7 @@ namespace {
     std::chrono::time_point<std::chrono::system_clock> startSimulation()
     {
         // 2015-04-09T00:00:00+0000
-        auto timePoint = std::tm{};
-
-        timePoint.tm_year = 115;     // 2015
-        timePoint.tm_mon  =   4 - 1; // April
-        timePoint.tm_mday =   9;     // 9th
-
-        return Opm::TimeService::from_time_t( Opm::TimeService::makeUTCTime(timePoint) );
+        return Opm::TimeService::from_time_t( Opm::TimeService::mkdate(2015, 4, 9) );
     }
 
     std::chrono::duration<double, std::chrono::seconds::period> tstep_123()
@@ -204,6 +199,52 @@ BOOST_AUTO_TEST_CASE(Netbalan)
     BOOST_CHECK_EQUAL(v[VI::doubhead::Netbalmaxerr], 1.E+18);
     BOOST_CHECK_EQUAL(v[VI::doubhead::Netbalstepsz], 0.15);
 
+}
+
+BOOST_AUTO_TEST_CASE(Time_Stamp_With_Concurrent_Conversions)
+{
+    // Restart headers may be built on one thread while another converts
+    // times to calendar dates.  Neither may pick up the other's dates.
+    const auto stamp = makeTStamp(startSimulation(), tstep_123());
+    const auto start = Opm::asTimeT(Opm::TimeStampUTC { 2015, 4, 9 });
+
+    std::atomic<bool> started { false };
+    std::atomic<bool> done { false };
+
+    auto conversions = std::async(std::launch::async, [start, &started, &done]()
+    {
+        auto numWrong = 0;
+
+        started = true;
+        while (! done) {
+            for (const auto day : { 10, 12, 14 }) {
+                const auto ts = Opm::TimeStampUTC { start } + Day { day - 9 + 0.5 };
+
+                if ((ts.year() != 2015) || (ts.month() != 4) || (ts.day() != day)) {
+                    ++numWrong;
+                }
+            }
+        }
+
+        return numWrong;
+    });
+
+    while (! started) {}
+
+    auto numWrongStart = 0;
+    for (auto i = 0; i < 100'000; ++i) {
+        const auto dh = Opm::RestartIO::DoubHEAD{}.timeStamp(stamp);
+
+        // floor(365.25 * 2015) + day_of_year(=99)
+        if (dh.data()[161 - 1] != 736077.0) {
+            ++numWrongStart;
+        }
+    }
+
+    done = true;
+
+    BOOST_CHECK_EQUAL(numWrongStart, 0);
+    BOOST_CHECK_EQUAL(conversions.get(), 0);
 }
 
 
