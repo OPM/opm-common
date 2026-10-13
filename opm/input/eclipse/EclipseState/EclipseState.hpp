@@ -188,6 +188,7 @@ namespace Opm {
         void reportNumberOfActivePhases() const;
         void initLgrs(const Deck& deck);
         void conveyNumericalAquiferEffects();
+        void applyDualPorosityNNC(const Deck& deck);
         void applyMULTXYZ();
         void initFaults(const Deck& deck);
         void initPara(const Deck& deck);

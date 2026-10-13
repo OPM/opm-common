@@ -101,7 +101,7 @@ namespace Opm::RestartIO {
         ///
         /// \param[in] pvt Current run's PVT model characteristics.
         ///
-        /// \return \code *this \endcode.
+        /// \return \c *this
         LogiHEAD& pvtModel(const PVTModel& pvt);
 
         /// Assign saturation function characteristics.
@@ -109,12 +109,17 @@ namespace Opm::RestartIO {
         /// \param[in] satfunc Current run's saturation function
         ///    characteristics.
         ///
-        /// \return \code *this \endcode.
+        /// \return \c *this
         LogiHEAD& saturationFunction(const SatfuncFlags& satfunc);
 
         /// Logical switch to indicate that the network option is used.
         LogiHEAD& network(const int maxNoNodes);
 
+        /// Set the dual-porosity model flag.
+        ///
+        /// \param[in] dual_poro Whether the run models dual porosity.
+        /// \return \c *this
+        LogiHEAD& dualPorosity(const bool dual_poro);
         /// Linearised result array.
         ///
         /// This is the final output of LogiHEAD assembly.
