@@ -333,6 +333,17 @@ inline CpTable<double, 2> f1CpTable()
 }
 
 /*!
+ * \brief The cp table for the F2 fixture, in the component order that
+ *        registerF2Components() registers: CO2, C1 (methane), nC10 (decane).
+ */
+inline CpTable<double, 3> f2CpTable()
+{
+    return {SimpleCO2<double>::idealGasHeatCapacityPolynomial(),
+            C1<double>::idealGasHeatCapacityPolynomial(),
+            C10<double>::idealGasHeatCapacityPolynomial()};
+}
+
+/*!
  * \brief n-Eicosane (nC20), the heavy component of the H1 fixture.
  *
  * Its acentric factor is above 0.49, where PRCORR differs from PR. In the
