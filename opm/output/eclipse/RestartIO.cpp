@@ -368,6 +368,7 @@ namespace {
 
         rstFile.write("IACT", actionxData.getIACT());
         rstFile.write("SACT", actionxData.getSACT());
+        rstFile.write("XACT", actionxData.getXACT());
         rstFile.write("ZACT", actionxData.getZACT());
         rstFile.write("ZLACT", actionxData.getZLACT());
         rstFile.write("ZACN", actionxData.getZACN());
