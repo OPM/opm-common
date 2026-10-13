@@ -31,6 +31,8 @@
 #include <opm/output/eclipse/RestartIO.hpp>
 #include <opm/output/eclipse/RestartValue.hpp>
 
+#include <opm/common/OpmLog/OpmLog.hpp>
+#include <opm/common/OpmLog/StreamLog.hpp>
 #include <opm/common/utility/TimeService.hpp>
 
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
@@ -69,6 +71,7 @@
 #include <fstream>
 #include <iterator>
 #include <memory>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <tuple>
@@ -1088,17 +1091,32 @@ TSTEP
 
     write_file("BASE.DATA", time_of_day_deck("", schedule));
 
-    for (const auto report_step : { 4, 7 }) {
-        BOOST_TEST_CONTEXT("SKIPREST, restart at report step " << report_step) {
-            write_restart_file("BASE", report_step);
-            write_file("RESTART.DATA",
-                       time_of_day_deck(fmt::format("RESTART\n  'BASE' {} /\n", report_step),
-                                        "SKIPREST\n\n" + schedule));
+    std::ostringstream restart_log;
+    OpmLog::addBackend("RESTART_TIME_TEST",
+                       std::make_shared<StreamLog>(restart_log, Log::MessageType::Info));
+    try {
+        for (const auto report_step : { 4, 7 }) {
+            BOOST_TEST_CONTEXT("SKIPREST, restart at report step " << report_step) {
+                write_restart_file("BASE", report_step);
+                write_file("RESTART.DATA",
+                           time_of_day_deck(fmt::format("RESTART\n  'BASE' {} /\n", report_step),
+                                            "SKIPREST\n\n" + schedule));
 
-            compare_sched("BASE.DATA", "RESTART.DATA",
-                          fmt::format("BASE.X{:04d}", report_step), report_step);
+                compare_sched("BASE.DATA", "RESTART.DATA",
+                              fmt::format("BASE.X{:04d}", report_step), report_step);
+            }
         }
     }
+    catch (...) {
+        OpmLog::removeBackend("RESTART_TIME_TEST");
+        throw;
+    }
+    OpmLog::removeBackend("RESTART_TIME_TEST");
+
+    BOOST_CHECK(restart_log.str().find("skipping until report step 4 at 2020-01-04 02:24:00")
+                != std::string::npos);
+    BOOST_CHECK(restart_log.str().find("skipping until report step 7 at 2020-01-05 16:47:59.999")
+                != std::string::npos);
 
     // Without SKIPREST the report steps continue from the restart time.
     BOOST_TEST_CONTEXT("No SKIPREST, restart at report step 4") {
