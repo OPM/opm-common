@@ -57,6 +57,7 @@
 #include <fmt/format.h>
 #include <fmt/ranges.h>
 
+#include <algorithm>
 #include <cstddef>
 #include <filesystem>
 #include <map>
@@ -94,6 +95,33 @@ namespace {
                 };
             }
         }
+    }
+
+    // A keyword inside a CARFIN ... ENDFIN block whose values the refined
+    // cells do not take stops the input, as in every other local grid block.
+    [[noreturn]] void refuseLgrBlockKeyword(const std::string& name,
+                                            const std::string& lgrName,
+                                            const Opm::KeywordLocation& location)
+    {
+        throw Opm::OpmInputError {
+            fmt::format("{} is given for the cells of local grid {}: values "
+                        "for local grid cells are not supported.", name, lgrName),
+            location
+        };
+    }
+
+    // The keyword of the block that sets the array, or the block's first
+    // keyword when an operation such as EQUALS set it.
+    Opm::KeywordLocation blockLocation(const Opm::DeckView& block,
+                                       const std::string& name)
+    {
+        for (const auto& keyword : block) {
+            if (keyword.name() == name) {
+                return keyword.location();
+            }
+        }
+
+        return block.empty() ? Opm::KeywordLocation{} : block.begin()->location();
     }
 }
 
@@ -392,9 +420,9 @@ namespace Opm {
         const GRIDSection gridSection ( deck );
 
         m_lgrs = LgrCollection(gridSection, m_inputGrid, deck);
-        warnUnappliedLgrBlockKeywords(deck);
+        refuseUnappliedLgrBlockKeywords(deck);
         m_inputGrid.init_lgr_cells(m_lgrs);
-        applyLgrBlockMinpv();
+        applyLgrBlockMinpv(deck);
         applyLgrBlockValues(deck);
     }
 
@@ -412,7 +440,7 @@ namespace Opm {
       ACTNUM change (the output grid is the input grid with the field's MINPV
       applied) only switches refined cells off, so the cells stay removed.
     */
-    void EclipseState::applyLgrBlockMinpv()
+    void EclipseState::applyLgrBlockMinpv(const Deck& deck)
     {
         if (this->m_lgrs.size() == 0) {
             return;
@@ -427,11 +455,13 @@ namespace Opm {
             }
 
             if (lgr.PARENT_NAME() != "GLOBAL") {
-                OpmLog::warning(fmt::format("CARFIN '{}' is nested and sets MINPV, which is "
-                                            "applied only to a block refining the global "
-                                            "grid. Its refined cells keep their father's "
-                                            "activity.", lgr.NAME()));
-                continue;
+                // Applied only to a block refining the global grid.
+                const auto block = deck.lgrBlock(lgr.NAME());
+                const auto minpv = std::find_if(block.begin(), block.end(), [](const auto& keyword)
+                    { return (keyword.name() == "MINPV") || (keyword.name() == "MINPORV"); });
+                refuseLgrBlockKeyword((minpv != block.end()) ? minpv->name() : std::string{"MINPV"},
+                                      lgr.NAME(),
+                                      (minpv != block.end()) ? minpv->location() : KeywordLocation{});
             }
 
             if (! porv.has_value()) {
@@ -476,7 +506,8 @@ namespace Opm {
     /*
       Property values for the refined cells: each starts from its father's and
       the block's own keywords apply in local indices. Only those the simulator
-      reads per refined cell are kept; a block ACTNUM removes cells, as MINPV.
+      reads per refined cell are taken, the others stop the input; a block
+      ACTNUM removes cells, as MINPV.
     */
     void EclipseState::applyLgrBlockValues(const Deck& deck)
     {
@@ -492,14 +523,31 @@ namespace Opm {
             }
 
             if (lgr.PARENT_NAME() != "GLOBAL") {
-                OpmLog::warning(fmt::format("CARFIN '{}' is nested; the property keywords "
-                                            "of its block are not applied. Its refined "
-                                            "cells take their father's values.", lgr.NAME()));
+                // Only a block refining the global grid gives its refined
+                // cells values of their own.
+                for (const auto& keyword : block) {
+                    if (FieldProps::isGridPropertyKeyword(keyword.name())) {
+                        refuseLgrBlockKeyword(keyword.name(), lgr.NAME(), keyword.location());
+                    }
+                }
                 continue;
             }
 
             auto& lgrGrid = this->m_inputGrid.getLGRCell(lgr.NAME());
             auto values = this->field_props.lgrBlockValues(lgrGrid, block);
+
+            // Arrays the simulator does not take for the refined cells stop
+            // the input; the block's ACTNUM removes cells.
+            auto refuseUnhonoured = [&block, &lgr](const auto& arrays) {
+                for (const auto& array : arrays) {
+                    if ((honoured.count(array.first) == 0) && (array.first != "ACTNUM")) {
+                        refuseLgrBlockKeyword(array.first, lgr.NAME(),
+                                              blockLocation(block, array.first));
+                    }
+                }
+            };
+            refuseUnhonoured(values.doubles);
+            refuseUnhonoured(values.ints);
 
             if (auto actnum = values.ints.find("ACTNUM"); actnum != values.ints.end()) {
                 const auto before = lgrGrid.getNumActive();
@@ -508,28 +556,6 @@ namespace Opm {
                 values.ints.erase(actnum);
                 OpmLog::info(fmt::format("CARFIN '{}': ACTNUM removes {} of its refined cells.",
                                          lgr.NAME(), before - lgrGrid.getNumActive()));
-            }
-
-            auto ignored = std::vector<std::string>{};
-            auto dropIgnored = [&ignored](auto& arrays) {
-                for (auto it = arrays.begin(); it != arrays.end();) {
-                    if (honoured.count(it->first) == 0) {
-                        ignored.push_back(it->first);
-                        it = arrays.erase(it);
-                    }
-                    else {
-                        ++it;
-                    }
-                }
-            };
-            dropIgnored(values.doubles);
-            dropIgnored(values.ints);
-
-            if (!ignored.empty()) {
-                OpmLog::warning(fmt::format("CARFIN '{}' sets {} for its refined cells, which "
-                                            "the simulator does not yet apply to them. They "
-                                            "take their father's values.",
-                                            lgr.NAME(), fmt::join(ignored, ", ")));
             }
 
             if (!values.empty()) {
@@ -551,9 +577,9 @@ namespace Opm {
       The keywords inside a CARFIN...ENDFIN block describe the refined cells and
       are kept out of the global grid (Deck::scopeLgrBlockKeywords). N*FIN/H*FIN
       subdivide the box, MINPV thresholds the refined cells' pore volume, and the
-      property keywords are applied by applyLgrBlockValues(). Name the rest.
+      property keywords are applied by applyLgrBlockValues(). Stop on the rest.
     */
-    void EclipseState::warnUnappliedLgrBlockKeywords(const Deck& deck) const
+    void EclipseState::refuseUnappliedLgrBlockKeywords(const Deck& deck) const
     {
         for (std::size_t index = 0; index < this->m_lgrs.size(); ++index) {
             const auto& lgrName = this->m_lgrs.getLgr(index).NAME();
@@ -568,24 +594,13 @@ namespace Opm {
                 "MINPV", "MINPORV",
             };
 
-            auto names = std::vector<std::string>{};
             for (const auto& keyword : block) {
                 if ((applied.count(keyword.name()) == 0) &&
                     !FieldProps::isGridPropertyKeyword(keyword.name()))
                 {
-                    names.push_back(keyword.name());
+                    refuseLgrBlockKeyword(keyword.name(), lgrName, keyword.location());
                 }
             }
-
-            if (names.empty()) {
-                continue;
-            }
-
-            OpmLog::warning(fmt::format("CARFIN '{}' brackets keywords that are not applied "
-                                        "to the refined cells: {}. Those cells inherit their "
-                                        "father cell's values, and the keywords do not reach "
-                                        "the global grid either.",
-                                        lgrName, fmt::join(names, ", ")));
         }
     }
 

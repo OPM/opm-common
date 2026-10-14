@@ -1138,10 +1138,10 @@ Carfin::BlockValues FieldProps::lgrBlockValues(const FieldProps& father,
     lgrProps.scanGridKeywords(block);
 
     auto values = Carfin::BlockValues{};
-    auto keep = [&lgr, &lgrProps](const std::string& name,
-                                  const auto& data,
-                                  const auto& seeded,
-                                  auto& out)
+    auto keep = [&lgr, &lgrProps, &block](const std::string& name,
+                                          const auto& data,
+                                          const auto& seeded,
+                                          auto& out)
     {
         if (data.numValuePerCell() != 1) {
             return;
@@ -1154,11 +1154,18 @@ Carfin::BlockValues FieldProps::lgrBlockValues(const FieldProps& father,
         }
 
         if (!data.valid()) {
-            OpmLog::warning(fmt::format("CARFIN '{}' sets {} on part of its refined "
-                                        "cells only, and their father has no value to "
-                                        "inherit for the rest. {} is not applied to the "
-                                        "refined cells.", lgr.get_lgr_tag(), name, name));
-            return;
+            // Part of the refined cells only, and their father has no value
+            // to inherit for the rest.
+            const auto keyword = std::find_if(block.begin(), block.end(),
+                                              [&name](const auto& kw)
+                                              { return kw.name() == name; });
+            throw OpmInputError {
+                fmt::format("{} is given for the cells of local grid {}: values "
+                            "for local grid cells are not supported.",
+                            name, lgr.get_lgr_tag()),
+                (keyword != block.end()) ? keyword->location()
+                    : (block.empty() ? KeywordLocation{} : block.begin()->location())
+            };
         }
 
         auto& cartesian = out[name];

@@ -188,8 +188,8 @@ namespace Opm {
         void reportNumberOfActivePhases() const;
         void initLgrs(const Deck& deck);
         void checkNumericalAquifersOutsideLgrs() const;
-        void warnUnappliedLgrBlockKeywords(const Deck& deck) const;
-        void applyLgrBlockMinpv();
+        void refuseUnappliedLgrBlockKeywords(const Deck& deck) const;
+        void applyLgrBlockMinpv(const Deck& deck);
         void applyLgrBlockValues(const Deck& deck);
         void conveyNumericalAquiferEffects();
         void applyMULTXYZ();

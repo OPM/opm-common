@@ -871,6 +871,47 @@ ACTNUM
     BOOST_CHECK_THROW(Opm::EclipseState{deck}, std::exception);
 }
 
+// A keyword of a CARFIN block whose values the refined cells do not take
+// stops the input, as in every other local grid block: an array the
+// simulator does not read per refined cell, MINPVV, part of an array the
+// father has no value of, and a keyword that is no array.
+BOOST_AUTO_TEST_CASE(TestLgrBlockUnappliedKeywordStops)
+{
+    for (const std::string block : { "MULTX\n 9*0.0 /",
+                                     "MINPVV\n 9*1000 /",
+                                     "FLUXNUM\n 9*2 /",
+                                     "EQUALS\n MINPVV 1000 1 3 1 1 1 1 /\n/",
+                                     "PINCH\n /" })
+    {
+        BOOST_CHECK_THROW(lgrBlockState(block), Opm::OpmInputError);
+    }
+
+    // The values the refined cells take.
+    BOOST_CHECK_NO_THROW(lgrBlockState("PORO\n 9*0.30 /\nNTG\n 9*0.5 /\nMULTPV\n 9*2.0 /"));
+}
+
+// Only a block refining the global grid gives its refined cells values of
+// their own: a nested block with a property or MINPV stops the input.
+BOOST_AUTO_TEST_CASE(TestLgrNestedBlockValuesStop)
+{
+    const auto nested = [](const std::string& block)
+    {
+        return gridWithLgrs(1, fmt::format(R"(
+CARFIN
+'LGR1'  2  2  2  2  1  1  3  3  1  1*  GLOBAL /
+ENDFIN
+CARFIN
+'LGR2'  2  2  2  2  1  1  3  3  1  1*  LGR1 /
+{}
+ENDFIN
+)", block));
+    };
+
+    BOOST_CHECK_NO_THROW(nested(""));
+    BOOST_CHECK_THROW(nested("PORO\n 9*0.30 /"), Opm::OpmInputError);
+    BOOST_CHECK_THROW(nested("MINPV\n 10 /"), Opm::OpmInputError);
+}
+
 namespace {
 
 // One column of two layers on sheared pillars; the lower layer thickens towards
