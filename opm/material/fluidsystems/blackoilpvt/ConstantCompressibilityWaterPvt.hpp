@@ -27,9 +27,14 @@
 #ifndef OPM_CONSTANT_COMPRESSIBILITY_WATER_PVT_HPP
 #define OPM_CONSTANT_COMPRESSIBILITY_WATER_PVT_HPP
 
+#include <opm/common/ErrorMacros.hpp>
 #include <opm/material/common/MathToolbox.hpp>
+#include <opm/common/utility/gpuDecorators.hpp>
+#include <opm/common/utility/gpuistl_if_available.hpp>
 #include <opm/common/utility/VectorWithDefaultAllocator.hpp>
 
+#include <algorithm>
+#include <array>
 #include <cstddef>
 #include <stdexcept>
 
@@ -38,14 +43,48 @@ namespace Opm {
 class EclipseState;
 class Schedule;
 
-/*!
- * \brief This class represents the Pressure-Volume-Temperature relations of the gas phase
- *        without vaporized oil.
- */
+// Forward declaration, so that copy_to_gpu() and make_view() can be declared before
+// the class definition. The default template argument is given here (and only here).
 template <class Scalar, template<class> class Storage = VectorWithDefaultAllocator>
+class ConstantCompressibilityWaterPvt;
+
+#if HAVE_CUDA
+// Declarations of copy_to_gpu() and make_view(), so that they can be declared as
+// friends in the class.
+namespace gpuistl
+{
+    template <class ScalarT>
+    ConstantCompressibilityWaterPvt<ScalarT, GpuBuffer>
+    copy_to_gpu(const ConstantCompressibilityWaterPvt<ScalarT>& );
+
+    template <class ScalarT>
+    ConstantCompressibilityWaterPvt<ScalarT, GpuView>
+    make_view(ConstantCompressibilityWaterPvt<ScalarT, GpuBuffer>& );
+} // namespace gpuistl
+#endif // HAVE_CUDA
+
+/*!
+ * \brief This class represents the Pressure-Volume-Temperature relations of the water
+ *        phase with constant compressibility (Eclipse PVTW keyword).
+ *
+ * The class is used with three storage containers:
+ *  - \c ConstantCompressibilityWaterPvt<Scalar> (CPU): initialized from the deck by
+ *    initFromState() or by the setters followed by initEnd().
+ *  - \c ConstantCompressibilityWaterPvt<Scalar, gpuistl::GpuBuffer> (owning GPU):
+ *    created from a CPU object by gpuistl::copy_to_gpu(). Owns all device memory.
+ *  - \c ConstantCompressibilityWaterPvt<Scalar, gpuistl::GpuView> (non-owning GPU):
+ *    created from an owning GPU object by gpuistl::make_view(). This is the object to
+ *    pass to kernels; the owning object must outlive it.
+ *
+ * \tparam Scalar  Floating point type of the per-region parameters.
+ * \tparam Storage Container for the per-region parameters.
+ */
+template <class Scalar, template<class> class Storage>
 class ConstantCompressibilityWaterPvt
 {
 public:
+    ConstantCompressibilityWaterPvt() = default;
+
     /*!
      * \brief Sets the pressure-dependent water viscosity and density
      *        using a table stemming from the Eclipse PVTW keyword.
@@ -308,6 +347,37 @@ public:
     { return waterViscosibility_; }
 
 private:
+    #if HAVE_CUDA
+    template <class ScalarT>
+    friend ConstantCompressibilityWaterPvt<ScalarT, gpuistl::GpuBuffer>
+    gpuistl::copy_to_gpu(const ConstantCompressibilityWaterPvt<ScalarT>&);
+    
+    template <class ScalarT>
+    friend ConstantCompressibilityWaterPvt<ScalarT, gpuistl::GpuView>
+    gpuistl::make_view(ConstantCompressibilityWaterPvt<ScalarT, gpuistl::GpuBuffer>&);
+
+    /*!
+     * \brief Constructor for the GPU objects, used by gpuistl::copy_to_gpu() and
+     *        gpuistl::make_view().
+     *
+     * All arguments hold one entry per PVT region, as set by the corresponding setters.
+     */
+    ConstantCompressibilityWaterPvt(Storage<Scalar>&& waterReferenceDensity,
+                                    Storage<Scalar>&& waterReferencePressure,
+                                    Storage<Scalar>&& waterReferenceFormationVolumeFactor,
+                                    Storage<Scalar>&& waterCompressibility,
+                                    Storage<Scalar>&& waterViscosity,
+                                    Storage<Scalar>&& waterViscosibility)
+    : waterReferenceDensity_(std::move(waterReferenceDensity))
+    , waterReferencePressure_(std::move(waterReferencePressure))
+    , waterReferenceFormationVolumeFactor_(std::move(waterReferenceFormationVolumeFactor))
+    , waterCompressibility_(std::move(waterCompressibility))
+    , waterViscosity_(std::move(waterViscosity))
+    , waterViscosibility_(std::move(waterViscosibility))
+    { }
+
+    #endif // HAVE_CUDA
+
     Storage<Scalar> waterReferenceDensity_{};
     Storage<Scalar> waterReferencePressure_{};
     Storage<Scalar> waterReferenceFormationVolumeFactor_{};
@@ -315,6 +385,68 @@ private:
     Storage<Scalar> waterViscosity_{};
     Storage<Scalar> waterViscosibility_{};
 };
+
+#if HAVE_CUDA
+namespace gpuistl {
+    /*!
+     * \brief Copy a CPU ConstantCompressibilityWaterPvt to the GPU.
+     *
+     * Each per-region parameter vector is uploaded to its own GpuBuffer.
+     *
+     * \param cpu A fully initialized CPU object (i.e. initEnd() has been called).
+     * \throws std::logic_error if \p cpu has no regions, or if any of its per-region
+     *         parameter vectors does not have one entry per region.
+     * \return An owning GPU object. Use make_view() to obtain an object that can be
+     *         passed to kernels.
+     */
+    template<class ScalarT>
+    ConstantCompressibilityWaterPvt<ScalarT, GpuBuffer>
+    copy_to_gpu(const ConstantCompressibilityWaterPvt<ScalarT>& cpu) {
+        // setNumRegions() resizes all parameter vectors and fills them with default
+        // values, so an initialized object has numRegions() > 0 entries in each of them.
+        const auto numRegions = cpu.numRegions();
+        const std::array sizes{cpu.waterReferenceDensity_.size(),
+                               cpu.waterReferencePressure_.size(),
+                               cpu.waterReferenceFormationVolumeFactor_.size(),
+                               cpu.waterCompressibility_.size(),
+                               cpu.waterViscosity_.size(),
+                               cpu.waterViscosibility_.size()};
+        const bool initialized = numRegions > 0
+            && std::ranges::all_of(sizes, [numRegions](auto size) { return size == numRegions; });
+        OPM_ERROR_IF(!initialized,
+                     "copy_to_gpu: ConstantCompressibilityWaterPvt is not initialized "
+                     "(call initFromState() or setNumRegions() first).");
+
+        return ConstantCompressibilityWaterPvt<ScalarT, GpuBuffer>(
+            GpuBuffer<ScalarT>(cpu.waterReferenceDensity_),
+            GpuBuffer<ScalarT>(cpu.waterReferencePressure_),
+            GpuBuffer<ScalarT>(cpu.waterReferenceFormationVolumeFactor_),
+            GpuBuffer<ScalarT>(cpu.waterCompressibility_),
+            GpuBuffer<ScalarT>(cpu.waterViscosity_),
+            GpuBuffer<ScalarT>(cpu.waterViscosibility_)
+        );
+    }
+
+    /*!
+     * \brief Create a non-owning view of an owning GPU ConstantCompressibilityWaterPvt.
+     *
+     * The view can be passed by value to kernels. It does not own any memory, so
+     * \p buf must outlive every use of the view.
+     */
+    template <class ScalarT>
+    ConstantCompressibilityWaterPvt<ScalarT, GpuView>
+    make_view(ConstantCompressibilityWaterPvt<ScalarT, GpuBuffer>& buf) {
+        return ConstantCompressibilityWaterPvt<ScalarT, GpuView>(
+            make_view(buf.waterReferenceDensity_),
+            make_view(buf.waterReferencePressure_),
+            make_view(buf.waterReferenceFormationVolumeFactor_),
+            make_view(buf.waterCompressibility_),
+            make_view(buf.waterViscosity_),
+            make_view(buf.waterViscosibility_)
+        );
+    }
+} // namespace gpuistl
+#endif
 
 } // namespace Opm
 
