@@ -148,37 +148,37 @@ public:
     /*!
      * \brief Return the number of PVT regions which are considered by this PVT-object.
      */
-    unsigned numRegions() const
+    OPM_HOST_DEVICE unsigned numRegions() const
     { return waterReferenceDensity_.size(); }
 
     /*!
      * \brief Returns the specific enthalpy [J/kg] of water given a set of parameters.
      */
     template <class Evaluation>
-    Evaluation internalEnergy(unsigned,
-                        const Evaluation&,
-                        const Evaluation&,
-                        const Evaluation&,
-                        const Evaluation&) const
+    OPM_HOST_DEVICE Evaluation internalEnergy(unsigned,
+                                              const Evaluation&,
+                                              const Evaluation&,
+                                              const Evaluation&,
+                                              const Evaluation&) const
     {
-        throw std::runtime_error("Requested the enthalpy of water but the thermal "
-                                 "option is not enabled");
+        OPM_THROW(std::runtime_error, "Requested the enthalpy of water but the thermal "
+                                      "option is not enabled");
     }
 
-    Scalar hVap(unsigned) const
+    OPM_HOST_DEVICE Scalar hVap(unsigned) const
     {
-        throw std::runtime_error("Requested the hvap of oil but the thermal "
-                                 "option is not enabled");
+        OPM_THROW(std::runtime_error, "Requested the hvap of oil but the thermal "
+                                      "option is not enabled");
     }
 
     /*!
      * \brief Returns the dynamic viscosity [Pa s] of the fluid phase given a set of parameters.
      */
     template <class Evaluation>
-    Evaluation saturatedViscosity(unsigned regionIdx,
-                                  const Evaluation& temperature,
-                                  const Evaluation& pressure,
-                                  const Evaluation& saltconcentration) const
+    OPM_HOST_DEVICE Evaluation saturatedViscosity(unsigned regionIdx,
+                                                  const Evaluation& temperature,
+                                                  const Evaluation& pressure,
+                                                  const Evaluation& saltconcentration) const
     {
         Scalar BwMuwRef = waterViscosity_[regionIdx]*waterReferenceFormationVolumeFactor_[regionIdx];
         const Evaluation& bw = saturatedInverseFormationVolumeFactor(regionIdx, temperature, pressure, saltconcentration);
@@ -194,11 +194,11 @@ public:
      * \brief Returns the dynamic viscosity [Pa s] of the fluid phase given a set of parameters.
      */
     template <class Evaluation>
-    Evaluation viscosity(unsigned regionIdx,
-                         const Evaluation& temperature,
-                         const Evaluation& pressure,
-                         const Evaluation& Rsw,
-                         const Evaluation& saltconcentration) const
+    OPM_HOST_DEVICE Evaluation viscosity(unsigned regionIdx,
+                                         const Evaluation& temperature,
+                                         const Evaluation& pressure,
+                                         const Evaluation& Rsw,
+                                         const Evaluation& saltconcentration) const
     {
         Scalar BwMuwRef = waterViscosity_[regionIdx]*waterReferenceFormationVolumeFactor_[regionIdx];
         const Evaluation& bw = inverseFormationVolumeFactor(regionIdx, temperature, pressure, Rsw, saltconcentration);
@@ -214,10 +214,10 @@ public:
      * \brief Returns the formation volume factor [-] of the fluid phase.
      */
     template <class Evaluation>
-    Evaluation saturatedInverseFormationVolumeFactor(unsigned regionIdx,
-                                                     const Evaluation& temperature,
-                                                     const Evaluation& pressure,
-                                                     const Evaluation& saltconcentration) const
+    OPM_HOST_DEVICE Evaluation saturatedInverseFormationVolumeFactor(unsigned regionIdx,
+                                                                     const Evaluation& temperature,
+                                                                     const Evaluation& pressure,
+                                                                     const Evaluation& saltconcentration) const
     {
       Evaluation Rsw = 0.0;
       return inverseFormationVolumeFactor(regionIdx, temperature, pressure,
@@ -228,11 +228,11 @@ public:
      * \brief Returns the formation volume factor [-] of the fluid phase.
      */
     template <class Evaluation>
-    Evaluation inverseFormationVolumeFactor(unsigned regionIdx,
-                                            const Evaluation& /*temperature*/,
-                                            const Evaluation& pressure,
-                                            const Evaluation& /*Rsw*/,
-                                            const Evaluation& /*saltconcentration*/) const
+    OPM_HOST_DEVICE Evaluation inverseFormationVolumeFactor(unsigned regionIdx,
+                                                            const Evaluation& /*temperature*/,
+                                                            const Evaluation& pressure,
+                                                            const Evaluation& /*Rsw*/,
+                                                            const Evaluation& /*saltconcentration*/) const
     {
         Scalar pRef = waterReferencePressure_[regionIdx];
         const Evaluation& X = waterCompressibility_[regionIdx]*(pressure - pRef);
@@ -248,7 +248,7 @@ public:
      */
     template <class FluidState, class LhsEval = typename FluidState::ValueType>
     std::pair<LhsEval, LhsEval>
-    inverseFormationVolumeFactorAndViscosity(const FluidState& fluidState, unsigned regionIdx)
+    OPM_HOST_DEVICE inverseFormationVolumeFactorAndViscosity(const FluidState& fluidState, unsigned regionIdx)
     {
         const auto& pressure = decay<LhsEval>(fluidState.pressure(FluidState::waterPhaseIdx));
         Scalar pRef = waterReferencePressure_[regionIdx];
@@ -265,18 +265,18 @@ public:
     }
 
     template <class Evaluation>
-    void inverseBAndMu(Evaluation& bw, Evaluation& muW, unsigned regionIdx,
-                       const Evaluation& /*temperature*/,
-                       const Evaluation& pressure,
-                       const Evaluation& /*Rsw*/,
-                       const Evaluation& /*saltconcentration*/) const
+    OPM_HOST_DEVICE void inverseBAndMu(Evaluation& bw, Evaluation& muW, unsigned regionIdx,
+                                       const Evaluation& /*temperature*/,
+                                       const Evaluation& pressure,
+                                       const Evaluation& /*Rsw*/,
+                                       const Evaluation& /*saltconcentration*/) const
     {
         inverseBAndMu(bw, muW, regionIdx,pressure);
     }
 
     template <class Evaluation>
-    void inverseBAndMu(Evaluation& bw, Evaluation& muW, unsigned regionIdx,
-                       const Evaluation& pressure) const
+    OPM_HOST_DEVICE void inverseBAndMu(Evaluation& bw, Evaluation& muW, unsigned regionIdx,
+                                       const Evaluation& pressure) const
     {
         Scalar pRef = waterReferencePressure_[regionIdx];
         const Evaluation& X = waterCompressibility_[regionIdx]*(pressure - pRef);
@@ -302,33 +302,33 @@ public:
      *           will yield one cubic meter of oil at the surface [-]
      */
     template <class Evaluation>
-    Evaluation saturationPressure(unsigned /*regionIdx*/,
-                                  const Evaluation& /*temperature*/,
-                                  const Evaluation& /*Rs*/,
-                                  const Evaluation& /*saltconcentration*/) const
+    OPM_HOST_DEVICE Evaluation saturationPressure(unsigned /*regionIdx*/,
+                                                  const Evaluation& /*temperature*/,
+                                                  const Evaluation& /*Rs*/,
+                                                  const Evaluation& /*saltconcentration*/) const
     { return 0.0; /* this is dead water, so there isn't any meaningful saturation pressure! */ }
 
     template <class Evaluation>
-    Evaluation diffusionCoefficient(const Evaluation& /*temperature*/,
-                                    const Evaluation& /*pressure*/,
-                                    unsigned /*compIdx*/,
-                                    unsigned /*regionIdx*/ = 0) const
+    OPM_HOST_DEVICE Evaluation diffusionCoefficient(const Evaluation& /*temperature*/,
+                                                    const Evaluation& /*pressure*/,
+                                                    unsigned /*compIdx*/,
+                                                    unsigned /*regionIdx*/ = 0) const
     {
-        throw std::runtime_error("Not implemented: The PVT model does not provide "
-                                 "a diffusionCoefficient()");
+        OPM_THROW(std::runtime_error, "Not implemented: The PVT model does not provide "
+                                      "a diffusionCoefficient()");
     }
 
     /*!
      * \brief Returns the gas dissolution factor \f$R_s\f$ [m^3/m^3] of the water phase.
      */
     template <class Evaluation>
-    Evaluation saturatedGasDissolutionFactor(unsigned /*regionIdx*/,
-                                             const Evaluation& /*temperature*/,
-                                             const Evaluation& /*pressure*/,
-                                             const Evaluation& /*saltconcentration*/) const
+    OPM_HOST_DEVICE Evaluation saturatedGasDissolutionFactor(unsigned /*regionIdx*/,
+                                                             const Evaluation& /*temperature*/,
+                                                             const Evaluation& /*pressure*/,
+                                                             const Evaluation& /*saltconcentration*/) const
     { return 0.0; /* this is dead water! */ }
 
-    Scalar waterReferenceDensity(unsigned regionIdx) const
+    OPM_HOST_DEVICE Scalar waterReferenceDensity(unsigned regionIdx) const
     { return waterReferenceDensity_[regionIdx]; }
 
     const Storage<Scalar>& waterReferencePressure() const
