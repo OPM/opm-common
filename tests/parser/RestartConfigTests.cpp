@@ -315,7 +315,7 @@ END
         BOOST_CHECK_EQUAL( state.month_num(), ts.month() - 1);
         BOOST_CHECK_EQUAL( state.first_in_month(), first_in_month );
         BOOST_CHECK_EQUAL( state.first_in_year(), first_in_year );
-        BOOST_CHECK_MESSAGE( ts == TimeStampUTC( TimeService::to_time_t(state.start_time() )),
+        BOOST_CHECK_MESSAGE( ts == TimeStampUTC( state.start_time() ),
                              "Time stamp does not match expected");
     }
 }

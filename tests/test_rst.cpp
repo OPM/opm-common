@@ -37,6 +37,7 @@
 #include <opm/output/eclipse/AggregateConnectionData.hpp>
 #include <opm/output/eclipse/AggregateGroupData.hpp>
 #include <opm/output/eclipse/InteHEAD.hpp>
+#include <opm/output/eclipse/VectorItems/doubhead.hpp>
 #include <opm/output/eclipse/VectorItems/intehead.hpp>
 #include <opm/output/eclipse/VectorItems/well.hpp>
 #include <opm/output/eclipse/WriteRestartHelpers.hpp>
@@ -571,7 +572,8 @@ BOOST_AUTO_TEST_CASE(Restart_Time_Of_Day)
         Opm::TimeStampUTC::YMD { 2016, 1, 4 }, 16, 47, 59, 0
     };
 
-    BOOST_CHECK_EQUAL(header.sim_time(), Opm::asTimeT(ts));
+    BOOST_CHECK(header.sim_time() == Opm::asTimePoint(ts) +
+                                    std::chrono::milliseconds { 999 });
 
     const auto& [time, report_step] = header.restart_info();
     BOOST_CHECK(time == Opm::asTimePoint(ts) + std::chrono::milliseconds { 999 });
@@ -609,7 +611,8 @@ BOOST_AUTO_TEST_CASE(Restart_Time_Millisecond_Rounding)
                 std::vector<bool>(100), std::vector<double>(1000)
             };
 
-            BOOST_CHECK_EQUAL(header.sim_time(), Opm::asTimeT(ts));
+            BOOST_CHECK(header.sim_time() == Opm::asTimePoint(ts) +
+                                            std::chrono::milliseconds { milliseconds });
 
             const auto& [time, report_step] = header.restart_info();
             BOOST_CHECK(time == Opm::asTimePoint(ts) +
@@ -645,10 +648,33 @@ BOOST_AUTO_TEST_CASE(Restart_Time_Rounding_Carry)
             };
 
             const auto& [time, report_step] = header.restart_info();
+            BOOST_CHECK(header.sim_time() == Opm::asTimePoint(expected));
             BOOST_CHECK(time == Opm::asTimePoint(expected));
             BOOST_CHECK_EQUAL(report_step, std::size_t{7});
         }
     }
+}
+
+BOOST_AUTO_TEST_CASE(Restart_Start_Inferred_From_Fractional_Time)
+{
+    const auto ih = Opm::RestartIO::InteHEAD{}
+        .calendarDate({2020, 1, 2, 0, 0, 0, 1'000})
+        .stepParam(1, 1);
+
+    auto dh = std::vector<double>(1000);
+    dh[Opm::RestartIO::Helpers::VectorItems::doubhead::SimTime] =
+        (86'400.0 + 0.001) / 86'400.0;
+
+    const auto header = Opm::RestartIO::RstHeader {
+        Opm::UnitSystem::newMETRIC(), ih.data(),
+        std::vector<bool>(100), dh
+    };
+
+    // Dropping the millisecond from sim_time() moves the inferred start
+    // into the previous day when its timestamp is floored to whole seconds.
+    BOOST_REQUIRE(header.inferred_start_from_elapsed_simtime.has_value());
+    BOOST_CHECK(Opm::asTimePoint(*header.inferred_start_from_elapsed_simtime) ==
+                Opm::TimeService::mkdate(2020, 1, 1));
 }
 
 BOOST_AUTO_TEST_CASE(Well_Economic_Limits)

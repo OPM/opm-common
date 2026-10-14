@@ -412,7 +412,7 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckMissingReturnsDefaults) {
     const FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
     const Runspec runspec (deck);
     const Schedule schedule(deck, grid, fp, NumericalAquifers{}, runspec, std::make_shared<Python>());
-    BOOST_CHECK_EQUAL( schedule.getStartTime() , asTimeT( TimeStampUTC(1983, 1, 1)));
+    BOOST_CHECK( schedule.getStartTime() == asTimePoint( TimeStampUTC(1983, 1, 1)));
 }
 
 BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsOrdered) {
@@ -477,7 +477,7 @@ BOOST_AUTO_TEST_CASE(GroupTree2TEST) {
 
 BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithStart) {
     const auto& schedule = make_schedule( createDeck() );
-    BOOST_CHECK_EQUAL( schedule.getStartTime() , asTimeT(TimeStampUTC(1998, 3  , 8 )));
+    BOOST_CHECK( schedule.getStartTime() == asTimePoint(TimeStampUTC(1998, 3  , 8 )));
 }
 
 BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithSCHEDULENoThrow) {
@@ -1653,7 +1653,7 @@ COMPDAT
     BOOST_CHECK_EQUAL(sim_time1.month(), 10);
     BOOST_CHECK_EQUAL(sim_time1.year(), 2008);
 
-    sim_time1 = schedule.simTime(3);
+    sim_time1 = TimeStampUTC{ schedule.simTime(3) };
     BOOST_CHECK_EQUAL(sim_time1.day(), 20);
     BOOST_CHECK_EQUAL(sim_time1.month(), 1);
     BOOST_CHECK_EQUAL(sim_time1.year(), 2011);
@@ -6389,7 +6389,7 @@ bool compare_dates(const time_point& t, const std::array<int, 3>& ymd)
 }
 
 std::string dates_msg(const time_point& t, std::array<int,3>& ymd) {
-    auto ts = TimeStampUTC( std::chrono::system_clock::to_time_t(t) );
+    auto ts = TimeStampUTC( t );
     return fmt::format("Different dates: {}-{}-{} != {}-{}-{}", ts.year(), ts.month(), ts.day(), ymd[0], ymd[1], ymd[2]);
 }
 
@@ -6443,7 +6443,7 @@ BOOST_AUTO_TEST_CASE(ScheduleDeckTest) {
         Parser parser;
         auto deck = parser.parseString( createDeckWTEST() );
         Runspec runspec{deck};
-        ScheduleDeck sched_deck( TimeService::from_time_t(runspec.start_time()), deck, {} );
+        ScheduleDeck sched_deck( runspec.start_time(), deck, {} );
         BOOST_CHECK_EQUAL( sched_deck.size(), 6 );
 
         std::vector<std::string> first_kw = {"WELSPECS", "WTEST", "SUMTHIN", "WCONINJH", "WELOPEN", "WCONINJH"};

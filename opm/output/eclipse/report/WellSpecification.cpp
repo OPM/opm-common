@@ -20,6 +20,7 @@
 #include <opm/output/eclipse/report/WellSpecification.hpp>
 
 #include <opm/common/utility/String.hpp>
+#include <opm/common/utility/TimeService.hpp>
 
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 
@@ -1157,7 +1158,7 @@ namespace {
             // upper case, so mixed case month names would look out of place.
             const auto header = ::Opm::uppercase
                 (fmt::format("WELL LISTS ({:%d-%b-%Y})",
-                             fmt::gmtime(schedule.simTime(reportStep))));
+                             Opm::asTm(Opm::TimeStampUTC { schedule.simTime(reportStep) })));
 
             os << "\n\n"
                << indent << std::string(std::string::size_type{40}, field_padding)

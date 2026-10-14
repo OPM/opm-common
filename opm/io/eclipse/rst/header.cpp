@@ -31,7 +31,6 @@
 #include <chrono>
 #include <cmath>
 #include <cstddef>
-#include <ctime>
 #include <optional>
 #include <utility>
 #include <vector>
@@ -95,7 +94,7 @@ inferStartFromDateNum(const std::vector<double>& doubhead)
 }
 
 std::optional<Opm::TimeStampUTC>
-inferStartFromElapsedSimDays(const std::time_t simTime,
+inferStartFromElapsedSimDays(const Opm::time_point& simTime,
                              const std::vector<double>& doubhead)
 {
     if (doubhead.size() <= VI::doubhead::SimTime) {
@@ -240,26 +239,23 @@ RstHeader::RstHeader(const Opm::UnitSystem&     unit_system,
         inferStartFromElapsedSimDays(this->sim_time(), doubhead);
 }
 
-std::time_t RstHeader::sim_time() const
+time_point RstHeader::sim_time() const
 {
     TimeStampUTC ts(this->year, this->month, this->mday);
 
     // ISECND holds the seconds and their fraction, in microseconds.
     ts.hour(this->hour).minutes(this->minute)
-        .seconds(this->microsecond / 1'000'000)
-        .microseconds(this->microsecond % 1'000'000);
+        .seconds(this->microsecond / 1'000'000);
 
-    return asTimeT(ts);
+    // Round the fraction of a second to the schedule's millisecond resolution.
+    const auto fraction = std::chrono::microseconds { this->microsecond % 1'000'000 };
+    return asTimePoint(ts) + std::chrono::round<time_point::duration>(fraction);
 }
 
 std::pair<time_point, std::size_t>
 RstHeader::restart_info() const
 {
-    // Round the fraction of a second to the schedule's millisecond resolution.
-    const auto fraction = std::chrono::microseconds { this->microsecond % 1'000'000 };
-
-    return std::make_pair(TimeService::from_time_t(this->sim_time()) +
-                          std::chrono::round<time_point::duration>(fraction),
+    return std::make_pair(this->sim_time(),
                           std::size_t(this->report_step));
 }
 
@@ -271,10 +267,10 @@ RstHeader::inferred_start_time_drift_seconds() const
         return std::nullopt;
     }
 
-    const auto t0 = asTimeT(this->inferred_start_from_doubhead_start.value());
-    const auto t1 = asTimeT(this->inferred_start_from_elapsed_simtime.value());
+    const auto t0 = asTimePoint(this->inferred_start_from_doubhead_start.value());
+    const auto t1 = asTimePoint(this->inferred_start_from_elapsed_simtime.value());
 
-    return std::abs(std::difftime(t0, t1));
+    return std::abs(std::chrono::duration<double> { t0 - t1 }.count());
 }
 
 int RstHeader::num_udq() const

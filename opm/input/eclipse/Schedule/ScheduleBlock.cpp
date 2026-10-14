@@ -117,8 +117,8 @@ ScheduleBlock ScheduleBlock::serializationTestObject()
 {
     ScheduleBlock block;
     block.m_time_type = ScheduleTimeType::TSTEP;
-    block.m_start_time = TimeService::from_time_t( asTimeT( TimeStampUTC( 2003, 10, 10 )));
-    block.m_end_time = TimeService::from_time_t( asTimeT( TimeStampUTC( 1993, 07, 06 )));
+    block.m_start_time = asTimePoint( TimeStampUTC( 2003, 10, 10 ));
+    block.m_end_time = asTimePoint( TimeStampUTC( 1993, 07, 06 ));
     block.m_location = KeywordLocation::serializationTestObject();
     block.m_keywords = {DeckKeyword::serializationTestObject()};
     return block;
@@ -158,9 +158,7 @@ void ScheduleBlock::dump_time(const UnitSystem& usys,
 
 void ScheduleBlock::writeDates(DeckOutput& output) const
 {
-    const auto ts = TimeStampUTC {
-        TimeService::to_time_t(this->start_time())
-    };
+    const auto ts = TimeStampUTC { this->start_time() };
 
     const auto ecl_month = TimeService::eclipseMonthNames().at(ts.month());
     const auto dates_string = fmt::format(R"(

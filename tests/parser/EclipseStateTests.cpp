@@ -216,7 +216,7 @@ BOOST_AUTO_TEST_CASE(CreateSchedule) {
     auto python = std::make_shared<Python>();
     EclipseState state(deck);
     Schedule schedule(deck, state, python);
-    BOOST_CHECK_EQUAL(schedule.getStartTime(), asTimeT(TimeStampUTC( 1998 , 3 , 8)));
+    BOOST_CHECK(schedule.getStartTime() == asTimePoint(TimeStampUTC( 1998 , 3 , 8)));
 }
 
 static Deck createDeckSimConfig() {

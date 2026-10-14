@@ -95,9 +95,7 @@ public:
         else
             utc_chrono = m_ext_esmry->startdate();
 
-        auto utc_time_t   = std::chrono::system_clock::to_time_t( utc_chrono );
-
-        auto utc_ts       = Opm::TimeStampUTC( utc_time_t );
+        auto utc_ts       = Opm::TimeStampUTC( utc_chrono );
 
         auto local_time_t = Opm::asLocalTimeT( utc_ts );
 
@@ -127,8 +125,7 @@ public:
         }
         result.reserve(times.size());
         for (std::size_t i = 0; i < times.size(); ++i) {
-            auto utc_time_t   = std::chrono::system_clock::to_time_t(times[i]);
-            auto utc_ts       = Opm::TimeStampUTC(utc_time_t);
+            auto utc_ts       = Opm::TimeStampUTC(times[i]);
             auto local_time_t = Opm::asLocalTimeT(utc_ts);
             result.push_back(TimeService::from_time_t(local_time_t));
         }

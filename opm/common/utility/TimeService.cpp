@@ -71,15 +71,13 @@ namespace {
 
 
 
-const time_t system_clock_epoch = std::chrono::system_clock::to_time_t({});
-
+// std::chrono::system_clock measures Unix time, so its epoch is that of std::time_t.
 time_point from_time_t(std::time_t t) {
-    auto diff = std::difftime(t, system_clock_epoch);
-    return time_point(std::chrono::seconds(static_cast<std::chrono::seconds::rep>(diff)));
+    return time_point { std::chrono::seconds { t } };
 }
 
 std::time_t to_time_t(const time_point& tp) {
-    return std::chrono::duration_cast<std::chrono::seconds>(tp.time_since_epoch()).count() + system_clock_epoch;
+    return std::chrono::duration_cast<std::chrono::seconds>(tp.time_since_epoch()).count();
 }
 
 
@@ -89,10 +87,12 @@ time_point now() {
     return epoch + std::chrono::duration_cast<Opm::time_point::duration>(default_now.time_since_epoch());
 }
 
-std::time_t advance(const std::time_t tp, const double sec)
+time_point advance(const time_point& tp, const double sec)
 {
-    const auto t = Opm::TimeService::from_time_t(tp) + std::chrono::duration_cast<Opm::time_point::duration>(std::chrono::duration<double>(sec));
-    return Opm::TimeService::to_time_t(t);
+    // Round rather than truncate: sec is often a sum of floating-point time
+    // steps that falls just short of a whole millisecond.
+    return tp + std::chrono::round<time_point::duration>
+        (std::chrono::duration<double>(sec));
 }
 
 const std::unordered_map<std::string , int>& eclipseMonthIndices() {
@@ -117,14 +117,14 @@ bool valid_month(const std::string& month_name)
     return month_indices.contains(month_name);
 }
 
-std::time_t mkdatetime(int in_year, int in_month, int in_day, int hour, int minute, int second) {
+time_point mkdatetime(int in_year, int in_month, int in_day, int hour, int minute, int second) {
     const auto tp = TimeStampUTC{ TimeStampUTC::YMD { in_year, in_month, in_day } }
         .hour(hour).minutes(minute).seconds(second);
 
-    std::time_t t = asTimeT(tp);
+    const auto t = asTimePoint(tp);
     {
         /*
-          asTimeT() will happily wrap around dates like January
+          asTimePoint() will happily wrap around dates like January
           33, this function will check that no such wrap-around
           has taken place.
         */
@@ -135,11 +135,11 @@ std::time_t mkdatetime(int in_year, int in_month, int in_day, int hour, int minu
     return t;
 }
 
-std::time_t mkdate(int in_year, int in_month, int in_day) {
+time_point mkdate(int in_year, int in_month, int in_day) {
     return mkdatetime(in_year , in_month , in_day, 0,0,0);
 }
 
-std::time_t timeFromEclipse(const DeckRecord &dateRecord) {
+time_point timeFromEclipse(const DeckRecord &dateRecord) {
     const auto &dayItem = dateRecord.getItem(0);
     const auto &monthItem = dateRecord.getItem(1);
     const auto &yearItem = dateRecord.getItem(2);
@@ -155,13 +155,12 @@ std::time_t timeFromEclipse(const DeckRecord &dateRecord) {
     // Accept lower- and mixed-case month names.
     std::string monthname = uppercase(monthItem.get<std::string>(0));
 
-    std::time_t date = mkdatetime(yearItem.get<int>(0),
-                                  TimeService::eclipseMonthIndices().at(monthname),
-                                  dayItem.get<int>(0),
-                                  hour,
-                                  min,
-                                  second);
-    return date;
+    return mkdatetime(yearItem.get<int>(0),
+                      TimeService::eclipseMonthIndices().at(monthname),
+                      dayItem.get<int>(0),
+                      hour,
+                      min,
+                      second);
 }
 
 }
@@ -224,16 +223,14 @@ namespace {
         };
     }
 
-    Opm::TimeStampUTC toTimeStampUTC(const std::time_t tp)
+    Opm::TimeStampUTC toTimeStampUTC(const std::chrono::sys_seconds t)
     {
         namespace ch = std::chrono;
-
-        const auto t = ch::sys_seconds { ch::seconds { tp } };
 
         // Check before flooring to days, whose count may be 32 bits.
         if ((t < calendarBegin) || (t >= calendarEnd)) {
             throw std::out_of_range {
-                outsideCalendar(fmt::format("Time point {}", tp))
+                outsideCalendar(fmt::format("Time point {}", t.time_since_epoch().count()))
             };
         }
 
@@ -254,23 +251,14 @@ namespace {
         };
     }
 
-    std::tm makeTm(const Opm::TimeStampUTC& tp) {
-        auto timePoint = std::tm{};
-
-        timePoint.tm_year = tp.year()  - 1900;
-        timePoint.tm_mon  = tp.month() -    1;
-        timePoint.tm_mday = tp.day();
-        timePoint.tm_hour = tp.hour();
-        timePoint.tm_min  = tp.minutes();
-        timePoint.tm_sec  = tp.seconds();
-
-        return timePoint;
-    }
-
 }
 
 Opm::TimeStampUTC::TimeStampUTC(const std::time_t tp)
-    : TimeStampUTC { toTimeStampUTC(tp) }
+    : TimeStampUTC { toTimeStampUTC(std::chrono::sys_seconds { std::chrono::seconds { tp } }) }
+{}
+
+Opm::TimeStampUTC::TimeStampUTC(const time_point& tp)
+    : TimeStampUTC { toTimeStampUTC(std::chrono::floor<std::chrono::seconds>(tp)) }
 {}
 
 Opm::TimeStampUTC::TimeStampUTC(const Opm::TimeStampUTC::YMD& ymd,
@@ -284,7 +272,7 @@ Opm::TimeStampUTC::TimeStampUTC(const Opm::TimeStampUTC::YMD& ymd,
 
 Opm::TimeStampUTC& Opm::TimeStampUTC::operator=(const std::time_t tp)
 {
-    return *this = toTimeStampUTC(tp);
+    return *this = TimeStampUTC { tp };
 }
 
 bool Opm::TimeStampUTC::operator==(const TimeStampUTC& data) const
@@ -329,6 +317,20 @@ Opm::TimeStampUTC& Opm::TimeStampUTC::microseconds(const int us)
 }
 
 
+std::tm Opm::asTm(const TimeStampUTC& tp)
+{
+    auto timePoint = std::tm{};
+
+    timePoint.tm_year = tp.year()  - 1900;
+    timePoint.tm_mon  = tp.month() -    1;
+    timePoint.tm_mday = tp.day();
+    timePoint.tm_hour = tp.hour();
+    timePoint.tm_min  = tp.minutes();
+    timePoint.tm_sec  = tp.seconds();
+
+    return timePoint;
+}
+
 std::time_t Opm::asTimeT(const TimeStampUTC& tp)
 {
     return toSysSeconds(tp).time_since_epoch().count();
@@ -336,15 +338,15 @@ std::time_t Opm::asTimeT(const TimeStampUTC& tp)
 
 std::time_t Opm::asLocalTimeT(const TimeStampUTC& tp)
 {
-    auto tm = makeTm(tp);
+    auto tm = asTm(tp);
     return std::mktime(&tm);
 }
 
 Opm::TimeStampUTC Opm::operator+(const Opm::TimeStampUTC& lhs, std::chrono::duration<double> delta) {
-    return Opm::TimeStampUTC( Opm::TimeService::advance(Opm::asTimeT(lhs) , delta.count()) );
+    return Opm::TimeStampUTC( Opm::TimeService::advance(Opm::asTimePoint(lhs) , delta.count()) );
 }
 
 Opm::time_point Opm::asTimePoint(const TimeStampUTC& ts)
 {
-    return Opm::TimeService::from_time_t( Opm::asTimeT(ts) );
+    return toSysSeconds(ts);
 }
