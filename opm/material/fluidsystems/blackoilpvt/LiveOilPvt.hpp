@@ -41,6 +41,7 @@
 #include <cstddef>
 #include <memory>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 namespace Opm {
@@ -48,6 +49,13 @@ namespace Opm {
 class EclipseState;
 class Schedule;
 class SimpleTable;
+
+// Forward declaration, so that copy_to_gpu() and make_view() can be declared before
+// the class definition. The default template arguments are given here (and only here).
+template <class Scalar,
+          template<class> class Storage = VectorWithDefaultAllocator,
+          template<class> class TableStorage = VectorWithDefaultAllocator>
+class LiveOilPvt;
 
 namespace gpuistl
 {
@@ -58,13 +66,27 @@ template <class T>
 class GpuView;
 } // namespace gpuistl
 
+#if HAVE_CUDA
+// Declarations of copy_to_gpu() and make_view(), so that they can be declared as
+// friends in the class.
+namespace gpuistl {
+    template <class ScalarT>
+    LiveOilPvt<ScalarT, GpuBuffer, GpuView>
+    copy_to_gpu(const LiveOilPvt<ScalarT>&);
+
+    template <class ScalarT>
+    LiveOilPvt<ScalarT, GpuView, GpuView>
+    make_view(LiveOilPvt<ScalarT, GpuBuffer, GpuView>&);
+} // namespace gpuistl
+#endif // HAVE_CUDA
+
 /*!
  * \brief This class represents the Pressure-Volume-Temperature relations of the oil phas
  *        with dissolved gas.
  */
 template <class Scalar,
-          template<class> class Storage = VectorWithDefaultAllocator,
-          template<class> class TableStorage = VectorWithDefaultAllocator>
+          template<class> class Storage,
+          template<class> class TableStorage>
 class LiveOilPvt
 {
     using SamplingPoints = std::vector<std::pair<Scalar, Scalar>>;
@@ -477,6 +499,51 @@ private:
     Storage<TabulatedOneDFunction> saturationPressure_{};
 
     Scalar vapPar2_ = 0.0;
+
+#if HAVE_CUDA
+    /*!
+     * \brief Constructor for the GPU objects, used by gpuistl::copy_to_gpu() and
+     *        gpuistl::make_view().
+     *
+     * \param gpuTables The device table owner for the owning GPU object. The table
+     *                  views passed in the other arguments must point into its tables.
+     *                  For the other GPU objects this is the empty storage; pass {}.
+     */
+    LiveOilPvt(GpuTablesStorage&& gpuTables,
+               Storage<Scalar>&& gasReferenceDensity,
+               Storage<Scalar>&& oilReferenceDensity,
+               Storage<TabulatedTwoDFunction>&& inverseOilBTable,
+               Storage<TabulatedTwoDFunction>&& oilMuTable,
+               Storage<TabulatedTwoDFunction>&& inverseOilBMuTable,
+               Storage<TabulatedOneDFunction>&& saturatedOilMuTable,
+               Storage<TabulatedOneDFunction>&& inverseSaturatedOilBTable,
+               Storage<TabulatedOneDFunction>&& inverseSaturatedOilBMuTable,
+               Storage<TabulatedOneDFunction>&& saturatedGasDissolutionFactorTable,
+               Storage<TabulatedOneDFunction>&& saturationPressure,
+               Scalar vapPar2)
+        requires (!isCpuStorage)
+        : gpuTables_(std::move(gpuTables))
+        , gasReferenceDensity_(std::move(gasReferenceDensity))
+        , oilReferenceDensity_(std::move(oilReferenceDensity))
+        , inverseOilBTable_(std::move(inverseOilBTable))
+        , oilMuTable_(std::move(oilMuTable))
+        , inverseOilBMuTable_(std::move(inverseOilBMuTable))
+        , saturatedOilMuTable_(std::move(saturatedOilMuTable))
+        , inverseSaturatedOilBTable_(std::move(inverseSaturatedOilBTable))
+        , inverseSaturatedOilBMuTable_(std::move(inverseSaturatedOilBMuTable))
+        , saturatedGasDissolutionFactorTable_(std::move(saturatedGasDissolutionFactorTable))
+        , saturationPressure_(std::move(saturationPressure))
+        , vapPar2_(vapPar2)
+    { }
+
+    template <class ScalarT>
+    friend LiveOilPvt<ScalarT, gpuistl::GpuBuffer, gpuistl::GpuView>
+    gpuistl::copy_to_gpu(const LiveOilPvt<ScalarT>&);
+
+    template <class ScalarT>
+    friend LiveOilPvt<ScalarT, gpuistl::GpuView, gpuistl::GpuView>
+    gpuistl::make_view(LiveOilPvt<ScalarT, gpuistl::GpuBuffer, gpuistl::GpuView>&);
+#endif // HAVE_CUDA
 };
 
 } // namespace Opm
