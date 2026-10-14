@@ -491,7 +491,7 @@ BOOST_AUTO_TEST_CASE(TestBox) {
                 "DX\n"
                 "4*0.25 /\n"
                 "BOX\n"
-                "1* 1 1 1 1 1 /\n"
+                "1* 2 1 2 1 1 /\n"
                 "DY\n"
                 "4*0.25 /\n"
                 "DZ\n"
