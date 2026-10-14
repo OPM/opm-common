@@ -82,8 +82,32 @@ namespace gpuistl {
 #endif // HAVE_CUDA
 
 /*!
- * \brief This class represents the Pressure-Volume-Temperature relations of the oil phas
+ * \brief This class represents the Pressure-Volume-Temperature relations of the oil phase
  *        with dissolved gas.
+ *
+ * The class is used with four combinations of \c Storage (the per-region arrays) and
+ * \c TableStorage (the data inside each table):
+ *
+ * - \c VectorWithDefaultAllocator, \c VectorWithDefaultAllocator: the CPU object, set up
+ *   by initFromState(), or by setNumRegions(), the setters and initEnd().
+ * - \c VectorWithDefaultAllocator, \c gpuistl::GpuBuffer: the device table owner, holding
+ *   one owning device table per region. It is created by and internal to
+ *   gpuistl::copy_to_gpu(), and owned by the owning GPU object.
+ * - \c gpuistl::GpuBuffer, \c gpuistl::GpuView: the owning GPU object, returned by
+ *   gpuistl::copy_to_gpu(). It holds device arrays of views into the device table
+ *   owner's tables, and it is move-only.
+ * - \c gpuistl::GpuView, \c gpuistl::GpuView: the GPU view, returned by
+ *   gpuistl::make_view(). It owns no memory, is trivially copyable, and is passed to
+ *   kernels by value.
+ *
+ * \code
+ * auto gpuPvt = Opm::gpuistl::copy_to_gpu(cpuPvt);  // owning GPU object
+ * auto gpuView = Opm::gpuistl::make_view(gpuPvt);   // GPU view
+ * kernel<<<...>>>(gpuView);
+ * \endcode
+ *
+ * The owning GPU object must outlive every kernel that uses a view made from it. Moving
+ * it does not invalidate such views.
  */
 template <class Scalar,
           template<class> class Storage,
