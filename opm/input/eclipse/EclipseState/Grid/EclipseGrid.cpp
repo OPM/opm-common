@@ -2617,11 +2617,6 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
     }
 
     void EclipseGrid::initializeLGRTreeIndices(){
-        // Re-runnable: updateLgrActiveCells() calls this again after an ACTNUM
-        // change, and both containers below are filled by appending.
-        num_lgr_children_cells.clear();
-        lgr_level_active_map.clear();
-
         // initialize the LGR tree indices for each refined cell.
         auto set_map_scalar = [&](const auto& vec, const auto& value){
              num_lgr_children_cells[vec] = value;
@@ -2707,25 +2702,19 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         }
     }
 
-    // LGR cells follow their host both ways; a cell its own block removed stays off.
+    // An inactive host cell makes its LGR cells inactive.  The other LGR cells
+    // keep their own activity: a host never makes an LGR cell active.
     void EclipseGrid::propagateACTNUMToLGRChildren()
     {
-        this->updateLgrActiveCells();
-    }
-
-    void EclipseGrid::updateLgrActiveCells()
-    {
-        if (this->lgr_children_cells.empty()) {
-            return;
+        for (auto& lgr : this->lgr_children_cells) {
+            auto lgr_actnum = lgr.getACTNUM();
+            for (std::size_t cell = 0; cell < lgr_actnum.size(); ++cell) {
+                if (this->m_actnum[lgr.get_hostnum(cell)] == 0) {
+                    lgr_actnum[cell] = 0;
+                }
+            }
+            lgr.resetACTNUM(lgr_actnum);
         }
-
-        for (auto& child : this->lgr_children_cells) {
-            child.inheritActiveCellsFromFather(*this);
-        }
-
-        // The tree numbering counts active cells, so it has to follow.
-        this->initializeLGRTreeIndices();
-        this->parseGlobalReferenceToChildren();
     }
 
 
@@ -2936,19 +2925,17 @@ namespace Opm {
         m_columns = columns;
         // father_global and the refined ACTNUM come from
         // inheritActiveCellsFromFather(), which the caller invokes once the
-        // grid is in place -- and again whenever the father's own ACTNUM moves.
+        // grid is in place.
         father_label = father_label_;
         lgr_label = self_label;
     }
 
     void EclipseGridLGR::inheritActiveCellsFromFather(const EclipseGrid& father)
     {
-        // A refined cell is active exactly when its father is, so both the
-        // refined ACTNUM and the list of fathers this LGR spans follow from the
-        // father's activity. They must be re-derived, not just derived once:
-        // the output grid is a copy of the input grid with MINPV applied, and a
-        // father that MINPV switched off leaves an active refined cell with no
-        // active father to map onto.
+        // A refined cell starts out active exactly when its father is, so both
+        // the refined ACTNUM and the list of fathers this LGR spans follow from
+        // the father's activity.  Later changes to the father's ACTNUM only
+        // switch refined cells off (propagateACTNUMToLGRChildren()).
         const auto ncells = this->getCartesianSize();
 
         std::vector<int> actnum(ncells, 0);
@@ -2958,9 +2945,6 @@ namespace Opm {
                 this->low_fatherIJK[0] + m_columns[0].parentOffset[ijk[0]],
                 this->low_fatherIJK[1] + m_columns[1].parentOffset[ijk[1]],
                 this->low_fatherIJK[2] + m_columns[2].parentOffset[ijk[2]]) ? 1 : 0;
-            if (!m_minpv_removed.empty() && (m_minpv_removed[cell] != 0)) {
-                actnum[cell] = 0;
-            }
         }
 
         // Cartesian order over the box gives increasing global index, hence
@@ -2976,7 +2960,20 @@ namespace Opm {
             }
         }
 
-        // Propagates into this LGR's own children, via updateLgrActiveCells().
+        // Propagates into this LGR's own children.
+        this->resetACTNUM(actnum);
+    }
+
+    void EclipseGridLGR::switchOffRemovedCells()
+    {
+        // As an inactive host cell does: the removed cells switch off, no
+        // other cell switches on.
+        auto actnum = this->getACTNUM();
+        for (std::size_t cell = 0; cell < actnum.size(); ++cell) {
+            if (m_minpv_removed[cell] != 0) {
+                actnum[cell] = 0;
+            }
+        }
         this->resetACTNUM(actnum);
     }
 
@@ -3037,7 +3034,7 @@ namespace Opm {
         this->throwIfHostEmptied(father, fmt::format("MINPV {}", minpv));
 
         // Fold the removals into ACTNUM (and into any nested child's).
-        this->inheritActiveCellsFromFather(father);
+        this->switchOffRemovedCells();
     }
 
     void EclipseGridLGR::removeBlockCells(const EclipseGrid& father,
@@ -3054,7 +3051,7 @@ namespace Opm {
         }
 
         this->throwIfHostEmptied(father, "ACTNUM");
-        this->inheritActiveCellsFromFather(father);
+        this->switchOffRemovedCells();
     }
 
     void EclipseGridLGR::throwIfHostEmptied(const EclipseGrid& father,

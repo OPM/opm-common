@@ -408,9 +408,9 @@ namespace Opm {
       geometry and the father's pore volume are both to hand -- and because the
       answer has to be the same on both sides: the simulation grid's refined
       levels and the LGR grids the EGRID/INIT are written from must agree on
-      which refined cells exist. It is recorded on the LGR grid, so a later
+      which refined cells exist. It is recorded on the LGR grid, and a later
       ACTNUM change (the output grid is the input grid with the field's MINPV
-      applied) re-applies it instead of resurrecting the cells.
+      applied) only switches refined cells off, so the cells stay removed.
     */
     void EclipseState::applyLgrBlockMinpv()
     {

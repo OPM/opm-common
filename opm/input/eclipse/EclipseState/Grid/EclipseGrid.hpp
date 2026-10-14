@@ -181,10 +181,6 @@ namespace Opm {
           in the current class.
         */
         void init_children_host_cells(bool logical = true);
-
-        /// Re-derive every child LGR's ACTNUM (and the tree numbering that
-        /// counts active cells) from this grid's current activity.
-        void updateLgrActiveCells();
         void init_children_host_cells_logical(void);
         void init_children_host_cells_geometrical(void);
         std::array<int,3> getCellSubdivisionRatioLGR(const std::string&  lgr_tag,
@@ -477,15 +473,12 @@ namespace Opm {
                        const std::array<int, 3>& up_fatherIJK_,
                        const std::array<Carfin::RefinedColumns, 3>& columns);
 
-        /// Re-derive this LGR's ACTNUM and its list of father cells from the
-        /// father's current activity. Call after construction, and again
-        /// whenever the father's ACTNUM changes.
+        /// Derive this LGR's ACTNUM and its list of father cells from the
+        /// father's activity. Call once, after construction.
         void inheritActiveCellsFromFather(const EclipseGrid& father);
 
         /// Apply the block's own MINPV: a refined cell takes its share of the
         /// father's pore volume by volume, and drops out below the threshold.
-        /// Recorded, so a later ACTNUM change re-applies it rather than
-        /// resurrecting the cells.
         ///
         /// @param fatherPorv Cartesian-sized pore volume of the father grid.
         void applyBlockMinpv(const EclipseGrid& father,
@@ -572,6 +565,8 @@ namespace Opm {
     private:
         void save_core(Opm::EclIO::EclOutput&, const Opm::UnitSystem&) const;
         void throwIfHostEmptied(const EclipseGrid& father, const std::string& what) const;
+        /// Switch off the cells the block removed, keeping the others' activity.
+        void switchOffRemovedCells();
 
 
 

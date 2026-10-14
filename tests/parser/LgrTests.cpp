@@ -755,9 +755,32 @@ ENDFIN
     BOOST_CHECK( !lgr1.cellActive(3,0,0) );
     BOOST_CHECK_EQUAL( eclipse_grid.getLGRCell("LGR2").getNumActive() , 9U );
 
-    // The host cell back on: its LGR cells follow it.
+    // The host cell back on: its LGR cells keep their activity, as a host
+    // never makes an LGR cell active.
     eclipse_grid.resetACTNUM();
-    BOOST_CHECK_EQUAL( eclipse_grid.getLGRCell("LGR1").getNumActive() , 18U );
+    BOOST_CHECK_EQUAL( eclipse_grid.getLGRCell("LGR1").getNumActive() , 9U );
+}
+
+// Every host cell of an LGR turned off after input, as MINPV can do: the LGR
+// keeps no active cell, the other LGR keeps its own.
+BOOST_AUTO_TEST_CASE(TestLGRresetACTNUMAllHostCellsOff) {
+    auto eclipse_grid = gridWithLgrs(1, R"(
+CARFIN
+'LGR1'  1  2  1  1  1  1  6  3  1 /
+ENDFIN
+CARFIN
+'LGR2'  3  3  3  3  1  1  3  3  1 /
+ENDFIN
+)");
+
+    std::vector<int> actnum(9, 1);
+    actnum[0] = 0;
+    actnum[1] = 0;
+    auto output_grid = eclipse_grid;
+    output_grid.resetACTNUM(actnum);
+
+    BOOST_CHECK_EQUAL( output_grid.getLGRCell("LGR1").getNumActive() , 0U );
+    BOOST_CHECK_EQUAL( output_grid.getLGRCell("LGR2").getNumActive() , 9U );
 }
 
 namespace {
