@@ -30,6 +30,8 @@
 #include <opm/common/ErrorMacros.hpp>
 #include <opm/common/Exceptions.hpp>
 #include <opm/common/OpmLog/OpmLog.hpp>
+#include <opm/common/utility/gpuDecorators.hpp>
+#include <opm/common/utility/gpuistl_if_available.hpp>
 #include <opm/common/utility/VectorWithDefaultAllocator.hpp>
 
 #include <opm/material/common/ConditionalStorage.hpp>
@@ -123,7 +125,8 @@ public:
 
     //! True for the CPU object. Used to restrict the host-only methods that would otherwise
     //! compile for a GPU instantiation and then read or write device memory from the host
-    //! (setInverseOilFormationVolumeFactor(), setOilViscosity() and saturationPressure()).
+    //! (setInverseOilFormationVolumeFactor(), setOilViscosity() and saturationPressure()),
+    //! and setVapPars(), which on a GPU object would not reach the views made from it.
     //! The other host-only methods are defined in the .cpp file for CPU storage only, so
     //! misusing them already fails at link time.
     static constexpr bool isCpuStorage
@@ -167,6 +170,7 @@ public:
     void setNumRegions(std::size_t numRegions);
 
     void setVapPars(const Scalar, const Scalar par2)
+        requires isCpuStorage
     {
         vapPar2_ = par2;
     }
@@ -272,9 +276,9 @@ public:
      */
     template <class Evaluation>
     OPM_HOST_DEVICE Evaluation viscosity(unsigned regionIdx,
-                               const Evaluation& /*temperature*/,
-                               const Evaluation& pressure,
-                               const Evaluation& Rs) const
+                                         const Evaluation& /*temperature*/,
+                                         const Evaluation& pressure,
+                                         const Evaluation& Rs) const
     {
         // ATTENTION: Rs is the first axis!
         const Evaluation& invBo = inverseOilBTable_[regionIdx].eval(Rs, pressure, /*extrapolate=*/true);
