@@ -44,6 +44,10 @@ namespace Opm {
  *
  * If the condition is false, nothing is stored and an exception is thrown when trying to
  * access the object.
+ *
+ * The copy and move operations are defaulted, so the object is trivially copyable
+ * whenever T is (always if the condition is false). If the condition is true, it is
+ * copyable only if T is.
  */
 template <bool cond, class T>
 class ConditionalStorage
@@ -68,25 +72,10 @@ public:
         : data_(args...)
     {}
 
-    OPM_HOST_DEVICE ConditionalStorage(const ConditionalStorage& t)
-        : data_(t.data_)
-    {};
-
-    OPM_HOST_DEVICE ConditionalStorage(ConditionalStorage&& t)
-        : data_(std::move(t.data_))
-    {};
-
-    OPM_HOST_DEVICE ConditionalStorage& operator=(const ConditionalStorage& v)
-    {
-        data_ = v.data_;
-        return *this;
-    }
-
-    OPM_HOST_DEVICE ConditionalStorage& operator=(ConditionalStorage&& v)
-    {
-        data_ = std::move(v.data_);
-        return *this;
-    }
+    ConditionalStorage(const ConditionalStorage&) = default;
+    ConditionalStorage(ConditionalStorage&&) = default;
+    ConditionalStorage& operator=(const ConditionalStorage&) = default;
+    ConditionalStorage& operator=(ConditionalStorage&&) = default;
 
     OPM_HOST_DEVICE const T& operator*() const
     { return data_; }
@@ -124,23 +113,16 @@ public:
         static_assert(std::is_copy_constructible_v<T>);
     }
 
-    OPM_HOST_DEVICE ConditionalStorage(const ConditionalStorage &)
-    {
-        // copying an empty conditional storage object does not do anything.
-    };
-
     template <class ...Args>
     OPM_HOST_DEVICE ConditionalStorage(Args...)
     {
         static_assert(std::is_constructible_v<T, Args...>);
     }
 
-    OPM_HOST_DEVICE ConditionalStorage& operator=(const ConditionalStorage&)
-    {
-        static_assert(std::is_copy_assignable_v<T>);
-        return *this;
-    }
-
+    ConditionalStorage(const ConditionalStorage&) = default;
+    ConditionalStorage(ConditionalStorage&&) = default;
+    ConditionalStorage& operator=(const ConditionalStorage&) = default;
+    ConditionalStorage& operator=(ConditionalStorage&&) = default;
 };
 
 } // namespace Opm
