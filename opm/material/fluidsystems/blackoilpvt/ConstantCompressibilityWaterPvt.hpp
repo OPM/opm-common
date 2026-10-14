@@ -37,6 +37,7 @@
 #include <array>
 #include <cstddef>
 #include <stdexcept>
+#include <utility>
 
 namespace Opm {
 
@@ -167,7 +168,7 @@ public:
 
     OPM_HOST_DEVICE Scalar hVap(unsigned) const
     {
-        OPM_THROW(std::runtime_error, "Requested the hvap of oil but the thermal "
+        OPM_THROW(std::runtime_error, "Requested the hvap of water but the thermal "
                                       "option is not enabled");
     }
 
@@ -247,8 +248,9 @@ public:
      * \brief Returns the formation volume factor [-] and viscosity [Pa s] of the fluid phase.
      */
     template <class FluidState, class LhsEval = typename FluidState::ValueType>
-    std::pair<LhsEval, LhsEval>
-    OPM_HOST_DEVICE inverseFormationVolumeFactorAndViscosity(const FluidState& fluidState, unsigned regionIdx)
+    OPM_HOST_DEVICE std::pair<LhsEval, LhsEval>
+    inverseFormationVolumeFactorAndViscosity(const FluidState& fluidState,
+                                             unsigned regionIdx) const
     {
         const auto& pressure = decay<LhsEval>(fluidState.pressure(FluidState::waterPhaseIdx));
         Scalar pRef = waterReferencePressure_[regionIdx];
@@ -347,11 +349,11 @@ public:
     { return waterViscosibility_; }
 
 private:
-    #if HAVE_CUDA
+#if HAVE_CUDA
     template <class ScalarT>
     friend ConstantCompressibilityWaterPvt<ScalarT, gpuistl::GpuBuffer>
     gpuistl::copy_to_gpu(const ConstantCompressibilityWaterPvt<ScalarT>&);
-    
+
     template <class ScalarT>
     friend ConstantCompressibilityWaterPvt<ScalarT, gpuistl::GpuView>
     gpuistl::make_view(ConstantCompressibilityWaterPvt<ScalarT, gpuistl::GpuBuffer>&);
@@ -376,7 +378,7 @@ private:
     , waterViscosibility_(std::move(waterViscosibility))
     { }
 
-    #endif // HAVE_CUDA
+#endif // HAVE_CUDA
 
     Storage<Scalar> waterReferenceDensity_{};
     Storage<Scalar> waterReferencePressure_{};
