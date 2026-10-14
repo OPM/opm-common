@@ -1859,8 +1859,11 @@ BOOST_AUTO_TEST_CASE(WELSPECS_WGNAME_SPACE) {
         1000*0.25 /
         DZ
         1000*0.25 /
+        BOX
+        1 10 1 10 1 1 /
         TOPS
         100*0.25 /
+        ENDBOX
         SCHEDULE
         DATES             -- 1
          10  OKT 2008 /
@@ -1911,8 +1914,11 @@ BOOST_AUTO_TEST_CASE(createDeckModifyMultipleGCONPROD) {
         1000*0.25 /
         DZ
         1000*0.25 /
+        BOX
+        1 10 1 10 1 1 /
         TOPS
         100*0.25 /
+        ENDBOX
         SCHEDULE
         DATES             -- 1
          10  OKT 2008 /
@@ -5278,8 +5284,11 @@ DYV
  10*100 /
 DZV
  10*10 /
+BOX
+ 1 10 1 10 1 1 /
 TOPS
  100*2000 /
+ENDBOX
 SCHEDULE
 )" } + schedule_body;
     }
@@ -5762,8 +5771,11 @@ DYV
  10*100 /
 DZV
  10*10 /
+BOX
+ 1 10 1 10 1 1 /
 TOPS
  100*2000 /
+ENDBOX
 SOLUTION
 GPTABLE
  1 3 3
@@ -5935,8 +5947,11 @@ DYV
  10*100 /
 DZV
  10*10 /
+BOX
+ 1 10 1 10 1 1 /
 TOPS
  100*2000 /
+ENDBOX
 SCHEDULE
 GPTABLE
  5 3 3  0.0 0.10 0.20 0.70 /
@@ -5969,8 +5984,11 @@ DYV
  10*100 /
 DZV
  10*10 /
+BOX
+ 1 10 1 10 1 1 /
 TOPS
  100*2000 /
+ENDBOX
 SCHEDULE
 GPTABLE
  1 3 3  0.0 0.10 0.20 0.70 /
@@ -6002,8 +6020,11 @@ DYV
  10*100 /
 DZV
  10*10 /
+BOX
+ 1 10 1 10 1 1 /
 TOPS
  100*2000 /
+ENDBOX
 SOLUTION
 GPTABLE
  1 3 3  0.0 0.10 0.20 0.70 /
@@ -6042,8 +6063,11 @@ DYV
  10*100 /
 DZV
  10*10 /
+BOX
+ 1 10 1 10 1 1 /
 TOPS
  100*2000 /
+ENDBOX
 SOLUTION
 GPTABLE
  1 3 3

@@ -79,10 +79,15 @@ DZ
 -- In each layer there are 81 cells
     81*30 81*30 81*50 81*50 /
 
+BOX
+    1 9 1 9 1 1 /
+
 TOPS
 -- The depth of the top of each grid block
 --  81*7315 81*7345 81*7375 81*7425 /
     81*7315 /
+
+ENDBOX
 
 PORO
 -- Constant porosity of 0.3 throughout all 324 grid cells

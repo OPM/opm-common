@@ -460,8 +460,11 @@ DY
   8*100.0 /
 DZ
   8*10.0 /
+BOX
+  1 2 1 2 1 1 /
 TOPS
   4*2000.0 /
+ENDBOX
 PORO
   8*0.2 /
 PERMX

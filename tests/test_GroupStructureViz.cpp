@@ -202,8 +202,11 @@ DYV
   5*100 /
 DZV
   2*10 /
+BOX
+  1 5 1 5 1 1 /
 TOPS
   25*2000 /
+ENDBOX
 
 PERMX
   50*100 /

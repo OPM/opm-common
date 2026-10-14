@@ -152,9 +152,12 @@ DZV
 20*5.0
 /
 
+BOX
+1 1 1 1 1 1 /
 TOPS
 0.0
 /
+ENDBOX
 END
 )";
     const EclipseState ecl_state {Parser{}.parseString(deck_input)};

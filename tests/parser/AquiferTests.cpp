@@ -75,8 +75,13 @@ DYV
 DZV
 1 1 1 /
 
+BOX
+  1 3 1 3 1 1 /
+
 TOPS
   9*100 /
+
+ENDBOX
 
 PORO
   27*0.15 /
@@ -119,8 +124,13 @@ DYV
 DZV
 1 1 1 /
 
+BOX
+  1 3 1 3 1 1 /
+
 TOPS
   9*100 /
+
+ENDBOX
 
 PORO
   27*0.15 /
@@ -169,8 +179,13 @@ DYV
 DZV
 1 1 1 /
 
+BOX
+  1 3 1 3 1 1 /
+
 TOPS
   9*100 /
+
+ENDBOX
 
 PORO
   27*0.15 /
@@ -214,8 +229,13 @@ DYV
 DZV
 1 1 1 /
 
+BOX
+  1 3 1 3 1 1 /
+
 TOPS
   9*100 /
+
+ENDBOX
 
 PORO
   27*0.15 /
@@ -310,8 +330,13 @@ DYV
 DZV
 1 1 1 /
 
+BOX
+  1 3 1 3 1 1 /
+
 TOPS
   9*100 /
+
+ENDBOX
 
 PORO
   27*0.15 /
@@ -342,8 +367,13 @@ DYV
 DZV
 1 1 1 /
 
+BOX
+  1 3 1 3 1 1 /
+
 TOPS
   9*100 /
+
+ENDBOX
 
 PORO
   27*0.15 /
@@ -376,8 +406,13 @@ DYV
 DZV
 1 1 1 /
 
+BOX
+  1 3 1 3 1 1 /
+
 TOPS
   9*100 /
+
+ENDBOX
 
 PORO
   27*0.15 /
@@ -441,8 +476,13 @@ DYV
 DZV
 1 1 1 /
 
+BOX
+  1 3 1 3 1 1 /
+
 TOPS
   9*100 /
+
+ENDBOX
 
 PORO
   27*0.15 /
@@ -505,8 +545,13 @@ DYV
 DZV
 1 1 1 /
 
+BOX
+  1 3 1 3 1 1 /
+
 TOPS
   9*100 /
+
+ENDBOX
 
 PORO
   27*0.15 /
@@ -545,8 +590,13 @@ DYV
 DZV
 1 1 1 /
 
+BOX
+  1 3 1 3 1 1 /
+
 TOPS
   9*100 /
+
+ENDBOX
 
 PORO
   27*0.15 /
@@ -581,8 +631,13 @@ DYV
 DZV
 1 1 1 /
 
+BOX
+  1 3 1 3 1 1 /
+
 TOPS
   9*100 /
+
+ENDBOX
 
 PORO
   27*0.15 /
@@ -662,8 +717,11 @@ DY
   27*1 /
 DZ
   27*1 /
+BOX
+  1 3 1 3 1 1 /
 TOPS
   9*1 /
+ENDBOX
 PORO
   27*1 /
 )";
@@ -703,8 +761,11 @@ DYV
    10*400 /
 DZV
    10*400 /
+BOX
+   1 10 1 10 1 1 /
 TOPS
    100*2202 /
+ENDBOX
 PERMX
   1000*0.25 /
 COPY

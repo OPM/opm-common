@@ -525,8 +525,11 @@ BOOST_AUTO_TEST_CASE( test_invalid_wtemplate_config ) {
     1000*0.25 /
     DZ
     1000*0.25 /
+    BOX
+    1 10 1 10 1 1 /
     TOPS
     100*0.25 /
+    ENDBOX
     PERMX
        1000*1 /
     PERMY

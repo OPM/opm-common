@@ -450,8 +450,11 @@ DYV
    10*400 /
 DZV
    10*400 /
+BOX
+   1 10 1 10 1 1 /
 TOPS
    100*2202 /
+ENDBOX
 PERMX
   1000*0.25 /
 COPY

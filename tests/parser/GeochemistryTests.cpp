@@ -66,8 +66,11 @@ static Deck createSpeciesDeck()
         27*1.0 /
         DZ
         27*1.0 /
+        BOX
+        1 3 1 3 1 1 /
         TOPS
         9*10.0 /
+        ENDBOX
 
         PROPS
         SPECIES
@@ -101,8 +104,11 @@ static Deck createMineralDeck()
         27*1.0 /
         DZ
         27*1.0 /
+        BOX
+        1 3 1 3 1 1 /
         TOPS
         9*10.0 /
+        ENDBOX
 
         PROPS
         MINERAL
@@ -137,8 +143,11 @@ static Deck createIonExchangeDeck()
         27*1.0 /
         DZ
         27*1.0 /
+        BOX
+        1 3 1 3 1 1 /
         TOPS
         9*10.0 /
+        ENDBOX
 
         PROPS
         IONEX
@@ -172,8 +181,11 @@ static Deck createSpeciesNameCheckDeck()
         27*1.0 /
         DZ
         27*1.0 /
+        BOX
+        1 3 1 3 1 1 /
         TOPS
         9*10.0 /
+        ENDBOX
 
         PROPS
         SPECIES

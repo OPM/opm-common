@@ -322,8 +322,11 @@ Opm::Deck createCARTDeck() {
         "10*0.25 /\n"
         "DZ\n"
         "1000*0.25 /\n"
+        "BOX\n"
+        "1 10 1 10 1 1 /\n"
         "TOPS\n"
         "100*0.25 /\n"
+        "ENDBOX\n"
         "EDIT\n"
         "\n";
 
@@ -1398,8 +1401,11 @@ DY
 25*1 /
 DZ
 25*1 /
+BOX
+1 5 1 1 1 1 /
 TOPS
 5*0 /
+ENDBOX
 ACTNUM
 1 1 1 1 1
 1 1 1 1 1
@@ -1772,8 +1778,11 @@ Opm::Deck radial_keywords_DRV_size_mismatch() {
         "6*60 /\n"
         "DZV\n"
         "12*0.25 /\n"
+        "BOX\n"
+        "1 10 1 6 1 1 /\n"
         "TOPS\n"
         "60*0.0 /\n"
+        "ENDBOX\n"
         "PORO \n"
         "  720*0.15 /"
         "\n";
@@ -1798,8 +1807,11 @@ Opm::Deck radial_keywords_DZV_size_mismatch() {
         "6*60 /\n"
         "DZV\n"
         "11*0.25 /\n"
+        "BOX\n"
+        "1 10 1 6 1 1 /\n"
         "TOPS\n"
         "60*0.0 /\n"
+        "ENDBOX\n"
         "PORO \n"
         "  720*0.15 /"
         "\n";
@@ -1824,8 +1836,11 @@ Opm::Deck radial_keywords_DZ_size_mismatch() {
         "6*60 /\n"
         "DZ\n"
         "660*0.25 /\n"
+        "BOX\n"
+        "1 10 1 6 1 1 /\n"
         "TOPS\n"
         "60*0.0 /\n"
+        "ENDBOX\n"
         "PORO \n"
         "  720*0.15 /"
         "\n";
@@ -1850,8 +1865,11 @@ Opm::Deck radial_keywords_DTHETAV_size_mismatch() {
         "5*60 /\n"
         "DZV\n"
         "12*0.25 /\n"
+        "BOX\n"
+        "1 10 1 6 1 1 /\n"
         "TOPS\n"
         "60*0.0 /\n"
+        "ENDBOX\n"
         "PORO \n"
         "  720*0.15 /"
         "\n";
@@ -1905,8 +1923,11 @@ Opm::Deck radial_keywords_ANGLE_OVERFLOW() {
         "6*70 /\n"
         "DZV\n"
         "12*0.25 /\n"
+        "BOX\n"
+        "1 10 1 6 1 1 /\n"
         "TOPS\n"
         "60*0.0 /\n"
+        "ENDBOX\n"
         "PORO \n"
         "  720*0.15 /"
         "\n";
@@ -1944,8 +1965,11 @@ Opm::Deck spider_details() {
         "3*90 60 30/\n"
         "DZV\n"
         "2*1 /\n"
+        "BOX\n"
+        "1 1 1 5 1 1 /\n"
         "TOPS\n"
         "5*1.0 /\n"
+        "ENDBOX\n"
         "PORO \n"
         "  10*0.15 /"
         "\n";
@@ -2001,8 +2025,11 @@ Opm::Deck spider_details_dz() {
         "3*90 60 30/\n"
         "DZ\n"
         "10*1 /\n"
+        "BOX\n"
+        "1 1 1 5 1 1 /\n"
         "TOPS\n"
         "5*1.0 /\n"
+        "ENDBOX\n"
         "PORO \n"
         "  10*0.15 /"
         "\n";
@@ -2058,8 +2085,11 @@ Opm::Deck radial_details() {
         "3*90 60 30/\n"
         "DZV\n"
         "2*1 /\n"
+        "BOX\n"
+        "1 1 1 5 1 1 /\n"
         "TOPS\n"
         "5*1.0 /\n"
+        "ENDBOX\n"
         "PORO \n"
         "  10*0.15 /"
         "\n";
@@ -2115,8 +2145,11 @@ Opm::Deck radial_details_dz() {
         "3*90 60 30/\n"
         "DZ\n"
         "10*1 /\n"
+        "BOX\n"
+        "1 1 1 5 1 1 /\n"
         "TOPS\n"
         "5*1.0 /\n"
+        "ENDBOX\n"
         "PORO \n"
         "  10*0.15 /"
         "\n";
@@ -2181,8 +2214,11 @@ Opm::Deck createCARTDeckTest3x4x2() {
         "70  80  85  80  70  80  85  80  70  80  85  80 /\n"
         "DZ\n"
         "12*25 12*35 /\n"
+        "BOX\n"
+        "1 3 1 4 1 1 /\n"
         "TOPS\n"
         "2500 2510 2520  2520 2530 2540  2540 2550 2560  2560 2570 2580 /\n"
+        "ENDBOX\n"
         "PORO \n"
         "  24*0.15 /"
         "EDIT\n"
@@ -2355,8 +2391,11 @@ BOOST_AUTO_TEST_CASE(SAVE_FIELD_UNITS) {
         " 48*300 /\n"
         "DZ\n"
         " 16*20 16*30 16*50 / \n"
+        "BOX\n"
+        " 1 4 1 4 1 1 /\n"
         "TOPS\n"
         " 16*8325 / \n"
+        "ENDBOX\n"
         "PORO\n"
         "  48*0.15 /\n"
         "EDIT\n"
@@ -2451,8 +2490,11 @@ BOOST_AUTO_TEST_CASE(SAVE_FIELD_UNITS) {
             " 48*300 /\n"
             "DZ\n"
             " 16*20 16*30 16*50 / \n"
+            "BOX\n"
+            " 1 4 1 4 1 1 /\n"
             "TOPS\n"
             " 16*8325 / \n"
+            "ENDBOX\n"
             "PORO\n"
             "  48*0.15 /\n"
             "EDIT\n"
@@ -2500,8 +2542,11 @@ BOOST_AUTO_TEST_CASE(SAVE_FIELD_UNITS) {
             " 48*300 /\n"
             "DZ\n"
             " 16*20 16*30 16*50 / \n"
+            "BOX\n"
+            " 1 4 1 4 1 1 /\n"
             "TOPS\n"
             " 16*8325 / \n"
+            "ENDBOX\n"
             "PORO\n"
             "  48*0.15 /\n"
             "EDIT\n"
@@ -2553,8 +2598,11 @@ BOOST_AUTO_TEST_CASE(SAVE_METRIC_UNITS) {
         " 48*300 /\n"
         "DZ\n"
         " 16*20 16*30 16*50 / \n"
+        "BOX\n"
+        " 1 4 1 4 1 1 /\n"
         "TOPS\n"
         " 16*8325 / \n"
+        "ENDBOX\n"
         "NNC\n"
         " 2 2 1  2 3 2   0.95 / \n"
         " 3 2 1  3 3 2   1.05 / \n"
@@ -2676,8 +2724,11 @@ BOOST_AUTO_TEST_CASE(SAVE_METRIC_UNITS) {
             " 48*300 /\n"
             "DZ\n"
             " 16*20 16*30 16*50 / \n"
+            "BOX\n"
+            " 1 4 1 4 1 1 /\n"
             "TOPS\n"
             " 16*8325 / \n"
+            "ENDBOX\n"
             "NNC\n"
             " 2 2 1  2 3 2   0.95 / \n"
             " 3 2 1  3 3 2   1.05 / \n"
@@ -3069,8 +3120,11 @@ BOOST_AUTO_TEST_CASE(TEST_constructFromEgrid) {
         " 300*1000 /\n"
         "DZ\n"
         " 100*20 100*30 100*50 / \n"
+        "BOX\n"
+        " 1 10 1 10 1 1 /\n"
         "TOPS\n"
         " 100*8325 / \n"
+        "ENDBOX\n"
         "ACTNUM\n"
         " 44*1 3*0 7*1 3*0  243*1/\n"
         "PORO\n"
@@ -3520,8 +3574,11 @@ DYV
 10*1.0/
 DZ
 1000*1.0 /
+BOX
+1 10 1 10 1 1 /
 TOPS
 100*1.0 /
+ENDBOX
 EDIT
 )";
 
@@ -3575,8 +3632,11 @@ DTHETAV
 3*90 60 30/
 DZV
 2*1 /
+BOX
+1 1 1 5 1 1 /
 TOPS
 5*1.0 /
+ENDBOX
 DX
 99*0.25 /
 DY
