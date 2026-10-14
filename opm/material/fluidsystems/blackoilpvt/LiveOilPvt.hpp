@@ -32,13 +32,16 @@
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/common/utility/VectorWithDefaultAllocator.hpp>
 
+#include <opm/material/common/ConditionalStorage.hpp>
 #include <opm/material/common/MathToolbox.hpp>
 #include <opm/material/common/UniformXTabulated2DFunction.hpp>
 #include <opm/material/common/UniformXTabulated2DFunctionBuilder.hpp>
 #include <opm/material/common/Tabulated1DFunction.hpp>
 
 #include <cstddef>
+#include <memory>
 #include <type_traits>
+#include <vector>
 
 namespace Opm {
 
@@ -448,10 +451,22 @@ public:
 private:
     void updateSaturationPressure_(unsigned regionIdx);
 
+    //! The device table owner. Only the owning GPU object stores one; the table views in
+    //! the owning GPU object and in the GPU view point into device memory owned by its
+    //! tables. Held through a unique_ptr so that the owning GPU object is move-only.
+    using GpuTables = LiveOilPvt<Scalar, VectorWithDefaultAllocator, gpuistl::GpuBuffer>;
+    using GpuTablesStorage = ConditionalStorage<isOwningGpu, std::unique_ptr<GpuTables>>;
+
+    //! The table builders are only needed by the CPU object, between setNumRegions()
+    //! and initEnd().
+    using BuilderStorage = ConditionalStorage<isCpuStorage, std::vector<TabulatedTwoDFunctionBuilder>>;
+
+    GpuTablesStorage gpuTables_{};
+    BuilderStorage inverseOilBTableBuilder_{};
+    BuilderStorage oilMuTableBuilder_{};
+
     Storage<Scalar> gasReferenceDensity_{};
     Storage<Scalar> oilReferenceDensity_{};
-    std::vector<TabulatedTwoDFunctionBuilder> inverseOilBTableBuilder_{};
-    std::vector<TabulatedTwoDFunctionBuilder> oilMuTableBuilder_{};
     Storage<TabulatedTwoDFunction> inverseOilBTable_{};
     Storage<TabulatedTwoDFunction> oilMuTable_{};
     Storage<TabulatedTwoDFunction> inverseOilBMuTable_{};
