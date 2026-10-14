@@ -38,6 +38,7 @@
 #include <opm/material/common/UniformXTabulated2DFunctionBuilder.hpp>
 #include <opm/material/common/Tabulated1DFunction.hpp>
 
+#include <algorithm>
 #include <cstddef>
 #include <memory>
 #include <type_traits>
@@ -542,5 +543,134 @@ private:
 };
 
 } // namespace Opm
+
+#if HAVE_CUDA
+namespace Opm::gpuistl {
+
+/*!
+ * \brief Copy a CPU LiveOilPvt to the GPU.
+ *
+ * Each per-region table is uploaded to its own GpuBuffer-based table. These tables are
+ * held by a device table owner (LiveOilPvt<ScalarT, VectorWithDefaultAllocator,
+ * GpuBuffer>), which the returned object owns. The views into these tables are then
+ * collected on the host and uploaded as one GpuBuffer per table member.
+ *
+ * \param cpu A fully initialized CPU object (i.e. initEnd() has been called).
+ * \return An owning GPU object. It is move-only. Use make_view() to obtain an object
+ *         that can be passed to kernels; the owning GPU object must outlive every
+ *         kernel that uses such a view.
+ */
+template <class ScalarT>
+LiveOilPvt<ScalarT, GpuBuffer, GpuView>
+copy_to_gpu(const LiveOilPvt<ScalarT>& cpu)
+{
+    using GpuTables = LiveOilPvt<ScalarT, VectorWithDefaultAllocator, GpuBuffer>;
+    using GpuPvt = LiveOilPvt<ScalarT, GpuBuffer, GpuView>;
+
+    // inverseOilBMuTable_ is only filled by initEnd(); after setNumRegions() alone its
+    // tables are empty.
+    const bool initialized = cpu.numRegions() > 0
+        && std::ranges::none_of(cpu.inverseOilBMuTable(),
+                                [](const auto& table) { return table.numX() == 0; });
+    OPM_ERROR_IF(!initialized,
+                 "copy_to_gpu: LiveOilPvt is not initialized (call initFromState() or initEnd() first).");
+
+    // Uploads each per-region table to its own owning table on the GPU.
+    auto upload = [](const auto& cpuTables) {
+        std::vector<decltype(copy_to_gpu(cpuTables.front()))> ownedTables;
+        ownedTables.reserve(cpuTables.size());
+        for (const auto& cpuTable : cpuTables) {
+            ownedTables.push_back(copy_to_gpu(cpuTable));
+        }
+        return ownedTables;
+    };
+
+    // Not std::make_unique: the constructor is private, and std::make_unique is not a friend.
+    std::unique_ptr<GpuTables> tables(new GpuTables(typename GpuTables::GpuTablesStorage{},
+                                                    std::vector<ScalarT>(cpu.gasReferenceDensity_),
+                                                    std::vector<ScalarT>(cpu.oilReferenceDensity_),
+                                                    upload(cpu.inverseOilBTable_),
+                                                    upload(cpu.oilMuTable_),
+                                                    upload(cpu.inverseOilBMuTable_),
+                                                    upload(cpu.saturatedOilMuTable_),
+                                                    upload(cpu.inverseSaturatedOilBTable_),
+                                                    upload(cpu.inverseSaturatedOilBMuTable_),
+                                                    upload(cpu.saturatedGasDissolutionFactorTable_),
+                                                    upload(cpu.saturationPressure_),
+                                                    cpu.vapPar2_));
+
+    // Returns a GpuBuffer of views into the owning tables.
+    auto viewsOf = [](auto& ownedTables) {
+        using ViewTable = decltype(make_view(ownedTables.front()));
+        static_assert(std::is_trivially_copyable_v<ViewTable>,
+                      "The table views are copied to the GPU with memcpy.");
+
+        std::vector<ViewTable> views;
+        views.reserve(ownedTables.size());
+        for (auto& ownedTable : ownedTables) {
+            views.push_back(make_view(ownedTable));
+        }
+        return GpuBuffer<ViewTable>(views);
+    };
+
+    // Everything that reads through `tables` is done before `tables` is moved into the
+    // returned object: the order in which function arguments are evaluated is
+    // unspecified, so reading and moving `tables` in the same call would be a bug.
+    auto gasReferenceDensity = GpuBuffer<ScalarT>(tables->gasReferenceDensity_);
+    auto oilReferenceDensity = GpuBuffer<ScalarT>(tables->oilReferenceDensity_);
+    auto inverseOilB = viewsOf(tables->inverseOilBTable_);
+    auto oilMu = viewsOf(tables->oilMuTable_);
+    auto inverseOilBMu = viewsOf(tables->inverseOilBMuTable_);
+    auto saturatedOilMu = viewsOf(tables->saturatedOilMuTable_);
+    auto inverseSaturatedOilB = viewsOf(tables->inverseSaturatedOilBTable_);
+    auto inverseSaturatedOilBMu = viewsOf(tables->inverseSaturatedOilBMuTable_);
+    auto saturatedGasDissolutionFactor = viewsOf(tables->saturatedGasDissolutionFactorTable_);
+    auto saturationPressure = viewsOf(tables->saturationPressure_);
+    const ScalarT vapPar2 = tables->vapPar2_;
+
+    return GpuPvt(typename GpuPvt::GpuTablesStorage(std::move(tables)),
+                  std::move(gasReferenceDensity),
+                  std::move(oilReferenceDensity),
+                  std::move(inverseOilB),
+                  std::move(oilMu),
+                  std::move(inverseOilBMu),
+                  std::move(saturatedOilMu),
+                  std::move(inverseSaturatedOilB),
+                  std::move(inverseSaturatedOilBMu),
+                  std::move(saturatedGasDissolutionFactor),
+                  std::move(saturationPressure),
+                  vapPar2);
+}
+
+/*!
+ * \brief Create a GPU view of an owning GPU LiveOilPvt.
+ *
+ * The view can be passed by value to kernels. It does not own any memory, so
+ * \p gpuPvt must outlive every use of the view.
+ */
+template <class ScalarT>
+LiveOilPvt<ScalarT, GpuView, GpuView>
+make_view(LiveOilPvt<ScalarT, GpuBuffer, GpuView>& gpuPvt)
+{
+    using GpuPvtView = LiveOilPvt<ScalarT, GpuView, GpuView>;
+    static_assert(std::is_trivially_copyable_v<GpuPvtView>,
+                  "The view is passed by value to kernels.");
+
+    return GpuPvtView(typename GpuPvtView::GpuTablesStorage{},
+                      make_view(gpuPvt.gasReferenceDensity_),
+                      make_view(gpuPvt.oilReferenceDensity_),
+                      make_view(gpuPvt.inverseOilBTable_),
+                      make_view(gpuPvt.oilMuTable_),
+                      make_view(gpuPvt.inverseOilBMuTable_),
+                      make_view(gpuPvt.saturatedOilMuTable_),
+                      make_view(gpuPvt.inverseSaturatedOilBTable_),
+                      make_view(gpuPvt.inverseSaturatedOilBMuTable_),
+                      make_view(gpuPvt.saturatedGasDissolutionFactorTable_),
+                      make_view(gpuPvt.saturationPressure_),
+                      gpuPvt.vapPar2_);
+}
+
+} // namespace Opm::gpuistl
+#endif // HAVE_CUDA
 
 #endif
