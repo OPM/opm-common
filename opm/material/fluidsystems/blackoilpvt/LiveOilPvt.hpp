@@ -30,6 +30,7 @@
 #include <opm/common/ErrorMacros.hpp>
 #include <opm/common/Exceptions.hpp>
 #include <opm/common/OpmLog/OpmLog.hpp>
+#include <opm/common/utility/gpuDecorators.hpp>
 #include <opm/common/utility/VectorWithDefaultAllocator.hpp>
 
 #include <opm/material/common/ConditionalStorage.hpp>
@@ -272,9 +273,9 @@ public:
      */
     template <class Evaluation>
     OPM_HOST_DEVICE Evaluation viscosity(unsigned regionIdx,
-                               const Evaluation& /*temperature*/,
-                               const Evaluation& pressure,
-                               const Evaluation& Rs) const
+                                         const Evaluation& /*temperature*/,
+                                         const Evaluation& pressure,
+                                         const Evaluation& Rs) const
     {
         // ATTENTION: Rs is the first axis!
         const Evaluation& invBo = inverseOilBTable_[regionIdx].eval(Rs, pressure, /*extrapolate=*/true);
