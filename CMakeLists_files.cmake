@@ -901,6 +901,7 @@ list(APPEND EXAMPLE_SOURCE_FILES
 # installation
 list(APPEND PROGRAM_SOURCE_FILES
   examples/opmi.cpp
+  examples/inspect-eps.cpp
   examples/opmpack.cpp
   examples/opmhash.cpp
   examples/make_ext_smry.cpp
