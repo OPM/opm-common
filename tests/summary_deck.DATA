@@ -51,8 +51,11 @@ DY
 1000*1 /
 DZ
 1000*1 /
+BOX
+1 10 1 10 1 1 /
 TOPS
 100*1 /
+ENDBOX
 
 -- Cell 2,1,10 is inactive
 ACTNUM

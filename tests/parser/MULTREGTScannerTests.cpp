@@ -84,8 +84,11 @@ DY
 18*0.25 /
 DZ
 18*0.25 /
+BOX
+1 3 1 3 1 1 /
 TOPS
 9*0.25 /
+ENDBOX
 FLUXNUM
 1 1 2
 1 1 2
@@ -147,8 +150,11 @@ DY
 18*0.25 /
 DZ
 18*0.25 /
+BOX
+1 3 1 3 1 1 /
 TOPS
 9*0.25 /
+ENDBOX
 FLUXNUM
 1 1 2
 1 1 2
@@ -219,8 +225,11 @@ DY
 18*0.25 /
 DZ
 18*0.25 /
+BOX
+1 3 1 3 1 1 /
 TOPS
 9*0.25 /
+ENDBOX
 FLUXNUM
 1 1 2
 1 1 2
@@ -280,8 +289,11 @@ DY
 8*0.25 /
 DZ
 8*0.25 /
+BOX
+1 2 1 2 1 1 /
 TOPS
 4*0.25 /
+ENDBOX
 FLUXNUM
 1 2
 1 2

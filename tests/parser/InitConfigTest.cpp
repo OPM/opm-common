@@ -666,8 +666,13 @@ DYV
 DZV
   3*10 /
 
+BOX
+  1 5 1 5 1 1 /
+
 TOPS
   25*2000 /
+
+ENDBOX
 
 EQUALS
   PERMX 100 /
@@ -766,8 +771,13 @@ DYV
 DZV
   3*10 /
 
+BOX
+  1 5 1 5 1 1 /
+
 TOPS
   25*2000 /
+
+ENDBOX
 
 EQUALS
   PERMX 100 /
@@ -864,8 +874,13 @@ DYV
 DZV
   3*10 /
 
+BOX
+  1 5 1 5 1 1 /
+
 TOPS
   25*2000 /
+
+ENDBOX
 
 EQUALS
   PERMX 100 /

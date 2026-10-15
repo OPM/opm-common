@@ -676,8 +676,11 @@ BOOST_AUTO_TEST_CASE(LATE_GET_SATFUNC) {
         "DZV\n"
         "1 1 1 /\n"
         "\n"
+        "BOX\n"
+        "1 3 1 3 1 1 /\n"
         "TOPS\n"
         "9*100 /\n"
+        "ENDBOX\n"
         "\n"
         "PORO \n"
         "  27*0.15 /\n"
@@ -1316,8 +1319,13 @@ DYV
 DZV
   3*5.0 /
 
+BOX
+  1 6 1 6 1 1 /
+
 TOPS
   36*2000.0 /
+
+ENDBOX
 
 PERMX
   108*100.0 /
@@ -1394,8 +1402,13 @@ DYV
 DZV
   3*5.0 /
 
+BOX
+  1 6 1 6 1 1 /
+
 TOPS
   36*2000.0 /
+
+ENDBOX
 
 PERMX
   108*100.0 /

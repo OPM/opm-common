@@ -72,9 +72,14 @@ INIT
 INCLUDE
   'include/grid.grdecl' /
 
+BOX
+	1 10 1 10 1 1 /
+
 TOPS
 -- The depth of the top of each grid block
 	100*8325 /
+
+ENDBOX
 
 INCLUDE
   'include/props.grdecl' /

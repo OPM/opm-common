@@ -273,8 +273,11 @@ DYV
 4.0 5.0 6.0 /
 DZV
 7.0 8.0 9.0 /
+BOX
+1 3 1 3 1 1 /
 TOPS
 9*100 /
+ENDBOX
 PORO
   27*0.15 /
 PROPS

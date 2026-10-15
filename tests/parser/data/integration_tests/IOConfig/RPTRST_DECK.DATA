@@ -10,8 +10,11 @@ DY
 113344*1 /
 DZ
 113344*1 /
+BOX
+1 46 1 112 1 1 /
 TOPS
 5152*1 /
+ENDBOX
 SPECGRID
    46  112   22     1     F     /
 PORO

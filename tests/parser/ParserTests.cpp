@@ -2496,7 +2496,7 @@ BOOST_AUTO_TEST_CASE(parseSections) {
 
     const auto deck_all = parser.parseFile("./tests/SPE1CASE1.DATA", parseContext);
 
-    BOOST_CHECK_EQUAL( deck_all.size(), 79 );
+    BOOST_CHECK_EQUAL( deck_all.size(), 81 );
 
     std::vector<Opm::Ecl::SectionType> grid_section = {Opm::Ecl::GRID};
     std::vector<Opm::Ecl::SectionType> props_section = {Opm::Ecl::PROPS};
@@ -2516,7 +2516,7 @@ BOOST_AUTO_TEST_CASE(parseSections) {
 
     const auto deck_test1 = parser.parseFile("./tests/SPE1CASE1.DATA", parseContext, test1);
 
-    BOOST_CHECK_EQUAL( deck_grid.size(), 12 );
+    BOOST_CHECK_EQUAL( deck_grid.size(), 14 );
     BOOST_CHECK_EQUAL( deck_props.size(), 8 );
     BOOST_CHECK_EQUAL( deck_regions.size(), 2 );
     BOOST_CHECK_EQUAL( deck_solution.size(), 3 );
@@ -2527,7 +2527,7 @@ BOOST_AUTO_TEST_CASE(parseSections) {
 
     const auto deck1b_all = parser.parseFile("./tests/SPE1CASE1B.DATA", parseContext);
 
-    BOOST_CHECK_EQUAL( deck1b_all.size(), 79 );
+    BOOST_CHECK_EQUAL( deck1b_all.size(), 81 );
 
 
     BOOST_CHECK_THROW(parser.parseFile("./tests/SPE1CASE1B.DATA", parseContext, grid_section), std::runtime_error);

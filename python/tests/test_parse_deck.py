@@ -163,7 +163,7 @@ FIPNUM
 
         all_spe1case1 = ["RUNSPEC", "TITLE", "DIMENS", "EQLDIMS", "TABDIMS", "REGDIMS", "OIL", "GAS",
                          "WATER", "DISGAS", "FIELD", "START", "WELLDIMS", "UNIFOUT", "UDQDIMS", "UDADIMS",
-                         "GRID", "INIT", "NOECHO", "DX", "DY", "DZ", "TOPS", "PORO", "PERMX", "PERMY",
+                         "GRID", "INIT", "NOECHO", "DX", "DY", "DZ", "BOX", "TOPS", "ENDBOX", "PORO", "PERMX", "PERMY",
                          "PERMZ", "ECHO", "PROPS", "PVTW", "ROCK", "SWOF", "SGOF", "DENSITY", "PVDG",
                          "PVTO", "REGIONS", "EQLNUM", "FIPNUM", "SOLUTION", "EQUIL", "RSVD", "SUMMARY",
                          "FOPR", "WGOR", "FGOR", "BPR", "BGSAT", "WBHP", "WGIR", "WGIT", "WGPR", "WGPT",
