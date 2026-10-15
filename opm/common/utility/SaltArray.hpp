@@ -204,6 +204,11 @@ public:
     SaltArray() = default;
 
     /*!
+     * Default (not converting) copy constructor.
+     */
+    OPM_HOST_DEVICE SaltArray(const SaltArray&) = default;
+
+    /*!
      * Conversion constructor
      *
      * @tparam U Value type different from T
