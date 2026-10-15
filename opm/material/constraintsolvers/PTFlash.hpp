@@ -106,6 +106,14 @@ protected:
         JacobianState state;
     };
 
+    //! A scalar flash result, with the composition Jacobian when Newton
+    //! finished the split.
+    struct ScalarFlashResult
+    {
+        bool single_phase;
+        std::optional<NewtonJacobian> newton_jacobian;
+    };
+
 public:
     /*!
      * \brief Calculates the fluid state from the global mole fractions of the components and the phase pressures
@@ -136,9 +144,8 @@ public:
 
         scalar_state.setTemperature(Opm::getValue(fluid_state.temperature(0)));
 
-        std::optional<NewtonJacobian> newton_jacobian;
-        const auto is_single_phase = flash_solve_scalar_(
-            scalar_state, twoPhaseMethod, flash_tolerance, eos_type, verbosity, &newton_jacobian);
+        const auto [is_single_phase, newton_jacobian]
+            = flashScalar_(scalar_state, twoPhaseMethod, flash_tolerance, eos_type, verbosity);
 
         // Transfer the converged values before reconstructing their derivatives.
         for (int compIdx=0; compIdx<numComponents; ++compIdx){
@@ -188,9 +195,6 @@ public:
      *    new stability test from Wilson estimates and at most one retry; and
      * -# for a single-phase mixture, the phase label.
      *
-     * When \p newton_jacobian is given, it receives the composition Jacobian of
-     * each Newton solve that converges.
-     *
      * \return Whether the mixture is single-phase.
      */
     template <typename FluidState>
@@ -198,9 +202,23 @@ public:
                                     PTFlashMethod twoPhaseMethod,
                                     const Scalar flash_tolerance,
                                     const EOSType& eos_type,
-                                    const int verbosity = 0,
-                                    std::optional<NewtonJacobian>* newton_jacobian = nullptr)
+                                    const int verbosity = 0)
     {
+        return flashScalar_(fluid_state, twoPhaseMethod, flash_tolerance, eos_type, verbosity)
+            .single_phase;
+    }
+
+protected:
+    //! flash_solve_scalar_(), also returning the composition Jacobian when
+    //! Newton finished the split.
+    template <typename FluidState>
+    static ScalarFlashResult flashScalar_(FluidState& fluid_state,
+                                          PTFlashMethod twoPhaseMethod,
+                                          const Scalar flash_tolerance,
+                                          const EOSType& eos_type,
+                                          const int verbosity)
+    {
+        std::optional<NewtonJacobian> newton_jacobian;
         // States without a physical two-phase fraction require stability
         // analysis. Every completed split is classified below.
         bool is_single_phase = false;
@@ -233,8 +251,8 @@ public:
             const auto try_solve_split = [&](const auto& on_failure) {
                 try {
                     L_scalar = RachfordRice::solve(K_scalar, z_scalar, verbosity);
-                    flash_2ph(z_scalar, twoPhaseMethod, K_scalar, L_scalar, fluid_state,
-                              flash_tolerance, eos_type, verbosity, newton_jacobian);
+                    newton_jacobian = flash_2ph(z_scalar, twoPhaseMethod, K_scalar, L_scalar,
+                                                fluid_state, flash_tolerance, eos_type, verbosity);
                     return true;
                 }
                 catch (const NumericalProblem& error) {
@@ -324,9 +342,10 @@ public:
             }
         }
         fluid_state.setLvalue(L_scalar);
-        return is_single_phase;
+        return {is_single_phase, newton_jacobian};
     }
 
+public:
     template <class Vector, class FlashFluidState>
     static typename Vector::field_type li_single_phase_label_(const FlashFluidState& fluid_state, const Vector& z, int verbosity)
     {
@@ -661,17 +680,18 @@ protected:
 
     /*!
      * \brief The two-phase compositions by the requested method.
+     *
+     * \return The composition Jacobian when Newton finished the solve.
      */
     template <class FluidState, class ComponentVector>
-    static void flash_2ph(const ComponentVector& z_scalar,
+    static auto flash_2ph(const ComponentVector& z_scalar,
                           PTFlashMethod flash_2p_method,
                           ComponentVector& K_scalar,
                           typename FluidState::ValueType& L_scalar,
                           FluidState& fluid_state_scalar,
                           const Scalar flash_tolerance,
                           const EOSType& eos_type,
-                          int verbosity = 0,
-                          std::optional<NewtonJacobian>* newton_jacobian = nullptr) {
+                          int verbosity = 0) -> std::optional<NewtonJacobian> {
         if (verbosity >= 1) {
             OpmLog::debug(fmt::format("Cell is two-phase! Solve Rachford-Rice with initial K = [{}]",
                                      fmt::join(K_scalar, " ")));
@@ -679,12 +699,15 @@ protected:
 
         // Calculate composition using nonlinear solver
         bool converged = false;
+        std::optional<NewtonJacobian> newton_jacobian;
         switch (flash_2p_method) {
         case PTFlashMethod::Newton:
             if (verbosity >= 1) {
                 OpmLog::debug("Calculate composition using Newton.");
             }
-            converged = newtonComposition_(K_scalar, L_scalar, fluid_state_scalar, z_scalar, flash_tolerance, eos_type, verbosity, newton_jacobian);
+            newton_jacobian = newtonComposition_(K_scalar, L_scalar, fluid_state_scalar, z_scalar,
+                                                 flash_tolerance, eos_type, verbosity);
+            converged = true;
             break;
 
         case PTFlashMethod::Ssi:
@@ -717,9 +740,10 @@ protected:
                     converged = successiveSubstitutionComposition_(K_scalar, L_scalar, fluid_state_scalar, z_scalar, false, flash_tolerance, eos_type, verbosity);
                 };
                 try {
-                    converged = newtonComposition_(K_scalar, L_scalar, fluid_state_scalar,
-                                                   z_scalar, flash_tolerance, eos_type, verbosity,
-                                                   newton_jacobian);
+                    newton_jacobian = newtonComposition_(K_scalar, L_scalar, fluid_state_scalar,
+                                                         z_scalar, flash_tolerance, eos_type,
+                                                         verbosity);
+                    converged = true;
                 }
                 catch (const NumericalProblem& error) {
                     fall_back_to_ssi(error);
@@ -750,6 +774,7 @@ protected:
                             Opm::getValue(L_scalar),
                             ptFlashMethodToString(flash_2p_method)));
         }
+        return newton_jacobian;
     }
 
     template <class FlashFluidState>
@@ -826,18 +851,19 @@ protected:
      *     \sum_i x_i - \sum_i y_i = 0. \f]
      *
      * The Jacobian comes from automatic differentiation of the residuals in
-     * the unknowns. The convergence test follows its assembly, so on success
-     * it belongs to the returned state and is stored in \p newton_jacobian.
+     * the unknowns. The convergence test follows its assembly, so the
+     * Jacobian returned belongs to the converged state.
+     *
+     * \throws NumericalProblem when Newton does not converge.
      */
     template <class FlashFluidState, class ComponentVector>
-    static bool newtonComposition_(ComponentVector& K,
+    static auto newtonComposition_(ComponentVector& K,
                                    typename FlashFluidState::ValueType& L,
                                    FlashFluidState& fluid_state,
                                    const ComponentVector& z,
                                    const Scalar tolerance,
                                    const EOSType& eos_type,
-                                   int verbosity,
-                                   std::optional<NewtonJacobian>* newton_jacobian = nullptr)
+                                   int verbosity) -> NewtonJacobian
     {
         constexpr std::size_t num_equations = numMisciblePhases * numMiscibleComponents + 1;
         constexpr std::size_t num_unknowns = numMisciblePhases * numMiscibleComponents + 1;
@@ -1018,10 +1044,7 @@ protected:
         }
         L = Opm::getValue(liquid_fraction);
         fluid_state.setLvalue(L);
-        if (newton_jacobian != nullptr) {
-            *newton_jacobian = NewtonJacobian{jacobian, jacobianState_(fluid_state)};
-        }
-        return converged;
+        return {jacobian, jacobianState_(fluid_state)};
     }
 
     /*!
@@ -1180,8 +1203,7 @@ protected:
                                    FluidState& fluid_state,
                                    const EOSType& eos_type,
                                    bool is_single_phase,
-                                   const std::optional<NewtonJacobian>& newton_jacobian
-                                   = std::nullopt)
+                                   const std::optional<NewtonJacobian>& newton_jacobian)
     {
         if (!is_single_phase) {
             updateDerivativesTwoPhase_(fluid_state_scalar, fluid_state, eos_type, newton_jacobian);
@@ -1209,8 +1231,7 @@ protected:
     static void updateDerivativesTwoPhase_(const FlashFluidStateScalar& fluid_state_scalar,
                                            FluidState& fluid_state,
                                            const EOSType& eos_type,
-                                           const std::optional<NewtonJacobian>& newton_jacobian
-                                           = std::nullopt)
+                                           const std::optional<NewtonJacobian>& newton_jacobian)
     {
         using InputEval = typename FluidState::ValueType;
         using ComponentVector = Dune::FieldVector<InputEval, numComponents>;

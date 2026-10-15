@@ -86,7 +86,7 @@ class ExposedPtFlash : public Opm::PTFlash<Scalar, FluidSystem>
 public:
     using Base::NewtonJacobian;
     using Base::compositionJacobian_;
-    using Base::flash_solve_scalar_;
+    using Base::flashScalar_;
     using Base::jacobianState_;
     using Base::updateDerivatives_;
 };
@@ -210,8 +210,10 @@ std::optional<Flash> flash(const FluidState& state, const PTFlashMethod method)
 {
     Flash result{state, scalarCopy(state), std::nullopt, true};
     try {
-        result.singlePhase = ExposedPtFlash::flash_solve_scalar_(
-            result.scalar, method, flashTolerance, eosType, 0, &result.newtonJacobian);
+        auto [singlePhase, newtonJacobian]
+            = ExposedPtFlash::flashScalar_(result.scalar, method, flashTolerance, eosType, 0);
+        result.singlePhase = singlePhase;
+        result.newtonJacobian = std::move(newtonJacobian);
     } catch (const Opm::NumericalProblem&) {
         if (method != PTFlashMethod::Newton) {
             throw;
