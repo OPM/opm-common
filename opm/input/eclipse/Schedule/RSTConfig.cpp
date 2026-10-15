@@ -453,6 +453,10 @@ void RSTConfig::handleRPTRST(const DeckKeyword&  keyword,
     const auto& [mnemonics, basic_freq] =
         RPTRST(keyword, parseContext, errors, compositional);
 
+    if (basic_freq.first == 0) {
+        this->clearRptRstMnemonics();
+    }
+
     this->update_schedule(basic_freq);
 
     // Extract NORST for graphics-only restart file control
@@ -471,6 +475,10 @@ void RSTConfig::handleRPTRSTSOLUTION(const DeckKeyword&  keyword,
                                      ErrorGuard&         errors)
 {
     const auto& [mnemonics, basic_freq] = RPTRST(keyword, parseContext, errors, compositional);
+
+    if (basic_freq.first == 0) {
+        this->clearRptRstMnemonics();
+    }
 
     update_optional(this->basic, basic_freq.first);
     update_optional(this->freq, basic_freq.second);
@@ -527,6 +535,16 @@ void RSTConfig::handleRPTSCHED(const DeckKeyword&  keyword,
     for (const auto& [kw, num] : mnemonics) {
         this->keywords.insert_or_assign(kw, num);
     }
+}
+
+// Solution-only keywords from RPTSOL are deliberately retained.
+void RSTConfig::clearRptRstMnemonics()
+{
+    std::erase_if(this->keywords, [this](const auto& kw)
+    { return ! this->solution_only_keywords.contains(kw.first); });
+
+    this->freq.reset();
+    this->norst.reset();
 }
 
 void RSTConfig::update_schedule(const std::pair<std::optional<int>, std::optional<int>>& basic_freq)
