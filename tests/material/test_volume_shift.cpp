@@ -300,12 +300,12 @@ BOOST_AUTO_TEST_CASE(ShiftDoesNotReachTheCachedVolume)
     pc.updatePhase(fs, FluidSystem::gasPhaseIdx);
 
     const Scalar Vm = pc.molarVolume(FluidSystem::gasPhaseIdx);
-    const Scalar shift = pc.phaseVolumeShift(FluidSystem::gasPhaseIdx);
+    const Scalar vshift = pc.phaseVolumeShift(FluidSystem::gasPhaseIdx);
     BOOST_CHECK_CLOSE(pc.correctedMolarVolume(FluidSystem::gasPhaseIdx),
-                      Vm - shift, 1.0e-10);
+                      Vm - vshift, 1.0e-10);
     // Density uses the translated molar volume.
     BOOST_CHECK_CLOSE(FluidSystem::density(fs, pc, FluidSystem::gasPhaseIdx),
-                      fs.averageMolarMass(FluidSystem::gasPhaseIdx) / (Vm - shift),
+                      fs.averageMolarMass(FluidSystem::gasPhaseIdx) / (Vm - vshift),
                       1.0e-10);
 }
 
