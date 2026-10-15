@@ -249,6 +249,7 @@ protected:
         // Update the composition if cell is two-phase
         if (!is_single_phase) {
             const auto try_solve_split = [&](const auto& on_failure) {
+                newton_jacobian.reset();
                 try {
                     L_scalar = RachfordRice::solve(K_scalar, z_scalar, verbosity);
                     newton_jacobian = flash_2ph(z_scalar, twoPhaseMethod, K_scalar, L_scalar,
@@ -332,6 +333,7 @@ protected:
             }
         }
         if (is_single_phase) {
+            newton_jacobian.reset();
             for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
                 fluid_state.setMoleFraction(gasPhaseIdx, compIdx, z_scalar[compIdx]);
                 fluid_state.setMoleFraction(oilPhaseIdx, compIdx, z_scalar[compIdx]);
@@ -1116,15 +1118,17 @@ protected:
     static JacobianState jacobianState_(const FlashFluidState& fluid_state)
     {
         JacobianState state{};
-        for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
+        for (unsigned compIdx = 0; compIdx < numMiscibleComponents; ++compIdx) {
             state[compIdx] = Opm::getValue(fluid_state.moleFraction(oilPhaseIdx, compIdx));
-            state[compIdx + numComponents]
+            state[compIdx + numMiscibleComponents]
                 = Opm::getValue(fluid_state.moleFraction(gasPhaseIdx, compIdx));
         }
-        state[2 * numComponents] = Opm::getValue(fluid_state.L());
-        state[2 * numComponents + 1] = Opm::getValue(fluid_state.pressure(oilPhaseIdx));
-        state[2 * numComponents + 2] = Opm::getValue(fluid_state.pressure(gasPhaseIdx));
-        state[2 * numComponents + 3] = Opm::getValue(fluid_state.temperature(0));
+        // L is the last flash unknown, as in newtonComposition_().
+        constexpr std::size_t liquid_fraction_idx = numFlashUnknowns - 1;
+        state[liquid_fraction_idx] = Opm::getValue(fluid_state.L());
+        state[liquid_fraction_idx + 1] = Opm::getValue(fluid_state.pressure(oilPhaseIdx));
+        state[liquid_fraction_idx + 2] = Opm::getValue(fluid_state.pressure(gasPhaseIdx));
+        state[liquid_fraction_idx + 3] = Opm::getValue(fluid_state.temperature(0));
         return state;
     }
 
