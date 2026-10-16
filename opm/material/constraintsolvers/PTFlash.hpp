@@ -93,27 +93,6 @@ class PTFlash
     static constexpr Scalar substitutionTolerance = 1e-10;
     static constexpr Scalar trivialSolutionTolerance = 1e-5;
 
-protected:
-    static constexpr std::size_t numFlashUnknowns = numMisciblePhases * numMiscibleComponents + 1;
-    // x, y and L, then both phase pressures and the temperature.
-    using JacobianState = std::array<Scalar, numFlashUnknowns + 3>;
-
-    //! The composition Jacobian dF/d(x, y, L) where newtonComposition_()
-    //! converged, and the state it was assembled at.
-    struct NewtonJacobian
-    {
-        Dune::FieldMatrix<Scalar, numFlashUnknowns, numFlashUnknowns> jacobian;
-        JacobianState state;
-    };
-
-    //! A scalar flash result, with the composition Jacobian when Newton
-    //! finished the split.
-    struct ScalarFlashResult
-    {
-        bool single_phase;
-        std::optional<NewtonJacobian> newton_jacobian;
-    };
-
 public:
     /*!
      * \brief Calculates the fluid state from the global mole fractions of the components and the phase pressures
@@ -195,6 +174,10 @@ public:
      *    new stability test from Wilson estimates and at most one retry; and
      * -# for a single-phase mixture, the phase label.
      *
+     * \note This is public and called from outside the class; the trailing
+     *       underscore is a leftover and should be dropped when its callers
+     *       can be renamed along with it.
+     *
      * \return Whether the mixture is single-phase.
      */
     template <typename FluidState>
@@ -209,6 +192,26 @@ public:
     }
 
 protected:
+    static constexpr std::size_t numFlashUnknowns = numMisciblePhases * numMiscibleComponents + 1;
+    // x, y and L, then both phase pressures and the temperature.
+    using JacobianState = std::array<Scalar, numFlashUnknowns + 3>;
+
+    //! The composition Jacobian dF/d(x, y, L) where newtonComposition_()
+    //! converged, and the state it was assembled at.
+    struct NewtonJacobian
+    {
+        Dune::FieldMatrix<Scalar, numFlashUnknowns, numFlashUnknowns> jacobian;
+        JacobianState state;
+    };
+
+    //! A scalar flash result, with the composition Jacobian when Newton
+    //! finished the split.
+    struct ScalarFlashResult
+    {
+        bool single_phase;
+        std::optional<NewtonJacobian> newton_jacobian;
+    };
+
     //! flash_solve_scalar_(), also returning the composition Jacobian when
     //! Newton finished the split.
     template <typename FluidState>
@@ -347,7 +350,6 @@ protected:
         return {is_single_phase, newton_jacobian};
     }
 
-public:
     template <class Vector, class FlashFluidState>
     static typename Vector::field_type li_single_phase_label_(const FlashFluidState& fluid_state, const Vector& z, int verbosity)
     {
@@ -479,8 +481,6 @@ public:
             }
         }
     }
-
-protected:
 
     template <class ComponentVector>
     static Scalar trivialSolutionMeasure_(const ComponentVector& equilibrium_ratios)
