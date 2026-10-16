@@ -73,18 +73,19 @@ namespace {
     Opm::Well makeStandardWell(const Opm::Connection::Order ordering,
                                const std::vector<Opm::Connection>& conns)
     {
+        using namespace std::string_literals;
+
         auto w = Opm::Well {
-            "W1", "G", 0, 0, 0, 0, 100.0,
+            "W1"s, "G"s, 0, 0, 0, 0, std::optional{100.0},
             Opm::WellType { true, Opm::Phase::OIL },
             Opm::Well::ProducerCMode::ORAT,
-            ordering,
             Opm::UnitSystem::newMETRIC(),
             0.0, true, true, 0,
             Opm::Well::GasInflowEquation::STD
         };
 
         w.updateConnections(std::make_shared<Opm::WellConnections>
-                            (ordering, 0, 0, conns), /*force*/ true);
+                            (0, 0, conns), ordering, /*force*/ true);
         return w;
     }
 

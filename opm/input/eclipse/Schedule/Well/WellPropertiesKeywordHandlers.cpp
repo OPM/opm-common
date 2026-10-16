@@ -105,8 +105,12 @@ void handleWDFACCOR(HandlerContext& handlerContext)
             wdfac->updateWDFACCOR(record);
 
             conns->applyDFactorCorrelation(handlerContext.grid, *wdfac);
-            const auto updateConns =
-                well.updateConnections(std::move(conns), handlerContext.grid);
+
+            const auto compord = handlerContext.state().compord()
+                .getConnectionOrder(well_name);
+
+            const auto updateConns = well
+                .updateConnections(std::move(conns), compord, handlerContext.grid);
 
             if (well.updateWDFAC(std::move(wdfac)) || updateConns) {
                 handlerContext.state().wells.update(std::move(well));
@@ -278,7 +282,11 @@ void handleWELPI(HandlerContext& handlerContext)
             // Well::updateWellProductivityIndex() implicitly mutates
             // internal state in the WellConnections class.
             auto connections = std::make_shared<WellConnections>(well2.getConnections());
-            well2.updateConnections(std::move(connections), true);
+
+            const auto compord = handlerContext.state().compord()
+                .getConnectionOrder(well_name);
+
+            well2.updateConnections(std::move(connections), compord, true);
             if (well2.updateWellProductivityIndex()) {
                 handlerContext.state().wells.update(std::move(well2));
             }
@@ -317,12 +325,16 @@ void handleWFOAM(HandlerContext& handlerContext)
 void handleWINJCLN(HandlerContext& handlerContext)
 {
     for (const auto& record : handlerContext.keyword) {
-        const std::string& wellNamePattern = record.getItem<ParserKeywords::WINJCLN::WELL_NAME>().getTrimmedString(0);
+        const auto wellNamePattern = record.getItem<ParserKeywords::WINJCLN::WELL_NAME>().getTrimmedString(0);
         const auto well_names = handlerContext.wellNames(wellNamePattern, false);
         for (const auto& well_name: well_names) {
+            const auto compord = handlerContext.state().compord()
+                .getConnectionOrder(well_name);
+
             auto well = handlerContext.state().wells(well_name);
-            well.handleWINJCLN(record, handlerContext.keyword.location());
-            handlerContext.state().wells.update(std::move(well));
+            if (well.handleWINJCLN(record, compord, handlerContext.keyword.location())) {
+                handlerContext.state().wells.update(std::move(well));
+            }
         }
     }
 }
@@ -330,12 +342,15 @@ void handleWINJCLN(HandlerContext& handlerContext)
 void handleWINJDAM(HandlerContext& handlerContext)
 {
     for (const auto& record : handlerContext.keyword) {
-        const std::string& wellNamePattern = record.getItem<ParserKeywords::WINJDAM::WELL_NAME>().getTrimmedString(0);
+        const auto wellNamePattern = record.getItem<ParserKeywords::WINJDAM::WELL_NAME>().getTrimmedString(0);
         const auto well_names = handlerContext.wellNames(wellNamePattern, true);
 
         for (const auto& well_name : well_names) {
+            const auto compord = handlerContext.state().compord()
+                .getConnectionOrder(well_name);
+
             auto well = handlerContext.state().wells(well_name);
-            if (well.handleWINJDAM(record, handlerContext.keyword.location())) {
+            if (well.handleWINJDAM(record, compord, handlerContext.keyword.location())) {
                 handlerContext.state().wells.update( std::move(well) );
             }
         }
@@ -345,7 +360,7 @@ void handleWINJDAM(HandlerContext& handlerContext)
 void handleWINJFCNC(HandlerContext& handlerContext)
 {
     for (const auto& record : handlerContext.keyword) {
-        const std::string& wellNamePattern = record.getItem<ParserKeywords::WINJFCNC::WELL>().getTrimmedString(0);
+        const auto wellNamePattern = record.getItem<ParserKeywords::WINJFCNC::WELL>().getTrimmedString(0);
         const auto well_names = handlerContext.wellNames(wellNamePattern, false);
         for (const auto& well_name: well_names) {
             auto well = handlerContext.state().wells(well_name);
@@ -361,7 +376,7 @@ void handleWINJMULT(HandlerContext& handlerContext)
     using Kw = ParserKeywords::WINJMULT;
 
     for (const auto& record : handlerContext.keyword) {
-        const std::string& wellNamePattern = record.getItem<Kw::WELL_NAME>().getTrimmedString(0);
+        const auto wellNamePattern = record.getItem<Kw::WELL_NAME>().getTrimmedString(0);
         const auto well_names = handlerContext.wellNames(wellNamePattern, true);
 
         for (const auto& well_name : well_names) {
@@ -371,7 +386,10 @@ void handleWINJMULT(HandlerContext& handlerContext)
                                                        " but Well {} is a producer", well_name);
                 throw OpmInputError(reason, handlerContext.keyword.location());
             }
-            if (well.handleWINJMULT(record, handlerContext.keyword.location())) {
+
+            if (const auto compord = handlerContext.state().compord().getConnectionOrder(well_name);
+                well.handleWINJMULT(record, compord, handlerContext.keyword.location()))
+            {
                 handlerContext.state().wells.update(std::move(well));
             }
         }
@@ -385,7 +403,7 @@ void handleWINJTEMP(HandlerContext& handlerContext)
     using Kw = ParserKeywords::WINJTEMP;
 
     for (const auto& record : handlerContext.keyword) {
-        const std::string& wellNamePattern = record.getItem<Kw::WELL>().getTrimmedString(0);
+        const auto wellNamePattern = record.getItem<Kw::WELL>().getTrimmedString(0);
         auto well_names = handlerContext.wellNames(wellNamePattern, false);
 
         const double temp = record.getItem<Kw::TEMPERATURE>().getSIDouble(0);
@@ -407,7 +425,7 @@ void handleWMICP(HandlerContext& handlerContext)
     using Kw = ParserKeywords::WMICP;
 
     for (const auto& record : handlerContext.keyword) {
-        const std::string& wellNamePattern = record.getItem<Kw::WELL>().getTrimmedString(0);
+        const auto wellNamePattern = record.getItem<Kw::WELL>().getTrimmedString(0);
         const auto well_names = handlerContext.wellNames(wellNamePattern, false);
 
         for (const auto& well_name : well_names) {
@@ -439,8 +457,8 @@ void handleWPIMULT(HandlerContext& handlerContext)
     };
 
     for (const auto& record : handlerContext.keyword) {
-        const std::string& wellNamePattern = record.getItem<Kw::WELL>().getTrimmedString(0);
-        const auto& well_names = handlerContext.wellNames(wellNamePattern);
+        const auto wellNamePattern = record.getItem<Kw::WELL>().getTrimmedString(0);
+        const auto well_names = handlerContext.wellNames(wellNamePattern);
 
         // for the record has defaulted connection and completion information, we do not apply it immediately
         // because we only need to apply the last record with defaulted connection and completion information
@@ -459,9 +477,13 @@ void handleWPIMULT(HandlerContext& handlerContext)
 
         // the record with non-defaulted connection and completion information will be applied immediately
         for (const auto& wname : well_names) {
-            auto well = handlerContext.state().wells( wname );
-            if (well.handleWPIMULT(record))
-                handlerContext.state().wells.update( std::move(well));
+            auto well = handlerContext.state().wells(wname);
+
+            if (const auto compord = handlerContext.state().compord().getConnectionOrder(wname);
+                well.handleWPIMULT(record, compord))
+            {
+                handlerContext.state().wells.update(std::move(well));
+            }
         }
     }
 }
